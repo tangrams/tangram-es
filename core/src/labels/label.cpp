@@ -17,17 +17,14 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh
     if (!m_options.collide || m_type == Type::debug){
         enterState(State::visible, 1.0);
     } else {
-        m_currentState = State::wait_occ;
+        m_state = State::wait_occ;
         m_transform.state.alpha = 0.0;
     }
 
     m_occludedLastFrame = false;
-    m_occlusionSolved = false;
-    m_occlusionType = OcclusionType::none;
     m_updateMeshVisibility = true;
     m_dirty = true;
     m_proxy = false;
-    m_skipTransitions = false;
     m_xAxis = glm::vec2(1.0, 0.0);
     m_yAxis = glm::vec2(0.0, 1.0);
 }
@@ -63,11 +60,13 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
         }
         case Type::line:
         {
-            // project label position from mercator world space to clip coordinates
+            // project label position from mercator world space to clip
+            // coordinates
             glm::vec4 v1 = worldToClipSpace(_mvp, glm::vec4(m_transform.modelPosition1, 0.0, 1.0));
             glm::vec4 v2 = worldToClipSpace(_mvp, glm::vec4(m_transform.modelPosition2, 0.0, 1.0));
 
-            // check whether the label is behind the camera using the perspective division factor
+            // check whether the label is behind the camera using the
+            // perspective division factor
             if (_testVisibility && (v1.w <= 0 || v2.w <= 0)) {
                 return false;
             }
@@ -126,15 +125,6 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
     return true;
 }
 
-bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt, float _zoomFract) {
-    bool animate = false;
-
-    animate = updateState(_mvp, _screenSize, _dt, _zoomFract);
-    m_occlusionSolved = false;
-
-    return animate;
-}
-
 bool Label::offViewport(const glm::vec2& _screenSize) {
     const auto& quad = m_obb.getQuad();
 
@@ -148,13 +138,8 @@ bool Label::offViewport(const glm::vec2& _screenSize) {
     return true;
 }
 
-void Label::occlude(OcclusionType _occlusionType, bool _occlusion) {
-    if (!canOcclude()) {
-        return;
-    }
-
-    m_occlusionType = _occlusionType;
-    m_occludedLastFrame = _occlusion;
+void Label::occlude(bool _occlusion) {
+    m_occluded = _occlusion;
 }
 
 bool Label::canOcclude() {
@@ -162,23 +147,27 @@ bool Label::canOcclude() {
         return false;
     }
 
-    int occludeFlags = (State::visible | State::wait_occ | State::fading_in | State::sleep | State::out_of_screen);
-    return (occludeFlags & m_currentState) && !(m_type == Type::debug);
+    int occludeFlags = (State::visible |
+                        State::wait_occ |
+                        State::skip_transition |
+                        State::fading_in |
+                        State::sleep |
+                        State::out_of_screen);
+
+    return (occludeFlags & m_state) && !(m_type == Type::debug);
 }
 
 bool Label::visibleState() const {
-    int visibleFlags = (State::visible | State::fading_in | State::fading_out);
-    return (visibleFlags & m_currentState);
-}
+    int visibleFlags = (State::visible |
+                        State::fading_in |
+                        State::fading_out |
+                        State::skip_transition);
 
-void Label::occlusionSolved() {
-    m_occlusionSolved = true;
+    return (visibleFlags & m_state);
 }
 
 void Label::skipTransitions() {
-    if (!m_occlusionSolved) {
-        m_skipTransitions = true;
-    }
+    enterState(State::skip_transition, 0.0);
 }
 
 glm::vec2 Label::center() const {
@@ -186,7 +175,8 @@ glm::vec2 Label::center() const {
 }
 
 void Label::enterState(const State& _state, float _alpha) {
-    m_currentState = _state;
+    m_prevState = m_state;
+    m_state = _state;
     setAlpha(_alpha);
 }
 
@@ -206,16 +196,17 @@ void Label::pushTransform() {
 
     // update the buffer on valid states
     if (m_dirty) {
-        static size_t attribOffset = offsetof(Label::Vertex, state);
-        static size_t alphaOffset = offsetof(Label::Vertex::State, alpha) + attribOffset;
+        const static size_t attribOffset = offsetof(Label::Vertex, state);
+        const static size_t alphaOffset = offsetof(Label::Vertex::State, alpha) + attribOffset;
 
         if (visibleState()) {
             // update the complete state on the mesh
             m_mesh.updateAttribute(m_vertexRange, m_transform.state.vertex(), attribOffset);
         } else {
 
-            // for any non-visible states, we don't need to overhead the gpu with updates on the
-            // alpha attribute, but simply do it once until the label goes back in a visible state
+            // for any non-visible states, we don't need to overhead the gpu
+            // with updates on the alpha attribute, but simply do it once until
+            // the label goes back in a visible state
             if (m_updateMeshVisibility) {
                 m_mesh.updateAttribute(m_vertexRange, (m_transform.state.vertex().alpha), alphaOffset);
                 m_updateMeshVisibility = false;
@@ -228,32 +219,37 @@ void Label::pushTransform() {
 
 void Label::resetState() {
     m_occludedLastFrame = false;
-    m_skipTransitions = false;
-    m_occlusionSolved = false;
+    m_occluded = false;
     m_updateMeshVisibility = true;
     m_dirty = true;
     m_proxy = false;
     enterState(State::wait_occ, 0.0);
 }
 
-bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt, float _zoomFract) {
-    if (m_currentState == State::dead) {
+bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract) {
+    if (m_state == State::dead) {
         return false;
     }
 
-    bool occludedLastFrame = m_occludedLastFrame;
-    m_occludedLastFrame = false;
+    m_occluded = false;
 
-    bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize);
+    bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize, true);
 
     // one of the label rules has not been satisfied
     if (!ruleSatisfied) {
-
-        // go to dead state, this breaks determinism, but reduce potential label set since a lot
-        // of discarded labels are discared for line exceed (lots of tiny small lines on a curve
-        // for example), which won't have their rule satisfied
-        enterState(State::dead, 0.0);
+        if ((m_state & State::wait_occ) != 0) {
+            // go to dead state, this breaks determinism, but reduce potential
+            // label set since a lot of discarded labels are discared for line
+            // exceed (lots of tiny small lines on a curve for example), which
+            // won't have their rule satisfied
+            enterState(State::dead, 0.0);
+            pushTransform();
+        } else {
+            enterState(State::sleep, 0.0);
+            pushTransform();
+        }
         return false;
+
     }
 
     // update the view-space bouding box
@@ -264,31 +260,40 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
         enterState(State::out_of_screen, 0.0);
     }
 
-    bool animate = false;
+    return true;
+}
 
-    switch (m_currentState) {
+bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
+
+    bool animate = false;
+    m_prevState = m_state;
+
+    switch (m_state) {
         case State::visible:
-            if (occludedLastFrame) {
-                m_fade = FadeEffect(false, m_options.hideTransition.ease, m_options.hideTransition.time);
+            if (m_occluded) {
+                m_fade = FadeEffect(false, m_options.hideTransition.ease,
+                                    m_options.hideTransition.time);
                 enterState(State::fading_out, 1.0);
                 animate = true;
             }
             break;
         case State::fading_in:
-            if (occludedLastFrame) {
-                enterState(State::sleep, 0.0);
+            if (m_occluded) {
+                // enterState(State::sleep, 0.0);
+                enterState(State::fading_out, m_transform.state.alpha);
+                animate = true;
                 break;
             }
             setAlpha(m_fade.update(_dt));
             animate = true;
-            if (m_fade.isFinished()) {
+            if (m_fade.isFinished() || (m_transform.state.alpha > 0.9f)) {
                 enterState(State::visible, 1.0);
             }
             break;
         case State::fading_out:
             setAlpha(m_fade.update(_dt));
             animate = true;
-            if (m_fade.isFinished()) {
+            if (m_fade.isFinished() || (m_transform.state.alpha < 0.1f )) {
                 enterState(State::sleep, 0.0);
             }
             break;
@@ -298,25 +303,28 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
             }
             break;
         case State::wait_occ:
-            if (m_occlusionSolved) {
-                if (occludedLastFrame) {
-                    enterState(State::dead, 0.0); // dead
-                }  else if (m_skipTransitions) {
-                    enterState(State::visible, 1.0);
-                    animate = true;
-                } else {
-                    m_fade = FadeEffect(true, m_options.showTransition.ease, m_options.showTransition.time);
-                    enterState(State::fading_in, 0.0);
-                    animate = true;
-                }
+            if (m_occluded) {
+                enterState(State::dead, 0.0);
+
             } else {
-                // request for occlusion solving
+                m_fade = FadeEffect(true, m_options.showTransition.ease,
+                                    m_options.showTransition.time);
+                enterState(State::fading_in, 0.0);
                 animate = true;
             }
             break;
+        case State::skip_transition:
+            if (m_occluded) {
+                enterState(State::dead, 0.0);
+
+            } else {
+                enterState(State::visible, 1.0);
+            }
+            break;
         case State::sleep:
-            if (!occludedLastFrame) {
-                m_fade = FadeEffect(true, m_options.showTransition.ease, m_options.showTransition.time);
+            if (!m_occluded) {
+                m_fade = FadeEffect(true, m_options.showTransition.ease,
+                                    m_options.showTransition.time);
                 enterState(State::fading_in, 0.0);
                 animate = true;
             }
@@ -324,6 +332,9 @@ bool Label::updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, flo
         case State::dead:
             break;
     }
+
+    m_occludedLastFrame = m_occluded;
+    m_occluded = false;
 
     return animate;
 }
