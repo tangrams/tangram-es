@@ -8,6 +8,8 @@
 
 namespace Tangram {
 
+static constexpr size_t maxLabelMeshVertices = 16384;
+
 class ShaderProgram;
 
 class LabelMesh : public VboMesh<Label::Vertex> {

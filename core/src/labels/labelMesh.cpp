@@ -10,8 +10,6 @@ static GLuint s_quadIndexBuffer = 0;
 static int s_quadGeneration = -1;
 static std::atomic<int> s_meshCounter(0);
 
-const size_t maxVertices = 16384;
-
 LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
     : VboMesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW)
 {
@@ -39,9 +37,9 @@ void LabelMesh::loadQuadIndices() {
     s_quadGeneration = RenderState::generation();
 
     std::vector<GLushort> indices;
-    indices.reserve(maxVertices / 4 * 6);
+    indices.reserve(maxLabelMeshVertices / 4 * 6);
 
-    for (size_t i = 0; i < maxVertices; i += 4) {
+    for (size_t i = 0; i < maxLabelMeshVertices; i += 4) {
         indices.push_back(i + 2);
         indices.push_back(i + 0);
         indices.push_back(i + 1);
