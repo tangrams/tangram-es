@@ -2,15 +2,13 @@
 
 #include "material.h"
 #include "scene/drawRule.h"
-#include "text/fontContext.h"
 #include "tile/tile.h"
 #include "gl/shaderProgram.h"
 #include "gl/vboMesh.h"
 #include "view/view.h"
-#include "labels/textLabel.h"
-#include "text/fontContext.h"
 #include "data/propertyItem.h" // Include wherever Properties is used!
-#include "text/textBuffer.h"
+#include "labels/labelMesh.h"
+#include "gl/texture.h"
 #include "gl/renderState.h"
 
 #include "platform.h"
@@ -24,10 +22,11 @@
 #include "alfons/font.h"
 #include "alfons/inputSource.h"
 
+#define SDF_IMPLEMENTATION
 #include "sdf.h"
 
 #include <bitset>
-
+#include <mutex>
 
 namespace alf = alfons;
 
@@ -285,7 +284,7 @@ struct AlfonsContext : public alf::TextureCallback {
 // Not actually used as VboMesh!
 // TODO make LabelMesh an interface
 // - just keeps labels and vertices for all Labels of a tile
-struct LabelContainer : public LabelSet, public Mesh {
+struct LabelContainer : public LabelSet, public StyledMesh {
 
     LabelContainer(AlfonsContext& _ctx) : context(_ctx) {}
 
@@ -412,9 +411,7 @@ void AlfonsStyle::onEndDrawFrame() {
     }
 }
 
-namespace {
-
-struct Builder : public StyleBuilder {
+struct TextStyleBuilder : public StyleBuilder {
 
     const AlfonsStyle& m_style;
 
@@ -436,7 +433,7 @@ struct Builder : public StyleBuilder {
         glm::vec2 bbox;
         glm::vec2 quadsLocalOrigin;
         int numLines;
-        FontContext::FontMetrics metrics;
+        FontMetrics metrics;
         int numQuads;
 
         uint32_t fill;
@@ -472,7 +469,7 @@ struct Builder : public StyleBuilder {
 
     ScratchBuffer m_scratch;
 
-    Builder(const AlfonsStyle& _style) :
+    TextStyleBuilder(const AlfonsStyle& _style) :
         StyleBuilder(_style),
         m_style(_style),
         m_batch(_style.context()->m_atlas, m_scratch) {}
@@ -485,7 +482,7 @@ struct Builder : public StyleBuilder {
     void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
     bool checkRule(const DrawRule& _rule) const override;
 
-    void begin(const Tile& _tile) override {
+    void setup(const Tile& _tile) override {
         m_tileSize = _tile.getProjection()->TileSize();
         m_labels.clear();
         m_scratch.clear();
@@ -493,7 +490,7 @@ struct Builder : public StyleBuilder {
         m_mesh = std::make_unique<LabelContainer>(*m_style.context());
     }
 
-    virtual std::unique_ptr<Mesh> build() override {
+    virtual std::unique_ptr<StyledMesh> build() override {
         if (!m_labels.empty()) {
             m_mesh->setLabels(m_labels, m_scratch.quads);
         }
@@ -509,12 +506,12 @@ struct Builder : public StyleBuilder {
     void addLabel(const AlfonsStyle::Parameters& _params, Label::Type _type, Label::Transform _transform);
 };
 
-bool Builder::checkRule(const DrawRule& _rule) const {
+bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
     return true;
 }
 
 
-void Builder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
+void TextStyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
     AlfonsStyle::Parameters params = applyRule(_rule, _props);
 
     if (!prepareLabel(params, Label::Type::point)) { return; }
@@ -522,7 +519,7 @@ void Builder::addPoint(const Point& _point, const Properties& _props, const Draw
     addLabel(params, Label::Type::point, { glm::vec2(_point), glm::vec2(_point) });
 }
 
-void Builder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
+void TextStyleBuilder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
 
     AlfonsStyle::Parameters params = applyRule(_rule, _props);
 
@@ -541,12 +538,12 @@ void Builder::addLine(const Line& _line, const Properties& _props, const DrawRul
     }
 }
 
-void Builder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
+void TextStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
     Point p = glm::vec3(centroid(_polygon), 0.0);
     addPoint(p, _props, _rule);
 }
 
-bool Builder::prepareLabel(const AlfonsStyle::Parameters& _params, Label::Type _type) {
+bool TextStyleBuilder::prepareLabel(const AlfonsStyle::Parameters& _params, Label::Type _type) {
 
     if (_params.text.empty() || _params.fontSize <= 0.f) {
         LOGD("invalid params: %s %f", _params.text.c_str(), _params.fontSize);
@@ -607,7 +604,7 @@ bool Builder::prepareLabel(const AlfonsStyle::Parameters& _params, Label::Type _
     return true;
 }
 
-void Builder::addLabel(const AlfonsStyle::Parameters& _params, Label::Type _type,
+void TextStyleBuilder::addLabel(const AlfonsStyle::Parameters& _params, Label::Type _type,
                        Label::Transform _transform) {
 
     int numQuads = m_scratch.numQuads;
@@ -623,7 +620,7 @@ void Builder::addLabel(const AlfonsStyle::Parameters& _params, Label::Type _type
                                           m_scratch.quadsLocalOrigin));
 }
 
-AlfonsStyle::Parameters Builder::applyRule(const DrawRule& _rule,
+AlfonsStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
                                            const Properties& _props) const {
 
     const static std::string key_name("name");
@@ -729,10 +726,8 @@ AlfonsStyle::Parameters Builder::applyRule(const DrawRule& _rule,
     return p;
 }
 
-}
-
 std::unique_ptr<StyleBuilder> AlfonsStyle::createBuilder() const {
-    return std::make_unique<Builder>(*this);
+    return std::make_unique<TextStyleBuilder>(*this);
 }
 
 
@@ -740,7 +735,7 @@ using namespace LabelProperty;
 
 AlfonsLabel::AlfonsLabel(Label::Transform _transform, Type _type, glm::vec2 _dim,
                      LabelContainer& _mesh, Range _vertexRange,
-                     Label::Options _options, FontContext::FontMetrics _metrics,
+                     Label::Options _options, FontMetrics _metrics,
                      int _nLines, Anchor _anchor, glm::vec2 _quadsLocalOrigin)
     : Label(_transform, _dim, _type, _vertexRange, _options),
       m_metrics(_metrics),
