@@ -1,12 +1,9 @@
 #include "fontContext.h"
 
+#include "platform.h"
+
 #define SDF_IMPLEMENTATION
 #include "sdf.h"
-
-// #define DEFAULT_FONT "fonts/amiri-400regular.ttf"
-// #define DEFAULT_FONT "/usr/share/fonts/TTF/DejaVuSans.ttf"
-// #define DEFAULT_FONT "fonts/open sans-300normal.ttf"
-// #define FALLBACK_FONT "fonts/roboto-regular.ttf"
 
 #define DEFAULT "fonts/NotoSans-Regular.ttf"
 #define FONT_AR "fonts/NotoNaskh-Regular.ttf"
@@ -53,13 +50,9 @@ AlfonsContext::AlfonsContext() : m_atlas(*this, textureSize) {
 #endif
     }
 
-void AlfonsContext::setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout) {
-    m_vertexLayout = _vertexLayout;
-}
-
 // Synchronized on m_mutex on tile-worker threads
 void AlfonsContext::addTexture(alf::AtlasID id, uint16_t width, uint16_t height) {
-    m_batches.emplace_back(m_vertexLayout);
+    m_batches.emplace_back();
 }
 
 // Synchronized on m_mutex, called tile-worker threads
@@ -121,8 +114,22 @@ void AlfonsContext::lockAtlas(std::bitset<maxTextures> _refs) {
     }
 }
 
-std::vector<GlyphBatch>& AlfonsContext::batches() {
-    return m_batches;
+void AlfonsContext::updateTextures() {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    for (auto& batch : m_batches) {
+        if (batch.dirty || !batch.texture.isValid()) {
+            batch.dirty = false;
+            auto td = reinterpret_cast<const GLuint*>(batch.texData.data());
+            batch.texture.update(0, td);
+        }
+    }
+}
+
+void AlfonsContext::bindTexture(alf::AtlasID _id, GLuint _unit) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_batches[_id].texture.bind(_unit);
+
 }
 
 }

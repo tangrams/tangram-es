@@ -169,6 +169,17 @@ void update(float _dt) {
             m_tasks.pop();
         }
     }
+
+    bool animated = false;
+    for (const auto& style : m_scene->styles()) {
+        style->onUpdate();
+
+        animated |= style->isAnimated();
+    }
+    if (animated != isContinuousRendering()) {
+        setContinuousRendering(animated);
+    }
+
     {
         std::lock_guard<std::mutex> lock(m_tilesMutex);
         ViewState viewState {
@@ -193,17 +204,6 @@ void update(float _dt) {
         if (updateLabels) {
             auto& cache = m_tileManager->getTileCache();
             m_labels->update(*m_view, _dt, m_scene->styles(), tiles, cache);
-        }
-
-        bool animated = false;
-        for (const auto& style : m_scene->styles()) {
-            if (style->isAnimated()) {
-                animated = true;
-                break;
-            }
-        }
-        if (animated != isContinuousRendering()) {
-            setContinuousRendering(animated);
         }
     }
 }

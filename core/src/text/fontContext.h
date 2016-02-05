@@ -8,7 +8,7 @@
 #include "alfons/font.h"
 #include "alfons/inputSource.h"
 
-#include "text/glyphBatch.h"
+#include "gl/texture.h"
 
 #include <bitset>
 #include <mutex>
@@ -17,17 +17,32 @@
 
 namespace Tangram {
 
+constexpr int textureSize = 256;
+constexpr int maxTextures = 64;
+
 namespace alf = alfons;
 
 struct FontMetrics {
     float ascender, descender, lineHeight;
 };
 
+// TODO could be a shared_ptr<Texture>
+struct GlyphBatch {
+
+    GlyphBatch() : texture(textureSize, textureSize) {
+        texData.resize(textureSize * textureSize);
+    }
+
+    std::vector<unsigned char> texData;
+    Texture texture;
+
+    bool dirty;
+    size_t refCount = 0;
+};
+
 class AlfonsContext : public alf::TextureCallback {
 public:
     AlfonsContext();
-
-    void setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout);
 
     // Synchronized on m_mutex on tile-worker threads
     void addTexture(alf::AtlasID id, uint16_t width, uint16_t height) override;
@@ -40,20 +55,27 @@ public:
 
     void lockAtlas(std::bitset<maxTextures> _refs);
 
-    std::vector<GlyphBatch>& batches();
+    void updateTextures();
 
-    // TODO: make those private
+    // TODO lock?
+    size_t glyphBatchCount() {
+        return m_batches.size();
+    }
+
+    void bindTexture(alf::AtlasID _id, GLuint _unit);
+
+    // TODO private
     std::mutex m_mutex;
     std::array<int, maxTextures> m_atlasRefCount = {{0}};
-    std::shared_ptr<alf::Font> m_font;
     alf::GlyphAtlas m_atlas;
 
-private:
     alf::FontManager m_alfons;
+    std::shared_ptr<alf::Font> m_font;
+
+private:
 
     std::vector<unsigned char> m_sdfBuffer;
     std::vector<GlyphBatch> m_batches;
-    std::shared_ptr<VertexLayout> m_vertexLayout;
 };
 
 }

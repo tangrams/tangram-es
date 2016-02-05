@@ -1,5 +1,7 @@
 #include "textMesh.h"
 
+#include "gl/renderState.h"
+
 namespace Tangram {
 
 void TextMesh::pushQuad(GlyphQuad& _quad, Label::Vertex::State& _state) {

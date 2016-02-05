@@ -2,7 +2,6 @@
 
 #include "labels/labelMesh.h"
 #include "alfons/atlas.h"
-#include "gl/renderState.h"
 
 namespace Tangram {
 

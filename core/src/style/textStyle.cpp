@@ -39,8 +39,6 @@ void TextStyle::constructVertexLayout() {
         {"a_alpha", 1, GL_SHORT, true, 0},
         {"a_rotation", 1, GL_SHORT, false, 0},
     }));
-
-    m_context->setVertexLayout(m_vertexLayout);
 }
 
 void TextStyle::constructShaderProgram() {
@@ -57,33 +55,10 @@ void TextStyle::constructShaderProgram() {
 }
 
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
-    if (m_context->batches().empty()) { return; }
+    m_context->updateTextures();
 
-    {
-        std::lock_guard<std::mutex> lock(m_context->m_mutex);
-        int tex = 0;
+    for (auto& mesh : m_meshes) { mesh->myUpload(); }
 
-        for (auto& batch : m_context->batches()) {
-            bool dirty = false;
-
-            if (batch.dirty || !batch.texture.isValid()) {
-                batch.dirty = false;
-                dirty = true;
-
-                auto td = reinterpret_cast<const GLuint*>(batch.texData.data());
-                batch.texture.update(0, td);
-            }
-
-            batch.mesh->myUpload();
-
-            LOG(">>> refcount:%d texture:%d/%d texid:%d upload:%d - buffersize:%d",
-                m_context->m_atlasRefCount[tex], tex,
-                m_context->batches().size(),
-                batch.texture.getGlHandle(),
-                dirty, batch.mesh->bufferSize());
-            tex++;
-        }
-    }
     m_shaderProgram->setUniformf("u_uv_scale_factor",
                                  glm::vec2(1.0f / textureSize));
     m_shaderProgram->setUniformi("u_tex", 0);
@@ -93,31 +68,37 @@ void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureU
 }
 
 void TextStyle::onEndDrawFrame() {
-    if (m_context->batches().empty()) { return; }
-
-    std::lock_guard<std::mutex> lock(m_context->m_mutex);
 
     if (m_sdf) {
         m_shaderProgram->setUniformi("u_pass", 1);
-        for (auto& gt : m_context->batches()) {
-            if (gt.mesh->compiled()) {
-                gt.texture.bind(0);
-                gt.mesh->draw(*m_shaderProgram);
+        for (size_t i = 0; i < m_meshes.size(); i++) {
+            if (m_meshes[i]->compiled()) {
+                m_context->bindTexture(i, 0);
+
+                m_meshes[i]->draw(*m_shaderProgram);
             }
         }
         m_shaderProgram->setUniformi("u_pass", 0);
     }
 
-    for (auto& gt : m_context->batches()) {
-        if (gt.mesh->compiled()) {
+    for (size_t i = 0; i < m_meshes.size(); i++) {
+        if (m_meshes[i]->compiled()) {
+            m_context->bindTexture(i, 0);
 
-            gt.texture.bind(0);
-            gt.mesh->draw(*m_shaderProgram);
+            m_meshes[i]->draw(*m_shaderProgram);
 
             // FIXME - resets for next frame..
             // should be done only when buffers are changing
-            gt.mesh->clear();
+            m_meshes[i]->clear();
+
         }
+    }
+}
+
+void TextStyle::onUpdate() {
+    size_t s = m_context->glyphBatchCount();
+    while (m_meshes.size() < s) {
+        m_meshes.push_back(std::make_unique<TextMesh>(m_vertexLayout, GL_TRIANGLES));
     }
 }
 
@@ -197,13 +178,15 @@ struct TextStyleBuilder : public StyleBuilder {
         m_labels.clear();
         m_scratch.clear();
 
-        m_labelContainer = std::make_unique<LabelContainer>(*m_style.context());
+        m_labelContainer = std::make_unique<LabelContainer>(m_style);
     }
 
     virtual std::unique_ptr<StyledMesh> build() override {
         if (!m_labels.empty()) {
-            m_labelContainer->setLabels(m_labels, m_scratch.quads);
+            m_labelContainer->setLabels(m_labels);
+            m_labelContainer->setQuads(m_scratch.quads);
         }
+
         m_labels.clear();
         m_scratch.clear();
 
