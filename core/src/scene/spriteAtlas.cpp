@@ -1,5 +1,6 @@
 #include "spriteAtlas.h"
 #include "platform.h"
+#include "debug/textDisplay.h"
 #include <algorithm>
 
 namespace Tangram {
@@ -176,10 +177,16 @@ bool SpriteAtlas::pack() {
         }
     }
 
+    size_t origSize = (m_texture->getWidth() * m_texture->getHeight() * sizeof(GLuint)) / (1024 * 1024);
+    size_t newSize = (SPRITE_ATLAS_PACK_SIZE * SPRITE_ATLAS_PACK_SIZE * sizeof(GLuint)) / (1024 * 1024);
+    size_t diff = origSize - newSize;
+    LOGS("Original uncompressed size %d mb", origSize);
+    LOGS("New uncompressed size %d mb", newSize);
+    LOGS("Saved memory %d mb", diff);
     newTexture->setData(newTextureData, SPRITE_ATLAS_PACK_SIZE * SPRITE_ATLAS_PACK_SIZE);
     delete[] newTextureData;
 
-    // FIXME: don't recopy texture like this, keep a blob of data from original texture
+    // FIXME: don't copy texture like this, keep a blob of data from original texture
     m_texture = newTexture;
 
     return true;

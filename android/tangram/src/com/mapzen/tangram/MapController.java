@@ -52,7 +52,7 @@ public class MapController implements Renderer {
      */
     public MapController(Activity mainApp, MapView view) {
 
-        this(mainApp, view, "scene.yaml");
+        this(mainApp, view, "eraser-map.yaml");
     }
 
     /**
