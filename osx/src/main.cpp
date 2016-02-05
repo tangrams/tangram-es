@@ -5,7 +5,7 @@
 #include <memory>
 #include <signal.h>
 #include <stdlib.h>
- 
+
 // Forward declaration
 void init_main_window();
 
@@ -14,7 +14,8 @@ std::string sceneFile = "scene.yaml";
 GLFWwindow* main_window = nullptr;
 int width = 800;
 int height = 600;
-bool recreate_context;
+float density = 1.0;
+bool recreate_context = false;
 
 // Input handling
 // ==============
@@ -46,6 +47,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
     double x, y;
     glfwGetCursorPos(window, &x, &y);
+    x *= density;
+    y *= density;
     double time = glfwGetTime();
 
     if (was_panning && action == GLFW_RELEASE) {
@@ -112,6 +115,9 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 
+    x *= density;
+    y *= density;
+
     int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
     double time = glfwGetTime();
 
@@ -137,6 +143,8 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
 
     double x, y;
     glfwGetCursorPos(window, &x, &y);
+    x *= density;
+    y *= density;
 
     bool rotating = glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS;
     bool shoving = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
@@ -206,12 +214,16 @@ void drop_callback(GLFWwindow* window, int count, const char** paths) {
 
 void window_size_callback(GLFWwindow* window, int width, int height) {
 
-    Tangram::resize(width, height);
+    // The callback parameters are measure in screen coordinates, but Tangram
+    // should be given sizes in pixels, which can be measured differently on
+    // hi-dpi displays.
 
-    // Work-around for a bug in GLFW on retina displays
     int fbWidth = 0, fbHeight = 0;
     glfwGetFramebufferSize(main_window, &fbWidth, &fbHeight);
-    glViewport(0, 0, fbWidth, fbHeight);
+    density = (float)fbWidth / (float)width;
+    Tangram::setPixelScale(density);
+    Tangram::resize(fbWidth, fbHeight);
+
 }
 
 void init_main_window() {
@@ -244,12 +256,7 @@ void init_main_window() {
 
     // Setup graphics
     Tangram::setupGL();
-    Tangram::resize(width, height);
-
-    // Work-around for a bug in GLFW on retina displays
-    int fbWidth = 0, fbHeight = 0;
-    glfwGetFramebufferSize(main_window, &fbWidth, &fbHeight);
-    glViewport(0, 0, fbWidth, fbHeight);
+    window_size_callback(main_window, width, height);
 
     data_source = std::make_shared<ClientGeoJsonSource>("touch", "");
     Tangram::addDataSource(data_source);
