@@ -167,13 +167,10 @@ bool SpriteAtlas::pack() {
         for (int y = 0; y < dst.size.y; ++y) {
             int srcy = (src.origin.y + y) * m_texture->getWidth();
             int dsty = (dst.origin.y + y) * SPRITE_ATLAS_PACK_SIZE;
+            int srcx = src.origin.x;
+            int dstx = dst.origin.x;
 
-            for (int x = 0; x < dst.size.x; ++x) {
-                int srcx = src.origin.x + x;
-                int dstx = dst.origin.x + x;
-
-                newTextureData[dstx + dsty] = textureData[srcx + srcy];
-            }
+            std::memcpy(newTextureData + dsty + dstx, &textureData[srcy + srcx], sizeof(GLuint) * src.size.x);
         }
     }
 
