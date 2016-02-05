@@ -22,8 +22,8 @@ Tile Coordinates:
   (0.0, 0.0) ----->---- (1.0, 0.0)
 
   Coordinates that fall outside the range [0.0, 1.0] are permissible, as tile
-  servers may choose not to clip certain geometries to tile boundaries, but in
-  the future these points may be clipped in the client-side geometry processing.
+  servers may choose not to clip certain geometries to tile boundaries, but these
+  points are clipped in the client-side geometry processing.
 
   Z coordinates are expected to be normalized to the same scale as x, y coordinates.
 

@@ -234,30 +234,19 @@ void addCap(const glm::vec3& _coord, const glm::vec2& _normal, int _numCorners, 
     addFan(_coord, nA, nB, nC, uA, uB, uC, _numCorners, _ctx);
 }
 
-bool nearlyEqual(float _a, float _b, float _tolerance = 0.001) {
-    return fabsf(_a - _b) < _tolerance;
-}
-
-// Tests if a line segment (from point A to B) is nearly coincident with the edge of a tile
-bool isOnTileEdge(const glm::vec3& _a, const glm::vec3& _b) {
+// Tests if a line segment (from point A to B) is outside the edge of a tile
+bool isOutsideTile(const glm::vec3& _a, const glm::vec3& _b) {
 
     float tolerance = 0.0005; // tweak this adjust if catching too few/many line segments near tile edges
     // TODO: make tolerance configurable by source if necessary
     glm::vec2 tile_min(0.0, 0.0);
     glm::vec2 tile_max(1.0, 1.0);
 
-    if (nearlyEqual(_a.x, _b.x, tolerance)) {
-        auto x = fmod(_a.x, tile_max.x);
-        if (nearlyEqual(x, tile_min.x, tolerance) || nearlyEqual(x, tile_max.x, tolerance)) {
-            return true;
-        }
-    }
-    if (nearlyEqual(_a.y, _b.y, tolerance)) {
-        auto y = fmod(_a.y, tile_max.y);
-        if (nearlyEqual(y, tile_min.y, tolerance) || nearlyEqual(y, tile_min.y, tolerance)) {
-            return true;
-        }
-    }
+    if ( (_a.x <= tile_min.x + tolerance && _b.x <= tile_min.x + tolerance) ||
+         (_a.x >= tile_max.x - tolerance && _b.x >= tile_max.x - tolerance) ||
+         (_a.y <= tile_min.y + tolerance && _b.y <= tile_min.y + tolerance) ||
+         (_a.y >= tile_max.y - tolerance && _b.y >= tile_max.y - tolerance) ) { return true; }
+
     return false;
 }
 
@@ -383,7 +372,7 @@ void Builders::buildPolyLine(const Line& _line, PolyLineBuilder& _ctx) {
         for (size_t i = 0; i < _line.size() - 1; i++) {
             const glm::vec3& coordCurr = _line[i];
             const glm::vec3& coordNext = _line[i+1];
-            if (isOnTileEdge(coordCurr, coordNext)) {
+            if (isOutsideTile(coordCurr, coordNext)) {
                 Line line = Line(&_line[cut], &_line[i+1]);
                 buildPolyLineSegment(line, _ctx);
                 cut = i + 1;
