@@ -212,17 +212,17 @@ void drop_callback(GLFWwindow* window, int count, const char** paths) {
 // Window handling
 // ===============
 
-void window_size_callback(GLFWwindow* window, int width, int height) {
+void framebuffer_size_callback(GLFWwindow* window, int fWidth, int fHeight) {
 
-    // The callback parameters are measure in screen coordinates, but Tangram
-    // should be given sizes in pixels, which can be measured differently on
-    // hi-dpi displays.
-
-    int fbWidth = 0, fbHeight = 0;
-    glfwGetFramebufferSize(main_window, &fbWidth, &fbHeight);
-    density = (float)fbWidth / (float)width;
+    int wWidth = 0, wHeight = 0;
+    glfwGetWindowSize(main_window, &wWidth, &wHeight);
+    float new_density = (float)fWidth / (float)wWidth;
+    if (new_density != density) {
+        recreate_context = true;
+        density = new_density;
+    }
     Tangram::setPixelScale(density);
-    Tangram::resize(fbWidth, fbHeight);
+    Tangram::resize(fWidth, fHeight);
 
 }
 
@@ -247,7 +247,7 @@ void init_main_window() {
     glfwMakeContextCurrent(main_window);
 
     // Set input callbacks
-    glfwSetWindowSizeCallback(main_window, window_size_callback);
+    glfwSetFramebufferSizeCallback(main_window, framebuffer_size_callback);
     glfwSetMouseButtonCallback(main_window, mouse_button_callback);
     glfwSetCursorPosCallback(main_window, cursor_pos_callback);
     glfwSetScrollCallback(main_window, scroll_callback);
@@ -256,7 +256,9 @@ void init_main_window() {
 
     // Setup graphics
     Tangram::setupGL();
-    window_size_callback(main_window, width, height);
+    int fWidth = 0, fHeight = 0;
+    glfwGetFramebufferSize(main_window, &fWidth, &fHeight);
+    framebuffer_size_callback(main_window, fWidth, fHeight);
 
     data_source = std::make_shared<ClientGeoJsonSource>("touch", "");
     Tangram::addDataSource(data_source);
@@ -301,8 +303,6 @@ int main(int argc, char* argv[]) {
     NSurlInit();
 
     double lastTime = glfwGetTime();
-
-    recreate_context = false;
 
     // Loop until the user closes the window
     while (keepRunning && !glfwWindowShouldClose(main_window)) {
