@@ -419,6 +419,9 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
                 atlas->addSpriteNode(spriteName, pos, size);
             }
         }
+
+        atlas->pack();
+
         scene.spriteAtlases()[name] = atlas;
     }
     scene.textures().emplace(name, texture);
