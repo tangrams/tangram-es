@@ -1,6 +1,7 @@
 #include "spriteAtlas.h"
 #include "platform.h"
 #include "debug/textDisplay.h"
+#include "glm/gtx/norm.hpp"
 #include <algorithm>
 
 namespace Tangram {
@@ -129,6 +130,39 @@ bool SpriteAtlas::addNode(const SpriteNode& _in, SpriteNode& _out) {
 }
 
 bool SpriteAtlas::pack() {
+    static const int maxint = std::numeric_limits<int>::max();
+
+    bool badPacking = false;
+    int minDist2, minsx, minsy;
+
+    for (const auto& sprite1 : m_spritesNodes) {
+        minDist2 = minsx = minsy = maxint;
+
+        for (const auto& sprite2 : m_spritesNodes) {
+            if (sprite1.first == sprite2.first) {
+                continue;
+            }
+
+            int dist2 = glm::distance2(sprite1.second.origin, sprite2.second.origin);
+
+            if (dist2 < minDist2) {
+                minDist2 = dist2;
+                minsx = std::min(sprite1.second.size.x, sprite2.second.size.x);
+                minsy = std::min(sprite1.second.size.y, sprite2.second.size.y);
+            }
+        }
+
+        float minDist = sqrtf(minDist2);
+        if (minDist > minsy && minDist > minsy) {
+            badPacking = true;
+            break;
+        }
+    }
+
+    if (!badPacking) {
+        return true;
+    }
+
     std::vector<std::pair<SpriteNode, SpriteNode>> packedNodes;
 
     m_packedNodes.clear();
