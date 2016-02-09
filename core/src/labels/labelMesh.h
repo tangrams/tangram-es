@@ -22,7 +22,12 @@ struct GlyphQuad {
     } quad[4];
     // TODO color and stroke must not be stored per quad
     uint32_t color;
-    uint32_t stroke;
+    union {
+        uint32_t stroke;
+        float extrude;
+    };
+
+    // TODO: used only for text, cleanup
     alf::AtlasID atlas;
 };
 
@@ -47,6 +52,8 @@ public:
     void myUpload();
 
     void clear();
+
+    size_t numberOfVertices() const { return m_vertices.size(); }
 
 private:
 

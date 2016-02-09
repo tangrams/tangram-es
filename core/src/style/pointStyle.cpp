@@ -78,7 +78,6 @@ struct PointStyleBuilder : public StyleBuilder {
 
     const PointStyle& m_style;
 
-    std::vector<Label::Vertex> m_vertices;
     std::vector<std::unique_ptr<Label>> m_labels;
 
     std::unique_ptr<PointStyleMesh> m_mesh;
@@ -100,9 +99,7 @@ struct PointStyleBuilder : public StyleBuilder {
         if (m_labels.empty()) { return nullptr; }
 
         m_mesh->setLabels(m_labels);
-        m_mesh->compile(m_vertices);
         m_labels.clear();
-        m_vertices.clear();
         return std::move(m_mesh);
     };
 
@@ -110,12 +107,12 @@ struct PointStyleBuilder : public StyleBuilder {
 
     PointStyleBuilder(const PointStyle& _style) : StyleBuilder(_style), m_style(_style) {}
 
-    void pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size, const glm::vec2& _uvBL,
-                  const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const;
-
     bool getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const;
 
     PointStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
+
+    void pushQuad(const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR,
+        unsigned int _color, float _extrudeScale) const;
 
     template<typename ...Args>
     void addLabel(Args&& ...args) {
@@ -182,20 +179,25 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     return p;
 }
 
-void PointStyleBuilder::pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size,
-                                 const glm::vec2& _uvBL, const glm::vec2& _uvTR, unsigned int _color,
-                                 float _extrudeScale) const {
-
-    float es = _extrudeScale;
-
+void PointStyleBuilder::pushQuad(const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR,
+    unsigned int _color,
+    float _extrudeScale) const
+{
     // Attribute will be normalized - scale to max short;
     glm::vec2 uvTR = _uvTR * texture_scale;
     glm::vec2 uvBL = _uvBL * texture_scale;
 
-    _vertices.push_back({{    0.0,       0.0}, {uvBL.x, uvTR.y}, {-es,  es }, _color});
-    _vertices.push_back({{_size.x,       0.0}, {uvTR.x, uvTR.y}, { es,  es }, _color});
-    _vertices.push_back({{    0.0,  -_size.y}, {uvBL.x, uvBL.y}, {-es, -es }, _color});
-    _vertices.push_back({{_size.x,  -_size.y}, {uvTR.x, uvBL.y}, { es, -es }, _color});
+    Label::Vertex::State state;
+    GlyphQuad quad {
+        {{{0.0, 0.0}, {uvBL.x, uvTR.y}},
+        {{_size.x, 0.0}, {uvTR.x, uvTR.y}},
+        {{0.0, -_size.y}, {uvBL.x, uvBL.y}},
+        {{_size.x, -_size.y}, {uvTR.x, uvBL.y}}},
+        _color
+    };
+    quad.extrude = _extrudeScale;
+
+    m_mesh->pushQuad(quad, state);
 }
 
 bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const {
@@ -241,10 +243,10 @@ void PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
 
     Label::Transform transform = { glm::vec2(_point) };
 
-    addLabel(transform, p.size, *m_mesh, m_vertices.size(),
+    addLabel(transform, p.size, *m_mesh, m_mesh->numberOfVertices(),
              p.labelOptions, p.extrudeScale, p.anchor);
 
-    pushQuad(m_vertices, p.size,
+    pushQuad(p.size,
              {uvsQuad.x, uvsQuad.y},
              {uvsQuad.z, uvsQuad.w},
              p.color, p.extrudeScale);
@@ -263,10 +265,10 @@ void PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
     for (size_t i = 0; i < _line.size(); ++i) {
         Label::Transform transform = { glm::vec2(_line[i]) };
 
-        addLabel(transform, p.size, *m_mesh, m_vertices.size(),
+        addLabel(transform, p.size, *m_mesh, m_mesh->numberOfVertices(),
                  p.labelOptions, p.extrudeScale, p.anchor);
 
-        pushQuad(m_vertices, p.size,
+        pushQuad(p.size,
                  {uvsQuad.x, uvsQuad.y},
                  {uvsQuad.z, uvsQuad.w},
                  p.color, p.extrudeScale);
@@ -292,10 +294,10 @@ void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
             for (auto point : line) {
                 Label::Transform transform = { glm::vec2(point) };
 
-                addLabel(transform, p.size, *m_mesh, m_vertices.size(),
+                addLabel(transform, p.size, *m_mesh, m_mesh->numberOfVertices(),
                          p.labelOptions, p.extrudeScale, p.anchor);
 
-                pushQuad(m_vertices, p.size,
+                pushQuad(p.size,
                          {uvsQuad.x, uvsQuad.y},
                          {uvsQuad.z, uvsQuad.w},
                          p.color, p.extrudeScale);
@@ -305,10 +307,10 @@ void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
         glm::vec2 c = centroid(_polygon);
         Label::Transform transform = { c };
 
-        addLabel(transform, p.size, *m_mesh, m_vertices.size(),
+        addLabel(transform, p.size, *m_mesh, m_mesh->numberOfVertices(),
                  p.labelOptions, p.extrudeScale, p.anchor);
 
-        pushQuad(m_vertices, p.size,
+        pushQuad(p.size,
                  {uvsQuad.x, uvsQuad.y},
                  {uvsQuad.z, uvsQuad.w},
                  p.color, p.extrudeScale);
