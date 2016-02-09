@@ -51,6 +51,8 @@ public:
 
     void clear();
 
+    size_t numberOfVertices() const { return m_vertices.size(); }
+
 private:
 
     std::vector<Label::Vertex> m_vertices;

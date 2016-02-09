@@ -76,7 +76,6 @@ struct PointStyleBuilder : public StyleBuilder {
 
     const PointStyle& m_style;
 
-    std::vector<Label::Vertex> m_vertices;
     std::vector<std::unique_ptr<Label>> m_labels;
 
     std::unique_ptr<PointStyleMesh> m_mesh;
@@ -96,9 +95,9 @@ struct PointStyleBuilder : public StyleBuilder {
 
     std::unique_ptr<StyledMesh> build() override {
         m_mesh->setLabels(m_labels);
-        m_mesh->compile(m_vertices);
+        //m_mesh->compile(m_vertices);
         m_labels.clear();
-        m_vertices.clear();
+        //m_vertices.clear();
         return std::move(m_mesh);
     };
 
@@ -110,8 +109,8 @@ struct PointStyleBuilder : public StyleBuilder {
 
     PointStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
-    void pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size,
-        const glm::vec2& _uvBL, const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const;
+    void pushQuad(const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR,
+        unsigned int _color, float _extrudeScale) const;
 
     template<typename ...Args>
     void addLabel(Args&& ...args) {
@@ -178,9 +177,10 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     return p;
 }
 
-void PointStyleBuilder::pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size,
-                                 const glm::vec2& _uvBL, const glm::vec2& _uvTR, unsigned int _color,
-                                 float _extrudeScale) const {
+void PointStyleBuilder::pushQuad(const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR,
+    unsigned int _color,
+    float _extrudeScale) const
+{
     // Attribute will be normalized - scale to max short;
     glm::vec2 uvTR = _uvTR * texture_scale;
     glm::vec2 uvBL = _uvBL * texture_scale;
@@ -241,10 +241,10 @@ void PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
 
     Label::Transform transform = { glm::vec2(_point) };
 
-    addLabel(transform, p.size, *m_mesh, m_vertices.size(),
+    addLabel(transform, p.size, *m_mesh, m_mesh->numberOfVertices(),
              p.labelOptions, p.extrudeScale, p.anchor);
 
-    pushQuad(m_vertices, p.size,
+    pushQuad(p.size,
              {uvsQuad.x, uvsQuad.y},
              {uvsQuad.z, uvsQuad.w},
              p.color, p.extrudeScale);
@@ -263,10 +263,10 @@ void PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
     for (size_t i = 0; i < _line.size(); ++i) {
         Label::Transform transform = { glm::vec2(_line[i]) };
 
-        addLabel(transform, p.size, *m_mesh, m_vertices.size(),
+        addLabel(transform, p.size, *m_mesh, m_mesh->numberOfVertices(),
                  p.labelOptions, p.extrudeScale, p.anchor);
 
-        pushQuad(m_vertices, p.size,
+        pushQuad(p.size,
                  {uvsQuad.x, uvsQuad.y},
                  {uvsQuad.z, uvsQuad.w},
                  p.color, p.extrudeScale);
@@ -292,10 +292,10 @@ void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
             for (auto point : line) {
                 Label::Transform transform = { glm::vec2(point) };
 
-                addLabel(transform, p.size, *m_mesh, m_vertices.size(),
+                addLabel(transform, p.size, *m_mesh, m_mesh->numberOfVertices(),
                          p.labelOptions, p.extrudeScale, p.anchor);
 
-                pushQuad(m_vertices, p.size,
+                pushQuad(p.size,
                          {uvsQuad.x, uvsQuad.y},
                          {uvsQuad.z, uvsQuad.w},
                          p.color, p.extrudeScale);
@@ -305,10 +305,10 @@ void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
         glm::vec2 c = centroid(_polygon);
         Label::Transform transform = { c };
 
-        addLabel(transform, p.size, *m_mesh, m_vertices.size(),
+        addLabel(transform, p.size, *m_mesh, m_mesh->numberOfVertices(),
                  p.labelOptions, p.extrudeScale, p.anchor);
 
-        pushQuad(m_vertices, p.size,
+        pushQuad(p.size,
                  {uvsQuad.x, uvsQuad.y},
                  {uvsQuad.z, uvsQuad.w},
                  p.color, p.extrudeScale);
