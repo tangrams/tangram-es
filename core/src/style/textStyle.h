@@ -54,7 +54,7 @@ protected:
 
     std::shared_ptr<AlfonsContext> m_context;
 
-    mutable std::vector<std::unique_ptr<TextMesh>> m_meshes;
+    mutable std::vector<std::unique_ptr<LabelMesh>> m_meshes;
 
 public:
 
@@ -66,7 +66,7 @@ public:
     void onEndDrawFrame() override;
     void onUpdate() override;
 
-    TextMesh& mesh(size_t id) const { return *m_meshes[id]; }
+    LabelMesh& mesh(size_t id) const { return *m_meshes[id]; }
 
     ~TextStyle() override;
 

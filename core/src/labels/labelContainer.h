@@ -1,9 +1,9 @@
 #pragma once
 
 #include "labels/labelSet.h"
+#include "labels/labelMesh.h"
 #include "style/textStyle.h"
 #include "text/fontContext.h"
-#include "text/textMesh.h"
 
 namespace Tangram {
 

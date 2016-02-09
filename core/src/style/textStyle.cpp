@@ -98,7 +98,7 @@ void TextStyle::onEndDrawFrame() {
 void TextStyle::onUpdate() {
     size_t s = m_context->glyphBatchCount();
     while (m_meshes.size() < s) {
-        m_meshes.push_back(std::make_unique<TextMesh>(m_vertexLayout, GL_TRIANGLES));
+        m_meshes.push_back(std::make_unique<LabelMesh>(m_vertexLayout, GL_TRIANGLES));
     }
 }
 
