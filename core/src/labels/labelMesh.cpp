@@ -72,7 +72,7 @@ void LabelMesh::loadQuadIndices() {
 void LabelMesh::compile(std::vector<Label::Vertex>& _vertices) {
     // NO-OP
 
-    //return;
+    return;
 
     // Compile vertex buffer directly instead of making a temporary copy
     m_nVertices = _vertices.size();
@@ -153,7 +153,8 @@ void LabelMesh::draw(ShaderProgram& _shader) {
 
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {
-        upload();
+        myUpload();
+        //upload();
     } else if (m_dirty) {
         subDataUpload();
     }

@@ -106,12 +106,12 @@ struct PointStyleBuilder : public StyleBuilder {
 
     PointStyleBuilder(const PointStyle& _style) : StyleBuilder(_style), m_style(_style) {}
 
-    void pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size, const glm::vec2& _uvBL,
-                  const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const;
-
     bool getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const;
 
     PointStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
+
+    void pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size,
+        const glm::vec2& _uvBL, const glm::vec2& _uvTR, unsigned int _color, float _extrudeScale) const;
 
     template<typename ...Args>
     void addLabel(Args&& ...args) {
@@ -181,17 +181,21 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
 void PointStyleBuilder::pushQuad(std::vector<Label::Vertex>& _vertices, const glm::vec2& _size,
                                  const glm::vec2& _uvBL, const glm::vec2& _uvTR, unsigned int _color,
                                  float _extrudeScale) const {
-
-    float es = _extrudeScale;
-
     // Attribute will be normalized - scale to max short;
     glm::vec2 uvTR = _uvTR * texture_scale;
     glm::vec2 uvBL = _uvBL * texture_scale;
 
-    _vertices.push_back({{    0.0,       0.0}, {uvBL.x, uvTR.y}, {-es,  es }, _color});
-    _vertices.push_back({{_size.x,       0.0}, {uvTR.x, uvTR.y}, { es,  es }, _color});
-    _vertices.push_back({{    0.0,  -_size.y}, {uvBL.x, uvBL.y}, {-es, -es }, _color});
-    _vertices.push_back({{_size.x,  -_size.y}, {uvTR.x, uvBL.y}, { es, -es }, _color});
+    Label::Vertex::State state;
+    GlyphQuad quad {
+        {{{0.0, 0.0}, {uvBL.x, uvTR.y}},
+        {{_size.x, 0.0}, {uvTR.x, uvTR.y}},
+        {{0.0, -_size.y}, {uvBL.x, uvBL.y}},
+        {{_size.x, -_size.y}, {uvTR.x, uvBL.y}}},
+        _color
+    };
+    quad.extrude = _extrudeScale;
+
+    m_mesh->pushQuad(quad, state);
 }
 
 bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const {
