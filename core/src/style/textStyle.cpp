@@ -62,6 +62,11 @@ void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureU
     m_shaderProgram->setUniformi("u_tex", 0);
     m_shaderProgram->setUniformMatrix4f("u_ortho", _view.getOrthoViewportMatrix());
 
+    // Upload meshes for next frame
+    for (size_t i = 0; i < m_meshes.size(); i++) {
+        m_meshes[i]->myUpload();
+    }
+
     Style::onBeginDrawFrame(_view, _scene, 1);
 }
 

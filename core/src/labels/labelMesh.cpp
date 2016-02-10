@@ -2,6 +2,7 @@
 #include "labels/label.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
+#include "gl/hardware.h"
 #include <atomic>
 
 namespace Tangram {
@@ -71,6 +72,8 @@ void LabelMesh::loadQuadIndices() {
 }
 
 void LabelMesh::myUpload() {
+    if (m_nVertices == 0) { return; }
+
     m_vertexOffsets.clear();
     for (size_t offset = 0; offset < m_nVertices; offset += maxLabelMeshVertices) {
         size_t nVertices = maxLabelMeshVertices;
@@ -91,8 +94,20 @@ void LabelMesh::myUpload() {
     RenderState::vertexBuffer(m_glVertexBuffer);
 
     GLbyte* bufferData = reinterpret_cast<GLbyte*>(m_vertices.data());
+
+    // invalidate/orphane the data store on the driver
     glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
-    glBufferData(GL_ARRAY_BUFFER, vertexBytes, bufferData, m_hint);
+
+    if (Hardware::supportsMapBuffer) {
+        GLvoid* dataStore = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+
+        // write memory client side
+        std::memcpy(dataStore, bufferData, vertexBytes);
+
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+    } else {
+        glBufferData(GL_ARRAY_BUFFER, vertexBytes, bufferData, m_hint);
+    }
 }
 
 void LabelMesh::clear() {
@@ -106,10 +121,12 @@ void LabelMesh::draw(ShaderProgram& _shader) {
 
     if (m_nVertices == 0) { return; }
 
-    myUpload();
-
     if (!valid) {
         loadQuadIndices();
+    }
+
+    if (!m_isUploaded) {
+        myUpload();
     }
 
     // Bind buffers for drawing

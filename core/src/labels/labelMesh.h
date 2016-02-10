@@ -53,9 +53,9 @@ public:
 
     GLbyte* data() { return reinterpret_cast<GLbyte*>(m_vertices.data()); }
 
-private:
-
     void myUpload();
+
+private:
 
     std::vector<Label::Vertex> m_vertices;
 };
