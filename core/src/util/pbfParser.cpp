@@ -6,6 +6,7 @@
 #include "util/geom.h"
 
 #include <algorithm>
+#include <iterator>
 
 namespace Tangram {
 
@@ -25,7 +26,7 @@ PbfParser::Geometry PbfParser::getGeometry(ParserContext& _ctx, protobuf::messag
 
     while(_geomIn.getData() < _geomIn.getEnd()) {
 
-        if(cmdRepeat == 0) { // get new command, lengh and parameters..
+        if(cmdRepeat == 0) { // get new command, length and parameters..
             uint32_t cmdData = static_cast<uint32_t>(_geomIn.varint());
             cmd = static_cast<pbfGeomCmd>(cmdData & 0x7); //first 3 bits of the cmdData
             cmdRepeat = cmdData >> 3; //last 5 bits
@@ -150,7 +151,6 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
             break;
 
         case GeometryType::lines:
-        case GeometryType::polygons:
         {
             int offset = 0;
 
@@ -165,24 +165,69 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
                             _ctx.geometry.coordinates.begin() + offset + length);
 
                 offset += length;
+                feature.lines.emplace_back(std::move(line));
+            }
+        }
+        case GeometryType::polygons:
+        {
+            int offset = 0;
 
-                if (feature.geometryType == GeometryType::lines) {
-                    feature.lines.emplace_back(std::move(line));
-                } else {
+            for (int length : _ctx.geometry.sizes) {
+                if (length == 0) { continue; }
+                
+                // Determine winding order from first polygon
+                if (_ctx.windingOrder == 0.0) {
+                    Line firstPoly;
+                    firstPoly.reserve(length);
+                    firstPoly.insert(firstPoly.begin(),
+                                     _ctx.geometry.coordinates.begin(),
+                                     _ctx.geometry.coordinates.begin() + length);
+                    _ctx.windingOrder = signedArea(firstPoly);
+                }
+
+                Line line;
+                line.reserve(length);
+
+                if (_ctx.windingOrder >= 0.0f) {
                     // Polygons are in a flat list of rings, with ccw rings indicating
                     // the beginning of a new polygon
+                    line.insert(line.begin(),
+                                _ctx.geometry.coordinates.begin() + offset,
+                                _ctx.geometry.coordinates.begin() + offset + length);
+                    offset += length;
+
                     if (feature.polygons.empty()) {
                         feature.polygons.emplace_back();
                     } else {
                         double area = signedArea(line);
-                        if (area > 0) {
+                        if (area > 0.0) {
                             feature.polygons.emplace_back();
-                        } else if (area == 0){
+                        } else if (area == 0.0){
                             continue;
                         }
                     }
-                    feature.polygons.back().push_back(std::move(line));
+                } else {
+                    // Polygons are in a flat list of rings, with cw rings indicating
+                    // the beginning of a new polygon
+                    using iter_type = std::vector<Point>::iterator;
+                    std::reverse_iterator<iter_type> start(_ctx.geometry.coordinates.begin() + offset + length);
+                    std::reverse_iterator<iter_type> end(_ctx.geometry.coordinates.begin() + offset);
+                    line.insert(line.begin(), start, end);
+                    offset += length;
+                    
+                    if (feature.polygons.empty()) {
+                        feature.polygons.emplace_back();
+                    } else {
+                        double area = signedArea(line);
+                        if (area < 0.0) {
+                            feature.polygons.emplace_back();
+                        } else if (area == 0.0) {
+                            continue;
+                        }
+                    }
                 }
+                
+                feature.polygons.back().push_back(std::move(line));
             }
             break;
         }
