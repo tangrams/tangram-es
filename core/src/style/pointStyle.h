@@ -38,6 +38,8 @@ public:
 
     virtual ~PointStyle();
 
+    auto& getMesh() const { return m_mesh; }
+
 protected:
 
     virtual void constructVertexLayout() override;
@@ -50,6 +52,8 @@ protected:
 
     UniformLocation m_uTex{"u_tex"};
     UniformLocation m_uOrtho{"u_ortho"};
+
+    mutable std::unique_ptr<LabelMesh> m_mesh;
 };
 
 }

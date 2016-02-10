@@ -8,6 +8,8 @@
 #include "style/textStyle.h"
 #include "text/fontContext.h"
 
+#include "alfons/atlas.h"
+
 #include <bitset>
 #include <vector>
 
@@ -47,6 +49,18 @@ private:
     glm::vec2 m_quadLocalOrigin;
 };
 
+struct GlyphQuad {
+    alf::AtlasID atlas;
+
+    struct {
+        glm::i16vec2 pos;
+        glm::u16vec2 uv;
+    } quad[4];
+
+    // TODO color and stroke must not be stored per quad
+    uint32_t color;
+    uint32_t stroke;
+};
 
 class TextLabels : public LabelSet, public StyledMesh {
 public:
