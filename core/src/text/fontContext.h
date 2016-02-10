@@ -57,6 +57,9 @@ public:
 
     void updateTextures();
 
+    std::shared_ptr<alf::Font> getFont(const std::string& _name, const std::string& _style,
+                                       const std::string& _weight, float _size);
+
     // TODO lock?
     size_t glyphBatchCount() {
         return m_batches.size();

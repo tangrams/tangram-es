@@ -7,6 +7,7 @@
 
 #include <memory>
 
+namespace alfons { class Font; }
 namespace Tangram {
 
 class FontContext;
@@ -22,7 +23,7 @@ class TextStyle : public Style {
 public:
 
     struct Parameters {
-        FontID fontId = -1;
+        std::shared_ptr<alfons::Font> font;
         std::string text = "";
         bool interactive = false;
         uint32_t fill = 0xff000000;
@@ -82,7 +83,8 @@ namespace std {
         size_t operator() (const Tangram::TextStyle::Parameters& p) const {
             std::hash<Tangram::Label::Options> optionsHash;
             std::size_t seed = 0;
-            hash_combine(seed, p.fontId);
+            // TODO
+            //hash_combine(seed, p.fontId);
             hash_combine(seed, p.text);
             hash_combine(seed, p.interactive);
             hash_combine(seed, p.fill);

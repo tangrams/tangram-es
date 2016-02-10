@@ -22,7 +22,7 @@ AlfonsContext::AlfonsContext() : m_atlas(*this, textureSize) {
         auto fontPath = systemFontPath("sans-serif", "400", "normal");
         LOG("FONT %s", fontPath.c_str());
 
-        m_font = m_alfons.addFont(fontPath, FONT_SIZE);
+        m_font = m_alfons.addFont("default", alf::InputSource(fontPath), FONT_SIZE);
 
         std::string fallback = "";
         int importance = 0;
@@ -39,14 +39,14 @@ AlfonsContext::AlfonsContext() : m_atlas(*this, textureSize) {
             fontPath += fallback;
             LOG("FALLBACK %s", fontPath.c_str());
 
-            m_font->addFace(m_alfons.getFontFace(alf::InputSource(fontPath), FONT_SIZE));
+            m_font->addFace(m_alfons.addFontFace(alf::InputSource(fontPath), FONT_SIZE));
         }
 #else
-        m_font = m_alfons.addFont(DEFAULT, FONT_SIZE);
-        m_font->addFace(m_alfons.getFontFace(alf::InputSource(FONT_AR), FONT_SIZE));
-        m_font->addFace(m_alfons.getFontFace(alf::InputSource(FONT_HE), FONT_SIZE));
-        m_font->addFace(m_alfons.getFontFace(alf::InputSource(FONT_JA), FONT_SIZE));
-        m_font->addFace(m_alfons.getFontFace(alf::InputSource(FALLBACK), FONT_SIZE));
+        m_font = m_alfons.addFont("default", alf::InputSource(DEFAULT), FONT_SIZE);
+        m_font->addFace(m_alfons.addFontFace(alf::InputSource(FONT_AR), FONT_SIZE));
+        m_font->addFace(m_alfons.addFontFace(alf::InputSource(FONT_HE), FONT_SIZE));
+        m_font->addFace(m_alfons.addFontFace(alf::InputSource(FONT_JA), FONT_SIZE));
+        m_font->addFace(m_alfons.addFontFace(alf::InputSource(FALLBACK), FONT_SIZE));
 #endif
     }
 
@@ -130,6 +130,41 @@ void AlfonsContext::bindTexture(alf::AtlasID _id, GLuint _unit) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_batches[_id].texture.bind(_unit);
 
+}
+
+auto AlfonsContext::getFont(const std::string& _family, const std::string& _style,
+                            const std::string& _weight, float _size) -> std::shared_ptr<alf::Font> {
+
+    std::string fontName = _family + "_" + _weight + "_" + _style;
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    auto font = m_alfons.getFont(fontName, FONT_SIZE);
+    if (font->hasFaces()) { return font; }
+
+    unsigned int dataSize = 0;
+    unsigned char* data = nullptr;
+
+    // Assuming bundled ttf file follows this convention
+    auto bundledFontPath = "fonts/" + _family + "-" + _weight + _style + ".ttf";
+    if (!(data = bytesFromFile(bundledFontPath.c_str(), PathType::resource, &dataSize)) &&
+        !(data = bytesFromFile(bundledFontPath.c_str(), PathType::internal, &dataSize))) {
+        const std::string sysFontPath = systemFontPath(_family, _weight, _style);
+        if (!(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize)) ) {
+
+            LOGE("Could not load font file %s", fontName.c_str());
+            // add fallbacks from default font
+            font->addFaces(*m_font);
+            return font;
+        }
+    }
+
+    font->addFace(m_alfons.addFontFace(alf::InputSource(reinterpret_cast<char*>(data), dataSize), FONT_SIZE));
+
+    // add fallbacks from default font
+    font->addFaces(*m_font);
+
+    return font;
 }
 
 }

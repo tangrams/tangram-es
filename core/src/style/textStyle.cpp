@@ -196,7 +196,7 @@ struct TextStyleBuilder : public StyleBuilder {
     TextStyle::Parameters applyRule(const DrawRule& _rule,
                                     const Properties& _props) const;
 
-    bool prepareLabel(const TextStyle::Parameters& _params, Label::Type _type);
+    bool prepareLabel(TextStyle::Parameters& _params, Label::Type _type);
     void addLabel(const TextStyle::Parameters& _params, Label::Type _type,
                   Label::Transform _transform);
 };
@@ -244,10 +244,10 @@ void TextStyleBuilder::addPolygon(const Polygon& _polygon,
     addPoint(p, _props, _rule);
 }
 
-bool TextStyleBuilder::prepareLabel(const TextStyle::Parameters& _params, Label::Type _type) {
+bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type _type) {
 
     if (_params.text.empty() || _params.fontSize <= 0.f) {
-        LOGD("invalid params: %s %f", _params.text.c_str(), _params.fontSize);
+        LOGD("invalid params: '%s' %f", _params.text.c_str(), _params.fontSize);
         return false;
     }
 
@@ -272,7 +272,7 @@ bool TextStyleBuilder::prepareLabel(const TextStyle::Parameters& _params, Label:
         auto ctx = m_style.context();
 
         std::lock_guard<std::mutex> lock(ctx->m_mutex);
-        auto line = m_shaper.shape(ctx->m_font, _params.text);
+        auto line = m_shaper.shape(_params.font, _params.text);
 
         line.setScale(fontScale);
 
@@ -331,15 +331,27 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     std::string fontFamily, fontWeight, fontStyle, transform, align, anchor;
     glm::vec2 offset;
 
+    _rule.get(StyleParamKey::text_source, p.text);
+    if (!_rule.isJSFunction(StyleParamKey::text_source)) {
+        if (p.text.empty()) {
+            p.text = _props.getString(key_name);
+        } else {
+            p.text = _props.getString(p.text);
+        }
+    }
+    if (p.text.empty()) { return p; }
+
     _rule.get(StyleParamKey::font_family, fontFamily);
     _rule.get(StyleParamKey::font_weight, fontWeight);
     _rule.get(StyleParamKey::font_style, fontStyle);
 
     fontWeight = (fontWeight.size() == 0) ? "400" : fontWeight;
     fontStyle = (fontStyle.size() == 0) ? "normal" : fontStyle;
-    // TODO - look font from fontManager
 
     _rule.get(StyleParamKey::font_size, p.fontSize);
+    // TODO - look font from fontManager
+    p.font = m_style.context()->getFont(fontFamily, fontStyle, fontWeight, p.fontSize);
+
     _rule.get(StyleParamKey::font_fill, p.fill);
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
     _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
@@ -353,15 +365,6 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
     _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
     _rule.get(StyleParamKey::text_wrap, p.maxLineWidth);
-
-    _rule.get(StyleParamKey::text_source, p.text);
-    if (!_rule.isJSFunction(StyleParamKey::text_source)) {
-        if (p.text.empty()) {
-            p.text = _props.getString(key_name);
-        } else {
-            p.text = _props.getString(p.text);
-        }
-    }
 
     size_t repeatGroupHash = 0;
     std::string repeatGroup;
