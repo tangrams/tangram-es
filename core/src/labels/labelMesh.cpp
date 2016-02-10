@@ -14,6 +14,7 @@ LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMo
     : VboMesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW)
 {
     s_meshCounter++;
+    m_isCompiled = true;
 }
 
 void LabelMesh::pushQuad(GlyphQuad& _quad, Label::Vertex::State& _state) {
@@ -70,9 +71,6 @@ void LabelMesh::loadQuadIndices() {
 }
 
 void LabelMesh::myUpload() {
-
-    if (m_nVertices == 0) { return; }
-
     m_vertexOffsets.clear();
     for (size_t offset = 0; offset < m_nVertices; offset += maxLabelMeshVertices) {
         size_t nVertices = maxLabelMeshVertices;
@@ -80,10 +78,6 @@ void LabelMesh::myUpload() {
             nVertices = m_nVertices - offset;
         }
         m_vertexOffsets.emplace_back(nVertices / 4 * 6, nVertices);
-    }
-
-    if (!checkValidity()) {
-        loadQuadIndices();
     }
 
     // Generate vertex buffer, if needed
@@ -99,16 +93,12 @@ void LabelMesh::myUpload() {
     GLbyte* bufferData = reinterpret_cast<GLbyte*>(m_vertices.data());
     glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
     glBufferData(GL_ARRAY_BUFFER, vertexBytes, bufferData, m_hint);
-
-    m_isCompiled = true;
-    // m_isUploaded = true;
-    m_dirty = false;
 }
 
 void LabelMesh::clear() {
+    // Clear vertices for next frame
     m_nVertices = 0;
     m_vertices.clear();
-    m_isCompiled = false;
 }
 
 void LabelMesh::draw(ShaderProgram& _shader) {
@@ -117,13 +107,6 @@ void LabelMesh::draw(ShaderProgram& _shader) {
     if (m_nVertices == 0) { return; }
 
     myUpload();
-
-    // Ensure that geometry is buffered into GPU
-    // if (!m_isUploaded) {
-    //    upload();
-    // } else if (m_dirty) {
-    //    subDataUpload();
-    // }
 
     if (!valid) {
         loadQuadIndices();

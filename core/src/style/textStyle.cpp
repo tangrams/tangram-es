@@ -57,8 +57,6 @@ void TextStyle::constructShaderProgram() {
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
     m_context->updateTextures();
 
-    for (auto& mesh : m_meshes) { mesh->myUpload(); }
-
     m_shaderProgram->setUniformf("u_uv_scale_factor",
                                  glm::vec2(1.0f / textureSize));
     m_shaderProgram->setUniformi("u_tex", 0);
@@ -72,26 +70,18 @@ void TextStyle::onEndDrawFrame() {
     if (m_sdf) {
         m_shaderProgram->setUniformi("u_pass", 1);
         for (size_t i = 0; i < m_meshes.size(); i++) {
-            if (m_meshes[i]->compiled()) {
-                m_context->bindTexture(i, 0);
+            m_context->bindTexture(i, 0);
 
-                m_meshes[i]->draw(*m_shaderProgram);
-            }
+            m_meshes[i]->draw(*m_shaderProgram);
         }
         m_shaderProgram->setUniformi("u_pass", 0);
     }
 
     for (size_t i = 0; i < m_meshes.size(); i++) {
-        if (m_meshes[i]->compiled()) {
-            m_context->bindTexture(i, 0);
+        m_context->bindTexture(i, 0);
 
-            m_meshes[i]->draw(*m_shaderProgram);
-
-            // FIXME - resets for next frame..
-            // should be done only when buffers are changing
-            m_meshes[i]->clear();
-
-        }
+        m_meshes[i]->draw(*m_shaderProgram);
+        m_meshes[i]->clear();
     }
 }
 

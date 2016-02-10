@@ -47,8 +47,6 @@ public:
 
     void pushQuad(GlyphQuad& _quad, Label::Vertex::State& _state);
 
-    void myUpload();
-
     void clear();
 
     size_t numberOfVertices() const { return m_vertices.size(); }
@@ -56,6 +54,8 @@ public:
     GLbyte* data() { return reinterpret_cast<GLbyte*>(m_vertices.data()); }
 
 private:
+
+    void myUpload();
 
     std::vector<Label::Vertex> m_vertices;
 };
