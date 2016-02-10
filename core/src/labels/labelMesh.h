@@ -19,13 +19,11 @@ struct GlyphQuad {
     struct {
         glm::i16vec2 pos;
         glm::u16vec2 uv;
+        glm::i16vec2 extrude;
     } quad[4];
     // TODO color and stroke must not be stored per quad
     uint32_t color;
-    union {
-        uint32_t stroke;
-        float extrude;
-    };
+    uint32_t stroke;
 
     // TODO: used only for text, cleanup
     alf::AtlasID atlas;

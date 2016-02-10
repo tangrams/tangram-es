@@ -183,15 +183,16 @@ void PointStyleBuilder::pushQuad(const glm::vec2& _size, const glm::vec2& _uvBL,
     glm::vec2 uvTR = _uvTR * texture_scale;
     glm::vec2 uvBL = _uvBL * texture_scale;
 
+    _extrudeScale *= extrusion_scale;
+
     Label::Vertex::State state;
     GlyphQuad quad {
-        {{{0.0, 0.0}, {uvBL.x, uvTR.y}},
-        {{_size.x, 0.0}, {uvTR.x, uvTR.y}},
-        {{0.0, -_size.y}, {uvBL.x, uvBL.y}},
-        {{_size.x, -_size.y}, {uvTR.x, uvBL.y}}},
+        {{{0.0, 0.0}, {uvBL.x, uvTR.y}, {-_extrudeScale, _extrudeScale}},
+        {{_size.x * position_scale, 0.0}, {uvTR.x, uvTR.y}, {_extrudeScale, _extrudeScale}},
+        {{0.0, -_size.y * position_scale}, {uvBL.x, uvBL.y}, {-_extrudeScale, -_extrudeScale}},
+        {{_size.x * position_scale, -_size.y * position_scale}, {uvTR.x, uvBL.y}, {_extrudeScale, -_extrudeScale}}},
         _color
     };
-    quad.extrude = _extrudeScale;
 
     m_mesh->pushQuad(quad, state);
 }

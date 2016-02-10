@@ -25,8 +25,10 @@ void LabelMesh::pushQuad(GlyphQuad& _quad, Label::Vertex::State& _state) {
         Label::Vertex& v = m_vertices[m_nVertices+i];
         v.pos = _quad.quad[i].pos;
         v.uv = _quad.quad[i].uv;
+        v.extrude = _quad.quad[i].extrude;
         v.color = _quad.color;
-        v.stroke = _quad.stroke; // union with extrude
+        // FIXME: can be unsafe with union (works only because extrude set right before)
+        v.stroke = _quad.stroke;
         v.state = _state;
     }
 
