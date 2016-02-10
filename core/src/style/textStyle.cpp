@@ -102,6 +102,83 @@ void TextStyle::onUpdate() {
     }
 }
 
+struct TextBatch : public alf::TextBatch {
+    using Base = alf::TextBatch;
+    using Base::Base;
+
+    std::vector<std::pair<int,float>> m_lineWraps;
+
+    glm::vec2 drawWithLineWrappingByCharacterCount(const alf::LineLayout& _line, size_t _maxChar,
+                                                   TextLabelProperty::Align _alignment) {
+
+        m_lineWraps.clear();
+
+        float lineWidth = 0;
+        float maxWidth = 0;
+        size_t charCount = 0;
+        size_t shapeCount = 0;
+
+        float lastWidth = 0;
+        size_t lastShape = 0;
+        size_t lastChar = 0;
+
+        for (auto& c : _line.shapes()) {
+            shapeCount++;
+            lineWidth += _line.advance(c);
+
+            if (c.cluster) { charCount++; }
+
+            if (c.canBreak || c.mustBreak) {
+                lastShape = shapeCount;
+                lastChar = charCount;
+                lastWidth = lineWidth;
+            }
+
+            if (charCount > _maxChar || c.mustBreak) {
+                // only go to next line if chars have been added on the current line
+                if (lastShape != 0) {
+                    m_lineWraps.emplace_back(lastShape, lastWidth);
+                    maxWidth = std::max(maxWidth, lastWidth);
+
+                    lineWidth -= lastWidth;
+                    charCount -= lastChar;
+
+                    lastShape = 0;
+                }
+            }
+        }
+        if (charCount > 0) {
+            m_lineWraps.emplace_back(shapeCount, lineWidth);
+            maxWidth = std::max(maxWidth, lineWidth);
+        }
+
+        size_t shapeStart = 0;
+        glm::vec2 offset(0);
+        for (auto wrap : m_lineWraps) {
+            switch(_alignment) {
+            case TextLabelProperty::Align::center:
+                offset.x = (maxWidth - wrap.second) * 0.5;
+                break;
+            case TextLabelProperty::Align::right:
+                offset.x = (maxWidth - wrap.second);
+                break;
+            default:
+                offset.x = 0;
+            }
+
+            size_t shapeEnd = wrap.first;
+            alf::TextBatch::draw(_line, shapeStart, shapeEnd, offset);
+            shapeStart = shapeEnd;
+
+            offset.y += _line.height();
+        }
+
+        offset.x = maxWidth;
+        return offset;
+    }
+
+};
+
 struct TextStyleBuilder : public StyleBuilder {
 
     const TextStyle& m_style;
@@ -109,7 +186,7 @@ struct TextStyleBuilder : public StyleBuilder {
     float m_tileSize;
 
     alf::TextShaper m_shaper;
-    alf::TextBatch m_batch;
+    TextBatch m_batch;
 
     bool m_sdf;
     float m_pixelScale = 1;
@@ -276,12 +353,12 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 
         line.setScale(fontScale);
 
-        if (_type == Label::Type::point) {
-            auto adv = m_batch.draw(line, {0, 0}, _params.maxLineWidth * line.height() * 0.5);
+        if (_type == Label::Type::point && _params.wordWrap) {
+            //auto adv = m_batch.draw(line, {0, 0}, _params.maxLineWidth * line.height() * 0.5);
+            m_scratch.bbox = m_batch.drawWithLineWrappingByCharacterCount(line, _params.maxLineWidth,
+                                                                          _params.align);
 
-            m_scratch.numLines = adv.y/line.height();
-            m_scratch.bbox.y = adv.y;
-            m_scratch.bbox.x = adv.x;
+            m_scratch.numLines = m_scratch.bbox.y/line.height();
 
         } else {
             m_batch.draw(line, {0, 0});
