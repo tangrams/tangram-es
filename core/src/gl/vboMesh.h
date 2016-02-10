@@ -62,7 +62,7 @@ public:
      * Renders the geometry in this mesh using the ShaderProgram _shader; if
      * geometry has not already been uploaded it will be uploaded at this point
      */
-    void draw(ShaderProgram& _shader);
+    void draw(ShaderProgram& _shader, bool _clear);
 
     size_t bufferSize();
 
@@ -143,8 +143,8 @@ public:
         return VboMeshBase::bufferSize();
     }
 
-    virtual void draw(ShaderProgram& _shader) {
-        VboMeshBase::draw(_shader);
+    virtual void draw(ShaderProgram& _shader, bool _clear = false) {
+        VboMeshBase::draw(_shader, _clear);
     }
 
     void compile(const std::vector<MeshData<T>>& _meshes);

@@ -17,7 +17,7 @@ public:
         m_style.context()->releaseAtlas(atlasRefs);
     }
 
-    void draw(ShaderProgram& _shader) override {}
+    void draw(ShaderProgram& _shader, bool _clear) override {}
     size_t bufferSize() override { return 0; }
 
     void setQuads(std::vector<GlyphQuad>& _quads) {

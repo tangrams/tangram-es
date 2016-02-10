@@ -165,7 +165,7 @@ void VboMeshBase::upload() {
     resetDirty();
 }
 
-void VboMeshBase::draw(ShaderProgram& _shader) {
+void VboMeshBase::draw(ShaderProgram& _shader, bool _clear) {
 
     checkValidity();
 

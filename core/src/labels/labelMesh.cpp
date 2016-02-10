@@ -110,13 +110,7 @@ void LabelMesh::myUpload() {
     }
 }
 
-void LabelMesh::clear() {
-    // Clear vertices for next frame
-    m_nVertices = 0;
-    m_vertices.clear();
-}
-
-void LabelMesh::draw(ShaderProgram& _shader) {
+void LabelMesh::draw(ShaderProgram& _shader, bool _clear) {
     bool valid = checkValidity();
 
     if (m_nVertices == 0) { return; }
@@ -150,6 +144,12 @@ void LabelMesh::draw(ShaderProgram& _shader) {
         glDrawElements(m_drawMode, nIndices, GL_UNSIGNED_SHORT, 0);
 
         vertexOffset += nVertices;
+    }
+
+    if (_clear) {
+        // Clear vertices for next frame
+        m_nVertices = 0;
+        m_vertices.clear();
     }
 }
 

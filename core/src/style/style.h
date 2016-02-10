@@ -36,7 +36,7 @@ enum class Blending : int8_t {
 };
 
 struct StyledMesh {
-    virtual void draw(ShaderProgram& _shader) = 0;
+    virtual void draw(ShaderProgram& _shader, bool _clear = false) = 0;
     virtual size_t bufferSize() = 0;
 
     virtual ~StyledMesh() {}
