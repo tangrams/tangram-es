@@ -85,7 +85,7 @@ void TextStyle::onEndDrawFrame() {
     for (size_t i = 0; i < m_meshes.size(); i++) {
         m_context->bindTexture(i, 0);
 
-        m_meshes[i]->draw(*m_shaderProgram);
+        m_meshes[i]->draw(*m_shaderProgram, true);
     }
 }
 

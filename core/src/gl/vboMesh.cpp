@@ -76,13 +76,7 @@ void VboMeshBase::setDrawMode(GLenum _drawMode) {
     }
 }
 
-void VboMeshBase::resetDirty() {
-    m_dirtyOffset = 0;
-    m_dirtySize = 0;
-    m_dirty = false;
-}
-
-void VboMeshBase::subDataUpload() {
+void VboMeshBase::subDataUpload(GLbyte* _data) {
     if (!m_dirty) {
         return;
     }
@@ -92,34 +86,30 @@ void VboMeshBase::subDataUpload() {
         assert(false);
     }
 
+    GLbyte* data = _data ? _data : m_glVertexData;
+
     RenderState::vertexBuffer(m_glVertexBuffer);
 
     long vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
+    // invalidate/orphane the data store on the driver
+    glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
+
     if (Hardware::supportsMapBuffer) {
-        // invalidate/orphane the data store on the driver
-        glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
         GLvoid* dataStore = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 
         // write memory client side
-        std::memcpy(dataStore, m_glVertexData, vertexBytes);
+        std::memcpy(dataStore, data, vertexBytes);
 
         glUnmapBuffer(GL_ARRAY_BUFFER);
     } else {
-        // when all vertices are modified, it's better to update the entire mesh
-        if (vertexBytes - m_dirtySize < m_vertexLayout->getStride()) {
-            // invalidate/orphane the data store on the driver
-            glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
-            // if this buffer is still used by gpu on current frame this call will not wait
-            // for the frame to finish using the vbo but "directly" send command to upload the data
-            glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, m_hint);
-        } else {
-            // perform simple sub data upload for part of the buffer
-            glBufferSubData(GL_ARRAY_BUFFER, m_dirtyOffset, m_dirtySize, m_glVertexData + m_dirtyOffset);
-        }
+
+        // if this buffer is still used by gpu on current frame this call will not wait
+        // for the frame to finish using the vbo but "directly" send command to upload the data
+        glBufferData(GL_ARRAY_BUFFER, vertexBytes, data, m_hint);
     }
 
-    resetDirty();
+    m_dirty = false;
 }
 
 void VboMeshBase::upload() {
@@ -161,8 +151,6 @@ void VboMeshBase::upload() {
     m_generation = RenderState::generation();
 
     m_isUploaded = true;
-
-    resetDirty();
 }
 
 void VboMeshBase::draw(ShaderProgram& _shader, bool _clear) {

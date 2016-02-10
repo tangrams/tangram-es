@@ -55,14 +55,13 @@ public:
     /*
      * Sub data upload of the mesh, returns true if this results in a buffer binding
      */
-    void subDataUpload();
-    void resetDirty();
+    void subDataUpload(GLbyte* _data = nullptr);
 
     /*
      * Renders the geometry in this mesh using the ShaderProgram _shader; if
      * geometry has not already been uploaded it will be uploaded at this point
      */
-    void draw(ShaderProgram& _shader, bool _clear);
+    void draw(ShaderProgram& _shader, bool _clear = false);
 
     size_t bufferSize();
 

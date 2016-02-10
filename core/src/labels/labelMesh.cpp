@@ -36,7 +36,9 @@ void LabelMesh::pushQuad(GlyphQuad& _quad, Label::Vertex::State& _state) {
 LabelMesh::~LabelMesh() {
     s_meshCounter--;
 
-    if (s_quadIndexBuffer != 0 && (!RenderState::isCurrentGeneration(s_quadGeneration) || s_meshCounter <= 0)) {
+    if (s_quadIndexBuffer != 0 && (!RenderState::isCurrentGeneration(s_quadGeneration)
+        || s_meshCounter <= 0))
+    {
         if (RenderState::indexBuffer.compare(s_quadIndexBuffer)) {
             RenderState::indexBuffer.init(0, false);
         }
@@ -74,40 +76,27 @@ void LabelMesh::loadQuadIndices() {
 void LabelMesh::myUpload() {
     if (m_nVertices == 0) { return; }
 
-    m_vertexOffsets.clear();
-    for (size_t offset = 0; offset < m_nVertices; offset += maxLabelMeshVertices) {
-        size_t nVertices = maxLabelMeshVertices;
-        if (offset + maxLabelMeshVertices > m_nVertices) {
-            nVertices = m_nVertices - offset;
-        }
-        m_vertexOffsets.emplace_back(nVertices / 4 * 6, nVertices);
-    }
-
     // Generate vertex buffer, if needed
     if (m_glVertexBuffer == 0) {
         glGenBuffers(1, &m_glVertexBuffer);
     }
 
-    // Buffer vertex data
-    int vertexBytes = m_nVertices * m_vertexLayout->getStride();
+    // Compute vertex ranges for big meshes
+    m_vertexOffsets.clear();
+    for (size_t offset = 0; offset < m_nVertices; offset += maxLabelMeshVertices) {
+        size_t nVertices = maxLabelMeshVertices;
 
-    RenderState::vertexBuffer(m_glVertexBuffer);
+        if (offset + maxLabelMeshVertices > m_nVertices) {
+            nVertices = m_nVertices - offset;
+        }
 
-    GLbyte* bufferData = reinterpret_cast<GLbyte*>(m_vertices.data());
-
-    // invalidate/orphane the data store on the driver
-    glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
-
-    if (Hardware::supportsMapBuffer) {
-        GLvoid* dataStore = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-
-        // write memory client side
-        std::memcpy(dataStore, bufferData, vertexBytes);
-
-        glUnmapBuffer(GL_ARRAY_BUFFER);
-    } else {
-        glBufferData(GL_ARRAY_BUFFER, vertexBytes, bufferData, m_hint);
+        m_vertexOffsets.emplace_back(nVertices / 4 * 6, nVertices);
     }
+
+    m_dirty = true;
+
+    GLbyte* bufferData = data();
+    subDataUpload(bufferData);
 }
 
 void LabelMesh::draw(ShaderProgram& _shader, bool _clear) {
