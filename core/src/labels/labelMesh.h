@@ -53,11 +53,11 @@ public:
 
     size_t numberOfVertices() const { return m_vertices.size(); }
 
+    GLbyte* data() { return reinterpret_cast<GLbyte*>(m_vertices.data()); }
+
 private:
 
     std::vector<Label::Vertex> m_vertices;
-    
-    int bufferCapacity = 0;
 };
 
 }

@@ -95,9 +95,7 @@ struct PointStyleBuilder : public StyleBuilder {
 
     std::unique_ptr<StyledMesh> build() override {
         m_mesh->setLabels(m_labels);
-        //m_mesh->compile(m_vertices);
         m_labels.clear();
-        //m_vertices.clear();
         return std::move(m_mesh);
     };
 
@@ -244,10 +242,7 @@ void PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
     addLabel(transform, p.size, *m_mesh, m_mesh->numberOfVertices(),
              p.labelOptions, p.extrudeScale, p.anchor);
 
-    pushQuad(p.size,
-             {uvsQuad.x, uvsQuad.y},
-             {uvsQuad.z, uvsQuad.w},
-             p.color, p.extrudeScale);
+    pushQuad(p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
 }
 
 void PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
@@ -266,10 +261,7 @@ void PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
         addLabel(transform, p.size, *m_mesh, m_mesh->numberOfVertices(),
                  p.labelOptions, p.extrudeScale, p.anchor);
 
-        pushQuad(p.size,
-                 {uvsQuad.x, uvsQuad.y},
-                 {uvsQuad.z, uvsQuad.w},
-                 p.color, p.extrudeScale);
+        pushQuad(p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
     }
 }
 
@@ -295,10 +287,7 @@ void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
                 addLabel(transform, p.size, *m_mesh, m_mesh->numberOfVertices(),
                          p.labelOptions, p.extrudeScale, p.anchor);
 
-                pushQuad(p.size,
-                         {uvsQuad.x, uvsQuad.y},
-                         {uvsQuad.z, uvsQuad.w},
-                         p.color, p.extrudeScale);
+                pushQuad(p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
             }
         }
     } else {
@@ -308,10 +297,7 @@ void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
         addLabel(transform, p.size, *m_mesh, m_mesh->numberOfVertices(),
                  p.labelOptions, p.extrudeScale, p.anchor);
 
-        pushQuad(p.size,
-                 {uvsQuad.x, uvsQuad.y},
-                 {uvsQuad.z, uvsQuad.w},
-                 p.color, p.extrudeScale);
+        pushQuad(p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
     }
 }
 

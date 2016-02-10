@@ -170,6 +170,7 @@ public:
     template<class A>
     void updateAttribute(Range _vertexRange,
                          const A& _newAttributeValue,
+                         GLbyte* _glBufferData = nullptr,
                          size_t _attribOffset = 0);
 
 protected:
@@ -241,8 +242,12 @@ template<class T>
 template<class A>
 void VboMesh<T>::updateAttribute(Range _vertexRange,
                                  const A& _newAttributeValue,
+                                 GLbyte* _glBufferData,
                                  size_t _attribOffset) {
-    if (m_glVertexData == nullptr) {
+
+    GLbyte* data = _glBufferData ? _glBufferData : m_glVertexData;
+
+    if (data == nullptr) {
         assert(false);
         return;
     }
@@ -268,7 +273,7 @@ void VboMesh<T>::updateAttribute(Range _vertexRange,
 
     // update the vertices attributes
     for (size_t offset = start; offset < end; offset += tSize) {
-        std::memcpy(m_glVertexData + offset, &_newAttributeValue, aSize);
+        std::memcpy(data + offset, &_newAttributeValue, aSize);
     }
 
     // set all modified vertices dirty
