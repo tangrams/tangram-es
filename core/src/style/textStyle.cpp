@@ -361,6 +361,8 @@ std::string TextStyleBuilder::applyTextTransform(const TextStyle::Parameters& _p
         default:
             break;
     }
+
+    return text;
 }
 
 bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type _type) {
@@ -371,6 +373,17 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     }
 
     m_scratch.reset();
+
+    // Apply text transforms
+    const std::string* renderText;
+    std::string text;
+
+    if (_params.transform == TextLabelProperty::Transform::none) {
+        renderText = &_params.text;
+    } else {
+        text = applyTextTransform(_params, _params.text);
+        renderText = &text;
+    }
 
     m_scratch.fill = _params.fill;
 
@@ -391,7 +404,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         auto ctx = m_style.context();
 
         std::lock_guard<std::mutex> lock(ctx->m_mutex);
-        auto line = m_shaper.shape(_params.font, _params.text);
+        auto line = m_shaper.shape(_params.font, *renderText);
 
         line.setScale(fontScale);
 
