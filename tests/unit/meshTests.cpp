@@ -104,7 +104,7 @@ TEST_CASE( "Update on second attribute of the mesh for n vertices", "[Core][Type
     int nVert = 5;
     size_t stride_b = sizeof(float); // stride of a in the struct
 
-    mesh->updateAttribute({1, nVert}, 0.f, stride_b);
+    mesh->updateAttribute({1, nVert}, 0.f, nullptr, stride_b);
 
     REQUIRE(mesh->getDirtyOffset() == stride_b + sizeof(Vertex));
     REQUIRE(mesh->getDirtySize() == (nVert - 1) * sizeof(Vertex) + sizeof(float));
@@ -116,7 +116,7 @@ TEST_CASE( "Update on second attribute of the mesh for 1 vertices", "[Core][Type
     auto mesh = newMesh(10);
     size_t stride_b = sizeof(float); // stride of a in the struct
 
-    mesh->updateAttribute({0, 1}, 0.f, stride_b);
+    mesh->updateAttribute({0, 1}, 0.f, nullptr, stride_b);
 
     REQUIRE(mesh->getDirtyOffset() == stride_b);
     REQUIRE(mesh->getDirtySize() == sizeof(float));
@@ -130,8 +130,8 @@ TEST_CASE( "Update on second and third attribute of the mesh for n vertices", "[
     size_t stride_c = 2 * sizeof(float); // stride of c in the struct
     short c = 0;
 
-    mesh->updateAttribute({0, 5}, 0.f, stride_b);
-    mesh->updateAttribute({1, 8}, c, stride_c);
+    mesh->updateAttribute({0, 5}, 0.f, nullptr, stride_b);
+    mesh->updateAttribute({1, 8}, c, nullptr, stride_c);
 
     REQUIRE(mesh->getDirtyOffset() == stride_b);
     int dist = stride_c - stride_b; // distance between b and c
@@ -146,8 +146,8 @@ TEST_CASE( "Update on second and fourth attribute of the mesh for n vertices", "
     size_t stride_d = 2 * sizeof(float) + sizeof(short); // stride of c in the struct
     char d = 0;
 
-    mesh->updateAttribute({0, 1}, 0.f, stride_b);
-    mesh->updateAttribute({1, 7}, d, stride_d);
+    mesh->updateAttribute({0, 1}, 0.f, nullptr, stride_b);
+    mesh->updateAttribute({1, 7}, d, nullptr, stride_d);
 
     REQUIRE(mesh->getDirtyOffset() == stride_b);
     int dist = stride_d - stride_b; // distance between b and c
@@ -160,9 +160,9 @@ TEST_CASE( "Check overflow", "[Core][TypedMesh]" ) {
     auto mesh = newMesh(10);
     size_t stride_b = sizeof(float); // stride of b in the struct
 
-    mesh->updateAttribute({0, 100}, 0.f, stride_b);
+    mesh->updateAttribute({0, 100}, 0.f, nullptr, stride_b);
     mesh->updateVertices({0, 100}, Vertex());
-    mesh->updateAttribute({10, 1}, Vertex(), stride_b);
+    mesh->updateAttribute({10, 1}, Vertex(), nullptr, stride_b);
     mesh->updateAttribute({-100, 10}, Vertex());
 
     REQUIRE(mesh->getDirtyOffset() == 0);
