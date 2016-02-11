@@ -185,6 +185,8 @@ auto PolylineStyleBuilder::parseRule(const DrawRule& _rule, const Properties& _p
     float height = getUpperExtrudeMeters(extrude, _props);
     height *= m_tileUnitsPerMeter;
 
+    p.fill.set(fill.width, fill.slope, height, fill.order);
+
     stroke.order = fill.order;
     p.stroke.cap = p.fill.cap;
     p.stroke.join = p.fill.join;
@@ -223,8 +225,6 @@ auto PolylineStyleBuilder::parseRule(const DrawRule& _rule, const Properties& _p
         fill.color <<= (m_zoom % 6);
         stroke.color <<= (m_zoom % 6);
     }
-
-    p.fill.set(fill.width, fill.slope, height, fill.order);
 
     return p;
 }
