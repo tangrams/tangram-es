@@ -15,6 +15,7 @@
 #include "text/fontContext.h"
 
 #include <mutex>
+#include <locale>
 
 #include "platform.h"
 #include "tangram.h"
@@ -277,6 +278,9 @@ struct TextStyleBuilder : public StyleBuilder {
     bool prepareLabel(TextStyle::Parameters& _params, Label::Type _type);
     void addLabel(const TextStyle::Parameters& _params, Label::Type _type,
                   Label::Transform _transform);
+
+    std::string applyTextTransform(const TextStyle::Parameters& _params,
+                                   const std::string& _string);
 };
 
 bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
@@ -285,8 +289,9 @@ bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
 
 
 void TextStyleBuilder::addPoint(const Point& _point,
-                               const Properties& _props,
-                               const DrawRule& _rule) {
+                                const Properties& _props,
+                                const DrawRule& _rule) {
+
     TextStyle::Parameters params = applyRule(_rule, _props);
 
     if (!prepareLabel(params, Label::Type::point)) { return; }
@@ -295,8 +300,8 @@ void TextStyleBuilder::addPoint(const Point& _point,
 }
 
 void TextStyleBuilder::addLine(const Line& _line,
-                              const Properties& _props,
-                              const DrawRule& _rule) {
+                               const Properties& _props,
+                               const DrawRule& _rule) {
 
     TextStyle::Parameters params = applyRule(_rule, _props);
 
@@ -316,10 +321,43 @@ void TextStyleBuilder::addLine(const Line& _line,
 }
 
 void TextStyleBuilder::addPolygon(const Polygon& _polygon,
-                                 const Properties& _props,
-                                 const DrawRule& _rule) {
+                                  const Properties& _props,
+                                  const DrawRule& _rule) {
     Point p = glm::vec3(centroid(_polygon), 0.0);
     addPoint(p, _props, _rule);
+}
+
+std::string TextStyleBuilder::applyTextTransform(const TextStyle::Parameters& _params,
+                                                 const std::string& _string)
+{
+    std::locale loc;
+    std::string text = _string;
+
+    switch (_params.transform) {
+        case TextLabelProperty::Transform::capitalize:
+            text[0] = toupper(text[0], loc);
+            if (text.size() > 1) {
+                for (size_t i = 1; i < text.length(); ++i) {
+                    if (text[i - 1] == ' ') {
+                        text[i] = std::toupper(text[i], loc);
+                    }
+                }
+            }
+            break;
+        case TextLabelProperty::Transform::lowercase:
+            for (size_t i = 0; i < text.length(); ++i) {
+                text[i] = std::tolower(text[i], loc);
+            }
+            break;
+        case TextLabelProperty::Transform::uppercase:
+            // TODO : use to wupper when any wide character is detected
+            for (size_t i = 0; i < text.length(); ++i) {
+                text[i] = std::toupper(text[i], loc);
+            }
+            break;
+        default:
+            break;
+    }
 }
 
 bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type _type) {
