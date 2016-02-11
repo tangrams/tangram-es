@@ -12,7 +12,8 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type,
     m_transform(_transform),
     m_dim(_size),
     m_vertexRange(_vertexRange),
-    m_options(_options) {
+    m_options(_options)
+{
     if (!m_options.collide || m_type == Type::debug){
         enterState(State::visible, 1.0);
     } else {

@@ -341,6 +341,7 @@ layers:
                     style: normal
                     size: 1.2em
                     fill: white
+                    transform: uppercase
     road_labels:
         data: {source: osm, layer: roads}
         filter: { name: true, aeroway: false, tunnel: false, railway: false, not: { kind: rail }, $zoom: { min: 10 } }
