@@ -19,7 +19,7 @@ namespace {
 constexpr float position_scale = 4.0f;
 constexpr float extrusion_scale = 256.0f;
 constexpr float rotation_scale = 4096.0f;
-constexpr float alpha_scale = 32767.f;
+constexpr float alpha_scale = 255.f;
 }
 
 namespace Tangram {
@@ -72,8 +72,9 @@ public:
         };
         struct State {
             glm::i16vec2 screenPos;
-            short alpha;
-            short rotation;
+            uint8_t alpha;
+            uint8_t scale;
+            int16_t rotation;
         } state;
     };
 

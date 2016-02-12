@@ -13,8 +13,6 @@
 #include <bitset>
 #include <mutex>
 
-#define FONT_SIZE 24
-
 namespace Tangram {
 
 constexpr int textureSize = 256;
