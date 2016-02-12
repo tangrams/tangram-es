@@ -102,10 +102,25 @@ void Labels::skipTransitions(const std::vector<const Style*>& _styles, Tile& _ti
     }
 }
 
+std::shared_ptr<Tile> findProxy(int32_t _sourceID, const TileID& _proxyID,
+                                const std::vector<std::shared_ptr<Tile>>& _tiles,
+                                std::unique_ptr<TileCache>& _cache) {
+
+    auto proxy = _cache->contains(_sourceID, _proxyID);
+    if (proxy) { return proxy; }
+
+    for (auto& tile : _tiles) {
+        if (tile->getID() == _proxyID && tile->sourceID() == _sourceID) {
+            return tile;
+        }
+    }
+    return nullptr;
+}
+
 void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
                              const std::vector<std::shared_ptr<Tile>>& _tiles,
-                             std::unique_ptr<TileCache>& _cache, float _currentZoom) const
-{
+                             std::unique_ptr<TileCache>& _cache, float _currentZoom) const {
+
     std::vector<const Style*> styles;
 
     for (const auto& style : _styles) {
@@ -121,20 +136,20 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
 
         if (m_lastZoom < _currentZoom) {
             // zooming in, add the one cached parent tile
-            proxy = _cache->contains(tile->sourceID(), tileID.getParent());
+            proxy = findProxy(tile->sourceID(), tileID.getParent(), _tiles, _cache);
             if (proxy) { skipTransitions(styles, *tile, *proxy); }
         } else {
             // zooming out, add the 4 cached children tiles
-            proxy = _cache->contains(tile->sourceID(), tileID.getChild(0));
+            proxy = findProxy(tile->sourceID(), tileID.getChild(0), _tiles, _cache);
             if (proxy) { skipTransitions(styles, *tile, *proxy); }
 
-            proxy = _cache->contains(tile->sourceID(), tileID.getChild(1));
+            proxy = findProxy(tile->sourceID(), tileID.getChild(1), _tiles, _cache);
             if (proxy) { skipTransitions(styles, *tile, *proxy); }
 
-            proxy = _cache->contains(tile->sourceID(), tileID.getChild(2));
+            proxy = findProxy(tile->sourceID(), tileID.getChild(2), _tiles, _cache);
             if (proxy) { skipTransitions(styles, *tile, *proxy); }
 
-            proxy = _cache->contains(tile->sourceID(), tileID.getChild(3));
+            proxy = findProxy(tile->sourceID(), tileID.getChild(3), _tiles, _cache);
             if (proxy) { skipTransitions(styles, *tile, *proxy); }
         }
     }
