@@ -8,8 +8,6 @@
 #include "style/textStyle.h"
 #include "text/fontContext.h"
 
-#include "alfons/atlas.h"
-
 #include <bitset>
 #include <vector>
 
@@ -17,15 +15,24 @@ namespace Tangram {
 
 class TextLabels;
 
-struct FontMetrics {
-    float ascender, descender, lineHeight;
-};
-
 class TextLabel : public Label {
+
 public:
+
+    struct FontMetrics {
+        float ascender, descender, lineHeight;
+    };
+
+    struct FontVertexAttributes {
+        uint32_t fill;
+        uint32_t stroke;
+        uint8_t fontScale;
+    };
+
     TextLabel(Label::Transform _transform, Type _type,
               Label::Options _options,
               LabelProperty::Anchor _anchor,
+              TextLabel::FontVertexAttributes _attrib,
               glm::vec2 _dim, FontMetrics _metrics,
               int _nLines, glm::vec2 _quadsLocalOrigin,
               TextLabels& _labels, Range _vertexRange);
@@ -47,19 +54,17 @@ private:
 
     glm::vec2 m_anchor;
     glm::vec2 m_quadLocalOrigin;
+
+    FontVertexAttributes m_fontAttrib;
 };
 
 struct GlyphQuad {
-    alf::AtlasID atlas;
+    size_t atlas;
 
     struct {
         glm::i16vec2 pos;
         glm::u16vec2 uv;
     } quad[4];
-
-    // TODO color and stroke must not be stored per quad
-    uint32_t color;
-    uint32_t stroke;
 };
 
 class TextLabels : public LabelSet, public StyledMesh {

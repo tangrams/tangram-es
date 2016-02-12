@@ -6,6 +6,7 @@ using namespace LabelProperty;
 
 TextLabel::TextLabel(Label::Transform _transform, Type _type,
                      Label::Options _options, Anchor _anchor,
+                     TextLabel::FontVertexAttributes _attrib,
                      glm::vec2 _dim, FontMetrics _metrics,
                      int _nLines, glm::vec2 _quadsLocalOrigin,
                      TextLabels& _labels, Range _vertexRange)
@@ -14,7 +15,8 @@ TextLabel::TextLabel(Label::Transform _transform, Type _type,
       m_nLines(_nLines),
       m_textLabels(_labels),
       m_vertexRange(_vertexRange),
-      m_quadLocalOrigin(_quadsLocalOrigin) {
+      m_quadLocalOrigin(_quadsLocalOrigin),
+      m_fontAttrib(_attrib) {
 
     if (m_type == Type::point) {
         glm::vec2 halfDim = m_dim * 0.5f;
@@ -85,17 +87,29 @@ void TextLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const g
 void TextLabel::pushTransform() {
     if (!visibleState()) { return; }
 
-    // TODO
-    // m_textLabels.pushQuads(*this);
-
-    auto& style = m_textLabels.m_style;
-    auto state = m_transform.state.vertex();
+    Label::Vertex::State state {
+        glm::i16vec2(m_transform.state.screenPos * position_scale),
+        uint8_t(m_transform.state.alpha * alpha_scale),
+        uint8_t(m_fontAttrib.fontScale),
+        int16_t(m_transform.state.rotation * rotation_scale)
+    };
 
     auto it = m_textLabels.quads.begin() + m_vertexRange.start;
     auto end = it + m_vertexRange.length;
+    auto& style = m_textLabels.m_style;
 
     for (; it != end; ++it) {
-        style.mesh(it->atlas).pushQuad(*it, state);
+        auto quad = *it;
+
+        auto* quadVertices = style.mesh(it->atlas).pushQuad();
+        for (int i = 0; i < 4; i++) {
+            Label::Vertex& v = quadVertices[i];
+            v.pos = quad.quad[i].pos;
+            v.uv = quad.quad[i].uv;
+            v.color = m_fontAttrib.fill;
+            v.stroke = m_fontAttrib.stroke;
+            v.state = state;
+        }
     }
 }
 

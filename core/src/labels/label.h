@@ -71,15 +71,9 @@ public:
             uint32_t stroke;
         };
         struct State {
-            State() {}
-            State(glm::vec2 pos, float alpha, float rotation)
-                : screenPos(pos * position_scale),
-                  alpha(alpha * alpha_scale),
-                  rotation(rotation * rotation_scale) {}
-
             glm::i16vec2 screenPos;
-            short alpha = 0;
-            short rotation = 0;
+            short alpha;
+            short rotation;
         } state;
     };
 
@@ -94,7 +88,6 @@ public:
             glm::vec2 screenPos;
             float alpha = 0.f;
             float rotation = 0.f;
-            Vertex::State vertex() { return Vertex::State(screenPos, alpha, rotation); }
         } state;
     };
 

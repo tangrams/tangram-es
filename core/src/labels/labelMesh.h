@@ -10,8 +10,6 @@ namespace Tangram {
 
 class ShaderProgram;
 
-struct SpriteQuad;
-struct GlyphQuad;
 
 class LabelMesh : public VboMesh<Label::Vertex> {
 
@@ -23,12 +21,14 @@ public:
 
     void draw(ShaderProgram& _shader, bool _clear = true) override;
 
-    void pushQuad(const GlyphQuad& _quad, const Label::Vertex::State& _state);
-    void pushQuad(const SpriteQuad& _quad, const Label::Vertex::State& _state);
-
     void myUpload();
 
     bool isReady() { return m_isUploaded; }
+
+    // Reserves space for one quad and returns pointer
+    // into m_vertices to write into 4 vertices.
+    Label::Vertex* pushQuad();
+
 private:
 
     static void loadQuadIndices();
