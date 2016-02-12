@@ -43,6 +43,8 @@ public:
 
     auto& context() const { return m_context; }
 
+    void onBeginFrame() override;
+
 protected:
 
     void constructVertexLayout() override;
@@ -69,7 +71,7 @@ public:
 
     void onBeginDrawFrame(const View& _view, Scene& _scene) override;
     void onEndDrawFrame() override;
-    void onUpdate() override;
+    void onBeginUpdate() override;
 
     LabelMesh& mesh(size_t id) const { return *m_meshes[id]; }
 

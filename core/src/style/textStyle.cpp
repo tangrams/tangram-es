@@ -55,17 +55,11 @@ void TextStyle::constructShaderProgram() {
 }
 
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
-    m_context->updateTextures();
 
     m_shaderProgram->setUniformf(m_uTexScaleFactor,
                                  glm::vec2(1.0f / textureSize));
     m_shaderProgram->setUniformi(m_uTex, 0);
     m_shaderProgram->setUniformMatrix4f(m_uOrtho, _view.getOrthoViewportMatrix());
-
-    // Upload meshes for next frame
-    for (size_t i = 0; i < m_meshes.size(); i++) {
-        m_meshes[i]->myUpload();
-    }
 
     Style::onBeginDrawFrame(_view, _scene);
 }
@@ -76,7 +70,7 @@ void TextStyle::onEndDrawFrame() {
         m_shaderProgram->setUniformi(m_uPass, 1);
 
         for (size_t i = 0; i < m_meshes.size(); i++) {
-            if (m_meshes[i]->compiled()) {
+            if (m_meshes[i]->isReady()) {
                 m_context->bindTexture(i, 0);
                 m_meshes[i]->draw(*m_shaderProgram);
             }
@@ -85,7 +79,7 @@ void TextStyle::onEndDrawFrame() {
     }
 
     for (size_t i = 0; i < m_meshes.size(); i++) {
-        if (m_meshes[i]->compiled()) {
+        if (m_meshes[i]->isReady()) {
             m_context->bindTexture(i, 0);
             m_meshes[i]->draw(*m_shaderProgram);
             m_meshes[i]->clear();
@@ -93,10 +87,21 @@ void TextStyle::onEndDrawFrame() {
     }
 }
 
-void TextStyle::onUpdate() {
+void TextStyle::onBeginUpdate() {
+    // Ensure that meshes are available to push to
+    // in labels::update()
     size_t s = m_context->glyphBatchCount();
     while (m_meshes.size() < s) {
         m_meshes.push_back(std::make_unique<LabelMesh>(m_vertexLayout, GL_TRIANGLES));
+    }
+}
+
+void TextStyle::onBeginFrame() {
+    m_context->updateTextures();
+
+    // Upload meshes
+    for (size_t i = 0; i < m_meshes.size(); i++) {
+        m_meshes[i]->myUpload();
     }
 }
 

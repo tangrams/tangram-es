@@ -57,6 +57,11 @@ void PointStyle::constructShaderProgram() {
     m_mesh = std::make_unique<LabelMesh>(m_vertexLayout, m_drawMode);
 }
 
+void PointStyle::onBeginFrame() {
+    // Upload meshes for next frame
+    m_mesh->myUpload();
+}
+
 void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
     Style::onBeginDrawFrame(_view, _scene);
 
@@ -69,8 +74,6 @@ void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
 
     m_shaderProgram->setUniformi(m_uTex, RenderState::currentTextureUnit());
     m_shaderProgram->setUniformMatrix4f(m_uOrtho, _view.getOrthoViewportMatrix());
-
-    m_mesh->myUpload();
 
     m_mesh->draw(*m_shaderProgram);
     m_mesh->clear();

@@ -8,8 +8,6 @@
 
 namespace Tangram {
 
-static constexpr size_t maxLabelMeshVertices = 16384;
-
 class ShaderProgram;
 
 struct SpriteQuad;
@@ -27,8 +25,6 @@ public:
 
     void compile(std::vector<Label::Vertex>& _vertices);
 
-    bool compiled() { return m_isCompiled; }
-
     void clear();
 
     size_t numberOfVertices() const { return m_vertices.size(); }
@@ -38,6 +34,7 @@ public:
 
     void myUpload();
 
+    bool isReady() { return m_isUploaded; }
 private:
 
     static void loadQuadIndices();
