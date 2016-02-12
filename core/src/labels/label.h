@@ -164,7 +164,6 @@ public:
     const OBB& obb() const { return m_obb; }
     const Transform& transform() const { return m_transform; }
     State state() const { return m_state; }
-    State prevState() const { return m_prevState; }
     bool isOccluded() const { return m_occluded; }
     bool occludedLastFrame() const { return m_occludedLastFrame; }
 
@@ -181,7 +180,6 @@ private:
     bool m_proxy;
     // the current label state
     State m_state;
-    State m_prevState;
     // the label fade effect
     FadeEffect m_fade;
     // whether the label was occluded on the previous frame

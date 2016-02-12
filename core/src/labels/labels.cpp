@@ -68,7 +68,7 @@ void Labels::updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
     }
 }
 
-void skip(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) {
+void Labels::skipTransitions(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) const {
 
     for (const auto& style : _styles) {
 
@@ -80,28 +80,21 @@ void skip(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) {
 
         for (auto& l0 : mesh0->getLabels()) {
             if (!l0->canOcclude()) { continue; }
-            if ((l0->state() & Label::State::wait_occ) == 0) { continue; }
+            if (l0->state() != Label::State::wait_occ) { continue; }
 
             for (auto& l1 : mesh1->getLabels()) {
-                //if (!l1->canOcclude() || l0->hash() != l1->hash()) { continue; }
-                if (!l1->canOcclude() || l0->options().repeatGroup != l1->options().repeatGroup) {
-                    continue;
-                }
+                if (!l1->visibleState()) { continue; }
+                if (!l1->canOcclude()) { continue;}
+
+                // Using repeat group to also handle labels with dynamic style properties
+                if (l0->options().repeatGroup != l1->options().repeatGroup) { continue; }
+                // if (l0->hash() != l1->hash()) { continue; }
 
                 float d2 = glm::distance2(l0->transform().state.screenPos,
                                           l1->transform().state.screenPos);
 
                 // The new label lies within the circle defined by the bbox of l0
                 if (sqrt(d2) < std::max(l0->dimension().x, l0->dimension().y)) {
-
-                    auto* t = dynamic_cast<const TextLabel*>(l0.get());
-                    if (t && t->options().properties) {
-                        auto v = t->options().properties->get("name");
-                        if (v.is<std::string>())
-                            LOG("skip transition: %s", v.get<std::string>().c_str());
-                    }
-                    // LOG("skip transition... ");
-
                     l0->skipTransitions();
                 }
             }
@@ -129,20 +122,20 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
         if (m_lastZoom < _currentZoom) {
             // zooming in, add the one cached parent tile
             proxy = _cache->contains(tile->sourceID(), tileID.getParent());
-            if (proxy) { skip(styles, *tile, *proxy); }
+            if (proxy) { skipTransitions(styles, *tile, *proxy); }
         } else {
             // zooming out, add the 4 cached children tiles
             proxy = _cache->contains(tile->sourceID(), tileID.getChild(0));
-            if (proxy) { skip(styles, *tile, *proxy); }
+            if (proxy) { skipTransitions(styles, *tile, *proxy); }
 
             proxy = _cache->contains(tile->sourceID(), tileID.getChild(1));
-            if (proxy) { skip(styles, *tile, *proxy); }
+            if (proxy) { skipTransitions(styles, *tile, *proxy); }
 
             proxy = _cache->contains(tile->sourceID(), tileID.getChild(2));
-            if (proxy) { skip(styles, *tile, *proxy); }
+            if (proxy) { skipTransitions(styles, *tile, *proxy); }
 
             proxy = _cache->contains(tile->sourceID(), tileID.getChild(3));
-            if (proxy) { skip(styles, *tile, *proxy); }
+            if (proxy) { skipTransitions(styles, *tile, *proxy); }
         }
     }
 }
@@ -271,7 +264,8 @@ void Labels::update(const View& _view, float _dt,
             }
         } else if (l1->visibleState() != l2->visibleState()) {
             // keep the visible one, different from occludedLastframe
-            // when one lets labels fade out
+            // when one lets labels fade out.
+            // (A label is also in visibleState() when skip_transition is set)
             if (!l1->visibleState()) {
                 l1->occlude();
             } else {

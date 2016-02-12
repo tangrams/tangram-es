@@ -56,6 +56,8 @@ private:
                          const std::vector<std::shared_ptr<Tile>>& _tiles,
                          std::unique_ptr<TileCache>& _cache, float _currentZoom) const;
 
+    void skipTransitions(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) const;
+
     void checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const;
 
     int LODDiscardFunc(float _maxZoom, float _zoom);

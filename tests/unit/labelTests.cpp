@@ -78,11 +78,11 @@ TEST_CASE( "Ensure the end state after occlusion is leep state", "[Core][Label]"
     l.occlude(true);
     l.evalState(screenSize, 1.f);
 
-    REQUIRE(l.state() == Label::State::fading_out);
-
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
-    l.occlude(true);
-    l.evalState(screenSize, 1.f);
+    // Depends whether fading-in labels fade out or set to sleep in evalState
+    // REQUIRE(l.state() == Label::State::fading_out);
+    // l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+    // l.occlude(true);
+    // l.evalState(screenSize, 1.f);
 
     REQUIRE(l.state() == Label::State::sleep);
     REQUIRE(l.canOcclude());

@@ -175,7 +175,6 @@ glm::vec2 Label::center() const {
 }
 
 void Label::enterState(const State& _state, float _alpha) {
-    m_prevState = m_state;
     m_state = _state;
     setAlpha(_alpha);
 }
@@ -237,7 +236,7 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
 
     // one of the label rules has not been satisfied
     if (!ruleSatisfied) {
-        if ((m_state & State::wait_occ) != 0) {
+        if (m_state == State::wait_occ) {
             // go to dead state, this breaks determinism, but reduce potential
             // label set since a lot of discarded labels are discared for line
             // exceed (lots of tiny small lines on a curve for example), which
@@ -266,7 +265,6 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
 bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
 
     bool animate = false;
-    m_prevState = m_state;
 
     switch (m_state) {
         case State::visible:
@@ -279,21 +277,21 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             break;
         case State::fading_in:
             if (m_occluded) {
-                // enterState(State::sleep, 0.0);
-                enterState(State::fading_out, m_transform.state.alpha);
-                animate = true;
+                enterState(State::sleep, 0.0);
+                // enterState(State::fading_out, m_transform.state.alpha);
+                // animate = true;
                 break;
             }
             setAlpha(m_fade.update(_dt));
             animate = true;
-            if (m_fade.isFinished() || (m_transform.state.alpha > 0.9f)) {
+            if (m_fade.isFinished()) {
                 enterState(State::visible, 1.0);
             }
             break;
         case State::fading_out:
             setAlpha(m_fade.update(_dt));
             animate = true;
-            if (m_fade.isFinished() || (m_transform.state.alpha < 0.1f )) {
+            if (m_fade.isFinished()) {
                 enterState(State::sleep, 0.0);
             }
             break;
