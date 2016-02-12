@@ -120,13 +120,8 @@ struct PointStyleBuilder : public StyleBuilder {
 
     PointStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
-    void pushQuad(const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR,
-                  unsigned int _color, float _extrudeScale);
-
-    template<typename ...Args>
-    void addLabel(Args&& ...args) {
-        m_labels.push_back(std::make_unique<SpriteLabel>(args...));
-    }
+    void addLabel(const Point& _point, const glm::vec4& _quad,
+                  const PointStyle::Parameters& _params);
 
 };
 
@@ -188,28 +183,39 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     return p;
 }
 
-void PointStyleBuilder::pushQuad(const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR,
-                                 unsigned int _color, float _extrudeScale) {
-    // Attribute will be normalized - scale to max short;
-    glm::vec2 uvTR = _uvTR * texture_scale;
-    glm::vec2 uvBL = _uvBL * texture_scale;
+void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
+                                 const PointStyle::Parameters& _params) {
 
-    _extrudeScale *= extrusion_scale;
+    m_labels.push_back(std::make_unique<SpriteLabel>(Label::Transform{glm::vec2(_point)},
+                                                     _params.size,
+                                                     _params.labelOptions,
+                                                     _params.extrudeScale,
+                                                     _params.anchor,
+                                                     *m_spriteLabels,
+                                                     m_quads.size()));
+
+    glm::i16vec2 size = _params.size * position_scale;
+
+    // Attribute will be normalized - scale to max short;
+    glm::vec2 uvTR = glm::vec2{_quad.z, _quad.w} * texture_scale;
+    glm::vec2 uvBL = glm::vec2{_quad.x, _quad.y} * texture_scale;
+
+    int16_t extrude = _params.extrudeScale * extrusion_scale;
 
     m_quads.push_back({
-            {{{0.0, 0.0},
+            {{{0, 0},
              {uvBL.x, uvTR.y},
-             {-_extrudeScale, _extrudeScale}},
-            {{_size.x * position_scale, 0.0},
+             {-extrude, extrude}},
+            {{size.x, 0},
              {uvTR.x, uvTR.y},
-             {_extrudeScale, _extrudeScale}},
-            {{0.0, -_size.y * position_scale},
+             {extrude, extrude}},
+            {{0, -size.y},
              {uvBL.x, uvBL.y},
-             {-_extrudeScale, -_extrudeScale}},
-            {{_size.x * position_scale, -_size.y * position_scale},
+             {-extrude, -extrude}},
+            {{size.x, -size.y},
              {uvTR.x, uvBL.y},
-             {_extrudeScale, -_extrudeScale}}},
-            _color});
+             {extrude, -extrude}}},
+            _params.color});
 }
 
 bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const {
@@ -253,12 +259,7 @@ void PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
         return;
     }
 
-    Label::Transform transform = { glm::vec2(_point) };
-
-    addLabel(transform, p.size, p.labelOptions, p.extrudeScale, p.anchor,
-             *m_spriteLabels, m_quads.size());
-
-    pushQuad(p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
+    addLabel(_point, uvsQuad, p);
 }
 
 void PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
@@ -272,12 +273,7 @@ void PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
     }
 
     for (size_t i = 0; i < _line.size(); ++i) {
-        Label::Transform transform = { glm::vec2(_line[i]) };
-
-        addLabel(transform, p.size, p.labelOptions, p.extrudeScale, p.anchor,
-                 *m_spriteLabels, m_quads.size());
-
-        pushQuad(p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
+        addLabel(_line[i], uvsQuad, p);
     }
 }
 
@@ -298,22 +294,13 @@ void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
 
         for (auto line : _polygon) {
             for (auto point : line) {
-                Label::Transform transform = { glm::vec2(point) };
-
-                addLabel(transform, p.size, p.labelOptions, p.extrudeScale, p.anchor,
-                     *m_spriteLabels, m_quads.size());
-
-                pushQuad(p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
+                addLabel(point, uvsQuad, p);
             }
         }
     } else {
         glm::vec2 c = centroid(_polygon);
-        Label::Transform transform = { c };
 
-        addLabel(transform, p.size, p.labelOptions, p.extrudeScale, p.anchor,
-            *m_spriteLabels, m_quads.size());
-
-        pushQuad(p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
+        addLabel(Point{c,0}, uvsQuad, p);
     }
 }
 

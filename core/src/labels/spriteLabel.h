@@ -15,7 +15,7 @@ public:
 
     SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Options _options,
                 float _extrudeScale, LabelProperty::Anchor _anchor,
-                SpriteLabels& _labels, int _vertexOffset);
+                SpriteLabels& _labels, size_t _labelsPos);
 
     void updateBBoxes(float _zoomFract) override;
     void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) override;
@@ -23,8 +23,9 @@ public:
     void pushTransform() override;
 
 private:
-    // Back-pointer to owning container
-    SpriteLabels& m_spriteLabels;
+    // Back-pointer to owning container and position
+    SpriteLabels& m_labels;
+    size_t m_labelsPos;
 
     float m_extrudeScale;
     glm::vec2 m_anchor;

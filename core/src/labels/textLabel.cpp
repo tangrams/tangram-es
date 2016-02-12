@@ -4,14 +4,16 @@ namespace Tangram {
 
 using namespace LabelProperty;
 
-TextLabel::TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim,
-                     TextLabels& _labels, Range _vertexRange,
-                     Label::Options _options, FontMetrics _metrics,
-                     int _nLines, Anchor _anchor, glm::vec2 _quadsLocalOrigin)
-    : Label(_transform, _dim, _type, _vertexRange, _options),
+TextLabel::TextLabel(Label::Transform _transform, Type _type,
+                     Label::Options _options, Anchor _anchor,
+                     glm::vec2 _dim, FontMetrics _metrics,
+                     int _nLines, glm::vec2 _quadsLocalOrigin,
+                     TextLabels& _labels, Range _vertexRange)
+    : Label(_transform, _dim, _type, _options),
       m_metrics(_metrics),
       m_nLines(_nLines),
       m_textLabels(_labels),
+      m_vertexRange(_vertexRange),
       m_quadLocalOrigin(_quadsLocalOrigin) {
 
     if (m_type == Type::point) {
