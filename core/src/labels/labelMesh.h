@@ -28,6 +28,7 @@ public:
 
     void myUpload();
 
+    bool isReady() { return m_isUploaded; }
 private:
 
     static void loadQuadIndices();

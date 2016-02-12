@@ -62,6 +62,7 @@ void PointStyle::onEndUpdate() {
 }
 
 void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
+    if (!m_mesh->isReady()) { return; }
 
     if (m_spriteAtlas) {
         m_spriteAtlas->bind(0);

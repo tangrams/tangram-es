@@ -70,17 +70,19 @@ void TextStyle::onEndDrawFrame() {
     if (m_sdf) {
         m_shaderProgram->setUniformi("u_pass", 1);
         for (size_t i = 0; i < m_meshes.size(); i++) {
-            m_context->bindTexture(i, 0);
-
-            m_meshes[i]->draw(*m_shaderProgram, false);
+            if (m_meshes[i]->isReady()) {
+                m_context->bindTexture(i, 0);
+                m_meshes[i]->draw(*m_shaderProgram, false);
+            }
         }
         m_shaderProgram->setUniformi("u_pass", 0);
     }
 
     for (size_t i = 0; i < m_meshes.size(); i++) {
-        m_context->bindTexture(i, 0);
-
-        m_meshes[i]->draw(*m_shaderProgram, true);
+        if (m_meshes[i]->isReady()) {
+            m_context->bindTexture(i, 0);
+            m_meshes[i]->draw(*m_shaderProgram, true);
+        }
     }
 }
 
