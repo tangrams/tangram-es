@@ -5,13 +5,13 @@ namespace Tangram {
 using namespace LabelProperty;
 
 TextLabel::TextLabel(Label::Transform _transform, Type _type, glm::vec2 _dim,
-                     LabelContainer& _labelContainer, Range _vertexRange,
+                     TextLabels& _labels, Range _vertexRange,
                      Label::Options _options, FontMetrics _metrics,
                      int _nLines, Anchor _anchor, glm::vec2 _quadsLocalOrigin)
     : Label(_transform, _dim, _type, _vertexRange, _options),
       m_metrics(_metrics),
       m_nLines(_nLines),
-      m_labelContainer(_labelContainer),
+      m_textLabels(_labels),
       m_quadLocalOrigin(_quadsLocalOrigin) {
 
     if (m_type == Type::point) {
@@ -84,12 +84,12 @@ void TextLabel::pushTransform() {
     if (!visibleState()) { return; }
 
     // TODO
-    // m_labelContainer.pushQuads(*this);
+    // m_textLabels.pushQuads(*this);
 
-    auto& style = m_labelContainer.m_style;
+    auto& style = m_textLabels.m_style;
     auto state = m_transform.state.vertex();
 
-    auto it = m_labelContainer.quads.begin() + m_vertexRange.start;
+    auto it = m_textLabels.quads.begin() + m_vertexRange.start;
     auto end = it + m_vertexRange.length;
 
     for (; it != end; ++it) {
