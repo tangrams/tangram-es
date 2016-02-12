@@ -52,9 +52,12 @@ void PointStyle::constructShaderProgram() {
     }
 
     m_shaderProgram->addSourceBlock("defines", defines);
+
+    m_mesh = std::make_unique<LabelMesh>(m_vertexLayout, m_drawMode);
 }
 
 void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
+
     if (m_spriteAtlas) {
         m_spriteAtlas->bind(0);
     } else if (m_texture) {
@@ -66,6 +69,10 @@ void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _texture
     m_shaderProgram->setUniformMatrix4f("u_ortho", _view.getOrthoViewportMatrix());
 
     Style::onBeginDrawFrame(_view, _scene, 1);
+
+    m_mesh->myUpload();
+
+    m_mesh->draw(*m_shaderProgram, true);
 }
 
 struct PointStyleBuilder : public StyleBuilder {
@@ -77,14 +84,14 @@ struct PointStyleBuilder : public StyleBuilder {
     const PointStyle& m_style;
 
     std::vector<std::unique_ptr<Label>> m_labels;
+    std::vector<SpriteQuad> m_quads;
 
-    std::unique_ptr<PointStyleMesh> m_mesh;
+    std::unique_ptr<SpriteLabels> m_spriteLabels;
     float m_zoom;
 
     void setup(const Tile& _tile) override {
         m_zoom = _tile.getID().z;
-        m_mesh = std::make_unique<PointStyleMesh>(m_style.vertexLayout(),
-                                                  m_style.drawMode());
+        m_spriteLabels = std::make_unique<SpriteLabels>(m_style);
     }
 
     bool checkRule(const DrawRule& _rule) const override;
@@ -94,9 +101,11 @@ struct PointStyleBuilder : public StyleBuilder {
     void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
 
     std::unique_ptr<StyledMesh> build() override {
-        m_mesh->setLabels(m_labels);
+        m_spriteLabels->setLabels(m_labels);
+        m_spriteLabels->setQuads(m_quads);
         m_labels.clear();
-        return std::move(m_mesh);
+        m_quads.clear();
+        return std::move(m_spriteLabels);
     };
 
     const Style& style() const override { return m_style; }
@@ -108,7 +117,7 @@ struct PointStyleBuilder : public StyleBuilder {
     PointStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
     void pushQuad(const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR,
-        unsigned int _color, float _extrudeScale) const;
+                  unsigned int _color, float _extrudeScale);
 
     template<typename ...Args>
     void addLabel(Args&& ...args) {
@@ -176,25 +185,27 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
 }
 
 void PointStyleBuilder::pushQuad(const glm::vec2& _size, const glm::vec2& _uvBL, const glm::vec2& _uvTR,
-    unsigned int _color,
-    float _extrudeScale) const
-{
+                                 unsigned int _color, float _extrudeScale) {
     // Attribute will be normalized - scale to max short;
     glm::vec2 uvTR = _uvTR * texture_scale;
     glm::vec2 uvBL = _uvBL * texture_scale;
 
     _extrudeScale *= extrusion_scale;
 
-    Label::Vertex::State state;
-    GlyphQuad quad {
-        {{{0.0, 0.0}, {uvBL.x, uvTR.y}, {-_extrudeScale, _extrudeScale}},
-        {{_size.x * position_scale, 0.0}, {uvTR.x, uvTR.y}, {_extrudeScale, _extrudeScale}},
-        {{0.0, -_size.y * position_scale}, {uvBL.x, uvBL.y}, {-_extrudeScale, -_extrudeScale}},
-        {{_size.x * position_scale, -_size.y * position_scale}, {uvTR.x, uvBL.y}, {_extrudeScale, -_extrudeScale}}},
-        _color
-    };
-
-    m_mesh->pushQuad(quad, state);
+    m_quads.push_back({
+            {{{0.0, 0.0},
+             {uvBL.x, uvTR.y},
+             {-_extrudeScale, _extrudeScale}},
+            {{_size.x * position_scale, 0.0},
+             {uvTR.x, uvTR.y},
+             {_extrudeScale, _extrudeScale}},
+            {{0.0, -_size.y * position_scale},
+             {uvBL.x, uvBL.y},
+             {-_extrudeScale, -_extrudeScale}},
+            {{_size.x * position_scale, -_size.y * position_scale},
+             {uvTR.x, uvBL.y},
+             {_extrudeScale, -_extrudeScale}}},
+            _color});
 }
 
 bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const {
@@ -240,8 +251,8 @@ void PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
 
     Label::Transform transform = { glm::vec2(_point) };
 
-    addLabel(transform, p.size, *m_mesh, m_mesh->numberOfVertices(),
-             p.labelOptions, p.extrudeScale, p.anchor);
+    addLabel(transform, p.size, p.labelOptions, p.extrudeScale, p.anchor,
+             *m_spriteLabels, m_quads.size());
 
     pushQuad(p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
 }
@@ -259,8 +270,8 @@ void PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
     for (size_t i = 0; i < _line.size(); ++i) {
         Label::Transform transform = { glm::vec2(_line[i]) };
 
-        addLabel(transform, p.size, *m_mesh, m_mesh->numberOfVertices(),
-                 p.labelOptions, p.extrudeScale, p.anchor);
+        addLabel(transform, p.size, p.labelOptions, p.extrudeScale, p.anchor,
+                 *m_spriteLabels, m_quads.size());
 
         pushQuad(p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
     }
@@ -285,8 +296,8 @@ void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
             for (auto point : line) {
                 Label::Transform transform = { glm::vec2(point) };
 
-                addLabel(transform, p.size, *m_mesh, m_mesh->numberOfVertices(),
-                         p.labelOptions, p.extrudeScale, p.anchor);
+                addLabel(transform, p.size, p.labelOptions, p.extrudeScale, p.anchor,
+                     *m_spriteLabels, m_quads.size());
 
                 pushQuad(p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
             }
@@ -295,8 +306,8 @@ void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
         glm::vec2 c = centroid(_polygon);
         Label::Transform transform = { c };
 
-        addLabel(transform, p.size, *m_mesh, m_mesh->numberOfVertices(),
-                 p.labelOptions, p.extrudeScale, p.anchor);
+        addLabel(transform, p.size, p.labelOptions, p.extrudeScale, p.anchor,
+            *m_spriteLabels, m_quads.size());
 
         pushQuad(p.size, {uvsQuad.x, uvsQuad.y}, {uvsQuad.z, uvsQuad.w}, p.color, p.extrudeScale);
     }

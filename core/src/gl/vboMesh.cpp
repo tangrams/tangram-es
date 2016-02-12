@@ -77,7 +77,7 @@ void VboMeshBase::setDrawMode(GLenum _drawMode) {
 }
 
 void VboMeshBase::subDataUpload(GLbyte* _data) {
-    if (!m_dirty) {
+    if (!m_dirty && _data == nullptr) {
         return;
     }
 

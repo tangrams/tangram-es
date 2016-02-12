@@ -1,5 +1,7 @@
 #include "labels/labelMesh.h"
 #include "labels/label.h"
+#include "labels/textLabel.h"
+#include "labels/spriteLabel.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 #include "gl/hardware.h"
@@ -18,7 +20,22 @@ LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMo
     m_isCompiled = true;
 }
 
-void LabelMesh::pushQuad(GlyphQuad& _quad, Label::Vertex::State& _state) {
+void LabelMesh::pushQuad(const GlyphQuad& _quad, const Label::Vertex::State& _state) {
+    m_vertices.resize(m_nVertices + 4);
+
+    for (int i = 0; i < 4; i++) {
+        Label::Vertex& v = m_vertices[m_nVertices+i];
+        v.pos = _quad.quad[i].pos;
+        v.uv = _quad.quad[i].uv;
+        v.color = _quad.color;
+        v.stroke = _quad.stroke;
+        v.state = _state;
+    }
+
+    m_nVertices += 4;
+}
+
+void LabelMesh::pushQuad(const SpriteQuad& _quad, const Label::Vertex::State& _state) {
     m_vertices.resize(m_nVertices + 4);
 
     for (int i = 0; i < 4; i++) {
@@ -27,8 +44,6 @@ void LabelMesh::pushQuad(GlyphQuad& _quad, Label::Vertex::State& _state) {
         v.uv = _quad.quad[i].uv;
         v.extrude = _quad.quad[i].extrude;
         v.color = _quad.color;
-        // FIXME: can be unsafe with union (works only because extrude set right before)
-        v.stroke = _quad.stroke;
         v.state = _state;
     }
 
@@ -78,6 +93,8 @@ void LabelMesh::loadQuadIndices() {
 void LabelMesh::myUpload() {
     if (m_nVertices == 0) { return; }
 
+    checkValidity();
+
     // Generate vertex buffer, if needed
     if (m_glVertexBuffer == 0) {
         glGenBuffers(1, &m_glVertexBuffer);
@@ -91,22 +108,22 @@ void LabelMesh::myUpload() {
         if (offset + maxLabelMeshVertices > m_nVertices) {
             nVertices = m_nVertices - offset;
         }
-
         m_vertexOffsets.emplace_back(nVertices / 4 * 6, nVertices);
     }
 
-    m_dirty = true;
+    subDataUpload(reinterpret_cast<GLbyte*>(m_vertices.data()));
 
-    GLbyte* bufferData = data();
-    subDataUpload(bufferData);
+    m_isCompiled = true;
+    m_isUploaded = true;
 }
 
 void LabelMesh::draw(ShaderProgram& _shader, bool _clear) {
-    bool valid = checkValidity();
+
+    checkValidity();
 
     if (m_nVertices == 0) { return; }
 
-    if (!valid) {
+    if (!RenderState::isCurrentGeneration(s_quadGeneration)) {
         loadQuadIndices();
     }
 

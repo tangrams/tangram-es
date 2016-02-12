@@ -224,11 +224,12 @@ struct TextStyleBuilder : public StyleBuilder {
 
             auto& g = *atlasGlyph.glyph;
             quads.push_back({
+                    atlasGlyph.atlas,
                     {{glm::vec2{q.x1, q.y1} * position_scale, {g.u1, g.v1}},
                      {glm::vec2{q.x1, q.y2} * position_scale, {g.u1, g.v2}},
                      {glm::vec2{q.x2, q.y1} * position_scale, {g.u2, g.v1}},
                      {glm::vec2{q.x2, q.y2} * position_scale, {g.u2, g.v2}}},
-                    fill, stroke, atlasGlyph.atlas });
+                    fill, stroke });
         }
 
         void clear() {

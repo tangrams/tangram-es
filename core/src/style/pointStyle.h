@@ -38,6 +38,8 @@ public:
 
     virtual ~PointStyle();
 
+    auto& getMesh() const { return m_mesh; }
+
 protected:
 
     virtual void constructVertexLayout() override;
@@ -48,6 +50,7 @@ protected:
     std::shared_ptr<SpriteAtlas> m_spriteAtlas;
     std::shared_ptr<Texture> m_texture;
 
+    mutable std::unique_ptr<LabelMesh> m_mesh;
 };
 
 }

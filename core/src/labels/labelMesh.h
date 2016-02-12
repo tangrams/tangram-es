@@ -2,32 +2,18 @@
 
 #include "gl/vboMesh.h"
 #include "labels/label.h"
-#include "alfons/atlas.h"
 
 #include <memory>
 #include <vector>
 
 namespace Tangram {
 
-namespace alf = alfons;
-
 static constexpr size_t maxLabelMeshVertices = 16384;
 
 class ShaderProgram;
 
-struct GlyphQuad {
-    struct {
-        glm::i16vec2 pos;
-        glm::u16vec2 uv;
-        glm::i16vec2 extrude;
-    } quad[4];
-    // TODO color and stroke must not be stored per quad
-    uint32_t color;
-    uint32_t stroke;
-
-    // TODO: used only for text, cleanup
-    alf::AtlasID atlas;
-};
+struct SpriteQuad;
+struct GlyphQuad;
 
 class LabelMesh : public VboMesh<Label::Vertex> {
 
@@ -39,19 +25,14 @@ public:
 
     void draw(ShaderProgram& _shader, bool _clear = true) override;
 
-    void compile(std::vector<Label::Vertex>& _vertices);
-
-    static void loadQuadIndices();
-
-    void pushQuad(GlyphQuad& _quad, Label::Vertex::State& _state);
-
-    size_t numberOfVertices() const { return m_vertices.size(); }
-
-    GLbyte* data() { return reinterpret_cast<GLbyte*>(m_vertices.data()); }
+    void pushQuad(const GlyphQuad& _quad, const Label::Vertex::State& _state);
+    void pushQuad(const SpriteQuad& _quad, const Label::Vertex::State& _state);
 
     void myUpload();
 
 private:
+
+    static void loadQuadIndices();
 
     std::vector<Label::Vertex> m_vertices;
 };
