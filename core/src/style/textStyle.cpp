@@ -10,7 +10,6 @@
 #include "view/view.h"
 #include "data/propertyItem.h" // Include wherever Properties is used!
 #include "labels/labelMesh.h"
-#include "labels/labelContainer.h"
 #include "labels/textLabel.h"
 #include "text/fontContext.h"
 
@@ -196,11 +195,11 @@ struct TextStyleBuilder : public StyleBuilder {
     bool m_sdf;
     float m_pixelScale = 1;
 
-    std::unique_ptr<LabelContainer> m_labelContainer;
-    std::vector<std::unique_ptr<Label>> m_labels;
+    std::unique_ptr<TextLabels> m_textLabels;
 
     struct ScratchBuffer : public alf::MeshCallback {
         std::vector<GlyphQuad> quads;
+        std::vector<std::unique_ptr<Label>> labels;
 
         // label width and height
         glm::vec2 bbox;
@@ -237,6 +236,7 @@ struct TextStyleBuilder : public StyleBuilder {
 
         void clear() {
             quads.clear();
+            labels.clear();
         }
     };
 
@@ -257,22 +257,20 @@ struct TextStyleBuilder : public StyleBuilder {
 
     void setup(const Tile& _tile) override {
         m_tileSize = _tile.getProjection()->TileSize();
-        m_labels.clear();
         m_scratch.clear();
 
-        m_labelContainer = std::make_unique<LabelContainer>(m_style);
+        m_textLabels = std::make_unique<TextLabels>(m_style);
     }
 
     virtual std::unique_ptr<StyledMesh> build() override {
-        if (!m_labels.empty()) {
-            m_labelContainer->setLabels(m_labels);
-            m_labelContainer->setQuads(m_scratch.quads);
+        if (!m_scratch.labels.empty()) {
+            m_textLabels->setLabels(m_scratch.labels);
+            m_textLabels->setQuads(m_scratch.quads);
         }
 
-        m_labels.clear();
         m_scratch.clear();
 
-        return std::move(m_labelContainer);
+        return std::move(m_textLabels);
     };
 
     TextStyle::Parameters applyRule(const DrawRule& _rule,
@@ -393,14 +391,14 @@ void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Typ
     int numQuads = m_scratch.numQuads;
     int quadOffset = m_scratch.quads.size() - numQuads;
 
-    m_labels.emplace_back(new TextLabel(_transform, _type,
-                                          m_scratch.bbox, *m_labelContainer,
-                                          { quadOffset, numQuads },
-                                          _params.labelOptions,
-                                          m_scratch.metrics,
-                                          m_scratch.numLines,
-                                          _params.anchor,
-                                          m_scratch.quadsLocalOrigin));
+    m_scratch.labels.emplace_back(new TextLabel(_transform, _type,
+                                                m_scratch.bbox, *m_textLabels,
+                                                { quadOffset, numQuads },
+                                                _params.labelOptions,
+                                                m_scratch.metrics,
+                                                m_scratch.numLines,
+                                                _params.anchor,
+                                                m_scratch.quadsLocalOrigin));
 }
 
 TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
