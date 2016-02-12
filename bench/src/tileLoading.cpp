@@ -50,7 +50,7 @@ struct TestContext {
         }
         scene = std::make_shared<Scene>();
         SceneLoader::loadScene(sceneNode, *scene);
-        scene->fontContext()->addFont("firasans", "medium", "");
+        // scene->fontContext()->addFont("firasans", "medium", "");
 
         styleContext.initFunctions(*scene);
         styleContext.setGlobalZoom(0);

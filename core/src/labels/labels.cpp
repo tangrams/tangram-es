@@ -159,7 +159,7 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
 void Labels::checkRepeatGroups(std::vector<Label*>& _visibleSet) const {
 
     struct GroupElement {
-        TextLabel* label;
+        Label* label;
 
         bool operator==(const GroupElement& _ge) {
             return _ge.label->center() == label->center();
