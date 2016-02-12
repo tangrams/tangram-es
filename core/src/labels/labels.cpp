@@ -158,10 +158,10 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
 void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
 
     struct GroupElement {
-        glm::vec2 position;
+        TextLabel* label;
 
         bool operator==(const GroupElement& _ge) {
-            return _ge.position == position;
+            return _ge.label->center() == label->center();
         };
     };
 
@@ -169,7 +169,7 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
 
     for (TextLabel* textLabel : _visibleSet) {
         auto& options = textLabel->options();
-        GroupElement element { textLabel->center() };
+        GroupElement element { textLabel };
 
         auto& group = repeatGroups[options.repeatGroup];
         if (group.empty()) {
@@ -185,11 +185,18 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
         float threshold2 = pow(options.repeatDistance, 2);
 
         bool add = true;
-        for (const GroupElement& ge : group) {
+        for (GroupElement& ge : group) {
 
-            float d2 = distance2(ge.position, element.position);
+            float d2 = distance2(ge.label->center(), textLabel->center());
             if (d2 < threshold2) {
-                textLabel->occlude();
+                if (textLabel->visibleState() && !ge.label->visibleState()) {
+                    // If textLabel is already visible, the added GroupElement is not
+                    // replace GroupElement with textLabel and set the other occluded.
+                    ge.label->occlude();
+                    ge.label = textLabel;
+                } else {
+                    textLabel->occlude();
+                }
                 add = false;
                 break;
             }
