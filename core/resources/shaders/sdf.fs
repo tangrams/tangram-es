@@ -34,6 +34,7 @@ varying vec4 v_color;
 varying vec2 v_texcoords;
 varying float v_sdf_threshold;
 varying float v_alpha;
+varying float v_sdf_scale;
 
 #pragma tangram: global
 
@@ -78,8 +79,14 @@ void main(void) {
     // emSize 15/16 = .937
     // float s = 0.0625 * emSize; // 0.0625 = 1.0/1em ratio
     // // ==> .0666
-    float s = 0.066;
-    s *= 2.5;
+
+    // (0.5 / 3.0) * 0.5 <= sdf 0.5 pixel threshold
+    // float s = 0.083 / v_sdf_scale;
+
+    // (0.5 / 3.0) * 0.75 == 0.1245
+    //   0.5 pixel threshold (to both sides)
+    // + 0.25 for a bit of smoothness (==> 0.75)
+    float s = 0.1245 / v_sdf_scale;
 
     float alpha = smoothstep(v_sdf_threshold - s,
                              v_sdf_threshold + s,

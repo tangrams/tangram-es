@@ -36,7 +36,8 @@ void TextStyle::constructVertexLayout() {
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_stroke", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_screenPosition", 2, GL_SHORT, false, 0},
-        {"a_alpha", 1, GL_SHORT, true, 0},
+        {"a_alpha", 1, GL_UNSIGNED_BYTE, true, 0},
+        {"a_scale", 1, GL_UNSIGNED_BYTE, false, 0},
         {"a_rotation", 1, GL_SHORT, false, 0},
     }));
 }
@@ -394,7 +395,10 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     //uint32_t strokeWidth = (_params.strokeWidth / _params.blurSpread * 255. * .25) / fontScale;
     //m_scratch.stroke = (_params.strokeColor & 0x00ffffff) + (strokeWidth << 24);
 
-    uint32_t strokeWidth = (_params.strokeWidth / 3.f * 255. * .25) / fontScale;
+    //uint32_t strokeWidth = (_params.strokeWidth / 3.f * 255. * .25); // fontScale;
+
+    // Maximal strokewidth is 3px, attribute is normalized to 0-1 range
+    uint32_t strokeWidth = std::min(_params.strokeWidth / 3.f * 255.f, 255.f);
 
     m_scratch.stroke = (_params.strokeColor & 0x00ffffff) + (strokeWidth << 24);
     m_scratch.fill = _params.fill;
