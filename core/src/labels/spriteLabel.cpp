@@ -54,10 +54,26 @@ void SpriteLabel::pushTransform() {
 
     if (!visibleState()) { return; }
 
+    Label::Vertex::State state {
+        glm::i16vec2(m_transform.state.screenPos * position_scale),
+        uint8_t(m_transform.state.alpha * alpha_scale),
+        0,
+        int16_t(m_transform.state.rotation * rotation_scale)
+    };
+
     auto& style = m_labels.m_style;
     auto& quad = m_labels.quads[m_labelsPos];
 
-    style.getMesh()->pushQuad(quad, m_transform.state.vertex());
+    auto* quadVertices = style.getMesh()->pushQuad();
+
+    for (int i = 0; i < 4; i++) {
+        Label::Vertex& v = quadVertices[i];
+        v.pos = quad.quad[i].pos;
+        v.uv = quad.quad[i].uv;
+        v.extrude = quad.quad[i].extrude;
+        v.color = quad.color;
+        v.state = state;
+    }
 }
 
 }

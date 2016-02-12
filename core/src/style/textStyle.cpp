@@ -186,7 +186,6 @@ struct TextBatch : public alf::TextBatch {
         offset.x = maxWidth;
         return offset;
     }
-
 };
 
 struct TextStyleBuilder : public StyleBuilder {
@@ -211,11 +210,12 @@ struct TextStyleBuilder : public StyleBuilder {
         glm::vec2 bbox;
         glm::vec2 quadsLocalOrigin;
         int numLines;
-        FontMetrics metrics;
+        TextLabel::FontMetrics metrics;
         int numQuads;
 
         uint32_t fill;
         uint32_t stroke;
+        uint8_t fontScale;
 
         float yMin, xMin;
 
@@ -237,8 +237,7 @@ struct TextStyleBuilder : public StyleBuilder {
                     {{glm::vec2{q.x1, q.y1} * position_scale, {g.u1, g.v1}},
                      {glm::vec2{q.x1, q.y2} * position_scale, {g.u1, g.v2}},
                      {glm::vec2{q.x2, q.y1} * position_scale, {g.u2, g.v1}},
-                     {glm::vec2{q.x2, q.y2} * position_scale, {g.u2, g.v2}}},
-                    fill, stroke });
+                     {glm::vec2{q.x2, q.y2} * position_scale, {g.u2, g.v2}}}});
         }
 
         void clear() {
@@ -336,8 +335,7 @@ void TextStyleBuilder::addPolygon(const Polygon& _polygon,
 }
 
 std::string TextStyleBuilder::applyTextTransform(const TextStyle::Parameters& _params,
-                                                 const std::string& _string)
-{
+                                                 const std::string& _string) {
     std::locale loc;
     std::string text = _string;
 
@@ -390,8 +388,6 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         renderText = &text;
     }
 
-    m_scratch.fill = _params.fill;
-
     // Stroke width is normalized by the distance of the SDF spread, then scaled
     // to a char, then packed into the "alpha" channel of stroke. The .25 scaling
     // probably has to do with how the SDF is generated, but honestly I'm not sure
@@ -404,6 +400,8 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     uint32_t strokeWidth = (_params.strokeWidth / 3.f * 255. * .25) / fontScale;
 
     m_scratch.stroke = (_params.strokeColor & 0x00ffffff) + (strokeWidth << 24);
+    m_scratch.fill = _params.fill;
+    m_scratch.fontScale = std::min(fontScale * 64.f, 255.f);
 
     {
         auto ctx = m_style.context();
@@ -451,6 +449,7 @@ void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Typ
     m_scratch.labels.emplace_back(new TextLabel(_transform, _type,
                                                 _params.labelOptions,
                                                 _params.anchor,
+                                                {m_scratch.fill, m_scratch.stroke, m_scratch.fontScale },
                                                 m_scratch.bbox,
                                                 m_scratch.metrics,
                                                 m_scratch.numLines,

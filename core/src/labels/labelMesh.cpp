@@ -1,7 +1,5 @@
 #include "labels/labelMesh.h"
 #include "labels/label.h"
-#include "labels/textLabel.h"
-#include "labels/spriteLabel.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 
@@ -22,34 +20,10 @@ LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMo
     m_isCompiled = true;
 }
 
-void LabelMesh::pushQuad(const GlyphQuad& _quad, const Label::Vertex::State& _state) {
-    m_vertices.resize(m_nVertices + 4);
-
-    for (int i = 0; i < 4; i++) {
-        Label::Vertex& v = m_vertices[m_nVertices+i];
-        v.pos = _quad.quad[i].pos;
-        v.uv = _quad.quad[i].uv;
-        v.color = _quad.color;
-        v.stroke = _quad.stroke;
-        v.state = _state;
-    }
-
+Label::Vertex* LabelMesh::pushQuad() {
     m_nVertices += 4;
-}
-
-void LabelMesh::pushQuad(const SpriteQuad& _quad, const Label::Vertex::State& _state) {
-    m_vertices.resize(m_nVertices + 4);
-
-    for (int i = 0; i < 4; i++) {
-        Label::Vertex& v = m_vertices[m_nVertices+i];
-        v.pos = _quad.quad[i].pos;
-        v.uv = _quad.quad[i].uv;
-        v.extrude = _quad.quad[i].extrude;
-        v.color = _quad.color;
-        v.state = _state;
-    }
-
-    m_nVertices += 4;
+    m_vertices.resize(m_nVertices);
+    return &m_vertices[m_nVertices - 4];
 }
 
 LabelMesh::~LabelMesh() {
