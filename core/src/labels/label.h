@@ -46,7 +46,8 @@ public:
         sleep           = 1 << 3,
         out_of_screen   = 1 << 4,
         wait_occ        = 1 << 5, // state waiting for first occlusion result
-        dead            = 1 << 6,
+        skip_transition = 1 << 6,
+        dead            = 1 << 7,
     };
 
     struct Vertex {
@@ -118,24 +119,17 @@ public:
         size_t paramHash = 0;
     };
 
-    enum OcclusionType {
-        none,
-        collision,
-        repeat_group
-    };
-
     Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange,
             Options _options);
 
     virtual ~Label();
 
-    /* Update the transform of the label in world space, and project it to screen space */
-    void updateTransform(const Transform& _transform, const glm::mat4& _mvp, const glm::vec2& _screenSize);
-
-    bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt, float _zoomFract);
+    bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract);
 
     /* Push the pending transforms to the vbo by updating the vertices */
     void pushTransform();
+
+    bool evalState(const glm::vec2& _screenSize, float _dt);
 
     /* Update the screen position of the label */
     bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize,
@@ -144,13 +138,10 @@ public:
     virtual void updateBBoxes(float _zoomFract) = 0;
 
     /* Occlude the label */
-    void occlude(OcclusionType _type, bool _occlusion = true);
+    void occlude(bool _occlusion = true);
 
     /* Checks whether the label is in a state where it can occlusion */
     bool canOcclude();
-
-    /* Mark the label as resolved */
-    void occlusionSolved();
 
     void skipTransitions();
 
@@ -172,11 +163,11 @@ public:
     /* Gets the oriented bounding box of the label */
     const OBB& obb() const { return m_obb; }
     const Transform& transform() const { return m_transform; }
-    const State& state() const { return m_currentState; }
+    State state() const { return m_state; }
+    bool isOccluded() const { return m_occluded; }
     bool occludedLastFrame() const { return m_occludedLastFrame; }
-    virtual glm::vec2 center() const;
 
-    OcclusionType occlusionType() const { return m_occlusionType; }
+    virtual glm::vec2 center() const;
 
 private:
 
@@ -184,25 +175,18 @@ private:
 
     inline void enterState(const State& _state, float _alpha = 1.0f);
 
-    bool updateState(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _dt, float _zoomFract);
-
     void setAlpha(float _alpha);
 
     bool m_proxy;
     // the current label state
-    State m_currentState;
+    State m_state;
     // the label fade effect
     FadeEffect m_fade;
     // whether the label was occluded on the previous frame
     bool m_occludedLastFrame;
-    // whether or not the occlusion has been solved by the occlusion manager
-    bool m_occlusionSolved;
+    bool m_occluded;
     // whether or not we need to update the mesh visibilit (alpha channel)
     bool m_updateMeshVisibility;
-    // whether this label should skip transitions to move to first visible state
-    bool m_skipTransitions;
-    // How occlusion have been triggered
-    OcclusionType m_occlusionType;
 
 protected:
 

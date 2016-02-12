@@ -6,6 +6,8 @@
 #include "gl/primitives.h"
 #include "view/view.h"
 #include "style/style.h"
+#include "style/pointStyle.h"
+#include "style/textStyle.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
 
@@ -27,12 +29,10 @@ int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 }
 
-bool Labels::updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
+void Labels::updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
                           const std::vector<std::shared_ptr<Tile>>& _tiles,
                           float _dt, float _dz, const View& _view)
 {
-    bool animate = false;
-
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
 
     // int lodDiscard = LODDiscardFunc(View::s_maxZoom, _view.getZoom());
@@ -56,117 +56,112 @@ bool Labels::updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
             if (!labelMesh) { continue; }
 
             for (auto& label : labelMesh->getLabels()) {
-                animate |= label->update(mvp, screenSize, _dt, _dz);
+                if (!label->update(mvp, screenSize, _dz)) {
+                    // skip dead labels
+                    continue;
+                }
 
                 label->setProxy(proxyTile);
-
-                if (label->canOcclude()) {
-                    m_aabbs.push_back(label->aabb());
-                    m_aabbs.back().m_userData = (void*)label.get();
-                }
                 m_labels.push_back(label.get());
             }
         }
     }
-
-    return animate;
 }
 
-std::set<std::pair<Label*, Label*>> Labels::narrowPhase(const CollisionPairs& _pairs) const {
-    std::set<std::pair<Label*, Label*>> occlusions;
+void Labels::skipTransitions(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) const {
 
-    for (auto pair : _pairs) {
-        const auto& aabb1 = m_aabbs[pair.first];
-        const auto& aabb2 = m_aabbs[pair.second];
+    for (const auto& style : _styles) {
 
-        auto l1 = static_cast<Label*>(aabb1.m_userData);
-        auto l2 = static_cast<Label*>(aabb2.m_userData);
+        auto* mesh0 = static_cast<const LabelMesh*>(_tile.getMesh(*style).get());
+        if (!mesh0) { continue; }
 
-        if (intersect(l1->obb(), l2->obb())) {
-            occlusions.insert({l1, l2});
-        }
-    }
+        auto* mesh1 = static_cast<const LabelMesh*>(_proxy.getMesh(*style).get());
+        if (!mesh1) { continue; }
 
-    return occlusions;
-}
+        for (auto& l0 : mesh0->getLabels()) {
+            if (!l0->canOcclude()) { continue; }
+            if (l0->state() != Label::State::wait_occ) { continue; }
 
-void Labels::applyPriorities(const std::set<std::pair<Label*, Label*>> _occlusions) const {
-    for (auto& pair : _occlusions) {
-        if (!pair.first->occludedLastFrame() || !pair.second->occludedLastFrame()) {
-            // check first is the label belongs to a proxy tile
-            if (pair.first->isProxy() && !pair.second->isProxy()) {
-                pair.first->occlude(Label::OcclusionType::collision);
-            } else if (!pair.first->isProxy() && pair.second->isProxy()) {
-                pair.second->occlude(Label::OcclusionType::collision);
-            } else {
-                // lower numeric priority means higher priority
-                if (pair.first->options().priority < pair.second->options().priority) {
-                    pair.second->occlude(Label::OcclusionType::collision);
-                } else {
-                    pair.first->occlude(Label::OcclusionType::collision);
+            for (auto& l1 : mesh1->getLabels()) {
+                if (!l1->visibleState()) { continue; }
+                if (!l1->canOcclude()) { continue;}
+
+                // Using repeat group to also handle labels with dynamic style properties
+                if (l0->options().repeatGroup != l1->options().repeatGroup) { continue; }
+                // if (l0->hash() != l1->hash()) { continue; }
+
+                float d2 = glm::distance2(l0->transform().state.screenPos,
+                                          l1->transform().state.screenPos);
+
+                // The new label lies within the circle defined by the bbox of l0
+                if (sqrt(d2) < std::max(l0->dimension().x, l0->dimension().y)) {
+                    l0->skipTransitions();
                 }
             }
         }
     }
+}
+
+std::shared_ptr<Tile> findProxy(int32_t _sourceID, const TileID& _proxyID,
+                                const std::vector<std::shared_ptr<Tile>>& _tiles,
+                                std::unique_ptr<TileCache>& _cache) {
+
+    auto proxy = _cache->contains(_sourceID, _proxyID);
+    if (proxy) { return proxy; }
+
+    for (auto& tile : _tiles) {
+        if (tile->getID() == _proxyID && tile->sourceID() == _sourceID) {
+            return tile;
+        }
+    }
+    return nullptr;
 }
 
 void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
                              const std::vector<std::shared_ptr<Tile>>& _tiles,
-                             std::unique_ptr<TileCache>& _cache, float _currentZoom) const
-{
-    for (const auto& t0 : _tiles) {
-        TileID tileID = t0->getID();
-        std::vector<std::shared_ptr<Tile>> tiles;
+                             std::unique_ptr<TileCache>& _cache, float _currentZoom) const {
+
+    std::vector<const Style*> styles;
+
+    for (const auto& style : _styles) {
+        if (dynamic_cast<const TextStyle*>(style.get()) ||
+            dynamic_cast<const PointStyle*>(style.get())) {
+            styles.push_back(style.get());
+        }
+    }
+
+    for (const auto& tile : _tiles) {
+        TileID tileID = tile->getID();
+        std::shared_ptr<Tile> proxy;
 
         if (m_lastZoom < _currentZoom) {
             // zooming in, add the one cached parent tile
-            tiles.push_back(_cache->contains(t0->sourceID(), tileID.getParent()));
+            proxy = findProxy(tile->sourceID(), tileID.getParent(), _tiles, _cache);
+            if (proxy) { skipTransitions(styles, *tile, *proxy); }
         } else {
             // zooming out, add the 4 cached children tiles
-            tiles.push_back(_cache->contains(t0->sourceID(), tileID.getChild(0)));
-            tiles.push_back(_cache->contains(t0->sourceID(), tileID.getChild(1)));
-            tiles.push_back(_cache->contains(t0->sourceID(), tileID.getChild(2)));
-            tiles.push_back(_cache->contains(t0->sourceID(), tileID.getChild(3)));
-        }
+            proxy = findProxy(tile->sourceID(), tileID.getChild(0), _tiles, _cache);
+            if (proxy) { skipTransitions(styles, *tile, *proxy); }
 
-        for (const auto& t1 : tiles) {
-            if (!t1) { continue; }
-            for (const auto& style : _styles) {
-                const auto& m0 = t0->getMesh(*style);
-                if (!m0) { continue; }
-                const LabelMesh* mesh0 = dynamic_cast<const LabelMesh*>(m0.get());
-                if (!mesh0) { continue; }
-                const auto& m1 = t1->getMesh(*style);
-                if (!m1) { continue; }
-                const LabelMesh* mesh1 = static_cast<const LabelMesh*>(m1.get());
+            proxy = findProxy(tile->sourceID(), tileID.getChild(1), _tiles, _cache);
+            if (proxy) { skipTransitions(styles, *tile, *proxy); }
 
-                for (auto& l0 : mesh0->getLabels()) {
-                    if (!l0->canOcclude()) { continue; }
+            proxy = findProxy(tile->sourceID(), tileID.getChild(2), _tiles, _cache);
+            if (proxy) { skipTransitions(styles, *tile, *proxy); }
 
-                    for (auto& l1 : mesh1->getLabels()) {
-                        if (!l1 || !l1->canOcclude() || l0->hash() != l1->hash()) {
-                            continue;
-                        }
-                        float d2 = glm::distance2(l0->transform().state.screenPos,
-                                l1->transform().state.screenPos);
-
-                        // The new label lies within the circle defined by the bbox of l0
-                        if (sqrt(d2) < std::max(l0->dimension().x, l0->dimension().y)) {
-                            l0->skipTransitions();
-                        }
-                    }
-                }
-            }
+            proxy = findProxy(tile->sourceID(), tileID.getChild(3), _tiles, _cache);
+            if (proxy) { skipTransitions(styles, *tile, *proxy); }
         }
     }
 }
 
 void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
+
     struct GroupElement {
-        glm::vec2 position;
+        TextLabel* label;
 
         bool operator==(const GroupElement& _ge) {
-            return _ge.position == position;
+            return _ge.label->center() == label->center();
         };
     };
 
@@ -174,7 +169,7 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
 
     for (TextLabel* textLabel : _visibleSet) {
         auto& options = textLabel->options();
-        GroupElement element { textLabel->center() };
+        GroupElement element { textLabel };
 
         auto& group = repeatGroups[options.repeatGroup];
         if (group.empty()) {
@@ -190,11 +185,18 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
         float threshold2 = pow(options.repeatDistance, 2);
 
         bool add = true;
-        for (const GroupElement& ge : group) {
+        for (GroupElement& ge : group) {
 
-            float d2 = distance2(ge.position, element.position);
+            float d2 = distance2(ge.label->center(), textLabel->center());
             if (d2 < threshold2) {
-                textLabel->occlude(Label::OcclusionType::repeat_group);
+                if (textLabel->visibleState() && !ge.label->visibleState()) {
+                    // If textLabel is already visible, the added GroupElement is not
+                    // replace GroupElement with textLabel and set the other occluded.
+                    ge.label->occlude();
+                    ge.label = textLabel;
+                } else {
+                    textLabel->occlude();
+                }
                 add = false;
                 break;
             }
@@ -221,59 +223,121 @@ void Labels::update(const View& _view, float _dt,
 
     /// Collect and update labels from visible tiles
 
-    m_needUpdate = updateLabels(_styles, _tiles, _dt, dz, _view);
+    updateLabels(_styles, _tiles, _dt, dz, _view);
+
+
+    /// Mark labels to skip transitions
+
+    if (int(m_lastZoom) != int(_view.getZoom())) {
+        skipTransitions(_styles, _tiles, _cache, currentZoom);
+    }
 
     /// Manage occlusions
 
     // Update collision context size
-
     m_isect2d.resize({_view.getWidth() / 256, _view.getHeight() / 256},
                      {_view.getWidth(), _view.getHeight()});
 
     // Broad phase collision detection
+    for (auto* label : m_labels) {
+        if (!label->isOccluded() && label->canOcclude()) {
+            m_aabbs.push_back(label->aabb());
+            m_aabbs.back().m_userData = (void*)label;
+        }
+    }
     m_isect2d.intersect(m_aabbs);
 
-    // Narrow Phase
-    auto occlusions = narrowPhase(m_isect2d.pairs);
+    // Narrow Phase, resolve conflicts
+    for (auto& pair : m_isect2d.pairs) {
+        const auto& aabb1 = m_aabbs[pair.first];
+        const auto& aabb2 = m_aabbs[pair.second];
 
-    applyPriorities(occlusions);
+        auto l1 = static_cast<Label*>(aabb1.m_userData);
+        auto l2 = static_cast<Label*>(aabb2.m_userData);
 
-    /// Mark labels to skip transitions
+        if (l1->isOccluded() || l2->isOccluded()) {
+            // One of this pair is already occluded.
+            // => conflict solved
+            continue;
+        }
 
-    if ((int) m_lastZoom != (int) _view.getZoom()) {
-        skipTransitions(_styles, _tiles, _cache, currentZoom);
-    }
+        if (!intersect(l1->obb(), l2->obb())) { continue; }
 
-    /// Update label meshes
-
-    std::vector<TextLabel*> repeatGroupSet;
-
-    for (auto label : m_labels) {
-        label->occlusionSolved();
-        label->pushTransform();
-
-        if (label->canOcclude()) {
-            if (!label->visibleState() && label->occlusionType() == Label::OcclusionType::collision) {
-                continue;
+        if (l1->isProxy() != l2->isProxy()) {
+            // check first is the label belongs to a proxy tile
+            if (l1->isProxy()) {
+                l1->occlude();
+            } else {
+                l2->occlude();
             }
-            if (label->options().repeatDistance == 0.f) {
-                continue;
+        } else if (l1->options().priority != l2->options().priority) {
+            // lower numeric priority means higher priority
+            if(l1->options().priority > l2->options().priority) {
+                l1->occlude();
+            } else {
+                l2->occlude();
             }
-
-            TextLabel* textLabel = dynamic_cast<TextLabel*>(label);
-            if (!textLabel) { continue; }
-            repeatGroupSet.push_back(textLabel);
+        } else if (l1->occludedLastFrame() != l2->occludedLastFrame()) {
+            // keep the one that way active previously
+            if (l1->occludedLastFrame()) {
+                l1->occlude();
+            } else {
+                l2->occlude();
+            }
+        } else if (l1->visibleState() != l2->visibleState()) {
+            // keep the visible one, different from occludedLastframe
+            // when one lets labels fade out.
+            // (A label is also in visibleState() when skip_transition is set)
+            if (!l1->visibleState()) {
+                l1->occlude();
+            } else {
+                l2->occlude();
+            }
+        } else {
+            // just so it is consistent between two instances
+            if (l1 < l2) {
+                l1->occlude();
+            } else {
+                l2->occlude();
+            }
         }
     }
 
-    // Ensure the labels are always treated in the same order in the visible set
-    std::sort(repeatGroupSet.begin(), repeatGroupSet.end(), [](TextLabel* _a, TextLabel* _b) {
-        return glm::length2(_a->transform().modelPosition1) < glm::length2(_b->transform().modelPosition1);
-    });
-
     /// Apply repeat groups
 
+    std::vector<TextLabel*> repeatGroupSet;
+    for (auto* label : m_labels) {
+        if (!label->canOcclude() || label->isOccluded()) {
+            continue;
+        }
+
+        if (label->options().repeatDistance == 0.f) {
+            continue;
+        }
+        TextLabel* textLabel = dynamic_cast<TextLabel*>(label);
+        if (!textLabel) { continue; }
+        repeatGroupSet.push_back(textLabel);
+    }
+
+    // Ensure the labels are always treated in the same order in the visible set
+    std::sort(repeatGroupSet.begin(), repeatGroupSet.end(),
+              [](TextLabel* _a, TextLabel* _b) {
+        return glm::length2(_a->transform().modelPosition1) <
+               glm::length2(_b->transform().modelPosition1);
+    });
+
     checkRepeatGroups(repeatGroupSet);
+
+
+    /// Update label meshes
+
+    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
+
+    m_needUpdate = false;
+    for (auto* label : m_labels) {
+        m_needUpdate |= label->evalState(screenSize, _dt);
+        label->pushTransform();
+    }
 
     // Request for render if labels are in fading in/out states
     if (m_needUpdate) {
