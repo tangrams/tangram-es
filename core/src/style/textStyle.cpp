@@ -449,13 +449,13 @@ void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Typ
     int quadOffset = m_scratch.quads.size() - numQuads;
 
     m_scratch.labels.emplace_back(new TextLabel(_transform, _type,
-                                                m_scratch.bbox, *m_textLabels,
-                                                { quadOffset, numQuads },
                                                 _params.labelOptions,
+                                                _params.anchor,
+                                                m_scratch.bbox,
                                                 m_scratch.metrics,
                                                 m_scratch.numLines,
-                                                _params.anchor,
-                                                m_scratch.quadsLocalOrigin));
+                                                m_scratch.quadsLocalOrigin,
+                                                *m_textLabels, { quadOffset, numQuads }));
 }
 
 TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,

@@ -8,9 +8,10 @@ using namespace LabelProperty;
 
 SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Options _options,
                          float _extrudeScale, LabelProperty::Anchor _anchor,
-                         SpriteLabels& _labels, int _vertexOffset)
-    : Label(_transform, _size, Label::Type::point, {_vertexOffset, 4}, _options),
-      m_spriteLabels(_labels),
+                         SpriteLabels& _labels, size_t _labelsPos)
+    : Label(_transform, _size, Label::Type::point, _options),
+      m_labels(_labels),
+      m_labelsPos(_labelsPos),
       m_extrudeScale(_extrudeScale)
 {
     switch(_anchor) {
@@ -53,8 +54,8 @@ void SpriteLabel::pushTransform() {
 
     if (!visibleState()) { return; }
 
-    auto& style = m_spriteLabels.m_style;
-    auto& quad = m_spriteLabels.quads[m_vertexRange.start];
+    auto& style = m_labels.m_style;
+    auto& quad = m_labels.quads[m_labelsPos];
 
     style.getMesh()->pushQuad(quad, m_transform.state.vertex());
 }

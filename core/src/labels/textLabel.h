@@ -24,17 +24,15 @@ struct FontMetrics {
 class TextLabel : public Label {
 public:
     TextLabel(Label::Transform _transform, Type _type,
-              glm::vec2 _dim, TextLabels& _labels,
-              Range _vertexRange,
               Label::Options _options,
-              FontMetrics _metrics,
-              int _nLines, LabelProperty::Anchor _anchor,
-              glm::vec2 _quadsLocalOrigin);
+              LabelProperty::Anchor _anchor,
+              glm::vec2 _dim, FontMetrics _metrics,
+              int _nLines, glm::vec2 _quadsLocalOrigin,
+              TextLabels& _labels, Range _vertexRange);
 
     void updateBBoxes(float _zoomFract) override;
 
 protected:
-
     void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) override;
     FontMetrics m_metrics;
     int m_nLines;
@@ -44,6 +42,8 @@ protected:
 private:
     // Back-pointer to owning container
     TextLabels& m_textLabels;
+    // first vertex and count in m_mesh vertices
+    Range m_vertexRange;
 
     glm::vec2 m_anchor;
     glm::vec2 m_quadLocalOrigin;

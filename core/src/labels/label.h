@@ -120,7 +120,7 @@ public:
         size_t paramHash = 0;
     };
 
-    Label(Transform _transform, glm::vec2 _size, Type _type, Range _vertexRange, Options _options);
+    Label(Transform _transform, glm::vec2 _size, Type _type, Options _options);
 
     virtual ~Label();
 
@@ -203,8 +203,6 @@ protected:
     Transform m_transform;
     // the dimension of the label
     glm::vec2 m_dim;
-    // first vertex and count in m_mesh vertices
-    Range m_vertexRange;
     // label options
     Options m_options;
 
