@@ -172,7 +172,7 @@ void update(float _dt) {
 
     bool animated = false;
     for (const auto& style : m_scene->styles()) {
-        style->onUpdate();
+        style->onBeginUpdate();
 
         animated |= style->isAnimated();
     }
@@ -205,6 +205,9 @@ void update(float _dt) {
             auto& cache = m_tileManager->getTileCache();
             m_labels->update(*m_view, _dt, m_scene->styles(), tiles, cache);
         }
+    }
+    for (const auto& style : m_scene->styles()) {
+        style->onEndUpdate();
     }
 }
 

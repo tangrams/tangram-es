@@ -171,7 +171,9 @@ public:
     /* Make this style ready to be used (call after all needed properties are set) */
     virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
 
-    virtual void onUpdate() {}
+    virtual void onBeginUpdate() {}
+
+    virtual void onEndUpdate() {}
 
     /* Perform any setup needed before drawing each frame
      * _textUnit is the next available texture unit

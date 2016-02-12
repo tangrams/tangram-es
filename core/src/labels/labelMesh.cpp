@@ -9,6 +9,8 @@
 
 namespace Tangram {
 
+static const size_t maxLabelMeshVertices = 16384;
+
 static GLuint s_quadIndexBuffer = 0;
 static int s_quadGeneration = -1;
 static std::atomic<int> s_meshCounter(0);
@@ -119,16 +121,12 @@ void LabelMesh::myUpload() {
 
 void LabelMesh::draw(ShaderProgram& _shader, bool _clear) {
 
-    checkValidity();
-
     if (m_nVertices == 0) { return; }
+
+    assert(m_isCompiled && m_isUploaded);
 
     if (!RenderState::isCurrentGeneration(s_quadGeneration)) {
         loadQuadIndices();
-    }
-
-    if (!m_isUploaded) {
-        myUpload();
     }
 
     // Bind buffers for drawing

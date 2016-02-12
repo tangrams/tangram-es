@@ -29,6 +29,7 @@ public:
     PointStyle(std::string _name, Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
 
     virtual void onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit = 0) override;
+    virtual void onEndUpdate() override;
 
     void setSpriteAtlas(std::shared_ptr<SpriteAtlas> _spriteAtlas) { m_spriteAtlas = _spriteAtlas; }
     void setTexture(std::shared_ptr<Texture> _texture) { m_texture = _texture; }

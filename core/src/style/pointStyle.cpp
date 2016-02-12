@@ -56,6 +56,11 @@ void PointStyle::constructShaderProgram() {
     m_mesh = std::make_unique<LabelMesh>(m_vertexLayout, m_drawMode);
 }
 
+void PointStyle::onEndUpdate() {
+    // Upload meshes for next frame
+    m_mesh->myUpload();
+}
+
 void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
 
     if (m_spriteAtlas) {
@@ -69,8 +74,6 @@ void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _texture
     m_shaderProgram->setUniformMatrix4f("u_ortho", _view.getOrthoViewportMatrix());
 
     Style::onBeginDrawFrame(_view, _scene, 1);
-
-    m_mesh->myUpload();
 
     m_mesh->draw(*m_shaderProgram, true);
 }

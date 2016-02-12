@@ -8,8 +8,6 @@
 
 namespace Tangram {
 
-static constexpr size_t maxLabelMeshVertices = 16384;
-
 class ShaderProgram;
 
 struct SpriteQuad;
