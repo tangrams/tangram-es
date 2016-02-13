@@ -384,21 +384,22 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         renderText = &text;
     }
 
-    // Stroke width is normalized by the distance of the SDF spread, then scaled
-    // to a char, then packed into the "alpha" channel of stroke. The .25 scaling
-    // probably has to do with how the SDF is generated, but honestly I'm not sure
-    // what it represents.
-    float fontScale = _params.fontSize / FONT_SIZE * m_style.pixelScale();
+    // Scale factor by which the texture glyphs are scaled to match fontSize
+    float fontScale = (_params.fontSize * m_style.pixelScale()) / FONT_SIZE;
 
-    //uint32_t strokeWidth = (_params.strokeWidth / _params.blurSpread * 255. * .25) / fontScale;
-    //m_scratch.stroke = (_params.strokeColor & 0x00ffffff) + (strokeWidth << 24);
+    // Stroke width is normalized by the distance of the SDF spread, then
+    // scaled to a char, then packed into the "alpha" channel of stroke.
+    // Maximal strokeWidth is 3px, attribute is normalized to 0-1 range.
+    float strokeWidth = _params.strokeWidth * m_style.pixelScale();
+    uint32_t strokeAttrib = std::min(strokeWidth / 3.f * 255.f, 255.f);
 
-    //uint32_t strokeWidth = (_params.strokeWidth / 3.f * 255. * .25); // fontScale;
+    // HACK - need to use a smaller font in this case
+    // to have enough sdf-radius for the stroke!
+    if (strokeWidth > 2.5 * fontScale) {
+        strokeAttrib = (2.5 * fontScale) / 3.f * 255.f;
+    }
 
-    // Maximal strokewidth is 3px, attribute is normalized to 0-1 range
-    uint32_t strokeWidth = std::min(_params.strokeWidth / 3.f * 255.f, 255.f);
-
-    m_scratch.stroke = (_params.strokeColor & 0x00ffffff) + (strokeWidth << 24);
+    m_scratch.stroke = (_params.strokeColor & 0x00ffffff) + (strokeAttrib << 24);
     m_scratch.fill = _params.fill;
     m_scratch.fontScale = std::min(fontScale * 64.f, 255.f);
 

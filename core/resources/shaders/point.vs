@@ -81,7 +81,7 @@ void main() {
             // scale sdf (texture is scaled depeding on font size)
             stroke_width /= v_sdf_scale;
 
-            v_sdf_threshold = 0.5 - stroke_width * u_device_pixel_ratio;
+            v_sdf_threshold = 0.5 - stroke_width;
 
             v_color.rgb = a_stroke.rgb;
         }
