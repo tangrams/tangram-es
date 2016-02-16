@@ -10,6 +10,7 @@
 #include "tile/tile.h"
 #include "tile/tileBuilder.h"
 #include "tile/tileTask.h"
+#include "text/fontContext.h"
 
 #include <vector>
 #include <iostream>
@@ -49,6 +50,8 @@ struct TestContext {
         }
         scene = std::make_shared<Scene>();
         SceneLoader::loadScene(sceneNode, *scene);
+        scene->fontContext()->addFont("firasans", "medium", "");
+
         styleContext.initFunctions(*scene);
         styleContext.setGlobalZoom(0);
 
@@ -73,12 +76,11 @@ struct TestContext {
     }
 
     void parseTile() {
-        Tile tile({0,0,0}, s_projection);
+        Tile tile({0,0,10,10,0}, s_projection);
         source = scene->dataSources()[0];
         auto task = source->createTask(tile.getID());
         auto& t = dynamic_cast<DownloadTileTask&>(*task);
-        t.rawTileData = std::make_shared<std::vector<char>>();
-        std::swap(*t.rawTileData, rawTileData);
+        t.rawTileData = std::make_shared<std::vector<char>>(rawTileData);
 
         tileData = source->parse(*task, s_projection);
     }
@@ -108,7 +110,10 @@ public:
 BENCHMARK_DEFINE_F(TileLoadingFixture, BuildTest)(benchmark::State& st) {
 
     while (st.KeepRunning()) {
-        result = ctx.tileBuilder.build({0,0,0}, *ctx.tileData, *ctx.source);
+        ctx.parseTile();
+        result = ctx.tileBuilder.build({0,0,10,10,0}, *ctx.tileData, *ctx.source);
+
+        LOG("ok %d / bytes - %d", bool(result), result->getMemoryUsage());
     }
 }
 

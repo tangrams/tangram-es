@@ -273,4 +273,16 @@ auto Stops::nearestHigherFrame(float _key) const -> std::vector<Frame>::const_it
                             [](const Frame& f, float z) { return f.key < z; });
 }
 
+void Stops::eval(const Stops& _stops, StyleParamKey _key, float _zoom, StyleParam::Value& _result) {
+    if (StyleParam::isColor(_key)) {
+        _result = _stops.evalColor(_zoom);
+    } else if (StyleParam::isWidth(_key)) {
+        _result = _stops.evalWidth(_zoom);
+    } else if (StyleParam::isOffsets(_key)) {
+        _result = _stops.evalVec2(_zoom);
+    } else {
+        _result = _stops.evalFloat(_zoom);
+    }
+}
+
 }

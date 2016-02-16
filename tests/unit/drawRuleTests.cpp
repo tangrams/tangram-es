@@ -60,11 +60,11 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
         DrawRuleMergeSet ruleSet;
         ruleSet.mergeRules(layer_a);
 
-        REQUIRE(ruleSet.matchedRules.size() == 1);
-        auto& merged_ab = ruleSet.matchedRules[0];
+        REQUIRE(ruleSet.matchedRules().size() == 1);
+        auto& merged_ab = ruleSet.matchedRules()[0];
 
         for (size_t i = 0; i < StyleParamKeySize; i++) {
-            auto* param = merged_ab.params[i];
+            auto* param = merged_ab.params[i].param;
             if (!param) {
                 logMsg("param : none %d\n", i);
                 continue;
@@ -74,31 +74,31 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
 
         ruleSet.mergeRules(layer_b);
 
-        REQUIRE(ruleSet.matchedRules.size() == 1);
+        REQUIRE(ruleSet.matchedRules().size() == 1);
 
         // printf("rule_a:\n %s", rule_a.toString().c_str());
         // printf("rule_c:\n %s", rule_c.toString().c_str());
         // printf("merged_ac:\n %s", merged_ac.toString().c_str());
         for (size_t i = 0; i < StyleParamKeySize; i++) {
-            auto* param = merged_ab.params[i];
+            auto* param = merged_ab.params[i].param;
             if (!param) {
                 logMsg("param : none %d\n", i);
                 continue;
             }
             logMsg("param : %s\n", param->toString().c_str());
         }
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::cap)]->key == StyleParamKey::cap);
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::cap)]->value.get<std::string>() == "value_3b");
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::color)]->key == StyleParamKey::color);
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::color)]->value.get<std::string>() == "value_1b");
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::join)]->key == StyleParamKey::join);
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::join)]->value.get<std::string>() == "value_4a");
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::order)]->key == StyleParamKey::order);
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::order)]->value.get<std::string>() == "value_0b");
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::style)]->key == StyleParamKey::style);
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::style)]->value.get<std::string>() == "value_4b");
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::width)]->key == StyleParamKey::width);
-        REQUIRE(merged_ab.params[static_cast<uint8_t>(StyleParamKey::width)]->value.get<std::string>() == "value_2b");
+        REQUIRE(merged_ab.findParameter(StyleParamKey::cap).key == StyleParamKey::cap);
+        REQUIRE(merged_ab.findParameter(StyleParamKey::cap).value.get<std::string>() == "value_3b");
+        REQUIRE(merged_ab.findParameter(StyleParamKey::color).key == StyleParamKey::color);
+        REQUIRE(merged_ab.findParameter(StyleParamKey::color).value.get<std::string>() == "value_1b");
+        REQUIRE(merged_ab.findParameter(StyleParamKey::join).key == StyleParamKey::join);
+        REQUIRE(merged_ab.findParameter(StyleParamKey::join).value.get<std::string>() == "value_4a");
+        REQUIRE(merged_ab.findParameter(StyleParamKey::order).key == StyleParamKey::order);
+        REQUIRE(merged_ab.findParameter(StyleParamKey::order).value.get<std::string>() == "value_0b");
+        REQUIRE(merged_ab.findParameter(StyleParamKey::style).key == StyleParamKey::style);
+        REQUIRE(merged_ab.findParameter(StyleParamKey::style).value.get<std::string>() == "value_4b");
+        REQUIRE(merged_ab.findParameter(StyleParamKey::width).key == StyleParamKey::width);
+        REQUIRE(merged_ab.findParameter(StyleParamKey::width).value.get<std::string>() == "value_2b");
 
         // explicit style wins
         REQUIRE(merged_ab.getStyleName() == "value_4b");
@@ -109,22 +109,22 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
         ruleSet.mergeRules(layer_b);
         ruleSet.mergeRules(layer_a);
 
-        REQUIRE(ruleSet.matchedRules.size() == 1);
+        REQUIRE(ruleSet.matchedRules().size() == 1);
 
-        auto& merged_ba = ruleSet.matchedRules[0];
+        auto& merged_ba = ruleSet.matchedRules()[0];
 
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::cap)]->key == StyleParamKey::cap);
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::cap)]->value.get<std::string>() == "value_3b");
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::color)]->key == StyleParamKey::color);
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::color)]->value.get<std::string>() == "value_1b");
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::join)]->key == StyleParamKey::join);
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::join)]->value.get<std::string>() == "value_4a");
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::order)]->key == StyleParamKey::order);
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::order)]->value.get<std::string>() == "value_0b");
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::style)]->key == StyleParamKey::style);
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::style)]->value.get<std::string>() == "value_4b");
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::width)]->key == StyleParamKey::width);
-        REQUIRE(merged_ba.params[static_cast<uint8_t>(StyleParamKey::width)]->value.get<std::string>() == "value_2b");
+        REQUIRE(merged_ba.findParameter(StyleParamKey::cap).key == StyleParamKey::cap);
+        REQUIRE(merged_ba.findParameter(StyleParamKey::cap).value.get<std::string>() == "value_3b");
+        REQUIRE(merged_ba.findParameter(StyleParamKey::color).key == StyleParamKey::color);
+        REQUIRE(merged_ba.findParameter(StyleParamKey::color).value.get<std::string>() == "value_1b");
+        REQUIRE(merged_ba.findParameter(StyleParamKey::join).key == StyleParamKey::join);
+        REQUIRE(merged_ba.findParameter(StyleParamKey::join).value.get<std::string>() == "value_4a");
+        REQUIRE(merged_ba.findParameter(StyleParamKey::order).key == StyleParamKey::order);
+        REQUIRE(merged_ba.findParameter(StyleParamKey::order).value.get<std::string>() == "value_0b");
+        REQUIRE(merged_ba.findParameter(StyleParamKey::style).key == StyleParamKey::style);
+        REQUIRE(merged_ba.findParameter(StyleParamKey::style).value.get<std::string>() == "value_4b");
+        REQUIRE(merged_ba.findParameter(StyleParamKey::width).key == StyleParamKey::width);
+        REQUIRE(merged_ba.findParameter(StyleParamKey::width).value.get<std::string>() == "value_2b");
 
         // explicit style wins
         REQUIRE(merged_ba.getStyleName() == "value_4b");
@@ -135,9 +135,9 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
         ruleSet.mergeRules(layer_c);
         ruleSet.mergeRules(layer_b);
 
-        REQUIRE(ruleSet.matchedRules.size() == 1);
+        REQUIRE(ruleSet.matchedRules().size() == 1);
 
-        auto& merged_bc = ruleSet.matchedRules[0];
+        auto& merged_bc = ruleSet.matchedRules()[0];
 
         // for (size_t i = 0; i < StyleParamKeySize; i++) {
         //     auto* param = merged_bc.params[i];
@@ -162,7 +162,7 @@ TEST_CASE("DrawRule locates and outputs a parameter that it contains", "[DrawRul
 
     DrawRuleMergeSet a;
     a.mergeRules(layer_a);
-    auto& rule_a = a.matchedRules[0];
+    auto& rule_a = a.matchedRules()[0];
 
     REQUIRE(rule_a.get(StyleParamKey::order, str)); REQUIRE(str == "value_0a");
     REQUIRE(rule_a.get(StyleParamKey::color, str)); REQUIRE(str == "value_1a");
@@ -170,7 +170,7 @@ TEST_CASE("DrawRule locates and outputs a parameter that it contains", "[DrawRul
 
     DrawRuleMergeSet b;
     b.mergeRules(layer_b);
-    auto& rule_b = b.matchedRules[0];
+    auto& rule_b = b.matchedRules()[0];
 
     REQUIRE(rule_b.get(StyleParamKey::color, str)); REQUIRE(str == "value_1b");
     REQUIRE(rule_b.get(StyleParamKey::width, str)); REQUIRE(str == "value_2b");
@@ -184,18 +184,18 @@ TEST_CASE("DrawRule correctly reports that it doesn't contain a parameter", "[Dr
     const SceneLayer layer_a = { "a", Filter(), { instance_a() }, {} };
     DrawRuleMergeSet a;
     a.mergeRules(layer_a);
-    REQUIRE(!a.matchedRules[0].get(StyleParamKey::width, str)); REQUIRE(str == "");
+    REQUIRE(!a.matchedRules()[0].get(StyleParamKey::width, str)); REQUIRE(str == "");
 
 
     const SceneLayer layer_b = { "b", Filter(), { instance_b() }, {} };
     DrawRuleMergeSet b;
     b.mergeRules(layer_b);
-    REQUIRE(!b.matchedRules[0].get(StyleParamKey::join, str)); REQUIRE(str == "");
+    REQUIRE(!b.matchedRules()[0].get(StyleParamKey::join, str)); REQUIRE(str == "");
 
     const SceneLayer layer_c = { "c", Filter(), { instance_c() }, {} };
     DrawRuleMergeSet c;
     c.mergeRules(layer_c);
-    REQUIRE(!c.matchedRules[0].get(StyleParamKey::order, str)); REQUIRE(str == "");
+    REQUIRE(!c.matchedRules()[0].get(StyleParamKey::order, str)); REQUIRE(str == "");
 
 
 }

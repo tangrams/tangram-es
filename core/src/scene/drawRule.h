@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <set>
+#include <bitset>
 
 namespace Tangram {
 
@@ -36,12 +37,15 @@ class StyleContext;
 
 struct DrawRuleData {
 
+    // https://github.com/tangrams/tangram-docs/blob/gh-pages/pages/draw.md#style-parameters
     std::vector<StyleParam> parameters;
+
+    // draw-rule name (and assigned id)
+    // https://github.com/tangrams/tangram-docs/blob/gh-pages/pages/draw.md#draw-rule
     std::string name;
     int id;
 
-    DrawRuleData(std::string _name, int _id,
-                 const std::vector<StyleParam>& _parameters);
+    DrawRuleData(std::string _name, int _id, std::vector<StyleParam> _parameters);
 
     std::string toString() const;
 
@@ -49,15 +53,28 @@ struct DrawRuleData {
 
 struct DrawRule {
 
-    const StyleParam* params[StyleParamKeySize] = { nullptr };
-    const char*       layers[StyleParamKeySize] = { nullptr };
-    size_t            depths[StyleParamKeySize] = { 0 };
+    // Map of StypeParamKey => StyleParam pointer
+    // of the matched SceneLayer or the evaluated
+    // Function/Stops in DrawRuleMergeset.
+    struct {
+        const StyleParam* param;
+        // SceneLayer name and depth
+        const char* name;
+        size_t depth;
 
+    } params[StyleParamKeySize];
+
+    // A mask to indicate which parameters are set.
+    // 'active' MUST be checked before accessing 'params'
+    // This is cheaper to zero out 4 byte than
+    // 480 (on 32bit arch) or 980 byte for params array.
+    std::bitset<StyleParamKeySize> active = { 0 };
+
+    // draw-style name and id
     const std::string* name = nullptr;
-
     int id;
 
-    DrawRule(const DrawRuleData& _ruleData);
+    DrawRule(const DrawRuleData& _ruleData, const SceneLayer& _layer);
 
     void merge(const DrawRuleData& _ruleData, const SceneLayer& _layer);
 
@@ -69,19 +86,24 @@ struct DrawRule {
 
     const char* getLayerName(StyleParamKey _key) const;
 
-    std::set<const char*> getLayerNames() const;
+    size_t getParamSetHash() const;
 
     const StyleParam& findParameter(StyleParamKey _key) const;
 
     template<typename T>
     bool get(StyleParamKey _key, T& _value) const {
-        auto& param = findParameter(_key);
-        if (!param) { return false; }
-        if (!param.value.is<T>()) {
-            return false;
+        if (auto& param = findParameter(_key)) {
+            return StyleParam::Value::visit(param.value, StyleParam::visitor<T>{ _value });
         }
-        _value = param.value.get<T>();
-        return true;
+        return false;
+    }
+
+    template<typename T>
+    const T* get(StyleParamKey _key) const {
+        if (auto& param = findParameter(_key)) {
+            return StyleParam::Value::visit(param.value, StyleParam::visitor_ptr<T>{});
+        }
+        return nullptr;
     }
 
 private:
@@ -89,8 +111,9 @@ private:
 
 };
 
-struct DrawRuleMergeSet {
+class DrawRuleMergeSet {
 
+public:
     /* Determine and apply DrawRules for a @_feature and add
      * the result to @_tile
      */
@@ -103,12 +126,15 @@ struct DrawRuleMergeSet {
     // internal
     void mergeRules(const SceneLayer& _layer);
 
+    auto& matchedRules() { return m_matchedRules; }
+
+private:
     // Reusable containers 'matchedRules' and 'queuedLayers'
-    std::vector<DrawRule> matchedRules;
-    std::vector<const SceneLayer*> queuedLayers;
+    std::vector<DrawRule> m_matchedRules;
+    std::vector<const SceneLayer*> m_queuedLayers;
 
     // Container for dynamically-evaluated parameters
-    StyleParam evaluated[StyleParamKeySize];
+    StyleParam m_evaluated[StyleParamKeySize];
 
 };
 

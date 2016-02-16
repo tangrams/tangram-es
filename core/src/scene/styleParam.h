@@ -146,6 +146,31 @@ struct StyleParam {
     static StyleParamKey getKey(const std::string& _key);
 
     static const std::string& keyName(StyleParamKey _key);
+
+    template<typename T>
+    struct visitor {
+        using result_type = bool;
+        T& out;
+        bool operator()(const T& v) const {
+            out = v;
+            return true;
+        }
+        template<typename O>
+        bool operator()(const O v) const {
+            return false;
+        }
+    };
+    template<typename T>
+    struct visitor_ptr {
+        using result_type = const T*;
+        const T* operator()(const T& v) const {
+            return &v;
+        }
+        template<typename O>
+        const T* operator()(const O v) const {
+            return nullptr;
+        }
+    };
 };
 
 }
