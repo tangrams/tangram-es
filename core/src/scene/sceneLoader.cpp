@@ -1322,7 +1322,7 @@ void SceneLoader::parseTransition(Node params, Scene& scene, std::vector<StylePa
     }
 }
 
-SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene& scene) {
+SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, Scene& scene) {
 
     std::vector<SceneLayer> sublayers;
     std::vector<DrawRuleData> rules;
@@ -1341,10 +1341,10 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene&
                 std::vector<StyleParam> params;
                 parseStyleParams(ruleNode.second, scene, "", params);
 
-                auto name = ruleNode.first.as<std::string>();
-                int nameId = scene.addIdForName(name);
+                auto ruleName = ruleNode.first.as<std::string>();
+                int ruleId = scene.addIdForName(ruleName);
 
-                rules.push_back({ name, nameId, std::move(params) });
+                rules.push_back({ ruleName, ruleId, std::move(params) });
             }
         } else if (key == "filter") {
             filter = generateFilter(member.second, scene);
@@ -1354,11 +1354,11 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& name, Scene&
             // TODO: ignored for now
         } else {
             // Member is a sublayer
-            sublayers.push_back(loadSublayer(member.second, (name + ":" + key), scene));
+            sublayers.push_back(loadSublayer(member.second, (layerName + ":" + key), scene));
         }
     }
 
-    return { name, filter, rules, sublayers };
+    return { layerName, filter, rules, sublayers };
 }
 
 void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {

@@ -15,10 +15,10 @@
 namespace Tangram {
 
 DrawRuleData::DrawRuleData(std::string _name, int _id,
-                           const std::vector<StyleParam>& _parameters) :
-    parameters(_parameters),
-    name(std::move(_name)),
-    id(_id) {}
+                           std::vector<StyleParam> _parameters)
+    : parameters(std::move(_parameters)),
+      name(std::move(_name)),
+      id(_id) {}
 
 std::string DrawRuleData::toString() const {
     std::string str = "{\n";

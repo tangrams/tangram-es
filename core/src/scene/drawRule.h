@@ -37,12 +37,15 @@ class StyleContext;
 
 struct DrawRuleData {
 
+    // https://github.com/tangrams/tangram-docs/blob/gh-pages/pages/draw.md#style-parameters
     std::vector<StyleParam> parameters;
+
+    // draw-rule name (and assigned id)
+    // https://github.com/tangrams/tangram-docs/blob/gh-pages/pages/draw.md#draw-rule
     std::string name;
     int id;
 
-    DrawRuleData(std::string _name, int _id,
-                 const std::vector<StyleParam>& _parameters);
+    DrawRuleData(std::string _name, int _id, std::vector<StyleParam> _parameters);
 
     std::string toString() const;
 
