@@ -64,6 +64,11 @@ void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureU
     m_shaderProgram->setUniformMatrix4f("u_ortho", _view.getOrthoViewportMatrix());
 
     Style::onBeginDrawFrame(_view, _scene, 1);
+
+    // Upload meshes
+    for (size_t i = 0; i < m_meshes.size(); i++) {
+        m_meshes[i]->myUpload();
+    }
 }
 
 void TextStyle::onEndDrawFrame() {
@@ -93,13 +98,6 @@ void TextStyle::onBeginUpdate() {
     size_t s = m_context->glyphBatchCount();
     while (m_meshes.size() < s) {
         m_meshes.push_back(std::make_unique<LabelMesh>(m_vertexLayout, GL_TRIANGLES));
-    }
-}
-
-void TextStyle::onEndUpdate() {
-    // Upload meshes for next frame
-    for (size_t i = 0; i < m_meshes.size(); i++) {
-        m_meshes[i]->myUpload();
     }
 }
 

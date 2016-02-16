@@ -65,7 +65,6 @@ public:
     void onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit = 0) override;
     void onEndDrawFrame() override;
     void onBeginUpdate() override;
-    void onEndUpdate() override;
 
     LabelMesh& mesh(size_t id) const { return *m_meshes[id]; }
 
