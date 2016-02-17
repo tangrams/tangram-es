@@ -237,15 +237,18 @@ void addCap(const glm::vec3& _coord, const glm::vec2& _normal, int _numCorners, 
 // Tests if a line segment (from point A to B) is outside the edge of a tile
 bool isOutsideTile(const glm::vec3& _a, const glm::vec3& _b) {
 
-    float tolerance = 0.0005; // tweak this adjust if catching too few/many line segments near tile edges
+    // tweak this adjust if catching too few/many line segments near tile edges
     // TODO: make tolerance configurable by source if necessary
-    glm::vec2 tile_min(0.0, 0.0);
-    glm::vec2 tile_max(1.0, 1.0);
+    float tolerance = 0.0005;
+    float tile_min = 0.0 + tolerance;
+    float tile_max = 1.0 - tolerance;
 
-    if ( (_a.x <= tile_min.x + tolerance && _b.x <= tile_min.x + tolerance) ||
-         (_a.x >= tile_max.x - tolerance && _b.x >= tile_max.x - tolerance) ||
-         (_a.y <= tile_min.y + tolerance && _b.y <= tile_min.y + tolerance) ||
-         (_a.y >= tile_max.y - tolerance && _b.y >= tile_max.y - tolerance) ) { return true; }
+    if ( (_a.x < tile_min && _b.x < tile_min) ||
+         (_a.x > tile_max && _b.x > tile_max) ||
+         (_a.y < tile_min && _b.y < tile_min) ||
+         (_a.y > tile_max && _b.y > tile_max) ) {
+        return true;
+    }
 
     return false;
 }
