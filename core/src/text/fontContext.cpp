@@ -77,14 +77,16 @@ void AlfonsContext::addGlyph(alf::AtlasID id, uint16_t gx, uint16_t gy, uint16_t
     gw += pad * 2;
     gh += pad * 2;
 
+    static std::vector<unsigned char> tmpSdfBuffer;
+
     size_t bytes = gw * gh * sizeof(float) * 3;
-    if (m_sdfBuffer.size() < bytes) {
-        m_sdfBuffer.resize(bytes);
+    if (tmpSdfBuffer.size() < bytes) {
+        tmpSdfBuffer.resize(bytes);
     }
 
     sdfBuildDistanceFieldNoAlloc(dst, width, SDF_WIDTH,
                                  dst, gw, gh, width,
-                                 &m_sdfBuffer[0]);
+                                 &tmpSdfBuffer[0]);
 
     texture.setDirty(gy, gh);
 }

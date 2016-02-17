@@ -72,7 +72,6 @@ public:
 
 private:
 
-    std::vector<unsigned char> m_sdfBuffer;
     std::vector<GlyphBatch> m_batches;
 };
 
