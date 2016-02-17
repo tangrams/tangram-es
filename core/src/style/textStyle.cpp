@@ -110,12 +110,11 @@ struct TextBatch : public alf::TextBatch {
     using Base = alf::TextBatch;
     using Base::Base;
 
-    std::vector<std::pair<int,float>> m_lineWraps;
-
     glm::vec2 drawWithLineWrappingByCharacterCount(const alf::LineLayout& _line, size_t _maxChar,
                                                    TextLabelProperty::Align _alignment) {
+        static std::vector<std::pair<int,float>> lineWraps;
 
-        m_lineWraps.clear();
+        lineWraps.clear();
 
         float lineWidth = 0;
         float maxWidth = 0;
@@ -148,7 +147,13 @@ struct TextBatch : public alf::TextBatch {
                 // Collaborative
                 // Studies
                 if (lastShape != 0 && (c.mustBreak || shapeCount - lastShape > 4 )) {
-                    m_lineWraps.emplace_back(lastShape, lastWidth);
+
+                    auto& endShape = _line.shapes()[lastShape-1];
+                    if (endShape.isSpace) {
+                        lineWidth -= _line.advance(endShape);
+                        lastWidth -= _line.advance(endShape);
+                    }
+                    lineWraps.emplace_back(lastShape, lastWidth);
                     maxWidth = std::max(maxWidth, lastWidth);
 
                     lineWidth -= lastWidth;
@@ -159,13 +164,13 @@ struct TextBatch : public alf::TextBatch {
             }
         }
         if (charCount > 0) {
-            m_lineWraps.emplace_back(shapeCount, lineWidth);
+            lineWraps.emplace_back(shapeCount, lineWidth);
             maxWidth = std::max(maxWidth, lineWidth);
         }
 
         size_t shapeStart = 0;
         glm::vec2 offset(0);
-        for (auto wrap : m_lineWraps) {
+        for (auto wrap : lineWraps) {
             switch(_alignment) {
             case TextLabelProperty::Align::center:
                 offset.x = (maxWidth - wrap.second) * 0.5;
