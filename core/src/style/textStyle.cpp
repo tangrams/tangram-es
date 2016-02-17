@@ -135,14 +135,14 @@ struct TextBatch : public alf::TextBatch {
 
             if (c.mustBreak || charCount > _maxChar) {
                 // only go to next line if chars have been added on the current line
-                // HACK: avoid short words on single line, e.g. maxChar==15:
-                // New York City
-                // Laboratory
-                // Middle School
-                // <<= of <<=
-                // Collaborative
-                // Studies
+                // HACK: avoid short words on single line
                 if (lastShape != 0 && (c.mustBreak || shapeCount - lastShape > 4 )) {
+
+                    auto& endShape = _line.shapes()[lastShape-1];
+                    if (endShape.isSpace) {
+                        lineWidth -= _line.advance(endShape);
+                        lastWidth -= _line.advance(endShape);
+                    }
                     m_lineWraps.emplace_back(lastShape, lastWidth);
                     maxWidth = std::max(maxWidth, lastWidth);
 
