@@ -69,12 +69,8 @@ void AlfonsContext::addGlyph(alf::AtlasID id, uint16_t gx, uint16_t gy, uint16_t
 
     unsigned char* dst = &texData[(gx + pad) + (gy + pad) * stride];
 
-    size_t pos = 0;
-    for (uint16_t y = 0; y < gh; y++) {
-        size_t row = (y * stride);
-        for (uint16_t x = 0; x < gw; x++) {
-            dst[row + x] = src[pos++];
-        }
+    for (size_t y = 0, pos = 0; y < gh; y++, pos += gw) {
+        std::memcpy(dst + y * stride, src + pos, gw);
     }
 
     dst = &texData[gx + gy * width];
