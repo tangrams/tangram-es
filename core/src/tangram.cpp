@@ -541,16 +541,9 @@ void setupGL() {
         m_tileManager->clearTileSets();
     }
 
-    // The OpenGL context has been destroyed since the last time resources were created,
-    // so we invalidate all data that depends on OpenGL object handles.
-
-    // ShaderPrograms are invalidated and immediately rebuilt
-    ShaderProgram::invalidateAllPrograms();
-
-    // Texture objects are invalidated and re-uploaded the next time they are updated
-    Texture::invalidateAllTextures();
-
-    // Reconfigure the render states
+    // Reconfigure the render states. Increases context 'generation'.
+    // The OpenGL context has been destroyed since the last time resources were
+    // created, so we invalidate all data that depends on OpenGL object handles.
     RenderState::configure();
 
     // Set default primitive render color

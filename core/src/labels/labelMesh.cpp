@@ -21,7 +21,7 @@ LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMo
 LabelMesh::~LabelMesh() {
     s_meshCounter--;
 
-    if (s_quadIndexBuffer != 0 && (!RenderState::isCurrentGeneration(s_quadGeneration) || s_meshCounter <= 0)) {
+    if (s_quadIndexBuffer != 0 && (!RenderState::isValidGeneration(s_quadGeneration) || s_meshCounter <= 0)) {
         if (RenderState::indexBuffer.compare(s_quadIndexBuffer)) {
             RenderState::indexBuffer.init(0, false);
         }
@@ -38,7 +38,7 @@ void LabelMesh::reset() {
 }
 
 void LabelMesh::loadQuadIndices() {
-    if (RenderState::isCurrentGeneration(s_quadGeneration)) {
+    if (RenderState::isValidGeneration(s_quadGeneration)) {
         return;
     }
 

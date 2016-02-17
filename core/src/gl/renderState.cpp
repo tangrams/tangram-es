@@ -72,7 +72,7 @@ namespace RenderState {
         textureUnit.init(std::numeric_limits<unsigned int>::max(), false);
     }
 
-    bool isCurrentGeneration(int _generation) {
+    bool isValidGeneration(int _generation) {
         return _generation == s_validGeneration;
     }
 

@@ -234,7 +234,7 @@ void VboMeshBase::draw(ShaderProgram& _shader) {
 }
 
 bool VboMeshBase::checkValidity() {
-    if (!RenderState::isCurrentGeneration(m_generation)) {
+    if (!RenderState::isValidGeneration(m_generation)) {
         m_isUploaded = false;
         m_glVertexBuffer = 0;
         m_glIndexBuffer = 0;
