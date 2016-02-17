@@ -255,24 +255,23 @@ void render() {
 
         totaltime += (float(end - start) / CLOCKS_PER_SEC) * 1000.f;
 
-        std::vector<std::string> debuginfos;
-
-        debuginfos.push_back("zoom:" + std::to_string(m_view->getZoom()));
-        debuginfos.push_back("pos:" + std::to_string(m_view->getPosition().x) + "/"
-                + std::to_string(m_view->getPosition().y));
-        debuginfos.push_back("tilt:" + std::to_string(m_view->getPitch() * 57.3) + "deg");
-        debuginfos.push_back("visible tiles:"
-                + std::to_string(m_tileManager->getVisibleTiles().size()));
-        debuginfos.push_back("tile cache size:"
-                + std::to_string(m_tileManager->getTileCache()->getMemoryUsage() / 1024) + "kb");
-        debuginfos.push_back("avg frame render time:" + std::to_string(time) + "ms");
-
         size_t memused = 0;
         for (const auto& tile : m_tileManager->getVisibleTiles()) {
             memused += tile->getMemoryUsage();
         }
 
+        std::vector<std::string> debuginfos;
+
+        debuginfos.push_back("visible tiles:"
+                + std::to_string(m_tileManager->getVisibleTiles().size()));
+        debuginfos.push_back("tile cache size:"
+                + std::to_string(m_tileManager->getTileCache()->getMemoryUsage() / 1024) + "kb");
         debuginfos.push_back("tile size:" + std::to_string(memused / 1024) + "kb");
+        debuginfos.push_back("avg frame render time:" + std::to_string(time) + "ms");
+        debuginfos.push_back("zoom:" + std::to_string(m_view->getZoom()));
+        debuginfos.push_back("pos:" + std::to_string(m_view->getPosition().x) + "/"
+                + std::to_string(m_view->getPosition().y));
+        debuginfos.push_back("tilt:" + std::to_string(m_view->getPitch() * 57.3) + "deg");
 
         TextDisplay::Instance().draw(debuginfos);
     }
