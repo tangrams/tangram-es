@@ -461,10 +461,11 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
                                            const Properties& _props) const {
 
     const static std::string key_name("name");
+    const static std::string defaultWeight("400");
+    const static std::string defaultStyle("normal");
+    const static std::string defaultFamily("default");
 
     TextStyle::Parameters p;
-
-    std::string fontFamily, fontWeight, fontStyle, transform, align, anchor;
     glm::vec2 offset;
 
     _rule.get(StyleParamKey::text_source, p.text);
@@ -477,24 +478,23 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     }
     if (p.text.empty()) { return p; }
 
-    _rule.get(StyleParamKey::font_family, fontFamily);
-    _rule.get(StyleParamKey::font_weight, fontWeight);
-    _rule.get(StyleParamKey::font_style, fontStyle);
+    auto fontFamily = _rule.get<std::string>(StyleParamKey::font_family);
+    fontFamily = (!fontFamily) ? &defaultFamily : fontFamily;
 
-    fontWeight = (fontWeight.size() == 0) ? "400" : fontWeight;
-    fontStyle = (fontStyle.size() == 0) ? "normal" : fontStyle;
+    auto fontWeight = _rule.get<std::string>(StyleParamKey::font_weight);
+    fontWeight = (!fontWeight) ? &defaultWeight : fontWeight;
+
+    auto fontStyle = _rule.get<std::string>(StyleParamKey::font_style);
+    fontStyle = (!fontStyle) ? &defaultStyle : fontStyle;
 
     _rule.get(StyleParamKey::font_size, p.fontSize);
     // TODO - look font from fontManager
-    p.font = m_style.context()->getFont(fontFamily, fontStyle, fontWeight, p.fontSize);
+    p.font = m_style.context()->getFont(*fontFamily, *fontStyle, *fontWeight, p.fontSize);
 
     _rule.get(StyleParamKey::font_fill, p.fill);
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
     _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
     _rule.get(StyleParamKey::font_stroke_width, p.strokeWidth);
-    _rule.get(StyleParamKey::transform, transform);
-    _rule.get(StyleParamKey::align, align);
-    _rule.get(StyleParamKey::anchor, anchor);
     _rule.get(StyleParamKey::priority, p.labelOptions.priority);
     _rule.get(StyleParamKey::collide, p.labelOptions.collide);
     _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
@@ -508,9 +508,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         hash_combine(repeatGroupHash, repeatGroup);
     } else {
         // Default to hash on all used layer names ('draw.key' in JS version)
-        for (auto* name : _rule.getLayerNames()) {
-            hash_combine(repeatGroupHash, name);
-        }
+        repeatGroupHash = _rule.getParamSetHash();
     }
 
     StyleParam::Width repeatDistance;
@@ -528,12 +526,18 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         p.labelOptions.properties = std::make_shared<Properties>(_props);
     }
 
-    LabelProperty::anchor(anchor, p.anchor);
+    if (auto* anchor = _rule.get<std::string>(StyleParamKey::anchor)) {
+        LabelProperty::anchor(*anchor, p.anchor);
+    }
 
-    TextLabelProperty::transform(transform, p.transform);
-    bool res = TextLabelProperty::align(align, p.align);
-    if (!res) {
-        switch(p.anchor) {
+    if (auto* transform = _rule.get<std::string>(StyleParamKey::transform)) {
+        TextLabelProperty::transform(*transform, p.transform);
+    }
+
+    if (auto* align = _rule.get<std::string>(StyleParamKey::align)) {
+        bool res = TextLabelProperty::align(*align, p.align);
+        if (!res) {
+            switch(p.anchor) {
             case LabelProperty::Anchor::top_left:
             case LabelProperty::Anchor::left:
             case LabelProperty::Anchor::bottom_left:
@@ -548,6 +552,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
             case LabelProperty::Anchor::bottom:
             case LabelProperty::Anchor::center:
                 break;
+            }
         }
     }
 
