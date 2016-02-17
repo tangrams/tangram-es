@@ -17,7 +17,7 @@ class Scene;
 class Style;
 class View;
 class StyleContext;
-class StyledMesh;
+struct StyledMesh;
 
 /* Tile of vector map data
  *
