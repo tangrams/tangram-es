@@ -14,7 +14,7 @@
 using namespace Tangram;
 
 // Forward declaration
-void init_main_window();
+void init_main_window(bool recreate);
 
 std::string sceneFile = "scene.yaml";
 
@@ -223,33 +223,35 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 
 }
 
-void init_main_window() {
+void init_main_window(bool recreate) {
 
     // Setup tangram
     Tangram::initialize(sceneFile.c_str());
 
-    // Destroy old window
-    if (main_window != nullptr) {
-        glfwDestroyWindow(main_window);
+    if (!recreate) {
+        // Destroy old window
+        if (main_window != nullptr) {
+            glfwDestroyWindow(main_window);
+        }
+
+        // Create a windowed mode window and its OpenGL context
+        glfwWindowHint(GLFW_SAMPLES, 2);
+        main_window = glfwCreateWindow(width, height, "Tangram ES", NULL, NULL);
+        if (!main_window) {
+            glfwTerminate();
+        }
+
+        // Make the main_window's context current
+        glfwMakeContextCurrent(main_window);
+
+        // Set input callbacks
+        glfwSetWindowSizeCallback(main_window, window_size_callback);
+        glfwSetMouseButtonCallback(main_window, mouse_button_callback);
+        glfwSetCursorPosCallback(main_window, cursor_pos_callback);
+        glfwSetScrollCallback(main_window, scroll_callback);
+        glfwSetKeyCallback(main_window, key_callback);
+        glfwSetDropCallback(main_window, drop_callback);
     }
-
-    // Create a windowed mode window and its OpenGL context
-    glfwWindowHint(GLFW_SAMPLES, 2);
-    main_window = glfwCreateWindow(width, height, "Tangram ES", NULL, NULL);
-    if (!main_window) {
-        glfwTerminate();
-    }
-
-    // Make the main_window's context current
-    glfwMakeContextCurrent(main_window);
-
-    // Set input callbacks
-    glfwSetWindowSizeCallback(main_window, window_size_callback);
-    glfwSetMouseButtonCallback(main_window, mouse_button_callback);
-    glfwSetCursorPosCallback(main_window, cursor_pos_callback);
-    glfwSetScrollCallback(main_window, scroll_callback);
-    glfwSetKeyCallback(main_window, key_callback);
-    glfwSetDropCallback(main_window, drop_callback);
 
     // Setup graphics
     Tangram::setupGL();
@@ -299,7 +301,7 @@ int main(int argc, char* argv[]) {
     }
     auto last_mod = sb.st_mtime;
 
-    init_main_window();
+    init_main_window(false);
 
     // Initialize cURL
     curl_global_init(CURL_GLOBAL_DEFAULT);
@@ -337,7 +339,7 @@ int main(int argc, char* argv[]) {
         if (recreate_context) {
             logMsg("recreate context\n");
              // Simulate GL context loss
-            init_main_window();
+            init_main_window(true);
             recreate_context = false;
         }
 
