@@ -385,19 +385,47 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     }
 
     // Scale factor by which the texture glyphs are scaled to match fontSize
-    float fontScale = (_params.fontSize * m_style.pixelScale()) / FONT_SIZE;
+    float fontScale = (_params.fontSize * m_style.pixelScale()) / _params.font->size();
 
     // Stroke width is normalized by the distance of the SDF spread, then
     // scaled to a char, then packed into the "alpha" channel of stroke.
     // Maximal strokeWidth is 3px, attribute is normalized to 0-1 range.
     float strokeWidth = _params.strokeWidth * m_style.pixelScale();
-    uint32_t strokeAttrib = std::min(strokeWidth / 3.f * 255.f, 255.f);
 
+#if 0
     // HACK - need to use a smaller font in this case
     // to have enough sdf-radius for the stroke!
-    if (strokeWidth > 2.5 * fontScale) {
-        strokeAttrib = (2.5 * fontScale) / 3.f * 255.f;
+    // if (strokeWidth > 1.5 * fontScale) {
+    //     strokeWidth = 1.5 * fontScale;
+    // }
+
+    //// see point.vs and sdf.fs
+    float sdf_radius = 3.0;
+
+    // (rate of change within one pixel)
+    float sdf_pixel = 0.5 / sdf_radius;
+
+    // scale strokeWidth to sdf_pixel
+    float stroke_width = strokeWidth * sdf_pixel;
+
+    // scale sdf (texture is scaled depeding on font size)
+    stroke_width /= fontScale;
+
+    float v_sdf_threshold = 0.5 - stroke_width;
+
+    // 0.1245 antialiasing filter width of unscaled glyph
+    float filter_width = sdf_pixel / fontScale * (0.5 + 0.25);
+
+    if (v_sdf_threshold - filter_width < 0) {
+        // modify stroke width to be within sdf_radius
+        LOG("size:%f scale:%f stroke:%f att:%f thres:%f filter:%f ==> %f",
+            _params.fontSize, fontScale, _params.strokeWidth,
+            stroke_width, v_sdf_threshold, filter_width,
+            v_sdf_threshold - filter_width);
     }
+#endif
+
+    uint32_t strokeAttrib = std::max(std::min(strokeWidth / 3.f * 255.f, 255.f), 0.f);
 
     m_scratch.stroke = (_params.strokeColor & 0x00ffffff) + (strokeAttrib << 24);
     m_scratch.fill = _params.fill;

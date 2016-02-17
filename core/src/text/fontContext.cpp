@@ -12,6 +12,7 @@
 #define FALLBACK "fonts/DroidSansFallback.ttf"
 
 #define SDF_WIDTH 3
+#define FONT_SIZE 24
 
 #define ANDROID_FONT_PATH "/system/fonts/"
 

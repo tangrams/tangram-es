@@ -71,29 +71,37 @@ void main(void) {
 
     vec4 color = v_color;
 
-    //float distance = texture2D(u_tex, v_texcoords).a;
-    // color *= v_alpha * pow(sampleAlpha(v_texcoords, distance, v_sdf_threshold), 0.4545);
-
     float dist = texture2D(u_tex, v_texcoords).a;
 
-    // emSize 15/16 = .937
-    // float s = 0.0625 * emSize; // 0.0625 = 1.0/1em ratio
-    // // ==> .0666
+    // - At the glyph outline alpha is 0.5
+    //
+    // - The sdf-radius is 3.0px, i.e. within 3px distance
+    //   from the outline alpha is in the range (0.5 -> 0.0)
+    //
+    // - 0.75 for 0.5 pixel threshold (to both sides of the outline)
+    //   plus 0.25 for a bit of smoothness (0.75)
+    //
+    //   ==> (0.5 / 3.0) * (0.5 + 0.25) == 0.1245
+    //   This value is added to sdf_threshold to antialias
+    //   the outline within one pixel for the *unscaled* glyph.
+    //
+    // - sdf_scale == fontScale / glyphScale:
+    //   When the glyph is scaled down, 's' must be increased
+    //   (used to interpolate 1px of the scaled glyph around v_sdf_threshold)
+    float filter_width = 0.1245 / v_sdf_scale;
 
-    // (0.5 / 3.0) * 0.5 <= sdf 0.5 pixel threshold
-    // float s = 0.083 / v_sdf_scale;
+    // float sdf_pixel = (0.5/3.0) / v_sdf_scale;
+    // float add_smooth = 0.25;
+    // float filter_width = (sdf_pixel * (0.5 + add_smooth));
 
-    // (0.5 / 3.0) * 0.75 == 0.1245
-    //   0.5 pixel threshold (to both sides)
-    // + 0.25 for a bit of smoothness (==> 0.75)
-    float s = 0.1245 / v_sdf_scale;
-
-    float alpha = smoothstep(v_sdf_threshold - s,
-                             v_sdf_threshold + s,
+    float alpha = smoothstep(max(v_sdf_threshold - filter_width, 0.0),
+                             v_sdf_threshold + filter_width,
                              dist);
 
     color *= v_alpha * alpha;
-
+    //color = mix(vec4(1., 0., 0., 1.), vec4(0., 0., 1., 1.), dist);
+    // color = mix(vec4(1., 0., 0., 1.), vec4(0., 0., 1., 1.), step(dist,0.5));
+    // color.a *= max(alpha, 0.2);
 
     #pragma tangram: color
     #pragma tangram: filter
