@@ -183,19 +183,52 @@ struct TextBatch : public alf::TextBatch {
     }
 };
 
-struct TextStyleBuilder : public StyleBuilder {
+class TextStyleBuilder : public StyleBuilder {
 
-    const TextStyle& m_style;
+public:
 
-    float m_tileSize;
+    TextStyleBuilder(const TextStyle& _style) :
+        StyleBuilder(_style),
+        m_style(_style),
+        m_batch(_style.context()->m_atlas, m_scratch) {}
 
-    alf::TextShaper m_shaper;
-    TextBatch m_batch;
+    const Style& style() const override { return m_style; }
 
-    bool m_sdf;
-    float m_pixelScale = 1;
+    // StyleBuilder interface
+    void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
+    void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
+    void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
+    bool checkRule(const DrawRule& _rule) const override;
 
-    std::unique_ptr<TextLabels> m_textLabels;
+    void setup(const Tile& _tile) override {
+        m_tileSize = _tile.getProjection()->TileSize();
+        m_scratch.clear();
+
+        m_textLabels = std::make_unique<TextLabels>(m_style);
+    }
+
+    virtual std::unique_ptr<StyledMesh> build() override {
+        if (!m_scratch.labels.empty()) {
+            m_textLabels->setLabels(m_scratch.labels);
+            m_textLabels->setQuads(m_scratch.quads);
+        }
+
+        m_scratch.clear();
+
+        return std::move(m_textLabels);
+    };
+
+    TextStyle::Parameters applyRule(const DrawRule& _rule,
+                                    const Properties& _props) const;
+
+    bool prepareLabel(TextStyle::Parameters& _params, Label::Type _type);
+    void addLabel(const TextStyle::Parameters& _params, Label::Type _type,
+                  Label::Transform _transform);
+
+    std::string applyTextTransform(const TextStyle::Parameters& _params,
+                                   const std::string& _string);
+
+private:
 
     struct ScratchBuffer : public alf::MeshCallback {
         std::vector<GlyphQuad> quads;
@@ -241,48 +274,20 @@ struct TextStyleBuilder : public StyleBuilder {
         }
     };
 
+    const TextStyle& m_style;
+
+    float m_tileSize;
+
+    alf::TextShaper m_shaper;
+    TextBatch m_batch;
+
+    bool m_sdf;
+    float m_pixelScale = 1;
+
     ScratchBuffer m_scratch;
 
-    TextStyleBuilder(const TextStyle& _style) :
-        StyleBuilder(_style),
-        m_style(_style),
-        m_batch(_style.context()->m_atlas, m_scratch) {}
+    std::unique_ptr<TextLabels> m_textLabels;
 
-    const Style& style() const override { return m_style; }
-
-    // StyleBuilder interface
-    void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
-    void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
-    void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
-    bool checkRule(const DrawRule& _rule) const override;
-
-    void setup(const Tile& _tile) override {
-        m_tileSize = _tile.getProjection()->TileSize();
-        m_scratch.clear();
-
-        m_textLabels = std::make_unique<TextLabels>(m_style);
-    }
-
-    virtual std::unique_ptr<StyledMesh> build() override {
-        if (!m_scratch.labels.empty()) {
-            m_textLabels->setLabels(m_scratch.labels);
-            m_textLabels->setQuads(m_scratch.quads);
-        }
-
-        m_scratch.clear();
-
-        return std::move(m_textLabels);
-    };
-
-    TextStyle::Parameters applyRule(const DrawRule& _rule,
-                                    const Properties& _props) const;
-
-    bool prepareLabel(TextStyle::Parameters& _params, Label::Type _type);
-    void addLabel(const TextStyle::Parameters& _params, Label::Type _type,
-                  Label::Transform _transform);
-
-    std::string applyTextTransform(const TextStyle::Parameters& _params,
-                                   const std::string& _string);
 };
 
 bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
