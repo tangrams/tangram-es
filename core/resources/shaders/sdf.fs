@@ -78,8 +78,8 @@ void main(void) {
     // - The sdf-radius is 3.0px, i.e. within 3px distance
     //   from the outline alpha is in the range (0.5 -> 0.0)
     //
-    // - 0.75 for 0.5 pixel threshold (to both sides of the outline)
-    //   plus 0.25 for a bit of smoothness (0.75)
+    // - 0.5 pixel threshold (to both sides of the outline)
+    //   plus 0.25 for a bit of smoothness
     //
     //   ==> (0.5 / 3.0) * (0.5 + 0.25) == 0.1245
     //   This value is added to sdf_threshold to antialias
