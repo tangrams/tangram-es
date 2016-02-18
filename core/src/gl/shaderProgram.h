@@ -134,7 +134,7 @@ private:
     GLuint m_glVertexShader;
 
     fastmap<std::string, ShaderLocation> m_attribMap;
-    fastmap<std::string, ShaderLocation> m_uniformMap;
+    fastmap<intptr_t, ShaderLocation> m_uniformMap;
     fastmap<GLint, UniformValue> m_uniformCache;
 
     std::string m_fragmentShaderSource;

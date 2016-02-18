@@ -100,7 +100,7 @@ GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
 
     // Get uniform location at this key, or create one valued at -2 if absent
-    GLint& location = m_uniformMap[_uniformName].loc;
+    GLint& location = m_uniformMap[(intptr_t)&_uniformName].loc;
 
     // -2 means this is a new entry
     if (location == -2) {
