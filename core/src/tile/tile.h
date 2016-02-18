@@ -13,10 +13,8 @@ namespace Tangram {
 
 class DataSource;
 class MapProjection;
-class Scene;
 class Style;
 class View;
-class StyleContext;
 class StyledMesh;
 
 /* Tile of vector map data
@@ -53,16 +51,15 @@ public:
 
     void initGeometry(uint32_t _size);
 
-    std::unique_ptr<StyledMesh>& getMesh(const Style& _style);
+    const std::unique_ptr<StyledMesh>& getMesh(const Style& _style) const;
+
+    void setMesh(const Style& _style, std::unique_ptr<StyledMesh> _mesh);
 
     /* Update the Tile considering the current view */
     void update(float _dt, const View& _view);
 
     /* Update tile origin based on wraping for this tile */
     void updateTileOrigin(const int _wrap);
-
-    /* Draws the geometry associated with the provided <Style> and view-projection matrix */
-    void draw(const Style& _style, const View& _view);
 
     void resetState();
 

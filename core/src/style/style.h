@@ -179,6 +179,9 @@ public:
     /* Perform any unsetup needed after drawing each frame */
     virtual void onEndDrawFrame() {}
 
+    /* Draws the geometry associated with this <Style> */
+    virtual void draw(const Tile& _tile);
+
     virtual void setLightingType(LightingType _lType);
 
     void setAnimated(bool _animated) { m_animated = _animated; }

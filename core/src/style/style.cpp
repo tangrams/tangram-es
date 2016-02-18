@@ -11,6 +11,7 @@
 #include "scene/spriteAtlas.h"
 #include "tile/tile.h"
 #include "view/view.h"
+#include "tangram.h"
 
 namespace Tangram {
 
@@ -95,6 +96,11 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
 
 void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
 
+    // TODO cache which uniforms are used by the shader!
+
+    // Set time uniforms style's shader programs
+    m_shaderProgram->setUniformf("u_time", Tangram::frameTime());
+
     m_shaderProgram->setUniformf("u_device_pixel_ratio", m_pixelScale);
 
     m_material->setupProgram(*m_shaderProgram);
@@ -155,6 +161,22 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit)
     }
 }
 
+void Style::draw(const Tile& _tile) {
+
+    auto& styleMesh = _tile.getMesh(*this);
+
+    if (styleMesh) {
+        float zoomAndProxy = _tile.getID().z * (_tile.isProxy() ? -1 : 1);
+
+        m_shaderProgram->setUniformMatrix4f("u_model", _tile.getModelMatrix());
+        m_shaderProgram->setUniformf("u_tile_origin",
+                                     _tile.getOrigin().x,
+                                     _tile.getOrigin().y,
+                                     zoomAndProxy);
+
+        styleMesh->draw(*m_shaderProgram);
+    }
+}
 
 bool StyleBuilder::checkRule(const DrawRule& _rule) const {
 
