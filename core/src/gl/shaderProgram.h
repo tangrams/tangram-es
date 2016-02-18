@@ -153,4 +153,18 @@ private:
 
 };
 
+namespace Uniform {
+    extern const std::string time;
+    extern const std::string model;
+    extern const std::string tileOrigin;
+    extern const std::string devicePixelRatio;
+    extern const std::string resolution;
+    extern const std::string mapPosition;
+    extern const std::string normalMatrix;
+    extern const std::string inverseNormalMatrix;
+    extern const std::string metersPerPixel;
+    extern const std::string view;
+    extern const std::string proj;
+};
+
 }

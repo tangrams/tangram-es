@@ -11,6 +11,19 @@
 
 namespace Tangram {
 
+namespace Uniform {
+    const std::string time = "u_time";
+    const std::string model = "u_model";
+    const std::string tileOrigin = "u_tile_origin";
+    const std::string devicePixelRatio = "u_device_pixel_ratio";
+    const std::string resolution = "u_resolution";
+    const std::string mapPosition = "u_map_position";
+    const std::string normalMatrix = "u_normalMatrix";
+    const std::string inverseNormalMatrix = "u_inverseNormalMatrix";
+    const std::string metersPerPixel = "u_meters_per_pixel";
+    const std::string view = "u_view";
+    const std::string proj = "u_proj";
+}
 
 ShaderProgram::ShaderProgram() {
 

@@ -95,12 +95,10 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
 
 void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
 
-    // TODO cache which uniforms are used by the shader!
-
     // Set time uniforms style's shader programs
-    m_shaderProgram->setUniformf("u_time", Tangram::frameTime());
+    m_shaderProgram->setUniformf(Uniform::time, Tangram::frameTime());
 
-    m_shaderProgram->setUniformf("u_device_pixel_ratio", m_pixelScale);
+    m_shaderProgram->setUniformf(Uniform::devicePixelRatio, m_pixelScale);
 
     m_material->setupProgram(*m_shaderProgram);
 
@@ -112,15 +110,15 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit)
     }
 
     // Set Map Position
-    m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
+    m_shaderProgram->setUniformf(Uniform::resolution, _view.getWidth(), _view.getHeight());
 
     const auto& mapPos = _view.getPosition();
-    m_shaderProgram->setUniformf("u_map_position", mapPos.x, mapPos.y, _view.getZoom());
-    m_shaderProgram->setUniformMatrix3f("u_normalMatrix", _view.getNormalMatrix());
-    m_shaderProgram->setUniformMatrix3f("u_inverseNormalMatrix", glm::inverse(_view.getNormalMatrix()));
-    m_shaderProgram->setUniformf("u_meters_per_pixel", 1.0 / _view.pixelsPerMeter());
-    m_shaderProgram->setUniformMatrix4f("u_view", _view.getViewMatrix());
-    m_shaderProgram->setUniformMatrix4f("u_proj", _view.getProjectionMatrix());
+    m_shaderProgram->setUniformf(Uniform::mapPosition, mapPos.x, mapPos.y, _view.getZoom());
+    m_shaderProgram->setUniformMatrix3f(Uniform::normalMatrix, _view.getNormalMatrix());
+    m_shaderProgram->setUniformMatrix3f(Uniform::inverseNormalMatrix, glm::inverse(_view.getNormalMatrix()));
+    m_shaderProgram->setUniformf(Uniform::metersPerPixel, 1.0 / _view.pixelsPerMeter());
+    m_shaderProgram->setUniformMatrix4f(Uniform::view, _view.getViewMatrix());
+    m_shaderProgram->setUniformMatrix4f(Uniform::proj, _view.getProjectionMatrix());
 
     setupShaderUniforms(_textureUnit, _scene);
 
