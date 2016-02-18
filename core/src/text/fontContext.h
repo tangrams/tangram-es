@@ -68,7 +68,7 @@ public:
     alf::GlyphAtlas m_atlas;
 
     alf::FontManager m_alfons;
-    std::shared_ptr<alf::Font> m_font;
+    std::array<std::shared_ptr<alf::Font>, 3> m_font;
 
 private:
 
