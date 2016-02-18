@@ -43,8 +43,10 @@ void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
 
     m_material->injectOnProgram(*m_shaderProgram);
 
-    for (auto& light : _lights) {
-        light->injectOnProgram(*m_shaderProgram);
+    if (m_lightingType != LightingType::none) {
+        for (auto& light : _lights) {
+            light->injectOnProgram(*m_shaderProgram);
+        }
     }
 }
 
@@ -105,9 +107,11 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit)
 
     m_material->setupProgram(*m_shaderProgram);
 
-    // Set up lights
-    for (const auto& light : _scene.lights()) {
-        light->setupProgram(_view, *m_shaderProgram);
+    if (m_lightingType != LightingType::none) {
+        // Set up lights
+        for (const auto& light : _scene.lights()) {
+            light->setupProgram(_view, *m_shaderProgram);
+        }
     }
 
     // Set Map Position
