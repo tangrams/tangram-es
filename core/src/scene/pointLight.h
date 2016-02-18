@@ -9,7 +9,7 @@ public:
 
 	PointLight(const std::string& _name, bool _dynamic = false);
 	virtual ~PointLight();
-    
+
     /*  Set the position relative to the camera */
     virtual void setPosition(const glm::vec3& _pos);
 
@@ -19,9 +19,9 @@ public:
     /*  Set the constant outer radius or inner/outer radius*/
     virtual void setRadius(float _outer);
     virtual void setRadius(float _inner, float _outer);
-    
+
     virtual void setupProgram(const View& _view, ShaderProgram& _program) override;
-    
+
 protected:
 
     /*  GLSL block code with structs and need functions for this light type */
@@ -29,9 +29,9 @@ protected:
     virtual std::string getInstanceDefinesBlock() override;
     virtual std::string getInstanceAssignBlock() override;
     virtual const std::string& getTypeName() override;
-    
+
     static std::string s_classBlock;
-    
+
     glm::vec4 m_position;
 
     float m_attenuation;
@@ -41,6 +41,11 @@ protected:
 private:
 
     static std::string s_typeName;
+
+    UniformEntries::EntryId m_positionUniform = 0;
+    UniformEntries::EntryId m_attenuationUniform = 0;
+    UniformEntries::EntryId m_innerRadiusUniform = 0;
+    UniformEntries::EntryId m_outerRadiusUniform = 0;
 
 };
 

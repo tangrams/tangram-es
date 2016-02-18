@@ -47,9 +47,21 @@ void SpotLight::setupProgram(const View& _view, ShaderProgram& _shader ) {
             direction = glm::normalize(_view.getNormalMatrix() * direction);
         }
 
-        _shader.setUniformf(getUniformName()+".direction", direction);
-        _shader.setUniformf(getUniformName()+".spotCosCutoff", m_spotCosCutoff);
-        _shader.setUniformf(getUniformName()+".spotExponent", m_spotExponent);
+        if (m_directionUniform == 0) {
+            UniformEntries::lazyGenEntry(&m_directionUniform, getUniformName() + ".direction");
+        }
+
+        if (m_spotCosCutoffUniform == 0) {
+            UniformEntries::lazyGenEntry(&m_spotCosCutoffUniform, getUniformName() + ".spotCosCutoff");
+        }
+
+        if (m_spotExponentUniform == 0) {
+            UniformEntries::lazyGenEntry(&m_spotExponentUniform, getUniformName() + ".spotExponent");
+        }
+
+        _shader.setUniformf(UniformEntries::getEntry(m_directionUniform), direction);
+        _shader.setUniformf(UniformEntries::getEntry(m_spotCosCutoffUniform), m_spotCosCutoff);
+        _shader.setUniformf(UniformEntries::getEntry(m_spotExponentUniform), m_spotExponent);
     }
 }
 

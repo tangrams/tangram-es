@@ -11,6 +11,42 @@
 
 namespace Tangram {
 
+namespace Uniform {
+    UniformEntries::EntryId color;
+    UniformEntries::EntryId time;
+    UniformEntries::EntryId model;
+    UniformEntries::EntryId tileOrigin;
+    UniformEntries::EntryId devicePixelRatio;
+    UniformEntries::EntryId resolution;
+    UniformEntries::EntryId mapPosition;
+    UniformEntries::EntryId normalMatrix;
+    UniformEntries::EntryId inverseNormalMatrix;
+    UniformEntries::EntryId metersPerPixel;
+    UniformEntries::EntryId view;
+    UniformEntries::EntryId proj;
+    UniformEntries::EntryId ortho;
+    UniformEntries::EntryId orthoProj;
+    UniformEntries::EntryId modelViewProj;
+    UniformEntries::EntryId tex;
+    UniformEntries::EntryId pass;
+    UniformEntries::EntryId uvScaleFactor;
+    UniformEntries::EntryId materialEmission;
+    UniformEntries::EntryId materialEmissionTexture;
+    UniformEntries::EntryId materialEmissionScale;
+    UniformEntries::EntryId materialAmbiant;
+    UniformEntries::EntryId materialAmbiantTexture;
+    UniformEntries::EntryId materialAmbiantScale;
+    UniformEntries::EntryId materialDiffuse;
+    UniformEntries::EntryId materialDiffuseTexture;
+    UniformEntries::EntryId materialDiffuseScale;
+    UniformEntries::EntryId materialShininess;
+    UniformEntries::EntryId materialSpecular;
+    UniformEntries::EntryId materialSpecularTexture;
+    UniformEntries::EntryId materialSpecularScale;
+    UniformEntries::EntryId materialNormalTexture;
+    UniformEntries::EntryId materialNormalScale;
+    UniformEntries::EntryId materialNormalAmount;
+}
 
 ShaderProgram::ShaderProgram() {
 
@@ -86,13 +122,33 @@ GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 
 GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
 
+    //// Get uniform location at this key, or create one valued at -2 if absent
+    //GLint& location = m_uniformMap[(intptr_t)&_uniformName].loc;
+
+    //// -2 means this is a new entry
+    //if (location == -2) {
+    //    // Get the actual location from OpenGL
+    //    location = glGetUniformLocation(m_glProgram, _uniformName.c_str());
+    //}
+
+    //return location;
+
+}
+
+GLint ShaderProgram::getUniformLocation(const UniformEntries::UniformEntry* _entry) {
+
+    if (_entry == nullptr) {
+        LOGW("Trying to access null entry");
+        return -1;
+    }
+
     // Get uniform location at this key, or create one valued at -2 if absent
-    GLint& location = m_uniformMap[_uniformName].loc;
+    GLint& location = m_uniformMap[_entry->id].loc;
 
     // -2 means this is a new entry
     if (location == -2) {
         // Get the actual location from OpenGL
-        location = glGetUniformLocation(m_glProgram, _uniformName.c_str());
+        location = glGetUniformLocation(m_glProgram, _entry->name.c_str());
     }
 
     return location;
@@ -310,115 +366,160 @@ void ShaderProgram::checkValidity() {
     }
 }
 
-void ShaderProgram::setUniformi(const std::string& _name, int _value) {
+void ShaderProgram::setUniformi(const UniformEntries::UniformEntry* _entry, int _value) {
     use();
-    GLint location = getUniformLocation(_name);
+    GLint location = getUniformLocation(_entry);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
         if (!cached) { glUniform1i(location, _value); }
     }
 }
 
-void ShaderProgram::setUniformi(const std::string& _name, int _value0, int _value1) {
+void ShaderProgram::setUniformi(const UniformEntries::UniformEntry* _entry, int _value0, int _value1) {
     use();
-    GLint location = getUniformLocation(_name);
+    GLint location = getUniformLocation(_entry);
     if (location >= 0) {
         bool cached = getFromCache(location, glm::vec2(_value0, _value1));
         if (!cached) { glUniform2i(location, _value0, _value1); }
     }
 }
 
-void ShaderProgram::setUniformi(const std::string& _name, int _value0, int _value1, int _value2) {
+void ShaderProgram::setUniformi(const UniformEntries::UniformEntry* _entry, int _value0, int _value1, int _value2) {
     use();
-    GLint location = getUniformLocation(_name);
+    GLint location = getUniformLocation(_entry);
     if (location >= 0) {
         bool cached = getFromCache(location, glm::vec3(_value0, _value1, _value2));
         if (!cached) { glUniform3i(location, _value0, _value1, _value2); }
     }
 }
 
-void ShaderProgram::setUniformi(const std::string& _name, int _value0, int _value1, int _value2, int _value3) {
+void ShaderProgram::setUniformi(const UniformEntries::UniformEntry* _entry, int _value0, int _value1, int _value2, int _value3) {
     use();
-    GLint location = getUniformLocation(_name);
+    GLint location = getUniformLocation(_entry);
     if (location >= 0) {
         bool cached = getFromCache(location, glm::vec4(_value0, _value1, _value2, _value3));
         if (!cached) { glUniform4i(location, _value0, _value1, _value2, _value3); }
     }
 }
 
-void ShaderProgram::setUniformf(const std::string& _name, float _value) {
+void ShaderProgram::setUniformf(const UniformEntries::UniformEntry* _entry, float _value) {
     use();
-    GLint location = getUniformLocation(_name);
+    GLint location = getUniformLocation(_entry);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
         if (!cached) { glUniform1f(location, _value); }
     }
 }
 
-void ShaderProgram::setUniformf(const std::string& _name, float _value0, float _value1) {
-    setUniformf(_name, glm::vec2(_value0, _value1));
+void ShaderProgram::setUniformf(const UniformEntries::UniformEntry* _entry, float _value0, float _value1) {
+    setUniformf(_entry, glm::vec2(_value0, _value1));
 }
 
-void ShaderProgram::setUniformf(const std::string& _name, float _value0, float _value1, float _value2) {
-    setUniformf(_name, glm::vec3(_value0, _value1, _value2));
+void ShaderProgram::setUniformf(const UniformEntries::UniformEntry* _entry, float _value0, float _value1, float _value2) {
+    setUniformf(_entry, glm::vec3(_value0, _value1, _value2));
 }
 
-void ShaderProgram::setUniformf(const std::string& _name, float _value0, float _value1, float _value2, float _value3) {
-    setUniformf(_name, glm::vec4(_value0, _value1, _value2, _value3));
+void ShaderProgram::setUniformf(const UniformEntries::UniformEntry* _entry, float _value0, float _value1, float _value2, float _value3) {
+    setUniformf(_entry, glm::vec4(_value0, _value1, _value2, _value3));
 }
 
-void ShaderProgram::setUniformf(const std::string& _name, const glm::vec2& _value) {
+void ShaderProgram::setUniformf(const UniformEntries::UniformEntry* _entry, const glm::vec2& _value) {
     use();
-    GLint location = getUniformLocation(_name);
+    GLint location = getUniformLocation(_entry);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
         if (!cached) { glUniform2f(location, _value.x, _value.y); }
     }
 }
 
-void ShaderProgram::setUniformf(const std::string& _name, const glm::vec3& _value) {
+void ShaderProgram::setUniformf(const UniformEntries::UniformEntry* _entry, const glm::vec3& _value) {
     use();
-    GLint location = getUniformLocation(_name);
+    GLint location = getUniformLocation(_entry);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
         if (!cached) { glUniform3f(location, _value.x, _value.y, _value.z); }
     }
 }
 
-void ShaderProgram::setUniformf(const std::string& _name, const glm::vec4& _value) {
+void ShaderProgram::setUniformf(const UniformEntries::UniformEntry* _entry, const glm::vec4& _value) {
     use();
-    GLint location = getUniformLocation(_name);
+    GLint location = getUniformLocation(_entry);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
         if (!cached) { glUniform4f(location, _value.x, _value.y, _value.z, _value.w); }
     }
 }
 
-void ShaderProgram::setUniformMatrix2f(const std::string& _name, const glm::mat2& _value, bool _transpose) {
+void ShaderProgram::setUniformMatrix2f(const UniformEntries::UniformEntry* _entry, const glm::mat2& _value, bool _transpose) {
     use();
-    GLint location = getUniformLocation(_name);
+    GLint location = getUniformLocation(_entry);
     if (location >= 0) {
         bool cached = !_transpose && getFromCache(location, _value);
         if (!cached) { glUniformMatrix2fv(location, 1, _transpose, glm::value_ptr(_value)); }
     }
 }
 
-void ShaderProgram::setUniformMatrix3f(const std::string& _name, const glm::mat3& _value, bool _transpose) {
+void ShaderProgram::setUniformMatrix3f(const UniformEntries::UniformEntry* _entry, const glm::mat3& _value, bool _transpose) {
     use();
-    GLint location = getUniformLocation(_name);
+    GLint location = getUniformLocation(_entry);
     if (location >= 0) {
         bool cached = !_transpose && getFromCache(location, _value);
         if (!cached) { glUniformMatrix3fv(location, 1, _transpose, glm::value_ptr(_value)); }
     }
 }
 
-void ShaderProgram::setUniformMatrix4f(const std::string& _name, const glm::mat4& _value, bool _transpose) {
+void ShaderProgram::setUniformMatrix4f(const UniformEntries::UniformEntry* _entry, const glm::mat4& _value, bool _transpose) {
     use();
-    GLint location = getUniformLocation(_name);
+    GLint location = getUniformLocation(_entry);
     if (location >= 0) {
         bool cached = !_transpose && getFromCache(location, _value);
         if (!cached) { glUniformMatrix4fv(location, 1, _transpose, glm::value_ptr(_value)); }
     }
+}
+
+void ShaderProgram::allocateUniformEntries() {
+    static bool allocated = false;
+
+    if (allocated) {
+        return;
+    }
+
+    UniformEntries::genEntry(&Uniform::color, "u_color");
+    UniformEntries::genEntry(&Uniform::time, "u_time");
+    UniformEntries::genEntry(&Uniform::model, "u_model");
+    UniformEntries::genEntry(&Uniform::tileOrigin, "u_tile_origin");
+    UniformEntries::genEntry(&Uniform::devicePixelRatio, "u_device_pixel_ratio");
+    UniformEntries::genEntry(&Uniform::resolution, "u_resolution");
+    UniformEntries::genEntry(&Uniform::mapPosition, "u_map_position");
+    UniformEntries::genEntry(&Uniform::normalMatrix, "u_normalMatrix");
+    UniformEntries::genEntry(&Uniform::inverseNormalMatrix, "u_inverseNormalMatrix");
+    UniformEntries::genEntry(&Uniform::metersPerPixel, "u_meters_per_pixel");
+    UniformEntries::genEntry(&Uniform::view, "u_view");
+    UniformEntries::genEntry(&Uniform::proj, "u_proj");
+    UniformEntries::genEntry(&Uniform::ortho, "u_ortho");
+    UniformEntries::genEntry(&Uniform::orthoProj, "u_orthoProj");
+    UniformEntries::genEntry(&Uniform::modelViewProj, "u_modelViewProj");
+    UniformEntries::genEntry(&Uniform::tex, "u_tex");
+    UniformEntries::genEntry(&Uniform::pass, "u_pass");
+    UniformEntries::genEntry(&Uniform::uvScaleFactor, "u_uv_scale_factor");
+    UniformEntries::genEntry(&Uniform::materialEmission, "u_material.emission");
+    UniformEntries::genEntry(&Uniform::materialEmissionTexture, "u_material_emission_texture");
+    UniformEntries::genEntry(&Uniform::materialEmissionScale, "u_material.emissionScale");
+    UniformEntries::genEntry(&Uniform::materialAmbiant, "u_material.ambient");
+    UniformEntries::genEntry(&Uniform::materialAmbiantTexture, "u_material_ambient_texture");
+    UniformEntries::genEntry(&Uniform::materialAmbiantScale, "u_material.ambientScale");
+    UniformEntries::genEntry(&Uniform::materialDiffuse, "u_material.diffuse");
+    UniformEntries::genEntry(&Uniform::materialDiffuseTexture, "u_material_diffuse_texture");
+    UniformEntries::genEntry(&Uniform::materialDiffuseScale, "u_material.diffuseScale");
+    UniformEntries::genEntry(&Uniform::materialShininess, "u_material.shininess");
+    UniformEntries::genEntry(&Uniform::materialSpecular, "u_material.specular");
+    UniformEntries::genEntry(&Uniform::materialSpecularTexture, "u_material_specular_texture");
+    UniformEntries::genEntry(&Uniform::materialSpecularScale, "u_material.specularScale");
+    UniformEntries::genEntry(&Uniform::materialNormalTexture, "u_material_normal_texture");
+    UniformEntries::genEntry(&Uniform::materialNormalScale, "u_material.normalScale");
+    UniformEntries::genEntry(&Uniform::materialNormalAmount, "u_material.normalAmount");
+
+    allocated = true;
 }
 
 }

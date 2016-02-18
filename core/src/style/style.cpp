@@ -59,9 +59,12 @@ void Style::setLightingType(LightingType _type) {
 }
 
 void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
-    for (const auto& uniformPair : m_styleUniforms) {
+    for (auto& uniformPair : m_styleUniforms) {
         const auto& name = uniformPair.first;
-        const auto& value = uniformPair.second;
+        const auto& value = uniformPair.second.value;
+
+        UniformEntries::lazyGenEntry(&uniformPair.second.entry, name);
+        const UniformEntries::UniformEntry* uniformEntry = UniformEntries::getEntry(uniformPair.second.entry);
 
         if (value.is<std::string>()) {
 
@@ -70,21 +73,21 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
                 tex->update(_textureUnit);
                 tex->bind(_textureUnit);
 
-                m_shaderProgram->setUniformi(name, _textureUnit);
+                m_shaderProgram->setUniformi(uniformEntry, _textureUnit);
                 _textureUnit++;
             }
         } else {
 
             if (value.is<bool>()) {
-                m_shaderProgram->setUniformi(name, value.get<bool>());
+                m_shaderProgram->setUniformi(uniformEntry, value.get<bool>());
             } else if(value.is<float>()) {
-                m_shaderProgram->setUniformf(name, value.get<float>());
+                m_shaderProgram->setUniformf(uniformEntry, value.get<float>());
             } else if(value.is<glm::vec2>()) {
-                m_shaderProgram->setUniformf(name, value.get<glm::vec2>());
+                m_shaderProgram->setUniformf(uniformEntry, value.get<glm::vec2>());
             } else if(value.is<glm::vec3>()) {
-                m_shaderProgram->setUniformf(name, value.get<glm::vec3>());
+                m_shaderProgram->setUniformf(uniformEntry, value.get<glm::vec3>());
             } else if(value.is<glm::vec4>()) {
-                m_shaderProgram->setUniformf(name, value.get<glm::vec4>());
+                m_shaderProgram->setUniformf(uniformEntry, value.get<glm::vec4>());
             } else {
                 // TODO: Throw away uniform on loading!
                 // none_type
@@ -95,12 +98,10 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
 
 void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
 
-    // TODO cache which uniforms are used by the shader!
-
     // Set time uniforms style's shader programs
-    m_shaderProgram->setUniformf("u_time", Tangram::frameTime());
+    m_shaderProgram->setUniformf(UniformEntries::getEntry(Uniform::time), Tangram::frameTime());
 
-    m_shaderProgram->setUniformf("u_device_pixel_ratio", m_pixelScale);
+    m_shaderProgram->setUniformf(UniformEntries::getEntry(Uniform::devicePixelRatio), m_pixelScale);
 
     m_material->setupProgram(*m_shaderProgram);
 
@@ -112,15 +113,15 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit)
     }
 
     // Set Map Position
-    m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
+    m_shaderProgram->setUniformf(UniformEntries::getEntry(Uniform::resolution), _view.getWidth(), _view.getHeight());
 
     const auto& mapPos = _view.getPosition();
-    m_shaderProgram->setUniformf("u_map_position", mapPos.x, mapPos.y, _view.getZoom());
-    m_shaderProgram->setUniformMatrix3f("u_normalMatrix", _view.getNormalMatrix());
-    m_shaderProgram->setUniformMatrix3f("u_inverseNormalMatrix", glm::inverse(_view.getNormalMatrix()));
-    m_shaderProgram->setUniformf("u_meters_per_pixel", 1.0 / _view.pixelsPerMeter());
-    m_shaderProgram->setUniformMatrix4f("u_view", _view.getViewMatrix());
-    m_shaderProgram->setUniformMatrix4f("u_proj", _view.getProjectionMatrix());
+    m_shaderProgram->setUniformf(UniformEntries::getEntry(Uniform::mapPosition), mapPos.x, mapPos.y, _view.getZoom());
+    m_shaderProgram->setUniformMatrix3f(UniformEntries::getEntry(Uniform::normalMatrix), _view.getNormalMatrix());
+    m_shaderProgram->setUniformMatrix3f(UniformEntries::getEntry(Uniform::inverseNormalMatrix), glm::inverse(_view.getNormalMatrix()));
+    m_shaderProgram->setUniformf(UniformEntries::getEntry(Uniform::metersPerPixel), 1.0 / _view.pixelsPerMeter());
+    m_shaderProgram->setUniformMatrix4f(UniformEntries::getEntry(Uniform::view), _view.getViewMatrix());
+    m_shaderProgram->setUniformMatrix4f(UniformEntries::getEntry(Uniform::proj), _view.getProjectionMatrix());
 
     setupShaderUniforms(_textureUnit, _scene);
 
@@ -169,8 +170,8 @@ void Style::draw(const Tile& _tile) {
     if (styleMesh) {
         float zoomAndProxy = _tile.getID().z * (_tile.isProxy() ? -1 : 1);
 
-        m_shaderProgram->setUniformMatrix4f("u_model", _tile.getModelMatrix());
-        m_shaderProgram->setUniformf("u_tile_origin",
+        m_shaderProgram->setUniformMatrix4f(UniformEntries::getEntry(Uniform::model), _tile.getModelMatrix());
+        m_shaderProgram->setUniformf(UniformEntries::getEntry(Uniform::tileOrigin),
                                      _tile.getOrigin().x,
                                      _tile.getOrigin().y,
                                      zoomAndProxy);

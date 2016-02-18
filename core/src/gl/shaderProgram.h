@@ -4,6 +4,7 @@
 #include "glm/glm.hpp"
 #include "util/fastmap.h"
 #include "util/uniform.h"
+#include "gl/uniformBlock.h"
 
 #include <string>
 #include <vector>
@@ -49,6 +50,8 @@ public:
      */
     GLint getUniformLocation(const std::string& _uniformName);
 
+    GLint getUniformLocation(const UniformEntries::UniformEntry* _entry);
+
     /*
      * Returns true if this object represents a valid OpenGL shader program
      */
@@ -63,28 +66,29 @@ public:
 
     /*
      * Ensures the program is bound and then sets the named uniform to the given value(s)
+     * Note: _name shoud have the same address for consistent uniform location caching
      */
-    void setUniformi(const std::string& _name, int _value);
-    void setUniformi(const std::string& _name, int _value0, int _value1);
-    void setUniformi(const std::string& _name, int _value0, int _value1, int _value2);
-    void setUniformi(const std::string& _name, int _value0, int _value1, int _value2, int _value3);
+    void setUniformi(const UniformEntries::UniformEntry* _entry, int _value);
+    void setUniformi(const UniformEntries::UniformEntry* _entry, int _value0, int _value1);
+    void setUniformi(const UniformEntries::UniformEntry* _entry, int _value0, int _value1, int _value2);
+    void setUniformi(const UniformEntries::UniformEntry* _entry, int _value0, int _value1, int _value2, int _value3);
 
-    void setUniformf(const std::string& _name, float _value);
-    void setUniformf(const std::string& _name, float _value0, float _value1);
-    void setUniformf(const std::string& _name, float _value0, float _value1, float _value2);
-    void setUniformf(const std::string& _name, float _value0, float _value1, float _value2, float _value3);
+    void setUniformf(const UniformEntries::UniformEntry* _entry, float _value);
+    void setUniformf(const UniformEntries::UniformEntry* _entry, float _value0, float _value1);
+    void setUniformf(const UniformEntries::UniformEntry* _entry, float _value0, float _value1, float _value2);
+    void setUniformf(const UniformEntries::UniformEntry* _entry, float _value0, float _value1, float _value2, float _value3);
 
-    void setUniformf(const std::string& _name, const glm::vec2& _value);
-    void setUniformf(const std::string& _name, const glm::vec3& _value);
-    void setUniformf(const std::string& _name, const glm::vec4& _value);
+    void setUniformf(const UniformEntries::UniformEntry* _entry, const glm::vec2& _value);
+    void setUniformf(const UniformEntries::UniformEntry* _entry, const glm::vec3& _value);
+    void setUniformf(const UniformEntries::UniformEntry* _entry, const glm::vec4& _value);
 
     /*
      * Ensures the program is bound and then sets the named uniform to the values
      * beginning at the pointer _value; 4 values are used for a 2x2 matrix, 9 values for a 3x3, etc.
      */
-    void setUniformMatrix2f(const std::string& _name, const glm::mat2& _value, bool transpose = false);
-    void setUniformMatrix3f(const std::string& _name, const glm::mat3& _value, bool transpose = false);
-    void setUniformMatrix4f(const std::string& _name, const glm::mat4& _value, bool transpose = false);
+    void setUniformMatrix2f(const UniformEntries::UniformEntry* _entry, const glm::mat2& _value, bool transpose = false);
+    void setUniformMatrix3f(const UniformEntries::UniformEntry* _entry, const glm::mat3& _value, bool transpose = false);
+    void setUniformMatrix4f(const UniformEntries::UniformEntry* _entry, const glm::mat4& _value, bool transpose = false);
 
     /* Invalidates all managed ShaderPrograms
      *
@@ -92,6 +96,8 @@ public:
      * handles are invalidated and immediately recreated.
      */
     static void invalidateAllPrograms();
+
+    static void allocateUniformEntries();
 
     auto getSourceBlocks() const { return  m_sourceBlocks; }
 
@@ -134,7 +140,7 @@ private:
     GLuint m_glVertexShader;
 
     fastmap<std::string, ShaderLocation> m_attribMap;
-    fastmap<std::string, ShaderLocation> m_uniformMap;
+    fastmap<UniformEntries::EntryId, ShaderLocation> m_uniformMap;
     fastmap<GLint, UniformValue> m_uniformCache;
 
     std::string m_fragmentShaderSource;
@@ -151,6 +157,43 @@ private:
 
     std::string applySourceBlocks(const std::string& source, bool fragShader);
 
+};
+
+namespace Uniform {
+    extern UniformEntries::EntryId color;
+    extern UniformEntries::EntryId time;
+    extern UniformEntries::EntryId model;
+    extern UniformEntries::EntryId tileOrigin;
+    extern UniformEntries::EntryId devicePixelRatio;
+    extern UniformEntries::EntryId resolution;
+    extern UniformEntries::EntryId mapPosition;
+    extern UniformEntries::EntryId normalMatrix;
+    extern UniformEntries::EntryId inverseNormalMatrix;
+    extern UniformEntries::EntryId metersPerPixel;
+    extern UniformEntries::EntryId view;
+    extern UniformEntries::EntryId proj;
+    extern UniformEntries::EntryId ortho;
+    extern UniformEntries::EntryId orthoProj;
+    extern UniformEntries::EntryId modelViewProj;
+    extern UniformEntries::EntryId tex;
+    extern UniformEntries::EntryId pass;
+    extern UniformEntries::EntryId uvScaleFactor;
+    extern UniformEntries::EntryId materialEmission;
+    extern UniformEntries::EntryId materialEmissionTexture;
+    extern UniformEntries::EntryId materialEmissionScale;
+    extern UniformEntries::EntryId materialAmbiant;
+    extern UniformEntries::EntryId materialAmbiantTexture;
+    extern UniformEntries::EntryId materialAmbiantScale;
+    extern UniformEntries::EntryId materialDiffuse;
+    extern UniformEntries::EntryId materialDiffuseTexture;
+    extern UniformEntries::EntryId materialDiffuseScale;
+    extern UniformEntries::EntryId materialShininess;
+    extern UniformEntries::EntryId materialSpecular;
+    extern UniformEntries::EntryId materialSpecularTexture;
+    extern UniformEntries::EntryId materialSpecularScale;
+    extern UniformEntries::EntryId materialNormalTexture;
+    extern UniformEntries::EntryId materialNormalScale;
+    extern UniformEntries::EntryId materialNormalAmount;
 };
 
 }

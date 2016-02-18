@@ -38,6 +38,10 @@ protected:
 private:
 
     static std::string s_typeName;
+
+    UniformEntries::EntryId m_directionUniform = 0;
+    UniformEntries::EntryId m_spotCosCutoffUniform = 0;
+    UniformEntries::EntryId m_spotExponentUniform = 0;
     
 };
 

@@ -72,18 +72,34 @@ void PointLight::setupProgram(const View& _view, ShaderProgram& _shader) {
             position = _view.getViewMatrix() * position;
         }
 
-        _shader.setUniformf(getUniformName()+".position", position);
+        if (m_positionUniform == 0) {
+            std::string positionUniformName = getUniformName() + ".position";
+            if (UniformEntries::entryExistsForName(positionUniformName)) {
+                UniformEntries::genEntry(&m_positionUniform, positionUniformName);
+            }
+        }
 
-        if (m_attenuation!=0.0) {
-            _shader.setUniformf(getUniformName()+".attenuation", m_attenuation);
+        _shader.setUniformf(UniformEntries::getEntry(m_positionUniform), position);
+
+        if (m_attenuation != 0.0) {
+            if (m_attenuationUniform == 0) {
+                UniformEntries::lazyGenEntry(&m_attenuationUniform, getUniformName() + ".attenuation");
+            }
+            _shader.setUniformf(UniformEntries::getEntry(m_attenuationUniform), m_attenuation);
         }
 
         if (m_innerRadius!=0.0) {
-            _shader.setUniformf(getUniformName()+".innerRadius", m_innerRadius);
+            if (m_innerRadiusUniform == 0) {
+                UniformEntries::lazyGenEntry(&m_innerRadiusUniform, getUniformName() + ".innerRadius");
+            }
+            _shader.setUniformf(UniformEntries::getEntry(m_innerRadiusUniform), m_innerRadius);
         }
 
         if (m_outerRadius!=0.0) {
-            _shader.setUniformf(getUniformName()+".outerRadius", m_outerRadius);
+            if (m_outerRadiusUniform == 0) {
+                UniformEntries::lazyGenEntry(&m_outerRadiusUniform, getUniformName() + ".outerRadius");
+            }
+            _shader.setUniformf(UniformEntries::getEntry(m_outerRadiusUniform), m_outerRadius);
         }
     }
 }

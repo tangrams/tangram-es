@@ -63,9 +63,13 @@ void Light::injectOnProgram(ShaderProgram& _shader) {
 
 void Light::setupProgram(const View& _view, ShaderProgram& _shader) {
     if (m_dynamic) {
-        _shader.setUniformf(getUniformName()+".ambient", m_ambient);
-        _shader.setUniformf(getUniformName()+".diffuse", m_diffuse);
-        _shader.setUniformf(getUniformName()+".specular", m_specular);
+        if (m_ambiantUniform == 0) { UniformEntries::lazyGenEntry(&m_ambiantUniform, getUniformName() + ".ambient"); }
+        if (m_diffuseUniform == 0) { UniformEntries::lazyGenEntry(&m_diffuseUniform, getUniformName() + ".diffuse"); }
+        if (m_specularUniform == 0) { UniformEntries::lazyGenEntry(&m_specularUniform, getUniformName() + ".specular"); }
+
+        _shader.setUniformf(UniformEntries::getEntry(m_ambiantUniform), m_ambient);
+        _shader.setUniformf(UniformEntries::getEntry(m_diffuseUniform), m_diffuse);
+        _shader.setUniformf(UniformEntries::getEntry(m_specularUniform), m_specular);
     }
 }
 

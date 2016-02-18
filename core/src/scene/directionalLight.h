@@ -2,6 +2,7 @@
 
 #include "light.h"
 #include "glm/vec3.hpp"
+#include "gl/uniformBlock.h"
 
 namespace Tangram {
 
@@ -31,6 +32,7 @@ protected:
 private:
 
     static std::string s_typeName;
+    UniformEntries::EntryId m_uniformEntry = 0;
     
 };
 

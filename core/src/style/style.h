@@ -3,6 +3,7 @@
 #include "gl.h"
 #include "data/tileData.h"
 #include "util/uniform.h"
+#include "gl/uniformBlock.h"
 
 #include <memory>
 #include <string>
@@ -84,8 +85,6 @@ protected:
  */
 class Style {
 
-using StyleUniform = std::pair< std::string, UniformValue >;
-
 protected:
 
     /* The platform pixel scale */
@@ -132,6 +131,14 @@ protected:
     void setupShaderUniforms(int _textureUnit, Scene& _scene);
 
 private:
+
+    struct CustomStyleUniform {
+        CustomStyleUniform(UniformValue& value) : value(value) {}
+        UniformValue value;
+        UniformEntries::EntryId entry = 0;
+    };
+
+    using StyleUniform = std::pair<std::string, CustomStyleUniform>;
 
     std::vector<StyleUniform> m_styleUniforms;
 

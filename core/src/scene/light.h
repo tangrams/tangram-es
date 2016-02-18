@@ -1,11 +1,13 @@
 #pragma once
- 
+
 #include "glm/vec4.hpp"
 
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "gl/uniformBlock.h"
 
 namespace Tangram {
 
@@ -107,6 +109,10 @@ protected:
     bool m_dynamic;
 
 private:
+
+    UniformEntries::EntryId m_ambiantUniform = 0;
+    UniformEntries::EntryId m_diffuseUniform = 0;
+    UniformEntries::EntryId m_specularUniform = 0;
 
     static std::string s_mainLightingBlock;
 
