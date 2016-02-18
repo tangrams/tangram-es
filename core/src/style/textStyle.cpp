@@ -213,7 +213,7 @@ public:
     void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
     bool checkRule(const DrawRule& _rule) const override;
 
-    void setup(const Tile& _tile) override {
+    virtual void setup(const Tile& _tile) override {
         m_tileSize = _tile.getProjection()->TileSize();
         m_scratch.clear();
 
@@ -241,7 +241,7 @@ public:
     std::string applyTextTransform(const TextStyle::Parameters& _params,
                                    const std::string& _string);
 
-private:
+protected:
 
     struct ScratchBuffer : public alf::MeshCallback {
         std::vector<GlyphQuad> quads;
@@ -453,6 +453,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         std::lock_guard<std::mutex> lock(ctx->m_mutex);
         auto line = m_shaper.shape(_params.font, *renderText);
 
+        LOG("fontScale %d", m_scratch.fontScale);
         line.setScale(fontScale);
 
         if (_type == Label::Type::point && _params.wordWrap) {
@@ -617,6 +618,64 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
 std::unique_ptr<StyleBuilder> TextStyle::createBuilder() const {
     return std::make_unique<TextStyleBuilder>(*this);
+}
+
+class DebugTextStyleBuilder : public TextStyleBuilder {
+
+public:
+
+    DebugTextStyleBuilder(const TextStyle& _style) :
+        TextStyleBuilder(_style) {}
+
+    void setup(const Tile& _tile) override;
+
+    std::unique_ptr<StyledMesh> build() override;
+
+private:
+    std::string m_tileID;
+
+};
+
+void DebugTextStyleBuilder::setup(const Tile& _tile) {
+    if (!Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
+        return;
+    }
+
+    m_tileID = _tile.getID().toString();
+
+    TextStyleBuilder::setup(_tile);
+}
+
+std::unique_ptr<StyledMesh> DebugTextStyleBuilder::build() {
+    if (!Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
+        return nullptr;
+    }
+
+    TextStyle::Parameters params;
+
+    params.text = m_tileID;
+    params.fontSize = 30.f;
+
+    params.font = m_style.context()->getFont("sans-serif", "normal", "400", 32 * m_style.pixelScale());
+
+    if (!prepareLabel(params, Label::Type::debug)) {
+        return nullptr;
+    }
+
+    addLabel(params, Label::Type::debug, { glm::vec2(.5f) });
+
+    if (!m_scratch.labels.empty()) {
+        m_textLabels->setLabels(m_scratch.labels);
+        m_textLabels->setQuads(m_scratch.quads);
+    }
+
+    m_scratch.clear();
+
+    return std::move(m_textLabels);
+}
+
+std::unique_ptr<StyleBuilder> DebugTextStyle::createBuilder() const {
+    return std::make_unique<DebugTextStyleBuilder>(*this);
 }
 
 }
