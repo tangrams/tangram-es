@@ -66,6 +66,7 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
     // Instantiate built-in styles
     _scene.styles().emplace_back(new PolygonStyle("polygons"));
     _scene.styles().emplace_back(new PolylineStyle("lines"));
+    _scene.styles().emplace_back(new DebugTextStyle("debugtext", true));
     _scene.styles().emplace_back(new TextStyle("text", true));
     _scene.styles().emplace_back(new DebugStyle("debug"));
     _scene.styles().emplace_back(new PointStyle("points"));

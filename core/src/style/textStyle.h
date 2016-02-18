@@ -70,11 +70,20 @@ public:
 
     LabelMesh& mesh(size_t id) const { return *m_meshes[id]; }
 
-    ~TextStyle() override;
+    virtual ~TextStyle() override;
 
 private:
 
     const std::string& applyTextSource(const Parameters& _parameters, const Properties& _props) const;
+};
+
+class DebugTextStyle : public TextStyle {
+
+public:
+    DebugTextStyle(std::string _name, bool _sdf = false) : TextStyle(_name, _sdf) {}
+
+    std::unique_ptr<StyleBuilder> createBuilder() const override;
+
 };
 
 }

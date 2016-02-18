@@ -151,6 +151,8 @@ void AlfonsContext::bindTexture(alf::AtlasID _id, GLuint _unit) {
 auto AlfonsContext::getFont(const std::string& _family, const std::string& _style,
                             const std::string& _weight, float _size) -> std::shared_ptr<alf::Font> {
 
+    LOG("%s %s %s", _family.c_str(), _weight.c_str(), _style.c_str());
+
     std::string fontName = _family + "_" + _weight + "_" + _style;
 
     int sizeIndex = 0;
