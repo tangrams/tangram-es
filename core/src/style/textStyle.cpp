@@ -524,7 +524,8 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     _rule.get(StyleParamKey::font_size, p.fontSize);
     // TODO - look font from fontManager
-    p.font = m_style.context()->getFont(*fontFamily, *fontStyle, *fontWeight, p.fontSize);
+    p.font = m_style.context()->getFont(*fontFamily, *fontStyle, *fontWeight,
+                                        p.fontSize * m_style.pixelScale());
 
     _rule.get(StyleParamKey::font_fill, p.fill);
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
