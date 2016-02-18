@@ -62,10 +62,18 @@ void Light::injectOnProgram(ShaderProgram& _shader) {
 }
 
 void Light::setupProgram(const View& _view, ShaderProgram& _shader) {
+    static std::string ambiantUniformName = "";
+    static std::string diffuseUniformName = "";
+    static std::string specularUniformName = "";
+
     if (m_dynamic) {
-        _shader.setUniformf(getUniformName()+".ambient", m_ambient);
-        _shader.setUniformf(getUniformName()+".diffuse", m_diffuse);
-        _shader.setUniformf(getUniformName()+".specular", m_specular);
+        if (ambiantUniformName.empty()) { ambiantUniformName = getUniformName() + ".ambient"; }
+        if (diffuseUniformName.empty()) { diffuseUniformName = getUniformName() + ".diffuse"; }
+        if (specularUniformName.empty()) { specularUniformName = getUniformName() + ".specular"; }
+
+        _shader.setUniformf(ambiantUniformName, m_ambient);
+        _shader.setUniformf(diffuseUniformName, m_diffuse);
+        _shader.setUniformf(specularUniformName, m_specular);
     }
 }
 

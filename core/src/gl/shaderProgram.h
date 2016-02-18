@@ -63,6 +63,7 @@ public:
 
     /*
      * Ensures the program is bound and then sets the named uniform to the given value(s)
+     * Note: _name shoud have the same address for consistent uniform location caching
      */
     void setUniformi(const std::string& _name, int _value);
     void setUniformi(const std::string& _name, int _value0, int _value1);
