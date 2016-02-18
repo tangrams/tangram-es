@@ -128,6 +128,11 @@ void PolylineStyleBuilder::setup(const Tile& _tile) {
 }
 
 std::unique_ptr<StyledMesh> PolylineStyleBuilder::build() {
+    if (m_meshData[0].vertices.empty() &&
+        m_meshData[1].vertices.empty()) {
+        return nullptr;
+    }
+
     auto mesh = std::make_unique<Mesh<PolylineVertex>>(m_style.vertexLayout(),
                                                        m_style.drawMode());
 

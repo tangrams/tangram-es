@@ -97,6 +97,8 @@ struct PolygonStyleBuilder : public StyleBuilder {
 };
 
 std::unique_ptr<StyledMesh> PolygonStyleBuilder::build() {
+    if (m_meshData.vertices.empty()) { return nullptr; }
+
     auto mesh = std::make_unique<Mesh<PolygonVertex>>(m_style.vertexLayout(),
                                                       m_style.drawMode());
     mesh->compile(m_meshData);

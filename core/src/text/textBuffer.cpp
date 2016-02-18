@@ -185,8 +185,9 @@ void TextBuffer::Builder::setup(std::shared_ptr<VertexLayout> _vertexLayout) {
 std::unique_ptr<TextBuffer> TextBuffer::Builder::build() {
     if (!m_labels.empty()) {
         m_mesh->compile(m_labels, m_vertices);
+        return std::move(m_mesh);
     }
-    return std::move(m_mesh);
+    return nullptr;
 }
 
 bool TextBuffer::Builder::prepareLabel(FontContext& _fontContext,

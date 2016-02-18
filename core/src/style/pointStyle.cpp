@@ -89,6 +89,8 @@ struct PointStyleBuilder : public StyleBuilder {
     void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
 
     std::unique_ptr<StyledMesh> build() override {
+        if (m_labels.empty()) { return nullptr; }
+
         m_mesh->compile(m_labels, m_vertices);
         m_labels.clear();
         m_vertices.clear();
