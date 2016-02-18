@@ -212,7 +212,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 if (pixel_scale == 1.0) {
                     pixel_scale = 2.0;
                 } else if (pixel_scale == 2.0) {
-                    pixel_scale = 0.5;
+                    pixel_scale = 0.75;
                 } else {
                     pixel_scale = 1.0;
                 }

@@ -62,7 +62,11 @@ public:
 
     void bindTexture(alf::AtlasID _id, GLuint _unit);
 
+    float maxStrokeWidth() { return m_sdfRadius; }
+
     // TODO private
+    float m_sdfRadius;
+
     std::mutex m_mutex;
     std::array<int, maxTextures> m_atlasRefCount = {{0}};
     alf::GlyphAtlas m_atlas;

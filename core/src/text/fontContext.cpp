@@ -11,8 +11,6 @@
 #define FONT_JA "fonts/DroidSansJapanese.ttf"
 #define FALLBACK "fonts/DroidSansFallback.ttf"
 
-#define SDF_WIDTH 3
-
 #if defined(PLATFORM_ANDROID)
 #define BASE_SIZE 24
 #define ANDROID_FONT_PATH "/system/fonts/"
@@ -21,9 +19,14 @@
 #endif
 #define STEP_SIZE 12
 
+#define SDF_WIDTH 6
+
 namespace Tangram {
 
-AlfonsContext::AlfonsContext() : m_atlas(*this, textureSize) {
+AlfonsContext::AlfonsContext() :
+    m_sdfRadius(SDF_WIDTH),
+    m_atlas(*this, textureSize, m_sdfRadius) {
+
 #if defined(PLATFORM_ANDROID)
 #define BASE_SIZE 16
     auto fontPath = systemFontPath("sans-serif", "400", "normal");
@@ -72,8 +75,8 @@ void AlfonsContext::addTexture(alf::AtlasID id, uint16_t width, uint16_t height)
 
 // Synchronized on m_mutex, called tile-worker threads
 void AlfonsContext::addGlyph(alf::AtlasID id, uint16_t gx, uint16_t gy, uint16_t gw, uint16_t gh,
-              const unsigned char* src, uint16_t pad)
-{
+                             const unsigned char* src, uint16_t pad) {
+
     auto& texData = m_batches[id].texData;
     auto& texture = m_batches[id].texture;
     m_batches[id].dirty = true;
@@ -98,7 +101,7 @@ void AlfonsContext::addGlyph(alf::AtlasID id, uint16_t gx, uint16_t gy, uint16_t
         tmpSdfBuffer.resize(bytes);
     }
 
-    sdfBuildDistanceFieldNoAlloc(dst, width, SDF_WIDTH,
+    sdfBuildDistanceFieldNoAlloc(dst, width, m_sdfRadius,
                                  dst, gw, gh, width,
                                  &tmpSdfBuffer[0]);
 
