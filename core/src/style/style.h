@@ -175,6 +175,8 @@ public:
 
     virtual void onEndUpdate() {}
 
+    virtual void onBeginFrame() {}
+
     /* Perform any setup needed before drawing each frame
      * _textUnit is the next available texture unit
      */

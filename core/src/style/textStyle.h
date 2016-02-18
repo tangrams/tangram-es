@@ -43,6 +43,8 @@ public:
 
     auto& context() const { return m_context; }
 
+    void onBeginFrame() override;
+
 protected:
 
     void constructVertexLayout() override;
