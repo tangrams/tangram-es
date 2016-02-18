@@ -258,11 +258,16 @@ size_t VboMeshBase::bufferSize() {
 size_t VboMeshBase::compileIndices(const std::vector<std::pair<uint32_t, uint32_t>>& _offsets,
                                    const std::vector<uint16_t>& _indices, size_t _offset) {
 
-    m_vertexOffsets.emplace_back(0, 0);
 
     GLushort* dst = m_glIndexData + _offset;
     size_t curVertices = 0;
     size_t src = 0;
+
+    if (m_vertexOffsets.empty()) {
+        m_vertexOffsets.emplace_back(0, 0);
+    } else {
+        curVertices = m_vertexOffsets.back().second;
+    }
 
     for (auto& p : _offsets) {
         size_t nIndices = p.first;
