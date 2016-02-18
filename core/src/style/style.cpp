@@ -54,7 +54,7 @@ void Style::setMaterial(const std::shared_ptr<Material>& _material) {
     m_material = _material;
 }
 
-void Style::setLightingType(LightingType _type){
+void Style::setLightingType(LightingType _type) {
     m_lightingType = _type;
 }
 
@@ -63,19 +63,16 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
         const auto& name = uniformPair.first;
         const auto& value = uniformPair.second;
 
-        auto& textures = _scene.textures();
-
         if (value.is<std::string>()) {
 
-            auto& tex = textures[value.get<std::string>()];
+            auto& tex = _scene.textures()[value.get<std::string>()];
+            if (tex) {
+                tex->update(_textureUnit);
+                tex->bind(_textureUnit);
 
-            tex->update(_textureUnit);
-            tex->bind(_textureUnit);
-
-            m_shaderProgram->setUniformi(name, _textureUnit);
-
-            _textureUnit++;
-
+                m_shaderProgram->setUniformi(name, _textureUnit);
+                _textureUnit++;
+            }
         } else {
 
             if (value.is<bool>()) {
