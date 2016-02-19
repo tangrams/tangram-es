@@ -15,6 +15,7 @@
 
 #include <mutex>
 #include <locale>
+#include <cmath>
 
 #include "platform.h"
 #include "tangram.h"
