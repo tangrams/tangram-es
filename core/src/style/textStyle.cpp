@@ -165,28 +165,29 @@ struct TextBatch : public alf::TextBatch {
         }
 
         size_t shapeStart = 0;
-        glm::vec2 offset(0);
+        alf::LineDesc lineDesc;
         for (auto wrap : lineWraps) {
             switch(_alignment) {
             case TextLabelProperty::Align::center:
-                offset.x = (maxWidth - wrap.second) * 0.5;
+                lineDesc.offset.x = (maxWidth - wrap.second) * 0.5;
                 break;
             case TextLabelProperty::Align::right:
-                offset.x = (maxWidth - wrap.second);
+                lineDesc.offset.x = (maxWidth - wrap.second);
                 break;
             default:
-                offset.x = 0;
+                lineDesc.offset.x = 0;
             }
 
             size_t shapeEnd = wrap.first;
-            alf::TextBatch::draw(_line, shapeStart, shapeEnd, offset);
+
+            alf::TextBatch::draw(_line, shapeStart, shapeEnd, lineDesc);
             shapeStart = shapeEnd;
 
-            offset.y += _line.height();
+            lineDesc.offset.y += _line.height();
         }
 
-        offset.x = maxWidth;
-        return offset;
+        lineDesc.offset.x = maxWidth;
+        return lineDesc.offset;
     }
 };
 
@@ -458,7 +459,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
             m_scratch.numLines = m_scratch.bbox.y/line.height();
 
         } else {
-            m_batch.draw(line, {0, 0});
+            alf::LineDesc lineDesc = m_batch.draw(line, alf::LineDesc());
 
             m_scratch.bbox.y = line.height();
             m_scratch.bbox.x = line.advance();
