@@ -165,29 +165,30 @@ struct TextBatch : public alf::TextBatch {
         }
 
         size_t shapeStart = 0;
-        alf::LineDesc lineDesc;
+        alf::LineMetrics lineMetrics;
+        glm::vec2 position;
         for (auto wrap : lineWraps) {
             switch(_alignment) {
             case TextLabelProperty::Align::center:
-                lineDesc.offset.x = (maxWidth - wrap.second) * 0.5;
+                position.x = (maxWidth - wrap.second) * 0.5;
                 break;
             case TextLabelProperty::Align::right:
-                lineDesc.offset.x = (maxWidth - wrap.second);
+                position.x = (maxWidth - wrap.second);
                 break;
             default:
-                lineDesc.offset.x = 0;
+                position.x = 0;
             }
 
             size_t shapeEnd = wrap.first;
 
-            alf::TextBatch::draw(_line, shapeStart, shapeEnd, lineDesc);
+            alf::TextBatch::draw(_line, shapeStart, shapeEnd, position, lineMetrics);
             shapeStart = shapeEnd;
 
-            lineDesc.offset.y += _line.height();
+            position.y += _line.height();
         }
 
-        lineDesc.offset.x = maxWidth;
-        return lineDesc.offset;
+        position.x = maxWidth;
+        return position;
     }
 };
 
@@ -459,10 +460,14 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
             m_scratch.numLines = m_scratch.bbox.y/line.height();
 
         } else {
-            alf::LineDesc lineDesc = m_batch.draw(line, alf::LineDesc());
+            alf::LineMetrics lineMetrics;
+            m_batch.draw(line, glm::vec2(0.0), lineMetrics);
 
             m_scratch.bbox.y = line.height();
             m_scratch.bbox.x = line.advance();
+
+            //m_scratch.bbox.x = std::fabsf(lineMetrics.aabb.z) - std::fabsf(lineMetrics.aabb.x);
+            //m_scratch.bbox.x = std::fabsf(lineMetrics.aabb.w) - std::fabsf(lineMetrics.aabb.y);
         }
 
         m_scratch.metrics.descender = -line.descent();
