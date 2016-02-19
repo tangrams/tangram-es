@@ -112,7 +112,7 @@ struct TextBatch : public alf::TextBatch {
     using Base = alf::TextBatch;
     using Base::Base;
 
-    glm::vec2 drawWithLineWrappingByCharacterCount(const alf::LineLayout& _line, size_t _maxChar,
+    alf::LineMetrics drawWithLineWrappingByCharacterCount(const alf::LineLayout& _line, size_t _maxChar,
                                                    TextLabelProperty::Align _alignment) {
         static std::vector<std::pair<int,float>> lineWraps;
 
@@ -187,8 +187,7 @@ struct TextBatch : public alf::TextBatch {
             position.y += _line.height();
         }
 
-        position.x = maxWidth;
-        return position;
+        return lineMetrics;
     }
 };
 
@@ -452,21 +451,21 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         LOG("fontScale %d", m_scratch.fontScale);
         line.setScale(fontScale);
 
+        alf::LineMetrics lineMetrics;
+
         if (_type == Label::Type::point && _params.wordWrap) {
             //auto adv = m_batch.draw(line, {0, 0}, _params.maxLineWidth * line.height() * 0.5);
-            m_scratch.bbox = m_batch.drawWithLineWrappingByCharacterCount(line, _params.maxLineWidth,
+            lineMetrics = m_batch.drawWithLineWrappingByCharacterCount(line, _params.maxLineWidth,
                                                                           _params.align);
-
-            m_scratch.numLines = m_scratch.bbox.y/line.height();
-
         } else {
-            alf::LineMetrics lineMetrics;
             m_batch.draw(line, glm::vec2(0.0), lineMetrics);
-
-            // FIXME: bbox should account for local origin (negative (x,y) position
-            m_scratch.bbox.x = std::fabsf(lineMetrics.aabb.x) + (lineMetrics.aabb.z);
-            m_scratch.bbox.y = std::fabsf(lineMetrics.aabb.y) + (lineMetrics.aabb.w);
         }
+
+        // FIXME: bbox should account for local origin (negative (x,y) position
+        m_scratch.bbox.x = std::fabsf(lineMetrics.aabb.x) + (lineMetrics.aabb.z);
+        m_scratch.bbox.y = std::fabsf(lineMetrics.aabb.y) + (lineMetrics.aabb.w);
+
+        m_scratch.numLines = m_scratch.bbox.y / line.height();
 
         m_scratch.metrics.descender = -line.descent();
         m_scratch.metrics.ascender = line.ascent();
