@@ -463,11 +463,9 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
             alf::LineMetrics lineMetrics;
             m_batch.draw(line, glm::vec2(0.0), lineMetrics);
 
-            m_scratch.bbox.y = line.height();
-            m_scratch.bbox.x = line.advance();
-
-            //m_scratch.bbox.x = std::fabsf(lineMetrics.aabb.z) - std::fabsf(lineMetrics.aabb.x);
-            //m_scratch.bbox.x = std::fabsf(lineMetrics.aabb.w) - std::fabsf(lineMetrics.aabb.y);
+            // FIXME: bbox should account for local origin (negative (x,y) position
+            m_scratch.bbox.x = std::fabsf(lineMetrics.aabb.x) + (lineMetrics.aabb.z);
+            m_scratch.bbox.y = std::fabsf(lineMetrics.aabb.y) + (lineMetrics.aabb.w);
         }
 
         m_scratch.metrics.descender = -line.descent();
