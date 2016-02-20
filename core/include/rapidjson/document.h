@@ -863,6 +863,30 @@ public:
     /*! \pre IsObject() == true */
     MemberIterator MemberEnd()              { RAPIDJSON_ASSERT(IsObject()); return MemberIterator(data_.o.members + data_.o.size); }
 
+    struct MembersHandle {
+
+        MembersHandle(Member* members, SizeType size)
+            : members(members), size(size) {}
+
+        ConstMemberIterator begin() const { return ConstMemberIterator(members); }
+        ConstMemberIterator end() const   { return ConstMemberIterator(members + size); }
+        MemberIterator begin()            { return MemberIterator(members); }
+        MemberIterator end()              { return MemberIterator(members + size); }
+
+    private:
+        Member* members;
+        SizeType size;
+    };
+
+    MembersHandle Members() const {
+        RAPIDJSON_ASSERT(IsObject());
+        return MembersHandle(data_.o.members, data_.o.size);
+    }
+
+    MembersHandle Members() {
+        RAPIDJSON_ASSERT(IsObject());
+        return MembersHandle(data_.o.members, data_.o.size);
+    }
     //! Check whether a member exists in the object.
     /*!
         \param name Member name to be searched.
@@ -1257,15 +1281,19 @@ public:
     //! Element iterator
     /*! \pre IsArray() == true */
     ValueIterator Begin() { RAPIDJSON_ASSERT(IsArray()); return data_.a.elements; }
+    ValueIterator begin() { RAPIDJSON_ASSERT(IsArray()); return data_.a.elements; }
     //! \em Past-the-end element iterator
     /*! \pre IsArray() == true */
     ValueIterator End() { RAPIDJSON_ASSERT(IsArray()); return data_.a.elements + data_.a.size; }
+    ValueIterator end() { RAPIDJSON_ASSERT(IsArray()); return data_.a.elements + data_.a.size; }
     //! Constant element iterator
     /*! \pre IsArray() == true */
     ConstValueIterator Begin() const { return const_cast<GenericValue&>(*this).Begin(); }
+    ConstValueIterator begin() const { return const_cast<GenericValue&>(*this).Begin(); }
     //! Constant \em past-the-end element iterator
     /*! \pre IsArray() == true */
     ConstValueIterator End() const { return const_cast<GenericValue&>(*this).End(); }
+    ConstValueIterator end() const { return const_cast<GenericValue&>(*this).End(); }
 
     //! Request the array to have enough capacity to store elements.
     /*! \param newCapacity  The capacity that the array at least need to have.
