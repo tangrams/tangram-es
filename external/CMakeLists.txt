@@ -133,3 +133,10 @@ if((BENCHMARK OR USE_EXTERNAL_LIBS) AND (PLATFORM_LINUX OR PLATFORM_OSX))
       FILE ${EXPORTS_DIR}/benchmark.cmake)
   endif()
 endif()
+
+## alfons ##
+############
+#set(GLM_ROOT ${PROJECT_SOURCE_DIR}/core/include/glm)
+set(GLM_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/core/include/glm)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)

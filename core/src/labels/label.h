@@ -51,6 +51,7 @@ public:
     };
 
     struct Vertex {
+        Vertex() {}
         // Constructor for TextStyle vertices
         Vertex(glm::vec2 pos, glm::vec2 uv, uint32_t color, uint32_t stroke)
             : pos(glm::round(pos * position_scale)), uv(uv),
