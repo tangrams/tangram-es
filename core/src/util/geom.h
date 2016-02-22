@@ -65,6 +65,18 @@ struct BoundingBox {
     glm::dvec2 center() const { return 0.5 * (min + max); }
 };
 
+template<class InputIt>
+float signedArea(InputIt _begin, InputIt _end) {
+    if (_begin == _end) { return 0; }
+    float area = 0;
+    auto prev = _end - 1;
+    for (auto curr = _begin; curr != _end; ++curr) {
+        area += curr->x * prev->y - curr->y * prev->x;
+        prev = curr;
+    }
+    return 0.5 * area;
+}
+
 /* Map a value from the range [_inputMin, _inputMax] into the range [_outputMin, _outputMax];
  * If _clamp is true, the output is strictly within the output range.
  * Ex: mapValue(5, 0, 10, 0, 360) == 180
@@ -83,8 +95,6 @@ glm::vec2 clipToScreenSpace(const glm::vec4& _clipCoords, const glm::vec2& _scre
 
 /* Computes the screen coordinates from a world position, a model view matrix and a screen size */
 glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize);
-
-float signedArea(const std::vector<glm::vec3>& _polygon);
 
 /* Computes the geometric center of the two dimentionnal region defined by the polygon */
 glm::vec2 centroid(const std::vector<std::vector<glm::vec3>>& _polygon);

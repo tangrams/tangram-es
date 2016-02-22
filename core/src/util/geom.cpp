@@ -55,18 +55,6 @@ glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosit
     return clipToScreenSpace(worldToClipSpace(_mvp, _worldPosition), _screenSize);
 }
 
-float signedArea(const std::vector<glm::vec3>& _polygon) {
-    if (_polygon.empty()) { return 0; }
-    float area = 0;
-    auto prev = _polygon.back();
-    for (const auto& curr : _polygon) {
-        area += curr.x * prev.y - curr.y * prev.x;
-        prev = curr;
-    }
-    return 0.5 * area;
-}
-
-
 glm::vec2 centroid(const std::vector<std::vector<glm::vec3>>& _polygon) {
     glm::vec2 centroid;
     int n = 0;

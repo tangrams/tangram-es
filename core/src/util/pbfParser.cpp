@@ -152,37 +152,24 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
 
         case GeometryType::lines:
         {
-            int offset = 0;
-
+            auto pos = _ctx.geometry.coordinates.begin();
             for (int length : _ctx.geometry.sizes) {
                 if (length == 0) { continue; }
-
                 Line line;
                 line.reserve(length);
-
-                line.insert(line.begin(),
-                            _ctx.geometry.coordinates.begin() + offset,
-                            _ctx.geometry.coordinates.begin() + offset + length);
-
-                offset += length;
+                line.insert(line.begin(), pos, pos + length);
+                pos += length;
                 feature.lines.emplace_back(std::move(line));
             }
         }
         case GeometryType::polygons:
         {
-            int offset = 0;
-
+            auto pos = _ctx.geometry.coordinates.begin();
             for (int length : _ctx.geometry.sizes) {
                 if (length == 0) { continue; }
-                
                 // Determine winding order from first polygon
                 if (_ctx.windingOrder == 0.0) {
-                    Line firstPoly;
-                    firstPoly.reserve(length);
-                    firstPoly.insert(firstPoly.begin(),
-                                     _ctx.geometry.coordinates.begin(),
-                                     _ctx.geometry.coordinates.begin() + length);
-                    _ctx.windingOrder = signedArea(firstPoly);
+                    _ctx.windingOrder = signedArea(pos, pos + length);
                 }
 
                 Line line;
@@ -191,15 +178,13 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
                 if (_ctx.windingOrder >= 0.0f) {
                     // Polygons are in a flat list of rings, with ccw rings indicating
                     // the beginning of a new polygon
-                    line.insert(line.begin(),
-                                _ctx.geometry.coordinates.begin() + offset,
-                                _ctx.geometry.coordinates.begin() + offset + length);
-                    offset += length;
+                    line.insert(line.begin(), pos, pos + length);
+                    pos += length;
 
                     if (feature.polygons.empty()) {
                         feature.polygons.emplace_back();
                     } else {
-                        double area = signedArea(line);
+                        double area = signedArea(line.begin(), line.end());
                         if (area > 0.0) {
                             feature.polygons.emplace_back();
                         } else if (area == 0.0){
@@ -210,15 +195,14 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
                     // Polygons are in a flat list of rings, with cw rings indicating
                     // the beginning of a new polygon
                     using iter_type = std::vector<Point>::iterator;
-                    std::reverse_iterator<iter_type> start(_ctx.geometry.coordinates.begin() + offset + length);
-                    std::reverse_iterator<iter_type> end(_ctx.geometry.coordinates.begin() + offset);
+                    std::reverse_iterator<iter_type> start(pos + length);
+                    std::reverse_iterator<iter_type> end(pos);
                     line.insert(line.begin(), start, end);
-                    offset += length;
-                    
+                    pos += length;
                     if (feature.polygons.empty()) {
                         feature.polygons.emplace_back();
                     } else {
-                        double area = signedArea(line);
+                        double area = signedArea(line.begin(), line.end());
                         if (area < 0.0) {
                             feature.polygons.emplace_back();
                         } else if (area == 0.0) {
@@ -226,7 +210,7 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
                         }
                     }
                 }
-                
+
                 feature.polygons.back().push_back(std::move(line));
             }
             break;

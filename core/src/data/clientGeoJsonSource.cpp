@@ -167,7 +167,7 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task,
                     }
                     // Polygons are in a flat list of rings, with ccw rings indicating
                     // the beginning of a new polygon
-                    if (signedArea(line) >= 0 || feat.polygons.empty()) {
+                    if (signedArea(line.begin(), line.end()) >= 0 || feat.polygons.empty()) {
                         feat.polygons.emplace_back();
                     }
                     feat.polygons.back().push_back(std::move(line));
