@@ -324,10 +324,10 @@ alf::LineMetrics TextStyleBuilder::drawWithLineWrapping(const alf::LineLayout& _
             lastWidth = lineWidth;
         }
 
-        if (c.mustBreak || charCount > _maxChar) {
+        if (lastShape != 0 && (c.mustBreak || charCount >= _maxChar)) {
             // only go to next line if chars have been added on the current line
             // HACK: avoid short words on single line
-            if (lastShape != 0 && (c.mustBreak || shapeCount - lastShape > 4 )) {
+            if (c.mustBreak || shapeCount - lastShape > 4 || _maxChar <= 4) {
 
                 auto& endShape = _line.shapes()[lastShape-1];
                 if (endShape.isSpace) {
