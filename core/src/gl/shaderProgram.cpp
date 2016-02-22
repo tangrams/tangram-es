@@ -23,6 +23,9 @@ namespace Uniform {
     const std::string metersPerPixel = "u_meters_per_pixel";
     const std::string view = "u_view";
     const std::string proj = "u_proj";
+    const std::string ortho = "u_ortho";
+    const std::string tex = "u_tex";
+    const std::string uvScaleFactor = "u_uv_scale_factor";
 }
 
 ShaderProgram::ShaderProgram() {

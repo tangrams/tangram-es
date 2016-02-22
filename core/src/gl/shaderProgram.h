@@ -166,6 +166,9 @@ namespace Uniform {
     extern const std::string metersPerPixel;
     extern const std::string view;
     extern const std::string proj;
+    extern const std::string ortho;
+    extern const std::string tex;
+    extern const std::string uvScaleFactor;
 };
 
 }
