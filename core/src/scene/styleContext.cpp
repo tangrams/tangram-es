@@ -100,14 +100,15 @@ bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {
     bool ok = true;
 
     for (auto& function : _functions) {
-        LOGD("compile '%s'", function.c_str());
         duk_push_string(m_ctx, function.c_str());
         duk_push_string(m_ctx, "");
 
         if (duk_pcompile(m_ctx, DUK_COMPILE_FUNCTION) == 0) {
             duk_put_prop_index(m_ctx, arr_idx, id);
         } else {
-            LOGE("Compile failed: %s", duk_safe_to_string(m_ctx, -1));
+            LOGW("Compile failed: %s\n%s\n---",
+                 duk_safe_to_string(m_ctx, -1),
+                 function.c_str());
             duk_pop(m_ctx);
             ok = false;
         }
