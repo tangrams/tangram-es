@@ -334,7 +334,39 @@ layers:
                 interactive: true
                 #offset: [0, 12px]
                 align: right
-                text_wrap: 20
+                text_wrap: 1
+                # using codePointAt() from
+                # https://github.com/paulmillr/es6-shim/blob/8e570a4b425a80f9b13ff027dbd28d65f201a319/es6-shim.js#L171-L183"
+                text_source: |
+                    function() {
+                      var index = 0;
+                      var last = 0;
+                      var string = feature.name;
+                      var length = string.length;
+                      var output = [];
+                      for (; index < length; ++index) {
+                        var codePoint = string.charCodeAt(index);
+                        var isEnd = (index + 1 === length);
+                        if (! (codePoint < 0xD800 || codePoint > 0xDBFF || isEnd)) {
+
+                          var second = string.charCodeAt(++index);
+                          if (! (second < 0xDC00 || second > 0xDFFF)) {
+                            codePoint =  ((codePoint - 0xD800) * 1024) + (second - 0xDC00) + 0x10000;
+                          }
+                        }
+                        if ((codePoint >= 0x3400 && codePoint < 0x4db5) ||
+                            (codePoint >= 0x4e00 && codePoint < 0x9fc4)) {
+                            output.push(string.slice(last, index + 1));
+                            last = index + 1;
+                        }
+                      }
+                      if (output.length > 0) {
+                        output.push(string.slice(last, length));
+
+                        return output.join(' ');
+                      }
+                      return feature.name;
+                    }
                 font:
                     family: sans-serif
                     weight: 400
