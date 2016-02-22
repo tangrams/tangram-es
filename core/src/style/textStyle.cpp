@@ -481,7 +481,8 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         m_scratch.metrics.descender = -line.descent();
         m_scratch.metrics.ascender = line.ascent();
         m_scratch.metrics.lineHeight = line.height();
-        m_scratch.quadsLocalOrigin = { 0, -line.ascent() };
+        //m_scratch.quadsLocalOrigin = { 0, -line.ascent() };
+        m_scratch.quadsLocalOrigin = {lineMetrics.aabb.x, lineMetrics.aabb.y};
 
     }
 
