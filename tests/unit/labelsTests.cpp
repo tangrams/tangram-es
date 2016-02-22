@@ -50,7 +50,7 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
 
     std::shared_ptr<Tile> tile(new Tile({0,0,0}, view.getMapProjection()));
     tile->initGeometry(1);
-    tile->getMesh(*textStyle.get()) = std::move(labelMesh);
+    tile->setMesh(*textStyle.get(), std::move(labelMesh));
     tile->update(0, view);
 
     std::vector<std::unique_ptr<Style>> styles;

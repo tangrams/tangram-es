@@ -11,7 +11,6 @@
 
 namespace Tangram {
 
-int ShaderProgram::s_validGeneration = 0;
 
 ShaderProgram::ShaderProgram() {
 
@@ -118,7 +117,7 @@ bool ShaderProgram::use() {
 bool ShaderProgram::build() {
 
     m_needsBuild = false;
-    m_generation = s_validGeneration;
+    m_generation = RenderState::generation();
 
     if (m_invalidShaderSource) { return false; }
 
@@ -302,19 +301,13 @@ std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fra
 
 void ShaderProgram::checkValidity() {
 
-    if (m_generation != s_validGeneration) {
+    if (!RenderState::isValidGeneration(m_generation)) {
         m_glFragmentShader = 0;
         m_glVertexShader = 0;
         m_glProgram = 0;
         m_needsBuild = true;
         m_uniformCache.clear();
     }
-}
-
-void ShaderProgram::invalidateAllPrograms() {
-
-    ++s_validGeneration;
-
 }
 
 void ShaderProgram::setUniformi(const std::string& _name, int _value) {

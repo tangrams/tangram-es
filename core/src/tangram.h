@@ -136,5 +136,7 @@ struct TouchItem {
 
 const std::vector<TouchItem>& pickFeaturesAt(float _x, float _y);
 
+float frameTime();
+
 }
 

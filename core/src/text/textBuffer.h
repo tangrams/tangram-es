@@ -9,7 +9,7 @@ namespace Tangram {
 class FontContext;
 
 /*
- * This class holds TextLabels together with their VboMesh
+ * This class holds TextLabels together with their Mesh
  */
 class TextBuffer : public LabelMesh {
 

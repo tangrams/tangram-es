@@ -1,18 +1,12 @@
 #include "tile.h"
 
 #include "data/dataSource.h"
-#include "scene/scene.h"
-#include "scene/styleContext.h"
 #include "style/style.h"
 #include "view/view.h"
 #include "tile/tileID.h"
 #include "labels/labelMesh.h"
-#include "gl/vboMesh.h"
-#include "gl/shaderProgram.h"
 
 #include "glm/gtc/matrix_transform.hpp"
-
-#include <algorithm>
 
 namespace Tangram {
 
@@ -75,25 +69,16 @@ void Tile::resetState() {
     }
 }
 
-void Tile::draw(const Style& _style, const View& _view) {
-
-    auto& styleMesh = getMesh(_style);
-
-    if (styleMesh) {
-        auto& shader = _style.getShaderProgram();
-
-        float zoomAndProxy = isProxy() ? -m_id.z : m_id.z;
-
-        shader->setUniformMatrix4f("u_model", m_modelMatrix);
-        shader->setUniformf("u_tile_origin", m_tileOrigin.x, m_tileOrigin.y, zoomAndProxy);
-
-        styleMesh->draw(*shader);
+void Tile::setMesh(const Style& _style, std::unique_ptr<StyledMesh> _mesh) {
+    size_t id = _style.getID();
+    if (id >= m_geometry.size()) {
+        m_geometry.resize(id+1);
     }
+    m_geometry[_style.getID()] = std::move(_mesh);
 }
 
-std::unique_ptr<VboMesh>& Tile::getMesh(const Style& _style) {
-    static std::unique_ptr<VboMesh> NONE = nullptr;
-
+const std::unique_ptr<StyledMesh>& Tile::getMesh(const Style& _style) const {
+    static std::unique_ptr<StyledMesh> NONE = nullptr;
     if (_style.getID() >= m_geometry.size()) { return NONE; }
 
     return m_geometry[_style.getID()];

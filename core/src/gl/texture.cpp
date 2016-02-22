@@ -12,8 +12,6 @@
 
 namespace Tangram {
 
-int Texture::s_validGeneration = 0;
-
 Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _options, bool _generateMipmaps)
     : m_options(_options), m_generateMipmaps(_generateMipmaps) {
 
@@ -147,12 +145,12 @@ void Texture::generate(GLuint _textureUnit) {
     glTexParameteri(m_target, GL_TEXTURE_WRAP_S, m_options.m_wrapping.m_wraps);
     glTexParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.m_wrapping.m_wrapt);
 
-    m_generation = s_validGeneration;
+    m_generation = RenderState::generation();
 }
 
 void Texture::checkValidity() {
 
-    if (m_generation != s_validGeneration) {
+    if (!RenderState::isValidGeneration(m_generation)) {
         m_shouldResize = true;
         m_glHandle = 0;
     }
@@ -243,12 +241,6 @@ size_t Texture::bytesPerPixel() {
         default:
             return 4;
     }
-}
-
-void Texture::invalidateAllTextures() {
-
-    ++s_validGeneration;
-
 }
 
 }

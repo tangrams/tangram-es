@@ -3,7 +3,7 @@
 #include "material.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
-#include "gl/vboMesh.h"
+#include "gl/mesh.h"
 #include "scene/light.h"
 #include "scene/styleParam.h"
 #include "scene/drawRule.h"
@@ -11,6 +11,7 @@
 #include "scene/spriteAtlas.h"
 #include "tile/tile.h"
 #include "view/view.h"
+#include "tangram.h"
 
 namespace Tangram {
 
@@ -42,8 +43,10 @@ void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
 
     m_material->injectOnProgram(*m_shaderProgram);
 
-    for (auto& light : _lights) {
-        light->injectOnProgram(*m_shaderProgram);
+    if (m_lightingType != LightingType::none) {
+        for (auto& light : _lights) {
+            light->injectOnProgram(*m_shaderProgram);
+        }
     }
 }
 
@@ -51,7 +54,7 @@ void Style::setMaterial(const std::shared_ptr<Material>& _material) {
     m_material = _material;
 }
 
-void Style::setLightingType(LightingType _type){
+void Style::setLightingType(LightingType _type) {
     m_lightingType = _type;
 }
 
@@ -60,19 +63,16 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
         const auto& name = uniformPair.first;
         const auto& value = uniformPair.second;
 
-        auto& textures = _scene.textures();
-
         if (value.is<std::string>()) {
 
-            auto& tex = textures[value.get<std::string>()];
+            auto& tex = _scene.textures()[value.get<std::string>()];
+            if (tex) {
+                tex->update(_textureUnit);
+                tex->bind(_textureUnit);
 
-            tex->update(_textureUnit);
-            tex->bind(_textureUnit);
-
-            m_shaderProgram->setUniformi(name, _textureUnit);
-
-            _textureUnit++;
-
+                m_shaderProgram->setUniformi(name, _textureUnit);
+                _textureUnit++;
+            }
         } else {
 
             if (value.is<bool>()) {
@@ -95,13 +95,20 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
 
 void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
 
+    // TODO cache which uniforms are used by the shader!
+
+    // Set time uniforms style's shader programs
+    m_shaderProgram->setUniformf("u_time", Tangram::frameTime());
+
     m_shaderProgram->setUniformf("u_device_pixel_ratio", m_pixelScale);
 
     m_material->setupProgram(*m_shaderProgram);
 
-    // Set up lights
-    for (const auto& light : _scene.lights()) {
-        light->setupProgram(_view, *m_shaderProgram);
+    if (m_lightingType != LightingType::none) {
+        // Set up lights
+        for (const auto& light : _scene.lights()) {
+            light->setupProgram(_view, *m_shaderProgram);
+        }
     }
 
     // Set Map Position
@@ -155,6 +162,22 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit)
     }
 }
 
+void Style::draw(const Tile& _tile) {
+
+    auto& styleMesh = _tile.getMesh(*this);
+
+    if (styleMesh) {
+        float zoomAndProxy = _tile.getID().z * (_tile.isProxy() ? -1 : 1);
+
+        m_shaderProgram->setUniformMatrix4f("u_model", _tile.getModelMatrix());
+        m_shaderProgram->setUniformf("u_tile_origin",
+                                     _tile.getOrigin().x,
+                                     _tile.getOrigin().y,
+                                     zoomAndProxy);
+
+        styleMesh->draw(*m_shaderProgram);
+    }
+}
 
 bool StyleBuilder::checkRule(const DrawRule& _rule) const {
 

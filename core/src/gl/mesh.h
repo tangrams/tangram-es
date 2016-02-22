@@ -1,11 +1,113 @@
 #pragma once
 
-#include "vboMesh.h"
+#include "gl.h"
+#include "vertexLayout.h"
+#include "vao.h"
+#include "util/types.h"
+#include "platform.h"
+#include "style/style.h"
 
+#include <string>
+#include <vector>
+#include <memory>
 #include <cstring> // for memcpy
 #include <cassert>
 
+#define MAX_INDEX_VALUE 65535 // Maximum value of GLushort
+
 namespace Tangram {
+
+/*
+ * Mesh - Drawable collection of geometry contained in a vertex buffer and
+ * (optionally) an index buffer
+ */
+struct MeshBase {
+public:
+    /*
+     * Creates a Mesh for vertex data arranged in the structure described by
+     * _vertexLayout to be drawn using the OpenGL primitive type _drawMode
+     */
+    MeshBase(std::shared_ptr<VertexLayout> _vertexlayout, GLenum _drawMode = GL_TRIANGLES,
+             GLenum _hint = GL_STATIC_DRAW, bool _keepMemoryData = false);
+
+    MeshBase();
+
+    /*
+     * Set Vertex Layout for the mesh object
+     */
+    void setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout);
+
+    /*
+     * Set Draw mode for the mesh object
+     */
+    void setDrawMode(GLenum _drawMode = GL_TRIANGLES);
+
+    /*
+     * Destructs this Mesh and releases all associated OpenGL resources
+     */
+    ~MeshBase();
+
+    /*
+     * Copies all added vertices and indices into OpenGL buffer objects; After
+     * geometry is uploaded, no more vertices or indices can be added
+     */
+    void upload();
+
+    /*
+     * Sub data upload of the mesh, returns true if this results in a buffer binding
+     */
+    void subDataUpload();
+    void resetDirty();
+
+    /*
+     * Renders the geometry in this mesh using the ShaderProgram _shader; if
+     * geometry has not already been uploaded it will be uploaded at this point
+     */
+    void draw(ShaderProgram& _shader);
+
+    size_t bufferSize();
+
+protected:
+
+    int m_generation; // Generation in which this mesh's GL handles were created
+
+    // Used in draw for legth and offsets: sumIndices, sumVertices
+    // needs to be set by compile()
+    std::vector<std::pair<uint32_t, uint32_t>> m_vertexOffsets;
+
+    std::shared_ptr<VertexLayout> m_vertexLayout;
+
+    size_t m_nVertices;
+    GLuint m_glVertexBuffer;
+
+    std::unique_ptr<Vao> m_vaos;
+
+    // Compiled vertices for upload
+    GLbyte* m_glVertexData = nullptr;
+
+    size_t m_nIndices;
+    GLuint m_glIndexBuffer;
+    // Compiled  indices for upload
+    GLushort* m_glIndexData = nullptr;
+
+    GLenum m_drawMode;
+    GLenum m_hint;
+
+    bool m_isUploaded;
+    bool m_isCompiled;
+    bool m_dirty;
+    bool m_keepMemoryData;
+
+    GLsizei m_dirtySize;
+    GLintptr m_dirtyOffset;
+
+    bool checkValidity();
+
+    size_t compileIndices(const std::vector<std::pair<uint32_t, uint32_t>>& _offsets,
+                          const std::vector<uint16_t>& _indices, size_t _offset);
+
+    void setDirty(GLintptr _byteOffset, GLsizei _byteSize);
+};
 
 template<class T>
 struct MeshData {
@@ -29,13 +131,26 @@ struct MeshData {
 };
 
 template<class T>
-class TypedMesh : public VboMesh {
-
+class Mesh : public StyledMesh, protected MeshBase {
 public:
 
-    TypedMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
-              GLenum _hint = GL_STATIC_DRAW, bool _keepMemoryData = false)
-        : VboMesh(_vertexLayout, _drawMode, _hint, _keepMemoryData) {};
+    Mesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
+         GLenum _hint = GL_STATIC_DRAW, bool _keepMemoryData = false)
+        : MeshBase(_vertexLayout, _drawMode, _hint, _keepMemoryData) {};
+
+    virtual ~Mesh() {}
+
+    virtual size_t bufferSize() {
+        return MeshBase::bufferSize();
+    }
+
+    virtual void draw(ShaderProgram& _shader) {
+        MeshBase::draw(_shader);
+    }
+
+    void compile(const std::vector<MeshData<T>>& _meshes);
+
+    void compile(const MeshData<T>& _mesh);
 
     /*
      * Update _nVerts vertices in the mesh with the new T value _newVertexValue
@@ -49,22 +164,13 @@ public:
      * memory
      */
     template<class A>
-    void updateAttribute(Range _vertexRange,
-                         const A& _newAttributeValue,
+    void updateAttribute(Range _vertexRange, const A& _newAttributeValue,
                          size_t _attribOffset = 0);
-
-    void compile(const std::vector<MeshData<T>>& _meshes);
-
-    void compile(const MeshData<T>& _mesh);
-
-protected:
-
-    void setDirty(GLintptr _byteOffset, GLsizei _byteSize);
 };
 
 
 template<class T>
-void TypedMesh<T>::compile(const std::vector<MeshData<T>>& _meshes) {
+void Mesh<T>::compile(const std::vector<MeshData<T>>& _meshes) {
 
     m_nVertices = 0;
     m_nIndices = 0;
@@ -103,7 +209,7 @@ void TypedMesh<T>::compile(const std::vector<MeshData<T>>& _meshes) {
 }
 
 template<class T>
-void TypedMesh<T>::compile(const MeshData<T>& _mesh) {
+void Mesh<T>::compile(const MeshData<T>& _mesh) {
 
     m_nVertices = _mesh.vertices.size();
     m_nIndices = _mesh.indices.size();
@@ -125,9 +231,9 @@ void TypedMesh<T>::compile(const MeshData<T>& _mesh) {
 
 template<class T>
 template<class A>
-void TypedMesh<T>::updateAttribute(Range _vertexRange,
-                                   const A& _newAttributeValue,
-                                   size_t _attribOffset) {
+void Mesh<T>::updateAttribute(Range _vertexRange, const A& _newAttributeValue,
+                              size_t _attribOffset) {
+
     if (m_glVertexData == nullptr) {
         assert(false);
         return;
@@ -162,24 +268,7 @@ void TypedMesh<T>::updateAttribute(Range _vertexRange,
 }
 
 template<class T>
-void TypedMesh<T>::setDirty(GLintptr _byteOffset, GLsizei _byteSize) {
-
-    if (!m_dirty) {
-        m_dirty = true;
-
-        m_dirtySize = _byteSize;
-        m_dirtyOffset = _byteOffset;
-
-    } else {
-        size_t end = std::max(m_dirtyOffset + m_dirtySize, _byteOffset + _byteSize);
-
-        m_dirtyOffset = std::min(m_dirtyOffset, _byteOffset);
-        m_dirtySize = end - m_dirtyOffset;
-    }
-}
-
-template<class T>
-void TypedMesh<T>::updateVertices(Range _vertexRange, const T& _newVertexValue) {
+void Mesh<T>::updateVertices(Range _vertexRange, const T& _newVertexValue) {
     if (m_glVertexData == nullptr) {
         assert(false);
         return;

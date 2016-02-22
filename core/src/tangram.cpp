@@ -220,14 +220,11 @@ void render() {
         // Loop over all styles
         for (const auto& style : m_scene->styles()) {
 
-            // Set time uniforms style's shader programs
-            style->getShaderProgram()->setUniformf("u_time", g_time);
-
             style->onBeginDrawFrame(*m_view, *m_scene);
 
             // Loop over all tiles in m_tileSet
             for (const auto& tile : m_tileManager->getVisibleTiles()) {
-                tile->draw(*style, *m_view);
+                style->draw(*tile);
             }
 
             style->onEndDrawFrame();
@@ -541,19 +538,9 @@ void setupGL() {
         m_tileManager->clearTileSets();
     }
 
-    // The OpenGL context has been destroyed since the last time resources were created,
-    // so we invalidate all data that depends on OpenGL object handles.
-
-    // ShaderPrograms are invalidated and immediately rebuilt
-    ShaderProgram::invalidateAllPrograms();
-
-    // Buffer objects are invalidated and re-uploaded the next time they are used
-    VboMesh::invalidateAllVBOs();
-
-    // Texture objects are invalidated and re-uploaded the next time they are updated
-    Texture::invalidateAllTextures();
-
-    // Reconfigure the render states
+    // Reconfigure the render states. Increases context 'generation'.
+    // The OpenGL context has been destroyed since the last time resources were
+    // created, so we invalidate all data that depends on OpenGL object handles.
     RenderState::configure();
 
     // Set default primitive render color
@@ -571,6 +558,10 @@ void setupGL() {
 void runOnMainLoop(std::function<void()> _task) {
     std::lock_guard<std::mutex> lock(m_tasksMutex);
     m_tasks.emplace(std::move(_task));
+}
+
+float frameTime() {
+    return g_time;
 }
 
 }

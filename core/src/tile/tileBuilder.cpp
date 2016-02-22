@@ -1,6 +1,6 @@
 #include "tile/tileBuilder.h"
 
-#include "gl/vboMesh.h"
+#include "gl/mesh.h"
 
 #include "data/dataSource.h"
 
@@ -70,7 +70,7 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
     }
 
     for (auto& builder : m_styleBuilder) {
-        tile->getMesh(builder.second->style()) = builder.second->build();
+        tile->setMesh(builder.second->style(), builder.second->build());
     }
 
     return tile;

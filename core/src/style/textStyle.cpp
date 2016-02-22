@@ -5,7 +5,7 @@
 #include "text/fontContext.h"
 #include "tile/tile.h"
 #include "gl/shaderProgram.h"
-#include "gl/vboMesh.h"
+#include "gl/mesh.h"
 #include "view/view.h"
 #include "labels/textLabel.h"
 #include "text/fontContext.h"
@@ -84,7 +84,7 @@ struct TextStyleBuilder : public StyleBuilder {
     void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
     void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
 
-    std::unique_ptr<VboMesh> build() override {
+    std::unique_ptr<StyledMesh> build() override {
         return m_builder.build();
     }
 
