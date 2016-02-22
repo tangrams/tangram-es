@@ -169,6 +169,22 @@ namespace Uniform {
     extern const std::string ortho;
     extern const std::string tex;
     extern const std::string uvScaleFactor;
+    extern const std::string materialEmission;
+    extern const std::string materialEmissionTexture;
+    extern const std::string materialEmissionScale;
+    extern const std::string materialAmbiant;
+    extern const std::string materialAmbiantTexture;
+    extern const std::string materialAmbiantScale;
+    extern const std::string materialDiffuse;
+    extern const std::string materialDiffuseTexture;
+    extern const std::string materialDiffuseScale;
+    extern const std::string materialShininess;
+    extern const std::string materialSpecular;
+    extern const std::string materialSpecularTexture;
+    extern const std::string materialSpecularScale;
+    extern const std::string materialNormalTexture;
+    extern const std::string materialNormalScale;
+    extern const std::string materialNormalAmount;
 };
 
 }

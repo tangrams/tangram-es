@@ -26,6 +26,22 @@ namespace Uniform {
     const std::string ortho = "u_ortho";
     const std::string tex = "u_tex";
     const std::string uvScaleFactor = "u_uv_scale_factor";
+    const std::string materialEmission = "u_material.emission";
+    const std::string materialEmissionTexture = "u_material_emission_texture";
+    const std::string materialEmissionScale = "u_material.emissionScale";
+    const std::string materialAmbiant = "u_material.ambient";
+    const std::string materialAmbiantTexture = "u_material_ambient_texture";
+    const std::string materialAmbiantScale = "u_material.ambientScale";
+    const std::string materialDiffuse = "u_material.diffuse";
+    const std::string materialDiffuseTexture = "u_material_diffuse_texture";
+    const std::string materialDiffuseScale = "u_material.diffuseScale";
+    const std::string materialShininess = "u_material.shininess";
+    const std::string materialSpecular = "u_material.specular";
+    const std::string materialSpecularTexture = "u_material_specular_texture";
+    const std::string materialSpecularScale = "u_material.specularScale";
+    const std::string materialNormalTexture = "u_material_normal_texture";
+    const std::string materialNormalScale = "u_material.normalScale";
+    const std::string materialNormalAmount = "u_material.normalAmount";
 }
 
 ShaderProgram::ShaderProgram() {
