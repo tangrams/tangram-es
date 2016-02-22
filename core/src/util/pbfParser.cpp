@@ -79,20 +79,49 @@ void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn)
     }
 }
 
-// Reuse string allocations in Value. Variant is not yet smart enough
-// probably due to traits not being so well supported everywhere..
-struct copy_visitor {
+struct string_visitor {
     using result_type = bool;
-    template <typename T>
-    bool operator()(T& l, const T& r) const {
-        l = r;
+    Value& propValue;
+    std::string& str;
+
+    bool operator()(const PbfParser::StringView& v) const {
+        str.assign(v.second, v.first);
         return true;
     }
-    template <typename L, typename R>
-    bool operator()(L l, R r) const {
+    template<typename T>
+    bool operator()(const T& v) const {
+        propValue = v;
         return false;
     }
 };
+struct double_visitor {
+    using result_type = bool;
+    Value& propValue;
+
+    bool operator()(const PbfParser::StringView& v) const {
+        propValue = std::string(v.second, v.first);
+        return false;
+    }
+    template<typename T>
+    bool operator()(const T& v) const {
+        propValue = v;
+        return true;
+    }
+};
+struct update_visitor {
+    using result_type = bool;
+    const PbfParser::TagValue& tagValue;
+    Value& propValue;
+
+    template<typename T>
+    bool operator()(T& v) const {
+        return PbfParser::TagValue::visit(tagValue, double_visitor{propValue});
+    }
+    bool operator()(std::string& v) const {
+        return PbfParser::TagValue::visit(tagValue, string_visitor{propValue, v});
+    }
+};
+
 
 void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureIn, TileDataSink& _sink) {
 
@@ -193,10 +222,9 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
             } else {
                 matchedKey++;
             }
-            if (!Value::binary_visit(it.value, _ctx.values[tagValue], copy_visitor{})) {
-                // Throw away old value
-                it.value = _ctx.values[tagValue];
-            } else { reused++; }
+            if (Value::visit(it.value, update_visitor{_ctx.values[tagValue], it.value})) {
+                reused++;
+            }
         } else {
             if (matchPrevious && _ctx.previousTags[tagKey] >= 0) {
                 matchPrevious = false;
@@ -321,7 +349,7 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, T
                 while (valueItr.next()) {
                     switch (valueItr.tag) {
                         case 1: // string value
-                            _ctx.values.push_back(valueItr.string());
+                            _ctx.values.push_back(valueItr.chunk());
                             break;
                         case 2: // float value
                             _ctx.values.push_back(valueItr.float32());
