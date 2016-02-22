@@ -310,6 +310,15 @@ void ShaderProgram::checkValidity() {
     }
 }
 
+std::string ShaderProgram::getExtensionDeclaration(const std::string& _extension) {
+    std::ostringstream oss;
+    oss << "#if defined(GL_ES) == 0 || defined(GL_" << _extension << ")\n";
+    oss << "    #extension GL_" << _extension << " : enable\n";
+    oss << "    #define TANGRAM_EXTENSION_" << _extension << '\n';
+    oss << "#endif\n";
+    return oss.str();
+}
+
 void ShaderProgram::setUniformi(const std::string& _name, int _value) {
     use();
     GLint location = getUniformLocation(_name);
