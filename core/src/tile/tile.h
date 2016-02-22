@@ -15,7 +15,7 @@ class DataSource;
 class MapProjection;
 class Style;
 class View;
-class StyledMesh;
+struct StyledMesh;
 
 /* Tile of vector map data
  *
