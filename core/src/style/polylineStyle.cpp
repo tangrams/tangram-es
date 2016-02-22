@@ -4,7 +4,7 @@
 #include "platform.h"
 #include "material.h"
 #include "gl/shaderProgram.h"
-#include "gl/vboMesh.h"
+#include "gl/mesh.h"
 #include "scene/stops.h"
 #include "scene/drawRule.h"
 #include "tile/tile.h"
@@ -128,8 +128,8 @@ void PolylineStyleBuilder::setup(const Tile& _tile) {
 }
 
 std::unique_ptr<StyledMesh> PolylineStyleBuilder::build() {
-    auto mesh = std::make_unique<VboMesh<PolylineVertex>>(m_style.vertexLayout(),
-                                                          m_style.drawMode());
+    auto mesh = std::make_unique<Mesh<PolylineVertex>>(m_style.vertexLayout(),
+                                                       m_style.drawMode());
 
     bool painterMode = (m_style.blendMode() == Blending::overlay ||
                         m_style.blendMode() == Blending::inlay);

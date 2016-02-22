@@ -3,7 +3,7 @@
 #include "material.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
-#include "gl/vboMesh.h"
+#include "gl/mesh.h"
 #include "scene/light.h"
 #include "scene/styleParam.h"
 #include "scene/drawRule.h"

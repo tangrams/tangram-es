@@ -1,7 +1,7 @@
 #include "catch.hpp"
 
 #include <iostream>
-#include "gl/vboMesh.h"
+#include "gl/mesh.h"
 
 using namespace Tangram;
 
@@ -18,8 +18,8 @@ std::shared_ptr<VertexLayout> layout = std::shared_ptr<VertexLayout>(new VertexL
     {"d",  1, GL_BYTE,  false, 0},
 }));
 
-struct TestMesh : public VboMesh<Vertex> {
-    using Base = VboMesh<Vertex>;
+struct TestMesh : public Mesh<Vertex> {
+    using Base = Mesh<Vertex>;
     using Base::Base;
 
     GLsizei getDirtySize() const { return m_dirtySize; }

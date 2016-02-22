@@ -2,7 +2,7 @@
 
 #include "labels/textLabel.h"
 #include "gl/texture.h"
-#include "gl/vboMesh.h"
+#include "gl/mesh.h"
 #include "gl/shaderProgram.h"
 
 #include <limits>

@@ -13,7 +13,7 @@ static std::atomic<int> s_meshCounter(0);
 const size_t maxVertices = 16384;
 
 LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
-    : VboMesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW)
+    : Mesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW)
 {
     s_meshCounter++;
 }

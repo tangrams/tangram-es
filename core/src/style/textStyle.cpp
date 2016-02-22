@@ -5,7 +5,7 @@
 #include "text/fontContext.h"
 #include "tile/tile.h"
 #include "gl/shaderProgram.h"
-#include "gl/vboMesh.h"
+#include "gl/mesh.h"
 #include "view/view.h"
 #include "labels/textLabel.h"
 #include "text/fontContext.h"

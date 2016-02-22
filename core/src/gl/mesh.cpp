@@ -1,4 +1,4 @@
-#include "vboMesh.h"
+#include "mesh.h"
 #include "shaderProgram.h"
 #include "renderState.h"
 #include "hardware.h"
@@ -7,7 +7,7 @@
 namespace Tangram {
 
 
-VboMeshBase::VboMeshBase() {
+MeshBase::MeshBase() {
     m_drawMode = GL_TRIANGLES;
     m_hint = GL_STATIC_DRAW;
     m_keepMemoryData = false;
@@ -25,8 +25,8 @@ VboMeshBase::VboMeshBase() {
     m_generation = -1;
 }
 
-VboMeshBase::VboMeshBase(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
-                 GLenum _hint, bool _keepMemoryData) : VboMeshBase() {
+MeshBase::MeshBase(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
+                   GLenum _hint, bool _keepMemoryData) : MeshBase() {
     m_vertexLayout = _vertexLayout;
     m_hint = _hint;
     m_keepMemoryData = _keepMemoryData;
@@ -34,7 +34,7 @@ VboMeshBase::VboMeshBase(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _dr
     setDrawMode(_drawMode);
 }
 
-VboMeshBase::~VboMeshBase() {
+MeshBase::~MeshBase() {
     // Deleting a index/array buffer being used ends up setting up the current vertex/index buffer to 0
     // after the driver finishes using it, force the render state to be 0 for vertex/index buffer
 
@@ -55,11 +55,11 @@ VboMeshBase::~VboMeshBase() {
     delete[] m_glIndexData;
 }
 
-void VboMeshBase::setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout) {
+void MeshBase::setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout) {
     m_vertexLayout = _vertexLayout;
 }
 
-void VboMeshBase::setDrawMode(GLenum _drawMode) {
+void MeshBase::setDrawMode(GLenum _drawMode) {
     switch (_drawMode) {
         case GL_POINTS:
         case GL_LINE_STRIP:
@@ -76,13 +76,13 @@ void VboMeshBase::setDrawMode(GLenum _drawMode) {
     }
 }
 
-void VboMeshBase::resetDirty() {
+void MeshBase::resetDirty() {
     m_dirtyOffset = 0;
     m_dirtySize = 0;
     m_dirty = false;
 }
 
-void VboMeshBase::subDataUpload() {
+void MeshBase::subDataUpload() {
     if (!m_dirty) {
         return;
     }
@@ -122,7 +122,7 @@ void VboMeshBase::subDataUpload() {
     resetDirty();
 }
 
-void VboMeshBase::upload() {
+void MeshBase::upload() {
 
     // Generate vertex buffer, if needed
     if (m_glVertexBuffer == 0) {
@@ -165,7 +165,7 @@ void VboMeshBase::upload() {
     resetDirty();
 }
 
-void VboMeshBase::draw(ShaderProgram& _shader) {
+void MeshBase::draw(ShaderProgram& _shader) {
 
     checkValidity();
 
@@ -233,7 +233,7 @@ void VboMeshBase::draw(ShaderProgram& _shader) {
     }
 }
 
-bool VboMeshBase::checkValidity() {
+bool MeshBase::checkValidity() {
     if (!RenderState::isValidGeneration(m_generation)) {
         m_isUploaded = false;
         m_glVertexBuffer = 0;
@@ -248,15 +248,15 @@ bool VboMeshBase::checkValidity() {
     return true;
 }
 
-size_t VboMeshBase::bufferSize() {
+size_t MeshBase::bufferSize() {
     return m_nVertices * m_vertexLayout->getStride() + m_nIndices * sizeof(GLushort);
 }
 
 // Add indices by collecting them into batches to draw as much as
 // possible in one draw call.  The indices must be shifted by the
 // number of vertices that are present in the current batch.
-size_t VboMeshBase::compileIndices(const std::vector<std::pair<uint32_t, uint32_t>>& _offsets,
-                                   const std::vector<uint16_t>& _indices, size_t _offset) {
+size_t MeshBase::compileIndices(const std::vector<std::pair<uint32_t, uint32_t>>& _offsets,
+                                const std::vector<uint16_t>& _indices, size_t _offset) {
 
 
     GLushort* dst = m_glIndexData + _offset;
@@ -291,7 +291,7 @@ size_t VboMeshBase::compileIndices(const std::vector<std::pair<uint32_t, uint32_
     return _offset + src;
 }
 
-void VboMeshBase::setDirty(GLintptr _byteOffset, GLsizei _byteSize) {
+void MeshBase::setDirty(GLintptr _byteOffset, GLsizei _byteSize) {
 
     if (!m_dirty) {
         m_dirty = true;

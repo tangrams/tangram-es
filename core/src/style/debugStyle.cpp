@@ -5,7 +5,7 @@
 #include "material.h"
 #include "tile/tile.h"
 #include "gl/shaderProgram.h"
-#include "gl/vboMesh.h"
+#include "gl/mesh.h"
 
 #include <vector>
 #include <memory>
@@ -53,8 +53,8 @@ struct DebugStyleBuilder : public StyleBuilder {
             return nullptr;
         }
 
-        auto mesh = std::make_unique<VboMesh<PosColVertex>>(m_style.vertexLayout(),
-                                                            m_style.drawMode());
+        auto mesh = std::make_unique<Mesh<PosColVertex>>(m_style.vertexLayout(),
+                                                         m_style.drawMode());
 
         GLuint abgr = 0xff0000ff;
 
@@ -70,7 +70,8 @@ struct DebugStyleBuilder : public StyleBuilder {
 
     const Style& style() const override { return m_style; }
 
-    DebugStyleBuilder(const DebugStyle& _style) : StyleBuilder(_style), m_style(_style) {}
+    DebugStyleBuilder(const DebugStyle& _style)
+        : StyleBuilder(_style), m_style(_style) {}
 
 };
 

@@ -6,7 +6,7 @@
 #include "util/builders.h"
 #include "util/extrude.h"
 #include "gl/shaderProgram.h"
-#include "gl/vboMesh.h"
+#include "gl/mesh.h"
 #include "tile/tile.h"
 #include "scene/drawRule.h"
 
@@ -97,8 +97,8 @@ struct PolygonStyleBuilder : public StyleBuilder {
 };
 
 std::unique_ptr<StyledMesh> PolygonStyleBuilder::build() {
-    auto mesh = std::make_unique<VboMesh<PolygonVertex>>(m_style.vertexLayout(),
-                                                         m_style.drawMode());
+    auto mesh = std::make_unique<Mesh<PolygonVertex>>(m_style.vertexLayout(),
+                                                      m_style.drawMode());
     mesh->compile(m_meshData);
     m_meshData.clear();
 

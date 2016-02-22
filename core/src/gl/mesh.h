@@ -18,34 +18,34 @@
 namespace Tangram {
 
 /*
- * VboMesh - Drawable collection of geometry contained in a vertex buffer and
+ * Mesh - Drawable collection of geometry contained in a vertex buffer and
  * (optionally) an index buffer
  */
-struct VboMeshBase {
+struct MeshBase {
 public:
     /*
-     * Creates a VboMesh for vertex data arranged in the structure described by
+     * Creates a Mesh for vertex data arranged in the structure described by
      * _vertexLayout to be drawn using the OpenGL primitive type _drawMode
      */
-    VboMeshBase(std::shared_ptr<VertexLayout> _vertexlayout, GLenum _drawMode = GL_TRIANGLES,
-                GLenum _hint = GL_STATIC_DRAW, bool _keepMemoryData = false);
+    MeshBase(std::shared_ptr<VertexLayout> _vertexlayout, GLenum _drawMode = GL_TRIANGLES,
+             GLenum _hint = GL_STATIC_DRAW, bool _keepMemoryData = false);
 
-    VboMeshBase();
+    MeshBase();
 
     /*
-     * Set Vertex Layout for the vboMesh object
+     * Set Vertex Layout for the mesh object
      */
     void setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout);
 
     /*
-     * Set Draw mode for the vboMesh object
+     * Set Draw mode for the mesh object
      */
     void setDrawMode(GLenum _drawMode = GL_TRIANGLES);
 
     /*
-     * Destructs this VboMesh and releases all associated OpenGL resources
+     * Destructs this Mesh and releases all associated OpenGL resources
      */
-    ~VboMeshBase();
+    ~MeshBase();
 
     /*
      * Copies all added vertices and indices into OpenGL buffer objects; After
@@ -131,21 +131,21 @@ struct MeshData {
 };
 
 template<class T>
-class VboMesh : public StyledMesh, protected VboMeshBase {
+class Mesh : public StyledMesh, protected MeshBase {
 public:
 
-    VboMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
-              GLenum _hint = GL_STATIC_DRAW, bool _keepMemoryData = false)
-        : VboMeshBase(_vertexLayout, _drawMode, _hint, _keepMemoryData) {};
+    Mesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
+         GLenum _hint = GL_STATIC_DRAW, bool _keepMemoryData = false)
+        : MeshBase(_vertexLayout, _drawMode, _hint, _keepMemoryData) {};
 
-    virtual ~VboMesh() {}
+    virtual ~Mesh() {}
 
     virtual size_t bufferSize() {
-        return VboMeshBase::bufferSize();
+        return MeshBase::bufferSize();
     }
 
     virtual void draw(ShaderProgram& _shader) {
-        VboMeshBase::draw(_shader);
+        MeshBase::draw(_shader);
     }
 
     void compile(const std::vector<MeshData<T>>& _meshes);
@@ -164,14 +164,13 @@ public:
      * memory
      */
     template<class A>
-    void updateAttribute(Range _vertexRange,
-                         const A& _newAttributeValue,
+    void updateAttribute(Range _vertexRange, const A& _newAttributeValue,
                          size_t _attribOffset = 0);
 };
 
 
 template<class T>
-void VboMesh<T>::compile(const std::vector<MeshData<T>>& _meshes) {
+void Mesh<T>::compile(const std::vector<MeshData<T>>& _meshes) {
 
     m_nVertices = 0;
     m_nIndices = 0;
@@ -210,7 +209,7 @@ void VboMesh<T>::compile(const std::vector<MeshData<T>>& _meshes) {
 }
 
 template<class T>
-void VboMesh<T>::compile(const MeshData<T>& _mesh) {
+void Mesh<T>::compile(const MeshData<T>& _mesh) {
 
     m_nVertices = _mesh.vertices.size();
     m_nIndices = _mesh.indices.size();
@@ -232,9 +231,9 @@ void VboMesh<T>::compile(const MeshData<T>& _mesh) {
 
 template<class T>
 template<class A>
-void VboMesh<T>::updateAttribute(Range _vertexRange,
-                                 const A& _newAttributeValue,
-                                 size_t _attribOffset) {
+void Mesh<T>::updateAttribute(Range _vertexRange, const A& _newAttributeValue,
+                              size_t _attribOffset) {
+
     if (m_glVertexData == nullptr) {
         assert(false);
         return;
@@ -269,7 +268,7 @@ void VboMesh<T>::updateAttribute(Range _vertexRange,
 }
 
 template<class T>
-void VboMesh<T>::updateVertices(Range _vertexRange, const T& _newVertexValue) {
+void Mesh<T>::updateVertices(Range _vertexRange, const T& _newVertexValue) {
     if (m_glVertexData == nullptr) {
         assert(false);
         return;

@@ -1,6 +1,6 @@
 #include "tile/tileBuilder.h"
 
-#include "gl/vboMesh.h"
+#include "gl/mesh.h"
 
 #include "data/dataSource.h"
 
