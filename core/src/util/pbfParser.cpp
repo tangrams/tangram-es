@@ -36,7 +36,7 @@ void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn)
 
     while(_geomIn.getData() < _geomIn.getEnd()) {
 
-        if(cmdRepeat == 0) { // get new command, lengh and parameters..
+        if(cmdRepeat == 0) { // get new command, length and parameters..
             uint32_t cmdData = static_cast<uint32_t>(_geomIn.varint());
             cmd = static_cast<pbfGeomCmd>(cmdData & 0x7); //first 3 bits of the cmdData
             cmdRepeat = cmdData >> 3; //last 5 bits
@@ -125,13 +125,15 @@ struct update_visitor {
 
 void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureIn, TileDataSink& _sink) {
 
-    //Iterate through this feature
-    protobuf::message geometry; // By default data_ and end_ are nullptr
+    protobuf::message geometry;
 
     _ctx.coordinates.clear();
     _ctx.numCoordinates.clear();
 
-    _ctx.featureTags.clear();
+    // keep previous tags to check which tags changed
+    _ctx.featureTags.swap(_ctx.previousTags);
+
+    // clear current tags
     _ctx.featureTags.assign(_ctx.keys.size(), -1);
 
     Feature& feature = _ctx.feature;
@@ -193,49 +195,37 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
     auto& properties = feature.props.items();
     properties.resize(numTags);
 
+    // Only update keys and values that differ from last feature.
+    bool matchingKeys = true;
     numTags = 0;
-    bool matchPrevious = true;
 
-    int matchedKey = 0;
-    int matchedVal = 0;
-    int reused = 0;
-
-    // Less copies: Only update keys and values that have changed
     for (int tagKey : _ctx.orderedKeys) {
         int tagValue = _ctx.featureTags[tagKey];
 
         if (tagValue >= 0) {
+            auto& prop = properties[numTags++];
 
-            auto& it = properties[numTags++];
-
-            if (matchPrevious && _ctx.previousTags[tagKey] < 0) {
-                matchPrevious = false;
+            if (matchingKeys && _ctx.previousTags[tagKey] < 0) {
+                // Previous feature did not have this key
+                matchingKeys = false;
             }
-            if (matchPrevious && _ctx.previousTags[tagKey] == tagValue) {
-                // Same as before. yay!
-                matchedKey++;
-                matchedVal++;
+            if (matchingKeys && _ctx.previousTags[tagKey] == tagValue) {
+                // Same tag as the previous feature
                 continue;
             }
-            if (!matchPrevious) {
-                it.key = _ctx.keys[tagKey];
-            } else {
-                matchedKey++;
+            if (!matchingKeys) {
+                // Update key
+                prop.key = _ctx.keys[tagKey];
             }
-            if (Value::visit(it.value, update_visitor{_ctx.values[tagValue], it.value})) {
-                reused++;
-            }
-        } else {
-            if (matchPrevious && _ctx.previousTags[tagKey] >= 0) {
-                matchPrevious = false;
-            }
+
+            // Update value, reuse string allocation
+            Value::visit(prop.value, update_visitor{_ctx.values[tagValue], prop.value});
+
+        } else if (matchingKeys && _ctx.previousTags[tagKey] >= 0) {
+            // Properties key-set changed from last feature
+            matchingKeys = false;
         }
     }
-
-    LOG("Matched key:%d val:%d - reused-alloc:%d / sum tags:%d",
-        matchedKey, matchedVal, reused + matchedVal, numTags);
-
-    _ctx.featureTags.swap(_ctx.previousTags);
 
     if (!_sink.matchFeature(feature)) {
         return;
@@ -403,7 +393,7 @@ void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, T
                   return Properties::keyComparator(_ctx.keys[a], _ctx.keys[b]);
               });
 
-    _ctx.previousTags.assign(_ctx.keys.size(), -1);
+    _ctx.featureTags.assign(_ctx.keys.size(), -1);
 
     for (auto& featureItr : _ctx.featureMsgs) {
         do {
