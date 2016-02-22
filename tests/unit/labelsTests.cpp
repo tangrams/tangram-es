@@ -1,4 +1,3 @@
-#if 0
 #include "catch.hpp"
 #include "tangram.h"
 #include "platform.h"
@@ -7,14 +6,18 @@
 #include "style/style.h"
 #include "style/textStyle.h"
 #include "labels/labels.h"
+#include "labels/textLabel.h"
 
 #include "view/view.h"
 #include "tile/tile.h"
 
+#include <memory>
+
 namespace Tangram {
 
 glm::vec2 screenSize(256.f, 256.f);
-LabelMesh dummy(nullptr, 0);
+TextStyle dummyStyle("textStyle");
+TextLabels dummy(dummyStyle);
 
 std::unique_ptr<TextLabel> makeLabel(Label::Transform _transform, Label::Type _type, std::string id) {
     Label::Options options;
@@ -23,9 +26,9 @@ std::unique_ptr<TextLabel> makeLabel(Label::Transform _transform, Label::Type _t
     options.properties->set("id", id);
     options.interactive = true;
 
-    return std::unique_ptr<TextLabel>(new TextLabel(_transform, _type, {10, 10},dummy,
-                                                    {0, 0}, options, {}, 1, LabelProperty::Anchor::center,
-                                                    _transform.modelPosition1 - glm::vec2{5,5}));
+    return std::unique_ptr<TextLabel>(new TextLabel(_transform, _type, options,
+            LabelProperty::Anchor::center,
+            {}, {10, 10}, {}, 1, _transform.modelPosition1 - glm::vec2(5, 5), dummy, {}));
 }
 
 TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
@@ -42,7 +45,7 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
     };
 
     auto labelMesh = std::unique_ptr<TestLabelMesh>(new TestLabelMesh(nullptr, 0));
-    auto textStyle = std::unique_ptr<TextStyle>(new TextStyle("test", nullptr));
+    auto textStyle = std::unique_ptr<TextStyle>(new TextStyle("test", false));
     textStyle->setID(0);
 
     labelMesh->addLabel(makeLabel(glm::vec2{.5f,.5f}, Label::Type::point, "0"));
@@ -79,4 +82,3 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
 }
 
 }
-#endif

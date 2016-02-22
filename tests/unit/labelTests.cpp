@@ -1,4 +1,3 @@
-#if 0
 #include "catch.hpp"
 #include "tangram.h"
 #include "labels/label.h"
@@ -11,12 +10,15 @@
 using namespace Tangram;
 
 glm::vec2 screenSize(500.f, 500.f);
-LabelMesh dummy(nullptr, 0);
+TextStyle dummyStyle("textStyle");
+TextLabels dummy(dummyStyle);
 
 TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
     Label::Options options;
     options.offset = {0.0f, 0.0f};
-    return TextLabel(_transform, _type, {0, 0}, dummy, {0, 0}, options, {}, 1, LabelProperty::Anchor::center, {});
+    return TextLabel(_transform, _type, options,
+            LabelProperty::Anchor::center,
+            {}, {0, 0}, {}, 1, {0, 0}, dummy, {});
 }
 
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {
@@ -198,4 +200,3 @@ TEST_CASE( "Sine interpolation", "[Core][Label][Fade]" ) {
     REQUIRE(fadeIn.isFinished());
 }
 
-#endif
