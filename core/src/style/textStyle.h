@@ -60,6 +60,7 @@ protected:
     UniformLocation m_uTex{"u_tex"};
     UniformLocation m_uOrtho{"u_ortho"};
     UniformLocation m_uPass{"u_pass"};
+    UniformLocation m_uMaxStrokeWidth{"u_max_stroke_width"};
 
     mutable std::vector<std::unique_ptr<LabelMesh>> m_meshes;
 

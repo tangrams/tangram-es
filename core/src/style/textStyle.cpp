@@ -57,6 +57,8 @@ void TextStyle::constructShaderProgram() {
 
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
 
+    m_shaderProgram->setUniformf(m_uMaxStrokeWidth,
+                                 m_context->maxStrokeWidth());
     m_shaderProgram->setUniformf(m_uTexScaleFactor,
                                  glm::vec2(1.0f / textureSize));
     m_shaderProgram->setUniformi(m_uTex, 0);
@@ -439,16 +441,15 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
             v_sdf_threshold - filter_width);
     }
 #endif
+    auto ctx = m_style.context();
 
-    uint32_t strokeAttrib = std::max(std::min(strokeWidth / 3.f * 255.f, 255.f), 0.f);
+    uint32_t strokeAttrib = std::max(std::min(strokeWidth / ctx->maxStrokeWidth() * 255.f, 255.f), 0.f);
 
     m_scratch.stroke = (_params.strokeColor & 0x00ffffff) + (strokeAttrib << 24);
     m_scratch.fill = _params.fill;
     m_scratch.fontScale = std::min(fontScale * 64.f, 255.f);
 
     {
-        auto ctx = m_style.context();
-
         std::lock_guard<std::mutex> lock(ctx->m_mutex);
         auto line = m_shaper.shape(_params.font, *renderText);
 

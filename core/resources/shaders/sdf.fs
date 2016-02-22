@@ -27,6 +27,7 @@ uniform float u_time;
 uniform float u_meters_per_pixel;
 uniform float u_device_pixel_ratio;
 uniform int u_pass;
+uniform float u_max_stroke_width;
 
 #pragma tangram: uniforms
 
@@ -88,11 +89,11 @@ void main(void) {
     // - sdf_scale == fontScale / glyphScale:
     //   When the glyph is scaled down, 's' must be increased
     //   (used to interpolate 1px of the scaled glyph around v_sdf_threshold)
-    float filter_width = 0.1245 / v_sdf_scale;
+    //float filter_width = 0.1245 / v_sdf_scale;
 
-    // float sdf_pixel = (0.5/3.0) / v_sdf_scale;
-    // float add_smooth = 0.25;
-    // float filter_width = (sdf_pixel * (0.5 + add_smooth));
+    float sdf_pixel = (0.5/u_max_stroke_width) / v_sdf_scale;
+    float add_smooth = 0.25;
+    float filter_width = (sdf_pixel * (0.5 + add_smooth));
 
     float alpha = smoothstep(max(v_sdf_threshold - filter_width, 0.0),
                              v_sdf_threshold + filter_width,

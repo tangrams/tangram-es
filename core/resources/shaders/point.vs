@@ -18,6 +18,7 @@ uniform float u_meters_per_pixel;
 uniform float u_device_pixel_ratio;
 #ifdef TANGRAM_TEXT
 uniform vec2 u_uv_scale_factor;
+uniform float u_max_stroke_width;
 uniform int u_pass;
 #endif
 
@@ -69,10 +70,10 @@ void main() {
     } else if (a_stroke.a > 0.0) {
         // stroke
         // (0.5 / 3.0) <= sdf change by pixel distance to outline == 0.083
-        float sdf_pixel = 0.5/3.0;
+        float sdf_pixel = 0.5/u_max_stroke_width;
 
-        // de-normalize [0..1] -> [0..3]
-        float stroke_width = a_stroke.a * 3.0;
+        // de-normalize [0..1] -> [0..max_stroke_width]
+        float stroke_width = a_stroke.a * u_max_stroke_width;
 
         // scale to sdf pixel
         stroke_width *= sdf_pixel;
