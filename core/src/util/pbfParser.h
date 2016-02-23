@@ -32,7 +32,7 @@ namespace PbfParser {
         std::vector<int> orderedKeys;
 
         int tileExtent = 0;
-        double windingOrder = 0.0;
+        int winding = 0;
     };
 
     Geometry getGeometry(ParserContext& _ctx, protobuf::message _geomIn);

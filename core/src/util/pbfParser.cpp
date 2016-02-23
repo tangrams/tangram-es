@@ -165,52 +165,29 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
         case GeometryType::polygons:
         {
             auto pos = _ctx.geometry.coordinates.begin();
+            auto rpos = _ctx.geometry.coordinates.rend();
             for (int length : _ctx.geometry.sizes) {
                 if (length == 0) { continue; }
-                // Determine winding order from first polygon
-                if (_ctx.windingOrder == 0.0) {
-                    _ctx.windingOrder = signedArea(pos, pos + length);
+                float area = signedArea(pos, pos + length);
+                if (area == 0) { continue; }
+                int winding = area > 0 ? 1 : -1;
+                // Determine exterior winding from first polygon.
+                if (_ctx.winding == 0) {
+                    _ctx.winding = winding;
                 }
-
                 Line line;
                 line.reserve(length);
-
-                if (_ctx.windingOrder >= 0.0f) {
-                    // Polygons are in a flat list of rings, with ccw rings indicating
-                    // the beginning of a new polygon
+                if (_ctx.winding > 0) {
                     line.insert(line.begin(), pos, pos + length);
-                    pos += length;
-
-                    if (feature.polygons.empty()) {
-                        feature.polygons.emplace_back();
-                    } else {
-                        double area = signedArea(line.begin(), line.end());
-                        if (area > 0.0) {
-                            feature.polygons.emplace_back();
-                        } else if (area == 0.0){
-                            continue;
-                        }
-                    }
                 } else {
-                    // Polygons are in a flat list of rings, with cw rings indicating
-                    // the beginning of a new polygon
-                    using iter_type = std::vector<Point>::iterator;
-                    std::reverse_iterator<iter_type> start(pos + length);
-                    std::reverse_iterator<iter_type> end(pos);
-                    line.insert(line.begin(), start, end);
-                    pos += length;
-                    if (feature.polygons.empty()) {
-                        feature.polygons.emplace_back();
-                    } else {
-                        double area = signedArea(line.begin(), line.end());
-                        if (area < 0.0) {
-                            feature.polygons.emplace_back();
-                        } else if (area == 0.0) {
-                            continue;
-                        }
-                    }
+                    line.insert(line.begin(), rpos - length, rpos);
                 }
-
+                pos += length;
+                rpos -= length;
+                if (winding == _ctx.winding || feature.polygons.empty()) {
+                    // This is an exterior polygon.
+                    feature.polygons.emplace_back();
+                }
                 feature.polygons.back().push_back(std::move(line));
             }
             break;
