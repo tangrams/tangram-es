@@ -6,6 +6,7 @@
 #include "util/geom.h"
 
 #include <algorithm>
+#include <iterator>
 
 namespace Tangram {
 
@@ -25,7 +26,7 @@ PbfParser::Geometry PbfParser::getGeometry(ParserContext& _ctx, protobuf::messag
 
     while(_geomIn.getData() < _geomIn.getEnd()) {
 
-        if(cmdRepeat == 0) { // get new command, lengh and parameters..
+        if(cmdRepeat == 0) { // get new command, length and parameters..
             uint32_t cmdData = static_cast<uint32_t>(_geomIn.varint());
             cmd = static_cast<pbfGeomCmd>(cmdData & 0x7); //first 3 bits of the cmdData
             cmdRepeat = cmdData >> 3; //last 5 bits
@@ -150,39 +151,44 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
             break;
 
         case GeometryType::lines:
-        case GeometryType::polygons:
         {
-            int offset = 0;
-
+            auto pos = _ctx.geometry.coordinates.begin();
             for (int length : _ctx.geometry.sizes) {
                 if (length == 0) { continue; }
-
                 Line line;
                 line.reserve(length);
-
-                line.insert(line.begin(),
-                            _ctx.geometry.coordinates.begin() + offset,
-                            _ctx.geometry.coordinates.begin() + offset + length);
-
-                offset += length;
-
-                if (feature.geometryType == GeometryType::lines) {
-                    feature.lines.emplace_back(std::move(line));
-                } else {
-                    // Polygons are in a flat list of rings, with ccw rings indicating
-                    // the beginning of a new polygon
-                    if (feature.polygons.empty()) {
-                        feature.polygons.emplace_back();
-                    } else {
-                        double area = signedArea(line);
-                        if (area > 0) {
-                            feature.polygons.emplace_back();
-                        } else if (area == 0){
-                            continue;
-                        }
-                    }
-                    feature.polygons.back().push_back(std::move(line));
+                line.insert(line.begin(), pos, pos + length);
+                pos += length;
+                feature.lines.emplace_back(std::move(line));
+            }
+        }
+        case GeometryType::polygons:
+        {
+            auto pos = _ctx.geometry.coordinates.begin();
+            auto rpos = _ctx.geometry.coordinates.rend();
+            for (int length : _ctx.geometry.sizes) {
+                if (length == 0) { continue; }
+                float area = signedArea(pos, pos + length);
+                if (area == 0) { continue; }
+                int winding = area > 0 ? 1 : -1;
+                // Determine exterior winding from first polygon.
+                if (_ctx.winding == 0) {
+                    _ctx.winding = winding;
                 }
+                Line line;
+                line.reserve(length);
+                if (_ctx.winding > 0) {
+                    line.insert(line.begin(), pos, pos + length);
+                } else {
+                    line.insert(line.begin(), rpos - length, rpos);
+                }
+                pos += length;
+                rpos -= length;
+                if (winding == _ctx.winding || feature.polygons.empty()) {
+                    // This is an exterior polygon.
+                    feature.polygons.emplace_back();
+                }
+                feature.polygons.back().push_back(std::move(line));
             }
             break;
         }
