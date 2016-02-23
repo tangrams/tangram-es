@@ -53,6 +53,9 @@ void loadExtensions() {
     supportsVAOs = isAvailable("vertex_array_object");
     supportsTextureNPOT = isAvailable("texture_non_power_of_two");
 
+    supportsMapBuffer = false; //DESKTOP_GL || isAvailable("mapbuffer");
+    supportsVAOs = false; //isAvailable("vertex_array_object");
+
     LOG("Driver supports map buffer: %d", supportsMapBuffer);
     LOG("Driver supports vaos: %d", supportsVAOs);
 
