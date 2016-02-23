@@ -12,6 +12,7 @@
 #include "labels/labelMesh.h"
 #include "labels/textLabel.h"
 #include "text/fontContext.h"
+#include "text/lineWrapper.h"
 
 #include <mutex>
 #include <locale>
@@ -154,9 +155,6 @@ public:
     std::string applyTextTransform(const TextStyle::Parameters& _params,
                                    const std::string& _string);
 
-    alf::LineMetrics drawWithLineWrapping(const alf::LineLayout& _line, size_t _maxChar,
-                                          TextLabelProperty::Align _alignment);
-
 protected:
 
     struct ScratchBuffer : public alf::MeshCallback {
@@ -297,96 +295,6 @@ std::string TextStyleBuilder::applyTextTransform(const TextStyle::Parameters& _p
     return text;
 }
 
-alf::LineMetrics TextStyleBuilder::drawWithLineWrapping(const alf::LineLayout& _line, size_t _maxChar,
-                                                        TextLabelProperty::Align _alignment) {
-    static std::vector<std::pair<int,float>> lineWraps;
-
-    lineWraps.clear();
-
-    float lineWidth = 0;
-    float maxWidth = 0;
-    size_t charCount = 0;
-    size_t shapeCount = 0;
-
-    float lastWidth = 0;
-    size_t lastShape = 0;
-    size_t lastChar = 0;
-
-    for (auto& c : _line.shapes()) {
-        shapeCount++;
-        lineWidth += _line.advance(c);
-
-        if (c.cluster) { charCount++; }
-
-        if (c.canBreak || c.mustBreak) {
-            lastShape = shapeCount;
-            lastChar = charCount;
-            lastWidth = lineWidth;
-        }
-
-        if (c.mustBreak || charCount > _maxChar) {
-            // only go to next line if chars have been added on the current line
-            // HACK: avoid short words on single line
-            if (lastShape != 0 && (c.mustBreak || shapeCount - lastShape > 4 )) {
-
-                auto& endShape = _line.shapes()[lastShape-1];
-                if (endShape.isSpace) {
-                    lineWidth -= _line.advance(endShape);
-                    lastWidth -= _line.advance(endShape);
-                }
-                lineWraps.emplace_back(lastShape, lastWidth);
-                maxWidth = std::max(maxWidth, lastWidth);
-
-                lineWidth -= lastWidth;
-                charCount -= lastChar;
-
-                lastShape = 0;
-            }
-        }
-    }
-    if (charCount > 0) {
-        lineWraps.emplace_back(shapeCount, lineWidth);
-        maxWidth = std::max(maxWidth, lineWidth);
-    }
-
-    size_t shapeStart = 0;
-    glm::vec2 position;
-    alf::LineMetrics layoutMetrics;
-
-    for (auto wrap : lineWraps) {
-        alf::LineMetrics lineMetrics;
-
-        switch(_alignment) {
-        case TextLabelProperty::Align::center:
-            position.x = (maxWidth - wrap.second) * 0.5;
-            break;
-        case TextLabelProperty::Align::right:
-            position.x = (maxWidth - wrap.second);
-            break;
-        default:
-            position.x = 0;
-        }
-
-        size_t shapeEnd = wrap.first;
-
-        m_batch.draw(_line, shapeStart, shapeEnd, position, lineMetrics);
-        shapeStart = shapeEnd;
-
-        //position.y += _line.height();
-
-        float height = lineMetrics.height();
-        height -= (2 * 6) * _line.scale(); // substract glyph padding
-        height += 4 * m_style.pixelScale(); // add some custom line offset
-
-        position.y += height;
-
-        layoutMetrics.addExtents(lineMetrics.aabb);
-
-    }
-
-    return layoutMetrics;
-}
-
 bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type _type) {
 
     if (_params.text.empty() || _params.fontSize <= 0.f) {
@@ -466,8 +374,8 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 
         if (_type == Label::Type::point && _params.wordWrap) {
             //auto adv = m_batch.draw(line, {0, 0}, _params.maxLineWidth * line.height() * 0.5);
-            lineMetrics = drawWithLineWrapping(line, _params.maxLineWidth,
-                                               _params.align);
+            lineMetrics = drawWithLineWrapping(line, m_batch, _params.maxLineWidth,
+                                               _params.align, m_style.pixelScale());
         } else {
             m_batch.draw(line, glm::vec2(0.0), lineMetrics);
         }
