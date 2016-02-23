@@ -279,17 +279,17 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         //LOG("fontScale %d", m_scratch.fontScale);
         line.setScale(fontScale);
 
-        alf::LineMetrics lineMetrics;
+        LineWrap wrap;
 
         if (_type == Label::Type::point && _params.wordWrap) {
-            lineMetrics = drawWithLineWrapping(line, m_batch, _params.maxLineWidth,
+            wrap = drawWithLineWrapping(line, m_batch, _params.maxLineWidth,
                                                _params.align, m_style.pixelScale());
         } else {
-            m_batch.draw(line, glm::vec2(0.0), lineMetrics);
+            m_batch.draw(line, glm::vec2(0.0), wrap.metrics);
         }
 
-        m_scratch.bbox.x = fabsf(lineMetrics.aabb.x) + (lineMetrics.aabb.z);
-        m_scratch.bbox.y = fabsf(lineMetrics.aabb.y) + (lineMetrics.aabb.w);
+        m_scratch.bbox.x = fabsf(wrap.metrics.aabb.x) + (wrap.metrics.aabb.z);
+        m_scratch.bbox.y = fabsf(wrap.metrics.aabb.y) + (wrap.metrics.aabb.w);
 
         m_scratch.numLines = m_scratch.bbox.y / line.height();
 
@@ -297,7 +297,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         m_scratch.metrics.ascender = line.ascent();
         m_scratch.metrics.lineHeight = line.height();
 
-        m_scratch.quadsLocalOrigin = {lineMetrics.aabb.x, lineMetrics.aabb.y};
+        m_scratch.quadsLocalOrigin = {wrap.metrics.aabb.x, wrap.metrics.aabb.y};
     }
 
     return true;

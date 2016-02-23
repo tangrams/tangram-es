@@ -2,8 +2,8 @@
 
 namespace Tangram {
 
-alfons::LineMetrics drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch& _batch,
-                                         size_t _maxChar, TextLabelProperty::Align _alignment, float _pixelScale)
+LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch& _batch,
+    size_t _maxChar, TextLabelProperty::Align _alignment, float _pixelScale)
 {
     static std::vector<std::pair<int,float>> lineWraps;
 
@@ -17,6 +17,8 @@ alfons::LineMetrics drawWithLineWrapping(const alfons::LineLayout& _line, alfons
     float lastWidth = 0;
     size_t lastShape = 0;
     size_t lastChar = 0;
+
+    unsigned int numLines = 1;
 
     for (auto& c : _line.shapes()) {
         shapeCount++;
@@ -48,6 +50,8 @@ alfons::LineMetrics drawWithLineWrapping(const alfons::LineLayout& _line, alfons
                 charCount -= lastChar;
 
                 lastShape = 0;
+
+                numLines++;
             }
         }
     }
@@ -91,7 +95,7 @@ alfons::LineMetrics drawWithLineWrapping(const alfons::LineLayout& _line, alfons
         layoutMetrics.addExtents(lineMetrics.aabb);
     }
 
-    return layoutMetrics;
+    return {layoutMetrics, numLines};
 }
 
 }
