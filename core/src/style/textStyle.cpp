@@ -145,15 +145,13 @@ public:
         return std::move(m_textLabels);
     };
 
-    TextStyle::Parameters applyRule(const DrawRule& _rule,
-                                    const Properties& _props) const;
+    TextStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
     bool prepareLabel(TextStyle::Parameters& _params, Label::Type _type);
     void addLabel(const TextStyle::Parameters& _params, Label::Type _type,
                   Label::Transform _transform);
 
-    std::string applyTextTransform(const TextStyle::Parameters& _params,
-                                   const std::string& _string);
+    std::string applyTextTransform(const TextStyle::Parameters& _params, const std::string& _string);
 
 protected:
 
@@ -222,9 +220,7 @@ bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
 }
 
 
-void TextStyleBuilder::addPoint(const Point& _point,
-                                const Properties& _props,
-                                const DrawRule& _rule) {
+void TextStyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
 
     TextStyle::Parameters params = applyRule(_rule, _props);
 
@@ -233,9 +229,7 @@ void TextStyleBuilder::addPoint(const Point& _point,
     addLabel(params, Label::Type::point, { glm::vec2(_point), glm::vec2(_point) });
 }
 
-void TextStyleBuilder::addLine(const Line& _line,
-                               const Properties& _props,
-                               const DrawRule& _rule) {
+void TextStyleBuilder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
 
     TextStyle::Parameters params = applyRule(_rule, _props);
 
@@ -254,9 +248,7 @@ void TextStyleBuilder::addLine(const Line& _line,
     }
 }
 
-void TextStyleBuilder::addPolygon(const Polygon& _polygon,
-                                  const Properties& _props,
-                                  const DrawRule& _rule) {
+void TextStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
     Point p = glm::vec3(centroid(_polygon), 0.0);
     addPoint(p, _props, _rule);
 }
@@ -373,14 +365,12 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         alf::LineMetrics lineMetrics;
 
         if (_type == Label::Type::point && _params.wordWrap) {
-            //auto adv = m_batch.draw(line, {0, 0}, _params.maxLineWidth * line.height() * 0.5);
             lineMetrics = drawWithLineWrapping(line, m_batch, _params.maxLineWidth,
                                                _params.align, m_style.pixelScale());
         } else {
             m_batch.draw(line, glm::vec2(0.0), lineMetrics);
         }
 
-        // FIXME: bbox should account for local origin (negative (x,y) position
         m_scratch.bbox.x = fabsf(lineMetrics.aabb.x) + (lineMetrics.aabb.z);
         m_scratch.bbox.y = fabsf(lineMetrics.aabb.y) + (lineMetrics.aabb.w);
 
@@ -389,34 +379,22 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         m_scratch.metrics.descender = -line.descent();
         m_scratch.metrics.ascender = line.ascent();
         m_scratch.metrics.lineHeight = line.height();
-        //m_scratch.quadsLocalOrigin = { 0, -line.ascent() };
+
         m_scratch.quadsLocalOrigin = {lineMetrics.aabb.x, lineMetrics.aabb.y};
-
     }
-
-    // LOG("LABEL  %f %f - %f %f - %d",
-    //     m_scratch.metrics.ascender, m_scratch.metrics.descender,
-    //     m_scratch.bbox.x, m_scratch.bbox.y,
-    //     m_scratch.vertices.size());
 
     return true;
 }
 
 void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
-                       Label::Transform _transform) {
-
+                                Label::Transform _transform)
+{
     int numQuads = m_scratch.numQuads;
     int quadOffset = m_scratch.quads.size() - numQuads;
 
-    m_scratch.labels.emplace_back(new TextLabel(_transform, _type,
-                                                _params.labelOptions,
-                                                _params.anchor,
-                                                {m_scratch.fill, m_scratch.stroke, m_scratch.fontScale },
-                                                m_scratch.bbox,
-                                                m_scratch.metrics,
-                                                m_scratch.numLines,
-                                                m_scratch.quadsLocalOrigin,
-                                                *m_textLabels, { quadOffset, numQuads }));
+    m_scratch.labels.emplace_back(new TextLabel(_transform, _type, _params.labelOptions, _params.anchor,
+        {m_scratch.fill, m_scratch.stroke, m_scratch.fontScale }, m_scratch.bbox, m_scratch.metrics,
+        m_scratch.numLines, m_scratch.quadsLocalOrigin, *m_textLabels, { quadOffset, numQuads }));
 }
 
 TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
@@ -541,8 +519,7 @@ class DebugTextStyleBuilder : public TextStyleBuilder {
 
 public:
 
-    DebugTextStyleBuilder(const TextStyle& _style) :
-        TextStyleBuilder(_style) {}
+    DebugTextStyleBuilder(const TextStyle& _style) : TextStyleBuilder(_style) {}
 
     void setup(const Tile& _tile) override;
 
