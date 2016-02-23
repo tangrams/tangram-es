@@ -60,11 +60,11 @@ FontContext::FontContext() :
 #else
     int size = BASE_SIZE;
     for (int i = 0; i < 3; i++, size += STEP_SIZE) {
-        m_font[i] = m_alfons.addFont("default", alfons::InputSource(DEFAULT), size);
-        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_AR), size));
-        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_HE), size));
-        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_JA), size));
-        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FALLBACK), size));
+        m_font[i] = m_alfons.addFont("default", alfons::InputSource(resolvePath(DEFAULT, PathType::resource)), size);
+        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(resolvePath(FONT_AR, PathType::resource)), size));
+        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(resolvePath(FONT_HE, PathType::resource)), size));
+        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(resolvePath(FONT_JA, PathType::resource)), size));
+        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(resolvePath(FALLBACK, PathType::resource)), size));
     }
 #endif
 }
