@@ -94,9 +94,12 @@ void Light::assembleLights(std::map<std::string, std::vector<std::string>>& _sou
         lights << string;
     }
 
-    size_t pos = lightingBlock.find(tag) + tag.length();
-    lightingBlock.insert(pos, lights.str());
-
+    size_t pos = lightingBlock.find(tag);
+    if (pos != std::string::npos) {
+        lightingBlock.insert(pos + tag.length(), lights.str());
+    } else {
+        LOGE("Missing 'lights_to_compute' in shader source");
+    }
     // Place our assembled lighting source code back into the map of "source blocks";
     // The assembled strings will then be injected into a shader at the "vertex_lighting"
     // and "fragment_lighting" tags

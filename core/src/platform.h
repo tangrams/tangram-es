@@ -37,6 +37,8 @@ enum class PathType : char {
  * The string returned is the path to the given file relative to the new root resource directory. */
 std::string setResourceRoot(const char* _path);
 
+std::string resolvePath(const char* _path, PathType _type);
+
 /* Read a file as a string
  *
  * Opens the file at the _path, resolved with _type, and returns a string with its contents.
