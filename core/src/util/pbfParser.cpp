@@ -170,7 +170,11 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
             for (int length : _ctx.geometry.sizes) {
                 if (length == 0) { continue; }
                 float area = signedArea(pos, pos + length);
-                if (area == 0) { continue; }
+                if (area == 0) {
+                    pos += length;
+                    rpos -= length;
+                    continue;
+                }
                 int winding = area > 0 ? 1 : -1;
                 // Determine exterior winding from first polygon.
                 if (_ctx.winding == 0) {
@@ -179,9 +183,9 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
                 Line line;
                 line.reserve(length);
                 if (_ctx.winding > 0) {
-                    line.insert(line.begin(), pos, pos + length);
+                    line.insert(line.end(), pos, pos + length);
                 } else {
-                    line.insert(line.begin(), rpos - length, rpos);
+                    line.insert(line.end(), rpos - length, rpos);
                 }
                 pos += length;
                 rpos -= length;
