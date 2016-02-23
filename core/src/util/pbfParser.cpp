@@ -161,6 +161,7 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
                 pos += length;
                 feature.lines.emplace_back(std::move(line));
             }
+            break;
         }
         case GeometryType::polygons:
         {
