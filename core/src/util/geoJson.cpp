@@ -6,6 +6,27 @@
 
 namespace Tangram {
 
+bool GeoJson::isFeatureCollection(const JsonValue& _in) {
+
+    // A FeatureCollection must have a "type" of "FeatureCollection"
+    // and a member named "features" that is an array.
+    // http://geojson.org/geojson-spec.html#feature-collection-objects
+
+    auto type = _in.FindMember("type");
+    if (type == _in.MemberEnd() || !type->value.IsString() ||
+        std::strcmp(type->value.GetString(), "FeatureCollection") != 0) {
+        return false;
+    }
+
+    auto features = _in.FindMember("features");
+    if (features == _in.MemberEnd() || !features->value.IsArray()) {
+        return false;
+    }
+
+    return true;
+
+}
+
 Point GeoJson::getPoint(const JsonValue& _in, const Transform& _proj) {
     return _proj(glm::dvec2(_in[0].GetDouble(), _in[1].GetDouble()));
 }
@@ -113,13 +134,13 @@ Feature GeoJson::getFeature(const JsonValue& _in, const Transform& _proj, int32_
 
 }
 
-Layer GeoJson::getLayer(const JsonDocument::MemberIterator& _in, const Transform& _proj, int32_t _sourceId) {
+Layer GeoJson::getLayer(const JsonValue& _in, const Transform& _proj, int32_t _sourceId) {
 
-    Layer layer(_in->name.GetString());
+    Layer layer("");
 
-    auto features = _in->value.FindMember("features");
+    auto features = _in.FindMember("features");
 
-    if (features == _in->value.MemberEnd()) {
+    if (features == _in.MemberEnd()) {
         LOGE("GeoJSON missing 'features' member");
         return layer;
     }

@@ -45,8 +45,15 @@ std::shared_ptr<TileData> GeoJsonSource::parse(const TileTask& _task,
     };
 
     // Transform JSON data into TileData using GeoJson functions
-    for (auto layer = document.MemberBegin(); layer != document.MemberEnd(); ++layer) {
-        tileData->layers.push_back(GeoJson::getLayer(layer, projFn, m_id));
+    if (GeoJson::isFeatureCollection(document)) {
+        tileData->layers.push_back(GeoJson::getLayer(document, projFn, m_id));
+    } else {
+        for (auto layer = document.MemberBegin(); layer != document.MemberEnd(); ++layer) {
+            if (GeoJson::isFeatureCollection(layer->value)) {
+                tileData->layers.push_back(GeoJson::getLayer(layer->value, projFn, m_id));
+                tileData->layers.back().name = layer->name.GetString();
+            }
+        }
     }
 
 
