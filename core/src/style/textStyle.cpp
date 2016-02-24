@@ -274,6 +274,11 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         std::lock_guard<std::mutex> lock(ctx->m_mutex);
         auto line = m_shaper.shape(_params.font, *renderText);
 
+        if (line.shapes().size() == 0) {
+            LOGD("Empty text line");
+            return false;
+        }
+
         //LOG("fontScale %d", m_scratch.fontScale);
         line.setScale(fontScale);
 

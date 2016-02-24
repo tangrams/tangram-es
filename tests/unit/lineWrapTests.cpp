@@ -54,23 +54,27 @@ TEST_CASE("Ensure empty line is given when giving empty shape to alfons", "[Core
     auto line = shaper.shape(font, "");
 
     REQUIRE(line.shapes().size() == 0);
+
+    wrap = drawWithLineWrapping(line, batch, 10, 4, TextLabelProperty::Align::center, 1.0);
+    REQUIRE(wrap.nbLines == 0);
 }
 
 TEST_CASE() {
     initFont();
 
     auto line = shaper.shape(font, "The quick brown fox");
-    wrap = drawWithLineWrapping(line, batch, 10, 4, TextLabelProperty::Align::center, 1.0);
 
     REQUIRE(line.shapes().size() == 19);
+
+    wrap = drawWithLineWrapping(line, batch, 10, 4, TextLabelProperty::Align::center, 1.0);
     REQUIRE(wrap.nbLines == 2);
-}
-
-TEST_CASE() {
-    initFont();
-
-    auto line = shaper.shape(font, "The quick brown fox");
     wrap = drawWithLineWrapping(line, batch, 4, 4, TextLabelProperty::Align::center, 1.0);
+    REQUIRE(wrap.nbLines == 4);
+    wrap = drawWithLineWrapping(line, batch, 1, 0, TextLabelProperty::Align::center, 1.0);
+    REQUIRE(wrap.nbLines == 4);
+    wrap = drawWithLineWrapping(line, batch, 3, 0, TextLabelProperty::Align::center, 1.0);
+    REQUIRE(wrap.nbLines == 4);
+    wrap = drawWithLineWrapping(line, batch, 3, 5, TextLabelProperty::Align::center, 1.0);
     REQUIRE(wrap.nbLines == 4);
 }
 

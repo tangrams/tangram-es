@@ -9,6 +9,10 @@ LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch
 
     lineWraps.clear();
 
+    if (_line.shapes().size() == 0) {
+        return {alfons::LineMetrics(), 0};
+    }
+
     float lineWidth = 0;
     float maxWidth = 0;
     size_t charCount = 0;
@@ -41,6 +45,7 @@ LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch
                 if (endShape.isSpace) {
                     lineWidth -= _line.advance(endShape);
                     lastWidth -= _line.advance(endShape);
+                    numLines++;
                 }
 
                 lineWraps.emplace_back(lastShape, lastWidth);
@@ -50,8 +55,6 @@ LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch
                 charCount -= lastChar;
 
                 lastShape = 0;
-
-                numLines++;
             }
         }
     }
