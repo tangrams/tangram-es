@@ -93,6 +93,8 @@ public:
      */
     static void invalidateAllPrograms();
 
+    static std::string getExtensionDeclaration(const std::string& _extension);
+
     auto getSourceBlocks() const { return  m_sourceBlocks; }
 
 private:

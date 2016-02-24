@@ -48,6 +48,7 @@ struct SceneLoader {
     static void loadMaterial(Node matNode, Material& material, Scene& scene);
     static void loadShaderConfig(Node shaders, Style& style, Scene& scene);
     static SceneLayer loadSublayer(Node layer, const std::string& name, Scene& scene);
+    static Filter generateFilter(Node filter, Scene& scene);
     static Filter generateAnyFilter(Node filter, Scene& scene);
     static Filter generateNoneFilter(Node filter, Scene& scene);
     static Filter generatePredicate(Node filter, std::string _key);
@@ -61,29 +62,9 @@ struct SceneLoader {
     static void parseTransition(Node params, Scene& scene, std::vector<StyleParam>& out);
 
     static StyleUniforms parseStyleUniforms(const Node& uniform, Scene& scene);
-    static Node mixStyles(const std::vector<Node>& mixes);
 
-    static bool loadStyle(const std::string& styleName, Node styles, Scene& scene,
-                          std::unordered_set<std::string>& mixedStyles);
+    static bool loadStyle(const std::string& styleName, Node config, Scene& scene);
 
-    /* Generate style mixins for a given style node
-     * @styleName: styleName to be mixed
-     * @styles: YAML::Node for all styles
-     * @uniqueStyles: to make sure Mixes returned is a uniqueSet
-     */
-    static std::vector<Node> getMixins(const Node& styleNode, const Node& styles, Scene& scene,
-                                       std::unordered_set<std::string>& mixedStyles);
-
-    // Generic methods to merge properties
-    static bool propOr(const std::string& propStr, const std::vector<Node>& mixes);
-    static Node propMerge(const std::string& propStr, const std::vector<Node>& mixes);
-
-    // Methods to merge shader blocks
-    static Node shaderBlockMerge(const std::vector<Node>& mixes);
-
-    // Methods to merge shader extensions
-    static Node shaderExtMerge(const std::vector<Node>& mixes);
-    static Filter generateFilter(Node filter, Scene& scene);
 
     SceneLoader() = delete;
 

@@ -20,6 +20,7 @@
 #include "scene/sceneLayer.h"
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
+#include "scene/styleMixer.h"
 #include "util/yamlHelper.h"
 #include "view/view.h"
 
@@ -92,16 +93,21 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
         }
     }
 
-    std::unordered_set<std::string> mixedStyles;
-
     if (Node styles = config["styles"]) {
-        for (const auto& style : styles) {
+        StyleMixer mixer;
+        try {
+            mixer.mixStyleNodes(styles);
+        } catch (YAML::RepresentationException e) {
+            LOGNode("Mixing styles: '%s'", styles, e.what());
+        }
+        for (const auto& entry : styles) {
             try {
-                std::string styleName = style.first.as<std::string>();
-                loadStyle(styleName, styles, _scene, mixedStyles);
+                auto name = entry.first.Scalar();
+                auto config = entry.second;
+                loadStyle(name, config, _scene);
             }
             catch (YAML::RepresentationException e) {
-                LOGNode("Parsing style: '%s'", style, e.what());
+                LOGNode("Parsing style: '%s'", entry, e.what());
             }
         }
     }
@@ -162,22 +168,13 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
 
     auto& shader = *(style.getShaderProgram());
 
-    if (Node extensionsNode = shaders["extensions"]) {
-        switch (extensionsNode.Type()) {
-        case NodeType::Sequence:
-            for (const auto& extNode : extensionsNode) {
-                auto extName = extNode.as<std::string>();
-                std::ostringstream ext;
-                ext << "#if defined(GL_ES) == 0 || defined(GL_" << extName << ")\n";
-                ext << "    #extension GL_" << extName << " : enable\n";
-                ext << "    #define TANGRAM_EXTENSION_" << extName << '\n';
-                ext << "#endif\n";
-
-                shader.addSourceBlock("extensions", ext.str());
+    if (Node extNode = shaders["extensions_mixed"]) {
+        if (extNode.IsScalar()) {
+            shader.addSourceBlock("extensions", ShaderProgram::getExtensionDeclaration(extNode.Scalar()));
+        } else if (extNode.IsSequence()) {
+            for (const auto& e : extNode) {
+                shader.addSourceBlock("extensions", ShaderProgram::getExtensionDeclaration(e.Scalar()));
             }
-            break;
-        default:
-            LOGNode("Invalid 'extensions'", extensionsNode);
         }
     }
     //shader.addSourceBlock("defines", "#define " + name + " " + value);
@@ -225,17 +222,16 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
         }
     }
 
-    if (Node blocksNode = shaders["blocks"]) {
+    if (Node blocksNode = shaders["blocks_mixed"]) {
         for (const auto& block : blocksNode) {
             const auto& name = block.first.as<std::string>();
-            if (block.second.IsSequence()){
-                for (auto & n : block.second) {
-                    const auto& value = n.as<std::string>();
-                    shader.addSourceBlock(name, value, false);
-
+            const auto& value = block.second;
+            if (value.IsSequence()){
+                for (const auto& it : value) {
+                    shader.addSourceBlock(name, it.Scalar(), false);
                 }
-            } else {
-                LOGNode("Invalid merged shader %s 'block'", block, name.c_str());
+            } else if (value.IsScalar()) {
+                shader.addSourceBlock(name, value.Scalar(), false);
             }
         }
     }
@@ -512,298 +508,38 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
     }
 }
 
-bool SceneLoader::propOr(const std::string& propStr, const std::vector<Node>& mixes) {
+bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) {
 
-    for (const auto& mixNode : mixes) {
-        if (!mixNode.IsMap()) { continue; }
+    const auto& builtIn = Style::builtInStyleNames();
 
-        Node node = mixNode[propStr];
-        if (node && node.IsScalar()) {
-            bool bValue;
-            if (getBool(node, bValue, propStr.c_str()) && bValue) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-Node SceneLoader::propMerge(const std::string& propName, const std::vector<Node>& mixes) {
-    Node result;
-
-    if (propName == "extensions" || propName == "blocks") {
-         // handled by explicit methods
-        return result;
-    }
-
-    std::unordered_map<std::string, std::vector<Node>> mapMixes;
-
-    for (const auto& mixNode : mixes) {
-        if (!mixNode.IsMap()) { continue; }
-
-        Node propValue = mixNode[propName];
-        if (!propValue) { continue; }
-
-        switch (propValue.Type()) {
-        case NodeType::Scalar:
-        case NodeType::Sequence:
-            // Overwrite Property
-            result = Clone(propValue);
-            break;
-
-        case NodeType::Map:
-            // Reset previous scalar/sequence node
-            result.reset();
-            for (const auto& tag : propValue) {
-                // Deep Merge for all Map Props
-                const std::string& tagName = tag.first.Scalar();
-                mapMixes[tagName].push_back(propValue);
-            }
-            break;
-        default:
-            LOGNode("Cannot merge property '%s'", mixNode, propName.c_str());
-            break;
-        }
-    }
-
-    if (result.IsScalar() || result.IsSequence()) {
-        mapMixes.clear();
-    }
-
-    // Recursively merge map nodes from this propStr node
-    for (auto& it : mapMixes) {
-        if (Node n = propMerge(it.first, it.second)) {
-            result[it.first] = n;
-        }
-    }
-
-    return result;
-}
-
-Node SceneLoader::shaderBlockMerge(const std::vector<Node>& styles) {
-
-    Node result;
-
-    for (const auto& style : styles) {
-        if (!style.IsMap()) {
-            LOGNode("Expected map for 'style'", style);
-            continue;
-        }
-
-        Node shaderNode = style["shaders"];
-        if (!shaderNode) { continue; }
-        if (!shaderNode.IsMap()) {
-            LOGNode("Expected map for 'shader'", shaderNode);
-            continue;
-        }
-
-        Node blocks = shaderNode["blocks"];
-        if (!blocks) { continue; }
-        if (!blocks.IsMap()) {
-            LOGNode("Expected map for 'blocks'", shaderNode);
-            continue;
-        }
-
-        for (const auto& block : blocks) {
-            const auto& blockName = block.first.Scalar();
-
-            if (block.second.IsSequence()) {
-                for (auto& n : block.second)
-                    result[blockName].push_back(n);
-
-            } else if (block.second.IsScalar()) {
-                result[blockName].push_back(block.second);
-            }
-        }
-    }
-
-    return result;
-}
-
-Node SceneLoader::shaderExtMerge(const std::vector<Node>& styles) {
-
-    Node result;
-    std::unordered_set<std::string> uniqueList;
-
-    for (const auto& style : styles) {
-        if (!style.IsMap()) {
-            LOGNode("Expected map for 'style'", style);
-            continue;
-        }
-
-        Node shaderNode = style["shaders"];
-        if (!shaderNode) { continue; }
-        if (!shaderNode.IsMap()) {
-            LOGNode("Expected map for 'shader'", shaderNode);
-            continue;
-        }
-        Node extNode = shaderNode["extensions"];
-        if (!extNode) { continue; }
-
-        switch(extNode.Type()) {
-        case NodeType::Scalar: {
-            auto val = extNode.as<std::string>();
-            if (uniqueList.find(val) == uniqueList.end()) {
-                result.push_back(extNode);
-                uniqueList.insert(val);
-            }
-            break;
-        }
-        case NodeType::Sequence: {
-            for (const auto& n : extNode) {
-                auto val = n.as<std::string>();
-                if (uniqueList.find(val) == uniqueList.end()) {
-                    result.push_back(n);
-                    uniqueList.insert(val);
-                }
-            }
-            break;
-        }
-        default:
-            LOGNode("Expected scalar or sequence value for 'extensions' node", shaderNode);
-        }
-    }
-
-    return result;
-}
-
-Node SceneLoader::mixStyles(const std::vector<Node>& styles) {
-
-    Node result;
-
-    for (auto& property: {"animated", "texcoords"}) {
-        if (propOr(property, styles)) {
-            result[property] = true;
-        }
-    }
-
-    for (auto& property : {"base", "lighting", "texture", "blend", "material", "shaders", "blend_order"}) {
-        Node node = propMerge(property, styles);
-        if (!node.IsNull()) {
-            result[property] = node;
-        }
-    }
-
-    Node shaderNode = result["shaders"];
-
-    Node shaderExtNode = shaderExtMerge(styles);
-    if (!shaderExtNode.IsNull()) {
-        shaderNode["extensions"] = shaderExtNode;
-    }
-
-    Node shaderBlocksNode = shaderBlockMerge(styles);
-    if (!shaderBlocksNode.IsNull()) {
-        shaderNode["blocks"] = shaderBlocksNode;
-    }
-
-    return result;
-}
-
-std::vector<Node> SceneLoader::getMixins(const Node& styleNode, const Node& styles, Scene& scene,
-                                         std::unordered_set<std::string>& mixedStyles) {
-
-    Node mixNode = styleNode["mix"];
-    std::vector<Node> mixes;
-
-    if (!mixNode) {
-        return {};
-    }
-
-    std::unordered_set<std::string> uniqueStyles;
-    Node mixNodes;
-
-    if (mixNode.IsScalar()) {
-        // NB: Would be nice if scalar node had a single item iterator.
-        mixes.reserve(2);
-        mixNodes.push_back(mixNode);
-    } else if (mixNode.IsSequence()) {
-        mixes.reserve(mixNode.size() + 1);
-        mixNodes = mixNode;
-    } else {
-        // LOGW("Expected scalar or sequence value as 'mix' parameter: %s.",
-        //      styleName.c_str());
-        return {};
-    }
-
-    for (const auto& mixNode : mixNodes) {
-        auto& mixName = mixNode.Scalar();
-
-        if (mixedStyles.find(mixName) == mixedStyles.end()) {
-            // Recursively process the mix style first
-            if (!loadStyle(mixName, styles, scene, mixedStyles)) {
-                continue;
-            }
-
-        } else if (uniqueStyles.find(mixName) != uniqueStyles.end()) {
-            // This mix has already been added to the current style
-            continue;
-        }
-        uniqueStyles.insert(mixName);
-
-        if (Node mixStyle = styles[mixName]) {
-            mixes.push_back(mixStyle);
-        }
-    }
-
-    return mixes;
-}
-
-bool SceneLoader::loadStyle(const std::string& styleName, Node styles, Scene& scene,
-                            std::unordered_set<std::string>& mixedStyles) {
-
-    static const auto builtIn = {
-        "polygons", "lines", "points", "text", "debug", "debugtext"
-    };
-
-    if (std::find(builtIn.begin(), builtIn.end(), styleName) != builtIn.end()) {
-        LOGW("Cannot use built-in style name '%s' for new style", styleName.c_str());
+    if (std::find(builtIn.begin(), builtIn.end(), name) != builtIn.end()) {
+        LOGW("Cannot use built-in style name '%s' for new style", name.c_str());
         return false;
     }
 
-    Node styleNode = styles[styleName];
-    if (!styleNode) {
-        LOGW("Style name '%s' is not defined", styleName.c_str());
-        return false;
-    }
-
-    if (mixedStyles.find(styleName) != mixedStyles.end()) {
-        return false;  // This style is already added
-    }
-
-    // Add here to not allow loops in addMixinNode recursion!
-    mixedStyles.insert(styleName);
-
-    std::vector<Node> mixes = getMixins(styleNode, styles, scene, mixedStyles);
-
-    // Finally through our self into the mix!
-    mixes.push_back(styleNode);
-
-    // Update styleNode with mixed style (also for future uses)
-    styleNode = mixStyles(mixes);
-
-    Node baseNode = styleNode["base"];
+    Node baseNode = config["base"];
     if (!baseNode) {
-        // No base style, this is an abstract styleNode
+        // No base style, this is an abstract style
         return true;
     }
 
     // Construct style instance using the merged properties
     std::unique_ptr<Style> style;
-    std::string baseStyle = baseNode.as<std::string>();
+    auto baseStyle = baseNode.Scalar();
     if (baseStyle == "polygons") {
-        style = std::make_unique<PolygonStyle>(styleName);
+        style = std::make_unique<PolygonStyle>(name);
     } else if (baseStyle == "lines") {
-        style = std::make_unique<PolylineStyle>(styleName);
+        style = std::make_unique<PolylineStyle>(name);
     } else if (baseStyle == "text") {
-        style = std::make_unique<TextStyle>(styleName, scene.fontContext(), true, false);
+        style = std::make_unique<TextStyle>(name, scene.fontContext(), true, false);
     } else if (baseStyle == "points") {
-        style = std::make_unique<PointStyle>(styleName);
+        style = std::make_unique<PointStyle>(name);
     } else {
         LOGW("Base style '%s' not recognized, cannot instantiate.", baseStyle.c_str());
         return false;
     }
 
-    loadStyleProps(*style.get(), styleNode, scene);
+    loadStyleProps(*style.get(), config, scene);
 
     scene.styles().push_back(std::move(style));
 

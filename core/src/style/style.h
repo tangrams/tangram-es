@@ -159,6 +159,8 @@ public:
         return a->getName() < b->getName();
     }
 
+    static const std::vector<std::string>& builtInStyleNames();
+
     Blending blendMode() const { return m_blend; };
     int blendOrder() const { return m_blendOrder; };
 

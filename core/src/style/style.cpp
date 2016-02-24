@@ -15,7 +15,7 @@
 
 namespace Tangram {
 
-    Style::Style(std::string _name, Blending _blendMode, GLenum _drawMode) :
+Style::Style(std::string _name, Blending _blendMode, GLenum _drawMode) :
     m_name(_name),
     m_shaderProgram(std::make_unique<ShaderProgram>()),
     m_material(std::make_shared<Material>()),
@@ -24,6 +24,11 @@ namespace Tangram {
 {}
 
 Style::~Style() {}
+
+const std::vector<std::string>& Style::builtInStyleNames() {
+    static std::vector<std::string> builtInStyleNames{ "points", "lines", "polygons", "text", "debug", "debugtext" };
+    return builtInStyleNames;
+}
 
 void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
 
