@@ -97,7 +97,6 @@ protected:
     GLenum m_target;
 
     int m_generation;
-    static int s_validGeneration;
 
 private:
 
