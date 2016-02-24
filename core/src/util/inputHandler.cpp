@@ -1,6 +1,7 @@
 #include "inputHandler.h"
 
-#include "glm/glm.hpp"
+#include "glm/vec2.hpp"
+#include "glm/gtx/rotate_vector.hpp"
 #include "platform.h"
 #include <cmath>
 
@@ -129,6 +130,15 @@ void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, fl
 void InputHandler::handleRotateGesture(float _posX, float _posY, float _radians) {
 
     onGesture();
+
+    // Get vector from center of rotation to view center
+    m_view->screenToGroundPlane(_posX, _posY);
+    glm::vec2 offset(_posX, _posY);
+
+    // Rotate vector by gesture rotation and apply difference as translation
+    glm::vec2 translation = offset - glm::rotate(offset, _radians);
+    m_view->translate(translation.x, translation.y);
+
     m_view->roll(_radians);
 
 }
