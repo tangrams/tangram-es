@@ -97,7 +97,7 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
         StyleMixer mixer;
         try {
             mixer.mixStyleNodes(styles);
-        } catch ( YAML::RepresentationException e) {
+        } catch (YAML::RepresentationException e) {
             LOGNode("Mixing styles: '%s'", styles, e.what());
         }
         for (const auto& entry : styles) {
