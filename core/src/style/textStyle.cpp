@@ -58,10 +58,8 @@ void TextStyle::constructShaderProgram() {
 
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
 
-    m_shaderProgram->setUniformf(m_uMaxStrokeWidth,
-                                 m_context->maxStrokeWidth());
-    m_shaderProgram->setUniformf(m_uTexScaleFactor,
-                                 glm::vec2(1.0f / textureSize));
+    m_shaderProgram->setUniformf(m_uMaxStrokeWidth, m_context->maxStrokeWidth());
+    m_shaderProgram->setUniformf(m_uTexScaleFactor, glm::vec2(1.0f / textureSize));
     m_shaderProgram->setUniformi(m_uTex, 0);
     m_shaderProgram->setUniformMatrix4f(m_uOrtho, _view.getOrthoViewportMatrix());
 
@@ -282,8 +280,8 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         LineWrap wrap;
 
         if (_type == Label::Type::point && _params.wordWrap) {
-            wrap = drawWithLineWrapping(line, m_batch, _params.maxLineWidth,
-                                               _params.align, m_style.pixelScale());
+            wrap = drawWithLineWrapping(line, m_batch, _params.maxLineWidth, 4, _params.align,
+                m_style.pixelScale());
         } else {
             m_batch.draw(line, glm::vec2(0.0), wrap.metrics);
         }

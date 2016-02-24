@@ -3,7 +3,7 @@
 namespace Tangram {
 
 LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch& _batch,
-    size_t _maxChar, TextLabelProperty::Align _alignment, float _pixelScale)
+    size_t _maxChar, size_t _minWordLength, TextLabelProperty::Align _alignment, float _pixelScale)
 {
     static std::vector<std::pair<int,float>> lineWraps;
 
@@ -35,7 +35,7 @@ LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch
         if (lastShape != 0 && (c.mustBreak || charCount >= _maxChar)) {
             // only go to next line if chars have been added on the current line
             // HACK: avoid short words on single line
-            if (c.mustBreak || shapeCount - lastShape > 4 || _maxChar <= 4) {
+            if (c.mustBreak || shapeCount - lastShape > _minWordLength || _maxChar <= 4) {
                 auto& endShape = _line.shapes()[lastShape-1];
 
                 if (endShape.isSpace) {
