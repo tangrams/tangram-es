@@ -88,7 +88,11 @@ void initialize(const char* _scenePath) {
     // label setup
     m_labels = std::make_unique<Labels>();
 
+    clock_t start = clock();
     loadScene(_scenePath, true);
+    clock_t end = clock();
+    float time = float(end - start) / CLOCKS_PER_SEC * 1000.f;
+    LOGS("Loading scene time %f ms", time);
 
     glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
     m_view->setPosition(projPos.x, projPos.y);
@@ -233,6 +237,7 @@ void render() {
 
     m_labels->drawDebug(*m_view);
 
+    setDebugFlag(Tangram::DebugFlags::tangram_infos, true);
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
 
         // Force opengl to finish commands (for accurate frame time)

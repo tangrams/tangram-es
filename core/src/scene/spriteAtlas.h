@@ -8,9 +8,10 @@
 namespace Tangram {
 
 struct SpriteNode {
-    glm::vec2 m_uvBL;
-    glm::vec2 m_uvTR;
-    glm::vec2 m_size;
+    glm::vec2 uvBL;
+    glm::vec2 uvTR;
+    glm::vec2 size;
+    glm::vec2 origin;
 };
 
 class SpriteAtlas {
@@ -24,11 +25,22 @@ public:
 
     /* Bind the atlas in the driver */
     void bind(GLuint _slot);
+    bool pack();
 
 private:
+    struct PackedNode {
+        int x, y, width;
+    };
+
+    int rectFits(uint32_t _i, int _w, int _h);
+    void addSkylineLevel(uint32_t _idx, int _x, int _y, int _w, int _h);
+    bool addNode(const SpriteNode& _in, SpriteNode& _out);
+
     std::map<std::string, SpriteNode> m_spritesNodes;
     std::string m_file;
     std::shared_ptr<Texture> m_texture;
+    
+    std::vector<PackedNode> m_packedNodes;
 };
 
 }

@@ -71,7 +71,11 @@ public:
 
     typedef std::pair<GLuint, GLuint> TextureSlot;
 
+    std::vector<GLuint>& data() { return m_data; }
+
     static void invalidateAllTextures();
+
+    size_t bytesPerPixel();
 
 protected:
     void generate(GLuint _textureUnit);
@@ -98,8 +102,6 @@ protected:
     static int s_validGeneration;
 
 private:
-
-    size_t bytesPerPixel();
 
     bool m_generateMipmaps;
 };

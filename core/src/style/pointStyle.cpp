@@ -201,13 +201,13 @@ bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _q
         }
 
         if (std::isnan(_params.size.x)) {
-            _params.size = spriteNode.m_size;
+            _params.size = spriteNode.size;
         }
 
-        _quad.x = spriteNode.m_uvBL.x;
-        _quad.y = spriteNode.m_uvBL.y;
-        _quad.z = spriteNode.m_uvTR.x;
-        _quad.w = spriteNode.m_uvTR.y;
+        _quad.x = spriteNode.uvBL.x;
+        _quad.y = spriteNode.uvBL.y;
+        _quad.z = spriteNode.uvTR.x;
+        _quad.w = spriteNode.uvTR.y;
     } else {
         // default point size
         if (std::isnan(_params.size.x)) {

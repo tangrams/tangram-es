@@ -21,6 +21,7 @@
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
 #include "util/yamlHelper.h"
+#include "debug/textDisplay.h"
 #include "view/view.h"
 
 #include "yaml-cpp/yaml.h"
@@ -419,6 +420,13 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
                 atlas->addSpriteNode(spriteName, pos, size);
             }
         }
+
+        clock_t start = clock();
+        atlas->pack();
+        clock_t end = clock();
+        float time = float(end - start) / CLOCKS_PER_SEC * 1000.f;
+        LOGS("Packing time %f ms", time);
+
         scene.spriteAtlases()[name] = atlas;
     }
     scene.textures().emplace(name, texture);

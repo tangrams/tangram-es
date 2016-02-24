@@ -9,7 +9,7 @@
 // Forward declaration
 void init_main_window(bool recreate);
 
-std::string sceneFile = "scene.yaml";
+std::string sceneFile = "eraser-map.yaml";
 
 GLFWwindow* main_window = nullptr;
 int width = 800;
