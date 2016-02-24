@@ -9,20 +9,20 @@
 namespace Tangram {
 
 struct TextureFiltering {
-    GLenum m_min;
-    GLenum m_mag;
+    GLenum min;
+    GLenum mag;
 };
 
 struct TextureWrapping {
-    GLenum m_wraps;
-    GLenum m_wrapt;
+    GLenum wraps;
+    GLenum wrapt;
 };
 
 struct TextureOptions {
-    GLenum m_internalFormat;
-    GLenum m_format;
-    TextureFiltering m_filtering;
-    TextureWrapping m_wrapping;
+    GLenum internalFormat;
+    GLenum format;
+    TextureFiltering filtering;
+    TextureWrapping wrapping;
 };
 
 #define TANGRAM_MAX_TEXTURE_UNIT    6
