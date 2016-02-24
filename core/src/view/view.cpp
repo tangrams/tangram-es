@@ -8,9 +8,9 @@
 #include <cmath>
 #include <functional>
 
-namespace Tangram {
+#define MAX_LOD 6
 
-constexpr float View::s_maxZoom; // Create a stack reference to the static member variable
+namespace Tangram {
 
 double invLodFunc(double d) {
     return exp2(d) - 1.0;
@@ -25,8 +25,7 @@ View::View(int _width, int _height, ProjectionType _projType) :
 
     setMapProjection(_projType);
     setSize(_width, _height);
-    setZoom(m_initZoom); // Arbitrary zoom for testing
-
+    setZoom(m_zoom);
     setPosition(0.0, 0.0);
 }
 
@@ -45,10 +44,6 @@ void View::setMapProjection(ProjectionType _projType) {
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
 
-}
-
-const MapProjection& View::getMapProjection() const {
-    return *m_projection.get();
 }
 
 void View::setPixelScale(float _pixelsPerPoint) {
