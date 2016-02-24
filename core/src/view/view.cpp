@@ -73,11 +73,6 @@ void View::setSize(int _width, int _height) {
 
 }
 
-bool contains(const glm::dvec2& _point, const BoundingBox& _bounds) {
-    if ( _point.y < _bounds.min.y || _point.y > _bounds.max.y ) { return false; }
-    return true;
-}
-
 bool View::checkMapBound() {
 
     auto mapBounds = m_projection->MapBounds();
@@ -91,19 +86,19 @@ bool View::checkMapBound() {
 
     screenToGroundPlane(bottomLeft.x, bottomLeft.y);
     bottomLeft += glm::dvec2(m_pos.x, m_pos.y);
-    if (!contains(bottomLeft, mapBounds)) { return false; }
+    if (!mapBounds.containsY(bottomLeft.y)) { return false; }
 
     screenToGroundPlane(bottomRight.x, bottomRight.y);
     bottomRight += glm::dvec2(m_pos.x, m_pos.y);
-    if (!contains(bottomRight, mapBounds)) { return false; }
+    if (!mapBounds.containsY(bottomRight.y)) { return false; }
 
     screenToGroundPlane(topRight.x, topRight.y);
     topRight += glm::dvec2(m_pos.x, m_pos.y);
-    if (!contains(topRight, mapBounds)) { return false; }
+    if (!mapBounds.containsY(topRight.y)) { return false; }
 
     screenToGroundPlane(topLeft.x, topLeft.y);
     topLeft += glm::dvec2(m_pos.x, m_pos.y);
-    if (!contains(topLeft, mapBounds)) { return false; }
+    if (!mapBounds.containsY(topLeft.y)) { return false; }
 
     return true;
 }
