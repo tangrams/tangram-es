@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "style/styleMixer.h"
+#include "scene/styleMixer.h"
 #include "yaml-cpp/yaml.h"
 #include <iostream>
 #include <set>

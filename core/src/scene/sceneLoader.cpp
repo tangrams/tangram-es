@@ -15,12 +15,12 @@
 #include "style/debugStyle.h"
 #include "style/debugTextStyle.h"
 #include "style/pointStyle.h"
-#include "style/styleMixer.h"
 #include "scene/dataLayer.h"
 #include "scene/filters.h"
 #include "scene/sceneLayer.h"
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
+#include "scene/styleMixer.h"
 #include "util/yamlHelper.h"
 #include "view/view.h"
 
