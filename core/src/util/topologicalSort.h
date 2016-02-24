@@ -5,6 +5,8 @@
 #include <utility>
 #include <vector>
 
+namespace Tangram {
+
 /**
  * Given a list of edges describing a directed acyclic graph, returns a
  * list of nodes sorted in topological order; that is, if there is a path
@@ -64,5 +66,7 @@ std::vector<T> topologicalSort(std::vector<std::pair<T, T>> edges) {
     }
 
     return sorted;
+
+}
 
 }
