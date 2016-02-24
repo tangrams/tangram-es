@@ -225,8 +225,19 @@ void Texture::resize(const unsigned int _width, const unsigned int _height) {
     m_width = _width;
     m_height = _height;
 
+    if (isPowerOfTwo(m_width) && isPowerOfTwo(m_height)
+        && (m_generateMipmaps || isRepeatWrapping(m_options.m_wrapping))) {
+        LOGW("OpenGL ES doesn't support texture repeat wrapping for NPOT textures nor mipmap textures");
+        LOGW("Falling back to LINEAR Filtering");
+        m_options.m_filtering = {GL_LINEAR, GL_LINEAR};
+    }
+
     m_shouldResize = true;
     m_dirtyRanges.clear();
+}
+
+bool Texture::isRepeatWrapping(TextureWrapping _wrapping) {
+    return _wrapping.m_wraps == GL_REPEAT || _wrapping.m_wrapt == GL_REPEAT;
 }
 
 size_t Texture::bytesPerPixel() {

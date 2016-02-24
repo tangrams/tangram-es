@@ -73,6 +73,8 @@ public:
 
     static void invalidateAllTextures();
 
+    static bool isRepeatWrapping(TextureWrapping _wrapping);
+
 protected:
     void generate(GLuint _textureUnit);
     void checkValidity();
