@@ -25,9 +25,9 @@ Labels::Labels()
 
 Labels::~Labels() {}
 
-int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
-    return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
-}
+// int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
+//     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
+// }
 
 void Labels::updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
                           const std::vector<std::shared_ptr<Tile>>& _tiles,

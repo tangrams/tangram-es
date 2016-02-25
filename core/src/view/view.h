@@ -10,8 +10,6 @@
 #include <set>
 #include <memory>
 
-#define MAX_LOD 6
-
 namespace Tangram {
 
 enum class CameraType : uint8_t {
@@ -38,7 +36,7 @@ public:
     void setMapProjection(ProjectionType _projType);
 
     /* Gets the current map projection */
-    const MapProjection& getMapProjection() const;
+    const MapProjection& getMapProjection() const { return *m_projection.get(); }
 
     void setCameraType(CameraType _type);
     auto cameraType() const { return m_type; }
@@ -47,7 +45,6 @@ public:
     auto obliqueAxis() const { return m_obliqueAxis; }
 
     /* Sets the ratio of hardware pixels to logical pixels (for high-density screens)
-     *
      * If unset, default is 1.0
      */
     void setPixelScale(float _pixelsPerPoint);
@@ -57,7 +54,6 @@ public:
 
     /* Sets the position of the view within the world (in projection units) */
     void setPosition(double _x, double _y);
-
     void setPosition(const glm::dvec3 pos) { setPosition(pos.x, pos.y); }
     void setPosition(const glm::dvec2 pos) { setPosition(pos.x, pos.y); }
 
@@ -121,9 +117,8 @@ public:
      * replacing the input coordinates with world-space coordinates
      * @return the un-normalized distance 'into the screen' to the ground plane
      * (if < 0, intersection is behind the screen)
-    */
+     */
     double screenToGroundPlane(double& _screenX, double& _screenY);
-    /* Provide an overloaded method for platform specific API support, which pass float screen positions */
     double screenToGroundPlane(float& _screenX, float& _screenY);
 
     /* Returns the set of all tiles visible at the current position and zoom */
@@ -131,8 +126,6 @@ public:
 
     /* Returns true if the view properties have changed since the last call to update() */
     bool changedOnLastUpdate() const { return m_changed; }
-
-    virtual ~View() {}
 
     /* TODO: API for setting these */
     constexpr static float s_maxZoom = 20.5;
@@ -174,9 +167,8 @@ protected:
     float m_pitch = 0.f;
     float m_pitch_prev = 0.f;
 
-    float m_zoom;
-    float m_zoom_prev = 0.0f;
-    float m_initZoom = 16.0;
+    float m_zoom = 0.f;
+    float m_zoom_prev = 0.f;
 
     float m_width;
     float m_height;

@@ -63,6 +63,9 @@ struct BoundingBox {
     double width() const { return glm::abs(max.x - min.x); }
     double height() const { return glm::abs(max.y - min.y); }
     glm::dvec2 center() const { return 0.5 * (min + max); }
+    bool containsX(double x) const { return x >= min.x && x <= max.x; }
+    bool containsY(double y) const { return y >= min.y && y <= max.y; }
+    bool contains(double x, double y) const { return containsX(x) && containsY(y); }
 };
 
 template<class InputIt>
