@@ -9,6 +9,8 @@ namespace Tangram {
 
 #define TEST_FONT_SIZE  24
 #define TEST_FONT       "fonts/NotoSans-Regular.ttf"
+#define TEST_FONT_AR 	"fonts/NotoNaskh-Regular.ttf"
+#define TEST_FONT_JP    "fonts/DroidSansJapanese.ttf"
 
 struct ScratchBuffer : public alfons::MeshCallback {
     void drawGlyph(const alfons::Quad& q, const alfons::AtlasGlyph& atlasGlyph) override {}
@@ -30,11 +32,11 @@ alfons::TextBatch batch(atlas, buffer);
 alfons::FontManager fontManager;
 std::shared_ptr<alfons::Font> font;
 
-void initFont() {
-    font = fontManager.addFont("default", alf::InputSource(TEST_FONT), TEST_FONT_SIZE);
+void initFont(std::string _font = TEST_FONT) {
+    font = fontManager.addFont("default", alf::InputSource(_font), TEST_FONT_SIZE);
 
     unsigned int dataSize = 0;
-    unsigned char* data = bytesFromFile(TEST_FONT, PathType::internal, &dataSize);
+    unsigned char* data = bytesFromFile(_font.c_str(), PathType::internal, &dataSize);
 
     auto face = fontManager.addFontFace(alf::InputSource(reinterpret_cast<char*>(data), dataSize), TEST_FONT_SIZE);
 
@@ -68,6 +70,28 @@ TEST_CASE() {
     REQUIRE(wrap.nbLines == 4);
     wrap = drawWithLineWrapping(line, batch, 3, 5, TextLabelProperty::Align::center, 1.0);
     REQUIRE(wrap.nbLines == 4);
+}
+
+TEST_CASE() {
+    initFont(TEST_FONT_AR);
+
+    auto line = shaper.shape(font, "لعدم عليها كلّ.");
+    REQUIRE(line.shapes().size() == 15);
+
+    wrap = drawWithLineWrapping(line, batch, 1, 0, TextLabelProperty::Align::center, 1.0);
+    REQUIRE(wrap.nbLines == 3);
+    wrap = drawWithLineWrapping(line, batch, 10, 0, TextLabelProperty::Align::center, 1.0);
+    REQUIRE(wrap.nbLines == 2);
+}
+
+TEST_CASE() {
+    initFont(TEST_FONT_JP);
+
+    auto line = shaper.shape(font, "日本語のキーボード");
+    REQUIRE(line.shapes().size() == 9);
+
+    wrap = drawWithLineWrapping(line, batch, 1, 0, TextLabelProperty::Align::center, 1.0);
+    REQUIRE(wrap.nbLines == 1);
 }
 
 }
