@@ -1,4 +1,7 @@
 #include "debugTextStyle.h"
+
+#include "textStyleBuilder.h"
+
 #include "tangram.h"
 #include "tile/tile.h"
 
@@ -8,7 +11,8 @@ class DebugTextStyleBuilder : public TextStyleBuilder {
 
 public:
 
-    DebugTextStyleBuilder(const TextStyle& _style) : TextStyleBuilder(_style) {}
+    DebugTextStyleBuilder(const TextStyle& _style)
+        : TextStyleBuilder(_style) {}
 
     void setup(const Tile& _tile) override;
 
