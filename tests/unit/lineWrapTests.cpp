@@ -1,15 +1,7 @@
 #include "catch.hpp"
 #include "tangram.h"
 #include "platform.h"
-#include "style/textStyle.h"
-
-#include "alfons/textBatch.h"
-#include "alfons/textShaper.h"
-#include "alfons/atlas.h"
-#include "alfons/alfons.h"
-#include "alfons/fontManager.h"
-
-#include "text/lineWrapper.h"
+#include "style/textStyleBuilder.h"
 
 #include <memory>
 
