@@ -41,6 +41,9 @@ void View::setMapProjection(ProjectionType _projType) {
             break;
     }
 
+    auto bounds = m_projection->MapBounds();
+    m_constraint.setLimitsY(bounds.min.y, bounds.max.y);
+
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
 
@@ -71,36 +74,6 @@ void View::setSize(int _width, int _height) {
     // Screen space orthographic projection matrix, top left origin, y pointing down
     m_orthoViewport = glm::ortho(0.f, (float)m_vpWidth, (float)m_vpHeight, 0.f, -1.f, 1.f);
 
-}
-
-bool View::checkMapBound() {
-
-    auto mapBounds = m_projection->MapBounds();
-
-    // Make sure world space view trapezoid bounds are within mapBounds
-    // If any of the 4 view trapezoid bounds are off the mapBounds, do not set the view Position
-    glm::dvec2 bottomLeft = { 0.f, m_vpHeight};
-    glm::dvec2 bottomRight = { m_vpWidth, m_vpHeight};
-    glm::dvec2 topRight = { m_vpWidth, 0.f};
-    glm::dvec2 topLeft = { 0.f, 0.f};
-
-    screenToGroundPlane(bottomLeft.x, bottomLeft.y);
-    bottomLeft += glm::dvec2(m_pos.x, m_pos.y);
-    if (!mapBounds.containsY(bottomLeft.y)) { return false; }
-
-    screenToGroundPlane(bottomRight.x, bottomRight.y);
-    bottomRight += glm::dvec2(m_pos.x, m_pos.y);
-    if (!mapBounds.containsY(bottomRight.y)) { return false; }
-
-    screenToGroundPlane(topRight.x, topRight.y);
-    topRight += glm::dvec2(m_pos.x, m_pos.y);
-    if (!mapBounds.containsY(topRight.y)) { return false; }
-
-    screenToGroundPlane(topLeft.x, topLeft.y);
-    topLeft += glm::dvec2(m_pos.x, m_pos.y);
-    if (!mapBounds.containsY(topLeft.y)) { return false; }
-
-    return true;
 }
 
 void View::setPosition(double _x, double _y) {
@@ -163,7 +136,14 @@ void View::pitch(float _dpitch) {
 
 }
 
-void View::update() {
+void View::update(bool _constrainToWorldBounds) {
+
+    if (_constrainToWorldBounds) {
+        m_constraint.setRadius(std::fmax(getWidth(), getHeight()) / pixelsPerMeter() / pixelScale());
+        m_pos.x = m_constraint.getConstrainedX(m_pos.x);
+        m_pos.y = m_constraint.getConstrainedY(m_pos.y);
+        m_zoom -= std::log(m_constraint.getConstrainedScale()) / std::log(2);
+    }
 
     if (m_dirtyMatrices) {
 
@@ -173,27 +153,6 @@ void View::update() {
 
     }
 
-    bool inBounds = checkMapBound();
-
-    if(!inBounds) {
-
-        // Reset view values to previous legal values
-        m_pos = m_pos_prev;
-        m_roll = m_roll_prev;
-        m_zoom = m_zoom_prev;
-        m_pitch = m_pitch_prev;
-        m_dirtyMatrices = true;
-        m_dirtyTiles = true;
-        updateMatrices();
-
-        inBounds = checkMapBound();
-    }
-
-    m_pos_prev = m_pos;
-    m_roll_prev = m_roll;
-    m_zoom_prev = m_zoom;
-    m_pitch_prev = m_pitch;
-
     if (m_dirtyTiles && !Tangram::getDebugFlag(Tangram::DebugFlags::freeze_tiles)) {
 
         updateTiles(); // Resets dirty flag
@@ -201,12 +160,6 @@ void View::update() {
 
     }
 
-    // If the viewport dimention change and the view trapezoid is not within the mapbound,
-    // zoom in to get view trapezoid within map bounds
-    if(!inBounds) {
-        m_zoom_prev += 1;
-        requestRender();
-    }
 }
 
 glm::dmat2 View::getBoundsRect() const {
