@@ -15,6 +15,7 @@ typedef int FontID;
 
 class AlfonsContext;
 class LabelContainer;
+struct TextMesh;
 
 class TextStyle : public Style {
 
@@ -57,6 +58,8 @@ protected:
     UniformLocation m_uOrtho{"u_ortho"};
     UniformLocation m_uPass{"u_pass"};
 
+    mutable std::vector<std::unique_ptr<TextMesh>> m_meshes;
+
 public:
 
     TextStyle(std::string _name, bool _sdf = false,
@@ -65,6 +68,9 @@ public:
 
     void onBeginDrawFrame(const View& _view, Scene& _scene) override;
     void onEndDrawFrame() override;
+    void onUpdate() override;
+
+    TextMesh& mesh(size_t id) const { return *m_meshes[id]; }
 
     ~TextStyle() override;
 

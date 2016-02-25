@@ -22,6 +22,8 @@ public:
 
     void compile(std::vector<Label::Vertex>& _vertices);
 
+    bool compiled() { return m_isCompiled; }
+
     static void loadQuadIndices();
 
 };

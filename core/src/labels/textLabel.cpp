@@ -83,14 +83,17 @@ void TextLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const g
 void TextLabel::pushTransform() {
     if (!visibleState()) { return; }
 
-    auto& batches = m_labelContainer.context.batches();
+    // TODO
+    // m_labelContainer.pushQuads(*this);
+
+    auto& style = m_labelContainer.m_style;
     auto state = m_transform.state.vertex();
 
     auto it = m_labelContainer.quads.begin() + m_vertexRange.start;
     auto end = it + m_vertexRange.length;
 
     for (; it != end; ++it) {
-        batches[it->atlas].mesh->pushQuad(*it, state);
+        style.mesh(it->atlas).pushQuad(*it, state);
     }
 }
 
