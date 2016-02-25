@@ -33,7 +33,7 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
     View view(256, 256);
     view.setPosition(0, 0);
     view.setZoom(0);
-    view.update();
+    view.update(false);
 
     struct TestLabelMesh : public LabelMesh {
         using LabelMesh::LabelMesh;

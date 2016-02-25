@@ -4,8 +4,9 @@
 #include "glm/vec4.hpp"
 #include "glm/vec3.hpp"
 
-#include "util/mapProjection.h"
 #include "tile/tileID.h"
+#include "util/mapProjection.h"
+#include "view/viewConstraint.h"
 
 #include <set>
 #include <memory>
@@ -88,7 +89,7 @@ public:
     float getPitch() const { return m_pitch; }
 
     /* Updates the view and projection matrices if properties have changed */
-    void update();
+    void update(bool _constrainToWorldBounds = true);
 
     /* Gets the position of the view in projection units (z is the effective 'height' determined from zoom) */
     const glm::dvec3& getPosition() const { return m_pos; }
@@ -149,6 +150,8 @@ protected:
 
     std::shared_ptr<MapProjection> m_projection;
     std::set<TileID> m_visibleTiles;
+
+    ViewConstraint m_constraint;
 
     glm::dvec3 m_pos;
     glm::dvec3 m_pos_prev = glm::dvec3(0.0, 0.0, 0.0);
