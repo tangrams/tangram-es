@@ -203,7 +203,7 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::extrude", "[Duktape][evalStyleFn]"
     REQUIRE(ctx.evalStyle(0, StyleParamKey::extrude, value) == true);
     REQUIRE(value.is<glm::vec2>() == true);
     StyleParam::Value e1(glm::vec2(NAN, NAN));
-    REQUIRE(isnan(value.get<glm::vec2>()[0]) == true);
+    REQUIRE(std::isnan(value.get<glm::vec2>()[0]) == true);
 
     REQUIRE(ctx.evalStyle(1, StyleParamKey::extrude, value) == true);
     REQUIRE(value.is<glm::vec2>() == true);

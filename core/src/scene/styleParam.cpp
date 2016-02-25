@@ -133,7 +133,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     }
     case StyleParamKey::offset: {
         auto vec2 = glm::vec2(0.f, 0.f);
-        if (!parseVec2(_value, { Unit::pixel }, vec2) || isnan(vec2.y)) {
+        if (!parseVec2(_value, { Unit::pixel }, vec2) || std::isnan(vec2.y)) {
             LOGW("Invalid offset parameter '%s'.", _value.c_str());
         }
         return vec2;
