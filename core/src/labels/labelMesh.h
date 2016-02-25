@@ -39,7 +39,7 @@ public:
 
     virtual ~LabelMesh() override;
 
-    virtual void draw(ShaderProgram& _shader) override;
+    void draw(ShaderProgram& _shader) override;
 
     void compile(std::vector<Label::Vertex>& _vertices);
 
@@ -49,17 +49,15 @@ public:
 
     void pushQuad(GlyphQuad& _quad, Label::Vertex::State& _state);
 
-    void myUpload();
-
     void clear();
 
     size_t numberOfVertices() const { return m_vertices.size(); }
 
+    void myUpload();
+
 private:
 
     std::vector<Label::Vertex> m_vertices;
-
-    int bufferCapacity = 0;
 };
 
 }

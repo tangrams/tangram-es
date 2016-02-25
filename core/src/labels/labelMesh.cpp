@@ -2,6 +2,7 @@
 #include "labels/label.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
+
 #include <atomic>
 
 namespace Tangram {
@@ -11,9 +12,10 @@ static int s_quadGeneration = -1;
 static std::atomic<int> s_meshCounter(0);
 
 LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
-    : Mesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW)
-{
+    : Mesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW) {
+
     s_meshCounter++;
+    m_isCompiled = true;
 }
 
 void LabelMesh::pushQuad(GlyphQuad& _quad, Label::Vertex::State& _state) {
@@ -34,7 +36,9 @@ void LabelMesh::pushQuad(GlyphQuad& _quad, Label::Vertex::State& _state) {
 LabelMesh::~LabelMesh() {
     s_meshCounter--;
 
-    if (s_quadIndexBuffer != 0 && (!RenderState::isValidGeneration(s_quadGeneration) || s_meshCounter <= 0)) {
+    if (s_quadIndexBuffer != 0 && (!RenderState::isValidGeneration(s_quadGeneration) ||
+                                   s_meshCounter <= 0)) {
+
         if (RenderState::indexBuffer.compare(s_quadIndexBuffer)) {
             RenderState::indexBuffer.init(0, false);
         }
@@ -69,98 +73,46 @@ void LabelMesh::loadQuadIndices() {
                  reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW);
 }
 
-void LabelMesh::compile(std::vector<Label::Vertex>& _vertices) {
-    // NO-OP
-
-    return;
-
-    // Compile vertex buffer directly instead of making a temporary copy
-    m_nVertices = _vertices.size();
-
-    int stride = m_vertexLayout->getStride();
-    m_glVertexData = new GLbyte[stride * m_nVertices];
-    std::memcpy(m_glVertexData,
-                reinterpret_cast<const GLbyte*>(_vertices.data()),
-                m_nVertices * stride);
-
-    for (size_t offset = 0; offset < m_nVertices; offset += maxLabelMeshVertices) {
-        size_t nVertices = maxLabelMeshVertices;
-        if (offset + maxLabelMeshVertices > m_nVertices) {
-            nVertices = m_nVertices - offset;
-        }
-        m_vertexOffsets.emplace_back(nVertices / 4 * 6, nVertices);
-    }
-    m_isCompiled = true;
-}
-
 void LabelMesh::myUpload() {
-
     if (m_nVertices == 0) { return; }
 
+    // Generate vertex buffer, if needed
+    if (m_glVertexBuffer == 0) {
+        glGenBuffers(1, &m_glVertexBuffer);
+    }
+
+    // Compute vertex ranges for big meshes
     m_vertexOffsets.clear();
     for (size_t offset = 0; offset < m_nVertices; offset += maxLabelMeshVertices) {
         size_t nVertices = maxLabelMeshVertices;
+
         if (offset + maxLabelMeshVertices > m_nVertices) {
             nVertices = m_nVertices - offset;
         }
+
         m_vertexOffsets.emplace_back(nVertices / 4 * 6, nVertices);
     }
 
-    if (!checkValidity()) {
-        loadQuadIndices();
-        bufferCapacity = 0;
-    }
-
-    // Generate vertex buffer, if needed
-    if (m_glVertexBuffer == 0) { glGenBuffers(1, &m_glVertexBuffer); }
-
-    // Buffer vertex data
-    int vertexBytes = m_nVertices * m_vertexLayout->getStride();
-
-    RenderState::vertexBuffer(m_glVertexBuffer);
-
-    if (vertexBytes > bufferCapacity) {
-        if (bufferCapacity > 0) {
-            glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
-        }
-
-        bufferCapacity = vertexBytes;
-
-        glBufferData(GL_ARRAY_BUFFER, vertexBytes,
-                     reinterpret_cast<GLbyte*>(m_vertices.data()),
-                     m_hint);
-    } else {
-        glBufferSubData(GL_ARRAY_BUFFER, 0, vertexBytes,
-                        reinterpret_cast<GLbyte*>(m_vertices.data()));
-    }
-
-    m_isCompiled = true;
-    m_isUploaded = true;
-    m_dirty = false;
+    subDataUpload(reinterpret_cast<GLbyte*>(m_vertices.data()));
 }
 
 void LabelMesh::clear() {
+    // Clear vertices for next frame
     m_nVertices = 0;
     m_vertices.clear();
-    m_isCompiled = false;
 }
 
 void LabelMesh::draw(ShaderProgram& _shader) {
     bool valid = checkValidity();
 
-    if (!m_isCompiled) { return; }
     if (m_nVertices == 0) { return; }
-
-    // Ensure that geometry is buffered into GPU
-    if (!m_isUploaded) {
-        myUpload();
-        //upload();
-    } else if (m_dirty) {
-        subDataUpload();
-    }
 
     if (!valid) {
         loadQuadIndices();
+    }
+
+    if (!m_isUploaded) {
+        myUpload();
     }
 
     // Bind buffers for drawing
