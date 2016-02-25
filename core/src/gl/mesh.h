@@ -56,8 +56,7 @@ public:
     /*
      * Sub data upload of the mesh, returns true if this results in a buffer binding
      */
-    void subDataUpload();
-    void resetDirty();
+    void subDataUpload(GLbyte* _data = nullptr);
 
     /*
      * Renders the geometry in this mesh using the ShaderProgram _shader; if
@@ -140,11 +139,11 @@ public:
 
     virtual ~Mesh() {}
 
-    virtual size_t bufferSize() {
+    size_t bufferSize() override {
         return MeshBase::bufferSize();
     }
 
-    virtual void draw(ShaderProgram& _shader) {
+    void draw(ShaderProgram& _shader) override {
         MeshBase::draw(_shader);
     }
 
