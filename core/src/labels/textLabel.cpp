@@ -1,4 +1,5 @@
 #include "textLabel.h"
+#include "style/textStyle.h"
 
 namespace Tangram {
 
@@ -96,7 +97,7 @@ void TextLabel::pushTransform() {
 
     auto it = m_textLabels.quads.begin() + m_vertexRange.start;
     auto end = it + m_vertexRange.length;
-    auto& style = m_textLabels.m_style;
+    auto& style = m_textLabels.style;
 
     for (; it != end; ++it) {
         auto quad = *it;
@@ -113,5 +114,18 @@ void TextLabel::pushTransform() {
     }
 }
 
+TextLabels::~TextLabels() {
+    style.context()->releaseAtlas(m_atlasRefs);
+}
+
+void TextLabels::setQuads(std::vector<GlyphQuad>& _quads) {
+    quads.insert(quads.end(), _quads.begin(), _quads.end());
+
+    for (auto& q : quads) {
+        m_atlasRefs.set(q.atlas);
+    }
+
+    style.context()->lockAtlas(m_atlasRefs);
+}
 
 }

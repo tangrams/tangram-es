@@ -20,6 +20,9 @@ constexpr int maxTextures = 64;
 
 namespace alf = alfons;
 
+struct FontMetrics {
+    float ascender, descender, lineHeight;
+};
 
 // TODO could be a shared_ptr<Texture>
 struct GlyphBatch {

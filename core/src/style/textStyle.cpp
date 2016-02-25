@@ -1,6 +1,5 @@
 #include "textStyle.h"
 
-#include "material.h"
 #include "scene/drawRule.h"
 #include "tile/tile.h"
 #include "gl/shaderProgram.h"
@@ -110,115 +109,33 @@ void TextStyle::onBeginFrame() {
     }
 }
 
-class TextStyleBuilder : public StyleBuilder {
+TextStyleBuilder::TextStyleBuilder(const TextStyle& _style) :
+    StyleBuilder(_style),
+    m_style(_style),
+    m_batch(_style.context()->m_atlas, m_scratch) {}
 
-public:
+void TextStyleBuilder::setup(const Tile& _tile){
+    m_tileSize = _tile.getProjection()->TileSize();
+    m_scratch.clear();
 
-    TextStyleBuilder(const TextStyle& _style) :
-        StyleBuilder(_style),
-        m_style(_style),
-        m_batch(_style.context()->m_atlas, m_scratch) {}
+    m_textLabels = std::make_unique<TextLabels>(m_style);
+}
 
-    const Style& style() const override { return m_style; }
-
-    // StyleBuilder interface
-    void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
-    void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
-    void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
-    bool checkRule(const DrawRule& _rule) const override;
-
-    virtual void setup(const Tile& _tile) override {
-        m_tileSize = _tile.getProjection()->TileSize();
-        m_scratch.clear();
-
-        m_textLabels = std::make_unique<TextLabels>(m_style);
+std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
+    if (!m_scratch.labels.empty()) {
+        m_textLabels->setLabels(m_scratch.labels);
+        m_textLabels->setQuads(m_scratch.quads);
     }
 
-    virtual std::unique_ptr<StyledMesh> build() override {
-        if (!m_scratch.labels.empty()) {
-            m_textLabels->setLabels(m_scratch.labels);
-            m_textLabels->setQuads(m_scratch.quads);
-        }
+    m_scratch.clear();
 
-        m_scratch.clear();
+    return std::move(m_textLabels);
+}
 
-        return std::move(m_textLabels);
-    };
-
-    TextStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
-
-    bool prepareLabel(TextStyle::Parameters& _params, Label::Type _type);
-    void addLabel(const TextStyle::Parameters& _params, Label::Type _type,
-                  Label::Transform _transform);
-
-    std::string applyTextTransform(const TextStyle::Parameters& _params, const std::string& _string);
-
-protected:
-
-    struct ScratchBuffer : public alf::MeshCallback {
-        std::vector<GlyphQuad> quads;
-        std::vector<std::unique_ptr<Label>> labels;
-
-        // label width and height
-        glm::vec2 bbox;
-        glm::vec2 quadsLocalOrigin;
-        int numLines;
-        TextLabel::FontMetrics metrics;
-        int numQuads;
-
-        uint32_t fill;
-        uint32_t stroke;
-        uint8_t fontScale;
-
-        float yMin, xMin;
-
-        void reset() {
-            yMin = std::numeric_limits<float>::max();
-            xMin = std::numeric_limits<float>::max();
-            bbox = glm::vec2(0);
-            numLines = 1;
-            numQuads = 0;
-        }
-        // TextRenderer interface
-        void drawGlyph(const alf::Quad& q, const alf::AtlasGlyph& altasGlyph) override {}
-        void drawGlyph(const alf::Rect& q, const alf::AtlasGlyph& atlasGlyph) override {
-            numQuads++;
-
-            auto& g = *atlasGlyph.glyph;
-            quads.push_back({
-                    atlasGlyph.atlas,
-                    {{glm::vec2{q.x1, q.y1} * position_scale, {g.u1, g.v1}},
-                     {glm::vec2{q.x1, q.y2} * position_scale, {g.u1, g.v2}},
-                     {glm::vec2{q.x2, q.y1} * position_scale, {g.u2, g.v1}},
-                     {glm::vec2{q.x2, q.y2} * position_scale, {g.u2, g.v2}}}});
-        }
-
-        void clear() {
-            quads.clear();
-            labels.clear();
-        }
-    };
-
-    const TextStyle& m_style;
-
-    float m_tileSize;
-
-    alf::TextShaper m_shaper;
-    alf::TextBatch m_batch;
-
-    bool m_sdf;
-    float m_pixelScale = 1;
-
-    ScratchBuffer m_scratch;
-
-    std::unique_ptr<TextLabels> m_textLabels;
-
-};
 
 bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
     return true;
 }
-
 
 void TextStyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
 
@@ -515,61 +432,29 @@ std::unique_ptr<StyleBuilder> TextStyle::createBuilder() const {
     return std::make_unique<TextStyleBuilder>(*this);
 }
 
-class DebugTextStyleBuilder : public TextStyleBuilder {
-
-public:
-
-    DebugTextStyleBuilder(const TextStyle& _style) : TextStyleBuilder(_style) {}
-
-    void setup(const Tile& _tile) override;
-
-    std::unique_ptr<StyledMesh> build() override;
-
-private:
-    std::string m_tileID;
-
-};
-
-void DebugTextStyleBuilder::setup(const Tile& _tile) {
-    if (!Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
-        return;
-    }
-
-    m_tileID = _tile.getID().toString();
-
-    TextStyleBuilder::setup(_tile);
+void TextStyleBuilder::ScratchBuffer::reset() {
+    yMin = std::numeric_limits<float>::max();
+    xMin = std::numeric_limits<float>::max();
+    bbox = glm::vec2(0);
+    numLines = 1;
+    numQuads = 0;
 }
 
-std::unique_ptr<StyledMesh> DebugTextStyleBuilder::build() {
-    if (!Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
-        return nullptr;
-    }
+void TextStyleBuilder::ScratchBuffer::drawGlyph(const alf::Rect& q, const alf::AtlasGlyph& atlasGlyph) {
+    numQuads++;
 
-    TextStyle::Parameters params;
-
-    params.text = m_tileID;
-    params.fontSize = 30.f;
-
-    params.font = m_style.context()->getFont("sans-serif", "normal", "400", 32 * m_style.pixelScale());
-
-    if (!prepareLabel(params, Label::Type::debug)) {
-        return nullptr;
-    }
-
-    addLabel(params, Label::Type::debug, { glm::vec2(.5f) });
-
-    if (!m_scratch.labels.empty()) {
-        m_textLabels->setLabels(m_scratch.labels);
-        m_textLabels->setQuads(m_scratch.quads);
-    }
-
-    m_scratch.clear();
-
-    return std::move(m_textLabels);
+    auto& g = *atlasGlyph.glyph;
+    quads.push_back({
+            atlasGlyph.atlas,
+            {{glm::vec2{q.x1, q.y1} * position_scale, {g.u1, g.v1}},
+             {glm::vec2{q.x1, q.y2} * position_scale, {g.u1, g.v2}},
+             {glm::vec2{q.x2, q.y1} * position_scale, {g.u2, g.v1}},
+             {glm::vec2{q.x2, q.y2} * position_scale, {g.u2, g.v2}}}});
 }
 
-std::unique_ptr<StyleBuilder> DebugTextStyle::createBuilder() const {
-    return std::make_unique<DebugTextStyleBuilder>(*this);
+void TextStyleBuilder::ScratchBuffer::clear() {
+    quads.clear();
+    labels.clear();
 }
 
 }

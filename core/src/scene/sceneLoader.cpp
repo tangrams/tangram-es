@@ -13,6 +13,7 @@
 #include "style/polylineStyle.h"
 #include "style/textStyle.h"
 #include "style/debugStyle.h"
+#include "style/debugTextStyle.h"
 #include "style/pointStyle.h"
 #include "scene/dataLayer.h"
 #include "scene/filters.h"

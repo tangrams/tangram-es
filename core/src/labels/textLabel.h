@@ -5,23 +5,18 @@
 
 #include "labels/labelSet.h"
 #include "labels/labelMesh.h"
-#include "style/textStyle.h"
 #include "text/fontContext.h"
 
-#include <bitset>
 #include <vector>
 
 namespace Tangram {
 
 class TextLabels;
+class TextStyle;
 
 class TextLabel : public Label {
 
 public:
-
-    struct FontMetrics {
-        float ascender, descender, lineHeight;
-    };
 
     struct FontVertexAttributes {
         uint32_t fill;
@@ -68,30 +63,24 @@ struct GlyphQuad {
 };
 
 class TextLabels : public LabelSet, public StyledMesh {
-public:
-    TextLabels(const TextStyle& _style) : m_style(_style) {}
 
-    ~TextLabels() override {
-        m_style.context()->releaseAtlas(atlasRefs);
-    }
+public:
+
+    TextLabels(const TextStyle& _style) : style(_style) {}
+
+    ~TextLabels() override;
 
     void draw(ShaderProgram& _shader) override {}
     size_t bufferSize() override { return 0; }
 
-    void setQuads(std::vector<GlyphQuad>& _quads) {
+    void setQuads(std::vector<GlyphQuad>& _quads);
 
-        quads.insert(quads.end(),
-                     _quads.begin(),
-                     _quads.end());
-
-        for (auto& q : quads) { atlasRefs.set(q.atlas); }
-        m_style.context()->lockAtlas(atlasRefs);
-    }
-
-    // TODO: hide within class if needed
-    const TextStyle& m_style;
     std::vector<GlyphQuad> quads;
-    std::bitset<maxTextures> atlasRefs;
+    const TextStyle& style;
+
+private:
+
+    std::bitset<maxTextures> m_atlasRefs;
 };
 
 }
