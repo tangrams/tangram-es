@@ -74,7 +74,7 @@ void TextureCube::update(GLuint _textureUnit) {
 
     for (int i = 0; i < 6; ++i) {
         Face& f = m_faces[i];
-        glTexImage2D(CubeMapFace[i], 0, m_options.m_internalFormat, m_width, m_height, 0, m_options.m_format, GL_UNSIGNED_BYTE, f.m_data.data());
+        glTexImage2D(CubeMapFace[i], 0, m_options.internalFormat, m_width, m_height, 0, m_options.format, GL_UNSIGNED_BYTE, f.m_data.data());
     }
 }
 

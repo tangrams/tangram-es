@@ -96,4 +96,8 @@ float sqSegmentDistance(const glm::vec2& _p, const glm::vec2& _p1, const glm::ve
     return glm::length2(_p - _p1);
 }
 
+bool isPowerOfTwo(int _value) {
+    return (_value & (_value - 1)) == 0;
+}
+
 }

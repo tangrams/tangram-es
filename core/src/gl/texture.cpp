@@ -139,11 +139,11 @@ void Texture::generate(GLuint _textureUnit) {
 
     bind(_textureUnit);
 
-    glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, m_options.m_filtering.m_min);
-    glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, m_options.m_filtering.m_mag);
+    glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, m_options.filtering.min);
+    glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, m_options.filtering.mag);
 
-    glTexParameteri(m_target, GL_TEXTURE_WRAP_S, m_options.m_wrapping.m_wraps);
-    glTexParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.m_wrapping.m_wrapt);
+    glTexParameteri(m_target, GL_TEXTURE_WRAP_S, m_options.wrapping.wraps);
+    glTexParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.wrapping.wrapt);
 
     m_generation = RenderState::generation();
 }
@@ -197,8 +197,8 @@ void Texture::update(GLuint _textureUnit, const GLuint* data) {
             LOGW("The hardware maximum texture size is currently reached");
         }
 
-        glTexImage2D(m_target, 0, m_options.m_internalFormat,
-                     m_width, m_height, 0, m_options.m_format,
+        glTexImage2D(m_target, 0, m_options.internalFormat,
+                     m_width, m_height, 0, m_options.format,
                      GL_UNSIGNED_BYTE, data);
 
         if (data && m_generateMipmaps) {
@@ -215,7 +215,7 @@ void Texture::update(GLuint _textureUnit, const GLuint* data) {
     for (auto& range : m_dirtyRanges) {
         size_t offset =  (range.min * m_width) / divisor;
         glTexSubImage2D(m_target, 0, 0, range.min, m_width, range.max - range.min,
-                        m_options.m_format, GL_UNSIGNED_BYTE,
+                        m_options.format, GL_UNSIGNED_BYTE,
                         data + offset);
     }
     m_dirtyRanges.clear();
@@ -225,12 +225,23 @@ void Texture::resize(const unsigned int _width, const unsigned int _height) {
     m_width = _width;
     m_height = _height;
 
+    if (!(isPowerOfTwo(m_width) && isPowerOfTwo(m_height)) && (m_generateMipmaps || isRepeatWrapping(m_options.wrapping))) {
+        LOGW("OpenGL ES doesn't support texture repeat wrapping for NPOT textures nor mipmap textures");
+        LOGW("Falling back to LINEAR Filtering");
+        m_options.filtering = {GL_LINEAR, GL_LINEAR};
+        m_generateMipmaps = false;
+    }
+
     m_shouldResize = true;
     m_dirtyRanges.clear();
 }
 
+bool Texture::isRepeatWrapping(TextureWrapping _wrapping) {
+    return _wrapping.wraps == GL_REPEAT || _wrapping.wrapt == GL_REPEAT;
+}
+
 size_t Texture::bytesPerPixel() {
-    switch (m_options.m_internalFormat) {
+    switch (m_options.internalFormat) {
         case GL_ALPHA:
         case GL_LUMINANCE:
             return 1;
