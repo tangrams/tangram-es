@@ -33,8 +33,6 @@ private:
 
     std::shared_ptr<View> m_view;
 
-    bool m_gestureOccured = false;
-
     // fling deltas on zoom and translation
     glm::vec2 m_velocityPan;
     float m_velocityZoom = 0.f;

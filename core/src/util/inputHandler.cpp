@@ -31,9 +31,10 @@ void InputHandler::update(float _dt) {
 
     auto velocityPanPixels = m_view->pixelsPerMeter() / m_view->pixelScale() * m_velocityPan;
 
-    bool isFlinging = glm::length(velocityPanPixels) > THRESHOLD_STOP_PAN || std::abs(m_velocityZoom) > THRESHOLD_STOP_ZOOM;
+    bool isFlinging = glm::length(velocityPanPixels) > THRESHOLD_STOP_PAN ||
+                      std::abs(m_velocityZoom) > THRESHOLD_STOP_ZOOM;
 
-    if (!m_gestureOccured && isFlinging) {
+    if (isFlinging) {
 
         m_velocityPan -= _dt * DAMPING_PAN * m_velocityPan;
         m_view->translate(_dt * m_velocityPan.x, _dt * m_velocityPan.y);
@@ -42,10 +43,7 @@ void InputHandler::update(float _dt) {
         m_view->zoom(m_velocityZoom * _dt);
 
         requestRender();
-
     }
-
-    m_gestureOccured = false;
 }
 
 void InputHandler::handleTapGesture(float _posX, float _posY) {
@@ -89,6 +87,8 @@ void InputHandler::handleFlingGesture(float _posX, float _posY, float _velocityX
     }
 
     const static float epsilon = 0.0167f;
+
+    onGesture();
 
     float startX = _posX;
     float startY = _posY;
@@ -160,7 +160,6 @@ void InputHandler::cancelFling() {
 
 void InputHandler::onGesture() {
 
-    m_gestureOccured = true;
     setVelocity(0.f, { 0.f, 0.f });
     requestRender();
 
