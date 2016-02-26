@@ -16,6 +16,7 @@ int width = 800;
 int height = 600;
 float density = 1.0;
 bool recreate_context = false;
+float pixel_scale = 1.0;
 
 // Input handling
 // ==============
@@ -192,6 +193,17 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 break;
             case GLFW_KEY_N:
                 Tangram::setRotation(0.f, 1.f);
+                break;
+            case GLFW_KEY_S:
+                if (pixel_scale == 1.0) {
+                    pixel_scale = 2.0;
+                } else if (pixel_scale == 2.0) {
+                    pixel_scale = 0.75;
+                } else {
+                    pixel_scale = 1.0;
+                }
+                Tangram::loadScene(sceneFile.c_str());
+                Tangram::setPixelScale(pixel_scale);
                 break;
             case GLFW_KEY_ESCAPE:
                 glfwSetWindowShouldClose(main_window, true);
