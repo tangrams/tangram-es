@@ -58,7 +58,17 @@ void main(void) {
     float start = max(v_sdf_threshold - filter_width, 0.0);
     float end = v_sdf_threshold + filter_width;
 
-    float alpha = smoothstep(start, end, signed_distance);
+    float alpha;
+
+    if (u_pass == 0) {
+        alpha = smoothstep(start, end, signed_distance);
+    } else {
+        // smooth the signed distance for outlines
+        float signed_distance_1_over_2 = 1.0 / (2.0 * signed_distance);
+        float smooth_signed_distance = pow(signed_distance, signed_distance_1_over_2);
+
+        alpha = smoothstep(start, end, smooth_signed_distance);
+    }
 
     color.a *= v_alpha * alpha;
 
