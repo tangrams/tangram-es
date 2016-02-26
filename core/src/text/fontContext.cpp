@@ -21,7 +21,7 @@
 
 namespace Tangram {
 
-AlfonsContext::AlfonsContext() :
+FontContext::FontContext() :
     m_sdfRadius(SDF_WIDTH),
     m_atlas(*this, textureSize, m_sdfRadius) {
 
@@ -66,13 +66,13 @@ AlfonsContext::AlfonsContext() :
 }
 
 // Synchronized on m_mutex on tile-worker threads
-void AlfonsContext::addTexture(alf::AtlasID id, uint16_t width, uint16_t height) {
+void FontContext::addTexture(alf::AtlasID id, uint16_t width, uint16_t height) {
     m_batches.emplace_back();
 }
 
 // Synchronized on m_mutex, called tile-worker threads
-void AlfonsContext::addGlyph(alf::AtlasID id, uint16_t gx, uint16_t gy, uint16_t gw, uint16_t gh,
-                             const unsigned char* src, uint16_t pad) {
+void FontContext::addGlyph(alf::AtlasID id, uint16_t gx, uint16_t gy, uint16_t gw, uint16_t gh,
+                           const unsigned char* src, uint16_t pad) {
 
     auto& texData = m_batches[id].texData;
     auto& texture = m_batches[id].texture;
@@ -105,7 +105,7 @@ void AlfonsContext::addGlyph(alf::AtlasID id, uint16_t gx, uint16_t gy, uint16_t
     texture.setDirty(gy, gh);
 }
 
-void AlfonsContext::releaseAtlas(std::bitset<maxTextures> _refs) {
+void FontContext::releaseAtlas(std::bitset<maxTextures> _refs) {
     if (!_refs.any()) { return; }
     std::lock_guard<std::mutex> lock(m_mutex);
     for (size_t i = 0; i < m_batches.size(); i++) {
@@ -119,7 +119,7 @@ void AlfonsContext::releaseAtlas(std::bitset<maxTextures> _refs) {
     }
 }
 
-void AlfonsContext::lockAtlas(std::bitset<maxTextures> _refs) {
+void FontContext::lockAtlas(std::bitset<maxTextures> _refs) {
     if (!_refs.any()) { return; }
     std::lock_guard<std::mutex> lock(m_mutex);
     for (size_t i = 0; i < m_batches.size(); i++) {
@@ -127,7 +127,7 @@ void AlfonsContext::lockAtlas(std::bitset<maxTextures> _refs) {
     }
 }
 
-void AlfonsContext::updateTextures() {
+void FontContext::updateTextures() {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     for (auto& batch : m_batches) {
@@ -139,16 +139,14 @@ void AlfonsContext::updateTextures() {
     }
 }
 
-void AlfonsContext::bindTexture(alf::AtlasID _id, GLuint _unit) {
+void FontContext::bindTexture(alf::AtlasID _id, GLuint _unit) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_batches[_id].texture.bind(_unit);
 
 }
 
-auto AlfonsContext::getFont(const std::string& _family, const std::string& _style,
-                            const std::string& _weight, float _size) -> std::shared_ptr<alf::Font> {
-
-    std::string fontName = _family + "_" + _weight + "_" + _style;
+auto FontContext::getFont(const std::string& _family, const std::string& _style,
+                          const std::string& _weight, float _size) -> std::shared_ptr<alf::Font> {
 
     int sizeIndex = 0;
 
@@ -163,6 +161,15 @@ auto AlfonsContext::getFont(const std::string& _family, const std::string& _styl
     //LOG(">> %f - %d ==> %f", _size, sizeIndex, _size / ((sizeIndex+1) * BASE_SIZE));
 
     std::lock_guard<std::mutex> lock(m_mutex);
+
+    static std::string fontName;
+
+    fontName.clear();
+    fontName += _family;
+    fontName += '_';
+    fontName += _weight;
+    fontName += '_';
+    fontName += _style;
 
     auto font = m_alfons.getFont(fontName, fontSize);
     if (font->hasFaces()) { return font; }

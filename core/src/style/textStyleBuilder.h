@@ -1,6 +1,9 @@
 #pragma once
 
 #include "textStyle.h"
+
+#include "labels/textLabel.h"
+#include "text/fontContext.h"
 #include "style/labelProperty.h"
 
 #include "alfons/alfons.h"
@@ -11,13 +14,6 @@
 #include <memory>
 #include <vector>
 #include <string>
-
-namespace alfons {
-    class Font;
-    struct AtlasGlyph;
-    struct Quad;
-    struct Rect;
-}
 
 namespace Tangram {
 
@@ -97,7 +93,12 @@ protected:
 
     float m_tileSize;
 
+    // TextShaper to create <LineLayout> for a given text
     alfons::TextShaper m_shaper;
+
+    // TextBatch to 'draw' <LineLayout>s, i.e. creating glyph textures and glyph quads.
+    // It is intialized with a TextureCallback provided by FontContext for adding glyph
+    // textures and a MeshCallback provided by ScratchBufferthe for adding glyph quads.
     alfons::TextBatch m_batch;
 
     bool m_sdf;

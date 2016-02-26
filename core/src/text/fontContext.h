@@ -38,9 +38,9 @@ struct GlyphBatch {
     size_t refCount = 0;
 };
 
-class AlfonsContext : public alf::TextureCallback {
+class FontContext : public alf::TextureCallback {
 public:
-    AlfonsContext();
+    FontContext();
 
     // Synchronized on m_mutex on tile-worker threads
     void addTexture(alf::AtlasID id, uint16_t width, uint16_t height) override;
@@ -52,6 +52,10 @@ public:
     void releaseAtlas(std::bitset<maxTextures> _refs);
 
     void lockAtlas(std::bitset<maxTextures> _refs);
+
+    alf::GlyphAtlas& atlas() { return m_atlas; }
+
+    std::mutex& mutex() { return m_mutex; }
 
     void updateTextures();
 
@@ -67,7 +71,7 @@ public:
 
     float maxStrokeWidth() { return m_sdfRadius; }
 
-    // TODO private
+private:
     float m_sdfRadius;
 
     std::mutex m_mutex;
@@ -76,8 +80,6 @@ public:
 
     alf::FontManager m_alfons;
     std::array<std::shared_ptr<alf::Font>, 3> m_font;
-
-private:
 
     std::vector<GlyphBatch> m_batches;
 };

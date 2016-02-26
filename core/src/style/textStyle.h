@@ -1,7 +1,7 @@
 #pragma once
 
 #include "style.h"
-#include "labels/textLabel.h"
+#include "labels/label.h"
 #include "style/labelProperty.h"
 #include "util/hash.h"
 
@@ -9,15 +9,15 @@
 #include <vector>
 #include <string>
 
+namespace alfons { class Font; }
+
 namespace Tangram {
 
 class FontContext;
-struct Properties;
-
-class AlfonsContext;
 class LabelContainer;
 struct GlyphQuad;
 struct TextMesh;
+struct Properties;
 
 class TextStyle : public Style {
 
@@ -54,7 +54,7 @@ protected:
 
     bool m_sdf;
 
-    std::shared_ptr<AlfonsContext> m_context;
+    std::shared_ptr<FontContext> m_context;
 
     UniformLocation m_uTexScaleFactor{"u_uv_scale_factor"};
     UniformLocation m_uTex{"u_tex"};

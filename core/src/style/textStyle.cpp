@@ -12,7 +12,7 @@ namespace Tangram {
 
 TextStyle::TextStyle(std::string _name, bool _sdf, Blending _blendMode, GLenum _drawMode) :
     Style(_name, _blendMode, _drawMode), m_sdf(_sdf),
-    m_context(std::make_shared<AlfonsContext>()) {}
+    m_context(std::make_shared<FontContext>()) {}
 
 TextStyle::~TextStyle() {}
 

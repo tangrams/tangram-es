@@ -16,7 +16,7 @@ namespace Tangram {
 TextStyleBuilder::TextStyleBuilder(const TextStyle& _style)
     : StyleBuilder(_style),
       m_style(_style),
-      m_batch(_style.context()->m_atlas, m_scratch) {}
+      m_batch(_style.context()->atlas(), m_scratch) {}
 
 void TextStyleBuilder::setup(const Tile& _tile){
     m_tileSize = _tile.getProjection()->TileSize();
@@ -175,38 +175,41 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     m_scratch.fill = _params.fill;
     m_scratch.fontScale = std::min(fontScale * 64.f, 255.f);
 
+    LineWrap wrap;
+    alf::LineLayout line;
+
     {
-        std::lock_guard<std::mutex> lock(ctx->m_mutex);
-        auto line = m_shaper.shape(_params.font, *renderText);
+        std::lock_guard<std::mutex> lock(ctx->mutex());
+        line = m_shaper.shape(_params.font, *renderText);
 
         if (line.shapes().size() == 0) {
             LOGD("Empty text line");
             return false;
         }
 
-        //LOG("fontScale %d", m_scratch.fontScale);
         line.setScale(fontScale);
 
-        LineWrap wrap;
-
+        // m_batch.draw() calls FontContext's TextureCallback for new glyphs
+        // and ScratchBuffer's MeshCallback for vertex quads of each
+        // glyph in LineLayout.
         if (_type == Label::Type::point && _params.wordWrap) {
-            wrap = drawWithLineWrapping(line, m_batch, _params.maxLineWidth, 4, _params.align,
-                m_style.pixelScale());
+            wrap = drawWithLineWrapping(line, m_batch, _params.maxLineWidth,
+                                        4, _params.align, m_style.pixelScale());
         } else {
             m_batch.draw(line, glm::vec2(0.0), wrap.metrics);
         }
-
-        m_scratch.bbox.x = fabsf(wrap.metrics.aabb.x) + (wrap.metrics.aabb.z);
-        m_scratch.bbox.y = fabsf(wrap.metrics.aabb.y) + (wrap.metrics.aabb.w);
-
-        m_scratch.numLines = m_scratch.bbox.y / line.height();
-
-        m_scratch.metrics.descender = -line.descent();
-        m_scratch.metrics.ascender = line.ascent();
-        m_scratch.metrics.lineHeight = line.height();
-
-        m_scratch.quadsLocalOrigin = {wrap.metrics.aabb.x, wrap.metrics.aabb.y};
     }
+
+    m_scratch.bbox.x = fabsf(wrap.metrics.aabb.x) + (wrap.metrics.aabb.z);
+    m_scratch.bbox.y = fabsf(wrap.metrics.aabb.y) + (wrap.metrics.aabb.w);
+
+    m_scratch.numLines = m_scratch.bbox.y / line.height();
+
+    m_scratch.metrics.descender = -line.descent();
+    m_scratch.metrics.ascender = line.ascent();
+    m_scratch.metrics.lineHeight = line.height();
+
+    m_scratch.quadsLocalOrigin = {wrap.metrics.aabb.x, wrap.metrics.aabb.y};
 
     return true;
 }
