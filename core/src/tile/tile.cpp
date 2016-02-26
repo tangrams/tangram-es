@@ -73,7 +73,7 @@ void Tile::setMesh(const Style& _style, std::unique_ptr<StyledMesh> _mesh) {
     size_t id = _style.getID();
     if (id >= m_geometry.size()) {
         m_geometry.resize(id+1);
-    }
+   }
     m_geometry[_style.getID()] = std::move(_mesh);
 }
 

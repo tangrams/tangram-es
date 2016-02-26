@@ -47,6 +47,11 @@ void PointLight::setRadius(float _inner, float _outer){
 }
 
 void PointLight::setupProgram(const View& _view, ShaderProgram& _shader) {
+    static std::string positionUniformName = "";
+    static std::string attenuationUniformName = "";
+    static std::string innerRadiusUniformName = "";
+    static std::string outerRadiusUniformName = "";
+
     if (m_dynamic) {
         Light::setupProgram(_view, _shader);
 
@@ -72,18 +77,22 @@ void PointLight::setupProgram(const View& _view, ShaderProgram& _shader) {
             position = _view.getViewMatrix() * position;
         }
 
-        _shader.setUniformf(getUniformName()+".position", position);
+        if (positionUniformName.empty()) { positionUniformName = getUniformName() + ".position"; }
+        _shader.setUniformf(positionUniformName, position);
 
-        if (m_attenuation!=0.0) {
-            _shader.setUniformf(getUniformName()+".attenuation", m_attenuation);
+        if (m_attenuation != 0.0) {
+            if (attenuationUniformName.empty()) { attenuationUniformName = getUniformName() + ".attenuation"; }
+            _shader.setUniformf(attenuationUniformName, m_attenuation);
         }
 
         if (m_innerRadius!=0.0) {
-            _shader.setUniformf(getUniformName()+".innerRadius", m_innerRadius);
+            if (innerRadiusUniformName.empty()) { innerRadiusUniformName = getUniformName() + ".innerRadius"; }
+            _shader.setUniformf(innerRadiusUniformName, m_innerRadius);
         }
 
         if (m_outerRadius!=0.0) {
-            _shader.setUniformf(getUniformName()+".outerRadius", m_outerRadius);
+            if (outerRadiusUniformName.empty()) { outerRadiusUniformName = getUniformName() + ".outerRadius"; }
+            _shader.setUniformf(outerRadiusUniformName, m_outerRadius);
         }
     }
 }

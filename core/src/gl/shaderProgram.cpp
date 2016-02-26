@@ -11,6 +11,38 @@
 
 namespace Tangram {
 
+namespace Uniform {
+    const std::string time = "u_time";
+    const std::string model = "u_model";
+    const std::string tileOrigin = "u_tile_origin";
+    const std::string devicePixelRatio = "u_device_pixel_ratio";
+    const std::string resolution = "u_resolution";
+    const std::string mapPosition = "u_map_position";
+    const std::string normalMatrix = "u_normalMatrix";
+    const std::string inverseNormalMatrix = "u_inverseNormalMatrix";
+    const std::string metersPerPixel = "u_meters_per_pixel";
+    const std::string view = "u_view";
+    const std::string proj = "u_proj";
+    const std::string ortho = "u_ortho";
+    const std::string tex = "u_tex";
+    const std::string uvScaleFactor = "u_uv_scale_factor";
+    const std::string materialEmission = "u_material.emission";
+    const std::string materialEmissionTexture = "u_material_emission_texture";
+    const std::string materialEmissionScale = "u_material.emissionScale";
+    const std::string materialAmbiant = "u_material.ambient";
+    const std::string materialAmbiantTexture = "u_material_ambient_texture";
+    const std::string materialAmbiantScale = "u_material.ambientScale";
+    const std::string materialDiffuse = "u_material.diffuse";
+    const std::string materialDiffuseTexture = "u_material_diffuse_texture";
+    const std::string materialDiffuseScale = "u_material.diffuseScale";
+    const std::string materialShininess = "u_material.shininess";
+    const std::string materialSpecular = "u_material.specular";
+    const std::string materialSpecularTexture = "u_material_specular_texture";
+    const std::string materialSpecularScale = "u_material.specularScale";
+    const std::string materialNormalTexture = "u_material_normal_texture";
+    const std::string materialNormalScale = "u_material.normalScale";
+    const std::string materialNormalAmount = "u_material.normalAmount";
+}
 
 ShaderProgram::ShaderProgram() {
 
@@ -87,7 +119,7 @@ GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 GLint ShaderProgram::getUniformLocation(const std::string& _uniformName) {
 
     // Get uniform location at this key, or create one valued at -2 if absent
-    GLint& location = m_uniformMap[_uniformName].loc;
+    GLint& location = m_uniformMap[(intptr_t)&_uniformName].loc;
 
     // -2 means this is a new entry
     if (location == -2) {

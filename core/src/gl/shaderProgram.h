@@ -63,6 +63,7 @@ public:
 
     /*
      * Ensures the program is bound and then sets the named uniform to the given value(s)
+     * Note: _name shoud have the same address for consistent uniform location caching
      */
     void setUniformi(const std::string& _name, int _value);
     void setUniformi(const std::string& _name, int _value0, int _value1);
@@ -136,7 +137,7 @@ private:
     GLuint m_glVertexShader;
 
     fastmap<std::string, ShaderLocation> m_attribMap;
-    fastmap<std::string, ShaderLocation> m_uniformMap;
+    fastmap<intptr_t, ShaderLocation> m_uniformMap;
     fastmap<GLint, UniformValue> m_uniformCache;
 
     std::string m_fragmentShaderSource;
@@ -153,6 +154,39 @@ private:
 
     std::string applySourceBlocks(const std::string& source, bool fragShader);
 
+};
+
+namespace Uniform {
+    extern const std::string time;
+    extern const std::string model;
+    extern const std::string tileOrigin;
+    extern const std::string devicePixelRatio;
+    extern const std::string resolution;
+    extern const std::string mapPosition;
+    extern const std::string normalMatrix;
+    extern const std::string inverseNormalMatrix;
+    extern const std::string metersPerPixel;
+    extern const std::string view;
+    extern const std::string proj;
+    extern const std::string ortho;
+    extern const std::string tex;
+    extern const std::string uvScaleFactor;
+    extern const std::string materialEmission;
+    extern const std::string materialEmissionTexture;
+    extern const std::string materialEmissionScale;
+    extern const std::string materialAmbiant;
+    extern const std::string materialAmbiantTexture;
+    extern const std::string materialAmbiantScale;
+    extern const std::string materialDiffuse;
+    extern const std::string materialDiffuseTexture;
+    extern const std::string materialDiffuseScale;
+    extern const std::string materialShininess;
+    extern const std::string materialSpecular;
+    extern const std::string materialSpecularTexture;
+    extern const std::string materialSpecularScale;
+    extern const std::string materialNormalTexture;
+    extern const std::string materialNormalScale;
+    extern const std::string materialNormalAmount;
 };
 
 }
