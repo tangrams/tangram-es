@@ -70,8 +70,20 @@ public:
               Blending _blendMode = Blending::overlay,
               GLenum _drawMode = GL_TRIANGLES);
 
+    /* Upload the buffers of the text batches
+     * Upload the textur atlases
+     */
     void onBeginDrawFrame(const View& _view, Scene& _scene) override;
+
+    /* Performs the actual drawing of the meshes in two passes
+     * - First pass if signed distance field is on, draw outlines
+     * - Second pass, draw the inner glyph pixels
+     */
     void onEndDrawFrame() override;
+
+    /* Dequeue the meshes (glyph batches) and create the associated gl mesh
+     * No GL involved, called from Tangram::update()
+     */
     void onBeginUpdate() override;
 
     LabelMesh& mesh(size_t id) const { return *m_meshes[id]; }

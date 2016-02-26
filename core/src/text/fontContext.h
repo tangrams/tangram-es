@@ -42,10 +42,16 @@ class FontContext : public alf::TextureCallback {
 public:
     FontContext();
 
-    // Synchronized on m_mutex on tile-worker threads
+    /* Synchronized on m_mutex on tile-worker threads
+     * Called from alfons when a texture atlas needs to be created
+     * Triggered from TextStyleBuilder::prepareLabel
+     */
     void addTexture(alf::AtlasID id, uint16_t width, uint16_t height) override;
 
-    // Synchronized on m_mutex, called tile-worker threads
+    /* Synchronized on m_mutex, called tile-worker threads
+     * Called from alfons when a glyph needs to be added the the atlas identified by id
+     * Triggered from TextStyleBuilder::prepareLabel
+     */
     void addGlyph(alf::AtlasID id, uint16_t gx, uint16_t gy, uint16_t gw, uint16_t gh,
                   const unsigned char* src, uint16_t pad) override;
 
@@ -57,6 +63,7 @@ public:
 
     std::mutex& mutex() { return m_mutex; }
 
+    /* Update all textures batches, uploads the data to the GPU */
     void updateTextures();
 
     std::shared_ptr<alf::Font> getFont(const std::string& _name, const std::string& _style,

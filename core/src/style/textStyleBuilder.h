@@ -57,7 +57,12 @@ public:
 
     TextStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
+    /* Draws the labels (rasterize them) using Alfons
+     * This triggers the mesh and texture callbacks
+     */
     bool prepareLabel(TextStyle::Parameters& _params, Label::Type _type);
+
+    /* Add label to the mesh using the current scratch buffer data */
     void addLabel(const TextStyle::Parameters& _params, Label::Type _type,
                   Label::Transform _transform);
 
@@ -66,6 +71,10 @@ public:
 protected:
 
     struct ScratchBuffer : public alfons::MeshCallback {
+
+        /* drawGlyph() Called from worker thread from alfons after
+         * TextStyleBuilder::prepareLabel, happens after textureCallback(s)
+         */
         void drawGlyph(const alfons::Quad& q, const alfons::AtlasGlyph& altasGlyph) override {}
         void drawGlyph(const alfons::Rect& q, const alfons::AtlasGlyph& atlasGlyph) override;
 
