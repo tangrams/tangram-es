@@ -65,7 +65,7 @@ public:
 
     bool setFunctions(const std::vector<std::string>& _functions);
 
-    void setGlobal(const std::string& _key, const Value& _value);
+    void setGlobal(const std::string& _key, Value _value);
     const Value& getGlobal(const std::string& _key) const;
 
 private:
@@ -75,8 +75,8 @@ private:
     bool parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
 
     std::array<Value, 4> m_globals;
-    double m_globalGeom = -1;
-    double m_globalZoom = -1;
+    int m_globalGeom = -1;
+    int m_globalZoom = -1;
 
     int32_t m_sceneId = -1;
 

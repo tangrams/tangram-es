@@ -127,41 +127,43 @@ void StyleContext::setFeature(const Feature& _feature) {
 
     m_feature = &_feature;
 
-    if (m_feature->geometryType != m_globalGeom) {
-        //setGlobal(key_geom, m_feature->geometryType);
+    if (m_globalGeom != m_feature->geometryType) {
         setGlobal(key_geom, s_geometryStrings[m_feature->geometryType]);
+        m_globalGeom = m_feature->geometryType;
     }
 }
 
 void StyleContext::setGlobalZoom(int _zoom) {
-    if (_zoom != m_globalZoom) {
+    if (m_globalZoom != _zoom) {
         setGlobal(key_zoom, _zoom);
+        m_globalZoom = _zoom;
     }
 }
 
-void StyleContext::setGlobal(const std::string& _key, const Value& _val) {
+void StyleContext::setGlobal(const std::string& _key, Value _val) {
     auto globalKey = Filter::globalType(_key);
     if (globalKey == FilterGlobal::undefined) {
         LOG("Undefined Global: %s", _key.c_str());
         return;
     }
 
+    // Unset shortcuts in case setGlobal was not called by
+    // the helper functions above.
+    if (_key == key_zoom) { m_globalZoom = -1; }
+    if (_key == key_geom) { m_globalGeom = -1; }
+
     Value& entry = m_globals[static_cast<uint8_t>(globalKey)];
     if (entry == _val) { return; }
 
-    entry = _val;
-
-    if (_val.is<double>()) {
-        duk_push_number(m_ctx, _val.get<double>());
-        duk_put_global_string(m_ctx, _key.c_str());
-
-        if (_key == key_zoom) { m_globalZoom = _val.get<double>(); }
-        if (_key == key_geom) { m_globalGeom = _val.get<double>(); }
-
-    } else if (_val.is<std::string>()) {
+    if (_val.is<std::string>()) {
         duk_push_string(m_ctx, _val.get<std::string>().c_str());
         duk_put_global_string(m_ctx, _key.c_str());
+    } else if (_val.is<double>()) {
+        duk_push_number(m_ctx, _val.get<double>());
+        duk_put_global_string(m_ctx, _key.c_str());
     }
+
+    entry = std::move(_val);
 }
 
 const Value& StyleContext::getGlobal(const std::string& _key) const {
