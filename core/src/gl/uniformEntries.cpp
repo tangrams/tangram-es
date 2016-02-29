@@ -1,4 +1,4 @@
-#include "uniformBlock.h"
+#include "uniformEntries.h"
 #include "platform.h"
 #include <vector>
 

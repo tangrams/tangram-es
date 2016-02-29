@@ -2,7 +2,6 @@
 
 #include "light.h"
 #include "glm/vec3.hpp"
-#include "gl/uniformBlock.h"
 
 namespace Tangram {
 

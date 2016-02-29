@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "gl/uniformBlock.h"
+#include "gl/uniformEntries.h"
 
 namespace Tangram {
 

@@ -4,7 +4,7 @@
 #include "glm/glm.hpp"
 #include "util/fastmap.h"
 #include "util/uniform.h"
-#include "gl/uniformBlock.h"
+#include "gl/uniformEntries.h"
 
 #include <string>
 #include <vector>
@@ -48,8 +48,6 @@ public:
     /*
      * Fetches the location of a shader uniform, caching the result
      */
-    GLint getUniformLocation(const std::string& _uniformName);
-
     GLint getUniformLocation(const UniformEntries::UniformEntry* _entry);
 
     /*

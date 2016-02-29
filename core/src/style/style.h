@@ -3,7 +3,7 @@
 #include "gl.h"
 #include "data/tileData.h"
 #include "util/uniform.h"
-#include "gl/uniformBlock.h"
+#include "gl/uniformEntries.h"
 
 #include <memory>
 #include <string>
