@@ -8,6 +8,18 @@
 #include <algorithm>
 #include <iterator>
 
+#define FEATURE_ID 1
+#define FEATURE_TAGS 2
+#define FEATURE_TYPE 3
+#define FEATURE_GEOM 4
+
+
+#define LAYER_NAME 1
+#define LAYER_FEATURE 2
+#define LAYER_KEY 3
+#define LAYER_VALUE 4
+#define LAYER_TILE_EXTENT 5
+
 namespace Tangram {
 
 PbfParser::Geometry PbfParser::getGeometry(ParserContext& _ctx, protobuf::message _geomIn) {
@@ -81,15 +93,12 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
 
     while(_featureIn.next()) {
         switch(_featureIn.tag) {
-            // Feature ID
-            case 1:
+            case FEATURE_ID:
                 // ignored for now, also not used in json parsing
                 _featureIn.skip();
                 break;
-            // Feature tags (properties)
-            case 2:
-            {
-                // extract tags message
+
+            case FEATURE_TAGS: {
                 protobuf::message tagsMsg = _featureIn.getMessage();
 
                 while(tagsMsg) {
@@ -116,16 +125,14 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
                 }
                 break;
             }
-            // Feature Type
-            case 3:
+            case FEATURE_TYPE:
                 feature.geometryType = (GeometryType)_featureIn.varint();
                 break;
             // Actual geometry data
-            case 4:
-                // geometryMessage = _featureIn.getMessage();
+            case FEATURE_GEOM:
                 _ctx.geometry = getGeometry(_ctx, _featureIn.getMessage());
                 break;
-            // None.. skip
+
             default:
                 _featureIn.skip();
                 break;
@@ -216,25 +223,21 @@ Layer PbfParser::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
 
     //// Iterate layer to populate featureMsgs, keys and values
     while(_layerIn.next()) {
+
         switch(_layerIn.tag) {
-            case 1: // name
+            case LAYER_NAME: {
                 layer.name = _layerIn.string();
                 break;
-
-            case 2: // features
-            {
+            }
+            case LAYER_FEATURE: {
                 _ctx.featureMsgs.push_back(_layerIn.getMessage());
                 break;
             }
-
-            case 3: // key string
-            {
+            case LAYER_KEY: {
                 _ctx.keys.push_back(_layerIn.string());
                 break;
             }
-
-            case 4: // values
-            {
+            case LAYER_VALUE: {
                 protobuf::message valueItr = _layerIn.getMessage();
 
                 while (valueItr.next()) {
@@ -268,8 +271,7 @@ Layer PbfParser::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
                 }
                 break;
             }
-
-            case 5: //extent
+            case LAYER_TILE_EXTENT:
                 _ctx.tileExtent = static_cast<int>(_layerIn.int64());
                 break;
 
