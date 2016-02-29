@@ -87,7 +87,7 @@ void main() {
     // Set position varying to the camera-space vertex position
     v_position = u_view * position;
 
-    #ifdef TANGRAM_LIGHTING_VERTEX
+    #ifndef TANGRAM_LIGHTING_FRAGMENT
         vec4 color = v_color;
         vec3 normal = v_normal;
 
@@ -97,7 +97,10 @@ void main() {
         // Modify color and material properties before lighting
         #pragma tangram: color
 
-        v_lighting = calculateLighting(v_position.xyz, normal, color);
+        #ifdef TANGRAM_LIGHTING_VERTEX
+            v_lighting = calculateLighting(v_position.xyz, normal, color);
+        #endif
+
         v_color = color;
         v_normal = normal;
     #endif
