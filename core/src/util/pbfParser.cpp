@@ -221,7 +221,11 @@ Layer PbfParser::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
     _ctx.values.clear();
     _ctx.featureMsgs.clear();
 
-    //// Iterate layer to populate featureMsgs, keys and values
+    bool lastWasFeature = false;
+    size_t numFeatures = 0;
+    protobuf::message featureItr;
+
+    // Iterate layer to populate featureMsgs, keys and values
     while(_layerIn.next()) {
 
         switch(_layerIn.tag) {
@@ -230,8 +234,13 @@ Layer PbfParser::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
                 break;
             }
             case LAYER_FEATURE: {
-                _ctx.featureMsgs.push_back(_layerIn.getMessage());
-                break;
+                numFeatures++;
+                if (!lastWasFeature) {
+                    _ctx.featureMsgs.push_back(_layerIn);
+                    lastWasFeature = true;
+                }
+                _layerIn.skip();
+                continue;
             }
             case LAYER_KEY: {
                 _ctx.keys.push_back(_layerIn.string());
@@ -279,7 +288,10 @@ Layer PbfParser::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
                 _layerIn.skip();
                 break;
         }
+        lastWasFeature = false;
     }
+
+    if (_ctx.featureMsgs.empty()) { return layer; }
 
     //// Assign ordering to keys for faster sorting
     _ctx.orderedKeys.clear();
@@ -294,9 +306,14 @@ Layer PbfParser::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
                   return Properties::keyComparator(_ctx.keys[a], _ctx.keys[b]);
               });
 
-    layer.features.reserve(_ctx.featureMsgs.size());
-    for(auto& featureMsg : _ctx.featureMsgs) {
-        layer.features.push_back(getFeature(_ctx, featureMsg));
+    layer.features.reserve(numFeatures);
+    for (auto& featureItr : _ctx.featureMsgs) {
+        do {
+            auto featureMsg = featureItr.getMessage();
+
+            layer.features.push_back(getFeature(_ctx, featureMsg));
+
+        } while (featureItr.next() && featureItr.tag == LAYER_FEATURE);
     }
 
     return layer;
