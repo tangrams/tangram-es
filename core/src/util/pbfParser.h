@@ -12,7 +12,7 @@ namespace Tangram {
 namespace PbfParser {
 
     using StringView = std::pair<size_t, const char*>;
-    using TagValue = variant<none_type, double, StringView>;
+    using TagValue = variant<StringView, double, none_type>;
 
     struct ParserContext {
         ParserContext(int32_t _sourceId) {
@@ -38,6 +38,8 @@ namespace PbfParser {
     };
 
     void extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn);
+
+    bool extractTags(ParserContext& _ctx, protobuf::message& _tagsIn);
 
     void extractFeature(ParserContext& _ctx, protobuf::message& _featureIn, TileDataSink& _sink);
 
