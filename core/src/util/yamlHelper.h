@@ -4,6 +4,7 @@
 #pragma once
 
 #include "yaml-cpp/yaml.h"
+#include "glm/vec4.hpp"
 
 using YAML::Node;
 using YAML::BadConversion;
@@ -23,6 +24,8 @@ inline T parseVec(const Node& node) {
     }
     return vec;
 }
+
+glm::vec4 getColorAsVec4(const Node& node);
 
 std::string parseSequence(const Node& node);
 
