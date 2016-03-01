@@ -27,7 +27,11 @@ enum class LightOrigin {
 };
 
 struct LightUniforms {
-    LightUniforms(ShaderProgram& _shader) : shader(_shader) {}
+    LightUniforms(ShaderProgram& _shader, const std::string& _name)
+        : shader(_shader),
+          ambient(_name+".ambient"),
+          diffuse(_name+".diffuse"),
+          specular(_name+".specular") {}
 
     ShaderProgram& shader;
 

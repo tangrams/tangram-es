@@ -22,8 +22,12 @@ public:
     virtual void setupProgram(const View& _view, LightUniforms& _uniforms) override;
 
     struct Uniforms : public PointLight::Uniforms {
-        using Base = PointLight::Uniforms;
-        using Base::Base;
+
+        Uniforms(ShaderProgram& _shader, const std::string& _name)
+            : PointLight::Uniforms(_shader, _name),
+            direction(_name+".direction"),
+            spotCosCutoff(_name+".spotCosCutoff"),
+            spotExponent(_name+".spotExponent") {}
 
         UniformLocation direction;
         UniformLocation spotCosCutoff;

@@ -14,11 +14,15 @@ public:
 
     /*	Set the direction of the light */
     virtual void setDirection(const glm::vec3& _dir);
-    
+
     virtual void setupProgram(const View& _view, LightUniforms& _uniforms) override;
 
     struct Uniforms : public LightUniforms {
-        using LightUniforms::LightUniforms;
+
+        Uniforms(ShaderProgram& _shader, const std::string& _name)
+            : LightUniforms(_shader, _name),
+              direction(_name+".direction") {}
+
         UniformLocation direction;
     };
 
@@ -34,13 +38,13 @@ protected:
     virtual const std::string& getTypeName() override;
 
     static std::string s_classBlock;
-    
+
     glm::vec3 m_direction;
 
 private:
 
     static std::string s_typeName;
-    
+
 };
 
 }

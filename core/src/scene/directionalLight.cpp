@@ -28,15 +28,9 @@ void DirectionalLight::setDirection(const glm::vec3 &_dir) {
 std::unique_ptr<LightUniforms> DirectionalLight::injectOnProgram(ShaderProgram& _shader) {
     Light::injectOnProgram(_shader);
 
-    auto u = std::make_unique<Uniforms>(_shader);
+    if (!m_dynamic) { return nullptr; }
 
-    auto name = getUniformName();
-    u->ambient = name+".ambient";
-    u->diffuse = name+".diffuse";
-    u->specular = name+".specular";
-    u->direction = name+".direction";
-
-    return std::move(u);
+    return std::make_unique<Uniforms>(_shader, getUniformName());
 }
 
 void DirectionalLight::setupProgram(const View& _view, LightUniforms& _uniforms) {

@@ -49,19 +49,9 @@ void PointLight::setRadius(float _inner, float _outer){
 std::unique_ptr<LightUniforms> PointLight::injectOnProgram(ShaderProgram& _shader) {
     Light::injectOnProgram(_shader);
 
-    auto u = std::make_unique<Uniforms>(_shader);
+    if (!m_dynamic) { return nullptr; }
 
-    auto name = getUniformName();
-    u->ambient = name+".ambient";
-    u->diffuse = name+".diffuse";
-    u->specular = name+".specular";
-
-    u->position = name+".position";
-    u->attenuation = name+".attenuation";
-    u->innerRadius = name+".innerRadius";
-    u->outerRadius = name+".outerRadius";
-
-    return std::move(u);
+    return std::make_unique<Uniforms>(_shader, getUniformName());
 }
 
 void PointLight::setupProgram(const View& _view, LightUniforms& _uniforms) {

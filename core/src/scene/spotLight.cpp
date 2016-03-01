@@ -41,23 +41,9 @@ void SpotLight::setCutoffExponent(float _exponent) {
 std::unique_ptr<LightUniforms> SpotLight::injectOnProgram(ShaderProgram& _shader) {
     Light::injectOnProgram(_shader);
 
-    auto u = std::make_unique<Uniforms>(_shader);
+    if (!m_dynamic) { return nullptr; }
 
-    auto name = getUniformName();
-    u->ambient = name+".ambient";
-    u->diffuse = name+".diffuse";
-    u->specular = name+".specular";
-
-    u->position = name+".position";
-    u->attenuation = name+".attenuation";
-    u->innerRadius = name+".innerRadius";
-    u->outerRadius = name+".outerRadius";
-
-    u->direction = name+".direction";
-    u->spotCosCutoff = name+".spotCosCutoff";
-    u->spotExponent = name+".spotExponent";
-
-    return std::move(u);
+    return std::make_unique<Uniforms>(_shader, getUniformName());
 }
 
 void SpotLight::setupProgram(const View& _view, LightUniforms& _uniforms ) {

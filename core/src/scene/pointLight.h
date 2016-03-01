@@ -23,7 +23,12 @@ public:
     virtual void setupProgram(const View& _view, LightUniforms& _uniforms) override;
 
     struct Uniforms : public LightUniforms {
-        using LightUniforms::LightUniforms;
+        Uniforms(ShaderProgram& _shader, const std::string& _name)
+            : LightUniforms(_shader, _name),
+              position(_name+".position"),
+              attenuation(_name+".attenuation"),
+              innerRadius(_name+".innerRadius"),
+              outerRadius(_name+".outerRadius") {}
 
         UniformLocation position;
         UniformLocation attenuation;
