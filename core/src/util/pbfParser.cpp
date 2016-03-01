@@ -79,53 +79,59 @@ void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn)
     }
 }
 
-struct string_visitor {
-    using result_type = bool;
-    Value& propValue;
-    std::string& str;
-
-    bool operator()(const PbfParser::StringView& v) const {
-        str.assign(v.second, v.first);
-        return true;
-    }
-    template<typename T>
-    bool operator()(const T& v) const {
-        propValue = v;
-        return false;
-    }
-};
-struct double_visitor {
-    using result_type = bool;
-    Value& propValue;
-
-    bool operator()(const PbfParser::StringView& v) const {
-        propValue = std::string(v.second, v.first);
-        return false;
-    }
-    template<typename T>
-    bool operator()(const T& v) const {
-        propValue = v;
-        return true;
-    }
-};
+// This is a bit heavy machinery to reuse string allocations in variants
 struct update_visitor {
     using result_type = bool;
     const PbfParser::TagValue& tagValue;
     Value& propValue;
 
+    struct double_visitor {
+        using result_type = bool;
+        Value& propValue;
+
+        bool operator()(const PbfParser::StringView& v) const {
+            // Create new string from StringView
+            propValue = std::string(v.second, v.first);
+            return false;
+        }
+        template<typename T>
+        bool operator()(const T& v) const {
+            propValue = v;
+            return true;
+        }
+    };
+
+    struct string_visitor {
+        using result_type = bool;
+        Value& propValue;
+        std::string& str;
+
+        bool operator()(const PbfParser::StringView& v) const {
+            // Assign StringView to previous string
+            str.assign(v.second, v.first);
+            return true;
+        }
+        template<typename T>
+        bool operator()(const T& v) const {
+            propValue = v;
+            return false;
+        }
+    };
+
     template<typename T>
     bool operator()(T& v) const {
+        // propValue was not string, replace it with new tagValue
         return PbfParser::TagValue::visit(tagValue, double_visitor{propValue});
     }
-    bool operator()(std::string& v) const {
-        return PbfParser::TagValue::visit(tagValue, string_visitor{propValue, v});
+
+    bool operator()(std::string& str) const {
+        // propValue was string, replace it with new tagValue.
+        // Reuses alloction when new value is also string.
+        return PbfParser::TagValue::visit(tagValue, string_visitor{propValue, str});
     }
 };
 
-
-void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureIn, TileDataSink& _sink) {
-
-    protobuf::message geometry;
+bool PbfParser::extractTags(ParserContext& _ctx, protobuf::message& _tagsMsg) {
 
     _ctx.coordinates.clear();
     _ctx.numCoordinates.clear();
@@ -136,63 +142,33 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
     // clear current tags
     _ctx.featureTags.assign(_ctx.keys.size(), -1);
 
-    Feature& feature = _ctx.feature;
     size_t numTags = 0;
 
-    while(_featureIn.next()) {
-        switch(_featureIn.tag) {
-            case FEATURE_ID:
-                // ignored for now, also not used in json parsing
-                _featureIn.skip();
-                break;
+    while(_tagsMsg) {
+        auto tagKey = _tagsMsg.varint();
 
-            case FEATURE_TAGS: {
-                protobuf::message tagsMsg = _featureIn.getMessage();
-
-                while(tagsMsg) {
-                    auto tagKey = tagsMsg.varint();
-
-                    if(_ctx.keys.size() <= tagKey) {
-                        LOGE("accessing out of bound key");
-                        return;
-                    }
-
-                    if(!tagsMsg) {
-                        LOGE("uneven number of feature tag ids");
-                        return;
-                    }
-
-                    auto valueKey = tagsMsg.varint();
-
-                    if( _ctx.values.size() <= valueKey ) {
-                        LOGE("accessing out of bound values");
-                        return;
-                    }
-
-                    _ctx.featureTags[tagKey] = valueKey;
-                    numTags++;
-                }
-                break;
-            }
-            case FEATURE_TYPE:
-                feature.geometryType = (GeometryType)_featureIn.varint();
-                break;
-
-            case FEATURE_GEOM:
-                geometry = _featureIn.getMessage();
-                extractGeometry(_ctx, geometry);
-                break;
-
-            default:
-                _featureIn.skip();
-                break;
+        if(_ctx.keys.size() <= tagKey) {
+            LOGE("accessing out of bound key");
+            return false;
         }
-    }
-    if (feature.geometryType == GeometryType::unknown) {
-        return;
+
+        if(!_tagsMsg) {
+            LOGE("uneven number of feature tag ids");
+            return false;
+        }
+
+        uint64_t valueKey = _tagsMsg.varint();
+
+        if(_ctx.values.size() <= valueKey ) {
+            LOGE("accessing out of bound values");
+            return false;
+        }
+
+        _ctx.featureTags[tagKey] = valueKey;
+        numTags++;
     }
 
-    auto& properties = feature.props.items();
+    auto& properties = _ctx.feature.props.items();
     properties.resize(numTags);
 
     // Only update keys and values that differ from last feature.
@@ -202,34 +178,88 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
     for (int tagKey : _ctx.orderedKeys) {
         int tagValue = _ctx.featureTags[tagKey];
 
-        if (tagValue >= 0) {
-            auto& prop = properties[numTags++];
+        if (matchingKeys) {
+            int prevTagValue = _ctx.previousTags[tagKey];
 
-            if (matchingKeys && _ctx.previousTags[tagKey] < 0) {
+            if (tagValue < 0) {
+                if (prevTagValue >= 0) {
+                    // Properties key-set changed from last feature
+                    matchingKeys = false;
+                }
+                continue;
+            }
+
+            if (prevTagValue < 0) {
                 // Previous feature did not have this key
                 matchingKeys = false;
-            }
-            if (matchingKeys && _ctx.previousTags[tagKey] == tagValue) {
+
+            } else if (prevTagValue == tagValue) {
+                numTags++;
                 // Same tag as the previous feature
                 continue;
             }
-            if (!matchingKeys) {
-                // Update key
-                prop.key = _ctx.keys[tagKey];
-            }
+        } else if (tagValue < 0) { continue; }
 
-            // Update value, reuse string allocation
-            Value::visit(prop.value, update_visitor{_ctx.values[tagValue], prop.value});
+        auto& prop = properties[numTags++];
 
-        } else if (matchingKeys && _ctx.previousTags[tagKey] >= 0) {
-            // Properties key-set changed from last feature
-            matchingKeys = false;
+        if (!matchingKeys) {
+            prop.key = _ctx.keys[tagKey];
         }
+
+        // Update value, reuse string allocation if possible
+        Value::visit(prop.value, update_visitor{_ctx.values[tagValue], prop.value});
+
+    }
+
+    return true;
+}
+
+void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureIn,
+                               TileDataSink& _sink) {
+
+    protobuf::message geomMsg;
+    protobuf::message tagsMsg;
+
+    auto& feature = _ctx.feature;
+
+    while(_featureIn.next()) {
+        switch(_featureIn.tag) {
+            case FEATURE_ID:
+                // ignored for now, also not used in json parsing
+                _featureIn.skip();
+                break;
+
+            case FEATURE_TAGS:
+                tagsMsg = _featureIn.getMessage();
+                break;
+
+            case FEATURE_TYPE:
+                feature.geometryType = (GeometryType)_featureIn.varint();
+                break;
+
+            case FEATURE_GEOM:
+                geomMsg = _featureIn.getMessage();
+                break;
+
+            default:
+                _featureIn.skip();
+                break;
+        }
+    }
+
+    if (!geomMsg || !tagsMsg || feature.geometryType == GeometryType::unknown) {
+        return;
+    }
+
+    if (!extractTags(_ctx, tagsMsg)) {
+        return;
     }
 
     if (!_sink.matchFeature(feature)) {
         return;
     }
+
+    extractGeometry(_ctx, geomMsg);
 
     switch(feature.geometryType) {
         case GeometryType::points: {
