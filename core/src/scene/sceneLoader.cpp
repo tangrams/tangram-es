@@ -330,11 +330,9 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene)
         } else if (mapping == "spheremap") {
             matTex.mapping = MappingType::spheremap;
         } else if (mapping == "planar") {
-            // TODO
-            LOGW("Planar texture mapping not yet implemented");
+            matTex.mapping = MappingType::planar;
         } else if (mapping == "triplanar") {
-            // TODO
-            LOGW("Triplanar texture mapping not yet implemented");
+            matTex.mapping = MappingType::triplanar;
         } else {
             LOGW("Unrecognized texture mapping '%s'", mapping.c_str());
         }
