@@ -18,12 +18,9 @@ SpotLight::SpotLight(const std::string& _name, bool _dynamic) :
     m_spotCosCutoff(0.0) {
 
     m_type = LightType::spot;
-
 }
 
-SpotLight::~SpotLight() {
-
-}
+SpotLight::~SpotLight() {}
 
 void SpotLight::setDirection(const glm::vec3 &_dir) {
     m_direction = _dir;
@@ -47,19 +44,17 @@ std::unique_ptr<LightUniforms> SpotLight::injectOnProgram(ShaderProgram& _shader
 }
 
 void SpotLight::setupProgram(const View& _view, LightUniforms& _uniforms ) {
-    if (m_dynamic) {
-        PointLight::setupProgram(_view, _uniforms);
+    PointLight::setupProgram(_view, _uniforms);
 
-        glm::vec3 direction = m_direction;
-        if (m_origin == LightOrigin::world) {
-            direction = glm::normalize(_view.getNormalMatrix() * direction);
-        }
-
-        auto& u = static_cast<Uniforms&>(_uniforms);
-        u.shader.setUniformf(u.direction, direction);
-        u.shader.setUniformf(u.spotCosCutoff, m_spotCosCutoff);
-        u.shader.setUniformf(u.spotExponent, m_spotExponent);
+    glm::vec3 direction = m_direction;
+    if (m_origin == LightOrigin::world) {
+        direction = glm::normalize(_view.getNormalMatrix() * direction);
     }
+
+    auto& u = static_cast<Uniforms&>(_uniforms);
+    u.shader.setUniformf(u.direction, direction);
+    u.shader.setUniformf(u.spotCosCutoff, m_spotCosCutoff);
+    u.shader.setUniformf(u.spotExponent, m_spotExponent);
 }
 
 std::string SpotLight::getClassBlock() {

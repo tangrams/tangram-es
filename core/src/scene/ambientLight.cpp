@@ -15,9 +15,7 @@ AmbientLight::AmbientLight(const std::string& _name, bool _dynamic) :
 
 }
 
-AmbientLight::~AmbientLight() {
-
-}
+AmbientLight::~AmbientLight() {}
 
 std::unique_ptr<LightUniforms> AmbientLight::injectOnProgram(ShaderProgram& _shader) {
     injectSourceBlocks(_shader);
@@ -28,9 +26,7 @@ std::unique_ptr<LightUniforms> AmbientLight::injectOnProgram(ShaderProgram& _sha
 }
 
 void AmbientLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
-    if (m_dynamic) {
-        Light::setupProgram(_view, _uniforms);
-    }
+    Light::setupProgram(_view, _uniforms);
 }
 
 std::string AmbientLight::getClassBlock() {

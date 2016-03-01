@@ -17,9 +17,7 @@ DirectionalLight::DirectionalLight(const std::string& _name, bool _dynamic) :
     m_type = LightType::directional;
 }
 
-DirectionalLight::~DirectionalLight() {
-
-}
+DirectionalLight::~DirectionalLight() {}
 
 void DirectionalLight::setDirection(const glm::vec3 &_dir) {
     m_direction = glm::normalize(_dir);
@@ -35,18 +33,15 @@ std::unique_ptr<LightUniforms> DirectionalLight::injectOnProgram(ShaderProgram& 
 
 void DirectionalLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
 
-    if (m_dynamic) {
-
-        glm::vec3 direction = m_direction;
-        if (m_origin == LightOrigin::world) {
-            direction = _view.getNormalMatrix() * direction;
-        }
-
-        Light::setupProgram(_view, _uniforms);
-
-        auto& u = static_cast<DirectionalLight::Uniforms&>(_uniforms);
-        u.shader.setUniformf(u.direction, direction);
+    glm::vec3 direction = m_direction;
+    if (m_origin == LightOrigin::world) {
+        direction = _view.getNormalMatrix() * direction;
     }
+
+    Light::setupProgram(_view, _uniforms);
+
+    auto& u = static_cast<DirectionalLight::Uniforms&>(_uniforms);
+    u.shader.setUniformf(u.direction, direction);
 }
 
 std::string DirectionalLight::getClassBlock() {
@@ -57,16 +52,16 @@ std::string DirectionalLight::getClassBlock() {
 }
 
 std::string DirectionalLight::getInstanceDefinesBlock() {
-        //	Directional lights don't have defines.... yet.
-        return "\n";
+    //	Directional lights don't have defines.... yet.
+    return "\n";
 }
 
 std::string DirectionalLight::getInstanceAssignBlock() {
-        std::string block = Light::getInstanceAssignBlock();
-        if (!m_dynamic) {
+    std::string block = Light::getInstanceAssignBlock();
+    if (!m_dynamic) {
         block += ", " + glm::to_string(m_direction) + ")";
-        }
-        return block;
+    }
+    return block;
 }
 
 const std::string& DirectionalLight::getTypeName() {
