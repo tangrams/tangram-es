@@ -50,6 +50,10 @@ private:
     std::string m_log[LOG_CAPACITY];
     std::mutex m_mutex;
     char* m_vertexBuffer;
+
+    UniformLocation m_uOrthoProj{"u_orthoProj"};
+    UniformLocation m_uColor{"u_color"};
+
 };
 
 }
