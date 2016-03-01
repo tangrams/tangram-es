@@ -116,18 +116,15 @@ private:
     // Get a uniform value from the cache, and returns false when it's a cache miss
     template <class T>
     inline bool getFromCache(GLint _location, T _value) {
-        const auto& v = m_uniformCache.find(_location);
-        bool cached = false;
-        if (v != m_uniformCache.end()) {
-            if (v->second.is<T>()) {
-                T& value = v->second.get<T>();
-                cached = value == _value;
-                if (!cached) {
-                    value = _value;
-                }
+        auto& v = m_uniformCache[_location];
+        if (v.is<T>()) {
+            T& value = v.get<T>();
+            if (value == _value) {
+                return true;
             }
-        } else { m_uniformCache[_location] = _value; }
-        return cached;
+        }
+        v = _value;
+        return false;
     }
 
     int m_generation;
