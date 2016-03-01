@@ -59,10 +59,10 @@ void TextStyle::constructShaderProgram() {
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
     m_fontContext->bindAtlas(0);
 
-    m_shaderProgram->setUniformf("u_uv_scale_factor",
+    m_shaderProgram->setUniformf({"u_uv_scale_factor"},
                                  1.0f / m_fontContext->getAtlasResolution());
-    m_shaderProgram->setUniformi("u_tex", 0);
-    m_shaderProgram->setUniformMatrix4f("u_ortho", _view.getOrthoViewportMatrix());
+    m_shaderProgram->setUniformi({"u_tex"}, 0);
+    m_shaderProgram->setUniformMatrix4f({"u_ortho"}, _view.getOrthoViewportMatrix());
 
     Style::onBeginDrawFrame(_view, _scene, 1);
 }

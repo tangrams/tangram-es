@@ -158,56 +158,56 @@ void Material::injectOnProgram(ShaderProgram& _shader ) {
 void Material::setupProgram(ShaderProgram& _shader) {
 
     if (m_bEmission) {
-        _shader.setUniformf("u_material.emission", m_emission);
+        _shader.setUniformf(m_uEmission, m_emission);
 
         if (m_emission_texture.tex) {
             m_emission_texture.tex->update(1);
             m_emission_texture.tex->bind(1);
-            _shader.setUniformi("u_material_emission_texture", 1);
-            _shader.setUniformf("u_material.emissionScale", m_emission_texture.scale);
+            _shader.setUniformi(m_uEmissionTexture, 1);
+            _shader.setUniformf(m_uEmissionScale, m_emission_texture.scale);
         }
     }
 
     if (m_bAmbient) {
-        _shader.setUniformf("u_material.ambient", m_ambient);
+        _shader.setUniformf(m_uAmbient, m_ambient);
 
         if (m_ambient_texture.tex) {
             m_ambient_texture.tex->update(2);
             m_ambient_texture.tex->bind(2);
-            _shader.setUniformi("u_material_ambient_texture", 2);
-            _shader.setUniformf("u_material.ambientScale", m_ambient_texture.scale);
+            _shader.setUniformi(m_uAmbientTexture, 2);
+            _shader.setUniformf(m_uAmbientScale, m_ambient_texture.scale);
         }
     }
 
     if (m_bDiffuse) {
-        _shader.setUniformf("u_material.diffuse", m_diffuse);
+        _shader.setUniformf(m_uDiffuse, m_diffuse);
 
         if (m_diffuse_texture.tex) {
             m_diffuse_texture.tex->update(3);
             m_diffuse_texture.tex->bind(3);
-            _shader.setUniformi("u_material_diffuse_texture", 3);
-            _shader.setUniformf("u_material.diffuseScale", m_diffuse_texture.scale);
+            _shader.setUniformi(m_uDiffuseTexture, 3);
+            _shader.setUniformf(m_uDiffuseScale, m_diffuse_texture.scale);
         }
     }
 
     if (m_bSpecular) {
-        _shader.setUniformf("u_material.specular", m_specular);
-        _shader.setUniformf("u_material.shininess", m_shininess);
+        _shader.setUniformf(m_uSpecular, m_specular);
+        _shader.setUniformf(m_uShininess, m_shininess);
 
         if (m_specular_texture.tex) {
             m_specular_texture.tex->update(4);
             m_specular_texture.tex->bind(4);
-            _shader.setUniformi("u_material_specular_texture", 4);
-            _shader.setUniformf("u_material.specularScale", m_specular_texture.scale);
+            _shader.setUniformi(m_uSpecularTexture, 4);
+            _shader.setUniformf(m_uSpecularScale, m_specular_texture.scale);
         }
     }
 
     if (m_normal_texture.tex) {
         m_normal_texture.tex->update(5);
         m_normal_texture.tex->bind(5);
-        _shader.setUniformi("u_material_normal_texture", 5);
-        _shader.setUniformf("u_material.normalScale", m_normal_texture.scale);
-        _shader.setUniformf("u_material.normalAmount", m_normal_texture.amount);
+        _shader.setUniformi(m_uNormalTexture, 5);
+        _shader.setUniformf(m_uNormalScale, m_normal_texture.scale);
+        _shader.setUniformf(m_uNormalAmount, m_normal_texture.amount);
     }
 }
 

@@ -19,9 +19,22 @@ AmbientLight::~AmbientLight() {
 
 }
 
-void AmbientLight::setupProgram(const View& _view, ShaderProgram& _shader ) {
+std::unique_ptr<LightUniforms> AmbientLight::injectOnProgram(ShaderProgram& _shader) {
+    Light::injectOnProgram(_shader);
+
+    auto u = std::make_unique<LightUniforms>(_shader);
+
+    auto name = getUniformName();
+    u->ambient = name+".ambient";
+    u->diffuse = name+".diffuse";
+    u->specular = name+".specular";
+
+    return u;
+}
+
+void AmbientLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
     if (m_dynamic) {
-        Light::setupProgram(_view, _shader);
+        Light::setupProgram(_view, _uniforms);
     }
 }
 

@@ -10,6 +10,7 @@ This openGL Material implementation follows from the WebGL version of Tangram
 #include <string>
 #include "glm/vec3.hpp"
 #include "glm/vec4.hpp"
+#include "util/uniform.h"
 
 namespace Tangram {
 
@@ -111,6 +112,28 @@ private:
     MaterialTexture m_normal_texture;
 
     float m_shininess = .2f;
+
+    UniformLocation m_uEmission{"u_material.emission"};
+    UniformLocation m_uEmissionTexture{"material_emission_texture"};
+    UniformLocation m_uEmissionScale{"u_material.emissionScale"};
+
+    UniformLocation m_uAmbient{"u_material.ambient"};
+    UniformLocation m_uAmbientTexture{"u_material_ambient_texture"};
+    UniformLocation m_uAmbientScale{"u_material.ambientScale"};
+
+    UniformLocation m_uDiffuse{"u_material.diffuse"};
+    UniformLocation m_uDiffuseTexture{"u_material_diffuse_texture"};
+    UniformLocation m_uDiffuseScale{"u_material.diffuseScale"};
+
+    UniformLocation m_uSpecular{"u_material.specular"};
+    UniformLocation m_uShininess{"u_material.shininess"};
+
+    UniformLocation m_uSpecularTexture{"u_material_specular_texture"};
+    UniformLocation m_uSpecularScale{"u_material.specularScale"};
+
+    UniformLocation m_uNormalTexture{"u_material_normal_texture"};
+    UniformLocation m_uNormalScale{"u_material.normalScale"};
+    UniformLocation m_uNormalAmount{"u_material.normalAmount"};
 
 };
 

@@ -46,9 +46,27 @@ void PointLight::setRadius(float _inner, float _outer){
     m_outerRadius = _outer;
 }
 
-void PointLight::setupProgram(const View& _view, ShaderProgram& _shader) {
+std::unique_ptr<LightUniforms> PointLight::injectOnProgram(ShaderProgram& _shader) {
+    Light::injectOnProgram(_shader);
+
+    auto u = std::make_unique<Uniforms>(_shader);
+
+    auto name = getUniformName();
+    u->ambient = name+".ambient";
+    u->diffuse = name+".diffuse";
+    u->specular = name+".specular";
+
+    u->position = name+".position";
+    u->attenuation = name+".attenuation";
+    u->innerRadius = name+".innerRadius";
+    u->outerRadius = name+".outerRadius";
+
+    return std::move(u);
+}
+
+void PointLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
     if (m_dynamic) {
-        Light::setupProgram(_view, _shader);
+        Light::setupProgram(_view, _uniforms);
 
         glm::vec4 position = m_position;
 
@@ -72,18 +90,20 @@ void PointLight::setupProgram(const View& _view, ShaderProgram& _shader) {
             position = _view.getViewMatrix() * position;
         }
 
-        _shader.setUniformf(getUniformName()+".position", position);
+        auto& u = static_cast<Uniforms&>(_uniforms);
 
-        if (m_attenuation!=0.0) {
-            _shader.setUniformf(getUniformName()+".attenuation", m_attenuation);
+        u.shader.setUniformf(u.position, position);
+
+        if (m_attenuation != 0.0) {
+            u.shader.setUniformf(u.attenuation, m_attenuation);
         }
 
-        if (m_innerRadius!=0.0) {
-            _shader.setUniformf(getUniformName()+".innerRadius", m_innerRadius);
+        if (m_innerRadius != 0.0) {
+            u.shader.setUniformf(u.innerRadius, m_innerRadius);
         }
 
-        if (m_outerRadius!=0.0) {
-            _shader.setUniformf(getUniformName()+".outerRadius", m_outerRadius);
+        if (m_outerRadius != 0.0) {
+            u.shader.setUniformf(u.outerRadius, m_outerRadius);
         }
     }
 }

@@ -25,17 +25,34 @@ void DirectionalLight::setDirection(const glm::vec3 &_dir) {
     m_direction = glm::normalize(_dir);
 }
 
-void DirectionalLight::setupProgram(const View& _view, ShaderProgram& _shader ) {
+std::unique_ptr<LightUniforms> DirectionalLight::injectOnProgram(ShaderProgram& _shader) {
+    Light::injectOnProgram(_shader);
 
-    glm::vec3 direction = m_direction;
-    if (m_origin == LightOrigin::world) {
-        direction = _view.getNormalMatrix() * direction;
+    auto u = std::make_unique<Uniforms>(_shader);
+
+    auto name = getUniformName();
+    u->ambient = name+".ambient";
+    u->diffuse = name+".diffuse";
+    u->specular = name+".specular";
+    u->direction = name+".direction";
+
+    return std::move(u);
+}
+
+void DirectionalLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
+
+    if (m_dynamic) {
+
+        glm::vec3 direction = m_direction;
+        if (m_origin == LightOrigin::world) {
+            direction = _view.getNormalMatrix() * direction;
+        }
+
+        Light::setupProgram(_view, _uniforms);
+
+        auto& u = static_cast<DirectionalLight::Uniforms&>(_uniforms);
+        u.shader.setUniformf(u.direction, direction);
     }
-
-	if (m_dynamic) {
-		Light::setupProgram(_view, _shader);
-		_shader.setUniformf(getUniformName()+".direction", direction);
-	}
 }
 
 std::string DirectionalLight::getClassBlock() {
@@ -46,16 +63,16 @@ std::string DirectionalLight::getClassBlock() {
 }
 
 std::string DirectionalLight::getInstanceDefinesBlock() {
-	//	Directional lights don't have defines.... yet.
-	return "\n";
+        //	Directional lights don't have defines.... yet.
+        return "\n";
 }
 
 std::string DirectionalLight::getInstanceAssignBlock() {
-	std::string block = Light::getInstanceAssignBlock();
-	if (!m_dynamic) {
+        std::string block = Light::getInstanceAssignBlock();
+        if (!m_dynamic) {
         block += ", " + glm::to_string(m_direction) + ")";
-	}
-	return block;
+        }
+        return block;
 }
 
 const std::string& DirectionalLight::getTypeName() {

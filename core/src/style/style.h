@@ -12,6 +12,7 @@ namespace Tangram {
 
 struct DrawRule;
 class Light;
+class LightUniforms;
 class Tile;
 class MapProjection;
 class Material;
@@ -84,7 +85,7 @@ protected:
  */
 class Style {
 
-using StyleUniform = std::pair< std::string, UniformValue >;
+using StyleUniform = std::pair<UniformLocation, UniformValue >;
 
 protected:
 
@@ -131,9 +132,31 @@ protected:
      */
     void setupShaderUniforms(int _textureUnit, Scene& _scene);
 
+    UniformLocation m_uTime{"u_time"};
+    // View uniforms
+    UniformLocation m_uDevicePixelRatio{"u_device_pixel_ratio"};
+    UniformLocation m_uResolution{"u_resolution"};
+    UniformLocation m_uMapPosition{"u_map_position"};
+    UniformLocation m_uNormalMatrix{"u_normalMatrix"};
+    UniformLocation m_uInverseNormalMatrix{"u_inverseNormalMatrix"};
+    UniformLocation m_uMetersPerPixel{"u_meters_per_pixel"};
+    UniformLocation m_uView{"u_view"};
+    UniformLocation m_uProj{"u_proj"};
+    // Tile uniforms
+    UniformLocation m_uModel{"u_model"};
+    UniformLocation m_uTileOrigin{"u_tile_origin"};
+
 private:
 
     std::vector<StyleUniform> m_styleUniforms;
+
+    struct LightHandle {
+        LightHandle(Light* _light, std::unique_ptr<LightUniforms> _uniforms);
+
+        Light *light;
+        std::unique_ptr<LightUniforms> uniforms;
+    };
+    std::vector<LightHandle> m_lights;
 
 public:
 

@@ -5,17 +5,26 @@
 
 namespace Tangram {
 
+
 class DirectionalLight : public Light {
 public:
-    
+
     DirectionalLight(const std::string& _name, bool _dynamic = false);
     virtual ~DirectionalLight();
 
     /*	Set the direction of the light */
     virtual void setDirection(const glm::vec3& _dir);
     
-    virtual void setupProgram(const View& _view, ShaderProgram& _program) override;
-    
+    virtual void setupProgram(const View& _view, LightUniforms& _uniforms) override;
+
+    struct Uniforms : public LightUniforms {
+        using LightUniforms::LightUniforms;
+        UniformLocation direction;
+    };
+
+
+    std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) override;
+
 protected:
 
     /*  GLSL block code with structs and need functions for this light type */

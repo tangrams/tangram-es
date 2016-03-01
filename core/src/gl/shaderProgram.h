@@ -10,6 +10,7 @@
 #include <map>
 
 namespace Tangram {
+
 /*
  * ShaderProgram - utility class representing an OpenGL shader program
  */
@@ -47,7 +48,7 @@ public:
     /*
      * Fetches the location of a shader uniform, caching the result
      */
-    GLint getUniformLocation(const std::string& _uniformName);
+    GLint getUniformLocation(const UniformLocation& _uniformName);
 
     /*
      * Returns true if this object represents a valid OpenGL shader program
@@ -64,27 +65,27 @@ public:
     /*
      * Ensures the program is bound and then sets the named uniform to the given value(s)
      */
-    void setUniformi(const std::string& _name, int _value);
-    void setUniformi(const std::string& _name, int _value0, int _value1);
-    void setUniformi(const std::string& _name, int _value0, int _value1, int _value2);
-    void setUniformi(const std::string& _name, int _value0, int _value1, int _value2, int _value3);
+    void setUniformi(const UniformLocation& _loc, int _value);
+    void setUniformi(const UniformLocation& _loc, int _value0, int _value1);
+    void setUniformi(const UniformLocation& _loc, int _value0, int _value1, int _value2);
+    void setUniformi(const UniformLocation& _loc, int _value0, int _value1, int _value2, int _value3);
 
-    void setUniformf(const std::string& _name, float _value);
-    void setUniformf(const std::string& _name, float _value0, float _value1);
-    void setUniformf(const std::string& _name, float _value0, float _value1, float _value2);
-    void setUniformf(const std::string& _name, float _value0, float _value1, float _value2, float _value3);
+    void setUniformf(const UniformLocation& _loc, float _value);
+    void setUniformf(const UniformLocation& _loc, float _value0, float _value1);
+    void setUniformf(const UniformLocation& _loc, float _value0, float _value1, float _value2);
+    void setUniformf(const UniformLocation& _loc, float _value0, float _value1, float _value2, float _value3);
 
-    void setUniformf(const std::string& _name, const glm::vec2& _value);
-    void setUniformf(const std::string& _name, const glm::vec3& _value);
-    void setUniformf(const std::string& _name, const glm::vec4& _value);
+    void setUniformf(const UniformLocation& _loc, const glm::vec2& _value);
+    void setUniformf(const UniformLocation& _loc, const glm::vec3& _value);
+    void setUniformf(const UniformLocation& _loc, const glm::vec4& _value);
 
     /*
      * Ensures the program is bound and then sets the named uniform to the values
      * beginning at the pointer _value; 4 values are used for a 2x2 matrix, 9 values for a 3x3, etc.
      */
-    void setUniformMatrix2f(const std::string& _name, const glm::mat2& _value, bool transpose = false);
-    void setUniformMatrix3f(const std::string& _name, const glm::mat3& _value, bool transpose = false);
-    void setUniformMatrix4f(const std::string& _name, const glm::mat4& _value, bool transpose = false);
+    void setUniformMatrix2f(const UniformLocation& _loc, const glm::mat2& _value, bool transpose = false);
+    void setUniformMatrix3f(const UniformLocation& _loc, const glm::mat3& _value, bool transpose = false);
+    void setUniformMatrix4f(const UniformLocation& _loc, const glm::mat4& _value, bool transpose = false);
 
     /* Invalidates all managed ShaderPrograms
      *
@@ -133,7 +134,6 @@ private:
     GLuint m_glVertexShader;
 
     fastmap<std::string, ShaderLocation> m_attribMap;
-    fastmap<std::string, ShaderLocation> m_uniformMap;
     fastmap<GLint, UniformValue> m_uniformCache;
 
     std::string m_fragmentShaderSource;

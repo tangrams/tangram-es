@@ -20,10 +20,12 @@ Style::Style(std::string _name, Blending _blendMode, GLenum _drawMode) :
     m_shaderProgram(std::make_unique<ShaderProgram>()),
     m_material(std::make_shared<Material>()),
     m_blend(_blendMode),
-    m_drawMode(_drawMode)
-{}
+    m_drawMode(_drawMode) {}
 
 Style::~Style() {}
+
+Style::LightHandle::LightHandle(Light* _light, std::unique_ptr<LightUniforms> _uniforms)
+    : light(_light), uniforms(std::move(_uniforms)){}
 
 const std::vector<std::string>& Style::builtInStyleNames() {
     static std::vector<std::string> builtInStyleNames{ "points", "lines", "polygons", "text", "debug", "debugtext" };
@@ -50,7 +52,10 @@ void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
 
     if (m_lightingType != LightingType::none) {
         for (auto& light : _lights) {
-            light->injectOnProgram(*m_shaderProgram);
+            auto uniforms = light->injectOnProgram(*m_shaderProgram);
+            if (uniforms) {
+                m_lights.emplace_back(light.get(), std::move(uniforms));
+            }
         }
     }
 }
@@ -103,29 +108,27 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit)
     // TODO cache which uniforms are used by the shader!
 
     // Set time uniforms style's shader programs
-    m_shaderProgram->setUniformf("u_time", Tangram::frameTime());
+    m_shaderProgram->setUniformf(m_uTime, Tangram::frameTime());
 
-    m_shaderProgram->setUniformf("u_device_pixel_ratio", m_pixelScale);
+    m_shaderProgram->setUniformf(m_uDevicePixelRatio, m_pixelScale);
 
     m_material->setupProgram(*m_shaderProgram);
 
-    if (m_lightingType != LightingType::none) {
-        // Set up lights
-        for (const auto& light : _scene.lights()) {
-            light->setupProgram(_view, *m_shaderProgram);
-        }
+    // Set up lights
+    for (const auto& light : m_lights) {
+        light.light->setupProgram(_view, *light.uniforms);
     }
 
     // Set Map Position
-    m_shaderProgram->setUniformf("u_resolution", _view.getWidth(), _view.getHeight());
+    m_shaderProgram->setUniformf(m_uResolution, _view.getWidth(), _view.getHeight());
 
     const auto& mapPos = _view.getPosition();
-    m_shaderProgram->setUniformf("u_map_position", mapPos.x, mapPos.y, _view.getZoom());
-    m_shaderProgram->setUniformMatrix3f("u_normalMatrix", _view.getNormalMatrix());
-    m_shaderProgram->setUniformMatrix3f("u_inverseNormalMatrix", _view.getInverseNormalMatrix());
-    m_shaderProgram->setUniformf("u_meters_per_pixel", 1.0 / _view.pixelsPerMeter());
-    m_shaderProgram->setUniformMatrix4f("u_view", _view.getViewMatrix());
-    m_shaderProgram->setUniformMatrix4f("u_proj", _view.getProjectionMatrix());
+    m_shaderProgram->setUniformf(m_uMapPosition, mapPos.x, mapPos.y, _view.getZoom());
+    m_shaderProgram->setUniformMatrix3f(m_uNormalMatrix, _view.getNormalMatrix());
+    m_shaderProgram->setUniformMatrix3f(m_uInverseNormalMatrix, _view.getInverseNormalMatrix());
+    m_shaderProgram->setUniformf(m_uMetersPerPixel, 1.0 / _view.pixelsPerMeter());
+    m_shaderProgram->setUniformMatrix4f(m_uView, _view.getViewMatrix());
+    m_shaderProgram->setUniformMatrix4f(m_uProj, _view.getProjectionMatrix());
 
     setupShaderUniforms(_textureUnit, _scene);
 
@@ -174,8 +177,8 @@ void Style::draw(const Tile& _tile) {
     if (styleMesh) {
         float zoomAndProxy = _tile.getID().z * (_tile.isProxy() ? -1 : 1);
 
-        m_shaderProgram->setUniformMatrix4f("u_model", _tile.getModelMatrix());
-        m_shaderProgram->setUniformf("u_tile_origin",
+        m_shaderProgram->setUniformMatrix4f(m_uModel, _tile.getModelMatrix());
+        m_shaderProgram->setUniformf(m_uTileOrigin,
                                      _tile.getOrigin().x,
                                      _tile.getOrigin().y,
                                      zoomAndProxy);
