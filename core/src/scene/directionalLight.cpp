@@ -26,7 +26,7 @@ void DirectionalLight::setDirection(const glm::vec3 &_dir) {
 }
 
 std::unique_ptr<LightUniforms> DirectionalLight::injectOnProgram(ShaderProgram& _shader) {
-    Light::injectOnProgram(_shader);
+    injectSourceBlocks(_shader);
 
     if (!m_dynamic) { return nullptr; }
 

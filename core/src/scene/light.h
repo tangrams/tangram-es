@@ -90,6 +90,11 @@ public:
 
 protected:
 
+    /*
+     * Inject the needed lines of GLSL code on the shader to make this light work
+     */
+    void injectSourceBlocks(ShaderProgram& _shader);
+
     /*  Get the uniform name of the DYNAMICAL light */
     virtual std::string getUniformName();
 

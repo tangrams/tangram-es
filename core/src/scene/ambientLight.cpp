@@ -20,7 +20,7 @@ AmbientLight::~AmbientLight() {
 }
 
 std::unique_ptr<LightUniforms> AmbientLight::injectOnProgram(ShaderProgram& _shader) {
-    Light::injectOnProgram(_shader);
+    injectSourceBlocks(_shader);
 
     if (!m_dynamic) { return nullptr; }
 
