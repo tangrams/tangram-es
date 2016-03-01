@@ -75,6 +75,7 @@ struct PolyLineBuilder {
     PolyLineVertexFn addVertex;
     SizeHintFn sizeHint;
     size_t numVertices = 0;
+    float miterLimit = 3.f;
     CapTypes cap;
     JoinTypes join;
     bool keepTileEdges;

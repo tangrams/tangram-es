@@ -305,7 +305,10 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
         // Compute "normal" for miter joint
         miterVec = normPrev + normNext;
         float scale = sqrtf(2.0f / (1.0f + glm::dot(normPrev, normNext)) / glm::dot(miterVec, miterVec) );
-        miterVec *= fminf(scale, 5.0f); // clamps our miter vector to an arbitrary length
+        miterVec *= scale;
+        if (glm::length(miterVec) > _ctx.miterLimit) {
+            trianglesOnJoin = 1;
+        }
 
         float v = i / (float)lineSize;
 
