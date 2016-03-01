@@ -1,8 +1,19 @@
 #include "util/yamlHelper.h"
 
 #include "platform.h"
+#include "csscolorparser.hpp"
 
 namespace Tangram {
+
+glm::vec4 getColorAsVec4(const Node& node) {
+    if (node.IsSequence()) {
+        return parseVec<glm::vec4>(node);
+    } else if (node.IsScalar()) {
+        auto c = CSSColorParser::parse(node.Scalar());
+        return glm::vec4(c.r / 255.f, c.g / 255.f, c.b / 255.f, c.a);
+    }
+    return glm::vec4();
+}
 
 std::string parseSequence(const Node& node) {
     std::stringstream sstream;

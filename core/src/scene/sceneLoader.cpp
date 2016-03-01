@@ -24,6 +24,7 @@
 #include "util/yamlHelper.h"
 #include "view/view.h"
 
+#include "csscolorparser.hpp"
 #include "yaml-cpp/yaml.h"
 
 #include <algorithm>
@@ -247,8 +248,7 @@ glm::vec4 parseMaterialVec(const Node& prop) {
         if (getDouble(prop, value)) {
             return glm::vec4(value, value, value, 1.0);
         } else {
-            LOGNode("Invalid 'material'", prop);
-            // TODO: css color parser and hex_values
+            return getColorAsVec4(prop);
         }
         break;
     }
@@ -655,13 +655,13 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
         }
     }
     if (Node ambient = light["ambient"]) {
-        sceneLight->setAmbientColor(parseVec<glm::vec4>(ambient));
+        sceneLight->setAmbientColor(getColorAsVec4(ambient));
     }
     if (Node diffuse = light["diffuse"]) {
-        sceneLight->setDiffuseColor(parseVec<glm::vec4>(diffuse));
+        sceneLight->setDiffuseColor(getColorAsVec4(diffuse));
     }
     if (Node specular = light["specular"]) {
-        sceneLight->setSpecularColor(parseVec<glm::vec4>(specular));
+        sceneLight->setSpecularColor(getColorAsVec4(specular));
     }
 
     scene.lights().push_back(std::move(sceneLight));
