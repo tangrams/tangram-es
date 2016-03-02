@@ -64,6 +64,9 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
         auto& merged_ab = ruleSet.matchedRules()[0];
 
         for (size_t i = 0; i < StyleParamKeySize; i++) {
+            if (!merged_ab.active[i]) {
+                continue;
+            }
             auto* param = merged_ab.params[i].param;
             if (!param) {
                 logMsg("param : none %d\n", i);
@@ -80,6 +83,9 @@ TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
         // printf("rule_c:\n %s", rule_c.toString().c_str());
         // printf("merged_ac:\n %s", merged_ac.toString().c_str());
         for (size_t i = 0; i < StyleParamKeySize; i++) {
+            if (!merged_ab.active[i]) {
+                continue;
+            }
             auto* param = merged_ab.params[i].param;
             if (!param) {
                 logMsg("param : none %d\n", i);
