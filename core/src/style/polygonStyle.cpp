@@ -116,6 +116,8 @@ public:
 
     void parseRule(const DrawRule& _rule, const Properties& _props);
 
+    PolygonBuilder& polygonBuilder() { return m_builder; }
+
 private:
 
     const PolygonStyle& m_style;
@@ -186,9 +188,13 @@ void PolygonStyleBuilder<V>::addPolygon(const Polygon& _polygon, const Propertie
 
 std::unique_ptr<StyleBuilder> PolygonStyle::createBuilder() const {
     if (m_texCoordsGeneration) {
-        return std::make_unique<PolygonStyleBuilder<PolygonVertex>>(*this);
+        auto builder = std::make_unique<PolygonStyleBuilder<PolygonVertex>>(*this);
+        builder->polygonBuilder().useTexCoords = true;
+        return std::move(builder);
     } else {
-        return std::make_unique<PolygonStyleBuilder<PolygonVertexNoUVs>>(*this);
+        auto builder = std::make_unique<PolygonStyleBuilder<PolygonVertexNoUVs>>(*this);
+        builder->polygonBuilder().useTexCoords = false;
+        return std::move(builder);
     }
 }
 
