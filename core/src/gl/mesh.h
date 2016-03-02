@@ -28,7 +28,7 @@ public:
      * _vertexLayout to be drawn using the OpenGL primitive type _drawMode
      */
     MeshBase(std::shared_ptr<VertexLayout> _vertexlayout, GLenum _drawMode = GL_TRIANGLES,
-             GLenum _hint = GL_STATIC_DRAW, bool _keepMemoryData = false);
+             GLenum _hint = GL_STATIC_DRAW);
 
     MeshBase();
 
@@ -134,8 +134,8 @@ class Mesh : public StyledMesh, protected MeshBase {
 public:
 
     Mesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
-         GLenum _hint = GL_STATIC_DRAW, bool _keepMemoryData = false)
-        : MeshBase(_vertexLayout, _drawMode, _hint, _keepMemoryData) {};
+         GLenum _hint = GL_STATIC_DRAW)
+        : MeshBase(_vertexLayout, _drawMode, _hint) {};
 
     virtual ~Mesh() {}
 

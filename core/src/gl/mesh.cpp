@@ -10,7 +10,6 @@ namespace Tangram {
 MeshBase::MeshBase() {
     m_drawMode = GL_TRIANGLES;
     m_hint = GL_STATIC_DRAW;
-    m_keepMemoryData = false;
     m_glVertexBuffer = 0;
     m_glIndexBuffer = 0;
     m_nVertices = 0;
@@ -25,11 +24,11 @@ MeshBase::MeshBase() {
     m_generation = -1;
 }
 
-MeshBase::MeshBase(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
-                   GLenum _hint, bool _keepMemoryData) : MeshBase() {
+MeshBase::MeshBase(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, GLenum _hint)
+    : MeshBase()
+{
     m_vertexLayout = _vertexLayout;
     m_hint = _hint;
-    m_keepMemoryData = _keepMemoryData;
 
     setDrawMode(_drawMode);
 }
@@ -51,8 +50,13 @@ MeshBase::~MeshBase() {
         glDeleteBuffers(1, &m_glIndexBuffer);
     }
 
-    delete[] m_glVertexData;
-    delete[] m_glIndexData;
+    if (m_glVertexData) {
+        delete[] m_glVertexData;
+    }
+
+    if (m_glIndexData) {
+        delete[] m_glIndexData;
+    }
 }
 
 void MeshBase::setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout) {
@@ -124,11 +128,8 @@ void MeshBase::upload() {
     RenderState::vertexBuffer(m_glVertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, m_hint);
 
-    // Clear vertex data that is not supposed to be updated.
-    if (m_hint == GL_STATIC_DRAW && !m_keepMemoryData) {
-        delete[] m_glVertexData;
-        m_glVertexData = nullptr;
-    }
+    delete[] m_glVertexData;
+    m_glVertexData = nullptr;
 
     if (m_glIndexData) {
 
@@ -141,10 +142,8 @@ void MeshBase::upload() {
 
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_nIndices * sizeof(GLushort), m_glIndexData, m_hint);
 
-        if (!m_keepMemoryData) {
-            delete[] m_glIndexData;
-            m_glIndexData = nullptr;
-        }
+        delete[] m_glIndexData;
+        m_glIndexData = nullptr;
     }
 
     m_generation = RenderState::generation();
