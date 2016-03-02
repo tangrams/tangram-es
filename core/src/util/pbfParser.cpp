@@ -42,9 +42,10 @@ void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn)
 
     while(_geomIn.getData() < _geomIn.getEnd()) {
 
-        uint32_t cmdData = static_cast<uint32_t>(_geomIn.varint());
-        pbfGeomCmd cmd = static_cast<pbfGeomCmd>(cmdData & 0x7); // first 3 bits of the cmdData
-        uint32_t cmdRepeat = cmdData >> 3; // last 5 bits
+        uint32_t cmdData = static_cast<uint32_t>(_geomIn.varint32());
+        // First 3 bits of the cmdData, last 5 bits encode repeats
+        pbfGeomCmd cmd = static_cast<pbfGeomCmd>(cmdData & 0x7);
+        uint32_t cmdRepeat = cmdData >> 3;
 
         if (cmd == pbfGeomCmd::lineTo ||
             cmd == pbfGeomCmd::moveTo) {
@@ -56,8 +57,8 @@ void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn)
             }
 
             for (uint32_t i = 0; i < cmdRepeat; ++i) {
-                x += _geomIn.svarint();
-                y += _geomIn.svarint();
+                x += _geomIn.svarint32();
+                y += _geomIn.svarint32();
 
                 if (lastX != x || lastY != y || nPoints == 0) {
                     // Bring the points in 0 to 1 space
@@ -201,7 +202,7 @@ bool PbfParser::extractTags(ParserContext& _ctx, protobuf::message& _tagsMsg) {
     size_t numTags = 0;
 
     while(_tagsMsg) {
-        auto tagKey = _tagsMsg.varint();
+        uint32_t tagKey = _tagsMsg.varint32();
 
         if(_ctx.keys.size() <= tagKey) {
             LOGE("accessing out of bound key");
@@ -213,7 +214,7 @@ bool PbfParser::extractTags(ParserContext& _ctx, protobuf::message& _tagsMsg) {
             return false;
         }
 
-        uint64_t valueKey = _tagsMsg.varint();
+        uint32_t valueKey = _tagsMsg.varint32();
 
         if(_ctx.values.size() <= valueKey ) {
             LOGE("accessing out of bound values");
