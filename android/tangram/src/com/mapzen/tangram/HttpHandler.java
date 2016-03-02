@@ -1,24 +1,26 @@
 package com.mapzen.tangram;
 
-import com.squareup.okhttp.Cache;
-import com.squareup.okhttp.Callback;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
+import okhttp3.Cache;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class HttpHandler {
 
     private OkHttpClient okClient;
+    private OkHttpClient.Builder okClientBuilder;
     private Request.Builder okRequestBuilder;
 
     public HttpHandler() {
         okRequestBuilder = new Request.Builder();
-        okClient = new OkHttpClient();
-        okClient.setConnectTimeout(10, TimeUnit.SECONDS);
-        okClient.setReadTimeout(30, TimeUnit.SECONDS);
+        okClientBuilder = new OkHttpClient().newBuilder()
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS);
+        okClient = okClientBuilder.build();
     }
 
     /**
@@ -28,7 +30,7 @@ public class HttpHandler {
      * @return true if request was successfully started
      */
     public boolean onRequest(String url, Callback cb) {
-        Request request = okRequestBuilder.tag(url).url(url).build();
+        Request request = okRequestBuilder.url(url).build();
         okClient.newCall(request).enqueue(cb);
         return true;
     }
@@ -38,7 +40,16 @@ public class HttpHandler {
      * @param url URL of the request to be cancelled
      */
     public void onCancel(String url) {
-        okClient.cancel(url);
+        for (Call call : okClient.dispatcher().queuedCalls()) {
+            if (call.request().url().toString().equals(url)) {
+                call.cancel();
+            }
+        }
+        for (Call call : okClient.dispatcher().runningCalls()) {
+            if (call.request().url().toString().equals(url)) {
+                call.cancel();
+            }
+        }
     }
 
     /**
@@ -49,8 +60,7 @@ public class HttpHandler {
      */
     public boolean setCache(File directory, long maxSize) {
         Cache okTileCache = new Cache(directory, maxSize);
-        okClient.setCache(okTileCache);
-
+        okClient = okClientBuilder.cache(okTileCache).build();
         return true;
     }
 
