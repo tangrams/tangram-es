@@ -25,7 +25,6 @@ namespace Tangram {
 struct PolylineVertex {
     PolylineVertex(glm::vec2 position, glm::vec2 extrude, glm::vec2 uv,
                    glm::i16vec2 width, glm::i16vec2 height, GLuint abgr)
-
         : pos(glm::i16vec2{ glm::round(position * position_scale)}, height),
           texcoord(uv * texture_scale),
           extrude(glm::i16vec2{extrude * extrusion_scale}, width),
@@ -43,19 +42,49 @@ struct PolylineVertex {
     GLuint abgr;
 };
 
+struct PolylineVertexNoUVs {
+    PolylineVertexNoUVs(glm::vec2 position, glm::vec2 extrude, glm::vec2 uv,
+                   glm::i16vec2 width, glm::i16vec2 height, GLuint abgr)
+        : pos(glm::i16vec2{ glm::round(position * position_scale)}, height),
+          extrude(glm::i16vec2{extrude * extrusion_scale}, width),
+          abgr(abgr) {}
+
+    PolylineVertexNoUVs(PolylineVertexNoUVs v, short order, glm::i16vec2 width, GLuint abgr)
+        : pos(glm::i16vec4{glm::i16vec3{v.pos}, order}),
+          extrude(glm::i16vec4{ v.extrude.x, v.extrude.y, width }),
+          abgr(abgr) {}
+
+    glm::i16vec4 pos;
+    glm::i16vec4 extrude;
+    GLuint abgr;
+};
+
 PolylineStyle::PolylineStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
-    : Style(_name, _blendMode, _drawMode) {
+    : Style(_name, _blendMode, _drawMode)
+{
+    m_defines = "";
 }
 
 void PolylineStyle::constructVertexLayout() {
 
     // TODO: Ideally this would be in the same location as the struct that it basically describes
-    m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-        {"a_position", 4, GL_SHORT, false, 0},
-        {"a_texcoord", 2, GL_UNSIGNED_SHORT, true, 0},
-        {"a_extrude", 4, GL_SHORT, false, 0},
-        {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
-    }));
+    if (m_texCoordsGeneration) {
+        m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
+            {"a_position", 4, GL_SHORT, false, 0},
+            {"a_texcoord", 2, GL_UNSIGNED_SHORT, true, 0},
+            {"a_extrude", 4, GL_SHORT, false, 0},
+            {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+        }));
+
+        m_defines += "#define TANGRAM_USE_TEX_COORDS\n";
+    } else {
+        m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
+            {"a_position", 4, GL_SHORT, false, 0},
+            {"a_extrude", 4, GL_SHORT, false, 0},
+            {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+        }));
+    }
+
 }
 
 void PolylineStyle::constructShaderProgram() {
@@ -64,9 +93,14 @@ void PolylineStyle::constructShaderProgram() {
     std::string fragShaderSrcStr = stringFromFile("shaders/polyline.fs", PathType::internal);
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+
+    m_shaderProgram->addSourceBlock("defines", m_defines);
 }
 
+template <class V>
 struct PolylineStyleBuilder : public StyleBuilder {
+
+public:
 
     struct Parameters {
 
@@ -89,15 +123,6 @@ struct PolylineStyleBuilder : public StyleBuilder {
         bool outlineOn = false;
     };
 
-    const PolylineStyle& m_style;
-    PolyLineBuilder m_builder;
-
-    std::vector<MeshData<PolylineVertex>> m_meshData;
-
-    float m_tileUnitsPerMeter;
-    float m_tileSize;
-    int m_zoom;
-
     void setup(const Tile& _tile) override;
 
     const Style& style() const override { return m_style; }
@@ -112,29 +137,42 @@ struct PolylineStyleBuilder : public StyleBuilder {
 
     void addMesh(const Line& _line, const Parameters& _params);
 
-    void buildLine(const Line& _line, const Parameters::Attributes& _att,
-                   MeshData<PolylineVertex>& _mesh);
+    void buildLine(const Line& _line, const typename Parameters::Attributes& _att,
+                   MeshData<V>& _mesh);
 
     Parameters parseRule(const DrawRule& _rule, const Properties& _props);
 
     bool evalWidth(const StyleParam& _styleParam, float& width, float& slope);
 
+    PolyLineBuilder& polylineBuilder() { return m_builder; }
+
+private:
+
+    const PolylineStyle& m_style;
+    PolyLineBuilder m_builder;
+
+    std::vector<MeshData<V>> m_meshData;
+
+    float m_tileUnitsPerMeter;
+    float m_tileSize;
+    int m_zoom;
 };
 
-void PolylineStyleBuilder::setup(const Tile& _tile) {
+template <class V>
+void PolylineStyleBuilder<V>::setup(const Tile& _tile) {
     m_tileUnitsPerMeter = _tile.getInverseScale();
     m_zoom = _tile.getID().z;
     m_tileSize = _tile.getProjection()->TileSize();
 }
 
-std::unique_ptr<StyledMesh> PolylineStyleBuilder::build() {
+template <class V>
+std::unique_ptr<StyledMesh> PolylineStyleBuilder<V>::build() {
     if (m_meshData[0].vertices.empty() &&
         m_meshData[1].vertices.empty()) {
         return nullptr;
     }
 
-    auto mesh = std::make_unique<Mesh<PolylineVertex>>(m_style.vertexLayout(),
-                                                       m_style.drawMode());
+    auto mesh = std::make_unique<Mesh<V>>(m_style.vertexLayout(), m_style.drawMode());
 
     bool painterMode = (m_style.blendMode() == Blending::overlay ||
                         m_style.blendMode() == Blending::inlay);
@@ -152,7 +190,8 @@ std::unique_ptr<StyledMesh> PolylineStyleBuilder::build() {
     return std::move(mesh);
 }
 
-auto PolylineStyleBuilder::parseRule(const DrawRule& _rule, const Properties& _props) -> Parameters {
+template <class V>
+auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties& _props) -> Parameters {
     Parameters p;
 
     uint32_t cap = 0, join = 0;
@@ -241,7 +280,8 @@ double widthMeterToPixel(int _zoom, double _tileSize, double _width) {
     return _width * meterRes;
 }
 
-bool PolylineStyleBuilder::evalWidth(const StyleParam& _styleParam, float& width, float& slope) {
+template <class V>
+bool PolylineStyleBuilder<V>::evalWidth(const StyleParam& _styleParam, float& width, float& slope) {
 
     // NB: 0.5 because 'width' will be extruded in both directions
     float tileRes = 0.5 / m_tileSize;
@@ -277,7 +317,8 @@ bool PolylineStyleBuilder::evalWidth(const StyleParam& _styleParam, float& width
     return false;
 }
 
-void PolylineStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
+template <class V>
+void PolylineStyleBuilder<V>::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
     if (_feat.geometryType == GeometryType::points) { return; }
     if (!checkRule(_rule)) { return; }
@@ -302,8 +343,9 @@ void PolylineStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rul
     }
 }
 
-void PolylineStyleBuilder::buildLine(const Line& _line, const Parameters::Attributes& _att,
-                        MeshData<PolylineVertex>& _mesh) {
+template <class V>
+void PolylineStyleBuilder<V>::buildLine(const Line& _line, const typename Parameters::Attributes& _att,
+                        MeshData<V>& _mesh) {
 
     m_builder.addVertex = [&_mesh, &_att](const glm::vec3& coord,
                                    const glm::vec2& normal,
@@ -324,7 +366,8 @@ void PolylineStyleBuilder::buildLine(const Line& _line, const Parameters::Attrib
     m_builder.clear();
 }
 
-void PolylineStyleBuilder::addMesh(const Line& _line, const Parameters& _params) {
+template <class V>
+void PolylineStyleBuilder<V>::addMesh(const Line& _line, const Parameters& _params) {
 
     m_builder.cap = _params.fill.cap;
     m_builder.join = _params.fill.join;
@@ -372,7 +415,15 @@ void PolylineStyleBuilder::addMesh(const Line& _line, const Parameters& _params)
 }
 
 std::unique_ptr<StyleBuilder> PolylineStyle::createBuilder() const {
-    return std::make_unique<PolylineStyleBuilder>(*this);
+    if (m_texCoordsGeneration) {
+        auto builder = std::make_unique<PolylineStyleBuilder<PolylineVertex>>(*this);
+        //builder->polylineBuilder().useTexCoords = true;
+        return std::move(builder);
+    } else {
+        auto builder = std::make_unique<PolylineStyleBuilder<PolylineVertexNoUVs>>(*this);
+        //builder->polylineBuilder().useTexCoords = false;
+        return std::move(builder);
+    }
 }
 
 }

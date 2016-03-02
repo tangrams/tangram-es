@@ -17,8 +17,12 @@ public:
 
     PolylineStyle(std::string _name, Blending _blendMode = Blending::none, GLenum _drawMode = GL_TRIANGLES);
 
-    virtual ~PolylineStyle() {
-    }
+    virtual ~PolylineStyle() {}
+
+private:
+
+    std::string m_defines;
+
 };
 
 }
