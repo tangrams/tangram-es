@@ -116,7 +116,7 @@ protected:
     bool m_animated = false;
 
     /* Whether the style should generate texture coordinates */
-    bool m_texCoordsGeneration = true;
+    bool m_texCoordsGeneration = false;
 
     /* Create <VertexLayout> corresponding to this style; subclasses must
      * implement this and call it on construction
