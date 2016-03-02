@@ -417,11 +417,11 @@ void PolylineStyleBuilder<V>::addMesh(const Line& _line, const Parameters& _para
 std::unique_ptr<StyleBuilder> PolylineStyle::createBuilder() const {
     if (m_texCoordsGeneration) {
         auto builder = std::make_unique<PolylineStyleBuilder<PolylineVertex>>(*this);
-        //builder->polylineBuilder().useTexCoords = true;
+        builder->polylineBuilder().useTexCoords = true;
         return std::move(builder);
     } else {
         auto builder = std::make_unique<PolylineStyleBuilder<PolylineVertexNoUVs>>(*this);
-        //builder->polylineBuilder().useTexCoords = false;
+        builder->polylineBuilder().useTexCoords = false;
         return std::move(builder);
     }
 }
