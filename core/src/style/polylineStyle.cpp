@@ -75,7 +75,7 @@ struct PolylineStyleBuilder : public StyleBuilder {
             glm::i16vec2 height;
             glm::i16vec2 width;
             uint32_t color;
-
+            float miterLimit = 3.0;
             CapTypes cap = CapTypes::butt;
             JoinTypes join = JoinTypes::miter;
 
@@ -175,6 +175,7 @@ auto PolylineStyleBuilder::parseRule(const DrawRule& _rule, const Properties& _p
     _rule.get(StyleParamKey::join, join);
     _rule.get(StyleParamKey::order, fill.order);
     _rule.get(StyleParamKey::tile_edges, p.keepTileEdges);
+    _rule.get(StyleParamKey::miter_limit, p.fill.miterLimit);
 
     p.fill.cap = static_cast<CapTypes>(cap);
     p.fill.join = static_cast<JoinTypes>(join);
@@ -190,13 +191,15 @@ auto PolylineStyleBuilder::parseRule(const DrawRule& _rule, const Properties& _p
     stroke.order = fill.order;
     p.stroke.cap = p.fill.cap;
     p.stroke.join = p.fill.join;
+    p.stroke.miterLimit = p.fill.miterLimit;
 
     auto& strokeWidth = _rule.findParameter(StyleParamKey::outline_width);
     if (strokeWidth |
         _rule.get(StyleParamKey::outline_color, p.stroke.color) |
         _rule.get(StyleParamKey::outline_order, stroke.order) |
         _rule.get(StyleParamKey::outline_cap, cap) |
-        _rule.get(StyleParamKey::outline_join, join)) {
+        _rule.get(StyleParamKey::outline_join, join) |
+        _rule.get(StyleParamKey::outline_miter_limit, p.stroke.miterLimit)) {
 
         p.stroke.cap = static_cast<CapTypes>(cap);
         p.stroke.join = static_cast<JoinTypes>(join);
@@ -325,6 +328,7 @@ void PolylineStyleBuilder::addMesh(const Line& _line, const Parameters& _params)
 
     m_builder.cap = _params.fill.cap;
     m_builder.join = _params.fill.join;
+    m_builder.miterLimit = _params.fill.miterLimit;
     m_builder.keepTileEdges = _params.keepTileEdges;
 
     buildLine(_line, _params.fill, m_meshData[0]);
@@ -332,10 +336,12 @@ void PolylineStyleBuilder::addMesh(const Line& _line, const Parameters& _params)
     if (!_params.outlineOn) { return; }
 
     if (_params.stroke.cap != _params.fill.cap ||
-        _params.stroke.join != _params.fill.join) {
+        _params.stroke.join != _params.fill.join ||
+        _params.stroke.miterLimit != _params.fill.miterLimit) {
         // need to re-triangulate with different cap and/or join
         m_builder.cap = _params.stroke.cap;
         m_builder.join = _params.stroke.join;
+        m_builder.miterLimit = _params.stroke.miterLimit;
 
         buildLine(_line, _params.stroke, m_meshData[1]);
 
