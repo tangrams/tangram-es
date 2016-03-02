@@ -48,8 +48,16 @@ void main(void) {
             float c2 = circle(uv, vec2(0.0), circleRadiusOut);
             color = vec4(vec3(c1) * v_color.rgb, c2 * v_alpha * v_color.a);
         #else
+            // premultiplied texture color
             vec4 texColor = texture2D(u_tex, v_texcoords);
-            color = vec4(texColor.rgb * v_color.rgb, v_alpha * texColor.a * v_color.a);
+            //color = vec4(texColor.rgb * v_color.rgb, texColor.a * v_color.a);
+
+            // Correct? v_color as multipler - to say how much of each texture channel is used?
+            color = texColor * v_color;
+            color *= v_alpha;
+
+            // unpremultiply for blending(src_alpha,one_minus_src_alpha)
+            color.rgb /= color.a;
         #endif
 
         #pragma tangram: color
