@@ -456,10 +456,7 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
     }
 
     if (Node texcoordsNode = styleNode["texcoords"]) {
-        LOGW("'texcoords' style parameter is currently ignored");
-
-        if (texcoordsNode.as<bool>()) { } // TODO
-        else { } // TODO
+        style.setTexCoordsGeneration(texcoordsNode.as<bool>());
     }
 
     if (Node shadersNode = styleNode["shaders"]) {

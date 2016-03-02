@@ -115,6 +115,9 @@ protected:
     /* animated property */
     bool m_animated = false;
 
+    /* Whether the style should generate texture coordinates */
+    bool m_texCoordsGeneration = true;
+
     /* Create <VertexLayout> corresponding to this style; subclasses must
      * implement this and call it on construction
      */
@@ -222,6 +225,10 @@ public:
     void setMaterial(const std::shared_ptr<Material>& _material);
 
     void setPixelScale(float _pixelScale) { m_pixelScale = _pixelScale; }
+
+    void setTexCoordsGeneration(bool _texCoordsGeneration) { m_texCoordsGeneration = _texCoordsGeneration; }
+
+    bool genTexCoords() const { return m_texCoordsGeneration; }
 
     void setID(uint32_t _id) { m_id = _id; }
 

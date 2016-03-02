@@ -24,7 +24,10 @@ varying vec4 v_world_position;
 varying vec4 v_position;
 varying vec4 v_color;
 varying vec3 v_normal;
-varying vec2 v_texcoord;
+
+#ifdef TANGRAM_USE_TEX_COORDS
+    varying vec2 v_texcoord;
+#endif
 
 #ifdef TANGRAM_LIGHTING_VERTEX
     varying vec4 v_lighting;

@@ -24,8 +24,7 @@ namespace Tangram {
 
 struct PolygonVertex {
 
-    PolygonVertex(glm::vec3 position, uint32_t order,
-                  glm::vec3 normal, glm::vec2 uv, GLuint abgr)
+    PolygonVertex(glm::vec3 position, uint32_t order, glm::vec3 normal, glm::vec2 uv, GLuint abgr)
         : pos(glm::i16vec4{ glm::round(position * position_scale), order }),
           norm(normal * normal_scale),
           texcoord(uv * texture_scale),
@@ -38,17 +37,43 @@ struct PolygonVertex {
     GLuint abgr;
 };
 
+struct PolygonVertexNoUVs {
+
+    PolygonVertexNoUVs(glm::vec3 position, uint32_t order, glm::vec3 normal, glm::vec2 uv, GLuint abgr)
+        : pos(glm::i16vec4{ glm::round(position * position_scale), order }),
+          norm(normal * normal_scale),
+          abgr(abgr) {}
+
+    glm::i16vec4 pos; // pos.w contains layer (params.order)
+    glm::i8vec3 norm;
+    uint8_t padding = 0;
+    GLuint abgr;
+};
+
 PolygonStyle::PolygonStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
-    : Style(_name, _blendMode, _drawMode) {}
+    : Style(_name, _blendMode, _drawMode)
+{
+    m_defines = "";
+}
 
 void PolygonStyle::constructVertexLayout() {
 
-    m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-        {"a_position", 4, GL_SHORT, false, 0},
-        {"a_normal", 4, GL_BYTE, true, 0}, // The 4th byte is for padding
-        {"a_texcoord", 2, GL_UNSIGNED_SHORT, true, 0},
-        {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
-    }));
+    if (m_texCoordsGeneration) {
+        m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
+            {"a_position", 4, GL_SHORT, false, 0},
+            {"a_normal", 4, GL_BYTE, true, 0}, // The 4th byte is for padding
+            {"a_texcoord", 2, GL_UNSIGNED_SHORT, true, 0},
+            {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+        }));
+
+        m_defines += "#define TANGRAM_USE_TEX_COORDS\n";
+    } else {
+        m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
+            {"a_position", 4, GL_SHORT, false, 0},
+            {"a_normal", 4, GL_BYTE, true, 0},
+            {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+        }));
+    }
 
 }
 
@@ -58,16 +83,14 @@ void PolygonStyle::constructShaderProgram() {
     std::string fragShaderSrcStr = stringFromFile("shaders/polygon.fs", PathType::internal);
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+
+    m_shaderProgram->addSourceBlock("defines", m_defines);
 }
 
+template <class V>
 struct PolygonStyleBuilder : public StyleBuilder {
 
-    const PolygonStyle& m_style;
-
-    MeshData<PolygonVertex> m_meshData;
-
-    float m_tileUnitsPerMeter;
-    int m_zoom;
+public:
 
     struct {
         uint32_t order = 0;
@@ -93,13 +116,24 @@ struct PolygonStyleBuilder : public StyleBuilder {
 
     void parseRule(const DrawRule& _rule, const Properties& _props);
 
+private:
+
+    const PolygonStyle& m_style;
+
     PolygonBuilder m_builder;
+
+    MeshData<V> m_meshData;
+
+    float m_tileUnitsPerMeter;
+    int m_zoom;
+
 };
 
-std::unique_ptr<StyledMesh> PolygonStyleBuilder::build() {
+template <class V>
+std::unique_ptr<StyledMesh> PolygonStyleBuilder<V>::build() {
     if (m_meshData.vertices.empty()) { return nullptr; }
 
-    auto mesh = std::make_unique<Mesh<PolygonVertex>>(m_style.vertexLayout(),
+    auto mesh = std::make_unique<Mesh<V>>(m_style.vertexLayout(),
                                                       m_style.drawMode());
     mesh->compile(m_meshData);
     m_meshData.clear();
@@ -107,8 +141,8 @@ std::unique_ptr<StyledMesh> PolygonStyleBuilder::build() {
     return std::move(mesh);
 }
 
-
-void PolygonStyleBuilder::parseRule(const DrawRule& _rule, const Properties& _props) {
+template <class V>
+void PolygonStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties& _props) {
     _rule.get(StyleParamKey::color, m_params.color);
     _rule.get(StyleParamKey::extrude, m_params.extrude);
     _rule.get(StyleParamKey::order, m_params.order);
@@ -123,15 +157,15 @@ void PolygonStyleBuilder::parseRule(const DrawRule& _rule, const Properties& _pr
 
 }
 
-void PolygonStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
+template <class V>
+void PolygonStyleBuilder<V>::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
 
     parseRule(_rule, _props);
 
     m_builder.addVertex = [this](const glm::vec3& coord,
                                  const glm::vec3& normal,
                                  const glm::vec2& uv) {
-        m_meshData.vertices.push_back({ coord, m_params.order,
-                                        normal, uv, m_params.color });
+        m_meshData.vertices.push_back({ coord, m_params.order, normal, uv, m_params.color });
     };
 
     if (m_params.minHeight != m_params.height) {
@@ -151,7 +185,11 @@ void PolygonStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& 
 }
 
 std::unique_ptr<StyleBuilder> PolygonStyle::createBuilder() const {
-    return std::make_unique<PolygonStyleBuilder>(*this);
+    if (m_texCoordsGeneration) {
+        return std::make_unique<PolygonStyleBuilder<PolygonVertex>>(*this);
+    } else {
+        return std::make_unique<PolygonStyleBuilder<PolygonVertexNoUVs>>(*this);
+    }
 }
 
 }

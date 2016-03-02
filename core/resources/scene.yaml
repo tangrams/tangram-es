@@ -50,9 +50,10 @@ styles:
     heightglow:
         base: polygons
         lighting: vertex
-        shaders:
-            blocks:
-                color: "color.rgb += vec3(position.z / 800.);"
+        #shaders:
+        #    blocks:
+        #        color: "color.rgb += vec3(worldPosition().z / 800.);"
+        texcoords: false
     heightglowline:
         base: lines
         mix: heightglow
