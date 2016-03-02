@@ -38,6 +38,21 @@ Texture::Texture(const std::string& _file, TextureOptions _options, bool _genera
 
     pixels = stbi_load_from_memory(data, size, &width, &height, &comp, STBI_rgb_alpha);
 
+    if (comp == STBI_rgb_alpha) {
+        // Premultiply
+        auto *p = pixels;
+        for (size_t i = 0, end = width*height; i < end; i++, p+=4) {
+            int32_t alpha = p[3];
+            if (alpha) {
+                p[0] = p[0] * alpha / 255;
+                p[1] = p[1] * alpha / 255;
+                p[2] = p[2] * alpha / 255;
+            } else {
+                p[0] = p[1] = p[2] = 0;
+            }
+        }
+    }
+
     resize(width, height);
     setData(reinterpret_cast<GLuint*>(pixels), width * height);
 
