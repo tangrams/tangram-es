@@ -22,26 +22,6 @@ constexpr float order_scale = 2.0f;
 
 namespace Tangram {
 
-struct PolylineVertex {
-    PolylineVertex(glm::vec2 position, glm::vec2 extrude, glm::vec2 uv,
-                   glm::i16vec2 width, glm::i16vec2 height, GLuint abgr)
-        : pos(glm::i16vec2{ glm::round(position * position_scale)}, height),
-          texcoord(uv * texture_scale),
-          extrude(glm::i16vec2{extrude * extrusion_scale}, width),
-          abgr(abgr) {}
-
-    PolylineVertex(PolylineVertex v, short order, glm::i16vec2 width, GLuint abgr)
-        : pos(glm::i16vec4{glm::i16vec3{v.pos}, order}),
-          texcoord(v.texcoord),
-          extrude(glm::i16vec4{ v.extrude.x, v.extrude.y, width }),
-          abgr(abgr) {}
-
-    glm::i16vec4 pos;
-    glm::u16vec2 texcoord;
-    glm::i16vec4 extrude;
-    GLuint abgr;
-};
-
 struct PolylineVertexNoUVs {
     PolylineVertexNoUVs(glm::vec2 position, glm::vec2 extrude, glm::vec2 uv,
                    glm::i16vec2 width, glm::i16vec2 height, GLuint abgr)
@@ -59,6 +39,19 @@ struct PolylineVertexNoUVs {
     GLuint abgr;
 };
 
+struct PolylineVertex : PolylineVertexNoUVs {
+    PolylineVertex(glm::vec2 position, glm::vec2 extrude, glm::vec2 uv,
+                   glm::i16vec2 width, glm::i16vec2 height, GLuint abgr)
+        : PolylineVertexNoUVs(position, extrude, uv, width, height, abgr),
+          texcoord(uv * texture_scale) {}
+
+    PolylineVertex(PolylineVertex v, short order, glm::i16vec2 width, GLuint abgr)
+        : PolylineVertexNoUVs(v, order, width, abgr),
+          texcoord(v.texcoord) {}
+
+    glm::u16vec2 texcoord;
+};
+
 PolylineStyle::PolylineStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
     : Style(_name, _blendMode, _drawMode)
 {
@@ -71,9 +64,9 @@ void PolylineStyle::constructVertexLayout() {
     if (m_texCoordsGeneration) {
         m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
             {"a_position", 4, GL_SHORT, false, 0},
-            {"a_texcoord", 2, GL_UNSIGNED_SHORT, true, 0},
             {"a_extrude", 4, GL_SHORT, false, 0},
             {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+            {"a_texcoord", 2, GL_UNSIGNED_SHORT, true, 0},
         }));
 
         m_defines += "#define TANGRAM_USE_TEX_COORDS\n";

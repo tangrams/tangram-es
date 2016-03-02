@@ -22,20 +22,6 @@ constexpr float normal_scale = 127.0f;
 
 namespace Tangram {
 
-struct PolygonVertex {
-
-    PolygonVertex(glm::vec3 position, uint32_t order, glm::vec3 normal, glm::vec2 uv, GLuint abgr)
-        : pos(glm::i16vec4{ glm::round(position * position_scale), order }),
-          norm(normal * normal_scale),
-          texcoord(uv * texture_scale),
-          abgr(abgr) {}
-
-    glm::i16vec4 pos; // pos.w contains layer (params.order)
-    glm::i8vec3 norm;
-    uint8_t padding = 0;
-    glm::u16vec2 texcoord;
-    GLuint abgr;
-};
 
 struct PolygonVertexNoUVs {
 
@@ -50,6 +36,14 @@ struct PolygonVertexNoUVs {
     GLuint abgr;
 };
 
+struct PolygonVertex : PolygonVertexNoUVs {
+
+    PolygonVertex(glm::vec3 position, uint32_t order, glm::vec3 normal, glm::vec2 uv, GLuint abgr)
+        : PolygonVertexNoUVs(position, order, normal, uv, abgr), texcoord(uv * texture_scale) {}
+
+    glm::u16vec2 texcoord;
+};
+
 PolygonStyle::PolygonStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
     : Style(_name, _blendMode, _drawMode)
 {
@@ -62,8 +56,8 @@ void PolygonStyle::constructVertexLayout() {
         m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
             {"a_position", 4, GL_SHORT, false, 0},
             {"a_normal", 4, GL_BYTE, true, 0}, // The 4th byte is for padding
-            {"a_texcoord", 2, GL_UNSIGNED_SHORT, true, 0},
             {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+            {"a_texcoord", 2, GL_UNSIGNED_SHORT, true, 0},
         }));
 
         m_defines += "#define TANGRAM_USE_TEX_COORDS\n";
