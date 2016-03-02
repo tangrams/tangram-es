@@ -42,6 +42,8 @@ textures:
             info: [0, 1110, 32, 32]
             hotel: [0, 259, 32, 32]
             bookstore: [0, 333, 32, 32]
+    grid:
+        url: img/grid.jpg
 
 styles:
     flatcolor:
@@ -49,17 +51,22 @@ styles:
         lighting: false
     heightglow:
         base: polygons
-        lighting: vertex
-        #shaders:
-        #    blocks:
-        #        color: "color.rgb += vec3(worldPosition().z / 800.);"
+        lighting: fragment
         texcoords: false
+        material:
+            diffuse:
+                texture: grid
+                mapping: uv # defaults texcoords to true
     polyline_no_uvs:
         base: lines
         lighting: vertex
         texcoords: false
     heightglowline:
-        texcoords: false
+        texcoords: true
+        lighting: vertex
+        shaders:
+            blocks:
+                color: "color.rgb = vec3(a_texcoord, 1.0);"
         base: lines
         mix: heightglow
     icons:

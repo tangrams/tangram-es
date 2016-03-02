@@ -262,26 +262,26 @@ glm::vec4 parseMaterialVec(const Node& prop) {
     return glm::vec4(0.0);
 }
 
-void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
+void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene, Style& style) {
     if (!matNode.IsMap()) { return; }
 
     if (Node n = matNode["emission"]) {
         if (n.IsMap()) {
-            material.setEmission(loadMaterialTexture(n, scene));
+            material.setEmission(loadMaterialTexture(n, scene, style));
         } else {
             material.setEmission(parseMaterialVec(n));
         }
     }
     if (Node n = matNode["diffuse"]) {
         if (n.IsMap()) {
-            material.setDiffuse(loadMaterialTexture(n, scene));
+            material.setDiffuse(loadMaterialTexture(n, scene, style));
         } else {
             material.setDiffuse(parseMaterialVec(n));
         }
     }
     if (Node n = matNode["ambient"]) {
         if (n.IsMap()) {
-            material.setAmbient(loadMaterialTexture(n, scene));
+            material.setAmbient(loadMaterialTexture(n, scene, style));
         } else {
             material.setAmbient(parseMaterialVec(n));
         }
@@ -289,7 +289,7 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
 
     if (Node n = matNode["specular"]) {
         if (n.IsMap()) {
-            material.setSpecular(loadMaterialTexture(n, scene));
+            material.setSpecular(loadMaterialTexture(n, scene, style));
         } else {
             material.setSpecular(parseMaterialVec(n));
         }
@@ -302,10 +302,10 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, Scene& scene) {
         }
     }
 
-    material.setNormal(loadMaterialTexture(matNode["normal"], scene));
+    material.setNormal(loadMaterialTexture(matNode["normal"], scene, style));
 }
 
-MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene) {
+MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene, Style& style) {
 
     if (!matCompNode) { return MaterialTexture{}; }
 
@@ -327,6 +327,16 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene)
         std::string mapping = mappingNode.as<std::string>();
         if (mapping == "uv") {
             matTex.mapping = MappingType::uv;
+
+            // Mark the style to generate texture coordinates
+            if (!style.genTexCoords()) {
+                LOGW("Style %s has option `texcoords: false` but material %s has uv mapping",
+                    style.getName().c_str(), name.c_str());
+                LOGW("Defaulting uvs generation to true for style %s",
+                    style.getName().c_str());
+            }
+
+            style.setTexCoordsGeneration(true);
         } else if (mapping == "spheremap") {
             matTex.mapping = MappingType::spheremap;
         } else if (mapping == "planar") {
@@ -464,7 +474,7 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
     }
 
     if (Node materialNode = styleNode["material"]) {
-        loadMaterial(materialNode, *(style.getMaterial()), scene);
+        loadMaterial(materialNode, *(style.getMaterial()), scene, style);
     }
 
     if (Node lightingNode = styleNode["lighting"]) {
