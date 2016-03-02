@@ -14,8 +14,11 @@ public:
     void updateBBoxes(float _zoomFract) override;
     void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) override;
 
+    void pushTransform() override;
 
 private:
+    // Back-pointer to owning container
+    LabelMesh& m_mesh;
 
     float m_extrudeScale;
     glm::vec2 m_anchor;

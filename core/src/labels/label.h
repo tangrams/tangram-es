@@ -119,15 +119,14 @@ public:
         size_t paramHash = 0;
     };
 
-    Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange,
-            Options _options);
+    Label(Transform _transform, glm::vec2 _size, Type _type, Range _vertexRange, Options _options);
 
     virtual ~Label();
 
     bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract);
 
     /* Push the pending transforms to the vbo by updating the vertices */
-    void pushTransform();
+    virtual void pushTransform() = 0;
 
     bool evalState(const glm::vec2& _screenSize, float _dt);
 
@@ -185,8 +184,6 @@ private:
     // whether the label was occluded on the previous frame
     bool m_occludedLastFrame;
     bool m_occluded;
-    // whether or not we need to update the mesh visibilit (alpha channel)
-    bool m_updateMeshVisibility;
 
 protected:
 
@@ -205,8 +202,6 @@ protected:
     Transform m_transform;
     // the dimension of the label
     glm::vec2 m_dim;
-    // Back-pointer to owning container
-    LabelMesh& m_mesh;
     // first vertex and count in m_mesh vertices
     Range m_vertexRange;
     // label options
@@ -214,6 +209,10 @@ protected:
 
     glm::vec2 m_xAxis;
     glm::vec2 m_yAxis;
+
+    // whether or not we need to update the mesh visibilit (alpha channel)
+    bool m_updateMeshVisibility;
+
 };
 
 }

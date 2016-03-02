@@ -35,7 +35,7 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
     view.setZoom(0);
     view.update();
 
-    struct TestLabelMesh : public LabelMesh {
+    struct TestLabelMesh : public LabelMesh, public LabelSet {
         using LabelMesh::LabelMesh;
         void addLabel(std::unique_ptr<Label> _label) { m_labels.push_back(std::move(_label)); }
     };

@@ -270,7 +270,7 @@ bool PolylineStyleBuilder::evalWidth(const StyleParam& _styleParam, float& width
         return true;
     }
 
-    LOGD("Invalid type for Width '%d'", _styleParam.value.which());
+    //LOGD("Invalid type for Width '%d'", _styleParam.value.which());
     return false;
 }
 

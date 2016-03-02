@@ -349,11 +349,9 @@ layers:
                 interactive: true
                 visible: true
                 priority: 2
-                offset: [0, 8px]
                 transition:
                     [show, hide]:
                         time: 1s
-                offset: [[16, [0, 8px]], [18, [0, 120px]]]
                 font:
                     family: sans-serif
                     weight: 400
@@ -368,7 +366,6 @@ layers:
                     repeat_distance: 200px
                     repeat_group: road_labels
                     visible: true
-                    #offset: [0px, 5px]
                     priority: 1
                     transition:
                         [show, hide]:
