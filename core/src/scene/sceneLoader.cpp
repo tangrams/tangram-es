@@ -876,10 +876,7 @@ Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
             filters.emplace_back(generateFilter(filt, scene));
         }
     } else if (_filter.IsMap()) { // not case
-        for (const auto& filt : _filter) {
-            std::string keyFilter = filt.first.as<std::string>();
-            filters.emplace_back(generatePredicate(_filter[keyFilter], keyFilter));
-        }
+        filters.emplace_back(generateFilter(_filter, scene));
     } else {
         LOGW("Invalid filter. 'None' expects a list or an object.");
         return Filter();
