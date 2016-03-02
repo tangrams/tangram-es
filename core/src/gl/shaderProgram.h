@@ -1,9 +1,10 @@
 #pragma once
 
 #include "gl.h"
-#include "glm/glm.hpp"
+#include "uniform.h"
 #include "util/fastmap.h"
-#include "util/uniform.h"
+
+#include "glm/glm.hpp"
 
 #include <string>
 #include <vector>

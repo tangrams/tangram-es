@@ -92,6 +92,7 @@ GLint ShaderProgram::getUniformLocation(const UniformLocation& _uniform) {
 
     _uniform.generation = m_generation;
     _uniform.location = glGetUniformLocation(m_glProgram, _uniform.getName().c_str());
+
     return _uniform.location;
 }
 
@@ -162,7 +163,6 @@ bool ShaderProgram::build() {
     // Clear any cached shader locations
 
     m_attribMap.clear();
-    //m_uniformMap.clear();
 
     return true;
 }

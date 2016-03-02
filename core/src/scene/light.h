@@ -1,7 +1,8 @@
 #pragma once
 
+#include "gl/uniform.h"
+
 #include "glm/vec4.hpp"
-#include "util/uniform.h"
 
 #include <map>
 #include <memory>

@@ -6,11 +6,12 @@ This openGL Material implementation follows from the WebGL version of Tangram
 
 #pragma once
 
+#include "gl/uniform.h"
+
 #include <memory>
 #include <string>
 #include "glm/vec3.hpp"
 #include "glm/vec4.hpp"
-#include "util/uniform.h"
 
 namespace Tangram {
 
