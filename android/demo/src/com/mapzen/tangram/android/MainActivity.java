@@ -16,7 +16,7 @@ import com.mapzen.tangram.Tangram;
 import com.mapzen.tangram.Coordinates;
 
 import com.mapzen.tangram.TouchInput;
-import okhttp3.Callback;
+import com.squareup.okhttp.Callback;
 
 import java.io.File;
 import java.lang.Math;
