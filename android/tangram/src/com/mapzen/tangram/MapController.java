@@ -548,6 +548,7 @@ public class MapController implements Renderer {
     // GLSurfaceView.Renderer methods
     // ==============================
 
+    @Override
     public void onDrawFrame(GL10 gl) {
         long newTime = System.nanoTime();
         float delta = (newTime - time) / 1000000000.0f;
@@ -557,11 +558,13 @@ public class MapController implements Renderer {
         render();
     }
 
+    @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         setPixelScale(displayMetrics.density);
         resize(width, height);
     }
 
+    @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         init(this, assetManager, scenePath);
         // init() is safe to call twice, this invocation ensures that the jni
@@ -572,14 +575,14 @@ public class MapController implements Renderer {
     // Networking methods
     // ==================
 
-    public void cancelUrlRequest(String url) {
+    void cancelUrlRequest(String url) {
         if (httpHandler == null) {
             return;
         }
         httpHandler.onCancel(url);
     }
 
-    public boolean startUrlRequest(String url, final long callbackPtr) throws Exception {
+    boolean startUrlRequest(String url, final long callbackPtr) throws Exception {
         if (httpHandler == null) {
             return false;
         }
@@ -606,7 +609,7 @@ public class MapController implements Renderer {
 
     // Font Fetching
     // =============
-    public String getFontFilePath(String key) {
+    String getFontFilePath(String key) {
 
         return fontFileParser.getFontFile(key);
 
@@ -614,7 +617,7 @@ public class MapController implements Renderer {
 
     // Feature selection
     // =================
-    public void featureSelectionCb(Properties properties, float positionX, float positionY) {
+    void featureSelectionCb(Properties properties, float positionX, float positionY) {
         if (featureTouchListener != null) {
             featureTouchListener.onTouch(properties, positionX, positionY);
         }
