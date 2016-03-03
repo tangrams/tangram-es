@@ -12,10 +12,11 @@ namespace Tangram {
 
 struct DrawRule;
 class Light;
-class LightUniforms;
+struct LightUniforms;
 class Tile;
 class MapProjection;
 class Material;
+struct MaterialUniforms;
 class VertexLayout;
 class View;
 class Scene;
@@ -102,9 +103,6 @@ protected:
     /* <VertexLayout> shared between meshes using this style */
     std::shared_ptr<VertexLayout> m_vertexLayout;
 
-    /* <Material> used for drawing meshes that use this style */
-    std::shared_ptr<Material> m_material;
-
     /* <LightingType> to determine how lighting will be calculated for this style */
     LightingType m_lightingType = LightingType::fragment;
 
@@ -157,6 +155,16 @@ private:
         std::unique_ptr<LightUniforms> uniforms;
     };
     std::vector<LightHandle> m_lights;
+
+
+    struct MaterialHandle {
+        /* <Material> used for drawing meshes that use this style */
+        std::shared_ptr<Material> material;
+
+        std::unique_ptr<MaterialUniforms> uniforms;
+    };
+
+    MaterialHandle m_material;
 
 public:
 
@@ -217,7 +225,7 @@ public:
 
     void setID(uint32_t _id) { m_id = _id; }
 
-    std::shared_ptr<Material> getMaterial() { return m_material; }
+    std::shared_ptr<Material> getMaterial() { return m_material.material; }
 
     const std::unique_ptr<ShaderProgram>& getShaderProgram() const { return m_shaderProgram; }
 

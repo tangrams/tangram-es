@@ -18,9 +18,10 @@ namespace Tangram {
 Style::Style(std::string _name, Blending _blendMode, GLenum _drawMode) :
     m_name(_name),
     m_shaderProgram(std::make_unique<ShaderProgram>()),
-    m_material(std::make_shared<Material>()),
     m_blend(_blendMode),
-    m_drawMode(_drawMode) {}
+    m_drawMode(_drawMode) {
+    m_material.material = std::make_shared<Material>();
+}
 
 Style::~Style() {}
 
@@ -48,7 +49,9 @@ void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
             break;
     }
 
-    m_material->injectOnProgram(*m_shaderProgram);
+    if (m_material.material) {
+        m_material.uniforms = m_material.material->injectOnProgram(*m_shaderProgram);
+    }
 
     if (m_lightingType != LightingType::none) {
         for (auto& light : _lights) {
@@ -61,7 +64,8 @@ void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
 }
 
 void Style::setMaterial(const std::shared_ptr<Material>& _material) {
-    m_material = _material;
+    m_material.material = _material;
+    m_material.uniforms.reset();
 }
 
 void Style::setLightingType(LightingType _type) {
@@ -112,7 +116,9 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit)
 
     m_shaderProgram->setUniformf(m_uDevicePixelRatio, m_pixelScale);
 
-    m_material->setupProgram(*m_shaderProgram);
+    if (m_material.uniforms) {
+        m_material.material->setupProgram(*m_material.uniforms);
+    }
 
     // Set up lights
     for (const auto& light : m_lights) {

@@ -32,6 +32,35 @@ struct MaterialTexture {
     glm::vec3 amount = glm::vec3(1.f);
 };
 
+struct MaterialUniforms {
+
+    MaterialUniforms(ShaderProgram& _shader) : shader(_shader) {}
+
+    ShaderProgram& shader;
+
+    UniformLocation emission{"u_material.emission"};
+    UniformLocation emissionTexture{"material_emission_texture"};
+    UniformLocation emissionScale{"u_material.emissionScale"};
+
+    UniformLocation ambient{"u_material.ambient"};
+    UniformLocation ambientTexture{"u_material_ambient_texture"};
+    UniformLocation ambientScale{"u_material.ambientScale"};
+
+    UniformLocation diffuse{"u_material.diffuse"};
+    UniformLocation diffuseTexture{"u_material_diffuse_texture"};
+    UniformLocation diffuseScale{"u_material.diffuseScale"};
+
+    UniformLocation specular{"u_material.specular"};
+    UniformLocation shininess{"u_material.shininess"};
+
+    UniformLocation specularTexture{"u_material_specular_texture"};
+    UniformLocation specularScale{"u_material.specularScale"};
+
+    UniformLocation normalTexture{"u_material_normal_texture"};
+    UniformLocation normalScale{"u_material.normalScale"};
+    UniformLocation normalAmount{"u_material.normalAmount"};
+};
+
 class Material {
 public:
 
@@ -76,10 +105,10 @@ public:
     void setNormal(MaterialTexture _normalTexture);
 
     /*  Inject the needed lines of GLSL code on the shader to make this material work */
-    virtual void injectOnProgram(ShaderProgram& _shader);
+    virtual std::unique_ptr<MaterialUniforms> injectOnProgram(ShaderProgram& _shader);
 
     /*  Method to pass it self as a uniform to the shader program */
-    virtual void setupProgram(ShaderProgram& _shader);
+    virtual void setupProgram(MaterialUniforms& _uniforms);
 
     bool hasEmission() const { return m_bEmission; }
     bool hasAmbient() const { return m_bAmbient; }
@@ -113,29 +142,6 @@ private:
     MaterialTexture m_normal_texture;
 
     float m_shininess = .2f;
-
-    UniformLocation m_uEmission{"u_material.emission"};
-    UniformLocation m_uEmissionTexture{"material_emission_texture"};
-    UniformLocation m_uEmissionScale{"u_material.emissionScale"};
-
-    UniformLocation m_uAmbient{"u_material.ambient"};
-    UniformLocation m_uAmbientTexture{"u_material_ambient_texture"};
-    UniformLocation m_uAmbientScale{"u_material.ambientScale"};
-
-    UniformLocation m_uDiffuse{"u_material.diffuse"};
-    UniformLocation m_uDiffuseTexture{"u_material_diffuse_texture"};
-    UniformLocation m_uDiffuseScale{"u_material.diffuseScale"};
-
-    UniformLocation m_uSpecular{"u_material.specular"};
-    UniformLocation m_uShininess{"u_material.shininess"};
-
-    UniformLocation m_uSpecularTexture{"u_material_specular_texture"};
-    UniformLocation m_uSpecularScale{"u_material.specularScale"};
-
-    UniformLocation m_uNormalTexture{"u_material_normal_texture"};
-    UniformLocation m_uNormalScale{"u_material.normalScale"};
-    UniformLocation m_uNormalAmount{"u_material.normalAmount"};
-
 };
 
 }
