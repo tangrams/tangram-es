@@ -1,5 +1,7 @@
 #pragma once
 
+#include "gl/uniform.h"
+
 #include <string>
 #include <vector>
 #include <memory>
@@ -11,8 +13,6 @@
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "glm/vec4.hpp"
-
-#include "util/uniform.h"
 
 namespace Tangram {
 

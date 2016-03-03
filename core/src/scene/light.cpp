@@ -45,7 +45,7 @@ void Light::setOrigin( LightOrigin _origin ) {
     m_origin = _origin;
 }
 
-void Light::injectOnProgram(ShaderProgram& _shader) {
+void Light::injectSourceBlocks(ShaderProgram& _shader) {
 
     // Inject all needed #defines for this light instance
     _shader.addSourceBlock("defines", getInstanceDefinesBlock(), false);
@@ -58,15 +58,12 @@ void Light::injectOnProgram(ShaderProgram& _shader) {
     _shader.addSourceBlock("__lighting", getClassBlock(), false);
     _shader.addSourceBlock("__lighting", getInstanceBlock());
     _shader.addSourceBlock("__lights_to_compute", getInstanceComputeBlock());
-
 }
 
-void Light::setupProgram(const View& _view, ShaderProgram& _shader) {
-    if (m_dynamic) {
-        _shader.setUniformf(getUniformName()+".ambient", m_ambient);
-        _shader.setUniformf(getUniformName()+".diffuse", m_diffuse);
-        _shader.setUniformf(getUniformName()+".specular", m_specular);
-    }
+void Light::setupProgram(const View& _view, LightUniforms& _uniforms) {
+    _uniforms.shader.setUniformf(_uniforms.ambient, m_ambient);
+    _uniforms.shader.setUniformf(_uniforms.diffuse, m_diffuse);
+    _uniforms.shader.setUniformf(_uniforms.specular, m_specular);
 }
 
 void Light::assembleLights(std::map<std::string, std::vector<std::string>>& _sourceBlocks) {

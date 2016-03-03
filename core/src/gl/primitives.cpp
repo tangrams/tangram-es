@@ -18,6 +18,9 @@ static std::unique_ptr<VertexLayout> s_layout;
 static glm::vec2 s_resolution;
 static GLuint s_boundBuffer;
 
+static UniformLocation s_uColor{"u_color"};
+static UniformLocation s_uProj{"u_proj"};
+
 void init() {
 
     // lazy init
@@ -100,14 +103,14 @@ void setColor(unsigned int _color) {
     float g = (_color >> 8  & 0xff) / 255.0;
     float b = (_color       & 0xff) / 255.0;
 
-    s_shader->setUniformf("u_color", r, g, b);
+    s_shader->setUniformf(s_uColor, r, g, b);
 }
 
 void setResolution(float _width, float _height) {
     init();
 
     glm::mat4 proj = glm::ortho(0.f, _width, _height, 0.f, -1.f, 1.f);
-    s_shader->setUniformMatrix4f("u_proj", proj);
+    s_shader->setUniformMatrix4f(s_uProj, proj);
 }
 
 }

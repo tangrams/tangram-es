@@ -112,10 +112,10 @@ void TextDisplay::draw(const std::vector<std::string>& _infos) {
     m_shader->use();
 
     glm::mat4 orthoProj = glm::ortho(0.f, (float)m_textDisplayResolution.x, (float)m_textDisplayResolution.y, 0.f, -1.f, 1.f);
-    m_shader->setUniformMatrix4f("u_orthoProj", orthoProj);
+    m_shader->setUniformMatrix4f(m_uOrthoProj, orthoProj);
 
     // Display Tangram info messages
-    m_shader->setUniformf("u_color", 0.f, 0.f, 0.f);
+    m_shader->setUniformf(m_uColor, 0.f, 0.f, 0.f);
     int offset = 0;
     for (auto& text : _infos) {
         draw(text, 3, 3 + offset);
@@ -124,7 +124,7 @@ void TextDisplay::draw(const std::vector<std::string>& _infos) {
 
     // Display screen log
     offset = 0;
-    m_shader->setUniformf("u_color", 51 / 255.f, 73 / 255.f, 120 / 255.f);
+    m_shader->setUniformf(m_uColor, 51 / 255.f, 73 / 255.f, 120 / 255.f);
     for (int i = 0; i < LOG_CAPACITY; ++i) {
         draw(m_log[i], 3, m_textDisplayResolution.y - 10 + offset);
         offset -= 10;

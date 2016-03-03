@@ -1,5 +1,7 @@
 #pragma once
- 
+
+#include "gl/uniform.h"
+
 #include "glm/vec4.hpp"
 
 #include <map>
@@ -23,6 +25,20 @@ enum class LightOrigin {
     camera,
     ground,
     world
+};
+
+struct LightUniforms {
+    LightUniforms(ShaderProgram& _shader, const std::string& _name)
+        : shader(_shader),
+          ambient(_name+".ambient"),
+          diffuse(_name+".diffuse"),
+          specular(_name+".specular") {}
+
+    ShaderProgram& shader;
+
+    UniformLocation ambient;
+    UniformLocation diffuse;
+    UniformLocation specular;
 };
 
 /*  This is the abstract class that other type of lights can extend from it.
@@ -61,16 +77,24 @@ public:
     /*  GLSL line to compute the specific light instance */
     virtual std::string getInstanceComputeBlock();
 
-    /*  Inject the needed lines of GLSL code on the shader to make this light work */
-    virtual void injectOnProgram(ShaderProgram& _shader);
+    /*
+     * Inject the needed lines of GLSL code on the shader to make this light work
+     * Returns LightUniforms for passing to setupProgram if this light is dynamic
+     */
+    virtual std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) = 0;
 
     /*  Pass the uniforms for this particular DYNAMICAL light on the passed shader */
-    virtual void setupProgram(const View& _view, ShaderProgram& _shader );
+    virtual void setupProgram(const View& _view, LightUniforms& _uniforms);
 
     /*  STATIC Function that compose sourceBlocks with Lights on a ProgramShader */
     static void assembleLights(std::map<std::string, std::vector<std::string>>& _sourceBlocks);
 
 protected:
+
+    /*
+     * Inject the needed lines of GLSL code on the shader to make this light work
+     */
+    void injectSourceBlocks(ShaderProgram& _shader);
 
     /*  Get the uniform name of the DYNAMICAL light */
     virtual std::string getUniformName();

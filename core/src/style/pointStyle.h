@@ -48,6 +48,8 @@ protected:
     std::shared_ptr<SpriteAtlas> m_spriteAtlas;
     std::shared_ptr<Texture> m_texture;
 
+    UniformLocation m_uTex{"u_tex"};
+    UniformLocation m_uOrtho{"u_ortho"};
 };
 
 }

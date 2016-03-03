@@ -7,9 +7,9 @@ namespace Tangram {
 class PointLight : public Light {
 public:
 
-	PointLight(const std::string& _name, bool _dynamic = false);
-	virtual ~PointLight();
-    
+    PointLight(const std::string& _name, bool _dynamic = false);
+    virtual ~PointLight();
+
     /*  Set the position relative to the camera */
     virtual void setPosition(const glm::vec3& _pos);
 
@@ -19,9 +19,25 @@ public:
     /*  Set the constant outer radius or inner/outer radius*/
     virtual void setRadius(float _outer);
     virtual void setRadius(float _inner, float _outer);
-    
-    virtual void setupProgram(const View& _view, ShaderProgram& _program) override;
-    
+
+    virtual void setupProgram(const View& _view, LightUniforms& _uniforms) override;
+
+    struct Uniforms : public LightUniforms {
+        Uniforms(ShaderProgram& _shader, const std::string& _name)
+            : LightUniforms(_shader, _name),
+              position(_name+".position"),
+              attenuation(_name+".attenuation"),
+              innerRadius(_name+".innerRadius"),
+              outerRadius(_name+".outerRadius") {}
+
+        UniformLocation position;
+        UniformLocation attenuation;
+        UniformLocation innerRadius;
+        UniformLocation outerRadius;
+    };
+
+    std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) override;
+
 protected:
 
     /*  GLSL block code with structs and need functions for this light type */
@@ -29,9 +45,9 @@ protected:
     virtual std::string getInstanceDefinesBlock() override;
     virtual std::string getInstanceAssignBlock() override;
     virtual const std::string& getTypeName() override;
-    
+
     static std::string s_classBlock;
-    
+
     glm::vec4 m_position;
 
     float m_attenuation;

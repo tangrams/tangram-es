@@ -51,6 +51,10 @@ protected:
 
     std::shared_ptr<FontContext> m_fontContext;
 
+    UniformLocation m_uOrtho{"u_ortho"};
+    UniformLocation m_uTex{"u_tex"};
+    UniformLocation m_uTexScaleFactor{"u_uv_scale_factor"};
+
 public:
 
     TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
@@ -94,4 +98,3 @@ namespace std {
         }
     };
 }
-

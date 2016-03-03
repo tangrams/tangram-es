@@ -6,12 +6,14 @@ namespace Tangram {
 
 class AmbientLight : public Light {
 public:
-    
+
     AmbientLight(const std::string& _name, bool _dynamic = false);
     virtual ~AmbientLight();
     
-    virtual void setupProgram(const View& _view, ShaderProgram& _program) override;
-    
+    virtual void setupProgram(const View& _view, LightUniforms& _uniforms) override;
+
+    std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) override;
+
 protected:
 
     /*  GLSL block code with structs and need functions for this light type */

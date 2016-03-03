@@ -1,8 +1,8 @@
 #pragma once
 
 #include "gl.h"
+#include "gl/uniform.h"
 #include "data/tileData.h"
-#include "util/uniform.h"
 
 #include <memory>
 #include <string>
@@ -12,9 +12,11 @@ namespace Tangram {
 
 struct DrawRule;
 class Light;
+struct LightUniforms;
 class Tile;
 class MapProjection;
 class Material;
+struct MaterialUniforms;
 class VertexLayout;
 class View;
 class Scene;
@@ -84,7 +86,7 @@ protected:
  */
 class Style {
 
-using StyleUniform = std::pair< std::string, UniformValue >;
+using StyleUniform = std::pair<UniformLocation, UniformValue >;
 
 protected:
 
@@ -100,9 +102,6 @@ protected:
 
     /* <VertexLayout> shared between meshes using this style */
     std::shared_ptr<VertexLayout> m_vertexLayout;
-
-    /* <Material> used for drawing meshes that use this style */
-    std::shared_ptr<Material> m_material;
 
     /* <LightingType> to determine how lighting will be calculated for this style */
     LightingType m_lightingType = LightingType::fragment;
@@ -131,9 +130,41 @@ protected:
      */
     void setupShaderUniforms(int _textureUnit, Scene& _scene);
 
+    UniformLocation m_uTime{"u_time"};
+    // View uniforms
+    UniformLocation m_uDevicePixelRatio{"u_device_pixel_ratio"};
+    UniformLocation m_uResolution{"u_resolution"};
+    UniformLocation m_uMapPosition{"u_map_position"};
+    UniformLocation m_uNormalMatrix{"u_normalMatrix"};
+    UniformLocation m_uInverseNormalMatrix{"u_inverseNormalMatrix"};
+    UniformLocation m_uMetersPerPixel{"u_meters_per_pixel"};
+    UniformLocation m_uView{"u_view"};
+    UniformLocation m_uProj{"u_proj"};
+    // Tile uniforms
+    UniformLocation m_uModel{"u_model"};
+    UniformLocation m_uTileOrigin{"u_tile_origin"};
+
 private:
 
     std::vector<StyleUniform> m_styleUniforms;
+
+    struct LightHandle {
+        LightHandle(Light* _light, std::unique_ptr<LightUniforms> _uniforms);
+
+        Light *light;
+        std::unique_ptr<LightUniforms> uniforms;
+    };
+    std::vector<LightHandle> m_lights;
+
+
+    struct MaterialHandle {
+        /* <Material> used for drawing meshes that use this style */
+        std::shared_ptr<Material> material;
+
+        std::unique_ptr<MaterialUniforms> uniforms;
+    };
+
+    MaterialHandle m_material;
 
 public:
 
@@ -194,7 +225,7 @@ public:
 
     void setID(uint32_t _id) { m_id = _id; }
 
-    std::shared_ptr<Material> getMaterial() { return m_material; }
+    std::shared_ptr<Material> getMaterial() { return m_material.material; }
 
     const std::unique_ptr<ShaderProgram>& getShaderProgram() const { return m_shaderProgram; }
 

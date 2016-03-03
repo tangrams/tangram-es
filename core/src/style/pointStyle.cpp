@@ -61,8 +61,8 @@ void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _texture
         m_texture->bind(0);
     }
 
-    m_shaderProgram->setUniformi("u_tex", 0);
-    m_shaderProgram->setUniformMatrix4f("u_ortho", _view.getOrthoViewportMatrix());
+    m_shaderProgram->setUniformi(m_uTex, 0);
+    m_shaderProgram->setUniformMatrix4f(m_uOrtho, _view.getOrthoViewportMatrix());
 
     Style::onBeginDrawFrame(_view, _scene, 1);
 }

@@ -21,9 +21,7 @@ PointLight::PointLight(const std::string& _name, bool _dynamic) :
 
 }
 
-PointLight::~PointLight() {
-
-}
+PointLight::~PointLight() {}
 
 void PointLight::setPosition(const glm::vec3 &_pos) {
     m_position.x = _pos.x;
@@ -46,45 +44,53 @@ void PointLight::setRadius(float _inner, float _outer){
     m_outerRadius = _outer;
 }
 
-void PointLight::setupProgram(const View& _view, ShaderProgram& _shader) {
-    if (m_dynamic) {
-        Light::setupProgram(_view, _shader);
+std::unique_ptr<LightUniforms> PointLight::injectOnProgram(ShaderProgram& _shader) {
+    injectSourceBlocks(_shader);
 
-        glm::vec4 position = m_position;
+    if (!m_dynamic) { return nullptr; }
 
-        if (m_origin == LightOrigin::world) {
-            // For world origin, format is: [longitude, latitude, meters (default) or pixels w/px units]
+    return std::make_unique<Uniforms>(_shader, getUniformName());
+}
 
-            // Move light's world position into camera space
-            glm::dvec2 camSpace = _view.getMapProjection().LonLatToMeters(glm::dvec2(m_position.x, m_position.y));
-            position.x = camSpace.x - _view.getPosition().x;
-            position.y = camSpace.y - _view.getPosition().y;
-            position.z = position.z - _view.getPosition().z;
+void PointLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
+    Light::setupProgram(_view, _uniforms);
 
-        } else if (m_origin == LightOrigin::ground) {
-            // Leave light's xy in camera space, but z needs to be moved relative to ground plane
-            position.z = position.z - _view.getPosition().z;
-        }
+    glm::vec4 position = m_position;
 
-        if (m_origin == LightOrigin::world || m_origin == LightOrigin::ground) {
-            // Light position is a vector from the camera to the light in world space;
-            // we can transform this vector into camera space the same way we would with normals
-            position = _view.getViewMatrix() * position;
-        }
+    if (m_origin == LightOrigin::world) {
+        // For world origin, format is: [longitude, latitude, meters (default) or pixels w/px units]
 
-        _shader.setUniformf(getUniformName()+".position", position);
+        // Move light's world position into camera space
+        glm::dvec2 camSpace = _view.getMapProjection().LonLatToMeters(glm::dvec2(m_position.x, m_position.y));
+        position.x = camSpace.x - _view.getPosition().x;
+        position.y = camSpace.y - _view.getPosition().y;
+        position.z = position.z - _view.getPosition().z;
 
-        if (m_attenuation!=0.0) {
-            _shader.setUniformf(getUniformName()+".attenuation", m_attenuation);
-        }
+    } else if (m_origin == LightOrigin::ground) {
+        // Leave light's xy in camera space, but z needs to be moved relative to ground plane
+        position.z = position.z - _view.getPosition().z;
+    }
 
-        if (m_innerRadius!=0.0) {
-            _shader.setUniformf(getUniformName()+".innerRadius", m_innerRadius);
-        }
+    if (m_origin == LightOrigin::world || m_origin == LightOrigin::ground) {
+        // Light position is a vector from the camera to the light in world space;
+        // we can transform this vector into camera space the same way we would with normals
+        position = _view.getViewMatrix() * position;
+    }
 
-        if (m_outerRadius!=0.0) {
-            _shader.setUniformf(getUniformName()+".outerRadius", m_outerRadius);
-        }
+    auto& u = static_cast<Uniforms&>(_uniforms);
+
+    u.shader.setUniformf(u.position, position);
+
+    if (m_attenuation != 0.0) {
+        u.shader.setUniformf(u.attenuation, m_attenuation);
+    }
+
+    if (m_innerRadius != 0.0) {
+        u.shader.setUniformf(u.innerRadius, m_innerRadius);
+    }
+
+    if (m_outerRadius != 0.0) {
+        u.shader.setUniformf(u.outerRadius, m_outerRadius);
     }
 }
 

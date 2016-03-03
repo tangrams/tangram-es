@@ -294,6 +294,7 @@ void View::updateMatrices() {
     // but since our view matrix is orthonormal transposing is equivalent to inverting, so the normal matrix is just the
     // original view matrix (cropped to the top-left 3 rows and columns, since we're applying it to 3d vectors)
     m_normalMatrix = glm::mat3(m_view);
+    m_invNormalMatrix = glm::inverse(m_normalMatrix);
 
     m_dirtyMatrices = false;
 

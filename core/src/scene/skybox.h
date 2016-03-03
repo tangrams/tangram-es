@@ -38,6 +38,8 @@ private:
 
     std::string m_file;
 
+    UniformLocation m_uModelViewProj{"u_modelViewProj"};
+    UniformLocation m_uTex{"u_tex"};
 };
 
 }

@@ -51,8 +51,8 @@ void Skybox::draw(const View& _view) {
     // Remove translation so that skybox is centered on view
     vp[3] = { 0, 0, 0, 0 };
 
-    m_shader->setUniformMatrix4f("u_modelViewProj", vp);
-    m_shader->setUniformi("u_tex", 0);
+    m_shader->setUniformMatrix4f(m_uModelViewProj, vp);
+    m_shader->setUniformi(m_uTex, 0);
 
     RenderState::blending(GL_FALSE);
     RenderState::depthTest(GL_TRUE);

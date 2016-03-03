@@ -107,6 +107,8 @@ public:
     /* Gets the normal matrix; transforms surface normals from model space to camera space */
     const glm::mat3& getNormalMatrix() const { return m_normalMatrix; }
 
+    const glm::mat3& getInverseNormalMatrix() const { return m_invNormalMatrix; }
+
     /* Returns a rectangle of the current view range as [[x_min, y_min], [x_max, y_max]] */
     glm::dmat2 getBoundsRect() const;
 
@@ -163,6 +165,7 @@ protected:
     glm::mat4 m_viewProj;
     glm::mat4 m_invViewProj;
     glm::mat3 m_normalMatrix;
+    glm::mat3 m_invNormalMatrix;
 
     float m_roll = 0.f;
     float m_pitch = 0.f;

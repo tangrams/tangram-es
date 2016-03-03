@@ -6,6 +6,8 @@ This openGL Material implementation follows from the WebGL version of Tangram
 
 #pragma once
 
+#include "gl/uniform.h"
+
 #include <memory>
 #include <string>
 #include "glm/vec3.hpp"
@@ -28,6 +30,35 @@ struct MaterialTexture {
     MappingType mapping = MappingType::uv;
     glm::vec3 scale = glm::vec3(1.f);
     glm::vec3 amount = glm::vec3(1.f);
+};
+
+struct MaterialUniforms {
+
+    MaterialUniforms(ShaderProgram& _shader) : shader(_shader) {}
+
+    ShaderProgram& shader;
+
+    UniformLocation emission{"u_material.emission"};
+    UniformLocation emissionTexture{"material_emission_texture"};
+    UniformLocation emissionScale{"u_material.emissionScale"};
+
+    UniformLocation ambient{"u_material.ambient"};
+    UniformLocation ambientTexture{"u_material_ambient_texture"};
+    UniformLocation ambientScale{"u_material.ambientScale"};
+
+    UniformLocation diffuse{"u_material.diffuse"};
+    UniformLocation diffuseTexture{"u_material_diffuse_texture"};
+    UniformLocation diffuseScale{"u_material.diffuseScale"};
+
+    UniformLocation specular{"u_material.specular"};
+    UniformLocation shininess{"u_material.shininess"};
+
+    UniformLocation specularTexture{"u_material_specular_texture"};
+    UniformLocation specularScale{"u_material.specularScale"};
+
+    UniformLocation normalTexture{"u_material_normal_texture"};
+    UniformLocation normalScale{"u_material.normalScale"};
+    UniformLocation normalAmount{"u_material.normalAmount"};
 };
 
 class Material {
@@ -74,10 +105,10 @@ public:
     void setNormal(MaterialTexture _normalTexture);
 
     /*  Inject the needed lines of GLSL code on the shader to make this material work */
-    virtual void injectOnProgram(ShaderProgram& _shader);
+    virtual std::unique_ptr<MaterialUniforms> injectOnProgram(ShaderProgram& _shader);
 
     /*  Method to pass it self as a uniform to the shader program */
-    virtual void setupProgram(ShaderProgram& _shader);
+    virtual void setupProgram(MaterialUniforms& _uniforms);
 
     bool hasEmission() const { return m_bEmission; }
     bool hasAmbient() const { return m_bAmbient; }
@@ -111,7 +142,6 @@ private:
     MaterialTexture m_normal_texture;
 
     float m_shininess = .2f;
-
 };
 
 }

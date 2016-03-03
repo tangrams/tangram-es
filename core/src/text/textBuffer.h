@@ -61,6 +61,7 @@ protected:
 
     bool m_strokePass = false;
 
+    UniformLocation m_uPass{"u_pass"};
 };
 
 }
