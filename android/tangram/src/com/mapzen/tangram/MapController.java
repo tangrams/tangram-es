@@ -44,11 +44,6 @@ public class MapController implements Renderer {
         void onTouch(Properties properties, float positionX, float positionY);
     }
 
-    static {
-        System.loadLibrary("c++_shared");
-        System.loadLibrary("tangram");
-    }
-
     /**
      * Construct a MapController using the default scene file
      * @param mainApp Activity in which the map will function; the asset bundle for this activity must contain all
@@ -494,6 +489,11 @@ public class MapController implements Renderer {
     // Native methods
     // ==============
 
+    static {
+        System.loadLibrary("c++_shared");
+        System.loadLibrary("tangram");
+    }
+
     private synchronized native void init(MapController instance, AssetManager assetManager, String stylePath);
     private synchronized native void loadScene(String path);
     private synchronized native void setupGL();
@@ -530,19 +530,14 @@ public class MapController implements Renderer {
     // Private members
     // ===============
 
-    private static String TAG = "Tangram";
     private String scenePath;
     private long time = System.nanoTime();
     private MapView mapView;
     private AssetManager assetManager;
     private TouchInput touchInput;
-
     private final FontFileParser fontFileParser = new FontFileParser();
-
     private DisplayMetrics displayMetrics = new DisplayMetrics();
-
     private HttpHandler httpHandler;
-
     private FeatureTouchListener featureTouchListener;
 
     // GLSurfaceView.Renderer methods
