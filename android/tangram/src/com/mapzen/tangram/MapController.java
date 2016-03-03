@@ -35,6 +35,12 @@ public class MapController implements Renderer {
     }
 
     public interface FeatureTouchListener {
+        /**
+         * Receive information about features found in a call to {@link #pickFeature(float, float)}
+         * @param properties A mapping of string keys to string or number values
+         * @param positionX The horizontal screen coordinate of the center of the feature
+         * @param positionY The vertical screen coordinate of the center of the feature
+         */
         void onTouch(Properties properties, float positionX, float positionY);
     }
 
@@ -93,6 +99,10 @@ public class MapController implements Renderer {
 
     }
 
+    /**
+     * Load a new scene file
+     * @param path Location of the YAML scene file within the application assets
+     */
     public void loadSceneFile(String path) {
         scenePath = path;
         loadScene(path);
@@ -120,15 +130,28 @@ public class MapController implements Renderer {
      * Set the geographic position of the center of the map view
      * @param lng Degrees longitude of the position to set
      * @param lat Degrees latitude of the position to set
-     * @param duration Time in seconds to ease to the given position
-     * @param ease Type of easing to use
      */
     public void setMapPosition(double lng, double lat) {
         setPosition(lng, lat);
     }
+
+    /**
+     * Set the geographic position of the center of the map view
+     * @param lng Degrees longitude of the position to set
+     * @param lat Degrees latitude of the position to set
+     * @param duration Time in seconds to ease to the given position
+     */
     public void setMapPosition(double lng, double lat, float duration) {
         setPositionEased(lng, lat, duration, EaseType.QUINT.ordinal());
     }
+
+    /**
+     * Set the geographic position of the center of the map view
+     * @param lng Degrees longitude of the position to set
+     * @param lat Degrees latitude of the position to set
+     * @param duration Time in seconds to ease to the given position
+     * @param ease Type of easing to use
+     */
     public void setMapPosition(double lng, double lat, float duration, EaseType ease) {
         setPositionEased(lng, lat, duration, ease.ordinal());
     }
@@ -155,15 +178,26 @@ public class MapController implements Renderer {
     /**
      * Set the zoom level of the map view
      * @param zoom Fractional zoom level
-     * @param duration Time in seconds to ease to given zoom
-     * @param ease Type of easing to use
      */
     public void setMapZoom(float zoom) {
         setZoom(zoom);
     }
+
+    /**
+     * Set the zoom level of the map view
+     * @param zoom Fractional zoom level
+     * @param duration Time in seconds to ease to given zoom
+     */
     public void setMapZoom(float zoom, float duration) {
         setZoomEased(zoom, duration, EaseType.QUINT.ordinal());
     }
+
+    /**
+     * Set the zoom level of the map view
+     * @param zoom Fractional zoom level
+     * @param duration Time in seconds to ease to given zoom
+     * @param ease Type of easing to use
+     */
     public void setMapZoom(float zoom, float duration, EaseType ease) {
         setZoomEased(zoom, duration, ease.ordinal());
     }
@@ -179,15 +213,26 @@ public class MapController implements Renderer {
     /**
      * Set the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
      * @param radians Rotation in radians
-     * @param duration Time in seconds to ease to the given rotation
-     * @param ease Type of easing to use
      */
     public void setMapRotation(float radians) {
         setRotation(radians);
     }
+
+    /**
+     * Set the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
+     * @param radians Rotation in radians
+     * @param duration Time in seconds to ease to the given rotation
+     */
     public void setMapRotation(float radians, float duration) {
         setRotationEased(radians, duration, EaseType.QUINT.ordinal());
     }
+
+    /**
+     * Set the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
+     * @param radians Rotation in radians
+     * @param duration Time in seconds to ease to the given rotation
+     * @param ease Type of easing to use
+     */
     public void setMapRotation(float radians, float duration, EaseType ease) {
         setRotationEased(radians, duration, ease.ordinal());
     }
@@ -203,15 +248,26 @@ public class MapController implements Renderer {
     /**
      * Set the tilt angle of the view in radians; 0 corresponds to straight down
      * @param radians Tilt angle in radians
-     * @param duration Time in seconds to ease to the given tilt
-     * @param ease Type of easing to use
      */
     public void setMapTilt(float radians) {
         setTilt(radians);
     }
+
+    /**
+     * Set the tilt angle of the view in radians; 0 corresponds to straight down
+     * @param radians Tilt angle in radians
+     * @param duration Time in seconds to ease to the given tilt
+     */
     public void setMapTilt(float radians, float duration) {
         setTiltEased(radians, duration, EaseType.QUINT.ordinal());
     }
+
+    /**
+     * Set the tilt angle of the view in radians; 0 corresponds to straight down
+     * @param radians Tilt angle in radians
+     * @param duration Time in seconds to ease to the given tilt
+     * @param ease Type of easing to use
+     */
     public void setMapTilt(float radians, float duration, EaseType ease) {
         setTiltEased(radians, duration, ease.ordinal());
     }
@@ -224,11 +280,19 @@ public class MapController implements Renderer {
         return getTilt();
     }
 
-    public void setMapCameraType(CameraType _cameraType) {
-        setCameraType(_cameraType.ordinal());
+    /**
+     * Set the camera type for the map view
+     * @param type A CameraType
+     */
+    public void setMapCameraType(CameraType type) {
+        setCameraType(type.ordinal());
         requestRender();
     }
 
+    /**
+     * Get the camera type currently in use for the map view
+     * @return The current CameraType
+     */
     public CameraType getMapCameraType() {
         return CameraType.values()[getCameraType()];
     }
@@ -384,20 +448,20 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Set whether the gesture {@param second} can be recognized while {@param first} is in progress
+     * Set whether the gesture {@code second} can be recognized while {@code first} is in progress
      * @param first Initial gesture type
      * @param second Subsequent gesture type
-     * @param allowed True if {@param second} should be recognized, else false
+     * @param allowed True if {@code second} should be recognized, else false
      */
     public void setSimultaneousGestureAllowed(Gestures first, Gestures second, boolean allowed) {
         touchInput.setSimultaneousDetectionAllowed(first, second, allowed);
     }
 
     /**
-     * Get whether the gesture {@param second} can be recognized while {@param first} is in progress
+     * Get whether the gesture {@code second} can be recognized while {@code first} is in progress
      * @param first Initial gesture type
      * @param second Subsequent gesture type
-     * @return True if {@param second} will be recognized, else false
+     * @return True if {@code second} will be recognized, else false
      */
     public boolean isSimultaneousGestureAllowed(Gestures first, Gestures second) {
         return touchInput.isSimultaneousDetectionAllowed(first, second);
@@ -410,6 +474,14 @@ public class MapController implements Renderer {
     public void setFeatureTouchListener(FeatureTouchListener listener) {
         featureTouchListener = listener;
     }
+
+    /**
+     * Query the map for labeled features at the given screen coordinates; results will be returned
+     * in a callback to the object set by {@link #setFeatureTouchListener(FeatureTouchListener)}
+     * @param posX The horizontal screen coordinate
+     * @param posY The vertical screen coordinate
+     */
+    public synchronized native void pickFeature(float posX, float posY);
 
     /**
      * Enqueue a Runnable to be executed synchronously on the rendering thread
@@ -451,7 +523,6 @@ public class MapController implements Renderer {
     private synchronized native void handlePinchGesture(float posX, float posY, float scale, float velocity);
     private synchronized native void handleRotateGesture(float posX, float posY, float rotation);
     private synchronized native void handleShoveGesture(float distance);
-    public synchronized native void pickFeature(float posX, float posY);
 
     private native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private native void onUrlFailure(long callbackPtr);
