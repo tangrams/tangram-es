@@ -62,9 +62,9 @@ void PointLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
 
         // Move light's world position into camera space
         glm::dvec2 camSpace = _view.getMapProjection().LonLatToMeters(glm::dvec2(m_position.x, m_position.y));
-        position.x = camSpace.x - _view.getPosition().x;
-        position.y = camSpace.y - _view.getPosition().y;
-        position.z = position.z - _view.getPosition().z;
+        position.x = camSpace.x - (_view.getPosition().x + _view.getEye().x);
+        position.y = camSpace.y - (_view.getPosition().y + _view.getEye().y);
+        position.z = position.z - _view.getEye().z;
 
     } else if (m_origin == LightOrigin::ground) {
         // Leave light's xy in camera space, but z needs to be moved relative to ground plane
