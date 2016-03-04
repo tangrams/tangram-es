@@ -22,7 +22,9 @@ Feature civic, bmw1, bike;
 Filter load(const std::string& filterYaml) {
     Scene scene;
     YAML::Node node = YAML::Load(filterYaml);
-    return SceneLoader::generateFilter(node["filter"], scene);
+    auto filter = SceneLoader::generateFilter(node["filter"], scene);
+    ctx.initFunctions(scene);
+    return filter;
 }
 
 void init() {
@@ -226,4 +228,13 @@ TEST_CASE( "yaml-filter-tests: predicate with large integers", "[filters][core][
     REQUIRE(filter.eval(bmw1, ctx));
     REQUIRE(!filter.eval(bike, ctx));
 
+}
+
+TEST_CASE("Filters specified as a javascript function evaluate correctly", "[filters][core][yaml]") {
+    init();
+    Filter filter = load("filter: { 'function() { return false; }' }");
+
+    REQUIRE(!filter.eval(civic, ctx));
+    REQUIRE(!filter.eval(bmw1, ctx));
+    REQUIRE(!filter.eval(bike, ctx));
 }

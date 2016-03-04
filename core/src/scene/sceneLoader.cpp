@@ -875,7 +875,7 @@ Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
         for (const auto& filt : _filter) {
             filters.emplace_back(generateFilter(filt, scene));
         }
-    } else if (_filter.IsMap()) { // not case
+    } else if (_filter.IsMap() || _filter.IsScalar()) { // not case
         filters.emplace_back(generateFilter(_filter, scene));
     } else {
         LOGW("Invalid filter. 'None' expects a list or an object.");
