@@ -63,8 +63,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     if (was_panning) {
         was_panning = false;
         Tangram::handleFlingGesture(x, y,
-                                    clamp(last_x_velocity, -1000.0, 1000.0),
-                                    clamp(last_y_velocity, -1000.0, 1000.0));
+                                    clamp(last_x_velocity, -2000.0, 2000.0),
+                                    clamp(last_y_velocity, -2000.0, 2000.0));
         return; // Clicks with movement don't count as taps, so stop here
     }
 

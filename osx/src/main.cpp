@@ -40,6 +40,11 @@ using namespace Tangram;
 std::shared_ptr<ClientGeoJsonSource> data_source;
 LngLat last_point;
 
+template<typename T>
+static constexpr T clamp(T val, T min, T max) {
+    return val > max ? max : val < min ? min : val;
+}
+
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
 
     if (button != GLFW_MOUSE_BUTTON_1) {
@@ -54,7 +59,9 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
     if (was_panning && action == GLFW_RELEASE) {
         was_panning = false;
-        Tangram::handleFlingGesture(x, y, last_x_velocity, last_y_velocity);
+        Tangram::handleFlingGesture(x, y,
+                                    clamp(last_x_velocity, -2000.0, 2000.0),
+                                    clamp(last_y_velocity, -2000.0, 2000.0));
         return; // Clicks with movement don't count as taps, so stop here
     }
 
