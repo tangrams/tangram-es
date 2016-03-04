@@ -109,6 +109,9 @@ public:
 
     const glm::mat3& getInverseNormalMatrix() const { return m_invNormalMatrix; }
 
+    /* Returns the eye position in world space */
+    const glm::vec3& getEye() const { return m_eye; }
+
     /* Returns a rectangle of the current view range as [[x_min, y_min], [x_max, y_max]] */
     glm::dmat2 getBoundsRect() const;
 
