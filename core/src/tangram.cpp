@@ -59,6 +59,7 @@ void clearEase(EaseField _f) {
 
 static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
+float m_pixelsPerPoint = 1.f;
 int log_level = 2;
 
 void initialize(const char* _scenePath) {
@@ -269,6 +270,7 @@ void render() {
         debuginfos.push_back("pos:" + std::to_string(m_view->getPosition().x) + "/"
                 + std::to_string(m_view->getPosition().y));
         debuginfos.push_back("tilt:" + std::to_string(m_view->getPitch() * 57.3) + "deg");
+        debuginfos.push_back("pixel scale:" + std::to_string(m_pixelsPerPoint));
 
         TextDisplay::Instance().draw(debuginfos);
     }
@@ -413,6 +415,8 @@ void screenToWorldCoordinates(double& _x, double& _y) {
 }
 
 void setPixelScale(float _pixelsPerPoint) {
+
+    m_pixelsPerPoint = _pixelsPerPoint;
 
     if (m_view) {
         m_view->setPixelScale(_pixelsPerPoint);
