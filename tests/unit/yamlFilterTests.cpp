@@ -149,10 +149,10 @@ TEST_CASE( "yaml-filter-tests: none", "[filters][core][yaml]") {
 //9. not
 TEST_CASE( "yaml-filter-tests: not", "[filters][core][yaml]") {
     init();
-    Filter filter = load("filter: {not : {name : civic}}");
+    Filter filter = load("filter: {not : { any: [{name : civic}, {name : bmw320i}]}}");
 
     REQUIRE(!filter.eval(civic, ctx));
-    REQUIRE(filter.eval(bmw1, ctx));
+    REQUIRE(!filter.eval(bmw1, ctx));
     REQUIRE(filter.eval(bike, ctx));
 
 }
