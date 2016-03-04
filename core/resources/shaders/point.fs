@@ -48,8 +48,14 @@ void main(void) {
             float c2 = circle(uv, vec2(0.0), circleRadiusOut);
             color = vec4(vec3(c1) * v_color.rgb, c2 * v_alpha * v_color.a);
         #else
-            vec4 texColor = texture2D(u_tex, v_texcoords);
-            color = vec4(texColor.rgb * v_color.rgb, v_alpha * texColor.a * v_color.a);
+            // assume premultiplied texture color
+            color = texture2D(u_tex, v_texcoords);
+
+            // unpremultiply for blending(src_alpha,one_minus_src_alpha)
+            color.rgb /= color.a;
+
+            color *= v_color;
+            color.a *= v_alpha;
         #endif
 
         #pragma tangram: color

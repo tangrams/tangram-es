@@ -272,16 +272,16 @@ layers:
                 draw: { icons: { sprite: restaurant } }
             cafe:
                 filter: { kind: [cafe, convenience] }
-                draw: { icons: { sprite: cafe } }
+                draw: { icons: { sprite: cafe, color: [0.5, 0.5, 1.0, 0.5] } }
             bar:
                 filter: { kind: [bar, pub] }
                 draw: { icons: { sprite: bar } }
             culture:
                 filter: { kind: [museum, library, church, place_of_worship, bank] }
-                draw: { icons: { sprite: museum } }
+                draw: { icons: { sprite: museum, color: [1.0, 1.0, 1.0, 0.5] } }
             station:
                 filter: { kind: [station] }
-                draw: { icons: { sprite: train } }
+                draw: { icons: { sprite: museum, color: [0.0, 1.0, 0.0, 0.5] } }
             hospital:
                 filter: { kind: [hospital, pharmacy] }
                 draw: { icons: { sprite: hospital } }
