@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class HttpHandler {
 
     private OkHttpClient okClient;
-    private Request.Builder okRequestBuilder;
+    protected Request.Builder okRequestBuilder;
 
     public HttpHandler() {
         okRequestBuilder = new Request.Builder();
