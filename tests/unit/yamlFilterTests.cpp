@@ -232,7 +232,7 @@ TEST_CASE( "yaml-filter-tests: predicate with large integers", "[filters][core][
 
 TEST_CASE("Filters specified as a javascript function evaluate correctly", "[filters][core][yaml]") {
     init();
-    Filter filter = load("filter: { 'function() { return false; }' }");
+    Filter filter = load("filter: 'function() { return false; }'");
 
     REQUIRE(!filter.eval(civic, ctx));
     REQUIRE(!filter.eval(bmw1, ctx));
