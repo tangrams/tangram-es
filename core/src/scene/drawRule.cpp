@@ -48,6 +48,19 @@ DrawRule::DrawRule(const DrawRuleData& _ruleData, const SceneLayer& _layer) :
     }
 }
 
+DrawRule::DrawRule(const DrawRule& _other) : active(_other.active), name(_other.name),
+    id(_other.id), dummyOutline(_other.dummyOutline) {
+
+    for (size_t i = 0; i < StyleParamKeySize; ++i) {
+
+        if (!_other.active[i]) {
+            continue;
+        }
+
+        params[i] = _other.params[i];
+    }
+}
+
 void DrawRule::merge(const DrawRuleData& _ruleData, const SceneLayer& _layer) {
 
     evalConflict(*this, _ruleData, _layer);
@@ -109,6 +122,12 @@ size_t DrawRule::getParamSetHash() const {
         if (active[i]) { hash_combine(seed, params[i].name); }
     }
     return seed;
+}
+
+DrawRule DrawRule::outlineRule() const {
+    DrawRule outlineRule(*this);
+    outlineRule.dummyOutline = true;
+    return outlineRule;
 }
 
 void DrawRule::logGetError(StyleParamKey _expectedKey, const StyleParam& _param) const {
@@ -213,6 +232,20 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
         }
 
         if (valid) {
+
+            // build outline explicitly with outline style
+            const auto& outlineStyleName = rule.findParameter(StyleParamKey::outline_style);
+            if (outlineStyleName) {
+                auto& styleName = outlineStyleName.value.get<std::string>();
+                auto* outlineStyle = _builder.getStyleBuilder(styleName);
+                if (!outlineStyle) {
+                    LOGE("Invalid style %s", styleName.c_str());
+                } else {
+                    outlineStyle->addFeature(_feature, rule.outlineRule());
+                }
+            }
+
+            // build feature with style
             style->addFeature(_feature, rule);
         }
     }
