@@ -41,6 +41,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"outline:miter_limit", StyleParamKey::outline_miter_limit},
     {"outline:order", StyleParamKey::outline_order},
     {"outline:width", StyleParamKey::outline_width},
+    {"outline:style", StyleParamKey::outline_style},
     {"priority", StyleParamKey::priority},
     {"repeat_distance", StyleParamKey::repeat_distance},
     {"repeat_group", StyleParamKey::repeat_group},
@@ -170,6 +171,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::sprite:
     case StyleParamKey::sprite_default:
     case StyleParamKey::style:
+    case StyleParamKey::outline_style:
     case StyleParamKey::repeat_group:
         return _value;
     case StyleParamKey::font_size: {
