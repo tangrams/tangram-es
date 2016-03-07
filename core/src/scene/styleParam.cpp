@@ -31,12 +31,14 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"font:weight", StyleParamKey::font_weight},
     {"interactive", StyleParamKey::interactive},
     {"join", StyleParamKey::join},
+    {"miter_limit", StyleParamKey::miter_limit},
     {"none", StyleParamKey::none},
     {"offset", StyleParamKey::offset},
     {"order", StyleParamKey::order},
     {"outline:cap", StyleParamKey::outline_cap},
     {"outline:color", StyleParamKey::outline_color},
     {"outline:join", StyleParamKey::outline_join},
+    {"outline:miter_limit", StyleParamKey::outline_miter_limit},
     {"outline:order", StyleParamKey::outline_order},
     {"outline:width", StyleParamKey::outline_width},
     {"priority", StyleParamKey::priority},
@@ -226,6 +228,8 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
 
         return Width(width);
     }
+    case StyleParamKey::miter_limit:
+    case StyleParamKey::outline_miter_limit:
     case StyleParamKey::font_stroke_width: {
         double num;
         if (parseFloat(_value, num) > 0) {
@@ -321,6 +325,10 @@ std::string StyleParam::toString() const {
     case StyleParamKey::outline_join:
         if (!value.is<uint32_t>()) break;
         return k + std::to_string(value.get<uint32_t>());
+    case StyleParamKey::miter_limit:
+    case StyleParamKey::outline_miter_limit:
+        if (!value.is<float>()) break;
+        return k + std::to_string(value.get<float>());
     default:
         break;
     }

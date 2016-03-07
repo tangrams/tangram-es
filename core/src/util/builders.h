@@ -73,18 +73,17 @@ typedef std::function<void(const glm::vec3& coord, const glm::vec2& enormal, con
 struct PolyLineBuilder {
     std::vector<uint16_t> indices; // indices for drawing the polyline as triangles are added to this vector
     PolyLineVertexFn addVertex;
-    SizeHintFn sizeHint;
     size_t numVertices = 0;
+    float miterLimit = 3.f;
     CapTypes cap;
     JoinTypes join;
     bool keepTileEdges;
 
     PolyLineBuilder(PolyLineVertexFn _addVertex = [](auto&,auto&,auto&){},
-                    SizeHintFn _sizeHint = [](auto){},
                     CapTypes _cap = CapTypes::butt,
                     JoinTypes _join = JoinTypes::bevel,
                     bool _kte = true)
-        : addVertex(_addVertex), sizeHint(_sizeHint), cap(_cap), join(_join), keepTileEdges(_kte) {}
+        : addVertex(_addVertex), cap(_cap), join(_join), keepTileEdges(_kte) {}
 
     void clear() {
         numVertices = 0;

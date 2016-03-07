@@ -264,28 +264,6 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
     int cornersOnCap = (int)_ctx.cap;
     int trianglesOnJoin = (int)_ctx.join;
 
-    // Calculate number of used vertices to reserve enough space
-    size_t nIndices = _ctx.indices.size();
-    nIndices += (lineSize - 1) * 6;
-    size_t nVertices = _ctx.numVertices;
-    nVertices += lineSize * 2;
-
-    if (trianglesOnJoin > 0) {
-        int nJoins = (lineSize - 2);
-        nVertices += nJoins * (trianglesOnJoin + 4);
-        nIndices += nJoins * (trianglesOnJoin * 3);
-    }
-    if (cornersOnCap == 2) {
-        nVertices += 2 * 2;
-        nIndices += 2 * 3;
-    }
-    else if (cornersOnCap > 2) {
-        nVertices += 2 * (cornersOnCap + 2);
-        nIndices += 2 * cornersOnCap * 3;
-    }
-    _ctx.indices.reserve(nIndices);
-    _ctx.sizeHint(nVertices);
-
     // Process first point in line with an end cap
     normNext = glm::normalize(perp2d(coordCurr, coordNext));
     addCap(coordCurr, normNext, cornersOnCap, true, _ctx);
@@ -305,7 +283,10 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
         // Compute "normal" for miter joint
         miterVec = normPrev + normNext;
         float scale = sqrtf(2.0f / (1.0f + glm::dot(normPrev, normNext)) / glm::dot(miterVec, miterVec) );
-        miterVec *= fminf(scale, 5.0f); // clamps our miter vector to an arbitrary length
+        miterVec *= scale;
+        if (glm::length(miterVec) > _ctx.miterLimit) {
+            trianglesOnJoin = 1;
+        }
 
         float v = i / (float)lineSize;
 
@@ -352,14 +333,6 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
     indexPairs(1, _ctx.numVertices, _ctx.indices);
     addCap(coordNext, normNext, cornersOnCap , false, _ctx);
 
-#if 1
-    if (nIndices != _ctx.indices.size() || nVertices != _ctx.numVertices) {
-        LOGW("expected indices = %d => %d (%d / %d / %d)", nIndices, _ctx.indices.size(), lineSize,
-               cornersOnCap, trianglesOnJoin);
-        LOGW("expected vertices = %d => %d (%d / %d / %d)", nVertices, _ctx.numVertices, lineSize,
-               cornersOnCap, trianglesOnJoin);
-    }
-#endif
 }
 
 void Builders::buildPolyLine(const Line& _line, PolyLineBuilder& _ctx) {
