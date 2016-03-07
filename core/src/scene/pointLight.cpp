@@ -67,8 +67,8 @@ void PointLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
         position.z = position.z - _view.getEye().z;
 
     } else if (m_origin == LightOrigin::ground) {
-        // Leave light's xy in camera space, but z needs to be moved relative to ground plane
-        position.z = position.z - _view.getPosition().z;
+        // Move light position relative to the eye position in world space
+        position -= glm::vec4(_view.getEye(), 0.0);
     }
 
     if (m_origin == LightOrigin::world || m_origin == LightOrigin::ground) {
