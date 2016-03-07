@@ -333,8 +333,8 @@ layers:
             text:
                 interactive: true
                 #offset: [0, 12px]
-                align: right
-                text_wrap: 1
+                text_wrap: 10
+                align: center
                 # using codePointAt() from
                 # https://github.com/paulmillr/es6-shim/blob/8e570a4b425a80f9b13ff027dbd28d65f201a319/es6-shim.js#L171-L183"
                 text_source: |
@@ -362,8 +362,7 @@ layers:
                       }
                       if (output.length > 0) {
                         output.push(string.slice(last, length));
-
-                        return output.join(' ');
+                        return output.join('\n');
                       }
                       return feature.name;
                     }

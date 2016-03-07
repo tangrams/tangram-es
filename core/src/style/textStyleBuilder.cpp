@@ -11,6 +11,8 @@
 #include <locale>
 #include <mutex>
 
+#define MIN_LINE_WIDTH 4
+
 namespace Tangram {
 
 TextStyleBuilder::TextStyleBuilder(const TextStyle& _style)
@@ -72,6 +74,9 @@ void TextStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _pr
     Point p = glm::vec3(centroid(_polygon), 0.0);
     addPoint(p, _props, _rule);
 }
+
+// TODO use icu transforms
+// http://source.icu-project.org/repos/icu/icu/trunk/source/samples/ustring/ustring.cpp
 
 std::string TextStyleBuilder::applyTextTransform(const TextStyle::Parameters& _params,
                                                  const std::string& _string) {
@@ -192,9 +197,11 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         // m_batch.draw() calls FontContext's TextureCallback for new glyphs
         // and ScratchBuffer's MeshCallback for vertex quads of each
         // glyph in LineLayout.
+        //
         if (_type == Label::Type::point && _params.wordWrap) {
-            wrap = drawWithLineWrapping(line, m_batch, _params.maxLineWidth,
-                                        4, _params.align, m_style.pixelScale());
+            wrap = drawWithLineWrapping(line, m_batch, MIN_LINE_WIDTH,
+                                        _params.maxLineWidth, _params.align,
+                                        m_style.pixelScale());
         } else {
             m_batch.draw(line, glm::vec2(0.0), wrap.metrics);
         }
@@ -365,7 +372,7 @@ void TextStyleBuilder::ScratchBuffer::clear() {
 }
 
 LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch& _batch,
-                              size_t _maxChar, size_t _minWordLength,
+                              size_t _minLineChars, size_t _maxLineChars,
                               TextLabelProperty::Align _alignment,  float _pixelScale) {
 
     static std::vector<std::pair<int,float>> lineWraps;
@@ -385,30 +392,32 @@ LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch
     size_t lastShape = 0;
     size_t lastChar = 0;
 
-    unsigned int numLines = 1;
+    for (auto& shape : _line.shapes()) {
 
-    for (auto& c : _line.shapes()) {
+        if (!shape.cluster) {
+            shapeCount++;
+            lineWidth += _line.advance(shape);
+            continue;
+        }
+
+        charCount++;
         shapeCount++;
-        lineWidth += _line.advance(c);
+        lineWidth += _line.advance(shape);
 
-        if (c.cluster) { charCount++; }
-
-        if (c.canBreak || c.mustBreak) {
+        if (shape.canBreak || shape.mustBreak) {
             lastShape = shapeCount;
             lastChar = charCount;
             lastWidth = lineWidth;
         }
 
-        if (lastShape != 0 && (c.mustBreak || charCount >= _maxChar)) {
+        if (lastShape != 0 && (shape.mustBreak || charCount >= _maxLineChars)) {
             // only go to next line if chars have been added on the current line
-            // HACK: avoid short words on single line
-            if (c.mustBreak || shapeCount - lastShape > _minWordLength || _maxChar <= 4) {
+            if (shape.mustBreak || charCount - lastChar >= _minLineChars) {
                 auto& endShape = _line.shapes()[lastShape-1];
 
                 if (endShape.isSpace) {
                     lineWidth -= _line.advance(endShape);
                     lastWidth -= _line.advance(endShape);
-                    numLines++;
                 }
 
                 lineWraps.emplace_back(lastShape, lastWidth);
@@ -452,6 +461,7 @@ LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch
 
         shapeStart = shapeEnd;
 
+        // FIXME hardcoded values
         float height = lineMetrics.height();
         height -= (2 * 6) * _line.scale(); // substract glyph padding
         height += 4 * _pixelScale; // add some custom line offset
@@ -461,7 +471,7 @@ LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch
         layoutMetrics.addExtents(lineMetrics.aabb);
     }
 
-    return {layoutMetrics, numLines};
+    return {layoutMetrics, int(lineWraps.size())};
 }
 
 }

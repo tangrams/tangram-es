@@ -19,7 +19,7 @@ namespace Tangram {
 
 struct LineWrap {
     alfons::LineMetrics metrics;
-    unsigned int nbLines;
+    int nbLines;
 };
 
 /* Wrap an Alfons line layout, and draw the glyph quads to the TextBatch.
@@ -34,7 +34,8 @@ struct LineWrap {
  * _pixelScale the screen pixel density
  */
 LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch& _batch,
-    size_t _maxChar, size_t _minWordLength, TextLabelProperty::Align _alignment, float _pixelScale);
+                              size_t _minLineChars, size_t _maxLineChars,
+                              TextLabelProperty::Align _alignment, float _pixelScale);
 
 
 class TextStyleBuilder : public StyleBuilder {

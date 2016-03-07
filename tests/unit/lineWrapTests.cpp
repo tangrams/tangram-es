@@ -60,15 +60,15 @@ TEST_CASE() {
 
     REQUIRE(line.shapes().size() == 19);
 
-    wrap = drawWithLineWrapping(line, batch, 10, 4, TextLabelProperty::Align::center, 1.0);
+    wrap = drawWithLineWrapping(line, batch, 4, 10, TextLabelProperty::Align::center, 1.0);
     REQUIRE(wrap.nbLines == 2);
     wrap = drawWithLineWrapping(line, batch, 4, 4, TextLabelProperty::Align::center, 1.0);
+    REQUIRE(wrap.nbLines == 3);
+    wrap = drawWithLineWrapping(line, batch, 0, 1, TextLabelProperty::Align::center, 1.0);
     REQUIRE(wrap.nbLines == 4);
-    wrap = drawWithLineWrapping(line, batch, 1, 0, TextLabelProperty::Align::center, 1.0);
+    wrap = drawWithLineWrapping(line, batch, 0, 3, TextLabelProperty::Align::center, 1.0);
     REQUIRE(wrap.nbLines == 4);
-    wrap = drawWithLineWrapping(line, batch, 3, 0, TextLabelProperty::Align::center, 1.0);
-    REQUIRE(wrap.nbLines == 4);
-    wrap = drawWithLineWrapping(line, batch, 3, 5, TextLabelProperty::Align::center, 1.0);
+    wrap = drawWithLineWrapping(line, batch, 2, 5, TextLabelProperty::Align::center, 1.0);
     REQUIRE(wrap.nbLines == 4);
 }
 
@@ -78,9 +78,9 @@ TEST_CASE() {
     auto line = shaper.shape(font, "لعدم عليها كلّ.");
     REQUIRE(line.shapes().size() == 15);
 
-    wrap = drawWithLineWrapping(line, batch, 1, 0, TextLabelProperty::Align::center, 1.0);
+    wrap = drawWithLineWrapping(line, batch, 0, 1, TextLabelProperty::Align::center, 1.0);
     REQUIRE(wrap.nbLines == 3);
-    wrap = drawWithLineWrapping(line, batch, 10, 0, TextLabelProperty::Align::center, 1.0);
+    wrap = drawWithLineWrapping(line, batch, 0, 10, TextLabelProperty::Align::center, 1.0);
     REQUIRE(wrap.nbLines == 2);
 }
 
@@ -90,8 +90,8 @@ TEST_CASE() {
     auto line = shaper.shape(font, "日本語のキーボード");
     REQUIRE(line.shapes().size() == 9);
 
-    wrap = drawWithLineWrapping(line, batch, 1, 0, TextLabelProperty::Align::center, 1.0);
-    REQUIRE(wrap.nbLines == 1);
+    wrap = drawWithLineWrapping(line, batch, 0, 1, TextLabelProperty::Align::center, 1.0);
+    REQUIRE(wrap.nbLines == 6);
 }
 
 }
