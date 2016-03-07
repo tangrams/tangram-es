@@ -22,49 +22,131 @@ constexpr float normal_scale = 127.0f;
 
 namespace Tangram {
 
+class PolygonMeshBase {
+    using AddVertexFunc = std::function<void(const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv)>;
 
-struct PolygonVertexNoUVs {
+protected:
+    GLenum m_drawMode;
 
-    PolygonVertexNoUVs(glm::vec3 position, uint32_t order, glm::vec3 normal, glm::vec2 uv, GLuint abgr)
-        : pos(glm::i16vec4{ glm::round(position * position_scale), order }),
-          norm(normal * normal_scale),
-          abgr(abgr) {}
+public:
+    PolygonMeshBase(GLenum drawMode) : m_drawMode(drawMode) {}
 
-    glm::i16vec4 pos; // pos.w contains layer (params.order)
-    glm::i8vec3 norm;
-    uint8_t padding = 0;
-    GLuint abgr;
+    struct {
+        uint32_t order = 0;
+        uint32_t color = 0xff00ffff;
+    } attributes;
+
+    AddVertexFunc addVertex;
+    virtual std::unique_ptr<StyledMesh> build() = 0;
+    virtual void clear() = 0;
+    virtual std::vector<uint16_t>& indices() = 0;
+    virtual std::vector<std::pair<uint32_t, uint32_t>>& offsets() = 0;
 };
 
-struct PolygonVertex : PolygonVertexNoUVs {
+class PolygonMeshNoUVs : public PolygonMeshBase {
+    public:
+        PolygonMeshNoUVs(GLenum drawMode) : PolygonMeshBase(drawMode) {
+            addVertex = [this](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv) {
+                m_meshData.vertices.push_back({ coord, attributes.order, normal, uv, attributes.color });
+            };
+        }
 
-    PolygonVertex(glm::vec3 position, uint32_t order, glm::vec3 normal, glm::vec2 uv, GLuint abgr)
-        : PolygonVertexNoUVs(position, order, normal, uv, abgr), texcoord(uv * texture_scale) {}
+        static std::shared_ptr<VertexLayout> layout;
 
-    glm::u16vec2 texcoord;
+        struct PolygonVertexNoUVs {
+            PolygonVertexNoUVs(glm::vec3 position, uint32_t order, glm::vec3 normal, glm::vec2 uv, GLuint abgr)
+                : pos(glm::i16vec4{ glm::round(position * position_scale), order }),
+                  norm(normal * normal_scale),
+                  abgr(abgr) {}
+
+            glm::i16vec4 pos; // pos.w contains layer (params.order)
+            glm::i8vec3 norm;
+            uint8_t padding = 0;
+            GLuint abgr;
+        };
+
+        void clear() override { m_meshData.clear(); }
+
+        std::unique_ptr<StyledMesh> build() override {
+            if (m_meshData.vertices.empty()) { return nullptr; }
+
+            auto mesh = std::make_unique<Mesh<PolygonVertexNoUVs>>(layout, m_drawMode);
+            mesh->compile(m_meshData);
+            m_meshData.clear();
+
+            return std::move(mesh);
+        }
+
+        std::vector<std::pair<uint32_t, uint32_t>>& offsets() override {
+            return m_meshData.offsets;
+        }
+
+        std::vector<uint16_t>& indices() override { return m_meshData.indices; }
+
+    private:
+        MeshData<PolygonVertexNoUVs> m_meshData;
 };
+
+std::shared_ptr<VertexLayout> PolygonMeshNoUVs::layout = std::shared_ptr<VertexLayout>(new VertexLayout({
+    {"a_position", 4, GL_SHORT, false, 0},
+    {"a_normal", 4, GL_BYTE, true, 0},
+    {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+}));
+
+class PolygonMesh : public PolygonMeshBase {
+    public:
+        PolygonMesh(GLenum drawMode) : PolygonMeshBase(drawMode) {
+            addVertex = [this](const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv) {
+                m_meshData.vertices.push_back({ coord, attributes.order, normal, uv, attributes.color });
+            };
+        }
+
+        static std::shared_ptr<VertexLayout> layout;
+        struct PolygonVertex : PolygonMeshNoUVs::PolygonVertexNoUVs {
+            PolygonVertex(glm::vec3 position, uint32_t order, glm::vec3 normal, glm::vec2 uv, GLuint abgr)
+                : PolygonVertexNoUVs(position, order, normal, uv, abgr), texcoord(uv * texture_scale) {}
+            glm::u16vec2 texcoord;
+        };
+
+        void clear() override { m_meshData.clear(); }
+
+        std::unique_ptr<StyledMesh> build() override {
+            if (m_meshData.vertices.empty()) { return nullptr; }
+
+            auto mesh = std::make_unique<Mesh<PolygonVertex>>(layout, m_drawMode);
+            mesh->compile(m_meshData);
+            m_meshData.clear();
+
+            return std::move(mesh);
+        }
+
+        std::vector<std::pair<uint32_t, uint32_t>>& offsets() override {
+            return m_meshData.offsets;
+        }
+
+        std::vector<uint16_t>& indices() override { return m_meshData.indices; }
+
+    private:
+        MeshData<PolygonVertex> m_meshData;
+};
+
+std::shared_ptr<VertexLayout> PolygonMesh::layout = std::shared_ptr<VertexLayout>(new VertexLayout({
+    {"a_position", 4, GL_SHORT, false, 0},
+    {"a_normal", 4, GL_BYTE, true, 0}, // The 4th byte is for padding
+    {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+    {"a_texcoord", 2, GL_UNSIGNED_SHORT, true, 0},
+}));
 
 PolygonStyle::PolygonStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
     : Style(_name, _blendMode, _drawMode)
 {}
 
 void PolygonStyle::constructVertexLayout() {
-
     if (m_texCoordsGeneration) {
-        m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-            {"a_position", 4, GL_SHORT, false, 0},
-            {"a_normal", 4, GL_BYTE, true, 0}, // The 4th byte is for padding
-            {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
-            {"a_texcoord", 2, GL_UNSIGNED_SHORT, true, 0},
-        }));
+        m_vertexLayout = PolygonMesh::layout;
     } else {
-        m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-            {"a_position", 4, GL_SHORT, false, 0},
-            {"a_normal", 4, GL_BYTE, true, 0},
-            {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
-        }));
+        m_vertexLayout = PolygonMeshNoUVs::layout;
     }
-
 }
 
 void PolygonStyle::constructShaderProgram() {
@@ -79,14 +161,11 @@ void PolygonStyle::constructShaderProgram() {
     }
 }
 
-template <class V>
 struct PolygonStyleBuilder : public StyleBuilder {
 
 public:
 
     struct {
-        uint32_t order = 0;
-        uint32_t color = 0xff00ffff;
         glm::vec2 extrude;
         float height;
         float minHeight;
@@ -95,7 +174,7 @@ public:
     void setup(const Tile& _tile) override {
         m_tileUnitsPerMeter = _tile.getInverseScale();
         m_zoom = _tile.getID().z;
-        m_meshData.clear();
+        mesh->clear();
     }
 
     void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
@@ -110,39 +189,30 @@ public:
 
     PolygonBuilder& polygonBuilder() { return m_builder; }
 
+    std::unique_ptr<PolygonMeshBase> mesh;
+
 private:
 
     const PolygonStyle& m_style;
 
     PolygonBuilder m_builder;
 
-    MeshData<V> m_meshData;
-
     float m_tileUnitsPerMeter;
     int m_zoom;
 
 };
 
-template <class V>
-std::unique_ptr<StyledMesh> PolygonStyleBuilder<V>::build() {
-    if (m_meshData.vertices.empty()) { return nullptr; }
-
-    auto mesh = std::make_unique<Mesh<V>>(m_style.vertexLayout(),
-                                                      m_style.drawMode());
-    mesh->compile(m_meshData);
-    m_meshData.clear();
-
-    return std::move(mesh);
+std::unique_ptr<StyledMesh> PolygonStyleBuilder::build() {
+    return std::move(mesh->build());
 }
 
-template <class V>
-void PolygonStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties& _props) {
-    _rule.get(StyleParamKey::color, m_params.color);
+void PolygonStyleBuilder::parseRule(const DrawRule& _rule, const Properties& _props) {
+    _rule.get(StyleParamKey::color, mesh->attributes.color);
     _rule.get(StyleParamKey::extrude, m_params.extrude);
-    _rule.get(StyleParamKey::order, m_params.order);
+    _rule.get(StyleParamKey::order, mesh->attributes.order);
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        m_params.color <<= (m_zoom % 6);
+        mesh->attributes.color <<= (m_zoom % 6);
     }
 
     auto& extrude = m_params.extrude;
@@ -151,40 +221,34 @@ void PolygonStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties& 
 
 }
 
-template <class V>
-void PolygonStyleBuilder<V>::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
+void PolygonStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
 
     parseRule(_rule, _props);
 
-    m_builder.addVertex = [this](const glm::vec3& coord,
-                                 const glm::vec3& normal,
-                                 const glm::vec2& uv) {
-        m_meshData.vertices.push_back({ coord, m_params.order, normal, uv, m_params.color });
-    };
+    m_builder.addVertex = mesh->addVertex;
 
     if (m_params.minHeight != m_params.height) {
-        Builders::buildPolygonExtrusion(_polygon, m_params.minHeight,
-                                        m_params.height, m_builder);
+        Builders::buildPolygonExtrusion(_polygon, m_params.minHeight, m_params.height, m_builder);
     }
 
     Builders::buildPolygon(_polygon, m_params.height, m_builder);
 
-    m_meshData.indices.insert(m_meshData.indices.end(),
-                              m_builder.indices.begin(),
-                              m_builder.indices.end());
+    mesh->indices().insert(mesh->indices().end(), m_builder.indices.begin(), m_builder.indices.end());
 
-    m_meshData.offsets.emplace_back(m_builder.indices.size(),
-                                    m_builder.numVertices);
+    mesh->offsets().emplace_back(m_builder.indices.size(), m_builder.numVertices);
+
     m_builder.clear();
 }
 
 std::unique_ptr<StyleBuilder> PolygonStyle::createBuilder() const {
     if (m_texCoordsGeneration) {
-        auto builder = std::make_unique<PolygonStyleBuilder<PolygonVertex>>(*this);
+        auto builder = std::make_unique<PolygonStyleBuilder>(*this);
+        builder->mesh = std::make_unique<PolygonMesh>(builder->style().drawMode());
         builder->polygonBuilder().useTexCoords = true;
         return std::move(builder);
     } else {
-        auto builder = std::make_unique<PolygonStyleBuilder<PolygonVertexNoUVs>>(*this);
+        auto builder = std::make_unique<PolygonStyleBuilder>(*this);
+        builder->mesh = std::make_unique<PolygonMeshNoUVs>(builder->style().drawMode());
         builder->polygonBuilder().useTexCoords = false;
         return std::move(builder);
     }
