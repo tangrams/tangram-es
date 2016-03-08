@@ -22,9 +22,6 @@ public:
 
     virtual ~PolygonStyle() {}
 
-private:
-
-    std::string m_defines;
 };
 
 }

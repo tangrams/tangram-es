@@ -46,9 +46,7 @@ struct PolygonVertex : PolygonVertexNoUVs {
 
 PolygonStyle::PolygonStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
     : Style(_name, _blendMode, _drawMode)
-{
-    m_defines = "";
-}
+{}
 
 void PolygonStyle::constructVertexLayout() {
 
@@ -59,8 +57,6 @@ void PolygonStyle::constructVertexLayout() {
             {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
             {"a_texcoord", 2, GL_UNSIGNED_SHORT, true, 0},
         }));
-
-        m_defines += "#define TANGRAM_USE_TEX_COORDS\n";
     } else {
         m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
             {"a_position", 4, GL_SHORT, false, 0},
@@ -78,7 +74,9 @@ void PolygonStyle::constructShaderProgram() {
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
-    m_shaderProgram->addSourceBlock("defines", m_defines);
+    if (m_texCoordsGeneration) {
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_USE_TEX_COORDS\n");
+    }
 }
 
 template <class V>

@@ -19,10 +19,6 @@ public:
 
     virtual ~PolylineStyle() {}
 
-private:
-
-    std::string m_defines;
-
 };
 
 }
