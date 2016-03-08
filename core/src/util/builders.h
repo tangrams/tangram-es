@@ -40,12 +40,14 @@ typedef std::function<void(size_t reserve)> SizeHintFn;
  */
 struct PolygonBuilder {
     std::vector<uint16_t> indices; // indices for drawing the polyon as triangles are added to this vector
+    std::vector<int> used;
+
     PolygonVertexFn addVertex;
     SizeHintFn sizeHint;
     size_t numVertices = 0;
     bool useTexCoords;
 
-    mapbox::Earcut<float, uint16_t> earcut;
+    mapbox::detail::Earcut<uint16_t> earcut;
 
     PolygonBuilder(PolygonVertexFn _addVertex = [](auto&,auto&,auto&){},
                    SizeHintFn _sizeHint = [](auto){},

@@ -32,21 +32,7 @@ JoinTypes JoinTypeFromString(const std::string& str) {
 
 void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuilder& _ctx) {
 
-    _ctx.earcut(_polygon);
-
-    uint16_t vertexDataOffset = _ctx.numVertices;
-
-    if (vertexDataOffset == 0) {
-        _ctx.indices = std::move(_ctx.earcut.indices);
-    } else {
-        _ctx.indices.reserve(_ctx.indices.size() +  _ctx.earcut.indices.size());
-        for (auto i : _ctx.earcut.indices) {
-            _ctx.indices.push_back(vertexDataOffset + i);
-        }
-    }
-
     glm::vec2 min, max;
-
     if (_ctx.useTexCoords) {
         min = glm::vec2(std::numeric_limits<float>::max());
         max = glm::vec2(std::numeric_limits<float>::min());
@@ -59,22 +45,67 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
         }
     }
 
-    // call the tesselator
-    glm::vec3 normal(0.0, 0.0, 1.0);
+    _ctx.earcut(_polygon);
 
-    _ctx.numVertices += _ctx.earcut.vertices.size();
+    size_t sumPoints = 0;
+    for (auto& line : _polygon) {
+        sumPoints += line.size();
+    }
+
+    size_t sumVertices = 0;
+    _ctx.used.assign(sumPoints, 0);
+    for (auto i : _ctx.earcut.indices) {
+        if (_ctx.used[i] == 0) {
+            _ctx.used[i] = 1;
+            sumVertices++;
+        }
+    }
+
+    uint16_t vertexDataOffset = _ctx.numVertices;
+    _ctx.numVertices += sumVertices;
     _ctx.sizeHint(_ctx.numVertices);
 
-    for (auto& p : _ctx.earcut.vertices) {
-        glm::vec3 coord(p[0], p[1], _height);
+    size_t ring = 0;
+    size_t offset = 0;
+    size_t modified = 0;
 
-        if (_ctx.useTexCoords) {
-            glm::vec2 uv(mapValue(coord.x, min.x, max.x, 0., 1.),
-                         mapValue(coord.y, min.y, max.y, 1., 0.));
+    for (size_t src = 0, dst = 0; src < sumPoints; src++) {
 
-            _ctx.addVertex(coord, normal, uv);
-        } else {
-            _ctx.addVertex(coord, normal, glm::vec2(0));
+        if (src - offset >= _polygon[ring].size()) {
+            offset += _polygon[ring].size();
+            ring += 1;
+        }
+        const Line& points = _polygon[ring];
+
+        if (_ctx.used[src] > 0) {
+            // Remember the first skipped vertex
+            if (!modified && src != dst) { modified = src+1; }
+
+            _ctx.used[src] = dst++;
+
+            auto& p = points[src - offset];
+            glm::vec3 coord(p.x, p.y, _height);
+            glm::vec3 normal(0.0, 0.0, 1.0);
+
+            if (_ctx.useTexCoords) {
+                glm::vec2 uv(mapValue(coord.x, min.x, max.x, 0., 1.),
+                             mapValue(coord.y, min.y, max.y, 1., 0.));
+
+                _ctx.addVertex(coord, normal, uv);
+            } else {
+                _ctx.addVertex(coord, normal, glm::vec2(0));
+            }
+        }
+    }
+
+    _ctx.indices.reserve(_ctx.indices.size() +  _ctx.earcut.indices.size());
+    if (modified) {
+        for (auto i : _ctx.earcut.indices) {
+            _ctx.indices.push_back(vertexDataOffset + _ctx.used[i]);
+        }
+    } else {
+        for (auto i : _ctx.earcut.indices) {
+            _ctx.indices.push_back(vertexDataOffset + i);
         }
     }
 }
