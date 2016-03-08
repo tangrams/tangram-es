@@ -195,7 +195,6 @@ auto PolylineStyleBuilder::parseRule(const DrawRule& _rule, const Properties& _p
 
     auto& strokeWidth = _rule.findParameter(StyleParamKey::outline_width);
     if (strokeWidth |
-        _rule.get(StyleParamKey::outline_color, p.stroke.color) |
         _rule.get(StyleParamKey::outline_order, stroke.order) |
         _rule.get(StyleParamKey::outline_cap, cap) |
         _rule.get(StyleParamKey::outline_join, join) |
@@ -204,6 +203,7 @@ auto PolylineStyleBuilder::parseRule(const DrawRule& _rule, const Properties& _p
         p.stroke.cap = static_cast<CapTypes>(cap);
         p.stroke.join = static_cast<JoinTypes>(join);
 
+        if (!_rule.get(StyleParamKey::outline_color, p.stroke.color)) { return p; }
         if (!evalWidth(strokeWidth, stroke.width, stroke.slope)) {
             return p;
         }
