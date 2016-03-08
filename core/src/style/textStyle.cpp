@@ -16,7 +16,11 @@
 #include "platform.h"
 #include "tangram.h"
 
+#include <sstream>
+
 namespace Tangram {
+
+const static std::string key_name("name");
 
 TextStyle::TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext, bool _sdf,
                      bool _sdfMultisampling, Blending _blendMode, GLenum _drawMode) :
@@ -98,14 +102,36 @@ struct TextStyleBuilder : public StyleBuilder {
 
     bool prepareLabel(const TextStyle::Parameters& _params, Label::Type _type);
     void addLabel(const TextStyle::Parameters& _params, Label::Type _type, Label::Transform _transform);
+
+    std::string resolveTextSource(const std::string& textSource, const Properties& props) const;
 };
 
 bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
     return true;
 }
 
+std::string TextStyleBuilder::resolveTextSource(const std::string& textSource, const Properties& props) const {
+
+    std::vector<std::string> fallbacks;
+    std::stringstream ss(textSource);
+    std::string item;
+
+    // Parse fallbacks
+    while (std::getline(ss, item, ',')) {
+        fallbacks.push_back(item);
+    }
+
+    for (const auto& fallback : fallbacks) {
+        if (props.getString(fallback, item)) {
+            return item;
+        }
+    }
+
+    // Default to 'name'
+    return props.getString(key_name);
+}
+
 auto TextStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _props) const -> TextStyle::Parameters {
-    const static std::string key_name("name");
 
     TextStyle::Parameters p;
 
@@ -147,11 +173,12 @@ auto TextStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _props
     _rule.get(StyleParamKey::text_wrap, p.maxLineWidth);
 
     _rule.get(StyleParamKey::text_source, p.text);
+
     if (!_rule.isJSFunction(StyleParamKey::text_source)) {
         if (p.text.empty()) {
             p.text = _props.getString(key_name);
         } else {
-            p.text = _props.getString(p.text);
+            p.text = resolveTextSource(p.text, _props);
         }
     }
 

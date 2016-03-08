@@ -156,7 +156,7 @@ layers:
                 order: 'function() { return feature.sort_key + 5 }'
                 outline:
                     color: [[16, '#999'], [18, '#aaa']]
-                    width: [[15, 0], [16, 2]]
+                    width: [[10, 0], [16, 2]]
 
         rounded:
             filter: { $zoom: { min: 18 } }
@@ -320,6 +320,22 @@ layers:
                     color: [.75, .75, .73]
                     order: 52
                     extrude: true
+                text:
+                    repeat_distance: 0
+                    text_source: [name:en, name]
+                    #text_source: |
+                    #    function() {
+                    #        if (feature.height > 80)
+                    #            return 'high';
+                    #        else
+                    #            return 'low';
+                    #    }
+                    priority: 0
+                    font:
+                        family: sans-serif
+                        style: normal
+                        size: 0.5em
+                        fill: black
         high-line:
             filter: {roof_material: grass}
             draw:
