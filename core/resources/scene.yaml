@@ -322,7 +322,7 @@ layers:
                     extrude: true
                 text:
                     repeat_distance: 0
-                    text_source: [name:en, name]
+                    text_source: [name:en, name, area, volume]
                     #text_source: |
                     #    function() {
                     #        if (feature.height > 80)

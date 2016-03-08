@@ -112,19 +112,23 @@ bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
 
 std::string TextStyleBuilder::resolveTextSource(const std::string& textSource, const Properties& props) const {
 
-    std::vector<std::string> fallbacks;
-    std::stringstream ss(textSource);
-    std::string item;
+    std::string tmp, item;
 
-    // Parse fallbacks
-    while (std::getline(ss, item, ',')) {
-        fallbacks.push_back(item);
+    // Meaning we have a yaml sequence defining fallbacks
+    if (textSource.find(',') != std::string::npos) {
+        std::stringstream ss(textSource);
+
+        // Parse fallbacks
+        while (std::getline(ss, tmp, ',')) {
+            if (props.getAsString(tmp, item)) {
+                return item;
+            }
+        }
     }
 
-    for (const auto& fallback : fallbacks) {
-        if (props.getString(fallback, item)) {
-            return item;
-        }
+    // Fallback to default text source
+    if (props.getAsString(textSource, item)) {
+        return item;
     }
 
     // Default to 'name'

@@ -93,6 +93,20 @@ const std::string& Properties::getString(const std::string& key) const {
     return EMPTY_STRING;
 }
 
+const bool Properties::getAsString(const std::string& key, std::string& value) const {
+    auto& it = get(key);
+
+    if (it.is<std::string>()) {
+        value = it.get<std::string>();
+        return true;
+    } else if (it.is<double>()) {
+        value = std::to_string(it.get<double>());
+        return true;
+    }
+
+    return false;
+}
+
 std::string Properties::asString(const Value& value) const {
     if (value.is<std::string>()) {
         return value.get<std::string>();

@@ -40,6 +40,8 @@ struct Properties {
 
     std::string getAsString(const std::string& key) const;
 
+    const bool getAsString(const std::string& key, std::string& value) const;
+
     std::string toJson() const;
 
     void set(std::string key, std::string value);
