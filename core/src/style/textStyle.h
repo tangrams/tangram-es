@@ -39,6 +39,18 @@ public:
         }
     };
 
+    TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
+              bool _sdf = false, bool _sdfMultisampling = false,
+              Blending _blendMode = Blending::overlay,
+              GLenum _drawMode = GL_TRIANGLES);
+
+    virtual void onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit = 0) override;
+
+    virtual ~TextStyle();
+
+    bool useSDF() const { return m_sdf; }
+    auto& fontContext() const { return *m_fontContext; }
+
 protected:
 
     virtual void constructVertexLayout() override;
@@ -54,24 +66,7 @@ protected:
     UniformLocation m_uOrtho{"u_ortho"};
     UniformLocation m_uTex{"u_tex"};
     UniformLocation m_uTexScaleFactor{"u_uv_scale_factor"};
-
-public:
-
-    TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
-              bool _sdf = false, bool _sdfMultisampling = false,
-              Blending _blendMode = Blending::overlay,
-              GLenum _drawMode = GL_TRIANGLES);
-
-    virtual void onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit = 0) override;
-
-    virtual ~TextStyle();
-
-    bool useSDF() const { return m_sdf; }
-    auto& fontContext() const { return *m_fontContext; }
-
-private:
-
-    const std::string& applyTextSource(const Parameters& _parameters, const Properties& _props) const;
+    
 };
 
 }

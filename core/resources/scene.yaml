@@ -156,7 +156,7 @@ layers:
                 order: 'function() { return feature.sort_key + 5 }'
                 outline:
                     color: [[16, '#999'], [18, '#aaa']]
-                    width: [[15, 0], [16, 2]]
+                    width: [[10, 0], [16, 2]]
 
         rounded:
             filter: { $zoom: { min: 18 } }
@@ -413,6 +413,8 @@ layers:
                 #- function() {return (feature.scalerank * .75) <= ($zoom - 4); }
         draw:
             text:
+                text_source: [name:en, name, area, volume]
+                repeat_distance: 0
                 interactive: true
                 priority: 5
                 transition:
