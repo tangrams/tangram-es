@@ -42,8 +42,6 @@ textures:
             info: [0, 1110, 32, 32]
             hotel: [0, 259, 32, 32]
             bookstore: [0, 333, 32, 32]
-    grid:
-        url: img/grid.jpg
 
 styles:
     flatcolor:
@@ -51,22 +49,11 @@ styles:
         lighting: false
     heightglow:
         base: polygons
-        lighting: fragment
-        texcoords: false
-        material:
-            diffuse:
-                texture: grid
-                mapping: uv # defaults texcoords to true
-    polyline_no_uvs:
-        base: lines
-        lighting: vertex
-        texcoords: false
-    heightglowline:
-        texcoords: true
         lighting: vertex
         shaders:
             blocks:
-                color: "color.rgb = vec3(a_texcoord, 1.0);"
+                color: "color.rgb += vec3(position.z / 800.);"
+    heightglowline:
         base: lines
         mix: heightglow
     icons:
@@ -197,7 +184,6 @@ layers:
             filter: { kind: highway }
             draw:
                 lines:
-                    style: polyline_no_uvs
                     color: '#D16768'
                     width: [[14, 2px], [15, 12]]
                     outline:
@@ -206,14 +192,12 @@ layers:
                 filter: { is_link: yes }
                 draw:
                     lines:
-                        style: polyline_no_uvs
                         color: '#aaa'
                         width: [[13, 1px], [14, 12]]
         major_road:
             filter: { kind: major_road, $zoom: { min: 10 } }
             draw:
                 lines:
-                    style: polyline_no_uvs
                     color: '#aaaaa4'
                     width: [[10, 1px], [13, 2px], [14, 2px], [16, 12]]
                     outline:
@@ -222,7 +206,6 @@ layers:
             filter: { kind: minor_road }
             draw:
                 lines:
-                    style: polyline_no_uvs
                     color: '#bbbbb8'
                     width: [[13, 1px], [14, 1px], [15, 8]]
                     outline:
@@ -231,7 +214,6 @@ layers:
             filter: { kind: path }
             draw:
                 lines:
-                    style: polyline_no_uvs
                     color: '#fff'
                     width: [[15, 1px], [17, 2px]]
                     outline:
@@ -250,7 +232,6 @@ layers:
                 filter: { aeroway: runway }
                 draw:
                     lines:
-                        style: polyline_no_uvs
                         color: [[13, '#FFE4B5'], [16, white]]
                         width: [[11, 2.], [12, 3.], [13, 4.], [17, 8.]]
                         order: 39
