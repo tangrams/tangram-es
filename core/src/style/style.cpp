@@ -182,6 +182,7 @@ void Style::draw(const Tile& _tile) {
 
     if (styleMesh) {
         m_shaderProgram->setUniformMatrix4f(m_uModel, _tile.getModelMatrix());
+        m_shaderProgram->setUniformf(m_uProxyDepth, _tile.isProxy() ? 1.f : 0.f);
         m_shaderProgram->setUniformf(m_uTileOrigin,
                                      _tile.getOrigin().x,
                                      _tile.getOrigin().y,

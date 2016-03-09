@@ -16,6 +16,7 @@ uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_meters_per_pixel;
 uniform float u_device_pixel_ratio;
+uniform float u_proxy_depth;
 
 #pragma tangram: uniforms
 
@@ -121,9 +122,8 @@ void main() {
 
     gl_Position = u_proj * v_position;
 
-    // Proxy tiles have u_tile_origin.z < 0, so this adjustment will place proxy tiles
-    // deeper in the depth buffer than non-proxy tiles
-    // gl_Position.z += TANGRAM_DEPTH_DELTA * gl_Position.w * (1. - sign(u_tile_origin.z));
+    // Proxy tiles are placed deeper in the depth buffer than non-proxy tiles
+    gl_Position.z += TANGRAM_DEPTH_DELTA * gl_Position.w * u_proxy_depth;
 
     #ifdef TANGRAM_DEPTH_DELTA
         float layer = UNPACK_ORDER(a_position.w);
