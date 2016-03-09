@@ -786,8 +786,8 @@ Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
     }
 
     if (filters.size() == 0) { return Filter(); }
-    if (filters.size() == 1) { return filters.front(); }
-    return (Filter::MatchAll(filters));
+    if (filters.size() == 1) { return std::move(filters.front()); }
+    return (Filter::MatchAll(std::move(filters)));
 }
 
 Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
@@ -1089,7 +1089,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, S
         }
     }
 
-    return { layerName, filter, rules, sublayers };
+    return { layerName, std::move(filter), rules, std::move(sublayers) };
 }
 
 void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {
@@ -1121,7 +1121,7 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {
 
     auto sublayer = loadSublayer(layer.second, name, scene);
 
-    scene.layers().push_back({ sublayer, source, collections });
+    scene.layers().push_back({ std::move(sublayer), source, collections });
 }
 
 void SceneLoader::loadBackground(Node background, Scene& scene) {

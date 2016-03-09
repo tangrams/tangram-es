@@ -3,6 +3,7 @@
 #include "util/variant.h"
 
 #include <vector>
+#include <memory>
 
 namespace Tangram {
 
@@ -66,14 +67,17 @@ struct Filter {
     bool eval(const Feature& feat, StyleContext& ctx) const;
 
     // Create an 'any', 'all', or 'none' filter
-    inline static Filter MatchAny(const std::vector<Filter>& filters) {
-        return { OperatorAny{ sort(filters) }};
+    inline static Filter MatchAny(std::vector<Filter> filters) {
+        sort(filters);
+        return { OperatorAny{ std::move(filters) }};
     }
-    inline static Filter MatchAll(const std::vector<Filter>& filters) {
-        return { OperatorAll{ sort(filters) }};
+    inline static Filter MatchAll(std::vector<Filter> filters) {
+        sort(filters);
+        return { OperatorAll{ std::move(filters) }};
     }
-    inline static Filter MatchNone(const std::vector<Filter>& filters) {
-        return { OperatorNone{ sort(filters) }};
+    inline static Filter MatchNone(std::vector<Filter> filters) {
+        sort(filters);
+        return { OperatorNone{ std::move(filters) }};
     }
     // Create an 'equality' filter
     inline static Filter MatchEquality(const std::string& k, const std::vector<Value>& vals) {
@@ -106,7 +110,7 @@ struct Filter {
     }
 
     /* Public for testing */
-    static std::vector<Filter> sort(const std::vector<Filter>& filters);
+    static void sort(std::vector<Filter>& filters);
     void print(int _indent = 0) const;
     int filterCost() const;
     const bool isOperator() const;
