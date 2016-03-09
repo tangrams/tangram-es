@@ -10,8 +10,8 @@ uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_proj;
 uniform mat3 u_normalMatrix;
+uniform vec4 u_tile_origin;
 uniform vec3 u_map_position;
-uniform vec3 u_tile_origin;
 uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_meters_per_pixel;
@@ -76,7 +76,7 @@ void main() {
         vec4 extrude = UNPACK_EXTRUSION(a_extrude);
         float width = extrude.z;
         float dwdz = extrude.w;
-        float dz = u_map_position.z - abs(u_tile_origin.z);
+        float dz = u_map_position.z - u_tile_origin.w;
         // Interpolate between zoom levels
         width += dwdz * clamp(dz, 0.0, 1.0);
         // Scale pixel dimensions to be consistent in screen space
@@ -123,7 +123,7 @@ void main() {
 
     // Proxy tiles have u_tile_origin.z < 0, so this adjustment will place proxy tiles
     // deeper in the depth buffer than non-proxy tiles
-    gl_Position.z += TANGRAM_DEPTH_DELTA * gl_Position.w * (1. - sign(u_tile_origin.z));
+    // gl_Position.z += TANGRAM_DEPTH_DELTA * gl_Position.w * (1. - sign(u_tile_origin.z));
 
     #ifdef TANGRAM_DEPTH_DELTA
         float layer = UNPACK_ORDER(a_position.w);

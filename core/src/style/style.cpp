@@ -181,13 +181,12 @@ void Style::draw(const Tile& _tile) {
     auto& styleMesh = _tile.getMesh(*this);
 
     if (styleMesh) {
-        float zoomAndProxy = _tile.getID().z * (_tile.isProxy() ? -1 : 1);
-
         m_shaderProgram->setUniformMatrix4f(m_uModel, _tile.getModelMatrix());
         m_shaderProgram->setUniformf(m_uTileOrigin,
                                      _tile.getOrigin().x,
                                      _tile.getOrigin().y,
-                                     zoomAndProxy);
+                                     _tile.getID().s,
+                                     _tile.getID().z);
 
         styleMesh->draw(*m_shaderProgram);
     }
