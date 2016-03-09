@@ -9,37 +9,36 @@
 
 namespace Tangram {
 
-class Tile;
-
 namespace PbfParser {
 
-    struct Geometry {
-        std::vector<Point> coordinates;
-        std::vector<int> sizes;
-    };
-
     struct ParserContext {
-        ParserContext(int32_t _sourceId) : sourceId(_sourceId){}
+        ParserContext(int32_t _sourceId) {
+            values.reserve(256);
+            coordinates.reserve(256);
+            feature.props.sourceId = _sourceId;
+        }
 
-        int32_t sourceId;
         std::vector<std::string> keys;
         std::vector<Value> values;
         std::vector<protobuf::message> featureMsgs;
-        Geometry geometry;
+        std::vector<Point> coordinates;
+        std::vector<int> numCoordinates;
         // Map Key ID -> Tag values
         std::vector<int> featureTags;
+        std::vector<int> previousTags;
         // Key IDs sorted by Property key ordering
         std::vector<int> orderedKeys;
+        Feature feature;
 
         int tileExtent = 0;
         int winding = 0;
     };
 
-    Geometry getGeometry(ParserContext& _ctx, protobuf::message _geomIn);
+    void extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn);
 
-    Feature getFeature(ParserContext& _ctx, protobuf::message _featureIn);
+    void extractFeature(ParserContext& _ctx, protobuf::message& _featureIn, TileDataSink& _sink);
 
-    Layer getLayer(ParserContext& _ctx, protobuf::message _layerIn);
+    void extractLayer(ParserContext& _ctx, protobuf::message& _in, TileDataSink& _sink);
 
     enum pbfGeomCmd {
         moveTo = 1,

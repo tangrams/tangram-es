@@ -1,13 +1,13 @@
 #include "util/pbfParser.h"
 
 #include "data/propertyItem.h"
+#include "data/tileSource.h"
 #include "tile/tile.h"
 #include "log.h"
 #include "platform.h"
 #include "util/geom.h"
 
 #include <algorithm>
-#include <iterator>
 
 #define FEATURE_ID 1
 #define FEATURE_TAGS 2
@@ -15,7 +15,6 @@
 #define FEATURE_GEOM 4
 
 
-#define LAYER_NAME 1
 #define LAYER_FEATURE 2
 #define LAYER_KEY 3
 #define LAYER_VALUE 4
@@ -23,14 +22,12 @@
 
 namespace Tangram {
 
-PbfParser::Geometry PbfParser::getGeometry(ParserContext& _ctx, protobuf::message _geomIn) {
-
-    Geometry geometry;
+void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn) {
 
     pbfGeomCmd cmd = pbfGeomCmd::moveTo;
     uint32_t cmdRepeat = 0;
 
-    double invTileExtent = (1.0/(_ctx.tileExtent-1.0));
+    double invTileExtent = (1.0/(double)_ctx.tileExtent);
 
     int64_t x = 0;
     int64_t y = 0;
@@ -39,7 +36,7 @@ PbfParser::Geometry PbfParser::getGeometry(ParserContext& _ctx, protobuf::messag
 
     while(_geomIn.getData() < _geomIn.getEnd()) {
 
-        if(cmdRepeat == 0) { // get new command, length and parameters..
+        if(cmdRepeat == 0) { // get new command, lengh and parameters..
             uint32_t cmdData = static_cast<uint32_t>(_geomIn.varint());
             cmd = static_cast<pbfGeomCmd>(cmdData & 0x7); //first 3 bits of the cmdData
             cmdRepeat = cmdData >> 3; //last 5 bits
@@ -48,8 +45,8 @@ PbfParser::Geometry PbfParser::getGeometry(ParserContext& _ctx, protobuf::messag
         if(cmd == pbfGeomCmd::moveTo || cmd == pbfGeomCmd::lineTo) { // get parameters/points
             // if cmd is move then move to a new line/set of points and save this line
             if(cmd == pbfGeomCmd::moveTo) {
-                if (geometry.coordinates.size() > 0) {
-                    geometry.sizes.push_back(numCoordinates);
+                if(_ctx.coordinates.size() > 0) {
+                    _ctx.numCoordinates.push_back(numCoordinates);
                 }
                 numCoordinates = 0;
             }
@@ -62,14 +59,14 @@ PbfParser::Geometry PbfParser::getGeometry(ParserContext& _ctx, protobuf::messag
             p.x = invTileExtent * (double)x;
             p.y = invTileExtent * (double)(_ctx.tileExtent - y);
 
-            if (numCoordinates == 0 || geometry.coordinates.back() != p) {
-                geometry.coordinates.push_back(p);
+            if (numCoordinates == 0 || _ctx.coordinates.back() != p) {
+                _ctx.coordinates.push_back(p);
                 numCoordinates++;
             }
         } else if(cmd == pbfGeomCmd::closePath) {
             // end of a polygon, push first point in this line as last and push line to poly
-            geometry.coordinates.push_back(geometry.coordinates[geometry.coordinates.size() - numCoordinates]);
-            geometry.sizes.push_back(numCoordinates + 1);
+            _ctx.coordinates.push_back(_ctx.coordinates[_ctx.coordinates.size() - numCoordinates]);
+            _ctx.numCoordinates.push_back(numCoordinates + 1);
             numCoordinates = 0;
         }
 
@@ -78,19 +75,22 @@ PbfParser::Geometry PbfParser::getGeometry(ParserContext& _ctx, protobuf::messag
 
     // Enter the last line
     if (numCoordinates > 0) {
-        geometry.sizes.push_back(numCoordinates);
+        _ctx.numCoordinates.push_back(numCoordinates);
     }
-
-    return geometry;
 }
 
-Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn) {
+void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureIn, TileDataSink& _sink) {
 
-    Feature feature(_ctx.sourceId);
+    //Iterate through this feature
+    protobuf::message geometry; // By default data_ and end_ are nullptr
+
+    _ctx.coordinates.clear();
+    _ctx.numCoordinates.clear();
 
     _ctx.featureTags.clear();
     _ctx.featureTags.assign(_ctx.keys.size(), -1);
 
+    Feature& feature = _ctx.feature;
 
     while(_featureIn.next()) {
         switch(_featureIn.tag) {
@@ -107,19 +107,19 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
 
                     if(_ctx.keys.size() <= tagKey) {
                         LOGE("accessing out of bound key");
-                        return feature;
+                        return;
                     }
 
                     if(!tagsMsg) {
                         LOGE("uneven number of feature tag ids");
-                        return feature;
+                        return;
                     }
 
                     auto valueKey = tagsMsg.varint();
 
                     if( _ctx.values.size() <= valueKey ) {
                         LOGE("accessing out of bound values");
-                        return feature;
+                        return;
                     }
 
                     _ctx.featureTags[tagKey] = valueKey;
@@ -129,9 +129,10 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
             case FEATURE_TYPE:
                 feature.geometryType = (GeometryType)_featureIn.varint();
                 break;
-            // Actual geometry data
+
             case FEATURE_GEOM:
-                _ctx.geometry = getGeometry(_ctx, _featureIn.getMessage());
+                geometry = _featureIn.getMessage();
+                extractGeometry(_ctx, geometry);
                 break;
 
             default:
@@ -139,103 +140,117 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
                 break;
         }
     }
+    if (feature.geometryType == GeometryType::unknown) {
+        return;
+    }
 
-    std::vector<Properties::Item> properties;
-    properties.reserve(_ctx.featureTags.size());
+    std::vector<Properties::Item>& properties = feature.props.items();
+    properties.resize(_ctx.featureTags.size());
+
+    size_t numTags = 0;
 
     for (int tagKey : _ctx.orderedKeys) {
         int tagValue = _ctx.featureTags[tagKey];
         if (tagValue >= 0) {
-            properties.emplace_back(_ctx.keys[tagKey], _ctx.values[tagValue]);
+            properties[numTags++] = PropertyItem{_ctx.keys[tagKey], _ctx.values[tagValue]};
         }
     }
-    feature.props.setSorted(std::move(properties));
+
+    if (!_sink.matchFeature(feature)) {
+        return;
+    }
 
     switch(feature.geometryType) {
-        case GeometryType::points:
-            feature.points.insert(feature.points.begin(),
-                                  _ctx.geometry.coordinates.begin(),
-                                  _ctx.geometry.coordinates.end());
-            break;
-
-        case GeometryType::lines:
-        {
-            auto pos = _ctx.geometry.coordinates.begin();
-            for (int length : _ctx.geometry.sizes) {
+        case GeometryType::points: {
+                feature.points.clear();
+                feature.points.insert(feature.points.begin(),
+                                      _ctx.coordinates.begin(),
+                                      _ctx.coordinates.end());
+                break;
+        }
+        case GeometryType::lines: {
+            int offset = 0;
+            feature.lines.clear();
+            for (int length : _ctx.numCoordinates) {
                 if (length == 0) { continue; }
+
                 Line line;
                 line.reserve(length);
-                line.insert(line.begin(), pos, pos + length);
-                pos += length;
+
+                line.insert(line.begin(),
+                            _ctx.coordinates.begin() + offset,
+                            _ctx.coordinates.begin() + offset + length);
+
+                offset += length;
                 feature.lines.emplace_back(std::move(line));
             }
             break;
         }
-        case GeometryType::polygons:
-        {
-            auto pos = _ctx.geometry.coordinates.begin();
-            auto rpos = _ctx.geometry.coordinates.rend();
-            for (int length : _ctx.geometry.sizes) {
+        case GeometryType::polygons: {
+            int offset = 0;
+            int winding = 0;
+
+            feature.polygons.clear();
+
+            for (int length : _ctx.numCoordinates) {
                 if (length == 0) { continue; }
-                float area = signedArea(pos, pos + length);
-                if (area == 0) {
-                    pos += length;
-                    rpos -= length;
+                auto it = _ctx.coordinates.begin() + offset;
+
+                double area = signedArea(it, it + length);
+                if (area == 0.0) {
+                    offset += length;
                     continue;
                 }
-                int winding = area > 0 ? 1 : -1;
-                // Determine exterior winding from first polygon.
-                if (_ctx.winding == 0) {
-                    _ctx.winding = winding;
+                int curWinding = area > 0 ? 1 : -1;
+
+                // Polygons are in a flat list of rings. The first ring's winding
+                // determines which winding is the beginning of a new polygon.
+                if (winding == 0) {
+                    winding = curWinding;
                 }
-                Line line;
-                line.reserve(length);
-                if (_ctx.winding > 0) {
-                    line.insert(line.end(), pos, pos + length);
-                } else {
-                    line.insert(line.end(), rpos - length, rpos);
-                }
-                pos += length;
-                rpos -= length;
-                if (winding == _ctx.winding || feature.polygons.empty()) {
-                    // This is an exterior polygon.
+
+                if (feature.polygons.empty() || winding == curWinding) {
+                    // Start new polygon
                     feature.polygons.emplace_back();
                 }
+
+                Line line;
+                line.reserve(length);
+
+                if (winding > 0) {
+                    line.insert(line.end(), it, it + length);
+                } else {
+                    // Reverse points
+                    auto it = _ctx.coordinates.rend() - offset - length;
+                    line.insert(line.end(), it, it + length);
+                }
+                offset += length;
+
                 feature.polygons.back().push_back(std::move(line));
             }
             break;
         }
-        case GeometryType::unknown:
-            break;
         default:
             break;
     }
 
-    return feature;
+    _sink.addFeature(feature);
 }
 
-Layer PbfParser::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
-
-    Layer layer("");
+void PbfParser::extractLayer(ParserContext& _ctx, protobuf::message& _layerIn, TileDataSink& _sink) {
 
     _ctx.keys.clear();
     _ctx.values.clear();
     _ctx.featureMsgs.clear();
 
     bool lastWasFeature = false;
-    size_t numFeatures = 0;
     protobuf::message featureItr;
 
     // Iterate layer to populate featureMsgs, keys and values
     while(_layerIn.next()) {
 
         switch(_layerIn.tag) {
-            case LAYER_NAME: {
-                layer.name = _layerIn.string();
-                break;
-            }
             case LAYER_FEATURE: {
-                numFeatures++;
                 if (!lastWasFeature) {
                     _ctx.featureMsgs.push_back(_layerIn);
                     lastWasFeature = true;
@@ -292,7 +307,7 @@ Layer PbfParser::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
         lastWasFeature = false;
     }
 
-    if (_ctx.featureMsgs.empty()) { return layer; }
+    if (_ctx.featureMsgs.empty()) { return; }
 
     //// Assign ordering to keys for faster sorting
     _ctx.orderedKeys.clear();
@@ -307,17 +322,14 @@ Layer PbfParser::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
                   return Properties::keyComparator(_ctx.keys[a], _ctx.keys[b]);
               });
 
-    layer.features.reserve(numFeatures);
     for (auto& featureItr : _ctx.featureMsgs) {
         do {
             auto featureMsg = featureItr.getMessage();
 
-            layer.features.push_back(getFeature(_ctx, featureMsg));
+            extractFeature(_ctx, featureMsg, _sink);
 
         } while (featureItr.next() && featureItr.tag == LAYER_FEATURE);
     }
-
-    return layer;
 }
 
 }

@@ -8,33 +8,52 @@
 
 namespace Tangram {
 
-std::shared_ptr<TileData> MVTSource::parse(const TileTask& _task, const MapProjection& _projection) const {
+#define TAG_TILE_LAYER 3
+#define TAG_LAYER_NAME 1
 
-    auto tileData = std::make_shared<TileData>();
+bool MVTSource::process(const TileTask& _task, const MapProjection& _projection,
+                        TileDataSink& _sink) const {
 
     auto& task = static_cast<const BinaryTileTask&>(_task);
 
-    protobuf::message item(task.rawTileData->data(), task.rawTileData->size());
+    protobuf::message tileMsg(task.rawTileData->data(), task.rawTileData->size());
     PbfParser::ParserContext ctx(m_id);
 
     try {
-        while(item.next()) {
-            if(item.tag == 3) {
-                tileData->layers.push_back(PbfParser::getLayer(ctx, item.getMessage()));
-            } else {
-                item.skip();
+        while (tileMsg.next()) {
+            if (tileMsg.tag != TAG_TILE_LAYER) {
+                tileMsg.skip();
+                continue;
+            }
+            protobuf::message layerMsg = tileMsg.getMessage();
+            protobuf::message layerItr = layerMsg;
+
+            while (layerItr.next()) {
+
+                if (layerItr.tag != TAG_LAYER_NAME) {
+                    layerItr.skip();
+                    continue;
+                }
+                auto layerName = layerItr.string();
+
+                if (!_sink.beginLayer(layerName)){
+                    break;
+                }
+
+                PbfParser::extractLayer(ctx, layerMsg, _sink);
+                break;
             }
         }
     } catch(const std::invalid_argument& e) {
         LOGE("Cannot parse tile %s: %s", _task.tileId().toString().c_str(), e.what());
-        return {};
+        return false;
     } catch(const std::runtime_error& e) {
         LOGE("Cannot parse tile %s: %s", _task.tileId().toString().c_str(), e.what());
-        return {};
+        return false;
     } catch(...) {
-        return {};
+        return false;
     }
-    return tileData;
-}
 
+    return true;
+}
 }

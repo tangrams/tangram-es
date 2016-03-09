@@ -1,5 +1,6 @@
 #pragma once
 
+#include "data/tileData.h"
 #include "data/tileSource.h"
 #include "labels/labelCollider.h"
 #include "scene/styleContext.h"
@@ -13,10 +14,11 @@ class Tile;
 class TileSource;
 struct Feature;
 struct Properties;
-struct TileData;
+class Tile;
+class TileTask;
+class StyleBuilder;
 
-class TileBuilder {
-
+class TileBuilder : public TileDataSink {
 public:
 
     TileBuilder(std::shared_ptr<Scene> _scene);
@@ -25,7 +27,13 @@ public:
 
     StyleBuilder* getStyleBuilder(const std::string& _name);
 
-    std::shared_ptr<Tile> build(TileID _tileID, const TileData& _data, const TileSource& _source);
+    // Process TileTask. On sucess _task.isReady() is true
+    // and _task.tile() returns the created tile.
+    std::shared_ptr<Tile> build(TileTask& _task);
+
+    virtual bool beginLayer(const std::string& _layer) override;
+    virtual bool matchFeature(const Feature& _feature) override;
+    virtual void addFeature(const Feature& _feature) override;
 
     const Scene& scene() const { return *m_scene; }
 
@@ -44,6 +52,11 @@ private:
     fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilder;
 
     fastmap<uint32_t, std::shared_ptr<Properties>> m_selectionFeatures;
+
+    std::vector<const DataLayer*> m_activeLayers;
+    const DataLayer* m_matchedLayer = nullptr;
+
+    std::shared_ptr<Tile> m_tile;
 };
 
 }

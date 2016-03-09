@@ -54,7 +54,7 @@ struct Properties {
     //     sort();
     // }
 
-    const std::vector<Item>& items() const { return props; }
+    std::vector<Item>& items() { return props; }
 
     int32_t sourceId;
 

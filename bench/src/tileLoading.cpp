@@ -38,7 +38,7 @@ struct TestContext {
 
     std::shared_ptr<TileData> tileData;
 
-    std::unique_ptr<TileBuilder> tileBuilder;
+    TileBuilder tileBuilder;
 
     void loadScene(const char* sceneFile) {
         scene = std::make_shared<Scene>(platform, sceneFile);
@@ -56,8 +56,13 @@ struct TestContext {
         styleContext.initFunctions(*scene);
         styleContext.setKeywordZoom(0);
 
-        source = *scene->tileSources().begin();
-        tileBuilder = std::make_unique<TileBuilder>(scene);
+// <<<<<<< HEAD
+//         source = *scene->tileSources().begin();
+//         tileBuilder = std::make_unique<TileBuilder>(scene);
+// =======
+        source = scene->dataSources()[0];
+        tileBuilder.setScene(scene);
+// >>>>>>> wip: TileDataSink
     }
 
     void loadTile(const char* path){
@@ -76,14 +81,26 @@ struct TestContext {
         resource.close();
     }
 
-    void parseTile() {
-        Tile tile({0,0,10,10,0}, s_projection);
-        source = *scene->tileSources().begin();
+// <<<<<<< HEAD
+//     void parseTile() {
+//         Tile tile({0,0,10,10,0}, s_projection);
+//         source = *scene->tileSources().begin();
+// =======
+    void processTile() {
+        Tile tile(TileID{0,0,10,10,0}, s_projection);
+        source = scene->dataSources()[0];
+// >>>>>>> wip: TileDataSink
         auto task = source->createTask(tile.getID());
         auto& t = dynamic_cast<BinaryTileTask&>(*task);
         t.rawTileData = std::make_shared<std::vector<char>>(rawTileData);
 
-        tileData = source->parse(*task, s_projection);
+
+        bool ok = tileBuilder.build(*task);
+
+        benchmark::DoNotOptimize(ok);
+
+        LOG("ok %d / bytes - %d", ok, task->tile()->getMemoryUsage());
+
     }
 };
 
@@ -99,7 +116,6 @@ public:
         LOG("SETUP");
         ctx.loadScene(sceneFile);
         ctx.loadTile("tile.mvt");
-        ctx.parseTile();
         LOG("Ready");
     }
     void TearDown() override {
@@ -111,10 +127,7 @@ public:
 BENCHMARK_DEFINE_F(TileLoadingFixture, BuildTest)(benchmark::State& st) {
 #if 0
     while (st.KeepRunning()) {
-        ctx.parseTile();
-        result = ctx.tileBuilder->build({0,0,10,10,0}, *ctx.tileData, *ctx.source);
-
-        LOG("ok %d / bytes - %d", bool(result), result->getMemoryUsage());
+        ctx.processTile();
     }
 #endif
 }

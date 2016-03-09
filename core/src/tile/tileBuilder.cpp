@@ -12,6 +12,7 @@
 #include "tile/tile.h"
 #include "util/mapProjection.h"
 #include "view/view.h"
+#include "tile/tileTask.h"
 
 namespace Tangram {
 
@@ -36,9 +37,6 @@ StyleBuilder* TileBuilder::getStyleBuilder(const std::string& _name) {
 }
 
 void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer) {
-
-    // If no rules matched the feature, return immediately
-    if (!m_ruleSet.match(_feature, _layer, m_styleContext)) { return; }
 
     uint32_t selectionColor = 0;
     bool added = false;
@@ -92,39 +90,84 @@ void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer
     }
 }
 
-std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData, const TileSource& _source) {
+bool TileBuilder::beginLayer(const std::string& _layerName) {
+
+    m_activeLayers.clear();
+
+    for (const auto& layer : m_scene->layers()) {
+
+        if (!_layerName.empty()) {
+            const auto& dlc = layer.collections();
+            if (std::find(dlc.begin(), dlc.end(), _layerName) == dlc.end()) {
+                continue;
+            }
+        }
+        m_activeLayers.push_back(&layer);
+    }
+
+    return !m_activeLayers.empty();
+}
+
+// TileDataSink callback
+bool TileBuilder::matchFeature(const Feature& _feature) {
+    m_matchedLayer = nullptr;
+
+    for (auto* layer : m_activeLayers) {
+        if(m_ruleSet.match(_feature, *layer, m_styleContext)) {
+            // keep reference to matched layer for addFeature
+            m_matchedLayer = layer;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// TileDataSink callback
+void TileBuilder::addFeature(const Feature& _feature) {
+
+    // Require that matchFeature found a layer.
+    if (!m_matchedLayer) { return; }
+
+    for (const auto* layer : m_activeLayers) {
+
+        if (m_matchedLayer) {
+            // Skip until first matched layer
+            if (m_matchedLayer != layer) {
+                continue;
+            }
+            m_matchedLayer = nullptr;
+
+        } else if (!m_ruleSet.match(_feature, *layer, m_styleContext)) {
+            continue;
+        }
+
+        applyStyling(_feature, *layer);
+    }
+}
+
+std::shared_ptr<Tile> TileBuilder::build(TileTask& _task) {
 
     m_selectionFeatures.clear();
 
-    auto tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), &_source);
+    auto tile = std::make_shared<Tile>(_task.tileId(),
+                                       *m_scene->mapProjection(),
+                                       &_task.source());
 
     tile->initGeometry(m_scene->styles().size());
 
-    m_styleContext.setKeywordZoom(_tileID.s);
+    m_styleContext.setKeywordZoom(_task.tileId().s);
 
     for (auto& builder : m_styleBuilder) {
-        if (builder.second)
+        if (builder.second) {
             builder.second->setup(*tile);
+        }
     }
 
-    for (const auto& datalayer : m_scene->layers()) {
-
-        if (datalayer.source() != _source.name()) { continue; }
-
-        for (const auto& collection : _tileData.layers) {
-
-            if (!collection.name.empty()) {
-                const auto& dlc = datalayer.collections();
-                bool layerContainsCollection =
-                    std::find(dlc.begin(), dlc.end(), collection.name) != dlc.end();
-
-                if (!layerContainsCollection) { continue; }
-            }
-
-            for (const auto& feat : collection.features) {
-                applyStyling(feat, datalayer);
-            }
-        }
+    // Pass 'this' as TileDataSink
+    if (!_task.source().process(_task, *m_scene->mapProjection(), *this)) {
+        _task.cancel();
+        return nullptr;
     }
 
     for (auto& builder : m_styleBuilder) {
@@ -134,7 +177,7 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
 
     float tileSize = m_scene->mapProjection()->TileSize() * m_scene->pixelScale();
 
-    m_labelLayout.process(_tileID, tile->getInverseScale(), tileSize);
+    m_labelLayout.process(_task.tileId(), tile->getInverseScale(), tileSize);
 
     for (auto& builder : m_styleBuilder) {
         tile->setMesh(builder.second->style(), builder.second->build());

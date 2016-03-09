@@ -236,30 +236,30 @@ struct add_geometry {
     }
 };
 
-std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task,
-                                                     const MapProjection& _projection) const {
+bool ClientGeoJsonSource::process(const TileTask& _task,
+                                  const MapProjection& _projection,
+                                  TileDataSink& _sink) const {
 
-    std::lock_guard<std::mutex> lock(m_mutexStore);
-
-    auto data = std::make_shared<TileData>();
-
-    if (!m_store->tiles) { return nullptr; }
+    if (!m_store->tiles) { return false; }
     auto tile = m_store->tiles->getTile(_task.tileId().z, _task.tileId().x, _task.tileId().y);
 
-    data->layers.emplace_back("");  // empty name will skip filtering by 'collection'
-    Layer& layer = data->layers.back();
+    // empty name will skip filtering by 'collection'
+    // TODO why not use DataSource name as layer name?
+    if (!_sink.beginLayer("")) {
+        return true;
+    }
 
     for (auto& it : tile.features) {
+
         Feature feature(m_id);
 
         if (geometry::geometry<int16_t>::visit(it.geometry, add_geometry{ feature })) {
             feature.props = m_store->properties[it.id.get<uint64_t>()];
-            layer.features.emplace_back(std::move(feature));
+            _sink.addFeature(feature);
         }
     }
 
-
-    return data;
+    return true;
 }
 
 }
