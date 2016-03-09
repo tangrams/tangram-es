@@ -320,22 +320,6 @@ layers:
                     color: [.75, .75, .73]
                     order: 52
                     extrude: true
-                text:
-                    repeat_distance: 0
-                    text_source: [name:en, name, area, volume]
-                    #text_source: |
-                    #    function() {
-                    #        if (feature.height > 80)
-                    #            return 'high';
-                    #        else
-                    #            return 'low';
-                    #    }
-                    priority: 0
-                    font:
-                        family: sans-serif
-                        style: normal
-                        size: 0.5em
-                        fill: black
         high-line:
             filter: {roof_material: grass}
             draw:
@@ -429,6 +413,8 @@ layers:
                 #- function() {return (feature.scalerank * .75) <= ($zoom - 4); }
         draw:
             text:
+                text_source: [name:en, name, area, volume]
+                repeat_distance: 0
                 interactive: true
                 priority: 5
                 transition:
