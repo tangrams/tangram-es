@@ -62,6 +62,8 @@ static std::bitset<8> g_flags = 0;
 float m_pixelsPerPoint = 1.f;
 int log_level = 2;
 
+static float lastUpdateTime = 0.0;
+
 void initialize(const char* _scenePath) {
 
     if (m_tileManager) {
@@ -145,6 +147,11 @@ void resize(int _newWidth, int _newHeight) {
 
 void update(float _dt) {
 
+    clock_t start{0};
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
+        start = clock();
+    }
+
     g_time += _dt;
 
     for (auto& ease : m_eases) {
@@ -200,6 +207,11 @@ void update(float _dt) {
             setContinuousRendering(animated);
         }
     }
+
+    if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
+        clock_t end = clock();
+        lastUpdateTime = (float(end - start) / CLOCKS_PER_SEC) * 1000.f;
+    }
 }
 
 void render() {
@@ -235,23 +247,37 @@ void render() {
     m_labels->drawDebug(*m_view);
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
+        static int cpt = 0;
+
+        clock_t endCpu = clock();
+        static float timeCpu[60] = { 0 };
+        static float timeUpdate[60] = { 0 };
+        static float timeRender[60] = { 0 };
+        timeCpu[cpt] = (float(endCpu - start) / CLOCKS_PER_SEC) * 1000.f;
 
         // Force opengl to finish commands (for accurate frame time)
         glFinish();
 
         clock_t end = clock();
-        static int cpt = 0;
-        static float totaltime = 0;
-        static float time = 0.f;
+        timeRender[cpt] = (float(end - start) / CLOCKS_PER_SEC) * 1000.f;
+
+        if (++cpt == 60) { cpt = 0; }
 
         // Only compute average frame time every 60 frames
-        if (cpt++ > 60) {
-            time = totaltime / float(cpt);
-            totaltime = 0.f;
-            cpt = 0;
-        }
+        float avgTimeRender = 0.f;
+        float avgTimeCpu = 0.f;
+        float avgTimeUpdate = 0.f;
 
-        totaltime += (float(end - start) / CLOCKS_PER_SEC) * 1000.f;
+        timeUpdate[cpt] = lastUpdateTime;
+
+        for (int i = 0; i < 60; i++) {
+            avgTimeRender += timeRender[i];
+            avgTimeCpu += timeCpu[i];
+            avgTimeUpdate += timeUpdate[i];
+        }
+        avgTimeRender /= 60;
+        avgTimeCpu /= 60;
+        avgTimeUpdate /= 60;
 
         size_t memused = 0;
         for (const auto& tile : m_tileManager->getVisibleTiles()) {
@@ -265,7 +291,9 @@ void render() {
         debuginfos.push_back("tile cache size:"
                 + std::to_string(m_tileManager->getTileCache()->getMemoryUsage() / 1024) + "kb");
         debuginfos.push_back("tile size:" + std::to_string(memused / 1024) + "kb");
-        debuginfos.push_back("avg frame render time:" + std::to_string(time) + "ms");
+        debuginfos.push_back("avg frame cpu time:" + to_string_with_precision(avgTimeCpu, 2) + "ms");
+        debuginfos.push_back("avg frame render time:" + to_string_with_precision(avgTimeRender, 2) + "ms");
+        debuginfos.push_back("avg frame update time:" + to_string_with_precision(avgTimeUpdate, 2) + "ms");
         debuginfos.push_back("zoom:" + std::to_string(m_view->getZoom()));
         debuginfos.push_back("pos:" + std::to_string(m_view->getPosition().x) + "/"
                 + std::to_string(m_view->getPosition().y));

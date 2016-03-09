@@ -8,6 +8,8 @@
 #include "gl/mesh.h"
 #include "gl/shaderProgram.h"
 #include "glm/vec2.hpp"
+#include <sstream>
+#include <iomanip>
 
 namespace Tangram {
 
@@ -15,6 +17,13 @@ namespace Tangram {
 #define VERTEX_BUFFER_SIZE  99999
 
 typedef int FontID;
+
+template <typename T>
+std::string to_string_with_precision(const T a_value, const int n = 6) {
+    std::ostringstream out;
+    out << std::fixed << std::setprecision(n) << a_value;
+    return out.str();
+}
 
 class TextDisplay {
 
