@@ -7,7 +7,8 @@ namespace Hardware {
 
 extern bool supportsMapBuffer;
 extern bool supportsVAOs;
-extern int maxTextureSize;
+extern bool supportsTextureNPOT;
+extern uint32_t maxTextureSize;
 
 void loadCapabilities();
 void loadExtensions();

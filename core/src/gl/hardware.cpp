@@ -12,7 +12,9 @@ namespace Hardware {
 
 bool supportsMapBuffer = false;
 bool supportsVAOs = false;
-int maxTextureSize = 0;
+bool supportsTextureNPOT = false;
+
+uint32_t maxTextureSize = 0;
 static char* s_glExtensions;
 
 bool isAvailable(std::string _extension) {
@@ -48,6 +50,7 @@ void loadExtensions() {
 
     supportsMapBuffer = DESKTOP_GL || isAvailable("mapbuffer");
     supportsVAOs = isAvailable("vertex_array_object");
+    supportsTextureNPOT = isAvailable("texture_non_power_of_two");
 
     LOG("Driver supports map buffer: %d", supportsMapBuffer);
     LOG("Driver supports vaos: %d", supportsVAOs);
@@ -57,7 +60,9 @@ void loadExtensions() {
 }
 
 void loadCapabilities() {
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+    int val;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &val);
+    maxTextureSize = val;
 
     LOG("Hardware max texture size %d", maxTextureSize);
 }
