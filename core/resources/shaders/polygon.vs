@@ -40,7 +40,7 @@ varying vec3 v_normal;
 #define UNPACK_POSITION(x) (x / 8192.0)
 
 vec4 modelPosition() {
-    return vec4(UNPACK_POSITION(a_position.xyz), 1.0);
+    return vec4(UNPACK_POSITION(a_position.xyz) * exp2(u_tile_origin.z - u_tile_origin.w), 1.0);
 }
 
 vec4 worldPosition() {
