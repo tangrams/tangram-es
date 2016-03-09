@@ -3,8 +3,8 @@
 #include "textStyle.h"
 
 #include "labels/textLabel.h"
+#include "labels/labelProperty.h"
 #include "text/fontContext.h"
-#include "style/labelProperty.h"
 
 #include "alfons/alfons.h"
 #include "alfons/textBatch.h"

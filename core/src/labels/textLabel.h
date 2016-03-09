@@ -1,8 +1,7 @@
 #pragma once
 
 #include "labels/label.h"
-#include "style/labelProperty.h"
-
+#include "labels/labelProperty.h"
 #include "labels/labelSet.h"
 #include "labels/labelMesh.h"
 #include "text/fontContext.h"

@@ -4,7 +4,7 @@
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "labels/label.h"
-#include "labelProperty.h"
+#include "labels/labelProperty.h"
 
 namespace Tangram {
 

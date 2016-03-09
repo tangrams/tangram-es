@@ -2,7 +2,7 @@
 
 #include "style.h"
 #include "labels/label.h"
-#include "style/labelProperty.h"
+#include "labels/labelProperty.h"
 #include "util/hash.h"
 
 #include <memory>
