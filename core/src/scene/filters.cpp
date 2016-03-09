@@ -207,10 +207,10 @@ int compareSetFilter(const Filter& a, const Filter& b) {
     return 0;
 }
 
-std::vector<Filter> Filter::sort(const std::vector<Filter>& _filters) {
-    std::vector<Filter> filters = _filters;
-    std::sort(filters.begin(), filters.end(),
-              [](auto& a, auto& b) {
+
+void Filter::sort(std::vector<Filter>& _filters) {
+    std::sort(_filters.begin(), _filters.end(),
+              [](Filter& a, Filter& b) {
 
                   // Sort simple filters by eval cost
                   int ma = a.filterCost();
@@ -236,8 +236,6 @@ std::vector<Filter> Filter::sort(const std::vector<Filter>& _filters) {
 
                   return compareSetFilter(a, b) < 0;
               });
-
-    return filters;
 }
 
 

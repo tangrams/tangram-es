@@ -124,7 +124,6 @@ bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, 
     // If the first filter doesn't match, return immediately
     if (!_layer.filter().eval(_feature, _ctx)) { return false; }
 
-    // Add the first layer to the stack
     m_queuedLayers.push_back(&_layer);
 
     // Iterate depth-first over the layer hierarchy
@@ -134,17 +133,17 @@ bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, 
         const auto& layer = *m_queuedLayers.back();
         m_queuedLayers.pop_back();
 
-        // If the filter doesn't pass, move on to the next one
-        if (!layer.filter().eval(_feature, _ctx)) { continue; }
-
-        // Push each of the layer's sublayers onto the stack
-        for (const auto& sublayer : layer.sublayers()) {
-            m_queuedLayers.push_back(&sublayer);
-        }
-
-        // Merge rules from current layer into accumulated set
+        // Merge rules from layer into accumulated set
         mergeRules(layer);
+
+        // Push each of the layer's matching sublayers onto the stack
+        for (const auto& sublayer : layer.sublayers()) {
+            if (sublayer.filter().eval(_feature, _ctx)) {
+                m_queuedLayers.push_back(&sublayer);
+            }
+        }
     }
+
     return true;
 }
 
@@ -211,15 +210,17 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
 
 void DrawRuleMergeSet::mergeRules(const SceneLayer& _layer) {
 
+    size_t pos, end = m_matchedRules.size();
+
     for (const auto& rule : _layer.rules()) {
+        for (pos = 0; pos < end; pos++) {
+            if (m_matchedRules[pos].id == rule.id) { break; }
+        }
 
-        auto it = std::find_if(m_matchedRules.begin(), m_matchedRules.end(),
-                               [&](auto& m) { return rule.id == m.id; });
-
-        if (it == m_matchedRules.end()) {
+        if (pos == end) {
             m_matchedRules.emplace_back(rule, _layer);
         } else {
-            it->merge(rule, _layer);
+            m_matchedRules[pos].merge(rule, _layer);
         }
     }
 }

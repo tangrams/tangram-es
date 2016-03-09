@@ -7,10 +7,10 @@ namespace Tangram {
 SceneLayer::SceneLayer(std::string _name, Filter _filter,
                        std::vector<DrawRuleData> _rules,
                        std::vector<SceneLayer> _sublayers) :
-    m_filter(_filter),
+    m_filter(std::move(_filter)),
     m_name(_name),
     m_rules(_rules),
-    m_sublayers(_sublayers) {
+    m_sublayers(std::move(_sublayers)) {
 
     setDepth(1);
 
