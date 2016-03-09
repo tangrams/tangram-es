@@ -193,7 +193,12 @@ void addFan(const glm::vec3& _pC,
     for (int i = 0; i < _numTriangles; i++) {
         float frac = (i + 1)/(float)_numTriangles;
         radial = glm::rotate(_nA, angle * frac);
-        glm::vec2 uv = (1.f - frac) * _uA + frac * _uB;
+
+        glm::vec2 uv(0.0);
+        if (_ctx.useTexCoords) {
+            uv = (1.f - frac) * _uA + frac * _uB;
+        }
+
         addPolyLineVertex(_pC, radial, uv, _ctx);
 
         // Add indices

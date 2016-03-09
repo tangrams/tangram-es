@@ -22,13 +22,16 @@ uniform float u_device_pixel_ratio;
 attribute vec4 a_position;
 attribute vec4 a_color;
 attribute vec4 a_extrude;
-attribute vec2 a_texcoord;
+
+#ifdef TANGRAM_USE_TEX_COORDS
+    attribute vec2 a_texcoord;
+    varying vec2 v_texcoord;
+#endif
 
 varying vec4 v_world_position;
 varying vec4 v_position;
 varying vec4 v_color;
 varying vec3 v_normal;
-varying vec2 v_texcoord;
 
 #ifdef TANGRAM_LIGHTING_VERTEX
     varying vec4 v_lighting;
@@ -62,7 +65,11 @@ void main() {
     vec4 position = vec4(UNPACK_POSITION(a_position.xyz), 1.0);
 
     v_color = a_color;
-    v_texcoord = a_texcoord;
+
+    #ifdef TANGRAM_USE_TEX_COORDS
+        v_texcoord = a_texcoord;
+    #endif
+
     v_normal = u_normalMatrix * vec3(0.,0.,1.);
 
     {

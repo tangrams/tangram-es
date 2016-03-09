@@ -45,7 +45,7 @@ struct SceneLoader {
     static void loadLight(const std::pair<Node, Node>& light, Scene& scene);
     static void loadCameras(Node cameras, Scene& scene);
     static void loadStyleProps(Style& style, Node styleNode, Scene& scene);
-    static void loadMaterial(Node matNode, Material& material, Scene& scene);
+    static void loadMaterial(Node matNode, Material& material, Scene& scene, Style& style);
     static void loadShaderConfig(Node shaders, Style& style, Scene& scene);
     static SceneLayer loadSublayer(Node layer, const std::string& name, Scene& scene);
     static Filter generateFilter(Node filter, Scene& scene);
@@ -55,7 +55,7 @@ struct SceneLoader {
     /* loads a texture with default texture properties */
     static void loadTexture(const std::string& url, Scene& scene);
 
-    static MaterialTexture loadMaterialTexture(Node matCompNode, Scene& scene);
+    static MaterialTexture loadMaterialTexture(Node matCompNode, Scene& scene, Style& style);
 
     static void parseStyleParams(Node params, Scene& scene, const std::string& propPrefix,
                                  std::vector<StyleParam>& out);

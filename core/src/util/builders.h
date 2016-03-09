@@ -78,6 +78,7 @@ struct PolyLineBuilder {
     CapTypes cap;
     JoinTypes join;
     bool keepTileEdges;
+    bool useTexCoords;
 
     PolyLineBuilder(PolyLineVertexFn _addVertex = [](auto&,auto&,auto&){},
                     CapTypes _cap = CapTypes::butt,
