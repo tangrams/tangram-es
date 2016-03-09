@@ -2,6 +2,7 @@
 #include "platform.h"
 #include "data/dataSource.h"
 #include "data/mvtSource.h"
+#include "data/tileData.h"
 #include "util/mapProjection.h"
 #include "tile/tile.h"
 #include "tile/tileTask.h"
@@ -15,6 +16,23 @@
 
 using namespace Tangram;
 
+struct TestTileDataSink : Tangram::TileDataSink {
+    bool beginLayer(const std::string& _layer) override {
+        benchmark::DoNotOptimize(&_layer);
+
+        return true;
+    }
+    bool matchFeature(const Feature& _feature) override {
+        benchmark::DoNotOptimize(&_feature);
+
+        return true;
+    }
+
+    void addFeature(const Feature& _feature) override {
+        benchmark::DoNotOptimize(&_feature);
+    }
+
+};
 struct TestContext {
 
     MercatorProjection projection;
@@ -22,6 +40,8 @@ struct TestContext {
     std::shared_ptr<DataSource> source;
     std::shared_ptr<std::vector<char>> rawTileData;
     std::shared_ptr<TileData> tileData;
+
+    TestTileDataSink sink;
 
     void loadTile(const char* path){
         std::ifstream resource(path, std::ifstream::ate | std::ifstream::binary);
@@ -62,13 +82,13 @@ BENCHMARK_DEFINE_F(MVTParsingFixture, BuildTest)(benchmark::State& st) {
     while (st.KeepRunning()) {
         TileID tileId{0,0,10,10,0};
         Tile tile(tileId, ctx.projection);
-        
+
         auto task = std::make_shared<DownloadTileTask>(tileId, ctx.source);
         task->rawTileData = ctx.rawTileData;
 
-        auto tileData = ctx.source->parse(*task, ctx.projection);
+        bool ok = ctx.source->process(*task, ctx.projection, ctx.sink);
 
-        benchmark::DoNotOptimize(tileData);
+        benchmark::DoNotOptimize(ok);
     }
 }
 

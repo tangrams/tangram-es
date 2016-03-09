@@ -146,30 +146,52 @@ void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coo
     m_generation++;
 }
 
-std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task,
-                                                     const MapProjection& _projection) const {
-
-    auto data = std::make_shared<TileData>();
+bool ClientGeoJsonSource::process(const TileTask& _task,
+                                  const MapProjection& _projection,
+                                  TileDataSink& _sink) const {
 
     geojsonvt::Tile tile;
     {
         std::lock_guard<std::mutex> lock(m_mutexStore);
-        if (!m_store) { return nullptr; }
+        //if (!m_store) { return nullptr; }
+        if (!m_store) { return false; }
         tile = m_store->getTile(_task.tileId().z, _task.tileId().x, _task.tileId().y);
     }
 
-    Layer layer(""); // empty name will skip filtering by 'collection'
+    // empty name will skip filtering by 'collection'
+    // TODO why not use DataSource name as layer name?
+    if (!_sink.beginLayer("")) {
+        return true;
+    }
+
+    Feature feat(m_id);
 
     for (auto& it : tile.features) {
-
-        Feature feat(m_id);
 
         const auto& geom = it.tileGeometry;
         const auto type = it.type;
 
         switch (type) {
+        case geojsonvt::TileFeatureType::Point:
+            feat.geometryType = GeometryType::points;
+            break;
+        case geojsonvt::TileFeatureType::LineString:
+            feat.geometryType = GeometryType::lines;
+            break;
+        case geojsonvt::TileFeatureType::Polygon:
+            feat.geometryType = GeometryType::polygons;
+            break;
+        default:
+            continue;
+        }
+
+        feat.props = *it.tags.map;
+
+        if (!_sink.matchFeature(feat)) { continue; }
+
+        switch (type) {
             case geojsonvt::TileFeatureType::Point: {
-                feat.geometryType = GeometryType::points;
+                feat.points.clear();
                 for (const auto& pt : geom) {
                     const auto& point = pt.get<geojsonvt::TilePoint>();
                     feat.points.push_back(transformPoint(point));
@@ -177,7 +199,7 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task,
                 break;
             }
             case geojsonvt::TileFeatureType::LineString: {
-                feat.geometryType = GeometryType::lines;
+                feat.lines.clear();
                 for (const auto& r : geom) {
                     Line line;
                     for (const auto& pt : r.get<geojsonvt::TileRing>().points) {
@@ -188,7 +210,7 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task,
                 break;
             }
             case geojsonvt::TileFeatureType::Polygon: {
-                feat.geometryType = GeometryType::polygons;
+                feat.polygons.clear();
                 for (const auto& r : geom) {
                     Line line;
                     for (const auto& pt : r.get<geojsonvt::TileRing>().points) {
@@ -206,15 +228,10 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task,
             default: break;
         }
 
-        feat.props = *it.tags.map;
-        layer.features.emplace_back(std::move(feat));
-
+        _sink.addFeature(feat);
     }
 
-    data->layers.emplace_back(std::move(layer));
-
-    return data;
-
+    return true;
 }
 
 }

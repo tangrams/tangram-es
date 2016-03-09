@@ -15,21 +15,22 @@ TopoJsonSource::TopoJsonSource(const std::string& _name, const std::string& _url
     DataSource(_name, _urlTemplate, minDisplayZoom, _maxDisplayZoom, _maxZoom) {
 }
 
-std::shared_ptr<TileData> TopoJsonSource::parse(const TileTask& _task,
-                                                const MapProjection& _projection) const {
+bool TopoJsonSource::process(const TileTask& _task, const MapProjection& _projection,
+                             TileDataSink& _sink) const {
 
     auto& task = static_cast<const DownloadTileTask&>(_task);
-
-    std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
 
     // Parse data into a JSON document
     const char* error;
     size_t offset;
-    auto document = JsonParseBytes(task.rawTileData->data(), task.rawTileData->size(), &error, &offset);
+    auto document = JsonParseBytes(task.rawTileData->data(),
+                                   task.rawTileData->size(),
+                                   &error, &offset);
 
     if (error) {
-        LOGE("Json parsing failed on tile [%s]: %s (%u)", task.tileId().toString().c_str(), error, offset);
-        return tileData;
+        LOGE("Json parsing failed on tile [%s]: %s (%u)",
+             task.tileId().toString().c_str(), error, offset);
+        return false;
     }
 
     // Transform JSON data into a TileData using TopoJson functions
@@ -51,15 +52,16 @@ std::shared_ptr<TileData> TopoJsonSource::parse(const TileTask& _task,
 
     // Parse each TopoJson object as a data layer
     auto objectsIt = document.FindMember("objects");
-    if (objectsIt == document.MemberEnd()) { return tileData; }
+    if (objectsIt == document.MemberEnd()) {
+        return true;
+    }
     auto& objects = objectsIt->value;
     for (auto layer = objects.MemberBegin(); layer != objects.MemberEnd(); ++layer) {
-        tileData->layers.push_back(TopoJson::getLayer(layer, topology, m_id));
+        TopoJson::processLayer(layer, topology, m_id, _sink);
     }
 
-    // Discard JSON object and return TileData
-    return tileData;
-
+    // Discard JSON object
+    return true;
 }
 
 }

@@ -93,9 +93,10 @@ struct TestDataSource : DataSource {
 
     void cancelLoadingTile(const TileID& _tile) override {}
 
-    std::shared_ptr<TileData> parse(const TileTask& _task,
-                                    const MapProjection& _projection) const override{
-        return nullptr;
+    virtual bool process(const TileTask& _task,
+                         const MapProjection& _projection,
+                         TileDataSink& _builder) const override {
+        return true;
     };
 
     void clearData() override {}

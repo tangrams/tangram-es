@@ -134,22 +134,25 @@ Feature GeoJson::getFeature(const JsonValue& _in, const Transform& _proj, int32_
 
 }
 
-Layer GeoJson::getLayer(const JsonValue& _in, const Transform& _proj, int32_t _sourceId) {
-
-    Layer layer("");
+bool GeoJson::processLayer(const JsonValue& _in, const Transform& _proj,
+                            int32_t _sourceId, TileDataSink& _sink) {
 
     auto features = _in.FindMember("features");
 
     if (features == _in.MemberEnd()) {
         LOGE("GeoJSON missing 'features' member");
-        return layer;
+        return false;
     }
 
     for (auto featureIt = features->value.Begin(); featureIt != features->value.End(); ++featureIt) {
-        layer.features.push_back(getFeature(*featureIt, _proj, _sourceId));
+        auto feat = getFeature(*featureIt, _proj, _sourceId);
+        // TODO could be optimized by skipping geometry parsing for unmatched features
+        if (_sink.matchFeature(feat)) {
+            _sink.addFeature(feat);
+        }
     }
 
-    return layer;
+    return true;
 
 }
 

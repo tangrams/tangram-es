@@ -5,6 +5,8 @@
 namespace Tangram {
 
 struct PropertyItem {
+    PropertyItem() {}
+
     PropertyItem(std::string _key, Value _value) :
         key(std::move(_key)), value(std::move(_value)) {}
 

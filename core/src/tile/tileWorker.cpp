@@ -91,6 +91,7 @@ void TileWorker::run(Worker* instance) {
             continue;
         }
 
+// <<<<<<< eb46636cdba3cd87c39d0bf192703e0451882bac
         // const clock_t begin = clock();
 
         task->process(*builder);
@@ -99,6 +100,17 @@ void TileWorker::run(Worker* instance) {
         // LOG("loadTime %s - %f", task->tileID.toString().c_str(), loadTime);
 
         requestRender();
+// =======
+//         const clock_t begin = clock();
+
+//         if (builder->build(*task)) {
+//             m_pendingTiles = true;
+//             requestRender();
+//         }
+
+//         float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+//         LOG("loadTime %s - %f", task->tileId().toString().c_str(), loadTime);
+// >>>>>>> wip: TileDataSink
     }
 }
 

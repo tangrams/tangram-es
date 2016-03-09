@@ -90,7 +90,8 @@ std::shared_ptr<Texture> RasterSource::createTexture(const std::vector<char>& _r
     return texture;
 }
 
-std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapProjection& _projection) const {
+bool RasterSource::process(const TileTask& _task, const MapProjection& _projection,
+                           TileDataSink& _sink) const {
 
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
 
@@ -105,10 +106,12 @@ std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapPr
                                  } } };
     rasterFeature.props = Properties();
 
-    tileData->layers.emplace_back("");
-    tileData->layers.back().features.push_back(rasterFeature);
-    return tileData;
+    _sink.beginLayer("");
+    if (_sink.matchFeature(rasterFeature)) {
+        _sink.addFeature(rasterFeature);
+    }
 
+    return true;
 }
 
 std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, int _subTask) {

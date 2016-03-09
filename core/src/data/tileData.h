@@ -98,4 +98,10 @@ struct TileData {
 
 };
 
+struct TileDataSink {
+    virtual bool beginLayer(const std::string& _layer) = 0;
+    virtual bool matchFeature(const Feature& _feature) = 0;
+    virtual void addFeature(const Feature& _feature) = 0;
+};
+
 }

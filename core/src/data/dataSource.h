@@ -18,6 +18,9 @@ class TileManager;
 struct RawCache;
 class Texture;
 
+struct Feature;
+struct TileDataSink;
+
 class DataSource : public std::enable_shared_from_this<DataSource> {
 
 public:
@@ -44,8 +47,8 @@ public:
     /* Stops any running I/O tasks pertaining to @_tile */
     virtual void cancelLoadingTile(const TileID& _tile);
 
-    /* Parse a <TileTask> with data into a <TileData>, returning an empty TileData on failure */
-    virtual std::shared_ptr<TileData> parse(const TileTask& _task, const MapProjection& _projection) const = 0;
+    /* FIXME doc /Parse a <TileTask> with data into a <TileData>, returning an empty TileData on failure */
+    virtual bool process(const TileTask& _task, const MapProjection& _projection, TileDataSink& _sink) const = 0;
 
     /* Clears all data associated with this DataSource */
     virtual void clearData();

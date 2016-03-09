@@ -28,7 +28,8 @@ Polygon getPolygon(const JsonValue& _arcs, const Topology& _topology);
 
 Feature getFeature(const JsonValue& _geometry, const Topology& _topology, int32_t _sourceId);
 
-Layer getLayer(JsonValue::MemberIterator& _object, const Topology& _topology, int32_t _sourceId);
+bool processLayer(JsonValue::MemberIterator& _object, const Topology& _topology,
+                  int32_t _sourceId, TileDataSink& _sink);
 
 }
 

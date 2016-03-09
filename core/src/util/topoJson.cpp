@@ -222,9 +222,12 @@ Feature getFeature(const JsonValue& _geometry, const Topology& _topology, int32_
 
 }
 
-Layer getLayer(JsonValue::MemberIterator& _objectIt, const Topology& _topology, int32_t _source) {
+bool processLayer(JsonValue::MemberIterator& _objectIt, const Topology& _topology,
+                  int32_t _source, TileDataSink& _sink) {
 
-    Layer layer(_objectIt->name.GetString());
+    if (!_sink.beginLayer(_objectIt->name.GetString())) {
+        return false;
+    }
 
     JsonValue& object = _objectIt->value;
     auto type = object.FindMember("type");
@@ -232,12 +235,18 @@ Layer getLayer(JsonValue::MemberIterator& _objectIt, const Topology& _topology, 
         auto geometries = object.FindMember("geometries");
         if (geometries != object.MemberEnd() && geometries->value.IsArray()) {
             for (auto it = geometries->value.Begin(); it != geometries->value.End(); ++it) {
-                layer.features.push_back(getFeature(*it, _topology, _source));
+
+                auto feat = getFeature(*it, _topology, _source);
+
+                // TODO could be optimized by skipping geometry parsing for unmatched features
+                if (_sink.matchFeature(feat)) {
+                    _sink.addFeature(feat);
+                }
             }
         }
     }
 
-    return layer;
+    return true;
 
 }
 

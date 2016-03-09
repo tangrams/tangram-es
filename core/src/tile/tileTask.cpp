@@ -15,14 +15,7 @@ TileTask::TileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, int _su
     m_priority(0) {}
 
 void TileTask::process(TileBuilder& _tileBuilder) {
-
-    auto tileData = m_source->parse(*this, *_tileBuilder.scene().mapProjection());
-
-    if (tileData) {
-        m_tile = _tileBuilder.build(m_tileId, *tileData, *m_source);
-    } else {
-        cancel();
-    }
+    m_tile = _tileBuilder.build(*this);
 }
 
 void TileTask::complete() {

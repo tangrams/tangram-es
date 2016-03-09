@@ -24,8 +24,7 @@ class RasterSource : public DataSource {
 
 protected:
 
-    virtual std::shared_ptr<TileData> parse(const TileTask& _task,
-                                            const MapProjection& _projection) const override;
+    virtual bool process(const TileTask& _task, const MapProjection& _projection, TileDataSink& _sink) const override;
 
     virtual void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
                               TileTaskCb _cb) override;
