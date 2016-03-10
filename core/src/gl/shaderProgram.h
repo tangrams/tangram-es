@@ -80,6 +80,8 @@ public:
     void setUniformf(const UniformLocation& _loc, const glm::vec3& _value);
     void setUniformf(const UniformLocation& _loc, const glm::vec4& _value);
 
+    void setUniformf(const UniformLocation& _loc, const UniformArray& _value);
+
     /*
      * Ensures the program is bound and then sets the named uniform to the values
      * beginning at the pointer _value; 4 values are used for a 2x2 matrix, 9 values for a 3x3, etc.

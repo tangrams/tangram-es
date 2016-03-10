@@ -99,6 +99,8 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
                 m_shaderProgram->setUniformf(name, value.get<glm::vec3>());
             } else if(value.is<glm::vec4>()) {
                 m_shaderProgram->setUniformf(name, value.get<glm::vec4>());
+            } else if (value.is<UniformArray>()) {
+                m_shaderProgram->setUniformf(name, value.get<UniformArray>());
             } else {
                 // TODO: Throw away uniform on loading!
                 // none_type

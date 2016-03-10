@@ -51,8 +51,11 @@ styles:
         base: polygons
         lighting: vertex
         shaders:
+            uniforms:
+                u_test: [0.5, 0.5, 0.5, 0.5, 0.9]
+                #u_vec: [0.5, 0.5, 0.5]
             blocks:
-                color: "color.rgb += vec3(position.z / 800.);"
+                color: "color.rgb *= u_test[4];"
     heightglowline:
         base: lines
         mix: heightglow
