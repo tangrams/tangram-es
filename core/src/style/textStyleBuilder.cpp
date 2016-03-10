@@ -10,10 +10,14 @@
 #include <cmath>
 #include <locale>
 #include <mutex>
+#include <sstream>
 
 #define MIN_LINE_WIDTH 4
 
 namespace Tangram {
+
+const static std::string key_name("name");
+
 
 TextStyleBuilder::TextStyleBuilder(const TextStyle& _style)
     : StyleBuilder(_style),
@@ -111,6 +115,33 @@ std::string TextStyleBuilder::applyTextTransform(const TextStyle::Parameters& _p
 
     return text;
 }
+
+std::string TextStyleBuilder::resolveTextSource(const std::string& textSource,
+                                                const Properties& props) const {
+
+    std::string tmp, item;
+
+    // Meaning we have a yaml sequence defining fallbacks
+    if (textSource.find(',') != std::string::npos) {
+        std::stringstream ss(textSource);
+
+        // Parse fallbacks
+        while (std::getline(ss, tmp, ',')) {
+            if (props.getAsString(tmp, item)) {
+                return item;
+            }
+        }
+    }
+
+    // Fallback to default text source
+    if (props.getAsString(textSource, item)) {
+        return item;
+    }
+
+    // Default to 'name'
+    return props.getString(key_name);
+}
+
 
 bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type _type) {
 
@@ -233,9 +264,8 @@ void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Typ
 }
 
 TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
-                                                  const Properties& _props) const
-{
-    const static std::string key_name("name");
+                                                  const Properties& _props) const {
+
     const static std::string defaultWeight("400");
     const static std::string defaultStyle("normal");
     const static std::string defaultFamily("default");
@@ -248,7 +278,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         if (p.text.empty()) {
             p.text = _props.getString(key_name);
         } else {
-            p.text = _props.getString(p.text);
+            p.text = resolveTextSource(p.text, _props);
         }
     }
     if (p.text.empty()) { return p; }

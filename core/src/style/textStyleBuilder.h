@@ -69,6 +69,8 @@ public:
 
     std::string applyTextTransform(const TextStyle::Parameters& _params, const std::string& _string);
 
+    std::string resolveTextSource(const std::string& textSource, const Properties& props) const;
+
 protected:
 
     struct ScratchBuffer : public alfons::MeshCallback {
