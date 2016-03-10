@@ -56,7 +56,7 @@ public abstract class BaseGestureDetector {
      * extending classes.
      *
      * @param event
-     * @return
+     * @return Always true
      */
     public boolean onTouchEvent(MotionEvent event) {
         final int actionCode = event.getActionMasked();

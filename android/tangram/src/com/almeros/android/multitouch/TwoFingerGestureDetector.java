@@ -156,7 +156,7 @@ public abstract class TwoFingerGestureDetector extends BaseGestureDetector {
      * MotionEvent has no getRawX(int) method; simulate it pending future API approval.
      * @param event
      * @param pointerIndex
-     * @return
+     * @return Raw X coordinate in pixels
      */
     protected static float getRawX(MotionEvent event, int pointerIndex) {
         float offset = event.getX() - event.getRawX();
@@ -170,7 +170,7 @@ public abstract class TwoFingerGestureDetector extends BaseGestureDetector {
      * MotionEvent has no getRawY(int) method; simulate it pending future API approval.
      * @param event
      * @param pointerIndex
-     * @return
+     * @return Raw Y coordinate in pixels
      */
     protected static float getRawY(MotionEvent event, int pointerIndex) {
         float offset = event.getY() - event.getRawY();
@@ -185,7 +185,7 @@ public abstract class TwoFingerGestureDetector extends BaseGestureDetector {
      * of the user's hand is touching the screen, for example.
      *
      * @param event
-     * @return
+     * @return True if gesture is sloppy, else false
      */
     protected boolean isSloppyGesture(MotionEvent event) {
         // As orientation can change, query the metrics in touch down
