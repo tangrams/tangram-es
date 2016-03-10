@@ -1065,6 +1065,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, S
     std::vector<SceneLayer> sublayers;
     std::vector<DrawRuleData> rules;
     Filter filter;
+    bool visible = true;
 
     for (const auto& member : layer) {
 
@@ -1089,14 +1090,14 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, S
         } else if (key == "properties") {
             // TODO: ignored for now
         } else if (key == "visible") {
-            // TODO: ignored for now
+            getBool(member.second, visible, "visible");
         } else {
             // Member is a sublayer
             sublayers.push_back(loadSublayer(member.second, (layerName + ":" + key), scene));
         }
     }
 
-    return { layerName, std::move(filter), rules, std::move(sublayers) };
+    return { layerName, std::move(filter), rules, std::move(sublayers), visible };
 }
 
 void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {

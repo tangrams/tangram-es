@@ -121,6 +121,11 @@ bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, 
     m_matchedRules.clear();
     m_queuedLayers.clear();
 
+    // If uber layer is marked not visible return immediately
+    if (!_layer.visible()) {
+        return false;
+    }
+
     // If the first filter doesn't match, return immediately
     if (!_layer.filter().eval(_feature, _ctx)) { return false; }
 
@@ -138,6 +143,11 @@ bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, 
 
         // Push each of the layer's matching sublayers onto the stack
         for (const auto& sublayer : layer.sublayers()) {
+            // Skip matching this sublayer if marked not visible
+            if (!sublayer.visible()) {
+                continue;
+            }
+
             if (sublayer.filter().eval(_feature, _ctx)) {
                 m_queuedLayers.push_back(&sublayer);
             }
