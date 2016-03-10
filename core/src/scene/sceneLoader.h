@@ -28,7 +28,10 @@ struct MaterialTexture;
 struct Filter;
 
 // 0: type, 1: values
-using StyleUniforms = std::pair<std::string, std::vector<UniformValue>>;
+struct StyleUniform {
+    std::string type;
+    UniformValue value;
+};
 
 struct SceneLoader {
     using Node = YAML::Node;
@@ -61,7 +64,7 @@ struct SceneLoader {
                                  std::vector<StyleParam>& out);
     static void parseTransition(Node params, Scene& scene, std::vector<StyleParam>& out);
 
-    static StyleUniforms parseStyleUniforms(const Node& uniform, Scene& scene);
+    static StyleUniform parseStyleUniforms(const Node& uniform, Scene& scene);
 
     static bool loadStyle(const std::string& styleName, Node config, Scene& scene);
 

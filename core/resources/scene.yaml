@@ -42,20 +42,26 @@ textures:
             info: [0, 1110, 32, 32]
             hotel: [0, 259, 32, 32]
             bookstore: [0, 333, 32, 32]
+    texture0:
+        url: img/cross.png
+    texture1:
+        url: img/sem.jpg
 
 styles:
     flatcolor:
         base: polygons
-        lighting: false
+        #lighting: false
     heightglow:
         base: polygons
-        lighting: vertex
+        #lighting: vertex
+        texcoords: true
         shaders:
             uniforms:
                 u_test: [0.5, 0.5, 0.5, 0.5, 0.9]
-                #u_vec: [0.5, 0.5, 0.5]
+                u_textures: [texture0, texture1]
             blocks:
-                color: "color.rgb *= u_test[4];"
+                #color: "color.rgb *= u_test[4];"
+                color: "color.rgb *= texture2D(u_textures[0], v_texcoord).rgb;"
     heightglowline:
         base: lines
         mix: heightglow
