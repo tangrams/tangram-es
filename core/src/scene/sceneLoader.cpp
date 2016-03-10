@@ -210,9 +210,18 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             auto& type = uniforms.first;
             auto& uniformValues = uniforms.second;
             int size = uniformValues.size();
+
             if (size == 1) {
-                shader.addSourceBlock("uniforms", "uniform " + type + " " + name + ";");
-                style.styleUniforms().emplace_back(name, uniformValues[0]);
+                auto& uniformValue = uniformValues[0];
+
+                if (uniformValue.is<UniformArray>()) {
+                    UniformArray& array = uniformValue.get<UniformArray>();
+                    shader.addSourceBlock("uniforms", "uniform float " + name + "[" + std::to_string(array.size()) + "];");
+                } else {
+                    shader.addSourceBlock("uniforms", "uniform " + type + " " + name + ";");
+                }
+
+                style.styleUniforms().emplace_back(name, uniformValue);
             } else {
                 shader.addSourceBlock("uniforms", "uniform " + type + " " + name +
                                                         "[" + std::to_string(size) + "];");
@@ -1005,8 +1014,12 @@ StyleUniforms SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
                     uVal = parseVec<glm::vec4>(value);
                     break;
                 default:
+                    std::vector<float> uniformArray;
+                    for (const auto& val : value) {
+                        uniformArray.push_back(val.as<double>());
+                    }
+                    uVal = uniformArray;
                     break;
-                    // TODO: Handle numeric arrays past 4 elements
             }
             uniformValues.push_back(uVal);
         } catch (const BadConversion& e) { // array of strings (textures)
