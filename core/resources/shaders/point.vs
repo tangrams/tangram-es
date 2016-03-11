@@ -25,7 +25,7 @@ uniform int u_pass;
 
 attribute vec2 a_uv;
 attribute vec2 a_position;
-attribute vec2 a_screenPosition;
+attribute vec2 a_screen_position;
 attribute LOWP float a_alpha;
 attribute LOWP float a_rotation;
 attribute LOWP vec4 a_color;
@@ -56,7 +56,7 @@ void main() {
         v_alpha = a_alpha;
         v_color = a_color;
 
-        vec2 vertexPos = UNPACK_POSITION(a_position);
+        vec2 vertex_pos = UNPACK_POSITION(a_position);
 
         #ifdef TANGRAM_TEXT
         v_texcoords = a_uv * u_uv_scale_factor;
@@ -73,17 +73,17 @@ void main() {
         v_texcoords = a_uv;
         if (a_extrude.x != 0.0) {
             float dz = u_map_position.z - abs(u_tile_origin.z);
-            vertexPos.xy += clamp(dz, 0.0, 1.0) * UNPACK_EXTRUDE(a_extrude.xy);
+            vertex_pos.xy += clamp(dz, 0.0, 1.0) * UNPACK_EXTRUDE(a_extrude.xy);
         }
         #endif
 
         // rotates first around +z-axis (0,0,1) and then translates by (tx,ty,0)
         float st = sin(UNPACK_ROTATION(a_rotation));
         float ct = cos(UNPACK_ROTATION(a_rotation));
-        vec2 screenPos = UNPACK_POSITION(a_screenPosition);
+        vec2 screen_pos = UNPACK_POSITION(a_screen_position);
         vec4 position = vec4(
-            vertexPos.x * ct - vertexPos.y * st + screenPos.x,
-            vertexPos.x * st + vertexPos.y * ct + screenPos.y,
+            vertex_pos.x * ct - vertex_pos.y * st + screen_pos.x,
+            vertex_pos.x * st + vertex_pos.y * ct + screen_pos.y,
             0.0, 1.0
         );
 
