@@ -73,9 +73,9 @@ void Style::setLightingType(LightingType _type) {
 }
 
 void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
-    for (const auto& uniformPair : m_styleUniforms) {
+    for (auto& uniformPair : m_styleUniforms) {
         const auto& name = uniformPair.first;
-        const auto& value = uniformPair.second;
+        auto& value = uniformPair.second;
 
         if (value.is<std::string>()) {
             std::shared_ptr<Texture> texture = nullptr;
@@ -107,7 +107,7 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
             } else if (value.is<UniformArray>()) {
                 m_shaderProgram->setUniformf(name, value.get<UniformArray>());
             } else if (value.is<UniformTextureArray>()) {
-                auto& textureUniformArray = value.get<UniformTextureArray>();
+                UniformTextureArray& textureUniformArray = value.get<UniformTextureArray>();
 
                 for (const auto& textureName : textureUniformArray.names) {
                     std::shared_ptr<Texture> texture = nullptr;
@@ -120,6 +120,7 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
                     texture->update(_textureUnit);
                     texture->bind(_textureUnit);
 
+                    textureUniformArray.slots.push_back(_textureUnit);
                     _textureUnit++;
                 }
 
