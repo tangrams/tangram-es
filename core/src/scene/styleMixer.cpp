@@ -165,7 +165,7 @@ void StyleMixer::applyShaderMixins(Node _shaders, const std::vector<Node>& _mixi
     }
 }
 
-void StyleMixer::mergeBooleanFieldAsDisjunction(std::string key, Node target, const std::vector<Node>& sources) {
+void StyleMixer::mergeBooleanFieldAsDisjunction(const std::string& key, Node target, const std::vector<Node>& sources) {
 
     auto current = target[key];
     if (current && current.as<bool>(false)) {
@@ -182,7 +182,7 @@ void StyleMixer::mergeBooleanFieldAsDisjunction(std::string key, Node target, co
     }
 }
 
-void StyleMixer::mergeFieldTakingLast(std::string key, Node target, const std::vector<Node>& sources) {
+void StyleMixer::mergeFieldTakingLast(const std::string& key, Node target, const std::vector<Node>& sources) {
 
     if (target[key]) {
         // Target already has a value, we can stop here.
@@ -198,8 +198,7 @@ void StyleMixer::mergeFieldTakingLast(std::string key, Node target, const std::v
     }
 }
 
-void StyleMixer::mergeMapFieldTakingLast(std::string key, Node target, const std::vector<Node>& sources) {
-
+void StyleMixer::mergeMapFieldTakingLast(const std::string& key, Node target, const std::vector<Node>& sources) {
 
     Node map = target[key];
     if (map && !map.IsMap()) { return; }
