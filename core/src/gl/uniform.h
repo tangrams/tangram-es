@@ -11,7 +11,15 @@ namespace Tangram {
 
 class ShaderProgram;
 
-using UniformTextureArray = std::vector<std::string>;
+struct UniformTextureArray {
+    std::vector<std::string> names;
+    std::vector<int> slots;
+
+    inline bool operator==(UniformTextureArray& uta) {
+        return uta.slots == slots;
+    };
+};
+
 using UniformArray = std::vector<float>;
 
 /* Style Block Uniform types */

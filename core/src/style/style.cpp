@@ -78,15 +78,12 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
         const auto& value = uniformPair.second;
 
         if (value.is<std::string>()) {
-            std::string textureName = value.get<std::string>();
-            auto texIt = _scene.textures().find(textureName);
+            std::shared_ptr<Texture> texture = nullptr;
 
-            if (texIt == _scene.textures().end()) {
+            if (!_scene.texture(value.get<std::string>(), texture) || !texture) {
                 // TODO: LOG, would be nice to do have a notify-once-log not to overwhelm logging
                 continue;
             }
-
-            auto& texture = texIt->second;
 
             texture->update(_textureUnit);
             texture->bind(_textureUnit);
@@ -110,7 +107,23 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
             } else if (value.is<UniformArray>()) {
                 m_shaderProgram->setUniformf(name, value.get<UniformArray>());
             } else if (value.is<UniformTextureArray>()) {
+                auto& textureUniformArray = value.get<UniformTextureArray>();
 
+                for (const auto& textureName : textureUniformArray.names) {
+                    std::shared_ptr<Texture> texture = nullptr;
+
+                    if (!_scene.texture(textureName, texture) || !texture) {
+                        // TODO: LOG, would be nice to do have a notify-once-log not to overwhelm logging
+                        continue;
+                    }
+
+                    texture->update(_textureUnit);
+                    texture->bind(_textureUnit);
+
+                    _textureUnit++;
+                }
+
+                m_shaderProgram->setUniformi(name, textureUniformArray);
             } else {
                 // TODO: Throw away uniform on loading!
                 // none_type

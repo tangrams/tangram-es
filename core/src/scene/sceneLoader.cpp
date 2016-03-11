@@ -215,7 +215,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             } else if(styleUniform.value.is<UniformTextureArray>()) {
                 UniformTextureArray& textureArray = styleUniform.value.get<UniformTextureArray>();
                 shader.addSourceBlock("uniforms", "uniform " + styleUniform.type + " " + name +
-                    "[" + std::to_string(textureArray.size()) + "];");
+                    "[" + std::to_string(textureArray.names.size()) + "];");
             } else {
                 shader.addSourceBlock("uniforms", "uniform " + styleUniform.type + " " + name + ";");
             }
@@ -1015,12 +1015,12 @@ StyleUniform SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
         } catch (const BadConversion& e) { // array of strings (textures)
             // FIXME: don't base the fact that we should parse strings based on an exception
             UniformTextureArray textureArrayUniform;
-            textureArrayUniform.reserve(size);
+            textureArrayUniform.names.reserve(size);
             styleUniform.type = "sampler2D";
 
             for (const auto& strVal : value) {
                 auto textureName = strVal.as<std::string>();
-                textureArrayUniform.push_back(textureName);
+                textureArrayUniform.names.push_back(textureName);
                 auto texItr = scene.textures().find(textureName);
 
                 // TODO: remove, shouldn't load a texture 'name'

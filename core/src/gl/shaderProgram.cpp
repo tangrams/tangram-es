@@ -435,4 +435,13 @@ void ShaderProgram::setUniformf(const UniformLocation& _loc, const UniformArray&
     }
 }
 
+void ShaderProgram::setUniformi(const UniformLocation& _loc, const UniformTextureArray& _value) {
+    use();
+    GLint location = getUniformLocation(_loc);
+    if (location >= 0) {
+        bool cached = getFromCache(location, _value);
+        if (!cached) { glUniform1iv(location, _value.slots.size(), _value.slots.data()); }
+    }
+}
+
 }

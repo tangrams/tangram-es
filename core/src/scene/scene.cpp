@@ -63,4 +63,16 @@ const Light* Scene::findLight(const std::string &_name) const {
     return nullptr;
 }
 
+bool Scene::texture(const std::string& textureName, std::shared_ptr<Texture>& texture) const {
+    auto texIt = m_textures.find(textureName);
+
+    if (texIt == m_textures.end()) {
+        return false;
+    }
+
+    texture = texIt->second;
+
+    return true;
+}
+
 }

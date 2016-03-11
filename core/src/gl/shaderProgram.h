@@ -81,6 +81,7 @@ public:
     void setUniformf(const UniformLocation& _loc, const glm::vec4& _value);
 
     void setUniformf(const UniformLocation& _loc, const UniformArray& _value);
+    void setUniformi(const UniformLocation& _loc, const UniformTextureArray& _value);
 
     /*
      * Ensures the program is bound and then sets the named uniform to the values
