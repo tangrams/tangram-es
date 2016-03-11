@@ -374,10 +374,24 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene,
     return matTex;
 }
 
-void SceneLoader::loadTexture(const std::string& url, Scene& scene) {
-    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
-    std::shared_ptr<Texture> texture(new Texture(url, options, false));
+bool SceneLoader::loadTexture(const std::string& url, Scene& scene) {
+    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
+
+    unsigned int size = 0;
+    unsigned char* blob = bytesFromFile(url.c_str(), PathType::resource, &size);
+
+    if (!blob) {
+        LOGE("Can't load texture resource at url %s", url.c_str());
+        return false;
+    }
+
+    std::shared_ptr<Texture> texture(new Texture(blob, size, options, false));
+
+    free(blob);
+
     scene.textures().emplace(url, texture);
+
+    return true;
 }
 
 void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
@@ -982,11 +996,13 @@ StyleUniform SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
         } else {
             auto strVal = value.as<std::string>();
             styleUniform.type = "sampler2D";
-            auto texItr = scene.textures().find(strVal);
+            std::shared_ptr<Texture> texture;
+            scene.texture(strVal, texture);
 
-            if (texItr == scene.textures().end()) {
-                loadTexture(strVal, scene);
+            if (!texture && !loadTexture(strVal, scene)) {
+                LOGW("Can't load texture with name %s", strVal.c_str());
             }
+
             styleUniform.value = strVal;
         }
     } else if (value.IsSequence()) {
@@ -1013,7 +1029,6 @@ StyleUniform SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
 
             styleUniform.type = "vec" + std::to_string(size);
         } catch (const BadConversion& e) { // array of strings (textures)
-            // FIXME: don't base the fact that we should parse strings based on an exception
             UniformTextureArray textureArrayUniform;
             textureArrayUniform.names.reserve(size);
             styleUniform.type = "sampler2D";
@@ -1021,11 +1036,11 @@ StyleUniform SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
             for (const auto& strVal : value) {
                 auto textureName = strVal.as<std::string>();
                 textureArrayUniform.names.push_back(textureName);
-                auto texItr = scene.textures().find(textureName);
+                std::shared_ptr<Texture> texture;
+                scene.texture(textureName, texture);
 
-                // TODO: remove, shouldn't load a texture 'name'
-                if (texItr == scene.textures().end()) {
-                    loadTexture(textureName, scene);
+                if (!texture && !loadTexture(textureName, scene)) {
+                    LOGW("Can't load texture with name %s", textureName.c_str());
                 }
             }
 

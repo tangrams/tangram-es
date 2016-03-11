@@ -25,18 +25,25 @@ struct TextureOptions {
     TextureWrapping wrapping;
 };
 
-#define TANGRAM_MAX_TEXTURE_UNIT    6
+#define DEFAULT_TEXTURE_OPTION \
+    {GL_ALPHA, GL_ALPHA, \
+    {GL_LINEAR, GL_LINEAR}, \
+    {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}
 
 class Texture {
 
 public:
 
     Texture(unsigned int _width, unsigned int _height,
-            TextureOptions _options = {GL_ALPHA, GL_ALPHA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}},
+            TextureOptions _options = DEFAULT_TEXTURE_OPTION},
+            bool _generateMipmaps = false);
+
+    Texture(const unsigned char* data, size_t dataSize,
+            TextureOptions _options = DEFAULT_TEXTURE_OPTION},
             bool _generateMipmaps = false);
 
     Texture(const std::string& _file,
-            TextureOptions _options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}},
+            TextureOptions _options = DEFAULT_TEXTURE_OPTION},
             bool _generateMipmaps = false);
 
     virtual ~Texture();

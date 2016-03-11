@@ -24,7 +24,7 @@ Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _opti
 }
 
 Texture::Texture(const std::string& _file, TextureOptions _options, bool _generateMipmaps)
-    : Texture(0, 0, _options, _generateMipmaps) {
+    : Texture(0u, 0u, _options, _generateMipmaps) {
 
     unsigned int size;
     unsigned char* data = bytesFromFile(_file.c_str(), PathType::resource, &size);
@@ -42,6 +42,19 @@ Texture::Texture(const std::string& _file, TextureOptions _options, bool _genera
     setData(reinterpret_cast<GLuint*>(pixels), width * height);
 
     free(data);
+    stbi_image_free(pixels);
+}
+
+Texture::Texture(const unsigned char* data, size_t dataSize, TextureOptions options, bool generateMipmaps)
+    : Texture(0u, 0u, options, generateMipmaps) {
+    unsigned char* pixels;
+    int width, height, comp;
+
+    pixels = stbi_load_from_memory(data, dataSize, &width, &height, &comp, STBI_rgb_alpha);
+
+    resize(width, height);
+    setData(reinterpret_cast<GLuint*>(pixels), width * height);
+
     stbi_image_free(pixels);
 }
 
