@@ -9,6 +9,7 @@ extern bool supportsMapBuffer;
 extern bool supportsVAOs;
 extern bool supportsTextureNPOT;
 extern uint32_t maxTextureSize;
+extern uint32_t maxCombinedTextureUnits;
 
 void loadCapabilities();
 void loadExtensions();

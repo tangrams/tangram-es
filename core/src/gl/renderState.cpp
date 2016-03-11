@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "vertexLayout.h"
+#include "gl/hardware.h"
 
 namespace Tangram {
 
@@ -35,10 +36,6 @@ namespace RenderState {
     ClearColor clearColor;
 
     GLuint getTextureUnit(GLuint _unit) {
-        if (_unit >= TANGRAM_MAX_TEXTURE_UNIT) {
-            LOGW("trying to access unavailable texture unit");
-        }
-
         return GL_TEXTURE0 + _unit;
     }
 
@@ -85,6 +82,11 @@ namespace RenderState {
     }
 
     int nextAvailableTextureUnit() {
+        if (s_textureUnit + 1 > Hardware::maxCombinedTextureUnits) {
+            LOGE("Too many combined texture units are being used");
+            LOGE("GPU supports %d combined texture units", Hardware::maxCombinedTextureUnits);
+        }
+
         return ++s_textureUnit;
     }
 

@@ -5,9 +5,6 @@
 #include <tuple>
 #include <limits>
 
-// Max texture units used at the same time by a shader
-#define TANGRAM_MAX_TEXTURE_UNIT 6
-
 namespace Tangram {
 
 namespace RenderState {

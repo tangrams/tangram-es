@@ -15,6 +15,7 @@ bool supportsVAOs = false;
 bool supportsTextureNPOT = false;
 
 uint32_t maxTextureSize = 0;
+uint32_t maxCombinedTextureUnits = 0;
 static char* s_glExtensions;
 
 bool isAvailable(std::string _extension) {
@@ -64,7 +65,11 @@ void loadCapabilities() {
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &val);
     maxTextureSize = val;
 
+    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &val);
+    maxCombinedTextureUnits = val;
+
     LOG("Hardware max texture size %d", maxTextureSize);
+    LOG("Hardware max combined texture units %d", maxCombinedTextureUnits);
 }
 
 }
