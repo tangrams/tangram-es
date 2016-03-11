@@ -73,10 +73,9 @@ struct DrawRule {
     // draw-style name and id
     const std::string* name = nullptr;
     int id;
-    bool dummyOutline = false;
+    bool isOutlineOnly = false;
 
     DrawRule(const DrawRuleData& _ruleData, const SceneLayer& _layer);
-    DrawRule(const DrawRule& _other);
 
     void merge(const DrawRuleData& _ruleData, const SceneLayer& _layer);
 
@@ -91,8 +90,6 @@ struct DrawRule {
     size_t getParamSetHash() const;
 
     const StyleParam& findParameter(StyleParamKey _key) const;
-
-    DrawRule outlineRule() const;
 
     template<typename T>
     bool get(StyleParamKey _key, T& _value) const {

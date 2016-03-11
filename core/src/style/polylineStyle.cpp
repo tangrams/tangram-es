@@ -227,7 +227,7 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
     height *= m_tileUnitsPerMeter;
 
     p.fill.set(fill.width, fill.slope, height, fill.order);
-    p.lineOn = !_rule.dummyOutline;
+    p.lineOn = !_rule.isOutlineOnly;
 
     stroke.order = fill.order;
     p.stroke.cap = p.fill.cap;
