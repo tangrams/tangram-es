@@ -7,6 +7,7 @@ namespace Tangram {
 
  // Incremented when the GL context is invalidated
 static int s_validGeneration;
+static int s_textureUnit;
 
 namespace RenderState {
 
@@ -47,6 +48,7 @@ namespace RenderState {
     void bindTexture(GLenum _target, GLuint _textureId) { glBindTexture(_target, _textureId); }
 
     void configure() {
+        s_textureUnit = -1;
         s_validGeneration++;
         VertexLayout::clearCache();
 
@@ -63,13 +65,15 @@ namespace RenderState {
         glClearDepthf(1.0);
         glDepthRangef(0.0, 1.0);
 
+        static size_t max = std::numeric_limits<size_t>::max();
+
         clearColor.init(0.0, 0.0, 0.0, 0.0);
-        shaderProgram.init(std::numeric_limits<unsigned int>::max(), false);
-        vertexBuffer.init(std::numeric_limits<unsigned int>::max(), false);
-        indexBuffer.init(std::numeric_limits<unsigned int>::max(), false);
-        texture.init(GL_TEXTURE_2D, std::numeric_limits<unsigned int>::max(), false);
-        texture.init(GL_TEXTURE_CUBE_MAP, std::numeric_limits<unsigned int>::max(), false);
-        textureUnit.init(std::numeric_limits<unsigned int>::max(), false);
+        shaderProgram.init(max, false);
+        vertexBuffer.init(max, false);
+        indexBuffer.init(max, false);
+        texture.init(GL_TEXTURE_2D, max, false);
+        texture.init(GL_TEXTURE_CUBE_MAP, max, false);
+        textureUnit.init(max, false);
     }
 
     bool isValidGeneration(int _generation) {
@@ -80,6 +84,17 @@ namespace RenderState {
         return s_validGeneration;
     }
 
+    int nextAvailableTextureUnit() {
+        return ++s_textureUnit;
+    }
+
+    int currentTextureUnit() {
+        return s_textureUnit;
+    }
+
+    void resetTextureUnit() {
+        s_textureUnit = -1;
+    }
 }
 
 }

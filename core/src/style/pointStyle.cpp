@@ -5,6 +5,7 @@
 #include "gl/shaderProgram.h"
 #include "gl/texture.h"
 #include "gl/vertexLayout.h"
+#include "gl/renderState.h"
 #include "labels/labelMesh.h"
 #include "labels/spriteLabel.h"
 #include "scene/drawRule.h"
@@ -53,18 +54,19 @@ void PointStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
+void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
+    Style::onBeginDrawFrame(_view, _scene);
+
     if (m_spriteAtlas) {
-        m_spriteAtlas->bind(0);
+        m_spriteAtlas->bind(RenderState::nextAvailableTextureUnit());
     } else if (m_texture) {
-        m_texture->update(0);
-        m_texture->bind(0);
+        m_texture->update(RenderState::nextAvailableTextureUnit());
+        m_texture->bind(RenderState::currentTextureUnit());
     }
 
     m_shaderProgram->setUniformi(m_uTex, 0);
     m_shaderProgram->setUniformMatrix4f(m_uOrtho, _view.getOrthoViewportMatrix());
 
-    Style::onBeginDrawFrame(_view, _scene, 1);
 }
 
 struct PointStyleBuilder : public StyleBuilder {

@@ -5,6 +5,7 @@
 #include "text/fontContext.h"
 #include "tile/tile.h"
 #include "gl/shaderProgram.h"
+#include "gl/renderState.h"
 #include "gl/mesh.h"
 #include "view/view.h"
 #include "labels/textLabel.h"
@@ -60,15 +61,15 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
-    m_fontContext->bindAtlas(0);
+void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
+    Style::onBeginDrawFrame(_view, _scene);
+
+    m_fontContext->bindAtlas(RenderState::nextAvailableTextureUnit());
+    m_shaderProgram->setUniformi(m_uTex, RenderState::currentTextureUnit());
 
     m_shaderProgram->setUniformf(m_uTexScaleFactor,
                                  1.0f / m_fontContext->getAtlasResolution());
-    m_shaderProgram->setUniformi(m_uTex, 0);
     m_shaderProgram->setUniformMatrix4f(m_uOrtho, _view.getOrthoViewportMatrix());
-
-    Style::onBeginDrawFrame(_view, _scene, 1);
 }
 
 struct TextStyleBuilder : public StyleBuilder {

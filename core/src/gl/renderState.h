@@ -28,6 +28,12 @@ namespace RenderState {
     bool isValidGeneration(int _generation);
     int generation();
 
+    int currentTextureUnit();
+    /* Gives the immediately next available texture unit */
+    int nextAvailableTextureUnit();
+    /* Reset the currently used texture unit */
+    void resetTextureUnit();
+
     template <typename T>
     class State {
     public:

@@ -72,7 +72,7 @@ void Style::setLightingType(LightingType _type) {
     m_lightingType = _type;
 }
 
-void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
+void Style::setupShaderUniforms(Scene& _scene) {
     for (auto& uniformPair : m_styleUniforms) {
         const auto& name = uniformPair.first;
         auto& value = uniformPair.second;
@@ -85,13 +85,10 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
                 continue;
             }
 
-            texture->update(_textureUnit);
-            texture->bind(_textureUnit);
+            texture->update(RenderState::nextAvailableTextureUnit());
+            texture->bind(RenderState::currentTextureUnit());
 
-            m_shaderProgram->setUniformi(name, _textureUnit);
-
-            // TODO: Bug, this might not be working properly since not a reference, move to renderstate
-            _textureUnit++;
+            m_shaderProgram->setUniformi(name, RenderState::currentTextureUnit());
         } else {
 
             if (value.is<bool>()) {
@@ -118,11 +115,10 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
                         continue;
                     }
 
-                    texture->update(_textureUnit);
-                    texture->bind(_textureUnit);
+                    texture->update(RenderState::nextAvailableTextureUnit());
+                    texture->bind(RenderState::currentTextureUnit());
 
-                    textureUniformArray.slots.push_back(_textureUnit);
-                    _textureUnit++;
+                    textureUniformArray.slots.push_back(RenderState::currentTextureUnit());
                 }
 
                 m_shaderProgram->setUniformi(name, textureUniformArray);
@@ -134,9 +130,10 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
     }
 }
 
-void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
+void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {
 
-    // TODO cache which uniforms are used by the shader!
+    // Reset the currently used texture unit to 0
+    RenderState::resetTextureUnit();
 
     // Set time uniforms style's shader programs
     m_shaderProgram->setUniformf(m_uTime, Tangram::frameTime());
@@ -163,7 +160,7 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit)
     m_shaderProgram->setUniformMatrix4f(m_uView, _view.getViewMatrix());
     m_shaderProgram->setUniformMatrix4f(m_uProj, _view.getProjectionMatrix());
 
-    setupShaderUniforms(_textureUnit, _scene);
+    setupShaderUniforms(_scene);
 
     // Configure render state
     switch (m_blend) {
