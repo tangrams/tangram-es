@@ -10,12 +10,13 @@ uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_proj;
 uniform mat3 u_normalMatrix;
+uniform vec4 u_tile_origin;
 uniform vec3 u_map_position;
-uniform vec3 u_tile_origin;
 uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_meters_per_pixel;
 uniform float u_device_pixel_ratio;
+uniform float u_proxy_depth;
 
 #pragma tangram: uniforms
 
@@ -40,7 +41,7 @@ varying vec3 v_normal;
 #define UNPACK_POSITION(x) (x / 8192.0)
 
 vec4 modelPosition() {
-    return vec4(UNPACK_POSITION(a_position.xyz), 1.0);
+    return vec4(UNPACK_POSITION(a_position.xyz) * exp2(u_tile_origin.z - u_tile_origin.w), 1.0);
 }
 
 vec4 worldPosition() {
@@ -103,9 +104,8 @@ void main() {
 
     gl_Position = u_proj * v_position;
 
-    // Proxy tiles have u_tile_origin.z < 0, so this adjustment will place proxy tiles
-    // deeper in the depth buffer than non-proxy tiles
-    gl_Position.z += TANGRAM_DEPTH_DELTA * gl_Position.w * (1. - sign(u_tile_origin.z));
+    // Proxy tiles are placed deeper in the depth buffer than non-proxy tiles
+    gl_Position.z += TANGRAM_DEPTH_DELTA * gl_Position.w * u_proxy_depth;
 
     #ifdef TANGRAM_DEPTH_DELTA
         float layer = a_position.w;

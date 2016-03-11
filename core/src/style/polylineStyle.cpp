@@ -145,15 +145,24 @@ private:
     std::vector<MeshData<V>> m_meshData;
 
     float m_tileUnitsPerMeter;
-    float m_tileSize;
+    float m_tileSizePixels;
     int m_zoom;
 };
 
 template <class V>
-void PolylineStyleBuilder<V>::setup(const Tile& _tile) {
-    m_tileUnitsPerMeter = _tile.getInverseScale();
-    m_zoom = _tile.getID().z;
-    m_tileSize = _tile.getProjection()->TileSize();
+void PolylineStyleBuilder<V>::setup(const Tile& tile) {
+
+    const auto& id = tile.getID();
+
+    // Use the 'style zoom' to evaluate style parameters.
+    m_zoom = id.s;
+    m_tileUnitsPerMeter = tile.getInverseScale();
+    m_tileSizePixels = tile.getProjection()->TileSize();
+
+    // When a tile is overzoomed, we are actually styling the area of its
+    // 'source' tile, which will have a larger effective pixel size at the
+    // 'style' zoom level.
+    m_tileSizePixels *= std::exp2(id.s - id.z);
 }
 
 template <class V>
@@ -275,7 +284,7 @@ template <class V>
 bool PolylineStyleBuilder<V>::evalWidth(const StyleParam& _styleParam, float& width, float& slope) {
 
     // NB: 0.5 because 'width' will be extruded in both directions
-    float tileRes = 0.5 / m_tileSize;
+    float tileRes = 0.5 / m_tileSizePixels;
 
     // auto& styleParam = _rule.findParameter(_key);
     if (_styleParam.stops) {
@@ -294,7 +303,7 @@ bool PolylineStyleBuilder<V>::evalWidth(const StyleParam& _styleParam, float& wi
         width = widthParam.value;
 
         if (widthParam.isMeter()) {
-            width = widthMeterToPixel(m_zoom, m_tileSize, width);
+            width = widthMeterToPixel(m_zoom, m_tileSizePixels, width);
             width *= tileRes;
             slope = width * 2;
         } else {
