@@ -9,14 +9,14 @@ precision highp float;
 uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_proj;
-uniform mat3 u_normalMatrix;
+uniform mat3 u_normal_matrix;
 uniform vec4 u_tile_origin;
 uniform vec3 u_map_position;
 uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_meters_per_pixel;
 uniform float u_device_pixel_ratio;
-uniform mat3 u_inverseNormalMatrix;
+uniform mat3 u_inverse_normal_matrix;
 
 #pragma tangram: uniforms
 
@@ -38,7 +38,7 @@ varying vec3 v_normal;
 #pragma tangram: global
 
 vec3 worldNormal() {
-    return normalize(u_inverseNormalMatrix * v_normal);
+    return normalize(u_inverse_normal_matrix * v_normal);
 }
 
 void main(void) {

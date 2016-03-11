@@ -138,8 +138,8 @@ protected:
     UniformLocation m_uDevicePixelRatio{"u_device_pixel_ratio"};
     UniformLocation m_uResolution{"u_resolution"};
     UniformLocation m_uMapPosition{"u_map_position"};
-    UniformLocation m_uNormalMatrix{"u_normalMatrix"};
-    UniformLocation m_uInverseNormalMatrix{"u_inverseNormalMatrix"};
+    UniformLocation m_uNormalMatrix{"u_normal_matrix"};
+    UniformLocation m_uInverseNormalMatrix{"u_inverse_normal_matrix"};
     UniformLocation m_uMetersPerPixel{"u_meters_per_pixel"};
     UniformLocation m_uView{"u_view"};
     UniformLocation m_uProj{"u_proj"};

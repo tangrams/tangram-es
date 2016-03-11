@@ -9,7 +9,7 @@ precision highp float;
 uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_proj;
-uniform mat3 u_normalMatrix;
+uniform mat3 u_normal_matrix;
 uniform vec4 u_tile_origin;
 uniform vec3 u_map_position;
 uniform vec2 u_resolution;
@@ -71,7 +71,7 @@ void main() {
         v_texcoord = a_texcoord;
     #endif
 
-    v_normal = u_normalMatrix * vec3(0.,0.,1.);
+    v_normal = u_normal_matrix * vec3(0.,0.,1.);
 
     {
         vec4 extrude = UNPACK_EXTRUSION(a_extrude);
