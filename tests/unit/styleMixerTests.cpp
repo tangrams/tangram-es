@@ -87,6 +87,7 @@ TEST_CASE("Correctly mix two shader configuration nodes", "[mixing][yaml]") {
         D:
             blocks:
                 color: colorBlockD
+        E:
         )END");
 
     // Mixing is applied in-place, so independent tests need to take copies of the original nodes.
@@ -163,6 +164,27 @@ TEST_CASE("Correctly mix two shader configuration nodes", "[mixing][yaml]") {
     // Check that "diamond inheritance" doesn't result in repeated blocks.
     REQUIRE(resultABCD["blocks_mixed"]["color"].size() == 4);
 
+    Node resultEA;
+    {
+        Node shaders = Clone(shadersMap);
+        mixer.applyShaderMixins(shaders["A"], {});
+        mixer.applyShaderMixins(shaders["E"], { shaders["A"] });
+        resultEA = shaders["E"];
+    }
+
+    REQUIRE(resultEA["extensions_mixed"].IsSequence() == true);
+    correctExtensions = { "gl_arb_stuff" };
+    std::set<std::string> resultExtensionsEA;
+    for (const auto& ext : resultEA["extensions_mixed"]) {
+        resultExtensionsEA.insert(ext.Scalar());
+    }
+    REQUIRE(resultExtensionsEA == correctExtensions);
+    REQUIRE(resultEA["uniforms"]["green"].Scalar() == "0x00ff00");
+    REQUIRE(resultEA["uniforms"]["tex"].Scalar() == "a.png");
+    REQUIRE(resultEA["blocks_mixed"]["color"].size() == 1);
+    REQUIRE(resultEA["blocks_mixed"]["color"][0].Scalar() == "colorBlockA");
+    REQUIRE(resultEA["blocks_mixed"]["normal"].size() == 1);
+    REQUIRE(resultEA["blocks_mixed"]["normal"][0].Scalar() == "normalBlockA");
 }
 
 TEST_CASE("Correctly mix two style config nodes", "[yaml][mixing]") {
