@@ -1023,10 +1023,13 @@ StyleUniform SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
                 textureArrayUniform.push_back(textureName);
                 auto texItr = scene.textures().find(textureName);
 
+                // TODO: remove, shouldn't load a texture 'name'
                 if (texItr == scene.textures().end()) {
                     loadTexture(textureName, scene);
                 }
             }
+
+            styleUniform.value = textureArrayUniform;
         }
     } else {
         LOGW("Expected a scalar or sequence value for uniforms");

@@ -78,15 +78,23 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
         const auto& value = uniformPair.second;
 
         if (value.is<std::string>()) {
+            std::string textureName = value.get<std::string>();
+            auto texIt = _scene.textures().find(textureName);
 
-            auto& tex = _scene.textures()[value.get<std::string>()];
-            if (tex) {
-                tex->update(_textureUnit);
-                tex->bind(_textureUnit);
-
-                m_shaderProgram->setUniformi(name, _textureUnit);
-                _textureUnit++;
+            if (texIt == _scene.textures().end()) {
+                // TODO: LOG, would be nice to do have a notify-once-log not to overwhelm logging
+                continue;
             }
+
+            auto& texture = texIt->second;
+
+            texture->update(_textureUnit);
+            texture->bind(_textureUnit);
+
+            m_shaderProgram->setUniformi(name, _textureUnit);
+
+            // TODO: Bug, this might not be working properly since not a reference, move to renderstate
+            _textureUnit++;
         } else {
 
             if (value.is<bool>()) {
@@ -101,6 +109,8 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
                 m_shaderProgram->setUniformf(name, value.get<glm::vec4>());
             } else if (value.is<UniformArray>()) {
                 m_shaderProgram->setUniformf(name, value.get<UniformArray>());
+            } else if (value.is<UniformTextureArray>()) {
+
             } else {
                 // TODO: Throw away uniform on loading!
                 // none_type
