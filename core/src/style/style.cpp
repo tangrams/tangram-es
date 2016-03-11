@@ -108,6 +108,7 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
                 m_shaderProgram->setUniformf(name, value.get<UniformArray>());
             } else if (value.is<UniformTextureArray>()) {
                 UniformTextureArray& textureUniformArray = value.get<UniformTextureArray>();
+                textureUniformArray.slots.clear();
 
                 for (const auto& textureName : textureUniformArray.names) {
                     std::shared_ptr<Texture> texture = nullptr;

@@ -3,7 +3,7 @@
 #include "util/variant.h"
 
 #include "glm/glm.hpp"
-
+#include "platform.h"
 #include <string>
 #include <vector>
 
@@ -15,8 +15,8 @@ struct UniformTextureArray {
     std::vector<std::string> names;
     std::vector<int> slots;
 
-    inline bool operator==(UniformTextureArray& uta) {
-        return uta.slots == slots;
+    inline bool operator==(const UniformTextureArray& uta) {
+        return uta.slots.size() == slots.size() && uta.slots == slots;
     };
 };
 
