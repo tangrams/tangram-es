@@ -200,10 +200,10 @@ void StyleMixer::mergeFieldTakingLast(std::string key, Node target, const std::v
 
 void StyleMixer::mergeMapFieldTakingLast(std::string key, Node target, const std::vector<Node>& sources) {
 
+
     Node map = target[key];
-    if (!map || !map.IsMap()) {
-        return;
-    }
+    if (map && !map.IsMap()) { return; }
+
     for (auto it = sources.rbegin(); it != sources.rend(); ++it) {
         const auto& source = (*it)[key];
         if (!source.IsMap()) {
