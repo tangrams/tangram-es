@@ -282,9 +282,17 @@ void View::updateMatrices() {
     }
 
     if (m_type == CameraType::isometric) {
-        // Add the oblique projection scaling factors to the view matrix
-        m_view[2][0] += m_obliqueAxis.x;
-        m_view[2][1] += m_obliqueAxis.y;
+        glm::mat4 shear = m_view;
+
+        // Add the oblique projection scaling factors to the shear matrix
+        shear[2][0] += m_obliqueAxis.x;
+        shear[2][1] += m_obliqueAxis.y;
+
+        // Remove the view from the shear matrix so we don't apply it two times
+        shear *= glm::inverse(m_view);
+
+        // Inject the shear in the projection matrix
+        m_proj *= shear;
     }
 
     m_viewProj = m_proj * m_view;
