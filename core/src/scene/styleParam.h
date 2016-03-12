@@ -36,6 +36,7 @@ enum class StyleParamKey : uint8_t {
     outline_miter_limit,
     outline_order,
     outline_width,
+    outline_style,
     priority,
     repeat_distance,
     repeat_group,

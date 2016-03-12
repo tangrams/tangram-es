@@ -213,6 +213,22 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
         }
 
         if (valid) {
+
+            // build outline explicitly with outline style
+            const auto& outlineStyleName = rule.findParameter(StyleParamKey::outline_style);
+            if (outlineStyleName) {
+                auto& styleName = outlineStyleName.value.get<std::string>();
+                auto* outlineStyle = _builder.getStyleBuilder(styleName);
+                if (!outlineStyle) {
+                    LOGE("Invalid style %s", styleName.c_str());
+                } else {
+                    rule.isOutlineOnly = true;
+                    outlineStyle->addFeature(_feature, rule);
+                    rule.isOutlineOnly = false;
+                }
+            }
+
+            // build feature with style
             style->addFeature(_feature, rule);
         }
     }

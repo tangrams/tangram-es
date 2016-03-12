@@ -112,6 +112,7 @@ public:
 
         bool keepTileEdges = false;
         bool outlineOn = false;
+        bool lineOn = true;
     };
 
     void setup(const Tile& _tile) override;
@@ -226,6 +227,7 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
     height *= m_tileUnitsPerMeter;
 
     p.fill.set(fill.width, fill.slope, height, fill.order);
+    p.lineOn = !_rule.isOutlineOnly;
 
     stroke.order = fill.order;
     p.stroke.cap = p.fill.cap;
@@ -233,34 +235,36 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
     p.stroke.miterLimit = p.fill.miterLimit;
 
     auto& strokeWidth = _rule.findParameter(StyleParamKey::outline_width);
-    if (strokeWidth |
-        _rule.get(StyleParamKey::outline_order, stroke.order) |
-        _rule.get(StyleParamKey::outline_cap, cap) |
-        _rule.get(StyleParamKey::outline_join, join) |
-        _rule.get(StyleParamKey::outline_miter_limit, p.stroke.miterLimit)) {
+    if (!p.lineOn || !_rule.findParameter(StyleParamKey::outline_style)) {
+        if (strokeWidth |
+            _rule.get(StyleParamKey::outline_order, stroke.order) |
+            _rule.get(StyleParamKey::outline_cap, cap) |
+            _rule.get(StyleParamKey::outline_join, join) |
+            _rule.get(StyleParamKey::outline_miter_limit, p.stroke.miterLimit)) {
 
-        p.stroke.cap = static_cast<CapTypes>(cap);
-        p.stroke.join = static_cast<JoinTypes>(join);
+            p.stroke.cap = static_cast<CapTypes>(cap);
+            p.stroke.join = static_cast<JoinTypes>(join);
 
-        if (!_rule.get(StyleParamKey::outline_color, p.stroke.color)) { return p; }
-        if (!evalWidth(strokeWidth, stroke.width, stroke.slope)) {
-            return p;
+            if (!_rule.get(StyleParamKey::outline_color, p.stroke.color)) { return p; }
+            if (!evalWidth(strokeWidth, stroke.width, stroke.slope)) {
+                return p;
+            }
+
+            // NB: Multiply by 2 for the stroke to get the expected stroke pixel width.
+            stroke.width *= 2.0f;
+            stroke.slope *= 2.0f;
+            stroke.slope -= stroke.width;
+
+            stroke.width += fill.width;
+            stroke.slope += fill.slope;
+
+            stroke.order = std::min(stroke.order, fill.order);
+
+            p.stroke.set(stroke.width, stroke.slope,
+                    height, stroke.order - 0.5f);
+
+            p.outlineOn = true;
         }
-
-        // NB: Multiply by 2 for the stroke to get the expected stroke pixel width.
-        stroke.width *= 2.0f;
-        stroke.slope *= 2.0f;
-        stroke.slope -= stroke.width;
-
-        stroke.width += fill.width;
-        stroke.slope += fill.slope;
-
-        stroke.order = std::min(stroke.order, fill.order);
-
-        p.stroke.set(stroke.width, stroke.slope,
-                     height, stroke.order - 0.5f);
-
-        p.outlineOn = true;
     }
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
@@ -374,11 +378,12 @@ void PolylineStyleBuilder<V>::addMesh(const Line& _line, const Parameters& _para
     m_builder.miterLimit = _params.fill.miterLimit;
     m_builder.keepTileEdges = _params.keepTileEdges;
 
-    buildLine(_line, _params.fill, m_meshData[0]);
+    if (_params.lineOn) { buildLine(_line, _params.fill, m_meshData[0]); }
 
     if (!_params.outlineOn) { return; }
 
-    if (_params.stroke.cap != _params.fill.cap ||
+    if (!_params.lineOn ||
+        _params.stroke.cap != _params.fill.cap ||
         _params.stroke.join != _params.fill.join ||
         _params.stroke.miterLimit != _params.fill.miterLimit) {
         // need to re-triangulate with different cap and/or join

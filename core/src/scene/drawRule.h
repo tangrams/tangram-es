@@ -73,6 +73,7 @@ struct DrawRule {
     // draw-style name and id
     const std::string* name = nullptr;
     int id;
+    bool isOutlineOnly = false;
 
     DrawRule(const DrawRuleData& _ruleData, const SceneLayer& _layer);
 
