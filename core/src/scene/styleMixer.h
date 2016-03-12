@@ -38,11 +38,11 @@ public:
 
 private:
 
-    void mergeBooleanFieldAsDisjunction(std::string _key, Node _target, const std::vector<Node>& _sources);
+    void mergeBooleanFieldAsDisjunction(const std::string& _key, Node _target, const std::vector<Node>& _sources);
 
-    void mergeFieldTakingLast(std::string _key, Node _target, const std::vector<Node>& _sources);
+    void mergeFieldTakingLast(const std::string& _key, Node _target, const std::vector<Node>& _sources);
 
-    void mergeMapFieldTakingLast(std::string _key, Node _target, const std::vector<Node>& _sources);
+    void mergeMapFieldTakingLast(const std::string& _key, Node _target, const std::vector<Node>& _sources);
 
 };
 
