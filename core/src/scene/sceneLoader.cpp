@@ -206,21 +206,25 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
     if (Node uniformsNode = shaders["uniforms"]) {
         for (const auto& uniform : uniformsNode) {
             auto name = uniform.first.as<std::string>();
-            auto styleUniform = parseStyleUniforms(uniform.second, scene);
+            StyleUniform styleUniform;
 
-            if (styleUniform.value.is<UniformArray>()) {
-                UniformArray& array = styleUniform.value.get<UniformArray>();
-                shader.addSourceBlock("uniforms", "uniform float " + name +
-                    "[" + std::to_string(array.size()) + "];");
-            } else if(styleUniform.value.is<UniformTextureArray>()) {
-                UniformTextureArray& textureArray = styleUniform.value.get<UniformTextureArray>();
-                shader.addSourceBlock("uniforms", "uniform " + styleUniform.type + " " + name +
-                    "[" + std::to_string(textureArray.names.size()) + "];");
+            if (parseStyleUniforms(uniform.second, scene, styleUniform)) {
+                if (styleUniform.value.is<UniformArray>()) {
+                    UniformArray& array = styleUniform.value.get<UniformArray>();
+                    shader.addSourceBlock("uniforms", "uniform float " + name +
+                        "[" + std::to_string(array.size()) + "];");
+                } else if(styleUniform.value.is<UniformTextureArray>()) {
+                    UniformTextureArray& textureArray = styleUniform.value.get<UniformTextureArray>();
+                    shader.addSourceBlock("uniforms", "uniform " + styleUniform.type + " " + name +
+                        "[" + std::to_string(textureArray.names.size()) + "];");
+                } else {
+                    shader.addSourceBlock("uniforms", "uniform " + styleUniform.type + " " + name + ";");
+                }
+
+                style.styleUniforms().emplace_back(name, styleUniform.value);
             } else {
-                shader.addSourceBlock("uniforms", "uniform " + styleUniform.type + " " + name + ";");
+                LOGNode("Style uniform parsing failure '%s'", uniform.second);
             }
-
-            style.styleUniforms().emplace_back(name, styleUniform.value);
         }
     }
 
@@ -980,9 +984,7 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
     }
 }
 
-StyleUniform SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
-    StyleUniform styleUniform;
-
+bool SceneLoader::parseStyleUniforms(const Node& value, Scene& scene, StyleUniform& styleUniform) {
     if (value.IsScalar()) { // float, bool or string (texture)
         double fValue;
         bool bValue;
@@ -1001,6 +1003,7 @@ StyleUniform SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
 
             if (!texture && !loadTexture(strVal, scene)) {
                 LOGW("Can't load texture with name %s", strVal.c_str());
+                return false;
             }
 
             styleUniform.value = strVal;
@@ -1021,9 +1024,14 @@ StyleUniform SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
                 default:
                     UniformArray uniformArray;
                     for (const auto& val : value) {
-                        uniformArray.push_back(val.as<double>());
+                        double fValue;
+                        if (getDouble(val, fValue)) {
+                            uniformArray.push_back(fValue);
+                        } else {
+                            return false;
+                        }
                     }
-                    styleUniform.value = uniformArray;
+                    styleUniform.value = std::move(uniformArray);
                     break;
             }
 
@@ -1041,16 +1049,18 @@ StyleUniform SceneLoader::parseStyleUniforms(const Node& value, Scene& scene) {
 
                 if (!texture && !loadTexture(textureName, scene)) {
                     LOGW("Can't load texture with name %s", textureName.c_str());
+                    return false;
                 }
             }
 
-            styleUniform.value = textureArrayUniform;
+            styleUniform.value = std::move(textureArrayUniform);
         }
     } else {
         LOGW("Expected a scalar or sequence value for uniforms");
+        return false;
     }
 
-    return styleUniform;
+    return true;
 }
 
 void SceneLoader::parseTransition(Node params, Scene& scene, std::vector<StyleParam>& out) {

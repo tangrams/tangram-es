@@ -57,7 +57,7 @@ styles:
         shaders:
             uniforms:
                 u_test: [0.5, 0.5, 1.0, 0.5, 0.9]
-                u_textures: [texture0, texture1]
+                u_textures: [texture0s, texture1]
             blocks:
                 color: "color.rgb *= mix(texture2D(u_textures[1], v_texcoord).rgb, vec3(u_test[0], u_test[1], u_test[4]), 0.5);"
     heightglowline:
