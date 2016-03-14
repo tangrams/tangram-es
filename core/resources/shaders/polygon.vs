@@ -9,7 +9,7 @@ precision highp float;
 uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_proj;
-uniform mat3 u_normalMatrix;
+uniform mat3 u_normal_matrix;
 uniform vec4 u_tile_origin;
 uniform vec3 u_map_position;
 uniform vec2 u_resolution;
@@ -69,7 +69,7 @@ void main() {
         v_texcoord = a_texcoord;
     #endif
 
-    v_normal = normalize(u_normalMatrix * a_normal);
+    v_normal = normalize(u_normal_matrix * a_normal);
 
     // Transform position into meters relative to map center
     position = u_model * position;

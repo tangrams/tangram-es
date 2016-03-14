@@ -31,7 +31,7 @@ void PointStyle::constructVertexLayout() {
         {"a_uv", 2, GL_UNSIGNED_SHORT, true, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_extrude", 2, GL_SHORT, false, 0},
-        {"a_screenPosition", 2, GL_SHORT, false, 0},
+        {"a_screen_position", 2, GL_SHORT, false, 0},
         {"a_alpha", 1, GL_SHORT, true, 0},
         {"a_rotation", 1, GL_SHORT, false, 0},
     }));
