@@ -81,24 +81,19 @@ protected:
         void drawGlyph(const alfons::Quad& q, const alfons::AtlasGlyph& altasGlyph) override {}
         void drawGlyph(const alfons::Rect& q, const alfons::AtlasGlyph& atlasGlyph) override;
 
-        void reset();
         void clear();
 
         std::vector<GlyphQuad> quads;
         std::vector<std::unique_ptr<Label>> labels;
 
         // label width and height
-        glm::vec2 bbox;
-        glm::vec2 quadsLocalOrigin;
-        int numLines;
-        FontMetrics metrics;
+        glm::vec2 labelDimension;
+        glm::vec2 labelAnchor;
         int numQuads;
 
         uint32_t fill;
         uint32_t stroke;
         uint8_t fontScale;
-
-        float yMin, xMin;
     };
 
     const TextStyle& m_style;

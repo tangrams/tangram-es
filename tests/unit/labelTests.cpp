@@ -19,7 +19,7 @@ TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
     options.offset = {0.0f, 0.0f};
     return TextLabel(_transform, _type, options,
             LabelProperty::Anchor::center,
-            {}, {0, 0}, {}, 1, {0, 0}, dummy, {});
+            {}, {0, 0}, dummy, {});
 }
 
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {

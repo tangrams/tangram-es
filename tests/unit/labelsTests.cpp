@@ -28,7 +28,7 @@ std::unique_ptr<TextLabel> makeLabel(Label::Transform _transform, Label::Type _t
 
     return std::unique_ptr<TextLabel>(new TextLabel(_transform, _type, options,
             LabelProperty::Anchor::center,
-            {}, {10, 10}, {}, 1, _transform.modelPosition1 - glm::vec2(5, 5), dummy, {}));
+            {}, {10, 10}, dummy, {}));
 }
 
 TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {

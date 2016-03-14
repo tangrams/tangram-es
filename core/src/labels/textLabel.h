@@ -23,31 +23,23 @@ public:
         uint8_t fontScale;
     };
 
-    TextLabel(Label::Transform _transform, Type _type,
-              Label::Options _options,
-              LabelProperty::Anchor _anchor,
-              TextLabel::FontVertexAttributes _attrib,
-              glm::vec2 _dim, FontMetrics _metrics,
-              int _nLines, glm::vec2 _quadsLocalOrigin,
-              TextLabels& _labels, Range _vertexRange);
+    TextLabel(Label::Transform _transform, Type _type, Label::Options _options,
+              LabelProperty::Anchor _anchor, TextLabel::FontVertexAttributes _attrib,
+              glm::vec2 _dim, TextLabels& _labels, Range _vertexRange);
 
     void updateBBoxes(float _zoomFract) override;
 
 protected:
     void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) override;
-    FontMetrics m_metrics;
-    int m_nLines;
+    glm::vec2 m_anchor;
 
     void pushTransform() override;
 
 private:
     // Back-pointer to owning container
     TextLabels& m_textLabels;
-    // first vertex and count in m_mesh vertices
+    // first vertex and count in m_textLabels quads
     Range m_vertexRange;
-
-    glm::vec2 m_anchor;
-    glm::vec2 m_quadLocalOrigin;
 
     FontVertexAttributes m_fontAttrib;
 };

@@ -63,7 +63,7 @@ void TextStyleBuilder::addLine(const Line& _line, const Properties& _props, cons
 
     float pixel = 2.0 / (m_tileSize * m_style.pixelScale());
 
-    float minLength = m_scratch.bbox.x * pixel * 0.2;
+    float minLength = m_scratch.labelDimension.x * pixel * 0.2;
 
     for (size_t i = 0; i < _line.size() - 1; i++) {
         glm::vec2 p1 = glm::vec2(_line[i]);
@@ -142,15 +142,12 @@ std::string TextStyleBuilder::resolveTextSource(const std::string& textSource,
     return props.getString(key_name);
 }
 
-
 bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type _type) {
 
     if (_params.text.empty() || _params.fontSize <= 0.f) {
         LOGD("invalid params: '%s' %f", _params.text.c_str(), _params.fontSize);
         return false;
     }
-
-    m_scratch.reset();
 
     // Apply text transforms
     const std::string* renderText;
@@ -212,10 +209,14 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     m_scratch.fontScale = std::min(fontScale * 64.f, 255.f);
 
     LineWrap wrap;
+
     alf::LineLayout line;
+    alf::LineMetrics metrics;
 
     {
         std::lock_guard<std::mutex> lock(ctx->mutex());
+
+        // Shape text
         line = m_shaper.shape(_params.font, *renderText);
 
         if (line.shapes().size() == 0) {
@@ -226,41 +227,55 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         line.setScale(fontScale);
 
         // m_batch.draw() calls FontContext's TextureCallback for new glyphs
-        // and ScratchBuffer's MeshCallback for vertex quads of each
+        // and ScratchBuffer's MeshCallback (drawGlyph) for vertex quads of each
         // glyph in LineLayout.
-        //
+
+        // reset count of added quads in drawGlyph
+        m_scratch.numQuads = 0;
+
         if (_type == Label::Type::point && _params.wordWrap) {
-            wrap = drawWithLineWrapping(line, m_batch, MIN_LINE_WIDTH,
-                                        _params.maxLineWidth, _params.align,
-                                        m_style.pixelScale());
+            auto wrap = drawWithLineWrapping(line, m_batch, MIN_LINE_WIDTH,
+                                             _params.maxLineWidth, _params.align,
+                                             m_style.pixelScale());
+            metrics = wrap.metrics;
         } else {
-            m_batch.draw(line, glm::vec2(0.0), wrap.metrics);
+            glm::vec2 position(0);
+            m_batch.drawShapeRange(line, 0, line.shapes().size(), position, metrics);
         }
     }
 
-    m_scratch.bbox.x = fabsf(wrap.metrics.aabb.x) + (wrap.metrics.aabb.z);
-    m_scratch.bbox.y = fabsf(wrap.metrics.aabb.y) + (wrap.metrics.aabb.w);
+    // Bounding box dimension
+    float width = metrics.aabb.z - metrics.aabb.x;
+    float height = metrics.aabb.w - metrics.aabb.y;
 
-    m_scratch.numLines = m_scratch.bbox.y / line.height();
+    // TextLabel parameter: Dimension
+    m_scratch.labelDimension = glm::vec2(width, height);
 
-    m_scratch.metrics.descender = -line.descent();
-    m_scratch.metrics.ascender = line.ascent();
-    m_scratch.metrics.lineHeight = line.height();
+    // Offset to center all glyphs around 0/0
+    glm::vec2 offset((metrics.aabb.x + width * 0.5) * position_scale,
+                     (metrics.aabb.y + height * 0.5) * position_scale);
 
-    m_scratch.quadsLocalOrigin = {wrap.metrics.aabb.x, wrap.metrics.aabb.y};
+    auto it = m_scratch.quads.end() - m_scratch.numQuads;
+    while (it != m_scratch.quads.end()) {
+        it->quad[0].pos -= offset;
+        it->quad[1].pos -= offset;
+        it->quad[2].pos -= offset;
+        it->quad[3].pos -= offset;
+        ++it;
+    }
 
     return true;
 }
 
 void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
-                                Label::Transform _transform)
-{
+                                Label::Transform _transform) {
+
     int numQuads = m_scratch.numQuads;
     int quadOffset = m_scratch.quads.size() - numQuads;
 
     m_scratch.labels.emplace_back(new TextLabel(_transform, _type, _params.labelOptions, _params.anchor,
-        {m_scratch.fill, m_scratch.stroke, m_scratch.fontScale }, m_scratch.bbox, m_scratch.metrics,
-        m_scratch.numLines, m_scratch.quadsLocalOrigin, *m_textLabels, { quadOffset, numQuads }));
+                                                {m_scratch.fill, m_scratch.stroke, m_scratch.fontScale},
+                                                m_scratch.labelDimension, *m_textLabels, {quadOffset, numQuads}));
 }
 
 TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
@@ -376,14 +391,6 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     return p;
 }
 
-void TextStyleBuilder::ScratchBuffer::reset() {
-    yMin = std::numeric_limits<float>::max();
-    xMin = std::numeric_limits<float>::max();
-    bbox = glm::vec2(0);
-    numLines = 1;
-    numQuads = 0;
-}
-
 void TextStyleBuilder::ScratchBuffer::drawGlyph(const alf::Rect& q, const alf::AtlasGlyph& atlasGlyph) {
     numQuads++;
 
@@ -487,7 +494,7 @@ LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch
         size_t shapeEnd = wrap.first;
 
         // Draw line quads
-        _batch.draw(_line, shapeStart, shapeEnd, position, lineMetrics);
+        _batch.drawShapeRange(_line, shapeStart, shapeEnd, position, lineMetrics);
 
         shapeStart = shapeEnd;
 
