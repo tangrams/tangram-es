@@ -42,27 +42,20 @@ textures:
             info: [0, 1110, 32, 32]
             hotel: [0, 259, 32, 32]
             bookstore: [0, 333, 32, 32]
-    texture0:
-        url: img/poi_icons_32.png
-    texture1:
-        url: img/sem.jpg
 
 styles:
     flatcolor:
         base: polygons
+        lighting: false
     heightglow:
         base: polygons
-        #lighting: vertex
-        texcoords: true
+        lighting: vertex
         shaders:
-            uniforms:
-                u_test: [0.5, 0.5, 1.0, 0.5, 0.9]
-                u_textures: [texture0, texture1]
             blocks:
-                color: "color.rgb *= mix(texture2D(u_textures[1], v_texcoord).rgb, vec3(u_test[0], u_test[1], u_test[4]), 0.5);"
+                color: "color.rgb += vec3(position.z / 800.);"
     heightglowline:
         base: lines
-    #    mix: heightglow
+        mix: heightglow
     icons:
         base: points
         texture: pois
@@ -170,17 +163,17 @@ layers:
             draw:
                 lines:
                     cap: round
-        #rail:
-        #    filter: { kind: rail }
-        #    draw:
-        #       lines:
-        #          cap: butt
-        #          color: '#333'
-        #          width: 1.
-        #          order: 8
-        #          outline:
-        #            color: '#555'
-        #            width: 1.5
+        # rail:
+        #     filter: { kind: rail }
+        #     draw:
+        #        lines:
+        #           cap: butt
+        #           color: '#333'
+        #           width: 1.
+        #           order: 8
+        #           outline:
+        #             color: '#555'
+        #             width: 1.5
         routes:
             filter: { $zoom: { max: 10 } }
             draw:
