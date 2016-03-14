@@ -1,6 +1,6 @@
 scene:
     background:
-        color: '#000000'
+        color: '#8db7d5'
 cameras:
     iso-camera:
         # Manhattan
@@ -47,7 +47,6 @@ styles:
     flatcolor:
         base: polygons
         lighting: false
-        blend: overlay
     heightglow:
         base: polygons
         lighting: vertex
@@ -96,9 +95,9 @@ layers:
     earth:
         data: { source: osm }
         draw:
-            flatcolor:
+            polygons:
                 order: 0
-                color: '#ccffffff'
+                color: '#f0ebeb'
     landuse:
         data: { source: osm }
         filter:
@@ -144,7 +143,7 @@ layers:
         draw:
             flatcolor:
                 order: 3
-                color: '#cc8db7d5'
+                color: '#8db7d5'
 
     roads:
         data: { source: osm }
