@@ -94,7 +94,7 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: textures uniform value", 
 
     Node node = YAML::Load(R"END(
         u_tex : img/cross.png
-        u_tex2 : [img/cross.png, img/normal_map.png, img/sem.jpg]
+        u_tex2 : [img/cross.png, img/normals.jpg, img/sem.jpg]
         )END");
 
     StyleUniform uniformValues;
@@ -108,7 +108,24 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: textures uniform value", 
     REQUIRE(uniformValues.value.is<UniformTextureArray>());
     REQUIRE(uniformValues.value.get<UniformTextureArray>().names.size() == 3);
     REQUIRE(uniformValues.value.get<UniformTextureArray>().names[0] == "img/cross.png");
-    REQUIRE(uniformValues.value.get<UniformTextureArray>().names[1] == "img/normal_map.png");
+    REQUIRE(uniformValues.value.get<UniformTextureArray>().names[1] == "img/normals.jpg");
     REQUIRE(uniformValues.value.get<UniformTextureArray>().names[2] == "img/sem.jpg");
+}
+
+TEST_CASE( "Style Uniforms Parsing failure Tests: textures uniform value", "[StyleUniforms][core][yaml]") {
+
+    Node node = YAML::Load(R"END(
+        u_tex : not_a_texture
+        u_tex2 : [not_a_texture_path2, not_a_texture_path_1]
+        u_uniform_float0: 0.5f
+        u_uniform_float1: 0s.5
+        )END");
+
+    StyleUniform uniformValues;
+
+    REQUIRE(!SceneLoader::parseStyleUniforms(node["u_tex"], scene, uniformValues));
+    REQUIRE(!SceneLoader::parseStyleUniforms(node["u_tex2"], scene, uniformValues));
+    REQUIRE(!SceneLoader::parseStyleUniforms(node["u_uniform_float0"], scene, uniformValues));
+    REQUIRE(!SceneLoader::parseStyleUniforms(node["u_uniform_float1"], scene, uniformValues));
 }
 
