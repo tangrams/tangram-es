@@ -25,9 +25,9 @@ struct FontMetrics {
 };
 
 // TODO could be a shared_ptr<Texture>
-struct GlyphBatch {
+struct GlyphTexture {
 
-    GlyphBatch() : texture(textureSize, textureSize) {
+    GlyphTexture() : texture(textureSize, textureSize) {
         texData.resize(textureSize * textureSize);
     }
 
@@ -69,9 +69,8 @@ public:
     std::shared_ptr<alf::Font> getFont(const std::string& _name, const std::string& _style,
                                        const std::string& _weight, float _size);
 
-    // TODO lock?
-    size_t glyphBatchCount() {
-        return m_batches.size();
+    size_t glyphTextureCount() {
+        return m_textures.size();
     }
 
     void bindTexture(alf::AtlasID _id, GLuint _unit);
@@ -88,7 +87,7 @@ private:
     alf::FontManager m_alfons;
     std::array<std::shared_ptr<alf::Font>, 3> m_font;
 
-    std::vector<GlyphBatch> m_batches;
+    std::vector<GlyphTexture> m_textures;
 };
 
 }

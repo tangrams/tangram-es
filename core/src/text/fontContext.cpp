@@ -67,16 +67,16 @@ FontContext::FontContext() :
 
 // Synchronized on m_mutex on tile-worker threads
 void FontContext::addTexture(alf::AtlasID id, uint16_t width, uint16_t height) {
-    m_batches.emplace_back();
+    m_textures.emplace_back();
 }
 
 // Synchronized on m_mutex, called tile-worker threads
 void FontContext::addGlyph(alf::AtlasID id, uint16_t gx, uint16_t gy, uint16_t gw, uint16_t gh,
                            const unsigned char* src, uint16_t pad) {
 
-    auto& texData = m_batches[id].texData;
-    auto& texture = m_batches[id].texture;
-    m_batches[id].dirty = true;
+    auto& texData = m_textures[id].texData;
+    auto& texture = m_textures[id].texture;
+    m_textures[id].dirty = true;
 
     uint16_t stride = textureSize;
     uint16_t width = textureSize;
@@ -108,13 +108,13 @@ void FontContext::addGlyph(alf::AtlasID id, uint16_t gx, uint16_t gy, uint16_t g
 void FontContext::releaseAtlas(std::bitset<maxTextures> _refs) {
     if (!_refs.any()) { return; }
     std::lock_guard<std::mutex> lock(m_mutex);
-    for (size_t i = 0; i < m_batches.size(); i++) {
+    for (size_t i = 0; i < m_textures.size(); i++) {
         if (!_refs[i]) { continue; }
 
         if (--m_atlasRefCount[i] == 0) {
             LOG("CLEAR ATLAS %d", i);
             m_atlas.clear(i);
-            m_batches[i].texData.assign(textureSize * textureSize, 0);
+            m_textures[i].texData.assign(textureSize * textureSize, 0);
         }
     }
 }
@@ -122,7 +122,7 @@ void FontContext::releaseAtlas(std::bitset<maxTextures> _refs) {
 void FontContext::lockAtlas(std::bitset<maxTextures> _refs) {
     if (!_refs.any()) { return; }
     std::lock_guard<std::mutex> lock(m_mutex);
-    for (size_t i = 0; i < m_batches.size(); i++) {
+    for (size_t i = 0; i < m_textures.size(); i++) {
         if (_refs[i]) { m_atlasRefCount[i]++; }
     }
 }
@@ -130,18 +130,18 @@ void FontContext::lockAtlas(std::bitset<maxTextures> _refs) {
 void FontContext::updateTextures() {
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    for (auto& batch : m_batches) {
-        if (batch.dirty || !batch.texture.isValid()) {
-            batch.dirty = false;
-            auto td = reinterpret_cast<const GLuint*>(batch.texData.data());
-            batch.texture.update(0, td);
+    for (auto& gt : m_textures) {
+        if (gt.dirty || !gt.texture.isValid()) {
+            gt.dirty = false;
+            auto td = reinterpret_cast<const GLuint*>(gt.texData.data());
+            gt.texture.update(0, td);
         }
     }
 }
 
 void FontContext::bindTexture(alf::AtlasID _id, GLuint _unit) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_batches[_id].texture.bind(_unit);
+    m_textures[_id].texture.bind(_unit);
 
 }
 

@@ -78,7 +78,7 @@ void TextStyle::onEndDrawFrame() {
 void TextStyle::onBeginUpdate() {
     // Ensure that meshes are available to push to
     // in labels::update()
-    size_t s = m_context->glyphBatchCount();
+    size_t s = m_context->glyphTextureCount();
     while (m_meshes.size() < s) {
         m_meshes.push_back(std::make_unique<LabelMesh>(m_vertexLayout, GL_TRIANGLES));
     }
