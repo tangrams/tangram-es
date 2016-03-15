@@ -82,7 +82,10 @@ public:
 
     static bool isRepeatWrapping(TextureWrapping _wrapping);
 
+    void loadPNG(const unsigned char* blob, unsigned int size);
+
 protected:
+
     void generate(GLuint _textureUnit);
     void checkValidity();
 
