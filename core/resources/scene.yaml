@@ -427,28 +427,29 @@ layers:
                         style: normal
                         size: 20.5pt
     places:
-        data: { sources: osm }
+        data: { source: osm }
         filter:
             name: true
             not: { kind: [county, state, island] }
             any:
                 - { $zoom: { min: 1 }, kind: ocean }
-                - { $zoom: { min: 2, max: 5 }, kind: continent }
+                - { $zoom: { min: 2, max: 4 }, kind: continent }
                 #important contries
-                - { $zoom: { min: 4 }, name: ["United States of America", "Brasil", "Россия", "中华人民共和国"] }
+                - { $zoom: { min: 3 }, name: ["United States of America", "Brasil", "Россия", "中华人民共和国"] }
                 # unimportant countries
-                - { $zoom: { min: 5 }, kind: country }
+                - { $zoom: { min: 4 }, kind: country }
+                - { $zoom: { min: 5 }, capital: yes }
+                - { $zoom: { min: 6 }, kind: city }
                 # this function matches the "cities" sublayer
                 #- function() {return (feature.scalerank * .75) <= ($zoom - 4); }
         draw:
             text:
-                text_source: [name:en, name, area, volume]
+                #text_source: [name:en, name, area, volume]
                 repeat_distance: 0
-                interactive: true
-                priority: 5
                 transition:
                     [show, hide]:
                         time: 1s
+                priority: 0
                 font:
                     family: sans-serif
                     weight: 400
