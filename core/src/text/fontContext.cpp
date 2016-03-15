@@ -19,11 +19,14 @@
 
 #define SDF_WIDTH 6
 
+#define MIN_LINE_WIDTH 4
+
 namespace Tangram {
 
 FontContext::FontContext() :
     m_sdfRadius(SDF_WIDTH),
-    m_atlas(*this, textureSize, m_sdfRadius) {
+    m_atlas(*this, GlyphTexture::size, m_sdfRadius),
+    m_batch(m_atlas, m_scratch) {
 
 #if defined(PLATFORM_ANDROID)
     auto fontPath = systemFontPath("sans-serif", "400", "normal");
@@ -67,6 +70,10 @@ FontContext::FontContext() :
 
 // Synchronized on m_mutex on tile-worker threads
 void FontContext::addTexture(alf::AtlasID id, uint16_t width, uint16_t height) {
+    if (m_textures.size() == max_textures) {
+        LOGE("Way too many glyph textures!");
+        return;
+    }
     m_textures.emplace_back();
 }
 
@@ -74,12 +81,14 @@ void FontContext::addTexture(alf::AtlasID id, uint16_t width, uint16_t height) {
 void FontContext::addGlyph(alf::AtlasID id, uint16_t gx, uint16_t gy, uint16_t gw, uint16_t gh,
                            const unsigned char* src, uint16_t pad) {
 
+    if (id >= max_textures) { return; }
+
     auto& texData = m_textures[id].texData;
     auto& texture = m_textures[id].texture;
     m_textures[id].dirty = true;
 
-    uint16_t stride = textureSize;
-    uint16_t width = textureSize;
+    uint16_t stride = GlyphTexture::size;
+    uint16_t width =  GlyphTexture::size;
 
     unsigned char* dst = &texData[(gx + pad) + (gy + pad) * stride];
 
@@ -105,7 +114,7 @@ void FontContext::addGlyph(alf::AtlasID id, uint16_t gx, uint16_t gy, uint16_t g
     texture.setDirty(gy, gh);
 }
 
-void FontContext::releaseAtlas(std::bitset<maxTextures> _refs) {
+void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
     if (!_refs.any()) { return; }
     std::lock_guard<std::mutex> lock(m_mutex);
     for (size_t i = 0; i < m_textures.size(); i++) {
@@ -114,12 +123,12 @@ void FontContext::releaseAtlas(std::bitset<maxTextures> _refs) {
         if (--m_atlasRefCount[i] == 0) {
             LOG("CLEAR ATLAS %d", i);
             m_atlas.clear(i);
-            m_textures[i].texData.assign(textureSize * textureSize, 0);
+            m_textures[i].texData.assign(GlyphTexture::size * GlyphTexture::size, 0);
         }
     }
 }
 
-void FontContext::lockAtlas(std::bitset<maxTextures> _refs) {
+void FontContext::lockAtlas(std::bitset<max_textures> _refs) {
     if (!_refs.any()) { return; }
     std::lock_guard<std::mutex> lock(m_mutex);
     for (size_t i = 0; i < m_textures.size(); i++) {
@@ -143,6 +152,73 @@ void FontContext::bindTexture(alf::AtlasID _id, GLuint _unit) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_textures[_id].texture.bind(_unit);
 
+}
+
+bool FontContext::layoutText(TextStyle::Parameters& _params, Label::Type _type,
+                             const std::string& _text,
+                             std::vector<GlyphQuad>& _quads,  glm::vec2& _size) {
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    alfons::LineMetrics metrics;
+
+    alfons::LineLayout line = m_shaper.shape(_params.font, _text);
+
+    if (line.shapes().size() == 0) {
+        LOGD("Empty text line");
+        return false;
+    }
+
+    line.setScale(_params.fontScale);
+
+    // m_batch.drawShapeRange() calls FontContext's TextureCallback for new glyphs
+    // and MeshCallback (drawGlyph) for vertex quads of each glyph in LineLayout.
+
+    m_scratch.quads = &_quads;
+
+    size_t quadsStart = _quads.size();
+
+    if (_type == Label::Type::point && _params.wordWrap) {
+        auto wrap = drawWithLineWrapping(line, m_batch, MIN_LINE_WIDTH,
+                                         _params.maxLineWidth, _params.align,
+                                         _params.lineSpacing);
+        metrics = wrap.metrics;
+    } else {
+        glm::vec2 position(0);
+        m_batch.drawShapeRange(line, 0, line.shapes().size(), position, metrics);
+    }
+
+    // TextLabel parameter: Dimension
+    float width = metrics.aabb.z - metrics.aabb.x;
+    float height = metrics.aabb.w - metrics.aabb.y;
+
+
+    // Offset to center all glyphs around 0/0
+    glm::vec2 offset((metrics.aabb.x + width * 0.5) * position_scale,
+                     (metrics.aabb.y + height * 0.5) * position_scale);
+
+    auto it = _quads.begin() + quadsStart;
+    while (it != _quads.end()) {
+        it->quad[0].pos -= offset;
+        it->quad[1].pos -= offset;
+        it->quad[2].pos -= offset;
+        it->quad[3].pos -= offset;
+        ++it;
+    }
+
+    _size = glm::vec2(width, height);
+
+    return true;
+}
+
+void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::AtlasGlyph& atlasGlyph) {
+    auto& g = *atlasGlyph.glyph;
+    quads->push_back({
+            atlasGlyph.atlas,
+            {{glm::vec2{q.x1, q.y1} * position_scale, {g.u1, g.v1}},
+             {glm::vec2{q.x1, q.y2} * position_scale, {g.u1, g.v2}},
+             {glm::vec2{q.x2, q.y1} * position_scale, {g.u2, g.v1}},
+             {glm::vec2{q.x2, q.y2} * position_scale, {g.u2, g.v2}}}});
 }
 
 auto FontContext::getFont(const std::string& _family, const std::string& _style,
@@ -198,5 +274,6 @@ auto FontContext::getFont(const std::string& _family, const std::string& _style,
 
     return font;
 }
+
 
 }

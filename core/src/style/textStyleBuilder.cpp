@@ -1,5 +1,8 @@
 #include "textStyleBuilder.h"
 
+#include "labels/textLabel.h"
+#include "labels/textLabels.h"
+
 #include "data/propertyItem.h" // Include wherever Properties is used!
 #include "scene/drawRule.h"
 #include "tile/tile.h"
@@ -12,8 +15,6 @@
 #include <mutex>
 #include <sstream>
 
-#define MIN_LINE_WIDTH 4
-
 namespace Tangram {
 
 const static std::string key_name("name");
@@ -21,8 +22,7 @@ const static std::string key_name("name");
 
 TextStyleBuilder::TextStyleBuilder(const TextStyle& _style)
     : StyleBuilder(_style),
-      m_style(_style),
-      m_batch(_style.context()->atlas(), *this) {}
+      m_style(_style) {}
 
 void TextStyleBuilder::setup(const Tile& _tile){
     m_tileSize = _tile.getProjection()->TileSize();
@@ -119,7 +119,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     fontStyle = (!fontStyle) ? &defaultStyle : fontStyle;
 
     _rule.get(StyleParamKey::font_size, p.fontSize);
-    // TODO - look font from fontManager
+
     p.font = m_style.context()->getFont(*fontFamily, *fontStyle, *fontWeight,
                                         p.fontSize * m_style.pixelScale());
 
@@ -285,6 +285,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 
     // Scale factor by which the texture glyphs are scaled to match fontSize
     float fontScale = (_params.fontSize * m_style.pixelScale()) / _params.font->size();
+    _params.fontScale = fontScale;
 
     // Stroke width is normalized by the distance of the SDF spread, then
     // scaled to a char, then packed into the "alpha" channel of stroke.
@@ -299,52 +300,13 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     m_attributes.fill = _params.fill;
     m_attributes.fontScale = std::min(fontScale * 64.f, 255.f);
 
-    alf::LineMetrics metrics;
-
-    {
-        std::lock_guard<std::mutex> lock(ctx->mutex());
-
-        alf::LineLayout line = m_shaper.shape(_params.font, *renderText);
-
-        if (line.shapes().size() == 0) {
-            LOGD("Empty text line");
-            return false;
-        }
-
-        line.setScale(fontScale);
-
-        // m_batch.drawShapeRange() calls FontContext's TextureCallback for new glyphs
-        // and MeshCallback (drawGlyph) for vertex quads of each glyph in LineLayout.
-
-        if (_type == Label::Type::point && _params.wordWrap) {
-            auto wrap = drawWithLineWrapping(line, m_batch, MIN_LINE_WIDTH,
-                                             _params.maxLineWidth, _params.align,
-                                             m_style.pixelScale());
-            metrics = wrap.metrics;
-        } else {
-            glm::vec2 position(0);
-            m_batch.drawShapeRange(line, 0, line.shapes().size(), position, metrics);
-        }
+    glm::vec2 bbox(0);
+    if (ctx->layoutText(_params, _type, *renderText, m_quads, bbox)) {
+        m_attributes.width = bbox.x;
+        m_attributes.height = bbox.y;
+        return true;
     }
-
-    // TextLabel parameter: Dimension
-    m_attributes.width = metrics.aabb.z - metrics.aabb.x;
-    m_attributes.height = metrics.aabb.w - metrics.aabb.y;
-
-    // Offset to center all glyphs around 0/0
-    glm::vec2 offset((metrics.aabb.x + m_attributes.width * 0.5) * position_scale,
-                     (metrics.aabb.y + m_attributes.height * 0.5) * position_scale);
-
-    auto it = m_quads.begin() + m_attributes.quadsStart;
-    while (it != m_quads.end()) {
-        it->quad[0].pos -= offset;
-        it->quad[1].pos -= offset;
-        it->quad[2].pos -= offset;
-        it->quad[3].pos -= offset;
-        ++it;
-    }
-
-    return true;
+    return false;
 }
 
 void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
@@ -357,120 +319,6 @@ void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Typ
                                         {m_attributes.fill, m_attributes.stroke, m_attributes.fontScale},
                                         {m_attributes.width, m_attributes.height},
                                         *m_textLabels, {quadsStart, quadsCount}));
-}
-
-void TextStyleBuilder::drawGlyph(const alf::Rect& q, const alf::AtlasGlyph& atlasGlyph) {
-
-    auto& g = *atlasGlyph.glyph;
-    m_quads.push_back({
-            atlasGlyph.atlas,
-            {{glm::vec2{q.x1, q.y1} * position_scale, {g.u1, g.v1}},
-             {glm::vec2{q.x1, q.y2} * position_scale, {g.u1, g.v2}},
-             {glm::vec2{q.x2, q.y1} * position_scale, {g.u2, g.v1}},
-             {glm::vec2{q.x2, q.y2} * position_scale, {g.u2, g.v2}}}});
-}
-
-LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch& _batch,
-                              size_t _minLineChars, size_t _maxLineChars,
-                              TextLabelProperty::Align _alignment,  float _pixelScale) {
-
-    static std::vector<std::pair<int,float>> lineWraps;
-
-    lineWraps.clear();
-
-    if (_line.shapes().size() == 0) {
-        return {alfons::LineMetrics(), 0};
-    }
-
-    float lineWidth = 0;
-    float maxWidth = 0;
-    size_t charCount = 0;
-    size_t shapeCount = 0;
-
-    float lastWidth = 0;
-    size_t lastShape = 0;
-    size_t lastChar = 0;
-
-    for (auto& shape : _line.shapes()) {
-
-        if (!shape.cluster) {
-            shapeCount++;
-            lineWidth += _line.advance(shape);
-            continue;
-        }
-
-        charCount++;
-        shapeCount++;
-        lineWidth += _line.advance(shape);
-
-        if (shape.canBreak || shape.mustBreak) {
-            lastShape = shapeCount;
-            lastChar = charCount;
-            lastWidth = lineWidth;
-        }
-
-        if (lastShape != 0 && (shape.mustBreak || charCount >= _maxLineChars)) {
-            // only go to next line if chars have been added on the current line
-            if (shape.mustBreak || charCount - lastChar >= _minLineChars) {
-                auto& endShape = _line.shapes()[lastShape-1];
-
-                if (endShape.isSpace) {
-                    lineWidth -= _line.advance(endShape);
-                    lastWidth -= _line.advance(endShape);
-                }
-
-                lineWraps.emplace_back(lastShape, lastWidth);
-                maxWidth = std::max(maxWidth, lastWidth);
-
-                lineWidth -= lastWidth;
-                charCount -= lastChar;
-
-                lastShape = 0;
-            }
-        }
-    }
-
-    if (charCount > 0) {
-        lineWraps.emplace_back(shapeCount, lineWidth);
-        maxWidth = std::max(maxWidth, lineWidth);
-    }
-
-    size_t shapeStart = 0;
-    glm::vec2 position;
-    alfons::LineMetrics layoutMetrics;
-
-    for (auto wrap : lineWraps) {
-        alfons::LineMetrics lineMetrics;
-
-        switch(_alignment) {
-        case TextLabelProperty::Align::center:
-            position.x = (maxWidth - wrap.second) * 0.5;
-            break;
-        case TextLabelProperty::Align::right:
-            position.x = (maxWidth - wrap.second);
-            break;
-        default:
-            position.x = 0;
-        }
-
-        size_t shapeEnd = wrap.first;
-
-        // Draw line quads
-        _batch.drawShapeRange(_line, shapeStart, shapeEnd, position, lineMetrics);
-
-        shapeStart = shapeEnd;
-
-        // FIXME hardcoded values
-        float height = lineMetrics.height();
-        height -= (2 * 6) * _line.scale(); // substract glyph padding
-        height += 4 * _pixelScale; // add some custom line offset
-
-        position.y += height;
-
-        layoutMetrics.addExtents(lineMetrics.aabb);
-    }
-
-    return {layoutMetrics, int(lineWraps.size())};
 }
 
 }

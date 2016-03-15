@@ -7,6 +7,7 @@
 #include "style/textStyle.h"
 #include "labels/labels.h"
 #include "labels/textLabel.h"
+#include "labels/textLabels.h"
 
 #include "view/view.h"
 #include "tile/tile.h"

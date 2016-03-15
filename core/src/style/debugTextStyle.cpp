@@ -1,6 +1,7 @@
 #include "debugTextStyle.h"
 
 #include "textStyleBuilder.h"
+#include "labels/textLabels.h"
 
 #include "tangram.h"
 #include "tile/tile.h"

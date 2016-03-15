@@ -1,5 +1,7 @@
 #include "textLabel.h"
+#include "textLabels.h"
 #include "style/textStyle.h"
+#include "text/fontContext.h"
 
 namespace Tangram {
 

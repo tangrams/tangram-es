@@ -4,9 +4,10 @@
 #include "gl/shaderProgram.h"
 #include "gl/mesh.h"
 #include "gl/renderState.h"
-#include "view/view.h"
 #include "labels/labelMesh.h"
+#include "labels/textLabels.h"
 #include "text/fontContext.h"
+#include "view/view.h"
 
 namespace Tangram {
 
@@ -45,7 +46,7 @@ void TextStyle::constructShaderProgram() {
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
 
     m_shaderProgram->setUniformf(m_uMaxStrokeWidth, m_context->maxStrokeWidth());
-    m_shaderProgram->setUniformf(m_uTexScaleFactor, glm::vec2(1.0f / textureSize));
+    m_shaderProgram->setUniformf(m_uTexScaleFactor, glm::vec2(1.0f / GlyphTexture::size));
     m_shaderProgram->setUniformi(m_uTex, 0);
     m_shaderProgram->setUniformMatrix4f(m_uOrtho, _view.getOrthoViewportMatrix());
 

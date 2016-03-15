@@ -3,6 +3,7 @@
 #include "labels/label.h"
 #include "style/textStyle.h"
 #include "labels/textLabel.h"
+#include "labels/textLabels.h"
 #include "glm/mat4x4.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 

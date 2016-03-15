@@ -14,9 +14,6 @@ namespace alfons { class Font; }
 namespace Tangram {
 
 class FontContext;
-class LabelContainer;
-struct GlyphQuad;
-struct TextMesh;
 struct Properties;
 
 class TextStyle : public Style {
@@ -39,6 +36,9 @@ public:
         TextLabelProperty::Transform transform = TextLabelProperty::Transform::none;
         TextLabelProperty::Align align = TextLabelProperty::Align::center;
         LabelProperty::Anchor anchor = LabelProperty::Anchor::center;
+
+        float fontScale = 1;
+        float lineSpacing = 0;
     };
 
     auto& context() const { return m_context; }

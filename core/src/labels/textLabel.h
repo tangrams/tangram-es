@@ -3,15 +3,22 @@
 #include "labels/label.h"
 #include "labels/labelProperty.h"
 #include "labels/labelSet.h"
-#include "labels/labelMesh.h"
-#include "text/fontContext.h"
 
-#include <vector>
+#include <glm/glm.hpp>
 
 namespace Tangram {
 
 class TextLabels;
 class TextStyle;
+
+struct GlyphQuad {
+    size_t atlas;
+
+    struct {
+        glm::i16vec2 pos;
+        glm::u16vec2 uv;
+    } quad[4];
+};
 
 class TextLabel : public Label {
 
@@ -42,36 +49,6 @@ private:
     Range m_vertexRange;
 
     FontVertexAttributes m_fontAttrib;
-};
-
-struct GlyphQuad {
-    size_t atlas;
-
-    struct {
-        glm::i16vec2 pos;
-        glm::u16vec2 uv;
-    } quad[4];
-};
-
-class TextLabels : public LabelSet, public StyledMesh {
-
-public:
-
-    TextLabels(const TextStyle& _style) : style(_style) {}
-
-    ~TextLabels() override;
-
-    void draw(ShaderProgram& _shader) override {}
-    size_t bufferSize() override { return 0; }
-
-    void setQuads(std::vector<GlyphQuad>& _quads);
-
-    std::vector<GlyphQuad> quads;
-    const TextStyle& style;
-
-private:
-
-    std::bitset<maxTextures> m_atlasRefs;
 };
 
 }
