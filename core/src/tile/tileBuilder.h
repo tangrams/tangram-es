@@ -53,6 +53,7 @@ private:
 
     fastmap<uint32_t, std::shared_ptr<Properties>> m_selectionFeatures;
 
+    std::string m_activeSource;
     std::vector<const DataLayer*> m_activeLayers;
     const DataLayer* m_matchedLayer = nullptr;
 

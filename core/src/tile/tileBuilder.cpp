@@ -96,6 +96,10 @@ bool TileBuilder::beginLayer(const std::string& _layerName) {
 
     for (const auto& layer : m_scene->layers()) {
 
+        if (layer.source() != m_activeSource) {
+            continue;
+        }
+
         if (!_layerName.empty()) {
             const auto& dlc = layer.collections();
             if (std::find(dlc.begin(), dlc.end(), _layerName) == dlc.end()) {
@@ -163,6 +167,8 @@ std::shared_ptr<Tile> TileBuilder::build(TileTask& _task) {
             builder.second->setup(*tile);
         }
     }
+
+    m_activeSource = _task.source().name();
 
     // Pass 'this' as TileDataSink
     if (!_task.source().process(_task, *m_scene->mapProjection(), *this)) {
