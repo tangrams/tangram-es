@@ -426,4 +426,22 @@ void ShaderProgram::setUniformMatrix4f(const UniformLocation& _loc, const glm::m
     }
 }
 
+void ShaderProgram::setUniformf(const UniformLocation& _loc, const UniformArray& _value) {
+    use();
+    GLint location = getUniformLocation(_loc);
+    if (location >= 0) {
+        bool cached = getFromCache(location, _value);
+        if (!cached) { glUniform1fv(location, _value.size(), _value.data()); }
+    }
+}
+
+void ShaderProgram::setUniformi(const UniformLocation& _loc, const UniformTextureArray& _value) {
+    use();
+    GLint location = getUniformLocation(_loc);
+    if (location >= 0) {
+        bool cached = getFromCache(location, _value);
+        if (!cached) { glUniform1iv(location, _value.slots.size(), _value.slots.data()); }
+    }
+}
+
 }

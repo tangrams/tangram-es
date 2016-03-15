@@ -28,7 +28,10 @@ struct MaterialTexture;
 struct Filter;
 
 // 0: type, 1: values
-using StyleUniforms = std::pair<std::string, std::vector<UniformValue>>;
+struct StyleUniform {
+    std::string type;
+    UniformValue value;
+};
 
 struct SceneLoader {
     using Node = YAML::Node;
@@ -53,7 +56,7 @@ struct SceneLoader {
     static Filter generateNoneFilter(Node filter, Scene& scene);
     static Filter generatePredicate(Node filter, std::string _key);
     /* loads a texture with default texture properties */
-    static void loadTexture(const std::string& url, Scene& scene);
+    static bool loadTexture(const std::string& url, Scene& scene);
 
     static MaterialTexture loadMaterialTexture(Node matCompNode, Scene& scene, Style& style);
 
@@ -61,7 +64,7 @@ struct SceneLoader {
                                  std::vector<StyleParam>& out);
     static void parseTransition(Node params, Scene& scene, std::vector<StyleParam>& out);
 
-    static StyleUniforms parseStyleUniforms(const Node& uniform, Scene& scene);
+    static bool parseStyleUniforms(const Node& value, Scene& scene, StyleUniform& styleUniform);
 
     static bool loadStyle(const std::string& styleName, Node config, Scene& scene);
 

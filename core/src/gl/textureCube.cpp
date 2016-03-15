@@ -8,7 +8,7 @@
 
 namespace Tangram {
 
-TextureCube::TextureCube(std::string _file, TextureOptions _options) : Texture(0, 0, _options) {
+TextureCube::TextureCube(std::string _file, TextureOptions _options) : Texture(0u, 0u, _options) {
 
     m_target = GL_TEXTURE_CUBE_MAP;
     load(_file);

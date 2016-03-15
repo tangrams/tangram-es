@@ -3,6 +3,7 @@
 #include "platform.h"
 #include "gl/shaderProgram.h"
 #include "gl/texture.h"
+#include "gl/renderState.h"
 
 namespace Tangram {
 
@@ -168,9 +169,9 @@ void Material::setupProgram(MaterialUniforms& _uniforms) {
         u.shader.setUniformf(u.emission, m_emission);
 
         if (m_emission_texture.tex) {
-            m_emission_texture.tex->update(1);
-            m_emission_texture.tex->bind(1);
-            u.shader.setUniformi(u.emissionTexture, 1);
+            m_emission_texture.tex->update(RenderState::nextAvailableTextureUnit());
+            m_emission_texture.tex->bind(RenderState::currentTextureUnit());
+            u.shader.setUniformi(u.emissionTexture, RenderState::currentTextureUnit());
             u.shader.setUniformf(u.emissionScale, m_emission_texture.scale);
         }
     }
@@ -179,9 +180,9 @@ void Material::setupProgram(MaterialUniforms& _uniforms) {
         u.shader.setUniformf(u.ambient, m_ambient);
 
         if (m_ambient_texture.tex) {
-            m_ambient_texture.tex->update(2);
-            m_ambient_texture.tex->bind(2);
-            u.shader.setUniformi(u.ambientTexture, 2);
+            m_ambient_texture.tex->update(RenderState::nextAvailableTextureUnit());
+            m_ambient_texture.tex->bind(RenderState::currentTextureUnit());
+            u.shader.setUniformi(u.ambientTexture, RenderState::currentTextureUnit());
             u.shader.setUniformf(u.ambientScale, m_ambient_texture.scale);
         }
     }
@@ -190,9 +191,9 @@ void Material::setupProgram(MaterialUniforms& _uniforms) {
         u.shader.setUniformf(u.diffuse, m_diffuse);
 
         if (m_diffuse_texture.tex) {
-            m_diffuse_texture.tex->update(3);
-            m_diffuse_texture.tex->bind(3);
-            u.shader.setUniformi(u.diffuseTexture, 3);
+            m_diffuse_texture.tex->update(RenderState::nextAvailableTextureUnit());
+            m_diffuse_texture.tex->bind(RenderState::currentTextureUnit());
+            u.shader.setUniformi(u.diffuseTexture, RenderState::currentTextureUnit());
             u.shader.setUniformf(u.diffuseScale, m_diffuse_texture.scale);
         }
     }
@@ -202,17 +203,17 @@ void Material::setupProgram(MaterialUniforms& _uniforms) {
         u.shader.setUniformf(u.shininess, m_shininess);
 
         if (m_specular_texture.tex) {
-            m_specular_texture.tex->update(4);
-            m_specular_texture.tex->bind(4);
-            u.shader.setUniformi(u.specularTexture, 4);
+            m_specular_texture.tex->update(RenderState::nextAvailableTextureUnit());
+            m_specular_texture.tex->bind(RenderState::currentTextureUnit());
+            u.shader.setUniformi(u.specularTexture, RenderState::currentTextureUnit());
             u.shader.setUniformf(u.specularScale, m_specular_texture.scale);
         }
     }
 
     if (m_normal_texture.tex) {
-        m_normal_texture.tex->update(5);
-        m_normal_texture.tex->bind(5);
-        u.shader.setUniformi(u.normalTexture, 5);
+        m_normal_texture.tex->update(RenderState::nextAvailableTextureUnit());
+        m_normal_texture.tex->bind(RenderState::currentTextureUnit());
+        u.shader.setUniformi(u.normalTexture, RenderState::currentTextureUnit());
         u.shader.setUniformf(u.normalScale, m_normal_texture.scale);
         u.shader.setUniformf(u.normalAmount, m_normal_texture.amount);
     }

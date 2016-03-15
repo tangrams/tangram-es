@@ -58,6 +58,8 @@ public:
     int addIdForName(const std::string& _name);
     int getIdForName(const std::string& _name) const;
 
+    bool texture(const std::string& textureName, std::shared_ptr<Texture>& texture) const;
+
     const int32_t id;
 
     glm::dvec2 startPosition = { 0, 0 };

@@ -129,9 +129,8 @@ protected:
     virtual void constructShaderProgram() = 0;
 
     /* Set uniform values when @_updateUniforms is true,
-     * and bind textures starting at @_textureUnit
      */
-    void setupShaderUniforms(int _textureUnit, Scene& _scene);
+    void setupShaderUniforms(Scene& _scene);
 
     UniformLocation m_uTime{"u_time"};
     // View uniforms
@@ -211,7 +210,7 @@ public:
     /* Perform any setup needed before drawing each frame
      * _textUnit is the next available texture unit
      */
-    virtual void onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit = 0);
+    virtual void onBeginDrawFrame(const View& _view, Scene& _scene);
 
     /* Perform any unsetup needed after drawing each frame */
     virtual void onEndDrawFrame() {}

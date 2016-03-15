@@ -72,21 +72,23 @@ void Style::setLightingType(LightingType _type) {
     m_lightingType = _type;
 }
 
-void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
-    for (const auto& uniformPair : m_styleUniforms) {
+void Style::setupShaderUniforms(Scene& _scene) {
+    for (auto& uniformPair : m_styleUniforms) {
         const auto& name = uniformPair.first;
-        const auto& value = uniformPair.second;
+        auto& value = uniformPair.second;
 
         if (value.is<std::string>()) {
+            std::shared_ptr<Texture> texture = nullptr;
 
-            auto& tex = _scene.textures()[value.get<std::string>()];
-            if (tex) {
-                tex->update(_textureUnit);
-                tex->bind(_textureUnit);
-
-                m_shaderProgram->setUniformi(name, _textureUnit);
-                _textureUnit++;
+            if (!_scene.texture(value.get<std::string>(), texture) || !texture) {
+                // TODO: LOG, would be nice to do have a notify-once-log not to overwhelm logging
+                continue;
             }
+
+            texture->update(RenderState::nextAvailableTextureUnit());
+            texture->bind(RenderState::currentTextureUnit());
+
+            m_shaderProgram->setUniformi(name, RenderState::currentTextureUnit());
         } else {
 
             if (value.is<bool>()) {
@@ -99,6 +101,27 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
                 m_shaderProgram->setUniformf(name, value.get<glm::vec3>());
             } else if(value.is<glm::vec4>()) {
                 m_shaderProgram->setUniformf(name, value.get<glm::vec4>());
+            } else if (value.is<UniformArray>()) {
+                m_shaderProgram->setUniformf(name, value.get<UniformArray>());
+            } else if (value.is<UniformTextureArray>()) {
+                UniformTextureArray& textureUniformArray = value.get<UniformTextureArray>();
+                textureUniformArray.slots.clear();
+
+                for (const auto& textureName : textureUniformArray.names) {
+                    std::shared_ptr<Texture> texture = nullptr;
+
+                    if (!_scene.texture(textureName, texture) || !texture) {
+                        // TODO: LOG, would be nice to do have a notify-once-log not to overwhelm logging
+                        continue;
+                    }
+
+                    texture->update(RenderState::nextAvailableTextureUnit());
+                    texture->bind(RenderState::currentTextureUnit());
+
+                    textureUniformArray.slots.push_back(RenderState::currentTextureUnit());
+                }
+
+                m_shaderProgram->setUniformi(name, textureUniformArray);
             } else {
                 // TODO: Throw away uniform on loading!
                 // none_type
@@ -107,9 +130,10 @@ void Style::setupShaderUniforms(int _textureUnit, Scene& _scene) {
     }
 }
 
-void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
+void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {
 
-    // TODO cache which uniforms are used by the shader!
+    // Reset the currently used texture unit to 0
+    RenderState::resetTextureUnit();
 
     // Set time uniforms style's shader programs
     m_shaderProgram->setUniformf(m_uTime, Tangram::frameTime());
@@ -136,7 +160,7 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit)
     m_shaderProgram->setUniformMatrix4f(m_uView, _view.getViewMatrix());
     m_shaderProgram->setUniformMatrix4f(m_uProj, _view.getProjectionMatrix());
 
-    setupShaderUniforms(_textureUnit, _scene);
+    setupShaderUniforms(_scene);
 
     // Configure render state
     switch (m_blend) {

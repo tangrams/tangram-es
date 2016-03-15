@@ -5,9 +5,6 @@
 #include <tuple>
 #include <limits>
 
-// Max texture units used at the same time by a shader
-#define TANGRAM_MAX_TEXTURE_UNIT 6
-
 namespace Tangram {
 
 namespace RenderState {
@@ -27,6 +24,12 @@ namespace RenderState {
 
     bool isValidGeneration(int _generation);
     int generation();
+
+    int currentTextureUnit();
+    /* Gives the immediately next available texture unit */
+    int nextAvailableTextureUnit();
+    /* Reset the currently used texture unit */
+    void resetTextureUnit();
 
     template <typename T>
     class State {
