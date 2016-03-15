@@ -15,6 +15,8 @@ if [ "${PLATFORM}" = "android" ] && [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ 
     #make android-native-lib ANDROID_ARCH=mips64
 
     make android-tangram-apk
-    cd "$TRAVIS_BUILD_DIR"/android; ./gradlew uploadArchives -PsonatypeUsername="$SONATYPE_USERNAME" -PsonatypePassword="$SONATYPE_PASSWORD"
+    cd "$TRAVIS_BUILD_DIR"/android
+    git clone git@github.com:mapzen/android-config.git
+    ./gradlew uploadArchives -PsonatypeUsername="$SONATYPE_USERNAME" -PsonatypePassword="$SONATYPE_PASSWORD" -Psigning.keyId="$SIGNING_KEY_ID" -Psigning.password="$SIGNING_PASSWORD" -Psigning.secretKeyRingFile="$SIGNING_SECRET_KEY_RING_FILE"
     cd "$TRAVIS_BUILD_DIR"
 fi
