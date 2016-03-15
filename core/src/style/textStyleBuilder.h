@@ -38,7 +38,7 @@ LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch
                               TextLabelProperty::Align _alignment, float _pixelScale);
 
 
-class TextStyleBuilder : public StyleBuilder {
+class TextStyleBuilder : public StyleBuilder,  public alfons::MeshCallback {
 
 public:
 
@@ -54,11 +54,9 @@ public:
 
     TextStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
-    /* Draws the labels (rasterize them) using Alfons
-     * This triggers the mesh and texture callbacks */
     bool prepareLabel(TextStyle::Parameters& _params, Label::Type _type);
 
-    /* Add label to the mesh using the current scratch buffer data */
+    // Add label to the mesh using the prepared label data
     void addLabel(const TextStyle::Parameters& _params, Label::Type _type,
                   Label::Transform _transform);
 
@@ -66,48 +64,45 @@ public:
 
     std::string resolveTextSource(const std::string& textSource, const Properties& props) const;
 
+    // alfons::MeshCallback interface
+    void drawGlyph(const alfons::Quad& q, const alfons::AtlasGlyph& altasGlyph) override {}
+    void drawGlyph(const alfons::Rect& q, const alfons::AtlasGlyph& atlasGlyph) override;
+
 protected:
 
-    struct ScratchBuffer : public alfons::MeshCallback {
+    const TextStyle& m_style;
 
-        /* drawGlyph() Called from worker thread from alfons after
-         * TextStyleBuilder::prepareLabel, happens after textureCallback(s) */
-        void drawGlyph(const alfons::Quad& q, const alfons::AtlasGlyph& altasGlyph) override {}
-        void drawGlyph(const alfons::Rect& q, const alfons::AtlasGlyph& atlasGlyph) override;
+    // Result: TextLabel container
+    std::unique_ptr<TextLabels> m_textLabels;
 
-        void clear();
+    // Buffers to hold data for TextLabels until build()
+    std::vector<GlyphQuad> m_quads;
+    std::vector<std::unique_ptr<Label>> m_labels;
 
-        std::vector<GlyphQuad> quads;
-        std::vector<std::unique_ptr<Label>> labels;
+    // Attributes of the currently prepared Label
+    struct {
+        float width;
+        float height;
 
-        // label width and height
-        glm::vec2 labelDimension;
-        glm::vec2 labelAnchor;
-        int numQuads;
+        // start position in m_quads
+        size_t quadsStart;
 
         uint32_t fill;
         uint32_t stroke;
         uint8_t fontScale;
-    };
-
-    const TextStyle& m_style;
-
-    float m_tileSize;
+    } m_attributes;
 
     // TextShaper to create <LineLayout> for a given text
     alfons::TextShaper m_shaper;
 
     // TextBatch to 'draw' <LineLayout>s, i.e. creating glyph textures and glyph quads.
-    // It is intialized with a TextureCallback provided by FontContext for adding glyph
-    // textures and a MeshCallback provided by ScratchBufferthe for adding glyph quads.
+    // It is intialized with a TextureCallback implemented by FontContext for adding glyph
+    // textures and a MeshCallback implemented by TextStyleBuilder for adding glyph quads.
     alfons::TextBatch m_batch;
 
+    float m_tileSize;
     bool m_sdf;
     float m_pixelScale = 1;
-
-    ScratchBuffer m_scratch;
-
-    std::unique_ptr<TextLabels> m_textLabels;
 
 };
 

@@ -22,22 +22,23 @@ const static std::string key_name("name");
 TextStyleBuilder::TextStyleBuilder(const TextStyle& _style)
     : StyleBuilder(_style),
       m_style(_style),
-      m_batch(_style.context()->atlas(), m_scratch) {}
+      m_batch(_style.context()->atlas(), *this) {}
 
 void TextStyleBuilder::setup(const Tile& _tile){
     m_tileSize = _tile.getProjection()->TileSize();
-    m_scratch.clear();
+    m_quads.clear();
+    m_labels.clear();
 
     m_textLabels = std::make_unique<TextLabels>(m_style);
 }
 
 std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
-    if (!m_scratch.labels.empty()) {
-        m_textLabels->setLabels(m_scratch.labels);
-        m_textLabels->setQuads(m_scratch.quads);
+    if (!m_labels.empty()) {
+        m_textLabels->setLabels(m_labels);
+        m_textLabels->setQuads(m_quads);
     }
-
-    m_scratch.clear();
+    m_quads.clear();
+    m_labels.clear();
 
     return std::move(m_textLabels);
 }
@@ -65,7 +66,7 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
     } else if (_feat.geometryType == GeometryType::lines) {
         float pixel = 2.0 / (m_tileSize * m_style.pixelScale());
-        float minLength = m_scratch.labelDimension.x * pixel * 0.2;
+        float minLength = m_attributes.width * pixel * 0.2;
 
         for (auto& line : _feat.lines) {
             for (size_t i = 0; i < line.size() - 1; i++) {
@@ -285,20 +286,16 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 
     uint32_t strokeAttrib = std::max(std::min(strokeWidth / ctx->maxStrokeWidth() * 255.f, 255.f), 0.f);
 
-    m_scratch.stroke = (_params.strokeColor & 0x00ffffff) + (strokeAttrib << 24);
-    m_scratch.fill = _params.fill;
-    m_scratch.fontScale = std::min(fontScale * 64.f, 255.f);
+    m_attributes.stroke = (_params.strokeColor & 0x00ffffff) + (strokeAttrib << 24);
+    m_attributes.fill = _params.fill;
+    m_attributes.fontScale = std::min(fontScale * 64.f, 255.f);
 
-    LineWrap wrap;
-
-    alf::LineLayout line;
     alf::LineMetrics metrics;
 
     {
         std::lock_guard<std::mutex> lock(ctx->mutex());
 
-        // Shape text
-        line = m_shaper.shape(_params.font, *renderText);
+        alf::LineLayout line = m_shaper.shape(_params.font, *renderText);
 
         if (line.shapes().size() == 0) {
             LOGD("Empty text line");
@@ -307,12 +304,11 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 
         line.setScale(fontScale);
 
-        // m_batch.draw() calls FontContext's TextureCallback for new glyphs
-        // and ScratchBuffer's MeshCallback (drawGlyph) for vertex quads of each
-        // glyph in LineLayout.
+        // m_batch.drawShapeRange() calls FontContext's TextureCallback for new glyphs
+        // and MeshCallback (drawGlyph) for vertex quads of each glyph in LineLayout.
 
-        // reset count of added quads in drawGlyph
-        m_scratch.numQuads = 0;
+        // start position of new quads
+        m_attributes.quadsStart = m_quads.size();
 
         if (_type == Label::Type::point && _params.wordWrap) {
             auto wrap = drawWithLineWrapping(line, m_batch, MIN_LINE_WIDTH,
@@ -325,19 +321,17 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         }
     }
 
-    // Bounding box dimension
-    float width = metrics.aabb.z - metrics.aabb.x;
-    float height = metrics.aabb.w - metrics.aabb.y;
 
     // TextLabel parameter: Dimension
-    m_scratch.labelDimension = glm::vec2(width, height);
+    m_attributes.width = metrics.aabb.z - metrics.aabb.x;
+    m_attributes.height = metrics.aabb.w - metrics.aabb.y;
 
     // Offset to center all glyphs around 0/0
-    glm::vec2 offset((metrics.aabb.x + width * 0.5) * position_scale,
-                     (metrics.aabb.y + height * 0.5) * position_scale);
+    glm::vec2 offset((metrics.aabb.x + m_attributes.width * 0.5) * position_scale,
+                     (metrics.aabb.y + m_attributes.height * 0.5) * position_scale);
 
-    auto it = m_scratch.quads.end() - m_scratch.numQuads;
-    while (it != m_scratch.quads.end()) {
+    auto it = m_quads.begin() + m_attributes.quadsStart;
+    while (it != m_quads.end()) {
         it->quad[0].pos -= offset;
         it->quad[1].pos -= offset;
         it->quad[2].pos -= offset;
@@ -351,29 +345,24 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
                                 Label::Transform _transform) {
 
-    int numQuads = m_scratch.numQuads;
-    int quadOffset = m_scratch.quads.size() - numQuads;
+    int quadsStart = m_attributes.quadsStart;
+    int quadsCount = m_quads.size() - quadsStart;
 
-    m_scratch.labels.emplace_back(new TextLabel(_transform, _type, _params.labelOptions, _params.anchor,
-                                                {m_scratch.fill, m_scratch.stroke, m_scratch.fontScale},
-                                                m_scratch.labelDimension, *m_textLabels, {quadOffset, numQuads}));
+    m_labels.emplace_back(new TextLabel(_transform, _type, _params.labelOptions, _params.anchor,
+                                        {m_attributes.fill, m_attributes.stroke, m_attributes.fontScale},
+                                        {m_attributes.width, m_attributes.height},
+                                        *m_textLabels, {quadsStart, quadsCount}));
 }
 
-void TextStyleBuilder::ScratchBuffer::drawGlyph(const alf::Rect& q, const alf::AtlasGlyph& atlasGlyph) {
-    numQuads++;
+void TextStyleBuilder::drawGlyph(const alf::Rect& q, const alf::AtlasGlyph& atlasGlyph) {
 
     auto& g = *atlasGlyph.glyph;
-    quads.push_back({
+    m_quads.push_back({
             atlasGlyph.atlas,
             {{glm::vec2{q.x1, q.y1} * position_scale, {g.u1, g.v1}},
              {glm::vec2{q.x1, q.y2} * position_scale, {g.u1, g.v2}},
              {glm::vec2{q.x2, q.y1} * position_scale, {g.u2, g.v1}},
              {glm::vec2{q.x2, q.y2} * position_scale, {g.u2, g.v2}}}});
-}
-
-void TextStyleBuilder::ScratchBuffer::clear() {
-    quads.clear();
-    labels.clear();
 }
 
 LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch& _batch,

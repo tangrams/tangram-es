@@ -51,12 +51,12 @@ std::unique_ptr<StyledMesh> DebugTextStyleBuilder::build() {
 
     addLabel(params, Label::Type::debug, { glm::vec2(.5f) });
 
-    if (!m_scratch.labels.empty()) {
-        m_textLabels->setLabels(m_scratch.labels);
-        m_textLabels->setQuads(m_scratch.quads);
+    if (!m_labels.empty()) {
+        m_textLabels->setLabels(m_labels);
+        m_textLabels->setQuads(m_quads);
     }
-
-    m_scratch.clear();
+    m_quads.clear();
+    m_labels.clear();
 
     return std::move(m_textLabels);
 }
