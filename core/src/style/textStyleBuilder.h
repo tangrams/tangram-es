@@ -46,21 +46,16 @@ public:
 
     const Style& style() const override { return m_style; }
 
-    // StyleBuilder interface
-    void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
-    void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
-    void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
-    bool checkRule(const DrawRule& _rule) const override;
+    void addFeature(const Feature& _feature, const DrawRule& _rule) override;
 
-    virtual void setup(const Tile& _tile) override;
+    void setup(const Tile& _tile) override;
 
-    virtual std::unique_ptr<StyledMesh> build() override;
+    std::unique_ptr<StyledMesh> build() override;
 
     TextStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
     /* Draws the labels (rasterize them) using Alfons
-     * This triggers the mesh and texture callbacks
-     */
+     * This triggers the mesh and texture callbacks */
     bool prepareLabel(TextStyle::Parameters& _params, Label::Type _type);
 
     /* Add label to the mesh using the current scratch buffer data */
@@ -76,8 +71,7 @@ protected:
     struct ScratchBuffer : public alfons::MeshCallback {
 
         /* drawGlyph() Called from worker thread from alfons after
-         * TextStyleBuilder::prepareLabel, happens after textureCallback(s)
-         */
+         * TextStyleBuilder::prepareLabel, happens after textureCallback(s) */
         void drawGlyph(const alfons::Quad& q, const alfons::AtlasGlyph& altasGlyph) override {}
         void drawGlyph(const alfons::Rect& q, const alfons::AtlasGlyph& atlasGlyph) override;
 

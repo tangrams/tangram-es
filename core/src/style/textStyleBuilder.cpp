@@ -42,41 +42,41 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
     return std::move(m_textLabels);
 }
 
-bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
-    return true;
-}
+void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
-void TextStyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
+    TextStyle::Parameters params = applyRule(_rule, _feat.props);
 
-    TextStyle::Parameters params = applyRule(_rule, _props);
+    auto labelType = _feat.geometryType == GeometryType::lines
+        ? Label::Type::line : Label::Type::point;
 
-    if (!prepareLabel(params, Label::Type::point)) { return; }
+    if (!prepareLabel(params, labelType)) { return; }
 
-    addLabel(params, Label::Type::point, { glm::vec2(_point), glm::vec2(_point) });
-}
+    if (_feat.geometryType == GeometryType::points) {
+        for (auto& point : _feat.points) {
+            auto p = glm::vec2(point);
+            addLabel(params, Label::Type::point, { p, p });
+        }
 
-void TextStyleBuilder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
+    } else if (_feat.geometryType == GeometryType::polygons) {
+        for (auto& polygon : _feat.polygons) {
+            auto p = centroid(polygon);
+            addLabel(params, Label::Type::point, { p, p });
+        }
 
-    TextStyle::Parameters params = applyRule(_rule, _props);
+    } else if (_feat.geometryType == GeometryType::lines) {
+        float pixel = 2.0 / (m_tileSize * m_style.pixelScale());
+        float minLength = m_scratch.labelDimension.x * pixel * 0.2;
 
-    if (!prepareLabel(params, Label::Type::line)) { return; }
-
-    float pixel = 2.0 / (m_tileSize * m_style.pixelScale());
-
-    float minLength = m_scratch.labelDimension.x * pixel * 0.2;
-
-    for (size_t i = 0; i < _line.size() - 1; i++) {
-        glm::vec2 p1 = glm::vec2(_line[i]);
-        glm::vec2 p2 = glm::vec2(_line[i + 1]);
-        if (glm::length(p1-p2) > minLength) {
-            addLabel(params, Label::Type::line, { p1, p2 });
+        for (auto& line : _feat.lines) {
+            for (size_t i = 0; i < line.size() - 1; i++) {
+                glm::vec2 p1 = glm::vec2(line[i]);
+                glm::vec2 p2 = glm::vec2(line[i + 1]);
+                if (glm::length(p1-p2) > minLength) {
+                    addLabel(params, Label::Type::line, { p1, p2 });
+                }
+            }
         }
     }
-}
-
-void TextStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
-    Point p = glm::vec3(centroid(_polygon), 0.0);
-    addPoint(p, _props, _rule);
 }
 
 TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
