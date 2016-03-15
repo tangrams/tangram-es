@@ -183,7 +183,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
 
     if (Node definesNode = shaders["defines"]) {
         for (const auto& define : definesNode) {
-            std::string name = define.first.as<std::string>();
+            const std::string& name = define.first.Scalar();
 
             // undefine any previous definitions
             shader.addSourceBlock("defines", "#undef " + name);
@@ -197,7 +197,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
                     shader.addSourceBlock("defines", "#define " + name);
                 }
             } else {
-                std::string value = define.second.as<std::string>();
+                const std::string& value = define.second.Scalar();
                 shader.addSourceBlock("defines", "#define " + name + " " + value);
             }
         }
@@ -205,7 +205,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
 
     if (Node uniformsNode = shaders["uniforms"]) {
         for (const auto& uniform : uniformsNode) {
-            auto name = uniform.first.as<std::string>();
+            const std::string& name = uniform.first.Scalar();
             StyleUniform styleUniform;
 
             if (parseStyleUniforms(uniform.second, scene, styleUniform)) {
@@ -230,7 +230,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
 
     if (Node blocksNode = shaders["blocks_mixed"]) {
         for (const auto& block : blocksNode) {
-            const auto& name = block.first.as<std::string>();
+            const auto& name = block.first.Scalar();
             const auto& value = block.second;
             if (value.IsSequence()){
                 for (const auto& it : value) {
@@ -321,7 +321,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene,
         return MaterialTexture{};
     }
 
-    std::string name = textureNode.as<std::string>();
+    const std::string& name = textureNode.Scalar();
 
     MaterialTexture matTex;
     matTex.tex = scene.textures()[name];
@@ -329,7 +329,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene,
     if (!matTex.tex) { matTex.tex = std::make_shared<Texture>(name); }
 
     if (Node mappingNode = matCompNode["mapping"]) {
-        std::string mapping = mappingNode.as<std::string>();
+        const std::string& mapping = mappingNode.Scalar();
         if (mapping == "uv") {
             matTex.mapping = MappingType::uv;
 
@@ -400,7 +400,7 @@ bool SceneLoader::loadTexture(const std::string& url, Scene& scene) {
 
 void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
 
-    std::string name = node.first.as<std::string>();
+    const std::string& name = node.first.Scalar();
     Node textureConfig = node.second;
 
     std::string file;
@@ -416,12 +416,12 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
     bool generateMipmaps = false;
 
     if (Node filtering = textureConfig["filtering"]) {
-        std::string f = filtering.as<std::string>();
-        if (f == "linear") { options.filtering = { GL_LINEAR, GL_LINEAR }; }
-        else if (f == "mipmap") {
+        const std::string& textureFiltering = filtering.Scalar();
+        if (textureFiltering == "linear") { options.filtering = { GL_LINEAR, GL_LINEAR }; }
+        else if (textureFiltering == "mipmap") {
             options.filtering = { GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR };
             generateMipmaps = true;
-        } else if (f == "nearest") { options.filtering = { GL_NEAREST, GL_NEAREST }; }
+        } else if (textureFiltering == "nearest") { options.filtering = { GL_NEAREST, GL_NEAREST }; }
     }
 
     std::shared_ptr<Texture> texture(new Texture(file, options, generateMipmaps));
@@ -432,7 +432,7 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
         for (auto it = sprites.begin(); it != sprites.end(); ++it) {
 
             const Node sprite = it->second;
-            std::string spriteName = it->first.as<std::string>();
+            const std::string& spriteName = it->first.Scalar();
 
             if (sprite) {
                 glm::vec4 desc = parseVec<glm::vec4>(sprite);
@@ -466,13 +466,13 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
     }
 
     if (Node blendNode = styleNode["blend"]) {
-        auto str = blendNode.as<std::string>();
-        if      (str == "none")     { style.setBlendMode(Blending::none); }
-        else if (str == "add")      { style.setBlendMode(Blending::add); }
-        else if (str == "multiply") { style.setBlendMode(Blending::multiply); }
-        else if (str == "overlay")  { style.setBlendMode(Blending::overlay); }
-        else if (str == "inlay")    { style.setBlendMode(Blending::inlay); }
-        else { LOGW("Invalid blend mode '%s'", str.c_str()); }
+        const std::string& blendMode = blendNode.Scalar();
+        if      (blendMode == "none")     { style.setBlendMode(Blending::none); }
+        else if (blendMode == "add")      { style.setBlendMode(Blending::add); }
+        else if (blendMode == "multiply") { style.setBlendMode(Blending::multiply); }
+        else if (blendMode == "overlay")  { style.setBlendMode(Blending::overlay); }
+        else if (blendMode == "inlay")    { style.setBlendMode(Blending::inlay); }
+        else { LOGW("Invalid blend mode '%s'", blendMode.c_str()); }
     }
 
     if (Node blendOrderNode = styleNode["blend_order"]) {
@@ -497,7 +497,7 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
     }
 
     if (Node lightingNode = styleNode["lighting"]) {
-        auto lighting = lightingNode.as<std::string>();
+        const std::string& lighting = lightingNode.Scalar();
         if (lighting == "fragment") { style.setLightingType(LightingType::fragment); }
         else if (lighting == "vertex") { style.setLightingType(LightingType::vertex); }
         else if (lighting == "false") { style.setLightingType(LightingType::none); }
@@ -509,7 +509,7 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
 
         if (auto pointStyle = dynamic_cast<PointStyle*>(&style)) {
 
-            auto textureName = textureNode.as<std::string>();
+            const std::string& textureName = textureNode.Scalar();
             auto atlases = scene.spriteAtlases();
             auto atlasIt = atlases.find(textureName);
             if (atlasIt != atlases.end()) {
@@ -573,9 +573,9 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) 
 void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
 
     const Node source = src.second;
-    std::string name = src.first.as<std::string>();
-    std::string type = source["type"].as<std::string>();
-    std::string url = source["url"].as<std::string>();
+    const std::string& name = src.first.Scalar();
+    const std::string& type = source["type"].Scalar();
+    const std::string& url = source["url"].Scalar();
     int32_t maxZoom = 18;
 
     if (auto maxZoomNode = source["max_zoom"]) {
@@ -612,8 +612,8 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
 void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
 
     const Node light = node.second;
-    const std::string name = node.first.Scalar();
-    const std::string type = light["type"].as<std::string>();
+    const std::string& name = node.first.Scalar();
+    const std::string& type = light["type"].Scalar();
 
     std::unique_ptr<Light> sceneLight;
 
@@ -671,7 +671,7 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
         sceneLight = std::move(sLight);
     }
     if (Node origin = light["origin"]) {
-        const std::string originStr = origin.as<std::string>();
+        const std::string& originStr = origin.Scalar();
         if (originStr == "world") {
             sceneLight->setOrigin(LightOrigin::world);
         } else if (originStr == "camera") {
@@ -773,7 +773,7 @@ Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
     switch (_filter.Type()) {
     case NodeType::Scalar: {
 
-        const auto& val = _filter.as<std::string>();
+        const std::string& val = _filter.Scalar();
 
         if (val.compare(0, 8, "function") == 0) {
             scene.functions().push_back(val);
@@ -789,7 +789,7 @@ Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
     }
     case NodeType::Map: {
         for (const auto& filtItr : _filter) {
-            std::string key = filtItr.first.as<std::string>();
+            const std::string& key = filtItr.first.Scalar();
             Node node = _filter[key];
 
             if (key == "none") {
@@ -834,7 +834,7 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
         if (getBool(_node, existence)) {
             return Filter::MatchExistence(_key, existence);
         }
-        std::string value = _node.as<std::string>();
+        const std::string& value = _node.Scalar();
         return Filter::MatchEquality(_key, { Value(std::move(value)) });
     }
     case NodeType::Sequence: {
@@ -844,7 +844,7 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
             if (getDouble(valItr, number)) {
                 values.emplace_back(number);
             } else {
-                std::string value = valItr.as<std::string>();
+                const std::string& value = valItr.Scalar();
                 values.emplace_back(std::move(value));
             }
         }
@@ -930,7 +930,7 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
 
         switch (value.Type()) {
         case NodeType::Scalar: {
-            const auto& val = value.as<std::string>();
+            const std::string& val = value.Scalar();
 
             if (val.compare(0, 8, "function") == 0) {
                 StyleParam param(key, "");
@@ -996,7 +996,7 @@ bool SceneLoader::parseStyleUniforms(const Node& value, Scene& scene, StyleUnifo
             styleUniform.type = "bool";
             styleUniform.value = (bool)bValue;
         } else {
-            auto strVal = value.as<std::string>();
+            const std::string& strVal = value.Scalar();
             styleUniform.type = "sampler2D";
             std::shared_ptr<Texture> texture;
             scene.texture(strVal, texture);
@@ -1042,7 +1042,7 @@ bool SceneLoader::parseStyleUniforms(const Node& value, Scene& scene, StyleUnifo
             styleUniform.type = "sampler2D";
 
             for (const auto& strVal : value) {
-                auto textureName = strVal.as<std::string>();
+                const std::string& textureName = strVal.Scalar();
                 textureArrayUniform.names.push_back(textureName);
                 std::shared_ptr<Texture> texture;
                 scene.texture(textureName, texture);
@@ -1105,7 +1105,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, S
 
     for (const auto& member : layer) {
 
-        const std::string key = member.first.as<std::string>();
+        const std::string& key = member.first.Scalar();
 
         if (key == "data") {
             // Ignored for sublayers
@@ -1116,7 +1116,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, S
                 std::vector<StyleParam> params;
                 parseStyleParams(ruleNode.second, scene, "", params);
 
-                auto ruleName = ruleNode.first.as<std::string>();
+                const std::string& ruleName = ruleNode.first.Scalar();
                 int ruleId = scene.addIdForName(ruleName);
 
                 rules.push_back({ ruleName, ruleId, std::move(params) });
@@ -1138,7 +1138,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, S
 
 void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {
 
-    std::string name = layer.first.as<std::string>();
+    const std::string& name = layer.first.Scalar();
 
     std::string source;
     std::vector<std::string> collections;
