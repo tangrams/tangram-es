@@ -18,3 +18,10 @@ if [[ ${PLATFORM} == "android" ]]; then
     echo "Done."
 
 fi
+
+if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
+
+    brew update
+    brew install cmake
+
+fi
