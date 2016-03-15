@@ -50,6 +50,10 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     auto labelType = _feat.geometryType == GeometryType::lines
         ? Label::Type::line : Label::Type::point;
 
+    // Keep start position of new quads
+    m_attributes.quadsStart = m_quads.size();
+    size_t numLabels = m_labels.size();
+
     if (!prepareLabel(params, labelType)) { return; }
 
     if (_feat.geometryType == GeometryType::points) {
@@ -77,6 +81,11 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
                 }
             }
         }
+    }
+
+    if (numLabels == m_labels.size()) {
+        // Drop quads when no label was added
+        m_quads.resize(m_attributes.quadsStart);
     }
 }
 
@@ -307,9 +316,6 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         // m_batch.drawShapeRange() calls FontContext's TextureCallback for new glyphs
         // and MeshCallback (drawGlyph) for vertex quads of each glyph in LineLayout.
 
-        // start position of new quads
-        m_attributes.quadsStart = m_quads.size();
-
         if (_type == Label::Type::point && _params.wordWrap) {
             auto wrap = drawWithLineWrapping(line, m_batch, MIN_LINE_WIDTH,
                                              _params.maxLineWidth, _params.align,
@@ -320,7 +326,6 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
             m_batch.drawShapeRange(line, 0, line.shapes().size(), position, metrics);
         }
     }
-
 
     // TextLabel parameter: Dimension
     m_attributes.width = metrics.aabb.z - metrics.aabb.x;
