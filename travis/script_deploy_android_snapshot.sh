@@ -4,7 +4,10 @@ set -e
 set -o pipefail
 
 if [ "${PLATFORM}" = "android" ] && [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "deploy-release-version" ]; then
-    
+
+    # Configure private repository credentials (used to sign release artifacts)
+    echo -e "machine github.com\n  login $GITHUB_USERNAME\n  password $GITHUB_PASSWORD" >> ~/.netrc
+
     # Build all android architectures (armeabi-v7a already build)
     make android-native-lib ANDROID_ARCH=x86
     make android-native-lib ANDROID_ARCH=armeabi
