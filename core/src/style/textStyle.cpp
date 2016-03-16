@@ -43,39 +43,6 @@ void TextStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
-void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
-
-    m_shaderProgram->setUniformf(m_uMaxStrokeWidth, m_context->maxStrokeWidth());
-    m_shaderProgram->setUniformf(m_uTexScaleFactor, glm::vec2(1.0f / GlyphTexture::size));
-    m_shaderProgram->setUniformi(m_uTex, 0);
-    m_shaderProgram->setUniformMatrix4f(m_uOrtho, _view.getOrthoViewportMatrix());
-
-    Style::onBeginDrawFrame(_view, _scene);
-}
-
-void TextStyle::onEndDrawFrame() {
-
-    if (m_sdf) {
-        m_shaderProgram->setUniformi(m_uPass, 1);
-
-        for (size_t i = 0; i < m_meshes.size(); i++) {
-            if (m_meshes[i]->isReady()) {
-                m_context->bindTexture(i, 0);
-                m_meshes[i]->draw(*m_shaderProgram);
-            }
-        }
-        m_shaderProgram->setUniformi(m_uPass, 0);
-    }
-
-    for (size_t i = 0; i < m_meshes.size(); i++) {
-        if (m_meshes[i]->isReady()) {
-            m_context->bindTexture(i, 0);
-            m_meshes[i]->draw(*m_shaderProgram);
-            m_meshes[i]->clear();
-        }
-    }
-}
-
 void TextStyle::onBeginUpdate() {
     // Ensure that meshes are available to push to
     // in labels::update()
@@ -91,6 +58,38 @@ void TextStyle::onBeginFrame() {
     // Upload meshes
     for (size_t i = 0; i < m_meshes.size(); i++) {
         m_meshes[i]->myUpload();
+    }
+}
+
+void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
+
+    Style::onBeginDrawFrame(_view, _scene);
+
+    auto texUnit = RenderState::nextAvailableTextureUnit();
+
+    m_shaderProgram->setUniformf(m_uMaxStrokeWidth, m_context->maxStrokeWidth());
+    m_shaderProgram->setUniformf(m_uTexScaleFactor, glm::vec2(1.0f / GlyphTexture::size));
+    m_shaderProgram->setUniformi(m_uTex, texUnit);
+    m_shaderProgram->setUniformMatrix4f(m_uOrtho, _view.getOrthoViewportMatrix());
+
+    if (m_sdf) {
+        m_shaderProgram->setUniformi(m_uPass, 1);
+
+        for (size_t i = 0; i < m_meshes.size(); i++) {
+            if (m_meshes[i]->isReady()) {
+                m_context->bindTexture(i, texUnit);
+                m_meshes[i]->draw(*m_shaderProgram);
+            }
+        }
+        m_shaderProgram->setUniformi(m_uPass, 0);
+    }
+
+    for (size_t i = 0; i < m_meshes.size(); i++) {
+        if (m_meshes[i]->isReady()) {
+            m_context->bindTexture(i, texUnit);
+            m_meshes[i]->draw(*m_shaderProgram);
+            m_meshes[i]->clear();
+        }
     }
 }
 

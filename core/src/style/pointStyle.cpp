@@ -66,14 +66,16 @@ void PointStyle::onBeginFrame() {
 void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
     Style::onBeginDrawFrame(_view, _scene);
 
+    auto texUnit = RenderState::nextAvailableTextureUnit();
+
     if (m_spriteAtlas) {
-        m_spriteAtlas->bind(RenderState::nextAvailableTextureUnit());
+        m_spriteAtlas->bind(texUnit);
     } else if (m_texture) {
-        m_texture->update(RenderState::nextAvailableTextureUnit());
-        m_texture->bind(RenderState::currentTextureUnit());
+        m_texture->update(texUnit);
+        m_texture->bind(texUnit);
     }
 
-    m_shaderProgram->setUniformi(m_uTex, RenderState::currentTextureUnit());
+    m_shaderProgram->setUniformi(m_uTex, texUnit);
     m_shaderProgram->setUniformMatrix4f(m_uOrtho, _view.getOrthoViewportMatrix());
 
     m_mesh->draw(*m_shaderProgram);
