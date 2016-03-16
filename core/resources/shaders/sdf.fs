@@ -17,7 +17,7 @@ uniform float u_time;
 uniform float u_meters_per_pixel;
 uniform float u_device_pixel_ratio;
 uniform float u_max_stroke_width;
-uniform int u_pass;
+uniform LOWP int u_pass;
 
 #pragma tangram: uniforms
 

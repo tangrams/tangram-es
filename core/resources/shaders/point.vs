@@ -19,7 +19,7 @@ uniform float u_device_pixel_ratio;
 #ifdef TANGRAM_TEXT
 uniform vec2 u_uv_scale_factor;
 uniform float u_max_stroke_width;
-uniform int u_pass;
+uniform LOWP int u_pass;
 #endif
 
 #pragma tangram: uniforms
