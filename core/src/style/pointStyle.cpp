@@ -60,7 +60,7 @@ void PointStyle::constructShaderProgram() {
 
 void PointStyle::onBeginFrame() {
     // Upload meshes for next frame
-    m_mesh->myUpload();
+    m_mesh->upload();
 }
 
 void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {

@@ -66,8 +66,8 @@ void LabelMesh::loadQuadIndices() {
                  reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW);
 }
 
-void LabelMesh::myUpload() {
-    if (m_nVertices == 0) { return; }
+void LabelMesh::upload() {
+    if (m_nVertices == 0 || m_isUploaded) { return; }
 
     checkValidity();
 

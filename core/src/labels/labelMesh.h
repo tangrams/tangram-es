@@ -27,7 +27,7 @@ public:
 
     size_t numberOfVertices() const { return m_vertices.size(); }
 
-    void myUpload();
+    void upload() override;
 
     bool isReady() { return m_isUploaded; }
 

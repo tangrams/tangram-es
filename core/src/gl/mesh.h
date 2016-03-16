@@ -51,7 +51,7 @@ public:
      * Copies all added vertices and indices into OpenGL buffer objects; After
      * geometry is uploaded, no more vertices or indices can be added
      */
-    void upload();
+    virtual void upload();
 
     /*
      * Sub data upload of the mesh, returns true if this results in a buffer binding
