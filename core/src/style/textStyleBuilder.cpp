@@ -51,7 +51,7 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
         ? Label::Type::line : Label::Type::point;
 
     // Keep start position of new quads
-    m_attributes.quadsStart = m_quads.size();
+    size_t quadsStart = m_quads.size();
     size_t numLabels = m_labels.size();
 
     if (!prepareLabel(params, labelType)) { return; }
@@ -85,7 +85,7 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
     if (numLabels == m_labels.size()) {
         // Drop quads when no label was added
-        m_quads.resize(m_attributes.quadsStart);
+        m_quads.resize(quadsStart);
     }
 }
 
@@ -299,6 +299,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     m_attributes.stroke = (_params.strokeColor & 0x00ffffff) + (strokeAttrib << 24);
     m_attributes.fill = _params.fill;
     m_attributes.fontScale = std::min(fontScale * 64.f, 255.f);
+    m_attributes.quadsStart = m_quads.size();
 
     glm::vec2 bbox(0);
     if (ctx->layoutText(_params, _type, *renderText, m_quads, bbox)) {
