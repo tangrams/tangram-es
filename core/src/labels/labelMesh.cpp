@@ -97,6 +97,7 @@ void LabelMesh::clear() {
     // Clear vertices for next frame
     m_nVertices = 0;
     m_vertices.clear();
+    m_isUploaded = false;
 }
 
 void LabelMesh::draw(ShaderProgram& _shader) {
