@@ -7,7 +7,7 @@ namespace Tangram {
 
 LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch& _batch,
                               size_t _minLineChars, size_t _maxLineChars,
-                              TextLabelProperty::Align _alignment,  float _pixelScale) {
+                              TextLabelProperty::Align _alignment, float _lineSpacing) {
 
     static std::vector<std::pair<int,float>> lineWraps;
 
@@ -95,10 +95,10 @@ LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch
 
         shapeStart = shapeEnd;
 
-        // FIXME hardcoded values
+        // FIXME hardcoded value for SDF radius 6
         float height = lineMetrics.height();
         height -= (2 * 6) * _line.scale(); // substract glyph padding
-        height += 4 * _pixelScale; // add some custom line offset
+        height += _lineSpacing; // add some custom line offset
 
         position.y += height;
 

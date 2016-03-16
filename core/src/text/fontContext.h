@@ -84,8 +84,7 @@ public:
 
     float maxStrokeWidth() { return m_sdfRadius; }
 
-    bool layoutText(TextStyle::Parameters& _params, Label::Type _type,
-                    const std::string& _text,
+    bool layoutText(TextStyle::Parameters& _params, const std::string& _text,
                     std::vector<GlyphQuad>& _quads, glm::vec2& _bbox);
 
     struct ScratchBuffer : public alfons::MeshCallback {

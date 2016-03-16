@@ -69,6 +69,8 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
         }
 
     } else if (_feat.geometryType == GeometryType::lines) {
+        params.wordWrap = false;
+
         float pixel = 2.0 / (m_tileSize * m_style.pixelScale());
         float minLength = m_attributes.width * pixel * 0.2;
 
@@ -119,14 +121,16 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     fontStyle = (!fontStyle) ? &defaultStyle : fontStyle;
 
     _rule.get(StyleParamKey::font_size, p.fontSize);
+    p.fontSize *= m_style.pixelScale();
 
-    p.font = m_style.context()->getFont(*fontFamily, *fontStyle, *fontWeight,
-                                        p.fontSize * m_style.pixelScale());
+    p.font = m_style.context()->getFont(*fontFamily, *fontStyle, *fontWeight, p.fontSize);
 
     _rule.get(StyleParamKey::font_fill, p.fill);
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
     _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
     _rule.get(StyleParamKey::font_stroke_width, p.strokeWidth);
+    p.strokeWidth *= m_style.pixelScale();
+
     _rule.get(StyleParamKey::priority, p.labelOptions.priority);
     _rule.get(StyleParamKey::collide, p.labelOptions.collide);
     _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
@@ -187,17 +191,13 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         }
     }
 
-    /* Global operations done for fontsize and sdfblur */
-    p.fontSize *= m_pixelScale;
-    p.labelOptions.offset *= m_pixelScale;
-    float emSize = p.fontSize / 16.f;
-    p.blurSpread = m_sdf ? emSize * 5.0f : 0.0f;
-
-    float boundingBoxBuffer = -p.fontSize / 2.f;
-    p.labelOptions.buffer = boundingBoxBuffer;
+    // TODO style option?
+    p.labelOptions.buffer = p.fontSize * 0.25f;
 
     std::hash<TextStyle::Parameters> hash;
     p.labelOptions.paramHash = hash(p);
+
+    p.lineSpacing = 2 * m_style.pixelScale();
 
     return p;
 }
@@ -284,25 +284,30 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     }
 
     // Scale factor by which the texture glyphs are scaled to match fontSize
-    float fontScale = (_params.fontSize * m_style.pixelScale()) / _params.font->size();
-    _params.fontScale = fontScale;
+    _params.fontScale = _params.fontSize / _params.font->size();
 
     // Stroke width is normalized by the distance of the SDF spread, then
-    // scaled to a char, then packed into the "alpha" channel of stroke.
+    // scaled to 255 and packed into the "alpha" channel of stroke.
     // Maximal strokeWidth is 3px, attribute is normalized to 0-1 range.
-    float strokeWidth = _params.strokeWidth * m_style.pixelScale();
 
     auto ctx = m_style.context();
 
-    uint32_t strokeAttrib = std::max(std::min(strokeWidth / ctx->maxStrokeWidth() * 255.f, 255.f), 0.f);
-
+    uint32_t strokeAttrib = std::max(_params.strokeWidth / ctx->maxStrokeWidth() * 255.f, 0.f);
+    if (strokeAttrib > 255) {
+        LOGW("stroke_width too large: %f / %f", _params.strokeWidth, strokeAttrib/255.f);
+        strokeAttrib = 255;
+    }
     m_attributes.stroke = (_params.strokeColor & 0x00ffffff) + (strokeAttrib << 24);
     m_attributes.fill = _params.fill;
-    m_attributes.fontScale = std::min(fontScale * 64.f, 255.f);
+    m_attributes.fontScale = _params.fontScale * 64.f;
+    if (m_attributes.fontScale > 255) {
+        LOGW("Too large font scale %f, maximal scale is 4", _params.fontScale);
+        m_attributes.fontScale = 255;
+    }
     m_attributes.quadsStart = m_quads.size();
 
     glm::vec2 bbox(0);
-    if (ctx->layoutText(_params, _type, *renderText, m_quads, bbox)) {
+    if (ctx->layoutText(_params, *renderText, m_quads, bbox)) {
         m_attributes.width = bbox.x;
         m_attributes.height = bbox.y;
         return true;

@@ -154,8 +154,7 @@ void FontContext::bindTexture(alf::AtlasID _id, GLuint _unit) {
 
 }
 
-bool FontContext::layoutText(TextStyle::Parameters& _params, Label::Type _type,
-                             const std::string& _text,
+bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& _text,
                              std::vector<GlyphQuad>& _quads,  glm::vec2& _size) {
 
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -178,7 +177,7 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, Label::Type _type,
 
     size_t quadsStart = _quads.size();
 
-    if (_type == Label::Type::point && _params.wordWrap) {
+    if (_params.wordWrap) {
         auto wrap = drawWithLineWrapping(line, m_batch, MIN_LINE_WIDTH,
                                          _params.maxLineWidth, _params.align,
                                          _params.lineSpacing);

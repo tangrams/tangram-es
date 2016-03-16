@@ -64,8 +64,6 @@ protected:
 
     float m_tileSize;
     bool m_sdf;
-    float m_pixelScale = 1;
-
 };
 
 }

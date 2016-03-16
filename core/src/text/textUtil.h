@@ -23,11 +23,11 @@ struct LineWrap {
  * _maxChar the maximum line length
  * _minWordLength a parameter to control the minimum word length
  * _alignment align text (center, left, right)
- * _pixelScale the screen pixel density
+ * _lineSpacing
  */
 LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch& _batch,
                               size_t _minLineChars, size_t _maxLineChars,
-                              TextLabelProperty::Align _alignment, float _pixelScale);
+                              TextLabelProperty::Align _alignment, float _lineSpacing);
 
 
 }
