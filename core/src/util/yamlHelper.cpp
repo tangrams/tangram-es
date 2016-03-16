@@ -6,9 +6,14 @@
 namespace Tangram {
 
 glm::vec4 getColorAsVec4(const Node& node) {
+    double val;
+    if (getDouble(node, val)) {
+        return glm::vec4(val, val, val, 1.0);
+    }
     if (node.IsSequence()) {
         return parseVec<glm::vec4>(node);
-    } else if (node.IsScalar()) {
+    }
+    if (node.IsScalar()) {
         auto c = CSSColorParser::parse(node.Scalar());
         return glm::vec4(c.r / 255.f, c.g / 255.f, c.b / 255.f, c.a);
     }
