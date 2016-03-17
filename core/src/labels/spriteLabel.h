@@ -23,8 +23,8 @@ public:
 
 private:
     // Back-pointer to owning container and position
-    SpriteLabels& m_labels;
-    size_t m_labelsPos;
+    const SpriteLabels& m_labels;
+    const size_t m_labelsPos;
 
     float m_extrudeScale;
     glm::vec2 m_anchor;

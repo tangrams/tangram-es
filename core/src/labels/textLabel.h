@@ -44,9 +44,9 @@ protected:
 
 private:
     // Back-pointer to owning container
-    TextLabels& m_textLabels;
+    const TextLabels& m_textLabels;
     // first vertex and count in m_textLabels quads
-    Range m_vertexRange;
+    const Range m_vertexRange;
 
     FontVertexAttributes m_fontAttrib;
 };
