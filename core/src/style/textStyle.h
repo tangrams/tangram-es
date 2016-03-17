@@ -83,7 +83,7 @@ public:
      */
     void onBeginDrawFrame(const View& _view, Scene& _scene) override;
 
-    LabelMesh& mesh(size_t id) const { return *m_meshes[id]; }
+    LabelMesh& getMesh(size_t id) const { return *m_meshes[id]; }
 
     virtual ~TextStyle() override;
 

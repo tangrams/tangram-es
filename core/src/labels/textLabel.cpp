@@ -96,7 +96,7 @@ void TextLabel::pushTransform() {
     for (; it != end; ++it) {
         auto quad = *it;
 
-        auto* quadVertices = style.mesh(it->atlas).pushQuad();
+        auto* quadVertices = style.getMesh(it->atlas).pushQuad();
         for (int i = 0; i < 4; i++) {
             Label::Vertex& v = quadVertices[i];
             v.pos = quad.quad[i].pos;
