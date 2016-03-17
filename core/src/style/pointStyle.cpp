@@ -55,7 +55,7 @@ void PointStyle::constructShaderProgram() {
 
     m_shaderProgram->addSourceBlock("defines", defines);
 
-    m_mesh = std::make_unique<DynamicQuadMesh>(m_vertexLayout, m_drawMode);
+    m_mesh = std::make_unique<DynamicQuadMesh<Label::Vertex>>(m_vertexLayout, m_drawMode);
 }
 
 void PointStyle::onBeginFrame() {

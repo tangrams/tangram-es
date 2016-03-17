@@ -48,7 +48,7 @@ void TextStyle::onBeginUpdate() {
     // in labels::update()
     size_t s = m_context->glyphTextureCount();
     while (m_meshes.size() < s) {
-        m_meshes.push_back(std::make_unique<DynamicQuadMesh>(m_vertexLayout, GL_TRIANGLES));
+        m_meshes.push_back(std::make_unique<DynamicQuadMesh<Label::Vertex>>(m_vertexLayout, GL_TRIANGLES));
     }
 }
 

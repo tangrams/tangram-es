@@ -4,6 +4,7 @@
 #include "labels/label.h"
 #include "labels/labelProperty.h"
 #include "util/hash.h"
+#include "gl/dynamicQuadMesh.h"
 
 #include <memory>
 #include <vector>
@@ -14,7 +15,6 @@ namespace alfons { class Font; }
 namespace Tangram {
 
 class FontContext;
-class DynamicQuadMesh;
 struct Properties;
 
 class TextStyle : public Style {
@@ -60,7 +60,7 @@ protected:
     UniformLocation m_uPass{"u_pass"};
     UniformLocation m_uMaxStrokeWidth{"u_max_stroke_width"};
 
-    mutable std::vector<std::unique_ptr<DynamicQuadMesh>> m_meshes;
+    mutable std::vector<std::unique_ptr<DynamicQuadMesh<Label::Vertex>>> m_meshes;
 
 public:
 
@@ -84,7 +84,7 @@ public:
      */
     void onBeginDrawFrame(const View& _view, Scene& _scene) override;
 
-    DynamicQuadMesh& getMesh(size_t id) const {
+    DynamicQuadMesh<Label::Vertex>& getMesh(size_t id) const {
         if (id >= m_meshes.size()) {
             LOGE("Accesing inconsistent quad mesh");
             assert(false);

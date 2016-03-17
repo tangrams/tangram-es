@@ -5,12 +5,12 @@
 #include "glm/vec3.hpp"
 #include "labels/label.h"
 #include "labels/labelProperty.h"
+#include "gl/dynamicQuadMesh.h"
 
 namespace Tangram {
 
 class Texture;
 class SpriteAtlas;
-class DynamicQuadMesh;
 
 class PointStyle : public Style {
 
@@ -55,7 +55,7 @@ protected:
     UniformLocation m_uTex{"u_tex"};
     UniformLocation m_uOrtho{"u_ortho"};
 
-    mutable std::unique_ptr<DynamicQuadMesh> m_mesh;
+    mutable std::unique_ptr<DynamicQuadMesh<Label::Vertex>> m_mesh;
 };
 
 }
