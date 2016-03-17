@@ -59,8 +59,8 @@ void TextLabel::updateBBoxes(float _zoomFract) {
     m_obb = OBB(m_transform.state.screenPos.x,
                 m_transform.state.screenPos.y,
                 m_transform.state.rotation,
-                m_dim.x + m_options.buffer,
-                m_dim.y + m_options.buffer);
+                m_dim.x - m_options.buffer,
+                m_dim.y - m_options.buffer);
 
     m_aabb = m_obb.getExtent();
 }
