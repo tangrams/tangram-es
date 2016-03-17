@@ -24,8 +24,6 @@ constexpr float alpha_scale = 255.f;
 
 namespace Tangram {
 
-class LabelMesh;
-
 class Label {
 
 public:
