@@ -209,8 +209,6 @@ public:
 
     virtual void onBeginUpdate() {}
 
-    virtual void onEndUpdate() {}
-
     virtual void onBeginFrame() {}
 
     /* Perform any setup needed before drawing each frame

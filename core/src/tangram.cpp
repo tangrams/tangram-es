@@ -214,9 +214,6 @@ void update(float _dt) {
             m_labels->update(*m_view, _dt, m_scene->styles(), tiles, cache);
         }
     }
-    for (const auto& style : m_scene->styles()) {
-        style->onEndUpdate();
-    }
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
         clock_t end = clock();
