@@ -11,6 +11,7 @@
 #include "tile/tile.h"
 #include "tile/tileCache.h"
 #include "labels/labelSet.h"
+#include "labels/textLabel.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -311,10 +312,13 @@ void Labels::update(const View& _view, float _dt,
         if (!label->canOcclude() || label->isOccluded()) {
             continue;
         }
-
         if (label->options().repeatDistance == 0.f) {
             continue;
         }
+        if (!dynamic_cast<TextLabel*>(label)) {
+            continue;
+        }
+
         repeatGroupSet.push_back(label);
     }
 
