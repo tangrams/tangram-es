@@ -27,22 +27,12 @@ private:
 
 
 template<class T>
-class DynamicQuadMesh : public Mesh<T> {
-    // Make base class members visible in template
-    // What's all that 'using'?
-    // http://stackoverflow.com/questions/4643074/why-do-i-have-to
-    // -access-template-base-class-members-through-the-this-pointer
-    using Mesh<T>::m_isUploaded;
-    using Mesh<T>::m_drawMode;
-    using Mesh<T>::m_nVertices;
-    using Mesh<T>::m_glVertexBuffer;
-    using Mesh<T>::m_vertexOffsets;
-    using Mesh<T>::m_vertexLayout;
+class DynamicQuadMesh : public StyledMesh, protected MeshBase {
 
 public:
 
     DynamicQuadMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
-        : Mesh<T>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW) {
+        : MeshBase(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW) {
 
         QuadIndices::ref();
     }
@@ -52,6 +42,10 @@ public:
     }
 
     void draw(ShaderProgram& _shader) override;
+
+    size_t bufferSize() override {
+        return MeshBase::bufferSize();
+    }
 
     void clear() {
         // Clear vertices for next frame
@@ -84,14 +78,14 @@ void DynamicQuadMesh<T>::upload() {
 
     if (m_nVertices == 0 || m_isUploaded) { return; }
 
-    Mesh<T>::checkValidity();
+    MeshBase::checkValidity();
 
     // Generate vertex buffer, if needed
     if (m_glVertexBuffer == 0) {
         glGenBuffers(1, &m_glVertexBuffer);
     }
 
-    Mesh<T>::subDataUpload(reinterpret_cast<GLbyte*>(m_vertices.data()));
+    MeshBase::subDataUpload(reinterpret_cast<GLbyte*>(m_vertices.data()));
 
     m_isUploaded = true;
 }
