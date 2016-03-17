@@ -14,6 +14,7 @@ namespace alfons { class Font; }
 namespace Tangram {
 
 class FontContext;
+class DynamicQuadMesh;
 struct Properties;
 
 class TextStyle : public Style {
@@ -59,7 +60,7 @@ protected:
     UniformLocation m_uPass{"u_pass"};
     UniformLocation m_uMaxStrokeWidth{"u_max_stroke_width"};
 
-    mutable std::vector<std::unique_ptr<LabelMesh>> m_meshes;
+    mutable std::vector<std::unique_ptr<DynamicQuadMesh>> m_meshes;
 
 public:
 
@@ -83,7 +84,7 @@ public:
      */
     void onBeginDrawFrame(const View& _view, Scene& _scene) override;
 
-    LabelMesh& getMesh(size_t id) const { return *m_meshes[id]; }
+    DynamicQuadMesh& getMesh(size_t id) const { return *m_meshes[id]; }
 
     virtual ~TextStyle() override;
 

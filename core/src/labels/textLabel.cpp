@@ -2,6 +2,7 @@
 #include "textLabels.h"
 #include "style/textStyle.h"
 #include "text/fontContext.h"
+#include "gl/dynamicQuadMesh.h"
 
 namespace Tangram {
 

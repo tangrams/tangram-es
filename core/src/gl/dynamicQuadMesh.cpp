@@ -1,5 +1,4 @@
-#include "labels/labelMesh.h"
-#include "labels/label.h"
+#include "gl/dynamicQuadMesh.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 
@@ -13,20 +12,20 @@ static GLuint s_quadIndexBuffer = 0;
 static int s_quadGeneration = -1;
 static std::atomic<int> s_meshCounter(0);
 
-LabelMesh::LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
+DynamicQuadMesh::DynamicQuadMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
     : Mesh<Label::Vertex>(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW) {
 
     s_meshCounter++;
     m_isCompiled = true;
 }
 
-Label::Vertex* LabelMesh::pushQuad() {
+Label::Vertex* DynamicQuadMesh::pushQuad() {
     m_nVertices += 4;
     m_vertices.resize(m_nVertices);
     return &m_vertices[m_nVertices - 4];
 }
 
-LabelMesh::~LabelMesh() {
+DynamicQuadMesh::~DynamicQuadMesh() {
     s_meshCounter--;
 
     if (s_quadIndexBuffer != 0 && (!RenderState::isValidGeneration(s_quadGeneration) ||
@@ -41,7 +40,7 @@ LabelMesh::~LabelMesh() {
     }
 }
 
-void LabelMesh::loadQuadIndices() {
+void DynamicQuadMesh::loadQuadIndices() {
     if (RenderState::isValidGeneration(s_quadGeneration)) {
         return;
     }
@@ -66,7 +65,7 @@ void LabelMesh::loadQuadIndices() {
                  reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW);
 }
 
-void LabelMesh::upload() {
+void DynamicQuadMesh::upload() {
     if (m_nVertices == 0 || m_isUploaded) { return; }
 
     checkValidity();
@@ -93,14 +92,14 @@ void LabelMesh::upload() {
     m_isUploaded = true;
 }
 
-void LabelMesh::clear() {
+void DynamicQuadMesh::clear() {
     // Clear vertices for next frame
     m_nVertices = 0;
     m_vertices.clear();
     m_isUploaded = false;
 }
 
-void LabelMesh::draw(ShaderProgram& _shader) {
+void DynamicQuadMesh::draw(ShaderProgram& _shader) {
 
     if (m_nVertices == 0) { return; }
 

@@ -10,14 +10,13 @@ namespace Tangram {
 
 class ShaderProgram;
 
-
-class LabelMesh : public Mesh<Label::Vertex> {
+class DynamicQuadMesh : public Mesh<Label::Vertex> {
 
 public:
 
-    LabelMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode);
+    DynamicQuadMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode);
 
-    virtual ~LabelMesh() override;
+    virtual ~DynamicQuadMesh() override;
 
     void draw(ShaderProgram& _shader) override;
 

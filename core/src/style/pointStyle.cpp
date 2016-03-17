@@ -4,9 +4,9 @@
 #include "material.h"
 #include "gl/shaderProgram.h"
 #include "gl/texture.h"
+#include "gl/dynamicQuadMesh.h"
 #include "gl/vertexLayout.h"
 #include "gl/renderState.h"
-#include "labels/labelMesh.h"
 #include "labels/spriteLabel.h"
 #include "scene/drawRule.h"
 #include "scene/spriteAtlas.h"
@@ -55,7 +55,7 @@ void PointStyle::constructShaderProgram() {
 
     m_shaderProgram->addSourceBlock("defines", defines);
 
-    m_mesh = std::make_unique<LabelMesh>(m_vertexLayout, m_drawMode);
+    m_mesh = std::make_unique<DynamicQuadMesh>(m_vertexLayout, m_drawMode);
 }
 
 void PointStyle::onBeginFrame() {
@@ -84,8 +84,8 @@ void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
 
 struct PointStyleBuilder : public StyleBuilder {
 
-    struct PointStyleMesh : public LabelMesh, public LabelSet {
-        using LabelMesh::LabelMesh;
+    struct PointStyleMesh : public DynamicQuadMesh, public LabelSet {
+        using DynamicQuadMesh::DynamicQuadMesh;
     };
 
     const PointStyle& m_style;
@@ -97,6 +97,7 @@ struct PointStyleBuilder : public StyleBuilder {
     float m_zoom;
 
     void setup(const Tile& _tile) override {
+
         m_zoom = _tile.getID().z;
         m_spriteLabels = std::make_unique<SpriteLabels>(m_style);
     }

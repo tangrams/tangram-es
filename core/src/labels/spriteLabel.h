@@ -3,7 +3,6 @@
 #include "labels/label.h"
 #include "labels/labelProperty.h"
 #include "labels/labelSet.h"
-#include "labels/labelMesh.h"
 #include "style/pointStyle.h"
 
 namespace Tangram {

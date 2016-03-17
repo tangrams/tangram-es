@@ -4,7 +4,7 @@
 #include "gl/shaderProgram.h"
 #include "gl/mesh.h"
 #include "gl/renderState.h"
-#include "labels/labelMesh.h"
+#include "gl/dynamicQuadMesh.h"
 #include "labels/textLabels.h"
 #include "text/fontContext.h"
 #include "view/view.h"
@@ -48,7 +48,7 @@ void TextStyle::onBeginUpdate() {
     // in labels::update()
     size_t s = m_context->glyphTextureCount();
     while (m_meshes.size() < s) {
-        m_meshes.push_back(std::make_unique<LabelMesh>(m_vertexLayout, GL_TRIANGLES));
+        m_meshes.push_back(std::make_unique<DynamicQuadMesh>(m_vertexLayout, GL_TRIANGLES));
     }
 }
 

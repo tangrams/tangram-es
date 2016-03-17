@@ -10,6 +10,7 @@ namespace Tangram {
 
 class Texture;
 class SpriteAtlas;
+class DynamicQuadMesh;
 
 class PointStyle : public Style {
 
@@ -54,7 +55,7 @@ protected:
     UniformLocation m_uTex{"u_tex"};
     UniformLocation m_uOrtho{"u_ortho"};
 
-    mutable std::unique_ptr<LabelMesh> m_mesh;
+    mutable std::unique_ptr<DynamicQuadMesh> m_mesh;
 };
 
 }

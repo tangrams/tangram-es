@@ -1,7 +1,6 @@
 #pragma once
 
 #include "text/fontContext.h"
-#include "labels/labelMesh.h"
 #include "labels/textLabel.h"
 #include "style/style.h"
 

@@ -8,6 +8,7 @@
 #include "labels/labels.h"
 #include "labels/textLabel.h"
 #include "labels/textLabels.h"
+#include "gl/dynamicQuadMesh.h"
 
 #include "view/view.h"
 #include "tile/tile.h"
@@ -40,8 +41,8 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
     view.setZoom(0);
     view.update(false);
 
-    struct TestLabelMesh : public LabelMesh, public LabelSet {
-        using LabelMesh::LabelMesh;
+    struct TestLabelMesh : public DynamicQuadMesh, public LabelSet {
+        using DynamicQuadMesh::DynamicQuadMesh;
         void addLabel(std::unique_ptr<Label> _label) { m_labels.push_back(std::move(_label)); }
     };
 

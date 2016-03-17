@@ -1,5 +1,5 @@
 #include "labels/spriteLabel.h"
-#include "labels/labelMesh.h"
+#include "gl/dynamicQuadMesh.h"
 #include "platform.h"
 
 namespace Tangram {

@@ -10,7 +10,6 @@
 #include "style/textStyle.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
-#include "labels/labelMesh.h"
 #include "labels/labelSet.h"
 
 #include "glm/glm.hpp"
