@@ -40,12 +40,9 @@ struct SpriteQuad {
     uint32_t color;
 };
 
-class SpriteLabels : public LabelSet, public StyledMesh {
+class SpriteLabels : public LabelSet {
 public:
     SpriteLabels(const PointStyle& _style) : m_style(_style) {}
-
-    void draw(ShaderProgram& _shader) override {}
-    size_t bufferSize() override { return 0; }
 
     void setQuads(std::vector<SpriteQuad>& _quads) {
         quads.insert(quads.end(),

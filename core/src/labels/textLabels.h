@@ -2,23 +2,19 @@
 
 #include "text/fontContext.h"
 #include "labels/textLabel.h"
-#include "style/style.h"
 
 #include <vector>
 #include <bitset>
 
 namespace Tangram {
 
-class TextLabels : public LabelSet, public StyledMesh {
+class TextLabels : public LabelSet {
 
 public:
 
     TextLabels(const TextStyle& _style) : style(_style) {}
 
     ~TextLabels() override;
-
-    void draw(ShaderProgram& _shader) override {}
-    size_t bufferSize() override { return 0; }
 
     void setQuads(std::vector<GlyphQuad>& _quads);
 

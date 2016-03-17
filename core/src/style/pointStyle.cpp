@@ -84,10 +84,6 @@ void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
 
 struct PointStyleBuilder : public StyleBuilder {
 
-    struct PointStyleMesh : public DynamicQuadMesh, public LabelSet {
-        using DynamicQuadMesh::DynamicQuadMesh;
-    };
-
     const PointStyle& m_style;
 
     std::vector<std::unique_ptr<Label>> m_labels;

@@ -41,12 +41,11 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
     view.setZoom(0);
     view.update(false);
 
-    struct TestLabelMesh : public DynamicQuadMesh, public LabelSet {
-        using DynamicQuadMesh::DynamicQuadMesh;
+    struct TestLabelMesh : public LabelSet {
         void addLabel(std::unique_ptr<Label> _label) { m_labels.push_back(std::move(_label)); }
     };
 
-    auto labelMesh = std::unique_ptr<TestLabelMesh>(new TestLabelMesh(nullptr, 0));
+    auto labelMesh = std::unique_ptr<TestLabelMesh>(new TestLabelMesh());
     auto textStyle = std::unique_ptr<TextStyle>(new TextStyle("test", false));
     textStyle->setID(0);
 
