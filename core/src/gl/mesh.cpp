@@ -234,7 +234,7 @@ bool MeshBase::checkValidity() {
     return true;
 }
 
-size_t MeshBase::bufferSize() {
+size_t MeshBase::bufferSize() const {
     return m_nVertices * m_vertexLayout->getStride() + m_nIndices * sizeof(GLushort);
 }
 

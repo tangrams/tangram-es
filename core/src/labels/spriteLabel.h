@@ -45,9 +45,7 @@ public:
     SpriteLabels(const PointStyle& _style) : m_style(_style) {}
 
     void setQuads(std::vector<SpriteQuad>& _quads) {
-        quads.insert(quads.end(),
-                     _quads.begin(),
-                     _quads.end());
+        quads.insert(quads.end(), _quads.begin(), _quads.end());
     }
 
     // TODO: hide within class if needed

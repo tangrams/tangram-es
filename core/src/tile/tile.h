@@ -63,7 +63,7 @@ public:
 
     void resetState();
 
-    /* Get the sum in bytes of all <Mesh>es */
+    /* Get the sum in bytes of static <Mesh>es */
     size_t getMemoryUsage() const;
 
     int64_t sourceGeneration() const { return m_sourceGeneration; }

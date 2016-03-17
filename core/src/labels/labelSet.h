@@ -16,7 +16,8 @@ public:
     virtual ~LabelSet();
 
     void draw(ShaderProgram& _shader) override {}
-    size_t bufferSize() override { return 0; }
+
+    size_t bufferSize() const override { return 0; }
 
     void setLabels(std::vector<std::unique_ptr<Label>>& _labels);
 

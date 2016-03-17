@@ -64,7 +64,7 @@ public:
      */
     void draw(ShaderProgram& _shader);
 
-    size_t bufferSize();
+    size_t bufferSize() const;
 
 protected:
 
@@ -139,7 +139,7 @@ public:
 
     virtual ~Mesh() {}
 
-    size_t bufferSize() override {
+    size_t bufferSize() const override {
         return MeshBase::bufferSize();
     }
 

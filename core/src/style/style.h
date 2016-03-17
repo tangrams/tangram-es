@@ -39,7 +39,7 @@ enum class Blending : int8_t {
 
 struct StyledMesh {
     virtual void draw(ShaderProgram& _shader) = 0;
-    virtual size_t bufferSize() = 0;
+    virtual size_t bufferSize() const = 0;
 
     virtual ~StyledMesh() {}
 
@@ -242,6 +242,8 @@ public:
 
     const std::string& getName() const { return m_name; }
     const uint32_t& getID() const { return m_id; }
+
+    virtual size_t dynamicMeshSize() const { return 0; }
 
     std::vector<StyleUniform>& styleUniforms() { return m_styleUniforms; }
 

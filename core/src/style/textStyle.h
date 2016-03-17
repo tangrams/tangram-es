@@ -74,7 +74,7 @@ public:
     void onBeginUpdate() override;
 
     /* Upload the buffers of the text batches
-     * Upload the textur atlases
+     * Upload the texture atlases
      */
     void onBeginFrame() override;
 
@@ -90,6 +90,22 @@ public:
             assert(false);
         }
         return *m_meshes[id];
+    }
+
+    virtual size_t dynamicMeshSize() const override {
+        size_t size = 0;
+        for (const auto& mesh : m_meshes) {
+            size += mesh->bufferSize();
+        }
+        return size;
+    }
+
+    size_t meshBufferSize() const {
+        size_t size = 0;
+        for (const auto& m : m_meshes) {
+            size += m->bufferSize();
+        }
+        return size;
     }
 
     virtual ~TextStyle() override;

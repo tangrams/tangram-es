@@ -42,6 +42,7 @@ public:
     virtual ~PointStyle();
 
     auto& getMesh() const { return m_mesh; }
+    virtual size_t dynamicMeshSize() const override { return m_mesh->bufferSize(); }
 
 protected:
 

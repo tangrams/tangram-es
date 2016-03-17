@@ -43,7 +43,7 @@ public:
 
     void draw(ShaderProgram& _shader) override;
 
-    size_t bufferSize() override {
+    size_t bufferSize() const override {
         return MeshBase::bufferSize();
     }
 

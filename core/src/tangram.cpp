@@ -291,8 +291,13 @@ void render() {
         avgTimeUpdate /= 60;
 
         size_t memused = 0;
+        size_t dynamicmem = 0;
         for (const auto& tile : m_tileManager->getVisibleTiles()) {
             memused += tile->getMemoryUsage();
+        }
+
+        for (const auto& style: m_scene->styles()) {
+            dynamicmem += style->dynamicMeshSize();
         }
 
         std::vector<std::string> debuginfos;
@@ -301,7 +306,8 @@ void render() {
                 + std::to_string(m_tileManager->getVisibleTiles().size()));
         debuginfos.push_back("tile cache size:"
                 + std::to_string(m_tileManager->getTileCache()->getMemoryUsage() / 1024) + "kb");
-        debuginfos.push_back("tile size:" + std::to_string(memused / 1024) + "kb");
+        debuginfos.push_back("buffer size:" + std::to_string(memused / 1024) + "kb");
+        debuginfos.push_back("dynamic buffer size:" + std::to_string(dynamicmem / 1024) + "kb");
         debuginfos.push_back("avg frame cpu time:" + to_string_with_precision(avgTimeCpu, 2) + "ms");
         debuginfos.push_back("avg frame render time:" + to_string_with_precision(avgTimeRender, 2) + "ms");
         debuginfos.push_back("avg frame update time:" + to_string_with_precision(avgTimeUpdate, 2) + "ms");
