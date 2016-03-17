@@ -58,6 +58,10 @@ void PointStyle::constructShaderProgram() {
     m_mesh = std::make_unique<DynamicQuadMesh<Label::Vertex>>(m_vertexLayout, m_drawMode);
 }
 
+void PointStyle::onBeginUpdate() {
+    m_mesh->clear();
+}
+
 void PointStyle::onBeginFrame() {
     // Upload meshes for next frame
     m_mesh->upload();
@@ -79,7 +83,6 @@ void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
     m_shaderProgram->setUniformMatrix4f(m_uOrtho, _view.getOrthoViewportMatrix());
 
     m_mesh->draw(*m_shaderProgram);
-    m_mesh->clear();
 }
 
 struct PointStyleBuilder : public StyleBuilder {

@@ -44,6 +44,10 @@ void TextStyle::constructShaderProgram() {
 }
 
 void TextStyle::onBeginUpdate() {
+    for (size_t i = 0; i < m_meshes.size(); i++) {
+        m_meshes[i]->clear();
+    }
+
     // Ensure that meshes are available to push to
     // in labels::update()
     size_t s = m_context->glyphTextureCount();
@@ -88,7 +92,6 @@ void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
         if (m_meshes[i]->isReady()) {
             m_context->bindTexture(i, texUnit);
             m_meshes[i]->draw(*m_shaderProgram);
-            m_meshes[i]->clear();
         }
     }
 }

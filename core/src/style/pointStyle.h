@@ -29,6 +29,7 @@ public:
 
     PointStyle(std::string _name, Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
 
+    virtual void onBeginUpdate() override;
     virtual void onBeginDrawFrame(const View& _view, Scene& _scene) override;
     virtual void onBeginFrame() override;
 
