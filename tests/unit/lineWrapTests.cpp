@@ -91,7 +91,7 @@ TEST_CASE() {
     REQUIRE(line.shapes().size() == 9);
 
     wrap = drawWithLineWrapping(line, batch, 0, 1, TextLabelProperty::Align::center, 1.0);
-    REQUIRE(wrap.nbLines == 6);
+    REQUIRE(wrap.nbLines == 7);
 }
 
 }
