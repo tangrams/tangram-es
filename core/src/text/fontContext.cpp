@@ -121,7 +121,7 @@ void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
         if (!_refs[i]) { continue; }
 
         if (--m_atlasRefCount[i] == 0) {
-            LOG("CLEAR ATLAS %d", i);
+            LOGD("CLEAR ATLAS %d", i);
             m_atlas.clear(i);
             m_textures[i].texData.assign(GlyphTexture::size * GlyphTexture::size, 0);
         }
@@ -211,6 +211,8 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
 }
 
 void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::AtlasGlyph& atlasGlyph) {
+    if (atlasGlyph.atlas >= max_textures) { return; }
+
     auto& g = *atlasGlyph.glyph;
     quads->push_back({
             atlasGlyph.atlas,
