@@ -84,7 +84,13 @@ public:
      */
     void onBeginDrawFrame(const View& _view, Scene& _scene) override;
 
-    DynamicQuadMesh& getMesh(size_t id) const { return *m_meshes[id]; }
+    DynamicQuadMesh& getMesh(size_t id) const {
+        if (id >= m_meshes.size()) {
+            LOGE("Accesing inconsistent quad mesh");
+            assert(false);
+        }
+        return *m_meshes[id];
+    }
 
     virtual ~TextStyle() override;
 
