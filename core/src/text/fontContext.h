@@ -21,8 +21,6 @@
 
 namespace Tangram {
 
-namespace alf = alfons;
-
 struct FontMetrics {
     float ascender, descender, lineHeight;
 };
@@ -43,7 +41,7 @@ struct GlyphTexture {
     size_t refCount = 0;
 };
 
-class FontContext : public alf::TextureCallback {
+class FontContext : public alfons::TextureCallback {
 
 public:
 
@@ -55,32 +53,32 @@ public:
      * Called from alfons when a texture atlas needs to be created
      * Triggered from TextStyleBuilder::prepareLabel
      */
-    void addTexture(alf::AtlasID id, uint16_t width, uint16_t height) override;
+    void addTexture(alfons::AtlasID id, uint16_t width, uint16_t height) override;
 
     /* Synchronized on m_mutex, called tile-worker threads
      * Called from alfons when a glyph needs to be added the the atlas identified by id
      * Triggered from TextStyleBuilder::prepareLabel
      */
-    void addGlyph(alf::AtlasID id, uint16_t gx, uint16_t gy, uint16_t gw, uint16_t gh,
+    void addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_t gw, uint16_t gh,
                   const unsigned char* src, uint16_t pad) override;
 
     void releaseAtlas(std::bitset<max_textures> _refs);
 
     void lockAtlas(std::bitset<max_textures> _refs);
 
-    alf::GlyphAtlas& atlas() { return m_atlas; }
+    alfons::GlyphAtlas& atlas() { return m_atlas; }
 
     /* Update all textures batches, uploads the data to the GPU */
     void updateTextures();
 
-    std::shared_ptr<alf::Font> getFont(const std::string& _name, const std::string& _style,
-                                       const std::string& _weight, float _size);
+    std::shared_ptr<alfons::Font> getFont(const std::string& _name, const std::string& _style,
+                                          const std::string& _weight, float _size);
 
     size_t glyphTextureCount() {
         return m_textures.size();
     }
 
-    void bindTexture(alf::AtlasID _id, GLuint _unit);
+    void bindTexture(alfons::AtlasID _id, GLuint _unit);
 
     float maxStrokeWidth() { return m_sdfRadius; }
 
@@ -99,10 +97,10 @@ private:
 
     std::mutex m_mutex;
     std::array<int, max_textures> m_atlasRefCount = {{0}};
-    alf::GlyphAtlas m_atlas;
+    alfons::GlyphAtlas m_atlas;
 
-    alf::FontManager m_alfons;
-    std::array<std::shared_ptr<alf::Font>, 3> m_font;
+    alfons::FontManager m_alfons;
+    std::array<std::shared_ptr<alfons::Font>, 3> m_font;
 
     std::vector<GlyphTexture> m_textures;
 

@@ -34,7 +34,7 @@ FontContext::FontContext() :
 
     int size = BASE_SIZE;
     for (int i = 0; i < 3; i++, size += STEP_SIZE) {
-        m_font[i] = m_alfons.addFont("default", alf::InputSource(fontPath), size);
+        m_font[i] = m_alfons.addFont("default", alfons::InputSource(fontPath), size);
     }
 
     std::string fallback = "";
@@ -53,23 +53,23 @@ FontContext::FontContext() :
 
         int size = BASE_SIZE;
         for (int i = 0; i < 3; i++, size += STEP_SIZE) {
-            m_font[i]->addFace(m_alfons.addFontFace(alf::InputSource(fontPath), size));
+            m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(fontPath), size));
         }
     }
 #else
     int size = BASE_SIZE;
     for (int i = 0; i < 3; i++, size += STEP_SIZE) {
-        m_font[i] = m_alfons.addFont("default", alf::InputSource(DEFAULT), size);
-        m_font[i]->addFace(m_alfons.addFontFace(alf::InputSource(FONT_AR), size));
-        m_font[i]->addFace(m_alfons.addFontFace(alf::InputSource(FONT_HE), size));
-        m_font[i]->addFace(m_alfons.addFontFace(alf::InputSource(FONT_JA), size));
-        m_font[i]->addFace(m_alfons.addFontFace(alf::InputSource(FALLBACK), size));
+        m_font[i] = m_alfons.addFont("default", alfons::InputSource(DEFAULT), size);
+        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_AR), size));
+        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_HE), size));
+        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_JA), size));
+        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FALLBACK), size));
     }
 #endif
 }
 
 // Synchronized on m_mutex on tile-worker threads
-void FontContext::addTexture(alf::AtlasID id, uint16_t width, uint16_t height) {
+void FontContext::addTexture(alfons::AtlasID id, uint16_t width, uint16_t height) {
     if (m_textures.size() == max_textures) {
         LOGE("Way too many glyph textures!");
         return;
@@ -78,7 +78,7 @@ void FontContext::addTexture(alf::AtlasID id, uint16_t width, uint16_t height) {
 }
 
 // Synchronized on m_mutex, called tile-worker threads
-void FontContext::addGlyph(alf::AtlasID id, uint16_t gx, uint16_t gy, uint16_t gw, uint16_t gh,
+void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_t gw, uint16_t gh,
                            const unsigned char* src, uint16_t pad) {
 
     if (id >= max_textures) { return; }
@@ -148,7 +148,7 @@ void FontContext::updateTextures() {
     }
 }
 
-void FontContext::bindTexture(alf::AtlasID _id, GLuint _unit) {
+void FontContext::bindTexture(alfons::AtlasID _id, GLuint _unit) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_textures[_id].texture.bind(_unit);
 
@@ -158,8 +158,6 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
                              std::vector<GlyphQuad>& _quads,  glm::vec2& _size) {
 
     std::lock_guard<std::mutex> lock(m_mutex);
-
-    alfons::LineMetrics metrics;
 
     alfons::LineLayout line = m_shaper.shape(_params.font, _text);
 
@@ -176,6 +174,7 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     m_scratch.quads = &_quads;
 
     size_t quadsStart = _quads.size();
+    alfons::LineMetrics metrics;
 
     if (_params.wordWrap) {
         auto wrap = drawWithLineWrapping(line, m_batch, MIN_LINE_WIDTH,
@@ -190,7 +189,6 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     // TextLabel parameter: Dimension
     float width = metrics.aabb.z - metrics.aabb.x;
     float height = metrics.aabb.w - metrics.aabb.y;
-
 
     // Offset to center all glyphs around 0/0
     glm::vec2 offset((metrics.aabb.x + width * 0.5) * position_scale,
@@ -223,7 +221,7 @@ void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::
 }
 
 auto FontContext::getFont(const std::string& _family, const std::string& _style,
-                          const std::string& _weight, float _size) -> std::shared_ptr<alf::Font> {
+                          const std::string& _weight, float _size) -> std::shared_ptr<alfons::Font> {
 
     int sizeIndex = 0;
 
@@ -268,7 +266,7 @@ auto FontContext::getFont(const std::string& _family, const std::string& _style,
         }
     }
 
-    font->addFace(m_alfons.addFontFace(alf::InputSource(reinterpret_cast<char*>(data), dataSize), fontSize));
+    font->addFace(m_alfons.addFontFace(alfons::InputSource(reinterpret_cast<char*>(data), dataSize), fontSize));
 
     // add fallbacks from default font
     font->addFaces(*m_font[sizeIndex]);
