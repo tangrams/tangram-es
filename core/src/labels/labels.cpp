@@ -62,9 +62,14 @@ void Labels::updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
                     // skip dead labels
                     continue;
                 }
+                if (label->canOcclude()) {
+                    label->setProxy(proxyTile);
+                    m_labels.push_back(label.get());
 
-                label->setProxy(proxyTile);
-                m_labels.push_back(label.get());
+                } else {
+                    m_needUpdate |= label->evalState(screenSize, _dt);
+                    label->pushTransform();
+                }
             }
         }
     }
@@ -227,7 +232,6 @@ void Labels::update(const View& _view, float _dt,
 
     updateLabels(_styles, _tiles, _dt, dz, _view);
 
-
     /// Mark labels to skip transitions
 
     if (int(m_lastZoom) != int(_view.getZoom())) {
@@ -242,11 +246,10 @@ void Labels::update(const View& _view, float _dt,
 
     // Broad phase collision detection
     for (auto* label : m_labels) {
-        if (!label->isOccluded() && label->canOcclude()) {
-            m_aabbs.push_back(label->aabb());
-            m_aabbs.back().m_userData = (void*)label;
-        }
+        m_aabbs.push_back(label->aabb());
+        m_aabbs.back().m_userData = (void*)label;
     }
+
     m_isect2d.intersect(m_aabbs);
 
     // Narrow Phase, resolve conflicts
@@ -309,7 +312,7 @@ void Labels::update(const View& _view, float _dt,
 
     std::vector<Label*> repeatGroupSet;
     for (auto* label : m_labels) {
-        if (!label->canOcclude() || label->isOccluded()) {
+        if (label->isOccluded()) {
             continue;
         }
         if (label->options().repeatDistance == 0.f) {
