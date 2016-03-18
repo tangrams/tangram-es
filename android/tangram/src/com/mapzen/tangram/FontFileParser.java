@@ -49,9 +49,6 @@ class FontFileParser {
                             if (weightStr != null) { familyWeights.add(weightStr); }
                             weightStr = (weightStr == null) ? "400" : weightStr;
 
-                            String styleStr = parser.getAttributeValue(null, "style");
-                            styleStr = (styleStr == null) ? "normal" : styleStr;
-
                             String filename = parser.nextText();
 
                             Integer weight = new Integer(weightStr);
