@@ -28,6 +28,7 @@ FontContext::FontContext() :
     m_atlas(*this, GlyphTexture::size, m_sdfRadius),
     m_batch(m_atlas, m_scratch) {
 
+// TODO: make this platform independent
 #if defined(PLATFORM_ANDROID)
     auto fontPath = systemFontPath("sans-serif", "400", "normal");
     LOG("FONT %s", fontPath.c_str());
