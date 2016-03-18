@@ -10,7 +10,6 @@ namespace Tangram {
 MeshBase::MeshBase() {
     m_drawMode = GL_TRIANGLES;
     m_hint = GL_STATIC_DRAW;
-    m_keepMemoryData = false;
     m_glVertexBuffer = 0;
     m_glIndexBuffer = 0;
     m_nVertices = 0;
@@ -25,11 +24,11 @@ MeshBase::MeshBase() {
     m_generation = -1;
 }
 
-MeshBase::MeshBase(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
-                   GLenum _hint, bool _keepMemoryData) : MeshBase() {
+MeshBase::MeshBase(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, GLenum _hint)
+    : MeshBase()
+{
     m_vertexLayout = _vertexLayout;
     m_hint = _hint;
-    m_keepMemoryData = _keepMemoryData;
 
     setDrawMode(_drawMode);
 }
@@ -51,8 +50,13 @@ MeshBase::~MeshBase() {
         glDeleteBuffers(1, &m_glIndexBuffer);
     }
 
-    delete[] m_glVertexData;
-    delete[] m_glIndexData;
+    if (m_glVertexData) {
+        delete[] m_glVertexData;
+    }
+
+    if (m_glIndexData) {
+        delete[] m_glIndexData;
+    }
 }
 
 void MeshBase::setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout) {
@@ -76,50 +80,39 @@ void MeshBase::setDrawMode(GLenum _drawMode) {
     }
 }
 
-void MeshBase::resetDirty() {
-    m_dirtyOffset = 0;
-    m_dirtySize = 0;
-    m_dirty = false;
-}
+void MeshBase::subDataUpload(GLbyte* _data) {
 
-void MeshBase::subDataUpload() {
-    if (!m_dirty) {
-        return;
-    }
+    if (!m_dirty && _data == nullptr) { return; }
 
     if (m_hint == GL_STATIC_DRAW) {
         LOGW("Wrong usage hint provided to the Vbo");
         assert(false);
     }
 
+    GLbyte* data = _data ? _data : m_glVertexData;
+
     RenderState::vertexBuffer(m_glVertexBuffer);
 
     long vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
+    // invalidate/orphane the data store on the driver
+    glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
+
     if (Hardware::supportsMapBuffer) {
-        // invalidate/orphane the data store on the driver
-        glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
         GLvoid* dataStore = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 
         // write memory client side
-        std::memcpy(dataStore, m_glVertexData, vertexBytes);
+        std::memcpy(dataStore, data, vertexBytes);
 
         glUnmapBuffer(GL_ARRAY_BUFFER);
     } else {
-        // when all vertices are modified, it's better to update the entire mesh
-        if (vertexBytes - m_dirtySize < m_vertexLayout->getStride()) {
-            // invalidate/orphane the data store on the driver
-            glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
-            // if this buffer is still used by gpu on current frame this call will not wait
-            // for the frame to finish using the vbo but "directly" send command to upload the data
-            glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, m_hint);
-        } else {
-            // perform simple sub data upload for part of the buffer
-            glBufferSubData(GL_ARRAY_BUFFER, m_dirtyOffset, m_dirtySize, m_glVertexData + m_dirtyOffset);
-        }
+
+        // if this buffer is still used by gpu on current frame this call will not wait
+        // for the frame to finish using the vbo but "directly" send command to upload the data
+        glBufferData(GL_ARRAY_BUFFER, vertexBytes, data, m_hint);
     }
 
-    resetDirty();
+    m_dirty = false;
 }
 
 void MeshBase::upload() {
@@ -135,11 +128,8 @@ void MeshBase::upload() {
     RenderState::vertexBuffer(m_glVertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, m_hint);
 
-    // Clear vertex data that is not supposed to be updated.
-    if (m_hint == GL_STATIC_DRAW && !m_keepMemoryData) {
-        delete[] m_glVertexData;
-        m_glVertexData = nullptr;
-    }
+    delete[] m_glVertexData;
+    m_glVertexData = nullptr;
 
     if (m_glIndexData) {
 
@@ -152,17 +142,13 @@ void MeshBase::upload() {
 
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_nIndices * sizeof(GLushort), m_glIndexData, m_hint);
 
-        if (!m_keepMemoryData) {
-            delete[] m_glIndexData;
-            m_glIndexData = nullptr;
-        }
+        delete[] m_glIndexData;
+        m_glIndexData = nullptr;
     }
 
     m_generation = RenderState::generation();
 
     m_isUploaded = true;
-
-    resetDirty();
 }
 
 void MeshBase::draw(ShaderProgram& _shader) {
@@ -248,7 +234,7 @@ bool MeshBase::checkValidity() {
     return true;
 }
 
-size_t MeshBase::bufferSize() {
+size_t MeshBase::bufferSize() const {
     return m_nVertices * m_vertexLayout->getStride() + m_nIndices * sizeof(GLushort);
 }
 

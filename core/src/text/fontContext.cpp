@@ -1,238 +1,279 @@
 #include "fontContext.h"
-#define FONTSTASH_IMPLEMENTATION
-#include "fontstash.h"
 
 #include "platform.h"
-#include "gl/hardware.h"
+
+#define SDF_IMPLEMENTATION
+#include "sdf.h"
+
+#define DEFAULT "fonts/NotoSans-Regular.ttf"
+#define FONT_AR "fonts/NotoNaskh-Regular.ttf"
+#define FONT_HE "fonts/NotoSansHebrew-Regular.ttf"
+#define FONT_JA "fonts/DroidSansJapanese.ttf"
+#define FALLBACK "fonts/DroidSansFallback.ttf"
+
+#if defined(PLATFORM_ANDROID)
+#define ANDROID_FONT_PATH "/system/fonts/"
+#endif
+#define BASE_SIZE 16
+#define STEP_SIZE 12
+
+#define SDF_WIDTH 6
+
+#define MIN_LINE_WIDTH 4
 
 namespace Tangram {
 
-#define INVALID_FONT -2
-#define ATLAS_SIZE 512
+FontContext::FontContext() :
+    m_sdfRadius(SDF_WIDTH),
+    m_atlas(*this, GlyphTexture::size, m_sdfRadius),
+    m_batch(m_atlas, m_scratch) {
 
-FontContext::FontContext() : FontContext(ATLAS_SIZE) {}
+// TODO: make this platform independent
+#if defined(PLATFORM_ANDROID)
+    auto fontPath = systemFontPath("sans-serif", "400", "normal");
+    LOG("FONT %s", fontPath.c_str());
 
-FontContext::FontContext(int _atlasSize) {
-    initFontContext(_atlasSize);
-}
-
-FontContext::~FontContext() {
-    fonsDeleteInternal(m_fsContext);
-}
-
-void FontContext::bindAtlas(GLuint _textureUnit) {
-    {
-        std::lock_guard<std::mutex> lock(m_atlasMutex);
-        int width, height;
-        auto* tex = fonsGetTextureData(m_fsContext, &width, &height);
-        m_atlas->update(_textureUnit, reinterpret_cast<const GLuint*>(tex));
-
-        // use size of bound texture for drawing, since
-        // atlas size can change on tile-worker thread
-        m_boundAtlasSize = { m_atlas->getWidth(), m_atlas->getHeight() };
+    int size = BASE_SIZE;
+    for (int i = 0; i < 3; i++, size += STEP_SIZE) {
+        m_font[i] = m_alfons.addFont("default", alfons::InputSource(fontPath), size);
     }
-    m_atlas->bind(_textureUnit);
+
+    std::string fallback = "";
+    int importance = 0;
+
+    while (importance < 100) {
+        fallback = systemFontFallbackPath(importance++, 400);
+        if (fallback.empty()) { break; }
+
+        if (fallback.find("UI-") != std::string::npos) {
+            continue;
+        }
+        fontPath = ANDROID_FONT_PATH;
+        fontPath += fallback;
+        LOG("FALLBACK %s", fontPath.c_str());
+
+        int size = BASE_SIZE;
+        for (int i = 0; i < 3; i++, size += STEP_SIZE) {
+            m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(fontPath), size));
+        }
+    }
+#else
+    int size = BASE_SIZE;
+    for (int i = 0; i < 3; i++, size += STEP_SIZE) {
+        m_font[i] = m_alfons.addFont("default", alfons::InputSource(DEFAULT), size);
+        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_AR), size));
+        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_HE), size));
+        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_JA), size));
+        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FALLBACK), size));
+    }
+#endif
 }
 
-void FontContext::clearState() {
-    fonsClearState(m_fsContext);
+// Synchronized on m_mutex on tile-worker threads
+void FontContext::addTexture(alfons::AtlasID id, uint16_t width, uint16_t height) {
+    if (m_textures.size() == max_textures) {
+        LOGE("Way too many glyph textures!");
+        return;
+    }
+    m_textures.emplace_back();
 }
 
-bool FontContext::lock() {
-    try {
-        m_contextMutex.lock();
-    } catch (std::system_error& e) {
-        LOGW("Dead lock: aborting");
+// Synchronized on m_mutex, called tile-worker threads
+void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_t gw, uint16_t gh,
+                           const unsigned char* src, uint16_t pad) {
+
+    if (id >= max_textures) { return; }
+
+    auto& texData = m_textures[id].texData;
+    auto& texture = m_textures[id].texture;
+    m_textures[id].dirty = true;
+
+    uint16_t stride = GlyphTexture::size;
+    uint16_t width =  GlyphTexture::size;
+
+    unsigned char* dst = &texData[(gx + pad) + (gy + pad) * stride];
+
+    for (size_t y = 0, pos = 0; y < gh; y++, pos += gw) {
+        std::memcpy(dst + y * stride, src + pos, gw);
+    }
+
+    dst = &texData[gx + gy * width];
+    gw += pad * 2;
+    gh += pad * 2;
+
+    static std::vector<unsigned char> tmpSdfBuffer;
+
+    size_t bytes = gw * gh * sizeof(float) * 3;
+    if (tmpSdfBuffer.size() < bytes) {
+        tmpSdfBuffer.resize(bytes);
+    }
+
+    sdfBuildDistanceFieldNoAlloc(dst, width, m_sdfRadius,
+                                 dst, gw, gh, width,
+                                 &tmpSdfBuffer[0]);
+
+    texture.setDirty(gy, gh);
+}
+
+void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
+    if (!_refs.any()) { return; }
+    std::lock_guard<std::mutex> lock(m_mutex);
+    for (size_t i = 0; i < m_textures.size(); i++) {
+        if (!_refs[i]) { continue; }
+
+        if (--m_atlasRefCount[i] == 0) {
+            LOGD("CLEAR ATLAS %d", i);
+            m_atlas.clear(i);
+            m_textures[i].texData.assign(GlyphTexture::size * GlyphTexture::size, 0);
+        }
+    }
+}
+
+void FontContext::lockAtlas(std::bitset<max_textures> _refs) {
+    if (!_refs.any()) { return; }
+    std::lock_guard<std::mutex> lock(m_mutex);
+    for (size_t i = 0; i < m_textures.size(); i++) {
+        if (_refs[i]) { m_atlasRefCount[i]++; }
+    }
+}
+
+void FontContext::updateTextures() {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    for (auto& gt : m_textures) {
+        if (gt.dirty || !gt.texture.isValid()) {
+            gt.dirty = false;
+            auto td = reinterpret_cast<const GLuint*>(gt.texData.data());
+            gt.texture.update(0, td);
+        }
+    }
+}
+
+void FontContext::bindTexture(alfons::AtlasID _id, GLuint _unit) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_textures[_id].texture.bind(_unit);
+
+}
+
+bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& _text,
+                             std::vector<GlyphQuad>& _quads,  glm::vec2& _size) {
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    alfons::LineLayout line = m_shaper.shape(_params.font, _text);
+
+    if (line.shapes().size() == 0) {
+        LOGD("Empty text line");
         return false;
     }
+
+    line.setScale(_params.fontScale);
+
+    // m_batch.drawShapeRange() calls FontContext's TextureCallback for new glyphs
+    // and MeshCallback (drawGlyph) for vertex quads of each glyph in LineLayout.
+
+    m_scratch.quads = &_quads;
+
+    size_t quadsStart = _quads.size();
+    alfons::LineMetrics metrics;
+
+    if (_params.wordWrap) {
+        auto wrap = drawWithLineWrapping(line, m_batch, MIN_LINE_WIDTH,
+                                         _params.maxLineWidth, _params.align,
+                                         _params.lineSpacing);
+        metrics = wrap.metrics;
+    } else {
+        glm::vec2 position(0);
+        m_batch.drawShapeRange(line, 0, line.shapes().size(), position, metrics);
+    }
+
+    // TextLabel parameter: Dimension
+    float width = metrics.aabb.z - metrics.aabb.x;
+    float height = metrics.aabb.w - metrics.aabb.y;
+
+    // Offset to center all glyphs around 0/0
+    glm::vec2 offset((metrics.aabb.x + width * 0.5) * TextVertex::position_scale,
+                     (metrics.aabb.y + height * 0.5) * TextVertex::position_scale);
+
+    auto it = _quads.begin() + quadsStart;
+    while (it != _quads.end()) {
+        it->quad[0].pos -= offset;
+        it->quad[1].pos -= offset;
+        it->quad[2].pos -= offset;
+        it->quad[3].pos -= offset;
+        ++it;
+    }
+
+    _size = glm::vec2(width, height);
+
     return true;
 }
 
-void FontContext::unlock() {
-    m_contextMutex.unlock();
+void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::AtlasGlyph& atlasGlyph) {
+    if (atlasGlyph.atlas >= max_textures) { return; }
+
+    auto& g = *atlasGlyph.glyph;
+    quads->push_back({
+            atlasGlyph.atlas,
+            {{glm::vec2{q.x1, q.y1} * TextVertex::position_scale, {g.u1, g.v1}},
+             {glm::vec2{q.x1, q.y2} * TextVertex::position_scale, {g.u1, g.v2}},
+             {glm::vec2{q.x2, q.y1} * TextVertex::position_scale, {g.u2, g.v1}},
+             {glm::vec2{q.x2, q.y2} * TextVertex::position_scale, {g.u2, g.v2}}}});
 }
 
-FontID FontContext::addFont(const std::string& _family, const std::string& _weight,
-                            const std::string& _style, bool _tryFallback) {
+auto FontContext::getFont(const std::string& _family, const std::string& _style,
+                          const std::string& _weight, float _size) -> std::shared_ptr<alfons::Font> {
+
+    int sizeIndex = 0;
+
+    // Pick the smallest font that does not scale down too much
+    float fontSize = BASE_SIZE;
+    for (int i = 0; i < 3; i++) {
+        sizeIndex = i;
+
+        if (_size <= fontSize) { break; }
+        fontSize += STEP_SIZE;
+    }
+    //LOG(">> %f - %d ==> %f", _size, sizeIndex, _size / ((sizeIndex+1) * BASE_SIZE));
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    static std::string fontName;
+
+    fontName.clear();
+    fontName += _family;
+    fontName += '_';
+    fontName += _weight;
+    fontName += '_';
+    fontName += _style;
+
+    auto font = m_alfons.getFont(fontName, fontSize);
+    if (font->hasFaces()) { return font; }
 
     unsigned int dataSize = 0;
     unsigned char* data = nullptr;
-    int font = FONS_INVALID;
 
-    std::string fontKey = _family + "_" + _weight + "_" + _style;
+    // Assuming bundled ttf file follows this convention
+    auto bundledFontPath = "fonts/" + _family + "-" + _weight + _style + ".ttf";
+    if (!(data = bytesFromFile(bundledFontPath.c_str(), PathType::resource, &dataSize)) &&
+        !(data = bytesFromFile(bundledFontPath.c_str(), PathType::internal, &dataSize))) {
+        const std::string sysFontPath = systemFontPath(_family, _weight, _style);
+        if (!(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize)) ) {
 
-    auto it = m_fonts.find(fontKey);
-    if (it != m_fonts.end()) {
-        if (it->second < 0) {
-            goto fallback;
-        }
-        return it->second;
-    }
-
-    {
-        // Assuming bundled ttf file follows this convention
-        auto bundledFontPath = "fonts/" + _family + "-" + _weight + _style + ".ttf";
-        if (!(data = bytesFromFile(bundledFontPath.c_str(), PathType::resource, &dataSize)) &&
-            !(data = bytesFromFile(bundledFontPath.c_str(), PathType::internal, &dataSize))) {
-            const std::string sysFontPath = systemFontPath(_family, _weight, _style);
-            if ( !(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize)) ) {
-
-                LOGE("Could not load font file %s", fontKey.c_str());
-                m_fonts.emplace(std::move(fontKey), INVALID_FONT);
-                goto fallback;
-            }
+            LOGE("Could not load font file %s", fontName.c_str());
+            // add fallbacks from default font
+            font->addFaces(*m_font[sizeIndex]);
+            return font;
         }
     }
 
-    font = fonsAddFont(m_fsContext, fontKey.c_str(), data, dataSize);
+    font->addFace(m_alfons.addFontFace(alfons::InputSource(reinterpret_cast<char*>(data), dataSize), fontSize));
 
-    if (font == FONS_INVALID) {
-        LOGE("Could not load font %s", fontKey.c_str());
-        m_fonts.emplace(std::move(fontKey), INVALID_FONT);
-        goto fallback;
-    }
-
-    m_fonts.emplace(std::move(fontKey), font);
+    // add fallbacks from default font
+    font->addFaces(*m_font[sizeIndex]);
 
     return font;
-
-fallback:
-    if (_tryFallback && m_fonts.size() > 0) {
-        return 0;
-    }
-    return INVALID_FONT;
 }
 
-FontContext::FontMetrics FontContext::getMetrics() {
-    FontMetrics metrics;
-    fonsVertMetrics(m_fsContext, &metrics.ascender, &metrics.descender, &metrics.lineHeight);
-    return metrics;
-}
-
-FontID FontContext::getFontID(const std::string& _key) {
-    auto it = m_fonts.find(_key);
-
-    if (it != m_fonts.end()) {
-        return it->second;
-    }
-
-    if (m_fonts.size() > 0) {
-        // sceneLoader makes sure that first loaded font is the default bundled font
-        LOGW("Using default font for '%s'.", _key.c_str());
-        m_fonts.emplace(_key, 0);
-        return 0;
-    } else {
-        LOGE("No default font loaded.");
-        return -1;
-    }
-}
-
-std::vector<FONSquad>& FontContext::rasterize(const std::string& _text, FontID _fontID,
-                                              float _fontSize, float _sdf) {
-
-    m_quadBuffer.clear();
-
-    if (fonsTextDrawable(m_fsContext, _text.c_str(), _text.c_str() + _text.length(), 1)) {
-        fonsSetSize(m_fsContext, _fontSize);
-        fonsSetFont(m_fsContext, _fontID);
-
-        if (_sdf > 0){
-            fonsSetBlur(m_fsContext, _sdf);
-            fonsSetBlurType(m_fsContext, FONS_EFFECT_DISTANCE_FIELD);
-        } else {
-            fonsSetBlurType(m_fsContext, FONS_EFFECT_NONE);
-        }
-
-        float advance = fonsDrawText(m_fsContext, 0, 0,
-                _text.c_str(), _text.c_str() + _text.length(),
-                0);
-        if (advance < 0) {
-            m_quadBuffer.clear();
-            return m_quadBuffer;
-        }
-    } else {
-        LOGW("Can't draw text %s", _text.c_str());
-    }
-
-    return m_quadBuffer;
-}
-
-void FontContext::pushQuad(void* _userPtr, const FONSquad* _quad) {
-    FontContext* fontContext = static_cast<FontContext*>(_userPtr);
-    fontContext->m_quadBuffer.emplace_back(*_quad);
-}
-
-int FontContext::renderCreate(void* _userPtr, int _width, int _height) {
-    return 1;
-}
-
-void FontContext::renderUpdate(void* _userPtr, int* _rect, const unsigned char* _data) {
-    FontContext* fontContext = static_cast<FontContext*>(_userPtr);
-
-    // DONT: deadlock here when the lock is held by FONS_ATLAS_FULL
-    if (fontContext->m_handleAtlasFull) { return; }
-
-    uint32_t yoff = _rect[1];
-    uint32_t height = _rect[3] - _rect[1];
-
-    std::lock_guard<std::mutex> lock(fontContext->m_atlasMutex);
-    fontContext->m_atlas->setDirty(yoff, height);
-}
-
-void FontContext::fontstashError(void* _uptr, int _error, int _val) {
-    FontContext* fontContext = static_cast<FontContext*>(_uptr);
-
-    switch(_error) {
-    case FONS_ATLAS_FULL: {
-        // callback during rasterize ()
-        fontContext->m_handleAtlasFull = true;
-        const auto& tex = fontContext->m_atlas;
-        unsigned int nw = tex->getWidth() * 2;
-        unsigned int nh = tex->getHeight() * 2;
-
-        if (nw > Hardware::maxTextureSize || nh > Hardware::maxTextureSize) {
-            LOGE("Full font texture atlas size reached!");
-        } else {
-            std::lock_guard<std::mutex> lock(fontContext->m_atlasMutex);
-
-            if (fonsExpandAtlas(fontContext->m_fsContext, nw, nh, 1)) {
-                tex->resize(nw, nh);
-                LOGW("Texture Atlas resized to %d %d", nw, nh);
-            } else {
-                LOGE("Unexpected error while expanding the font atlas");
-            }
-        }
-        fontContext->m_handleAtlasFull = false;
-        break;
-    }
-    case FONS_SCRATCH_FULL:
-    case FONS_STATES_OVERFLOW:
-    case FONS_STATES_UNDERFLOW:
-    default:
-        LOGE("Unexpected error in Fontstash %d:%d!", _error, _val);
-        break;
-    }
-}
-
-void FontContext::initFontContext(int _atlasSize) {
-    m_atlas = std::unique_ptr<Texture>(new Texture(_atlasSize, _atlasSize));
-
-    FONSparams params;
-    params.width = _atlasSize;
-    params.height = _atlasSize;
-    params.flags = (unsigned char)FONS_ZERO_TOPLEFT;
-
-    params.renderCreate = renderCreate;
-    params.renderResize = nullptr;
-    params.renderUpdate = renderUpdate;
-    params.renderDraw = nullptr;
-    params.renderDelete = nullptr;
-    params.pushQuad = pushQuad;
-    params.userPtr = (void*) this;
-
-    m_fsContext = fonsCreateInternal(&params);
-
-    fonsSetErrorCallback(m_fsContext, &fontstashError, (void*) this);
-}
 
 }

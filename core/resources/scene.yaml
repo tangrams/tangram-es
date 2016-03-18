@@ -353,7 +353,6 @@ layers:
                 transition:
                     [show, hide]:
                         time: 1s
-                offset: [[16, [0, 8px]], [18, [0, 120px]]]
                 font:
                     family: sans-serif
                     weight: 400
@@ -398,7 +397,7 @@ layers:
                         style: normal
                         size: 20.5pt
     places:
-        data: { sources: osm }
+        data: { source: osm }
         filter:
             name: true
             not: { kind: [county, state, island] }

@@ -10,6 +10,8 @@
 #include "style/textStyle.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
+#include "labels/labelSet.h"
+#include "labels/textLabel.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -52,7 +54,7 @@ void Labels::updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
             const auto& mesh = tile->getMesh(*style);
             if (!mesh) { continue; }
 
-            const LabelMesh* labelMesh = dynamic_cast<const LabelMesh*>(mesh.get());
+            auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
             if (!labelMesh) { continue; }
 
             for (auto& label : labelMesh->getLabels()) {
@@ -60,9 +62,14 @@ void Labels::updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
                     // skip dead labels
                     continue;
                 }
+                if (label->canOcclude()) {
+                    label->setProxy(proxyTile);
+                    m_labels.push_back(label.get());
 
-                label->setProxy(proxyTile);
-                m_labels.push_back(label.get());
+                } else {
+                    m_needUpdate |= label->evalState(screenSize, _dt);
+                    label->pushTransform();
+                }
             }
         }
     }
@@ -72,10 +79,10 @@ void Labels::skipTransitions(const std::vector<const Style*>& _styles, Tile& _ti
 
     for (const auto& style : _styles) {
 
-        auto* mesh0 = static_cast<const LabelMesh*>(_tile.getMesh(*style).get());
+        auto* mesh0 = dynamic_cast<const LabelSet*>(_tile.getMesh(*style).get());
         if (!mesh0) { continue; }
 
-        auto* mesh1 = static_cast<const LabelMesh*>(_proxy.getMesh(*style).get());
+        auto* mesh1 = dynamic_cast<const LabelSet*>(_proxy.getMesh(*style).get());
         if (!mesh1) { continue; }
 
         for (auto& l0 : mesh0->getLabels()) {
@@ -155,10 +162,10 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
     }
 }
 
-void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
+void Labels::checkRepeatGroups(std::vector<Label*>& _visibleSet) const {
 
     struct GroupElement {
-        TextLabel* label;
+        Label* label;
 
         bool operator==(const GroupElement& _ge) {
             return _ge.label->center() == label->center();
@@ -167,7 +174,7 @@ void Labels::checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const {
 
     std::map<size_t, std::vector<GroupElement>> repeatGroups;
 
-    for (TextLabel* textLabel : _visibleSet) {
+    for (Label* textLabel : _visibleSet) {
         auto& options = textLabel->options();
         GroupElement element { textLabel };
 
@@ -225,7 +232,6 @@ void Labels::update(const View& _view, float _dt,
 
     updateLabels(_styles, _tiles, _dt, dz, _view);
 
-
     /// Mark labels to skip transitions
 
     if (int(m_lastZoom) != int(_view.getZoom())) {
@@ -240,11 +246,10 @@ void Labels::update(const View& _view, float _dt,
 
     // Broad phase collision detection
     for (auto* label : m_labels) {
-        if (!label->isOccluded() && label->canOcclude()) {
-            m_aabbs.push_back(label->aabb());
-            m_aabbs.back().m_userData = (void*)label;
-        }
+        m_aabbs.push_back(label->aabb());
+        m_aabbs.back().m_userData = (void*)label;
     }
+
     m_isect2d.intersect(m_aabbs);
 
     // Narrow Phase, resolve conflicts
@@ -305,23 +310,24 @@ void Labels::update(const View& _view, float _dt,
 
     /// Apply repeat groups
 
-    std::vector<TextLabel*> repeatGroupSet;
+    std::vector<Label*> repeatGroupSet;
     for (auto* label : m_labels) {
-        if (!label->canOcclude() || label->isOccluded()) {
+        if (label->isOccluded()) {
             continue;
         }
-
         if (label->options().repeatDistance == 0.f) {
             continue;
         }
-        TextLabel* textLabel = dynamic_cast<TextLabel*>(label);
-        if (!textLabel) { continue; }
-        repeatGroupSet.push_back(textLabel);
+        if (!dynamic_cast<TextLabel*>(label)) {
+            continue;
+        }
+
+        repeatGroupSet.push_back(label);
     }
 
     // Ensure the labels are always treated in the same order in the visible set
     std::sort(repeatGroupSet.begin(), repeatGroupSet.end(),
-              [](TextLabel* _a, TextLabel* _b) {
+              [](auto* _a, auto* _b) {
         return glm::length2(_a->transform().modelPosition1) <
                glm::length2(_b->transform().modelPosition1);
     });
@@ -372,7 +378,7 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
             const auto& mesh = tile->getMesh(*style);
             if (!mesh) { continue; }
 
-            const LabelMesh* labelMesh = dynamic_cast<const LabelMesh*>(mesh.get());
+            auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
             if (!labelMesh) { continue; }
 
             for (auto& label : labelMesh->getLabels()) {

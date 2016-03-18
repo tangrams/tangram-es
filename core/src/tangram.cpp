@@ -18,7 +18,6 @@
 #include "tile/tileCache.h"
 #include "view/view.h"
 #include "data/clientGeoJsonSource.h"
-#include "text/fontContext.h"
 #include "gl.h"
 #include "gl/hardware.h"
 #include "util/ease.h"
@@ -114,7 +113,6 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
     }
     if (SceneLoader::loadScene(sceneString, *scene)) {
         m_scene = scene;
-        m_scene->fontContext()->addFont("firasans", "medium", "");
         if (setPositionFromCurrentView && !_setPositionFromScene) {
             m_scene->view()->setPosition(m_view->getPosition());
             m_scene->view()->setZoom(m_view->getZoom());
@@ -170,6 +168,17 @@ void update(float _dt) {
             m_tasks.pop();
         }
     }
+
+    bool animated = false;
+    for (const auto& style : m_scene->styles()) {
+        style->onBeginUpdate();
+
+        animated |= style->isAnimated();
+    }
+    if (animated != isContinuousRendering()) {
+        setContinuousRendering(animated);
+    }
+
     {
         std::lock_guard<std::mutex> lock(m_tilesMutex);
         ViewState viewState {
@@ -195,17 +204,6 @@ void update(float _dt) {
             auto& cache = m_tileManager->getTileCache();
             m_labels->update(*m_view, _dt, m_scene->styles(), tiles, cache);
         }
-
-        bool animated = false;
-        for (const auto& style : m_scene->styles()) {
-            if (style->isAnimated()) {
-                animated = true;
-                break;
-            }
-        }
-        if (animated != isContinuousRendering()) {
-            setContinuousRendering(animated);
-        }
     }
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
@@ -226,6 +224,10 @@ void render() {
     auto& color = m_scene->background();
     RenderState::clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    for (const auto& style : m_scene->styles()) {
+        style->onBeginFrame();
+    }
 
     {
         std::lock_guard<std::mutex> lock(m_tilesMutex);
@@ -280,8 +282,13 @@ void render() {
         avgTimeUpdate /= 60;
 
         size_t memused = 0;
+        size_t dynamicmem = 0;
         for (const auto& tile : m_tileManager->getVisibleTiles()) {
             memused += tile->getMemoryUsage();
+        }
+
+        for (const auto& style: m_scene->styles()) {
+            dynamicmem += style->dynamicMeshSize();
         }
 
         std::vector<std::string> debuginfos;
@@ -290,7 +297,8 @@ void render() {
                 + std::to_string(m_tileManager->getVisibleTiles().size()));
         debuginfos.push_back("tile cache size:"
                 + std::to_string(m_tileManager->getTileCache()->getMemoryUsage() / 1024) + "kb");
-        debuginfos.push_back("tile size:" + std::to_string(memused / 1024) + "kb");
+        debuginfos.push_back("buffer size:" + std::to_string(memused / 1024) + "kb");
+        debuginfos.push_back("dynamic buffer size:" + std::to_string(dynamicmem / 1024) + "kb");
         debuginfos.push_back("avg frame cpu time:" + to_string_with_precision(avgTimeCpu, 2) + "ms");
         debuginfos.push_back("avg frame render time:" + to_string_with_precision(avgTimeRender, 2) + "ms");
         debuginfos.push_back("avg frame update time:" + to_string_with_precision(avgTimeUpdate, 2) + "ms");

@@ -3,8 +3,9 @@
 #include "style.h"
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
-#include "labels/label.h"
-#include "labelProperty.h"
+#include "labels/spriteLabel.h"
+#include "labels/labelProperty.h"
+#include "gl/dynamicQuadMesh.h"
 
 namespace Tangram {
 
@@ -28,7 +29,9 @@ public:
 
     PointStyle(std::string _name, Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
 
+    virtual void onBeginUpdate() override;
     virtual void onBeginDrawFrame(const View& _view, Scene& _scene) override;
+    virtual void onBeginFrame() override;
 
     void setSpriteAtlas(std::shared_ptr<SpriteAtlas> _spriteAtlas) { m_spriteAtlas = _spriteAtlas; }
     void setTexture(std::shared_ptr<Texture> _texture) { m_texture = _texture; }
@@ -37,6 +40,9 @@ public:
     const auto& spriteAtlas() const { return m_spriteAtlas; }
 
     virtual ~PointStyle();
+
+    auto& getMesh() const { return m_mesh; }
+    virtual size_t dynamicMeshSize() const override { return m_mesh->bufferSize(); }
 
 protected:
 
@@ -50,6 +56,8 @@ protected:
 
     UniformLocation m_uTex{"u_tex"};
     UniformLocation m_uOrtho{"u_ortho"};
+
+    mutable std::unique_ptr<DynamicQuadMesh<SpriteVertex>> m_mesh;
 };
 
 }

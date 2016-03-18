@@ -1,36 +1,21 @@
 #include "textStyle.h"
+#include "textStyleBuilder.h"
 
-#include "material.h"
-#include "scene/drawRule.h"
-#include "text/fontContext.h"
-#include "tile/tile.h"
 #include "gl/shaderProgram.h"
-#include "gl/renderState.h"
 #include "gl/mesh.h"
-#include "view/view.h"
-#include "labels/textLabel.h"
+#include "gl/renderState.h"
+#include "gl/dynamicQuadMesh.h"
+#include "labels/textLabels.h"
 #include "text/fontContext.h"
-#include "data/propertyItem.h" // Include wherever Properties is used!
-#include "text/textBuffer.h"
-#include "util/hash.h"
-
-#include "platform.h"
-#include "tangram.h"
-
-#include <sstream>
+#include "view/view.h"
 
 namespace Tangram {
 
-const static std::string key_name("name");
+TextStyle::TextStyle(std::string _name, bool _sdf, Blending _blendMode, GLenum _drawMode) :
+    Style(_name, _blendMode, _drawMode), m_sdf(_sdf),
+    m_context(std::make_shared<FontContext>()) {}
 
-TextStyle::TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext, bool _sdf,
-                     bool _sdfMultisampling, Blending _blendMode, GLenum _drawMode) :
-    Style(_name, _blendMode, _drawMode), m_sdf(_sdf), m_sdfMultisampling(_sdfMultisampling),
-    m_fontContext(_fontContext) {
-}
-
-TextStyle::~TextStyle() {
-}
+TextStyle::~TextStyle() {}
 
 void TextStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
@@ -39,7 +24,8 @@ void TextStyle::constructVertexLayout() {
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_stroke", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_screen_position", 2, GL_SHORT, false, 0},
-        {"a_alpha", 1, GL_SHORT, true, 0},
+        {"a_alpha", 1, GL_UNSIGNED_BYTE, true, 0},
+        {"a_scale", 1, GL_UNSIGNED_BYTE, false, 0},
         {"a_rotation", 1, GL_SHORT, false, 0},
     }));
 }
@@ -54,255 +40,60 @@ void TextStyle::constructShaderProgram() {
 
     std::string defines = "#define TANGRAM_TEXT\n";
 
-    if (m_sdf && m_sdfMultisampling) {
-        defines += "#define TANGRAM_SDF_MULTISAMPLING\n";
-    }
-
     m_shaderProgram->addSourceBlock("defines", defines);
 }
 
+void TextStyle::onBeginUpdate() {
+    for (size_t i = 0; i < m_meshes.size(); i++) {
+        m_meshes[i]->clear();
+    }
+
+    // Ensure that meshes are available to push to
+    // in labels::update()
+    size_t s = m_context->glyphTextureCount();
+    while (m_meshes.size() < s) {
+        m_meshes.push_back(std::make_unique<DynamicQuadMesh<TextVertex>>(m_vertexLayout, GL_TRIANGLES));
+    }
+}
+
+void TextStyle::onBeginFrame() {
+    m_context->updateTextures();
+
+    // Upload meshes
+    for (size_t i = 0; i < m_meshes.size(); i++) {
+        m_meshes[i]->upload();
+    }
+}
+
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
+
     Style::onBeginDrawFrame(_view, _scene);
 
-    m_fontContext->bindAtlas(RenderState::nextAvailableTextureUnit());
-    m_shaderProgram->setUniformi(m_uTex, RenderState::currentTextureUnit());
+    auto texUnit = RenderState::nextAvailableTextureUnit();
 
-    m_shaderProgram->setUniformf(m_uTexScaleFactor,
-                                 1.0f / m_fontContext->getAtlasResolution());
+    m_shaderProgram->setUniformf(m_uMaxStrokeWidth, m_context->maxStrokeWidth());
+    m_shaderProgram->setUniformf(m_uTexScaleFactor, glm::vec2(1.0f / GlyphTexture::size));
+    m_shaderProgram->setUniformi(m_uTex, texUnit);
     m_shaderProgram->setUniformMatrix4f(m_uOrtho, _view.getOrthoViewportMatrix());
-}
 
-struct TextStyleBuilder : public StyleBuilder {
+    if (m_sdf) {
+        m_shaderProgram->setUniformi(m_uPass, 1);
 
-    const TextStyle& m_style;
-
-    float m_tileSize;
-
-    void setup(const Tile& _tile) override {
-        m_builder.setup(m_style.vertexLayout());
-        m_tileSize = _tile.getProjection()->TileSize();
-    }
-
-    bool checkRule(const DrawRule& _rule) const override;
-
-    void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
-    void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
-    void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
-
-    std::unique_ptr<StyledMesh> build() override {
-        return m_builder.build();
-    }
-
-    const Style& style() const override { return m_style; }
-
-    TextStyleBuilder(const TextStyle& _style) : StyleBuilder(_style), m_style(_style) {}
-
-    TextStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
-
-    TextBuffer::Builder m_builder;
-
-    bool prepareLabel(const TextStyle::Parameters& _params, Label::Type _type);
-    void addLabel(const TextStyle::Parameters& _params, Label::Type _type, Label::Transform _transform);
-
-    std::string resolveTextSource(const std::string& textSource, const Properties& props) const;
-};
-
-bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
-    return true;
-}
-
-std::string TextStyleBuilder::resolveTextSource(const std::string& textSource, const Properties& props) const {
-
-    std::string tmp, item;
-
-    // Meaning we have a yaml sequence defining fallbacks
-    if (textSource.find(',') != std::string::npos) {
-        std::stringstream ss(textSource);
-
-        // Parse fallbacks
-        while (std::getline(ss, tmp, ',')) {
-            if (props.getAsString(tmp, item)) {
-                return item;
+        for (size_t i = 0; i < m_meshes.size(); i++) {
+            if (m_meshes[i]->isReady()) {
+                m_context->bindTexture(i, texUnit);
+                m_meshes[i]->draw(*m_shaderProgram);
             }
         }
+        m_shaderProgram->setUniformi(m_uPass, 0);
     }
 
-    // Fallback to default text source
-    if (props.getAsString(textSource, item)) {
-        return item;
-    }
-
-    // Default to 'name'
-    return props.getString(key_name);
-}
-
-auto TextStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _props) const -> TextStyle::Parameters {
-
-    TextStyle::Parameters p;
-
-    const std::string *fontFamily = nullptr, *fontWeight = nullptr, *fontStyle = nullptr;
-    glm::vec2 offset;
-
-    fontFamily = _rule.get<std::string>(StyleParamKey::font_family);
-    fontWeight = _rule.get<std::string>(StyleParamKey::font_weight);
-    fontStyle = _rule.get<std::string>(StyleParamKey::font_style);
-
-    static const std::string defaultWeight = "400";
-    static const std::string defaultStyle = "normal";
-    static const std::string defaultFamily = "";
-
-    fontWeight = (!fontWeight) ? &defaultWeight : fontWeight;
-    fontStyle = (!fontStyle) ? &defaultStyle : fontStyle;
-    fontFamily = (!fontFamily) ? &defaultFamily : fontFamily;
-
-    {
-        auto& fontContext = m_style.fontContext();
-        if (!fontContext.lock()) { return p; }
-
-        p.fontId = fontContext.addFont(*fontFamily, *fontWeight, *fontStyle);
-
-        fontContext.unlock();
-        if (p.fontId < 0) { return p; }
-    }
-
-    _rule.get(StyleParamKey::font_size, p.fontSize);
-    _rule.get(StyleParamKey::font_fill, p.fill);
-    _rule.get(StyleParamKey::offset, p.labelOptions.offset);
-    _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
-    _rule.get(StyleParamKey::font_stroke_width, p.strokeWidth);
-    _rule.get(StyleParamKey::priority, p.labelOptions.priority);
-    _rule.get(StyleParamKey::collide, p.labelOptions.collide);
-    _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
-    _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
-    _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
-    _rule.get(StyleParamKey::text_wrap, p.maxLineWidth);
-
-    _rule.get(StyleParamKey::text_source, p.text);
-
-    if (!_rule.isJSFunction(StyleParamKey::text_source)) {
-        if (p.text.empty()) {
-            p.text = _props.getString(key_name);
-        } else {
-            p.text = resolveTextSource(p.text, _props);
+    for (size_t i = 0; i < m_meshes.size(); i++) {
+        if (m_meshes[i]->isReady()) {
+            m_context->bindTexture(i, texUnit);
+            m_meshes[i]->draw(*m_shaderProgram);
         }
     }
-
-    size_t repeatGroupHash = 0;
-    std::string repeatGroup;
-    if (_rule.get(StyleParamKey::repeat_group, repeatGroup)) {
-        hash_combine(repeatGroupHash, repeatGroup);
-    } else {
-        // Default to hash on all used layer names ('draw.key' in JS version)
-        repeatGroup = _rule.getParamSetHash();
-
-        // for (auto* name : _rule.getLayerNames()) {
-        //     hash_combine(repeatGroupHash, name);
-        //     // repeatGroup += name;
-        //     // repeatGroup += "/";
-        // }
-        //LOG("rg: %s", p.labelOptions.repeatGroup.c_str());
-    }
-
-    StyleParam::Width repeatDistance;
-    if (_rule.get(StyleParamKey::repeat_distance, repeatDistance)) {
-        p.labelOptions.repeatDistance = repeatDistance.value;
-    } else {
-        p.labelOptions.repeatDistance = View::s_pixelsPerTile;
-    }
-
-    hash_combine(repeatGroupHash, p.text);
-    p.labelOptions.repeatGroup = repeatGroupHash;
-
-    p.labelOptions.repeatDistance *= m_style.pixelScale();
-
-    if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
-        p.labelOptions.properties = std::make_shared<Properties>(_props);
-    }
-
-    if (auto* anchor = _rule.get<std::string>(StyleParamKey::anchor)) {
-        LabelProperty::anchor(*anchor, p.anchor);
-    }
-
-    if (auto* transform = _rule.get<std::string>(StyleParamKey::transform)) {
-        TextLabelProperty::transform(*transform, p.transform);
-    }
-
-    if (auto* align = _rule.get<std::string>(StyleParamKey::align)) {
-        bool res = TextLabelProperty::align(*align, p.align);
-        if (!res) {
-            switch(p.anchor) {
-            case LabelProperty::Anchor::top_left:
-            case LabelProperty::Anchor::left:
-            case LabelProperty::Anchor::bottom_left:
-                p.align = TextLabelProperty::Align::right;
-                break;
-            case LabelProperty::Anchor::top_right:
-            case LabelProperty::Anchor::right:
-            case LabelProperty::Anchor::bottom_right:
-                p.align = TextLabelProperty::Align::left;
-                break;
-            case LabelProperty::Anchor::top:
-            case LabelProperty::Anchor::bottom:
-            case LabelProperty::Anchor::center:
-                break;
-            }
-        }
-    }
-
-    /* Global operations done for fontsize and sdfblur */
-    p.fontSize *= m_style.pixelScale();
-    p.labelOptions.offset *= m_style.pixelScale();
-    float emSize = p.fontSize / 16.f;
-    p.blurSpread = m_style.useSDF() ? emSize * 5.0f : 0.0f;
-
-    float boundingBoxBuffer = -p.fontSize / 2.f;
-    p.labelOptions.buffer = boundingBoxBuffer;
-
-    std::hash<TextStyle::Parameters> hash;
-    p.labelOptions.paramHash = hash(p);
-
-    return p;
-}
-
-void TextStyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
-
-    TextStyle::Parameters params = applyRule(_rule, _props);
-
-    if (!params.isValid()) { return; }
-
-    if (!m_builder.prepareLabel(m_style.fontContext(), params)) { return; }
-
-    m_builder.addLabel(params, Label::Type::point, { glm::vec2(_point), glm::vec2(_point) });
-}
-
-void TextStyleBuilder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
-
-    TextStyle::Parameters params = applyRule(_rule, _props);
-
-    if (!params.isValid()) { return; }
-
-    // Not yet supported for line labels
-    params.wordWrap = false;
-
-    if (!m_builder.prepareLabel(m_style.fontContext(), params)) { return; }
-
-    // Check if any line segment is long enough for the label
-    // when the tile is magnified to 2 zoom-levels above (=> 0.25)
-    float pixel = 1.0 / (m_tileSize * m_style.pixelScale());
-    float minLength = m_builder.labelWidth() * pixel * 0.25;
-
-    for (size_t i = 0; i < _line.size() - 1; i++) {
-        glm::vec2 p1 = glm::vec2(_line[i]);
-        glm::vec2 p2 = glm::vec2(_line[i + 1]);
-        if (glm::length(p1-p2) > minLength) {
-            m_builder.addLabel(params, Label::Type::line, { p1, p2 });
-        }
-    }
-}
-
-void TextStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
-    Point p = glm::vec3(centroid(_polygon), 0.0);
-    addPoint(p, _props, _rule);
 }
 
 std::unique_ptr<StyleBuilder> TextStyle::createBuilder() const {

@@ -4,7 +4,7 @@
 #include "style/style.h"
 #include "view/view.h"
 #include "tile/tileID.h"
-#include "labels/labelMesh.h"
+#include "labels/labelSet.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 
@@ -63,9 +63,9 @@ void Tile::update(float _dt, const View& _view) {
 void Tile::resetState() {
     for (auto& entry : m_geometry) {
         if (!entry) { continue; }
-        auto labelMesh = dynamic_cast<LabelMesh*>(entry.get());
-        if (!labelMesh) { continue; }
-        labelMesh->reset();
+        auto labelSet = dynamic_cast<LabelSet*>(entry.get());
+        if (!labelSet) { continue; }
+        labelSet->reset();
     }
 }
 

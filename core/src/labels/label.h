@@ -14,17 +14,8 @@
 #include <limits>
 #include <memory>
 
-namespace {
-// Conversion factors for Label::Vertex attributes
-constexpr float position_scale = 4.0f;
-constexpr float extrusion_scale = 256.0f;
-constexpr float rotation_scale = 4096.0f;
-constexpr float alpha_scale = 32767.f;
-}
 
 namespace Tangram {
-
-class LabelMesh;
 
 class Label {
 
@@ -50,38 +41,6 @@ public:
         dead            = 1 << 7,
     };
 
-    struct Vertex {
-        // Constructor for TextStyle vertices
-        Vertex(glm::vec2 pos, glm::vec2 uv, uint32_t color, uint32_t stroke)
-            : pos(glm::round(pos * position_scale)), uv(uv),
-              color(color), stroke(stroke) {}
-
-        // Constructor for PointStyle vertices
-        Vertex(glm::vec2 pos, glm::vec2 uv, glm::vec2 extrude, uint32_t color)
-            : pos(glm::round(pos * position_scale)), uv(uv),
-              color(color),
-              extrude(extrude * extrusion_scale) {}
-
-        glm::i16vec2 pos;
-        glm::u16vec2 uv;
-        uint32_t color;
-        union {
-            glm::i16vec2 extrude;
-            uint32_t stroke;
-        };
-        struct State {
-            State() {}
-            State(glm::vec2 pos, float alpha, float rotation)
-                : screenPos(pos * position_scale),
-                  alpha(alpha * alpha_scale),
-                  rotation(rotation * rotation_scale) {}
-
-            glm::i16vec2 screenPos;
-            short alpha = 0;
-            short rotation = 0;
-        } state;
-    };
-
     struct Transform {
         Transform(glm::vec2 _pos) : modelPosition1(_pos), modelPosition2(_pos) {}
         Transform(glm::vec2 _pos1, glm::vec2 _pos2) : modelPosition1(_pos1), modelPosition2(_pos2) {}
@@ -93,7 +52,6 @@ public:
             glm::vec2 screenPos;
             float alpha = 0.f;
             float rotation = 0.f;
-            Vertex::State vertex() { return Vertex::State(screenPos, alpha, rotation); }
         } state;
     };
 
@@ -119,15 +77,14 @@ public:
         size_t paramHash = 0;
     };
 
-    Label(Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh, Range _vertexRange,
-            Options _options);
+    Label(Transform _transform, glm::vec2 _size, Type _type, Options _options);
 
     virtual ~Label();
 
     bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract);
 
     /* Push the pending transforms to the vbo by updating the vertices */
-    void pushTransform();
+    virtual void pushTransform() = 0;
 
     bool evalState(const glm::vec2& _screenSize, float _dt);
 
@@ -185,8 +142,6 @@ private:
     // whether the label was occluded on the previous frame
     bool m_occludedLastFrame;
     bool m_occluded;
-    // whether or not we need to update the mesh visibilit (alpha channel)
-    bool m_updateMeshVisibility;
 
 protected:
 
@@ -205,15 +160,15 @@ protected:
     Transform m_transform;
     // the dimension of the label
     glm::vec2 m_dim;
-    // Back-pointer to owning container
-    LabelMesh& m_mesh;
-    // first vertex and count in m_mesh vertices
-    Range m_vertexRange;
     // label options
     Options m_options;
 
     glm::vec2 m_xAxis;
     glm::vec2 m_yAxis;
+
+    // whether or not we need to update the mesh visibilit (alpha channel)
+    bool m_updateMeshVisibility;
+
 };
 
 }

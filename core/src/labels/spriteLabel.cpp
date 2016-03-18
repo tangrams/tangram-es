@@ -1,14 +1,25 @@
 #include "labels/spriteLabel.h"
+#include "gl/dynamicQuadMesh.h"
+#include "style/pointStyle.h"
 #include "platform.h"
 
 namespace Tangram {
 
 using namespace LabelProperty;
 
-SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, LabelMesh& _mesh, int _vertexOffset,
-        Label::Options _options, float _extrudeScale, LabelProperty::Anchor _anchor) :
-    Label(_transform, _size, Label::Type::point, _mesh, {_vertexOffset, 4}, _options),
-    m_extrudeScale(_extrudeScale)
+const float SpriteVertex::position_scale = 4.0f;
+const float SpriteVertex::rotation_scale = 4096.0f;
+const float SpriteVertex::alpha_scale = 255.f;
+const float SpriteVertex::texture_scale = 65535.f;
+const float SpriteVertex::extrusion_scale = 256.0f;
+
+SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Options _options,
+                         float _extrudeScale, LabelProperty::Anchor _anchor,
+                         SpriteLabels& _labels, size_t _labelsPos)
+    : Label(_transform, _size, Label::Type::point, _options),
+      m_labels(_labels),
+      m_labelsPos(_labelsPos),
+      m_extrudeScale(_extrudeScale)
 {
     switch(_anchor) {
         case Anchor::left: m_anchor = glm::vec2(1.0, 0.5); break;
@@ -44,6 +55,32 @@ void SpriteLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const
             break;
     }
 
+}
+
+void SpriteLabel::pushTransform() {
+
+    if (!visibleState()) { return; }
+
+    SpriteVertex::State state {
+        glm::i16vec2(m_transform.state.screenPos * SpriteVertex::position_scale),
+        uint8_t(m_transform.state.alpha * SpriteVertex::alpha_scale),
+        0,
+        int16_t(m_transform.state.rotation * SpriteVertex::rotation_scale)
+    };
+
+    auto& style = m_labels.m_style;
+    auto& quad = m_labels.quads[m_labelsPos];
+
+    auto* quadVertices = style.getMesh()->pushQuad();
+
+    for (int i = 0; i < 4; i++) {
+        SpriteVertex& v = quadVertices[i];
+        v.pos = quad.quad[i].pos;
+        v.uv = quad.quad[i].uv;
+        v.extrude = quad.quad[i].extrude;
+        v.color = quad.color;
+        v.state = state;
+    }
 }
 
 }

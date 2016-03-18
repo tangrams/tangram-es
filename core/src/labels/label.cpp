@@ -1,19 +1,16 @@
 #include "label.h"
 
 #include "util/geom.h"
-#include "labels/labelMesh.h"
 #include "glm/gtx/rotate_vector.hpp"
 
 namespace Tangram {
 
-Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, LabelMesh& _mesh,
-             Range _vertexRange, Options _options) :
-    m_type(_type),
-    m_transform(_transform),
-    m_dim(_size),
-    m_mesh(_mesh),
-    m_vertexRange(_vertexRange),
-    m_options(_options) {
+Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _options)
+    : m_type(_type),
+      m_transform(_transform),
+      m_dim(_size),
+      m_options(_options) {
+
     if (!m_options.collide || m_type == Type::debug){
         enterState(State::visible, 1.0);
     } else {
@@ -188,31 +185,6 @@ void Label::setAlpha(float _alpha) {
 
     if (alpha == 0.f) {
         m_updateMeshVisibility = true;
-    }
-}
-
-void Label::pushTransform() {
-
-    // update the buffer on valid states
-    if (m_dirty) {
-        const static size_t attribOffset = offsetof(Label::Vertex, state);
-        const static size_t alphaOffset = offsetof(Label::Vertex::State, alpha) + attribOffset;
-
-        if (visibleState()) {
-            // update the complete state on the mesh
-            m_mesh.updateAttribute(m_vertexRange, m_transform.state.vertex(), attribOffset);
-        } else {
-
-            // for any non-visible states, we don't need to overhead the gpu
-            // with updates on the alpha attribute, but simply do it once until
-            // the label goes back in a visible state
-            if (m_updateMeshVisibility) {
-                m_mesh.updateAttribute(m_vertexRange, (m_transform.state.vertex().alpha), alphaOffset);
-                m_updateMeshVisibility = false;
-            }
-        }
-
-        m_dirty = false;
     }
 }
 

@@ -28,7 +28,7 @@ public:
      * _vertexLayout to be drawn using the OpenGL primitive type _drawMode
      */
     MeshBase(std::shared_ptr<VertexLayout> _vertexlayout, GLenum _drawMode = GL_TRIANGLES,
-             GLenum _hint = GL_STATIC_DRAW, bool _keepMemoryData = false);
+             GLenum _hint = GL_STATIC_DRAW);
 
     MeshBase();
 
@@ -51,13 +51,12 @@ public:
      * Copies all added vertices and indices into OpenGL buffer objects; After
      * geometry is uploaded, no more vertices or indices can be added
      */
-    void upload();
+    virtual void upload();
 
     /*
      * Sub data upload of the mesh, returns true if this results in a buffer binding
      */
-    void subDataUpload();
-    void resetDirty();
+    void subDataUpload(GLbyte* _data = nullptr);
 
     /*
      * Renders the geometry in this mesh using the ShaderProgram _shader; if
@@ -65,7 +64,7 @@ public:
      */
     void draw(ShaderProgram& _shader);
 
-    size_t bufferSize();
+    size_t bufferSize() const;
 
 protected:
 
@@ -135,16 +134,16 @@ class Mesh : public StyledMesh, protected MeshBase {
 public:
 
     Mesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode,
-         GLenum _hint = GL_STATIC_DRAW, bool _keepMemoryData = false)
-        : MeshBase(_vertexLayout, _drawMode, _hint, _keepMemoryData) {};
+         GLenum _hint = GL_STATIC_DRAW)
+        : MeshBase(_vertexLayout, _drawMode, _hint) {};
 
     virtual ~Mesh() {}
 
-    virtual size_t bufferSize() {
+    size_t bufferSize() const override {
         return MeshBase::bufferSize();
     }
 
-    virtual void draw(ShaderProgram& _shader) {
+    void draw(ShaderProgram& _shader) override {
         MeshBase::draw(_shader);
     }
 

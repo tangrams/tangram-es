@@ -18,7 +18,8 @@ uniform float u_meters_per_pixel;
 uniform float u_device_pixel_ratio;
 #ifdef TANGRAM_TEXT
 uniform vec2 u_uv_scale_factor;
-uniform int u_pass;
+uniform float u_max_stroke_width;
+uniform LOWP int u_pass;
 #endif
 
 #pragma tangram: uniforms
@@ -31,6 +32,7 @@ attribute LOWP float a_rotation;
 attribute LOWP vec4 a_color;
 #ifdef TANGRAM_TEXT
 attribute LOWP vec4 a_stroke;
+attribute float a_scale;
 #else
 attribute vec3 a_extrude;
 #endif
@@ -39,60 +41,71 @@ varying vec4 v_color;
 varying vec2 v_texcoords;
 #ifdef TANGRAM_TEXT
 varying float v_sdf_threshold;
+varying float v_sdf_scale;
 #endif
 varying float v_alpha;
-const vec4 clipped = vec4(2.0, 0.0, 2.0, 1.0);
 
 #pragma tangram: global
 
 #define UNPACK_POSITION(x) (x / 4.0) // 4 subpixel precision
 #define UNPACK_EXTRUDE(x) (x / 256.0)
 #define UNPACK_ROTATION(x) (x / 4096.0)
+#define UNPACK_TEXTURE(x) (x * u_uv_scale_factor)
 
 void main() {
 
-    if (a_alpha > TANGRAM_EPSILON) {
+    v_alpha = a_alpha;
+    v_color = a_color;
 
-        v_alpha = a_alpha;
-        v_color = a_color;
+    vec2 vertex_pos = UNPACK_POSITION(a_position);
 
-        vec2 vertex_pos = UNPACK_POSITION(a_position);
+#ifdef TANGRAM_TEXT
+    v_texcoords = UNPACK_TEXTURE(a_uv);
+    v_sdf_scale = a_scale / 64.0;
 
-        #ifdef TANGRAM_TEXT
-        v_texcoords = a_uv * u_uv_scale_factor;
-        if (u_pass == 0) {
-            // fill
-            v_sdf_threshold = 0.5;
-        } else {
-            // stroke
-            float stroke_width = a_stroke.a;
-            v_sdf_threshold = 0.5 - stroke_width * u_device_pixel_ratio;
-            v_color.rgb = a_stroke.rgb;
-        }
-        #else
-        v_texcoords = a_uv;
-        if (a_extrude.x != 0.0) {
-            float dz = u_map_position.z - abs(u_tile_origin.z);
-            vertex_pos.xy += clamp(dz, 0.0, 1.0) * UNPACK_EXTRUDE(a_extrude.xy);
-        }
-        #endif
+    if (u_pass == 0) {
+        // fill
+        v_sdf_threshold = 0.5;
+        //v_alpha = 0.0;
+    } else if (a_stroke.a > 0.0) {
+        // stroke
+        // (0.5 / 3.0) <= sdf change by pixel distance to outline == 0.083
+        float sdf_pixel = 0.5/u_max_stroke_width;
 
-        // rotates first around +z-axis (0,0,1) and then translates by (tx,ty,0)
-        float st = sin(UNPACK_ROTATION(a_rotation));
-        float ct = cos(UNPACK_ROTATION(a_rotation));
-        vec2 screen_pos = UNPACK_POSITION(a_screen_position);
-        vec4 position = vec4(
-            vertex_pos.x * ct - vertex_pos.y * st + screen_pos.x,
-            vertex_pos.x * st + vertex_pos.y * ct + screen_pos.y,
-            0.0, 1.0
-        );
+        // de-normalize [0..1] -> [0..max_stroke_width]
+        float stroke_width = a_stroke.a * u_max_stroke_width;
 
-        #pragma tangram: position
+        // scale to sdf pixel
+        stroke_width *= sdf_pixel;
 
-        gl_Position = u_ortho * position;
+        // scale sdf (texture is scaled depeding on font size)
+        stroke_width /= v_sdf_scale;
 
+        v_sdf_threshold = max(0.5 - stroke_width, 0.0);
+
+        v_color.rgb = a_stroke.rgb;
     } else {
-        gl_Position = clipped;
+        v_alpha = 0.0;
     }
+#else
+    v_texcoords = a_uv;
+    if (a_extrude.x != 0.0) {
+        float dz = u_map_position.z - abs(u_tile_origin.z);
+        vertex_pos.xy += clamp(dz, 0.0, 1.0) * UNPACK_EXTRUDE(a_extrude.xy);
+    }
+#endif
 
+    // rotates first around +z-axis (0,0,1) and then translates by (tx,ty,0)
+    float st = sin(UNPACK_ROTATION(a_rotation));
+    float ct = cos(UNPACK_ROTATION(a_rotation));
+    vec2 screen_pos = UNPACK_POSITION(a_screen_position);
+    vec4 position = vec4(
+        vertex_pos.x * ct - vertex_pos.y * st + screen_pos.x,
+        vertex_pos.x * st + vertex_pos.y * ct + screen_pos.y,
+        0.0, 1.0
+    );
+
+    #pragma tangram: position
+
+    gl_Position = u_ortho * position;
 }
