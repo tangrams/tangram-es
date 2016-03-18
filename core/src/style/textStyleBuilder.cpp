@@ -47,8 +47,13 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
     TextStyle::Parameters params = applyRule(_rule, _feat.props);
 
-    auto labelType = _feat.geometryType == GeometryType::lines
-        ? Label::Type::line : Label::Type::point;
+    Label::Type labelType;
+    if (_feat.geometryType == GeometryType::lines) {
+        labelType = Label::Type::line;
+        params.wordWrap = false;
+    } else {
+        labelType = Label::Type::point;
+    }
 
     // Keep start position of new quads
     size_t quadsStart = m_quads.size();
@@ -69,7 +74,6 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
         }
 
     } else if (_feat.geometryType == GeometryType::lines) {
-        params.wordWrap = false;
 
         float pixel = 2.0 / (m_tileSize * m_style.pixelScale());
         float minLength = m_attributes.width * pixel * 0.2;
