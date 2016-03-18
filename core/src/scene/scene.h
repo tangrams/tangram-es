@@ -65,6 +65,13 @@ public:
     glm::dvec2 startPosition = { 0, 0 };
     float startZoom = 0;
 
+    enum animate {
+        yes, no, none
+    };
+
+    void animated(bool animated) { m_animated = animated ? yes : no; }
+    animate animated() const { return m_animated; }
+
 private:
 
     std::unique_ptr<MapProjection> m_mapProjection;
@@ -88,6 +95,8 @@ private:
     Color m_background;
 
     std::shared_ptr<FontContext> m_fontContext;
+
+    animate m_animated = none;
 };
 
 }

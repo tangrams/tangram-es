@@ -169,12 +169,14 @@ void update(float _dt) {
         }
     }
 
-    bool animated = false;
+    bool animated = m_scene->animated() == Scene::animate::yes;
     for (const auto& style : m_scene->styles()) {
         style->onBeginUpdate();
-
-        animated |= style->isAnimated();
+        if (m_scene->animated() == Scene::animate::none) {
+            animated |= style->isAnimated();
+        }
     }
+
     if (animated != isContinuousRendering()) {
         setContinuousRendering(animated);
     }

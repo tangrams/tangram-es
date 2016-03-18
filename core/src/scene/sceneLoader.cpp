@@ -156,6 +156,11 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
 
     loadBackground(config["scene"]["background"], _scene);
 
+    Node animated = config["scene"]["animated"];
+    if (animated) {
+        _scene.animated(animated.as<bool>());
+    }
+
     for (auto& style : _scene.styles()) {
         style->build(_scene.lights());
     }
