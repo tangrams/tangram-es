@@ -8,6 +8,10 @@ namespace Tangram {
 
 using namespace LabelProperty;
 
+const float TextVertex::position_scale = 4.0f;
+const float TextVertex::rotation_scale = 4096.0f;
+const float TextVertex::alpha_scale = 255.f;
+
 TextLabel::TextLabel(Label::Transform _transform, Type _type, Label::Options _options,
                      LabelProperty::Anchor _anchor, TextLabel::FontVertexAttributes _attrib,
                      glm::vec2 _dim,  TextLabels& _labels, Range _vertexRange)
@@ -83,11 +87,11 @@ void TextLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const g
 void TextLabel::pushTransform() {
     if (!visibleState()) { return; }
 
-    Label::Vertex::State state {
-        glm::i16vec2(m_transform.state.screenPos * position_scale),
-        uint8_t(m_transform.state.alpha * alpha_scale),
+    TextVertex::State state {
+        glm::i16vec2(m_transform.state.screenPos * TextVertex::position_scale),
+        uint8_t(m_transform.state.alpha * TextVertex::alpha_scale),
         uint8_t(m_fontAttrib.fontScale),
-        int16_t(m_transform.state.rotation * rotation_scale)
+        int16_t(m_transform.state.rotation * TextVertex::rotation_scale)
     };
 
     auto it = m_textLabels.quads.begin() + m_vertexRange.start;
@@ -99,7 +103,7 @@ void TextLabel::pushTransform() {
 
         auto* quadVertices = style.getMesh(it->atlas).pushQuad();
         for (int i = 0; i < 4; i++) {
-            Label::Vertex& v = quadVertices[i];
+            TextVertex& v = quadVertices[i];
             v.pos = quad.quad[i].pos;
             v.uv = quad.quad[i].uv;
             v.color = m_fontAttrib.fill;

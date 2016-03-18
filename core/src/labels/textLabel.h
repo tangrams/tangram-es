@@ -13,11 +13,27 @@ class TextStyle;
 
 struct GlyphQuad {
     size_t atlas;
-
     struct {
         glm::i16vec2 pos;
         glm::u16vec2 uv;
     } quad[4];
+};
+
+struct TextVertex {
+    glm::i16vec2 pos;
+    glm::u16vec2 uv;
+    uint32_t color;
+    uint32_t stroke;
+    struct State {
+        glm::i16vec2 screenPos;
+        uint8_t alpha;
+        uint8_t scale;
+        int16_t rotation;
+    } state;
+
+    const static float position_scale;
+    const static float rotation_scale;
+    const static float alpha_scale;
 };
 
 class TextLabel : public Label {

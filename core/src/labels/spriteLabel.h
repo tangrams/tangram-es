@@ -3,11 +3,30 @@
 #include "labels/label.h"
 #include "labels/labelProperty.h"
 #include "labels/labelSet.h"
-#include "style/pointStyle.h"
 
 namespace Tangram {
 
 class SpriteLabels;
+class PointStyle;
+
+struct SpriteVertex {
+    glm::i16vec2 pos;
+    glm::u16vec2 uv;
+    uint32_t color;
+    glm::i16vec2 extrude;
+    struct State {
+        glm::i16vec2 screenPos;
+        uint8_t alpha;
+        uint8_t scale;
+        int16_t rotation;
+    } state;
+
+    static const float position_scale;
+    static const float rotation_scale;
+    static const float alpha_scale;
+    static const float texture_scale;
+    static const float extrusion_scale;
+};
 
 class SpriteLabel : public Label {
 public:

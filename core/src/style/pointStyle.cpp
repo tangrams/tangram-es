@@ -17,8 +17,6 @@
 #include "data/propertyItem.h" // Include wherever Properties is used!
 #include "scene/stops.h"
 
-constexpr float texture_scale = 65535.f;
-
 namespace Tangram {
 
 PointStyle::PointStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
@@ -55,7 +53,7 @@ void PointStyle::constructShaderProgram() {
 
     m_shaderProgram->addSourceBlock("defines", defines);
 
-    m_mesh = std::make_unique<DynamicQuadMesh<Label::Vertex>>(m_vertexLayout, m_drawMode);
+    m_mesh = std::make_unique<DynamicQuadMesh<SpriteVertex>>(m_vertexLayout, m_drawMode);
 }
 
 void PointStyle::onBeginUpdate() {
@@ -199,13 +197,13 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
                                                      *m_spriteLabels,
                                                      m_quads.size()));
 
-    glm::i16vec2 size = _params.size * position_scale;
+    glm::i16vec2 size = _params.size * SpriteVertex::position_scale;
 
     // Attribute will be normalized - scale to max short;
-    glm::vec2 uvTR = glm::vec2{_quad.z, _quad.w} * texture_scale;
-    glm::vec2 uvBL = glm::vec2{_quad.x, _quad.y} * texture_scale;
+    glm::vec2 uvTR = glm::vec2{_quad.z, _quad.w} * SpriteVertex::texture_scale;
+    glm::vec2 uvBL = glm::vec2{_quad.x, _quad.y} * SpriteVertex::texture_scale;
 
-    int16_t extrude = _params.extrudeScale * extrusion_scale;
+    int16_t extrude = _params.extrudeScale * SpriteVertex::extrusion_scale;
 
     m_quads.push_back({
             {{{0, 0},

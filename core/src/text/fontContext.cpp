@@ -191,8 +191,8 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     float height = metrics.aabb.w - metrics.aabb.y;
 
     // Offset to center all glyphs around 0/0
-    glm::vec2 offset((metrics.aabb.x + width * 0.5) * position_scale,
-                     (metrics.aabb.y + height * 0.5) * position_scale);
+    glm::vec2 offset((metrics.aabb.x + width * 0.5) * TextVertex::position_scale,
+                     (metrics.aabb.y + height * 0.5) * TextVertex::position_scale);
 
     auto it = _quads.begin() + quadsStart;
     while (it != _quads.end()) {
@@ -214,10 +214,10 @@ void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::
     auto& g = *atlasGlyph.glyph;
     quads->push_back({
             atlasGlyph.atlas,
-            {{glm::vec2{q.x1, q.y1} * position_scale, {g.u1, g.v1}},
-             {glm::vec2{q.x1, q.y2} * position_scale, {g.u1, g.v2}},
-             {glm::vec2{q.x2, q.y1} * position_scale, {g.u2, g.v1}},
-             {glm::vec2{q.x2, q.y2} * position_scale, {g.u2, g.v2}}}});
+            {{glm::vec2{q.x1, q.y1} * TextVertex::position_scale, {g.u1, g.v1}},
+             {glm::vec2{q.x1, q.y2} * TextVertex::position_scale, {g.u1, g.v2}},
+             {glm::vec2{q.x2, q.y1} * TextVertex::position_scale, {g.u2, g.v1}},
+             {glm::vec2{q.x2, q.y2} * TextVertex::position_scale, {g.u2, g.v2}}}});
 }
 
 auto FontContext::getFont(const std::string& _family, const std::string& _style,

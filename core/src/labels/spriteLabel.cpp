@@ -1,10 +1,17 @@
 #include "labels/spriteLabel.h"
 #include "gl/dynamicQuadMesh.h"
+#include "style/pointStyle.h"
 #include "platform.h"
 
 namespace Tangram {
 
 using namespace LabelProperty;
+
+const float SpriteVertex::position_scale = 4.0f;
+const float SpriteVertex::rotation_scale = 4096.0f;
+const float SpriteVertex::alpha_scale = 255.f;
+const float SpriteVertex::texture_scale = 65535.f;
+const float SpriteVertex::extrusion_scale = 256.0f;
 
 SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Options _options,
                          float _extrudeScale, LabelProperty::Anchor _anchor,
@@ -54,11 +61,11 @@ void SpriteLabel::pushTransform() {
 
     if (!visibleState()) { return; }
 
-    Label::Vertex::State state {
-        glm::i16vec2(m_transform.state.screenPos * position_scale),
-        uint8_t(m_transform.state.alpha * alpha_scale),
+    SpriteVertex::State state {
+        glm::i16vec2(m_transform.state.screenPos * SpriteVertex::position_scale),
+        uint8_t(m_transform.state.alpha * SpriteVertex::alpha_scale),
         0,
-        int16_t(m_transform.state.rotation * rotation_scale)
+        int16_t(m_transform.state.rotation * SpriteVertex::rotation_scale)
     };
 
     auto& style = m_labels.m_style;
@@ -67,7 +74,7 @@ void SpriteLabel::pushTransform() {
     auto* quadVertices = style.getMesh()->pushQuad();
 
     for (int i = 0; i < 4; i++) {
-        Label::Vertex& v = quadVertices[i];
+        SpriteVertex& v = quadVertices[i];
         v.pos = quad.quad[i].pos;
         v.uv = quad.quad[i].uv;
         v.extrude = quad.quad[i].extrude;

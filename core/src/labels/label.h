@@ -14,13 +14,6 @@
 #include <limits>
 #include <memory>
 
-namespace {
-// Conversion factors for Label::Vertex attributes
-constexpr float position_scale = 4.0f;
-constexpr float extrusion_scale = 256.0f;
-constexpr float rotation_scale = 4096.0f;
-constexpr float alpha_scale = 255.f;
-}
 
 namespace Tangram {
 
@@ -46,34 +39,6 @@ public:
         wait_occ        = 1 << 5, // state waiting for first occlusion result
         skip_transition = 1 << 6,
         dead            = 1 << 7,
-    };
-
-    struct Vertex {
-        Vertex() {}
-        // Constructor for TextStyle vertices
-        Vertex(glm::vec2 pos, glm::vec2 uv, uint32_t color, uint32_t stroke)
-            : pos(glm::round(pos * position_scale)), uv(uv),
-              color(color), stroke(stroke) {}
-
-        // Constructor for PointStyle vertices
-        Vertex(glm::vec2 pos, glm::vec2 uv, glm::vec2 extrude, uint32_t color)
-            : pos(glm::round(pos * position_scale)), uv(uv),
-              color(color),
-              extrude(extrude * extrusion_scale) {}
-
-        glm::i16vec2 pos;
-        glm::u16vec2 uv;
-        uint32_t color;
-        union {
-            glm::i16vec2 extrude;
-            uint32_t stroke;
-        };
-        struct State {
-            glm::i16vec2 screenPos;
-            uint8_t alpha;
-            uint8_t scale;
-            int16_t rotation;
-        } state;
     };
 
     struct Transform {
