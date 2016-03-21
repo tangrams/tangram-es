@@ -131,6 +131,8 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     _rule.get(StyleParamKey::font_fill, p.fill);
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
+    p.labelOptions.offset *= m_style.pixelScale();
+
     _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
     _rule.get(StyleParamKey::font_stroke_width, p.strokeWidth);
     p.strokeWidth *= m_style.pixelScale();
