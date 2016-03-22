@@ -483,6 +483,13 @@ void addDataSource(std::shared_ptr<DataSource> _source) {
     m_tileManager->addDataSource(_source);
 }
 
+bool removeDataSource(DataSource& source) {
+    if (!m_tileManager) { return false; }
+    std::lock_guard<std::mutex> lock(m_tilesMutex);
+
+    return m_tileManager->removeDataSource(source);
+}
+
 void clearDataSource(DataSource& _source, bool _data, bool _tiles) {
     if (!m_tileManager) { return; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);

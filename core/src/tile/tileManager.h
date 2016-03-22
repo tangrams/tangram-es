@@ -58,6 +58,8 @@ public:
 
     void addDataSource(std::shared_ptr<DataSource> _dataSource);
 
+    bool removeDataSource(DataSource& dataSource);
+
     std::unique_ptr<TileCache>& getTileCache() { return m_tileCache; }
 
     const auto& getTileSets() { return m_tileSets; }

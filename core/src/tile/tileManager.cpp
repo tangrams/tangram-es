@@ -74,6 +74,24 @@ void TileManager::addDataSource(std::shared_ptr<DataSource> _dataSource) {
     m_tileSets.push_back({ _dataSource });
 }
 
+bool TileManager::removeDataSource(DataSource& dataSource) {
+    bool removed = false;
+    for (auto it = m_tileSets.begin(); it != m_tileSets.end();) {
+        if (it->source.get() == &dataSource) {
+            // Cancel all tasks for this data source
+            for (auto& tile : it->tiles) {
+                tile.second.cancelTask();
+            }
+            // Remove the tile set associated with this data source
+            it = m_tileSets.erase(it);
+            removed = true;
+        } else {
+            ++it;
+        }
+    }
+    return removed;
+}
+
 void TileManager::clearTileSets() {
     for (auto& tileSet : m_tileSets) {
         for (auto& tile : tileSet.tiles) {
