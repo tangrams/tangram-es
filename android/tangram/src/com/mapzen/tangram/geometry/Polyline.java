@@ -2,8 +2,6 @@ package com.mapzen.tangram.geometry;
 
 import com.mapzen.tangram.LngLat;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,9 +11,14 @@ import java.util.Map;
 public class Polyline extends Geometry {
 
     public Polyline(List<LngLat> polyline, Map<String, String> properties) {
-        this.coordinates = new ArrayList<>(polyline);
+        this.coordinates = new double[polyline.size() * 2];
+        int i = 0;
+        for (LngLat point : polyline) {
+            coordinates[i++] = point.longitude;
+            coordinates[i++] = point.latitude;
+        }
         if (properties != null) {
-            this.properties = new HashMap<>(properties);
+            this.properties = getStringMapAsArray(properties);
         }
     }
     

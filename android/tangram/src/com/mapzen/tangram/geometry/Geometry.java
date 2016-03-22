@@ -1,8 +1,5 @@
 package com.mapzen.tangram.geometry;
 
-import com.mapzen.tangram.LngLat;
-
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -10,18 +7,12 @@ import java.util.Map;
  */
 public abstract class Geometry {
 
-    List<LngLat> coordinates;
-    Map<String, String> properties;
-    int[] rings;
+    protected double[] coordinates;
+    protected int[] rings;
+    protected String[] properties;
 
     public double[] getCoordinateArray() {
-        double[] out = new double[coordinates.size() * 2];
-        int i = 0;
-        for (LngLat point : coordinates) {
-            out[i++] = point.longitude;
-            out[i++] = point.latitude;
-        }
-        return out;
+        return coordinates;
     }
 
     public int[] getRingArray() {
@@ -29,6 +20,10 @@ public abstract class Geometry {
     }
 
     public String[] getPropertyArray() {
+        return properties;
+    }
+
+    protected String[] getStringMapAsArray(Map<String, String> properties) {
         String[] out = new String[properties.size() * 2];
         int i = 0;
         for (Map.Entry<String, String> entry : properties.entrySet()) {

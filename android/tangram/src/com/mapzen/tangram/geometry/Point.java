@@ -12,10 +12,11 @@ import java.util.Map;
 public class Point extends Geometry {
 
     public Point(LngLat point, Map<String, String> properties) {
-        this.coordinates = new ArrayList<>(1);
-        coordinates.add(new LngLat(point));
+        this.coordinates = new double[2];
+        coordinates[0] = point.longitude;
+        coordinates[1] = point.latitude;
         if (properties != null) {
-            this.properties = new HashMap<>(properties);
+            this.properties = getStringMapAsArray(properties);
         }
 
     }
