@@ -322,7 +322,7 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
 
         float scale = 1.f;
 
-        // normPrev and normNext are in the same direction
+        // normPrev and normNext are in the opposite direction
         // in order to prevent NaN values, we use the perp
         // vector of those two vectors
         if (miterVec == glm::zero<glm::vec2>()) {
