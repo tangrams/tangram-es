@@ -8,7 +8,8 @@ namespace Tangram {
         tile_bounds,        // Draws tile boundaries
         tile_infos,         // Debug tile infos
         labels,             // Debug label bounding boxes
-        tangram_infos       // Various text tangram debug info printed on the screen
+        tangram_infos,      // Various text tangram debug info printed on the screen
+        all_labels          // Draw all labels
     };
 
 }
