@@ -1,7 +1,6 @@
 #pragma once
 
 #include "platform.h"
-#include "data/properties.h"
 
 #include <memory>
 #include <jni.h>
@@ -15,3 +14,5 @@ struct TouchItem;
 }
 
 void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<Tangram::TouchItem>& items);
+
+std::string stringFromJString(JNIEnv* jniEnv, jstring string);

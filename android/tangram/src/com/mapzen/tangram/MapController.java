@@ -11,6 +11,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
+import java.util.Map;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -41,7 +42,7 @@ public class MapController implements Renderer {
          * @param positionX The horizontal screen coordinate of the center of the feature
          * @param positionY The vertical screen coordinate of the center of the feature
          */
-        void onTouch(Properties properties, float positionX, float positionY);
+        void onTouch(Map<String, String> properties, float positionX, float positionY);
     }
 
     /**
@@ -531,6 +532,12 @@ public class MapController implements Renderer {
     private native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private native void onUrlFailure(long callbackPtr);
 
+    native long nativeAddDataSource(String name);
+    native void nativeRemoveDataSource(long pointer);
+    native void nativeClearDataSource(long pointer);
+    native void nativeAddFeature(long pointer, double[] coordinates, int[] rings, String[] properties);
+    native void nativeAddGeoJson(long pointer, String geojson);
+
     // Private members
     // ===============
 
@@ -621,7 +628,7 @@ public class MapController implements Renderer {
 
     // Feature selection
     // =================
-    void featureSelectionCb(Properties properties, float positionX, float positionY) {
+    void featureSelectionCb(Map<String, String> properties, float positionX, float positionY) {
         if (featureTouchListener != null) {
             featureTouchListener.onTouch(properties, positionX, positionY);
         }

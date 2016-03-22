@@ -1,6 +1,8 @@
 #ifdef PLATFORM_ANDROID
 
 #include "platform_android.h"
+#include "data/properties.h"
+#include "data/propertyItem.h"
 #include "tangram.h"
 
 #include <GLES2/gl2platform.h>
@@ -43,7 +45,9 @@ static jmethodID getFontFilePath;
 static jmethodID getFontFallbackFilePath;
 static jmethodID featureSelectionCbMID;
 
-static jmethodID propertiesConstructorMID;
+static jclass hashmapClass;
+static jmethodID hashmapInitMID;
+static jmethodID hashmapPutMID;
 
 static AAssetManager* assetManager;
 
@@ -55,10 +59,9 @@ PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT = 0;
 PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT = 0;
 PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT = 0;
 
-void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
-    _jniEnv->GetJavaVM(&jvm);
-    JNIEnv* jniEnv = _jniEnv;
-    jniRenderThreadEnv = _jniEnv;
+void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager) {
+    jniEnv->GetJavaVM(&jvm);
+    jniRenderThreadEnv = jniEnv;
 
     tangramInstance = jniEnv->NewGlobalRef(_tangramInstance);
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/MapController");
@@ -66,13 +69,13 @@ void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManage
     cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(Ljava/lang/String;)V");
     getFontFilePath = jniEnv->GetMethodID(tangramClass, "getFontFilePath", "(Ljava/lang/String;)Ljava/lang/String;");
     getFontFallbackFilePath = jniEnv->GetMethodID(tangramClass, "getFontFallbackFilePath", "(II)Ljava/lang/String;");
-    requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
-    setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
-    featureSelectionCbMID = _jniEnv->GetMethodID(tangramClass, "featureSelectionCb", "(Lcom/mapzen/tangram/Properties;FF)V");
+    requestRenderMethodID = jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
+    setRenderModeMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
+    featureSelectionCbMID = jniEnv->GetMethodID(tangramClass, "featureSelectionCb", "(Ljava/util/Map;FF)V");
 
-    jclass propertiesClass = jniEnv->FindClass("com/mapzen/tangram/Properties");
-
-    propertiesConstructorMID = jniEnv->GetMethodID(propertiesClass, "<init>", "(JZ)V");
+    hashmapClass = jniEnv->FindClass("java/util/HashMap");
+    hashmapInitMID = jniEnv->GetMethodID(hashmapClass, "<init>", "()V");
+    hashmapPutMID = jniEnv->GetMethodID(hashmapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
     assetManager = AAssetManager_fromJava(jniEnv, _assetManager);
 
@@ -311,13 +314,19 @@ void setCurrentThreadPriority(int priority) {
 
 void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<Tangram::TouchItem>& items) {
 
-    jlong jresult = 0;
-    jclass propertiesClass = jniEnv->FindClass("com/mapzen/tangram/Properties");
+    auto result = items[0];
+    auto properties = result.properties;
+    auto position = result.position;
 
-    jresult = reinterpret_cast<jlong>(new std::shared_ptr<Tangram::Properties >(items[0].properties));
-    jobject object = jniEnv->NewObject(propertiesClass, propertiesConstructorMID, jresult, true);
+    jobject hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
 
-    jniEnv->CallVoidMethod(tangramInstance, featureSelectionCbMID, object, items[0].position[0], items[0].position[1]);
+    for (const auto& item : properties->items()) {
+        jstring jkey = jniEnv->NewStringUTF(item.key.c_str());
+        jstring jvalue = jniEnv->NewStringUTF(properties->asString(item.value).c_str());
+        jniEnv->CallVoidMethod(hashmap, hashmapPutMID, jkey, jvalue);
+    }
+
+    jniEnv->CallVoidMethod(tangramInstance, featureSelectionCbMID, hashmap, position[0], position[1]);
 }
 
 void initGLExtensions() {
@@ -328,5 +337,11 @@ void initGLExtensions() {
     glGenVertexArraysOESEXT = (PFNGLGENVERTEXARRAYSOESPROC) dlsym(libhandle, "glGenVertexArraysOES");
 }
 
+std::string stringFromJString(JNIEnv* jniEnv, jstring string) {
+    const char* cstring = jniEnv->GetStringUTFChars(string, NULL);
+    auto out = std::string(cstring);
+    jniEnv->ReleaseStringUTFChars(string, cstring);
+    return out;
+}
 
 #endif
