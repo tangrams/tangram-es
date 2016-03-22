@@ -31,7 +31,6 @@ set(LIB_NAME tangram) # in order to have libtangram.so
 
 add_library(${LIB_NAME} SHARED
   ${CMAKE_SOURCE_DIR}/android/tangram/jni/jniExports.cpp
-  ${CMAKE_SOURCE_DIR}/android/tangram/jni/jniGenerated.cpp
   ${CMAKE_SOURCE_DIR}/android/tangram/jni/platform_android.cpp)
 
 
