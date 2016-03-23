@@ -107,7 +107,8 @@ public class MainActivity extends Activity {
                     touchMarkers.clear().syncWithMap();
                 }
                 tileInfo = !tileInfo;
-                // Tangram.setDebugFlag(DebugFlags.TILE_INFOS, tileInfo);
+                mapController.setDebugFlag(MapController.DebugFlag.TILE_BOUNDS, tileInfo);
+                mapController.setDebugFlag(MapController.DebugFlag.TILE_INFOS, tileInfo);
             }
         });
 

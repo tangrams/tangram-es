@@ -226,4 +226,8 @@ extern "C" {
         source_ptr->addData(data);
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetDebugFlag(JNIEnv* jniEnv, jobject obj, jint flag, jboolean on) {
+        Tangram::setDebugFlag(static_cast<Tangram::DebugFlags>(flag), on);
+    }
+
 }

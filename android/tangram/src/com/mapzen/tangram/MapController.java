@@ -35,6 +35,16 @@ public class MapController implements Renderer {
         FLAT,
     }
 
+    public enum DebugFlag {
+        FREEZE_TILES,
+        PROXY_COLORS,
+        TILE_BOUNDS,
+        TILE_INFOS,
+        LABELS,
+        TANGRAM_INFOS,
+        ALL_LABELS,
+    }
+
     public interface FeatureTouchListener {
         /**
          * Receive information about features found in a call to {@link #pickFeature(float, float)}
@@ -491,6 +501,15 @@ public class MapController implements Renderer {
         mapView.queueEvent(r);
     }
 
+    /**
+     * Make a debugging feature active or inactive
+     * @param flag The feature to set
+     * @param on True to activate the feature, false to deactivate
+     */
+    public void setDebugFlag(DebugFlag flag, boolean on) {
+        nativeSetDebugFlag(flag.ordinal(), on);
+    }
+
     // Native methods
     // ==============
 
@@ -537,6 +556,8 @@ public class MapController implements Renderer {
     native void nativeClearDataSource(long pointer);
     native void nativeAddFeature(long pointer, double[] coordinates, int[] rings, String[] properties);
     native void nativeAddGeoJson(long pointer, String geojson);
+
+    native void nativeSetDebugFlag(int flag, boolean on);
 
     // Private members
     // ===============
