@@ -46,6 +46,9 @@ public class MapData {
      * @param map The {@code MapController} managing the destination map.
      */
     public void addToMap(MapController map) {
+        if (map == null) {
+            throw new RuntimeException("Cannot assign a null map, use removeFromMap() instead");
+        }
         if (this.map != null) {
             removeFromMap();
         }
@@ -59,6 +62,9 @@ public class MapData {
      * called when this {@code MapData} is not associated with a map.
      */
     public void removeFromMap() {
+        if (map == null) {
+            throw new RuntimeException("There is no associated map for this MapData");
+        }
         map.nativeRemoveDataSource(pointer);
         pointer = 0;
         map = null;
@@ -72,6 +78,9 @@ public class MapData {
      * associated with a map.
      */
     public void syncWithMap() {
+        if (map == null) {
+            throw new RuntimeException("There is no associated map for this MapData");
+        }
         map.nativeClearDataSource(pointer);
         for (String data : geojson) {
             map.nativeAddGeoJson(pointer, data);
