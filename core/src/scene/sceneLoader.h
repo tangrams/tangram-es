@@ -38,6 +38,7 @@ struct SceneLoader {
 
     static bool loadScene(const std::string& _sceneString, Scene& _scene);
     static bool loadScene(Node& config, Scene& _scene);
+    static void applyGlobalProperties(Node& node, Scene& scene);
 
     /*** all public for testing ***/
 
@@ -65,6 +66,8 @@ struct SceneLoader {
     static void parseTransition(Node params, Scene& scene, std::vector<StyleParam>& out);
 
     static bool parseStyleUniforms(const Node& value, Scene& scene, StyleUniform& styleUniform);
+
+    static void parseGlobals(const Node& node, Scene& scene, const std::string& key="");
 
     static bool loadStyle(const std::string& styleName, Node config, Scene& scene);
 

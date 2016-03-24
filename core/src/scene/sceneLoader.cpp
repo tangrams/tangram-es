@@ -64,6 +64,90 @@ void printFilters(const SceneLayer& layer, int indent){
     }
 };
 
+void SceneLoader::applyGlobalProperties(Node& node, Scene& scene) {
+    /*switch(node.Type()) {
+    case NodeType::Scalar:
+        {
+            std::string key = node.Scalar();
+            if (key.compare(0, 7, "global.") == 0) {
+                key.replace(0, 7, "");
+                if (scene.m_globals.find(key) != scene.m_globals.end()) {
+                    auto& value = scene.m_globals[key];
+                    switch (value.which()) {
+                        case 1:
+
+                            break;
+                        case 2:
+                            break;
+                        case 3:
+                            break;
+                        case 4:
+                            break;
+                        case 0:
+                        default:
+                            break;
+                    }
+                    node = scene.m_globals[key];
+                }
+            }
+        }
+        break;
+    case NodeType::Sequence:
+        for (const auto& n : node) {
+            Node nextNode = n;
+            applyGlobalProperties(nextNode, scene);
+        }
+        break;
+    case NodeType::Map:
+        for (const auto& n : node) {
+            Node nextNode = node[n.first.Scalar()];
+            applyGlobalProperties(nextNode, scene);
+        }
+        break;
+    default:
+        break;
+    }*/
+}
+
+void SceneLoader::parseGlobals(const Node& node, Scene& scene, const std::string& key) {
+    const std::string wildcard = "_$_";
+    switch (node.Type()) {
+    case NodeType::Scalar:
+        bool bVal;
+        double fVal;
+        if (getDouble(node, fVal)) {
+            scene.m_globals[key] = fVal;
+        } else if (getBool(node, bVal)) {
+            scene.m_globals[key] = bVal;
+        } else {
+            scene.m_globals[key] = node.Scalar();
+        }
+        break;
+    case NodeType::Sequence:
+        try {
+            Scene::ArrayValue values;
+            for (const auto& val : node) {
+                double fVal;
+                if (getDouble(val, fVal)) {
+                    values.push_back(fVal);
+                } else { return; }
+            }
+            scene.m_globals[key] = std::move(values);
+        }
+        catch (const BadConversion& e) {
+        }
+        break;
+    case NodeType::Map:
+        for (const auto& g : node) {
+            std::string value = g.first.Scalar();
+            Node global = node[value];
+            parseGlobals(global, scene, key + wildcard + value);
+        }
+    default:
+        break;
+    }
+}
+
 bool SceneLoader::loadScene(Node& config, Scene& _scene) {
 
     // Instantiate built-in styles
@@ -73,6 +157,12 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
     _scene.styles().emplace_back(new TextStyle("text", true));
     _scene.styles().emplace_back(new DebugStyle("debug"));
     _scene.styles().emplace_back(new PointStyle("points"));
+
+    if (Node globals = config["global"]) {
+        parseGlobals(globals, _scene);
+        applyGlobalProperties(config, _scene);
+    }
+
 
     if (Node sources = config["sources"]) {
         for (const auto& source : sources) {
