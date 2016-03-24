@@ -1,6 +1,7 @@
 #pragma once
 
 #include "util/color.h"
+#include "util/variant.h"
 #include <list>
 #include <memory>
 #include <string>
@@ -31,6 +32,10 @@ class Scene {
 public:
     Scene();
     ~Scene();
+
+    using ArrayValue = std::vector<double>;
+    using Value = variant<none_type, bool, double, std::string, ArrayValue>;
+    std::unordered_map<std::string, Value> m_globals;
 
     auto& view() { return m_view; }
     auto& dataSources() { return m_dataSources; };
