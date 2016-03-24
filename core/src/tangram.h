@@ -1,6 +1,6 @@
 #pragma once
 
-#include "debug.h"
+#include "debug/debug.h"
 #include "data/properties.h"
 #include "util/ease.h"
 #include <memory>
