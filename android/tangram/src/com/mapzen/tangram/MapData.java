@@ -97,7 +97,7 @@ public class MapData {
      * Add a point feature to this collection.
      * @param point The coordinates of the feature.
      * @param properties The properties of the feature, used for filtering and styling according to
-     * the scene file used by the map.
+     * the scene file used by the map; may be null.
      * @return This object, for chaining.
      */
     public MapData addPoint(LngLat point, Map<String, String> properties) {
@@ -109,7 +109,7 @@ public class MapData {
      * Add a polyline feature to this collection.
      * @param polyline A list of coordinates that define the line segments of the feature.
      * @param properties The properties of the feature, used for filtering and styling according to
-     * the scene file used by the map.
+     * the scene file used by the map; may be null.
      * @return This object, for chaining.
      */
     public MapData addPolyline(List<LngLat> polyline, Map<String, String> properties) {
@@ -123,7 +123,7 @@ public class MapData {
      * ring is a list of coordinates. The first ring is taken as the "exterior" of the polygon and
      * rings with opposite winding are considered "holes".
      * @param properties The properties of the feature, used for filtering and styling according to
-     * the scene file used by the map.
+     * the scene file used by the map; may be null.
      * @return This object, for chaining.
      */
     public MapData addPolygon(List<List<LngLat>> polygon, Map<String, String> properties) {

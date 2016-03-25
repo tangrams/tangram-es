@@ -173,7 +173,7 @@ extern "C" {
 
         size_t n_points = jniEnv->GetArrayLength(jcoordinates) / 2;
         size_t n_rings = (jrings == NULL) ? 0 : jniEnv->GetArrayLength(jrings);
-        size_t n_properties = jniEnv->GetArrayLength(jproperties) / 2;
+        size_t n_properties = (jproperties == NULL) ? 0 : jniEnv->GetArrayLength(jproperties) / 2;
 
         Tangram::Properties properties;
 
