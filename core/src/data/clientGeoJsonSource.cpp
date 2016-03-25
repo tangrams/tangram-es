@@ -46,6 +46,7 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
     m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
+    m_generation++;
 
 }
 
