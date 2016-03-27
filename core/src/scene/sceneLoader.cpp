@@ -722,12 +722,25 @@ void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
 
             view->setCameraType(CameraType::perspective);
 
-            if (Node fov = camera["fov"]) {
-                // TODO
-            }
-
+            // Only one of focal length and FOV is applied;
+            // according to docs, focal length takes precedence.
             if (Node focal = camera["focal_length"]) {
-                // TODO
+                if (focal.IsScalar()) {
+                    float length = focal.as<float>(view->getFocalLength());
+                    view->setFocalLength(length);
+                } else if (focal.IsSequence()) {
+                    auto stops = std::make_shared<Stops>(Stops::Numbers(focal));
+                    view->setFocalLengthStops(stops);
+                }
+            } else if (Node fov = camera["fov"]) {
+                if (fov.IsScalar()) {
+                    float degrees = fov.as<float>(view->getFieldOfView() * RAD_TO_DEG);
+                    view->setFieldOfView(degrees * DEG_TO_RAD);
+                } else if (fov.IsSequence()) {
+                    auto stops = std::make_shared<Stops>(Stops::Numbers(fov));
+                    for (auto& f : stops->frames) { f.value = f.value.get<float>() * DEG_TO_RAD; }
+                    view->setFieldOfViewStops(stops);
+                }
             }
 
             if (Node vanishing = camera["vanishing_point"]) {
