@@ -314,6 +314,10 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
         coordCurr = coordNext;
         coordNext = _line[i + 1];
 
+        if (coordCurr == coordNext) {
+            continue;
+        }
+
         normPrev = normNext;
         normNext = glm::normalize(perp2d(coordCurr, coordNext));
 
