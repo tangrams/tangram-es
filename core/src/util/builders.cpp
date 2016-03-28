@@ -2,8 +2,7 @@
 
 #include "geom.h"
 #include "glm/gtx/rotate_vector.hpp"
-#include "platform.h"
-#include <memory>
+#include "glm/gtx/norm.hpp"
 
 namespace mapbox { namespace util {
 template <>
@@ -337,8 +336,9 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
 
         miterVec *= scale;
 
-        if (glm::length(miterVec) > _ctx.miterLimit) {
+        if (glm::length2(miterVec) > glm::length2(_ctx.miterLimit)) {
             trianglesOnJoin = 1;
+            miterVec *= _ctx.miterLimit / glm::length(miterVec);
         }
 
         float v = i / (float)lineSize;
