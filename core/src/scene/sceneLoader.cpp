@@ -39,9 +39,9 @@ using YAML::BadConversion;
 
 namespace Tangram {
 
+const std::string DELIMITER = ":";
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
-
 
 bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
 
@@ -69,10 +69,9 @@ void SceneLoader::applyGlobalProperties(Node& node, Scene& scene) {
     case NodeType::Scalar:
         {
             std::string key = node.Scalar();
-            const std::string wildcard = "_$_";
             if (key.compare(0, 7, "global.") == 0) {
                 key.replace(0, 7, "");
-                key = std::regex_replace(key, std::regex("\\."), wildcard);
+                key = std::regex_replace(key, std::regex("\\."), DELIMITER);
                 node = scene.globals()[key];
             }
         }
@@ -95,7 +94,6 @@ void SceneLoader::applyGlobalProperties(Node& node, Scene& scene) {
 }
 
 void SceneLoader::parseGlobals(const Node& node, Scene& scene, const std::string& key) {
-    const std::string wildcard = "_$_";
     switch (node.Type()) {
     case NodeType::Scalar:
     case NodeType::Sequence:
@@ -108,7 +106,7 @@ void SceneLoader::parseGlobals(const Node& node, Scene& scene, const std::string
         for (const auto& g : node) {
             std::string value = g.first.Scalar();
             Node global = node[value];
-            std::string mapKey = (key.size() == 0) ? value : (key + wildcard + value);
+            std::string mapKey = (key.size() == 0) ? value : (key + DELIMITER + value);
             parseGlobals(global, scene, mapKey);
         }
     default:
@@ -993,7 +991,7 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
     for (const auto& prop : params) {
         std::string key;
         if (!prefix.empty()) {
-            key = prefix + ":" + prop.first.Scalar();
+            key = prefix + DELIMITER + prop.first.Scalar();
         } else {
             key = prop.first.as<std::string>();
         }
@@ -1153,10 +1151,10 @@ void SceneLoader::parseTransition(Node params, Scene& scene, std::vector<StylePa
             std::string prefixedKey;
             switch (prop.first.Type()) {
                 case YAML::NodeType::Sequence:
-                    prefixedKey = prefix + ":" + key;
+                    prefixedKey = prefix + DELIMITER + key;
                     break;
                 case YAML::NodeType::Scalar:
-                    prefixedKey = prefix + ":" + prop.first.as<std::string>();
+                    prefixedKey = prefix + DELIMITER + prop.first.as<std::string>();
                     break;
                 default:
                     LOGW("Expected a scalar or sequence value for transition");
@@ -1165,7 +1163,7 @@ void SceneLoader::parseTransition(Node params, Scene& scene, std::vector<StylePa
             }
 
             for (auto child : prop.second) {
-                auto childKey = prefixedKey + ":" + child.first.as<std::string>();
+                auto childKey = prefixedKey + DELIMITER + child.first.as<std::string>();
                 out.push_back(StyleParam{ childKey, child.second.as<std::string>() });
             }
         }
@@ -1205,7 +1203,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, S
             getBool(member.second, visible, "visible");
         } else {
             // Member is a sublayer
-            sublayers.push_back(loadSublayer(member.second, (layerName + ":" + key), scene));
+            sublayers.push_back(loadSublayer(member.second, (layerName + DELIMITER + key), scene));
         }
     }
 
