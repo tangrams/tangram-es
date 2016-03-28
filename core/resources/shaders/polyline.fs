@@ -53,19 +53,17 @@ void main(void) {
     vec4 color = v_color;
     vec3 normal = v_normal;
 
+    // Modify material properties before lighting
     #ifdef TANGRAM_MATERIAL_NORMAL_TEXTURE
         calculateNormal(normal);
     #endif
 
-    // Modify normal before lighting
-    #pragma tangram: normal
-
-    // Modify color and material properties before lighting
-    #ifndef TANGRAM_LIGHTING_VERTEX
-        #pragma tangram: color
-    #endif
-
     #ifdef TANGRAM_LIGHTING_FRAGMENT
+        // Modify normal and color before lighting
+        #pragma tangram: normal
+
+        #pragma tangram: color
+
         color = calculateLighting(v_position.xyz, normal, color);
     #else
         #ifdef TANGRAM_LIGHTING_VERTEX
