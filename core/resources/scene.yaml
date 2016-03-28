@@ -11,8 +11,8 @@ cameras:
     perspective-camera:
         # Manhattan
         position: [-74.00976419448854, 40.70532700869127, 16]
-        type: perspective #currently ignored
-        focal_length: [[16, 2], [20, 6]] # currently ignored
+        type: perspective
+        fov: 45
         vanishing_point: [-250, -250] # currently ignored
         active: true
 
