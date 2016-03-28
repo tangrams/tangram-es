@@ -251,7 +251,7 @@ auto FontContext::getFont(const std::string& _family, const std::string& _style,
 
     // Pick the smallest font that does not scale down too much
     float fontSize = BASE_SIZE;
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < MAX_STEPS; i++) {
         sizeIndex = i;
 
         if (_size <= fontSize) { break; }
