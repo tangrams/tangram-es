@@ -1,7 +1,6 @@
 #pragma once
 
 #include "util/color.h"
-#include "util/variant.h"
 #include <list>
 #include <memory>
 #include <string>
@@ -9,6 +8,7 @@
 #include <unordered_map>
 
 #include "glm/vec2.hpp"
+#include "yaml-cpp/yaml.h"
 
 namespace Tangram {
 
@@ -33,9 +33,6 @@ public:
     Scene();
     ~Scene();
 
-    using ArrayValue = std::vector<double>;
-    using Value = variant<none_type, bool, double, std::string, ArrayValue>;
-    std::unordered_map<std::string, Value> m_globals;
 
     auto& view() { return m_view; }
     auto& dataSources() { return m_dataSources; };
@@ -48,6 +45,7 @@ public:
     auto& stops() { return m_stops; }
     auto& background() { return m_background; }
     auto& fontContext() { return m_fontContext; }
+    auto& globals() { return m_globals; }
 
     const auto& dataSources() const { return m_dataSources; };
     const auto& layers() const { return m_layers; };
@@ -88,6 +86,7 @@ private:
     std::vector<std::unique_ptr<Light>> m_lights;
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
+    std::unordered_map<std::string, YAML::Node> m_globals;
 
     // Container of all strings used in styling rules; these need to be
     // copied and compared frequently when applying styling, so rules use
