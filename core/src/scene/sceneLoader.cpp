@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <iterator>
 #include <unordered_map>
+#include <regex>
 
 using YAML::Node;
 using YAML::NodeType;
@@ -65,29 +66,35 @@ void printFilters(const SceneLayer& layer, int indent){
 };
 
 void SceneLoader::applyGlobalProperties(Node& node, Scene& scene) {
-    /*switch(node.Type()) {
+    switch(node.Type()) {
     case NodeType::Scalar:
         {
             std::string key = node.Scalar();
+            const std::string wildcard = "_$_";
             if (key.compare(0, 7, "global.") == 0) {
                 key.replace(0, 7, "");
+                key = std::regex_replace(key, std::regex("\\."), wildcard);
                 if (scene.m_globals.find(key) != scene.m_globals.end()) {
                     auto& value = scene.m_globals[key];
                     switch (value.which()) {
                         case 1:
-
+                            node = value.get<bool>();
                             break;
                         case 2:
+                            node = value.get<double>();
                             break;
                         case 3:
+                            node = value.get<std::string>();
                             break;
                         case 4:
+                            for (auto& v : value.get<Scene::ArrayValue>()) {
+                                node.push_back(v);
+                            }
                             break;
                         case 0:
                         default:
                             break;
                     }
-                    node = scene.m_globals[key];
                 }
             }
         }
@@ -106,7 +113,7 @@ void SceneLoader::applyGlobalProperties(Node& node, Scene& scene) {
         break;
     default:
         break;
-    }*/
+    }
 }
 
 void SceneLoader::parseGlobals(const Node& node, Scene& scene, const std::string& key) {
@@ -141,7 +148,8 @@ void SceneLoader::parseGlobals(const Node& node, Scene& scene, const std::string
         for (const auto& g : node) {
             std::string value = g.first.Scalar();
             Node global = node[value];
-            parseGlobals(global, scene, key + wildcard + value);
+            std::string mapKey = (key.size() == 0) ? value : (key + wildcard + value);
+            parseGlobals(global, scene, mapKey);
         }
     default:
         break;
