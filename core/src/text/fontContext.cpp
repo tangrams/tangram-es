@@ -5,68 +5,92 @@
 #define SDF_IMPLEMENTATION
 #include "sdf.h"
 
-#define DEFAULT "fonts/NotoSans-Regular.ttf"
-#define FONT_AR "fonts/NotoNaskh-Regular.ttf"
-#define FONT_HE "fonts/NotoSansHebrew-Regular.ttf"
-#define FONT_JA "fonts/DroidSansJapanese.ttf"
-#define FALLBACK "fonts/DroidSansFallback.ttf"
+struct FallbackPath {
+    PathType type;
+    std::string path;
+};
 
-#if defined(PLATFORM_ANDROID)
-#define ANDROID_FONT_PATH "/system/fonts/"
-#endif
-#define BASE_SIZE 16
-#define STEP_SIZE 12
+static std::vector<FallbackPath> defaultFontFallbacks = {
+    {PathType::resource, "fonts/NotoSans-Regular.ttf"},
+    {PathType::resource, "fonts/NotoNaskh-Regular.ttf"},
+    {PathType::resource, "fonts/NotoSansHebrew-Regular.ttf"},
+    {PathType::resource, "fonts/DroidSansJapanese.ttf"},
+    {PathType::resource, "fonts/DroidSansFallback.ttf"}
+};
 
-#define SDF_WIDTH 6
-
-#define MIN_LINE_WIDTH 4
+#define BASE_SIZE           16  // Default font base size, size at which the font would get rasterized
+                                // When a glyph get rasterized the closest size is picked, then texture
+                                // scaling is applied to it (using its distance field)
+#define STEP_SIZE           12  // The step size increase applied, which means that each font exists
+                                // at a specific text size within the font renderer
+#define MAX_STEPS           3   // The maximum number of steps to increase the size to
+#define DEFAULT_BOLDNESS    400
+#define SDF_WIDTH           6
+#define MIN_LINE_WIDTH      4
 
 namespace Tangram {
+
+bool addFace(std::shared_ptr<alfons::Font>& font,
+    alfons::FontManager& manager,
+    const FallbackPath& fallback, float size)
+{
+    alfons::InputSource source;
+    unsigned int byteSize;
+    unsigned char* data;
+
+    data = bytesFromFile(fallback.path.c_str(), fallback.type, &byteSize);
+
+    if (!data) {
+        return false;
+    }
+
+    source = alfons::InputSource(reinterpret_cast<char*>(data), byteSize);
+
+    if (!font) {
+        font = manager.addFont("default", source, size);
+    } else {
+        font->addFace(manager.addFontFace(source, size));
+    }
+
+    return true;
+}
 
 FontContext::FontContext() :
     m_sdfRadius(SDF_WIDTH),
     m_atlas(*this, GlyphTexture::size, m_sdfRadius),
-    m_batch(m_atlas, m_scratch) {
-
-// TODO: make this platform independent
-#if defined(PLATFORM_ANDROID)
-    auto fontPath = systemFontPath("sans-serif", "400", "normal");
-    LOG("FONT %s", fontPath.c_str());
-
-    int size = BASE_SIZE;
-    for (int i = 0; i < 3; i++, size += STEP_SIZE) {
-        m_font[i] = m_alfons.addFont("default", alfons::InputSource(fontPath), size);
-    }
-
-    std::string fallback = "";
+    m_batch(m_atlas, m_scratch)
+{
+    std::vector<FallbackPath> fallbacks;
     int importance = 0;
 
-    while (importance < 100) {
-        fallback = systemFontFallbackPath(importance++, 400);
-        if (fallback.empty()) { break; }
+    fallbacks.push_back({
+        PathType::resource,
+        systemFontPath("sans-serif", std::to_string(DEFAULT_BOLDNESS), "normal")
+    });
 
-        if (fallback.find("UI-") != std::string::npos) {
-            continue;
+    std::string platformFallback = systemFontFallbackPath(importance++, DEFAULT_BOLDNESS);
+
+    if (!platformFallback.empty()) {
+        while (!platformFallback.empty()) {
+            fallbacks.push_back({PathType::absolute, platformFallback});
+            platformFallback = systemFontFallbackPath(importance++, DEFAULT_BOLDNESS);
         }
-        fontPath = ANDROID_FONT_PATH;
-        fontPath += fallback;
-        LOG("FALLBACK %s", fontPath.c_str());
+    } else {
+        // No platform fallback, add bundled font fallbacks
+        fallbacks.insert(fallbacks.end(),
+            defaultFontFallbacks.begin(),
+            defaultFontFallbacks.end());
+    }
 
-        int size = BASE_SIZE;
-        for (int i = 0; i < 3; i++, size += STEP_SIZE) {
-            m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(fontPath), size));
+    // Load fonts to font rendering manager
+    for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
+        for (const FallbackPath& fallback : defaultFontFallbacks) {
+            if (fallback.path.empty()) { continue; }
+            if (!addFace(m_font[i], m_alfons, fallback, size)) {
+                LOGW("Failed loading face %s", fallback.path.c_str());
+            }
         }
     }
-#else
-    int size = BASE_SIZE;
-    for (int i = 0; i < 3; i++, size += STEP_SIZE) {
-        m_font[i] = m_alfons.addFont("default", alfons::InputSource(DEFAULT), size);
-        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_AR), size));
-        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_HE), size));
-        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_JA), size));
-        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FALLBACK), size));
-    }
-#endif
 }
 
 // Synchronized on m_mutex on tile-worker threads
@@ -152,7 +176,6 @@ void FontContext::updateTextures() {
 void FontContext::bindTexture(alfons::AtlasID _id, GLuint _unit) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_textures[_id].texture.bind(_unit);
-
 }
 
 bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& _text,
@@ -234,7 +257,6 @@ auto FontContext::getFont(const std::string& _family, const std::string& _style,
         if (_size <= fontSize) { break; }
         fontSize += STEP_SIZE;
     }
-    //LOG(">> %f - %d ==> %f", _size, sizeIndex, _size / ((sizeIndex+1) * BASE_SIZE));
 
     std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -258,7 +280,7 @@ auto FontContext::getFont(const std::string& _family, const std::string& _style,
     if (!(data = bytesFromFile(bundledFontPath.c_str(), PathType::resource, &dataSize)) &&
         !(data = bytesFromFile(bundledFontPath.c_str(), PathType::internal, &dataSize))) {
         const std::string sysFontPath = systemFontPath(_family, _weight, _style);
-        if (!(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize)) ) {
+        if (!(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize))) {
 
             LOGE("Could not load font file %s", fontName.c_str());
             // add fallbacks from default font

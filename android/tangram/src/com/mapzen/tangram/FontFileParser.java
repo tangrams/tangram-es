@@ -56,7 +56,13 @@ class FontFileParser {
                                 fallbackFontDict.put(weight, new Vector<String>());
                             }
 
-                            fallbackFontDict.get(weight).add(filename);
+                            // Don't use UI fonts
+                            if (filename.indexOf("UI-") >= 0) {
+                                continue;
+                            }
+
+                            String fullFileName = "system/fonts/" + filename;
+                            fallbackFontDict.get(weight).add(fullFileName);
                         } else {
                             skip(parser);
                         }
