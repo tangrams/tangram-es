@@ -25,7 +25,6 @@
 #include "view/view.h"
 
 #include "csscolorparser.hpp"
-#include "yaml-cpp/yaml.h"
 
 #include <algorithm>
 #include <iterator>
@@ -74,28 +73,7 @@ void SceneLoader::applyGlobalProperties(Node& node, Scene& scene) {
             if (key.compare(0, 7, "global.") == 0) {
                 key.replace(0, 7, "");
                 key = std::regex_replace(key, std::regex("\\."), wildcard);
-                if (scene.m_globals.find(key) != scene.m_globals.end()) {
-                    auto& value = scene.m_globals[key];
-                    switch (value.which()) {
-                        case 1:
-                            node = value.get<bool>();
-                            break;
-                        case 2:
-                            node = value.get<double>();
-                            break;
-                        case 3:
-                            node = value.get<std::string>();
-                            break;
-                        case 4:
-                            for (auto& v : value.get<Scene::ArrayValue>()) {
-                                node.push_back(v);
-                            }
-                            break;
-                        case 0:
-                        default:
-                            break;
-                    }
-                }
+                node = scene.globals()[key];
             }
         }
         break;
@@ -107,7 +85,7 @@ void SceneLoader::applyGlobalProperties(Node& node, Scene& scene) {
         break;
     case NodeType::Map:
         for (const auto& n : node) {
-            Node nextNode = node[n.first.Scalar()];
+            Node nextNode = n.second;
             applyGlobalProperties(nextNode, scene);
         }
         break;
@@ -120,30 +98,12 @@ void SceneLoader::parseGlobals(const Node& node, Scene& scene, const std::string
     const std::string wildcard = "_$_";
     switch (node.Type()) {
     case NodeType::Scalar:
-        bool bVal;
-        double fVal;
-        if (getDouble(node, fVal)) {
-            scene.m_globals[key] = fVal;
-        } else if (getBool(node, bVal)) {
-            scene.m_globals[key] = bVal;
-        } else {
-            scene.m_globals[key] = node.Scalar();
-        }
-        break;
     case NodeType::Sequence:
-        try {
-            Scene::ArrayValue values;
-            for (const auto& val : node) {
-                double fVal;
-                if (getDouble(val, fVal)) {
-                    values.push_back(fVal);
-                } else { return; }
-            }
-            scene.m_globals[key] = std::move(values);
+        {
+            auto& g = scene.globals();
+            g[key] = YAML::Clone(node);
+            break;
         }
-        catch (const BadConversion& e) {
-        }
-        break;
     case NodeType::Map:
         for (const auto& g : node) {
             std::string value = g.first.Scalar();
