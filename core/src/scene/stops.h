@@ -31,8 +31,10 @@ struct Stops {
     static Stops Widths(const YAML::Node& _node, const MapProjection& _projection, const std::vector<Unit>& _units);
     static Stops FontSize(const YAML::Node& _node);
     static Stops Offsets(const YAML::Node& _node, const std::vector<Unit>& _units);
+    static Stops Numbers(const YAML::Node& node);
 
     Stops(const std::vector<Frame>& _frames) : frames(_frames) {}
+    Stops(const Stops& rhs) = default;
     Stops() {}
 
     auto evalFloat(float _key) const -> float;

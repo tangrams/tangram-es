@@ -181,6 +181,29 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, co
     return stops;
 }
 
+auto Stops::Numbers(const YAML::Node& node) -> Stops {
+    Stops stops;
+    if (!node.IsSequence()) { return stops; }
+
+    float lastKey = 0;
+
+    for (const auto frameNode : node) {
+        if (!frameNode.IsSequence() || frameNode.size() != 2) { continue; }
+
+        float key = frameNode[0].as<float>();
+        if (lastKey > key) {
+            LOGW("Invalid stop order: key %f > %f\n", lastKey, key);
+            continue;
+        }
+        lastKey = key;
+
+        float value = frameNode[1].as<float>();
+        stops.frames.emplace_back(key, value);
+    }
+
+    return stops;
+}
+
 auto Stops::evalWidth(float _key) const -> float {
     if (frames.empty()) { return 0; }
 
