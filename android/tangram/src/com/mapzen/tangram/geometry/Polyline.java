@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A sequence of LngLat points and its properties
+ * {@code Polyline} is a sequence of LngLat points and its properties.
+ *
+ * Users of Tangram do not need to use this class.
  */
 public class Polyline extends Geometry {
 

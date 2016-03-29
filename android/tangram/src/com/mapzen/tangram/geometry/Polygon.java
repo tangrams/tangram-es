@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A sequence of rings of LngLat points and its properties
+ * {@code Polygon} is a sequence of rings of LngLat points and its properties.
+ *
+ * Users of Tangram do not need to use this class.
  */
 public class Polygon extends Geometry {
 

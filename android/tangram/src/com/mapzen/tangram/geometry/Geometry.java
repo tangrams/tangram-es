@@ -3,7 +3,9 @@ package com.mapzen.tangram.geometry;
 import java.util.Map;
 
 /**
- * Geometry is an abstract container of LngLat points and associated properties
+ * {@code Geometry} is an abstract container of LngLat points and associated properties.
+ *
+ * Users of Tangram do not need to use this class.
  */
 public abstract class Geometry {
 
