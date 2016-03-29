@@ -2,8 +2,7 @@
 
 #include "geom.h"
 #include "glm/gtx/rotate_vector.hpp"
-#include "platform.h"
-#include <memory>
+#include "glm/gtx/norm.hpp"
 
 namespace mapbox { namespace util {
 template <>
@@ -87,7 +86,7 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
 
         auto& p = _polygon[ring][src - offset];
         glm::vec3 coord(p.x, p.y, _height);
-        glm::vec3 normal(0.0, 0.0, 1.0);
+        static const glm::vec3 normal(0.0, 0.0, 1.0);
 
         if (_ctx.useTexCoords) {
             glm::vec2 uv(mapValue(coord.x, min.x, max.x, 0., 1.),
@@ -108,7 +107,7 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, 
 
     int vertexDataOffset = (int)_ctx.numVertices;
 
-    glm::vec3 upVector(0.0f, 0.0f, 1.0f);
+    static const glm::vec3 upVector(0.0f, 0.0f, 1.0f);
     glm::vec3 normalVector;
 
     size_t sumIndices = _ctx.indices.size();
@@ -136,6 +135,12 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, 
 
             normalVector = glm::cross(upVector, b - a);
             normalVector = glm::normalize(normalVector);
+
+            if (std::isnan(normalVector.x)
+             || std::isnan(normalVector.y)
+             || std::isnan(normalVector.z)) {
+                continue;
+            }
 
             // 1st vertex top
             a.z = _maxHeight;
@@ -296,6 +301,7 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
 
     // Process first point in line with an end cap
     normNext = glm::normalize(perp2d(coordCurr, coordNext));
+
     addCap(coordCurr, normNext, cornersOnCap, true, _ctx);
     addPolyLineVertex(coordCurr, normNext, {1.0f, 0.0f}, _ctx); // right corner
     addPolyLineVertex(coordCurr, -normNext, {0.0f, 0.0f}, _ctx); // left corner
@@ -307,15 +313,32 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
         coordCurr = coordNext;
         coordNext = _line[i + 1];
 
+        if (coordCurr == coordNext) {
+            continue;
+        }
+
         normPrev = normNext;
         normNext = glm::normalize(perp2d(coordCurr, coordNext));
 
         // Compute "normal" for miter joint
         miterVec = normPrev + normNext;
-        float scale = sqrtf(2.0f / (1.0f + glm::dot(normPrev, normNext)) / glm::dot(miterVec, miterVec) );
+
+        float scale = 1.f;
+
+        // normPrev and normNext are in the opposite direction
+        // in order to prevent NaN values, we use the perp
+        // vector of those two vectors
+        if (miterVec == glm::zero<glm::vec2>()) {
+            miterVec = perp2d(glm::vec3(normNext, 0.f), glm::vec3(normPrev, 0.f));
+        } else {
+            scale = sqrtf(2.0f / (1.0f + glm::dot(normPrev, normNext)) / glm::dot(miterVec, miterVec));
+        }
+
         miterVec *= scale;
-        if (glm::length(miterVec) > _ctx.miterLimit) {
+
+        if (glm::length2(miterVec) > glm::length2(_ctx.miterLimit)) {
             trianglesOnJoin = 1;
+            miterVec *= _ctx.miterLimit / glm::length(miterVec);
         }
 
         float v = i / (float)lineSize;
