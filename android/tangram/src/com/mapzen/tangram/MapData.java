@@ -47,7 +47,7 @@ public class MapData {
      */
     public void addToMap(MapController map) {
         if (map == null) {
-            throw new RuntimeException("Cannot assign a null map, use removeFromMap() instead");
+            throw new RuntimeException("MapData cannot be added to a null MapController");
         }
         if (this.map != null) {
             removeFromMap();
