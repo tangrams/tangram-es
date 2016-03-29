@@ -12,22 +12,17 @@ std::string PointLight::s_typeName = "PointLight";
 
 PointLight::PointLight(const std::string& _name, bool _dynamic) :
     Light(_name, _dynamic),
-    m_position(0.0),
     m_attenuation(0.0),
     m_innerRadius(0.0),
     m_outerRadius(0.0) {
 
     m_type = LightType::point;
-
 }
 
 PointLight::~PointLight() {}
 
-void PointLight::setPosition(const glm::vec3 &_pos) {
-    m_position.x = _pos.x;
-    m_position.y = _pos.y;
-    m_position.z = _pos.z;
-    m_position.w = 0.0;
+void PointLight::setPosition(UnitVec<glm::vec3, 3> pos) {
+    m_position = pos;
 }
 
 void PointLight::setAttenuation(float _att){
@@ -55,13 +50,13 @@ std::unique_ptr<LightUniforms> PointLight::injectOnProgram(ShaderProgram& _shade
 void PointLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
     Light::setupProgram(_view, _uniforms);
 
-    glm::vec4 position = m_position;
+    glm::vec4 position = glm::vec4(m_position.value, 0.0);
 
     if (m_origin == LightOrigin::world) {
         // For world origin, format is: [longitude, latitude, meters (default) or pixels w/px units]
 
         // Move light's world position into camera space
-        glm::dvec2 camSpace = _view.getMapProjection().LonLatToMeters(glm::dvec2(m_position.x, m_position.y));
+        glm::dvec2 camSpace = _view.getMapProjection().LonLatToMeters(glm::dvec2(position.x, position.y));
         position.x = camSpace.x - (_view.getPosition().x + _view.getEye().x);
         position.y = camSpace.y - (_view.getPosition().y + _view.getEye().y);
         position.z = position.z - _view.getEye().z;
@@ -69,6 +64,14 @@ void PointLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
     } else if (m_origin == LightOrigin::ground) {
         // Move light position relative to the eye position in world space
         position -= glm::vec4(_view.getEye(), 0.0);
+    }
+
+    if (m_origin == LightOrigin::camera || m_origin == LightOrigin::ground) {
+        for (int i = 0; i < 3; ++i) {
+            if (m_position.units[i] == Unit::pixel) {
+                position[i] /= _view.pixelsPerMeter();
+            }
+        }
     }
 
     if (m_origin == LightOrigin::world || m_origin == LightOrigin::ground) {
@@ -121,7 +124,7 @@ std::string PointLight::getInstanceDefinesBlock() {
 std::string PointLight::getInstanceAssignBlock() {
     std::string block = Light::getInstanceAssignBlock();
     if (!m_dynamic) {
-        block += ", " + glm::to_string(m_position);
+        block += ", " + glm::to_string(m_position.value);
         if (m_attenuation!=0.0) {
             block += ", " + std::to_string(m_attenuation);
         }

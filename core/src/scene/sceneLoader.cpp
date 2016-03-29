@@ -21,6 +21,7 @@
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
 #include "scene/styleMixer.h"
+#include "scene/styleParam.h"
 #include "util/yamlHelper.h"
 #include "view/view.h"
 
@@ -716,7 +717,9 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
         auto pLight(std::make_unique<PointLight>(name));
 
         if (Node position = light["position"]) {
-            pLight->setPosition(parseVec<glm::vec3>(position));
+            UnitVec<glm::vec3, 3> lightPos;
+            StyleParam::parseVec3(position.Scalar(), {Unit::meter, Unit::pixel}, lightPos);
+            pLight->setPosition(lightPos);
         }
         if (Node radius = light["radius"]) {
             if (radius.size() > 1) {
@@ -734,7 +737,9 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
         auto sLight(std::make_unique<SpotLight>(name));
 
         if (Node position = light["position"]) {
-            sLight->setPosition(parseVec<glm::vec3>(position));
+            UnitVec<glm::vec3, 3> lightPos;
+            StyleParam::parseVec3(position.Scalar(), {Unit::meter, Unit::pixel}, lightPos);
+            sLight->setPosition(lightPos);
         }
         if (Node direction = light["direction"]) {
             sLight->setDirection(parseVec<glm::vec3>(direction));
