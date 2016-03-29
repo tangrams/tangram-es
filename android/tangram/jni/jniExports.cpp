@@ -183,6 +183,8 @@ extern "C" {
             auto key = stringFromJString(jniEnv, jkey);
             auto value = stringFromJString(jniEnv, jvalue);
             properties.set(key, value);
+            jniEnv->DeleteLocalRef(jkey);
+            jniEnv->DeleteLocalRef(jvalue);
         }
 
         auto* coordinates = jniEnv->GetDoubleArrayElements(jcoordinates, NULL);
