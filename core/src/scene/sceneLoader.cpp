@@ -792,6 +792,21 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
         sceneLight->setSpecularColor(getColorAsVec4(specular));
     }
 
+    // Verify that light position parameters are consistent with the origin type
+    if (sceneLight->getType() == LightType::point || sceneLight->getType() == LightType::spot) {
+        auto pLight = static_cast<PointLight&>(*sceneLight);
+        auto lightPosition = pLight.getPosition();
+        LightOrigin origin = pLight.getOrigin();
+
+        if (origin == LightOrigin::world) {
+            if (lightPosition.units[0] == Unit::pixel || lightPosition.units[1] == Unit::pixel) {
+                LOGW("Light position with attachment %s may not be used with unit of type %s",
+                    lightOriginString(origin).c_str(), unitString(Unit::pixel).c_str());
+                LOGW("Long/Lat expected in meters");
+            }
+        }
+    }
+
     scene.lights().push_back(std::move(sceneLight));
 }
 

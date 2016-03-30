@@ -54,6 +54,7 @@ void PointLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
 
     if (m_origin == LightOrigin::world) {
         // For world origin, format is: [longitude, latitude, meters (default) or pixels w/px units]
+        position[2] /= m_position.units[2] == Unit::pixel ? _view.pixelsPerMeter() : 1.0;
 
         // Move light's world position into camera space
         glm::dvec2 camSpace = _view.getMapProjection().LonLatToMeters(glm::dvec2(position.x, position.y));

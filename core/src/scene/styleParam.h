@@ -60,6 +60,16 @@ constexpr size_t StyleParamKeySize = static_cast<size_t>(StyleParamKey::NUM_ELEM
 
 enum class Unit { pixel, milliseconds, meter, seconds };
 
+static std::string unitString(Unit unit) {
+    switch(unit) {
+        case Unit::pixel: return "pixel";
+        case Unit::milliseconds: return "milliseconds";
+        case Unit::meter: return "meter";
+        case Unit::seconds: return "seconds";
+        default: return "undefined";
+    }
+}
+
 template <typename T, int size>
 struct UnitVec {
     T value = T(0.0);
