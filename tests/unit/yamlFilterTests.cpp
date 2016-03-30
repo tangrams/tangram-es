@@ -55,8 +55,8 @@ void init() {
     bike.props.set("check", "available");
     bike.props.set("serial", 4398046511105); // 2^42 + 1
 
-    ctx.setGlobal("$geometry", Value(1));
-    ctx.setGlobal("$zoom", Value("false"));
+    ctx.setKeyword("$geometry", Value(1));
+    ctx.setKeyword("$zoom", Value("false"));
 }
 
 

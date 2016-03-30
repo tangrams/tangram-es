@@ -207,7 +207,7 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
                 m_evaluated[i] = *param;
                 param = &m_evaluated[i];
 
-                Stops::eval(*param->stops, param->key, _ctx.getGlobalZoom(),
+                Stops::eval(*param->stops, param->key, _ctx.getKeywordZoom(),
                             m_evaluated[i].value);
             }
         }

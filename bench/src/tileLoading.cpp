@@ -52,7 +52,7 @@ struct TestContext {
         SceneLoader::loadScene(sceneNode, *scene);
 
         styleContext.initFunctions(*scene);
-        styleContext.setGlobalZoom(0);
+        styleContext.setKeywordZoom(0);
 
         source = scene->dataSources()[0];
         tileBuilder.setScene(scene);

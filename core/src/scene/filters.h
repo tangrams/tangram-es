@@ -10,7 +10,7 @@ namespace Tangram {
 class StyleContext;
 struct Feature;
 
-enum class FilterGlobal : uint8_t {
+enum class FilterKeyword : uint8_t {
     undefined,
     zoom,
     geometry,
@@ -30,18 +30,18 @@ struct Filter {
     struct EqualitySet {
         std::string key;
         std::vector<Value> values;
-        FilterGlobal global;
+        FilterKeyword keyword;
     };
     struct Equality {
         std::string key;
         Value value;
-        FilterGlobal global;
+        FilterKeyword keyword;
     };
     struct Range {
         std::string key;
         float min;
         float max;
-        FilterGlobal global;
+        FilterKeyword keyword;
     };
     struct Existence {
         std::string key;
@@ -82,14 +82,14 @@ struct Filter {
     // Create an 'equality' filter
     inline static Filter MatchEquality(const std::string& k, const std::vector<Value>& vals) {
         if (vals.size() == 1) {
-            return { Equality{ k, vals[0], globalType(k) }};
+            return { Equality{ k, vals[0], keywordType(k) }};
         } else {
-            return { EqualitySet{ k, vals, globalType(k) }};
+            return { EqualitySet{ k, vals, keywordType(k) }};
         }
     }
     // Create a 'range' filter
     inline static Filter MatchRange(const std::string& k, float min, float max) {
-        return { Range{ k, min, max, globalType(k) }};
+        return { Range{ k, min, max, keywordType(k) }};
     }
     // Create an 'existence' filter
     inline static Filter MatchExistence(const std::string& k, bool ex) {
@@ -100,13 +100,13 @@ struct Filter {
         return { Function{ id }};
     }
 
-    static FilterGlobal globalType(const std::string& _key) {
+    static FilterKeyword keywordType(const std::string& _key) {
         if (_key == "$geometry") {
-            return FilterGlobal::geometry;
+            return FilterKeyword::geometry;
         } else if (_key == "$zoom") {
-            return  FilterGlobal::zoom;
+            return  FilterKeyword::zoom;
         }
-        return  FilterGlobal::undefined;
+        return  FilterKeyword::undefined;
     }
 
     /* Public for testing */
