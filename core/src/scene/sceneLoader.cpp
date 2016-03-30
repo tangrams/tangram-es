@@ -29,7 +29,6 @@
 #include <algorithm>
 #include <iterator>
 #include <unordered_map>
-#include <regex>
 
 using YAML::Node;
 using YAML::NodeType;
@@ -71,21 +70,19 @@ void SceneLoader::applyGlobalProperties(Node& node, Scene& scene) {
             std::string key = node.Scalar();
             if (key.compare(0, 7, "global.") == 0) {
                 key.replace(0, 7, "");
-                key = std::regex_replace(key, std::regex("\\."), DELIMITER);
+                std::replace(key.begin(), key.end(), '.', DELIMITER[0]);
                 node = scene.globals()[key];
             }
         }
         break;
     case NodeType::Sequence:
-        for (const auto& n : node) {
-            Node nextNode = n;
-            applyGlobalProperties(nextNode, scene);
+        for (auto n : node) {
+            applyGlobalProperties(n, scene);
         }
         break;
     case NodeType::Map:
-        for (const auto& n : node) {
-            Node nextNode = n.second;
-            applyGlobalProperties(nextNode, scene);
+        for (auto n : node) {
+            applyGlobalProperties(n.second, scene);
         }
         break;
     default:
@@ -97,12 +94,12 @@ void SceneLoader::parseGlobals(const Node& node, Scene& scene, const std::string
     switch (node.Type()) {
     case NodeType::Scalar:
     case NodeType::Sequence:
-        {
-            auto& g = scene.globals();
-            g[key] = YAML::Clone(node);
-            break;
-        }
+        scene.globals()[key] = node;
+        break;
     case NodeType::Map:
+        if (key.size() > 0) {
+            scene.globals()[key] = node;
+        }
         for (const auto& g : node) {
             std::string value = g.first.Scalar();
             Node global = node[value];
