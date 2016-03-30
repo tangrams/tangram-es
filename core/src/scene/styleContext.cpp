@@ -127,32 +127,32 @@ void StyleContext::setFeature(const Feature& _feature) {
 
     m_feature = &_feature;
 
-    if (m_globalGeom != m_feature->geometryType) {
-        setGlobal(key_geom, s_geometryStrings[m_feature->geometryType]);
-        m_globalGeom = m_feature->geometryType;
+    if (m_keywordGeom != m_feature->geometryType) {
+        setKeyword(key_geom, s_geometryStrings[m_feature->geometryType]);
+        m_keywordGeom = m_feature->geometryType;
     }
 }
 
-void StyleContext::setGlobalZoom(int _zoom) {
-    if (m_globalZoom != _zoom) {
-        setGlobal(key_zoom, _zoom);
-        m_globalZoom = _zoom;
+void StyleContext::setKeywordZoom(int _zoom) {
+    if (m_keywordZoom != _zoom) {
+        setKeyword(key_zoom, _zoom);
+        m_keywordZoom = _zoom;
     }
 }
 
-void StyleContext::setGlobal(const std::string& _key, Value _val) {
-    auto globalKey = Filter::globalType(_key);
-    if (globalKey == FilterGlobal::undefined) {
-        LOG("Undefined Global: %s", _key.c_str());
+void StyleContext::setKeyword(const std::string& _key, Value _val) {
+    auto keywordKey = Filter::keywordType(_key);
+    if (keywordKey == FilterKeyword::undefined) {
+        LOG("Undefined Keyword: %s", _key.c_str());
         return;
     }
 
-    // Unset shortcuts in case setGlobal was not called by
+    // Unset shortcuts in case setKeyword was not called by
     // the helper functions above.
-    if (_key == key_zoom) { m_globalZoom = -1; }
-    if (_key == key_geom) { m_globalGeom = -1; }
+    if (_key == key_zoom) { m_keywordZoom = -1; }
+    if (_key == key_geom) { m_keywordGeom = -1; }
 
-    Value& entry = m_globals[static_cast<uint8_t>(globalKey)];
+    Value& entry = m_keywords[static_cast<uint8_t>(keywordKey)];
     if (entry == _val) { return; }
 
     if (_val.is<std::string>()) {
@@ -166,8 +166,8 @@ void StyleContext::setGlobal(const std::string& _key, Value _val) {
     entry = std::move(_val);
 }
 
-const Value& StyleContext::getGlobal(const std::string& _key) const {
-    return getGlobal(Filter::globalType(_key));
+const Value& StyleContext::getKeyword(const std::string& _key) const {
+    return getKeyword(Filter::keywordType(_key));
 }
 
 void StyleContext::clear() {

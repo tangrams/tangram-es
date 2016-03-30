@@ -42,7 +42,7 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
     auto tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), &_source);
     tile->initGeometry(m_scene->styles().size());
 
-    m_styleContext.setGlobalZoom(_tileID.s);
+    m_styleContext.setKeywordZoom(_tileID.s);
 
     for (auto& builder : m_styleBuilder) {
         if (builder.second)
