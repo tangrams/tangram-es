@@ -89,7 +89,9 @@ uint8_t getCameraType();
 // according to the scene file using the provided data source name;
 void addDataSource(std::shared_ptr<DataSource> _source);
 
-int removeDataSource(DataSource& _source);
+// Remove a data source from the map; returns true if the source was found
+// and removed, otherwise returns false.
+bool removeDataSource(DataSource& _source);
 
 void clearDataSource(DataSource& _source, bool _data, bool _tiles);
 

@@ -11,6 +11,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
+import java.util.Map;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -34,6 +35,16 @@ public class MapController implements Renderer {
         FLAT,
     }
 
+    public enum DebugFlag {
+        FREEZE_TILES,
+        PROXY_COLORS,
+        TILE_BOUNDS,
+        TILE_INFOS,
+        LABELS,
+        TANGRAM_INFOS,
+        ALL_LABELS,
+    }
+
     public interface FeatureTouchListener {
         /**
          * Receive information about features found in a call to {@link #pickFeature(float, float)}
@@ -41,7 +52,7 @@ public class MapController implements Renderer {
          * @param positionX The horizontal screen coordinate of the center of the feature
          * @param positionY The vertical screen coordinate of the center of the feature
          */
-        void onTouch(Properties properties, float positionX, float positionY);
+        void onTouch(Map<String, String> properties, float positionX, float positionY);
     }
 
     /**
@@ -490,6 +501,15 @@ public class MapController implements Renderer {
         mapView.queueEvent(r);
     }
 
+    /**
+     * Make a debugging feature active or inactive
+     * @param flag The feature to set
+     * @param on True to activate the feature, false to deactivate
+     */
+    public void setDebugFlag(DebugFlag flag, boolean on) {
+        nativeSetDebugFlag(flag.ordinal(), on);
+    }
+
     // Native methods
     // ==============
 
@@ -530,6 +550,14 @@ public class MapController implements Renderer {
 
     private native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private native void onUrlFailure(long callbackPtr);
+
+    native long nativeAddDataSource(String name);
+    native void nativeRemoveDataSource(long pointer);
+    native void nativeClearDataSource(long pointer);
+    native void nativeAddFeature(long pointer, double[] coordinates, int[] rings, String[] properties);
+    native void nativeAddGeoJson(long pointer, String geojson);
+
+    native void nativeSetDebugFlag(int flag, boolean on);
 
     // Private members
     // ===============
@@ -621,7 +649,7 @@ public class MapController implements Renderer {
 
     // Feature selection
     // =================
-    void featureSelectionCb(Properties properties, float positionX, float positionY) {
+    void featureSelectionCb(Map<String, String> properties, float positionX, float positionY) {
         if (featureTouchListener != null) {
             featureTouchListener.onTouch(properties, positionX, positionY);
         }

@@ -1,5 +1,8 @@
 #include "tangram.h"
 #include "platform_android.h"
+#include "data/clientGeoJsonSource.h"
+
+#include <cassert>
 
 extern "C" {
 
@@ -143,5 +146,90 @@ extern "C" {
         }
     }
 
-}
+    JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeAddDataSource(JNIEnv* jniEnv, jobject obj, jstring name) {
+        auto source_name = stringFromJString(jniEnv, name);
+        auto source = std::shared_ptr<Tangram::DataSource>(new Tangram::ClientGeoJsonSource(source_name, ""));
+        Tangram::addDataSource(source);
+        return reinterpret_cast<jlong>(source.get());
+    }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeRemoveDataSource(JNIEnv* jniEnv, jobject obj, jlong pointer) {
+        assert(pointer > 0);
+        auto source_ptr = reinterpret_cast<Tangram::DataSource*>(pointer);
+        Tangram::removeDataSource(*source_ptr);
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeClearDataSource(JNIEnv* jniEnv, jobject obj, jlong pointer) {
+        assert(pointer > 0);
+        auto source_ptr = reinterpret_cast<Tangram::DataSource*>(pointer);
+        Tangram::clearDataSource(*source_ptr, true, true);
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeAddFeature(JNIEnv* jniEnv, jobject obj, jlong pointer,
+        jdoubleArray jcoordinates, jintArray jrings, jobjectArray jproperties) {
+
+        assert(pointer > 0);
+        auto source_ptr = reinterpret_cast<Tangram::ClientGeoJsonSource*>(pointer);
+
+        size_t n_points = jniEnv->GetArrayLength(jcoordinates) / 2;
+        size_t n_rings = (jrings == NULL) ? 0 : jniEnv->GetArrayLength(jrings);
+        size_t n_properties = (jproperties == NULL) ? 0 : jniEnv->GetArrayLength(jproperties) / 2;
+
+        Tangram::Properties properties;
+
+        for (size_t i = 0; i < n_properties; ++i) {
+            jstring jkey = (jstring) (jniEnv->GetObjectArrayElement(jproperties, 2 * i));
+            jstring jvalue = (jstring) (jniEnv->GetObjectArrayElement(jproperties, 2 * i + 1));
+            auto key = stringFromJString(jniEnv, jkey);
+            auto value = stringFromJString(jniEnv, jvalue);
+            properties.set(key, value);
+            jniEnv->DeleteLocalRef(jkey);
+            jniEnv->DeleteLocalRef(jvalue);
+        }
+
+        auto* coordinates = jniEnv->GetDoubleArrayElements(jcoordinates, NULL);
+
+        if (n_rings > 0) {
+            // If rings are defined, this is a polygon feature.
+            auto* rings = jniEnv->GetIntArrayElements(jrings, NULL);
+            std::vector<std::vector<Tangram::LngLat>> polygon;
+            size_t ring_start = 0, ring_end = 0;
+            for (size_t i = 0; i < n_rings; ++i) {
+                ring_end += rings[i];
+                std::vector<Tangram::LngLat> ring;
+                for (; ring_start < ring_end; ++ring_start) {
+                    ring.push_back({coordinates[2 * ring_start], coordinates[2 * ring_start + 1]});
+                }
+                polygon.push_back(std::move(ring));
+            }
+            source_ptr->addPoly(properties, polygon);
+            jniEnv->ReleaseIntArrayElements(jrings, rings, JNI_ABORT);
+        } else if (n_points > 1) {
+            // If no rings defined but multiple points, this is a polyline feature.
+            std::vector<Tangram::LngLat> polyline;
+            for (size_t i = 0; i < n_points; ++i) {
+                polyline.push_back({coordinates[2 * i], coordinates[2 * i + 1]});
+            }
+            source_ptr->addLine(properties, polyline);
+        } else {
+            // This is a point feature.
+            auto point = Tangram::LngLat(coordinates[0], coordinates[1]);
+            source_ptr->addPoint(properties, point);
+        }
+
+        jniEnv->ReleaseDoubleArrayElements(jcoordinates, coordinates, JNI_ABORT);
+
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeAddGeoJson(JNIEnv* jniEnv, jobject obj, jlong pointer, jstring geojson) {
+        assert(pointer > 0);
+        auto source_ptr = reinterpret_cast<Tangram::ClientGeoJsonSource*>(pointer);
+        auto data = stringFromJString(jniEnv, geojson);
+        source_ptr->addData(data);
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetDebugFlag(JNIEnv* jniEnv, jobject obj, jint flag, jboolean on) {
+        Tangram::setDebugFlag(static_cast<Tangram::DebugFlags>(flag), on);
+    }
+
+}

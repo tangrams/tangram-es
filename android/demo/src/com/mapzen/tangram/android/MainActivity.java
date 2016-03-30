@@ -5,21 +5,18 @@ import android.os.Bundle;
 import android.view.Window;
 import android.widget.Toast;
 
-import com.mapzen.tangram.DebugFlags;
 import com.mapzen.tangram.HttpHandler;
 import com.mapzen.tangram.LngLat;
 import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
-import com.mapzen.tangram.Properties;
-import com.mapzen.tangram.Tangram;
-import com.mapzen.tangram.Coordinates;
-
 import com.mapzen.tangram.TouchInput;
 import com.squareup.okhttp.Callback;
 
 import java.io.File;
-import java.lang.Math;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends Activity {
 
@@ -44,13 +41,13 @@ public class MainActivity extends Activity {
         mapController.setMapZoom(16);
         mapController.setMapPosition(-74.00976419448854, 40.70532700869127);
 
-        final MapData touchMarkers = new MapData("touch");
-        Tangram.addDataSource(touchMarkers);
+        touchMarkers = new MapData("touch");
+        touchMarkers.addToMap(mapController);
 
         final LngLat lastTappedPoint = new LngLat();
-        final String colors[] = {"blue", "red", "green" };
+        final String colors[] = {"blue", "red", "green"};
         final LngLat zeroCoord = new LngLat();
-        final Coordinates line = new Coordinates();
+        final ArrayList<LngLat> line = new ArrayList<>();
 
         mapController.setTapResponder(new TouchInput.TapResponder() {
             @Override
@@ -63,18 +60,20 @@ public class MainActivity extends Activity {
                 LngLat tapPoint = mapController.coordinatesAtScreenPosition(x, y);
 
                 if (!lastTappedPoint.equals(zeroCoord)) {
-                    Properties props = new Properties();
-                    props.set("type", "line");
-                    props.set("color", colors[(int)(Math.random() * 2.0 + 0.5)] );
+                    Map<String, String> props = new HashMap<>();
+                    props.put("type", "line");
+                    props.put("color", colors[(int) (Math.random() * 2.0 + 0.5)]);
 
                     line.clear();
-                    line.add(tapPoint);
-                    line.add(lastTappedPoint);
-                    touchMarkers.addLine(props, line);
+                    line.add(new LngLat(tapPoint));
+                    line.add(new LngLat(lastTappedPoint));
+                    touchMarkers.addPolyline(line, props);
 
-                    props = new Properties();
-                    props.set("type", "point");
-                    touchMarkers.addPoint(props, lastTappedPoint);
+                    props = new HashMap<>();
+                    props.put("type", "point");
+                    touchMarkers.addPoint(lastTappedPoint, props);
+
+                    touchMarkers.syncWithMap();
                 }
                 lastTappedPoint.set(tapPoint);
 
@@ -105,18 +104,19 @@ public class MainActivity extends Activity {
             @Override
             public void onLongPress(float x, float y) {
                 if (touchMarkers != null) {
-                    touchMarkers.clear();
+                    touchMarkers.clear().syncWithMap();
                 }
                 tileInfo = !tileInfo;
-                Tangram.setDebugFlag(DebugFlags.TILE_INFOS, tileInfo);
+                mapController.setDebugFlag(MapController.DebugFlag.TILE_BOUNDS, tileInfo);
+                mapController.setDebugFlag(MapController.DebugFlag.TILE_INFOS, tileInfo);
             }
         });
 
         mapController.setFeatureTouchListener(new MapController.FeatureTouchListener() {
             @Override
-            public void onTouch(Properties properties, float positionX, float positionY) {
-                String name = properties.getString("name");
-                if (name.length() == 0) {
+            public void onTouch(Map<String, String> properties, float positionX, float positionY) {
+                String name = properties.get("name");
+                if (name != null) {
                     name = "unnamed...";
                 }
                 Toast.makeText(getApplicationContext(),
