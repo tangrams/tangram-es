@@ -37,6 +37,8 @@ public:
         UniformLocation outerRadius;
     };
 
+    auto getPosition() const -> UnitVec<glm::vec3, 3> { return m_position; }
+
     std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) override;
 
 protected:
