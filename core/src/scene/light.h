@@ -66,7 +66,7 @@ public:
     virtual void setSpecularColor(const glm::vec4 _specular);
 
     /*  Set the origin relative to which this light will be positioned */
-    virtual void setOrigin( LightOrigin _origin );
+    void setOrigin(LightOrigin origin);
 
     /*  Get the instances light name defined on the shader */
     virtual std::string getInstanceName();

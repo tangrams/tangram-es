@@ -25,16 +25,16 @@ void PointLight::setPosition(UnitVec<glm::vec3, 3> pos) {
     m_position = pos;
 }
 
-void PointLight::setAttenuation(float _att){
+void PointLight::setAttenuation(float _att) {
     m_attenuation = _att;
 }
 
-void PointLight::setRadius(float _outer){
+void PointLight::setRadius(float _outer) {
     m_innerRadius = 0.0;
     m_outerRadius = _outer;
 }
 
-void PointLight::setRadius(float _inner, float _outer){
+void PointLight::setRadius(float _inner, float _outer) {
     m_innerRadius = _inner;
     m_outerRadius = _outer;
 }
@@ -61,16 +61,14 @@ void PointLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
         position.y = camSpace.y - (_view.getPosition().y + _view.getEye().y);
         position.z = position.z - _view.getEye().z;
 
-    } else if (m_origin == LightOrigin::ground) {
-        // Move light position relative to the eye position in world space
-        position -= glm::vec4(_view.getEye(), 0.0);
-    }
-
-    if (m_origin == LightOrigin::camera || m_origin == LightOrigin::ground) {
+    } else if (m_origin == LightOrigin::ground || m_origin == LightOrigin::camera) {
         for (int i = 0; i < 3; ++i) {
-            if (m_position.units[i] == Unit::pixel) {
-                position[i] /= _view.pixelsPerMeter();
-            }
+            position[i] /= m_position.units[i] == Unit::pixel ? _view.pixelsPerMeter() : 1.0;
+        }
+
+        if (m_origin == LightOrigin::ground) {
+            // Move light position relative to the eye position in world space
+            position -= glm::vec4(_view.getEye(), 0.0);
         }
     }
 
