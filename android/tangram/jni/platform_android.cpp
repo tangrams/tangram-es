@@ -111,6 +111,10 @@ public:
     JNIEnv* operator->() const {
         return jniEnv;
     }
+
+    operator JNIEnv*() const {
+        return jniEnv;
+    }
 };
 
 void requestRender() {
@@ -126,11 +130,7 @@ std::string systemFontFallbackPath(int _importance, int _weightHint) {
 
     jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFallbackFilePath, _importance, _weightHint);
 
-    size_t length = jniEnv->GetStringUTFLength(returnStr);
-    std::string fontFallbackPath(length, 0);
-    jniEnv->GetStringUTFRegion(returnStr, 0, length, &fontFallbackPath[0]);
-
-    return fontFallbackPath;
+    return stringFromJString(jniEnv, returnStr);
 }
 
 std::string systemFontPath(const std::string& _family, const std::string& _weight, const std::string& _style) {
@@ -142,11 +142,7 @@ std::string systemFontPath(const std::string& _family, const std::string& _weigh
     jstring jkey = jniEnv->NewStringUTF(key.c_str());
     jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFilePath, jkey);
 
-    size_t length = jniEnv->GetStringUTFLength(returnStr);
-    std::string fontPath(length, 0);
-    jniEnv->GetStringUTFRegion(returnStr, 0, length, &fontPath[0]);
-
-    return fontPath;
+    return stringFromJString(jniEnv, returnStr);
 }
 
 void setContinuousRendering(bool _isContinuous) {
@@ -338,9 +334,9 @@ void initGLExtensions() {
 }
 
 std::string stringFromJString(JNIEnv* jniEnv, jstring string) {
-    const char* cstring = jniEnv->GetStringUTFChars(string, NULL);
-    auto out = std::string(cstring);
-    jniEnv->ReleaseStringUTFChars(string, cstring);
+    size_t length = jniEnv->GetStringLength(string);
+    std::string out(length, 0);
+    jniEnv->GetStringUTFRegion(string, 0, length, &out[0]);
     return out;
 }
 
