@@ -41,10 +41,6 @@ vec3 worldNormal() {
     return normalize(u_inverse_normal_matrix * v_normal);
 }
 
-vec4 worldPosition() {
-    return v_world_position;
-}
-
 #pragma tangram: material
 #pragma tangram: lighting
 #pragma tangram: global
