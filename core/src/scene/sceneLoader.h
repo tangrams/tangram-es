@@ -25,6 +25,7 @@ class Material;
 class Style;
 struct StyleParam;
 struct MaterialTexture;
+class PointLight;
 struct Filter;
 
 // 0: type, 1: values
@@ -68,6 +69,7 @@ struct SceneLoader {
     static bool parseStyleUniforms(const Node& value, Scene& scene, StyleUniform& styleUniform);
 
     static void parseGlobals(const Node& node, Scene& scene, const std::string& key="");
+    static void parseLightPosition(Node position, PointLight& light);
 
     static bool loadStyle(const std::string& styleName, Node config, Scene& scene);
 

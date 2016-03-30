@@ -694,6 +694,22 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
     }
 }
 
+void SceneLoader::parseLightPosition(Node position, PointLight& light) {
+    UnitVec<glm::vec3, 3> lightPos;
+    std::string positionSequence;
+    if (position.IsSequence()) {
+        // Evaluate sequence separated by ',' to parse with parseVec3
+        for (auto n : position) {
+            positionSequence += n.Scalar() + ",";
+        }
+
+        StyleParam::parseVec3(positionSequence, {Unit::meter, Unit::pixel}, lightPos);
+        light.setPosition(lightPos);
+    } else {
+        LOGNode("Wrong light position parameter %s", position);
+    }
+}
+
 void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
 
     const Node light = node.second;
@@ -717,9 +733,7 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
         auto pLight(std::make_unique<PointLight>(name));
 
         if (Node position = light["position"]) {
-            UnitVec<glm::vec3, 3> lightPos;
-            StyleParam::parseVec3(position.Scalar(), {Unit::meter, Unit::pixel}, lightPos);
-            pLight->setPosition(lightPos);
+            parseLightPosition(position, *pLight);
         }
         if (Node radius = light["radius"]) {
             if (radius.size() > 1) {
@@ -737,9 +751,7 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
         auto sLight(std::make_unique<SpotLight>(name));
 
         if (Node position = light["position"]) {
-            UnitVec<glm::vec3, 3> lightPos;
-            StyleParam::parseVec3(position.Scalar(), {Unit::meter, Unit::pixel}, lightPos);
-            sLight->setPosition(lightPos);
+            parseLightPosition(position, *sLight);
         }
         if (Node direction = light["direction"]) {
             sLight->setDirection(parseVec<glm::vec3>(direction));
