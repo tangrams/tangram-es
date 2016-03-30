@@ -60,7 +60,7 @@ public class MapController implements Renderer {
      * must contain all the local files that the map will need
      * @param sceneFilePath Location of the YAML scene file within the assets directory
      */
-    public MapController(Context context, String sceneFilePath) {
+    MapController(Context context, String sceneFilePath) {
 
         scenePath = sceneFilePath;
 
@@ -81,7 +81,7 @@ public class MapController implements Renderer {
      * @param view GLSurfaceView where the map will be displayed; input events from this view will
      * be handled by the resulting MapController
      */
-    public void setView(GLSurfaceView view) {
+    void setView(GLSurfaceView view) {
         touchInput = new TouchInput(view.getContext());
         setPanResponder(null);
         setScaleResponder(null);
