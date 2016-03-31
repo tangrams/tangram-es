@@ -43,7 +43,32 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
         setContentView(R.layout.main);
 
         view = (MapView)findViewById(R.id.map);
+        view.onCreate(savedInstanceState);
         view.getMapAsync(this, "scene.yaml");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        view.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        view.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        view.onDestroy();
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        view.onLowMemory();
     }
 
     @Override

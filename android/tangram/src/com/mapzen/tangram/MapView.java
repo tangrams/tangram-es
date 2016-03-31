@@ -3,12 +3,14 @@ package com.mapzen.tangram;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
 public class MapView extends FrameLayout {
 
     protected GLSurfaceView glSurfaceView;
+    protected AsyncTask<Void, Void, MapController> getMapTask;
 
     public MapView(Context context) {
 
@@ -42,7 +44,7 @@ public class MapView extends FrameLayout {
 
         final Context context = getContext();
 
-        new AsyncTask<Void, Void, MapController>() {
+        getMapTask = new AsyncTask<Void, Void, MapController>() {
 
             @Override
             protected MapController doInBackground(Void... params) {
@@ -69,5 +71,28 @@ public class MapView extends FrameLayout {
 
     }
 
+    public void onCreate(Bundle savedInstanceState) {
+
+    }
+
+    public void onResume() {
+
+    }
+
+    public void onPause() {
+
+    }
+
+    public void onDestroy() {
+
+        if (getMapTask != null) {
+            getMapTask.cancel(true);
+        }
+
+    }
+
+    public void onLowMemory() {
+
+    }
 
 }
