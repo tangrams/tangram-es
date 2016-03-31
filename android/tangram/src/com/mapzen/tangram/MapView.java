@@ -28,19 +28,26 @@ public class MapView extends FrameLayout {
 
     }
 
+    /**
+     * Interface for receiving a {@code MapController} once it is ready to be used
+     */
     public interface OnMapReadyCallback {
 
+        /**
+         * Called when the map is ready to be used
+         * @param mapController A non-null {@code MapController} instance for this {@code MapView}
+         */
         void onMapReady(MapController mapController);
 
     }
 
     /**
-     * Construct a MapController asynchronously; may only be called from the UI thread
-     * @param listener The object to receive the resulting MapController in a callback;
+     * Construct a {@code MapController} asynchronously; may only be called from the UI thread
+     * @param callback The object to receive the resulting MapController in a callback;
      * the callback will be made on the UI thread
      * @param sceneFilePath Location of the YAML scene file within the asset bundle
      */
-    public void getMapAsync(final OnMapReadyCallback listener, final String sceneFilePath) {
+    public void getMapAsync(final OnMapReadyCallback callback, final String sceneFilePath) {
 
         final Context context = getContext();
 
@@ -55,7 +62,7 @@ public class MapView extends FrameLayout {
             protected void onPostExecute(MapController map) {
                 map.setView(glSurfaceView);
                 addView(glSurfaceView);
-                listener.onMapReady(map);
+                callback.onMapReady(map);
             }
 
         }.execute();
@@ -71,18 +78,30 @@ public class MapView extends FrameLayout {
 
     }
 
+    /**
+     * You must call this method from the parent Activity/Fragment's corresponding method.
+     */
     public void onCreate(Bundle savedInstanceState) {
 
     }
 
+    /**
+     * You must call this method from the parent Activity/Fragment's corresponding method.
+     */
     public void onResume() {
 
     }
 
+    /**
+     * You must call this method from the parent Activity/Fragment's corresponding method.
+     */
     public void onPause() {
 
     }
 
+    /**
+     * You must call this method from the parent Activity/Fragment's corresponding method.
+     */
     public void onDestroy() {
 
         if (getMapTask != null) {
@@ -91,6 +110,9 @@ public class MapView extends FrameLayout {
 
     }
 
+    /**
+     * You must call this method from the parent Activity/Fragment's corresponding method.
+     */
     public void onLowMemory() {
 
     }
