@@ -4,6 +4,7 @@ import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
@@ -47,7 +48,8 @@ public class MapView extends FrameLayout {
      * the callback will be made on the UI thread
      * @param sceneFilePath Location of the YAML scene file within the asset bundle
      */
-    public void getMapAsync(final OnMapReadyCallback callback, final String sceneFilePath) {
+    public void getMapAsync(@NonNull final OnMapReadyCallback callback,
+                            @NonNull final String sceneFilePath) {
 
         final Context context = getContext();
 
