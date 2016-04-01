@@ -33,10 +33,6 @@ varying vec3 v_normal;
     varying vec4 v_lighting;
 #endif
 
-#pragma tangram: material
-#pragma tangram: lighting
-#pragma tangram: global
-
 vec4 worldPosition() {
     return v_world_position;
 }
@@ -44,6 +40,10 @@ vec4 worldPosition() {
 vec3 worldNormal() {
     return normalize(u_inverse_normal_matrix * v_normal);
 }
+
+#pragma tangram: material
+#pragma tangram: lighting
+#pragma tangram: global
 
 void main(void) {
 
