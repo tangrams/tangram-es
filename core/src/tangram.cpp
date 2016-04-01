@@ -1,4 +1,4 @@
-#include "tangram.h"
+c#include "tangram.h"
 
 #include "platform.h"
 #include "scene/scene.h"
@@ -76,7 +76,7 @@ void initialize(const char* _scenePath) {
     m_view = std::make_shared<View>();
 
     // Create a scene object
-    m_scene = std::make_shared<Scene>();
+    m_scene = std::make_shared<Scene>(std::string(_scenePath));
 
     // Input handler
     m_inputHandler = std::make_unique<InputHandler>(m_view);
@@ -107,7 +107,7 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
 
     bool setPositionFromCurrentView = bool(m_scene);
 
-    auto scene = std::make_shared<Scene>();
+    auto scene = std::make_shared<Scene>(m_scene->path(), m_scene->userDefines());
     if (m_view) {
         scene->view() = std::make_shared<View>(*m_view);
     }
@@ -570,7 +570,16 @@ const std::vector<TouchItem>& pickFeaturesAt(float _x, float _y) {
                                         _x, _y);
 }
 
+void setSceneComponent(std::string componentName, std::string value) {
 
+    return m_scene->setComponent(componentName, value);
+}
+
+void applySceneUpdates() {
+
+    // reload the entire scene for now
+    loadScene(m_scene->path().c_str());
+}
 
 void setupGL() {
 

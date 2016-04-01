@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <iterator>
 #include <unordered_map>
+#include "util/util.h"
 
 using YAML::Node;
 using YAML::NodeType;
@@ -760,13 +761,27 @@ void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
 
     auto& view = _scene.view();
 
+    const std::string currentPath = "cameras";
+
     for (const auto& entry : _cameras) {
 
         const Node camera = entry.second;
 
-        if (Node active = camera["active"]) {
-            if (!active.as<bool>()) {
-                continue;
+        std::string name = entry.first.Scalar();
+
+        std::string path = currentPath + COMPONENT_PATH_DELIMITER + name;
+
+        const static std::string activeKey = "active";
+        if (Node active = camera[activeKey]) {
+            std::string subPath = path + COMPONENT_PATH_DELIMITER + activeKey;
+            std::string isActive;
+
+            if (!_scene.getComponentValue(StyleComponent::cameras, subPath, isActive)) {
+                if (!active.as<bool>()) {
+                    continue;
+                }
+            } else {
+                if (isActive == "false") continue;
             }
         }
 

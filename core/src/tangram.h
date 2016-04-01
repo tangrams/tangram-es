@@ -128,6 +128,10 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene = false);
 
 void runOnMainLoop(std::function<void()> _task);
 
+void setSceneComponent(std::string componentName, std::string value);
+
+void applySceneUpdates();
+
 struct TouchItem {
     std::shared_ptr<Properties> properties;
     float position[2];

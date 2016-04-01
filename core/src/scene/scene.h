@@ -7,6 +7,7 @@
 #include <vector>
 #include <unordered_map>
 
+#include "util/fastmap.h"
 #include "glm/vec2.hpp"
 #include "yaml-cpp/yaml.h"
 
@@ -28,11 +29,26 @@ struct Stops;
  * Scene is a singleton containing the styles, lighting, and interactions defining a map scene
  */
 
+enum StyleComponent {
+    scene,
+    global,
+    cameras,
+    lights,
+    textures,
+    styles,
+    sources,
+    layers
+};
+
+#define COMPONENT_PATH_DELIMITER '.'
+
+using StyleComponents = fastmap<std::string, std::string>;
+
 class Scene {
 public:
-    Scene();
+    Scene(std::string path);
+    Scene(std::string path, std::unordered_map<StyleComponent, StyleComponents> userDefined);
     ~Scene();
-
 
     auto& view() { return m_view; }
     auto& dataSources() { return m_dataSources; };
@@ -75,6 +91,14 @@ public:
     void animated(bool animated) { m_animated = animated ? yes : no; }
     animate animated() const { return m_animated; }
 
+    void setComponent(std::string componentName, std::string value);
+
+    bool getComponentValue(StyleComponent component, const std::string& componentPath, std::string& value);
+
+    std::string path() const { return m_path; }
+
+    const std::unordered_map<StyleComponent, StyleComponents>& userDefines() const { return m_userDefinedValues; }
+
 private:
 
     std::unique_ptr<MapProjection> m_mapProjection;
@@ -87,6 +111,10 @@ private:
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
     std::unordered_map<std::string, YAML::Node> m_globals;
+
+    std::unordered_map<StyleComponent, StyleComponents> m_userDefinedValues;
+
+    std::string m_path;
 
     // Container of all strings used in styling rules; these need to be
     // copied and compared frequently when applying styling, so rules use
