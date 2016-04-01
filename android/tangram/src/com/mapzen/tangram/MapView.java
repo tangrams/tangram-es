@@ -51,6 +51,10 @@ public class MapView extends FrameLayout {
 
         final Context context = getContext();
 
+        if (getMapTask != null) {
+            getMapTask.cancel(true);
+        }
+
         getMapTask = new AsyncTask<Void, Void, MapController>() {
 
             @Override
