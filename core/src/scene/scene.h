@@ -99,6 +99,8 @@ public:
 
     const std::unordered_map<StyleComponent, StyleComponents>& userDefines() const { return m_userDefinedValues; }
 
+    void clearUserDefines() { m_userDefinedValues.clear(); }
+
 private:
 
     std::unique_ptr<MapProjection> m_mapProjection;

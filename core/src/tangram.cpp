@@ -1,4 +1,4 @@
-c#include "tangram.h"
+#include "tangram.h"
 
 #include "platform.h"
 #include "scene/scene.h"
@@ -577,8 +577,12 @@ void setSceneComponent(std::string componentName, std::string value) {
 
 void applySceneUpdates() {
 
-    // reload the entire scene for now
-    loadScene(m_scene->path().c_str());
+    if (m_scene->userDefines().size() > 0) {
+        // reload the entire scene for now
+        loadScene(m_scene->path().c_str());
+
+        m_scene->clearUserDefines();
+    }
 }
 
 void setupGL() {
