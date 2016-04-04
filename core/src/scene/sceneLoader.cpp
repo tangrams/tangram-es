@@ -672,6 +672,7 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
 
     const Node light = node.second;
     const std::string& name = node.first.Scalar();
+
     const std::string& type = light["type"].Scalar();
 
     std::unique_ptr<Light> sceneLight;
@@ -752,6 +753,27 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
     scene.lights().push_back(std::move(sceneLight));
 }
 
+bool SceneLoader::node(StyleComponent component,
+    Node root,
+    Node& value,
+    const std::string& key,
+    Scene& scene,
+    const std::string path)
+{
+    std::string nodeValue;
+    value = root[key];
+
+    if (value) {
+        if (scene.getComponentValue(component, path + COMPONENT_PATH_DELIMITER + key, nodeValue)) {
+            value = Node(nodeValue);
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
 void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
 
     // To correctly match the behavior of the webGL library we'll need a place
@@ -771,28 +793,26 @@ void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
 
         std::string path = currentPath + COMPONENT_PATH_DELIMITER + name;
 
-        const static std::string activeKey = "active";
-        if (Node active = camera[activeKey]) {
-            std::string subPath = path + COMPONENT_PATH_DELIMITER + activeKey;
-            std::string isActive;
+        Node active;
 
-            if (!_scene.getComponentValue(StyleComponent::cameras, subPath, isActive)) {
-                if (!active.as<bool>()) {
-                    continue;
-                }
-            } else {
-                if (isActive == "false") continue;
+        if (node(StyleComponent::cameras, camera, active, "active", _scene, path)) {
+            if (!active.as<bool>()) {
+                continue;
             }
         }
 
-        auto type = camera["type"].Scalar();
-        if (type == "perspective") {
+        Node type;
+        node(StyleComponent::cameras, camera, type, "type", _scene, path);
+
+        if (type.Scalar() == "perspective") {
 
             view->setCameraType(CameraType::perspective);
 
             // Only one of focal length and FOV is applied;
             // according to docs, focal length takes precedence.
-            if (Node focal = camera["focal_length"]) {
+            Node focal, fov;
+
+            if (node(StyleComponent::cameras, camera, focal, "focal_length", _scene, path)) {
                 if (focal.IsScalar()) {
                     float length = focal.as<float>(view->getFocalLength());
                     view->setFocalLength(length);
@@ -800,7 +820,7 @@ void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
                     auto stops = std::make_shared<Stops>(Stops::Numbers(focal));
                     view->setFocalLengthStops(stops);
                 }
-            } else if (Node fov = camera["fov"]) {
+            } else if (node(StyleComponent::cameras, camera, fov, "fov", _scene, path)) {
                 if (fov.IsScalar()) {
                     float degrees = fov.as<float>(view->getFieldOfView() * RAD_TO_DEG);
                     view->setFieldOfView(degrees * DEG_TO_RAD);
@@ -814,14 +834,14 @@ void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
             if (Node vanishing = camera["vanishing_point"]) {
                 // TODO
             }
-        } else if (type == "isometric") {
+        } else if (type.Scalar() == "isometric") {
 
             view->setCameraType(CameraType::isometric);
 
             if (Node axis = camera["axis"]) {
                 view->setObliqueAxis(axis[0].as<float>(), axis[1].as<float>());
             }
-        } else if (type == "flat") {
+        } else if (type.Scalar() == "flat") {
 
             view->setCameraType(CameraType::flat);
 

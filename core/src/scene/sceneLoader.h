@@ -71,6 +71,8 @@ struct SceneLoader {
 
     static bool loadStyle(const std::string& styleName, Node config, Scene& scene);
 
+    static bool node(StyleComponent component, Node root, Node& value, const std::string& key,
+        Scene& scene, const std::string path);
 
     SceneLoader() = delete;
 
