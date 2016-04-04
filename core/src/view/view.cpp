@@ -329,6 +329,9 @@ void View::updateMatrices() {
             far = 2. * m_pos.z / std::max(0., cos(m_pitch + 0.5 * fovy));
             far = std::min(far, maxTileDistance);
             m_proj = glm::perspective(fovy, m_aspect, near, far);
+            // Adjust for vanishing point.
+            m_proj[2][0] -= m_vanishingPoint.x / getWidth();
+            m_proj[2][1] -= m_vanishingPoint.y / getHeight();
             break;
         case CameraType::isometric:
         case CameraType::flat:

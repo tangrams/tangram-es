@@ -47,6 +47,9 @@ public:
     void setObliqueAxis(float _x, float _y) { m_obliqueAxis = { _x, _y}; }
     auto obliqueAxis() const { return m_obliqueAxis; }
 
+    void setVanishingPoint(float x, float y) { m_vanishingPoint = { x, y }; }
+    auto vanishingPoint() const { return m_vanishingPoint; }
+
     // Set the vertical field-of-view angle, in radians.
     void setFieldOfView(float radians);
 
@@ -183,6 +186,7 @@ protected:
     glm::dvec3 m_pos;
     glm::vec3 m_eye;
     glm::vec2 m_obliqueAxis;
+    glm::vec2 m_vanishingPoint;
 
     glm::mat4 m_view;
     glm::mat4 m_orthoViewport;

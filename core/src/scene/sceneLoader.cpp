@@ -744,7 +744,12 @@ void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
             }
 
             if (Node vanishing = camera["vanishing_point"]) {
-                // TODO
+                if (vanishing.IsSequence() && vanishing.size() >= 2) {
+                    // Values are pixels, unit strings are ignored.
+                    float x = std::stof(vanishing[0].Scalar());
+                    float y = std::stof(vanishing[1].Scalar());
+                    view->setVanishingPoint(x, y);
+                }
             }
         } else if (type == "isometric") {
 
