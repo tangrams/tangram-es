@@ -668,69 +668,82 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
     }
 }
 
-void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
+void SceneLoader::loadLight(const std::pair<Node, Node>& nodePair, Scene& scene) {
+    const std::string currentPath = "lights";
+    const std::string& name = nodePair.first.Scalar();
+    std::string path = currentPath + COMPONENT_PATH_DELIMITER + name;
+    Node type, light = nodePair.second;
 
-    const Node light = node.second;
-    const std::string& name = node.first.Scalar();
+    node(StyleComponent::lights, light, type, "type", scene, path);
 
-    const std::string& type = light["type"].Scalar();
+    std::string lightType = type.Scalar();
 
     std::unique_ptr<Light> sceneLight;
 
-    if (type == "ambient") {
+    if (lightType == "ambient") {
         sceneLight = std::make_unique<AmbientLight>(name);
 
-    } else if (type == "directional") {
+    } else if (lightType == "directional") {
         auto dLight(std::make_unique<DirectionalLight>(name));
 
-        if (Node direction = light["direction"]) {
+        Node direction;
+        if (node(StyleComponent::lights, light, direction, "direction", scene, path)) {
             dLight->setDirection(parseVec<glm::vec3>(direction));
         }
         sceneLight = std::move(dLight);
 
-    } else if (type == "point") {
+    } else if (lightType == "point") {
         auto pLight(std::make_unique<PointLight>(name));
 
-        if (Node position = light["position"]) {
+        Node position;
+        if (node(StyleComponent::lights, light, position, "position", scene, path)) {
             pLight->setPosition(parseVec<glm::vec3>(position));
         }
-        if (Node radius = light["radius"]) {
+        Node radius;
+        if (node(StyleComponent::lights, light, radius, "radius", scene, path)) {
             if (radius.size() > 1) {
                 pLight->setRadius(radius[0].as<float>(), radius[1].as<float>());
             } else {
                 pLight->setRadius(radius.as<float>());
             }
         }
-        if (Node att = light["attenuation"]) {
-            pLight->setAttenuation(att.as<float>());
+        Node attenuation;
+        if (node(StyleComponent::lights, light, attenuation, "attenuation", scene, path)) {
+            pLight->setAttenuation(attenuation.as<float>());
         }
         sceneLight = std::move(pLight);
 
-    } else if (type == "spotlight") {
+    } else if (lightType == "spotlight") {
         auto sLight(std::make_unique<SpotLight>(name));
 
-        if (Node position = light["position"]) {
+        Node position;
+        if (node(StyleComponent::lights, light, position, "position", scene, path)) {
             sLight->setPosition(parseVec<glm::vec3>(position));
         }
-        if (Node direction = light["direction"]) {
+        Node direction;
+        if (node(StyleComponent::lights, light, direction, "direction", scene, path)) {
             sLight->setDirection(parseVec<glm::vec3>(direction));
         }
-        if (Node radius = light["radius"]) {
+        Node radius;
+        if (node(StyleComponent::lights, light, radius, "radius", scene, path)) {
             if (radius.size() > 1) {
                 sLight->setRadius(radius[0].as<float>(), radius[1].as<float>());
             } else {
                 sLight->setRadius(radius.as<float>());
             }
         }
-        if (Node angle = light["angle"]) {
+        Node angle;
+        if (node(StyleComponent::lights, light, angle, "angle", scene, path)) {
             sLight->setCutoffAngle(angle.as<float>());
         }
-        if (Node exponent = light["exponent"]) {
+        Node exponent;
+        if (node(StyleComponent::lights, light, exponent, "exponent", scene, path)) {
             sLight->setCutoffExponent(exponent.as<float>());
         }
         sceneLight = std::move(sLight);
     }
-    if (Node origin = light["origin"]) {
+    Node origin;
+    if (node(StyleComponent::lights, light, origin, "origin", scene, path)) {
         const std::string& originStr = origin.Scalar();
         if (originStr == "world") {
             sceneLight->setOrigin(LightOrigin::world);
@@ -740,13 +753,16 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
             sceneLight->setOrigin(LightOrigin::ground);
         }
     }
-    if (Node ambient = light["ambient"]) {
+    Node ambient;
+    if (node(StyleComponent::lights, light, ambient, "ambient", scene, path)) {
         sceneLight->setAmbientColor(getColorAsVec4(ambient));
     }
-    if (Node diffuse = light["diffuse"]) {
+    Node diffuse;
+    if (node(StyleComponent::lights, light, diffuse, "diffuse", scene, path)) {
         sceneLight->setDiffuseColor(getColorAsVec4(diffuse));
     }
-    if (Node specular = light["specular"]) {
+    Node specular;
+    if (node(StyleComponent::lights, light, specular, "specular", scene, path)) {
         sceneLight->setSpecularColor(getColorAsVec4(specular));
     }
 
