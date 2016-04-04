@@ -92,7 +92,7 @@ void Scene::setComponent(std::string componentPath, std::string value) {
         {"lights", StyleComponent::lights},
         {"textures", StyleComponent::textures},
         {"styles", StyleComponent::styles},
-        {"source", StyleComponent::sources},
+        {"sources", StyleComponent::sources},
         {"layers", StyleComponent::layers}
     };
 

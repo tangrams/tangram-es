@@ -1,6 +1,7 @@
 #include "tangram.h"
 #include "platform_osx.h"
 #include "data/clientGeoJsonSource.h"
+#include "debug/textDisplay.h"
 #include <cmath>
 #include <memory>
 #include <signal.h>
@@ -234,6 +235,20 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_B: // brighter
                 brightness += 0.1f;
                 Tangram::setSceneComponent("lights.light1.ambient", std::to_string(brightness));
+                Tangram::applySceneUpdates();
+                break;
+            case GLFW_KEY_G:
+                static bool geoJSON = false;
+                if (!geoJSON) {
+                    LOGS("Switching to GeoJSON data source");
+                    Tangram::setSceneComponent("sources.osm.type", "GeoJSON");
+                    Tangram::setSceneComponent("sources.osm.url", "https://vector.mapzen.com/osm/all/{z}/{x}/{y}.json");
+                } else {
+                    LOGS("Switching to MVT data source");
+                    Tangram::setSceneComponent("sources.osm.type", "MVT");
+                    Tangram::setSceneComponent("sources.osm.url", "https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt");
+                }
+                geoJSON = !geoJSON;
                 Tangram::applySceneUpdates();
                 break;
             case GLFW_KEY_ESCAPE:
