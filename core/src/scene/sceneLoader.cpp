@@ -631,14 +631,15 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) 
 }
 
 void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
-
+    static const std::string currentPath = "sources";
     const Node source = src.second;
     std::string name = src.first.Scalar();
     std::string type = source["type"].Scalar();
     std::string url = source["url"].Scalar();
     int32_t maxZoom = 18;
 
-    if (auto maxZoomNode = source["max_zoom"]) {
+    Node maxZoomNode;
+    if (node(StyleComponent::sources, source, maxZoomNode, "max_zoom", _scene, path)) {
         maxZoom = maxZoomNode.as<int32_t>(maxZoom);
     }
 
@@ -669,24 +670,24 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
     }
 
     // distinguish tiled and non-tiled sources by url
-    bool tiled = url.find("{x}") != std::string::npos &&
-        url.find("{y}") != std::string::npos &&
-        url.find("{z}") != std::string::npos;
+    bool tiled = sourceUrl.find("{x}") != std::string::npos &&
+        sourceUrl.find("{y}") != std::string::npos &&
+        sourceUrl.find("{z}") != std::string::npos;
 
     std::shared_ptr<DataSource> sourcePtr;
 
-    if (type == "GeoJSON") {
+    if (sourceType == "GeoJSON") {
         if (tiled) {
-            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url, maxZoom));
+            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, sourceUrl, maxZoom));
         } else {
-            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, maxZoom));
+            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, sourceUrl, maxZoom));
         }
-    } else if (type == "TopoJSON") {
-        sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, maxZoom));
-    } else if (type == "MVT") {
-        sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, maxZoom));
+    } else if (sourceType == "TopoJSON") {
+        sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, sourceUrl, maxZoom));
+    } else if (sourceType == "MVT") {
+        sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, sourceUrl, maxZoom));
     } else {
-        LOGW("Unrecognized data source type '%s', skipping", type.c_str());
+        LOGW("Unrecognized data source type '%s', skipping", sourceType.c_str());
     }
 
     if (sourcePtr) {
@@ -712,68 +713,80 @@ void SceneLoader::parseLightPosition(Node position, PointLight& light) {
     }
 }
 
-void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
+void SceneLoader::loadLight(const std::pair<Node, Node>& nodePair, Scene& scene) {
+    const std::string currentPath = "lights";
+    const std::string& name = nodePair.first.Scalar();
+    std::string path = currentPath + COMPONENT_PATH_DELIMITER + name;
+    Node type, light = nodePair.second;
 
-    const Node light = node.second;
-    const std::string& name = node.first.Scalar();
-    const std::string& type = light["type"].Scalar();
+    node(StyleComponent::lights, light, type, "type", scene, path);
+
+    std::string lightType = type.Scalar();
 
     std::unique_ptr<Light> sceneLight;
 
-    if (type == "ambient") {
+    if (lightType == "ambient") {
         sceneLight = std::make_unique<AmbientLight>(name);
 
-    } else if (type == "directional") {
+    } else if (lightType == "directional") {
         auto dLight(std::make_unique<DirectionalLight>(name));
 
-        if (Node direction = light["direction"]) {
+        Node direction;
+        if (node(StyleComponent::lights, light, direction, "direction", scene, path)) {
             dLight->setDirection(parseVec<glm::vec3>(direction));
         }
         sceneLight = std::move(dLight);
 
-    } else if (type == "point") {
+    } else if (lightType == "point") {
         auto pLight(std::make_unique<PointLight>(name));
 
         if (Node position = light["position"]) {
             parseLightPosition(position, *pLight);
         }
-        if (Node radius = light["radius"]) {
+        Node radius;
+        if (node(StyleComponent::lights, light, radius, "radius", scene, path)) {
             if (radius.size() > 1) {
                 pLight->setRadius(radius[0].as<float>(), radius[1].as<float>());
             } else {
                 pLight->setRadius(radius.as<float>());
             }
         }
-        if (Node att = light["attenuation"]) {
-            pLight->setAttenuation(att.as<float>());
+        Node attenuation;
+        if (node(StyleComponent::lights, light, attenuation, "attenuation", scene, path)) {
+            pLight->setAttenuation(attenuation.as<float>());
         }
         sceneLight = std::move(pLight);
 
-    } else if (type == "spotlight") {
+    } else if (lightType == "spotlight") {
         auto sLight(std::make_unique<SpotLight>(name));
 
         if (Node position = light["position"]) {
             parseLightPosition(position, *sLight);
         }
-        if (Node direction = light["direction"]) {
+        Node direction;
+        if (node(StyleComponent::lights, light, direction, "direction", scene, path)) {
             sLight->setDirection(parseVec<glm::vec3>(direction));
         }
-        if (Node radius = light["radius"]) {
+        Node radius;
+        if (node(StyleComponent::lights, light, radius, "radius", scene, path)) {
             if (radius.size() > 1) {
                 sLight->setRadius(radius[0].as<float>(), radius[1].as<float>());
             } else {
                 sLight->setRadius(radius.as<float>());
             }
         }
-        if (Node angle = light["angle"]) {
+        Node angle;
+        if (node(StyleComponent::lights, light, angle, "angle", scene, path)) {
             sLight->setCutoffAngle(angle.as<float>());
         }
-        if (Node exponent = light["exponent"]) {
+        Node exponent;
+        if (node(StyleComponent::lights, light, exponent, "exponent", scene, path)) {
             sLight->setCutoffExponent(exponent.as<float>());
         }
         sceneLight = std::move(sLight);
     }
-    if (Node origin = light["origin"]) {
+    Node origin;
+    if (node(StyleComponent::lights, light, origin, "origin", scene, path)) {
         const std::string& originStr = origin.Scalar();
         if (originStr == "world") {
             sceneLight->setOrigin(LightOrigin::world);
@@ -783,13 +796,16 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
             sceneLight->setOrigin(LightOrigin::ground);
         }
     }
-    if (Node ambient = light["ambient"]) {
+    Node ambient;
+    if (node(StyleComponent::lights, light, ambient, "ambient", scene, path)) {
         sceneLight->setAmbientColor(getColorAsVec4(ambient));
     }
-    if (Node diffuse = light["diffuse"]) {
+    Node diffuse;
+    if (node(StyleComponent::lights, light, diffuse, "diffuse", scene, path)) {
         sceneLight->setDiffuseColor(getColorAsVec4(diffuse));
     }
-    if (Node specular = light["specular"]) {
+    Node specular;
+    if (node(StyleComponent::lights, light, specular, "specular", scene, path)) {
         sceneLight->setSpecularColor(getColorAsVec4(specular));
     }
 
@@ -811,6 +827,27 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
     scene.lights().push_back(std::move(sceneLight));
 }
 
+bool SceneLoader::node(StyleComponent component,
+    Node root,
+    Node& value,
+    const std::string& key,
+    Scene& scene,
+    const std::string path)
+{
+    std::string nodeValue;
+    value = root[key];
+
+    if (value) {
+        if (scene.getComponentValue(component, path + COMPONENT_PATH_DELIMITER + key, nodeValue)) {
+            value = Node(nodeValue);
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
 void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
 
     // To correctly match the behavior of the webGL library we'll need a place
@@ -830,28 +867,26 @@ void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
 
         std::string path = currentPath + COMPONENT_PATH_DELIMITER + name;
 
-        const static std::string activeKey = "active";
-        if (Node active = camera[activeKey]) {
-            std::string subPath = path + COMPONENT_PATH_DELIMITER + activeKey;
-            std::string isActive;
+        Node active;
 
-            if (!_scene.getComponentValue(StyleComponent::cameras, subPath, isActive)) {
-                if (!active.as<bool>()) {
-                    continue;
-                }
-            } else {
-                if (isActive == "false") continue;
+        if (node(StyleComponent::cameras, camera, active, "active", _scene, path)) {
+            if (!active.as<bool>()) {
+                continue;
             }
         }
 
-        auto type = camera["type"].Scalar();
-        if (type == "perspective") {
+        Node type;
+        node(StyleComponent::cameras, camera, type, "type", _scene, path);
+
+        if (type.Scalar() == "perspective") {
 
             view->setCameraType(CameraType::perspective);
 
             // Only one of focal length and FOV is applied;
             // according to docs, focal length takes precedence.
-            if (Node focal = camera["focal_length"]) {
+            Node focal, fov;
+
+            if (node(StyleComponent::cameras, camera, focal, "focal_length", _scene, path)) {
                 if (focal.IsScalar()) {
                     float length = focal.as<float>(view->getFocalLength());
                     view->setFocalLength(length);
@@ -859,7 +894,7 @@ void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
                     auto stops = std::make_shared<Stops>(Stops::Numbers(focal));
                     view->setFocalLengthStops(stops);
                 }
-            } else if (Node fov = camera["fov"]) {
+            } else if (node(StyleComponent::cameras, camera, fov, "fov", _scene, path)) {
                 if (fov.IsScalar()) {
                     float degrees = fov.as<float>(view->getFieldOfView() * RAD_TO_DEG);
                     view->setFieldOfView(degrees * DEG_TO_RAD);
@@ -878,14 +913,14 @@ void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
                     view->setVanishingPoint(x, y);
                 }
             }
-        } else if (type == "isometric") {
+        } else if (type.Scalar() == "isometric") {
 
             view->setCameraType(CameraType::isometric);
 
             if (Node axis = camera["axis"]) {
                 view->setObliqueAxis(axis[0].as<float>(), axis[1].as<float>());
             }
-        } else if (type == "flat") {
+        } else if (type.Scalar() == "flat") {
 
             view->setCameraType(CameraType::flat);
 
