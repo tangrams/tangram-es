@@ -1,11 +1,12 @@
 package com.mapzen.tangram;
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.util.DisplayMetrics;
 
+import com.mapzen.tangram.TouchInput.Gestures;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -17,8 +18,6 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import okio.BufferedSource;
-
-import com.mapzen.tangram.TouchInput.Gestures;
 
 public class MapController implements Renderer {
 
@@ -56,34 +55,34 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Construct a MapController using the default scene file
-     * @param mainApp Activity in which the map will function; the asset bundle for this activity must contain all
-     * the local files that the map will need
-     * @param view MapView where the map will be displayed; input events from this view will be handled by the
-     * resulting MapController
-     */
-    public MapController(Activity mainApp, MapView view) {
-
-        this(mainApp, view, "scene.yaml");
-    }
-
-    /**
      * Construct a MapController using a custom scene file
-     * @param mainApp Activity in which the map will function; the asset bundle for this activity must contain all
-     * the local files that the map will need
-     * @param view MapView where the map will be displayed; input events from this view will be handled by the
-     * resulting MapController
+     * @param context Context in which the map will function; the asset bundle for this activity
+     * must contain all the local files that the map will need
      * @param sceneFilePath Location of the YAML scene file within the assets directory
      */
-    public MapController(Activity mainApp, MapView view, String sceneFilePath) {
+    MapController(Context context, String sceneFilePath) {
 
         scenePath = sceneFilePath;
 
         // Get configuration info from application
-        mainApp.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        assetManager = mainApp.getAssets();
+        displayMetrics = context.getResources().getDisplayMetrics();
+        assetManager = context.getAssets();
 
-        touchInput = new TouchInput(mainApp);
+        // Load the fonts
+        fontFileParser = new FontFileParser();
+        fontFileParser.parse("/system/etc/fonts.xml");
+
+        init(this, assetManager, scenePath);
+
+    }
+
+    /**
+     * Set the view in which the map will be drawn
+     * @param view GLSurfaceView where the map will be displayed; input events from this view will
+     * be handled by the resulting MapController
+     */
+    void setView(GLSurfaceView view) {
+        touchInput = new TouchInput(view.getContext());
         setPanResponder(null);
         setScaleResponder(null);
         setRotateResponder(null);
@@ -100,13 +99,6 @@ public class MapController implements Renderer {
         view.setOnTouchListener(touchInput);
         view.setRenderer(this);
         view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-
-        // Load the fonts
-        fontFileParser = new FontFileParser();
-        fontFileParser.parse("/system/etc/fonts.xml");
-
-        init(this, assetManager, scenePath);
-
     }
 
     /**
@@ -564,7 +556,7 @@ public class MapController implements Renderer {
 
     private String scenePath;
     private long time = System.nanoTime();
-    private MapView mapView;
+    private GLSurfaceView mapView;
     private AssetManager assetManager;
     private TouchInput touchInput;
     private FontFileParser fontFileParser;
