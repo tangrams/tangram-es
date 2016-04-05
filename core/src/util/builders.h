@@ -33,8 +33,6 @@ JoinTypes JoinTypeFromString(const std::string& str);
  */
 typedef std::function<void(const glm::vec3& coord, const glm::vec3& normal, const glm::vec2& uv)> PolygonVertexFn;
 
-typedef std::function<void(size_t reserve)> SizeHintFn;
-
 /* PolygonBuilder context,
  * see Builders::buildPolygon() and Builders::buildPolygonExtrusion()
  */
@@ -43,16 +41,14 @@ struct PolygonBuilder {
     std::vector<int> used;
 
     PolygonVertexFn addVertex;
-    SizeHintFn sizeHint;
     size_t numVertices = 0;
     bool useTexCoords;
 
     mapbox::detail::Earcut<uint16_t> earcut;
 
     PolygonBuilder(PolygonVertexFn _addVertex = [](auto&,auto&,auto&){},
-                   SizeHintFn _sizeHint = [](auto){},
                    bool _useTexCoords = true)
-        : addVertex(_addVertex), sizeHint(_sizeHint), useTexCoords(_useTexCoords){}
+        : addVertex(_addVertex), useTexCoords(_useTexCoords){}
 
     void clear() {
         numVertices = 0;

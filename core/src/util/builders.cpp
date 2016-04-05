@@ -64,7 +64,6 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
 
     uint16_t vertexDataOffset = _ctx.numVertices;
     _ctx.numVertices += sumVertices;
-    _ctx.sizeHint(_ctx.numVertices);
 
     size_t ring = 0;
     size_t offset = 0;
@@ -117,12 +116,10 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, 
         size_t lineSize = line.size();
         sumIndices += lineSize * 6;
         sumVertices += (lineSize - 1) * 4;
-
-        _ctx.numVertices = sumVertices;
     }
 
+    _ctx.numVertices = sumVertices;
     _ctx.indices.reserve(sumIndices);
-    _ctx.sizeHint(sumVertices);
 
     for (auto& line : _polygon) {
 
@@ -139,6 +136,7 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, 
             if (std::isnan(normalVector.x)
              || std::isnan(normalVector.y)
              || std::isnan(normalVector.z)) {
+                _ctx.numVertices -= 4;
                 continue;
             }
 
