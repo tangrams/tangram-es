@@ -104,22 +104,10 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
 
 void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, float _maxHeight, PolygonBuilder& _ctx) {
 
-    int vertexDataOffset = (int)_ctx.numVertices;
+    auto vertexDataOffset = _ctx.numVertices;
 
     static const glm::vec3 upVector(0.0f, 0.0f, 1.0f);
     glm::vec3 normalVector;
-
-    size_t sumIndices = _ctx.indices.size();
-    size_t sumVertices = _ctx.numVertices;
-
-    for (auto& line : _polygon) {
-        size_t lineSize = line.size();
-        sumIndices += lineSize * 6;
-        sumVertices += (lineSize - 1) * 4;
-    }
-
-    _ctx.numVertices = sumVertices;
-    _ctx.indices.reserve(sumIndices);
 
     for (auto& line : _polygon) {
 
@@ -136,7 +124,6 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, 
             if (std::isnan(normalVector.x)
              || std::isnan(normalVector.y)
              || std::isnan(normalVector.z)) {
-                _ctx.numVertices -= 4;
                 continue;
             }
 
@@ -167,6 +154,8 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, 
 
             vertexDataOffset += 4;
         }
+
+        _ctx.numVertices = vertexDataOffset;
     }
 }
 
