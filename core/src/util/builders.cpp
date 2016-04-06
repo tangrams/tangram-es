@@ -292,12 +292,15 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx,
                           size_t startIndex, size_t endIndex, bool endCap = true) {
 
     size_t origLineSize = _line.size();
+
+    // endIndex/startIndex could be wrapped values, calculate lineSize accordingly
     int lineSize = (int)((endIndex > startIndex) ?
                    (endIndex - startIndex) :
                    (origLineSize - startIndex + endIndex));
     if (lineSize < 2) { return; }
 
     glm::vec3 coordCurr(_line[startIndex]);
+    // get the Point using wrapped index in the original line geometry
     glm::vec3 coordNext(_line[(startIndex + 1) % origLineSize]);
     glm::vec2 normPrev, normNext, miterVec;
 
@@ -316,6 +319,7 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx,
 
     // Process intermediate points
     for (int i = 1; i < lineSize - 1; i++) {
+        // get the Point using wrapped index in the original line geometry
         int nextIndex = (i + startIndex + 1) % origLineSize;
 
         coordCurr = coordNext;
@@ -427,8 +431,11 @@ void Builders::buildPolyLine(const Line& _line, PolyLineBuilder& _ctx) {
 
         if (_ctx.closedPolygon) {
             if (cut == 0) {
-                buildPolyLineSegment(_line, _ctx, cut, lineSize+2, false);
+                // no tile edge cuts!
+                // loop and close the polygon with no endcaps
+                buildPolyLineSegment(_line, _ctx, 0, lineSize+2, false);
             } else {
+                // merge first and last cut line-segments together
                 buildPolyLineSegment(_line, _ctx, cut, firstCutEnd);
             }
         } else {
