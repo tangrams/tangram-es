@@ -77,6 +77,7 @@ private:
     static int jsHasProperty(duk_context *_ctx);
 
     bool evalFunction(FunctionID id);
+    bool evalFunction(std::string function, std::string& result);
     void parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
     void parseSceneGlobals(const YAML::Node& node, const std::string& key, int seqIndex, int dukObject);
     void pushSceneGlobals(const Scene& scene);

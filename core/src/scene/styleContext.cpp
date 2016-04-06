@@ -82,7 +82,8 @@ StyleContext::~StyleContext() {
     duk_destroy_heap(m_ctx);
 }
 
-void StyleContext::parseSceneGlobals(const YAML::Node& node, const std::string& key, int seqIndex, duk_idx_t dukObject) {
+void StyleContext::parseSceneGlobals(const YAML::Node& node, const std::string& key, int seqIndex,
+                                     duk_idx_t dukObject) {
 
     switch(node.Type()) {
         case YAML::NodeType::Scalar:
@@ -90,8 +91,17 @@ void StyleContext::parseSceneGlobals(const YAML::Node& node, const std::string& 
                 duk_push_string(m_ctx, node.Scalar().c_str());
                 duk_put_prop_index(m_ctx, dukObject, seqIndex);
             } else {
-                duk_push_string(m_ctx, node.Scalar().c_str());
-                duk_put_prop_string(m_ctx, dukObject, key.c_str());
+                auto nodeValue = node.Scalar();
+                if (nodeValue.compare(0, 8, "function") == 0) {
+                    std::string result;
+                    if (evalFunction(nodeValue, result)) {
+                        duk_push_string(m_ctx, result.c_str());
+                        duk_put_prop_string(m_ctx, dukObject, key.c_str());
+                    }
+                } else {
+                    duk_push_string(m_ctx, node.Scalar().c_str());
+                    duk_put_prop_string(m_ctx, dukObject, key.c_str());
+                }
             }
             break;
         case YAML::NodeType::Sequence:
@@ -228,6 +238,31 @@ const Value& StyleContext::getKeyword(const std::string& _key) const {
 
 void StyleContext::clear() {
     m_feature = nullptr;
+}
+
+bool StyleContext::evalFunction(std::string function, std::string& result) {
+    //compile the function
+    duk_push_string(m_ctx, function.c_str());
+    duk_push_string(m_ctx, "");
+    if (duk_pcompile(m_ctx, DUK_COMPILE_FUNCTION) == 0) {
+        //call the function
+        if (duk_pcall(m_ctx, 0) != 0) {
+            LOGE("EvalFilterFn: %s", duk_safe_to_string(m_ctx, -1));
+            duk_pop(m_ctx);
+            return false;
+        } else {
+            //get the value
+            result = duk_safe_to_string(m_ctx, -1);
+            duk_pop(m_ctx);
+        }
+    } else  {
+        LOGW("Compile failed: %s\n%s\n---",
+             duk_safe_to_string(m_ctx, -1),
+             function.c_str());
+        duk_pop(m_ctx);
+        return false;
+    }
+    return true;
 }
 
 bool StyleContext::evalFunction(FunctionID id) {
