@@ -81,7 +81,13 @@ bool Scene::texture(const std::string& textureName, std::shared_ptr<Texture>& te
 }
 
 bool Scene::getComponentValue(StyleComponent component, const std::string& componentPath, std::string& value) {
-    return tryFind(m_userDefinedValues[component], componentPath, value);
+    auto& componentMap = m_userDefinedValues[component];
+
+    if (componentMap.size() > 0) {
+        return tryFind(componentMap, componentPath, value);
+    }
+
+    return false;
 }
 
 void Scene::setComponent(std::string componentPath, std::string value) {
