@@ -33,23 +33,23 @@
  * http://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/invocation.html
  */
 
-static JavaVM* jvm;
+static JavaVM* jvm = nullptr;
 // JNI Env bound on androids render thread (our native main thread)
-static JNIEnv* jniRenderThreadEnv;
-static jobject tangramInstance;
-static jmethodID requestRenderMethodID;
-static jmethodID setRenderModeMethodID;
-static jmethodID startUrlRequestMID;
-static jmethodID cancelUrlRequestMID;
-static jmethodID getFontFilePath;
-static jmethodID getFontFallbackFilePath;
-static jmethodID featureSelectionCbMID;
+static JNIEnv* jniRenderThreadEnv = nullptr;
+static jobject tangramInstance = nullptr;
+static jmethodID requestRenderMethodID = 0;
+static jmethodID setRenderModeMethodID = 0;
+static jmethodID startUrlRequestMID = 0;
+static jmethodID cancelUrlRequestMID = 0;
+static jmethodID getFontFilePath = 0;
+static jmethodID getFontFallbackFilePath = 0;
+static jmethodID featureSelectionCbMID = 0;
 
-static jclass hashmapClass;
-static jmethodID hashmapInitMID;
-static jmethodID hashmapPutMID;
+static jclass hashmapClass = nullptr;
+static jmethodID hashmapInitMID = 0;
+static jmethodID hashmapPutMID = 0;
 
-static AAssetManager* assetManager;
+static AAssetManager* assetManager = nullptr;
 
 static bool s_isContinuousRendering = false;
 static bool s_useInternalResources = true;
@@ -63,6 +63,9 @@ void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager
     jniEnv->GetJavaVM(&jvm);
     jniRenderThreadEnv = jniEnv;
 
+    if (tangramInstance) {
+        jniEnv->DeleteGlobalRef(tangramInstance);
+    }
     tangramInstance = jniEnv->NewGlobalRef(_tangramInstance);
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/MapController");
     startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)Z");
@@ -73,6 +76,9 @@ void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager
     setRenderModeMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
     featureSelectionCbMID = jniEnv->GetMethodID(tangramClass, "featureSelectionCb", "(Ljava/util/Map;FF)V");
 
+    if (hashmapClass) {
+        jniEnv->DeleteGlobalRef(hashmapClass);
+    }
     hashmapClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("java/util/HashMap"));
     hashmapInitMID = jniEnv->GetMethodID(hashmapClass, "<init>", "()V");
     hashmapPutMID = jniEnv->GetMethodID(hashmapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
