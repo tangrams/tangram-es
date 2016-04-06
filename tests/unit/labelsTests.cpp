@@ -1,7 +1,6 @@
 #include "catch.hpp"
 #include "tangram.h"
 #include "platform.h"
-#include "debug/debug.h"
 #include "scene/scene.h"
 #include "style/style.h"
 #include "style/textStyle.h"

@@ -21,7 +21,7 @@
 #include "gl/hardware.h"
 #include "util/ease.h"
 #include "debug/textDisplay.h"
-#include "debug/debug.h"
+#include "debug/frameInfo.h"
 #include <memory>
 #include <array>
 #include <cmath>

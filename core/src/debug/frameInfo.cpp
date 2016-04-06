@@ -1,4 +1,4 @@
-#include "debug/debug.h"
+#include "debug/frameInfo.h"
 
 #include "tangram.h"
 #include "debug/textDisplay.h"
