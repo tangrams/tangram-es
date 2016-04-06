@@ -13,7 +13,6 @@
 #include "gl/shaderProgram.h"
 #include "gl/renderState.h"
 #include "gl/primitives.h"
-#include "gl/hardware.h"
 #include "util/inputHandler.h"
 #include "tile/tileCache.h"
 #include "view/view.h"
@@ -22,13 +21,13 @@
 #include "gl/hardware.h"
 #include "util/ease.h"
 #include "debug/textDisplay.h"
+#include "debug/frameInfo.h"
 #include <memory>
 #include <array>
 #include <cmath>
 #include <bitset>
 #include <mutex>
 #include <queue>
-
 
 namespace Tangram {
 
@@ -58,10 +57,6 @@ void clearEase(EaseField _f) {
 
 static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
-float m_pixelsPerPoint = 1.f;
-int log_level = 2;
-
-static float lastUpdateTime = 0.0;
 
 void initialize(const char* _scenePath) {
 
@@ -87,7 +82,7 @@ void initialize(const char* _scenePath) {
     // Create a tileManager
     m_tileManager = std::make_unique<TileManager>(*m_tileWorker);
 
-    // label setup
+    // Label setup
     m_labels = std::make_unique<Labels>();
 
     loadScene(_scenePath, true);
@@ -145,10 +140,7 @@ void resize(int _newWidth, int _newHeight) {
 
 void update(float _dt) {
 
-    clock_t start{0};
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
-        start = clock();
-    }
+    FrameInfo::beginUpdate();
 
     g_time += _dt;
 
@@ -208,18 +200,12 @@ void update(float _dt) {
         }
     }
 
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
-        clock_t end = clock();
-        lastUpdateTime = (float(end - start) / CLOCKS_PER_SEC) * 1000.f;
-    }
+    FrameInfo::endUpdate();
 }
 
 void render() {
-    clock_t start{0};
 
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
-        start = clock();
-    }
+    FrameInfo::beginFrame();
 
     // Set up openGL for new frame
     RenderState::depthWrite(GL_TRUE);
@@ -250,68 +236,7 @@ void render() {
 
     m_labels->drawDebug(*m_view);
 
-    if (Tangram::getDebugFlag(Tangram::DebugFlags::tangram_infos)) {
-        static int cpt = 0;
-
-        clock_t endCpu = clock();
-        static float timeCpu[60] = { 0 };
-        static float timeUpdate[60] = { 0 };
-        static float timeRender[60] = { 0 };
-        timeCpu[cpt] = (float(endCpu - start) / CLOCKS_PER_SEC) * 1000.f;
-
-        // Force opengl to finish commands (for accurate frame time)
-        glFinish();
-
-        clock_t end = clock();
-        timeRender[cpt] = (float(end - start) / CLOCKS_PER_SEC) * 1000.f;
-
-        if (++cpt == 60) { cpt = 0; }
-
-        // Only compute average frame time every 60 frames
-        float avgTimeRender = 0.f;
-        float avgTimeCpu = 0.f;
-        float avgTimeUpdate = 0.f;
-
-        timeUpdate[cpt] = lastUpdateTime;
-
-        for (int i = 0; i < 60; i++) {
-            avgTimeRender += timeRender[i];
-            avgTimeCpu += timeCpu[i];
-            avgTimeUpdate += timeUpdate[i];
-        }
-        avgTimeRender /= 60;
-        avgTimeCpu /= 60;
-        avgTimeUpdate /= 60;
-
-        size_t memused = 0;
-        size_t dynamicmem = 0;
-        for (const auto& tile : m_tileManager->getVisibleTiles()) {
-            memused += tile->getMemoryUsage();
-        }
-
-        for (const auto& style: m_scene->styles()) {
-            dynamicmem += style->dynamicMeshSize();
-        }
-
-        std::vector<std::string> debuginfos;
-
-        debuginfos.push_back("visible tiles:"
-                + std::to_string(m_tileManager->getVisibleTiles().size()));
-        debuginfos.push_back("tile cache size:"
-                + std::to_string(m_tileManager->getTileCache()->getMemoryUsage() / 1024) + "kb");
-        debuginfos.push_back("buffer size:" + std::to_string(memused / 1024) + "kb");
-        debuginfos.push_back("dynamic buffer size:" + std::to_string(dynamicmem / 1024) + "kb");
-        debuginfos.push_back("avg frame cpu time:" + to_string_with_precision(avgTimeCpu, 2) + "ms");
-        debuginfos.push_back("avg frame render time:" + to_string_with_precision(avgTimeRender, 2) + "ms");
-        debuginfos.push_back("avg frame update time:" + to_string_with_precision(avgTimeUpdate, 2) + "ms");
-        debuginfos.push_back("zoom:" + std::to_string(m_view->getZoom()));
-        debuginfos.push_back("pos:" + std::to_string(m_view->getPosition().x) + "/"
-                + std::to_string(m_view->getPosition().y));
-        debuginfos.push_back("tilt:" + std::to_string(m_view->getPitch() * 57.3) + "deg");
-        debuginfos.push_back("pixel scale:" + std::to_string(m_pixelsPerPoint));
-
-        TextDisplay::Instance().draw(debuginfos);
-    }
+    FrameInfo::draw(*m_view, *m_tileManager);
 
     while (Error::hadGlError("Tangram::render()")) {}
 }
@@ -453,8 +378,6 @@ void screenToWorldCoordinates(double& _x, double& _y) {
 }
 
 void setPixelScale(float _pixelsPerPoint) {
-
-    m_pixelsPerPoint = _pixelsPerPoint;
 
     if (m_view) {
         m_view->setPixelScale(_pixelsPerPoint);

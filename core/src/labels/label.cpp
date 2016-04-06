@@ -2,7 +2,6 @@
 
 #include "util/geom.h"
 #include "glm/gtx/rotate_vector.hpp"
-#include "debug.h"
 #include "tangram.h"
 
 namespace Tangram {
