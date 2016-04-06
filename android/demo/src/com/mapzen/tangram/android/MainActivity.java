@@ -80,6 +80,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
         map.setTapResponder(this);
         map.setDoubleTapResponder(this);
         map.setLongPressResponder(this);
+        map.setFeatureTouchListener(this);
 
         markers = new MapData("touch");
         markers.addToMap(map);

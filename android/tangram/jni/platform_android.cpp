@@ -73,7 +73,7 @@ void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager
     setRenderModeMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
     featureSelectionCbMID = jniEnv->GetMethodID(tangramClass, "featureSelectionCb", "(Ljava/util/Map;FF)V");
 
-    hashmapClass = jniEnv->FindClass("java/util/HashMap");
+    hashmapClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("java/util/HashMap"));
     hashmapInitMID = jniEnv->GetMethodID(hashmapClass, "<init>", "()V");
     hashmapPutMID = jniEnv->GetMethodID(hashmapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
@@ -319,7 +319,7 @@ void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<Tangram::TouchIt
     for (const auto& item : properties->items()) {
         jstring jkey = jniEnv->NewStringUTF(item.key.c_str());
         jstring jvalue = jniEnv->NewStringUTF(properties->asString(item.value).c_str());
-        jniEnv->CallVoidMethod(hashmap, hashmapPutMID, jkey, jvalue);
+        jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
     }
 
     jniEnv->CallVoidMethod(tangramInstance, featureSelectionCbMID, hashmap, position[0], position[1]);
