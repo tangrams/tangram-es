@@ -230,44 +230,66 @@ void StyleContext::clear() {
     m_feature = nullptr;
 }
 
-bool StyleContext::evalFilter(FunctionID _id) {
-
+bool StyleContext::evalFunction(FunctionID id) {
+    // Get all functions (array) in context
     if (!duk_get_global_string(m_ctx, FUNC_ID)) {
-        LOGE("EvalFilterFn - functions not initialized");
+        LOGE("EvalFilterFn - functions array not initialized");
+        duk_pop(m_ctx); // pop [undefined] sitting at stack top
         return false;
     }
 
-    if (!duk_get_prop_index(m_ctx, -1, _id)) {
-        LOGE("EvalFilterFn - function %d not set", _id);
-        duk_pop(m_ctx);
-        DBG("evalFilterFn\n");
+    // Get function at index `id` from functions array, put it at stack top
+    if (!duk_get_prop_index(m_ctx, -1, id)) {
+        LOGE("EvalFilterFn - function %d not set", id);
+        duk_pop(m_ctx); // pop "undefined" sitting at stack top
+        duk_pop(m_ctx); // pop functions (array) now sitting at stack top
         return false;
     }
 
+    // pop fns array
+    duk_remove(m_ctx, -2);
+
+    // call popped function (sitting at stack top), evaluated value is put on stack top
     if (duk_pcall(m_ctx, 0) != 0) {
         LOGE("EvalFilterFn: %s", duk_safe_to_string(m_ctx, -1));
         duk_pop(m_ctx);
-        duk_pop(m_ctx);
-        DBG("evalFilterFn\n");
         return false;
     }
 
+    return true;
+}
+
+bool StyleContext::evalFilter(FunctionID _id) {
+
     bool result = false;
 
+    if (!evalFunction(_id)) { return false; };
+
+    // check for evaluated value sitting at value stack top
     if (duk_is_boolean(m_ctx, -1)) {
         result = duk_get_boolean(m_ctx, -1);
     }
 
     // pop result
     duk_pop(m_ctx);
-    // pop fns obj
-    duk_pop(m_ctx);
 
-    DUMP("evalFilterFn\n");
     return result;
 }
 
-bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const {
+bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Value& _val) {
+
+    if (!evalFunction(_id)) { return false; }
+
+    // parse evaluated result at stack top
+    parseStyleResult(_key, _val);
+
+    // pop result, empty stack
+    duk_pop(m_ctx);
+
+    return !_val.is<none_type>();
+}
+
+void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const {
     _val = none_type{};
 
     if (duk_is_string(m_ctx, -1)) {
@@ -390,33 +412,7 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
         LOGW("Unhandled return type from Javascript style function for %d.", _key);
     }
 
-    duk_pop(m_ctx);
-
     DUMP("parseStyleResult\n");
-    return !_val.is<none_type>();
-}
-
-bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Value& _val) {
-
-    if (!duk_get_global_string(m_ctx, FUNC_ID)) {
-        LOGE("EvalFilterFn - functions array not initialized");
-        return false;
-    }
-
-    if (!duk_get_prop_index(m_ctx, -1, _id)) {
-        LOGE("EvalFilterFn - function %d not set", _id);
-    }
-
-    // pop fns array
-    duk_remove(m_ctx, -2);
-
-    if (duk_pcall(m_ctx, 0) != 0) {
-        LOGE("EvalFilterFn: %s", duk_safe_to_string(m_ctx, -1));
-        duk_pop(m_ctx);
-        return false;
-    }
-
-    return parseStyleResult(_key, _val);
 }
 
 // Implements Proxy handler.has(target_object, key)
