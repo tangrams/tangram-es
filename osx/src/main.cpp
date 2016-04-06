@@ -221,6 +221,18 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 Tangram::setSceneComponent("cameras.perspective-camera.active", "false");
                 Tangram::applySceneUpdates();
                 break;
+            case GLFW_KEY_A:
+                //Tangram::setSceneComponent("textures.pois.sprites.plane", "[0, 0, 32, 32]");
+                ///Tangram::setSceneComponent("textures.pois.sprites", "{ plane: [0, 0, 32, 32], museum: [0, 0, 64, 64] }");
+                static bool animated = false;
+                if (animated) {
+                    Tangram::setSceneComponent("styles.heightglow.animated", "false");
+                } else {
+                    Tangram::setSceneComponent("styles.heightglow.animated", "true");
+                }
+                animated = !animated;
+                Tangram::applySceneUpdates();
+                break;
             case GLFW_KEY_P:
                 Tangram::setSceneComponent("cameras.iso-camera.active", "false");
                 Tangram::setSceneComponent("cameras.perspective-camera.active", "true");

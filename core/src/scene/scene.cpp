@@ -26,7 +26,7 @@ Scene::Scene(std::string path) : id(s_serial++), m_path(path) {
     m_mapProjection.reset(new MercatorProjection());
 }
 
-Scene::Scene(std::string path, std::unordered_map<StyleComponent, StyleComponents> userDefined) :
+Scene::Scene(std::string path, std::map<StyleComponent, StyleComponents> userDefined) :
     Scene(path)
 {
     m_userDefinedValues = userDefined;

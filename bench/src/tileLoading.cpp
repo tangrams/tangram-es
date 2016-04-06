@@ -48,7 +48,7 @@ struct TestContext {
             LOGE("Parsing scene config '%s'", e.what());
             return;
         }
-        scene = std::make_shared<Scene>();
+        scene = std::make_shared<Scene>("");
         SceneLoader::loadScene(sceneNode, *scene);
 
         styleContext.initFunctions(*scene);

@@ -13,10 +13,10 @@
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "glm/vec4.hpp"
+#include "scene/scene.h"
 
 namespace Tangram {
 
-class Scene;
 class TileManager;
 class SceneLayer;
 class View;
@@ -36,7 +36,7 @@ struct StyleUniform {
 struct SceneLoader {
     using Node = YAML::Node;
 
-    static bool loadScene(const std::string& _sceneString, Scene& _scene);
+    static bool loadScene(const std::string& _sceneString, Scene& _scene, Node& root);
     static bool loadScene(Node& config, Scene& _scene);
     static void applyGlobalProperties(Node& node, Scene& scene);
 
@@ -48,7 +48,7 @@ struct SceneLoader {
     static void loadLayer(const std::pair<Node, Node>& layer, Scene& scene);
     static void loadLight(const std::pair<Node, Node>& light, Scene& scene);
     static void loadCameras(Node cameras, Scene& scene);
-    static void loadStyleProps(Style& style, Node styleNode, Scene& scene);
+    static void loadStyleProps(Style& style, Node styleNode, Scene& scene, const std::string& path);
     static void loadMaterial(Node matNode, Material& material, Scene& scene, Style& style);
     static void loadShaderConfig(Node shaders, Style& style, Scene& scene);
     static SceneLayer loadSublayer(Node layer, const std::string& name, Scene& scene);
@@ -69,7 +69,7 @@ struct SceneLoader {
 
     static void parseGlobals(const Node& node, Scene& scene, const std::string& key="");
 
-    static bool loadStyle(const std::string& styleName, Node config, Scene& scene);
+    static bool loadStyle(const std::pair<Node, Node>& style, Scene& scene);
 
     static bool node(StyleComponent component, Node root, Node& value, const std::string& key,
         Scene& scene, const std::string path);

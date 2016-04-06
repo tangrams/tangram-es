@@ -29,7 +29,7 @@ struct Stops;
  * Scene is a singleton containing the styles, lighting, and interactions defining a map scene
  */
 
-enum StyleComponent {
+enum class StyleComponent {
     scene,
     global,
     cameras,
@@ -47,7 +47,7 @@ using StyleComponents = fastmap<std::string, std::string>;
 class Scene {
 public:
     Scene(std::string path);
-    Scene(std::string path, std::unordered_map<StyleComponent, StyleComponents> userDefined);
+    Scene(std::string path, std::map<StyleComponent, StyleComponents> userDefined);
     ~Scene();
 
     auto& view() { return m_view; }
@@ -97,7 +97,7 @@ public:
 
     std::string path() const { return m_path; }
 
-    const std::unordered_map<StyleComponent, StyleComponents>& userDefines() const { return m_userDefinedValues; }
+    const std::map<StyleComponent, StyleComponents>& userDefines() const { return m_userDefinedValues; }
 
     void clearUserDefines() { m_userDefinedValues.clear(); }
 
@@ -114,7 +114,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
     std::unordered_map<std::string, YAML::Node> m_globals;
 
-    std::unordered_map<StyleComponent, StyleComponents> m_userDefinedValues;
+    std::map<StyleComponent, StyleComponents> m_userDefinedValues;
 
     std::string m_path;
 
