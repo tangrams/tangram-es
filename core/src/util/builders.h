@@ -76,13 +76,14 @@ struct PolyLineBuilder {
     CapTypes cap;
     JoinTypes join;
     bool keepTileEdges;
+    bool closedPolygon;
     bool useTexCoords;
 
     PolyLineBuilder(PolyLineVertexFn _addVertex = [](auto&,auto&,auto&){},
                     CapTypes _cap = CapTypes::butt,
                     JoinTypes _join = JoinTypes::bevel,
-                    bool _kte = true)
-        : addVertex(_addVertex), cap(_cap), join(_join), keepTileEdges(_kte) {}
+                    bool _kte = true, bool _closedPoly = false)
+        : addVertex(_addVertex), cap(_cap), join(_join), keepTileEdges(_kte), closedPolygon(_closedPoly) {}
 
     void clear() {
         numVertices = 0;

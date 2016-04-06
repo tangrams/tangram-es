@@ -275,12 +275,20 @@ bool isOutsideTile(const glm::vec3& _a, const glm::vec3& _b) {
     return false;
 }
 
-void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
+void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx,
+                          size_t startIndex, size_t endIndex, bool endCap = true) {
 
-    int lineSize = (int)_line.size();
+    size_t origLineSize = _line.size();
+
+    // endIndex/startIndex could be wrapped values, calculate lineSize accordingly
+    int lineSize = (int)((endIndex > startIndex) ?
+                   (endIndex - startIndex) :
+                   (origLineSize - startIndex + endIndex));
     if (lineSize < 2) { return; }
 
-    glm::vec3 coordPrev(_line[0]), coordCurr(_line[0]), coordNext(_line[1]);
+    glm::vec3 coordCurr(_line[startIndex]);
+    // get the Point using wrapped index in the original line geometry
+    glm::vec3 coordNext(_line[(startIndex + 1) % origLineSize]);
     glm::vec2 normPrev, normNext, miterVec;
 
     int cornersOnCap = (int)_ctx.cap;
@@ -289,16 +297,20 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
     // Process first point in line with an end cap
     normNext = glm::normalize(perp2d(coordCurr, coordNext));
 
-    addCap(coordCurr, normNext, cornersOnCap, true, _ctx);
+    if (endCap) {
+        addCap(coordCurr, normNext, cornersOnCap, true, _ctx);
+    }
     addPolyLineVertex(coordCurr, normNext, {1.0f, 0.0f}, _ctx); // right corner
     addPolyLineVertex(coordCurr, -normNext, {0.0f, 0.0f}, _ctx); // left corner
 
+
     // Process intermediate points
     for (int i = 1; i < lineSize - 1; i++) {
+        // get the Point using wrapped index in the original line geometry
+        int nextIndex = (i + startIndex + 1) % origLineSize;
 
-        coordPrev = coordCurr;
         coordCurr = coordNext;
-        coordNext = _line[i + 1];
+        coordNext = _line[nextIndex];
 
         if (coordCurr == coordNext) {
             continue;
@@ -338,6 +350,7 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
             indexPairs(1, _ctx.numVertices, _ctx.indices);
 
         } else {
+
             // Join type is a fan of triangles
 
             bool isRightTurn = (normNext.x * normPrev.y - normNext.y * normPrev.x) > 0; // z component of cross(normNext, normPrev)
@@ -371,32 +384,50 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
     addPolyLineVertex(coordNext, normNext, {1.f, 1.f}, _ctx); // right corner
     addPolyLineVertex(coordNext, -normNext, {0.f, 1.f}, _ctx); // left corner
     indexPairs(1, _ctx.numVertices, _ctx.indices);
-    addCap(coordNext, normNext, cornersOnCap , false, _ctx);
+    if (endCap) {
+        addCap(coordNext, normNext, cornersOnCap, false, _ctx);
+    }
 
 }
 
 void Builders::buildPolyLine(const Line& _line, PolyLineBuilder& _ctx) {
 
+    size_t lineSize = _line.size();
+
     if (_ctx.keepTileEdges) {
 
-        buildPolyLineSegment(_line, _ctx);
+        buildPolyLineSegment(_line, _ctx, 0, lineSize);
 
     } else {
 
         int cut = 0;
+        int firstCutEnd = 0;
 
-        for (size_t i = 0; i < _line.size() - 1; i++) {
+        // Determine cuts
+        for (size_t i = 0; i < lineSize - 1; i++) {
             const glm::vec3& coordCurr = _line[i];
             const glm::vec3& coordNext = _line[i+1];
             if (isOutsideTile(coordCurr, coordNext)) {
-                Line line = Line(&_line[cut], &_line[i+1]);
-                buildPolyLineSegment(line, _ctx);
+                if (cut == 0) {
+                    firstCutEnd = i + 1;
+                }
+                buildPolyLineSegment(_line, _ctx, cut, i + 1);
                 cut = i + 1;
             }
         }
 
-        Line line = Line(&_line[cut], &_line[_line.size()]);
-        buildPolyLineSegment(line, _ctx);
+        if (_ctx.closedPolygon) {
+            if (cut == 0) {
+                // no tile edge cuts!
+                // loop and close the polygon with no endcaps
+                buildPolyLineSegment(_line, _ctx, 0, lineSize+2, false);
+            } else {
+                // merge first and last cut line-segments together
+                buildPolyLineSegment(_line, _ctx, cut, firstCutEnd);
+            }
+        } else {
+            buildPolyLineSegment(_line, _ctx, cut, lineSize);
+        }
 
     }
 
