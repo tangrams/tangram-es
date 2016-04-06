@@ -11,6 +11,10 @@
 struct duk_hthread;
 typedef struct duk_hthread duk_context;
 
+namespace YAML {
+    class Node;
+}
+
 namespace Tangram {
 
 class Scene;
@@ -73,6 +77,8 @@ private:
     static int jsHasProperty(duk_context *_ctx);
 
     bool parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
+    void parseSceneGlobals(const YAML::Node& node, const std::string& key, int seqIndex, int dukObject);
+    void pushSceneGlobals(const Scene& scene);
 
     std::array<Value, 4> m_keywords;
     int m_keywordGeom= -1;

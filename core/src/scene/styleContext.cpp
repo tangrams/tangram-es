@@ -82,6 +82,61 @@ StyleContext::~StyleContext() {
     duk_destroy_heap(m_ctx);
 }
 
+void StyleContext::parseSceneGlobals(const YAML::Node& node, const std::string& key, int seqIndex, duk_idx_t dukObject) {
+
+    switch(node.Type()) {
+        case YAML::NodeType::Scalar:
+            if (key.size() == 0) {
+                duk_push_string(m_ctx, node.Scalar().c_str());
+                duk_put_prop_index(m_ctx, dukObject, seqIndex);
+            } else {
+                duk_push_string(m_ctx, node.Scalar().c_str());
+                duk_put_prop_string(m_ctx, dukObject, key.c_str());
+            }
+            break;
+        case YAML::NodeType::Sequence:
+            {
+                auto seqObj = duk_push_array(m_ctx);
+                for (int i = 0; i < node.size(); i++) {
+                    parseSceneGlobals(node[i], "", i, seqObj);
+                }
+                duk_put_prop_string(m_ctx, seqObj-1, key.c_str());
+                break;
+            }
+        case YAML::NodeType::Map:
+            {
+                //duk_push_string(m_ctx, key.c_str());
+                auto mapObj = duk_push_object(m_ctx);
+                for (auto& mapNode : node) {
+                    auto itemKey = mapNode.first.Scalar();
+                    parseSceneGlobals(mapNode.second, itemKey, 0, mapObj);
+                }
+                duk_put_prop_string(m_ctx, mapObj-1, key.c_str());
+            }
+        default:
+            break;
+    }
+
+    return;
+}
+
+void StyleContext::pushSceneGlobals(const Scene& scene) {
+    const auto& sceneGlobals = scene.globals();
+
+    if (sceneGlobals.size() == 0) { return; }
+
+    //[ "ctx" ]
+    auto globalObject = duk_push_object(m_ctx);
+
+    for (auto& global : sceneGlobals) {
+        auto key = global.first;
+        if (key.find(":") != std::string::npos) { continue; }
+        parseSceneGlobals(global.second, key, 0, globalObject);
+    }
+
+    duk_put_global_string(m_ctx, "global");
+}
+
 void StyleContext::initFunctions(const Scene& _scene) {
 
     if (_scene.id == m_sceneId) {
@@ -90,6 +145,7 @@ void StyleContext::initFunctions(const Scene& _scene) {
     m_sceneId = _scene.id;
 
     setFunctions(_scene.functions());
+    pushSceneGlobals(_scene);
 }
 
 bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {
