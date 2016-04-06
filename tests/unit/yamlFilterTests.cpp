@@ -20,7 +20,7 @@ Context ctx;
 Feature civic, bmw1, bike;
 
 Filter load(const std::string& filterYaml) {
-    Scene scene;
+    Scene scene("");
     YAML::Node node = YAML::Load(filterYaml);
     auto filter = SceneLoader::generateFilter(node["filter"], scene);
     ctx.initFunctions(scene);

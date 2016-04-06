@@ -44,16 +44,14 @@ const std::string DELIMITER = ":";
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
-bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
+bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, Node& root) {
 
-    Node config;
-
-    try { config = YAML::Load(_sceneString); }
+    try { root = YAML::Load(_sceneString); }
     catch (YAML::ParserException e) {
         LOGE("Parsing scene config '%s'", e.what());
         return false;
     }
-    return loadScene(config, _scene);
+    return loadScene(root, _scene);
 }
 
 void printFilters(const SceneLayer& layer, int indent){
@@ -157,11 +155,7 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
             LOGNode("Mixing styles: '%s'", styles, e.what());
         }
         for (const auto& entry : styles) {
-            try {
-                auto name = entry.first.Scalar();
-                auto config = entry.second;
-                loadStyle(name, config, _scene);
-            }
+            try { loadStyle(entry, _scene); }
             catch (YAML::RepresentationException e) {
                 LOGNode("Parsing style: '%s'", entry, e.what());
             }
@@ -458,15 +452,17 @@ bool SceneLoader::loadTexture(const std::string& url, Scene& scene) {
     return true;
 }
 
-void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
-
-    const std::string& name = node.first.Scalar();
-    Node textureConfig = node.second;
+void SceneLoader::loadTexture(const std::pair<Node, Node>& root, Scene& scene) {
+    static const std::string currentPath = "textures";
+    const std::string& name = root.first.Scalar();
+    std::string path = currentPath + COMPONENT_PATH_DELIMITER + name;
+    Node textureConfig = root.second;
 
     std::string file;
-    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
+    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
 
-    if (Node url = textureConfig["url"]) {
+    Node url;
+    if (node(StyleComponent::textures, textureConfig, url, "url", scene, path)) {
         file = url.as<std::string>();
     } else {
         LOGW("No url specified for texture '%s', skipping.", name.c_str());
@@ -475,7 +471,8 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
 
     bool generateMipmaps = false;
 
-    if (Node filtering = textureConfig["filtering"]) {
+    Node filtering;
+    if (node(StyleComponent::textures, textureConfig, filtering, "filtering", scene, path)) {
         const std::string& textureFiltering = filtering.Scalar();
         if (textureFiltering == "linear") { options.filtering = { GL_LINEAR, GL_LINEAR }; }
         else if (textureFiltering == "mipmap") {
@@ -486,13 +483,25 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
 
     std::shared_ptr<Texture> texture(new Texture(file, options, generateMipmaps));
 
-    if (Node sprites = textureConfig["sprites"]) {
+    Node sprites;
+    if (node(StyleComponent::textures, textureConfig, sprites, "sprites", scene, path)) {
         std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture, file));
 
-        for (auto it = sprites.begin(); it != sprites.end(); ++it) {
+        std::string spritesPath = path + COMPONENT_PATH_DELIMITER + "sprites";
 
-            const Node sprite = it->second;
+        for (auto it = sprites.begin(); it != sprites.end(); ++it) {
             const std::string& spriteName = it->first.Scalar();
+            std::string spritePath = spritesPath + COMPONENT_PATH_DELIMITER + spriteName;
+
+            Node sprite;
+
+            std::string userDefines;
+
+            if (scene.getComponentValue(StyleComponent::textures, spritePath, userDefines)) {
+                sprite = YAML::Load(userDefines);
+            } else {
+                sprite = it->second;
+            }
 
             if (sprite) {
                 glm::vec4 desc = parseVec<glm::vec4>(sprite);
@@ -507,15 +516,15 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
     scene.textures().emplace(name, texture);
 }
 
-void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
+void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene, const std::string& path) {
 
     if (!styleNode) {
         LOGW("Can not parse style parameters, bad style YAML Node");
         return;
     }
 
-    if (Node animatedNode = styleNode["animated"]) {
-        LOGW("'animated' property will be set but not yet implemented in styles"); // TODO
+    Node animatedNode;
+    if (node(StyleComponent::styles, styleNode, animatedNode, "animated", scene, path)) {
         if (!animatedNode.IsScalar()) { LOGW("animated flag should be a scalar"); }
         else {
             bool animate;
@@ -525,7 +534,8 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         }
     }
 
-    if (Node blendNode = styleNode["blend"]) {
+    Node blendNode;
+    if (node(StyleComponent::styles, styleNode, blendNode, "blend", scene, path)) {
         const std::string& blendMode = blendNode.Scalar();
         if      (blendMode == "none")     { style.setBlendMode(Blending::none); }
         else if (blendMode == "add")      { style.setBlendMode(Blending::add); }
@@ -535,7 +545,8 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         else { LOGW("Invalid blend mode '%s'", blendMode.c_str()); }
     }
 
-    if (Node blendOrderNode = styleNode["blend_order"]) {
+    Node blendOrderNode;
+    if (node(StyleComponent::styles, styleNode, blendOrderNode, "blend_order", scene, path)) {
         try {
             auto blendOrder = blendOrderNode.as<int>();
             style.setBlendOrder(blendOrder);
@@ -544,19 +555,23 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         }
     }
 
-    if (Node texcoordsNode = styleNode["texcoords"]) {
+    Node texcoordsNode;
+    if (node(StyleComponent::styles, styleNode, texcoordsNode, "texcoords", scene, path)) {
         style.setTexCoordsGeneration(texcoordsNode.as<bool>());
     }
 
-    if (Node shadersNode = styleNode["shaders"]) {
+    Node shadersNode;
+    if (node(StyleComponent::styles, styleNode, shadersNode, "shaders", scene, path)) {
         loadShaderConfig(shadersNode, style, scene);
     }
 
-    if (Node materialNode = styleNode["material"]) {
+    Node materialNode;
+    if (node(StyleComponent::styles, styleNode, materialNode, "material", scene, path)) {
         loadMaterial(materialNode, *(style.getMaterial()), scene, style);
     }
 
-    if (Node lightingNode = styleNode["lighting"]) {
+    Node lightingNode;
+    if (node(StyleComponent::styles, styleNode, lightingNode, "lighting", scene, path)) {
         const std::string& lighting = lightingNode.Scalar();
         if (lighting == "fragment") { style.setLightingType(LightingType::fragment); }
         else if (lighting == "vertex") { style.setLightingType(LightingType::vertex); }
@@ -565,7 +580,8 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         else { LOGW("Unrecognized lighting type '%s'", lighting.c_str()); }
     }
 
-    if (Node textureNode = styleNode["texture"]) {
+    Node textureNode;
+    if (node(StyleComponent::styles, styleNode, textureNode, "texture", scene, path)) {
 
         if (auto pointStyle = dynamic_cast<PointStyle*>(&style)) {
 
@@ -592,7 +608,11 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
     }
 }
 
-bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) {
+bool SceneLoader::loadStyle(const std::pair<Node, Node>& styleNodes, Scene& scene) {
+    static const std::string currentPath = "styles";
+    const std::string& name = styleNodes.first.Scalar();
+    std::string path = currentPath + COMPONENT_PATH_DELIMITER + name;
+    Node config = styleNodes.second;
 
     const auto& builtIn = Style::builtInStyleNames();
 
@@ -601,8 +621,8 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) 
         return false;
     }
 
-    Node baseNode = config["base"];
-    if (!baseNode) {
+    Node baseNode;
+    if (!node(StyleComponent::styles, config, baseNode, "base", scene, path)) {
         // No base style, this is an abstract style
         return true;
     }
@@ -623,7 +643,7 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) 
         return false;
     }
 
-    loadStyleProps(*style.get(), config, scene);
+    loadStyleProps(*style.get(), config, scene, path);
 
     scene.styles().push_back(std::move(style));
 
@@ -827,19 +847,14 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& nodePair, Scene& scene)
     scene.lights().push_back(std::move(sceneLight));
 }
 
-bool SceneLoader::node(StyleComponent component,
-    Node root,
-    Node& value,
-    const std::string& key,
-    Scene& scene,
-    const std::string path)
-{
+bool SceneLoader::node(StyleComponent component, Node root, Node& value, const std::string& key,
+    Scene& scene, const std::string path) {
     std::string nodeValue;
     value = root[key];
 
     if (value) {
         if (scene.getComponentValue(component, path + COMPONENT_PATH_DELIMITER + key, nodeValue)) {
-            value = Node(nodeValue);
+            value = YAML::Load(nodeValue);
         }
 
         return true;

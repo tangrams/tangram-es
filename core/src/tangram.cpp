@@ -106,7 +106,9 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
     if (m_view) {
         scene->view() = std::make_shared<View>(*m_view);
     }
-    if (SceneLoader::loadScene(sceneString, *scene)) {
+
+    YAML::Node sceneRoot;
+    if (SceneLoader::loadScene(sceneString, *scene, sceneRoot)) {
         m_scene = scene;
         if (setPositionFromCurrentView && !_setPositionFromScene) {
             m_scene->view()->setPosition(m_view->getPosition());
