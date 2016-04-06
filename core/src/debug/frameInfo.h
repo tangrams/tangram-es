@@ -1,34 +1,18 @@
 #pragma once
 
-#include <memory>
-
 namespace Tangram {
 
 class TileManager;
 class View;
 
+struct FrameInfo {
 
-namespace Debug {
+    static void beginUpdate();
+    static void beginFrame();
 
-void beginUpdate();
-void beginFrame();
+    static void endUpdate();
 
-void endUpdate();
-void endFrame();
-
-struct Context {
-    Context(std::shared_ptr<TileManager> tileManager, std::shared_ptr<View> view)
-        : tileManager(tileManager), view(view)
-    {}
-
-    std::shared_ptr<TileManager> tileManager;
-    std::shared_ptr<View> view;
+    static void draw(const View& _view, TileManager& _tileManager);
 };
-
-#define TIME_TO_MS(start, end) (float(end - start) / CLOCKS_PER_SEC * 1000.0f)
-
-extern std::unique_ptr<Context> context;
-
-}
 
 }

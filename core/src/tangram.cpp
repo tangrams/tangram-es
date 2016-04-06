@@ -36,7 +36,7 @@ const static size_t MAX_WORKERS = 2;
 std::mutex m_tilesMutex;
 std::mutex m_tasksMutex;
 std::queue<std::function<void()>> m_tasks;
-std::shared_ptr<TileManager> m_tileManager;
+std::unique_ptr<TileManager> m_tileManager;
 std::unique_ptr<TileWorker> m_tileWorker;
 std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
@@ -80,13 +80,10 @@ void initialize(const char* _scenePath) {
     m_tileWorker = std::make_unique<TileWorker>(MAX_WORKERS);
 
     // Create a tileManager
-    m_tileManager = std::make_shared<TileManager>(*m_tileWorker);
+    m_tileManager = std::make_unique<TileManager>(*m_tileWorker);
 
     // Label setup
     m_labels = std::make_unique<Labels>();
-
-    // Setup debug context
-    Debug::context = std::make_unique<Debug::Context>(m_tileManager, m_view);
 
     loadScene(_scenePath, true);
 
@@ -143,7 +140,7 @@ void resize(int _newWidth, int _newHeight) {
 
 void update(float _dt) {
 
-    Debug::beginUpdate();
+    FrameInfo::beginUpdate();
 
     g_time += _dt;
 
@@ -203,12 +200,12 @@ void update(float _dt) {
         }
     }
 
-    Debug::endUpdate();
+    FrameInfo::endUpdate();
 }
 
 void render() {
 
-    Debug::beginFrame();
+    FrameInfo::beginFrame();
 
     // Set up openGL for new frame
     RenderState::depthWrite(GL_TRUE);
@@ -239,7 +236,7 @@ void render() {
 
     m_labels->drawDebug(*m_view);
 
-    Debug::endFrame();
+    FrameInfo::draw(*m_view, *m_tileManager);
 
     while (Error::hadGlError("Tangram::render()")) {}
 }
