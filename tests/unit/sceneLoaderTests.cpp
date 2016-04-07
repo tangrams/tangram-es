@@ -17,7 +17,7 @@ using YAML::Node;
 TEST_CASE("Style with the same name as a built-in style are ignored") {
 
     Scene scene("");
-    SceneLoader::loadStyle({Node("polygons"), YAML::Node()}, scene);
+    SceneLoader::loadStyle("polygons", Node(), scene);
     REQUIRE(scene.styles().size() == 0);
 
 }
@@ -38,7 +38,7 @@ TEST_CASE("Correctly instantiate a style from a YAML configuration") {
             emission: 0.0
         )END");
 
-    SceneLoader::loadStyle({Node("roads"), node}, scene);
+    SceneLoader::loadStyle("roads", node, scene);
 
     auto& styles = scene.styles();
 

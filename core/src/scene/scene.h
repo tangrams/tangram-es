@@ -29,25 +29,17 @@ struct Stops;
  * Scene is a singleton containing the styles, lighting, and interactions defining a map scene
  */
 
-enum class StyleComponent {
-    scene,
-    global,
-    cameras,
-    lights,
-    textures,
-    styles,
-    sources,
-    layers
-};
-
 #define COMPONENT_PATH_DELIMITER '.'
 
-using StyleComponents = fastmap<std::string, std::string>;
+struct UserDefinedSceneValue {
+    std::vector<std::string> splitPath;
+    std::string value;
+};
 
 class Scene {
 public:
     Scene(std::string path);
-    Scene(std::string path, std::map<StyleComponent, StyleComponents> userDefined);
+    Scene(std::string path, std::map<std::string, UserDefinedSceneValue> userDefined);
     ~Scene();
 
     auto& view() { return m_view; }
@@ -94,11 +86,9 @@ public:
 
     void setComponent(std::string componentName, std::string value);
 
-    bool getComponentValue(StyleComponent component, const std::string& componentPath, std::string& value);
-
     std::string path() const { return m_path; }
 
-    const std::map<StyleComponent, StyleComponents>& userDefines() const { return m_userDefinedValues; }
+    const std::map<std::string, UserDefinedSceneValue>& userDefines() const { return m_userDefinedValues; }
 
     void clearUserDefines() { m_userDefinedValues.clear(); }
 
@@ -115,7 +105,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
     std::unordered_map<std::string, YAML::Node> m_globals;
 
-    std::map<StyleComponent, StyleComponents> m_userDefinedValues;
+    std::map<std::string, UserDefinedSceneValue> m_userDefinedValues;
 
     std::string m_path;
 

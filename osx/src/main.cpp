@@ -217,8 +217,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 Tangram::setPixelScale(pixel_scale);
                 break;
             case GLFW_KEY_I:
-                Tangram::setSceneComponent("cameras.iso-camera.active", "true");
                 Tangram::setSceneComponent("cameras.perspective-camera.active", "false");
+                Tangram::setSceneComponent("cameras.iso-camera.active", "true");
                 Tangram::applySceneUpdates();
                 break;
             case GLFW_KEY_A:
