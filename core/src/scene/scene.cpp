@@ -26,7 +26,7 @@ Scene::Scene(std::string path) : id(s_serial++), m_path(path) {
     m_mapProjection.reset(new MercatorProjection());
 }
 
-Scene::Scene(std::string path, std::map<StyleComponent, StyleComponents> userDefined) :
+Scene::Scene(std::string path, std::map<std::string, UserDefinedSceneValue> userDefined) :
     Scene(path)
 {
     m_userDefinedValues = userDefined;
@@ -80,53 +80,9 @@ bool Scene::texture(const std::string& textureName, std::shared_ptr<Texture>& te
     return true;
 }
 
-bool Scene::getComponentValue(StyleComponent component, const std::string& componentPath, std::string& value) {
-    auto& componentMap = m_userDefinedValues[component];
-
-    if (componentMap.size() > 0) {
-        return tryFind(componentMap, componentPath, value);
-    }
-
-    return false;
-}
-
 void Scene::setComponent(std::string componentPath, std::string value) {
-    static const std::map<std::string, StyleComponent> components = {
-        {"scene", StyleComponent::scene},
-        {"global", StyleComponent::global},
-        {"cameras", StyleComponent::cameras},
-        {"lights", StyleComponent::lights},
-        {"textures", StyleComponent::textures},
-        {"styles", StyleComponent::styles},
-        {"sources", StyleComponent::sources},
-        {"layers", StyleComponent::layers}
-    };
-
     std::vector<std::string> splitPath = splitString(componentPath, COMPONENT_PATH_DELIMITER);
-
-    if (splitPath.size() < 2) {
-        return;
-    }
-
-    StyleComponent component;
-    if (!tryFind(components, splitPath[0], component)) {
-        return;
-    }
-
-    m_userDefinedValues[component][componentPath] = value;
-
-#if 0
-    for (auto styleComponent : m_userDefinedValues) {
-        for (auto components : styleComponent.second) {
-            std::string path;
-            for (auto p : components.second.path) {
-                path += "/" + p;
-            }
-            LOG("[%d] - %s @ %s", styleComponent.first,
-                components.second.value.c_str(), path.c_str());
-        }
-    }
-#endif
+    m_userDefinedValues[componentPath] = { splitPath, value };
 }
 
 }

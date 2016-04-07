@@ -59,3 +59,23 @@ TEST_CASE("Scene update for light scene block") {
     REQUIRE(root["lights"]["light1"]["origin"].Scalar() == "ground");
 }
 
+TEST_CASE("Scene update for styles block") {
+    Scene scene("scene.yaml");
+
+    auto sceneString = stringFromFile(setResourceRoot(path).c_str(), PathType::resource);
+
+    REQUIRE(!sceneString.empty());
+
+    Node root;
+    REQUIRE(SceneLoader::loadScene(sceneString, scene, root));
+
+    // Update
+    scene.setComponent("styles.heightglow.shaders.uniforms.u_time_expand", "5.0");
+
+    // Tangram apply scene updates, reload the scene
+    REQUIRE(SceneLoader::loadScene(sceneString, scene, root));
+    scene.clearUserDefines();
+
+    REQUIRE(root["styles"]["heightglow"]["shaders"]["uniforms"]["u_time_expand"].Scalar() == "5.0");
+}
+

@@ -59,8 +59,10 @@ styles:
         lighting: vertex
         animated: false
         shaders:
+            uniforms:
+                u_time_expand: 10.0
             blocks:
-                color: "color.r *= (cos(u_time * 10.0) * 0.5 + 0.5);"
+                color: "color.r *= (cos(u_time * u_time_expand) * 0.5 + 0.5);"
     heightglowline:
         base: lines
         mix: heightglow
