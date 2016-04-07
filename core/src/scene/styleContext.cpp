@@ -130,8 +130,7 @@ void StyleContext::parseSceneGlobals(const YAML::Node& node, const std::string& 
     return;
 }
 
-void StyleContext::pushSceneGlobals(const Scene& scene) {
-    const auto& sceneGlobals = scene.globals();
+void StyleContext::setSceneGlobals(const std::unordered_map<std::string, YAML::Node>& sceneGlobals) {
 
     if (sceneGlobals.size() == 0) { return; }
 
@@ -155,7 +154,7 @@ void StyleContext::initFunctions(const Scene& _scene) {
     m_sceneId = _scene.id;
 
     setFunctions(_scene.functions());
-    pushSceneGlobals(_scene);
+    setSceneGlobals(_scene.globals());
 }
 
 bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {

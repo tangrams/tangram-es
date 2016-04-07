@@ -306,3 +306,57 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
         }
     }
 }
+
+TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
+    Scene scene;
+    YAML::Node n0 = YAML::Load(R"(
+            global:
+                width: 2
+                mapNode:
+                    color: function() { return [1, 0, 0, 1]; }
+                    caps:
+                        cap: round
+            draw:
+                color: function() { return global.mapNode.color; }
+                width: function() { return global.width; }
+                cap: function() { return global.mapNode.caps.cap; }
+            )");
+
+    std::vector<StyleParam> styles;
+
+    SceneLoader::parseGlobals(n0["global"], scene);
+    SceneLoader::applyGlobalProperties(n0, scene);
+
+    SceneLoader::parseStyleParams(n0["draw"], scene, "", styles);
+
+    REQUIRE(scene.functions().size() == 3);
+
+    StyleContext ctx;
+    ctx.initFunctions(scene);
+    ctx.setSceneGlobals(scene.globals());
+
+    for (auto& style : styles) {
+        if (style.key == StyleParamKey::color) {
+            StyleParam::Value value;
+            REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
+            REQUIRE(value.is<uint32_t>() == true);
+            REQUIRE(value.get<uint32_t>() == 0xff0000ff);
+
+        } else if (style.key == StyleParamKey::width) {
+            StyleParam::Value value;
+            REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
+            REQUIRE(value.is<StyleParam::Width>() == true);
+            REQUIRE(value.get<StyleParam::Width>().value == 2);
+
+        } else if (style.key == StyleParamKey::cap) {
+            StyleParam::Value value;
+            REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
+            REQUIRE(value.is<uint32_t>() == true);
+            REQUIRE(static_cast<CapTypes>(value.get<uint32_t>()) == CapTypes::round);
+
+        } else {
+            REQUIRE(true == false);
+        }
+    }
+
+}

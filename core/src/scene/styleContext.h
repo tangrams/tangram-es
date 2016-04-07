@@ -7,6 +7,7 @@
 #include <functional>
 #include <memory>
 #include <array>
+#include <unordered_map>
 
 struct duk_hthread;
 typedef struct duk_hthread duk_context;
@@ -68,6 +69,7 @@ public:
     void clear();
 
     bool setFunctions(const std::vector<std::string>& _functions);
+    void setSceneGlobals(const std::unordered_map<std::string, YAML::Node>& sceneGlobals);
 
     void setKeyword(const std::string& _key, Value _value);
     const Value& getKeyword(const std::string& _key) const;
@@ -80,7 +82,6 @@ private:
     bool evalFunction(std::string function, std::string& result);
     void parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
     void parseSceneGlobals(const YAML::Node& node, const std::string& key, int seqIndex, int dukObject);
-    void pushSceneGlobals(const Scene& scene);
 
     std::array<Value, 4> m_keywords;
     int m_keywordGeom= -1;
