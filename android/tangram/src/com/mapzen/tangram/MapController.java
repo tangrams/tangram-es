@@ -585,22 +585,22 @@ public class MapController implements Renderer {
 
     native void nativeSetDebugFlag(int flag, boolean on);
 
-    // Private members
+    // Protected members
     // ===============
 
-    private String scenePath;
-    private long time = System.nanoTime();
-    private GLSurfaceView mapView;
-    private AssetManager assetManager;
-    private TouchInput touchInput;
-    private FontFileParser fontFileParser;
-    private DisplayMetrics displayMetrics = new DisplayMetrics();
-    private HttpHandler httpHandler;
-    private FeaturePickListener featurePickListener;
+    protected String scenePath;
+    protected long time = System.nanoTime();
+    protected GLSurfaceView mapView;
+    protected AssetManager assetManager;
+    protected TouchInput touchInput;
+    protected FontFileParser fontFileParser;
+    protected DisplayMetrics displayMetrics = new DisplayMetrics();
+    protected HttpHandler httpHandler;
+    protected FeaturePickListener featurePickListener;
 
     // A static map of client data sources added dynamically. This map has static storage duration
     // because it should mimic the lifetime of native objects whose lifetime is the entire program.
-    private static Map<String, MapData> clientDataSources = new HashMap<>();
+    protected static Map<String, MapData> clientDataSources = new HashMap<>();
 
     // GLSurfaceView.Renderer methods
     // ==============================
