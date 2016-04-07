@@ -15,34 +15,29 @@ static std::vector<FallbackPath> defaultFontFallbacks = {
     {PathType::resource, "fonts/NotoNaskh-Regular.ttf"},
     {PathType::resource, "fonts/NotoSansHebrew-Regular.ttf"},
     {PathType::resource, "fonts/DroidSansJapanese.ttf"},
-    {PathType::resource, "fonts/DroidSansFallback.ttf"}
-};
+    {PathType::resource, "fonts/DroidSansFallback.ttf"}};
 
-#define BASE_SIZE           16  // Default font base size, size at which the font would get rasterized
-                                // When a glyph get rasterized the closest size is picked, then texture
-                                // scaling is applied to it (using its distance field)
-#define STEP_SIZE           12  // The step size increase applied, which means that each font exists
-                                // at a specific text size within the font renderer
-#define MAX_STEPS           3   // The maximum number of steps to increase the size to
-#define DEFAULT_BOLDNESS    400
-#define SDF_WIDTH           6
-#define MIN_LINE_WIDTH      4
+#define BASE_SIZE 16 // Default font base size, size at which the font would get rasterized
+                     // When a glyph get rasterized the closest size is picked, then texture
+                     // scaling is applied to it (using its distance field)
+#define STEP_SIZE 12 // The step size increase applied, which means that each font exists
+                     // at a specific text size within the font renderer
+#define MAX_STEPS 3  // The maximum number of steps to increase the size to
+#define DEFAULT_BOLDNESS 400
+#define SDF_WIDTH 6
+#define MIN_LINE_WIDTH 4
 
 namespace Tangram {
 
-bool addFace(std::shared_ptr<alfons::Font>& font,
-    alfons::FontManager& manager,
-    const FallbackPath& fallback, float size)
-{
+bool addFace(std::shared_ptr<alfons::Font>& font, alfons::FontManager& manager,
+             const FallbackPath& fallback, float size) {
     alfons::InputSource source;
     unsigned int byteSize;
     unsigned char* data;
 
     data = bytesFromFile(fallback.path.c_str(), fallback.type, &byteSize);
 
-    if (!data) {
-        return false;
-    }
+    if (!data) { return false; }
 
     source = alfons::InputSource(reinterpret_cast<char*>(data), byteSize);
 
@@ -55,18 +50,14 @@ bool addFace(std::shared_ptr<alfons::Font>& font,
     return true;
 }
 
-FontContext::FontContext() :
-    m_sdfRadius(SDF_WIDTH),
-    m_atlas(*this, GlyphTexture::size, m_sdfRadius),
-    m_batch(m_atlas, m_scratch)
-{
+FontContext::FontContext()
+    : m_sdfRadius(SDF_WIDTH), m_atlas(*this, GlyphTexture::size, m_sdfRadius),
+      m_batch(m_atlas, m_scratch) {
     std::vector<FallbackPath> fallbacks;
     int importance = 0;
 
-    fallbacks.push_back({
-        PathType::resource,
-        systemFontPath("sans-serif", std::to_string(DEFAULT_BOLDNESS), "normal")
-    });
+    fallbacks.push_back({PathType::resource,
+                         systemFontPath("sans-serif", std::to_string(DEFAULT_BOLDNESS), "normal")});
 
     std::string platformFallback = systemFontFallbackPath(importance++, DEFAULT_BOLDNESS);
 
@@ -77,9 +68,7 @@ FontContext::FontContext() :
         }
     } else {
         // No platform fallback, add bundled font fallbacks
-        fallbacks.insert(fallbacks.end(),
-            defaultFontFallbacks.begin(),
-            defaultFontFallbacks.end());
+        fallbacks.insert(fallbacks.end(), defaultFontFallbacks.begin(), defaultFontFallbacks.end());
     }
 
     // Load fonts to font rendering manager
@@ -113,7 +102,7 @@ void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_
     m_textures[id].dirty = true;
 
     uint16_t stride = GlyphTexture::size;
-    uint16_t width =  GlyphTexture::size;
+    uint16_t width = GlyphTexture::size;
 
     unsigned char* dst = &texData[(gx + pad) + (gy + pad) * stride];
 
@@ -128,13 +117,9 @@ void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_
     static std::vector<unsigned char> tmpSdfBuffer;
 
     size_t bytes = gw * gh * sizeof(float) * 3;
-    if (tmpSdfBuffer.size() < bytes) {
-        tmpSdfBuffer.resize(bytes);
-    }
+    if (tmpSdfBuffer.size() < bytes) { tmpSdfBuffer.resize(bytes); }
 
-    sdfBuildDistanceFieldNoAlloc(dst, width, m_sdfRadius,
-                                 dst, gw, gh, width,
-                                 &tmpSdfBuffer[0]);
+    sdfBuildDistanceFieldNoAlloc(dst, width, m_sdfRadius, dst, gw, gh, width, &tmpSdfBuffer[0]);
 
     texture.setDirty(gy, gh);
 }
@@ -179,7 +164,7 @@ void FontContext::bindTexture(alfons::AtlasID _id, GLuint _unit) {
 }
 
 bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& _text,
-                             std::vector<GlyphQuad>& _quads,  glm::vec2& _size) {
+                             std::vector<GlyphQuad>& _quads, glm::vec2& _size) {
 
     std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -201,9 +186,8 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     alfons::LineMetrics metrics;
 
     if (_params.wordWrap) {
-        auto wrap = drawWithLineWrapping(line, m_batch, MIN_LINE_WIDTH,
-                                         _params.maxLineWidth, _params.align,
-                                         _params.lineSpacing);
+        auto wrap = drawWithLineWrapping(line, m_batch, MIN_LINE_WIDTH, _params.maxLineWidth,
+                                         _params.align, _params.lineSpacing);
         metrics = wrap.metrics;
     } else {
         glm::vec2 position(0);
@@ -232,20 +216,21 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     return true;
 }
 
-void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::AtlasGlyph& atlasGlyph) {
+void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q,
+                                           const alfons::AtlasGlyph& atlasGlyph) {
     if (atlasGlyph.atlas >= max_textures) { return; }
 
     auto& g = *atlasGlyph.glyph;
-    quads->push_back({
-            atlasGlyph.atlas,
-            {{glm::vec2{q.x1, q.y1} * TextVertex::position_scale, {g.u1, g.v1}},
-             {glm::vec2{q.x1, q.y2} * TextVertex::position_scale, {g.u1, g.v2}},
-             {glm::vec2{q.x2, q.y1} * TextVertex::position_scale, {g.u2, g.v1}},
-             {glm::vec2{q.x2, q.y2} * TextVertex::position_scale, {g.u2, g.v2}}}});
+    quads->push_back({atlasGlyph.atlas,
+                      {{glm::vec2{q.x1, q.y1} * TextVertex::position_scale, {g.u1, g.v1}},
+                       {glm::vec2{q.x1, q.y2} * TextVertex::position_scale, {g.u1, g.v2}},
+                       {glm::vec2{q.x2, q.y1} * TextVertex::position_scale, {g.u2, g.v1}},
+                       {glm::vec2{q.x2, q.y2} * TextVertex::position_scale, {g.u2, g.v2}}}});
 }
 
 auto FontContext::getFont(const std::string& _family, const std::string& _style,
-                          const std::string& _weight, float _size) -> std::shared_ptr<alfons::Font> {
+                          const std::string& _weight, float _size)
+    -> std::shared_ptr<alfons::Font> {
 
     int sizeIndex = 0;
 
@@ -289,13 +274,12 @@ auto FontContext::getFont(const std::string& _family, const std::string& _style,
         }
     }
 
-    font->addFace(m_alfons.addFontFace(alfons::InputSource(reinterpret_cast<char*>(data), dataSize), fontSize));
+    font->addFace(m_alfons.addFontFace(alfons::InputSource(reinterpret_cast<char*>(data), dataSize),
+                                       fontSize));
 
     // add fallbacks from default font
     font->addFaces(*m_font[sizeIndex]);
 
     return font;
 }
-
-
 }
