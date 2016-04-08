@@ -21,7 +21,7 @@ PointLight::PointLight(const std::string& _name, bool _dynamic) :
 
 PointLight::~PointLight() {}
 
-void PointLight::setPosition(UnitVec<glm::vec3, 3> pos) {
+void PointLight::setPosition(UnitVec<glm::vec3> pos) {
     m_position = pos;
 }
 

@@ -60,7 +60,7 @@ constexpr size_t StyleParamKeySize = static_cast<size_t>(StyleParamKey::NUM_ELEM
 
 enum class Unit { pixel, milliseconds, meter, seconds };
 
-static std::string unitString(Unit unit) {
+static inline std::string unitString(Unit unit) {
     switch(unit) {
         case Unit::pixel: return "pixel";
         case Unit::milliseconds: return "milliseconds";
@@ -70,9 +70,10 @@ static std::string unitString(Unit unit) {
     }
 }
 
-template <typename T, int size>
+template <typename T>
 struct UnitVec {
     T value = T(0.0);
+    static constexpr int size = sizeof(value)/sizeof(value[0]);
     Unit units[size];
 
     UnitVec() {
@@ -154,8 +155,8 @@ struct StyleParam {
     static bool parseTime(const std::string& _value, float& _time);
 
     // values within _value string parameter must be delimited by ','
-    static bool parseVec2(const std::string& _value, const std::vector<Unit> _allowedUnits, UnitVec<glm::vec2, 2>& _vec2);
-    static bool parseVec3(const std::string& _value, const std::vector<Unit> _allowedUnits, UnitVec<glm::vec3, 3>& _vec3);
+    static bool parseVec2(const std::string& _value, const std::vector<Unit> _allowedUnits, UnitVec<glm::vec2>& _vec2);
+    static bool parseVec3(const std::string& _value, const std::vector<Unit> _allowedUnits, UnitVec<glm::vec3>& _vec3);
 
     static int parseValueUnitPair(const std::string& _value, size_t start,
                                   StyleParam::ValueUnitPair& _result);

@@ -27,7 +27,7 @@ enum class LightOrigin {
     world
 };
 
-static std::string lightOriginString(LightOrigin origin) {
+static inline std::string lightOriginString(LightOrigin origin) {
     switch(origin) {
         case LightOrigin::camera: return "camera";
         case LightOrigin::ground: return "ground";

@@ -696,7 +696,7 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
 
 void SceneLoader::parseLightPosition(Node position, PointLight& light) {
     if (position.IsSequence()) {
-        UnitVec<glm::vec3, 3> lightPos;
+        UnitVec<glm::vec3> lightPos;
         std::string positionSequence;
 
         // Evaluate sequence separated by ',' to parse with parseVec3

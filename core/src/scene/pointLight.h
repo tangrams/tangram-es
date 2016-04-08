@@ -12,7 +12,7 @@ public:
     virtual ~PointLight();
 
     /*  Set the position relative to the camera */
-    virtual void setPosition(UnitVec<glm::vec3, 3> position);
+    virtual void setPosition(UnitVec<glm::vec3> position);
 
     /*  Set the constant attenuation */
     virtual void setAttenuation(float _att);
@@ -37,7 +37,7 @@ public:
         UniformLocation outerRadius;
     };
 
-    auto getPosition() const -> UnitVec<glm::vec3, 3> { return m_position; }
+    auto getPosition() const -> UnitVec<glm::vec3> { return m_position; }
 
     std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) override;
 
@@ -51,7 +51,7 @@ protected:
 
     static std::string s_classBlock;
 
-    UnitVec<glm::vec3, 3> m_position;
+    UnitVec<glm::vec3> m_position;
 
     float m_attenuation;
     float m_innerRadius;
