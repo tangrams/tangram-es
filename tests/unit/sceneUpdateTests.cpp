@@ -12,30 +12,7 @@ using namespace Tangram;
 
 const char* path = "scene.yaml";
 
-TEST_CASE("Scene update for cameras scene block") {
-    Scene scene("scene.yaml");
-
-    auto sceneString = stringFromFile(setResourceRoot(path).c_str(), PathType::resource);
-
-    REQUIRE(!sceneString.empty());
-
-    Node root;
-    REQUIRE(SceneLoader::loadScene(sceneString, scene, root));
-    REQUIRE(root["cameras"]["iso-camera"]["active"].Scalar() == "false");
-
-    // Update
-    scene.setComponent("cameras.iso-camera.active", "true");
-    scene.setComponent("cameras.iso-camera.type", "perspective");
-
-    // Tangram apply scene updates, reload the scene
-    REQUIRE(SceneLoader::loadScene(sceneString, scene, root));
-    scene.clearUserDefines();
-
-    REQUIRE(root["cameras"]["iso-camera"]["active"].Scalar() == "true");
-    REQUIRE(root["cameras"]["iso-camera"]["type"].Scalar() == "perspective");
-}
-
-TEST_CASE("Scene update for light scene block") {
+TEST_CASE("Scene update tests") {
     Scene scene("scene.yaml");
 
     auto sceneString = stringFromFile(setResourceRoot(path).c_str(), PathType::resource);
@@ -49,6 +26,10 @@ TEST_CASE("Scene update for light scene block") {
     scene.setComponent("lights.light1.ambient", "0.9");
     scene.setComponent("lights.light1.type", "spotlight");
     scene.setComponent("lights.light1.origin", "ground");
+    scene.setComponent("layers.poi_icons.draw.icons.interactive", "false");
+    scene.setComponent("styles.heightglow.shaders.uniforms.u_time_expand", "5.0");
+    scene.setComponent("cameras.iso-camera.active", "true");
+    scene.setComponent("cameras.iso-camera.type", "perspective");
 
     // Tangram apply scene updates, reload the scene
     REQUIRE(SceneLoader::loadScene(sceneString, scene, root));
@@ -57,25 +38,8 @@ TEST_CASE("Scene update for light scene block") {
     REQUIRE(root["lights"]["light1"]["ambient"].Scalar() == "0.9");
     REQUIRE(root["lights"]["light1"]["type"].Scalar() == "spotlight");
     REQUIRE(root["lights"]["light1"]["origin"].Scalar() == "ground");
-}
-
-TEST_CASE("Scene update for styles block") {
-    Scene scene("scene.yaml");
-
-    auto sceneString = stringFromFile(setResourceRoot(path).c_str(), PathType::resource);
-
-    REQUIRE(!sceneString.empty());
-
-    Node root;
-    REQUIRE(SceneLoader::loadScene(sceneString, scene, root));
-
-    // Update
-    scene.setComponent("styles.heightglow.shaders.uniforms.u_time_expand", "5.0");
-
-    // Tangram apply scene updates, reload the scene
-    REQUIRE(SceneLoader::loadScene(sceneString, scene, root));
-    scene.clearUserDefines();
-
+    REQUIRE(root["layers"]["poi_icons"]["draw"]["icons"]["interactive"].Scalar() == "false");
     REQUIRE(root["styles"]["heightglow"]["shaders"]["uniforms"]["u_time_expand"].Scalar() == "5.0");
+    REQUIRE(root["cameras"]["iso-camera"]["active"].Scalar() == "true");
+    REQUIRE(root["cameras"]["iso-camera"]["type"].Scalar() == "perspective");
 }
-
