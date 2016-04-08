@@ -308,7 +308,7 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
 }
 
 TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
-    Scene scene;
+    Scene scene("");
     YAML::Node n0 = YAML::Load(R"(
             global:
                 width: 2
