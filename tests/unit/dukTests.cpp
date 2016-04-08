@@ -39,23 +39,23 @@ TEST_CASE( "Test evalFilterFn with feature", "[Duktape][evalFilterFn]") {
     REQUIRE(ctx.evalFilter(0) == false);
 }
 
-TEST_CASE( "Test evalFilterFn with feature and globals", "[Duktape][evalFilterFn]") {
+TEST_CASE( "Test evalFilterFn with feature and keywords", "[Duktape][evalFilterFn]") {
     Feature feature;
     feature.props.set("scalerank", 2);
 
     StyleContext ctx;
     ctx.setFeature(feature);
-    ctx.setGlobal("$zoom", 5);
+    ctx.setKeyword("$zoom", 5);
 
     REQUIRE(ctx.setFunctions({ R"(function() { return (feature.scalerank * .5) <= ($zoom - 4); })"}));
     REQUIRE(ctx.evalFilter(0) == true);
 
-    ctx.setGlobal("$zoom", 4);
+    ctx.setKeyword("$zoom", 4);
     REQUIRE(ctx.evalFilter(0) == false);
 
 }
 
-TEST_CASE( "Test evalFilterFn with feature and global geometry", "[Duktape][evalFilterFn]") {
+TEST_CASE( "Test evalFilterFn with feature and keyword geometry", "[Duktape][evalFilterFn]") {
     Feature points;
     points.geometryType = GeometryType::points;
 
@@ -67,7 +67,7 @@ TEST_CASE( "Test evalFilterFn with feature and global geometry", "[Duktape][eval
 
     StyleContext ctx;
 
-    // Test $geometry global
+    // Test $geometry keyword
     REQUIRE(ctx.setFunctions({
                 R"(function() { return $geometry === 'point'; })",
                 R"(function() { return $geometry === 'line'; })",
@@ -109,23 +109,23 @@ TEST_CASE( "Test evalFilterFn with different features", "[Duktape][evalFilterFn]
     REQUIRE(ctx.evalFilter(0) == true);
 }
 
-TEST_CASE( "Test numeric global", "[Duktape][setGlobal]") {
+TEST_CASE( "Test numeric keyword", "[Duktape][setKeyword]") {
     StyleContext ctx;
-    ctx.setGlobal("$zoom", 10);
+    ctx.setKeyword("$zoom", 10);
     REQUIRE(ctx.setFunctions({ R"(function() { return $zoom === 10 })"}));
     REQUIRE(ctx.evalFilter(0) == true);
 
-    ctx.setGlobal("$zoom", 0);
+    ctx.setKeyword("$zoom", 0);
     REQUIRE(ctx.evalFilter(0) == false);
 }
 
-TEST_CASE( "Test string global", "[Duktape][setGlobal]") {
+TEST_CASE( "Test string keyword", "[Duktape][setKeyword]") {
     StyleContext ctx;
-    ctx.setGlobal("$geometry", GeometryType::points);
+    ctx.setKeyword("$geometry", GeometryType::points);
     REQUIRE(ctx.setFunctions({ R"(function() { return $geometry === point })"}));
     REQUIRE(ctx.evalFilter(0) == true);
 
-    ctx.setGlobal("$geometry", "none");
+    ctx.setKeyword("$geometry", "none");
     REQUIRE(ctx.evalFilter(0) == false);
 
 }
@@ -305,4 +305,66 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
             REQUIRE(true == false);
         }
     }
+}
+
+TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
+    Scene scene;
+    YAML::Node n0 = YAML::Load(R"(
+            global:
+                width: 2
+                mapNode:
+                    color: function(c) { return c; }
+                    caps:
+                        cap: round
+                    test: function
+            draw:
+                color: function() { return global.mapNode.color("blue"); }
+                width: function() { return global.width; }
+                cap: function() { return global.mapNode.caps.cap; }
+                text_source: function() { return global.mapNode.test; }
+            )");
+
+    std::vector<StyleParam> styles;
+
+    SceneLoader::parseGlobals(n0["global"], scene);
+    SceneLoader::applyGlobalProperties(n0, scene);
+
+    SceneLoader::parseStyleParams(n0["draw"], scene, "", styles);
+
+    REQUIRE(scene.functions().size() == 4);
+
+    StyleContext ctx;
+    ctx.initFunctions(scene);
+    ctx.setSceneGlobals(scene.globals());
+
+    for (auto& style : styles) {
+        if (style.key == StyleParamKey::color) {
+            StyleParam::Value value;
+            REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
+            REQUIRE(value.is<uint32_t>() == true);
+            REQUIRE(value.get<uint32_t>() == 0xffff0000);
+
+        } else if (style.key == StyleParamKey::width) {
+            StyleParam::Value value;
+            REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
+            REQUIRE(value.is<StyleParam::Width>() == true);
+            REQUIRE(value.get<StyleParam::Width>().value == 2);
+
+        } else if (style.key == StyleParamKey::cap) {
+            StyleParam::Value value;
+            REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
+            REQUIRE(value.is<uint32_t>() == true);
+            REQUIRE(static_cast<CapTypes>(value.get<uint32_t>()) == CapTypes::round);
+
+        } else if(style.key == StyleParamKey::text_source) {
+            StyleParam::Value value;
+            REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
+            REQUIRE(value.is<std::string>() == true);
+            REQUIRE(value.get<std::string>() == "function");
+
+        } else {
+            REQUIRE(true == false);
+        }
+    }
+
 }

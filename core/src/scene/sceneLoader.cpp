@@ -25,7 +25,6 @@
 #include "view/view.h"
 
 #include "csscolorparser.hpp"
-#include "yaml-cpp/yaml.h"
 
 #include <algorithm>
 #include <iterator>
@@ -39,9 +38,9 @@ using YAML::BadConversion;
 
 namespace Tangram {
 
+const std::string DELIMITER = ":";
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
-
 
 bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
 
@@ -64,6 +63,54 @@ void printFilters(const SceneLayer& layer, int indent){
     }
 };
 
+void SceneLoader::applyGlobalProperties(Node& node, Scene& scene) {
+    switch(node.Type()) {
+    case NodeType::Scalar:
+        {
+            std::string key = node.Scalar();
+            if (key.compare(0, 7, "global.") == 0) {
+                key.replace(0, 7, "");
+                std::replace(key.begin(), key.end(), '.', DELIMITER[0]);
+                node = scene.globals()[key];
+            }
+        }
+        break;
+    case NodeType::Sequence:
+        for (auto n : node) {
+            applyGlobalProperties(n, scene);
+        }
+        break;
+    case NodeType::Map:
+        for (auto n : node) {
+            applyGlobalProperties(n.second, scene);
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+void SceneLoader::parseGlobals(const Node& node, Scene& scene, const std::string& key) {
+    switch (node.Type()) {
+    case NodeType::Scalar:
+    case NodeType::Sequence:
+        scene.globals()[key] = node;
+        break;
+    case NodeType::Map:
+        if (key.size() > 0) {
+            scene.globals()[key] = node;
+        }
+        for (const auto& g : node) {
+            std::string value = g.first.Scalar();
+            Node global = node[value];
+            std::string mapKey = (key.size() == 0) ? value : (key + DELIMITER + value);
+            parseGlobals(global, scene, mapKey);
+        }
+    default:
+        break;
+    }
+}
+
 bool SceneLoader::loadScene(Node& config, Scene& _scene) {
 
     // Instantiate built-in styles
@@ -73,6 +120,12 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
     _scene.styles().emplace_back(new TextStyle("text", true));
     _scene.styles().emplace_back(new DebugStyle("debug"));
     _scene.styles().emplace_back(new PointStyle("points"));
+
+    if (Node globals = config["global"]) {
+        parseGlobals(globals, _scene);
+        applyGlobalProperties(config, _scene);
+    }
+
 
     if (Node sources = config["sources"]) {
         for (const auto& source : sources) {
@@ -940,7 +993,7 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
     for (const auto& prop : params) {
         std::string key;
         if (!prefix.empty()) {
-            key = prefix + ":" + prop.first.Scalar();
+            key = prefix + DELIMITER + prop.first.Scalar();
         } else {
             key = prop.first.as<std::string>();
         }
@@ -1100,10 +1153,10 @@ void SceneLoader::parseTransition(Node params, Scene& scene, std::vector<StylePa
             std::string prefixedKey;
             switch (prop.first.Type()) {
                 case YAML::NodeType::Sequence:
-                    prefixedKey = prefix + ":" + key;
+                    prefixedKey = prefix + DELIMITER + key;
                     break;
                 case YAML::NodeType::Scalar:
-                    prefixedKey = prefix + ":" + prop.first.as<std::string>();
+                    prefixedKey = prefix + DELIMITER + prop.first.as<std::string>();
                     break;
                 default:
                     LOGW("Expected a scalar or sequence value for transition");
@@ -1112,7 +1165,7 @@ void SceneLoader::parseTransition(Node params, Scene& scene, std::vector<StylePa
             }
 
             for (auto child : prop.second) {
-                auto childKey = prefixedKey + ":" + child.first.as<std::string>();
+                auto childKey = prefixedKey + DELIMITER + child.first.as<std::string>();
                 out.push_back(StyleParam{ childKey, child.second.as<std::string>() });
             }
         }
@@ -1152,7 +1205,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, S
             getBool(member.second, visible, "visible");
         } else {
             // Member is a sublayer
-            sublayers.push_back(loadSublayer(member.second, (layerName + ":" + key), scene));
+            sublayers.push_back(loadSublayer(member.second, (layerName + DELIMITER + key), scene));
         }
     }
 

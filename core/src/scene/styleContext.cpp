@@ -82,6 +82,80 @@ StyleContext::~StyleContext() {
     duk_destroy_heap(m_ctx);
 }
 
+void StyleContext::parseSceneGlobals(const YAML::Node& node, const std::string& key, int seqIndex,
+                                     duk_idx_t dukObject) {
+
+    switch(node.Type()) {
+        case YAML::NodeType::Scalar:
+            if (key.size() == 0) {
+                duk_push_string(m_ctx, node.Scalar().c_str());
+                duk_put_prop_index(m_ctx, dukObject, seqIndex);
+            } else {
+                auto nodeValue = node.Scalar();
+                if (nodeValue.compare(0, 8, "function") == 0) {
+                    duk_push_string(m_ctx, key.c_str()); // push property key
+                    duk_push_string(m_ctx, nodeValue.c_str()); // push function string
+                    duk_push_string(m_ctx, "");
+                    if (duk_pcompile(m_ctx, DUK_COMPILE_FUNCTION) == 0) { // compile function
+                        duk_put_prop(m_ctx, -3); // put {key: function()}
+                    } else {
+                        LOGW("Compile failed in global function: %s\n%s\n---",
+                             duk_safe_to_string(m_ctx, -1),
+                             nodeValue.c_str());
+                        duk_pop(m_ctx); //pop error
+                        duk_pop(m_ctx); //pop key
+                        // push property as a string
+                        duk_push_string(m_ctx, nodeValue.c_str());
+                        duk_put_prop_string(m_ctx, dukObject, key.c_str());
+                    }
+                } else {
+                    duk_push_string(m_ctx, nodeValue.c_str());
+                    duk_put_prop_string(m_ctx, dukObject, key.c_str());
+                }
+            }
+            break;
+        case YAML::NodeType::Sequence:
+            {
+                auto seqObj = duk_push_array(m_ctx);
+                for (int i = 0; i < node.size(); i++) {
+                    parseSceneGlobals(node[i], "", i, seqObj);
+                }
+                duk_put_prop_string(m_ctx, seqObj-1, key.c_str());
+                break;
+            }
+        case YAML::NodeType::Map:
+            {
+                //duk_push_string(m_ctx, key.c_str());
+                auto mapObj = duk_push_object(m_ctx);
+                for (auto& mapNode : node) {
+                    auto itemKey = mapNode.first.Scalar();
+                    parseSceneGlobals(mapNode.second, itemKey, 0, mapObj);
+                }
+                duk_put_prop_string(m_ctx, mapObj-1, key.c_str());
+            }
+        default:
+            break;
+    }
+
+    return;
+}
+
+void StyleContext::setSceneGlobals(const std::unordered_map<std::string, YAML::Node>& sceneGlobals) {
+
+    if (sceneGlobals.size() == 0) { return; }
+
+    //[ "ctx" ]
+    auto globalObject = duk_push_object(m_ctx);
+
+    for (auto& global : sceneGlobals) {
+        auto key = global.first;
+        if (key.find(":") != std::string::npos) { continue; }
+        parseSceneGlobals(global.second, key, 0, globalObject);
+    }
+
+    duk_put_global_string(m_ctx, "global");
+}
+
 void StyleContext::initFunctions(const Scene& _scene) {
 
     if (_scene.id == m_sceneId) {
@@ -90,6 +164,7 @@ void StyleContext::initFunctions(const Scene& _scene) {
     m_sceneId = _scene.id;
 
     setFunctions(_scene.functions());
+    setSceneGlobals(_scene.globals());
 }
 
 bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {
@@ -127,32 +202,32 @@ void StyleContext::setFeature(const Feature& _feature) {
 
     m_feature = &_feature;
 
-    if (m_globalGeom != m_feature->geometryType) {
-        setGlobal(key_geom, s_geometryStrings[m_feature->geometryType]);
-        m_globalGeom = m_feature->geometryType;
+    if (m_keywordGeom != m_feature->geometryType) {
+        setKeyword(key_geom, s_geometryStrings[m_feature->geometryType]);
+        m_keywordGeom = m_feature->geometryType;
     }
 }
 
-void StyleContext::setGlobalZoom(int _zoom) {
-    if (m_globalZoom != _zoom) {
-        setGlobal(key_zoom, _zoom);
-        m_globalZoom = _zoom;
+void StyleContext::setKeywordZoom(int _zoom) {
+    if (m_keywordZoom != _zoom) {
+        setKeyword(key_zoom, _zoom);
+        m_keywordZoom = _zoom;
     }
 }
 
-void StyleContext::setGlobal(const std::string& _key, Value _val) {
-    auto globalKey = Filter::globalType(_key);
-    if (globalKey == FilterGlobal::undefined) {
-        LOG("Undefined Global: %s", _key.c_str());
+void StyleContext::setKeyword(const std::string& _key, Value _val) {
+    auto keywordKey = Filter::keywordType(_key);
+    if (keywordKey == FilterKeyword::undefined) {
+        LOG("Undefined Keyword: %s", _key.c_str());
         return;
     }
 
-    // Unset shortcuts in case setGlobal was not called by
+    // Unset shortcuts in case setKeyword was not called by
     // the helper functions above.
-    if (_key == key_zoom) { m_globalZoom = -1; }
-    if (_key == key_geom) { m_globalGeom = -1; }
+    if (_key == key_zoom) { m_keywordZoom = -1; }
+    if (_key == key_geom) { m_keywordGeom = -1; }
 
-    Value& entry = m_globals[static_cast<uint8_t>(globalKey)];
+    Value& entry = m_keywords[static_cast<uint8_t>(keywordKey)];
     if (entry == _val) { return; }
 
     if (_val.is<std::string>()) {
@@ -166,52 +241,74 @@ void StyleContext::setGlobal(const std::string& _key, Value _val) {
     entry = std::move(_val);
 }
 
-const Value& StyleContext::getGlobal(const std::string& _key) const {
-    return getGlobal(Filter::globalType(_key));
+const Value& StyleContext::getKeyword(const std::string& _key) const {
+    return getKeyword(Filter::keywordType(_key));
 }
 
 void StyleContext::clear() {
     m_feature = nullptr;
 }
 
-bool StyleContext::evalFilter(FunctionID _id) {
-
+bool StyleContext::evalFunction(FunctionID id) {
+    // Get all functions (array) in context
     if (!duk_get_global_string(m_ctx, FUNC_ID)) {
-        LOGE("EvalFilterFn - functions not initialized");
+        LOGE("EvalFilterFn - functions array not initialized");
+        duk_pop(m_ctx); // pop [undefined] sitting at stack top
         return false;
     }
 
-    if (!duk_get_prop_index(m_ctx, -1, _id)) {
-        LOGE("EvalFilterFn - function %d not set", _id);
-        duk_pop(m_ctx);
-        DBG("evalFilterFn\n");
+    // Get function at index `id` from functions array, put it at stack top
+    if (!duk_get_prop_index(m_ctx, -1, id)) {
+        LOGE("EvalFilterFn - function %d not set", id);
+        duk_pop(m_ctx); // pop "undefined" sitting at stack top
+        duk_pop(m_ctx); // pop functions (array) now sitting at stack top
         return false;
     }
 
+    // pop fns array
+    duk_remove(m_ctx, -2);
+
+    // call popped function (sitting at stack top), evaluated value is put on stack top
     if (duk_pcall(m_ctx, 0) != 0) {
         LOGE("EvalFilterFn: %s", duk_safe_to_string(m_ctx, -1));
         duk_pop(m_ctx);
-        duk_pop(m_ctx);
-        DBG("evalFilterFn\n");
         return false;
     }
 
+    return true;
+}
+
+bool StyleContext::evalFilter(FunctionID _id) {
+
     bool result = false;
 
+    if (!evalFunction(_id)) { return false; };
+
+    // check for evaluated value sitting at value stack top
     if (duk_is_boolean(m_ctx, -1)) {
         result = duk_get_boolean(m_ctx, -1);
     }
 
     // pop result
     duk_pop(m_ctx);
-    // pop fns obj
-    duk_pop(m_ctx);
 
-    DUMP("evalFilterFn\n");
     return result;
 }
 
-bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const {
+bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Value& _val) {
+
+    if (!evalFunction(_id)) { return false; }
+
+    // parse evaluated result at stack top
+    parseStyleResult(_key, _val);
+
+    // pop result, empty stack
+    duk_pop(m_ctx);
+
+    return !_val.is<none_type>();
+}
+
+void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const {
     _val = none_type{};
 
     if (duk_is_string(m_ctx, -1)) {
@@ -334,33 +431,7 @@ bool StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
         LOGW("Unhandled return type from Javascript style function for %d.", _key);
     }
 
-    duk_pop(m_ctx);
-
     DUMP("parseStyleResult\n");
-    return !_val.is<none_type>();
-}
-
-bool StyleContext::evalStyle(FunctionID _id, StyleParamKey _key, StyleParam::Value& _val) {
-
-    if (!duk_get_global_string(m_ctx, FUNC_ID)) {
-        LOGE("EvalFilterFn - functions array not initialized");
-        return false;
-    }
-
-    if (!duk_get_prop_index(m_ctx, -1, _id)) {
-        LOGE("EvalFilterFn - function %d not set", _id);
-    }
-
-    // pop fns array
-    duk_remove(m_ctx, -2);
-
-    if (duk_pcall(m_ctx, 0) != 0) {
-        LOGE("EvalFilterFn: %s", duk_safe_to_string(m_ctx, -1));
-        duk_pop(m_ctx);
-        return false;
-    }
-
-    return parseStyleResult(_key, _val);
 }
 
 // Implements Proxy handler.has(target_object, key)
