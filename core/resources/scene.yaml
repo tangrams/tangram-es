@@ -1,16 +1,6 @@
-global:
-    labels: false
-    color:
-        colorA: red
-        colorC: [1, 1, 1, 1]
-        colorE: function(c) { return c; }
-        colorF: function() { return "cyan"; }
-    test:
-        background:
-            color: '#990000'
-
-scene: global.test
-
+scene:
+    background:
+        color: '#8db7d5'
 cameras:
     iso-camera:
         # Manhattan
@@ -120,13 +110,8 @@ layers:
         draw:
             polygons:
                 order: 1
-                #color: '#fffffa'
-                color: global.color.colorA
+                color: '#fffffa'
                 interactive: true # currently ignored
-            lines:
-                order: 2
-                color: function() { return global.color.colorE("orange"); }
-                width: 5px
         green:
             filter: { kind: [park, graveyard, cemetery, forest, recreation_ground] }
             draw:
@@ -157,7 +142,7 @@ layers:
         draw:
             flatcolor:
                 order: 3
-                color: global.color.colorF
+                color: '#8db7d5'
 
     roads:
         data: { source: osm }
@@ -361,7 +346,7 @@ layers:
         draw:
             text:
                 interactive: true
-                visible: global.labels
+                visible: true
                 priority: 2
                 offset: [0, 8px]
                 transition:
@@ -380,7 +365,7 @@ layers:
                 text:
                     repeat_distance: 200px
                     repeat_group: road_labels
-                    visible: global.labels
+                    visible: true
                     #offset: [0px, 5px]
                     priority: 1
                     transition:
@@ -400,7 +385,7 @@ layers:
                     repeat_distance: 100px
                     repeat_group: roads
                     interactive: true
-                    visible: global.labels
+                    visible: true
                     priority: 3
                     transition:
                         [show, hide]:
