@@ -139,10 +139,10 @@ extern "C" {
         onUrlFailure(jniEnv, callbackPtr);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_pickFeature(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickFeature(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY, jobject listener) {
         auto& items = Tangram::pickFeaturesAt(posX, posY);
         if (!items.empty()) {
-            featureSelectionCallback(jniEnv, items);
+            featurePickCallback(jniEnv, listener, items);
         }
     }
 

@@ -43,7 +43,7 @@ static jmethodID startUrlRequestMID = 0;
 static jmethodID cancelUrlRequestMID = 0;
 static jmethodID getFontFilePath = 0;
 static jmethodID getFontFallbackFilePath = 0;
-static jmethodID featureSelectionCbMID = 0;
+static jmethodID onFeaturePickMID = 0;
 
 static jclass hashmapClass = nullptr;
 static jmethodID hashmapInitMID = 0;
@@ -74,7 +74,9 @@ void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager
     getFontFallbackFilePath = jniEnv->GetMethodID(tangramClass, "getFontFallbackFilePath", "(II)Ljava/lang/String;");
     requestRenderMethodID = jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
-    featureSelectionCbMID = jniEnv->GetMethodID(tangramClass, "featureSelectionCb", "(Ljava/util/Map;FF)V");
+
+    jclass featurePickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$FeaturePickListener");
+    onFeaturePickMID = jniEnv->GetMethodID(featurePickListenerClass, "onFeaturePick", "(Ljava/util/Map;FF)V");
 
     if (hashmapClass) {
         jniEnv->DeleteGlobalRef(hashmapClass);
@@ -314,7 +316,7 @@ void setCurrentThreadPriority(int priority) {
     setpriority(PRIO_PROCESS, tid, priority);
 }
 
-void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<Tangram::TouchItem>& items) {
+void featurePickCallback(JNIEnv* jniEnv, jobject listener, const std::vector<Tangram::TouchItem>& items) {
 
     auto result = items[0];
     auto properties = result.properties;
@@ -328,7 +330,7 @@ void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<Tangram::TouchIt
         jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
     }
 
-    jniEnv->CallVoidMethod(tangramInstance, featureSelectionCbMID, hashmap, position[0], position[1]);
+    jniEnv->CallVoidMethod(listener, onFeaturePickMID, hashmap, position[0], position[1]);
 }
 
 void initGLExtensions() {
