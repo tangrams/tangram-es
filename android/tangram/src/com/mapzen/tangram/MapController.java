@@ -44,14 +44,14 @@ public class MapController implements Renderer {
         ALL_LABELS,
     }
 
-    public interface FeatureTouchListener {
+    public interface FeaturePickListener {
         /**
          * Receive information about features found in a call to {@link #pickFeature(float, float)}
          * @param properties A mapping of string keys to string or number values
          * @param positionX The horizontal screen coordinate of the center of the feature
          * @param positionY The vertical screen coordinate of the center of the feature
          */
-        void onTouch(Map<String, String> properties, float positionX, float positionY);
+        void onFeaturePick(Map<String, String> properties, float positionX, float positionY);
     }
 
     /**
@@ -470,20 +470,24 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Set a listener for Feature touch events
-     * @param listener Listen to call
+     * Set a listener for feature pick events
+     * @param listener Listener to call
      */
-    public void setFeatureTouchListener(FeatureTouchListener listener) {
-        featureTouchListener = listener;
+    public void setFeaturePickListener(FeaturePickListener listener) {
+        featurePickListener = listener;
     }
 
     /**
      * Query the map for labeled features at the given screen coordinates; results will be returned
-     * in a callback to the object set by {@link #setFeatureTouchListener(FeatureTouchListener)}
+     * in a callback to the object set by {@link #setFeaturePickListener(FeaturePickListener)}
      * @param posX The horizontal screen coordinate
      * @param posY The vertical screen coordinate
      */
-    public synchronized native void pickFeature(float posX, float posY);
+    public void pickFeature(float posX, float posY) {
+        if (featurePickListener != null) {
+            nativePickFeature(posX, posY, featurePickListener);
+        }
+    }
 
     /**
      * Enqueue a Runnable to be executed synchronously on the rendering thread
@@ -540,6 +544,8 @@ public class MapController implements Renderer {
     private synchronized native void handleRotateGesture(float posX, float posY, float rotation);
     private synchronized native void handleShoveGesture(float distance);
 
+    public synchronized native void nativePickFeature(float posX, float posY, FeaturePickListener listener);
+
     private native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private native void onUrlFailure(long callbackPtr);
 
@@ -562,7 +568,7 @@ public class MapController implements Renderer {
     private FontFileParser fontFileParser;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
-    private FeatureTouchListener featureTouchListener;
+    private FeaturePickListener featurePickListener;
 
     // GLSurfaceView.Renderer methods
     // ==============================
@@ -637,14 +643,6 @@ public class MapController implements Renderer {
     public String getFontFallbackFilePath(int importance, int weightHint) {
 
         return fontFileParser.getFontFallback(importance, weightHint);
-    }
-
-    // Feature selection
-    // =================
-    void featureSelectionCb(Map<String, String> properties, float positionX, float positionY) {
-        if (featureTouchListener != null) {
-            featureTouchListener.onTouch(properties, positionX, positionY);
-        }
     }
 
 }

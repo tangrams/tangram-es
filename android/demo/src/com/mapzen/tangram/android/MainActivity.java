@@ -8,7 +8,7 @@ import android.widget.Toast;
 import com.mapzen.tangram.HttpHandler;
 import com.mapzen.tangram.LngLat;
 import com.mapzen.tangram.MapController;
-import com.mapzen.tangram.MapController.FeatureTouchListener;
+import com.mapzen.tangram.MapController.FeaturePickListener;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.MapView.OnMapReadyCallback;
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends Activity implements OnMapReadyCallback, TapResponder,
-        DoubleTapResponder, LongPressResponder, FeatureTouchListener {
+        DoubleTapResponder, LongPressResponder, FeaturePickListener {
 
     MapController map;
     MapView view;
@@ -80,7 +80,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
         map.setTapResponder(this);
         map.setDoubleTapResponder(this);
         map.setLongPressResponder(this);
-        map.setFeatureTouchListener(this);
+        map.setFeaturePickListener(this);
 
         markers = new MapData("touch");
         markers.addToMap(map);
@@ -165,7 +165,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     }
 
     @Override
-    public void onTouch(Map<String, String> properties, float positionX, float positionY) {
+    public void onFeaturePick(Map<String, String> properties, float positionX, float positionY) {
         String name = properties.get("name");
         if (name.isEmpty()) {
             name = "unnamed";
