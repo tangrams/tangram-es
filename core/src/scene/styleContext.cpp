@@ -93,13 +93,20 @@ void StyleContext::parseSceneGlobals(const YAML::Node& node, const std::string& 
             } else {
                 auto nodeValue = node.Scalar();
                 if (nodeValue.compare(0, 8, "function") == 0) {
-                    std::string result;
-                    if (evalFunction(nodeValue, result)) {
-                        duk_push_string(m_ctx, result.c_str());
-                        duk_put_prop_string(m_ctx, dukObject, key.c_str());
+                    duk_push_string(m_ctx, key.c_str()); // push property key
+                    duk_push_string(m_ctx, nodeValue.c_str()); // push function string
+                    duk_push_string(m_ctx, "");
+                    if (duk_pcompile(m_ctx, DUK_COMPILE_FUNCTION) == 0) { // compile function
+                        duk_put_prop(m_ctx, -3); // put {key: function()}
+                    } else {
+                        LOGW("Compile failed: %s\n%s\n---",
+                             duk_safe_to_string(m_ctx, -1),
+                             nodeValue.c_str());
+                        duk_pop(m_ctx); //pop error
+                        duk_pop(m_ctx); //pop key
                     }
                 } else {
-                    duk_push_string(m_ctx, node.Scalar().c_str());
+                    duk_push_string(m_ctx, nodeValue.c_str());
                     duk_put_prop_string(m_ctx, dukObject, key.c_str());
                 }
             }
@@ -237,31 +244,6 @@ const Value& StyleContext::getKeyword(const std::string& _key) const {
 
 void StyleContext::clear() {
     m_feature = nullptr;
-}
-
-bool StyleContext::evalFunction(std::string function, std::string& result) {
-    //compile the function
-    duk_push_string(m_ctx, function.c_str());
-    duk_push_string(m_ctx, "");
-    if (duk_pcompile(m_ctx, DUK_COMPILE_FUNCTION) == 0) {
-        //call the function
-        if (duk_pcall(m_ctx, 0) != 0) {
-            LOGE("EvalFilterFn: %s", duk_safe_to_string(m_ctx, -1));
-            duk_pop(m_ctx);
-            return false;
-        } else {
-            //get the value
-            result = duk_safe_to_string(m_ctx, -1);
-            duk_pop(m_ctx);
-        }
-    } else  {
-        LOGW("Compile failed: %s\n%s\n---",
-             duk_safe_to_string(m_ctx, -1),
-             function.c_str());
-        duk_pop(m_ctx);
-        return false;
-    }
-    return true;
 }
 
 bool StyleContext::evalFunction(FunctionID id) {
@@ -442,6 +424,13 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
     } else if (duk_is_null_or_undefined(m_ctx, -1)) {
         // Ignore setting value
         LOGD("duk evaluates JS method to null or undefined.\n");
+    } else if (duk_is_function(m_ctx, -1)) {
+        if (duk_pcall(m_ctx, 0) != 0) {
+            LOGE("EvalFilterFn: %s", duk_safe_to_string(m_ctx, -1));
+            duk_pop(m_ctx);
+        } else {
+            parseStyleResult(_key, _val);
+        }
     } else {
         LOGW("Unhandled return type from Javascript style function for %d.", _key);
     }
