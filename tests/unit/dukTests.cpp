@@ -313,11 +313,11 @@ TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
             global:
                 width: 2
                 mapNode:
-                    color: function() { return [1, 0, 0, 1]; }
+                    color: function(c) { return c; }
                     caps:
                         cap: round
             draw:
-                color: function() { return global.mapNode.color; }
+                color: function() { return global.mapNode.color("blue"); }
                 width: function() { return global.width; }
                 cap: function() { return global.mapNode.caps.cap; }
             )");
@@ -340,7 +340,7 @@ TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
             StyleParam::Value value;
             REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
             REQUIRE(value.is<uint32_t>() == true);
-            REQUIRE(value.get<uint32_t>() == 0xff0000ff);
+            REQUIRE(value.get<uint32_t>() == 0xffff0000);
 
         } else if (style.key == StyleParamKey::width) {
             StyleParam::Value value;
