@@ -241,12 +241,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_D: // darker
                 static float brightness = 0.5f;
                 brightness -= 0.1f;
-                Tangram::setSceneComponent("lights.light1.ambient", std::to_string(brightness));
+                Tangram::setSceneComponent("lights.light1.ambient", std::to_string(brightness).c_str());
                 Tangram::applySceneUpdates();
                 break;
             case GLFW_KEY_B: // brighter
                 brightness += 0.1f;
-                Tangram::setSceneComponent("lights.light1.ambient", std::to_string(brightness));
+                Tangram::setSceneComponent("lights.light1.ambient", std::to_string(brightness).c_str());
                 Tangram::applySceneUpdates();
                 break;
             case GLFW_KEY_G:

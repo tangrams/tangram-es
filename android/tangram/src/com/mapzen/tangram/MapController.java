@@ -543,6 +543,8 @@ public class MapController implements Renderer {
     private synchronized native void nativeHandlePinchGesture(float posX, float posY, float scale, float velocity);
     private synchronized native void nativeHandleRotateGesture(float posX, float posY, float rotation);
     private synchronized native void nativeHandleShoveGesture(float distance);
+    private synchronized native void nativeSetSceneComponent(String componentPath, String value);
+    private synchronized native void nativeApplySceneUpdates();
 
     public synchronized native void nativePickFeature(float posX, float posY, FeaturePickListener listener);
 

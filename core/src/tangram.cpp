@@ -502,7 +502,7 @@ const std::vector<TouchItem>& pickFeaturesAt(float _x, float _y) {
                                         _x, _y);
 }
 
-void setSceneComponent(std::string componentName, std::string value) {
+void setSceneComponent(const char* componentName, const char* value) {
 
     return m_scene->setComponent(componentName, value);
 }
