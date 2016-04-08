@@ -20,7 +20,7 @@ Context ctx;
 Feature civic, bmw1, bike;
 
 Filter load(const std::string& filterYaml) {
-    Scene scene;
+    Scene scene("");
     YAML::Node node = YAML::Load(filterYaml);
     auto filter = SceneLoader::generateFilter(node["filter"], scene);
     ctx.initFunctions(scene);
@@ -55,8 +55,8 @@ void init() {
     bike.props.set("check", "available");
     bike.props.set("serial", 4398046511105); // 2^42 + 1
 
-    ctx.setGlobal("$geometry", Value(1));
-    ctx.setGlobal("$zoom", Value("false"));
+    ctx.setKeyword("$geometry", Value(1));
+    ctx.setKeyword("$zoom", Value("false"));
 }
 
 

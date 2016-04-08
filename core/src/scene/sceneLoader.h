@@ -36,8 +36,9 @@ struct StyleUniform {
 struct SceneLoader {
     using Node = YAML::Node;
 
-    static bool loadScene(const std::string& _sceneString, Scene& _scene);
+    static bool loadScene(const std::string& _sceneString, Scene& _scene, Node& root);
     static bool loadScene(Node& config, Scene& _scene);
+    static void applyGlobalProperties(Node& node, Scene& scene);
 
     /*** all public for testing ***/
 
@@ -58,6 +59,8 @@ struct SceneLoader {
     /* loads a texture with default texture properties */
     static bool loadTexture(const std::string& url, Scene& scene);
 
+    static void updateUserDefines(Node root, Scene& scene);
+
     static MaterialTexture loadMaterialTexture(Node matCompNode, Scene& scene, Style& style);
 
     static void parseStyleParams(Node params, Scene& scene, const std::string& propPrefix,
@@ -65,6 +68,8 @@ struct SceneLoader {
     static void parseTransition(Node params, Scene& scene, std::vector<StyleParam>& out);
 
     static bool parseStyleUniforms(const Node& value, Scene& scene, StyleUniform& styleUniform);
+
+    static void parseGlobals(const Node& node, Scene& scene, const std::string& key="");
 
     static bool loadStyle(const std::string& styleName, Node config, Scene& scene);
 

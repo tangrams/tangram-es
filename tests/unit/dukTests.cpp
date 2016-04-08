@@ -39,23 +39,23 @@ TEST_CASE( "Test evalFilterFn with feature", "[Duktape][evalFilterFn]") {
     REQUIRE(ctx.evalFilter(0) == false);
 }
 
-TEST_CASE( "Test evalFilterFn with feature and globals", "[Duktape][evalFilterFn]") {
+TEST_CASE( "Test evalFilterFn with feature and keywords", "[Duktape][evalFilterFn]") {
     Feature feature;
     feature.props.set("scalerank", 2);
 
     StyleContext ctx;
     ctx.setFeature(feature);
-    ctx.setGlobal("$zoom", 5);
+    ctx.setKeyword("$zoom", 5);
 
     REQUIRE(ctx.setFunctions({ R"(function() { return (feature.scalerank * .5) <= ($zoom - 4); })"}));
     REQUIRE(ctx.evalFilter(0) == true);
 
-    ctx.setGlobal("$zoom", 4);
+    ctx.setKeyword("$zoom", 4);
     REQUIRE(ctx.evalFilter(0) == false);
 
 }
 
-TEST_CASE( "Test evalFilterFn with feature and global geometry", "[Duktape][evalFilterFn]") {
+TEST_CASE( "Test evalFilterFn with feature and keyword geometry", "[Duktape][evalFilterFn]") {
     Feature points;
     points.geometryType = GeometryType::points;
 
@@ -67,7 +67,7 @@ TEST_CASE( "Test evalFilterFn with feature and global geometry", "[Duktape][eval
 
     StyleContext ctx;
 
-    // Test $geometry global
+    // Test $geometry keyword
     REQUIRE(ctx.setFunctions({
                 R"(function() { return $geometry === 'point'; })",
                 R"(function() { return $geometry === 'line'; })",
@@ -109,23 +109,23 @@ TEST_CASE( "Test evalFilterFn with different features", "[Duktape][evalFilterFn]
     REQUIRE(ctx.evalFilter(0) == true);
 }
 
-TEST_CASE( "Test numeric global", "[Duktape][setGlobal]") {
+TEST_CASE( "Test numeric keyword", "[Duktape][setKeyword]") {
     StyleContext ctx;
-    ctx.setGlobal("$zoom", 10);
+    ctx.setKeyword("$zoom", 10);
     REQUIRE(ctx.setFunctions({ R"(function() { return $zoom === 10 })"}));
     REQUIRE(ctx.evalFilter(0) == true);
 
-    ctx.setGlobal("$zoom", 0);
+    ctx.setKeyword("$zoom", 0);
     REQUIRE(ctx.evalFilter(0) == false);
 }
 
-TEST_CASE( "Test string global", "[Duktape][setGlobal]") {
+TEST_CASE( "Test string keyword", "[Duktape][setKeyword]") {
     StyleContext ctx;
-    ctx.setGlobal("$geometry", GeometryType::points);
+    ctx.setKeyword("$geometry", GeometryType::points);
     REQUIRE(ctx.setFunctions({ R"(function() { return $geometry === point })"}));
     REQUIRE(ctx.evalFilter(0) == true);
 
-    ctx.setGlobal("$geometry", "none");
+    ctx.setKeyword("$geometry", "none");
     REQUIRE(ctx.evalFilter(0) == false);
 
 }
@@ -218,7 +218,7 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::extrude", "[Duktape][evalStyleFn]"
 }
 
 TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFilter]") {
-    Scene scene;
+    Scene scene("");
     YAML::Node n0 = YAML::Load(R"(filter: function() { return feature.sort_key === 2; })");
     YAML::Node n1 = YAML::Load(R"(filter: function() { return feature.name === 'test'; })");
 
@@ -260,7 +260,7 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
 }
 
 TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][evalStyle]") {
-    Scene scene;
+    Scene scene("");
     YAML::Node n0 = YAML::Load(R"(
             draw:
                 color: function() { return '#ffff00ff'; }

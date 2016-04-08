@@ -18,7 +18,7 @@ struct Feature;
 struct StyleParam;
 
 enum class StyleParamKey : uint8_t;
-enum class FilterGlobal : uint8_t;
+enum class FilterKeyword : uint8_t;
 
 
 class StyleContext {
@@ -36,15 +36,15 @@ public:
     void setFeature(const Feature& _feature);
 
     /*
-     * Set global for currently processed Tile
+     * Set keyword for currently processed Tile
      */
-    void setGlobalZoom(int _zoom);
+    void setKeywordZoom(int _zoom);
 
     /* Called from Filter::eval */
-    float getGlobalZoom() const { return m_globalZoom; }
+    float getKeywordZoom() const { return m_keywordZoom; }
 
-    const Value& getGlobal(FilterGlobal _key) const {
-        return m_globals[static_cast<uint8_t>(_key)];
+    const Value& getKeyword(FilterKeyword _key) const {
+        return m_keywords[static_cast<uint8_t>(_key)];
     }
 
     /* Called from Filter::eval */
@@ -65,8 +65,8 @@ public:
 
     bool setFunctions(const std::vector<std::string>& _functions);
 
-    void setGlobal(const std::string& _key, Value _value);
-    const Value& getGlobal(const std::string& _key) const;
+    void setKeyword(const std::string& _key, Value _value);
+    const Value& getKeyword(const std::string& _key) const;
 
 private:
     static int jsGetProperty(duk_context *_ctx);
@@ -74,9 +74,9 @@ private:
 
     bool parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
 
-    std::array<Value, 4> m_globals;
-    int m_globalGeom = -1;
-    int m_globalZoom = -1;
+    std::array<Value, 4> m_keywords;
+    int m_keywordGeom= -1;
+    int m_keywordZoom = -1;
 
     int32_t m_sceneId = -1;
 

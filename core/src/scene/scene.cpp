@@ -10,6 +10,7 @@
 #include "scene/stops.h"
 #include "util/mapProjection.h"
 #include "view/view.h"
+#include "util/util.h"
 
 #include <atomic>
 #include <algorithm>
@@ -18,11 +19,17 @@ namespace Tangram {
 
 static std::atomic<int32_t> s_serial;
 
-Scene::Scene() : id(s_serial++) {
+Scene::Scene(std::string path) : id(s_serial++), m_path(path) {
     m_view = std::make_shared<View>();
     // For now we only have one projection..
     // TODO how to share projection with view?
     m_mapProjection.reset(new MercatorProjection());
+}
+
+Scene::Scene(std::string path, std::map<std::string, UserDefinedSceneValue> userDefined) :
+    Scene(path)
+{
+    m_userDefinedValues = userDefined;
 }
 
 Scene::~Scene() {}
@@ -71,6 +78,11 @@ bool Scene::texture(const std::string& textureName, std::shared_ptr<Texture>& te
     texture = texIt->second;
 
     return true;
+}
+
+void Scene::setComponent(std::string componentPath, std::string value) {
+    std::vector<std::string> splitPath = splitString(componentPath, COMPONENT_PATH_DELIMITER);
+    m_userDefinedValues[componentPath] = { splitPath, value };
 }
 
 }

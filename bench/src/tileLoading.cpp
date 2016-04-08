@@ -48,11 +48,11 @@ struct TestContext {
             LOGE("Parsing scene config '%s'", e.what());
             return;
         }
-        scene = std::make_shared<Scene>();
+        scene = std::make_shared<Scene>("");
         SceneLoader::loadScene(sceneNode, *scene);
 
         styleContext.initFunctions(*scene);
-        styleContext.setGlobalZoom(0);
+        styleContext.setKeywordZoom(0);
 
         source = scene->dataSources()[0];
         tileBuilder.setScene(scene);

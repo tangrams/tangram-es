@@ -1,6 +1,13 @@
 scene:
     background:
         color: '#8db7d5'
+
+global:
+    labels: false
+    color:
+        colorA: red
+        colorB: blue
+
 cameras:
     iso-camera:
         # Manhattan
@@ -49,9 +56,12 @@ styles:
     heightglow:
         base: polygons
         lighting: vertex
+        animated: false
         shaders:
+            uniforms:
+                u_time_expand: 10.0
             blocks:
-                color: "color.rgb += vec3(worldPosition().z / 800.);"
+                color: "color.r *= (cos(u_time * u_time_expand) * 0.5 + 0.5);"
     heightglowline:
         base: lines
         mix: heightglow
@@ -110,7 +120,8 @@ layers:
         draw:
             polygons:
                 order: 1
-                color: '#fffffa'
+                #color: '#fffffa'
+                color: global.color.colorA
                 interactive: true # currently ignored
         green:
             filter: { kind: [park, graveyard, cemetery, forest, recreation_ground] }
@@ -142,7 +153,8 @@ layers:
         draw:
             flatcolor:
                 order: 3
-                color: '#8db7d5'
+                #color: '#8db7d5'
+                color: global.color.colorB
 
     roads:
         data: { source: osm }
@@ -346,7 +358,7 @@ layers:
         draw:
             text:
                 interactive: true
-                visible: true
+                visible: global.labels
                 priority: 2
                 offset: [0, 8px]
                 transition:
@@ -365,7 +377,7 @@ layers:
                 text:
                     repeat_distance: 200px
                     repeat_group: road_labels
-                    visible: true
+                    visible: global.labels
                     #offset: [0px, 5px]
                     priority: 1
                     transition:
@@ -385,7 +397,7 @@ layers:
                     repeat_distance: 100px
                     repeat_group: roads
                     interactive: true
-                    visible: true
+                    visible: global.labels
                     priority: 3
                     transition:
                         [show, hide]:

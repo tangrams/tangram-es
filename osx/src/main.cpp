@@ -1,6 +1,7 @@
 #include "tangram.h"
 #include "platform_osx.h"
 #include "data/clientGeoJsonSource.h"
+#include "debug/textDisplay.h"
 #include <cmath>
 #include <memory>
 #include <signal.h>
@@ -214,6 +215,53 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 }
                 Tangram::loadScene(sceneFile.c_str());
                 Tangram::setPixelScale(pixel_scale);
+                break;
+            case GLFW_KEY_I:
+                Tangram::setSceneComponent("cameras.perspective-camera.active", "false");
+                Tangram::setSceneComponent("cameras.iso-camera.active", "true");
+                Tangram::applySceneUpdates();
+                break;
+            case GLFW_KEY_A:
+                //Tangram::setSceneComponent("textures.pois.sprites.plane", "[0, 0, 32, 32]");
+                ///Tangram::setSceneComponent("textures.pois.sprites", "{ plane: [0, 0, 32, 32], museum: [0, 0, 64, 64] }");
+                static bool animated = false;
+                if (animated) {
+                    Tangram::setSceneComponent("styles.heightglow.animated", "false");
+                } else {
+                    Tangram::setSceneComponent("styles.heightglow.animated", "true");
+                }
+                animated = !animated;
+                Tangram::applySceneUpdates();
+                break;
+            case GLFW_KEY_P:
+                Tangram::setSceneComponent("cameras.iso-camera.active", "false");
+                Tangram::setSceneComponent("cameras.perspective-camera.active", "true");
+                Tangram::applySceneUpdates();
+                break;
+            case GLFW_KEY_D: // darker
+                static float brightness = 0.5f;
+                brightness -= 0.1f;
+                Tangram::setSceneComponent("lights.light1.ambient", std::to_string(brightness));
+                Tangram::applySceneUpdates();
+                break;
+            case GLFW_KEY_B: // brighter
+                brightness += 0.1f;
+                Tangram::setSceneComponent("lights.light1.ambient", std::to_string(brightness));
+                Tangram::applySceneUpdates();
+                break;
+            case GLFW_KEY_G:
+                static bool geoJSON = false;
+                if (!geoJSON) {
+                    LOGS("Switching to GeoJSON data source");
+                    Tangram::setSceneComponent("sources.osm.type", "GeoJSON");
+                    Tangram::setSceneComponent("sources.osm.url", "https://vector.mapzen.com/osm/all/{z}/{x}/{y}.json");
+                } else {
+                    LOGS("Switching to MVT data source");
+                    Tangram::setSceneComponent("sources.osm.type", "MVT");
+                    Tangram::setSceneComponent("sources.osm.url", "https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt");
+                }
+                geoJSON = !geoJSON;
+                Tangram::applySceneUpdates();
                 break;
             case GLFW_KEY_ESCAPE:
                 glfwSetWindowShouldClose(main_window, true);

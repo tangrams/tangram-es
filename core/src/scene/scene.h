@@ -7,7 +7,9 @@
 #include <vector>
 #include <unordered_map>
 
+#include "util/fastmap.h"
 #include "glm/vec2.hpp"
+#include "yaml-cpp/yaml.h"
 
 namespace Tangram {
 
@@ -27,9 +29,17 @@ struct Stops;
  * Scene is a singleton containing the styles, lighting, and interactions defining a map scene
  */
 
+#define COMPONENT_PATH_DELIMITER '.'
+
+struct UserDefinedSceneValue {
+    std::vector<std::string> splitPath;
+    std::string value;
+};
+
 class Scene {
 public:
-    Scene();
+    Scene(std::string path);
+    Scene(std::string path, std::map<std::string, UserDefinedSceneValue> userDefined);
     ~Scene();
 
     auto& view() { return m_view; }
@@ -43,6 +53,7 @@ public:
     auto& stops() { return m_stops; }
     auto& background() { return m_background; }
     auto& fontContext() { return m_fontContext; }
+    auto& globals() { return m_globals; }
 
     const auto& dataSources() const { return m_dataSources; };
     const auto& layers() const { return m_layers; };
@@ -72,6 +83,14 @@ public:
     void animated(bool animated) { m_animated = animated ? yes : no; }
     animate animated() const { return m_animated; }
 
+    void setComponent(std::string componentName, std::string value);
+
+    std::string path() const { return m_path; }
+
+    const std::map<std::string, UserDefinedSceneValue>& userDefines() const { return m_userDefinedValues; }
+
+    void clearUserDefines() { m_userDefinedValues.clear(); }
+
 private:
 
     std::unique_ptr<MapProjection> m_mapProjection;
@@ -83,6 +102,11 @@ private:
     std::vector<std::unique_ptr<Light>> m_lights;
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
+    std::unordered_map<std::string, YAML::Node> m_globals;
+
+    std::map<std::string, UserDefinedSceneValue> m_userDefinedValues;
+
+    std::string m_path;
 
     // Container of all strings used in styling rules; these need to be
     // copied and compared frequently when applying styling, so rules use
