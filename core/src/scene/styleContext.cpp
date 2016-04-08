@@ -99,11 +99,14 @@ void StyleContext::parseSceneGlobals(const YAML::Node& node, const std::string& 
                     if (duk_pcompile(m_ctx, DUK_COMPILE_FUNCTION) == 0) { // compile function
                         duk_put_prop(m_ctx, -3); // put {key: function()}
                     } else {
-                        LOGW("Compile failed: %s\n%s\n---",
+                        LOGW("Compile failed in global function: %s\n%s\n---",
                              duk_safe_to_string(m_ctx, -1),
                              nodeValue.c_str());
                         duk_pop(m_ctx); //pop error
                         duk_pop(m_ctx); //pop key
+                        // push property as a string
+                        duk_push_string(m_ctx, nodeValue.c_str());
+                        duk_put_prop_string(m_ctx, dukObject, key.c_str());
                     }
                 } else {
                     duk_push_string(m_ctx, nodeValue.c_str());
@@ -424,13 +427,6 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
     } else if (duk_is_null_or_undefined(m_ctx, -1)) {
         // Ignore setting value
         LOGD("duk evaluates JS method to null or undefined.\n");
-    } else if (duk_is_function(m_ctx, -1)) {
-        if (duk_pcall(m_ctx, 0) != 0) {
-            LOGE("EvalFilterFn: %s", duk_safe_to_string(m_ctx, -1));
-            duk_pop(m_ctx);
-        } else {
-            parseStyleResult(_key, _val);
-        }
     } else {
         LOGW("Unhandled return type from Javascript style function for %d.", _key);
     }

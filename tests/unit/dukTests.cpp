@@ -316,10 +316,12 @@ TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
                     color: function(c) { return c; }
                     caps:
                         cap: round
+                    test: function
             draw:
                 color: function() { return global.mapNode.color("blue"); }
                 width: function() { return global.width; }
                 cap: function() { return global.mapNode.caps.cap; }
+                text_source: function() { return global.mapNode.test; }
             )");
 
     std::vector<StyleParam> styles;
@@ -329,7 +331,7 @@ TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
 
     SceneLoader::parseStyleParams(n0["draw"], scene, "", styles);
 
-    REQUIRE(scene.functions().size() == 3);
+    REQUIRE(scene.functions().size() == 4);
 
     StyleContext ctx;
     ctx.initFunctions(scene);
@@ -353,6 +355,12 @@ TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
             REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
             REQUIRE(value.is<uint32_t>() == true);
             REQUIRE(static_cast<CapTypes>(value.get<uint32_t>()) == CapTypes::round);
+
+        } else if(style.key == StyleParamKey::text_source) {
+            StyleParam::Value value;
+            REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
+            REQUIRE(value.is<std::string>() == true);
+            REQUIRE(value.get<std::string>() == "function");
 
         } else {
             REQUIRE(true == false);
