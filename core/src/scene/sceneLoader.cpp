@@ -631,13 +631,39 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) 
 void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
 
     const Node source = src.second;
-    const std::string& name = src.first.Scalar();
-    const std::string& type = source["type"].Scalar();
-    const std::string& url = source["url"].Scalar();
+    std::string name = src.first.Scalar();
+    std::string type = source["type"].Scalar();
+    std::string url = source["url"].Scalar();
     int32_t maxZoom = 18;
 
     if (auto maxZoomNode = source["max_zoom"]) {
         maxZoom = maxZoomNode.as<int32_t>(maxZoom);
+    }
+
+    // Parse and append any URL parameters.
+    if (auto urlParamsNode = source["url_params"]) {
+        std::stringstream urlStream;
+        // Transform our current URL from "base[?query][#hash]" into "base?params[query][#hash]".
+        auto hashStart = std::min(url.find_first_of("#"), url.size());
+        auto queryStart = std::min(url.find_first_of("?"), url.size());
+        auto baseEnd = std::min(hashStart, queryStart + 1);
+        urlStream << url.substr(0, baseEnd);
+        if (queryStart == url.size()) {
+            urlStream << "?";
+        }
+        if (urlParamsNode.IsMap()) {
+            for (const auto& entry : urlParamsNode) {
+                if (entry.first.IsScalar() && entry.second.IsScalar()) {
+                    urlStream << entry.first.Scalar() << "=" << entry.second.Scalar() << "&";
+                } else {
+                    LOGW("Invalid url_params entry in source '%s', entries should be strings.", name.c_str());
+                }
+            }
+        } else {
+            LOGW("Expected a map of values for url_params in source '%s'.", name.c_str());
+        }
+        urlStream << url.substr(baseEnd);
+        url = urlStream.str();
     }
 
     // distinguish tiled and non-tiled sources by url

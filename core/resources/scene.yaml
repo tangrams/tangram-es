@@ -67,6 +67,8 @@ sources:
         type: MVT
         url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
         max_zoom: 18
+        url_params:
+            api_key: vector-tiles-tyHL4AY
 
 layers:
     touch:
