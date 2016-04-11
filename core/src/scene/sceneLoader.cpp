@@ -74,17 +74,22 @@ void SceneLoader::updateUserDefines(Node root, Scene& scene) {
             }
         }
 
-        if (stack.size() - 1 != path.size()) {
+        if (stack.size() < path.size()) {
             LOGW("User defined path %s was not found", define.first.c_str());
             LOGW("Can't update scene node");
         } else {
-            try {
-                if (stack.back()) {
-                    stack.back() = YAML::Load(userDefine.value);
+            if (stack.back()) {
+                try {
+                    if (stack.size() == path.size()) {
+                        const std::string& missingNodeKey = path[path.size() - 1];
+                        stack.back()[missingNodeKey] = YAML::Load(userDefine.value);
+                    } else {
+                        stack.back() = YAML::Load(userDefine.value);
+                    }
+                } catch(YAML::ParserException e) {
+                    LOGE("Parsing error on user defined value '%s'", e.what());
+                    LOGE("%s %s", define.first.c_str(), userDefine.value.c_str());
                 }
-            } catch(YAML::ParserException e) {
-                LOGE("Parsing error on user defined value '%s'", e.what());
-                LOGE("%s %s", define.first.c_str(), userDefine.value.c_str());
             }
         }
     }
