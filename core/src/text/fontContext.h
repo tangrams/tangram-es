@@ -75,6 +75,7 @@ public:
                                           const std::string& _weight, float _size);
 
     size_t glyphTextureCount() {
+        std::lock_guard<std::mutex> lock(m_mutex);
         return m_textures.size();
     }
 
