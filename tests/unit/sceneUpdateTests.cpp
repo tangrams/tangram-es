@@ -31,6 +31,8 @@ TEST_CASE("Scene update tests") {
     scene.setComponent("cameras.iso-camera.active", "true");
     scene.setComponent("cameras.iso-camera.type", "perspective");
     scene.setComponent("global.default_order", "function() { return 0.0; }");
+    scene.setComponent("global.non_existing_property0", "true");
+    scene.setComponent("global.non_existing_property1.non_existing_property_deep", "true");
 
     // Tangram apply scene updates, reload the scene
     REQUIRE(SceneLoader::loadScene(sceneString, scene, root));
@@ -45,4 +47,6 @@ TEST_CASE("Scene update tests") {
     REQUIRE(root["cameras"]["iso-camera"]["active"].Scalar() == "true");
     REQUIRE(root["cameras"]["iso-camera"]["type"].Scalar() == "perspective");
     REQUIRE(root["global"]["default_order"].Scalar() == "function() { return 0.0; }");
+    REQUIRE(root["global"]["non_existing_property0"].Scalar() == "true");
+    REQUIRE(!root["global"]["non_existing_property1"]);
 }
