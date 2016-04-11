@@ -21,6 +21,7 @@
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
 #include "scene/styleMixer.h"
+#include "scene/styleParam.h"
 #include "util/yamlHelper.h"
 #include "view/view.h"
 
@@ -693,6 +694,23 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
     }
 }
 
+void SceneLoader::parseLightPosition(Node position, PointLight& light) {
+    if (position.IsSequence()) {
+        UnitVec<glm::vec3> lightPos;
+        std::string positionSequence;
+
+        // Evaluate sequence separated by ',' to parse with parseVec3
+        for (auto n : position) {
+            positionSequence += n.Scalar() + ",";
+        }
+
+        StyleParam::parseVec3(positionSequence, {Unit::meter, Unit::pixel}, lightPos);
+        light.setPosition(lightPos);
+    } else {
+        LOGNode("Wrong light position parameter %s", position);
+    }
+}
+
 void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
 
     const Node light = node.second;
@@ -716,7 +734,7 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
         auto pLight(std::make_unique<PointLight>(name));
 
         if (Node position = light["position"]) {
-            pLight->setPosition(parseVec<glm::vec3>(position));
+            parseLightPosition(position, *pLight);
         }
         if (Node radius = light["radius"]) {
             if (radius.size() > 1) {
@@ -734,7 +752,7 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
         auto sLight(std::make_unique<SpotLight>(name));
 
         if (Node position = light["position"]) {
-            sLight->setPosition(parseVec<glm::vec3>(position));
+            parseLightPosition(position, *sLight);
         }
         if (Node direction = light["direction"]) {
             sLight->setDirection(parseVec<glm::vec3>(direction));
@@ -772,6 +790,21 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
     }
     if (Node specular = light["specular"]) {
         sceneLight->setSpecularColor(getColorAsVec4(specular));
+    }
+
+    // Verify that light position parameters are consistent with the origin type
+    if (sceneLight->getType() == LightType::point || sceneLight->getType() == LightType::spot) {
+        auto pLight = static_cast<PointLight&>(*sceneLight);
+        auto lightPosition = pLight.getPosition();
+        LightOrigin origin = pLight.getOrigin();
+
+        if (origin == LightOrigin::world) {
+            if (lightPosition.units[0] == Unit::pixel || lightPosition.units[1] == Unit::pixel) {
+                LOGW("Light position with attachment %s may not be used with unit of type %s",
+                    lightOriginString(origin).c_str(), unitString(Unit::pixel).c_str());
+                LOGW("Long/Lat expected in meters");
+            }
+        }
     }
 
     scene.lights().push_back(std::move(sceneLight));

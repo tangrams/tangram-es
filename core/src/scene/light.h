@@ -27,6 +27,15 @@ enum class LightOrigin {
     world
 };
 
+static inline std::string lightOriginString(LightOrigin origin) {
+    switch(origin) {
+        case LightOrigin::camera: return "camera";
+        case LightOrigin::ground: return "ground";
+        case LightOrigin::world: return "world";
+        default: return "undefined";
+    }
+}
+
 struct LightUniforms {
     LightUniforms(ShaderProgram& _shader, const std::string& _name)
         : shader(_shader),
@@ -66,7 +75,10 @@ public:
     virtual void setSpecularColor(const glm::vec4 _specular);
 
     /*  Set the origin relative to which this light will be positioned */
-    virtual void setOrigin( LightOrigin _origin );
+    void setOrigin(LightOrigin origin);
+
+    /*  Get the origin relative to which this light is positioned */
+    LightOrigin getOrigin() const { return m_origin; }
 
     /*  Get the instances light name defined on the shader */
     virtual std::string getInstanceName();

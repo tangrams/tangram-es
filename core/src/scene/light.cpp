@@ -40,9 +40,9 @@ void Light::setSpecularColor(const glm::vec4 _specular) {
     m_specular = _specular;
 }
 
-void Light::setOrigin( LightOrigin _origin ) {
+void Light::setOrigin(LightOrigin origin) {
     m_dynamic = true;
-    m_origin = _origin;
+    m_origin = origin;
 }
 
 void Light::injectSourceBlocks(ShaderProgram& _shader) {
