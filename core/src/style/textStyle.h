@@ -101,14 +101,6 @@ public:
         return size;
     }
 
-    size_t meshBufferSize() const {
-        size_t size = 0;
-        for (const auto& m : m_meshes) {
-            size += m->bufferSize();
-        }
-        return size;
-    }
-
     virtual ~TextStyle() override;
 
 private:
