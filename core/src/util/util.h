@@ -4,7 +4,7 @@
 #include <vector>
 #include <sstream>
 
-static std::vector<std::string> splitString(const std::string& s, char delim) {
+inline std::vector<std::string> splitString(const std::string& s, char delim) {
     std::vector<std::string> elems;
     std::stringstream ss(s);
     std::string item;
@@ -27,3 +27,4 @@ inline bool tryFind(M& map, const std::string& key, T& out) {
 
     return false;
 }
+
