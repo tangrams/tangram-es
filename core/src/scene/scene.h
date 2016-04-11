@@ -7,7 +7,6 @@
 #include <vector>
 #include <unordered_map>
 
-#include "util/fastmap.h"
 #include "glm/vec2.hpp"
 #include "yaml-cpp/yaml.h"
 
@@ -36,10 +35,12 @@ struct UserDefinedSceneValue {
     std::string value;
 };
 
+using UserDefinedSceneValuePair = std::pair<std::string, UserDefinedSceneValue>;
+
 class Scene {
 public:
     Scene(std::string path);
-    Scene(std::string path, std::map<std::string, UserDefinedSceneValue> userDefined);
+    Scene(std::string path, std::vector<UserDefinedSceneValuePair> userDefined);
     ~Scene();
 
     auto& view() { return m_view; }
@@ -84,11 +85,11 @@ public:
     void animated(bool animated) { m_animated = animated ? yes : no; }
     animate animated() const { return m_animated; }
 
-    void setComponent(std::string componentName, std::string value);
+    void queueComponentUpdate(std::string componentName, std::string value);
 
     std::string path() const { return m_path; }
 
-    const std::map<std::string, UserDefinedSceneValue>& userDefines() const { return m_userDefinedValues; }
+    const std::vector<UserDefinedSceneValuePair>& userDefines() const { return m_userDefinedValues; }
 
     void clearUserDefines() { m_userDefinedValues.clear(); }
 
@@ -105,7 +106,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
     std::unordered_map<std::string, YAML::Node> m_globals;
 
-    std::map<std::string, UserDefinedSceneValue> m_userDefinedValues;
+    std::vector<UserDefinedSceneValuePair> m_userDefinedValues;
 
     std::string m_path;
 

@@ -139,7 +139,7 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene = false);
 
 void runOnMainLoop(std::function<void()> _task);
 
-void setSceneComponent(const char* componentName, const char* value);
+void queueSceneUpdate(const char* componentName, const char* value);
 
 void applySceneUpdates();
 
