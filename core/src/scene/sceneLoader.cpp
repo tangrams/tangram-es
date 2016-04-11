@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <iterator>
 #include <unordered_map>
+#include <numeric>
 
 using YAML::Node;
 using YAML::NodeType;
@@ -59,13 +60,11 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, Node
 void SceneLoader::updateUserDefines(Node root, Scene& scene) {
     auto& userDefines = scene.userDefines();
 
-    for (const auto& define : userDefines) {
-        auto& userDefine = define.second;
-        auto& path = userDefine.splitPath;
+    for (const UserDefinedSceneValue& define : userDefines) {
 
         std::vector<Node> stack;
         stack.push_back(root);
-        for (auto& str : path) {
+        for (auto& str : define.splitPath) {
             if (stack.back()[str]) {
                 stack.push_back(stack.back()[str]);
                 continue;
@@ -74,21 +73,25 @@ void SceneLoader::updateUserDefines(Node root, Scene& scene) {
             }
         }
 
-        if (stack.size() < path.size()) {
-            LOGW("User defined path %s was not found", define.first.c_str());
+        if (stack.size() < define.splitPath.size()) {
+            std::string path;
+            std::accumulate(std::begin(define.splitPath), std::end(define.splitPath), path);
+            LOGW("User defined path %s was not found", path.c_str());
             LOGW("Can't update scene node");
         } else {
             if (stack.back()) {
                 try {
-                    if (stack.size() == path.size()) {
-                        const std::string& missingNodeKey = path[path.size() - 1];
-                        stack.back()[missingNodeKey] = YAML::Load(userDefine.value);
+                    if (stack.size() == define.splitPath.size()) {
+                        const std::string& missingNodeKey = define.splitPath[define.splitPath.size() - 1];
+                        stack.back()[missingNodeKey] = YAML::Load(define.value);
                     } else {
-                        stack.back() = YAML::Load(userDefine.value);
+                        stack.back() = YAML::Load(define.value);
                     }
                 } catch(YAML::ParserException e) {
+                    std::string path;
+                    std::accumulate(std::begin(define.splitPath), std::end(define.splitPath), path);
                     LOGE("Parsing error on user defined value '%s'", e.what());
-                    LOGE("%s %s", define.first.c_str(), userDefine.value.c_str());
+                    LOGE("%s %s", path.c_str(), define.value.c_str());
                 }
             }
         }

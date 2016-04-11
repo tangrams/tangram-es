@@ -15,6 +15,8 @@
 #include <atomic>
 #include <algorithm>
 
+#define COMPONENT_PATH_DELIMITER '.'
+
 namespace Tangram {
 
 static std::atomic<int32_t> s_serial;
@@ -26,7 +28,7 @@ Scene::Scene(std::string path) : id(s_serial++), m_path(path) {
     m_mapProjection.reset(new MercatorProjection());
 }
 
-Scene::Scene(std::string path, std::vector<UserDefinedSceneValuePair> userDefined) :
+Scene::Scene(std::string path, std::vector<UserDefinedSceneValue> userDefined) :
     Scene(path)
 {
     m_userDefinedValues = userDefined;
@@ -82,7 +84,7 @@ bool Scene::texture(const std::string& textureName, std::shared_ptr<Texture>& te
 
 void Scene::queueComponentUpdate(std::string componentPath, std::string value) {
     std::vector<std::string> splitPath = splitString(componentPath, COMPONENT_PATH_DELIMITER);
-    m_userDefinedValues.push_back({ componentPath, { splitPath, value }});
+    m_userDefinedValues.push_back({ splitPath, value });
 }
 
 }

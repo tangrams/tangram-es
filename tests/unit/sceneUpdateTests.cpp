@@ -51,3 +51,23 @@ TEST_CASE("Scene update tests") {
     REQUIRE(!root["global"]["non_existing_property1"]);
 }
 
+TEST_CASE("Scene update tests, ensure update ordering is preserved") {
+    Scene scene("scene.yaml");
+
+    auto sceneString = stringFromFile(setResourceRoot(path).c_str(), PathType::resource);
+
+    REQUIRE(!sceneString.empty());
+
+    Node root;
+    REQUIRE(SceneLoader::loadScene(sceneString, scene, root));
+
+    // Update
+    scene.queueComponentUpdate("lights.light1.ambient", "0.9");
+    scene.queueComponentUpdate("lights.light1.ambient", "0.0");
+
+    // Tangram apply scene updates, reload the scene
+    REQUIRE(SceneLoader::loadScene(sceneString, scene, root));
+    scene.clearUserDefines();
+
+    REQUIRE(root["lights"]["light1"]["ambient"].Scalar() == "0.0");
+}

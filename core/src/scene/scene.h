@@ -28,19 +28,15 @@ struct Stops;
  * Scene is a singleton containing the styles, lighting, and interactions defining a map scene
  */
 
-#define COMPONENT_PATH_DELIMITER '.'
-
 struct UserDefinedSceneValue {
     std::vector<std::string> splitPath;
     std::string value;
 };
 
-using UserDefinedSceneValuePair = std::pair<std::string, UserDefinedSceneValue>;
-
 class Scene {
 public:
     Scene(std::string path);
-    Scene(std::string path, std::vector<UserDefinedSceneValuePair> userDefined);
+    Scene(std::string path, std::vector<UserDefinedSceneValue> userDefined);
     ~Scene();
 
     auto& view() { return m_view; }
@@ -89,7 +85,7 @@ public:
 
     std::string path() const { return m_path; }
 
-    const std::vector<UserDefinedSceneValuePair>& userDefines() const { return m_userDefinedValues; }
+    const std::vector<UserDefinedSceneValue>& userDefines() const { return m_userDefinedValues; }
 
     void clearUserDefines() { m_userDefinedValues.clear(); }
 
@@ -106,7 +102,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
     std::unordered_map<std::string, YAML::Node> m_globals;
 
-    std::vector<UserDefinedSceneValuePair> m_userDefinedValues;
+    std::vector<UserDefinedSceneValue> m_userDefinedValues;
 
     std::string m_path;
 
