@@ -30,9 +30,7 @@ struct GlyphTexture {
 
     static constexpr int size = 256;
 
-    GlyphTexture() : texture(size, size) {
-        texData.resize(size * size);
-    }
+    GlyphTexture() : texture(size, size) { texData.resize(size * size); }
 
     std::vector<unsigned char> texData;
     Texture texture;
@@ -44,7 +42,6 @@ struct GlyphTexture {
 class FontContext : public alfons::TextureCallback {
 
 public:
-
     static constexpr int max_textures = 64;
 
     FontContext();
@@ -74,9 +71,7 @@ public:
     std::shared_ptr<alfons::Font> getFont(const std::string& _name, const std::string& _style,
                                           const std::string& _weight, float _size);
 
-    size_t glyphTextureCount() {
-        return m_textures.size();
-    }
+    size_t glyphTextureCount() { return m_textures.size(); }
 
     void bindTexture(alfons::AtlasID _id, GLuint _unit);
 
@@ -111,7 +106,5 @@ private:
     // It is intialized with a TextureCallback implemented by FontContext for adding glyph
     // textures and a MeshCallback implemented by TextStyleBuilder for adding glyph quads.
     alfons::TextBatch m_batch;
-
 };
-
 }
