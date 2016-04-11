@@ -69,7 +69,7 @@ FontContext::FontContext() :
 #endif
 }
 
-// Synchronized on m_mutex on tile-worker threads
+// Synchronized on m_mutex in layoutText(), called on tile-worker threads
 void FontContext::addTexture(alfons::AtlasID id, uint16_t width, uint16_t height) {
     if (m_textures.size() == max_textures) {
         LOGE("Way too many glyph textures!");
@@ -78,7 +78,7 @@ void FontContext::addTexture(alfons::AtlasID id, uint16_t width, uint16_t height
     m_textures.emplace_back();
 }
 
-// Synchronized on m_mutex, called tile-worker threads
+// Synchronized on m_mutex in layoutText(), called on tile-worker threads
 void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_t gw, uint16_t gh,
                            const unsigned char* src, uint16_t pad) {
 
@@ -101,16 +101,14 @@ void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_
     gw += pad * 2;
     gh += pad * 2;
 
-    static std::vector<unsigned char> tmpSdfBuffer;
-
     size_t bytes = gw * gh * sizeof(float) * 3;
-    if (tmpSdfBuffer.size() < bytes) {
-        tmpSdfBuffer.resize(bytes);
+    if (m_sdfBuffer.size() < bytes) {
+        m_sdfBuffer.resize(bytes);
     }
 
     sdfBuildDistanceFieldNoAlloc(dst, width, m_sdfRadius,
                                  dst, gw, gh, width,
-                                 &tmpSdfBuffer[0]);
+                                 &m_sdfBuffer[0]);
 
     texture.setDirty(gy, gh);
 }

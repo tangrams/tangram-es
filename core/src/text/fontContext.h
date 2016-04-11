@@ -95,6 +95,7 @@ public:
 private:
     float m_sdfRadius;
     ScratchBuffer m_scratch;
+    std::vector<unsigned char> m_sdfBuffer;
 
     std::mutex m_mutex;
     std::array<int, max_textures> m_atlasRefCount = {{0}};
