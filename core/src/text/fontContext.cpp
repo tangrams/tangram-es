@@ -176,10 +176,9 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     alfons::LineMetrics metrics;
 
     if (_params.wordWrap) {
-        auto wrap = drawWithLineWrapping(line, m_batch, MIN_LINE_WIDTH,
-                                         _params.maxLineWidth, _params.align,
-                                         _params.lineSpacing);
-        metrics = wrap.metrics;
+        m_textWrapper.draw(m_batch, line, MIN_LINE_WIDTH,
+                           _params.maxLineWidth, _params.align,
+                           _params.lineSpacing, metrics);
     } else {
         glm::vec2 position(0);
         m_batch.drawShapeRange(line, 0, line.shapes().size(), position, metrics);

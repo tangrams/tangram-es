@@ -113,7 +113,7 @@ private:
     // It is intialized with a TextureCallback implemented by FontContext for adding glyph
     // textures and a MeshCallback implemented by TextStyleBuilder for adding glyph quads.
     alfons::TextBatch m_batch;
-
+    TextWrapper m_textWrapper;
 };
 
 }

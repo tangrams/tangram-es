@@ -25,7 +25,7 @@ struct AtlasCallback : public alfons::TextureCallback {
 
 AtlasCallback atlasCb;
 ScratchBuffer buffer;
-LineWrap wrap;
+
 alfons::TextShaper shaper;
 alfons::GlyphAtlas atlas(atlasCb);
 alfons::TextBatch batch(atlas, buffer);
@@ -48,9 +48,10 @@ TEST_CASE("Ensure empty line is given when giving empty shape to alfons", "[Core
     auto line = shaper.shape(font, "");
 
     REQUIRE(line.shapes().size() == 0);
-
-    wrap = drawWithLineWrapping(line, batch, 10, 4, TextLabelProperty::Align::center, 1.0);
-    REQUIRE(wrap.nbLines == 0);
+    TextWrapper textWrap;
+    alfons::LineMetrics metrics;
+    int nbLines = textWrap.draw(batch, line, 10, 4, TextLabelProperty::Align::center, 1.0, metrics);
+    REQUIRE(nbLines == 0);
 }
 
 TEST_CASE() {
@@ -60,16 +61,18 @@ TEST_CASE() {
 
     REQUIRE(line.shapes().size() == 19);
 
-    wrap = drawWithLineWrapping(line, batch, 4, 10, TextLabelProperty::Align::center, 1.0);
-    REQUIRE(wrap.nbLines == 2);
-    wrap = drawWithLineWrapping(line, batch, 4, 4, TextLabelProperty::Align::center, 1.0);
-    REQUIRE(wrap.nbLines == 3);
-    wrap = drawWithLineWrapping(line, batch, 0, 1, TextLabelProperty::Align::center, 1.0);
-    REQUIRE(wrap.nbLines == 4);
-    wrap = drawWithLineWrapping(line, batch, 0, 3, TextLabelProperty::Align::center, 1.0);
-    REQUIRE(wrap.nbLines == 4);
-    wrap = drawWithLineWrapping(line, batch, 2, 5, TextLabelProperty::Align::center, 1.0);
-    REQUIRE(wrap.nbLines == 4);
+    TextWrapper textWrap;
+    alfons::LineMetrics metrics;
+    int nbLines = textWrap.draw(batch, line, 4, 10, TextLabelProperty::Align::center, 1.0, metrics);
+    REQUIRE(nbLines == 2);
+    nbLines = textWrap.draw(batch, line, 4, 4, TextLabelProperty::Align::center, 1.0, metrics);
+    REQUIRE(nbLines == 3);
+    nbLines = textWrap.draw(batch, line, 0, 1, TextLabelProperty::Align::center, 1.0, metrics);
+    REQUIRE(nbLines == 4);
+    nbLines = textWrap.draw(batch, line, 0, 3, TextLabelProperty::Align::center, 1.0, metrics);
+    REQUIRE(nbLines == 4);
+    nbLines = textWrap.draw(batch, line, 2, 5, TextLabelProperty::Align::center, 1.0, metrics);
+    REQUIRE(nbLines == 4);
 }
 
 TEST_CASE() {
@@ -78,10 +81,12 @@ TEST_CASE() {
     auto line = shaper.shape(font, "لعدم عليها كلّ.");
     REQUIRE(line.shapes().size() == 15);
 
-    wrap = drawWithLineWrapping(line, batch, 0, 1, TextLabelProperty::Align::center, 1.0);
-    REQUIRE(wrap.nbLines == 3);
-    wrap = drawWithLineWrapping(line, batch, 0, 10, TextLabelProperty::Align::center, 1.0);
-    REQUIRE(wrap.nbLines == 2);
+    TextWrapper textWrap;
+    alfons::LineMetrics metrics;
+    int nbLines = textWrap.draw(batch, line, 0, 1, TextLabelProperty::Align::center, 1.0, metrics);
+    REQUIRE(nbLines == 3);
+    nbLines = textWrap.draw(batch, line, 0, 10, TextLabelProperty::Align::center, 1.0, metrics);
+    REQUIRE(nbLines == 2);
 }
 
 TEST_CASE() {
@@ -90,8 +95,10 @@ TEST_CASE() {
     auto line = shaper.shape(font, "日本語のキーボード");
     REQUIRE(line.shapes().size() == 9);
 
-    wrap = drawWithLineWrapping(line, batch, 0, 1, TextLabelProperty::Align::center, 1.0);
-    REQUIRE(wrap.nbLines == 7);
+    TextWrapper textWrap;
+    alfons::LineMetrics metrics;
+    int nbLines = textWrap.draw(batch, line, 0, 1, TextLabelProperty::Align::center, 1.0, metrics);
+    REQUIRE(nbLines == 7);
 }
 
 }
