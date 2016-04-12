@@ -98,14 +98,7 @@ void initialize(const char* _scenePath) {
 void loadScene(const char* _scenePath, bool _setPositionFromScene) {
     LOG("Loading scene file: %s", _scenePath);
 
-    std::string sceneString = "";
-
-    if (std::strlen(_scenePath) != 0) {
-        sceneString = stringFromFile(setResourceRoot(_scenePath).c_str(), PathType::resource);
-    } else {
-        // Get string scene representation already loaded
-        sceneString = m_scene->scene();
-    }
+    auto sceneString = stringFromFile(setResourceRoot(_scenePath).c_str(), PathType::resource);
 
     bool setPositionFromCurrentView = bool(m_scene);
 
@@ -514,11 +507,33 @@ void queueSceneUpdate(const char* componentName, const char* value) {
     return m_scene->queueComponentUpdate(componentName, value);
 }
 
-void applySceneUpdates() {
+void applySceneUpdates(bool _setPositionFromScene) {
 
     if (m_scene->userDefines().size() > 0) {
         // reload the entire scene for now
-        loadScene("");
+        LOG("Applying scene updates");
+
+        bool setPositionFromCurrentView = bool(m_scene);
+
+        auto scene = std::make_shared<Scene>(m_scene->userDefines(), m_scene->scene());
+        if (m_view) {
+            scene->view() = std::make_shared<View>(*m_view);
+        }
+
+        YAML::Node sceneRoot;
+        if (SceneLoader::loadScene(m_scene->scene(), *scene, sceneRoot, true)) {
+            m_scene = scene;
+            if (setPositionFromCurrentView && !_setPositionFromScene) {
+                m_scene->view()->setPosition(m_view->getPosition());
+                m_scene->view()->setZoom(m_view->getZoom());
+            }
+            m_view = m_scene->view();
+            m_inputHandler->setView(m_view);
+            m_tileManager->setDataSources(scene->dataSources());
+            setPixelScale(m_view->pixelScale());
+
+            m_tileWorker->setScene(scene);
+        }
 
         m_scene->clearUserDefines();
     }

@@ -44,7 +44,7 @@ const std::string DELIMITER = ":";
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
-bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, Node& root) {
+bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, Node& root, bool _applyUserUpdates) {
 
     try { root = YAML::Load(_sceneString); }
     catch (YAML::ParserException e) {
@@ -52,7 +52,9 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, Node
         return false;
     }
 
-    updateUserDefines(root, _scene);
+    if (_applyUserUpdates) {
+        updateUserDefines(root, _scene);
+    }
 
     return loadScene(root, _scene);
 }

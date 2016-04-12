@@ -141,7 +141,7 @@ void runOnMainLoop(std::function<void()> _task);
 
 void queueSceneUpdate(const char* componentName, const char* value);
 
-void applySceneUpdates();
+void applySceneUpdates(bool _setPositionFromScene = false);
 
 struct TouchItem {
     std::shared_ptr<Properties> properties;

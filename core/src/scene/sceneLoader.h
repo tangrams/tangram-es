@@ -37,7 +37,7 @@ struct StyleUniform {
 struct SceneLoader {
     using Node = YAML::Node;
 
-    static bool loadScene(const std::string& _sceneString, Scene& _scene, Node& root);
+    static bool loadScene(const std::string& _sceneString, Scene& _scene, Node& _root, bool _applyUserUpdates = false);
     static bool loadScene(Node& config, Scene& _scene);
     static void applyGlobalProperties(Node& node, Scene& scene);
 
