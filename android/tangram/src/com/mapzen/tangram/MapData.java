@@ -5,7 +5,6 @@ import com.mapzen.tangram.geometry.Point;
 import com.mapzen.tangram.geometry.Polygon;
 import com.mapzen.tangram.geometry.Polyline;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -17,17 +16,28 @@ public class MapData {
     String name;
     long pointer = 0;
     MapController map;
-    List<String> geojson = new ArrayList<>();
-    List<Geometry> features = new ArrayList<>();
 
     /**
-     * Construct a collection of drawable map features.
-     * @param name The name of the data collection. Once added to a map, features from this
-     * {@code MapData} will be available from a data source with this name, just like a data source
-     * specified in a scene file.
+     * For package-internal use only; create a new {@code MapData}
+     * @param name The name of the associated data source
+     * @param pointer The pointer to the native data source, encoded as a long
+     * @param map The {@code MapController} associated with this data source
      */
-    public MapData(String name) {
+    MapData(String name, long pointer, MapController map) {
         this.name = name;
+        this.pointer = pointer;
+        this.map = map;
+    }
+
+    /**
+     * Add a geometry feature to this data collection
+     * @param geometry The feature to add
+     */
+    protected void addFeature(Geometry geometry) {
+        map.nativeAddFeature(pointer,
+                geometry.getCoordinateArray(),
+                geometry.getRingArray(),
+                geometry.getPropertyArray());
     }
 
     /**
@@ -39,58 +49,13 @@ public class MapData {
     }
 
     /**
-     * Add the features from this {@code MapData} to a map.
-     * <p>
-     * This {@code MapData} will be associated with the given map until {@link #removeFromMap()}
-     * is called or until this method is called again.
-     * @param map The {@code MapController} managing the destination map.
+     * Remove this {@code MapData} from the map it is currently associated with. After
+     * {@code remove} is called, this object can no longer apply changes to the map.
      */
-    public void addToMap(MapController map) {
-        if (map == null) {
-            throw new RuntimeException("MapData cannot be added to a null MapController");
-        }
-        if (this.map != null) {
-            removeFromMap();
-        }
-        this.map = map;
-        this.pointer = map.nativeAddDataSource(name);
-        syncWithMap();
-    }
-
-    /**
-     * Remove this {@code MapData} from the map it is currently associated with. This must not be
-     * called when this {@code MapData} is not associated with a map.
-     */
-    public void removeFromMap() {
-        if (map == null) {
-            throw new RuntimeException("There is no associated map for this MapData");
-        }
-        map.nativeRemoveDataSource(pointer);
+    public void remove() {
+        map.removeDataLayer(this);
         pointer = 0;
         map = null;
-    }
-
-    /**
-     * Synchronize the features in this {@code MapData} with the map.
-     * <p>
-     * This method must be called after features are added or removed to update their
-     * appearance in the map. This method must not be called when this {@code MapData} is not
-     * associated with a map.
-     */
-    public void syncWithMap() {
-        if (map == null) {
-            throw new RuntimeException("There is no associated map for this MapData");
-        }
-        map.nativeClearDataSource(pointer);
-        for (String data : geojson) {
-            map.nativeAddGeoJson(pointer, data);
-        }
-        for (Geometry geometry : features) {
-            map.nativeAddFeature(pointer,
-                    geometry.getCoordinateArray(),
-                    geometry.getRingArray(),
-                    geometry.getPropertyArray());
-        }
     }
 
     /**
@@ -101,7 +66,7 @@ public class MapData {
      * @return This object, for chaining.
      */
     public MapData addPoint(LngLat point, Map<String, String> properties) {
-        features.add(new Point(point, properties));
+        addFeature(new Point(point, properties));
         return this;
     }
 
@@ -113,7 +78,7 @@ public class MapData {
      * @return This object, for chaining.
      */
     public MapData addPolyline(List<LngLat> polyline, Map<String, String> properties) {
-        features.add(new Polyline(polyline, properties));
+        addFeature(new Polyline(polyline, properties));
         return this;
     }
 
@@ -127,7 +92,7 @@ public class MapData {
      * @return This object, for chaining.
      */
     public MapData addPolygon(List<List<LngLat>> polygon, Map<String, String> properties) {
-        features.add(new Polygon(polygon, properties));
+        addFeature(new Polygon(polygon, properties));
         return this;
     }
 
@@ -137,7 +102,7 @@ public class MapData {
      * @return This object, for chaining.
      */
     public MapData addGeoJson(String data) {
-        geojson.add(data);
+        map.nativeAddGeoJson(pointer, data);
         return this;
     }
 
@@ -146,8 +111,7 @@ public class MapData {
      * @return This object, for chaining.
      */
     public MapData clear() {
-        geojson.clear();
-        features.clear();
+        map.nativeClearDataSource(pointer);
         return this;
     }
 

@@ -12,6 +12,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -312,6 +313,37 @@ public class MapController implements Renderer {
     }
 
     /**
+     * Construct a collection of drawable map features.
+     * @param name The name of the data collection. Once added to a map, features from this
+     * {@code MapData} will be available from a data source with this name, just like a data source
+     * specified in a scene file. You cannot create more than one data source with the same name.
+     * If you call {@code addDataLayer} with the same name more than once, the same {@code MapData}
+     * object will be returned.
+     */
+    public MapData addDataLayer(String name) {
+        MapData mapData = clientDataSources.get(name);
+        if (mapData != null) {
+            return mapData;
+        }
+        long pointer = nativeAddDataSource(name);
+        if (pointer <= 0) {
+            throw new RuntimeException("Unable to create new data source");
+        }
+        mapData = new MapData(name, pointer, this);
+        clientDataSources.put(name, mapData);
+        return mapData;
+    }
+
+    /**
+     * For package-internal use only; remove a {@code MapData} from this map
+     * @param mapData The {@code MapData} to remove
+     */
+    void removeDataLayer(MapData mapData) {
+        clientDataSources.remove(mapData.name);
+        nativeRemoveDataSource(mapData.pointer);
+    }
+
+    /**
      * Manually trigger a re-draw of the map view
      *
      * Typically this does not need to be called from outside Tangram, see {@link #setRenderMode(int)}.
@@ -569,6 +601,10 @@ public class MapController implements Renderer {
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
     private FeaturePickListener featurePickListener;
+
+    // A static map of client data sources added dynamically. This map has static storage duration
+    // because it should mimic the lifetime of native objects whose lifetime is the entire program.
+    private static Map<String, MapData> clientDataSources = new HashMap<>();
 
     // GLSurfaceView.Renderer methods
     // ==============================
