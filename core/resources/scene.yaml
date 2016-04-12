@@ -1,5 +1,5 @@
 global:
-    default_order: function() { return feature.sort_key; }
+    default_order: function() { return feature.sort_key || 0; }
 
 scene:
     background:
@@ -157,7 +157,7 @@ layers:
             lines:
                 color: white
                 width: 12.
-                order: 'function() { return feature.sort_key + 5 }'
+                order: 'function() { return feature.sort_key + 5 || 0 }'
                 outline:
                     color: [[16, '#999'], [18, '#aaa']]
                     width: [[10, 0], [16, 2]]
@@ -322,7 +322,7 @@ layers:
                     style: heightglowline
                     width: 1.0
                     color: [.75, .75, .73]
-                    order: function() { return feature.sort_key + 1; }
+                    order: function() { return feature.sort_key + 1 || 0; }
                     extrude: true
         high-line:
             filter: {roof_material: grass}

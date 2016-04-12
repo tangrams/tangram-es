@@ -22,6 +22,7 @@ void TextureCube::load(const std::string& _file) {
 
     if (data == nullptr || size == 0) {
         LOGE("Texture not found! '%s'", _file.c_str());
+        free(data);
         return;
     }
 

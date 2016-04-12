@@ -10,6 +10,8 @@
 
 #include <algorithm>
 
+#define DBG(...) // LOGD(__VA_ARGS__)
+
 namespace Tangram {
 
 TileManager::TileManager(TileTaskQueue& _tileWorker) : m_workers(_tileWorker) {
@@ -41,7 +43,7 @@ void TileManager::setDataSources(std::vector<std::shared_ptr<DataSource>> _sourc
                 [&](auto& s){ return tileSet.source->equals(*s); });
 
             if (sIt == _sources.end()) {
-                LOG("remove source %s", tileSet.source->name().c_str());
+                DBG("remove source %s", tileSet.source->name().c_str());
                 return true;
             }
 
@@ -64,7 +66,7 @@ void TileManager::setDataSources(std::vector<std::shared_ptr<DataSource>> _sourc
                          [&](const TileSet& a) {
                              return a.source->name() == source->name();
                          }) == m_tileSets.end()) {
-            LOG("add source %s", source->name().c_str());
+            DBG("add source %s", source->name().c_str());
             addDataSource(source);
         }
     }
@@ -101,7 +103,6 @@ void TileManager::clearTileSets() {
     }
 
     m_tileCache->clear();
-    m_loadPending = 0;
 }
 
 void TileManager::clearTileSet(int32_t _sourceId) {
@@ -114,7 +115,6 @@ void TileManager::clearTileSet(int32_t _sourceId) {
     }
 
     m_tileCache->clear();
-    m_loadPending = 0;
     m_tileSetChanged = true;
 }
 
@@ -195,15 +195,15 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
     while (visTilesIt != visibleTiles->end() || curTilesIt != tiles.end()) {
 
         auto& visTileId = visTilesIt == visibleTiles->end()
-            ? NOT_A_TILE
-            : *visTilesIt;
+            ? NOT_A_TILE : *visTilesIt;
 
         auto& curTileId = curTilesIt == tiles.end()
             ? NOT_A_TILE : curTilesIt->first;
 
         if (visTileId == curTileId) {
             // tiles in both sets match
-            assert(!(visTileId == NOT_A_TILE));
+            assert(visTilesIt != visibleTiles->end() &&
+                   curTilesIt != tiles.end());
 
             auto& entry = curTilesIt->second;
             entry.setVisible(true);
@@ -244,7 +244,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             // NB: if (curTileId == NOT_A_TILE) it is always > visTileId
             //     and if curTileId > visTileId, then visTileId cannot be
             //     NOT_A_TILE. (for the current implementation of > operator)
-            assert(!(visTileId == NOT_A_TILE));
+            assert(visTilesIt != visibleTiles->end());
 
             if (!addTile(_tileSet, visTileId)) {
                 // Not in cache - enqueue for loading
@@ -255,7 +255,8 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
 
         } else {
             // tileSet has a tile not present in visibleTiles
-            assert(!(curTileId == NOT_A_TILE));
+            assert(curTilesIt != tiles.end());
+
             auto& entry = curTilesIt->second;
 
             if (entry.getProxyCounter() > 0) {
@@ -292,13 +293,13 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
     for (auto& it : tiles) {
         auto& entry = it.second;
 
-        LOGD("> %s - ready:%d proxy:%d/%d loading:%d canceled:%d",
-             it.first.toString().c_str(),
-             entry.isReady(),
-             entry.getProxyCounter(),
-             entry.m_proxies,
-             entry.task && !entry.task->hasData(),
-             entry.task && entry.task->isCanceled());
+        DBG("> %s - ready:%d proxy:%d/%d loading:%d canceled:%d",
+            it.first.toString().c_str(),
+            entry.isReady(),
+            entry.getProxyCounter(),
+            entry.m_proxies,
+            entry.task && !entry.task->hasData(),
+            entry.task && entry.task->isCanceled());
 
         if (entry.isLoading()) {
             auto& id = it.first;
@@ -368,9 +369,9 @@ void TileManager::loadTiles() {
         }
     }
 
-    LOGD("loading:%d pending:%d cache: %fMB",
-         m_loadTasks.size(), m_loadPending,
-         (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
+    DBG("loading:%d pending:%d cache: %fMB",
+        m_loadTasks.size(), m_loadPending,
+        (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
 
     m_loadTasks.clear();
 }

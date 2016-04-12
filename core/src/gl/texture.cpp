@@ -66,6 +66,7 @@ Texture::Texture(Texture&& _other) {
     m_options = _other.m_options;
     m_data = std::move(_other.m_data);
     m_dirtyRanges = std::move(_other.m_dirtyRanges);
+    m_shouldResize = _other.m_shouldResize;
     m_width = _other.m_width;
     m_height = _other.m_height;
     m_target = _other.m_target;
@@ -80,6 +81,7 @@ Texture& Texture::operator=(Texture&& _other) {
     m_options = _other.m_options;
     m_data = std::move(_other.m_data);
     m_dirtyRanges = std::move(_other.m_dirtyRanges);
+    m_shouldResize = _other.m_shouldResize;
     m_width = _other.m_width;
     m_height = _other.m_height;
     m_target = _other.m_target;

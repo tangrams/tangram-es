@@ -4,20 +4,9 @@
 
 namespace Tangram {
 
-Properties::Properties() {}
+Properties::Properties() : sourceId(0) {}
 
 Properties::~Properties() {}
-
-Properties::Properties(std::vector<Item>&& _items) {
-    typedef std::vector<Item>::iterator iter_t;
-
-    props.reserve(_items.size());
-    props.insert(props.begin(),
-                 std::move_iterator<iter_t>(_items.begin()),
-                 std::move_iterator<iter_t>(_items.end()));
-    _items.clear();
-    sort();
-}
 
 Properties& Properties::operator=(Properties&& _other) {
     props = std::move(_other.props);

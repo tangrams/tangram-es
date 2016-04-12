@@ -25,6 +25,7 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _
     m_proxy = false;
     m_xAxis = glm::vec2(1.0, 0.0);
     m_yAxis = glm::vec2(0.0, 1.0);
+    m_occluded = false;
 }
 
 Label::~Label() {}
