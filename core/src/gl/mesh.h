@@ -95,7 +95,6 @@ protected:
     bool m_isUploaded;
     bool m_isCompiled;
     bool m_dirty;
-    bool m_keepMemoryData;
 
     GLsizei m_dirtySize;
     GLintptr m_dirtyOffset;

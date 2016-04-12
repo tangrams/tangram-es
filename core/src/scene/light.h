@@ -43,6 +43,8 @@ struct LightUniforms {
           diffuse(_name+".diffuse"),
           specular(_name+".specular") {}
 
+    virtual ~LightUniforms() {}
+
     ShaderProgram& shader;
 
     UniformLocation ambient;

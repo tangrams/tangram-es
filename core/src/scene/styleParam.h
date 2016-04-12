@@ -90,7 +90,7 @@ struct StyleParam {
         ValueUnitPair(float _value, Unit _unit)
             : value(_value), unit(_unit) {}
 
-        float value;
+        float value = 0.f;
         Unit unit = Unit::meter;
 
         bool isMeter() const { return unit == Unit::meter; }

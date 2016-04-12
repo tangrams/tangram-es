@@ -133,7 +133,7 @@ private:
             return false;
         }
 
-        bool m_visible;
+        bool m_visible = false;
 
         /* Method to check whther this tile is in the current set of visible tiles
          * determined by view::updateTiles().
