@@ -27,6 +27,7 @@ struct StyleParam;
 struct MaterialTexture;
 class PointLight;
 struct Filter;
+struct TextureFiltering;
 
 // 0: type, 1: values
 struct StyleUniform {
@@ -61,6 +62,7 @@ struct SceneLoader {
     static Filter generatePredicate(Node filter, std::string _key);
     /* loads a texture with default texture properties */
     static bool loadTexture(const std::string& url, Scene& scene);
+    static bool extractTexFiltering(Node& filtering, TextureFiltering& filter);
 
     static MaterialTexture loadMaterialTexture(Node matCompNode, Scene& scene, Style& style);
 

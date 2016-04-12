@@ -7,6 +7,7 @@
 #include "data/geoJsonSource.h"
 #include "data/mvtSource.h"
 #include "data/topoJsonSource.h"
+#include "data/rasterSource.h"
 #include "gl/shaderProgram.h"
 #include "style/material.h"
 #include "style/polygonStyle.h"
@@ -494,6 +495,23 @@ bool SceneLoader::loadTexture(const std::string& url, Scene& scene) {
     return true;
 }
 
+
+bool SceneLoader::extractTexFiltering(Node& filtering, TextureFiltering& filter) {
+    const std::string& textureFiltering = filtering.Scalar();
+    if (textureFiltering == "linear") {
+        filter.min = filter.mag = GL_LINEAR;
+        return false;
+    } else if (textureFiltering == "mipmap") {
+        filter.min = GL_LINEAR_MIPMAP_LINEAR;
+        return true;
+    } else if (textureFiltering == "nearest") {
+        filter.min = filter.mag = GL_NEAREST;
+        return false;
+    } else {
+        return false;
+    }
+}
+
 void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
 
     const std::string& name = node.first.Scalar();
@@ -512,12 +530,9 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
     bool generateMipmaps = false;
 
     if (Node filtering = textureConfig["filtering"]) {
-        const std::string& textureFiltering = filtering.Scalar();
-        if (textureFiltering == "linear") { options.filtering = { GL_LINEAR, GL_LINEAR }; }
-        else if (textureFiltering == "mipmap") {
-            options.filtering = { GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR };
+        if (extractTexFiltering(filtering, options.filtering)) {
             generateMipmaps = true;
-        } else if (textureFiltering == "nearest") { options.filtering = { GL_NEAREST, GL_NEAREST }; }
+        }
     }
 
     std::shared_ptr<Texture> texture(new Texture(file, options, generateMipmaps));
@@ -721,6 +736,15 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
         sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, maxZoom));
     } else if (type == "MVT") {
         sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, maxZoom));
+    } else if (type == "Raster") {
+        TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
+        bool generateMipmaps = false;
+        if (Node filtering = source["filtering"]) {
+            if (extractTexFiltering(filtering, options.filtering)) {
+                generateMipmaps = true;
+            }
+        }
+        sourcePtr = std::shared_ptr<DataSource>(new RasterSource(name, url, maxZoom, options, generateMipmaps));
     } else {
         LOGW("Unrecognized data source type '%s', skipping", type.c_str());
     }
