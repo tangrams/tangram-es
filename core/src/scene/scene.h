@@ -35,8 +35,8 @@ struct UserDefinedSceneValue {
 
 class Scene {
 public:
-    Scene(std::string path);
-    Scene(std::string path, std::vector<UserDefinedSceneValue> userDefined);
+    Scene(std::string path = "", std::string scene = "");
+    Scene(std::string path, std::vector<UserDefinedSceneValue> userDefined, std::string scene);
     ~Scene();
 
     auto& view() { return m_view; }
@@ -83,7 +83,10 @@ public:
 
     void queueComponentUpdate(std::string componentName, std::string value);
 
-    std::string path() const { return m_path; }
+    const std::string& path() const { return m_path; }
+
+    void scene(const std::string& scene) { m_scene = scene; }
+    const std::string& scene() const { return m_scene; }
 
     const std::vector<UserDefinedSceneValue>& userDefines() const { return m_userDefinedValues; }
 
@@ -103,6 +106,8 @@ private:
     std::unordered_map<std::string, YAML::Node> m_globals;
 
     std::vector<UserDefinedSceneValue> m_userDefinedValues;
+
+    std::string m_scene;
 
     std::string m_path;
 

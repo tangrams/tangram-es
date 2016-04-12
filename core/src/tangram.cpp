@@ -98,11 +98,17 @@ void initialize(const char* _scenePath) {
 void loadScene(const char* _scenePath, bool _setPositionFromScene) {
     LOG("Loading scene file: %s", _scenePath);
 
-    auto sceneString = stringFromFile(setResourceRoot(_scenePath).c_str(), PathType::resource);
+    std::string sceneString = "";
+
+    if (m_scene->scene().empty()) {
+        sceneString = stringFromFile(setResourceRoot(_scenePath).c_str(), PathType::resource);
+    } else {
+        sceneString = m_scene->scene();
+    }
 
     bool setPositionFromCurrentView = bool(m_scene);
 
-    auto scene = std::make_shared<Scene>(m_scene->path(), m_scene->userDefines());
+    auto scene = std::make_shared<Scene>(m_scene->path(), m_scene->userDefines(), sceneString);
     if (m_view) {
         scene->view() = std::make_shared<View>(*m_view);
     }
