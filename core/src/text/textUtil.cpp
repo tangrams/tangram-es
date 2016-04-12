@@ -5,17 +5,15 @@
 
 namespace Tangram {
 
-LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch& _batch,
-                              size_t _minLineChars, size_t _maxLineChars,
-                              TextLabelProperty::Align _alignment, float _lineSpacing) {
+int TextWrapper::draw(alfons::TextBatch& _batch, const alfons::LineLayout& _line,
+                       size_t _minLineChars, size_t _maxLineChars,
+                       TextLabelProperty::Align _alignment, float _lineSpacing,
+                       alfons::LineMetrics& _layoutMetrics) {
 
-    static std::vector<std::pair<int,float>> lineWraps;
 
-    lineWraps.clear();
+    m_lineWraps.clear();
 
-    if (_line.shapes().size() == 0) {
-        return {alfons::LineMetrics(), 0};
-    }
+    if (_line.shapes().size() == 0) { return 0; }
 
     float lineWidth = 0;
     float maxWidth = 0;
@@ -54,7 +52,7 @@ LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch
                     lastWidth -= _line.advance(endShape);
                 }
 
-                lineWraps.emplace_back(lastShape, lastWidth);
+                m_lineWraps.emplace_back(lastShape, lastWidth);
                 maxWidth = std::max(maxWidth, lastWidth);
 
                 lineWidth -= lastWidth;
@@ -66,15 +64,14 @@ LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch
     }
 
     if (charCount > 0) {
-        lineWraps.emplace_back(shapeCount, lineWidth);
+        m_lineWraps.emplace_back(shapeCount, lineWidth);
         maxWidth = std::max(maxWidth, lineWidth);
     }
 
     size_t shapeStart = 0;
     glm::vec2 position;
-    alfons::LineMetrics layoutMetrics;
 
-    for (auto wrap : lineWraps) {
+    for (auto wrap : m_lineWraps) {
         alfons::LineMetrics lineMetrics;
 
         switch(_alignment) {
@@ -102,10 +99,10 @@ LineWrap drawWithLineWrapping(const alfons::LineLayout& _line, alfons::TextBatch
 
         position.y += height;
 
-        layoutMetrics.addExtents(lineMetrics.aabb);
+        _layoutMetrics.addExtents(lineMetrics.aabb);
     }
 
-    return {layoutMetrics, int(lineWraps.size())};
+    return int(m_lineWraps.size());
 }
 
 

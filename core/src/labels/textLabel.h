@@ -22,9 +22,9 @@ struct GlyphQuad {
 struct TextVertex {
     glm::i16vec2 pos;
     glm::u16vec2 uv;
-    uint32_t color;
-    uint32_t stroke;
     struct State {
+        uint32_t color;
+        uint32_t stroke;
         glm::i16vec2 screenPos;
         uint8_t alpha;
         uint8_t scale;

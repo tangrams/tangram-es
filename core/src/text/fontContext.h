@@ -75,6 +75,7 @@ public:
                                           const std::string& _weight, float _size);
 
     size_t glyphTextureCount() {
+        std::lock_guard<std::mutex> lock(m_mutex);
         return m_textures.size();
     }
 
@@ -94,6 +95,7 @@ public:
 private:
     float m_sdfRadius;
     ScratchBuffer m_scratch;
+    std::vector<unsigned char> m_sdfBuffer;
 
     std::mutex m_mutex;
     std::array<int, max_textures> m_atlasRefCount = {{0}};
@@ -111,7 +113,7 @@ private:
     // It is intialized with a TextureCallback implemented by FontContext for adding glyph
     // textures and a MeshCallback implemented by TextStyleBuilder for adding glyph quads.
     alfons::TextBatch m_batch;
-
+    TextWrapper m_textWrapper;
 };
 
 }

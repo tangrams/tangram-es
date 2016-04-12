@@ -44,12 +44,11 @@ void TextStyle::constructShaderProgram() {
 }
 
 void TextStyle::onBeginUpdate() {
-    for (size_t i = 0; i < m_meshes.size(); i++) {
-        m_meshes[i]->clear();
-    }
 
-    // Ensure that meshes are available to push to
-    // in labels::update()
+    // Clear vertices from previous frame
+    for (auto& mesh : m_meshes) { mesh->clear(); }
+
+    // Ensure that meshes are available to push to on labels::update()
     size_t s = m_context->glyphTextureCount();
     while (m_meshes.size() < s) {
         m_meshes.push_back(std::make_unique<DynamicQuadMesh<TextVertex>>(m_vertexLayout, GL_TRIANGLES));
@@ -57,12 +56,11 @@ void TextStyle::onBeginUpdate() {
 }
 
 void TextStyle::onBeginFrame() {
+
+    // Upload meshes and textures
     m_context->updateTextures();
 
-    // Upload meshes
-    for (size_t i = 0; i < m_meshes.size(); i++) {
-        m_meshes[i]->upload();
-    }
+    for (auto& mesh : m_meshes) { mesh->upload(); }
 }
 
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
