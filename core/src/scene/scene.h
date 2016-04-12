@@ -35,8 +35,8 @@ struct UserDefinedSceneValue {
 
 class Scene {
 public:
-    Scene(std::string path = "", std::string scene = "");
-    Scene(std::string path, std::vector<UserDefinedSceneValue> userDefined, std::string scene);
+    Scene(std::string scene = "");
+    Scene(std::vector<UserDefinedSceneValue> userDefined, std::string scene);
     ~Scene();
 
     auto& view() { return m_view; }
@@ -83,8 +83,6 @@ public:
 
     void queueComponentUpdate(std::string componentName, std::string value);
 
-    const std::string& path() const { return m_path; }
-
     void scene(const std::string& scene) { m_scene = scene; }
     const std::string& scene() const { return m_scene; }
 
@@ -108,8 +106,6 @@ private:
     std::vector<UserDefinedSceneValue> m_userDefinedValues;
 
     std::string m_scene;
-
-    std::string m_path;
 
     // Container of all strings used in styling rules; these need to be
     // copied and compared frequently when applying styling, so rules use

@@ -100,15 +100,16 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
 
     std::string sceneString = "";
 
-    if (m_scene->scene().empty()) {
+    if (std::strlen(_scenePath) != 0) {
         sceneString = stringFromFile(setResourceRoot(_scenePath).c_str(), PathType::resource);
     } else {
+        // Get string scene representation already loaded
         sceneString = m_scene->scene();
     }
 
     bool setPositionFromCurrentView = bool(m_scene);
 
-    auto scene = std::make_shared<Scene>(m_scene->path(), m_scene->userDefines(), sceneString);
+    auto scene = std::make_shared<Scene>(m_scene->userDefines(), sceneString);
     if (m_view) {
         scene->view() = std::make_shared<View>(*m_view);
     }
@@ -517,7 +518,7 @@ void applySceneUpdates() {
 
     if (m_scene->userDefines().size() > 0) {
         // reload the entire scene for now
-        loadScene(m_scene->path().c_str());
+        loadScene("");
 
         m_scene->clearUserDefines();
     }

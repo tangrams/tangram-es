@@ -14,7 +14,7 @@ using namespace Tangram;
 using YAML::Node;
 
 TEST_CASE( "Style Uniforms Parsing and Injection Test: Float uniform value", "[StyleUniforms][core][yaml]") {
-    Scene scene("");
+    Scene scene;
 
     Node node = YAML::Load(R"END(
         u_float: 0.5
@@ -29,7 +29,7 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: Float uniform value", "[S
 }
 
 TEST_CASE( "Style Uniforms Parsing and Injection Test: Boolean uniform value", "[StyleUniforms][core][yaml]") {
-    Scene scene("");
+    Scene scene;
 
     Node node = YAML::Load(R"END(
         u_true: true
@@ -50,7 +50,7 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: Boolean uniform value", "
 }
 
 TEST_CASE( "Style Uniforms Parsing and Injection Test: vec2, vec3, vec4 uniform value", "[StyleUniforms][core][yaml]") {
-    Scene scene("");
+    Scene scene;
 
     Node node = YAML::Load(R"END(
         u_vec2: [0.1, 0.2]
@@ -92,7 +92,7 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: vec2, vec3, vec4 uniform 
 }
 
 TEST_CASE( "Style Uniforms Parsing and Injection Test: textures uniform value", "[StyleUniforms][core][yaml]") {
-    Scene scene("");
+    Scene scene;
 
     Node node = YAML::Load(R"END(
         u_tex : img/cross.png
@@ -115,7 +115,7 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: textures uniform value", 
 }
 
 TEST_CASE( "Style Uniforms Parsing failure Tests: textures uniform value", "[StyleUniforms][core][yaml]") {
-    Scene scene("");
+    Scene scene;
 
     Node node = YAML::Load(R"END(
         u_tex : not_a_texture

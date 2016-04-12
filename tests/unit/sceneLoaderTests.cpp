@@ -16,14 +16,14 @@ using YAML::Node;
 
 TEST_CASE("Style with the same name as a built-in style are ignored") {
 
-    Scene scene("");
+    Scene scene;
     SceneLoader::loadStyle("polygons", Node(), scene);
     REQUIRE(scene.styles().size() == 0);
 
 }
 
 TEST_CASE("Correctly instantiate a style from a YAML configuration") {
-    Scene scene("");
+    Scene scene;
 
     scene.styles().emplace_back(new PolygonStyle("polygons"));
     scene.styles().emplace_back(new PolylineStyle("lines"));
