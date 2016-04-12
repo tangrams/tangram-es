@@ -10,17 +10,50 @@
 using YAML::Node;
 using namespace Tangram;
 
-const char* path = "scene.yaml";
+const static std::string sceneString = R"END(
+global:
+    default_order: function() { return feature.sort_key; }
+
+cameras:
+    iso-camera:
+        type: isometric
+        active: false
+    perspective-camera:
+        type: perspective
+        active: true
+
+lights:
+    light1:
+        type: directional
+        direction: [.1, .5, -1]
+        diffuse: .7
+        ambient: .5
+
+styles:
+    heightglow:
+        base: polygons
+        shaders:
+            uniforms:
+                u_time_expand: 10.0
+    heightglowline:
+        base: lines
+        mix: heightglow
+
+layers:
+    poi_icons:
+        draw:
+            icons:
+                interactive: true
+
+)END";
 
 TEST_CASE("Scene update tests") {
-    Scene scene("scene.yaml");
-
-    auto sceneString = stringFromFile(setResourceRoot(path).c_str(), PathType::resource);
+    Scene scene;
 
     REQUIRE(!sceneString.empty());
 
     Node root;
-    REQUIRE(SceneLoader::loadScene(sceneString, scene, root));
+    REQUIRE(SceneLoader::loadScene(sceneString, scene, root, true));
 
     // Update
     scene.queueComponentUpdate("lights.light1.ambient", "0.9");
@@ -35,7 +68,7 @@ TEST_CASE("Scene update tests") {
     scene.queueComponentUpdate("global.non_existing_property1.non_existing_property_deep", "true");
 
     // Tangram apply scene updates, reload the scene
-    REQUIRE(SceneLoader::loadScene(sceneString, scene, root));
+    REQUIRE(SceneLoader::loadScene(sceneString, scene, root, true));
     scene.clearUserDefines();
 
     REQUIRE(root["lights"]["light1"]["ambient"].Scalar() == "0.9");
@@ -52,22 +85,25 @@ TEST_CASE("Scene update tests") {
 }
 
 TEST_CASE("Scene update tests, ensure update ordering is preserved") {
-    Scene scene("scene.yaml");
-
-    auto sceneString = stringFromFile(setResourceRoot(path).c_str(), PathType::resource);
+    Scene scene;
 
     REQUIRE(!sceneString.empty());
 
     Node root;
-    REQUIRE(SceneLoader::loadScene(sceneString, scene, root));
+    REQUIRE(SceneLoader::loadScene(sceneString, scene, root, true));
 
     // Update
     scene.queueComponentUpdate("lights.light1.ambient", "0.9");
-    scene.queueComponentUpdate("lights.light1.ambient", "0.0");
+    scene.queueComponentUpdate("lights.light2.ambient", "0.0");
+
+    // Delete lights
+    scene.queueComponentUpdate("lights", "null");
+    scene.queueComponentUpdate("lights.light2.ambient", "0.0");
 
     // Tangram apply scene updates, reload the scene
-    REQUIRE(SceneLoader::loadScene(sceneString, scene, root));
+    REQUIRE(SceneLoader::loadScene(sceneString, scene, root, true));
     scene.clearUserDefines();
 
-    REQUIRE(root["lights"]["light1"]["ambient"].Scalar() == "0.0");
+    REQUIRE(!root["lights"]["light1"]);
+    REQUIRE(!root["lights"]["light2"]);
 }
