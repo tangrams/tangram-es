@@ -28,15 +28,19 @@ struct Stops;
  * Scene is a singleton containing the styles, lighting, and interactions defining a map scene
  */
 
-struct UserDefinedSceneValue {
-    std::vector<std::string> splitPath;
-    std::string value;
-};
-
 class Scene {
 public:
+    struct UpdateValue {
+        std::vector<std::string> splitPath;
+        std::string value;
+    };
+
+    enum animate {
+        yes, no, none
+    };
+
     Scene(std::string scene = "");
-    Scene(std::vector<UserDefinedSceneValue> userDefined, std::string scene);
+    Scene(std::vector<UpdateValue> updates, std::string scene);
     ~Scene();
 
     auto& view() { return m_view; }
@@ -74,10 +78,6 @@ public:
     glm::dvec2 startPosition = { 0, 0 };
     float startZoom = 0;
 
-    enum animate {
-        yes, no, none
-    };
-
     void animated(bool animated) { m_animated = animated ? yes : no; }
     animate animated() const { return m_animated; }
 
@@ -86,9 +86,10 @@ public:
     void scene(const std::string& scene) { m_scene = scene; }
     const std::string& scene() const { return m_scene; }
 
-    const std::vector<UserDefinedSceneValue>& userDefines() const { return m_userDefinedValues; }
 
-    void clearUserDefines() { m_userDefinedValues.clear(); }
+    const std::vector<UpdateValue>& updates() const { return m_updates; }
+
+    void clearUpdates() { m_updates.clear(); }
 
 private:
 
@@ -103,7 +104,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
     std::unordered_map<std::string, YAML::Node> m_globals;
 
-    std::vector<UserDefinedSceneValue> m_userDefinedValues;
+    std::vector<UpdateValue> m_updates;
 
     std::string m_scene;
 

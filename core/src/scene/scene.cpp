@@ -28,10 +28,10 @@ Scene::Scene(std::string scene) : id(s_serial++), m_scene(scene) {
     m_mapProjection.reset(new MercatorProjection());
 }
 
-Scene::Scene(std::vector<UserDefinedSceneValue> userDefined, std::string scene) :
+Scene::Scene(std::vector<UpdateValue> updates, std::string scene) :
     Scene(scene)
 {
-    m_userDefinedValues = userDefined;
+    m_updates = updates;
 }
 
 Scene::~Scene() {}
@@ -84,7 +84,7 @@ bool Scene::texture(const std::string& textureName, std::shared_ptr<Texture>& te
 
 void Scene::queueComponentUpdate(std::string componentPath, std::string value) {
     std::vector<std::string> splitPath = splitString(componentPath, COMPONENT_PATH_DELIMITER);
-    m_userDefinedValues.push_back({ splitPath, value });
+    m_updates.push_back({ splitPath, value });
 }
 
 }

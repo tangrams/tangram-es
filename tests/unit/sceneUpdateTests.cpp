@@ -69,7 +69,7 @@ TEST_CASE("Scene update tests") {
 
     // Tangram apply scene updates, reload the scene
     REQUIRE(SceneLoader::loadScene(sceneString, scene, root, true));
-    scene.clearUserDefines();
+    scene.clearUpdates();
 
     REQUIRE(root["lights"]["light1"]["ambient"].Scalar() == "0.9");
     REQUIRE(root["lights"]["light1"]["type"].Scalar() == "spotlight");
@@ -102,7 +102,7 @@ TEST_CASE("Scene update tests, ensure update ordering is preserved") {
 
     // Tangram apply scene updates, reload the scene
     REQUIRE(SceneLoader::loadScene(sceneString, scene, root, true));
-    scene.clearUserDefines();
+    scene.clearUpdates();
 
     REQUIRE(!root["lights"]["light1"]);
     REQUIRE(!root["lights"]["light2"]);

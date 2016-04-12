@@ -102,7 +102,7 @@ void loadScene(const char* _scenePath, bool _setPositionFromScene) {
 
     bool setPositionFromCurrentView = bool(m_scene);
 
-    auto scene = std::make_shared<Scene>(m_scene->userDefines(), sceneString);
+    auto scene = std::make_shared<Scene>(m_scene->updates(), sceneString);
     if (m_view) {
         scene->view() = std::make_shared<View>(*m_view);
     }
@@ -509,13 +509,13 @@ void queueSceneUpdate(const char* componentName, const char* value) {
 
 void applySceneUpdates(bool _setPositionFromScene) {
 
-    if (m_scene->userDefines().size() > 0) {
+    if (m_scene->updates().size() > 0) {
         // reload the entire scene for now
         LOG("Applying scene updates");
 
         bool setPositionFromCurrentView = bool(m_scene);
 
-        auto scene = std::make_shared<Scene>(m_scene->userDefines(), m_scene->scene());
+        auto scene = std::make_shared<Scene>(m_scene->updates(), m_scene->scene());
         if (m_view) {
             scene->view() = std::make_shared<View>(*m_view);
         }
@@ -535,7 +535,7 @@ void applySceneUpdates(bool _setPositionFromScene) {
             m_tileWorker->setScene(scene);
         }
 
-        m_scene->clearUserDefines();
+        m_scene->clearUpdates();
     }
 }
 

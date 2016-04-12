@@ -44,7 +44,7 @@ const std::string DELIMITER = ":";
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
-bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, Node& root, bool _applyUserUpdates) {
+bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, Node& root, bool _applyUpdates) {
 
     try { root = YAML::Load(_sceneString); }
     catch (YAML::ParserException e) {
@@ -52,21 +52,21 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, Node
         return false;
     }
 
-    if (_applyUserUpdates) {
-        updateUserDefines(root, _scene);
+    if (_applyUpdates) {
+        processUpdates(root, _scene);
     }
 
     return loadScene(root, _scene);
 }
 
-void SceneLoader::updateUserDefines(Node root, Scene& scene) {
-    auto& userDefines = scene.userDefines();
+void SceneLoader::processUpdates(Node root, Scene& scene) {
+    auto& updates = scene.updates();
 
-    for (const UserDefinedSceneValue& define : userDefines) {
+    for (const Scene::UpdateValue& update : updates) {
 
         std::vector<Node> stack;
         stack.push_back(root);
-        for (auto& str : define.splitPath) {
+        for (auto& str : update.splitPath) {
             if (stack.back()[str]) {
                 stack.push_back(stack.back()[str]);
                 continue;
@@ -75,25 +75,25 @@ void SceneLoader::updateUserDefines(Node root, Scene& scene) {
             }
         }
 
-        if (stack.size() < define.splitPath.size()) {
+        if (stack.size() < update.splitPath.size()) {
             std::string path;
-            std::accumulate(std::begin(define.splitPath), std::end(define.splitPath), path);
+            std::accumulate(std::begin(update.splitPath), std::end(update.splitPath), path);
             LOGW("User defined path %s was not found", path.c_str());
             LOGW("Can't update scene node");
         } else {
             if (stack.back()) {
                 try {
-                    if (stack.size() == define.splitPath.size()) {
-                        const std::string& missingNodeKey = define.splitPath[define.splitPath.size() - 1];
-                        stack.back()[missingNodeKey] = YAML::Load(define.value);
+                    if (stack.size() == update.splitPath.size()) {
+                        const std::string& missingNodeKey = update.splitPath[update.splitPath.size() - 1];
+                        stack.back()[missingNodeKey] = YAML::Load(update.value);
                     } else {
-                        stack.back() = YAML::Load(define.value);
+                        stack.back() = YAML::Load(update.value);
                     }
                 } catch(YAML::ParserException e) {
                     std::string path;
-                    std::accumulate(std::begin(define.splitPath), std::end(define.splitPath), path);
+                    std::accumulate(std::begin(update.splitPath), std::end(update.splitPath), path);
                     LOGE("Parsing error on user defined value '%s'", e.what());
-                    LOGE("%s %s", path.c_str(), define.value.c_str());
+                    LOGE("%s %s", path.c_str(), update.value.c_str());
                 }
             }
         }
