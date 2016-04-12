@@ -103,7 +103,6 @@ void TileManager::clearTileSets() {
     }
 
     m_tileCache->clear();
-    m_loadPending = 0;
 }
 
 void TileManager::clearTileSet(int32_t _sourceId) {
@@ -116,7 +115,6 @@ void TileManager::clearTileSet(int32_t _sourceId) {
     }
 
     m_tileCache->clear();
-    m_loadPending = 0;
     m_tileSetChanged = true;
 }
 
@@ -197,15 +195,15 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
     while (visTilesIt != visibleTiles->end() || curTilesIt != tiles.end()) {
 
         auto& visTileId = visTilesIt == visibleTiles->end()
-            ? NOT_A_TILE
-            : *visTilesIt;
+            ? NOT_A_TILE : *visTilesIt;
 
         auto& curTileId = curTilesIt == tiles.end()
             ? NOT_A_TILE : curTilesIt->first;
 
         if (visTileId == curTileId) {
             // tiles in both sets match
-            assert(!(visTileId == NOT_A_TILE));
+            assert(visTilesIt != visibleTiles->end() &&
+                   curTilesIt != tiles.end());
 
             auto& entry = curTilesIt->second;
             entry.setVisible(true);
@@ -246,7 +244,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             // NB: if (curTileId == NOT_A_TILE) it is always > visTileId
             //     and if curTileId > visTileId, then visTileId cannot be
             //     NOT_A_TILE. (for the current implementation of > operator)
-            assert(!(visTileId == NOT_A_TILE));
+            assert(visTilesIt != visibleTiles->end());
 
             if (!addTile(_tileSet, visTileId)) {
                 // Not in cache - enqueue for loading
@@ -257,7 +255,8 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
 
         } else {
             // tileSet has a tile not present in visibleTiles
-            assert(!(curTileId == NOT_A_TILE));
+            assert(curTilesIt != tiles.end());
+
             auto& entry = curTilesIt->second;
 
             if (entry.getProxyCounter() > 0) {
