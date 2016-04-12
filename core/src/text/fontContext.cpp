@@ -127,14 +127,6 @@ void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
     }
 }
 
-void FontContext::lockAtlas(std::bitset<max_textures> _refs) {
-    if (!_refs.any()) { return; }
-    std::lock_guard<std::mutex> lock(m_mutex);
-    for (size_t i = 0; i < m_textures.size(); i++) {
-        if (_refs[i]) { m_atlasRefCount[i]++; }
-    }
-}
-
 void FontContext::updateTextures() {
     std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -154,7 +146,7 @@ void FontContext::bindTexture(alfons::AtlasID _id, GLuint _unit) {
 }
 
 bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& _text,
-                             std::vector<GlyphQuad>& _quads,  glm::vec2& _size) {
+                             std::vector<GlyphQuad>& _quads, std::bitset<max_textures>& _refs, glm::vec2& _size) {
 
     std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -194,6 +186,12 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
 
     auto it = _quads.begin() + quadsStart;
     while (it != _quads.end()) {
+
+        if (!_refs[it->atlas]) {
+            _refs[it->atlas] = true;
+            m_atlasRefCount[it->atlas]++;
+        }
+
         it->quad[0].pos -= offset;
         it->quad[1].pos -= offset;
         it->quad[2].pos -= offset;

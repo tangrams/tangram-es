@@ -37,7 +37,7 @@ struct GlyphTexture {
     std::vector<unsigned char> texData;
     Texture texture;
 
-    bool dirty;
+    bool dirty = false;
     size_t refCount = 0;
 };
 
@@ -64,8 +64,6 @@ public:
 
     void releaseAtlas(std::bitset<max_textures> _refs);
 
-    void lockAtlas(std::bitset<max_textures> _refs);
-
     alfons::GlyphAtlas& atlas() { return m_atlas; }
 
     /* Update all textures batches, uploads the data to the GPU */
@@ -84,7 +82,7 @@ public:
     float maxStrokeWidth() { return m_sdfRadius; }
 
     bool layoutText(TextStyle::Parameters& _params, const std::string& _text,
-                    std::vector<GlyphQuad>& _quads, glm::vec2& _bbox);
+                    std::vector<GlyphQuad>& _quads, std::bitset<max_textures>& _refs, glm::vec2& _bbox);
 
     struct ScratchBuffer : public alfons::MeshCallback {
         void drawGlyph(const alfons::Quad& q, const alfons::AtlasGlyph& altasGlyph) override {}

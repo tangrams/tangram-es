@@ -117,14 +117,10 @@ TextLabels::~TextLabels() {
     style.context()->releaseAtlas(m_atlasRefs);
 }
 
-void TextLabels::setQuads(std::vector<GlyphQuad>& _quads) {
+void TextLabels::setQuads(std::vector<GlyphQuad>& _quads, std::bitset<FontContext::max_textures> _atlasRefs) {
     quads.insert(quads.end(), _quads.begin(), _quads.end());
+    m_atlasRefs = _atlasRefs;
 
-    for (auto& q : quads) {
-        m_atlasRefs.set(q.atlas);
-    }
-
-    style.context()->lockAtlas(m_atlasRefs);
 }
 
 }
