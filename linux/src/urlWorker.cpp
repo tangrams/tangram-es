@@ -38,7 +38,7 @@ void UrlWorker::perform(std::unique_ptr<UrlTask> _task) {
         curl_easy_setopt(m_curlHandle, CURLOPT_VERBOSE, 0L);
         curl_easy_setopt(m_curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip");
 
-        logMsg("Fetching URL: %s\n", m_task->url.c_str());
+        LOGD("Fetching URL: %s", m_task->url.c_str());
 
         // Reset stream
         m_stream.seekp(0);
@@ -56,8 +56,8 @@ void UrlWorker::perform(std::unique_ptr<UrlTask> _task) {
             m_stream.seekg(0);
             m_stream.read(m_task->content.data(), nBytes);
         } else {
-            logMsg("curl_easy_perform failed: %s - %d\n",
-                   curl_easy_strerror(result), httpStatusCode);
+            LOGE("curl_easy_perform failed: %s - %d",
+                 curl_easy_strerror(result), httpStatusCode);
         }
 
         m_task->callback(std::move(m_task->content));
