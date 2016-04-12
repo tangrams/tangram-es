@@ -259,7 +259,6 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             if (entry.getProxyCounter() > 0) {
                 if (entry.isReady()) {
                     m_tiles.push_back(entry.tile);
-
                 } else if (curTileId.z < maxZoom) {
                     // Cancel loading
                     removeTiles.push_back(curTileId);
