@@ -155,6 +155,7 @@ protected:
     UniformLocation m_uModel{"u_model"};
     UniformLocation m_uTileOrigin{"u_tile_origin"};
     UniformLocation m_uProxyDepth{"u_proxy_depth"};
+    UniformLocation m_uRasters{"u_rasters"};
 
 private:
 

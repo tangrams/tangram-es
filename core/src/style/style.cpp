@@ -154,6 +154,8 @@ void Style::setupRasters() {
     // TODO: change to number of raster sources
     m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_NUM_RASTER_SOURCES 1\n", false);
 
+    m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n", false);
+
     std::string rasterBlock = stringFromFile("shaders/rasters.glsl", PathType::internal);
 
     m_shaderProgram->addSourceBlock("raster", rasterBlock);
@@ -238,8 +240,14 @@ void Style::draw(const Tile& _tile) {
 
         // TODO: bind all raster textures
         if (texture) {
+            UniformTextureArray textureArray;
+
             texture->update(RenderState::nextAvailableTextureUnit());
             texture->bind(RenderState::currentTextureUnit());
+
+            textureArray.slots.push_back(RenderState::currentTextureUnit());
+
+            m_shaderProgram->setUniformi(m_uRasters, textureArray);
         }
 
         m_shaderProgram->setUniformMatrix4f(m_uModel, _tile.getModelMatrix());
