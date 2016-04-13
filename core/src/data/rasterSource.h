@@ -1,5 +1,6 @@
 #pragma once
 
+#include <tile/tileTask.h>
 #include "dataSource.h"
 #include "gl/texture.h"
 
@@ -19,6 +20,8 @@ public:
 
     RasterSource(const std::string& _name, const std::string& _urlTemplate, int32_t _maxZoom,
                  TextureOptions _options, bool genMipmap= false);
+
+    virtual std::unique_ptr<Texture> getTexture(const TileTask& _task) const override;
 
 };
 
