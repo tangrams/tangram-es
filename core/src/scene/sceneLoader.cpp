@@ -682,6 +682,18 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) 
         return false;
     }
 
+    Node rasterNode = config["raster"];
+    if (rasterNode) {
+        const auto& raster = rasterNode.Scalar();
+        if (raster == "normal") {
+            style->setRasterType(RasterType::normal);
+        } else if (raster == "color") {
+            style->setRasterType(RasterType::color);
+        } else if (raster == "custom") {
+            style->setRasterType(RasterType::custom);
+        }
+    }
+
     loadStyleProps(*style.get(), config, scene);
 
     scene.styles().push_back(std::move(style));
