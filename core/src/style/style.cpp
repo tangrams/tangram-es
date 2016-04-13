@@ -130,6 +130,14 @@ void Style::setupShaderUniforms(Scene& _scene) {
     }
 }
 
+void Style::setupRasters() {
+    if (!hasRasters()) {
+        return;
+    }
+
+    // TOOD: add shader defines
+}
+
 void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {
 
     // Reset the currently used texture unit to 0
