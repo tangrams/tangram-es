@@ -37,6 +37,12 @@ enum class Blending : int8_t {
     overlay,
 };
 
+enum class RasterType {
+    color,
+    normal,
+    custom
+};
+
 struct StyledMesh {
     virtual void draw(ShaderProgram& _shader) = 0;
     virtual size_t bufferSize() const = 0;
@@ -171,6 +177,8 @@ private:
 
     MaterialHandle m_material;
 
+    RasterType m_rasterType;
+
 public:
 
     Style(std::string _name, Blending _blendMode, GLenum _drawMode);
@@ -231,6 +239,8 @@ public:
     void setMaterial(const std::shared_ptr<Material>& _material);
 
     void setPixelScale(float _pixelScale) { m_pixelScale = _pixelScale; }
+
+    void setRasterType(RasterType _rasterType) { m_rasterType = _rasterType; }
 
     void setTexCoordsGeneration(bool _texCoordsGeneration) { m_texCoordsGeneration = _texCoordsGeneration; }
 
