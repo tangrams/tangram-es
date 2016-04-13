@@ -507,12 +507,19 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Enqueuee a scene component by a YAML node value
+     * Enqueuee a scene component update with its corresponding YAML node value
      * @param componentPath The YAML component path delimited by a '.' (example "scene.animated")
      * @param value A YAML valid string (example "{ property: true }" or "true")
      */
     public void queueSceneUpdate(String componentPath, String value) {
         nativeQueueSceneUpdate(componentPath, value);
+    }
+
+    /*
+     * Dispatch scene updates queued by qeueSceneUpdate, and update the scene accordingly
+     */
+    public void applySceneUpdates() {
+        nativeApplySceneUpdates();
     }
 
     // Native methods
