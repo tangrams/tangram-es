@@ -2,6 +2,7 @@
 
 #include "glm/mat4x4.hpp"
 #include "glm/vec2.hpp"
+#include "gl/texture.h"
 #include "tileID.h"
 
 #include <map>
@@ -52,8 +53,10 @@ public:
     void initGeometry(uint32_t _size);
 
     const std::unique_ptr<StyledMesh>& getMesh(const Style& _style) const;
+    const std::unique_ptr<Texture>& getTexture() const;
 
     void setMesh(const Style& _style, std::unique_ptr<StyledMesh> _mesh);
+    void setTexture(std::unique_ptr<Texture> _texture);
 
     /* Update the Tile considering the current view */
     void update(float _dt, const View& _view);
@@ -101,6 +104,7 @@ private:
 
     // Map of <Style>s and their associated <Mesh>es
     std::vector<std::unique_ptr<StyledMesh>> m_geometry;
+    std::unique_ptr<Texture> m_texture;
 
     mutable size_t m_memoryUsage = 0;
 };
