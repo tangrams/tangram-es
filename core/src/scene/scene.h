@@ -30,7 +30,7 @@ struct Stops;
 
 class Scene {
 public:
-    struct UpdateValue {
+    struct Update {
         std::vector<std::string> splitPath;
         std::string value;
     };
@@ -39,8 +39,8 @@ public:
         yes, no, none
     };
 
-    Scene(std::string scene = "");
-    Scene(std::vector<UpdateValue> updates, std::string scene);
+    Scene();
+    Scene(std::vector<Update> updates);
     ~Scene();
 
     auto& view() { return m_view; }
@@ -81,17 +81,18 @@ public:
     void animated(bool animated) { m_animated = animated ? yes : no; }
     animate animated() const { return m_animated; }
 
-    void queueComponentUpdate(std::string componentName, std::string value);
+    void queueUpdate(std::string componentName, std::string value);
 
-    void scene(const std::string& scene) { m_scene = scene; }
-    const std::string& scene() const { return m_scene; }
-
-
-    const std::vector<UpdateValue>& updates() const { return m_updates; }
+    const std::vector<Update>& updates() const { return m_updates; }
 
     void clearUpdates() { m_updates.clear(); }
 
+    YAML::Node& config() { return m_config; }
+
 private:
+
+    // The root node of the YAML scene configuration
+    YAML::Node m_config;
 
     std::unique_ptr<MapProjection> m_mapProjection;
     std::shared_ptr<View> m_view;
@@ -104,9 +105,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
     std::unordered_map<std::string, YAML::Node> m_globals;
 
-    std::vector<UpdateValue> m_updates;
-
-    std::string m_scene;
+    std::vector<Update> m_updates;
 
     // Container of all strings used in styling rules; these need to be
     // copied and compared frequently when applying styling, so rules use

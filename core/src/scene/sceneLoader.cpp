@@ -44,7 +44,9 @@ const std::string DELIMITER = ":";
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
-bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, Node& root, bool _applyUpdates) {
+bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
+
+    Node& root = _scene.config();
 
     try { root = YAML::Load(_sceneString); }
     catch (YAML::ParserException e) {
@@ -52,17 +54,12 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, Node
         return false;
     }
 
-    if (_applyUpdates) {
-        processUpdates(root, _scene);
-    }
-
-    return loadScene(root, _scene);
+    return applyConfig(root, _scene);
 }
 
-void SceneLoader::processUpdates(Node root, Scene& scene) {
-    auto& updates = scene.updates();
+void SceneLoader::applyUpdates(Node& root, const std::vector<Scene::Update>& updates) {
 
-    for (const Scene::UpdateValue& update : updates) {
+    for (const Scene::Update& update : updates) {
 
         std::vector<Node> stack;
         stack.push_back(root);
@@ -157,7 +154,7 @@ void SceneLoader::parseGlobals(const Node& node, Scene& scene, const std::string
     }
 }
 
-bool SceneLoader::loadScene(Node& config, Scene& _scene) {
+bool SceneLoader::applyConfig(Node& config, Scene& _scene) {
 
     // Instantiate built-in styles
     _scene.styles().emplace_back(new PolygonStyle("polygons"));

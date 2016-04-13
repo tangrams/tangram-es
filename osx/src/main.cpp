@@ -216,6 +216,14 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 Tangram::loadScene(sceneFile.c_str());
                 Tangram::setPixelScale(pixel_scale);
                 break;
+            case GLFW_KEY_P:
+                Tangram::queueSceneUpdate("cameras", "{ main_camera: { type: perspective } }");
+                Tangram::applySceneUpdates();
+                break;
+            case GLFW_KEY_I:
+                Tangram::queueSceneUpdate("cameras", "{ main_camera: { type: isometric } }");
+                Tangram::applySceneUpdates();
+                break;
             case GLFW_KEY_G:
                 static bool geoJSON = false;
                 if (!geoJSON) {

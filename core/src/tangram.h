@@ -20,6 +20,12 @@ class DataSource;
 // given resource path
 void initialize(const char* _scenePath);
 
+void loadScene(const char* _scenePath, bool _setPositionFromScene = false);
+
+void queueSceneUpdate(const char* componentName, const char* value);
+
+void applySceneUpdates();
+
 // Initialize graphics resources; OpenGL context must be created prior to calling this
 void setupGL();
 
@@ -129,13 +135,7 @@ bool getDebugFlag(DebugFlags _flag);
 // Toggle the boolean state of a debug feature (see debug.h)
 void toggleDebugFlag(DebugFlags _flag);
 
-void loadScene(const char* _scenePath, bool _setPositionFromScene = false);
-
 void runOnMainLoop(std::function<void()> _task);
-
-void queueSceneUpdate(const char* componentName, const char* value);
-
-void applySceneUpdates(bool _setPositionFromScene = false);
 
 struct TouchItem {
     std::shared_ptr<Properties> properties;
