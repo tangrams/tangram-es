@@ -84,7 +84,7 @@ Feature GeoJson::getFeature(const JsonValue& _in, const Transform& _proj, int32_
     // Copy properties into tile data
     auto properties = _in.FindMember("properties");
     if (properties != _in.MemberEnd()) {
-        feature.props = std::move(getProperties(properties->value, _sourceId));
+        feature.props = getProperties(properties->value, _sourceId);
     }
 
     // Copy geometry into tile data
