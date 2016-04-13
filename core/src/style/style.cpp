@@ -258,8 +258,10 @@ void Style::draw(const Tile& _tile) {
 
         styleMesh->draw(*m_shaderProgram);
 
-        // TODO: for each tile texture, release a slot
-        RenderState::releaseTextureUnit();
+        if (texture) {
+            // TODO: for each tile texture, release a slot
+            RenderState::releaseTextureUnit();
+        }
     }
 }
 
