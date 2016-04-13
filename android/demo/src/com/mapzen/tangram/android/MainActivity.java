@@ -82,8 +82,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
         map.setLongPressResponder(this);
         map.setFeaturePickListener(this);
 
-        markers = new MapData("touch");
-        markers.addToMap(map);
+        markers = map.addDataLayer("touch");
     }
 
     HttpHandler getHttpHandler() {
@@ -131,8 +130,6 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
             props = new HashMap<>();
             props.put("type", "point");
             markers.addPoint(tappedPoint, props);
-
-            markers.syncWithMap();
         }
 
         lastTappedPoint = tappedPoint;
@@ -159,7 +156,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
     @Override
     public void onLongPress(float x, float y) {
-        markers.clear().syncWithMap();
+        markers.clear();
         showTileInfo = !showTileInfo;
         map.setDebugFlag(MapController.DebugFlag.TILE_INFOS, showTileInfo);
     }
