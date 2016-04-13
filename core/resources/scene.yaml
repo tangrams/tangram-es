@@ -50,7 +50,6 @@ styles:
         base: polygons
         lighting: false
     heightglow:
-        raster: color
         base: polygons
         lighting: vertex
         shaders:

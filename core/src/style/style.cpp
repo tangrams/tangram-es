@@ -61,6 +61,8 @@ void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
             }
         }
     }
+
+    setupRasters();
 }
 
 void Style::setMaterial(const std::shared_ptr<Material>& _material) {
@@ -130,12 +132,29 @@ void Style::setupShaderUniforms(Scene& _scene) {
     }
 }
 
+bool Style::hasRasters() const {
+    return m_rasterType == RasterType::custom ||
+           m_rasterType == RasterType::color ||
+           m_rasterType == RasterType::normal;
+}
+
 void Style::setupRasters() {
     if (!hasRasters()) {
         return;
     }
 
-    // TOOD: add shader defines
+    if (m_rasterType == RasterType::normal) {
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_NORMAL\n", false);
+    } else if (m_rasterType == RasterType::color) {
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_COLOR\n", false);
+    }
+
+    // TODO: change to number of raster sources
+    m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_NUM_RASTER_SOURCES 1\n", false);
+
+    std::string rasterBlock = stringFromFile("shaders/rasters.glsl", PathType::internal);
+
+    m_shaderProgram->addSourceBlock("raster", rasterBlock);
 }
 
 void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {

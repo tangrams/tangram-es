@@ -38,6 +38,7 @@ enum class Blending : int8_t {
 };
 
 enum class RasterType {
+    none,
     color,
     normal,
     custom
@@ -177,7 +178,7 @@ private:
 
     MaterialHandle m_material;
 
-    RasterType m_rasterType;
+    RasterType m_rasterType = RasterType::none;
 
 public:
 
@@ -257,7 +258,7 @@ public:
 
     virtual size_t dynamicMeshSize() const { return 0; }
 
-    virtual bool hasRasters() const { return false; }
+    virtual bool hasRasters() const;
 
     void setupRasters();
 
