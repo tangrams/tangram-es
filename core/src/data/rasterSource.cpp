@@ -36,13 +36,16 @@ std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapPr
 
 }
 
-std::unique_ptr<Texture> RasterSource::getTexture(const TileTask& _task) const {
+std::shared_ptr<Texture> RasterSource::texture(const TileTask& _task) {
+
+    auto tileID = _task.tileId();
+    if (m_textures.find(tileID) != m_textures.end()) { return m_textures[tileID]; }
 
     auto &task = static_cast<const DownloadTileTask &>(_task);
     auto udata = (unsigned char*)task.rawTileData->data();
-    std::unique_ptr<Texture> texture(new Texture(udata, task.rawTileData->size(), m_texOptions, m_genMipmap));
-    return std::move(texture);
-
+    std::shared_ptr<Texture> texture(new Texture(udata, task.rawTileData->size(), m_texOptions, m_genMipmap));
+    m_textures[tileID] = texture;
+    return texture;
 }
 
 }
