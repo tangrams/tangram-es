@@ -46,6 +46,10 @@ vec3 worldNormal() {
 #pragma tangram: global
 #pragma tangram: raster
 
+#ifdef TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING
+    varying vec4 v_modelpos_base_zoom;
+#endif
+
 void main(void) {
 
     // Initialize globals
@@ -76,5 +80,5 @@ void main(void) {
     #pragma tangram: filter
 
     //color.rgb = pow(color.rgb, vec3(1.0/2.2)); // gamma correction
-    gl_FragColor = color;
+    gl_FragColor = texture2D(u_rasters[0], v_modelpos_base_zoom.xy);
 }
