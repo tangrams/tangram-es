@@ -5,8 +5,6 @@
 #include <memory>
 #include <vector>
 
-#include "gl/texture.h"
-
 namespace Tangram {
 
 class MapProjection;
@@ -16,6 +14,7 @@ class Tile;
 class TileManager;
 struct RawCache;
 class TileTask;
+class Texture;
 struct TileTaskCb;
 
 class DataSource : public std::enable_shared_from_this<DataSource> {
@@ -51,7 +50,7 @@ public:
 
     const std::string& name() const { return m_name; }
 
-    virtual std::unique_ptr<Texture> getTexture(const TileTask& _task) const { return nullptr; }
+    virtual std::unique_ptr<Texture> getTexture(const TileTask& _task) const ;
 
     virtual bool equals(const DataSource& _other) const {
         return m_name == _other.m_name &&
