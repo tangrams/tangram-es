@@ -74,8 +74,8 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     @Override
     public void onMapReady(MapController mapController) {
         map = mapController;
-        map.setMapZoom(16);
-        map.setMapPosition(-74.00976419448854, 40.70532700869127);
+        map.setZoom(16);
+        map.setPosition(new LngLat(-74.00976419448854, 40.70532700869127));
         map.setHttpHandler(getHttpHandler());
         map.setTapResponder(this);
         map.setDoubleTapResponder(this);
@@ -136,21 +136,20 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
         map.pickFeature(x, y);
 
-        map.setMapPosition(tappedPoint.longitude, tappedPoint.latitude, 1.f);
+        map.setPosition(tappedPoint, 1.f);
 
         return true;
     }
 
     @Override
     public boolean onDoubleTap(float x, float y) {
-        map.setMapZoom(map.getMapZoom() + 1.f, .5f);
+        map.setZoom(map.getZoom() + 1.f, .5f);
         LngLat tapped = map.coordinatesAtScreenPosition(x, y);
-        LngLat current = map.getMapPosition();
-        map.setMapPosition(
+        LngLat current = map.getPosition();
+        LngLat next = new LngLat(
                 .5 * (tapped.longitude + current.longitude),
-                .5 * (tapped.latitude + current.latitude),
-                .5f
-        );
+                .5 * (tapped.latitude + current.latitude));
+        map.setPosition(next, .5f);
         return true;
     }
 
