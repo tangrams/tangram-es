@@ -7,6 +7,7 @@
 #include "tile/tile.h"
 #include "tile/tileManager.h"
 #include "tile/tileTask.h"
+#include "gl/texture.h"
 
 #include <atomic>
 #include <mutex>
@@ -163,6 +164,10 @@ bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb)
 
 void DataSource::cancelLoadingTile(const TileID& _tileID) {
     cancelUrlRequest(constructURL(_tileID));
+}
+
+std::unique_ptr<Texture> DataSource::getTexture(const TileTask &_task) const {
+    return nullptr;
 }
 
 }
