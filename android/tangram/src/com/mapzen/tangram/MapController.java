@@ -29,6 +29,8 @@ public class MapController implements Renderer {
         SINE,
     }
 
+    protected static EaseType DEFAULT_EASE_TYPE = EaseType.CUBIC;
+
     public enum CameraType {
         PERSPECTIVE,
         ISOMETRIC,
@@ -135,7 +137,7 @@ public class MapController implements Renderer {
      * @param duration Time in seconds to ease to the given position
      */
     public void setPosition(LngLat position, float duration) {
-        nativeSetPositionEased(position.longitude, position.latitude, duration, EaseType.QUINT.ordinal());
+        setPosition(position, duration, DEFAULT_EASE_TYPE);
     }
 
     /**
@@ -181,7 +183,7 @@ public class MapController implements Renderer {
      * @param duration Time in seconds to ease to given zoom
      */
     public void setZoom(float zoom, float duration) {
-        nativeSetZoomEased(zoom, duration, EaseType.QUINT.ordinal());
+        setZoom(zoom, duration, DEFAULT_EASE_TYPE);
     }
 
     /**
@@ -216,7 +218,7 @@ public class MapController implements Renderer {
      * @param duration Time in seconds to ease to the given rotation
      */
     public void setRotation(float radians, float duration) {
-        nativeSetRotationEased(radians, duration, EaseType.QUINT.ordinal());
+        setRotation(radians, duration, DEFAULT_EASE_TYPE);
     }
 
     /**
@@ -251,7 +253,7 @@ public class MapController implements Renderer {
      * @param duration Time in seconds to ease to the given tilt
      */
     public void setTilt(float radians, float duration) {
-        nativeSetTiltEased(radians, duration, EaseType.QUINT.ordinal());
+        setTilt(radians, duration, DEFAULT_EASE_TYPE);
     }
 
     /**
