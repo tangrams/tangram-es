@@ -17,7 +17,6 @@ RasterSource::RasterSource(const std::string& _name, const std::string& _urlTemp
 
 std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapProjection& _projection) const {
 
-    //TODO: Return TileData with a featureCollection having a quad of TileScale Dimentions.
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
 
     Feature rasterFeature;
@@ -34,6 +33,15 @@ std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapPr
     tileData->layers.emplace_back("");
     tileData->layers.back().features.push_back(rasterFeature);
     return tileData;
+
+}
+
+std::unique_ptr<Texture> RasterSource::getTexture(const TileTask& _task) const {
+
+    auto &task = static_cast<const DownloadTileTask &>(_task);
+    auto udata = (unsigned char*)task.rawTileData->data();
+    std::unique_ptr<Texture> texture(new Texture(udata, task.rawTileData->size(), m_texOptions, m_genMipmap));
+    return std::move(texture);
 
 }
 

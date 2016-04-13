@@ -5,6 +5,8 @@
 #include <memory>
 #include <vector>
 
+#include "gl/texture.h"
+
 namespace Tangram {
 
 class MapProjection;
@@ -48,6 +50,8 @@ public:
     virtual void clearData();
 
     const std::string& name() const { return m_name; }
+
+    virtual std::unique_ptr<Texture> getTexture(const TileTask& _task) const { return nullptr; }
 
     virtual bool equals(const DataSource& _other) const {
         return m_name == _other.m_name &&
