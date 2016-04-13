@@ -44,6 +44,7 @@ vec3 worldNormal() {
 #pragma tangram: material
 #pragma tangram: lighting
 #pragma tangram: global
+#pragma tangram: raster
 
 void main(void) {
 
