@@ -262,8 +262,10 @@ void Style::draw(const Tile& _tile) {
             LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
         }
 
-        // TODO: for each tile texture, release a slot
-        RenderState::releaseTextureUnit();
+        if (texture) {
+            // TODO: for each tile texture, release a slot
+            RenderState::releaseTextureUnit();
+        }
     }
 }
 
