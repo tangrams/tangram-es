@@ -79,6 +79,13 @@ void PolygonStyle::constructShaderProgram() {
     }
 }
 
+bool PolygonStyle::hasRasters() const {
+
+    // TODO
+
+    return false;
+}
+
 template <class V>
 struct PolygonStyleBuilder : public StyleBuilder {
 

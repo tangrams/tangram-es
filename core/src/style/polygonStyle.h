@@ -16,6 +16,8 @@ protected:
 
     virtual std::unique_ptr<StyleBuilder> createBuilder() const override;
 
+    virtual bool hasRasters() const override;
+
 public:
 
     PolygonStyle(std::string _name, Blending _blendMode = Blending::none, GLenum _drawMode = GL_TRIANGLES);

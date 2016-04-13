@@ -247,6 +247,10 @@ public:
 
     virtual size_t dynamicMeshSize() const { return 0; }
 
+    virtual bool hasRasters() const { return false; }
+
+    void setupRasters();
+
     std::vector<StyleUniform>& styleUniforms() { return m_styleUniforms; }
 
     virtual std::unique_ptr<StyleBuilder> createBuilder() const = 0;
