@@ -31,12 +31,6 @@ public class MapController implements Renderer {
 
     protected static EaseType DEFAULT_EASE_TYPE = EaseType.CUBIC;
 
-    public enum CameraType {
-        PERSPECTIVE,
-        ISOMETRIC,
-        FLAT,
-    }
-
     public enum DebugFlag {
         FREEZE_TILES,
         PROXY_COLORS,
@@ -276,23 +270,6 @@ public class MapController implements Renderer {
      */
     public float getTilt() {
         return nativeGetTilt();
-    }
-
-    /**
-     * Set the camera type for the map view
-     * @param type A CameraType
-     */
-    public void setMapCameraType(CameraType type) {
-        nativeSetCameraType(type.ordinal());
-        requestRender();
-    }
-
-    /**
-     * Get the camera type currently in use for the map view
-     * @return The current CameraType
-     */
-    public CameraType getMapCameraType() {
-        return CameraType.values()[nativeGetCameraType()];
     }
 
     /**
@@ -577,8 +554,6 @@ public class MapController implements Renderer {
     private synchronized native float nativeGetTilt();
     private synchronized native void nativeScreenToWorldCoordinates(double[] screenCoords);
     private synchronized native void nativeSetPixelScale(float scale);
-    private synchronized native void nativeSetCameraType(int cameraType);
-    private synchronized native int nativeGetCameraType();
     private synchronized native void nativeHandleTapGesture(float posX, float posY);
     private synchronized native void nativeHandleDoubleTapGesture(float posX, float posY);
     private synchronized native void nativeHandlePanGesture(float startX, float startY, float endX, float endY);
