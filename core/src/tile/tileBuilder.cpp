@@ -37,9 +37,13 @@ void TileBuilder::setScene(std::shared_ptr<Scene> _scene) {
 }
 
 std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData,
-                                         const DataSource& _source) {
+                                         const DataSource& _source, std::unique_ptr<Texture> tileTexture) {
 
     auto tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), &_source);
+    if (tileTexture) {
+        tile->setTexture(std::move(tileTexture));
+    }
+
     tile->initGeometry(m_scene->styles().size());
 
     m_styleContext.setKeywordZoom(_tileID.s);
