@@ -506,6 +506,15 @@ public class MapController implements Renderer {
         nativeSetDebugFlag(flag.ordinal(), on);
     }
 
+    /**
+     * Enqueuee a scene component by a YAML node value
+     * @param componentPath The YAML component path delimited by a '.' (example "scene.animated")
+     * @param value A YAML valid string (example "{ property: true }" or "true")
+     */
+    public void queueSceneUpdate(String componentPath, String value) {
+        nativeQueueSceneUpdate(componentPath, value);
+    }
+
     // Native methods
     // ==============
 
@@ -543,6 +552,8 @@ public class MapController implements Renderer {
     private synchronized native void nativeHandlePinchGesture(float posX, float posY, float scale, float velocity);
     private synchronized native void nativeHandleRotateGesture(float posX, float posY, float rotation);
     private synchronized native void nativeHandleShoveGesture(float distance);
+    private synchronized native void nativeQueueSceneUpdate(String componentPath, String value);
+    private synchronized native void nativeApplySceneUpdates();
 
     public synchronized native void nativePickFeature(float posX, float posY, FeaturePickListener listener);
 

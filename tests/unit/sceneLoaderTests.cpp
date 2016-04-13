@@ -1,7 +1,6 @@
 #include "catch.hpp"
 
 #include "yaml-cpp/yaml.h"
-#include "gl/shaderProgram.h"
 #include "scene/sceneLoader.h"
 #include "scene/scene.h"
 #include "style/material.h"
@@ -18,7 +17,7 @@ using YAML::Node;
 TEST_CASE("Style with the same name as a built-in style are ignored") {
 
     Scene scene;
-    SceneLoader::loadStyle("polygons", YAML::Node(), scene);
+    SceneLoader::loadStyle("polygons", Node(), scene);
     REQUIRE(scene.styles().size() == 0);
 
 }
@@ -38,8 +37,6 @@ TEST_CASE("Correctly instantiate a style from a YAML configuration") {
             diffuse: .9
             emission: 0.0
         )END");
-
-    // logMsg("Node:\n'%s'\n", Dump(node).c_str());
 
     SceneLoader::loadStyle("roads", node, scene);
 

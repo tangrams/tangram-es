@@ -63,6 +63,8 @@ struct fastmap {
     const_iterator begin() const { return map.begin(); }
     const_iterator end() const { return map.end(); }
 
+    size_t size() const { return map.size(); }
+
     void clear() { map.clear(); }
 };
 
@@ -121,6 +123,8 @@ struct fastmap<std::string, T> {
 
     iterator begin() { return map.begin(); }
     iterator end() { return map.end(); }
+
+    size_t size() const { return map.size(); }
 
     const_iterator begin() const { return map.begin(); }
     const_iterator end() const { return map.end(); }

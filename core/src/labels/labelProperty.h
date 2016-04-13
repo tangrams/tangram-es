@@ -1,18 +1,9 @@
 #pragma once
 
 #include <string>
+#include "util/util.h"
 
 namespace Tangram {
-
-template <class M, class T>
-inline bool tryFind(M& _map, const std::string& _transform, T& _out) {
-    auto it = _map.find(_transform);
-    if (it != _map.end()) {
-        _out = it->second;
-        return true;
-    }
-    return false;
-}
 
 namespace LabelProperty {
 

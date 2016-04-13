@@ -10,19 +10,28 @@
 #include "scene/stops.h"
 #include "util/mapProjection.h"
 #include "view/view.h"
+#include "util/util.h"
 
 #include <atomic>
 #include <algorithm>
+
+#define COMPONENT_PATH_DELIMITER '.'
 
 namespace Tangram {
 
 static std::atomic<int32_t> s_serial;
 
-Scene::Scene() : id(s_serial++) {
+Scene::Scene(std::string scene) : id(s_serial++), m_scene(scene) {
     m_view = std::make_shared<View>();
     // For now we only have one projection..
     // TODO how to share projection with view?
     m_mapProjection.reset(new MercatorProjection());
+}
+
+Scene::Scene(std::vector<UpdateValue> updates, std::string scene) :
+    Scene(scene)
+{
+    m_updates = updates;
 }
 
 Scene::~Scene() {}
@@ -71,6 +80,11 @@ bool Scene::texture(const std::string& textureName, std::shared_ptr<Texture>& te
     texture = texIt->second;
 
     return true;
+}
+
+void Scene::queueComponentUpdate(std::string componentPath, std::string value) {
+    std::vector<std::string> splitPath = splitString(componentPath, COMPONENT_PATH_DELIMITER);
+    m_updates.push_back({ splitPath, value });
 }
 
 }

@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <iterator>
 #include <unordered_map>
+#include <numeric>
 
 using YAML::Node;
 using YAML::NodeType;
@@ -43,16 +44,60 @@ const std::string DELIMITER = ":";
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
-bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
+bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene, Node& root, bool _applyUpdates) {
 
-    Node config;
-
-    try { config = YAML::Load(_sceneString); }
+    try { root = YAML::Load(_sceneString); }
     catch (YAML::ParserException e) {
         LOGE("Parsing scene config '%s'", e.what());
         return false;
     }
-    return loadScene(config, _scene);
+
+    if (_applyUpdates) {
+        processUpdates(root, _scene);
+    }
+
+    return loadScene(root, _scene);
+}
+
+void SceneLoader::processUpdates(Node root, Scene& scene) {
+    auto& updates = scene.updates();
+
+    for (const Scene::UpdateValue& update : updates) {
+
+        std::vector<Node> stack;
+        stack.push_back(root);
+        for (auto& str : update.splitPath) {
+            if (stack.back()[str]) {
+                stack.push_back(stack.back()[str]);
+                continue;
+            } else {
+                break;
+            }
+        }
+
+        if (stack.size() < update.splitPath.size()) {
+            std::string path;
+            std::accumulate(std::begin(update.splitPath), std::end(update.splitPath), path);
+            LOGW("User defined path %s was not found", path.c_str());
+            LOGW("Can't update scene node");
+        } else {
+            if (stack.back()) {
+                try {
+                    if (stack.size() == update.splitPath.size()) {
+                        const std::string& missingNodeKey = update.splitPath[update.splitPath.size() - 1];
+                        stack.back()[missingNodeKey] = YAML::Load(update.value);
+                    } else {
+                        stack.back() = YAML::Load(update.value);
+                    }
+                } catch(YAML::ParserException e) {
+                    std::string path;
+                    std::accumulate(std::begin(update.splitPath), std::end(update.splitPath), path);
+                    LOGE("Parsing error on user defined value '%s'", e.what());
+                    LOGE("%s %s", path.c_str(), update.value.c_str());
+                }
+            }
+        }
+    }
 }
 
 void printFilters(const SceneLayer& layer, int indent){

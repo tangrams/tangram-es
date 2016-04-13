@@ -52,9 +52,12 @@ styles:
     heightglow:
         base: polygons
         lighting: vertex
+        animated: false
         shaders:
+            uniforms:
+                u_time_expand: 10.0
             blocks:
-                color: "color.rgb += vec3(worldPosition().z / 800.);"
+                color: "color.r *= (cos(u_time * u_time_expand) * 0.5 + 0.5);"
     heightglowline:
         base: lines
         mix: heightglow
