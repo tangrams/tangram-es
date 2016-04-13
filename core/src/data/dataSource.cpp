@@ -166,7 +166,7 @@ void DataSource::cancelLoadingTile(const TileID& _tileID) {
     cancelUrlRequest(constructURL(_tileID));
 }
 
-std::unique_ptr<Texture> DataSource::getTexture(const TileTask &_task) const {
+std::shared_ptr<Texture> DataSource::texture(const TileTask &_task) {
     return nullptr;
 }
 

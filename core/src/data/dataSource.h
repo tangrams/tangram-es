@@ -50,7 +50,7 @@ public:
 
     const std::string& name() const { return m_name; }
 
-    virtual std::unique_ptr<Texture> getTexture(const TileTask& _task) const ;
+    virtual std::shared_ptr<Texture> texture(const TileTask& _task);
 
     virtual bool equals(const DataSource& _other) const {
         return m_name == _other.m_name &&
