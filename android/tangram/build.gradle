@@ -1,7 +1,7 @@
 buildscript {
   dependencies {
-    classpath 'com.android.tools.build:gradle:1.2.3'
-    classpath 'com.github.dcendents:android-maven-plugin:1.2'
+    classpath 'com.android.tools.build:gradle:2.0.0'
+    classpath 'com.github.dcendents:android-maven-gradle-plugin:1.3'
   }
 }
 
@@ -12,7 +12,7 @@ group = GROUP
 version = VERSION_NAME
 
 android {
-  compileSdkVersion 22
+  compileSdkVersion 23
 
   /*
    * Ubuntu can't run the aapt on 64 bit before installing this packages
@@ -24,7 +24,7 @@ android {
 
   defaultConfig {
     minSdkVersion 15
-    targetSdkVersion 22
+    targetSdkVersion 23
   }
 
   sourceSets.main {
@@ -48,6 +48,7 @@ afterEvaluate {
 dependencies {
   compile 'com.squareup.okhttp:okhttp:2.5.0'
   compile 'xmlpull:xmlpull:1.1.3.1'
+  compile 'com.android.support:support-annotations:23.1.1'
 }
 
 apply from: file('gradle-mvn-push.gradle')

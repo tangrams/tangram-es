@@ -2,8 +2,7 @@
 
 #include "geom.h"
 #include "glm/gtx/rotate_vector.hpp"
-#include "platform.h"
-#include <memory>
+#include "glm/gtx/norm.hpp"
 
 namespace mapbox { namespace util {
 template <>
@@ -65,7 +64,6 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
 
     uint16_t vertexDataOffset = _ctx.numVertices;
     _ctx.numVertices += sumVertices;
-    _ctx.sizeHint(_ctx.numVertices);
 
     size_t ring = 0;
     size_t offset = 0;
@@ -87,7 +85,7 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
 
         auto& p = _polygon[ring][src - offset];
         glm::vec3 coord(p.x, p.y, _height);
-        glm::vec3 normal(0.0, 0.0, 1.0);
+        static const glm::vec3 normal(0.0, 0.0, 1.0);
 
         if (_ctx.useTexCoords) {
             glm::vec2 uv(mapValue(coord.x, min.x, max.x, 0., 1.),
@@ -106,24 +104,10 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
 
 void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, float _maxHeight, PolygonBuilder& _ctx) {
 
-    int vertexDataOffset = (int)_ctx.numVertices;
+    auto vertexDataOffset = _ctx.numVertices;
 
-    glm::vec3 upVector(0.0f, 0.0f, 1.0f);
+    static const glm::vec3 upVector(0.0f, 0.0f, 1.0f);
     glm::vec3 normalVector;
-
-    size_t sumIndices = _ctx.indices.size();
-    size_t sumVertices = _ctx.numVertices;
-
-    for (auto& line : _polygon) {
-        size_t lineSize = line.size();
-        sumIndices += lineSize * 6;
-        sumVertices += (lineSize - 1) * 4;
-
-        _ctx.numVertices = sumVertices;
-    }
-
-    _ctx.indices.reserve(sumIndices);
-    _ctx.sizeHint(sumVertices);
 
     for (auto& line : _polygon) {
 
@@ -136,6 +120,12 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, 
 
             normalVector = glm::cross(upVector, b - a);
             normalVector = glm::normalize(normalVector);
+
+            if (std::isnan(normalVector.x)
+             || std::isnan(normalVector.y)
+             || std::isnan(normalVector.z)) {
+                continue;
+            }
 
             // 1st vertex top
             a.z = _maxHeight;
@@ -164,6 +154,8 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, 
 
             vertexDataOffset += 4;
         }
+
+        _ctx.numVertices = vertexDataOffset;
     }
 }
 
@@ -283,12 +275,20 @@ bool isOutsideTile(const glm::vec3& _a, const glm::vec3& _b) {
     return false;
 }
 
-void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
+void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx,
+                          size_t startIndex, size_t endIndex, bool endCap = true) {
 
-    int lineSize = (int)_line.size();
+    size_t origLineSize = _line.size();
+
+    // endIndex/startIndex could be wrapped values, calculate lineSize accordingly
+    int lineSize = (int)((endIndex > startIndex) ?
+                   (endIndex - startIndex) :
+                   (origLineSize - startIndex + endIndex));
     if (lineSize < 2) { return; }
 
-    glm::vec3 coordPrev(_line[0]), coordCurr(_line[0]), coordNext(_line[1]);
+    glm::vec3 coordCurr(_line[startIndex]);
+    // get the Point using wrapped index in the original line geometry
+    glm::vec3 coordNext(_line[(startIndex + 1) % origLineSize]);
     glm::vec2 normPrev, normNext, miterVec;
 
     int cornersOnCap = (int)_ctx.cap;
@@ -296,26 +296,48 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
 
     // Process first point in line with an end cap
     normNext = glm::normalize(perp2d(coordCurr, coordNext));
-    addCap(coordCurr, normNext, cornersOnCap, true, _ctx);
+
+    if (endCap) {
+        addCap(coordCurr, normNext, cornersOnCap, true, _ctx);
+    }
     addPolyLineVertex(coordCurr, normNext, {1.0f, 0.0f}, _ctx); // right corner
     addPolyLineVertex(coordCurr, -normNext, {0.0f, 0.0f}, _ctx); // left corner
 
+
     // Process intermediate points
     for (int i = 1; i < lineSize - 1; i++) {
+        // get the Point using wrapped index in the original line geometry
+        int nextIndex = (i + startIndex + 1) % origLineSize;
 
-        coordPrev = coordCurr;
         coordCurr = coordNext;
-        coordNext = _line[i + 1];
+        coordNext = _line[nextIndex];
+
+        if (coordCurr == coordNext) {
+            continue;
+        }
 
         normPrev = normNext;
         normNext = glm::normalize(perp2d(coordCurr, coordNext));
 
         // Compute "normal" for miter joint
         miterVec = normPrev + normNext;
-        float scale = sqrtf(2.0f / (1.0f + glm::dot(normPrev, normNext)) / glm::dot(miterVec, miterVec) );
+
+        float scale = 1.f;
+
+        // normPrev and normNext are in the opposite direction
+        // in order to prevent NaN values, we use the perp
+        // vector of those two vectors
+        if (miterVec == glm::zero<glm::vec2>()) {
+            miterVec = perp2d(glm::vec3(normNext, 0.f), glm::vec3(normPrev, 0.f));
+        } else {
+            scale = sqrtf(2.0f / (1.0f + glm::dot(normPrev, normNext)) / glm::dot(miterVec, miterVec));
+        }
+
         miterVec *= scale;
-        if (glm::length(miterVec) > _ctx.miterLimit) {
+
+        if (glm::length2(miterVec) > glm::length2(_ctx.miterLimit)) {
             trianglesOnJoin = 1;
+            miterVec *= _ctx.miterLimit / glm::length(miterVec);
         }
 
         float v = i / (float)lineSize;
@@ -328,6 +350,7 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
             indexPairs(1, _ctx.numVertices, _ctx.indices);
 
         } else {
+
             // Join type is a fan of triangles
 
             bool isRightTurn = (normNext.x * normPrev.y - normNext.y * normPrev.x) > 0; // z component of cross(normNext, normPrev)
@@ -361,32 +384,50 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx) {
     addPolyLineVertex(coordNext, normNext, {1.f, 1.f}, _ctx); // right corner
     addPolyLineVertex(coordNext, -normNext, {0.f, 1.f}, _ctx); // left corner
     indexPairs(1, _ctx.numVertices, _ctx.indices);
-    addCap(coordNext, normNext, cornersOnCap , false, _ctx);
+    if (endCap) {
+        addCap(coordNext, normNext, cornersOnCap, false, _ctx);
+    }
 
 }
 
 void Builders::buildPolyLine(const Line& _line, PolyLineBuilder& _ctx) {
 
+    size_t lineSize = _line.size();
+
     if (_ctx.keepTileEdges) {
 
-        buildPolyLineSegment(_line, _ctx);
+        buildPolyLineSegment(_line, _ctx, 0, lineSize);
 
     } else {
 
         int cut = 0;
+        int firstCutEnd = 0;
 
-        for (size_t i = 0; i < _line.size() - 1; i++) {
+        // Determine cuts
+        for (size_t i = 0; i < lineSize - 1; i++) {
             const glm::vec3& coordCurr = _line[i];
             const glm::vec3& coordNext = _line[i+1];
             if (isOutsideTile(coordCurr, coordNext)) {
-                Line line = Line(&_line[cut], &_line[i+1]);
-                buildPolyLineSegment(line, _ctx);
+                if (cut == 0) {
+                    firstCutEnd = i + 1;
+                }
+                buildPolyLineSegment(_line, _ctx, cut, i + 1);
                 cut = i + 1;
             }
         }
 
-        Line line = Line(&_line[cut], &_line[_line.size()]);
-        buildPolyLineSegment(line, _ctx);
+        if (_ctx.closedPolygon) {
+            if (cut == 0) {
+                // no tile edge cuts!
+                // loop and close the polygon with no endcaps
+                buildPolyLineSegment(_line, _ctx, 0, lineSize+2, false);
+            } else {
+                // merge first and last cut line-segments together
+                buildPolyLineSegment(_line, _ctx, cut, firstCutEnd);
+            }
+        } else {
+            buildPolyLineSegment(_line, _ctx, cut, lineSize);
+        }
 
     }
 

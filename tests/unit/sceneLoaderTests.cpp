@@ -8,6 +8,7 @@
 #include "style/style.h"
 #include "style/polylineStyle.h"
 #include "style/polygonStyle.h"
+#include "scene/pointLight.h"
 
 #include "platform.h"
 
@@ -55,4 +56,20 @@ TEST_CASE("Correctly instantiate a style from a YAML configuration") {
     REQUIRE(styles[2]->getMaterial()->hasDiffuse() == true);
     REQUIRE(styles[2]->getMaterial()->hasAmbient() == false);
     REQUIRE(styles[2]->getMaterial()->hasSpecular() == false);
+}
+
+TEST_CASE("Test light parameter parsing") {
+    YAML::Node node = YAML::Load("position: [100px, 0, 20m]");
+
+    auto light(std::make_unique<PointLight>("light"));
+    SceneLoader::parseLightPosition(node["position"], *light);
+
+    auto pos = light->getPosition();
+
+    REQUIRE(pos.value.x == 100);
+    REQUIRE(pos.value.y == 0);
+    REQUIRE(pos.value.z == 20);
+    REQUIRE(pos.units[0] == Unit::pixel);
+    REQUIRE(pos.units[1] == Unit::meter);
+    REQUIRE(pos.units[2] == Unit::meter);
 }

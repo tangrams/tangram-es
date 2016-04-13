@@ -3,6 +3,7 @@
 #include "platform.h"
 #include "tangram.h"
 #include "util/rasterize.h"
+#include "scene/stops.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 
@@ -73,6 +74,54 @@ void View::setSize(int _width, int _height) {
 
     // Screen space orthographic projection matrix, top left origin, y pointing down
     m_orthoViewport = glm::ortho(0.f, (float)m_vpWidth, (float)m_vpHeight, 0.f, -1.f, 1.f);
+
+}
+
+void View::setFieldOfView(float radians) {
+
+    m_fov = radians;
+    m_fovStops = nullptr;
+    m_dirtyMatrices = true;
+    m_dirtyTiles = true;
+
+}
+
+void View::setFieldOfViewStops(std::shared_ptr<Stops> stops) {
+
+    m_fovStops = stops;
+    m_dirtyMatrices = true;
+    m_dirtyTiles = true;
+
+}
+
+float View::getFieldOfView() const {
+
+    if (m_fovStops) {
+        return m_fovStops->evalFloat(m_zoom);
+    }
+    return m_fov;
+
+}
+
+void View::setFocalLength(float length) {
+
+    setFieldOfView(focalLengthToFieldOfView(length));
+
+}
+
+void View::setFocalLengthStops(std::shared_ptr<Stops> stops) {
+
+    for (auto& frame : stops->frames) {
+        float length = frame.value.get<float>();
+        frame.value = focalLengthToFieldOfView(length);
+    }
+    setFieldOfViewStops(stops);
+
+}
+
+float View::getFocalLength() const {
+
+    return fieldOfViewToFocalLength(getFieldOfView());
 
 }
 
@@ -230,6 +279,14 @@ float View::pixelsPerMeter() const {
     return s_pixelsPerTile / metersPerTile;
 }
 
+float View::focalLengthToFieldOfView(float length) {
+    return 2.f * atanf(1.f / length);
+}
+
+float View::fieldOfViewToFocalLength(float radians) {
+    return 1.f / tanf(radians / 2.f);
+}
+
 void View::updateMatrices() {
 
     // find dimensions of tiles in world space at new zoom level
@@ -241,7 +298,7 @@ void View::updateMatrices() {
     m_width = m_height * m_aspect;
 
     // set vertical field-of-view
-    float fovy = PI * 0.25;
+    float fovy = getFieldOfView();
 
     // we assume portrait orientation by default, so in landscape
     // mode we scale the vertical FOV such that the wider dimension
@@ -272,6 +329,9 @@ void View::updateMatrices() {
             far = 2. * m_pos.z / std::max(0., cos(m_pitch + 0.5 * fovy));
             far = std::min(far, maxTileDistance);
             m_proj = glm::perspective(fovy, m_aspect, near, far);
+            // Adjust for vanishing point.
+            m_proj[2][0] -= m_vanishingPoint.x / getWidth();
+            m_proj[2][1] -= m_vanishingPoint.y / getHeight();
             break;
         case CameraType::isometric:
         case CameraType::flat:

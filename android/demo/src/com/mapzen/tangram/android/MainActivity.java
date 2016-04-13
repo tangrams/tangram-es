@@ -5,31 +5,34 @@ import android.os.Bundle;
 import android.view.Window;
 import android.widget.Toast;
 
-import com.mapzen.tangram.DebugFlags;
 import com.mapzen.tangram.HttpHandler;
 import com.mapzen.tangram.LngLat;
 import com.mapzen.tangram.MapController;
+import com.mapzen.tangram.MapController.FeaturePickListener;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
-import com.mapzen.tangram.Properties;
-import com.mapzen.tangram.Tangram;
-import com.mapzen.tangram.Coordinates;
-
-import com.mapzen.tangram.TouchInput;
+import com.mapzen.tangram.MapView.OnMapReadyCallback;
+import com.mapzen.tangram.TouchInput.DoubleTapResponder;
+import com.mapzen.tangram.TouchInput.LongPressResponder;
+import com.mapzen.tangram.TouchInput.TapResponder;
 import com.squareup.okhttp.Callback;
 
 import java.io.File;
-import java.lang.Math;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements OnMapReadyCallback, TapResponder,
+        DoubleTapResponder, LongPressResponder, FeaturePickListener {
 
-    MapController mapController;
-    MapView mapView;
-    MapData touchMarkers;
+    MapController map;
+    MapView view;
+    LngLat lastTappedPoint;
+    MapData markers;
+    boolean showTileInfo = false;
 
-    boolean tileInfo;
-
-    String tileApiKey = "?api_key=vector-tiles-tyHL4AY";
+    final static String tileApiKey = "?api_key=vector-tiles-tyHL4AY";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -39,92 +42,51 @@ public class MainActivity extends Activity {
 
         setContentView(R.layout.main);
 
-        mapView = (MapView)findViewById(R.id.map);
-        mapController = new MapController(this, mapView);
-        mapController.setMapZoom(16);
-        mapController.setMapPosition(-74.00976419448854, 40.70532700869127);
+        view = (MapView)findViewById(R.id.map);
+        view.onCreate(savedInstanceState);
+        view.getMapAsync(this, "scene.yaml");
+    }
 
-        final MapData touchMarkers = new MapData("touch");
-        Tangram.addDataSource(touchMarkers);
+    @Override
+    public void onResume() {
+        super.onResume();
+        view.onResume();
+    }
 
-        final LngLat lastTappedPoint = new LngLat();
-        final String colors[] = {"blue", "red", "green" };
-        final LngLat zeroCoord = new LngLat();
-        final Coordinates line = new Coordinates();
+    @Override
+    public void onPause() {
+        super.onPause();
+        view.onPause();
+    }
 
-        mapController.setTapResponder(new TouchInput.TapResponder() {
-            @Override
-            public boolean onSingleTapUp(float x, float y) {
-                return false;
-            }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        view.onDestroy();
+    }
 
-            @Override
-            public boolean onSingleTapConfirmed(float x, float y) {
-                LngLat tapPoint = mapController.coordinatesAtScreenPosition(x, y);
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        view.onLowMemory();
+    }
 
-                if (!lastTappedPoint.equals(zeroCoord)) {
-                    Properties props = new Properties();
-                    props.set("type", "line");
-                    props.set("color", colors[(int)(Math.random() * 2.0 + 0.5)] );
+    @Override
+    public void onMapReady(MapController mapController) {
+        map = mapController;
+        map.setMapZoom(16);
+        map.setMapPosition(-74.00976419448854, 40.70532700869127);
+        map.setHttpHandler(getHttpHandler());
+        map.setTapResponder(this);
+        map.setDoubleTapResponder(this);
+        map.setLongPressResponder(this);
+        map.setFeaturePickListener(this);
 
-                    line.clear();
-                    line.add(tapPoint);
-                    line.add(lastTappedPoint);
-                    touchMarkers.addLine(props, line);
+        markers = new MapData("touch");
+        markers.addToMap(map);
+    }
 
-                    props = new Properties();
-                    props.set("type", "point");
-                    touchMarkers.addPoint(props, lastTappedPoint);
-                }
-                lastTappedPoint.set(tapPoint);
-
-                mapController.pickFeature(x, y);
-
-                mapController.setMapPosition(tapPoint.longitude, tapPoint.latitude, 1);
-
-                return true;
-            }
-        });
-
-        mapController.setDoubleTapResponder(new TouchInput.DoubleTapResponder() {
-            @Override
-            public boolean onDoubleTap(float x, float y) {
-                mapController.setMapZoom(mapController.getMapZoom() + 1.f, .5f);
-                LngLat tapped = mapController.coordinatesAtScreenPosition(x, y);
-                LngLat current = mapController.getMapPosition();
-                mapController.setMapPosition(
-                        .5 * (tapped.longitude + current.longitude),
-                        .5 * (tapped.latitude + current.latitude),
-                        .5f
-                );
-                return true;
-            }
-        });
-
-        mapController.setLongPressResponder(new TouchInput.LongPressResponder() {
-            @Override
-            public void onLongPress(float x, float y) {
-                if (touchMarkers != null) {
-                    touchMarkers.clear();
-                }
-                tileInfo = !tileInfo;
-                Tangram.setDebugFlag(DebugFlags.TILE_INFOS, tileInfo);
-            }
-        });
-
-        mapController.setFeatureTouchListener(new MapController.FeatureTouchListener() {
-            @Override
-            public void onTouch(Properties properties, float positionX, float positionY) {
-                String name = properties.getString("name");
-                if (name.length() == 0) {
-                    name = "unnamed...";
-                }
-                Toast.makeText(getApplicationContext(),
-                        "Selected: " + name + " at: " + positionX + ", " + positionY,
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
-
+    HttpHandler getHttpHandler() {
         HttpHandler handler = new HttpHandler() {
             @Override
             public boolean onRequest(String url, Callback cb) {
@@ -139,16 +101,78 @@ public class MainActivity extends Activity {
             }
         };
 
-        try {
-            File httpCache = new File(getExternalCacheDir().getAbsolutePath() + "/tile_cache");
-            handler.setCache(httpCache, 30 * 1024 * 1024);
-        } catch (Exception e) {
-            e.printStackTrace();
+        File cacheDir = getExternalCacheDir();
+        if (cacheDir != null && cacheDir.exists()) {
+            handler.setCache(new File(cacheDir, "tile_cache"), 30 * 1024 * 1024);
         }
 
-        mapController.setHttpHandler(handler);
-
+        return handler;
     }
 
+    @Override
+    public boolean onSingleTapUp(float x, float y) {
+        return false;
+    }
+
+    @Override
+    public boolean onSingleTapConfirmed(float x, float y) {
+        LngLat tappedPoint = map.coordinatesAtScreenPosition(x, y);
+
+        if (lastTappedPoint != null) {
+            Map<String, String> props = new HashMap<>();
+            props.put("type", "line");
+            props.put("color", "#D2655F");
+
+            List<LngLat> line = new ArrayList<>();
+            line.add(lastTappedPoint);
+            line.add(tappedPoint);
+            markers.addPolyline(line, props);
+
+            props = new HashMap<>();
+            props.put("type", "point");
+            markers.addPoint(tappedPoint, props);
+
+            markers.syncWithMap();
+        }
+
+        lastTappedPoint = tappedPoint;
+
+        map.pickFeature(x, y);
+
+        map.setMapPosition(tappedPoint.longitude, tappedPoint.latitude, 1.f);
+
+        return true;
+    }
+
+    @Override
+    public boolean onDoubleTap(float x, float y) {
+        map.setMapZoom(map.getMapZoom() + 1.f, .5f);
+        LngLat tapped = map.coordinatesAtScreenPosition(x, y);
+        LngLat current = map.getMapPosition();
+        map.setMapPosition(
+                .5 * (tapped.longitude + current.longitude),
+                .5 * (tapped.latitude + current.latitude),
+                .5f
+        );
+        return true;
+    }
+
+    @Override
+    public void onLongPress(float x, float y) {
+        markers.clear().syncWithMap();
+        showTileInfo = !showTileInfo;
+        map.setDebugFlag(MapController.DebugFlag.TILE_INFOS, showTileInfo);
+    }
+
+    @Override
+    public void onFeaturePick(Map<String, String> properties, float positionX, float positionY) {
+        String name = properties.get("name");
+        if (name.isEmpty()) {
+            name = "unnamed";
+        }
+        Toast.makeText(getApplicationContext(),
+                "Selected: " + name + " at: " + positionX + ", " + positionY,
+                Toast.LENGTH_SHORT).show();
+    }
 }
 

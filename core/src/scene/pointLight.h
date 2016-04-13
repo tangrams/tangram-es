@@ -1,6 +1,7 @@
 #pragma once
 
 #include "light.h"
+#include "scene/styleParam.h"
 
 namespace Tangram {
 
@@ -11,7 +12,7 @@ public:
     virtual ~PointLight();
 
     /*  Set the position relative to the camera */
-    virtual void setPosition(const glm::vec3& _pos);
+    virtual void setPosition(UnitVec<glm::vec3> position);
 
     /*  Set the constant attenuation */
     virtual void setAttenuation(float _att);
@@ -36,6 +37,8 @@ public:
         UniformLocation outerRadius;
     };
 
+    auto getPosition() const -> UnitVec<glm::vec3> { return m_position; }
+
     std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) override;
 
 protected:
@@ -48,7 +51,7 @@ protected:
 
     static std::string s_classBlock;
 
-    glm::vec4 m_position;
+    UnitVec<glm::vec3> m_position;
 
     float m_attenuation;
     float m_innerRadius;

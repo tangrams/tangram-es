@@ -1,23 +1,23 @@
 package com.mapzen.tangram;
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.util.DisplayMetrics;
 
+import com.mapzen.tangram.TouchInput.Gestures;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
+import java.util.Map;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import okio.BufferedSource;
-
-import com.mapzen.tangram.TouchInput.Gestures;
 
 public class MapController implements Renderer {
 
@@ -34,45 +34,55 @@ public class MapController implements Renderer {
         FLAT,
     }
 
-    public interface FeatureTouchListener {
+    public enum DebugFlag {
+        FREEZE_TILES,
+        PROXY_COLORS,
+        TILE_BOUNDS,
+        TILE_INFOS,
+        LABELS,
+        TANGRAM_INFOS,
+        ALL_LABELS,
+    }
+
+    public interface FeaturePickListener {
         /**
          * Receive information about features found in a call to {@link #pickFeature(float, float)}
          * @param properties A mapping of string keys to string or number values
          * @param positionX The horizontal screen coordinate of the center of the feature
          * @param positionY The vertical screen coordinate of the center of the feature
          */
-        void onTouch(Properties properties, float positionX, float positionY);
-    }
-
-    /**
-     * Construct a MapController using the default scene file
-     * @param mainApp Activity in which the map will function; the asset bundle for this activity must contain all
-     * the local files that the map will need
-     * @param view MapView where the map will be displayed; input events from this view will be handled by the
-     * resulting MapController
-     */
-    public MapController(Activity mainApp, MapView view) {
-
-        this(mainApp, view, "scene.yaml");
+        void onFeaturePick(Map<String, String> properties, float positionX, float positionY);
     }
 
     /**
      * Construct a MapController using a custom scene file
-     * @param mainApp Activity in which the map will function; the asset bundle for this activity must contain all
-     * the local files that the map will need
-     * @param view MapView where the map will be displayed; input events from this view will be handled by the
-     * resulting MapController
+     * @param context Context in which the map will function; the asset bundle for this activity
+     * must contain all the local files that the map will need
      * @param sceneFilePath Location of the YAML scene file within the assets directory
      */
-    public MapController(Activity mainApp, MapView view, String sceneFilePath) {
+    MapController(Context context, String sceneFilePath) {
 
         scenePath = sceneFilePath;
 
         // Get configuration info from application
-        mainApp.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        assetManager = mainApp.getAssets();
+        displayMetrics = context.getResources().getDisplayMetrics();
+        assetManager = context.getAssets();
 
-        touchInput = new TouchInput(mainApp);
+        // Load the fonts
+        fontFileParser = new FontFileParser();
+        fontFileParser.parse("/system/etc/fonts.xml");
+
+        nativeInit(this, assetManager, scenePath);
+
+    }
+
+    /**
+     * Set the view in which the map will be drawn
+     * @param view GLSurfaceView where the map will be displayed; input events from this view will
+     * be handled by the resulting MapController
+     */
+    void setView(GLSurfaceView view) {
+        touchInput = new TouchInput(view.getContext());
         setPanResponder(null);
         setScaleResponder(null);
         setRotateResponder(null);
@@ -89,13 +99,6 @@ public class MapController implements Renderer {
         view.setOnTouchListener(touchInput);
         view.setRenderer(this);
         view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-
-        // Load the fonts
-        fontFileParser = new FontFileParser();
-        fontFileParser.parse("/system/etc/fonts.xml");
-
-        init(this, assetManager, scenePath);
-
     }
 
     /**
@@ -104,7 +107,7 @@ public class MapController implements Renderer {
      */
     public void loadSceneFile(String path) {
         scenePath = path;
-        loadScene(path);
+        nativeLoadScene(path);
         requestRender();
     }
 
@@ -131,7 +134,7 @@ public class MapController implements Renderer {
      * @param lat Degrees latitude of the position to set
      */
     public void setMapPosition(double lng, double lat) {
-        setPosition(lng, lat);
+        nativeSetPosition(lng, lat);
     }
 
     /**
@@ -141,7 +144,7 @@ public class MapController implements Renderer {
      * @param duration Time in seconds to ease to the given position
      */
     public void setMapPosition(double lng, double lat, float duration) {
-        setPositionEased(lng, lat, duration, EaseType.QUINT.ordinal());
+        nativeSetPositionEased(lng, lat, duration, EaseType.QUINT.ordinal());
     }
 
     /**
@@ -152,7 +155,7 @@ public class MapController implements Renderer {
      * @param ease Type of easing to use
      */
     public void setMapPosition(double lng, double lat, float duration, EaseType ease) {
-        setPositionEased(lng, lat, duration, ease.ordinal());
+        nativeSetPositionEased(lng, lat, duration, ease.ordinal());
     }
 
     /**
@@ -170,7 +173,7 @@ public class MapController implements Renderer {
      */
     public LngLat getMapPosition(LngLat out) {
         double[] tmp = { 0, 0 };
-        getPosition(tmp);
+        nativeGetPosition(tmp);
         return out.set(tmp[0], tmp[1]);
     }
 
@@ -179,7 +182,7 @@ public class MapController implements Renderer {
      * @param zoom Fractional zoom level
      */
     public void setMapZoom(float zoom) {
-        setZoom(zoom);
+        nativeSetZoom(zoom);
     }
 
     /**
@@ -188,7 +191,7 @@ public class MapController implements Renderer {
      * @param duration Time in seconds to ease to given zoom
      */
     public void setMapZoom(float zoom, float duration) {
-        setZoomEased(zoom, duration, EaseType.QUINT.ordinal());
+        nativeSetZoomEased(zoom, duration, EaseType.QUINT.ordinal());
     }
 
     /**
@@ -198,7 +201,7 @@ public class MapController implements Renderer {
      * @param ease Type of easing to use
      */
     public void setMapZoom(float zoom, float duration, EaseType ease) {
-        setZoomEased(zoom, duration, ease.ordinal());
+        nativeSetZoomEased(zoom, duration, ease.ordinal());
     }
 
     /**
@@ -206,7 +209,7 @@ public class MapController implements Renderer {
      * @return Fractional zoom level
      */
     public float getMapZoom() {
-        return getZoom();
+        return nativeGetZoom();
     }
 
     /**
@@ -214,7 +217,7 @@ public class MapController implements Renderer {
      * @param radians Rotation in radians
      */
     public void setMapRotation(float radians) {
-        setRotation(radians);
+        nativeSetRotation(radians);
     }
 
     /**
@@ -223,7 +226,7 @@ public class MapController implements Renderer {
      * @param duration Time in seconds to ease to the given rotation
      */
     public void setMapRotation(float radians, float duration) {
-        setRotationEased(radians, duration, EaseType.QUINT.ordinal());
+        nativeSetRotationEased(radians, duration, EaseType.QUINT.ordinal());
     }
 
     /**
@@ -233,7 +236,7 @@ public class MapController implements Renderer {
      * @param ease Type of easing to use
      */
     public void setMapRotation(float radians, float duration, EaseType ease) {
-        setRotationEased(radians, duration, ease.ordinal());
+        nativeSetRotationEased(radians, duration, ease.ordinal());
     }
 
     /**
@@ -241,7 +244,7 @@ public class MapController implements Renderer {
      * @return Rotation in radians
      */
     public float getMapRotation() {
-        return getRotation();
+        return nativeGetRotation();
     }
 
     /**
@@ -249,7 +252,7 @@ public class MapController implements Renderer {
      * @param radians Tilt angle in radians
      */
     public void setMapTilt(float radians) {
-        setTilt(radians);
+        nativeSetTilt(radians);
     }
 
     /**
@@ -258,7 +261,7 @@ public class MapController implements Renderer {
      * @param duration Time in seconds to ease to the given tilt
      */
     public void setMapTilt(float radians, float duration) {
-        setTiltEased(radians, duration, EaseType.QUINT.ordinal());
+        nativeSetTiltEased(radians, duration, EaseType.QUINT.ordinal());
     }
 
     /**
@@ -268,7 +271,7 @@ public class MapController implements Renderer {
      * @param ease Type of easing to use
      */
     public void setMapTilt(float radians, float duration, EaseType ease) {
-        setTiltEased(radians, duration, ease.ordinal());
+        nativeSetTiltEased(radians, duration, ease.ordinal());
     }
 
     /**
@@ -276,7 +279,7 @@ public class MapController implements Renderer {
      * @return Tilt angle in radians
      */
     public float getMapTilt() {
-        return getTilt();
+        return nativeGetTilt();
     }
 
     /**
@@ -284,7 +287,7 @@ public class MapController implements Renderer {
      * @param type A CameraType
      */
     public void setMapCameraType(CameraType type) {
-        setCameraType(type.ordinal());
+        nativeSetCameraType(type.ordinal());
         requestRender();
     }
 
@@ -293,7 +296,7 @@ public class MapController implements Renderer {
      * @return The current CameraType
      */
     public CameraType getMapCameraType() {
-        return CameraType.values()[getCameraType()];
+        return CameraType.values()[nativeGetCameraType()];
     }
 
     /**
@@ -304,7 +307,7 @@ public class MapController implements Renderer {
      */
     public LngLat coordinatesAtScreenPosition(double screenX, double screenY) {
         double[] tmp = { screenX, screenY };
-        screenToWorldCoordinates(tmp);
+        nativeScreenToWorldCoordinates(tmp);
         return new LngLat(tmp[0], tmp[1]);
     }
 
@@ -383,7 +386,7 @@ public class MapController implements Renderer {
             @Override
             public boolean onPan(float startX, float startY, float endX, float endY) {
                 if (responder == null || !responder.onPan(startX, startY, endX, endY)) {
-                    handlePanGesture(startX, startY, endX, endY);
+                    nativeHandlePanGesture(startX, startY, endX, endY);
                 }
                 return true;
             }
@@ -391,7 +394,7 @@ public class MapController implements Renderer {
             @Override
             public boolean onFling(float posX, float posY, float velocityX, float velocityY) {
                 if (responder == null || !responder.onFling(posX, posY, velocityX, velocityY)) {
-                    handleFlingGesture(posX, posY, velocityX, velocityY);
+                    nativeHandleFlingGesture(posX, posY, velocityX, velocityY);
                 }
                 return true;
             }
@@ -407,7 +410,7 @@ public class MapController implements Renderer {
             @Override
             public boolean onRotate(float x, float y, float rotation) {
                 if (responder == null || !responder.onRotate(x, y, rotation)) {
-                    handleRotateGesture(x, y, rotation);
+                    nativeHandleRotateGesture(x, y, rotation);
                 }
                 return true;
             }
@@ -423,7 +426,7 @@ public class MapController implements Renderer {
             @Override
             public boolean onScale(float x, float y, float scale, float velocity) {
                 if (responder == null || !responder.onScale(x, y, scale, velocity)) {
-                    handlePinchGesture(x, y, scale, velocity);
+                    nativeHandlePinchGesture(x, y, scale, velocity);
                 }
                 return true;
             }
@@ -439,7 +442,7 @@ public class MapController implements Renderer {
             @Override
             public boolean onShove(float distance) {
                 if (responder == null || !responder.onShove(distance)) {
-                    handleShoveGesture(distance);
+                    nativeHandleShoveGesture(distance);
                 }
                 return true;
             }
@@ -467,20 +470,24 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Set a listener for Feature touch events
-     * @param listener Listen to call
+     * Set a listener for feature pick events
+     * @param listener Listener to call
      */
-    public void setFeatureTouchListener(FeatureTouchListener listener) {
-        featureTouchListener = listener;
+    public void setFeaturePickListener(FeaturePickListener listener) {
+        featurePickListener = listener;
     }
 
     /**
      * Query the map for labeled features at the given screen coordinates; results will be returned
-     * in a callback to the object set by {@link #setFeatureTouchListener(FeatureTouchListener)}
+     * in a callback to the object set by {@link #setFeaturePickListener(FeaturePickListener)}
      * @param posX The horizontal screen coordinate
      * @param posY The vertical screen coordinate
      */
-    public synchronized native void pickFeature(float posX, float posY);
+    public void pickFeature(float posX, float posY) {
+        if (featurePickListener != null) {
+            nativePickFeature(posX, posY, featurePickListener);
+        }
+    }
 
     /**
      * Enqueue a Runnable to be executed synchronously on the rendering thread
@@ -488,6 +495,15 @@ public class MapController implements Renderer {
      */
     public void queueEvent(Runnable r) {
         mapView.queueEvent(r);
+    }
+
+    /**
+     * Make a debugging feature active or inactive
+     * @param flag The feature to set
+     * @param on True to activate the feature, false to deactivate
+     */
+    public void setDebugFlag(DebugFlag flag, boolean on) {
+        nativeSetDebugFlag(flag.ordinal(), on);
     }
 
     // Native methods
@@ -498,51 +514,61 @@ public class MapController implements Renderer {
         System.loadLibrary("tangram");
     }
 
-    private synchronized native void init(MapController instance, AssetManager assetManager, String stylePath);
-    private synchronized native void loadScene(String path);
-    private synchronized native void setupGL();
-    private synchronized native void resize(int width, int height);
-    private synchronized native void update(float dt);
-    private synchronized native void render();
-    private synchronized native void setPosition(double lon, double lat);
-    private synchronized native void setPositionEased(double lon, double lat, float duration, int ease);
-    private synchronized native void getPosition(double[] lonLatOut);
-    private synchronized native void setZoom(float zoom);
-    private synchronized native void setZoomEased(float zoom, float duration, int ease);
-    private synchronized native float getZoom();
-    private synchronized native void setRotation(float radians);
-    private synchronized native void setRotationEased(float radians, float duration, int ease);
-    private synchronized native float getRotation();
-    private synchronized native void setTilt(float radians);
-    private synchronized native void setTiltEased(float radians, float duration, int ease);
-    private synchronized native float getTilt();
-    private synchronized native void screenToWorldCoordinates(double[] screenCoords);
-    private synchronized native void setPixelScale(float scale);
-    private synchronized native void setCameraType(int cameraType);
-    private synchronized native int getCameraType();
-    private synchronized native void handleTapGesture(float posX, float posY);
-    private synchronized native void handleDoubleTapGesture(float posX, float posY);
-    private synchronized native void handlePanGesture(float startX, float startY, float endX, float endY);
-    private synchronized native void handleFlingGesture(float posX, float posY, float velocityX, float velocityY);
-    private synchronized native void handlePinchGesture(float posX, float posY, float scale, float velocity);
-    private synchronized native void handleRotateGesture(float posX, float posY, float rotation);
-    private synchronized native void handleShoveGesture(float distance);
+    private synchronized native void nativeInit(MapController instance, AssetManager assetManager, String stylePath);
+    private synchronized native void nativeLoadScene(String path);
+    private synchronized native void nativeSetupGL();
+    private synchronized native void nativeResize(int width, int height);
+    private synchronized native void nativeUpdate(float dt);
+    private synchronized native void nativeRender();
+    private synchronized native void nativeSetPosition(double lon, double lat);
+    private synchronized native void nativeSetPositionEased(double lon, double lat, float duration, int ease);
+    private synchronized native void nativeGetPosition(double[] lonLatOut);
+    private synchronized native void nativeSetZoom(float zoom);
+    private synchronized native void nativeSetZoomEased(float zoom, float duration, int ease);
+    private synchronized native float nativeGetZoom();
+    private synchronized native void nativeSetRotation(float radians);
+    private synchronized native void nativeSetRotationEased(float radians, float duration, int ease);
+    private synchronized native float nativeGetRotation();
+    private synchronized native void nativeSetTilt(float radians);
+    private synchronized native void nativeSetTiltEased(float radians, float duration, int ease);
+    private synchronized native float nativeGetTilt();
+    private synchronized native void nativeScreenToWorldCoordinates(double[] screenCoords);
+    private synchronized native void nativeSetPixelScale(float scale);
+    private synchronized native void nativeSetCameraType(int cameraType);
+    private synchronized native int nativeGetCameraType();
+    private synchronized native void nativeHandleTapGesture(float posX, float posY);
+    private synchronized native void nativeHandleDoubleTapGesture(float posX, float posY);
+    private synchronized native void nativeHandlePanGesture(float startX, float startY, float endX, float endY);
+    private synchronized native void nativeHandleFlingGesture(float posX, float posY, float velocityX, float velocityY);
+    private synchronized native void nativeHandlePinchGesture(float posX, float posY, float scale, float velocity);
+    private synchronized native void nativeHandleRotateGesture(float posX, float posY, float rotation);
+    private synchronized native void nativeHandleShoveGesture(float distance);
 
-    private native void onUrlSuccess(byte[] rawDataBytes, long callbackPtr);
-    private native void onUrlFailure(long callbackPtr);
+    public synchronized native void nativePickFeature(float posX, float posY, FeaturePickListener listener);
+
+    private native void nativeOnUrlSuccess(byte[] rawDataBytes, long callbackPtr);
+    private native void nativeOnUrlFailure(long callbackPtr);
+
+    native long nativeAddDataSource(String name);
+    native void nativeRemoveDataSource(long pointer);
+    native void nativeClearDataSource(long pointer);
+    native void nativeAddFeature(long pointer, double[] coordinates, int[] rings, String[] properties);
+    native void nativeAddGeoJson(long pointer, String geojson);
+
+    native void nativeSetDebugFlag(int flag, boolean on);
 
     // Private members
     // ===============
 
     private String scenePath;
     private long time = System.nanoTime();
-    private MapView mapView;
+    private GLSurfaceView mapView;
     private AssetManager assetManager;
     private TouchInput touchInput;
     private FontFileParser fontFileParser;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
-    private FeatureTouchListener featureTouchListener;
+    private FeaturePickListener featurePickListener;
 
     // GLSurfaceView.Renderer methods
     // ==============================
@@ -553,22 +579,22 @@ public class MapController implements Renderer {
         float delta = (newTime - time) / 1000000000.0f;
         time = newTime;
 
-        update(delta);
-        render();
+        nativeUpdate(delta);
+        nativeRender();
     }
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-        setPixelScale(displayMetrics.density);
-        resize(width, height);
+        nativeSetPixelScale(displayMetrics.density);
+        nativeResize(width, height);
     }
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        init(this, assetManager, scenePath);
-        // init() is safe to call twice, this invocation ensures that the jni
+        nativeInit(this, assetManager, scenePath);
+        // nativeInit() is safe to call twice, this invocation ensures that the jni
         // environment is attached to the rendering thread
-        setupGL();
+        nativeSetupGL();
     }
 
     // Networking methods
@@ -588,19 +614,19 @@ public class MapController implements Renderer {
         httpHandler.onRequest(url, new Callback() {
             @Override
             public void onFailure(Request request, IOException e) {
-                onUrlFailure(callbackPtr);
+                nativeOnUrlFailure(callbackPtr);
                 //e.printStackTrace();
             }
 
             @Override
             public void onResponse(Response response) throws IOException {
                 if (!response.isSuccessful()) {
-                    onUrlFailure(callbackPtr);
+                    nativeOnUrlFailure(callbackPtr);
                     throw new IOException("Unexpected response code: " + response);
                 }
                 BufferedSource source = response.body().source();
                 byte[] bytes = source.readByteArray();
-                onUrlSuccess(bytes, callbackPtr);
+                nativeOnUrlSuccess(bytes, callbackPtr);
             }
         });
         return true;
@@ -617,14 +643,6 @@ public class MapController implements Renderer {
     public String getFontFallbackFilePath(int importance, int weightHint) {
 
         return fontFileParser.getFontFallback(importance, weightHint);
-    }
-
-    // Feature selection
-    // =================
-    void featureSelectionCb(Properties properties, float positionX, float positionY) {
-        if (featureTouchListener != null) {
-            featureTouchListener.onTouch(properties, positionX, positionY);
-        }
     }
 
 }

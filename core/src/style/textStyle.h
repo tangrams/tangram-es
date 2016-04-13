@@ -88,6 +88,7 @@ public:
         if (id >= m_meshes.size()) {
             LOGE("Accesing inconsistent quad mesh");
             assert(false);
+            return *m_meshes[0];
         }
         return *m_meshes[id];
     }
@@ -96,14 +97,6 @@ public:
         size_t size = 0;
         for (const auto& mesh : m_meshes) {
             size += mesh->bufferSize();
-        }
-        return size;
-    }
-
-    size_t meshBufferSize() const {
-        size_t size = 0;
-        for (const auto& m : m_meshes) {
-            size += m->bufferSize();
         }
         return size;
     }

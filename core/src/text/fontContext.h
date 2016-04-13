@@ -37,7 +37,7 @@ struct GlyphTexture {
     std::vector<unsigned char> texData;
     Texture texture;
 
-    bool dirty;
+    bool dirty = false;
     size_t refCount = 0;
 };
 
@@ -64,8 +64,6 @@ public:
 
     void releaseAtlas(std::bitset<max_textures> _refs);
 
-    void lockAtlas(std::bitset<max_textures> _refs);
-
     alfons::GlyphAtlas& atlas() { return m_atlas; }
 
     /* Update all textures batches, uploads the data to the GPU */
@@ -75,6 +73,7 @@ public:
                                           const std::string& _weight, float _size);
 
     size_t glyphTextureCount() {
+        std::lock_guard<std::mutex> lock(m_mutex);
         return m_textures.size();
     }
 
@@ -83,7 +82,7 @@ public:
     float maxStrokeWidth() { return m_sdfRadius; }
 
     bool layoutText(TextStyle::Parameters& _params, const std::string& _text,
-                    std::vector<GlyphQuad>& _quads, glm::vec2& _bbox);
+                    std::vector<GlyphQuad>& _quads, std::bitset<max_textures>& _refs, glm::vec2& _bbox);
 
     struct ScratchBuffer : public alfons::MeshCallback {
         void drawGlyph(const alfons::Quad& q, const alfons::AtlasGlyph& altasGlyph) override {}
@@ -94,6 +93,7 @@ public:
 private:
     float m_sdfRadius;
     ScratchBuffer m_scratch;
+    std::vector<unsigned char> m_sdfBuffer;
 
     std::mutex m_mutex;
     std::array<int, max_textures> m_atlasRefCount = {{0}};
@@ -111,7 +111,7 @@ private:
     // It is intialized with a TextureCallback implemented by FontContext for adding glyph
     // textures and a MeshCallback implemented by TextStyleBuilder for adding glyph quads.
     alfons::TextBatch m_batch;
-
+    TextWrapper m_textWrapper;
 };
 
 }

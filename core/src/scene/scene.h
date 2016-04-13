@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include "glm/vec2.hpp"
+#include "yaml-cpp/yaml.h"
 
 namespace Tangram {
 
@@ -32,6 +33,7 @@ public:
     Scene();
     ~Scene();
 
+
     auto& view() { return m_view; }
     auto& dataSources() { return m_dataSources; };
     auto& layers() { return m_layers; };
@@ -43,6 +45,7 @@ public:
     auto& stops() { return m_stops; }
     auto& background() { return m_background; }
     auto& fontContext() { return m_fontContext; }
+    auto& globals() { return m_globals; }
 
     const auto& dataSources() const { return m_dataSources; };
     const auto& layers() const { return m_layers; };
@@ -51,6 +54,7 @@ public:
     const auto& functions() const { return m_jsFunctions; };
     const auto& mapProjection() const { return m_mapProjection; };
     const auto& fontContext() const { return m_fontContext; }
+    const auto& globals() const { return m_globals; }
 
     const Style* findStyle(const std::string& _name) const;
     const Light* findLight(const std::string& _name) const;
@@ -65,6 +69,13 @@ public:
     glm::dvec2 startPosition = { 0, 0 };
     float startZoom = 0;
 
+    enum animate {
+        yes, no, none
+    };
+
+    void animated(bool animated) { m_animated = animated ? yes : no; }
+    animate animated() const { return m_animated; }
+
 private:
 
     std::unique_ptr<MapProjection> m_mapProjection;
@@ -76,6 +87,7 @@ private:
     std::vector<std::unique_ptr<Light>> m_lights;
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
+    std::unordered_map<std::string, YAML::Node> m_globals;
 
     // Container of all strings used in styling rules; these need to be
     // copied and compared frequently when applying styling, so rules use
@@ -88,6 +100,8 @@ private:
     Color m_background;
 
     std::shared_ptr<FontContext> m_fontContext;
+
+    animate m_animated = none;
 };
 
 }

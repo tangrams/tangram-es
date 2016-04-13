@@ -111,6 +111,7 @@ public:
         } fill, stroke;
 
         bool keepTileEdges = false;
+        bool closedPolygon = false;
         bool outlineOn = false;
         bool lineOn = true;
     };
@@ -339,6 +340,8 @@ void PolylineStyleBuilder<V>::addFeature(const Feature& _feat, const DrawRule& _
             addMesh(line, params);
         }
     } else {
+        params.closedPolygon = true;
+
         for (auto& polygon : _feat.polygons) {
             for (const auto& line : polygon) {
                 addMesh(line, params);
@@ -377,6 +380,7 @@ void PolylineStyleBuilder<V>::addMesh(const Line& _line, const Parameters& _para
     m_builder.join = _params.fill.join;
     m_builder.miterLimit = _params.fill.miterLimit;
     m_builder.keepTileEdges = _params.keepTileEdges;
+    m_builder.closedPolygon = _params.closedPolygon;
 
     if (_params.lineOn) { buildLine(_line, _params.fill, m_meshData[0]); }
 

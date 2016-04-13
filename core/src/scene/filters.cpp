@@ -40,14 +40,14 @@ void Filter::print(int _indent) const {
     case Data::type<EqualitySet>::value: {
         auto& f = data.get<EqualitySet>();
         if (f.values[0].is<std::string>()) {
-            logMsg("%*s equality set - global:%d key:%s val:%s\n", _indent, "",
-                   f.global != FilterGlobal::undefined,
+            logMsg("%*s equality set - keyword:%d key:%s val:%s\n", _indent, "",
+                   f.keyword != FilterKeyword::undefined,
                    f.key.c_str(),
                    f.values[0].get<std::string>().c_str());
         }
         if (f.values[0].is<double>()) {
-            logMsg("%*s equality - global:%d key:%s val:%f\n", _indent, "",
-                   f.global != FilterGlobal::undefined,
+            logMsg("%*s equality - keyword:%d key:%s val:%f\n", _indent, "",
+                   f.keyword != FilterKeyword::undefined,
                    f.key.c_str(),
                    f.values[0].get<double>());
         }
@@ -56,14 +56,14 @@ void Filter::print(int _indent) const {
     case Data::type<Equality>::value: {
         auto& f = data.get<Equality>();
         if (f.value.is<std::string>()) {
-            logMsg("%*s equality - global:%d key:%s val:%s\n", _indent, "",
-                   f.global != FilterGlobal::undefined,
+            logMsg("%*s equality - keyword:%d key:%s val:%s\n", _indent, "",
+                   f.keyword != FilterKeyword::undefined,
                    f.key.c_str(),
                    f.value.get<std::string>().c_str());
         }
         if (f.value.is<double>()) {
-            logMsg("%*s equality - global:%d key:%s val:%f\n", _indent, "",
-                   f.global != FilterGlobal::undefined,
+            logMsg("%*s equality - keyword:%d key:%s val:%f\n", _indent, "",
+                   f.keyword != FilterKeyword::undefined,
                    f.key.c_str(),
                    f.value.get<double>());
         }
@@ -71,8 +71,8 @@ void Filter::print(int _indent) const {
     }
     case Data::type<Range>::value: {
         auto& f = data.get<Range>();
-        logMsg("%*s range - global:%d key:%s min:%f max:%f\n", _indent, "",
-               f.global != FilterGlobal::undefined,
+        logMsg("%*s range - keyword:%d key:%s min:%f max:%f\n", _indent, "",
+               f.keyword != FilterKeyword::undefined,
                f.key.c_str(), f.min, f.max);
         return;
     }
@@ -110,13 +110,13 @@ int Filter::filterCost() const {
         return 20;
 
     case Data::type<EqualitySet>::value:
-        return data.get<EqualitySet>().global == FilterGlobal::undefined ? 10 : 1;
+        return data.get<EqualitySet>().keyword == FilterKeyword::undefined ? 10 : 1;
 
     case Data::type<Equality>::value:
-        return data.get<Equality>().global == FilterGlobal::undefined ? 10 : 1;
+        return data.get<Equality>().keyword == FilterKeyword::undefined ? 10 : 1;
 
     case Data::type<Filter::Range>::value:
-        return data.get<Range>().global == FilterGlobal::undefined ? 10 : 1;
+        return data.get<Range>().keyword == FilterKeyword::undefined ? 10 : 1;
 
     case Data::type<Function>::value:
         // Most expensive filter should be checked last
@@ -350,23 +350,23 @@ struct matcher {
         return f.exists == props.contains(f.key);
     }
     bool operator() (const Filter::EqualitySet& f) const {
-        auto& value = (f.global == FilterGlobal::undefined)
+        auto& value = (f.keyword == FilterKeyword::undefined)
             ? props.get(f.key)
-            : ctx.getGlobal(f.global);
+            : ctx.getKeyword(f.keyword);
 
         return Value::visit(value, match_equal_set{f.values});
     }
     bool operator() (const Filter::Equality& f) const {
-        auto& value = (f.global == FilterGlobal::undefined)
+        auto& value = (f.keyword == FilterKeyword::undefined)
             ? props.get(f.key)
-            : ctx.getGlobal(f.global);
+            : ctx.getKeyword(f.keyword);
 
         return Value::visit(value, match_equal{f.value});
     }
     bool operator() (const Filter::Range& f) const {
-        auto& value = (f.global == FilterGlobal::undefined)
+        auto& value = (f.keyword == FilterKeyword::undefined)
             ? props.get(f.key)
-            : ctx.getGlobal(f.global);
+            : ctx.getKeyword(f.keyword);
 
         return Value::visit(value, match_range{f});
     }

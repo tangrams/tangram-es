@@ -42,10 +42,15 @@ ClientGeoJsonSource::~ClientGeoJsonSource() {}
 
 void ClientGeoJsonSource::addData(const std::string& _data) {
 
-    m_features = geojsonvt::GeoJSONVT::convertFeatures(_data);
+    auto features = geojsonvt::GeoJSONVT::convertFeatures(_data);
+
+    for (auto& f : features) {
+        m_features.push_back(std::move(f));
+    }
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
     m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
+    m_generation++;
 
 }
 

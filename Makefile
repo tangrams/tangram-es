@@ -35,6 +35,8 @@ RPI_BUILD_DIR = build/rpi
 LINUX_BUILD_DIR = build/linux
 TESTS_BUILD_DIR = build/tests
 BENCH_BUILD_DIR = build/bench
+TIZEN_ARM_BUILD_DIR = build/tizen-arm
+TIZEN_X86_BUILD_DIR = build/tizen-x86
 
 TOOLCHAIN_DIR = toolchains
 OSX_TARGET = tangram
@@ -147,6 +149,25 @@ LINUX_CMAKE_PARAMS = \
         ${BUILD_TYPE} \
         ${CMAKE_OPTIONS} \
 	-DPLATFORM_TARGET=linux \
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
+
+TIZEN_ARM_CMAKE_PARAMS = \
+        ${BUILD_TYPE} \
+        ${CMAKE_OPTIONS} \
+	-DTIZEN_SDK=$$TIZEN_SDK \
+        -DTIZEN_SYSROOT=$$TIZEN_SDK/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-device.core \
+	-DTIZEN_DEVICE=1 \
+	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/tizen.toolchain.cmake \
+	-DPLATFORM_TARGET=tizen \
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
+
+TIZEN_X86_CMAKE_PARAMS = \
+	${BUILD_TYPE} \
+	${CMAKE_OPTIONS} \
+	-DTIZEN_SDK=$$TIZEN_SDK \
+	-DTIZEN_SYSROOT=$$TIZEN_SDK/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-emulator.core \
+	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/tizen.toolchain.cmake \
+	-DPLATFORM_TARGET=tizen \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
 
 clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux
@@ -265,6 +286,24 @@ cmake-linux:
 	mkdir -p ${LINUX_BUILD_DIR}
 	cd ${LINUX_BUILD_DIR} &&\
 	cmake ../.. ${LINUX_CMAKE_PARAMS}
+
+tizen-arm: cmake-tizen-arm
+	cd ${TIZEN_ARM_BUILD_DIR} && \
+	${MAKE}
+
+cmake-tizen-arm:
+	mkdir -p ${TIZEN_ARM_BUILD_DIR}
+	cd ${TIZEN_ARM_BUILD_DIR} &&\
+	cmake ../.. ${TIZEN_ARM_CMAKE_PARAMS}
+
+tizen-x86: cmake-tizen-x86
+	cd ${TIZEN_X86_BUILD_DIR} && \
+	${MAKE}
+
+cmake-tizen-x86:
+	mkdir -p ${TIZEN_X86_BUILD_DIR}
+	cd ${TIZEN_X86_BUILD_DIR} && \
+	cmake ../.. ${TIZEN_X86_CMAKE_PARAMS}
 
 tests: unit-tests
 

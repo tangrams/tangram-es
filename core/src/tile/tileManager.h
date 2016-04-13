@@ -58,6 +58,8 @@ public:
 
     void addDataSource(std::shared_ptr<DataSource> _dataSource);
 
+    bool removeDataSource(DataSource& dataSource);
+
     std::unique_ptr<TileCache>& getTileCache() { return m_tileCache; }
 
     const auto& getTileSets() { return m_tileSets; }
@@ -131,7 +133,7 @@ private:
             return false;
         }
 
-        bool m_visible;
+        bool m_visible = false;
 
         /* Method to check whther this tile is in the current set of visible tiles
          * determined by view::updateTiles().

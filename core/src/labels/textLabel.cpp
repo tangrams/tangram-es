@@ -88,6 +88,8 @@ void TextLabel::pushTransform() {
     if (!visibleState()) { return; }
 
     TextVertex::State state {
+        m_fontAttrib.fill,
+        m_fontAttrib.stroke,
         glm::i16vec2(m_transform.state.screenPos * TextVertex::position_scale),
         uint8_t(m_transform.state.alpha * TextVertex::alpha_scale),
         uint8_t(m_fontAttrib.fontScale),
@@ -106,8 +108,6 @@ void TextLabel::pushTransform() {
             TextVertex& v = quadVertices[i];
             v.pos = quad.quad[i].pos;
             v.uv = quad.quad[i].uv;
-            v.color = m_fontAttrib.fill;
-            v.stroke = m_fontAttrib.stroke;
             v.state = state;
         }
     }
@@ -117,14 +117,10 @@ TextLabels::~TextLabels() {
     style.context()->releaseAtlas(m_atlasRefs);
 }
 
-void TextLabels::setQuads(std::vector<GlyphQuad>& _quads) {
+void TextLabels::setQuads(std::vector<GlyphQuad>& _quads, std::bitset<FontContext::max_textures> _atlasRefs) {
     quads.insert(quads.end(), _quads.begin(), _quads.end());
+    m_atlasRefs = _atlasRefs;
 
-    for (auto& q : quads) {
-        m_atlasRefs.set(q.atlas);
-    }
-
-    style.context()->lockAtlas(m_atlasRefs);
 }
 
 }

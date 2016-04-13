@@ -128,25 +128,28 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     }
     case StyleParamKey::text_wrap: {
         int textWrap;
-        if (_value == "true") return textWrap;
-        if (_value == "false") return std::numeric_limits<uint32_t>::max();
         if (parseInt(_value, textWrap) > 0) {
              return static_cast<uint32_t>(textWrap);
         }
+        if (_value == "true") {
+            return 15; // DEFAULT
+        } else {
+            return std::numeric_limits<uint32_t>::max();
+        }
     }
     case StyleParamKey::offset: {
-        auto vec2 = glm::vec2(0.f, 0.f);
-        if (!parseVec2(_value, { Unit::pixel }, vec2) || std::isnan(vec2.y)) {
+        UnitVec<glm::vec2> vec;
+        if (!parseVec2(_value, { Unit::pixel }, vec) || std::isnan(vec.value.y)) {
             LOGW("Invalid offset parameter '%s'.", _value.c_str());
         }
-        return vec2;
+        return vec.value;
     }
     case StyleParamKey::size: {
-        auto vec2 = glm::vec2(0.f, 0.f);
-        if (!parseVec2(_value, { Unit::pixel }, vec2)) {
+        UnitVec<glm::vec2> vec;
+        if (!parseVec2(_value, { Unit::pixel }, vec)) {
             LOGW("Invalid size parameter '%s'.", _value.c_str());
         }
-        return vec2;
+        return vec.value;
     }
     case StyleParamKey::transition_hide_time:
     case StyleParamKey::transition_show_time:
@@ -400,7 +403,7 @@ bool StyleParam::parseTime(const std::string &_value, float &_time) {
     return true;
 }
 
-bool StyleParam::parseVec2(const std::string& _value, const std::vector<Unit> units, glm::vec2& _vec) {
+bool StyleParam::parseVec2(const std::string& _value, const std::vector<Unit> units, UnitVec<glm::vec2>& _vec) {
     ValueUnitPair v1, v2;
 
     // initialize with defaults
@@ -414,18 +417,62 @@ bool StyleParam::parseVec2(const std::string& _value, const std::vector<Unit> un
     if (std::find(units.begin(), units.end(), v1.unit) == units.end()) {
         return false;
     }
+    _vec.units[0] = v1.unit;
 
     pos = parseValueUnitPair(_value, pos, v2);
     if (pos < 0) {
-        _vec = { v1.value, NAN };
+        _vec.value = { v1.value, NAN };
         return true;
+    }
+
+    if (std::find(units.begin(), units.end(), v2.unit) == units.end()) {
+        return false;
+    }
+    _vec.units[1] = v2.unit;
+    _vec.value = { v1.value, v2.value };
+    
+    return true;
+}
+
+bool StyleParam::parseVec3(const std::string& _value, const std::vector<Unit> units, UnitVec<glm::vec3> & _vec) {
+    ValueUnitPair v1, v2, v3;
+
+    // initialize with defaults
+    v1.unit = v2.unit = v3.unit = units[0];
+
+    int pos = parseValueUnitPair(_value, 0, v1);
+    if (pos < 0) {
+        return false;
     }
 
     if (std::find(units.begin(), units.end(), v1.unit) == units.end()) {
         return false;
     }
+    _vec.units[0] = v1.unit;
 
-    _vec = { v1.value, v2.value };
+    pos = parseValueUnitPair(_value, pos, v2);
+    if (pos < 0) {
+        _vec.value = { v1.value, NAN, NAN };
+        return true;
+    }
+
+    if (std::find(units.begin(), units.end(), v2.unit) == units.end()) {
+        return false;
+    }
+    _vec.units[1] = v2.unit;
+
+    pos = parseValueUnitPair(_value, pos, v3);
+    if (pos < 0) {
+        _vec.value = { v1.value, v2.value, NAN };
+        return true;
+    }
+    
+    if (std::find(units.begin(), units.end(), v3.unit) == units.end()) {
+        return false;
+    }
+    _vec.units[2] = v3.unit;
+    _vec.value = { v1.value, v2.value,  v3.value };
+
     return true;
 }
 

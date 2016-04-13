@@ -1,6 +1,5 @@
 #pragma once
 
-#include "debug.h"
 #include "data/properties.h"
 #include "util/ease.h"
 #include <memory>
@@ -89,7 +88,9 @@ uint8_t getCameraType();
 // according to the scene file using the provided data source name;
 void addDataSource(std::shared_ptr<DataSource> _source);
 
-int removeDataSource(DataSource& _source);
+// Remove a data source from the map; returns true if the source was found
+// and removed, otherwise returns false.
+bool removeDataSource(DataSource& _source);
 
 void clearDataSource(DataSource& _source, bool _data, bool _tiles);
 
@@ -114,6 +115,16 @@ void handleRotateGesture(float _posX, float _posY, float _rotation);
 
 // Respond to a two-finger shove with the given distance in screen coordinates
 void handleShoveGesture(float _distance);
+
+enum DebugFlags {
+    freeze_tiles = 0,   // While on, the set of tiles currently being drawn will not update to match the view
+    proxy_colors,       // Applies a color change to every other zoom level of tiles to visualize proxy tile behavior
+    tile_bounds,        // Draws tile boundaries
+    tile_infos,         // Debug tile infos
+    labels,             // Debug label bounding boxes
+    tangram_infos,      // Various text tangram debug info printed on the screen
+    all_labels          // Draw all labels
+};
 
 // Set debug features on or off using a boolean (see debug.h)
 void setDebugFlag(DebugFlags _flag, bool _on);

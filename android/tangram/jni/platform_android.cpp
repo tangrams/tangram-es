@@ -1,6 +1,8 @@
 #ifdef PLATFORM_ANDROID
 
 #include "platform_android.h"
+#include "data/properties.h"
+#include "data/propertyItem.h"
 #include "tangram.h"
 
 #include <GLES2/gl2platform.h>
@@ -31,21 +33,23 @@
  * http://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/invocation.html
  */
 
-static JavaVM* jvm;
+static JavaVM* jvm = nullptr;
 // JNI Env bound on androids render thread (our native main thread)
-static JNIEnv* jniRenderThreadEnv;
-static jobject tangramInstance;
-static jmethodID requestRenderMethodID;
-static jmethodID setRenderModeMethodID;
-static jmethodID startUrlRequestMID;
-static jmethodID cancelUrlRequestMID;
-static jmethodID getFontFilePath;
-static jmethodID getFontFallbackFilePath;
-static jmethodID featureSelectionCbMID;
+static JNIEnv* jniRenderThreadEnv = nullptr;
+static jobject tangramInstance = nullptr;
+static jmethodID requestRenderMethodID = 0;
+static jmethodID setRenderModeMethodID = 0;
+static jmethodID startUrlRequestMID = 0;
+static jmethodID cancelUrlRequestMID = 0;
+static jmethodID getFontFilePath = 0;
+static jmethodID getFontFallbackFilePath = 0;
+static jmethodID onFeaturePickMID = 0;
 
-static jmethodID propertiesConstructorMID;
+static jclass hashmapClass = nullptr;
+static jmethodID hashmapInitMID = 0;
+static jmethodID hashmapPutMID = 0;
 
-static AAssetManager* assetManager;
+static AAssetManager* assetManager = nullptr;
 
 static bool s_isContinuousRendering = false;
 static bool s_useInternalResources = true;
@@ -55,24 +59,31 @@ PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT = 0;
 PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT = 0;
 PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT = 0;
 
-void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager) {
-    _jniEnv->GetJavaVM(&jvm);
-    JNIEnv* jniEnv = _jniEnv;
-    jniRenderThreadEnv = _jniEnv;
+void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager) {
+    jniEnv->GetJavaVM(&jvm);
+    jniRenderThreadEnv = jniEnv;
 
+    if (tangramInstance) {
+        jniEnv->DeleteGlobalRef(tangramInstance);
+    }
     tangramInstance = jniEnv->NewGlobalRef(_tangramInstance);
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/MapController");
     startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)Z");
     cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(Ljava/lang/String;)V");
     getFontFilePath = jniEnv->GetMethodID(tangramClass, "getFontFilePath", "(Ljava/lang/String;)Ljava/lang/String;");
     getFontFallbackFilePath = jniEnv->GetMethodID(tangramClass, "getFontFallbackFilePath", "(II)Ljava/lang/String;");
-    requestRenderMethodID = _jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
-    setRenderModeMethodID = _jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
-    featureSelectionCbMID = _jniEnv->GetMethodID(tangramClass, "featureSelectionCb", "(Lcom/mapzen/tangram/Properties;FF)V");
+    requestRenderMethodID = jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
+    setRenderModeMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
 
-    jclass propertiesClass = jniEnv->FindClass("com/mapzen/tangram/Properties");
+    jclass featurePickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$FeaturePickListener");
+    onFeaturePickMID = jniEnv->GetMethodID(featurePickListenerClass, "onFeaturePick", "(Ljava/util/Map;FF)V");
 
-    propertiesConstructorMID = jniEnv->GetMethodID(propertiesClass, "<init>", "(JZ)V");
+    if (hashmapClass) {
+        jniEnv->DeleteGlobalRef(hashmapClass);
+    }
+    hashmapClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("java/util/HashMap"));
+    hashmapInitMID = jniEnv->GetMethodID(hashmapClass, "<init>", "()V");
+    hashmapPutMID = jniEnv->GetMethodID(hashmapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
     assetManager = AAssetManager_fromJava(jniEnv, _assetManager);
 
@@ -108,6 +119,10 @@ public:
     JNIEnv* operator->() const {
         return jniEnv;
     }
+
+    operator JNIEnv*() const {
+        return jniEnv;
+    }
 };
 
 void requestRender() {
@@ -123,11 +138,7 @@ std::string systemFontFallbackPath(int _importance, int _weightHint) {
 
     jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFallbackFilePath, _importance, _weightHint);
 
-    size_t length = jniEnv->GetStringUTFLength(returnStr);
-    std::string fontFallbackPath(length, 0);
-    jniEnv->GetStringUTFRegion(returnStr, 0, length, &fontFallbackPath[0]);
-
-    return fontFallbackPath;
+    return stringFromJString(jniEnv, returnStr);
 }
 
 std::string systemFontPath(const std::string& _family, const std::string& _weight, const std::string& _style) {
@@ -139,11 +150,7 @@ std::string systemFontPath(const std::string& _family, const std::string& _weigh
     jstring jkey = jniEnv->NewStringUTF(key.c_str());
     jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFilePath, jkey);
 
-    size_t length = jniEnv->GetStringUTFLength(returnStr);
-    std::string fontPath(length, 0);
-    jniEnv->GetStringUTFRegion(returnStr, 0, length, &fontPath[0]);
-
-    return fontPath;
+    return stringFromJString(jniEnv, returnStr);
 }
 
 void setContinuousRendering(bool _isContinuous) {
@@ -309,15 +316,21 @@ void setCurrentThreadPriority(int priority) {
     setpriority(PRIO_PROCESS, tid, priority);
 }
 
-void featureSelectionCallback(JNIEnv* jniEnv, const std::vector<Tangram::TouchItem>& items) {
+void featurePickCallback(JNIEnv* jniEnv, jobject listener, const std::vector<Tangram::TouchItem>& items) {
 
-    jlong jresult = 0;
-    jclass propertiesClass = jniEnv->FindClass("com/mapzen/tangram/Properties");
+    auto result = items[0];
+    auto properties = result.properties;
+    auto position = result.position;
 
-    jresult = reinterpret_cast<jlong>(new std::shared_ptr<Tangram::Properties >(items[0].properties));
-    jobject object = jniEnv->NewObject(propertiesClass, propertiesConstructorMID, jresult, true);
+    jobject hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
 
-    jniEnv->CallVoidMethod(tangramInstance, featureSelectionCbMID, object, items[0].position[0], items[0].position[1]);
+    for (const auto& item : properties->items()) {
+        jstring jkey = jniEnv->NewStringUTF(item.key.c_str());
+        jstring jvalue = jniEnv->NewStringUTF(properties->asString(item.value).c_str());
+        jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
+    }
+
+    jniEnv->CallVoidMethod(listener, onFeaturePickMID, hashmap, position[0], position[1]);
 }
 
 void initGLExtensions() {
@@ -328,5 +341,11 @@ void initGLExtensions() {
     glGenVertexArraysOESEXT = (PFNGLGENVERTEXARRAYSOESPROC) dlsym(libhandle, "glGenVertexArraysOES");
 }
 
+std::string stringFromJString(JNIEnv* jniEnv, jstring string) {
+    size_t length = jniEnv->GetStringLength(string);
+    std::string out(length, 0);
+    jniEnv->GetStringUTFRegion(string, 0, length, &out[0]);
+    return out;
+}
 
 #endif

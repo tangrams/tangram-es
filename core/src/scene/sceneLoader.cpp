@@ -21,11 +21,11 @@
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
 #include "scene/styleMixer.h"
+#include "scene/styleParam.h"
 #include "util/yamlHelper.h"
 #include "view/view.h"
 
 #include "csscolorparser.hpp"
-#include "yaml-cpp/yaml.h"
 
 #include <algorithm>
 #include <iterator>
@@ -39,9 +39,9 @@ using YAML::BadConversion;
 
 namespace Tangram {
 
+const std::string DELIMITER = ":";
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
-
 
 bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
 
@@ -64,6 +64,54 @@ void printFilters(const SceneLayer& layer, int indent){
     }
 };
 
+void SceneLoader::applyGlobalProperties(Node& node, Scene& scene) {
+    switch(node.Type()) {
+    case NodeType::Scalar:
+        {
+            std::string key = node.Scalar();
+            if (key.compare(0, 7, "global.") == 0) {
+                key.replace(0, 7, "");
+                std::replace(key.begin(), key.end(), '.', DELIMITER[0]);
+                node = scene.globals()[key];
+            }
+        }
+        break;
+    case NodeType::Sequence:
+        for (auto n : node) {
+            applyGlobalProperties(n, scene);
+        }
+        break;
+    case NodeType::Map:
+        for (auto n : node) {
+            applyGlobalProperties(n.second, scene);
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+void SceneLoader::parseGlobals(const Node& node, Scene& scene, const std::string& key) {
+    switch (node.Type()) {
+    case NodeType::Scalar:
+    case NodeType::Sequence:
+        scene.globals()[key] = node;
+        break;
+    case NodeType::Map:
+        if (key.size() > 0) {
+            scene.globals()[key] = node;
+        }
+        for (const auto& g : node) {
+            std::string value = g.first.Scalar();
+            Node global = node[value];
+            std::string mapKey = (key.size() == 0) ? value : (key + DELIMITER + value);
+            parseGlobals(global, scene, mapKey);
+        }
+    default:
+        break;
+    }
+}
+
 bool SceneLoader::loadScene(Node& config, Scene& _scene) {
 
     // Instantiate built-in styles
@@ -73,6 +121,12 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
     _scene.styles().emplace_back(new TextStyle("text", true));
     _scene.styles().emplace_back(new DebugStyle("debug"));
     _scene.styles().emplace_back(new PointStyle("points"));
+
+    if (Node globals = config["global"]) {
+        parseGlobals(globals, _scene);
+        applyGlobalProperties(config, _scene);
+    }
+
 
     if (Node sources = config["sources"]) {
         for (const auto& source : sources) {
@@ -155,6 +209,11 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
     }
 
     loadBackground(config["scene"]["background"], _scene);
+
+    Node animated = config["scene"]["animated"];
+    if (animated) {
+        _scene.animated(animated.as<bool>());
+    }
 
     for (auto& style : _scene.styles()) {
         style->build(_scene.lights());
@@ -573,13 +632,39 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) 
 void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
 
     const Node source = src.second;
-    const std::string& name = src.first.Scalar();
-    const std::string& type = source["type"].Scalar();
-    const std::string& url = source["url"].Scalar();
+    std::string name = src.first.Scalar();
+    std::string type = source["type"].Scalar();
+    std::string url = source["url"].Scalar();
     int32_t maxZoom = 18;
 
     if (auto maxZoomNode = source["max_zoom"]) {
         maxZoom = maxZoomNode.as<int32_t>(maxZoom);
+    }
+
+    // Parse and append any URL parameters.
+    if (auto urlParamsNode = source["url_params"]) {
+        std::stringstream urlStream;
+        // Transform our current URL from "base[?query][#hash]" into "base?params[query][#hash]".
+        auto hashStart = std::min(url.find_first_of("#"), url.size());
+        auto queryStart = std::min(url.find_first_of("?"), url.size());
+        auto baseEnd = std::min(hashStart, queryStart + 1);
+        urlStream << url.substr(0, baseEnd);
+        if (queryStart == url.size()) {
+            urlStream << "?";
+        }
+        if (urlParamsNode.IsMap()) {
+            for (const auto& entry : urlParamsNode) {
+                if (entry.first.IsScalar() && entry.second.IsScalar()) {
+                    urlStream << entry.first.Scalar() << "=" << entry.second.Scalar() << "&";
+                } else {
+                    LOGW("Invalid url_params entry in source '%s', entries should be strings.", name.c_str());
+                }
+            }
+        } else {
+            LOGW("Expected a map of values for url_params in source '%s'.", name.c_str());
+        }
+        urlStream << url.substr(baseEnd);
+        url = urlStream.str();
     }
 
     // distinguish tiled and non-tiled sources by url
@@ -609,6 +694,23 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
     }
 }
 
+void SceneLoader::parseLightPosition(Node position, PointLight& light) {
+    if (position.IsSequence()) {
+        UnitVec<glm::vec3> lightPos;
+        std::string positionSequence;
+
+        // Evaluate sequence separated by ',' to parse with parseVec3
+        for (auto n : position) {
+            positionSequence += n.Scalar() + ",";
+        }
+
+        StyleParam::parseVec3(positionSequence, {Unit::meter, Unit::pixel}, lightPos);
+        light.setPosition(lightPos);
+    } else {
+        LOGNode("Wrong light position parameter %s", position);
+    }
+}
+
 void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
 
     const Node light = node.second;
@@ -632,7 +734,7 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
         auto pLight(std::make_unique<PointLight>(name));
 
         if (Node position = light["position"]) {
-            pLight->setPosition(parseVec<glm::vec3>(position));
+            parseLightPosition(position, *pLight);
         }
         if (Node radius = light["radius"]) {
             if (radius.size() > 1) {
@@ -650,7 +752,7 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
         auto sLight(std::make_unique<SpotLight>(name));
 
         if (Node position = light["position"]) {
-            sLight->setPosition(parseVec<glm::vec3>(position));
+            parseLightPosition(position, *sLight);
         }
         if (Node direction = light["direction"]) {
             sLight->setDirection(parseVec<glm::vec3>(direction));
@@ -690,6 +792,21 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
         sceneLight->setSpecularColor(getColorAsVec4(specular));
     }
 
+    // Verify that light position parameters are consistent with the origin type
+    if (sceneLight->getType() == LightType::point || sceneLight->getType() == LightType::spot) {
+        auto pLight = static_cast<PointLight&>(*sceneLight);
+        auto lightPosition = pLight.getPosition();
+        LightOrigin origin = pLight.getOrigin();
+
+        if (origin == LightOrigin::world) {
+            if (lightPosition.units[0] == Unit::pixel || lightPosition.units[1] == Unit::pixel) {
+                LOGW("Light position with attachment %s may not be used with unit of type %s",
+                    lightOriginString(origin).c_str(), unitString(Unit::pixel).c_str());
+                LOGW("Long/Lat expected in meters");
+            }
+        }
+    }
+
     scene.lights().push_back(std::move(sceneLight));
 }
 
@@ -717,16 +834,34 @@ void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
 
             view->setCameraType(CameraType::perspective);
 
-            if (Node fov = camera["fov"]) {
-                // TODO
-            }
-
+            // Only one of focal length and FOV is applied;
+            // according to docs, focal length takes precedence.
             if (Node focal = camera["focal_length"]) {
-                // TODO
+                if (focal.IsScalar()) {
+                    float length = focal.as<float>(view->getFocalLength());
+                    view->setFocalLength(length);
+                } else if (focal.IsSequence()) {
+                    auto stops = std::make_shared<Stops>(Stops::Numbers(focal));
+                    view->setFocalLengthStops(stops);
+                }
+            } else if (Node fov = camera["fov"]) {
+                if (fov.IsScalar()) {
+                    float degrees = fov.as<float>(view->getFieldOfView() * RAD_TO_DEG);
+                    view->setFieldOfView(degrees * DEG_TO_RAD);
+                } else if (fov.IsSequence()) {
+                    auto stops = std::make_shared<Stops>(Stops::Numbers(fov));
+                    for (auto& f : stops->frames) { f.value = f.value.get<float>() * DEG_TO_RAD; }
+                    view->setFieldOfViewStops(stops);
+                }
             }
 
             if (Node vanishing = camera["vanishing_point"]) {
-                // TODO
+                if (vanishing.IsSequence() && vanishing.size() >= 2) {
+                    // Values are pixels, unit strings are ignored.
+                    float x = std::stof(vanishing[0].Scalar());
+                    float y = std::stof(vanishing[1].Scalar());
+                    view->setVanishingPoint(x, y);
+                }
             }
         } else if (type == "isometric") {
 
@@ -917,7 +1052,7 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
     for (const auto& prop : params) {
         std::string key;
         if (!prefix.empty()) {
-            key = prefix + ":" + prop.first.Scalar();
+            key = prefix + DELIMITER + prop.first.Scalar();
         } else {
             key = prop.first.as<std::string>();
         }
@@ -1077,10 +1212,10 @@ void SceneLoader::parseTransition(Node params, Scene& scene, std::vector<StylePa
             std::string prefixedKey;
             switch (prop.first.Type()) {
                 case YAML::NodeType::Sequence:
-                    prefixedKey = prefix + ":" + key;
+                    prefixedKey = prefix + DELIMITER + key;
                     break;
                 case YAML::NodeType::Scalar:
-                    prefixedKey = prefix + ":" + prop.first.as<std::string>();
+                    prefixedKey = prefix + DELIMITER + prop.first.as<std::string>();
                     break;
                 default:
                     LOGW("Expected a scalar or sequence value for transition");
@@ -1089,7 +1224,7 @@ void SceneLoader::parseTransition(Node params, Scene& scene, std::vector<StylePa
             }
 
             for (auto child : prop.second) {
-                auto childKey = prefixedKey + ":" + child.first.as<std::string>();
+                auto childKey = prefixedKey + DELIMITER + child.first.as<std::string>();
                 out.push_back(StyleParam{ childKey, child.second.as<std::string>() });
             }
         }
@@ -1129,7 +1264,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, S
             getBool(member.second, visible, "visible");
         } else {
             // Member is a sublayer
-            sublayers.push_back(loadSublayer(member.second, (layerName + ":" + key), scene));
+            sublayers.push_back(loadSublayer(member.second, (layerName + DELIMITER + key), scene));
         }
     }
 

@@ -19,6 +19,8 @@ enum class CameraType : uint8_t {
     flat,
 };
 
+struct Stops;
+
 /* View
  * 1. Stores a representation of the current view into the map world
  * 2. Determines which tiles are visible in the current view
@@ -44,6 +46,30 @@ public:
 
     void setObliqueAxis(float _x, float _y) { m_obliqueAxis = { _x, _y}; }
     auto obliqueAxis() const { return m_obliqueAxis; }
+
+    void setVanishingPoint(float x, float y) { m_vanishingPoint = { x, y }; }
+    auto vanishingPoint() const { return m_vanishingPoint; }
+
+    // Set the vertical field-of-view angle, in radians.
+    void setFieldOfView(float radians);
+
+    // Set the vertical field-of-view angle as a series of stops over zooms.
+    void setFieldOfViewStops(std::shared_ptr<Stops> stops);
+
+    // Get the vertical field-of-view angle, in radians.
+    float getFieldOfView() const;
+
+    // Set the vertical field-of-view angle to a value that corresponds to the
+    // given focal length.
+    void setFocalLength(float length);
+
+    // Set the vertical field-of-view angle according to focal length as a
+    // series of stops over zooms.
+    void setFocalLengthStops(std::shared_ptr<Stops> stops);
+
+    // Get the focal length that corresponds to the current vertical
+    // field-of-view angle.
+    float getFocalLength() const;
 
     /* Sets the ratio of hardware pixels to logical pixels (for high-density screens)
      * If unset, default is 1.0
@@ -143,12 +169,16 @@ public:
     float pixelScale() const { return m_pixelScale; }
     float pixelsPerMeter() const;
 
+    static float focalLengthToFieldOfView(float length);
+    static float fieldOfViewToFocalLength(float radians);
+
 protected:
 
     void updateMatrices();
     void updateTiles();
 
     std::shared_ptr<MapProjection> m_projection;
+    std::shared_ptr<Stops> m_fovStops;
     std::set<TileID> m_visibleTiles;
 
     ViewConstraint m_constraint;
@@ -156,6 +186,7 @@ protected:
     glm::dvec3 m_pos;
     glm::vec3 m_eye;
     glm::vec2 m_obliqueAxis;
+    glm::vec2 m_vanishingPoint;
 
     glm::mat4 m_view;
     glm::mat4 m_orthoViewport;
@@ -177,6 +208,7 @@ protected:
     int m_vpHeight;
     float m_aspect;
     float m_pixelScale = 1.0f;
+    float m_fov = 0.25 * PI;
 
     CameraType m_type;
 

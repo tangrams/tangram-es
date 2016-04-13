@@ -68,7 +68,7 @@ std::string SpotLight::getInstanceAssignBlock() {
     std::string block = Light::getInstanceAssignBlock();
 
     if (!m_dynamic) {
-        block += ", " + glm::to_string(m_position);
+        block += ", " + glm::to_string(m_position.value);
         if (m_attenuation!=0.0) {
             block += ", " + std::to_string(m_attenuation);
         }

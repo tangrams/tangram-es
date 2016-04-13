@@ -60,16 +60,16 @@ FontContext::FontContext() :
 #else
     int size = BASE_SIZE;
     for (int i = 0; i < 3; i++, size += STEP_SIZE) {
-        m_font[i] = m_alfons.addFont("default", alfons::InputSource(DEFAULT), size);
-        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_AR), size));
-        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_HE), size));
-        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_JA), size));
-        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FALLBACK), size));
+        m_font[i] = m_alfons.addFont("default", alfons::InputSource(resolvePath(DEFAULT, PathType::resource)), size);
+        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(resolvePath(FONT_AR, PathType::resource)), size));
+        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(resolvePath(FONT_HE, PathType::resource)), size));
+        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(resolvePath(FONT_JA, PathType::resource)), size));
+        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(resolvePath(FALLBACK, PathType::resource)), size));
     }
 #endif
 }
 
-// Synchronized on m_mutex on tile-worker threads
+// Synchronized on m_mutex in layoutText(), called on tile-worker threads
 void FontContext::addTexture(alfons::AtlasID id, uint16_t width, uint16_t height) {
     if (m_textures.size() == max_textures) {
         LOGE("Way too many glyph textures!");
@@ -78,7 +78,7 @@ void FontContext::addTexture(alfons::AtlasID id, uint16_t width, uint16_t height
     m_textures.emplace_back();
 }
 
-// Synchronized on m_mutex, called tile-worker threads
+// Synchronized on m_mutex in layoutText(), called on tile-worker threads
 void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_t gw, uint16_t gh,
                            const unsigned char* src, uint16_t pad) {
 
@@ -101,16 +101,14 @@ void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_
     gw += pad * 2;
     gh += pad * 2;
 
-    static std::vector<unsigned char> tmpSdfBuffer;
-
     size_t bytes = gw * gh * sizeof(float) * 3;
-    if (tmpSdfBuffer.size() < bytes) {
-        tmpSdfBuffer.resize(bytes);
+    if (m_sdfBuffer.size() < bytes) {
+        m_sdfBuffer.resize(bytes);
     }
 
     sdfBuildDistanceFieldNoAlloc(dst, width, m_sdfRadius,
                                  dst, gw, gh, width,
-                                 &tmpSdfBuffer[0]);
+                                 &m_sdfBuffer[0]);
 
     texture.setDirty(gy, gh);
 }
@@ -126,14 +124,6 @@ void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
             m_atlas.clear(i);
             m_textures[i].texData.assign(GlyphTexture::size * GlyphTexture::size, 0);
         }
-    }
-}
-
-void FontContext::lockAtlas(std::bitset<max_textures> _refs) {
-    if (!_refs.any()) { return; }
-    std::lock_guard<std::mutex> lock(m_mutex);
-    for (size_t i = 0; i < m_textures.size(); i++) {
-        if (_refs[i]) { m_atlasRefCount[i]++; }
     }
 }
 
@@ -156,7 +146,7 @@ void FontContext::bindTexture(alfons::AtlasID _id, GLuint _unit) {
 }
 
 bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& _text,
-                             std::vector<GlyphQuad>& _quads,  glm::vec2& _size) {
+                             std::vector<GlyphQuad>& _quads, std::bitset<max_textures>& _refs, glm::vec2& _size) {
 
     std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -178,10 +168,9 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     alfons::LineMetrics metrics;
 
     if (_params.wordWrap) {
-        auto wrap = drawWithLineWrapping(line, m_batch, MIN_LINE_WIDTH,
-                                         _params.maxLineWidth, _params.align,
-                                         _params.lineSpacing);
-        metrics = wrap.metrics;
+        m_textWrapper.draw(m_batch, line, MIN_LINE_WIDTH,
+                           _params.maxLineWidth, _params.align,
+                           _params.lineSpacing, metrics);
     } else {
         glm::vec2 position(0);
         m_batch.drawShapeRange(line, 0, line.shapes().size(), position, metrics);
@@ -197,6 +186,12 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
 
     auto it = _quads.begin() + quadsStart;
     while (it != _quads.end()) {
+
+        if (!_refs[it->atlas]) {
+            _refs[it->atlas] = true;
+            m_atlasRefCount[it->atlas]++;
+        }
+
         it->quad[0].pos -= offset;
         it->quad[1].pos -= offset;
         it->quad[2].pos -= offset;

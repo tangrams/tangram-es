@@ -33,13 +33,17 @@ varying vec3 v_normal;
     varying vec4 v_lighting;
 #endif
 
-#pragma tangram: material
-#pragma tangram: lighting
-#pragma tangram: global
+vec4 worldPosition() {
+    return v_world_position;
+}
 
 vec3 worldNormal() {
     return normalize(u_inverse_normal_matrix * v_normal);
 }
+
+#pragma tangram: material
+#pragma tangram: lighting
+#pragma tangram: global
 
 void main(void) {
 
@@ -53,20 +57,18 @@ void main(void) {
         calculateNormal(normal);
     #endif
 
-    // Modify normal before lighting
-    #pragma tangram: normal
-
-    // Modify color and material properties before lighting
-    #ifndef TANGRAM_LIGHTING_VERTEX
-        #pragma tangram: color
+    // Modify normal before lighting if not already modified in vertex shader
+    #if !defined(TANGRAM_LIGHTING_VERTEX)
+        #pragma tangram: normal
     #endif
 
-    #ifdef TANGRAM_LIGHTING_FRAGMENT
+    // Modify color before lighting is applied
+    #pragma tangram: color
+
+    #if defined(TANGRAM_LIGHTING_FRAGMENT)
         color = calculateLighting(v_position.xyz, normal, color);
-    #else
-        #ifdef TANGRAM_LIGHTING_VERTEX
-            color = v_lighting;
-        #endif
+    #elif defined(TANGRAM_LIGHTING_VERTEX)
+        color *= v_lighting;
     #endif
 
     // Modify color after lighting (filter-like effects that don't require a additional render passes)

@@ -27,18 +27,15 @@ TextStyleBuilder::TextStyleBuilder(const TextStyle& _style)
 void TextStyleBuilder::setup(const Tile& _tile){
     m_tileSize = _tile.getProjection()->TileSize();
     m_quads.clear();
+    m_atlasRefs.reset();
     m_labels.clear();
 
     m_textLabels = std::make_unique<TextLabels>(m_style);
 }
 
 std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
-    if (!m_labels.empty()) {
-        m_textLabels->setLabels(m_labels);
-        m_textLabels->setQuads(m_quads);
-    }
-    m_quads.clear();
-    m_labels.clear();
+    m_textLabels->setLabels(m_labels);
+    m_textLabels->setQuads(m_quads, m_atlasRefs);
 
     return std::move(m_textLabels);
 }
@@ -131,6 +128,8 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     _rule.get(StyleParamKey::font_fill, p.fill);
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
+    p.labelOptions.offset *= m_style.pixelScale();
+
     _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
     _rule.get(StyleParamKey::font_stroke_width, p.strokeWidth);
     p.strokeWidth *= m_style.pixelScale();
@@ -311,7 +310,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     m_attributes.quadsStart = m_quads.size();
 
     glm::vec2 bbox(0);
-    if (ctx->layoutText(_params, *renderText, m_quads, bbox)) {
+    if (ctx->layoutText(_params, *renderText, m_quads, m_atlasRefs, bbox)) {
         m_attributes.width = bbox.x;
         m_attributes.height = bbox.y;
         return true;
