@@ -16,6 +16,7 @@
 #include "style/debugStyle.h"
 #include "style/debugTextStyle.h"
 #include "style/pointStyle.h"
+#include "style/rasterStyle.h"
 #include "scene/dataLayer.h"
 #include "scene/filters.h"
 #include "scene/sceneLayer.h"
@@ -157,6 +158,7 @@ bool SceneLoader::applyConfig(Node& config, Scene& _scene) {
     _scene.styles().emplace_back(new TextStyle("text", true));
     _scene.styles().emplace_back(new DebugStyle("debug"));
     _scene.styles().emplace_back(new PointStyle("points"));
+    _scene.styles().emplace_back(new RasterStyle("raster"));
 
     if (Node globals = config["global"]) {
         parseGlobals(globals, _scene);
