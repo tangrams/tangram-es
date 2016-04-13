@@ -24,7 +24,8 @@ public:
 
     void setScene(std::shared_ptr<Scene> _scene);
 
-    std::shared_ptr<Tile> build(TileID _tileID, const TileData& _data, const DataSource& _source);
+    std::shared_ptr<Tile> build(TileID _tileID, const TileData& _data, const DataSource& _source,
+                                std::unique_ptr<Texture> tileTexture);
 
     const Scene& scene() const { return *m_scene; }
 

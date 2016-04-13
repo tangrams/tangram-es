@@ -118,7 +118,11 @@ void TileWorker::run(Worker* instance) {
 
         if (tileData) {
 
-            auto tile = builder->build(task->tileId(), *tileData, task->source());
+            // TODO: before parsing the tile data, get the tile textures
+            // 1. initially task->source().fetchTexture should return a texture which is then saved in the tile
+            // 2. Figure out how textures from different raster sources will be put in this tile!
+            auto texture = task->source().getTexture(*task);
+            auto tile = builder->build(task->tileId(), *tileData, task->source(), std::move(texture));
 
             // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
             // LOG("loadTime %s - %f", task->tile()->getID().toString().c_str(), loadTime);
