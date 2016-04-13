@@ -216,27 +216,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 Tangram::loadScene(sceneFile.c_str());
                 Tangram::setPixelScale(pixel_scale);
                 break;
-            case GLFW_KEY_I:
-                Tangram::queueSceneUpdate("cameras.perspective-camera.active", "false");
-                Tangram::queueSceneUpdate("cameras.iso-camera.active", "true");
-                Tangram::applySceneUpdates();
-                break;
-            case GLFW_KEY_P:
-                Tangram::queueSceneUpdate("cameras.iso-camera.active", "false");
-                Tangram::queueSceneUpdate("cameras.perspective-camera.active", "true");
-                Tangram::applySceneUpdates();
-                break;
-            case GLFW_KEY_D: // darker
-                static float brightness = 0.5f;
-                brightness -= 0.1f;
-                Tangram::queueSceneUpdate("lights.light1.ambient", std::to_string(brightness).c_str());
-                Tangram::applySceneUpdates();
-                break;
-            case GLFW_KEY_B: // brighter
-                brightness += 0.1f;
-                Tangram::queueSceneUpdate("lights.light1.ambient", std::to_string(brightness).c_str());
-                Tangram::applySceneUpdates();
-                break;
             case GLFW_KEY_G:
                 static bool geoJSON = false;
                 if (!geoJSON) {
