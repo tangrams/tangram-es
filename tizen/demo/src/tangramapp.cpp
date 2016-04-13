@@ -4,7 +4,6 @@
 #include "platform_tizen.h"
 
 #include "tangram.h"
-#include "debug.h"
 
 typedef struct appdata {
     Evas_Object *win;
