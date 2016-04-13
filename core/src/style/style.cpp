@@ -215,6 +215,14 @@ void Style::draw(const Tile& _tile) {
     auto& styleMesh = _tile.getMesh(*this);
 
     if (styleMesh) {
+        auto& texture = _tile.getTexture();
+
+        // TODO: bind all raster textures
+        if (texture) {
+            texture->update(RenderState::nextAvailableTextureUnit());
+            texture->bind(RenderState::currentTextureUnit());
+        }
+
         m_shaderProgram->setUniformMatrix4f(m_uModel, _tile.getModelMatrix());
         m_shaderProgram->setUniformf(m_uProxyDepth, _tile.isProxy() ? 1.f : 0.f);
         m_shaderProgram->setUniformf(m_uTileOrigin,
@@ -226,6 +234,9 @@ void Style::draw(const Tile& _tile) {
         if (!styleMesh->draw(*m_shaderProgram)) {
             LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
         }
+
+        // TODO: for each tile texture, release a slot
+        RenderState::releaseTextureUnit();
     }
 }
 
