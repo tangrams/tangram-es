@@ -58,6 +58,14 @@ void main(void) {
     vec4 color = v_color;
     vec3 normal = v_normal;
 
+    #ifdef TANGRAM_RASTER_TEXTURE_COLOR
+        color *= sampleRaster(0);
+    #endif
+
+    #ifdef TANGRAM_RASTER_TEXTURE_NORMAL
+        normal = normalize(sampleRaster(0).rgb * 2.0 - 1.0);
+    #endif
+
     #ifdef TANGRAM_MATERIAL_NORMAL_TEXTURE
         calculateNormal(normal);
     #endif

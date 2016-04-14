@@ -58,6 +58,14 @@ void main(void) {
     vec4 color = v_color;
     vec3 normal = v_normal;
 
+    #ifdef TANGRAM_RASTER_TEXTURE_COLOR
+        color *= sampleRaster(0);
+    #endif
+
+    #ifdef TANGRAM_RASTER_TEXTURE_NORMAL
+        normal = normalize(sampleRaster(0).rgb * 2.0 - 1.0);
+    #endif
+
     #ifdef TANGRAM_MATERIAL_NORMAL_TEXTURE
         calculateNormal(normal);
     #endif
@@ -80,5 +88,5 @@ void main(void) {
     #pragma tangram: filter
 
     //color.rgb = pow(color.rgb, vec3(1.0/2.2)); // gamma correction
-    gl_FragColor = texture2D(u_rasters[0], v_modelpos_base_zoom.xy);
+    gl_FragColor = color;
 }
