@@ -58,10 +58,17 @@ void Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size, 
 
     pixels = stbi_load_from_memory(blob, size, &width, &height, &comp, STBI_rgb_alpha);
 
-    resize(width, height);
-    setData(reinterpret_cast<GLuint*>(pixels), width * height);
+    if (pixels) {
+        resize(width, height);
+        setData(reinterpret_cast<GLuint*>(pixels), width * height);
 
-    stbi_image_free(pixels);
+        stbi_image_free(pixels);
+
+        m_validData = true;
+    } else {
+        LOGE("Decoding image from memory failed");
+        m_validData = false;
+    }
 }
 
 Texture::Texture(Texture&& _other) {
@@ -209,8 +216,14 @@ void Texture::checkValidity() {
     }
 }
 
-bool Texture::isValid() {
-    return (RenderState::isValidGeneration(m_generation) && m_glHandle != 0);
+bool Texture::isValid() const {
+    return (RenderState::isValidGeneration(m_generation)
+        && m_glHandle != 0
+        && hasValidData());
+}
+
+bool Texture::hasValidData() const {
+    return m_validData;
 }
 
 void Texture::update(GLuint _textureUnit) {
