@@ -51,7 +51,7 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
 
     public interface TapResponder {
         /**
-         * Called immediately after a touch is lifted in a tap gesture
+         * Called immediately after a touch is lifted in a tap gesture; may be part of a double tap
          * @param x The x screen coordinate of the tapped point
          * @param y The y screen coordinate of the tapped point
          * @return True if the event is consumed, false if the event should continue to propagate
@@ -59,9 +59,11 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         boolean onSingleTapUp(float x, float y);
 
         /**
-         * Called after a touch is lifted and determined to not be part of a double-tap
+         * Called after a touch is lifted and determined to not be part of a double tap
+         *
+         * The timeout duration for a double tap is determined by {@link ViewConfiguration}
          * @param x The x screen coordinate of the tapped point
-         * @param y The y screen coordinate of the tappwd point
+         * @param y The y screen coordinate of the tapped point
          * @return True if the event is consumed, false if the event should continue to propagate
          */
         boolean onSingleTapConfirmed(float x, float y);
@@ -70,6 +72,8 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     public interface DoubleTapResponder {
         /**
          * Called immediately after the second time a touch is lifted in a double tap gesture
+         *
+         * The allowable duration between taps is determined by {@link ViewConfiguration}
          * @param x The x screen coordinate of the tapped point
          * @param y The y screen coordinate of the tapped point
          * @return True if the event is consumed, false if the event should continue to propagate
@@ -81,7 +85,7 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         /**
          * Called immediately after a long press is detected
          *
-         * The duration threshold for a long press is a system-wide value determined by Android
+         * The duration threshold for a long press is determined by {@link ViewConfiguration}
          * @param x The x screen coordinate of the pressed point
          * @param y The y screen coordinate of the pressed point
          */
@@ -165,6 +169,10 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
 
     private long lastMultiTouchEndTime = -MULTITOUCH_BUFFER_TIME;
 
+    /**
+     * Construct a new touch input manager; this may only be called on the UI thread
+     * @param context A {@link Context} whose {@code Handler} will be used for deferred events
+     */
     public TouchInput(Context context) {
 
         this.panTapGestureDetector = new GestureDetector(context, this);
@@ -181,35 +189,68 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         }
     }
 
+    /**
+     * Set a {@link TapResponder}
+     * @param responder The responder object, or null to leave these gesture events unchanged
+     */
     public void setTapResponder(TapResponder responder) {
         this.tapResponder = responder;
     }
 
+    /**
+     * Set a {@link DoubleTapResponder}
+     * @param responder The responder object, or null to leave these gesture events unchanged
+     */
     public void setDoubleTapResponder(DoubleTapResponder responder) {
         this.doubleTapResponder = responder;
     }
 
+    /**
+     * Set a {@link LongPressResponder}
+     * @param responder The responder object, or null to leave these gesture events unchanged
+     */
     public void setLongPressResponder(LongPressResponder responder) {
         this.longPressResponder = responder;
     }
 
+    /**
+     * Set a {@link PanResponder}
+     * @param responder The responder object, or null to leave these gesture events unchanged
+     */
     public void setPanResponder(PanResponder responder) {
         this.panResponder = responder;
     }
 
+    /**
+     * Set a {@link ScaleResponder}
+     * @param responder The responder object, or null to leave these gesture events unchanged
+     */
     public void setScaleResponder(ScaleResponder responder) {
         this.scaleResponder = responder;
     }
 
+    /**
+     * Set a {@link RotateResponder}
+     * @param responder The responder object, or null to leave these gesture events unchanged
+     */
     public void setRotateResponder(RotateResponder responder) {
         this.rotateResponder = responder;
     }
 
+    /**
+     * Set a {@link ShoveResponder}
+     * @param responder The responder object, or null to leave these gesture events unchanged
+     */
     public void setShoveResponder(ShoveResponder responder) {
         this.shoveResponder = responder;
     }
 
-    // Set whether 'second' can detect while 'first' is in progress
+    /**
+     * Set whether the gesture {@code second} can be recognized while {@code first} is in progress
+     * @param first Initial gesture type
+     * @param second Subsequent gesture type
+     * @param allowed True if {@code second} should be recognized, else false
+     */
     public void setSimultaneousDetectionAllowed(Gestures first, Gestures second, boolean allowed) {
         if (first != second) {
             if (allowed) {
@@ -220,6 +261,12 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         }
     }
 
+    /**
+     * Get whether the gesture {@code second} can be recognized while {@code first} is in progress
+     * @param first Initial gesture type
+     * @param second Subsequent gesture type
+     * @return True if {@code second} will be recognized, else false
+     */
     public boolean isSimultaneousDetectionAllowed(Gestures first, Gestures second) {
         return allowedSimultaneousGestures.get(second).contains(first);
     }
