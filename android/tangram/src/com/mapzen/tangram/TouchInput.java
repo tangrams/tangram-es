@@ -50,32 +50,97 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     }
 
     public interface TapResponder {
+        /**
+         * Called immediately after a touch is lifted in a tap gesture
+         * @param x The x screen coordinate of the tapped point
+         * @param y The y screen coordinate of the tapped point
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onSingleTapUp(float x, float y);
+
+        /**
+         * Called after a touch is lifted and determined to not be part of a double-tap
+         * @param x The x screen coordinate of the tapped point
+         * @param y The y screen coordinate of the tappwd point
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onSingleTapConfirmed(float x, float y);
     }
 
     public interface DoubleTapResponder {
+        /**
+         * Called immediately after the second time a touch is lifted in a double tap gesture
+         * @param x The x screen coordinate of the tapped point
+         * @param y The y screen coordinate of the tapped point
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onDoubleTap(float x, float y);
     }
 
     public interface LongPressResponder {
+        /**
+         * Called immediately after a long press is detected
+         *
+         * The duration threshold for a long press is a system-wide value determined by Android
+         * @param x The x screen coordinate of the pressed point
+         * @param y The y screen coordinate of the pressed point
+         */
         void onLongPress(float x, float y);
     }
 
     public interface PanResponder {
+        /**
+         * Called repeatedly while a touch point is dragged
+         * @param startX The starting x screen coordinate for an interval of motion
+         * @param startY The starting y screen coordinate for an interval of motion
+         * @param endX The ending x screen coordinate for an interval of motion
+         * @param endY The ending y screen coordinate for an interval of motion
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onPan(float startX, float startY, float endX, float endY);
+
+        /**
+         * Called when a dragged touch point with non-zero velocity is lifted
+         * @param posX The x screen coordinate where the touch was lifted
+         * @param posY The y screen coordinate where the touch was lifted
+         * @param velocityX The x velocity of the gesture in screen coordinates per second
+         * @param velocityY The y velocity of the gesture in screen coordinates per second
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onFling(float posX, float posY, float velocityX, float velocityY);
     }
 
     public interface ScaleResponder {
+        /**
+         * Called repeatedly while two touch points are moved closer to or further from each other
+         * @param x The x screen coordinate of the point between the two touch points
+         * @param y The y screen coordinate of the point between the two touch points
+         * @param scale The scale factor relative to the previous scaling event
+         * @param velocity The rate of scale change in units per second
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onScale(float x, float y, float scale, float velocity);
     }
 
     public interface RotateResponder {
+        /**
+         * Called repeatedly while two touch points are rotated around a point
+         * @param x The x screen coordinate of the center of rotation
+         * @param y The y screen coordinate of the center of rotation
+         * @param rotation The change in rotation of the touch points relative to the previous
+         * rotation event, in counter-clockwise radians
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onRotate(float x, float y, float rotation);
     }
 
     public interface ShoveResponder {
+        /**
+         * Called repeatedly while two touch points are moved together vertically
+         * @param distance The vertical distance moved by the two touch points relative to the last
+         * shoving event, in screen coordinates
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onShove(float distance);
     }
 
