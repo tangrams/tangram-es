@@ -173,7 +173,7 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         this.shoveGestureDetector = new ShoveGestureDetector(context, this);
 
         this.detectedGestures = EnumSet.noneOf(Gestures.class);
-        this.allowedSimultaneousGestures = new EnumMap<Gestures, EnumSet<Gestures>>(Gestures.class);
+        this.allowedSimultaneousGestures = new EnumMap<>(Gestures.class);
 
         // By default, all gestures are allowed to detect simultaneously
         for (Gestures g : Gestures.values()) {
@@ -252,6 +252,7 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     // View.OnTouchListener implementation
     // ===================================
 
+    @Override
     public boolean onTouch(View v, MotionEvent event) {
 
         panTapGestureDetector.onTouchEvent(event);
