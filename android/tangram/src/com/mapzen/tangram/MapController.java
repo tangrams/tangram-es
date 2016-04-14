@@ -7,6 +7,8 @@ import android.opengl.GLSurfaceView.Renderer;
 import android.util.DisplayMetrics;
 
 import com.mapzen.tangram.TouchInput.Gestures;
+import com.mapzen.tangram.camera.CameraPosition;
+import com.mapzen.tangram.camera.CameraUpdate;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -115,6 +117,22 @@ public class MapController implements Renderer {
      */
     public void setHttpHandler(HttpHandler handler) {
         this.httpHandler = handler;
+    }
+
+    public void moveCamera(CameraUpdate update) {
+        CameraPosition position = update.getCameraPosition(this);
+        setPosition(position.target);
+        setZoom(position.zoom);
+        setTilt(position.tilt);
+        setRotation(position.bearing);
+    }
+
+    public void animateCamera(CameraUpdate update, int duration) {
+        CameraPosition position = update.getCameraPosition(this);
+        setPosition(position.target, duration);
+        setZoom(position.zoom, duration);
+        setTilt(position.tilt, duration);
+        setRotation(position.bearing, duration);
     }
 
     /**

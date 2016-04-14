@@ -1,6 +1,7 @@
 package com.mapzen.tangram.android;
 
 import android.app.Activity;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.view.Window;
 import android.widget.Toast;
@@ -15,6 +16,7 @@ import com.mapzen.tangram.MapView.OnMapReadyCallback;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
+import com.mapzen.tangram.camera.CameraUpdateFactory;
 import com.squareup.okhttp.Callback;
 
 import java.io.File;
@@ -136,20 +138,15 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
         map.pickFeature(x, y);
 
-        map.setPosition(tappedPoint, 1000);
+        map.animateCamera(CameraUpdateFactory.newLngLat(tappedPoint), 1000);
 
         return true;
     }
 
     @Override
     public boolean onDoubleTap(float x, float y) {
-        map.setZoom(map.getZoom() + 1.f, 500);
-        LngLat tapped = map.coordinatesAtScreenPosition(x, y);
-        LngLat current = map.getPosition();
-        LngLat next = new LngLat(
-                .5 * (tapped.longitude + current.longitude),
-                .5 * (tapped.latitude + current.latitude));
-        map.setPosition(next, 500);
+        Point focus = new Point((int)x, (int)y);
+        map.animateCamera(CameraUpdateFactory.zoomBy(1, focus), 500);
         return true;
     }
 
