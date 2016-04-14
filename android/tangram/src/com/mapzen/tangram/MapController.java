@@ -29,11 +29,7 @@ public class MapController implements Renderer {
         SINE,
     }
 
-    public enum CameraType {
-        PERSPECTIVE,
-        ISOMETRIC,
-        FLAT,
-    }
+    protected static EaseType DEFAULT_EASE_TYPE = EaseType.CUBIC;
 
     public enum DebugFlag {
         FREEZE_TILES,
@@ -125,46 +121,36 @@ public class MapController implements Renderer {
      * Set the geographic position of the center of the map view
      * @param position LngLat of the position to set
      */
-    public void setMapPosition(LngLat position) {
-        setMapPosition(position.longitude, position.latitude);
+    public void setPosition(LngLat position) {
+        nativeSetPosition(position.longitude, position.latitude);
     }
 
     /**
      * Set the geographic position of the center of the map view
-     * @param lng Degrees longitude of the position to set
-     * @param lat Degrees latitude of the position to set
+     * @param position LngLat of the position to set
+     * @param duration Time in milliseconds to ease to the given position
      */
-    public void setMapPosition(double lng, double lat) {
-        nativeSetPosition(lng, lat);
+    public void setPosition(LngLat position, int duration) {
+        setPosition(position, duration, DEFAULT_EASE_TYPE);
     }
 
     /**
      * Set the geographic position of the center of the map view
-     * @param lng Degrees longitude of the position to set
-     * @param lat Degrees latitude of the position to set
-     * @param duration Time in seconds to ease to the given position
-     */
-    public void setMapPosition(double lng, double lat, float duration) {
-        nativeSetPositionEased(lng, lat, duration, EaseType.QUINT.ordinal());
-    }
-
-    /**
-     * Set the geographic position of the center of the map view
-     * @param lng Degrees longitude of the position to set
-     * @param lat Degrees latitude of the position to set
-     * @param duration Time in seconds to ease to the given position
+     * @param position LngLat of the position to set
+     * @param duration Time in milliseconds to ease to the given position
      * @param ease Type of easing to use
      */
-    public void setMapPosition(double lng, double lat, float duration, EaseType ease) {
-        nativeSetPositionEased(lng, lat, duration, ease.ordinal());
+    public void setPosition(LngLat position, int duration, EaseType ease) {
+        float seconds = duration / 1000.f;
+        nativeSetPositionEased(position.longitude, position.latitude, seconds, ease.ordinal());
     }
 
     /**
      * Get the geographic position of the center of the map view
      * @return The current map position in a LngLat
      */
-    public LngLat getMapPosition() {
-        return getMapPosition(new LngLat());
+    public LngLat getPosition() {
+        return getPosition(new LngLat());
     }
 
     /**
@@ -172,7 +158,7 @@ public class MapController implements Renderer {
      * @param out LngLat to be reused as the output
      * @return Degrees longitude and latitude of the current map position, in a two-element array
      */
-    public LngLat getMapPosition(LngLat out) {
+    public LngLat getPosition(LngLat out) {
         double[] tmp = { 0, 0 };
         nativeGetPosition(tmp);
         return out.set(tmp[0], tmp[1]);
@@ -182,34 +168,35 @@ public class MapController implements Renderer {
      * Set the zoom level of the map view
      * @param zoom Fractional zoom level
      */
-    public void setMapZoom(float zoom) {
+    public void setZoom(float zoom) {
         nativeSetZoom(zoom);
     }
 
     /**
      * Set the zoom level of the map view
      * @param zoom Fractional zoom level
-     * @param duration Time in seconds to ease to given zoom
+     * @param duration Time in milliseconds to ease to given zoom
      */
-    public void setMapZoom(float zoom, float duration) {
-        nativeSetZoomEased(zoom, duration, EaseType.QUINT.ordinal());
+    public void setZoom(float zoom, int duration) {
+        setZoom(zoom, duration, DEFAULT_EASE_TYPE);
     }
 
     /**
      * Set the zoom level of the map view
      * @param zoom Fractional zoom level
-     * @param duration Time in seconds to ease to given zoom
+     * @param duration Time in milliseconds to ease to given zoom
      * @param ease Type of easing to use
      */
-    public void setMapZoom(float zoom, float duration, EaseType ease) {
-        nativeSetZoomEased(zoom, duration, ease.ordinal());
+    public void setZoom(float zoom, int duration, EaseType ease) {
+        float seconds = duration / 1000.f;
+        nativeSetZoomEased(zoom, seconds, ease.ordinal());
     }
 
     /**
      * Get the zoom level of the map view
      * @return Fractional zoom level
      */
-    public float getMapZoom() {
+    public float getZoom() {
         return nativeGetZoom();
     }
 
@@ -217,34 +204,35 @@ public class MapController implements Renderer {
      * Set the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
      * @param radians Rotation in radians
      */
-    public void setMapRotation(float radians) {
+    public void setRotation(float radians) {
         nativeSetRotation(radians);
     }
 
     /**
      * Set the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
      * @param radians Rotation in radians
-     * @param duration Time in seconds to ease to the given rotation
+     * @param duration Time in milliseconds to ease to the given rotation
      */
-    public void setMapRotation(float radians, float duration) {
-        nativeSetRotationEased(radians, duration, EaseType.QUINT.ordinal());
+    public void setRotation(float radians, int duration) {
+        setRotation(radians, duration, DEFAULT_EASE_TYPE);
     }
 
     /**
      * Set the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
      * @param radians Rotation in radians
-     * @param duration Time in seconds to ease to the given rotation
+     * @param duration Time in milliseconds to ease to the given rotation
      * @param ease Type of easing to use
      */
-    public void setMapRotation(float radians, float duration, EaseType ease) {
-        nativeSetRotationEased(radians, duration, ease.ordinal());
+    public void setRotation(float radians, int duration, EaseType ease) {
+        float seconds = duration / 1000.f;
+        nativeSetRotationEased(radians, seconds, ease.ordinal());
     }
 
     /**
      * Get the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
      * @return Rotation in radians
      */
-    public float getMapRotation() {
+    public float getRotation() {
         return nativeGetRotation();
     }
 
@@ -252,52 +240,36 @@ public class MapController implements Renderer {
      * Set the tilt angle of the view in radians; 0 corresponds to straight down
      * @param radians Tilt angle in radians
      */
-    public void setMapTilt(float radians) {
+    public void setTilt(float radians) {
         nativeSetTilt(radians);
     }
 
     /**
      * Set the tilt angle of the view in radians; 0 corresponds to straight down
      * @param radians Tilt angle in radians
-     * @param duration Time in seconds to ease to the given tilt
+     * @param duration Time in milliseconds to ease to the given tilt
      */
-    public void setMapTilt(float radians, float duration) {
-        nativeSetTiltEased(radians, duration, EaseType.QUINT.ordinal());
+    public void setTilt(float radians, int duration) {
+        setTilt(radians, duration, DEFAULT_EASE_TYPE);
     }
 
     /**
      * Set the tilt angle of the view in radians; 0 corresponds to straight down
      * @param radians Tilt angle in radians
-     * @param duration Time in seconds to ease to the given tilt
+     * @param duration Time in milliseconds to ease to the given tilt
      * @param ease Type of easing to use
      */
-    public void setMapTilt(float radians, float duration, EaseType ease) {
-        nativeSetTiltEased(radians, duration, ease.ordinal());
+    public void setTilt(float radians, int duration, EaseType ease) {
+        float seconds = duration / 1000.f;
+        nativeSetTiltEased(radians, seconds, ease.ordinal());
     }
 
     /**
      * Get the tilt angle of the view in radians; 0 corresponds to straight down
      * @return Tilt angle in radians
      */
-    public float getMapTilt() {
+    public float getTilt() {
         return nativeGetTilt();
-    }
-
-    /**
-     * Set the camera type for the map view
-     * @param type A CameraType
-     */
-    public void setMapCameraType(CameraType type) {
-        nativeSetCameraType(type.ordinal());
-        requestRender();
-    }
-
-    /**
-     * Get the camera type currently in use for the map view
-     * @return The current CameraType
-     */
-    public CameraType getMapCameraType() {
-        return CameraType.values()[nativeGetCameraType()];
     }
 
     /**
@@ -569,21 +541,19 @@ public class MapController implements Renderer {
     private synchronized native void nativeUpdate(float dt);
     private synchronized native void nativeRender();
     private synchronized native void nativeSetPosition(double lon, double lat);
-    private synchronized native void nativeSetPositionEased(double lon, double lat, float duration, int ease);
+    private synchronized native void nativeSetPositionEased(double lon, double lat, float seconds, int ease);
     private synchronized native void nativeGetPosition(double[] lonLatOut);
     private synchronized native void nativeSetZoom(float zoom);
-    private synchronized native void nativeSetZoomEased(float zoom, float duration, int ease);
+    private synchronized native void nativeSetZoomEased(float zoom, float seconds, int ease);
     private synchronized native float nativeGetZoom();
     private synchronized native void nativeSetRotation(float radians);
-    private synchronized native void nativeSetRotationEased(float radians, float duration, int ease);
+    private synchronized native void nativeSetRotationEased(float radians, float seconds, int ease);
     private synchronized native float nativeGetRotation();
     private synchronized native void nativeSetTilt(float radians);
-    private synchronized native void nativeSetTiltEased(float radians, float duration, int ease);
+    private synchronized native void nativeSetTiltEased(float radians, float seconds, int ease);
     private synchronized native float nativeGetTilt();
     private synchronized native void nativeScreenToWorldCoordinates(double[] screenCoords);
     private synchronized native void nativeSetPixelScale(float scale);
-    private synchronized native void nativeSetCameraType(int cameraType);
-    private synchronized native int nativeGetCameraType();
     private synchronized native void nativeHandleTapGesture(float posX, float posY);
     private synchronized native void nativeHandleDoubleTapGesture(float posX, float posY);
     private synchronized native void nativeHandlePanGesture(float startX, float startY, float endX, float endY);

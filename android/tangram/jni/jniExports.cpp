@@ -95,14 +95,6 @@ extern "C" {
         Tangram::setPixelScale(scale);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetCameraType(JNIEnv* jniEnv, jobject obj, jint cameraType) {
-        Tangram::setCameraType(cameraType);
-    }
-
-    JNIEXPORT jint JNICALL Java_com_mapzen_tangram_MapController_nativeGetCameraType(JNIEnv* jniEnv, jobject obj) {
-        return Tangram::getCameraType();
-    }
-
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeHandleTapGesture(JNIEnv* jniEnv, jobject obj, jfloat posX, jfloat posY) {
         Tangram::handleTapGesture(posX, posY);
     }
