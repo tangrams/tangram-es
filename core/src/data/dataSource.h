@@ -72,6 +72,13 @@ public:
 
     int32_t maxZoom() const { return m_maxZoom; }
 
+    /* assign/get rasters to this datasource */
+    auto& rasters() { return m_rasters; }
+    const auto& rasters() const { return m_rasters; }
+
+    bool geomTiles() { return m_geometryTiles; }
+    void setGeomTiles(bool geomTiles) { m_geometryTiles = geomTiles; }
+
 protected:
 
     void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb);
@@ -84,6 +91,9 @@ protected:
         constructURL(_tileCoord, url);
         return url;
     }
+
+    // This datasource is used to generate actual tile geometry
+    bool m_geometryTiles = false;
 
     // Name used to identify this source in the style sheet
     std::string m_name;
@@ -101,6 +111,9 @@ protected:
     std::string m_urlTemplate;
 
     std::unique_ptr<RawCache> m_cache;
+
+    /* vector of raster sources (as raster samplers) referenced by this datasource */
+    std::vector<std::shared_ptr<DataSource>> m_rasters;
 };
 
 }
