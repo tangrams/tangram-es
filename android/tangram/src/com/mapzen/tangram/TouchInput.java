@@ -50,32 +50,101 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     }
 
     public interface TapResponder {
+        /**
+         * Called immediately after a touch is lifted in a tap gesture; may be part of a double tap
+         * @param x The x screen coordinate of the tapped point
+         * @param y The y screen coordinate of the tapped point
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onSingleTapUp(float x, float y);
+
+        /**
+         * Called after a touch is lifted and determined to not be part of a double tap
+         *
+         * The timeout duration for a double tap is determined by {@link ViewConfiguration}
+         * @param x The x screen coordinate of the tapped point
+         * @param y The y screen coordinate of the tapped point
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onSingleTapConfirmed(float x, float y);
     }
 
     public interface DoubleTapResponder {
+        /**
+         * Called immediately after the second time a touch is lifted in a double tap gesture
+         *
+         * The allowable duration between taps is determined by {@link ViewConfiguration}
+         * @param x The x screen coordinate of the tapped point
+         * @param y The y screen coordinate of the tapped point
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onDoubleTap(float x, float y);
     }
 
     public interface LongPressResponder {
+        /**
+         * Called immediately after a long press is detected
+         *
+         * The duration threshold for a long press is determined by {@link ViewConfiguration}
+         * @param x The x screen coordinate of the pressed point
+         * @param y The y screen coordinate of the pressed point
+         */
         void onLongPress(float x, float y);
     }
 
     public interface PanResponder {
+        /**
+         * Called repeatedly while a touch point is dragged
+         * @param startX The starting x screen coordinate for an interval of motion
+         * @param startY The starting y screen coordinate for an interval of motion
+         * @param endX The ending x screen coordinate for an interval of motion
+         * @param endY The ending y screen coordinate for an interval of motion
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onPan(float startX, float startY, float endX, float endY);
+
+        /**
+         * Called when a dragged touch point with non-zero velocity is lifted
+         * @param posX The x screen coordinate where the touch was lifted
+         * @param posY The y screen coordinate where the touch was lifted
+         * @param velocityX The x velocity of the gesture in screen coordinates per second
+         * @param velocityY The y velocity of the gesture in screen coordinates per second
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onFling(float posX, float posY, float velocityX, float velocityY);
     }
 
     public interface ScaleResponder {
+        /**
+         * Called repeatedly while two touch points are moved closer to or further from each other
+         * @param x The x screen coordinate of the point between the two touch points
+         * @param y The y screen coordinate of the point between the two touch points
+         * @param scale The scale factor relative to the previous scaling event
+         * @param velocity The rate of scale change in units per second
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onScale(float x, float y, float scale, float velocity);
     }
 
     public interface RotateResponder {
+        /**
+         * Called repeatedly while two touch points are rotated around a point
+         * @param x The x screen coordinate of the center of rotation
+         * @param y The y screen coordinate of the center of rotation
+         * @param rotation The change in rotation of the touch points relative to the previous
+         * rotation event, in counter-clockwise radians
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onRotate(float x, float y, float rotation);
     }
 
     public interface ShoveResponder {
+        /**
+         * Called repeatedly while two touch points are moved together vertically
+         * @param distance The vertical distance moved by the two touch points relative to the last
+         * shoving event, in screen coordinates
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
         boolean onShove(float distance);
     }
 
@@ -100,6 +169,10 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
 
     private long lastMultiTouchEndTime = -MULTITOUCH_BUFFER_TIME;
 
+    /**
+     * Construct a new touch input manager; this may only be called on the UI thread
+     * @param context A {@link Context} whose {@code Handler} will be used for deferred events
+     */
     public TouchInput(Context context) {
 
         this.panTapGestureDetector = new GestureDetector(context, this);
@@ -108,7 +181,7 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         this.shoveGestureDetector = new ShoveGestureDetector(context, this);
 
         this.detectedGestures = EnumSet.noneOf(Gestures.class);
-        this.allowedSimultaneousGestures = new EnumMap<Gestures, EnumSet<Gestures>>(Gestures.class);
+        this.allowedSimultaneousGestures = new EnumMap<>(Gestures.class);
 
         // By default, all gestures are allowed to detect simultaneously
         for (Gestures g : Gestures.values()) {
@@ -116,35 +189,68 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         }
     }
 
+    /**
+     * Set a {@link TapResponder}
+     * @param responder The responder object, or null to leave these gesture events unchanged
+     */
     public void setTapResponder(TapResponder responder) {
         this.tapResponder = responder;
     }
 
+    /**
+     * Set a {@link DoubleTapResponder}
+     * @param responder The responder object, or null to leave these gesture events unchanged
+     */
     public void setDoubleTapResponder(DoubleTapResponder responder) {
         this.doubleTapResponder = responder;
     }
 
+    /**
+     * Set a {@link LongPressResponder}
+     * @param responder The responder object, or null to leave these gesture events unchanged
+     */
     public void setLongPressResponder(LongPressResponder responder) {
         this.longPressResponder = responder;
     }
 
+    /**
+     * Set a {@link PanResponder}
+     * @param responder The responder object, or null to leave these gesture events unchanged
+     */
     public void setPanResponder(PanResponder responder) {
         this.panResponder = responder;
     }
 
+    /**
+     * Set a {@link ScaleResponder}
+     * @param responder The responder object, or null to leave these gesture events unchanged
+     */
     public void setScaleResponder(ScaleResponder responder) {
         this.scaleResponder = responder;
     }
 
+    /**
+     * Set a {@link RotateResponder}
+     * @param responder The responder object, or null to leave these gesture events unchanged
+     */
     public void setRotateResponder(RotateResponder responder) {
         this.rotateResponder = responder;
     }
 
+    /**
+     * Set a {@link ShoveResponder}
+     * @param responder The responder object, or null to leave these gesture events unchanged
+     */
     public void setShoveResponder(ShoveResponder responder) {
         this.shoveResponder = responder;
     }
 
-    // Set whether 'second' can detect while 'first' is in progress
+    /**
+     * Set whether the gesture {@code second} can be recognized while {@code first} is in progress
+     * @param first Initial gesture type
+     * @param second Subsequent gesture type
+     * @param allowed True if {@code second} should be recognized, else false
+     */
     public void setSimultaneousDetectionAllowed(Gestures first, Gestures second, boolean allowed) {
         if (first != second) {
             if (allowed) {
@@ -155,6 +261,12 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         }
     }
 
+    /**
+     * Get whether the gesture {@code second} can be recognized while {@code first} is in progress
+     * @param first Initial gesture type
+     * @param second Subsequent gesture type
+     * @return True if {@code second} will be recognized, else false
+     */
     public boolean isSimultaneousDetectionAllowed(Gestures first, Gestures second) {
         return allowedSimultaneousGestures.get(second).contains(first);
     }
@@ -187,6 +299,7 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     // View.OnTouchListener implementation
     // ===================================
 
+    @Override
     public boolean onTouch(View v, MotionEvent event) {
 
         panTapGestureDetector.onTouchEvent(event);
