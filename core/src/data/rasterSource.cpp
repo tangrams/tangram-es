@@ -39,8 +39,9 @@ std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapPr
 std::shared_ptr<Texture> RasterSource::texture(const TileTask& _task) {
 
     auto tileID = _task.tileId();
-    if (m_textures.find(tileID) != m_textures.end()) { return m_textures[tileID]; }
+    if (m_textures.find(tileID) != m_textures.end()) { return m_textures.at(tileID); }
 
+    std::lock_guard<std::mutex> lock(m_textureMutex);
     auto &task = static_cast<const DownloadTileTask &>(_task);
     auto udata = (unsigned char*)task.rawTileData->data();
     std::shared_ptr<Texture> texture(new Texture(udata, task.rawTileData->size(), m_texOptions, m_genMipmap));
