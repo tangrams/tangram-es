@@ -31,26 +31,24 @@ TileManager::~TileManager() {
     m_tileSets.clear();
 }
 
-void TileManager::setDataSources(std::vector<std::shared_ptr<DataSource>> _sources) {
+void TileManager::setDataSources(const fastmap<std::string, std::shared_ptr<DataSource>>& _sources) {
     m_tileCache->clear();
 
     // remove sources that are not in new scene - there must be a better way..
     auto it = std::remove_if(
         m_tileSets.begin(), m_tileSets.end(),
         [&](auto& tileSet) {
-            auto sIt = std::find_if(
-                _sources.begin(), _sources.end(),
-                [&](auto& s){ return tileSet.source->equals(*s); });
+            auto sIt = _sources.find(tileSet.source->name());
 
-            if (sIt == _sources.end()) {
+            if (sIt == _sources.end() || !sIt->second->geomTiles()) {
                 DBG("remove source %s", tileSet.source->name().c_str());
                 return true;
             }
 
             // Cancel pending  tiles
             for_each(tileSet.tiles.begin(), tileSet.tiles.end(), [&](auto& tile) {
-                    tile.second.cancelTask();
-                });
+                tile.second.cancelTask();
+            });
 
             // Clear cache
             tileSet.tiles.clear();
@@ -64,10 +62,11 @@ void TileManager::setDataSources(std::vector<std::shared_ptr<DataSource>> _sourc
 
         if (std::find_if(m_tileSets.begin(), m_tileSets.end(),
                          [&](const TileSet& a) {
-                             return a.source->name() == source->name();
-                         }) == m_tileSets.end()) {
-            DBG("add source %s", source->name().c_str());
-            addDataSource(source);
+                             return a.source->name() == source.second->name();
+                         }) == m_tileSets.end()
+                && source.second->geomTiles()) {
+            DBG("add source %s", source.second->name().c_str());
+            addDataSource(source.second);
         }
     }
 }
@@ -290,12 +289,12 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
         auto& entry = it.second;
 
         DBG("> %s - ready:%d proxy:%d/%d loading:%d canceled:%d",
-            it.first.toString().c_str(),
-            entry.isReady(),
-            entry.getProxyCounter(),
-            entry.m_proxies,
-            entry.task && !entry.task->hasData(),
-            entry.task && entry.task->isCanceled());
+             it.first.toString().c_str(),
+             entry.isReady(),
+             entry.getProxyCounter(),
+             entry.m_proxies,
+             entry.task && !entry.task->hasData(),
+             entry.task && entry.task->isCanceled());
 
         if (entry.isLoading()) {
             auto& id = it.first;
@@ -366,8 +365,8 @@ void TileManager::loadTiles() {
     }
 
     DBG("loading:%d pending:%d cache: %fMB",
-        m_loadTasks.size(), m_loadPending,
-        (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
+         m_loadTasks.size(), m_loadPending,
+         (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
 
     m_loadTasks.clear();
 }
