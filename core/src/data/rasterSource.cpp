@@ -6,6 +6,7 @@
 #include "tile/tile.h"
 #include "tile/tileTask.h"
 #include "util/geoJson.h"
+#include "platform.h"
 
 namespace Tangram {
 
@@ -45,8 +46,14 @@ std::shared_ptr<Texture> RasterSource::texture(const TileTask& _task) {
     auto &task = static_cast<const DownloadTileTask &>(_task);
     auto udata = (unsigned char*)task.rawTileData->data();
     std::shared_ptr<Texture> texture(new Texture(udata, task.rawTileData->size(), m_texOptions, m_genMipmap, true));
-    m_textures[tileID] = texture;
-    return texture;
+
+    if (texture->hasValidData()) {
+        m_textures[tileID] = texture;
+        return texture;
+    } else {
+        LOGW("Texture for data source %s has failed to decode", m_name.c_str());
+        return nullptr;
+    }
 }
 
 }

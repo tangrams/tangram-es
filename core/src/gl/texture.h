@@ -79,7 +79,11 @@ public:
     void setSubData(const GLuint* _subData, uint16_t _xoff, uint16_t _yoff,
                     uint16_t _width, uint16_t _height, uint16_t _stride);
 
-    bool isValid();
+    /* Checks whether the texture has valid data and has been successfully uploaded to GPU */
+    bool isValid() const;
+
+    /* Checks whether the texture has a valid data to upload to GPU */
+    bool hasValidData() const;
 
     typedef std::pair<GLuint, GLuint> TextureSlot;
 
@@ -118,6 +122,7 @@ private:
     size_t bytesPerPixel();
 
     bool m_generateMipmaps;
+    bool m_validData;
 };
 
 }
