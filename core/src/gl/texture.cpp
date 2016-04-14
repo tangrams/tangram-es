@@ -23,7 +23,7 @@ Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _opti
     resize(_width, _height);
 }
 
-Texture::Texture(const std::string& _file, TextureOptions _options, bool _generateMipmaps)
+Texture::Texture(const std::string& _file, TextureOptions _options, bool _generateMipmaps, bool _flipOnLoad)
     : Texture(0u, 0u, _options, _generateMipmaps) {
 
     unsigned int size;
@@ -31,18 +31,18 @@ Texture::Texture(const std::string& _file, TextureOptions _options, bool _genera
 
     data = bytesFromFile(_file.c_str(), PathType::resource, &size);
 
-    loadPNG(data, size);
+    loadImageFromMemory(data, size, _flipOnLoad);
 
     free(data);
 }
 
-Texture::Texture(const unsigned char* data, size_t dataSize, TextureOptions options, bool generateMipmaps)
+Texture::Texture(const unsigned char* data, size_t dataSize, TextureOptions options, bool generateMipmaps, bool _flipOnLoad)
     : Texture(0u, 0u, options, generateMipmaps) {
 
-    loadPNG(data, dataSize);
+    loadImageFromMemory(data, dataSize, _flipOnLoad);
 }
 
-void Texture::loadPNG(const unsigned char* blob, unsigned int size) {
+void Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size, bool flipOnLoad) {
     if (blob == nullptr || size == 0) {
         LOGE("Texture data is empty!");
         return;
@@ -50,6 +50,11 @@ void Texture::loadPNG(const unsigned char* blob, unsigned int size) {
 
     unsigned char* pixels;
     int width, height, comp;
+
+    // stbi_load_from_memory loads the image as a serie of scanline starting from
+    // the top-left corner of the image. When shouldFlip is set to true, the image
+    // would be flipped vertically.
+    stbi_set_flip_vertically_on_load((int)flipOnLoad);
 
     pixels = stbi_load_from_memory(blob, size, &width, &height, &comp, STBI_rgb_alpha);
 
