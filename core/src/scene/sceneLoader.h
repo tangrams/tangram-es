@@ -26,6 +26,7 @@ class Style;
 struct StyleParam;
 struct MaterialTexture;
 class PointLight;
+class DataSource;
 struct Filter;
 struct TextureFiltering;
 
@@ -47,7 +48,9 @@ struct SceneLoader {
     /*** all public for testing ***/
 
     static void loadBackground(Node background, Scene& scene);
-    static void loadSource(const std::pair<Node, Node>& source, Scene& scene);
+    static void loadSource(const std::string& name, const Node& source, const Node& sources, Scene& scene);
+    static void loadSourceRasters(std::shared_ptr<DataSource>& source, Node rasterNode, const Node& sources,
+                                  Scene& scene);
     static void loadTexture(const std::pair<Node, Node>& texture, Scene& scene);
     static void loadLayer(const std::pair<Node, Node>& layer, Scene& scene);
     static void loadLight(const std::pair<Node, Node>& light, Scene& scene);

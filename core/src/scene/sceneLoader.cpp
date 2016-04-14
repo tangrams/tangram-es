@@ -168,7 +168,8 @@ bool SceneLoader::applyConfig(Node& config, Scene& _scene) {
 
     if (Node sources = config["sources"]) {
         for (const auto& source : sources) {
-            try { loadSource(source, _scene); }
+            std::string srcName = source.first.Scalar();
+            try { loadSource(srcName, source.second, sources, _scene); }
             catch (YAML::RepresentationException e) {
                 LOGNode("Parsing sources: '%s'", source, e.what());
             }
@@ -701,10 +702,10 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) 
     return true;
 }
 
-void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
+void SceneLoader::loadSource(const std::string& name, const Node& source, const Node& sources, Scene& _scene) {
 
-    const Node source = src.second;
-    std::string name = src.first.Scalar();
+    if (_scene.dataSources().find(name) != _scene.dataSources().end()) { return; }
+
     std::string type = source["type"].Scalar();
     std::string url = source["url"].Scalar();
     int32_t maxZoom = 18;
@@ -771,7 +772,29 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
 
     if (sourcePtr) {
         sourcePtr->setCacheSize(CACHE_SIZE);
-        _scene.dataSources().push_back(sourcePtr);
+        _scene.dataSources()[name] = sourcePtr;
+    }
+
+    if (auto rasters = source["rasters"]) {
+        loadSourceRasters(sourcePtr, source["rasters"], sources, _scene);
+    }
+
+}
+
+void SceneLoader::loadSourceRasters(std::shared_ptr<DataSource> &source, Node rasterNode, const Node& sources,
+                                    Scene& scene) {
+    auto& dataSources = scene.dataSources();
+    if (rasterNode.IsSequence()) {
+        for (const auto& raster : rasterNode) {
+            std::string srcName = raster.Scalar();
+            try {
+                loadSource(srcName, sources[srcName], sources, scene);
+            } catch (YAML::RepresentationException e) {
+                LOGNode("Parsing sources: '%s'", sources[srcName], e.what());
+                return;
+            }
+            source->rasters().push_back(dataSources[srcName]);
+        }
     }
 }
 
@@ -1369,6 +1392,9 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {
         if (Node data_source = data["source"]) {
             if (data_source.IsScalar()) {
                 source = data_source.Scalar();
+                if (scene.dataSources().find(source) != scene.dataSources().end()) {
+                    scene.dataSources()[source]->setGeomTiles(true);
+                }
             }
         }
 
