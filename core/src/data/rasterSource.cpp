@@ -44,7 +44,7 @@ std::shared_ptr<Texture> RasterSource::texture(const TileTask& _task) {
     std::lock_guard<std::mutex> lock(m_textureMutex);
     auto &task = static_cast<const DownloadTileTask &>(_task);
     auto udata = (unsigned char*)task.rawTileData->data();
-    std::shared_ptr<Texture> texture(new Texture(udata, task.rawTileData->size(), m_texOptions, m_genMipmap));
+    std::shared_ptr<Texture> texture(new Texture(udata, task.rawTileData->size(), m_texOptions, m_genMipmap, true));
     m_textures[tileID] = texture;
     return texture;
 }
