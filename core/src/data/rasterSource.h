@@ -8,6 +8,7 @@
 
 #include <functional>
 #include <unordered_map>
+#include <mutex>
 
 namespace Tangram {
 
@@ -16,6 +17,7 @@ class RasterSource : public DataSource {
     TextureOptions m_texOptions;
     bool m_genMipmap;
     std::unordered_map<TileID, std::shared_ptr<Texture>> m_textures;
+    std::mutex m_textureMutex;
 
 protected:
 
