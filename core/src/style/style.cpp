@@ -247,18 +247,20 @@ void Style::draw(const Tile& _tile) {
         // TODO: do for all tile textures
         // FIXME: Currently only the first texture (which is the raster datasource's self texture)
 
-        UniformTextureArray textureArray;
+        UniformTextureArray textureIndexUniform;
+        UniformArray2f rasterSizeUniform;
 
         if (_tile.textures().size() > 0) {
             auto& texture = _tile.textures()[0];
             if (texture) {
-
                 texture->update(RenderState::nextAvailableTextureUnit());
                 texture->bind(RenderState::currentTextureUnit());
 
-                textureArray.slots.push_back(RenderState::currentTextureUnit());
+                textureIndexUniform.slots.push_back(RenderState::currentTextureUnit());
+                rasterSizeUniform.push_back({texture->getWidth(), texture->getHeight()});
 
-                m_shaderProgram->setUniformi(m_uRasters, textureArray);
+                m_shaderProgram->setUniformi(m_uRasters, textureIndexUniform);
+                m_shaderProgram->setUniformf(m_uRasterSizes, rasterSizeUniform);
             }
         }
 
@@ -272,7 +274,7 @@ void Style::draw(const Tile& _tile) {
 
         styleMesh->draw(*m_shaderProgram);
 
-        for (int i = 0; i < textureArray.slots.size(); ++i) {
+        for (int i = 0; i < textureIndexUniform.slots.size(); ++i) {
             RenderState::releaseTextureUnit();
         }
     }
