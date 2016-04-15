@@ -83,6 +83,8 @@ bool TileManager::removeDataSource(DataSource& dataSource) {
             for (auto& tile : it->tiles) {
                 tile.second.cancelTask();
             }
+            // Remove the textures for this data source
+            it->source->clearTextures();
             // Remove the tile set associated with this data source
             it = m_tileSets.erase(it);
             removed = true;
@@ -315,6 +317,11 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             if (!task->hasData()) {
                 m_loadPending++;
             }
+            for (auto& rasterTask : task->rasterTasks()) {
+                if (!rasterTask->hasData()) {
+                    m_loadPending++;
+                }
+            }
         }
 
         if (entry.isReady()) {
@@ -357,12 +364,29 @@ void TileManager::loadTiles() {
 
         } else if (m_loadPending < MAX_DOWNLOADS) {
             entry.task = task;
-            if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
-                m_loadPending++;
-            } else {
-                // Set canceled state, so that tile will not be tried
-                // for reloading until sourceGeneration increased.
-                entry.task->cancel();
+            // create and download raster references for this datasource
+            // store these rastertasks in this datasource' task
+            for (auto& raster : tileSet.source->rasters()) {
+                auto rasterTask = raster->createTask(tileId);
+                task->rasterTasks().push_back(rasterTask);
+                // TODO: Manage download task numers and queue tasks not downloaded
+                if (m_loadPending < MAX_DOWNLOADS) {
+                    if(raster->loadTileData(std::move(rasterTask))) {
+                        m_loadPending++;
+                    }
+                }
+            }
+            if (m_loadPending < MAX_DOWNLOADS) {
+                if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
+                    m_loadPending++;
+                } else {
+                    // Set canceled state, so that tile will not be tried
+                    // for reloading until sourceGeneration increased.
+                    for (auto& rasterTask : entry.task->rasterTasks()) {
+                        rasterTask->cancel();
+                    }
+                    entry.task->cancel();
+                }
             }
         }
     }
@@ -426,6 +450,8 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
 
     // Remove tile from set
     _tileIt = _tileSet.tiles.erase(_tileIt);
+    //Remove textures from this DS
+    _tileSet.source->clearTexture(id);
 }
 
 bool TileManager::updateProxyTile(TileSet& _tileSet, TileEntry& _tile,
