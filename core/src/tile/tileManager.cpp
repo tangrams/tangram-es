@@ -290,12 +290,27 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
     for (auto& it : tiles) {
         auto& entry = it.second;
 
-        DBG("> %s - ready:%d proxy:%d/%d loading:%d canceled:%d",
+        size_t rasterPending = 0;
+        size_t rasterLoading = 0;
+        size_t rasterDone = 0;
+
+        if (entry.task) {
+            rasterPending = entry.task->source().rasters().size() - entry.task->rasterTasks().size();
+            for (auto &raster : entry.task->rasterTasks()) {
+                if (raster->hasData()) { rasterDone++; }
+                else { rasterLoading++; }
+            }
+        }
+
+        DBG("> %s - ready:%d proxy:%d/%d loading:%d rDone:%d rLoading:%d rPending:%d canceled:%d",
              it.first.toString().c_str(),
              entry.isReady(),
              entry.getProxyCounter(),
              entry.m_proxies,
              entry.task && !entry.task->hasData(),
+             rasterDone,
+             rasterLoading,
+             rasterPending,
              entry.task && entry.task->isCanceled());
 
         if (entry.isLoading()) {
