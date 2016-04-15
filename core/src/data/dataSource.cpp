@@ -132,7 +132,7 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
     }
 }
 
-void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb) {
+void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
     TileID tileID = _task->tileId();
 
     if (!_rawData.empty()) {
@@ -149,25 +149,60 @@ void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
     }
 }
 
+// Load/Download referenced raster data
+void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task) {
+    TileID tileID = _task->tileId();
+
+    if (!_rawData.empty()) {
+
+        auto rawDataRef = std::make_shared<std::vector<char>>();
+        std::swap(*rawDataRef, _rawData);
+
+        auto& task = static_cast<DownloadTileTask&>(*_task);
+        task.rawTileData = rawDataRef;
+
+        m_cache->put(tileID, rawDataRef);
+    }
+}
 
 bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
 
     std::string url(constructURL(_task->tileId()));
 
-    // Using bind instead of lambda to be able to 'move' (until c++14)
-    return startUrlRequest(url, std::bind(&DataSource::onTileLoaded,
-                                          this,
-                                          std::placeholders::_1,
-                                          std::move(_task), _cb));
+    // lambda captured parameters are const by default, we want "task" (moved) to be non-const, hence "mutable"
+    // Refer: http://en.cppreference.com/w/cpp/language/lambda
+    return startUrlRequest(url, [this, _cb, task = std::move(_task)](std::vector<char>&& rawData) mutable {
+                                this->onTileLoaded(std::move(rawData), std::move(task), _cb);
+                            });
 
+}
+
+// Load/Download referenced raster data
+bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task) {
+
+    std::string url(constructURL(_task->tileId()));
+
+    // lambda captured parameters are const by default, we want "task" (moved) to be non-const, hence "mutable"
+    // Refer: http://en.cppreference.com/w/cpp/language/lambda
+    return startUrlRequest(url, [this, task = std::move(_task)](std::vector<char>&& rawData) mutable {
+                                onTileLoaded(std::move(rawData), std::move(task));
+                            });
 }
 
 void DataSource::cancelLoadingTile(const TileID& _tileID) {
     cancelUrlRequest(constructURL(_tileID));
 }
 
-std::shared_ptr<Texture> DataSource::texture(const TileTask &_task) {
+std::shared_ptr<Texture> DataSource::texture(const TileTask& task) {
     return nullptr;
+}
+
+void DataSource::clearTextures() {
+    //No-Op
+}
+
+void DataSource::clearTexture(const TileID& id) {
+    //No-Op
 }
 
 }
