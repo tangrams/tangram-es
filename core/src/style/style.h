@@ -2,6 +2,7 @@
 
 #include "gl.h"
 #include "gl/uniform.h"
+#include "util/fastMap.h"
 #include "data/tileData.h"
 
 #include <memory>
@@ -22,6 +23,7 @@ class View;
 class Scene;
 class ShaderProgram;
 class Style;
+class DataSource;
 
 enum class LightingType : char {
     none,
@@ -217,7 +219,7 @@ public:
     bool isAnimated() { return m_animated; }
 
     /* Make this style ready to be used (call after all needed properties are set) */
-    virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
+    virtual void build(const Scene& _scene);
 
     virtual void onBeginUpdate() {}
 
@@ -261,7 +263,7 @@ public:
 
     virtual bool hasRasters() const;
 
-    void setupRasters();
+    void setupRasters(const fastmap<std::string, std::shared_ptr<DataSource>>& _dataSources);
 
     std::vector<StyleUniform>& styleUniforms() { return m_styleUniforms; }
 
