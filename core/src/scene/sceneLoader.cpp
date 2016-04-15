@@ -672,6 +672,8 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) 
         style = std::make_unique<TextStyle>(name, true);
     } else if (baseStyle == "points") {
         style = std::make_unique<PointStyle>(name);
+    } else if (baseStyle == "raster") {
+        style = std::make_unique<RasterStyle>(name);
     } else {
         LOGW("Base style '%s' not recognized, cannot instantiate.", baseStyle.c_str());
         return false;
