@@ -77,21 +77,11 @@ void Tile::setMesh(const Style& _style, std::unique_ptr<StyledMesh> _mesh) {
     m_geometry[_style.getID()] = std::move(_mesh);
 }
 
-void Tile::setTexture(std::shared_ptr<Texture> _texture) {
-    m_texture = std::move(_texture);
-}
-
 const std::unique_ptr<StyledMesh>& Tile::getMesh(const Style& _style) const {
     static std::unique_ptr<StyledMesh> NONE = nullptr;
     if (_style.getID() >= m_geometry.size()) { return NONE; }
 
     return m_geometry[_style.getID()];
-}
-
-const std::shared_ptr<Texture>& Tile::getTexture() const {
-    static std::shared_ptr<Texture> NONE = nullptr;
-    if (m_texture) { return m_texture; }
-    return NONE;
 }
 
 size_t Tile::getMemoryUsage() const {
