@@ -50,6 +50,8 @@ public:
 
     StyleBuilder(const Style& _style);
 
+    virtual ~StyleBuilder() = default;
+
     virtual void setup(const Tile& _tile) = 0;
 
     virtual void addFeature(const Feature& _feat, const DrawRule& _rule);
