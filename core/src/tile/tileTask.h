@@ -58,6 +58,7 @@ public:
     bool isProxy() const { return m_proxyState; }
 
     void setProxyState(bool isProxy) { m_proxyState = isProxy; }
+    auto& rasterTasks() { return m_rasterTasks; }
 
 protected:
 
@@ -65,6 +66,9 @@ protected:
 
     // Save shared reference to Datasource while building tile
     std::shared_ptr<DataSource> m_source;
+
+    // Vector of tasks to download raster samplers
+    std::vector<std::shared_ptr<TileTask>> m_rasterTasks;
 
     const int64_t m_sourceGeneration;
 
