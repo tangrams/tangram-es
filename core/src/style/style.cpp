@@ -234,18 +234,22 @@ void Style::draw(const Tile& _tile) {
     auto& styleMesh = _tile.getMesh(*this);
 
     if (styleMesh) {
-        auto& texture = _tile.getTexture();
 
         // TODO: bind all raster textures
-        if (texture) {
-            UniformTextureArray textureArray;
+        // TODO: do for all tile textures
+        // FIXME: Currently only the first texture (which is the raster datasource's self texture)
+        if (_tile.textures().size() > 0) {
+            auto& texture = _tile.textures()[0];
+            if (texture) {
+                UniformTextureArray textureArray;
 
-            texture->update(RenderState::nextAvailableTextureUnit());
-            texture->bind(RenderState::currentTextureUnit());
+                texture->update(RenderState::nextAvailableTextureUnit());
+                texture->bind(RenderState::currentTextureUnit());
 
-            textureArray.slots.push_back(RenderState::currentTextureUnit());
+                textureArray.slots.push_back(RenderState::currentTextureUnit());
 
-            m_shaderProgram->setUniformi(m_uRasters, textureArray);
+                m_shaderProgram->setUniformi(m_uRasters, textureArray);
+            }
         }
 
         m_shaderProgram->setUniformMatrix4f(m_uModel, _tile.getModelMatrix());
@@ -258,8 +262,9 @@ void Style::draw(const Tile& _tile) {
 
         styleMesh->draw(*m_shaderProgram);
 
-        if (texture) {
+        if (_tile.textures().size() > 0) {
             // TODO: for each tile texture, release a slot
+            // FIXME: since only one texture (default raster datasource's self texture, is bound, only one is released)
             RenderState::releaseTextureUnit();
         }
     }

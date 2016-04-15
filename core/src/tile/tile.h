@@ -53,10 +53,11 @@ public:
     void initGeometry(uint32_t _size);
 
     const std::unique_ptr<StyledMesh>& getMesh(const Style& _style) const;
-    const std::shared_ptr<Texture>& getTexture() const;
 
     void setMesh(const Style& _style, std::unique_ptr<StyledMesh> _mesh);
-    void setTexture(std::shared_ptr<Texture> _texture);
+
+    auto& textures() { return m_textures; }
+    const auto& textures() const { return m_textures; }
 
     /* Update the Tile considering the current view */
     void update(float _dt, const View& _view);
@@ -104,7 +105,7 @@ private:
 
     // Map of <Style>s and their associated <Mesh>es
     std::vector<std::unique_ptr<StyledMesh>> m_geometry;
-    std::shared_ptr<Texture> m_texture;
+    std::vector<std::shared_ptr<Texture>> m_textures;
 
     mutable size_t m_memoryUsage = 0;
 };
