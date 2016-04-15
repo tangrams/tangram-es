@@ -10,6 +10,7 @@
 #include "scene/scene.h"
 #include "scene/spriteAtlas.h"
 #include "tile/tile.h"
+#include "data/dataSource.h"
 #include "view/view.h"
 #include "tangram.h"
 
@@ -33,7 +34,7 @@ const std::vector<std::string>& Style::builtInStyleNames() {
     return builtInStyleNames;
 }
 
-void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
+void Style::build(const Scene& _scene) {
 
     constructVertexLayout();
     constructShaderProgram();
@@ -56,7 +57,7 @@ void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
     }
 
     if (m_lightingType != LightingType::none) {
-        for (auto& light : _lights) {
+        for (auto& light : _scene.lights()) {
             auto uniforms = light->injectOnProgram(*m_shaderProgram);
             if (uniforms) {
                 m_lights.emplace_back(light.get(), std::move(uniforms));
@@ -64,7 +65,7 @@ void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
         }
     }
 
-    setupRasters();
+    setupRasters(_scene.dataSources());
 }
 
 void Style::setMaterial(const std::shared_ptr<Material>& _material) {
@@ -140,7 +141,7 @@ bool Style::hasRasters() const {
            m_rasterType == RasterType::normal;
 }
 
-void Style::setupRasters() {
+void Style::setupRasters(const fastmap<std::string, std::shared_ptr<DataSource>>& _dataSources) {
     if (!hasRasters()) {
         return;
     }
@@ -151,8 +152,15 @@ void Style::setupRasters() {
         m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_COLOR\n", false);
     }
 
-    // TODO: change to number of raster sources
-    m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_NUM_RASTER_SOURCES 1\n", false);
+    int numRasterSource = 0;
+    for (const auto& dataSourcePair : _dataSources) {
+        if (dataSourcePair.second->isRaster()) {
+            numRasterSource++;
+        }
+    }
+
+    m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_NUM_RASTER_SOURCES "
+        + std::to_string(numRasterSource) + "\n", false);
 
     m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n", false);
 

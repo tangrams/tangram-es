@@ -32,6 +32,7 @@ public:
     virtual std::shared_ptr<Texture> texture(const TileTask& _task) override;
     virtual void clearTextures() override;
     virtual void clearTexture(const TileID& id) override;
+    virtual bool isRaster() const override { return true; }
 
 };
 

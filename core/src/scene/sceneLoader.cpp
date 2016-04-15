@@ -263,7 +263,7 @@ bool SceneLoader::applyConfig(Node& config, Scene& _scene) {
     }
 
     for (auto& style : _scene.styles()) {
-        style->build(_scene.lights());
+        style->build(_scene);
     }
 
     return true;
@@ -1394,8 +1394,11 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {
         if (Node data_source = data["source"]) {
             if (data_source.IsScalar()) {
                 source = data_source.Scalar();
-                if (scene.dataSources().find(source) != scene.dataSources().end()) {
-                    scene.dataSources()[source]->setGeomTiles(true);
+                auto dataSourceIt = scene.dataSources().find(source);
+                if (dataSourceIt != scene.dataSources().end()) {
+                    dataSourceIt->second->setGeomTiles(true);
+                } else {
+                    LOGW("Can't find data source %s for layer %s", source.c_str(), name.c_str());
                 }
             }
         }

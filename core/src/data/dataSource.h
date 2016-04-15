@@ -82,6 +82,9 @@ public:
     bool geomTiles() { return m_geometryTiles; }
     void setGeomTiles(bool geomTiles) { m_geometryTiles = geomTiles; }
 
+    /* Avoid RTTI by adding a boolean check on the data source object */
+    virtual bool isRaster() const { return false; }
+
 protected:
 
     void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task, TileTaskCb _cb);
