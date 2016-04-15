@@ -158,6 +158,7 @@ protected:
     UniformLocation m_uTileOrigin{"u_tile_origin"};
     UniformLocation m_uProxyDepth{"u_proxy_depth"};
     UniformLocation m_uRasters{"u_rasters"};
+    UniformLocation m_uRasterSizes{"u_raster_sizes"};
 
     RasterType m_rasterType = RasterType::none;
 

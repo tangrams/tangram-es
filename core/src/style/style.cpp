@@ -104,8 +104,8 @@ void Style::setupShaderUniforms(Scene& _scene) {
                 m_shaderProgram->setUniformf(name, value.get<glm::vec3>());
             } else if(value.is<glm::vec4>()) {
                 m_shaderProgram->setUniformf(name, value.get<glm::vec4>());
-            } else if (value.is<UniformArray>()) {
-                m_shaderProgram->setUniformf(name, value.get<UniformArray>());
+            } else if (value.is<UniformArray1f>()) {
+                m_shaderProgram->setUniformf(name, value.get<UniformArray1f>());
             } else if (value.is<UniformTextureArray>()) {
                 UniformTextureArray& textureUniformArray = value.get<UniformTextureArray>();
                 textureUniformArray.slots.clear();

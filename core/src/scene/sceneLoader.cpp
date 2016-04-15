@@ -309,8 +309,8 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             StyleUniform styleUniform;
 
             if (parseStyleUniforms(uniform.second, scene, styleUniform)) {
-                if (styleUniform.value.is<UniformArray>()) {
-                    UniformArray& array = styleUniform.value.get<UniformArray>();
+                if (styleUniform.value.is<UniformArray1f>()) {
+                    UniformArray1f& array = styleUniform.value.get<UniformArray1f>();
                     shader.addSourceBlock("uniforms", "uniform float " + name +
                         "[" + std::to_string(array.size()) + "];");
                 } else if(styleUniform.value.is<UniformTextureArray>()) {
@@ -1262,7 +1262,7 @@ bool SceneLoader::parseStyleUniforms(const Node& value, Scene& scene, StyleUnifo
                     styleUniform.value = parseVec<glm::vec4>(value);
                     break;
                 default:
-                    UniformArray uniformArray;
+                    UniformArray1f uniformArray;
                     for (const auto& val : value) {
                         double fValue;
                         if (getDouble(val, fValue)) {

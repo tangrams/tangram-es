@@ -20,11 +20,13 @@ struct UniformTextureArray {
     };
 };
 
-using UniformArray = std::vector<float>;
+using UniformArray1f = std::vector<float>;
+using UniformArray2f = std::vector<glm::vec2>;
+using UniformArray3f = std::vector<glm::vec3>;
 
 /* Style Block Uniform types */
-using UniformValue = variant<none_type, bool, std::string, float, int, glm::vec2, glm::vec3,
-      glm::vec4, glm::mat2, glm::mat3, glm::mat4, UniformArray, UniformTextureArray>;
+using UniformValue = variant<none_type, bool, std::string, float, int, glm::vec2, glm::vec3, glm::vec4,
+    glm::mat2, glm::mat3, glm::mat4, UniformArray1f, UniformArray2f, UniformArray3f, UniformTextureArray>;
 
 
 class UniformLocation {
