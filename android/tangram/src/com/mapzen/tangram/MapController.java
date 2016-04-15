@@ -563,8 +563,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeHandleShoveGesture(float distance);
     private synchronized native void nativeQueueSceneUpdate(String componentPath, String value);
     private synchronized native void nativeApplySceneUpdates();
-
-    public synchronized native void nativePickFeature(float posX, float posY, FeaturePickListener listener);
+    private synchronized native void nativePickFeature(float posX, float posY, FeaturePickListener listener);
 
     private native void nativeOnUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private native void nativeOnUrlFailure(long callbackPtr);
