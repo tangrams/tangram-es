@@ -157,6 +157,8 @@ protected:
     UniformLocation m_uProxyDepth{"u_proxy_depth"};
     UniformLocation m_uRasters{"u_rasters"};
 
+    RasterType m_rasterType = RasterType::none;
+
 private:
 
     std::vector<StyleUniform> m_styleUniforms;
@@ -178,8 +180,6 @@ private:
     };
 
     MaterialHandle m_material;
-
-    RasterType m_rasterType = RasterType::none;
 
 public:
 
