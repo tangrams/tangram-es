@@ -364,28 +364,26 @@ void TileManager::loadTiles() {
 
         } else if (m_loadPending < MAX_DOWNLOADS) {
             entry.task = task;
+            if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
+                m_loadPending++;
+            } else {
+                // Set canceled state, so that tile will not be tried
+                // for reloading until sourceGeneration increased.
+                task->cancel();
+                continue;
+            }
             // create and download raster references for this datasource
             // store these rastertasks in this datasource' task
             for (auto& raster : tileSet.source->rasters()) {
                 auto rasterTask = raster->createTask(tileId);
-                task->rasterTasks().push_back(rasterTask);
-                // TODO: Manage download task numers and queue tasks not downloaded
-                if (m_loadPending < MAX_DOWNLOADS) {
-                    if(raster->loadTileData(std::move(rasterTask))) {
-                        m_loadPending++;
+                if (!rasterTask->hasData()) {
+                    auto saveRasterTask = rasterTask;
+                    if (m_loadPending < MAX_DOWNLOADS) {
+                        if (raster->loadTileData(std::move(rasterTask))) {
+                            entry.task->rasterTasks().push_back(std::move(saveRasterTask));
+                            m_loadPending++;
+                        }
                     }
-                }
-            }
-            if (m_loadPending < MAX_DOWNLOADS) {
-                if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
-                    m_loadPending++;
-                } else {
-                    // Set canceled state, so that tile will not be tried
-                    // for reloading until sourceGeneration increased.
-                    for (auto& rasterTask : entry.task->rasterTasks()) {
-                        rasterTask->cancel();
-                    }
-                    entry.task->cancel();
                 }
             }
         }
