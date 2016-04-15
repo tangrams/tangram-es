@@ -69,6 +69,9 @@ public class MapController implements Renderer {
         fontFileParser = new FontFileParser();
         fontFileParser.parse("/system/etc/fonts.xml");
 
+        // Set a default HTTPHandler
+        httpHandler = new HttpHandler();
+
         nativeInit(this, assetManager, scenePath);
 
     }
