@@ -30,6 +30,8 @@ public:
                  TextureOptions _options, bool genMipmap= false);
 
     virtual std::shared_ptr<Texture> texture(const TileTask& _task) override;
+    virtual void clearTextures() override;
+    virtual void clearTexture(const TileID& id) override;
 
 };
 

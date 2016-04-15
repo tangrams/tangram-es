@@ -56,4 +56,18 @@ std::shared_ptr<Texture> RasterSource::texture(const TileTask& _task) {
     }
 }
 
+void RasterSource::clearTextures() {
+    for (auto& raster: m_rasters) {
+        raster->clearTextures();
+    }
+    m_textures.clear();
+}
+
+void RasterSource::clearTexture(const TileID &id) {
+    for (auto& raster: m_rasters) {
+        raster->clearTexture(id);
+    }
+    m_textures.erase(id);
+}
+
 }

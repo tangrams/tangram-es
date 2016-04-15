@@ -37,6 +37,7 @@ public:
      * further processing before it is renderable.
      */
     virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb);
+    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task);
 
 
     /* Stops any running I/O tasks pertaining to @_tile */
@@ -50,7 +51,9 @@ public:
 
     const std::string& name() const { return m_name; }
 
-    virtual std::shared_ptr<Texture> texture(const TileTask& _task);
+    virtual std::shared_ptr<Texture> texture(const TileTask& task);
+    virtual void clearTextures();
+    virtual void clearTexture(const TileID& id);
 
     virtual bool equals(const DataSource& _other) const {
         return m_name == _other.m_name &&
@@ -81,7 +84,8 @@ public:
 
 protected:
 
-    void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb);
+    void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task, TileTaskCb _cb);
+    void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task);
 
     /* Constructs the URL of a tile using <m_urlTemplate> */
     virtual void constructURL(const TileID& _tileCoord, std::string& _url) const;
