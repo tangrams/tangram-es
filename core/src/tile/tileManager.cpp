@@ -361,6 +361,26 @@ void TileManager::enqueueTask(TileSet& _tileSet, const TileID& _tileID,
     m_loadTasks.insert(it, std::make_tuple(distance, &_tileSet, _tileID));
 }
 
+// create and download raster references for this datasource
+// store these rastertasks in this datasource' task
+void TileManager::loadRasterTasks(TileSet& tileSet, std::shared_ptr<TileTask>& tileTask, const TileID& tileID) {
+    auto& rasterSources = tileSet.source->rasters();
+    auto& rasterTasks = tileTask->rasterTasks();
+    if (rasterTasks.size() < rasterSources.size()) {
+        for (size_t index = rasterTasks.size(); index < rasterSources.size(); index++) {
+            auto& rasterSource = rasterSources[index];
+            auto rasterTask = rasterSource->createTask(tileID);
+            if (m_loadPending < MAX_DOWNLOADS) {
+                auto saveRasterTask = rasterTask;
+                if (rasterSource->loadTileData(std::move(rasterTask))) {
+                    rasterTasks.push_back(std::move(saveRasterTask));
+                    m_loadPending++;
+                }
+            }
+        }
+    }
+}
+
 void TileManager::loadTiles() {
 
     for (auto& loadTask : m_loadTasks) {
@@ -375,10 +395,12 @@ void TileManager::loadTiles() {
         if (task->hasData()) {
             // Note: Set implicit 'loading' state
             entry.task = task;
+            loadRasterTasks(tileSet, entry.task, tileId);
             m_dataCallback.func(std::move(task));
 
         } else if (m_loadPending < MAX_DOWNLOADS) {
             entry.task = task;
+            loadRasterTasks(tileSet, entry.task, tileId);
             if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
                 m_loadPending++;
             } else {
@@ -386,20 +408,6 @@ void TileManager::loadTiles() {
                 // for reloading until sourceGeneration increased.
                 task->cancel();
                 continue;
-            }
-            // create and download raster references for this datasource
-            // store these rastertasks in this datasource' task
-            for (auto& raster : tileSet.source->rasters()) {
-                auto rasterTask = raster->createTask(tileId);
-                if (!rasterTask->hasData()) {
-                    auto saveRasterTask = rasterTask;
-                    if (m_loadPending < MAX_DOWNLOADS) {
-                        if (raster->loadTileData(std::move(rasterTask))) {
-                            entry.task->rasterTasks().push_back(std::move(saveRasterTask));
-                            m_loadPending++;
-                        }
-                    }
-                }
             }
         }
     }
