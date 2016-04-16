@@ -43,7 +43,7 @@ public:
 
     TileID tileId() const { return m_tileId; }
 
-    void cancel() { m_canceled = true; }
+    void cancel();
 
     bool isCanceled() const { return m_canceled; }
 
