@@ -2,7 +2,7 @@
 
 #include "gl.h"
 #include "gl/uniform.h"
-#include "util/fastMap.h"
+#include "util/fastmap.h"
 #include "data/tileData.h"
 
 #include <memory>
