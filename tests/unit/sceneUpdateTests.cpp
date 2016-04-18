@@ -53,22 +53,22 @@ TEST_CASE("Scene update tests") {
     REQUIRE(!sceneString.empty());
 
     Node root;
-    REQUIRE(SceneLoader::loadScene(sceneString, scene, root, true));
+    REQUIRE(SceneLoader::loadScene(sceneString, scene));
 
     // Update
-    scene.queueComponentUpdate("lights.light1.ambient", "0.9");
-    scene.queueComponentUpdate("lights.light1.type", "spotlight");
-    scene.queueComponentUpdate("lights.light1.origin", "ground");
-    scene.queueComponentUpdate("layers.poi_icons.draw.icons.interactive", "false");
-    scene.queueComponentUpdate("styles.heightglow.shaders.uniforms.u_time_expand", "5.0");
-    scene.queueComponentUpdate("cameras.iso-camera.active", "true");
-    scene.queueComponentUpdate("cameras.iso-camera.type", "perspective");
-    scene.queueComponentUpdate("global.default_order", "function() { return 0.0; }");
-    scene.queueComponentUpdate("global.non_existing_property0", "true");
-    scene.queueComponentUpdate("global.non_existing_property1.non_existing_property_deep", "true");
+    scene.queueUpdate("lights.light1.ambient", "0.9");
+    scene.queueUpdate("lights.light1.type", "spotlight");
+    scene.queueUpdate("lights.light1.origin", "ground");
+    scene.queueUpdate("layers.poi_icons.draw.icons.interactive", "false");
+    scene.queueUpdate("styles.heightglow.shaders.uniforms.u_time_expand", "5.0");
+    scene.queueUpdate("cameras.iso-camera.active", "true");
+    scene.queueUpdate("cameras.iso-camera.type", "perspective");
+    scene.queueUpdate("global.default_order", "function() { return 0.0; }");
+    scene.queueUpdate("global.non_existing_property0", "true");
+    scene.queueUpdate("global.non_existing_property1.non_existing_property_deep", "true");
 
     // Tangram apply scene updates, reload the scene
-    REQUIRE(SceneLoader::loadScene(sceneString, scene, root, true));
+    REQUIRE(SceneLoader::loadScene(sceneString, scene));
     scene.clearUpdates();
 
     REQUIRE(root["lights"]["light1"]["ambient"].Scalar() == "0.9");
@@ -90,18 +90,18 @@ TEST_CASE("Scene update tests, ensure update ordering is preserved") {
     REQUIRE(!sceneString.empty());
 
     Node root;
-    REQUIRE(SceneLoader::loadScene(sceneString, scene, root, true));
+    REQUIRE(SceneLoader::loadScene(sceneString, scene));
 
     // Update
-    scene.queueComponentUpdate("lights.light1.ambient", "0.9");
-    scene.queueComponentUpdate("lights.light2.ambient", "0.0");
+    scene.queueUpdate("lights.light1.ambient", "0.9");
+    scene.queueUpdate("lights.light2.ambient", "0.0");
 
     // Delete lights
-    scene.queueComponentUpdate("lights", "null");
-    scene.queueComponentUpdate("lights.light2.ambient", "0.0");
+    scene.queueUpdate("lights", "null");
+    scene.queueUpdate("lights.light2.ambient", "0.0");
 
     // Tangram apply scene updates, reload the scene
-    REQUIRE(SceneLoader::loadScene(sceneString, scene, root, true));
+    REQUIRE(SceneLoader::loadScene(sceneString, scene));
     scene.clearUpdates();
 
     REQUIRE(!root["lights"]["light1"]);
