@@ -27,11 +27,11 @@ protected:
 public:
 
     RasterSource(const std::string& _name, const std::string& _urlTemplate, int32_t _maxZoom,
-                 TextureOptions _options, bool genMipmap= false);
+                 TextureOptions _options, bool genMipmap = false);
 
-    virtual std::shared_ptr<Texture> texture(const TileTask& _task) override;
-    virtual void clearTextures() override;
-    virtual void clearTexture(const TileID& id) override;
+    virtual Raster raster(const TileTask& _task) override;
+    virtual void clearRasters() override;
+    virtual void clearRaster(const TileID& id) override;
     virtual bool isRaster() const override { return true; }
 
 };

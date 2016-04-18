@@ -84,7 +84,7 @@ bool TileManager::removeDataSource(DataSource& dataSource) {
                 tile.second.cancelTask();
             }
             // Remove the textures for this data source
-            it->source->clearTextures();
+            it->source->clearRasters();
             // Remove the tile set associated with this data source
             it = m_tileSets.erase(it);
             removed = true;
@@ -472,8 +472,8 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
 
     // Remove tile from set
     _tileIt = _tileSet.tiles.erase(_tileIt);
-    //Remove textures from this DS
-    _tileSet.source->clearTexture(id);
+    // Remove textures from this DS
+    _tileSet.source->clearRaster(id);
 }
 
 bool TileManager::updateProxyTile(TileSet& _tileSet, TileEntry& _tile,

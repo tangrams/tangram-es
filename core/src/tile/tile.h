@@ -18,6 +18,16 @@ class Style;
 class View;
 struct StyledMesh;
 
+struct Raster {
+    TileID tileID;
+    std::shared_ptr<Texture> texture;
+
+    Raster(TileID tileID, std::shared_ptr<Texture> texture) : tileID(tileID), texture(texture) {}
+    Raster(Raster&& other) : tileID(other.tileID), texture(std::move(other.texture)) {}
+
+    bool isValid() const { return texture != nullptr; }
+};
+
 /* Tile of vector map data
  *
  * Tile represents a fixed area of a map at a fixed zoom level; It contains its
@@ -56,8 +66,8 @@ public:
 
     void setMesh(const Style& _style, std::unique_ptr<StyledMesh> _mesh);
 
-    auto& textures() { return m_textures; }
-    const auto& textures() const { return m_textures; }
+    auto& rasters() { return m_rasters; }
+    const auto& rasters() const { return m_rasters; }
 
     /* Update the Tile considering the current view */
     void update(float _dt, const View& _view);
@@ -105,7 +115,7 @@ private:
 
     // Map of <Style>s and their associated <Mesh>es
     std::vector<std::unique_ptr<StyledMesh>> m_geometry;
-    std::vector<std::shared_ptr<Texture>> m_textures;
+    std::vector<Raster> m_rasters;
 
     mutable size_t m_memoryUsage = 0;
 };

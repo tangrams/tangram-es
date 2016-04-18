@@ -10,6 +10,7 @@ namespace Tangram {
 class MapProjection;
 struct TileData;
 struct TileID;
+struct Raster;
 class Tile;
 class TileManager;
 struct RawCache;
@@ -51,9 +52,9 @@ public:
 
     const std::string& name() const { return m_name; }
 
-    virtual std::shared_ptr<Texture> texture(const TileTask& task);
-    virtual void clearTextures();
-    virtual void clearTexture(const TileID& id);
+    virtual Raster raster(const TileTask& task);
+    virtual void clearRasters();
+    virtual void clearRaster(const TileID& id);
 
     virtual bool equals(const DataSource& _other) const {
         return m_name == _other.m_name &&

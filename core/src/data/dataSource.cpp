@@ -163,7 +163,7 @@ void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
 
         m_cache->put(tileID, rawDataRef);
         // load the texture and store in datasource resources if network request was good.
-        texture(*_task);
+        raster(*_task);
     }
 }
 
@@ -198,16 +198,16 @@ void DataSource::cancelLoadingTile(const TileID& _tileID) {
     }
 }
 
-std::shared_ptr<Texture> DataSource::texture(const TileTask& task) {
-    return nullptr;
+Raster DataSource::raster(const TileTask& task) {
+    return { task.tileId(), nullptr };
 }
 
-void DataSource::clearTextures() {
-    //No-Op
+void DataSource::clearRasters() {
+    // No-Op by default
 }
 
-void DataSource::clearTexture(const TileID& id) {
-    //No-Op
+void DataSource::clearRaster(const TileID& id) {
+    // No-Op by default
 }
 
 }

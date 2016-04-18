@@ -252,8 +252,9 @@ void Style::draw(const Tile& _tile) {
         UniformTextureArray textureIndexUniform;
         UniformArray2f rasterSizeUniform;
 
-        for (auto& texture : _tile.textures()) {
-            if (texture) {
+        for (auto& raster : _tile.rasters()) {
+            if (raster.isValid()) {
+                auto& texture = raster.texture;
                 texture->update(RenderState::nextAvailableTextureUnit());
                 texture->bind(RenderState::currentTextureUnit());
 
@@ -277,8 +278,8 @@ void Style::draw(const Tile& _tile) {
             LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
         }
 
-        for (auto& texture : _tile.textures()) {
-            if (texture) {
+        for (auto& raster : _tile.rasters()) {
+            if (raster.isValid()) {
                 RenderState::releaseTextureUnit();
             }
         }
