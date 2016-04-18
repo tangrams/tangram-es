@@ -119,16 +119,12 @@ void TileWorker::run(Worker* instance) {
         if (tileData) {
 
             std::unique_lock<std::mutex> lock(m_mutex);
-            // TODO: before parsing the tile data, get the tile textures
-            // 1. initially task->source().fetchTexture should return a texture which is then saved in the tile
-            // 2. Figure out how textures from different raster sources will be put in this tile!
             auto texture = task->source().texture(*task);
             auto tile = builder->build(task->tileId(), *tileData, task->source());
 
             // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
             // LOG("loadTime %s - %f", task->tile()->getID().toString().c_str(), loadTime);
 
-            // TODO: Conditional wait on this thread till all the raster textures have been fetched
             m_condition.wait(lock, [&]() {
                                         for (auto& raster : task->rasterTasks()) {
                                             if (!raster->hasData()) {
@@ -143,7 +139,9 @@ void TileWorker::run(Worker* instance) {
             }
             for (auto& rasterTask : task->rasterTasks()) {
                 auto rasterTex = rasterTask->source().texture(*rasterTask);
-                tile->textures().push_back(std::move(rasterTex));
+                if (rasterTex) {
+                    tile->textures().push_back(std::move(rasterTex));
+                }
             }
 
             // Mark task as ready
