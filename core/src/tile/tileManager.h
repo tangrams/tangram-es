@@ -13,6 +13,7 @@
 #include <mutex>
 #include <tuple>
 #include <set>
+#include <data/dataSource.h>
 
 namespace Tangram {
 
@@ -107,6 +108,10 @@ private:
 
         void cancelTask() {
             if (task) {
+                for (auto& raster : task->rasterTasks()) {
+                    raster->cancel();
+                }
+                task->rasterTasks().clear();
                 task->cancel();
                 task.reset();
             }
@@ -161,7 +166,8 @@ private:
     void enqueueTask(TileSet& _tileSet, const TileID& _tileID, const ViewState& _view);
 
     void loadTiles();
-    void loadRasterTasks(TileSet& tileSet, std::shared_ptr<TileTask>& tileTask, const TileID& tileID);
+    void loadRasterTasks(std::vector<std::shared_ptr<DataSource>>& rasters, std::shared_ptr<TileTask>& tileTask,
+                         const TileID& tileID);
 
     /*
      * Constructs a future (async) to load data of a new visible tile this is
