@@ -143,16 +143,10 @@ void TileManager::updateTileSets(const ViewState& _view,
 void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
                                 const std::set<TileID>& _visibleTiles) {
 
-    bool reloadTiles = false;
     bool newTiles = false;
 
     if (_tileSet.sourceGeneration != _tileSet.source->generation()) {
         _tileSet.sourceGeneration = _tileSet.source->generation();
-        reloadTiles = true;
-    }
-
-    if (!_view.changedOnLastUpdate && !m_tileSetChanged && !reloadTiles) {
-        return;
     }
 
     // Tile load request above this zoom-level will be canceled in order to
