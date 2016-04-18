@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gl/uniform.h"
+#include "scene/scene.h"
 
 #include <string>
 #include <vector>
@@ -16,7 +17,6 @@
 
 namespace Tangram {
 
-class Scene;
 class TileManager;
 class SceneLayer;
 class View;

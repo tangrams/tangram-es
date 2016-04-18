@@ -20,7 +20,7 @@ class DataSource;
 // given resource path
 void initialize(const char* _scenePath);
 
-void loadScene(const char* _scenePath, bool _setPositionFromScene = false);
+void loadScene(const char* _scenePath);
 
 void queueSceneUpdate(const char* componentName, const char* value);
 

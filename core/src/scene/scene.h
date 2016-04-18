@@ -40,9 +40,10 @@ public:
     };
 
     Scene();
-    Scene(std::vector<Update> updates);
+    Scene(const Scene& _other);
     ~Scene();
 
+    auto& config() { return m_config; }
     auto& view() { return m_view; }
     auto& dataSources() { return m_dataSources; };
     auto& layers() { return m_layers; };
@@ -55,7 +56,9 @@ public:
     auto& background() { return m_background; }
     auto& fontContext() { return m_fontContext; }
     auto& globals() { return m_globals; }
+    auto& updates() { return m_updates; }
 
+    const auto& config() const { return m_config; }
     const auto& dataSources() const { return m_dataSources; };
     const auto& layers() const { return m_layers; };
     const auto& styles() const { return m_styles; };
@@ -64,6 +67,7 @@ public:
     const auto& mapProjection() const { return m_mapProjection; };
     const auto& fontContext() const { return m_fontContext; }
     const auto& globals() const { return m_globals; }
+    const auto& updates() const { return m_updates; }
 
     const Style* findStyle(const std::string& _name) const;
     const Light* findLight(const std::string& _name) const;
@@ -83,11 +87,12 @@ public:
 
     void queueUpdate(std::string componentName, std::string value);
 
-    const std::vector<Update>& updates() const { return m_updates; }
-
     void clearUpdates() { m_updates.clear(); }
 
-    YAML::Node& config() { return m_config; }
+    void addClientDataSource(std::shared_ptr<DataSource> _source);
+    void removeClientDataSource(DataSource& _source);
+
+    const std::vector<std::shared_ptr<DataSource>> getAllDataSources() const;
 
 private:
 
@@ -99,6 +104,7 @@ private:
 
     std::vector<DataLayer> m_layers;
     std::vector<std::shared_ptr<DataSource>> m_dataSources;
+    std::vector<std::shared_ptr<DataSource>> m_clientDataSources;
     std::vector<std::unique_ptr<Style>> m_styles;
     std::vector<std::unique_ptr<Light>> m_lights;
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;

@@ -85,7 +85,7 @@ void initialize(const char* _scenePath) {
     // Label setup
     m_labels = std::make_unique<Labels>();
 
-    loadScene(_scenePath, true);
+    loadScene(_scenePath);
 
     glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
     m_view->setPosition(projPos.x, projPos.y);
@@ -99,28 +99,19 @@ void setScene(std::shared_ptr<Scene>& _scene) {
     m_scene = _scene;
     m_view = _scene->view();
     m_inputHandler->setView(m_view);
-    m_tileManager->setDataSources(_scene->dataSources());
+    m_tileManager->setDataSources(_scene->getAllDataSources());
     m_tileWorker->setScene(_scene);
     setPixelScale(m_view->pixelScale());
 }
 
-void loadScene(const char* _scenePath, bool _setPositionFromScene) {
+void loadScene(const char* _scenePath) {
     LOG("Loading scene file: %s", _scenePath);
 
     auto sceneString = stringFromFile(setResourceRoot(_scenePath).c_str(), PathType::resource);
 
-    bool setPositionFromCurrentView = bool(m_scene);
-
-    auto scene = std::make_shared<Scene>(m_scene->updates());
-    if (m_view) {
-        scene->view() = std::make_shared<View>(*m_view);
-    }
+    auto scene = std::make_shared<Scene>(*m_scene);
 
     if (SceneLoader::loadScene(sceneString, *scene)) {
-        if (setPositionFromCurrentView && !_setPositionFromScene) {
-            scene->view()->setPosition(m_view->getPosition());
-            scene->view()->setZoom(m_view->getZoom());
-        }
         setScene(scene);
     }
 }
@@ -137,9 +128,8 @@ void applySceneUpdates() {
     SceneLoader::applyUpdates(m_scene->config(), m_scene->updates());
     m_scene->clearUpdates();
 
-    auto scene = std::make_shared<Scene>();
-    scene->config() = m_scene->config();
-    scene->view() = m_scene->view();
+    auto scene = std::make_shared<Scene>(*m_scene);
+
     if (SceneLoader::applyConfig(scene->config(), *scene)) {
         setScene(scene);
     }
@@ -416,14 +406,14 @@ void setPixelScale(float _pixelsPerPoint) {
 void addDataSource(std::shared_ptr<DataSource> _source) {
     if (!m_tileManager) { return; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
-
+    m_scene->addClientDataSource(_source);
     m_tileManager->addDataSource(_source);
 }
 
 bool removeDataSource(DataSource& source) {
     if (!m_tileManager) { return false; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
-
+    m_scene->removeClientDataSource(source);
     return m_tileManager->removeDataSource(source);
 }
 
