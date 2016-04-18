@@ -159,7 +159,7 @@ void setContinuousRendering(bool _isContinuous) {
 
     JniThreadBinding jniEnv(jvm);
 
-    jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID, _isContinuous ? 1 : 0);
+    jniEnv->CallVoidMethod(tangramInstance, setRenderModeMethodID, _isContinuous ? 1 : 0);
 }
 
 bool isContinuousRendering() {

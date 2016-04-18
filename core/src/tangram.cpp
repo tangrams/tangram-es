@@ -102,6 +102,18 @@ void setScene(std::shared_ptr<Scene>& _scene) {
     m_tileManager->setDataSources(_scene->getAllDataSources());
     m_tileWorker->setScene(_scene);
     setPixelScale(m_view->pixelScale());
+
+    bool animated = m_scene->animated() == Scene::animate::yes;
+
+    if (m_scene->animated() == Scene::animate::none) {
+        for (const auto& style : m_scene->styles()) {
+            animated |= style->isAnimated();
+        }
+    }
+
+    if (animated != isContinuousRendering()) {
+        setContinuousRendering(animated);
+    }
 }
 
 void loadScene(const char* _scenePath) {
@@ -168,23 +180,14 @@ void update(float _dt) {
 
     {
         std::lock_guard<std::mutex> lock(m_tasksMutex);
-
         while (!m_tasks.empty()) {
             m_tasks.front()();
             m_tasks.pop();
         }
     }
 
-    bool animated = m_scene->animated() == Scene::animate::yes;
     for (const auto& style : m_scene->styles()) {
         style->onBeginUpdate();
-        if (m_scene->animated() == Scene::animate::none) {
-            animated |= style->isAnimated();
-        }
-    }
-
-    if (animated != isContinuousRendering()) {
-        setContinuousRendering(animated);
     }
 
     {
