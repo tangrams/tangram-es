@@ -242,13 +242,11 @@ void Style::draw(const Tile& _tile) {
     auto& styleMesh = _tile.getMesh(*this);
 
     if (styleMesh) {
-
-        // TODO: bind all raster textures
-        // TODO: do for all tile textures
-        // FIXME: Currently only the first texture (which is the raster datasource's self texture)
+        TileID tileID = _tile.getID();
 
         UniformTextureArray textureIndexUniform;
         UniformArray2f rasterSizeUniform;
+        UniformArray3f rasterOffsetsUniform;
 
         for (auto& raster : _tile.rasters()) {
             if (raster.isValid()) {
@@ -259,9 +257,22 @@ void Style::draw(const Tile& _tile) {
                 textureIndexUniform.slots.push_back(RenderState::currentTextureUnit());
                 rasterSizeUniform.push_back({texture->getWidth(), texture->getHeight()});
 
-                m_shaderProgram->setUniformi(m_uRasters, textureIndexUniform);
-                m_shaderProgram->setUniformf(m_uRasterSizes, rasterSizeUniform);
+                if (tileID.z > raster.tileID.z) {
+                    float dz = tileID.z - raster.tileID.z;
+                    float dz2 = powf(2.f, dz);
+
+                    // TODO
+                    rasterOffsetsUniform.push_back({0, 0, 1});
+                } else {
+                    rasterOffsetsUniform.push_back({0, 0, 1});
+                }
             }
+        }
+
+        if (_tile.rasters().size() > 0) {
+            m_shaderProgram->setUniformi(m_uRasters, textureIndexUniform);
+            m_shaderProgram->setUniformf(m_uRasterSizes, rasterSizeUniform);
+            m_shaderProgram->setUniformf(m_uRasterOffsets, rasterOffsetsUniform);
         }
 
         m_shaderProgram->setUniformMatrix4f(m_uModel, _tile.getModelMatrix());
@@ -269,8 +280,8 @@ void Style::draw(const Tile& _tile) {
         m_shaderProgram->setUniformf(m_uTileOrigin,
                                      _tile.getOrigin().x,
                                      _tile.getOrigin().y,
-                                     _tile.getID().s,
-                                     _tile.getID().z);
+                                     tileID.s,
+                                     tileID.z);
 
         styleMesh->draw(*m_shaderProgram);
 
