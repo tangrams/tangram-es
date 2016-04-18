@@ -37,11 +37,13 @@ std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapPr
 
 }
 
-std::shared_ptr<Texture> RasterSource::texture(const TileTask& _task) {
+Raster RasterSource::raster(const TileTask& _task) {
 
     auto tileID = _task.tileId();
 
-    if (m_textures.find(tileID) != m_textures.end()) { return m_textures.at(tileID); }
+    if (m_textures.find(tileID) != m_textures.end()) {
+        return { tileID, m_textures.at(tileID) };
+    }
 
     std::lock_guard<std::mutex> lock(m_textureMutex);
     auto &task = static_cast<const DownloadTileTask &>(_task);
@@ -50,23 +52,23 @@ std::shared_ptr<Texture> RasterSource::texture(const TileTask& _task) {
 
     if (texture->hasValidData()) {
         m_textures[tileID] = texture;
-        return texture;
+        return { tileID, texture };
     } else {
         LOGW("Texture for data source %s has failed to decode", m_name.c_str());
-        return nullptr;
+        return { tileID, nullptr };
     }
 }
 
-void RasterSource::clearTextures() {
+void RasterSource::clearRasters() {
     for (auto& raster: m_rasters) {
-        raster->clearTextures();
+        raster->clearRasters();
     }
     m_textures.clear();
 }
 
-void RasterSource::clearTexture(const TileID &id) {
+void RasterSource::clearRaster(const TileID &id) {
     for (auto& raster: m_rasters) {
-        raster->clearTexture(id);
+        raster->clearRaster(id);
     }
     m_textures.erase(id);
 }
