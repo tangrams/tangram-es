@@ -162,6 +162,8 @@ void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
         task.rawTileData = rawDataRef;
 
         m_cache->put(tileID, rawDataRef);
+        // load the texture and store in datasource resources if network request was good.
+        texture(*_task);
     }
 }
 
@@ -191,6 +193,9 @@ bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task) {
 
 void DataSource::cancelLoadingTile(const TileID& _tileID) {
     cancelUrlRequest(constructURL(_tileID));
+    for (auto& raster : m_rasters) {
+        raster->cancelLoadingTile(_tileID);
+    }
 }
 
 std::shared_ptr<Texture> DataSource::texture(const TileTask& task) {

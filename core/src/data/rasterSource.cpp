@@ -40,6 +40,7 @@ std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapPr
 std::shared_ptr<Texture> RasterSource::texture(const TileTask& _task) {
 
     auto tileID = _task.tileId();
+
     if (m_textures.find(tileID) != m_textures.end()) { return m_textures.at(tileID); }
 
     std::lock_guard<std::mutex> lock(m_textureMutex);
