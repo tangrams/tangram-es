@@ -203,11 +203,16 @@ Raster DataSource::raster(const TileTask& task) {
 }
 
 void DataSource::clearRasters() {
-    // No-Op by default
+    for (auto& raster : m_rasters) {
+        raster->clearRasters();
+    }
 }
 
 void DataSource::clearRaster(const TileID& id) {
-    // No-Op by default
+    for (auto& raster : m_rasters) {
+        TileID rasterID = id.withMaxSourceZoom(raster->maxZoom());
+        raster->clearRaster(rasterID);
+    }
 }
 
 }

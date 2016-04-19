@@ -474,9 +474,9 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
         m_tileCache->put(_tileSet.source->id(), entry.tile);
     }
 
-    // Remove tile from set
+    //remove tile from set
     _tileIt = _tileSet.tiles.erase(_tileIt);
-    // Remove textures from this DS
+    // Remove rasters from this DS
     _tileSet.source->clearRaster(id);
 }
 
