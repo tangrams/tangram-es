@@ -57,7 +57,7 @@ public class MapController implements Renderer {
      * must contain all the local files that the map will need
      * @param sceneFilePath Location of the YAML scene file within the assets directory
      */
-    MapController(Context context, String sceneFilePath) {
+    protected MapController(Context context, String sceneFilePath) {
 
         scenePath = sceneFilePath;
 
@@ -74,6 +74,10 @@ public class MapController implements Renderer {
 
         nativeInit(this, assetManager, scenePath);
 
+    }
+
+    static MapController getInstance(Context context, String sceneFilePath) {
+        return new MapController(context, sceneFilePath);
     }
 
     /**

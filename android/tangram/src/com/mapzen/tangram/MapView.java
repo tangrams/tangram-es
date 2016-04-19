@@ -60,8 +60,9 @@ public class MapView extends FrameLayout {
         getMapTask = new AsyncTask<Void, Void, MapController>() {
 
             @Override
+            @SuppressWarnings("WrongThread")
             protected MapController doInBackground(Void... params) {
-                return new MapController(context, sceneFilePath);
+                return getMapInstance(context, sceneFilePath);
             }
 
             @Override
@@ -73,6 +74,10 @@ public class MapView extends FrameLayout {
 
         }.execute();
 
+    }
+
+    protected MapController getMapInstance(Context context, String sceneFilePath) {
+        return MapController.getInstance(context, sceneFilePath);
     }
 
     protected void configureGLSurfaceView() {
