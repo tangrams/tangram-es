@@ -40,7 +40,7 @@ void TileManager::setDataSources(const fastmap<std::string, std::shared_ptr<Data
         [&](auto& tileSet) {
             auto sIt = _sources.find(tileSet.source->name());
 
-            if (sIt == _sources.end() || !sIt->second->geomTiles()) {
+            if (sIt == _sources.end() || !sIt->second->generateGeometry()) {
                 DBG("remove source %s", tileSet.source->name().c_str());
                 return true;
             }
@@ -64,7 +64,7 @@ void TileManager::setDataSources(const fastmap<std::string, std::shared_ptr<Data
                          [&](const TileSet& a) {
                              return a.source->name() == source.second->name();
                          }) == m_tileSets.end()
-                && source.second->geomTiles()) {
+                && source.second->generateGeometry()) {
             DBG("add source %s", source.second->name().c_str());
             addDataSource(source.second);
         }
