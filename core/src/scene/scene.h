@@ -31,7 +31,7 @@ struct Stops;
 class Scene {
 public:
     struct Update {
-        std::vector<std::string> splitPath;
+        std::vector<std::string> keys;
         std::string value;
     };
 

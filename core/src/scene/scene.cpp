@@ -83,9 +83,9 @@ bool Scene::texture(const std::string& textureName, std::shared_ptr<Texture>& te
     return true;
 }
 
-void Scene::queueUpdate(std::string componentPath, std::string value) {
-    std::vector<std::string> splitPath = splitString(componentPath, COMPONENT_PATH_DELIMITER);
-    m_updates.push_back({ splitPath, value });
+void Scene::queueUpdate(std::string path, std::string value) {
+    auto keys = splitString(path, COMPONENT_PATH_DELIMITER);
+    m_updates.push_back({ keys, value });
 }
 
 void Scene::addClientDataSource(std::shared_ptr<DataSource> _source) {

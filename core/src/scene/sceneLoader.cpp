@@ -30,7 +30,6 @@
 #include <algorithm>
 #include <iterator>
 #include <unordered_map>
-#include <numeric>
 
 using YAML::Node;
 using YAML::NodeType;
@@ -59,40 +58,26 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
 
 void SceneLoader::applyUpdates(Node& root, const std::vector<Scene::Update>& updates) {
 
-    for (const Scene::Update& update : updates) {
+    for (const auto& update : updates) {
 
-        std::vector<Node> stack;
-        stack.push_back(root);
-        for (auto& str : update.splitPath) {
-            if (stack.back()[str]) {
-                stack.push_back(stack.back()[str]);
-                continue;
-            } else {
-                break;
-            }
+        auto node = root;
+        std::string key;
+        for (auto it = update.keys.begin(); it != update.keys.end(); ++it) {
+            key = *it;
+            if (it + 1 == update.keys.end()) { break; } // Stop before last key.
+            node.reset(node[key]); // Node safely becomes invalid is key is not present.
         }
 
-        if (stack.size() < update.splitPath.size()) {
-            std::string path;
-            std::accumulate(std::begin(update.splitPath), std::end(update.splitPath), path);
-            LOGW("User defined path %s was not found", path.c_str());
-            LOGW("Can't update scene node");
-        } else {
-            if (stack.back()) {
-                try {
-                    if (stack.size() == update.splitPath.size()) {
-                        const std::string& missingNodeKey = update.splitPath[update.splitPath.size() - 1];
-                        stack.back()[missingNodeKey] = YAML::Load(update.value);
-                    } else {
-                        stack.back() = YAML::Load(update.value);
-                    }
-                } catch(YAML::ParserException e) {
-                    std::string path;
-                    std::accumulate(std::begin(update.splitPath), std::end(update.splitPath), path);
-                    LOGE("Parsing error on user defined value '%s'", e.what());
-                    LOGE("%s %s", path.c_str(), update.value.c_str());
-                }
+        if (node) {
+            try {
+                node[key] = YAML::Load(update.value);
+            } catch (YAML::ParserException e) {
+                LOGW("Cannot update scene - value invalid: %s", e.what());
             }
+        } else {
+            std::string path;
+            for (const auto& k : update.keys) { path += "." + k; }
+            LOGW("Cannot update scene - key not found: %s", path.c_str());
         }
     }
 }
