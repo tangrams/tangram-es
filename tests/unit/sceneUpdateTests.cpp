@@ -52,8 +52,7 @@ TEST_CASE("Scene update tests") {
 
     REQUIRE(!sceneString.empty());
 
-    Node root;
-    REQUIRE(SceneLoader::loadScene(sceneString, scene));
+    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
 
     // Update
     scene.queueUpdate("lights.light1.ambient", "0.9");
@@ -68,15 +67,16 @@ TEST_CASE("Scene update tests") {
     scene.queueUpdate("global.non_existing_property1.non_existing_property_deep", "true");
 
     // Tangram apply scene updates, reload the scene
-    REQUIRE(SceneLoader::loadScene(sceneString, scene));
+    SceneLoader::applyUpdates(scene.config(), scene.updates());
     scene.clearUpdates();
+
+    const Node& root = scene.config();
 
     REQUIRE(root["lights"]["light1"]["ambient"].Scalar() == "0.9");
     REQUIRE(root["lights"]["light1"]["type"].Scalar() == "spotlight");
     REQUIRE(root["lights"]["light1"]["origin"].Scalar() == "ground");
     REQUIRE(root["layers"]["poi_icons"]["draw"]["icons"]["interactive"].Scalar() == "false");
     REQUIRE(root["styles"]["heightglow"]["shaders"]["uniforms"]["u_time_expand"].Scalar() == "5.0");
-    REQUIRE(root["styles"]["heightglowline"]["shaders"]["uniforms"]["u_time_expand"].Scalar() == "5.0");
     REQUIRE(root["cameras"]["iso-camera"]["active"].Scalar() == "true");
     REQUIRE(root["cameras"]["iso-camera"]["type"].Scalar() == "perspective");
     REQUIRE(root["global"]["default_order"].Scalar() == "function() { return 0.0; }");
@@ -89,8 +89,7 @@ TEST_CASE("Scene update tests, ensure update ordering is preserved") {
 
     REQUIRE(!sceneString.empty());
 
-    Node root;
-    REQUIRE(SceneLoader::loadScene(sceneString, scene));
+    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
 
     // Update
     scene.queueUpdate("lights.light1.ambient", "0.9");
@@ -101,8 +100,10 @@ TEST_CASE("Scene update tests, ensure update ordering is preserved") {
     scene.queueUpdate("lights.light2.ambient", "0.0");
 
     // Tangram apply scene updates, reload the scene
-    REQUIRE(SceneLoader::loadScene(sceneString, scene));
+    SceneLoader::applyUpdates(scene.config(), scene.updates());
     scene.clearUpdates();
+
+    const Node& root = scene.config();
 
     REQUIRE(!root["lights"]["light1"]);
     REQUIRE(!root["lights"]["light2"]);

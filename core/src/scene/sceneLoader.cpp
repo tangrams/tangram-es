@@ -47,13 +47,21 @@ bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
 
     Node& root = _scene.config();
 
+    if (loadConfig(_sceneString, root)) {
+        applyConfig(root, _scene);
+        return true;
+    }
+    return false;
+}
+
+bool SceneLoader::loadConfig(const std::string& _sceneString, Node& root) {
+
     try { root = YAML::Load(_sceneString); }
     catch (YAML::ParserException e) {
         LOGE("Parsing scene config '%s'", e.what());
         return false;
     }
-
-    return applyConfig(root, _scene);
+    return true;
 }
 
 void SceneLoader::applyUpdates(Node& root, const std::vector<Scene::Update>& updates) {

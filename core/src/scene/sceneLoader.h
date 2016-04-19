@@ -38,6 +38,7 @@ struct SceneLoader {
     using Node = YAML::Node;
 
     static bool loadScene(const std::string& _sceneString, Scene& _scene);
+    static bool loadConfig(const std::string& _sceneString, Node& _root);
     static bool applyConfig(Node& config, Scene& scene);
     static void applyUpdates(Node& root, const std::vector<Scene::Update>& updates);
     static void applyGlobalProperties(Node& node, Scene& scene);
