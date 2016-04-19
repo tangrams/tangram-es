@@ -144,12 +144,6 @@ void Style::setupRasters(const fastmap<std::string, std::shared_ptr<DataSource>>
         return;
     }
 
-    if (m_rasterType == RasterType::normal) {
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_NORMAL\n", false);
-    } else if (m_rasterType == RasterType::color) {
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_COLOR\n", false);
-    }
-
     int numRasterSource = 0;
     for (const auto& dataSourcePair : _dataSources) {
         if (dataSourcePair.second->isRaster()) {
@@ -157,9 +151,19 @@ void Style::setupRasters(const fastmap<std::string, std::shared_ptr<DataSource>>
         }
     }
 
-    m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_NUM_RASTER_SOURCES "
-        + std::to_string(numRasterSource) + "\n", false);
+    if (numRasterSource == 0) {
+        return;
+    }
 
+    // Inject shader defines for raster sampling and uniforms
+    if (m_rasterType == RasterType::normal) {
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_NORMAL\n", false);
+    } else if (m_rasterType == RasterType::color) {
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_COLOR\n", false);
+    }
+
+    m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_NUM_RASTER_SOURCES "
+            + std::to_string(numRasterSource) + "\n", false);
     m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n", false);
 
     std::string rasterBlock = stringFromFile("shaders/rasters.glsl", PathType::internal);
