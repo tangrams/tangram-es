@@ -1396,7 +1396,7 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {
                 source = data_source.Scalar();
                 auto dataSourceIt = scene.dataSources().find(source);
                 if (dataSourceIt != scene.dataSources().end()) {
-                    dataSourceIt->second->setGeomTiles(true);
+                    dataSourceIt->second->generateGeometry(true);
                 } else {
                     LOGW("Can't find data source %s for layer %s", source.c_str(), name.c_str());
                 }

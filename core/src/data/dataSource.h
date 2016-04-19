@@ -80,8 +80,8 @@ public:
     auto& rasters() { return m_rasters; }
     const auto& rasters() const { return m_rasters; }
 
-    bool geomTiles() { return m_geometryTiles; }
-    void setGeomTiles(bool geomTiles) { m_geometryTiles = geomTiles; }
+    bool generateGeometry() const { return m_generateGeometry; }
+    void generateGeometry(bool generateGeometry) { m_generateGeometry = generateGeometry; }
 
     /* Avoid RTTI by adding a boolean check on the data source object */
     virtual bool isRaster() const { return false; }
@@ -101,7 +101,7 @@ protected:
     }
 
     // This datasource is used to generate actual tile geometry
-    bool m_geometryTiles = false;
+    bool m_generateGeometry = false;
 
     // Name used to identify this source in the style sheet
     std::string m_name;
