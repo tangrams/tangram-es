@@ -136,20 +136,20 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
         map.pickFeature(x, y);
 
-        map.setPosition(tappedPoint, 1000);
+        map.setPositionEased(tappedPoint, 1000);
 
         return true;
     }
 
     @Override
     public boolean onDoubleTap(float x, float y) {
-        map.setZoom(map.getZoom() + 1.f, 500);
+        map.setZoomEased(map.getZoom() + 1.f, 500);
         LngLat tapped = map.coordinatesAtScreenPosition(x, y);
         LngLat current = map.getPosition();
         LngLat next = new LngLat(
                 .5 * (tapped.longitude + current.longitude),
                 .5 * (tapped.latitude + current.latitude));
-        map.setPosition(next, 500);
+        map.setPositionEased(next, 500);
         return true;
     }
 

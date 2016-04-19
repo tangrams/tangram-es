@@ -133,21 +133,21 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Set the geographic position of the center of the map view
+     * Set the geographic position of the center of the map view with default easing
      * @param position LngLat of the position to set
      * @param duration Time in milliseconds to ease to the given position
      */
-    public void setPosition(LngLat position, int duration) {
-        setPosition(position, duration, DEFAULT_EASE_TYPE);
+    public void setPositionEased(LngLat position, int duration) {
+        setPositionEased(position, duration, DEFAULT_EASE_TYPE);
     }
 
     /**
-     * Set the geographic position of the center of the map view
+     * Set the geographic position of the center of the map view with custom easing
      * @param position LngLat of the position to set
      * @param duration Time in milliseconds to ease to the given position
      * @param ease Type of easing to use
      */
-    public void setPosition(LngLat position, int duration, EaseType ease) {
+    public void setPositionEased(LngLat position, int duration, EaseType ease) {
         float seconds = duration / 1000.f;
         nativeSetPositionEased(position.longitude, position.latitude, seconds, ease.ordinal());
     }
@@ -163,7 +163,7 @@ public class MapController implements Renderer {
     /**
      * Get the geographic position of the center of the map view
      * @param out LngLat to be reused as the output
-     * @return Degrees longitude and latitude of the current map position, in a two-element array
+     * @return LngLat of the center of the map view
      */
     public LngLat getPosition(LngLat out) {
         double[] tmp = { 0, 0 };
@@ -173,107 +173,107 @@ public class MapController implements Renderer {
 
     /**
      * Set the zoom level of the map view
-     * @param zoom Fractional zoom level
+     * @param zoom Zoom level; lower values show more area
      */
     public void setZoom(float zoom) {
         nativeSetZoom(zoom);
     }
 
     /**
-     * Set the zoom level of the map view
-     * @param zoom Fractional zoom level
+     * Set the zoom level of the map view with default easing
+     * @param zoom Zoom level; lower values show more area
      * @param duration Time in milliseconds to ease to given zoom
      */
-    public void setZoom(float zoom, int duration) {
-        setZoom(zoom, duration, DEFAULT_EASE_TYPE);
+    public void setZoomEased(float zoom, int duration) {
+        setZoomEased(zoom, duration, DEFAULT_EASE_TYPE);
     }
 
     /**
-     * Set the zoom level of the map view
-     * @param zoom Fractional zoom level
+     * Set the zoom level of the map view with custom easing
+     * @param zoom Zoom level; lower values show more area
      * @param duration Time in milliseconds to ease to given zoom
      * @param ease Type of easing to use
      */
-    public void setZoom(float zoom, int duration, EaseType ease) {
+    public void setZoomEased(float zoom, int duration, EaseType ease) {
         float seconds = duration / 1000.f;
         nativeSetZoomEased(zoom, seconds, ease.ordinal());
     }
 
     /**
      * Get the zoom level of the map view
-     * @return Fractional zoom level
+     * @return Zoom level; lower values show more area
      */
     public float getZoom() {
         return nativeGetZoom();
     }
 
     /**
-     * Set the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
-     * @param radians Rotation in radians
+     * Set the rotation of the view
+     * @param rotation Counter-clockwise rotation in radians; 0 corresponds to North pointing up
      */
-    public void setRotation(float radians) {
-        nativeSetRotation(radians);
+    public void setRotation(float rotation) {
+        nativeSetRotation(rotation);
     }
 
     /**
-     * Set the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
-     * @param radians Rotation in radians
+     * Set the rotation of the view with default easing
+     * @param rotation Counter-clockwise rotation in radians; 0 corresponds to North pointing up
      * @param duration Time in milliseconds to ease to the given rotation
      */
-    public void setRotation(float radians, int duration) {
-        setRotation(radians, duration, DEFAULT_EASE_TYPE);
+    public void setRotationEased(float rotation, int duration) {
+        setRotationEased(rotation, duration, DEFAULT_EASE_TYPE);
     }
 
     /**
-     * Set the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
-     * @param radians Rotation in radians
+     * Set the rotation of the view with custom easing
+     * @param rotation Counter-clockwise rotation in radians; 0 corresponds to North pointing up
      * @param duration Time in milliseconds to ease to the given rotation
      * @param ease Type of easing to use
      */
-    public void setRotation(float radians, int duration, EaseType ease) {
+    public void setRotationEased(float rotation, int duration, EaseType ease) {
         float seconds = duration / 1000.f;
-        nativeSetRotationEased(radians, seconds, ease.ordinal());
+        nativeSetRotationEased(rotation, seconds, ease.ordinal());
     }
 
     /**
-     * Get the counter-clockwise rotation of the view in radians; 0 corresponds to North pointing up
-     * @return Rotation in radians
+     * Get the rotation of the view
+     * @return Counter-clockwise rotation in radians; 0 corresponds to North pointing up
      */
     public float getRotation() {
         return nativeGetRotation();
     }
 
     /**
-     * Set the tilt angle of the view in radians; 0 corresponds to straight down
-     * @param radians Tilt angle in radians
+     * Set the tilt angle of the view
+     * @param tilt Tilt angle in radians; 0 corresponds to straight down
      */
-    public void setTilt(float radians) {
-        nativeSetTilt(radians);
+    public void setTilt(float tilt) {
+        nativeSetTilt(tilt);
     }
 
     /**
-     * Set the tilt angle of the view in radians; 0 corresponds to straight down
-     * @param radians Tilt angle in radians
+     * Set the tilt angle of the view with default easing
+     * @param tilt Tilt angle in radians; 0 corresponds to straight down
      * @param duration Time in milliseconds to ease to the given tilt
      */
-    public void setTilt(float radians, int duration) {
-        setTilt(radians, duration, DEFAULT_EASE_TYPE);
+    public void setTiltEased(float tilt, int duration) {
+        setTiltEased(tilt, duration, DEFAULT_EASE_TYPE);
     }
 
     /**
-     * Set the tilt angle of the view in radians; 0 corresponds to straight down
-     * @param radians Tilt angle in radians
+     * Set the tilt angle of the view with custom easing
+     * @param tilt Tilt angle in radians; 0 corresponds to straight down
      * @param duration Time in milliseconds to ease to the given tilt
      * @param ease Type of easing to use
      */
-    public void setTilt(float radians, int duration, EaseType ease) {
+    public void setTiltEased(float tilt, int duration, EaseType ease) {
         float seconds = duration / 1000.f;
-        nativeSetTiltEased(radians, seconds, ease.ordinal());
+        nativeSetTiltEased(tilt, seconds, ease.ordinal());
     }
 
     /**
-     * Get the tilt angle of the view in radians; 0 corresponds to straight down
-     * @return Tilt angle in radians
+     * Get the tilt angle of the view
+     * @return Tilt angle in radians; 0 corresponds to straight down
      */
     public float getTilt() {
         return nativeGetTilt();
