@@ -78,7 +78,7 @@ struct TestDataSource : DataSource {
     int tileTaskCount = 0;
 
     TestDataSource() : DataSource("", "") {
-        m_geometryTiles = true;
+        m_generateGeometry = true;
     }
     virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
         tileTaskCount++;

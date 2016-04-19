@@ -269,6 +269,8 @@ void Style::draw(const Tile& _tile) {
                 } else {
                     rasterOffsetsUniform.push_back({0, 0, 1});
                 }
+            } else {
+                LOGW("Invalid raster");
             }
         }
 
