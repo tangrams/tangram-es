@@ -116,9 +116,8 @@ void loadScene(const char* _scenePath) {
     }
 }
 
-void queueSceneUpdate(const char* componentName, const char* value) {
-
-    return m_scene->queueUpdate(componentName, value);
+void queueSceneUpdate(const char* _path, const char* _value) {
+    return m_scene->queueUpdate(_path, _value);
 }
 
 void applySceneUpdates() {

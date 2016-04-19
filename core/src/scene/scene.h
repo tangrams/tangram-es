@@ -56,7 +56,6 @@ public:
     auto& background() { return m_background; }
     auto& fontContext() { return m_fontContext; }
     auto& globals() { return m_globals; }
-    auto& updates() { return m_updates; }
 
     const auto& config() const { return m_config; }
     const auto& dataSources() const { return m_dataSources; };
@@ -85,7 +84,7 @@ public:
     void animated(bool animated) { m_animated = animated ? yes : no; }
     animate animated() const { return m_animated; }
 
-    void queueUpdate(std::string componentName, std::string value);
+    void queueUpdate(std::string path, std::string value);
 
     void clearUpdates() { m_updates.clear(); }
 

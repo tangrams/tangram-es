@@ -20,10 +20,15 @@ class DataSource;
 // given resource path
 void initialize(const char* _scenePath);
 
+// Load the scene at the given absolute file path
 void loadScene(const char* _scenePath);
 
-void queueSceneUpdate(const char* componentName, const char* value);
+// Request an update to the scene configuration; the path is a series of yaml keys
+// separated by a '.' and the value is a string of yaml to replace the current value
+// at the given path in the scene
+void queueSceneUpdate(const char* _path, const char* _value);
 
+// Apply all previously requested scene updates
 void applySceneUpdates();
 
 // Initialize graphics resources; OpenGL context must be created prior to calling this
