@@ -366,7 +366,11 @@ void TileManager::loadRasterTasks(std::vector<std::shared_ptr<DataSource>>& rast
     if (rasterTasks.size() < rasters.size()) {
         for (size_t index = rasterTasks.size(); index < rasters.size(); index++) {
             auto& rasterSource = rasters[index];
-            auto rasterTask = rasterSource->createTask(tileID);
+            TileID rasterTileID = tileID;
+            if (rasterTileID.z > rasterSource->maxZoom()) {
+                rasterTileID = rasterTileID.withMaxSourceZoom(rasterSource->maxZoom());
+            }
+            auto rasterTask = rasterSource->createTask(rasterTileID);
             if (rasterTask->hasData()) {
                 loadRasterTasks(rasterSource->rasters(), rasterTask, tileID);
                 rasterTasks.push_back(std::move(rasterTask));
