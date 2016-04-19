@@ -263,8 +263,11 @@ void Style::draw(const Tile& _tile) {
                     float dz = tileID.z - raster.tileID.z;
                     float dz2 = powf(2.f, dz);
 
-                    // TODO
-                    rasterOffsetsUniform.push_back({0, 0, 1});
+                    rasterOffsetsUniform.push_back({
+                        fmodf(tileID.x, dz2) / dz2,
+                        (dz2 - 1.f - fmodf(tileID.y, dz2)) / dz2,
+                        1.f / dz2
+                    });
                 } else {
                     rasterOffsetsUniform.push_back({0, 0, 1});
                 }
