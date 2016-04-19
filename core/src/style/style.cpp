@@ -248,40 +248,40 @@ void Style::draw(const Tile& _tile) {
     if (styleMesh) {
         TileID tileID = _tile.getID();
 
-        UniformTextureArray textureIndexUniform;
-        UniformArray2f rasterSizeUniform;
-        UniformArray3f rasterOffsetsUniform;
+        if (hasRasters()) {
+            UniformTextureArray textureIndexUniform;
+            UniformArray2f rasterSizeUniform;
+            UniformArray3f rasterOffsetsUniform;
 
-        for (auto& raster : _tile.rasters()) {
-            if (raster.isValid()) {
-                auto& texture = raster.texture;
-                texture->update(RenderState::nextAvailableTextureUnit());
-                texture->bind(RenderState::currentTextureUnit());
+            for (auto& raster : _tile.rasters()) {
+                if (raster.isValid()) {
+                    auto& texture = raster.texture;
+                    texture->update(RenderState::nextAvailableTextureUnit());
+                    texture->bind(RenderState::currentTextureUnit());
 
-                textureIndexUniform.slots.push_back(RenderState::currentTextureUnit());
-                rasterSizeUniform.push_back({texture->getWidth(), texture->getHeight()});
+                    textureIndexUniform.slots.push_back(RenderState::currentTextureUnit());
+                    rasterSizeUniform.push_back({texture->getWidth(), texture->getHeight()});
 
-                if (tileID.z > raster.tileID.z) {
-                    float dz = tileID.z - raster.tileID.z;
-                    float dz2 = powf(2.f, dz);
+                    if (tileID.z > raster.tileID.z) {
+                        float dz = tileID.z - raster.tileID.z;
+                        float dz2 = powf(2.f, dz);
 
-                    rasterOffsetsUniform.push_back({
-                        fmodf(tileID.x, dz2) / dz2,
-                        (dz2 - 1.f - fmodf(tileID.y, dz2)) / dz2,
-                        1.f / dz2
-                    });
-                } else {
-                    rasterOffsetsUniform.push_back({0, 0, 1});
+                        rasterOffsetsUniform.push_back({
+                            fmodf(tileID.x, dz2) / dz2,
+                            (dz2 - 1.f - fmodf(tileID.y, dz2)) / dz2,
+                            1.f / dz2
+                        });
+                    } else {
+                        rasterOffsetsUniform.push_back({0, 0, 1});
+                    }
                 }
-            } else {
-                LOGW("Invalid raster");
             }
-        }
 
-        if (_tile.rasters().size() > 0) {
-            m_shaderProgram->setUniformi(m_uRasters, textureIndexUniform);
-            m_shaderProgram->setUniformf(m_uRasterSizes, rasterSizeUniform);
-            m_shaderProgram->setUniformf(m_uRasterOffsets, rasterOffsetsUniform);
+            if (_tile.rasters().size() > 0) {
+                m_shaderProgram->setUniformi(m_uRasters, textureIndexUniform);
+                m_shaderProgram->setUniformf(m_uRasterSizes, rasterSizeUniform);
+                m_shaderProgram->setUniformf(m_uRasterOffsets, rasterOffsetsUniform);
+            }
         }
 
         m_shaderProgram->setUniformMatrix4f(m_uModel, _tile.getModelMatrix());
@@ -294,9 +294,11 @@ void Style::draw(const Tile& _tile) {
 
         styleMesh->draw(*m_shaderProgram);
 
-        for (auto& raster : _tile.rasters()) {
-            if (raster.isValid()) {
-                RenderState::releaseTextureUnit();
+        if (hasRasters()) {
+            for (auto& raster : _tile.rasters()) {
+                if (raster.isValid()) {
+                    RenderState::releaseTextureUnit();
+                }
             }
         }
     }
