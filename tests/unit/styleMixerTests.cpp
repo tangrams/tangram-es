@@ -257,3 +257,37 @@ TEST_CASE("Correctly mix two style config nodes", "[yaml][mixing]") {
     REQUIRE(resultBA["material"]["specular"].Scalar() == "green");
 
 }
+
+TEST_CASE("fix:mergeMapFieldTakingLast: Correctly mix two style config nodes", "[yaml][mixing]") {
+
+    StyleMixer mixer;
+
+    Node styles = YAML::Load(R"END(
+        styleA:
+        styleB:
+            base: styleA
+            animated: true
+            texcoords: false
+            lighting: fragment
+            texture: b.png
+            blend: overlay
+            blend_order: 2
+            material:
+                diffuse: mat.png
+                specular: green
+        )END");
+
+    mixer.applyStyleMixins(styles["styleB"], { styles["styleA"] });
+    auto resultB = styles["styleB"];
+
+    REQUIRE(resultB["base"].Scalar() == "styleA");
+    REQUIRE(resultB["animated"].Scalar() == "true");
+    REQUIRE(resultB["texcoords"].Scalar() == "false");
+    REQUIRE(resultB["lighting"].Scalar() == "fragment");
+    REQUIRE(resultB["texture"].Scalar() == "b.png");
+    REQUIRE(resultB["blend"].Scalar() == "overlay");
+    REQUIRE(resultB["blend_order"].Scalar() == "2");
+    REQUIRE(resultB["material"]["diffuse"].Scalar() == "mat.png");
+    REQUIRE(resultB["material"]["specular"].Scalar() == "green");
+
+}
