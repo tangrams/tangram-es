@@ -789,7 +789,7 @@ void SceneLoader::loadSourceRasters(std::shared_ptr<DataSource> &source, Node ra
                 LOGNode("Parsing sources: '%s'", sources[srcName], e.what());
                 return;
             }
-            source->rasters().push_back(dataSources[srcName]);
+            source->rasterSources().push_back(dataSources[srcName]);
         }
     }
 }

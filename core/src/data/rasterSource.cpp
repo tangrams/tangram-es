@@ -60,7 +60,7 @@ Raster RasterSource::raster(const TileTask& _task) {
 }
 
 void RasterSource::clearRasters() {
-    for (auto& raster: m_rasters) {
+    for (auto& raster: m_rasterSources) {
         raster->clearRasters();
     }
     std::lock_guard<std::mutex> lock(m_textureMutex);
@@ -68,7 +68,7 @@ void RasterSource::clearRasters() {
 }
 
 void RasterSource::clearRaster(const TileID &id) {
-    for (auto& raster: m_rasters) {
+    for (auto& raster: m_rasterSources) {
         TileID rasterID = id.withMaxSourceZoom(raster->maxZoom());
         raster->clearRaster(rasterID);
     }

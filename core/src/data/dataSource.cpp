@@ -193,7 +193,7 @@ bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task) {
 
 void DataSource::cancelLoadingTile(const TileID& _tileID) {
     cancelUrlRequest(constructURL(_tileID));
-    for (auto& raster : m_rasters) {
+    for (auto& raster : m_rasterSources) {
         raster->cancelLoadingTile(_tileID);
     }
 }
@@ -203,13 +203,13 @@ Raster DataSource::raster(const TileTask& task) {
 }
 
 void DataSource::clearRasters() {
-    for (auto& raster : m_rasters) {
+    for (auto& raster : m_rasterSources) {
         raster->clearRasters();
     }
 }
 
 void DataSource::clearRaster(const TileID& id) {
-    for (auto& raster : m_rasters) {
+    for (auto& raster : m_rasterSources) {
         TileID rasterID = id.withMaxSourceZoom(raster->maxZoom());
         raster->clearRaster(rasterID);
     }
