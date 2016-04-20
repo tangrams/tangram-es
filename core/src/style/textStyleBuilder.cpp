@@ -297,14 +297,16 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 
     uint32_t strokeAttrib = std::max(_params.strokeWidth / ctx->maxStrokeWidth() * 255.f, 0.f);
     if (strokeAttrib > 255) {
-        LOGW("stroke_width too large: %f / %f", _params.strokeWidth, strokeAttrib/255.f);
+        // FIXME: This warning should not be logged for every label
+        // LOGW("stroke_width too large: %f / %f", _params.strokeWidth, strokeAttrib/255.f);
         strokeAttrib = 255;
     }
     m_attributes.stroke = (_params.strokeColor & 0x00ffffff) + (strokeAttrib << 24);
     m_attributes.fill = _params.fill;
     m_attributes.fontScale = _params.fontScale * 64.f;
     if (m_attributes.fontScale > 255) {
-        LOGW("Too large font scale %f, maximal scale is 4", _params.fontScale);
+        // FIXME: This warning should not be logged for every label
+        // LOGW("Too large font scale %f, maximal scale is 4", _params.fontScale);
         m_attributes.fontScale = 255;
     }
     m_attributes.quadsStart = m_quads.size();
