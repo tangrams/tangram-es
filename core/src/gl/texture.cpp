@@ -43,12 +43,7 @@ Texture::Texture(const unsigned char* data, size_t dataSize, TextureOptions opti
 }
 
 void Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size, bool flipOnLoad) {
-    if (blob == nullptr || size == 0) {
-        LOGE("Texture data is empty!");
-        return;
-    }
-
-    unsigned char* pixels;
+    unsigned char* pixels = nullptr;
     int width, height, comp;
 
     // stbi_load_from_memory loads the image as a serie of scanline starting from
@@ -56,17 +51,28 @@ void Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size, 
     // would be flipped vertically.
     stbi_set_flip_vertically_on_load((int)flipOnLoad);
 
-    pixels = stbi_load_from_memory(blob, size, &width, &height, &comp, STBI_rgb_alpha);
+    if (blob != nullptr && size != 0) {
+        pixels = stbi_load_from_memory(blob, size, &width, &height, &comp, STBI_rgb_alpha);
+    }
 
     if (pixels) {
         resize(width, height);
+
         setData(reinterpret_cast<GLuint*>(pixels), width * height);
 
         stbi_image_free(pixels);
 
         m_validData = true;
     } else {
+        // Default inconsistent texture data is set to a 1*1 pixel texture
+        // This reduces inconsistent behavior when texture failed loading
+        // texture data but a Tangram style shader requires a shader sampler
+        GLuint blackPixel = 0x0000ff;
+
+        setData(&blackPixel, 1);
+
         LOGE("Decoding image from memory failed");
+
         m_validData = false;
     }
 }
