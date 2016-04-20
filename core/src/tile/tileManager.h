@@ -140,6 +140,7 @@ private:
         }
 
         bool m_visible = false;
+        bool m_mainTaskLoaded = false;
 
         /* Method to check whther this tile is in the current set of visible tiles
          * determined by view::updateTiles().
