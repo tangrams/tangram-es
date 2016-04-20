@@ -207,6 +207,8 @@ void update(float _dt) {
 
 void render() {
 
+    RenderState::setDefaultStates();
+
     FrameInfo::beginFrame();
 
     // Set up openGL for new frame

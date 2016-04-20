@@ -11,6 +11,8 @@ namespace RenderState {
 
     /* Configure the render states */
     void configure();
+    /* Set render states to their default values */
+    void setDefaultStates();
     /* Get the texture slot from a texture unit from 0 to TANGRAM_MAX_TEXTURE_UNIT-1 */
     GLuint getTextureUnit(GLuint _unit);
     /* Bind a vertex buffer */

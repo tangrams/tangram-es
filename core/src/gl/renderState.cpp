@@ -45,8 +45,12 @@ namespace RenderState {
     void bindTexture(GLenum _target, GLuint _textureId) { glBindTexture(_target, _textureId); }
 
     void configure() {
-        s_textureUnit = -1;
         s_validGeneration++;
+        setDefaultStates();
+    }
+
+    void setDefaultStates() {
+        resetTextureUnit();
         VertexLayout::clearCache();
 
         blending.init(GL_FALSE);
