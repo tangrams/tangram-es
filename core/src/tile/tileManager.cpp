@@ -220,7 +220,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
                     }
                     m_tilesInProgress++;
 
-                } else if (!bool(entry.task) ||
+                } else if (!bool(entry.task) || !entry.m_mainTaskLoaded ||
                            (entry.isCanceled() &&
                             (entry.task->sourceGeneration() < generation))) {
                     // Start loading when no task is set or the task stems from an
@@ -407,6 +407,7 @@ void TileManager::loadTiles() {
             entry.task = task;
             loadRasterTasks(tileSet.source->rasterSources(), entry.task, tileId);
             if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
+                entry.m_mainTaskLoaded = true;
                 m_loadPending++;
             } else {
                 // Set canceled state, so that tile will not be tried
