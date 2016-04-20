@@ -295,7 +295,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
         size_t rasterDone = 0;
 
         if (entry.task) {
-            rasterPending = entry.task->source().rasters().size() - entry.task->rasterTasks().size();
+            rasterPending = entry.task->source().rasterSources().size() - entry.task->rasterTasks().size();
             for (auto &raster : entry.task->rasterTasks()) {
                 if (raster->hasData()) { rasterDone++; }
                 else { rasterLoading++; }
@@ -372,10 +372,10 @@ void TileManager::loadRasterTasks(std::vector<std::shared_ptr<DataSource>>& rast
             }
             auto rasterTask = rasterSource->createTask(rasterTileID);
             if (rasterTask->hasData()) {
-                loadRasterTasks(rasterSource->rasters(), rasterTask, tileID);
+                loadRasterTasks(rasterSource->rasterSources(), rasterTask, tileID);
                 rasterTasks.push_back(std::move(rasterTask));
             } else if (m_loadPending < MAX_DOWNLOADS) {
-                loadRasterTasks(rasterSource->rasters(), rasterTask, tileID);
+                loadRasterTasks(rasterSource->rasterSources(), rasterTask, tileID);
                 auto saveRasterTask = rasterTask;
                 if (rasterSource->loadTileData(std::move(rasterTask))) {
                     rasterTasks.push_back(std::move(saveRasterTask));
@@ -400,12 +400,12 @@ void TileManager::loadTiles() {
         if (task->hasData()) {
             // Note: Set implicit 'loading' state
             entry.task = task;
-            loadRasterTasks(tileSet.source->rasters(), entry.task, tileId);
+            loadRasterTasks(tileSet.source->rasterSources(), entry.task, tileId);
             m_dataCallback.func(std::move(task));
 
         } else if (m_loadPending < MAX_DOWNLOADS) {
             entry.task = task;
-            loadRasterTasks(tileSet.source->rasters(), entry.task, tileId);
+            loadRasterTasks(tileSet.source->rasterSources(), entry.task, tileId);
             if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
                 m_loadPending++;
             } else {

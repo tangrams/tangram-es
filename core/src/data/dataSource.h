@@ -76,9 +76,9 @@ public:
 
     int32_t maxZoom() const { return m_maxZoom; }
 
-    /* assign/get rasters to this datasource */
-    auto& rasters() { return m_rasters; }
-    const auto& rasters() const { return m_rasters; }
+    /* assign/get raster datasources to this datasource */
+    auto& rasterSources() { return m_rasterSources; }
+    const auto& rasterSources() const { return m_rasterSources; }
 
     bool generateGeometry() const { return m_generateGeometry; }
     void generateGeometry(bool generateGeometry) { m_generateGeometry = generateGeometry; }
@@ -121,7 +121,7 @@ protected:
     std::unique_ptr<RawCache> m_cache;
 
     /* vector of raster sources (as raster samplers) referenced by this datasource */
-    std::vector<std::shared_ptr<DataSource>> m_rasters;
+    std::vector<std::shared_ptr<DataSource>> m_rasterSources;
 };
 
 }
