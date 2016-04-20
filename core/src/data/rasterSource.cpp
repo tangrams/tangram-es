@@ -50,19 +50,20 @@ Raster RasterSource::raster(const TileTask& _task) {
     auto udata = (unsigned char*)task.rawTileData->data();
     std::shared_ptr<Texture> texture(new Texture(udata, task.rawTileData->size(), m_texOptions, m_genMipmap, true));
 
-    if (texture->hasValidData()) {
-        m_textures[tileID] = texture;
-        return { tileID, texture };
-    } else {
+    m_textures[tileID] = texture;
+
+    if (!texture->hasValidData()) {
         LOGW("Texture for data source %s has failed to decode", m_name.c_str());
-        return { tileID, nullptr };
     }
+
+    return { tileID, texture };
 }
 
 void RasterSource::clearRasters() {
     for (auto& raster: m_rasterSources) {
         raster->clearRasters();
     }
+
     std::lock_guard<std::mutex> lock(m_textureMutex);
     m_textures.clear();
 }
@@ -72,7 +73,9 @@ void RasterSource::clearRaster(const TileID &id) {
         TileID rasterID = id.withMaxSourceZoom(raster->maxZoom());
         raster->clearRaster(rasterID);
     }
-    // We do not want to delete the texture reference from the DS if any of the tiles is still using this as a reference
+
+    // We do not want to delete the texture reference from the
+    // DS if any of the tiles is still using this as a reference
     std::lock_guard<std::mutex> lock(m_textureMutex);
     if (m_textures[id].use_count() <= 1) {
         m_textures.erase(id);
