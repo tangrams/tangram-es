@@ -205,9 +205,10 @@ void StyleMixer::mergeMapFieldTakingLast(const std::string& key, Node target, co
 
     for (auto it = sources.rbegin(); it != sources.rend(); ++it) {
         const auto& source = (*it)[key];
-        if (!source.IsMap()) {
+        if (!source || !source.IsMap()) {
             continue;
         }
+
         for (const auto& entry : source) {
             const auto& subkey = entry.first.Scalar();
             if (!map[subkey]) {
