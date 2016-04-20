@@ -86,7 +86,7 @@ public:
 
     struct {
         uint32_t order = 0;
-        uint32_t color = 0xff00ffff;
+        uint32_t color = 0xffffffff;
         glm::vec2 extrude;
         float height;
         float minHeight;
