@@ -41,6 +41,7 @@ varying vec3 v_normal;
 #define UNPACK_POSITION(x) (x / 8192.0)
 #define UNPACK_EXTRUSION(x) (x / 4096.0)
 #define UNPACK_ORDER(x) (x / 2.0)
+#define UNPACK_TEXCOORD(x) (x / 8192.0)
 
 vec4 modelPosition() {
     return vec4(UNPACK_POSITION(a_position.xyz) * exp2(u_tile_origin.z - u_tile_origin.w), 1.0);
@@ -68,7 +69,7 @@ void main() {
     v_color = a_color;
 
     #ifdef TANGRAM_USE_TEX_COORDS
-        v_texcoord = a_texcoord;
+        v_texcoord = UNPACK_TEXCOORD(a_texcoord);
     #endif
 
     v_normal = u_normal_matrix * vec3(0.,0.,1.);
@@ -87,6 +88,10 @@ void main() {
         #pragma tangram: width
 
         position.xy += extrude.xy * width;
+
+        #ifdef TANGRAM_USE_TEX_COORDS
+            v_texcoord.y /= 2. * width;
+        #endif
     }
 
     // Transform position into meters relative to map center
