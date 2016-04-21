@@ -752,6 +752,11 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
     const std::string& name = node.first.Scalar();
     const std::string& type = light["type"].Scalar();
 
+    if (Node visible = light["visible"]) {
+        // If 'visible' is false, skip loading this light.
+        if (!visible.as<bool>(true)) { return; }
+    }
+
     std::unique_ptr<Light> sceneLight;
 
     if (type == "ambient") {
