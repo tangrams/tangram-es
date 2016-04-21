@@ -278,6 +278,8 @@ bool isOutsideTile(const glm::vec3& _a, const glm::vec3& _b) {
 void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx,
                           size_t startIndex, size_t endIndex, bool endCap = true) {
 
+    float distance = 0; // Cumulative distance along the polyline.
+
     size_t origLineSize = _line.size();
 
     // endIndex/startIndex could be wrapped values, calculate lineSize accordingly
@@ -308,6 +310,8 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx,
     for (int i = 1; i < lineSize - 1; i++) {
         // get the Point using wrapped index in the original line geometry
         int nextIndex = (i + startIndex + 1) % origLineSize;
+
+        distance += glm::distance(coordCurr, coordNext);
 
         coordCurr = coordNext;
         coordNext = _line[nextIndex];
@@ -340,7 +344,7 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx,
             miterVec *= _ctx.miterLimit / glm::length(miterVec);
         }
 
-        float v = i / (float)lineSize;
+        float v = distance;
 
         if (trianglesOnJoin == 0) {
             // Join type is a simple miter
@@ -380,9 +384,11 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx,
         }
     }
 
+    distance += glm::distance(coordCurr, coordNext);
+
     // Process last point in line with a cap
-    addPolyLineVertex(coordNext, normNext, {1.f, 1.f}, _ctx); // right corner
-    addPolyLineVertex(coordNext, -normNext, {0.f, 1.f}, _ctx); // left corner
+    addPolyLineVertex(coordNext, normNext, {1.f, distance}, _ctx); // right corner
+    addPolyLineVertex(coordNext, -normNext, {0.f, distance}, _ctx); // left corner
     indexPairs(1, _ctx.numVertices, _ctx.indices);
     if (endCap) {
         addCap(coordNext, normNext, cornersOnCap, false, _ctx);
