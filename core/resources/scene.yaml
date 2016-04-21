@@ -61,6 +61,12 @@ styles:
     icons:
         base: points
         texture: pois
+    stripeline:
+        base: lines
+        texcoords: true
+        shaders:
+            blocks:
+                filter: "color.rgb -= .1 * floor(2. * fract(v_texcoord.y / 2.));"
 
 sources:
     osm:
@@ -222,6 +228,11 @@ layers:
                     width: [[15, 1px], [17, 2px]]
                     outline:
                         width: 0
+        ferries:
+            filter: { kind: ferry }
+            draw:
+                lines:
+                    style: stripeline
         airports:
             filter: { aeroway: true }
             draw:
