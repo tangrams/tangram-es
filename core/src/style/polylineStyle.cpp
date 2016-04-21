@@ -17,7 +17,7 @@
 
 constexpr float extrusion_scale = 4096.0f;
 constexpr float position_scale = 8192.0f;
-constexpr float texture_scale = 65535.0f;
+constexpr float texture_scale = 8192.0f;
 constexpr float order_scale = 2.0f;
 
 namespace Tangram {
@@ -64,7 +64,7 @@ void PolylineStyle::constructVertexLayout() {
             {"a_position", 4, GL_SHORT, false, 0},
             {"a_extrude", 4, GL_SHORT, false, 0},
             {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
-            {"a_texcoord", 2, GL_UNSIGNED_SHORT, true, 0},
+            {"a_texcoord", 2, GL_UNSIGNED_SHORT, false, 0},
         }));
     } else {
         m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
