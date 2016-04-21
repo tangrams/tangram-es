@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gl/uniform.h"
+#include "scene/scene.h"
 
 #include <string>
 #include <vector>
@@ -16,7 +17,6 @@
 
 namespace Tangram {
 
-class Scene;
 class TileManager;
 class SceneLayer;
 class View;
@@ -37,8 +37,10 @@ struct StyleUniform {
 struct SceneLoader {
     using Node = YAML::Node;
 
-    static bool loadScene(const std::string& _sceneString, Scene& _scene, Node& _root, bool _applyUserUpdates = false);
-    static bool loadScene(Node& config, Scene& _scene);
+    static bool loadScene(const std::string& _sceneString, Scene& _scene);
+    static bool loadConfig(const std::string& _sceneString, Node& _root);
+    static bool applyConfig(Node& config, Scene& scene);
+    static void applyUpdates(Node& root, const std::vector<Scene::Update>& updates);
     static void applyGlobalProperties(Node& node, Scene& scene);
 
     /*** all public for testing ***/
@@ -59,8 +61,6 @@ struct SceneLoader {
     static Filter generatePredicate(Node filter, std::string _key);
     /* loads a texture with default texture properties */
     static bool loadTexture(const std::string& url, Scene& scene);
-
-    static void processUpdates(Node root, Scene& scene);
 
     static MaterialTexture loadMaterialTexture(Node matCompNode, Scene& scene, Style& style);
 

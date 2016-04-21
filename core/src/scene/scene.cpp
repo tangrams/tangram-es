@@ -21,17 +21,18 @@ namespace Tangram {
 
 static std::atomic<int32_t> s_serial;
 
-Scene::Scene(std::string scene) : id(s_serial++), m_scene(scene) {
+Scene::Scene() : id(s_serial++) {
     m_view = std::make_shared<View>();
     // For now we only have one projection..
     // TODO how to share projection with view?
     m_mapProjection.reset(new MercatorProjection());
 }
 
-Scene::Scene(std::vector<UpdateValue> updates, std::string scene) :
-    Scene(scene)
-{
-    m_updates = updates;
+Scene::Scene(const Scene& _other) : Scene() {
+    m_config = _other.m_config;
+    m_updates = _other.m_updates;
+    m_clientDataSources = _other.m_clientDataSources;
+    m_view = _other.m_view;
 }
 
 Scene::~Scene() {}
@@ -82,9 +83,25 @@ bool Scene::texture(const std::string& textureName, std::shared_ptr<Texture>& te
     return true;
 }
 
-void Scene::queueComponentUpdate(std::string componentPath, std::string value) {
-    std::vector<std::string> splitPath = splitString(componentPath, COMPONENT_PATH_DELIMITER);
-    m_updates.push_back({ splitPath, value });
+void Scene::queueUpdate(std::string path, std::string value) {
+    auto keys = splitString(path, COMPONENT_PATH_DELIMITER);
+    m_updates.push_back({ keys, value });
+}
+
+void Scene::addClientDataSource(std::shared_ptr<DataSource> _source) {
+    m_clientDataSources.push_back(_source);
+}
+
+void Scene::removeClientDataSource(DataSource& _source) {
+    auto it = std::remove_if(m_clientDataSources.begin(), m_clientDataSources.end(),
+        [&](auto& s) { return s.get() == &_source; });
+    m_clientDataSources.erase(it, m_clientDataSources.end());
+}
+
+const std::vector<std::shared_ptr<DataSource>> Scene::getAllDataSources() const {
+    auto sources = m_dataSources;
+    sources.insert(sources.end(), m_clientDataSources.begin(), m_clientDataSources.end());
+    return sources;
 }
 
 }

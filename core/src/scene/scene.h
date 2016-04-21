@@ -30,8 +30,8 @@ struct Stops;
 
 class Scene {
 public:
-    struct UpdateValue {
-        std::vector<std::string> splitPath;
+    struct Update {
+        std::vector<std::string> keys;
         std::string value;
     };
 
@@ -39,10 +39,11 @@ public:
         yes, no, none
     };
 
-    Scene(std::string scene = "");
-    Scene(std::vector<UpdateValue> updates, std::string scene);
+    Scene();
+    Scene(const Scene& _other);
     ~Scene();
 
+    auto& config() { return m_config; }
     auto& view() { return m_view; }
     auto& dataSources() { return m_dataSources; };
     auto& layers() { return m_layers; };
@@ -56,6 +57,7 @@ public:
     auto& fontContext() { return m_fontContext; }
     auto& globals() { return m_globals; }
 
+    const auto& config() const { return m_config; }
     const auto& dataSources() const { return m_dataSources; };
     const auto& layers() const { return m_layers; };
     const auto& styles() const { return m_styles; };
@@ -64,6 +66,7 @@ public:
     const auto& mapProjection() const { return m_mapProjection; };
     const auto& fontContext() const { return m_fontContext; }
     const auto& globals() const { return m_globals; }
+    const auto& updates() const { return m_updates; }
 
     const Style* findStyle(const std::string& _name) const;
     const Light* findLight(const std::string& _name) const;
@@ -81,32 +84,33 @@ public:
     void animated(bool animated) { m_animated = animated ? yes : no; }
     animate animated() const { return m_animated; }
 
-    void queueComponentUpdate(std::string componentName, std::string value);
-
-    void scene(const std::string& scene) { m_scene = scene; }
-    const std::string& scene() const { return m_scene; }
-
-
-    const std::vector<UpdateValue>& updates() const { return m_updates; }
+    void queueUpdate(std::string path, std::string value);
 
     void clearUpdates() { m_updates.clear(); }
 
+    void addClientDataSource(std::shared_ptr<DataSource> _source);
+    void removeClientDataSource(DataSource& _source);
+
+    const std::vector<std::shared_ptr<DataSource>> getAllDataSources() const;
+
 private:
+
+    // The root node of the YAML scene configuration
+    YAML::Node m_config;
 
     std::unique_ptr<MapProjection> m_mapProjection;
     std::shared_ptr<View> m_view;
 
     std::vector<DataLayer> m_layers;
     std::vector<std::shared_ptr<DataSource>> m_dataSources;
+    std::vector<std::shared_ptr<DataSource>> m_clientDataSources;
     std::vector<std::unique_ptr<Style>> m_styles;
     std::vector<std::unique_ptr<Light>> m_lights;
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
     std::unordered_map<std::string, YAML::Node> m_globals;
 
-    std::vector<UpdateValue> m_updates;
-
-    std::string m_scene;
+    std::vector<Update> m_updates;
 
     // Container of all strings used in styling rules; these need to be
     // copied and compared frequently when applying styling, so rules use

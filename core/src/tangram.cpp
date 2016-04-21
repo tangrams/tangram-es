@@ -71,7 +71,7 @@ void initialize(const char* _scenePath) {
     m_view = std::make_shared<View>();
 
     // Create a scene object
-    m_scene = std::make_shared<Scene>(std::string(_scenePath));
+    m_scene = std::make_shared<Scene>();
 
     // Input handler
     m_inputHandler = std::make_unique<InputHandler>(m_view);
@@ -85,7 +85,7 @@ void initialize(const char* _scenePath) {
     // Label setup
     m_labels = std::make_unique<Labels>();
 
-    loadScene(_scenePath, true);
+    loadScene(_scenePath);
 
     glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
     m_view->setPosition(projPos.x, projPos.y);
@@ -95,32 +95,44 @@ void initialize(const char* _scenePath) {
 
 }
 
-void loadScene(const char* _scenePath, bool _setPositionFromScene) {
+void setScene(std::shared_ptr<Scene>& _scene) {
+    m_scene = _scene;
+    m_view = _scene->view();
+    m_inputHandler->setView(m_view);
+    m_tileManager->setDataSources(_scene->getAllDataSources());
+    m_tileWorker->setScene(_scene);
+    setPixelScale(m_view->pixelScale());
+}
+
+void loadScene(const char* _scenePath) {
     LOG("Loading scene file: %s", _scenePath);
 
     auto sceneString = stringFromFile(setResourceRoot(_scenePath).c_str(), PathType::resource);
 
-    bool setPositionFromCurrentView = bool(m_scene);
+    auto scene = std::make_shared<Scene>(*m_scene);
 
-    auto scene = std::make_shared<Scene>(m_scene->updates(), sceneString);
-    if (m_view) {
-        scene->view() = std::make_shared<View>(*m_view);
+    if (SceneLoader::loadScene(sceneString, *scene)) {
+        setScene(scene);
+    }
+}
+
+void queueSceneUpdate(const char* _path, const char* _value) {
+    return m_scene->queueUpdate(_path, _value);
+}
+
+void applySceneUpdates() {
+
+    LOG("Applying scene updates");
+
+    SceneLoader::applyUpdates(m_scene->config(), m_scene->updates());
+    m_scene->clearUpdates();
+
+    auto scene = std::make_shared<Scene>(*m_scene);
+
+    if (SceneLoader::applyConfig(scene->config(), *scene)) {
+        setScene(scene);
     }
 
-    YAML::Node sceneRoot;
-    if (SceneLoader::loadScene(sceneString, *scene, sceneRoot)) {
-        m_scene = scene;
-        if (setPositionFromCurrentView && !_setPositionFromScene) {
-            m_scene->view()->setPosition(m_view->getPosition());
-            m_scene->view()->setZoom(m_view->getZoom());
-        }
-        m_view = m_scene->view();
-        m_inputHandler->setView(m_view);
-        m_tileManager->setDataSources(scene->dataSources());
-        setPixelScale(m_view->pixelScale());
-
-        m_tileWorker->setScene(scene);
-    }
 }
 
 void resize(int _newWidth, int _newHeight) {
@@ -393,14 +405,14 @@ void setPixelScale(float _pixelsPerPoint) {
 void addDataSource(std::shared_ptr<DataSource> _source) {
     if (!m_tileManager) { return; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
-
+    m_scene->addClientDataSource(_source);
     m_tileManager->addDataSource(_source);
 }
 
 bool removeDataSource(DataSource& source) {
     if (!m_tileManager) { return false; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
-
+    m_scene->removeClientDataSource(source);
     return m_tileManager->removeDataSource(source);
 }
 
@@ -489,43 +501,6 @@ const std::vector<TouchItem>& pickFeaturesAt(float _x, float _y) {
     return m_labels->getFeaturesAtPoint(*m_view, 0, m_scene->styles(),
                                         m_tileManager->getVisibleTiles(),
                                         _x, _y);
-}
-
-void queueSceneUpdate(const char* componentName, const char* value) {
-
-    return m_scene->queueComponentUpdate(componentName, value);
-}
-
-void applySceneUpdates(bool _setPositionFromScene) {
-
-    if (m_scene->updates().size() > 0) {
-        // reload the entire scene for now
-        LOG("Applying scene updates");
-
-        bool setPositionFromCurrentView = bool(m_scene);
-
-        auto scene = std::make_shared<Scene>(m_scene->updates(), m_scene->scene());
-        if (m_view) {
-            scene->view() = std::make_shared<View>(*m_view);
-        }
-
-        YAML::Node sceneRoot;
-        if (SceneLoader::loadScene(m_scene->scene(), *scene, sceneRoot, true)) {
-            m_scene = scene;
-            if (setPositionFromCurrentView && !_setPositionFromScene) {
-                m_scene->view()->setPosition(m_view->getPosition());
-                m_scene->view()->setZoom(m_view->getZoom());
-            }
-            m_view = m_scene->view();
-            m_inputHandler->setView(m_view);
-            m_tileManager->setDataSources(scene->dataSources());
-            setPixelScale(m_view->pixelScale());
-
-            m_tileWorker->setScene(scene);
-        }
-
-        m_scene->clearUpdates();
-    }
 }
 
 void setupGL() {
