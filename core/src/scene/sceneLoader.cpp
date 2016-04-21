@@ -229,7 +229,9 @@ bool SceneLoader::applyConfig(Node& config, Scene& _scene) {
                 LOGNode("Parsing light: '%s'", light, e.what());
             }
         }
-    } else {
+    }
+
+    if (_scene.lights().empty()) {
         // Add an ambient light if nothing else is specified
         std::unique_ptr<AmbientLight> amb(new AmbientLight("defaultLight"));
         amb->setAmbientColor({ 1.f, 1.f, 1.f, 1.f });
