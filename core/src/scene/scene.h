@@ -92,7 +92,7 @@ public:
     void addClientDataSource(std::shared_ptr<DataSource> _source);
     void removeClientDataSource(DataSource& _source);
 
-    const std::vector<std::shared_ptr<DataSource>> getAllDataSources() const;
+    const fastmap<std::string, std::shared_ptr<DataSource>> getAllDataSources() const;
 
 private:
 
