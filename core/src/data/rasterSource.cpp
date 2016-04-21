@@ -74,11 +74,13 @@ void RasterSource::clearRaster(const TileID &id) {
         raster->clearRaster(rasterID);
     }
 
+    auto rasterID = id.withMaxSourceZoom(m_maxZoom);
+
     // We do not want to delete the texture reference from the
     // DS if any of the tiles is still using this as a reference
     std::lock_guard<std::mutex> lock(m_textureMutex);
-    if (m_textures[id].use_count() <= 1) {
-        m_textures.erase(id);
+    if (m_textures[rasterID].use_count() <= 1) {
+        m_textures.erase(rasterID);
     }
 }
 
