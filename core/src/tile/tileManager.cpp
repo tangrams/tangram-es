@@ -472,7 +472,10 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
 
     } else if (entry.isReady()) {
         // Add to cache
-        m_tileCache->put(_tileSet.source->id(), entry.tile);
+        auto poppedTiles = m_tileCache->put(_tileSet.source->id(), entry.tile);
+        for (auto& tileID : poppedTiles) {
+            _tileSet.source->clearRaster(tileID);
+        }
     }
 
     //remove tile from set
