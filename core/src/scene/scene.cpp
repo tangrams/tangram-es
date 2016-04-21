@@ -2,6 +2,7 @@
 
 #include "gl/shaderProgram.h"
 #include "platform.h"
+#include "data/dataSource.h"
 #include "style/material.h"
 #include "style/style.h"
 #include "scene/dataLayer.h"
@@ -98,9 +99,11 @@ void Scene::removeClientDataSource(DataSource& _source) {
     m_clientDataSources.erase(it, m_clientDataSources.end());
 }
 
-const std::vector<std::shared_ptr<DataSource>> Scene::getAllDataSources() const {
+const fastmap<std::string, std::shared_ptr<DataSource>> Scene::getAllDataSources() const {
     auto sources = m_dataSources;
-    sources.insert(sources.end(), m_clientDataSources.begin(), m_clientDataSources.end());
+    for (auto clientSrc: m_clientDataSources) {
+        sources[clientSrc->name()] = clientSrc;
+    }
     return sources;
 }
 
