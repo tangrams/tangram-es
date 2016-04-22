@@ -9,11 +9,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * {@code HttpHandler} is a class for customizing HTTP requests for map resources, it can be
+ * extended to override the request or caching behavior.
+ */
 public class HttpHandler {
 
     private OkHttpClient okClient;
     protected Request.Builder okRequestBuilder;
 
+    /**
+     * Construct an {@code HttpHandler} with default options.
+     */
     public HttpHandler() {
         okRequestBuilder = new Request.Builder();
         okClient = new OkHttpClient();

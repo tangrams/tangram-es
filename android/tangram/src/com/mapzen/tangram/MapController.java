@@ -20,8 +20,14 @@ import javax.microedition.khronos.opengles.GL10;
 
 import okio.BufferedSource;
 
+/**
+ * {@code MapController} is the main class for interacting with a Tangram map.
+ */
 public class MapController implements Renderer {
 
+    /**
+     * Options for interpolating map parameters
+     */
     public enum EaseType {
         LINEAR,
         CUBIC,
@@ -31,6 +37,9 @@ public class MapController implements Renderer {
 
     protected static EaseType DEFAULT_EASE_TYPE = EaseType.CUBIC;
 
+    /**
+     * Options for enabling debug rendering features
+     */
     public enum DebugFlag {
         FREEZE_TILES,
         PROXY_COLORS,
@@ -41,6 +50,9 @@ public class MapController implements Renderer {
         ALL_LABELS,
     }
 
+    /**
+     * Interface for a callback to receive information about features picked from the map
+     */
     public interface FeaturePickListener {
         /**
          * Receive information about features found in a call to {@link #pickFeature(float, float)}
@@ -518,7 +530,7 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Enqueuee a scene component update with its corresponding YAML node value
+     * Enqueue a scene component update with its corresponding YAML node value
      * @param componentPath The YAML component path delimited by a '.' (example "scene.animated")
      * @param value A YAML valid string (example "{ property: true }" or "true")
      */
@@ -526,8 +538,8 @@ public class MapController implements Renderer {
         nativeQueueSceneUpdate(componentPath, value);
     }
 
-    /*
-     * Dispatch scene updates queued by qeueSceneUpdate, and update the scene accordingly
+    /**
+     * Apply updates queued by queueSceneUpdate; this empties the current queue of updates
      */
     public void applySceneUpdates() {
         nativeApplySceneUpdates();

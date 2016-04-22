@@ -21,8 +21,20 @@ import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.EGLConfigChooser;
 import android.util.Log;
 
+/**
+ * {@code ConfigChooser} is a convenience class for configuring a {@code GLSurfaceView}.
+ */
 public class ConfigChooser implements GLSurfaceView.EGLConfigChooser {
 
+    /**
+     * Construct a {@code ConfigChooser} to match the given framebuffer parameters
+     * @param r Red bits
+     * @param g Green bits
+     * @param b Blue bits
+     * @param a Alpha bits
+     * @param depth Depth bits
+     * @param stencil Stencil bits
+     */
     public ConfigChooser (int r, int g, int b, int a, int depth, int stencil) {
         mRedSize = r;
         mGreenSize = g;
@@ -40,6 +52,7 @@ public class ConfigChooser implements GLSurfaceView.EGLConfigChooser {
     private static int[] s_configAttribs = {EGL10.EGL_RED_SIZE, 4, EGL10.EGL_GREEN_SIZE, 4, EGL10.EGL_BLUE_SIZE, 4,
         EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT, EGL10.EGL_NONE};
 
+    @Override
     public EGLConfig chooseConfig (EGL10 egl, EGLDisplay display) {
 
         // Get the number of minimally matching EGL configurations

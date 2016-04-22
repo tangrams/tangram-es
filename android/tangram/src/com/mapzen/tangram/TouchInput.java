@@ -21,12 +21,15 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 
 /**
- * Collects touch data, applies gesture detectors, resolves simultaneous detection, and calls the
- * appropriate input responders
+ * {@code TouchInput} collects touch data, applies gesture detectors, resolves simultaneous
+ * detection, and calls the appropriate input responders.
  */
 public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         OnRotateGestureListener, OnGestureListener, OnDoubleTapListener, OnShoveGestureListener {
 
+    /**
+     * List of gestures that can be detected and responded to
+     */
     public enum Gestures {
         TAP,
         DOUBLE_TAP,
@@ -37,6 +40,10 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         SHOVE,
         ;
 
+        /**
+         * Whether a gesture uses multiple touch points simultaneously
+         * @return True if the gesture is multi-touch, otherwise false
+         */
         public boolean isMultiTouch() {
             switch(this) {
                 case ROTATE:
@@ -49,6 +56,9 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         }
     }
 
+    /**
+     * Interface for responding to a tap gesture
+     */
     public interface TapResponder {
         /**
          * Called immediately after a touch is lifted in a tap gesture; may be part of a double tap
@@ -69,6 +79,9 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         boolean onSingleTapConfirmed(float x, float y);
     }
 
+    /**
+     * Interface for responding to a double-tap gesture
+     */
     public interface DoubleTapResponder {
         /**
          * Called immediately after the second time a touch is lifted in a double tap gesture
@@ -81,6 +94,9 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         boolean onDoubleTap(float x, float y);
     }
 
+    /**
+     * Interface for responding to a long press gesture
+     */
     public interface LongPressResponder {
         /**
          * Called immediately after a long press is detected
@@ -92,6 +108,9 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         void onLongPress(float x, float y);
     }
 
+    /**
+     * Interface for responding to a panning (dragging) gesture
+     */
     public interface PanResponder {
         /**
          * Called repeatedly while a touch point is dragged
@@ -114,6 +133,9 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         boolean onFling(float posX, float posY, float velocityX, float velocityY);
     }
 
+    /**
+     * Interface for responding to a scaling (pinching) gesture
+     */
     public interface ScaleResponder {
         /**
          * Called repeatedly while two touch points are moved closer to or further from each other
@@ -126,6 +148,9 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         boolean onScale(float x, float y, float scale, float velocity);
     }
 
+    /**
+     * Interface for responding to a rotation gesture
+     */
     public interface RotateResponder {
         /**
          * Called repeatedly while two touch points are rotated around a point
@@ -138,6 +163,9 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         boolean onRotate(float x, float y, float rotation);
     }
 
+    /**
+     * Interface for responding to a shove (two-finger vertical drag) gesture
+     */
     public interface ShoveResponder {
         /**
          * Called repeatedly while two touch points are moved together vertically
