@@ -79,6 +79,7 @@ void main() {
         float width = extrude.z;
         float dwdz = extrude.w;
         float dz = u_map_position.z - u_tile_origin.z;
+
         // Interpolate between zoom levels
         width += dwdz * clamp(dz, 0.0, 1.0);
         // Scale pixel dimensions to be consistent in screen space
@@ -87,11 +88,11 @@ void main() {
         // Modify line width in model space before extrusion
         #pragma tangram: width
 
-        position.xy += extrude.xy * width;
-
         #ifdef TANGRAM_USE_TEX_COORDS
-            v_texcoord.y /= 2. * width;
+            v_texcoord.y /= 2. * extrude.z;
         #endif
+
+        position.xy += extrude.xy * width;
     }
 
     // Transform position into meters relative to map center
