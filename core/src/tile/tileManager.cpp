@@ -23,6 +23,7 @@ TileManager::TileManager(TileTaskQueue& _tileWorker) : m_workers(_tileWorker) {
                 m_workers.enqueue(std::move(task));
             } else {
                 task->cancel();
+                m_workers.notifyCancel();
             }
     }};
 }
@@ -391,6 +392,9 @@ void TileManager::loadRasterTasks(std::vector<std::shared_ptr<DataSource>>& rast
                 if (rasterSource->loadTileData(std::move(rasterTask))) {
                     rasterTasks.push_back(std::move(saveRasterTask));
                     m_loadPending++;
+                } else {
+                    rasterTask->cancel();
+                    m_workers.notifyCancel();
                 }
             }
         }
@@ -426,6 +430,7 @@ void TileManager::loadTiles() {
                     // Set canceled state, so that tile will not be tried
                     // for reloading until sourceGeneration increased.
                     task->cancel();
+                    m_workers.notifyCancel();
                     continue;
                 }
             }

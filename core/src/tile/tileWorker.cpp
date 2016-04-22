@@ -184,6 +184,10 @@ void TileWorker::setScene(std::shared_ptr<Scene>& _scene) {
     }
 }
 
+void TileWorker::notifyCancel() {
+    m_condition.notify_all();
+}
+
 void TileWorker::enqueue(std::shared_ptr<TileTask>&& task) {
     {
         std::unique_lock<std::mutex> lock(m_mutex);
