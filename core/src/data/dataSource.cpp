@@ -194,7 +194,8 @@ bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task) {
 void DataSource::cancelLoadingTile(const TileID& _tileID) {
     cancelUrlRequest(constructURL(_tileID));
     for (auto& raster : m_rasterSources) {
-        raster->cancelLoadingTile(_tileID);
+        TileID rasterID = _tileID.withMaxSourceZoom(raster->maxZoom());
+        raster->cancelLoadingTile(rasterID);
     }
 }
 
