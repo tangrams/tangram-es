@@ -31,7 +31,9 @@ TileManager::~TileManager() {
     m_tileSets.clear();
 }
 
-void TileManager::setDataSources(const fastmap<std::string, std::shared_ptr<DataSource>>& _sources) {
+void TileManager::setDataSources(const fastmap<std::string,
+        std::shared_ptr<DataSource>>& _sources) {
+
     m_tileCache->clear();
 
     // remove sources that are not in new scene - there must be a better way..
@@ -175,6 +177,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             if (entry.newData()) {
                 clearProxyTiles(_tileSet, it.first, entry, removeTiles);
                 entry.tile = std::move(entry.task->tile());
+                entry.m_mainTaskLoaded = false;
                 entry.task.reset();
 
                 newTiles = true;
@@ -401,19 +404,22 @@ void TileManager::loadTiles() {
             // Note: Set implicit 'loading' state
             entry.task = task;
             loadRasterTasks(tileSet.source->rasterSources(), entry.task, tileId);
+            entry.m_mainTaskLoaded = true;
             m_dataCallback.func(std::move(task));
 
         } else if (m_loadPending < MAX_DOWNLOADS) {
             entry.task = task;
             loadRasterTasks(tileSet.source->rasterSources(), entry.task, tileId);
-            if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
-                entry.m_mainTaskLoaded = true;
-                m_loadPending++;
-            } else {
-                // Set canceled state, so that tile will not be tried
-                // for reloading until sourceGeneration increased.
-                task->cancel();
-                continue;
+            if (m_loadPending < MAX_DOWNLOADS) {
+                if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
+                    entry.m_mainTaskLoaded = true;
+                    m_loadPending++;
+                } else {
+                    // Set canceled state, so that tile will not be tried
+                    // for reloading until sourceGeneration increased.
+                    task->cancel();
+                    continue;
+                }
             }
         }
     }
