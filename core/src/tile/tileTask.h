@@ -43,9 +43,11 @@ public:
 
     TileID tileId() const { return m_tileId; }
 
-    void cancel() { m_canceled = true; }
+    void cancel();
+    void doneBuilding();
 
     bool isCanceled() const { return m_canceled; }
+    bool isBuilt() const { return m_doneBuilding; }
 
     double getPriority() const {
         return m_priority.load();
@@ -58,6 +60,7 @@ public:
     bool isProxy() const { return m_proxyState; }
 
     void setProxyState(bool isProxy) { m_proxyState = isProxy; }
+    auto& rasterTasks() { return m_rasterTasks; }
 
 protected:
 
@@ -66,12 +69,16 @@ protected:
     // Save shared reference to Datasource while building tile
     std::shared_ptr<DataSource> m_source;
 
+    // Vector of tasks to download raster samplers
+    std::vector<std::shared_ptr<TileTask>> m_rasterTasks;
+
     const int64_t m_sourceGeneration;
 
     // Tile result, set when tile was  sucessfully created
     std::shared_ptr<Tile> m_tile;
 
     bool m_canceled = false;
+    bool m_doneBuilding = false;
 
     std::atomic<double> m_priority;
     bool m_proxyState = false;
@@ -83,14 +90,20 @@ public:
         : TileTask(_tileId, _source) {}
 
     virtual bool hasData() const override {
-        return rawTileData && !rawTileData->empty();
+        return rasterReady || (rawTileData && !rawTileData->empty());
     }
     // Raw tile data that will be processed by DataSource.
     std::shared_ptr<std::vector<char>> rawTileData;
+
+    // OkHttp returns empty rawData on a bad url fetch. This make sures the rasterTasks are not
+    // blocking the worker threads for eternity.
+    bool rasterReady = false;
 };
 
 struct TileTaskQueue {
     virtual void enqueue(std::shared_ptr<TileTask>&& task) = 0;
+
+    virtual void notifyCancel() = 0;
 
     // Check processed-tiles flag. Resets flag on each call..
     // TODO better name checkAndResetProcessedTilesFlag?

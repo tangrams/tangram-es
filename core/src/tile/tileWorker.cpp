@@ -118,10 +118,47 @@ void TileWorker::run(Worker* instance) {
 
         if (tileData) {
 
+            auto raster = task->source().raster(*task);
             auto tile = builder->build(task->tileId(), *tileData, task->source());
+
+            if (tile) { task->doneBuilding(); }
 
             // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
             // LOG("loadTime %s - %f", task->tile()->getID().toString().c_str(), loadTime);
+
+            std::unique_lock<std::mutex> lock(m_mutex);
+            m_condition.wait(lock, [&]() {
+                                        if (!m_running) { return true; }
+                                        if (task->isCanceled()) { return true; }
+                                        for (auto& raster : task->rasterTasks()) {
+                                            if (!raster->hasData()) {
+                                                return false;
+                                            }
+                                        }
+                                        return true;
+                                    });
+
+            if (!m_running) {
+                if (builder) {
+                    disposeBuilder(std::move(builder));
+                }
+                break;
+            }
+
+            if (task->isCanceled()) {
+                continue;
+            }
+
+            // first set self texture, if it has one, then go to reference raster textures
+            if (raster.isValid()) {
+                tile->rasters().push_back(std::move(raster));
+            }
+            for (auto& rasterTask : task->rasterTasks()) {
+                auto rasterTex = rasterTask->source().raster(*rasterTask);
+                if (rasterTex.isValid()) {
+                    tile->rasters().push_back(std::move(rasterTex));
+                }
+            }
 
             // Mark task as ready
             task->setTile(std::move(tile));
@@ -144,13 +181,19 @@ void TileWorker::setScene(std::shared_ptr<Scene>& _scene) {
     }
 }
 
+void TileWorker::notifyCancel() {
+    m_condition.notify_all();
+}
+
 void TileWorker::enqueue(std::shared_ptr<TileTask>&& task) {
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         if (!m_running) {
             return;
         }
-        m_queue.push_back(std::move(task));
+        if (!task->isBuilt()) {
+            m_queue.push_back(std::move(task));
+        }
     }
     m_condition.notify_one();
 }

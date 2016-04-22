@@ -2,6 +2,7 @@
 
 #include "gl.h"
 #include "gl/uniform.h"
+#include "util/fastmap.h"
 #include "data/tileData.h"
 
 #include <memory>
@@ -22,6 +23,7 @@ class View;
 class Scene;
 class ShaderProgram;
 class Style;
+class DataSource;
 
 enum class LightingType : char {
     none,
@@ -35,6 +37,13 @@ enum class Blending : int8_t {
     multiply,
     inlay,
     overlay,
+};
+
+enum class RasterType {
+    none,
+    color,
+    normal,
+    custom
 };
 
 struct StyledMesh {
@@ -148,6 +157,11 @@ protected:
     UniformLocation m_uModel{"u_model"};
     UniformLocation m_uTileOrigin{"u_tile_origin"};
     UniformLocation m_uProxyDepth{"u_proxy_depth"};
+    UniformLocation m_uRasters{"u_rasters"};
+    UniformLocation m_uRasterSizes{"u_raster_sizes"};
+    UniformLocation m_uRasterOffsets{"u_raster_offsets"};
+
+    RasterType m_rasterType = RasterType::none;
 
 private:
 
@@ -207,7 +221,7 @@ public:
     bool isAnimated() { return m_animated; }
 
     /* Make this style ready to be used (call after all needed properties are set) */
-    virtual void build(const std::vector<std::unique_ptr<Light>>& _lights);
+    virtual void build(const Scene& _scene);
 
     virtual void onBeginUpdate() {}
 
@@ -232,6 +246,8 @@ public:
 
     void setPixelScale(float _pixelScale) { m_pixelScale = _pixelScale; }
 
+    void setRasterType(RasterType _rasterType) { m_rasterType = _rasterType; }
+
     void setTexCoordsGeneration(bool _texCoordsGeneration) { m_texCoordsGeneration = _texCoordsGeneration; }
 
     bool genTexCoords() const { return m_texCoordsGeneration; }
@@ -246,6 +262,10 @@ public:
     const uint32_t& getID() const { return m_id; }
 
     virtual size_t dynamicMeshSize() const { return 0; }
+
+    virtual bool hasRasters() const;
+
+    void setupRasters(const fastmap<std::string, std::shared_ptr<DataSource>>& _dataSources);
 
     std::vector<StyleUniform>& styleUniforms() { return m_styleUniforms; }
 

@@ -36,10 +36,10 @@ void TileBuilder::setScene(std::shared_ptr<Scene> _scene) {
     }
 }
 
-std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData,
-                                         const DataSource& _source) {
+std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData, const DataSource& _source) {
 
     auto tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), &_source);
+
     tile->initGeometry(m_scene->styles().size());
 
     m_styleContext.setKeywordZoom(_tileID.s);

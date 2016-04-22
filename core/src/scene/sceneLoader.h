@@ -26,7 +26,9 @@ class Style;
 struct StyleParam;
 struct MaterialTexture;
 class PointLight;
+class DataSource;
 struct Filter;
+struct TextureFiltering;
 
 // 0: type, 1: values
 struct StyleUniform {
@@ -46,7 +48,9 @@ struct SceneLoader {
     /*** all public for testing ***/
 
     static void loadBackground(Node background, Scene& scene);
-    static void loadSource(const std::pair<Node, Node>& source, Scene& scene);
+    static void loadSource(const std::string& name, const Node& source, const Node& sources, Scene& scene);
+    static void loadSourceRasters(std::shared_ptr<DataSource>& source, Node rasterNode, const Node& sources,
+                                  Scene& scene);
     static void loadTexture(const std::pair<Node, Node>& texture, Scene& scene);
     static void loadLayer(const std::pair<Node, Node>& layer, Scene& scene);
     static void loadLight(const std::pair<Node, Node>& light, Scene& scene);
@@ -61,6 +65,7 @@ struct SceneLoader {
     static Filter generatePredicate(Node filter, std::string _key);
     /* loads a texture with default texture properties */
     static bool loadTexture(const std::string& url, Scene& scene);
+    static bool extractTexFiltering(Node& filtering, TextureFiltering& filter);
 
     static MaterialTexture loadMaterialTexture(Node matCompNode, Scene& scene, Style& style);
 

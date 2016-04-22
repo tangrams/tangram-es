@@ -5,6 +5,7 @@
 #include "tile/tile.h"
 #include "tile/tileID.h"
 #include "tileTask.h"
+#include "util/fastmap.h"
 
 #include <map>
 #include <vector>
@@ -12,6 +13,7 @@
 #include <mutex>
 #include <tuple>
 #include <set>
+#include <data/dataSource.h>
 
 namespace Tangram {
 
@@ -42,7 +44,7 @@ public:
     virtual ~TileManager();
 
     /* Sets the tile DataSources */
-    void setDataSources(std::vector<std::shared_ptr<DataSource>> _sources);
+    void setDataSources(const fastmap<std::string, std::shared_ptr<DataSource>>& _sources);
 
     /* Updates visible tile set and load missing tiles */
     void updateTileSets(const ViewState& _view, const std::set<TileID>& _visibleTiles);
@@ -98,12 +100,16 @@ private:
         uint8_t m_proxies = 0;
 
         bool isReady() { return bool(tile); }
-        bool isLoading() { return bool(task) && !task->isCanceled(); }
+        bool isLoading() { return m_mainTaskDownloading && bool(task) && !task->isCanceled(); }
         bool isCanceled() { return bool(task) && task->isCanceled(); }
         bool newData() { return bool(task) && bool(task->tile()); }
 
         void cancelTask() {
             if (task) {
+                for (auto& raster : task->rasterTasks()) {
+                    raster->cancel();
+                }
+                task->rasterTasks().clear();
                 task->cancel();
                 task.reset();
             }
@@ -134,6 +140,7 @@ private:
         }
 
         bool m_visible = false;
+        bool m_mainTaskDownloading = false;
 
         /* Method to check whther this tile is in the current set of visible tiles
          * determined by view::updateTiles().
@@ -158,6 +165,8 @@ private:
     void enqueueTask(TileSet& _tileSet, const TileID& _tileID, const ViewState& _view);
 
     void loadTiles();
+    void loadRasterTasks(std::vector<std::shared_ptr<DataSource>>& rasters, std::shared_ptr<TileTask>& tileTask,
+                         const TileID& tileID);
 
     /*
      * Constructs a future (async) to load data of a new visible tile this is

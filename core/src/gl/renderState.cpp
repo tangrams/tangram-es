@@ -90,6 +90,10 @@ namespace RenderState {
         return ++s_textureUnit;
     }
 
+    void releaseTextureUnit() {
+        s_textureUnit--;
+    }
+
     int currentTextureUnit() {
         return s_textureUnit;
     }

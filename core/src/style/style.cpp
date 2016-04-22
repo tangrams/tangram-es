@@ -10,6 +10,7 @@
 #include "scene/scene.h"
 #include "scene/spriteAtlas.h"
 #include "tile/tile.h"
+#include "data/dataSource.h"
 #include "view/view.h"
 #include "tangram.h"
 
@@ -33,7 +34,7 @@ const std::vector<std::string>& Style::builtInStyleNames() {
     return builtInStyleNames;
 }
 
-void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
+void Style::build(const Scene& _scene) {
 
     constructVertexLayout();
     constructShaderProgram();
@@ -54,13 +55,15 @@ void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
     }
 
     if (m_lightingType != LightingType::none) {
-        for (auto& light : _lights) {
+        for (auto& light : _scene.lights()) {
             auto uniforms = light->injectOnProgram(*m_shaderProgram);
             if (uniforms) {
                 m_lights.emplace_back(light.get(), std::move(uniforms));
             }
         }
     }
+
+    setupRasters(_scene.dataSources());
 }
 
 void Style::setMaterial(const std::shared_ptr<Material>& _material) {
@@ -101,8 +104,8 @@ void Style::setupShaderUniforms(Scene& _scene) {
                 m_shaderProgram->setUniformf(name, value.get<glm::vec3>());
             } else if(value.is<glm::vec4>()) {
                 m_shaderProgram->setUniformf(name, value.get<glm::vec4>());
-            } else if (value.is<UniformArray>()) {
-                m_shaderProgram->setUniformf(name, value.get<UniformArray>());
+            } else if (value.is<UniformArray1f>()) {
+                m_shaderProgram->setUniformf(name, value.get<UniformArray1f>());
             } else if (value.is<UniformTextureArray>()) {
                 UniformTextureArray& textureUniformArray = value.get<UniformTextureArray>();
                 textureUniformArray.slots.clear();
@@ -128,6 +131,44 @@ void Style::setupShaderUniforms(Scene& _scene) {
             }
         }
     }
+}
+
+bool Style::hasRasters() const {
+    return m_rasterType == RasterType::custom ||
+           m_rasterType == RasterType::color ||
+           m_rasterType == RasterType::normal;
+}
+
+void Style::setupRasters(const fastmap<std::string, std::shared_ptr<DataSource>>& _dataSources) {
+    if (!hasRasters()) {
+        return;
+    }
+
+    int numRasterSource = 0;
+    for (const auto& dataSourcePair : _dataSources) {
+        if (dataSourcePair.second->isRaster()) {
+            numRasterSource++;
+        }
+    }
+
+    if (numRasterSource == 0) {
+        return;
+    }
+
+    // Inject shader defines for raster sampling and uniforms
+    if (m_rasterType == RasterType::normal) {
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_NORMAL\n", false);
+    } else if (m_rasterType == RasterType::color) {
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_COLOR\n", false);
+    }
+
+    m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_NUM_RASTER_SOURCES "
+            + std::to_string(numRasterSource) + "\n", false);
+    m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n", false);
+
+    std::string rasterBlock = stringFromFile("shaders/rasters.glsl", PathType::internal);
+
+    m_shaderProgram->addSourceBlock("raster", rasterBlock);
 }
 
 void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {
@@ -205,15 +246,61 @@ void Style::draw(const Tile& _tile) {
     auto& styleMesh = _tile.getMesh(*this);
 
     if (styleMesh) {
+        TileID tileID = _tile.getID();
+
+        if (hasRasters()) {
+            UniformTextureArray textureIndexUniform;
+            UniformArray2f rasterSizeUniform;
+            UniformArray3f rasterOffsetsUniform;
+
+            for (auto& raster : _tile.rasters()) {
+                if (raster.isValid()) {
+                    auto& texture = raster.texture;
+                    texture->update(RenderState::nextAvailableTextureUnit());
+                    texture->bind(RenderState::currentTextureUnit());
+
+                    textureIndexUniform.slots.push_back(RenderState::currentTextureUnit());
+                    rasterSizeUniform.push_back({texture->getWidth(), texture->getHeight()});
+
+                    if (tileID.z > raster.tileID.z) {
+                        float dz = tileID.z - raster.tileID.z;
+                        float dz2 = powf(2.f, dz);
+
+                        rasterOffsetsUniform.push_back({
+                            fmodf(tileID.x, dz2) / dz2,
+                            (dz2 - 1.f - fmodf(tileID.y, dz2)) / dz2,
+                            1.f / dz2
+                        });
+                    } else {
+                        rasterOffsetsUniform.push_back({0, 0, 1});
+                    }
+                }
+            }
+
+            if (_tile.rasters().size() > 0) {
+                m_shaderProgram->setUniformi(m_uRasters, textureIndexUniform);
+                m_shaderProgram->setUniformf(m_uRasterSizes, rasterSizeUniform);
+                m_shaderProgram->setUniformf(m_uRasterOffsets, rasterOffsetsUniform);
+            }
+        }
+
         m_shaderProgram->setUniformMatrix4f(m_uModel, _tile.getModelMatrix());
         m_shaderProgram->setUniformf(m_uProxyDepth, _tile.isProxy() ? 1.f : 0.f);
         m_shaderProgram->setUniformf(m_uTileOrigin,
                                      _tile.getOrigin().x,
                                      _tile.getOrigin().y,
-                                     _tile.getID().s,
-                                     _tile.getID().z);
+                                     tileID.s,
+                                     tileID.z);
 
         styleMesh->draw(*m_shaderProgram);
+
+        if (hasRasters()) {
+            for (auto& raster : _tile.rasters()) {
+                if (raster.isValid()) {
+                    RenderState::releaseTextureUnit();
+                }
+            }
+        }
     }
 }
 
@@ -264,7 +351,8 @@ void StyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 StyleBuilder::StyleBuilder(const Style& _style) {
     const auto& blocks = _style.getShaderProgram()->getSourceBlocks();
     if (blocks.find("color") != blocks.end() ||
-        blocks.find("filter") != blocks.end()) {
+        blocks.find("filter") != blocks.end() ||
+        blocks.find("raster") != blocks.end()) {
         m_hasColorShaderBlock = true;
     }
 }

@@ -23,6 +23,7 @@ TileManager::TileManager(TileTaskQueue& _tileWorker) : m_workers(_tileWorker) {
                 m_workers.enqueue(std::move(task));
             } else {
                 task->cancel();
+                m_workers.notifyCancel();
             }
     }};
 }
@@ -31,26 +32,26 @@ TileManager::~TileManager() {
     m_tileSets.clear();
 }
 
-void TileManager::setDataSources(std::vector<std::shared_ptr<DataSource>> _sources) {
+void TileManager::setDataSources(const fastmap<std::string,
+        std::shared_ptr<DataSource>>& _sources) {
+
     m_tileCache->clear();
 
     // remove sources that are not in new scene - there must be a better way..
     auto it = std::remove_if(
         m_tileSets.begin(), m_tileSets.end(),
         [&](auto& tileSet) {
-            auto sIt = std::find_if(
-                _sources.begin(), _sources.end(),
-                [&](auto& s){ return tileSet.source->equals(*s); });
+            auto sIt = _sources.find(tileSet.source->name());
 
-            if (sIt == _sources.end()) {
+            if (sIt == _sources.end() || !sIt->second->generateGeometry()) {
                 DBG("remove source %s", tileSet.source->name().c_str());
                 return true;
             }
 
             // Cancel pending  tiles
             for_each(tileSet.tiles.begin(), tileSet.tiles.end(), [&](auto& tile) {
-                    tile.second.cancelTask();
-                });
+                tile.second.cancelTask();
+            });
 
             // Clear cache
             tileSet.tiles.clear();
@@ -64,10 +65,11 @@ void TileManager::setDataSources(std::vector<std::shared_ptr<DataSource>> _sourc
 
         if (std::find_if(m_tileSets.begin(), m_tileSets.end(),
                          [&](const TileSet& a) {
-                             return a.source->name() == source->name();
-                         }) == m_tileSets.end()) {
-            DBG("add source %s", source->name().c_str());
-            addDataSource(source);
+                             return a.source->name() == source.second->name();
+                         }) == m_tileSets.end()
+                && source.second->generateGeometry()) {
+            DBG("add source %s", source.second->name().c_str());
+            addDataSource(source.second);
         }
     }
 }
@@ -84,6 +86,8 @@ bool TileManager::removeDataSource(DataSource& dataSource) {
             for (auto& tile : it->tiles) {
                 tile.second.cancelTask();
             }
+            // Remove the textures for this data source
+            it->source->clearRasters();
             // Remove the tile set associated with this data source
             it = m_tileSets.erase(it);
             removed = true;
@@ -179,6 +183,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             if (entry.newData()) {
                 clearProxyTiles(_tileSet, it.first, entry, removeTiles);
                 entry.tile = std::move(entry.task->tile());
+                entry.m_mainTaskDownloading = false;
                 entry.task.reset();
 
                 newTiles = true;
@@ -219,17 +224,22 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
 
             } else {
 
-                if (entry.isLoading()) {
+                if (entry.task && entry.task->isBuilt() && !entry.isCanceled()) {
+                    // tile is done building geometry but not ready (tile not set)
+                    // might be waiting on raster task.. call enqueue again for a notification
+                    enqueueTask(_tileSet, visTileId, _view);
+                } else if (entry.isLoading()) {
                     if (newTiles) {
                         // check again for proxies
                         updateProxyTiles(_tileSet, visTileId, entry);
                     }
-
                 } else if (!bool(entry.task) ||
-                           (entry.isCanceled() &&
-                            (entry.task->sourceGeneration() < generation))) {
-                    // Start loading when no task is set or the task stems from an
-                    // older tile source generation.
+                           !entry.m_mainTaskDownloading ||
+                           (entry.isCanceled() && (entry.task->sourceGeneration() < generation))) {
+                    // Start loading when:
+                    // no task is set,
+                    // or mainTask has not started its downloading
+                    // or the task stems from an older tile source generation.
 
                     // Not yet available - enqueue for loading
                     enqueueTask(_tileSet, visTileId, _view);
@@ -262,7 +272,6 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             if (entry.getProxyCounter() > 0) {
                 if (entry.isReady()) {
                     m_tiles.push_back(entry.tile);
-
                 } else if (curTileId.z < maxZoom) {
                     // Cancel loading
                     removeTiles.push_back(curTileId);
@@ -293,13 +302,28 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
     for (auto& it : tiles) {
         auto& entry = it.second;
 
-        DBG("> %s - ready:%d proxy:%d/%d loading:%d canceled:%d",
-            it.first.toString().c_str(),
-            entry.isReady(),
-            entry.getProxyCounter(),
-            entry.m_proxies,
-            entry.task && !entry.task->hasData(),
-            entry.task && entry.task->isCanceled());
+        size_t rasterPending = 0;
+        size_t rasterLoading = 0;
+        size_t rasterDone = 0;
+
+        if (entry.task) {
+            rasterPending = entry.task->source().rasterSources().size() - entry.task->rasterTasks().size();
+            for (auto &raster : entry.task->rasterTasks()) {
+                if (raster->hasData()) { rasterDone++; }
+                else { rasterLoading++; }
+            }
+        }
+
+        DBG("> %s - ready:%d proxy:%d/%d loading:%d rDone:%d rLoading:%d rPending:%d canceled:%d",
+             it.first.toString().c_str(),
+             entry.isReady(),
+             entry.getProxyCounter(),
+             entry.m_proxies,
+             entry.task && !entry.task->hasData(),
+             rasterDone,
+             rasterLoading,
+             rasterPending,
+             entry.task && entry.task->isCanceled());
 
         if (entry.isLoading()) {
             auto& id = it.first;
@@ -316,6 +340,11 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             // limit download requests.
             if (!task->hasData()) {
                 m_loadPending++;
+            }
+            for (auto& rasterTask : task->rasterTasks()) {
+                if (!rasterTask->hasData()) {
+                    m_loadPending++;
+                }
             }
         }
 
@@ -341,6 +370,37 @@ void TileManager::enqueueTask(TileSet& _tileSet, const TileID& _tileID,
     m_loadTasks.insert(it, std::make_tuple(distance, &_tileSet, _tileID));
 }
 
+// create and download raster references (recursively)
+// store these rastertasks in this datasource' task
+void TileManager::loadRasterTasks(std::vector<std::shared_ptr<DataSource>>& rasters,
+                                  std::shared_ptr<TileTask>& tileTask, const TileID& tileID) {
+    auto& rasterTasks = tileTask->rasterTasks();
+    if (rasterTasks.size() < rasters.size()) {
+        for (size_t index = rasterTasks.size(); index < rasters.size(); index++) {
+            auto& rasterSource = rasters[index];
+            TileID rasterTileID = tileID;
+            if (rasterTileID.z > rasterSource->maxZoom()) {
+                rasterTileID = rasterTileID.withMaxSourceZoom(rasterSource->maxZoom());
+            }
+            auto rasterTask = rasterSource->createTask(rasterTileID);
+            if (rasterTask->hasData()) {
+                loadRasterTasks(rasterSource->rasterSources(), rasterTask, tileID);
+                rasterTasks.push_back(std::move(rasterTask));
+            } else if (m_loadPending < MAX_DOWNLOADS) {
+                loadRasterTasks(rasterSource->rasterSources(), rasterTask, tileID);
+                auto saveRasterTask = rasterTask;
+                if (rasterSource->loadTileData(std::move(rasterTask))) {
+                    rasterTasks.push_back(std::move(saveRasterTask));
+                    m_loadPending++;
+                } else {
+                    rasterTask->cancel();
+                    m_workers.notifyCancel();
+                }
+            }
+        }
+    }
+}
+
 void TileManager::loadTiles() {
 
     for (auto& loadTask : m_loadTasks) {
@@ -355,23 +415,31 @@ void TileManager::loadTiles() {
         if (task->hasData()) {
             // Note: Set implicit 'loading' state
             entry.task = task;
+            loadRasterTasks(tileSet.source->rasterSources(), entry.task, tileId);
+            entry.m_mainTaskDownloading = true;
             m_dataCallback.func(std::move(task));
 
         } else if (m_loadPending < MAX_DOWNLOADS) {
             entry.task = task;
-            if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
-                m_loadPending++;
-            } else {
-                // Set canceled state, so that tile will not be tried
-                // for reloading until sourceGeneration increased.
-                entry.task->cancel();
+            loadRasterTasks(tileSet.source->rasterSources(), entry.task, tileId);
+            if (m_loadPending < MAX_DOWNLOADS) {
+                if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
+                    entry.m_mainTaskDownloading = true;
+                    m_loadPending++;
+                } else {
+                    // Set canceled state, so that tile will not be tried
+                    // for reloading until sourceGeneration increased.
+                    task->cancel();
+                    m_workers.notifyCancel();
+                    continue;
+                }
             }
         }
     }
 
     DBG("loading:%d pending:%d cache: %fMB",
-        m_loadTasks.size(), m_loadPending,
-        (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
+         m_loadTasks.size(), m_loadPending,
+         (double(m_tileCache->getMemoryUsage()) / (1024 * 1024)));
 
     m_loadTasks.clear();
 }
@@ -423,11 +491,16 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
 
     } else if (entry.isReady()) {
         // Add to cache
-        m_tileCache->put(_tileSet.source->id(), entry.tile);
+        auto poppedTiles = m_tileCache->put(_tileSet.source->id(), entry.tile);
+        for (auto& tileID : poppedTiles) {
+            _tileSet.source->clearRaster(tileID);
+        }
     }
 
-    // Remove tile from set
+    //remove tile from set
     _tileIt = _tileSet.tiles.erase(_tileIt);
+    // Remove rasters from this DS
+    _tileSet.source->clearRaster(id);
 }
 
 bool TileManager::updateProxyTile(TileSet& _tileSet, TileEntry& _tile,

@@ -9,4 +9,16 @@ TileTask::TileTask(TileID& _tileId, std::shared_ptr<DataSource> _source) :
     m_sourceGeneration(_source->generation()),
     m_priority(0) {}
 
+void TileTask::cancel() {
+    for (auto& raster : m_rasterTasks) {
+        raster->cancel();
+    }
+    m_canceled = true;
 }
+
+void TileTask::doneBuilding() {
+    m_doneBuilding = true;
+}
+
+}
+

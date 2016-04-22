@@ -10,10 +10,12 @@ namespace Tangram {
 class MapProjection;
 struct TileData;
 struct TileID;
+struct Raster;
 class Tile;
 class TileManager;
 struct RawCache;
 class TileTask;
+class Texture;
 struct TileTaskCb;
 
 class DataSource : public std::enable_shared_from_this<DataSource> {
@@ -36,6 +38,7 @@ public:
      * further processing before it is renderable.
      */
     virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb);
+    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task);
 
 
     /* Stops any running I/O tasks pertaining to @_tile */
@@ -48,6 +51,10 @@ public:
     virtual void clearData();
 
     const std::string& name() const { return m_name; }
+
+    virtual Raster raster(const TileTask& task);
+    virtual void clearRasters();
+    virtual void clearRaster(const TileID& id);
 
     virtual bool equals(const DataSource& _other) const {
         return m_name == _other.m_name &&
@@ -69,9 +76,20 @@ public:
 
     int32_t maxZoom() const { return m_maxZoom; }
 
+    /* assign/get raster datasources to this datasource */
+    auto& rasterSources() { return m_rasterSources; }
+    const auto& rasterSources() const { return m_rasterSources; }
+
+    bool generateGeometry() const { return m_generateGeometry; }
+    void generateGeometry(bool generateGeometry) { m_generateGeometry = generateGeometry; }
+
+    /* Avoid RTTI by adding a boolean check on the data source object */
+    virtual bool isRaster() const { return false; }
+
 protected:
 
-    void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb);
+    void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task, TileTaskCb _cb);
+    void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task);
 
     /* Constructs the URL of a tile using <m_urlTemplate> */
     virtual void constructURL(const TileID& _tileCoord, std::string& _url) const;
@@ -81,6 +99,9 @@ protected:
         constructURL(_tileCoord, url);
         return url;
     }
+
+    // This datasource is used to generate actual tile geometry
+    bool m_generateGeometry = false;
 
     // Name used to identify this source in the style sheet
     std::string m_name;
@@ -98,6 +119,9 @@ protected:
     std::string m_urlTemplate;
 
     std::unique_ptr<RawCache> m_cache;
+
+    /* vector of raster sources (as raster samplers) referenced by this datasource */
+    std::vector<std::shared_ptr<DataSource>> m_rasterSources;
 };
 
 }

@@ -40,11 +40,11 @@ public:
 
     Texture(const unsigned char* data, size_t dataSize,
             TextureOptions _options = DEFAULT_TEXTURE_OPTION},
-            bool _generateMipmaps = false);
+            bool _generateMipmaps = false, bool _flipOnLoad = false);
 
     Texture(const std::string& _file,
             TextureOptions _options = DEFAULT_TEXTURE_OPTION},
-            bool _generateMipmaps = false);
+            bool _generateMipmaps = false, bool _flipOnLoad = false);
 
     Texture(Texture&& _other);
     Texture& operator=(Texture&& _other);
@@ -79,7 +79,11 @@ public:
     void setSubData(const GLuint* _subData, uint16_t _xoff, uint16_t _yoff,
                     uint16_t _width, uint16_t _height, uint16_t _stride);
 
-    bool isValid();
+    /* Checks whether the texture has valid data and has been successfully uploaded to GPU */
+    bool isValid() const;
+
+    /* Checks whether the texture has a valid data to upload to GPU */
+    bool hasValidData() const;
 
     typedef std::pair<GLuint, GLuint> TextureSlot;
 
@@ -87,7 +91,7 @@ public:
 
     static bool isRepeatWrapping(TextureWrapping _wrapping);
 
-    void loadPNG(const unsigned char* blob, unsigned int size);
+    void loadImageFromMemory(const unsigned char* blob, unsigned int size, bool flipOnLoad);
 
 protected:
 
@@ -118,6 +122,7 @@ private:
     size_t bytesPerPixel();
 
     bool m_generateMipmaps;
+    bool m_validData;
 };
 
 }
