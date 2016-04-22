@@ -182,7 +182,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             if (entry.newData()) {
                 clearProxyTiles(_tileSet, it.first, entry, removeTiles);
                 entry.tile = std::move(entry.task->tile());
-                entry.m_mainTaskLoaded = false;
+                entry.m_mainTaskDownloading = false;
                 entry.task.reset();
 
                 newTiles = true;
@@ -223,17 +223,22 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
 
             } else {
 
-                if (entry.isLoading()) {
+                if (entry.task && entry.task->isBuilt() && !entry.isCanceled()) {
+                    // tile is done building geometry but not ready (tile not set)
+                    // might be waiting on raster task.. call enqueue again for a notification
+                    enqueueTask(_tileSet, visTileId, _view);
+                } else if (entry.isLoading()) {
                     if (newTiles) {
                         // check again for proxies
                         updateProxyTiles(_tileSet, visTileId, entry);
                     }
-
-                } else if (!bool(entry.task) || !entry.m_mainTaskLoaded ||
-                           (entry.isCanceled() &&
-                            (entry.task->sourceGeneration() < generation))) {
-                    // Start loading when no task is set or the task stems from an
-                    // older tile source generation.
+                } else if (!bool(entry.task) ||
+                           !entry.m_mainTaskDownloading ||
+                           (entry.isCanceled() && (entry.task->sourceGeneration() < generation))) {
+                    // Start loading when:
+                    // no task is set,
+                    // or mainTask has not started its downloading
+                    // or the task stems from an older tile source generation.
 
                     // Not yet available - enqueue for loading
                     enqueueTask(_tileSet, visTileId, _view);
@@ -407,7 +412,7 @@ void TileManager::loadTiles() {
             // Note: Set implicit 'loading' state
             entry.task = task;
             loadRasterTasks(tileSet.source->rasterSources(), entry.task, tileId);
-            entry.m_mainTaskLoaded = true;
+            entry.m_mainTaskDownloading = true;
             m_dataCallback.func(std::move(task));
 
         } else if (m_loadPending < MAX_DOWNLOADS) {
@@ -415,7 +420,7 @@ void TileManager::loadTiles() {
             loadRasterTasks(tileSet.source->rasterSources(), entry.task, tileId);
             if (m_loadPending < MAX_DOWNLOADS) {
                 if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
-                    entry.m_mainTaskLoaded = true;
+                    entry.m_mainTaskDownloading = true;
                     m_loadPending++;
                 } else {
                     // Set canceled state, so that tile will not be tried
