@@ -90,10 +90,14 @@ public:
         : TileTask(_tileId, _source) {}
 
     virtual bool hasData() const override {
-        return rawTileData && !rawTileData->empty();
+        return rasterReady || (rawTileData && !rawTileData->empty());
     }
     // Raw tile data that will be processed by DataSource.
     std::shared_ptr<std::vector<char>> rawTileData;
+
+    // OkHttp returns empty rawData on a bad url fetch. This make sures the rasterTasks are not
+    // blocking the worker threads for eternity.
+    bool rasterReady = false;
 };
 
 struct TileTaskQueue {
