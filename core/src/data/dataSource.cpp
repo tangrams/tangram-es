@@ -164,6 +164,13 @@ void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
         m_cache->put(tileID, rawDataRef);
         // load the texture and store in datasource resources if network request was good.
         raster(*_task);
+    } else {
+        //store a black empty texture for this url fetch
+        // OkHttp does not return any data for a bad url fetch (no errors in rawData also)
+        // This makes sure tileWorkers are not blocking on rasterTask->hasData() for eternity
+        auto& task = static_cast<DownloadTileTask&>(*_task);
+        task.rawTileData = nullptr;
+        task.rasterReady = true;
     }
 }
 
