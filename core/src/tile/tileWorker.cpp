@@ -142,13 +142,10 @@ void TileWorker::run(Worker* instance) {
                 if (builder) {
                     disposeBuilder(std::move(builder));
                 }
-                tile.reset();
-                m_queue.clear();
                 break;
             }
 
             if (task->isCanceled()) {
-                tile.reset();
                 continue;
             }
 
