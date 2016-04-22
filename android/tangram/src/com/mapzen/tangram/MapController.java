@@ -682,7 +682,7 @@ public class MapController implements Renderer {
 
     }
 
-    public String getFontFallbackFilePath(int importance, int weightHint) {
+    String getFontFallbackFilePath(int importance, int weightHint) {
 
         return fontFileParser.getFontFallback(importance, weightHint);
     }
