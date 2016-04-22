@@ -129,6 +129,7 @@ void TileWorker::run(Worker* instance) {
             std::unique_lock<std::mutex> lock(m_mutex);
             m_condition.wait(lock, [&]() {
                                         if (!m_running) { return true; }
+                                        if (task->isCanceled()) { return true; }
                                         for (auto& raster : task->rasterTasks()) {
                                             if (!raster->hasData()) {
                                                 return false;
