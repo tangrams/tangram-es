@@ -118,14 +118,17 @@ void TileWorker::run(Worker* instance) {
 
         if (tileData) {
 
-            std::unique_lock<std::mutex> lock(m_mutex);
             auto raster = task->source().raster(*task);
             auto tile = builder->build(task->tileId(), *tileData, task->source());
+
+            if (tile) { task->doneBuilding(); }
 
             // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
             // LOG("loadTime %s - %f", task->tile()->getID().toString().c_str(), loadTime);
 
+            std::unique_lock<std::mutex> lock(m_mutex);
             m_condition.wait(lock, [&]() {
+                                        if (!m_running) { return true; }
                                         for (auto& raster : task->rasterTasks()) {
                                             if (!raster->hasData()) {
                                                 return false;
@@ -133,6 +136,21 @@ void TileWorker::run(Worker* instance) {
                                         }
                                         return true;
                                     });
+
+            if (!m_running) {
+                if (builder) {
+                    disposeBuilder(std::move(builder));
+                }
+                tile.reset();
+                m_queue.clear();
+                break;
+            }
+
+            if (task->isCanceled()) {
+                tile.reset();
+                continue;
+            }
+
             // first set self texture, if it has one, then go to reference raster textures
             if (raster.isValid()) {
                 tile->rasters().push_back(std::move(raster));
@@ -171,7 +189,9 @@ void TileWorker::enqueue(std::shared_ptr<TileTask>&& task) {
         if (!m_running) {
             return;
         }
-        m_queue.push_back(std::move(task));
+        if (!task->isBuilt()) {
+            m_queue.push_back(std::move(task));
+        }
     }
     m_condition.notify_one();
 }

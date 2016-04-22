@@ -16,5 +16,9 @@ void TileTask::cancel() {
     m_canceled = true;
 }
 
+void TileTask::doneBuilding() {
+    m_doneBuilding = true;
+}
+
 }
 
