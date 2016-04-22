@@ -44,8 +44,10 @@ public:
     TileID tileId() const { return m_tileId; }
 
     void cancel();
+    void doneBuilding();
 
     bool isCanceled() const { return m_canceled; }
+    bool isBuilt() const { return m_doneBuilding; }
 
     double getPriority() const {
         return m_priority.load();
@@ -76,6 +78,7 @@ protected:
     std::shared_ptr<Tile> m_tile;
 
     bool m_canceled = false;
+    bool m_doneBuilding = false;
 
     std::atomic<double> m_priority;
     bool m_proxyState = false;
