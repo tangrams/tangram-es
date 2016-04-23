@@ -54,7 +54,8 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
 
 }
 
-bool ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
+bool ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb,
+        bool setDependentRaster) {
 
     _cb.func(std::move(_task));
 

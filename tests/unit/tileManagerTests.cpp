@@ -80,7 +80,9 @@ struct TestDataSource : DataSource {
     TestDataSource() : DataSource("", "") {
         m_generateGeometry = true;
     }
-    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
+
+    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb,
+            bool setDependentRaster) {
         tileTaskCount++;
         static_cast<Task*>(_task.get())->gotData = true;
         _cb.func(std::move(_task));
