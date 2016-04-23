@@ -90,12 +90,13 @@ bool RasterSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _c
 
 Raster RasterSource::raster(const TileTask& _task) {
 
-    auto tileID = _task.tileId();
+    TileID id(_task.tileId().x, _task.tileId().y, _task.tileId().z);
+
     unsigned char* udata = nullptr;
     size_t dataSize = 0;
 
-    if (m_textures.find(tileID) != m_textures.end()) {
-        return { tileID, m_textures.at(tileID) };
+    if (m_textures.find(id) != m_textures.end()) {
+        return { id, m_textures.at(id) };
     }
 
     {
@@ -107,13 +108,13 @@ Raster RasterSource::raster(const TileTask& _task) {
         }
         std::shared_ptr<Texture> texture(new Texture(udata, dataSize, m_texOptions, m_genMipmap, true));
 
-        m_textures[tileID] = texture;
+        m_textures[id] = texture;
 
         if (!texture->hasValidData()) {
             LOGW("Texture for data source %s has failed to decode", m_name.c_str());
         }
 
-        return { tileID, texture };
+        return { id, texture };
     }
 }
 
@@ -126,7 +127,9 @@ void RasterSource::clearRasters() {
     m_textures.clear();
 }
 
-void RasterSource::clearRaster(const TileID &id) {
+void RasterSource::clearRaster(const TileID &tileID) {
+    TileID id(tileID.x, tileID.y, tileID.z);
+
     for (auto& raster: m_rasterSources) {
         TileID rasterID = id.withMaxSourceZoom(raster->maxZoom());
         raster->clearRaster(rasterID);
