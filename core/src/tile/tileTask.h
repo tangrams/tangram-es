@@ -29,6 +29,9 @@ public:
     virtual ~TileTask() {}
 
     virtual bool hasData() const { return true; }
+    bool hasRaster() const { return m_rasterReady; }
+
+    void rasterReady() { m_rasterReady = true; }
 
     void setTile(std::shared_ptr<Tile>&& _tile) {
         m_tile = std::move(_tile);
@@ -44,10 +47,8 @@ public:
     TileID tileId() const { return m_tileId; }
 
     void cancel();
-    void doneBuilding();
 
     bool isCanceled() const { return m_canceled; }
-    bool isBuilt() const { return m_doneBuilding; }
 
     double getPriority() const {
         return m_priority.load();
@@ -78,10 +79,13 @@ protected:
     std::shared_ptr<Tile> m_tile;
 
     bool m_canceled = false;
-    bool m_doneBuilding = false;
 
     std::atomic<double> m_priority;
     bool m_proxyState = false;
+
+    // OkHttp returns empty rawData on a bad url fetch. This make sures the rasterTasks are not
+    // blocking the worker threads for eternity.
+    bool m_rasterReady = false;
 };
 
 class DownloadTileTask : public TileTask {
@@ -90,18 +94,16 @@ public:
         : TileTask(_tileId, _source) {}
 
     virtual bool hasData() const override {
-        return rasterReady || (rawTileData && !rawTileData->empty());
+        return rawTileData && !rawTileData->empty();
     }
     // Raw tile data that will be processed by DataSource.
     std::shared_ptr<std::vector<char>> rawTileData;
-
-    // OkHttp returns empty rawData on a bad url fetch. This make sures the rasterTasks are not
-    // blocking the worker threads for eternity.
-    bool rasterReady = false;
 };
 
 struct TileTaskQueue {
     virtual void enqueue(std::shared_ptr<TileTask>&& task) = 0;
+
+    virtual void notifyAll() = 0;
 
     // Check processed-tiles flag. Resets flag on each call..
     // TODO better name checkAndResetProcessedTilesFlag?
