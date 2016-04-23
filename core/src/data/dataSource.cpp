@@ -132,7 +132,9 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
     }
 }
 
-void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
+bool DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
+        TileTaskCb _cb, bool setDependentRaster) {
+
     TileID tileID = _task->tileId();
 
     if (!_rawData.empty()) {
@@ -143,59 +145,33 @@ void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
         auto& task = static_cast<DownloadTileTask&>(*_task);
         task.rawTileData = rawDataRef;
 
+        if (setDependentRaster) {
+            _task->rasterReady();
+        }
         _cb.func(std::move(_task));
 
         m_cache->put(tileID, rawDataRef);
+
+        return true;
     }
+
+    return false;
 }
 
-// Load/Download referenced raster data
-void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task) {
-    TileID tileID = _task->tileId();
-
-    if (!_rawData.empty()) {
-
-        auto rawDataRef = std::make_shared<std::vector<char>>();
-        std::swap(*rawDataRef, _rawData);
-
-        auto& task = static_cast<DownloadTileTask&>(*_task);
-        task.rawTileData = rawDataRef;
-
-        m_cache->put(tileID, rawDataRef);
-        // load the texture and store in datasource resources if network request was good.
-        raster(*_task);
-    } else {
-        //store a black empty texture for this url fetch
-        // OkHttp does not return any data for a bad url fetch (no errors in rawData also)
-        // This makes sure tileWorkers are not blocking on rasterTask->hasData() for eternity
-        auto& task = static_cast<DownloadTileTask&>(*_task);
-        task.rawTileData = nullptr;
-        task.rasterReady = true;
-    }
-}
-
-bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
+bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb,
+        bool setDependentRaster) {
 
     std::string url(constructURL(_task->tileId()));
 
-    // lambda captured parameters are const by default, we want "task" (moved) to be non-const, hence "mutable"
+    // lambda captured parameters are const by default, we want "task" (moved) to be non-const,
+    // hence "mutable"
     // Refer: http://en.cppreference.com/w/cpp/language/lambda
-    return startUrlRequest(url, [this, _cb, task = std::move(_task)](std::vector<char>&& rawData) mutable {
-                                this->onTileLoaded(std::move(rawData), std::move(task), _cb);
-                            });
+    return startUrlRequest(url,
+            [this, _cb, setDependentRaster,
+            task = std::move(_task)](std::vector<char>&& rawData) mutable {
+                this->onTileLoaded(std::move(rawData), std::move(task), _cb, setDependentRaster);
+            });
 
-}
-
-// Load/Download referenced raster data
-bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task) {
-
-    std::string url(constructURL(_task->tileId()));
-
-    // lambda captured parameters are const by default, we want "task" (moved) to be non-const, hence "mutable"
-    // Refer: http://en.cppreference.com/w/cpp/language/lambda
-    return startUrlRequest(url, [this, task = std::move(_task)](std::vector<char>&& rawData) mutable {
-                                onTileLoaded(std::move(rawData), std::move(task));
-                            });
 }
 
 void DataSource::cancelLoadingTile(const TileID& _tileID) {

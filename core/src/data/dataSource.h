@@ -37,8 +37,8 @@ public:
      * the I/O task is complete, the tile data is added to a queue in @_tileManager for
      * further processing before it is renderable.
      */
-    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb);
-    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task);
+    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb,
+            bool setDependentRaster = false);
 
 
     /* Stops any running I/O tasks pertaining to @_tile */
@@ -88,8 +88,8 @@ public:
 
 protected:
 
-    void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task, TileTaskCb _cb);
-    void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task);
+    virtual bool onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
+            TileTaskCb _cb, bool setDependentRaster = false);
 
     /* Constructs the URL of a tile using <m_urlTemplate> */
     virtual void constructURL(const TileID& _tileCoord, std::string& _url) const;

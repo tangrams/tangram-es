@@ -24,10 +24,16 @@ protected:
     virtual std::shared_ptr<TileData> parse(const TileTask& _task,
                                             const MapProjection& _projection) const override;
 
+    virtual bool onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
+            TileTaskCb _cb, bool setDependentRaster = false) override;
+
 public:
 
     RasterSource(const std::string& _name, const std::string& _urlTemplate, int32_t _maxZoom,
                  TextureOptions _options, bool genMipmap = false);
+
+    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb,
+            bool setDependentRaster = false) override;
 
     virtual Raster raster(const TileTask& _task) override;
     virtual void clearRasters() override;

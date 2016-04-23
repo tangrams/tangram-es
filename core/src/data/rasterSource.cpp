@@ -37,6 +37,57 @@ std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapPr
 
 }
 
+// Load/Download referenced raster data
+bool RasterSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
+        TileTaskCb _cb, bool setDependentRaster) {
+
+    auto copyTask = _task;
+
+    if(!DataSource::onTileLoaded(std::move(_rawData), std::move(copyTask), _cb, setDependentRaster)) {
+        // store a black empty texture for this url fetch, used specially when this is a dependent
+        // raster
+        // OkHttp does not return any data for a bad url fetch (no errors in rawData also)
+        // This makes sure tileWorkers are not blocking on rasterTask->hasData() for eternity
+        auto& task = static_cast<DownloadTileTask&>(*_task);
+        task.rawTileData = nullptr;
+
+        // send this back for further processing
+        // - if geometry task, geometry building task will be enqueued
+        // - if dependent raster task, then hasRaster notification will be sent
+        if (setDependentRaster) {
+            _task->rasterReady();
+        }
+        _cb.func(std::move(_task));
+    }
+
+    return true;
+}
+
+bool RasterSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb,
+        bool setDependentRaster) {
+
+    std::string url(constructURL(_task->tileId()));
+
+    auto copyTask = _task;
+
+    // lambda captured parameters are const by default, we want "task" (moved) to be non-const,
+    // hence "mutable"
+    // Refer: http://en.cppreference.com/w/cpp/language/lambda
+    bool status = startUrlRequest(url,
+            [this, _cb, setDependentRaster,
+            task = std::move(_task)](std::vector<char>&& rawData) mutable {
+                this->onTileLoaded(std::move(rawData), std::move(task), _cb, setDependentRaster);
+            });
+
+    // For "dependent" raster datasources if this returns false make sure to create a black texture
+    // for tileID in this task, and consider dependent raster ready
+    if (!status) {
+        copyTask->rasterReady();
+    }
+
+    return status;
+}
+
 Raster RasterSource::raster(const TileTask& _task) {
 
     auto tileID = _task.tileId();
