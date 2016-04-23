@@ -18,6 +18,9 @@ struct TestTileWorker : TileTaskQueue {
 
     std::deque<std::shared_ptr<TileTask>> tasks;
 
+    virtual void notifyAll() {
+    }
+
     virtual void enqueue(std::shared_ptr<TileTask>&& task) {
         tasks.push_back(std::move(task));
     }

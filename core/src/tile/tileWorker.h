@@ -24,6 +24,8 @@ public:
 
     virtual void enqueue(std::shared_ptr<TileTask>&& task) override;
 
+    virtual void notifyAll() override;
+
     void stop();
 
     bool isRunning() const { return m_running; }
