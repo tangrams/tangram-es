@@ -98,6 +98,7 @@ void StyleMixer::applyStyleMixins(Node _style, const std::vector<Node>& _mixins)
     mergeFieldTakingLast("texture", _style, _mixins);
     mergeFieldTakingLast("blend", _style, _mixins);
     mergeFieldTakingLast("blend_order", _style, _mixins);
+    mergeFieldTakingLast("raster", _style, _mixins);
 
     // Merge map fields with newer values taking precedence.
     mergeMapFieldTakingLast("material", _style, _mixins);
