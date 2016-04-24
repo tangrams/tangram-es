@@ -394,6 +394,12 @@ void TileManager::loadRasterTasks(std::vector<std::shared_ptr<DataSource>>& rast
                 rasterTasks.push_back(std::move(savedRasterTask));
                 if (rasterSource->loadTileData(std::move(rasterTask), m_rasterCallback, true)) {
                     m_loadPending++;
+                    // possible raster is already availbale for a overzoomed tile
+                    // Make sure to notify the workers by doing a callback
+                    if (rasterTasks.back()->hasRaster()) {
+                        auto saveTask = rasterTasks.back();
+                        m_rasterCallback.func(std::move(saveTask));
+                    }
                 } else {
                     // dependent raster's loading failed..
                     // this rasterTask's rasterReady must have been set with black texture
