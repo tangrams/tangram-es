@@ -1,5 +1,8 @@
 package com.mapzen.tangram;
 
+/**
+ * {@code LngLat} represents a geographic coordinate with longitude and latitude.
+ */
 public class LngLat {
 
     public double longitude; // Degrees longitude

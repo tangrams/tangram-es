@@ -86,6 +86,7 @@ afterEvaluate { project ->
     source = android.sourceSets.main.java.srcDirs
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
     exclude '**/*.kt'
+    exclude 'com/almeros/android/multitouch'
 
     if (JavaVersion.current().isJava8Compatible()) {
       allprojects {

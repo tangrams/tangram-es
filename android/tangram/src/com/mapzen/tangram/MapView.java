@@ -8,6 +8,9 @@ import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
+/**
+ * {@code MapView} is a View for displaying a Tangram map.
+ */
 public class MapView extends FrameLayout {
 
     protected GLSurfaceView glSurfaceView;
