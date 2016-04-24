@@ -238,7 +238,13 @@ bool SceneLoader::applyConfig(Node& config, Scene& _scene) {
         _scene.lights().push_back(std::move(amb));
     }
 
-    if (Node cameras = config["cameras"]) {
+    if (Node camera = config["camera"]) {
+        try { loadCamera(camera, _scene); }
+        catch (YAML::RepresentationException e) {
+            LOGNode("Parsing camera: '%s'", camera, e.what());
+        }
+
+    } else if (Node cameras = config["cameras"]) {
         try { loadCameras(cameras, _scene); }
         catch (YAML::RepresentationException e) {
             LOGNode("Parsing cameras: '%s'", cameras, e.what());
@@ -852,6 +858,84 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
     scene.lights().push_back(std::move(sceneLight));
 }
 
+void SceneLoader::loadCamera(const Node& camera, Scene& scene) {
+
+    auto& view = scene.view();
+
+    if (Node active = camera["active"]) {
+        if (!active.as<bool>()) {
+            return;
+        }
+    }
+
+    auto type = camera["type"].Scalar();
+    if (type == "perspective") {
+
+        view->setCameraType(CameraType::perspective);
+
+        // Only one of focal length and FOV is applied;
+        // according to docs, focal length takes precedence.
+        if (Node focal = camera["focal_length"]) {
+            if (focal.IsScalar()) {
+                float length = focal.as<float>(view->getFocalLength());
+                view->setFocalLength(length);
+            } else if (focal.IsSequence()) {
+                auto stops = std::make_shared<Stops>(Stops::Numbers(focal));
+                view->setFocalLengthStops(stops);
+            }
+        } else if (Node fov = camera["fov"]) {
+            if (fov.IsScalar()) {
+                float degrees = fov.as<float>(view->getFieldOfView() * RAD_TO_DEG);
+                view->setFieldOfView(degrees * DEG_TO_RAD);
+            } else if (fov.IsSequence()) {
+                auto stops = std::make_shared<Stops>(Stops::Numbers(fov));
+                for (auto& f : stops->frames) { f.value = f.value.get<float>() * DEG_TO_RAD; }
+                view->setFieldOfViewStops(stops);
+            }
+        }
+
+        if (Node vanishing = camera["vanishing_point"]) {
+            if (vanishing.IsSequence() && vanishing.size() >= 2) {
+                // Values are pixels, unit strings are ignored.
+                float x = std::stof(vanishing[0].Scalar());
+                float y = std::stof(vanishing[1].Scalar());
+                view->setVanishingPoint(x, y);
+            }
+        }
+    } else if (type == "isometric") {
+
+        view->setCameraType(CameraType::isometric);
+
+        if (Node axis = camera["axis"]) {
+            view->setObliqueAxis(axis[0].as<float>(), axis[1].as<float>());
+        }
+    } else if (type == "flat") {
+
+        view->setCameraType(CameraType::flat);
+
+    }
+
+    // Default is world origin at 0 zoom
+    double x = 0;
+    double y = 0;
+    float z = 0;
+
+    if (Node position = camera["position"]) {
+        x = position[0].as<double>();
+        y = position[1].as<double>();
+        if (position.size() > 2) {
+            z = position[2].as<float>();
+        }
+    }
+
+    if (Node zoom = camera["zoom"]) {
+        z = zoom.as<float>();
+    }
+
+    scene.startPosition = glm::dvec2(x, y);
+    scene.startZoom = z;
+}
+
 void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
 
     // To correctly match the behavior of the webGL library we'll need a place
@@ -859,85 +943,8 @@ void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
     // right now, we'll just apply the settings from the first active camera we
     // find.
 
-    auto& view = _scene.view();
-
     for (const auto& entry : _cameras) {
-
-        const Node camera = entry.second;
-
-        if (Node active = camera["active"]) {
-            if (!active.as<bool>()) {
-                continue;
-            }
-        }
-
-        auto type = camera["type"].Scalar();
-        if (type == "perspective") {
-
-            view->setCameraType(CameraType::perspective);
-
-            // Only one of focal length and FOV is applied;
-            // according to docs, focal length takes precedence.
-            if (Node focal = camera["focal_length"]) {
-                if (focal.IsScalar()) {
-                    float length = focal.as<float>(view->getFocalLength());
-                    view->setFocalLength(length);
-                } else if (focal.IsSequence()) {
-                    auto stops = std::make_shared<Stops>(Stops::Numbers(focal));
-                    view->setFocalLengthStops(stops);
-                }
-            } else if (Node fov = camera["fov"]) {
-                if (fov.IsScalar()) {
-                    float degrees = fov.as<float>(view->getFieldOfView() * RAD_TO_DEG);
-                    view->setFieldOfView(degrees * DEG_TO_RAD);
-                } else if (fov.IsSequence()) {
-                    auto stops = std::make_shared<Stops>(Stops::Numbers(fov));
-                    for (auto& f : stops->frames) { f.value = f.value.get<float>() * DEG_TO_RAD; }
-                    view->setFieldOfViewStops(stops);
-                }
-            }
-
-            if (Node vanishing = camera["vanishing_point"]) {
-                if (vanishing.IsSequence() && vanishing.size() >= 2) {
-                    // Values are pixels, unit strings are ignored.
-                    float x = std::stof(vanishing[0].Scalar());
-                    float y = std::stof(vanishing[1].Scalar());
-                    view->setVanishingPoint(x, y);
-                }
-            }
-        } else if (type == "isometric") {
-
-            view->setCameraType(CameraType::isometric);
-
-            if (Node axis = camera["axis"]) {
-                view->setObliqueAxis(axis[0].as<float>(), axis[1].as<float>());
-            }
-        } else if (type == "flat") {
-
-            view->setCameraType(CameraType::flat);
-
-        }
-
-        // Default is world origin at 0 zoom
-        double x = 0;
-        double y = 0;
-        float z = 0;
-
-        if (Node position = camera["position"]) {
-            x = position[0].as<double>();
-            y = position[1].as<double>();
-            if (position.size() > 2) {
-                z = position[2].as<float>();
-            }
-        }
-
-        if (Node zoom = camera["zoom"]) {
-            z = zoom.as<float>();
-        }
-
-        _scene.startPosition = glm::dvec2(x, y);
-        _scene.startZoom = z;
-
+        loadCamera(entry.second, _scene);
     }
 }
 
