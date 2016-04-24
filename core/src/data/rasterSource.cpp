@@ -95,7 +95,7 @@ Raster RasterSource::raster(const TileTask& _task) {
     unsigned char* udata = nullptr;
     size_t dataSize = 0;
 
-    if (m_textures.find(id) != m_textures.end()) {
+    if (m_textures.find(id) != m_textures.end() && m_textures.at(id)) {
         return { id, m_textures.at(id) };
     }
 
