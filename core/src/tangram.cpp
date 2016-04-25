@@ -164,14 +164,19 @@ void resize(int _newWidth, int _newHeight) {
 
 }
 
-void update(float _dt) {
+bool update(float _dt) {
 
     FrameInfo::beginUpdate();
 
     g_time += _dt;
 
+    bool viewComplete = true;
+
     for (auto& ease : m_eases) {
-        if (!ease.finished()) { ease.update(_dt); }
+        if (!ease.finished()) {
+            ease.update(_dt);
+            viewComplete = false;
+        }
     }
 
     m_inputHandler->update(_dt);
@@ -203,7 +208,8 @@ void update(float _dt) {
 
         auto& tiles = m_tileManager->getVisibleTiles();
 
-        if (m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged()) {
+        if (m_view->changedOnLastUpdate() ||
+            m_tileManager->hasTileSetChanged()) {
             for (const auto& tile : tiles) {
                 tile->update(_dt, *m_view);
             }
@@ -217,8 +223,15 @@ void update(float _dt) {
 
     FrameInfo::endUpdate();
 
+    if (m_view->changedOnLastUpdate() ||
+        m_tileManager->hasTileSetChanged() ||
+        m_tileManager->hasLoadingTiles() ||
+        m_labels->needUpdate()) { viewComplete = false; }
+
     // Request for render if labels are in fading in/out states
     if (m_labels->needUpdate()) { requestRender(); }
+
+    return viewComplete;
 }
 
 void render() {

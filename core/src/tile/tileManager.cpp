@@ -122,6 +122,7 @@ void TileManager::updateTileSets(const ViewState& _view,
                                  const std::set<TileID>& _visibleTiles) {
     m_tiles.clear();
     m_loadPending = 0;
+    m_tilesInProgress = 0;
 
     m_tileSetChanged = m_workers.checkProcessedTiles();
 
@@ -210,14 +211,13 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
                     // Tile needs update - enqueue for loading
                     enqueueTask(_tileSet, visTileId, _view);
                 }
-
             } else {
-
                 if (entry.isLoading()) {
                     if (newTiles) {
                         // check again for proxies
                         updateProxyTiles(_tileSet, visTileId, entry);
                     }
+                    m_tilesInProgress++;
 
                 } else if (!bool(entry.task) ||
                            (entry.isCanceled() &&
@@ -227,6 +227,8 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
 
                     // Not yet available - enqueue for loading
                     enqueueTask(_tileSet, visTileId, _view);
+
+                    m_tilesInProgress++;
                 }
             }
 
@@ -243,6 +245,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             if (!addTile(_tileSet, visTileId)) {
                 // Not in cache - enqueue for loading
                 enqueueTask(_tileSet, visTileId, _view);
+                m_tilesInProgress++;
             }
 
             ++visTilesIt;

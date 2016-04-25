@@ -63,6 +63,14 @@ public class MapController implements Renderer {
         void onFeaturePick(Map<String, String> properties, float positionX, float positionY);
     }
 
+    public interface ViewCompleteListener {
+        /**
+         * Called on the render-thread at the end of whenever the view is fully loaded and
+         * no ease- or label-animation is running.
+         */
+        void onViewComplete();
+    }
+
     /**
      * Construct a MapController using a custom scene file
      * @param context Context in which the map will function; the asset bundle for this activity
@@ -513,6 +521,12 @@ public class MapController implements Renderer {
     }
 
     /**
+     */
+    public void setViewCompleteListener(ViewCompleteListener listener) {
+        viewCompleteListener = listener;
+    }
+
+    /**
      * Enqueue a Runnable to be executed synchronously on the rendering thread
      * @param r Runnable to run
      */
@@ -557,7 +571,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeLoadScene(String path);
     private synchronized native void nativeSetupGL();
     private synchronized native void nativeResize(int width, int height);
-    private synchronized native void nativeUpdate(float dt);
+    private synchronized native boolean nativeUpdate(float dt);
     private synchronized native void nativeRender();
     private synchronized native void nativeSetPosition(double lon, double lat);
     private synchronized native void nativeSetPositionEased(double lon, double lat, float seconds, int ease);
@@ -607,6 +621,7 @@ public class MapController implements Renderer {
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
     private FeaturePickListener featurePickListener;
+    private ViewCompleteListener viewCompleteListener;
 
     // A static map of client data sources added dynamically. This map has static storage duration
     // because it should mimic the lifetime of native objects whose lifetime is the entire program.
@@ -621,8 +636,12 @@ public class MapController implements Renderer {
         float delta = (newTime - time) / 1000000000.0f;
         time = newTime;
 
-        nativeUpdate(delta);
+        boolean viewComplete = nativeUpdate(delta);
         nativeRender();
+
+        if (viewComplete && viewCompleteListener != null) {
+            viewCompleteListener.onViewComplete();
+        }
     }
 
     @Override
@@ -688,4 +707,3 @@ public class MapController implements Renderer {
     }
 
 }
-

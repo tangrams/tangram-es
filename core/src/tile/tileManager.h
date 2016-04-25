@@ -56,6 +56,8 @@ public:
 
     bool hasTileSetChanged() { return m_tileSetChanged; }
 
+    bool hasLoadingTiles() { return m_tilesInProgress > 0; }
+
     void addDataSource(std::shared_ptr<DataSource> _dataSource);
 
     bool removeDataSource(DataSource& dataSource);
@@ -184,7 +186,8 @@ private:
      */
     void clearProxyTiles(TileSet& _tileSet, const TileID& _tileID, TileEntry& _tile, std::vector<TileID>& _removes);
 
-    int32_t m_loadPending;
+    int32_t m_loadPending = 0;
+    int32_t m_tilesInProgress = 0;
 
     std::vector<TileSet> m_tileSets;
 
