@@ -22,8 +22,7 @@ namespace Tangram {
 
 Labels::Labels()
     : m_needUpdate(false),
-      m_lastZoom(0.0f)
-{}
+      m_lastZoom(0.0f) {}
 
 Labels::~Labels() {}
 
@@ -31,13 +30,17 @@ Labels::~Labels() {}
 //     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 // }
 
-void Labels::updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
+void Labels::updateLabels(const View& _view, float _dt,
+                          const std::vector<std::unique_ptr<Style>>& _styles,
                           const std::vector<std::shared_ptr<Tile>>& _tiles,
-                          float _dt, float _dz, const View& _view)
-{
+                          bool _onlyTransitions) {
+
+    m_needUpdate = false;
+
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
 
     // int lodDiscard = LODDiscardFunc(View::s_maxZoom, _view.getZoom());
+    float dz = _view.getZoom() - std::floor(_view.getZoom());
 
     for (const auto& tile : _tiles) {
 
@@ -58,11 +61,17 @@ void Labels::updateLabels(const std::vector<std::unique_ptr<Style>>& _styles,
             if (!labelMesh) { continue; }
 
             for (auto& label : labelMesh->getLabels()) {
-                if (!label->update(mvp, screenSize, _dz)) {
+                if (!label->update(mvp, screenSize, dz)) {
                     // skip dead labels
                     continue;
                 }
-                if (label->canOcclude()) {
+
+                if (_onlyTransitions) {
+                    if (!label->canOcclude() || label->visibleState()) {
+                        m_needUpdate |= label->evalState(screenSize, _dt);
+                        label->pushTransform();
+                    }
+                } else if (label->canOcclude()) {
                     label->setProxy(proxyTile);
                     m_labels.push_back(label.get());
 
@@ -216,26 +225,24 @@ void Labels::checkRepeatGroups(std::vector<Label*>& _visibleSet) const {
     }
 }
 
-void Labels::update(const View& _view, float _dt,
-                    const std::vector<std::unique_ptr<Style>>& _styles,
-                    const std::vector<std::shared_ptr<Tile>>& _tiles,
-                    std::unique_ptr<TileCache>& _cache)
-{
+void Labels::updateLabelSet(const View& _view, float _dt,
+                            const std::vector<std::unique_ptr<Style>>& _styles,
+                            const std::vector<std::shared_ptr<Tile>>& _tiles,
+                            std::unique_ptr<TileCache>& _cache) {
+
     // Could clear this at end of function unless debug draw is active
     m_labels.clear();
     m_aabbs.clear();
 
-    float currentZoom = _view.getZoom();
-    float dz = currentZoom - std::floor(currentZoom);
-
     /// Collect and update labels from visible tiles
 
-    updateLabels(_styles, _tiles, _dt, dz, _view);
+    updateLabels(_view, _dt, _styles, _tiles, false);
 
     /// Mark labels to skip transitions
 
     if (int(m_lastZoom) != int(_view.getZoom())) {
-        skipTransitions(_styles, _tiles, _cache, currentZoom);
+        skipTransitions(_styles, _tiles, _cache, _view.getZoom());
+        m_lastZoom = _view.getZoom();
     }
 
     /// Manage occlusions
@@ -339,18 +346,10 @@ void Labels::update(const View& _view, float _dt,
 
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
 
-    m_needUpdate = false;
     for (auto* label : m_labels) {
         m_needUpdate |= label->evalState(screenSize, _dt);
         label->pushTransform();
     }
-
-    // Request for render if labels are in fading in/out states
-    if (m_needUpdate) {
-        requestRender();
-    }
-
-    m_lastZoom = currentZoom;
 }
 
 const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, float _dt,

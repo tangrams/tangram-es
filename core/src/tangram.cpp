@@ -198,23 +198,24 @@ void update(float _dt) {
 
         m_tileManager->updateTileSets(viewState, m_view->getVisibleTiles());
 
-        bool updateLabels = m_labels->needUpdate();
         auto& tiles = m_tileManager->getVisibleTiles();
 
         if (m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged()) {
             for (const auto& tile : tiles) {
                 tile->update(_dt, *m_view);
             }
-            updateLabels = true;
-        }
-
-        if (updateLabels) {
             auto& cache = m_tileManager->getTileCache();
-            m_labels->update(*m_view, _dt, m_scene->styles(), tiles, cache);
+            m_labels->updateLabelSet(*m_view, _dt, m_scene->styles(), tiles, cache);
+
+        } else {
+            m_labels->updateLabels(*m_view, _dt, m_scene->styles(), tiles);
         }
     }
 
     FrameInfo::endUpdate();
+
+    // Request for render if labels are in fading in/out states
+    if (m_labels->needUpdate()) { requestRender(); }
 }
 
 void render() {
