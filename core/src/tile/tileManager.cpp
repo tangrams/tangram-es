@@ -421,13 +421,14 @@ void TileManager::loadTiles() {
         auto tileIt = tileSet.tiles.find(tileId);
         auto& entry = tileIt->second;
 
-        std::shared_ptr<TileTask> task = nullptr;
-
         if (entry.task && entry.rastersPending() > 0 && !entry.isCanceled()) {
-            task = entry.task;
-        } else {
-            task = tileSet.source->createTask(tileId);
+            // just load the rasters and continue,
+            // the main tile task has already started loading
+            loadRasterTasks(tileSet.source->rasterSources(), entry.task, tileId);
+            continue;
         }
+
+        auto task = tileSet.source->createTask(tileId);
 
         if (task->hasData()) {
             // Note: Set implicit 'loading' state
