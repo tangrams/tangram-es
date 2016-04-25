@@ -51,6 +51,7 @@ struct SceneLoader {
     static void loadLayer(const std::pair<Node, Node>& layer, Scene& scene);
     static void loadLight(const std::pair<Node, Node>& light, Scene& scene);
     static void loadCameras(Node cameras, Scene& scene);
+    static void loadCamera(const Node& camera, Scene& scene);
     static void loadStyleProps(Style& style, Node styleNode, Scene& scene);
     static void loadMaterial(Node matNode, Material& material, Scene& scene, Style& style);
     static void loadShaderConfig(Node shaders, Style& style, Scene& scene);
