@@ -2,6 +2,7 @@ package com.mapzen.tangram.android;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Window;
 import android.widget.Toast;
 
@@ -87,9 +88,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
                 public void onViewComplete() {
                     runOnUiThread(new Runnable() {
                             public void run() {
-                                Toast.makeText(getApplicationContext(),
-                                               "View Complete",
-                                               Toast.LENGTH_SHORT).show();
+                                Log.d("Tangram", "View complete");
                             }
                         });
                 }});
