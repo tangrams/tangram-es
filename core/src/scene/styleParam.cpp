@@ -128,14 +128,16 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     }
     case StyleParamKey::text_wrap: {
         int textWrap;
-        if (parseInt(_value, textWrap) > 0) {
-             return static_cast<uint32_t>(textWrap);
+        if (_value == "false") {
+            return std::numeric_limits<uint32_t>::max();
         }
         if (_value == "true") {
             return 15; // DEFAULT
-        } else {
-            return std::numeric_limits<uint32_t>::max();
         }
+        if (parseInt(_value, textWrap) > 0) {
+             return static_cast<uint32_t>(textWrap);
+        }
+        return std::numeric_limits<uint32_t>::max();
     }
     case StyleParamKey::offset: {
         UnitVec<glm::vec2> vec;
