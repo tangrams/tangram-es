@@ -2,8 +2,10 @@ package com.mapzen.tangram;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
+import android.opengl.GLES20;
 import android.util.DisplayMetrics;
 
 import com.mapzen.tangram.TouchInput.Gestures;
@@ -12,6 +14,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
+import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -69,6 +72,49 @@ public class MapController implements Renderer {
          * no ease- or label-animation is running.
          */
         void onViewComplete();
+    }
+
+    /**
+     * Callback for {@link #captureFrame(FrameCaptureCallback, bool) }
+     */
+    public interface FrameCaptureCallback {
+        /**
+         * Called on the render-thread when a frame was captured.
+         */
+        void onCaptured(Bitmap bitmap);
+    }
+
+    /**
+     * Capture MapView as Bitmap.
+     * @param waitForCompleteView Delay the capture until the view is fully loaded and
+     *                            no ease- or label-animation is running.
+     */
+    public void captureFrame(FrameCaptureCallback callback, boolean waitForCompleteView) {
+        frameCaptureCallback = callback;
+        frameCaptureAwaitCompleteView = waitForCompleteView;
+        requestRender();
+    }
+
+    private Bitmap capture() {
+        int w = mapView.getWidth();
+        int h = mapView.getHeight();
+
+        int b[] = new int[(int) (w * h)];
+        int bt[] = new int[(int) (w * h)];
+        IntBuffer buffer = IntBuffer.wrap(b);
+        buffer.position(0);
+        GLES20.glReadPixels(0, 0, w, h, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer);
+        for (int i = 0; i < h; i++) {
+            for (int j = 0; j < w; j++) {
+                int pix = b[i * w + j];
+                int pb = (pix >> 16) & 0xff;
+                int pr = (pix << 16) & 0x00ff0000;
+                int pix1 = (pix & 0xff00ff00) | pr | pb;
+                bt[(h - i - 1) * w + j] = pix1;
+            }
+        }
+
+        return Bitmap.createBitmap(bt, w, h, Bitmap.Config.ARGB_8888);
     }
 
     /**
@@ -622,6 +668,8 @@ public class MapController implements Renderer {
     private HttpHandler httpHandler;
     private FeaturePickListener featurePickListener;
     private ViewCompleteListener viewCompleteListener;
+    private FrameCaptureCallback frameCaptureCallback;
+    private boolean frameCaptureAwaitCompleteView;
 
     // A static map of client data sources added dynamically. This map has static storage duration
     // because it should mimic the lifetime of native objects whose lifetime is the entire program.
@@ -641,6 +689,12 @@ public class MapController implements Renderer {
 
         if (viewComplete && viewCompleteListener != null) {
             viewCompleteListener.onViewComplete();
+        }
+        if (frameCaptureCallback != null) {
+            if (!frameCaptureAwaitCompleteView || viewComplete) {
+                frameCaptureCallback.onCaptured(capture());
+                frameCaptureCallback = null;
+            }
         }
     }
 
