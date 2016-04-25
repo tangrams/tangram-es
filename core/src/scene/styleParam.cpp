@@ -134,7 +134,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         if (_value == "true") {
             return 15; // DEFAULT
         }
-        if (parseInt(_value, textWrap) > 0) {
+        if (parseInt(_value, textWrap) > 0 && textWrap > 0) {
              return static_cast<uint32_t>(textWrap);
         }
         return std::numeric_limits<uint32_t>::max();
@@ -200,8 +200,11 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::priority: {
         int num;
         if (parseInt(_value, num) > 0) {
-             return static_cast<uint32_t>(num);
+            if (num >= 0) {
+                return static_cast<uint32_t>(num);
+            }
         }
+        LOGW("Invalid '%s' value '%s'", keyName(key).c_str(), _value.c_str());
         break;
     }
     case StyleParamKey::repeat_distance: {
