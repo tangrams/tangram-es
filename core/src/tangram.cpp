@@ -102,6 +102,18 @@ void setScene(std::shared_ptr<Scene>& _scene) {
     m_tileManager->setDataSources(_scene->getAllDataSources());
     m_tileWorker->setScene(_scene);
     setPixelScale(m_view->pixelScale());
+
+    bool animated = m_scene->animated() == Scene::animate::yes;
+
+    if (m_scene->animated() == Scene::animate::none) {
+        for (const auto& style : m_scene->styles()) {
+            animated |= style->isAnimated();
+        }
+    }
+
+    if (animated != isContinuousRendering()) {
+        setContinuousRendering(animated);
+    }
 }
 
 void loadScene(const char* _scenePath) {
@@ -152,14 +164,19 @@ void resize(int _newWidth, int _newHeight) {
 
 }
 
-void update(float _dt) {
+bool update(float _dt) {
 
     FrameInfo::beginUpdate();
 
     g_time += _dt;
 
+    bool viewComplete = true;
+
     for (auto& ease : m_eases) {
-        if (!ease.finished()) { ease.update(_dt); }
+        if (!ease.finished()) {
+            ease.update(_dt);
+            viewComplete = false;
+        }
     }
 
     m_inputHandler->update(_dt);
@@ -168,23 +185,14 @@ void update(float _dt) {
 
     {
         std::lock_guard<std::mutex> lock(m_tasksMutex);
-
         while (!m_tasks.empty()) {
             m_tasks.front()();
             m_tasks.pop();
         }
     }
 
-    bool animated = m_scene->animated() == Scene::animate::yes;
     for (const auto& style : m_scene->styles()) {
         style->onBeginUpdate();
-        if (m_scene->animated() == Scene::animate::none) {
-            animated |= style->isAnimated();
-        }
-    }
-
-    if (animated != isContinuousRendering()) {
-        setContinuousRendering(animated);
     }
 
     {
@@ -198,23 +206,32 @@ void update(float _dt) {
 
         m_tileManager->updateTileSets(viewState, m_view->getVisibleTiles());
 
-        bool updateLabels = m_labels->needUpdate();
         auto& tiles = m_tileManager->getVisibleTiles();
 
-        if (m_view->changedOnLastUpdate() || m_tileManager->hasTileSetChanged()) {
+        if (m_view->changedOnLastUpdate() ||
+            m_tileManager->hasTileSetChanged()) {
             for (const auto& tile : tiles) {
                 tile->update(_dt, *m_view);
             }
-            updateLabels = true;
-        }
-
-        if (updateLabels) {
             auto& cache = m_tileManager->getTileCache();
-            m_labels->update(*m_view, _dt, m_scene->styles(), tiles, cache);
+            m_labels->updateLabelSet(*m_view, _dt, m_scene->styles(), tiles, cache);
+
+        } else {
+            m_labels->updateLabels(*m_view, _dt, m_scene->styles(), tiles);
         }
     }
 
     FrameInfo::endUpdate();
+
+    if (m_view->changedOnLastUpdate() ||
+        m_tileManager->hasTileSetChanged() ||
+        m_tileManager->hasLoadingTiles() ||
+        m_labels->needUpdate()) { viewComplete = false; }
+
+    // Request for render if labels are in fading in/out states
+    if (m_labels->needUpdate()) { requestRender(); }
+
+    return viewComplete;
 }
 
 void render() {

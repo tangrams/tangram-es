@@ -187,6 +187,8 @@ void View::pitch(float _dpitch) {
 
 void View::update(bool _constrainToWorldBounds) {
 
+    m_changed = false;
+
     if (_constrainToWorldBounds) {
         m_constraint.setRadius(std::fmax(getWidth(), getHeight()) / pixelsPerMeter() / pixelScale());
         m_pos.x = m_constraint.getConstrainedX(m_pos.x);

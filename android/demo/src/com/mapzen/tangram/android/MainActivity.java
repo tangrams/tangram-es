@@ -2,6 +2,7 @@ package com.mapzen.tangram.android;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Window;
 import android.widget.Toast;
 
@@ -9,6 +10,7 @@ import com.mapzen.tangram.HttpHandler;
 import com.mapzen.tangram.LngLat;
 import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapController.FeaturePickListener;
+import com.mapzen.tangram.MapController.ViewCompleteListener;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.MapView.OnMapReadyCallback;
@@ -82,6 +84,14 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
         map.setLongPressResponder(this);
         map.setFeaturePickListener(this);
 
+        map.setViewCompleteListener(new ViewCompleteListener() {
+                public void onViewComplete() {
+                    runOnUiThread(new Runnable() {
+                            public void run() {
+                                Log.d("Tangram", "View complete");
+                            }
+                        });
+                }});
         markers = map.addDataLayer("touch");
     }
 

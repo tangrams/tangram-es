@@ -79,8 +79,8 @@ extern "C" {
         Tangram::resize(width, height);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeUpdate(JNIEnv* jniEnv, jobject obj, jfloat dt) {
-        Tangram::update(dt);
+    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeUpdate(JNIEnv* jniEnv, jobject obj, jfloat dt) {
+        return Tangram::update(dt);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeRender(JNIEnv* jniEnv, jobject obj) {
