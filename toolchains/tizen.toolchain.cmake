@@ -1,46 +1,38 @@
-SET(SDK_ROOT ${TIZEN_SDK})
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_VERSION 1)
 
-SET(CMAKE_SYSTEM_NAME Linux)
-SET(CMAKE_SYSTEM_VERSION 1)
-
-SET(TIZEN_DEVICE OFF)
+message(STATUS "Tizen SDK path: ${TIZEN_SDK}, Target: ${TIZEN_DEVICE}")
 
 if (${TIZEN_DEVICE})
 
-  SET(CMAKE_C_COMPILER
-    ${SDK_ROOT}/tools/arm-linux-gnueabi-gcc-4.9/bin/arm-linux-gnueabi-gcc)
+  set(CMAKE_C_COMPILER ${TIZEN_SDK}/tools/arm-linux-gnueabi-gcc-4.9/bin/arm-linux-gnueabi-gcc)
+  set(CMAKE_CXX_COMPILER ${TIZEN_SDK}/tools/arm-linux-gnueabi-gcc-4.9/bin/arm-linux-gnueabi-g++)
+  set(CMAKE_FIND_ROOT_PATH ${TIZEN_SDK}/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-device.core)
 
-  SET(CMAKE_CXX_COMPILER
-    ${SDK_ROOT}/tools/arm-linux-gnueabi-gcc-4.9/bin/arm-linux-gnueabi-g++)
+  # set(CMAKE_SYSROOT  ${TIZEN_SDK}/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-device.core)
+  set(CMAKE_SYSROOT ${TIZEN_SYSROOT})
 
-  SET(CMAKE_FIND_ROOT_PATH
-    ${SDK_ROOT}/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-device.core)
-
-  SET(CMAKE_SYSROOT
-    ${SDK_ROOT}/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-device.core)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+  set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 else() # Emulator
 
-  SET(CMAKE_C_COMPILER
-    ${SDK_ROOT}/tools/i386-linux-gnueabi-gcc-4.9/bin/i386-linux-gnueabi-gcc)
+  set(CMAKE_C_COMPILER ${TIZEN_SDK}/tools/i386-linux-gnueabi-gcc-4.9/bin/i386-linux-gnueabi-gcc)
+  set(CMAKE_CXX_COMPILER ${TIZEN_SDK}/tools/i386-linux-gnueabi-gcc-4.9/bin/i386-linux-gnueabi-g++)
+  set(CMAKE_FIND_ROOT_PATH ${TIZEN_SDK}/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-emulator.core)
 
-  SET(CMAKE_CXX_COMPILER
-    ${SDK_ROOT}/tools/i386-linux-gnueabi-gcc-4.9/bin/i386-linux-gnueabi-g++)
+  # set(TIZEN_SYSROOT ${TIZEN_SDK}/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-emulator.core)
+  set(CMAKE_SYSROOT ${TIZEN_SYSROOT})
 
-  SET(CMAKE_FIND_ROOT_PATH
-    ${SDK_ROOT}/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-emulator.core)
-
-  SET(CMAKE_SYSROOT
-    ${SDK_ROOT}/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-emulator.core)
-
-  SET(CMAKE_C_FLAGS_INIT "-march=i486")
-  SET(CMAKE_CXX_FLAGS_INIT "-march=i486")
-
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i486")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i486")
+  # set(CMAKE_C_FLAGS_INIT "-march=i486")
+  # set(CMAKE_CXX_FLAGS_INIT "-march=i486")
+  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i486")
+  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i486")
 
 endif()
 
-SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+message(STATUS "SYSROOT: ${CMAKE_SYSROOT}")
+
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)

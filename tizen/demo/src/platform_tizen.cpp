@@ -23,6 +23,7 @@
 
 static bool s_isContinuousRendering = false;
 static std::string s_resourceRoot;
+static std::string s_internalResourceRoot = "";
 
 
 #if USE_ECORE_CON
@@ -168,10 +169,6 @@ static bool s_update = false;
 #define LOG_TAG "Tangram"
 
 void logMsg(const char* fmt, ...) {
-//    va_list args;
-//    va_start(args, fmt);
-//    vfprintf(stderr, fmt, args);
-//    va_end(args);
 
         va_list vl;
         va_start(vl, fmt);
@@ -181,7 +178,6 @@ void logMsg(const char* fmt, ...) {
 
 void requestRender() {
     s_update = true;
-    //glfwPostEmptyEvent();
 }
 
 bool shouldRender() {
@@ -205,11 +201,16 @@ bool isContinuousRendering() {
 
 std::string setResourceRoot(const char* _path) {
 
-    //std::string dir(_path);
-    //s_resourceRoot = std::string(dirname(&dir[0])) + '/';
-    char *app_res = app_get_resource_path();
-    s_resourceRoot = std::string(app_res);
-    free(app_res);
+	if (_path[0] == '/') {
+		std::string dir(_path);
+	    s_resourceRoot = std::string(dirname(&dir[0])) + '/';
+
+	} else {
+
+		char *app_res = app_get_resource_path();
+		s_resourceRoot = std::string(app_res);
+		free(app_res);
+	}
 
     std::string base(_path);
 
@@ -221,10 +222,16 @@ std::string resolvePath(const char* _path, PathType _type) {
         LOG("RESOLVE PATH %s %d", _path, static_cast<int>(_type));
     switch (_type) {
     case PathType::absolute:
-    case PathType::internal:
+    case PathType::internal: {
         //return std::string(_path);
-        return s_resourceRoot + _path;
-    case PathType::resource:
+    	if (s_internalResourceRoot.empty()) {
+    		char *app_res = app_get_resource_path();
+    		s_internalResourceRoot = std::string(app_res);
+    		free(app_res);
+    	}
+
+        return s_internalResourceRoot + _path;
+    } case PathType::resource:
         return s_resourceRoot + _path;
     }
     return "";
