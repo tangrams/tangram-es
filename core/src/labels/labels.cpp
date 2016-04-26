@@ -18,6 +18,8 @@
 #include "glm/gtx/rotate_vector.hpp"
 #include "glm/gtx/norm.hpp"
 
+#define LOD_MAX 3
+
 namespace Tangram {
 
 Labels::Labels()
@@ -25,10 +27,6 @@ Labels::Labels()
       m_lastZoom(0.0f) {}
 
 Labels::~Labels() {}
-
-// int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
-//     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
-// }
 
 void Labels::updateLabels(const View& _view, float _dt,
                           const std::vector<std::unique_ptr<Style>>& _styles,
@@ -39,15 +37,13 @@ void Labels::updateLabels(const View& _view, float _dt,
 
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
 
-    // int lodDiscard = LODDiscardFunc(View::s_maxZoom, _view.getZoom());
-    float dz = _view.getZoom() - std::floor(_view.getZoom());
+    float zoom = _view.getZoom();
+    float dz = zoom - std::floor(zoom);
 
     for (const auto& tile : _tiles) {
 
-        // discard based on level of detail
-        // if ((zoom - tile->getID().z) > lodDiscard) {
-        //     continue;
-        // }
+        // discard very low LOD tiles relative to current view
+        if ((zoom - tile->getID().z) >= LOD_MAX) { continue; }
 
         bool proxyTile = tile->isProxy();
 
