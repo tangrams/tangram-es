@@ -127,6 +127,9 @@ void TileWorker::run(Worker* instance) {
 
             } else {
                 task->cancel();
+                m_pendingTiles = true;
+                requestRender();
+                continue;
             }
 
             // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
@@ -145,7 +148,6 @@ void TileWorker::run(Worker* instance) {
                 }
             }
         }
-
 
         if (!rastersReady) {
             // enqueue this task again
