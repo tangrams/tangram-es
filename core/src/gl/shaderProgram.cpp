@@ -97,18 +97,21 @@ GLint ShaderProgram::getUniformLocation(const UniformLocation& _uniform) {
 }
 
 bool ShaderProgram::use() {
+    bool valid = true;
 
     checkValidity();
 
     if (m_needsBuild) {
-        build();
+        valid |= build();
     }
 
-    if (m_glProgram != 0) {
+    valid &= (m_glProgram != 0);
+
+    if (valid) {
         RenderState::shaderProgram(m_glProgram);
-        return true;
     }
-    return false;
+
+    return valid;
 }
 
 bool ShaderProgram::build() {

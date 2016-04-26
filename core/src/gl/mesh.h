@@ -62,7 +62,7 @@ public:
      * Renders the geometry in this mesh using the ShaderProgram _shader; if
      * geometry has not already been uploaded it will be uploaded at this point
      */
-    void draw(ShaderProgram& _shader);
+    bool draw(ShaderProgram& _shader);
 
     size_t bufferSize() const;
 
@@ -142,8 +142,8 @@ public:
         return MeshBase::bufferSize();
     }
 
-    void draw(ShaderProgram& _shader) override {
-        MeshBase::draw(_shader);
+    bool draw(ShaderProgram& _shader) override {
+        return MeshBase::draw(_shader);
     }
 
     void compile(const std::vector<MeshData<T>>& _meshes);
