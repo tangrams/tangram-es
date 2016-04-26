@@ -39,7 +39,7 @@ public:
 
     std::shared_ptr<Tile>& tile() { return m_tile; }
 
-    bool isReady() const { return bool(m_tile); }
+    bool hasTile() const { return bool(m_tile); }
 
     DataSource& source() { return *m_source; }
     int64_t sourceGeneration() const { return m_sourceGeneration; }
