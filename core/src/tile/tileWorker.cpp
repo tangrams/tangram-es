@@ -112,72 +112,61 @@ void TileWorker::run(Worker* instance) {
             continue;
         }
 
-        auto tileData = task->source().parse(*task, *builder->scene().mapProjection());
+        if (!task->hasTile()) {
 
-        // const clock_t begin = clock();
+            auto tileData = task->source().parse(*task, *builder->scene().mapProjection());
 
-        if (tileData) {
+            // const clock_t begin = clock();
 
-            auto raster = task->source().raster(*task);
-            auto tile = builder->build(task->tileId(), *tileData, task->source());
+            if (tileData) {
 
-            bool waitOnRasters = false;
+                auto raster = task->source().raster(*task);
+                auto tile = builder->build(task->tileId(), *tileData, task->source());
+                // move tile to task (probably done if no rasters)
+                task->setTile(std::move(tile));
 
-            if (task->source().rasterSources().size() != task->rasterTasks().size()) {
-                waitOnRasters = true;
             } else {
-                for (auto& rasterTask : task->rasterTasks()) {
-                    if (!rasterTask->hasRaster()) {
-                        waitOnRasters = true;
-                        break;
-                    }
-                }
+                task->cancel();
             }
 
             // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
             // LOG("loadTime %s - %f", task->tile()->getID().toString().c_str(), loadTime);
+        }
 
-            if (waitOnRasters) {
-                std::unique_lock<std::mutex> lock(m_mutex);
-                m_condition.wait(lock, [&]() {
-                    if (!m_running || task->isCanceled()) { return true; }
-                    if (task->source().rasterSources().size() != task->rasterTasks().size()) {
-                        return false;
-                    }
-                    for (auto& rasterTask : task->rasterTasks()) {
-                        if (!rasterTask->hasRaster()) { return false; }
-                    }
-                    return true;
-                });
+        bool rastersReady = true;
 
-                if (!m_running) {
-                    if (builder) {
-                        disposeBuilder(std::move(builder));
-                    }
+        if (task->source().rasterSources().size() != task->rasterTasks().size()) {
+            rastersReady = false;
+        } else {
+            for (auto& rasterTask : task->rasterTasks()) {
+                if (!rasterTask->hasRaster()) {
+                    rastersReady = false;
                     break;
                 }
-
-                if (task->isCanceled()) {
-                    continue;
-                }
             }
-
-            // first set self texture, if it has one, then go to reference raster textures
-            if (raster.isValid()) {
-                tile->rasters().push_back(std::move(raster));
-            }
-            for (auto& rasterTask : task->rasterTasks()) {
-                auto rasterTex = rasterTask->source().raster(*rasterTask);
-                if (rasterTex.isValid()) {
-                    tile->rasters().push_back(std::move(rasterTex));
-                }
-            }
-
-            // Mark task as ready
-            task->setTile(std::move(tile));
-        } else {
-            task->cancel();
         }
+
+
+        if (!rastersReady) {
+            // enqueue this task again
+            enqueue(std::move(task));
+            continue;
+        }
+
+        auto raster = task->source().raster(*task);
+
+        // first set self texture, if it has one, then go to reference raster textures
+        if (raster.isValid()) {
+            task->tile()->rasters().push_back(std::move(raster));
+        }
+        for (auto& rasterTask : task->rasterTasks()) {
+            assert(rasterTask->hasRaster());
+            auto rasterTex = rasterTask->source().raster(*rasterTask);
+            if (rasterTex.isValid()) {
+                task->tile()->rasters().push_back(std::move(rasterTex));
+            }
+        }
+
 
         m_pendingTiles = true;
 

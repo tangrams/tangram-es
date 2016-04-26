@@ -110,7 +110,13 @@ private:
             return 0;
         }
         bool isCanceled() { return bool(task) && task->isCanceled(); }
-        bool newData() { return bool(task) && bool(task->tile()); }
+
+        // New Data only when
+        // - task still exists
+        // - task has a tile ready
+        // - tile has rasters ready
+        bool newData() { return bool(task) && bool(task->tile()) &&
+                        task->source().rasterSources().size() == task->tile()->rasters().size(); }
 
         void cancelTask() {
             if (task) {

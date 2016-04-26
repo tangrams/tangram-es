@@ -195,6 +195,8 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
                 newTiles = true;
             }
         }
+        // need to notify all workers to start next set of task(s)
+        m_workers.notifyAll();
     }
 
     // Loop over visibleTiles and add any needed tiles to tileSet
