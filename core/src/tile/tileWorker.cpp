@@ -135,20 +135,20 @@ void TileWorker::run(Worker* instance) {
             // LOG("loadTime %s - %f", task->tile()->getID().toString().c_str(), loadTime);
         }
 
-        bool rastersReady = true;
+        bool ready = true;
 
         if (task->source().rasterSources().size() != task->rasterTasks().size()) {
-            rastersReady = false;
+            ready = false;
         } else {
             for (auto& rasterTask : task->rasterTasks()) {
                 if (!rasterTask->hasRaster()) {
-                    rastersReady = false;
+                    ready = false;
                     break;
                 }
             }
         }
 
-        if (!rastersReady) {
+        if (!ready) {
             // enqueue this task again
             enqueue(std::move(task));
             continue;
@@ -168,10 +168,10 @@ void TileWorker::run(Worker* instance) {
             }
         }
 
-
-        m_pendingTiles = true;
-
-        requestRender();
+        if (ready) {
+            m_pendingTiles = true;
+            requestRender();
+        }
     }
 }
 
