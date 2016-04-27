@@ -405,8 +405,22 @@ public class MapController implements Renderer {
      * @param renderMode Either 1, to render continuously, or 0, to render only when needed.
      */
     public void setRenderMode(int renderMode) {
-        mapView.setRenderMode(renderMode);
+        continuousRendering = (renderMode == 1) ? true : false;
+        if (mapView != null) {
+            mapView.setRenderMode(renderMode);
+        }
     }
+
+    /**
+     * Get the previously set state of continuous rendering
+     *
+     * Typically this does not need to be called from outside Tangram.
+     * @return true if continuous rendering was set in the scene, else false
+     */
+    public boolean getContinuousRendering() {
+        return continuousRendering;
+    }
+
 
     /**
      * Set a responder for tap gestures
@@ -670,6 +684,7 @@ public class MapController implements Renderer {
     private ViewCompleteListener viewCompleteListener;
     private FrameCaptureCallback frameCaptureCallback;
     private boolean frameCaptureAwaitCompleteView;
+    private boolean continuousRendering = false;
 
     // A static map of client data sources added dynamically. This map has static storage duration
     // because it should mimic the lifetime of native objects whose lifetime is the entire program.
