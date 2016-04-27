@@ -71,6 +71,7 @@ public class MapView extends FrameLayout {
             @Override
             protected void onPostExecute(MapController map) {
                 map.setView(glSurfaceView);
+                if (map.getContinuousRendering()) { map.setRenderMode(1); }
                 addView(glSurfaceView);
                 callback.onMapReady(map);
             }
