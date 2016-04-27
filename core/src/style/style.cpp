@@ -79,9 +79,11 @@ void Style::setupShaderUniforms(Scene& _scene) {
 
         if (value.is<std::string>()) {
             std::shared_ptr<Texture> texture = nullptr;
+            std::string textureName = value.get<std::string>();
 
-            if (!_scene.texture(value.get<std::string>(), texture) || !texture) {
-                // TODO: LOG, would be nice to do have a notify-once-log not to overwhelm logging
+            if (!_scene.texture(textureName, texture) || !texture) {
+                NOTIFY("Texture with texture name %s is not available to be sent as uniform",
+                    textureName.c_str());
                 continue;
             }
 
@@ -111,7 +113,8 @@ void Style::setupShaderUniforms(Scene& _scene) {
                     std::shared_ptr<Texture> texture = nullptr;
 
                     if (!_scene.texture(textureName, texture) || !texture) {
-                        // TODO: LOG, would be nice to do have a notify-once-log not to overwhelm logging
+                        NOTIFY("Texture with texture name %s is not available to be sent as uniform",
+                            textureName.c_str());
                         continue;
                     }
 
@@ -122,9 +125,6 @@ void Style::setupShaderUniforms(Scene& _scene) {
                 }
 
                 m_shaderProgram->setUniformi(name, textureUniformArray);
-            } else {
-                // TODO: Throw away uniform on loading!
-                // none_type
             }
         }
     }
@@ -213,7 +213,9 @@ void Style::draw(const Tile& _tile) {
                                      _tile.getID().s,
                                      _tile.getID().z);
 
-        styleMesh->draw(*m_shaderProgram);
+        if (!styleMesh->draw(*m_shaderProgram)) {
+            NOTIFY("Mesh built by style %s cannot be drawn", m_name.c_str());
+        }
     }
 }
 
