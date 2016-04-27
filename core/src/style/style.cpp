@@ -38,6 +38,8 @@ void Style::build(const std::vector<std::unique_ptr<Light>>& _lights) {
     constructVertexLayout();
     constructShaderProgram();
 
+    m_shaderProgram->setDescription("{style:" + m_name + "}");
+
     switch (m_lightingType) {
         case LightingType::vertex:
             m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n", false);

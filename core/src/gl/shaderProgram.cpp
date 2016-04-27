@@ -20,6 +20,7 @@ ShaderProgram::ShaderProgram() {
     m_needsBuild = true;
     m_generation = -1;
     m_invalidShaderSource = false;
+    m_description = "";
 }
 
 ShaderProgram::~ShaderProgram() {
@@ -102,7 +103,7 @@ bool ShaderProgram::use() {
     checkValidity();
 
     if (m_needsBuild) {
-        valid |= build();
+        build();
     }
 
     valid &= (m_glProgram != 0);
@@ -212,7 +213,8 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
         if (infoLength > 1) {
             std::vector<GLchar> infoLog(infoLength);
             glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
-            LOGE("Compiling shader:\n%s", &infoLog[0]);
+            LOGE("Shader compilation failed %s", m_description.c_str());
+            LOGE("%s", &infoLog[0]);
             //logMsg("\n%s\n", source);
         }
         glDeleteShader(shader);
