@@ -185,6 +185,11 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
                      (metrics.aabb.y + height * 0.5) * TextVertex::position_scale);
 
     auto it = _quads.begin() + quadsStart;
+    if (it == _quads.end()) {
+        // No glyphs added
+        return false;
+    }
+
     while (it != _quads.end()) {
 
         if (!_refs[it->atlas]) {
