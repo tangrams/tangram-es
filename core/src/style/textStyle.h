@@ -45,11 +45,6 @@ public:
 
 protected:
 
-    void constructVertexLayout() override;
-    void constructShaderProgram() override;
-
-    std::unique_ptr<StyleBuilder> createBuilder() const override;
-
     bool m_sdf;
 
     std::shared_ptr<FontContext> m_context;
@@ -68,6 +63,9 @@ public:
               Blending _blendMode = Blending::overlay,
               GLenum _drawMode = GL_TRIANGLES);
 
+    void constructVertexLayout() override;
+    void constructShaderProgram() override;
+
     /* Create the LabelMeshes associated with FontContext GlyphTexture<s>
      * No GL involved, called from Tangram::update()
      */
@@ -83,6 +81,8 @@ public:
      * - Second pass, draw the inner glyph pixels
      */
     void onBeginDrawFrame(const View& _view, Scene& _scene) override;
+
+    std::unique_ptr<StyleBuilder> createBuilder() const override;
 
     DynamicQuadMesh<TextVertex>& getMesh(size_t id) const {
         if (id >= m_meshes.size()) {

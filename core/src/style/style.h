@@ -129,16 +129,6 @@ protected:
     /* Whether the style should generate texture coordinates */
     bool m_texCoordsGeneration = false;
 
-    /* Create <VertexLayout> corresponding to this style; subclasses must
-     * implement this and call it on construction
-     */
-    virtual void constructVertexLayout() = 0;
-
-    /* Create <ShaderProgram> for this style; subclasses must implement
-     * this and call it on construction
-     */
-    virtual void constructShaderProgram() = 0;
-
     /* Set uniform values when @_updateUniforms is true,
      */
     void setupShaderUniforms(Scene& _scene);
@@ -226,6 +216,16 @@ public:
     virtual void onBeginUpdate() {}
 
     virtual void onBeginFrame() {}
+
+    /* Create <VertexLayout> corresponding to this style; subclasses must
+     * implement this and call it on construction
+     */
+    virtual void constructVertexLayout() = 0;
+
+    /* Create <ShaderProgram> for this style; subclasses must implement
+     * this and call it on construction
+     */
+    virtual void constructShaderProgram() = 0;
 
     /* Perform any setup needed before drawing each frame
      * _textUnit is the next available texture unit
