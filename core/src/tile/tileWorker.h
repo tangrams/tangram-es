@@ -14,7 +14,7 @@ namespace Tangram {
 class Scene;
 class TileBuilder;
 
-class TileWorker {
+class TileWorker : public TileTaskQueue {
 
 public:
 
@@ -22,13 +22,13 @@ public:
 
     ~TileWorker();
 
-    virtual void enqueue(std::shared_ptr<TileTask>&& task);
+    virtual void enqueue(std::shared_ptr<TileTask>&& task) override;
 
     void stop();
 
     bool isRunning() const { return m_running; }
 
-    virtual bool checkProcessedTiles() {
+    virtual bool checkProcessedTiles() override {
         if (m_pendingTiles) {
             m_pendingTiles = false;
             return true;

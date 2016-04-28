@@ -14,7 +14,7 @@
 
 namespace Tangram {
 
-TileManager::TileManager(std::shared_ptr<TileWorker> _tileWorker) : m_workers(_tileWorker) {
+TileManager::TileManager(std::shared_ptr<TileTaskQueue> _tileWorker) : m_workers(_tileWorker) {
 
     m_tileCache = std::unique_ptr<TileCache>(new TileCache(DEFAULT_CACHE_SIZE));
 
