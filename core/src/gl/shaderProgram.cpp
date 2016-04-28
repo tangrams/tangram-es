@@ -297,7 +297,14 @@ std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fra
     //     }
     // }
 
-    return sourceOut.str();
+    // Certain graphics drivers have issues with shaders having line continuation backslashes "\".
+    // Example raster.glsl was having issues on s6 and note2 because of the "\"s in the glsl file.
+    // This also makes sure if any "\"s are present in the shaders coming from style sheet will be
+    // taken care of.
+    auto str = sourceOut.str();
+    std::regex backslashMatch("\\\\\\s*\\n");
+
+    return std::regex_replace(str, backslashMatch, " ");
 }
 
 void ShaderProgram::checkValidity() {
