@@ -37,7 +37,7 @@ class TileManager {
 
 public:
 
-    TileManager(TileTaskQueue& _tileWorker);
+    TileManager(std::shared_ptr<TileWorker> _tileWorker);
 
     virtual ~TileManager();
 
@@ -196,7 +196,7 @@ private:
 
     std::unique_ptr<TileCache> m_tileCache;
 
-    TileTaskQueue& m_workers;
+    std::shared_ptr<TileWorker> m_workers;
 
     bool m_tileSetChanged = false;
 

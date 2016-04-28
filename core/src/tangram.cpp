@@ -37,7 +37,7 @@ std::mutex m_tilesMutex;
 std::mutex m_tasksMutex;
 std::queue<std::function<void()>> m_tasks;
 std::unique_ptr<TileManager> m_tileManager;
-std::unique_ptr<TileWorker> m_tileWorker;
+std::shared_ptr<TileWorker> m_tileWorker;
 std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
 std::unique_ptr<Labels> m_labels;
@@ -77,10 +77,10 @@ void initialize(const char* _scenePath) {
     m_inputHandler = std::make_unique<InputHandler>(m_view);
 
     // Instantiate workers
-    m_tileWorker = std::make_unique<TileWorker>(MAX_WORKERS);
+    m_tileWorker = std::make_shared<TileWorker>(MAX_WORKERS);
 
     // Create a tileManager
-    m_tileManager = std::make_unique<TileManager>(*m_tileWorker);
+    m_tileManager = std::make_unique<TileManager>(m_tileWorker);
 
     // Label setup
     m_labels = std::make_unique<Labels>();
