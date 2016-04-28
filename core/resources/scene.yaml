@@ -485,4 +485,4 @@ layers:
     pois:
         data: { source: osm }
         draw:
-            icons: {}
+            icon: {}
