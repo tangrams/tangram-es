@@ -123,36 +123,21 @@ public class MapController implements Renderer {
      * must contain all the local files that the map will need
      * @param sceneFilePath Location of the YAML scene file within the assets directory
      */
-    protected MapController(Context context, String sceneFilePath) {
+    protected MapController(GLSurfaceView view, String sceneFilePath) {
 
         scenePath = sceneFilePath;
 
-        // Get configuration info from application
-        displayMetrics = context.getResources().getDisplayMetrics();
-        assetManager = context.getAssets();
-
-        // Load the fonts
-        fontFileParser = new FontFileParser();
-        fontFileParser.parse("/system/etc/fonts.xml");
+        // Set up MapView
+        mapView = view;
+        view.setRenderer(this);
+        view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
         // Set a default HTTPHandler
         httpHandler = new HttpHandler();
 
-        nativeInit(this, assetManager, scenePath);
-
-    }
-
-    static MapController getInstance(Context context, String sceneFilePath) {
-        return new MapController(context, sceneFilePath);
-    }
-
-    /**
-     * Set the view in which the map will be drawn
-     * @param view GLSurfaceView where the map will be displayed; input events from this view will
-     * be handled by the resulting MapController
-     */
-    void setView(GLSurfaceView view) {
         touchInput = new TouchInput(view.getContext());
+        view.setOnTouchListener(touchInput);
+
         setPanResponder(null);
         setScaleResponder(null);
         setRotateResponder(null);
@@ -163,12 +148,22 @@ public class MapController implements Renderer {
         touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.SCALE, false);
         touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.PAN, false);
         touchInput.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.LONG_PRESS, false);
+    }
 
-        // Set up MapView
-        mapView = view;
-        view.setOnTouchListener(touchInput);
-        view.setRenderer(this);
-        view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+    void initNativeMap() {
+        // Get configuration info from application
+        displayMetrics = mapView.getContext().getResources().getDisplayMetrics();
+        assetManager = mapView.getContext().getAssets();
+
+        // Load the fonts
+        fontFileParser = new FontFileParser();
+        fontFileParser.parse("/system/etc/fonts.xml");
+
+        nativeInit(this, assetManager, scenePath);
+    }
+
+    static MapController getInstance(GLSurfaceView view, String sceneFilePath) {
+        return new MapController(view, sceneFilePath);
     }
 
     /**

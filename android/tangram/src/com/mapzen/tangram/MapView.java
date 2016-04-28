@@ -14,7 +14,7 @@ import android.widget.FrameLayout;
 public class MapView extends FrameLayout {
 
     protected GLSurfaceView glSurfaceView;
-    protected AsyncTask<Void, Void, MapController> getMapTask;
+    protected AsyncTask<Void, Void, Boolean> getMapTask;
 
     public MapView(Context context) {
 
@@ -60,27 +60,29 @@ public class MapView extends FrameLayout {
             getMapTask.cancel(true);
         }
 
-        getMapTask = new AsyncTask<Void, Void, MapController>() {
+        final MapController mapController = getMapInstance(sceneFilePath);
+
+        getMapTask = new AsyncTask<Void, Void, Boolean>() {
 
             @Override
             @SuppressWarnings("WrongThread")
-            protected MapController doInBackground(Void... params) {
-                return getMapInstance(context, sceneFilePath);
+            protected Boolean doInBackground(Void... params) {
+                mapController.initNativeMap();
+                return true;
             }
 
             @Override
-            protected void onPostExecute(MapController map) {
-                map.setView(glSurfaceView);
+            protected void onPostExecute(Boolean ok) {
                 addView(glSurfaceView);
-                callback.onMapReady(map);
+                callback.onMapReady(mapController);
             }
 
         }.execute();
 
     }
 
-    protected MapController getMapInstance(Context context, String sceneFilePath) {
-        return MapController.getInstance(context, sceneFilePath);
+    protected MapController getMapInstance(String sceneFilePath) {
+        return MapController.getInstance(glSurfaceView, sceneFilePath);
     }
 
     protected void configureGLSurfaceView() {
