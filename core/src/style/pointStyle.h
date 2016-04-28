@@ -44,12 +44,12 @@ public:
     auto& getMesh() const { return m_mesh; }
     virtual size_t dynamicMeshSize() const override { return m_mesh->bufferSize(); }
 
-protected:
+    virtual std::unique_ptr<StyleBuilder> createBuilder() const override;
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
 
-    virtual std::unique_ptr<StyleBuilder> createBuilder() const override;
+protected:
 
     std::shared_ptr<SpriteAtlas> m_spriteAtlas;
     std::shared_ptr<Texture> m_texture;

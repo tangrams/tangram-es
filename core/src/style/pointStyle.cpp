@@ -74,6 +74,7 @@ void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
 
     m_mesh->draw(*m_shaderProgram);
 }
+
 std::unique_ptr<StyleBuilder> PointStyle::createBuilder() const {
     return std::make_unique<PointStyleBuilder>(*this);
 }

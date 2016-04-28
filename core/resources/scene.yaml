@@ -58,7 +58,7 @@ styles:
     heightglowline:
         base: lines
         mix: heightglow
-    icons:
+    icon:
         base: points
         texture: pois
     stripeline:
@@ -95,7 +95,7 @@ layers:
         point:
             filter: { type: point }
             draw:
-              icons:
+              icon:
                 sprite: sunburst
                 collide: false
                 transition:
@@ -255,11 +255,11 @@ layers:
                             color: orange
                             width: [[11, 0], [12, 1.], [17, 2.]]
 
-    poi_icons:
+    poi_icon:
         data: { source: osm, layer: pois }
         filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
         draw:
-            icons:
+            icon:
                 interactive: true
                 #offset: [0px, -15px]
                 size: 20px
@@ -280,35 +280,35 @@ layers:
                     sprite_default: info
                     #sprite: info
 
-        # examples of different icons mapped to feature properties
-        icons:
-            restaurant:
-                filter: { kind: [restaurant] }
-                draw: { icons: { sprite: restaurant } }
-            cafe:
-                filter: { kind: [cafe, convenience] }
-                draw: { icons: { sprite: cafe } }
-            bar:
-                filter: { kind: [bar, pub] }
-                draw: { icons: { sprite: bar } }
-            culture:
-                filter: { kind: [museum, library, church, place_of_worship, bank] }
-                draw: { icons: { sprite: museum } }
-            station:
-                filter: { kind: [station] }
-                draw: { icons: { sprite: train } }
-            hospital:
-                filter: { kind: [hospital, pharmacy] }
-                draw: { icons: { sprite: hospital } }
-            hotel:
-                filter: { kind: [hotel, hostel] }
-                draw: { icons: { sprite: hotel } }
-            bus_stop:
-                filter: { kind: [bus_stop] }
-                draw: { icons: { sprite: bus } }
-            bookstore:
-                filter: { kind: [bookstore] }
-                draw: { icons: { sprite: bookstore } }
+        # examples of different icon mapped to feature properties
+        #icon:
+        #    restaurant:
+        #        filter: { kind: [restaurant] }
+        #        draw: { icon: { sprite: restaurant } }
+        #    cafe:
+        #        filter: { kind: [cafe, convenience] }
+        #        draw: { icon: { sprite: cafe } }
+        #    bar:
+        #        filter: { kind: [bar, pub] }
+        #        draw: { icon: { sprite: bar } }
+        #    culture:
+        #        filter: { kind: [museum, library, church, place_of_worship, bank] }
+        #        draw: { icon: { sprite: museum } }
+        #    station:
+        #        filter: { kind: [station] }
+        #        draw: { icon: { sprite: train } }
+        #    hospital:
+        #        filter: { kind: [hospital, pharmacy] }
+        #        draw: { icon: { sprite: hospital } }
+        #    hotel:
+        #        filter: { kind: [hotel, hostel] }
+        #        draw: { icon: { sprite: hotel } }
+        #    bus_stop:
+        #        filter: { kind: [bus_stop] }
+        #        draw: { icon: { sprite: bus } }
+        #    bookstore:
+        #        filter: { kind: [bookstore] }
+        #        draw: { icon: { sprite: bookstore } }
 
     buildings:
         data: { source: osm }
