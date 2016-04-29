@@ -297,8 +297,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 
     uint32_t strokeAttrib = std::max(_params.strokeWidth / ctx->maxStrokeWidth() * 255.f, 0.f);
     if (strokeAttrib > 255) {
-        // FIXME: This warning should not be logged for every label
-        // LOGW("stroke_width too large: %f / %f", _params.strokeWidth, strokeAttrib/255.f);
+        LOGN("stroke_width too large: %f / %f", _params.strokeWidth, strokeAttrib/255.f);
         strokeAttrib = 255;
     }
     m_attributes.stroke = (_params.strokeColor & 0x00ffffff) + (strokeAttrib << 24);
