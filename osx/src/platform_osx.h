@@ -6,3 +6,5 @@
 #include <GLFW/glfw3.h>
 
 void NSurlInit();
+
+void finishUrlRequests();

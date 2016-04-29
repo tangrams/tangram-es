@@ -174,6 +174,15 @@ void cancelUrlRequest(const std::string& _url) {
     }];
 }
 
+void finishUrlRequests() {
+
+    [defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
+        for(NSURLSessionTask* task in dataTasks) {
+            [task cancel];
+        }
+    }];
+}
+
 void setCurrentThreadPriority(int priority) {
     int tid = syscall(SYS_gettid);
     setpriority(PRIO_PROCESS, tid, priority);
