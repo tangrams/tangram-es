@@ -79,7 +79,14 @@ std::string systemFontFallbackPath(int _importance, int _weightHint);
 
 void initGLExtensions();
 
-/* Log utilities */
+/* 
+ * Log utilities:
+ * LOGD: Debug log, level >= 3
+ * LOGW: Warning log, level >= 2
+ * LOGE: Error log, level >= 1
+ * LOGN: Notification log (displayed once), level >= 0
+ * LOG: Default log, level >= 0
+ */
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #define TANGRAM_MAX_BUFFER_LOG_SIZE 99999
@@ -103,7 +110,7 @@ void initGLExtensions();
 #endif
 
 #if LOG_LEVEL >= 0
-#define NOTIFY(fmt, ...) do {                                                       \
+#define LOGN(fmt, ...) do {                                                         \
     static std::vector<std::string> logs;                                           \
     static char buffer[TANGRAM_MAX_BUFFER_LOG_SIZE];                                \
     snprintf(buffer, TANGRAM_MAX_BUFFER_LOG_SIZE - 1, fmt, ## __VA_ARGS__);         \
@@ -115,7 +122,7 @@ void initGLExtensions();
 } while (0)
 #define LOG(fmt, ...) do { logMsg("TANGRAM %s:%d: " fmt "\n", __FILENAME__, __LINE__, ## __VA_ARGS__); } while(0)
 #else
-#define NOTIFY(fmt, ...)
+#define LOGN(fmt, ...)
 #define LOG(fmt, ...)
 #endif
 

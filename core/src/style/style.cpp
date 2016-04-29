@@ -84,7 +84,7 @@ void Style::setupShaderUniforms(Scene& _scene) {
             std::string textureName = value.get<std::string>();
 
             if (!_scene.texture(textureName, texture) || !texture) {
-                NOTIFY("Texture with texture name %s is not available to be sent as uniform",
+                LOGN("Texture with texture name %s is not available to be sent as uniform",
                     textureName.c_str());
                 continue;
             }
@@ -115,7 +115,7 @@ void Style::setupShaderUniforms(Scene& _scene) {
                     std::shared_ptr<Texture> texture = nullptr;
 
                     if (!_scene.texture(textureName, texture) || !texture) {
-                        NOTIFY("Texture with texture name %s is not available to be sent as uniform",
+                        LOGN("Texture with texture name %s is not available to be sent as uniform",
                             textureName.c_str());
                         continue;
                     }
@@ -216,7 +216,7 @@ void Style::draw(const Tile& _tile) {
                                      _tile.getID().z);
 
         if (!styleMesh->draw(*m_shaderProgram)) {
-            NOTIFY("Mesh built by style %s cannot be drawn", m_name.c_str());
+            LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
         }
     }
 }
