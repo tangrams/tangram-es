@@ -119,8 +119,11 @@ public class MapController implements Renderer {
 
     /**
      * Construct a MapController using a custom scene file
-     * @param context Context in which the map will function; the asset bundle for this activity
-     * must contain all the local files that the map will need
+     * @param view GLSurfaceView for the map display; input events from this
+     * view will be handled by the MapController's TouchInput gesture detector.
+     * It also provides the Context in which the map will function; the asset
+     * bundle for this activity must contain all the local files that the map
+     * will need.
      * @param sceneFilePath Location of the YAML scene file within the assets directory
      */
     protected MapController(GLSurfaceView view, String sceneFilePath) {
@@ -150,7 +153,13 @@ public class MapController implements Renderer {
         touchInput.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.LONG_PRESS, false);
     }
 
-    void initNativeMap() {
+    /**
+     * Initialize native Tangram component. This must be called before any use
+     * of the MapController!
+     * This function is separated from MapController constructor to allow
+     * initialization and loading of the Scene on a background thread.
+     */
+    void init() {
         // Get configuration info from application
         displayMetrics = mapView.getContext().getResources().getDisplayMetrics();
         assetManager = mapView.getContext().getAssets();

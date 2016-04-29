@@ -67,7 +67,7 @@ public class MapView extends FrameLayout {
             @Override
             @SuppressWarnings("WrongThread")
             protected Boolean doInBackground(Void... params) {
-                mapController.initNativeMap();
+                mapController.init();
                 return true;
             }
 
