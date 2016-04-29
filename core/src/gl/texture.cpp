@@ -116,7 +116,7 @@ Texture& Texture::operator=(Texture&& _other) {
 
 Texture::~Texture() {
     if (m_glHandle) {
-        Tangram::runOnMainLoop([id = m_glHandle](){ glDeleteTextures(1, &id); });
+        Tangram::runOnMainLoop([id = m_glHandle]() { GL_CHECK(glDeleteTextures(1, &id)); });
 
         // if the texture is bound, and deleted, the binding defaults to 0
         // according to the OpenGL spec, in this case we need to force the
@@ -206,15 +206,15 @@ void Texture::bind(GLuint _unit) {
 }
 
 void Texture::generate(GLuint _textureUnit) {
-    glGenTextures(1, &m_glHandle);
+   GL_CHECK(glGenTextures(1, &m_glHandle));
 
     bind(_textureUnit);
 
-    glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, m_options.filtering.min);
-    glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, m_options.filtering.mag);
+    GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, m_options.filtering.min));
+    GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, m_options.filtering.mag));
 
-    glTexParameteri(m_target, GL_TEXTURE_WRAP_S, m_options.wrapping.wraps);
-    glTexParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.wrapping.wrapt);
+    GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_WRAP_S, m_options.wrapping.wraps));
+    GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.wrapping.wrapt));
 
     m_generation = RenderState::generation();
 }
@@ -278,13 +278,13 @@ void Texture::update(GLuint _textureUnit, const GLuint* data) {
             LOGW("The hardware maximum texture size is currently reached");
         }
 
-        glTexImage2D(m_target, 0, m_options.internalFormat,
+        GL_CHECK(glTexImage2D(m_target, 0, m_options.internalFormat,
                      m_width, m_height, 0, m_options.format,
-                     GL_UNSIGNED_BYTE, data);
+                     GL_UNSIGNED_BYTE, data));
 
         if (data && m_generateMipmaps) {
             // generate the mipmaps for this texture
-            glGenerateMipmap(m_target);
+            GL_CHECK(glGenerateMipmap(m_target));
         }
         m_shouldResize = false;
         m_dirtyRanges.clear();
@@ -295,9 +295,9 @@ void Texture::update(GLuint _textureUnit, const GLuint* data) {
 
     for (auto& range : m_dirtyRanges) {
         size_t offset =  (range.min * m_width) / divisor;
-        glTexSubImage2D(m_target, 0, 0, range.min, m_width, range.max - range.min,
+        GL_CHECK(glTexSubImage2D(m_target, 0, 0, range.min, m_width, range.max - range.min,
                         m_options.format, GL_UNSIGNED_BYTE,
-                        data + offset);
+                        data + offset));
     }
     m_dirtyRanges.clear();
 }

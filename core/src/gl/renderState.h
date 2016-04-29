@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gl.h"
+#include "gl/error.h"
 
 #include <tuple>
 #include <limits>
@@ -56,9 +57,9 @@ namespace RenderState {
         using Type = GLboolean;
         inline static void set(const Type& _type) {
             if (_type) {
-                glEnable(N);
+                GL_CHECK(glEnable(N));
             } else {
-                glDisable(N);
+                GL_CHECK(glDisable(N));
             }
         }
     };
@@ -98,7 +99,7 @@ namespace RenderState {
 
         template<int ...S>
         inline void call(seq<S...>) {
-            fn(std::get<S>(params) ...);
+            GL_CHECK(fn(std::get<S>(params) ...));
         }
     };
 

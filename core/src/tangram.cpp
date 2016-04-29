@@ -160,9 +160,6 @@ void resize(int _newWidth, int _newHeight) {
     }
 
     Primitives::setResolution(_newWidth, _newHeight);
-
-    while (Error::hadGlError("Tangram::resize()")) {}
-
 }
 
 bool update(float _dt) {
@@ -277,8 +274,6 @@ void render() {
     m_labels->drawDebug(*m_view);
 
     FrameInfo::draw(*m_view, *m_tileManager);
-
-    while (Error::hadGlError("Tangram::render()")) {}
 }
 
 void setPositionNow(double _lon, double _lat) {
@@ -550,8 +545,6 @@ void setupGL() {
     Hardware::loadCapabilities();
 
     Hardware::printAvailableExtensions();
-
-    while (Error::hadGlError("Tangram::setupGL()")) {}
 }
 
 void runOnMainLoop(std::function<void()> _task) {

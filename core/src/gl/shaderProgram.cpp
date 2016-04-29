@@ -26,15 +26,15 @@ ShaderProgram::ShaderProgram() {
 ShaderProgram::~ShaderProgram() {
 
     if (m_glProgram != 0) {
-        glDeleteProgram(m_glProgram);
+        GL_CHECK(glDeleteProgram(m_glProgram));
     }
 
     if (m_glFragmentShader != 0) {
-        glDeleteShader(m_glFragmentShader);
+        GL_CHECK(glDeleteShader(m_glFragmentShader));
     }
 
     if (m_glVertexShader != 0) {
-        glDeleteShader(m_glVertexShader);
+        GL_CHECK(glDeleteShader(m_glVertexShader));
     }
 
     // Deleting a shader program being used ends up setting up the current shader program to 0
@@ -79,6 +79,7 @@ GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
     if (location == -2) {
         // Get the actual location from OpenGL
         location = glGetAttribLocation(m_glProgram, _attribName.c_str());
+        GL_CHECK(void(0));
     }
 
     return location;
@@ -93,6 +94,7 @@ GLint ShaderProgram::getUniformLocation(const UniformLocation& _uniform) {
 
     _uniform.generation = m_generation;
     _uniform.location = glGetUniformLocation(m_glProgram, _uniform.name.c_str());
+    GL_CHECK(void(0));
 
     return _uniform.location;
 }
@@ -140,7 +142,7 @@ bool ShaderProgram::build() {
     GLint fragmentShader = makeCompiledShader(fragSrc, GL_FRAGMENT_SHADER);
 
     if (fragmentShader == 0) {
-        glDeleteShader(vertexShader);
+        GL_CHECK(glDeleteShader(vertexShader));
         return false;
     }
 
@@ -149,16 +151,16 @@ bool ShaderProgram::build() {
     GLint program = makeLinkedShaderProgram(fragmentShader, vertexShader);
 
     if (program == 0) {
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
+        GL_CHECK(glDeleteShader(vertexShader));
+        GL_CHECK(glDeleteShader(fragmentShader));
         return false;
     }
 
     // Delete handles for old shaders and program; values of 0 are silently ignored
 
-    glDeleteShader(m_glFragmentShader);
-    glDeleteShader(m_glVertexShader);
-    glDeleteProgram(m_glProgram);
+    GL_CHECK(glDeleteShader(m_glFragmentShader));
+    GL_CHECK(glDeleteShader(m_glVertexShader));
+    GL_CHECK(glDeleteProgram(m_glProgram));
 
     m_glFragmentShader = fragmentShader;
     m_glVertexShader = vertexShader;
@@ -174,22 +176,26 @@ bool ShaderProgram::build() {
 GLuint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader) {
 
     GLuint program = glCreateProgram();
-    glAttachShader(program, _fragShader);
-    glAttachShader(program, _vertShader);
-    glLinkProgram(program);
+    GL_CHECK(void(0));
+
+    GL_CHECK(glAttachShader(program, _fragShader));
+    GL_CHECK(glAttachShader(program, _vertShader));
+    GL_CHECK(glLinkProgram(program));
 
     GLint isLinked;
-    glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+    GL_CHECK(glGetProgramiv(program, GL_LINK_STATUS, &isLinked));
 
     if (isLinked == GL_FALSE) {
         GLint infoLength = 0;
-        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLength);
+        GL_CHECK(glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLength));
+
         if (infoLength > 1) {
             std::vector<GLchar> infoLog(infoLength);
-            glGetProgramInfoLog(program, infoLength, NULL, &infoLog[0]);
+            GL_CHECK(glGetProgramInfoLog(program, infoLength, NULL, &infoLog[0]));
             LOGE("linking program:\n%s", &infoLog[0]);
         }
-        glDeleteProgram(program);
+
+        GL_CHECK(glDeleteProgram(program));
         m_invalidShaderSource = true;
         return 0;
     }
@@ -200,24 +206,28 @@ GLuint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShad
 GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) {
 
     GLuint shader = glCreateShader(_type);
+    GL_CHECK(void(0));
+
     const GLchar* source = (const GLchar*) _src.c_str();
-    glShaderSource(shader, 1, &source, NULL);
-    glCompileShader(shader);
+    GL_CHECK(glShaderSource(shader, 1, &source, NULL));
+    GL_CHECK(glCompileShader(shader));
 
     GLint isCompiled;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
+    GL_CHECK(glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled));
 
     if (isCompiled == GL_FALSE) {
         GLint infoLength = 0;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLength);
+        GL_CHECK(glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLength));
+
         if (infoLength > 1) {
             std::vector<GLchar> infoLog(infoLength);
-            glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
+            GL_CHECK(glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]));
             LOGE("Shader compilation failed %s", m_description.c_str());
             LOGE("%s", &infoLog[0]);
             //logMsg("\n%s\n", source);
         }
-        glDeleteShader(shader);
+
+        GL_CHECK(glDeleteShader(shader));
         m_invalidShaderSource = true;
         return 0;
     }
@@ -332,7 +342,7 @@ void ShaderProgram::setUniformi(const UniformLocation& _loc, int _value) {
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
-        if (!cached) { glUniform1i(location, _value); }
+        if (!cached) { GL_CHECK(glUniform1i(location, _value)); }
     }
 }
 
@@ -341,7 +351,7 @@ void ShaderProgram::setUniformi(const UniformLocation& _loc, int _value0, int _v
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, glm::vec2(_value0, _value1));
-        if (!cached) { glUniform2i(location, _value0, _value1); }
+        if (!cached) { GL_CHECK(glUniform2i(location, _value0, _value1)); }
     }
 }
 
@@ -350,7 +360,7 @@ void ShaderProgram::setUniformi(const UniformLocation& _loc, int _value0, int _v
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, glm::vec3(_value0, _value1, _value2));
-        if (!cached) { glUniform3i(location, _value0, _value1, _value2); }
+        if (!cached) { GL_CHECK(glUniform3i(location, _value0, _value1, _value2)); }
     }
 }
 
@@ -359,7 +369,7 @@ void ShaderProgram::setUniformi(const UniformLocation& _loc, int _value0, int _v
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, glm::vec4(_value0, _value1, _value2, _value3));
-        if (!cached) { glUniform4i(location, _value0, _value1, _value2, _value3); }
+        if (!cached) { GL_CHECK(glUniform4i(location, _value0, _value1, _value2, _value3)); }
     }
 }
 
@@ -368,7 +378,7 @@ void ShaderProgram::setUniformf(const UniformLocation& _loc, float _value) {
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
-        if (!cached) { glUniform1f(location, _value); }
+        if (!cached) { GL_CHECK(glUniform1f(location, _value)); }
     }
 }
 
@@ -389,7 +399,7 @@ void ShaderProgram::setUniformf(const UniformLocation& _loc, const glm::vec2& _v
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
-        if (!cached) { glUniform2f(location, _value.x, _value.y); }
+        if (!cached) { GL_CHECK(glUniform2f(location, _value.x, _value.y)); }
     }
 }
 
@@ -398,7 +408,7 @@ void ShaderProgram::setUniformf(const UniformLocation& _loc, const glm::vec3& _v
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
-        if (!cached) { glUniform3f(location, _value.x, _value.y, _value.z); }
+        if (!cached) { GL_CHECK(glUniform3f(location, _value.x, _value.y, _value.z)); }
     }
 }
 
@@ -407,7 +417,7 @@ void ShaderProgram::setUniformf(const UniformLocation& _loc, const glm::vec4& _v
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
-        if (!cached) { glUniform4f(location, _value.x, _value.y, _value.z, _value.w); }
+        if (!cached) { GL_CHECK(glUniform4f(location, _value.x, _value.y, _value.z, _value.w)); }
     }
 }
 
@@ -416,7 +426,7 @@ void ShaderProgram::setUniformMatrix2f(const UniformLocation& _loc, const glm::m
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = !_transpose && getFromCache(location, _value);
-        if (!cached) { glUniformMatrix2fv(location, 1, _transpose, glm::value_ptr(_value)); }
+        if (!cached) { GL_CHECK(glUniformMatrix2fv(location, 1, _transpose, glm::value_ptr(_value))); }
     }
 }
 
@@ -425,7 +435,7 @@ void ShaderProgram::setUniformMatrix3f(const UniformLocation& _loc, const glm::m
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = !_transpose && getFromCache(location, _value);
-        if (!cached) { glUniformMatrix3fv(location, 1, _transpose, glm::value_ptr(_value)); }
+        if (!cached) { GL_CHECK(glUniformMatrix3fv(location, 1, _transpose, glm::value_ptr(_value))); }
     }
 }
 
@@ -434,7 +444,7 @@ void ShaderProgram::setUniformMatrix4f(const UniformLocation& _loc, const glm::m
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = !_transpose && getFromCache(location, _value);
-        if (!cached) { glUniformMatrix4fv(location, 1, _transpose, glm::value_ptr(_value)); }
+        if (!cached) { GL_CHECK(glUniformMatrix4fv(location, 1, _transpose, glm::value_ptr(_value))); }
     }
 }
 
@@ -443,7 +453,7 @@ void ShaderProgram::setUniformf(const UniformLocation& _loc, const UniformArray1
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
-        if (!cached) { glUniform1fv(location, _value.size(), _value.data()); }
+        if (!cached) { GL_CHECK(glUniform1fv(location, _value.size(), _value.data())); }
     }
 }
 
@@ -470,7 +480,7 @@ void ShaderProgram::setUniformi(const UniformLocation& _loc, const UniformTextur
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
-        if (!cached) { glUniform1iv(location, _value.slots.size(), _value.slots.data()); }
+        if (!cached) { GL_CHECK(glUniform1iv(location, _value.slots.size(), _value.slots.data())); }
     }
 }
 

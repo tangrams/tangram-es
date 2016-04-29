@@ -22,7 +22,7 @@ void QuadIndices::unref() {
         if (RenderState::indexBuffer.compare(quadIndexBuffer)) {
             RenderState::indexBuffer.init(0, false);
         }
-        glDeleteBuffers(1, &quadIndexBuffer);
+        GL_CHECK(glDeleteBuffers(1, &quadIndexBuffer));
         quadIndexBuffer = 0;
         quadGeneration = -1;
     }
@@ -49,10 +49,10 @@ void QuadIndices::load() {
         indices.push_back(i + 2);
     }
 
-    glGenBuffers(1, &quadIndexBuffer);
+    GL_CHECK(glGenBuffers(1, &quadIndexBuffer));
     RenderState::indexBuffer(quadIndexBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLushort),
-                 reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW);
+    GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLushort),
+                 reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW));
 }
 
 }

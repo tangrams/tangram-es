@@ -1,5 +1,6 @@
-#include "vertexLayout.h"
-#include "shaderProgram.h"
+#include "gl/vertexLayout.h"
+#include "gl/shaderProgram.h"
+#include "gl/error.h"
 #include "platform.h"
 
 namespace Tangram {
@@ -69,8 +70,8 @@ void VertexLayout::enable(const fastmap<std::string, GLuint>& _locations, size_t
 
         if (location != -1) {
             void* offset = ((unsigned char*) attrib.offset) + _byteOffset;
-            glEnableVertexAttribArray(location);
-            glVertexAttribPointer(location, attrib.size, attrib.type, attrib.normalized, m_stride, offset);
+            GL_CHECK(glEnableVertexAttribArray(location));
+            GL_CHECK(glVertexAttribPointer(location, attrib.size, attrib.type, attrib.normalized, m_stride, offset));
         }
     }
 
@@ -93,12 +94,12 @@ void VertexLayout::enable(ShaderProgram& _program, size_t _byteOffset, void* _pt
             auto& loc = s_enabledAttribs[location];
             // Track currently enabled attribs by the program to which they are bound
             if (loc != glProgram) {
-                glEnableVertexAttribArray(location);
+                GL_CHECK(glEnableVertexAttribArray(location));
                 loc = glProgram;
             }
 
             void* data = (unsigned char*)_ptr + attrib.offset + _byteOffset;
-            glVertexAttribPointer(location, attrib.size, attrib.type, attrib.normalized, m_stride, data);
+            GL_CHECK(glVertexAttribPointer(location, attrib.size, attrib.type, attrib.normalized, m_stride, data));
         }
     }
 
@@ -109,7 +110,7 @@ void VertexLayout::enable(ShaderProgram& _program, size_t _byteOffset, void* _pt
         GLuint& boundProgram = locationProgramPair.second;
 
         if (boundProgram != glProgram && boundProgram != 0) {
-            glDisableVertexAttribArray(location);
+            GL_CHECK(glDisableVertexAttribArray(location));
             boundProgram = 0;
         }
     }
