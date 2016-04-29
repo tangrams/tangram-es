@@ -84,22 +84,9 @@ public:
 
     std::unique_ptr<StyleBuilder> createBuilder() const override;
 
-    DynamicQuadMesh<TextVertex>& getMesh(size_t id) const {
-        if (id >= m_meshes.size()) {
-            LOGE("Accesing inconsistent quad mesh");
-            assert(false);
-            return *m_meshes[0];
-        }
-        return *m_meshes[id];
-    }
+    DynamicQuadMesh<TextVertex>& getMesh(size_t id) const;
 
-    virtual size_t dynamicMeshSize() const override {
-        size_t size = 0;
-        for (const auto& mesh : m_meshes) {
-            size += mesh->bufferSize();
-        }
-        return size;
-    }
+    virtual size_t dynamicMeshSize() const override;
 
     virtual ~TextStyle() override;
 
