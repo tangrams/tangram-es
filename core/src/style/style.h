@@ -51,7 +51,6 @@ struct StyledMesh {
     virtual size_t bufferSize() const = 0;
 
     virtual ~StyledMesh() {}
-
 };
 
 class StyleBuilder {
