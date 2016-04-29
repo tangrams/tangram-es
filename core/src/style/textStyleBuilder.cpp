@@ -108,10 +108,11 @@ void TextStyleBuilder::addPoint(const Point& _point, const Properties& _props, c
 }
 
 void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
+#if 0
     StyleBuilder::addFeature(_feat, _rule);
     return;
-
-#if 0
+#endif
+#if 1
     TextStyle::Parameters params = applyRule(_rule, _feat.props);
 
     Label::Type labelType;
