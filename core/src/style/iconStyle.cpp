@@ -46,7 +46,7 @@ struct IconStyleBuilder : public StyleBuilder {
 
     void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
     void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
-    void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
+    void addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) override;
 
     // TODO: possibly returns several meshes
     std::unique_ptr<StyledMesh> build() override;
@@ -71,25 +71,41 @@ void IconStyleBuilder::setup(const Tile& _tile) {
 }
 
 bool IconStyleBuilder::checkRule(const DrawRule& _rule) const {
-    return false;
+    return true;
 }
 
 void IconStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
+    // TOOD: override addFeature
+    TextStyleBuilder& tBuilder = static_cast<TextStyleBuilder&>(*textStyleBuilder);
+    PointStyleBuilder& pBuilder = static_cast<PointStyleBuilder&>(*pointStyleBuilder);
 
+    tBuilder.addPolygon(_polygon, _props, _rule);
+    pBuilder.addPolygon(_polygon, _props, _rule);
 }
 
 void IconStyleBuilder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
+    // TOOD: override addFeature
+    TextStyleBuilder& tBuilder = static_cast<TextStyleBuilder&>(*textStyleBuilder);
+    PointStyleBuilder& pBuilder = static_cast<PointStyleBuilder&>(*pointStyleBuilder);
 
+    tBuilder.addLine(_line, _props, _rule);
+    pBuilder.addLine(_line, _props, _rule);
 }
 
-void IconStyleBuilder::addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) {
+void IconStyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
+    // TOOD: override addFeature
+    TextStyleBuilder& tBuilder = static_cast<TextStyleBuilder&>(*textStyleBuilder);
+    PointStyleBuilder& pBuilder = static_cast<PointStyleBuilder&>(*pointStyleBuilder);
 
+    tBuilder.addPoint(_point, _props, _rule);
+    pBuilder.addPoint(_point, _props, _rule);
 }
 
 std::unique_ptr<StyledMesh> IconStyleBuilder::build() {
-    return nullptr;
+    TextStyleBuilder& tBuilder = static_cast<TextStyleBuilder&>(*textStyleBuilder);
+    PointStyleBuilder& pBuilder = static_cast<PointStyleBuilder&>(*pointStyleBuilder);
+    return std::move(tBuilder.build());
 };
-
 
 std::unique_ptr<StyleBuilder> IconStyle::createBuilder() const {
     auto iconStyleBuilder = std::make_unique<IconStyleBuilder>(*this);

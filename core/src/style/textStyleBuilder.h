@@ -38,6 +38,12 @@ public:
 
     std::string resolveTextSource(const std::string& textSource, const Properties& props) const;
 
+    void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
+    void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
+    void addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) override;
+
+    bool checkRule(const DrawRule& _rule) const override { return true; }
+
 protected:
 
     const TextStyle& m_style;
