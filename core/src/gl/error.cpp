@@ -26,4 +26,14 @@ bool Error::hadGlError(const std::string& _locationTag) {
     return false;
 }
 
+void Error::glError(const char* stmt, const char* fname, int line) {
+    GLenum err = glGetError();
+
+    auto it = s_GlErrorCodesToStrings.find(err);
+
+    if (it != s_GlErrorCodesToStrings.end() && err != GL_NO_ERROR) {
+        LOGE("OpenGL error %s, at %s:%i - for %s\n", it->second.c_str(), fname, line, stmt);
+    }
+}
+
 }

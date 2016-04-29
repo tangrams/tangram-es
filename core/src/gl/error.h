@@ -18,10 +18,18 @@ public:
      */
     static bool hadGlError(const std::string& _locationTag);
 
+    static void glError(const char* stmt, const char* fname, int line);
+
 private:
 
     static std::unordered_map<GLenum, std::string> s_GlErrorCodesToStrings;
 
 };
+
+#ifdef TANGRAM_DEBUG
+#define GL_CHECK(STMT) do { STMT; Tangram::Error::glError(#STMT, __FILE__, __LINE__); } while (0)
+#else
+#define GL_CHECK(STMT) STMT;
+#endif
 
 }
