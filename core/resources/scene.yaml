@@ -257,28 +257,31 @@ layers:
 
     poi_icon:
         data: { source: osm, layer: pois }
-        filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
+        filter: { name: true } # not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
         draw:
-            icon:
-                interactive: true
-                #offset: [0px, -15px]
-                size: 20px
-                priority: 5
-                collide: true
-                transition:
-                    [show, hide]:
-                        time: 1s
-                #size: [[13, 12px], [15, 18px]]
-                #interactive: true
-
-        # add generic icon at high zoom
-        generic:
-            filter: { $zoom: { min: 18 } }
-            draw:
-                icons:
-                    sprite: function() { return feature.kind; }
-                    sprite_default: info
-                    #sprite: info
+        #    icon:
+        #        interactive: true
+        #        #offset: [0px, -15px]
+        #        size: 20px
+        #        priority: 5
+        #        collide: true
+        #        transition:
+        #            [show, hide]:
+        #                time: 1s
+        #        #size: [[13, 12px], [15, 18px]]
+        #        #interactive: true
+        #generic:
+            icons:
+                sprite: function() { return feature.kind; }
+                sprite_default: info
+                #TODO: move to text rule
+                #text:
+                font:
+                    family: sans-serif
+                    weight: 400
+                    style: normal
+                    size: 1.2em
+                    fill: white
 
         # examples of different icon mapped to feature properties
         #icon:
@@ -341,21 +344,21 @@ layers:
                 polygons:
                     style: polygons
                     color: '#bddec5'
-    poi_labels:
-        data: { source: osm, layer: pois }
-        filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
-        draw:
-            text:
-                interactive: true
-                #offset: [0, 12px]
-                align: right
-                text_wrap: 20
-                font:
-                    family: sans-serif
-                    weight: 400
-                    style: normal
-                    size: 1.2em
-                    fill: white
+    #poi_labels:
+    #    data: { source: osm, layer: pois }
+    #    filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
+    #    draw:
+    #        text:
+    #            interactive: true
+    #            #offset: [0, 12px]
+    #            align: right
+    #            text_wrap: 20
+    #            font:
+    #                family: sans-serif
+    #                weight: 400
+    #                style: normal
+    #                size: 1.2em
+    #                fill: white
     road_labels:
         data: {source: osm, layer: roads}
         filter: { name: true, aeroway: false, tunnel: false, railway: false, not: { kind: rail }, $zoom: { min: 10 } }
