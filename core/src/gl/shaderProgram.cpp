@@ -20,6 +20,7 @@ ShaderProgram::ShaderProgram() {
     m_needsBuild = true;
     m_generation = -1;
     m_invalidShaderSource = false;
+    m_description = "";
 }
 
 ShaderProgram::~ShaderProgram() {
@@ -97,6 +98,7 @@ GLint ShaderProgram::getUniformLocation(const UniformLocation& _uniform) {
 }
 
 bool ShaderProgram::use() {
+    bool valid = true;
 
     checkValidity();
 
@@ -104,11 +106,13 @@ bool ShaderProgram::use() {
         build();
     }
 
-    if (m_glProgram != 0) {
+    valid &= (m_glProgram != 0);
+
+    if (valid) {
         RenderState::shaderProgram(m_glProgram);
-        return true;
     }
-    return false;
+
+    return valid;
 }
 
 bool ShaderProgram::build() {
@@ -209,7 +213,8 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
         if (infoLength > 1) {
             std::vector<GLchar> infoLog(infoLength);
             glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]);
-            LOGE("Compiling shader:\n%s", &infoLog[0]);
+            LOGE("Shader compilation failed %s", m_description.c_str());
+            LOGE("%s", &infoLog[0]);
             //logMsg("\n%s\n", source);
         }
         glDeleteShader(shader);
@@ -316,7 +321,7 @@ std::string ShaderProgram::getExtensionDeclaration(const std::string& _extension
 }
 
 void ShaderProgram::setUniformi(const UniformLocation& _loc, int _value) {
-    use();
+    if (!use()) { return; }
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
@@ -325,7 +330,7 @@ void ShaderProgram::setUniformi(const UniformLocation& _loc, int _value) {
 }
 
 void ShaderProgram::setUniformi(const UniformLocation& _loc, int _value0, int _value1) {
-    use();
+    if (!use()) { return; }
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, glm::vec2(_value0, _value1));
@@ -334,7 +339,7 @@ void ShaderProgram::setUniformi(const UniformLocation& _loc, int _value0, int _v
 }
 
 void ShaderProgram::setUniformi(const UniformLocation& _loc, int _value0, int _value1, int _value2) {
-    use();
+    if (!use()) { return; }
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, glm::vec3(_value0, _value1, _value2));
@@ -343,7 +348,7 @@ void ShaderProgram::setUniformi(const UniformLocation& _loc, int _value0, int _v
 }
 
 void ShaderProgram::setUniformi(const UniformLocation& _loc, int _value0, int _value1, int _value2, int _value3) {
-    use();
+    if (!use()) { return; }
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, glm::vec4(_value0, _value1, _value2, _value3));
@@ -352,7 +357,7 @@ void ShaderProgram::setUniformi(const UniformLocation& _loc, int _value0, int _v
 }
 
 void ShaderProgram::setUniformf(const UniformLocation& _loc, float _value) {
-    use();
+    if (!use()) { return; }
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
@@ -373,7 +378,7 @@ void ShaderProgram::setUniformf(const UniformLocation& _loc, float _value0, floa
 }
 
 void ShaderProgram::setUniformf(const UniformLocation& _loc, const glm::vec2& _value) {
-    use();
+    if (!use()) { return; }
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
@@ -382,7 +387,7 @@ void ShaderProgram::setUniformf(const UniformLocation& _loc, const glm::vec2& _v
 }
 
 void ShaderProgram::setUniformf(const UniformLocation& _loc, const glm::vec3& _value) {
-    use();
+    if (!use()) { return; }
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
@@ -391,7 +396,7 @@ void ShaderProgram::setUniformf(const UniformLocation& _loc, const glm::vec3& _v
 }
 
 void ShaderProgram::setUniformf(const UniformLocation& _loc, const glm::vec4& _value) {
-    use();
+    if (!use()) { return; }
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
@@ -400,7 +405,7 @@ void ShaderProgram::setUniformf(const UniformLocation& _loc, const glm::vec4& _v
 }
 
 void ShaderProgram::setUniformMatrix2f(const UniformLocation& _loc, const glm::mat2& _value, bool _transpose) {
-    use();
+    if (!use()) { return; }
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = !_transpose && getFromCache(location, _value);
@@ -409,7 +414,7 @@ void ShaderProgram::setUniformMatrix2f(const UniformLocation& _loc, const glm::m
 }
 
 void ShaderProgram::setUniformMatrix3f(const UniformLocation& _loc, const glm::mat3& _value, bool _transpose) {
-    use();
+    if (!use()) { return; }
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = !_transpose && getFromCache(location, _value);
@@ -418,7 +423,7 @@ void ShaderProgram::setUniformMatrix3f(const UniformLocation& _loc, const glm::m
 }
 
 void ShaderProgram::setUniformMatrix4f(const UniformLocation& _loc, const glm::mat4& _value, bool _transpose) {
-    use();
+    if (!use()) { return; }
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = !_transpose && getFromCache(location, _value);
@@ -427,7 +432,7 @@ void ShaderProgram::setUniformMatrix4f(const UniformLocation& _loc, const glm::m
 }
 
 void ShaderProgram::setUniformf(const UniformLocation& _loc, const UniformArray& _value) {
-    use();
+    if (!use()) { return; }
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
@@ -436,7 +441,7 @@ void ShaderProgram::setUniformf(const UniformLocation& _loc, const UniformArray&
 }
 
 void ShaderProgram::setUniformi(const UniformLocation& _loc, const UniformTextureArray& _value) {
-    use();
+    if (!use()) { return; }
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);

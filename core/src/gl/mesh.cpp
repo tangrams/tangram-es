@@ -151,16 +151,16 @@ void MeshBase::upload() {
     m_isUploaded = true;
 }
 
-void MeshBase::draw(ShaderProgram& _shader) {
+bool MeshBase::draw(ShaderProgram& _shader) {
 
     checkValidity();
 
-    if (!m_isCompiled) { return; }
-    if (m_nVertices == 0) { return; }
+    if (!m_isCompiled) { return false; }
+    if (m_nVertices == 0) { return false; }
 
     // Enable shader program
     if (!_shader.use()) {
-        return;
+        return false;
     }
 
     // Ensure that geometry is buffered into GPU
@@ -217,6 +217,8 @@ void MeshBase::draw(ShaderProgram& _shader) {
     if (Hardware::supportsVAOs) {
         m_vaos->unbind();
     }
+
+    return true;
 }
 
 bool MeshBase::checkValidity() {

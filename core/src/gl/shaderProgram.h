@@ -102,6 +102,8 @@ public:
 
     auto getSourceBlocks() const { return  m_sourceBlocks; }
 
+    void setDescription(std::string _description) { m_description = _description; }
+
 private:
 
     struct ShaderLocation {
@@ -142,6 +144,9 @@ private:
 
     std::string m_fragmentShaderSource;
     std::string m_vertexShaderSource;
+
+    // An optionnal shader description printed on compile failure
+    std::string m_description;
 
     std::map<std::string, std::vector<std::string>> m_sourceBlocks;
 

@@ -15,7 +15,7 @@ public:
 
     virtual ~LabelSet();
 
-    void draw(ShaderProgram& _shader) override {}
+    bool draw(ShaderProgram& _shader) override { return true; }
 
     size_t bufferSize() const override { return 0; }
 

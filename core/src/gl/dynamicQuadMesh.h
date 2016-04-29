@@ -41,7 +41,7 @@ public:
         QuadIndices::unref();
     }
 
-    void draw(ShaderProgram& _shader) override;
+    bool draw(ShaderProgram& _shader) override;
 
     size_t bufferSize() const override {
         return MeshBase::bufferSize();
@@ -91,16 +91,18 @@ void DynamicQuadMesh<T>::upload() {
 }
 
 template<class T>
-void DynamicQuadMesh<T>::draw(ShaderProgram& _shader) {
+bool DynamicQuadMesh<T>::draw(ShaderProgram& _shader) {
 
-    if (m_nVertices == 0) { return; }
+    if (m_nVertices == 0) { return false; }
 
     // Bind buffers for drawing
     RenderState::vertexBuffer(m_glVertexBuffer);
     QuadIndices::load();
 
     // Enable shader program
-    _shader.use();
+    if (!_shader.use()) {
+        return false;
+    }
 
     size_t vertexOffset = 0;
 
@@ -118,6 +120,8 @@ void DynamicQuadMesh<T>::draw(ShaderProgram& _shader) {
 
         vertexOffset += nVertices;
     }
+
+    return true;
 }
 
 }
