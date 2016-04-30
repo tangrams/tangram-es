@@ -114,9 +114,17 @@ private:
         // New Data only when
         // - task still exists
         // - task has a tile ready
-        // - tile has rasters ready
-        bool newData() { return bool(task) && bool(task->tile()) &&
-                        task->source().rasterSources().size() == task->tile()->rasters().size(); }
+        // - tile has all rasters set
+        bool newData() {
+            if (bool(task) && bool(task->tile())) {
+                auto depedentRasters = task->source().rasterSources().size();
+                size_t rasterCount = task->source().isRaster() ?
+                                     depedentRasters + 1 :
+                                     depedentRasters;
+                return (rasterCount == task->tile()->rasters().size());
+            }
+            return false;
+        }
 
         void cancelTask() {
             if (task) {
