@@ -120,7 +120,6 @@ void TileWorker::run(Worker* instance) {
 
             if (tileData) {
 
-                auto raster = task->source().raster(*task);
                 auto tile = builder->build(task->tileId(), *tileData, task->source());
                 // move tile to task (probably done if no rasters)
                 task->setTile(std::move(tile));
