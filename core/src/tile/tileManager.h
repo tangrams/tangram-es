@@ -118,10 +118,13 @@ private:
         bool newData() {
             if (bool(task) && bool(task->tile())) {
                 auto depedentRasters = task->source().rasterSources().size();
-                size_t rasterCount = task->source().isRaster() ?
-                                     depedentRasters + 1 :
-                                     depedentRasters;
-                return (rasterCount == task->tile()->rasters().size());
+                if (task->rasterTasks().size() != depedentRasters) {
+                    return false;
+                }
+                for (auto& rTask : task->rasterTasks()) {
+                    if (!rTask->hasRaster()) { return false; }
+                }
+                return true;
             }
             return false;
         }
@@ -182,6 +185,7 @@ private:
     };
 
     void updateTileSet(TileSet& tileSet, const ViewState& _view, const std::set<TileID>& _visibleTiles);
+    void setTileRasters(const std::shared_ptr<TileTask>& task);
 
     void enqueueTask(TileSet& _tileSet, const TileID& _tileID, const ViewState& _view);
 
@@ -227,12 +231,14 @@ private:
     TileTaskQueue& m_workers;
 
     bool m_tileSetChanged = false;
+    bool m_rasterDone = false;
+
+    std::mutex m_rasterDoneMutex;
 
     /* Callback for DataSource:
      * Passes TileTask back with data for further processing by <TileWorker>s
      */
     TileTaskCb m_dataCallback;
-    TileTaskCb m_rasterCallback;
 
     /* Temporary list of tiles that need to be loaded */
     std::vector<std::tuple<double, TileSet*, TileID>> m_loadTasks;

@@ -83,8 +83,6 @@ protected:
     std::atomic<double> m_priority;
     bool m_proxyState = false;
 
-    // OkHttp returns empty rawData on a bad url fetch. This make sures the rasterTasks are not
-    // blocking the worker threads for eternity.
     bool m_rasterReady = false;
 };
 
@@ -102,8 +100,6 @@ public:
 
 struct TileTaskQueue {
     virtual void enqueue(std::shared_ptr<TileTask>&& task) = 0;
-
-    virtual void notifyAll() = 0;
 
     // Check processed-tiles flag. Resets flag on each call..
     // TODO better name checkAndResetProcessedTilesFlag?

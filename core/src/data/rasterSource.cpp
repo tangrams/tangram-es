@@ -57,6 +57,9 @@ bool RasterSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Ti
         if (setDependentRaster) {
             _task->rasterReady();
         }
+
+        raster(*_task);
+
         _cb.func(std::move(_task));
     }
 
