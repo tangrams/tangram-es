@@ -238,9 +238,9 @@ void StyleContext::setFeature(const Feature& _feature) {
 
     m_feature = &_feature;
 
-    if (m_keywordGeom != m_feature->geometryType) {
-        setKeyword(key_geom, s_geometryStrings[m_feature->geometryType]);
-        m_keywordGeom = m_feature->geometryType;
+    if (m_keywordGeom != m_feature->geometry.type) {
+        setKeyword(key_geom, s_geometryStrings[m_feature->geometry.type]);
+        m_keywordGeom = m_feature->geometry.type;
     }
 }
 

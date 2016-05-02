@@ -31,24 +31,38 @@ Point GeoJson::getPoint(const JsonValue& _in, const Transform& _proj) {
     return _proj(glm::dvec2(_in[0].GetDouble(), _in[1].GetDouble()));
 }
 
-Line GeoJson::getLine(const JsonValue& _in, const Transform& _proj) {
+bool GeoJson::getLine(const JsonValue& _in, const Transform& _proj, Geometry<Point>& _geom) {
 
-    Line line;
-    for (auto itr = _in.Begin(); itr != _in.End(); ++itr) {
-        line.push_back(getPoint(*itr, _proj));
+    int numPoints = 0;
+    Point prev;
+    for (auto& point : _in) {
+        auto p = getPoint(point, _proj);
+        if (numPoints == 0 || p != prev) {
+            _geom.addPoint(p);
+            numPoints++;
+        }
+        prev = p;
     }
-    return line;
-
+    if (numPoints > 0) {
+        _geom.endLine();
+        return true;
+    }
+    return false;
 }
 
-Polygon GeoJson::getPolygon(const JsonValue& _in, const Transform& _proj) {
+bool GeoJson::getPolygon(const JsonValue& _in, const Transform& _proj, Geometry<Point>& _geom) {
 
-    Polygon polygon;
-    for (auto itr = _in.Begin(); itr != _in.End(); ++itr) {
-        polygon.push_back(getLine(*itr, _proj));
+    int numRings = 0;
+    for (auto& ring : _in) {
+        if (getLine(ring, _proj, _geom)) {
+            numRings++;
+        }
     }
-    return polygon;
-
+    if (numRings > 0) {
+        _geom.endPoly();
+        return true;
+    }
+    return false;
 }
 
 Properties GeoJson::getProperties(const JsonValue& _in, int32_t _sourceId) {
@@ -56,16 +70,15 @@ Properties GeoJson::getProperties(const JsonValue& _in, int32_t _sourceId) {
     std::vector<PropertyItem> items;
     items.reserve(_in.MemberCount());
 
-    for (auto it = _in.MemberBegin(); it != _in.MemberEnd(); ++it) {
+    for (auto& prop : _in.Members()) {
 
-        const auto& name = it->name.GetString();
-        const auto& value = it->value;
+        const auto& name = prop.name.GetString();
+        const auto& value = prop.value;
         if (value.IsNumber()) {
             items.emplace_back(name, value.GetDouble());
-        } else if (it->value.IsString()) {
+        } else if (prop.value.IsString()) {
             items.emplace_back(name, value.GetString());
         }
-
     }
 
     Properties properties;
@@ -74,64 +87,75 @@ Properties GeoJson::getProperties(const JsonValue& _in, int32_t _sourceId) {
     properties.sort();
 
     return properties;
-
 }
 
-Feature GeoJson::getFeature(const JsonValue& _in, const Transform& _proj, int32_t _sourceId) {
+void GeoJson::processFeature(const JsonValue& _in, const Transform& _proj, int32_t _sourceId,
+                             Feature& _feature, TileDataSink& _sink) {
 
-    Feature feature;
+    _feature.geometry.clear();
 
     // Copy properties into tile data
     auto properties = _in.FindMember("properties");
     if (properties != _in.MemberEnd()) {
-        feature.props = getProperties(properties->value, _sourceId);
+        _feature.props = getProperties(properties->value, _sourceId);
+    } else {
+        LOGW("Missing 'properties'");
+        return;
     }
 
     // Copy geometry into tile data
     const JsonValue& geometry = _in["geometry"];
     const JsonValue& coords = geometry["coordinates"];
-    const std::string& geometryType = geometry["type"].GetString();
+    const std::string& type = geometry["type"].GetString();
 
-    if (geometryType.compare("Point") == 0) {
-
-        feature.geometryType = GeometryType::points;
-        feature.points.push_back(getPoint(coords, _proj));
-
-    } else if (geometryType.compare("MultiPoint") == 0) {
-
-        feature.geometryType = GeometryType::points;
-        for (auto pointCoords = coords.Begin(); pointCoords != coords.End(); ++pointCoords) {
-            feature.points.push_back(getPoint(*pointCoords, _proj));
-        }
-
-    } else if (geometryType.compare("LineString") == 0) {
-
-        feature.geometryType = GeometryType::lines;
-        feature.lines.push_back(getLine(coords, _proj));
-
-    } else if (geometryType.compare("MultiLineString") == 0) {
-
-        feature.geometryType = GeometryType::lines;
-        for (auto lineCoords = coords.Begin(); lineCoords != coords.End(); ++lineCoords) {
-            feature.lines.push_back(getLine(*lineCoords, _proj));
-        }
-
-    } else if (geometryType.compare("Polygon") == 0) {
-
-        feature.geometryType = GeometryType::polygons;
-        feature.polygons.push_back(getPolygon(coords, _proj));
-
-    } else if (geometryType.compare("MultiPolygon") == 0) {
-
-        feature.geometryType = GeometryType::polygons;
-        for (auto polyCoords = coords.Begin(); polyCoords != coords.End(); ++polyCoords) {
-            feature.polygons.push_back(getPolygon(*polyCoords, _proj));
-        }
-
+    if (type == "Point" || type == "MultiPoint") {
+        _feature.geometry.type = GeometryType::points;
+    } else if (type == "LineString" || type == "MultiLineString") {
+        _feature.geometry.type = GeometryType::lines;
+    } else if (type == "Polygon" || type == "MultiPolygon") {
+        _feature.geometry.type = GeometryType::polygons;
+    } else {
+        // TODO: Unhandled GeometryCollection
+        LOG("Unhandled type: %s", type.c_str());
+        return;
     }
 
-    return feature;
+    if (!_sink.matchFeature(_feature)) {
+        // LOG("skip feature %d - props %s",
+        //     _feature.geometry.type,
+        //     _feature.props.toJson().c_str());
+        return;
+    }
 
+    bool multi = type.compare(0, 5, "Multi") == 0;
+
+    if (_feature.geometry.type == GeometryType::points) {
+        if (!multi) {
+            _feature.geometry.addPoint(getPoint(coords, _proj));
+        } else {
+            for (auto& pointCoords : coords) {
+                _feature.geometry.addPoint(getPoint(pointCoords, _proj));
+            }
+        }
+    } else if (_feature.geometry.type == GeometryType::lines) {
+        if (!multi) {
+            getLine(coords, _proj, _feature.geometry);
+        } else {
+            for (auto& lineCoords : coords) {
+                getLine(lineCoords, _proj, _feature.geometry);
+            }
+        }
+    } else if (_feature.geometry.type == GeometryType::polygons) {
+        if (!multi) {
+            getPolygon(coords, _proj, _feature.geometry);
+        } else {
+            for (auto& polyCoords : coords) {
+                getPolygon(polyCoords, _proj, _feature.geometry);
+            }
+        }
+    }
+
+    _sink.addFeature(_feature);
 }
 
 bool GeoJson::processLayer(const JsonValue& _in, const Transform& _proj,
@@ -144,16 +168,13 @@ bool GeoJson::processLayer(const JsonValue& _in, const Transform& _proj,
         return false;
     }
 
-    for (auto featureIt = features->value.Begin(); featureIt != features->value.End(); ++featureIt) {
-        auto feat = getFeature(*featureIt, _proj, _sourceId);
-        // TODO could be optimized by skipping geometry parsing for unmatched features
-        if (_sink.matchFeature(feat)) {
-            _sink.addFeature(feat);
-        }
+    Feature feature;
+
+    for (auto& featureValue : features->value) {
+        processFeature(featureValue, _proj, _sourceId, feature, _sink);
     }
 
     return true;
 
 }
-
 }

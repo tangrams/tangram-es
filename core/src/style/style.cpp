@@ -432,19 +432,19 @@ bool StyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     if (!checkRule(_rule)) { return false; }
 
     bool added = false;
-    switch (_feat.geometryType) {
+    switch (_feat.geometry.type) {
         case GeometryType::points:
-            for (auto& point : _feat.points) {
+            for (auto& point : _feat.points()) {
                 added |= addPoint(point, _feat.props, _rule);
             }
             break;
         case GeometryType::lines:
-            for (auto& line : _feat.lines) {
+            for (auto& line : _feat.lines()) {
                 added |= addLine(line, _feat.props, _rule);
             }
             break;
         case GeometryType::polygons:
-            for (auto& polygon : _feat.polygons) {
+            for (auto& polygon : _feat.polygons()) {
                 added |= addPolygon(polygon, _feat.props, _rule);
             }
             break;

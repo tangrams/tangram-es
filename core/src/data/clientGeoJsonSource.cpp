@@ -153,7 +153,6 @@ bool ClientGeoJsonSource::process(const TileTask& _task,
     geojsonvt::Tile tile;
     {
         std::lock_guard<std::mutex> lock(m_mutexStore);
-        //if (!m_store) { return nullptr; }
         if (!m_store) { return false; }
         tile = m_store->getTile(_task.tileId().z, _task.tileId().x, _task.tileId().y);
     }
@@ -171,15 +170,17 @@ bool ClientGeoJsonSource::process(const TileTask& _task,
         const auto& geom = it.tileGeometry;
         const auto type = it.type;
 
+        feat.geometry.clear();
+
         switch (type) {
         case geojsonvt::TileFeatureType::Point:
-            feat.geometryType = GeometryType::points;
+            feat.geometry.type = GeometryType::points;
             break;
         case geojsonvt::TileFeatureType::LineString:
-            feat.geometryType = GeometryType::lines;
+            feat.geometry.type = GeometryType::lines;
             break;
         case geojsonvt::TileFeatureType::Polygon:
-            feat.geometryType = GeometryType::polygons;
+            feat.geometry.type = GeometryType::polygons;
             break;
         default:
             continue;
@@ -191,43 +192,44 @@ bool ClientGeoJsonSource::process(const TileTask& _task,
 
         switch (type) {
             case geojsonvt::TileFeatureType::Point: {
-                feat.points.clear();
                 for (const auto& pt : geom) {
                     const auto& point = pt.get<geojsonvt::TilePoint>();
-                    feat.points.push_back(transformPoint(point));
+                    feat.geometry.addPoint(transformPoint(point));
                 }
                 break;
             }
             case geojsonvt::TileFeatureType::LineString: {
-                feat.lines.clear();
                 for (const auto& r : geom) {
-                    Line line;
                     for (const auto& pt : r.get<geojsonvt::TileRing>().points) {
-                        line.push_back(transformPoint(pt));
+                        feat.geometry.addPoint(transformPoint(pt));
                     }
-                    feat.lines.emplace_back(std::move(line));
+                    feat.geometry.endLine();
                 }
                 break;
             }
             case geojsonvt::TileFeatureType::Polygon: {
-                feat.polygons.clear();
                 for (const auto& r : geom) {
-                    Line line;
+                    size_t begin = feat.geometry.points().size();
+
                     for (const auto& pt : r.get<geojsonvt::TileRing>().points) {
-                        line.push_back(transformPoint(pt));
+                        feat.geometry.addPoint(transformPoint(pt));
                     }
+                    feat.geometry.endRing();
+
                     // Polygons are in a flat list of rings, with ccw rings indicating
                     // the beginning of a new polygon
-                    if (signedArea(line.begin(), line.end()) >= 0 || feat.polygons.empty()) {
-                        feat.polygons.emplace_back();
+                    if (feat.polygons().size() == 0 ||
+                        signedArea(feat.geometry.points().begin() + begin,
+                                   feat.geometry.points().end()) >= 0) {
+
+                        feat.geometry.endPoly();
                     }
-                    feat.polygons.back().push_back(std::move(line));
                 }
+                feat.geometry.endPoly();
                 break;
             }
             default: break;
         }
-
         _sink.addFeature(feat);
     }
 

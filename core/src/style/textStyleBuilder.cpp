@@ -166,7 +166,7 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
     TextStyle::Parameters params = applyRule(_rule, _feat.props, _iconText);
 
     Label::Type labelType;
-    if (_feat.geometryType == GeometryType::lines) {
+    if (_feat.geometry.type == GeometryType::lines) {
         labelType = Label::Type::line;
         params.wordWrap = false;
     } else {
@@ -179,14 +179,14 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
 
     if (!prepareLabel(params, labelType)) { return false; }
 
-    if (_feat.geometryType == GeometryType::points) {
-        for (auto& point : _feat.points) {
+    if (_feat.geometry.type == GeometryType::points) {
+        for (auto& point : _feat.points()) {
             auto p = glm::vec2(point);
             addLabel(params, Label::Type::point, { p, p });
         }
 
-    } else if (_feat.geometryType == GeometryType::polygons) {
-        for (auto& polygon : _feat.polygons) {
+    } else if (_feat.geometry.type == GeometryType::polygons) {
+        for (auto& polygon : _feat.polygons()) {
             if (_iconText) {
                 auto p = centroid(polygon);
                 addLabel(params, Label::Type::point, { p, p });
@@ -199,10 +199,10 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
             }
         }
 
-    } else if (_feat.geometryType == GeometryType::lines) {
+    } else if (_feat.geometry.type == GeometryType::lines) {
 
         if (_iconText) {
-            for (auto& line : _feat.lines) {
+            for (auto& line : _feat.lines()) {
                 for (auto& point : line) {
                     addLabel(params, Label::Type::point, { point });
                 }
@@ -225,7 +225,7 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
 
     float tolerance = pow(pixelScale * 2, 2);
 
-    for (auto& line : _feat.lines) {
+    for (auto& line : _feat.lines()) {
 
         for (size_t i = 0; i < line.size() - 1; i++) {
             glm::vec2 p1 = glm::vec2(line[i]);

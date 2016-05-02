@@ -34,8 +34,6 @@ struct TestContext {
 
     std::vector<char> rawTileData;
 
-    std::shared_ptr<TileData> tileData;
-
     std::unique_ptr<TileBuilder> tileBuilder;
 
     void loadScene(const char* sceneFile) {

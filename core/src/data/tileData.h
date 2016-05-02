@@ -1,7 +1,7 @@
 #pragma once
 
-#include "glm/vec3.hpp"
 #include "data/properties.h"
+#include "data/geometry.h"
 
 #include <vector>
 #include <string>
@@ -56,52 +56,53 @@ Data heirarchy:
 */
 namespace Tangram {
 
-enum GeometryType {
-    unknown,
-    points,
-    lines,
-    polygons
-};
-
-typedef glm::vec3 Point;
-
-typedef std::vector<Point> Line;
-
-typedef std::vector<Line> Polygon;
 
 struct Feature {
     Feature() {}
     Feature(int32_t _sourceId) { props.sourceId = _sourceId; }
 
-    GeometryType geometryType = GeometryType::polygons;
-
-    std::vector<Point> points;
-    std::vector<Line> lines;
-    std::vector<Polygon> polygons;
-
     Properties props;
-};
+    Geometry<Point> geometry;
 
-struct Layer {
-
-    Layer(const std::string& _name) : name(_name) {}
-
-    std::string name;
-
-    std::vector<Feature> features;
-
-};
-
-struct TileData {
-
-    std::vector<Layer> layers;
-
+    auto& points() const { return geometry.points(); }
+    auto lines() const { return geometry.lines(); }
+    auto polygons() const { return geometry.polygons(); }
 };
 
 struct TileDataSink {
     virtual bool beginLayer(const std::string& _layer) = 0;
     virtual bool matchFeature(const Feature& _feature) = 0;
     virtual void addFeature(const Feature& _feature) = 0;
+};
+
+/*** Unused - but may be handy for writing tests. ***/
+struct Layer {
+    Layer(const std::string& _name) : name(_name) {}
+
+    std::string name;
+
+    std::vector<Feature> features;
+
+    void process(TileDataSink& _sink) {
+        for (auto& feat : features) {
+            if (_sink.matchFeature(feat)) {
+                _sink.addFeature(feat);
+            }
+        }
+    }
+};
+
+struct TileData {
+
+    std::vector<Layer> layers;
+
+    void process(TileDataSink& _sink) {
+        for (auto& layer : layers) {
+            if (_sink.beginLayer(layer.name)) {
+                layer.process(_sink);
+            }
+        }
+    }
 };
 
 }

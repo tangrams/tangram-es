@@ -24,61 +24,117 @@ namespace Tangram {
 
 void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn) {
 
-    _ctx.coordinates.clear();
-    _ctx.numCoordinates.clear();
+    int32_t x = 0;
+    int32_t y = 0;
+    int32_t lastX = 0;
+    int32_t lastY = 0;
 
-    pbfGeomCmd cmd = pbfGeomCmd::moveTo;
-    uint32_t cmdRepeat = 0;
+    auto& geometry = _ctx.feature.geometry;
+    auto& points = geometry.points();
+    geometry.clear();
 
-    double invTileExtent = (1.0/(double)_ctx.tileExtent);
+    size_t nPoints = 0;
+    size_t nRings = 0;
+    int winding = 0;
 
-    int64_t x = 0;
-    int64_t y = 0;
-
-    size_t numCoordinates = 0;
+    double tileExtent = _ctx.tileExtent;
+    double invTileExtent = 1.0/tileExtent;
 
     while(_geomIn.getData() < _geomIn.getEnd()) {
 
-        if(cmdRepeat == 0) { // get new command, length and parameters..
-            uint32_t cmdData = static_cast<uint32_t>(_geomIn.varint());
-            cmd = static_cast<pbfGeomCmd>(cmdData & 0x7); //first 3 bits of the cmdData
-            cmdRepeat = cmdData >> 3; //last 5 bits
-        }
+        uint32_t cmdData = static_cast<uint32_t>(_geomIn.varint());
+        pbfGeomCmd cmd = static_cast<pbfGeomCmd>(cmdData & 0x7); // first 3 bits of the cmdData
+        uint32_t cmdRepeat = cmdData >> 3; // last 5 bits
 
-        if(cmd == pbfGeomCmd::moveTo || cmd == pbfGeomCmd::lineTo) { // get parameters/points
-            // if cmd is move then move to a new line/set of points and save this line
-            if(cmd == pbfGeomCmd::moveTo) {
-                if(_ctx.coordinates.size() > 0) {
-                    _ctx.numCoordinates.push_back(numCoordinates);
+        if (cmd == pbfGeomCmd::lineTo ||
+            cmd == pbfGeomCmd::moveTo) {
+
+            // If cmd is move then save current line and start next line
+            if (cmd == pbfGeomCmd::moveTo && nPoints > 0) {
+                geometry.endLine();
+                nPoints = 0;
+            }
+
+            for (uint32_t i = 0; i < cmdRepeat; ++i) {
+                x += _geomIn.svarint();
+                y += _geomIn.svarint();
+
+                if (lastX != x || lastY != y || nPoints == 0) {
+                    // Bring the points in 0 to 1 space
+                    points.emplace_back(invTileExtent * x,
+                                        invTileExtent * (tileExtent - y),
+                                        0);
+                    nPoints++;
                 }
-                numCoordinates = 0;
+                lastX = x;
+                lastY = y;
             }
 
-            x += _geomIn.svarint();
-            y += _geomIn.svarint();
-
-            // bring the points in 0 to 1 space
-            Point p;
-            p.x = invTileExtent * (double)x;
-            p.y = invTileExtent * (double)(_ctx.tileExtent - y);
-
-            if (numCoordinates == 0 || _ctx.coordinates.back() != p) {
-                _ctx.coordinates.push_back(p);
-                numCoordinates++;
+        } else if (cmd == pbfGeomCmd::closePath) {
+            // End of a polygon
+            if (nPoints == 0) {
+                assert(false);
+                continue;
             }
-        } else if(cmd == pbfGeomCmd::closePath) {
-            // end of a polygon, push first point in this line as last and push line to poly
-            _ctx.coordinates.push_back(_ctx.coordinates[_ctx.coordinates.size() - numCoordinates]);
-            _ctx.numCoordinates.push_back(numCoordinates + 1);
-            numCoordinates = 0;
+            // Push first point in this line as last and push line to poly
+            points.push_back(*(points.end() - nPoints));
+            nPoints++;
+
+            auto coordIt = points.end() - nPoints;
+            double area = signedArea(coordIt, coordIt + nPoints);
+
+            if (area == 0.f) {
+                // Erase empty ring
+                points.erase(coordIt, coordIt + nPoints);
+                nPoints = 0;
+                continue;
+            }
+
+            int curWinding = area > 0 ? 1 : -1;
+
+            if (winding == 0) {
+                winding = curWinding;
+            }
+
+            if (nRings == 0) {
+                // Add outer ring
+                geometry.endRing();
+                nRings = 1;
+            } else if (winding == curWinding) {
+                // End current Polygon
+                geometry.endPoly();
+
+                // This ring starts new Polygon
+                geometry.endRing();
+                nRings = 1;
+            } else {
+                // Add inner ring
+                geometry.endRing();
+                nRings++;
+            }
+
+            // Enforce consistent winding
+            if (curWinding < 0) {
+                std::reverse(coordIt, coordIt + nPoints);
+            }
+
+            nPoints = 0;
         }
-
-        cmdRepeat--;
     }
 
-    // Enter the last line
-    if (numCoordinates > 0) {
-        _ctx.numCoordinates.push_back(numCoordinates);
+    assert(_geomIn.getData() == _geomIn.getEnd());
+
+    if (nPoints > 0) {
+        // End the last line
+        assert(geometry.type == GeometryType::lines ||
+               geometry.type == GeometryType::points);
+        geometry.endLine();
+    }
+
+    if (nRings > 0) {
+        // End last Polygon - this case may only happen when the last ring had zero area!
+        assert(geometry.type == GeometryType::polygons);
+        geometry.endPoly();
     }
 }
 
@@ -234,7 +290,7 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
                 break;
 
             case FEATURE_TYPE:
-                feature.geometryType = (GeometryType)_featureIn.varint();
+                feature.geometry.type = (GeometryType)_featureIn.varint();
                 break;
 
             case FEATURE_GEOM:
@@ -247,7 +303,7 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
         }
     }
 
-    if (!geomMsg || feature.geometryType == GeometryType::unknown) {
+    if (!geomMsg || feature.geometry.type == GeometryType::unknown) {
         return;
     }
 
@@ -260,80 +316,6 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
     }
 
     extractGeometry(_ctx, geomMsg);
-
-    switch(feature.geometryType) {
-        case GeometryType::points: {
-                feature.points.clear();
-                feature.points.insert(feature.points.begin(),
-                                      _ctx.coordinates.begin(),
-                                      _ctx.coordinates.end());
-                break;
-        }
-        case GeometryType::lines: {
-            int offset = 0;
-            feature.lines.clear();
-            for (int length : _ctx.numCoordinates) {
-                if (length == 0) { continue; }
-
-                Line line;
-                line.reserve(length);
-
-                line.insert(line.begin(),
-                            _ctx.coordinates.begin() + offset,
-                            _ctx.coordinates.begin() + offset + length);
-
-                offset += length;
-                feature.lines.emplace_back(std::move(line));
-            }
-            break;
-        }
-        case GeometryType::polygons: {
-            int offset = 0;
-            int winding = 0;
-
-            feature.polygons.clear();
-
-            for (int length : _ctx.numCoordinates) {
-                if (length == 0) { continue; }
-                auto it = _ctx.coordinates.begin() + offset;
-
-                double area = signedArea(it, it + length);
-                if (area == 0.0) {
-                    offset += length;
-                    continue;
-                }
-                int curWinding = area > 0 ? 1 : -1;
-
-                // Polygons are in a flat list of rings. The first ring's winding
-                // determines which winding is the beginning of a new polygon.
-                if (winding == 0) {
-                    winding = curWinding;
-                }
-
-                if (feature.polygons.empty() || winding == curWinding) {
-                    // Start new polygon
-                    feature.polygons.emplace_back();
-                }
-
-                Line line;
-                line.reserve(length);
-
-                if (winding > 0) {
-                    line.insert(line.end(), it, it + length);
-                } else {
-                    // Reverse points
-                    auto it = _ctx.coordinates.rend() - offset - length;
-                    line.insert(line.end(), it, it + length);
-                }
-                offset += length;
-
-                feature.polygons.back().push_back(std::move(line));
-            }
-            break;
-        }
-        default:
-            break;
-    }
 
     _sink.addFeature(feature);
 }

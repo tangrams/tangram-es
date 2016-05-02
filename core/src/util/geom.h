@@ -116,6 +116,28 @@ inline glm::vec2 rotateBy(const glm::vec2& _in, const glm::vec2& _normal) {
     };
 }
 
+template<typename T>
+glm::vec2 centroid(T _polygon) {
+    glm::vec2 centroid;
+    int n = 0;
+
+    for (auto& l : _polygon) {
+        for (auto& p : l) {
+            centroid.x += p.x;
+            centroid.y += p.y;
+            n++;
+        }
+    }
+
+    if (n == 0) {
+        return centroid;
+    }
+
+    centroid /= n;
+
+    return centroid;
+}
+
 float sqSegmentDistance(const glm::vec2& _p, const glm::vec2& _p1, const glm::vec2& _p2);
 
 bool isPowerOfTwo(int _value);

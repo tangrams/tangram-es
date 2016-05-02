@@ -2,6 +2,7 @@
 #include "gl.h"
 
 #include "util/builders.h"
+#include "data/geometry.h"
 #include "glm/glm.hpp"
 #include <vector>
 
@@ -37,7 +38,7 @@ static void BM_Tangram_BuildButtMiterLine(benchmark::State& state) {
             JoinTypes::miter
         };
 
-        Builders::buildPolyLine(line, builder);
+        //Builders::buildPolyLine(Geometry<Point>::line(line), builder);
     }
 }
 BENCHMARK(BM_Tangram_BuildButtMiterLine);
@@ -53,7 +54,7 @@ static void BM_Tangram_BuildRoundRoundLine(benchmark::State& state) {
             JoinTypes::round
         };
 
-        Builders::buildPolyLine(line, builder);
+        //Builders::buildPolyLine(Geometry<Point>::line(line), builder);
     }
 }
 BENCHMARK(BM_Tangram_BuildRoundRoundLine);
