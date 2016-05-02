@@ -29,10 +29,10 @@ TileManager::TileManager(TileTaskQueue& _tileWorker) : m_workers(_tileWorker) {
 
     m_rasterCallback = TileTaskCb{[this](std::shared_ptr<TileTask>&& rasterTask) {
         // If a rasterTask ever reach this point its hasRaster must have been set!
-        assert(rasterTask->hasRaster());
-        if (rasterTask->hasRaster()) {
-            m_workers.notifyAll();
-        }
+        // assert(rasterTask->hasRaster());
+        // if (rasterTask->hasRaster()) {
+        //     m_workers.notifyAll();
+        // }
     }};
 }
 
@@ -376,39 +376,31 @@ void TileManager::enqueueTask(TileSet& _tileSet, const TileID& _tileID,
 
 // create and download raster references (recursively)
 // store these rastertasks in this datasource' task
-void TileManager::loadRasterTasks(std::vector<std::shared_ptr<DataSource>>& rasters,
+void TileManager::loadRasterTasks(std::vector<std::shared_ptr<DataSource>>& rasterSources,
                                   std::shared_ptr<TileTask>& tileTask, const TileID& tileID) {
+
     auto& rasterTasks = tileTask->rasterTasks();
-    if (rasterTasks.size() < rasters.size()) {
-        for (size_t index = rasterTasks.size(); index < rasters.size(); index++) {
-            auto& rasterSource = rasters[index];
-            TileID rasterTileID = tileID;
-            if (rasterTileID.z > rasterSource->maxZoom()) {
-                rasterTileID = rasterTileID.withMaxSourceZoom(rasterSource->maxZoom());
-            }
-            auto rasterTask = rasterSource->createTask(rasterTileID);
-            if (rasterTask->hasRaster()) {
-                auto savedRasterTask = rasterTask;
-                rasterTasks.push_back(std::move(savedRasterTask));
-                m_rasterCallback.func(std::move(rasterTask));
-            } else if (m_loadPending < MAX_DOWNLOADS) {
-                auto savedRasterTask = rasterTask;
-                rasterTasks.push_back(std::move(savedRasterTask));
-                if (rasterSource->loadTileData(std::move(rasterTask), m_rasterCallback, true)) {
-                    m_loadPending++;
-                    // possible raster is already availbale for a overzoomed tile
-                    // Make sure to notify the workers by doing a callback
-                    if (rasterTasks.back()->hasRaster()) {
-                        auto saveTask = rasterTasks.back();
-                        m_rasterCallback.func(std::move(saveTask));
-                    }
-                } else {
-                    // dependent raster's loading failed..
-                    // this rasterTask's rasterReady must have been set with black texture
-                    assert(rasterTask->hasRaster());
-                    auto moveRasterTask = rasterTasks.back();
-                    m_rasterCallback.func(std::move(moveRasterTask));
-                }
+    if (rasterTasks.size() >= rasterSources.size()) { return; }
+
+
+    for (size_t index = rasterTasks.size(); index < rasterSources.size(); index++) {
+        auto& rasterSource = rasterSources[index];
+        TileID rasterTileID = tileID;
+        if (rasterTileID.z > rasterSource->maxZoom()) {
+            rasterTileID = rasterTileID.withMaxSourceZoom(rasterSource->maxZoom());
+        }
+
+        auto rasterTask = rasterSource->createTask(rasterTileID);
+
+        if (!rasterTask->hasRaster() && m_loadPending < MAX_DOWNLOADS) {
+            rasterTasks.push_back(rasterTask);
+
+            if (rasterSource->loadTileData(std::move(rasterTask), m_rasterCallback, true)) {
+                m_loadPending++;
+            } else {
+                // dependent raster's loading failed..
+                // this rasterTask's rasterReady must have been set with black texture
+                assert(rasterTask->hasRaster());
             }
         }
     }
