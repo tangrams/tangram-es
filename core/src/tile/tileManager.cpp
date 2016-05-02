@@ -23,15 +23,6 @@ TileManager::TileManager(TileTaskQueue& _tileWorker) : m_workers(_tileWorker) {
             m_workers.enqueue(std::move(task));
         } else {
             task->cancel();
-            m_workers.notifyAll();
-        }
-    }};
-
-    m_rasterCallback = TileTaskCb{[this](std::shared_ptr<TileTask>&& rasterTask) {
-        // If a rasterTask ever reach this point its hasRaster must have been set!
-        assert(rasterTask->hasRaster());
-        if (rasterTask->hasRaster()) {
-            m_workers.notifyAll();
         }
     }};
 }
@@ -59,7 +50,6 @@ void TileManager::setDataSources(const fastmap<std::string,
             // Cancel pending  tiles
             for_each(tileSet.tiles.begin(), tileSet.tiles.end(), [&](auto& tile) {
                 tile.second.cancelTask();
-                m_workers.notifyAll();
             });
 
             // Clear cache
@@ -94,7 +84,6 @@ bool TileManager::removeDataSource(DataSource& dataSource) {
             // Cancel all tasks for this data source
             for (auto& tile : it->tiles) {
                 tile.second.cancelTask();
-                m_workers.notifyAll();
             }
             // Remove the textures for this data source
             it->source->clearRasters();
@@ -112,7 +101,6 @@ void TileManager::clearTileSets() {
     for (auto& tileSet : m_tileSets) {
         for (auto& tile : tileSet.tiles) {
             tile.second.cancelTask();
-                m_workers.notifyAll();
         }
         tileSet.tiles.clear();
     }
@@ -125,7 +113,6 @@ void TileManager::clearTileSet(int32_t _sourceId) {
         if (tileSet.source->id() != _sourceId) { continue; }
         for (auto& tile : tileSet.tiles) {
             tile.second.cancelTask();
-            m_workers.notifyAll();
         }
         tileSet.tiles.clear();
     }
@@ -134,13 +121,35 @@ void TileManager::clearTileSet(int32_t _sourceId) {
     m_tileSetChanged = true;
 }
 
+void TileManager::setTileRasters(const std::shared_ptr<TileTask>& task) {
+    //set tile rasters
+    auto raster = task->source().raster(*task);
+
+    // first set self texture, if it has one, then go to reference raster textures
+    if (raster.isValid()) {
+        task->tile()->rasters().push_back(std::move(raster));
+    }
+
+    for (auto& rasterTask : task->rasterTasks()) {
+        assert(rasterTask->hasRaster());
+        auto rasterTex = rasterTask->source().raster(*rasterTask);
+        if (rasterTex.isValid()) {
+            task->tile()->rasters().push_back(std::move(rasterTex));
+        }
+    }
+}
+
 void TileManager::updateTileSets(const ViewState& _view,
                                  const std::set<TileID>& _visibleTiles) {
     m_tiles.clear();
     m_loadPending = 0;
     m_tilesInProgress = 0;
 
-    m_tileSetChanged = m_workers.checkProcessedTiles();
+    {
+        std::lock_guard<std::mutex> lock(m_rasterDoneMutex);
+        m_tileSetChanged = m_rasterDone || m_workers.checkProcessedTiles();
+        m_rasterDone = false;
+    }
 
     for (auto& tileSet : m_tileSets) {
         updateTileSet(tileSet, _view, _visibleTiles);
@@ -189,14 +198,14 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             auto& entry = it.second;
             if (entry.newData()) {
                 clearProxyTiles(_tileSet, it.first, entry, removeTiles);
+
+                setTileRasters(entry.task);
                 entry.tile = std::move(entry.task->tile());
                 entry.task.reset();
 
                 newTiles = true;
             }
         }
-        // need to notify all workers to start next set of task(s)
-        m_workers.notifyAll();
     }
 
     // Loop over visibleTiles and add any needed tiles to tileSet
@@ -379,36 +388,39 @@ void TileManager::enqueueTask(TileSet& _tileSet, const TileID& _tileID,
 void TileManager::loadRasterTasks(std::vector<std::shared_ptr<DataSource>>& rasters,
                                   std::shared_ptr<TileTask>& tileTask, const TileID& tileID) {
     auto& rasterTasks = tileTask->rasterTasks();
-    if (rasterTasks.size() < rasters.size()) {
-        for (size_t index = rasterTasks.size(); index < rasters.size(); index++) {
-            auto& rasterSource = rasters[index];
-            TileID rasterTileID = tileID;
-            if (rasterTileID.z > rasterSource->maxZoom()) {
-                rasterTileID = rasterTileID.withMaxSourceZoom(rasterSource->maxZoom());
-            }
-            auto rasterTask = rasterSource->createTask(rasterTileID);
-            if (rasterTask->hasRaster()) {
-                auto savedRasterTask = rasterTask;
-                rasterTasks.push_back(std::move(savedRasterTask));
-                m_rasterCallback.func(std::move(rasterTask));
-            } else if (m_loadPending < MAX_DOWNLOADS) {
-                auto savedRasterTask = rasterTask;
-                rasterTasks.push_back(std::move(savedRasterTask));
-                if (rasterSource->loadTileData(std::move(rasterTask), m_rasterCallback, true)) {
-                    m_loadPending++;
-                    // possible raster is already availbale for a overzoomed tile
-                    // Make sure to notify the workers by doing a callback
-                    if (rasterTasks.back()->hasRaster()) {
-                        auto saveTask = rasterTasks.back();
-                        m_rasterCallback.func(std::move(saveTask));
-                    }
-                } else {
-                    // dependent raster's loading failed..
-                    // this rasterTask's rasterReady must have been set with black texture
-                    assert(rasterTask->hasRaster());
-                    auto moveRasterTask = rasterTasks.back();
-                    m_rasterCallback.func(std::move(moveRasterTask));
-                }
+
+    if (rasterTasks.size() >= rasters.size()) { return; }
+
+    for (size_t index = rasterTasks.size(); index < rasters.size(); index++) {
+        auto& rasterSource = rasters[index];
+        TileID rasterTileID = tileID;
+        if (rasterTileID.z > rasterSource->maxZoom()) {
+            rasterTileID = rasterTileID.withMaxSourceZoom(rasterSource->maxZoom());
+        }
+        auto rasterTask = rasterSource->createTask(rasterTileID);
+        if (rasterTask->hasRaster()) {
+            rasterTasks.push_back(std::move(rasterTask));
+            std::lock_guard<std::mutex> lock(m_rasterDoneMutex);
+            m_rasterDone = true;
+        } else if (m_loadPending < MAX_DOWNLOADS) {
+            auto savedRasterTask = rasterTask;
+            rasterTasks.push_back(std::move(savedRasterTask));
+            if (rasterSource->loadTileData(std::move(rasterTask),
+                        TileTaskCb{[this](std::shared_ptr<TileTask>&& task) {
+                            assert(task->hasRaster());
+                            std::lock_guard<std::mutex> lock(m_rasterDoneMutex);
+                            m_rasterDone = true;
+                        }
+                    },
+                    true)) {
+                m_loadPending++;
+            } else {
+                // dependent raster's loading failed..
+                // this rasterTask's rasterReady must have been set with black texture
+                assert(rasterTask->hasRaster());
+
+                std::lock_guard<std::mutex> lock(m_rasterDoneMutex);
+                m_rasterDone = true;
             }
         }
     }
@@ -447,7 +459,6 @@ void TileManager::loadTiles() {
                 // Set canceled state, so that tile will not be tried
                 // for reloading until sourceGeneration increased.
                 entry.task->cancel();
-                m_workers.notifyAll();
                 continue;
             }
         }
@@ -500,7 +511,6 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
 
     if (entry.isLoading()) {
         entry.cancelTask();
-        m_workers.notifyAll();
 
         // 1. Remove from Datasource. Make sure to cancel
         //  the network request associated with this tile.

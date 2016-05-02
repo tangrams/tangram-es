@@ -148,6 +148,8 @@ bool DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
         if (setDependentRaster) {
             _task->rasterReady();
         }
+
+        raster(*_task);
         _cb.func(std::move(_task));
 
         m_cache->put(tileID, rawDataRef);

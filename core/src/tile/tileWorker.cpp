@@ -112,62 +112,22 @@ void TileWorker::run(Worker* instance) {
             continue;
         }
 
-        if (!task->hasTile()) {
+        auto tileData = task->source().parse(*task, *builder->scene().mapProjection());
 
-            auto tileData = task->source().parse(*task, *builder->scene().mapProjection());
+        // const clock_t begin = clock();
 
-            // const clock_t begin = clock();
+        if (tileData) {
 
-            if (tileData) {
-
-                auto tile = builder->build(task->tileId(), *tileData, task->source());
-                // move tile to task (probably done if no rasters)
-                task->setTile(std::move(tile));
-
-            } else {
-                task->cancel();
-                m_pendingTiles = true;
-                requestRender();
-                continue;
-            }
+            auto tile = builder->build(task->tileId(), *tileData, task->source());
 
             // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
             // LOG("loadTime %s - %f", task->tile()->getID().toString().c_str(), loadTime);
-        }
 
-        bool rastersReady = true;
-
-        if (task->source().rasterSources().size() != task->rasterTasks().size()) {
-            rastersReady = false;
+            // move tile to task (probably done if no rasters)
+            task->setTile(std::move(tile));
         } else {
-            for (auto& rasterTask : task->rasterTasks()) {
-                if (!rasterTask->hasRaster()) {
-                    rastersReady = false;
-                    break;
-                }
-            }
+            task->cancel();
         }
-
-        if (!rastersReady) {
-            // enqueue this task again
-            enqueue(std::move(task));
-            continue;
-        }
-
-        auto raster = task->source().raster(*task);
-
-        // first set self texture, if it has one, then go to reference raster textures
-        if (raster.isValid()) {
-            task->tile()->rasters().push_back(std::move(raster));
-        }
-        for (auto& rasterTask : task->rasterTasks()) {
-            assert(rasterTask->hasRaster());
-            auto rasterTex = rasterTask->source().raster(*rasterTask);
-            if (rasterTex.isValid()) {
-                task->tile()->rasters().push_back(std::move(rasterTex));
-            }
-        }
-
 
         m_pendingTiles = true;
 
@@ -182,10 +142,6 @@ void TileWorker::setScene(std::shared_ptr<Scene>& _scene) {
 
         worker->tileBuilder = std::move(tileBuilder);
     }
-}
-
-void TileWorker::notifyAll() {
-    m_condition.notify_all();
 }
 
 void TileWorker::enqueue(std::shared_ptr<TileTask>&& task) {
