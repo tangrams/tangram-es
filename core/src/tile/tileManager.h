@@ -186,7 +186,7 @@ private:
     void enqueueTask(TileSet& _tileSet, const TileID& _tileID, const ViewState& _view);
 
     void loadTiles();
-    void loadRasterTasks(std::vector<std::shared_ptr<DataSource>>& rasters, std::shared_ptr<TileTask>& tileTask,
+    void loadRasterTasks(std::vector<std::shared_ptr<DataSource>>& rasters, std::shared_ptr<TileTask> tileTask,
                          const TileID& tileID);
 
     /*

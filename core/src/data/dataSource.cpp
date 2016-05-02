@@ -90,9 +90,9 @@ struct RawCache {
 
 static std::atomic<int32_t> s_serial;
 
-DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate, int32_t _maxZoom) :
-    m_name(_name), m_maxZoom(_maxZoom), m_urlTemplate(_urlTemplate),
-    m_cache(std::make_unique<RawCache>()){
+DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate, int32_t _maxZoom)
+    : m_name(_name), m_maxZoom(_maxZoom), m_urlTemplate(_urlTemplate),
+      m_cache(std::make_unique<RawCache>()){
 
     m_id = s_serial++;
 }
@@ -133,7 +133,7 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
 }
 
 bool DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
-        TileTaskCb _cb, bool setDependentRaster) {
+                              TileTaskCb _cb, bool setDependentRaster) {
 
     TileID tileID = _task->tileId();
 
@@ -159,7 +159,7 @@ bool DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
 }
 
 bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb,
-        bool setDependentRaster) {
+                              bool setDependentRaster) {
 
     std::string url(constructURL(_task->tileId()));
 
