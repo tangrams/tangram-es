@@ -381,6 +381,8 @@ int main(int argc, char* argv[]) {
 
     }
 
+    finishUrlRequests();
+
     glfwTerminate();
     return 0;
 }
