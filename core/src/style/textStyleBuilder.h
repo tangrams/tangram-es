@@ -44,6 +44,9 @@ public:
 
     bool checkRule(const DrawRule& _rule) const override { return true; }
 
+    const std::vector<std::unique_ptr<Label>>& labels() const { return m_labels; }
+    const std::vector<GlyphQuad>& quads() const { return m_quads; }
+
 protected:
 
     const TextStyle& m_style;
