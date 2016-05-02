@@ -415,7 +415,13 @@ void TileManager::loadTiles() {
         auto tileIt = tileSet.tiles.find(tileId);
         auto& entry = tileIt->second;
 
-        if (entry.task && entry.rastersPending() > 0 && !entry.isCanceled()) {
+        // FIXME: When can this happen?
+        if (entry.isCanceled()) {
+            assert(false);
+            continue;
+        }
+
+        if (entry.task && entry.rastersPending() > 0) {
             // just load the rasters and continue,
             // the main tile task has already started loading
             loadRasterTasks(tileSet.source->rasterSources(), entry.task, tileId);
