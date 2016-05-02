@@ -150,7 +150,7 @@ void TileWorker::run(Worker* instance) {
 
         if (!ready) {
             // enqueue this task again
-            enqueue(std::move(task));
+            // enqueue(std::move(task));
             continue;
         }
 
