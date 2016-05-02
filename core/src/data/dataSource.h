@@ -38,7 +38,7 @@ public:
      * further processing before it is renderable.
      */
     virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb,
-            bool setDependentRaster = false);
+                              bool setDependentRaster = false);
 
 
     /* Stops any running I/O tasks pertaining to @_tile */

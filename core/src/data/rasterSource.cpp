@@ -39,7 +39,7 @@ std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapPr
 
 // Load/Download referenced raster data
 bool RasterSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
-        TileTaskCb _cb, bool setDependentRaster) {
+                                TileTaskCb _cb, bool setDependentRaster) {
 
     auto copyTask = _task;
 
@@ -64,7 +64,7 @@ bool RasterSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Ti
 }
 
 bool RasterSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb,
-        bool setDependentRaster) {
+                                bool setDependentRaster) {
 
     std::string url(constructURL(_task->tileId()));
 
@@ -110,8 +110,8 @@ Raster RasterSource::raster(const TileTask& _task) {
 
         m_textures[id] = texture;
 
-        if (!texture->hasValidData()) {
-            LOGW("Texture for data source %s has failed to decode", m_name.c_str());
+        if (!texture->hasValidData() && dataSize > 0) {
+            LOGW("Texture for data source %s has failed to decode (%d bytes)", m_name.c_str(), dataSize);
         }
 
         return { id, texture };
