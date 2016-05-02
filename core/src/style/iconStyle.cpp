@@ -96,8 +96,22 @@ void IconStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 std::unique_ptr<StyledMesh> IconStyleBuilder::build() {
     TextStyleBuilder& tBuilder = static_cast<TextStyleBuilder&>(*textStyleBuilder);
     PointStyleBuilder& pBuilder = static_cast<PointStyleBuilder&>(*pointStyleBuilder);
-    return std::move(tBuilder.build());
-};
+
+    //auto tQuads = tBuilder.quads();
+    //auto pQuasd = pBuilder.quads();
+
+    //auto tLabels = tBuilder.labels();
+    //auto pLabels = pBuilder.labels();
+
+    //m_labels->setLabels(m_labels);
+    //m_labels->setQuads(m_quads, m_atlasRefs);
+    auto iconMesh = std::make_unique<IconMesh>();
+
+    iconMesh->spriteLabels = pBuilder.build();
+    iconMesh->textLabels = tBuilder.build();
+
+    return std::move(iconMesh);
+}
 
 std::unique_ptr<StyleBuilder> IconStyle::createBuilder() const {
     auto iconStyleBuilder = std::make_unique<IconStyleBuilder>(*this);

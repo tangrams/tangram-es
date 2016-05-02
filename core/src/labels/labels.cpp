@@ -8,6 +8,7 @@
 #include "style/style.h"
 #include "style/pointStyle.h"
 #include "style/textStyle.h"
+#include "style/iconStyle.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
 #include "labels/labelSet.h"
@@ -29,6 +30,31 @@ Labels::~Labels() {}
 // int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
 //     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 // }
+
+void Labels::updateLabelSet(const LabelSet& set, glm::mat4 mvp, float dz, glm::vec2 screenSize,
+                            float dt, bool onlyTransitions, bool proxyTile) {
+
+    for (auto& label : set.getLabels()) {
+        if (!label->update(mvp, screenSize, dz)) {
+            // skip dead labels
+            continue;
+        }
+        
+        if (onlyTransitions) {
+            if (!label->canOcclude() || label->visibleState()) {
+                m_needUpdate |= label->evalState(screenSize, dt);
+                label->pushTransform();
+            }
+        } else if (label->canOcclude()) {
+            label->setProxy(proxyTile);
+            m_labels.push_back(label.get());
+            
+        } else {
+            m_needUpdate |= label->evalState(screenSize, dt);
+            label->pushTransform();
+        }
+    }
+}
 
 void Labels::updateLabels(const View& _view, float _dt,
                           const std::vector<std::unique_ptr<Style>>& _styles,
@@ -57,28 +83,20 @@ void Labels::updateLabels(const View& _view, float _dt,
             const auto& mesh = tile->getMesh(*style);
             if (!mesh) { continue; }
 
-            auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
-            if (!labelMesh) { continue; }
-
-            for (auto& label : labelMesh->getLabels()) {
-                if (!label->update(mvp, screenSize, dz)) {
-                    // skip dead labels
-                    continue;
+            auto iconMesh = dynamic_cast<const IconMesh*>(mesh.get());
+            if (iconMesh) {
+                auto textLabelMesh = dynamic_cast<const LabelSet*>(iconMesh->textLabels.get());
+                if (textLabelMesh) {
+                    updateLabelSet(*textLabelMesh, mvp, dz, screenSize, _dt, _onlyTransitions, proxyTile);
                 }
-
-                if (_onlyTransitions) {
-                    if (!label->canOcclude() || label->visibleState()) {
-                        m_needUpdate |= label->evalState(screenSize, _dt);
-                        label->pushTransform();
-                    }
-                } else if (label->canOcclude()) {
-                    label->setProxy(proxyTile);
-                    m_labels.push_back(label.get());
-
-                } else {
-                    m_needUpdate |= label->evalState(screenSize, _dt);
-                    label->pushTransform();
+                auto spriteLabelMesh = dynamic_cast<const LabelSet*>(iconMesh->spriteLabels.get());
+                if (spriteLabelMesh) {
+                    updateLabelSet(*spriteLabelMesh, mvp, dz, screenSize, _dt, _onlyTransitions, proxyTile);
                 }
+            } else {
+                auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
+                if (!labelMesh) { continue; }
+                updateLabelSet(*labelMesh, mvp, dz, screenSize, _dt, _onlyTransitions, proxyTile);
             }
         }
     }

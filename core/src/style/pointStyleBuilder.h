@@ -11,11 +11,6 @@ struct PointStyleBuilder : public StyleBuilder {
 
     const PointStyle& m_style;
 
-    std::vector<std::unique_ptr<Label>> m_labels;
-    std::vector<SpriteQuad> m_quads;
-
-    std::unique_ptr<SpriteLabels> m_spriteLabels;
-    float m_zoom;
 
     void setup(const Tile& _tile) override;
 
@@ -37,6 +32,16 @@ struct PointStyleBuilder : public StyleBuilder {
 
     void addLabel(const Point& _point, const glm::vec4& _quad,
                   const PointStyle::Parameters& _params);
+
+    const std::vector<std::unique_ptr<Label>>& labels() const { return m_labels; }
+    const std::vector<SpriteQuad> quads() const { return m_quads; }
+
+private:
+    std::vector<std::unique_ptr<Label>> m_labels;
+    std::vector<SpriteQuad> m_quads;
+    
+    float m_zoom;
+    std::unique_ptr<SpriteLabels> m_spriteLabels;
 
 };
 
