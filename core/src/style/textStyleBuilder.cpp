@@ -402,6 +402,9 @@ void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Typ
                                         {m_attributes.fill, m_attributes.stroke, m_attributes.fontScale},
                                         {m_attributes.width, m_attributes.height},
                                         *m_textLabels, {quadsStart, quadsCount}));
+
+    // TODO: only if unified
+    m_labelStack.push_back(m_labels.back());
 }
 
 }

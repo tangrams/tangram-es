@@ -33,11 +33,12 @@ struct PointStyleBuilder : public StyleBuilder {
     void addLabel(const Point& _point, const glm::vec4& _quad,
                   const PointStyle::Parameters& _params);
 
-    const std::vector<std::unique_ptr<Label>>& labels() const { return m_labels; }
-    const std::vector<SpriteQuad> quads() const { return m_quads; }
+    const std::vector<std::shared_ptr<Label>>& labelStack() const { return m_labelStack; }
+    void clearLabelStack() { m_labelStack.clear(); }
 
 private:
-    std::vector<std::unique_ptr<Label>> m_labels;
+    std::vector<std::shared_ptr<Label>> m_labels;
+    std::vector<std::shared_ptr<Label>> m_labelStack;
     std::vector<SpriteQuad> m_quads;
     
     float m_zoom;

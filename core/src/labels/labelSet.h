@@ -9,7 +9,7 @@ namespace Tangram {
 
 class LabelSet : public StyledMesh {
 public:
-    const std::vector<std::unique_ptr<Label>>& getLabels() const {
+    const std::vector<std::shared_ptr<Label>>& getLabels() const {
         return m_labels;
     }
 
@@ -19,12 +19,12 @@ public:
 
     size_t bufferSize() const override { return 0; }
 
-    void setLabels(std::vector<std::unique_ptr<Label>>& _labels);
+    void setLabels(std::vector<std::shared_ptr<Label>>& _labels);
 
     void reset();
 
 protected:
-    std::vector<std::unique_ptr<Label>> m_labels;
+    std::vector<std::shared_ptr<Label>> m_labels;
 };
 
 }

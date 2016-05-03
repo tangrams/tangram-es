@@ -13,7 +13,7 @@
 namespace Tangram {
 
 struct IconMesh : StyledMesh {
-    void draw(ShaderProgram& _shader) override {}
+    bool draw(ShaderProgram& _shader) override {}
     size_t bufferSize() const override { return 0; }
 
     std::unique_ptr<StyledMesh> textLabels;
