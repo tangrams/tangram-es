@@ -79,7 +79,7 @@ GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
     if (location == -2) {
         // Get the actual location from OpenGL
         location = glGetAttribLocation(m_glProgram, _attribName.c_str());
-        GL_CHECK(void(0));
+        GL_CHECK();
     }
 
     return location;
@@ -93,8 +93,8 @@ GLint ShaderProgram::getUniformLocation(const UniformLocation& _uniform) {
     }
 
     _uniform.generation = m_generation;
-    _uniform.location = glGetUniformLocation(m_glProgram, _uniform.name.c_str());
-    GL_CHECK(void(0));
+    _uniform.location = glGetUniformLocation(0, _uniform.name.c_str());
+    GL_CHECK();
 
     return _uniform.location;
 }
@@ -176,7 +176,7 @@ bool ShaderProgram::build() {
 GLuint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader) {
 
     GLuint program = glCreateProgram();
-    GL_CHECK(void(0));
+    GL_CHECK();
 
     GL_CHECK(glAttachShader(program, _fragShader));
     GL_CHECK(glAttachShader(program, _vertShader));
@@ -206,7 +206,7 @@ GLuint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShad
 GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) {
 
     GLuint shader = glCreateShader(_type);
-    GL_CHECK(void(0));
+    GL_CHECK();
 
     const GLchar* source = (const GLchar*) _src.c_str();
     GL_CHECK(glShaderSource(shader, 1, &source, NULL));
