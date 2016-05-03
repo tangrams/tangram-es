@@ -91,20 +91,28 @@ void IconStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
             pBuilder.addLine(line, _feat.props, _rule);
         }
     }
+
+    auto textLabels = tBuilder.labelStack();
+    auto pointLabels = pBuilder.labelStack();
+
+    if (textLabels.size() == pointLabels.size()) {
+        for (size_t i = 0; i < textLabels.size(); ++i) {
+            auto tLabel = textLabels[i];
+            auto pLabel = pointLabels[i];
+
+            // Link labels together
+            tLabel->parent(pLabel);
+        }
+    }
+
+    tBuilder.clearLabelStack();
+    pBuilder.clearLabelStack();
 }
 
 std::unique_ptr<StyledMesh> IconStyleBuilder::build() {
     TextStyleBuilder& tBuilder = static_cast<TextStyleBuilder&>(*textStyleBuilder);
     PointStyleBuilder& pBuilder = static_cast<PointStyleBuilder&>(*pointStyleBuilder);
 
-    //auto tQuads = tBuilder.quads();
-    //auto pQuasd = pBuilder.quads();
-
-    //auto tLabels = tBuilder.labels();
-    //auto pLabels = pBuilder.labels();
-
-    //m_labels->setLabels(m_labels);
-    //m_labels->setQuads(m_quads, m_atlasRefs);
     auto iconMesh = std::make_unique<IconMesh>();
 
     iconMesh->spriteLabels = pBuilder.build();

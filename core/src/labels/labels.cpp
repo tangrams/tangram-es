@@ -365,6 +365,11 @@ void Labels::updateLabelSet(const View& _view, float _dt,
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
 
     for (auto* label : m_labels) {
+        // Manage link occlusion (unified icon labels)
+        if (label->parent() && label->parent()->isOccluded()) {
+            label->occlude();
+        }
+
         m_needUpdate |= label->evalState(screenSize, _dt);
         label->pushTransform();
     }

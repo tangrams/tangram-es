@@ -44,8 +44,8 @@ public:
 
     bool checkRule(const DrawRule& _rule) const override { return true; }
 
-    const std::vector<std::unique_ptr<Label>>& labels() const { return m_labels; }
-    const std::vector<GlyphQuad>& quads() const { return m_quads; }
+    const std::vector<std::shared_ptr<Label>>& labelStack() const { return m_labelStack; }
+    void clearLabelStack() { m_labelStack.clear(); }
 
 protected:
 
@@ -57,7 +57,8 @@ protected:
     // Buffers to hold data for TextLabels until build()
     std::vector<GlyphQuad> m_quads;
     std::bitset<FontContext::max_textures> m_atlasRefs;
-    std::vector<std::unique_ptr<Label>> m_labels;
+    std::vector<std::shared_ptr<Label>> m_labels;
+    std::vector<std::shared_ptr<Label>> m_labelStack;
 
     // Attributes of the currently prepared Label
     struct {

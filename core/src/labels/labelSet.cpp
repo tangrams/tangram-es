@@ -10,8 +10,8 @@ void LabelSet::reset() {
     }
 }
 
-void LabelSet::setLabels(std::vector<std::unique_ptr<Label>>& _labels) {
-    typedef std::vector<std::unique_ptr<Label>>::iterator iter_t;
+void LabelSet::setLabels(std::vector<std::shared_ptr<Label>>& _labels) {
+    typedef std::vector<std::shared_ptr<Label>>::iterator iter_t;
     m_labels.clear();
     m_labels.insert(m_labels.end(),
                     std::move_iterator<iter_t>(_labels.begin()),
