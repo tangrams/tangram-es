@@ -275,13 +275,13 @@ layers:
                 sprite: function() { return feature.kind; }
                 sprite_default: info
                 #TODO: move to text rule
-                #text:
-                font:
-                    family: sans-serif
-                    weight: 400
-                    style: normal
-                    size: 1.2em
-                    fill: white
+                text:
+                    font:
+                        family: sans-serif
+                        weight: 400
+                        style: normal
+                        size: 1.2em
+                        fill: white
 
         # examples of different icon mapped to feature properties
         #icon:

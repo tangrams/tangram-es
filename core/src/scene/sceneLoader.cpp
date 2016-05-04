@@ -1161,15 +1161,19 @@ Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
     return Filter::MatchNone(std::move(filters));
 }
 
-void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string& prefix,
+void SceneLoader::parseStyleParams(Node parent, Node params, Scene& scene, const std::string& prefix,
                                    std::vector<StyleParam>& out) {
 
     for (const auto& prop : params) {
         std::string key;
         if (!prefix.empty()) {
-            key = prefix + DELIMITER + prop.first.Scalar();
+            if (StyleParam::skipPrefix(parent.Scalar(), prefix)) {
+                key = prop.first.Scalar();
+            } else {
+                key = prefix + DELIMITER + prop.first.Scalar();
+            }
         } else {
-            key = prop.first.as<std::string>();
+            key = prop.first.Scalar();
         }
         if (key == "transition") {
             parseTransition(prop.second, scene, out);
@@ -1225,7 +1229,7 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
         }
         case NodeType::Map: {
             // NB: Flatten parameter map
-            parseStyleParams(value, scene, key, out);
+            parseStyleParams(parent, value, scene, key, out);
             break;
         }
         default:
@@ -1364,7 +1368,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, S
             for (auto& ruleNode : member.second) {
 
                 std::vector<StyleParam> params;
-                parseStyleParams(ruleNode.second, scene, "", params);
+                parseStyleParams(ruleNode.first, ruleNode.second, scene, "", params);
 
                 const std::string& ruleName = ruleNode.first.Scalar();
                 int ruleId = scene.addIdForName(ruleName);

@@ -46,7 +46,6 @@ struct IconStyleBuilder : public StyleBuilder {
 
     virtual void addFeature(const Feature& _feat, const DrawRule& _rule) override;
 
-    // TODO: possibly returns several meshes
     std::unique_ptr<StyledMesh> build() override;
 
     const Style& style() const override { return m_style; }
