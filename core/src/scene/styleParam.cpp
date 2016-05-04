@@ -5,6 +5,7 @@
 #include "util/builders.h" // for cap, join
 #include "util/extrude.h"
 #include "util/geom.h" // for CLAMP
+#include "util/util.h"
 #include <algorithm>
 #include <map>
 #include <cstring>
@@ -57,6 +58,10 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"transition:show:time", StyleParamKey::transition_show_time},
     {"visible", StyleParamKey::visible},
     {"width", StyleParamKey::width},
+};
+
+const std::map<std::string, std::string> s_StyleParamPrefix = {
+    {"text", "icons"},
 };
 
 const std::map<StyleParamKey, std::vector<Unit>> s_StyleParamUnits = {
@@ -118,6 +123,14 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     if (!_value.empty()) {
         value = parseString(key, _value);
     }
+}
+
+bool StyleParam::skipPrefix(const std::string& _parent, const std::string& _key) {
+    std::string parent;
+    if (tryFind(s_StyleParamPrefix, _key, parent)) {
+        return _parent == parent;
+    }
+    return false;
 }
 
 StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& _value) {

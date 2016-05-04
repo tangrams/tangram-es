@@ -70,7 +70,7 @@ struct SceneLoader {
 
     static MaterialTexture loadMaterialTexture(Node matCompNode, Scene& scene, Style& style);
 
-    static void parseStyleParams(Node params, Scene& scene, const std::string& propPrefix,
+    static void parseStyleParams(Node parent, Node params, Scene& scene, const std::string& propPrefix,
                                  std::vector<StyleParam>& out);
     static void parseTransition(Node params, Scene& scene, std::vector<StyleParam>& out);
 

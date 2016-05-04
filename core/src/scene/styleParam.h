@@ -169,6 +169,8 @@ struct StyleParam {
     static bool isFontSize(StyleParamKey _key);
     static bool isRequired(StyleParamKey _key);
 
+    static bool skipPrefix(const std::string& _parent, const std::string& _key);
+
     static bool unitsForStyleParam(StyleParamKey _key, std::vector<Unit>& _unit);
 
     static StyleParamKey getKey(const std::string& _key);
