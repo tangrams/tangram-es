@@ -9,6 +9,7 @@
 #include "util/types.h"
 #include "util/hash.h"
 #include "data/properties.h"
+#include "labels/labelProperty.h"
 
 #include <string>
 #include <limits>
@@ -77,7 +78,7 @@ public:
         size_t paramHash = 0;
     };
 
-    Label(Transform _transform, glm::vec2 _size, Type _type, Options _options);
+    Label(Transform _transform, glm::vec2 _size, Type _type, Options _options, LabelProperty::Anchor _anchor);
 
     virtual ~Label();
 
@@ -125,11 +126,13 @@ public:
     bool occludedLastFrame() const { return m_occludedLastFrame; }
 
     const std::shared_ptr<Label>& parent() const { return m_parent; }
-    void parent(std::shared_ptr<Label> parent) { m_parent = parent; }
+    void parent(std::shared_ptr<Label> parent);
 
     virtual glm::vec2 center() const;
 
 private:
+
+    virtual void applyAnchor(const glm::vec2& _dimension, LabelProperty::Anchor _anchor) = 0;
 
     bool offViewport(const glm::vec2& _screenSize);
 
@@ -165,6 +168,8 @@ protected:
     glm::vec2 m_dim;
     // label options
     Options m_options;
+
+    LabelProperty::Anchor m_anchor;
 
     glm::vec2 m_xAxis;
     glm::vec2 m_yAxis;

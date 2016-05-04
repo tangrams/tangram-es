@@ -90,9 +90,14 @@ public:
 
     virtual ~TextStyle() override;
 
+    Parameters& defaultParams() { return m_defaultParams; }
+    Parameters defaultParams() const { return m_defaultParams; }
+
 private:
 
     const std::string& applyTextSource(const Parameters& _parameters, const Properties& _props) const;
+
+    Parameters m_defaultParams;
 };
 
 }

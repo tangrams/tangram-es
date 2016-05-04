@@ -172,7 +172,8 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     const static std::string defaultStyle("normal");
     const static std::string defaultFamily("default");
 
-    TextStyle::Parameters p;
+    const TextStyle& textStyle = static_cast<const TextStyle&>(style());
+    TextStyle::Parameters p = textStyle.defaultParams();
     glm::vec2 offset;
 
     _rule.get(StyleParamKey::text_source, p.text);
@@ -201,6 +202,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     _rule.get(StyleParamKey::font_fill, p.fill);
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
+    p.labelOptions.offset = glm::vec2(0.0, 20.0);
     p.labelOptions.offset *= m_style.pixelScale();
 
     _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
