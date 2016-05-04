@@ -404,7 +404,7 @@ void TileManager::loadRasterTasks(std::vector<std::shared_ptr<DataSource>>& rast
                             assert(task->hasRaster());
                             requestRender();
                         }
-                    }, true)) {
+                    })) {
 
                 m_loadPending++;
 

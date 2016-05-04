@@ -88,11 +88,11 @@ struct RawCache {
     }
 };
 
-static std::atomic<int32_t> s_serial;
-
 DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate, int32_t _maxZoom) :
     m_name(_name), m_maxZoom(_maxZoom), m_urlTemplate(_urlTemplate),
     m_cache(std::make_unique<RawCache>()){
+
+    static std::atomic<int32_t> s_serial;
 
     m_id = s_serial++;
 }
@@ -104,13 +104,21 @@ DataSource::~DataSource() {
 std::shared_ptr<TileTask> DataSource::createTask(TileID _tileId) {
     auto task = std::make_shared<DownloadTileTask>(_tileId, shared_from_this());
 
-    m_cache->get(*task);
+    cacheGet(*task);
 
     return task;
 }
 
 void DataSource::setCacheSize(size_t _cacheSize) {
     m_cache->m_maxUsage = _cacheSize;
+}
+
+bool DataSource::cacheGet(DownloadTileTask& _task) {
+    return m_cache->get(_task);
+}
+
+void DataSource::cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef) {
+    m_cache->put(_tileID, _rawDataRef);
 }
 
 void DataSource::clearData() {
@@ -133,7 +141,7 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
 }
 
 bool DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
-        TileTaskCb _cb, bool setDependentRaster) {
+                              TileTaskCb _cb) {
 
     TileID tileID = _task->tileId();
 
@@ -145,14 +153,9 @@ bool DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
         auto& task = static_cast<DownloadTileTask&>(*_task);
         task.rawTileData = rawDataRef;
 
-        if (setDependentRaster) {
-            _task->rasterReady();
-        }
-
-        raster(*_task);
         _cb.func(std::move(_task));
 
-        m_cache->put(tileID, rawDataRef);
+        cachePut(tileID, rawDataRef);
 
         return true;
     }
@@ -160,8 +163,7 @@ bool DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
     return false;
 }
 
-bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb,
-        bool setDependentRaster) {
+bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
 
     std::string url(constructURL(_task->tileId()));
 
@@ -169,9 +171,8 @@ bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb,
     // hence "mutable"
     // Refer: http://en.cppreference.com/w/cpp/language/lambda
     return startUrlRequest(url,
-            [this, _cb, setDependentRaster,
-            task = std::move(_task)](std::vector<char>&& rawData) mutable {
-                this->onTileLoaded(std::move(rawData), std::move(task), _cb, setDependentRaster);
+            [this, _cb, task = std::move(_task)](std::vector<char>&& rawData) mutable {
+                this->onTileLoaded(std::move(rawData), std::move(task), _cb);
             });
 
 }

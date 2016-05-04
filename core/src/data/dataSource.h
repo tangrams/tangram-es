@@ -5,6 +5,8 @@
 #include <memory>
 #include <vector>
 
+#include "tile/tileTask.h"
+
 namespace Tangram {
 
 class MapProjection;
@@ -14,9 +16,7 @@ struct Raster;
 class Tile;
 class TileManager;
 struct RawCache;
-class TileTask;
 class Texture;
-struct TileTaskCb;
 
 class DataSource : public std::enable_shared_from_this<DataSource> {
 
@@ -37,8 +37,7 @@ public:
      * the I/O task is complete, the tile data is added to a queue in @_tileManager for
      * further processing before it is renderable.
      */
-    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb,
-            bool setDependentRaster = false);
+    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb);
 
 
     /* Stops any running I/O tasks pertaining to @_tile */
@@ -89,7 +88,7 @@ public:
 protected:
 
     virtual bool onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
-            TileTaskCb _cb, bool setDependentRaster = false);
+            TileTaskCb _cb);
 
     /* Constructs the URL of a tile using <m_urlTemplate> */
     virtual void constructURL(const TileID& _tileCoord, std::string& _url) const;
@@ -99,6 +98,10 @@ protected:
         constructURL(_tileCoord, url);
         return url;
     }
+
+    bool cacheGet(DownloadTileTask& _task);
+
+    void cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef);
 
     // This datasource is used to generate actual tile geometry
     bool m_generateGeometry = false;
