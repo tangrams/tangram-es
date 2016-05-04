@@ -18,7 +18,6 @@ namespace Tangram {
 
 TileWorker::TileWorker(int _num_worker) {
     m_running = true;
-    m_pendingTiles = false;
 
     for (int i = 0; i < _num_worker; i++) {
         auto worker = std::make_unique<Worker>();
@@ -128,8 +127,6 @@ void TileWorker::run(Worker* instance) {
         } else {
             task->cancel();
         }
-
-        m_pendingTiles = true;
 
         requestRender();
     }

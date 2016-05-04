@@ -231,9 +231,6 @@ private:
     TileTaskQueue& m_workers;
 
     bool m_tileSetChanged = false;
-    bool m_rasterDone = false;
-
-    std::mutex m_rasterDoneMutex;
 
     /* Callback for DataSource:
      * Passes TileTask back with data for further processing by <TileWorker>s

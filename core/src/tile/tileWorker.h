@@ -28,14 +28,6 @@ public:
 
     bool isRunning() const { return m_running; }
 
-    virtual bool checkProcessedTiles() override {
-        if (m_pendingTiles) {
-            m_pendingTiles = false;
-            return true;
-        }
-        return false;
-    }
-
     void setScene(std::shared_ptr<Scene>& _scene);
 
 private:
@@ -48,8 +40,6 @@ private:
     void run(Worker* instance);
 
     bool m_running;
-
-    std::atomic<bool> m_pendingTiles;
 
     std::vector<std::unique_ptr<Worker>> m_workers;
 
