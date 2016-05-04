@@ -145,12 +145,6 @@ void TileManager::updateTileSets(const ViewState& _view,
     m_loadPending = 0;
     m_tilesInProgress = 0;
 
-    {
-        std::lock_guard<std::mutex> lock(m_rasterDoneMutex);
-        m_tileSetChanged = m_rasterDone || m_workers.checkProcessedTiles();
-        m_rasterDone = false;
-    }
-
     for (auto& tileSet : m_tileSets) {
         updateTileSet(tileSet, _view, _visibleTiles);
     }
@@ -183,6 +177,21 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
     std::vector<TileID> removeTiles;
     auto& tiles = _tileSet.tiles;
 
+    // Check for ready tasks, move Tile to active TileSet and unset Proxies.
+    for (auto& it : tiles) {
+        auto& entry = it.second;
+        if (entry.newData()) {
+            clearProxyTiles(_tileSet, it.first, entry, removeTiles);
+
+            setTileRasters(entry.task);
+            entry.tile = std::move(entry.task->tile());
+            entry.task.reset();
+            newTiles = true;
+
+            m_tileSetChanged = true;
+        }
+    }
+
     const auto* visibleTiles = &_visibleTiles;
 
     std::set<TileID> mappedTiles;
@@ -191,21 +200,6 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             mappedTiles.insert(id.withMaxSourceZoom(_tileSet.source->maxZoom()));
         }
         visibleTiles = &mappedTiles;
-    }
-
-    if (m_tileSetChanged) {
-        for (auto& it : tiles) {
-            auto& entry = it.second;
-            if (entry.newData()) {
-                clearProxyTiles(_tileSet, it.first, entry, removeTiles);
-
-                setTileRasters(entry.task);
-                entry.tile = std::move(entry.task->tile());
-                entry.task.reset();
-
-                newTiles = true;
-            }
-        }
     }
 
     // Loop over visibleTiles and add any needed tiles to tileSet
@@ -400,27 +394,25 @@ void TileManager::loadRasterTasks(std::vector<std::shared_ptr<DataSource>>& rast
         auto rasterTask = rasterSource->createTask(rasterTileID);
         if (rasterTask->hasRaster()) {
             rasterTasks.push_back(std::move(rasterTask));
-            std::lock_guard<std::mutex> lock(m_rasterDoneMutex);
-            m_rasterDone = true;
+            requestRender();
+
         } else if (m_loadPending < MAX_DOWNLOADS) {
-            auto savedRasterTask = rasterTask;
-            rasterTasks.push_back(std::move(savedRasterTask));
+            rasterTasks.push_back(rasterTask);
+
             if (rasterSource->loadTileData(std::move(rasterTask),
-                        TileTaskCb{[this](std::shared_ptr<TileTask>&& task) {
+                        TileTaskCb{[](std::shared_ptr<TileTask>&& task) {
                             assert(task->hasRaster());
-                            std::lock_guard<std::mutex> lock(m_rasterDoneMutex);
-                            m_rasterDone = true;
+                            requestRender();
                         }
-                    },
-                    true)) {
+                    }, true)) {
+
                 m_loadPending++;
+
             } else {
                 // dependent raster's loading failed..
                 // this rasterTask's rasterReady must have been set with black texture
                 assert(rasterTask->hasRaster());
-
-                std::lock_guard<std::mutex> lock(m_rasterDoneMutex);
-                m_rasterDone = true;
+                requestRender();
             }
         }
     }
