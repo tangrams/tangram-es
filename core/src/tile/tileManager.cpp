@@ -14,16 +14,18 @@
 
 namespace Tangram {
 
-TileManager::TileManager(TileTaskQueue& _tileWorker) : m_workers(_tileWorker) {
+TileManager::TileManager(std::shared_ptr<TileTaskQueue> _tileWorker) : m_workers(_tileWorker) {
 
     m_tileCache = std::unique_ptr<TileCache>(new TileCache(DEFAULT_CACHE_SIZE));
 
     m_dataCallback = TileTaskCb{[this](std::shared_ptr<TileTask>&& task) {
+        if (m_workers) {
             if (task->hasData()) {
-                m_workers.enqueue(std::move(task));
+                m_workers->enqueue(std::move(task));
             } else {
                 task->cancel();
             }
+        }
     }};
 }
 
@@ -124,7 +126,7 @@ void TileManager::updateTileSets(const ViewState& _view,
     m_loadPending = 0;
     m_tilesInProgress = 0;
 
-    m_tileSetChanged = m_workers.checkProcessedTiles();
+    m_tileSetChanged = m_workers->checkProcessedTiles();
 
     for (auto& tileSet : m_tileSets) {
         updateTileSet(tileSet, _view, _visibleTiles);
