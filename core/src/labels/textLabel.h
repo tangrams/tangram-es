@@ -1,7 +1,6 @@
 #pragma once
 
 #include "labels/label.h"
-#include "labels/labelProperty.h"
 #include "labels/labelSet.h"
 
 #include <glm/glm.hpp>
@@ -59,6 +58,8 @@ protected:
     void pushTransform() override;
 
 private:
+    void applyAnchor(const glm::vec2& _dimension, LabelProperty::Anchor _anchor) override;
+
     // Back-pointer to owning container
     const TextLabels& m_textLabels;
     // first vertex and count in m_textLabels quads

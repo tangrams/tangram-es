@@ -6,12 +6,13 @@
 
 namespace Tangram {
 
-Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _options)
+Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _options, LabelProperty::Anchor _anchor)
     : m_type(_type),
       m_transform(_transform),
       m_dim(_size),
-      m_options(_options) {
-
+      m_options(_options),
+      m_anchor(_anchor)
+{
     if (!m_options.collide || m_type == Type::debug){
         enterState(State::visible, 1.0);
     } else {
@@ -123,6 +124,13 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
     }
 
     return true;
+}
+
+void Label::parent(std::shared_ptr<Label> _parent) {
+    m_parent = _parent;
+
+    applyAnchor(_parent->dimension(), m_anchor);
+    m_options.offset += _parent->options().offset;
 }
 
 bool Label::offViewport(const glm::vec2& _screenSize) {

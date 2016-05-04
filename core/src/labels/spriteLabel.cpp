@@ -16,11 +16,19 @@ const float SpriteVertex::extrusion_scale = 256.0f;
 SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Options _options,
                          float _extrudeScale, LabelProperty::Anchor _anchor,
                          SpriteLabels& _labels, size_t _labelsPos)
-    : Label(_transform, _size, Label::Type::point, _options),
+    : Label(_transform, _size, Label::Type::point, _options, _anchor),
       m_labels(_labels),
       m_labelsPos(_labelsPos),
       m_extrudeScale(_extrudeScale)
 {
+    applyAnchor(m_dim, _anchor);
+}
+
+void SpriteLabel::applyAnchor(const glm::vec2& _dimension, LabelProperty::Anchor _anchor) {
+
+    // _dimension is not applied to the sprite anchor since fractionnal zoom
+    // level would result in scaling the sprite size dynamically, instead we
+    // store a factor between 0..1 to scale the sprite accordingly
     switch(_anchor) {
         case Anchor::left: m_anchor = glm::vec2(1.0, 0.5); break;
         case Anchor::right: m_anchor = glm::vec2(0.0, 0.5); break;

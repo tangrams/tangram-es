@@ -15,14 +15,18 @@ const float TextVertex::alpha_scale = 255.f;
 TextLabel::TextLabel(Label::Transform _transform, Type _type, Label::Options _options,
                      LabelProperty::Anchor _anchor, TextLabel::FontVertexAttributes _attrib,
                      glm::vec2 _dim,  TextLabels& _labels, Range _vertexRange)
-    : Label(_transform, _dim, _type, _options),
+    : Label(_transform, _dim, _type, _options, _anchor),
       m_textLabels(_labels),
       m_vertexRange(_vertexRange),
-      m_fontAttrib(_attrib) {
+      m_fontAttrib(_attrib)
+{
+    applyAnchor(_dim, _anchor);
+}
 
+void TextLabel::applyAnchor(const glm::vec2& _dimension, Anchor _anchor) {
     m_anchor = glm::vec2(0);
-    float width = _dim.x;
-    float height = _dim.y;
+    float width = _dimension.x;
+    float height = _dimension.y;
 
     switch(_anchor) {
     case Anchor::center:
@@ -73,9 +77,10 @@ void TextLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const g
 
     switch (m_type) {
         case Type::debug:
-        case Type::point:
+        case Type::point: {
             _screenPosition += m_anchor;
             break;
+        }
         case Type::line: {
             // anchor at line center
             _screenPosition = (_ap1 + _ap2) * 0.5f;

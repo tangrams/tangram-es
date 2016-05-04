@@ -1,7 +1,6 @@
 #pragma once
 
 #include "labels/label.h"
-#include "labels/labelProperty.h"
 #include "labels/labelSet.h"
 
 namespace Tangram {
@@ -41,6 +40,9 @@ public:
     void pushTransform() override;
 
 private:
+
+    void applyAnchor(const glm::vec2& _dimension, LabelProperty::Anchor _anchor) override;
+    
     // Back-pointer to owning container and position
     const SpriteLabels& m_labels;
     const size_t m_labelsPos;

@@ -275,7 +275,9 @@ layers:
                 sprite: function() { return feature.kind; }
                 sprite_default: info
                 #TODO: move to text rule
+                offset: [0, 20px]
                 text:
+                    offset: [0, 160px]
                     font:
                         family: sans-serif
                         weight: 400
