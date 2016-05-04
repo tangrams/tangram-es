@@ -5,12 +5,18 @@
 #import <cstdio>
 #import <cstdarg>
 #import <fstream>
+
+#include <mutex>
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
 #include "platform_osx.h"
 
 static bool s_isContinuousRendering = false;
+
+static bool s_stopUrlRequests = false;
+static std::mutex s_urlRequestsMutex;
+
 static NSMutableString* s_resourceRoot = NULL;
 
 NSURLSession* defaultSession;
@@ -136,6 +142,15 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
     void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
 
+        {
+            std::lock_guard<std::mutex> lock(s_urlRequestsMutex);
+
+            if (s_stopUrlRequests) {
+                LOGE("Response after Tangram shutdown.");
+                return;
+            }
+        }
+
         if(error == nil) {
 
             int dataLength = [data length];
@@ -175,6 +190,11 @@ void cancelUrlRequest(const std::string& _url) {
 }
 
 void finishUrlRequests() {
+
+    {
+        std::lock_guard<std::mutex> lock(s_urlRequestsMutex);
+        s_stopUrlRequests = true;
+    }
 
     [defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
         for(NSURLSessionTask* task in dataTasks) {
