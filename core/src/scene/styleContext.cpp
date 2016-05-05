@@ -320,6 +320,7 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
 
         switch (_key) {
             case StyleParamKey::interactive:
+            case StyleParamKey::text_interactive:
             case StyleParamKey::visible:
                 _val = value;
                 break;
@@ -355,8 +356,8 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
             }
             case StyleParamKey::color:
             case StyleParamKey::outline_color:
-            case StyleParamKey::font_fill:
-            case StyleParamKey::font_stroke_color: {
+            case StyleParamKey::text_font_fill:
+            case StyleParamKey::text_font_stroke_color: {
                 if (len < 3 || len > 4) {
                     LOGW("Wrong array size for color: '%d'.", len);
                     break;
@@ -407,7 +408,7 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 _val = StyleParam::Width{static_cast<float>(v)};
                 break;
             }
-            case StyleParamKey::font_stroke_width: {
+            case StyleParamKey::text_font_stroke_width: {
                 _val = static_cast<float>(duk_get_number(m_ctx, -1));
                 break;
             }
@@ -416,8 +417,8 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
             case StyleParamKey::priority:
             case StyleParamKey::color:
             case StyleParamKey::outline_color:
-            case StyleParamKey::font_fill:
-            case StyleParamKey::font_stroke_color: {
+            case StyleParamKey::text_font_fill:
+            case StyleParamKey::text_font_stroke_color: {
                 _val = static_cast<uint32_t>(duk_get_uint(m_ctx, -1));
                 break;
             }

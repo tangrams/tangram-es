@@ -1167,11 +1167,7 @@ void SceneLoader::parseStyleParams(Node parent, Node params, Scene& scene, const
     for (const auto& prop : params) {
         std::string key;
         if (!prefix.empty()) {
-            if (StyleParam::skipPrefix(parent.Scalar(), prefix)) {
-                key = prop.first.Scalar();
-            } else {
-                key = prefix + DELIMITER + prop.first.Scalar();
-            }
+            key = prefix + DELIMITER + prop.first.Scalar();
         } else {
             key = prop.first.Scalar();
         }
@@ -1368,6 +1364,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, S
             for (auto& ruleNode : member.second) {
 
                 std::vector<StyleParam> params;
+                std::string s = ruleNode.first.Scalar();
                 parseStyleParams(ruleNode.first, ruleNode.second, scene, "", params);
 
                 const std::string& ruleName = ruleNode.first.Scalar();
