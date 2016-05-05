@@ -40,79 +40,7 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
     return std::move(m_textLabels);
 }
 
-void TextStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
-    // TODO: don't reapply applyRule for each subpolygon
-    TextStyle::Parameters params = applyRule(_rule, _props);
-
-    // Keep start position of new quads
-    size_t quadsStart = m_quads.size();
-    size_t numLabels = m_labels.size();
-
-    if (!prepareLabel(params, Label::Type::point)) { return; }
-
-    auto p = centroid(_polygon);
-    addLabel(params, Label::Type::point, { p, p });
-    
-    if (numLabels == m_labels.size()) {
-        // Drop quads when no label was added
-        m_quads.resize(quadsStart);
-    }
-}
-
-void TextStyleBuilder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
-    // TODO: don't reapply applyRule for each subpolygon
-    TextStyle::Parameters params = applyRule(_rule, _props);
-
-    params.wordWrap = false;
-    
-    // Keep start position of new quads
-    size_t quadsStart = m_quads.size();
-    size_t numLabels = m_labels.size();
-
-    if (!prepareLabel(params, Label::Type::line)) { return; }
-    
-    float pixel = 2.0 / (m_tileSize * m_style.pixelScale());
-    float minLength = m_attributes.width * pixel * 0.2;
-    
-    for (size_t i = 0; i < _line.size() - 1; i++) {
-        glm::vec2 p1 = glm::vec2(_line[i]);
-        glm::vec2 p2 = glm::vec2(_line[i + 1]);
-        if (glm::length(p1-p2) > minLength) {
-            addLabel(params, Label::Type::line, { p1, p2 });
-        }
-    }
-    
-    if (numLabels == m_labels.size()) {
-        // Drop quads when no label was added
-        m_quads.resize(quadsStart);
-    }
-}
-
-void TextStyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
-    // TODO: don't reapply applyRule for each subpolygon
-    TextStyle::Parameters params = applyRule(_rule, _props);
-
-    // Keep start position of new quads
-    size_t quadsStart = m_quads.size();
-    size_t numLabels = m_labels.size();
-
-    if (!prepareLabel(params, Label::Type::point)) { return; }
-    
-    auto p = glm::vec2(_point);
-    addLabel(params, Label::Type::point, { p, p });
-
-    if (numLabels == m_labels.size()) {
-        // Drop quads when no label was added
-        m_quads.resize(quadsStart);
-    }
-}
-
 void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
-#if 0
-    StyleBuilder::addFeature(_feat, _rule);
-    return;
-#endif
-#if 1
     TextStyle::Parameters params = applyRule(_rule, _feat.props);
 
     Label::Type labelType;
@@ -161,7 +89,6 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
         // Drop quads when no label was added
         m_quads.resize(quadsStart);
     }
-#endif
 
 }
 
