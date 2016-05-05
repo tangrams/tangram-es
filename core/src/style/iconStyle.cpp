@@ -12,6 +12,7 @@ IconStyle::IconStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
     m_pointStyle = std::make_unique<PointStyle>(_name, _blendMode, _drawMode);
     m_textStyle = std::make_unique<TextStyle>(_name, true, _blendMode, _drawMode);
 
+    m_textStyle->unified(true);
     TextStyle::Parameters& defaultTextParams = m_textStyle->defaultParams();
     defaultTextParams.anchor = LabelProperty::Anchor::bottom;
 }

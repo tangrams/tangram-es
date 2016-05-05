@@ -93,11 +93,16 @@ public:
     Parameters& defaultParams() { return m_defaultParams; }
     Parameters defaultParams() const { return m_defaultParams; }
 
+    void unified(bool _unified) { m_unified = _unified; }
+    bool unified() const { return m_unified; }
+
 private:
 
     const std::string& applyTextSource(const Parameters& _parameters, const Properties& _props) const;
 
     Parameters m_defaultParams;
+
+    bool m_unified = false;
 };
 
 }

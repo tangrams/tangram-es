@@ -186,46 +186,59 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     }
     if (p.text.empty()) { return p; }
 
-    auto fontFamily = _rule.get<std::string>(StyleParamKey::font_family);
+    auto fontFamily = _rule.get<std::string>(StyleParamKey::text_font_family);
     fontFamily = (!fontFamily) ? &defaultFamily : fontFamily;
 
-    auto fontWeight = _rule.get<std::string>(StyleParamKey::font_weight);
+    auto fontWeight = _rule.get<std::string>(StyleParamKey::text_font_weight);
     fontWeight = (!fontWeight) ? &defaultWeight : fontWeight;
 
-    auto fontStyle = _rule.get<std::string>(StyleParamKey::font_style);
+    auto fontStyle = _rule.get<std::string>(StyleParamKey::text_font_style);
     fontStyle = (!fontStyle) ? &defaultStyle : fontStyle;
 
-    _rule.get(StyleParamKey::font_size, p.fontSize);
+    _rule.get(StyleParamKey::text_font_size, p.fontSize);
     p.fontSize *= m_style.pixelScale();
 
     p.font = m_style.context()->getFont(*fontFamily, *fontStyle, *fontWeight, p.fontSize);
 
-    _rule.get(StyleParamKey::font_fill, p.fill);
-    _rule.get(StyleParamKey::offset, p.labelOptions.offset);
-    p.labelOptions.offset = glm::vec2(0.0, 20.0);
+    _rule.get(StyleParamKey::text_font_fill, p.fill);
+
     p.labelOptions.offset *= m_style.pixelScale();
 
-    _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
-    _rule.get(StyleParamKey::font_stroke_width, p.strokeWidth);
+    _rule.get(StyleParamKey::text_font_stroke_color, p.strokeColor);
+    _rule.get(StyleParamKey::text_font_stroke_width, p.strokeWidth);
     p.strokeWidth *= m_style.pixelScale();
 
-    _rule.get(StyleParamKey::priority, p.labelOptions.priority);
-    _rule.get(StyleParamKey::collide, p.labelOptions.collide);
-    _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
-    _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
-    _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
+    const std::string* anchor = nullptr;
+
+    if (textStyle.unified()) {
+        _rule.get(StyleParamKey::text_priority, p.labelOptions.priority);
+        _rule.get(StyleParamKey::text_collide, p.labelOptions.collide);
+        _rule.get(StyleParamKey::text_interactive, p.interactive);
+        _rule.get(StyleParamKey::text_offset, p.labelOptions.offset);
+        anchor = _rule.get<std::string>(StyleParamKey::text_anchor);
+    } else {
+        _rule.get(StyleParamKey::priority, p.labelOptions.priority);
+        _rule.get(StyleParamKey::collide, p.labelOptions.collide);
+        _rule.get(StyleParamKey::interactive, p.interactive);
+        _rule.get(StyleParamKey::offset, p.labelOptions.offset);
+        anchor = _rule.get<std::string>(StyleParamKey::anchor);
+    }
+
+    _rule.get(StyleParamKey::text_transition_hide_time, p.labelOptions.hideTransition.time);
+    _rule.get(StyleParamKey::text_transition_selected_time, p.labelOptions.selectTransition.time);
+    _rule.get(StyleParamKey::text_transition_show_time, p.labelOptions.showTransition.time);
     _rule.get(StyleParamKey::text_wrap, p.maxLineWidth);
 
     size_t repeatGroupHash = 0;
     std::string repeatGroup;
-    if (_rule.get(StyleParamKey::repeat_group, repeatGroup)) {
+    if (_rule.get(StyleParamKey::text_repeat_group, repeatGroup)) {
         hash_combine(repeatGroupHash, repeatGroup);
     } else {
         repeatGroupHash = _rule.getParamSetHash();
     }
 
     StyleParam::Width repeatDistance;
-    if (_rule.get(StyleParamKey::repeat_distance, repeatDistance)) {
+    if (_rule.get(StyleParamKey::text_repeat_distance, repeatDistance)) {
         p.labelOptions.repeatDistance = repeatDistance.value;
     } else {
         p.labelOptions.repeatDistance = View::s_pixelsPerTile;
@@ -235,19 +248,19 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     p.labelOptions.repeatGroup = repeatGroupHash;
     p.labelOptions.repeatDistance *= m_style.pixelScale();
 
-    if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
+    if (p.interactive) {
         p.labelOptions.properties = std::make_shared<Properties>(_props);
     }
 
-    if (auto* anchor = _rule.get<std::string>(StyleParamKey::anchor)) {
+    if (anchor) {
         LabelProperty::anchor(*anchor, p.anchor);
     }
 
-    if (auto* transform = _rule.get<std::string>(StyleParamKey::transform)) {
+    if (auto* transform = _rule.get<std::string>(StyleParamKey::text_transform)) {
         TextLabelProperty::transform(*transform, p.transform);
     }
 
-    if (auto* align = _rule.get<std::string>(StyleParamKey::align)) {
+    if (auto* align = _rule.get<std::string>(StyleParamKey::text_align)) {
         bool res = TextLabelProperty::align(*align, p.align);
         if (!res) {
             switch(p.anchor) {
