@@ -5,7 +5,6 @@
 #include "util/builders.h" // for cap, join
 #include "util/extrude.h"
 #include "util/geom.h" // for CLAMP
-#include "util/util.h"
 #include <algorithm>
 #include <map>
 #include <cstring>
@@ -89,10 +88,6 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"width", StyleParamKey::width},
 };
 
-const std::map<std::string, std::string> s_StyleParamPrefix = {
-    {"text", "icons"},
-};
-
 const std::map<StyleParamKey, std::vector<Unit>> s_StyleParamUnits = {
     {StyleParamKey::offset, {Unit::pixel}},
     {StyleParamKey::text_offset, {Unit::pixel}},
@@ -153,14 +148,6 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
     if (!_value.empty()) {
         value = parseString(key, _value);
     }
-}
-
-bool StyleParam::skipPrefix(const std::string& _parent, const std::string& _key) {
-    std::string parent;
-    if (tryFind(s_StyleParamPrefix, _key, parent)) {
-        return _parent == parent;
-    }
-    return false;
 }
 
 StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& _value) {
@@ -318,7 +305,6 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
 
 std::string StyleParam::toString() const {
 
-#if 0
     std::string k(keyName(key));
     k += " : ";
 
@@ -342,17 +328,17 @@ std::string StyleParam::toString() const {
     case StyleParamKey::transition_hide_time:
     case StyleParamKey::transition_show_time:
     case StyleParamKey::transition_selected_time:
-    case StyleParamKey::font_family:
-    case StyleParamKey::font_weight:
-    case StyleParamKey::font_style:
+    case StyleParamKey::text_font_family:
+    case StyleParamKey::text_font_weight:
+    case StyleParamKey::text_font_style:
     case StyleParamKey::text_source:
-    case StyleParamKey::transform:
+    case StyleParamKey::text_transform:
     case StyleParamKey::text_wrap:
-    case StyleParamKey::repeat_group:
+    case StyleParamKey::text_repeat_group:
     case StyleParamKey::sprite:
     case StyleParamKey::sprite_default:
     case StyleParamKey::style:
-    case StyleParamKey::align:
+    case StyleParamKey::text_align:
     case StyleParamKey::anchor:
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
@@ -365,8 +351,8 @@ std::string StyleParam::toString() const {
         return k + std::to_string(value.get<bool>());
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
-    case StyleParamKey::font_stroke_width:
-    case StyleParamKey::font_size:
+    case StyleParamKey::text_font_stroke_width:
+    case StyleParamKey::text_font_size:
         if (!value.is<Width>()) break;
         return k + std::to_string(value.get<Width>().value);
     case StyleParamKey::order:
@@ -374,9 +360,9 @@ std::string StyleParam::toString() const {
     case StyleParamKey::priority:
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
-    case StyleParamKey::font_fill:
-    case StyleParamKey::font_stroke_color:
-    case StyleParamKey::repeat_distance:
+    case StyleParamKey::text_font_fill:
+    case StyleParamKey::text_font_stroke_color:
+    case StyleParamKey::text_repeat_distance:
     case StyleParamKey::cap:
     case StyleParamKey::outline_cap:
     case StyleParamKey::join:
@@ -398,7 +384,6 @@ std::string StyleParam::toString() const {
 
     return k + "undefined " + std::to_string(static_cast<uint8_t>(key));
 
-#endif
 }
 
 int StyleParam::parseValueUnitPair(const std::string& _value, size_t start,
