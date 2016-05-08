@@ -101,8 +101,8 @@ DataSource::~DataSource() {
     clearData();
 }
 
-std::shared_ptr<TileTask> DataSource::createTask(TileID _tileId) {
-    auto task = std::make_shared<DownloadTileTask>(_tileId, shared_from_this());
+std::shared_ptr<TileTask> DataSource::createTask(TileID _tileId, bool _subTask) {
+    auto task = std::make_shared<DownloadTileTask>(_tileId, shared_from_this(), _subTask);
 
     cacheGet(*task);
 
@@ -140,7 +140,7 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
     }
 }
 
-bool DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
+void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
                               TileTaskCb _cb) {
 
     TileID tileID = _task->tileId();
@@ -156,11 +156,7 @@ bool DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
         _cb.func(std::move(_task));
 
         cachePut(tileID, rawDataRef);
-
-        return true;
     }
-
-    return false;
 }
 
 bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
@@ -183,10 +179,6 @@ void DataSource::cancelLoadingTile(const TileID& _tileID) {
         TileID rasterID = _tileID.withMaxSourceZoom(raster->maxZoom());
         raster->cancelLoadingTile(rasterID);
     }
-}
-
-Raster DataSource::raster(const TileTask& task) {
-    return { task.tileId(), nullptr };
 }
 
 void DataSource::clearRasters() {

@@ -10,6 +10,7 @@
 namespace Tangram {
 
 class TileManager;
+class TileBuilder;
 class DataSource;
 class Tile;
 class MapProjection;
@@ -20,7 +21,7 @@ class TileTask {
 
 public:
 
-    TileTask(TileID& _tileId, std::shared_ptr<DataSource> _source);
+    TileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, bool _subTask = false);
 
     // No copies
     TileTask(const TileTask& _other) = delete;
@@ -29,17 +30,10 @@ public:
     virtual ~TileTask() {}
 
     virtual bool hasData() const { return true; }
-    bool hasRaster() const { return m_rasterReady; }
 
-    void rasterReady() { m_rasterReady = true; }
-
-    void setTile(std::shared_ptr<Tile>&& _tile) {
-        m_tile = std::move(_tile);
-    }
+    virtual bool isReady() const { return bool(m_tile); }
 
     std::shared_ptr<Tile>& tile() { return m_tile; }
-
-    bool hasTile() const { return bool(m_tile); }
 
     DataSource& source() { return *m_source; }
     int64_t sourceGeneration() const { return m_sourceGeneration; }
@@ -47,7 +41,6 @@ public:
     TileID tileId() const { return m_tileId; }
 
     void cancel() { m_canceled = true; }
-
     bool isCanceled() const { return m_canceled; }
 
     double getPriority() const {
@@ -58,20 +51,31 @@ public:
         m_priority.store(_priority);
     }
 
+    void setProxyState(bool isProxy) { m_proxyState = isProxy; }
     bool isProxy() const { return m_proxyState; }
 
-    void setProxyState(bool isProxy) { m_proxyState = isProxy; }
-    auto& rasterTasks() { return m_rasterTasks; }
+    auto& subTasks() { return m_subTasks; }
+
+    // running on worker thread
+    virtual void onProcess(TileBuilder& _tileBuilder);
+
+    // running on main thread when the tile is added to
+    virtual void onDone();
+
+    // onDone for sub-tasks
+    virtual void onDone(TileTask& _mainTask) {}
 
 protected:
 
     const TileID m_tileId;
 
+    const bool m_subTask;
+
     // Save shared reference to Datasource while building tile
     std::shared_ptr<DataSource> m_source;
 
     // Vector of tasks to download raster samplers
-    std::vector<std::shared_ptr<TileTask>> m_rasterTasks;
+    std::vector<std::shared_ptr<TileTask>> m_subTasks;
 
     const int64_t m_sourceGeneration;
 
@@ -82,14 +86,12 @@ protected:
 
     std::atomic<double> m_priority;
     bool m_proxyState = false;
-
-    bool m_rasterReady = false;
 };
 
 class DownloadTileTask : public TileTask {
 public:
-    DownloadTileTask(TileID& _tileId, std::shared_ptr<DataSource> _source)
-        : TileTask(_tileId, _source) {}
+    DownloadTileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, bool _subTask)
+        : TileTask(_tileId, _source, _subTask) {}
 
     virtual bool hasData() const override {
         return rawTileData && !rawTileData->empty();

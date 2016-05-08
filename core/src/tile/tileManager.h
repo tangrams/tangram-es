@@ -105,7 +105,7 @@ private:
         bool isLoading() { return bool(task) && !task->isCanceled(); }
         size_t rastersPending() {
             if (task) {
-                return (task->source().rasterSources().size() - task->rasterTasks().size());
+                return (task->source().rasterSources().size() - task->subTasks().size());
             }
             return 0;
         }
@@ -116,11 +116,12 @@ private:
         // - task has a tile ready
         // - tile has all rasters set
         bool newData() {
-            if (bool(task) && bool(task->tile())) {
+            if (bool(task) && task->isReady()) {
+
                 if (rastersPending()) { return false; }
 
-                for (auto& rTask : task->rasterTasks()) {
-                    if (!rTask->hasRaster()) { return false; }
+                for (auto& rTask : task->subTasks()) {
+                    if (!rTask->isReady()) { return false; }
                 }
                 return true;
             }
@@ -129,10 +130,10 @@ private:
 
         void clearTask() {
             if (task) {
-                for (auto& raster : task->rasterTasks()) {
+                for (auto& raster : task->subTasks()) {
                     raster->cancel();
                 }
-                task->rasterTasks().clear();
+                task->subTasks().clear();
                 task->cancel();
 
                 task.reset();
@@ -184,13 +185,12 @@ private:
     };
 
     void updateTileSet(TileSet& tileSet, const ViewState& _view, const std::set<TileID>& _visibleTiles);
-    void setTileRasters(const std::shared_ptr<TileTask>& task);
 
     void enqueueTask(TileSet& _tileSet, const TileID& _tileID, const ViewState& _view);
 
     void loadTiles();
-    void loadRasterTasks(std::vector<std::shared_ptr<DataSource>>& rasters, std::shared_ptr<TileTask>& tileTask,
-                         const TileID& tileID);
+    void loadSubTasks(std::vector<std::shared_ptr<DataSource>>& subSources, std::shared_ptr<TileTask>& tileTask,
+                      const TileID& tileID);
 
     /*
      * Constructs a future (async) to load data of a new visible tile this is
