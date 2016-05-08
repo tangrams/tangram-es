@@ -18,9 +18,6 @@ struct TestTileWorker : TileTaskQueue {
 
     std::deque<std::shared_ptr<TileTask>> tasks;
 
-    virtual void notifyAll() {
-    }
-
     virtual void enqueue(std::shared_ptr<TileTask>&& task) {
         tasks.push_back(std::move(task));
     }
@@ -40,7 +37,8 @@ struct TestTileWorker : TileTaskQueue {
             if (task->isCanceled()) {
                 continue;
             }
-            task->setTile(std::make_shared<Tile>(task->tileId(), s_projection, &task->source()));
+
+            task->tile() = std::make_shared<Tile>(task->tileId(), s_projection, &task->source());
 
             pendingTiles = true;
             processedCount++;
@@ -52,7 +50,7 @@ struct TestTileWorker : TileTaskQueue {
         auto task = tasks[position];
         tasks.erase(tasks.begin() + position);
 
-        task->setTile(std::make_shared<Tile>(task->tileId(), s_projection, &task->source()));
+        task->tile() = std::make_shared<Tile>(task->tileId(), s_projection, &task->source());
 
         pendingTiles = true;
         processedCount++;
@@ -72,10 +70,11 @@ struct TestDataSource : DataSource {
     public:
         bool gotData = false;
 
-        Task(TileID& _tileId, std::shared_ptr<DataSource> _source)
-            : TileTask(_tileId, _source) {}
+        Task(TileID& _tileId, std::shared_ptr<DataSource> _source, bool _subTask)
+            : TileTask(_tileId, _source, _subTask) {}
 
-        virtual bool hasData() const override { return gotData; }
+        bool hasData() const override { return gotData; }
+
     };
 
     int tileTaskCount = 0;
@@ -84,24 +83,24 @@ struct TestDataSource : DataSource {
         m_generateGeometry = true;
     }
 
-    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
+    bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) override {
         tileTaskCount++;
         static_cast<Task*>(_task.get())->gotData = true;
         _cb.func(std::move(_task));
         return true;
     }
 
-    virtual void cancelLoadingTile(const TileID& _tile) {}
+    void cancelLoadingTile(const TileID& _tile) override {}
 
-    virtual std::shared_ptr<TileData> parse(const TileTask& _task,
-                                            const MapProjection& _projection) const {
+    std::shared_ptr<TileData> parse(const TileTask& _task,
+                                    const MapProjection& _projection) const override{
         return nullptr;
     };
 
-    virtual void clearData() {}
+    void clearData() override {}
 
-    virtual std::shared_ptr<TileTask> createTask(TileID _tileId) {
-        return std::make_shared<Task>(_tileId, shared_from_this());
+    std::shared_ptr<TileTask> createTask(TileID _tileId, bool _subTask) override {
+        return std::make_shared<Task>(_tileId, shared_from_this(), _subTask);
     }
 };
 

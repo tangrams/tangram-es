@@ -2,9 +2,6 @@
 
 #include "platform.h"
 #include "data/dataSource.h"
-#include "tile/tile.h"
-#include "view/view.h"
-#include "scene/scene.h"
 #include "tile/tileID.h"
 #include "tile/tileTask.h"
 #include "tile/tileBuilder.h"
@@ -111,22 +108,12 @@ void TileWorker::run(Worker* instance) {
             continue;
         }
 
-        auto tileData = task->source().parse(*task, *builder->scene().mapProjection());
-
         // const clock_t begin = clock();
 
-        if (tileData) {
+        task->process(*builder);
 
-            auto tile = builder->build(task->tileId(), *tileData, task->source());
-
-            // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
-            // LOG("loadTime %s - %f", task->tile()->getID().toString().c_str(), loadTime);
-
-            // move tile to task (probably done if no rasters)
-            task->setTile(std::move(tile));
-        } else {
-            task->cancel();
-        }
+        // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+        // LOG("loadTime %s - %f", task->tileID.toString().c_str(), loadTime);
 
         requestRender();
     }

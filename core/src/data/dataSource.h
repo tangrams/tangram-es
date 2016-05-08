@@ -51,7 +51,6 @@ public:
 
     const std::string& name() const { return m_name; }
 
-    virtual Raster raster(const TileTask& task);
     virtual void clearRasters();
     virtual void clearRaster(const TileID& id);
 
@@ -60,7 +59,7 @@ public:
                m_urlTemplate == _other.m_urlTemplate;
     }
 
-    virtual std::shared_ptr<TileTask> createTask(TileID _tile);
+    virtual std::shared_ptr<TileTask> createTask(TileID _tile, bool _subTask = false);
 
     /* @_cacheSize: Set size of in-memory cache for tile data in bytes.
      * This cache holds unprocessed tile data for fast recreation of recently used tiles.
@@ -87,8 +86,8 @@ public:
 
 protected:
 
-    virtual bool onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
-            TileTaskCb _cb);
+    virtual void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
+                              TileTaskCb _cb);
 
     /* Constructs the URL of a tile using <m_urlTemplate> */
     virtual void constructURL(const TileID& _tileCoord, std::string& _url) const;

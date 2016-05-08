@@ -19,8 +19,8 @@ const double extent = 4096;
 const uint32_t indexMaxPoints = 100000;
 double tolerance = 1E-8;
 
-std::shared_ptr<TileTask> ClientGeoJsonSource::createTask(TileID _tileId) {
-    return std::make_shared<TileTask>(_tileId, shared_from_this());
+std::shared_ptr<TileTask> ClientGeoJsonSource::createTask(TileID _tileId, bool _subTask) {
+    return std::make_shared<TileTask>(_tileId, shared_from_this(), _subTask);
 }
 
 // Transform a geojsonvt::TilePoint into the corresponding Tangram::Point
