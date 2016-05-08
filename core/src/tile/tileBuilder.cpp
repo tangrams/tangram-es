@@ -12,7 +12,16 @@
 
 namespace Tangram {
 
-TileBuilder::TileBuilder() {}
+TileBuilder::TileBuilder(std::shared_ptr<Scene> _scene)
+    : m_scene(_scene) {
+
+    m_styleContext.initFunctions(*_scene);
+
+    // Initialize StyleBuilders
+    for (auto& style : _scene->styles()) {
+        m_styleBuilder[style->getName()] = style->createBuilder();
+    }
+}
 
 TileBuilder::~TileBuilder() {}
 
@@ -21,19 +30,6 @@ StyleBuilder* TileBuilder::getStyleBuilder(const std::string& _name) {
     if (it == m_styleBuilder.end()) { return nullptr; }
 
     return it->second.get();
-}
-
-void TileBuilder::setScene(std::shared_ptr<Scene> _scene) {
-
-    m_scene = _scene;
-
-    m_styleContext.initFunctions(*_scene);
-
-    // Initialize StyleBuilders
-    m_styleBuilder.clear();
-    for (auto& style : _scene->styles()) {
-        m_styleBuilder[style->getName()] = style->createBuilder();
-    }
 }
 
 std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData, const DataSource& _source) {

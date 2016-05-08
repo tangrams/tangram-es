@@ -16,13 +16,11 @@ class TileBuilder {
 
 public:
 
-    TileBuilder();
+    TileBuilder(std::shared_ptr<Scene> _scene);
 
     ~TileBuilder();
 
     StyleBuilder* getStyleBuilder(const std::string& _name);
-
-    void setScene(std::shared_ptr<Scene> _scene);
 
     std::shared_ptr<Tile> build(TileID _tileID, const TileData& _data, const DataSource& _source);
 
