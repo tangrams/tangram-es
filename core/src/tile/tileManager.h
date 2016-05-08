@@ -90,7 +90,7 @@ private:
         TileEntry(){}
         TileEntry(std::shared_ptr<Tile>& _tile) : tile(_tile) {}
 
-        ~TileEntry() { cancelTask(); }
+        ~TileEntry() { clearTask(); }
 
         std::shared_ptr<Tile> tile;
         std::shared_ptr<TileTask> task;
@@ -117,10 +117,8 @@ private:
         // - tile has all rasters set
         bool newData() {
             if (bool(task) && bool(task->tile())) {
-                auto depedentRasters = task->source().rasterSources().size();
-                if (task->rasterTasks().size() != depedentRasters) {
-                    return false;
-                }
+                if (rastersPending()) { return false; }
+
                 for (auto& rTask : task->rasterTasks()) {
                     if (!rTask->hasRaster()) { return false; }
                 }
@@ -129,13 +127,14 @@ private:
             return false;
         }
 
-        void cancelTask() {
+        void clearTask() {
             if (task) {
                 for (auto& raster : task->rasterTasks()) {
                     raster->cancel();
                 }
                 task->rasterTasks().clear();
                 task->cancel();
+
                 task.reset();
             }
         }

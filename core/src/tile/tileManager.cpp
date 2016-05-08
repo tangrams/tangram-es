@@ -47,11 +47,6 @@ void TileManager::setDataSources(const fastmap<std::string,
                 return true;
             }
 
-            // Cancel pending  tiles
-            for_each(tileSet.tiles.begin(), tileSet.tiles.end(), [&](auto& tile) {
-                tile.second.cancelTask();
-            });
-
             // Clear cache
             tileSet.tiles.clear();
             return false;
@@ -81,10 +76,6 @@ bool TileManager::removeDataSource(DataSource& dataSource) {
     bool removed = false;
     for (auto it = m_tileSets.begin(); it != m_tileSets.end();) {
         if (it->source.get() == &dataSource) {
-            // Cancel all tasks for this data source
-            for (auto& tile : it->tiles) {
-                tile.second.cancelTask();
-            }
             // Remove the textures for this data source
             it->source->clearRasters();
             // Remove the tile set associated with this data source
@@ -99,9 +90,6 @@ bool TileManager::removeDataSource(DataSource& dataSource) {
 
 void TileManager::clearTileSets() {
     for (auto& tileSet : m_tileSets) {
-        for (auto& tile : tileSet.tiles) {
-            tile.second.cancelTask();
-        }
         tileSet.tiles.clear();
     }
 
@@ -111,9 +99,6 @@ void TileManager::clearTileSets() {
 void TileManager::clearTileSet(int32_t _sourceId) {
     for (auto& tileSet : m_tileSets) {
         if (tileSet.source->id() != _sourceId) { continue; }
-        for (auto& tile : tileSet.tiles) {
-            tile.second.cancelTask();
-        }
         tileSet.tiles.clear();
     }
 
@@ -403,8 +388,7 @@ void TileManager::loadRasterTasks(std::vector<std::shared_ptr<DataSource>>& rast
                         TileTaskCb{[](std::shared_ptr<TileTask>&& task) {
                             assert(task->hasRaster());
                             requestRender();
-                        }
-                    })) {
+                        }})) {
 
                 m_loadPending++;
 
@@ -502,7 +486,7 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
 
 
     if (entry.isLoading()) {
-        entry.cancelTask();
+        entry.clearTask();
 
         // 1. Remove from Datasource. Make sure to cancel
         //  the network request associated with this tile.
