@@ -134,10 +134,7 @@ void TileWorker::run(Worker* instance) {
 
 void TileWorker::setScene(std::shared_ptr<Scene>& _scene) {
     for (auto& worker : m_workers) {
-        auto tileBuilder = std::make_unique<TileBuilder>();
-        tileBuilder->setScene(_scene);
-
-        worker->tileBuilder = std::move(tileBuilder);
+        worker->tileBuilder = std::make_unique<TileBuilder>(_scene);
     }
 }
 
