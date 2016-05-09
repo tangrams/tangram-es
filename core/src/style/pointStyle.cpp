@@ -12,7 +12,10 @@
 namespace Tangram {
 
 PointStyle::PointStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
-    : Style(_name, _blendMode, _drawMode) {}
+    : Style(_name, _blendMode, _drawMode)
+{
+    m_unified = false;
+}
 
 PointStyle::~PointStyle() {}
 

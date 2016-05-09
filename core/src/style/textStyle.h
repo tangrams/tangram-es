@@ -102,7 +102,7 @@ private:
 
     Parameters m_defaultParams;
 
-    bool m_unified = false;
+    bool m_unified;
 };
 
 }

@@ -49,6 +49,9 @@ public:
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
 
+    void unified(bool _unified) { m_unified = _unified; }
+    bool unified() const { return m_unified; }
+
 protected:
 
     std::shared_ptr<SpriteAtlas> m_spriteAtlas;
@@ -56,6 +59,8 @@ protected:
 
     UniformLocation m_uTex{"u_tex"};
     UniformLocation m_uOrtho{"u_ortho"};
+
+    bool m_unified;
 
     mutable std::unique_ptr<DynamicQuadMesh<SpriteVertex>> m_mesh;
 };
