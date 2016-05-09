@@ -2,6 +2,7 @@
 
 #include "glm/mat4x4.hpp"
 #include "glm/vec2.hpp"
+#include "gl/texture.h"
 #include "tileID.h"
 
 #include <map>
@@ -16,6 +17,16 @@ class MapProjection;
 class Style;
 class View;
 struct StyledMesh;
+
+struct Raster {
+    TileID tileID;
+    std::shared_ptr<Texture> texture;
+
+    Raster(TileID tileID, std::shared_ptr<Texture> texture) : tileID(tileID), texture(texture) {}
+    Raster(Raster&& other) : tileID(other.tileID), texture(std::move(other.texture)) {}
+
+    bool isValid() const { return texture != nullptr; }
+};
 
 /* Tile of vector map data
  *
@@ -54,6 +65,9 @@ public:
     const std::unique_ptr<StyledMesh>& getMesh(const Style& _style) const;
 
     void setMesh(const Style& _style, std::unique_ptr<StyledMesh> _mesh);
+
+    auto& rasters() { return m_rasters; }
+    const auto& rasters() const { return m_rasters; }
 
     /* Update the Tile considering the current view */
     void update(float _dt, const View& _view);
@@ -101,6 +115,7 @@ private:
 
     // Map of <Style>s and their associated <Mesh>es
     std::vector<std::unique_ptr<StyledMesh>> m_geometry;
+    std::vector<Raster> m_rasters;
 
     mutable size_t m_memoryUsage = 0;
 };

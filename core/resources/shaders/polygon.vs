@@ -52,9 +52,18 @@ vec3 worldNormal() {
     return a_normal;
 }
 
+vec4 modelPositionBaseZoom() {
+    return vec4(UNPACK_POSITION(a_position.xyz), 1.0);
+}
+
 #pragma tangram: material
 #pragma tangram: lighting
 #pragma tangram: global
+#pragma tangram: raster
+
+#ifdef TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING
+    varying vec4 v_modelpos_base_zoom;
+#endif
 
 void main() {
 
@@ -67,6 +76,10 @@ void main() {
 
     #ifdef TANGRAM_USE_TEX_COORDS
         v_texcoord = a_texcoord;
+    #endif
+
+    #ifdef TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING
+        v_modelpos_base_zoom = modelPositionBaseZoom();
     #endif
 
     v_normal = normalize(u_normal_matrix * a_normal);

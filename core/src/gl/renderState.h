@@ -30,6 +30,8 @@ namespace RenderState {
     int nextAvailableTextureUnit();
     /* Reset the currently used texture unit */
     void resetTextureUnit();
+    /* Release one texture unit slot */
+    void releaseTextureUnit();
 
     template <typename T>
     class State {

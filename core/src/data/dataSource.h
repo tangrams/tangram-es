@@ -5,16 +5,18 @@
 #include <memory>
 #include <vector>
 
+#include "tile/tileTask.h"
+
 namespace Tangram {
 
 class MapProjection;
 struct TileData;
 struct TileID;
+struct Raster;
 class Tile;
 class TileManager;
 struct RawCache;
-class TileTask;
-struct TileTaskCb;
+class Texture;
 
 class DataSource : public std::enable_shared_from_this<DataSource> {
 
@@ -49,12 +51,15 @@ public:
 
     const std::string& name() const { return m_name; }
 
+    virtual void clearRasters();
+    virtual void clearRaster(const TileID& id);
+
     virtual bool equals(const DataSource& _other) const {
         return m_name == _other.m_name &&
                m_urlTemplate == _other.m_urlTemplate;
     }
 
-    virtual std::shared_ptr<TileTask> createTask(TileID _tile);
+    virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask = 0);
 
     /* @_cacheSize: Set size of in-memory cache for tile data in bytes.
      * This cache holds unprocessed tile data for fast recreation of recently used tiles.
@@ -69,9 +74,20 @@ public:
 
     int32_t maxZoom() const { return m_maxZoom; }
 
+    /* assign/get raster datasources to this datasource */
+    auto& rasterSources() { return m_rasterSources; }
+    const auto& rasterSources() const { return m_rasterSources; }
+
+    bool generateGeometry() const { return m_generateGeometry; }
+    void generateGeometry(bool generateGeometry) { m_generateGeometry = generateGeometry; }
+
+    /* Avoid RTTI by adding a boolean check on the data source object */
+    virtual bool isRaster() const { return false; }
+
 protected:
 
-    void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb);
+    virtual void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
+                              TileTaskCb _cb);
 
     /* Constructs the URL of a tile using <m_urlTemplate> */
     virtual void constructURL(const TileID& _tileCoord, std::string& _url) const;
@@ -81,6 +97,13 @@ protected:
         constructURL(_tileCoord, url);
         return url;
     }
+
+    bool cacheGet(DownloadTileTask& _task);
+
+    void cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef);
+
+    // This datasource is used to generate actual tile geometry
+    bool m_generateGeometry = false;
 
     // Name used to identify this source in the style sheet
     std::string m_name;
@@ -98,6 +121,9 @@ protected:
     std::string m_urlTemplate;
 
     std::unique_ptr<RawCache> m_cache;
+
+    /* vector of raster sources (as raster samplers) referenced by this datasource */
+    std::vector<std::shared_ptr<DataSource>> m_rasterSources;
 };
 
 }

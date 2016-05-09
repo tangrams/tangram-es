@@ -7,6 +7,7 @@
 #include "data/geoJsonSource.h"
 #include "data/mvtSource.h"
 #include "data/topoJsonSource.h"
+#include "data/rasterSource.h"
 #include "gl/shaderProgram.h"
 #include "style/material.h"
 #include "style/polygonStyle.h"
@@ -15,6 +16,7 @@
 #include "style/debugStyle.h"
 #include "style/debugTextStyle.h"
 #include "style/pointStyle.h"
+#include "style/rasterStyle.h"
 #include "scene/dataLayer.h"
 #include "scene/filters.h"
 #include "scene/sceneLayer.h"
@@ -156,6 +158,7 @@ bool SceneLoader::applyConfig(Node& config, Scene& _scene) {
     _scene.styles().emplace_back(new TextStyle("text", true));
     _scene.styles().emplace_back(new DebugStyle("debug"));
     _scene.styles().emplace_back(new PointStyle("points"));
+    _scene.styles().emplace_back(new RasterStyle("raster"));
 
     if (Node globals = config["global"]) {
         parseGlobals(globals, _scene);
@@ -165,7 +168,8 @@ bool SceneLoader::applyConfig(Node& config, Scene& _scene) {
 
     if (Node sources = config["sources"]) {
         for (const auto& source : sources) {
-            try { loadSource(source, _scene); }
+            std::string srcName = source.first.Scalar();
+            try { loadSource(srcName, source.second, sources, _scene); }
             catch (YAML::RepresentationException e) {
                 LOGNode("Parsing sources: '%s'", source, e.what());
             }
@@ -259,7 +263,7 @@ bool SceneLoader::applyConfig(Node& config, Scene& _scene) {
     }
 
     for (auto& style : _scene.styles()) {
-        style->build(_scene.lights());
+        style->build(_scene);
     }
 
     return true;
@@ -311,8 +315,8 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             StyleUniform styleUniform;
 
             if (parseStyleUniforms(uniform.second, scene, styleUniform)) {
-                if (styleUniform.value.is<UniformArray>()) {
-                    UniformArray& array = styleUniform.value.get<UniformArray>();
+                if (styleUniform.value.is<UniformArray1f>()) {
+                    UniformArray1f& array = styleUniform.value.get<UniformArray1f>();
                     shader.addSourceBlock("uniforms", "uniform float " + name +
                         "[" + std::to_string(array.size()) + "];");
                 } else if(styleUniform.value.is<UniformTextureArray>()) {
@@ -500,6 +504,23 @@ bool SceneLoader::loadTexture(const std::string& url, Scene& scene) {
     return true;
 }
 
+
+bool SceneLoader::extractTexFiltering(Node& filtering, TextureFiltering& filter) {
+    const std::string& textureFiltering = filtering.Scalar();
+    if (textureFiltering == "linear") {
+        filter.min = filter.mag = GL_LINEAR;
+        return false;
+    } else if (textureFiltering == "mipmap") {
+        filter.min = GL_LINEAR_MIPMAP_LINEAR;
+        return true;
+    } else if (textureFiltering == "nearest") {
+        filter.min = filter.mag = GL_NEAREST;
+        return false;
+    } else {
+        return false;
+    }
+}
+
 void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
 
     const std::string& name = node.first.Scalar();
@@ -518,12 +539,9 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
     bool generateMipmaps = false;
 
     if (Node filtering = textureConfig["filtering"]) {
-        const std::string& textureFiltering = filtering.Scalar();
-        if (textureFiltering == "linear") { options.filtering = { GL_LINEAR, GL_LINEAR }; }
-        else if (textureFiltering == "mipmap") {
-            options.filtering = { GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR };
+        if (extractTexFiltering(filtering, options.filtering)) {
             generateMipmaps = true;
-        } else if (textureFiltering == "nearest") { options.filtering = { GL_NEAREST, GL_NEAREST }; }
+        }
     }
 
     std::shared_ptr<Texture> texture(new Texture(file, options, generateMipmaps));
@@ -660,9 +678,23 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) 
         style = std::make_unique<TextStyle>(name, true);
     } else if (baseStyle == "points") {
         style = std::make_unique<PointStyle>(name);
+    } else if (baseStyle == "raster") {
+        style = std::make_unique<RasterStyle>(name);
     } else {
         LOGW("Base style '%s' not recognized, cannot instantiate.", baseStyle.c_str());
         return false;
+    }
+
+    Node rasterNode = config["raster"];
+    if (rasterNode) {
+        const auto& raster = rasterNode.Scalar();
+        if (raster == "normal") {
+            style->setRasterType(RasterType::normal);
+        } else if (raster == "color") {
+            style->setRasterType(RasterType::color);
+        } else if (raster == "custom") {
+            style->setRasterType(RasterType::custom);
+        }
     }
 
     loadStyleProps(*style.get(), config, scene);
@@ -672,10 +704,10 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) 
     return true;
 }
 
-void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
+void SceneLoader::loadSource(const std::string& name, const Node& source, const Node& sources, Scene& _scene) {
 
-    const Node source = src.second;
-    std::string name = src.first.Scalar();
+    if (_scene.dataSources().find(name) != _scene.dataSources().end()) { return; }
+
     std::string type = source["type"].Scalar();
     std::string url = source["url"].Scalar();
     int32_t maxZoom = 18;
@@ -727,13 +759,44 @@ void SceneLoader::loadSource(const std::pair<Node, Node>& src, Scene& _scene) {
         sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, maxZoom));
     } else if (type == "MVT") {
         sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, maxZoom));
+    } else if (type == "Raster") {
+        TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
+        bool generateMipmaps = false;
+        if (Node filtering = source["filtering"]) {
+            if (extractTexFiltering(filtering, options.filtering)) {
+                generateMipmaps = true;
+            }
+        }
+        sourcePtr = std::shared_ptr<DataSource>(new RasterSource(name, url, maxZoom, options, generateMipmaps));
     } else {
         LOGW("Unrecognized data source type '%s', skipping", type.c_str());
     }
 
     if (sourcePtr) {
         sourcePtr->setCacheSize(CACHE_SIZE);
-        _scene.dataSources().push_back(sourcePtr);
+        _scene.dataSources()[name] = sourcePtr;
+    }
+
+    if (auto rasters = source["rasters"]) {
+        loadSourceRasters(sourcePtr, source["rasters"], sources, _scene);
+    }
+
+}
+
+void SceneLoader::loadSourceRasters(std::shared_ptr<DataSource> &source, Node rasterNode, const Node& sources,
+                                    Scene& scene) {
+    auto& dataSources = scene.dataSources();
+    if (rasterNode.IsSequence()) {
+        for (const auto& raster : rasterNode) {
+            std::string srcName = raster.Scalar();
+            try {
+                loadSource(srcName, sources[srcName], sources, scene);
+            } catch (YAML::RepresentationException e) {
+                LOGNode("Parsing sources: '%s'", sources[srcName], e.what());
+                return;
+            }
+            source->rasterSources().push_back(dataSources[srcName]);
+        }
     }
 }
 
@@ -1206,7 +1269,7 @@ bool SceneLoader::parseStyleUniforms(const Node& value, Scene& scene, StyleUnifo
                     styleUniform.value = parseVec<glm::vec4>(value);
                     break;
                 default:
-                    UniformArray uniformArray;
+                    UniformArray1f uniformArray;
                     for (const auto& val : value) {
                         double fValue;
                         if (getDouble(val, fValue)) {
@@ -1331,6 +1394,12 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {
         if (Node data_source = data["source"]) {
             if (data_source.IsScalar()) {
                 source = data_source.Scalar();
+                auto dataSourceIt = scene.dataSources().find(source);
+                if (dataSourceIt != scene.dataSources().end()) {
+                    dataSourceIt->second->generateGeometry(true);
+                } else {
+                    LOGW("Can't find data source %s for layer %s", source.c_str(), name.c_str());
+                }
             }
         }
 

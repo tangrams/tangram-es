@@ -35,7 +35,7 @@ struct TestContext {
 
     std::shared_ptr<TileData> tileData;
 
-    TileBuilder tileBuilder;
+    std::unique_ptr<TileBuilder> tileBuilder;
 
     void loadScene(const char* sceneFile) {
         auto sceneRelPath = setResourceRoot(sceneFile);
@@ -54,8 +54,8 @@ struct TestContext {
         styleContext.initFunctions(*scene);
         styleContext.setKeywordZoom(0);
 
-        source = scene->dataSources()[0];
-        tileBuilder.setScene(scene);
+        source = scene->dataSources().begin()->second;
+        tileBuilder = std::make_unique<TileBuilder>(scene);
     }
 
     void loadTile(const char* path){
@@ -76,7 +76,7 @@ struct TestContext {
 
     void parseTile() {
         Tile tile({0,0,10,10,0}, s_projection);
-        source = scene->dataSources()[0];
+        source = scene->dataSources().begin()->second;
         auto task = source->createTask(tile.getID());
         auto& t = dynamic_cast<DownloadTileTask&>(*task);
         t.rawTileData = std::make_shared<std::vector<char>>(rawTileData);
@@ -110,7 +110,7 @@ BENCHMARK_DEFINE_F(TileLoadingFixture, BuildTest)(benchmark::State& st) {
 
     while (st.KeepRunning()) {
         ctx.parseTile();
-        result = ctx.tileBuilder.build({0,0,10,10,0}, *ctx.tileData, *ctx.source);
+        result = ctx.tileBuilder->build({0,0,10,10,0}, *ctx.tileData, *ctx.source);
 
         LOG("ok %d / bytes - %d", bool(result), result->getMemoryUsage());
     }

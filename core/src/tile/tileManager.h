@@ -5,6 +5,7 @@
 #include "tile/tile.h"
 #include "tile/tileID.h"
 #include "tileTask.h"
+#include "util/fastmap.h"
 
 #include <map>
 #include <vector>
@@ -12,6 +13,7 @@
 #include <mutex>
 #include <tuple>
 #include <set>
+#include <data/dataSource.h>
 
 namespace Tangram {
 
@@ -42,7 +44,7 @@ public:
     virtual ~TileManager();
 
     /* Sets the tile DataSources */
-    void setDataSources(std::vector<std::shared_ptr<DataSource>> _sources);
+    void setDataSources(const fastmap<std::string, std::shared_ptr<DataSource>>& _sources);
 
     /* Updates visible tile set and load missing tiles */
     void updateTileSets(const ViewState& _view, const std::set<TileID>& _visibleTiles);
@@ -88,7 +90,7 @@ private:
         TileEntry(){}
         TileEntry(std::shared_ptr<Tile>& _tile) : tile(_tile) {}
 
-        ~TileEntry() { cancelTask(); }
+        ~TileEntry() { clearTask(); }
 
         std::shared_ptr<Tile> tile;
         std::shared_ptr<TileTask> task;
@@ -101,12 +103,39 @@ private:
 
         bool isReady() { return bool(tile); }
         bool isLoading() { return bool(task) && !task->isCanceled(); }
-        bool isCanceled() { return bool(task) && task->isCanceled(); }
-        bool newData() { return bool(task) && bool(task->tile()); }
-
-        void cancelTask() {
+        size_t rastersPending() {
             if (task) {
+                return (task->source().rasterSources().size() - task->subTasks().size());
+            }
+            return 0;
+        }
+        bool isCanceled() { return bool(task) && task->isCanceled(); }
+
+        // New Data only when
+        // - task still exists
+        // - task has a tile ready
+        // - tile has all rasters set
+        bool newData() {
+            if (bool(task) && task->isReady()) {
+
+                if (rastersPending()) { return false; }
+
+                for (auto& rTask : task->subTasks()) {
+                    if (!rTask->isReady()) { return false; }
+                }
+                return true;
+            }
+            return false;
+        }
+
+        void clearTask() {
+            if (task) {
+                for (auto& raster : task->subTasks()) {
+                    raster->cancel();
+                }
+                task->subTasks().clear();
                 task->cancel();
+
                 task.reset();
             }
         }
@@ -160,6 +189,8 @@ private:
     void enqueueTask(TileSet& _tileSet, const TileID& _tileID, const ViewState& _view);
 
     void loadTiles();
+    void loadSubTasks(std::vector<std::shared_ptr<DataSource>>& subSources, std::shared_ptr<TileTask>& tileTask,
+                      const TileID& tileID);
 
     /*
      * Constructs a future (async) to load data of a new visible tile this is

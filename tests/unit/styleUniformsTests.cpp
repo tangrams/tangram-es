@@ -83,12 +83,12 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: vec2, vec3, vec4 uniform 
     REQUIRE(uniformValues.type == "vec4");
 
     REQUIRE(SceneLoader::parseStyleUniforms(node["u_array"], scene, uniformValues));
-    REQUIRE(uniformValues.value.is<UniformArray>());
-    REQUIRE(uniformValues.value.get<UniformArray>()[0] == 0.1f);
-    REQUIRE(uniformValues.value.get<UniformArray>()[1] == 0.2f);
-    REQUIRE(uniformValues.value.get<UniformArray>()[2] == 0.3f);
-    REQUIRE(uniformValues.value.get<UniformArray>()[3] == 0.4f);
-    REQUIRE(uniformValues.value.get<UniformArray>()[4] == 0.5f);
+    REQUIRE(uniformValues.value.is<UniformArray1f>());
+    REQUIRE(uniformValues.value.get<UniformArray1f>()[0] == 0.1f);
+    REQUIRE(uniformValues.value.get<UniformArray1f>()[1] == 0.2f);
+    REQUIRE(uniformValues.value.get<UniformArray1f>()[2] == 0.3f);
+    REQUIRE(uniformValues.value.get<UniformArray1f>()[3] == 0.4f);
+    REQUIRE(uniformValues.value.get<UniformArray1f>()[4] == 0.5f);
 }
 
 TEST_CASE( "Style Uniforms Parsing and Injection Test: textures uniform value", "[StyleUniforms][core][yaml]") {

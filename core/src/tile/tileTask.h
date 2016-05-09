@@ -10,6 +10,7 @@
 namespace Tangram {
 
 class TileManager;
+class TileBuilder;
 class DataSource;
 class Tile;
 class MapProjection;
@@ -20,7 +21,7 @@ class TileTask {
 
 public:
 
-    TileTask(TileID& _tileId, std::shared_ptr<DataSource> _source);
+    TileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, int _subTask = -1);
 
     // No copies
     TileTask(const TileTask& _other) = delete;
@@ -30,13 +31,9 @@ public:
 
     virtual bool hasData() const { return true; }
 
-    void setTile(std::shared_ptr<Tile>&& _tile) {
-        m_tile = std::move(_tile);
-    }
+    virtual bool isReady() const { return bool(m_tile); }
 
     std::shared_ptr<Tile>& tile() { return m_tile; }
-
-    bool isReady() const { return bool(m_tile); }
 
     DataSource& source() { return *m_source; }
     int64_t sourceGeneration() const { return m_sourceGeneration; }
@@ -44,7 +41,6 @@ public:
     TileID tileId() const { return m_tileId; }
 
     void cancel() { m_canceled = true; }
-
     bool isCanceled() const { return m_canceled; }
 
     double getPriority() const {
@@ -55,16 +51,33 @@ public:
         m_priority.store(_priority);
     }
 
+    void setProxyState(bool isProxy) { m_proxyState = isProxy; }
     bool isProxy() const { return m_proxyState; }
 
-    void setProxyState(bool isProxy) { m_proxyState = isProxy; }
+    auto& subTasks() { return m_subTasks; }
+    int subTaskId() const { return m_subTaskId; }
+    bool isSubTask() const { return m_subTaskId >= 0; }
+
+    // running on worker thread
+    virtual void process(TileBuilder& _tileBuilder);
+
+    // running on main thread when the tile is added to
+    virtual void complete();
+
+    // onDone for sub-tasks
+    virtual void complete(TileTask& _mainTask) {}
 
 protected:
 
     const TileID m_tileId;
 
+    const int m_subTaskId;
+
     // Save shared reference to Datasource while building tile
     std::shared_ptr<DataSource> m_source;
+
+    // Vector of tasks to download raster samplers
+    std::vector<std::shared_ptr<TileTask>> m_subTasks;
 
     const int64_t m_sourceGeneration;
 
@@ -79,8 +92,8 @@ protected:
 
 class DownloadTileTask : public TileTask {
 public:
-    DownloadTileTask(TileID& _tileId, std::shared_ptr<DataSource> _source)
-        : TileTask(_tileId, _source) {}
+    DownloadTileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, bool _subTask)
+        : TileTask(_tileId, _source, _subTask) {}
 
     virtual bool hasData() const override {
         return rawTileData && !rawTileData->empty();
@@ -91,11 +104,6 @@ public:
 
 struct TileTaskQueue {
     virtual void enqueue(std::shared_ptr<TileTask>&& task) = 0;
-
-    // Check processed-tiles flag. Resets flag on each call..
-    // TODO better name checkAndResetProcessedTilesFlag?
-    virtual bool checkProcessedTiles() = 0;
-
 };
 
 struct TileTaskCb {

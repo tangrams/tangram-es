@@ -7,6 +7,7 @@
 #include "tile/tile.h"
 #include "tile/tileManager.h"
 #include "tile/tileTask.h"
+#include "gl/texture.h"
 
 #include <atomic>
 #include <mutex>
@@ -87,11 +88,11 @@ struct RawCache {
     }
 };
 
-static std::atomic<int32_t> s_serial;
-
 DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate, int32_t _maxZoom) :
     m_name(_name), m_maxZoom(_maxZoom), m_urlTemplate(_urlTemplate),
     m_cache(std::make_unique<RawCache>()){
+
+    static std::atomic<int32_t> s_serial;
 
     m_id = s_serial++;
 }
@@ -100,16 +101,24 @@ DataSource::~DataSource() {
     clearData();
 }
 
-std::shared_ptr<TileTask> DataSource::createTask(TileID _tileId) {
-    auto task = std::make_shared<DownloadTileTask>(_tileId, shared_from_this());
+std::shared_ptr<TileTask> DataSource::createTask(TileID _tileId, int _subTask) {
+    auto task = std::make_shared<DownloadTileTask>(_tileId, shared_from_this(), _subTask);
 
-    m_cache->get(*task);
+    cacheGet(*task);
 
     return task;
 }
 
 void DataSource::setCacheSize(size_t _cacheSize) {
     m_cache->m_maxUsage = _cacheSize;
+}
+
+bool DataSource::cacheGet(DownloadTileTask& _task) {
+    return m_cache->get(_task);
+}
+
+void DataSource::cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef) {
+    m_cache->put(_tileID, _rawDataRef);
 }
 
 void DataSource::clearData() {
@@ -131,7 +140,11 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
     }
 }
 
-void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>& _task, TileTaskCb _cb) {
+void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
+                              TileTaskCb _cb) {
+
+    if (_task->isCanceled()) { return; }
+
     TileID tileID = _task->tileId();
 
     if (!_rawData.empty()) {
@@ -144,25 +157,43 @@ void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
 
         _cb.func(std::move(_task));
 
-        m_cache->put(tileID, rawDataRef);
+        cachePut(tileID, rawDataRef);
     }
 }
-
 
 bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
 
     std::string url(constructURL(_task->tileId()));
 
-    // Using bind instead of lambda to be able to 'move' (until c++14)
-    return startUrlRequest(url, std::bind(&DataSource::onTileLoaded,
-                                          this,
-                                          std::placeholders::_1,
-                                          std::move(_task), _cb));
+    // lambda captured parameters are const by default, we want "task" (moved) to be non-const,
+    // hence "mutable"
+    // Refer: http://en.cppreference.com/w/cpp/language/lambda
+    return startUrlRequest(url,
+            [this, _cb, task = std::move(_task)](std::vector<char>&& rawData) mutable {
+                this->onTileLoaded(std::move(rawData), std::move(task), _cb);
+            });
 
 }
 
 void DataSource::cancelLoadingTile(const TileID& _tileID) {
     cancelUrlRequest(constructURL(_tileID));
+    for (auto& raster : m_rasterSources) {
+        TileID rasterID = _tileID.withMaxSourceZoom(raster->maxZoom());
+        raster->cancelLoadingTile(rasterID);
+    }
+}
+
+void DataSource::clearRasters() {
+    for (auto& raster : m_rasterSources) {
+        raster->clearRasters();
+    }
+}
+
+void DataSource::clearRaster(const TileID& id) {
+    for (auto& raster : m_rasterSources) {
+        TileID rasterID = id.withMaxSourceZoom(raster->maxZoom());
+        raster->clearRaster(rasterID);
+    }
 }
 
 }

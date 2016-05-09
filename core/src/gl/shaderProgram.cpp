@@ -297,7 +297,14 @@ std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fra
     //     }
     // }
 
-    return sourceOut.str();
+    // Certain graphics drivers have issues with shaders having line continuation backslashes "\".
+    // Example raster.glsl was having issues on s6 and note2 because of the "\"s in the glsl file.
+    // This also makes sure if any "\"s are present in the shaders coming from style sheet will be
+    // taken care of.
+    auto str = sourceOut.str();
+    std::regex backslashMatch("\\\\\\s*\\n");
+
+    return std::regex_replace(str, backslashMatch, " ");
 }
 
 void ShaderProgram::checkValidity() {
@@ -431,12 +438,30 @@ void ShaderProgram::setUniformMatrix4f(const UniformLocation& _loc, const glm::m
     }
 }
 
-void ShaderProgram::setUniformf(const UniformLocation& _loc, const UniformArray& _value) {
+void ShaderProgram::setUniformf(const UniformLocation& _loc, const UniformArray1f& _value) {
     if (!use()) { return; }
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
         if (!cached) { glUniform1fv(location, _value.size(), _value.data()); }
+    }
+}
+
+void ShaderProgram::setUniformf(const UniformLocation& _loc, const UniformArray2f& _value) {
+    if (!use()) { return; }
+    GLint location = getUniformLocation(_loc);
+    if (location >= 0) {
+        bool cached = getFromCache(location, _value);
+        if (!cached) { glUniform2fv(location, _value.size(), (float*)_value.data()); }
+    }
+}
+
+void ShaderProgram::setUniformf(const UniformLocation& _loc, const UniformArray3f& _value) {
+    if (!use()) { return; }
+    GLint location = getUniformLocation(_loc);
+    if (location >= 0) {
+        bool cached = getFromCache(location, _value);
+        if (!cached) { glUniform3fv(location, _value.size(), (float*)_value.data()); }
     }
 }
 

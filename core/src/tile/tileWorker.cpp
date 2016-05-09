@@ -2,9 +2,6 @@
 
 #include "platform.h"
 #include "data/dataSource.h"
-#include "tile/tile.h"
-#include "view/view.h"
-#include "scene/scene.h"
 #include "tile/tileID.h"
 #include "tile/tileTask.h"
 #include "tile/tileBuilder.h"
@@ -18,7 +15,6 @@ namespace Tangram {
 
 TileWorker::TileWorker(int _num_worker) {
     m_running = true;
-    m_pendingTiles = false;
 
     for (int i = 0; i < _num_worker; i++) {
         auto worker = std::make_unique<Worker>();
@@ -112,24 +108,12 @@ void TileWorker::run(Worker* instance) {
             continue;
         }
 
-        auto tileData = task->source().parse(*task, *builder->scene().mapProjection());
-
         // const clock_t begin = clock();
 
-        if (tileData) {
+        task->process(*builder);
 
-            auto tile = builder->build(task->tileId(), *tileData, task->source());
-
-            // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
-            // LOG("loadTime %s - %f", task->tile()->getID().toString().c_str(), loadTime);
-
-            // Mark task as ready
-            task->setTile(std::move(tile));
-        } else {
-            task->cancel();
-        }
-
-        m_pendingTiles = true;
+        // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+        // LOG("loadTime %s - %f", task->tileID.toString().c_str(), loadTime);
 
         requestRender();
     }
@@ -137,10 +121,7 @@ void TileWorker::run(Worker* instance) {
 
 void TileWorker::setScene(std::shared_ptr<Scene>& _scene) {
     for (auto& worker : m_workers) {
-        auto tileBuilder = std::make_unique<TileBuilder>();
-        tileBuilder->setScene(_scene);
-
-        worker->tileBuilder = std::move(tileBuilder);
+        worker->tileBuilder = std::make_unique<TileBuilder>(_scene);
     }
 }
 

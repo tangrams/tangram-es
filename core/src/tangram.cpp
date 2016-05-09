@@ -210,11 +210,12 @@ bool update(float _dt) {
 
         if (m_view->changedOnLastUpdate() ||
             m_tileManager->hasTileSetChanged()) {
+
             for (const auto& tile : tiles) {
                 tile->update(_dt, *m_view);
             }
-            auto& cache = m_tileManager->getTileCache();
-            m_labels->updateLabelSet(*m_view, _dt, m_scene->styles(), tiles, cache);
+            m_labels->updateLabelSet(*m_view, _dt, m_scene->styles(), tiles,
+                                     m_tileManager->getTileCache());
 
         } else {
             m_labels->updateLabels(*m_view, _dt, m_scene->styles(), tiles);

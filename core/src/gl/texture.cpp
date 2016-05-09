@@ -4,6 +4,7 @@
 #include "util/geom.h"
 #include "gl/renderState.h"
 #include "gl/hardware.h"
+#include "tangram.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -23,7 +24,7 @@ Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _opti
     resize(_width, _height);
 }
 
-Texture::Texture(const std::string& _file, TextureOptions _options, bool _generateMipmaps)
+Texture::Texture(const std::string& _file, TextureOptions _options, bool _generateMipmaps, bool _flipOnLoad)
     : Texture(0u, 0u, _options, _generateMipmaps) {
 
     unsigned int size;
@@ -31,32 +32,50 @@ Texture::Texture(const std::string& _file, TextureOptions _options, bool _genera
 
     data = bytesFromFile(_file.c_str(), PathType::resource, &size);
 
-    loadPNG(data, size);
+    loadImageFromMemory(data, size, _flipOnLoad);
 
     free(data);
 }
 
-Texture::Texture(const unsigned char* data, size_t dataSize, TextureOptions options, bool generateMipmaps)
+Texture::Texture(const unsigned char* data, size_t dataSize, TextureOptions options, bool generateMipmaps, bool _flipOnLoad)
     : Texture(0u, 0u, options, generateMipmaps) {
 
-    loadPNG(data, dataSize);
+    loadImageFromMemory(data, dataSize, _flipOnLoad);
 }
 
-void Texture::loadPNG(const unsigned char* blob, unsigned int size) {
-    if (blob == nullptr || size == 0) {
-        LOGE("Texture data is empty!");
-        return;
-    }
-
-    unsigned char* pixels;
+void Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size, bool flipOnLoad) {
+    unsigned char* pixels = nullptr;
     int width, height, comp;
 
-    pixels = stbi_load_from_memory(blob, size, &width, &height, &comp, STBI_rgb_alpha);
+    // stbi_load_from_memory loads the image as a serie of scanline starting from
+    // the top-left corner of the image. When shouldFlip is set to true, the image
+    // would be flipped vertically.
+    stbi_set_flip_vertically_on_load((int)flipOnLoad);
 
-    resize(width, height);
-    setData(reinterpret_cast<GLuint*>(pixels), width * height);
+    if (blob != nullptr && size != 0) {
+        pixels = stbi_load_from_memory(blob, size, &width, &height, &comp, STBI_rgb_alpha);
+    }
 
-    stbi_image_free(pixels);
+    if (pixels) {
+        resize(width, height);
+
+        setData(reinterpret_cast<GLuint*>(pixels), width * height);
+
+        stbi_image_free(pixels);
+
+        m_validData = true;
+    } else {
+        // Default inconsistent texture data is set to a 1*1 pixel texture
+        // This reduces inconsistent behavior when texture failed loading
+        // texture data but a Tangram style shader requires a shader sampler
+        GLuint blackPixel = 0x0000ff;
+
+        setData(&blackPixel, 1);
+
+        LOGE("Decoding image from memory failed");
+
+        m_validData = false;
+    }
 }
 
 Texture::Texture(Texture&& _other) {
@@ -93,7 +112,7 @@ Texture& Texture::operator=(Texture&& _other) {
 
 Texture::~Texture() {
     if (m_glHandle) {
-        glDeleteTextures(1, &m_glHandle);
+        Tangram::runOnMainLoop([id = m_glHandle](){ glDeleteTextures(1, &id); });
 
         // if the texture is bound, and deleted, the binding defaults to 0
         // according to the OpenGL spec, in this case we need to force the
@@ -204,8 +223,14 @@ void Texture::checkValidity() {
     }
 }
 
-bool Texture::isValid() {
-    return (RenderState::isValidGeneration(m_generation) && m_glHandle != 0);
+bool Texture::isValid() const {
+    return (RenderState::isValidGeneration(m_generation)
+        && m_glHandle != 0
+        && hasValidData());
+}
+
+bool Texture::hasValidData() const {
+    return m_validData;
 }
 
 void Texture::update(GLuint _textureUnit) {

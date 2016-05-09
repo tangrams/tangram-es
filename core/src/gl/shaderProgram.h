@@ -80,7 +80,9 @@ public:
     void setUniformf(const UniformLocation& _loc, const glm::vec3& _value);
     void setUniformf(const UniformLocation& _loc, const glm::vec4& _value);
 
-    void setUniformf(const UniformLocation& _loc, const UniformArray& _value);
+    void setUniformf(const UniformLocation& _loc, const UniformArray1f& _value);
+    void setUniformf(const UniformLocation& _loc, const UniformArray2f& _value);
+    void setUniformf(const UniformLocation& _loc, const UniformArray3f& _value);
     void setUniformi(const UniformLocation& _loc, const UniformTextureArray& _value);
 
     /*
