@@ -110,7 +110,7 @@ void TileWorker::run(Worker* instance) {
 
         // const clock_t begin = clock();
 
-        task->onProcess(*builder);
+        task->process(*builder);
 
         // float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
         // LOG("loadTime %s - %f", task->tileID.toString().c_str(), loadTime);

@@ -59,13 +59,13 @@ public:
     bool isSubTask() const { return m_subTaskId >= 0; }
 
     // running on worker thread
-    virtual void onProcess(TileBuilder& _tileBuilder);
+    virtual void process(TileBuilder& _tileBuilder);
 
     // running on main thread when the tile is added to
-    virtual void onDone();
+    virtual void complete();
 
     // onDone for sub-tasks
-    virtual void onDone(TileTask& _mainTask) {}
+    virtual void complete(TileTask& _mainTask) {}
 
 protected:
 

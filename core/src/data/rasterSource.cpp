@@ -29,7 +29,7 @@ public:
         }
     }
 
-    void onProcess(TileBuilder& _tileBuilder) override {
+    void process(TileBuilder& _tileBuilder) override {
 
         auto source = reinterpret_cast<RasterSource*>(m_source.get());
 
@@ -40,11 +40,11 @@ public:
 
         // Create tile geometries
         if (!isSubTask()) {
-            DownloadTileTask::onProcess(_tileBuilder);
+            DownloadTileTask::process(_tileBuilder);
         }
     }
 
-    void onDone() override {
+    void complete() override {
         auto source = reinterpret_cast<RasterSource*>(m_source.get());
 
         auto raster = source->getRaster(*this);
@@ -54,11 +54,11 @@ public:
 
         for (auto& subTask : m_subTasks) {
             assert(subTask->isReady());
-            subTask->onDone(*this);
+            subTask->complete(*this);
         }
     }
 
-    void onDone(TileTask& _mainTask) override {
+    void complete(TileTask& _mainTask) override {
         auto source = reinterpret_cast<RasterSource*>(m_source.get());
 
         auto raster = source->getRaster(*this);

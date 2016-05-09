@@ -14,7 +14,7 @@ TileTask::TileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, int _su
     m_sourceGeneration(_source->generation()),
     m_priority(0) {}
 
-void TileTask::onProcess(TileBuilder& _tileBuilder) {
+void TileTask::process(TileBuilder& _tileBuilder) {
 
     auto tileData = m_source->parse(*this, *_tileBuilder.scene().mapProjection());
 
@@ -25,11 +25,11 @@ void TileTask::onProcess(TileBuilder& _tileBuilder) {
     }
 }
 
-void TileTask::onDone() {
+void TileTask::complete() {
 
     for (auto& subTask : m_subTasks) {
         assert(subTask->isReady());
-        subTask->onDone(*this);
+        subTask->complete(*this);
     }
     
 }

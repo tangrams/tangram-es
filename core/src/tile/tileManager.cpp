@@ -156,7 +156,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
         auto& entry = it.second;
         if (entry.newData()) {
             clearProxyTiles(_tileSet, it.first, entry, removeTiles);
-            entry.task->onDone();
+            entry.task->complete();
 
             entry.tile = std::move(entry.task->tile());
             entry.task.reset();
