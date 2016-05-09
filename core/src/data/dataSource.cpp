@@ -101,7 +101,7 @@ DataSource::~DataSource() {
     clearData();
 }
 
-std::shared_ptr<TileTask> DataSource::createTask(TileID _tileId, bool _subTask) {
+std::shared_ptr<TileTask> DataSource::createTask(TileID _tileId, int _subTask) {
     auto task = std::make_shared<DownloadTileTask>(_tileId, shared_from_this(), _subTask);
 
     cacheGet(*task);
