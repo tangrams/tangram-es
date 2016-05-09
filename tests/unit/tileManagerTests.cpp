@@ -99,7 +99,7 @@ struct TestDataSource : DataSource {
 
     void clearData() override {}
 
-    std::shared_ptr<TileTask> createTask(TileID _tileId, bool _subTask) override {
+    std::shared_ptr<TileTask> createTask(TileID _tileId, int _subTask) override {
         return std::make_shared<Task>(_tileId, shared_from_this(), _subTask);
     }
 };

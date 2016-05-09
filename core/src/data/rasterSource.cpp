@@ -22,10 +22,10 @@ public:
     }
 
     bool isReady() const override {
-        if (m_subTask) {
-            return bool(m_texture);
-        } else {
+        if (!isSubTask()) {
             return bool(m_tile);
+        } else {
+            return bool(m_texture);
         }
     }
 
@@ -39,7 +39,7 @@ public:
         }
 
         // Create tile geometries
-        if (!m_subTask) {
+        if (!isSubTask()) {
             DownloadTileTask::onProcess(_tileBuilder);
         }
     }
@@ -113,7 +113,7 @@ std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapPr
 
 }
 
-std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, bool _subTask) {
+std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, int _subTask) {
     auto task = std::make_shared<RasterTileTask>(_tileId, shared_from_this(), _subTask);
 
     // First try existing textures cache

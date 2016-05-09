@@ -156,7 +156,6 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
         auto& entry = it.second;
         if (entry.newData()) {
             clearProxyTiles(_tileSet, it.first, entry, removeTiles);
-
             entry.task->onDone();
 
             entry.tile = std::move(entry.task->tile());
@@ -355,31 +354,35 @@ void TileManager::enqueueTask(TileSet& _tileSet, const TileID& _tileID,
 // create and download raster references store these
 // rastertasks in this datasource' task
 void TileManager::loadSubTasks(std::vector<std::shared_ptr<DataSource>>& _subSources,
-                                  std::shared_ptr<TileTask>& tileTask, const TileID& tileID) {
+                               std::shared_ptr<TileTask>& tileTask, const TileID& tileID) {
+
     auto& subTasks = tileTask->subTasks();
 
     if (subTasks.size() >= _subSources.size()) { return; }
 
-    // FIXME tasks must be in the correct order to get added to the right
-    // texture slot!
-
-    for (size_t index = subTasks.size(); index < _subSources.size(); index++) {
+    for (size_t index = 0; index < _subSources.size(); index++) {
         auto& subSource = _subSources[index];
+
+        auto it = std::lower_bound(subTasks.begin(), subTasks.end(), int(index),
+                                   [&](auto& task, auto id){ return task->subTaskId() < id; });
+
+        if (it != subTasks.end() && (*it)->subTaskId() == int(index)) { continue; }
+
         TileID subTileID = tileID;
         if (subTileID.z > subSource->maxZoom()) {
             subTileID = subTileID.withMaxSourceZoom(subSource->maxZoom());
         }
-        auto subTask = subSource->createTask(subTileID, true);
+        auto subTask = subSource->createTask(subTileID, index);
         if (subTask->isReady()) {
-            subTasks.push_back(subTask);
+            subTasks.insert(it, subTask);
             requestRender();
 
         } else if (subTask->hasData()) {
-            subTasks.push_back(subTask);
+            subTasks.insert(it, subTask);
             m_dataCallback.func(std::move(subTask));
 
         } else if (m_loadPending < MAX_DOWNLOADS) {
-            subTasks.push_back(subTask);
+            subTasks.insert(it, subTask);
 
             if (subSource->loadTileData(std::move(subTask), m_dataCallback)) {
                 m_loadPending++;
