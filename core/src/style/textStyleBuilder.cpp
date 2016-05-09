@@ -345,8 +345,11 @@ void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Typ
                                         {m_attributes.width, m_attributes.height},
                                         *m_textLabels, {quadsStart, quadsCount}));
 
-    // TODO: only if unified
-    m_labelStack.push_back(m_labels.back());
+    const TextStyle& textStyle = static_cast<const TextStyle&>(style());
+
+    if (textStyle.unified()) {
+        m_labelStack.push_back(m_labels.back());
+    }
 }
 
 }
