@@ -4,6 +4,7 @@
 #include "util/geom.h"
 #include "gl/renderState.h"
 #include "gl/hardware.h"
+#include "tangram.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -111,7 +112,7 @@ Texture& Texture::operator=(Texture&& _other) {
 
 Texture::~Texture() {
     if (m_glHandle) {
-        glDeleteTextures(1, &m_glHandle);
+        Tangram::runOnMainLoop([id = m_glHandle](){ glDeleteTextures(1, &id); });
 
         // if the texture is bound, and deleted, the binding defaults to 0
         // according to the OpenGL spec, in this case we need to force the
