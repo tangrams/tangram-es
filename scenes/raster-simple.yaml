@@ -1,0 +1,13 @@
+sources:
+    stamen-terrain:
+        type: Raster
+        #url: http://a.tile.stamen.com/terrain-background/{z}/{x}/{y}.jpg
+        url: http://a.tile.openstreetmap.org/{z}/{x}/{y}.png
+
+layers:
+    terrain:
+        data: { source: stamen-terrain }
+        draw:
+            raster:
+                color: [0.5, 0.5, 0.5]
+                order: 0 # draw on bottom
