@@ -628,22 +628,39 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
     }
 
     if (Node textureNode = styleNode["texture"]) {
+        const std::string& textureName = textureNode.Scalar();
+        auto atlases = scene.spriteAtlases();
+        auto atlasIt = atlases.find(textureName);
+        std::shared_ptr<SpriteAtlas> atlas;
+        std::shared_ptr<Texture> texture;
 
-        if (auto pointStyle = dynamic_cast<PointStyle*>(&style)) {
+        if (atlasIt != atlases.end()) {
+            atlas = atlasIt->second;
+        } else {
+            auto textures = scene.textures();
+            auto texIt = textures.find(textureName);
 
-            const std::string& textureName = textureNode.Scalar();
-            auto atlases = scene.spriteAtlases();
-            auto atlasIt = atlases.find(textureName);
-            if (atlasIt != atlases.end()) {
-                pointStyle->setSpriteAtlas(atlasIt->second);
+            if (texIt != textures.end()) {
+                texture = texIt->second;
             } else {
-                auto textures = scene.textures();
-                auto texIt = textures.find(textureName);
-                if (texIt != textures.end()) {
-                    pointStyle->setTexture(texIt->second);
-                } else {
-                    LOGW("Undefined texture name %s", textureName.c_str());
-                }
+                LOGW("Undefined texture name %s for style",
+                    textureName.c_str(), style.getName().c_str());
+            }
+        }
+
+        PointStyle* pointStyle = dynamic_cast<PointStyle*>(&style);
+        if (!pointStyle) {
+            IconStyle* iconStyle = dynamic_cast<IconStyle*>(&style);
+            if (iconStyle) {
+                pointStyle = &iconStyle->pointStyle();
+            }
+        }
+
+        if (pointStyle) {
+            if (texture) {
+                pointStyle->setTexture(texture);
+            } else if (atlas) {
+                pointStyle->setSpriteAtlas(atlas);
             }
         }
     }
@@ -682,6 +699,8 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) 
         style = std::make_unique<PointStyle>(name);
     } else if (baseStyle == "raster") {
         style = std::make_unique<RasterStyle>(name);
+    } else if (baseStyle == "icons") {
+        style = std::make_unique<IconStyle>(name);
     } else {
         LOGW("Base style '%s' not recognized, cannot instantiate.", baseStyle.c_str());
         return false;
