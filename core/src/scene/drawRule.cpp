@@ -169,7 +169,7 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
 
         StyleBuilder* style = _builder.getStyleBuilder(rule.getStyleName());
         if (!style) {
-            LOGE("Invalid style %s", rule.getStyleName().c_str());
+            LOGN("Invalid style %s", rule.getStyleName().c_str());
             continue;
         }
 
@@ -220,7 +220,7 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
                 auto& styleName = outlineStyleName.value.get<std::string>();
                 auto* outlineStyle = _builder.getStyleBuilder(styleName);
                 if (!outlineStyle) {
-                    LOGE("Invalid style %s", styleName.c_str());
+                    LOGN("Invalid style %s", styleName.c_str());
                 } else {
                     rule.isOutlineOnly = true;
                     outlineStyle->addFeature(_feature, rule);

@@ -61,6 +61,9 @@ styles:
     icon:
         base: points
         texture: pois
+    icons-unified:
+        base: icons
+        texture: pois
     stripeline:
         base: lines
         texcoords: true
@@ -271,13 +274,12 @@ layers:
         #        #size: [[13, 12px], [15, 18px]]
         #        #interactive: true
         #generic:
-            icons:
+            icons-unified:
                 sprite: function() { return feature.kind; }
                 sprite_default: info
-                #TODO: move to text rule
-                offset: [0, 20px]
+                # offset: [0, 20px]
                 text:
-                    offset: [0, 160px]
+                    #offset: [20px, 0px]
                     font:
                         family: sans-serif
                         weight: 400

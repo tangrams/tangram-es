@@ -129,7 +129,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 void Label::parent(std::shared_ptr<Label> _parent) {
     m_parent = _parent;
 
-    applyAnchor(_parent->dimension(), m_anchor);
+    applyAnchor(_parent->dimension() + m_dim, m_anchor);
     m_options.offset += _parent->options().offset;
 }
 

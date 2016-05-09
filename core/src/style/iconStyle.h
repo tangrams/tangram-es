@@ -38,6 +38,8 @@ public:
     void onBeginDrawFrame(const View& _view, Scene& _scene) override;
     virtual ~IconStyle() override;
 
+    PointStyle& pointStyle() const { return *m_pointStyle; }
+
     std::unique_ptr<TextStyle> m_textStyle;
     std::unique_ptr<PointStyle> m_pointStyle;
 };
