@@ -38,13 +38,11 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"sprite", StyleParamKey::sprite},
     {"sprite_default", StyleParamKey::sprite_default},
     {"style", StyleParamKey::style},
-
     {"text:anchor", StyleParamKey::text_anchor},
     {"text:collide", StyleParamKey::text_collide},
     {"text:interactive", StyleParamKey::text_interactive},
     {"text:offset", StyleParamKey::text_offset},
     {"text:priority", StyleParamKey::text_priority},
-
     {"text:align", StyleParamKey::text_align},
     {"text:repeat_distance", StyleParamKey::text_repeat_distance},
     {"text:repeat_group", StyleParamKey::text_repeat_group},
@@ -63,7 +61,6 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"text:transition:hide:time", StyleParamKey::text_transition_hide_time},
     {"text:transition:selected:time", StyleParamKey::text_transition_selected_time},
     {"text:transition:show:time", StyleParamKey::text_transition_show_time},
-
     {"align", StyleParamKey::text_align},
     {"repeat_distance", StyleParamKey::text_repeat_distance},
     {"repeat_group", StyleParamKey::text_repeat_group},
@@ -79,7 +76,6 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"font:style", StyleParamKey::text_font_style},
     {"font:transform", StyleParamKey::text_transform},
     {"font:weight", StyleParamKey::text_font_weight},
-
     {"tile_edges", StyleParamKey::tile_edges},
     {"transition:hide:time", StyleParamKey::transition_hide_time},
     {"transition:selected:time", StyleParamKey::transition_selected_time},
@@ -205,6 +201,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     }
     case StyleParamKey::text_align:
     case StyleParamKey::anchor:
+    case StyleParamKey::text_anchor:
     case StyleParamKey::text_source:
     case StyleParamKey::text_transform:
     case StyleParamKey::sprite:
@@ -222,16 +219,19 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     }
     case StyleParamKey::centroid:
     case StyleParamKey::interactive:
+    case StyleParamKey::text_interactive:
     case StyleParamKey::tile_edges:
     case StyleParamKey::visible:
     case StyleParamKey::collide:
+    case StyleParamKey::text_collide:
         if (_value == "true") { return true; }
         if (_value == "false") { return false; }
         LOGW("Bool value required for capitalized/visible. Using Default.");
         break;
     case StyleParamKey::order:
     case StyleParamKey::outline_order:
-    case StyleParamKey::priority: {
+    case StyleParamKey::priority:
+    case StyleParamKey::text_priority: {
         int num;
         if (parseInt(_value, num) > 0) {
             if (num >= 0) {
@@ -320,14 +320,18 @@ std::string StyleParam::toString() const {
         return k + "(" + std::to_string(p[0]) + ", " + std::to_string(p[1]) + ")";
     }
     case StyleParamKey::size:
-    case StyleParamKey::offset: {
+    case StyleParamKey::offset:
+    case StyleParamKey::text_offset: {
         if (!value.is<glm::vec2>()) break;
         auto p = value.get<glm::vec2>();
         return k + "(" + std::to_string(p.x) + "px, " + std::to_string(p.y) + "px)";
     }
     case StyleParamKey::transition_hide_time:
+    case StyleParamKey::text_transition_hide_time:
     case StyleParamKey::transition_show_time:
+    case StyleParamKey::text_transition_show_time:
     case StyleParamKey::transition_selected_time:
+    case StyleParamKey::text_transition_selected_time:
     case StyleParamKey::text_font_family:
     case StyleParamKey::text_font_weight:
     case StyleParamKey::text_font_style:
@@ -340,13 +344,16 @@ std::string StyleParam::toString() const {
     case StyleParamKey::style:
     case StyleParamKey::text_align:
     case StyleParamKey::anchor:
+    case StyleParamKey::text_anchor:
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
     case StyleParamKey::interactive:
+    case StyleParamKey::text_interactive:
     case StyleParamKey::tile_edges:
     case StyleParamKey::visible:
     case StyleParamKey::centroid:
     case StyleParamKey::collide:
+    case StyleParamKey::text_collide:
         if (!value.is<bool>()) break;
         return k + std::to_string(value.get<bool>());
     case StyleParamKey::width:
@@ -358,8 +365,10 @@ std::string StyleParam::toString() const {
     case StyleParamKey::order:
     case StyleParamKey::outline_order:
     case StyleParamKey::priority:
+    case StyleParamKey::text_priority:
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
+    case StyleParamKey::outline_style:
     case StyleParamKey::text_font_fill:
     case StyleParamKey::text_font_stroke_color:
     case StyleParamKey::text_repeat_distance:
