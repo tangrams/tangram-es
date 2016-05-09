@@ -143,6 +143,8 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
 void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
                               TileTaskCb _cb) {
 
+    if (_task->isCanceled()) { return; }
+
     TileID tileID = _task->tileId();
 
     if (!_rawData.empty()) {

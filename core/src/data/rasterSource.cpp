@@ -134,7 +134,9 @@ std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, int _subTask)
 }
 
 void RasterSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
-                              TileTaskCb _cb) {
+                                TileTaskCb _cb) {
+
+    if (_task->isCanceled()) { return; }
 
     TileID tileID = _task->tileId();
 
