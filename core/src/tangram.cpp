@@ -121,6 +121,7 @@ void loadScene(const char* _scenePath) {
 
     auto sceneString = stringFromFile(setResourceRoot(_scenePath).c_str(), PathType::resource);
 
+    // Copy old scene
     auto scene = std::make_shared<Scene>(*m_scene);
 
     if (SceneLoader::loadScene(sceneString, *scene)) {
@@ -183,12 +184,19 @@ bool update(float _dt) {
 
     m_view->update();
 
+    size_t nTasks = 0;
     {
         std::lock_guard<std::mutex> lock(m_tasksMutex);
-        while (!m_tasks.empty()) {
-            m_tasks.front()();
+        nTasks = m_tasks.size();
+    }
+    while (nTasks-- > 0) {
+        std::function<void()> task;
+        {
+            std::lock_guard<std::mutex> lock(m_tasksMutex);
+            task = m_tasks.front();
             m_tasks.pop();
         }
+        task();
     }
 
     for (const auto& style : m_scene->styles()) {
