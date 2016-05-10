@@ -58,11 +58,8 @@ styles:
     heightglowline:
         base: lines
         mix: heightglow
-    icon:
+    icons:
         base: points
-        texture: pois
-    icons-unified:
-        base: icons
         texture: pois
     stripeline:
         base: lines
@@ -98,7 +95,7 @@ layers:
         point:
             filter: { type: point }
             draw:
-              icon:
+              icons:
                 sprite: sunburst
                 collide: false
                 transition:
@@ -258,67 +255,60 @@ layers:
                             color: orange
                             width: [[11, 0], [12, 1.], [17, 2.]]
 
-    poi_icon:
+    poi_icons:
         data: { source: osm, layer: pois }
-        filter: { name: true } # not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
+        filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
         draw:
-        #    icon:
-        #        interactive: true
-        #        #offset: [0px, -15px]
-        #        size: 20px
-        #        priority: 5
-        #        collide: true
-        #        transition:
-        #            [show, hide]:
-        #                time: 1s
-        #        #size: [[13, 12px], [15, 18px]]
-        #        #interactive: true
-        #generic:
-            icons-unified:
-                sprite: function() { return feature.kind; }
-                sprite_default: info
-                # offset: [0, 20px]
-                anchor: bottom-left
-                priority: 10
-                text:
-                    #offset: [20px, 0px]
-                    anchor: right
-                    font:
-                        family: sans-serif
-                        weight: 400
-                        style: normal
-                        size: 1.2em
-                        fill: white
+            icons:
+                interactive: true
+                #offset: [0px, -15px]
+                size: 20px
+                priority: 5
+                collide: true
+                transition:
+                    [show, hide]:
+                        time: 1s
+                #size: [[13, 12px], [15, 18px]]
+                #interactive: true
 
-        # examples of different icon mapped to feature properties
-        #icon:
-        #    restaurant:
-        #        filter: { kind: [restaurant] }
-        #        draw: { icon: { sprite: restaurant } }
-        #    cafe:
-        #        filter: { kind: [cafe, convenience] }
-        #        draw: { icon: { sprite: cafe } }
-        #    bar:
-        #        filter: { kind: [bar, pub] }
-        #        draw: { icon: { sprite: bar } }
-        #    culture:
-        #        filter: { kind: [museum, library, church, place_of_worship, bank] }
-        #        draw: { icon: { sprite: museum } }
-        #    station:
-        #        filter: { kind: [station] }
-        #        draw: { icon: { sprite: train } }
-        #    hospital:
-        #        filter: { kind: [hospital, pharmacy] }
-        #        draw: { icon: { sprite: hospital } }
-        #    hotel:
-        #        filter: { kind: [hotel, hostel] }
-        #        draw: { icon: { sprite: hotel } }
-        #    bus_stop:
-        #        filter: { kind: [bus_stop] }
-        #        draw: { icon: { sprite: bus } }
-        #    bookstore:
-        #        filter: { kind: [bookstore] }
-        #        draw: { icon: { sprite: bookstore } }
+        # add generic icon at high zoom
+        generic:
+            filter: { $zoom: { min: 18 } }
+            draw:
+                icons:
+                    sprite: function() { return feature.kind; }
+                    sprite_default: info
+                    #sprite: info
+
+        # examples of different icons mapped to feature properties
+        icons:
+            restaurant:
+                filter: { kind: [restaurant] }
+                draw: { icons: { sprite: restaurant } }
+            cafe:
+                filter: { kind: [cafe, convenience] }
+                draw: { icons: { sprite: cafe } }
+            bar:
+                filter: { kind: [bar, pub] }
+                draw: { icons: { sprite: bar } }
+            culture:
+                filter: { kind: [museum, library, church, place_of_worship, bank] }
+                draw: { icons: { sprite: museum } }
+            station:
+                filter: { kind: [station] }
+                draw: { icons: { sprite: train } }
+            hospital:
+                filter: { kind: [hospital, pharmacy] }
+                draw: { icons: { sprite: hospital } }
+            hotel:
+                filter: { kind: [hotel, hostel] }
+                draw: { icons: { sprite: hotel } }
+            bus_stop:
+                filter: { kind: [bus_stop] }
+                draw: { icons: { sprite: bus } }
+            bookstore:
+                filter: { kind: [bookstore] }
+                draw: { icons: { sprite: bookstore } }
 
     buildings:
         data: { source: osm }
@@ -351,21 +341,21 @@ layers:
                 polygons:
                     style: polygons
                     color: '#bddec5'
-    #poi_labels:
-    #    data: { source: osm, layer: pois }
-    #    filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
-    #    draw:
-    #        text:
-    #            interactive: true
-    #            #offset: [0, 12px]
-    #            align: right
-    #            text_wrap: 20
-    #            font:
-    #                family: sans-serif
-    #                weight: 400
-    #                style: normal
-    #                size: 1.2em
-    #                fill: white
+    poi_labels:
+        data: { source: osm, layer: pois }
+        filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
+        draw:
+            text:
+                interactive: true
+                #offset: [0, 12px]
+                align: right
+                text_wrap: 20
+                font:
+                    family: sans-serif
+                    weight: 400
+                    style: normal
+                    size: 1.2em
+                    fill: white
     road_labels:
         data: {source: osm, layer: roads}
         filter: { name: true, aeroway: false, tunnel: false, railway: false, not: { kind: rail }, $zoom: { min: 10 } }
@@ -495,4 +485,4 @@ layers:
     pois:
         data: { source: osm }
         draw:
-            icon: {}
+            icons: {}

@@ -147,7 +147,6 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
 }
 
 StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& _value) {
-
     switch (key) {
     case StyleParamKey::extrude: {
         return parseExtrudeString(_value);
