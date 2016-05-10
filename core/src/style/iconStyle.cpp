@@ -48,6 +48,11 @@ void IconStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
     m_textStyle->onBeginDrawFrame(_view, _scene);
 }
 
+void IconStyle::setPixelScale(float _pixelScale) {
+    m_pointStyle->setPixelScale(_pixelScale);
+    m_textStyle->setPixelScale(_pixelScale);
+}
+
 struct IconStyleBuilder : public StyleBuilder {
 
     void setup(const Tile& _tile) override;

@@ -243,7 +243,7 @@ public:
 
     void setMaterial(const std::shared_ptr<Material>& _material);
 
-    void setPixelScale(float _pixelScale) { m_pixelScale = _pixelScale; }
+    virtual void setPixelScale(float _pixelScale) { m_pixelScale = _pixelScale; }
 
     void setRasterType(RasterType _rasterType) { m_rasterType = _rasterType; }
 
