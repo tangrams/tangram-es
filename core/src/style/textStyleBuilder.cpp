@@ -137,14 +137,19 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     const std::string* anchor = nullptr;
 
+    uint32_t priority;
     if (textStyle.unified()) {
-        _rule.get(StyleParamKey::text_priority, p.labelOptions.priority);
+        if (_rule.get(StyleParamKey::text_priority, priority)) {
+            p.labelOptions.priority = (float)priority;
+        }
         _rule.get(StyleParamKey::text_collide, p.labelOptions.collide);
         _rule.get(StyleParamKey::text_interactive, p.interactive);
         _rule.get(StyleParamKey::text_offset, p.labelOptions.offset);
         anchor = _rule.get<std::string>(StyleParamKey::text_anchor);
     } else {
-        _rule.get(StyleParamKey::priority, p.labelOptions.priority);
+        if (_rule.get(StyleParamKey::priority, priority)) {
+            p.labelOptions.priority = (float)priority;
+        }
         _rule.get(StyleParamKey::collide, p.labelOptions.collide);
         _rule.get(StyleParamKey::interactive, p.interactive);
         _rule.get(StyleParamKey::offset, p.labelOptions.offset);

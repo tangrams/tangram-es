@@ -47,8 +47,12 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     _rule.get(StyleParamKey::color, p.color);
     _rule.get(StyleParamKey::sprite, p.sprite);
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
-    
-    _rule.get(StyleParamKey::priority, p.labelOptions.priority);
+
+    uint32_t priority;
+    if (_rule.get(StyleParamKey::priority, priority)) {
+        p.labelOptions.priority = (float)priority;
+    }
+
     _rule.get(StyleParamKey::sprite_default, p.spriteDefault);
     _rule.get(StyleParamKey::centroid, p.centroid);
     _rule.get(StyleParamKey::interactive, p.labelOptions.interactive);

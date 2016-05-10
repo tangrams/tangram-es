@@ -63,7 +63,7 @@ public:
 
     struct Options {
         glm::vec2 offset;
-        uint32_t priority = std::numeric_limits<uint32_t>::max();
+        float priority = std::numeric_limits<float>::max();
         bool interactive = false;
         std::shared_ptr<Properties> properties;
         bool collide = true;
@@ -126,7 +126,7 @@ public:
     bool occludedLastFrame() const { return m_occludedLastFrame; }
 
     const std::shared_ptr<Label>& parent() const { return m_parent; }
-    void parent(std::shared_ptr<Label> parent);
+    void parent(std::shared_ptr<Label> parent, bool definePriority);
 
     virtual glm::vec2 anchor() const { return m_anchor; }
     LabelProperty::Anchor anchorType() const { return m_anchorType; }

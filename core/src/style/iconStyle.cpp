@@ -3,6 +3,8 @@
 #include "style/pointStyleBuilder.h"
 #include "style/textStyleBuilder.h"
 #include "style/textStyle.h"
+#include "scene/styleParam.h"
+#include "scene/drawRule.h"
 
 namespace Tangram {
 
@@ -101,13 +103,16 @@ void IconStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     auto textLabels = tBuilder.labelStack();
     auto pointLabels = pBuilder.labelStack();
 
+    uint32_t textPriority;
+    bool definePriority = !_rule.get(StyleParamKey::text_priority, textPriority);
+
     if (textLabels.size() == pointLabels.size()) {
         for (size_t i = 0; i < textLabels.size(); ++i) {
             auto tLabel = textLabels[i];
             auto pLabel = pointLabels[i];
 
             // Link labels together
-            tLabel->parent(pLabel);
+            tLabel->parent(pLabel, definePriority);
         }
     }
 
