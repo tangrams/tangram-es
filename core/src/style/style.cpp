@@ -135,20 +135,14 @@ void Style::setupShaderUniforms(Scene& _scene) {
     }
 }
 
-bool Style::hasRasters() const {
-    return m_rasterType == RasterType::custom ||
-           m_rasterType == RasterType::color ||
-           m_rasterType == RasterType::normal;
-}
-
-void Style::setupRasters(const fastmap<std::string, std::shared_ptr<DataSource>>& _dataSources) {
+void Style::setupRasters(const std::vector<std::shared_ptr<DataSource>>& _dataSources) {
     if (!hasRasters()) {
         return;
     }
 
     int numRasterSource = 0;
-    for (const auto& dataSourcePair : _dataSources) {
-        if (dataSourcePair.second->isRaster()) {
+    for (const auto& dataSource : _dataSources) {
+        if (dataSource->isRaster()) {
             numRasterSource++;
         }
     }
@@ -247,62 +241,61 @@ void Style::draw(const Tile& _tile) {
 
     auto& styleMesh = _tile.getMesh(*this);
 
-    if (styleMesh) {
-        TileID tileID = _tile.getID();
+    if (!styleMesh) { return; }
 
-        if (hasRasters()) {
-            UniformTextureArray textureIndexUniform;
-            UniformArray2f rasterSizeUniform;
-            UniformArray3f rasterOffsetsUniform;
+    TileID tileID = _tile.getID();
 
-            for (auto& raster : _tile.rasters()) {
-                if (raster.isValid()) {
-                    auto& texture = raster.texture;
-                    texture->update(RenderState::nextAvailableTextureUnit());
-                    texture->bind(RenderState::currentTextureUnit());
+    if (hasRasters() && !_tile.rasters().empty()) {
+        UniformTextureArray textureIndexUniform;
+        UniformArray2f rasterSizeUniform;
+        UniformArray3f rasterOffsetsUniform;
 
-                    textureIndexUniform.slots.push_back(RenderState::currentTextureUnit());
-                    rasterSizeUniform.push_back({texture->getWidth(), texture->getHeight()});
+        for (auto& raster : _tile.rasters()) {
+            if (raster.isValid()) {
+                auto& texture = raster.texture;
+                auto texUnit = RenderState::nextAvailableTextureUnit();
+                texture->update(texUnit);
+                texture->bind(texUnit);
 
-                    if (tileID.z > raster.tileID.z) {
-                        float dz = tileID.z - raster.tileID.z;
-                        float dz2 = powf(2.f, dz);
+                textureIndexUniform.slots.push_back(texUnit);
+                rasterSizeUniform.push_back({texture->getWidth(), texture->getHeight()});
 
-                        rasterOffsetsUniform.push_back({
+                if (tileID.z > raster.tileID.z) {
+                    float dz = tileID.z - raster.tileID.z;
+                    float dz2 = powf(2.f, dz);
+
+                    rasterOffsetsUniform.push_back({
                             fmodf(tileID.x, dz2) / dz2,
-                            (dz2 - 1.f - fmodf(tileID.y, dz2)) / dz2,
-                            1.f / dz2
-                        });
-                    } else {
-                        rasterOffsetsUniform.push_back({0, 0, 1});
-                    }
+                                (dz2 - 1.f - fmodf(tileID.y, dz2)) / dz2,
+                                1.f / dz2
+                                });
+                } else {
+                    rasterOffsetsUniform.push_back({0, 0, 1});
                 }
-            }
-
-            if (_tile.rasters().size() > 0) {
-                m_shaderProgram->setUniformi(m_uRasters, textureIndexUniform);
-                m_shaderProgram->setUniformf(m_uRasterSizes, rasterSizeUniform);
-                m_shaderProgram->setUniformf(m_uRasterOffsets, rasterOffsetsUniform);
             }
         }
 
-        m_shaderProgram->setUniformMatrix4f(m_uModel, _tile.getModelMatrix());
-        m_shaderProgram->setUniformf(m_uProxyDepth, _tile.isProxy() ? 1.f : 0.f);
-        m_shaderProgram->setUniformf(m_uTileOrigin,
-                                     _tile.getOrigin().x,
-                                     _tile.getOrigin().y,
-                                     tileID.s,
-                                     tileID.z);
+        m_shaderProgram->setUniformi(m_uRasters, textureIndexUniform);
+        m_shaderProgram->setUniformf(m_uRasterSizes, rasterSizeUniform);
+        m_shaderProgram->setUniformf(m_uRasterOffsets, rasterOffsetsUniform);
+    }
 
-        if (!styleMesh->draw(*m_shaderProgram)) {
-            LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
-        }
+    m_shaderProgram->setUniformMatrix4f(m_uModel, _tile.getModelMatrix());
+    m_shaderProgram->setUniformf(m_uProxyDepth, _tile.isProxy() ? 1.f : 0.f);
+    m_shaderProgram->setUniformf(m_uTileOrigin,
+                                 _tile.getOrigin().x,
+                                 _tile.getOrigin().y,
+                                 tileID.s,
+                                 tileID.z);
 
-        if (hasRasters()) {
-            for (auto& raster : _tile.rasters()) {
-                if (raster.isValid()) {
-                    RenderState::releaseTextureUnit();
-                }
+    if (!styleMesh->draw(*m_shaderProgram)) {
+        LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
+    }
+
+    if (hasRasters()) {
+        for (auto& raster : _tile.rasters()) {
+            if (raster.isValid()) {
+                RenderState::releaseTextureUnit();
             }
         }
     }

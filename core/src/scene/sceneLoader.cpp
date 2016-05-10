@@ -705,8 +705,10 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) 
 }
 
 void SceneLoader::loadSource(const std::string& name, const Node& source, const Node& sources, Scene& _scene) {
-
-    if (_scene.dataSources().find(name) != _scene.dataSources().end()) { return; }
+    if (_scene.getDataSource(name)) {
+        LOGW("Duplicate DataSource: %s", name.c_str());
+        return;
+    }
 
     std::string type = source["type"].Scalar();
     std::string url = source["url"].Scalar();
@@ -774,7 +776,7 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
 
     if (sourcePtr) {
         sourcePtr->setCacheSize(CACHE_SIZE);
-        _scene.dataSources()[name] = sourcePtr;
+        _scene.dataSources().push_back(sourcePtr);
     }
 
     if (auto rasters = source["rasters"]) {
@@ -785,7 +787,6 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
 
 void SceneLoader::loadSourceRasters(std::shared_ptr<DataSource> &source, Node rasterNode, const Node& sources,
                                     Scene& scene) {
-    auto& dataSources = scene.dataSources();
     if (rasterNode.IsSequence()) {
         for (const auto& raster : rasterNode) {
             std::string srcName = raster.Scalar();
@@ -795,7 +796,7 @@ void SceneLoader::loadSourceRasters(std::shared_ptr<DataSource> &source, Node ra
                 LOGNode("Parsing sources: '%s'", sources[srcName], e.what());
                 return;
             }
-            source->rasterSources().push_back(dataSources[srcName]);
+            source->rasterSources().push_back(scene.getDataSource(srcName));
         }
     }
 }
@@ -1394,9 +1395,9 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, Scene& scene) {
         if (Node data_source = data["source"]) {
             if (data_source.IsScalar()) {
                 source = data_source.Scalar();
-                auto dataSourceIt = scene.dataSources().find(source);
-                if (dataSourceIt != scene.dataSources().end()) {
-                    dataSourceIt->second->generateGeometry(true);
+                auto dataSource = scene.getDataSource(source);
+                if (dataSource) {
+                    dataSource->generateGeometry(true);
                 } else {
                     LOGW("Can't find data source %s for layer %s", source.c_str(), name.c_str());
                 }

@@ -263,9 +263,9 @@ public:
 
     virtual size_t dynamicMeshSize() const { return 0; }
 
-    virtual bool hasRasters() const;
+    virtual bool hasRasters() const { return m_rasterType != RasterType::none; }
 
-    void setupRasters(const fastmap<std::string, std::shared_ptr<DataSource>>& _dataSources);
+    void setupRasters(const std::vector<std::shared_ptr<DataSource>>& _dataSources);
 
     std::vector<StyleUniform>& styleUniforms() { return m_styleUniforms; }
 

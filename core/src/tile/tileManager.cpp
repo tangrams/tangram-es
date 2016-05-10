@@ -37,8 +37,7 @@ TileManager::~TileManager() {
     m_tileSets.clear();
 }
 
-void TileManager::setDataSources(const fastmap<std::string,
-        std::shared_ptr<DataSource>>& _sources) {
+void TileManager::setDataSources(const std::vector<std::shared_ptr<DataSource>>& _sources) {
 
     m_tileCache->clear();
 
@@ -46,9 +45,10 @@ void TileManager::setDataSources(const fastmap<std::string,
     auto it = std::remove_if(
         m_tileSets.begin(), m_tileSets.end(),
         [&](auto& tileSet) {
-            auto sIt = _sources.find(tileSet.source->name());
+            auto sIt = std::find_if(_sources.begin(), _sources.end(),
+                                    [&](auto& source){ return source->name() == tileSet.source->name(); });
 
-            if (sIt == _sources.end() || !sIt->second->generateGeometry()) {
+            if (sIt == _sources.end() || !(*sIt)->generateGeometry()) {
                 DBG("remove source %s", tileSet.source->name().c_str());
                 return true;
             }
@@ -65,12 +65,12 @@ void TileManager::setDataSources(const fastmap<std::string,
 
         if (std::find_if(m_tileSets.begin(), m_tileSets.end(),
                          [&](const TileSet& a) {
-                             return a.source->name() == source.second->name();
+                             return a.source->name() == source->name();
                          }) == m_tileSets.end()
-                && source.second->generateGeometry()) {
+                && source->generateGeometry()) {
 
             DBG("add source %s", source.second->name().c_str());
-            addDataSource(source.second);
+            addDataSource(source);
         }
     }
 }
