@@ -59,7 +59,7 @@ public:
                m_urlTemplate == _other.m_urlTemplate;
     }
 
-    virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask = 0);
+    virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask = -1);
 
     /* @_cacheSize: Set size of in-memory cache for tile data in bytes.
      * This cache holds unprocessed tile data for fast recreation of recently used tiles.
