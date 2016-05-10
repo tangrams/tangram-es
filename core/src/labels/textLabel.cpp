@@ -13,18 +13,18 @@ const float TextVertex::rotation_scale = 4096.0f;
 const float TextVertex::alpha_scale = 255.f;
 
 TextLabel::TextLabel(Label::Transform _transform, Type _type, Label::Options _options,
-                     LabelProperty::Anchor _anchor, TextLabel::FontVertexAttributes _attrib,
+                     Anchor _anchor, TextLabel::FontVertexAttributes _attrib,
                      glm::vec2 _dim,  TextLabels& _labels, Range _vertexRange)
     : Label(_transform, _dim, _type, _options, _anchor),
       m_textLabels(_labels),
       m_vertexRange(_vertexRange),
       m_fontAttrib(_attrib)
 {
-    applyAnchor(_dim, _anchor);
+    applyAnchor(_dim, glm::vec2(0.0), _anchor);
 }
 
-void TextLabel::applyAnchor(const glm::vec2& _dimension, Anchor _anchor) {
-    m_anchor = glm::vec2(0);
+void TextLabel::applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin, Anchor _anchor) {
+    m_anchor = _origin;
     float width = _dimension.x;
     float height = _dimension.y;
 

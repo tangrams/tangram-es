@@ -128,11 +128,15 @@ public:
     const std::shared_ptr<Label>& parent() const { return m_parent; }
     void parent(std::shared_ptr<Label> parent);
 
+    virtual glm::vec2 anchor() const { return m_anchor; }
+    LabelProperty::Anchor anchorType() const { return m_anchorType; }
+
     virtual glm::vec2 center() const;
 
 private:
 
-    virtual void applyAnchor(const glm::vec2& _dimension, LabelProperty::Anchor _anchor) = 0;
+    virtual void applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
+        LabelProperty::Anchor _anchor) = 0;
 
     bool offViewport(const glm::vec2& _screenSize);
 
@@ -169,7 +173,8 @@ protected:
     // label options
     Options m_options;
 
-    LabelProperty::Anchor m_anchor;
+    LabelProperty::Anchor m_anchorType;
+    glm::vec2 m_anchor;
 
     glm::vec2 m_xAxis;
     glm::vec2 m_yAxis;
