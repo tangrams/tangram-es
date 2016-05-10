@@ -129,22 +129,9 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 void Label::parent(std::shared_ptr<Label> _parent) {
     m_parent = _parent;
 
-    glm::vec2 parentDim = _parent->dimension();
-    glm::vec2 halfParentDim = parentDim * 0.5f;
-    glm::vec2 anchorOrigin = glm::vec2(0.0);
-
-    switch (_parent->anchorType()) {
-        case LabelProperty::top: anchorOrigin = glm::vec2(0.0, -halfParentDim.y); break;
-        case LabelProperty::bottom: anchorOrigin = glm::vec2(0.0, halfParentDim.y); break;
-        case LabelProperty::left: anchorOrigin = glm::vec2(-halfParentDim.x, 0.0); break;
-        case LabelProperty::right: anchorOrigin = glm::vec2(halfParentDim.x, 0.0); break;
-        case LabelProperty::top_left: anchorOrigin = glm::vec2(-halfParentDim.x, -halfParentDim.y); break;
-        case LabelProperty::top_right: anchorOrigin = glm::vec2(halfParentDim.x, -halfParentDim.y); break;
-        case LabelProperty::bottom_left: anchorOrigin = glm::vec2(-halfParentDim.x, halfParentDim.y); break;
-        case LabelProperty::bottom_right: anchorOrigin = glm::vec2(halfParentDim.x, halfParentDim.y); break;
-    }
-
-    applyAnchor(m_dim + parentDim, anchorOrigin, m_anchorType);
+    glm::vec2 anchorDir = LabelProperty::anchorDirection(_parent->anchorType());
+    glm::vec2 anchorOrigin = anchorDir * _parent->dimension() * 0.5f;
+    applyAnchor(m_dim + _parent->dimension(), anchorOrigin, m_anchorType);
 
     m_options.offset += _parent->options().offset;
 }

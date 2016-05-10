@@ -24,42 +24,7 @@ TextLabel::TextLabel(Label::Transform _transform, Type _type, Label::Options _op
 }
 
 void TextLabel::applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin, Anchor _anchor) {
-    m_anchor = _origin;
-    float width = _dimension.x;
-    float height = _dimension.y;
-
-    switch(_anchor) {
-    case Anchor::center:
-        break;
-    case Anchor::left:
-        m_anchor.x -= 0.5 * width;
-        break;
-    case Anchor::right:
-        m_anchor.x += 0.5 * width;
-        break;
-    case Anchor::bottom:
-        m_anchor.y += 0.5 * height;
-        break;
-    case Anchor::bottom_left:
-        m_anchor.x -= 0.5 * width;
-        m_anchor.y += 0.5 * height;
-        break;
-    case Anchor::bottom_right:
-        m_anchor.x += 0.5 * width;
-        m_anchor.y += 0.5 * height;
-        break;
-    case Anchor::top:
-        m_anchor.y -= 0.5 * height;
-        break;
-    case Anchor::top_left:
-        m_anchor.x -= 0.5 * width;
-        m_anchor.y -= 0.5 * height;
-        break;
-    case Anchor::top_right:
-        m_anchor.x += 0.5 * width;
-        m_anchor.y -= 0.5 * height;
-        break;
-    }
+    m_anchor = _origin + LabelProperty::anchorDirection(_anchor) * _dimension * 0.5f;
 }
 
 void TextLabel::updateBBoxes(float _zoomFract) {
