@@ -20,6 +20,24 @@ bool anchor(const std::string& _anchor, Anchor& _out) {
     return tryFind(s_AnchorMap, _anchor, _out);
 }
 
+glm::vec2 anchorDirection(Anchor _anchor) {
+    glm::vec2 direction;
+
+    switch (_anchor) {
+        case top: direction = glm::vec2(0.0, -1.0); break;
+        case bottom: direction = glm::vec2(0.0, 1.0); break;
+        case left: direction = glm::vec2(-1.0, 0.0); break;
+        case right: direction = glm::vec2(1.0, 0.0); break;
+        case top_left: direction = glm::vec2(-1.0, -1.0); break;
+        case top_right: direction = glm::vec2(1.0, -1.0); break;
+        case bottom_left: direction = glm::vec2(-1.0, 1.0); break;
+        case bottom_right: direction = glm::vec2(1.0, 1.0); break;
+        case center: direction = glm::vec2(0.0, 0.0); break;
+    }
+
+    return direction;
+}
+
 } // LabelProperty
 
 namespace TextLabelProperty {

@@ -27,21 +27,15 @@ SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Op
 void SpriteLabel::applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
     LabelProperty::Anchor _anchor)
 {
-
     // _dimension is not applied to the sprite anchor since fractionnal zoom
     // level would result in scaling the sprite size dynamically, instead we
     // store a factor between 0..1 to scale the sprite accordingly
-    switch(_anchor) {
-        case Anchor::left: m_anchor = glm::vec2(1.0, 0.5); break;
-        case Anchor::right: m_anchor = glm::vec2(0.0, 0.5); break;
-        case Anchor::top: m_anchor = glm::vec2(0.5, 0.0); break;
-        case Anchor::bottom: m_anchor = glm::vec2(0.5, 1.0); break;
-        case Anchor::bottom_left: m_anchor = glm::vec2(1.0, 1.0); break;
-        case Anchor::bottom_right: m_anchor = glm::vec2(0.0, 1.0); break;
-        case Anchor::top_left: m_anchor = glm::vec2(1.0, 0.0); break;
-        case Anchor::top_right: m_anchor = glm::vec2(0.0, 0.0); break;
-        case Anchor::center: m_anchor = glm::vec2(0.5); break;
-    }
+
+    glm::vec2 direction = LabelProperty::anchorDirection(_anchor);
+
+    // Transform anchor direction from anchor space (centered)
+    // to local sprite space (lower-left corner for the sprite)
+    m_anchor = direction * glm::vec2(-0.5, 0.5) + glm::vec2(0.5);
 }
 
 glm::vec2 SpriteLabel::anchor() const {
