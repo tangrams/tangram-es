@@ -36,6 +36,9 @@ public:
     void onBeginUpdate() override;
     void onBeginFrame() override;
     void onBeginDrawFrame(const View& _view, Scene& _scene) override;
+
+    void setPixelScale(float _pixelScale) override;
+
     virtual ~IconStyle() override;
 
     PointStyle& pointStyle() const { return *m_pointStyle; }
