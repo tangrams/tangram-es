@@ -21,7 +21,7 @@ class TileTask {
 
 public:
 
-    TileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, int _subTask = -1);
+    TileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, int _subTask);
 
     // No copies
     TileTask(const TileTask& _other) = delete;
@@ -92,7 +92,7 @@ protected:
 
 class DownloadTileTask : public TileTask {
 public:
-    DownloadTileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, bool _subTask)
+    DownloadTileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, int _subTask)
         : TileTask(_tileId, _source, _subTask) {}
 
     virtual bool hasData() const override {

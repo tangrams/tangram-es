@@ -12,7 +12,7 @@ namespace Tangram {
 
 class RasterTileTask : public DownloadTileTask {
 public:
-    RasterTileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, bool _subTask)
+    RasterTileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, int _subTask)
         : DownloadTileTask(_tileId, _source, _subTask) {}
 
     std::shared_ptr<Texture> m_texture;
