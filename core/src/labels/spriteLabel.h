@@ -39,16 +39,18 @@ public:
 
     void pushTransform() override;
 
+    glm::vec2 anchor() const override;
+
 private:
 
-    void applyAnchor(const glm::vec2& _dimension, LabelProperty::Anchor _anchor) override;
+    void applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
+        LabelProperty::Anchor _anchor) override;
     
     // Back-pointer to owning container and position
     const SpriteLabels& m_labels;
     const size_t m_labelsPos;
 
     float m_extrudeScale;
-    glm::vec2 m_anchor;
 };
 
 struct SpriteQuad {

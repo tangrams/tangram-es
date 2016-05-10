@@ -278,8 +278,10 @@ layers:
                 sprite: function() { return feature.kind; }
                 sprite_default: info
                 # offset: [0, 20px]
+                anchor: right
                 text:
                     #offset: [20px, 0px]
+                    anchor: left
                     font:
                         family: sans-serif
                         weight: 400

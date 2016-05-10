@@ -21,10 +21,12 @@ SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Op
       m_labelsPos(_labelsPos),
       m_extrudeScale(_extrudeScale)
 {
-    applyAnchor(m_dim, _anchor);
+    applyAnchor(m_dim, glm::vec2(0.0), _anchor);
 }
 
-void SpriteLabel::applyAnchor(const glm::vec2& _dimension, LabelProperty::Anchor _anchor) {
+void SpriteLabel::applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
+    LabelProperty::Anchor _anchor)
+{
 
     // _dimension is not applied to the sprite anchor since fractionnal zoom
     // level would result in scaling the sprite size dynamically, instead we
@@ -42,6 +44,13 @@ void SpriteLabel::applyAnchor(const glm::vec2& _dimension, LabelProperty::Anchor
     }
 }
 
+glm::vec2 SpriteLabel::anchor() const {
+    glm::vec2 anchor;
+    anchor.x = -(m_dim.x * m_anchor.x);
+    anchor.y =  (m_dim.y * m_anchor.y);
+    return anchor;
+}
+
 void SpriteLabel::updateBBoxes(float _zoomFract) {
     glm::vec2 halfSize = m_dim * 0.5f;
     glm::vec2 sp = m_transform.state.screenPos;
@@ -55,8 +64,7 @@ void SpriteLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const
     switch (m_type) {
         case Type::debug:
         case Type::point:
-            _screenPosition.x -= m_dim.x * m_anchor.x;
-            _screenPosition.y += m_dim.y * m_anchor.y;
+            _screenPosition += anchor();
             break;
         case Type::line:
             LOGW("Line sprite labels not implemented yet");
