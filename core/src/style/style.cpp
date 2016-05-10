@@ -141,14 +141,14 @@ bool Style::hasRasters() const {
            m_rasterType == RasterType::normal;
 }
 
-void Style::setupRasters(const fastmap<std::string, std::shared_ptr<DataSource>>& _dataSources) {
+void Style::setupRasters(const std::vector<std::shared_ptr<DataSource>>& _dataSources) {
     if (!hasRasters()) {
         return;
     }
 
     int numRasterSource = 0;
-    for (const auto& dataSourcePair : _dataSources) {
-        if (dataSourcePair.second->isRaster()) {
+    for (const auto& dataSource : _dataSources) {
+        if (dataSource->isRaster()) {
             numRasterSource++;
         }
     }

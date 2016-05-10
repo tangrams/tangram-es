@@ -54,7 +54,7 @@ struct TestContext {
         styleContext.initFunctions(*scene);
         styleContext.setKeywordZoom(0);
 
-        source = scene->dataSources().begin()->second;
+        source = *scene->dataSources().begin();
         tileBuilder = std::make_unique<TileBuilder>(scene);
     }
 
@@ -76,7 +76,7 @@ struct TestContext {
 
     void parseTile() {
         Tile tile({0,0,10,10,0}, s_projection);
-        source = scene->dataSources().begin()->second;
+        source = *scene->dataSources().begin();
         auto task = source->createTask(tile.getID());
         auto& t = dynamic_cast<DownloadTileTask&>(*task);
         t.rawTileData = std::make_shared<std::vector<char>>(rawTileData);

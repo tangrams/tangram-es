@@ -99,12 +99,20 @@ void Scene::removeClientDataSource(DataSource& _source) {
     m_clientDataSources.erase(it, m_clientDataSources.end());
 }
 
-const fastmap<std::string, std::shared_ptr<DataSource>> Scene::getAllDataSources() const {
+const std::vector<std::shared_ptr<DataSource>> Scene::getAllDataSources() const {
     auto sources = m_dataSources;
-    for (auto clientSrc: m_clientDataSources) {
-        sources[clientSrc->name()] = clientSrc;
-    }
+
+    sources.insert(sources.end(), m_clientDataSources.begin(), m_clientDataSources.end());
     return sources;
+}
+
+std::shared_ptr<DataSource> Scene::getDataSource(const std::string& name) {
+    auto it = std::find_if(m_dataSources.begin(), m_dataSources.end(),
+                           [&](auto& s){ return s->name() == name; });
+    if (it != m_dataSources.end()) {
+        return *it;
+    }
+    return nullptr;
 }
 
 }

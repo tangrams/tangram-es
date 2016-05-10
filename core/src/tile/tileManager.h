@@ -44,7 +44,7 @@ public:
     virtual ~TileManager();
 
     /* Sets the tile DataSources */
-    void setDataSources(const fastmap<std::string, std::shared_ptr<DataSource>>& _sources);
+    void setDataSources(const std::vector<std::shared_ptr<DataSource>>& _sources);
 
     /* Updates visible tile set and load missing tiles */
     void updateTileSets(const ViewState& _view, const std::set<TileID>& _visibleTiles);

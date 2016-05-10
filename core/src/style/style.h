@@ -265,7 +265,7 @@ public:
 
     virtual bool hasRasters() const;
 
-    void setupRasters(const fastmap<std::string, std::shared_ptr<DataSource>>& _dataSources);
+    void setupRasters(const std::vector<std::shared_ptr<DataSource>>& _dataSources);
 
     std::vector<StyleUniform>& styleUniforms() { return m_styleUniforms; }
 
