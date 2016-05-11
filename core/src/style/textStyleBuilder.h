@@ -40,7 +40,7 @@ public:
 
     bool checkRule(const DrawRule& _rule) const override { return true; }
 
-    const auto& labels() const { return m_labels; }
+    auto& labels() { return m_labels; }
 
 protected:
 

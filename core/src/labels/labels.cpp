@@ -39,7 +39,7 @@ void Labels::updateLabelSet(const LabelSet& set, glm::mat4 mvp, float dz, glm::v
             // skip dead labels
             continue;
         }
-        
+
         if (onlyTransitions) {
             if (!label->canOcclude() || label->visibleState()) {
                 m_needUpdate |= label->evalState(screenSize, dt);
@@ -48,7 +48,7 @@ void Labels::updateLabelSet(const LabelSet& set, glm::mat4 mvp, float dz, glm::v
         } else if (label->canOcclude()) {
             label->setProxy(proxyTile);
             m_labels.push_back(label.get());
-            
+
         } else {
             m_needUpdate |= label->evalState(screenSize, dt);
             label->pushTransform();
@@ -83,21 +83,9 @@ void Labels::updateLabels(const View& _view, float _dt,
             const auto& mesh = tile->getMesh(*style);
             if (!mesh) { continue; }
 
-            auto iconMesh = dynamic_cast<const IconMesh*>(mesh.get());
-            if (iconMesh) {
-                auto textLabelMesh = dynamic_cast<const LabelSet*>(iconMesh->textLabels.get());
-                if (textLabelMesh) {
-                    updateLabelSet(*textLabelMesh, mvp, dz, screenSize, _dt, _onlyTransitions, proxyTile);
-                }
-                auto spriteLabelMesh = dynamic_cast<const LabelSet*>(iconMesh->spriteLabels.get());
-                if (spriteLabelMesh) {
-                    updateLabelSet(*spriteLabelMesh, mvp, dz, screenSize, _dt, _onlyTransitions, proxyTile);
-                }
-            } else {
-                auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
-                if (!labelMesh) { continue; }
-                updateLabelSet(*labelMesh, mvp, dz, screenSize, _dt, _onlyTransitions, proxyTile);
-            }
+            auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
+            if (!labelMesh) { continue; }
+            updateLabelSet(*labelMesh, mvp, dz, screenSize, _dt, _onlyTransitions, proxyTile);
         }
     }
 }

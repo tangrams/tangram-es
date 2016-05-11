@@ -12,12 +12,18 @@
 
 namespace Tangram {
 
-struct IconMesh : StyledMesh {
-    bool draw(ShaderProgram& _shader) override { return true; }
-    size_t bufferSize() const override { return 0; }
+struct IconMesh : LabelSet {
 
     std::unique_ptr<StyledMesh> textLabels;
     std::unique_ptr<StyledMesh> spriteLabels;
+
+    void addLabels(std::vector<std::unique_ptr<Label>>& _labels) {
+    typedef std::vector<std::unique_ptr<Label>>::iterator iter_t;
+    m_labels.insert(m_labels.end(),
+                    std::move_iterator<iter_t>(_labels.begin()),
+                    std::move_iterator<iter_t>(_labels.end()));
+}
+
 };
 
 class IconStyle : public Style {
