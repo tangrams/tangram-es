@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 #include "util/fastmap.h"
 
@@ -42,6 +43,14 @@ private:
 
     // import scene to respective root nodes
     fastmap<std::string, Node> m_scenes;
+    std::unordered_set<std::string> m_textureNames;
+
+    std::string getFilename(const std::string& scenePath);
+    void normalizeSceneTextures(Node& root, const std::string& parentPath);
+    void setNormalizedTexture(Node& texture, const std::vector<std::string>& names,
+            const std::string& parentPath);
+    void normalizeSceneImports(Node& root, const std::string& parentPath);
+    std::string normalizePath(const std::string& path, const std::string& parentPath);
 
 };
 
