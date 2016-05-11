@@ -37,9 +37,6 @@ public:
     void updateLabels(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
                       const std::vector<std::shared_ptr<Tile>>& _tiles, bool _onlyTransitions = true);
 
-    void updateLabelSet(const LabelSet& set, glm::mat4 mvp, float dz, glm::vec2 screenSize,
-        float dt, bool onlyTransitions, bool proxyTile);
-
     const std::vector<TouchItem>& getFeaturesAtPoint(const View& _view, float _dt,
                                                      const std::vector<std::unique_ptr<Style>>& _styles,
                                                      const std::vector<std::shared_ptr<Tile>>& _tiles,
