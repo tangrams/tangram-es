@@ -5,6 +5,7 @@
 #include "style/textStyle.h"
 #include "scene/styleParam.h"
 #include "scene/drawRule.h"
+#include "labels/textLabels.h"
 
 namespace Tangram {
 
@@ -66,19 +67,16 @@ struct IconStyleBuilder : public StyleBuilder {
 
     IconStyleBuilder(const IconStyle& _style) : StyleBuilder(_style), m_style(_style) {}
 
-    std::unique_ptr<StyleBuilder> pointStyleBuilder;
-    std::unique_ptr<StyleBuilder> textStyleBuilder;
+    std::unique_ptr<PointStyleBuilder> pointStyleBuilder;
+    std::unique_ptr<TextStyleBuilder> textStyleBuilder;
 
 private:
     const IconStyle& m_style;
 };
 
 void IconStyleBuilder::setup(const Tile& _tile) {
-    TextStyleBuilder& tBuilder = static_cast<TextStyleBuilder&>(*textStyleBuilder);
-    PointStyleBuilder& pBuilder = static_cast<PointStyleBuilder&>(*pointStyleBuilder);
-
-    tBuilder.setup(_tile);
-    pBuilder.setup(_tile);
+    textStyleBuilder->setup(_tile);
+    pointStyleBuilder->setup(_tile);
 }
 
 bool IconStyleBuilder::checkRule(const DrawRule& _rule) const {
@@ -86,26 +84,24 @@ bool IconStyleBuilder::checkRule(const DrawRule& _rule) const {
 }
 
 void IconStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
-    TextStyleBuilder& tBuilder = static_cast<TextStyleBuilder&>(*textStyleBuilder);
-    PointStyleBuilder& pBuilder = static_cast<PointStyleBuilder&>(*pointStyleBuilder);
 
-    auto& textLabels = tBuilder.labels();
-    auto& pointLabels = pBuilder.labels();
+    auto& textLabels = textStyleBuilder->labels();
+    auto& pointLabels = pointStyleBuilder->labels();
 
     size_t textLabelStart = textLabels.size();
     size_t pointLabelStart = pointLabels.size();
 
     if (_feat.geometryType == GeometryType::points) {
         for (auto& point : _feat.points) {
-            pBuilder.addPoint(point, _feat.props, _rule);
+            pointStyleBuilder->addPoint(point, _feat.props, _rule);
         }
     } else if (_feat.geometryType == GeometryType::polygons) {
         for (auto& polygon : _feat.polygons) {
-            pBuilder.addPolygon(polygon, _feat.props, _rule);
+            pointStyleBuilder->addPolygon(polygon, _feat.props, _rule);
         }
     } else if (_feat.geometryType == GeometryType::lines) {
         for (auto& line : _feat.lines) {
-            pBuilder.addLine(line, _feat.props, _rule);
+            pointStyleBuilder->addLine(line, _feat.props, _rule);
         }
     }
 
@@ -113,7 +109,7 @@ void IconStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
     if (pointLabelCount == 0) { return; }
 
-    tBuilder.addFeature(_feat, _rule);
+    textStyleBuilder->addFeature(_feat, _rule);
 
     size_t textLabelCount = textLabels.size() - textLabelStart;
 
@@ -135,13 +131,11 @@ void IconStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 }
 
 std::unique_ptr<StyledMesh> IconStyleBuilder::build() {
-    TextStyleBuilder& tBuilder = static_cast<TextStyleBuilder&>(*textStyleBuilder);
-    PointStyleBuilder& pBuilder = static_cast<PointStyleBuilder&>(*pointStyleBuilder);
 
     auto iconMesh = std::make_unique<IconMesh>();
 
-    iconMesh->spriteLabels = pBuilder.build();
-    iconMesh->textLabels = tBuilder.build();
+    iconMesh->spriteLabels = pointStyleBuilder->build();
+    iconMesh->textLabels = textStyleBuilder->build();
 
     return std::move(iconMesh);
 }
@@ -149,8 +143,11 @@ std::unique_ptr<StyledMesh> IconStyleBuilder::build() {
 std::unique_ptr<StyleBuilder> IconStyle::createBuilder() const {
     auto iconStyleBuilder = std::make_unique<IconStyleBuilder>(*this);
 
-    iconStyleBuilder->pointStyleBuilder = m_pointStyle->createBuilder();
-    iconStyleBuilder->textStyleBuilder = m_textStyle->createBuilder();
+    auto *pBuilder = static_cast<PointStyleBuilder*>(m_pointStyle->createBuilder().release());
+    iconStyleBuilder->pointStyleBuilder.reset(pBuilder);
+
+    auto *tBuilder = static_cast<TextStyleBuilder*>(m_textStyle->createBuilder().release());
+    iconStyleBuilder->textStyleBuilder.reset(tBuilder);
 
     return std::move(iconStyleBuilder);
 }
