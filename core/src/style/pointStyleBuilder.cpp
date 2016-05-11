@@ -101,12 +101,6 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
                                                      *m_spriteLabels,
                                                      m_quads.size()));
 
-    const PointStyle& pointStyle = static_cast<const PointStyle&>(style());
-
-    if (pointStyle.unified()) {
-        m_labelStack.push_back(m_labels.back());
-    }
-
     glm::i16vec2 size = _params.size * SpriteVertex::position_scale;
 
     // Attribute will be normalized - scale to max short;

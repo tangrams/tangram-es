@@ -9,8 +9,8 @@
 namespace Tangram {
 
 IconStyle::IconStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
-    : Style(_name, _blendMode, _drawMode)
-{
+    : Style(_name, _blendMode, _drawMode) {
+
     m_pointStyle = std::make_unique<PointStyle>(_name, _blendMode, _drawMode);
     m_textStyle = std::make_unique<TextStyle>(_name, true, _blendMode, _drawMode);
 
@@ -89,7 +89,11 @@ void IconStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     TextStyleBuilder& tBuilder = static_cast<TextStyleBuilder&>(*textStyleBuilder);
     PointStyleBuilder& pBuilder = static_cast<PointStyleBuilder&>(*pointStyleBuilder);
 
-    tBuilder.addFeature(_feat, _rule);
+    auto& textLabels = tBuilder.labels();
+    auto& pointLabels = pBuilder.labels();
+
+    size_t textLabelStart = textLabels.size();
+    size_t pointLabelStart = pointLabels.size();
 
     if (_feat.geometryType == GeometryType::points) {
         for (auto& point : _feat.points) {
@@ -105,24 +109,29 @@ void IconStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
         }
     }
 
-    auto textLabels = tBuilder.labelStack();
-    auto pointLabels = pBuilder.labelStack();
+    size_t pointLabelCount = pointLabels.size() - pointLabelStart;
+
+    if (pointLabelCount == 0) { return; }
+
+    tBuilder.addFeature(_feat, _rule);
+
+    size_t textLabelCount = textLabels.size() - textLabelStart;
 
     uint32_t textPriority;
     bool definePriority = !_rule.get(StyleParamKey::text_priority, textPriority);
 
-    if (textLabels.size() == pointLabels.size()) {
-        for (size_t i = 0; i < textLabels.size(); ++i) {
-            auto tLabel = textLabels[i];
-            auto pLabel = pointLabels[i];
+    if (textLabelCount == pointLabelCount) {
+        for (size_t i = 0; i < textLabelCount; ++i) {
+            auto& tLabel = textLabels[textLabelStart + i];
+            auto& pLabel = pointLabels[pointLabelStart + i];
 
             // Link labels together
-            tLabel->parent(pLabel, definePriority);
+            tLabel->setParent(*pLabel, definePriority);
         }
+    } else if (textLabelCount > 0) {
+        // TODO remove unused text labels
+        // textLabels.popLabels(textLabelCount);
     }
-
-    tBuilder.clearLabelStack();
-    pBuilder.clearLabelStack();
 }
 
 std::unique_ptr<StyledMesh> IconStyleBuilder::build() {
@@ -140,8 +149,8 @@ std::unique_ptr<StyledMesh> IconStyleBuilder::build() {
 std::unique_ptr<StyleBuilder> IconStyle::createBuilder() const {
     auto iconStyleBuilder = std::make_unique<IconStyleBuilder>(*this);
 
-    iconStyleBuilder->pointStyleBuilder = std::move(m_pointStyle->createBuilder());
-    iconStyleBuilder->textStyleBuilder = std::move(m_textStyle->createBuilder());
+    iconStyleBuilder->pointStyleBuilder = m_pointStyle->createBuilder();
+    iconStyleBuilder->textStyleBuilder = m_textStyle->createBuilder();
 
     return std::move(iconStyleBuilder);
 }

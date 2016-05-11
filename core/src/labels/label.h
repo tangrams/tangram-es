@@ -125,8 +125,8 @@ public:
     bool isOccluded() const { return m_occluded; }
     bool occludedLastFrame() const { return m_occludedLastFrame; }
 
-    const std::shared_ptr<Label>& parent() const { return m_parent; }
-    void parent(std::shared_ptr<Label> parent, bool definePriority);
+    const Label* parent() const { return m_parent; }
+    void setParent(const Label& parent, bool definePriority);
 
     virtual glm::vec2 anchor() const { return m_anchor; }
     LabelProperty::Anchor anchorType() const { return m_anchorType; }
@@ -182,7 +182,7 @@ protected:
     // whether or not we need to update the mesh visibilit (alpha channel)
     bool m_updateMeshVisibility;
 
-    std::shared_ptr<Label> m_parent;
+    const Label* m_parent;
 
 };
 
