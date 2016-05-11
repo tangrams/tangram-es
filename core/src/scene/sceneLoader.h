@@ -74,7 +74,7 @@ struct SceneLoader {
                                  std::vector<StyleParam>& out);
     static void parseTransition(Node params, Scene& scene, std::vector<StyleParam>& out);
 
-    static bool parseStyleUniforms(const Node& value, Scene& scene, StyleUniform& styleUniform);
+    static bool parseStyleUniforms(const Node& value, Scene* scene, StyleUniform& styleUniform);
 
     static void parseGlobals(const Node& node, Scene& scene, const std::string& key="");
     static void parseLightPosition(Node position, PointLight& light);

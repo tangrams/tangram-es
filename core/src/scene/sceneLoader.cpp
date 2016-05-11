@@ -317,7 +317,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             const std::string& name = uniform.first.Scalar();
             StyleUniform styleUniform;
 
-            if (parseStyleUniforms(uniform.second, scene, styleUniform)) {
+            if (parseStyleUniforms(uniform.second, &scene, styleUniform)) {
                 if (styleUniform.value.is<UniformArray1f>()) {
                     UniformArray1f& array = styleUniform.value.get<UniformArray1f>();
                     shader.addSourceBlock("uniforms", "uniform float " + name +
@@ -648,7 +648,6 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         else { LOGW("Unrecognized lighting type '%s'", lighting.c_str()); }
     }
 
-    // TODO: Handle inlined texture with URL
     if (Node textureNode = styleNode["texture"]) {
         if (auto pointStyle = dynamic_cast<PointStyle*>(&style)) {
             const std::string& textureName = textureNode.Scalar();
@@ -1267,7 +1266,7 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
     }
 }
 
-bool SceneLoader::parseStyleUniforms(const Node& value, Scene& scene, StyleUniform& styleUniform) {
+bool SceneLoader::parseStyleUniforms(const Node& value, Scene* scene, StyleUniform& styleUniform) {
     if (value.IsScalar()) { // float, bool or string (texture)
         double fValue;
         bool bValue;
@@ -1281,9 +1280,9 @@ bool SceneLoader::parseStyleUniforms(const Node& value, Scene& scene, StyleUnifo
         } else {
             const std::string& strVal = value.Scalar();
             styleUniform.type = "sampler2D";
-            std::shared_ptr<Texture> texture = scene.getTexture(strVal);
+            std::shared_ptr<Texture> texture = scene->getTexture(strVal);
 
-            if (!texture && !loadTexture(strVal, scene)) {
+            if (!texture && !loadTexture(strVal, *scene)) {
                 LOGW("Can't load texture with name %s", strVal.c_str());
                 return false;
             }
@@ -1326,9 +1325,9 @@ bool SceneLoader::parseStyleUniforms(const Node& value, Scene& scene, StyleUnifo
             for (const auto& strVal : value) {
                 const std::string& textureName = strVal.Scalar();
                 textureArrayUniform.names.push_back(textureName);
-                std::shared_ptr<Texture> texture = scene.getTexture(textureName);
+                std::shared_ptr<Texture> texture = scene->getTexture(textureName);
 
-                if (!texture && !loadTexture(textureName, scene)) {
+                if (!texture && !loadTexture(textureName, *scene)) {
                     LOGW("Can't load texture with name %s", textureName.c_str());
                     return false;
                 }
