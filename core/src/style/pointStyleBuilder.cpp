@@ -11,7 +11,7 @@
 namespace Tangram {
 
 std::unique_ptr<StyledMesh> PointStyleBuilder::build() {
-    if (m_labels.empty()) { return nullptr; }
+    if (m_quads.empty()) { return nullptr; }
 
     m_spriteLabels->setLabels(m_labels);
     m_spriteLabels->setQuads(m_quads);

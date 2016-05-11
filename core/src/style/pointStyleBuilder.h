@@ -33,7 +33,7 @@ struct PointStyleBuilder : public StyleBuilder {
     void addLabel(const Point& _point, const glm::vec4& _quad,
                   const PointStyle::Parameters& _params);
 
-    const auto& labels() const { return m_labels; }
+    auto& labels() { return m_labels; }
 
 private:
     std::vector<std::unique_ptr<Label>> m_labels;

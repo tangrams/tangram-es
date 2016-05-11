@@ -70,6 +70,8 @@ struct IconStyleBuilder : public StyleBuilder {
     std::unique_ptr<PointStyleBuilder> pointStyleBuilder;
     std::unique_ptr<TextStyleBuilder> textStyleBuilder;
 
+    std::unique_ptr<IconMesh> iconMesh;
+
 private:
     const IconStyle& m_style;
 };
@@ -77,6 +79,8 @@ private:
 void IconStyleBuilder::setup(const Tile& _tile) {
     textStyleBuilder->setup(_tile);
     pointStyleBuilder->setup(_tile);
+
+    iconMesh = std::make_unique<IconMesh>();
 }
 
 bool IconStyleBuilder::checkRule(const DrawRule& _rule) const {
@@ -84,12 +88,6 @@ bool IconStyleBuilder::checkRule(const DrawRule& _rule) const {
 }
 
 void IconStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
-
-    auto& textLabels = textStyleBuilder->labels();
-    auto& pointLabels = pointStyleBuilder->labels();
-
-    size_t textLabelStart = textLabels.size();
-    size_t pointLabelStart = pointLabels.size();
 
     if (_feat.geometryType == GeometryType::points) {
         for (auto& point : _feat.points) {
@@ -105,34 +103,42 @@ void IconStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
         }
     }
 
-    size_t pointLabelCount = pointLabels.size() - pointLabelStart;
-
-    if (pointLabelCount == 0) { return; }
+    auto& pointLabels = pointStyleBuilder->labels();
+    if (pointLabels.size() == 0) { return; }
 
     textStyleBuilder->addFeature(_feat, _rule);
+    auto& textLabels = textStyleBuilder->labels();
 
-    size_t textLabelCount = textLabels.size() - textLabelStart;
+    if (pointLabels.size() == textLabels.size()) {
 
-    uint32_t textPriority;
-    bool definePriority = !_rule.get(StyleParamKey::text_priority, textPriority);
+        uint32_t textPriority;
+        bool definePriority = !_rule.get(StyleParamKey::text_priority, textPriority);
 
-    if (textLabelCount == pointLabelCount) {
-        for (size_t i = 0; i < textLabelCount; ++i) {
-            auto& tLabel = textLabels[textLabelStart + i];
-            auto& pLabel = pointLabels[pointLabelStart + i];
+        for (size_t i = 0; i < textLabels.size(); ++i) {
+            auto& tLabel = textLabels[i];
+            auto& pLabel = pointLabels[i];
 
             // Link labels together
             tLabel->setParent(*pLabel, definePriority);
         }
-    } else if (textLabelCount > 0) {
-        // TODO remove unused text labels
+
+        // Move labels over to IconMesh
+        iconMesh->addLabels(pointLabels);
+        iconMesh->addLabels(textLabels);
+
+    } else if (textLabels.size()> 0) {
+
+        iconMesh->addLabels(pointLabels);
+
+        // TODO remove unused text labels quads
         // textLabels.popLabels(textLabelCount);
     }
+
+    textLabels.clear();
+    pointLabels.clear();
 }
 
 std::unique_ptr<StyledMesh> IconStyleBuilder::build() {
-
-    auto iconMesh = std::make_unique<IconMesh>();
 
     iconMesh->spriteLabels = pointStyleBuilder->build();
     iconMesh->textLabels = textStyleBuilder->build();
