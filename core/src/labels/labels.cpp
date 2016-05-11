@@ -464,6 +464,11 @@ void Labels::drawDebug(const View& _view) {
                     Primitives::setColor(0xff0000);
             }
 
+            if (label->parent()) {
+                Primitives::setColor(0xff0000);
+                Primitives::drawLine(sp, label->parent()->transform().state.screenPos);
+            }
+
             Primitives::drawPoly(&(label->obb().getQuad())[0], 4);
 
             // draw offset
