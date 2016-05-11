@@ -126,19 +126,19 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
     return true;
 }
 
-void Label::parent(std::shared_ptr<Label> _parent, bool _definePriority) {
-    m_parent = _parent;
+void Label::setParent(const Label& _parent, bool _definePriority) {
+    m_parent = &_parent;
 
-    glm::vec2 anchorDir = LabelProperty::anchorDirection(_parent->anchorType());
-    glm::vec2 anchorOrigin = anchorDir * _parent->dimension() * 0.5f;
-    applyAnchor(m_dim + _parent->dimension(), anchorOrigin, m_anchorType);
+    glm::vec2 anchorDir = LabelProperty::anchorDirection(_parent.anchorType());
+    glm::vec2 anchorOrigin = anchorDir * _parent.dimension() * 0.5f;
+    applyAnchor(m_dim + _parent.dimension(), anchorOrigin, m_anchorType);
 
     if (_definePriority) {
-        float parentPriority = _parent->options().priority;
+        float parentPriority = _parent.options().priority;
         m_options.priority = parentPriority - 0.5f;
     }
 
-    m_options.offset += _parent->options().offset;
+    m_options.offset += _parent.options().offset;
 }
 
 bool Label::offViewport(const glm::vec2& _screenSize) {

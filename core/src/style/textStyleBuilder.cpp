@@ -89,7 +89,6 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
         // Drop quads when no label was added
         m_quads.resize(quadsStart);
     }
-
 }
 
 TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
@@ -349,12 +348,6 @@ void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Typ
                                         {m_attributes.fill, m_attributes.stroke, m_attributes.fontScale},
                                         {m_attributes.width, m_attributes.height},
                                         *m_textLabels, {quadsStart, quadsCount}));
-
-    const TextStyle& textStyle = static_cast<const TextStyle&>(style());
-
-    if (textStyle.unified()) {
-        m_labelStack.push_back(m_labels.back());
-    }
 }
 
 }
