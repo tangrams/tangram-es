@@ -17,7 +17,6 @@
 #include "style/debugTextStyle.h"
 #include "style/pointStyle.h"
 #include "style/rasterStyle.h"
-#include "style/iconStyle.h"
 #include "scene/dataLayer.h"
 #include "scene/filters.h"
 #include "scene/sceneLayer.h"
@@ -160,7 +159,6 @@ bool SceneLoader::applyConfig(Node& config, Scene& _scene) {
     _scene.styles().emplace_back(new DebugStyle("debug"));
     _scene.styles().emplace_back(new PointStyle("points"));
     _scene.styles().emplace_back(new RasterStyle("raster"));
-    _scene.styles().emplace_back(new IconStyle("icons"));
 
     if (Node globals = config["global"]) {
         parseGlobals(globals, _scene);
@@ -649,12 +647,6 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         }
 
         PointStyle* pointStyle = dynamic_cast<PointStyle*>(&style);
-        if (!pointStyle) {
-            IconStyle* iconStyle = dynamic_cast<IconStyle*>(&style);
-            if (iconStyle) {
-                pointStyle = &iconStyle->pointStyle();
-            }
-        }
 
         if (pointStyle) {
             if (texture) {
@@ -699,8 +691,6 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) 
         style = std::make_unique<PointStyle>(name);
     } else if (baseStyle == "raster") {
         style = std::make_unique<RasterStyle>(name);
-    } else if (baseStyle == "icons") {
-        style = std::make_unique<IconStyle>(name);
     } else {
         LOGW("Base style '%s' not recognized, cannot instantiate.", baseStyle.c_str());
         return false;
