@@ -132,21 +132,24 @@ struct StyleParam {
         key(StyleParamKey::none),
         value(none_type{}) {};
 
-    StyleParam(const std::string& _key, const std::string& _value);
+    StyleParam(const std::string& _key, const std::string& _value, bool _unified = false);
 
-    StyleParam(StyleParamKey _key, std::string _value) :
+    StyleParam(StyleParamKey _key, std::string _value, bool _unified = false) :
         key(_key),
-        value(std::move(_value)) {}
+        value(std::move(_value)),
+        unified(_unified) {}
 
-    StyleParam(StyleParamKey _key, Stops* _stops) :
+    StyleParam(StyleParamKey _key, Stops* _stops, bool _unified = false) :
         key(_key),
         value(none_type{}),
-        stops(_stops) {
+        stops(_stops),
+        unified(_unified) {
     }
 
     StyleParamKey key;
     Value value;
     Stops* stops = nullptr;
+    bool unified = false;
     int32_t function = -1;
 
     bool operator<(const StyleParam& _rhs) const { return key < _rhs.key; }

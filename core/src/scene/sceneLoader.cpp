@@ -1180,10 +1180,11 @@ Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
     return Filter::MatchNone(std::move(filters));
 }
 
-void SceneLoader::parseStyleParams(Node parent, Node params, Scene& scene, const std::string& prefix,
-                                   std::vector<StyleParam>& out) {
+void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string& prefix,
+                                   std::vector<StyleParam>& out, bool unified) {
 
     for (const auto& prop : params) {
+        unified |= prefix == "text";
         std::string key;
         if (!prefix.empty()) {
             key = prefix + DELIMITER + prop.first.Scalar();
@@ -1202,12 +1203,12 @@ void SceneLoader::parseStyleParams(Node parent, Node params, Scene& scene, const
             const std::string& val = value.Scalar();
 
             if (val.compare(0, 8, "function") == 0) {
-                StyleParam param(key, "");
+                StyleParam param(key, "", unified);
                 param.function = scene.functions().size();
                 scene.functions().push_back(val);
                 out.push_back(std::move(param));
             } else {
-                out.push_back(StyleParam{ key, val });
+                out.push_back(StyleParam{ key, val, unified });
             }
             break;
         }
@@ -1218,33 +1219,33 @@ void SceneLoader::parseStyleParams(Node parent, Node params, Scene& scene, const
 
                     if (StyleParam::isColor(styleKey)) {
                         scene.stops().push_back(Stops::Colors(value));
-                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()), unified });
                     } else if (StyleParam::isWidth(styleKey)) {
                         std::vector<Unit> allowedUnits;
                         StyleParam::unitsForStyleParam(styleKey, allowedUnits);
                         scene.stops().push_back(Stops::Widths(value, *scene.mapProjection(), allowedUnits));
-                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()), unified });
                     } else if (StyleParam::isOffsets(styleKey)) {
                         std::vector<Unit> allowedUnits;
                         StyleParam::unitsForStyleParam(styleKey, allowedUnits);
                         scene.stops().push_back(Stops::Offsets(value, allowedUnits));
-                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()), unified });
                     } else if (StyleParam::isFontSize(styleKey)) {
                         scene.stops().push_back(Stops::FontSize(value));
-                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()), unified });
                     }
                 } else {
                     LOGW("Unknown style parameter %s", key.c_str());
                 }
 
             } else {
-                out.push_back(StyleParam{ key, parseSequence(value) });
+                out.push_back(StyleParam{ key, parseSequence(value), unified });
             }
             break;
         }
         case NodeType::Map: {
             // NB: Flatten parameter map
-            parseStyleParams(parent, value, scene, key, out);
+            parseStyleParams(value, scene, key, out, unified);
             break;
         }
         default:
@@ -1384,7 +1385,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, S
 
                 std::vector<StyleParam> params;
                 std::string s = ruleNode.first.Scalar();
-                parseStyleParams(ruleNode.first, ruleNode.second, scene, "", params);
+                parseStyleParams(ruleNode.second, scene, "", params);
 
                 const std::string& ruleName = ruleNode.first.Scalar();
                 int ruleId = scene.addIdForName(ruleName);
