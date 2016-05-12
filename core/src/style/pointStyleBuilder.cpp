@@ -19,12 +19,18 @@ std::unique_ptr<StyledMesh> PointStyleBuilder::build() {
     m_labels.clear();
     m_quads.clear();
 
-    return std::move(m_spriteLabels);
+    iconMesh->spriteLabels = std::move(m_spriteLabels);
+    iconMesh->textLabels = m_textStyleBuilder->build();
+
+    return std::move(iconMesh);
 }
 
 void PointStyleBuilder::setup(const Tile& _tile) {
     m_zoom = _tile.getID().z;
     m_spriteLabels = std::make_unique<SpriteLabels>(m_style);
+
+    m_textStyleBuilder->setup(_tile);
+    iconMesh = std::make_unique<IconMesh>();
 }
 
 bool PointStyleBuilder::checkRule(const DrawRule& _rule) const {
@@ -204,6 +210,37 @@ void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
         glm::vec2 c = centroid(_polygon);
 
         addLabel(Point{c,0}, uvsQuad, p);
+    }
+}
+
+void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
+    StyleBuilder::addFeature(_feat, _rule);
+
+    if (_rule.unified) {
+        if (m_labels.size() == 0) { return; }
+
+        m_textStyleBuilder->addFeature(_feat, _rule);
+        auto& textLabels = static_cast<TextStyleBuilder&>(*m_textStyleBuilder).labels();
+
+        if (m_labels.size() == textLabels.size()) {
+            uint32_t textPriority;
+            bool definePriority = !_rule.get(StyleParamKey::text_priority, textPriority);
+
+            for (size_t i = 0; i < textLabels.size(); ++i) {
+                auto& tLabel = textLabels[i];
+                auto& pLabel = m_labels[i];
+
+                // Link labels together
+                tLabel->setParent(*pLabel, definePriority);
+            }
+
+            iconMesh->addLabels(m_labels);
+            iconMesh->addLabels(textLabels);
+
+        }
+
+        textLabels.clear();
+        m_labels.clear();
     }
 }
 
