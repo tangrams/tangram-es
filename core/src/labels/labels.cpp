@@ -8,7 +8,6 @@
 #include "style/style.h"
 #include "style/pointStyle.h"
 #include "style/textStyle.h"
-#include "style/iconStyle.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
 #include "labels/labelSet.h"
