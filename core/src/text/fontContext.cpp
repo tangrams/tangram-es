@@ -268,6 +268,7 @@ auto FontContext::getFont(const std::string& _family, const std::string& _style,
     }
 
     font->addFace(m_alfons.addFontFace(alfons::InputSource(reinterpret_cast<char*>(data), dataSize), fontSize));
+    free(data);
 
     // add fallbacks from default font
     font->addFaces(*m_font[sizeIndex]);
