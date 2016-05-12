@@ -13,10 +13,8 @@ namespace Tangram {
 std::unique_ptr<StyledMesh> PointStyleBuilder::build() {
     if (m_quads.empty()) { return nullptr; }
 
-    m_spriteLabels->setLabels(m_labels);
     m_spriteLabels->setQuads(m_quads);
 
-    m_labels.clear();
     m_quads.clear();
 
     iconMesh->spriteLabels = std::move(m_spriteLabels);
@@ -240,8 +238,11 @@ void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
         }
 
         textLabels.clear();
-        m_labels.clear();
+    } else {
+        iconMesh->addLabels(m_labels);
     }
+
+    m_labels.clear();
 }
 
 }
