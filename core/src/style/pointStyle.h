@@ -6,6 +6,8 @@
 #include "labels/spriteLabel.h"
 #include "labels/labelProperty.h"
 #include "gl/dynamicQuadMesh.h"
+#include "style/textStyle.h"
+#include "labels/textLabels.h"
 
 namespace Tangram {
 
@@ -52,6 +54,9 @@ public:
     void unified(bool _unified) { m_unified = _unified; }
     bool unified() const { return m_unified; }
 
+    TextStyle& textStyle() const { return *m_textStyle; }
+    virtual void setPixelScale(float _pixelScale) override;
+
 protected:
 
     std::shared_ptr<SpriteAtlas> m_spriteAtlas;
@@ -63,6 +68,8 @@ protected:
     bool m_unified;
 
     mutable std::unique_ptr<DynamicQuadMesh<SpriteVertex>> m_mesh;
+
+    std::unique_ptr<TextStyle> m_textStyle;
 };
 
 }

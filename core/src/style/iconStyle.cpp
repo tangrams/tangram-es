@@ -70,7 +70,7 @@ struct IconStyleBuilder : public StyleBuilder {
     std::unique_ptr<PointStyleBuilder> pointStyleBuilder;
     std::unique_ptr<TextStyleBuilder> textStyleBuilder;
 
-    std::unique_ptr<IconMesh> iconMesh;
+    std::unique_ptr<IconMesh2> iconMesh;
 
 private:
     const IconStyle& m_style;
@@ -80,7 +80,7 @@ void IconStyleBuilder::setup(const Tile& _tile) {
     textStyleBuilder->setup(_tile);
     pointStyleBuilder->setup(_tile);
 
-    iconMesh = std::make_unique<IconMesh>();
+    iconMesh = std::make_unique<IconMesh2>();
 }
 
 bool IconStyleBuilder::checkRule(const DrawRule& _rule) const {
@@ -88,6 +88,7 @@ bool IconStyleBuilder::checkRule(const DrawRule& _rule) const {
 }
 
 void IconStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
+    return;
 
     if (_feat.geometryType == GeometryType::points) {
         for (auto& point : _feat.points) {
@@ -122,7 +123,7 @@ void IconStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
             tLabel->setParent(*pLabel, definePriority);
         }
 
-        // Move labels over to IconMesh
+        // Move labels over to IconMesh2
         iconMesh->addLabels(pointLabels);
         iconMesh->addLabels(textLabels);
 

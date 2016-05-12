@@ -168,7 +168,7 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
     // build the feature with the rule's parameters
     for (auto& rule : m_matchedRules) {
 
-        StyleBuilder* style = _builder.getStyleBuilder(rule);
+        StyleBuilder* style = _builder.getStyleBuilder(rule.getStyleName());
         if (!style) {
             LOGN("Invalid style %s", rule.getStyleName().c_str());
             continue;

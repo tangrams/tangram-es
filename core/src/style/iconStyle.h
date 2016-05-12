@@ -12,7 +12,7 @@
 
 namespace Tangram {
 
-struct IconMesh : LabelSet {
+struct IconMesh2 : LabelSet {
 
     std::unique_ptr<StyledMesh> textLabels;
     std::unique_ptr<StyledMesh> spriteLabels;
@@ -22,7 +22,7 @@ struct IconMesh : LabelSet {
     m_labels.insert(m_labels.end(),
                     std::move_iterator<iter_t>(_labels.begin()),
                     std::move_iterator<iter_t>(_labels.end()));
-}
+    }
 
 };
 

@@ -14,6 +14,7 @@ namespace Tangram {
 PointStyle::PointStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
     : Style(_name, _blendMode, _drawMode)
 {
+    m_textStyle = std::make_unique<TextStyle>(_name, true, _blendMode, _drawMode);
     m_unified = false;
 }
 
@@ -31,6 +32,8 @@ void PointStyle::constructVertexLayout() {
         {"a_scale", 1, GL_UNSIGNED_BYTE, false, 0},
         {"a_rotation", 1, GL_SHORT, false, 0},
     }));
+
+    m_textStyle->constructVertexLayout();
 }
 
 void PointStyle::constructShaderProgram() {
@@ -49,15 +52,19 @@ void PointStyle::constructShaderProgram() {
     m_shaderProgram->addSourceBlock("defines", defines);
 
     m_mesh = std::make_unique<DynamicQuadMesh<SpriteVertex>>(m_vertexLayout, m_drawMode);
+
+    m_textStyle->constructShaderProgram();
 }
 
 void PointStyle::onBeginUpdate() {
     m_mesh->clear();
+    m_textStyle->onBeginUpdate();
 }
 
 void PointStyle::onBeginFrame() {
     // Upload meshes for next frame
     m_mesh->upload();
+    m_textStyle->onBeginFrame();
 }
 
 void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
@@ -76,10 +83,17 @@ void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
     m_shaderProgram->setUniformMatrix4f(m_uOrtho, _view.getOrthoViewportMatrix());
 
     m_mesh->draw(*m_shaderProgram);
+
+    m_textStyle->onBeginDrawFrame(_view, _scene);
 }
 
 std::unique_ptr<StyleBuilder> PointStyle::createBuilder() const {
     return std::make_unique<PointStyleBuilder>(*this);
+}
+
+void PointStyle::setPixelScale(float _pixelScale) {
+    Style::setPixelScale(_pixelScale);
+    m_textStyle->setPixelScale(_pixelScale);
 }
 
 }

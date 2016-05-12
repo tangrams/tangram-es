@@ -137,7 +137,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     const std::string* anchor = nullptr;
 
     uint32_t priority;
-    if (textStyle.unified()) {
+    if (_rule.unified) {
         if (_rule.get(StyleParamKey::text_priority, priority)) {
             p.labelOptions.priority = (float)priority;
         }
