@@ -632,7 +632,7 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
             auto atlasIt = atlases.find(textureName);
             if (atlasIt != atlases.end()) {
                 pointStyle->setSpriteAtlas(atlasIt->second);
-            }  else {
+            } else {
                 auto textures = scene.textures();
                 auto texIt = textures.find(textureName);
                 if (texIt != textures.end()) {
