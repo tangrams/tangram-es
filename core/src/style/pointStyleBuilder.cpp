@@ -217,8 +217,11 @@ void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
     if (_rule.unified) {
         if (m_labels.size() == 0) { return; }
 
-        m_textStyleBuilder->addFeature(_feat, _rule);
-        auto& textLabels = static_cast<TextStyleBuilder&>(*m_textStyleBuilder).labels();
+        auto& textStyleBuilder = static_cast<TextStyleBuilder&>(*m_textStyleBuilder);
+
+        textStyleBuilder.addFeature(_feat, _rule);
+
+        auto& textLabels = textStyleBuilder.labels();
 
         if (m_labels.size() == textLabels.size()) {
             bool definePriority = !_rule.contains(StyleParamKey::text_priority);

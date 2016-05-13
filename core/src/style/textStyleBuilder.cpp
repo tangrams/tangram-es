@@ -68,8 +68,17 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
     } else if (_feat.geometryType == GeometryType::polygons) {
         for (auto& polygon : _feat.polygons) {
-            auto p = centroid(polygon);
-            addLabel(params, Label::Type::point, { p, p });
+            if (_rule.unified) {
+                auto p = centroid(polygon);
+                addLabel(params, Label::Type::point, { p, p });
+            } else {
+                for (auto& line : polygon) {
+                    for (auto& point : line) {
+                        auto p = glm::vec2(point);
+                        addLabel(params, Label::Type::point, { p });
+                    }
+                }
+            }
         }
 
     } else if (_feat.geometryType == GeometryType::lines) {
@@ -78,11 +87,18 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
         float minLength = m_attributes.width * pixel * 0.2;
 
         for (auto& line : _feat.lines) {
-            for (size_t i = 0; i < line.size() - 1; i++) {
-                glm::vec2 p1 = glm::vec2(line[i]);
-                glm::vec2 p2 = glm::vec2(line[i + 1]);
-                if (glm::length(p1-p2) > minLength) {
-                    addLabel(params, Label::Type::line, { p1, p2 });
+            if (_rule.unified) {
+                for (auto& point : line) {
+                    auto p = glm::vec2(point);
+                    addLabel(params, Label::Type::point, { p });
+                }
+            } else {
+                for (size_t i = 0; i < line.size() - 1; i++) {
+                    glm::vec2 p1 = glm::vec2(line[i]);
+                    glm::vec2 p2 = glm::vec2(line[i + 1]);
+                    if (glm::length(p1-p2) > minLength) {
+                        addLabel(params, Label::Type::line, { p1, p2 });
+                    }
                 }
             }
         }
