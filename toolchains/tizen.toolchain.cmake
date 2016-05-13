@@ -7,9 +7,9 @@ if (${TIZEN_DEVICE})
 
   set(CMAKE_C_COMPILER ${TIZEN_SDK}/tools/arm-linux-gnueabi-gcc-4.9/bin/arm-linux-gnueabi-gcc)
   set(CMAKE_CXX_COMPILER ${TIZEN_SDK}/tools/arm-linux-gnueabi-gcc-4.9/bin/arm-linux-gnueabi-g++)
-  set(CMAKE_FIND_ROOT_PATH ${TIZEN_SDK}/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-device.core)
+  set(CMAKE_FIND_ROOT_PATH ${TIZEN_SDK}/platforms/tizen-2.3.1/wearable/rootstraps/wearable-2.3.1-device.core)
 
-  # set(CMAKE_SYSROOT  ${TIZEN_SDK}/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-device.core)
+  # set(CMAKE_SYSROOT  ${TIZEN_SDK}/platforms/tizen-2.3.1/wearable/rootstraps/wearable-2.3.1-device.core)
   set(CMAKE_SYSROOT ${TIZEN_SYSROOT})
 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
@@ -19,9 +19,9 @@ else() # Emulator
 
   set(CMAKE_C_COMPILER ${TIZEN_SDK}/tools/i386-linux-gnueabi-gcc-4.9/bin/i386-linux-gnueabi-gcc)
   set(CMAKE_CXX_COMPILER ${TIZEN_SDK}/tools/i386-linux-gnueabi-gcc-4.9/bin/i386-linux-gnueabi-g++)
-  set(CMAKE_FIND_ROOT_PATH ${TIZEN_SDK}/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-emulator.core)
+  set(CMAKE_FIND_ROOT_PATH ${TIZEN_SDK}/platforms/tizen-2.3.1/wearable/rootstraps/wearable-2.3.1-emulator.core)
 
-  # set(TIZEN_SYSROOT ${TIZEN_SDK}/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-emulator.core)
+  # set(TIZEN_SYSROOT ${TIZEN_SDK}/platforms/tizen-2.3.1/wearable/rootstraps/wearable-2.3.1-emulator.core)
   set(CMAKE_SYSROOT ${TIZEN_SYSROOT})
 
   # set(CMAKE_C_FLAGS_INIT "-march=i486")

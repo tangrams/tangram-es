@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<manifest xmlns="http://tizen.org/ns/packages" api-version="2.3.1" package="com.mapzen.tangram.app" version="1.0.1">
+<manifest xmlns="http://tizen.org/ns/packages" api-version="2.4" package="com.mapzen.tangram.app" version="1.0.1">
     <profile name="mobile"/>
     <ui-application appid="com.mapzen.tangram.app" exec="tangramapp" hw-acceleration="on" multiple="false" nodisplay="false" taskmanage="true" type="capp">
         <label>tangramapp</label>
