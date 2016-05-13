@@ -5,6 +5,8 @@
 #define SDF_IMPLEMENTATION
 #include "sdf.h"
 
+#include <memory>
+
 #define DEFAULT "fonts/NotoSans-Regular.ttf"
 #define FONT_AR "fonts/NotoNaskh-Regular.ttf"
 #define FONT_HE "fonts/NotoSansHebrew-Regular.ttf"
@@ -57,6 +59,36 @@ FontContext::FontContext() :
             m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(fontPath), size));
         }
     }
+#elif defined(PLATFORM_IOS)
+
+    int size = BASE_SIZE;
+    auto loadFonts = [&](const char* path) {
+        unsigned int dataSize;
+        char* data = reinterpret_cast<char*>(bytesFromFile(path, PathType::resource, &dataSize));
+        if (data) {
+            for (int i = 0; i < 3; i++, size += STEP_SIZE) {
+                m_font[i] = m_alfons.addFont("default", alfons::InputSource(data, dataSize), size);
+            }
+            free(data);
+        }
+    };
+    auto addFaces = [&](const char* path) {
+        unsigned int dataSize;
+        char* data = reinterpret_cast<char*>(bytesFromFile(path, PathType::resource, &dataSize));
+        if (data) {
+            for (int i = 0; i < 3; i++, size += STEP_SIZE) {
+                    m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(data, dataSize), size));
+            }
+            free(data);
+        }
+    };
+
+    loadFonts(DEFAULT);
+    addFaces(FONT_AR);
+    addFaces(FONT_HE);
+    addFaces(FONT_JA);
+    addFaces(FALLBACK);
+
 #else
     int size = BASE_SIZE;
     for (int i = 0; i < 3; i++, size += STEP_SIZE) {
@@ -268,6 +300,7 @@ auto FontContext::getFont(const std::string& _family, const std::string& _style,
     }
 
     font->addFace(m_alfons.addFontFace(alfons::InputSource(reinterpret_cast<char*>(data), dataSize), fontSize));
+    free(data);
 
     // add fallbacks from default font
     font->addFaces(*m_font[sizeIndex]);
