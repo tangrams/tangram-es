@@ -26,16 +26,19 @@ TextStyleBuilder::TextStyleBuilder(const TextStyle& _style)
 
 void TextStyleBuilder::setup(const Tile& _tile){
     m_tileSize = _tile.getProjection()->TileSize();
-    m_quads.clear();
     m_atlasRefs.reset();
-    m_labels.clear();
 
     m_textLabels = std::make_unique<TextLabels>(m_style);
 }
 
 std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
+    if (m_quads.empty()) { return nullptr; }
+
     m_textLabels->setLabels(m_labels);
     m_textLabels->setQuads(m_quads, m_atlasRefs);
+
+    m_labels.clear();
+    m_quads.clear();
 
     return std::move(m_textLabels);
 }
