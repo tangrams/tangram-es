@@ -155,7 +155,7 @@ TIZEN_ARM_CMAKE_PARAMS = \
         ${BUILD_TYPE} \
         ${CMAKE_OPTIONS} \
 	-DTIZEN_SDK=$$TIZEN_SDK \
-        -DTIZEN_SYSROOT=$$TIZEN_SDK/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-device.core \
+        -DTIZEN_SYSROOT=$$TIZEN_SDK/platforms/tizen-2.3.1/wearable/rootstraps/wearable-2.3.1-device.core \
 	-DTIZEN_DEVICE=1 \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/tizen.toolchain.cmake \
 	-DPLATFORM_TARGET=tizen \
@@ -165,7 +165,7 @@ TIZEN_X86_CMAKE_PARAMS = \
 	${BUILD_TYPE} \
 	${CMAKE_OPTIONS} \
 	-DTIZEN_SDK=$$TIZEN_SDK \
-	-DTIZEN_SYSROOT=$$TIZEN_SDK/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-emulator.core \
+	-DTIZEN_SYSROOT=$$TIZEN_SDK/platforms/tizen-2.3.1/wearable/rootstraps/wearable-2.3.1-emulator.core \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/tizen.toolchain.cmake \
 	-DPLATFORM_TARGET=tizen \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
