@@ -101,8 +101,12 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     const static std::string defaultStyle("normal");
     const static std::string defaultFamily("default");
 
-    const TextStyle& textStyle = static_cast<const TextStyle&>(style());
-    TextStyle::Parameters p = textStyle.defaultParams();
+    TextStyle::Parameters p;
+
+    if (_rule.unified) {
+        p = m_style.defaultUnifiedParams();
+    }
+
     glm::vec2 offset;
 
     _rule.get(StyleParamKey::text_source, p.text);
