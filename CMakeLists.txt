@@ -84,3 +84,13 @@ if(BENCHMARK)
   message(STATUS "Build with benchmarks")
   add_subdirectory(${PROJECT_SOURCE_DIR}/bench)
 endif()
+
+### Resources
+file(GLOB_RECURSE UBER_RESOURCE_FILES "${PROJECT_SOURCE_DIR}/resources/*")
+
+add_custom_target(copy_uber_resources
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources
+    ${CMAKE_BINARY_DIR}/bin
+  SOURCES ${UBER_RESOURCE_FILES})
+

@@ -37,6 +37,7 @@ if(APPLICATION)
   endforeach()
 
   add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/core/resources" "Resources")
+  add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/resources" "Resources")
 
   file(GLOB_RECURSE OSX_RESOURCES "${PROJECT_SOURCE_DIR}/osx/resources/**")
   string(REGEX REPLACE "[.]DS_Store" "" OSX_RESOURCES "${OSX_RESOURCES}")
