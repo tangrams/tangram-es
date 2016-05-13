@@ -626,33 +626,20 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
     }
 
     if (Node textureNode = styleNode["texture"]) {
-        const std::string& textureName = textureNode.Scalar();
-        auto atlases = scene.spriteAtlases();
-        auto atlasIt = atlases.find(textureName);
-        std::shared_ptr<SpriteAtlas> atlas;
-        std::shared_ptr<Texture> texture;
-
-        if (atlasIt != atlases.end()) {
-            atlas = atlasIt->second;
-        } else {
-            auto textures = scene.textures();
-            auto texIt = textures.find(textureName);
-
-            if (texIt != textures.end()) {
-                texture = texIt->second;
+        if (auto pointStyle = dynamic_cast<PointStyle*>(&style)) {
+            const std::string& textureName = textureNode.Scalar();
+            auto atlases = scene.spriteAtlases();
+            auto atlasIt = atlases.find(textureName);
+            if (atlasIt != atlases.end()) {
+                pointStyle->setSpriteAtlas(atlasIt->second);
             } else {
-                LOGW("Undefined texture name %s for style",
-                    textureName.c_str(), style.getName().c_str());
-            }
-        }
-
-        PointStyle* pointStyle = dynamic_cast<PointStyle*>(&style);
-
-        if (pointStyle) {
-            if (texture) {
-                pointStyle->setTexture(texture);
-            } else if (atlas) {
-                pointStyle->setSpriteAtlas(atlas);
+                auto textures = scene.textures();
+                auto texIt = textures.find(textureName);
+                if (texIt != textures.end()) {
+                    pointStyle->setTexture(texIt->second);
+                } else {
+                    LOGW("Undefined texture name %s", textureName.c_str());
+                }
             }
         }
     }
@@ -1374,7 +1361,6 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, S
             for (auto& ruleNode : member.second) {
 
                 std::vector<StyleParam> params;
-                std::string s = ruleNode.first.Scalar();
                 parseStyleParams(ruleNode.second, scene, "", params);
 
                 const std::string& ruleName = ruleNode.first.Scalar();

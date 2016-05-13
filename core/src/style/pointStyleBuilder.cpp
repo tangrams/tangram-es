@@ -221,8 +221,7 @@ void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
         auto& textLabels = static_cast<TextStyleBuilder&>(*m_textStyleBuilder).labels();
 
         if (m_labels.size() == textLabels.size()) {
-            uint32_t textPriority;
-            bool definePriority = !_rule.get(StyleParamKey::text_priority, textPriority);
+            bool definePriority = !_rule.contains(StyleParamKey::text_priority);
 
             for (size_t i = 0; i < textLabels.size(); ++i) {
                 auto& tLabel = textLabels[i];
