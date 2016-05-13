@@ -205,3 +205,40 @@ TEST_CASE("DrawRule correctly reports that it doesn't contain a parameter", "[Dr
 
 
 }
+
+TEST_CASE("Test unified flag for draw rule") {
+
+    std::vector<StyleParam> params1 = {
+        { StyleParamKey::offset, "[20, 20]", false },
+    };
+
+    std::vector<StyleParam> params2 = {
+        { StyleParamKey::text_offset, "[10, 10]", true },
+    };
+
+    std::vector<StyleParam> params3 = {
+        { StyleParamKey::offset, "[20, 20]", false },
+        { StyleParamKey::text_offset, "[10, 10]", true },
+    };
+
+    DrawRuleData data1 { "dg1", 0, params1 };
+    DrawRuleData data2 { "dg2", 1, params2 };
+    DrawRuleData data3 { "dg3", 2, params3 };
+
+    const SceneLayer layer_a = { "a", Filter(), { data1 }, {} };
+    const SceneLayer layer_b = { "b", Filter(), { data2 }, {} };
+    const SceneLayer layer_c = { "c", Filter(), { data3 }, {} };
+
+    DrawRuleMergeSet a;
+    a.mergeRules(layer_a);
+    REQUIRE(!a.matchedRules()[0].unified);
+
+    a.mergeRules(layer_b);
+    REQUIRE(!a.matchedRules()[0].unified);
+    REQUIRE(a.matchedRules()[1].unified);
+
+    DrawRuleMergeSet b;
+    b.mergeRules(layer_c);
+    REQUIRE(b.matchedRules()[0].unified);
+
+}
