@@ -26,8 +26,7 @@ else() # Emulator
 
   # set(CMAKE_C_FLAGS_INIT "-march=i486")
   # set(CMAKE_CXX_FLAGS_INIT "-march=i486")
-  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i486")
-  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i486")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i486")
 
 endif()
 

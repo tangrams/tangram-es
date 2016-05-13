@@ -95,8 +95,10 @@ void __glAttachShader(GLuint program, GLuint shader) {
 void __glLinkProgram(GLuint program) {
     __evas_gl_glapi->glLinkProgram(program);
 }
+
 void __glShaderSource(GLuint shader, GLsizei count, const GLchar *const*string, const GLint *length) {
-    __evas_gl_glapi->glShaderSource(shader, count, string, length);
+	auto source = const_cast<const GLchar**>(string);
+    __evas_gl_glapi->glShaderSource(shader, count, source, length);
 }
 void __glGetShaderInfoLog(GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog) {
     __evas_gl_glapi->glGetShaderInfoLog(shader, bufSize, length, infoLog);
@@ -251,12 +253,12 @@ void __glFinish(void) {
 
 // VAO
 void __glBindVertexArray(GLuint array) {
-    __evas_gl_glapi->glBindVertexArray(array);
+    __evas_gl_glapi->glBindVertexArrayOES(array);
 }
 void __glDeleteVertexArrays(GLsizei n, const GLuint *arrays) {
-    __evas_gl_glapi->glDeleteVertexArrays(n, arrays);
+    __evas_gl_glapi->glDeleteVertexArraysOES(n, arrays);
 }
 void __glGenVertexArrays(GLsizei n, GLuint *arrays) {
-    __evas_gl_glapi->glGenVertexArrays(n, arrays);
+    __evas_gl_glapi->glGenVertexArraysOES(n, arrays);
 }
 

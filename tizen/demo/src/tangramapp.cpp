@@ -72,7 +72,7 @@ static void _init_gl(Evas_Object *obj) {
 	ecore_timer_add(0.01, [](void *data) {
 		bool anim = shouldRender();
 		if (anim) {
-			elm_glview_changed_set((Elm_Glview*)data);
+			elm_glview_changed_set((Evas_Object*)data);
 		}
 		return ECORE_CALLBACK_RENEW;
 	}, obj);
