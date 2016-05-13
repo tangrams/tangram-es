@@ -2,7 +2,7 @@
 <tproject xmlns="http://www.tizen.org/tproject">
     <platforms>
         <platform>
-            <name>mobile-2.4</name>
+            <name>wearable-2.3.1</name>
         </platform>
     </platforms>
     <package>
