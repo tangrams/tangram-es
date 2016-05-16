@@ -334,7 +334,7 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx,
         if (miterVec == glm::zero<glm::vec2>()) {
             miterVec = perp2d(glm::vec3(normNext, 0.f), glm::vec3(normPrev, 0.f));
         } else {
-            scale = sqrtf(2.0f / (1.0f + glm::dot(normPrev, normNext)) / glm::dot(miterVec, miterVec));
+            scale = 2.f / glm::dot(miterVec, miterVec);
         }
 
         miterVec *= scale;
