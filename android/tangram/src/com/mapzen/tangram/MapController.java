@@ -1,11 +1,10 @@
 package com.mapzen.tangram;
 
-import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
-import android.opengl.GLES20;
 import android.util.DisplayMetrics;
 
 import com.mapzen.tangram.TouchInput.Gestures;
@@ -75,7 +74,7 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Callback for {@link #captureFrame(FrameCaptureCallback, bool) }
+     * Callback for {@link #captureFrame(FrameCaptureCallback, boolean) }
      */
     public interface FrameCaptureCallback {
         /**
@@ -99,8 +98,8 @@ public class MapController implements Renderer {
         int w = mapView.getWidth();
         int h = mapView.getHeight();
 
-        int b[] = new int[(int) (w * h)];
-        int bt[] = new int[(int) (w * h)];
+        int b[] = new int[w * h];
+        int bt[] = new int[w * h];
         IntBuffer buffer = IntBuffer.wrap(b);
         buffer.position(0);
         GLES20.glReadPixels(0, 0, w, h, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer);
