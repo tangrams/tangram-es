@@ -65,9 +65,11 @@ static void _init_gl(Evas_Object *obj) {
 	ELEMENTARY_GLVIEW_GLOBAL_USE(obj);
 
 	Tangram::initialize("scene.yaml");
-	Tangram::setPixelScale(2);
+	//Tangram::setPixelScale(2);
 
 	Tangram::setupGL();
+
+	Tangram::toggleDebugFlag(Tangram::DebugFlags::tangram_infos);
 
 	ecore_timer_add(0.01, [](void *data) {
 		bool anim = shouldRender();
@@ -322,7 +324,7 @@ Evas_Object* glview_create(Evas_Object *win) {
 	glview = elm_glview_add(win);
 	elm_win_resize_object_add(win, glview);
 	elm_glview_mode_set(glview, static_cast<Elm_GLView_Mode>(ELM_GLVIEW_DEPTH | //ELM_GLVIEW_STENCIL |
-			ELM_GLVIEW_DIRECT | // ELM_GLVIEW_CLIENT_SIDE_ROTATION |
+			// ELM_GLVIEW_DIRECT | // ELM_GLVIEW_CLIENT_SIDE_ROTATION |
 			0));
 
 	elm_glview_resize_policy_set(glview, ELM_GLVIEW_RESIZE_POLICY_RECREATE);

@@ -873,7 +873,7 @@
 									<listOptionValue builtIn="false" value="PLATFORM_TIZEN"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.dialect.std.1889466896" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" value="gnu.cpp.compiler.dialect.c++1y" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.option.other.other.1036575807" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -march=i486 -static -static-libgcc -static-libstdc++" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.1036575807" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -march=i386 -mtune=i386" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1037625606" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool command="i386-linux-gnueabi-gcc" id="org.tizen.nativecore.tool.sbi.gnu.c.compiler.679897933" name="C Compiler" superClass="org.tizen.nativecore.tool.sbi.gnu.c.compiler">
@@ -976,7 +976,7 @@
 									<listOptionValue builtIn="false" value="harfbuzz"/>
 								</option>
 								<option id="sbi.gnu.cpp.linker.option.shared_flag.core.38009591" name="Linker.Shared" superClass="sbi.gnu.cpp.linker.option.shared_flag.core" value="false" valueType="boolean"/>
-								<option id="gnu.cpp.link.option.flags.2036842514" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-static-libgcc -static-libstdc++" valueType="string"/>
+								<option id="gnu.cpp.link.option.flags.2036842514" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-static-libstdc++" valueType="string"/>
 								<option id="gnu.cpp.link.option.nodeflibs.2049592617" name="Do not use default libraries (-nodefaultlibs)" superClass="gnu.cpp.link.option.nodeflibs" value="false" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.nostdlibs.10601986" name="No startup or default libs (-nostdlib)" superClass="gnu.cpp.link.option.nostdlibs" value="false" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.636630771" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
