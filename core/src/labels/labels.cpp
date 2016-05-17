@@ -305,7 +305,7 @@ void Labels::updateLabelSet(const View& _view, float _dt,
             }
         } else {
             // just so it is consistent between two instances
-            if (l1 < l2) {
+            if (l1->hash() < l2->hash()) {
                 l1->occlude();
             } else {
                 l2->occlude();
