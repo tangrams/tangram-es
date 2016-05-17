@@ -57,11 +57,12 @@ void Importer::normalizeSceneImports(Node& root, const std::string& parentPath) 
 void Importer::setNormalizedTexture(Node& texture, const std::vector<std::string>& names,
         const std::string& parentPath) {
 
-    for (auto& name : names) {
+    for (size_t index = 0; index < names.size(); index++) {
+        auto& name = names[index];
         if (m_textureNames.find(name) == m_textureNames.end()) {
             m_textureNames.insert(name);
             if (names.size() > 1) {
-                texture.push_back(normalizePath(name, parentPath));
+                texture[index] = normalizePath(name, parentPath);
             } else {
                 texture = normalizePath(name, parentPath);
             }
@@ -131,7 +132,7 @@ void Importer::normalizeSceneTextures(Node& root, const std::string& parentPath)
 bool Importer::loadScene(const std::string& path) {
 
     auto scenePath = path;
-    auto sceneString = stringFromFile(setResourceRoot(scenePath.c_str()).c_str(), PathType::resource);
+    auto sceneString = stringFromFile(scenePath.c_str(), PathType::resource);
     auto sceneName = getFilename(scenePath);
 
     if (m_scenes.find(sceneName) != m_scenes.end()) { return true; }
