@@ -214,12 +214,12 @@ void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
 void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     StyleBuilder::addFeature(_feat, _rule);
 
-    if (_rule.unified) {
+    if (_rule.contains(StyleParamKey::icon_text)) {
         if (m_labels.size() == 0) { return; }
 
         auto& textStyleBuilder = static_cast<TextStyleBuilder&>(*m_textStyleBuilder);
 
-        textStyleBuilder.addFeature(_feat, _rule);
+        textStyleBuilder.addFeatureCommon(_feat, _rule, true);
 
         auto& textLabels = textStyleBuilder.labels();
 

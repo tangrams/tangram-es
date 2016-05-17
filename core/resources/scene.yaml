@@ -270,7 +270,8 @@ layers:
                         time: 1s
                 #size: [[13, 12px], [15, 18px]]
                 #interactive: true
-
+                text:
+                  #collide: false
         # add generic icon at high zoom
         generic:
             filter: { $zoom: { min: 18 } }

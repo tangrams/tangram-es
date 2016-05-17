@@ -56,7 +56,6 @@ void DrawRule::merge(const DrawRuleData& _ruleData, const SceneLayer& _layer) {
     const char* layerNew = _layer.name().c_str();
 
     for (const auto& paramNew : _ruleData.parameters) {
-        unified |= paramNew.unified;
 
         auto key = static_cast<uint8_t>(paramNew.key);
         auto& param = params[key];
@@ -244,16 +243,8 @@ void DrawRuleMergeSet::mergeRules(const SceneLayer& _layer) {
             if (m_matchedRules[pos].id == rule.id) { break; }
         }
 
-        bool unified = false;
-        for (auto props : rule.parameters) {
-            if (props.unified) {
-                unified = true;
-            }
-        }
-
         if (pos == end) {
             m_matchedRules.emplace_back(rule, _layer);
-            m_matchedRules.back().unified = unified;
         } else {
             m_matchedRules[pos].merge(rule, _layer);
         }
