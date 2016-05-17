@@ -118,11 +118,12 @@ void setScene(std::shared_ptr<Scene>& _scene) {
 
 void loadScene(const char* _scenePath) {
     LOG("Loading scene file: %s", _scenePath);
-	
+
 	// Copy old scene
     auto scene = std::make_shared<Scene>(*m_scene);
 
-    if (SceneLoader::loadScene(_scenePath, *scene)) {
+    auto scenePath = setResourceRoot(_scenePath);
+    if (SceneLoader::loadScene(scenePath, *scene)) {
         setScene(scene);
     }
 }
