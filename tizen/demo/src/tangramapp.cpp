@@ -65,11 +65,11 @@ static void _init_gl(Evas_Object *obj) {
 	ELEMENTARY_GLVIEW_GLOBAL_USE(obj);
 
 	Tangram::initialize("scene.yaml");
-	//Tangram::setPixelScale(2);
+	Tangram::setPixelScale(2);
 
 	Tangram::setupGL();
 
-	Tangram::toggleDebugFlag(Tangram::DebugFlags::tangram_infos);
+	//Tangram::toggleDebugFlag(Tangram::DebugFlags::tangram_infos);
 
 	ecore_timer_add(0.01, [](void *data) {
 		bool anim = shouldRender();
@@ -411,12 +411,12 @@ static void _ctxpopup_item_cb_theme(void *data, Evas_Object *obj,
 }
 static void _ctxpopup_item_cb_infos(void *data, Evas_Object *obj,
 		void *event_info) {
-	Tangram::toggleDebugFlag(Tangram::DebugFlags::tangram_infos);
+	//Tangram::toggleDebugFlag(Tangram::DebugFlags::tangram_infos);
 	elm_ctxpopup_dismiss(obj);
 }
 static void _ctxpopup_item_cb_grid(void *data, Evas_Object *obj,
 		void *event_info) {
-	Tangram::toggleDebugFlag(Tangram::DebugFlags::tile_bounds);
+	//Tangram::toggleDebugFlag(Tangram::DebugFlags::tile_bounds);
 	elm_ctxpopup_dismiss(obj);
 }
 static void _ctxpopup_dismissed_cb(void *data, Evas_Object *obj,
