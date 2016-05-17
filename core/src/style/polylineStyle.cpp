@@ -106,7 +106,7 @@ public:
 
             void set(float _width, float _dWdZ, float _height, float _order) {
                 height = { glm::round(_height * position_scale), _order * order_scale};
-                width = glm::vec2{_width, _dWdZ} * extrusion_scale;
+                width = { glm::round(_width * extrusion_scale), glm::round(_dWdZ * extrusion_scale) };
             }
         } fill, stroke;
 
