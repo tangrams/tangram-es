@@ -217,7 +217,8 @@ void Label::resetState() {
 }
 
 bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract) {
-    if (m_state == State::dead) {
+
+    if (m_state == State::dead || (m_parent && m_parent->state() == State::dead)) {
         return false;
     }
 
