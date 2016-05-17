@@ -5,6 +5,7 @@ matrix:
         - os: osx
           env: PLATFORM=osx
           compiler: clang
+          osx_image: xcode7.2
         - os: linux
           env: PLATFORM=linux CXX=g++-4.9 CC=gcc-4.9
           addons:
@@ -14,6 +15,7 @@ matrix:
         - os: osx
           env: PLATFORM=ios
           compiler: clang
+          osx_image: xcode7.2
         - os: linux
           env: PLATFORM=android
           addons:

@@ -9,7 +9,7 @@ namespace Tangram {
 
 void Filter::print(int _indent) const {
 
-    switch (data.get_type_index()) {
+    switch (data.which()) {
 
     case Data::type<OperatorAny>::value: {
         logMsg("%*s any\n", _indent, "");
@@ -91,7 +91,7 @@ int Filter::filterCost() const {
     // Add some extra penalty for set vs simple filters
     int sum = 100;
 
-    switch (data.get_type_index()) {
+    switch (data.which()) {
     case Data::type<OperatorAny>::value:
         for (auto& f : operands()) { sum += f.filterCost(); }
         return sum;
@@ -129,7 +129,7 @@ int Filter::filterCost() const {
 const std::string& Filter::key() const {
     static const std::string empty = "";
 
-    switch (data.get_type_index()) {
+    switch (data.which()) {
 
     case Data::type<Existence>::value:
         return data.get<Existence>().key;
@@ -152,7 +152,7 @@ const std::string& Filter::key() const {
 const std::vector<Filter>& Filter::operands() const {
     static const std::vector<Filter> empty;
 
-    switch (data.get_type_index()) {
+    switch (data.which()) {
     case Data::type<OperatorAny>::value:
         return data.get<OperatorAny>().operands;
 
@@ -170,7 +170,7 @@ const std::vector<Filter>& Filter::operands() const {
 
 const bool Filter::isOperator() const {
 
-    switch (data.get_type_index()) {
+    switch (data.which()) {
     case Data::type<OperatorAny>::value:
         return true;
 
