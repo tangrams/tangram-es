@@ -40,7 +40,7 @@ public:
         yes, no, none
     };
 
-    Scene();
+    Scene(const std::string& _path = "");
     Scene(const Scene& _other);
     ~Scene();
 
@@ -58,6 +58,7 @@ public:
     auto& fontContext() { return m_fontContext; }
     auto& globals() { return m_globals; }
 
+    const auto& path() const { return m_path; }
     const auto& config() const { return m_config; }
     const auto& dataSources() const { return m_dataSources; };
     const auto& layers() const { return m_layers; };
@@ -97,6 +98,9 @@ public:
     std::shared_ptr<DataSource> getDataSource(const std::string& name);
 
 private:
+
+    // The file path from which this scene was loaded
+    std::string m_path;
 
     // The root node of the YAML scene configuration
     YAML::Node m_config;

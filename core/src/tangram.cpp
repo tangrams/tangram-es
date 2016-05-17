@@ -60,8 +60,8 @@ static std::bitset<8> g_flags = 0;
 
 void initialize(const char* _scenePath) {
 
-    if (m_tileManager) {
-        LOG("Notice: Already initialized");
+    if (m_scene && m_scene->path() == _scenePath) {
+        LOGD("Specified scene is already initalized.");
         return;
     }
 
@@ -71,7 +71,7 @@ void initialize(const char* _scenePath) {
     m_view = std::make_shared<View>();
 
     // Create a scene object
-    m_scene = std::make_shared<Scene>();
+    m_scene = std::make_shared<Scene>(_scenePath);
 
     // Input handler
     m_inputHandler = std::make_unique<InputHandler>(m_view);
