@@ -20,13 +20,17 @@ public:
 
     const Style& style() const override { return m_style; }
 
-    void addFeature(const Feature& _feature, const DrawRule& _rule) override;
+    void addFeature(const Feature& _feature, const DrawRule& _rule) override {
+        addFeatureCommon(_feature, _rule, false);
+    }
+
+    void addFeatureCommon(const Feature& _feature, const DrawRule& _rule, bool _iconText);
 
     void setup(const Tile& _tile) override;
 
     std::unique_ptr<StyledMesh> build() override;
 
-    TextStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
+    TextStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props, bool _iconText) const;
 
     bool prepareLabel(TextStyle::Parameters& _params, Label::Type _type);
 

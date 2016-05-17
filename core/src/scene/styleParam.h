@@ -61,6 +61,7 @@ enum class StyleParamKey : uint8_t {
     text_transition_show_time,
     visible,
     width,
+    point_text,
     NUM_ELEMENTS
 };
 
@@ -132,24 +133,21 @@ struct StyleParam {
         key(StyleParamKey::none),
         value(none_type{}) {};
 
-    StyleParam(const std::string& _key, const std::string& _value, bool _unified = false);
+    StyleParam(const std::string& _key, const std::string& _value);
 
-    StyleParam(StyleParamKey _key, std::string _value, bool _unified = false) :
+    StyleParam(StyleParamKey _key, std::string _value) :
         key(_key),
-        value(std::move(_value)),
-        unified(_unified) {}
+        value(std::move(_value)) {}
 
-    StyleParam(StyleParamKey _key, Stops* _stops, bool _unified = false) :
+    StyleParam(StyleParamKey _key, Stops* _stops) :
         key(_key),
         value(none_type{}),
-        stops(_stops),
-        unified(_unified) {
+        stops(_stops) {
     }
 
     StyleParamKey key;
     Value value;
     Stops* stops = nullptr;
-    bool unified = false;
     int32_t function = -1;
 
     bool operator<(const StyleParam& _rhs) const { return key < _rhs.key; }

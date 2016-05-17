@@ -1158,10 +1158,10 @@ Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
 }
 
 void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string& prefix,
-                                   std::vector<StyleParam>& out, bool unified) {
+                                   std::vector<StyleParam>& out) {
 
     for (const auto& prop : params) {
-        unified |= prefix == "text";
+
         std::string key;
         if (!prefix.empty()) {
             key = prefix + DELIMITER + prop.first.Scalar();
@@ -1173,6 +1173,11 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
             continue;
         }
 
+        if (key == "text") {
+            // Add StyleParam to signify that icon uses text
+            out.push_back(StyleParam{ StyleParamKey::point_text, "" });
+        }
+
         Node value = prop.second;
 
         switch (value.Type()) {
@@ -1180,12 +1185,12 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
             const std::string& val = value.Scalar();
 
             if (val.compare(0, 8, "function") == 0) {
-                StyleParam param(key, "", unified);
+                StyleParam param(key, "");
                 param.function = scene.functions().size();
                 scene.functions().push_back(val);
                 out.push_back(std::move(param));
             } else {
-                out.push_back(StyleParam{ key, val, unified });
+                out.push_back(StyleParam{ key, val });
             }
             break;
         }
@@ -1196,33 +1201,34 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
 
                     if (StyleParam::isColor(styleKey)) {
                         scene.stops().push_back(Stops::Colors(value));
-                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()), unified });
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
                     } else if (StyleParam::isWidth(styleKey)) {
                         std::vector<Unit> allowedUnits;
                         StyleParam::unitsForStyleParam(styleKey, allowedUnits);
                         scene.stops().push_back(Stops::Widths(value, *scene.mapProjection(), allowedUnits));
-                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()), unified });
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
                     } else if (StyleParam::isOffsets(styleKey)) {
                         std::vector<Unit> allowedUnits;
                         StyleParam::unitsForStyleParam(styleKey, allowedUnits);
                         scene.stops().push_back(Stops::Offsets(value, allowedUnits));
-                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()), unified });
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
                     } else if (StyleParam::isFontSize(styleKey)) {
                         scene.stops().push_back(Stops::FontSize(value));
-                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()), unified });
+                        out.push_back(StyleParam{ styleKey, &(scene.stops().back()) });
                     }
                 } else {
                     LOGW("Unknown style parameter %s", key.c_str());
                 }
 
             } else {
-                out.push_back(StyleParam{ key, parseSequence(value), unified });
+                out.push_back(StyleParam{ key, parseSequence(value) });
             }
             break;
         }
         case NodeType::Map: {
             // NB: Flatten parameter map
-            parseStyleParams(value, scene, key, out, unified);
+            parseStyleParams(value, scene, key, out);
+
             break;
         }
         default:

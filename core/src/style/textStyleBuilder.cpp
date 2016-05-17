@@ -43,8 +43,8 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
     return std::move(m_textLabels);
 }
 
-void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
-    TextStyle::Parameters params = applyRule(_rule, _feat.props);
+void TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _rule, bool _iconText) {
+    TextStyle::Parameters params = applyRule(_rule, _feat.props, _iconText);
 
     Label::Type labelType;
     if (_feat.geometryType == GeometryType::lines) {
@@ -68,7 +68,7 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
     } else if (_feat.geometryType == GeometryType::polygons) {
         for (auto& polygon : _feat.polygons) {
-            if (_rule.unified) {
+            if (_iconText) {
                 auto p = centroid(polygon);
                 addLabel(params, Label::Type::point, { p, p });
             } else {
@@ -87,7 +87,7 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
         float minLength = m_attributes.width * pixel * 0.2;
 
         for (auto& line : _feat.lines) {
-            if (_rule.unified) {
+            if (_iconText) {
                 for (auto& point : line) {
                     auto p = glm::vec2(point);
                     addLabel(params, Label::Type::point, { p });
@@ -111,7 +111,8 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 }
 
 TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
-                                                  const Properties& _props) const {
+                                                  const Properties& _props,
+                                                  bool _iconText) const {
 
     const static std::string defaultWeight("400");
     const static std::string defaultStyle("normal");
@@ -119,7 +120,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     TextStyle::Parameters p;
 
-    if (_rule.unified) {
+    if (_iconText) {
         p = m_style.defaultUnifiedParams();
     }
 
@@ -160,7 +161,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     const std::string* anchor = nullptr;
 
     uint32_t priority;
-    if (_rule.unified) {
+    if (_iconText) {
         if (_rule.get(StyleParamKey::text_priority, priority)) {
             p.labelOptions.priority = (float)priority;
         }

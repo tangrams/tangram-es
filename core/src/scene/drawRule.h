@@ -70,7 +70,6 @@ struct DrawRule {
     // 480 (on 32bit arch) or 980 byte for params array.
     std::bitset<StyleParamKeySize> active = { 0 };
 
-    bool unified = false;
 
     // draw-style name and id
     const std::string* name = nullptr;
