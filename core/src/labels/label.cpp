@@ -11,8 +11,8 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _
       m_transform(_transform),
       m_dim(_size),
       m_options(_options),
-      m_anchorType(_anchor)
-{
+      m_anchorType(_anchor) {
+
     if (!m_options.collide || m_type == Type::debug){
         enterState(State::visible, 1.0);
     } else {
@@ -221,6 +221,7 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
         return false;
     }
 
+    m_occludedLastFrame = m_occluded;
     m_occluded = false;
 
     bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize, !Tangram::getDebugFlag(DebugFlags::all_labels));
@@ -326,9 +327,6 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
         case State::dead:
             break;
     }
-
-    m_occludedLastFrame = m_occluded;
-    m_occluded = false;
 
     return animate;
 }

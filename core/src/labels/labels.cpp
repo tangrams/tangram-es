@@ -347,12 +347,8 @@ void Labels::updateLabelSet(const View& _view, float _dt,
     for (auto* label : m_labels) {
 
         // Manage link occlusion (unified icon labels)
-        if (label->parent()) {
-            if (label->parent()->isOccluded()
-            || label->parent()->occludedLastFrame()
-            || !label->parent()->visibleState()) {
-                label->occlude();
-            }
+        if (label->parent() && (label->parent()->isOccluded() || !label->parent()->visibleState())) {
+            label->occlude();
         }
 
         m_needUpdate |= label->evalState(screenSize, _dt);
