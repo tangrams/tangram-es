@@ -223,7 +223,9 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
     }
 
     m_occludedLastFrame = m_occluded;
-    m_occluded = false;
+    if (m_state != State::fading_out) {
+        m_occluded = false;
+    }
 
     bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize, !Tangram::getDebugFlag(DebugFlags::all_labels));
 
@@ -287,6 +289,11 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             }
             break;
         case State::fading_out:
+            // if (m_occluded) {
+            //     enterState(State::fading_in, m_transform.state.alpha);
+            //     animate = true;
+            //     break;
+            // }
             setAlpha(m_fade.update(_dt));
             animate = true;
             if (m_fade.isFinished()) {
