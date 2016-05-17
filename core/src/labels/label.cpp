@@ -300,8 +300,11 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             break;
         case State::wait_occ:
             if (m_occluded) {
-                enterState(State::dead, 0.0);
-
+                if (m_parent) {
+                    enterState(State::sleep, 0.0);
+                } else {
+                    enterState(State::dead, 0.0);
+                }
             } else {
                 m_fade = FadeEffect(true, m_options.showTransition.ease,
                                     m_options.showTransition.time);
