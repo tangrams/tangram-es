@@ -8,6 +8,8 @@ endif()
 # set for test in other cmake files
 set(PLATFORM_TIZEN ON)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fPIC -fPIE")
+
 # global compile options
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++1y -fPIC -fPIE")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
