@@ -163,8 +163,8 @@ void PolylineStyleBuilder<V>::setup(const Tile& tile) {
 
     // When a tile is overzoomed, we are actually styling the area of its
     // 'source' tile, which will have a larger effective pixel size at the
-    // 'style' zoom level.
-    m_tileSizePixels *= std::exp2(id.s - id.z);
+    // 'style' zoom level. This scaling is performed in the vertex shader to
+    // prevent loss of precision for small dimensions in packed attributes.
 }
 
 template <class V>
