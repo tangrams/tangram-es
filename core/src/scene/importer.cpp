@@ -59,13 +59,21 @@ void Importer::setNormalizedTexture(Node& texture, const std::vector<std::string
 
     for (size_t index = 0; index < names.size(); index++) {
         auto& name = names[index];
+        std::string normTexPath;
+
+        //get normalized texture path
         if (m_textureNames.find(name) == m_textureNames.end()) {
-            m_textureNames.insert(name);
-            if (names.size() > 1) {
-                texture[index] = normalizePath(name, parentPath);
-            } else {
-                texture = normalizePath(name, parentPath);
-            }
+            normTexPath = normalizePath(name, parentPath);
+            m_textureNames[name] = normTexPath;
+        } else {
+            normTexPath = m_textureNames.at(name);
+        }
+
+        //set yaml node with normalized texture path
+        if (names.size() > 1) {
+            texture[index] = normTexPath;
+        } else {
+            texture = normTexPath;
         }
     }
 }
