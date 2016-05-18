@@ -6,11 +6,12 @@
 
 namespace Tangram {
 
-Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _options)
+Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _options, LabelProperty::Anchor _anchor)
     : m_type(_type),
       m_transform(_transform),
       m_dim(_size),
-      m_options(_options) {
+      m_options(_options),
+      m_anchorType(_anchor) {
 
     if (!m_options.collide || m_type == Type::debug){
         enterState(State::visible, 1.0);
@@ -26,6 +27,7 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _
     m_xAxis = glm::vec2(1.0, 0.0);
     m_yAxis = glm::vec2(0.0, 1.0);
     m_occluded = false;
+    m_parent = nullptr;
 }
 
 Label::~Label() {}
@@ -124,6 +126,20 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
     return true;
 }
 
+void Label::setParent(const Label& _parent, bool _definePriority) {
+    m_parent = &_parent;
+
+    glm::vec2 anchorDir = LabelProperty::anchorDirection(_parent.anchorType());
+    glm::vec2 anchorOrigin = anchorDir * _parent.dimension() * 0.5f;
+    applyAnchor(m_dim + _parent.dimension(), anchorOrigin, m_anchorType);
+
+    if (_definePriority) {
+        m_options.priority = _parent.options().priority + 0.5f;
+    }
+
+    m_options.offset += _parent.options().offset;
+}
+
 bool Label::offViewport(const glm::vec2& _screenSize) {
     const auto& quad = m_obb.getQuad();
 
@@ -200,11 +216,15 @@ void Label::resetState() {
 }
 
 bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract) {
-    if (m_state == State::dead) {
+
+    if (m_state == State::dead || (m_parent && m_parent->state() == State::dead)) {
         return false;
     }
 
-    m_occluded = false;
+    m_occludedLastFrame = m_occluded;
+    if (m_state != State::fading_out) {
+        m_occluded = false;
+    }
 
     bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize, !Tangram::getDebugFlag(DebugFlags::all_labels));
 
@@ -268,6 +288,11 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             }
             break;
         case State::fading_out:
+            // if (m_occluded) {
+            //     enterState(State::fading_in, m_transform.state.alpha);
+            //     animate = true;
+            //     break;
+            // }
             setAlpha(m_fade.update(_dt));
             animate = true;
             if (m_fade.isFinished()) {
@@ -281,8 +306,11 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             break;
         case State::wait_occ:
             if (m_occluded) {
-                enterState(State::dead, 0.0);
-
+                if (m_parent) {
+                    enterState(State::sleep, 0.0);
+                } else {
+                    enterState(State::dead, 0.0);
+                }
             } else {
                 m_fade = FadeEffect(true, m_options.showTransition.ease,
                                     m_options.showTransition.time);
@@ -309,9 +337,6 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
         case State::dead:
             break;
     }
-
-    m_occludedLastFrame = m_occluded;
-    m_occluded = false;
 
     return animate;
 }

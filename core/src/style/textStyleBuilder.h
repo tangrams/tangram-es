@@ -20,13 +20,17 @@ public:
 
     const Style& style() const override { return m_style; }
 
-    void addFeature(const Feature& _feature, const DrawRule& _rule) override;
+    void addFeature(const Feature& _feature, const DrawRule& _rule) override {
+        addFeatureCommon(_feature, _rule, false);
+    }
+
+    void addFeatureCommon(const Feature& _feature, const DrawRule& _rule, bool _iconText);
 
     void setup(const Tile& _tile) override;
 
     std::unique_ptr<StyledMesh> build() override;
 
-    TextStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
+    TextStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props, bool _iconText) const;
 
     bool prepareLabel(TextStyle::Parameters& _params, Label::Type _type);
 
@@ -37,6 +41,10 @@ public:
     std::string applyTextTransform(const TextStyle::Parameters& _params, const std::string& _string);
 
     std::string resolveTextSource(const std::string& textSource, const Properties& props) const;
+
+    bool checkRule(const DrawRule& _rule) const override { return true; }
+
+    auto& labels() { return m_labels; }
 
 protected:
 

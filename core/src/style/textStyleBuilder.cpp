@@ -26,23 +26,25 @@ TextStyleBuilder::TextStyleBuilder(const TextStyle& _style)
 
 void TextStyleBuilder::setup(const Tile& _tile){
     m_tileSize = _tile.getProjection()->TileSize();
-    m_quads.clear();
     m_atlasRefs.reset();
-    m_labels.clear();
 
     m_textLabels = std::make_unique<TextLabels>(m_style);
 }
 
 std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
+    if (m_quads.empty()) { return nullptr; }
+
     m_textLabels->setLabels(m_labels);
     m_textLabels->setQuads(m_quads, m_atlasRefs);
+
+    m_labels.clear();
+    m_quads.clear();
 
     return std::move(m_textLabels);
 }
 
-void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
-
-    TextStyle::Parameters params = applyRule(_rule, _feat.props);
+void TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _rule, bool _iconText) {
+    TextStyle::Parameters params = applyRule(_rule, _feat.props, _iconText);
 
     Label::Type labelType;
     if (_feat.geometryType == GeometryType::lines) {
@@ -66,8 +68,17 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
     } else if (_feat.geometryType == GeometryType::polygons) {
         for (auto& polygon : _feat.polygons) {
-            auto p = centroid(polygon);
-            addLabel(params, Label::Type::point, { p, p });
+            if (_iconText) {
+                auto p = centroid(polygon);
+                addLabel(params, Label::Type::point, { p, p });
+            } else {
+                for (auto& line : polygon) {
+                    for (auto& point : line) {
+                        auto p = glm::vec2(point);
+                        addLabel(params, Label::Type::point, { p });
+                    }
+                }
+            }
         }
 
     } else if (_feat.geometryType == GeometryType::lines) {
@@ -76,11 +87,18 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
         float minLength = m_attributes.width * pixel * 0.2;
 
         for (auto& line : _feat.lines) {
-            for (size_t i = 0; i < line.size() - 1; i++) {
-                glm::vec2 p1 = glm::vec2(line[i]);
-                glm::vec2 p2 = glm::vec2(line[i + 1]);
-                if (glm::length(p1-p2) > minLength) {
-                    addLabel(params, Label::Type::line, { p1, p2 });
+            if (_iconText) {
+                for (auto& point : line) {
+                    auto p = glm::vec2(point);
+                    addLabel(params, Label::Type::point, { p });
+                }
+            } else {
+                for (size_t i = 0; i < line.size() - 1; i++) {
+                    glm::vec2 p1 = glm::vec2(line[i]);
+                    glm::vec2 p2 = glm::vec2(line[i + 1]);
+                    if (glm::length(p1-p2) > minLength) {
+                        addLabel(params, Label::Type::line, { p1, p2 });
+                    }
                 }
             }
         }
@@ -93,13 +111,19 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 }
 
 TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
-                                                  const Properties& _props) const {
+                                                  const Properties& _props,
+                                                  bool _iconText) const {
 
     const static std::string defaultWeight("400");
     const static std::string defaultStyle("normal");
     const static std::string defaultFamily("default");
 
     TextStyle::Parameters p;
+
+    if (_iconText) {
+        p = m_style.defaultUnifiedParams();
+    }
+
     glm::vec2 offset;
 
     _rule.get(StyleParamKey::text_source, p.text);
@@ -112,45 +136,64 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     }
     if (p.text.empty()) { return p; }
 
-    auto fontFamily = _rule.get<std::string>(StyleParamKey::font_family);
+    auto fontFamily = _rule.get<std::string>(StyleParamKey::text_font_family);
     fontFamily = (!fontFamily) ? &defaultFamily : fontFamily;
 
-    auto fontWeight = _rule.get<std::string>(StyleParamKey::font_weight);
+    auto fontWeight = _rule.get<std::string>(StyleParamKey::text_font_weight);
     fontWeight = (!fontWeight) ? &defaultWeight : fontWeight;
 
-    auto fontStyle = _rule.get<std::string>(StyleParamKey::font_style);
+    auto fontStyle = _rule.get<std::string>(StyleParamKey::text_font_style);
     fontStyle = (!fontStyle) ? &defaultStyle : fontStyle;
 
-    _rule.get(StyleParamKey::font_size, p.fontSize);
+    _rule.get(StyleParamKey::text_font_size, p.fontSize);
     p.fontSize *= m_style.pixelScale();
 
     p.font = m_style.context()->getFont(*fontFamily, *fontStyle, *fontWeight, p.fontSize);
 
-    _rule.get(StyleParamKey::font_fill, p.fill);
-    _rule.get(StyleParamKey::offset, p.labelOptions.offset);
+    _rule.get(StyleParamKey::text_font_fill, p.fill);
+
     p.labelOptions.offset *= m_style.pixelScale();
 
-    _rule.get(StyleParamKey::font_stroke_color, p.strokeColor);
-    _rule.get(StyleParamKey::font_stroke_width, p.strokeWidth);
+    _rule.get(StyleParamKey::text_font_stroke_color, p.strokeColor);
+    _rule.get(StyleParamKey::text_font_stroke_width, p.strokeWidth);
     p.strokeWidth *= m_style.pixelScale();
 
-    _rule.get(StyleParamKey::priority, p.labelOptions.priority);
-    _rule.get(StyleParamKey::collide, p.labelOptions.collide);
-    _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
-    _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
-    _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
+    const std::string* anchor = nullptr;
+
+    uint32_t priority;
+    if (_iconText) {
+        if (_rule.get(StyleParamKey::text_priority, priority)) {
+            p.labelOptions.priority = (float)priority;
+        }
+        _rule.get(StyleParamKey::text_collide, p.labelOptions.collide);
+        _rule.get(StyleParamKey::text_interactive, p.interactive);
+        _rule.get(StyleParamKey::text_offset, p.labelOptions.offset);
+        anchor = _rule.get<std::string>(StyleParamKey::text_anchor);
+    } else {
+        if (_rule.get(StyleParamKey::priority, priority)) {
+            p.labelOptions.priority = (float)priority;
+        }
+        _rule.get(StyleParamKey::collide, p.labelOptions.collide);
+        _rule.get(StyleParamKey::interactive, p.interactive);
+        _rule.get(StyleParamKey::offset, p.labelOptions.offset);
+        anchor = _rule.get<std::string>(StyleParamKey::anchor);
+    }
+
+    _rule.get(StyleParamKey::text_transition_hide_time, p.labelOptions.hideTransition.time);
+    _rule.get(StyleParamKey::text_transition_selected_time, p.labelOptions.selectTransition.time);
+    _rule.get(StyleParamKey::text_transition_show_time, p.labelOptions.showTransition.time);
     _rule.get(StyleParamKey::text_wrap, p.maxLineWidth);
 
     size_t repeatGroupHash = 0;
     std::string repeatGroup;
-    if (_rule.get(StyleParamKey::repeat_group, repeatGroup)) {
+    if (_rule.get(StyleParamKey::text_repeat_group, repeatGroup)) {
         hash_combine(repeatGroupHash, repeatGroup);
     } else {
         repeatGroupHash = _rule.getParamSetHash();
     }
 
     StyleParam::Width repeatDistance;
-    if (_rule.get(StyleParamKey::repeat_distance, repeatDistance)) {
+    if (_rule.get(StyleParamKey::text_repeat_distance, repeatDistance)) {
         p.labelOptions.repeatDistance = repeatDistance.value;
     } else {
         p.labelOptions.repeatDistance = View::s_pixelsPerTile;
@@ -160,19 +203,19 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     p.labelOptions.repeatGroup = repeatGroupHash;
     p.labelOptions.repeatDistance *= m_style.pixelScale();
 
-    if (_rule.get(StyleParamKey::interactive, p.interactive) && p.interactive) {
+    if (p.interactive) {
         p.labelOptions.properties = std::make_shared<Properties>(_props);
     }
 
-    if (auto* anchor = _rule.get<std::string>(StyleParamKey::anchor)) {
+    if (anchor) {
         LabelProperty::anchor(*anchor, p.anchor);
     }
 
-    if (auto* transform = _rule.get<std::string>(StyleParamKey::transform)) {
+    if (auto* transform = _rule.get<std::string>(StyleParamKey::text_transform)) {
         TextLabelProperty::transform(*transform, p.transform);
     }
 
-    if (auto* align = _rule.get<std::string>(StyleParamKey::align)) {
+    if (auto* align = _rule.get<std::string>(StyleParamKey::text_align)) {
         bool res = TextLabelProperty::align(*align, p.align);
         if (!res) {
             switch(p.anchor) {

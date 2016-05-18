@@ -6,6 +6,8 @@
 #include "labels/spriteLabel.h"
 #include "labels/labelProperty.h"
 #include "gl/dynamicQuadMesh.h"
+#include "style/textStyle.h"
+#include "labels/textLabels.h"
 
 namespace Tangram {
 
@@ -44,12 +46,15 @@ public:
     auto& getMesh() const { return m_mesh; }
     virtual size_t dynamicMeshSize() const override { return m_mesh->bufferSize(); }
 
-protected:
+    virtual std::unique_ptr<StyleBuilder> createBuilder() const override;
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
 
-    virtual std::unique_ptr<StyleBuilder> createBuilder() const override;
+    TextStyle& textStyle() const { return *m_textStyle; }
+    virtual void setPixelScale(float _pixelScale) override;
+
+protected:
 
     std::shared_ptr<SpriteAtlas> m_spriteAtlas;
     std::shared_ptr<Texture> m_texture;
@@ -58,6 +63,8 @@ protected:
     UniformLocation m_uOrtho{"u_ortho"};
 
     mutable std::unique_ptr<DynamicQuadMesh<SpriteVertex>> m_mesh;
+
+    std::unique_ptr<TextStyle> m_textStyle;
 };
 
 }

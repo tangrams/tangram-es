@@ -45,11 +45,6 @@ public:
 
 protected:
 
-    void constructVertexLayout() override;
-    void constructShaderProgram() override;
-
-    std::unique_ptr<StyleBuilder> createBuilder() const override;
-
     bool m_sdf;
 
     std::shared_ptr<FontContext> m_context;
@@ -68,6 +63,9 @@ public:
               Blending _blendMode = Blending::overlay,
               GLenum _drawMode = GL_TRIANGLES);
 
+    void constructVertexLayout() override;
+    void constructShaderProgram() override;
+
     /* Create the LabelMeshes associated with FontContext GlyphTexture<s>
      * No GL involved, called from Tangram::update()
      */
@@ -84,28 +82,20 @@ public:
      */
     void onBeginDrawFrame(const View& _view, Scene& _scene) override;
 
-    DynamicQuadMesh<TextVertex>& getMesh(size_t id) const {
-        if (id >= m_meshes.size()) {
-            LOGE("Accesing inconsistent quad mesh");
-            assert(false);
-            return *m_meshes[0];
-        }
-        return *m_meshes[id];
-    }
+    std::unique_ptr<StyleBuilder> createBuilder() const override;
 
-    virtual size_t dynamicMeshSize() const override {
-        size_t size = 0;
-        for (const auto& mesh : m_meshes) {
-            size += mesh->bufferSize();
-        }
-        return size;
-    }
+    DynamicQuadMesh<TextVertex>& getMesh(size_t id) const;
+
+    virtual size_t dynamicMeshSize() const override;
 
     virtual ~TextStyle() override;
+
+    Parameters defaultUnifiedParams() const;
 
 private:
 
     const std::string& applyTextSource(const Parameters& _parameters, const Properties& _props) const;
+
 };
 
 }

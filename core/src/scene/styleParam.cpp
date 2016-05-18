@@ -14,21 +14,12 @@ namespace Tangram {
 using Color = CSSColorParser::Color;
 
 const std::map<std::string, StyleParamKey> s_StyleParamMap = {
-    {"align", StyleParamKey::align},
     {"anchor", StyleParamKey::anchor},
     {"cap", StyleParamKey::cap},
     {"centroid", StyleParamKey::centroid},
     {"collide", StyleParamKey::collide},
     {"color", StyleParamKey::color},
     {"extrude", StyleParamKey::extrude},
-    {"font:family", StyleParamKey::font_family},
-    {"font:fill", StyleParamKey::font_fill},
-    {"font:size", StyleParamKey::font_size},
-    {"font:stroke:color", StyleParamKey::font_stroke_color},
-    {"font:stroke:width", StyleParamKey::font_stroke_width},
-    {"font:style", StyleParamKey::font_style},
-    {"font:transform", StyleParamKey::transform},
-    {"font:weight", StyleParamKey::font_weight},
     {"interactive", StyleParamKey::interactive},
     {"join", StyleParamKey::join},
     {"miter_limit", StyleParamKey::miter_limit},
@@ -43,14 +34,48 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"outline:width", StyleParamKey::outline_width},
     {"outline:style", StyleParamKey::outline_style},
     {"priority", StyleParamKey::priority},
-    {"repeat_distance", StyleParamKey::repeat_distance},
-    {"repeat_group", StyleParamKey::repeat_group},
     {"size", StyleParamKey::size},
     {"sprite", StyleParamKey::sprite},
     {"sprite_default", StyleParamKey::sprite_default},
     {"style", StyleParamKey::style},
+    {"text:anchor", StyleParamKey::text_anchor},
+    {"text:collide", StyleParamKey::text_collide},
+    {"text:interactive", StyleParamKey::text_interactive},
+    {"text:offset", StyleParamKey::text_offset},
+    {"text:priority", StyleParamKey::text_priority},
+    {"text:align", StyleParamKey::text_align},
+    {"text:repeat_distance", StyleParamKey::text_repeat_distance},
+    {"text:repeat_group", StyleParamKey::text_repeat_group},
+    {"text:text_source", StyleParamKey::text_source},
+    {"text:text_wrap", StyleParamKey::text_wrap},
+    {"text:text_source", StyleParamKey::text_source},
+    {"text:text_wrap", StyleParamKey::text_wrap},
+    {"text:font:family", StyleParamKey::text_font_family},
+    {"text:font:fill", StyleParamKey::text_font_fill},
+    {"text:font:size", StyleParamKey::text_font_size},
+    {"text:font:stroke:color", StyleParamKey::text_font_stroke_color},
+    {"text:font:stroke:width", StyleParamKey::text_font_stroke_width},
+    {"text:font:style", StyleParamKey::text_font_style},
+    {"text:font:transform", StyleParamKey::text_transform},
+    {"text:font:weight", StyleParamKey::text_font_weight},
+    {"text:transition:hide:time", StyleParamKey::text_transition_hide_time},
+    {"text:transition:selected:time", StyleParamKey::text_transition_selected_time},
+    {"text:transition:show:time", StyleParamKey::text_transition_show_time},
+    {"align", StyleParamKey::text_align},
+    {"repeat_distance", StyleParamKey::text_repeat_distance},
+    {"repeat_group", StyleParamKey::text_repeat_group},
     {"text_source", StyleParamKey::text_source},
     {"text_wrap", StyleParamKey::text_wrap},
+    {"text_source", StyleParamKey::text_source},
+    {"text_wrap", StyleParamKey::text_wrap},
+    {"font:family", StyleParamKey::text_font_family},
+    {"font:fill", StyleParamKey::text_font_fill},
+    {"font:size", StyleParamKey::text_font_size},
+    {"font:stroke:color", StyleParamKey::text_font_stroke_color},
+    {"font:stroke:width", StyleParamKey::text_font_stroke_width},
+    {"font:style", StyleParamKey::text_font_style},
+    {"font:transform", StyleParamKey::text_transform},
+    {"font:weight", StyleParamKey::text_font_weight},
     {"tile_edges", StyleParamKey::tile_edges},
     {"transition:hide:time", StyleParamKey::transition_hide_time},
     {"transition:selected:time", StyleParamKey::transition_selected_time},
@@ -61,8 +86,9 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
 
 const std::map<StyleParamKey, std::vector<Unit>> s_StyleParamUnits = {
     {StyleParamKey::offset, {Unit::pixel}},
+    {StyleParamKey::text_offset, {Unit::pixel}},
     {StyleParamKey::size, {Unit::pixel}},
-    {StyleParamKey::font_stroke_width, {Unit::pixel}},
+    {StyleParamKey::text_font_stroke_width, {Unit::pixel}},
     {StyleParamKey::width, {Unit::meter, Unit::pixel}},
     {StyleParamKey::outline_width, {Unit::meter, Unit::pixel}}
 };
@@ -121,7 +147,6 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
 }
 
 StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& _value) {
-
     switch (key) {
     case StyleParamKey::extrude: {
         return parseExtrudeString(_value);
@@ -139,6 +164,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         return std::numeric_limits<uint32_t>::max();
     }
+    case StyleParamKey::text_offset:
     case StyleParamKey::offset: {
         UnitVec<glm::vec2> vec;
         if (!parseVec2(_value, { Unit::pixel }, vec) || std::isnan(vec.value.y)) {
@@ -155,31 +181,35 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     }
     case StyleParamKey::transition_hide_time:
     case StyleParamKey::transition_show_time:
-    case StyleParamKey::transition_selected_time: {
+    case StyleParamKey::transition_selected_time:
+    case StyleParamKey::text_transition_hide_time:
+    case StyleParamKey::text_transition_show_time:
+    case StyleParamKey::text_transition_selected_time: {
         float time = 0.0f;
         if (!parseTime(_value, time)) {
             LOGW("Invalid time param '%s'", _value.c_str());
         }
         return time;
     }
-    case StyleParamKey::font_family:
-    case StyleParamKey::font_weight:
-    case StyleParamKey::font_style: {
+    case StyleParamKey::text_font_family:
+    case StyleParamKey::text_font_weight:
+    case StyleParamKey::text_font_style: {
         std::string normalized = _value;
         std::transform(normalized.begin(), normalized.end(), normalized.begin(), ::tolower);
         return normalized;
     }
-    case StyleParamKey::align:
+    case StyleParamKey::text_align:
     case StyleParamKey::anchor:
+    case StyleParamKey::text_anchor:
     case StyleParamKey::text_source:
-    case StyleParamKey::transform:
+    case StyleParamKey::text_transform:
     case StyleParamKey::sprite:
     case StyleParamKey::sprite_default:
     case StyleParamKey::style:
     case StyleParamKey::outline_style:
-    case StyleParamKey::repeat_group:
+    case StyleParamKey::text_repeat_group:
         return _value;
-    case StyleParamKey::font_size: {
+    case StyleParamKey::text_font_size: {
         float fontSize = 0.f;
         if (!parseFontSize(_value, fontSize)) {
             LOGW("Invalid font-size '%s'.", _value.c_str());
@@ -188,16 +218,19 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     }
     case StyleParamKey::centroid:
     case StyleParamKey::interactive:
+    case StyleParamKey::text_interactive:
     case StyleParamKey::tile_edges:
     case StyleParamKey::visible:
     case StyleParamKey::collide:
+    case StyleParamKey::text_collide:
         if (_value == "true") { return true; }
         if (_value == "false") { return false; }
         LOGW("Bool value required for capitalized/visible. Using Default.");
         break;
     case StyleParamKey::order:
     case StyleParamKey::outline_order:
-    case StyleParamKey::priority: {
+    case StyleParamKey::priority:
+    case StyleParamKey::text_priority: {
         int num;
         if (parseInt(_value, num) > 0) {
             if (num >= 0) {
@@ -207,7 +240,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         LOGW("Invalid '%s' value '%s'", keyName(key).c_str(), _value.c_str());
         break;
     }
-    case StyleParamKey::repeat_distance: {
+    case StyleParamKey::text_repeat_distance: {
         ValueUnitPair repeatDistance;
         repeatDistance.unit = Unit::pixel;
 
@@ -240,7 +273,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     }
     case StyleParamKey::miter_limit:
     case StyleParamKey::outline_miter_limit:
-    case StyleParamKey::font_stroke_width: {
+    case StyleParamKey::text_font_stroke_width: {
         double num;
         if (parseFloat(_value, num) > 0) {
              return static_cast<float>(num);
@@ -250,8 +283,8 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
 
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
-    case StyleParamKey::font_fill:
-    case StyleParamKey::font_stroke_color:
+    case StyleParamKey::text_font_fill:
+    case StyleParamKey::text_font_stroke_color:
         return parseColor(_value);
 
     case StyleParamKey::cap:
@@ -286,49 +319,58 @@ std::string StyleParam::toString() const {
         return k + "(" + std::to_string(p[0]) + ", " + std::to_string(p[1]) + ")";
     }
     case StyleParamKey::size:
-    case StyleParamKey::offset: {
+    case StyleParamKey::offset:
+    case StyleParamKey::text_offset: {
         if (!value.is<glm::vec2>()) break;
         auto p = value.get<glm::vec2>();
         return k + "(" + std::to_string(p.x) + "px, " + std::to_string(p.y) + "px)";
     }
     case StyleParamKey::transition_hide_time:
+    case StyleParamKey::text_transition_hide_time:
     case StyleParamKey::transition_show_time:
+    case StyleParamKey::text_transition_show_time:
     case StyleParamKey::transition_selected_time:
-    case StyleParamKey::font_family:
-    case StyleParamKey::font_weight:
-    case StyleParamKey::font_style:
+    case StyleParamKey::text_transition_selected_time:
+    case StyleParamKey::text_font_family:
+    case StyleParamKey::text_font_weight:
+    case StyleParamKey::text_font_style:
     case StyleParamKey::text_source:
-    case StyleParamKey::transform:
+    case StyleParamKey::text_transform:
     case StyleParamKey::text_wrap:
-    case StyleParamKey::repeat_group:
+    case StyleParamKey::text_repeat_group:
     case StyleParamKey::sprite:
     case StyleParamKey::sprite_default:
     case StyleParamKey::style:
-    case StyleParamKey::align:
+    case StyleParamKey::text_align:
     case StyleParamKey::anchor:
+    case StyleParamKey::text_anchor:
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
     case StyleParamKey::interactive:
+    case StyleParamKey::text_interactive:
     case StyleParamKey::tile_edges:
     case StyleParamKey::visible:
     case StyleParamKey::centroid:
     case StyleParamKey::collide:
+    case StyleParamKey::text_collide:
         if (!value.is<bool>()) break;
         return k + std::to_string(value.get<bool>());
     case StyleParamKey::width:
     case StyleParamKey::outline_width:
-    case StyleParamKey::font_stroke_width:
-    case StyleParamKey::font_size:
+    case StyleParamKey::text_font_stroke_width:
+    case StyleParamKey::text_font_size:
         if (!value.is<Width>()) break;
         return k + std::to_string(value.get<Width>().value);
     case StyleParamKey::order:
     case StyleParamKey::outline_order:
     case StyleParamKey::priority:
+    case StyleParamKey::text_priority:
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
-    case StyleParamKey::font_fill:
-    case StyleParamKey::font_stroke_color:
-    case StyleParamKey::repeat_distance:
+    case StyleParamKey::outline_style:
+    case StyleParamKey::text_font_fill:
+    case StyleParamKey::text_font_stroke_color:
+    case StyleParamKey::text_repeat_distance:
     case StyleParamKey::cap:
     case StyleParamKey::outline_cap:
     case StyleParamKey::join:
@@ -349,6 +391,7 @@ std::string StyleParam::toString() const {
     }
 
     return k + "undefined " + std::to_string(static_cast<uint8_t>(key));
+
 }
 
 int StyleParam::parseValueUnitPair(const std::string& _value, size_t start,
@@ -538,8 +581,8 @@ bool StyleParam::isColor(StyleParamKey _key) {
     switch (_key) {
         case StyleParamKey::color:
         case StyleParamKey::outline_color:
-        case StyleParamKey::font_fill:
-        case StyleParamKey::font_stroke_color:
+        case StyleParamKey::text_font_fill:
+        case StyleParamKey::text_font_stroke_color:
             return true;
         default:
             return false;
@@ -551,7 +594,7 @@ bool StyleParam::isWidth(StyleParamKey _key) {
         case StyleParamKey::width:
         case StyleParamKey::outline_width:
         case StyleParamKey::size:
-        case StyleParamKey::font_stroke_width:
+        case StyleParamKey::text_font_stroke_width:
             return true;
         default:
             return false;
@@ -561,6 +604,7 @@ bool StyleParam::isWidth(StyleParamKey _key) {
 bool StyleParam::isOffsets(StyleParamKey _key) {
     switch (_key) {
         case StyleParamKey::offset:
+        case StyleParamKey::text_offset:
             return true;
         default:
             return false;
@@ -569,7 +613,7 @@ bool StyleParam::isOffsets(StyleParamKey _key) {
 
 bool StyleParam::isFontSize(StyleParamKey _key) {
     switch (_key) {
-        case StyleParamKey::font_size:
+        case StyleParamKey::text_font_size:
             return true;
         default:
             return false;

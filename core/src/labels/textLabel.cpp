@@ -13,49 +13,18 @@ const float TextVertex::rotation_scale = 4096.0f;
 const float TextVertex::alpha_scale = 255.f;
 
 TextLabel::TextLabel(Label::Transform _transform, Type _type, Label::Options _options,
-                     LabelProperty::Anchor _anchor, TextLabel::FontVertexAttributes _attrib,
+                     Anchor _anchor, TextLabel::FontVertexAttributes _attrib,
                      glm::vec2 _dim,  TextLabels& _labels, Range _vertexRange)
-    : Label(_transform, _dim, _type, _options),
+    : Label(_transform, _dim, _type, _options, _anchor),
       m_textLabels(_labels),
       m_vertexRange(_vertexRange),
-      m_fontAttrib(_attrib) {
+      m_fontAttrib(_attrib)
+{
+    applyAnchor(_dim, glm::vec2(0.0), _anchor);
+}
 
-    m_anchor = glm::vec2(0);
-    float width = _dim.x;
-    float height = _dim.y;
-
-    switch(_anchor) {
-    case Anchor::center:
-        break;
-    case Anchor::left:
-        m_anchor.x -= 0.5 * width;
-        break;
-    case Anchor::right:
-        m_anchor.x += 0.5 * width;
-        break;
-    case Anchor::bottom:
-        m_anchor.y += 0.5 * height;
-        break;
-    case Anchor::bottom_left:
-        m_anchor.x -= 0.5 * width;
-        m_anchor.y += 0.5 * height;
-        break;
-    case Anchor::bottom_right:
-        m_anchor.x += 0.5 * width;
-        m_anchor.y += 0.5 * height;
-        break;
-    case Anchor::top:
-        m_anchor.y -= 0.5 * height;
-        break;
-    case Anchor::top_left:
-        m_anchor.x -= 0.5 * width;
-        m_anchor.y -= 0.5 * height;
-        break;
-    case Anchor::top_right:
-        m_anchor.x += 0.5 * width;
-        m_anchor.y -= 0.5 * height;
-        break;
-    }
+void TextLabel::applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin, Anchor _anchor) {
+    m_anchor = _origin + LabelProperty::anchorDirection(_anchor) * _dimension * 0.5f;
 }
 
 void TextLabel::updateBBoxes(float _zoomFract) {
@@ -73,9 +42,10 @@ void TextLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const g
 
     switch (m_type) {
         case Type::debug:
-        case Type::point:
+        case Type::point: {
             _screenPosition += m_anchor;
             break;
+        }
         case Type::line: {
             // anchor at line center
             _screenPosition = (_ap1 + _ap2) * 0.5f;

@@ -2,6 +2,7 @@
 
 #include <string>
 #include "util/util.h"
+#include "glm/vec2.hpp"
 
 namespace Tangram {
 
@@ -20,6 +21,8 @@ enum Anchor {
 };
 
 bool anchor(const std::string& _transform, Anchor& _out);
+
+glm::vec2 anchorDirection(Anchor _anchor);
 
 } // LabelProperty
 

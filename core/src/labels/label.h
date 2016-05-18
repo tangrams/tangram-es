@@ -9,6 +9,7 @@
 #include "util/types.h"
 #include "util/hash.h"
 #include "data/properties.h"
+#include "labels/labelProperty.h"
 
 #include <string>
 #include <limits>
@@ -62,7 +63,7 @@ public:
 
     struct Options {
         glm::vec2 offset;
-        uint32_t priority = std::numeric_limits<uint32_t>::max();
+        float priority = std::numeric_limits<float>::max();
         bool interactive = false;
         std::shared_ptr<Properties> properties;
         bool collide = true;
@@ -77,7 +78,7 @@ public:
         size_t paramHash = 0;
     };
 
-    Label(Transform _transform, glm::vec2 _size, Type _type, Options _options);
+    Label(Transform _transform, glm::vec2 _size, Type _type, Options _options, LabelProperty::Anchor _anchor);
 
     virtual ~Label();
 
@@ -124,9 +125,18 @@ public:
     bool isOccluded() const { return m_occluded; }
     bool occludedLastFrame() const { return m_occludedLastFrame; }
 
+    const Label* parent() const { return m_parent; }
+    void setParent(const Label& parent, bool definePriority);
+
+    virtual glm::vec2 anchor() const { return m_anchor; }
+    LabelProperty::Anchor anchorType() const { return m_anchorType; }
+
     virtual glm::vec2 center() const;
 
 private:
+
+    virtual void applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
+        LabelProperty::Anchor _anchor) = 0;
 
     bool offViewport(const glm::vec2& _screenSize);
 
@@ -163,11 +173,16 @@ protected:
     // label options
     Options m_options;
 
+    LabelProperty::Anchor m_anchorType;
+    glm::vec2 m_anchor;
+
     glm::vec2 m_xAxis;
     glm::vec2 m_yAxis;
 
     // whether or not we need to update the mesh visibilit (alpha channel)
     bool m_updateMeshVisibility;
+
+    const Label* m_parent;
 
 };
 

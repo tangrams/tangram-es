@@ -626,9 +626,7 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
     }
 
     if (Node textureNode = styleNode["texture"]) {
-
         if (auto pointStyle = dynamic_cast<PointStyle*>(&style)) {
-
             const std::string& textureName = textureNode.Scalar();
             auto atlases = scene.spriteAtlases();
             auto atlasIt = atlases.find(textureName);
@@ -1163,15 +1161,21 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
                                    std::vector<StyleParam>& out) {
 
     for (const auto& prop : params) {
+
         std::string key;
         if (!prefix.empty()) {
             key = prefix + DELIMITER + prop.first.Scalar();
         } else {
-            key = prop.first.as<std::string>();
+            key = prop.first.Scalar();
         }
         if (key == "transition") {
             parseTransition(prop.second, scene, out);
             continue;
+        }
+
+        if (key == "text") {
+            // Add StyleParam to signify that icon uses text
+            out.push_back(StyleParam{ StyleParamKey::point_text, "" });
         }
 
         Node value = prop.second;
@@ -1224,6 +1228,7 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
         case NodeType::Map: {
             // NB: Flatten parameter map
             parseStyleParams(value, scene, key, out);
+
             break;
         }
         default:

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "labels/label.h"
-#include "labels/labelProperty.h"
 #include "labels/labelSet.h"
 
 #include <glm/glm.hpp>
@@ -54,11 +53,13 @@ public:
 
 protected:
     void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) override;
-    glm::vec2 m_anchor;
 
     void pushTransform() override;
 
 private:
+    void applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
+                     LabelProperty::Anchor _anchor) override;
+
     // Back-pointer to owning container
     const TextLabels& m_textLabels;
     // first vertex and count in m_textLabels quads

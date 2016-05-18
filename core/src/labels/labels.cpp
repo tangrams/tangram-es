@@ -59,7 +59,6 @@ void Labels::updateLabels(const View& _view, float _dt,
 
             auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
             if (!labelMesh) { continue; }
-
             for (auto& label : labelMesh->getLabels()) {
                 if (!label->update(mvp, screenSize, dz)) {
                     // skip dead labels
@@ -74,7 +73,6 @@ void Labels::updateLabels(const View& _view, float _dt,
                 } else if (label->canOcclude()) {
                     label->setProxy(proxyTile);
                     m_labels.push_back(label.get());
-
                 } else {
                     m_needUpdate |= label->evalState(screenSize, _dt);
                     label->pushTransform();
@@ -307,7 +305,7 @@ void Labels::updateLabelSet(const View& _view, float _dt,
             }
         } else {
             // just so it is consistent between two instances
-            if (l1 < l2) {
+            if (l1->hash() < l2->hash()) {
                 l1->occlude();
             } else {
                 l2->occlude();
@@ -347,6 +345,12 @@ void Labels::updateLabelSet(const View& _view, float _dt,
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
 
     for (auto* label : m_labels) {
+
+        // Manage link occlusion (unified icon labels)
+        if (label->parent() && (label->parent()->isOccluded() || !label->parent()->visibleState())) {
+            label->occlude();
+        }
+
         m_needUpdate |= label->evalState(screenSize, _dt);
         label->pushTransform();
     }
@@ -439,6 +443,11 @@ void Labels::drawDebug(const View& _view) {
                     break;
                 default:
                     Primitives::setColor(0xff0000);
+            }
+
+            if (label->parent()) {
+                Primitives::setColor(0xff0000);
+                Primitives::drawLine(sp, label->parent()->transform().state.screenPos);
             }
 
             Primitives::drawPoly(&(label->obb().getQuad())[0], 4);
