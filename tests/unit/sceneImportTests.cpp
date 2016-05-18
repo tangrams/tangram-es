@@ -53,7 +53,34 @@ TestImporter::TestImporter() {
 
 
     // All about textures
-    // TODO: scenes to test texture importing
+    m_testScenes["import/import.yaml"] = std::string(
+            R"END(
+                textures:
+                    tex1: { url: "../resources/icons/poi.png" }
+                    tex4: { url: "../resources/icons/poi2.png" }
+                    tex5: { url: "importResources/tex.png" }
+                    tex6: { url: "/absPath/tex.png" }
+                styles:
+                    styleA:
+                        shaders:
+                            uniforms:
+                                u_tex3: "importResources/tex.png"
+            )END");
+    m_testScenes["scene.yaml"] = std::string(
+            R"END(
+                import: import/import.yaml
+                textures:
+                    tex1: { url: "resources/icons/poi.png" }
+                    tex2: { url: "/absoluteTexPath/texture.png" }
+                    tex3: { url: "resources/tex/sameName.png" }
+                styles:
+                    styleA:
+                        texture: "resources/tex/sameName.png"
+                        shaders:
+                            uniforms:
+                                u_tex1: "resources/tex/sameName.png"
+                                u_tex2: ["uTex1.png", "resources/uTex2.png"]
+            )END");
 }
 
 bool TestImporter::loadScene(const std::string& path) {
@@ -63,9 +90,6 @@ bool TestImporter::loadScene(const std::string& path) {
 
     if (m_scenes.find(sceneName) != m_scenes.end()) { return true; }
 
-    // Make sure all references from uber scene file are relative to itself, instead of being
-    // absolute paths (Example: when loading a file using command line args).
-    // TODO: Could be made better later.
     if (m_scenes.size() == 0 && scenePath[0] == '/') { scenePath = getFilename(scenePath); }
 
     try {
@@ -80,7 +104,6 @@ bool TestImporter::loadScene(const std::string& path) {
         }
     }
     catch (YAML::ParserException e) {
-        //LOGE("Parsing scene config '%s'", e.what());
         return false;
     }
     return true;
@@ -91,21 +114,41 @@ TEST_CASE( "Basic importing - property overriding", "[scene-import][core]") {
     TestImporter importer;
     auto root = importer.applySceneImports("thisCar.yaml");
 
+    REQUIRE(root["import"].Scalar() == "");
     REQUIRE(root["name"].Scalar() == "thisCar");
     REQUIRE(root["type"].Scalar() == "car");
     REQUIRE(root["category"].Scalar() == "vehicle");
 
-    // see if imports worked ... order
-    // see if texture urls are good
-    // what happens to texture urls which are common between scenes
-    //  - common names
-    //  - common urls
 }
 
 TEST_CASE( "Basic importing with absolute path scene file - property overriding", "[scene-import][core]") {
     TestImporter importer;
     auto root = importer.applySceneImports("/absolutePath/thisCar.yaml");
+
+    REQUIRE(root["import"].Scalar() == "");
     REQUIRE(root["name"].Scalar() == "thisCar");
     REQUIRE(root["type"].Scalar() == "car");
     REQUIRE(root["category"].Scalar() == "vehicle");
+}
+
+TEST_CASE( "Texture path tests after importing process", "[scene-import][core]") {
+    TestImporter importer;
+    auto root = importer.applySceneImports("scene.yaml");
+
+    REQUIRE(root["import"].Scalar() == "");
+    const auto& texturesNode = root["textures"];
+    REQUIRE(texturesNode["tex1"]["url"].Scalar() == "resources/icons/poi.png");
+    REQUIRE(texturesNode["tex2"]["url"].Scalar() == "/absoluteTexPath/texture.png");
+    REQUIRE(texturesNode["tex3"]["url"].Scalar() == "resources/tex/sameName.png");
+    REQUIRE(texturesNode["tex4"]["url"].Scalar() == "import/../resources/icons/poi2.png");
+    REQUIRE(texturesNode["tex5"]["url"].Scalar() == "import/importResources/tex.png");
+    REQUIRE(texturesNode["tex6"]["url"].Scalar() == "/absPath/tex.png");
+
+    const auto& styleNode = root["styles"]["styleA"];
+    const auto& uniformsNode = styleNode["shaders"]["uniforms"];
+    REQUIRE(styleNode["texture"].Scalar() == "resources/tex/sameName.png");
+    REQUIRE(uniformsNode["u_tex1"].Scalar() == "resources/tex/sameName.png");
+    REQUIRE(uniformsNode["u_tex2"][0].Scalar() == "uTex1.png");
+    REQUIRE(uniformsNode["u_tex2"][1].Scalar() == "resources/uTex2.png");
+    REQUIRE(uniformsNode["u_tex3"].Scalar() == "import/importResources/tex.png");
 }
