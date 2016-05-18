@@ -96,7 +96,8 @@ void main() {
         // Interpolate between zoom levels
         width += dwdz * clamp(dz, 0.0, 1.0);
         // Scale pixel dimensions to be consistent in screen space
-        width *= exp2(-dz);
+        // and adjust scale for overzooming.
+        width *= exp2(-dz + (u_tile_origin.w - u_tile_origin.z));
 
         // Modify line width in model space before extrusion
         #pragma tangram: width
