@@ -140,10 +140,11 @@ void Importer::normalizeSceneTextures(Node& root, const std::string& parentPath)
 bool Importer::loadScene(const std::string& path) {
 
     auto scenePath = path;
-    auto sceneString = stringFromFile(scenePath.c_str(), PathType::resource);
     auto sceneName = getFilename(scenePath);
 
     if (m_scenes.find(sceneName) != m_scenes.end()) { return true; }
+
+    auto sceneString = stringFromFile(scenePath.c_str(), PathType::resource);
 
     // Make sure all references from uber scene file are relative to itself, instead of being
     // absolute paths (Example: when loading a file using command line args).
@@ -195,14 +196,14 @@ std::vector<std::string> Importer::getImportOrder() {
         const auto& sceneRoot = scene.second;
         for (const auto& import : getScenesToImport(sceneRoot)) {
             auto importName = getFilename(import);
-            // TODO: fixme do not allow cycles
             dependencies.push_back( {importName, name} );
         }
     }
 
-    if (dependencies.empty()) {
-        // only possible when only 1 scene to load with no imports
-        return {m_scenes.map[0].first.k};
+    auto sortedScenes = topologicalSort(dependencies);
+
+    if (sortedScenes.empty()) {
+        return { m_scenes.map[0].first.k };
     }
 
     return topologicalSort(dependencies);
