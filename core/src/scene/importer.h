@@ -22,7 +22,9 @@ public:
     // Loads the main scene with deep merging dependentent imported scenes.
     Node applySceneImports(const std::string& scenePath);
 
-private:
+// protected for testing purposes, else could be private
+protected:
+    virtual bool loadScene(const std::string& scenePath);
 
     // Get the sequence of scene names that are designated to be imported into the
     // input scene node by its 'import' fields.
@@ -32,8 +34,6 @@ private:
     // 'b', 'b' will always precede 'a' in the sequence.
     std::vector<std::string> getImportOrder();
 
-    // loads import scenes recursively and saves in m_scenes
-    bool loadScene(const std::string& scenePath);
 
     // loads all the imported scenes and the master scene and returns a unified YAML root node.
     Node importScenes(const std::string& sceneName);
