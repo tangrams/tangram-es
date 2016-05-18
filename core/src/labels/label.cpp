@@ -134,8 +134,7 @@ void Label::setParent(const Label& _parent, bool _definePriority) {
     applyAnchor(m_dim + _parent.dimension(), anchorOrigin, m_anchorType);
 
     if (_definePriority) {
-        float parentPriority = _parent.options().priority;
-        m_options.priority = parentPriority - 0.5f;
+        m_options.priority = _parent.options().priority + 0.5f;
     }
 
     m_options.offset += _parent.options().offset;
