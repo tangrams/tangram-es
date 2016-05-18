@@ -22,14 +22,14 @@ namespace Tangram {
 
 static std::atomic<int32_t> s_serial;
 
-Scene::Scene() : id(s_serial++) {
+Scene::Scene(const std::string& _path) : id(s_serial++), m_path(_path) {
     m_view = std::make_shared<View>();
     // For now we only have one projection..
     // TODO how to share projection with view?
     m_mapProjection.reset(new MercatorProjection());
 }
 
-Scene::Scene(const Scene& _other) : Scene() {
+Scene::Scene(const Scene& _other) : Scene(_other.path()) {
     m_config = _other.m_config;
     m_updates = _other.m_updates;
     m_clientDataSources = _other.m_clientDataSources;
