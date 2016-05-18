@@ -271,7 +271,14 @@ layers:
                 #size: [[13, 12px], [15, 18px]]
                 #interactive: true
                 text:
-                  #collide: false
+                    interactive: true
+                    text_wrap: 20
+                    font:
+                        family: sans-serif
+                        weight: 400
+                        style: normal
+                        size: 1.2em
+                        fill: white
         # add generic icon at high zoom
         generic:
             filter: { $zoom: { min: 18 } }
@@ -342,21 +349,21 @@ layers:
                 polygons:
                     style: polygons
                     color: '#bddec5'
-    poi_labels:
-        data: { source: osm, layer: pois }
-        filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
-        draw:
-            text:
-                interactive: true
-                #offset: [0, 12px]
-                align: right
-                text_wrap: 20
-                font:
-                    family: sans-serif
-                    weight: 400
-                    style: normal
-                    size: 1.2em
-                    fill: white
+    # poi_labels:
+    #     data: { source: osm, layer: pois }
+    #     filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }
+    #     draw:
+    #         text:
+    #             interactive: true
+    #             #offset: [0, 12px]
+    #             align: right
+    #             text_wrap: 20
+    #             font:
+    #                 family: sans-serif
+    #                 weight: 400
+    #                 style: normal
+    #                 size: 1.2em
+    #                 fill: white
     road_labels:
         data: {source: osm, layer: roads}
         filter: { name: true, aeroway: false, tunnel: false, railway: false, not: { kind: rail }, $zoom: { min: 10 } }
