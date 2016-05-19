@@ -15,12 +15,7 @@ public:
     TestImporter();
 
 protected:
-    // The only thing different here is the call to `getSceneString` instead of reading and
-    // loading a yaml file, which is in the parent importer class
-    virtual bool loadScene(const std::string& scenePath) override;
-
-private:
-    std::string getSceneString(const std::string& scenePath) {
+    virtual std::string getSceneString(const std::string& scenePath) override {
         return m_testScenes[scenePath];
     }
 
@@ -28,31 +23,41 @@ private:
 };
 
 TestImporter::TestImporter() {
-    // Set multiple scenes here, basically set m_testScenes
-
-    m_testScenes["import/vehicle.yaml"] = std::string(R"END(
+    m_testScenes["import/car.yaml"] = std::string(R"END(
                                 name: vehicle
                                 type: vehicle
                                 category: vehicle
                                 )END");
 
     m_testScenes["car.yaml"] = std::string(R"END(
-                                import: import/vehicle.yaml
+                                import: import/car.yaml
                                 type: car
                                 )END");
 
     m_testScenes["thisCar.yaml"] = std::string(R"END(
-                                    import: [import/vehicle.yaml, car.yaml]
+                                    import: [import/car.yaml, car.yaml]
                                     name: thisCar
                                     )END");
 
     m_testScenes["/absolutePath/thisCar.yaml"] = std::string(R"END(
-                                    import: [import/vehicle.yaml, car.yaml]
+                                    import: [import/car.yaml, car.yaml]
                                     name: thisCar
                                     )END");
 
+    m_testScenes["cycle.yaml"] = std::string(R"END(
+                                    import: [cycleScene.yaml]
+                                    imported: false
+                                    )END");
+
+    m_testScenes["/cycleScene.yaml"] = std::string(R"END(
+                                    import: [cycle.yaml]
+                                    cycle: true
+                                    )END");
+
+    m_testScenes["cycleScene.yaml"] = m_testScenes["/cycleScene.yaml"];
 
     // All about textures
+    // TODO: Handle test cases for named URLs
     m_testScenes["import/import.yaml"] = std::string(
             R"END(
                 textures:
@@ -83,30 +88,25 @@ TestImporter::TestImporter() {
             )END");
 }
 
-bool TestImporter::loadScene(const std::string& path) {
-    auto scenePath = path;
-    auto sceneString = getSceneString(scenePath); // Importer.cpp read the scene from the file
-    auto sceneName = getFilename(scenePath);
+TEST_CASE( "Cyclic Imports - only load the root scene", "[scene-import][core]") {
 
-    if (m_scenes.find(sceneName) != m_scenes.end()) { return true; }
+    TestImporter importer;
 
-    if (m_scenes.size() == 0 && scenePath[0] == '/') { scenePath = getFilename(scenePath); }
+    auto root = importer.applySceneImports("cycleScene.yaml");
+    REQUIRE(root["import"].Scalar() == "");
+    REQUIRE(root["imported"].Scalar() == "");
+    REQUIRE(root["cycle"].Scalar() == "true");
+}
 
-    try {
-        auto root = YAML::Load(sceneString);
-        normalizeSceneImports(root, scenePath);
-        normalizeSceneTextures(root, scenePath);
-        auto imports = getScenesToImport(root);
-        m_scenes[sceneName] = root;
-        for (const auto& import : imports) {
-            // TODO: What happens when parsing fails for an import
-            loadScene(import);
-        }
-    }
-    catch (YAML::ParserException e) {
-        return false;
-    }
-    return true;
+TEST_CASE( "Cyclic Imports (absolute base scene path) - only load the root scene", "[scene-import][core]") {
+
+    TestImporter importer;
+
+    auto root = importer.applySceneImports("/cycleScene.yaml");
+    REQUIRE(root["import"].Scalar() == "");
+    REQUIRE(root["imported"].Scalar() == "");
+    REQUIRE(root["cycle"].Scalar() == "true");
+
 }
 
 TEST_CASE( "Basic importing - property overriding", "[scene-import][core]") {

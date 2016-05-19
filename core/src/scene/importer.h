@@ -24,7 +24,8 @@ public:
 
 // protected for testing purposes, else could be private
 protected:
-    virtual bool loadScene(const std::string& scenePath);
+    virtual std::string getSceneString(const std::string& scenePath);
+    bool loadScene(const std::string& scenePath);
 
     // Get the sequence of scene names that are designated to be imported into the
     // input scene node by its 'import' fields.
@@ -32,7 +33,7 @@ protected:
 
     // Get a sequence of scene names ordered such that if scene 'a' imports scene
     // 'b', 'b' will always precede 'a' in the sequence.
-    std::vector<std::string> getImportOrder();
+    std::vector<std::string> getImportOrder(const std::string& baseScene);
 
 
     // loads all the imported scenes and the master scene and returns a unified YAML root node.
