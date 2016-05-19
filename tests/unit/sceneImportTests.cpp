@@ -70,6 +70,7 @@ TestImporter::TestImporter() {
                         shaders:
                             uniforms:
                                 u_tex3: "importResources/tex.png"
+                                u_tex4: tex1
             )END");
     m_testScenes["scene.yaml"] = std::string(
             R"END(
@@ -85,6 +86,8 @@ TestImporter::TestImporter() {
                             uniforms:
                                 u_tex1: "resources/tex/sameName.png"
                                 u_tex2: ["uTex1.png", "resources/uTex2.png"]
+                    styleB:
+                        texture: tex5
             )END");
 }
 
@@ -146,9 +149,13 @@ TEST_CASE( "Texture path tests after importing process", "[scene-import][core]")
 
     const auto& styleNode = root["styles"]["styleA"];
     const auto& uniformsNode = styleNode["shaders"]["uniforms"];
+
     REQUIRE(styleNode["texture"].Scalar() == "resources/tex/sameName.png");
+    REQUIRE(root["styles"]["styleB"]["texture"].Scalar() == "tex5");
+
     REQUIRE(uniformsNode["u_tex1"].Scalar() == "resources/tex/sameName.png");
     REQUIRE(uniformsNode["u_tex2"][0].Scalar() == "uTex1.png");
     REQUIRE(uniformsNode["u_tex2"][1].Scalar() == "resources/uTex2.png");
     REQUIRE(uniformsNode["u_tex3"].Scalar() == "import/importResources/tex.png");
+    REQUIRE(uniformsNode["u_tex4"].Scalar() == "tex1");
 }

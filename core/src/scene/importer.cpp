@@ -61,6 +61,9 @@ void Importer::setNormalizedTexture(Node& texture, const std::vector<std::string
         auto& name = names[index];
         std::string normTexPath;
 
+        // if texture url is a named texture then move on (this has been already resolved
+        if (m_globalTextures.find(name) != m_globalTextures.end()) { continue; }
+
         //get normalized texture path
         if (m_textureNames.find(name) == m_textureNames.end()) {
             normTexPath = normalizePath(name, parentPath);
@@ -84,6 +87,7 @@ void Importer::normalizeSceneTextures(Node& root, const std::string& parentPath)
         for (auto texture : textures) {
             if (Node textureUrl = texture.second["url"]) {
                 setNormalizedTexture(textureUrl, {textureUrl.Scalar()}, parentPath);
+                m_globalTextures.insert(texture.first.Scalar());
             }
         }
     }
