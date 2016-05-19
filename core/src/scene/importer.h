@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "util/fastmap.h"
 
@@ -42,16 +43,18 @@ protected:
     //void mergeMapFieldsTaskingLast(const std::string& key, Node target, const std::vector<Node>& imports);
     void mergeMapFields(Node& target, const Node& import);
 
-    // import scene to respective root nodes
-    fastmap<std::string, Node> m_scenes;
-    std::unordered_map<std::string, std::string> m_textureNames;
-
     std::string getFilename(const std::string& scenePath);
     void normalizeSceneTextures(Node& root, const std::string& parentPath);
     void setNormalizedTexture(Node& texture, const std::vector<std::string>& names,
             const std::string& parentPath);
     void normalizeSceneImports(Node& root, const std::string& parentPath);
     std::string normalizePath(const std::string& path, const std::string& parentPath);
+
+private:
+    // import scene to respective root nodes
+    fastmap<std::string, Node> m_scenes;
+    std::unordered_set<std::string> m_globalTextures;
+    std::unordered_map<std::string, std::string> m_textureNames;
 
 };
 
