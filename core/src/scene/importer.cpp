@@ -21,11 +21,11 @@ Node Importer::applySceneImports(const std::string& scenePath) {
 }
 
 std::string Importer::getFilename(const std::string& filePath) {
-    std::string sceneName = filePath;
+    std::string scenePath = filePath;
     std::regex r("[^//]+$");
     std::smatch match;
-    if (std::regex_search(sceneName, match, r)) { sceneName = match[0]; }
-    return sceneName;
+    if (std::regex_search(scenePath, match, r)) { scenePath = match[0]; }
+    return scenePath;
 }
 
 std::string Importer::normalizePath(const std::string &path,
@@ -137,14 +137,17 @@ void Importer::normalizeSceneTextures(Node& root, const std::string& parentPath)
     }
 }
 
+std::string Importer::getSceneString(const std::string &scenePath) {
+    return stringFromFile(scenePath.c_str(), PathType::resource);
+}
+
 bool Importer::loadScene(const std::string& path) {
 
     auto scenePath = path;
-    auto sceneName = getFilename(scenePath);
 
-    if (m_scenes.find(sceneName) != m_scenes.end()) { return true; }
+    if (m_scenes.find(scenePath) != m_scenes.end()) { return true; }
 
-    auto sceneString = stringFromFile(scenePath.c_str(), PathType::resource);
+    auto sceneString = getSceneString(scenePath.c_str());
 
     // Make sure all references from uber scene file are relative to itself, instead of being
     // absolute paths (Example: when loading a file using command line args).
@@ -156,7 +159,7 @@ bool Importer::loadScene(const std::string& path) {
         normalizeSceneImports(root, scenePath);
         normalizeSceneTextures(root, scenePath);
         auto imports = getScenesToImport(root);
-        m_scenes[sceneName] = root;
+        m_scenes[scenePath] = root;
         for (const auto& import : imports) {
             // TODO: What happens when parsing fails for an import
             loadScene(import);
@@ -171,23 +174,23 @@ bool Importer::loadScene(const std::string& path) {
 
 std::vector<std::string> Importer::getScenesToImport(const Node& scene) {
 
-    std::vector<std::string> sceneNames;
+    std::vector<std::string> scenePaths;
 
     if (const Node& import = scene["import"]) {
         if (import.IsScalar()) {
-            sceneNames.push_back(import.Scalar());
+            scenePaths.push_back(import.Scalar());
         }
         else if (import.IsSequence()) {
             for (const auto& imp : import) {
-                if (imp.IsScalar()) { sceneNames.push_back(imp.Scalar()); }
+                if (imp.IsScalar()) { scenePaths.push_back(imp.Scalar()); }
             }
         }
     }
 
-    return sceneNames;
+    return scenePaths;
 }
 
-std::vector<std::string> Importer::getImportOrder() {
+std::vector<std::string> Importer::getImportOrder(const std::string& baseScene) {
 
     std::vector<std::pair<std::string, std::string>> dependencies;
 
@@ -195,27 +198,27 @@ std::vector<std::string> Importer::getImportOrder() {
         const auto& name = scene.first.k;
         const auto& sceneRoot = scene.second;
         for (const auto& import : getScenesToImport(sceneRoot)) {
-            auto importName = getFilename(import);
-            dependencies.push_back( {importName, name} );
+            dependencies.push_back( {import, name} );
         }
     }
 
     auto sortedScenes = topologicalSort(dependencies);
 
     if (sortedScenes.empty()) {
-        return { m_scenes.map[0].first.k };
+        return { baseScene };
     }
 
     return topologicalSort(dependencies);
 }
 
-Node Importer::importScenes(const std::string& sceneName) {
+Node Importer::importScenes(const std::string& scenePath) {
 
-    auto importScenesSorted = getImportOrder();
+    auto importScenesSorted = getImportOrder(scenePath);
 
     Node root = Node();
 
-    for (const auto& import : importScenesSorted) {
+    for (auto& import : importScenesSorted) {
+        if (importScenesSorted.size() == 1 && import[0] == '/') { import = getFilename(import); }
         const auto& importRoot = m_scenes[import];
         if (!importRoot.IsMap()) { continue; }
         mergeMapFields(root, importRoot);
