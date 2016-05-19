@@ -140,17 +140,28 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
     void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
 
-        if(error == nil) {
+        NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
+
+        int statusCode = [httpResponse statusCode];
+
+        if (error != nil) {
+
+            LOGE("Response \"%s\" with error \"%s\".", response, [error.localizedDescription UTF8String]);
+
+        } else if (statusCode < 200 || statusCode >= 300) {
+
+            LOGE("Unsuccessful status code %d: \"%s\" from: %s",
+                statusCode,
+                [[NSHTTPURLResponse localizedStringForStatusCode: statusCode] UTF8String],
+                [response.URL.absoluteString UTF8String]);
+
+        } else {
 
             int dataLength = [data length];
             std::vector<char> rawDataVec;
             rawDataVec.resize(dataLength);
             memcpy(rawDataVec.data(), (char *)[data bytes], dataLength);
             _callback(std::move(rawDataVec));
-
-        } else {
-
-            logMsg("ERROR: response \"%s\" with error \"%s\".\n", response, std::string([error.localizedDescription UTF8String]).c_str());
 
         }
 
