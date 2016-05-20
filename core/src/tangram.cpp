@@ -87,9 +87,10 @@ void initialize(const char* _scenePath) {
 
     loadScene(_scenePath);
 
-    glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
-    m_view->setPosition(projPos.x, projPos.y);
-    m_view->setZoom(m_scene->startZoom);
+    // TODO: Remove the following 3 lines, to be done by setScene
+    //glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
+    //m_view->setPosition(projPos.x, projPos.y);
+    //m_view->setZoom(m_scene->startZoom);
 
     LOG("finish initialize");
 
@@ -98,6 +99,11 @@ void initialize(const char* _scenePath) {
 void setScene(std::shared_ptr<Scene>& _scene) {
     m_scene = _scene;
     m_view = _scene->view();
+
+    glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
+    m_view->setPosition(projPos.x, projPos.y);
+    m_view->setZoom(m_scene->startZoom);
+
     m_inputHandler->setView(m_view);
     m_tileManager->setDataSources(_scene->getAllDataSources());
     m_tileWorker->setScene(_scene);
@@ -123,9 +129,8 @@ void loadScene(const char* _scenePath) {
     auto scene = std::make_shared<Scene>(*m_scene);
 
     auto scenePath = setResourceRoot(_scenePath);
-    if (SceneLoader::loadScene(scenePath, *scene)) {
-        setScene(scene);
-    }
+    //TODO: consequence of async scene loading on queueSceneUpdate
+    SceneLoader::loadScene(scenePath, scene, setScene);
 }
 
 void queueSceneUpdate(const char* _path, const char* _value) {

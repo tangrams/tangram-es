@@ -11,13 +11,72 @@ using YAML::NodeType;
 
 namespace Tangram {
 
+std::atomic_uint Importer::progressCounter(0);
+
 Node Importer::applySceneImports(const std::string& scenePath) {
 
-    if (loadScene(scenePath)) {
-        return importScenes(scenePath);
+    m_sceneQueue.push_back(scenePath);
+
+    while (!m_sceneQueue.empty() || progressCounter != 0) {
+        std::string sceneString;
+        std::string path;
+        {
+            std::lock_guard<std::mutex> lock(queueMutex);
+            path = m_sceneQueue.back();
+            m_sceneQueue.pop_back();
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(sceneMutex);
+            if (m_scenes.find(path) != m_scenes.end()) { continue; }
+        }
+
+        std::regex r("^(http|https):/");
+        std::smatch match;
+        if (std::regex_search(path, match, r)) {
+            if (progressCounter < MAX_SCENE_DOWNLOAD) {
+                progressCounter++;
+                startUrlRequest(path,
+                        [&](std::vector<char>&& rawData) {
+                            progressCounter--;
+                            std::lock_guard<std::mutex> lock(sceneMutex);
+                            processScene(path, rawData.data());
+                        });
+            } else {
+                std::lock_guard<std::mutex> lock(queueMutex);
+                m_sceneQueue.push_back(path);
+            }
+        } else {
+            std::lock_guard<std::mutex> lock(sceneMutex);
+            processScene(path, getSceneString(path));
+        }
     }
 
-    return Node();
+    return importScenes(scenePath);
+}
+
+void Importer::processScene(const std::string &scenePath, const std::string &sceneString) {
+
+    std::string path = scenePath;
+    // Make sure all references from uber scene file are relative to itself, instead of being
+    // absolute paths (Example: when loading a file using command line args).
+    // TODO: Could be made better later.
+    if (m_scenes.size() == 0 && path[0] == '/') { path= getFilename(path); }
+
+    try {
+        auto root = YAML::Load(sceneString);
+        normalizeSceneImports(root, path);
+        normalizeSceneTextures(root, path);
+        auto imports = getScenesToImport(root);
+        m_scenes[path] = root;
+        for (const auto& import : imports) {
+            std::lock_guard<std::mutex> lock(queueMutex);
+            m_sceneQueue.push_back(import);
+        }
+    }
+    catch (YAML::ParserException e) {
+        LOGE("Parsing scene config '%s'", e.what());
+    }
 }
 
 std::string Importer::getFilename(const std::string& filePath) {
@@ -143,37 +202,6 @@ void Importer::normalizeSceneTextures(Node& root, const std::string& parentPath)
 
 std::string Importer::getSceneString(const std::string &scenePath) {
     return stringFromFile(scenePath.c_str(), PathType::resource);
-}
-
-bool Importer::loadScene(const std::string& path) {
-
-    auto scenePath = path;
-
-    if (m_scenes.find(scenePath) != m_scenes.end()) { return true; }
-
-    auto sceneString = getSceneString(scenePath.c_str());
-
-    // Make sure all references from uber scene file are relative to itself, instead of being
-    // absolute paths (Example: when loading a file using command line args).
-    // TODO: Could be made better later.
-    if (m_scenes.size() == 0 && scenePath[0] == '/') { scenePath = getFilename(scenePath); }
-
-    try {
-        auto root = YAML::Load(sceneString);
-        normalizeSceneImports(root, scenePath);
-        normalizeSceneTextures(root, scenePath);
-        auto imports = getScenesToImport(root);
-        m_scenes[scenePath] = root;
-        for (const auto& import : imports) {
-            // TODO: What happens when parsing fails for an import
-            loadScene(import);
-        }
-    }
-    catch (YAML::ParserException e) {
-        LOGE("Parsing scene config '%s'", e.what());
-        return false;
-    }
-    return true;
 }
 
 std::vector<std::string> Importer::getScenesToImport(const Node& scene) {

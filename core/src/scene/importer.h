@@ -5,6 +5,8 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <mutex>
+#include <atomic>
 
 #include "util/fastmap.h"
 
@@ -26,7 +28,7 @@ public:
 // protected for testing purposes, else could be private
 protected:
     virtual std::string getSceneString(const std::string& scenePath);
-    bool loadScene(const std::string& scenePath);
+    void processScene(const std::string& scenePath, const std::string& sceneString);
 
     // Get the sequence of scene names that are designated to be imported into the
     // input scene node by its 'import' fields.
@@ -56,6 +58,12 @@ private:
     std::unordered_set<std::string> m_globalTextures;
     std::unordered_map<std::string, std::string> m_textureNames;
 
+    std::vector<std::string> m_sceneQueue;
+    static std::atomic_uint progressCounter;
+    std::mutex sceneMutex;
+    std::mutex queueMutex;
+
+    const unsigned int MAX_SCENE_DOWNLOAD = 8;
 };
 
 }

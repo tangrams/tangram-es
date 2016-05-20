@@ -1,4 +1,3 @@
-#include <vector>
 #include "platform.h"
 #include "scene.h"
 #include "sceneLoader.h"
@@ -30,6 +29,8 @@
 
 #include "csscolorparser.hpp"
 
+#include <vector>
+#include <future>
 #include <algorithm>
 #include <iterator>
 #include <unordered_map>
@@ -46,17 +47,17 @@ const std::string DELIMITER = ":";
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
-bool SceneLoader::loadScene(const std::string& _scenePath, Scene& _scene) {
+void SceneLoader::loadScene(const std::string& _scenePath, std::shared_ptr<Scene> _scene,
+        const std::function<void(std::shared_ptr<Scene>&)>& _setScene) {
 
-    Node& root = _scene.config();
-
-    Importer sceneImporter;
-
-    if ( (root = sceneImporter.applySceneImports(_scenePath)) ) {
-        applyConfig(root, _scene);
-        return true;
-    }
-    return false;
+    std::async(std::launch::async,[&]() {
+                Node& root = _scene->config();
+                Importer sceneImporter;
+                if ( (root = sceneImporter.applySceneImports(_scenePath)) ) {
+                    applyConfig(root, *_scene);
+                    _setScene(_scene);
+                }
+            });
 }
 
 bool SceneLoader::loadConfig(const std::string& _sceneString, Node& root) {
