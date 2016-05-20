@@ -144,6 +144,8 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
         int statusCode = [httpResponse statusCode];
 
+        std::vector<char> rawDataVec;
+
         if (error != nil) {
 
             LOGE("Response \"%s\" with error \"%s\".", response, [error.localizedDescription UTF8String]);
@@ -154,11 +156,11 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
                 statusCode,
                 [[NSHTTPURLResponse localizedStringForStatusCode: statusCode] UTF8String],
                 [response.URL.absoluteString UTF8String]);
+            _callback(std::move(rawDataVec));
 
         } else {
 
             int dataLength = [data length];
-            std::vector<char> rawDataVec;
             rawDataVec.resize(dataLength);
             memcpy(rawDataVec.data(), (char *)[data bytes], dataLength);
             _callback(std::move(rawDataVec));
