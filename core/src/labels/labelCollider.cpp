@@ -7,23 +7,25 @@
 
 namespace Tangram {
 
-const glm::vec2 screen_size{ MAX_SIZE*2, MAX_SIZE*2};
-const int tile_size = MAX_SIZE;
+void LabelCollider::setup(float _tileScale) {
+     m_tileScale = _tileScale;
+
+     // TODO use pixel scale
+     m_screenSize = glm::vec2{ 256 * 2 * _tileScale };
+}
 
 void LabelCollider::addLabels(std::vector<std::unique_ptr<Label>>& _labels) {
 
-    float scale = 1;
-
-    glm::mat4 mvp = glm::scale(glm::mat4(1.0), glm::vec3(scale));
+    glm::mat4 mvp = glm::scale(glm::mat4(1.0), glm::vec3(m_tileScale));
 
     // Place tile centered
-    mvp[3][0] = -0.5f;
-    mvp[3][1] = -0.5f;
+    // mvp[3][0] = -0.5f;
+    // mvp[3][1] = -0.5f;
 
     for (auto& label : _labels) {
 
         if (label->canOcclude()) {
-            label->update(mvp, screen_size, 1, true);
+            label->update(mvp, m_screenSize, 1, true);
 
             m_aabbs.push_back(label->aabb());
             m_aabbs.back().m_userData = (void*)label.get();
@@ -35,7 +37,7 @@ void LabelCollider::addLabels(std::vector<std::unique_ptr<Label>>& _labels) {
 
 void LabelCollider::process() {
 
-    m_isect2d.resize({tile_size / 256, tile_size / 256}, {tile_size, tile_size});
+    m_isect2d.resize({m_screenSize.x / 256, m_screenSize.y / 256}, m_screenSize);
 
     m_isect2d.intersect(m_aabbs);
 
@@ -93,18 +95,21 @@ void LabelCollider::process() {
     for (auto* label : m_labels) {
 
         // Manage link occlusion (unified icon labels)
-        if (label->parent() && (label->parent()->isOccluded() || !label->parent()->visibleState())) {
+        if (label->parent() && label->parent()->isOccluded()) {
             label->occlude();
         }
 
-        if (label->isOccluded()) { cnt++; }
+        if (label->isOccluded()) {
+            cnt++;
 
+            label->enterState(Label::State::dead, 0.0f);
+        } else {
+            label->occlude(false);
+        }
 
-        LOG("occlued: %d %f/%f ", label->isOccluded(),
-            label->transform().modelPosition1.x,
-            label->transform().modelPosition1.y);
-
-        label->evalState(screen_size, 0);
+        LOG("occluded: %d %f/%f ", label->isOccluded(),
+            label->transform().state.screenPos.x,
+            label->transform().state.screenPos.y);
     }
 
     LOG("Dropped %d/%d labels", cnt, m_labels.size());
