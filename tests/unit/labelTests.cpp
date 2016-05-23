@@ -23,6 +23,7 @@ TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
             {}, {0, 0}, dummy, {});
 }
 
+#if 0
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {
     TextLabel l(makeLabel({screenSize/2.f}, Label::Type::point));
 
@@ -42,6 +43,7 @@ TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[
     REQUIRE(l.state() == Label::State::dead);
     REQUIRE(!l.canOcclude());
 }
+#endif
 
 TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens", "[Core][Label]" ) {
     TextLabel l(makeLabel({screenSize/2.f}, Label::Type::point));

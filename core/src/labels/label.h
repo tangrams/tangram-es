@@ -133,14 +133,15 @@ public:
 
     virtual glm::vec2 center() const;
 
+    void enterState(const State& _state, float _alpha = 1.0f);
+
+    Type type() const { return m_type; }
 private:
 
     virtual void applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
         LabelProperty::Anchor _anchor) = 0;
 
     bool offViewport(const glm::vec2& _screenSize);
-
-    inline void enterState(const State& _state, float _alpha = 1.0f);
 
     void setAlpha(float _alpha);
 

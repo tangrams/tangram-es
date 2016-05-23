@@ -17,6 +17,7 @@ void LabelSet::setLabels(std::vector<std::unique_ptr<Label>>& _labels) {
                     std::move_iterator<iter_t>(_labels.begin()),
                     std::move_iterator<iter_t>(_labels.end()));
 
+    _labels.clear();
 }
 
 }

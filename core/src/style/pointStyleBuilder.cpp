@@ -17,10 +17,11 @@ std::unique_ptr<StyledMesh> PointStyleBuilder::build() {
 
     m_quads.clear();
 
-    iconMesh->spriteLabels = std::move(m_spriteLabels);
-    iconMesh->textLabels = m_textStyleBuilder->build();
+    m_iconMesh->setLabels(m_labels);
+    m_iconMesh->spriteLabels = std::move(m_spriteLabels);
+    m_iconMesh->textLabels = m_textStyleBuilder->build();
 
-    return std::move(iconMesh);
+    return std::move(m_iconMesh);
 }
 
 void PointStyleBuilder::setup(const Tile& _tile) {
@@ -28,7 +29,7 @@ void PointStyleBuilder::setup(const Tile& _tile) {
     m_spriteLabels = std::make_unique<SpriteLabels>(m_style);
 
     m_textStyleBuilder->setup(_tile);
-    iconMesh = std::make_unique<IconMesh>();
+    m_iconMesh = std::make_unique<IconMesh>();
 }
 
 bool PointStyleBuilder::checkRule(const DrawRule& _rule) const {
@@ -212,10 +213,15 @@ void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
 }
 
 void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
+
+    size_t labelsLast = m_labels.size();
+
     StyleBuilder::addFeature(_feat, _rule);
 
+    size_t labelsCount = m_labels.size() - labelsLast;
+
     if (_rule.contains(StyleParamKey::point_text)) {
-        if (m_labels.size() == 0) { return; }
+        if (labelsCount == 0) { return; }
 
         auto& textStyleBuilder = static_cast<TextStyleBuilder&>(*m_textStyleBuilder);
 
@@ -223,28 +229,26 @@ void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
 
         auto& textLabels = *textStyleBuilder.labels();
 
-        if (m_labels.size() == textLabels.size()) {
+        if (labelsCount == textLabels.size()) {
             bool definePriority = !_rule.contains(StyleParamKey::text_priority);
 
             for (size_t i = 0; i < textLabels.size(); ++i) {
                 auto& tLabel = textLabels[i];
-                auto& pLabel = m_labels[i];
+                auto& pLabel = m_labels[labelsLast + i];
 
                 // Link labels together
                 tLabel->setParent(*pLabel, definePriority);
             }
 
-            iconMesh->addLabels(m_labels);
-            iconMesh->addLabels(textLabels);
+            typedef std::vector<std::unique_ptr<Label>>::iterator iter_t;
+            m_labels.insert(m_labels.end(),
+                        std::move_iterator<iter_t>(textLabels.begin()),
+                        std::move_iterator<iter_t>(textLabels.end()));
 
         }
 
         textLabels.clear();
-    } else {
-        iconMesh->addLabels(m_labels);
     }
-
-    m_labels.clear();
 }
 
 }

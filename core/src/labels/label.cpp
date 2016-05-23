@@ -167,7 +167,8 @@ bool Label::canOcclude() {
                         State::skip_transition |
                         State::fading_in |
                         State::sleep |
-                        State::out_of_screen);
+                        State::out_of_screen |
+                        State::dead);
 
     return (occludeFlags & m_state) && !(m_type == Type::debug);
 }
@@ -190,6 +191,8 @@ glm::vec2 Label::center() const {
 }
 
 void Label::enterState(const State& _state, float _alpha) {
+    if (m_state == State::dead) { return; }
+
     m_state = _state;
     setAlpha(_alpha);
 }
@@ -207,42 +210,37 @@ void Label::setAlpha(float _alpha) {
 }
 
 void Label::resetState() {
+    if (m_state == State::dead) { return; }
+
     m_occludedLastFrame = false;
     m_occluded = false;
     m_updateMeshVisibility = true;
     m_dirty = true;
     m_proxy = false;
-    //enterState(State::wait_occ, 0.0);
+    enterState(State::wait_occ, 0.0);
 }
 
 bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _allLabels) {
-
-    if (!_allLabels && (m_state == State::dead || (m_parent && m_parent->state() == State::dead))) {
-        return false;
-    }
 
     m_occludedLastFrame = m_occluded;
     if (m_state != State::fading_out) {
         m_occluded = false;
     }
 
-    bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize, _allLabels);
+    if (m_state == State::dead) {
+        if (!_allLabels) {
+            return false;
+        } else {
+            m_occluded = true;
+        }
+    }
+
+    bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize, !_allLabels);
 
     // one of the label rules has not been satisfied
     if (!ruleSatisfied) {
-        if (m_state == State::wait_occ) {
-            // go to dead state, this breaks determinism, but reduce potential
-            // label set since a lot of discarded labels are discared for line
-            // exceed (lots of tiny small lines on a curve for example), which
-            // won't have their rule satisfied
-            enterState(State::dead, 0.0);
-            pushTransform();
-        } else {
-            enterState(State::sleep, 0.0);
-            pushTransform();
-        }
+        enterState(State::sleep, 0.0);
         return false;
-
     }
 
     // update the view-space bouding box
@@ -306,11 +304,11 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             break;
         case State::wait_occ:
             if (m_occluded) {
-                if (m_parent) {
-                    enterState(State::sleep, 0.0);
-                } else {
-                    enterState(State::dead, 0.0);
-                }
+                // if (m_parent) {
+                enterState(State::sleep, 0.0);
+                // } else {
+                //     enterState(State::dead, 0.0);
+                // }
             } else {
                 m_fade = FadeEffect(true, m_options.showTransition.ease,
                                     m_options.showTransition.time);
@@ -320,8 +318,8 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             break;
         case State::skip_transition:
             if (m_occluded) {
-                enterState(State::dead, 0.0);
-
+                enterState(State::sleep, 0.0);
+                // enterState(State::dead, 0.0);
             } else {
                 enterState(State::visible, 1.0);
             }

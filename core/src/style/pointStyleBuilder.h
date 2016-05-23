@@ -13,12 +13,6 @@ struct IconMesh : LabelSet {
     std::unique_ptr<StyledMesh> textLabels;
     std::unique_ptr<StyledMesh> spriteLabels;
 
-    void addLabels(std::vector<std::unique_ptr<Label>>& _labels) {
-        typedef std::vector<std::unique_ptr<Label>>::iterator iter_t;
-        m_labels.insert(m_labels.end(),
-                        std::move_iterator<iter_t>(_labels.begin()),
-                        std::move_iterator<iter_t>(_labels.end()));
-    }
 
 };
 
@@ -58,7 +52,7 @@ private:
     std::vector<std::unique_ptr<Label>> m_labels;
     std::vector<SpriteQuad> m_quads;
 
-    std::unique_ptr<IconMesh> iconMesh;
+    std::unique_ptr<IconMesh> m_iconMesh;
 
     float m_zoom;
     std::unique_ptr<SpriteLabels> m_spriteLabels;

@@ -62,6 +62,11 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
         }
     }
 
+    float tileScale = pow(2, _tileID.s - _tileID.z);
+
+    m_labelLayout.setup(tileScale);
+    LOG("tileScale %f", tileScale);
+
     for (auto& builder : m_styleBuilder) {
         if (auto* labels = builder.second->labels()) {
             LOG("add %s", builder.second->style().getName().c_str());

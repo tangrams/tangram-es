@@ -424,74 +424,69 @@ void Labels::drawDebug(const View& _view) {
     }
 
     for (auto label : m_labels) {
-        if (label->canOcclude()) {
-            glm::vec2 offset = label->options().offset;
-            glm::vec2 sp = label->transform().state.screenPos;
-            float angle = label->transform().state.rotation;
-            offset = glm::rotate(offset, angle);
+        if (label->type() == Label::Type::debug) { continue; }
 
-            // draw bounding box
-            Label::State state = label->state();
-            switch (state) {
-                case Label::State::sleep:
-                    if (label->parent() && label->parent()->state() == Label::State::dead) {
-                        Primitives::setColor(0xff00ff);
-                    } else {
-                        Primitives::setColor(0x00ff00);
-                    }
-                    break;
-                case Label::State::visible:
-                    Primitives::setColor(0x000000);
-                    break;
-                case Label::State::wait_occ:
-                    Primitives::setColor(0x0000ff);
-                    break;
-                case Label::State::dead:
-                    Primitives::setColor(0xff00ff);
-                    break;
-                case Label::State::fading_in:
-                case Label::State::fading_out:
-                    Primitives::setColor(0xffff00);
-                    break;
-                default:
-                    Primitives::setColor(0x999999);
-            }
+        glm::vec2 offset = label->options().offset;
+        glm::vec2 sp = label->transform().state.screenPos;
+        float angle = label->transform().state.rotation;
+        offset = glm::rotate(offset, angle);
 
-            Primitives::drawPoly(&(label->obb().getQuad())[0], 4);
-
-            if (label->parent()) {
-                Primitives::setColor(0xff0000);
-                Primitives::drawLine(sp, label->parent()->transform().state.screenPos);
-            }
-
-            // draw offset
+        // draw bounding box
+        switch (label->state()) {
+        case Label::State::sleep:
+            Primitives::setColor(0x00ff00);
+            break;
+        case Label::State::visible:
             Primitives::setColor(0x000000);
-            Primitives::drawLine(sp, sp - offset);
-
-            // draw projected anchor point
+            break;
+        case Label::State::wait_occ:
             Primitives::setColor(0x0000ff);
-            Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
-#if 0
-            if (label->options().repeatGroup != 0 && label->state() == Label::State::visible) {
-                size_t seed = 0;
-                hash_combine(seed, label->options().repeatGroup);
-                float repeatDistance = label->options().repeatDistance;
-
-                Primitives::setColor(seed);
-                Primitives::drawLine(label->center(),
-                    glm::vec2(repeatDistance, 0.f) + label->center());
-
-                float off = M_PI / 6.f;
-                for (float pad = 0.f; pad < M_PI * 2.f; pad += off) {
-                    glm::vec2 p0 = glm::vec2(cos(pad), sin(pad)) * repeatDistance
-                        + label->center();
-                    glm::vec2 p1 = glm::vec2(cos(pad + off), sin(pad + off)) * repeatDistance
-                        + label->center();
-                    Primitives::drawLine(p0, p1);
-                }
-            }
-#endif
+            break;
+        case Label::State::dead:
+            Primitives::setColor(0xff00ff);
+            break;
+        case Label::State::fading_in:
+        case Label::State::fading_out:
+            Primitives::setColor(0xffff00);
+            break;
+        default:
+            Primitives::setColor(0x999999);
         }
+
+        Primitives::drawPoly(&(label->obb().getQuad())[0], 4);
+
+        if (label->parent()) {
+            Primitives::setColor(0xff0000);
+            Primitives::drawLine(sp, label->parent()->transform().state.screenPos);
+        }
+
+        // draw offset
+        Primitives::setColor(0x000000);
+        Primitives::drawLine(sp, sp - offset);
+
+        // draw projected anchor point
+        Primitives::setColor(0x0000ff);
+        Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
+#if 0
+        if (label->options().repeatGroup != 0 && label->state() == Label::State::visible) {
+            size_t seed = 0;
+            hash_combine(seed, label->options().repeatGroup);
+            float repeatDistance = label->options().repeatDistance;
+
+            Primitives::setColor(seed);
+            Primitives::drawLine(label->center(),
+                                 glm::vec2(repeatDistance, 0.f) + label->center());
+
+            float off = M_PI / 6.f;
+            for (float pad = 0.f; pad < M_PI * 2.f; pad += off) {
+                glm::vec2 p0 = glm::vec2(cos(pad), sin(pad)) * repeatDistance
+                    + label->center();
+                glm::vec2 p1 = glm::vec2(cos(pad + off), sin(pad + off)) * repeatDistance
+                    + label->center();
+                Primitives::drawLine(p0, p1);
+            }
+        }
+#endif
     }
 
     glm::vec2 split(_view.getWidth() / 256, _view.getHeight() / 256);

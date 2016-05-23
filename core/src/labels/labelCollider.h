@@ -13,6 +13,9 @@ class Label;
 class LabelCollider {
 
 public:
+
+    void setup(float _tileScale);
+
     void addLabels(std::vector<std::unique_ptr<Label>>& _labels);
 
     void process();
@@ -28,6 +31,9 @@ private:
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
 
+    float m_tileScale;
+
+    glm::vec2 m_screenSize;
 };
 
 }
