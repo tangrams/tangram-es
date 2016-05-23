@@ -61,6 +61,7 @@ if(APPLICATION)
     ${GLFW_LIBRARIES}
     ${OPENGL_LIBRARIES})
 
-  add_dependencies(${EXECUTABLE_NAME} copy_resources)
+  add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/core/resources")
+  add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes")
 
 endif()

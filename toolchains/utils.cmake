@@ -104,3 +104,11 @@ macro(add_bundle_resources RESOURCE_LIST RESOURCE_DIR RESOURCE_BASE)
     list(APPEND ${RESOURCE_LIST} ${FULL_RESOURCE_PATHS})
 
 endmacro(add_bundle_resources)
+
+macro(add_resources TARGET RESOURCE_DIR)
+
+    add_custom_command(TARGET ${TARGET}
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${RESOURCE_DIR} ${CMAKE_BINARY_DIR}/bin)
+
+endmacro(add_resources)
