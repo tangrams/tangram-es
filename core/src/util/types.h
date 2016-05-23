@@ -7,6 +7,8 @@ namespace Tangram {
 struct Range {
     int start;
     int length;
+
+    int end() const { return start + length; }
 };
 
 struct LngLat {

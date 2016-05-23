@@ -13,7 +13,7 @@ struct IconMesh : LabelSet {
     std::unique_ptr<StyledMesh> textLabels;
     std::unique_ptr<StyledMesh> spriteLabels;
 
-
+    void setTextLabels(std::unique_ptr<StyledMesh> _textLabels);
 };
 
 struct PointStyleBuilder : public StyleBuilder {

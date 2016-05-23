@@ -50,6 +50,8 @@ public:
 
     void updateBBoxes(float _zoomFract) override;
 
+    Range& quadRange() { return m_vertexRange; }
+
 protected:
     void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) override;
 
@@ -62,7 +64,7 @@ private:
     // Back-pointer to owning container
     const TextLabels& m_textLabels;
     // first vertex and count in m_textLabels quads
-    const Range m_vertexRange;
+    Range m_vertexRange;
 
     FontVertexAttributes m_fontAttrib;
 };

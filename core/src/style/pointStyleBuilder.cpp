@@ -10,6 +10,22 @@
 
 namespace Tangram {
 
+
+void IconMesh::setTextLabels(std::unique_ptr<StyledMesh> _textLabels) {
+
+    auto* mesh = static_cast<TextLabels*>(_textLabels.get());
+    auto& labels = mesh->getLabels();
+
+    typedef std::vector<std::unique_ptr<Label>>::iterator iter_t;
+    m_labels.insert(m_labels.end(),
+                    std::move_iterator<iter_t>(labels.begin()),
+                    std::move_iterator<iter_t>(labels.end()));
+
+    labels.clear();
+
+    textLabels = std::move(_textLabels);
+}
+
 std::unique_ptr<StyledMesh> PointStyleBuilder::build() {
     if (m_quads.empty()) { return nullptr; }
 
@@ -19,7 +35,10 @@ std::unique_ptr<StyledMesh> PointStyleBuilder::build() {
 
     m_iconMesh->setLabels(m_labels);
     m_iconMesh->spriteLabels = std::move(m_spriteLabels);
-    m_iconMesh->textLabels = m_textStyleBuilder->build();
+
+    if (auto textLabels = m_textStyleBuilder->build()) {
+        m_iconMesh->setTextLabels(std::move(textLabels));
+    }
 
     return std::move(m_iconMesh);
 }
@@ -214,40 +233,35 @@ void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
 
 void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
-    size_t labelsLast = m_labels.size();
+    size_t iconsStart = m_labels.size();
 
     StyleBuilder::addFeature(_feat, _rule);
 
-    size_t labelsCount = m_labels.size() - labelsLast;
+    size_t iconsCount = m_labels.size() - iconsStart;
 
     if (_rule.contains(StyleParamKey::point_text)) {
-        if (labelsCount == 0) { return; }
+        if (iconsCount == 0) { return; }
 
         auto& textStyleBuilder = static_cast<TextStyleBuilder&>(*m_textStyleBuilder);
+        auto& textLabels = *textStyleBuilder.labels();
+
+        size_t textStart = textLabels.size();
 
         textStyleBuilder.addFeatureCommon(_feat, _rule, true);
 
-        auto& textLabels = *textStyleBuilder.labels();
+        size_t textCount = textLabels.size() - textStart;
 
-        if (labelsCount == textLabels.size()) {
+        if (iconsCount == textCount) {
             bool definePriority = !_rule.contains(StyleParamKey::text_priority);
 
-            for (size_t i = 0; i < textLabels.size(); ++i) {
-                auto& tLabel = textLabels[i];
-                auto& pLabel = m_labels[labelsLast + i];
+            for (size_t i = 0; i < textCount; ++i) {
+                auto& tLabel = textLabels[textStart + i];
+                auto& pLabel = m_labels[iconsStart + i];
 
                 // Link labels together
                 tLabel->setParent(*pLabel, definePriority);
             }
-
-            typedef std::vector<std::unique_ptr<Label>>::iterator iter_t;
-            m_labels.insert(m_labels.end(),
-                        std::move_iterator<iter_t>(textLabels.begin()),
-                        std::move_iterator<iter_t>(textLabels.end()));
-
         }
-
-        textLabels.clear();
     }
 }
 
