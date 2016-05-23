@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <mutex>
 #include <atomic>
+#include <condition_variable>
 
 #include "util/fastmap.h"
 
@@ -61,7 +62,7 @@ private:
     std::vector<std::string> m_sceneQueue;
     static std::atomic_uint progressCounter;
     std::mutex sceneMutex;
-    std::mutex queueMutex;
+    std::condition_variable m_condition;
 
     const unsigned int MAX_SCENE_DOWNLOAD = 8;
 };

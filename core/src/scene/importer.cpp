@@ -15,39 +15,38 @@ std::atomic_uint Importer::progressCounter(0);
 
 Node Importer::applySceneImports(const std::string& scenePath) {
 
+    std::string sceneString;
+    std::string path;
     m_sceneQueue.push_back(scenePath);
 
-    while (!m_sceneQueue.empty() || progressCounter != 0) {
-        std::string sceneString;
-        std::string path;
+    while (true) {
         {
-            std::lock_guard<std::mutex> lock(queueMutex);
+            std::unique_lock<std::mutex> lock(sceneMutex);
+
+            m_condition.wait(lock, [&, this]{
+                    return (!m_sceneQueue.empty() || progressCounter == 0);
+                });
+
+            if (m_sceneQueue.empty() && progressCounter == 0) { break; }
+
             path = m_sceneQueue.back();
             m_sceneQueue.pop_back();
-        }
-
-        {
-            std::lock_guard<std::mutex> lock(sceneMutex);
             if (m_scenes.find(path) != m_scenes.end()) { continue; }
         }
 
         std::regex r("^(http|https):/");
         std::smatch match;
         if (std::regex_search(path, match, r)) {
-            if (progressCounter < MAX_SCENE_DOWNLOAD) {
-                progressCounter++;
-                startUrlRequest(path,
-                        [&](std::vector<char>&& rawData) {
-                            progressCounter--;
-                            std::lock_guard<std::mutex> lock(sceneMutex);
-                            processScene(path, rawData.data());
-                        });
-            } else {
-                std::lock_guard<std::mutex> lock(queueMutex);
-                m_sceneQueue.push_back(path);
-            }
+            progressCounter++;
+            startUrlRequest(path,
+                    [&](std::vector<char>&& rawData) {
+                    std::unique_lock<std::mutex> lock(sceneMutex);
+                    progressCounter--;
+                    processScene(path, rawData.data());
+                    m_condition.notify_all();
+                });
         } else {
-            std::lock_guard<std::mutex> lock(sceneMutex);
+            std::unique_lock<std::mutex> lock(sceneMutex);
             processScene(path, getSceneString(path));
         }
     }
@@ -70,8 +69,8 @@ void Importer::processScene(const std::string &scenePath, const std::string &sce
         auto imports = getScenesToImport(root);
         m_scenes[path] = root;
         for (const auto& import : imports) {
-            std::lock_guard<std::mutex> lock(queueMutex);
             m_sceneQueue.push_back(import);
+            // notify here?
         }
     }
     catch (YAML::ParserException e) {

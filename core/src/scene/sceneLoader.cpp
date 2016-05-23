@@ -18,7 +18,6 @@
 #include "style/rasterStyle.h"
 #include "scene/dataLayer.h"
 #include "scene/filters.h"
-#include "scene/importer.h"
 #include "scene/sceneLayer.h"
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
@@ -47,13 +46,14 @@ const std::string DELIMITER = ":";
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
+const std::unique_ptr<Importer> SceneLoader::sceneImporter(new Importer());
+
 void SceneLoader::loadScene(const std::string& _scenePath, std::shared_ptr<Scene> _scene,
         const std::function<void(std::shared_ptr<Scene>&)>& _setScene) {
 
     std::async(std::launch::async,[&]() {
                 Node& root = _scene->config();
-                Importer sceneImporter;
-                if ( (root = sceneImporter.applySceneImports(_scenePath)) ) {
+                if ( (root = sceneImporter->applySceneImports(_scenePath)) ) {
                     applyConfig(root, *_scene);
                     _setScene(_scene);
                 }

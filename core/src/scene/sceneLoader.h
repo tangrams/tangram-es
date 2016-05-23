@@ -2,6 +2,7 @@
 
 #include "gl/uniform.h"
 #include "scene/scene.h"
+#include "scene/importer.h"
 
 #include <string>
 #include <vector>
@@ -82,6 +83,7 @@ struct SceneLoader {
 
     static bool loadStyle(const std::string& styleName, Node config, Scene& scene);
 
+    static const std::unique_ptr<Importer> sceneImporter;
 
     SceneLoader() = delete;
 
