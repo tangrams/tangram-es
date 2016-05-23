@@ -1,5 +1,6 @@
 #include "textStyleBuilder.h"
 
+#include "labels/labelCollider.h"
 #include "labels/labelSet.h"
 #include "labels/textLabel.h"
 #include "labels/textLabels.h"
@@ -31,6 +32,10 @@ void TextStyleBuilder::setup(const Tile& _tile){
     m_atlasRefs.reset();
 
     m_textLabels = std::make_unique<TextLabels>(m_style);
+}
+
+void TextStyleBuilder::addLayoutItems(LabelCollider& _layout) {
+    _layout.addLabels(m_labels);
 }
 
 std::unique_ptr<StyledMesh> TextStyleBuilder::build() {

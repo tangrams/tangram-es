@@ -68,11 +68,8 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
     LOG("tileScale %f", tileScale);
 
     for (auto& builder : m_styleBuilder) {
-        if (auto* labels = builder.second->labels()) {
-            LOG("add %s", builder.second->style().getName().c_str());
 
-            m_labelLayout.addLabels(*labels);
-        }
+        builder.second->addLayoutItems(m_labelLayout);
     }
 
     m_labelLayout.process();

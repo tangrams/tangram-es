@@ -13,6 +13,7 @@ namespace Tangram {
 
 struct DrawRule;
 class Label;
+class LabelCollider;
 class Light;
 struct LightUniforms;
 class Tile;
@@ -79,7 +80,7 @@ public:
 
     virtual bool checkRule(const DrawRule& _rule) const;
 
-    virtual std::vector<std::unique_ptr<Label>>* labels() { return nullptr; }
+    virtual void addLayoutItems(LabelCollider& _layout) {}
 
     virtual const Style& style() const = 0;
 

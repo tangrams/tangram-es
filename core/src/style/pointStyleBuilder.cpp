@@ -2,6 +2,7 @@
 #include "scene/drawRule.h"
 #include "scene/stops.h"
 #include "scene/spriteAtlas.h"
+#include "labels/labelCollider.h"
 #include "labels/spriteLabel.h"
 #include "util/geom.h"
 #include "data/propertyItem.h" // Include wherever Properties is used!
@@ -24,6 +25,11 @@ void IconMesh::setTextLabels(std::unique_ptr<StyledMesh> _textLabels) {
     labels.clear();
 
     textLabels = std::move(_textLabels);
+}
+
+void PointStyleBuilder::addLayoutItems(LabelCollider& _layout) {
+    _layout.addLabels(m_labels);
+    m_textStyleBuilder->addLayoutItems(_layout);
 }
 
 std::unique_ptr<StyledMesh> PointStyleBuilder::build() {

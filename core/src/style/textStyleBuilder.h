@@ -44,7 +44,9 @@ public:
 
     bool checkRule(const DrawRule& _rule) const override { return true; }
 
-    std::vector<std::unique_ptr<Label>>* labels() override { return &m_labels; }
+    std::vector<std::unique_ptr<Label>>* labels() { return &m_labels; }
+
+    void addLayoutItems(LabelCollider& _layout) override;
 
 protected:
 
