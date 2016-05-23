@@ -66,6 +66,13 @@ void LabelCollider::process() {
         auto l2 = static_cast<Label*>(aabb2.m_userData);
 
 
+        if (l1->parent() && l1->parent()->isOccluded()) {
+            l1->occlude();
+        }
+        if (l2->parent() && l2->parent()->isOccluded()) {
+            l2->occlude();
+        }
+
         if (l1->isOccluded() || l2->isOccluded()) {
             // One of this pair is already occluded.
             // => conflict solved
@@ -103,8 +110,6 @@ void LabelCollider::process() {
             cnt++;
 
             label->enterState(Label::State::dead, 0.0f);
-        } else {
-            label->occlude(false);
         }
 
         LOG("occluded: %d %f/%f ", label->isOccluded(),
