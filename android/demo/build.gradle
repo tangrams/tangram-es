@@ -20,6 +20,7 @@ android {
     java.srcDirs = ['src']
     resources.srcDirs = ['src']
     res.srcDirs = ['res']
+    assets.srcDirs = ['../../scenes']
   }
   buildTypes {
     debug {
@@ -27,6 +28,8 @@ android {
       jniDebuggable true
     }
   }
+
+  aaptOptions.ignoreAssetsPattern "!*.ttf"
 }
 
 dependencies {
