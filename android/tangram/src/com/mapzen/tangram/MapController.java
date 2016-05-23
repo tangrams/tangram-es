@@ -163,9 +163,10 @@ public class MapController implements Renderer {
         displayMetrics = mapView.getContext().getResources().getDisplayMetrics();
         assetManager = mapView.getContext().getAssets();
 
-        // Load the fonts
         fontFileParser = new FontFileParser();
-        fontFileParser.parse("/system/etc/fonts.xml");
+
+        // Parse font file desription
+        fontFileParser.parse();
 
         nativeInit(this, assetManager, scenePath);
     }
