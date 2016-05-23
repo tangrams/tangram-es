@@ -10,6 +10,7 @@
 #include "util/geom.h"
 #include "util/mapProjection.h"
 #include "view/view.h"
+#include "tangram.h"
 
 #include <cmath>
 #include <locale>
@@ -33,10 +34,82 @@ void TextStyleBuilder::setup(const Tile& _tile){
 }
 
 std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
+
     if (m_quads.empty()) { return nullptr; }
 
-    m_textLabels->setLabels(m_labels);
-    m_textLabels->setQuads(m_quads, m_atlasRefs);
+    if (Tangram::getDebugFlag(DebugFlags::all_labels)) {
+        m_textLabels->setLabels(m_labels);
+        m_textLabels->setQuads(m_quads, m_atlasRefs);
+
+    } else {
+
+        // TODO this could probably done more elegant
+
+        int quadPos = 0;
+        size_t sumQuads = 0;
+        size_t sumLabels = 0;
+        bool added = false;
+
+        // Determine size of final quads vector
+        for (auto& label : m_labels) {
+            auto* textLabel = static_cast<TextLabel*>(label.get());
+
+            auto& range = textLabel->quadRange();
+            bool active = textLabel->state() != Label::State::dead;
+
+            if (range.end() != quadPos) {
+                quadPos = range.end();
+                added = false;
+            }
+
+            if (!active) { continue; }
+
+            sumLabels +=1;
+            if (!added) {
+                added = true;
+                sumQuads += range.length;
+            }
+        }
+
+        size_t quadEnd = 0;
+        size_t quadStart = 0;
+        quadPos = 0;
+
+        std::vector<std::unique_ptr<Label>> labels;
+        labels.reserve(sumLabels);
+
+        std::vector<GlyphQuad> quads;
+        quads.reserve(sumQuads);
+
+        // Add only alive labels
+        for (auto& label : m_labels) {
+            auto* textLabel = static_cast<TextLabel*>(label.get());
+
+            auto& range = textLabel->quadRange();
+            bool active = textLabel->state() != Label::State::dead;
+
+            if (range.end() != quadPos) {
+                quadStart = quadEnd;
+                quadPos = range.end();
+                added = false;
+            }
+
+            if (!active) { continue; }
+            if (!added) {
+                added = true;
+                quadEnd += range.length;
+
+                auto it = m_quads.begin() + range.start;
+                quads.insert(quads.end(), it, it + range.length);
+            }
+            range.start = quadStart;
+
+            labels.push_back(std::move(label));
+        }
+
+        m_textLabels->setLabels(labels);
+        m_textLabels->setQuads(quads, m_atlasRefs);
+    }
 
     m_labels.clear();
     m_quads.clear();

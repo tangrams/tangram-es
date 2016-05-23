@@ -510,6 +510,7 @@ void toggleDebugFlag(DebugFlags _flag) {
     // Rebuild tiles for debug modes that needs it
     if (_flag == DebugFlags::proxy_colors
      || _flag == DebugFlags::tile_bounds
+     || _flag == DebugFlags::all_labels
      || _flag == DebugFlags::tile_infos) {
         if (m_tileManager) {
             std::lock_guard<std::mutex> lock(m_tilesMutex);
