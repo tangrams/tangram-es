@@ -44,9 +44,9 @@ struct PointStyleBuilder : public StyleBuilder {
     void addLabel(const Point& _point, const glm::vec4& _quad,
                   const PointStyle::Parameters& _params);
 
-    std::vector<std::unique_ptr<Label>>* labels() override { return &m_labels; }
+    void addLayoutItems(LabelCollider& _layout) override;
 
-    virtual void addFeature(const Feature& _feat, const DrawRule& _rule) override;
+    void addFeature(const Feature& _feat, const DrawRule& _rule) override;
 
 private:
     std::vector<std::unique_ptr<Label>> m_labels;
