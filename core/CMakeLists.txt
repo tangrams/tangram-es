@@ -79,13 +79,3 @@ target_compile_definitions(${CORE_LIBRARY}
 
 # make groups for xcode
 group_recursive_sources(src "src")
-
-### Resources
-file(GLOB_RECURSE RESOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
-
-add_custom_target(copy_resources
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources
-    ${CMAKE_BINARY_DIR}/bin
-  # Make resources show up in IDE, at least this should do it
-  SOURCES ${RESOURCE_FILES})
