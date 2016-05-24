@@ -30,7 +30,8 @@ foreach(_src_file_path ${TEST_SOURCES})
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/unit"
     )
 
-  add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/core/resources")
-  add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes")
-
 endforeach()
+
+# Copy resources into output directory (only needs to be performed for one target)
+add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/core/resources")
+add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes")
