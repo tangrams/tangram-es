@@ -117,7 +117,7 @@ CMakeCache.txt
 CMakeScripts
 CMakeFiles
 build
-**/Makefile
+build/**/Makefile
 cmake_install.cmake
 install_manifest.txt
 
@@ -131,9 +131,12 @@ android/*/obj
 android/demo/gradle
 android/demo/gradlew*
 
-# vim 
+# vim
 *.swp
 *.swo
 
 # perf files
 perf.data
+
+# shader generated headers
+core/include/shaders
