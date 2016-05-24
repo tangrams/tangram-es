@@ -21,6 +21,85 @@ class FontFileParser {
     private Map<String, String> fontDict = new HashMap<String, String>();
     private Map<Integer, Vector<String>> fallbackFontDict = new HashMap<Integer, Vector<String>>();
 
+    private void processDocumentFallback(XmlPullParser parser) throws XmlPullParserException, IOException {
+        parser.nextTag();
+        parser.require(XmlPullParser.START_TAG, null, "familyset");
+
+        ArrayList<String> namesets = new ArrayList<>();
+        ArrayList<String> filesets = new ArrayList<>();
+
+        while (parser.next() != XmlPullParser.END_DOCUMENT) {
+            if (parser.getEventType() != XmlPullParser.START_TAG) {
+                continue;
+            }
+
+            if ("family".equals(parser.getName())) {
+                namesets.clear();
+                filesets.clear();
+
+                while (parser.next() != XmlPullParser.END_TAG) {
+                    if (parser.getEventType() != XmlPullParser.START_TAG) {
+                        continue;
+                    }
+
+                    if ("nameset".equals(parser.getName())) {
+                        while (parser.next() != XmlPullParser.END_TAG) {
+                            if (parser.getEventType() != XmlPullParser.START_TAG) {
+                                continue;
+                            }
+
+                            String name = parser.nextText();
+                            namesets.add(name.toLowerCase());
+                        }
+                        continue;
+                    }
+
+                    if ("fileset".equals(parser.getName())) {
+                        while (parser.next() != XmlPullParser.END_TAG) {
+                            if (parser.getEventType() != XmlPullParser.START_TAG) {
+                                continue;
+                            }
+
+                            String file = parser.nextText();
+                            filesets.add(file);
+                        }
+                    } else {
+                       skip(parser);
+                    }
+
+                    for (String file : filesets) {
+                        for (String name : namesets) {
+                            String fullFilename = "/system/fonts/" + file;
+                            String style = "normal";
+
+                            // The file structure in `/etc/system_fonts.xml` is quite undescriptive
+                            // which makes it hard to make a matching from a font style to a font file
+                            // e.g. italic -> font file, instead we extract this information from the
+                            // font file name itself
+                            String[] fileSplit = file.split("-");
+                            if (fileSplit.length > 1) {
+                                style = fileSplit[fileSplit.length - 1].toLowerCase();
+                                // Remove extension .ttf
+                                style = style.substring(0, style.lastIndexOf('.'));
+
+                                if (style.equals("regular")) {
+                                    style = "normal";
+                                }
+                            }
+
+                            // Same here, font boldness is non-available for android < 5.0 file
+                            // description, we default to integer boldness of 400 by default
+                            String key = name + "_400_" + style;
+                            fontDict.put(key, fullFilename);
+                        }
+                    }
+                }
+            } else {
+                skip(parser);
+            }
+        }
+    }
+
     private void processDocument(XmlPullParser parser) throws XmlPullParserException, IOException {
 
         ArrayList<String> familyWeights = new ArrayList<String>();
@@ -128,18 +207,26 @@ class FontFileParser {
         }
     }
 
-    public void parse(String fontXMLPath) {
-        InputStream in = null;
-        final File fontFile = new File(fontXMLPath);
+    public void parse() {
+        // Android version >= 5.0
+        String fontXMLPath = "/system/etc/fonts.xml";
+        // Android version < 5.0
+        String fontXMLFallbackPath = "/etc/system_fonts.xml";
 
-        // TODO: Handle system_fonts parsing which has a different xml layout as compared to fonts.xml
-        //       system_fonts.xml also does not seem to have a good css style font parameter mapping as is the case with
-        //       fonts.xml (fonts.xml is available in android L and above)
+        InputStream in = null;
+        boolean fallbackXML = false;
+        final File fontFile = new File(fontXMLPath);
 
         String fileXml = "";
 
         if (fontFile.exists()) {
             fileXml = fontFile.getAbsolutePath();
+        } else {
+            File fontFileFallback = new File(fontXMLFallbackPath);
+            if (fontFileFallback.exists()) {
+                fileXml = fontFileFallback.getAbsolutePath();
+            }
+            fallbackXML = true;
         }
 
         if("".equals(fileXml)) {
@@ -157,7 +244,12 @@ class FontFileParser {
 
         try {
             parser.setInput(in, null);
-            processDocument(parser);
+
+            if (fallbackXML) {
+                processDocumentFallback(parser);
+            } else {
+                processDocument(parser);
+            }
         } catch(XmlPullParserException e) {
             e.printStackTrace();
         } catch(IOException e) {
