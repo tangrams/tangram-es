@@ -3,15 +3,17 @@
 #include "labels/labelSet.h"
 #include "glm/gtc/matrix_transform.hpp"
 
-#define MAX_SIZE 512
+#define TILE_SIZE 512
+#define MAX_SCALE 2
 
 namespace Tangram {
 
 void LabelCollider::setup(float _tileScale) {
-     m_tileScale = _tileScale;
+
+    m_tileScale = _tileScale * MAX_SCALE;
 
      // TODO use pixel scale
-     m_screenSize = glm::vec2{ 256 * 2 * _tileScale };
+     m_screenSize = glm::vec2{ TILE_SIZE * MAX_SCALE * _tileScale };
 }
 
 void LabelCollider::addLabels(std::vector<std::unique_ptr<Label>>& _labels) {
@@ -112,9 +114,9 @@ void LabelCollider::process() {
             label->enterState(Label::State::dead, 0.0f);
         }
 
-        LOG("occluded: %d %f/%f ", label->isOccluded(),
-            label->transform().state.screenPos.x,
-            label->transform().state.screenPos.y);
+        // LOG("occluded: %d %f/%f ", label->isOccluded(),
+        //     label->transform().state.screenPos.x,
+        //     label->transform().state.screenPos.y);
     }
 
     LOG("Dropped %d/%d labels", cnt, m_labels.size());
