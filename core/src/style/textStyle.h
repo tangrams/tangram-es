@@ -59,9 +59,8 @@ protected:
 
 public:
 
-    TextStyle(std::string _name, bool _sdf = false,
-              Blending _blendMode = Blending::overlay,
-              GLenum _drawMode = GL_TRIANGLES);
+    TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext, bool _sdf = false,
+              Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
 
     void constructVertexLayout() override;
     void constructShaderProgram() override;

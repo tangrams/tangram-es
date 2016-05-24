@@ -17,7 +17,7 @@
 namespace Tangram {
 
 glm::vec2 screenSize(256.f, 256.f);
-TextStyle dummyStyle("textStyle");
+TextStyle dummyStyle("textStyle", nullptr);
 TextLabels dummy(dummyStyle);
 
 std::unique_ptr<TextLabel> makeLabel(Label::Transform _transform, Label::Type _type, std::string id) {
@@ -45,7 +45,7 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
     };
 
     auto labelMesh = std::unique_ptr<TestLabelMesh>(new TestLabelMesh());
-    auto textStyle = std::unique_ptr<TextStyle>(new TextStyle("test", false));
+    auto textStyle = std::unique_ptr<TextStyle>(new TextStyle("test", nullptr, false));
     textStyle->setID(0);
 
     labelMesh->addLabel(makeLabel(glm::vec2{.5f,.5f}, Label::Type::point, "0"));

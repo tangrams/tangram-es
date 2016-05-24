@@ -13,10 +13,11 @@
 
 namespace Tangram {
 
-PointStyle::PointStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
-    : Style(_name, _blendMode, _drawMode)
-{
-    m_textStyle = std::make_unique<TextStyle>(_name, true, _blendMode, _drawMode);
+PointStyle::PointStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
+                       Blending _blendMode, GLenum _drawMode)
+    : Style(_name, _blendMode, _drawMode) {
+
+    m_textStyle = std::make_unique<TextStyle>(_name, _fontContext, true, _blendMode, _drawMode);
 }
 
 PointStyle::~PointStyle() {}

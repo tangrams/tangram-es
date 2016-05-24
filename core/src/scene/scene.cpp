@@ -1,17 +1,18 @@
 #include "scene.h"
 
+#include "data/dataSource.h"
 #include "gl/shaderProgram.h"
 #include "platform.h"
-#include "data/dataSource.h"
-#include "style/material.h"
-#include "style/style.h"
 #include "scene/dataLayer.h"
 #include "scene/light.h"
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
+#include "style/material.h"
+#include "style/style.h"
+#include "text/fontContext.h"
 #include "util/mapProjection.h"
-#include "view/view.h"
 #include "util/util.h"
+#include "view/view.h"
 
 #include <atomic>
 #include <algorithm>
@@ -22,7 +23,11 @@ namespace Tangram {
 
 static std::atomic<int32_t> s_serial;
 
-Scene::Scene(const std::string& _path) : id(s_serial++), m_path(_path) {
+Scene::Scene(const std::string& _path)
+    : id(s_serial++),
+      m_path(_path),
+      m_fontContext(std::make_shared<FontContext>()) {
+
     m_view = std::make_shared<View>();
     // For now we only have one projection..
     // TODO how to share projection with view?
@@ -34,6 +39,7 @@ Scene::Scene(const Scene& _other) : Scene(_other.path()) {
     m_updates = _other.m_updates;
     m_clientDataSources = _other.m_clientDataSources;
     m_view = _other.m_view;
+    m_fontContext = _other.m_fontContext;
 }
 
 Scene::~Scene() {}
