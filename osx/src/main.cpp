@@ -342,15 +342,15 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    // Initialize networking
+    NSurlInit();
+
     // Initialize the windowing library
     if (!glfwInit()) {
         return -1;
     }
 
     init_main_window(false);
-
-    // Initialize networking
-    NSurlInit();
 
     double lastTime = glfwGetTime();
 
