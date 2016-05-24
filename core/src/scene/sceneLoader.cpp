@@ -155,9 +155,9 @@ bool SceneLoader::applyConfig(Node& config, Scene& _scene) {
     _scene.styles().emplace_back(new PolygonStyle("polygons"));
     _scene.styles().emplace_back(new PolylineStyle("lines"));
     _scene.styles().emplace_back(new DebugTextStyle("debugtext", true));
-    _scene.styles().emplace_back(new TextStyle("text", true));
+    _scene.styles().emplace_back(new TextStyle("text", _scene.fontContext(), true));
     _scene.styles().emplace_back(new DebugStyle("debug"));
-    _scene.styles().emplace_back(new PointStyle("points"));
+    _scene.styles().emplace_back(new PointStyle("points", _scene.fontContext()));
     _scene.styles().emplace_back(new RasterStyle("raster"));
 
     if (Node globals = config["global"]) {
@@ -673,9 +673,9 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) 
     } else if (baseStyle == "lines") {
         style = std::make_unique<PolylineStyle>(name);
     } else if (baseStyle == "text") {
-        style = std::make_unique<TextStyle>(name, true);
+        style = std::make_unique<TextStyle>(name, scene.fontContext(), true);
     } else if (baseStyle == "points") {
-        style = std::make_unique<PointStyle>(name);
+        style = std::make_unique<PointStyle>(name, scene.fontContext());
     } else if (baseStyle == "raster") {
         style = std::make_unique<RasterStyle>(name);
     } else {

@@ -12,7 +12,7 @@
 using namespace Tangram;
 
 glm::vec2 screenSize(500.f, 500.f);
-TextStyle dummyStyle("textStyle");
+TextStyle dummyStyle("textStyle", nullptr);
 TextLabels dummy(dummyStyle);
 
 TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
