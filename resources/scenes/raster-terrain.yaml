@@ -1,0 +1,39 @@
+sources:
+    terrain-normals:
+        type: Raster
+        url: https://terrain-preview.mapzen.com/normal/{z}/{x}/{y}.png
+    mapzen-osm:
+        type: TopoJSON
+        url: https://vector.mapzen.com/osm/all/{z}/{x}/{y}.topojson
+        rasters: [terrain-normals]
+    basemap:
+        type: Raster
+        #url: http://a.tile.stamen.com/terrain-background/{z}/{x}/{y}.jpg
+        url: http://a.tile.openstreetmap.org/{z}/{x}/{y}.png
+        rasters: [terrain-normals]
+
+styles:
+    normals:
+        base: polygons
+        raster: custom
+        shaders:
+            blocks:
+                color: |
+                    color = sampleRaster(0); // color from first raster (basemap)
+                normal: |
+                    normal = normalize(sampleRaster(1).xyz * 2. - 1.); // normal from second raster (normal tiles)
+
+lights:
+    # point1:
+    #     type: point
+    #     position: [0, 0, 200px]
+    #     origin: ground
+    light2: { type: directional, direction: [1, 1, -.9], diffuse: 0.8, ambient: 0.3 }
+
+layers:
+    earth:
+        data: { source: basemap }
+        draw:
+            normals:
+                color: white
+                order: 0

@@ -31,5 +31,6 @@ foreach(_src_file_path ${TEST_SOURCES})
     )
 
   add_dependencies(${EXECUTABLE_NAME} copy_resources)
+  add_dependencies(${EXECUTABLE_NAME} copy_uber_resources)
 
 endforeach()

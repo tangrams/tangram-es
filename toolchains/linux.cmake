@@ -62,5 +62,6 @@ if(APPLICATION)
     ${OPENGL_LIBRARIES})
 
   add_dependencies(${EXECUTABLE_NAME} copy_resources)
+  add_dependencies(${EXECUTABLE_NAME} copy_uber_resources)
 
 endif()
