@@ -612,7 +612,6 @@ public class MapController implements Renderer {
     // ==============
 
     static {
-        System.loadLibrary("c++_shared");
         System.loadLibrary("tangram");
     }
 
