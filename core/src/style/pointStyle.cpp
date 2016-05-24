@@ -8,6 +8,8 @@
 #include "scene/spriteAtlas.h"
 #include "style/pointStyleBuilder.h"
 #include "view/view.h"
+#include "point_vs.h"
+#include "point_fs.h"
 
 namespace Tangram {
 
@@ -37,8 +39,8 @@ void PointStyle::constructVertexLayout() {
 
 void PointStyle::constructShaderProgram() {
 
-    std::string fragShaderSrcStr = stringFromFile("shaders/point.fs", PathType::internal);
-    std::string vertShaderSrcStr = stringFromFile("shaders/point.vs", PathType::internal);
+    std::string fragShaderSrcStr(reinterpret_cast<const char*>(point_fs_data)); //= stringFromFile("shaders/point.fs", PathType::internal);
+    std::string vertShaderSrcStr(reinterpret_cast<const char*>(point_vs_data)); //= stringFromFile("shaders/point.vs", PathType::internal);
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 
