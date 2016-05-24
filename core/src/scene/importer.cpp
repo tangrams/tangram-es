@@ -37,14 +37,20 @@ Node Importer::applySceneImports(const std::string& scenePath) {
         std::regex r("^(http|https):/");
         std::smatch match;
         if (std::regex_search(path, match, r)) {
-            progressCounter++;
-            startUrlRequest(path,
-                    [&](std::vector<char>&& rawData) {
-                    std::unique_lock<std::mutex> lock(sceneMutex);
-                    progressCounter--;
-                    processScene(path, rawData.data());
-                    m_condition.notify_all();
-                });
+            if (progressCounter < MAX_SCENE_DOWNLOAD) {
+                progressCounter++;
+                startUrlRequest(path,
+                        [&](std::vector<char>&& rawData) {
+                        std::unique_lock<std::mutex> lock(sceneMutex);
+                        progressCounter--;
+                        processScene(path, rawData.data());
+                        m_condition.notify_all();
+                    });
+            } else {
+                // requeue this scene for importing
+                std::unique_lock<std::mutex> lock(sceneMutex);
+                m_sceneQueue.push_back(path);
+            }
         } else {
             std::unique_lock<std::mutex> lock(sceneMutex);
             processScene(path, getSceneString(path));

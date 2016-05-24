@@ -64,7 +64,7 @@ private:
     std::mutex sceneMutex;
     std::condition_variable m_condition;
 
-    const unsigned int MAX_SCENE_DOWNLOAD = 8;
+    const unsigned int MAX_SCENE_DOWNLOAD = 4;
 };
 
 }
