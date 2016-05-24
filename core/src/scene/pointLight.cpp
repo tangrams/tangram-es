@@ -5,6 +5,8 @@
 #include "gl/shaderProgram.h"
 #include "view/view.h"
 
+#include "shaders/pointLight_glsl.h"
+
 namespace Tangram {
 
 std::string PointLight::s_classBlock;
@@ -98,7 +100,7 @@ void PointLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
 
 std::string PointLight::getClassBlock() {
     if (s_classBlock.empty()) {
-        s_classBlock = stringFromFile("shaders/pointLight.glsl", PathType::internal)+"\n";
+        s_classBlock = std::string(reinterpret_cast<const char*>(pointLight_glsl_data)) + "\n";
     }
     return s_classBlock;
 }

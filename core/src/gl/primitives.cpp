@@ -7,6 +7,9 @@
 #include "gl/renderState.h"
 #include "platform.h"
 
+#include "shaders/debugPrimitive_vs.h"
+#include "shaders/debugPrimitive_fs.h"
+
 namespace Tangram {
 
 namespace Primitives {
@@ -24,11 +27,10 @@ void init() {
 
     // lazy init
     if (!s_initialized) {
-        std::string vert, frag;
         s_shader = std::unique_ptr<ShaderProgram>(new ShaderProgram());
 
-        vert = stringFromFile("shaders/debugPrimitive.vs", PathType::internal);
-        frag = stringFromFile("shaders/debugPrimitive.fs", PathType::internal);
+        std::string vert(reinterpret_cast<const char*>(debugPrimitive_vs_data));
+        std::string frag(reinterpret_cast<const char*>(debugPrimitive_fs_data));
 
         s_shader->setSourceStrings(frag, vert);
 

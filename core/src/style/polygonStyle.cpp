@@ -13,6 +13,8 @@
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "glm/gtc/type_precision.hpp"
+#include "shaders/polygon_fs.h"
+#include "shaders/polygon_vs.h"
 
 #include <cmath>
 
@@ -69,8 +71,8 @@ void PolygonStyle::constructVertexLayout() {
 
 void PolygonStyle::constructShaderProgram() {
 
-    std::string vertShaderSrcStr = stringFromFile("shaders/polygon.vs", PathType::internal);
-    std::string fragShaderSrcStr = stringFromFile("shaders/polygon.fs", PathType::internal);
+    std::string vertShaderSrcStr(reinterpret_cast<const char*>(polygon_vs_data));
+    std::string fragShaderSrcStr(reinterpret_cast<const char*>(polygon_fs_data));
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 

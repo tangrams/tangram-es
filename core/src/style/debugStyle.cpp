@@ -11,6 +11,9 @@
 #include <memory>
 #include <string>
 
+#include "shaders/debug_vs.h"
+#include "shaders/debug_fs.h"
+
 namespace Tangram {
 
 struct PosColVertex {
@@ -35,8 +38,8 @@ void DebugStyle::constructVertexLayout() {
 
 void DebugStyle::constructShaderProgram() {
 
-    std::string vertShaderSrcStr = stringFromFile("shaders/debug.vs", PathType::internal);
-    std::string fragShaderSrcStr = stringFromFile("shaders/debug.fs", PathType::internal);
+    std::string vertShaderSrcStr(reinterpret_cast<const char*>(debug_vs_data));
+    std::string fragShaderSrcStr(reinterpret_cast<const char*>(debug_fs_data));
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 

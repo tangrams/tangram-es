@@ -5,14 +5,17 @@
 #include "gl/textureCube.h"
 #include "platform.h"
 
+#include "shaders/cubemap_vs.h"
+#include "shaders/cubemap_fs.h"
+
 namespace Tangram {
 
 Skybox::Skybox(std::string _file) : m_file(_file) {}
 
 void Skybox::init() {
 
-    std::string fragShaderSrcStr = stringFromFile("shaders/cubemap.fs", PathType::internal);
-    std::string vertShaderSrcStr = stringFromFile("shaders/cubemap.vs", PathType::internal);
+    std::string fragShaderSrcStr(reinterpret_cast<const char*>(cubemap_vs_data));
+    std::string vertShaderSrcStr(reinterpret_cast<const char*>(cubemap_fs_data));
 
     m_shader = std::make_unique<ShaderProgram>();
     m_shader->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
