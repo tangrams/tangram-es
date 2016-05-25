@@ -1,5 +1,6 @@
-#include "urlWorker.h"
+#if defined(PLATFORM_RPI) || defined(PLATFORM_LINUX)
 
+#include "urlWorker.h"
 #include <curl/curl.h>
 
 static size_t write_data(void *_buffer, size_t _size, size_t _nmemb, void *_dataPtr) {
@@ -80,3 +81,5 @@ void UrlWorker::join() {
 bool UrlWorker::hasTask(const std::string& _url) {
     return (m_task && m_task->url == _url);
 }
+
+#endif // PLATFORM_LINUX || PLATFORM_RPI

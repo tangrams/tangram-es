@@ -5,6 +5,7 @@ all: android osx ios
 .PHONY: clean-osx
 .PHONY: clean-xcode
 .PHONY: clean-ios
+.PHONY: clean-ios-sim
 .PHONY: clean-rpi
 .PHONY: clean-linux
 .PHONY: clean-benchmark
@@ -37,7 +38,7 @@ LINUX_BUILD_DIR = build/linux
 TESTS_BUILD_DIR = build/tests
 BENCH_BUILD_DIR = build/bench
 
-TOOLCHAIN_DIR = toolchains
+TOOLCHAIN_DIR = platform/toolchains
 OSX_TARGET = tangram
 IOS_TARGET = tangram
 OSX_XCODE_PROJ = tangram.xcodeproj
@@ -115,7 +116,7 @@ ANDROID_CMAKE_PARAMS = \
 	-DANDROID_STL=c++_static \
 	-DANDROID_TOOLCHAIN_NAME=${ANDROID_TOOLCHAIN} \
 	-DANDROID_NATIVE_API_LEVEL=${ANDROID_API_LEVEL} \
-	-DLIBRARY_OUTPUT_PATH_ROOT=../../android/tangram \
+	-DLIBRARY_OUTPUT_PATH_ROOT=../../platform/android/tangram \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
 
 IOS_CMAKE_PARAMS = \
@@ -154,17 +155,20 @@ clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean
 
 clean-android:
 	rm -rf ${ANDROID_BUILD_DIR}
-	rm -rf android/build
-	rm -rf android/tangram/build
-	rm -rf android/tangram/libs
-	rm -rf android/demo/build
-	rm -rf android/demo/libs
+	rm -rf platform/android/build
+	rm -rf platform/android/tangram/build
+	rm -rf platform/android/tangram/libs
+	rm -rf platform/android/demo/build
+	rm -rf platform/android/demo/libs
 
 clean-osx:
 	rm -rf ${OSX_BUILD_DIR}
 
 clean-ios:
 	rm -rf ${IOS_BUILD_DIR}
+
+clean-ios-sim:
+	rm -rf ${IOS_SIM_BUILD_DIR}
 
 clean-rpi:
 	rm -rf ${RPI_BUILD_DIR}
@@ -185,14 +189,14 @@ clean-shaders:
 	rm -rf core/include/shaders/*.h
 
 android: android-demo-apk
-	@echo "run: 'adb install -r android/demo/build/outputs/apk/demo-debug.apk'"
+	@echo "run: 'adb install -r platform/android/demo/build/outputs/apk/demo-debug.apk'"
 
 android-tangram-apk:
-	@cd android/ && \
+	@cd platform/android/ && \
 	./gradlew tangram:assembleDebug
 
 android-demo-apk: android-native-lib
-	@cd android/ && \
+	@cd platform/android/ && \
 	./gradlew demo:assembleDebug
 
 android-native-lib: android/tangram/libs/${ANDROID_ARCH}/libtangram.so
@@ -297,16 +301,16 @@ format:
 
 ### Android Helpers
 android-install:
-	@adb install -r android/demo/build/outputs/apk/demo-debug.apk
+	@adb install -r platform/android/demo/build/outputs/apk/demo-debug.apk
 
 android-debug:
-	@cd android/demo &&           \
+	@cd platform/android/demo &&  \
 	cp -a ../tangram/libs . &&    \
 	mkdir -p jni &&               \
 	cp ../tangram/jni/*.mk jni && \
 	python2 $$ANDROID_NDK/ndk-gdb.py --verbose --start
 
 android-debug-attach:
-	@cd android/demo &&           \
+	@cd platform/android/demo && \
 	python2 $$ANDROID_NDK/ndk-gdb.py --verbose
 

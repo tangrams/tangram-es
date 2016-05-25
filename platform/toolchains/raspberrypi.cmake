@@ -12,13 +12,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 # add sources and include headers
 find_sources_and_include_directories(
-  ${PROJECT_SOURCE_DIR}/rpi/src/*.h
-  ${PROJECT_SOURCE_DIR}/rpi/src/*.cpp)
-
-# add sources and include headers
-find_sources_and_include_directories(
-  ${PROJECT_SOURCE_DIR}/linux/src/urlWorker.*
-  ${PROJECT_SOURCE_DIR}/linux/src/urlWorker.*)
+    ${PROJECT_SOURCE_DIR}/common/rpi/src/*.h
+    ${PROJECT_SOURCE_DIR}/common/rpi/src/*.cpp)
 
 # include headers for rpi-installed libraries
 include_directories(/opt/vc/include/)
@@ -31,9 +26,11 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/external)
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
+include_directories(${PROJECT_SOURCE_DIR}/platform/common)
+set(SOURCES ${SOURCES} ${PROJECT_SOURCE_DIR}/platform/common/urlWorker.cpp)
+
 add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
-target_link_libraries(${EXECUTABLE_NAME}
-    ${CORE_LIBRARY} -lcurl)
+target_link_libraries(${EXECUTABLE_NAME} ${CORE_LIBRARY} -lcurl)
 
 add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes")
