@@ -106,4 +106,7 @@ float sqSegmentDistance(const glm::vec2& _p, const glm::vec2& _p1, const glm::ve
 
 bool isPowerOfTwo(int _value);
 
+float sqPointSegmentDistance(const glm::vec2& _p, const glm::vec2& _a, const glm::vec2& _b);
+float pointSegmentDistance(const glm::vec2& _p, const glm::vec2& _a, const glm::vec2& _b);
+
 }

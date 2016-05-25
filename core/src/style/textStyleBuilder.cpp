@@ -192,14 +192,28 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
     float pixelScale = 1.0/m_tileSize;
     float minLength = m_attributes.width * pixelScale;
 
+    float tolerance = pow(pixelScale, 2);
+
     for (auto& line : _feat.lines) {
 
         for (size_t i = 0; i < line.size() - 1; i++) {
             glm::vec2 p1 = glm::vec2(line[i]);
-            glm::vec2 p2 = glm::vec2(line[i + 1]);
+            // float angle = 0;
 
-            if (glm::length(p1 - p2) > minLength) {
-                addLabel(_params, Label::Type::line, { p1, p2 });
+            for (size_t j = i+1; j < line.size(); j++) {
+                glm::vec2 p2 = glm::vec2(line[j]);
+                float segmentLength = glm::length(p1 - p2);
+
+                if (j > i+1) {
+                    glm::vec2 p = glm::vec2(line[j-1]);
+
+                    float d = sqPointSegmentDistance(p, p1, p2);
+                    if (d > tolerance) { break; }
+                }
+
+                if (segmentLength > minLength) {
+                    addLabel(_params, Label::Type::line, { p1, p2 });
+                }
             }
         }
     }
