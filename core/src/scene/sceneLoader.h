@@ -10,6 +10,7 @@
 #include <tuple>
 #include <unordered_set>
 #include <sstream>
+#include <mutex>
 
 #include "yaml-cpp/yaml.h"
 #include "glm/vec2.hpp"
@@ -30,6 +31,7 @@ class PointLight;
 class DataSource;
 struct Filter;
 struct TextureFiltering;
+struct TextureOptions;
 
 // 0: type, 1: values
 struct StyleUniform {
@@ -68,6 +70,8 @@ struct SceneLoader {
     static Filter generatePredicate(Node filter, std::string _key);
     /* loads a texture with default texture properties */
     static bool loadTexture(const std::string& url, Scene& scene);
+    static std::shared_ptr<Texture> fetchTexture(const std::string& name, const std::string& url,
+            const TextureOptions& options, bool generateMipmaps, Scene& scene);
     static bool extractTexFiltering(Node& filtering, TextureFiltering& filter);
 
     static MaterialTexture loadMaterialTexture(Node matCompNode, Scene& scene, Style& style);
@@ -84,7 +88,7 @@ struct SceneLoader {
     static bool loadStyle(const std::string& styleName, Node config, Scene& scene);
 
     static const std::unique_ptr<Importer> sceneImporter;
-
+    static std::mutex m_textureMutex;
     SceneLoader() = delete;
 
 };

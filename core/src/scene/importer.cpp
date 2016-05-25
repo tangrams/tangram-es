@@ -34,6 +34,7 @@ Node Importer::applySceneImports(const std::string& scenePath) {
             if (m_scenes.find(path) != m_scenes.end()) { continue; }
         }
 
+        // TODO: generic handling of uri
         std::regex r("^(http|https):/");
         std::smatch match;
         if (std::regex_search(path, match, r)) {

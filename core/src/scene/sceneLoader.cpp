@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <iterator>
 #include <unordered_map>
+#include <regex>
 
 using YAML::Node;
 using YAML::NodeType;
@@ -47,6 +48,7 @@ const std::string DELIMITER = ":";
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
 const std::unique_ptr<Importer> SceneLoader::sceneImporter(new Importer());
+std::mutex SceneLoader::m_textureMutex;
 
 void SceneLoader::loadScene(const std::string& _scenePath, std::shared_ptr<Scene> _scene,
         const std::function<void(std::shared_ptr<Scene>&)>& _setScene) {
@@ -434,7 +436,10 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene,
     const std::string& name = textureNode.Scalar();
 
     MaterialTexture matTex;
-    matTex.tex = scene.textures()[name];
+    {
+        std::lock_guard<std::mutex> lock(m_textureMutex);
+        matTex.tex = scene.textures()[name];
+    }
 
     if (!matTex.tex) { matTex.tex = std::make_shared<Texture>(name); }
 
@@ -488,27 +493,6 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene,
     return matTex;
 }
 
-bool SceneLoader::loadTexture(const std::string& url, Scene& scene) {
-    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
-
-    unsigned int size = 0;
-    unsigned char* blob = bytesFromFile(url.c_str(), PathType::resource, &size);
-
-    if (!blob) {
-        LOGE("Can't load texture resource at url %s", url.c_str());
-        return false;
-    }
-
-    std::shared_ptr<Texture> texture(new Texture(blob, size, options, false));
-
-    free(blob);
-
-    scene.textures().emplace(url, texture);
-
-    return true;
-}
-
-
 bool SceneLoader::extractTexFiltering(Node& filtering, TextureFiltering& filter) {
     const std::string& textureFiltering = filtering.Scalar();
     if (textureFiltering == "linear") {
@@ -523,6 +507,51 @@ bool SceneLoader::extractTexFiltering(Node& filtering, TextureFiltering& filter)
     } else {
         return false;
     }
+}
+
+std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, const std::string& url,
+        const TextureOptions& options, bool generateMipmaps, Scene& scene) {
+
+    unsigned int size = 0;
+    std::shared_ptr<Texture> texture;
+
+    std::regex r("^(http|https):/");
+    std::smatch match;
+    if (std::regex_search(url, match, r)) {
+        startUrlRequest(url, [&](std::vector<char>&& rawData) {
+                auto texture =
+                std::make_shared<Texture>((unsigned char*)(rawData.data()), rawData.size(),
+                        options, generateMipmaps);
+                std::lock_guard<std::mutex> lock(m_textureMutex);
+                // TODO: replaced in scene textures but not in sprite texture!!!
+                scene.textures()[name] = texture;
+            });
+        texture = std::make_shared<Texture>(nullptr, 0, options, generateMipmaps, true);
+    } else {
+        unsigned char* blob = bytesFromFile(url.c_str(), PathType::resource, &size);
+
+        if (!blob) {
+            LOGE("Can't load texture resource at url %s", url.c_str());
+            return nullptr;
+        }
+        texture = std::make_shared<Texture>(blob, size, options, generateMipmaps);
+        free(blob);
+    }
+
+    return std::move(texture);
+}
+
+bool SceneLoader::loadTexture(const std::string& url, Scene& scene) {
+    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
+
+    auto texture = fetchTexture(url, url, options, false, scene);
+    if (texture) {
+        std::lock_guard<std::mutex> lock(m_textureMutex);
+        scene.textures().emplace(url, texture);
+        return true;
+    }
+
+    return false;
 }
 
 void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
@@ -548,7 +577,8 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
         }
     }
 
-    std::shared_ptr<Texture> texture(new Texture(file, options, generateMipmaps));
+    auto texture = fetchTexture(name, file, options, generateMipmaps, scene);
+    if (!texture) { return; }
 
     if (Node sprites = textureConfig["sprites"]) {
         std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture, file));
@@ -568,6 +598,7 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
         }
         scene.spriteAtlases()[name] = atlas;
     }
+    std::lock_guard<std::mutex> lock(m_textureMutex);
     scene.textures().emplace(name, texture);
 }
 
