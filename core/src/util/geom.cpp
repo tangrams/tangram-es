@@ -36,6 +36,38 @@ float angleBetweenPoints(const glm::vec2& _p1, const glm::vec2& _p2) {
     return (float)atan2(p1p2.x, -p1p2.y);
 }
 
+float sqPointSegmentDistance(const glm::vec2& _p, const glm::vec2& _a, const glm::vec2& _b) {
+
+    float dx = _b.x - _a.x;
+    float dy = _b.y - _a.y;
+
+    float x = _a.x;
+    float y = _a.y;
+
+    float d = dx * dx + dy * dy;
+
+    if (d != 0) {
+        // project point onto segment
+        float t = ((_p.x - _a.x) * dx + (_p.y - _a.y) * dy) / d;
+        if (t > 1) {
+            x = _b.x;
+            y = _b.y;
+        } else if (t > 0) {
+            x += dx * t;
+            y += dy * t;
+        }
+    }
+
+    dx = _p.x - x;
+    dy = _p.y - y;
+
+    return dx * dx + dy * dy;
+}
+
+float pointSegmentDistance(const glm::vec2& _p, const glm::vec2& _a, const glm::vec2& _b) {
+    return sqrt(sqPointSegmentDistance(_p, _a, _b));
+}
+
 glm::vec4 worldToClipSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition) {
     return _mvp * _worldPosition;
 }
