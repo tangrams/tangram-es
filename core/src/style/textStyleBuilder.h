@@ -38,6 +38,8 @@ public:
     void addLabel(const TextStyle::Parameters& _params, Label::Type _type,
                   Label::Transform _transform);
 
+    void addLineTextLabels(const Feature& _feature, const TextStyle::Parameters& _params);
+
     std::string applyTextTransform(const TextStyle::Parameters& _params, const std::string& _string);
 
     std::string resolveTextSource(const std::string& textSource, const Properties& props) const;

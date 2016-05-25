@@ -18,8 +18,8 @@ TextLabel::TextLabel(Label::Transform _transform, Type _type, Label::Options _op
     : Label(_transform, _dim, _type, _options, _anchor),
       m_textLabels(_labels),
       m_vertexRange(_vertexRange),
-      m_fontAttrib(_attrib)
-{
+      m_fontAttrib(_attrib) {
+
     applyAnchor(_dim, glm::vec2(0.0), _anchor);
 }
 

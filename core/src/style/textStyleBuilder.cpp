@@ -29,6 +29,14 @@ TextStyleBuilder::TextStyleBuilder(const TextStyle& _style)
 
 void TextStyleBuilder::setup(const Tile& _tile){
     m_tileSize = _tile.getProjection()->TileSize();
+    m_tileSize *= m_style.pixelScale();
+
+    float tileScale = pow(2, _tile.getID().s - _tile.getID().z);
+    m_tileSize *= tileScale;
+
+    // add scale factor to the next zoom-level
+    m_tileSize *= 2;
+
     m_atlasRefs.reset();
 
     m_textLabels = std::make_unique<TextLabels>(m_style);
@@ -162,30 +170,38 @@ void TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
 
     } else if (_feat.geometryType == GeometryType::lines) {
 
-        float pixel = 2.0 / (m_tileSize * m_style.pixelScale());
-        float minLength = m_attributes.width * pixel * 0.2;
-
-        for (auto& line : _feat.lines) {
-            if (_iconText) {
+        if (_iconText) {
+            for (auto& line : _feat.lines) {
                 for (auto& point : line) {
                     auto p = glm::vec2(point);
                     addLabel(params, Label::Type::point, { p });
                 }
-            } else {
-                for (size_t i = 0; i < line.size() - 1; i++) {
-                    glm::vec2 p1 = glm::vec2(line[i]);
-                    glm::vec2 p2 = glm::vec2(line[i + 1]);
-                    if (glm::length(p1-p2) > minLength) {
-                        addLabel(params, Label::Type::line, { p1, p2 });
-                    }
-                }
             }
+        } else {
+            addLineTextLabels(_feat, params);
         }
     }
 
     if (numLabels == m_labels.size()) {
         // Drop quads when no label was added
         m_quads.resize(quadsStart);
+    }
+}
+
+void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::Parameters& _params) {
+    float pixelScale = 1.0/m_tileSize;
+    float minLength = m_attributes.width * pixelScale;
+
+    for (auto& line : _feat.lines) {
+
+        for (size_t i = 0; i < line.size() - 1; i++) {
+            glm::vec2 p1 = glm::vec2(line[i]);
+            glm::vec2 p2 = glm::vec2(line[i + 1]);
+
+            if (glm::length(p1 - p2) > minLength) {
+                addLabel(_params, Label::Type::line, { p1, p2 });
+            }
+        }
     }
 }
 
