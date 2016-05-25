@@ -55,6 +55,17 @@ void LabelCollider::process() {
                       // lower numeric priority means higher priority
                       return l1->options().priority > l2->options().priority;
                   }
+
+                  if (l1->type() == Label::Type::line &&
+                      l2->type() == Label::Type::line) {
+                      // Prefer the label with longer line segment as it has a chance
+                      // to be shown earlier (also on the lower zoom-level)
+                      // TODO compare fraction segment_length/label_width
+
+                      return glm::length2(l1->transform().modelPosition1 - l1->transform().modelPosition2) >
+                             glm::length2(l2->transform().modelPosition1 - l2->transform().modelPosition2);
+
+                  }
                   // just so it is consistent between two instances
                   return (l1->hash() < l2->hash());
               });
