@@ -8,6 +8,7 @@ all: android osx ios
 .PHONY: clean-rpi
 .PHONY: clean-linux
 .PHONY: clean-benchmark
+.PHONY: clean-shaders
 .PHONY: android
 .PHONY: osx
 .PHONY: xcode
@@ -149,7 +150,7 @@ LINUX_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=linux \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
 
-clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux
+clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux clean-shaders
 
 clean-android:
 	rm -rf ${ANDROID_BUILD_DIR}
@@ -179,6 +180,9 @@ clean-tests:
 
 clean-benchmark:
 	rm -rf ${BENCH_BUILD_DIR}
+
+clean-shaders:
+	rm -rf core/include/shaders/*.h
 
 android: android-demo-apk
 	@echo "run: 'adb install -r android/demo/build/outputs/apk/demo-debug.apk'"
@@ -290,15 +294,6 @@ format:
 		if [[ -e $$file ]]; then clang-format -i $$file; fi \
 	done
 	@echo "format done on `git diff --diff-filter=ACMRTUXB --name-only -- '*.cpp' '*.h'`"
-
-swig-bindings:
-	@mkdir -p generated
-	@swig -v -c++  -Icore/src -o android/tangram/jni/jniGenerated.cpp \
-		-outdir generated \
-		-package com.mapzen.tangram -java swig/tangram.i
-	@astyle --style=attach --indent=spaces=2 android/tangram/jni/jniGenerated.cpp
-	@astyle --style=java generated/*.java
-	@mv generated/*.java android/tangram/src/com/mapzen/tangram
 
 ### Android Helpers
 android-install:

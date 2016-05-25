@@ -81,17 +81,23 @@ target_compile_definitions(${CORE_LIBRARY}
 # make groups for xcode
 group_recursive_sources(src "src")
 
+# add compile shader targets
 file(GLOB_RECURSE SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/shaders/*")
+set(SHADER_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/shaders)
 foreach(_shader ${SHADER_FILES})
     get_filename_component(_shader_name ${_shader} NAME_WE)
     get_filename_component(_shader_ext ${_shader} EXT)
     string(REGEX REPLACE "\\." "" _shader_ext ${_shader_ext})
-    set(_shader_name ${_shader_name}_${_shader_ext})
-    message(STATUS "Adding shader target ${_shader_name}")
-    add_custom_target(
-        ${_shader_name}
-        COMMAND ${PROJECT_SOURCE_DIR}/../scripts/incbin.sh ${_shader} core/include/shaders/${_shader_name}.h ${_shader_name}
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..
-        COMMENT "Make tangram shader " ${_shader_name})
-    add_dependencies(${CORE_LIBRARY} ${_shader_name})
+    if(${_shader_ext} STREQUAL "fs" OR ${_shader_ext} STREQUAL "glsl" OR ${_shader_ext} STREQUAL "vs")
+        set(_shader_name ${_shader_name}_${_shader_ext})
+        set(SHADER_OUTPUT ${SHADER_OUTPUT_DIRECTORY}/${_shader_name}.h)
+        add_custom_target(
+            ${_shader_name}
+            DEPENDS ${SHADER_OUTPUT})
+        add_custom_command(
+            OUTPUT ${SHADER_OUTPUT}
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..
+            COMMAND ${PROJECT_SOURCE_DIR}/../scripts/incbin.sh ${_shader} core/include/shaders/${_shader_name}.h ${_shader_name})
+        add_dependencies(${CORE_LIBRARY} ${_shader_name})
+    endif()
 endforeach()

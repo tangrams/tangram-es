@@ -139,4 +139,4 @@ android/demo/gradlew*
 perf.data
 
 # shader generated headers
-core/include/shaders
+core/include/shaders/*.h
