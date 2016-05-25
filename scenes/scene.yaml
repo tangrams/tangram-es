@@ -72,7 +72,7 @@ sources:
     osm:
         type: MVT
         url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
-        max_zoom: 18
+        max_zoom: 16
         url_params:
             api_key: vector-tiles-tyHL4AY
 
@@ -372,7 +372,7 @@ layers:
                 interactive: true
                 visible: true
                 priority: 2
-                offset: [0, 8px]
+                # offset: [0, 8px]
                 transition:
                     [show, hide]:
                         time: 1s
@@ -399,7 +399,7 @@ layers:
                         family: sans-serif
                         weight: 400
                         style: normal
-                        size: 25px
+                        size: 18px
                         fill: black
                         transform: capitalize
         major_road:
@@ -418,7 +418,7 @@ layers:
                         family: sans-serif
                         weight: 400
                         style: normal
-                        size: 20.5pt
+                        size: 14.5pt
     places:
         data: { source: osm }
         filter:
@@ -431,14 +431,16 @@ layers:
                 - { $zoom: { min: 4 }, name: ["United States of America", "Brasil", "Россия", "中华人民共和国"] }
                 # unimportant countries
                 - { $zoom: { min: 5 }, kind: country }
+                - $zoom: { min: 6 }
                 # this function matches the "cities" sublayer
                 #- function() {return (feature.scalerank * .75) <= ($zoom - 4); }
+            $zoom: { max: 15 }
         draw:
             text:
                 text_source: [name:en, name, area, volume]
                 repeat_distance: 0
                 interactive: true
-                priority: 5
+                priority: 1
                 transition:
                     [show, hide]:
                         time: 1s
