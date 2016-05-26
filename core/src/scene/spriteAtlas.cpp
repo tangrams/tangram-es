@@ -3,7 +3,7 @@
 
 namespace Tangram {
 
-SpriteAtlas::SpriteAtlas(std::shared_ptr<Texture> _texture, const std::string& _file) : m_file(_file), m_texture(_texture) {}
+SpriteAtlas::SpriteAtlas(std::shared_ptr<Texture> _texture) : m_texture(_texture) {}
 
 void SpriteAtlas::addSpriteNode(const std::string& _name, glm::vec2 _origin, glm::vec2 _size) {
 
@@ -11,7 +11,7 @@ void SpriteAtlas::addSpriteNode(const std::string& _name, glm::vec2 _origin, glm
     glm::vec2 uvBL = _origin / atlasSize;
     glm::vec2 uvTR = (_origin + _size) / atlasSize;
 
-    m_spritesNodes[_name] = SpriteNode { uvBL, uvTR, _size };
+    m_spritesNodes[_name] = SpriteNode { uvBL, uvTR, _size, _origin };
 }
 
 bool SpriteAtlas::getSpriteNode(const std::string& _name, SpriteNode& _node) const {
@@ -22,6 +22,13 @@ bool SpriteAtlas::getSpriteNode(const std::string& _name, SpriteNode& _node) con
 
     _node = it->second;
     return true;
+}
+
+void SpriteAtlas::updateSpriteNodes(std::shared_ptr<Texture> _texture) {
+    m_texture = _texture;
+    for (auto& spriteNode : m_spritesNodes) {
+        addSpriteNode(spriteNode.first.k, spriteNode.second.m_origin, spriteNode.second.m_size);
+    }
 }
 
 void SpriteAtlas::bind(GLuint _slot) {
