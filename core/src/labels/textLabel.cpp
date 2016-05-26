@@ -29,11 +29,14 @@ void TextLabel::applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origi
 
 void TextLabel::updateBBoxes(float _zoomFract) {
 
+    glm::vec2 dim = m_dim - m_options.buffer;
+
+    if (m_occludedLastFrame) { dim += 2; }
+
     m_obb = OBB(m_transform.state.screenPos.x,
                 m_transform.state.screenPos.y,
                 m_transform.state.rotation,
-                m_dim.x - m_options.buffer,
-                m_dim.y - m_options.buffer);
+                dim.x, dim.y);
 
     m_aabb = m_obb.getExtent();
 }
