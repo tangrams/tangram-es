@@ -18,6 +18,7 @@ set(CORE_LIBRARY core CACHE INTERNAL "core library name" FORCE)
 
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
+  add_definitions(-DDEBUG)
   add_definitions(-DLOG_LEVEL=3)
 else()
   add_definitions(-DLOG_LEVEL=2)
