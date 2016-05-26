@@ -39,10 +39,10 @@ namespace RenderState {
         return GL_TEXTURE0 + _unit;
     }
 
-    void bindVertexBuffer(GLuint _id) { glBindBuffer(GL_ARRAY_BUFFER, _id); }
-    void bindIndexBuffer(GLuint _id) { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _id); }
-    void activeTextureUnit(GLuint _unit) { glActiveTexture(getTextureUnit(_unit)); }
-    void bindTexture(GLenum _target, GLuint _textureId) { glBindTexture(_target, _textureId); }
+    void bindVertexBuffer(GLuint _id) { GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, _id)); }
+    void bindIndexBuffer(GLuint _id) { GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _id)); }
+    void activeTextureUnit(GLuint _unit) { GL_CHECK(glActiveTexture(getTextureUnit(_unit))); }
+    void bindTexture(GLenum _target, GLuint _textureId) { GL_CHECK(glBindTexture(_target, _textureId)); }
 
     void configure() {
         s_textureUnit = -1;
@@ -57,10 +57,10 @@ namespace RenderState {
         depthTest.init(GL_TRUE);
         depthWrite.init(GL_TRUE);
 
-        glDisable(GL_STENCIL_TEST);
-        glDepthFunc(GL_LESS);
-        glClearDepthf(1.0);
-        glDepthRangef(0.0, 1.0);
+        GL_CHECK(glDisable(GL_STENCIL_TEST));
+        GL_CHECK(glDepthFunc(GL_LESS));
+        GL_CHECK(glClearDepthf(1.0));
+        GL_CHECK(glDepthRangef(0.0, 1.0));
 
         static size_t max = std::numeric_limits<size_t>::max();
 
