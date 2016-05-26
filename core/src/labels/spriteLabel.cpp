@@ -49,6 +49,9 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
     glm::vec2 halfSize = m_dim * 0.5f;
     glm::vec2 sp = m_transform.state.screenPos;
     glm::vec2 dim = m_dim + glm::vec2(m_extrudeScale * 2.f * _zoomFract);
+
+    if (m_occludedLastFrame) { dim += 2; }
+
     m_obb = OBB(sp.x + halfSize.x, sp.y - halfSize.y, m_transform.state.rotation, dim.x, dim.y);
     m_aabb = m_obb.getExtent();
 }

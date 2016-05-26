@@ -150,11 +150,12 @@ private:
     State m_state;
     // the label fade effect
     FadeEffect m_fade;
+
+protected:
+
     // whether the label was occluded on the previous frame
     bool m_occludedLastFrame;
     bool m_occluded;
-
-protected:
 
     // set alignment on _screenPosition based on anchor points _ap1, _ap2
     virtual void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) = 0;
