@@ -36,4 +36,5 @@ add_executable(${EXECUTABLE_NAME} ${SOURCES})
 target_link_libraries(${EXECUTABLE_NAME}
     ${CORE_LIBRARY} -lcurl)
 
-add_dependencies(${EXECUTABLE_NAME} copy_resources)
+add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/core/resources")
+add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes")
