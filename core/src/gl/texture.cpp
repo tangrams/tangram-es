@@ -32,7 +32,11 @@ Texture::Texture(const std::string& _file, TextureOptions _options, bool _genera
 
     data = bytesFromFile(_file.c_str(), PathType::resource, &size);
 
-    loadImageFromMemory(data, size, _flipOnLoad);
+    if (data) {
+        loadImageFromMemory(data, size, _flipOnLoad);
+    } else {
+        LOGE("Failed to read Texture file: %s", _file.c_str());
+    }
 
     free(data);
 }
