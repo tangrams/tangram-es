@@ -525,6 +525,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
                 std::lock_guard<std::mutex> lock(m_textureMutex);
                 // TODO: replaced in scene textures but not in sprite texture!!!
                 scene.textures()[name] = texture;
+                scene.spriteAtlases()[name]->updateSpriteNodes(texture);
             });
         texture = std::make_shared<Texture>(nullptr, 0, options, generateMipmaps, true);
     } else {
@@ -580,8 +581,9 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
     auto texture = fetchTexture(name, file, options, generateMipmaps, scene);
     if (!texture) { return; }
 
+    std::lock_guard<std::mutex> lock(m_textureMutex);
     if (Node sprites = textureConfig["sprites"]) {
-        std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture, file));
+        std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture));
 
         for (auto it = sprites.begin(); it != sprites.end(); ++it) {
 
@@ -598,7 +600,6 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
         }
         scene.spriteAtlases()[name] = atlas;
     }
-    std::lock_guard<std::mutex> lock(m_textureMutex);
     scene.textures().emplace(name, texture);
 }
 
