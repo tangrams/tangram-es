@@ -3,7 +3,7 @@
 #include "labels/labelSet.h"
 #include "glm/gtc/matrix_transform.hpp"
 
-#define TILE_SIZE 512
+#define TILE_SIZE 256
 #define MAX_SCALE 2
 
 namespace Tangram {
@@ -21,8 +21,8 @@ void LabelCollider::addLabels(std::vector<std::unique_ptr<Label>>& _labels) {
     glm::mat4 mvp = glm::scale(glm::mat4(1.0), glm::vec3(m_tileScale));
 
     // Place tile centered
-    // mvp[3][0] = -0.5f;
-    // mvp[3][1] = -0.5f;
+    // mvp[3][0] = -0.5f * m_tileScale;
+    // mvp[3][1] = -0.5f * m_tileScale;
 
     for (auto& label : _labels) {
 
@@ -43,6 +43,18 @@ void LabelCollider::process() {
 
     m_isect2d.intersect(m_aabbs);
 
+    // Set the first item to be the one with higher priority
+    for (auto& pair : m_isect2d.pairs) {
+        const auto& aabb1 = m_aabbs[pair.first];
+        const auto& aabb2 = m_aabbs[pair.second];
+        auto l1 = static_cast<Label*>(aabb1.m_userData);
+        auto l2 = static_cast<Label*>(aabb2.m_userData);
+        if (l1->options().priority > l2->options().priority) {
+            std::swap(pair.first, pair.second);
+        }
+    }
+
+    // Sort by priority on the first item
     std::sort(m_isect2d.pairs.begin(), m_isect2d.pairs.end(),
               [&](auto& a, auto& b) {
                   const auto& aabb1 = m_aabbs[a.first];
@@ -62,8 +74,8 @@ void LabelCollider::process() {
                       // to be shown earlier (also on the lower zoom-level)
                       // TODO compare fraction segment_length/label_width
 
-                      return glm::length2(l1->transform().modelPosition1 - l1->transform().modelPosition2) >
-                             glm::length2(l2->transform().modelPosition1 - l2->transform().modelPosition2);
+                      return glm::length(l1->transform().modelPosition1 - l1->transform().modelPosition2) >
+                             glm::length(l2->transform().modelPosition1 - l2->transform().modelPosition2);
 
                   }
                   // just so it is consistent between two instances
