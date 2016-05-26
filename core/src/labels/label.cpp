@@ -286,11 +286,11 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             }
             break;
         case State::fading_out:
-            // if (m_occluded) {
-            //     enterState(State::fading_in, m_transform.state.alpha);
-            //     animate = true;
-            //     break;
-            // }
+            if (!m_occluded) {
+                enterState(State::fading_in, m_transform.state.alpha);
+                animate = true;
+                break;
+            }
             setAlpha(m_fade.update(_dt));
             animate = true;
             if (m_fade.isFinished()) {
@@ -304,11 +304,7 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             break;
         case State::wait_occ:
             if (m_occluded) {
-                // if (m_parent) {
                 enterState(State::sleep, 0.0);
-                // } else {
-                //     enterState(State::dead, 0.0);
-                // }
             } else {
                 m_fade = FadeEffect(true, m_options.showTransition.ease,
                                     m_options.showTransition.time);
@@ -319,7 +315,6 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
         case State::skip_transition:
             if (m_occluded) {
                 enterState(State::sleep, 0.0);
-                // enterState(State::dead, 0.0);
             } else {
                 enterState(State::visible, 1.0);
             }
