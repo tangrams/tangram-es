@@ -82,7 +82,7 @@ target_compile_definitions(${CORE_LIBRARY}
 group_recursive_sources(src "src")
 
 # add compile shader targets
-file(GLOB_RECURSE SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/shaders/*")
+file(GLOB_RECURSE SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
 set(SHADER_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/shaders)
 foreach(_shader ${SHADER_FILES})
     get_filename_component(_shader_name ${_shader} NAME_WE)
