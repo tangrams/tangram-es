@@ -248,7 +248,7 @@ void render() {
     RenderState::depthWrite(GL_TRUE);
     auto& color = m_scene->background();
     RenderState::clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
     for (const auto& style : m_scene->styles()) {
         style->onBeginFrame();
