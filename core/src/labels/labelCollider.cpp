@@ -12,17 +12,20 @@ void LabelCollider::setup(float _tileScale) {
 
     m_tileScale = _tileScale * MAX_SCALE;
 
-     // TODO use pixel scale
-     m_screenSize = glm::vec2{ TILE_SIZE * MAX_SCALE * _tileScale };
+    // TODO use pixel scale
+    m_screenSize = glm::vec2{ TILE_SIZE * m_tileScale };
 }
 
 void LabelCollider::addLabels(std::vector<std::unique_ptr<Label>>& _labels) {
 
-    glm::mat4 mvp = glm::scale(glm::mat4(1.0), glm::vec3(m_tileScale));
-
+    // Project tile to NDC (-1 to 1, y-up)
+    glm::mat4 mvp{1};
+    // Scale tile to 'fullscreen'
+    mvp[0][0] = 2;
+    mvp[1][1] = -2;
     // Place tile centered
-    // mvp[3][0] = -0.5f * m_tileScale;
-    // mvp[3][1] = -0.5f * m_tileScale;
+    mvp[3][0] = -1;
+    mvp[3][1] = 1;
 
     for (auto& label : _labels) {
 
