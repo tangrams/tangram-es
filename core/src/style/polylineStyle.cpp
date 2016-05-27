@@ -12,6 +12,9 @@
 #include "util/mapProjection.h"
 #include "util/extrude.h"
 
+#include "shaders/polyline_vs.h"
+#include "shaders/polyline_fs.h"
+
 #include "glm/vec3.hpp"
 #include "glm/gtc/type_precision.hpp"
 
@@ -78,8 +81,8 @@ void PolylineStyle::constructVertexLayout() {
 
 void PolylineStyle::constructShaderProgram() {
 
-    std::string vertShaderSrcStr = stringFromFile("shaders/polyline.vs", PathType::internal);
-    std::string fragShaderSrcStr = stringFromFile("shaders/polyline.fs", PathType::internal);
+    std::string vertShaderSrcStr(reinterpret_cast<const char*>(polyline_vs_data));
+    std::string fragShaderSrcStr(reinterpret_cast<const char*>(polyline_fs_data));
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 

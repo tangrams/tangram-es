@@ -3,6 +3,8 @@
 #include "glm/gtx/string_cast.hpp"
 #include "platform.h"
 
+#include "shaders/ambientLight_glsl.h"
+
 namespace Tangram {
 
 std::string AmbientLight::s_classBlock;
@@ -31,7 +33,7 @@ void AmbientLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
 
 std::string AmbientLight::getClassBlock() {
     if (s_classBlock.empty()) {
-        s_classBlock = stringFromFile("shaders/ambientLight.glsl", PathType::internal)+"\n";
+        s_classBlock = std::string(reinterpret_cast<const char*>(ambientLight_glsl_data)) + "\n";
     }
     return s_classBlock;
 }

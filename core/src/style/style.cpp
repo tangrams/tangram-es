@@ -14,6 +14,8 @@
 #include "view/view.h"
 #include "tangram.h"
 
+#include "shaders/rasters_glsl.h"
+
 namespace Tangram {
 
 Style::Style(std::string _name, Blending _blendMode, GLenum _drawMode) :
@@ -162,7 +164,7 @@ void Style::setupRasters(const std::vector<std::shared_ptr<DataSource>>& _dataSo
             + std::to_string(numRasterSource) + "\n", false);
     m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n", false);
 
-    std::string rasterBlock = stringFromFile("shaders/rasters.glsl", PathType::internal);
+    std::string rasterBlock(reinterpret_cast<const char*>(rasters_glsl_data));
 
     m_shaderProgram->addSourceBlock("raster", rasterBlock);
 }

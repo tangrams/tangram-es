@@ -4,6 +4,8 @@
 #include "platform.h"
 #include "gl/shaderProgram.h"
 
+#include "shaders/lights_glsl.h"
+
 #include <sstream>
 
 namespace Tangram {
@@ -80,7 +82,7 @@ void Light::assembleLights(std::map<std::string, std::vector<std::string>>& _sou
 
     // After lights definitions are all added, add the main lighting functions
     if (s_mainLightingBlock.empty()) {
-        s_mainLightingBlock = stringFromFile("shaders/lights.glsl", PathType::internal);
+        s_mainLightingBlock = std::string(reinterpret_cast<const char*>(lights_glsl_data));
     }
     std::string lightingBlock = s_mainLightingBlock;
 

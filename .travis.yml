@@ -25,7 +25,7 @@ matrix:
 
 before_install:
     - git submodule update --init --recursive
-    - source ./travis/before_install.sh
+    - source ./scripts/travis/before_install.sh
 
 install: ulimit -c
 
@@ -35,12 +35,12 @@ before_script:
 
 # build test project
 script:
-    - source ./travis/script_build.sh
-    - source ./travis/script_run_tests.sh
-    - source ./travis/script_run_bench.sh
+    - source ./scripts/travis/script_build.sh
+    - source ./scripts/travis/script_run_tests.sh
+    - source ./scripts/travis/script_run_bench.sh
 
 after_success:
-    - source ./travis/script_deploy_android_snapshot.sh
-    - source ./travis/script_deploy_android_demo.sh
+    - source ./scripts/travis/script_deploy_android_snapshot.sh
+    - source ./scripts/travis/script_deploy_android_demo.sh
 
 sudo: false

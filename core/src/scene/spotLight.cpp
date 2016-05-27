@@ -5,6 +5,8 @@
 #include "gl/shaderProgram.h"
 #include "view/view.h"
 
+#include "shaders/spotLight_glsl.h"
+
 namespace Tangram {
 
 std::string SpotLight::s_classBlock;
@@ -59,7 +61,7 @@ void SpotLight::setupProgram(const View& _view, LightUniforms& _uniforms ) {
 
 std::string SpotLight::getClassBlock() {
     if (s_classBlock.empty()) {
-        s_classBlock = stringFromFile("shaders/spotLight.glsl", PathType::internal)+"\n";
+        s_classBlock = std::string(reinterpret_cast<const char*>(spotLight_glsl_data)) + "\n";
     }
     return s_classBlock;
 }

@@ -41,7 +41,6 @@ foreach(_ext ${IOS_EXTENSIONS_FILES})
         ${PROJECT_SOURCE_DIR}/ios/src/${_ext})
 endforeach()
 
-add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/core/resources" "${EXECUTABLE_NAME}.app")
 add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes" "${EXECUTABLE_NAME}.app")
 
 file(GLOB_RECURSE IOS_RESOURCES ${PROJECT_SOURCE_DIR}/ios/resources/**)

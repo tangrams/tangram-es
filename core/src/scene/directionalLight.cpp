@@ -4,6 +4,7 @@
 #include "platform.h"
 #include "gl/shaderProgram.h"
 #include "view/view.h"
+#include "shaders/directionalLight_glsl.h"
 
 namespace Tangram {
 
@@ -46,7 +47,7 @@ void DirectionalLight::setupProgram(const View& _view, LightUniforms& _uniforms)
 
 std::string DirectionalLight::getClassBlock() {
     if (s_classBlock.empty()) {
-        s_classBlock = stringFromFile("shaders/directionalLight.glsl", PathType::internal)+"\n";
+        s_classBlock = std::string(reinterpret_cast<const char*>(directionalLight_glsl_data)) + "\n";
     }
     return s_classBlock;
 }

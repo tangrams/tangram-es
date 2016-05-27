@@ -9,6 +9,10 @@
 #include "text/fontContext.h"
 #include "view/view.h"
 
+#include "shaders/text_fs.h"
+#include "shaders/sdf_fs.h"
+#include "shaders/point_vs.h"
+
 namespace Tangram {
 
 TextStyle::TextStyle(std::string _name, bool _sdf, Blending _blendMode, GLenum _drawMode) :
@@ -31,10 +35,10 @@ void TextStyle::constructVertexLayout() {
 }
 
 void TextStyle::constructShaderProgram() {
-    std::string frag = m_sdf ? "shaders/sdf.fs" : "shaders/text.fs";
+    auto shaderFragData = m_sdf ? sdf_fs_data : text_fs_data;
 
-    std::string vertShaderSrcStr = stringFromFile("shaders/point.vs", PathType::internal);
-    std::string fragShaderSrcStr = stringFromFile(frag.c_str(), PathType::internal);
+    std::string vertShaderSrcStr(reinterpret_cast<const char*>(point_vs_data));
+    std::string fragShaderSrcStr(reinterpret_cast<const char*>(shaderFragData));
 
     m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
 

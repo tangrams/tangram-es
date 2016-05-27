@@ -36,7 +36,6 @@ if(APPLICATION)
       ${PROJECT_SOURCE_DIR}/osx/src/${_ext})
   endforeach()
 
-  add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/core/resources" "Resources")
   add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes" "Resources")
 
   file(GLOB_RECURSE OSX_RESOURCES "${PROJECT_SOURCE_DIR}/osx/resources/**")

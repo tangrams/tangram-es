@@ -5,6 +5,8 @@
 #include "gl/texture.h"
 #include "gl/renderState.h"
 
+#include "shaders/material_glsl.h"
+
 namespace Tangram {
 
 Material::Material() {
@@ -147,7 +149,7 @@ std::string Material::getDefinesBlock(){
 }
 
 std::string Material::getClassBlock() {
-    return stringFromFile("shaders/material.glsl", PathType::internal) + "\n";
+    return std::string(reinterpret_cast<const char*>(material_glsl_data)) + "\n";
 }
 
 std::unique_ptr<MaterialUniforms> Material::injectOnProgram(ShaderProgram& _shader ) {
