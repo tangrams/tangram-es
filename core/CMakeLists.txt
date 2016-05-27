@@ -16,7 +16,6 @@ set(INCLUDE_DIR include)
 set(SOURCE_DIR src)
 set(CORE_LIBRARY core CACHE INTERNAL "core library name" FORCE)
 
-
 if (CMAKE_BUILD_TYPE MATCHES Debug)
   add_definitions(-DDEBUG)
   add_definitions(-DLOG_LEVEL=3)
@@ -40,11 +39,13 @@ list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/mapbox)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/sdf)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/stb)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/glm)
+list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/shaders)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/isect2d/include)
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
 set(CORE_LIBRARIES_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/shaders
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/glm
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/sdf
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/stb
@@ -97,7 +98,11 @@ foreach(_shader ${SHADER_FILES})
         add_custom_command(
             OUTPUT ${SHADER_OUTPUT}
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..
-            COMMAND ${PROJECT_SOURCE_DIR}/../scripts/incbin.sh ${_shader} core/include/shaders/${_shader_name}.h ${_shader_name})
+            MAIN_DEPENDENCY ${_shader}
+            COMMAND ${PROJECT_SOURCE_DIR}/../scripts/incbin.sh
+                ${_shader}
+                core/include/shaders/${_shader_name}.h
+                ${_shader_name})
         add_dependencies(${CORE_LIBRARY} ${_shader_name})
     endif()
 endforeach()
