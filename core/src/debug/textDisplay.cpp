@@ -95,7 +95,7 @@ void TextDisplay::draw(const std::string& _text, int _posx, int _posy) {
     }
     vertexLayout.enable(*m_shader, 0, (void*)vertices.data());
 
-    glDrawArrays(GL_TRIANGLES, 0, nquads * 6);
+    GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, nquads * 6));
 }
 
 void TextDisplay::draw(const std::vector<std::string>& _infos) {
@@ -106,7 +106,7 @@ void TextDisplay::draw(const std::vector<std::string>& _infos) {
     RenderState::depthTest(GL_FALSE);
     RenderState::depthWrite(GL_FALSE);
 
-    glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*) &boundbuffer);
+    GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*) &boundbuffer));
     RenderState::vertexBuffer(0);
 
     m_shader->use();

@@ -96,6 +96,7 @@ typedef char            GLchar;
 #define GL_INVALID_VALUE                0x0501
 #define GL_INVALID_OPERATION            0x0502
 #define GL_OUT_OF_MEMORY                0x0505
+#define GL_INVALID_FRAMEBUFFER_OPERATION  0x0506
 
 /* Data types */
 #define GL_BYTE                         0x1400

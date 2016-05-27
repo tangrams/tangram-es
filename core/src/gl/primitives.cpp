@@ -37,13 +37,13 @@ void init() {
         }));
 
         s_initialized = true;
-        glLineWidth(1.5f);
+        GL_CHECK(glLineWidth(1.5f));
     }
 }
 
 void saveState() {
     // save the current gl state
-    glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*) &s_boundBuffer);
+    GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*) &s_boundBuffer));
     RenderState::depthTest(GL_FALSE);
     RenderState::vertexBuffer(0);
 }
@@ -69,7 +69,7 @@ void drawLine(const glm::vec2& _origin, const glm::vec2& _destination) {
     // enable the layout for the line vertices
     s_layout->enable(*s_shader, 0, &verts);
 
-    glDrawArrays(GL_LINES, 0, 2);
+    GL_CHECK(glDrawArrays(GL_LINES, 0, 2));
     popState();
 
 }
@@ -91,7 +91,7 @@ void drawPoly(const glm::vec2* _polygon, size_t _n) {
     // enable the layout for the _polygon vertices
     s_layout->enable(*s_shader, 0, (void*)_polygon);
 
-    glDrawArrays(GL_LINE_LOOP, 0, _n);
+    GL_CHECK(glDrawArrays(GL_LINE_LOOP, 0, _n));
     popState();
 }
 

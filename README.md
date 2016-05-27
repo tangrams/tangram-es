@@ -155,8 +155,20 @@ cd build/rpi/bin
 
 You can also move the map with `w`, `a`, `s`, and `z`, zoom in and out with `-` and `=`, and quit with `q`.
 
+## debug ##
+
+To build in `RELEASE` or `DEBUG` run the following:
+
+```sh
+make [platform] DEBUG=1
+```
+or
+```sh
+make [platform] RELEASE=1
+```
+
 Code Style
-=====
+==========
 In general, code changes should follow the style of the surrounding code.
 
 When in doubt, you can use the provided clang-format style file for automatic styling.

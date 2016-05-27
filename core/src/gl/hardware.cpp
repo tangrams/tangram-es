@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <iterator>
 #include "platform.h"
+#include "gl/error.h"
 #include "gl.h"
 
 namespace Tangram {
@@ -62,10 +63,10 @@ void loadExtensions() {
 
 void loadCapabilities() {
     int val;
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &val);
+    GL_CHECK(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &val));
     maxTextureSize = val;
 
-    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &val);
+    GL_CHECK(glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &val));
     maxCombinedTextureUnits = val;
 
     LOG("Hardware max texture size %d", maxTextureSize);
