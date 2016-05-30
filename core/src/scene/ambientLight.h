@@ -22,8 +22,6 @@ protected:
     virtual std::string getInstanceAssignBlock() override;
     virtual const std::string& getTypeName() override;
 
-    static std::string s_classBlock;
-
 private:
 
     static std::string s_typeName;

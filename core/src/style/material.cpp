@@ -149,7 +149,7 @@ std::string Material::getDefinesBlock(){
 }
 
 std::string Material::getClassBlock() {
-    return std::string(reinterpret_cast<const char*>(material_glsl_data)) + "\n";
+    return SHADER_SOURCE(material_glsl);
 }
 
 std::unique_ptr<MaterialUniforms> Material::injectOnProgram(ShaderProgram& _shader ) {

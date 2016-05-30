@@ -144,10 +144,6 @@ protected:
 
     bool m_dynamic;
 
-private:
-
-    static std::string s_mainLightingBlock;
-
 };
 
 }

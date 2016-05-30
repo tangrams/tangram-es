@@ -49,8 +49,6 @@ protected:
     virtual std::string getInstanceAssignBlock() override;
     virtual const std::string& getTypeName() override;
 
-    static std::string s_classBlock;
-
     UnitVec<glm::vec3> m_position;
 
     float m_attenuation;

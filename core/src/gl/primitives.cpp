@@ -29,10 +29,8 @@ void init() {
     if (!s_initialized) {
         s_shader = std::unique_ptr<ShaderProgram>(new ShaderProgram());
 
-        std::string vert(reinterpret_cast<const char*>(debugPrimitive_vs_data));
-        std::string frag(reinterpret_cast<const char*>(debugPrimitive_fs_data));
-
-        s_shader->setSourceStrings(frag, vert);
+        s_shader->setSourceStrings(SHADER_SOURCE(debugPrimitive_fs),
+                                   SHADER_SOURCE(debugPrimitive_vs));
 
         s_layout = std::unique_ptr<VertexLayout>(new VertexLayout({
             {"a_position", 2, GL_FLOAT, false, 0},

@@ -14,11 +14,9 @@ Skybox::Skybox(std::string _file) : m_file(_file) {}
 
 void Skybox::init() {
 
-    std::string fragShaderSrcStr(reinterpret_cast<const char*>(cubemap_vs_data));
-    std::string vertShaderSrcStr(reinterpret_cast<const char*>(cubemap_fs_data));
-
     m_shader = std::make_unique<ShaderProgram>();
-    m_shader->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+    m_shader->setSourceStrings(SHADER_SOURCE(cubemap_fs),
+                               SHADER_SOURCE(cubemap_vs));
 
     m_texture = std::unique_ptr<Texture>(new TextureCube(m_file));
     auto layout = std::shared_ptr<VertexLayout>(new VertexLayout({

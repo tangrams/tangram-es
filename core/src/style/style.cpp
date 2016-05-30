@@ -164,9 +164,7 @@ void Style::setupRasters(const std::vector<std::shared_ptr<DataSource>>& _dataSo
             + std::to_string(numRasterSource) + "\n", false);
     m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n", false);
 
-    std::string rasterBlock(reinterpret_cast<const char*>(rasters_glsl_data));
-
-    m_shaderProgram->addSourceBlock("raster", rasterBlock);
+    m_shaderProgram->addSourceBlock("raster", SHADER_SOURCE(rasters_glsl));
 }
 
 void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {

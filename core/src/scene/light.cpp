@@ -10,8 +10,6 @@
 
 namespace Tangram {
 
-std::string Light::s_mainLightingBlock;
-
 Light::Light(const std::string& _name, bool _dynamic):
     m_name(_name),
     m_ambient(0.0f),
@@ -81,10 +79,7 @@ void Light::assembleLights(std::map<std::string, std::vector<std::string>>& _sou
     }
 
     // After lights definitions are all added, add the main lighting functions
-    if (s_mainLightingBlock.empty()) {
-        s_mainLightingBlock = std::string(reinterpret_cast<const char*>(lights_glsl_data));
-    }
-    std::string lightingBlock = s_mainLightingBlock;
+    std::string lightingBlock = SHADER_SOURCE(lights_glsl);
 
     // The main lighting functions each contain a tag where all light instances should be computed;
     // Insert all of our "lights_to_compute" at this tag

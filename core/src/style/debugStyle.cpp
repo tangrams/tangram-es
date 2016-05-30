@@ -38,10 +38,8 @@ void DebugStyle::constructVertexLayout() {
 
 void DebugStyle::constructShaderProgram() {
 
-    std::string vertShaderSrcStr(reinterpret_cast<const char*>(debug_vs_data));
-    std::string fragShaderSrcStr(reinterpret_cast<const char*>(debug_fs_data));
-
-    m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+    m_shaderProgram->setSourceStrings(SHADER_SOURCE(debug_fs),
+                                      SHADER_SOURCE(debug_vs));
 
 }
 

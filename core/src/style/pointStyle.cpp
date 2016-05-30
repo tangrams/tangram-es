@@ -39,10 +39,8 @@ void PointStyle::constructVertexLayout() {
 
 void PointStyle::constructShaderProgram() {
 
-    std::string fragShaderSrcStr(reinterpret_cast<const char*>(point_fs_data));
-    std::string vertShaderSrcStr(reinterpret_cast<const char*>(point_vs_data));
-
-    m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+    m_shaderProgram->setSourceStrings(SHADER_SOURCE(point_fs),
+                                      SHADER_SOURCE(point_vs));
 
     std::string defines;
 

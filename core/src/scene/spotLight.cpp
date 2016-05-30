@@ -9,7 +9,6 @@
 
 namespace Tangram {
 
-std::string SpotLight::s_classBlock;
 std::string SpotLight::s_typeName = "SpotLight";
 
 SpotLight::SpotLight(const std::string& _name, bool _dynamic) :
@@ -60,10 +59,7 @@ void SpotLight::setupProgram(const View& _view, LightUniforms& _uniforms ) {
 }
 
 std::string SpotLight::getClassBlock() {
-    if (s_classBlock.empty()) {
-        s_classBlock = std::string(reinterpret_cast<const char*>(spotLight_glsl_data)) + "\n";
-    }
-    return s_classBlock;
+    return SHADER_SOURCE(spotLight_glsl);
 }
 
 std::string SpotLight::getInstanceAssignBlock() {
