@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.0)
 
 project(tangram)
 
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/alfons/deps/harfbuzz-icu-freetype")
+  message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init --recursive'")
+  return()
+endif()
+
 set(APPLICATION ON)
 
 if(NOT CMAKE_BUILD_TYPE)
