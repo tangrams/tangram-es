@@ -71,10 +71,8 @@ void PolygonStyle::constructVertexLayout() {
 
 void PolygonStyle::constructShaderProgram() {
 
-    std::string vertShaderSrcStr(reinterpret_cast<const char*>(polygon_vs_data));
-    std::string fragShaderSrcStr(reinterpret_cast<const char*>(polygon_fs_data));
-
-    m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+    m_shaderProgram->setSourceStrings(SHADER_SOURCE(polygon_fs),
+                                      SHADER_SOURCE(polygon_vs));
 
     if (m_texCoordsGeneration) {
         m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_USE_TEX_COORDS\n");

@@ -35,12 +35,14 @@ void TextStyle::constructVertexLayout() {
 }
 
 void TextStyle::constructShaderProgram() {
-    auto shaderFragData = m_sdf ? sdf_fs_data : text_fs_data;
 
-    std::string vertShaderSrcStr(reinterpret_cast<const char*>(point_vs_data));
-    std::string fragShaderSrcStr(reinterpret_cast<const char*>(shaderFragData));
-
-    m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+    if (m_sdf) {
+        m_shaderProgram->setSourceStrings(SHADER_SOURCE(sdf_fs),
+                                          SHADER_SOURCE(point_vs));
+    } else {
+        m_shaderProgram->setSourceStrings(SHADER_SOURCE(text_fs),
+                                          SHADER_SOURCE(point_vs));
+    }
 
     std::string defines = "#define TANGRAM_TEXT\n";
 

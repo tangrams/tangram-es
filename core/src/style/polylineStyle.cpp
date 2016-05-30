@@ -81,10 +81,8 @@ void PolylineStyle::constructVertexLayout() {
 
 void PolylineStyle::constructShaderProgram() {
 
-    std::string vertShaderSrcStr(reinterpret_cast<const char*>(polyline_vs_data));
-    std::string fragShaderSrcStr(reinterpret_cast<const char*>(polyline_fs_data));
-
-    m_shaderProgram->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+    m_shaderProgram->setSourceStrings(SHADER_SOURCE(polyline_fs),
+                                      SHADER_SOURCE(polyline_vs));
 
     if (m_texCoordsGeneration) {
         m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_USE_TEX_COORDS\n");

@@ -1,13 +1,12 @@
 #include "ambientLight.h"
 
-#include "glm/gtx/string_cast.hpp"
-#include "platform.h"
-
+#include "gl/shaderProgram.h"
 #include "shaders/ambientLight_glsl.h"
+
+#include "glm/gtx/string_cast.hpp"
 
 namespace Tangram {
 
-std::string AmbientLight::s_classBlock;
 std::string AmbientLight::s_typeName = "AmbientLight";
 
 AmbientLight::AmbientLight(const std::string& _name, bool _dynamic) :
@@ -32,10 +31,7 @@ void AmbientLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
 }
 
 std::string AmbientLight::getClassBlock() {
-    if (s_classBlock.empty()) {
-        s_classBlock = std::string(reinterpret_cast<const char*>(ambientLight_glsl_data)) + "\n";
-    }
-    return s_classBlock;
+    return SHADER_SOURCE(ambientLight_glsl);
 }
 
 std::string AmbientLight::getInstanceDefinesBlock() {

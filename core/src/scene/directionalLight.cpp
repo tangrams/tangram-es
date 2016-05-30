@@ -8,7 +8,6 @@
 
 namespace Tangram {
 
-std::string DirectionalLight::s_classBlock;
 std::string DirectionalLight::s_typeName = "DirectionalLight";
 
 DirectionalLight::DirectionalLight(const std::string& _name, bool _dynamic) :
@@ -46,10 +45,7 @@ void DirectionalLight::setupProgram(const View& _view, LightUniforms& _uniforms)
 }
 
 std::string DirectionalLight::getClassBlock() {
-    if (s_classBlock.empty()) {
-        s_classBlock = std::string(reinterpret_cast<const char*>(directionalLight_glsl_data)) + "\n";
-    }
-    return s_classBlock;
+    return SHADER_SOURCE(directionalLight_glsl);
 }
 
 std::string DirectionalLight::getInstanceDefinesBlock() {
