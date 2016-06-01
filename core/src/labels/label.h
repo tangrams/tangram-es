@@ -128,7 +128,6 @@ public:
     const Label* parent() const { return m_parent; }
     void setParent(const Label& parent, bool definePriority);
 
-    virtual glm::vec2 anchor() const { return m_anchor; }
     LabelProperty::Anchor anchorType() const { return m_anchorType; }
 
     virtual glm::vec2 center() const;
@@ -156,9 +155,6 @@ protected:
     // whether the label was occluded on the previous frame
     bool m_occludedLastFrame;
     bool m_occluded;
-
-    // set alignment on _screenPosition based on anchor points _ap1, _ap2
-    virtual void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) = 0;
 
     // the label type (point/line)
     Type m_type;

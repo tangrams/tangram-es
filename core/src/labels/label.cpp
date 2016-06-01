@@ -41,8 +41,6 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
     glm::vec2 screenPosition;
     float rot = 0;
 
-    glm::vec2 ap1, ap2;
-
     switch (m_type) {
         case Type::debug:
         case Type::point:
@@ -55,7 +53,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 
             screenPosition = clipToScreenSpace(v1, _screenSize);
 
-            ap1 = ap2 = screenPosition;
+            screenPosition += m_anchor;
 
             break;
         }
@@ -73,18 +71,10 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
             }
 
             // project to screen space
-            glm::vec2 p1 = clipToScreenSpace(v1, _screenSize);
-            glm::vec2 p2 = clipToScreenSpace(v2, _screenSize);
+            glm::vec2 ap1 = clipToScreenSpace(v1, _screenSize);
+            glm::vec2 ap2 = clipToScreenSpace(v2, _screenSize);
 
-            rot = angleBetweenPoints(p1, p2) + M_PI_2;
-
-            if (rot > M_PI_2 || rot < -M_PI_2) { // un-readable labels
-                rot += M_PI;
-            } else {
-                std::swap(p1, p2);
-            }
-
-            float length = glm::length(p2 - p1);
+            float length = glm::length(ap2 - ap1);
 
             float exceedHeuristic = 30; // default heuristic : 30%
 
@@ -95,14 +85,16 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
                 }
             }
 
-            ap1 = p1;
-            ap2 = p2;
+            screenPosition = (ap1 + ap2) * 0.5f;
+
+            rot = angleBetweenPoints(ap1, ap2) + M_PI_2;
+            if (rot > M_PI_2 || rot < -M_PI_2) { // un-readable labels
+                rot += M_PI;
+            }
 
             break;
         }
     }
-
-    align(screenPosition, ap1, ap2);
 
     // update screen position
     glm::vec2 offset = m_options.offset;
