@@ -36,18 +36,18 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 
     glm::vec2 screenPosition;
     glm::vec2 rotation = {1, 0};
+    bool clipped = false;
 
     switch (m_type) {
         case Type::debug:
         case Type::point:
         {
-            glm::vec4 v1 = worldToClipSpace(_mvp, glm::vec4(m_transform.modelPosition1, 0.0, 1.0));
+            screenPosition = worldToScreenSpace(_mvp, glm::vec4(m_transform.modelPosition1, 0.0, 1.0),
+                                                _screenSize, clipped);
 
-            if (_testVisibility && (v1.w <= 0)) {
+            if (_testVisibility && clipped) {
                 return false;
             }
-
-            screenPosition = clipToScreenSpace(v1, _screenSize);
 
             screenPosition += m_anchor;
 
@@ -55,27 +55,25 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
         }
         case Type::line:
         {
-            // project label position from mercator world space to clip
+            // project label position from mercator world space to screen
             // coordinates
-            glm::vec4 v1 = worldToClipSpace(_mvp, glm::vec4(m_transform.modelPosition1, 0.0, 1.0));
-            glm::vec4 v2 = worldToClipSpace(_mvp, glm::vec4(m_transform.modelPosition2, 0.0, 1.0));
+            glm::vec2 ap1 = worldToScreenSpace(_mvp, glm::vec4(m_transform.modelPosition1, 0.0, 1.0),
+                                               _screenSize, clipped);
+            glm::vec2 ap2 = worldToScreenSpace(_mvp, glm::vec4(m_transform.modelPosition2, 0.0, 1.0),
+                                               _screenSize, clipped);
 
             // check whether the label is behind the camera using the
             // perspective division factor
-            if (_testVisibility && (v1.w <= 0 || v2.w <= 0)) {
+            if (_testVisibility && clipped) {
                 return false;
             }
 
-            // project to screen space
-            glm::vec2 ap1 = clipToScreenSpace(v1, _screenSize);
-            glm::vec2 ap2 = clipToScreenSpace(v2, _screenSize);
-
             float length = glm::length(ap2 - ap1);
 
-            float exceedHeuristic = 30; // default heuristic : 30%
+            float exceedHeuristic = 0.3; // default heuristic : 30%
 
             if (_testVisibility && (m_dim.x > length)) {
-                float exceed = (1 - (length / m_dim.x)) * 100;
+                float exceed = 1 - (length / m_dim.x);
                 if (exceed > exceedHeuristic) {
                     return false;
                 }
