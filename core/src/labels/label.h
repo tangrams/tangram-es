@@ -51,8 +51,8 @@ public:
 
         struct {
             glm::vec2 screenPos;
+            glm::vec2 rotation;
             float alpha = 0.f;
-            float rotation = 0.f;
         } state;
     };
 

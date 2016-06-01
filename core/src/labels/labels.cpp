@@ -428,10 +428,8 @@ void Labels::drawDebug(const View& _view) {
     for (auto label : m_labels) {
         if (label->type() == Label::Type::debug) { continue; }
 
-        glm::vec2 offset = label->options().offset;
         glm::vec2 sp = label->transform().state.screenPos;
-        float angle = label->transform().state.rotation;
-        offset = glm::rotate(offset, angle);
+        glm::vec2 offset = rotateBy(label->options().offset, label->transform().state.rotation);
 
         // draw bounding box
         switch (label->state()) {

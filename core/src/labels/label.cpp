@@ -35,7 +35,7 @@ void Label::setProxy(bool _proxy) {
 bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _testVisibility) {
 
     glm::vec2 screenPosition;
-    float rot = 0;
+    glm::vec2 rotation = {1, 0};
 
     switch (m_type) {
         case Type::debug:
@@ -83,23 +83,16 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 
             screenPosition = (ap1 + ap2) * 0.5f;
 
-            rot = angleBetweenPoints(ap1, ap2) + M_PI_2;
-            if (rot > M_PI_2 || rot < -M_PI_2) { // un-readable labels
-                rot += M_PI;
-            }
+            rotation = (ap1.x <= ap2.x ? ap2 - ap1 : ap1 - ap2) / length;
 
             break;
         }
     }
 
-    glm::vec2 offset = m_options.offset;
-
-    if ((offset.x != 0.f || offset.y != 0.f) && rot != 0.f) {
-        offset = glm::rotate(offset, rot);
-    }
+    glm::vec2 offset = rotateBy(m_options.offset, rotation);
 
     m_transform.state.screenPos = screenPosition + offset;
-    m_transform.state.rotation = rot;
+    m_transform.state.rotation = rotation;
 
     return true;
 }

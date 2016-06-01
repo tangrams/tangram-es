@@ -19,8 +19,8 @@ SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Op
     : Label(_transform, _size, Label::Type::point, _options, _anchor),
       m_labels(_labels),
       m_labelsPos(_labelsPos),
-      m_extrudeScale(_extrudeScale)
-{
+      m_extrudeScale(_extrudeScale) {
+
     applyAnchor(m_dim, glm::vec2(0.0), _anchor);
 }
 
@@ -48,18 +48,21 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
 
     if (m_occludedLastFrame) { dim += 2; }
 
-    m_obb = OBB(sp.x + halfSize.x, sp.y - halfSize.y, m_transform.state.rotation, dim.x, dim.y);
+    m_obb = OBB({sp.x + halfSize.x, sp.y - halfSize.y},
+                m_transform.state.rotation, dim.x, dim.y);
 }
 
 void SpriteLabel::pushTransform() {
 
     if (!visibleState()) { return; }
 
+    float rotation = 0;
+
     SpriteVertex::State state {
         glm::i16vec2(m_transform.state.screenPos * SpriteVertex::position_scale),
         uint8_t(m_transform.state.alpha * SpriteVertex::alpha_scale),
         0,
-        int16_t(m_transform.state.rotation * SpriteVertex::rotation_scale)
+        int16_t(rotation * SpriteVertex::rotation_scale)
     };
 
     auto& style = m_labels.m_style;

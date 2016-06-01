@@ -33,8 +33,7 @@ void TextLabel::updateBBoxes(float _zoomFract) {
 
     if (m_occludedLastFrame) { dim += 2; }
 
-    m_obb = OBB(m_transform.state.screenPos.x,
-                m_transform.state.screenPos.y,
+    m_obb = OBB(m_transform.state.screenPos,
                 m_transform.state.rotation,
                 dim.x, dim.y);
 }
@@ -42,13 +41,15 @@ void TextLabel::updateBBoxes(float _zoomFract) {
 void TextLabel::pushTransform() {
     if (!visibleState()) { return; }
 
+    float rotation = -atan2(-m_transform.state.rotation.y, m_transform.state.rotation.x);
+
     TextVertex::State state {
         m_fontAttrib.fill,
         m_fontAttrib.stroke,
         glm::i16vec2(m_transform.state.screenPos * TextVertex::position_scale),
         uint8_t(m_transform.state.alpha * TextVertex::alpha_scale),
         uint8_t(m_fontAttrib.fontScale),
-        int16_t(m_transform.state.rotation * TextVertex::rotation_scale)
+        int16_t(rotation * TextVertex::rotation_scale)
     };
 
     auto it = m_textLabels.quads.begin() + m_vertexRange.start;

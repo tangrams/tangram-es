@@ -102,6 +102,13 @@ glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosit
 /* Computes the geometric center of the two dimentionnal region defined by the polygon */
 glm::vec2 centroid(const std::vector<std::vector<glm::vec3>>& _polygon);
 
+inline glm::vec2 rotateBy(const glm::vec2& _in, const glm::vec2& _normal) {
+    return {
+        _in.x * _normal.x + _in.y * _normal.y,
+        -_in.x * _normal.y + _in.y * _normal.x
+    };
+}
+
 float sqSegmentDistance(const glm::vec2& _p, const glm::vec2& _p1, const glm::vec2& _p2);
 
 bool isPowerOfTwo(int _value);
