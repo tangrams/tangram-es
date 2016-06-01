@@ -145,10 +145,6 @@ bool Label::offViewport(const glm::vec2& _screenSize) {
     return true;
 }
 
-void Label::occlude(bool _occlusion) {
-    m_occluded = _occlusion;
-}
-
 bool Label::canOcclude() {
     if (!m_options.collide) {
         return false;

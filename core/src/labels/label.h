@@ -96,7 +96,7 @@ public:
     virtual void updateBBoxes(float _zoomFract) = 0;
 
     /* Occlude the label */
-    void occlude(bool _occlusion = true);
+    void occlude(bool _occlusion = true) { m_occluded = _occlusion; }
 
     /* Checks whether the label is in a state where it can occlusion */
     bool canOcclude();
