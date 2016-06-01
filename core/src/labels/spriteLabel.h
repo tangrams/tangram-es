@@ -64,8 +64,8 @@ class SpriteLabels : public LabelSet {
 public:
     SpriteLabels(const PointStyle& _style) : m_style(_style) {}
 
-    void setQuads(std::vector<SpriteQuad>& _quads) {
-        quads.insert(quads.end(), _quads.begin(), _quads.end());
+    void setQuads(std::vector<SpriteQuad>&& _quads) {
+        quads = std::move(_quads);
     }
 
     // TODO: hide within class if needed

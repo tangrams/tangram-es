@@ -74,8 +74,8 @@ TextLabels::~TextLabels() {
     style.context()->releaseAtlas(m_atlasRefs);
 }
 
-void TextLabels::setQuads(std::vector<GlyphQuad>& _quads, std::bitset<FontContext::max_textures> _atlasRefs) {
-    quads.insert(quads.end(), _quads.begin(), _quads.end());
+void TextLabels::setQuads(std::vector<GlyphQuad>&& _quads, std::bitset<FontContext::max_textures> _atlasRefs) {
+    quads = std::move(_quads);
     m_atlasRefs = _atlasRefs;
 
 }
