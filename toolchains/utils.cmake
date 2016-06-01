@@ -112,3 +112,13 @@ macro(add_resources TARGET RESOURCE_DIR)
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${RESOURCE_DIR} ${CMAKE_BINARY_DIR}/bin)
 
 endmacro(add_resources)
+
+macro(check_submodule SUBMODULE_DIR)
+
+    file(GLOB CONTENTS ${SUBMODULE_DIR})
+    list(LENGTH CONTENTS N_FILES)
+    if(N_FILES EQUAL 0)
+        message(FATAL_ERROR "\nOops! '${SUBMODULE_DIR}' should contain a git submodule.\nDid you remember to initialize the git submodules? Try:\ngit submodule init --recursive\n")
+    endif()
+
+endmacro(check_submodule)

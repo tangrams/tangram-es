@@ -33,6 +33,11 @@ file(GLOB_RECURSE FOUND_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/*.h")
 set(INCLUDE_DIRS "")
 list(APPEND INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}")
 
+check_submodule(${INCLUDE_DIR}/earcut.hpp)
+check_submodule(${INCLUDE_DIR}/glm)
+check_submodule(${INCLUDE_DIR}/isect2d)
+check_submodule(${INCLUDE_DIR}/variant)
+
 set(CORE_INCLUDE_DIRS ${INCLUDE_DIRS} CACHE INTERNAL "core include directories" FORCE)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR})
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/mapbox)

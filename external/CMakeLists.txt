@@ -22,11 +22,13 @@ endif()
 ##############
 set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "Enable testing and parse tools")
 set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "Enable contrib stuff in library")
-add_subdirectory("yaml-cpp")
+check_submodule(${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp)
 
 
 ## css-color-parser-cpp ##
 ##########################
+check_submodule(${CMAKE_CURRENT_SOURCE_DIR}/css-color-parser-cpp)
 add_library(css-color-parser-cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/css-color-parser-cpp/csscolorparser.cpp)
 
@@ -37,6 +39,7 @@ target_include_directories(css-color-parser-cpp
 
 ## geojsonvt ##
 ###############
+check_submodule(${CMAKE_CURRENT_SOURCE_DIR}/geojson-vt-cpp)
 file(GLOB_RECURSE GEOJSON_VT_CPP_SOURCES "geojson-vt-cpp/src/*.cpp")
 add_library(geojson-vt-cpp ${GEOJSON_VT_CPP_SOURCES})
 target_include_directories(geojson-vt-cpp
@@ -59,6 +62,7 @@ target_compile_options(geojson-vt-cpp
 
 ## duktape ##
 #############
+check_submodule(${CMAKE_CURRENT_SOURCE_DIR}/duktape)
 add_library(duktape
   ${CMAKE_CURRENT_SOURCE_DIR}/duktape/duktape.c)
 
@@ -94,6 +98,7 @@ if(PLATFORM_LINUX OR PLATFORM_OSX)
   set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation")
   set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
 
+  check_submodule(${CMAKE_CURRENT_SOURCE_DIR}/glfw)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/glfw)
 
   target_include_directories(glfw
@@ -123,6 +128,7 @@ if((BENCHMARK OR USE_EXTERNAL_LIBS) AND (PLATFORM_LINUX OR PLATFORM_OSX))
   set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "")
   set(BENCHMARK_ENABLE_LTO OFF CACHE BOOL "")
 
+  check_submodule(${CMAKE_CURRENT_SOURCE_DIR}/benchmark)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/benchmark)
   target_compile_options(benchmark
     PRIVATE
@@ -139,4 +145,5 @@ endif()
 #set(GLM_ROOT ${PROJECT_SOURCE_DIR}/core/include/glm)
 set(GLM_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/core/include/glm)
 
+check_submodule(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
