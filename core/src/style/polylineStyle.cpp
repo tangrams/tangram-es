@@ -94,6 +94,8 @@ void PolylineStyle::constructShaderProgram() {
         auto pixels = DashArray::render(m_dashArray);
         m_texture = std::make_unique<Texture>(pixels.size(), 1, options);
         m_texture->setData(pixels.data(), pixels.size());
+
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_TEXTURE");
     }
 
     m_shaderProgram->setSourceStrings(SHADER_SOURCE(polyline_fs),
