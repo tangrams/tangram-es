@@ -163,21 +163,15 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
     glm::vec2 uvTR = glm::vec2{_quad.z, _quad.w} * SpriteVertex::texture_scale;
     glm::vec2 uvBL = glm::vec2{_quad.x, _quad.y} * SpriteVertex::texture_scale;
 
-    int16_t extrude = _params.extrudeScale * SpriteVertex::extrusion_scale;
-
     m_quads.push_back({
             {{{0, 0},
-             {uvBL.x, uvTR.y},
-             {-extrude, extrude}},
+             {uvBL.x, uvTR.y}},
             {{size.x, 0},
-             {uvTR.x, uvTR.y},
-             {extrude, extrude}},
+             {uvTR.x, uvTR.y}},
             {{0, -size.y},
-             {uvBL.x, uvBL.y},
-             {-extrude, -extrude}},
+             {uvBL.x, uvBL.y}},
             {{size.x, -size.y},
-             {uvTR.x, uvBL.y},
-             {extrude, -extrude}}},
+             {uvTR.x, uvBL.y}}},
             _params.color});
 }
 

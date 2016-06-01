@@ -3,6 +3,7 @@
 #include "style/textStyle.h"
 #include "text/fontContext.h"
 #include "gl/dynamicQuadMesh.h"
+#include "util/geom.h"
 
 namespace Tangram {
 
@@ -33,8 +34,7 @@ void TextLabel::updateBBoxes(float _zoomFract) {
 
     if (m_occludedLastFrame) { dim += 2; }
 
-    m_obb = OBB(m_transform.state.screenPos.x,
-                m_transform.state.screenPos.y,
+    m_obb = OBB(m_transform.state.screenPos,
                 m_transform.state.rotation,
                 dim.x, dim.y);
 }
@@ -42,18 +42,22 @@ void TextLabel::updateBBoxes(float _zoomFract) {
 void TextLabel::pushTransform() {
     if (!visibleState()) { return; }
 
+    bool rotate = (m_transform.state.rotation.x != 1.f);
+    glm::vec2 rotation = {m_transform.state.rotation.x, -m_transform.state.rotation.y};
+
     TextVertex::State state {
         m_fontAttrib.fill,
         m_fontAttrib.stroke,
-        glm::i16vec2(m_transform.state.screenPos * TextVertex::position_scale),
         uint8_t(m_transform.state.alpha * TextVertex::alpha_scale),
         uint8_t(m_fontAttrib.fontScale),
-        int16_t(m_transform.state.rotation * TextVertex::rotation_scale)
+        0
     };
 
     auto it = m_textLabels.quads.begin() + m_vertexRange.start;
     auto end = it + m_vertexRange.length;
     auto& style = m_textLabels.style;
+
+    glm::i16vec2 sp = glm::i16vec2(m_transform.state.screenPos * TextVertex::position_scale);
 
     for (; it != end; ++it) {
         auto quad = *it;
@@ -61,7 +65,11 @@ void TextLabel::pushTransform() {
         auto* quadVertices = style.getMesh(it->atlas).pushQuad();
         for (int i = 0; i < 4; i++) {
             TextVertex& v = quadVertices[i];
-            v.pos = quad.quad[i].pos;
+            if (rotate) {
+                v.pos = sp + glm::i16vec2{rotateBy(quad.quad[i].pos, rotation)};
+            } else {
+                v.pos = sp + quad.quad[i].pos;
+            }
             v.uv = quad.quad[i].uv;
             v.state = state;
         }

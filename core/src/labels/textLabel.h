@@ -23,7 +23,6 @@ struct TextVertex {
     struct State {
         uint32_t color;
         uint32_t stroke;
-        glm::i16vec2 screenPos;
         uint8_t alpha;
         uint8_t scale;
         int16_t rotation;

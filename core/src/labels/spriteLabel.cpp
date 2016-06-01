@@ -11,7 +11,6 @@ const float SpriteVertex::position_scale = 4.0f;
 const float SpriteVertex::rotation_scale = 4096.0f;
 const float SpriteVertex::alpha_scale = 255.f;
 const float SpriteVertex::texture_scale = 65535.f;
-const float SpriteVertex::extrusion_scale = 256.0f;
 
 SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Options _options,
                          float _extrudeScale, LabelProperty::Anchor _anchor,
@@ -19,8 +18,8 @@ SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Op
     : Label(_transform, _size, Label::Type::point, _options, _anchor),
       m_labels(_labels),
       m_labelsPos(_labelsPos),
-      m_extrudeScale(_extrudeScale)
-{
+      m_extrudeScale(_extrudeScale) {
+
     applyAnchor(m_dim, glm::vec2(0.0), _anchor);
 }
 
@@ -48,31 +47,39 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
 
     if (m_occludedLastFrame) { dim += 2; }
 
-    m_obb = OBB(sp.x + halfSize.x, sp.y - halfSize.y, m_transform.state.rotation, dim.x, dim.y);
+    m_obb = OBB({sp.x + halfSize.x, sp.y - halfSize.y},
+                m_transform.state.rotation, dim.x, dim.y);
 }
 
 void SpriteLabel::pushTransform() {
 
     if (!visibleState()) { return; }
 
+    // TODO
+    // if (a_extrude.x != 0.0) {
+    //     float dz = u_map_position.z - abs(u_tile_origin.z);
+    //     vertex_pos.xy += clamp(dz, 0.0, 1.0) * UNPACK_EXTRUDE(a_extrude.xy);
+    // }
+
+    auto& quad = m_labels.quads[m_labelsPos];
+
     SpriteVertex::State state {
-        glm::i16vec2(m_transform.state.screenPos * SpriteVertex::position_scale),
+        quad.color,
         uint8_t(m_transform.state.alpha * SpriteVertex::alpha_scale),
-        0,
-        int16_t(m_transform.state.rotation * SpriteVertex::rotation_scale)
+        0, 0
     };
 
     auto& style = m_labels.m_style;
-    auto& quad = m_labels.quads[m_labelsPos];
 
     auto* quadVertices = style.getMesh()->pushQuad();
 
+    glm::i16vec2 sp = glm::i16vec2(m_transform.state.screenPos * SpriteVertex::position_scale);
+
     for (int i = 0; i < 4; i++) {
         SpriteVertex& v = quadVertices[i];
-        v.pos = quad.quad[i].pos;
+        v.pos = sp + quad.quad[i].pos;
         v.uv = quad.quad[i].uv;
-        v.extrude = quad.quad[i].extrude;
-        v.color = quad.color;
+        //v.extrude = quad.quad[i].extrude;
         v.state = state;
     }
 }

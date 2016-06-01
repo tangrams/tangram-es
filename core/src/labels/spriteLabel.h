@@ -11,10 +11,8 @@ class PointStyle;
 struct SpriteVertex {
     glm::i16vec2 pos;
     glm::u16vec2 uv;
-    uint32_t color;
-    glm::i16vec2 extrude;
     struct State {
-        glm::i16vec2 screenPos;
+        uint32_t color;
         uint8_t alpha;
         uint8_t scale;
         int16_t rotation;
@@ -24,7 +22,6 @@ struct SpriteVertex {
     static const float rotation_scale;
     static const float alpha_scale;
     static const float texture_scale;
-    static const float extrusion_scale;
 };
 
 class SpriteLabel : public Label {
@@ -54,7 +51,6 @@ struct SpriteQuad {
     struct {
         glm::i16vec2 pos;
         glm::u16vec2 uv;
-        glm::i16vec2 extrude;
     } quad[4];
     // TODO color and stroke must not be stored per quad
     uint32_t color;
