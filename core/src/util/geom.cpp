@@ -75,16 +75,30 @@ glm::vec4 worldToClipSpace(const glm::mat4& _mvp, const glm::vec4& _worldPositio
 glm::vec2 clipToScreenSpace(const glm::vec4& _clipCoords, const glm::vec2& _screenSize) {
     glm::vec2 halfScreen = glm::vec2(_screenSize * 0.5f);
 
-    glm::vec4 ndc = _clipCoords / _clipCoords.w;
-
     // from normalized device coordinates to screen space coordinate system
     // top-left screen axis, y pointing down
 
-    return glm::vec2((ndc.x + 1) * halfScreen.x, (1 - ndc.y) * halfScreen.y);
+    glm::vec2 screenPos;
+    screenPos.x = (_clipCoords.x / _clipCoords.w) + 1;
+    screenPos.y = 1 - (_clipCoords.y / _clipCoords.w);
+
+    return screenPos * halfScreen;
 }
 
 glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize) {
     return clipToScreenSpace(worldToClipSpace(_mvp, _worldPosition), _screenSize);
+}
+
+glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize, bool& _clipped) {
+
+    glm::vec4 clipCoords = worldToClipSpace(_mvp, _worldPosition);
+
+    if (clipCoords.w <= 0.0f) {
+        _clipped = true;
+        return {};
+    }
+    return clipToScreenSpace(clipCoords, _screenSize);
+
 }
 
 glm::vec2 centroid(const std::vector<std::vector<glm::vec3>>& _polygon) {

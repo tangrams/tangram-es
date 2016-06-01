@@ -99,6 +99,8 @@ glm::vec2 clipToScreenSpace(const glm::vec4& _clipCoords, const glm::vec2& _scre
 /* Computes the screen coordinates from a world position, a model view matrix and a screen size */
 glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize);
 
+glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize, bool& _clipped);
+
 /* Computes the geometric center of the two dimentionnal region defined by the polygon */
 glm::vec2 centroid(const std::vector<std::vector<glm::vec3>>& _polygon);
 
