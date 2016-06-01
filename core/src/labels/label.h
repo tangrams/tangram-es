@@ -162,8 +162,6 @@ protected:
     OBB m_obb;
     // the label axis aligned bounding box
     AABB m_aabb;
-    // whether the label is dirty, this determines whether or no to update the geometry
-    bool m_dirty;
     // the label transforms
     Transform m_transform;
     // the dimension of the label
@@ -173,12 +171,6 @@ protected:
 
     LabelProperty::Anchor m_anchorType;
     glm::vec2 m_anchor;
-
-    glm::vec2 m_xAxis;
-    glm::vec2 m_yAxis;
-
-    // whether or not we need to update the mesh visibilit (alpha channel)
-    bool m_updateMeshVisibility;
 
     const Label* m_parent;
 
