@@ -49,7 +49,6 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
     if (m_occludedLastFrame) { dim += 2; }
 
     m_obb = OBB(sp.x + halfSize.x, sp.y - halfSize.y, m_transform.state.rotation, dim.x, dim.y);
-    m_aabb = m_obb.getExtent();
 }
 
 void SpriteLabel::pushTransform() {

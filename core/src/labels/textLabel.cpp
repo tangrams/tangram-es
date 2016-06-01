@@ -37,8 +37,6 @@ void TextLabel::updateBBoxes(float _zoomFract) {
                 m_transform.state.screenPos.y,
                 m_transform.state.rotation,
                 dim.x, dim.y);
-
-    m_aabb = m_obb.getExtent();
 }
 
 void TextLabel::pushTransform() {

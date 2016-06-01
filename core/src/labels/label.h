@@ -117,7 +117,7 @@ public:
     /* Gets for label options: color and offset */
     const Options& options() const { return m_options; }
     /* Gets the extent of the oriented bounding box of the label */
-    const AABB& aabb() const { return m_aabb; }
+    AABB aabb() const { return m_obb.getExtent(); }
     /* Gets the oriented bounding box of the label */
     const OBB& obb() const { return m_obb; }
     const Transform& transform() const { return m_transform; }
@@ -160,8 +160,6 @@ protected:
     Type m_type;
     // the label oriented bounding box
     OBB m_obb;
-    // the label axis aligned bounding box
-    AABB m_aabb;
     // the label transforms
     Transform m_transform;
     // the dimension of the label
