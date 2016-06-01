@@ -73,8 +73,10 @@ void Labels::updateLabels(const View& _view, float _dt,
                         label->pushTransform();
                     }
                 } else if (label->canOcclude()) {
-                    label->setProxy(proxyTile);
-                    m_labels.push_back(label.get());
+                    if (label->state() != Label::State::out_of_screen) {
+                        label->setProxy(proxyTile);
+                        m_labels.push_back(label.get());
+                    }
                 } else {
                     m_needUpdate |= label->evalState(screenSize, _dt);
                     label->pushTransform();
