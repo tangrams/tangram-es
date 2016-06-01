@@ -21,11 +21,7 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _
     }
 
     m_occludedLastFrame = false;
-    m_updateMeshVisibility = true;
-    m_dirty = true;
     m_proxy = false;
-    m_xAxis = glm::vec2(1.0, 0.0);
-    m_yAxis = glm::vec2(0.0, 1.0);
     m_occluded = false;
     m_parent = nullptr;
 }
@@ -96,24 +92,14 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
         }
     }
 
-    // update screen position
     glm::vec2 offset = m_options.offset;
 
-    if (m_transform.state.rotation != 0.f) {
-        offset = glm::rotate(offset, m_transform.state.rotation);
+    if ((offset.x != 0.f || offset.y != 0.f) && rot != 0.f) {
+        offset = glm::rotate(offset, rot);
     }
 
-    glm::vec2 newScreenPos = screenPosition + offset;
-    if (newScreenPos != m_transform.state.screenPos) {
-        m_transform.state.screenPos = newScreenPos;
-        m_dirty = true;
-    }
-
-    // update screen rotation
-    if (m_transform.state.rotation != rot) {
-        m_transform.state.rotation = rot;
-        m_dirty = true;
-    }
+    m_transform.state.screenPos = screenPosition + offset;
+    m_transform.state.rotation = rot;
 
     return true;
 }
@@ -186,15 +172,7 @@ void Label::enterState(const State& _state, float _alpha) {
 }
 
 void Label::setAlpha(float _alpha) {
-    float alpha = CLAMP(_alpha, 0.0, 1.0);
-    if (m_transform.state.alpha != alpha) {
-        m_transform.state.alpha = alpha;
-        m_dirty = true;
-    }
-
-    if (alpha == 0.f) {
-        m_updateMeshVisibility = true;
-    }
+    m_transform.state.alpha = CLAMP(_alpha, 0.0, 1.0);
 }
 
 void Label::resetState() {
@@ -202,8 +180,6 @@ void Label::resetState() {
 
     m_occludedLastFrame = false;
     m_occluded = false;
-    m_updateMeshVisibility = true;
-    m_dirty = true;
     m_proxy = false;
     enterState(State::wait_occ, 0.0);
 }
