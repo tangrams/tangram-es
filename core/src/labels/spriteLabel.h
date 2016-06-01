@@ -35,11 +35,8 @@ public:
                 SpriteLabels& _labels, size_t _labelsPos);
 
     void updateBBoxes(float _zoomFract) override;
-    void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) override;
 
     void pushTransform() override;
-
-    glm::vec2 anchor() const override;
 
 private:
 

@@ -53,7 +53,6 @@ public:
     Range& quadRange() { return m_vertexRange; }
 
 protected:
-    void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) override;
 
     void pushTransform() override;
 

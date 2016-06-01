@@ -36,13 +36,9 @@ void SpriteLabel::applyAnchor(const glm::vec2& _dimension, const glm::vec2& _ori
     // Transform anchor direction from anchor space (centered)
     // to local sprite space (lower-left corner for the sprite)
     m_anchor = direction * glm::vec2(-0.5, 0.5) + glm::vec2(0.5);
-}
 
-glm::vec2 SpriteLabel::anchor() const {
-    glm::vec2 anchor;
-    anchor.x = -(m_dim.x * m_anchor.x);
-    anchor.y =  (m_dim.y * m_anchor.y);
-    return anchor;
+    m_anchor.x = -(m_dim.x * m_anchor.x);
+    m_anchor.y =  (m_dim.y * m_anchor.y);
 }
 
 void SpriteLabel::updateBBoxes(float _zoomFract) {
@@ -54,20 +50,6 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
 
     m_obb = OBB(sp.x + halfSize.x, sp.y - halfSize.y, m_transform.state.rotation, dim.x, dim.y);
     m_aabb = m_obb.getExtent();
-}
-
-void SpriteLabel::align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) {
-
-    switch (m_type) {
-        case Type::debug:
-        case Type::point:
-            _screenPosition += anchor();
-            break;
-        case Type::line:
-            LOGW("Line sprite labels not implemented yet");
-            break;
-    }
-
 }
 
 void SpriteLabel::pushTransform() {
