@@ -1,14 +1,14 @@
 #include "pointStyleBuilder.h"
-#include "scene/drawRule.h"
-#include "scene/stops.h"
-#include "scene/spriteAtlas.h"
+
+#include "data/propertyItem.h" // Include wherever Properties is used!
 #include "labels/labelCollider.h"
 #include "labels/spriteLabel.h"
-#include "util/geom.h"
-#include "data/propertyItem.h" // Include wherever Properties is used!
-
+#include "scene/drawRule.h"
+#include "scene/spriteAtlas.h"
+#include "scene/stops.h"
 #include "tangram.h"
 #include "tile/tile.h"
+#include "util/geom.h"
 
 namespace Tangram {
 
