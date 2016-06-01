@@ -7,6 +7,7 @@
 #include "util/geom.h"
 #include "data/propertyItem.h" // Include wherever Properties is used!
 
+#include "tangram.h"
 #include "tile/tile.h"
 
 namespace Tangram {
@@ -35,11 +36,36 @@ void PointStyleBuilder::addLayoutItems(LabelCollider& _layout) {
 std::unique_ptr<StyledMesh> PointStyleBuilder::build() {
     if (m_quads.empty()) { return nullptr; }
 
-    m_spriteLabels->setQuads(m_quads);
+
+    if (Tangram::getDebugFlag(DebugFlags::all_labels)) {
+
+        m_iconMesh->setLabels(m_labels);
+
+    } else {
+        size_t sumLabels = 0;
+
+        // Determine number of labels
+       for (auto& label : m_labels) {
+           if (label->state() != Label::State::dead) { sumLabels +=1; }
+        }
+
+       std::vector<std::unique_ptr<Label>> labels;
+       labels.reserve(sumLabels);
+
+       for (auto& label : m_labels) {
+           if (label->state() != Label::State::dead) {
+               labels.push_back(std::move(label));
+           }
+       }
+       m_iconMesh->setLabels(labels);
+    }
+
+    std::vector<SpriteQuad> quads(m_quads);
+    m_spriteLabels->setQuads(std::move(quads));
 
     m_quads.clear();
+    m_labels.clear();
 
-    m_iconMesh->setLabels(m_labels);
     m_iconMesh->spriteLabels = std::move(m_spriteLabels);
 
     if (auto textLabels = m_textStyleBuilder->build()) {

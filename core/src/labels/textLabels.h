@@ -17,7 +17,7 @@ public:
 
     ~TextLabels() override;
 
-    void setQuads(std::vector<GlyphQuad>& _quads, std::bitset<FontContext::max_textures> _atlasRefs);
+    void setQuads(std::vector<GlyphQuad>&& _quads, std::bitset<FontContext::max_textures> _atlasRefs);
 
     std::vector<GlyphQuad> quads;
     const TextStyle& style;

@@ -52,7 +52,9 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
 
     if (Tangram::getDebugFlag(DebugFlags::all_labels)) {
         m_textLabels->setLabels(m_labels);
-        m_textLabels->setQuads(m_quads, m_atlasRefs);
+
+        std::vector<GlyphQuad> quads(m_quads);
+        m_textLabels->setQuads(std::move(quads), m_atlasRefs);
 
     } else {
 
@@ -63,7 +65,7 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
         size_t sumLabels = 0;
         bool added = false;
 
-        // Determine size of final quads vector
+        // Determine number of labels and size of final quads vector
         for (auto& label : m_labels) {
             auto* textLabel = static_cast<TextLabel*>(label.get());
 
@@ -121,7 +123,7 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
         }
 
         m_textLabels->setLabels(labels);
-        m_textLabels->setQuads(quads, m_atlasRefs);
+        m_textLabels->setQuads(std::move(quads), m_atlasRefs);
     }
 
     m_labels.clear();
