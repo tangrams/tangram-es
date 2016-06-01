@@ -22,10 +22,13 @@ public:
 
 private:
 
+    void handleRepeatGroup(size_t startPos);
+
     using AABB = isect2d::AABB<glm::vec2>;
     using OBB = isect2d::OBB<glm::vec2>;
     using CollisionPairs = std::vector<isect2d::ISect2D<glm::vec2>::Pair>;
 
+    // Parallel vectors
     std::vector<Label*> m_labels;
     std::vector<AABB> m_aabbs;
 
