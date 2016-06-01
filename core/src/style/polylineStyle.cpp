@@ -5,12 +5,14 @@
 #include "material.h"
 #include "gl/shaderProgram.h"
 #include "gl/mesh.h"
+#include "gl/texture.h"
 #include "scene/stops.h"
 #include "scene/drawRule.h"
 #include "tile/tile.h"
 #include "util/builders.h"
 #include "util/mapProjection.h"
 #include "util/extrude.h"
+#include "util/dashArray.h"
 
 #include "shaders/polyline_vs.h"
 #include "shaders/polyline_fs.h"
@@ -79,7 +81,20 @@ void PolylineStyle::constructVertexLayout() {
 
 }
 
+void PolylineStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
+    if (m_texture) {
+        m_texture->update(0);
+    }
+}
+
 void PolylineStyle::constructShaderProgram() {
+
+    if (m_dashArray.size() > 0) {
+        TextureOptions options {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
+        auto pixels = DashArray::render(m_dashArray);
+        m_texture = std::make_unique<Texture>(pixels.size(), 1, options);
+        m_texture->setData(pixels.data(), pixels.size());
+    }
 
     m_shaderProgram->setSourceStrings(SHADER_SOURCE(polyline_fs),
                                       SHADER_SOURCE(polyline_vs));

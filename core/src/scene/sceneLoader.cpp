@@ -608,6 +608,18 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         style.setTexCoordsGeneration(texcoordsNode.as<bool>());
     }
 
+    if (Node dashNode = styleNode["dash"]) {
+        if (auto polylineStyle = dynamic_cast<PolylineStyle*>(&style)) {
+            if (dashNode.IsSequence()) {
+                std::vector<int> dashValues;
+                for (auto dashValue : dashNode) {
+                    dashValues.push_back(dashValue.as<int>());
+                }
+                polylineStyle->setDashArray(dashValues);
+            }
+        }
+    }
+
     if (Node shadersNode = styleNode["shaders"]) {
         loadShaderConfig(shadersNode, style, scene);
     }
