@@ -63,13 +63,24 @@ private:
 
     bool m_needUpdate;
 
-    // temporary data used in update()
-    std::vector<Label*> m_labels;
-    std::vector<AABB> m_aabbs;
-
     isect2d::ISect2D<glm::vec2> m_isect2d;
 
     std::vector<TouchItem> m_touchItems;
+
+    struct LabelEntry {
+
+        LabelEntry(Label* _label, bool _proxy)
+            : label(_label),
+              priority(_label->options().priority),
+              proxy(_proxy) {}
+
+        Label* label;
+
+        float priority;
+        bool proxy;
+    };
+
+    std::vector<LabelEntry> m_labels;
 
     float m_lastZoom;
 };

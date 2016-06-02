@@ -3,8 +3,8 @@
 #include "glm/vec2.hpp"
 #include "glm/mat4x4.hpp"
 #include <climits> // needed in aabb.h
-#include "isect2d.h"
-#include "glm_vec.h" // for isect2d.h
+#include "aabb.h"
+#include "obb.h"
 #include "fadeEffect.h"
 #include "util/types.h"
 #include "util/hash.h"
@@ -108,10 +108,6 @@ public:
 
     void resetState();
 
-    void setProxy(bool _proxy);
-
-    /* Whether the label belongs to a proxy tile */
-    bool isProxy() const { return m_proxy; }
     size_t hash() const { return m_options.paramHash; }
     const glm::vec2& dimension() const { return m_dim; }
     /* Gets for label options: color and offset */
@@ -144,7 +140,6 @@ private:
 
     void setAlpha(float _alpha);
 
-    bool m_proxy;
     // the current label state
     State m_state;
     // the label fade effect

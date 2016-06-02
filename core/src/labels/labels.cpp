@@ -74,8 +74,7 @@ void Labels::updateLabels(const View& _view, float _dt,
                     }
                 } else if (label->canOcclude()) {
                     if (label->state() != Label::State::out_of_screen) {
-                        label->setProxy(proxyTile);
-                        m_labels.push_back(label.get());
+                        m_labels.emplace_back(label.get(), proxyTile);
                     }
                 } else {
                     m_needUpdate |= label->evalState(screenSize, _dt);
@@ -234,11 +233,36 @@ void Labels::updateLabelSet(const View& _view, float _dt,
 
     // Could clear this at end of function unless debug draw is active
     m_labels.clear();
-    m_aabbs.clear();
 
     /// Collect and update labels from visible tiles
-
     updateLabels(_view, _dt, _styles, _tiles, false);
+
+    std::sort(m_labels.begin(), m_labels.end(),
+              [](auto& _a, auto& _b) {
+
+                  if (_a.priority != _b.priority) {
+                       return _a.priority < _b.priority;
+                  }
+
+                  if (_a.proxy != _b.proxy) {
+                       return _b.proxy;
+                  }
+
+                  auto l1 = _a.label;
+                  auto l2 = _b.label;
+
+                  if (l1->occludedLastFrame() != l2->occludedLastFrame()) {
+                      return l2->occludedLastFrame();
+                  }
+
+                  if (l1->hash() != l2->hash()) {
+                      return l1->hash() < l2->hash();
+                  }
+                  if (l1->options().repeatGroup != l2->options().repeatGroup) {
+                      return l1->options().repeatGroup < l2->options().repeatGroup;
+                  }
+                  return l1 < l2;
+              });
 
     /// Mark labels to skip transitions
 
@@ -253,72 +277,32 @@ void Labels::updateLabelSet(const View& _view, float _dt,
     m_isect2d.resize({_view.getWidth() / 256, _view.getHeight() / 256},
                      {_view.getWidth(), _view.getHeight()});
 
-    // Broad phase collision detection
-    for (auto* label : m_labels) {
-        m_aabbs.push_back(label->aabb());
-    }
+    m_isect2d.clear();
 
-    m_isect2d.intersect(m_aabbs);
+    for (auto& entry : m_labels){
 
-    // Narrow Phase, resolve conflicts
-    for (auto& pair : m_isect2d.pairs) {
-
-        auto l1 = m_labels[pair.first];
-        auto l2 = m_labels[pair.second];
-
-        if (l1->isOccluded() || l2->isOccluded()) {
-            // One of this pair is already occluded.
-            // => conflict solved
+        if (entry.label->parent() && entry.label->parent()->isOccluded()) {
+            entry.label->occlude();
             continue;
         }
 
-        if (!intersect(l1->obb(), l2->obb())) { continue; }
+        auto aabb = entry.label->aabb();
+        aabb.m_userData = reinterpret_cast<void*>(entry.label);
 
-        if (l1->isProxy() != l2->isProxy()) {
-            // check first is the label belongs to a proxy tile
-            if (l1->isProxy()) {
-                l1->occlude();
-            } else {
-                l2->occlude();
-            }
-        } else if (l1->options().priority != l2->options().priority) {
-            // lower numeric priority means higher priority
-            if(l1->options().priority > l2->options().priority) {
-                l1->occlude();
-            } else {
-                l2->occlude();
-            }
-        } else if (l1->occludedLastFrame() != l2->occludedLastFrame()) {
-            // keep the one that way active previously
-            if (l1->occludedLastFrame()) {
-                l1->occlude();
-            } else {
-                l2->occlude();
-            }
-        // } else if (l1->visibleState() != l2->visibleState()) {
-        //     // keep the visible one, different from occludedLastframe
-        //     // when one lets labels fade out.
-        //     // (A label is also in visibleState() when skip_transition is set)
-        //     if (!l1->visibleState()) {
-        //         l1->occlude();
-        //     } else {
-        //         l2->occlude();
-        //     }
-        } else if (l1->hash() != l2->hash()) {
-            if (l1->hash() < l2->hash()) {
-                l1->occlude();
-            } else {
-                l2->occlude();
-            }
-        } else {
-            // just so it is consistent between two instances
-            if (l1 < l2) {
-                l1->occlude();
-            } else {
-                l2->occlude();
-            }
+        m_isect2d.intersect(aabb, [](auto& a, auto& b) {
+                auto* l1 = reinterpret_cast<Label*>(a.m_userData);
+                auto* l2 = reinterpret_cast<Label*>(b.m_userData);
+
+                if (intersect(l1->obb(), l2->obb())) {
+                    l1->occlude();
+                    // Drop label
+                    return false;
+                }
+
+                // Continue
+                return true;
+            });
         }
-    }
 
     /// Apply repeat groups
 #if 0
@@ -351,7 +335,8 @@ void Labels::updateLabelSet(const View& _view, float _dt,
 
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
 
-    for (auto* label : m_labels) {
+    for (auto& entry : m_labels) {
+        Label* label = entry.label;
 
         // Manage link occlusion (unified icon labels)
         if (label->parent() && (label->parent()->isOccluded() || !label->parent()->visibleState())) {
@@ -425,7 +410,9 @@ void Labels::drawDebug(const View& _view) {
         return;
     }
 
-    for (auto label : m_labels) {
+    for (auto& entry : m_labels) {
+        auto* label = entry.label;
+
         if (label->type() == Label::Type::debug) { continue; }
 
         glm::vec2 sp = label->transform().state.screenPos;
