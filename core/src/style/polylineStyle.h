@@ -25,6 +25,8 @@ private:
 
     std::vector<int> m_dashArray;
     std::unique_ptr<Texture> m_texture;
+
+    UniformLocation m_uTexture{"u_texture"};
 };
 
 }

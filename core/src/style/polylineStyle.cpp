@@ -6,6 +6,7 @@
 #include "gl/shaderProgram.h"
 #include "gl/mesh.h"
 #include "gl/texture.h"
+#include "gl/renderState.h"
 #include "scene/stops.h"
 #include "scene/drawRule.h"
 #include "tile/tile.h"
@@ -82,20 +83,29 @@ void PolylineStyle::constructVertexLayout() {
 }
 
 void PolylineStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
+    Style::onBeginDrawFrame(_view, _scene);
+
     if (m_texture) {
-        m_texture->update(0);
+        GLuint textureUnit = RenderState::nextAvailableTextureUnit();
+
+        m_texture->update(textureUnit);
+        m_texture->bind(textureUnit);
+
+        m_shaderProgram->setUniformf(m_uTexture, textureUnit);
     }
 }
 
 void PolylineStyle::constructShaderProgram() {
 
     if (m_dashArray.size() > 0) {
-        TextureOptions options {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
+        TextureOptions options {GL_RGBA, GL_RGBA, {GL_NEAREST, GL_NEAREST}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
         auto pixels = DashArray::render(m_dashArray);
-        m_texture = std::make_unique<Texture>(pixels.size(), 1, options);
+
+        m_texture = std::make_unique<Texture>(1, pixels.size(), options);
         m_texture->setData(pixels.data(), pixels.size());
 
         m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_TEXTURE");
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_ALPHA_TEST 0.5");
     }
 
     m_shaderProgram->setSourceStrings(SHADER_SOURCE(polyline_fs),

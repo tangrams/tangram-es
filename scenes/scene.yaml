@@ -57,17 +57,17 @@ styles:
                 color: "color.rgb += vec3(worldPosition().z / 800.);"
     heightglowline:
         base: lines
-        dash: [1, 4]
         mix: heightglow
     icons:
         base: points
         texture: pois
     stripeline:
         base: lines
-        texcoords: true
-        shaders:
-            blocks:
-                filter: "color.rgb -= .1 * floor(2. * fract(v_texcoord.y / 2.));"
+        #texcoords: true
+        dash: [1, 5]
+        #shaders:
+        #    blocks:
+        #        filter: "color.rgb -= .1 * floor(2. * fract(v_texcoord.y / 2.));"
 
 sources:
     osm:
