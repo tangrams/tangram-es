@@ -17,6 +17,7 @@ uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_meters_per_pixel;
 uniform float u_device_pixel_ratio;
+uniform sampler2D u_texture;
 
 #pragma tangram: uniforms
 
@@ -60,6 +61,17 @@ void main(void) {
 
     #ifdef TANGRAM_RASTER_TEXTURE_COLOR
         color *= sampleRaster(0);
+    #endif
+
+    #ifdef TANGRAM_LINE_TEXTURE
+        vec2 line_st = vec2(v_texcoord.x, fract(v_texcoord.y));
+        vec4 line_color = texture2D(u_texture, line_st);
+        color = vec4(line_st, 0.0, 1.0);
+        color = line_color;
+
+        if (line_color.a < TANGRAM_ALPHA_TEST) {
+            color.a = 0.0;
+        }
     #endif
 
     #ifdef TANGRAM_RASTER_TEXTURE_NORMAL

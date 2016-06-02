@@ -616,6 +616,7 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
                     dashValues.push_back(dashValue.as<int>());
                 }
                 polylineStyle->setDashArray(dashValues);
+                polylineStyle->setTexCoordsGeneration(true);
             }
         }
     }
