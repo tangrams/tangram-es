@@ -17,6 +17,7 @@ uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_meters_per_pixel;
 uniform float u_device_pixel_ratio;
+uniform float u_texture_ratio;
 uniform sampler2D u_texture;
 
 #pragma tangram: uniforms
@@ -64,17 +65,19 @@ void main(void) {
     #endif
 
     #ifdef TANGRAM_LINE_TEXTURE
-        vec2 line_st = vec2(v_texcoord.x, fract(v_texcoord.y));
+        vec2 line_st = vec2(v_texcoord.x, fract(v_texcoord.y / u_texture_ratio));
         vec4 line_color = texture2D(u_texture, line_st);
-        color = vec4(line_st, 0.0, 1.0);
-        color = line_color;
 
         if (line_color.a < TANGRAM_ALPHA_TEST) {
             #ifdef TANGRAM_LINE_BACKGROUND_COLOR
                 color.rgb = TANGRAM_LINE_BACKGROUND_COLOR;
+            #elif !defined(TANGRAM_BLEND_OVERLAY) && !defined(TANGRAM_BLEND_INLAY)
+                discard;
             #else
                 color.a = 0.0;
             #endif
+        } else {
+            color *= line_color;
         }
     #endif
 

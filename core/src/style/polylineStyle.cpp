@@ -92,6 +92,7 @@ void PolylineStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
         m_texture->bind(textureUnit);
 
         m_shaderProgram->setUniformf(m_uTexture, textureUnit);
+        m_shaderProgram->setUniformf(m_uTextureRatio, m_texture->getHeight() / m_texture->getWidth());
     }
 }
 
@@ -106,11 +107,11 @@ void PolylineStyle::constructShaderProgram() {
         TextureOptions options {GL_RGBA, GL_RGBA, {GL_NEAREST, GL_NEAREST}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
         auto pixels = DashArray::render(m_dashArray);
 
-        m_texture = std::make_unique<Texture>(1, pixels.size(), options);
+        m_texture = std::make_shared<Texture>(1, pixels.size(), options);
         m_texture->setData(pixels.data(), pixels.size());
 
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_TEXTURE");
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_ALPHA_TEST 0.5");
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_TEXTURE\n", false);
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_ALPHA_TEST 0.5\n", false);
 
         if (m_dashBackground) {
             m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_BACKGROUND_COLOR vec3(" +

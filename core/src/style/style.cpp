@@ -53,7 +53,13 @@ void Style::build(const Scene& _scene) {
         default:
             break;
     }
-
+    
+    if (m_blend == Blending::inlay) {
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_BLEND_INLAY\n", false);
+    } else if (m_blend == Blending::overlay) {
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_BLEND_OVERLAY\n", false);
+    }
+    
     if (m_material.material) {
         m_material.uniforms = m_material.material->injectOnProgram(*m_shaderProgram);
     }

@@ -65,7 +65,7 @@ styles:
         base: lines
         #texcoords: true
         dash: [1, 5]
-        dash_background_color: 0.5
+        #dash_background_color: 0.5
         #shaders:
         #    blocks:
         #        filter: "color.rgb -= .1 * floor(2. * fract(v_texcoord.y / 2.));"
@@ -166,9 +166,9 @@ layers:
                 color: white
                 width: 12.
                 order: 'function() { return feature.sort_key + 5 || 0 }'
-                outline:
-                    color: [[16, '#999'], [18, '#aaa']]
-                    width: [[10, 0], [16, 2]]
+                #outline:
+                #    color: [[16, '#999'], [18, '#aaa']]
+                #    width: [[10, 0], [16, 2]]
 
         rounded:
             filter: { $zoom: { min: 18 } }
