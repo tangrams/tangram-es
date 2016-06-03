@@ -47,6 +47,9 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
 
     if (m_occludedLastFrame) { dim += 2; }
 
+    // FIXME: Only for testing
+    if (state() == State::dead) { dim -= 4; }
+
     m_obb = OBB({sp.x + halfSize.x, sp.y - halfSize.y},
                 m_transform.state.rotation, dim.x, dim.y);
 }

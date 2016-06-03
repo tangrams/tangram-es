@@ -34,6 +34,9 @@ void TextLabel::updateBBoxes(float _zoomFract) {
 
     if (m_occludedLastFrame) { dim += 2; }
 
+    // FIXME: Only for testing
+    if (state() == State::dead) { dim -= 4; }
+
     m_obb = OBB(m_transform.state.screenPos,
                 m_transform.state.rotation,
                 dim.x, dim.y);
