@@ -35,6 +35,8 @@ void Labels::updateLabels(const View& _view, float _dt,
                           const std::vector<std::shared_ptr<Tile>>& _tiles,
                           bool _onlyTransitions) {
 
+    m_labels.clear();
+
     m_needUpdate = false;
 
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
@@ -172,68 +174,49 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
     }
 }
 
-void Labels::updateLabelSet(const View& _view, float _dt,
-                            const std::vector<std::unique_ptr<Style>>& _styles,
-                            const std::vector<std::shared_ptr<Tile>>& _tiles,
-                            std::unique_ptr<TileCache>& _cache) {
-
-    // Could clear this at end of function unless debug draw is active
-    m_labels.clear();
-
-    /// Collect and update labels from visible tiles
-    updateLabels(_view, _dt, _styles, _tiles, false);
-
-    std::sort(m_labels.begin(), m_labels.end(),
-              [](auto& _a, auto& _b) {
-
-                  if (_a.proxy != _b.proxy) {
-                       return _b.proxy;
-                  }
-
-                  if (_a.priority != _b.priority) {
-                       return _a.priority < _b.priority;
-                  }
-
-                  auto l1 = _a.label;
-                  auto l2 = _b.label;
-
-                  // Note: This causes non-deterministic placement, i.e. depending on
-                  // navigation history.
-                  if (l1->occludedLastFrame() != l2->occludedLastFrame()) {
-                      return l2->occludedLastFrame();
-                  }
-
-                  // if (l1->options().repeatGroup != l2->options().repeatGroup) {
-                  //     return l1->options().repeatGroup < l2->options().repeatGroup;
-                  // }
-
-                  if (l1->type() == Label::Type::line && l2->type() == Label::Type::line) {
-                      // Prefer the label with longer line segment as it has a chance
-                      return glm::length(l1->transform().modelPosition1 - l1->transform().modelPosition2) >
-                             glm::length(l2->transform().modelPosition1 - l2->transform().modelPosition2);
-                  }
-
-                  if (l1->hash() != l2->hash()) {
-                      return l1->hash() < l2->hash();
-                  }
-
-                  return l1 < l2;
-              });
-
-    /// Mark labels to skip transitions
-
-    if (int(m_lastZoom) != int(_view.getZoom())) {
-        skipTransitions(_styles, _tiles, _cache, _view.getZoom());
-        m_lastZoom = _view.getZoom();
+bool Labels::labelComparator(const LabelEntry& _a, const LabelEntry& _b) {
+    if (_a.proxy != _b.proxy) {
+        return _b.proxy;
     }
 
-    /// Manage occlusions
+    if (_a.priority != _b.priority) {
+        return _a.priority < _b.priority;
+    }
+
+    auto l1 = _a.label;
+    auto l2 = _b.label;
+
+    // Note: This causes non-deterministic placement, i.e. depending on
+    // navigation history.
+    if (l1->occludedLastFrame() != l2->occludedLastFrame()) {
+        return l2->occludedLastFrame();
+    }
+
+    // if (l1->options().repeatGroup != l2->options().repeatGroup) {
+    //     return l1->options().repeatGroup < l2->options().repeatGroup;
+    // }
+
+    if (l1->type() == Label::Type::line && l2->type() == Label::Type::line) {
+        // Prefer the label with longer line segment as it has a chance
+        return glm::length(l1->transform().modelPosition1 - l1->transform().modelPosition2) >
+               glm::length(l2->transform().modelPosition1 - l2->transform().modelPosition2);
+    }
+
+    if (l1->hash() != l2->hash()) {
+        return l1->hash() < l2->hash();
+    }
+
+    return l1 < l2;
+}
+
+void Labels::sortLabels() {
+    std::sort(m_labels.begin(), m_labels.end(), Labels::labelComparator);
+}
+
+void Labels::handleOcclusions() {
 
     m_isect2d.clear();
     m_repeatGroups.clear();
-
-    m_isect2d.resize({_view.getWidth() / 256, _view.getHeight() / 256},
-                     {_view.getWidth(), _view.getHeight()});
 
     for (auto& entry : m_labels){
         auto* l = entry.label;
@@ -248,18 +231,10 @@ void Labels::updateLabelSet(const View& _view, float _dt,
         // Skip label if another label of this repeatGroup is
         // within repeatDistance.
         if (l->options().repeatDistance > 0.f) {
-            float threshold2 = pow(l->options().repeatDistance, 2);
-            auto it = m_repeatGroups.find(l->options().repeatGroup);
-            if (it != m_repeatGroups.end()) {
-                for (auto* ll : it->second) {
-                    float d2 = distance2(l->center(), ll->center());
-                    if (d2 < threshold2) {
-                        l->occlude();
-                        break;
-                    }
-                }
+            if (withinRepeatDistance(l)) {
+                l->occlude();
+                continue;
             }
-            if (l->isOccluded()) { continue; }
         }
 
         // Skip label if it intersects with a previous label.
@@ -283,6 +258,44 @@ void Labels::updateLabelSet(const View& _view, float _dt,
             m_repeatGroups[l->options().repeatGroup].push_back(l);
         }
     }
+}
+
+bool Labels::withinRepeatDistance(Label *_label) {
+    float threshold2 = pow(_label->options().repeatDistance, 2);
+
+    auto it = m_repeatGroups.find(_label->options().repeatGroup);
+    if (it != m_repeatGroups.end()) {
+        for (auto* ll : it->second) {
+            float d2 = distance2(_label->center(), ll->center());
+            if (d2 < threshold2) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void Labels::updateLabelSet(const View& _view, float _dt,
+                            const std::vector<std::unique_ptr<Style>>& _styles,
+                            const std::vector<std::shared_ptr<Tile>>& _tiles,
+                            std::unique_ptr<TileCache>& _cache) {
+
+    /// Collect and update labels from visible tiles
+    updateLabels(_view, _dt, _styles, _tiles, false);
+
+    sortLabels();
+
+    /// Mark labels to skip transitions
+
+    if (int(m_lastZoom) != int(_view.getZoom())) {
+        skipTransitions(_styles, _tiles, _cache, _view.getZoom());
+        m_lastZoom = _view.getZoom();
+    }
+
+    m_isect2d.resize({_view.getWidth() / 256, _view.getHeight() / 256},
+                     {_view.getWidth(), _view.getHeight()});
+
+    handleOcclusions();
 
     /// Update label meshes
 
