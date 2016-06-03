@@ -20,11 +20,15 @@ public:
 
     void setDashArray(std::vector<int> _dashArray) { m_dashArray = _dashArray; }
 
+    void setDashBackgroundColor(const glm::vec4 _dashBackgroundColor);
+
 
 private:
 
     std::vector<int> m_dashArray;
     std::unique_ptr<Texture> m_texture;
+    bool m_dashBackground = false;
+    glm::vec4 m_dashBackgroundColor;
 
     UniformLocation m_uTexture{"u_texture"};
 };

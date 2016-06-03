@@ -621,6 +621,13 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         }
     }
 
+    if (Node dashBackgroundColor = styleNode["dash_background_color"]) {
+        if (auto polylineStyle = dynamic_cast<PolylineStyle*>(&style)) {
+            glm::vec4 backgroundColor = getColorAsVec4(dashBackgroundColor);
+            polylineStyle->setDashBackgroundColor(backgroundColor);
+        }
+    }
+
     if (Node shadersNode = styleNode["shaders"]) {
         loadShaderConfig(shadersNode, style, scene);
     }

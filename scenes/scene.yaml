@@ -65,6 +65,7 @@ styles:
         base: lines
         #texcoords: true
         dash: [1, 5]
+        dash_background_color: 0.5
         #shaders:
         #    blocks:
         #        filter: "color.rgb -= .1 * floor(2. * fract(v_texcoord.y / 2.));"

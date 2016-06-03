@@ -70,7 +70,11 @@ void main(void) {
         color = line_color;
 
         if (line_color.a < TANGRAM_ALPHA_TEST) {
-            color.a = 0.0;
+            #ifdef TANGRAM_LINE_BACKGROUND_COLOR
+                color.rgb = TANGRAM_LINE_BACKGROUND_COLOR;
+            #else
+                color.a = 0.0;
+            #endif
         }
     #endif
 
