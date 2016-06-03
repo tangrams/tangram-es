@@ -172,60 +172,6 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
     }
 }
 
-void Labels::checkRepeatGroups(std::vector<Label*>& _visibleSet) const {
-
-    struct GroupElement {
-        Label* label;
-
-        bool operator==(const GroupElement& _ge) {
-            return _ge.label->center() == label->center();
-        };
-    };
-
-    std::map<size_t, std::vector<GroupElement>> repeatGroups;
-
-    for (Label* textLabel : _visibleSet) {
-        auto& options = textLabel->options();
-        GroupElement element { textLabel };
-
-        auto& group = repeatGroups[options.repeatGroup];
-        if (group.empty()) {
-            group.push_back(element);
-            continue;
-        }
-
-        if (std::find(group.begin(), group.end(), element) != group.end()) {
-            //Two tiles contain the same label - have the same screen position.
-            continue;
-        }
-
-        float threshold2 = pow(options.repeatDistance, 2);
-
-        bool add = true;
-        for (GroupElement& ge : group) {
-
-            float d2 = distance2(ge.label->center(), textLabel->center());
-            if (d2 < threshold2) {
-                if (textLabel->visibleState() && !ge.label->visibleState()) {
-                    // If textLabel is already visible, the added GroupElement is not
-                    // replace GroupElement with textLabel and set the other occluded.
-                    ge.label->occlude();
-                    ge.label = textLabel;
-                } else {
-                    textLabel->occlude();
-                }
-                add = false;
-                break;
-            }
-        }
-
-        if (add) {
-            // No other label of this group within repeatDistance
-            group.push_back(element);
-        }
-    }
-}
-
 void Labels::updateLabelSet(const View& _view, float _dt,
                             const std::vector<std::unique_ptr<Style>>& _styles,
                             const std::vector<std::shared_ptr<Tile>>& _tiles,
@@ -240,27 +186,37 @@ void Labels::updateLabelSet(const View& _view, float _dt,
     std::sort(m_labels.begin(), m_labels.end(),
               [](auto& _a, auto& _b) {
 
-                  if (_a.priority != _b.priority) {
-                       return _a.priority < _b.priority;
-                  }
-
                   if (_a.proxy != _b.proxy) {
                        return _b.proxy;
+                  }
+
+                  if (_a.priority != _b.priority) {
+                       return _a.priority < _b.priority;
                   }
 
                   auto l1 = _a.label;
                   auto l2 = _b.label;
 
+                  // Note: This causes non-deterministic placement, i.e. depending on
+                  // navigation history.
                   if (l1->occludedLastFrame() != l2->occludedLastFrame()) {
                       return l2->occludedLastFrame();
+                  }
+
+                  // if (l1->options().repeatGroup != l2->options().repeatGroup) {
+                  //     return l1->options().repeatGroup < l2->options().repeatGroup;
+                  // }
+
+                  if (l1->type() == Label::Type::line && l2->type() == Label::Type::line) {
+                      // Prefer the label with longer line segment as it has a chance
+                      return glm::length(l1->transform().modelPosition1 - l1->transform().modelPosition2) >
+                             glm::length(l2->transform().modelPosition1 - l2->transform().modelPosition2);
                   }
 
                   if (l1->hash() != l2->hash()) {
                       return l1->hash() < l2->hash();
                   }
-                  if (l1->options().repeatGroup != l2->options().repeatGroup) {
-                      return l1->options().repeatGroup < l2->options().repeatGroup;
-                  }
+
                   return l1 < l2;
               });
 
@@ -273,63 +229,60 @@ void Labels::updateLabelSet(const View& _view, float _dt,
 
     /// Manage occlusions
 
-    // Update collision context size
+    m_isect2d.clear();
+    m_repeatGroups.clear();
+
     m_isect2d.resize({_view.getWidth() / 256, _view.getHeight() / 256},
                      {_view.getWidth(), _view.getHeight()});
 
-    m_isect2d.clear();
-
     for (auto& entry : m_labels){
+        auto* l = entry.label;
 
-        if (entry.label->parent() && entry.label->parent()->isOccluded()) {
-            entry.label->occlude();
+        // Parent must have been processed earlier so at this point
+        // its occlusion is determined for the current frame.
+        if (l->parent() && l->parent()->isOccluded()) {
+            l->occlude();
             continue;
         }
 
-        auto aabb = entry.label->aabb();
-        aabb.m_userData = reinterpret_cast<void*>(entry.label);
+        // Skip label if another label of this repeatGroup is
+        // within repeatDistance.
+        if (l->options().repeatDistance > 0.f) {
+            float threshold2 = pow(l->options().repeatDistance, 2);
+            auto it = m_repeatGroups.find(l->options().repeatGroup);
+            if (it != m_repeatGroups.end()) {
+                for (auto* ll : it->second) {
+                    float d2 = distance2(l->center(), ll->center());
+                    if (d2 < threshold2) {
+                        l->occlude();
+                        break;
+                    }
+                }
+            }
+            if (l->isOccluded()) { continue; }
+        }
+
+        // Skip label if it intersects with a previous label.
+        auto aabb = l->aabb();
+        aabb.m_userData = static_cast<void*>(l);
 
         m_isect2d.intersect(aabb, [](auto& a, auto& b) {
-                auto* l1 = reinterpret_cast<Label*>(a.m_userData);
-                auto* l2 = reinterpret_cast<Label*>(b.m_userData);
+                auto* l1 = static_cast<Label*>(a.m_userData);
+                auto* l2 = static_cast<Label*>(b.m_userData);
 
                 if (intersect(l1->obb(), l2->obb())) {
                     l1->occlude();
                     // Drop label
                     return false;
                 }
-
                 // Continue
                 return true;
             });
-        }
 
-    /// Apply repeat groups
-#if 0
-    std::vector<Label*> repeatGroupSet;
-    for (auto* label : m_labels) {
-        if (label->isOccluded()) {
-            continue;
+        if (l->options().repeatDistance > 0.f) {
+            m_repeatGroups[l->options().repeatGroup].push_back(l);
         }
-        if (label->options().repeatDistance == 0.f) {
-            continue;
-        }
-        if (!dynamic_cast<TextLabel*>(label)) {
-            continue;
-        }
-
-        repeatGroupSet.push_back(label);
     }
-
-    // Ensure the labels are always treated in the same order in the visible set
-    std::sort(repeatGroupSet.begin(), repeatGroupSet.end(),
-              [](auto* _a, auto* _b) {
-        return glm::length2(_a->transform().modelPosition1) <
-               glm::length2(_b->transform().modelPosition1);
-    });
-
-    checkRepeatGroups(repeatGroupSet);
-#endif
 
     /// Update label meshes
 
@@ -337,11 +290,6 @@ void Labels::updateLabelSet(const View& _view, float _dt,
 
     for (auto& entry : m_labels) {
         Label* label = entry.label;
-
-        // Manage link occlusion (unified icon labels)
-        if (label->parent() && (label->parent()->isOccluded() || !label->parent()->visibleState())) {
-            label->occlude();
-        }
 
         m_needUpdate |= label->evalState(screenSize, _dt);
         label->pushTransform();

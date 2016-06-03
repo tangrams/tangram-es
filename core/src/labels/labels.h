@@ -11,6 +11,7 @@
 #include <mutex>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <set>
 
 namespace Tangram {
@@ -57,7 +58,6 @@ private:
 
     void skipTransitions(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) const;
 
-    void checkRepeatGroups(std::vector<Label*>& _visibleSet) const;
 
     int LODDiscardFunc(float _maxZoom, float _zoom);
 
@@ -81,6 +81,8 @@ private:
     };
 
     std::vector<LabelEntry> m_labels;
+
+    std::unordered_map<size_t, std::vector<Label*>> m_repeatGroups;
 
     float m_lastZoom;
 };
