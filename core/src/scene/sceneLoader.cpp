@@ -645,6 +645,7 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         else { LOGW("Unrecognized lighting type '%s'", lighting.c_str()); }
     }
 
+    // TODO: Handle inlined texture with URL
     if (Node textureNode = styleNode["texture"]) {
         if (auto pointStyle = dynamic_cast<PointStyle*>(&style)) {
             const std::string& textureName = textureNode.Scalar();
@@ -653,13 +654,19 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
             if (atlasIt != atlases.end()) {
                 pointStyle->setSpriteAtlas(atlasIt->second);
             } else {
-                auto textures = scene.textures();
-                auto texIt = textures.find(textureName);
-                if (texIt != textures.end()) {
-                    pointStyle->setTexture(texIt->second);
+                auto texture = scene.getTexture(textureName);
+                if (texture) {
+                    pointStyle->setTexture(texture);
                 } else {
                     LOGW("Undefined texture name %s", textureName.c_str());
                 }
+            }
+        } else if (auto polylineStyle = dynamic_cast<PolylineStyle*>(&style)) {
+            const std::string& textureName = textureNode.Scalar();
+            auto texture = scene.getTexture(textureName);
+            if (texture) {
+                polylineStyle->setTexture(texture);
+                polylineStyle->setTexCoordsGeneration(true);
             }
         }
     }

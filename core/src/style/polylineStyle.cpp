@@ -110,15 +110,17 @@ void PolylineStyle::constructShaderProgram() {
         m_texture = std::make_shared<Texture>(1, pixels.size(), options);
         m_texture->setData(pixels.data(), pixels.size());
 
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_TEXTURE\n", false);
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_ALPHA_TEST 0.5\n", false);
-
         if (m_dashBackground) {
             m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_BACKGROUND_COLOR vec3(" +
                 std::to_string(m_dashBackgroundColor.r) + ", " +
                 std::to_string(m_dashBackgroundColor.g) + ", " +
                 std::to_string(m_dashBackgroundColor.b) + ")");
         }
+    }
+
+    if (m_dashArray.size() > 0 || m_texture) {
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_TEXTURE\n", false);
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_ALPHA_TEST 0.5\n", false);
     }
 
     m_shaderProgram->setSourceStrings(SHADER_SOURCE(polyline_fs),
