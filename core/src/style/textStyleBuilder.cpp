@@ -201,35 +201,49 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
         for (size_t i = 0; i < line.size() - 1; i++) {
             glm::vec2 p1 = glm::vec2(line[i]);
 
-            // Connect up to four segments
-            // (just to keep the number of label candidates sane)
-            size_t maxSegments = i + 4;
+            float segmentLength = 0;
 
-            for (size_t j = i+1; j < line.size(); j++) {
-                glm::vec2 p2 = glm::vec2(line[j]);
-                float segmentLength = glm::length(p1 - p2);
+            glm::vec2 p2;
 
-                if (j > i+1) {
-                    if (j > maxSegments) {
-                        i = maxSegments;
-                        break;
+            bool merged = false;
+
+            size_t next = i+1;
+            for (size_t j = next; j < line.size(); j++) {
+                glm::vec2 p = glm::vec2(line[j]);
+                segmentLength = glm::length(p1 - p);
+
+                if (j == next) {
+                    if (segmentLength > minLength) {
+                        addLabel(_params, Label::Type::line, { p1, p });
                     }
+                } else {
+                    glm::vec2 pp = glm::vec2(line[j-1]);
 
-                    glm::vec2 p = glm::vec2(line[j-1]);
-
-                    float d = sqPointSegmentDistance(p, p1, p2);
+                    float d = sqPointSegmentDistance(pp, p1, p);
                     if (d > tolerance) { break; }
-                    //LOG("join segment %d", segmentLength > minLength);
-                }
 
-                if (segmentLength > minLength) {
-                    // LOG("length %f / %f", segmentLength * m_tileSize, m_attributes.width);
-
-                    addLabel(_params, Label::Type::line, { p1, p2 });
-                    // just to keep the number of label candidates sane
-                    //break;
+                    // Merged segment
+                    merged = true;
+                    i += 1;
                 }
+                p2 = p;
             }
+
+            // place labels at segment-subdivisions
+            int run = merged ? 1 : 2;
+
+            while (segmentLength > minLength && run <= 4) {
+                glm::vec2 a = p1;
+                glm::vec2 b = glm::vec2(p2 - p1) / float(run);
+
+                for (int r = 0; r < run; r++) {
+                    addLabel(_params, Label::Type::line, { a, a+b });
+                    a += b;
+                }
+                run *= 2;
+                segmentLength /= 2.0f;
+            }
+
         }
     }
 }
