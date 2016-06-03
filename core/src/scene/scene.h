@@ -57,6 +57,7 @@ public:
     auto& background() { return m_background; }
     auto& fontContext() { return m_fontContext; }
     auto& globals() { return m_globals; }
+    Style* findStyle(const std::string& _name);
 
     const auto& path() const { return m_path; }
     const auto& config() const { return m_config; }

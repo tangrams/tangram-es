@@ -27,6 +27,7 @@ bool SpriteAtlas::getSpriteNode(const std::string& _name, SpriteNode& _node) con
 void SpriteAtlas::updateSpriteNodes(std::shared_ptr<Texture> _texture) {
     m_texture = _texture;
     for (auto& spriteNode : m_spritesNodes) {
+        // Use the origin of the spriteNode set when the node was created
         addSpriteNode(spriteNode.first.k, spriteNode.second.m_origin, spriteNode.second.m_size);
     }
 }

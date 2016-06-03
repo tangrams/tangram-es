@@ -47,6 +47,10 @@ const std::string DELIMITER = ":";
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
+// TODO: SceneImporter as static const for SceneLoader might not be a good approach. Make it a
+// member of Scene? How will it affect Scene copy thingy ... when loading a new scene in tangram.cpp
+// Or maybe only allow 1 scene to load at a time, newer scene waits on the previous scene to finish
+// loading.
 const std::unique_ptr<Importer> SceneLoader::sceneImporter(new Importer());
 std::mutex SceneLoader::m_textureMutex;
 
@@ -54,6 +58,7 @@ void SceneLoader::loadScene(const std::string& _scenePath, std::shared_ptr<Scene
         const std::function<void(std::shared_ptr<Scene>&)>& _setScene) {
 
     std::async(std::launch::async,[&]() {
+                // TODO: wait for sceneImporter to finish a previous importing
                 Node& root = _scene->config();
                 if ( (root = sceneImporter->applySceneImports(_scenePath)) ) {
                     applyConfig(root, *_scene);
@@ -441,7 +446,13 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene,
         matTex.tex = scene.textures()[name];
     }
 
-    if (!matTex.tex) { matTex.tex = std::make_shared<Texture>(name); }
+    if (!matTex.tex) {
+        // Load inline material  textures
+        if (!loadTexture(name, scene)) {
+            LOGW("Not able to load material texture: %s", name.c_str());
+            return MaterialTexture();
+        };
+    }
 
     if (Node mappingNode = matCompNode["mapping"]) {
         const std::string& mapping = mappingNode.Scalar();
@@ -509,6 +520,15 @@ bool SceneLoader::extractTexFiltering(Node& filtering, TextureFiltering& filter)
     }
 }
 
+void SceneLoader::updateSpriteNodes(const std::string& texName,
+        std::shared_ptr<Texture>& texture, Scene& scene) {
+    auto& spriteAtlases = scene.spriteAtlases();
+    if (spriteAtlases.find(texName) != spriteAtlases.end()) {
+        auto& spriteAtlas = spriteAtlases[texName];
+        spriteAtlas->updateSpriteNodes(texture);
+    }
+}
+
 std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, const std::string& url,
         const TextureOptions& options, bool generateMipmaps, Scene& scene) {
 
@@ -517,19 +537,26 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
 
     std::regex r("^(http|https):/");
     std::smatch match;
+    // TODO: generalize using URI handlers
     if (std::regex_search(url, match, r)) {
-        startUrlRequest(url, [&](std::vector<char>&& rawData) {
-                auto texture =
-                std::make_shared<Texture>((unsigned char*)(rawData.data()), rawData.size(),
-                        options, generateMipmaps);
+        startUrlRequest(url, [=, &scene](std::vector<char>&& rawData) {
+                auto ptr = (unsigned char*)(rawData.data());
+                size_t dataSize = rawData.size();
                 std::lock_guard<std::mutex> lock(m_textureMutex);
-                // TODO: replaced in scene textures but not in sprite texture!!!
-                scene.textures()[name] = texture;
-                scene.spriteAtlases()[name]->updateSpriteNodes(texture);
+				auto texture = scene.getTexture(name);
+                if (texture) {
+                    texture->loadImageFromMemory(ptr, dataSize, false);
+                    updateSpriteNodes(name, texture, scene);
+                }
             });
         texture = std::make_shared<Texture>(nullptr, 0, options, generateMipmaps, true);
     } else {
-        unsigned char* blob = bytesFromFile(url.c_str(), PathType::resource, &size);
+        unsigned char* blob;
+        if (url[0] == '/') {
+            blob = bytesFromFile(url.c_str(), PathType::absolute, &size);
+        } else {
+            blob = bytesFromFile(url.c_str(), PathType::resource, &size);
+        }
 
         if (!blob) {
             LOGE("Can't load texture resource at url %s", url.c_str());
@@ -668,10 +695,6 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         loadShaderConfig(shadersNode, style, scene);
     }
 
-    if (Node materialNode = styleNode["material"]) {
-        loadMaterial(materialNode, *(style.getMaterial()), scene, style);
-    }
-
     if (Node lightingNode = styleNode["lighting"]) {
         const std::string& lighting = lightingNode.Scalar();
         if (lighting == "fragment") { style.setLightingType(LightingType::fragment); }
@@ -682,19 +705,18 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
     }
 
     if (Node textureNode = styleNode["texture"]) {
+        std::lock_guard<std::mutex> lock(m_textureMutex);
         if (auto pointStyle = dynamic_cast<PointStyle*>(&style)) {
             const std::string& textureName = textureNode.Scalar();
-            auto atlases = scene.spriteAtlases();
+            auto& atlases = scene.spriteAtlases();
             auto atlasIt = atlases.find(textureName);
+			auto styleTexture = scene.getTexture(textureName);
             if (atlasIt != atlases.end()) {
                 pointStyle->setSpriteAtlas(atlasIt->second);
+            } else if (styleTexture){
+                pointStyle->setTexture(styleTexture);
             } else {
-                auto texture = scene.getTexture(textureName);
-                if (texture) {
-                    pointStyle->setTexture(texture);
-                } else {
-                    LOGW("Undefined texture name %s", textureName.c_str());
-                }
+                LOGW("Undefined texture name %s", textureName.c_str());
             }
         } else if (auto polylineStyle = dynamic_cast<PolylineStyle*>(&style)) {
             const std::string& textureName = textureNode.Scalar();
@@ -706,10 +728,10 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         }
     }
 
-    if (Node urlNode = styleNode["url"]) {
-        // TODO
-        LOGW("Loading style from URL not yet implemented");
+    if (Node materialNode = styleNode["material"]) {
+        loadMaterial(materialNode, *(style.getMaterial()), scene, style);
     }
+
 }
 
 bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) {

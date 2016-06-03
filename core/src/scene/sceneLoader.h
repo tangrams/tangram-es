@@ -8,6 +8,7 @@
 #include <vector>
 #include <memory>
 #include <tuple>
+#include <unordered_map>
 #include <unordered_set>
 #include <sstream>
 #include <mutex>
@@ -73,6 +74,9 @@ struct SceneLoader {
     static std::shared_ptr<Texture> fetchTexture(const std::string& name, const std::string& url,
             const TextureOptions& options, bool generateMipmaps, Scene& scene);
     static bool extractTexFiltering(Node& filtering, TextureFiltering& filter);
+
+    static void updateSpriteNodes(const std::string& texName,
+            std::shared_ptr<Texture>& texture, Scene& scene);
 
     static MaterialTexture loadMaterialTexture(Node matCompNode, Scene& scene, Style& style);
 

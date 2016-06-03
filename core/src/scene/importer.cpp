@@ -58,7 +58,10 @@ Node Importer::applySceneImports(const std::string& scenePath) {
         }
     }
 
-    return importScenes(scenePath);
+    auto root = importScenes(scenePath);
+
+    //TODO: clear importer data
+    return root;
 }
 
 void Importer::processScene(const std::string &scenePath, const std::string &sceneString) {

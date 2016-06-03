@@ -53,6 +53,14 @@ const Style* Scene::findStyle(const std::string& _name) const {
 
 }
 
+Style* Scene::findStyle(const std::string& _name) {
+
+    for (auto& style : m_styles) {
+        if (style->getName() == _name) { return style.get(); }
+    }
+    return nullptr;
+}
+
 int Scene::addIdForName(const std::string& _name) {
     int id = getIdForName(_name);
 
