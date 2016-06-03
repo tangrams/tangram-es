@@ -8,6 +8,13 @@ else()
     message(STATUS "Will use make prebuilt tool located at : ${CMAKE_BUILD_TOOL}")
 endif()
 
+FILE(READ "$ENV{ANDROID_NDK}/RELEASE.TXT" NDK_VERSION_STRING)
+string(FIND ${NDK_VERSION_STRING} "r10e" NDK_MATCH)
+if(${NDK_MATCH} LESS 0)
+  message(SEND_ERROR "Please use NDK version r10e as $ANDROID_NDK")
+  return()
+endif()
+
 # check for unsupported compilers
 check_unsupported_compiler_version()
 
