@@ -14,6 +14,8 @@
 #include <unordered_map>
 #include <set>
 
+#define PERF_TRACE __attribute__ ((noinline))
+
 namespace Tangram {
 
 class FontContext;
@@ -35,8 +37,8 @@ public:
     void updateLabelSet(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
                         const std::vector<std::shared_ptr<Tile>>& _tiles, std::unique_ptr<TileCache>& _cache);
 
-    void updateLabels(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
-                      const std::vector<std::shared_ptr<Tile>>& _tiles, bool _onlyTransitions = true);
+    PERF_TRACE void updateLabels(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
+                                 const std::vector<std::shared_ptr<Tile>>& _tiles, bool _onlyTransitions = true);
 
     const std::vector<TouchItem>& getFeaturesAtPoint(const View& _view, float _dt,
                                                      const std::vector<std::unique_ptr<Style>>& _styles,
@@ -56,10 +58,13 @@ private:
                          const std::vector<std::shared_ptr<Tile>>& _tiles,
                          std::unique_ptr<TileCache>& _cache, float _currentZoom) const;
 
-    void skipTransitions(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) const;
+    PERF_TRACE void skipTransitions(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) const;
 
+    PERF_TRACE void sortLabels();
 
-    int LODDiscardFunc(float _maxZoom, float _zoom);
+    PERF_TRACE void handleOcclusions();
+
+    PERF_TRACE bool withinRepeatDistance(Label *_label);
 
     bool m_needUpdate;
 
@@ -79,6 +84,8 @@ private:
         float priority;
         bool proxy;
     };
+
+    static bool labelComparator(const LabelEntry& _a, const LabelEntry& _b);
 
     std::vector<LabelEntry> m_labels;
 
