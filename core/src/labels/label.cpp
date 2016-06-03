@@ -172,9 +172,7 @@ void Label::resetState() {
 bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _allLabels) {
 
     m_occludedLastFrame = m_occluded;
-    if (m_state != State::fading_out) {
-        m_occluded = false;
-    }
+    m_occluded = false;
 
     if (m_state == State::dead) {
         if (!_allLabels) {
