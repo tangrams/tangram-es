@@ -200,14 +200,12 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
 
         for (size_t i = 0; i < line.size() - 1; i++) {
             glm::vec2 p1 = glm::vec2(line[i]);
-
-            float segmentLength = 0;
-
             glm::vec2 p2;
 
+            float segmentLength = 0;
             bool merged = false;
-
             size_t next = i+1;
+
             for (size_t j = next; j < line.size(); j++) {
                 glm::vec2 p = glm::vec2(line[j]);
                 segmentLength = glm::length(p1 - p);
@@ -222,7 +220,7 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
                     float d = sqPointSegmentDistance(pp, p1, p);
                     if (d > tolerance) { break; }
 
-                    // Merged segment
+                    // Skip merged segment
                     merged = true;
                     i += 1;
                 }
@@ -231,6 +229,7 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
 
             // place labels at segment-subdivisions
             int run = merged ? 1 : 2;
+            segmentLength /= run;
 
             while (segmentLength > minLength && run <= 4) {
                 glm::vec2 a = p1;
