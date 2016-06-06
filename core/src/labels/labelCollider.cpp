@@ -166,14 +166,6 @@ void LabelCollider::process() {
             }
         }
 
-        // std::string name;
-        // if (l1->options().properties) {
-        //     l1->options().properties->getString("name", name);
-        //     LOG("%p repeatGroup %u - %s", l1, l1->options().repeatGroup, name.c_str());
-        // } else {
-        //     LOG("%p repeatGroup %u", l1, l1->options().repeatGroup);
-        // }
-
         if (l1->parent() && l1->parent()->isOccluded()) {
             l1->occlude();
         }
@@ -208,7 +200,6 @@ void LabelCollider::process() {
         }
     }
 
-    int cnt = 0;
     for (auto* label : m_labels) {
 
         // Manage link occlusion (unified icon labels)
@@ -217,20 +208,11 @@ void LabelCollider::process() {
         }
 
         if (label->isOccluded()) {
-            cnt++;
             label->enterState(Label::State::dead, 0.0f);
         } else {
             label->enterState(Label::State::wait_occ, 0.0f);
         }
-
-        //LOG("occluded: %d %d/%d \t %d/%d", label->isOccluded(),
-            // (int)label->transform().state.screenPos.x,
-            // (int)label->transform().state.screenPos.y,
-            // (int)(((label->transform().modelPosition1.x + label->transform().modelPosition2.x) / 2.0) * m_screenSize.x),
-            // (int)(((label->transform().modelPosition1.y + label->transform().modelPosition2.y) / 2.0) * m_screenSize.y));
     }
-
-    // LOG("Dropped %d/%d labels", cnt, m_labels.size());
 
     m_labels.clear();
     m_aabbs.clear();
