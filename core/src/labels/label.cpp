@@ -37,7 +37,9 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
         case Type::debug:
         case Type::point:
         {
-            screenPosition = worldToScreenSpace(_mvp, glm::vec4(m_transform.modelPosition1, 0.0, 1.0),
+            glm::vec2 p0 = m_transform.modelPosition1;
+
+            screenPosition = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
                                                 _screenSize, clipped);
 
             if (_testVisibility && clipped) {
@@ -52,9 +54,12 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
         {
             // project label position from mercator world space to screen
             // coordinates
-            glm::vec2 ap1 = worldToScreenSpace(_mvp, glm::vec4(m_transform.modelPosition1, 0.0, 1.0),
+            glm::vec2 p0 = m_transform.modelPosition1;
+            glm::vec2 p2 = m_transform.modelPosition2;
+
+            glm::vec2 ap0 = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
                                                _screenSize, clipped);
-            glm::vec2 ap2 = worldToScreenSpace(_mvp, glm::vec4(m_transform.modelPosition2, 0.0, 1.0),
+            glm::vec2 ap2 = worldToScreenSpace(_mvp, glm::vec4(p2, 0.0, 1.0),
                                                _screenSize, clipped);
 
             // check whether the label is behind the camera using the
@@ -63,20 +68,24 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
                 return false;
             }
 
-            float length = glm::length(ap2 - ap1);
+            float length = glm::length(ap2 - ap0);
 
-            float exceedHeuristic = 0.3; // default heuristic : 30%
+            // default heuristic : allow label to be 30% wider than segment
+            float minLength = m_dim.x * 0.7;
 
-            if (_testVisibility && (m_dim.x > length)) {
-                float exceed = 1 - (length / m_dim.x);
-                if (exceed > exceedHeuristic) {
-                    return false;
-                }
+            if (_testVisibility && length < minLength) {
+                return false;
             }
 
-            screenPosition = (ap1 + ap2) * 0.5f;
+            glm::vec2 p1 = glm::vec2(p2 + p0) * 0.5f;
 
-            rotation = (ap1.x <= ap2.x ? ap2 - ap1 : ap1 - ap2) / length;
+            glm::vec2 ap1 = worldToScreenSpace(_mvp, glm::vec4(p1, 0.0, 1.0),
+                                               _screenSize, clipped);
+
+            // Keep screen position center at world center (less sliding in tilted view)
+            screenPosition = ap1;
+
+            rotation = (ap0.x <= ap2.x ? ap2 - ap0 : ap0 - ap2) / length;
 
             break;
         }
