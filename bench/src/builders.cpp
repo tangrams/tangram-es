@@ -37,7 +37,7 @@ static void BM_Tangram_BuildButtMiterLine(benchmark::State& state) {
             JoinTypes::miter
         };
 
-        Builders::buildPolyLine(line, builder);
+        Builders::buildPolyLine(line, builder, 1.f);
     }
 }
 BENCHMARK(BM_Tangram_BuildButtMiterLine);
@@ -53,7 +53,7 @@ static void BM_Tangram_BuildRoundRoundLine(benchmark::State& state) {
             JoinTypes::round
         };
 
-        Builders::buildPolyLine(line, builder);
+        Builders::buildPolyLine(line, builder, 1.f);
     }
 }
 BENCHMARK(BM_Tangram_BuildRoundRoundLine);
