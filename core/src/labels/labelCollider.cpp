@@ -3,17 +3,17 @@
 #include "labels/labelSet.h"
 #include "glm/gtc/matrix_transform.hpp"
 
-#define TILE_SIZE 256
 #define MAX_SCALE 2
 
 namespace Tangram {
 
-void LabelCollider::setup(float _tileScale) {
+void LabelCollider::setup(float _tileSize, float _tileScale) {
 
+    // Maximum scale at which this tile is used (unless it's a proxy)
     m_tileScale = _tileScale * MAX_SCALE;
 
     // TODO use pixel scale
-    m_screenSize = glm::vec2{ TILE_SIZE * m_tileScale };
+    m_screenSize = glm::vec2{ _tileSize * m_tileScale };
 }
 
 void LabelCollider::addLabels(std::vector<std::unique_ptr<Label>>& _labels) {

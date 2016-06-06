@@ -14,7 +14,7 @@ class LabelCollider {
 
 public:
 
-    void setup(float _tileScale);
+    void setup(float _tileSize, float _tileScale);
 
     void addLabels(std::vector<std::unique_ptr<Label>>& _labels);
 
