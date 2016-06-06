@@ -403,6 +403,10 @@ void Labels::drawDebug(const View& _view) {
 
         Primitives::drawPoly(&(label->obb().getQuad())[0], 4);
 
+        if (label->type() == Label::Type::line) {
+            Primitives::drawLine(label->transform().screenPosition1, label->transform().screenPosition2);
+        }
+
         if (label->visibleState() && label->parent()) {
             Primitives::setColor(0xff0000);
             Primitives::drawLine(sp, label->parent()->transform().state.screenPos);

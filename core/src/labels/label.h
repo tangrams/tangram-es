@@ -54,6 +54,9 @@ public:
             glm::vec2 rotation;
             float alpha = 0.f;
         } state;
+
+        glm::vec2 screenPosition1;
+        glm::vec2 screenPosition2;
     };
 
     struct Transition {

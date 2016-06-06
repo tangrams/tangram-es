@@ -3,6 +3,7 @@
 #include "util/geom.h"
 #include "glm/gtx/rotate_vector.hpp"
 #include "tangram.h"
+#include "platform.h"
 
 namespace Tangram {
 
@@ -61,6 +62,9 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
                                                _screenSize, clipped);
             glm::vec2 ap2 = worldToScreenSpace(_mvp, glm::vec4(p2, 0.0, 1.0),
                                                _screenSize, clipped);
+
+            m_transform.screenPosition1 = ap0;
+            m_transform.screenPosition2 = ap2;
 
             // check whether the label is behind the camera using the
             // perspective division factor
