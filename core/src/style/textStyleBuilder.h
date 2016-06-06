@@ -44,7 +44,7 @@ public:
 
     bool checkRule(const DrawRule& _rule) const override { return true; }
 
-    auto& labels() { return m_labels; }
+    std::vector<std::unique_ptr<Label>>* labels() override { return &m_labels; }
 
 protected:
 

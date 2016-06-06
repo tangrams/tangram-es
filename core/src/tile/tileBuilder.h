@@ -3,6 +3,7 @@
 #include "data/dataSource.h"
 #include "scene/styleContext.h"
 #include "scene/drawRule.h"
+#include "labels/labelCollider.h"
 
 namespace Tangram {
 
@@ -31,6 +32,8 @@ private:
 
     StyleContext m_styleContext;
     DrawRuleMergeSet m_ruleSet;
+
+    LabelCollider m_labelLayout;
 
     fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilder;
 };

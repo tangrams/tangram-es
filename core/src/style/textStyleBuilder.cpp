@@ -1,5 +1,6 @@
 #include "textStyleBuilder.h"
 
+#include "labels/labelSet.h"
 #include "labels/textLabel.h"
 #include "labels/textLabels.h"
 

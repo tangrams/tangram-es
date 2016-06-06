@@ -50,7 +50,7 @@ struct PointStyleBuilder : public StyleBuilder {
     void addLabel(const Point& _point, const glm::vec4& _quad,
                   const PointStyle::Parameters& _params);
 
-    auto& labels() { return m_labels; }
+    std::vector<std::unique_ptr<Label>>* labels() override { return &m_labels; }
 
     virtual void addFeature(const Feature& _feat, const DrawRule& _rule) override;
 
