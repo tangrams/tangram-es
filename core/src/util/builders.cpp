@@ -275,22 +275,22 @@ bool isOutsideTile(const glm::vec3& _a, const glm::vec3& _b) {
     return false;
 }
 
-void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx,
-                          size_t startIndex, size_t endIndex, bool endCap = true) {
+void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx, size_t _startIndex,
+                          size_t _endIndex, float _overzoom2, bool endCap = true) {
 
     float distance = 0; // Cumulative distance along the polyline.
 
     size_t origLineSize = _line.size();
 
     // endIndex/startIndex could be wrapped values, calculate lineSize accordingly
-    int lineSize = (int)((endIndex > startIndex) ?
-                   (endIndex - startIndex) :
-                   (origLineSize - startIndex + endIndex));
+    int lineSize = (int)((_endIndex > _startIndex) ?
+                   (_endIndex - _startIndex) :
+                   (origLineSize - _startIndex + _endIndex));
     if (lineSize < 2) { return; }
 
-    glm::vec3 coordCurr(_line[startIndex]);
+    glm::vec3 coordCurr(_line[_startIndex]);
     // get the Point using wrapped index in the original line geometry
-    glm::vec3 coordNext(_line[(startIndex + 1) % origLineSize]);
+    glm::vec3 coordNext(_line[(_startIndex + 1) % origLineSize]);
     glm::vec2 normPrev, normNext, miterVec;
 
     int cornersOnCap = (int)_ctx.cap;
@@ -309,9 +309,9 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx,
     // Process intermediate points
     for (int i = 1; i < lineSize - 1; i++) {
         // get the Point using wrapped index in the original line geometry
-        int nextIndex = (i + startIndex + 1) % origLineSize;
+        int nextIndex = (i + _startIndex + 1) % origLineSize;
 
-        distance += glm::distance(coordCurr, coordNext);
+        distance += glm::distance(coordCurr, coordNext) * _overzoom2;
 
         coordCurr = coordNext;
         coordNext = _line[nextIndex];
@@ -384,7 +384,7 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx,
         }
     }
 
-    distance += glm::distance(coordCurr, coordNext);
+    distance += glm::distance(coordCurr, coordNext) * _overzoom2;
 
     // Process last point in line with a cap
     addPolyLineVertex(coordNext, normNext, {1.f, distance}, _ctx); // right corner
@@ -396,13 +396,13 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx,
 
 }
 
-void Builders::buildPolyLine(const Line& _line, PolyLineBuilder& _ctx) {
+void Builders::buildPolyLine(const Line& _line, PolyLineBuilder& _ctx, float _overzoom2) {
 
     size_t lineSize = _line.size();
 
     if (_ctx.keepTileEdges) {
 
-        buildPolyLineSegment(_line, _ctx, 0, lineSize);
+        buildPolyLineSegment(_line, _ctx, 0, lineSize, _overzoom2);
 
     } else {
 
@@ -417,7 +417,7 @@ void Builders::buildPolyLine(const Line& _line, PolyLineBuilder& _ctx) {
                 if (cut == 0) {
                     firstCutEnd = i + 1;
                 }
-                buildPolyLineSegment(_line, _ctx, cut, i + 1);
+                buildPolyLineSegment(_line, _ctx, cut, i + 1, _overzoom2);
                 cut = i + 1;
             }
         }
@@ -426,13 +426,13 @@ void Builders::buildPolyLine(const Line& _line, PolyLineBuilder& _ctx) {
             if (cut == 0) {
                 // no tile edge cuts!
                 // loop and close the polygon with no endcaps
-                buildPolyLineSegment(_line, _ctx, 0, lineSize+2, false);
+                buildPolyLineSegment(_line, _ctx, 0, lineSize+2, _overzoom2, false);
             } else {
                 // merge first and last cut line-segments together
-                buildPolyLineSegment(_line, _ctx, cut, firstCutEnd);
+                buildPolyLineSegment(_line, _ctx, cut, firstCutEnd, _overzoom2);
             }
         } else {
-            buildPolyLineSegment(_line, _ctx, cut, lineSize);
+            buildPolyLineSegment(_line, _ctx, cut, lineSize, _overzoom2);
         }
 
     }

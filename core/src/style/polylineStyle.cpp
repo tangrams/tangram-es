@@ -171,10 +171,10 @@ public:
         : StyleBuilder(_style), m_style(_style),
           m_meshData(2) {}
 
-    void addMesh(const Line& _line, const Parameters& _params);
+    void addMesh(const Line& _line, const Parameters& _params, float _overzoom2);
 
     void buildLine(const Line& _line, const typename Parameters::Attributes& _att,
-                   MeshData<V>& _mesh);
+                   MeshData<V>& _mesh, float _overzoom2);
 
     Parameters parseRule(const DrawRule& _rule, const Properties& _props);
 
@@ -192,6 +192,7 @@ private:
     float m_tileUnitsPerMeter;
     float m_tileSizePixels;
     int m_zoom;
+    float m_overzoom2;
 };
 
 template <class V>
@@ -201,6 +202,7 @@ void PolylineStyleBuilder<V>::setup(const Tile& tile) {
 
     // Use the 'style zoom' to evaluate style parameters.
     m_zoom = id.s;
+    m_overzoom2 = powf(2.f, id.s - id.z);
     m_tileUnitsPerMeter = tile.getInverseScale();
     m_tileSizePixels = tile.getProjection()->TileSize();
 
@@ -380,14 +382,14 @@ void PolylineStyleBuilder<V>::addFeature(const Feature& _feat, const DrawRule& _
         params.keepTileEdges = true;
 
         for (auto& line : _feat.lines) {
-            addMesh(line, params);
+            addMesh(line, params, m_overzoom2);
         }
     } else {
         params.closedPolygon = true;
 
         for (auto& polygon : _feat.polygons) {
             for (const auto& line : polygon) {
-                addMesh(line, params);
+                addMesh(line, params, m_overzoom2);
             }
         }
     }
@@ -395,7 +397,7 @@ void PolylineStyleBuilder<V>::addFeature(const Feature& _feat, const DrawRule& _
 
 template <class V>
 void PolylineStyleBuilder<V>::buildLine(const Line& _line, const typename Parameters::Attributes& _att,
-                        MeshData<V>& _mesh) {
+                        MeshData<V>& _mesh, float _overzoom2) {
 
     m_builder.addVertex = [&_mesh, &_att](const glm::vec3& coord,
                                    const glm::vec2& normal,
@@ -404,7 +406,7 @@ void PolylineStyleBuilder<V>::buildLine(const Line& _line, const typename Parame
                               _att.width, _att.height, _att.color});
     };
 
-    Builders::buildPolyLine(_line, m_builder);
+    Builders::buildPolyLine(_line, m_builder, _overzoom2);
 
     _mesh.indices.insert(_mesh.indices.end(),
                          m_builder.indices.begin(),
@@ -417,7 +419,7 @@ void PolylineStyleBuilder<V>::buildLine(const Line& _line, const typename Parame
 }
 
 template <class V>
-void PolylineStyleBuilder<V>::addMesh(const Line& _line, const Parameters& _params) {
+void PolylineStyleBuilder<V>::addMesh(const Line& _line, const Parameters& _params, float _overzoom2) {
 
     m_builder.cap = _params.fill.cap;
     m_builder.join = _params.fill.join;
@@ -425,7 +427,7 @@ void PolylineStyleBuilder<V>::addMesh(const Line& _line, const Parameters& _para
     m_builder.keepTileEdges = _params.keepTileEdges;
     m_builder.closedPolygon = _params.closedPolygon;
 
-    if (_params.lineOn) { buildLine(_line, _params.fill, m_meshData[0]); }
+    if (_params.lineOn) { buildLine(_line, _params.fill, m_meshData[0], _overzoom2); }
 
     if (!_params.outlineOn) { return; }
 
@@ -438,7 +440,7 @@ void PolylineStyleBuilder<V>::addMesh(const Line& _line, const Parameters& _para
         m_builder.join = _params.stroke.join;
         m_builder.miterLimit = _params.stroke.miterLimit;
 
-        buildLine(_line, _params.stroke, m_meshData[1]);
+        buildLine(_line, _params.stroke, m_meshData[1], _overzoom2);
 
     } else {
         auto& fill = m_meshData[0];
