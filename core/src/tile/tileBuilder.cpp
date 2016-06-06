@@ -1,14 +1,11 @@
 #include "tile/tileBuilder.h"
 
-#include "gl/mesh.h"
-
 #include "data/dataSource.h"
-
+#include "gl/mesh.h"
 #include "scene/dataLayer.h"
 #include "scene/scene.h"
 #include "style/style.h"
 #include "tile/tile.h"
-
 
 namespace Tangram {
 
@@ -64,6 +61,16 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
             }
         }
     }
+
+    for (auto& builder : m_styleBuilder) {
+        if (auto* labels = builder.second->labels()) {
+            LOG("add %s", builder.second->style().getName().c_str());
+
+            m_labelLayout.addLabels(*labels);
+        }
+    }
+
+    m_labelLayout.process();
 
     for (auto& builder : m_styleBuilder) {
         tile->setMesh(builder.second->style(), builder.second->build());

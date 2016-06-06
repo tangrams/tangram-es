@@ -42,6 +42,8 @@ void Labels::updateLabels(const View& _view, float _dt,
     // int lodDiscard = LODDiscardFunc(View::s_maxZoom, _view.getZoom());
     float dz = _view.getZoom() - std::floor(_view.getZoom());
 
+    bool allLabels = Tangram::getDebugFlag(DebugFlags::all_labels);
+
     for (const auto& tile : _tiles) {
 
         // discard based on level of detail
@@ -60,7 +62,7 @@ void Labels::updateLabels(const View& _view, float _dt,
             auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
             if (!labelMesh) { continue; }
             for (auto& label : labelMesh->getLabels()) {
-                if (!label->update(mvp, screenSize, dz)) {
+                if (!label->update(mvp, screenSize, dz, allLabels)) {
                     // skip dead labels
                     continue;
                 }
@@ -429,7 +431,11 @@ void Labels::drawDebug(const View& _view) {
             Label::State state = label->state();
             switch (state) {
                 case Label::State::sleep:
-                    Primitives::setColor(0x00ff00);
+                    if (label->parent() && label->parent()->state() == Label::State::dead) {
+                        Primitives::setColor(0xff00ff);
+                    } else {
+                        Primitives::setColor(0x00ff00);
+                    }
                     break;
                 case Label::State::visible:
                     Primitives::setColor(0x000000);
@@ -437,20 +443,23 @@ void Labels::drawDebug(const View& _view) {
                 case Label::State::wait_occ:
                     Primitives::setColor(0x0000ff);
                     break;
+                case Label::State::dead:
+                    Primitives::setColor(0xff00ff);
+                    break;
                 case Label::State::fading_in:
                 case Label::State::fading_out:
                     Primitives::setColor(0xffff00);
                     break;
                 default:
-                    Primitives::setColor(0xff0000);
+                    Primitives::setColor(0x999999);
             }
+
+            Primitives::drawPoly(&(label->obb().getQuad())[0], 4);
 
             if (label->parent()) {
                 Primitives::setColor(0xff0000);
                 Primitives::drawLine(sp, label->parent()->transform().state.screenPos);
             }
-
-            Primitives::drawPoly(&(label->obb().getQuad())[0], 4);
 
             // draw offset
             Primitives::setColor(0x000000);
@@ -459,7 +468,7 @@ void Labels::drawDebug(const View& _view) {
             // draw projected anchor point
             Primitives::setColor(0x0000ff);
             Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
-
+#if 0
             if (label->options().repeatGroup != 0 && label->state() == Label::State::visible) {
                 size_t seed = 0;
                 hash_combine(seed, label->options().repeatGroup);
@@ -478,6 +487,7 @@ void Labels::drawDebug(const View& _view) {
                     Primitives::drawLine(p0, p1);
                 }
             }
+#endif
         }
     }
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "labels/label.h"
-#include "labels/labelSet.h"
 
 #include <glm/glm.hpp>
 

@@ -12,6 +12,7 @@
 namespace Tangram {
 
 struct DrawRule;
+class Label;
 class Light;
 struct LightUniforms;
 class Tile;
@@ -77,6 +78,8 @@ public:
     virtual std::unique_ptr<StyledMesh> build() = 0;
 
     virtual bool checkRule(const DrawRule& _rule) const;
+
+    virtual std::vector<std::unique_ptr<Label>>* labels() { return nullptr; }
 
     virtual const Style& style() const = 0;
 

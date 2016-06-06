@@ -212,12 +212,12 @@ void Label::resetState() {
     m_updateMeshVisibility = true;
     m_dirty = true;
     m_proxy = false;
-    enterState(State::wait_occ, 0.0);
+    //enterState(State::wait_occ, 0.0);
 }
 
-bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract) {
+bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _allLabels) {
 
-    if (m_state == State::dead || (m_parent && m_parent->state() == State::dead)) {
+    if (!_allLabels && (m_state == State::dead || (m_parent && m_parent->state() == State::dead))) {
         return false;
     }
 
@@ -226,7 +226,7 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
         m_occluded = false;
     }
 
-    bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize, !Tangram::getDebugFlag(DebugFlags::all_labels));
+    bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize, _allLabels);
 
     // one of the label rules has not been satisfied
     if (!ruleSatisfied) {
@@ -258,10 +258,10 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
 
 bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
 
-    if (Tangram::getDebugFlag(DebugFlags::all_labels)) {
-        enterState(State::visible, 1.0);
-        return false;
-    }
+    // if (Tangram::getDebugFlag(DebugFlags::all_labels)) {
+    //     enterState(State::visible, 1.0);
+    //     return false;
+    // }
 
     bool animate = false;
 
