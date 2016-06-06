@@ -254,18 +254,15 @@ void Labels::updateLabelSet(const View& _view, float _dt,
     // Broad phase collision detection
     for (auto* label : m_labels) {
         m_aabbs.push_back(label->aabb());
-        m_aabbs.back().m_userData = (void*)label;
     }
 
     m_isect2d.intersect(m_aabbs);
 
     // Narrow Phase, resolve conflicts
     for (auto& pair : m_isect2d.pairs) {
-        const auto& aabb1 = m_aabbs[pair.first];
-        const auto& aabb2 = m_aabbs[pair.second];
 
-        auto l1 = static_cast<Label*>(aabb1.m_userData);
-        auto l2 = static_cast<Label*>(aabb2.m_userData);
+        auto l1 = m_labels[pair.first];
+        auto l2 = m_labels[pair.second];
 
         if (l1->isOccluded() || l2->isOccluded()) {
             // One of this pair is already occluded.
@@ -296,18 +293,24 @@ void Labels::updateLabelSet(const View& _view, float _dt,
             } else {
                 l2->occlude();
             }
-        } else if (l1->visibleState() != l2->visibleState()) {
-            // keep the visible one, different from occludedLastframe
-            // when one lets labels fade out.
-            // (A label is also in visibleState() when skip_transition is set)
-            if (!l1->visibleState()) {
+        // } else if (l1->visibleState() != l2->visibleState()) {
+        //     // keep the visible one, different from occludedLastframe
+        //     // when one lets labels fade out.
+        //     // (A label is also in visibleState() when skip_transition is set)
+        //     if (!l1->visibleState()) {
+        //         l1->occlude();
+        //     } else {
+        //         l2->occlude();
+        //     }
+        } else if (l1->hash() != l2->hash()) {
+            if (l1->hash() < l2->hash()) {
                 l1->occlude();
             } else {
                 l2->occlude();
             }
         } else {
             // just so it is consistent between two instances
-            if (l1->hash() < l2->hash()) {
+            if (l1 < l2) {
                 l1->occlude();
             } else {
                 l2->occlude();
