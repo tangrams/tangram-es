@@ -60,7 +60,6 @@ Node Importer::applySceneImports(const std::string& scenePath) {
 
     auto root = importScenes(scenePath);
 
-    //TODO: clear importer data
     return root;
 }
 

@@ -18,6 +18,7 @@
 #include "style/rasterStyle.h"
 #include "scene/dataLayer.h"
 #include "scene/filters.h"
+#include "scene/importer.h"
 #include "scene/sceneLayer.h"
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
@@ -29,7 +30,6 @@
 #include "csscolorparser.hpp"
 
 #include <vector>
-#include <future>
 #include <algorithm>
 #include <iterator>
 #include <unordered_map>
@@ -47,24 +47,19 @@ const std::string DELIMITER = ":";
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
-// TODO: SceneImporter as static const for SceneLoader might not be a good approach. Make it a
-// member of Scene? How will it affect Scene copy thingy ... when loading a new scene in tangram.cpp
-// Or maybe only allow 1 scene to load at a time, newer scene waits on the previous scene to finish
-// loading.
-const std::unique_ptr<Importer> SceneLoader::sceneImporter(new Importer());
 std::mutex SceneLoader::m_textureMutex;
 
-void SceneLoader::loadScene(const std::string& _scenePath, std::shared_ptr<Scene> _scene,
-        const std::function<void(std::shared_ptr<Scene>&)>& _setScene) {
+bool SceneLoader::loadScene(const std::string& _scenePath, std::shared_ptr<Scene> _scene) {
 
-    std::async(std::launch::async,[&]() {
-                // TODO: wait for sceneImporter to finish a previous importing
-                Node& root = _scene->config();
-                if ( (root = sceneImporter->applySceneImports(_scenePath)) ) {
-                    applyConfig(root, *_scene);
-                    _setScene(_scene);
-                }
-            });
+    Node& root = _scene->config();
+
+    Importer sceneImporter;
+
+    if ( (root = sceneImporter.applySceneImports(_scenePath)) ) {
+        applyConfig(root, *_scene);
+        return true;
+    }
+    return false;
 }
 
 bool SceneLoader::loadConfig(const std::string& _sceneString, Node& root) {

@@ -2,8 +2,6 @@
 
 #include "gl/uniform.h"
 #include "scene/scene.h"
-#include "scene/importer.h"
-
 #include <string>
 #include <vector>
 #include <memory>
@@ -43,8 +41,7 @@ struct StyleUniform {
 struct SceneLoader {
     using Node = YAML::Node;
 
-    static void loadScene(const std::string& _scenePath, std::shared_ptr<Scene> _scene,
-            const std::function<void(std::shared_ptr<Scene>&)>& _setScene);
+    static bool loadScene(const std::string& _scenePath, std::shared_ptr<Scene> _scene);
     static bool loadConfig(const std::string& _sceneString, Node& _root);
     static bool applyConfig(Node& config, Scene& scene);
     static void applyUpdates(Node& root, const std::vector<Scene::Update>& updates);
@@ -91,7 +88,6 @@ struct SceneLoader {
 
     static bool loadStyle(const std::string& styleName, Node config, Scene& scene);
 
-    static const std::unique_ptr<Importer> sceneImporter;
     static std::mutex m_textureMutex;
     SceneLoader() = delete;
 

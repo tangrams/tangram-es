@@ -21,6 +21,8 @@
 #include "util/ease.h"
 #include "debug/textDisplay.h"
 #include "debug/frameInfo.h"
+#include <atomic>
+#include <future>
 #include <memory>
 #include <array>
 #include <cmath>
@@ -34,6 +36,7 @@ const static size_t MAX_WORKERS = 2;
 
 std::mutex m_tilesMutex;
 std::mutex m_tasksMutex;
+std::mutex m_newScenePathMutex;
 std::queue<std::function<void()>> m_tasks;
 std::unique_ptr<TileWorker> m_tileWorker;
 std::unique_ptr<TileManager> m_tileManager;
@@ -41,6 +44,10 @@ std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
 std::unique_ptr<Labels> m_labels;
 std::unique_ptr<InputHandler> m_inputHandler;
+
+std::string m_newScenePath;
+bool m_newScene;
+std::atomic_bool  m_sceneLoading(false);
 
 std::array<Ease, 4> m_eases;
 enum class EaseField { position, zoom, rotation, tilt };
@@ -87,11 +94,6 @@ void initialize(const char* _scenePath) {
 
     loadScene(_scenePath);
 
-    // TODO: Remove the following 3 lines, to be done by setScene
-    //glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
-    //m_view->setPosition(projPos.x, projPos.y);
-    //m_view->setZoom(m_scene->startZoom);
-
     LOG("finish initialize");
 
 }
@@ -125,18 +127,44 @@ void setScene(std::shared_ptr<Scene>& _scene) {
 void loadScene(const char* _scenePath) {
     LOG("Loading scene file: %s", _scenePath);
 
-	// Copy old scene
-    auto scene = std::make_shared<Scene>(*m_scene);
+    {
+        std::lock_guard<std::mutex> lock(m_newScenePathMutex);
+        m_newScenePath = std::string(_scenePath);
+        m_newScene = true;
+    }
 
-    auto scenePath = setResourceRoot(_scenePath);
-    //TODO: consequence of async scene loading on queueSceneUpdate
-    SceneLoader::loadScene(scenePath, scene, setScene);
+    if (m_sceneLoading) { return; }
+
+    m_sceneLoading = true;
+
+    std::async(std::launch::async, [&]() {
+                while(m_newScene) {
+                    std::string scenePath;
+                    {
+                        std::lock_guard<std::mutex> lock(m_newScenePathMutex);
+                        scenePath = setResourceRoot(m_newScenePath.c_str());
+                        m_newScene = false;
+                    }
+
+                    // Copy old scene
+                    auto scene = std::make_shared<Scene>(*m_scene);
+
+                    if (SceneLoader::loadScene(scenePath, scene)) {
+                        Tangram::runOnMainLoop([s = std::move(scene)]() mutable
+                                { Tangram::setScene(s); });
+                    }
+                }
+                m_sceneLoading = false;
+            });
+
+
 }
 
 void queueSceneUpdate(const char* _path, const char* _value) {
     return m_scene->queueUpdate(_path, _value);
 }
 
+//TODO: consequence of async scene loading on queueSceneUpdate
 void applySceneUpdates() {
 
     LOG("Applying scene updates");
