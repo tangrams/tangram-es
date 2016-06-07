@@ -96,8 +96,8 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
     }
 
     glm::vec2 offset = rotateBy(m_options.offset, rotation);
+    m_transform.state.screenPos = screenPosition + glm::vec2(offset.x, -offset.y);
 
-    m_transform.state.screenPos = screenPosition + offset;
     m_transform.state.rotation = rotation;
 
     return true;

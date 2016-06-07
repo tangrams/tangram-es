@@ -377,7 +377,6 @@ void Labels::drawDebug(const View& _view) {
         if (label->type() == Label::Type::debug) { continue; }
 
         glm::vec2 sp = label->transform().state.screenPos;
-        glm::vec2 offset = rotateBy(label->options().offset, label->transform().state.rotation);
 
         // draw bounding box
         switch (label->state()) {
@@ -413,8 +412,10 @@ void Labels::drawDebug(const View& _view) {
         }
 
         // draw offset
+        glm::vec2 rot = label->transform().state.rotation;
+        glm::vec2 offset = rotateBy(label->options().offset, rot);
         Primitives::setColor(0x000000);
-        Primitives::drawLine(sp, sp - offset);
+        Primitives::drawLine(sp, sp - glm::vec2(offset.x, -offset.y));
 
         // draw projected anchor point
         Primitives::setColor(0x0000ff);
