@@ -36,6 +36,7 @@ RPI_BUILD_DIR = build/rpi
 LINUX_BUILD_DIR = build/linux
 TESTS_BUILD_DIR = build/tests
 BENCH_BUILD_DIR = build/bench
+JS_BUILD_DIR = build/js
 
 TOOLCHAIN_DIR = toolchains
 OSX_TARGET = tangram
@@ -150,7 +151,20 @@ LINUX_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=linux \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
 
+JS_CMAKE_PARAMS = \
+	-DPLATFORM_TARGET=emscripten \
+	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/emscripten.toolchain.cmake \
+
 clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux clean-shaders
+
+js: cmake-js ${JS_BUILD_DIR}
+	@cd ${JS_BUILD_DIR} && \
+	${MAKE}
+
+cmake-js:
+	@mkdir -p ${JS_BUILD_DIR}
+	@cd ${JS_BUILD_DIR} && \
+	cmake ../.. ${JS_CMAKE_PARAMS}
 
 clean-android:
 	rm -rf ${ANDROID_BUILD_DIR}
