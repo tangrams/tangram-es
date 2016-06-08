@@ -137,8 +137,9 @@ std::string systemFontFallbackPath(int _importance, int _weightHint) {
     JniThreadBinding jniEnv(jvm);
 
     jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFallbackFilePath, _importance, _weightHint);
-
-    return stringFromJString(jniEnv, returnStr);
+    std::string path = stringFromJString(jniEnv, returnStr);
+    jniEnv->DeleteLocalRef(returnStr);
+    return path;
 }
 
 std::string systemFontPath(const std::string& _family, const std::string& _weight, const std::string& _style) {
@@ -149,8 +150,10 @@ std::string systemFontPath(const std::string& _family, const std::string& _weigh
 
     jstring jkey = jniEnv->NewStringUTF(key.c_str());
     jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFilePath, jkey);
-
-    return stringFromJString(jniEnv, returnStr);
+    std::string path = stringFromJString(jniEnv, returnStr);
+    jniEnv->DeleteLocalRef(jkey);
+    jniEnv->DeleteLocalRef(returnStr);
+    return path;
 }
 
 void setContinuousRendering(bool _isContinuous) {
