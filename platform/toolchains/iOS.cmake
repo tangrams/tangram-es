@@ -1,4 +1,4 @@
-include(${CMAKE_SOURCE_DIR}/toolchains/iOS.toolchain.cmake)
+include(${CMAKE_SOURCE_DIR}/platform/toolchains/iOS.toolchain.cmake)
 
 add_definitions(-DPLATFORM_IOS)
 
@@ -37,13 +37,13 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 set(IOS_EXTENSIONS_FILES *.mm *.cpp *.m)
 foreach(_ext ${IOS_EXTENSIONS_FILES})
     find_sources_and_include_directories(
-        ${PROJECT_SOURCE_DIR}/ios/src/*.h
-        ${PROJECT_SOURCE_DIR}/ios/src/${_ext})
+        ${PROJECT_SOURCE_DIR}/platform/ios/src/*.h
+        ${PROJECT_SOURCE_DIR}/platform/ios/src/${_ext})
 endforeach()
 
 add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes" "${EXECUTABLE_NAME}.app")
 
-file(GLOB_RECURSE IOS_RESOURCES ${PROJECT_SOURCE_DIR}/ios/resources/**)
+file(GLOB_RECURSE IOS_RESOURCES ${PROJECT_SOURCE_DIR}/platform/ios/resources/**)
 string(REGEX REPLACE "[.]DS_Store" "" IOS_RESOURCES "${IOS_RESOURCES}")
 
 macro(add_framework FWNAME APPNAME LIBPATH)
@@ -56,15 +56,15 @@ macro(add_framework FWNAME APPNAME LIBPATH)
     endif()
 endmacro(add_framework)
 
+include_directories(${PROJECT_SOURCE_DIR}/platform/common)
 
 add_executable(${EXECUTABLE_NAME} ${APP_TYPE} ${HEADERS} ${SOURCES} ${RESOURCES} ${IOS_RESOURCES})
 
-target_link_libraries(${EXECUTABLE_NAME}
-  ${CORE_LIBRARY})
+target_link_libraries(${EXECUTABLE_NAME} ${CORE_LIBRARY})
 
 # setting xcode properties
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
-  MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/resources/tangram-Info.plist
+  MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/platform/ios/resources/tangram-Info.plist
   RESOURCE "${IOS_RESOURCES}")
 
 set_xcode_property(${EXECUTABLE_NAME} GCC_GENERATE_DEBUGGING_SYMBOLS YES)

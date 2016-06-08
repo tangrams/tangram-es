@@ -1,6 +1,6 @@
 #pragma once
 
-#include "platform_rpi.h"
+#include "common/platform_common.h"
 #undef countof
 #include "glm/glm.hpp"
 
