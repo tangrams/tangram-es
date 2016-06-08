@@ -650,11 +650,11 @@ public class MapController implements Renderer {
     private native void nativeOnUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private native void nativeOnUrlFailure(long callbackPtr);
 
-    native long nativeAddDataSource(String name);
-    native void nativeRemoveDataSource(long pointer);
-    native void nativeClearDataSource(long pointer);
-    native void nativeAddFeature(long pointer, double[] coordinates, int[] rings, String[] properties);
-    native void nativeAddGeoJson(long pointer, String geojson);
+    synchronized native long nativeAddDataSource(String name);
+    synchronized native void nativeRemoveDataSource(long pointer);
+    synchronized native void nativeClearDataSource(long pointer);
+    synchronized native void nativeAddFeature(long pointer, double[] coordinates, int[] rings, String[] properties);
+    synchronized native void nativeAddGeoJson(long pointer, String geojson);
 
     native void nativeSetDebugFlag(int flag, boolean on);
 
