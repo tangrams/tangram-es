@@ -14,6 +14,7 @@
 #include "gl/primitives.h"
 #include "util/inputHandler.h"
 #include "tile/tileCache.h"
+#include "util/fastmap.h"
 #include "view/view.h"
 #include "data/clientGeoJsonSource.h"
 #include "gl.h"
@@ -22,13 +23,13 @@
 #include "debug/textDisplay.h"
 #include "debug/frameInfo.h"
 #include <atomic>
-#include <future>
 #include <memory>
 #include <array>
 #include <cmath>
 #include <bitset>
 #include <mutex>
 #include <queue>
+#include <thread>
 
 namespace Tangram {
 
@@ -37,6 +38,7 @@ const static size_t MAX_WORKERS = 2;
 std::mutex m_tilesMutex;
 std::mutex m_tasksMutex;
 std::mutex m_newScenePathMutex;
+std::mutex m_sceneMutex;
 std::queue<std::function<void()>> m_tasks;
 std::unique_ptr<TileWorker> m_tileWorker;
 std::unique_ptr<TileManager> m_tileManager;
@@ -45,9 +47,15 @@ std::shared_ptr<View> m_view;
 std::unique_ptr<Labels> m_labels;
 std::unique_ptr<InputHandler> m_inputHandler;
 
+using SceneUpdateData = std::pair<std::string, std::string>;
+// for every scene file store the updates
+fastmap<std::string, std::vector<SceneUpdateData>> m_queuedUpdates;
+
 std::string m_newScenePath;
 bool m_newScene;
-std::atomic_bool  m_sceneLoading(false);
+std::atomic_bool m_sceneLoading(false);
+std::atomic_bool m_sceneUpdating(false);
+std::atomic_bool m_newSceneUpdates(false);
 
 std::array<Ease, 4> m_eases;
 enum class EaseField { position, zoom, rotation, tilt };
@@ -99,7 +107,10 @@ void initialize(const char* _scenePath) {
 }
 
 void setScene(std::shared_ptr<Scene>& _scene) {
-    m_scene = _scene;
+    {
+        std::lock_guard<std::mutex> lock(m_sceneMutex);
+        m_scene = _scene;
+    }
     m_view = _scene->view();
 
     glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
@@ -137,47 +148,95 @@ void loadScene(const char* _scenePath) {
 
     m_sceneLoading = true;
 
-    std::async(std::launch::async, [&]() {
-                while(m_newScene) {
-                    std::string scenePath;
-                    {
-                        std::lock_guard<std::mutex> lock(m_newScenePathMutex);
-                        scenePath = setResourceRoot(m_newScenePath.c_str());
-                        m_newScene = false;
-                    }
-
-                    // Copy old scene
-                    auto scene = std::make_shared<Scene>(*m_scene);
-
-                    if (SceneLoader::loadScene(scenePath, scene)) {
-                        Tangram::runOnMainLoop([s = std::move(scene)]() mutable
-                                { Tangram::setScene(s); });
-                    }
+    std::thread t([&]() {
+            while(m_newScene) {
+                std::string scenePath;
+                {
+                    std::lock_guard<std::mutex> lock(m_newScenePathMutex);
+                    scenePath = setResourceRoot(m_newScenePath.c_str());
+                    m_newScene = false;
                 }
-                m_sceneLoading = false;
-            });
 
+                // Copy old scene
+                std::shared_ptr<Scene> scene;
+                {
+                    std::lock_guard<std::mutex> lock(m_sceneMutex);
+                    scene = std::make_shared<Scene>(*m_scene);
+                }
 
+                if (SceneLoader::loadScene(scenePath, scene)) {
+                    Tangram::runOnMainLoop([scenePath = scenePath, s = std::move(scene)]() mutable {
+                                if (s->id < m_scene->id) { return; }
+                                Tangram::setScene(s);
+                                bool sceneUpdateRqd = false;
+                                {
+                                    std::lock_guard<std::mutex> lock(m_newScenePathMutex);
+                                    auto& sceneUpdates = m_queuedUpdates[scenePath];
+                                    // queue this scene's updates saved in m_queuedUpdates
+                                    for (size_t i = 0; i < sceneUpdates.size(); i++) {
+                                        sceneUpdateRqd = true;
+                                        auto sceneUpdateData = sceneUpdates.back();
+                                        sceneUpdates.pop_back();
+                                        s->queueUpdate(sceneUpdateData.first, sceneUpdateData.second);
+                                    }
+                                }
+                                if (sceneUpdateRqd) { Tangram::applySceneUpdates(); }
+                                requestRender();
+                            });
+                    requestRender();
+                }
+            }
+            m_sceneLoading = false;
+        });
+    t.detach();
 }
 
 void queueSceneUpdate(const char* _path, const char* _value) {
+    if (m_sceneLoading) {
+        std::lock_guard<std::mutex> lock(m_newScenePathMutex);
+        auto scenePath = setResourceRoot(m_newScenePath.c_str());
+        m_queuedUpdates[scenePath].emplace_back(_path, _value);
+        return;
+    }
     return m_scene->queueUpdate(_path, _value);
 }
 
-//TODO: consequence of async scene loading on queueSceneUpdate
 void applySceneUpdates() {
 
     LOG("Applying scene updates");
 
-    SceneLoader::applyUpdates(m_scene->config(), m_scene->updates());
-    m_scene->clearUpdates();
+    m_newSceneUpdates = true;
 
-    auto scene = std::make_shared<Scene>(*m_scene);
+    if (m_sceneUpdating) { return; }
 
-    if (SceneLoader::applyConfig(scene->config(), *scene)) {
-        setScene(scene);
-    }
+    m_sceneUpdating = true;
 
+    std::thread t([&]() {
+        while(m_newSceneUpdates) {
+            m_newSceneUpdates = false;
+
+            std::shared_ptr<Scene> scene;
+            {
+                std::lock_guard<std::mutex> lock(m_sceneMutex);
+                scene = std::make_shared<Scene>(*m_scene);
+            }
+
+            if (scene->updates().empty()) { break; }
+            SceneLoader::applyUpdates(scene->config(), scene->updates());
+            scene->clearUpdates();
+
+            if (SceneLoader::applyConfig(scene->config(), *scene)) {
+                Tangram::runOnMainLoop([s = std::move(scene)]() mutable {
+                        if (s->id < m_scene->id) { return; }
+                        Tangram::setScene(s);
+                        requestRender();
+                    });
+                requestRender();
+            }
+        }
+        m_sceneUpdating = false;
+    });
+    t.detach();
 }
 
 void resize(int _newWidth, int _newHeight) {
