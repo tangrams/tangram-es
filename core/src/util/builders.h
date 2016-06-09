@@ -130,7 +130,7 @@ public:
      * @_options parameters for polyline construction
      * @_ctx output vectors, see <PolyLineBuilder>
      */
-    static void buildPolyLine(const Line& _line, PolyLineBuilder& _ctx, float _overzoom2);
+    static void buildPolyLine(const Line& _line, PolyLineBuilder& _ctx);
 
     /* Build a tesselated quad centered on _screenOrigin
      * @_screenOrigin the sprite origin in screen space

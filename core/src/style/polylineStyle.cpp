@@ -399,14 +399,21 @@ template <class V>
 void PolylineStyleBuilder<V>::buildLine(const Line& _line, const typename Parameters::Attributes& _att,
                         MeshData<V>& _mesh) {
 
-    m_builder.addVertex = [&_mesh, &_att](const glm::vec3& coord,
-                                   const glm::vec2& normal,
-                                   const glm::vec2& uv) {
-        _mesh.vertices.push_back({{ coord.x,coord.y }, normal, uv,
-                              _att.width, _att.height, _att.color});
-    };
 
-    Builders::buildPolyLine(_line, m_builder, m_overzoom2);
+    if (m_overzoom2 == 1.f) {
+        m_builder.addVertex = [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
+            _mesh.vertices.push_back({{ coord.x,coord.y }, normal, uv,
+                                        _att.width, _att.height, _att.color});
+        };
+
+    } else {
+        float zoom = m_overzoom2;
+        m_builder.addVertex = [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
+            _mesh.vertices.push_back({{ coord.x,coord.y }, normal, { uv.x, uv.y * zoom },
+                                      _att.width, _att.height, _att.color});
+        };
+    }
+    Builders::buildPolyLine(_line, m_builder);
 
     _mesh.indices.insert(_mesh.indices.end(),
                          m_builder.indices.begin(),
