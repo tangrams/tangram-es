@@ -4,6 +4,7 @@
 #include "util/fastmap.h"
 #include <list>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -133,6 +134,7 @@ private:
     std::shared_ptr<FontContext> m_fontContext;
 
     animate m_animated = none;
+    std::mutex m_updatesMutex;
 };
 
 }

@@ -96,6 +96,7 @@ std::shared_ptr<Texture> Scene::getTexture(const std::string& textureName) const
 
 void Scene::queueUpdate(std::string path, std::string value) {
     auto keys = splitString(path, COMPONENT_PATH_DELIMITER);
+    std::lock_guard<std::mutex> lock(m_updatesMutex);
     m_updates.push_back({ keys, value });
 }
 
