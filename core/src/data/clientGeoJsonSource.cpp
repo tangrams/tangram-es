@@ -31,6 +31,7 @@ Point transformPoint(geojsonvt::TilePoint pt) {
 ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::string& _url, int32_t _maxZoom)
     : DataSource(_name, _url, _maxZoom) {
 
+    m_generateGeometry = true;
     if (!_url.empty()) {
         // Load from file
         const auto& string = stringFromFile(_url.c_str(), PathType::resource);
