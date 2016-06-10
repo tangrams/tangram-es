@@ -120,7 +120,7 @@ void PolylineStyle::constructShaderProgram() {
 
     if (m_dashArray.size() > 0 || m_texture) {
         m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_TEXTURE\n", false);
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_ALPHA_TEST 0.5\n", false);
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_ALPHA_TEST 0.25\n", false);
     }
 
     m_shaderProgram->setSourceStrings(SHADER_SOURCE(polyline_fs),
