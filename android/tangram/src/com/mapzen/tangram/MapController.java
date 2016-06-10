@@ -635,6 +635,16 @@ public class MapController implements Renderer {
         nativeApplySceneUpdates();
     }
 
+    /**
+     * Whether to invalidate Open GL render state cachin between two frames.
+     * Usually Tangram would cache render state to reduce rendundant Open GL state changes.
+     * By default, invalidation is on. If you are concerned about efficiency and assume that
+     * your application doesn't modify the GL context, you can safely set invalidation to false.
+     */
+    public void invalidateGLStates(boolean invalidate) {
+        nativeInvalidateGLStates(invalidate);
+    }
+
     // Native methods
     // ==============
 
@@ -674,6 +684,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeQueueSceneUpdate(String componentPath, String value);
     private synchronized native void nativeApplySceneUpdates();
     private synchronized native void nativePickFeature(float posX, float posY, FeaturePickListener listener);
+    private synchronized native void nativeInvalidateGLStates(boolean invalidate);
 
     private native void nativeOnUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private native void nativeOnUrlFailure(long callbackPtr);

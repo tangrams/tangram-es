@@ -232,6 +232,10 @@ extern "C" {
         Tangram::setDebugFlag(static_cast<Tangram::DebugFlags>(flag), on);
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeInvalidateGLStates(JNIEnv* jniEnv, jobject obj, jboolean invalidate) {
+        Tangram::invalidateGLStates(invalidate);
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeQueueSceneUpdate(JNIEnv* jnienv, jobject obj, jstring path, jstring value) {
         const char* cPath = jnienv->GetStringUTFChars(path, NULL);
         const char* cValue = jnienv->GetStringUTFChars(value, NULL);
