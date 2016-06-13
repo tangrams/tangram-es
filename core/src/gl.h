@@ -9,6 +9,9 @@
 #if defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI)
 typedef long GLsizeiptr;
 typedef long GLintptr;
+#elif defined(PLATFORM_TIZEN)
+typedef signed long int  GLsizeiptr;
+typedef signed long int  GLintptr;
 #else
 #include <stddef.h>
 typedef ptrdiff_t GLsizeiptr;
@@ -96,7 +99,7 @@ typedef char            GLchar;
 #define GL_INVALID_VALUE                0x0501
 #define GL_INVALID_OPERATION            0x0502
 #define GL_OUT_OF_MEMORY                0x0505
-#define GL_INVALID_FRAMEBUFFER_OPERATION  0x0506
+#define GL_INVALID_FRAMEBUFFER_OPERATION 0x0506
 
 /* Data types */
 #define GL_BYTE                         0x1400
@@ -281,6 +284,8 @@ typedef char            GLchar;
 
 extern "C" {
 
+#ifndef PLATFORM_TIZEN
+
     GL_APICALL GLenum GL_APIENTRY glGetError(void);
     GL_APICALL const GLubyte* GL_APIENTRY glGetString(GLenum name);
 
@@ -422,4 +427,209 @@ extern "C" {
     GL_APICALL void GL_APIENTRY glGenVertexArrays(GLsizei n, GLuint *arrays);
 #endif
 
+#else // PLATFORM_TIZEN
+
+    GLenum __glGetError(void);
+    const GLubyte* __glGetString(GLenum name);
+
+    void __glClear(GLbitfield mask);
+    void __glLineWidth(GLfloat width);
+    void __glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+
+    void __glEnable(GLenum);
+    void __glDisable(GLenum);
+    void __glDepthFunc(GLenum func);
+    void __glDepthMask(GLboolean flag);
+    void __glDepthRangef(GLfloat n, GLfloat f);
+    void __glClearDepthf(GLfloat d);
+    void __glBlendFunc(GLenum sfactor, GLenum dfactor);
+    void __glStencilFunc(GLenum func, GLint ref, GLuint mask);
+    void __glStencilMask(GLuint mask);
+    void __glStencilOp(GLenum fail, GLenum zfail, GLenum zpass);
+    void __glClearStencil(GLint s);
+    void __glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
+    void __glCullFace(GLenum mode);
+    void __glFrontFace(GLenum mode);
+    void __glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
+    void __glGetIntegerv(GLenum pname, GLint *params );
+
+    // Program
+    void __glUseProgram(GLuint program);
+    void __glDeleteProgram(GLuint program);
+    void __glDeleteShader(GLuint shader);
+    GLuint __glCreateShader(GLenum type);
+    GLuint __glCreateProgram();
+    void __glCompileShader(GLuint shader);
+    void __glAttachShader(GLuint program, GLuint shader);
+    void __glLinkProgram(GLuint program);
+    void __glShaderSource(GLuint shader, GLsizei count, const GLchar *const*string, const GLint *length);
+    void __glGetShaderInfoLog(GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
+    void __glGetProgramInfoLog(GLuint program, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
+    GLint __glGetUniformLocation(GLuint program, const GLchar *name);
+    GLint __glGetAttribLocation(GLuint program, const GLchar *name);
+    void __glGetProgramiv(GLuint program, GLenum pname, GLint *params);
+    void __glGetShaderiv(GLuint shader, GLenum pname, GLint *params);
+
+    // Buffers
+    void __glBindBuffer(GLenum target, GLuint buffer);
+    void __glDeleteBuffers(GLsizei n, const GLuint *buffers);
+    void __glGenBuffers(GLsizei n, GLuint *buffers);
+    void __glBufferData(GLenum target, GLsizeiptr size, const void *data, GLenum usage);
+    void __glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void *data);
+
+    // Texture
+    void __glBindTexture(GLenum target, GLuint texture );
+    void __glActiveTexture(GLenum texture);
+    void __glGenTextures(GLsizei n, GLuint *textures );
+    void __glDeleteTextures(GLsizei n, const GLuint *textures);
+    void __glTexParameteri(GLenum target, GLenum pname, GLint param );
+    void __glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
+
+    void __glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels);
+
+    void __glGenerateMipmap(GLenum target);
+
+
+    void __glEnableVertexAttribArray(GLuint index);
+    void __glDisableVertexAttribArray(GLuint index);
+    void __glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized,
+                                GLsizei stride, const void *pointer);
+
+    void __glDrawArrays(GLenum mode, GLint first, GLsizei count );
+    void __glDrawElements(GLenum mode, GLsizei count,
+                         GLenum type, const GLvoid *indices );
+
+    void __glUniform1f(GLint location, GLfloat v0);
+    void __glUniform2f(GLint location, GLfloat v0, GLfloat v1);
+    void __glUniform3f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
+    void __glUniform4f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
+
+    void __glUniform1i(GLint location, GLint v0);
+    void __glUniform2i(GLint location, GLint v0, GLint v1);
+    void __glUniform3i(GLint location, GLint v0, GLint v1, GLint v2);
+    void __glUniform4i(GLint location, GLint v0, GLint v1, GLint v2, GLint v3);
+
+    void __glUniform1fv(GLint location, GLsizei count, const GLfloat *value);
+    void __glUniform2fv(GLint location, GLsizei count, const GLfloat *value);
+    void __glUniform3fv(GLint location, GLsizei count, const GLfloat *value);
+    void __glUniform4fv(GLint location, GLsizei count, const GLfloat *value);
+    void __glUniform1iv(GLint location, GLsizei count, const GLint *value);
+    void __glUniform2iv(GLint location, GLsizei count, const GLint *value);
+    void __glUniform3iv(GLint location, GLsizei count, const GLint *value);
+    void __glUniform4iv(GLint location, GLsizei count, const GLint *value);
+
+    void __glUniformMatrix2fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+    void __glUniformMatrix3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+    void __glUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+
+    // mapbuffer
+    void* __glMapBuffer(GLenum target, GLenum access);
+    GLboolean __glUnmapBuffer(GLenum target);
+
+    void __glFinish(void);
+
+    // VAO
+    void __glBindVertexArray(GLuint array);
+    void __glDeleteVertexArrays(GLsizei n, const GLuint *arrays);
+    void __glGenVertexArrays(GLsizei n, GLuint *arrays);
+
+    #define glGetError __glGetError
+    #define glGetString __glGetString
+
+    #define glClear __glClear
+    #define glLineWidth __glLineWidth
+    #define glViewport __glViewport
+
+    #define glEnable __glEnable
+    #define glDisable __glDisable
+    #define glDepthFunc __glDepthFunc
+    #define glDepthMask __glDepthMask
+    #define glDepthRangef __glDepthRangef
+    #define glClearDepthf __glClearDepthf
+    #define glBlendFunc __glBlendFunc
+    #define glStencilFunc __glStencilFunc
+    #define glStencilMask __glStencilMask
+    #define glStencilOp __glStencilOp
+    #define glClearStencil __glClearStencil
+    #define glColorMask __glColorMask
+    #define glCullFace __glCullFace
+    #define glFrontFace __glFrontFace
+    #define glClearColor __glClearColor
+    #define glGetIntegerv __glGetIntegerv
+
+    // Program
+    #define glUseProgram __glUseProgram
+    #define glDeleteProgram __glDeleteProgram
+    #define glDeleteShader __glDeleteShader
+    #define glCreateShader __glCreateShader
+    #define glCreateProgram __glCreateProgram
+    #define glCompileShader __glCompileShader
+    #define glAttachShader __glAttachShader
+    #define glLinkProgram __glLinkProgram
+    #define glShaderSource __glShaderSource
+    #define glGetShaderInfoLog __glGetShaderInfoLog
+    #define glGetProgramInfoLog __glGetProgramInfoLog
+    #define glGetUniformLocation __glGetUniformLocation
+    #define glGetAttribLocation __glGetAttribLocation
+    #define glGetProgramiv __glGetProgramiv
+    #define glGetShaderiv __glGetShaderiv
+
+    // Buffers
+    #define glBindBuffer __glBindBuffer
+    #define glDeleteBuffers __glDeleteBuffers
+    #define glGenBuffers __glGenBuffers
+    #define glBufferData __glBufferData
+    #define glBufferSubData __glBufferSubData
+
+    // Texture
+    #define glBindTexture __glBindTexture
+    #define glActiveTexture __glActiveTexture
+    #define glGenTextures __glGenTextures
+    #define glDeleteTextures __glDeleteTextures
+    #define glTexParameteri __glTexParameteri
+    #define glTexImage2D __glTexImage2D
+    #define glTexSubImage2D __glTexSubImage2D
+    #define glGenerateMipmap __glGenerateMipmap
+
+
+    #define glEnableVertexAttribArray __glEnableVertexAttribArray
+    #define glDisableVertexAttribArray __glDisableVertexAttribArray
+    #define glVertexAttribPointer __glVertexAttribPointer
+    #define glDrawArrays __glDrawArrays
+    #define glDrawElements __glDrawElements
+    #define glUniform1f __glUniform1f
+    #define glUniform2f __glUniform2f
+    #define glUniform3f __glUniform3f
+    #define glUniform4f __glUniform4f
+
+    #define glUniform1i __glUniform1i
+    #define glUniform2i __glUniform2i
+    #define glUniform3i __glUniform3i
+    #define glUniform4i __glUniform4i
+
+    #define glUniform1fv __glUniform1fv
+    #define glUniform2fv __glUniform2fv
+    #define glUniform3fv __glUniform3fv
+    #define glUniform4fv __glUniform4fv
+    #define glUniform1iv __glUniform1iv
+    #define glUniform2iv __glUniform2iv
+    #define glUniform3iv __glUniform3iv
+    #define glUniform4iv __glUniform4iv
+
+    #define glUniformMatrix2fv __glUniformMatrix2fv
+    #define glUniformMatrix3fv __glUniformMatrix3fv
+    #define glUniformMatrix4fv __glUniformMatrix4fv
+
+    // mapbuffer
+    #define glMapBuffer __glMapBuffer
+    #define glUnmapBuffer __glUnmapBuffer
+
+    #define glFinish __glFinish
+
+    // VAO
+    #define glBindVertexArray __glBindVertexArray
+    #define glDeleteVertexArrays __glDeleteVertexArrays
+    #define glGenVertexArrays __glGenVertexArrays
+
+#endif
 };
