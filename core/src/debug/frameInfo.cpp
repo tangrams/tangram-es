@@ -126,19 +126,25 @@ void FrameInfo::draw(const View& _view, TileManager& _tileManager, float _pixels
         }
 
         if (getDebugFlag(DebugFlags::stats)) {
+            const int scale = 5 * _pixelsPerPoint;
             int i = 0;
+
+            Primitives::setColor(0xfff000);
             for (float t : cputime) {
                 i += 4 * _pixelsPerPoint;
-                Primitives::setColor(0xfff000);
-                Primitives::drawLine(glm::vec2(i, 0), glm::vec2(i, t * 5));
+                Primitives::drawLine(glm::vec2(i, 0), glm::vec2(i, t * scale));
             }
 
             i = 2 * _pixelsPerPoint;
+            Primitives::setColor(0x0000ff);
             for (float t : rendertime) {
                 i += 4 * _pixelsPerPoint;
-                Primitives::setColor(0x0000ff);
-                Primitives::drawLine(glm::vec2(i, 0), glm::vec2(i, t * 5));
+                Primitives::drawLine(glm::vec2(i, 0), glm::vec2(i, t * scale));
             }
+
+            Primitives::setColor(0xff0000);
+            Primitives::drawLine(glm::vec2(0.0, 16.6 * scale),
+                glm::vec2(DEBUG_STATS_MAX_SIZE * 4 * _pixelsPerPoint + 4, 16.6 * scale));
         }
     }
 }
