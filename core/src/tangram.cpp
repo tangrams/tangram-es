@@ -44,6 +44,8 @@ std::unique_ptr<Labels> m_labels;
 std::unique_ptr<Skybox> m_skybox;
 std::unique_ptr<InputHandler> m_inputHandler;
 
+float m_pixelsPerPoint = 1;
+
 std::array<Ease, 4> m_eases;
 enum class EaseField { position, zoom, rotation, tilt };
 void setEase(EaseField _f, Ease _e) {
@@ -57,6 +59,7 @@ void clearEase(EaseField _f) {
 
 static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
+
 
 void initialize(const char* _scenePath) {
 
@@ -273,7 +276,7 @@ void render() {
 
     m_labels->drawDebug(*m_view);
 
-    FrameInfo::draw(*m_view, *m_tileManager);
+    FrameInfo::draw(*m_view, *m_tileManager, m_pixelsPerPoint);
 }
 
 void setPositionNow(double _lon, double _lat) {
@@ -413,6 +416,7 @@ void screenToWorldCoordinates(double& _x, double& _y) {
 }
 
 void setPixelScale(float _pixelsPerPoint) {
+    m_pixelsPerPoint = _pixelsPerPoint;
 
     if (m_view) {
         m_view->setPixelScale(_pixelsPerPoint);

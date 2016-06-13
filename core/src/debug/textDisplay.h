@@ -46,12 +46,12 @@ public:
 
     /* Stack the log message to be displayed in the screen log */
     void log(const char* fmt, ...);
+    void draw(const std::string& _text, int _posx, int _posy);
 
 private:
 
     TextDisplay();
 
-    void draw(const std::string& _text, int _posx, int _posy);
 
     glm::vec2 m_textDisplayResolution;
     bool m_initialized;

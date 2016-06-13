@@ -12,7 +12,7 @@ struct FrameInfo {
 
     static void endUpdate();
 
-    static void draw(const View& _view, TileManager& _tileManager);
+    static void draw(const View& _view, TileManager& _tileManager, float _pixelsPerPoint);
 };
 
 }
