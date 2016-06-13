@@ -9,6 +9,8 @@ all: android osx ios
 .PHONY: clean-linux
 .PHONY: clean-benchmark
 .PHONY: clean-shaders
+.PHONY: clean-tizen-arm
+.PHONY: clean-tizen-x86
 .PHONY: android
 .PHONY: osx
 .PHONY: xcode
@@ -36,6 +38,8 @@ RPI_BUILD_DIR = build/rpi
 LINUX_BUILD_DIR = build/linux
 TESTS_BUILD_DIR = build/tests
 BENCH_BUILD_DIR = build/bench
+TIZEN_ARM_BUILD_DIR = build/tizen-arm
+TIZEN_X86_BUILD_DIR = build/tizen-x86
 
 TOOLCHAIN_DIR = toolchains
 OSX_TARGET = tangram
@@ -150,7 +154,35 @@ LINUX_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=linux \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
 
-clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux clean-shaders
+ifndef TIZEN_PROFILE
+	TIZEN_PROFILE=mobile
+endif
+
+ifndef TIZEN_VERSION
+	TIZEN_VERSION=3.0
+endif
+
+TIZEN_ARM_CMAKE_PARAMS = \
+        ${BUILD_TYPE} \
+        ${CMAKE_OPTIONS} \
+	-DTIZEN_SDK=$$TIZEN_SDK \
+	-DTIZEN_SYSROOT=$$TIZEN_SDK/platforms/tizen-${TIZEN_VERSION}/${TIZEN_PROFILE}/rootstraps/${TIZEN_PROFILE}-${TIZEN_VERSION}-device.core \
+	-DTIZEN_DEVICE=1 \
+	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/tizen.toolchain.cmake \
+	-DPLATFORM_TARGET=tizen \
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
+
+TIZEN_X86_CMAKE_PARAMS = \
+	${BUILD_TYPE} \
+	${CMAKE_OPTIONS} \
+	-DTIZEN_SDK=$$TIZEN_SDK \
+	-DTIZEN_SYSROOT=$$TIZEN_SDK/platforms/tizen-${TIZEN_VERSION}/${TIZEN_PROFILE}/rootstraps/${TIZEN_PROFILE}-${TIZEN_VERSION}-emulator.core \
+	-DTIZEN_DEVICE=0 \
+	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/tizen.toolchain.cmake \
+	-DPLATFORM_TARGET=tizen \
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
+
+clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux clean-shaders clean-tizen-arm clean-tizen-x86
 
 clean-android:
 	rm -rf ${ANDROID_BUILD_DIR}
@@ -183,6 +215,12 @@ clean-benchmark:
 
 clean-shaders:
 	rm -rf core/include/shaders/*.h
+
+clean-tizen-arm:
+	rm -rf ${TIZEN_ARM_BUILD_DIR}
+
+clean-tizen-x86:
+	rm -rf ${TIZEN_X86_BUILD_DIR}
 
 android: android-demo-apk
 	@echo "run: 'adb install -r android/demo/build/outputs/apk/demo-debug.apk'"
@@ -270,6 +308,24 @@ cmake-linux:
 	cd ${LINUX_BUILD_DIR} &&\
 	cmake ../.. ${LINUX_CMAKE_PARAMS}
 
+tizen-arm: cmake-tizen-arm
+	cd ${TIZEN_ARM_BUILD_DIR} && \
+	${MAKE}
+
+cmake-tizen-arm:
+	mkdir -p ${TIZEN_ARM_BUILD_DIR}
+	cd ${TIZEN_ARM_BUILD_DIR} &&\
+	cmake ../.. ${TIZEN_ARM_CMAKE_PARAMS}
+
+tizen-x86: cmake-tizen-x86
+	cd ${TIZEN_X86_BUILD_DIR} && \
+	${MAKE}
+
+cmake-tizen-x86:
+	mkdir -p ${TIZEN_X86_BUILD_DIR}
+	cd ${TIZEN_X86_BUILD_DIR} && \
+	cmake ../.. ${TIZEN_X86_CMAKE_PARAMS}
+
 tests: unit-tests
 
 unit-tests:
@@ -309,4 +365,3 @@ android-debug:
 android-debug-attach:
 	@cd android/demo &&           \
 	python2 $$ANDROID_NDK/ndk-gdb.py --verbose
-
