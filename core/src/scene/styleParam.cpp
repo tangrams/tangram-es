@@ -230,8 +230,10 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         if (_value == "false") { return false; }
         LOGW("Bool value required for capitalized/visible. Using Default.");
         break;
-    case StyleParamKey::order:
     case StyleParamKey::text_order:
+        LOGW("text:order parameter is ignored.");
+        break;
+    case StyleParamKey::order:
     case StyleParamKey::outline_order:
     case StyleParamKey::priority:
     case StyleParamKey::text_priority: {

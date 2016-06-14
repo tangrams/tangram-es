@@ -281,7 +281,9 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
     p.stroke.miterLimit = p.fill.miterLimit;
 
     auto& strokeWidth = _rule.findParameter(StyleParamKey::outline_width);
-    if (!p.lineOn || !_rule.findParameter(StyleParamKey::outline_style)) {
+    bool outlineVisible = true;
+    _rule.get(StyleParamKey::outline_visible, outlineVisible);
+    if ( outlineVisible && (!p.lineOn || !_rule.findParameter(StyleParamKey::outline_style)) ) {
         if (strokeWidth |
             _rule.get(StyleParamKey::outline_order, stroke.order) |
             _rule.get(StyleParamKey::outline_cap, cap) |
