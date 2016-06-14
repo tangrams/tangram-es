@@ -39,10 +39,25 @@ namespace RenderState {
         return GL_TEXTURE0 + _unit;
     }
 
-    void bindVertexBuffer(GLuint _id) { GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, _id)); }
-    void bindIndexBuffer(GLuint _id) { GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _id)); }
-    void activeTextureUnit(GLuint _unit) { GL_CHECK(glActiveTexture(getTextureUnit(_unit))); }
-    void bindTexture(GLenum _target, GLuint _textureId) { GL_CHECK(glBindTexture(_target, _textureId)); }
+    static size_t max = std::numeric_limits<size_t>::max();
+
+    void bindVertexBuffer(GLuint _id) {
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, _id));
+    }
+
+    void bindIndexBuffer(GLuint _id) {
+        GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _id));
+    }
+
+    void activeTextureUnit(GLuint _unit) {
+        // current texture unit is changing, invalidate current texture binding:
+        texture.init(GL_TEXTURE_2D, max, false);
+        GL_CHECK(glActiveTexture(getTextureUnit(_unit)));
+    }
+
+    void bindTexture(GLenum _target, GLuint _textureId) {
+        GL_CHECK(glBindTexture(_target, _textureId));
+    }
 
     void configure() {
         s_textureUnit = -1;
@@ -62,7 +77,6 @@ namespace RenderState {
         GL_CHECK(glClearDepthf(1.0));
         GL_CHECK(glDepthRangef(0.0, 1.0));
 
-        static size_t max = std::numeric_limits<size_t>::max();
 
         clearColor.init(0.0, 0.0, 0.0, 0.0);
         shaderProgram.init(max, false);
