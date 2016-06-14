@@ -73,7 +73,7 @@ void TileWorker::run(Worker* instance) {
             }
 
             if (!builder) {
-                LOGE("Missing Scene/StyleContext in TileWorker!");
+                LOGD("Missing Scene/StyleContext in TileWorker");
                 continue;
             }
 

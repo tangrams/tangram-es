@@ -154,6 +154,7 @@ bool getDebugFlag(DebugFlags _flag);
 void toggleDebugFlag(DebugFlags _flag);
 
 void runOnMainLoop(std::function<void()> _task);
+void runAsyncTask(std::function<void()> _task);
 
 struct TouchItem {
     std::shared_ptr<Properties> properties;

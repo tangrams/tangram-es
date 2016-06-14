@@ -37,7 +37,6 @@ const static size_t MAX_WORKERS = 2;
 
 std::mutex m_tilesMutex;
 std::mutex m_tasksMutex;
-std::mutex m_newScenePathMutex;
 std::mutex m_sceneMutex;
 std::queue<std::function<void()>> m_tasks;
 std::unique_ptr<TileWorker> m_tileWorker;
@@ -47,12 +46,7 @@ std::shared_ptr<View> m_view;
 std::unique_ptr<Labels> m_labels;
 std::unique_ptr<InputHandler> m_inputHandler;
 
-using SceneUpdateData = std::pair<std::string, std::string>;
-// for every scene file store the updates
-fastmap<std::string, std::vector<SceneUpdateData>> m_queuedUpdates;
-
-std::string m_newScenePath;
-bool m_newScene;
+std::shared_ptr<Scene> m_nextScene;
 std::atomic_bool m_sceneLoading(false);
 std::atomic_bool m_sceneUpdating(false);
 std::atomic_bool m_newSceneUpdates(false);
@@ -72,6 +66,58 @@ static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
 static bool g_cacheGlState = false;
 
+
+class AsyncWorker {
+public:
+
+    AsyncWorker() {
+        thread = std::thread(&AsyncWorker::run, this);
+    }
+
+    ~AsyncWorker() {
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            m_running = false;
+        }
+        m_condition.notify_all();
+        thread.join();
+    }
+
+    void enqueue(std::function<void()> _task) {
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            if (!m_running) { return; }
+
+            m_queue.push_back(std::move(_task));
+        }
+        m_condition.notify_one();
+    }
+
+private:
+
+    void run() {
+        while (true) {
+            std::function<void()> task;
+            {
+                std::unique_lock<std::mutex> lock(m_mutex);
+                m_condition.wait(lock, [&]{ return !m_running || !m_queue.empty(); });
+                if (!m_running) { break; }
+
+                task = std::move(m_queue.front());
+                m_queue.pop_front();
+            }
+            task();
+        }
+    }
+
+    std::thread thread;
+    bool m_running = true;
+    std::condition_variable m_condition;
+    std::mutex m_mutex;
+    std::deque<std::function<void()>> m_queue;
+};
+
+AsyncWorker m_asyncWorker;
 
 void initialize(const char* _scenePath) {
 
@@ -109,6 +155,8 @@ void initialize(const char* _scenePath) {
 void setScene(std::shared_ptr<Scene>& _scene) {
     {
         std::lock_guard<std::mutex> lock(m_sceneMutex);
+        _scene->view()->setSize(m_scene->view()->getWidth(), m_scene->view()->getHeight());
+
         m_scene = _scene;
     }
     m_view = _scene->view();
@@ -138,105 +186,73 @@ void setScene(std::shared_ptr<Scene>& _scene) {
 void loadScene(const char* _scenePath) {
     LOG("Loading scene file: %s", _scenePath);
 
-    {
-        std::lock_guard<std::mutex> lock(m_newScenePathMutex);
-        m_newScenePath = std::string(_scenePath);
-        m_newScene = true;
-    }
+    m_nextScene = std::make_shared<Scene>(_scenePath);
 
-    if (m_sceneLoading) { return; }
+    Tangram::runAsyncTask([scene = m_nextScene](){
 
-    m_sceneLoading = true;
+            auto scenePath = setResourceRoot(scene->path().c_str());
 
-    std::thread t([&]() {
-            while(m_newScene) {
-                std::string scenePath;
-                {
-                    std::lock_guard<std::mutex> lock(m_newScenePathMutex);
-                    scenePath = setResourceRoot(m_newScenePath.c_str());
-                    m_newScene = false;
-                }
-
-                // Copy old scene
-                std::shared_ptr<Scene> scene;
-                {
-                    std::lock_guard<std::mutex> lock(m_sceneMutex);
-                    scene = std::make_shared<Scene>(*m_scene);
-                }
-
-                if (SceneLoader::loadScene(scenePath, scene)) {
-                    Tangram::runOnMainLoop([scenePath = scenePath, s = std::move(scene)]() mutable {
-                                if (s->id < m_scene->id) { return; }
-                                Tangram::setScene(s);
-                                bool sceneUpdateRqd = false;
-                                {
-                                    std::lock_guard<std::mutex> lock(m_newScenePathMutex);
-                                    auto& sceneUpdates = m_queuedUpdates[scenePath];
-                                    // queue this scene's updates saved in m_queuedUpdates
-                                    for (size_t i = 0; i < sceneUpdates.size(); i++) {
-                                        sceneUpdateRqd = true;
-                                        auto sceneUpdateData = sceneUpdates.back();
-                                        sceneUpdates.pop_back();
-                                        s->queueUpdate(sceneUpdateData.first, sceneUpdateData.second);
-                                    }
-                                }
-                                if (sceneUpdateRqd) { Tangram::applySceneUpdates(); }
-                                requestRender();
-                            });
-                    requestRender();
-                }
+            if (!SceneLoader::loadScene(scenePath, scene)) {
+                LOGE("Failed to load scene");
+                m_nextScene.reset();
+                return;
             }
-            m_sceneLoading = false;
+
+            Tangram::runOnMainLoop([scene]() {
+                    if (scene == m_nextScene) {
+                        m_nextScene.reset();
+
+                        auto s = scene;
+                        Tangram::setScene(s);
+                        Tangram::applySceneUpdates();
+                    }
+                });
         });
-    t.detach();
 }
 
 void queueSceneUpdate(const char* _path, const char* _value) {
-    if (m_sceneLoading) {
-        std::lock_guard<std::mutex> lock(m_newScenePathMutex);
-        auto scenePath = setResourceRoot(m_newScenePath.c_str());
-        m_queuedUpdates[scenePath].emplace_back(_path, _value);
-        return;
+    if (m_nextScene) {
+        m_nextScene->queueUpdate(_path, _value);
+    } else {
+        std::lock_guard<std::mutex> lock(m_sceneMutex);
+        m_scene->queueUpdate(_path, _value);
     }
-    return m_scene->queueUpdate(_path, _value);
 }
 
 void applySceneUpdates() {
 
-    LOG("Applying scene updates");
+    LOG("Applying %d scene updates", m_scene->updates().size());
 
-    m_newSceneUpdates = true;
+    if (m_nextScene) {
+        // Changes are automatically applied once the scene is loaded
+        return;
+    }
 
-    if (m_sceneUpdating) { return; }
+    if (m_scene->updates().empty()) { return; }
 
-    m_sceneUpdating = true;
+    std::shared_ptr<Scene> scene;
+    {
+        std::lock_guard<std::mutex> lock(m_sceneMutex);
+        scene = std::make_shared<Scene>(*m_scene);
+    }
 
-    std::thread t([&]() {
-        while(m_newSceneUpdates) {
-            m_newSceneUpdates = false;
+    Tangram::runAsyncTask([scene](){
 
-            std::shared_ptr<Scene> scene;
-            {
-                std::lock_guard<std::mutex> lock(m_sceneMutex);
-                scene = std::make_shared<Scene>(*m_scene);
-            }
-
-            if (scene->updates().empty()) { break; }
             SceneLoader::applyUpdates(scene->config(), scene->updates());
             scene->clearUpdates();
 
-            if (SceneLoader::applyConfig(scene->config(), *scene)) {
-                Tangram::runOnMainLoop([s = std::move(scene)]() mutable {
-                        if (s->id < m_scene->id) { return; }
-                        Tangram::setScene(s);
-                        requestRender();
-                    });
-                requestRender();
+            if (!SceneLoader::applyConfig(scene->config(), *scene)) {
+                // Note: applyConfig always return true atm
+                return;
             }
-        }
-        m_sceneUpdating = false;
-    });
-    t.detach();
+
+            Tangram::runOnMainLoop([scene]() {
+                    auto s = scene;
+                    if (s->id < m_scene->id) { return; }
+
+                    Tangram::setScene(s);
+                });
+        });
 }
 
 void resize(int _newWidth, int _newHeight) {
@@ -268,10 +284,6 @@ bool update(float _dt) {
         }
     }
 
-    m_inputHandler->update(_dt);
-
-    m_view->update();
-
     size_t nTasks = 0;
     {
         std::lock_guard<std::mutex> lock(m_tasksMutex);
@@ -286,6 +298,9 @@ bool update(float _dt) {
         }
         task();
     }
+
+    m_inputHandler->update(_dt);
+    m_view->update();
 
     for (const auto& style : m_scene->styles()) {
         style->onBeginUpdate();
@@ -667,6 +682,12 @@ void setupGL() {
 void runOnMainLoop(std::function<void()> _task) {
     std::lock_guard<std::mutex> lock(m_tasksMutex);
     m_tasks.emplace(std::move(_task));
+
+    requestRender();
+}
+
+void runAsyncTask(std::function<void()> _task) {
+    m_asyncWorker.enqueue(std::move(_task));
 }
 
 float frameTime() {
