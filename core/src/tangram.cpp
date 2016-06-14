@@ -166,7 +166,7 @@ void setScene(std::shared_ptr<Scene>& _scene) {
     m_view->setZoom(m_scene->startZoom);
 
     m_inputHandler->setView(m_view);
-    m_tileManager->setDataSources(_scene->getAllDataSources());
+    m_tileManager->setDataSources(_scene->dataSources());
     m_tileWorker->setScene(_scene);
     setPixelScale(m_view->pixelScale());
 
@@ -553,15 +553,13 @@ int getCameraType() {
 void addDataSource(std::shared_ptr<DataSource> _source) {
     if (!m_tileManager) { return; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
-    m_scene->addClientDataSource(_source);
-    m_tileManager->addDataSource(_source);
+    m_tileManager->addClientDataSource(_source);
 }
 
 bool removeDataSource(DataSource& source) {
     if (!m_tileManager) { return false; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
-    m_scene->removeClientDataSource(source);
-    return m_tileManager->removeDataSource(source);
+    return m_tileManager->removeClientDataSource(source);
 }
 
 void clearDataSource(DataSource& _source, bool _data, bool _tiles) {

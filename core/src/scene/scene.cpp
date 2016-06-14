@@ -34,10 +34,11 @@ Scene::Scene(const std::string& _path)
     m_mapProjection.reset(new MercatorProjection());
 }
 
-Scene::Scene(const Scene& _other) : Scene(_other.path()) {
+Scene::Scene(const Scene& _other)
+    : Scene(_other.path()) {
+
     m_config = _other.m_config;
     m_updates = _other.m_updates;
-    m_clientDataSources = _other.m_clientDataSources;
     m_view = _other.m_view;
     m_fontContext = _other.m_fontContext;
 }
@@ -98,23 +99,6 @@ void Scene::queueUpdate(std::string path, std::string value) {
     auto keys = splitString(path, COMPONENT_PATH_DELIMITER);
     std::lock_guard<std::mutex> lock(m_updatesMutex);
     m_updates.push_back({ keys, value });
-}
-
-void Scene::addClientDataSource(std::shared_ptr<DataSource> _source) {
-    m_clientDataSources.push_back(_source);
-}
-
-void Scene::removeClientDataSource(DataSource& _source) {
-    auto it = std::remove_if(m_clientDataSources.begin(), m_clientDataSources.end(),
-        [&](auto& s) { return s.get() == &_source; });
-    m_clientDataSources.erase(it, m_clientDataSources.end());
-}
-
-const std::vector<std::shared_ptr<DataSource>> Scene::getAllDataSources() const {
-    auto sources = m_dataSources;
-
-    sources.insert(sources.end(), m_clientDataSources.begin(), m_clientDataSources.end());
-    return sources;
 }
 
 std::shared_ptr<DataSource> Scene::getDataSource(const std::string& name) {

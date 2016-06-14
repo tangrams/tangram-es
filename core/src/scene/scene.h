@@ -90,11 +90,6 @@ public:
 
     void clearUpdates() { m_updates.clear(); }
 
-    void addClientDataSource(std::shared_ptr<DataSource> _source);
-    void removeClientDataSource(DataSource& _source);
-
-    const std::vector<std::shared_ptr<DataSource>> getAllDataSources() const;
-
     std::shared_ptr<DataSource> getDataSource(const std::string& name);
 
     std::shared_ptr<Texture> getTexture(const std::string& name) const;
@@ -112,7 +107,6 @@ private:
 
     std::vector<DataLayer> m_layers;
     std::vector<std::shared_ptr<DataSource>> m_dataSources;
-    std::vector<std::shared_ptr<DataSource>> m_clientDataSources;
     std::vector<std::unique_ptr<Style>> m_styles;
     std::vector<std::unique_ptr<Light>> m_lights;
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;

@@ -60,9 +60,9 @@ public:
 
     bool hasLoadingTiles() { return m_tilesInProgress > 0; }
 
-    void addDataSource(std::shared_ptr<DataSource> _dataSource);
+    void addClientDataSource(std::shared_ptr<DataSource> _dataSource);
 
-    bool removeDataSource(DataSource& dataSource);
+    bool removeClientDataSource(DataSource& dataSource);
 
     std::unique_ptr<TileCache>& getTileCache() { return m_tileCache; }
 
@@ -179,9 +179,13 @@ private:
     };
 
     struct TileSet {
+        TileSet(std::shared_ptr<DataSource> _source, bool _clientDataSource)
+            : source(_source), clientDataSource(_clientDataSource) {}
+
         std::shared_ptr<DataSource> source;
         std::map<TileID, TileEntry> tiles;
         int64_t sourceGeneration;
+        bool clientDataSource;
     };
 
     void updateTileSet(TileSet& tileSet, const ViewState& _view, const std::set<TileID>& _visibleTiles);

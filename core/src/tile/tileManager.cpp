@@ -45,14 +45,15 @@ void TileManager::setDataSources(const std::vector<std::shared_ptr<DataSource>>&
     auto it = std::remove_if(
         m_tileSets.begin(), m_tileSets.end(),
         [&](auto& tileSet) {
-            auto sIt = std::find_if(_sources.begin(), _sources.end(),
-                                    [&](auto& source){ return source->name() == tileSet.source->name(); });
+            if (!tileSet.clientDataSource) {
+                auto sIt = std::find_if(_sources.begin(), _sources.end(),
+                                        [&](auto& source){ return source->name() == tileSet.source->name(); });
 
-            if (sIt == _sources.end() || !(*sIt)->generateGeometry()) {
-                DBG("remove source %s", tileSet.source->name().c_str());
-                return true;
+                if (sIt == _sources.end() || !(*sIt)->generateGeometry()) {
+                    DBG("remove source %s", tileSet.source->name().c_str());
+                    return true;
+                }
             }
-
             // Clear cache
             tileSet.tiles.clear();
             return false;
@@ -70,16 +71,17 @@ void TileManager::setDataSources(const std::vector<std::shared_ptr<DataSource>>&
                 && source->generateGeometry()) {
 
             DBG("add source %s", source.second->name().c_str());
-            addDataSource(source);
+
+            m_tileSets.push_back({ source, false });
         }
     }
 }
 
-void TileManager::addDataSource(std::shared_ptr<DataSource> _dataSource) {
-    m_tileSets.push_back({ _dataSource });
+void TileManager::addClientDataSource(std::shared_ptr<DataSource> _dataSource) {
+    m_tileSets.push_back({ _dataSource, true });
 }
 
-bool TileManager::removeDataSource(DataSource& dataSource) {
+bool TileManager::removeClientDataSource(DataSource& dataSource) {
     bool removed = false;
     for (auto it = m_tileSets.begin(); it != m_tileSets.end();) {
         if (it->source.get() == &dataSource) {
