@@ -11,6 +11,8 @@ apply plugin: 'com.github.dcendents.android-maven'
 group = GROUP
 version = VERSION_NAME
 
+apply from: 'versioning.gradle'
+
 android {
   compileSdkVersion 23
 
@@ -25,6 +27,7 @@ android {
   defaultConfig {
     minSdkVersion 15
     targetSdkVersion 23
+    versionCode buildVersionCode()
     versionName VERSION_NAME
   }
 
