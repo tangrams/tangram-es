@@ -11,10 +11,12 @@
 #import <UIKit/UIKit.h>
 #import <GLKit/GLKit.h>
 
+struct TileID;
 @interface ViewController : GLKViewController <UIGestureRecognizerDelegate>
 
-@property (nonatomic) Tangram::Map* map;
-@property (nonatomic) bool continuous;
+@property (assign, nonatomic) Tangram::Map* map;
+@property (assign, nonatomic) BOOL continuous;
+
 - (void)renderOnce;
 
 @end
