@@ -37,6 +37,15 @@ public class MapController implements Renderer {
         SINE,
     }
 
+    /**
+     * Options for changing the appearance of 3D geometry
+     */
+    public enum CameraType {
+        PERSPECTIVE,
+        ISOMETRIC,
+        FLAT,
+    }
+
     protected static EaseType DEFAULT_EASE_TYPE = EaseType.CUBIC;
 
     /**
@@ -350,6 +359,22 @@ public class MapController implements Renderer {
     }
 
     /**
+     * Set the camera type for the map view
+     * @param type A {@code CameraType}
+     */
+    public void setCameraType(CameraType type) {
+        nativeSetCameraType(type.ordinal());
+    }
+
+    /**
+     * Get the camera type currently in use for the map view
+     * @return A {@code CameraType}
+     */
+    public CameraType getCameraType() {
+        return CameraType.values()[nativeGetCameraType()];
+    }
+
+    /**
      * Find the geographic coordinates corresponding to the given position on screen
      * @param screenX Pixels from the left edge of the screen
      * @param screenY Pixels from the top edge of the screen
@@ -636,6 +661,8 @@ public class MapController implements Renderer {
     private synchronized native float nativeGetTilt();
     private synchronized native void nativeScreenToWorldCoordinates(double[] screenCoords);
     private synchronized native void nativeSetPixelScale(float scale);
+    private synchronized native void nativeSetCameraType(int type);
+    private synchronized native int nativeGetCameraType();
     private synchronized native void nativeHandleTapGesture(float posX, float posY);
     private synchronized native void nativeHandleDoubleTapGesture(float posX, float posY);
     private synchronized native void nativeHandlePanGesture(float startX, float startY, float endX, float endY);
