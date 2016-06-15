@@ -29,7 +29,8 @@ public:
         float extrudeScale = 1.f;
     };
 
-    PointStyle(std::string _name, Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
+    PointStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
+               Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
 
     virtual void onBeginUpdate() override;
     virtual void onBeginDrawFrame(const View& _view, Scene& _scene) override;
