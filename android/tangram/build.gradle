@@ -25,6 +25,7 @@ android {
   defaultConfig {
     minSdkVersion 15
     targetSdkVersion 23
+    versionName VERSION_NAME
   }
 
   sourceSets.main {
