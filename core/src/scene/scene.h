@@ -33,7 +33,7 @@ struct Stops;
 class Scene {
 public:
     struct Update {
-        std::vector<std::string> keys;
+        std::string keys;
         std::string value;
     };
 
@@ -70,7 +70,6 @@ public:
     const auto& mapProjection() const { return m_mapProjection; };
     const auto& fontContext() const { return m_fontContext; }
     const auto& globals() const { return m_globals; }
-    const auto& updates() const { return m_updates; }
 
     const Style* findStyle(const std::string& _name) const;
     const Light* findLight(const std::string& _name) const;
@@ -85,10 +84,6 @@ public:
 
     void animated(bool animated) { m_animated = animated ? yes : no; }
     animate animated() const { return m_animated; }
-
-    void queueUpdate(std::string path, std::string value);
-
-    void clearUpdates() { m_updates.clear(); }
 
     std::shared_ptr<DataSource> getDataSource(const std::string& name);
 
@@ -113,8 +108,6 @@ private:
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
     std::unordered_map<std::string, YAML::Node> m_globals;
 
-    std::vector<Update> m_updates;
-
     // Container of all strings used in styling rules; these need to be
     // copied and compared frequently when applying styling, so rules use
     // integer indices into this container to represent strings
@@ -128,7 +121,6 @@ private:
     std::shared_ptr<FontContext> m_fontContext;
 
     animate m_animated = none;
-    std::mutex m_updatesMutex;
 };
 
 }

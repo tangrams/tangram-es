@@ -17,8 +17,6 @@
 #include <atomic>
 #include <algorithm>
 
-#define COMPONENT_PATH_DELIMITER '.'
-
 namespace Tangram {
 
 static std::atomic<int32_t> s_serial;
@@ -36,9 +34,7 @@ Scene::Scene(const std::string& _path)
 
 Scene::Scene(const Scene& _other)
     : Scene(_other.path()) {
-
     m_config = _other.m_config;
-    m_updates = _other.m_updates;
     m_view = _other.m_view;
     m_fontContext = _other.m_fontContext;
 }
@@ -93,12 +89,6 @@ std::shared_ptr<Texture> Scene::getTexture(const std::string& textureName) const
         return nullptr;
     }
     return texIt->second;
-}
-
-void Scene::queueUpdate(std::string path, std::string value) {
-    auto keys = splitString(path, COMPONENT_PATH_DELIMITER);
-    std::lock_guard<std::mutex> lock(m_updatesMutex);
-    m_updates.push_back({ keys, value });
 }
 
 std::shared_ptr<DataSource> Scene::getDataSource(const std::string& name) {

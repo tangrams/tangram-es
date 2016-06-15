@@ -39,6 +39,8 @@ using YAML::Node;
 using YAML::NodeType;
 using YAML::BadConversion;
 
+#define COMPONENT_PATH_DELIMITER '.'
+
 #define LOGNode(fmt, node, ...) LOGW(fmt ":\n'%s'\n", ## __VA_ARGS__, Dump(node).c_str())
 
 namespace Tangram {
@@ -76,11 +78,13 @@ void SceneLoader::applyUpdates(Node& root, const std::vector<Scene::Update>& upd
 
     for (const auto& update : updates) {
 
+        auto keys = splitString(update.keys, COMPONENT_PATH_DELIMITER);
+
         auto node = root;
         std::string key;
-        for (auto it = update.keys.begin(); it != update.keys.end(); ++it) {
+        for (auto it = keys.begin(); it != keys.end(); ++it) {
             key = *it;
-            if (it + 1 == update.keys.end()) { break; } // Stop before last key.
+            if (it + 1 == keys.end()) { break; } // Stop before last key.
             node.reset(node[key]); // Node safely becomes invalid is key is not present.
         }
 
@@ -92,7 +96,7 @@ void SceneLoader::applyUpdates(Node& root, const std::vector<Scene::Update>& upd
             }
         } else {
             std::string path;
-            for (const auto& k : update.keys) { path += "." + k; }
+            for (const auto& k : keys) { path += "." + k; }
             LOGW("Cannot update scene - key not found: %s", path.c_str());
         }
     }

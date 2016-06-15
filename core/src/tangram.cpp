@@ -50,6 +50,7 @@ std::shared_ptr<Scene> m_nextScene;
 std::atomic_bool m_sceneLoading(false);
 std::atomic_bool m_sceneUpdating(false);
 std::atomic_bool m_newSceneUpdates(false);
+std::vector<Scene::Update> m_sceneUpdates;
 
 std::array<Ease, 4> m_eases;
 enum class EaseField { position, zoom, rotation, tilt };
@@ -156,9 +157,9 @@ void setScene(std::shared_ptr<Scene>& _scene) {
     {
         std::lock_guard<std::mutex> lock(m_sceneMutex);
         _scene->view()->setSize(m_scene->view()->getWidth(), m_scene->view()->getHeight());
-
         m_scene = _scene;
     }
+
     m_view = _scene->view();
 
     glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
@@ -186,22 +187,25 @@ void setScene(std::shared_ptr<Scene>& _scene) {
 void loadScene(const char* _scenePath) {
     LOG("Loading scene file: %s", _scenePath);
 
+    {
+        std::lock_guard<std::mutex> lock(m_sceneMutex);
+        m_sceneUpdates.clear();
+    }
+
     m_nextScene = std::make_shared<Scene>(_scenePath);
 
     Tangram::runAsyncTask([scene = m_nextScene](){
 
             auto scenePath = setResourceRoot(scene->path().c_str());
 
-            if (!SceneLoader::loadScene(scenePath, scene)) {
-                LOGE("Failed to load scene");
-                m_nextScene.reset();
-                return;
-            }
+            bool ok = SceneLoader::loadScene(scenePath, scene);
 
-            Tangram::runOnMainLoop([scene]() {
+            Tangram::runOnMainLoop([scene, ok]() {
                     if (scene == m_nextScene) {
                         m_nextScene.reset();
+                    } else { return; }
 
+                    if (ok) {
                         auto s = scene;
                         Tangram::setScene(s);
                         Tangram::applySceneUpdates();
@@ -211,46 +215,45 @@ void loadScene(const char* _scenePath) {
 }
 
 void queueSceneUpdate(const char* _path, const char* _value) {
-    if (m_nextScene) {
-        m_nextScene->queueUpdate(_path, _value);
-    } else {
-        std::lock_guard<std::mutex> lock(m_sceneMutex);
-        m_scene->queueUpdate(_path, _value);
-    }
+    std::lock_guard<std::mutex> lock(m_sceneMutex);
+    m_sceneUpdates.push_back({_path, _value});
 }
 
 void applySceneUpdates() {
 
-    LOG("Applying %d scene updates", m_scene->updates().size());
+    LOG("Applying %d scene updates", m_sceneUpdates.size());
 
     if (m_nextScene) {
         // Changes are automatically applied once the scene is loaded
         return;
     }
 
-    if (m_scene->updates().empty()) { return; }
-
-    std::shared_ptr<Scene> scene;
+    std::vector<Scene::Update> updates;
     {
         std::lock_guard<std::mutex> lock(m_sceneMutex);
-        scene = std::make_shared<Scene>(*m_scene);
+        if (m_sceneUpdates.empty()) { return; }
+
+        m_nextScene = std::make_shared<Scene>(*m_scene);
+        updates = m_sceneUpdates;
+        m_sceneUpdates.clear();
     }
 
-    Tangram::runAsyncTask([scene](){
+    Tangram::runAsyncTask([scene = m_nextScene, updates = std::move(updates)](){
 
-            SceneLoader::applyUpdates(scene->config(), scene->updates());
-            scene->clearUpdates();
+            SceneLoader::applyUpdates(scene->config(), updates);
 
-            if (!SceneLoader::applyConfig(scene->config(), *scene)) {
-                // Note: applyConfig always return true atm
-                return;
-            }
+            bool ok = SceneLoader::applyConfig(scene->config(), *scene);
 
-            Tangram::runOnMainLoop([scene]() {
-                    auto s = scene;
-                    if (s->id < m_scene->id) { return; }
+            Tangram::runOnMainLoop([scene, ok]() {
+                    if (scene == m_nextScene) {
+                        m_nextScene.reset();
+                    } else { return; }
 
-                    Tangram::setScene(s);
+                    if (ok) {
+                        auto s = scene;
+                        Tangram::setScene(s);
+                        Tangram::applySceneUpdates();
+                    }
                 });
         });
 }
