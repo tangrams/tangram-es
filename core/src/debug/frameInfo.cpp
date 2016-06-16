@@ -28,7 +28,7 @@ static clock_t s_startFrameTime = 0,
 
 void FrameInfo::beginUpdate() {
 
-    if (getDebugFlag(DebugFlags::tangram_infos) || getDebugFlag(DebugFlags::stats)) {
+    if (getDebugFlag(DebugFlags::tangram_infos) || getDebugFlag(DebugFlags::tangram_stats)) {
         s_startUpdateTime = clock();
     }
 
@@ -36,7 +36,7 @@ void FrameInfo::beginUpdate() {
 
 void FrameInfo::endUpdate() {
 
-    if (getDebugFlag(DebugFlags::tangram_infos) || getDebugFlag(DebugFlags::stats)) {
+    if (getDebugFlag(DebugFlags::tangram_infos) || getDebugFlag(DebugFlags::tangram_stats)) {
         s_endUpdateTime = clock();
         s_lastUpdateTime = TIME_TO_MS(s_startUpdateTime, s_endUpdateTime);
     }
@@ -45,16 +45,16 @@ void FrameInfo::endUpdate() {
 
 void FrameInfo::beginFrame() {
 
-    if (getDebugFlag(DebugFlags::tangram_infos) || getDebugFlag(DebugFlags::stats)) {
+    if (getDebugFlag(DebugFlags::tangram_infos) || getDebugFlag(DebugFlags::tangram_stats)) {
         s_startFrameTime = clock();
     }
 
 }
 
 
-void FrameInfo::draw(const View& _view, TileManager& _tileManager, float _pixelsPerPoint) {
+void FrameInfo::draw(const View& _view, TileManager& _tileManager) {
 
-    if (getDebugFlag(DebugFlags::tangram_infos) || getDebugFlag(DebugFlags::stats)) {
+    if (getDebugFlag(DebugFlags::tangram_infos) || getDebugFlag(DebugFlags::tangram_stats)) {
         static int cpt = 0;
 
         static std::deque<float> updatetime;
@@ -125,13 +125,13 @@ void FrameInfo::draw(const View& _view, TileManager& _tileManager, float _pixels
             TextDisplay::Instance().draw(debuginfos);
         }
 
-        if (getDebugFlag(DebugFlags::stats)) {
-            const int scale = 5 * _pixelsPerPoint;
+        if (getDebugFlag(DebugFlags::tangram_stats)) {
+            const int scale = 5 * _view.pixelScale();
 
             for (int i = 0; i < updatetime.size(); i++) {
                 float tupdate = updatetime[i] * scale;
                 float trender = rendertime[i] * scale;
-                float offsetx = i * 4 * _pixelsPerPoint;
+                float offsetx = i * 4 * _view.pixelScale();
 
                 Primitives::setColor(0xfff000);
                 Primitives::drawLine(glm::vec2(offsetx, 0), glm::vec2(offsetx, tupdate));
@@ -142,7 +142,7 @@ void FrameInfo::draw(const View& _view, TileManager& _tileManager, float _pixels
             // Draw 16.6ms horizontal line
             Primitives::setColor(0xff0000);
             Primitives::drawLine(glm::vec2(0.0, 16.6 * scale),
-                glm::vec2(DEBUG_STATS_MAX_SIZE * 4 * _pixelsPerPoint + 4, 16.6 * scale));
+                glm::vec2(DEBUG_STATS_MAX_SIZE * 4 * _view.pixelScale() + 4, 16.6 * scale));
         }
     }
 }
