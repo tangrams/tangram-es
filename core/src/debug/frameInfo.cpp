@@ -57,7 +57,7 @@ void FrameInfo::draw(const View& _view, TileManager& _tileManager, float _pixels
     if (getDebugFlag(DebugFlags::tangram_infos) || getDebugFlag(DebugFlags::stats)) {
         static int cpt = 0;
 
-        static std::deque<float> cputime;
+        static std::deque<float> updatetime;
         static std::deque<float> rendertime;
 
         clock_t endCpu = clock();
@@ -66,15 +66,15 @@ void FrameInfo::draw(const View& _view, TileManager& _tileManager, float _pixels
         static float timeRender[60] = { 0 };
         timeCpu[cpt] = TIME_TO_MS(s_startFrameTime, endCpu);
 
-        if (cputime.size() >= DEBUG_STATS_MAX_SIZE) {
-            cputime.pop_front();
+        if (updatetime.size() >= DEBUG_STATS_MAX_SIZE) {
+            updatetime.pop_front();
         }
         if (rendertime.size() >= DEBUG_STATS_MAX_SIZE) {
             rendertime.pop_front();
         }
 
         rendertime.push_back(timeRender[cpt]);
-        cputime.push_back(timeCpu[cpt]);
+        updatetime.push_back(timeUpdate[cpt]);
 
         // Force opengl to finish commands (for accurate frame time)
         GL_CHECK(glFinish());
@@ -127,21 +127,19 @@ void FrameInfo::draw(const View& _view, TileManager& _tileManager, float _pixels
 
         if (getDebugFlag(DebugFlags::stats)) {
             const int scale = 5 * _pixelsPerPoint;
-            int i = 0;
 
-            Primitives::setColor(0xfff000);
-            for (float t : cputime) {
-                i += 4 * _pixelsPerPoint;
-                Primitives::drawLine(glm::vec2(i, 0), glm::vec2(i, t * scale));
+            for (int i = 0; i < updatetime.size(); i++) {
+                float tupdate = updatetime[i] * scale;
+                float trender = rendertime[i] * scale;
+                float offsetx = i * 4 * _pixelsPerPoint;
+
+                Primitives::setColor(0xfff000);
+                Primitives::drawLine(glm::vec2(offsetx, 0), glm::vec2(offsetx, tupdate));
+                Primitives::setColor(0x0000ff);
+                Primitives::drawLine(glm::vec2(offsetx, tupdate), glm::vec2(offsetx, tupdate + trender));
             }
 
-            i = 2 * _pixelsPerPoint;
-            Primitives::setColor(0x0000ff);
-            for (float t : rendertime) {
-                i += 4 * _pixelsPerPoint;
-                Primitives::drawLine(glm::vec2(i, 0), glm::vec2(i, t * scale));
-            }
-
+            // Draw 16.6ms horizontal line
             Primitives::setColor(0xff0000);
             Primitives::drawLine(glm::vec2(0.0, 16.6 * scale),
                 glm::vec2(DEBUG_STATS_MAX_SIZE * 4 * _pixelsPerPoint + 4, 16.6 * scale));
