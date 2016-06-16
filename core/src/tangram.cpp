@@ -210,10 +210,9 @@ void loadScene(const char* _scenePath, bool _useScenePosition) {
     {
         std::lock_guard<std::mutex> lock(m_sceneMutex);
         m_sceneUpdates.clear();
+        m_nextScene = std::make_shared<Scene>(_scenePath);
+        m_nextScene->useScenePosition = _useScenePosition;
     }
-
-    m_nextScene = std::make_shared<Scene>(_scenePath);
-    m_nextScene->useScenePosition = _useScenePosition;
 
     Tangram::runAsyncTask([scene = m_nextScene](){
 
@@ -223,6 +222,7 @@ void loadScene(const char* _scenePath, bool _useScenePosition) {
 
             Tangram::runOnMainLoop([scene, ok]() {
                     if (scene == m_nextScene) {
+                        std::lock_guard<std::mutex> lock(m_sceneMutex);
                         m_nextScene.reset();
                     } else { return; }
 
@@ -269,6 +269,7 @@ void applySceneUpdates() {
 
             Tangram::runOnMainLoop([scene, ok]() {
                     if (scene == m_nextScene) {
+                        std::lock_guard<std::mutex> lock(m_sceneMutex);
                         m_nextScene.reset();
                     } else { return; }
 
