@@ -16,7 +16,9 @@
 #include "platform.h"
 #include "platform_rpi.h"
 
+#include <sstream>
 #include <iostream>
+#include "glm/trigonometric.hpp"
 
 #define KEY_ESC      113    // q
 #define KEY_ZOOM_IN  45     // -
@@ -32,7 +34,7 @@ unsigned long long timePrev, timeStart;
 static bool bUpdate = true;
 
 //==============================================================================
-void setup();
+void setup(int argc, char **argv);
 void newFrame();
 
 int main(int argc, char **argv){
@@ -44,12 +46,7 @@ int main(int argc, char **argv){
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
     // Set background color and clear buffers
-    Tangram::initialize("scene.yaml");
-    Tangram::loadSceneAsync("scene.yaml");
-    Tangram::setupGL();
-    Tangram::resize(getWindowWidth(), getWindowHeight());
-
-    setup();
+    setup(argc, argv);
 
     // Start clock
     gettimeofday(&tv, NULL);
@@ -71,8 +68,64 @@ int main(int argc, char **argv){
     return 0;
 }
 
-void setup() {
+void setup(int argc, char **argv) {
+    int width = getWindowWidth();
+    int height = getWindowHeight();
+    float rot = 0.0f;
+    float zoom = 10.0f;
+    float tilt = 0.0f;
+    double lat = 40.70589;
+    double lon = -74.01321;
+    std::string scene = "scene.yaml";
 
+    for (int i = 1; i < argc ; i++) {
+        if (std::string(argv[i]) == "-s" ||
+            std::string(argv[i]) == "--scene") {
+            scene = std::string(argv[i+1]);
+        } else if (std::string(argv[i]) == "-lat" ) {
+            std::string argument = std::string(argv[i+1]);
+            std::istringstream cur(argument);
+            cur >> lat;
+        } else if (std::string(argv[i]) == "-lon" ) {
+            std::string argument = std::string(argv[i+1]);
+            std::istringstream cur(argument);
+            cur >> lon;
+        } else if (std::string(argv[i]) == "-z" ||
+                   std::string(argv[i]) == "--zoom" ) {
+            std::string argument = std::string(argv[i+1]);
+            std::istringstream cur(argument);
+            cur >> zoom;
+        } else if (std::string(argv[i]) == "-w" ||
+                   std::string(argv[i]) == "--width") {
+            std::string argument = std::string(argv[i+1]);
+            std::istringstream cur(argument);
+            cur >> width;
+        } else if (std::string(argv[i]) == "-h" ||
+                   std::string(argv[i]) == "--height") {
+            std::string argument = std::string(argv[i+1]);
+            std::istringstream cur(argument);
+            cur >> height;
+        } else if (std::string(argv[i]) == "-t" ||
+                   std::string(argv[i]) == "--tilt") {
+            std::string argument = std::string(argv[i+1]);
+            std::istringstream cur(argument);
+            cur >> tilt;
+        } else if (std::string(argv[i]) == "-r" ||
+                   std::string(argv[i]) == "--rotation") {
+            std::string argument = std::string(argv[i+1]);
+            std::istringstream cur(argument);
+            cur >> rot;
+        }
+    }
+
+    Tangram::initialize(scene.c_str());
+    Tangram::loadSceneAsync(scene.c_str());
+    Tangram::setupGL();
+    Tangram::resize(width, height);
+    Tangram::setPosition(lon,lat);
+    Tangram::setZoom(zoom);
+    Tangram::setTilt(glm::radians(tilt));
+    Tangram::setRotation(glm::radians(rot));
 }
 
 void newFrame() {
