@@ -91,6 +91,12 @@ void screenToWorldCoordinates(double& _x, double& _y);
 // Set the ratio of hardware pixels to logical pixels (defaults to 1.0)
 void setPixelScale(float _pixelsPerPoint);
 
+// Set the camera type (0 = perspective, 1 = isometric, 2 = flat)
+void setCameraType(int _type);
+
+// Get the camera type (0 = perspective, 1 = isometric, 2 = flat)
+int getCameraType();
+
 // Add a data source for adding drawable map data, which will be styled
 // according to the scene file using the provided data source name;
 void addDataSource(std::shared_ptr<DataSource> _source);
