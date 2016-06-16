@@ -21,7 +21,7 @@ class DataSource;
 void initialize(const char* _scenePath);
 
 // Load the scene at the given absolute file path
-void loadScene(const char* _scenePath);
+void loadScene(const char* _scenePath, bool _useScenePosition = false);
 
 // Request an update to the scene configuration; the path is a series of yaml keys
 // separated by a '.' and the value is a string of yaml to replace the current value

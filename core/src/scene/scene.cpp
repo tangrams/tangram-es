@@ -25,8 +25,6 @@ Scene::Scene(const std::string& _path)
     : id(s_serial++),
       m_path(_path),
       m_fontContext(std::make_shared<FontContext>()) {
-
-    m_view = std::make_shared<View>();
     // For now we only have one projection..
     // TODO how to share projection with view?
     m_mapProjection.reset(new MercatorProjection());
@@ -35,7 +33,6 @@ Scene::Scene(const std::string& _path)
 Scene::Scene(const Scene& _other)
     : Scene(_other.path()) {
     m_config = _other.m_config;
-    m_view = _other.m_view;
     m_fontContext = _other.m_fontContext;
 }
 

@@ -2,6 +2,8 @@
 
 #include "util/color.h"
 #include "util/fastmap.h"
+#include "view/view.h"
+
 #include <list>
 #include <memory>
 #include <mutex>
@@ -37,6 +39,20 @@ public:
         std::string value;
     };
 
+    struct Camera {
+        CameraType type;
+
+        // perspective
+        glm::vec2 vanishingPoint = {0, 0};
+        float fieldOfView = 0.25 * PI;
+        std::shared_ptr<Stops> fovStops;
+
+        // isometric
+        glm::vec2 obliqueAxis = {0, 1};
+    };
+
+    Camera m_camera;
+
     enum animate {
         yes, no, none
     };
@@ -45,8 +61,9 @@ public:
     Scene(const Scene& _other);
     ~Scene();
 
+    auto& camera() { return m_camera; }
+
     auto& config() { return m_config; }
-    auto& view() { return m_view; }
     auto& dataSources() { return m_dataSources; };
     auto& layers() { return m_layers; };
     auto& styles() { return m_styles; };
@@ -79,6 +96,7 @@ public:
 
     const int32_t id;
 
+    bool useScenePosition = true;
     glm::dvec2 startPosition = { 0, 0 };
     float startZoom = 0;
 
@@ -98,7 +116,6 @@ private:
     YAML::Node m_config;
 
     std::unique_ptr<MapProjection> m_mapProjection;
-    std::shared_ptr<View> m_view;
 
     std::vector<DataLayer> m_layers;
     std::vector<std::shared_ptr<DataSource>> m_dataSources;

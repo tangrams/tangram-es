@@ -1003,61 +1003,62 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
     scene.lights().push_back(std::move(sceneLight));
 }
 
-void SceneLoader::loadCamera(const Node& camera, Scene& scene) {
+void SceneLoader::loadCamera(const Node& _camera, Scene& _scene) {
 
-    auto& view = scene.view();
+    auto& camera = _scene.camera();
 
-    if (Node active = camera["active"]) {
+    if (Node active = _camera["active"]) {
         if (!active.as<bool>()) {
             return;
         }
     }
 
-    auto type = camera["type"].Scalar();
+    auto type = _camera["type"].Scalar();
     if (type == "perspective") {
-
-        view->setCameraType(CameraType::perspective);
+        camera.type = CameraType::perspective;
 
         // Only one of focal length and FOV is applied;
         // according to docs, focal length takes precedence.
-        if (Node focal = camera["focal_length"]) {
+        if (Node focal = _camera["focal_length"]) {
             if (focal.IsScalar()) {
-                float length = focal.as<float>(view->getFocalLength());
-                view->setFocalLength(length);
+                float length = focal.as<float>();
+                camera.fieldOfView = View::focalLengthToFieldOfView(length);
             } else if (focal.IsSequence()) {
-                auto stops = std::make_shared<Stops>(Stops::Numbers(focal));
-                view->setFocalLengthStops(stops);
+                camera.fovStops = std::make_shared<Stops>(Stops::Numbers(focal));
+                for (auto& f : camera.fovStops->frames) {
+                    f.value = View::focalLengthToFieldOfView(f.value.get<float>());
+                }
             }
-        } else if (Node fov = camera["fov"]) {
+        } else if (Node fov = _camera["fov"]) {
             if (fov.IsScalar()) {
-                float degrees = fov.as<float>(view->getFieldOfView() * RAD_TO_DEG);
-                view->setFieldOfView(degrees * DEG_TO_RAD);
+                float degrees = fov.as<float>(camera.fieldOfView * RAD_TO_DEG);
+                camera.fieldOfView = degrees * DEG_TO_RAD;
+
             } else if (fov.IsSequence()) {
-                auto stops = std::make_shared<Stops>(Stops::Numbers(fov));
-                for (auto& f : stops->frames) { f.value = f.value.get<float>() * DEG_TO_RAD; }
-                view->setFieldOfViewStops(stops);
+                camera.fovStops = std::make_shared<Stops>(Stops::Numbers(fov));
+                for (auto& f : camera.fovStops->frames) {
+                    f.value = f.value.get<float>() * DEG_TO_RAD;
+                }
             }
         }
 
-        if (Node vanishing = camera["vanishing_point"]) {
+        if (Node vanishing = _camera["vanishing_point"]) {
             if (vanishing.IsSequence() && vanishing.size() >= 2) {
                 // Values are pixels, unit strings are ignored.
                 float x = std::stof(vanishing[0].Scalar());
                 float y = std::stof(vanishing[1].Scalar());
-                view->setVanishingPoint(x, y);
+                camera.vanishingPoint = { x, y };
             }
         }
     } else if (type == "isometric") {
+        camera.type = CameraType::isometric;
 
-        view->setCameraType(CameraType::isometric);
+        if (Node axis = _camera["axis"]) {
+            camera.obliqueAxis = { axis[0].as<float>(), axis[1].as<float>() };
 
-        if (Node axis = camera["axis"]) {
-            view->setObliqueAxis(axis[0].as<float>(), axis[1].as<float>());
         }
     } else if (type == "flat") {
-
-        view->setCameraType(CameraType::flat);
-
+        camera.type = CameraType::flat;
     }
 
     // Default is world origin at 0 zoom
@@ -1065,7 +1066,7 @@ void SceneLoader::loadCamera(const Node& camera, Scene& scene) {
     double y = 0;
     float z = 0;
 
-    if (Node position = camera["position"]) {
+    if (Node position = _camera["position"]) {
         x = position[0].as<double>();
         y = position[1].as<double>();
         if (position.size() > 2) {
@@ -1073,12 +1074,12 @@ void SceneLoader::loadCamera(const Node& camera, Scene& scene) {
         }
     }
 
-    if (Node zoom = camera["zoom"]) {
+    if (Node zoom = _camera["zoom"]) {
         z = zoom.as<float>();
     }
 
-    scene.startPosition = glm::dvec2(x, y);
-    scene.startZoom = z;
+    _scene.startPosition = glm::dvec2(x, y);
+    _scene.startZoom = z;
 }
 
 void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {

@@ -147,7 +147,7 @@ void initialize(const char* _scenePath) {
     // Label setup
     m_labels = std::make_unique<Labels>();
 
-    loadScene(_scenePath);
+    loadScene(_scenePath, true);
 
     LOG("finish initialize");
 
@@ -156,15 +156,35 @@ void initialize(const char* _scenePath) {
 void setScene(std::shared_ptr<Scene>& _scene) {
     {
         std::lock_guard<std::mutex> lock(m_sceneMutex);
-        _scene->view()->setSize(m_scene->view()->getWidth(), m_scene->view()->getHeight());
         m_scene = _scene;
     }
 
-    m_view = _scene->view();
+    auto& camera = m_scene->camera();
+    m_view->setCameraType(camera.type);
 
-    glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
-    m_view->setPosition(projPos.x, projPos.y);
-    m_view->setZoom(m_scene->startZoom);
+    switch (camera.type) {
+    case CameraType::perspective:
+        m_view->setVanishingPoint(camera.vanishingPoint.x,
+                                  camera.vanishingPoint.y);
+        if (camera.fovStops) {
+            m_view->setFieldOfViewStops(camera.fovStops);
+        } else {
+            m_view->setFieldOfView(camera.fieldOfView);
+        }
+        break;
+    case CameraType::isometric:
+        m_view->setObliqueAxis(camera.obliqueAxis.x,
+                               camera.obliqueAxis.y);
+        break;
+    case CameraType::flat:
+        break;
+    }
+
+    if (m_scene->useScenePosition) {
+        glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
+        m_view->setPosition(projPos.x, projPos.y);
+        m_view->setZoom(m_scene->startZoom);
+    }
 
     m_inputHandler->setView(m_view);
     m_tileManager->setDataSources(_scene->dataSources());
@@ -184,7 +204,7 @@ void setScene(std::shared_ptr<Scene>& _scene) {
     }
 }
 
-void loadScene(const char* _scenePath) {
+void loadScene(const char* _scenePath, bool _useScenePosition) {
     LOG("Loading scene file: %s", _scenePath);
 
     {
@@ -193,6 +213,7 @@ void loadScene(const char* _scenePath) {
     }
 
     m_nextScene = std::make_shared<Scene>(_scenePath);
+    m_nextScene->useScenePosition = _useScenePosition;
 
     Tangram::runAsyncTask([scene = m_nextScene](){
 
@@ -234,6 +255,8 @@ void applySceneUpdates() {
         if (m_sceneUpdates.empty()) { return; }
 
         m_nextScene = std::make_shared<Scene>(*m_scene);
+        m_nextScene->useScenePosition = false;
+
         updates = m_sceneUpdates;
         m_sceneUpdates.clear();
     }
