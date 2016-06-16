@@ -73,8 +73,8 @@ void LabelCollider::process() {
                       // Prefer the label with longer line segment as it has a chance
                       // to be shown earlier (also on the lower zoom-level)
                       // TODO compare fraction segment_length/label_width
-                      return glm::length(l1->transform().modelPosition1 - l1->transform().modelPosition2) >
-                          glm::length(l2->transform().modelPosition1 - l2->transform().modelPosition2);
+                      return glm::length2(l1->transform().modelPosition1 - l1->transform().modelPosition2) >
+                             glm::length2(l2->transform().modelPosition1 - l2->transform().modelPosition2);
                   }
 
                   return l1->hash() < l2->hash();
@@ -132,8 +132,8 @@ void LabelCollider::process() {
                       // to be shown earlier (also on the lower zoom-level)
                       // TODO compare fraction segment_length/label_width
 
-                      return glm::length(l1->transform().modelPosition1 - l1->transform().modelPosition2) >
-                             glm::length(l2->transform().modelPosition1 - l2->transform().modelPosition2);
+                      return glm::length2(l1->transform().modelPosition1 - l1->transform().modelPosition2) >
+                             glm::length2(l2->transform().modelPosition1 - l2->transform().modelPosition2);
 
                   }
                   // just so it is consistent between two instances
