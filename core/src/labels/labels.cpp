@@ -198,8 +198,8 @@ bool Labels::labelComparator(const LabelEntry& _a, const LabelEntry& _b) {
 
     if (l1->type() == Label::Type::line && l2->type() == Label::Type::line) {
         // Prefer the label with longer line segment as it has a chance
-        return glm::length(l1->transform().modelPosition1 - l1->transform().modelPosition2) >
-               glm::length(l2->transform().modelPosition1 - l2->transform().modelPosition2);
+        return glm::length2(l1->transform().modelPosition1 - l1->transform().modelPosition2) >
+               glm::length2(l2->transform().modelPosition1 - l2->transform().modelPosition2);
     }
 
     if (l1->hash() != l2->hash()) {
