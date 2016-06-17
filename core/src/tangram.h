@@ -129,6 +129,10 @@ void handleRotateGesture(float _posX, float _posY, float _rotation);
 // Respond to a two-finger shove with the given distance in screen coordinates
 void handleShoveGesture(float _distance);
 
+// Set whether the OpenGL state will be cached between subsequent frames; this improves rendering
+// efficiency, but can cause errors if your application code makes OpenGL calls (false by default)
+void useCachedGlState(bool _use);
+
 enum DebugFlags {
     freeze_tiles = 0,   // While on, the set of tiles currently being drawn will not update to match the view
     proxy_colors,       // Applies a color change to every other zoom level of tiles to visualize proxy tile behavior

@@ -59,9 +59,8 @@ namespace RenderState {
         GL_CHECK(glBindTexture(_target, _textureId));
     }
 
-    void configure() {
+    void invalidate() {
         s_textureUnit = -1;
-        s_validGeneration++;
         VertexLayout::clearCache();
 
         blending.init(GL_FALSE);
@@ -85,6 +84,10 @@ namespace RenderState {
         texture.init(GL_TEXTURE_2D, max, false);
         texture.init(GL_TEXTURE_CUBE_MAP, max, false);
         textureUnit.init(max, false);
+    }
+
+    void increaseGeneration() {
+        s_validGeneration++;
     }
 
     bool isValidGeneration(int _generation) {
