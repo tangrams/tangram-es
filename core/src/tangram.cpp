@@ -55,7 +55,7 @@ void clearEase(EaseField _f) {
 
 static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
-static bool g_invalidateGLStates = true;
+static bool g_cacheGlState = false;
 
 
 void initialize(const char* _scenePath) {
@@ -244,7 +244,7 @@ void render() {
     FrameInfo::beginFrame();
 
     // Invalidate render states for new frame
-    if (g_invalidateGLStates) {
+    if (!g_cacheGlState) {
         RenderState::invalidate();
     }
 
@@ -541,8 +541,8 @@ const std::vector<TouchItem>& pickFeaturesAt(float _x, float _y) {
                                         _x, _y);
 }
 
-void invalidateGLStates(bool _invalidate) {
-    g_invalidateGLStates = _invalidate;
+void useCachedGlState(bool _useCache) {
+    g_cacheGlState = _useCache;
 }
 
 void setupGL() {

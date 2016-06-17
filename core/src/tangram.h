@@ -129,8 +129,9 @@ void handleRotateGesture(float _posX, float _posY, float _rotation);
 // Respond to a two-finger shove with the given distance in screen coordinates
 void handleShoveGesture(float _distance);
 
-// Whether to cache gl render states
-void invalidateGLStates(bool _invalidate);
+// Set whether the OpenGL state will be cached between subsequent frames; this improves rendering
+// efficiency, but can cause errors if your application code makes OpenGL calls (false by default)
+void useCachedGlState(bool _use);
 
 enum DebugFlags {
     freeze_tiles = 0,   // While on, the set of tiles currently being drawn will not update to match the view
