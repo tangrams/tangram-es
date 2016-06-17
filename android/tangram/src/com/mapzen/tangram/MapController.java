@@ -59,6 +59,7 @@ public class MapController implements Renderer {
         LABELS,
         TANGRAM_INFOS,
         ALL_LABELS,
+        TANGRAM_STATS,
     }
 
     /**

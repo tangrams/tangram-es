@@ -58,6 +58,7 @@ void clearEase(EaseField _f) {
 static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
 
+
 void initialize(const char* _scenePath) {
 
     if (m_scene && m_scene->path() == _scenePath) {
