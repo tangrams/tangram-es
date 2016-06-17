@@ -74,6 +74,7 @@ void Importer::processScene(const std::string &scenePath, const std::string &sce
     try {
         auto root = YAML::Load(sceneString);
         normalizeSceneImports(root, path);
+        normalizeSceneDataSources(root, scenePath);
         normalizeSceneTextures(root, path);
         auto imports = getScenesToImport(root);
         m_scenes[path] = root;
@@ -116,6 +117,16 @@ void Importer::normalizeSceneImports(Node& root, const std::string& parentPath) 
         } else if (import.IsSequence()) {
             for (Node imp : import) {
                 if (imp.IsScalar()) { imp = normalizePath(imp.Scalar(), parentPath); }
+            }
+        }
+    }
+}
+
+void Importer::normalizeSceneDataSources(Node &root, const std::string &parentPath) {
+    if (Node sources = root["sources"]) {
+        for (auto source : sources) {
+            if (Node sourceUrl = source.second["url"]) {
+                sourceUrl = normalizePath(sourceUrl.Scalar(), parentPath);
             }
         }
     }
