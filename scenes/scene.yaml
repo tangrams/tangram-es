@@ -61,12 +61,10 @@ styles:
     icons:
         base: points
         texture: pois
-    stripeline:
+    dashes:
         base: lines
-        texcoords: true
-        shaders:
-            blocks:
-                filter: "color.rgb -= .1 * floor(2. * fract(v_texcoord.y / 2.));"
+        dash: [1, 1]
+        dash_background_color: lightgrey
 
 sources:
     osm:
@@ -164,9 +162,9 @@ layers:
                 color: white
                 width: 12.
                 order: 'function() { return feature.sort_key + 5 || 0 }'
-                outline:
-                    color: [[16, '#999'], [18, '#aaa']]
-                    width: [[10, 0], [16, 2]]
+                #outline:
+                #    color: [[16, '#999'], [18, '#aaa']]
+                #    width: [[10, 0], [16, 2]]
 
         rounded:
             filter: { $zoom: { min: 18 } }
@@ -232,7 +230,7 @@ layers:
             filter: { kind: ferry }
             draw:
                 lines:
-                    style: stripeline
+                    style: dashes
         airports:
             filter: { aeroway: true }
             draw:

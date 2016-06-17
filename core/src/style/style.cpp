@@ -53,7 +53,13 @@ void Style::build(const Scene& _scene) {
         default:
             break;
     }
-
+    
+    if (m_blend == Blending::inlay) {
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_BLEND_INLAY\n", false);
+    } else if (m_blend == Blending::overlay) {
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_BLEND_OVERLAY\n", false);
+    }
+    
     if (m_material.material) {
         m_material.uniforms = m_material.material->injectOnProgram(*m_shaderProgram);
     }
@@ -85,10 +91,10 @@ void Style::setupShaderUniforms(Scene& _scene) {
         auto& value = uniformPair.second;
 
         if (value.is<std::string>()) {
-            std::shared_ptr<Texture> texture = nullptr;
             std::string textureName = value.get<std::string>();
+            std::shared_ptr<Texture> texture = _scene.getTexture(textureName);
 
-            if (!_scene.texture(textureName, texture) || !texture) {
+            if (!texture) {
                 LOGN("Texture with texture name %s is not available to be sent as uniform",
                     textureName.c_str());
                 continue;
@@ -117,9 +123,9 @@ void Style::setupShaderUniforms(Scene& _scene) {
                 textureUniformArray.slots.clear();
 
                 for (const auto& textureName : textureUniformArray.names) {
-                    std::shared_ptr<Texture> texture = nullptr;
+                    std::shared_ptr<Texture> texture = _scene.getTexture(textureName);
 
-                    if (!_scene.texture(textureName, texture) || !texture) {
+                    if (!texture) {
                         LOGN("Texture with texture name %s is not available to be sent as uniform",
                             textureName.c_str());
                         continue;

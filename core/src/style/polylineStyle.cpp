@@ -5,12 +5,15 @@
 #include "material.h"
 #include "gl/shaderProgram.h"
 #include "gl/mesh.h"
+#include "gl/texture.h"
+#include "gl/renderState.h"
 #include "scene/stops.h"
 #include "scene/drawRule.h"
 #include "tile/tile.h"
 #include "util/builders.h"
 #include "util/mapProjection.h"
 #include "util/extrude.h"
+#include "util/dashArray.h"
 
 #include "shaders/polyline_vs.h"
 #include "shaders/polyline_fs.h"
@@ -79,7 +82,46 @@ void PolylineStyle::constructVertexLayout() {
 
 }
 
+void PolylineStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
+    Style::onBeginDrawFrame(_view, _scene);
+
+    if (m_texture) {
+        GLuint textureUnit = RenderState::nextAvailableTextureUnit();
+
+        m_texture->update(textureUnit);
+        m_texture->bind(textureUnit);
+
+        m_shaderProgram->setUniformi(m_uTexture, textureUnit);
+        m_shaderProgram->setUniformf(m_uTextureRatio, m_texture->getHeight() / m_texture->getWidth());
+    }
+}
+
+void PolylineStyle::setDashBackgroundColor(const glm::vec4 _dashBackgroundColor) {
+    m_dashBackgroundColor = _dashBackgroundColor;
+    m_dashBackground = true;
+}
+
 void PolylineStyle::constructShaderProgram() {
+
+    if (m_dashArray.size() > 0) {
+        TextureOptions options {GL_RGBA, GL_RGBA, {GL_NEAREST, GL_NEAREST}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
+        auto pixels = DashArray::render(m_dashArray);
+
+        m_texture = std::make_shared<Texture>(1, pixels.size(), options);
+        m_texture->setData(pixels.data(), pixels.size());
+
+        if (m_dashBackground) {
+            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_BACKGROUND_COLOR vec3(" +
+                std::to_string(m_dashBackgroundColor.r) + ", " +
+                std::to_string(m_dashBackgroundColor.g) + ", " +
+                std::to_string(m_dashBackgroundColor.b) + ")");
+        }
+    }
+
+    if (m_dashArray.size() > 0 || m_texture) {
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_TEXTURE\n", false);
+        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_ALPHA_TEST 0.25\n", false);
+    }
 
     m_shaderProgram->setSourceStrings(SHADER_SOURCE(polyline_fs),
                                       SHADER_SOURCE(polyline_vs));
@@ -150,6 +192,7 @@ private:
     float m_tileUnitsPerMeter;
     float m_tileSizePixels;
     int m_zoom;
+    float m_overzoom2;
 };
 
 template <class V>
@@ -159,6 +202,7 @@ void PolylineStyleBuilder<V>::setup(const Tile& tile) {
 
     // Use the 'style zoom' to evaluate style parameters.
     m_zoom = id.s;
+    m_overzoom2 = powf(2.f, id.s - id.z);
     m_tileUnitsPerMeter = tile.getInverseScale();
     m_tileSizePixels = tile.getProjection()->TileSize();
 
@@ -355,11 +399,10 @@ template <class V>
 void PolylineStyleBuilder<V>::buildLine(const Line& _line, const typename Parameters::Attributes& _att,
                         MeshData<V>& _mesh) {
 
-    m_builder.addVertex = [&_mesh, &_att](const glm::vec3& coord,
-                                   const glm::vec2& normal,
-                                   const glm::vec2& uv) {
-        _mesh.vertices.push_back({{ coord.x,coord.y }, normal, uv,
-                              _att.width, _att.height, _att.color});
+    float zoom = m_overzoom2;
+    m_builder.addVertex = [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
+        _mesh.vertices.push_back({{ coord.x,coord.y }, normal, { uv.x, uv.y * zoom },
+                                  _att.width, _att.height, _att.color});
     };
 
     Builders::buildPolyLine(_line, m_builder);

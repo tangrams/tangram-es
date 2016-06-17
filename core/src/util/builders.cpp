@@ -275,22 +275,22 @@ bool isOutsideTile(const glm::vec3& _a, const glm::vec3& _b) {
     return false;
 }
 
-void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx,
-                          size_t startIndex, size_t endIndex, bool endCap = true) {
+void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx, size_t _startIndex,
+                          size_t _endIndex, bool endCap = true) {
 
     float distance = 0; // Cumulative distance along the polyline.
 
     size_t origLineSize = _line.size();
 
     // endIndex/startIndex could be wrapped values, calculate lineSize accordingly
-    int lineSize = (int)((endIndex > startIndex) ?
-                   (endIndex - startIndex) :
-                   (origLineSize - startIndex + endIndex));
+    int lineSize = (int)((_endIndex > _startIndex) ?
+                   (_endIndex - _startIndex) :
+                   (origLineSize - _startIndex + _endIndex));
     if (lineSize < 2) { return; }
 
-    glm::vec3 coordCurr(_line[startIndex]);
+    glm::vec3 coordCurr(_line[_startIndex]);
     // get the Point using wrapped index in the original line geometry
-    glm::vec3 coordNext(_line[(startIndex + 1) % origLineSize]);
+    glm::vec3 coordNext(_line[(_startIndex + 1) % origLineSize]);
     glm::vec2 normPrev, normNext, miterVec;
 
     int cornersOnCap = (int)_ctx.cap;
@@ -309,7 +309,7 @@ void buildPolyLineSegment(const Line& _line, PolyLineBuilder& _ctx,
     // Process intermediate points
     for (int i = 1; i < lineSize - 1; i++) {
         // get the Point using wrapped index in the original line geometry
-        int nextIndex = (i + startIndex + 1) % origLineSize;
+        int nextIndex = (i + _startIndex + 1) % origLineSize;
 
         distance += glm::distance(coordCurr, coordNext);
 
