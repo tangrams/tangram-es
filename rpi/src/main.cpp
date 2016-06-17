@@ -57,10 +57,10 @@ int main(int argc, char **argv){
 
         processNetworkQueue();
 
-        if (getRenderRequest()) {
-            setRenderRequest(false);
+        //if (getRenderRequest()) {
+        //    setRenderRequest(false);
             newFrame();
-        }
+        //}
     }
 
     curl_global_cleanup();
@@ -72,7 +72,7 @@ void setup(int argc, char **argv) {
     int width = getWindowWidth();
     int height = getWindowHeight();
     float rot = 0.0f;
-    float zoom = 10.0f;
+    float zoom = 16.0f;
     float tilt = 0.0f;
     double lat = 40.70589;
     double lon = -74.01321;
