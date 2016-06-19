@@ -76,11 +76,11 @@ std::string setResourceRoot(const char* _path, std::string& _sceneResourceRoot) 
         return path;
     }
 
-    std::string dir(path);
+    std::string dir(_path);
 
     _sceneResourceRoot = std::string(dirname(&dir[0])) + '/';
 
-    std::string base(path);
+    std::string base(_path);
 
     return std::string(basename(&base[0]));
 

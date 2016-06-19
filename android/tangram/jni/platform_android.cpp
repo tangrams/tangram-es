@@ -187,10 +187,10 @@ std::string setResourceRoot(const char* _path, std::string& _sceneResourceRoot) 
         return path;
     }
 
-    _sceneResourceRoot = std::string(dirname(path));
+    _sceneResourceRoot = std::string(dirname(_path));
 
     // TODO: InternalResource boolean should also be on Scene instead of being static
-    s_useInternalResources = (*path != '/');
+    s_useInternalResources = (*_path != '/');
 
     // For unclear reasons, the AAssetManager will fail to open a file at
     // path "filepath" if the path is instead given as "./filepath", so in
@@ -202,7 +202,7 @@ std::string setResourceRoot(const char* _path, std::string& _sceneResourceRoot) 
         _sceneResourceRoot += '/';
     }
 
-    return std::string(basename(path));
+    return std::string(basename(_path));
 
 }
 

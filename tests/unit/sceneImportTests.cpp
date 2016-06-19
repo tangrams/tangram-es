@@ -15,7 +15,7 @@ public:
     TestImporter();
 
 protected:
-    virtual std::string getSceneString(const std::string& scenePath) override {
+    virtual std::string getSceneString(const std::string& scenePath, const std::string& resourceRoot) override {
         return m_testScenes[scenePath];
     }
 
