@@ -4,12 +4,15 @@
 #include "mapbox/geojsonvt/geojsonvt.hpp"
 #include "mapbox/geojsonvt/geojsonvt_convert.hpp"
 #include "platform.h"
+#include "tangram.h"
 #include "tile/tileTask.h"
 #include "util/geom.h"
 #include "data/propertyItem.h"
 #include "data/tileData.h"
 #include "tile/tile.h"
 #include "view/view.h"
+
+#include <regex>
 
 using namespace mapbox::util;
 
@@ -37,9 +40,20 @@ ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::st
     // TODO: generic uri handling
     m_generateGeometry = true;
     if (!_url.empty()) {
-        // Load from file
-        const auto& string = stringFromFile(_url.c_str(), PathType::resource, _resourceRoot.c_str());
-        addData(string);
+        std::regex r("^(http|https):/");
+        std::smatch match;
+        if (std::regex_search(_url, match, r)) {
+            startUrlRequest(_url,
+                    [&, this](std::vector<char>&& rawData) {
+                        addData(std::string(rawData.begin(), rawData.end()));
+                        // delete all no-data tiles for this datasource and redo
+                        clearDataSource(*this, false, true);
+                    });
+        } else {
+            // Load from file
+            const auto& string = stringFromFile(_url.c_str(), PathType::resource, _resourceRoot.c_str());
+            addData(string);
+        }
     }
 }
 
