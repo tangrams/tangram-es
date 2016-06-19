@@ -63,6 +63,7 @@ public:
 
     auto& camera() { return m_camera; }
 
+    auto& resourceRoot() { return m_resourceRoot; }
     auto& config() { return m_config; }
     auto& dataSources() { return m_dataSources; };
     auto& layers() { return m_layers; };
@@ -78,6 +79,7 @@ public:
     Style* findStyle(const std::string& _name);
 
     const auto& path() const { return m_path; }
+    const auto& resourceRoot() const { return m_resourceRoot; }
     const auto& config() const { return m_config; }
     const auto& dataSources() const { return m_dataSources; };
     const auto& layers() const { return m_layers; };
@@ -111,6 +113,8 @@ private:
 
     // The file path from which this scene was loaded
     std::string m_path;
+
+    std::string m_resourceRoot;
 
     // The root node of the YAML scene configuration
     YAML::Node m_config;

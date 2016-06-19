@@ -28,13 +28,17 @@ Point transformPoint(geojsonvt::TilePoint pt) {
     return { pt.x / extent, 1. - pt.y / extent, 0 };
 }
 
-ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::string& _url, int32_t _maxZoom)
+// TODO: pass scene's resourcePath to constructor to be used with `stringFromFile`
+ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::string& _url,
+        const std::string& _resourceRoot, int32_t _maxZoom)
     : DataSource(_name, _url, _maxZoom) {
 
+    // TODO: handle network url for client datasource data
+    // TODO: generic uri handling
     m_generateGeometry = true;
     if (!_url.empty()) {
         // Load from file
-        const auto& string = stringFromFile(_url.c_str(), PathType::resource);
+        const auto& string = stringFromFile(_url.c_str(), PathType::resource, _resourceRoot.c_str());
         addData(string);
     }
 }

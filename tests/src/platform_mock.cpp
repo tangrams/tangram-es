@@ -10,7 +10,6 @@
 //#include <sys/resource.h>
 
 static bool s_isContinuousRendering = false;
-static std::string s_resourceRoot;
 
 void logMsg(const char* fmt, ...) {
     va_list args;
@@ -30,11 +29,11 @@ bool isContinuousRendering() {
     return s_isContinuousRendering;
 }
 
-std::string setResourceRoot(const char* _path) {
+std::string setResourceRoot(const char* _path, std::string& _sceneResourceRoot) {
 
     std::string dir(_path);
 
-    s_resourceRoot = std::string(dirname(&dir[0])) + '/';
+    _sceneResourceRoot = std::string(dirname(&dir[0])) + '/';
 
     std::string base(_path);
 
@@ -42,19 +41,22 @@ std::string setResourceRoot(const char* _path) {
 
 }
 
-std::string resolvePath(const char* _path, PathType _type) {
+std::string resolvePath(const char* _path, PathType _type, const char* _resourceRoot) {
 
     switch (_type) {
     case PathType::absolute:
     case PathType::internal:
         return std::string(_path);
     case PathType::resource:
-        return s_resourceRoot + _path;
+        if (_resourceRoot) {
+            return std::string(_resourceRoot) + _path;
+        }
+        return _path;
     }
     return "";
 }
 
-std::string stringFromFile(const char* _path, PathType _type) {
+std::string stringFromFile(const char* _path, PathType _type, const char* _resourceRoot) {
 
     unsigned int length = 0;
     unsigned char* bytes = bytesFromFile(_path, _type, &length);
@@ -65,9 +67,9 @@ std::string stringFromFile(const char* _path, PathType _type) {
     return out;
 }
 
-unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _size) {
+unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _size, const char* _resourceRoot) {
 
-    std::string path = resolvePath(_path, _type);
+    std::string path = resolvePath(_path, _type, _resourceRoot);
 
     std::ifstream resource(path.c_str(), std::ifstream::ate | std::ifstream::binary);
 

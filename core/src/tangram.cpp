@@ -6,6 +6,7 @@
 #include "style/material.h"
 #include "style/style.h"
 #include "labels/labels.h"
+#include "text/fontContext.h"
 #include "tile/tileManager.h"
 #include "tile/tile.h"
 #include "gl/error.h"
@@ -216,7 +217,8 @@ void loadScene(const char* _scenePath, bool _useScenePosition) {
 
     Tangram::runAsyncTask([scene = m_nextScene](){
 
-            auto scenePath = setResourceRoot(scene->path().c_str());
+            auto scenePath = setResourceRoot(scene->path().c_str(), scene->resourceRoot());
+            scene->fontContext()->setSceneResourceRoot(scene->resourceRoot());
 
             bool ok = SceneLoader::loadScene(scenePath, scene);
 

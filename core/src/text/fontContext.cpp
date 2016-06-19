@@ -28,7 +28,8 @@ namespace Tangram {
 FontContext::FontContext() :
     m_sdfRadius(SDF_WIDTH),
     m_atlas(*this, GlyphTexture::size, m_sdfRadius),
-    m_batch(m_atlas, m_scratch) {
+    m_batch(m_atlas, m_scratch),
+    m_sceneResourceRoot("") {
 
 // TODO: make this platform independent
 #if defined(PLATFORM_ANDROID)
@@ -64,7 +65,8 @@ FontContext::FontContext() :
     int size = BASE_SIZE;
     auto loadFonts = [&](const char* path) {
         unsigned int dataSize;
-        char* data = reinterpret_cast<char*>(bytesFromFile(path, PathType::resource, &dataSize));
+        char* data = reinterpret_cast<char*>(bytesFromFile(path, PathType::resource, &dataSize,
+                    m_sceneResourceRoot.c_str()));
         if (data) {
             for (int i = 0; i < 3; i++, size += STEP_SIZE) {
                 m_font[i] = m_alfons.addFont("default", alfons::InputSource(data, dataSize), size);
@@ -74,7 +76,8 @@ FontContext::FontContext() :
     };
     auto addFaces = [&](const char* path) {
         unsigned int dataSize;
-        char* data = reinterpret_cast<char*>(bytesFromFile(path, PathType::resource, &dataSize));
+        char* data = reinterpret_cast<char*>(bytesFromFile(path, PathType::resource, &dataSize,
+                    m_sceneResourceRoot.c_str()));
         if (data) {
             for (int i = 0; i < 3; i++, size += STEP_SIZE) {
                     m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(data, dataSize), size));
@@ -287,10 +290,10 @@ auto FontContext::getFont(const std::string& _family, const std::string& _style,
 
     // Assuming bundled ttf file follows this convention
     auto bundledFontPath = "fonts/" + _family + "-" + _weight + _style + ".ttf";
-    if (!(data = bytesFromFile(bundledFontPath.c_str(), PathType::resource, &dataSize)) &&
-        !(data = bytesFromFile(bundledFontPath.c_str(), PathType::internal, &dataSize))) {
+    if (!(data = bytesFromFile(bundledFontPath.c_str(), PathType::resource, &dataSize, m_sceneResourceRoot.c_str())) &&
+        !(data = bytesFromFile(bundledFontPath.c_str(), PathType::internal, &dataSize, m_sceneResourceRoot.c_str()))) {
         const std::string sysFontPath = systemFontPath(_family, _weight, _style);
-        if (!(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize)) ) {
+        if (!(data = bytesFromFile(sysFontPath.c_str(), PathType::absolute, &dataSize, m_sceneResourceRoot.c_str())) ) {
 
             LOGE("Could not load font file %s", fontName.c_str());
             // add fallbacks from default font

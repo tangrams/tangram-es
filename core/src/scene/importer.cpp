@@ -13,7 +13,7 @@ namespace Tangram {
 
 std::atomic_uint Importer::progressCounter(0);
 
-Node Importer::applySceneImports(const std::string& scenePath) {
+Node Importer::applySceneImports(const std::string& scenePath, const std::string& resourceRoot) {
 
     std::string sceneString;
     std::string path;
@@ -54,7 +54,7 @@ Node Importer::applySceneImports(const std::string& scenePath) {
             }
         } else {
             std::unique_lock<std::mutex> lock(sceneMutex);
-            processScene(path, getSceneString(path));
+            processScene(path, getSceneString(path, resourceRoot));
         }
     }
 
@@ -219,8 +219,8 @@ void Importer::normalizeSceneTextures(Node& root, const std::string& parentPath)
     }
 }
 
-std::string Importer::getSceneString(const std::string &scenePath) {
-    return stringFromFile(scenePath.c_str(), PathType::resource);
+std::string Importer::getSceneString(const std::string &scenePath, const std::string& resourceRoot) {
+    return stringFromFile(scenePath.c_str(), PathType::resource, resourceRoot.c_str());
 }
 
 std::vector<std::string> Importer::getScenesToImport(const Node& scene) {

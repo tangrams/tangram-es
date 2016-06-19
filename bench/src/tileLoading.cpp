@@ -38,8 +38,10 @@ struct TestContext {
     std::unique_ptr<TileBuilder> tileBuilder;
 
     void loadScene(const char* sceneFile) {
-        auto sceneRelPath = setResourceRoot(sceneFile);
-        auto sceneString = stringFromFile(sceneRelPath.c_str(), PathType::resource);
+        auto sceneRelPath = setResourceRoot(sceneFile, scene->resourceRoot());
+        scene->fontContext()->setSceneResourceRoot(scene->resourceRoot());
+
+        auto sceneString = stringFromFile(sceneRelPath.c_str(), PathType::resource, scene->resourceRoot().c_str());
 
         YAML::Node sceneNode;
 

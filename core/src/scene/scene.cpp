@@ -24,6 +24,7 @@ static std::atomic<int32_t> s_serial;
 Scene::Scene(const std::string& _path)
     : id(s_serial++),
       m_path(_path),
+      m_resourceRoot(""),
       m_fontContext(std::make_shared<FontContext>()) {
     // For now we only have one projection..
     // TODO how to share projection with view?
@@ -34,6 +35,7 @@ Scene::Scene(const Scene& _other)
     : Scene(_other.path()) {
     m_config = _other.m_config;
     m_fontContext = _other.m_fontContext;
+    m_resourceRoot = _other.resourceRoot();
 }
 
 Scene::~Scene() {}

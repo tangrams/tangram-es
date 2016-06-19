@@ -53,7 +53,6 @@ static AAssetManager* assetManager = nullptr;
 
 static bool s_isContinuousRendering = false;
 static bool s_useInternalResources = true;
-static std::string s_resourceRoot;
 
 PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT = 0;
 PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT = 0;
@@ -175,20 +174,21 @@ bool isContinuousRendering() {
 
 }
 
-std::string setResourceRoot(const char* _path) {
+std::string setResourceRoot(const char* _path, std::string& _sceneResourceRoot) {
 
-    s_resourceRoot = std::string(dirname(_path));
+    _sceneResourceRoot = std::string(dirname(_path));
 
+    // TODO: InternalResource boolean should also be on Scene instead of being static
     s_useInternalResources = (*_path != '/');
 
     // For unclear reasons, the AAssetManager will fail to open a file at
     // path "filepath" if the path is instead given as "./filepath", so in
     // cases where dirname returns "." we simply use an empty string. For
     // all other cases, we add a "/" for appending relative paths.
-    if (!s_resourceRoot.empty() && s_resourceRoot.front() == '.') {
-        s_resourceRoot = "";
+    if (!_sceneResourceRoot.empty() && _sceneResourceRoot.front() == '.') {
+        _sceneResourceRoot = "";
     } else {
-        s_resourceRoot += '/';
+        _sceneResourceRoot += '/';
     }
 
     return std::string(basename(_path));
@@ -245,10 +245,10 @@ unsigned char* bytesFromFileSystem(const char* _path, unsigned int* _size) {
 
 }
 
-std::string stringFromFile(const char* _path, PathType _type) {
+std::string stringFromFile(const char* _path, PathType _type, const char* _resourceRoot) {
 
     unsigned int length = 0;
-    unsigned char* bytes = bytesFromFile(_path, _type, &length);
+    unsigned char* bytes = bytesFromFile(_path, _type, &length, _resourceRoot);
     std::string out(reinterpret_cast<char*>(bytes), length);
     free(bytes);
 
@@ -256,9 +256,14 @@ std::string stringFromFile(const char* _path, PathType _type) {
 
 }
 
-unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _size) {
+unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _size, const char* _resourceRoot) {
 
-    std::string resourcePath = s_resourceRoot + _path;
+    std::string resourcePath;
+    if (_resourceRoot) {
+        resourcePath = std::string(_resourceRoot) + _path;
+    } else {
+        resourcePath = _path;
+    }
 
     switch (_type) {
     case PathType::absolute:

@@ -24,11 +24,11 @@ public:
     using Node = YAML::Node;
 
     // Loads the main scene with deep merging dependentent imported scenes.
-    Node applySceneImports(const std::string& scenePath);
+    Node applySceneImports(const std::string& scenePath, const std::string& resourceRoot);
 
 // protected for testing purposes, else could be private
 protected:
-    virtual std::string getSceneString(const std::string& scenePath);
+    virtual std::string getSceneString(const std::string& scenePath, const std::string& resourceRoot);
     void processScene(const std::string& scenePath, const std::string& sceneString);
 
     // Get the sequence of scene names that are designated to be imported into the

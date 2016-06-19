@@ -57,7 +57,7 @@ bool SceneLoader::loadScene(const std::string& _scenePath, std::shared_ptr<Scene
 
     Importer sceneImporter;
 
-    if ( (root = sceneImporter.applySceneImports(_scenePath)) ) {
+    if ( (root = sceneImporter.applySceneImports(_scenePath, _scene->resourceRoot())) ) {
         applyConfig(root, *_scene);
         return true;
     }
@@ -552,9 +552,9 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
     } else {
         unsigned char* blob;
         if (url[0] == '/') {
-            blob = bytesFromFile(url.c_str(), PathType::absolute, &size);
+            blob = bytesFromFile(url.c_str(), PathType::absolute, &size, scene.resourceRoot().c_str());
         } else {
-            blob = bytesFromFile(url.c_str(), PathType::resource, &size);
+            blob = bytesFromFile(url.c_str(), PathType::resource, &size, scene.resourceRoot().c_str());
         }
 
         if (!blob) {
@@ -836,7 +836,7 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
         if (tiled) {
             sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url, maxZoom));
         } else {
-            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, maxZoom));
+            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, _scene.resourceRoot(), maxZoom));
         }
     } else if (type == "TopoJSON") {
         sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, maxZoom));
