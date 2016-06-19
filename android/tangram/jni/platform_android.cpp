@@ -26,6 +26,8 @@
 #include <fstream>
 #include <algorithm>
 
+#include <regex>
+
 /* Followed the following document for JavaVM tips when used with native threads
  * http://android.wooyd.org/JNIExample/#NWD1sCYeT-I
  * http://developer.android.com/training/articles/perf-jni.html and
@@ -176,10 +178,19 @@ bool isContinuousRendering() {
 
 std::string setResourceRoot(const char* _path, std::string& _sceneResourceRoot) {
 
-    _sceneResourceRoot = std::string(dirname(_path));
+    std::regex r("^(http|https):/");
+    std::smatch match;
+    std::string path(_path);
+
+    if (std::regex_search(path, match, r)) {
+        _sceneResourceRoot = "";
+        return path;
+    }
+
+    _sceneResourceRoot = std::string(dirname(path));
 
     // TODO: InternalResource boolean should also be on Scene instead of being static
-    s_useInternalResources = (*_path != '/');
+    s_useInternalResources = (*path != '/');
 
     // For unclear reasons, the AAssetManager will fail to open a file at
     // path "filepath" if the path is instead given as "./filepath", so in
@@ -191,7 +202,7 @@ std::string setResourceRoot(const char* _path, std::string& _sceneResourceRoot) 
         _sceneResourceRoot += '/';
     }
 
-    return std::string(basename(_path));
+    return std::string(basename(path));
 
 }
 

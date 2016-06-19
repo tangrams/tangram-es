@@ -13,6 +13,8 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
+#include <regex>
+
 #define NUM_WORKERS 3
 
 PFNGLBINDVERTEXARRAYPROC glBindVertexArrayOESEXT = 0;
@@ -65,11 +67,20 @@ bool isContinuousRendering() {
 
 std::string setResourceRoot(const char* _path, std::string& _sceneResourceRoot) {
 
-    std::string dir(_path);
+    std::regex r("^(http|https):/");
+    std::smatch match;
+    std::string path(_path);
+
+    if (std::regex_search(path, match, r)) {
+        _sceneResourceRoot = "";
+        return path;
+    }
+
+    std::string dir(path);
 
     _sceneResourceRoot = std::string(dirname(&dir[0])) + '/';
 
-    std::string base(_path);
+    std::string base(path);
 
     return std::string(basename(&base[0]));
 
