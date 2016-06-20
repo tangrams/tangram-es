@@ -39,7 +39,7 @@ struct StyleUniform {
 struct SceneLoader {
     using Node = YAML::Node;
 
-    static bool loadScene(const std::string& _sceneString, Scene& _scene);
+    static bool loadScene(const std::string& _scenePath, Scene& _scene);
     static bool loadConfig(const std::string& _sceneString, Node& _root);
     static bool applyConfig(Node& config, Scene& scene);
     static void applyUpdates(Node& root, const std::vector<Scene::Update>& updates);
@@ -74,7 +74,7 @@ struct SceneLoader {
                                  std::vector<StyleParam>& out);
     static void parseTransition(Node params, Scene& scene, std::vector<StyleParam>& out);
 
-    static bool parseStyleUniforms(const Node& value, Scene& scene, StyleUniform& styleUniform);
+    static bool parseStyleUniforms(const Node& value, Scene* scene, StyleUniform& styleUniform);
 
     static void parseGlobals(const Node& node, Scene& scene, const std::string& key="");
     static void parseLightPosition(Node position, PointLight& light);
