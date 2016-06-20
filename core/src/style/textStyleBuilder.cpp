@@ -16,7 +16,7 @@
 #include <cmath>
 #include <locale>
 #include <mutex>
-#include <sstream>
+#include <algorithm>
 
 namespace Tangram {
 
@@ -345,7 +345,23 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     }
 
     if (anchor) {
-        LabelProperty::anchor(*anchor, p.anchor);
+        // TODO: cache in style param and optimize
+        std::string a = *anchor;
+        a.erase(std::remove(a.begin(), a.end(), ' '), a.end());
+        std::vector<std::string> anchors = splitString(a, ',');
+
+        if (anchors.size() > 1) {
+            for (int i = 1; i < anchors.size(); ++i) {
+                LabelProperty::Anchor labelAnchor;
+                if (LabelProperty::anchor(anchors[i], labelAnchor)) {
+                    p.anchorFallback.push_back(labelAnchor);
+                } else {
+                    LOG("Invalid anchor %s", anchors[i].c_str());
+                }
+            }
+        }
+
+        LabelProperty::anchor(anchors[0], p.anchor);
     }
 
     if (auto* transform = _rule.get<std::string>(StyleParamKey::text_transform)) {
