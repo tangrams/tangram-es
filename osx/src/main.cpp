@@ -13,6 +13,7 @@ void init_main_window(bool recreate);
 std::string sceneFile = "scene.yaml";
 
 GLFWwindow* main_window = nullptr;
+Tangram::Map* map = nullptr;
 int width = 800;
 int height = 600;
 float density = 1.0;
@@ -60,14 +61,14 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
     if (was_panning && action == GLFW_RELEASE) {
         was_panning = false;
-        Tangram::handleFlingGesture(x, y,
-                                    clamp(last_x_velocity, -2000.0, 2000.0),
-                                    clamp(last_y_velocity, -2000.0, 2000.0));
+        auto vx = clamp(last_x_velocity, -2000.0, 2000.0);
+        auto vy = clamp(last_y_velocity, -2000.0, 2000.0);
+        map->handleFlingGesture(x, y, vx, vy);
         return; // Clicks with movement don't count as taps, so stop here
     }
 
     if (action == GLFW_PRESS) {
-        Tangram::handlePanGesture(0.0f, 0.0f, 0.0f, 0.0f);
+        map->handlePanGesture(0.0f, 0.0f, 0.0f, 0.0f);
         last_x_down = x;
         last_y_down = y;
         last_time_pressed = time;
@@ -77,13 +78,13 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     if ((time - last_time_released) < double_tap_time) {
         // Double tap recognized
         LngLat p;
-        Tangram::screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
-        Tangram::setPosition(p.longitude, p.latitude, 1.f);
+        map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
+        map->setPositionEased(p.longitude, p.latitude, 1.f);
 
         logMsg("pick feature\n");
-        Tangram::clearDataSource(*data_source, true, true);
+        map->clearDataSource(*data_source, true, true);
 
-        auto picks = Tangram::pickFeaturesAt(x, y);
+        auto picks = map->pickFeaturesAt(x, y);
         std::string name;
         logMsg("picked %d features\n", picks.size());
         for (const auto& it : picks) {
@@ -94,7 +95,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     } else if ((time - last_time_pressed) < single_tap_time) {
         // Single tap recognized
         LngLat p1;
-        Tangram::screenPositionToLngLat(x, y, &p1.longitude, &p1.latitude);
+        map->screenPositionToLngLat(x, y, &p1.longitude, &p1.latitude);
 
         if (!(last_point == LngLat{0, 0})) {
             LngLat p2 = last_point;
@@ -133,7 +134,7 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
     if (action == GLFW_PRESS) {
 
         if (was_panning) {
-            Tangram::handlePanGesture(last_x_down, last_y_down, x, y);
+            map->handlePanGesture(last_x_down, last_y_down, x, y);
         }
 
         was_panning = true;
@@ -159,11 +160,11 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     bool shoving = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
 
     if (shoving) {
-        Tangram::handleShoveGesture(scroll_distance_multiplier * scrolly);
+        map->handleShoveGesture(scroll_distance_multiplier * scrolly);
     } else if (rotating) {
-        Tangram::handleRotateGesture(x, y, scroll_span_multiplier * scrolly);
+        map->handleRotateGesture(x, y, scroll_span_multiplier * scrolly);
     } else {
-        Tangram::handlePinchGesture(x, y, 1.0 + scroll_span_multiplier * scrolly, 0.f);
+        map->handlePinchGesture(x, y, 1.0 + scroll_span_multiplier * scrolly, 0.f);
     }
 
 }
@@ -200,13 +201,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 recreate_context = true;
                 break;
             case GLFW_KEY_R:
-                Tangram::loadSceneAsync(sceneFile.c_str());
+                map->loadSceneAsync(sceneFile.c_str());
                 break;
             case GLFW_KEY_Z:
-                Tangram::setZoom(Tangram::getZoom() + 1.f, 1.5f);
+                map->setZoomEased(map->getZoom() + 1.f, 1.5f);
                 break;
             case GLFW_KEY_N:
-                Tangram::setRotation(0.f, 1.f);
+                map->setRotationEased(0.f, 1.f);
                 break;
             case GLFW_KEY_S:
                 if (pixel_scale == 1.0) {
@@ -216,30 +217,30 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 } else {
                     pixel_scale = 1.0;
                 }
-                Tangram::loadSceneAsync(sceneFile.c_str());
-                Tangram::setPixelScale(pixel_scale);
+                map->loadSceneAsync(sceneFile.c_str());
+                map->setPixelScale(pixel_scale);
                 break;
             case GLFW_KEY_P:
-                Tangram::queueSceneUpdate("cameras", "{ main_camera: { type: perspective } }");
-                Tangram::applySceneUpdates();
+                map->queueSceneUpdate("cameras", "{ main_camera: { type: perspective } }");
+                map->applySceneUpdates();
                 break;
             case GLFW_KEY_I:
-                Tangram::queueSceneUpdate("cameras", "{ main_camera: { type: isometric } }");
-                Tangram::applySceneUpdates();
+                map->queueSceneUpdate("cameras", "{ main_camera: { type: isometric } }");
+                map->applySceneUpdates();
                 break;
             case GLFW_KEY_G:
                 static bool geoJSON = false;
                 if (!geoJSON) {
                     LOGS("Switching to GeoJSON data source");
-                    Tangram::queueSceneUpdate("sources.osm.type", "GeoJSON");
-                    Tangram::queueSceneUpdate("sources.osm.url", "https://vector.mapzen.com/osm/all/{z}/{x}/{y}.json");
+                    map->queueSceneUpdate("sources.osm.type", "GeoJSON");
+                    map->queueSceneUpdate("sources.osm.url", "https://vector.mapzen.com/osm/all/{z}/{x}/{y}.json");
                 } else {
                     LOGS("Switching to MVT data source");
-                    Tangram::queueSceneUpdate("sources.osm.type", "MVT");
-                    Tangram::queueSceneUpdate("sources.osm.url", "https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt");
+                    map->queueSceneUpdate("sources.osm.type", "MVT");
+                    map->queueSceneUpdate("sources.osm.url", "https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt");
                 }
                 geoJSON = !geoJSON;
-                Tangram::applySceneUpdates();
+                map->applySceneUpdates();
                 break;
             case GLFW_KEY_ESCAPE:
                 glfwSetWindowShouldClose(main_window, true);
@@ -253,7 +254,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void drop_callback(GLFWwindow* window, int count, const char** paths) {
 
     sceneFile = std::string(paths[0]);
-    Tangram::loadSceneAsync(sceneFile.c_str());
+    map->loadSceneAsync(sceneFile.c_str());
 
 }
 
@@ -269,16 +270,18 @@ void framebuffer_size_callback(GLFWwindow* window, int fWidth, int fHeight) {
         recreate_context = true;
         density = new_density;
     }
-    Tangram::setPixelScale(density);
-    Tangram::resize(fWidth, fHeight);
+    map->setPixelScale(density);
+    map->resize(fWidth, fHeight);
 
 }
 
 void init_main_window(bool recreate) {
 
     // Setup tangram
-    Tangram::initialize(sceneFile.c_str());
-    Tangram::loadSceneAsync(sceneFile.c_str());
+    if (!map) {
+        map = new Tangram::Map(sceneFile.c_str());
+        map->loadSceneAsync(sceneFile.c_str());
+    }
 
     if (!recreate) {
         // Destroy old window
@@ -306,13 +309,13 @@ void init_main_window(bool recreate) {
     }
 
     // Setup graphics
-    Tangram::setupGL();
+    map->setupGL();
     int fWidth = 0, fHeight = 0;
     glfwGetFramebufferSize(main_window, &fWidth, &fHeight);
     framebuffer_size_callback(main_window, fWidth, fHeight);
 
     data_source = std::make_shared<ClientGeoJsonSource>("touch", "");
-    Tangram::addDataSource(data_source);
+    map->addDataSource(data_source);
 
 }
 
@@ -363,8 +366,8 @@ int main(int argc, char* argv[]) {
         lastTime = currentTime;
 
         // Render
-        Tangram::update(delta);
-        Tangram::render();
+        map->update(delta);
+        map->render();
 
         // Swap front and back buffers
         glfwSwapBuffers(main_window);
