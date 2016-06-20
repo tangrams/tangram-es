@@ -37,9 +37,10 @@ public:
         visible         = 1 << 2,
         sleep           = 1 << 3,
         out_of_screen   = 1 << 4,
-        wait_occ        = 1 << 5, // state waiting for first occlusion result
-        skip_transition = 1 << 6,
-        dead            = 1 << 7,
+        anchor_fallback = 1 << 5,
+        wait_occ        = 1 << 6, // state waiting for first occlusion result
+        skip_transition = 1 << 7,
+        dead            = 1 << 8,
     };
 
     struct Transform {
@@ -79,6 +80,8 @@ public:
 
         // the label hash based on its styling parameters
         size_t paramHash = 0;
+
+        std::vector<LabelProperty::Anchor> anchorFallback;
     };
 
     Label(Transform _transform, glm::vec2 _size, Type _type, Options _options, LabelProperty::Anchor _anchor);
@@ -125,7 +128,9 @@ public:
     bool occludedLastFrame() const { return m_occludedLastFrame; }
 
     const Label* parent() const { return m_parent; }
-    void setParent(const Label& parent, bool definePriority);
+    void setParent(const Label& _parent, bool _definePriority);
+
+    void alignFromParent(const Label& _parent);
 
     LabelProperty::Anchor anchorType() const { return m_anchorType; }
 
@@ -134,6 +139,7 @@ public:
     void enterState(const State& _state, float _alpha = 1.0f);
 
     Type type() const { return m_type; }
+
 private:
 
     virtual void applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
@@ -147,6 +153,8 @@ private:
     State m_state;
     // the label fade effect
     FadeEffect m_fade;
+
+    int m_anchorFallbackCount;
 
 protected:
 

@@ -351,10 +351,10 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         std::vector<std::string> anchors = splitString(a, ',');
 
         if (anchors.size() > 1) {
-            for (int i = 1; i < anchors.size(); ++i) {
+            for (int i = 0; i < anchors.size(); ++i) {
                 LabelProperty::Anchor labelAnchor;
                 if (LabelProperty::anchor(anchors[i], labelAnchor)) {
-                    p.anchorFallback.push_back(labelAnchor);
+                    p.labelOptions.anchorFallback.push_back(labelAnchor);
                 } else {
                     LOG("Invalid anchor %s", anchors[i].c_str());
                 }
