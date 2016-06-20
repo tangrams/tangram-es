@@ -33,10 +33,6 @@ struct Stops;
 
 class Scene {
 public:
-    struct Update {
-        std::string keys;
-        std::string value;
-    };
 
     struct Camera {
         CameraType type;

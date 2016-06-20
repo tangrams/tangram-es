@@ -24,50 +24,31 @@
 #include "util/ease.h"
 #include "debug/textDisplay.h"
 #include "debug/frameInfo.h"
-#include <memory>
-#include <array>
+
 #include <cmath>
 #include <bitset>
-#include <mutex>
-#include <queue>
-#include <thread>
 
 namespace Tangram {
 
 const static size_t MAX_WORKERS = 2;
 
-std::mutex m_tilesMutex;
-std::mutex m_tasksMutex;
-std::mutex m_sceneMutex;
-std::queue<std::function<void()>> m_tasks;
-std::unique_ptr<TileWorker> m_tileWorker;
-std::unique_ptr<TileManager> m_tileManager;
-std::shared_ptr<Scene> m_scene;
-std::shared_ptr<View> m_view;
-std::unique_ptr<Labels> m_labels;
-std::unique_ptr<InputHandler> m_inputHandler;
-
-std::shared_ptr<Scene> m_nextScene;
-std::vector<Scene::Update> m_sceneUpdates;
-
-std::array<Ease, 4> m_eases;
-enum class EaseField { position, zoom, rotation, tilt };
-void setEase(EaseField _f, Ease _e) {
+void Map::setEase(EaseField _f, Ease _e) {
     m_eases[static_cast<size_t>(_f)] = _e;
     requestRender();
 }
-void clearEase(EaseField _f) {
+void Map::clearEase(EaseField _f) {
     static Ease none = {};
     m_eases[static_cast<size_t>(_f)] = none;
 }
 
 static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
-static bool g_cacheGlState = false;
+std::mutex g_tasksMutex;
+std::queue<std::function<void()>> g_tasks;
 
 AsyncWorker m_asyncWorker;
 
-void initialize(const char* _scenePath) {
+Map::Map(const char* _scenePath) {
 
     // For some unknown reasons, android fails to render the map, if same scene is reloaded, without resetting any of
     // the other Tangram global resources, which is what this method does.
@@ -102,7 +83,11 @@ void initialize(const char* _scenePath) {
 
 }
 
-void setScene(std::shared_ptr<Scene>& _scene) {
+Map::~Map() {
+
+}
+
+void Map::setScene(std::shared_ptr<Scene>& _scene) {
     {
         std::lock_guard<std::mutex> lock(m_sceneMutex);
         m_scene = _scene;
@@ -155,7 +140,7 @@ void setScene(std::shared_ptr<Scene>& _scene) {
     }
 }
 
-void loadScene(const char* _scenePath, bool _useScenePosition) {
+void Map::loadScene(const char* _scenePath, bool _useScenePosition) {
     LOG("Loading scene file: %s", _scenePath);
 
     // Copy old scene
@@ -167,7 +152,7 @@ void loadScene(const char* _scenePath, bool _useScenePosition) {
     }
 }
 
-void loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _platformCallback) {
+void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _platformCallback) {
     LOG("Loading scene file (async): %s", _scenePath);
 
     {
@@ -177,11 +162,11 @@ void loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _pl
         m_nextScene->useScenePosition = _useScenePosition;
     }
 
-    Tangram::runAsyncTask([scene = m_nextScene, _platformCallback](){
+    Tangram::runAsyncTask([scene = m_nextScene, _platformCallback, this](){
 
             bool ok = SceneLoader::loadScene(scene);
 
-            Tangram::runOnMainLoop([scene, ok, _platformCallback]() {
+            Tangram::runOnMainLoop([scene, ok, _platformCallback, this]() {
                     {
                         std::lock_guard<std::mutex> lock(m_sceneMutex);
                         if (scene == m_nextScene) {
@@ -191,20 +176,20 @@ void loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _pl
 
                     if (ok) {
                         auto s = scene;
-                        Tangram::setScene(s);
-                        Tangram::applySceneUpdates();
+                        setScene(s);
+                        applySceneUpdates();
                         if (_platformCallback) { _platformCallback(); }
                     }
                 });
         });
 }
 
-void queueSceneUpdate(const char* _path, const char* _value) {
+void Map::queueSceneUpdate(const char* _path, const char* _value) {
     std::lock_guard<std::mutex> lock(m_sceneMutex);
     m_sceneUpdates.push_back({_path, _value});
 }
 
-void applySceneUpdates() {
+void Map::applySceneUpdates() {
 
     LOG("Applying %d scene updates", m_sceneUpdates.size());
 
@@ -213,7 +198,7 @@ void applySceneUpdates() {
         return;
     }
 
-    std::vector<Scene::Update> updates;
+    std::vector<SceneUpdate> updates;
     {
         std::lock_guard<std::mutex> lock(m_sceneMutex);
         if (m_sceneUpdates.empty()) { return; }
@@ -225,13 +210,13 @@ void applySceneUpdates() {
         m_sceneUpdates.clear();
     }
 
-    Tangram::runAsyncTask([scene = m_nextScene, updates = std::move(updates)](){
+    Tangram::runAsyncTask([scene = m_nextScene, updates = std::move(updates), this](){
 
             SceneLoader::applyUpdates(scene->config(), updates);
 
             bool ok = SceneLoader::applyConfig(scene->config(), *scene);
 
-            Tangram::runOnMainLoop([scene, ok]() {
+            Tangram::runOnMainLoop([scene, ok, this]() {
                     if (scene == m_nextScene) {
                         std::lock_guard<std::mutex> lock(m_sceneMutex);
                         m_nextScene.reset();
@@ -239,14 +224,14 @@ void applySceneUpdates() {
 
                     if (ok) {
                         auto s = scene;
-                        Tangram::setScene(s);
-                        Tangram::applySceneUpdates();
+                        setScene(s);
+                        applySceneUpdates();
                     }
                 });
         });
 }
 
-void resize(int _newWidth, int _newHeight) {
+void Map::resize(int _newWidth, int _newHeight) {
 
     LOGS("resize: %d x %d", _newWidth, _newHeight);
     LOG("resize: %d x %d", _newWidth, _newHeight);
@@ -260,7 +245,7 @@ void resize(int _newWidth, int _newHeight) {
     Primitives::setResolution(_newWidth, _newHeight);
 }
 
-bool update(float _dt) {
+bool Map::update(float _dt) {
 
     FrameInfo::beginUpdate();
 
@@ -277,15 +262,15 @@ bool update(float _dt) {
 
     size_t nTasks = 0;
     {
-        std::lock_guard<std::mutex> lock(m_tasksMutex);
-        nTasks = m_tasks.size();
+        std::lock_guard<std::mutex> lock(g_tasksMutex);
+        nTasks = g_tasks.size();
     }
     while (nTasks-- > 0) {
         std::function<void()> task;
         {
-            std::lock_guard<std::mutex> lock(m_tasksMutex);
-            task = m_tasks.front();
-            m_tasks.pop();
+            std::lock_guard<std::mutex> lock(g_tasksMutex);
+            task = g_tasks.front();
+            g_tasks.pop();
         }
         task();
     }
@@ -343,11 +328,12 @@ bool update(float _dt) {
     return viewComplete;
 }
 
-void render() {
+void Map::render() {
+
     FrameInfo::beginFrame();
 
     // Invalidate render states for new frame
-    if (!g_cacheGlState) {
+    if (!m_cacheGlState) {
         RenderState::invalidate();
     }
 
@@ -383,23 +369,23 @@ void render() {
     FrameInfo::draw(*m_view, *m_tileManager);
 }
 
-int getViewportHeight() {
+int Map::getViewportHeight() {
     return m_view->getHeight();
 }
 
-int getViewportWidth() {
+int Map::getViewportWidth() {
     return m_view->getWidth();
 }
 
-float getPixelScale() {
+float Map::getPixelScale() {
     return m_view->pixelScale();
 }
 
-void captureSnapshot(unsigned int* _data) {
+void Map::captureSnapshot(unsigned int* _data) {
     GL_CHECK(glReadPixels(0, 0, m_view->getWidth(), m_view->getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)_data));
 }
 
-void setPositionNow(double _lon, double _lat) {
+void Map::setPositionNow(double _lon, double _lat) {
 
     glm::dvec2 meters = m_view->getMapProjection().LonLatToMeters({ _lon, _lat});
     m_view->setPosition(meters.x, meters.y);
@@ -408,14 +394,14 @@ void setPositionNow(double _lon, double _lat) {
 
 }
 
-void setPosition(double _lon, double _lat) {
+void Map::setPosition(double _lon, double _lat) {
 
     setPositionNow(_lon, _lat);
     clearEase(EaseField::position);
 
 }
 
-void setPosition(double _lon, double _lat, float _duration, EaseType _e) {
+void Map::setPositionEased(double _lon, double _lat, float _duration, EaseType _e) {
 
     double lon_start, lat_start;
     getPosition(lon_start, lat_start);
@@ -424,7 +410,7 @@ void setPosition(double _lon, double _lat, float _duration, EaseType _e) {
 
 }
 
-void getPosition(double& _lon, double& _lat) {
+void Map::getPosition(double& _lon, double& _lat) {
 
     glm::dvec2 meters(m_view->getPosition().x, m_view->getPosition().y);
     glm::dvec2 degrees = m_view->getMapProjection().MetersToLonLat(meters);
@@ -433,7 +419,7 @@ void getPosition(double& _lon, double& _lat) {
 
 }
 
-void setZoomNow(float _z) {
+void Map::setZoomNow(float _z) {
 
     m_view->setZoom(_z);
     m_inputHandler->cancelFling();
@@ -441,14 +427,14 @@ void setZoomNow(float _z) {
 
 }
 
-void setZoom(float _z) {
+void Map::setZoom(float _z) {
 
     setZoomNow(_z);
     clearEase(EaseField::zoom);
 
 }
 
-void setZoom(float _z, float _duration, EaseType _e) {
+void Map::setZoomEased(float _z, float _duration, EaseType _e) {
 
     float z_start = getZoom();
     auto cb = [=](float t) { setZoomNow(ease(z_start, _z, t, _e)); };
@@ -456,27 +442,27 @@ void setZoom(float _z, float _duration, EaseType _e) {
 
 }
 
-float getZoom() {
+float Map::getZoom() {
 
     return m_view->getZoom();
 
 }
 
-void setRotationNow(float _radians) {
+void Map::setRotationNow(float _radians) {
 
     m_view->setRoll(_radians);
     requestRender();
 
 }
 
-void setRotation(float _radians) {
+void Map::setRotation(float _radians) {
 
     setRotationNow(_radians);
     clearEase(EaseField::rotation);
 
 }
 
-void setRotation(float _radians, float _duration, EaseType _e) {
+void Map::setRotationEased(float _radians, float _duration, EaseType _e) {
 
     float radians_start = getRotation();
 
@@ -490,28 +476,28 @@ void setRotation(float _radians, float _duration, EaseType _e) {
 
 }
 
-float getRotation() {
+float Map::getRotation() {
 
     return m_view->getRoll();
 
 }
 
 
-void setTiltNow(float _radians) {
+void Map::setTiltNow(float _radians) {
 
     m_view->setPitch(_radians);
     requestRender();
 
 }
 
-void setTilt(float _radians) {
+void Map::setTilt(float _radians) {
 
     setTiltNow(_radians);
     clearEase(EaseField::tilt);
 
 }
 
-void setTilt(float _radians, float _duration, EaseType _e) {
+void Map::setTiltEased(float _radians, float _duration, EaseType _e) {
 
     float tilt_start = getTilt();
     auto cb = [=](float t) { setTiltNow(ease(tilt_start, _radians, t, _e)); };
@@ -519,13 +505,13 @@ void setTilt(float _radians, float _duration, EaseType _e) {
 
 }
 
-float getTilt() {
+float Map::getTilt() {
 
     return m_view->getPitch();
 
 }
 
-bool screenPositionToLngLat(double _x, double _y, double* _lng, double* _lat) {
+bool Map::screenPositionToLngLat(double _x, double _y, double* _lng, double* _lat) {
 
     double intersection = m_view->screenToGroundPlane(_x, _y);
     glm::dvec2 meters(_x + m_view->getPosition().x, _y + m_view->getPosition().y);
@@ -536,7 +522,7 @@ bool screenPositionToLngLat(double _x, double _y, double* _lng, double* _lat) {
     return (intersection >= 0);
 }
 
-bool lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y) {
+bool Map::lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y) {
     bool clipped = false;
 
     glm::vec2 screenCoords = m_view->lonLatToScreenPosition(_lng, _lat, clipped);
@@ -549,7 +535,7 @@ bool lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y) {
     return !clipped && withinViewport;
 }
 
-void setPixelScale(float _pixelsPerPoint) {
+void Map::setPixelScale(float _pixelsPerPoint) {
 
     if (m_view) {
         m_view->setPixelScale(_pixelsPerPoint);
@@ -564,32 +550,32 @@ void setPixelScale(float _pixelsPerPoint) {
     }
 }
 
-void setCameraType(int _type) {
+void Map::setCameraType(int _type) {
 
     m_view->setCameraType(static_cast<CameraType>(_type));
     requestRender();
 
 }
 
-int getCameraType() {
+int Map::getCameraType() {
 
     return static_cast<int>(m_view->cameraType());
 
 }
 
-void addDataSource(std::shared_ptr<DataSource> _source) {
+void Map::addDataSource(std::shared_ptr<DataSource> _source) {
     if (!m_tileManager) { return; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
     m_tileManager->addClientDataSource(_source);
 }
 
-bool removeDataSource(DataSource& source) {
+bool Map::removeDataSource(DataSource& source) {
     if (!m_tileManager) { return false; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
     return m_tileManager->removeClientDataSource(source);
 }
 
-void clearDataSource(DataSource& _source, bool _data, bool _tiles) {
+void Map::clearDataSource(DataSource& _source, bool _data, bool _tiles) {
     if (!m_tileManager) { return; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
 
@@ -599,52 +585,105 @@ void clearDataSource(DataSource& _source, bool _data, bool _tiles) {
     requestRender();
 }
 
-void handleTapGesture(float _posX, float _posY) {
+void Map::handleTapGesture(float _posX, float _posY) {
 
     m_inputHandler->handleTapGesture(_posX, _posY);
 
 }
 
-void handleDoubleTapGesture(float _posX, float _posY) {
+void Map::handleDoubleTapGesture(float _posX, float _posY) {
 
     m_inputHandler->handleDoubleTapGesture(_posX, _posY);
 
 }
 
-void handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
+void Map::handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
 
     m_inputHandler->handlePanGesture(_startX, _startY, _endX, _endY);
 
 }
 
-void handleFlingGesture(float _posX, float _posY, float _velocityX, float _velocityY) {
+void Map::handleFlingGesture(float _posX, float _posY, float _velocityX, float _velocityY) {
 
     m_inputHandler->handleFlingGesture(_posX, _posY, _velocityX, _velocityY);
 
 }
 
-void handlePinchGesture(float _posX, float _posY, float _scale, float _velocity) {
+void Map::handlePinchGesture(float _posX, float _posY, float _scale, float _velocity) {
 
     m_inputHandler->handlePinchGesture(_posX, _posY, _scale, _velocity);
 
 }
 
-void handleRotateGesture(float _posX, float _posY, float _radians) {
+void Map::handleRotateGesture(float _posX, float _posY, float _radians) {
 
     m_inputHandler->handleRotateGesture(_posX, _posY, _radians);
 
 }
 
-void handleShoveGesture(float _distance) {
+void Map::handleShoveGesture(float _distance) {
 
     m_inputHandler->handleShoveGesture(_distance);
 
 }
 
+void Map::setupGL() {
+
+    LOG("setup GL");
+
+    if (m_tileManager) {
+        m_tileManager->clearTileSets();
+    }
+
+    // Reconfigure the render states. Increases context 'generation'.
+    // The OpenGL context has been destroyed since the last time resources were
+    // created, so we invalidate all data that depends on OpenGL object handles.
+    RenderState::increaseGeneration();
+    RenderState::invalidate();
+
+    // Set default primitive render color
+    Primitives::setColor(0xffffff);
+
+    // Load GL extensions and capabilities
+    Hardware::loadExtensions();
+    Hardware::loadCapabilities();
+
+    Hardware::printAvailableExtensions();
+}
+
+void Map::useCachedGlState(bool _useCache) {
+    m_cacheGlState = _useCache;
+}
+
+const std::vector<TouchItem>& Map::pickFeaturesAt(float _x, float _y) {
+    return m_labels->getFeaturesAtPoint(*m_view, 0, m_scene->styles(),
+                                        m_tileManager->getVisibleTiles(),
+                                        _x, _y);
+}
+
+void runOnMainLoop(std::function<void()> _task) {
+    std::lock_guard<std::mutex> lock(g_tasksMutex);
+    g_tasks.emplace(std::move(_task));
+    // FIXME: The collection of tasks should be a mapping from thread IDs to lists of tasks;
+    // Any resources that need to be disposed on a GL thread can store the ID of the thread
+    // that they are created on, then pass that ID into this function when they are
+    // disposed; this ensures that multiple tangram instances on multiple threads can all
+    // safely dispose their GL resources on the same thread that created them.
+}
+
+void runAsyncTask(std::function<void()> _task) {
+    m_asyncWorker.enqueue(std::move(_task));
+}
+
+float frameTime() {
+    // FIXME: g_time should be a member of each Map instance
+    return g_time;
+}
+
 void setDebugFlag(DebugFlags _flag, bool _on) {
 
     g_flags.set(_flag, _on);
-    m_view->setZoom(m_view->getZoom()); // Force the view to refresh
+    // m_view->setZoom(m_view->getZoom()); // Force the view to refresh
 
 }
 
@@ -657,67 +696,17 @@ bool getDebugFlag(DebugFlags _flag) {
 void toggleDebugFlag(DebugFlags _flag) {
 
     g_flags.flip(_flag);
-    m_view->setZoom(m_view->getZoom()); // Force the view to refresh
+    // m_view->setZoom(m_view->getZoom()); // Force the view to refresh
 
     // Rebuild tiles for debug modes that needs it
-    if (_flag == DebugFlags::proxy_colors
-     || _flag == DebugFlags::tile_bounds
-     || _flag == DebugFlags::all_labels
-     || _flag == DebugFlags::tile_infos) {
-        if (m_tileManager) {
-            std::lock_guard<std::mutex> lock(m_tilesMutex);
-            m_tileManager->clearTileSets();
-        }
-    }
-}
-
-const std::vector<TouchItem>& pickFeaturesAt(float _x, float _y) {
-    return m_labels->getFeaturesAtPoint(*m_view, 0, m_scene->styles(),
-                                        m_tileManager->getVisibleTiles(),
-                                        _x, _y);
-}
-
-void useCachedGlState(bool _useCache) {
-    g_cacheGlState = _useCache;
-}
-
-void setupGL() {
-
-    LOG("setup GL");
-
-    if (m_tileManager) {
-        m_tileManager->clearTileSets();
-    }
-
-    // Reconfigure the render states. Increases context 'generation'.
-    // The OpenGL context has been destroyed since the last time resources were
-    // created, so we invalidate all data that depends on OpenGL object handles.
-    RenderState::invalidate();
-    RenderState::increaseGeneration();
-
-    // Set default primitive render color
-    Primitives::setColor(0xffffff);
-
-    // Load GL extensions and capabilities
-    Hardware::loadExtensions();
-    Hardware::loadCapabilities();
-
-    Hardware::printAvailableExtensions();
-}
-
-void runOnMainLoop(std::function<void()> _task) {
-    std::lock_guard<std::mutex> lock(m_tasksMutex);
-    m_tasks.emplace(std::move(_task));
-
-    requestRender();
-}
-
-void runAsyncTask(std::function<void()> _task) {
-    m_asyncWorker.enqueue(std::move(_task));
-}
-
-float frameTime() {
-    return g_time;
+    // if (_flag == DebugFlags::proxy_colors
+    //  || _flag == DebugFlags::tile_bounds
+    //  || _flag == DebugFlags::tile_infos) {
+    //     if (m_tileManager) {
+    //         std::lock_guard<std::mutex> lock(m_tilesMutex);
+    //         m_tileManager->clearTileSets();
+    //     }
+    // }
 }
 
 }

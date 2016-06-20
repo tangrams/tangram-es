@@ -2,6 +2,7 @@
 
 #include "gl/uniform.h"
 #include "scene/scene.h"
+#include "tangram.h"
 #include <string>
 #include <vector>
 #include <memory>
@@ -42,7 +43,7 @@ struct SceneLoader {
     static bool loadScene(std::shared_ptr<Scene> _scene);
     static bool loadConfig(const std::string& _sceneString, Node& _root);
     static bool applyConfig(Node& config, Scene& scene);
-    static void applyUpdates(Node& root, const std::vector<Scene::Update>& updates);
+    static void applyUpdates(Node& root, const std::vector<SceneUpdate>& updates);
     static void applyGlobalProperties(Node& node, Scene& scene);
 
     /*** all public for testing ***/

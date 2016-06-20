@@ -74,7 +74,7 @@ bool SceneLoader::loadConfig(const std::string& _sceneString, Node& root) {
     return true;
 }
 
-void SceneLoader::applyUpdates(Node& root, const std::vector<Scene::Update>& updates) {
+void SceneLoader::applyUpdates(Node& root, const std::vector<SceneUpdate>& updates) {
 
     for (const auto& update : updates) {
 

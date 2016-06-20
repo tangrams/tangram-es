@@ -46,6 +46,7 @@ protected:
     std::unique_ptr<GeoJSONVT> m_store;
     mutable std::mutex m_mutexStore;
     std::vector<mapbox::util::geojsonvt::ProjectedFeature> m_features;
+    bool m_hasPendingData = false;
 
 };
 
