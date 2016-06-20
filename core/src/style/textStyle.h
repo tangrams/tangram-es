@@ -36,7 +36,6 @@ public:
         TextLabelProperty::Transform transform = TextLabelProperty::Transform::none;
         TextLabelProperty::Align align = TextLabelProperty::Align::center;
         LabelProperty::Anchor anchor = LabelProperty::Anchor::center;
-        std::vector<LabelProperty::Anchor> anchorFallback;
 
         float fontScale = 1;
         float lineSpacing = 0;

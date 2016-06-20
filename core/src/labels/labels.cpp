@@ -415,6 +415,12 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
         // draw projected anchor point
         Primitives::setColor(rs, 0x0000ff);
         Primitives::drawRect(rs, sp - glm::vec2(1.f), sp + glm::vec2(1.f));
+
+        if (label->options().anchorFallback.size() != 0) {
+            Primitives::setColor(rs, 0xffffff);
+            Primitives::drawPoly(rs, &(label->obb().getQuad())[0], 4);
+        }
+
 #if 0
         if (label->options().repeatGroup != 0 && label->state() == Label::State::visible) {
             size_t seed = 0;
