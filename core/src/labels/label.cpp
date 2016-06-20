@@ -25,6 +25,7 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _
     m_occludedLastFrame = false;
     m_occluded = false;
     m_parent = nullptr;
+    m_anchorFallbackCount = 0;
 }
 
 Label::~Label() {}
@@ -101,18 +102,22 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
     return true;
 }
 
+void Label::alignFromParent(const Label& _parent) {
+    glm::vec2 anchorDir = LabelProperty::anchorDirection(_parent.anchorType());
+    glm::vec2 anchorOrigin = anchorDir * _parent.dimension() * 0.5f;
+
+    applyAnchor(m_dim + _parent.dimension(), anchorOrigin, m_anchorType);
+    m_options.offset += _parent.options().offset;
+}
+
 void Label::setParent(const Label& _parent, bool _definePriority) {
     m_parent = &_parent;
 
-    glm::vec2 anchorDir = LabelProperty::anchorDirection(_parent.anchorType());
-    glm::vec2 anchorOrigin = anchorDir * _parent.dimension() * 0.5f;
-    applyAnchor(m_dim + _parent.dimension(), anchorOrigin, m_anchorType);
+    alignFromParent(_parent);
 
     if (_definePriority) {
         m_options.priority = _parent.options().priority + 0.5f;
     }
-
-    m_options.offset += _parent.options().offset;
 }
 
 bool Label::offViewport(const glm::vec2& _screenSize) {
@@ -138,6 +143,7 @@ bool Label::canOcclude() {
                         State::skip_transition |
                         State::fading_in |
                         State::sleep |
+                        State::anchor_fallback |
                         State::out_of_screen |
                         State::dead);
 
@@ -148,6 +154,7 @@ bool Label::visibleState() const {
     int visibleFlags = (State::visible |
                         State::fading_in |
                         State::fading_out |
+                        State::anchor_fallback |
                         State::skip_transition);
 
     return (visibleFlags & m_state);
@@ -173,6 +180,7 @@ void Label::setAlpha(float _alpha) {
 }
 
 void Label::resetState() {
+
     if (m_state == State::dead) { return; }
 
     m_occludedLastFrame = false;
@@ -234,11 +242,38 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
     switch (m_state) {
         case State::visible:
             if (m_occluded) {
-                m_fade = FadeEffect(false, m_options.hideTransition.ease,
-                                    m_options.hideTransition.time);
-                enterState(State::fading_out, 1.0);
+                if (m_options.anchorFallback.size() > 0) {
+                    enterState(State::anchor_fallback, 0.0);
+                } else {
+                    m_fade = FadeEffect(false, m_options.hideTransition.ease,
+                                        m_options.hideTransition.time);
+                    enterState(State::fading_out, 1.0);
+                }
                 animate = true;
             }
+            break;
+        case State::anchor_fallback:
+            if (m_occluded) {
+                if (m_anchorFallbackCount >= m_options.anchorFallback.size()) {
+                    m_fade = FadeEffect(false, m_options.hideTransition.ease,
+                                        m_options.hideTransition.time);
+                    enterState(State::fading_out, m_transform.state.alpha);
+                    m_anchorFallbackCount = 0;
+                } else {
+                    m_anchorType = m_options.anchorFallback[m_anchorFallbackCount];
+                    if (m_parent) {
+                        alignFromParent(*m_parent);
+                    } else {
+                        applyAnchor(m_dim, glm::vec2(0.0), m_anchorType);
+                    }
+                }
+                m_anchorFallbackCount++;
+            } else {
+                m_anchorFallbackCount = 0;
+                enterState(State::visible, 1.0);
+            }
+            
+            animate = true;
             break;
         case State::fading_in:
             if (m_occluded) {
@@ -267,7 +302,12 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             break;
         case State::wait_occ:
             if (m_occluded) {
-                enterState(State::sleep, 0.0);
+                if (m_options.anchorFallback.size() > 0) {
+                    enterState(State::anchor_fallback, 0.0);
+                    animate = true;
+                } else {
+                    enterState(State::sleep, 0.0);
+                }
             } else {
                 m_fade = FadeEffect(true, m_options.showTransition.ease,
                                     m_options.showTransition.time);
