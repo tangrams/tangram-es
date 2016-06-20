@@ -43,6 +43,7 @@ enum Align {
 
 bool transform(const std::string& _transform, Transform& _out);
 bool align(const std::string& _transform, Align& _out);
+Align alignFromAnchor(LabelProperty::Anchor _anchor);
 
 } // TextLabelProperty
 } // Tangram
