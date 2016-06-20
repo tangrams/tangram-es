@@ -5,13 +5,13 @@
 #import <cstdio>
 #import <cstdarg>
 #import <fstream>
+#import <regex>
 
 #include "platform_ios.h"
 #include "ViewController.h"
 
 static ViewController* viewController;
 NSURLSession* defaultSession;
-static NSMutableString* s_resourceRoot = NULL;
 
 void init(ViewController* _controller) {
 
@@ -58,7 +58,16 @@ bool isContinuousRendering() {
 
 }
 
-std::string setResourceRoot(const char* _path) {
+std::string setResourceRoot(const char* _path, std::string& _sceneResourceRoot) {
+
+    std::regex r("^(http|https):/");
+    std::smatch match;
+    std::string p(_path);
+
+    if (std::regex_search(p, match, r)) {
+        _sceneResourceRoot = "";
+        return p;
+    }
 
     NSString* path = [NSString stringWithUTF8String:_path];
 
@@ -67,16 +76,19 @@ std::string setResourceRoot(const char* _path) {
         path = [resources stringByAppendingPathComponent:path];
     }
 
-    s_resourceRoot = [ [path stringByDeletingLastPathComponent] mutableCopy];
+    _sceneResourceRoot = std::string([ [path stringByDeletingLastPathComponent] UTF8String]);
 
     return std::string([[path lastPathComponent] UTF8String]);
 
 }
 
-NSString* resolvePath(const char* _path, PathType _type) {
+NSString* resolvePath(const char* _path, PathType _type, const char* _resourceRoot) {
 
-    if (s_resourceRoot == NULL) {
-        setResourceRoot(".");
+    NSString* resourceRoot = NULL;
+    if (_resourceRoot == NULL) {
+        resourceRoot = @".";
+    } else {
+        resourceRoot = [NSString stringWithUTF8String:(_resourceRoot)];
     }
 
     NSString* path = [NSString stringWithUTF8String:_path];
@@ -85,15 +97,15 @@ NSString* resolvePath(const char* _path, PathType _type) {
     case PathType::internal:
         return [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:path];
     case PathType::resource:
-        return [s_resourceRoot stringByAppendingPathComponent:path];
+        return [resourceRoot stringByAppendingPathComponent:path];
     case PathType::absolute:
         return path;
     }
 }
 
-std::string stringFromFile(const char* _path, PathType _type) {
+std::string stringFromFile(const char* _path, PathType _type, const char* _resourceRoot) {
 
-    NSString* path = resolvePath(_path, _type);
+    NSString* path = resolvePath(_path, _type, _resourceRoot);
     NSString* str = [NSString stringWithContentsOfFile:path
                                           usedEncoding:NULL
                                                  error:NULL];
@@ -106,9 +118,10 @@ std::string stringFromFile(const char* _path, PathType _type) {
     return std::string([str UTF8String]);
 }
 
-unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _size) {
+unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _size,
+                                const char* _resourceRoot) {
 
-    NSString* path = resolvePath(_path, _type);
+    NSString* path = resolvePath(_path, _type, _resourceRoot);
     NSMutableData* data = [NSMutableData dataWithContentsOfFile:path];
 
     if (data == nil) {
