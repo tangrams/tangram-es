@@ -7,7 +7,6 @@
 //
 
 #import "ViewController.h"
-#include "tangram.h"
 #include "platform_ios.h"
 
 @interface ViewController () {
@@ -101,7 +100,7 @@
 
 // Implement touchesBegan to catch down events
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    Tangram::handlePanGesture(0.0f, 0.0f, 0.0f, 0.0f);
+    self.map->handlePanGesture(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
@@ -118,12 +117,12 @@
 
 - (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer {
     CGPoint location = [tapRecognizer locationInView:self.view];
-    Tangram::handleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
+    self.map->handleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
 }
 
 - (void)respondToDoubleTapGesture:(UITapGestureRecognizer *)doubleTapRecognizer {
     CGPoint location = [doubleTapRecognizer locationInView:self.view];
-    Tangram::handleDoubleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
+    self.map->handleDoubleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
 }
 
 - (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer {
@@ -136,10 +135,10 @@
 
     switch (panRecognizer.state) {
         case UIGestureRecognizerStateChanged:
-            Tangram::handlePanGesture(start.x * self.pixelScale, start.y * self.pixelScale, end.x * self.pixelScale, end.y * self.pixelScale);
+            self.map->handlePanGesture(start.x * self.pixelScale, start.y * self.pixelScale, end.x * self.pixelScale, end.y * self.pixelScale);
             break;
         case UIGestureRecognizerStateEnded:
-            Tangram::handleFlingGesture(end.x * self.pixelScale, end.y * self.pixelScale, velocity.x * self.pixelScale, velocity.y * self.pixelScale);
+            self.map->handleFlingGesture(end.x * self.pixelScale, end.y * self.pixelScale, velocity.x * self.pixelScale, velocity.y * self.pixelScale);
             break;
         default:
             break;
@@ -150,14 +149,14 @@
     CGPoint location = [pinchRecognizer locationInView:self.view];
     CGFloat scale = pinchRecognizer.scale;
     [pinchRecognizer setScale:1.0];
-    Tangram::handlePinchGesture(location.x * self.pixelScale, location.y * self.pixelScale, scale, pinchRecognizer.velocity);
+    self.map->handlePinchGesture(location.x * self.pixelScale, location.y * self.pixelScale, scale, pinchRecognizer.velocity);
 }
 
 - (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer {
     CGPoint position = [rotationRecognizer locationInView:self.view];
     CGFloat rotation = rotationRecognizer.rotation;
     [rotationRecognizer setRotation:0.0];
-    Tangram::handleRotateGesture(position.x * self.pixelScale, position.y * self.pixelScale, rotation);
+    self.map->handleRotateGesture(position.x * self.pixelScale, position.y * self.pixelScale, rotation);
 }
 
 - (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer {
@@ -166,7 +165,7 @@
 
     // don't trigger shove on single touch gesture
     if ([shoveRecognizer numberOfTouches] == 2) {
-        Tangram::handleShoveGesture(displacement.y);
+        self.map->handleShoveGesture(displacement.y);
     }
 }
 
@@ -201,16 +200,18 @@
 {
     [EAGLContext setCurrentContext:self.context];
 
-    Tangram::initialize("scene.yaml");
-    Tangram::loadSceneAsync("scene.yaml");
-    Tangram::setupGL();
+    if (!self.map) {
+        self.map = new Tangram::Map("scene.yaml");
+        self.map->loadSceneAsync("scene.yaml");
+    }
+    self.map->setupGL();
 
     int width = self.view.bounds.size.width;
     int height = self.view.bounds.size.height;
 
-    Tangram::resize(width * self.pixelScale, height * self.pixelScale);
+    self.map->resize(width * self.pixelScale, height * self.pixelScale);
 
-    Tangram::setPixelScale(self.pixelScale);
+    self.map->setPixelScale(self.pixelScale);
 }
 
 - (void)tearDownGL
@@ -219,7 +220,7 @@
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
-    Tangram::resize(size.width * self.pixelScale, size.height * self.pixelScale);
+    self.map->resize(size.width * self.pixelScale, size.height * self.pixelScale);
     [self renderOnce];
 }
 
@@ -241,7 +242,7 @@
 
 - (void)update
 {
-    Tangram::update([self timeSinceLastUpdate]);
+    self.map->update([self timeSinceLastUpdate]);
 
     if (!self.continuous && !self.renderRequested) {
         self.paused = true;
@@ -251,7 +252,7 @@
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
-    Tangram::render();
+    self.map->render();
 }
 
 @end
