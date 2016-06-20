@@ -7,7 +7,7 @@
 namespace Tangram {
 
  // Incremented when the GL context is invalidated
-static int s_validGeneration;
+static int s_validGeneration = 0;
 static int s_textureUnit;
 
 namespace RenderState {
