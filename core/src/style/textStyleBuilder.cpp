@@ -355,22 +355,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     if (auto* align = _rule.get<std::string>(StyleParamKey::text_align)) {
         bool res = TextLabelProperty::align(*align, p.align);
         if (!res) {
-            switch(p.anchor) {
-            case LabelProperty::Anchor::top_left:
-            case LabelProperty::Anchor::left:
-            case LabelProperty::Anchor::bottom_left:
-                p.align = TextLabelProperty::Align::right;
-                break;
-            case LabelProperty::Anchor::top_right:
-            case LabelProperty::Anchor::right:
-            case LabelProperty::Anchor::bottom_right:
-                p.align = TextLabelProperty::Align::left;
-                break;
-            case LabelProperty::Anchor::top:
-            case LabelProperty::Anchor::bottom:
-            case LabelProperty::Anchor::center:
-                break;
-            }
+            p.align = TextLabelProperty::alignFromAnchor(p.anchor);
         }
     }
 

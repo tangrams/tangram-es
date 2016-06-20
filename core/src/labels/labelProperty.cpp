@@ -63,5 +63,22 @@ bool align(const std::string& _align, Align& _out) {
     return tryFind(s_AlignMap, _align, _out);
 }
 
+Align alignFromAnchor(LabelProperty::Anchor _anchor) {
+    switch(_anchor) {
+        case LabelProperty::Anchor::top_left:
+        case LabelProperty::Anchor::left:
+        case LabelProperty::Anchor::bottom_left:
+            return TextLabelProperty::Align::right;
+        case LabelProperty::Anchor::top_right:
+        case LabelProperty::Anchor::right:
+        case LabelProperty::Anchor::bottom_right:
+            return TextLabelProperty::Align::left;
+        case LabelProperty::Anchor::top:
+        case LabelProperty::Anchor::bottom:
+        case LabelProperty::Anchor::center:;
+    }
+    return TextLabelProperty::Align::center;
+}
+
 } // TextLabelProperty
 } // Tangram
