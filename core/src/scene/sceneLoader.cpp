@@ -339,7 +339,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
 
                 style.styleUniforms().emplace_back(name, styleUniform.value);
             } else {
-                LOGNode("Style uniform parsing failure '%s'", uniform.second);
+                LOGNode("Style uniform parsing failure", uniform.second);
             }
         }
     }
@@ -895,7 +895,7 @@ void SceneLoader::parseLightPosition(Node position, PointLight& light) {
         StyleParam::parseVec3(positionSequence, {Unit::meter, Unit::pixel}, lightPos);
         light.setPosition(lightPos);
     } else {
-        LOGNode("Wrong light position parameter %s", position);
+        LOGNode("Wrong light position parameter", position);
     }
 }
 
