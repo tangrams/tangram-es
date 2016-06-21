@@ -44,7 +44,7 @@ Node Importer::applySceneImports(const std::string& scenePath, const std::string
                         [&](std::vector<char>&& rawData) {
                         std::unique_lock<std::mutex> lock(sceneMutex);
                         progressCounter--;
-                        processScene(path, rawData.data());
+                        processScene(path, std::string(rawData.data(), rawData.size()));
                         m_condition.notify_all();
                     });
             } else {
