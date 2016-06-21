@@ -199,10 +199,22 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     size_t quadsStart = _quads.size();
     alfons::LineMetrics metrics;
 
+    // Collect possible alignment from anchor fallbacks
+    std::vector<TextLabelProperty::Align> alignments;
+    for (auto anchorFallback : _params.labelOptions.anchorFallback) {
+        TextLabelProperty::Align alignmentFallback = TextLabelProperty::alignFromAnchor(anchorFallback);
+        alignments.push_back(alignmentFallback);
+    }
+
     if (_params.wordWrap) {
-        m_textWrapper.draw(m_batch, line, MIN_LINE_WIDTH,
-                           _params.maxLineWidth, _params.align,
-                           _params.lineSpacing, metrics);
+        m_textWrapper.clearWraps();
+        
+        if (line.shapes().size() > 0) {
+            float width = m_textWrapper.getShapeRangeWidth(line,
+                MIN_LINE_WIDTH, _params.maxLineWidth);
+            m_textWrapper.draw(m_batch, width, line, alignments,
+                               _params.lineSpacing, metrics);
+        }
     } else {
         glm::vec2 position(0);
         m_batch.drawShapeRange(line, 0, line.shapes().size(), position, metrics);
