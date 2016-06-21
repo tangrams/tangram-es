@@ -55,8 +55,6 @@ public class MapView extends FrameLayout {
     public void getMapAsync(@NonNull final OnMapReadyCallback callback,
                             @NonNull final String sceneFilePath) {
 
-        final Context context = getContext();
-
         disposeMap();
 
         mapController = getMapInstance(sceneFilePath);
