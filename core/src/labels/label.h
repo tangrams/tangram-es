@@ -154,6 +154,7 @@ private:
     FadeEffect m_fade;
 
     int m_anchorFallbackCount;
+    int m_currentAnchorFallback;
 
 protected:
 

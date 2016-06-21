@@ -26,6 +26,7 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _
     m_occluded = false;
     m_parent = nullptr;
     m_anchorFallbackCount = 0;
+    m_currentAnchorFallback = 0;
 }
 
 Label::~Label() {}
@@ -252,6 +253,8 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
                     enterState(State::fading_out, 1.0);
                 }
                 animate = true;
+            } else if (m_currentAnchorFallback != 0) {
+                // TODO: try to place again to prefered fallback (0)
             }
             break;
         case State::anchor_fallback:
@@ -263,6 +266,7 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
                     m_anchorFallbackCount = 0;
                 } else {
                     m_anchorType = m_options.anchorFallback[m_anchorFallbackCount];
+                    m_currentAnchorFallback = m_anchorFallbackCount;
                     if (m_parent) {
                         alignFromParent(*m_parent);
                     } else {
