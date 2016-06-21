@@ -14,6 +14,7 @@ import android.widget.FrameLayout;
 public class MapView extends FrameLayout {
 
     protected GLSurfaceView glSurfaceView;
+    protected MapController mapController;
     protected AsyncTask<Void, Void, Boolean> getMapTask;
 
     public MapView(Context context) {
@@ -60,7 +61,11 @@ public class MapView extends FrameLayout {
             getMapTask.cancel(true);
         }
 
-        final MapController mapController = getMapInstance(sceneFilePath);
+        if (mapController != null) {
+            mapController.dispose();
+        }
+
+        mapController = getMapInstance(sceneFilePath);
 
         getMapTask = new AsyncTask<Void, Void, Boolean>() {
 
