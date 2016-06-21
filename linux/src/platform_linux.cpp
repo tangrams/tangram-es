@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <iostream>
 #include <fstream>
+#include <functional>
 #include <string>
 #include <list>
 

@@ -148,8 +148,6 @@ void initialize(const char* _scenePath) {
     // Label setup
     m_labels = std::make_unique<Labels>();
 
-    loadScene(_scenePath, true);
-
     LOG("finish initialize");
 
 }
@@ -208,6 +206,21 @@ void setScene(std::shared_ptr<Scene>& _scene) {
 void loadScene(const char* _scenePath, bool _useScenePosition) {
     LOG("Loading scene file: %s", _scenePath);
 
+    // Copy old scene
+    auto scene = std::make_shared<Scene>(_scenePath);
+
+    auto scenePath = setResourceRoot(_scenePath, scene->resourceRoot());
+    scene->useScenePosition = _useScenePosition;
+    scene->fontContext()->setSceneResourceRoot(scene->resourceRoot());
+
+    if (SceneLoader::loadScene(scenePath, scene)) {
+        setScene(scene);
+    }
+}
+
+void loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _platformCallback) {
+    LOG("Loading scene file (async): %s", _scenePath);
+
     {
         std::lock_guard<std::mutex> lock(m_sceneMutex);
         m_sceneUpdates.clear();
@@ -215,14 +228,14 @@ void loadScene(const char* _scenePath, bool _useScenePosition) {
         m_nextScene->useScenePosition = _useScenePosition;
     }
 
-    Tangram::runAsyncTask([scene = m_nextScene](){
+    Tangram::runAsyncTask([scene = m_nextScene, _platformCallback](){
 
             auto scenePath = setResourceRoot(scene->path().c_str(), scene->resourceRoot());
             scene->fontContext()->setSceneResourceRoot(scene->resourceRoot());
 
             bool ok = SceneLoader::loadScene(scenePath, scene);
 
-            Tangram::runOnMainLoop([scene, ok]() {
+            Tangram::runOnMainLoop([scene, ok, _platformCallback]() {
                     {
                         std::lock_guard<std::mutex> lock(m_sceneMutex);
                         if (scene == m_nextScene) {
@@ -234,6 +247,7 @@ void loadScene(const char* _scenePath, bool _useScenePosition) {
                         auto s = scene;
                         Tangram::setScene(s);
                         Tangram::applySceneUpdates();
+                        if (_platformCallback) { _platformCallback(); }
                     }
                 });
         });

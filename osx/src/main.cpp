@@ -200,7 +200,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 recreate_context = true;
                 break;
             case GLFW_KEY_R:
-                Tangram::loadScene(sceneFile.c_str());
+                Tangram::loadSceneAsync(sceneFile.c_str());
                 break;
             case GLFW_KEY_Z:
                 Tangram::setZoom(Tangram::getZoom() + 1.f, 1.5f);
@@ -216,7 +216,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 } else {
                     pixel_scale = 1.0;
                 }
-                Tangram::loadScene(sceneFile.c_str());
+                Tangram::loadSceneAsync(sceneFile.c_str());
                 Tangram::setPixelScale(pixel_scale);
                 break;
             case GLFW_KEY_P:
@@ -253,7 +253,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void drop_callback(GLFWwindow* window, int count, const char** paths) {
 
     sceneFile = std::string(paths[0]);
-    Tangram::loadScene(sceneFile.c_str());
+    Tangram::loadSceneAsync(sceneFile.c_str());
 
 }
 
@@ -278,6 +278,7 @@ void init_main_window(bool recreate) {
 
     // Setup tangram
     Tangram::initialize(sceneFile.c_str());
+    Tangram::loadSceneAsync(sceneFile.c_str());
 
     if (!recreate) {
         // Destroy old window

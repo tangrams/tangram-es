@@ -192,7 +192,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 Tangram::toggleDebugFlag(Tangram::DebugFlags::tangram_stats);
                 break;
             case GLFW_KEY_R:
-                Tangram::loadScene(sceneFile.c_str());
+                Tangram::loadSceneAsync(sceneFile.c_str());
                 break;
             case GLFW_KEY_E:
                 if (scene_editing_mode) {
@@ -204,7 +204,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                     setContinuousRendering(true);
                     glfwSwapInterval(1);
                 }
-                Tangram::loadScene(sceneFile.c_str());
+                Tangram::loadSceneAsync(sceneFile.c_str());
                 break;
             case GLFW_KEY_BACKSPACE:
                 recreate_context = true;
@@ -220,7 +220,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 } else {
                     pixel_scale = 1.0;
                 }
-                Tangram::loadScene(sceneFile.c_str());
+                Tangram::loadSceneAsync(sceneFile.c_str());
                 Tangram::setPixelScale(pixel_scale);
 
                 break;
@@ -244,7 +244,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void drop_callback(GLFWwindow* window, int count, const char** paths) {
 
     sceneFile = std::string(paths[0]);
-    Tangram::loadScene(sceneFile.c_str());
+    Tangram::loadSceneAsync(sceneFile.c_str());
 
 }
 
@@ -257,10 +257,16 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 
 }
 
+void updatePostInit() {
+    //stamford, ct location
+    Tangram::setPosition(-73.5387, 41.0534, 1.0);
+}
+
 void init_main_window(bool recreate) {
 
     // Setup tangram
     Tangram::initialize(sceneFile.c_str());
+    Tangram::loadSceneAsync(sceneFile.c_str(), true, updatePostInit);
 
     if (!recreate) {
         // Destroy old window
@@ -380,7 +386,7 @@ int main(int argc, char* argv[]) {
         if (scene_editing_mode) {
             if (stat(sceneFile.c_str(), &sb) == 0) {
                 if (last_mod != sb.st_mtime) {
-                    Tangram::loadScene(sceneFile.c_str());
+                    Tangram::loadSceneAsync(sceneFile.c_str());
                     last_mod = sb.st_mtime;
                 }
             }

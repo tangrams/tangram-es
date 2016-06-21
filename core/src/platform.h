@@ -13,6 +13,9 @@
  */
 void logMsg(const char* fmt, ...);
 
+/* Function type for a mapReady callback*/
+using MapReady = std::function<void(void)>;
+
 /* Request that a new frame be rendered by the windowing system
  */
 void requestRender();

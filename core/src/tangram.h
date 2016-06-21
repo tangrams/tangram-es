@@ -20,7 +20,9 @@ class DataSource;
 // given resource path
 void initialize(const char* _scenePath);
 
-// Load the scene at the given absolute file path
+// Load the scene at the given absolute file path asynchronously
+void loadSceneAsync(const char* _scenePath, bool _useScenePosition = false, std::function<void(void)> _platformCallback = {});
+// Load the scene at the given absolute file path synchronously
 void loadScene(const char* _scenePath, bool _useScenePosition = false);
 
 // Request an update to the scene configuration; the path is a series of yaml keys
