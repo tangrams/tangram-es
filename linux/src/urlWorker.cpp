@@ -63,6 +63,9 @@ void UrlWorker::perform(std::unique_ptr<UrlTask> _task) {
         m_task->callback(std::move(m_task->content));
         m_task.reset();
 
+        // Run processNetworkQueue() for pending tasks
+        requestRender();
+
         return true;
     });
 }
