@@ -229,10 +229,14 @@ bool update(float _dt) {
 
     FrameInfo::endUpdate();
 
-    if (m_view->changedOnLastUpdate() ||
-        m_tileManager->hasTileSetChanged() ||
-        m_tileManager->hasLoadingTiles() ||
-        m_labels->needUpdate()) { viewComplete = false; }
+    bool viewChanged = m_view->changedOnLastUpdate();
+    bool tilesChanged = m_tileManager->hasTileSetChanged();
+    bool tilesLoading = m_tileManager->hasLoadingTiles();
+    bool labelsNeedUpdate = m_labels->needUpdate();
+
+    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate) {
+        viewComplete = false;
+    }
 
     // Request for render if labels are in fading in/out states
     if (m_labels->needUpdate()) { requestRender(); }
