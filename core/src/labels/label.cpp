@@ -232,10 +232,12 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
 
 bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
 
-    // if (Tangram::getDebugFlag(DebugFlags::all_labels)) {
-    //     enterState(State::visible, 1.0);
-    //     return false;
-    // }
+#ifdef DEBUG
+    if (Tangram::getDebugFlag(DebugFlags::all_labels)) {
+        enterState(State::visible, 1.0);
+        return false;
+    }
+#endif
 
     bool animate = false;
 
