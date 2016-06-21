@@ -246,7 +246,7 @@ std::vector<std::string> Importer::getImportOrder(const std::string& baseScene) 
     std::vector<std::pair<std::string, std::string>> dependencies;
 
     for (const auto& scene : m_scenes) {
-        const auto& name = scene.first.k;
+        const auto& name = scene.first;
         const auto& sceneRoot = scene.second;
         for (const auto& import : getScenesToImport(sceneRoot)) {
             dependencies.push_back( {import, name} );

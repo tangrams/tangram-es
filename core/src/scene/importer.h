@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -56,7 +57,7 @@ protected:
 
 private:
     // import scene to respective root nodes
-    fastmap<std::string, Node> m_scenes;
+    std::map<std::string, Node> m_scenes;
     std::unordered_set<std::string> m_globalTextures;
     std::unordered_map<std::string, std::string> m_textureNames;
 
