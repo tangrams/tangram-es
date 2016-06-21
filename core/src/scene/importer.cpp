@@ -99,14 +99,14 @@ std::string Importer::getFilename(const std::string& filePath) {
 std::string Importer::normalizePath(const std::string &path,
                                          const std::string &parentPath) {
 
-    //TODO: Handle network urls
-
-    if (path[0] == '/') {
-        //absolute path, return as it is
+    std::regex r("^(http|https):/");
+    std::smatch match;
+    if (path[0] == '/' || std::regex_search(path, match, r)) {
+        //absolute path or network url , return as it is
         return path;
     }
 
-    std::regex r("[^//]+$");
+    r = std::regex("[^//]+$");
     return std::regex_replace(parentPath, r, path);
 }
 
