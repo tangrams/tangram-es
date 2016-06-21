@@ -57,6 +57,8 @@ int main(int argc, char **argv){
 
         processNetworkQueue();
 
+        // TODO:
+        //  - Implement the request frame thing
         //if (getRenderRequest()) {
         //    setRenderRequest(false);
             newFrame();
@@ -72,10 +74,10 @@ void setup(int argc, char **argv) {
     int width = getWindowWidth();
     int height = getWindowHeight();
     float rot = 0.0f;
-    float zoom = 16.0f;
+    float zoom = 0.0f;
     float tilt = 0.0f;
-    double lat = 40.70589;
-    double lon = -74.01321;
+    double lat = 0.0f;
+    double lon = 0.0f;
     std::string scene = "scene.yaml";
 
     for (int i = 1; i < argc ; i++) {
@@ -122,10 +124,18 @@ void setup(int argc, char **argv) {
     Tangram::loadSceneAsync(scene.c_str());
     Tangram::setupGL();
     Tangram::resize(width, height);
-    Tangram::setPosition(lon,lat);
-    Tangram::setZoom(zoom);
-    Tangram::setTilt(glm::radians(tilt));
-    Tangram::setRotation(glm::radians(rot));
+    if (lon != 0.0f && lat != 0.0f) {
+        Tangram::setPosition(lon,lat);
+    }
+    if (zoom != 0.0f) {
+        Tangram::setZoom(zoom);
+    }
+    if (tilt != 0.0f) {
+        Tangram::setTilt(glm::radians(tilt));
+    }
+    if (rot != 0.0f) {
+        Tangram::setRotation(glm::radians(rot));
+    }
 }
 
 void newFrame() {
