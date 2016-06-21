@@ -24,13 +24,31 @@ Node Importer::applySceneImports(const std::string& scenePath, const std::string
             std::unique_lock<std::mutex> lock(sceneMutex);
 
             m_condition.wait(lock, [&, this]{
-                    return (!m_sceneQueue.empty() || progressCounter == 0);
+                    if (m_sceneQueue.empty()) {
+                        // Not busy at all?
+                        if (progressCounter == 0) { return true; }
+                    } else {
+                        // More work and not completely busy?
+                        if (progressCounter < MAX_SCENE_DOWNLOAD) { return true; }
+                    }
+
+                    return false;
                 });
 
-            if (m_sceneQueue.empty() && progressCounter == 0) { break; }
+
+            if (progressCounter == MAX_SCENE_DOWNLOAD) { continue; }
+
+            if (m_sceneQueue.empty()) {
+                if (progressCounter == 0) {
+                    break;
+                }
+                continue;
+            }
 
             path = m_sceneQueue.back();
+
             m_sceneQueue.pop_back();
+
             if (m_scenes.find(path) != m_scenes.end()) { continue; }
         }
 
@@ -38,20 +56,17 @@ Node Importer::applySceneImports(const std::string& scenePath, const std::string
         std::regex r("^(http|https):/");
         std::smatch match;
         if (std::regex_search(path, match, r)) {
-            if (progressCounter < MAX_SCENE_DOWNLOAD) {
-                progressCounter++;
-                startUrlRequest(path,
-                        [&](std::vector<char>&& rawData) {
+            progressCounter++;
+            startUrlRequest(path,
+                    [&](std::vector<char>&& rawData) {
+
+                    if (!rawData.empty()) {
                         std::unique_lock<std::mutex> lock(sceneMutex);
-                        progressCounter--;
                         processScene(path, std::string(rawData.data(), rawData.size()));
-                        m_condition.notify_all();
-                    });
-            } else {
-                // requeue this scene for importing
-                std::unique_lock<std::mutex> lock(sceneMutex);
-                m_sceneQueue.push_back(path);
-            }
+                    }
+                    progressCounter--;
+                    m_condition.notify_all();
+            });
         } else {
             std::unique_lock<std::mutex> lock(sceneMutex);
             processScene(path, getSceneString(path, resourceRoot));
@@ -80,7 +95,7 @@ void Importer::processScene(const std::string &scenePath, const std::string &sce
         m_scenes[path] = root;
         for (const auto& import : imports) {
             m_sceneQueue.push_back(import);
-            // notify here?
+            m_condition.notify_all();
         }
     }
     catch (YAML::ParserException e) {

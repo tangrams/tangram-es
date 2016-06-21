@@ -223,10 +223,12 @@ void loadScene(const char* _scenePath, bool _useScenePosition) {
             bool ok = SceneLoader::loadScene(scenePath, scene);
 
             Tangram::runOnMainLoop([scene, ok]() {
-                    if (scene == m_nextScene) {
+                    {
                         std::lock_guard<std::mutex> lock(m_sceneMutex);
-                        m_nextScene.reset();
-                    } else { return; }
+                        if (scene == m_nextScene) {
+                            m_nextScene.reset();
+                        } else { return; }
+                    }
 
                     if (ok) {
                         auto s = scene;
