@@ -36,8 +36,6 @@ Node Importer::applySceneImports(const std::string& scenePath, const std::string
                 });
 
 
-            if (progressCounter == MAX_SCENE_DOWNLOAD) { continue; }
-
             if (m_sceneQueue.empty()) {
                 if (progressCounter == 0) {
                     break;
@@ -58,11 +56,11 @@ Node Importer::applySceneImports(const std::string& scenePath, const std::string
         if (std::regex_search(path, match, r)) {
             progressCounter++;
             startUrlRequest(path,
-                    [&](std::vector<char>&& rawData) {
+                    [&, p = path](std::vector<char>&& rawData) {
 
                     if (!rawData.empty()) {
                         std::unique_lock<std::mutex> lock(sceneMutex);
-                        processScene(path, std::string(rawData.data(), rawData.size()));
+                        processScene(p, std::string(rawData.data(), rawData.size()));
                     }
                     progressCounter--;
                     m_condition.notify_all();
