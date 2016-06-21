@@ -755,10 +755,7 @@ public class MapController implements Renderer {
     private ViewCompleteListener viewCompleteListener;
     private FrameCaptureCallback frameCaptureCallback;
     private boolean frameCaptureAwaitCompleteView;
-
-    // A static map of client data sources added dynamically. This map has static storage duration
-    // because it should mimic the lifetime of native objects whose lifetime is the entire program.
-    private static Map<String, MapData> clientDataSources = new HashMap<>();
+    private Map<String, MapData> clientDataSources = new HashMap<>();
 
     // GLSurfaceView.Renderer methods
     // ==============================
