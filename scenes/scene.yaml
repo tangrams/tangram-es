@@ -271,6 +271,7 @@ layers:
                 #size: [[13, 12px], [15, 18px]]
                 #interactive: true
                 text:
+                    anchor: right, bottom, left, top
                     interactive: true
                     text_wrap: 20
                     font:
