@@ -259,7 +259,7 @@ std::vector<std::string> Importer::getImportOrder(const std::string& baseScene) 
         return { baseScene };
     }
 
-    return topologicalSort(dependencies);
+    return sortedScenes;
 }
 
 Node Importer::importScenes(const std::string& scenePath) {
