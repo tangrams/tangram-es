@@ -118,6 +118,7 @@ void TileManager::updateTileSets(const ViewState& _view,
     m_tiles.clear();
     m_loadPending = 0;
     m_tilesInProgress = 0;
+    m_tileSetChanged = false;
 
     for (auto& tileSet : m_tileSets) {
         updateTileSet(tileSet, _view, _visibleTiles);
