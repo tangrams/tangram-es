@@ -5,6 +5,7 @@
 #include <memory>
 #include <jni.h>
 
+void bindJniEnvToThread(JNIEnv* jniEnv);
 void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance, jobject _assetManager);
 void onUrlSuccess(JNIEnv* jniEnv, jbyteArray jFetchedBytes, jlong jCallbackPtr);
 void onUrlFailure(JNIEnv* jniEnv, jlong jCallbackPtr);

@@ -60,10 +60,14 @@ PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT = 0;
 PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT = 0;
 PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT = 0;
 
-void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager) {
+
+void bindJniEnvToThread(JNIEnv* jniEnv) {
     jniEnv->GetJavaVM(&jvm);
     jniRenderThreadEnv = jniEnv;
+}
 
+void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager) {
+    bindJniEnvToThread(jniEnv);
     if (tangramInstance) {
         jniEnv->DeleteGlobalRef(tangramInstance);
     }

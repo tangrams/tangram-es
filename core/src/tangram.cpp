@@ -123,9 +123,13 @@ AsyncWorker m_asyncWorker;
 
 void initialize(const char* _scenePath) {
 
+    // For some unknown reasons, android fails to render the map, if same scene is reloaded, without resetting any of
+    // the other Tangram global resources, which is what this method does.
+    // As a work-around, re-initialization of an already loaded scene is done along with resetting all the Tangram
+    // global resources.
+    // NOTE: This will be refactored completely with Multiple Tangram Instances work being done in parallel.
     if (m_scene && m_scene->path() == _scenePath) {
         LOGD("Specified scene is already initalized.");
-        return;
     }
 
     LOG("initialize");

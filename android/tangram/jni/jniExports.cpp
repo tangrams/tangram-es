@@ -88,6 +88,7 @@ extern "C" {
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetupGL(JNIEnv* jniEnv, jobject obj) {
+        bindJniEnvToThread(jniEnv);
         Tangram::setupGL();
     }
 
