@@ -16,6 +16,8 @@ namespace Tangram {
 TileWorker::TileWorker(int _num_worker) {
     m_running = true;
 
+    m_mainThreadJobQueue.makeCurrentThreadTarget();
+
     for (int i = 0; i < _num_worker; i++) {
         auto worker = std::make_unique<Worker>();
         worker->thread = std::thread(&TileWorker::run, this, worker.get());
@@ -29,7 +31,7 @@ TileWorker::~TileWorker(){
     }
 }
 
-void disposeBuilder(std::unique_ptr<TileBuilder> _builder) {
+void TileWorker::disposeBuilder(std::unique_ptr<TileBuilder> _builder) {
     if (_builder) {
         // Bind _builder to a std::function that will run on the next mainloop
         // iteration and does therefore dispose the TileBuilder, including it's
@@ -39,7 +41,7 @@ void disposeBuilder(std::unique_ptr<TileBuilder> _builder) {
         auto disposer = std::bind([](auto builder){},
                                   std::shared_ptr<TileBuilder>(std::move(_builder)));
 
-        Tangram::runOnMainLoop(disposer);
+        m_mainThreadJobQueue.add(disposer);
     }
 }
 
