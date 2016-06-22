@@ -692,7 +692,7 @@ public class MapController implements Renderer {
     }
 
     private synchronized native long nativeInit(MapController instance, AssetManager assetManager, String stylePath);
-    private synchronized native long nativeDispose(long mapPtr);
+    private synchronized native void nativeDispose(long mapPtr);
     private synchronized native void nativeLoadScene(long mapPtr, String path);
     private synchronized native void nativeSetupGL(long mapPtr);
     private synchronized native void nativeResize(long mapPtr, int width, int height);
