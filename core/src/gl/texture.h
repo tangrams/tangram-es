@@ -82,16 +82,13 @@ public:
     /* Checks whether the texture has valid data and has been successfully uploaded to GPU */
     bool isValid() const;
 
-    /* Checks whether the texture has a valid data to upload to GPU */
-    bool hasValidData() const;
-
     typedef std::pair<GLuint, GLuint> TextureSlot;
 
     static void invalidateAllTextures();
 
     static bool isRepeatWrapping(TextureWrapping _wrapping);
 
-    void loadImageFromMemory(const unsigned char* blob, unsigned int size, bool flipOnLoad);
+    bool loadImageFromMemory(const unsigned char* blob, unsigned int size, bool flipOnLoad);
 
 protected:
 
@@ -122,7 +119,6 @@ private:
     size_t bytesPerPixel();
 
     bool m_generateMipmaps;
-    bool m_validData;
 };
 
 }

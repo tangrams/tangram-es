@@ -86,9 +86,6 @@ std::shared_ptr<Texture> RasterSource::createTexture(const std::vector<char>& _r
 
     auto texture = std::make_shared<Texture>(udata, dataSize, m_texOptions, m_genMipmap, true);
 
-    if (!texture->hasValidData() && dataSize > 0) {
-        LOGE("Texture for data source %s has failed to decode", m_name.c_str());
-    }
     return texture;
 }
 

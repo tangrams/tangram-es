@@ -20,8 +20,6 @@ Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _opti
     m_shouldResize = false;
     m_target = GL_TEXTURE_2D;
     m_generation = -1;
-    m_validData = true;
-
     resize(_width, _height);
 }
 
@@ -48,7 +46,7 @@ Texture::Texture(const unsigned char* data, size_t dataSize, TextureOptions opti
     loadImageFromMemory(data, dataSize, _flipOnLoad);
 }
 
-void Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size, bool flipOnLoad) {
+bool Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size, bool flipOnLoad) {
     unsigned char* pixels = nullptr;
     int width, height, comp;
 
@@ -68,19 +66,18 @@ void Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size, 
 
         stbi_image_free(pixels);
 
-        m_validData = true;
-    } else {
-        // Default inconsistent texture data is set to a 1*1 pixel texture
-        // This reduces inconsistent behavior when texture failed loading
-        // texture data but a Tangram style shader requires a shader sampler
-        GLuint blackPixel = 0x0000ff;
-
-        setData(&blackPixel, 1);
-
-        LOGE("Decoding image from memory failed");
-
-        m_validData = false;
+        return true;
     }
+    // Default inconsistent texture data is set to a 1*1 pixel texture
+    // This reduces inconsistent behavior when texture failed loading
+    // texture data but a Tangram style shader requires a shader sampler
+    GLuint blackPixel = 0x0000ff;
+
+    setData(&blackPixel, 1);
+
+    LOGE("Decoding image from memory failed");
+
+    return false;
 }
 
 Texture::Texture(Texture&& _other) {
@@ -100,7 +97,6 @@ Texture& Texture::operator=(Texture&& _other) {
     m_target = _other.m_target;
     m_generation = _other.m_generation;
     m_generateMipmaps = _other.m_generateMipmaps;
-    m_validData = _other.m_validData;
 
     return *this;
 }
@@ -220,12 +216,7 @@ void Texture::checkValidity() {
 
 bool Texture::isValid() const {
     return (RenderState::isValidGeneration(m_generation)
-        && m_glHandle != 0
-        && hasValidData());
-}
-
-bool Texture::hasValidData() const {
-    return m_validData;
+        && m_glHandle != 0);
 }
 
 void Texture::update(GLuint _textureUnit) {
