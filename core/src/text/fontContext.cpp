@@ -34,7 +34,7 @@ FontContext::FontContext() :
 // TODO: make this platform independent
 #if defined(PLATFORM_ANDROID)
     auto fontPath = systemFontPath("sans-serif", "400", "normal");
-    LOG("FONT %s", fontPath.c_str());
+    LOGD("FONT %s", fontPath.c_str());
 
     int size = BASE_SIZE;
     for (int i = 0; i < 3; i++, size += STEP_SIZE) {
@@ -53,7 +53,7 @@ FontContext::FontContext() :
         }
         fontPath = ANDROID_FONT_PATH;
         fontPath += fallback;
-        LOG("FALLBACK %s", fontPath.c_str());
+        LOGD("FALLBACK %s", fontPath.c_str());
 
         int size = BASE_SIZE;
         for (int i = 0; i < 3; i++, size += STEP_SIZE) {
