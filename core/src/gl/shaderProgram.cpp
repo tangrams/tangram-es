@@ -25,18 +25,19 @@ ShaderProgram::ShaderProgram() {
 
 ShaderProgram::~ShaderProgram() {
 
-    if (m_glProgram != 0) {
-        GL_CHECK(glDeleteProgram(m_glProgram));
-    }
+    if (RenderState::isValidGeneration(m_generation)) {
+        if (m_glProgram != 0) {
+            GL_CHECK(glDeleteProgram(m_glProgram));
+        }
 
-    if (m_glFragmentShader != 0) {
-        GL_CHECK(glDeleteShader(m_glFragmentShader));
-    }
+        if (m_glFragmentShader != 0) {
+            GL_CHECK(glDeleteShader(m_glFragmentShader));
+        }
 
-    if (m_glVertexShader != 0) {
-        GL_CHECK(glDeleteShader(m_glVertexShader));
+        if (m_glVertexShader != 0) {
+            GL_CHECK(glDeleteShader(m_glVertexShader));
+        }
     }
-
     // Deleting a shader program being used ends up setting up the current shader program to 0
     // after the driver finishes using it, force this setup by setting the current program
     if (RenderState::shaderProgram.compare(m_glProgram)) {

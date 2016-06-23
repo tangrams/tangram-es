@@ -37,17 +37,21 @@ MeshBase::~MeshBase() {
     // Deleting a index/array buffer being used ends up setting up the current vertex/index buffer to 0
     // after the driver finishes using it, force the render state to be 0 for vertex/index buffer
 
-    if (m_glVertexBuffer) {
-        if (RenderState::vertexBuffer.compare(m_glVertexBuffer)) {
-            RenderState::vertexBuffer.init(0, false);
+    if (RenderState::isValidGeneration(m_generation)) {
+        if (m_glVertexBuffer) {
+            if (RenderState::vertexBuffer.compare(m_glVertexBuffer)) {
+                RenderState::vertexBuffer.init(0, false);
+            }
+            GL_CHECK(glDeleteBuffers(1, &m_glVertexBuffer));
         }
-        GL_CHECK(glDeleteBuffers(1, &m_glVertexBuffer));
-    }
-    if (m_glIndexBuffer) {
-        if (RenderState::indexBuffer.compare(m_glIndexBuffer)) {
-            RenderState::indexBuffer.init(0, false);
+        if (m_glIndexBuffer) {
+            if (RenderState::indexBuffer.compare(m_glIndexBuffer)) {
+                RenderState::indexBuffer.init(0, false);
+            }
+            GL_CHECK(glDeleteBuffers(1, &m_glIndexBuffer));
         }
-        GL_CHECK(glDeleteBuffers(1, &m_glIndexBuffer));
+    } else {
+        if (m_vaos) { m_vaos->discard(); }
     }
 
     if (m_glVertexData) {

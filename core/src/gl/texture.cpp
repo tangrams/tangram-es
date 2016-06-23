@@ -20,7 +20,6 @@ Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _opti
     m_shouldResize = false;
     m_target = GL_TEXTURE_2D;
     m_generation = -1;
-
     resize(_width, _height);
 }
 
@@ -47,7 +46,7 @@ Texture::Texture(const unsigned char* data, size_t dataSize, TextureOptions opti
     loadImageFromMemory(data, dataSize, _flipOnLoad);
 }
 
-void Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size, bool flipOnLoad) {
+bool Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size, bool flipOnLoad) {
     unsigned char* pixels = nullptr;
     int width, height, comp;
 
@@ -67,34 +66,22 @@ void Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size, 
 
         stbi_image_free(pixels);
 
-        m_validData = true;
-    } else {
-        // Default inconsistent texture data is set to a 1*1 pixel texture
-        // This reduces inconsistent behavior when texture failed loading
-        // texture data but a Tangram style shader requires a shader sampler
-        GLuint blackPixel = 0x0000ff;
-
-        setData(&blackPixel, 1);
-
-        LOGE("Decoding image from memory failed");
-
-        m_validData = false;
+        return true;
     }
+    // Default inconsistent texture data is set to a 1*1 pixel texture
+    // This reduces inconsistent behavior when texture failed loading
+    // texture data but a Tangram style shader requires a shader sampler
+    GLuint blackPixel = 0x0000ff;
+
+    setData(&blackPixel, 1);
+
+    LOGE("Decoding image from memory failed");
+
+    return false;
 }
 
 Texture::Texture(Texture&& _other) {
-    m_glHandle = _other.m_glHandle;
-    _other.m_glHandle = 0;
-
-    m_options = _other.m_options;
-    m_data = std::move(_other.m_data);
-    m_dirtyRanges = std::move(_other.m_dirtyRanges);
-    m_shouldResize = _other.m_shouldResize;
-    m_width = _other.m_width;
-    m_height = _other.m_height;
-    m_target = _other.m_target;
-    m_generation = _other.m_generation;
-    m_generateMipmaps = _other.m_generateMipmaps;
+    *this = std::move(_other);
 }
 
 Texture& Texture::operator=(Texture&& _other) {
@@ -116,14 +103,18 @@ Texture& Texture::operator=(Texture&& _other) {
 
 Texture::~Texture() {
     if (m_glHandle) {
-        Tangram::runOnMainLoop([id = m_glHandle]() { GL_CHECK(glDeleteTextures(1, &id)); });
+        Tangram::runOnMainLoop([id = m_glHandle, t = m_target, g = m_generation]() {
+                if (RenderState::isValidGeneration(g)) {
+                    GL_CHECK(glDeleteTextures(1, &id));
 
-        // if the texture is bound, and deleted, the binding defaults to 0
-        // according to the OpenGL spec, in this case we need to force the
-        // currently bound texture to 0 in the render states
-        if (RenderState::texture.compare(m_target, m_glHandle)) {
-            RenderState::texture.init(m_target, 0, false);
-        }
+                    // if the texture is bound, and deleted, the binding defaults to 0
+                    // according to the OpenGL spec, in this case we need to force the
+                    // currently bound texture to 0 in the render states
+                    if (RenderState::texture.compare(t, id)) {
+                        RenderState::texture.init(t, 0, false);
+                    }
+                }
+        });
     }
 }
 
@@ -229,12 +220,7 @@ void Texture::checkValidity() {
 
 bool Texture::isValid() const {
     return (RenderState::isValidGeneration(m_generation)
-        && m_glHandle != 0
-        && hasValidData());
-}
-
-bool Texture::hasValidData() const {
-    return m_validData;
+        && m_glHandle != 0);
 }
 
 void Texture::update(GLuint _textureUnit) {
