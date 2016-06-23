@@ -183,8 +183,15 @@ public class MapController implements Renderer {
     }
 
     void dispose() {
-        nativeDispose(mapPointer);
-        mapPointer = 0;
+        // Disposing native resources involves GL calls, so we need to run on the GL thread.
+        queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                nativeDispose(mapPointer);
+                mapPointer = 0;
+                clientDataSources.clear();
+            }
+        });
     }
 
     static MapController getInstance(GLSurfaceView view, String sceneFilePath) {
@@ -765,6 +772,12 @@ public class MapController implements Renderer {
         long newTime = System.nanoTime();
         float delta = (newTime - time) / 1000000000.0f;
         time = newTime;
+
+        if (mapPointer <= 0) {
+            // No native instance is initialized, so stop here. This can happen during Activity
+            // shutdown when the map has been disposed but the View hasn't been destroyed yet.
+            return;
+        }
 
         boolean viewComplete = nativeUpdate(mapPointer, delta);
         nativeRender(mapPointer);
