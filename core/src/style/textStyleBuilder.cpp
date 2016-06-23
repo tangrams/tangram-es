@@ -69,12 +69,18 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
         for (auto& label : m_labels) {
             auto* textLabel = static_cast<TextLabel*>(label.get());
 
-            auto& range = textLabel->quadRange();
+            //Range range = textLabel->quadRange();
+
+            std::vector<TextRange>& ranges = textLabel->textRanges();
+
             bool active = textLabel->state() != Label::State::dead;
 
-            if (range.end() != quadPos) {
-                quadPos = range.end();
-                added = false;
+            for (auto& textRange : ranges) {
+                auto& range = textRange.range;
+                if (range.end() != quadPos) {
+                    quadPos = range.end();
+                    added = false;
+                }
             }
 
             if (!active) { continue; }
@@ -82,7 +88,11 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
             sumLabels +=1;
             if (!added) {
                 added = true;
-                sumQuads += range.length;
+
+                for (auto& textRange : ranges) {
+                    auto& range = textRange.range;
+                    sumQuads += range.length;
+                }
             }
         }
 
@@ -100,24 +110,37 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
         for (auto& label : m_labels) {
             auto* textLabel = static_cast<TextLabel*>(label.get());
 
-            auto& range = textLabel->quadRange();
+            // Range range = textLabel->quadRange();
+            std::vector<TextRange>& ranges = textLabel->textRanges();
             bool active = textLabel->state() != Label::State::dead;
 
-            if (range.end() != quadPos) {
-                quadStart = quadEnd;
-                quadPos = range.end();
-                added = false;
+            for (auto& textRange : ranges) {
+                auto& range = textRange.range;
+                if (range.end() != quadPos) {
+                    quadStart = quadEnd;
+                    quadPos = range.end();
+                    added = false;
+                }
             }
 
             if (!active) { continue; }
             if (!added) {
                 added = true;
-                quadEnd += range.length;
 
-                auto it = m_quads.begin() + range.start;
-                quads.insert(quads.end(), it, it + range.length);
+                for (auto& textRange : ranges) {
+                    auto& range = textRange.range;
+                    quadEnd += range.length;
+
+                    auto it = m_quads.begin() + range.start;
+                    quads.insert(quads.end(), it, it + range.length);
+                }
             }
-            range.start = quadStart;
+
+            int start = ranges[0].range.start;
+            ranges[0].range.start = quadStart;
+            for (int i = 1; i < ranges.size(); ++i) {
+                ranges[i].range.start = quadStart + (ranges[i].range.start - start);
+            }
 
             labels.push_back(std::move(label));
         }
@@ -491,7 +514,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     m_attributes.quadsStart = m_quads.size();
 
     glm::vec2 bbox(0);
-    if (ctx->layoutText(_params, *renderText, m_quads, m_atlasRefs, bbox)) {
+    if (ctx->layoutText(_params, *renderText, m_quads, m_atlasRefs, bbox, m_attributes.textRanges)) {
         m_attributes.width = bbox.x;
         m_attributes.height = bbox.y;
         return true;
@@ -502,13 +525,13 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
                                 Label::Transform _transform) {
 
-    int quadsStart = m_attributes.quadsStart;
-    int quadsCount = m_quads.size() - quadsStart;
+    // int quadsStart = m_attributes.quadsStart;
+    // int quadsCount = m_quads.size() - quadsStart;
 
     m_labels.emplace_back(new TextLabel(_transform, _type, _params.labelOptions, _params.anchor,
                                         {m_attributes.fill, m_attributes.stroke, m_attributes.fontScale},
                                         {m_attributes.width, m_attributes.height},
-                                        *m_textLabels, {quadsStart, quadsCount}));
+                                        *m_textLabels, std::move(m_attributes.textRanges)));
 }
 
 }

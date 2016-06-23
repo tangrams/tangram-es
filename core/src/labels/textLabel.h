@@ -3,6 +3,7 @@
 #include "labels/label.h"
 
 #include <glm/glm.hpp>
+#include <limits>
 
 namespace Tangram {
 
@@ -15,6 +16,11 @@ struct GlyphQuad {
         glm::i16vec2 pos;
         glm::u16vec2 uv;
     } quad[4];
+};
+
+struct TextRange {
+    TextLabelProperty::Align align;
+    Range range;
 };
 
 struct TextVertex {
@@ -43,11 +49,15 @@ public:
 
     TextLabel(Label::Transform _transform, Type _type, Label::Options _options,
               LabelProperty::Anchor _anchor, TextLabel::FontVertexAttributes _attrib,
-              glm::vec2 _dim, TextLabels& _labels, Range _vertexRange);
+              glm::vec2 _dim, TextLabels& _labels, std::vector<TextRange> _textRanges);
 
     void updateBBoxes(float _zoomFract) override;
 
-    Range& quadRange() { return m_vertexRange; }
+    size_t allQuadRange() const;
+
+    std::vector<TextRange>& textRanges() {
+        return m_textRanges;
+    }
 
 protected:
 
@@ -59,10 +69,14 @@ private:
 
     // Back-pointer to owning container
     const TextLabels& m_textLabels;
+
     // first vertex and count in m_textLabels quads
-    Range m_vertexRange;
+    std::vector<TextRange> m_textRanges;
 
     FontVertexAttributes m_fontAttrib;
+
+    // TODO: remove me
+    int rangeindex = 0;
 };
 
 }
