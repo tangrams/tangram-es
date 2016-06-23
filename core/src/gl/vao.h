@@ -20,6 +20,7 @@ public:
 
     void bind(unsigned int _index);
     void unbind();
+    void discard();
 
 private:
     GLuint* m_glVAOs;

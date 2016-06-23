@@ -64,5 +64,10 @@ void Vao::unbind() {
     GL_CHECK(glBindVertexArray(0));
 }
 
+void Vao::discard() {
+    delete[] m_glVAOs;
+    m_glVAOs = nullptr;
+}
+
 }
 
