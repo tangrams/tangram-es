@@ -279,10 +279,18 @@ Node Importer::importScenes(const std::string& scenePath) {
 
     auto importScenesSorted = getImportOrder(scenePath);
 
+    if (importScenesSorted.size() == 1) {
+        auto import = importScenesSorted[0];
+
+        if (import[0] == '/') { import = getFilename(import); }
+
+        return m_scenes[import];
+    }
+
     Node root = Node();
 
     for (auto& import : importScenesSorted) {
-        if (importScenesSorted.size() == 1 && import[0] == '/') { import = getFilename(import); }
+
         const auto& importRoot = m_scenes[import];
         if (!importRoot.IsMap()) { continue; }
         mergeMapFields(root, importRoot);
