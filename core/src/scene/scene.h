@@ -24,7 +24,6 @@ class FontContext;
 class Light;
 class MapProjection;
 class SpriteAtlas;
-class View;
 struct Stops;
 
 /* Singleton container of <Style> information

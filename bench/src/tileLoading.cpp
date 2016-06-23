@@ -54,7 +54,6 @@ struct TestContext {
         styleContext.initFunctions(*scene);
         styleContext.setKeywordZoom(0);
 
-        LOG("Here");
         source = *scene->dataSources().begin();
         tileBuilder = std::make_unique<TileBuilder>(scene);
     }

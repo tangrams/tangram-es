@@ -32,7 +32,6 @@
 #include <vector>
 #include <algorithm>
 #include <iterator>
-#include <unordered_map>
 #include <regex>
 
 using YAML::Node;
@@ -450,7 +449,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene,
         if (!loadTexture(name, scene)) {
             LOGW("Not able to load material texture: %s", name.c_str());
             return MaterialTexture();
-        };
+        }
     }
 
     if (Node mappingNode = matCompNode["mapping"]) {

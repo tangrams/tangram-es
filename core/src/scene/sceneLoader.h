@@ -6,8 +6,6 @@
 #include <vector>
 #include <memory>
 #include <tuple>
-#include <unordered_map>
-#include <unordered_set>
 #include <sstream>
 #include <mutex>
 
@@ -72,6 +70,11 @@ struct SceneLoader {
             const TextureOptions& options, bool generateMipmaps, Scene& scene);
     static bool extractTexFiltering(Node& filtering, TextureFiltering& filter);
 
+    /*
+     * Sprite nodes are created using a default 1x1 black texture when sprite atlas is requested over the network.
+     * Once a sprite atlas has been fetched, sprite nodes need to be updated according to the width/height of the
+     * fetched sprite atlas.
+     */
     static void updateSpriteNodes(const std::string& texName,
             std::shared_ptr<Texture>& texture, Scene& scene);
 

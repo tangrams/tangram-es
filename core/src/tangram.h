@@ -155,7 +155,10 @@ bool getDebugFlag(DebugFlags _flag);
 // Toggle the boolean state of a debug feature (see debug.h)
 void toggleDebugFlag(DebugFlags _flag);
 
+// Run this task on Tangram's main update loop.
 void runOnMainLoop(std::function<void()> _task);
+
+// Run this task asynchronously to Tangram's main update loop.
 void runAsyncTask(std::function<void()> _task);
 
 struct TouchItem {
