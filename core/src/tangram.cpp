@@ -24,7 +24,6 @@
 #include "util/ease.h"
 #include "debug/textDisplay.h"
 #include "debug/frameInfo.h"
-#include <atomic>
 #include <memory>
 #include <array>
 #include <cmath>
@@ -49,9 +48,6 @@ std::unique_ptr<Labels> m_labels;
 std::unique_ptr<InputHandler> m_inputHandler;
 
 std::shared_ptr<Scene> m_nextScene;
-std::atomic_bool m_sceneLoading(false);
-std::atomic_bool m_sceneUpdating(false);
-std::atomic_bool m_newSceneUpdates(false);
 std::vector<Scene::Update> m_sceneUpdates;
 
 std::array<Ease, 4> m_eases;
@@ -339,7 +335,7 @@ bool update(float _dt) {
     bool tilesLoading = m_tileManager->hasLoadingTiles();
     bool labelsNeedUpdate = m_labels->needUpdate();
 
-    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate) {
+    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || !bool(m_nextScene)) {
         viewComplete = false;
     }
 
