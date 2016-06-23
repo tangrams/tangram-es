@@ -20,6 +20,7 @@ Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _opti
     m_shouldResize = false;
     m_target = GL_TEXTURE_2D;
     m_generation = -1;
+    m_validData = true;
 
     resize(_width, _height);
 }
@@ -83,18 +84,7 @@ void Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size, 
 }
 
 Texture::Texture(Texture&& _other) {
-    m_glHandle = _other.m_glHandle;
-    _other.m_glHandle = 0;
-
-    m_options = _other.m_options;
-    m_data = std::move(_other.m_data);
-    m_dirtyRanges = std::move(_other.m_dirtyRanges);
-    m_shouldResize = _other.m_shouldResize;
-    m_width = _other.m_width;
-    m_height = _other.m_height;
-    m_target = _other.m_target;
-    m_generation = _other.m_generation;
-    m_generateMipmaps = _other.m_generateMipmaps;
+    *this = std::move(_other);
 }
 
 Texture& Texture::operator=(Texture&& _other) {
@@ -110,6 +100,7 @@ Texture& Texture::operator=(Texture&& _other) {
     m_target = _other.m_target;
     m_generation = _other.m_generation;
     m_generateMipmaps = _other.m_generateMipmaps;
+    m_validData = _other.m_validData;
 
     return *this;
 }
