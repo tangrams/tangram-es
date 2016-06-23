@@ -3,7 +3,6 @@
 #include "labels/label.h"
 
 #include <glm/glm.hpp>
-#include <limits>
 
 namespace Tangram {
 
@@ -52,8 +51,6 @@ public:
               glm::vec2 _dim, TextLabels& _labels, std::vector<TextRange> _textRanges);
 
     void updateBBoxes(float _zoomFract) override;
-
-    size_t allQuadRange() const;
 
     std::vector<TextRange>& textRanges() {
         return m_textRanges;
