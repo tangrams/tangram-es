@@ -32,7 +32,7 @@ public:
      * _metrics out: text extents
      */
     int draw(alfons::TextBatch& _batch, float _maxWidth, const alfons::LineLayout& _line,
-             std::vector<TextLabelProperty::Align> _alignments, float _lineSpacing,
+             TextLabelProperty::Align _alignment, float _lineSpacing,
              alfons::LineMetrics& _metrics);
 
 private:
