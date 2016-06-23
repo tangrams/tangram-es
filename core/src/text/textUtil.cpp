@@ -2,7 +2,6 @@
 
 #include "platform.h"
 
-
 namespace Tangram {
 
 float TextWrapper::getShapeRangeWidth(const alfons::LineLayout& _line,
@@ -69,44 +68,40 @@ void TextWrapper::clearWraps() {
 }
 
 int TextWrapper::draw(alfons::TextBatch& _batch, float _maxWidth, const alfons::LineLayout& _line,
-                       std::vector<TextLabelProperty::Align> _alignments, float _lineSpacing,
-                       alfons::LineMetrics& _layoutMetrics) {
-    for (auto alignment : _alignments) {
-        size_t shapeStart = 0;
-        glm::vec2 position;
+                      TextLabelProperty::Align _alignment, float _lineSpacing,
+                      alfons::LineMetrics& _layoutMetrics) {
+    size_t shapeStart = 0;
+    glm::vec2 position;
 
-        for (auto wrap : m_lineWraps) {
-            alfons::LineMetrics lineMetrics;
-            
-            switch(alignment) {
-                case TextLabelProperty::Align::center:
-                    position.x = (_maxWidth - wrap.second) * 0.5;
-                    break;
-                case TextLabelProperty::Align::right:
-                    position.x = (_maxWidth - wrap.second);
-                    break;
-                default:
-                    position.x = 0;
-            }
-            
-            size_t shapeEnd = wrap.first;
-            
-            // Draw line quads
-            _batch.drawShapeRange(_line, shapeStart, shapeEnd, position, lineMetrics);
-            
-            shapeStart = shapeEnd;
-            
-            // FIXME hardcoded value for SDF radius 6
-            float height = lineMetrics.height();
-            height -= (2 * 6) * _line.scale(); // substract glyph padding
-            height += _lineSpacing; // add some custom line offset
-            
-            position.y += height;
-            
-            _layoutMetrics.addExtents(lineMetrics.aabb);
+    for (auto wrap : m_lineWraps) {
+        alfons::LineMetrics lineMetrics;
+
+        switch(_alignment) {
+            case TextLabelProperty::Align::center:
+                position.x = (_maxWidth - wrap.second) * 0.5;
+                break;
+            case TextLabelProperty::Align::right:
+                position.x = (_maxWidth - wrap.second);
+                break;
+            default:
+                position.x = 0;
         }
-        // TODO: remove me
-        break;
+
+        size_t shapeEnd = wrap.first;
+
+        // Draw line quads
+        _batch.drawShapeRange(_line, shapeStart, shapeEnd, position, lineMetrics);
+
+        shapeStart = shapeEnd;
+
+        // FIXME hardcoded value for SDF radius 6
+        float height = lineMetrics.height();
+        height -= (2 * 6) * _line.scale(); // substract glyph padding
+        height += _lineSpacing; // add some custom line offset
+
+        position.y += height;
+
+        _layoutMetrics.addExtents(lineMetrics.aabb);
     }
 
     return int(m_lineWraps.size());
