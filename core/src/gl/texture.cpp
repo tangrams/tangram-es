@@ -103,14 +103,18 @@ Texture& Texture::operator=(Texture&& _other) {
 
 Texture::~Texture() {
     if (m_glHandle) {
-        Tangram::runOnMainLoop([id = m_glHandle]() { GL_CHECK(glDeleteTextures(1, &id)); });
+        Tangram::runOnMainLoop([id = m_glHandle, t = m_target, g = m_generation]() {
+                if (RenderState::isValidGeneration(g)) {
+                    GL_CHECK(glDeleteTextures(1, &id));
 
-        // if the texture is bound, and deleted, the binding defaults to 0
-        // according to the OpenGL spec, in this case we need to force the
-        // currently bound texture to 0 in the render states
-        if (RenderState::texture.compare(m_target, m_glHandle)) {
-            RenderState::texture.init(m_target, 0, false);
-        }
+                    // if the texture is bound, and deleted, the binding defaults to 0
+                    // according to the OpenGL spec, in this case we need to force the
+                    // currently bound texture to 0 in the render states
+                    if (RenderState::texture.compare(t, id)) {
+                        RenderState::texture.init(t, 0, false);
+                    }
+                }
+        });
     }
 }
 
