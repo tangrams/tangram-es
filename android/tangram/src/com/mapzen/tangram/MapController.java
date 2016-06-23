@@ -822,7 +822,6 @@ public class MapController implements Renderer {
             @Override
             public void onFailure(Request request, IOException e) {
                 nativeOnUrlFailure(callbackPtr);
-                //e.printStackTrace();
             }
 
             @Override
