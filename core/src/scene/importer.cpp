@@ -75,7 +75,7 @@ Node Importer::applySceneImports(const std::string& scenePath, const std::string
             });
         } else {
             std::unique_lock<std::mutex> lock(sceneMutex);
-            processScene(path, getSceneString(path, ""));
+            processScene(path, getSceneString(path));
         }
     }
 
@@ -241,7 +241,7 @@ void Importer::normalizeSceneTextures(Node& root, const std::string& parentPath)
     }
 }
 
-std::string Importer::getSceneString(const std::string &scenePath, const std::string& resourceRoot) {
+std::string Importer::getSceneString(const std::string &scenePath) {
     return stringFromFile(scenePath.c_str());
 }
 

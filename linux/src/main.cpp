@@ -335,10 +335,10 @@ int main(int argc, char* argv[]) {
     }
 
     struct stat sb;
-    if (stat(sceneFile.c_str(), &sb) == -1) {
-        logMsg("scene file not found!");
-        exit(EXIT_FAILURE);
-    }
+    //if (stat(sceneFile.c_str(), &sb) == -1) {
+        //logMsg("scene file not found!");
+        //exit(EXIT_FAILURE);
+    //}
     auto last_mod = sb.st_mtime;
 
     init_main_window(false);
@@ -384,12 +384,12 @@ int main(int argc, char* argv[]) {
         }
 
         if (scene_editing_mode) {
-            if (stat(sceneFile.c_str(), &sb) == 0) {
+            //if (stat(sceneFile.c_str(), &sb) == 0) {
                 if (last_mod != sb.st_mtime) {
                     Tangram::loadSceneAsync(sceneFile.c_str());
                     last_mod = sb.st_mtime;
                 }
-            }
+            //}
         }
     }
 

@@ -29,7 +29,7 @@ public:
 
 // protected for testing purposes, else could be private
 protected:
-    virtual std::string getSceneString(const std::string& scenePath, const std::string& resourceRoot);
+    virtual std::string getSceneString(const std::string& scenePath);
     void processScene(const std::string& scenePath, const std::string& sceneString);
 
     // Get the sequence of scene names that are designated to be imported into the
