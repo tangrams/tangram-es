@@ -18,9 +18,12 @@ TextLabels dummy(dummyStyle);
 TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
     Label::Options options;
     options.offset = {0.0f, 0.0f};
+    std::vector<TextRange> textRanges;
+    textRanges.push_back({TextLabelProperty::Align::none, {}});
+
     return TextLabel(_transform, _type, options,
-            LabelProperty::Anchor::center,
-            {}, {0, 0}, dummy, {});
+            LabelProperty::Anchor::center, {}, {0, 0}, dummy, textRanges,
+            TextLabelProperty::Align::none);
 }
 
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {
