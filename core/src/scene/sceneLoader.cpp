@@ -24,6 +24,7 @@
 #include "scene/stops.h"
 #include "scene/styleMixer.h"
 #include "scene/styleParam.h"
+#include "util/base64.h"
 #include "util/yamlHelper.h"
 #include "view/view.h"
 
@@ -530,7 +531,6 @@ void SceneLoader::updateSpriteNodes(const std::string& texName,
 std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, const std::string& url,
         const TextureOptions& options, bool generateMipmaps, Scene& scene) {
 
-    size_t size = 0;
     std::shared_ptr<Texture> texture;
 
     std::regex r("^(http|https):/");
@@ -543,21 +543,53 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
                 std::lock_guard<std::mutex> lock(m_textureMutex);
 				auto texture = scene.getTexture(name);
                 if (texture) {
-                    texture->loadImageFromMemory(ptr, dataSize, false);
+                    if (!texture->loadImageFromMemory(ptr, dataSize, false)) {
+                        LOGE("Invalid texture data '%s'", url.c_str());
+                    }
+
                     updateSpriteNodes(name, texture, scene);
                 }
             });
         texture = std::make_shared<Texture>(nullptr, 0, options, generateMipmaps, true);
     } else {
-        unsigned char* blob;
-        blob = bytesFromFile(url.c_str(), size);
 
-        if (!blob) {
-            LOGE("Can't load texture resource at url %s", url.c_str());
-            return nullptr;
+        if (url.substr(0, 22) == "data:image/png;base64,") {
+            // Skip data: prefix
+            auto data = url.substr(22);
+
+            std::vector<unsigned char> blob;
+
+            try {
+                blob = Base64::decode(data);
+            } catch(std::runtime_error e) {
+                LOGE("Can't decode Base64 texture '%s'", e.what());
+            }
+
+            if (blob.empty()) {
+                LOGE("Can't decode Base64 texture");
+                return nullptr;
+            }
+            texture = std::make_shared<Texture>(0, 0, options, generateMipmaps);
+
+            if (!texture->loadImageFromMemory(blob.data(), blob.size(), false)) {
+                LOGE("Invalid Base64 texture");
+            }
+
+        } else {
+            size_t size = 0;
+            unsigned char* blob = bytesFromFile(url.c_str(), size);
+
+            if (!blob) {
+                LOGE("Can't load texture resource at url '%s'", url.c_str());
+                return nullptr;
+            }
+            texture = std::make_shared<Texture>(0, 0, options, generateMipmaps);
+
+            if (!texture->loadImageFromMemory(blob, size, false)) {
+                LOGE("Invalid texture data '%s'", url.c_str());
+            }
+            free(blob);
         }
-        texture = std::make_shared<Texture>(blob, size, options, generateMipmaps);
-        free(blob);
     }
 
     return texture;

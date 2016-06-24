@@ -19,6 +19,10 @@ bool isUrl(const std::string &path) {
     return std::regex_search(path, match, r);
 }
 
+bool isBase64Data(const std::string &path) {
+    return path.substr(0, 21) == "data:image/png;base64";
+}
+
 Node Importer::applySceneImports(const std::string& scenePath, const std::string& resourceRoot) {
 
     std::string path;
@@ -147,13 +151,18 @@ void Importer::setNormalizedTexture(Node& texture, const std::vector<std::string
                                     const std::string& parentPath) {
 
     for (size_t index = 0; index < names.size(); index++) {
+
         auto& name = names[index];
+        if (isBase64Data(name)) {
+            continue;
+        }
+
         std::string normTexPath;
 
         // if texture url is a named texture then move on (this has been already resolved
         if (m_globalTextures.find(name) != m_globalTextures.end()) { continue; }
 
-        //get normalized texture path
+        // get normalized texture path
         if (m_textureNames.find(name) == m_textureNames.end()) {
             normTexPath = normalizePath(name, parentPath);
             m_textureNames[name] = normTexPath;
@@ -161,7 +170,7 @@ void Importer::setNormalizedTexture(Node& texture, const std::vector<std::string
             normTexPath = m_textureNames.at(name);
         }
 
-        //set yaml node with normalized texture path
+        // set yaml node with normalized texture path
         if (names.size() > 1) {
             texture[index] = normTexPath;
         } else {
@@ -175,7 +184,9 @@ void Importer::normalizeSceneTextures(Node& root, const std::string& parentPath)
     if (Node textures = root["textures"]) {
         for (auto texture : textures) {
             if (Node textureUrl = texture.second["url"]) {
-                setNormalizedTexture(textureUrl, {textureUrl.Scalar()}, parentPath);
+                if (!isBase64Data(textureUrl.Scalar())) {
+                    setNormalizedTexture(textureUrl, {textureUrl.Scalar()}, parentPath);
+                }
                 m_globalTextures.insert(texture.first.Scalar());
             }
         }
@@ -188,7 +199,7 @@ void Importer::normalizeSceneTextures(Node& root, const std::string& parentPath)
             auto style = styleNode.second;
             //style->texture
             if (Node texture = style["texture"]) {
-                if (texture.IsScalar()) {
+                if (texture.IsScalar() && !isBase64Data(texture.Scalar())) {
                     setNormalizedTexture(texture, {texture.Scalar()}, parentPath);
                 }
             }

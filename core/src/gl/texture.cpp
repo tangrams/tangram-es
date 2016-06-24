@@ -58,8 +58,6 @@ bool Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size, 
 
     setData(&blackPixel, 1);
 
-    LOGE("Decoding image from memory failed");
-
     return false;
 }
 
