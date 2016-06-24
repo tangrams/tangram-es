@@ -50,13 +50,13 @@ constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
 std::mutex SceneLoader::m_textureMutex;
 
-bool SceneLoader::loadScene(const std::string& _scenePath, std::shared_ptr<Scene> _scene) {
+bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
 
     Node& root = _scene->config();
 
     Importer sceneImporter;
 
-    if ( (root = sceneImporter.applySceneImports(_scenePath, _scene->resourceRoot())) ) {
+    if ((root = sceneImporter.applySceneImports(_scene->path(), _scene->resourceRoot())) ) {
         applyConfig(root, *_scene);
         return true;
     }
@@ -530,7 +530,7 @@ void SceneLoader::updateSpriteNodes(const std::string& texName,
 std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, const std::string& url,
         const TextureOptions& options, bool generateMipmaps, Scene& scene) {
 
-    unsigned int size = 0;
+    size_t size = 0;
     std::shared_ptr<Texture> texture;
 
     std::regex r("^(http|https):/");
@@ -550,11 +550,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
         texture = std::make_shared<Texture>(nullptr, 0, options, generateMipmaps, true);
     } else {
         unsigned char* blob;
-        if (url[0] == '/') {
-            blob = bytesFromFile(url.c_str(), PathType::absolute, &size, scene.resourceRoot().c_str());
-        } else {
-            blob = bytesFromFile(url.c_str(), PathType::resource, &size, scene.resourceRoot().c_str());
-        }
+        blob = bytesFromFile(url.c_str(), size);
 
         if (!blob) {
             LOGE("Can't load texture resource at url %s", url.c_str());
@@ -564,7 +560,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
         free(blob);
     }
 
-    return std::move(texture);
+    return texture;
 }
 
 bool SceneLoader::loadTexture(const std::string& url, Scene& scene) {
@@ -835,7 +831,7 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
         if (tiled) {
             sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url, maxZoom));
         } else {
-            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, _scene.resourceRoot(), maxZoom));
+            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, maxZoom));
         }
     } else if (type == "TopoJSON") {
         sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, maxZoom));

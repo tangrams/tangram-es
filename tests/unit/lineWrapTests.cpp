@@ -35,8 +35,8 @@ std::shared_ptr<alfons::Font> font;
 void initFont(std::string _font = TEST_FONT) {
     font = fontManager.addFont("default", alfons::InputSource(_font), TEST_FONT_SIZE);
 
-    unsigned int dataSize = 0;
-    unsigned char* data = bytesFromFile(_font.c_str(), PathType::internal, &dataSize);
+    size_t dataSize = 0;
+    unsigned char* data = bytesFromFile(_font.c_str(), dataSize, PathType::internal);
 
     auto face = fontManager.addFontFace(alfons::InputSource(reinterpret_cast<char*>(data), dataSize), TEST_FONT_SIZE);
 

@@ -16,6 +16,7 @@
 
 #include <atomic>
 #include <algorithm>
+#include <regex>
 
 namespace Tangram {
 
@@ -24,18 +25,43 @@ static std::atomic<int32_t> s_serial;
 Scene::Scene(const std::string& _path)
     : id(s_serial++),
       m_path(_path),
-      m_resourceRoot(""),
       m_fontContext(std::make_shared<FontContext>()) {
+
+    std::regex r("^(http|https):/");
+    std::smatch match;
+
+    if (std::regex_search(_path, match, r)) {
+        m_resourceRoot = "";
+        m_path = _path;
+    } else {
+
+        auto split = _path.find_last_of("/");
+        if (split == std::string::npos) {
+            m_resourceRoot = "";
+            m_path = _path;
+        } else {
+            m_resourceRoot = _path.substr(0, split + 1);
+            m_path = _path.substr(split + 1);
+        }
+    }
+
+    LOG("Scene '%s' => '%s' : '%s'", _path.c_str(), m_resourceRoot.c_str(), m_path.c_str());
+
+    m_fontContext->setSceneResourceRoot(m_resourceRoot);
+
     // For now we only have one projection..
     // TODO how to share projection with view?
     m_mapProjection.reset(new MercatorProjection());
 }
 
 Scene::Scene(const Scene& _other)
-    : Scene(_other.path()) {
+    : id(s_serial++) {
+
     m_config = _other.m_config;
     m_fontContext = _other.m_fontContext;
-    m_resourceRoot = _other.resourceRoot();
+
+    m_path = _other.m_path;
+    m_resourceRoot = _other.m_resourceRoot;
 }
 
 Scene::~Scene() {}

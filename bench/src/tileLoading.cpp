@@ -39,8 +39,7 @@ struct TestContext {
 
     void loadScene(const char* sceneFile) {
         scene = std::make_shared<Scene>(sceneFile);
-        auto sceneRelPath = setResourceRoot(sceneFile, scene->resourceRoot());
-        auto sceneString = stringFromFile(sceneRelPath.c_str(), PathType::resource, "");
+        auto sceneString = stringFromFile(sceneFile);
 
         YAML::Node sceneNode;
 

@@ -47,7 +47,6 @@ protected:
     //void mergeMapFieldsTaskingLast(const std::string& key, Node target, const std::vector<Node>& imports);
     void mergeMapFields(Node& target, const Node& import);
 
-    std::string getFilename(const std::string& scenePath);
     void normalizeSceneTextures(Node& root, const std::string& parentPath);
     void setNormalizedTexture(Node& texture, const std::vector<std::string>& names,
             const std::string& parentPath);

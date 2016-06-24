@@ -13,11 +13,17 @@ namespace Tangram {
 
 std::atomic_uint Importer::progressCounter(0);
 
+bool isUrl(const std::string &path) {
+    static const std::regex r("^(http|https):/");
+    std::smatch match;
+    return std::regex_search(path, match, r);
+}
+
 Node Importer::applySceneImports(const std::string& scenePath, const std::string& resourceRoot) {
 
-    std::string sceneString;
     std::string path;
-    m_sceneQueue.push_back(scenePath);
+
+    m_sceneQueue.push_back(resourceRoot + scenePath);
 
     while (true) {
         {
@@ -44,16 +50,13 @@ Node Importer::applySceneImports(const std::string& scenePath, const std::string
             }
 
             path = m_sceneQueue.back();
-
             m_sceneQueue.pop_back();
 
             if (m_scenes.find(path) != m_scenes.end()) { continue; }
         }
 
         // TODO: generic handling of uri
-        std::regex r("^(http|https):/");
-        std::smatch match;
-        if (std::regex_search(path, match, r)) {
+        if (isUrl(path)) {
             progressCounter++;
             startUrlRequest(path,
                     [&, p = path](std::vector<char>&& rawData) {
@@ -67,7 +70,9 @@ Node Importer::applySceneImports(const std::string& scenePath, const std::string
             });
         } else {
             std::unique_lock<std::mutex> lock(sceneMutex);
-            processScene(path, getSceneString(path, resourceRoot));
+            auto sceneString = stringFromFile(path.c_str());
+
+            processScene(path, sceneString);
         }
     }
 
@@ -78,20 +83,18 @@ Node Importer::applySceneImports(const std::string& scenePath, const std::string
 
 void Importer::processScene(const std::string &scenePath, const std::string &sceneString) {
 
-    std::string path = scenePath;
-    // Make sure all references from uber scene file are relative to itself, instead of being
-    // absolute paths (Example: when loading a file using command line args).
-    // TODO: Could be made better later.
-    if (m_scenes.size() == 0 && path[0] == '/') { path= getFilename(path); }
+    LOG("Process: '%s'", scenePath.c_str());
 
     try {
-        auto root = YAML::Load(sceneString);
-        normalizeSceneImports(root, path);
-        normalizeSceneDataSources(root, scenePath);
-        normalizeSceneTextures(root, path);
-        auto imports = getScenesToImport(root);
-        m_scenes[path] = root;
-        for (const auto& import : imports) {
+        auto sceneNode = YAML::Load(sceneString);
+
+        normalizeSceneImports(sceneNode, scenePath);
+        normalizeSceneDataSources(sceneNode, scenePath);
+        normalizeSceneTextures(sceneNode, scenePath);
+
+        m_scenes[scenePath] = sceneNode;
+
+        for (const auto& import : getScenesToImport(sceneNode)) {
             m_sceneQueue.push_back(import);
             m_condition.notify_all();
         }
@@ -101,26 +104,22 @@ void Importer::processScene(const std::string &scenePath, const std::string &sce
     }
 }
 
-std::string Importer::getFilename(const std::string& filePath) {
-    std::string scenePath = filePath;
-    std::regex r("[^//]+$");
-    std::smatch match;
-    if (std::regex_search(scenePath, match, r)) { scenePath = match[0]; }
-    return scenePath;
-}
+std::string Importer::normalizePath(const std::string &_path,
+                                    const std::string &_parentPath) {
 
-std::string Importer::normalizePath(const std::string &path,
-                                         const std::string &parentPath) {
+    std::string path;
 
-    std::regex r("^(http|https):/");
-    std::smatch match;
-    if (path[0] == '/' || std::regex_search(path, match, r)) {
-        //absolute path or network url , return as it is
-        return path;
+    // Check if absolute path or network url , return as it is
+    if (_path[0] == '/' || isUrl(_path)) {
+        path = _path;
+    } else {
+        auto r = std::regex("[^//]+$");
+        path = std::regex_replace(_parentPath, r, _path);
     }
 
-    r = std::regex("[^//]+$");
-    return std::regex_replace(parentPath, r, path);
+    LOG("Normalize '%s', '%s' => '%s'", _parentPath.c_str(), _path.c_str(), path.c_str());
+
+    return path;
 }
 
 void Importer::normalizeSceneImports(Node& root, const std::string& parentPath) {
@@ -146,7 +145,7 @@ void Importer::normalizeSceneDataSources(Node &root, const std::string &parentPa
 }
 
 void Importer::setNormalizedTexture(Node& texture, const std::vector<std::string>& names,
-        const std::string& parentPath) {
+                                    const std::string& parentPath) {
 
     for (size_t index = 0; index < names.size(); index++) {
         auto& name = names[index];
@@ -233,7 +232,12 @@ void Importer::normalizeSceneTextures(Node& root, const std::string& parentPath)
 }
 
 std::string Importer::getSceneString(const std::string &scenePath, const std::string& resourceRoot) {
-    return stringFromFile(scenePath.c_str(), PathType::resource, resourceRoot.c_str());
+
+    if (scenePath[0] == '/') {
+        return stringFromFile(scenePath.c_str());
+    }
+
+    return stringFromFile((resourceRoot + scenePath).c_str());
 }
 
 std::vector<std::string> Importer::getScenesToImport(const Node& scene) {
@@ -281,8 +285,6 @@ Node Importer::importScenes(const std::string& scenePath) {
 
     if (importScenesSorted.size() == 1) {
         auto import = importScenesSorted[0];
-
-        if (import[0] == '/') { import = getFilename(import); }
 
         return m_scenes[import];
     }

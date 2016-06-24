@@ -54,7 +54,6 @@ static jmethodID hashmapPutMID = 0;
 static AAssetManager* assetManager = nullptr;
 
 static bool s_isContinuousRendering = false;
-static bool s_useInternalResources = true;
 
 PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT = 0;
 PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT = 0;
@@ -180,37 +179,7 @@ bool isContinuousRendering() {
 
 }
 
-std::string setResourceRoot(const char* _path, std::string& _sceneResourceRoot) {
-
-    std::regex r("^(http|https):/");
-    std::smatch match;
-    std::string path(_path);
-
-    if (std::regex_search(path, match, r)) {
-        _sceneResourceRoot = "";
-        return path;
-    }
-
-    _sceneResourceRoot = std::string(dirname(_path));
-
-    // TODO: InternalResource boolean should also be on Scene instead of being static
-    s_useInternalResources = (*_path != '/');
-
-    // For unclear reasons, the AAssetManager will fail to open a file at
-    // path "filepath" if the path is instead given as "./filepath", so in
-    // cases where dirname returns "." we simply use an empty string. For
-    // all other cases, we add a "/" for appending relative paths.
-    if (!_sceneResourceRoot.empty() && _sceneResourceRoot.front() == '.') {
-        _sceneResourceRoot = "";
-    } else {
-        _sceneResourceRoot += '/';
-    }
-
-    return std::string(basename(_path));
-
-}
-
-unsigned char* bytesFromAssetManager(const char* _path, unsigned int* _size) {
+unsigned char* bytesFromAssetManager(const char* _path, size_t& _size) {
 
     unsigned char* data = nullptr;
 
@@ -218,15 +187,15 @@ unsigned char* bytesFromAssetManager(const char* _path, unsigned int* _size) {
 
     if (asset == nullptr) {
         logMsg("Failed to open asset at path: %s\n", _path);
-        *_size = 0;
+        _size = 0;
         return data;
     }
 
-    *_size = AAsset_getLength(asset);
+    _size = AAsset_getLength(asset);
 
-    data = (unsigned char*) malloc(sizeof(unsigned char) * (*_size));
+    data = (unsigned char*) malloc(sizeof(unsigned char) * _size);
 
-    int read = AAsset_read(asset, data, *_size);
+    int read = AAsset_read(asset, data, _size);
 
     if (read <= 0) {
         logMsg("Failed to read asset at path: %s\n", _path);
@@ -237,33 +206,33 @@ unsigned char* bytesFromAssetManager(const char* _path, unsigned int* _size) {
     return data;
 }
 
-unsigned char* bytesFromFileSystem(const char* _path, unsigned int* _size) {
+unsigned char* bytesFromFileSystem(const char* _path, size_t& _size) {
 
     std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
 
     if(!resource.is_open()) {
         logMsg("Failed to read file at path: %s\n", _path);
-        *_size = 0;
+        _size = 0;
         return nullptr;
     }
 
-    *_size = resource.tellg();
+    _size = resource.tellg();
 
     resource.seekg(std::ifstream::beg);
 
-    char* cdata = (char*) malloc(sizeof(char) * (*_size));
+    char* cdata = (char*) malloc(sizeof(char) * _size);
 
-    resource.read(cdata, *_size);
+    resource.read(cdata, _size);
     resource.close();
 
     return reinterpret_cast<unsigned char *>(cdata);
 
 }
 
-std::string stringFromFile(const char* _path, PathType _type, const char* _resourceRoot) {
+std::string stringFromFile(const char* _path, PathType _type) {
 
     unsigned int length = 0;
-    unsigned char* bytes = bytesFromFile(_path, _type, &length, _resourceRoot);
+    unsigned char* bytes = bytesFromFile(_path, length, _type);
     std::string out(reinterpret_cast<char*>(bytes), length);
     free(bytes);
 
@@ -271,28 +240,25 @@ std::string stringFromFile(const char* _path, PathType _type, const char* _resou
 
 }
 
-unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _size, const char* _resourceRoot) {
+unsigned char* bytesFromFile(const char* _path, size_t& _size, PathType _type) {
 
-    std::string resourcePath;
-    if (_resourceRoot) {
-        resourcePath = std::string(_resourceRoot) + _path;
-    } else {
-        resourcePath = _path;
-    }
+    size_t len = strlen(_path);
 
-    switch (_type) {
-    case PathType::absolute:
-        return bytesFromFileSystem(_path, _size);
-    case PathType::internal:
-        return bytesFromAssetManager(_path, _size);
-    case PathType::resource:
-        if (s_useInternalResources) {
-            return bytesFromAssetManager(resourcePath.c_str(), _size);
+    if (len > 0) {
+        if (_path[0] == '/') {
+
+            return bytesFromFileSystem(_path, _size);
+
         } else {
-            return bytesFromFileSystem(resourcePath.c_str(), _size);
+            // For unclear reasons, the AAssetManager will fail to open a file at
+            // path "filepath" if the path is instead given as "./filepath"
+            if (len >= 2 && _path[0] == '.' && _path[1] = '/') { _path += 2; }
+
+            return bytesFromAssetManager(_path, _size);
         }
     }
-
+    _size = 0;
+    return nullptr;
 }
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {

@@ -36,16 +36,12 @@ enum class PathType : char {
     resource, // resolved relative to the resource root
 };
 
-/* Set a path to act as the resource root. All other resource paths will be resolved relative to this root.
- * The string returned is the path to the given file relative to the new root resource directory. */
-std::string setResourceRoot(const char* _path, std::string& resourceRoot);
-
 /* Read a file as a string
  *
  * Opens the file at the _path, resolved with _type, and returns a string with its contents.
  * If the file cannot be found or read, the returned string is empty.
  */
-std::string stringFromFile(const char* _path, PathType _type, const char* _resourceRoot = nullptr);
+std::string stringFromFile(const char* _path, PathType _type = PathType::absolute);
 
 /* Read a file into memory
  *
@@ -53,7 +49,7 @@ std::string stringFromFile(const char* _path, PathType _type, const char* _resou
  * containing the contents of the file. The size of the memory in bytes is written to _size.
  * If the file cannot be read, nothing is allocated and nullptr is returned.
  */
-unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _size, const char* _resourceRoot = nullptr);
+unsigned char* bytesFromFile(const char* _path, size_t& _size, PathType _type = PathType::absolute);
 
 /* Function type for receiving data from a successful network request */
 using UrlCallback = std::function<void(std::vector<char>&&)>;

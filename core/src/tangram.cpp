@@ -158,12 +158,9 @@ void loadScene(const char* _scenePath, bool _useScenePosition) {
 
     // Copy old scene
     auto scene = std::make_shared<Scene>(_scenePath);
-
-    auto scenePath = setResourceRoot(_scenePath, scene->resourceRoot());
     scene->useScenePosition = _useScenePosition;
-    scene->fontContext()->setSceneResourceRoot(scene->resourceRoot());
 
-    if (SceneLoader::loadScene(scenePath, scene)) {
+    if (SceneLoader::loadScene(scene)) {
         setScene(scene);
     }
 }
@@ -180,10 +177,7 @@ void loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _pl
 
     Tangram::runAsyncTask([scene = m_nextScene, _platformCallback](){
 
-            auto scenePath = setResourceRoot(scene->path().c_str(), scene->resourceRoot());
-            scene->fontContext()->setSceneResourceRoot(scene->resourceRoot());
-
-            bool ok = SceneLoader::loadScene(scenePath, scene);
+            bool ok = SceneLoader::loadScene(scene);
 
             Tangram::runOnMainLoop([scene, ok, _platformCallback]() {
                     {

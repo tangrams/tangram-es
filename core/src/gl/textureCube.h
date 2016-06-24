@@ -11,7 +11,7 @@ namespace Tangram {
 class TextureCube : public Texture {
 
 public:
-    TextureCube(std::string _file, const std::string& _resourceName = "",
+    TextureCube(std::string _file,
             TextureOptions _options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
 
     void update(GLuint _textureUnit) override;
@@ -39,7 +39,7 @@ private:
 
     std::vector<Face> m_faces;
 
-    void load(const std::string& _file, const std::string& _resourcePath);
+    void load(const std::string& _filePath);
 
 };
 

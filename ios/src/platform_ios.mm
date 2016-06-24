@@ -58,54 +58,19 @@ bool isContinuousRendering() {
 
 }
 
-std::string setResourceRoot(const char* _path, std::string& _sceneResourceRoot) {
-
-    std::regex r("^(http|https):/");
-    std::smatch match;
-    std::string p(_path);
-
-    if (std::regex_search(p, match, r)) {
-        _sceneResourceRoot = "";
-        return p;
-    }
+NSString* resolvePath(const char* _path, PathType _type) {
 
     NSString* path = [NSString stringWithUTF8String:_path];
 
-    if (*_path != '/') {
-        NSString* resources = [[NSBundle mainBundle] resourcePath];
-        path = [resources stringByAppendingPathComponent:path];
-    }
+    if (*_path == '/') { return path; }
 
-    _sceneResourceRoot = std::string([ [path stringByDeletingLastPathComponent] UTF8String]);
-
-    return std::string([[path lastPathComponent] UTF8String]);
-
+    NSString* resources = [[NSBundle mainBundle] resourcePath];
+    return [resources stringByAppendingPathComponent:path];
 }
 
-NSString* resolvePath(const char* _path, PathType _type, const char* _resourceRoot) {
+std::string stringFromFile(const char* _path, PathType _type) {
 
-    NSString* resourceRoot = NULL;
-    if (_resourceRoot == NULL) {
-        resourceRoot = @".";
-    } else {
-        resourceRoot = [NSString stringWithUTF8String:(_resourceRoot)];
-    }
-
-    NSString* path = [NSString stringWithUTF8String:_path];
-
-    switch (_type) {
-    case PathType::internal:
-        return [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:path];
-    case PathType::resource:
-        return [resourceRoot stringByAppendingPathComponent:path];
-    case PathType::absolute:
-        return path;
-    }
-}
-
-std::string stringFromFile(const char* _path, PathType _type, const char* _resourceRoot) {
-
-    NSString* path = resolvePath(_path, _type, _resourceRoot);
+    NSString* path = resolvePath(_path, _type);
     NSString* str = [NSString stringWithContentsOfFile:path
                                           usedEncoding:NULL
                                                  error:NULL];
@@ -118,21 +83,20 @@ std::string stringFromFile(const char* _path, PathType _type, const char* _resou
     return std::string([str UTF8String]);
 }
 
-unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _size,
-                                const char* _resourceRoot) {
+unsigned char* bytesFromFile(const char* _path, size_t& _size, PathType _type) {
 
-    NSString* path = resolvePath(_path, _type, _resourceRoot);
+    NSString* path = resolvePath(_path, _type);
     NSMutableData* data = [NSMutableData dataWithContentsOfFile:path];
 
     if (data == nil) {
         logMsg("Failed to read file at path: %s\n", [path UTF8String]);
-        *_size = 0;
+        _size = 0;
         return nullptr;
     }
 
-    *_size = data.length;
-    unsigned char* ptr = (unsigned char*)malloc(*_size);
-    [data getBytes:ptr length:*_size];
+    _size = data.length;
+    unsigned char* ptr = (unsigned char*)malloc(_size);
+    [data getBytes:ptr length:_size];
 
     return ptr;
 }
