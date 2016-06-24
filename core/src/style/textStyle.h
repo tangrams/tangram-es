@@ -34,7 +34,7 @@ public:
         uint32_t maxLineWidth = 15;
 
         TextLabelProperty::Transform transform = TextLabelProperty::Transform::none;
-        TextLabelProperty::Align align = TextLabelProperty::Align::center;
+        TextLabelProperty::Align align = TextLabelProperty::Align::none;
         LabelProperty::Anchor anchor = LabelProperty::Anchor::center;
 
         float fontScale = 1;

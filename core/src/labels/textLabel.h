@@ -48,7 +48,8 @@ public:
 
     TextLabel(Label::Transform _transform, Type _type, Label::Options _options,
               LabelProperty::Anchor _anchor, TextLabel::FontVertexAttributes _attrib,
-              glm::vec2 _dim, TextLabels& _labels, std::vector<TextRange> _textRanges);
+              glm::vec2 _dim, TextLabels& _labels, std::vector<TextRange> _textRanges,
+              TextLabelProperty::Align _preferedAlignment);
 
     void updateBBoxes(float _zoomFract) override;
 
@@ -61,6 +62,7 @@ protected:
     void pushTransform() override;
 
 private:
+
     void applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
                      LabelProperty::Anchor _anchor) override;
 
@@ -70,10 +72,14 @@ private:
     // first vertex and count in m_textLabels quads
     std::vector<TextRange> m_textRanges;
 
+    // TextRange currently used for drawing
+    int m_textRangeIndex;
+
     FontVertexAttributes m_fontAttrib;
 
-    // TODO: remove me
-    int rangeindex = 0;
+    // The text LAbel prefered alignment
+    TextLabelProperty::Align m_preferedAlignment;
+
 };
 
 }
