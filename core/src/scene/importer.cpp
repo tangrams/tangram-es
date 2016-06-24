@@ -22,8 +22,9 @@ bool isUrl(const std::string &path) {
 Node Importer::applySceneImports(const std::string& scenePath, const std::string& resourceRoot) {
 
     std::string path;
+    std::string fullPath = resourceRoot + scenePath;
 
-    m_sceneQueue.push_back(resourceRoot + scenePath);
+    m_sceneQueue.push_back(fullPath);
 
     while (true) {
         {
@@ -70,13 +71,11 @@ Node Importer::applySceneImports(const std::string& scenePath, const std::string
             });
         } else {
             std::unique_lock<std::mutex> lock(sceneMutex);
-            auto sceneString = stringFromFile(path.c_str());
-
-            processScene(path, sceneString);
+            processScene(path, getSceneString(path, ""));
         }
     }
 
-    auto root = importScenes(scenePath);
+    auto root = importScenes(fullPath);
 
     return root;
 }
@@ -232,12 +231,7 @@ void Importer::normalizeSceneTextures(Node& root, const std::string& parentPath)
 }
 
 std::string Importer::getSceneString(const std::string &scenePath, const std::string& resourceRoot) {
-
-    if (scenePath[0] == '/') {
-        return stringFromFile(scenePath.c_str());
-    }
-
-    return stringFromFile((resourceRoot + scenePath).c_str());
+    return stringFromFile(scenePath.c_str());
 }
 
 std::vector<std::string> Importer::getScenesToImport(const Node& scene) {
@@ -284,9 +278,7 @@ Node Importer::importScenes(const std::string& scenePath) {
     auto importScenesSorted = getImportOrder(scenePath);
 
     if (importScenesSorted.size() == 1) {
-        auto import = importScenesSorted[0];
-
-        return m_scenes[import];
+        return m_scenes[importScenesSorted[0]];
     }
 
     Node root = Node();

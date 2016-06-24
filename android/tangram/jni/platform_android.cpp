@@ -252,7 +252,7 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size, PathType _type) {
         } else {
             // For unclear reasons, the AAssetManager will fail to open a file at
             // path "filepath" if the path is instead given as "./filepath"
-            if (len >= 2 && _path[0] == '.' && _path[1] = '/') { _path += 2; }
+            if (len >= 2 && (_path[0] == '.') && (_path[1] == '/')) { _path += 2; }
 
             return bytesFromAssetManager(_path, _size);
         }

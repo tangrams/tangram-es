@@ -39,6 +39,17 @@ TestImporter::TestImporter() {
                                     name: thisCar
                                     )END");
 
+    m_testScenes["/absolutePath/car.yaml"] = std::string(R"END(
+                                import: import/car.yaml
+                                type: car
+                                )END");
+
+    m_testScenes["/absolutePath/import/car.yaml"] = std::string(R"END(
+                                name: vehicle
+                                type: vehicle
+                                category: vehicle
+                                )END");
+
     m_testScenes["/absolutePath/thisCar.yaml"] = std::string(R"END(
                                     import: [import/car.yaml, car.yaml]
                                     name: thisCar
