@@ -28,14 +28,15 @@ glm::vec2 anchorDirection(Anchor _anchor);
 
 namespace TextLabelProperty {
 
-enum Transform {
+enum class Transform {
     none,
     capitalize,
     uppercase,
     lowercase,
 };
 
-enum Align {
+enum class Align {
+    none,
     right,
     left,
     center,

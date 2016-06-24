@@ -272,6 +272,7 @@ layers:
                 #interactive: true
                 text:
                     anchor: right, bottom, left, top
+                    align: right
                     interactive: true
                     text_wrap: 20
                     font:
