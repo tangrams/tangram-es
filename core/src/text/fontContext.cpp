@@ -220,7 +220,7 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
                 int rangeEnd = m_scratch.quads->size();
 
                 _textRanges.push_back({align, {rangeStart, rangeEnd - rangeStart}});
-                LOGD("Text quad range {%d,%d} for label %s", rangeStart, rangEnd, _text.c_str());
+                LOGD("Text quad range {%d,%d} for label %s", rangeStart, rangeEnd, _text.c_str());
             }
         }
     } else {

@@ -78,6 +78,7 @@ int TextWrapper::draw(alfons::TextBatch& _batch, float _maxWidth, const alfons::
 
         switch(_alignment) {
             case TextLabelProperty::Align::center:
+            case TextLabelProperty::Align::none:
                 position.x = (_maxWidth - wrap.second) * 0.5;
                 break;
             case TextLabelProperty::Align::right:

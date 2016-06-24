@@ -531,7 +531,8 @@ void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Typ
     m_labels.emplace_back(new TextLabel(_transform, _type, _params.labelOptions, _params.anchor,
                                         {m_attributes.fill, m_attributes.stroke, m_attributes.fontScale},
                                         {m_attributes.width, m_attributes.height},
-                                        *m_textLabels, std::move(m_attributes.textRanges)));
+                                        *m_textLabels, std::move(m_attributes.textRanges),
+                                        _params.align));
 }
 
 }

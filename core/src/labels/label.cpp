@@ -244,7 +244,7 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
 
     switch (m_state) {
         case State::visible:
-            if (m_occluded) {
+            if (m_occluded || m_occludedLastFrame) {
                 if (m_options.anchorFallback.size() > 0) {
                     enterState(State::anchor_fallback, 0.0);
                 } else {
@@ -276,7 +276,11 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
                 m_anchorFallbackCount++;
             } else {
                 m_anchorFallbackCount = 0;
-                enterState(State::visible, 1.0);
+                if (!m_occludedLastFrame) {
+                    enterState(State::visible, 1.0);
+                } else {
+                    enterState(State::sleep, 0.0);
+                }
             }
             
             animate = true;

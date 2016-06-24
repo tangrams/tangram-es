@@ -8,22 +8,37 @@
 namespace Tangram {
 
 using namespace LabelProperty;
+using namespace TextLabelProperty;
 
 const float TextVertex::position_scale = 4.0f;
 const float TextVertex::alpha_scale = 65535.0f;
 
 TextLabel::TextLabel(Label::Transform _transform, Type _type, Label::Options _options,
                      Anchor _anchor, TextLabel::FontVertexAttributes _attrib,
-                     glm::vec2 _dim,  TextLabels& _labels, std::vector<TextRange> _textRanges)
+                     glm::vec2 _dim,  TextLabels& _labels, std::vector<TextRange> _textRanges,
+                     Align _preferedAlignment)
     : Label(_transform, _dim, _type, _options, _anchor),
       m_textLabels(_labels),
       m_textRanges(_textRanges),
-      m_fontAttrib(_attrib) {
+      m_fontAttrib(_attrib),
+      m_preferedAlignment(_preferedAlignment) {
 
     applyAnchor(_dim, glm::vec2(0.0), _anchor);
+    m_textRangeIndex = 0;
 }
 
 void TextLabel::applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin, Anchor _anchor) {
+
+    if (m_preferedAlignment == Align::none) {
+        Align newAlignment = alignFromAnchor(_anchor);
+        for (int i = 0; i < m_textRanges.size(); ++i) {
+            if (m_textRanges[i].align == newAlignment) {
+                m_textRangeIndex = i;
+                break;
+            }
+        }
+    }
+
     m_anchor = _origin + LabelProperty::anchorDirection(_anchor) * _dimension * 0.5f;
 }
 
@@ -54,10 +69,8 @@ void TextLabel::pushTransform() {
         uint16_t(m_fontAttrib.fontScale),
     };
 
-    rangeindex = (rangeindex + 1) % m_textRanges.size();
-    auto it = m_textLabels.quads.begin() + m_textRanges[rangeindex].range.start;
-
-    auto end = it + m_textRanges[rangeindex].range.length;
+    auto it = m_textLabels.quads.begin() + m_textRanges[m_textRangeIndex].range.start;
+    auto end = it + m_textRanges[m_textRangeIndex].range.length;
     auto& style = m_textLabels.style;
 
     glm::i16vec2 sp = glm::i16vec2(m_transform.state.screenPos * TextVertex::position_scale);
