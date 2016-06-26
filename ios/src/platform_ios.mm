@@ -58,7 +58,7 @@ bool isContinuousRendering() {
 
 }
 
-NSString* resolvePath(const char* _path, PathType _type) {
+NSString* resolvePath(const char* _path) {
 
     NSString* path = [NSString stringWithUTF8String:_path];
 
@@ -68,9 +68,9 @@ NSString* resolvePath(const char* _path, PathType _type) {
     return [resources stringByAppendingPathComponent:path];
 }
 
-std::string stringFromFile(const char* _path, PathType _type) {
+std::string stringFromFile(const char* _path) {
 
-    NSString* path = resolvePath(_path, _type);
+    NSString* path = resolvePath(_path);
     NSString* str = [NSString stringWithContentsOfFile:path
                                           usedEncoding:NULL
                                                  error:NULL];
@@ -83,9 +83,9 @@ std::string stringFromFile(const char* _path, PathType _type) {
     return std::string([str UTF8String]);
 }
 
-unsigned char* bytesFromFile(const char* _path, size_t& _size, PathType _type) {
+unsigned char* bytesFromFile(const char* _path, size_t& _size) {
 
-    NSString* path = resolvePath(_path, _type);
+    NSString* path = resolvePath(_path);
     NSMutableData* data = [NSMutableData dataWithContentsOfFile:path];
 
     if (data == nil) {

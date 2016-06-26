@@ -229,10 +229,10 @@ unsigned char* bytesFromFileSystem(const char* _path, size_t& _size) {
 
 }
 
-std::string stringFromFile(const char* _path, PathType _type) {
+std::string stringFromFile(const char* _path) {
 
     unsigned int length = 0;
-    unsigned char* bytes = bytesFromFile(_path, length, _type);
+    unsigned char* bytes = bytesFromFile(_path, length);
     std::string out(reinterpret_cast<char*>(bytes), length);
     free(bytes);
 
@@ -240,7 +240,7 @@ std::string stringFromFile(const char* _path, PathType _type) {
 
 }
 
-unsigned char* bytesFromFile(const char* _path, size_t& _size, PathType _type) {
+unsigned char* bytesFromFile(const char* _path, size_t& _size) {
 
     size_t len = strlen(_path);
 

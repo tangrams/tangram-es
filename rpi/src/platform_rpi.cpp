@@ -53,10 +53,10 @@ bool isContinuousRendering() {
     return s_isContinuousRendering;
 }
 
-std::string stringFromFile(const char* _path, PathType _type) {
+std::string stringFromFile(const char* _path) {
 
     unsigned int length = 0;
-    unsigned char* bytes = bytesFromFile(_path, _type, &length);
+    unsigned char* bytes = bytesFromFile(_path, &length);
 
     std::string out(reinterpret_cast<char*>(bytes), length);
     free(bytes);
@@ -64,7 +64,7 @@ std::string stringFromFile(const char* _path, PathType _type) {
     return out;
 }
 
-unsigned char* bytesFromFile(const char* _path, size_t& _size, PathType _type) {
+unsigned char* bytesFromFile(const char* _path, size_t& _size) {
 
     std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
 

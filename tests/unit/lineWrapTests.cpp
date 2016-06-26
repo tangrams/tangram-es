@@ -36,7 +36,7 @@ void initFont(std::string _font = TEST_FONT) {
     font = fontManager.addFont("default", alfons::InputSource(_font), TEST_FONT_SIZE);
 
     size_t dataSize = 0;
-    unsigned char* data = bytesFromFile(_font.c_str(), dataSize, PathType::internal);
+    unsigned char* data = bytesFromFile(_font.c_str(), dataSize);
 
     auto face = fontManager.addFontFace(alfons::InputSource(reinterpret_cast<char*>(data), dataSize), TEST_FONT_SIZE);
 

@@ -45,7 +45,7 @@ Scene::Scene(const std::string& _path)
         }
     }
 
-    LOG("Scene '%s' => '%s' : '%s'", _path.c_str(), m_resourceRoot.c_str(), m_path.c_str());
+    LOGD("Scene '%s' => '%s' : '%s'", _path.c_str(), m_resourceRoot.c_str(), m_path.c_str());
 
     m_fontContext->setSceneResourceRoot(m_resourceRoot);
 

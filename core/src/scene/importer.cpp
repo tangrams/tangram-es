@@ -86,7 +86,7 @@ Node Importer::applySceneImports(const std::string& scenePath, const std::string
 
 void Importer::processScene(const std::string &scenePath, const std::string &sceneString) {
 
-    LOG("Process: '%s'", scenePath.c_str());
+    LOGD("Process: '%s'", scenePath.c_str());
 
     try {
         auto sceneNode = YAML::Load(sceneString);
@@ -120,7 +120,7 @@ std::string Importer::normalizePath(const std::string &_path,
         path = std::regex_replace(_parentPath, r, _path);
     }
 
-    LOG("Normalize '%s', '%s' => '%s'", _parentPath.c_str(), _path.c_str(), path.c_str());
+    LOGD("Normalize '%s', '%s' => '%s'", _parentPath.c_str(), _path.c_str(), path.c_str());
 
     return path;
 }

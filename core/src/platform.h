@@ -30,26 +30,20 @@ bool isContinuousRendering();
 /* get system path of a font file */
 std::string systemFontPath(const std::string& _name, const std::string& _weight, const std::string& _face);
 
-enum class PathType : char {
-    absolute, // resolved relative to the filesystem root
-    internal, // resolved relative to the application storage directory
-    resource, // resolved relative to the resource root
-};
-
 /* Read a file as a string
  *
- * Opens the file at the _path, resolved with _type, and returns a string with its contents.
+ * Opens the file at the _path and returns a string with its contents.
  * If the file cannot be found or read, the returned string is empty.
  */
-std::string stringFromFile(const char* _path, PathType _type = PathType::absolute);
+std::string stringFromFile(const char* _path);
 
 /* Read a file into memory
  *
- * Opens the file at _path, resolved with _type, then allocates and returns a pointer to memory
+ * Opens the file at _path then allocates and returns a pointer to memory
  * containing the contents of the file. The size of the memory in bytes is written to _size.
  * If the file cannot be read, nothing is allocated and nullptr is returned.
  */
-unsigned char* bytesFromFile(const char* _path, size_t& _size, PathType _type = PathType::absolute);
+unsigned char* bytesFromFile(const char* _path, size_t& _size);
 
 /* Function type for receiving data from a successful network request */
 using UrlCallback = std::function<void(std::vector<char>&&)>;
