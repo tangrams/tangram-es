@@ -16,7 +16,6 @@
 #include "platform.h"
 #include "platform_rpi.h"
 
-#include <sstream>
 #include <iostream>
 #include "glm/trigonometric.hpp"
 
@@ -80,43 +79,24 @@ void setup(int argc, char **argv) {
     double lon = 0.0f;
     std::string scene = "scene.yaml";
 
-    for (int i = 1; i < argc ; i++) {
-        if (std::string(argv[i]) == "-s" ||
-            std::string(argv[i]) == "--scene") {
-            scene = std::string(argv[i+1]);
-        } else if (std::string(argv[i]) == "-lat" ) {
-            std::string argument = std::string(argv[i+1]);
-            std::istringstream cur(argument);
-            cur >> lat;
-        } else if (std::string(argv[i]) == "-lon" ) {
-            std::string argument = std::string(argv[i+1]);
-            std::istringstream cur(argument);
-            cur >> lon;
-        } else if (std::string(argv[i]) == "-z" ||
-                   std::string(argv[i]) == "--zoom" ) {
-            std::string argument = std::string(argv[i+1]);
-            std::istringstream cur(argument);
-            cur >> zoom;
-        } else if (std::string(argv[i]) == "-w" ||
-                   std::string(argv[i]) == "--width") {
-            std::string argument = std::string(argv[i+1]);
-            std::istringstream cur(argument);
-            cur >> width;
-        } else if (std::string(argv[i]) == "-h" ||
-                   std::string(argv[i]) == "--height") {
-            std::string argument = std::string(argv[i+1]);
-            std::istringstream cur(argument);
-            cur >> height;
-        } else if (std::string(argv[i]) == "-t" ||
-                   std::string(argv[i]) == "--tilt") {
-            std::string argument = std::string(argv[i+1]);
-            std::istringstream cur(argument);
-            cur >> tilt;
-        } else if (std::string(argv[i]) == "-r" ||
-                   std::string(argv[i]) == "--rotation") {
-            std::string argument = std::string(argv[i+1]);
-            std::istringstream cur(argument);
-            cur >> rot;
+    for (int i = 1; i < argc - 1; i++) {
+        std::string argName(argv[i]), argValue(argv[i + 1]);
+        if (argName == "-s" || argName == "--scene") {
+            scene = argValue;
+        } else if (argName == "-lat" ) {
+            lat = std::stod(argValue);
+        } else if (argName == "-lon" ) {
+            lon = std::stod(argValue);
+        } else if (argName == "-z" || argName == "--zoom" ) {
+            zoom = std::stof(argValue);
+        } else if (argName == "-w" || argName == "--width") {
+            width = std::stoi(argValue);
+        } else if (argName == "-h" || argName == "--height") {
+            height = std::stoi(argValue);
+        } else if (argName == "-t" || argName == "--tilt") {
+            tilt = std::stof(argValue);
+        } else if (argName == "-r" || argName == "--rotation") {
+            rot = std::stof(argValue);
         }
     }
 
