@@ -24,7 +24,7 @@
 static bool s_isContinuousRendering = false;
 static std::string s_resourceRoot;
 static std::string s_internalResourceRoot = "";
-
+static std::function<void()> s_renderCallbackFunction = nullptr;
 
 #if USE_ECORE_CON
 #include <Eina.h>
@@ -176,8 +176,15 @@ void logMsg(const char* fmt, ...) {
         va_end(vl);
 }
 
+void setRenderCallbackFunction(std::function<void()> callback) {
+    s_renderCallbackFunction = callback;
+}
+
 void requestRender() {
     s_update = true;
+    if (s_renderCallbackFunction) {
+        s_renderCallbackFunction();
+    }
 }
 
 bool shouldRender() {
