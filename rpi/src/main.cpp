@@ -56,12 +56,10 @@ int main(int argc, char **argv){
 
         processNetworkQueue();
 
-        // TODO:
-        //  - Implement the request frame thing
-        //if (getRenderRequest()) {
-        //    setRenderRequest(false);
+        if (getRenderRequest()) {
+            setRenderRequest(false);
             newFrame();
-        //}
+        }
     }
 
     curl_global_cleanup();

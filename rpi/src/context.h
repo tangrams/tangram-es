@@ -13,6 +13,7 @@ void    closeGL();
 // SET
 void    setWindowSize(int _width, int _height);
 void    setRenderRequest(bool _request);
+void    setContinuousRendering(bool _continuous);
 
 // GET
 int     getWindowWidth();

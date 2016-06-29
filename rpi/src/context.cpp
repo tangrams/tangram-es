@@ -9,7 +9,7 @@
 #include <linux/input.h>
 
 #include "glm/gtc/matrix_transform.hpp"
-
+#include "platform.h"
 #include "util/geom.h"
 
 // Main global variables
@@ -45,7 +45,7 @@ std::string searchForDevice(const std::string& _device) {
 
     if (!file.is_open())
       return "NOT FOUND";
-    
+
     while (!file.eof()) {
       getline(file, buffer);
       std::size_t found = buffer.find(_device);
@@ -89,7 +89,7 @@ bool readMouseEvent(struct input_event *mousee){
         bytes = read(mouse_fd, mousee, sizeof(struct input_event));
         if (bytes == -1)
             return false;
-        else if (bytes == sizeof(struct input_event)) 
+        else if (bytes == sizeof(struct input_event))
             return true;
     }
     return false;
@@ -102,7 +102,7 @@ bool updateMouse() {
 
     struct input_event mousee;
     while ( readMouseEvent(&mousee) ) {
-        
+
         mouse.velX=0;
         mouse.velY=0;
 
@@ -381,14 +381,14 @@ int getKey() {
     new_term_attr.c_cc[VTIME] = 0;
     new_term_attr.c_cc[VMIN] = 0;
     tcsetattr(fileno(stdin), TCSANOW, &new_term_attr);
-    
+
     /* read a character from the stdin stream without blocking */
     /*   returns EOF (-1) if no character is available */
     character = fgetc(stdin);
 
     /* restore the original terminal attributes */
     tcsetattr(fileno(stdin), TCSANOW, &orig_term_attr);
-    
+
     return character;
 }
 
@@ -399,7 +399,7 @@ void updateGL() {
     if ( key != -1 && key != keyPressed ){
         keyPressed = key;
         onKeyPress(key);
-    }  
+    }
 }
 
 void setWindowSize(int _width, int _height) {
@@ -464,5 +464,5 @@ void setRenderRequest(bool _request) {
 }
 
 bool getRenderRequest() {
-    return bRender;
+    return bRender || isContinuousRendering();
 }
