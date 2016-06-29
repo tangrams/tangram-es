@@ -174,8 +174,15 @@ void logMsg(const char* fmt, ...) {
     va_end(vl);
 }
 
+void setRenderCallbackFunction(std::function<void()> callback) {
+    s_renderCallbackFunction = callback;
+}
+
 void requestRender() {
     s_update = true;
+    if (s_renderCallbackFunction) {
+        s_renderCallbackFunction();
+    }
 }
 
 bool shouldRender() {
