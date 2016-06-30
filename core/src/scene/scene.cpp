@@ -16,8 +16,7 @@
 
 #include <atomic>
 #include <algorithm>
-
-#define COMPONENT_PATH_DELIMITER '.'
+#include <regex>
 
 namespace Tangram {
 
@@ -28,18 +27,41 @@ Scene::Scene(const std::string& _path)
       m_path(_path),
       m_fontContext(std::make_shared<FontContext>()) {
 
-    m_view = std::make_shared<View>();
+    std::regex r("^(http|https):/");
+    std::smatch match;
+
+    if (std::regex_search(_path, match, r)) {
+        m_resourceRoot = "";
+        m_path = _path;
+    } else {
+
+        auto split = _path.find_last_of("/");
+        if (split == std::string::npos) {
+            m_resourceRoot = "";
+            m_path = _path;
+        } else {
+            m_resourceRoot = _path.substr(0, split + 1);
+            m_path = _path.substr(split + 1);
+        }
+    }
+
+    LOGD("Scene '%s' => '%s' : '%s'", _path.c_str(), m_resourceRoot.c_str(), m_path.c_str());
+
+    m_fontContext->setSceneResourceRoot(m_resourceRoot);
+
     // For now we only have one projection..
     // TODO how to share projection with view?
     m_mapProjection.reset(new MercatorProjection());
 }
 
-Scene::Scene(const Scene& _other) : Scene(_other.path()) {
+Scene::Scene(const Scene& _other)
+    : id(s_serial++) {
+
     m_config = _other.m_config;
-    m_updates = _other.m_updates;
-    m_clientDataSources = _other.m_clientDataSources;
-    m_view = _other.m_view;
     m_fontContext = _other.m_fontContext;
+
+    m_path = _other.m_path;
+    m_resourceRoot = _other.m_resourceRoot;
 }
 
 Scene::~Scene() {}
@@ -51,6 +73,14 @@ const Style* Scene::findStyle(const std::string& _name) const {
     }
     return nullptr;
 
+}
+
+Style* Scene::findStyle(const std::string& _name) {
+
+    for (auto& style : m_styles) {
+        if (style->getName() == _name) { return style.get(); }
+    }
+    return nullptr;
 }
 
 int Scene::addIdForName(const std::string& _name) {
@@ -84,28 +114,6 @@ std::shared_ptr<Texture> Scene::getTexture(const std::string& textureName) const
         return nullptr;
     }
     return texIt->second;
-}
-
-void Scene::queueUpdate(std::string path, std::string value) {
-    auto keys = splitString(path, COMPONENT_PATH_DELIMITER);
-    m_updates.push_back({ keys, value });
-}
-
-void Scene::addClientDataSource(std::shared_ptr<DataSource> _source) {
-    m_clientDataSources.push_back(_source);
-}
-
-void Scene::removeClientDataSource(DataSource& _source) {
-    auto it = std::remove_if(m_clientDataSources.begin(), m_clientDataSources.end(),
-        [&](auto& s) { return s.get() == &_source; });
-    m_clientDataSources.erase(it, m_clientDataSources.end());
-}
-
-const std::vector<std::shared_ptr<DataSource>> Scene::getAllDataSources() const {
-    auto sources = m_dataSources;
-
-    sources.insert(sources.end(), m_clientDataSources.begin(), m_clientDataSources.end());
-    return sources;
 }
 
 std::shared_ptr<DataSource> Scene::getDataSource(const std::string& name) {

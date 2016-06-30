@@ -6,14 +6,17 @@
 #include "style/material.h"
 #include "style/style.h"
 #include "labels/labels.h"
+#include "text/fontContext.h"
 #include "tile/tileManager.h"
 #include "tile/tile.h"
 #include "gl/error.h"
 #include "gl/shaderProgram.h"
 #include "gl/renderState.h"
 #include "gl/primitives.h"
+#include "util/asyncWorker.h"
 #include "util/inputHandler.h"
 #include "tile/tileCache.h"
+#include "util/fastmap.h"
 #include "view/view.h"
 #include "data/clientGeoJsonSource.h"
 #include "gl.h"
@@ -27,6 +30,7 @@
 #include <bitset>
 #include <mutex>
 #include <queue>
+#include <thread>
 
 namespace Tangram {
 
@@ -34,6 +38,7 @@ const static size_t MAX_WORKERS = 2;
 
 std::mutex m_tilesMutex;
 std::mutex m_tasksMutex;
+std::mutex m_sceneMutex;
 std::queue<std::function<void()>> m_tasks;
 std::unique_ptr<TileWorker> m_tileWorker;
 std::unique_ptr<TileManager> m_tileManager;
@@ -41,6 +46,9 @@ std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
 std::unique_ptr<Labels> m_labels;
 std::unique_ptr<InputHandler> m_inputHandler;
+
+std::shared_ptr<Scene> m_nextScene;
+std::vector<Scene::Update> m_sceneUpdates;
 
 std::array<Ease, 4> m_eases;
 enum class EaseField { position, zoom, rotation, tilt };
@@ -57,12 +65,17 @@ static float g_time = 0.0;
 static std::bitset<8> g_flags = 0;
 static bool g_cacheGlState = false;
 
+AsyncWorker m_asyncWorker;
 
 void initialize(const char* _scenePath) {
 
+    // For some unknown reasons, android fails to render the map, if same scene is reloaded, without resetting any of
+    // the other Tangram global resources, which is what this method does.
+    // As a work-around, re-initialization of an already loaded scene is done along with resetting all the Tangram
+    // global resources.
+    // NOTE: This will be refactored completely with Multiple Tangram Instances work being done in parallel.
     if (m_scene && m_scene->path() == _scenePath) {
         LOGD("Specified scene is already initalized.");
-        return;
     }
 
     LOG("initialize");
@@ -85,21 +98,45 @@ void initialize(const char* _scenePath) {
     // Label setup
     m_labels = std::make_unique<Labels>();
 
-    loadScene(_scenePath);
-
-    glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
-    m_view->setPosition(projPos.x, projPos.y);
-    m_view->setZoom(m_scene->startZoom);
-
     LOG("finish initialize");
 
 }
 
 void setScene(std::shared_ptr<Scene>& _scene) {
-    m_scene = _scene;
-    m_view = _scene->view();
+    {
+        std::lock_guard<std::mutex> lock(m_sceneMutex);
+        m_scene = _scene;
+    }
+
+    auto& camera = m_scene->camera();
+    m_view->setCameraType(camera.type);
+
+    switch (camera.type) {
+    case CameraType::perspective:
+        m_view->setVanishingPoint(camera.vanishingPoint.x,
+                                  camera.vanishingPoint.y);
+        if (camera.fovStops) {
+            m_view->setFieldOfViewStops(camera.fovStops);
+        } else {
+            m_view->setFieldOfView(camera.fieldOfView);
+        }
+        break;
+    case CameraType::isometric:
+        m_view->setObliqueAxis(camera.obliqueAxis.x,
+                               camera.obliqueAxis.y);
+        break;
+    case CameraType::flat:
+        break;
+    }
+
+    if (m_scene->useScenePosition) {
+        glm::dvec2 projPos = m_view->getMapProjection().LonLatToMeters(m_scene->startPosition);
+        m_view->setPosition(projPos.x, projPos.y);
+        m_view->setZoom(m_scene->startZoom);
+    }
+
     m_inputHandler->setView(m_view);
-    m_tileManager->setDataSources(_scene->getAllDataSources());
+    m_tileManager->setDataSources(_scene->dataSources());
     m_tileWorker->setScene(_scene);
     setPixelScale(m_view->pixelScale());
 
@@ -116,36 +153,95 @@ void setScene(std::shared_ptr<Scene>& _scene) {
     }
 }
 
-void loadScene(const char* _scenePath) {
+void loadScene(const char* _scenePath, bool _useScenePosition) {
     LOG("Loading scene file: %s", _scenePath);
 
-    auto sceneString = stringFromFile(setResourceRoot(_scenePath).c_str(), PathType::resource);
-
     // Copy old scene
-    auto scene = std::make_shared<Scene>(*m_scene);
+    auto scene = std::make_shared<Scene>(_scenePath);
+    scene->useScenePosition = _useScenePosition;
 
-    if (SceneLoader::loadScene(sceneString, *scene)) {
+    if (SceneLoader::loadScene(scene)) {
         setScene(scene);
     }
 }
 
+void loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _platformCallback) {
+    LOG("Loading scene file (async): %s", _scenePath);
+
+    {
+        std::lock_guard<std::mutex> lock(m_sceneMutex);
+        m_sceneUpdates.clear();
+        m_nextScene = std::make_shared<Scene>(_scenePath);
+        m_nextScene->useScenePosition = _useScenePosition;
+    }
+
+    Tangram::runAsyncTask([scene = m_nextScene, _platformCallback](){
+
+            bool ok = SceneLoader::loadScene(scene);
+
+            Tangram::runOnMainLoop([scene, ok, _platformCallback]() {
+                    {
+                        std::lock_guard<std::mutex> lock(m_sceneMutex);
+                        if (scene == m_nextScene) {
+                            m_nextScene.reset();
+                        } else { return; }
+                    }
+
+                    if (ok) {
+                        auto s = scene;
+                        Tangram::setScene(s);
+                        Tangram::applySceneUpdates();
+                        if (_platformCallback) { _platformCallback(); }
+                    }
+                });
+        });
+}
+
 void queueSceneUpdate(const char* _path, const char* _value) {
-    return m_scene->queueUpdate(_path, _value);
+    std::lock_guard<std::mutex> lock(m_sceneMutex);
+    m_sceneUpdates.push_back({_path, _value});
 }
 
 void applySceneUpdates() {
 
-    LOG("Applying scene updates");
+    LOG("Applying %d scene updates", m_sceneUpdates.size());
 
-    SceneLoader::applyUpdates(m_scene->config(), m_scene->updates());
-    m_scene->clearUpdates();
-
-    auto scene = std::make_shared<Scene>(*m_scene);
-
-    if (SceneLoader::applyConfig(scene->config(), *scene)) {
-        setScene(scene);
+    if (m_nextScene) {
+        // Changes are automatically applied once the scene is loaded
+        return;
     }
 
+    std::vector<Scene::Update> updates;
+    {
+        std::lock_guard<std::mutex> lock(m_sceneMutex);
+        if (m_sceneUpdates.empty()) { return; }
+
+        m_nextScene = std::make_shared<Scene>(*m_scene);
+        m_nextScene->useScenePosition = false;
+
+        updates = m_sceneUpdates;
+        m_sceneUpdates.clear();
+    }
+
+    Tangram::runAsyncTask([scene = m_nextScene, updates = std::move(updates)](){
+
+            SceneLoader::applyUpdates(scene->config(), updates);
+
+            bool ok = SceneLoader::applyConfig(scene->config(), *scene);
+
+            Tangram::runOnMainLoop([scene, ok]() {
+                    if (scene == m_nextScene) {
+                        std::lock_guard<std::mutex> lock(m_sceneMutex);
+                        m_nextScene.reset();
+                    } else { return; }
+
+                    if (ok) {
+                        auto s = scene;
+                        Tangram::setScene(s);
+                        Tangram::applySceneUpdates();
+                    }
+                });
+        });
 }
 
 void resize(int _newWidth, int _newHeight) {
@@ -177,10 +273,6 @@ bool update(float _dt) {
         }
     }
 
-    m_inputHandler->update(_dt);
-
-    m_view->update();
-
     size_t nTasks = 0;
     {
         std::lock_guard<std::mutex> lock(m_tasksMutex);
@@ -195,6 +287,9 @@ bool update(float _dt) {
         }
         task();
     }
+
+    m_inputHandler->update(_dt);
+    m_view->update();
 
     for (const auto& style : m_scene->styles()) {
         style->onBeginUpdate();
@@ -234,7 +329,7 @@ bool update(float _dt) {
     bool tilesLoading = m_tileManager->hasLoadingTiles();
     bool labelsNeedUpdate = m_labels->needUpdate();
 
-    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate) {
+    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || !bool(m_nextScene)) {
         viewComplete = false;
     }
 
@@ -447,15 +542,13 @@ int getCameraType() {
 void addDataSource(std::shared_ptr<DataSource> _source) {
     if (!m_tileManager) { return; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
-    m_scene->addClientDataSource(_source);
-    m_tileManager->addDataSource(_source);
+    m_tileManager->addClientDataSource(_source);
 }
 
 bool removeDataSource(DataSource& source) {
     if (!m_tileManager) { return false; }
     std::lock_guard<std::mutex> lock(m_tilesMutex);
-    m_scene->removeClientDataSource(source);
-    return m_tileManager->removeDataSource(source);
+    return m_tileManager->removeClientDataSource(source);
 }
 
 void clearDataSource(DataSource& _source, bool _data, bool _tiles) {
@@ -576,6 +669,12 @@ void setupGL() {
 void runOnMainLoop(std::function<void()> _task) {
     std::lock_guard<std::mutex> lock(m_tasksMutex);
     m_tasks.emplace(std::move(_task));
+
+    requestRender();
+}
+
+void runAsyncTask(std::function<void()> _task) {
+    m_asyncWorker.enqueue(std::move(_task));
 }
 
 float frameTime() {

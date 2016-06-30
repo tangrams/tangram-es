@@ -68,6 +68,7 @@ public class MapView extends FrameLayout {
             @SuppressWarnings("WrongThread")
             protected Boolean doInBackground(Void... params) {
                 mapController.init();
+                mapController.loadSceneFile(sceneFilePath);
                 return true;
             }
 

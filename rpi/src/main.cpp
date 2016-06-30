@@ -45,6 +45,7 @@ int main(int argc, char **argv){
 
     // Set background color and clear buffers
     Tangram::initialize("scene.yaml");
+    Tangram::loadSceneAsync("scene.yaml");
     Tangram::setupGL();
     Tangram::resize(getWindowWidth(), getWindowHeight());
 

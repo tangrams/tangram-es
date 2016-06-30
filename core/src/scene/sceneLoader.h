@@ -2,13 +2,12 @@
 
 #include "gl/uniform.h"
 #include "scene/scene.h"
-
 #include <string>
 #include <vector>
 #include <memory>
 #include <tuple>
-#include <unordered_set>
 #include <sstream>
+#include <mutex>
 
 #include "yaml-cpp/yaml.h"
 #include "glm/vec2.hpp"
@@ -29,6 +28,7 @@ class PointLight;
 class DataSource;
 struct Filter;
 struct TextureFiltering;
+struct TextureOptions;
 
 // 0: type, 1: values
 struct StyleUniform {
@@ -39,7 +39,7 @@ struct StyleUniform {
 struct SceneLoader {
     using Node = YAML::Node;
 
-    static bool loadScene(const std::string& _sceneString, Scene& _scene);
+    static bool loadScene(std::shared_ptr<Scene> _scene);
     static bool loadConfig(const std::string& _sceneString, Node& _root);
     static bool applyConfig(Node& config, Scene& scene);
     static void applyUpdates(Node& root, const std::vector<Scene::Update>& updates);
@@ -66,7 +66,17 @@ struct SceneLoader {
     static Filter generatePredicate(Node filter, std::string _key);
     /* loads a texture with default texture properties */
     static bool loadTexture(const std::string& url, Scene& scene);
+    static std::shared_ptr<Texture> fetchTexture(const std::string& name, const std::string& url,
+            const TextureOptions& options, bool generateMipmaps, Scene& scene);
     static bool extractTexFiltering(Node& filtering, TextureFiltering& filter);
+
+    /*
+     * Sprite nodes are created using a default 1x1 black texture when sprite atlas is requested over the network.
+     * Once a sprite atlas has been fetched, sprite nodes need to be updated according to the width/height of the
+     * fetched sprite atlas.
+     */
+    static void updateSpriteNodes(const std::string& texName,
+            std::shared_ptr<Texture>& texture, Scene& scene);
 
     static MaterialTexture loadMaterialTexture(Node matCompNode, Scene& scene, Style& style);
 
@@ -74,14 +84,14 @@ struct SceneLoader {
                                  std::vector<StyleParam>& out);
     static void parseTransition(Node params, Scene& scene, std::vector<StyleParam>& out);
 
-    static bool parseStyleUniforms(const Node& value, Scene& scene, StyleUniform& styleUniform);
+    static bool parseStyleUniforms(const Node& value, Scene* scene, StyleUniform& styleUniform);
 
     static void parseGlobals(const Node& node, Scene& scene, const std::string& key="");
     static void parseLightPosition(Node position, PointLight& light);
 
     static bool loadStyle(const std::string& styleName, Node config, Scene& scene);
 
-
+    static std::mutex m_textureMutex;
     SceneLoader() = delete;
 
 };

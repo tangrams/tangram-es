@@ -90,6 +90,8 @@ public:
         std::vector<GlyphQuad>* quads;
     };
 
+    void setSceneResourceRoot(const std::string& sceneResourceRoot) { m_sceneResourceRoot = sceneResourceRoot; }
+
 private:
     float m_sdfRadius;
     ScratchBuffer m_scratch;
@@ -112,6 +114,7 @@ private:
     // textures and a MeshCallback implemented by TextStyleBuilder for adding glyph quads.
     alfons::TextBatch m_batch;
     TextWrapper m_textWrapper;
+    std::string m_sceneResourceRoot;
 };
 
 }

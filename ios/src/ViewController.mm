@@ -202,6 +202,7 @@
     [EAGLContext setCurrentContext:self.context];
 
     Tangram::initialize("scene.yaml");
+    Tangram::loadSceneAsync("scene.yaml");
     Tangram::setupGL();
 
     int width = self.view.bounds.size.width;

@@ -42,10 +42,6 @@ public:
             TextureOptions _options = DEFAULT_TEXTURE_OPTION},
             bool _generateMipmaps = false, bool _flipOnLoad = false);
 
-    Texture(const std::string& _file,
-            TextureOptions _options = DEFAULT_TEXTURE_OPTION},
-            bool _generateMipmaps = false, bool _flipOnLoad = false);
-
     Texture(Texture&& _other);
     Texture& operator=(Texture&& _other);
 

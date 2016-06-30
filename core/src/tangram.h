@@ -20,8 +20,10 @@ class DataSource;
 // given resource path
 void initialize(const char* _scenePath);
 
-// Load the scene at the given absolute file path
-void loadScene(const char* _scenePath);
+// Load the scene at the given absolute file path asynchronously
+void loadSceneAsync(const char* _scenePath, bool _useScenePosition = false, std::function<void(void)> _platformCallback = {});
+// Load the scene at the given absolute file path synchronously
+void loadScene(const char* _scenePath, bool _useScenePosition = false);
 
 // Request an update to the scene configuration; the path is a series of yaml keys
 // separated by a '.' and the value is a string of yaml to replace the current value
@@ -153,7 +155,11 @@ bool getDebugFlag(DebugFlags _flag);
 // Toggle the boolean state of a debug feature (see debug.h)
 void toggleDebugFlag(DebugFlags _flag);
 
+// Run this task on Tangram's main update loop.
 void runOnMainLoop(std::function<void()> _task);
+
+// Run this task asynchronously to Tangram's main update loop.
+void runAsyncTask(std::function<void()> _task);
 
 struct TouchItem {
     std::shared_ptr<Properties> properties;

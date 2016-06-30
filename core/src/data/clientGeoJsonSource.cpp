@@ -4,12 +4,15 @@
 #include "mapbox/geojsonvt/geojsonvt.hpp"
 #include "mapbox/geojsonvt/geojsonvt_convert.hpp"
 #include "platform.h"
+#include "tangram.h"
 #include "tile/tileTask.h"
 #include "util/geom.h"
 #include "data/propertyItem.h"
 #include "data/tileData.h"
 #include "tile/tile.h"
 #include "view/view.h"
+
+#include <regex>
 
 using namespace mapbox::util;
 
@@ -28,14 +31,29 @@ Point transformPoint(geojsonvt::TilePoint pt) {
     return { pt.x / extent, 1. - pt.y / extent, 0 };
 }
 
+// TODO: pass scene's resourcePath to constructor to be used with `stringFromFile`
 ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::string& _url, int32_t _maxZoom)
     : DataSource(_name, _url, _maxZoom) {
 
+    // TODO: handle network url for client datasource data
+    // TODO: generic uri handling
     m_generateGeometry = true;
+
     if (!_url.empty()) {
-        // Load from file
-        const auto& string = stringFromFile(_url.c_str(), PathType::resource);
-        addData(string);
+        std::regex r("^(http|https):/");
+        std::smatch match;
+        if (std::regex_search(_url, match, r)) {
+            startUrlRequest(_url,
+                    [&, this](std::vector<char>&& rawData) {
+                        addData(std::string(rawData.begin(), rawData.end()));
+                        // delete all no-data tiles for this datasource and redo
+                        clearDataSource(*this, false, true);
+                    });
+        } else {
+            // Load from file
+            const auto& string = stringFromFile(_url.c_str());
+            addData(string);
+        }
     }
 }
 

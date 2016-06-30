@@ -23,23 +23,6 @@ Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _opti
     resize(_width, _height);
 }
 
-Texture::Texture(const std::string& _file, TextureOptions _options, bool _generateMipmaps, bool _flipOnLoad)
-    : Texture(0u, 0u, _options, _generateMipmaps) {
-
-    unsigned int size;
-    unsigned char* data;
-
-    data = bytesFromFile(_file.c_str(), PathType::resource, &size);
-
-    if (data) {
-        loadImageFromMemory(data, size, _flipOnLoad);
-    } else {
-        LOGE("Failed to read Texture file: %s", _file.c_str());
-    }
-
-    free(data);
-}
-
 Texture::Texture(const unsigned char* data, size_t dataSize, TextureOptions options, bool generateMipmaps, bool _flipOnLoad)
     : Texture(0u, 0u, options, generateMipmaps) {
 
@@ -74,8 +57,6 @@ bool Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size, 
     GLuint blackPixel = 0x0000ff;
 
     setData(&blackPixel, 1);
-
-    LOGE("Decoding image from memory failed");
 
     return false;
 }

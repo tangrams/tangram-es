@@ -10,7 +10,6 @@
 //#include <sys/resource.h>
 
 static bool s_isContinuousRendering = false;
-static std::string s_resourceRoot;
 
 void logMsg(const char* fmt, ...) {
     va_list args;
@@ -30,34 +29,10 @@ bool isContinuousRendering() {
     return s_isContinuousRendering;
 }
 
-std::string setResourceRoot(const char* _path) {
+std::string stringFromFile(const char* _path) {
 
-    std::string dir(_path);
-
-    s_resourceRoot = std::string(dirname(&dir[0])) + '/';
-
-    std::string base(_path);
-
-    return std::string(basename(&base[0]));
-
-}
-
-std::string resolvePath(const char* _path, PathType _type) {
-
-    switch (_type) {
-    case PathType::absolute:
-    case PathType::internal:
-        return std::string(_path);
-    case PathType::resource:
-        return s_resourceRoot + _path;
-    }
-    return "";
-}
-
-std::string stringFromFile(const char* _path, PathType _type) {
-
-    unsigned int length = 0;
-    unsigned char* bytes = bytesFromFile(_path, _type, &length);
+    size_t length = 0;
+    unsigned char* bytes = bytesFromFile(_path, length);
 
     std::string out(reinterpret_cast<char*>(bytes), length);
     free(bytes);
@@ -65,25 +40,23 @@ std::string stringFromFile(const char* _path, PathType _type) {
     return out;
 }
 
-unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _size) {
+unsigned char* bytesFromFile(const char* _path, size_t& _size) {
 
-    std::string path = resolvePath(_path, _type);
-
-    std::ifstream resource(path.c_str(), std::ifstream::ate | std::ifstream::binary);
+    std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
 
     if(!resource.is_open()) {
-        logMsg("Failed to read file at path: %s\n", path.c_str());
-        *_size = 0;
+        logMsg("Failed to read file at path: %s\n", _path);
+        _size = 0;
         return nullptr;
     }
 
-    *_size = resource.tellg();
+    _size = resource.tellg();
 
     resource.seekg(std::ifstream::beg);
 
-    char* cdata = (char*) malloc(sizeof(char) * (*_size));
+    char* cdata = (char*) malloc(sizeof(char) * _size);
 
-    resource.read(cdata, *_size);
+    resource.read(cdata, _size);
     resource.close();
 
     return reinterpret_cast<unsigned char *>(cdata);

@@ -1,4 +1,3 @@
-#include <vector>
 #include "platform.h"
 #include "scene.h"
 #include "sceneLoader.h"
@@ -19,23 +18,28 @@
 #include "style/rasterStyle.h"
 #include "scene/dataLayer.h"
 #include "scene/filters.h"
+#include "scene/importer.h"
 #include "scene/sceneLayer.h"
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
 #include "scene/styleMixer.h"
 #include "scene/styleParam.h"
+#include "util/base64.h"
 #include "util/yamlHelper.h"
 #include "view/view.h"
 
 #include "csscolorparser.hpp"
 
+#include <vector>
 #include <algorithm>
 #include <iterator>
-#include <unordered_map>
+#include <regex>
 
 using YAML::Node;
 using YAML::NodeType;
 using YAML::BadConversion;
+
+#define COMPONENT_PATH_DELIMITER '.'
 
 #define LOGNode(fmt, node, ...) LOGW(fmt ":\n'%s'\n", ## __VA_ARGS__, Dump(node).c_str())
 
@@ -45,12 +49,16 @@ const std::string DELIMITER = ":";
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
-bool SceneLoader::loadScene(const std::string& _sceneString, Scene& _scene) {
+std::mutex SceneLoader::m_textureMutex;
 
-    Node& root = _scene.config();
+bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
 
-    if (loadConfig(_sceneString, root)) {
-        applyConfig(root, _scene);
+    Node& root = _scene->config();
+
+    Importer sceneImporter;
+
+    if ((root = sceneImporter.applySceneImports(_scene->path(), _scene->resourceRoot())) ) {
+        applyConfig(root, *_scene);
         return true;
     }
     return false;
@@ -70,11 +78,13 @@ void SceneLoader::applyUpdates(Node& root, const std::vector<Scene::Update>& upd
 
     for (const auto& update : updates) {
 
+        auto keys = splitString(update.keys, COMPONENT_PATH_DELIMITER);
+
         auto node = root;
         std::string key;
-        for (auto it = update.keys.begin(); it != update.keys.end(); ++it) {
+        for (auto it = keys.begin(); it != keys.end(); ++it) {
             key = *it;
-            if (it + 1 == update.keys.end()) { break; } // Stop before last key.
+            if (it + 1 == keys.end()) { break; } // Stop before last key.
             node.reset(node[key]); // Node safely becomes invalid is key is not present.
         }
 
@@ -86,7 +96,7 @@ void SceneLoader::applyUpdates(Node& root, const std::vector<Scene::Update>& upd
             }
         } else {
             std::string path;
-            for (const auto& k : update.keys) { path += "." + k; }
+            for (const auto& k : keys) { path += "." + k; }
             LOGW("Cannot update scene - key not found: %s", path.c_str());
         }
     }
@@ -314,7 +324,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             const std::string& name = uniform.first.Scalar();
             StyleUniform styleUniform;
 
-            if (parseStyleUniforms(uniform.second, scene, styleUniform)) {
+            if (parseStyleUniforms(uniform.second, &scene, styleUniform)) {
                 if (styleUniform.value.is<UniformArray1f>()) {
                     UniformArray1f& array = styleUniform.value.get<UniformArray1f>();
                     shader.addSourceBlock("uniforms", "uniform float " + name +
@@ -329,7 +339,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
 
                 style.styleUniforms().emplace_back(name, styleUniform.value);
             } else {
-                LOGNode("Style uniform parsing failure '%s'", uniform.second);
+                LOGNode("Style uniform parsing failure", uniform.second);
             }
         }
     }
@@ -430,9 +440,18 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene,
     const std::string& name = textureNode.Scalar();
 
     MaterialTexture matTex;
-    matTex.tex = scene.textures()[name];
+    {
+        std::lock_guard<std::mutex> lock(m_textureMutex);
+        matTex.tex = scene.textures()[name];
+    }
 
-    if (!matTex.tex) { matTex.tex = std::make_shared<Texture>(name); }
+    if (!matTex.tex) {
+        // Load inline material  textures
+        if (!loadTexture(name, scene)) {
+            LOGW("Not able to load material texture: %s", name.c_str());
+            return MaterialTexture();
+        }
+    }
 
     if (Node mappingNode = matCompNode["mapping"]) {
         const std::string& mapping = mappingNode.Scalar();
@@ -484,27 +503,6 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene,
     return matTex;
 }
 
-bool SceneLoader::loadTexture(const std::string& url, Scene& scene) {
-    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
-
-    unsigned int size = 0;
-    unsigned char* blob = bytesFromFile(url.c_str(), PathType::resource, &size);
-
-    if (!blob) {
-        LOGE("Can't load texture resource at url %s", url.c_str());
-        return false;
-    }
-
-    std::shared_ptr<Texture> texture(new Texture(blob, size, options, false));
-
-    free(blob);
-
-    scene.textures().emplace(url, texture);
-
-    return true;
-}
-
-
 bool SceneLoader::extractTexFiltering(Node& filtering, TextureFiltering& filter) {
     const std::string& textureFiltering = filtering.Scalar();
     if (textureFiltering == "linear") {
@@ -519,6 +517,95 @@ bool SceneLoader::extractTexFiltering(Node& filtering, TextureFiltering& filter)
     } else {
         return false;
     }
+}
+
+void SceneLoader::updateSpriteNodes(const std::string& texName,
+        std::shared_ptr<Texture>& texture, Scene& scene) {
+    auto& spriteAtlases = scene.spriteAtlases();
+    if (spriteAtlases.find(texName) != spriteAtlases.end()) {
+        auto& spriteAtlas = spriteAtlases[texName];
+        spriteAtlas->updateSpriteNodes(texture);
+    }
+}
+
+std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, const std::string& url,
+        const TextureOptions& options, bool generateMipmaps, Scene& scene) {
+
+    std::shared_ptr<Texture> texture;
+
+    std::regex r("^(http|https):/");
+    std::smatch match;
+    // TODO: generalize using URI handlers
+    if (std::regex_search(url, match, r)) {
+        startUrlRequest(url, [=, &scene](std::vector<char>&& rawData) {
+                auto ptr = (unsigned char*)(rawData.data());
+                size_t dataSize = rawData.size();
+                std::lock_guard<std::mutex> lock(m_textureMutex);
+				auto texture = scene.getTexture(name);
+                if (texture) {
+                    if (!texture->loadImageFromMemory(ptr, dataSize, false)) {
+                        LOGE("Invalid texture data '%s'", url.c_str());
+                    }
+
+                    updateSpriteNodes(name, texture, scene);
+                }
+            });
+        texture = std::make_shared<Texture>(nullptr, 0, options, generateMipmaps, true);
+    } else {
+
+        if (url.substr(0, 22) == "data:image/png;base64,") {
+            // Skip data: prefix
+            auto data = url.substr(22);
+
+            std::vector<unsigned char> blob;
+
+            try {
+                blob = Base64::decode(data);
+            } catch(std::runtime_error e) {
+                LOGE("Can't decode Base64 texture '%s'", e.what());
+            }
+
+            if (blob.empty()) {
+                LOGE("Can't decode Base64 texture");
+                return nullptr;
+            }
+            texture = std::make_shared<Texture>(0, 0, options, generateMipmaps);
+
+            if (!texture->loadImageFromMemory(blob.data(), blob.size(), false)) {
+                LOGE("Invalid Base64 texture");
+            }
+
+        } else {
+            size_t size = 0;
+            unsigned char* blob = bytesFromFile(url.c_str(), size);
+
+            if (!blob) {
+                LOGE("Can't load texture resource at url '%s'", url.c_str());
+                return nullptr;
+            }
+            texture = std::make_shared<Texture>(0, 0, options, generateMipmaps);
+
+            if (!texture->loadImageFromMemory(blob, size, false)) {
+                LOGE("Invalid texture data '%s'", url.c_str());
+            }
+            free(blob);
+        }
+    }
+
+    return texture;
+}
+
+bool SceneLoader::loadTexture(const std::string& url, Scene& scene) {
+    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
+
+    auto texture = fetchTexture(url, url, options, false, scene);
+    if (texture) {
+        std::lock_guard<std::mutex> lock(m_textureMutex);
+        scene.textures().emplace(url, texture);
+        return true;
+    }
+
+    return false;
 }
 
 void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
@@ -544,10 +631,12 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
         }
     }
 
-    std::shared_ptr<Texture> texture(new Texture(file, options, generateMipmaps));
+    auto texture = fetchTexture(name, file, options, generateMipmaps, scene);
+    if (!texture) { return; }
 
+    std::lock_guard<std::mutex> lock(m_textureMutex);
     if (Node sprites = textureConfig["sprites"]) {
-        std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture, file));
+        std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture));
 
         for (auto it = sprites.begin(); it != sprites.end(); ++it) {
 
@@ -632,10 +721,6 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         loadShaderConfig(shadersNode, style, scene);
     }
 
-    if (Node materialNode = styleNode["material"]) {
-        loadMaterial(materialNode, *(style.getMaterial()), scene, style);
-    }
-
     if (Node lightingNode = styleNode["lighting"]) {
         const std::string& lighting = lightingNode.Scalar();
         if (lighting == "fragment") { style.setLightingType(LightingType::fragment); }
@@ -645,21 +730,19 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         else { LOGW("Unrecognized lighting type '%s'", lighting.c_str()); }
     }
 
-    // TODO: Handle inlined texture with URL
     if (Node textureNode = styleNode["texture"]) {
+        std::lock_guard<std::mutex> lock(m_textureMutex);
         if (auto pointStyle = dynamic_cast<PointStyle*>(&style)) {
             const std::string& textureName = textureNode.Scalar();
-            auto atlases = scene.spriteAtlases();
+            auto& atlases = scene.spriteAtlases();
             auto atlasIt = atlases.find(textureName);
+			auto styleTexture = scene.getTexture(textureName);
             if (atlasIt != atlases.end()) {
                 pointStyle->setSpriteAtlas(atlasIt->second);
+            } else if (styleTexture){
+                pointStyle->setTexture(styleTexture);
             } else {
-                auto texture = scene.getTexture(textureName);
-                if (texture) {
-                    pointStyle->setTexture(texture);
-                } else {
-                    LOGW("Undefined texture name %s", textureName.c_str());
-                }
+                LOGW("Undefined texture name %s", textureName.c_str());
             }
         } else if (auto polylineStyle = dynamic_cast<PolylineStyle*>(&style)) {
             const std::string& textureName = textureNode.Scalar();
@@ -671,10 +754,10 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {
         }
     }
 
-    if (Node urlNode = styleNode["url"]) {
-        // TODO
-        LOGW("Loading style from URL not yet implemented");
+    if (Node materialNode = styleNode["material"]) {
+        loadMaterial(materialNode, *(style.getMaterial()), scene, style);
     }
+
 }
 
 bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) {
@@ -839,7 +922,7 @@ void SceneLoader::parseLightPosition(Node position, PointLight& light) {
         StyleParam::parseVec3(positionSequence, {Unit::meter, Unit::pixel}, lightPos);
         light.setPosition(lightPos);
     } else {
-        LOGNode("Wrong light position parameter %s", position);
+        LOGNode("Wrong light position parameter", position);
     }
 }
 
@@ -947,61 +1030,62 @@ void SceneLoader::loadLight(const std::pair<Node, Node>& node, Scene& scene) {
     scene.lights().push_back(std::move(sceneLight));
 }
 
-void SceneLoader::loadCamera(const Node& camera, Scene& scene) {
+void SceneLoader::loadCamera(const Node& _camera, Scene& _scene) {
 
-    auto& view = scene.view();
+    auto& camera = _scene.camera();
 
-    if (Node active = camera["active"]) {
+    if (Node active = _camera["active"]) {
         if (!active.as<bool>()) {
             return;
         }
     }
 
-    auto type = camera["type"].Scalar();
+    auto type = _camera["type"].Scalar();
     if (type == "perspective") {
-
-        view->setCameraType(CameraType::perspective);
+        camera.type = CameraType::perspective;
 
         // Only one of focal length and FOV is applied;
         // according to docs, focal length takes precedence.
-        if (Node focal = camera["focal_length"]) {
+        if (Node focal = _camera["focal_length"]) {
             if (focal.IsScalar()) {
-                float length = focal.as<float>(view->getFocalLength());
-                view->setFocalLength(length);
+                float length = focal.as<float>();
+                camera.fieldOfView = View::focalLengthToFieldOfView(length);
             } else if (focal.IsSequence()) {
-                auto stops = std::make_shared<Stops>(Stops::Numbers(focal));
-                view->setFocalLengthStops(stops);
+                camera.fovStops = std::make_shared<Stops>(Stops::Numbers(focal));
+                for (auto& f : camera.fovStops->frames) {
+                    f.value = View::focalLengthToFieldOfView(f.value.get<float>());
+                }
             }
-        } else if (Node fov = camera["fov"]) {
+        } else if (Node fov = _camera["fov"]) {
             if (fov.IsScalar()) {
-                float degrees = fov.as<float>(view->getFieldOfView() * RAD_TO_DEG);
-                view->setFieldOfView(degrees * DEG_TO_RAD);
+                float degrees = fov.as<float>(camera.fieldOfView * RAD_TO_DEG);
+                camera.fieldOfView = degrees * DEG_TO_RAD;
+
             } else if (fov.IsSequence()) {
-                auto stops = std::make_shared<Stops>(Stops::Numbers(fov));
-                for (auto& f : stops->frames) { f.value = f.value.get<float>() * DEG_TO_RAD; }
-                view->setFieldOfViewStops(stops);
+                camera.fovStops = std::make_shared<Stops>(Stops::Numbers(fov));
+                for (auto& f : camera.fovStops->frames) {
+                    f.value = f.value.get<float>() * DEG_TO_RAD;
+                }
             }
         }
 
-        if (Node vanishing = camera["vanishing_point"]) {
+        if (Node vanishing = _camera["vanishing_point"]) {
             if (vanishing.IsSequence() && vanishing.size() >= 2) {
                 // Values are pixels, unit strings are ignored.
                 float x = std::stof(vanishing[0].Scalar());
                 float y = std::stof(vanishing[1].Scalar());
-                view->setVanishingPoint(x, y);
+                camera.vanishingPoint = { x, y };
             }
         }
     } else if (type == "isometric") {
+        camera.type = CameraType::isometric;
 
-        view->setCameraType(CameraType::isometric);
+        if (Node axis = _camera["axis"]) {
+            camera.obliqueAxis = { axis[0].as<float>(), axis[1].as<float>() };
 
-        if (Node axis = camera["axis"]) {
-            view->setObliqueAxis(axis[0].as<float>(), axis[1].as<float>());
         }
     } else if (type == "flat") {
-
-        view->setCameraType(CameraType::flat);
-
+        camera.type = CameraType::flat;
     }
 
     // Default is world origin at 0 zoom
@@ -1009,7 +1093,7 @@ void SceneLoader::loadCamera(const Node& camera, Scene& scene) {
     double y = 0;
     float z = 0;
 
-    if (Node position = camera["position"]) {
+    if (Node position = _camera["position"]) {
         x = position[0].as<double>();
         y = position[1].as<double>();
         if (position.size() > 2) {
@@ -1017,12 +1101,12 @@ void SceneLoader::loadCamera(const Node& camera, Scene& scene) {
         }
     }
 
-    if (Node zoom = camera["zoom"]) {
+    if (Node zoom = _camera["zoom"]) {
         z = zoom.as<float>();
     }
 
-    scene.startPosition = glm::dvec2(x, y);
-    scene.startZoom = z;
+    _scene.startPosition = glm::dvec2(x, y);
+    _scene.startZoom = z;
 }
 
 void SceneLoader::loadCameras(Node _cameras, Scene& _scene) {
@@ -1264,7 +1348,7 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
     }
 }
 
-bool SceneLoader::parseStyleUniforms(const Node& value, Scene& scene, StyleUniform& styleUniform) {
+bool SceneLoader::parseStyleUniforms(const Node& value, Scene* scene, StyleUniform& styleUniform) {
     if (value.IsScalar()) { // float, bool or string (texture)
         double fValue;
         bool bValue;
@@ -1278,11 +1362,14 @@ bool SceneLoader::parseStyleUniforms(const Node& value, Scene& scene, StyleUnifo
         } else {
             const std::string& strVal = value.Scalar();
             styleUniform.type = "sampler2D";
-            std::shared_ptr<Texture> texture = scene.getTexture(strVal);
 
-            if (!texture && !loadTexture(strVal, scene)) {
-                LOGW("Can't load texture with name %s", strVal.c_str());
-                return false;
+            if (scene) {
+                std::shared_ptr<Texture> texture = scene->getTexture(strVal);
+
+                if (!texture && !loadTexture(strVal, *scene)) {
+                    LOGW("Can't load texture with name %s", strVal.c_str());
+                    return false;
+                }
             }
 
             styleUniform.value = strVal;
@@ -1323,11 +1410,14 @@ bool SceneLoader::parseStyleUniforms(const Node& value, Scene& scene, StyleUnifo
             for (const auto& strVal : value) {
                 const std::string& textureName = strVal.Scalar();
                 textureArrayUniform.names.push_back(textureName);
-                std::shared_ptr<Texture> texture = scene.getTexture(textureName);
 
-                if (!texture && !loadTexture(textureName, scene)) {
-                    LOGW("Can't load texture with name %s", textureName.c_str());
-                    return false;
+                if (scene) {
+                    std::shared_ptr<Texture> texture = scene->getTexture(textureName);
+
+                    if (!texture && !loadTexture(textureName, *scene)) {
+                        LOGW("Can't load texture with name %s", textureName.c_str());
+                        return false;
+                    }
                 }
             }
 
