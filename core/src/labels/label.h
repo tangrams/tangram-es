@@ -3,8 +3,8 @@
 #include "glm/vec2.hpp"
 #include "glm/mat4x4.hpp"
 #include <climits> // needed in aabb.h
-#include "isect2d.h"
-#include "glm_vec.h" // for isect2d.h
+#include "aabb.h"
+#include "obb.h"
 #include "fadeEffect.h"
 #include "util/types.h"
 #include "util/hash.h"
@@ -37,9 +37,10 @@ public:
         visible         = 1 << 2,
         sleep           = 1 << 3,
         out_of_screen   = 1 << 4,
-        wait_occ        = 1 << 5, // state waiting for first occlusion result
-        skip_transition = 1 << 6,
-        dead            = 1 << 7,
+        anchor_fallback = 1 << 5,
+        wait_occ        = 1 << 6, // state waiting for first occlusion result
+        skip_transition = 1 << 7,
+        dead            = 1 << 8,
     };
 
     struct Transform {
@@ -51,9 +52,12 @@ public:
 
         struct {
             glm::vec2 screenPos;
+            glm::vec2 rotation;
             float alpha = 0.f;
-            float rotation = 0.f;
         } state;
+
+        glm::vec2 screenPosition1;
+        glm::vec2 screenPosition2;
     };
 
     struct Transition {
@@ -76,13 +80,15 @@ public:
 
         // the label hash based on its styling parameters
         size_t paramHash = 0;
+
+        std::vector<LabelProperty::Anchor> anchorFallback;
     };
 
     Label(Transform _transform, glm::vec2 _size, Type _type, Options _options, LabelProperty::Anchor _anchor);
 
     virtual ~Label();
 
-    bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract);
+    bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _allLabels = false);
 
     /* Push the pending transforms to the vbo by updating the vertices */
     virtual void pushTransform() = 0;
@@ -96,7 +102,7 @@ public:
     virtual void updateBBoxes(float _zoomFract) = 0;
 
     /* Occlude the label */
-    void occlude(bool _occlusion = true);
+    void occlude(bool _occlusion = true) { m_occluded = _occlusion; }
 
     /* Checks whether the label is in a state where it can occlusion */
     bool canOcclude();
@@ -108,16 +114,12 @@ public:
 
     void resetState();
 
-    void setProxy(bool _proxy);
-
-    /* Whether the label belongs to a proxy tile */
-    bool isProxy() const { return m_proxy; }
     size_t hash() const { return m_options.paramHash; }
     const glm::vec2& dimension() const { return m_dim; }
     /* Gets for label options: color and offset */
     const Options& options() const { return m_options; }
     /* Gets the extent of the oriented bounding box of the label */
-    const AABB& aabb() const { return m_aabb; }
+    AABB aabb() const { return m_obb.getExtent(); }
     /* Gets the oriented bounding box of the label */
     const OBB& obb() const { return m_obb; }
     const Transform& transform() const { return m_transform; }
@@ -126,12 +128,17 @@ public:
     bool occludedLastFrame() const { return m_occludedLastFrame; }
 
     const Label* parent() const { return m_parent; }
-    void setParent(const Label& parent, bool definePriority);
+    void setParent(const Label& _parent, bool _definePriority);
 
-    virtual glm::vec2 anchor() const { return m_anchor; }
+    void alignFromParent(const Label& _parent);
+
     LabelProperty::Anchor anchorType() const { return m_anchorType; }
 
     virtual glm::vec2 center() const;
+
+    void enterState(const State& _state, float _alpha = 1.0f);
+
+    Type type() const { return m_type; }
 
 private:
 
@@ -140,32 +147,26 @@ private:
 
     bool offViewport(const glm::vec2& _screenSize);
 
-    inline void enterState(const State& _state, float _alpha = 1.0f);
-
     void setAlpha(float _alpha);
 
-    bool m_proxy;
     // the current label state
     State m_state;
     // the label fade effect
     FadeEffect m_fade;
-    // whether the label was occluded on the previous frame
-    bool m_occludedLastFrame;
-    bool m_occluded;
+
+    int m_anchorFallbackCount;
+    int m_currentAnchorFallback;
 
 protected:
 
-    // set alignment on _screenPosition based on anchor points _ap1, _ap2
-    virtual void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) = 0;
+    // whether the label was occluded on the previous frame
+    bool m_occludedLastFrame;
+    bool m_occluded;
 
     // the label type (point/line)
     Type m_type;
     // the label oriented bounding box
     OBB m_obb;
-    // the label axis aligned bounding box
-    AABB m_aabb;
-    // whether the label is dirty, this determines whether or no to update the geometry
-    bool m_dirty;
     // the label transforms
     Transform m_transform;
     // the dimension of the label
@@ -175,12 +176,6 @@ protected:
 
     LabelProperty::Anchor m_anchorType;
     glm::vec2 m_anchor;
-
-    glm::vec2 m_xAxis;
-    glm::vec2 m_yAxis;
-
-    // whether or not we need to update the mesh visibilit (alpha channel)
-    bool m_updateMeshVisibility;
 
     const Label* m_parent;
 

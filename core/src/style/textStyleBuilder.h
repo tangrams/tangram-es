@@ -38,13 +38,17 @@ public:
     void addLabel(const TextStyle::Parameters& _params, Label::Type _type,
                   Label::Transform _transform);
 
+    void addLineTextLabels(const Feature& _feature, const TextStyle::Parameters& _params);
+
     std::string applyTextTransform(const TextStyle::Parameters& _params, const std::string& _string);
 
     std::string resolveTextSource(const std::string& textSource, const Properties& props) const;
 
     bool checkRule(const DrawRule& _rule) const override { return true; }
 
-    auto& labels() { return m_labels; }
+    std::vector<std::unique_ptr<Label>>* labels() { return &m_labels; }
+
+    void addLayoutItems(LabelCollider& _layout) override;
 
 protected:
 
@@ -69,6 +73,7 @@ protected:
         uint32_t fill;
         uint32_t stroke;
         uint8_t fontScale;
+        std::vector<TextRange> textRanges;
     } m_attributes;
 
     float m_tileSize;

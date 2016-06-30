@@ -53,7 +53,9 @@ std::unique_ptr<StyledMesh> DebugTextStyleBuilder::build() {
     addLabel(params, Label::Type::debug, { glm::vec2(.5f) });
 
     m_textLabels->setLabels(m_labels);
-    m_textLabels->setQuads(m_quads, m_atlasRefs);
+
+    std::vector<GlyphQuad> quads(m_quads);
+    m_textLabels->setQuads(std::move(quads), m_atlasRefs);
 
     m_quads.clear();
     m_atlasRefs.reset();

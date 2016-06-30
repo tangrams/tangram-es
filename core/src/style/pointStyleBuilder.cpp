@@ -1,26 +1,78 @@
 #include "pointStyleBuilder.h"
-#include "scene/drawRule.h"
-#include "scene/stops.h"
-#include "scene/spriteAtlas.h"
-#include "labels/spriteLabel.h"
-#include "util/geom.h"
-#include "data/propertyItem.h" // Include wherever Properties is used!
 
+#include "data/propertyItem.h" // Include wherever Properties is used!
+#include "labels/labelCollider.h"
+#include "labels/spriteLabel.h"
+#include "scene/drawRule.h"
+#include "scene/spriteAtlas.h"
+#include "scene/stops.h"
+#include "tangram.h"
 #include "tile/tile.h"
+#include "util/geom.h"
 
 namespace Tangram {
+
+
+void IconMesh::setTextLabels(std::unique_ptr<StyledMesh> _textLabels) {
+
+    auto* mesh = static_cast<TextLabels*>(_textLabels.get());
+    auto& labels = mesh->getLabels();
+
+    typedef std::vector<std::unique_ptr<Label>>::iterator iter_t;
+    m_labels.insert(m_labels.end(),
+                    std::move_iterator<iter_t>(labels.begin()),
+                    std::move_iterator<iter_t>(labels.end()));
+
+    labels.clear();
+
+    textLabels = std::move(_textLabels);
+}
+
+void PointStyleBuilder::addLayoutItems(LabelCollider& _layout) {
+    _layout.addLabels(m_labels);
+    m_textStyleBuilder->addLayoutItems(_layout);
+}
 
 std::unique_ptr<StyledMesh> PointStyleBuilder::build() {
     if (m_quads.empty()) { return nullptr; }
 
-    m_spriteLabels->setQuads(m_quads);
+
+    if (Tangram::getDebugFlag(DebugFlags::all_labels)) {
+
+        m_iconMesh->setLabels(m_labels);
+
+    } else {
+        size_t sumLabels = 0;
+
+        // Determine number of labels
+       for (auto& label : m_labels) {
+           if (label->state() != Label::State::dead) { sumLabels +=1; }
+        }
+
+       std::vector<std::unique_ptr<Label>> labels;
+       labels.reserve(sumLabels);
+
+       for (auto& label : m_labels) {
+           if (label->state() != Label::State::dead) {
+               labels.push_back(std::move(label));
+           }
+       }
+       m_iconMesh->setLabels(labels);
+    }
+
+    std::vector<SpriteQuad> quads(m_quads);
+    m_spriteLabels->setQuads(std::move(quads));
 
     m_quads.clear();
+    m_labels.clear();
 
-    iconMesh->spriteLabels = std::move(m_spriteLabels);
-    iconMesh->textLabels = m_textStyleBuilder->build();
+    m_iconMesh->spriteLabels = std::move(m_spriteLabels);
 
-    return std::move(iconMesh);
+    if (auto textLabels = m_textStyleBuilder->build()) {
+        m_iconMesh->setTextLabels(std::move(textLabels));
+    }
+
+    return std::move(m_iconMesh);
 }
 
 void PointStyleBuilder::setup(const Tile& _tile) {
@@ -28,7 +80,7 @@ void PointStyleBuilder::setup(const Tile& _tile) {
     m_spriteLabels = std::make_unique<SpriteLabels>(m_style);
 
     m_textStyleBuilder->setup(_tile);
-    iconMesh = std::make_unique<IconMesh>();
+    m_iconMesh = std::make_unique<IconMesh>();
 }
 
 bool PointStyleBuilder::checkRule(const DrawRule& _rule) const {
@@ -111,21 +163,15 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
     glm::vec2 uvTR = glm::vec2{_quad.z, _quad.w} * SpriteVertex::texture_scale;
     glm::vec2 uvBL = glm::vec2{_quad.x, _quad.y} * SpriteVertex::texture_scale;
 
-    int16_t extrude = _params.extrudeScale * SpriteVertex::extrusion_scale;
-
     m_quads.push_back({
             {{{0, 0},
-             {uvBL.x, uvTR.y},
-             {-extrude, extrude}},
+             {uvBL.x, uvTR.y}},
             {{size.x, 0},
-             {uvTR.x, uvTR.y},
-             {extrude, extrude}},
+             {uvTR.x, uvTR.y}},
             {{0, -size.y},
-             {uvBL.x, uvBL.y},
-             {-extrude, -extrude}},
+             {uvBL.x, uvBL.y}},
             {{size.x, -size.y},
-             {uvTR.x, uvBL.y},
-             {extrude, -extrude}}},
+             {uvTR.x, uvBL.y}}},
             _params.color});
 }
 
@@ -212,39 +258,37 @@ void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
 }
 
 void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
+
+    size_t iconsStart = m_labels.size();
+
     StyleBuilder::addFeature(_feat, _rule);
 
+    size_t iconsCount = m_labels.size() - iconsStart;
+
     if (_rule.contains(StyleParamKey::point_text)) {
-        if (m_labels.size() == 0) { return; }
+        if (iconsCount == 0) { return; }
 
         auto& textStyleBuilder = static_cast<TextStyleBuilder&>(*m_textStyleBuilder);
+        auto& textLabels = *textStyleBuilder.labels();
+
+        size_t textStart = textLabels.size();
 
         textStyleBuilder.addFeatureCommon(_feat, _rule, true);
 
-        auto& textLabels = textStyleBuilder.labels();
+        size_t textCount = textLabels.size() - textStart;
 
-        if (m_labels.size() == textLabels.size()) {
+        if (iconsCount == textCount) {
             bool definePriority = !_rule.contains(StyleParamKey::text_priority);
 
-            for (size_t i = 0; i < textLabels.size(); ++i) {
-                auto& tLabel = textLabels[i];
-                auto& pLabel = m_labels[i];
+            for (size_t i = 0; i < textCount; ++i) {
+                auto& tLabel = textLabels[textStart + i];
+                auto& pLabel = m_labels[iconsStart + i];
 
                 // Link labels together
                 tLabel->setParent(*pLabel, definePriority);
             }
-
-            iconMesh->addLabels(m_labels);
-            iconMesh->addLabels(textLabels);
-
         }
-
-        textLabels.clear();
-    } else {
-        iconMesh->addLabels(m_labels);
     }
-
-    m_labels.clear();
 }
 
 }

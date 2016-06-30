@@ -6,12 +6,18 @@
 #include "alfons/textBatch.h"
 #include "alfons/lineLayout.h"
 
+#include <vector>
 
 namespace Tangram {
 
-struct TextWrapper {
+class TextWrapper {
 
-    std::vector<std::pair<int,float>> m_lineWraps;
+public:
+
+    float getShapeRangeWidth(const alfons::LineLayout& _line,
+        size_t _minLineChars, size_t _maxLineChars);
+
+    void clearWraps();
 
     /* Wrap an Alfons line layout, and draw the glyph quads to the TextBatch.
      *
@@ -25,10 +31,12 @@ struct TextWrapper {
      * _lineSpacing
      * _metrics out: text extents
      */
-    int draw(alfons::TextBatch& _batch, const alfons::LineLayout& _line,
-             size_t _minLineChars, size_t _maxLineChars,
+    int draw(alfons::TextBatch& _batch, float _maxWidth, const alfons::LineLayout& _line,
              TextLabelProperty::Align _alignment, float _lineSpacing,
              alfons::LineMetrics& _metrics);
+
+private:
+    std::vector<std::pair<int,float>> m_lineWraps;
 };
 
 }

@@ -2,21 +2,13 @@
 
 #include "platform.h"
 
-
 namespace Tangram {
 
-int TextWrapper::draw(alfons::TextBatch& _batch, const alfons::LineLayout& _line,
-                       size_t _minLineChars, size_t _maxLineChars,
-                       TextLabelProperty::Align _alignment, float _lineSpacing,
-                       alfons::LineMetrics& _layoutMetrics) {
-
-
-    m_lineWraps.clear();
-
-    if (_line.shapes().size() == 0) { return 0; }
+float TextWrapper::getShapeRangeWidth(const alfons::LineLayout& _line,
+                                      size_t _minLineChars, size_t _maxLineChars) {
+    float maxWidth = 0;
 
     float lineWidth = 0;
-    float maxWidth = 0;
     size_t charCount = 0;
     size_t shapeCount = 0;
 
@@ -68,6 +60,16 @@ int TextWrapper::draw(alfons::TextBatch& _batch, const alfons::LineLayout& _line
         maxWidth = std::max(maxWidth, lineWidth);
     }
 
+    return maxWidth;
+}
+
+void TextWrapper::clearWraps() {
+    m_lineWraps.clear();
+}
+
+int TextWrapper::draw(alfons::TextBatch& _batch, float _maxWidth, const alfons::LineLayout& _line,
+                      TextLabelProperty::Align _alignment, float _lineSpacing,
+                      alfons::LineMetrics& _layoutMetrics) {
     size_t shapeStart = 0;
     glm::vec2 position;
 
@@ -75,14 +77,15 @@ int TextWrapper::draw(alfons::TextBatch& _batch, const alfons::LineLayout& _line
         alfons::LineMetrics lineMetrics;
 
         switch(_alignment) {
-        case TextLabelProperty::Align::center:
-            position.x = (maxWidth - wrap.second) * 0.5;
-            break;
-        case TextLabelProperty::Align::right:
-            position.x = (maxWidth - wrap.second);
-            break;
-        default:
-            position.x = 0;
+            case TextLabelProperty::Align::center:
+            case TextLabelProperty::Align::none:
+                position.x = (_maxWidth - wrap.second) * 0.5;
+                break;
+            case TextLabelProperty::Align::right:
+                position.x = (_maxWidth - wrap.second);
+                break;
+            default:
+                position.x = 0;
         }
 
         size_t shapeEnd = wrap.first;

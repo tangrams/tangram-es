@@ -178,7 +178,8 @@ void FontContext::bindTexture(alfons::AtlasID _id, GLuint _unit) {
 }
 
 bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& _text,
-                             std::vector<GlyphQuad>& _quads, std::bitset<max_textures>& _refs, glm::vec2& _size) {
+                             std::vector<GlyphQuad>& _quads, std::bitset<max_textures>& _refs,
+                             glm::vec2& _size, std::vector<TextRange>& _textRanges) {
 
     std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -199,13 +200,38 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     size_t quadsStart = _quads.size();
     alfons::LineMetrics metrics;
 
+    // Collect possible alignment from anchor fallbacks
+    std::vector<TextLabelProperty::Align> alignments;
+    for (auto anchorFallback : _params.labelOptions.anchorFallback) {
+        TextLabelProperty::Align alignmentFallback = TextLabelProperty::alignFromAnchor(anchorFallback);
+        alignments.push_back(alignmentFallback);
+    }
+
     if (_params.wordWrap) {
-        m_textWrapper.draw(m_batch, line, MIN_LINE_WIDTH,
-                           _params.maxLineWidth, _params.align,
-                           _params.lineSpacing, metrics);
+        m_textWrapper.clearWraps();
+        
+        if (line.shapes().size() > 0) {
+            float width = m_textWrapper.getShapeRangeWidth(line, MIN_LINE_WIDTH, _params.maxLineWidth);
+
+            for (auto& align : alignments) {
+                int rangeStart = m_scratch.quads->size();
+                m_textWrapper.draw(m_batch, width, line, align, _params.lineSpacing, metrics);
+                int rangeEnd = m_scratch.quads->size();
+
+                _textRanges.push_back({align, {rangeStart, rangeEnd - rangeStart}});
+                LOGD("Text quad range {%d,%d} for label %s", rangeStart, rangeEnd, _text.c_str());
+            }
+        }
     } else {
         glm::vec2 position(0);
-        m_batch.drawShapeRange(line, 0, line.shapes().size(), position, metrics);
+
+        for (auto& align : alignments) {
+            int rangeStart = m_scratch.quads->size();
+            m_batch.drawShapeRange(line, 0, line.shapes().size(), position, metrics);
+            int rangeEnd = m_scratch.quads->size();
+
+            _textRanges.push_back({align, {rangeStart, rangeEnd - rangeStart}});
+        }
     }
 
     // TextLabel parameter: Dimension
@@ -245,6 +271,7 @@ void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::
     if (atlasGlyph.atlas >= max_textures) { return; }
 
     auto& g = *atlasGlyph.glyph;
+
     quads->push_back({
             atlasGlyph.atlas,
             {{glm::vec2{q.x1, q.y1} * TextVertex::position_scale, {g.u1, g.v1}},

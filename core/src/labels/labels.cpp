@@ -35,12 +35,16 @@ void Labels::updateLabels(const View& _view, float _dt,
                           const std::vector<std::shared_ptr<Tile>>& _tiles,
                           bool _onlyTransitions) {
 
+    m_labels.clear();
+
     m_needUpdate = false;
 
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
 
     // int lodDiscard = LODDiscardFunc(View::s_maxZoom, _view.getZoom());
     float dz = _view.getZoom() - std::floor(_view.getZoom());
+
+    bool allLabels = Tangram::getDebugFlag(DebugFlags::all_labels);
 
     for (const auto& tile : _tiles) {
 
@@ -60,7 +64,7 @@ void Labels::updateLabels(const View& _view, float _dt,
             auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
             if (!labelMesh) { continue; }
             for (auto& label : labelMesh->getLabels()) {
-                if (!label->update(mvp, screenSize, dz)) {
+                if (!label->update(mvp, screenSize, dz, allLabels)) {
                     // skip dead labels
                     continue;
                 }
@@ -71,8 +75,9 @@ void Labels::updateLabels(const View& _view, float _dt,
                         label->pushTransform();
                     }
                 } else if (label->canOcclude()) {
-                    label->setProxy(proxyTile);
-                    m_labels.push_back(label.get());
+                    if (label->state() != Label::State::out_of_screen) {
+                        m_labels.emplace_back(label.get(), proxyTile);
+                    }
                 } else {
                     m_needUpdate |= label->evalState(screenSize, _dt);
                     label->pushTransform();
@@ -169,58 +174,105 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
     }
 }
 
-void Labels::checkRepeatGroups(std::vector<Label*>& _visibleSet) const {
+bool Labels::labelComparator(const LabelEntry& _a, const LabelEntry& _b) {
+    if (_a.proxy != _b.proxy) {
+        return _b.proxy;
+    }
 
-    struct GroupElement {
-        Label* label;
+    if (_a.priority != _b.priority) {
+        return _a.priority < _b.priority;
+    }
 
-        bool operator==(const GroupElement& _ge) {
-            return _ge.label->center() == label->center();
-        };
-    };
+    auto l1 = _a.label;
+    auto l2 = _b.label;
 
-    std::map<size_t, std::vector<GroupElement>> repeatGroups;
+    // Note: This causes non-deterministic placement, i.e. depending on
+    // navigation history.
+    if (l1->occludedLastFrame() != l2->occludedLastFrame()) {
+        return l2->occludedLastFrame();
+    }
 
-    for (Label* textLabel : _visibleSet) {
-        auto& options = textLabel->options();
-        GroupElement element { textLabel };
+    // if (l1->options().repeatGroup != l2->options().repeatGroup) {
+    //     return l1->options().repeatGroup < l2->options().repeatGroup;
+    // }
 
-        auto& group = repeatGroups[options.repeatGroup];
-        if (group.empty()) {
-            group.push_back(element);
+    if (l1->type() == Label::Type::line && l2->type() == Label::Type::line) {
+        // Prefer the label with longer line segment as it has a chance
+        return glm::length2(l1->transform().modelPosition1 - l1->transform().modelPosition2) >
+               glm::length2(l2->transform().modelPosition1 - l2->transform().modelPosition2);
+    }
+
+    if (l1->hash() != l2->hash()) {
+        return l1->hash() < l2->hash();
+    }
+
+    return l1 < l2;
+}
+
+void Labels::sortLabels() {
+    std::sort(m_labels.begin(), m_labels.end(), Labels::labelComparator);
+}
+
+void Labels::handleOcclusions() {
+
+    m_isect2d.clear();
+    m_repeatGroups.clear();
+
+    for (auto& entry : m_labels){
+        auto* l = entry.label;
+
+        // Parent must have been processed earlier so at this point
+        // its occlusion is determined for the current frame.
+        if (l->parent() && l->parent()->isOccluded()) {
+            l->occlude();
             continue;
         }
 
-        if (std::find(group.begin(), group.end(), element) != group.end()) {
-            //Two tiles contain the same label - have the same screen position.
-            continue;
-        }
-
-        float threshold2 = pow(options.repeatDistance, 2);
-
-        bool add = true;
-        for (GroupElement& ge : group) {
-
-            float d2 = distance2(ge.label->center(), textLabel->center());
-            if (d2 < threshold2) {
-                if (textLabel->visibleState() && !ge.label->visibleState()) {
-                    // If textLabel is already visible, the added GroupElement is not
-                    // replace GroupElement with textLabel and set the other occluded.
-                    ge.label->occlude();
-                    ge.label = textLabel;
-                } else {
-                    textLabel->occlude();
-                }
-                add = false;
-                break;
+        // Skip label if another label of this repeatGroup is
+        // within repeatDistance.
+        if (l->options().repeatDistance > 0.f) {
+            if (withinRepeatDistance(l)) {
+                l->occlude();
+                continue;
             }
         }
 
-        if (add) {
-            // No other label of this group within repeatDistance
-            group.push_back(element);
+        // Skip label if it intersects with a previous label.
+        auto aabb = l->aabb();
+        aabb.m_userData = static_cast<void*>(l);
+
+        m_isect2d.intersect(aabb, [](auto& a, auto& b) {
+                auto* l1 = static_cast<Label*>(a.m_userData);
+                auto* l2 = static_cast<Label*>(b.m_userData);
+
+                if (intersect(l1->obb(), l2->obb())) {
+                    l1->occlude();
+                    // Drop label
+                    return false;
+                }
+                // Continue
+                return true;
+            });
+
+        if (l->options().repeatDistance > 0.f) {
+            m_repeatGroups[l->options().repeatGroup].push_back(l);
         }
     }
+}
+
+bool Labels::withinRepeatDistance(Label *_label) {
+    float threshold2 = pow(_label->options().repeatDistance, 2);
+
+    auto it = m_repeatGroups.find(_label->options().repeatGroup);
+    if (it != m_repeatGroups.end()) {
+        for (auto* ll : it->second) {
+            float d2 = distance2(_label->center(), ll->center());
+            if (d2 < threshold2) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 void Labels::updateLabelSet(const View& _view, float _dt,
@@ -228,13 +280,10 @@ void Labels::updateLabelSet(const View& _view, float _dt,
                             const std::vector<std::shared_ptr<Tile>>& _tiles,
                             std::unique_ptr<TileCache>& _cache) {
 
-    // Could clear this at end of function unless debug draw is active
-    m_labels.clear();
-    m_aabbs.clear();
-
     /// Collect and update labels from visible tiles
-
     updateLabels(_view, _dt, _styles, _tiles, false);
+
+    sortLabels();
 
     /// Mark labels to skip transitions
 
@@ -243,113 +292,17 @@ void Labels::updateLabelSet(const View& _view, float _dt,
         m_lastZoom = _view.getZoom();
     }
 
-    /// Manage occlusions
-
-    // Update collision context size
     m_isect2d.resize({_view.getWidth() / 256, _view.getHeight() / 256},
                      {_view.getWidth(), _view.getHeight()});
 
-    // Broad phase collision detection
-    for (auto* label : m_labels) {
-        m_aabbs.push_back(label->aabb());
-        m_aabbs.back().m_userData = (void*)label;
-    }
-
-    m_isect2d.intersect(m_aabbs);
-
-    // Narrow Phase, resolve conflicts
-    for (auto& pair : m_isect2d.pairs) {
-        const auto& aabb1 = m_aabbs[pair.first];
-        const auto& aabb2 = m_aabbs[pair.second];
-
-        auto l1 = static_cast<Label*>(aabb1.m_userData);
-        auto l2 = static_cast<Label*>(aabb2.m_userData);
-
-        if (l1->isOccluded() || l2->isOccluded()) {
-            // One of this pair is already occluded.
-            // => conflict solved
-            continue;
-        }
-
-        if (!intersect(l1->obb(), l2->obb())) { continue; }
-
-        if (l1->isProxy() != l2->isProxy()) {
-            // check first is the label belongs to a proxy tile
-            if (l1->isProxy()) {
-                l1->occlude();
-            } else {
-                l2->occlude();
-            }
-        } else if (l1->options().priority != l2->options().priority) {
-            // lower numeric priority means higher priority
-            if(l1->options().priority > l2->options().priority) {
-                l1->occlude();
-            } else {
-                l2->occlude();
-            }
-        } else if (l1->occludedLastFrame() != l2->occludedLastFrame()) {
-            // keep the one that way active previously
-            if (l1->occludedLastFrame()) {
-                l1->occlude();
-            } else {
-                l2->occlude();
-            }
-        } else if (l1->visibleState() != l2->visibleState()) {
-            // keep the visible one, different from occludedLastframe
-            // when one lets labels fade out.
-            // (A label is also in visibleState() when skip_transition is set)
-            if (!l1->visibleState()) {
-                l1->occlude();
-            } else {
-                l2->occlude();
-            }
-        } else {
-            // just so it is consistent between two instances
-            if (l1->hash() < l2->hash()) {
-                l1->occlude();
-            } else {
-                l2->occlude();
-            }
-        }
-    }
-
-    /// Apply repeat groups
-
-    std::vector<Label*> repeatGroupSet;
-    for (auto* label : m_labels) {
-        if (label->isOccluded()) {
-            continue;
-        }
-        if (label->options().repeatDistance == 0.f) {
-            continue;
-        }
-        if (!dynamic_cast<TextLabel*>(label)) {
-            continue;
-        }
-
-        repeatGroupSet.push_back(label);
-    }
-
-    // Ensure the labels are always treated in the same order in the visible set
-    std::sort(repeatGroupSet.begin(), repeatGroupSet.end(),
-              [](auto* _a, auto* _b) {
-        return glm::length2(_a->transform().modelPosition1) <
-               glm::length2(_b->transform().modelPosition1);
-    });
-
-    checkRepeatGroups(repeatGroupSet);
-
+    handleOcclusions();
 
     /// Update label meshes
 
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
 
-    for (auto* label : m_labels) {
-
-        // Manage link occlusion (unified icon labels)
-        if (label->parent() && (label->parent()->isOccluded() || !label->parent()->visibleState())) {
-            label->occlude();
-        }
+    for (auto& entry : m_labels) {
+        Label* label = entry.label;
 
         m_needUpdate |= label->evalState(screenSize, _dt);
         label->pushTransform();
@@ -418,67 +371,81 @@ void Labels::drawDebug(const View& _view) {
         return;
     }
 
-    for (auto label : m_labels) {
-        if (label->canOcclude()) {
-            glm::vec2 offset = label->options().offset;
-            glm::vec2 sp = label->transform().state.screenPos;
-            float angle = label->transform().state.rotation;
-            offset = glm::rotate(offset, angle);
+    for (auto& entry : m_labels) {
+        auto* label = entry.label;
 
-            // draw bounding box
-            Label::State state = label->state();
-            switch (state) {
-                case Label::State::sleep:
-                    Primitives::setColor(0x00ff00);
-                    break;
-                case Label::State::visible:
-                    Primitives::setColor(0x000000);
-                    break;
-                case Label::State::wait_occ:
-                    Primitives::setColor(0x0000ff);
-                    break;
-                case Label::State::fading_in:
-                case Label::State::fading_out:
-                    Primitives::setColor(0xffff00);
-                    break;
-                default:
-                    Primitives::setColor(0xff0000);
-            }
+        if (label->type() == Label::Type::debug) { continue; }
 
-            if (label->parent()) {
-                Primitives::setColor(0xff0000);
-                Primitives::drawLine(sp, label->parent()->transform().state.screenPos);
-            }
+        glm::vec2 sp = label->transform().state.screenPos;
 
-            Primitives::drawPoly(&(label->obb().getQuad())[0], 4);
-
-            // draw offset
+        // draw bounding box
+        switch (label->state()) {
+        case Label::State::sleep:
+            Primitives::setColor(0x00ff00);
+            break;
+        case Label::State::visible:
             Primitives::setColor(0x000000);
-            Primitives::drawLine(sp, sp - offset);
-
-            // draw projected anchor point
+            break;
+        case Label::State::wait_occ:
             Primitives::setColor(0x0000ff);
-            Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
+            break;
+        case Label::State::dead:
+            Primitives::setColor(0xff00ff);
+            break;
+        case Label::State::fading_in:
+        case Label::State::fading_out:
+            Primitives::setColor(0xffff00);
+            break;
+        default:
+            Primitives::setColor(0x999999);
+        }
 
-            if (label->options().repeatGroup != 0 && label->state() == Label::State::visible) {
-                size_t seed = 0;
-                hash_combine(seed, label->options().repeatGroup);
-                float repeatDistance = label->options().repeatDistance;
+        Primitives::drawPoly(&(label->obb().getQuad())[0], 4);
 
-                Primitives::setColor(seed);
-                Primitives::drawLine(label->center(),
-                    glm::vec2(repeatDistance, 0.f) + label->center());
+        if (label->type() == Label::Type::line) {
+            Primitives::drawLine(label->transform().screenPosition1, label->transform().screenPosition2);
+        }
 
-                float off = M_PI / 6.f;
-                for (float pad = 0.f; pad < M_PI * 2.f; pad += off) {
-                    glm::vec2 p0 = glm::vec2(cos(pad), sin(pad)) * repeatDistance
-                        + label->center();
-                    glm::vec2 p1 = glm::vec2(cos(pad + off), sin(pad + off)) * repeatDistance
-                        + label->center();
-                    Primitives::drawLine(p0, p1);
-                }
+        if (label->visibleState() && label->parent()) {
+            Primitives::setColor(0xff0000);
+            Primitives::drawLine(sp, label->parent()->transform().state.screenPos);
+        }
+
+        // draw offset
+        glm::vec2 rot = label->transform().state.rotation;
+        glm::vec2 offset = rotateBy(label->options().offset, rot);
+        Primitives::setColor(0x000000);
+        Primitives::drawLine(sp, sp - glm::vec2(offset.x, -offset.y));
+
+        // draw projected anchor point
+        Primitives::setColor(0x0000ff);
+        Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
+
+        if (label->options().anchorFallback.size() != 0) {
+            Primitives::setColor(0xffffff);
+            Primitives::drawPoly(&(label->obb().getQuad())[0], 4);
+        }
+
+#if 0
+        if (label->options().repeatGroup != 0 && label->state() == Label::State::visible) {
+            size_t seed = 0;
+            hash_combine(seed, label->options().repeatGroup);
+            float repeatDistance = label->options().repeatDistance;
+
+            Primitives::setColor(seed);
+            Primitives::drawLine(label->center(),
+                                 glm::vec2(repeatDistance, 0.f) + label->center());
+
+            float off = M_PI / 6.f;
+            for (float pad = 0.f; pad < M_PI * 2.f; pad += off) {
+                glm::vec2 p0 = glm::vec2(cos(pad), sin(pad)) * repeatDistance
+                    + label->center();
+                glm::vec2 p1 = glm::vec2(cos(pad + off), sin(pad + off)) * repeatDistance
+                    + label->center();
+                Primitives::drawLine(p0, p1);
             }
         }
+#endif
     }
 
     glm::vec2 split(_view.getWidth() / 256, _view.getHeight() / 256);
