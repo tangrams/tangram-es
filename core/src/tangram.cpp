@@ -329,7 +329,7 @@ bool update(float _dt) {
     bool tilesLoading = m_tileManager->hasLoadingTiles();
     bool labelsNeedUpdate = m_labels->needUpdate();
 
-    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || !bool(m_nextScene)) {
+    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || bool(m_nextScene)) {
         viewComplete = false;
     }
 
