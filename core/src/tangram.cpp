@@ -376,6 +376,9 @@ void render() {
         }
     }
 
+    glm::vec2 screenPos = m_view->latLonToScreen(-74.00976419448854, 40.70532700869127);
+    LOGS("Screen x %f, %f", screenPos.x, screenPos.y);
+
     m_labels->drawDebug(*m_view);
 
     FrameInfo::draw(*m_view, *m_tileManager);

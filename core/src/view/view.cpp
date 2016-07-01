@@ -372,6 +372,20 @@ void View::updateMatrices() {
 
 }
 
+glm::vec2 View::latLonToScreen(double lat, double lon) {
+    bool clipped = false;
+    glm::dvec2 meters = m_projection->LonLatToMeters({lat, lon});
+    glm::dvec4 latlon(meters, 0.0, 1.0);
+    glm::vec2 viewportSize(m_vpHeight, m_vpHeight);
+
+    latlon.x = latlon.x - m_pos.x;
+    latlon.y = latlon.y - m_pos.y;
+
+    glm::vec2 screenCoords = worldToScreenSpace(m_viewProj, latlon, viewportSize, clipped);
+
+    return screenCoords;
+}
+
 void View::updateTiles() {
 
     m_visibleTiles.clear();
