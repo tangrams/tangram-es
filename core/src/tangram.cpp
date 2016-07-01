@@ -167,7 +167,7 @@ void loadScene(const char* _scenePath, bool _useScenePosition) {
     }
 }
 
-void loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _platformCallback) {
+void loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _platformCallback, void *_cbData) {
     LOG("Loading scene file (async): %s", _scenePath);
 
     {
@@ -177,11 +177,11 @@ void loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _pl
         m_nextScene->useScenePosition = _useScenePosition;
     }
 
-    Tangram::runAsyncTask([scene = m_nextScene, _platformCallback](){
+    Tangram::runAsyncTask([scene = m_nextScene, _platformCallback, _cbData](){
 
             bool ok = SceneLoader::loadScene(scene);
 
-            Tangram::runOnMainLoop([scene, ok, _platformCallback]() {
+            Tangram::runOnMainLoop([scene, ok, _platformCallback, _cbData]() {
                     {
                         std::lock_guard<std::mutex> lock(m_sceneMutex);
                         if (scene == m_nextScene) {
@@ -193,7 +193,7 @@ void loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _pl
                         auto s = scene;
                         Tangram::setScene(s);
                         Tangram::applySceneUpdates();
-                        if (_platformCallback) { _platformCallback(); }
+                        if (_platformCallback) { _platformCallback(_cbData); }
                     }
                 });
         });
