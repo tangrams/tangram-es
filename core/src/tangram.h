@@ -38,7 +38,8 @@ public:
     ~Map();
 
     // Load the scene at the given absolute file path asynchronously
-    void loadSceneAsync(const char* _scenePath, bool _useScenePosition = false, std::function<void(void)> _platformCallback = {});
+    void loadSceneAsync(const char* _scenePath, bool _useScenePosition = false,
+            std::function<void(void*)> _platformCallback = {}, void *_cbData = nullptr);
 
     // Load the scene at the given absolute file path synchronously
     void loadScene(const char* _scenePath, bool _useScenePosition = false);
