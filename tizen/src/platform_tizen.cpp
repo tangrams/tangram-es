@@ -22,8 +22,6 @@
 #define NUM_WORKERS 4
 
 static bool s_isContinuousRendering = false;
-static std::string s_resourceRoot;
-static std::string s_internalResourceRoot = "";
 static std::function<void()> s_renderCallbackFunction = nullptr;
 
 #if USE_ECORE_CON
@@ -170,10 +168,10 @@ static bool s_update = false;
 
 void logMsg(const char* fmt, ...) {
 
-        va_list vl;
-        va_start(vl, fmt);
-        dlog_vprint(DLOG_WARN, LOG_TAG, fmt, vl);
-        va_end(vl);
+    va_list vl;
+    va_start(vl, fmt);
+    dlog_vprint(DLOG_WARN, LOG_TAG, fmt, vl);
+    va_end(vl);
 }
 
 void setRenderCallbackFunction(std::function<void()> callback) {
@@ -206,50 +204,10 @@ bool isContinuousRendering() {
 
 }
 
-std::string setResourceRoot(const char* _path) {
+std::string stringFromFile(const char* _path) {
 
-    if (_path[0] == '/') {
-        std::string dir(_path);
-        s_resourceRoot = std::string(dirname(&dir[0])) + '/';
-
-    } else {
-
-        char *app_res = app_get_resource_path();
-        s_resourceRoot = std::string(app_res);
-        free(app_res);
-    }
-
-    std::string base(_path);
-
-    return std::string(basename(&base[0]));
-
-}
-
-std::string resolvePath(const char* _path, PathType _type) {
-        LOG("RESOLVE PATH %s %d", _path, static_cast<int>(_type));
-    switch (_type) {
-    case PathType::absolute:
-    case PathType::internal: {
-        //return std::string(_path);
-        if (s_internalResourceRoot.empty()) {
-            char *app_res = app_get_resource_path();
-            s_internalResourceRoot = std::string(app_res);
-            free(app_res);
-        }
-
-        return s_internalResourceRoot + _path;
-    } case PathType::resource:
-        return s_resourceRoot + _path;
-    }
-    return "";
-}
-
-std::string stringFromFile(const char* _path, PathType _type) {
-
-        //LOG("LOAD STRING %s %d", _path, static_cast<int>(_type));
-
-    unsigned int length = 0;
-    unsigned char* bytes = bytesFromFile(_path, _type, &length);
+    size_t length = 0;
+    unsigned char* bytes = bytesFromFile(_path, length);
 
     std::string out(reinterpret_cast<char*>(bytes), length);
     free(bytes);
@@ -262,29 +220,25 @@ std::string systemFontFallbackPath(int _importance, int _weightHint) {
     return "";
 }
 
-unsigned char* bytesFromFile(const char* _path, PathType _type, unsigned int* _size) {
+unsigned char* bytesFromFile(const char* _path, size_t& _size) {
 
-        if (!_path || strlen(_path) == 0) { return nullptr; }
+    if (!_path || strlen(_path) == 0) { return nullptr; }
 
-    std::string path = resolvePath(_path, _type);
-
-    LOG("LOAD BYTES %s %d", path.c_str(), static_cast<int>(_type));
-
-    std::ifstream resource(path.c_str(), std::ifstream::ate | std::ifstream::binary);
+    std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
 
     if(!resource.is_open()) {
-        logMsg("Failed to read file at path: %s\n", path.c_str());
-        *_size = 0;
+        logMsg("Failed to read file at path: %s\n", _path);
+        _size = 0;
         return nullptr;
     }
 
-    *_size = resource.tellg();
+    _size = resource.tellg();
 
     resource.seekg(std::ifstream::beg);
 
-    char* cdata = (char*) malloc(sizeof(char) * (*_size));
+    char* cdata = (char*) malloc(sizeof(char) * (_size));
 
-    resource.read(cdata, *_size);
+    resource.read(cdata, _size);
     resource.close();
 
     return reinterpret_cast<unsigned char *>(cdata);
