@@ -372,16 +372,14 @@ void View::updateMatrices() {
 
 }
 
-glm::vec2 View::latLonToScreen(double lat, double lon) {
-    bool clipped = false;
-    glm::dvec2 meters = m_projection->LonLatToMeters({lat, lon});
-    glm::dvec4 latlon(meters, 0.0, 1.0);
-    glm::vec2 viewportSize(m_vpHeight, m_vpHeight);
+glm::vec2 View::lonLatToScreenCoordinates(double lon, double lat, bool& clipped) {
+    glm::dvec2 meters = m_projection->LonLatToMeters({lon, lat});
+    glm::dvec4 lonLat(meters, 0.0, 1.0);
 
-    latlon.x = latlon.x - m_pos.x;
-    latlon.y = latlon.y - m_pos.y;
+    lonLat.x = lonLat.x - m_pos.x;
+    lonLat.y = lonLat.y - m_pos.y;
 
-    glm::vec2 screenCoords = worldToScreenSpace(m_viewProj, latlon, viewportSize, clipped);
+    glm::vec2 screenCoords = worldToScreenSpace(m_viewProj, lonLat, {m_vpWidth, m_vpHeight}, clipped);
 
     return screenCoords;
 }

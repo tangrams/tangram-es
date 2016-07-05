@@ -90,6 +90,10 @@ float getTilt();
 // and latitude in the map view
 void screenToWorldCoordinates(double& _x, double& _y);
 
+// Get the 2D screen coordinates from a longitude and latitude
+// Returns whether the (lat,lon) is not visible (out of the screen)
+bool lonLatToScreenCoordinates(double _lon, double _lat, float& _x, float& y);
+
 // Set the ratio of hardware pixels to logical pixels (defaults to 1.0)
 void setPixelScale(float _pixelsPerPoint);
 

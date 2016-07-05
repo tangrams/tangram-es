@@ -376,9 +376,6 @@ void render() {
         }
     }
 
-    glm::vec2 screenPos = m_view->latLonToScreen(-74.00976419448854, 40.70532700869127);
-    LOGS("Screen x %f, %f", screenPos.x, screenPos.y);
-
     m_labels->drawDebug(*m_view);
 
     FrameInfo::draw(*m_view, *m_tileManager);
@@ -518,6 +515,19 @@ void screenToWorldCoordinates(double& _x, double& _y) {
     _x = lonLat.x;
     _y = lonLat.y;
 
+}
+
+bool lonLatToScreenCoordinates(double _lon, double _lat, float& _x, float& _y) {
+    bool clipped = false;
+
+    glm::vec2 screenCoords = m_view->lonLatToScreenCoordinates(_lon, _lat, clipped);
+
+    _x = screenCoords.x;
+    _y = screenCoords.y;
+
+    bool withinViewport = _x >= 0.f && _x <= m_view->getWidth() && _y >= 0.f && _y <= m_view->getHeight();
+
+    return clipped || !withinViewport;
 }
 
 void setPixelScale(float _pixelsPerPoint) {
