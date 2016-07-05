@@ -517,10 +517,10 @@ void screenToWorldCoordinates(double& _x, double& _y) {
 
 }
 
-bool lonLatToScreenCoordinates(double _lon, double _lat, float& _x, float& _y) {
+bool lonLatToScreenPosition(double _lon, double _lat, float& _x, float& _y) {
     bool clipped = false;
 
-    glm::vec2 screenCoords = m_view->lonLatToScreenCoordinates(_lon, _lat, clipped);
+    glm::vec2 screenCoords = m_view->lonLatToScreenPosition(_lon, _lat, clipped);
 
     _x = screenCoords.x;
     _y = screenCoords.y;

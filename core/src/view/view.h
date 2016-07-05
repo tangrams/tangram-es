@@ -153,8 +153,8 @@ public:
     double screenToGroundPlane(double& _screenX, double& _screenY);
     double screenToGroundPlane(float& _screenX, float& _screenY);
 
-    /* Gets the screen coordinate from a latitude/longitude */
-    glm::vec2 lonLatToScreenCoordinates(double lon, double lat, bool& clipped);
+    /* Gets the screen position from a latitude/longitude */
+    glm::vec2 lonLatToScreenPosition(double lon, double lat, bool& clipped);
 
     /* Returns the set of all tiles visible at the current position and zoom */
     const std::set<TileID>& getVisibleTiles() { return m_visibleTiles; }
