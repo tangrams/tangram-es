@@ -258,11 +258,6 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 
 }
 
-void updatePostInit() {
-    //stamford, ct location
-    Tangram::setPosition(-73.5387, 41.0534, 1.0);
-}
-
 void init_main_window(bool recreate) {
 
     // Setup tangram
