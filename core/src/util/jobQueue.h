@@ -22,7 +22,7 @@ public:
     ~JobQueue() = default;
 
     void makeCurrentThreadTarget();
-    void add(Job job);
+    void add(Job job) const;
 
     static void runJobsForCurrentThread();
 

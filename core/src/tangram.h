@@ -11,6 +11,7 @@
 
 namespace Tangram {
 
+class AsyncWorker;
 class DataSource;
 class InputHandler;
 class Labels;
@@ -179,6 +180,9 @@ public:
 
     const std::vector<TouchItem>& pickFeaturesAt(float _x, float _y);
 
+    // Run this task asynchronously to Tangram's main update loop.
+    void runAsyncTask(std::function<void()> _task);
+
 private:
 
     enum class EaseField { position, zoom, rotation, tilt };
@@ -200,14 +204,12 @@ private:
     std::shared_ptr<View> m_view;
     std::unique_ptr<Labels> m_labels;
     std::unique_ptr<InputHandler> m_inputHandler;
+    std::unique_ptr<AsyncWorker> m_asyncWorker;
     std::vector<SceneUpdate> m_sceneUpdates;
     std::array<Ease, 4> m_eases;
     bool m_cacheGlState;
 
 };
-
-// Run this task asynchronously to Tangram's main update loop.
-void runAsyncTask(std::function<void()> _task);
 
 enum DebugFlags {
     freeze_tiles = 0,   // While on, the set of tiles currently being drawn will not update to match the view

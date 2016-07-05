@@ -44,8 +44,6 @@ void Map::clearEase(EaseField _f) {
 
 static std::bitset<8> g_flags = 0;
 
-AsyncWorker m_asyncWorker;
-
 Map::Map(const char* _scenePath) {
 
     // For some unknown reasons, android fails to render the map, if same scene is reloaded, without resetting any of
@@ -76,6 +74,9 @@ Map::Map(const char* _scenePath) {
 
     // Label setup
     m_labels = std::make_unique<Labels>();
+
+    // Create an AsyncWorker
+    m_asyncWorker = std::make_unique<AsyncWorker>();
 
     LOG("finish initialize");
 
@@ -160,11 +161,14 @@ void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapRead
         m_nextScene->useScenePosition = _useScenePosition;
     }
 
-    Tangram::runAsyncTask([scene = m_nextScene, _platformCallback, this](){
+    JobQueue mainThreadJobQueue;
+    mainThreadJobQueue.makeCurrentThreadTarget();
+
+    runAsyncTask([scene = m_nextScene, _platformCallback, mainThreadJobQueue, this](){
 
             bool ok = SceneLoader::loadScene(scene);
 
-            Tangram::runOnMainLoop([scene, ok, _platformCallback, this]() {
+            mainThreadJobQueue.add([scene, ok, _platformCallback, this]() {
                     {
                         std::lock_guard<std::mutex> lock(m_sceneMutex);
                         if (scene == m_nextScene) {
@@ -208,13 +212,16 @@ void Map::applySceneUpdates() {
         m_sceneUpdates.clear();
     }
 
-    Tangram::runAsyncTask([scene = m_nextScene, updates = std::move(updates), this](){
+    JobQueue mainThreadJobQueue;
+    mainThreadJobQueue.makeCurrentThreadTarget();
+
+    runAsyncTask([scene = m_nextScene, updates = std::move(updates), mainThreadJobQueue, this](){
 
             SceneLoader::applyUpdates(scene->config(), updates);
 
             bool ok = SceneLoader::applyConfig(scene->config(), *scene);
 
-            Tangram::runOnMainLoop([scene, ok, this]() {
+            mainThreadJobQueue.add([scene, ok, this]() {
                     if (scene == m_nextScene) {
                         std::lock_guard<std::mutex> lock(m_sceneMutex);
                         m_nextScene.reset();
@@ -645,6 +652,10 @@ const std::vector<TouchItem>& Map::pickFeaturesAt(float _x, float _y) {
     return m_labels->getFeaturesAtPoint(*m_view, 0, m_scene->styles(),
                                         m_tileManager->getVisibleTiles(),
                                         _x, _y);
+}
+
+void Map::runAsyncTask(std::function<void()> _task) {
+    m_asyncWorker->enqueue(std::move(_task));
 }
 
 void setDebugFlag(DebugFlags _flag, bool _on) {
