@@ -4,6 +4,7 @@
 #include "util/fastmap.h"
 #include "view/view.h"
 
+#include <atomic>
 #include <list>
 #include <memory>
 #include <string>
@@ -106,6 +107,8 @@ public:
     std::shared_ptr<DataSource> getDataSource(const std::string& name);
 
     std::shared_ptr<Texture> getTexture(const std::string& name) const;
+
+    std::atomic_ushort m_resourceLoad;
 
 private:
 

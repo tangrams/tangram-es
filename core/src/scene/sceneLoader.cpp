@@ -537,6 +537,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
     std::smatch match;
     // TODO: generalize using URI handlers
     if (std::regex_search(url, match, r)) {
+        scene.m_resourceLoad++;
         startUrlRequest(url, [=, &scene](std::vector<char>&& rawData) {
                 auto ptr = (unsigned char*)(rawData.data());
                 size_t dataSize = rawData.size();
@@ -548,6 +549,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
                     }
 
                     updateSpriteNodes(name, texture, scene);
+                    scene.m_resourceLoad--;
                 }
             });
         texture = std::make_shared<Texture>(nullptr, 0, options, generateMipmaps, true);
