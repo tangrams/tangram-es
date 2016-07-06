@@ -8,6 +8,7 @@
 #include "labels/textLabels.h"
 #include "text/fontContext.h"
 #include "view/view.h"
+#include "log.h"
 
 #include "shaders/text_fs.h"
 #include "shaders/sdf_fs.h"

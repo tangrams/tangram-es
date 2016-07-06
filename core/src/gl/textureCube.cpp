@@ -3,6 +3,7 @@
 #include "platform.h"
 #include "stb_image.h"
 #include "gl/error.h"
+#include "log.h"
 
 #include <cstring> // for memcpy
 #include <cstdlib>

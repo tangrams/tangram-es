@@ -1,7 +1,7 @@
 #include "gl/vertexLayout.h"
 #include "gl/shaderProgram.h"
 #include "gl/error.h"
-#include "platform.h"
+#include "log.h"
 
 namespace Tangram {
 

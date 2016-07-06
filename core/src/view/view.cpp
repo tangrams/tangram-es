@@ -6,6 +6,7 @@
 #include "scene/stops.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/rotate_vector.hpp"
+#include "log.h"
 
 #include <cmath>
 

@@ -9,6 +9,7 @@
 #include "platform.h"
 #include "drawRuleWarnings.h"
 #include "util/hash.h"
+#include "log.h"
 
 #include <algorithm>
 

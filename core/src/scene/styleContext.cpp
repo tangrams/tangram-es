@@ -6,6 +6,7 @@
 #include "scene/filters.h"
 #include "scene/scene.h"
 #include "util/builders.h"
+#include "log.h"
 
 #include "duktape.h"
 

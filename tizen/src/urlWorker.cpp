@@ -1,4 +1,5 @@
 #include "urlWorker.h"
+#include "log.h"
 
 #include <curl/curl.h>
 #include <sstream>

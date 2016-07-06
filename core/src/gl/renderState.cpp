@@ -3,6 +3,7 @@
 #include "platform.h"
 #include "vertexLayout.h"
 #include "gl/hardware.h"
+#include "log.h"
 
 namespace Tangram {
 

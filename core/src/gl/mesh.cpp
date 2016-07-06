@@ -3,6 +3,7 @@
 #include "renderState.h"
 #include "hardware.h"
 #include "platform.h"
+#include "log.h"
 
 namespace Tangram {
 

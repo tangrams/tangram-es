@@ -1,7 +1,7 @@
 #include "labels/spriteLabel.h"
 #include "gl/dynamicQuadMesh.h"
 #include "style/pointStyle.h"
-#include "platform.h"
+#include "log.h"
 
 namespace Tangram {
 

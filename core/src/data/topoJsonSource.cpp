@@ -6,7 +6,7 @@
 #include "util/mapProjection.h"
 #include "util/topoJson.h"
 #include "platform.h"
-
+#include "log.h"
 
 namespace Tangram {
 

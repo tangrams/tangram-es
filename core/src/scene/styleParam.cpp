@@ -5,6 +5,7 @@
 #include "util/builders.h" // for cap, join
 #include "util/extrude.h"
 #include "util/geom.h" // for CLAMP
+#include "log.h"
 #include <algorithm>
 #include <map>
 #include <cstring>

@@ -6,6 +6,7 @@
 #include <memory>
 #include <signal.h>
 #include <stdlib.h>
+#include "log.h"
 
 // Forward declaration
 void init_main_window(bool recreate);
