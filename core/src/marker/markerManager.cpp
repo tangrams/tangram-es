@@ -3,6 +3,7 @@
 #include "marker/marker.h"
 #include "scene/sceneLoader.h"
 #include "style/style.h"
+#include "log.h"
 
 namespace Tangram {
 

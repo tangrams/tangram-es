@@ -15,6 +15,7 @@
 #include "util/mapProjection.h"
 #include "util/extrude.h"
 #include "util/dashArray.h"
+#include "log.h"
 
 #include "shaders/polyline_vs.h"
 #include "shaders/polyline_fs.h"

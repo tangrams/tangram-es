@@ -8,6 +8,7 @@
 #include "tile/tileManager.h"
 #include "tile/tileTask.h"
 #include "gl/texture.h"
+#include "log.h"
 
 #include <atomic>
 #include <mutex>

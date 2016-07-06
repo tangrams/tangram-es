@@ -13,6 +13,7 @@
 #include "util/mapProjection.h"
 #include "util/util.h"
 #include "view/view.h"
+#include "log.h"
 
 #include <atomic>
 #include <algorithm>

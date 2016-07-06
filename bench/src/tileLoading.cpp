@@ -1,6 +1,7 @@
 #include "tangram.h"
 #include "gl.h"
 #include "platform.h"
+#include "log.h"
 #include "data/dataSource.h"
 #include "scene/sceneLoader.h"
 #include "scene/scene.h"

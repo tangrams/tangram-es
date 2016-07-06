@@ -1,6 +1,6 @@
 #include "util/yamlHelper.h"
 
-#include "platform.h"
+#include "log.h"
 #include "csscolorparser.hpp"
 
 namespace Tangram {

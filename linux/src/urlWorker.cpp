@@ -1,4 +1,5 @@
 #include "urlWorker.h"
+#include "log.h"
 
 static size_t write_data(void *_buffer, size_t _size, size_t _nmemb, void *_dataPtr) {
 

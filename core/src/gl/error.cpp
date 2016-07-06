@@ -1,4 +1,5 @@
 #include "error.h"
+#include "log.h"
 
 namespace Tangram {
 
