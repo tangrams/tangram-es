@@ -8,6 +8,7 @@
 #import <regex>
 
 #include "platform_ios.h"
+#include "log.h"
 #include "TGMapViewController.h"
 
 static TGMapViewController* viewController;

@@ -12,6 +12,7 @@
 #include <sys/syscall.h>
 
 #include "platform_osx.h"
+#include "log.h"
 
 static bool s_isContinuousRendering = false;
 

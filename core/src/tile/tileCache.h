@@ -3,6 +3,7 @@
 #include "tile/tile.h"
 #include "tile/tileHash.h"
 #include "tile/tileID.h"
+#include "log.h"
 
 #include <unordered_map>
 #include <list>

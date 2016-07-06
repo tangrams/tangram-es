@@ -13,6 +13,7 @@
 #include "util/mapProjection.h"
 #include "view/view.h"
 #include "tangram.h"
+#include "log.h"
 
 #include <cmath>
 #include <locale>

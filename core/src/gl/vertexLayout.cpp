@@ -2,7 +2,7 @@
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 #include "gl/error.h"
-#include "platform.h"
+#include "log.h"
 
 namespace Tangram {
 

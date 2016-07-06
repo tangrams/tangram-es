@@ -4,6 +4,7 @@
 #include "hardware.h"
 #include "platform.h"
 #include "gl/error.h"
+#include "log.h"
 
 namespace Tangram {
 

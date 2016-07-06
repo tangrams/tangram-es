@@ -14,6 +14,7 @@
 #include "view/view.h"
 #include "marker/marker.h"
 #include "tangram.h"
+#include "log.h"
 
 #include "shaders/rasters_glsl.h"
 

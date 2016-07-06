@@ -6,6 +6,7 @@
 #include "gl/error.h"
 #include "gl/renderState.h"
 #include "glm/gtc/type_ptr.hpp"
+#include "log.h"
 
 #include <sstream>
 #include <regex>
