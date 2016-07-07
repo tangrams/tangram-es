@@ -9,6 +9,7 @@
 
 //#include "urlWorker.h"
 #include "platform_tizen.h"
+#include "platform_gl.h"
 
 #include <app_common.h>
 #include <dlog.h>
@@ -176,6 +177,10 @@ void logMsg(const char* fmt, ...) {
 
 void setRenderCallbackFunction(std::function<void()> callback) {
     s_renderCallbackFunction = callback;
+}
+
+void setEvasGlAPI(Evas_GL_API *glApi) {
+    __evas_gl_glapi = glApi;
 }
 
 void requestRender() {
