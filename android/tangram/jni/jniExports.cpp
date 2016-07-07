@@ -62,6 +62,13 @@ extern "C" {
         jniEnv->ReleaseDoubleArrayElements(screenPos, arr, 0);
     }
 
+    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeLongitudeLatitudeToScreenPosition(JNIEnv* jniEnv, jobject obj, jdouble lon, jdouble lat, jfloatArray screenPosition) {
+        jfloat* arr = jniEnv->GetFloatArrayElements(screenPosition, NULL);
+        bool offViewport = Tangram::lonLatToScreenPosition(lon, lat, arr[0], arr[1]);
+        jniEnv->ReleaseFloatArrayElements(screenPosition, arr, 0);
+        return offViewport;
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeInit(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager, jstring stylePath) {
         setupJniEnv(jniEnv, tangramInstance, assetManager);
         const char* cStylePath = jniEnv->GetStringUTFChars(stylePath, NULL);

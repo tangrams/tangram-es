@@ -55,6 +55,17 @@ glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosit
     return clipToScreenSpace(worldToClipSpace(_mvp, _worldPosition), _screenSize);
 }
 
+glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize, bool& _clipped) {
+    glm::vec4 clipCoords = worldToClipSpace(_mvp, _worldPosition);
+
+    if (clipCoords.w <= 0.0f) {
+        _clipped = true;
+        return {};
+    }
+
+    return clipToScreenSpace(worldToClipSpace(_mvp, _worldPosition), _screenSize);
+}
+
 glm::vec2 centroid(const std::vector<std::vector<glm::vec3>>& _polygon) {
     glm::vec2 centroid;
     int n = 0;

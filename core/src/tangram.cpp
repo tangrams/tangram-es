@@ -517,6 +517,19 @@ void screenToWorldCoordinates(double& _x, double& _y) {
 
 }
 
+bool lonLatToScreenPosition(double _lon, double _lat, float& _x, float& _y) {
+    bool clipped = false;
+
+    glm::vec2 screenCoords = m_view->lonLatToScreenPosition(_lon, _lat, clipped);
+
+    _x = screenCoords.x;
+    _y = screenCoords.y;
+
+    bool withinViewport = _x >= 0.f && _x <= m_view->getWidth() && _y >= 0.f && _y <= m_view->getHeight();
+
+    return clipped || !withinViewport;
+}
+
 void setPixelScale(float _pixelsPerPoint) {
 
     if (m_view) {
