@@ -55,8 +55,8 @@ bool isContinuousRendering() {
 
 std::string stringFromFile(const char* _path) {
 
-    unsigned int length = 0;
-    unsigned char* bytes = bytesFromFile(_path, &length);
+    size_t length = 0;
+    unsigned char* bytes = bytesFromFile(_path, length);
 
     std::string out(reinterpret_cast<char*>(bytes), length);
     free(bytes);
@@ -70,7 +70,7 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
 
     if(!resource.is_open()) {
         logMsg("Failed to read file at path: %s\n", _path);
-        *_size = 0;
+        _size = 0;
         return nullptr;
     }
 
