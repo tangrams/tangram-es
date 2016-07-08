@@ -1,0 +1,72 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "BEF4CD3BF6A9DF306C3773D17F039B2DC1C72614",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "B81FCB83F310D0FE579C2C036BB1B65DBEA68F32" : 0,
+    "E1DE65396865A9214CEC7108611BC4DAC82E507C" : 0,
+    "1C40E86C1C06819F2AECFF89EBC2BD3C4AD1D0E1" : 0,
+    "BEF4CD3BF6A9DF306C3773D17F039B2DC1C72614" : 0,
+    "89BF49097CBE9539E080B51BBEECD090377E3AE9" : 0,
+    "712FCE76DAFCD7A92374B4096CF7B4A564C64796" : 0,
+    "B1E05D58146BF7B992144E82CC3F91DAC86DD1C5" : 0,
+    "98B5F1E9F1D4B271DC50DD42EDC5C62672F9C845" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "111BB024-BBE5-4349-A67A-736436153647",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "B81FCB83F310D0FE579C2C036BB1B65DBEA68F32" : "tangram-es-clean\/external\/yaml-cpp\/",
+    "E1DE65396865A9214CEC7108611BC4DAC82E507C" : "tangram-es-clean\/external\/css-color-parser-cpp\/",
+    "1C40E86C1C06819F2AECFF89EBC2BD3C4AD1D0E1" : "tangram-es-clean\/external\/alfons\/deps\/harfbuzz-icu-freetype\/harfbuzz\/",
+    "BEF4CD3BF6A9DF306C3773D17F039B2DC1C72614" : "tangram-es-clean\/",
+    "89BF49097CBE9539E080B51BBEECD090377E3AE9" : "tangram-es-clean\/external\/alfons\/",
+    "712FCE76DAFCD7A92374B4096CF7B4A564C64796" : "tangram-es-clean\/external\/duktape\/",
+    "B1E05D58146BF7B992144E82CC3F91DAC86DD1C5" : "tangram-es-clean\/external\/geojson-vt-cpp\/",
+    "98B5F1E9F1D4B271DC50DD42EDC5C62672F9C845" : "tangram-es-clean\/external\/alfons\/deps\/harfbuzz-icu-freetype\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "tangram",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "build\/ios\/tangram.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/behdad\/harfbuzz.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "1C40E86C1C06819F2AECFF89EBC2BD3C4AD1D0E1"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/tangrams\/duktape.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "712FCE76DAFCD7A92374B4096CF7B4A564C64796"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/hjanetzek\/alfons",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "89BF49097CBE9539E080B51BBEECD090377E3AE9"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/tangrams\/harfbuzz-icu-freetype.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "98B5F1E9F1D4B271DC50DD42EDC5C62672F9C845"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/tangrams\/geojson-vt-cpp.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "B1E05D58146BF7B992144E82CC3F91DAC86DD1C5"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/tangrams\/yaml-cpp",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "B81FCB83F310D0FE579C2C036BB1B65DBEA68F32"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:tangrams\/tangram-es.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "BEF4CD3BF6A9DF306C3773D17F039B2DC1C72614"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/tangrams\/css-color-parser-cpp",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "E1DE65396865A9214CEC7108611BC4DAC82E507C"
+    }
+  ]
+}
