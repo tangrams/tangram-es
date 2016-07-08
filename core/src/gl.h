@@ -397,6 +397,9 @@ extern "C" {
 
     GL_APICALL void GL_APIENTRY glFinish(void);
 
+    GL_APICALL void GL_APIENTRY glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                            GLenum format, GLenum type, GLvoid* pixels);
+
     // VAO
 #ifdef PLATFORM_ANDROID
     typedef void (GL_APIENTRYP PFNGLBINDVERTEXARRAYOESPROC) (GLuint array);
