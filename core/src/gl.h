@@ -342,6 +342,8 @@ extern "C" {
     GL_APICALL void GL_APIENTRY glGenBuffers(GLsizei n, GLuint *buffers);
     GL_APICALL void GL_APIENTRY glBufferData(GLenum target, GLsizeiptr size, const void *data, GLenum usage);
     GL_APICALL void GL_APIENTRY glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void *data);
+    GL_APICALL void GL_APIENTRY glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                            GLenum format, GLenum type, GLvoid* pixels);
 
     // Texture
     GL_APICALL void GL_APIENTRY glBindTexture(GLenum target, GLuint texture );
@@ -401,9 +403,6 @@ extern "C" {
     GL_APICALL GLboolean GL_APIENTRY glUnmapBuffer(GLenum target);
 
     GL_APICALL void GL_APIENTRY glFinish(void);
-
-    GL_APICALL void GL_APIENTRY glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                            GLenum format, GLenum type, GLvoid* pixels);
 
     // VAO
 #ifdef PLATFORM_ANDROID
@@ -476,6 +475,8 @@ extern "C" {
     void __glGenBuffers(GLsizei n, GLuint *buffers);
     void __glBufferData(GLenum target, GLsizeiptr size, const void *data, GLenum usage);
     void __glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void *data);
+    void __glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                            GLenum format, GLenum type, GLvoid* pixels);
 
     // Texture
     void __glBindTexture(GLenum target, GLuint texture );
@@ -580,6 +581,7 @@ extern "C" {
     #define glGenBuffers __glGenBuffers
     #define glBufferData __glBufferData
     #define glBufferSubData __glBufferSubData
+    #define glReadPixels __glReadPixels
 
     // Texture
     #define glBindTexture __glBindTexture
