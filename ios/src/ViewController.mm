@@ -216,6 +216,10 @@
 
 - (void)tearDownGL
 {
+    if (self.map) {
+        delete self.map;
+        self.map = nullptr;
+    }
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator

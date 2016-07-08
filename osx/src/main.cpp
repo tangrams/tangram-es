@@ -390,6 +390,11 @@ int main(int argc, char* argv[]) {
 
     finishUrlRequests();
 
+    if (map) {
+        delete map;
+        map = nullptr;
+    }
+
     glfwTerminate();
     return 0;
 }

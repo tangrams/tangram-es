@@ -393,6 +393,11 @@ int main(int argc, char* argv[]) {
 
     finishUrlRequests();
 
+    if (map) {
+        delete map;
+        map = nullptr;
+    }
+
     curl_global_cleanup();
     glfwTerminate();
     return 0;

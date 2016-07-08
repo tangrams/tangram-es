@@ -64,6 +64,11 @@ int main(int argc, char **argv){
         }
     }
 
+    if (map) {
+        delete map;
+        map = nullptr;
+    }
+
     curl_global_cleanup();
     closeGL();
     return 0;
