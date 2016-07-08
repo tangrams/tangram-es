@@ -83,7 +83,16 @@ Map::Map(const char* _scenePath) {
 }
 
 Map::~Map() {
-
+    // Explicitly destroy all member objects so that we have a chance
+    // to run any resulting jobs sent to the JobQueue.
+    m_asyncWorker.reset();
+    m_inputHandler.reset();
+    m_labels.reset();
+    m_view.reset();
+    m_nextScene.reset();
+    m_tileManager.reset();
+    m_tileWorker.reset();
+    JobQueue::runJobsForCurrentThread();
 }
 
 void Map::setScene(std::shared_ptr<Scene>& _scene) {
