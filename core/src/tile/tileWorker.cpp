@@ -33,15 +33,14 @@ TileWorker::~TileWorker(){
 
 void TileWorker::disposeBuilder(std::unique_ptr<TileBuilder> _builder) {
     if (_builder) {
-        // Bind _builder to a std::function that will run on the next mainloop
-        // iteration and does therefore dispose the TileBuilder, including it's
-        // Scene reference with OpenGL resources on the mainloop. This is done
-        // in order to ensure that no GL functions are called on
-        // the worker-thread.
-        auto disposer = std::bind([](auto builder){},
-                                  std::shared_ptr<TileBuilder>(std::move(_builder)));
-
-        m_mainThreadJobQueue.add(disposer);
+        // Create an std::function that will run on the main thread
+        // and dispose the TileBuilder, including its Scene reference
+        // with OpenGL resources, on the main thread. This ensures
+        // that no GL functions are called on the worker thread.
+        auto builderPtr = _builder.release();
+        m_mainThreadJobQueue.add([=]() {
+            delete builderPtr;
+        });
     }
 }
 
