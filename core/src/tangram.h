@@ -167,7 +167,7 @@ void runOnMainLoop(std::function<void()> _task);
 void runAsyncTask(std::function<void()> _task);
 
 // Capture a snapshot of the current frame
-std::vector<unsigned int> getSnapshot();
+std::vector<unsigned int> captureSnapshot();
 
 struct TouchItem {
     std::shared_ptr<Properties> properties;

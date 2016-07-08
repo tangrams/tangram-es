@@ -244,6 +244,17 @@ extern "C" {
         Tangram::useCachedGlState(use);
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeCaptureSnapshot(JNIEnv* jniEnv, jobject obj, jintArray buffer) {
+        jint* arr = jniEnv->GetIntArrayElements(buffer, NULL);
+        std::vector<unsigned int> snapshot = Tangram::captureSnapshot();
+
+        for (int i = 0; i < snapshot.size(); ++i) {
+            arr[i] = snapshot[i];
+        }
+
+        jniEnv->ReleaseIntArrayElements(buffer, arr, 0);
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeQueueSceneUpdate(JNIEnv* jnienv, jobject obj, jstring path, jstring value) {
         const char* cPath = jnienv->GetStringUTFChars(path, NULL);
         const char* cValue = jnienv->GetStringUTFChars(value, NULL);

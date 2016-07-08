@@ -381,9 +381,9 @@ void render() {
     FrameInfo::draw(*m_view, *m_tileManager);
 }
 
-std::vector<unsigned int> getSnapshot() {
+std::vector<unsigned int> captureSnapshot() {
     std::vector<unsigned int> pixels;
-    pixels.reserve(m_view->getWidth() * m_view->getHeight());
+    pixels.resize(m_view->getWidth() * m_view->getHeight());
     glReadPixels(0, 0, m_view->getWidth(), m_view->getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)pixels.data());
     return pixels;
 }
