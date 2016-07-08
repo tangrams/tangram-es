@@ -44,16 +44,7 @@ void Map::clearEase(EaseField _f) {
 
 static std::bitset<8> g_flags = 0;
 
-Map::Map(const char* _scenePath) {
-
-    // For some unknown reasons, android fails to render the map, if same scene is reloaded, without resetting any of
-    // the other Tangram global resources, which is what this method does.
-    // As a work-around, re-initialization of an already loaded scene is done along with resetting all the Tangram
-    // global resources.
-    // NOTE: This will be refactored completely with Multiple Tangram Instances work being done in parallel.
-    if (m_scene && m_scene->path() == _scenePath) {
-        LOGD("Specified scene is already initalized.");
-    }
+Map::Map() {
 
     LOG("initialize");
 
@@ -61,7 +52,7 @@ Map::Map(const char* _scenePath) {
     m_view = std::make_shared<View>();
 
     // Create a scene object
-    m_scene = std::make_shared<Scene>(_scenePath);
+    m_scene = std::make_shared<Scene>();
 
     // Input handler
     m_inputHandler = std::make_unique<InputHandler>(m_view);

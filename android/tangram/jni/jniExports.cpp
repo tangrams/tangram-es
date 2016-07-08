@@ -98,11 +98,9 @@ extern "C" {
         return ret;
     }
 
-    JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeInit(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager, jstring stylePath) {
+    JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeInit(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
         setupJniEnv(jniEnv, tangramInstance, assetManager);
-        const char* cStylePath = jniEnv->GetStringUTFChars(stylePath, NULL);
-        auto map = new Tangram::Map(cStylePath);
-        jniEnv->ReleaseStringUTFChars(stylePath, cStylePath);
+        auto map = new Tangram::Map();
         return reinterpret_cast<jlong>(map);
     }
 

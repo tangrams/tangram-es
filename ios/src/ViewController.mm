@@ -201,7 +201,7 @@
     [EAGLContext setCurrentContext:self.context];
 
     if (!self.map) {
-        self.map = new Tangram::Map("scene.yaml");
+        self.map = new Tangram::Map();
         self.map->loadSceneAsync("scene.yaml");
     }
     self.map->setupGL();

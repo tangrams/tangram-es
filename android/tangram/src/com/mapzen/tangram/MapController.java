@@ -134,11 +134,8 @@ public class MapController implements Renderer {
      * It also provides the Context in which the map will function; the asset
      * bundle for this activity must contain all the local files that the map
      * will need.
-     * @param sceneFilePath Location of the YAML scene file within the assets directory
      */
-    protected MapController(GLSurfaceView view, String sceneFilePath) {
-
-        scenePath = sceneFilePath;
+    protected MapController(GLSurfaceView view) {
 
         // Set up MapView
         mapView = view;
@@ -179,7 +176,7 @@ public class MapController implements Renderer {
         // Parse font file desription
         fontFileParser.parse();
 
-        mapPointer = nativeInit(this, assetManager, scenePath);
+        mapPointer = nativeInit(this, assetManager);
     }
 
     void dispose() {
@@ -194,8 +191,8 @@ public class MapController implements Renderer {
         });
     }
 
-    static MapController getInstance(GLSurfaceView view, String sceneFilePath) {
-        return new MapController(view, sceneFilePath);
+    static MapController getInstance(GLSurfaceView view) {
+        return new MapController(view);
     }
 
     /**
@@ -698,7 +695,7 @@ public class MapController implements Renderer {
         System.loadLibrary("tangram");
     }
 
-    private synchronized native long nativeInit(MapController instance, AssetManager assetManager, String stylePath);
+    private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
     private synchronized native void nativeDispose(long mapPtr);
     private synchronized native void nativeLoadScene(long mapPtr, String path);
     private synchronized native void nativeSetupGL(long mapPtr);

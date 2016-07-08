@@ -57,7 +57,7 @@ public class MapView extends FrameLayout {
 
         disposeTask();
 
-        final MapController mapInstance = getMapInstance(sceneFilePath);
+        final MapController mapInstance = getMapInstance();
 
         getMapTask = new AsyncTask<Void, Void, Boolean>() {
 
@@ -86,8 +86,8 @@ public class MapView extends FrameLayout {
 
     }
 
-    protected MapController getMapInstance(String sceneFilePath) {
-        return MapController.getInstance(glSurfaceView, sceneFilePath);
+    protected MapController getMapInstance() {
+        return MapController.getInstance(glSurfaceView);
     }
 
     protected void configureGLSurfaceView() {

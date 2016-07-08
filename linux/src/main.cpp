@@ -262,7 +262,7 @@ void init_main_window(bool recreate) {
 
     // Setup tangram
     if (!map) {
-        map = new Tangram::Map(sceneFile.c_str());
+        map = new Tangram::Map();
         map->loadSceneAsync(sceneFile.c_str());
     }
 

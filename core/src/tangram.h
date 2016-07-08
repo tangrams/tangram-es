@@ -35,14 +35,13 @@ class Map {
 
 public:
 
-    // Create resources and initialize the map view using the scene file at the
-    // given resource path
-    Map(const char* _scenePath);
-
+    // Create an empty map object. To display a map, call either loadScene() or loadSceneAsync().
+    Map();
     ~Map();
 
     // Load the scene at the given absolute file path asynchronously
     void loadSceneAsync(const char* _scenePath, bool _useScenePosition = false, std::function<void(void)> _platformCallback = {});
+
     // Load the scene at the given absolute file path synchronously
     void loadScene(const char* _scenePath, bool _useScenePosition = false);
 
