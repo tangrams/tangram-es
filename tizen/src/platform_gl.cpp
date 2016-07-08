@@ -135,6 +135,10 @@ void __glBufferData(GLenum target, GLsizeiptr size, const void *data, GLenum usa
 void __glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void *data) {
     __evas_gl_glapi->glBufferSubData(target, offset, size, data);
 }
+void __glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                    GLenum format, GLenum type, GLvoid* pixels) {
+    __evas_gl_glapi->glReadPixels(x, y, width, height, format, type, pixels);
+}
 
 // Texture
 void __glBindTexture(GLenum target, GLuint texture ) {
