@@ -166,6 +166,9 @@ void runOnMainLoop(std::function<void()> _task);
 // Run this task asynchronously to Tangram's main update loop.
 void runAsyncTask(std::function<void()> _task);
 
+// Capture a snapshot of the current frame
+std::vector<unsigned int> captureSnapshot();
+
 struct TouchItem {
     std::shared_ptr<Properties> properties;
     float position[2];

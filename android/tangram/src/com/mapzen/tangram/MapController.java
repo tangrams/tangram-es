@@ -110,9 +110,9 @@ public class MapController implements Renderer {
 
         int b[] = new int[w * h];
         int bt[] = new int[w * h];
-        IntBuffer buffer = IntBuffer.wrap(b);
-        buffer.position(0);
-        GLES20.glReadPixels(0, 0, w, h, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer);
+
+        nativeCaptureSnapshot(b);
+
         for (int i = 0; i < h; i++) {
             for (int j = 0; j < w; j++) {
                 int pix = b[i * w + j];
@@ -696,6 +696,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeApplySceneUpdates();
     private synchronized native void nativePickFeature(float posX, float posY, FeaturePickListener listener);
     private synchronized native void nativeUseCachedGlState(boolean use);
+    private synchronized native void nativeCaptureSnapshot(int[] buffer);
 
     private native void nativeOnUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private native void nativeOnUrlFailure(long callbackPtr);
