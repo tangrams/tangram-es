@@ -89,6 +89,8 @@ extern "C" {
     void glBindBuffer (GLenum target, GLuint buffer){}
     void glDeleteBuffers (GLsizei n, const GLuint *buffers){}
     void glGenBuffers (GLsizei n, GLuint *buffers){}
+    void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                      GLenum format, GLenum type, GLvoid* pixels){}
 
     void glUniform1f (GLint location, GLfloat v0){}
     void glUniform2f (GLint location, GLfloat v0, GLfloat v1){}
