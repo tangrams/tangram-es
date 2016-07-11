@@ -108,6 +108,9 @@ public:
 
     std::shared_ptr<Texture> getTexture(const std::string& name) const;
 
+    float pixelScale() { return m_pixelScale; }
+    void setPixelScale(float _scale) { m_pixelScale = _scale; }
+
     std::atomic_ushort m_resourceLoad;
 
 private:
@@ -143,6 +146,8 @@ private:
     std::shared_ptr<FontContext> m_fontContext;
 
     animate m_animated = none;
+
+    float m_pixelScale = 1.0f;
 };
 
 }

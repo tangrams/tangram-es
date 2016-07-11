@@ -108,6 +108,8 @@ void setScene(std::shared_ptr<Scene>& _scene) {
         m_scene = _scene;
     }
 
+    m_scene->setPixelScale(m_view->pixelScale());
+
     auto& camera = m_scene->camera();
     m_view->setCameraType(camera.type);
 
@@ -551,6 +553,10 @@ void setPixelScale(float _pixelsPerPoint) {
 
     if (m_view) {
         m_view->setPixelScale(_pixelsPerPoint);
+    }
+
+    if (m_scene) {
+        m_scene->setPixelScale(_pixelsPerPoint);
     }
 
     for (auto& style : m_scene->styles()) {
