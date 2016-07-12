@@ -56,17 +56,16 @@ extern "C" {
         return Tangram::getTilt();
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeScreenToWorldCoordinates(JNIEnv* jniEnv, jobject obj, jdoubleArray screenPos) {
-        jdouble* arr = jniEnv->GetDoubleArrayElements(screenPos, NULL);
-        Tangram::screenToWorldCoordinates(arr[0], arr[1]);
-        jniEnv->ReleaseDoubleArrayElements(screenPos, arr, 0);
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeScreenPositionToLngLat(JNIEnv* jniEnv, jobject obj, jdoubleArray coordinates) {
+        jdouble* arr = jniEnv->GetDoubleArrayElements(coordinates, NULL);
+        Tangram::screenPositionToLngLat(arr[0], arr[1], &arr[0], &arr[1]);
+        jniEnv->ReleaseDoubleArrayElements(coordinates, arr, 0);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeLongitudeLatitudeToScreenPosition(JNIEnv* jniEnv, jobject obj, jdouble lon, jdouble lat, jfloatArray screenPosition) {
-        jfloat* arr = jniEnv->GetFloatArrayElements(screenPosition, NULL);
-        bool offViewport = Tangram::lonLatToScreenPosition(lon, lat, arr[0], arr[1]);
-        jniEnv->ReleaseFloatArrayElements(screenPosition, arr, 0);
-        return offViewport;
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeLngLatToScreenPosition(JNIEnv* jniEnv, jobject obj, jdoubleArray coordinates) {
+        jdouble* arr = jniEnv->GetDoubleArrayElements(coordinates, NULL);
+        Tangram::lngLatToScreenPosition(arr[0], arr[1], &arr[0], &arr[1]);
+        jniEnv->ReleaseDoubleArrayElements(coordinates, arr, 0);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeInit(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager, jstring stylePath) {

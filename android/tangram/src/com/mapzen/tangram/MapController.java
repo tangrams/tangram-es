@@ -2,6 +2,7 @@ package com.mapzen.tangram;
 
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.PointF;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
@@ -377,25 +378,25 @@ public class MapController implements Renderer {
 
     /**
      * Find the geographic coordinates corresponding to the given position on screen
-     * @param screenX Pixels from the left edge of the screen
-     * @param screenY Pixels from the top edge of the screen
+     * @param screenPosition Position in pixels from the top-left corner of the map area
      * @return LngLat corresponding to the given point
      */
-    public LngLat coordinatesAtScreenPosition(double screenX, double screenY) {
-        double[] tmp = { screenX, screenY };
-        nativeScreenToWorldCoordinates(tmp);
+    public LngLat screenPositionToLngLat(PointF screenPosition) {
+        double[] tmp = { screenPosition.x, screenPosition.y };
+        nativeScreenPositionToLngLat(tmp);
         return new LngLat(tmp[0], tmp[1]);
     }
 
     /**
-     * Converts the geographic coordinates to a 2D screen position (in a top-left 2D screen axis,
-     * y-coordinate pointing down)
-     * @param position The geographic coordinate to be converted
-     * @param screenPosition The converted 2D position on the screen
-     * @return True if the geographic coordinates are not visible from the current camera orientation
+     * Find the position on screen corresponding to the given geographic coordinates
+     * @param lngLat Geographic coordinates
+     * @return Position in pixels from the top-left corner of the map area (the point
+     * may not lie within the viewable screen area)
      */
-    public boolean longitudeLatitudeToScreenPosition(LngLat position, float[] screenPosition) {
-        return nativeLongitudeLatitudeToScreenPosition(position.longitude, position.latitude, screenPosition);
+    public PointF lngLatToScreenPosition(LngLat lngLat) {
+        double[] tmp = { lngLat.longitude, lngLat.latitude };
+        nativeLngLatToScreenPosition(tmp);
+        return new PointF((float)tmp[0], (float)tmp[1]);
     }
 
     /**
@@ -671,7 +672,6 @@ public class MapController implements Renderer {
     private synchronized native void nativeSetPosition(double lon, double lat);
     private synchronized native void nativeSetPositionEased(double lon, double lat, float seconds, int ease);
     private synchronized native void nativeGetPosition(double[] lonLatOut);
-    private synchronized native boolean nativeLongitudeLatitudeToScreenPosition(double lon, double lat, float[] screenCoords);
     private synchronized native void nativeSetZoom(float zoom);
     private synchronized native void nativeSetZoomEased(float zoom, float seconds, int ease);
     private synchronized native float nativeGetZoom();
@@ -681,7 +681,8 @@ public class MapController implements Renderer {
     private synchronized native void nativeSetTilt(float radians);
     private synchronized native void nativeSetTiltEased(float radians, float seconds, int ease);
     private synchronized native float nativeGetTilt();
-    private synchronized native void nativeScreenToWorldCoordinates(double[] screenCoords);
+    private synchronized native void nativeScreenPositionToLngLat(double[] coordinates);
+    private synchronized native void nativeLngLatToScreenPosition(double[] coordinates);
     private synchronized native void nativeSetPixelScale(float scale);
     private synchronized native void nativeSetCameraType(int type);
     private synchronized native int nativeGetCameraType();

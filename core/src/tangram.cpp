@@ -514,25 +514,25 @@ float getTilt() {
 
 }
 
-void screenToWorldCoordinates(double& _x, double& _y) {
+void screenPositionToLngLat(double _x, double _y, double* _lng, double* _lat) {
 
     m_view->screenToGroundPlane(_x, _y);
     glm::dvec2 meters(_x + m_view->getPosition().x, _y + m_view->getPosition().y);
-    glm::dvec2 lonLat = m_view->getMapProjection().MetersToLonLat(meters);
-    _x = lonLat.x;
-    _y = lonLat.y;
+    glm::dvec2 lngLat = m_view->getMapProjection().MetersToLonLat(meters);
+    *_lng = lngLat.x;
+    *_lat = lngLat.y;
 
 }
 
-bool lonLatToScreenPosition(double _lon, double _lat, float& _x, float& _y) {
+bool lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y) {
     bool clipped = false;
 
-    glm::vec2 screenCoords = m_view->lonLatToScreenPosition(_lon, _lat, clipped);
+    glm::vec2 screenCoords = m_view->lonLatToScreenPosition(_lng, _lat, clipped);
 
-    _x = screenCoords.x;
-    _y = screenCoords.y;
+    *_x = screenCoords.x;
+    *_y = screenCoords.y;
 
-    bool withinViewport = _x >= 0.f && _x <= m_view->getWidth() && _y >= 0.f && _y <= m_view->getHeight();
+    bool withinViewport = *_x >= 0. && *_x <= m_view->getWidth() && *_y >= 0. && *_y <= m_view->getHeight();
 
     return clipped || !withinViewport;
 }
