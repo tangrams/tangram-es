@@ -379,12 +379,15 @@ public class MapController implements Renderer {
     /**
      * Find the geographic coordinates corresponding to the given position on screen
      * @param screenPosition Position in pixels from the top-left corner of the map area
-     * @return LngLat corresponding to the given point
+     * @return LngLat corresponding to the given point, or null if the screen position
+     * does not intersect a geographic location (this can happen at high tilt angles).
      */
     public LngLat screenPositionToLngLat(PointF screenPosition) {
         double[] tmp = { screenPosition.x, screenPosition.y };
-        nativeScreenPositionToLngLat(tmp);
-        return new LngLat(tmp[0], tmp[1]);
+        if (nativeScreenPositionToLngLat(tmp)) {
+            return new LngLat(tmp[0], tmp[1]);
+        }
+        return null;
     }
 
     /**
@@ -681,8 +684,8 @@ public class MapController implements Renderer {
     private synchronized native void nativeSetTilt(float radians);
     private synchronized native void nativeSetTiltEased(float radians, float seconds, int ease);
     private synchronized native float nativeGetTilt();
-    private synchronized native void nativeScreenPositionToLngLat(double[] coordinates);
-    private synchronized native void nativeLngLatToScreenPosition(double[] coordinates);
+    private synchronized native boolean nativeScreenPositionToLngLat(double[] coordinates);
+    private synchronized native boolean nativeLngLatToScreenPosition(double[] coordinates);
     private synchronized native void nativeSetPixelScale(float scale);
     private synchronized native void nativeSetCameraType(int type);
     private synchronized native int nativeGetCameraType();
