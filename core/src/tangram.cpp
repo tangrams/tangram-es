@@ -514,14 +514,15 @@ float getTilt() {
 
 }
 
-void screenPositionToLngLat(double _x, double _y, double* _lng, double* _lat) {
+bool screenPositionToLngLat(double _x, double _y, double* _lng, double* _lat) {
 
-    m_view->screenToGroundPlane(_x, _y);
+    double intersection = m_view->screenToGroundPlane(_x, _y);
     glm::dvec2 meters(_x + m_view->getPosition().x, _y + m_view->getPosition().y);
     glm::dvec2 lngLat = m_view->getMapProjection().MetersToLonLat(meters);
     *_lng = lngLat.x;
     *_lat = lngLat.y;
 
+    return (intersection >= 0);
 }
 
 bool lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y) {
