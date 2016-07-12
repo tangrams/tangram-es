@@ -17,6 +17,7 @@
 #include "platform_rpi.h"
 
 #include <iostream>
+#include "glm/trigonometric.hpp"
 
 #define KEY_ESC      113    // q
 #define KEY_ZOOM_IN  45     // -
@@ -32,7 +33,7 @@ unsigned long long timePrev, timeStart;
 static bool bUpdate = true;
 
 //==============================================================================
-void setup();
+void setup(int argc, char **argv);
 void newFrame();
 
 int main(int argc, char **argv){
@@ -44,12 +45,7 @@ int main(int argc, char **argv){
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
     // Set background color and clear buffers
-    Tangram::initialize("scene.yaml");
-    Tangram::loadSceneAsync("scene.yaml");
-    Tangram::setupGL();
-    Tangram::resize(getWindowWidth(), getWindowHeight());
-
-    setup();
+    setup(argc, argv);
 
     // Start clock
     gettimeofday(&tv, NULL);
@@ -71,8 +67,53 @@ int main(int argc, char **argv){
     return 0;
 }
 
-void setup() {
+void setup(int argc, char **argv) {
+    int width = getWindowWidth();
+    int height = getWindowHeight();
+    float rot = 0.0f;
+    float zoom = 0.0f;
+    float tilt = 0.0f;
+    double lat = 0.0f;
+    double lon = 0.0f;
+    std::string scene = "scene.yaml";
 
+    for (int i = 1; i < argc - 1; i++) {
+        std::string argName(argv[i]), argValue(argv[i + 1]);
+        if (argName == "-s" || argName == "--scene") {
+            scene = argValue;
+        } else if (argName == "-lat" ) {
+            lat = std::stod(argValue);
+        } else if (argName == "-lon" ) {
+            lon = std::stod(argValue);
+        } else if (argName == "-z" || argName == "--zoom" ) {
+            zoom = std::stof(argValue);
+        } else if (argName == "-w" || argName == "--width") {
+            width = std::stoi(argValue);
+        } else if (argName == "-h" || argName == "--height") {
+            height = std::stoi(argValue);
+        } else if (argName == "-t" || argName == "--tilt") {
+            tilt = std::stof(argValue);
+        } else if (argName == "-r" || argName == "--rotation") {
+            rot = std::stof(argValue);
+        }
+    }
+
+    Tangram::initialize(scene.c_str());
+    Tangram::loadSceneAsync(scene.c_str());
+    Tangram::setupGL();
+    Tangram::resize(width, height);
+    if (lon != 0.0f && lat != 0.0f) {
+        Tangram::setPosition(lon,lat);
+    }
+    if (zoom != 0.0f) {
+        Tangram::setZoom(zoom);
+    }
+    if (tilt != 0.0f) {
+        Tangram::setTilt(glm::radians(tilt));
+    }
+    if (rot != 0.0f) {
+        Tangram::setRotation(glm::radians(rot));
+    }
 }
 
 void newFrame() {
