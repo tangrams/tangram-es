@@ -25,11 +25,9 @@ struct TextVertex {
         uint32_t stroke;
         uint8_t alpha;
         uint8_t scale;
-        int16_t rotation;
     } state;
 
     const static float position_scale;
-    const static float rotation_scale;
     const static float alpha_scale;
 };
 

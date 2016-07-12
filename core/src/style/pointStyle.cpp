@@ -30,7 +30,6 @@ void PointStyle::constructVertexLayout() {
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_alpha", 1, GL_UNSIGNED_BYTE, true, 0},
         {"a_scale", 1, GL_UNSIGNED_BYTE, false, 0},
-        {"a_rotation", 1, GL_SHORT, false, 0},
     }));
 
     m_textStyle->constructVertexLayout();

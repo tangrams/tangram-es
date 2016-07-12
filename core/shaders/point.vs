@@ -27,7 +27,6 @@ uniform LOWP int u_pass;
 attribute vec2 a_uv;
 attribute vec2 a_position;
 attribute LOWP float a_alpha;
-attribute LOWP float a_rotation;
 attribute LOWP vec4 a_color;
 #ifdef TANGRAM_TEXT
 attribute LOWP vec4 a_stroke;
@@ -46,7 +45,6 @@ varying float v_alpha;
 
 #define UNPACK_POSITION(x) (x / 4.0) // 4 subpixel precision
 #define UNPACK_EXTRUDE(x) (x / 256.0)
-#define UNPACK_ROTATION(x) (x / 4096.0)
 #define UNPACK_TEXTURE(x) (x * u_uv_scale_factor)
 
 void main() {

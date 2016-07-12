@@ -8,7 +8,6 @@ namespace Tangram {
 using namespace LabelProperty;
 
 const float SpriteVertex::position_scale = 4.0f;
-const float SpriteVertex::rotation_scale = 4096.0f;
 const float SpriteVertex::alpha_scale = 255.f;
 const float SpriteVertex::texture_scale = 65535.f;
 
@@ -69,7 +68,7 @@ void SpriteLabel::pushTransform() {
     SpriteVertex::State state {
         quad.color,
         uint8_t(m_transform.state.alpha * SpriteVertex::alpha_scale),
-        0, 0
+        0,
     };
 
     auto& style = m_labels.m_style;

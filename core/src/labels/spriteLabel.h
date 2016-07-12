@@ -15,11 +15,9 @@ struct SpriteVertex {
         uint32_t color;
         uint8_t alpha;
         uint8_t scale;
-        int16_t rotation;
     } state;
 
     static const float position_scale;
-    static const float rotation_scale;
     static const float alpha_scale;
     static const float texture_scale;
 };

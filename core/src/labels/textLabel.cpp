@@ -10,7 +10,6 @@ namespace Tangram {
 using namespace LabelProperty;
 
 const float TextVertex::position_scale = 4.0f;
-const float TextVertex::rotation_scale = 4096.0f;
 const float TextVertex::alpha_scale = 255.f;
 
 TextLabel::TextLabel(Label::Transform _transform, Type _type, Label::Options _options,
@@ -53,7 +52,6 @@ void TextLabel::pushTransform() {
         m_fontAttrib.stroke,
         uint8_t(m_transform.state.alpha * TextVertex::alpha_scale),
         uint8_t(m_fontAttrib.fontScale),
-        0
     };
 
     auto it = m_textLabels.quads.begin() + m_vertexRange.start;
