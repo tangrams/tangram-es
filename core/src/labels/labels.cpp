@@ -35,7 +35,8 @@ void Labels::updateLabels(const View& _view, float _dt,
                           const std::vector<std::shared_ptr<Tile>>& _tiles,
                           bool _onlyTransitions) {
 
-    m_labels.clear();
+    // Keep labels for debugDraw
+    if (!_onlyTransitions) { m_labels.clear(); }
 
     m_needUpdate = false;
 
