@@ -534,7 +534,7 @@ bool lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y) {
 
     bool withinViewport = *_x >= 0. && *_x <= m_view->getWidth() && *_y >= 0. && *_y <= m_view->getHeight();
 
-    return clipped || !withinViewport;
+    return !clipped && withinViewport;
 }
 
 void setPixelScale(float _pixelsPerPoint) {

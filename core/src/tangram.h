@@ -92,7 +92,7 @@ void screenPositionToLngLat(double _x, double _y, double* _lng, double* _lat);
 
 // Given longitude and latitude coordinates, set the output coordinates to the
 // corresponding point in screen space (x right, y down); returns true if the
-// point is not visible on the screen
+// point is visible on the screen, otherwise returns false
 bool lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y);
 
 // Set the ratio of hardware pixels to logical pixels (defaults to 1.0)
