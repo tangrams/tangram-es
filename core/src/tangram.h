@@ -166,17 +166,21 @@ void runOnMainLoop(std::function<void()> _task);
 // Run this task asynchronously to Tangram's main update loop.
 void runAsyncTask(std::function<void()> _task);
 
-// Gets the viewport height in logical pixels
+// Gets the viewport height in physical pixels (framebuffer size)
 int getViewportHeight();
 
-// Gets the viewport width in logical pixels
+// Gets the viewport width in physical pixels (framebuffer size)
 int getViewportWidth();
 
 // Gets the pixel scale
 float getPixelScale();
 
-// Capture a snapshot of the current frame
-void captureSnapshot(unsigned int* data);
+// Capture a snapshot of the current frame and store it in the allocated _data
+// _data is expected to be of size getViewportHeight() * getViewportWidth()
+// Pixel data is stored starting from the lower left corner of the viewport
+// Each pixel(x, y) would be located at _data[y * getViewportWidth() + x]
+// Each unsigned int corresponds to an RGBA pixel value
+void captureSnapshot(unsigned int* _data);
 
 struct TouchItem {
     std::shared_ptr<Properties> properties;
