@@ -3985,7 +3985,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/polygon_fs_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/polygon_fs_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		12E95118F05046B89E860E28 /* CMake Rules */ = {
@@ -3996,7 +3996,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/text_fs_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/text_fs_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		2E03AC81EC084CA5B736D0DC /* CMake Rules */ = {
@@ -4007,7 +4007,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/spotLight_glsl_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/spotLight_glsl_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		3D93B75ABE4D44BCAEE4731F /* CMake Rules */ = {
@@ -4018,7 +4018,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/yaml-cpp -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/yaml-cpp/CMakeScripts/format_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/external/yaml-cpp -f $SRCROOT/build/ios/external/yaml-cpp/CMakeScripts/format_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		4023B76D6D2E4936AA3B17F4 /* CMake Rules */ = {
@@ -4029,7 +4029,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/point_vs_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/point_vs_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		437D361961374E729E3974D9 /* CMake Rules */ = {
@@ -4040,7 +4040,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/lights_glsl_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/lights_glsl_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		4CB3D7D826E04AF2A5E4A517 /* CMake Rules */ = {
@@ -4051,7 +4051,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/point_fs_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/point_fs_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		5635F64F3C444B77AFF48B32 /* CMake Rules */ = {
@@ -4062,7 +4062,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/polygon_vs_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/polygon_vs_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		5CC103BECA9C4D99A34124DD /* CMake Rules */ = {
@@ -4073,7 +4073,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/CMakeScripts/ALL_BUILD_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios -f $SRCROOT/build/ios/CMakeScripts/ALL_BUILD_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		656BE7B8DCBC4EA39BC9A2CC /* CMake Rules */ = {
@@ -4084,7 +4084,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/material_glsl_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/material_glsl_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		717EE6BAAC64492082D706FC /* CMake Rules */ = {
@@ -4095,7 +4095,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/polyline_fs_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/polyline_fs_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		8189CBDE6DB746A8B446254D /* CMake Rules */ = {
@@ -4106,7 +4106,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/debug_vs_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/debug_vs_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		82E0FAEA61F4441A8C5D9ABD /* CMake Rules */ = {
@@ -4117,7 +4117,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/sdf_fs_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/sdf_fs_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		9501BF6130A54C46BDE34E40 /* CMake Rules */ = {
@@ -4128,7 +4128,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/directionalLight_glsl_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/directionalLight_glsl_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		9E28C99E99E34983B1016594 /* CMake Rules */ = {
@@ -4139,7 +4139,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/debugPrimitive_vs_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/debugPrimitive_vs_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		A0667E1A04DB49D7B4B639D4 /* CMake Rules */ = {
@@ -4150,7 +4150,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/ambientLight_glsl_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/ambientLight_glsl_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		A26BFF4F8D064F3296C75F0C /* CMake Rules */ = {
@@ -4161,7 +4161,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/cubemap_fs_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/cubemap_fs_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		A783067AEA1245B39785C567 /* CMake PostBuild Rules */ = {
@@ -4172,7 +4172,7 @@
 			name = "CMake PostBuild Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/CMakeScripts/install_postBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios -f $SRCROOT/build/ios/CMakeScripts/install_postBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		A821166D082D4A40AD991E86 /* CMake Rules */ = {
@@ -4183,7 +4183,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/rasters_glsl_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/rasters_glsl_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		AE0D5434D3C346D8A32A33D2 /* CMake Rules */ = {
@@ -4194,7 +4194,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/cubemap_vs_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/cubemap_vs_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		BC5D603C07374F7FB9FF9195 /* CMake Rules */ = {
@@ -4205,7 +4205,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6 -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/CMakeScripts/dist_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROO)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6 -f $SRCROOT/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/CMakeScripts/dist_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		DC2F2D0291874B96A5DFAB03 /* CMake Rules */ = {
@@ -4216,7 +4216,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/polyline_vs_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/polyline_vs_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		E5BD9D32772A469AA7C04D0F /* CMake Rules */ = {
@@ -4227,7 +4227,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/CMakeScripts/ZERO_CHECK_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C build/ios -f $SRCROOT/build/ios/CMakeScripts/ZERO_CHECK_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		E76CC8ED551242F9A3551FB3 /* CMake Rules */ = {
@@ -4238,7 +4238,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/debugPrimitive_fs_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/debugPrimitive_fs_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		E8900A1E666646B38BB4B45D /* CMake Rules */ = {
@@ -4249,7 +4249,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/pointLight_glsl_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/pointLight_glsl_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		F2D2185D4C2D4EF186E3C3F2 /* CMake PostBuild Rules */ = {
@@ -4260,7 +4260,7 @@
 			name = "CMake PostBuild Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/CMakeScripts/package_postBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios -f $SRCROOT/build/ios/CMakeScripts/package_postBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 		F6B23AC1B5BC4EB5BD6CB938 /* CMake Rules */ = {
@@ -4271,7 +4271,7 @@
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core -f /Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core/CMakeScripts/debug_fs_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C $SRCROOT/build/ios/core -f $SRCROOT/build/ios/core/CMakeScripts/debug_fs_cmakeRulesBuildPhase.make$CONFIGURATION all";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -5198,7 +5198,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = rasters_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5227,7 +5227,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = cubemap_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5247,7 +5247,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/MinSizeRel";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -5262,9 +5262,9 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -5293,7 +5293,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = icucommon;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5313,7 +5313,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Release";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -5328,17 +5328,17 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -5359,7 +5359,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = alfons_wrap;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/src";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/src";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5388,7 +5388,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = material_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5417,7 +5417,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = polyline_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5446,7 +5446,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = spotLight_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5466,7 +5466,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/RelWithDebInfo";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -5478,10 +5478,10 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/geojson-vt-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/mapbox",
+					"$(SRCROOT)/external/geojson-vt-cpp/include",
+					"$(SRCROOT)/external/../core/src",
+					"$(SRCROOT)/external/../core/include",
+					"$(SRCROOT)/external/../core/include/mapbox",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -5504,7 +5504,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = "geojson-vt-cpp";
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external";
+				SYMROOT = "$(SRCROOT)/build/ios/external";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5533,7 +5533,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = cubemap_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5553,7 +5553,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/MinSizeRel";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -5569,11 +5569,11 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -5602,7 +5602,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = harfbuzz;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5622,7 +5622,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/MinSizeRel";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -5635,8 +5635,8 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -5653,7 +5653,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = freetype;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5673,7 +5673,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Release";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -5686,8 +5686,8 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/include",
+					"$(SRCROOT)/external/yaml-cpp/src",
+					"$(SRCROOT)/external/yaml-cpp/include",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -5724,7 +5724,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = "yaml-cpp";
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/yaml-cpp";
+				SYMROOT = "$(SRCROOT)/build/ios/external/yaml-cpp";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5753,7 +5753,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = debugPrimitive_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5773,7 +5773,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Debug";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -5785,10 +5785,10 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/geojson-vt-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/mapbox",
+					"$(SRCROOT)/external/geojson-vt-cpp/include",
+					"$(SRCROOT)/external/../core/src",
+					"$(SRCROOT)/external/../core/include",
+					"$(SRCROOT)/external/../core/include/mapbox",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -5811,7 +5811,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = "geojson-vt-cpp";
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external";
+				SYMROOT = "$(SRCROOT)/build/ios/external";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5831,13 +5831,13 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/ios/src";
 				INSTALL_PATH = "";
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = ALL_BUILD;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5866,7 +5866,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = point_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5891,14 +5891,14 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/ios/src";
 				INSTALL_PATH = "";
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = install;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5918,7 +5918,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Debug";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -5933,17 +5933,17 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -5964,7 +5964,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = alfons;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/src";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/src";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -5993,7 +5993,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = debug_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6018,15 +6018,15 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
 				);
 				INSTALL_PATH = "";
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = dist;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6055,7 +6055,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = polygon_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6084,7 +6084,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = spotLight_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6113,7 +6113,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = format;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/yaml-cpp";
+				SYMROOT = "$(SRCROOT)/build/ios/external/yaml-cpp";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6142,7 +6142,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = sdf_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6162,7 +6162,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/RelWithDebInfo";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -6173,7 +6173,7 @@
 					PLATFORM_IOS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/external/css-color-parser-cpp";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/external/css-color-parser-cpp";
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
 				ONLY_ACTIVE_ARCH = NO;
@@ -6193,7 +6193,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = "css-color-parser-cpp";
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external";
+				SYMROOT = "$(SRCROOT)/build/ios/external";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6222,7 +6222,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = cubemap_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6242,7 +6242,7 @@
 					arm64,
 				);
 				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.3.sdk;
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/build";
+				SYMROOT = "$(SRCROOT)/build/ios/build";
 			};
 			name = Debug;
 		};
@@ -6264,7 +6264,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = spotLight_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6293,7 +6293,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = material_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6322,7 +6322,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = cubemap_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6351,7 +6351,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = debugPrimitive_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6380,7 +6380,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = ambientLight_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6409,7 +6409,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = debugPrimitive_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6438,7 +6438,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = ambientLight_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6467,7 +6467,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = cubemap_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6496,7 +6496,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = pointLight_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6516,7 +6516,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Debug";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -6529,8 +6529,8 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/include",
+					"$(SRCROOT)/external/yaml-cpp/src",
+					"$(SRCROOT)/external/yaml-cpp/include",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -6567,7 +6567,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = "yaml-cpp";
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/yaml-cpp";
+				SYMROOT = "$(SRCROOT)/build/ios/external/yaml-cpp";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6596,7 +6596,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = directionalLight_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6625,7 +6625,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = polygon_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6645,7 +6645,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/MinSizeRel";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -6656,7 +6656,7 @@
 					PLATFORM_IOS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/external/alfons/src/linebreak";
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
 				ONLY_ACTIVE_ARCH = NO;
@@ -6672,7 +6672,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = linebreak;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/src";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/src";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6701,7 +6701,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = point_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6721,7 +6721,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/MinSizeRel";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -6734,8 +6734,8 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/include",
+					"$(SRCROOT)/external/yaml-cpp/src",
+					"$(SRCROOT)/external/yaml-cpp/include",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -6772,7 +6772,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = "yaml-cpp";
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/yaml-cpp";
+				SYMROOT = "$(SRCROOT)/build/ios/external/yaml-cpp";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6801,7 +6801,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = point_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6830,7 +6830,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = debug_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6859,7 +6859,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = sdf_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6888,7 +6888,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = debugPrimitive_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6917,7 +6917,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = debug_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -6938,7 +6938,7 @@
 				);
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/bin/Release";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/bin/Release";
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -6953,32 +6953,32 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/mapbox",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/sdf",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/stb",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/shaders",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/isect2d/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/duktape",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/css-color-parser-cpp",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/geojson-vt-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/ios/src",
+					"$(SRCROOT)/core/src",
+					"$(SRCROOT)/core/include",
+					"$(SRCROOT)/core/include/mapbox",
+					"$(SRCROOT)/core/include/sdf",
+					"$(SRCROOT)/core/include/stb",
+					"$(SRCROOT)/core/include/glm",
+					"$(SRCROOT)/core/include/shaders",
+					"$(SRCROOT)/core/include/isect2d/include",
+					"$(SRCROOT)/external/duktape",
+					"$(SRCROOT)/external/css-color-parser-cpp",
+					"$(SRCROOT)/external/geojson-vt-cpp/include",
+					"$(SRCROOT)/external/yaml-cpp/include",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
-				INFOPLIST_FILE = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/CMakeFiles/tangram.dir/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/build/ios/CMakeFiles/tangram.dir/Info.plist";
 				INSTALL_PATH = "";
 				LIBRARY_SEARCH_PATHS = "";
 				ONLY_ACTIVE_ARCH = YES;
@@ -7007,7 +7007,7 @@
 				OTHER_LDFLAGS = (
 					"-Wl,-search_paths_first",
 					"-Wl,-headerpad_max_install_names",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libcore.a",
+					"$(SRCROOT)/build/ios/lib/Release/libcore.a",
 					"-framework",
 					CoreGraphics,
 					"-framework",
@@ -7024,21 +7024,21 @@
 					CFNetwork,
 					"-framework",
 					GLKit,
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libduktape.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libcss-color-parser-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libgeojson-vt-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libyaml-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libalfons.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/liblinebreak.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libharfbuzz.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libfreetype.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libicucommon.a",
+					"$(SRCROOT)/build/ios/lib/Release/libduktape.a",
+					"$(SRCROOT)/build/ios/lib/Release/libcss-color-parser-cpp.a",
+					"$(SRCROOT)/build/ios/lib/Release/libgeojson-vt-cpp.a",
+					"$(SRCROOT)/build/ios/lib/Release/libyaml-cpp.a",
+					"$(SRCROOT)/build/ios/lib/Release/libalfons.a",
+					"$(SRCROOT)/build/ios/lib/Release/liblinebreak.a",
+					"$(SRCROOT)/build/ios/lib/Release/libharfbuzz.a",
+					"$(SRCROOT)/build/ios/lib/Release/libfreetype.a",
+					"$(SRCROOT)/build/ios/lib/Release/libicucommon.a",
 				);
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = tangram;
 				SECTORDER_FLAGS = "";
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USE_HEADERMAP = NO;
 				VALID_ARCHS = "armv7 armv7s arm64";
@@ -7069,7 +7069,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = polyline_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7089,7 +7089,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/MinSizeRel";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -7100,7 +7100,7 @@
 					PLATFORM_IOS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/external/duktape";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/external/duktape";
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
 				ONLY_ACTIVE_ARCH = NO;
@@ -7120,7 +7120,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = duktape;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external";
+				SYMROOT = "$(SRCROOT)/build/ios/external";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7140,7 +7140,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/MinSizeRel";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -7156,29 +7156,29 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/mapbox",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/sdf",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/stb",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/shaders",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/isect2d/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/duktape",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/css-color-parser-cpp",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/geojson-vt-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/core/src",
+					"$(SRCROOT)/core/include",
+					"$(SRCROOT)/core/include/mapbox",
+					"$(SRCROOT)/core/include/sdf",
+					"$(SRCROOT)/core/include/stb",
+					"$(SRCROOT)/core/include/glm",
+					"$(SRCROOT)/core/include/shaders",
+					"$(SRCROOT)/core/include/isect2d/include",
+					"$(SRCROOT)/external/duktape",
+					"$(SRCROOT)/external/css-color-parser-cpp",
+					"$(SRCROOT)/external/geojson-vt-cpp/include",
+					"$(SRCROOT)/external/yaml-cpp/include",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -7200,7 +7200,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = core;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7229,7 +7229,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = ambientLight_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7258,7 +7258,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = format;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/yaml-cpp";
+				SYMROOT = "$(SRCROOT)/build/ios/external/yaml-cpp";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7287,7 +7287,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = pointLight_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7316,7 +7316,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = debug_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7341,14 +7341,14 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/ios/src";
 				INSTALL_PATH = "";
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = install;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7368,7 +7368,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Release";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -7384,11 +7384,11 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -7417,7 +7417,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = harfbuzz;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7437,7 +7437,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/RelWithDebInfo";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -7453,11 +7453,11 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -7486,7 +7486,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = harfbuzz;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7515,7 +7515,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = spotLight_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7535,7 +7535,7 @@
 					arm64,
 				);
 				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.3.sdk;
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/build";
+				SYMROOT = "$(SRCROOT)/build/ios/build";
 			};
 			name = MinSizeRel;
 		};
@@ -7548,7 +7548,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/MinSizeRel";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -7563,17 +7563,17 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -7594,7 +7594,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = alfons;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/src";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/src";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7619,14 +7619,14 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/ios/src";
 				INSTALL_PATH = "";
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = package;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7655,7 +7655,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = sdf_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7675,7 +7675,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Release";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -7686,7 +7686,7 @@
 					PLATFORM_IOS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/external/css-color-parser-cpp";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/external/css-color-parser-cpp";
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
 				ONLY_ACTIVE_ARCH = NO;
@@ -7706,7 +7706,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = "css-color-parser-cpp";
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external";
+				SYMROOT = "$(SRCROOT)/build/ios/external";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7731,15 +7731,15 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
 				);
 				INSTALL_PATH = "";
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = dist;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7759,7 +7759,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/RelWithDebInfo";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -7774,17 +7774,17 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -7805,7 +7805,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = alfons;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/src";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/src";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7825,7 +7825,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Debug";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -7836,7 +7836,7 @@
 					PLATFORM_IOS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/external/duktape";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/external/duktape";
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
 				ONLY_ACTIVE_ARCH = NO;
@@ -7856,7 +7856,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = duktape;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external";
+				SYMROOT = "$(SRCROOT)/build/ios/external";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7876,7 +7876,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Debug";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -7891,17 +7891,17 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -7922,7 +7922,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = alfons_wrap;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/src";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/src";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7942,13 +7942,13 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/ios/src";
 				INSTALL_PATH = "";
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = ZERO_CHECK;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -7977,7 +7977,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = cubemap_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8002,15 +8002,15 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
 				);
 				INSTALL_PATH = "";
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = dist;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8039,7 +8039,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = debug_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8059,7 +8059,7 @@
 					arm64,
 				);
 				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.3.sdk;
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/build";
+				SYMROOT = "$(SRCROOT)/build/ios/build";
 			};
 			name = Release;
 		};
@@ -8081,7 +8081,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = cubemap_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8101,7 +8101,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Release";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -8117,29 +8117,29 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/mapbox",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/sdf",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/stb",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/shaders",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/isect2d/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/duktape",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/css-color-parser-cpp",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/geojson-vt-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/core/src",
+					"$(SRCROOT)/core/include",
+					"$(SRCROOT)/core/include/mapbox",
+					"$(SRCROOT)/core/include/sdf",
+					"$(SRCROOT)/core/include/stb",
+					"$(SRCROOT)/core/include/glm",
+					"$(SRCROOT)/core/include/shaders",
+					"$(SRCROOT)/core/include/isect2d/include",
+					"$(SRCROOT)/external/duktape",
+					"$(SRCROOT)/external/css-color-parser-cpp",
+					"$(SRCROOT)/external/geojson-vt-cpp/include",
+					"$(SRCROOT)/external/yaml-cpp/include",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -8161,7 +8161,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = core;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8190,7 +8190,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = polygon_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8210,7 +8210,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/MinSizeRel";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -8225,17 +8225,17 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -8256,7 +8256,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = alfons_wrap;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/src";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/src";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8285,7 +8285,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = debugPrimitive_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8314,7 +8314,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = pointLight_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8343,7 +8343,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = directionalLight_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8363,7 +8363,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/RelWithDebInfo";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -8374,7 +8374,7 @@
 					PLATFORM_IOS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/external/duktape";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/external/duktape";
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
 				ONLY_ACTIVE_ARCH = NO;
@@ -8394,7 +8394,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = duktape;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external";
+				SYMROOT = "$(SRCROOT)/build/ios/external";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8419,14 +8419,14 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/ios/src";
 				INSTALL_PATH = "";
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = package;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8446,7 +8446,7 @@
 					arm64,
 				);
 				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.3.sdk;
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/build";
+				SYMROOT = "$(SRCROOT)/build/ios/build";
 			};
 			name = RelWithDebInfo;
 		};
@@ -8468,7 +8468,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = debug_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8497,7 +8497,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = point_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8518,7 +8518,7 @@
 				);
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/bin/RelWithDebInfo";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/bin/RelWithDebInfo";
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -8533,32 +8533,32 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/mapbox",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/sdf",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/stb",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/shaders",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/isect2d/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/duktape",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/css-color-parser-cpp",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/geojson-vt-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/ios/src",
+					"$(SRCROOT)/core/src",
+					"$(SRCROOT)/core/include",
+					"$(SRCROOT)/core/include/mapbox",
+					"$(SRCROOT)/core/include/sdf",
+					"$(SRCROOT)/core/include/stb",
+					"$(SRCROOT)/core/include/glm",
+					"$(SRCROOT)/core/include/shaders",
+					"$(SRCROOT)/core/include/isect2d/include",
+					"$(SRCROOT)/external/duktape",
+					"$(SRCROOT)/external/css-color-parser-cpp",
+					"$(SRCROOT)/external/geojson-vt-cpp/include",
+					"$(SRCROOT)/external/yaml-cpp/include",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
-				INFOPLIST_FILE = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/CMakeFiles/tangram.dir/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/build/ios/CMakeFiles/tangram.dir/Info.plist";
 				INSTALL_PATH = "";
 				LIBRARY_SEARCH_PATHS = "";
 				ONLY_ACTIVE_ARCH = YES;
@@ -8587,7 +8587,7 @@
 				OTHER_LDFLAGS = (
 					"-Wl,-search_paths_first",
 					"-Wl,-headerpad_max_install_names",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libcore.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libcore.a",
 					"-framework",
 					CoreGraphics,
 					"-framework",
@@ -8604,21 +8604,21 @@
 					CFNetwork,
 					"-framework",
 					GLKit,
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libduktape.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libcss-color-parser-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libgeojson-vt-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libyaml-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libalfons.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/liblinebreak.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libharfbuzz.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libfreetype.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libicucommon.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libduktape.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libcss-color-parser-cpp.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libgeojson-vt-cpp.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libyaml-cpp.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libalfons.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/liblinebreak.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libharfbuzz.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libfreetype.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libicucommon.a",
 				);
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = tangram;
 				SECTORDER_FLAGS = "";
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USE_HEADERMAP = NO;
 				VALID_ARCHS = "armv7 armv7s arm64";
@@ -8645,14 +8645,14 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/ios/src";
 				INSTALL_PATH = "";
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = install;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8672,7 +8672,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Debug";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -8683,7 +8683,7 @@
 					PLATFORM_IOS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/external/css-color-parser-cpp";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/external/css-color-parser-cpp";
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
 				ONLY_ACTIVE_ARCH = NO;
@@ -8703,7 +8703,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = "css-color-parser-cpp";
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external";
+				SYMROOT = "$(SRCROOT)/build/ios/external";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8728,14 +8728,14 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/ios/src";
 				INSTALL_PATH = "";
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = package;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8764,7 +8764,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = debug_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8784,7 +8784,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Debug";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -8800,11 +8800,11 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -8834,7 +8834,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = harfbuzz;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8863,7 +8863,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = polygon_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8892,7 +8892,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = rasters_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8912,7 +8912,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Release";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -8927,17 +8927,17 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -8958,7 +8958,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = alfons;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/src";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/src";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -8987,7 +8987,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = sdf_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9007,7 +9007,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Release";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -9018,7 +9018,7 @@
 					PLATFORM_IOS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/external/alfons/src/linebreak";
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
 				ONLY_ACTIVE_ARCH = NO;
@@ -9034,7 +9034,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = linebreak;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/src";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/src";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9054,7 +9054,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/RelWithDebInfo";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -9069,17 +9069,17 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -9100,7 +9100,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = alfons_wrap;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/src";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/src";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9120,7 +9120,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Release";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -9131,7 +9131,7 @@
 					PLATFORM_IOS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/external/duktape";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/external/duktape";
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
 				ONLY_ACTIVE_ARCH = NO;
@@ -9151,7 +9151,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = duktape;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external";
+				SYMROOT = "$(SRCROOT)/build/ios/external";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9176,15 +9176,15 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
 				);
 				INSTALL_PATH = "";
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = dist;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9204,7 +9204,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Debug";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -9219,9 +9219,9 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -9251,7 +9251,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = icucommon;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9280,7 +9280,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = format;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/yaml-cpp";
+				SYMROOT = "$(SRCROOT)/build/ios/external/yaml-cpp";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9309,7 +9309,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = text_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9338,7 +9338,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = polyline_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9367,7 +9367,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = polyline_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9396,7 +9396,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = polygon_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9425,7 +9425,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = polyline_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9445,7 +9445,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Debug";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -9456,7 +9456,7 @@
 					PLATFORM_IOS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/external/alfons/src/linebreak";
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
 				ONLY_ACTIVE_ARCH = NO;
@@ -9472,7 +9472,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = linebreak;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/src";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/src";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9501,7 +9501,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = pointLight_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9530,7 +9530,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = text_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9550,7 +9550,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/RelWithDebInfo";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -9563,8 +9563,8 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/include",
+					"$(SRCROOT)/external/yaml-cpp/src",
+					"$(SRCROOT)/external/yaml-cpp/include",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -9601,7 +9601,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = "yaml-cpp";
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/yaml-cpp";
+				SYMROOT = "$(SRCROOT)/build/ios/external/yaml-cpp";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9621,7 +9621,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Debug";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -9634,8 +9634,8 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -9652,7 +9652,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = freetyped;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9681,7 +9681,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = point_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9710,7 +9710,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = directionalLight_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9739,7 +9739,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = polyline_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9759,13 +9759,13 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/ios/src";
 				INSTALL_PATH = "";
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = ZERO_CHECK;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9794,7 +9794,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = debug_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9814,13 +9814,13 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/ios/src";
 				INSTALL_PATH = "";
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = ALL_BUILD;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9849,7 +9849,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = polyline_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9878,7 +9878,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = material_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9903,14 +9903,14 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/ios/src";
 				INSTALL_PATH = "";
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = install;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9939,7 +9939,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = debugPrimitive_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9959,13 +9959,13 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/ios/src";
 				INSTALL_PATH = "";
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = ZERO_CHECK;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9985,7 +9985,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/RelWithDebInfo";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -9998,8 +9998,8 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -10016,7 +10016,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = freetype;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -10045,7 +10045,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = lights_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -10074,7 +10074,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = directionalLight_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -10094,13 +10094,13 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/ios/src";
 				INSTALL_PATH = "";
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = ZERO_CHECK;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -10120,13 +10120,13 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/ios/src";
 				INSTALL_PATH = "";
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = ALL_BUILD;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -10155,7 +10155,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = lights_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -10175,7 +10175,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/RelWithDebInfo";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -10186,7 +10186,7 @@
 					PLATFORM_IOS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/external/alfons/src/linebreak";
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
 				ONLY_ACTIVE_ARCH = NO;
@@ -10202,7 +10202,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = linebreak;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/src";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/src";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -10231,7 +10231,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = lights_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -10260,7 +10260,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = lights_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -10314,30 +10314,30 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/mapbox",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/sdf",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/stb",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/shaders",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/isect2d/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/duktape",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/css-color-parser-cpp",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/geojson-vt-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/ios/src",
+					"$(SRCROOT)/core/src",
+					"$(SRCROOT)/core/include",
+					"$(SRCROOT)/core/include/mapbox",
+					"$(SRCROOT)/core/include/sdf",
+					"$(SRCROOT)/core/include/stb",
+					"$(SRCROOT)/core/include/glm",
+					"$(SRCROOT)/core/include/shaders",
+					"$(SRCROOT)/core/include/isect2d/include",
+					"$(SRCROOT)/external/duktape",
+					"$(SRCROOT)/external/css-color-parser-cpp",
+					"$(SRCROOT)/external/geojson-vt-cpp/include",
+					"$(SRCROOT)/external/yaml-cpp/include",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INFOPLIST_FILE = build/ios/tangram_framework/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -10348,7 +10348,7 @@
 				OTHER_LDFLAGS = (
 					"-Wl,-search_paths_first",
 					"-Wl,-headerpad_max_install_names",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libcore.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libcore.a",
 					"-framework",
 					CoreGraphics,
 					"-framework",
@@ -10365,15 +10365,15 @@
 					CFNetwork,
 					"-framework",
 					GLKit,
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libduktape.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libcss-color-parser-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libgeojson-vt-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libyaml-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libalfons.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/liblinebreak.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libharfbuzz.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libfreetyped.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libicucommon.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libduktape.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libcss-color-parser-cpp.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libgeojson-vt-cpp.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libyaml-cpp.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libalfons.a",
+					"$(SRCROOT)/build/ios/lib/Debug/liblinebreak.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libharfbuzz.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libfreetyped.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libicucommon.a",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.mapzen.tangram-framework";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -10422,30 +10422,30 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/mapbox",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/sdf",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/stb",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/shaders",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/isect2d/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/duktape",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/css-color-parser-cpp",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/geojson-vt-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/ios/src",
+					"$(SRCROOT)/core/src",
+					"$(SRCROOT)/core/include",
+					"$(SRCROOT)/core/include/mapbox",
+					"$(SRCROOT)/core/include/sdf",
+					"$(SRCROOT)/core/include/stb",
+					"$(SRCROOT)/core/include/glm",
+					"$(SRCROOT)/core/include/shaders",
+					"$(SRCROOT)/core/include/isect2d/include",
+					"$(SRCROOT)/external/duktape",
+					"$(SRCROOT)/external/css-color-parser-cpp",
+					"$(SRCROOT)/external/geojson-vt-cpp/include",
+					"$(SRCROOT)/external/yaml-cpp/include",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INFOPLIST_FILE = build/ios/tangram_framework/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -10455,7 +10455,7 @@
 				OTHER_LDFLAGS = (
 					"-Wl,-search_paths_first",
 					"-Wl,-headerpad_max_install_names",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libcore.a",
+					"$(SRCROOT)/build/ios/lib/Release/libcore.a",
 					"-framework",
 					CoreGraphics,
 					"-framework",
@@ -10472,15 +10472,15 @@
 					CFNetwork,
 					"-framework",
 					GLKit,
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libduktape.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libcss-color-parser-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libgeojson-vt-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libyaml-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libalfons.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/liblinebreak.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libharfbuzz.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libfreetype.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release/libicucommon.a",
+					"$(SRCROOT)/build/ios/lib/Release/libduktape.a",
+					"$(SRCROOT)/build/ios/lib/Release/libcss-color-parser-cpp.a",
+					"$(SRCROOT)/build/ios/lib/Release/libgeojson-vt-cpp.a",
+					"$(SRCROOT)/build/ios/lib/Release/libyaml-cpp.a",
+					"$(SRCROOT)/build/ios/lib/Release/libalfons.a",
+					"$(SRCROOT)/build/ios/lib/Release/liblinebreak.a",
+					"$(SRCROOT)/build/ios/lib/Release/libharfbuzz.a",
+					"$(SRCROOT)/build/ios/lib/Release/libfreetype.a",
+					"$(SRCROOT)/build/ios/lib/Release/libicucommon.a",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.mapzen.tangram-framework";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -10530,30 +10530,30 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/mapbox",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/sdf",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/stb",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/shaders",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/isect2d/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/duktape",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/css-color-parser-cpp",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/geojson-vt-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/ios/src",
+					"$(SRCROOT)/core/src",
+					"$(SRCROOT)/core/include",
+					"$(SRCROOT)/core/include/mapbox",
+					"$(SRCROOT)/core/include/sdf",
+					"$(SRCROOT)/core/include/stb",
+					"$(SRCROOT)/core/include/glm",
+					"$(SRCROOT)/core/include/shaders",
+					"$(SRCROOT)/core/include/isect2d/include",
+					"$(SRCROOT)/external/duktape",
+					"$(SRCROOT)/external/css-color-parser-cpp",
+					"$(SRCROOT)/external/geojson-vt-cpp/include",
+					"$(SRCROOT)/external/yaml-cpp/include",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INFOPLIST_FILE = build/ios/tangram_framework/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -10563,7 +10563,7 @@
 				OTHER_LDFLAGS = (
 					"-Wl,-search_paths_first",
 					"-Wl,-headerpad_max_install_names",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libcore.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libcore.a",
 					"-framework",
 					CoreGraphics,
 					"-framework",
@@ -10580,15 +10580,15 @@
 					CFNetwork,
 					"-framework",
 					GLKit,
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libduktape.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libcss-color-parser-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libgeojson-vt-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libyaml-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libalfons.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/liblinebreak.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libharfbuzz.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libfreetype.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libicucommon.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libduktape.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libcss-color-parser-cpp.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libgeojson-vt-cpp.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libyaml-cpp.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libalfons.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/liblinebreak.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libharfbuzz.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libfreetype.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libicucommon.a",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.mapzen.tangram-framework";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -10638,30 +10638,30 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/mapbox",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/sdf",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/stb",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/shaders",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/isect2d/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/duktape",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/css-color-parser-cpp",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/geojson-vt-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/ios/src",
+					"$(SRCROOT)/core/src",
+					"$(SRCROOT)/core/include",
+					"$(SRCROOT)/core/include/mapbox",
+					"$(SRCROOT)/core/include/sdf",
+					"$(SRCROOT)/core/include/stb",
+					"$(SRCROOT)/core/include/glm",
+					"$(SRCROOT)/core/include/shaders",
+					"$(SRCROOT)/core/include/isect2d/include",
+					"$(SRCROOT)/external/duktape",
+					"$(SRCROOT)/external/css-color-parser-cpp",
+					"$(SRCROOT)/external/geojson-vt-cpp/include",
+					"$(SRCROOT)/external/yaml-cpp/include",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INFOPLIST_FILE = build/ios/tangram_framework/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -10671,7 +10671,7 @@
 				OTHER_LDFLAGS = (
 					"-Wl,-search_paths_first",
 					"-Wl,-headerpad_max_install_names",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libcore.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libcore.a",
 					"-framework",
 					CoreGraphics,
 					"-framework",
@@ -10688,15 +10688,15 @@
 					CFNetwork,
 					"-framework",
 					GLKit,
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libduktape.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libcss-color-parser-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libgeojson-vt-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libyaml-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libalfons.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/liblinebreak.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libharfbuzz.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libfreetype.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo/libicucommon.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libduktape.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libcss-color-parser-cpp.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libgeojson-vt-cpp.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libyaml-cpp.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libalfons.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/liblinebreak.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libharfbuzz.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libfreetype.a",
+					"$(SRCROOT)/build/ios/lib/RelWithDebInfo/libicucommon.a",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.mapzen.tangram-framework";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -10719,7 +10719,7 @@
 				);
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/bin/MinSizeRel";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/bin/MinSizeRel";
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -10734,32 +10734,32 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/mapbox",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/sdf",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/stb",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/shaders",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/isect2d/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/duktape",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/css-color-parser-cpp",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/geojson-vt-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/ios/src",
+					"$(SRCROOT)/core/src",
+					"$(SRCROOT)/core/include",
+					"$(SRCROOT)/core/include/mapbox",
+					"$(SRCROOT)/core/include/sdf",
+					"$(SRCROOT)/core/include/stb",
+					"$(SRCROOT)/core/include/glm",
+					"$(SRCROOT)/core/include/shaders",
+					"$(SRCROOT)/core/include/isect2d/include",
+					"$(SRCROOT)/external/duktape",
+					"$(SRCROOT)/external/css-color-parser-cpp",
+					"$(SRCROOT)/external/geojson-vt-cpp/include",
+					"$(SRCROOT)/external/yaml-cpp/include",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
-				INFOPLIST_FILE = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/CMakeFiles/tangram.dir/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/build/ios/CMakeFiles/tangram.dir/Info.plist";
 				INSTALL_PATH = "";
 				LIBRARY_SEARCH_PATHS = "";
 				ONLY_ACTIVE_ARCH = YES;
@@ -10788,7 +10788,7 @@
 				OTHER_LDFLAGS = (
 					"-Wl,-search_paths_first",
 					"-Wl,-headerpad_max_install_names",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libcore.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libcore.a",
 					"-framework",
 					CoreGraphics,
 					"-framework",
@@ -10805,21 +10805,21 @@
 					CFNetwork,
 					"-framework",
 					GLKit,
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libduktape.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libcss-color-parser-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libgeojson-vt-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libyaml-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libalfons.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/liblinebreak.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libharfbuzz.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libfreetype.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel/libicucommon.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libduktape.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libcss-color-parser-cpp.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libgeojson-vt-cpp.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libyaml-cpp.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libalfons.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/liblinebreak.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libharfbuzz.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libfreetype.a",
+					"$(SRCROOT)/build/ios/lib/MinSizeRel/libicucommon.a",
 				);
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = tangram;
 				SECTORDER_FLAGS = "";
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USE_HEADERMAP = NO;
 				VALID_ARCHS = "armv7 armv7s arm64";
@@ -10850,7 +10850,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = point_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -10879,7 +10879,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = cubemap_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -10899,13 +10899,13 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/ios/src";
 				INSTALL_PATH = "";
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = ALL_BUILD;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -10934,7 +10934,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = point_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -10963,7 +10963,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = text_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -10992,7 +10992,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = polygon_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11012,7 +11012,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/MinSizeRel";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -11024,10 +11024,10 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/geojson-vt-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/mapbox",
+					"$(SRCROOT)/external/geojson-vt-cpp/include",
+					"$(SRCROOT)/external/../core/src",
+					"$(SRCROOT)/external/../core/include",
+					"$(SRCROOT)/external/../core/include/mapbox",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -11050,7 +11050,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = "geojson-vt-cpp";
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external";
+				SYMROOT = "$(SRCROOT)/build/ios/external";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11071,7 +11071,7 @@
 				);
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/bin/Debug";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/bin/Debug";
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -11086,32 +11086,32 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/mapbox",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/sdf",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/stb",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/shaders",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/isect2d/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/duktape",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/css-color-parser-cpp",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/geojson-vt-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/ios/src",
+					"$(SRCROOT)/core/src",
+					"$(SRCROOT)/core/include",
+					"$(SRCROOT)/core/include/mapbox",
+					"$(SRCROOT)/core/include/sdf",
+					"$(SRCROOT)/core/include/stb",
+					"$(SRCROOT)/core/include/glm",
+					"$(SRCROOT)/core/include/shaders",
+					"$(SRCROOT)/core/include/isect2d/include",
+					"$(SRCROOT)/external/duktape",
+					"$(SRCROOT)/external/css-color-parser-cpp",
+					"$(SRCROOT)/external/geojson-vt-cpp/include",
+					"$(SRCROOT)/external/yaml-cpp/include",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
-				INFOPLIST_FILE = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/CMakeFiles/tangram.dir/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/build/ios/CMakeFiles/tangram.dir/Info.plist";
 				INSTALL_PATH = "";
 				LIBRARY_SEARCH_PATHS = "";
 				ONLY_ACTIVE_ARCH = YES;
@@ -11141,7 +11141,7 @@
 				OTHER_LDFLAGS = (
 					"-Wl,-search_paths_first",
 					"-Wl,-headerpad_max_install_names",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libcore.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libcore.a",
 					"-framework",
 					CoreGraphics,
 					"-framework",
@@ -11158,21 +11158,21 @@
 					CFNetwork,
 					"-framework",
 					GLKit,
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libduktape.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libcss-color-parser-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libgeojson-vt-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libyaml-cpp.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libalfons.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/liblinebreak.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libharfbuzz.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libfreetyped.a",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug/libicucommon.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libduktape.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libcss-color-parser-cpp.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libgeojson-vt-cpp.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libyaml-cpp.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libalfons.a",
+					"$(SRCROOT)/build/ios/lib/Debug/liblinebreak.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libharfbuzz.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libfreetyped.a",
+					"$(SRCROOT)/build/ios/lib/Debug/libicucommon.a",
 				);
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = tangram;
 				SECTORDER_FLAGS = "";
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USE_HEADERMAP = NO;
 				VALID_ARCHS = "armv7 armv7s arm64";
@@ -11199,14 +11199,14 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/ios/src";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/ios/src";
 				INSTALL_PATH = "";
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = " ";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = package;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios";
+				SYMROOT = "$(SRCROOT)/build/ios";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11226,7 +11226,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Release";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -11238,10 +11238,10 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/geojson-vt-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/mapbox",
+					"$(SRCROOT)/external/geojson-vt-cpp/include",
+					"$(SRCROOT)/external/../core/src",
+					"$(SRCROOT)/external/../core/include",
+					"$(SRCROOT)/external/../core/include/mapbox",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -11264,7 +11264,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = "geojson-vt-cpp";
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external";
+				SYMROOT = "$(SRCROOT)/build/ios/external";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11293,7 +11293,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = rasters_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11322,7 +11322,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = ambientLight_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11342,7 +11342,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Release";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -11357,9 +11357,9 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -11388,7 +11388,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = icucommon;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11417,7 +11417,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = point_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11446,7 +11446,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = polygon_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11466,7 +11466,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/MinSizeRel";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/MinSizeRel";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -11477,7 +11477,7 @@
 					PLATFORM_IOS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = "/Users/Smollinger/coding/git_projects/tangram-es-clean/external/css-color-parser-cpp";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/external/css-color-parser-cpp";
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
 				ONLY_ACTIVE_ARCH = NO;
@@ -11497,7 +11497,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = "css-color-parser-cpp";
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external";
+				SYMROOT = "$(SRCROOT)/build/ios/external";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11526,7 +11526,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = debugPrimitive_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11555,7 +11555,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = text_fs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11584,7 +11584,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = polygon_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11604,7 +11604,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Debug";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Debug";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -11620,29 +11620,29 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/mapbox",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/sdf",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/stb",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/shaders",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/isect2d/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/duktape",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/css-color-parser-cpp",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/geojson-vt-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/core/src",
+					"$(SRCROOT)/core/include",
+					"$(SRCROOT)/core/include/mapbox",
+					"$(SRCROOT)/core/include/sdf",
+					"$(SRCROOT)/core/include/stb",
+					"$(SRCROOT)/core/include/glm",
+					"$(SRCROOT)/core/include/shaders",
+					"$(SRCROOT)/core/include/isect2d/include",
+					"$(SRCROOT)/external/duktape",
+					"$(SRCROOT)/external/css-color-parser-cpp",
+					"$(SRCROOT)/external/geojson-vt-cpp/include",
+					"$(SRCROOT)/external/yaml-cpp/include",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -11664,7 +11664,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = core;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11684,7 +11684,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/RelWithDebInfo";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -11699,9 +11699,9 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -11730,7 +11730,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = icucommon;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11759,7 +11759,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = format;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/yaml-cpp";
+				SYMROOT = "$(SRCROOT)/build/ios/external/yaml-cpp";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11788,7 +11788,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = rasters_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11808,7 +11808,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/Release";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Release";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -11821,8 +11821,8 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -11839,7 +11839,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = freetype;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6";
+				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11868,7 +11868,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = polyline_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11897,7 +11897,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = material_glsl;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -11917,7 +11917,7 @@
 					arm64,
 				);
 				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/lib/RelWithDebInfo";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/RelWithDebInfo";
 				EXECUTABLE_PREFIX = lib;
 				EXECUTABLE_SUFFIX = .a;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -11933,29 +11933,29 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/mapbox",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/sdf",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/stb",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/shaders",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/core/include/isect2d/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/duktape",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/css-color-parser-cpp",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/geojson-vt-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/yaml-cpp/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/../core/include/glm",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/logger",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/src/linebreak",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
-					"/Users/Smollinger/coding/git_projects/tangram-es-clean/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
+					"$(SRCROOT)/core/src",
+					"$(SRCROOT)/core/include",
+					"$(SRCROOT)/core/include/mapbox",
+					"$(SRCROOT)/core/include/sdf",
+					"$(SRCROOT)/core/include/stb",
+					"$(SRCROOT)/core/include/glm",
+					"$(SRCROOT)/core/include/shaders",
+					"$(SRCROOT)/core/include/isect2d/include",
+					"$(SRCROOT)/external/duktape",
+					"$(SRCROOT)/external/css-color-parser-cpp",
+					"$(SRCROOT)/external/geojson-vt-cpp/include",
+					"$(SRCROOT)/external/yaml-cpp/include",
+					"$(SRCROOT)/external/alfons/src",
+					"$(SRCROOT)/external/../core/include/glm",
+					"$(SRCROOT)/external/alfons/src/logger",
+					"$(SRCROOT)/external/alfons/src/linebreak",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz-generated",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/stubdata",
+					"$(SRCROOT)/external/alfons/deps/harfbuzz-icu-freetype/icu/common/unicode",
 				);
 				INSTALL_PATH = "";
 				LIBRARY_STYLE = STATIC;
@@ -11977,7 +11977,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = core;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -12006,7 +12006,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = debugPrimitive_vs;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/Smollinger/coding/git_projects/tangram-es-clean/build/ios/core";
+				SYMROOT = "$(SRCROOT)/build/ios/core";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
