@@ -1,6 +1,7 @@
 package com.mapzen.tangram.android;
 
 import android.app.Activity;
+import android.graphics.PointF;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Window;
@@ -125,7 +126,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
     @Override
     public boolean onSingleTapConfirmed(float x, float y) {
-        LngLat tappedPoint = map.coordinatesAtScreenPosition(x, y);
+        LngLat tappedPoint = map.screenPositionToLngLat(new PointF(x, y));
 
         if (lastTappedPoint != null) {
             Map<String, String> props = new HashMap<>();
@@ -154,7 +155,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     @Override
     public boolean onDoubleTap(float x, float y) {
         map.setZoomEased(map.getZoom() + 1.f, 500);
-        LngLat tapped = map.coordinatesAtScreenPosition(x, y);
+        LngLat tapped = map.screenPositionToLngLat(new PointF(x, y));
         LngLat current = map.getPosition();
         LngLat next = new LngLat(
                 .5 * (tapped.longitude + current.longitude),

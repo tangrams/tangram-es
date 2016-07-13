@@ -76,8 +76,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
     if ((time - last_time_released) < double_tap_time) {
         // Double tap recognized
-        LngLat p { x, y };
-        Tangram::screenToWorldCoordinates(p.longitude, p.latitude);
+        LngLat p;
+        Tangram::screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
         Tangram::setPosition(p.longitude, p.latitude, 1.f);
 
         logMsg("pick feature\n");
@@ -93,8 +93,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         }
     } else if ((time - last_time_pressed) < single_tap_time) {
         // Single tap recognized
-        LngLat p1 {x, y};
-        Tangram::screenToWorldCoordinates(p1.longitude, p1.latitude);
+        LngLat p1;
+        Tangram::screenPositionToLngLat(x, y, &p1.longitude, &p1.latitude);
 
         if (!(last_point == LngLat{0, 0})) {
             LngLat p2 = last_point;

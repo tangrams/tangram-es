@@ -86,14 +86,15 @@ void setTilt(float _radians, float _duration, EaseType _e = EaseType::quint);
 // Get the tilt angle of the view in radians; 0 corresponds to straight down
 float getTilt();
 
-// Transform coordinates in screen space (x right, y down) into their longitude
-// and latitude in the map view
-void screenToWorldCoordinates(double& _x, double& _y);
+// Given coordinates in screen space (x right, y down), set the output longitude and
+// latitude to the geographic location corresponding to that point; returns false if
+// no geographic position corresponds to the screen location, otherwise returns true
+bool screenPositionToLngLat(double _x, double _y, double* _lng, double* _lat);
 
-// Get the 2D screen position (top-left screen axis, y pointing down
-// from a longitude and latitude
-// Returns true if the (lat,lon) is not visible (out of the screen)
-bool lonLatToScreenPosition(double _lon, double _lat, float& _x, float& y);
+// Given longitude and latitude coordinates, set the output coordinates to the
+// corresponding point in screen space (x right, y down); returns false if the
+// point is not visible on the screen, otherwise returns true
+bool lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y);
 
 // Set the ratio of hardware pixels to logical pixels (defaults to 1.0)
 void setPixelScale(float _pixelsPerPoint);
