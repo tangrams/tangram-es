@@ -381,11 +381,20 @@ void render() {
     FrameInfo::draw(*m_view, *m_tileManager);
 }
 
-std::vector<unsigned int> captureSnapshot() {
-    std::vector<unsigned int> pixels;
-    pixels.resize(m_view->getWidth() * m_view->getHeight());
-    GL_CHECK(glReadPixels(0, 0, m_view->getWidth(), m_view->getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)pixels.data()));
-    return pixels;
+int getViewportHeight() {
+    return m_view->getHeight();
+}
+
+int getViewportWidth() {
+    return m_view->getWidth();
+}
+
+float getPixelScale() {
+    return m_view->pixelScale();
+}
+
+void captureSnapshot(unsigned int* _data) {
+    GL_CHECK(glReadPixels(0, 0, m_view->getWidth(), m_view->getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)_data));
 }
 
 void setPositionNow(double _lon, double _lat) {

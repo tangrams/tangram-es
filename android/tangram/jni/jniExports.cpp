@@ -245,14 +245,10 @@ extern "C" {
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeCaptureSnapshot(JNIEnv* jniEnv, jobject obj, jintArray buffer) {
-        jint* arr = jniEnv->GetIntArrayElements(buffer, NULL);
-        std::vector<unsigned int> snapshot = Tangram::captureSnapshot();
-
-        for (int i = 0; i < snapshot.size(); ++i) {
-            arr[i] = snapshot[i];
-        }
-
-        jniEnv->ReleaseIntArrayElements(buffer, arr, 0);
+        jint* ptr = jniEnv->GetIntArrayElements(buffer, NULL);
+        unsigned int* data = reinterpret_cast<unsigned int*>(ptr);
+        Tangram::captureSnapshot(data);
+        jniEnv->ReleaseIntArrayElements(buffer, ptr, JNI_ABORT);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeQueueSceneUpdate(JNIEnv* jnienv, jobject obj, jstring path, jstring value) {
