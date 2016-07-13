@@ -23,8 +23,7 @@ SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Op
 }
 
 void SpriteLabel::applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
-    LabelProperty::Anchor _anchor)
-{
+                              LabelProperty::Anchor _anchor) {
     // _dimension is not applied to the sprite anchor since fractionnal zoom
     // level would result in scaling the sprite size dynamically, instead we
     // store a factor between 0..1 to scale the sprite accordingly
@@ -44,10 +43,7 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
     glm::vec2 sp = m_transform.state.screenPos;
     glm::vec2 dim = m_dim + glm::vec2(m_extrudeScale * 2.f * _zoomFract);
 
-    if (m_occludedLastFrame) { dim += 2; }
-
-    // FIXME: Only for testing
-    if (state() == State::dead) { dim -= 4; }
+    if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
 
     m_obb = OBB({sp.x + halfSize.x, sp.y - halfSize.y},
                 m_transform.state.rotation, dim.x, dim.y);

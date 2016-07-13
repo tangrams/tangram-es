@@ -31,7 +31,7 @@ void TextLabel::updateBBoxes(float _zoomFract) {
 
     glm::vec2 dim = m_dim - m_options.buffer;
 
-    if (m_occludedLastFrame) { dim += 2; }
+    if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
 
     // FIXME: Only for testing
     if (state() == State::dead) { dim -= 4; }

@@ -6,6 +6,8 @@
 
 namespace Tangram {
 
+const float Label::activation_distance_threshold = 2;
+
 Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _options, LabelProperty::Anchor _anchor)
     : m_type(_type),
       m_transform(_transform),

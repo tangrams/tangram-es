@@ -78,6 +78,8 @@ public:
         size_t paramHash = 0;
     };
 
+    static const float activation_distance_threshold;
+
     Label(Transform _transform, glm::vec2 _size, Type _type, Options _options, LabelProperty::Anchor _anchor);
 
     virtual ~Label();
@@ -193,4 +195,3 @@ namespace std {
         }
     };
 }
-
