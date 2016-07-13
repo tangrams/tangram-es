@@ -2,6 +2,7 @@
 
 #include "labels/labelSet.h"
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/norm.hpp"
 
 #define TILE_SIZE 256
 #define MAX_SCALE 2
