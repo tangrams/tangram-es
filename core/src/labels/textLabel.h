@@ -23,8 +23,8 @@ struct TextVertex {
     struct State {
         uint32_t color;
         uint32_t stroke;
-        uint8_t alpha;
-        uint8_t scale;
+        uint16_t alpha;
+        uint16_t scale;
     } state;
 
     const static float position_scale;

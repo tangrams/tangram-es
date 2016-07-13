@@ -13,8 +13,8 @@ struct SpriteVertex {
     glm::u16vec2 uv;
     struct State {
         uint32_t color;
-        uint8_t alpha;
-        uint8_t scale;
+        uint16_t alpha;
+        uint16_t scale;
     } state;
 
     static const float position_scale;

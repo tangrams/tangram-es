@@ -28,8 +28,8 @@ void TextStyle::constructVertexLayout() {
         {"a_uv", 2, GL_UNSIGNED_SHORT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_stroke", 4, GL_UNSIGNED_BYTE, true, 0},
-        {"a_alpha", 1, GL_UNSIGNED_BYTE, true, 0},
-        {"a_scale", 1, GL_UNSIGNED_BYTE, false, 0},
+        {"a_alpha", 1, GL_UNSIGNED_SHORT, true, 0},
+        {"a_scale", 1, GL_UNSIGNED_SHORT, false, 0},
     }));
 }
 
