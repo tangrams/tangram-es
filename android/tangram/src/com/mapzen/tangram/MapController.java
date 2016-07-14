@@ -797,6 +797,8 @@ public class MapController implements Renderer {
                 BufferedSource source = response.body().source();
                 byte[] bytes = source.readByteArray();
                 nativeOnUrlSuccess(bytes, callbackPtr);
+
+                response.body().close();
             }
         });
         return true;

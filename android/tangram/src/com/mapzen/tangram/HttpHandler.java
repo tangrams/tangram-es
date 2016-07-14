@@ -2,18 +2,41 @@ package com.mapzen.tangram;
 
 import com.squareup.okhttp.Cache;
 import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+
+import android.util.Log;
 
 /**
  * {@code HttpHandler} is a class for customizing HTTP requests for map resources, it can be
  * extended to override the request or caching behavior.
  */
 public class HttpHandler {
+
+
+    class LoggingInterceptor implements Interceptor {
+        @Override public Response intercept(Interceptor.Chain chain) throws IOException {
+            Request request = chain.request();
+
+            long t1 = System.nanoTime();
+            Log.d("tangram", String.format("Sending request %s on %s",
+                                           request.url(), chain.connection()));
+
+            Response response = chain.proceed(request);
+
+            long t2 = System.nanoTime();
+            Log.d("tangram", String.format("Received response for %s in %.1fms",
+                                           response.request().url(), (t2 - t1) / 1e6d));
+
+            return response;
+        }
+    }
 
     private OkHttpClient okClient;
     protected Request.Builder okRequestBuilder;
@@ -23,9 +46,14 @@ public class HttpHandler {
      */
     public HttpHandler() {
         okRequestBuilder = new Request.Builder();
+
+        // This tells okhttp that we decode ourself!
+        okRequestBuilder.addHeader("Accept-Encoding", "gzip");
+
         okClient = new OkHttpClient();
         okClient.setConnectTimeout(10, TimeUnit.SECONDS);
         okClient.setReadTimeout(30, TimeUnit.SECONDS);
+        okClient.networkInterceptors().add(new LoggingInterceptor());
     }
 
     /**

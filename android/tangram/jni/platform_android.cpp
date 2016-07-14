@@ -25,6 +25,11 @@
 #include <sys/resource.h>
 #include <fstream>
 #include <algorithm>
+#include <cassert>
+#include <mutex>
+#include <chrono>
+
+#include <zlib.h>
 
 #include <regex>
 
@@ -283,16 +288,83 @@ void cancelUrlRequest(const std::string& _url) {
     jniRenderThreadEnv->CallVoidMethod(tangramInstance, cancelUrlRequestMID, jUrl);
 }
 
+#define CHUNK 16384
+
+std::mutex mutexDecode;
+std::vector<char> bufferIn;
+std::vector<char> bufferOut;
+
+int inflate(const std::vector<char>& source, std::vector<char>& dst) {
+
+    int ret;
+    unsigned char out[CHUNK];
+
+    z_stream strm;
+    memset(&strm, 0, sizeof(z_stream));
+
+    ret = inflateInit2(&strm, 16+MAX_WBITS);
+
+    if (ret != Z_OK)
+        return ret;
+
+    strm.avail_in = source.size();
+    strm.next_in = (Bytef*)source.data();
+
+    do {
+        strm.avail_out = CHUNK;
+        strm.next_out = out;
+
+        ret = inflate(&strm, Z_NO_FLUSH);
+
+         /* state not clobbered */
+        assert(ret != Z_STREAM_ERROR);
+
+        switch (ret) {
+        case Z_NEED_DICT:
+            ret = Z_DATA_ERROR;     /* and fall through */
+        case Z_DATA_ERROR:
+        case Z_MEM_ERROR:
+            inflateEnd(&strm);
+            return ret;
+        }
+
+        size_t have = CHUNK - strm.avail_out;
+        dst.insert(dst.end(), out, out+have);
+
+    } while (ret == Z_OK);
+
+    inflateEnd(&strm);
+
+    return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
+}
+
 void onUrlSuccess(JNIEnv* _jniEnv, jbyteArray _jBytes, jlong _jCallbackPtr) {
-
-    size_t length = _jniEnv->GetArrayLength(_jBytes);
-    std::vector<char> content;
-    content.resize(length);
-
-    _jniEnv->GetByteArrayRegion(_jBytes, 0, length, reinterpret_cast<jbyte*>(content.data()));
+    const clock_t begin = clock();
 
     UrlCallback* callback = reinterpret_cast<UrlCallback*>(_jCallbackPtr);
+    size_t length = _jniEnv->GetArrayLength(_jBytes);
+
+    std::vector<char> content;
+    {
+        std::lock_guard<std::mutex> lock(mutexDecode);
+
+        bufferIn.resize(length);
+        bufferOut.clear();
+        _jniEnv->GetByteArrayRegion(_jBytes, 0, length, reinterpret_cast<jbyte*>(bufferIn.data()));
+
+        int ret = inflate(bufferIn, bufferOut);
+
+        content.insert(content.begin(), bufferOut.begin(), bufferOut.end());
+
+        logMsg("<<< %d <<<< => %d, ok:%d", bufferIn.size(), bufferOut.size(), ret);
+    }
+
     (*callback)(std::move(content));
+
+    double loadTime = (double(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+    //double loadTime = (double(clock()) - double(begin)) * 1000.0;
+    logMsg("unzipped %f\n", loadTime);
+
     delete callback;
 }
 
