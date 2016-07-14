@@ -2,6 +2,7 @@ tangram-es
 ==========
 
 [![Travis CI Build Status](https://travis-ci.org/tangrams/tangram-es.svg?branch=master)](https://travis-ci.org/tangrams/tangram-es/builds)
+[![Gitter](https://badges.gitter.im/pelias/pelias.svg)](https://gitter.im/tangrams/tangram-chat?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
 
 ![screenshot](images/screenshot.png)
 
