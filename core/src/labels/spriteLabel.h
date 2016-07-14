@@ -11,20 +11,15 @@ class PointStyle;
 struct SpriteVertex {
     glm::i16vec2 pos;
     glm::u16vec2 uv;
-    uint32_t color;
-    glm::i16vec2 extrude;
     struct State {
-        glm::i16vec2 screenPos;
-        uint8_t alpha;
-        uint8_t scale;
-        int16_t rotation;
+        uint32_t color;
+        uint16_t alpha;
+        uint16_t scale;
     } state;
 
     static const float position_scale;
-    static const float rotation_scale;
     static const float alpha_scale;
     static const float texture_scale;
-    static const float extrusion_scale;
 };
 
 class SpriteLabel : public Label {
@@ -35,11 +30,8 @@ public:
                 SpriteLabels& _labels, size_t _labelsPos);
 
     void updateBBoxes(float _zoomFract) override;
-    void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) override;
 
     void pushTransform() override;
-
-    glm::vec2 anchor() const override;
 
 private:
 
@@ -57,7 +49,6 @@ struct SpriteQuad {
     struct {
         glm::i16vec2 pos;
         glm::u16vec2 uv;
-        glm::i16vec2 extrude;
     } quad[4];
     // TODO color and stroke must not be stored per quad
     uint32_t color;
@@ -67,8 +58,8 @@ class SpriteLabels : public LabelSet {
 public:
     SpriteLabels(const PointStyle& _style) : m_style(_style) {}
 
-    void setQuads(std::vector<SpriteQuad>& _quads) {
-        quads.insert(quads.end(), _quads.begin(), _quads.end());
+    void setQuads(std::vector<SpriteQuad>&& _quads) {
+        quads = std::move(_quads);
     }
 
     // TODO: hide within class if needed

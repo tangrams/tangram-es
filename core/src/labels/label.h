@@ -3,8 +3,8 @@
 #include "glm/vec2.hpp"
 #include "glm/mat4x4.hpp"
 #include <climits> // needed in aabb.h
-#include "isect2d.h"
-#include "glm_vec.h" // for isect2d.h
+#include "aabb.h"
+#include "obb.h"
 #include "fadeEffect.h"
 #include "util/types.h"
 #include "util/hash.h"
@@ -51,8 +51,8 @@ public:
 
         struct {
             glm::vec2 screenPos;
+            glm::vec2 rotation;
             float alpha = 0.f;
-            float rotation = 0.f;
         } state;
     };
 
@@ -78,11 +78,13 @@ public:
         size_t paramHash = 0;
     };
 
+    static const float activation_distance_threshold;
+
     Label(Transform _transform, glm::vec2 _size, Type _type, Options _options, LabelProperty::Anchor _anchor);
 
     virtual ~Label();
 
-    bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract);
+    bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _allLabels = false);
 
     /* Push the pending transforms to the vbo by updating the vertices */
     virtual void pushTransform() = 0;
@@ -96,7 +98,7 @@ public:
     virtual void updateBBoxes(float _zoomFract) = 0;
 
     /* Occlude the label */
-    void occlude(bool _occlusion = true);
+    void occlude(bool _occlusion = true) { m_occluded = _occlusion; }
 
     /* Checks whether the label is in a state where it can occlusion */
     bool canOcclude();
@@ -108,16 +110,12 @@ public:
 
     void resetState();
 
-    void setProxy(bool _proxy);
-
-    /* Whether the label belongs to a proxy tile */
-    bool isProxy() const { return m_proxy; }
     size_t hash() const { return m_options.paramHash; }
     const glm::vec2& dimension() const { return m_dim; }
     /* Gets for label options: color and offset */
     const Options& options() const { return m_options; }
     /* Gets the extent of the oriented bounding box of the label */
-    const AABB& aabb() const { return m_aabb; }
+    AABB aabb() const { return m_obb.getExtent(); }
     /* Gets the oriented bounding box of the label */
     const OBB& obb() const { return m_obb; }
     const Transform& transform() const { return m_transform; }
@@ -128,11 +126,13 @@ public:
     const Label* parent() const { return m_parent; }
     void setParent(const Label& parent, bool definePriority);
 
-    virtual glm::vec2 anchor() const { return m_anchor; }
     LabelProperty::Anchor anchorType() const { return m_anchorType; }
 
     virtual glm::vec2 center() const;
 
+    void enterState(const State& _state, float _alpha = 1.0f);
+
+    Type type() const { return m_type; }
 private:
 
     virtual void applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
@@ -140,32 +140,23 @@ private:
 
     bool offViewport(const glm::vec2& _screenSize);
 
-    inline void enterState(const State& _state, float _alpha = 1.0f);
-
     void setAlpha(float _alpha);
 
-    bool m_proxy;
     // the current label state
     State m_state;
     // the label fade effect
     FadeEffect m_fade;
-    // whether the label was occluded on the previous frame
-    bool m_occludedLastFrame;
-    bool m_occluded;
 
 protected:
 
-    // set alignment on _screenPosition based on anchor points _ap1, _ap2
-    virtual void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) = 0;
+    // whether the label was occluded on the previous frame
+    bool m_occludedLastFrame;
+    bool m_occluded;
 
     // the label type (point/line)
     Type m_type;
     // the label oriented bounding box
     OBB m_obb;
-    // the label axis aligned bounding box
-    AABB m_aabb;
-    // whether the label is dirty, this determines whether or no to update the geometry
-    bool m_dirty;
     // the label transforms
     Transform m_transform;
     // the dimension of the label
@@ -175,12 +166,6 @@ protected:
 
     LabelProperty::Anchor m_anchorType;
     glm::vec2 m_anchor;
-
-    glm::vec2 m_xAxis;
-    glm::vec2 m_yAxis;
-
-    // whether or not we need to update the mesh visibilit (alpha channel)
-    bool m_updateMeshVisibility;
 
     const Label* m_parent;
 
@@ -210,4 +195,3 @@ namespace std {
         }
     };
 }
-

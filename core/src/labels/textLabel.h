@@ -1,7 +1,6 @@
 #pragma once
 
 #include "labels/label.h"
-#include "labels/labelSet.h"
 
 #include <glm/glm.hpp>
 
@@ -24,14 +23,11 @@ struct TextVertex {
     struct State {
         uint32_t color;
         uint32_t stroke;
-        glm::i16vec2 screenPos;
-        uint8_t alpha;
-        uint8_t scale;
-        int16_t rotation;
+        uint16_t alpha;
+        uint16_t scale;
     } state;
 
     const static float position_scale;
-    const static float rotation_scale;
     const static float alpha_scale;
 };
 
@@ -51,8 +47,9 @@ public:
 
     void updateBBoxes(float _zoomFract) override;
 
+    Range& quadRange() { return m_vertexRange; }
+
 protected:
-    void align(glm::vec2& _screenPosition, const glm::vec2& _ap1, const glm::vec2& _ap2) override;
 
     void pushTransform() override;
 
@@ -63,7 +60,7 @@ private:
     // Back-pointer to owning container
     const TextLabels& m_textLabels;
     // first vertex and count in m_textLabels quads
-    const Range m_vertexRange;
+    Range m_vertexRange;
 
     FontVertexAttributes m_fontAttrib;
 };

@@ -108,6 +108,8 @@ void setScene(std::shared_ptr<Scene>& _scene) {
         m_scene = _scene;
     }
 
+    m_scene->setPixelScale(m_view->pixelScale());
+
     auto& camera = m_scene->camera();
     m_view->setCameraType(camera.type);
 
@@ -553,6 +555,10 @@ void setPixelScale(float _pixelsPerPoint) {
         m_view->setPixelScale(_pixelsPerPoint);
     }
 
+    if (m_scene) {
+        m_scene->setPixelScale(_pixelsPerPoint);
+    }
+
     for (auto& style : m_scene->styles()) {
         style->setPixelScale(_pixelsPerPoint);
     }
@@ -656,6 +662,7 @@ void toggleDebugFlag(DebugFlags _flag) {
     // Rebuild tiles for debug modes that needs it
     if (_flag == DebugFlags::proxy_colors
      || _flag == DebugFlags::tile_bounds
+     || _flag == DebugFlags::all_labels
      || _flag == DebugFlags::tile_infos) {
         if (m_tileManager) {
             std::lock_guard<std::mutex> lock(m_tilesMutex);

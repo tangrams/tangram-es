@@ -1,5 +1,7 @@
 #include "textStyleBuilder.h"
 
+#include "labels/labelCollider.h"
+#include "labels/labelSet.h"
 #include "labels/textLabel.h"
 #include "labels/textLabels.h"
 
@@ -9,6 +11,7 @@
 #include "util/geom.h"
 #include "util/mapProjection.h"
 #include "view/view.h"
+#include "tangram.h"
 
 #include <cmath>
 #include <locale>
@@ -26,16 +29,102 @@ TextStyleBuilder::TextStyleBuilder(const TextStyle& _style)
 
 void TextStyleBuilder::setup(const Tile& _tile){
     m_tileSize = _tile.getProjection()->TileSize();
+    m_tileSize *= m_style.pixelScale();
+
+    float tileScale = pow(2, _tile.getID().s - _tile.getID().z);
+    m_tileSize *= tileScale;
+
+    // add scale factor to the next zoom-level
+    m_tileSize *= 2;
+
     m_atlasRefs.reset();
 
     m_textLabels = std::make_unique<TextLabels>(m_style);
 }
 
+void TextStyleBuilder::addLayoutItems(LabelCollider& _layout) {
+    _layout.addLabels(m_labels);
+}
+
 std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
+
     if (m_quads.empty()) { return nullptr; }
 
-    m_textLabels->setLabels(m_labels);
-    m_textLabels->setQuads(m_quads, m_atlasRefs);
+    if (Tangram::getDebugFlag(DebugFlags::all_labels)) {
+        m_textLabels->setLabels(m_labels);
+
+        std::vector<GlyphQuad> quads(m_quads);
+        m_textLabels->setQuads(std::move(quads), m_atlasRefs);
+
+    } else {
+
+        // TODO this could probably done more elegant
+
+        int quadPos = 0;
+        size_t sumQuads = 0;
+        size_t sumLabels = 0;
+        bool added = false;
+
+        // Determine number of labels and size of final quads vector
+        for (auto& label : m_labels) {
+            auto* textLabel = static_cast<TextLabel*>(label.get());
+
+            auto& range = textLabel->quadRange();
+            bool active = textLabel->state() != Label::State::dead;
+
+            if (range.end() != quadPos) {
+                quadPos = range.end();
+                added = false;
+            }
+
+            if (!active) { continue; }
+
+            sumLabels +=1;
+            if (!added) {
+                added = true;
+                sumQuads += range.length;
+            }
+        }
+
+        size_t quadEnd = 0;
+        size_t quadStart = 0;
+        quadPos = 0;
+
+        std::vector<std::unique_ptr<Label>> labels;
+        labels.reserve(sumLabels);
+
+        std::vector<GlyphQuad> quads;
+        quads.reserve(sumQuads);
+
+        // Add only alive labels
+        for (auto& label : m_labels) {
+            auto* textLabel = static_cast<TextLabel*>(label.get());
+
+            auto& range = textLabel->quadRange();
+            bool active = textLabel->state() != Label::State::dead;
+
+            if (range.end() != quadPos) {
+                quadStart = quadEnd;
+                quadPos = range.end();
+                added = false;
+            }
+
+            if (!active) { continue; }
+            if (!added) {
+                added = true;
+                quadEnd += range.length;
+
+                auto it = m_quads.begin() + range.start;
+                quads.insert(quads.end(), it, it + range.length);
+            }
+            range.start = quadStart;
+
+            labels.push_back(std::move(label));
+        }
+
+        m_textLabels->setLabels(labels);
+        m_textLabels->setQuads(std::move(quads), m_atlasRefs);
+    }
 
     m_labels.clear();
     m_quads.clear();
@@ -83,30 +172,78 @@ void TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
 
     } else if (_feat.geometryType == GeometryType::lines) {
 
-        float pixel = 2.0 / (m_tileSize * m_style.pixelScale());
-        float minLength = m_attributes.width * pixel * 0.2;
-
-        for (auto& line : _feat.lines) {
-            if (_iconText) {
+        if (_iconText) {
+            for (auto& line : _feat.lines) {
                 for (auto& point : line) {
                     auto p = glm::vec2(point);
                     addLabel(params, Label::Type::point, { p });
                 }
-            } else {
-                for (size_t i = 0; i < line.size() - 1; i++) {
-                    glm::vec2 p1 = glm::vec2(line[i]);
-                    glm::vec2 p2 = glm::vec2(line[i + 1]);
-                    if (glm::length(p1-p2) > minLength) {
-                        addLabel(params, Label::Type::line, { p1, p2 });
-                    }
-                }
             }
+        } else {
+            addLineTextLabels(_feat, params);
         }
     }
 
     if (numLabels == m_labels.size()) {
         // Drop quads when no label was added
         m_quads.resize(quadsStart);
+    }
+}
+
+void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::Parameters& _params) {
+    float pixelScale = 1.0/m_tileSize;
+    float minLength = m_attributes.width * pixelScale;
+
+    float tolerance = pow(pixelScale * 2, 2);
+
+    for (auto& line : _feat.lines) {
+
+        for (size_t i = 0; i < line.size() - 1; i++) {
+            glm::vec2 p1 = glm::vec2(line[i]);
+            glm::vec2 p2;
+
+            float segmentLength = 0;
+            bool merged = false;
+            size_t next = i+1;
+
+            for (size_t j = next; j < line.size(); j++) {
+                glm::vec2 p = glm::vec2(line[j]);
+                segmentLength = glm::length(p1 - p);
+
+                if (j == next) {
+                    if (segmentLength > minLength) {
+                        addLabel(_params, Label::Type::line, { p1, p });
+                    }
+                } else {
+                    glm::vec2 pp = glm::vec2(line[j-1]);
+
+                    float d = sqPointSegmentDistance(pp, p1, p);
+                    if (d > tolerance) { break; }
+
+                    // Skip merged segment
+                    merged = true;
+                    i += 1;
+                }
+                p2 = p;
+            }
+
+            // place labels at segment-subdivisions
+            int run = merged ? 1 : 2;
+            segmentLength /= run;
+
+            while (segmentLength > minLength && run <= 4) {
+                glm::vec2 a = p1;
+                glm::vec2 b = glm::vec2(p2 - p1) / float(run);
+
+                for (int r = 0; r < run; r++) {
+                    addLabel(_params, Label::Type::line, { a, a+b });
+                    a += b;
+                }
+                run *= 2;
+                segmentLength /= 2.0f;
+            }
+
+        }
     }
 }
 

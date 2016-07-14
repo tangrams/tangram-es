@@ -9,9 +9,9 @@ namespace Tangram {
 
 class LabelSet : public StyledMesh {
 public:
-    const std::vector<std::unique_ptr<Label>>& getLabels() const {
-        return m_labels;
-    }
+
+    const auto& getLabels() const { return m_labels; }
+    auto& getLabels() { return m_labels; }
 
     virtual ~LabelSet();
 

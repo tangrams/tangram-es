@@ -13,13 +13,7 @@ struct IconMesh : LabelSet {
     std::unique_ptr<StyledMesh> textLabels;
     std::unique_ptr<StyledMesh> spriteLabels;
 
-    void addLabels(std::vector<std::unique_ptr<Label>>& _labels) {
-        typedef std::vector<std::unique_ptr<Label>>::iterator iter_t;
-        m_labels.insert(m_labels.end(),
-                        std::move_iterator<iter_t>(_labels.begin()),
-                        std::move_iterator<iter_t>(_labels.end()));
-    }
-
+    void setTextLabels(std::unique_ptr<StyledMesh> _textLabels);
 };
 
 struct PointStyleBuilder : public StyleBuilder {
@@ -50,15 +44,15 @@ struct PointStyleBuilder : public StyleBuilder {
     void addLabel(const Point& _point, const glm::vec4& _quad,
                   const PointStyle::Parameters& _params);
 
-    auto& labels() { return m_labels; }
+    void addLayoutItems(LabelCollider& _layout) override;
 
-    virtual void addFeature(const Feature& _feat, const DrawRule& _rule) override;
+    void addFeature(const Feature& _feat, const DrawRule& _rule) override;
 
 private:
     std::vector<std::unique_ptr<Label>> m_labels;
     std::vector<SpriteQuad> m_quads;
 
-    std::unique_ptr<IconMesh> iconMesh;
+    std::unique_ptr<IconMesh> m_iconMesh;
 
     float m_zoom;
     std::unique_ptr<SpriteLabels> m_spriteLabels;
