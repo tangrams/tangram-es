@@ -62,6 +62,8 @@ Scene::Scene(const Scene& _other)
 
     m_path = _other.m_path;
     m_resourceRoot = _other.m_resourceRoot;
+
+    m_mapProjection.reset(new MercatorProjection());
 }
 
 Scene::~Scene() {}
