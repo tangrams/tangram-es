@@ -1,2 +1,2 @@
 // Substitute for Mapbox mason-installed header
-#include "variant/variant.hpp"
+#include "variant/include/mapbox/variant.hpp"
