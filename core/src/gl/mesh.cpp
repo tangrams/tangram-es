@@ -102,16 +102,17 @@ void MeshBase::subDataUpload(GLbyte* _data) {
     // invalidate/orphane the data store on the driver
     GL_CHECK(glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint));
 
+    GLvoid* dataStore = nullptr;
     if (Hardware::supportsMapBuffer) {
-        GLvoid* dataStore = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+        dataStore = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
         GL_CHECK();
+        GL_CHECK(glUnmapBuffer(GL_ARRAY_BUFFER));
+    }
 
+    if (dataStore) {
         // write memory client side
         std::memcpy(dataStore, data, vertexBytes);
-
-        GL_CHECK(glUnmapBuffer(GL_ARRAY_BUFFER));
     } else {
-
         // if this buffer is still used by gpu on current frame this call will not wait
         // for the frame to finish using the vbo but "directly" send command to upload the data
         GL_CHECK(glBufferData(GL_ARRAY_BUFFER, vertexBytes, data, m_hint));
