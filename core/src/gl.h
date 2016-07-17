@@ -524,8 +524,8 @@ extern "C" {
     void __glUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 
     // mapbuffer
-    void* __glMapBuffer(GLenum target, GLenum access);
-    GLboolean __glUnmapBuffer(GLenum target);
+    void* __glMapBufferOES(GLenum target, GLenum access);
+    GLboolean __glUnmapBufferOES(GLenum target);
 
     void __glFinish(void);
 
@@ -623,8 +623,8 @@ extern "C" {
     #define glUniformMatrix4fv __glUniformMatrix4fv
 
     // mapbuffer
-    #define glMapBuffer __glMapBuffer
-    #define glUnmapBuffer __glUnmapBuffer
+    #define glMapBuffer __glMapBufferOES
+    #define glUnmapBuffer __glUnmapBufferOES
 
     #define glFinish __glFinish
 

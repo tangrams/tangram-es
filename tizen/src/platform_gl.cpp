@@ -248,8 +248,12 @@ void __glUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, co
 }
 
 // mapbuffer
-void* __glMapBuffer(GLenum target, GLenum access) { return nullptr; }
-GLboolean __glUnmapBuffer(GLenum target) { return false; }
+void* __glMapBufferOES(GLenum target, GLenum access) {
+    return __evas_gl_glapi->glMapBufferOES(target, access);
+}
+GLboolean __glUnmapBufferOES(GLenum target) {
+    return __evas_gl_glapi->glUnmapBufferOES(target);
+}
 
 void __glFinish(void) {
     __evas_gl_glapi->glFinish();
