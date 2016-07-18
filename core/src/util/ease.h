@@ -1,18 +1,12 @@
 #pragma once
 
+#include "tangram.h"
 #include <cmath>
 #include <functional>
 
 namespace Tangram {
 
 using EaseCb = std::function<void (float)>;
-
-enum class EaseType : char {
-    linear = 0,
-    cubic,
-    quint,
-    sine,
-};
 
 template<typename T>
 T ease(T _start, T _end, float _t, EaseType _e) {
