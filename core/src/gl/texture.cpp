@@ -84,18 +84,20 @@ Texture& Texture::operator=(Texture&& _other) {
 
 Texture::~Texture() {
     if (m_glHandle) {
-        Tangram::runOnMainLoop([id = m_glHandle, t = m_target, g = m_generation]() {
-                if (RenderState::isValidGeneration(g)) {
-                    GL_CHECK(glDeleteTextures(1, &id));
 
-                    // if the texture is bound, and deleted, the binding defaults to 0
-                    // according to the OpenGL spec, in this case we need to force the
-                    // currently bound texture to 0 in the render states
-                    if (RenderState::texture.compare(t, id)) {
-                        RenderState::texture.init(t, 0, false);
-                    }
+        m_mainThreadJobQueue.add([id = m_glHandle, t = m_target, g = m_generation]() {
+            if (RenderState::isValidGeneration(g)) {
+                // If the texture is bound, and deleted, the binding defaults to 0
+                // according to the OpenGL spec. In this case we need to force the
+                // currently bound texture to 0 in the render state.
+                if (RenderState::texture.compare(t, id)) {
+                    RenderState::texture.init(t, 0, false);
                 }
+
+                GL_CHECK(glDeleteTextures(1, &id));
+            }
         });
+
     }
 }
 
@@ -178,7 +180,7 @@ void Texture::bind(GLuint _unit) {
 }
 
 void Texture::generate(GLuint _textureUnit) {
-   GL_CHECK(glGenTextures(1, &m_glHandle));
+    GL_CHECK(glGenTextures(1, &m_glHandle));
 
     bind(_textureUnit);
 
@@ -189,6 +191,8 @@ void Texture::generate(GLuint _textureUnit) {
     GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.wrapping.wrapt));
 
     m_generation = RenderState::generation();
+
+    m_mainThreadJobQueue.makeCurrentThreadTarget();
 }
 
 void Texture::checkValidity() {

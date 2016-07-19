@@ -6,13 +6,14 @@
 //  Copyright (c) 2014 Mapzen. All rights reserved.
 //
 
+#include "tangram.h"
+
 #import <UIKit/UIKit.h>
 #import <GLKit/GLKit.h>
 
-struct TileID;
-
 @interface ViewController : GLKViewController <UIGestureRecognizerDelegate>
 
+@property (nonatomic) Tangram::Map* map;
 @property (nonatomic) bool continuous;
 - (void)renderOnce;
 

@@ -46,9 +46,9 @@ ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::st
             startUrlRequest(_url,
                     [&, this](std::vector<char>&& rawData) {
                         addData(std::string(rawData.begin(), rawData.end()));
-                        // delete all no-data tiles for this datasource and redo
-                        clearDataSource(*this, false, true);
+                        m_hasPendingData = false;
                     });
+            m_hasPendingData = true;
         } else {
             // Load from file
             const auto& string = stringFromFile(_url.c_str());
@@ -74,6 +74,10 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
 }
 
 bool ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
+
+    if (m_hasPendingData) {
+        return false;
+    }
 
     _cb.func(std::move(_task));
 

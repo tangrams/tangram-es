@@ -34,7 +34,7 @@ public class MapData {
      * @param geometry The feature to add
      */
     protected void addFeature(Geometry geometry) {
-        map.nativeAddFeature(pointer,
+        map.addFeature(pointer,
                 geometry.getCoordinateArray(),
                 geometry.getRingArray(),
                 geometry.getPropertyArray());
@@ -102,7 +102,7 @@ public class MapData {
      * @return This object, for chaining.
      */
     public MapData addGeoJson(String data) {
-        map.nativeAddGeoJson(pointer, data);
+        map.addGeoJson(pointer, data);
         return this;
     }
 
@@ -111,7 +111,7 @@ public class MapData {
      * @return This object, for chaining.
      */
     public MapData clear() {
-        map.nativeClearDataSource(pointer);
+        map.clearDataSource(pointer);
         return this;
     }
 

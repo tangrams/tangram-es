@@ -14,6 +14,7 @@ import android.widget.FrameLayout;
 public class MapView extends FrameLayout {
 
     protected GLSurfaceView glSurfaceView;
+    protected MapController mapController;
     protected AsyncTask<Void, Void, Boolean> getMapTask;
 
     public MapView(Context context) {
@@ -54,36 +55,39 @@ public class MapView extends FrameLayout {
     public void getMapAsync(@NonNull final OnMapReadyCallback callback,
                             @NonNull final String sceneFilePath) {
 
-        final Context context = getContext();
+        disposeTask();
 
-        if (getMapTask != null) {
-            getMapTask.cancel(true);
-        }
-
-        final MapController mapController = getMapInstance(sceneFilePath);
+        final MapController mapInstance = getMapInstance();
 
         getMapTask = new AsyncTask<Void, Void, Boolean>() {
 
             @Override
             @SuppressWarnings("WrongThread")
             protected Boolean doInBackground(Void... params) {
-                mapController.init();
-                mapController.loadSceneFile(sceneFilePath);
+                mapInstance.init();
+                mapInstance.loadSceneFile(sceneFilePath);
                 return true;
             }
 
             @Override
             protected void onPostExecute(Boolean ok) {
                 addView(glSurfaceView);
+                disposeMap();
+                mapController = mapInstance;
                 callback.onMapReady(mapController);
+            }
+
+            @Override
+            protected void onCancelled(Boolean ok) {
+                mapInstance.dispose();
             }
 
         }.execute();
 
     }
 
-    protected MapController getMapInstance(String sceneFilePath) {
-        return MapController.getInstance(glSurfaceView, sceneFilePath);
+    protected MapController getMapInstance() {
+        return MapController.getInstance(glSurfaceView);
     }
 
     protected void configureGLSurfaceView() {
@@ -92,6 +96,26 @@ public class MapView extends FrameLayout {
         glSurfaceView.setEGLContextClientVersion(2);
         glSurfaceView.setPreserveEGLContextOnPause(true);
         glSurfaceView.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 0, 16, 0));
+
+    }
+
+    protected void disposeTask() {
+
+        if (getMapTask != null) {
+            // MapController is being initialized, so we'll dispose it in the onCancelled callback.
+            getMapTask.cancel(true);
+        }
+        getMapTask = null;
+
+    }
+
+    protected void disposeMap() {
+
+        if (mapController != null) {
+            // MapController has been initialized, so we'll dispose it now.
+            mapController.dispose();
+        }
+        mapController = null;
 
     }
 
@@ -121,9 +145,8 @@ public class MapView extends FrameLayout {
      */
     public void onDestroy() {
 
-        if (getMapTask != null) {
-            getMapTask.cancel(true);
-        }
+        disposeTask();
+        disposeMap();
 
     }
 

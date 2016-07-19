@@ -179,7 +179,7 @@ void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {
     RenderState::resetTextureUnit();
 
     // Set time uniforms style's shader programs
-    m_shaderProgram->setUniformf(m_uTime, Tangram::frameTime());
+    m_shaderProgram->setUniformf(m_uTime, _scene.time());
 
     m_shaderProgram->setUniformf(m_uDevicePixelRatio, m_pixelScale);
 

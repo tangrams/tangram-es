@@ -54,7 +54,7 @@ TEST_CASE("Scene update tests") {
 
     REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
 
-    std::vector<Scene::Update> updates;
+    std::vector<SceneUpdate> updates;
     // Update
     updates.push_back({"lights.light1.ambient", "0.9"});
     updates.push_back({"lights.light1.type", "spotlight"});
@@ -86,7 +86,7 @@ TEST_CASE("Scene update tests") {
 
 TEST_CASE("Scene update tests, ensure update ordering is preserved") {
     Scene scene;
-    std::vector<Scene::Update> updates;
+    std::vector<SceneUpdate> updates;
 
     REQUIRE(!sceneString.empty());
 

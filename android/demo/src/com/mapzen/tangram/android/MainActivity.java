@@ -35,8 +35,6 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     MapData markers;
     boolean showTileInfo = false;
 
-    final static String tileApiKey = "?api_key=vector-tiles-tyHL4AY";
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,20 +95,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     }
 
     HttpHandler getHttpHandler() {
-        HttpHandler handler = new HttpHandler() {
-            @Override
-            public boolean onRequest(String url, Callback cb) {
-                url += tileApiKey;
-                return super.onRequest(url, cb);
-            }
-
-            @Override
-            public void onCancel(String url) {
-                url += tileApiKey;
-                super.onCancel(url);
-            }
-        };
-
+        HttpHandler handler = new HttpHandler();
         File cacheDir = getExternalCacheDir();
         if (cacheDir != null && cacheDir.exists()) {
             handler.setCache(new File(cacheDir, "tile_cache"), 30 * 1024 * 1024);
