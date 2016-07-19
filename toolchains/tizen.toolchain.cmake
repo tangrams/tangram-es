@@ -7,20 +7,11 @@ set(CMAKE_C_COMPILER_WORKS TRUE)
 set(CMAKE_CXX_COMPILER_WORKS TRUE)
 
 if (${TIZEN_DEVICE})
-
   set(CMAKE_C_COMPILER ${TIZEN_SDK}/tools/arm-linux-gnueabi-gcc-4.9/bin/arm-linux-gnueabi-gcc)
   set(CMAKE_CXX_COMPILER ${TIZEN_SDK}/tools/arm-linux-gnueabi-gcc-4.9/bin/arm-linux-gnueabi-g++)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-  set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-
 else() # Emulator
-
   set(CMAKE_C_COMPILER ${TIZEN_SDK}/tools/i386-linux-gnueabi-gcc-4.9/bin/i386-linux-gnueabi-gcc)
   set(CMAKE_CXX_COMPILER ${TIZEN_SDK}/tools/i386-linux-gnueabi-gcc-4.9/bin/i386-linux-gnueabi-g++)
-  # set(CMAKE_C_FLAGS_INIT "-march=i486")
-  # set(CMAKE_CXX_FLAGS_INIT "-march=i486")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i486")
-
 endif()
 
 set(CMAKE_FIND_ROOT_PATH ${TIZEN_SYSROOT})

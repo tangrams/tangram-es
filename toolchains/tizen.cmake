@@ -3,7 +3,7 @@ if(NOT TIZEN_SDK)
     return()
 endif()
 
-#include(${CMAKE_SOURCE_DIR}/toolchains/tizen.toolchain.cmake)
+# include(${CMAKE_SOURCE_DIR}/toolchains/tizen.toolchain.cmake)
 
 # set for test in other cmake files
 set(PLATFORM_TIZEN ON)
@@ -13,7 +13,12 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fPIC -fPIE")
 # global compile options
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++1y -fPIC -fPIE")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -pie")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -pie")
+
+if (NOT ${TIZEN_DEVICE})
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=i486")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i486")
+endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
