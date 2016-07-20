@@ -110,17 +110,20 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
         for (auto& label : m_labels) {
             auto* textLabel = static_cast<TextLabel*>(label.get());
 
-            // Range range = textLabel->quadRange();
             std::vector<TextRange>& ranges = textLabel->textRanges();
             bool active = textLabel->state() != Label::State::dead;
 
-            for (auto& textRange : ranges) {
-                auto& range = textRange.range;
-                if (range.end() != quadPos) {
-                    quadStart = quadEnd;
-                    quadPos = range.end();
-                    added = false;
-                }
+            if (ranges.empty()) {
+                // FIXME when does this happen?
+                continue;
+            }
+
+
+            auto& range = ranges.back().range;
+            if (range.end() != quadPos) {
+                quadStart = quadEnd;
+                quadPos = range.end();
+                added = false;
             }
 
             if (!active) { continue; }
