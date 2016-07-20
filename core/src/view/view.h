@@ -50,6 +50,9 @@ public:
     void setVanishingPoint(float x, float y) { m_vanishingPoint = { x, y }; }
     auto vanishingPoint() const { return m_vanishingPoint; }
 
+    void setOffset(int xPixels, int yPixels);
+    auto offset() const { return m_offset; }
+
     // Set the vertical field-of-view angle, in radians.
     void setFieldOfView(float radians);
 
@@ -200,6 +203,7 @@ protected:
     glm::vec3 m_eye;
     glm::vec2 m_obliqueAxis;
     glm::vec2 m_vanishingPoint;
+    glm::ivec2 m_offset;
 
     glm::mat4 m_view;
     glm::mat4 m_orthoViewport;

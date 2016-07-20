@@ -2,6 +2,7 @@ package com.mapzen.tangram;
 
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -412,6 +413,25 @@ public class MapController implements Renderer {
     }
 
     /**
+     * Set the displacement of the map's position from the center of the view.
+     * @param xPixels displacement right from the view center
+     * @param yPixels displacement down from the view center
+     */
+    public void setViewOffset(int xPixels, int yPixels) {
+        nativeSetViewOffset(mapPointer, xPixels, yPixels);
+    }
+
+    /**
+     * Get the displacement of the map's position from the center of the view.
+     * @return Point containing the x (right) and y (down) displacement of the center.
+     */
+    public Point getViewOffset() {
+        int[] tmp = { 0, 0 };
+        nativeGetViewOffset(mapPointer, tmp);
+        return new Point(tmp[0], tmp[1]);
+    }
+
+    /**
      * Find the geographic coordinates corresponding to the given position on screen
      * @param screenPosition Position in pixels from the top-left corner of the map area
      * @return LngLat corresponding to the given point, or null if the screen position
@@ -768,6 +788,8 @@ public class MapController implements Renderer {
     private synchronized native void nativeSetPixelScale(long mapPtr, float scale);
     private synchronized native void nativeSetCameraType(long mapPtr, int type);
     private synchronized native int nativeGetCameraType(long mapPtr);
+    private synchronized native void nativeSetViewOffset(long mapPtr, int xPixels, int yPixels);
+    private synchronized native void nativeGetViewOffset(long mapPtr, int[] offset);
     private synchronized native void nativeHandleTapGesture(long mapPtr, float posX, float posY);
     private synchronized native void nativeHandleDoubleTapGesture(long mapPtr, float posX, float posY);
     private synchronized native void nativeHandlePanGesture(long mapPtr, float startX, float startY, float endX, float endY);

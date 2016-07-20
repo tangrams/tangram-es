@@ -161,6 +161,20 @@ extern "C" {
         return map->getCameraType();
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetViewOffset(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jint xPixels, jint yPixels) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        map->setViewOffset(xPixels, yPixels);
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetViewOffset(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jintArray offset) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        jint* arr = jniEnv->GetIntArrayElements(offset, NULL);
+        map->getViewOffset(&arr[0], &arr[1]);
+        jniEnv->ReleaseIntArrayElements(offset, arr, JNI_ABORT);
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeHandleTapGesture(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat posX, jfloat posY) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);

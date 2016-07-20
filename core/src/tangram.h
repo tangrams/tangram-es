@@ -130,6 +130,14 @@ public:
     // Get the camera type (0 = perspective, 1 = isometric, 2 = flat)
     int getCameraType();
 
+    // Set the displacement of the map's position from the center of the display.
+    // The location set as the map position will appear at the screen position
+    // (w/2 + xPixels, h/2 + yPixels) where 'w' and 'h' are the viewport width and height.
+    void setViewOffset(int xPixels, int yPixels);
+
+    // Get the displacement of the map's position from the center of the display.
+    void getViewOffset(int* xPixels, int* yPixels);
+
     // Given coordinates in screen space (x right, y down), set the output longitude and
     // latitude to the geographic location corresponding to that point; returns false if
     // no geographic position corresponds to the screen location, otherwise returns true

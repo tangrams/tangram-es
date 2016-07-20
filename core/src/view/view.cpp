@@ -128,6 +128,13 @@ float View::getFocalLength() const {
 
 }
 
+void View::setOffset(int xPixels, int yPixels) {
+
+    m_offset.x = xPixels;
+    m_offset.y = yPixels;
+
+}
+
 
 void View::setMaxPitch(float degrees) {
 
@@ -388,6 +395,12 @@ void View::updateMatrices() {
 
         // Inject the shear in the projection matrix
         m_proj *= shear;
+    }
+
+    // Add the view offset (some call this the "principle point offset")
+    {
+        m_proj[2][0] = (-2.f * m_offset.x) / m_vpWidth; // (right + left) / (right - left);
+        m_proj[2][1] = (-2.f * m_offset.y) / m_vpHeight; // (top + bottom) / (top - bottom);
     }
 
     m_viewProj = m_proj * m_view;
