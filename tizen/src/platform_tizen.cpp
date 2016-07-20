@@ -242,7 +242,7 @@ void initPlatformFontSetup() {
         FcValue fcStyleValue, fcLangValue;
 
         fcStyleValue.type = fcLangValue.type = FcType::FcTypeString;
-        fcStyleValue.u.s = (const FcChar8*)(style.c_str());
+        fcStyleValue.u.s = reinterpret_cast<const FcChar8*>(style.c_str());
         fcLangValue.u.s = fcLang;
 
         // create a pattern with style and family font properties
@@ -261,8 +261,9 @@ void initPlatformFontSetup() {
             FcChar8* file = nullptr;
             if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
                 // Make sure this font file is not previously added.
-                if (std::find(s_fallbackFonts.begin(), s_fallbackFonts.end(), (char*)file) == s_fallbackFonts.end()) {
-                    s_fallbackFonts.emplace_back((char*)file);
+                if (std::find(s_fallbackFonts.begin(), s_fallbackFonts.end(),
+                              reinterpret_cast<char*>(file)) == s_fallbackFonts.end()) {
+                    s_fallbackFonts.emplace_back(reinterpret_cast<char*>(file));
                 }
             }
             FcPatternDestroy(font);
@@ -295,9 +296,9 @@ std::string systemFontPath(const std::string& _name, const std::string& _weight,
     FcValue fcFamily, fcFace, fcWeight;
 
     fcFamily.type = fcFace.type = fcWeight.type = FcType::FcTypeString;
-    fcFamily.u.s = (const FcChar8*)(_name.c_str());
-    fcWeight.u.s = (const FcChar8*)(_weight.c_str());
-    fcFace.u.s = (const FcChar8*)(_face.c_str());
+    fcFamily.u.s = reinterpret_cast<const FcChar8*>(_name.c_str());
+    fcWeight.u.s = reinterpret_cast<const FcChar8*>(_weight.c_str());
+    fcFace.u.s = reinterpret_cast<const FcChar8*>(_face.c_str());
 
     // Create a pattern with family, style and weight font properties
     FcPattern* pattern = FcPatternCreate();
@@ -319,8 +320,8 @@ std::string systemFontPath(const std::string& _name, const std::string& _weight,
             FcPatternGetString(font, FC_FAMILY, 0, &fontFamily) == FcResultMatch) {
             // We do not want the "best" match, but an "exact" or at least the same "family" match
             // We have fallbacks to cover rest here.
-            if (strcmp((char*)fontFamily, _name.c_str()) == 0) {
-                fontFile = (char*)file;
+            if (strcmp(reinterpret_cast<const char*>(fontFamily), _name.c_str()) == 0) {
+                fontFile = reinterpret_cast<const char*>(file);
             }
         }
         FcPatternDestroy(font);
