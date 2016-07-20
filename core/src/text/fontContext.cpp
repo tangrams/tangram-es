@@ -239,21 +239,23 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
         }
     }
 
-    // TextLabel parameter: Dimension
-    float width = metrics.aabb.z - metrics.aabb.x;
-    float height = metrics.aabb.w - metrics.aabb.y;
-
-    // Offset to center all glyphs around 0/0
-    glm::vec2 offset((metrics.aabb.x + width * 0.5) * TextVertex::position_scale,
-                     (metrics.aabb.y + height * 0.5) * TextVertex::position_scale);
-
     auto it = _quads.begin() + quadsStart;
     if (it == _quads.end()) {
         // No glyphs added
         return false;
     }
 
-    while (it != _quads.end()) {
+    // TextLabel parameter: Dimension
+    float width = metrics.aabb.z - metrics.aabb.x;
+    float height = metrics.aabb.w - metrics.aabb.y;
+    _size = glm::vec2(width, height);
+
+    // Offset to center all glyphs around 0/0
+    glm::vec2 offset((metrics.aabb.x + width * 0.5) * TextVertex::position_scale,
+                     (metrics.aabb.y + height * 0.5) * TextVertex::position_scale);
+
+
+    for (; it != _quads.end(); ++it) {
 
         if (!_refs[it->atlas]) {
             _refs[it->atlas] = true;
@@ -264,10 +266,7 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
         it->quad[1].pos -= offset;
         it->quad[2].pos -= offset;
         it->quad[3].pos -= offset;
-        ++it;
     }
-
-    _size = glm::vec2(width, height);
 
     return true;
 }
