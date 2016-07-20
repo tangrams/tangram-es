@@ -70,6 +70,4 @@ void setCurrentThreadPriority(int priority);
  */
 std::string systemFontFallbackPath(int _importance, int _weightHint);
 
-void initPlatformFontSetup();
-
 void initGLExtensions();

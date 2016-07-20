@@ -228,6 +228,9 @@ std::string stringFromFile(const char* _path) {
 
 void initPlatformFontSetup() {
 
+    static bool s_platformFontsInit = false;
+    if (s_platformFontsInit) { return; }
+
     s_fcConfig = FcInitLoadConfigAndFonts();
 
     std::string style = "Regular";
@@ -266,9 +269,11 @@ void initPlatformFontSetup() {
         }
         FcPatternDestroy(pat);
     }
+    s_platformFontsInit = true;
 }
 
 std::string systemFontFallbackPath(int _importance, int _weightHint) {
+
     if ((size_t)_importance >= s_fallbackFonts.size()) {
         return "";
     }
@@ -278,6 +283,8 @@ std::string systemFontFallbackPath(int _importance, int _weightHint) {
 
 std::string systemFontPath(const std::string& _name, const std::string& _weight,
                            const std::string& _face) {
+
+    initPlatformFontSetup();
 
     if (!s_fcConfig) {
         return "";
