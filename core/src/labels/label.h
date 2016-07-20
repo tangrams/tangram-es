@@ -95,8 +95,7 @@ public:
     bool evalState(const glm::vec2& _screenSize, float _dt);
 
     /* Update the screen position of the label */
-    bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize,
-                               bool _testVisibility = true);
+    bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _drawAllLabels);
 
     virtual void updateBBoxes(float _zoomFract) = 0;
 
