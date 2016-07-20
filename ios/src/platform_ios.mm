@@ -102,6 +102,10 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
     return ptr;
 }
 
+void initPlatformFontSetup() {
+    //No-OP
+}
+
 // No system fonts implementation (yet!)
 std::string systemFontPath(const std::string& _name, const std::string& _weight, const std::string& _face) {
     return "";

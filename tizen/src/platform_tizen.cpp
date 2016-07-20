@@ -6,6 +6,7 @@
 #include <list>
 #include <memory>
 #include <algorithm>
+#include <vector>
 
 //#include "urlWorker.h"
 #include "platform_tizen.h"
@@ -26,6 +27,9 @@
 
 static bool s_isContinuousRendering = false;
 static std::function<void()> s_renderCallbackFunction = nullptr;
+
+static std::vector<std::string> s_fallbackFonts;
+static FcConfig* s_fcConfig = nullptr;
 
 #if USE_ECORE_CON
 #include <Eina.h>
@@ -222,14 +226,62 @@ std::string stringFromFile(const char* _path) {
     return out;
 }
 
-// No system fonts fallback implementation (yet!)
-std::string systemFontFallbackPath(int _importance, int _weightHint) {
-    return "";
+void initPlatformFontSetup() {
+
+    s_fcConfig = FcInitLoadConfigAndFonts();
+
+    std::string style = "Regular";
+
+    FcStrSet* fcLangs = FcGetLangs();
+    FcStrList* fcLangList = FcStrListCreate(fcLangs);
+    FcChar8* fcLang;
+    while ((fcLang = FcStrListNext(fcLangList))) {
+        FcValue fcStyleValue, fcLangValue;
+
+        fcStyleValue.type = fcLangValue.type = FcType::FcTypeString;
+        fcStyleValue.u.s = (const FcChar8*)(style.c_str());
+        fcLangValue.u.s = fcLang;
+
+        // create a pattern with style and family font properties
+        FcPattern* pat = FcPatternCreate();
+
+        FcPatternAdd(pat, FC_STYLE, fcStyleValue, true);
+        FcPatternAdd(pat, FC_LANG, fcLangValue, true);
+        //FcPatternPrint(pat);
+
+        FcConfigSubstitute(s_fcConfig, pat, FcMatchPattern);
+        FcDefaultSubstitute(pat);
+
+        FcResult res;
+        FcPattern* font = FcFontMatch(s_fcConfig, pat, &res);
+        if (font) {
+            FcChar8* file = nullptr;
+            if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
+                // Make sure this font file is not previously added.
+                if (std::find(s_fallbackFonts.begin(), s_fallbackFonts.end(), (char*)file) == s_fallbackFonts.end()) {
+                    s_fallbackFonts.emplace_back((char*)file);
+                }
+            }
+            FcPatternDestroy(font);
+        }
+        FcPatternDestroy(pat);
+    }
 }
 
-// No system fonts implementation (yet!)
+std::string systemFontFallbackPath(int _importance, int _weightHint) {
+    if ((size_t)_importance >= s_fallbackFonts.size()) {
+        return "";
+    }
+
+    return s_fallbackFonts[_importance];
+}
+
 std::string systemFontPath(const std::string& _name, const std::string& _weight,
                            const std::string& _face) {
+
+    if (!s_fcConfig) {
+        return "";
+    }
 
     std::string fontFile;
     FcValue fcFamily, fcFace, fcWeight;
@@ -239,7 +291,7 @@ std::string systemFontPath(const std::string& _name, const std::string& _weight,
     fcWeight.u.s = (const FcChar8*)(_weight.c_str());
     fcFace.u.s = (const FcChar8*)(_face.c_str());
 
-    FcConfig* config = FcInitLoadConfigAndFonts();
+    // Create a pattern with family, style and weight font properties
     FcPattern* pattern = FcPatternCreate();
 
     FcPatternAdd(pattern, FC_FAMILY, fcFamily, true);
@@ -247,15 +299,21 @@ std::string systemFontPath(const std::string& _name, const std::string& _weight,
     FcPatternAdd(pattern, FC_WEIGHT, fcWeight, true);
     //FcPatternPrint(pattern);
 
-    FcConfigSubstitute(config, pattern, FcMatchPattern);
+    FcConfigSubstitute(s_fcConfig, pattern, FcMatchPattern);
     FcDefaultSubstitute(pattern);
 
     FcResult res;
-    FcPattern* font = FcFontMatch(config, pattern, &res);
+    FcPattern* font = FcFontMatch(s_fcConfig, pattern, &res);
     if (font) {
         FcChar8* file = nullptr;
-        if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
-            fontFile = (char*)file;
+        FcChar8* fontFamily = nullptr;
+        if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch &&
+            FcPatternGetString(font, FC_FAMILY, 0, &fontFamily) == FcResultMatch) {
+            // We do not want the "best" match, but an "exact" or at least the same "family" match
+            // We have fallbacks to cover rest here.
+            if (std::string((char*)fontFamily) == _name) {
+                fontFile = (char*)file;
+            }
         }
         FcPatternDestroy(font);
     } else {
