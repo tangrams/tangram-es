@@ -31,7 +31,7 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _
 
 Label::~Label() {}
 
-bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _testVisibility) {
+bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _drawAllLabels) {
 
     glm::vec2 screenPosition;
     glm::vec2 rotation = {1, 0};
@@ -46,7 +46,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
             screenPosition = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
                                                 _screenSize, clipped);
 
-            if (_testVisibility && clipped) {
+            if (clipped) {
                 return false;
             }
 
@@ -68,7 +68,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 
             // check whether the label is behind the camera using the
             // perspective division factor
-            if (_testVisibility && clipped) {
+            if (clipped) {
                 return false;
             }
 
@@ -77,7 +77,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
             // default heuristic : allow label to be 30% wider than segment
             float minLength = m_dim.x * 0.7;
 
-            if (_testVisibility && length < minLength) {
+            if (!_drawAllLabels && length < minLength) {
                 return false;
             }
 
@@ -202,7 +202,7 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
         }
     }
 
-    bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize, !_drawAllLabels);
+    bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize, _drawAllLabels);
 
     // one of the label rules has not been satisfied
     if (!ruleSatisfied) {
