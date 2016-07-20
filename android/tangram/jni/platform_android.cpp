@@ -135,6 +135,10 @@ void requestRender() {
     jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID);
 }
 
+void initPlatformFontSetup() {
+    //No-OP
+}
+
 std::string systemFontFallbackPath(int _importance, int _weightHint) {
 
     JniThreadBinding jniEnv(jvm);
@@ -324,6 +328,7 @@ void featurePickCallback(JNIEnv* jniEnv, jobject listener, const std::vector<Tan
 
     jniEnv->CallVoidMethod(listener, onFeaturePickMID, hashmap, position[0], position[1]);
 }
+
 
 void initGLExtensions() {
     void* libhandle = dlopen("libGLESv2.so", RTLD_LAZY);
