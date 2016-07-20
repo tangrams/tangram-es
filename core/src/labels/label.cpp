@@ -189,20 +189,20 @@ void Label::resetState() {
     enterState(State::wait_occ, 0.0);
 }
 
-bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _allLabels) {
+bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _drawAllLabels) {
 
     m_occludedLastFrame = m_occluded;
     m_occluded = false;
 
     if (m_state == State::dead) {
-        if (!_allLabels) {
-            return false;
-        } else {
+        if (_drawAllLabels) {
             m_occluded = true;
+        } else {
+            return false;
         }
     }
 
-    bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize, !_allLabels);
+    bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize, !_drawAllLabels);
 
     // one of the label rules has not been satisfied
     if (!ruleSatisfied) {
@@ -234,7 +234,7 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
 bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
 
 #ifdef DEBUG
-    if (Tangram::getDebugFlag(DebugFlags::all_labels)) {
+    if (Tangram::getDebugFlag(DebugFlags::draw_all_labels)) {
         enterState(State::visible, 1.0);
         return false;
     }

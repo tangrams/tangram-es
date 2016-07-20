@@ -37,7 +37,7 @@ std::unique_ptr<StyledMesh> PointStyleBuilder::build() {
     if (m_quads.empty()) { return nullptr; }
 
 
-    if (Tangram::getDebugFlag(DebugFlags::all_labels)) {
+    if (Tangram::getDebugFlag(DebugFlags::draw_all_labels)) {
 
         m_iconMesh->setLabels(m_labels);
 

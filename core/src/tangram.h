@@ -193,7 +193,7 @@ enum DebugFlags {
     tile_infos,         // Debug tile infos
     labels,             // Debug label bounding boxes
     tangram_infos,      // Various text tangram debug info printed on the screen
-    all_labels,         // Draw all labels
+    draw_all_labels,    // Draw all labels
     tangram_stats,      // Tangram frame graph stats
 };
 
