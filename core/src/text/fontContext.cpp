@@ -61,6 +61,29 @@ FontContext::FontContext() :
             m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(fontPath), size));
         }
     }
+#elif defined(PLATFORM_TIZEN)
+    auto fontPath = systemFontPath("sans-serif", "400", "normal");
+    LOGD("FONT %s", fontPath.c_str());
+
+    int size = BASE_SIZE;
+    for (int i = 0; i < 3; i++, size += STEP_SIZE) {
+        m_font[i] = m_alfons.addFont("default", alfons::InputSource(fontPath), size);
+    }
+
+    std::string fallback = "";
+    int importance = 0;
+
+    while (importance < 100) {
+        fallback = systemFontFallbackPath(importance++, 400);
+        if (fallback.empty()) { break; }
+
+        LOGD("FALLBACK %s", fallback.c_str());
+
+        int size = BASE_SIZE;
+        for (int i = 0; i < 3; i++, size += STEP_SIZE) {
+            m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(fallback), size));
+        }
+    }
 #elif defined(PLATFORM_IOS)
 
     int size = BASE_SIZE;
