@@ -248,10 +248,12 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
                 if (m_options.anchorFallback.size() > 0) {
                     enterState(State::anchor_fallback, 0.0);
                 } else {
-                    m_fade = FadeEffect(false, m_options.hideTransition.ease,
+                    m_fade.reset(false, m_options.hideTransition.ease,
                                         m_options.hideTransition.time);
+
                     enterState(State::fading_out, 1.0);
                 }
+
                 animate = true;
             } else if (m_currentAnchorFallback != 0) {
                 // TODO: try to place again to prefered fallback (0)
@@ -260,13 +262,15 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
         case State::anchor_fallback:
             if (m_occluded) {
                 if (m_anchorFallbackCount >= m_options.anchorFallback.size()) {
-                    m_fade = FadeEffect(false, m_options.hideTransition.ease,
+                    m_fade.reset(false, m_options.hideTransition.ease,
                                         m_options.hideTransition.time);
+
                     enterState(State::fading_out, m_transform.state.alpha);
                     m_anchorFallbackCount = 0;
                 } else {
                     m_anchorType = m_options.anchorFallback[m_anchorFallbackCount];
                     m_currentAnchorFallback = m_anchorFallbackCount;
+
                     if (m_parent) {
                         alignFromParent(*m_parent);
                     } else {
@@ -276,6 +280,7 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
                 m_anchorFallbackCount++;
             } else {
                 m_anchorFallbackCount = 0;
+
                 if (!m_occludedLastFrame) {
                     enterState(State::visible, 1.0);
                 } else {
@@ -288,10 +293,9 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
         case State::fading_in:
             if (m_occluded) {
                 enterState(State::sleep, 0.0);
-                // enterState(State::fading_out, m_transform.state.alpha);
-                // animate = true;
                 break;
             }
+
             setAlpha(m_fade.update(_dt));
             animate = true;
             if (m_fade.isFinished()) {
@@ -304,6 +308,7 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
                 animate = true;
                 break;
             }
+
             setAlpha(m_fade.update(_dt));
             animate = true;
             if (m_fade.isFinished()) {
@@ -319,8 +324,9 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
                     enterState(State::sleep, 0.0);
                 }
             } else {
-                m_fade = FadeEffect(true, m_options.showTransition.ease,
-                                    m_options.showTransition.time);
+                m_fade.reset(true, m_options.showTransition.ease,
+                                   m_options.showTransition.time);
+
                 enterState(State::fading_in, 0.0);
                 animate = true;
             }
@@ -334,8 +340,9 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             break;
         case State::sleep:
             if (!m_occluded) {
-                m_fade = FadeEffect(true, m_options.showTransition.ease,
-                                    m_options.showTransition.time);
+                m_fade.reset(true, m_options.showTransition.ease,
+                                   m_options.showTransition.time);
+
                 enterState(State::fading_in, 0.0);
                 animate = true;
             }
