@@ -516,6 +516,8 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     }
     m_attributes.quadsStart = m_quads.size();
 
+    m_attributes.textRanges.clear();
+
     glm::vec2 bbox(0);
     if (ctx->layoutText(_params, *renderText, m_quads, m_atlasRefs, bbox, m_attributes.textRanges)) {
         m_attributes.width = bbox.x;
