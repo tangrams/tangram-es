@@ -269,6 +269,7 @@ void initPlatformFontSetup() {
         }
         FcPatternDestroy(pat);
     }
+    FcStrListDone(fcLangList);
     s_platformFontsInit = true;
 }
 
@@ -318,7 +319,7 @@ std::string systemFontPath(const std::string& _name, const std::string& _weight,
             FcPatternGetString(font, FC_FAMILY, 0, &fontFamily) == FcResultMatch) {
             // We do not want the "best" match, but an "exact" or at least the same "family" match
             // We have fallbacks to cover rest here.
-            if (std::string((char*)fontFamily) == _name) {
+            if (strcmp((char*)fontFamily, _name.c_str()) == 0) {
                 fontFile = (char*)file;
             }
         }
