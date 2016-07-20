@@ -69,18 +69,13 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
         for (auto& label : m_labels) {
             auto* textLabel = static_cast<TextLabel*>(label.get());
 
-            //Range range = textLabel->quadRange();
-
             std::vector<TextRange>& ranges = textLabel->textRanges();
 
             bool active = textLabel->state() != Label::State::dead;
 
-            for (auto& textRange : ranges) {
-                auto& range = textRange.range;
-                if (range.end() != quadPos) {
-                    quadPos = range.end();
-                    added = false;
-                }
+            if (ranges.back().range.end() != quadPos) {
+                quadPos = ranges.back().range.end();
+                added = false;
             }
 
             if (!active) { continue; }
@@ -89,10 +84,7 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
             if (!added) {
                 added = true;
 
-                for (auto& textRange : ranges) {
-                    auto& range = textRange.range;
-                    sumQuads += range.length;
-                }
+                sumQuads += ranges[0].range.length * ranges.size();
             }
         }
 
@@ -110,39 +102,31 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
         for (auto& label : m_labels) {
             auto* textLabel = static_cast<TextLabel*>(label.get());
 
-            std::vector<TextRange>& ranges = textLabel->textRanges();
             bool active = textLabel->state() != Label::State::dead;
-
-            if (ranges.empty()) {
-                // FIXME when does this happen?
-                continue;
-            }
-
-
-            auto& range = ranges.back().range;
-            if (range.end() != quadPos) {
-                quadStart = quadEnd;
-                quadPos = range.end();
-                added = false;
-            }
-
             if (!active) { continue; }
-            if (!added) {
-                added = true;
+
+            std::vector<TextRange>& ranges = textLabel->textRanges();
+
+            // Add the quads of line-labels only once
+            if (ranges.back().range.end() != quadPos) {
+                quadStart = quadEnd;
+                quadPos = ranges.back().range.end();
 
                 for (auto& textRange : ranges) {
-                    auto& range = textRange.range;
-                    quadEnd += range.length;
+                    quadEnd += textRange.range.length;
 
-                    auto it = m_quads.begin() + range.start;
-                    quads.insert(quads.end(), it, it + range.length);
+                    auto it = m_quads.begin() + textRange.range.start;
+                    quads.insert(quads.end(), it, it + textRange.range.length);
                 }
             }
 
-            int start = ranges[0].range.start;
-            ranges[0].range.start = quadStart;
-            for (int i = 1; i < ranges.size(); ++i) {
-                ranges[i].range.start = quadStart + (ranges[i].range.start - start);
+            // Update TextRange
+            auto start = quadStart;
+            auto nQuads = ranges[0].range.length;
+
+            for (auto& textRange : ranges) {
+                textRange.range.start = start;
+                start += nQuads;
             }
 
             labels.push_back(std::move(label));
@@ -377,7 +361,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         std::vector<std::string> anchors = splitString(a, ',');
 
         if (anchors.size() > 1) {
-            for (int i = 0; i < anchors.size(); ++i) {
+            for (size_t i = 0; i < anchors.size(); ++i) {
                 LabelProperty::Anchor labelAnchor;
                 if (LabelProperty::anchor(anchors[i], labelAnchor)) {
                     p.labelOptions.anchorFallback.push_back(labelAnchor);
@@ -530,13 +514,10 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
                                 Label::Transform _transform) {
 
-    // int quadsStart = m_attributes.quadsStart;
-    // int quadsCount = m_quads.size() - quadsStart;
-
     m_labels.emplace_back(new TextLabel(_transform, _type, _params.labelOptions, _params.anchor,
                                         {m_attributes.fill, m_attributes.stroke, m_attributes.fontScale},
                                         {m_attributes.width, m_attributes.height},
-                                        *m_textLabels, std::move(m_attributes.textRanges),
+                                        *m_textLabels, m_attributes.textRanges,
                                         _params.align));
 }
 
