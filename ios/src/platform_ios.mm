@@ -10,6 +10,8 @@
 #include "platform_ios.h"
 #include "ViewController.h"
 
+#include "log.h"
+
 static ViewController* viewController;
 NSURLSession* defaultSession;
 
