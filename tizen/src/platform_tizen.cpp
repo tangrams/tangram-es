@@ -291,7 +291,7 @@ std::string systemFontPath(const std::string& _name, const std::string& _weight,
         return "";
     }
 
-    std::string fontFile;
+    std::string fontFile = "";
     FcValue fcFamily, fcFace, fcWeight;
 
     fcFamily.type = fcFace.type = fcWeight.type = FcType::FcTypeString;
@@ -324,8 +324,6 @@ std::string systemFontPath(const std::string& _name, const std::string& _weight,
             }
         }
         FcPatternDestroy(font);
-    } else {
-        return "";
     }
 
     FcPatternDestroy(pattern);
