@@ -48,7 +48,7 @@ struct TestContext {
             LOGE("Parsing scene config '%s'", e.what());
             return;
         }
-        SceneLoader::applyConfig(sceneNode, *scene);
+        SceneLoader::applyConfig(sceneNode, scene);
 
         styleContext.initFunctions(*scene);
         styleContext.setKeywordZoom(0);
