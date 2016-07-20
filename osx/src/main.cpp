@@ -189,7 +189,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 Tangram::toggleDebugFlag(Tangram::DebugFlags::labels);
                 break;
             case GLFW_KEY_6:
-                Tangram::toggleDebugFlag(Tangram::DebugFlags::all_labels);
+                Tangram::toggleDebugFlag(Tangram::DebugFlags::draw_all_labels);
                 break;
             case GLFW_KEY_7:
                 Tangram::toggleDebugFlag(Tangram::DebugFlags::tangram_infos);

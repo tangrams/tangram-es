@@ -87,7 +87,7 @@ public:
 
     virtual ~Label();
 
-    bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _allLabels = false);
+    bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _drawAllLabels = false);
 
     /* Push the pending transforms to the vbo by updating the vertices */
     virtual void pushTransform() = 0;

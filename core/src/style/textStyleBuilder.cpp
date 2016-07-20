@@ -50,7 +50,7 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
 
     if (m_quads.empty()) { return nullptr; }
 
-    if (Tangram::getDebugFlag(DebugFlags::all_labels)) {
+    if (Tangram::getDebugFlag(DebugFlags::draw_all_labels)) {
         m_textLabels->setLabels(m_labels);
 
         std::vector<GlyphQuad> quads(m_quads);

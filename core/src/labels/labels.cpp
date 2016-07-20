@@ -45,7 +45,7 @@ void Labels::updateLabels(const View& _view, float _dt,
     // int lodDiscard = LODDiscardFunc(View::s_maxZoom, _view.getZoom());
     float dz = _view.getZoom() - std::floor(_view.getZoom());
 
-    bool allLabels = Tangram::getDebugFlag(DebugFlags::all_labels);
+    bool drawAllLabels = Tangram::getDebugFlag(DebugFlags::draw_all_labels);
 
     for (const auto& tile : _tiles) {
 
@@ -65,7 +65,7 @@ void Labels::updateLabels(const View& _view, float _dt,
             auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
             if (!labelMesh) { continue; }
             for (auto& label : labelMesh->getLabels()) {
-                if (!label->update(mvp, screenSize, dz, allLabels)) {
+                if (!label->update(mvp, screenSize, dz, drawAllLabels)) {
                     // skip dead labels
                     continue;
                 }
