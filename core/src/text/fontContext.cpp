@@ -208,6 +208,10 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
         alignments.push_back(alignmentFallback);
     }
 
+    if (alignments.empty()) {
+        alignments.push_back(TextLabelProperty::Align::center);
+    }
+
     if (_params.wordWrap) {
         m_textWrapper.clearWraps();
         
