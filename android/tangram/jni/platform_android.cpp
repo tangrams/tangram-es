@@ -135,10 +135,6 @@ void requestRender() {
     jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID);
 }
 
-void initPlatformFontSetup() {
-    //No-OP
-}
-
 std::string systemFontFallbackPath(int _importance, int _weightHint) {
 
     JniThreadBinding jniEnv(jvm);
