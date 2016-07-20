@@ -215,17 +215,15 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     if (_params.wordWrap) {
         m_textWrapper.clearWraps();
         
-        if (line.shapes().size() > 0) {
-            float width = m_textWrapper.getShapeRangeWidth(line, MIN_LINE_WIDTH, _params.maxLineWidth);
+        float width = m_textWrapper.getShapeRangeWidth(line, MIN_LINE_WIDTH, _params.maxLineWidth);
 
-            for (auto& align : alignments) {
-                int rangeStart = m_scratch.quads->size();
-                m_textWrapper.draw(m_batch, width, line, align, _params.lineSpacing, metrics);
-                int rangeEnd = m_scratch.quads->size();
+        for (auto& align : alignments) {
+            int rangeStart = m_scratch.quads->size();
+            m_textWrapper.draw(m_batch, width, line, align, _params.lineSpacing, metrics);
+            int rangeEnd = m_scratch.quads->size();
 
-                _textRanges.push_back({align, {rangeStart, rangeEnd - rangeStart}});
-                LOGD("Text quad range {%d,%d} for label %s", rangeStart, rangeEnd, _text.c_str());
-            }
+            _textRanges.push_back({align, {rangeStart, rangeEnd - rangeStart}});
+            LOGD("Text quad range {%d,%d} for label %s", rangeStart, rangeEnd, _text.c_str());
         }
     } else {
         glm::vec2 position(0);
