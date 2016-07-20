@@ -19,6 +19,8 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
+#include <fontconfig.h>
+
 
 #define NUM_WORKERS 4
 
@@ -225,6 +227,46 @@ std::string systemFontFallbackPath(int _importance, int _weightHint) {
     return "";
 }
 
+// No system fonts implementation (yet!)
+std::string systemFontPath(const std::string& _name, const std::string& _weight,
+                           const std::string& _face) {
+
+    std::string fontFile;
+    FcValue fcFamily, fcFace, fcWeight;
+
+    fcFamily.type = fcFace.type = fcWeight.type = FcType::FcTypeString;
+    fcFamily.u.s = (const FcChar8*)(_name.c_str());
+    fcWeight.u.s = (const FcChar8*)(_weight.c_str());
+    fcFace.u.s = (const FcChar8*)(_face.c_str());
+
+    FcConfig* config = FcInitLoadConfigAndFonts();
+    FcPattern* pattern = FcPatternCreate();
+
+    FcPatternAdd(pattern, FC_FAMILY, fcFamily, true);
+    FcPatternAdd(pattern, FC_STYLE, fcFace, true);
+    FcPatternAdd(pattern, FC_WEIGHT, fcWeight, true);
+    //FcPatternPrint(pattern);
+
+    FcConfigSubstitute(config, pattern, FcMatchPattern);
+    FcDefaultSubstitute(pattern);
+
+    FcResult res;
+    FcPattern* font = FcFontMatch(config, pattern, &res);
+    if (font) {
+        FcChar8* file = nullptr;
+        if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
+            fontFile = (char*)file;
+        }
+        FcPatternDestroy(font);
+    } else {
+        return "";
+    }
+
+    FcPatternDestroy(pattern);
+
+    return fontFile;
+}
+
 unsigned char* bytesFromFile(const char* _path, size_t& _size) {
 
     if (!_path || strlen(_path) == 0) { return nullptr; }
@@ -247,12 +289,6 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
     resource.close();
 
     return reinterpret_cast<unsigned char *>(cdata);
-}
-
-// No system fonts implementation (yet!)
-std::string systemFontPath(const std::string& _name, const std::string& _weight,
-                           const std::string& _face) {
-    return "";
 }
 
 void setCurrentThreadPriority(int priority){
