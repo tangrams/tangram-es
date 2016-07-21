@@ -153,8 +153,22 @@ extern "C" {
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeClearDataSource(JNIEnv* jniEnv, jobject obj, jlong pointer) {
         assert(pointer > 0);
-        auto source_ptr = reinterpret_cast<Tangram::DataSource*>(pointer);
-        Tangram::clearDataSource(*source_ptr, true, true);
+        auto source_ptr = reinterpret_cast<Tangram::ClientGeoJsonSource*>(pointer);
+        source_ptr->clearData();
+        //auto source_ptr = reinterpret_cast<Tangram::DataSource*>(pointer);
+	//Tangram::clearDataSource(*source_ptr, true, true);
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeBeginChangeBlock(JNIEnv* jniEnv, jobject obj, jlong pointer) {
+        assert(pointer > 0);
+        auto source_ptr = reinterpret_cast<Tangram::ClientGeoJsonSource*>(pointer);
+        source_ptr->beginChangeBlock();
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeEndChangeBlock(JNIEnv* jniEnv, jobject obj, jlong pointer) {
+        assert(pointer > 0);
+        auto source_ptr = reinterpret_cast<Tangram::ClientGeoJsonSource*>(pointer);
+        source_ptr->endChangeBlock();
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeAddFeature(JNIEnv* jniEnv, jobject obj, jlong pointer,

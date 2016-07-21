@@ -609,6 +609,16 @@ public class MapController implements Renderer {
         nativeApplySceneUpdates();
     }
 
+    void beginChangeBlock(long sourcePtr)
+    {
+	nativeBeginChangeBlock(sourcePtr);
+    }
+
+    void endChangeBlock(long sourcePtr)
+    {
+	nativeEndChangeBlock(sourcePtr);
+    }
+
     // Native methods
     // ==============
 
@@ -655,6 +665,9 @@ public class MapController implements Renderer {
     synchronized native void nativeClearDataSource(long pointer);
     synchronized native void nativeAddFeature(long pointer, double[] coordinates, int[] rings, String[] properties);
     synchronized native void nativeAddGeoJson(long pointer, String geojson);
+
+    synchronized native void nativeBeginChangeBlock(long sourcePtr);
+    synchronized native void nativeEndChangeBlock(long sourcePtr);
 
     native void nativeSetDebugFlag(int flag, boolean on);
 
