@@ -6,6 +6,7 @@
 
 namespace Tangram {
 
+class RenderState;
 class ShaderProgram;
 class VertexLayout;
 
@@ -15,7 +16,7 @@ public:
     Vao();
     ~Vao();
 
-    void init(ShaderProgram& _program, const std::vector<std::pair<uint32_t, uint32_t>>& _vertexOffsets,
+    void init(RenderState& rs, ShaderProgram& _program, const std::vector<std::pair<uint32_t, uint32_t>>& _vertexOffsets,
               VertexLayout& _layout, GLuint _vertexBuffer, GLuint _indexBuffer);
 
     void bind(unsigned int _index);

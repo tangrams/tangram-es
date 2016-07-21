@@ -98,24 +98,24 @@ void TextDisplay::draw(const std::string& _text, int _posx, int _posy) {
     GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, nquads * 6));
 }
 
-void TextDisplay::draw(const std::vector<std::string>& _infos) {
+void TextDisplay::draw(RenderState& rs, const std::vector<std::string>& _infos) {
     GLint boundbuffer = -1;
 
-    if (!m_shader->use()) { return; }
+    if (!m_shader->use(rs)) { return; }
 
-    RenderState::culling(GL_FALSE);
-    RenderState::blending(GL_FALSE);
-    RenderState::depthTest(GL_FALSE);
-    RenderState::depthWrite(GL_FALSE);
+    rs.culling(GL_FALSE);
+    rs.blending(GL_FALSE);
+    rs.depthTest(GL_FALSE);
+    rs.depthWrite(GL_FALSE);
 
     GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &boundbuffer));
-    RenderState::vertexBuffer(0);
+    rs.vertexBuffer(0);
 
     glm::mat4 orthoProj = glm::ortho(0.f, (float)m_textDisplayResolution.x, (float)m_textDisplayResolution.y, 0.f, -1.f, 1.f);
-    m_shader->setUniformMatrix4f(m_uOrthoProj, orthoProj);
+    m_shader->setUniformMatrix4f(rs, m_uOrthoProj, orthoProj);
 
     // Display Tangram info messages
-    m_shader->setUniformf(m_uColor, 0.f, 0.f, 0.f);
+    m_shader->setUniformf(rs, m_uColor, 0.f, 0.f, 0.f);
     int offset = 0;
     for (auto& text : _infos) {
         draw(text, 3, 3 + offset);
@@ -124,14 +124,14 @@ void TextDisplay::draw(const std::vector<std::string>& _infos) {
 
     // Display screen log
     offset = 0;
-    m_shader->setUniformf(m_uColor, 51 / 255.f, 73 / 255.f, 120 / 255.f);
+    m_shader->setUniformf(rs, m_uColor, 51 / 255.f, 73 / 255.f, 120 / 255.f);
     for (int i = 0; i < LOG_CAPACITY; ++i) {
         draw(m_log[i], 3, m_textDisplayResolution.y - 10 + offset);
         offset -= 10;
     }
 
-    RenderState::culling(GL_TRUE);
-    RenderState::vertexBuffer(boundbuffer);
+    rs.culling(GL_TRUE);
+    rs.vertexBuffer(boundbuffer);
 }
 
 }

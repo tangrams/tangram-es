@@ -60,6 +60,7 @@ public:
     InputHandler inputHandler{view};
     TileWorker tileWorker{MAX_WORKERS};
     TileManager tileManager{tileWorker};
+    RenderState renderState;
 
     std::vector<SceneUpdate> sceneUpdates;
     std::array<Ease, 4> eases;
@@ -252,7 +253,7 @@ void Map::resize(int _newWidth, int _newHeight) {
 
     impl->view.setSize(_newWidth, _newHeight);
 
-    Primitives::setResolution(_newWidth, _newHeight);
+    Primitives::setResolution(impl->renderState, _newWidth, _newHeight);
 }
 
 bool Map::update(float _dt) {
@@ -332,17 +333,17 @@ void Map::render() {
 
     // Invalidate render states for new frame
     if (!impl->cacheGlState) {
-        RenderState::invalidate();
+        impl->renderState.invalidate();
     }
 
     // Set up openGL for new frame
-    RenderState::depthWrite(GL_TRUE);
+    impl->renderState.depthWrite(GL_TRUE);
     auto& color = impl->scene->background();
-    RenderState::clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
+    impl->renderState.clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
     GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
     for (const auto& style : impl->scene->styles()) {
-        style->onBeginFrame();
+        style->onBeginFrame(impl->renderState);
     }
 
     {
@@ -351,20 +352,20 @@ void Map::render() {
         // Loop over all styles
         for (const auto& style : impl->scene->styles()) {
 
-            style->onBeginDrawFrame(impl->view, *(impl->scene));
+            style->onBeginDrawFrame(impl->renderState, impl->view, *(impl->scene));
 
             // Loop over all tiles in m_tileSet
             for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                style->draw(*tile);
+                style->draw(impl->renderState, *tile);
             }
 
             style->onEndDrawFrame();
         }
     }
 
-    impl->labels.drawDebug(impl->view);
+    impl->labels.drawDebug(impl->renderState, impl->view);
 
-    FrameInfo::draw(impl->view, impl->tileManager);
+    FrameInfo::draw(impl->renderState, impl->view, impl->tileManager);
 }
 
 int Map::getViewportHeight() {
@@ -635,11 +636,11 @@ void Map::setupGL() {
     // Reconfigure the render states. Increases context 'generation'.
     // The OpenGL context has been destroyed since the last time resources were
     // created, so we invalidate all data that depends on OpenGL object handles.
-    RenderState::increaseGeneration();
-    RenderState::invalidate();
+    impl->renderState.increaseGeneration();
+    impl->renderState.invalidate();
 
     // Set default primitive render color
-    Primitives::setColor(0xffffff);
+    Primitives::setColor(impl->renderState, 0xffffff);
 
     // Load GL extensions and capabilities
     Hardware::loadExtensions();

@@ -2,6 +2,7 @@
 
 namespace Tangram {
 
+class RenderState;
 class TileManager;
 class View;
 
@@ -12,7 +13,7 @@ struct FrameInfo {
 
     static void endUpdate();
 
-    static void draw(const View& _view, TileManager& _tileManager);
+    static void draw(RenderState& rs, const View& _view, TileManager& _tileManager);
 };
 
 }

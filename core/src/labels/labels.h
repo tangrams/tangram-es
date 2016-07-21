@@ -32,7 +32,7 @@ public:
 
     virtual ~Labels();
 
-    void drawDebug(const View& _view);
+    void drawDebug(RenderState& rs, const View& _view);
 
     void updateLabelSet(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
                         const std::vector<std::shared_ptr<Tile>>& _tiles, std::unique_ptr<TileCache>& _cache);

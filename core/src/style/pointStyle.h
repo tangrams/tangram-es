@@ -33,8 +33,8 @@ public:
                Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
 
     virtual void onBeginUpdate() override;
-    virtual void onBeginDrawFrame(const View& _view, Scene& _scene) override;
-    virtual void onBeginFrame() override;
+    virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
+    virtual void onBeginFrame(RenderState& rs) override;
 
     void setSpriteAtlas(std::shared_ptr<SpriteAtlas> _spriteAtlas) { m_spriteAtlas = _spriteAtlas; }
     void setTexture(std::shared_ptr<Texture> _texture) { m_texture = _texture; }

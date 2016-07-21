@@ -17,6 +17,7 @@ namespace Tangram {
 #define VERTEX_BUFFER_SIZE  99999
 
 typedef int FontID;
+class RenderState;
 
 template <typename T>
 std::string to_string_with_precision(const T a_value, const int n = 6) {
@@ -42,7 +43,7 @@ public:
     void init();
 
     /* Draw stacked messages added through log and draw _infos string list */
-    void draw(const std::vector<std::string>& _infos);
+    void draw(RenderState& rs, const std::vector<std::string>& _infos);
 
     /* Stack the log message to be displayed in the screen log */
     void log(const char* fmt, ...);

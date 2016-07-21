@@ -42,23 +42,23 @@ void Skybox::init() {
          {  1.0,  1.0, -1.0 }}});
 }
 
-void Skybox::draw(const View& _view) {
+void Skybox::draw(RenderState& rs, const View& _view) {
 
-    m_texture->update(0);
-    m_texture->bind(0);
+    m_texture->update(rs, 0);
+    m_texture->bind(rs, 0);
 
     glm::mat4 vp = _view.getViewProjectionMatrix();
 
     // Remove translation so that skybox is centered on view
     vp[3] = { 0, 0, 0, 0 };
 
-    m_shader->setUniformMatrix4f(m_uModelViewProj, vp);
-    m_shader->setUniformi(m_uTex, 0);
+    m_shader->setUniformMatrix4f(rs, m_uModelViewProj, vp);
+    m_shader->setUniformi(rs, m_uTex, 0);
 
-    RenderState::blending(GL_FALSE);
-    RenderState::depthTest(GL_TRUE);
+    rs.blending(GL_FALSE);
+    rs.depthTest(GL_TRUE);
 
-    m_mesh->draw(*m_shader);
+    m_mesh->draw(rs, *m_shader);
 
 }
 

@@ -82,16 +82,16 @@ Texture& Texture::operator=(Texture&& _other) {
     return *this;
 }
 
-Texture::~Texture() {
+void Texture::dispose(RenderState& rs) {
     if (m_glHandle) {
 
-        m_mainThreadJobQueue.add([id = m_glHandle, t = m_target, g = m_generation]() {
-            if (RenderState::isValidGeneration(g)) {
+        m_mainThreadJobQueue.add([id = m_glHandle, t = m_target, g = m_generation, &rs]() {
+            if (rs.isValidGeneration(g)) {
                 // If the texture is bound, and deleted, the binding defaults to 0
                 // according to the OpenGL spec. In this case we need to force the
                 // currently bound texture to 0 in the render state.
-                if (RenderState::texture.compare(t, id)) {
-                    RenderState::texture.init(t, 0, false);
+                if (rs.texture.compare(t, id)) {
+                    rs.texture.init(t, 0, false);
                 }
 
                 GL_CHECK(glDeleteTextures(1, &id));
@@ -174,15 +174,15 @@ void Texture::setDirty(size_t _yoff, size_t _height) {
     }
 }
 
-void Texture::bind(GLuint _unit) {
-    RenderState::textureUnit(_unit);
-    RenderState::texture(m_target, m_glHandle);
+void Texture::bind(RenderState& rs, GLuint _unit) {
+    rs.textureUnit(_unit);
+    rs.texture(m_target, m_glHandle);
 }
 
-void Texture::generate(GLuint _textureUnit) {
+void Texture::generate(RenderState& rs, GLuint _textureUnit) {
     GL_CHECK(glGenTextures(1, &m_glHandle));
 
-    bind(_textureUnit);
+    bind(rs, _textureUnit);
 
     GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, m_options.filtering.min));
     GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, m_options.filtering.mag));
@@ -190,27 +190,27 @@ void Texture::generate(GLuint _textureUnit) {
     GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_WRAP_S, m_options.wrapping.wraps));
     GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.wrapping.wrapt));
 
-    m_generation = RenderState::generation();
+    m_generation = rs.generation();
 
     m_mainThreadJobQueue.makeCurrentThreadTarget();
 }
 
-void Texture::checkValidity() {
+void Texture::checkValidity(RenderState& rs) {
 
-    if (!RenderState::isValidGeneration(m_generation)) {
+    if (!rs.isValidGeneration(m_generation)) {
         m_shouldResize = true;
         m_glHandle = 0;
     }
 }
 
-bool Texture::isValid() const {
-    return (RenderState::isValidGeneration(m_generation)
+bool Texture::isValid(RenderState& rs) const {
+    return (rs.isValidGeneration(m_generation)
         && m_glHandle != 0);
 }
 
-void Texture::update(GLuint _textureUnit) {
+void Texture::update(RenderState& rs, GLuint _textureUnit) {
 
-    checkValidity();
+    checkValidity(rs);
 
     if (!m_shouldResize && m_dirtyRanges.empty()) {
         return;
@@ -225,12 +225,12 @@ void Texture::update(GLuint _textureUnit) {
 
     GLuint* data = m_data.size() > 0 ? m_data.data() : nullptr;
 
-    update(_textureUnit, data);
+    update(rs, _textureUnit, data);
 }
 
-void Texture::update(GLuint _textureUnit, const GLuint* data) {
+void Texture::update(RenderState& rs, GLuint _textureUnit, const GLuint* data) {
 
-    checkValidity();
+    checkValidity(rs);
 
     if (!m_shouldResize && m_dirtyRanges.empty()) {
         return;
@@ -238,9 +238,9 @@ void Texture::update(GLuint _textureUnit, const GLuint* data) {
 
     if (m_glHandle == 0) {
         // texture hasn't been initialized yet, generate it
-        generate(_textureUnit);
+        generate(rs, _textureUnit);
     } else {
-        bind(_textureUnit);
+        bind(rs, _textureUnit);
     }
 
     // resize or push data

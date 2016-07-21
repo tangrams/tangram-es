@@ -21,7 +21,7 @@ public:
     virtual void setRadius(float _outer);
     virtual void setRadius(float _inner, float _outer);
 
-    virtual void setupProgram(const View& _view, LightUniforms& _uniforms) override;
+    virtual void setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms) override;
 
     struct Uniforms : public LightUniforms {
         Uniforms(ShaderProgram& _shader, const std::string& _name)

@@ -40,7 +40,7 @@ void init() {
     }
 }
 
-void drawLine(const glm::vec2& _origin, const glm::vec2& _destination) {
+void drawLine(RenderState& rs, const glm::vec2& _origin, const glm::vec2& _destination) {
 
     init();
 
@@ -49,61 +49,61 @@ void drawLine(const glm::vec2& _origin, const glm::vec2& _destination) {
         glm::vec2(_destination.x, _destination.y)
     };
 
-    if (!s_shader->use()) { return; }
+    if (!s_shader->use(rs)) { return; }
 
     GLint boundBuffer;
     GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &boundBuffer));
-    RenderState::vertexBuffer(0);
-    RenderState::depthTest(GL_FALSE);
+    rs.vertexBuffer(0);
+    rs.depthTest(GL_FALSE);
 
     // enable the layout for the line vertices
     s_layout->enable(*s_shader, 0, &verts);
 
     GL_CHECK(glDrawArrays(GL_LINES, 0, 2));
 
-    RenderState::vertexBuffer(boundBuffer);
+    rs.vertexBuffer(boundBuffer);
 }
 
-void drawRect(const glm::vec2& _origin, const glm::vec2& _destination) {
-    drawLine(_origin, {_destination.x, _origin.y});
-    drawLine({_destination.x, _origin.y}, _destination);
-    drawLine(_destination, {_origin.x, _destination.y});
-    drawLine({_origin.x,_destination.y}, _origin);
+void drawRect(RenderState& rs, const glm::vec2& _origin, const glm::vec2& _destination) {
+    drawLine(rs, _origin, {_destination.x, _origin.y});
+    drawLine(rs, {_destination.x, _origin.y}, _destination);
+    drawLine(rs, _destination, {_origin.x, _destination.y});
+    drawLine(rs, {_origin.x,_destination.y}, _origin);
 }
 
-void drawPoly(const glm::vec2* _polygon, size_t _n) {
+void drawPoly(RenderState& rs, const glm::vec2* _polygon, size_t _n) {
     init();
 
-    if (!s_shader->use()) { return; }
+    if (!s_shader->use(rs)) { return; }
 
     GLint boundBuffer;
     GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &boundBuffer));
-    RenderState::vertexBuffer(0);
-    RenderState::depthTest(GL_FALSE);
+    rs.vertexBuffer(0);
+    rs.depthTest(GL_FALSE);
 
     // enable the layout for the _polygon vertices
     s_layout->enable(*s_shader, 0, (void*)_polygon);
 
     GL_CHECK(glDrawArrays(GL_LINE_LOOP, 0, _n));
 
-    RenderState::vertexBuffer(boundBuffer);
+    rs.vertexBuffer(boundBuffer);
 }
 
-void setColor(unsigned int _color) {
+void setColor(RenderState& rs, unsigned int _color) {
     init();
 
     float r = (_color >> 16 & 0xff) / 255.0;
     float g = (_color >> 8  & 0xff) / 255.0;
     float b = (_color       & 0xff) / 255.0;
 
-    s_shader->setUniformf(s_uColor, r, g, b);
+    s_shader->setUniformf(rs, s_uColor, r, g, b);
 }
 
-void setResolution(float _width, float _height) {
+void setResolution(RenderState& rs, float _width, float _height) {
     init();
 
     glm::mat4 proj = glm::ortho(0.f, _width, _height, 0.f, -1.f, 1.f);
-    s_shader->setUniformMatrix4f(s_uProj, proj);
+    s_shader->setUniformMatrix4f(rs, s_uProj, proj);
 }
 
 }

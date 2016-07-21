@@ -160,21 +160,21 @@ void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
     }
 }
 
-void FontContext::updateTextures() {
+void FontContext::updateTextures(RenderState& rs) {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     for (auto& gt : m_textures) {
-        if (gt.dirty || !gt.texture.isValid()) {
+        if (gt.dirty || !gt.texture.isValid(rs)) {
             gt.dirty = false;
             auto td = reinterpret_cast<const GLuint*>(gt.texData.data());
-            gt.texture.update(0, td);
+            gt.texture.update(rs, 0, td);
         }
     }
 }
 
-void FontContext::bindTexture(alfons::AtlasID _id, GLuint _unit) {
+void FontContext::bindTexture(RenderState& rs, alfons::AtlasID _id, GLuint _unit) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_textures[_id].texture.bind(_unit);
+    m_textures[_id].texture.bind(rs, _unit);
 
 }
 

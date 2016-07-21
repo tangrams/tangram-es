@@ -15,7 +15,7 @@ public:
     /*	Set the direction of the light */
     virtual void setDirection(const glm::vec3& _dir);
 
-    virtual void setupProgram(const View& _view, LightUniforms& _uniforms) override;
+    virtual void setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms) override;
 
     struct Uniforms : public LightUniforms {
 

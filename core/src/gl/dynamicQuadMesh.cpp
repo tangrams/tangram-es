@@ -7,25 +7,24 @@ namespace Tangram {
 GLuint QuadIndices::quadIndexBuffer = 0;
 int QuadIndices::quadGeneration = -1;
 
-void QuadIndices::load() {
+void QuadIndices::load(RenderState& rs) {
 
-    if (quadIndexBuffer != 0 && !RenderState::isValidGeneration(quadGeneration)) {
+    if (quadIndexBuffer != 0 && !rs.isValidGeneration(quadGeneration)) {
 
-        if (RenderState::indexBuffer.compare(quadIndexBuffer)) {
-            RenderState::indexBuffer.init(0, false);
+        if (rs.indexBuffer.compare(quadIndexBuffer)) {
+            rs.indexBuffer.init(0, false);
         }
         GL_CHECK(glDeleteBuffers(1, &quadIndexBuffer));
         quadIndexBuffer = 0;
         quadGeneration = -1;
     }
 
-    if (RenderState::isValidGeneration(quadGeneration)) {
-
-        RenderState::indexBuffer(quadIndexBuffer);
+    if (rs.isValidGeneration(quadGeneration)) {
+        rs.indexBuffer(quadIndexBuffer);
         return;
     }
 
-    quadGeneration = RenderState::generation();
+    quadGeneration = rs.generation();
 
     std::vector<GLushort> indices;
     indices.reserve(maxVertices / 4 * 6);
@@ -40,7 +39,7 @@ void QuadIndices::load() {
     }
 
     GL_CHECK(glGenBuffers(1, &quadIndexBuffer));
-    RenderState::indexBuffer(quadIndexBuffer);
+    rs.indexBuffer(quadIndexBuffer);
     GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLushort),
                  reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW));
 }

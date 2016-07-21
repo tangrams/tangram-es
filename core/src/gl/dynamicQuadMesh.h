@@ -12,7 +12,7 @@ namespace Tangram {
 
 class QuadIndices {
 public :
-    static void load();
+    static void load(RenderState& rs);
 
     static const size_t maxVertices = 16384;
 
@@ -31,7 +31,7 @@ public:
         : MeshBase(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW) {
     }
 
-    bool draw(ShaderProgram& _shader) override;
+    bool draw(RenderState& rs, ShaderProgram& _shader) override;
 
     size_t bufferSize() const override {
         return MeshBase::bufferSize();
@@ -46,7 +46,7 @@ public:
 
     size_t numberOfVertices() const { return m_vertices.size(); }
 
-    void upload() override;
+    void upload(RenderState& rs) override;
 
     bool isReady() { return m_isUploaded; }
 
@@ -64,33 +64,33 @@ private:
 };
 
 template<class T>
-void DynamicQuadMesh<T>::upload() {
+void DynamicQuadMesh<T>::upload(RenderState& rs) {
 
     if (m_nVertices == 0 || m_isUploaded) { return; }
 
-    MeshBase::checkValidity();
+    MeshBase::checkValidity(rs);
 
     // Generate vertex buffer, if needed
     if (m_glVertexBuffer == 0) {
         GL_CHECK(glGenBuffers(1, &m_glVertexBuffer));
     }
 
-    MeshBase::subDataUpload(reinterpret_cast<GLbyte*>(m_vertices.data()));
+    MeshBase::subDataUpload(rs, reinterpret_cast<GLbyte*>(m_vertices.data()));
 
     m_isUploaded = true;
 }
 
 template<class T>
-bool DynamicQuadMesh<T>::draw(ShaderProgram& _shader) {
+bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& _shader) {
 
     if (m_nVertices == 0) { return false; }
 
     // Bind buffers for drawing
-    RenderState::vertexBuffer(m_glVertexBuffer);
-    QuadIndices::load();
+    rs.vertexBuffer(m_glVertexBuffer);
+    QuadIndices::load(rs);
 
     // Enable shader program
-    if (!_shader.use()) {
+    if (!_shader.use(rs)) {
         return false;
     }
 

@@ -9,6 +9,8 @@
 
 namespace Tangram {
 
+class RenderState;
+
 struct TextureFiltering {
     GLenum min;
     GLenum mag;
@@ -46,12 +48,14 @@ public:
     Texture(Texture&& _other);
     Texture& operator=(Texture&& _other);
 
-    virtual ~Texture();
+    virtual ~Texture() {}
+
+    virtual void dispose(RenderState& rs);
 
     /* Perform texture updates, should be called at least once and after adding data or resizing */
-    virtual void update(GLuint _textureSlot);
+    virtual void update(RenderState& rs, GLuint _textureSlot);
 
-    virtual void update(GLuint _textureSlot, const GLuint* data);
+    virtual void update(RenderState& rs, GLuint _textureSlot, const GLuint* data);
 
     /* Resize the texture */
     void resize(const unsigned int _width, const unsigned int _height);
@@ -60,7 +64,7 @@ public:
     unsigned int getWidth() const { return m_width; }
     unsigned int getHeight() const { return m_height; }
 
-    void bind(GLuint _unit);
+    void bind(RenderState& rs, GLuint _unit);
 
     void setDirty(size_t yOffset, size_t height);
 
@@ -77,7 +81,7 @@ public:
                     uint16_t _width, uint16_t _height, uint16_t _stride);
 
     /* Checks whether the texture has valid data and has been successfully uploaded to GPU */
-    bool isValid() const;
+    bool isValid(RenderState& rs) const;
 
     typedef std::pair<GLuint, GLuint> TextureSlot;
 
@@ -89,8 +93,8 @@ public:
 
 protected:
 
-    void generate(GLuint _textureUnit);
-    void checkValidity();
+    void generate(RenderState& rs, GLuint _textureUnit);
+    void checkValidity(RenderState& rs);
 
     TextureOptions m_options;
     std::vector<GLuint> m_data;

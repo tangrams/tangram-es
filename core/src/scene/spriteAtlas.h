@@ -26,7 +26,7 @@ public:
     void updateSpriteNodes(std::shared_ptr<Texture> _texture);
 
     /* Bind the atlas in the driver */
-    void bind(GLuint _slot);
+    void bind(RenderState& rs, GLuint _slot);
 
 private:
     fastmap<std::string, SpriteNode> m_spritesNodes;
