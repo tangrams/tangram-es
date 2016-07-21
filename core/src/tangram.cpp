@@ -302,9 +302,9 @@ bool Map::update(float _dt) {
             for (const auto& tile : tiles) {
                 tile->update(_dt, impl->view);
             }
+
             impl->labels.updateLabelSet(impl->view, _dt, impl->scene->styles(), tiles,
                                         impl->tileManager.getTileCache());
-
         } else {
             impl->labels.updateLabels(impl->view, _dt, impl->scene->styles(), tiles);
         }

@@ -122,9 +122,9 @@ void Labels::skipTransitions(const std::vector<const Style*>& _styles, Tile& _ti
 
 std::shared_ptr<Tile> findProxy(int32_t _sourceID, const TileID& _proxyID,
                                 const std::vector<std::shared_ptr<Tile>>& _tiles,
-                                std::unique_ptr<TileCache>& _cache) {
+                                TileCache& _cache) {
 
-    auto proxy = _cache->contains(_sourceID, _proxyID);
+    auto proxy = _cache.contains(_sourceID, _proxyID);
     if (proxy) { return proxy; }
 
     for (auto& tile : _tiles) {
@@ -137,7 +137,7 @@ std::shared_ptr<Tile> findProxy(int32_t _sourceID, const TileID& _proxyID,
 
 void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
                              const std::vector<std::shared_ptr<Tile>>& _tiles,
-                             std::unique_ptr<TileCache>& _cache, float _currentZoom) const {
+                             TileCache& _cache, float _currentZoom) const {
 
     std::vector<const Style*> styles;
 
@@ -277,7 +277,7 @@ bool Labels::withinRepeatDistance(Label *_label) {
 void Labels::updateLabelSet(const View& _view, float _dt,
                             const std::vector<std::unique_ptr<Style>>& _styles,
                             const std::vector<std::shared_ptr<Tile>>& _tiles,
-                            std::unique_ptr<TileCache>& _cache) {
+                            TileCache& _cache) {
 
     /// Collect and update labels from visible tiles
     updateLabels(_view, _dt, _styles, _tiles, false);
