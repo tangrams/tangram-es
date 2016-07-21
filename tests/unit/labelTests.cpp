@@ -26,6 +26,24 @@ TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
             TextLabelProperty::Align::none);
 }
 
+TextLabel makeLabelWithAnchorFallbacks() {
+    Label::Options options;
+
+    options.anchorFallback.push_back(LabelProperty::Anchor::right);
+    options.anchorFallback.push_back(LabelProperty::Anchor::bottom);
+    options.anchorFallback.push_back(LabelProperty::Anchor::left);
+    options.anchorFallback.push_back(LabelProperty::Anchor::top);
+
+    options.offset = {0.0f, 0.0f};
+
+    std::vector<TextRange> textRanges;
+
+    textRanges.push_back({TextLabelProperty::Align::none, {}});
+    return TextLabel({screenSize/2.f}, Label::Type::point, options,
+            LabelProperty::Anchor::right, {}, {0, 0},
+            dummy, textRanges, TextLabelProperty::Align::none);
+}
+
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {
     TextLabel l(makeLabel({screenSize/2.f}, Label::Type::point));
 
@@ -180,4 +198,78 @@ TEST_CASE( "Sine interpolation", "[Core][Label][Fade]" ) {
 
     REQUIRE(fadeIn.isFinished());
 }
+
+TEST_CASE( "Ensure anchor fallback behavior on first fallback", "[Core][Label]" ) {
+    TextLabel l = makeLabelWithAnchorFallbacks();
+
+    REQUIRE(l.state() == Label::State::wait_occ);
+
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+    l.occlude(true);
+    l.evalState(screenSize, 1.f);
+
+    REQUIRE(l.state() == Label::State::anchor_fallback);
+}
+
+TEST_CASE( "Ensure anchor fallback behavior when looping over all fallbacks without finding one", "[Core][Label]" ) {
+    TextLabel l = makeLabelWithAnchorFallbacks();
+
+    // wait_occ -> anchor_fallback
+    {
+        REQUIRE(l.state() == Label::State::wait_occ);
+
+        l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+        l.occlude(true);
+        l.evalState(screenSize, 1.f);
+
+        REQUIRE(l.state() == Label::State::anchor_fallback);
+    }
+
+    // anchor_fallback -> anchor_fallback (move to third anchor)
+    {
+        for (int i = 0; i < 3; ++i) {
+            l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+            l.occlude(true);
+            l.evalState(screenSize, 1.f);
+
+            REQUIRE(l.state() == Label::State::anchor_fallback);
+        }
+
+        REQUIRE(l.anchorType() == LabelProperty::Anchor::left);
+    }
+
+    // anchor_fallback -> fading_out (all anchor tested)
+    {
+        for (int i = 0; i < 2; ++i) {
+            l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+            l.occlude(true);
+            l.evalState(screenSize, 1.f);
+        }
+        REQUIRE(l.state() == Label::State::fading_out);
+    }
+}
+
+#if 0
+TEST_CASE( "Ensure anchor fallback behavior when looping over all fallback and finding one", "[Core][Label]" ) {
+    TextLabel l = makeLabelWithAnchorFallbacks();
+
+    REQUIRE(l.state() == Label::State::wait_occ);
+
+    // move to third anchor
+    for (int i = 0; i < 3; ++i) {
+        l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+        l.occlude(true);
+        l.evalState(screenSize, 1.f);
+
+        REQUIRE(l.state() == Label::State::anchor_fallback);
+    }
+
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+    l.occlude(false);
+    l.evalState(screenSize, 1.f);
+
+    REQUIRE(l.anchorType() == LabelProperty::Anchor::left);
+    REQUIRE(l.state() == Label::State::visible);
+}
+#endif
 
