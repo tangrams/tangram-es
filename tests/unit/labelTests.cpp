@@ -47,11 +47,11 @@ TextLabel makeLabelWithAnchorFallbacks() {
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {
     TextLabel l(makeLabel({screenSize/2.f}, Label::Type::point));
 
-    REQUIRE(l.state() == Label::State::wait_occ);
+    REQUIRE(l.state() == Label::State::none);
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
 
     REQUIRE(l.state() != Label::State::sleep);
-    REQUIRE(l.state() == Label::State::wait_occ);
+    REQUIRE(l.state() == Label::State::none);
     REQUIRE(l.canOcclude());
 
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
@@ -64,7 +64,7 @@ TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[
 TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens", "[Core][Label]" ) {
     TextLabel l(makeLabel({screenSize/2.f}, Label::Type::point));
 
-    REQUIRE(l.state() == Label::State::wait_occ);
+    REQUIRE(l.state() == Label::State::none);
 
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
     l.occlude(false);
@@ -107,7 +107,7 @@ TEST_CASE( "Ensure the end state after occlusion is leep state", "[Core][Label]"
 TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
     TextLabel l(makeLabel({screenSize*2.f}, Label::Type::point));
 
-    REQUIRE(l.state() == Label::State::wait_occ);
+    REQUIRE(l.state() == Label::State::none);
 
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
 
@@ -116,7 +116,7 @@ TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
 
     l.update(glm::ortho(0.f, screenSize.x * 4.f, screenSize.y * 4.f, 0.f, -1.f, 1.f), screenSize, 0);
     l.evalState(screenSize, 0);
-    REQUIRE(l.state() != Label::State::wait_occ);
+    REQUIRE(l.state() != Label::State::none);
 
     REQUIRE(l.state() == Label::State::visible);
     REQUIRE(l.canOcclude());
@@ -202,7 +202,7 @@ TEST_CASE( "Sine interpolation", "[Core][Label][Fade]" ) {
 TEST_CASE( "Ensure anchor fallback behavior on first fallback", "[Core][Label]" ) {
     TextLabel l = makeLabelWithAnchorFallbacks();
 
-    REQUIRE(l.state() == Label::State::wait_occ);
+    REQUIRE(l.state() == Label::State::none);
 
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
     l.occlude(true);
@@ -214,9 +214,9 @@ TEST_CASE( "Ensure anchor fallback behavior on first fallback", "[Core][Label]" 
 TEST_CASE( "Ensure anchor fallback behavior when looping over all fallbacks without finding one", "[Core][Label]" ) {
     TextLabel l = makeLabelWithAnchorFallbacks();
 
-    // wait_occ -> anchor_fallback
+    // none -> anchor_fallback
     {
-        REQUIRE(l.state() == Label::State::wait_occ);
+        REQUIRE(l.state() == Label::State::none);
 
         l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
         l.occlude(true);
@@ -253,7 +253,7 @@ TEST_CASE( "Ensure anchor fallback behavior when looping over all fallbacks with
 TEST_CASE( "Ensure anchor fallback behavior when looping over all fallback and finding one", "[Core][Label]" ) {
     TextLabel l = makeLabelWithAnchorFallbacks();
 
-    REQUIRE(l.state() == Label::State::wait_occ);
+    REQUIRE(l.state() == Label::State::none);
 
     // move to third anchor
     for (int i = 0; i < 3; ++i) {

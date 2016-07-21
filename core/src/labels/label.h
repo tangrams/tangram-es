@@ -28,17 +28,17 @@ public:
     enum class Type {
         point,
         line,
-        debug
+        debug,
     };
 
     enum State {
-        fading_in       = 1,
-        fading_out      = 1 << 1,
-        visible         = 1 << 2,
-        sleep           = 1 << 3,
-        out_of_screen   = 1 << 4,
-        anchor_fallback = 1 << 5,
-        wait_occ        = 1 << 6, // state waiting for first occlusion result
+        none            = 1 << 0,
+        fading_in       = 1 << 1,
+        fading_out      = 1 << 2,
+        visible         = 1 << 3,
+        sleep           = 1 << 4,
+        out_of_screen   = 1 << 5,
+        anchor_fallback = 1 << 6,
         skip_transition = 1 << 7,
         dead            = 1 << 8,
     };
