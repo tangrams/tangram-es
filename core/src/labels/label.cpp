@@ -319,7 +319,7 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             break;
         case State::wait_occ:
             if (m_occluded) {
-                if (m_options.anchorFallbacks.size() != 0) {
+                if (m_options.anchorFallbacks != 0) {
                     enterState(State::anchor_fallback, 0.0);
                     animate = true;
                 } else {
