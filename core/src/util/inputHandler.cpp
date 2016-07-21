@@ -25,11 +25,11 @@
 
 namespace Tangram {
 
-InputHandler::InputHandler(std::shared_ptr<View> _view) : m_view(_view) {}
+InputHandler::InputHandler(View& _view) : m_view(_view) {}
 
 void InputHandler::update(float _dt) {
 
-    auto velocityPanPixels = m_view->pixelsPerMeter() / m_view->pixelScale() * m_velocityPan;
+    auto velocityPanPixels = m_view.pixelsPerMeter() / m_view.pixelScale() * m_velocityPan;
 
     bool isFlinging = glm::length(velocityPanPixels) > THRESHOLD_STOP_PAN ||
                       std::abs(m_velocityZoom) > THRESHOLD_STOP_ZOOM;
@@ -37,10 +37,10 @@ void InputHandler::update(float _dt) {
     if (isFlinging) {
 
         m_velocityPan -= _dt * DAMPING_PAN * m_velocityPan;
-        m_view->translate(_dt * m_velocityPan.x, _dt * m_velocityPan.y);
+        m_view.translate(_dt * m_velocityPan.x, _dt * m_velocityPan.y);
 
         m_velocityZoom -= _dt * DAMPING_ZOOM * m_velocityZoom;
-        m_view->zoom(m_velocityZoom * _dt);
+        m_view.zoom(m_velocityZoom * _dt);
 
         requestRender();
     }
@@ -50,13 +50,13 @@ void InputHandler::handleTapGesture(float _posX, float _posY) {
 
     onGesture();
 
-    double viewCenterX = 0.5 * m_view->getWidth();
-    double viewCenterY = 0.5 * m_view->getHeight();
+    double viewCenterX = 0.5 * m_view.getWidth();
+    double viewCenterY = 0.5 * m_view.getHeight();
 
-    m_view->screenToGroundPlane(viewCenterX, viewCenterY);
-    m_view->screenToGroundPlane(_posX, _posY);
+    m_view.screenToGroundPlane(viewCenterX, viewCenterY);
+    m_view.screenToGroundPlane(_posX, _posY);
 
-    m_view->translate((_posX - viewCenterX), (_posY - viewCenterY));
+    m_view.translate((_posX - viewCenterX), (_posY - viewCenterY));
 
 }
 
@@ -70,19 +70,19 @@ void InputHandler::handlePanGesture(float _startX, float _startY, float _endX, f
 
     onGesture();
 
-    m_view->screenToGroundPlane(_startX, _startY);
-    m_view->screenToGroundPlane(_endX, _endY);
+    m_view.screenToGroundPlane(_startX, _startY);
+    m_view.screenToGroundPlane(_endX, _endY);
 
     float dx = _startX - _endX;
     float dy = _startY - _endY;
 
-    m_view->translate(dx, dy);
+    m_view.translate(dx, dy);
 
 }
 
 void InputHandler::handleFlingGesture(float _posX, float _posY, float _velocityX, float _velocityY) {
 
-    if (glm::length(glm::vec2(_velocityX, _velocityY)) / m_view->pixelScale() <= THRESHOLD_START_PAN) {
+    if (glm::length(glm::vec2(_velocityX, _velocityY)) / m_view.pixelScale() <= THRESHOLD_START_PAN) {
         return;
     }
 
@@ -95,8 +95,8 @@ void InputHandler::handleFlingGesture(float _posX, float _posY, float _velocityX
     float endX = _posX + epsilon * _velocityX;
     float endY = _posY + epsilon * _velocityY;
 
-    m_view->screenToGroundPlane(startX, startY);
-    m_view->screenToGroundPlane(endX, endY);
+    m_view.screenToGroundPlane(startX, startY);
+    m_view.screenToGroundPlane(endX, endY);
 
     float dx = (startX - endX) / epsilon;
     float dy = (startY - endY) / epsilon;
@@ -109,13 +109,13 @@ void InputHandler::handlePinchGesture(float _posX, float _posY, float _scale, fl
 
     onGesture();
 
-    float z = m_view->getZoom();
+    float z = m_view.getZoom();
     static float invLog2 = 1 / log(2);
-    m_view->zoom(log(_scale) * invLog2);
+    m_view.zoom(log(_scale) * invLog2);
 
-    m_view->screenToGroundPlane(_posX, _posY);
-    float s = pow(2, m_view->getZoom() - z) - 1;
-    m_view->translate(s * _posX, s * _posY);
+    m_view.screenToGroundPlane(_posX, _posY);
+    float s = pow(2, m_view.getZoom() - z) - 1;
+    m_view.translate(s * _posX, s * _posY);
 
     // Take the derivative of zoom as a function of scale:
     // z(s) = log2(s) + C
@@ -132,14 +132,14 @@ void InputHandler::handleRotateGesture(float _posX, float _posY, float _radians)
     onGesture();
 
     // Get vector from center of rotation to view center
-    m_view->screenToGroundPlane(_posX, _posY);
+    m_view.screenToGroundPlane(_posX, _posY);
     glm::vec2 offset(_posX, _posY);
 
     // Rotate vector by gesture rotation and apply difference as translation
     glm::vec2 translation = offset - glm::rotate(offset, _radians);
-    m_view->translate(translation.x, translation.y);
+    m_view.translate(translation.x, translation.y);
 
-    m_view->roll(_radians);
+    m_view.roll(_radians);
 
 }
 
@@ -147,8 +147,8 @@ void InputHandler::handleShoveGesture(float _distance) {
 
     onGesture();
 
-    float angle = -M_PI * _distance / m_view->getHeight();
-    m_view->pitch(angle);
+    float angle = -M_PI * _distance / m_view.getHeight();
+    m_view.pitch(angle);
 
 }
 

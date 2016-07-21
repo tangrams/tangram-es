@@ -1,24 +1,14 @@
 #pragma once
 
 #include "data/properties.h"
-#include "util/ease.h"
-#include <array>
+#include <functional>
 #include <memory>
-#include <mutex>
-#include <queue>
 #include <string>
 #include <vector>
 
 namespace Tangram {
 
-class AsyncWorker;
 class DataSource;
-class InputHandler;
-class Labels;
-class Scene;
-class TileManager;
-class TileWorker;
-class View;
 
 struct TouchItem {
     std::shared_ptr<Properties> properties;
@@ -29,6 +19,13 @@ struct TouchItem {
 struct SceneUpdate {
     std::string keys;
     std::string value;
+};
+
+enum class EaseType : char {
+    linear = 0,
+    cubic,
+    quint,
+    sine,
 };
 
 class Map {
@@ -184,29 +181,8 @@ public:
 
 private:
 
-    enum class EaseField { position, zoom, rotation, tilt };
-
-    void setEase(EaseField _f, Ease _e);
-    void clearEase(EaseField _f);
-    void setScene(std::shared_ptr<Scene>& _scene);
-    void setPositionNow(double _lon, double _lat);
-    void setZoomNow(float _z);
-    void setRotationNow(float _radians);
-    void setTiltNow(float _radians);
-
-    std::mutex m_tilesMutex;
-    std::mutex m_sceneMutex;
-    std::unique_ptr<TileWorker> m_tileWorker;
-    std::unique_ptr<TileManager> m_tileManager;
-    std::shared_ptr<Scene> m_scene;
-    std::shared_ptr<Scene> m_nextScene;
-    std::shared_ptr<View> m_view;
-    std::unique_ptr<Labels> m_labels;
-    std::unique_ptr<InputHandler> m_inputHandler;
-    std::unique_ptr<AsyncWorker> m_asyncWorker;
-    std::vector<SceneUpdate> m_sceneUpdates;
-    std::array<Ease, 4> m_eases;
-    bool m_cacheGlState;
+    class Impl;
+    std::unique_ptr<Impl> impl;
 
 };
 

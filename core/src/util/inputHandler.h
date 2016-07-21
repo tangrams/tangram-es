@@ -9,7 +9,7 @@ namespace Tangram {
 class InputHandler {
 
 public:
-    InputHandler(std::shared_ptr<View> _view);
+    InputHandler(View& _view);
 
     void handleTapGesture(float _posX, float _posY);
     void handleDoubleTapGesture(float _posX, float _posY);
@@ -23,7 +23,7 @@ public:
 
     void cancelFling();
 
-    void setView(std::shared_ptr<View> _view) { m_view = _view; }
+    void setView(View& _view) { m_view = _view; }
 
 private:
 
@@ -31,7 +31,7 @@ private:
 
     void onGesture();
 
-    std::shared_ptr<View> m_view;
+    View& m_view;
 
     // fling deltas on zoom and translation
     glm::vec2 m_velocityPan;
