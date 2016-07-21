@@ -32,6 +32,13 @@ public:
     // http://www.iana.org/assignments/media-types/application/geo+json
     virtual const char* mimeType() override { return "application/geo+json"; };
 
+    // after this is called, any call to add*() and clearData() will not take effect
+    // until commitChangeBlock() is called
+    void beginChangeBlock();
+
+    // commits changes after beginChangeBlock() was called
+    void endChangeBlock();
+
     // Add geometry from a GeoJSON string
     void addData(const std::string& _data);
     void addPoint(const Properties& _tags, LngLat _point);
@@ -55,6 +62,8 @@ protected:
     bool m_hasPendingData = false;
 
      std::shared_ptr<Platform> m_platform;
+
+    bool m_inChangeBlock = false;
 
 };
 

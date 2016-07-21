@@ -60,6 +60,21 @@ ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<Platform> _platform, co
 
 ClientGeoJsonSource::~ClientGeoJsonSource() {}
 
+void ClientGeoJsonSource::beginChangeBlock()
+{
+    m_inChangeBlock = true;
+}
+  
+void ClientGeoJsonSource::endChangeBlock()
+{
+    m_inChangeBlock = false;
+
+    std::lock_guard<std::mutex> lock(m_mutexStore);
+    m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
+    m_generation++;
+
+}
+  
 void ClientGeoJsonSource::addData(const std::string& _data) {
 
     auto features = geojsonvt::GeoJSONVT::convertFeatures(_data);
@@ -68,10 +83,11 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
         m_features.push_back(std::move(f));
     }
 
-    std::lock_guard<std::mutex> lock(m_mutexStore);
-    m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
-    m_generation++;
-
+    if(!m_inChangeBlock) {
+      std::lock_guard<std::mutex> lock(m_mutexStore);
+      m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
+      m_generation++;
+    }
 }
 
 void ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
@@ -94,9 +110,11 @@ void ClientGeoJsonSource::clearData() {
 
     m_features.clear();
 
-    std::lock_guard<std::mutex> lock(m_mutexStore);
-    m_store.reset();
-    m_generation++;
+    if(!m_inChangeBlock) {
+      std::lock_guard<std::mutex> lock(m_mutexStore);
+      m_store.reset();
+      m_generation++;
+    }
 }
 
 void ClientGeoJsonSource::addPoint(const Properties& _tags, LngLat _point) {
@@ -111,9 +129,11 @@ void ClientGeoJsonSource::addPoint(const Properties& _tags, LngLat _point) {
 
     m_features.push_back(std::move(feature));
 
-    std::lock_guard<std::mutex> lock(m_mutexStore);
-    m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
-    m_generation++;
+    if(!m_inChangeBlock) {
+      std::lock_guard<std::mutex> lock(m_mutexStore);
+      m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
+      m_generation++;
+    }
 }
 
 void ClientGeoJsonSource::addLine(const Properties& _tags, const Coordinates& _line) {
@@ -127,9 +147,11 @@ void ClientGeoJsonSource::addLine(const Properties& _tags, const Coordinates& _l
 
     m_features.push_back(std::move(feature));
 
-    std::lock_guard<std::mutex> lock(m_mutexStore);
-    m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
-    m_generation++;
+    if(!m_inChangeBlock) {
+      std::lock_guard<std::mutex> lock(m_mutexStore);
+      m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
+      m_generation++;
+    }
 }
 
 void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coordinates>& _poly) {
@@ -146,9 +168,11 @@ void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coo
 
     m_features.push_back(std::move(feature));
 
-    std::lock_guard<std::mutex> lock(m_mutexStore);
-    m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
-    m_generation++;
+    if(!m_inChangeBlock) {
+      std::lock_guard<std::mutex> lock(m_mutexStore);
+      m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
+      m_generation++;
+    }
 }
 
 std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task,
