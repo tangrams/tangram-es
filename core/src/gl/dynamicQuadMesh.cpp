@@ -6,18 +6,10 @@ namespace Tangram {
 
 GLuint QuadIndices::quadIndexBuffer = 0;
 int QuadIndices::quadGeneration = -1;
-std::atomic<int> QuadIndices::meshCounter(0);
 
+void QuadIndices::load() {
 
-void QuadIndices::ref() {
-    meshCounter++;
-}
-
-void QuadIndices::unref() {
-    meshCounter--;
-
-    if (quadIndexBuffer != 0 && (!RenderState::isValidGeneration(quadGeneration) ||
-                                 meshCounter <= 0)) {
+    if (quadIndexBuffer != 0 && !RenderState::isValidGeneration(quadGeneration)) {
 
         if (RenderState::indexBuffer.compare(quadIndexBuffer)) {
             RenderState::indexBuffer.init(0, false);
@@ -26,9 +18,7 @@ void QuadIndices::unref() {
         quadIndexBuffer = 0;
         quadGeneration = -1;
     }
-}
 
-void QuadIndices::load() {
     if (RenderState::isValidGeneration(quadGeneration)) {
 
         RenderState::indexBuffer(quadIndexBuffer);

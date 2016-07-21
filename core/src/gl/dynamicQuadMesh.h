@@ -13,16 +13,12 @@ namespace Tangram {
 class QuadIndices {
 public :
     static void load();
-    static void ref();
-    static void unref();
 
     static const size_t maxVertices = 16384;
 
 private:
     static GLuint quadIndexBuffer;
     static int quadGeneration;
-
-    static std::atomic<int> meshCounter;
 };
 
 
@@ -33,12 +29,6 @@ public:
 
     DynamicQuadMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
         : MeshBase(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW) {
-
-        QuadIndices::ref();
-    }
-
-    ~DynamicQuadMesh() override {
-        QuadIndices::unref();
     }
 
     bool draw(ShaderProgram& _shader) override;
