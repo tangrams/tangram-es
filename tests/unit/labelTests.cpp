@@ -29,10 +29,10 @@ TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
 TextLabel makeLabelWithAnchorFallbacks() {
     Label::Options options;
 
-    options.anchorFallback.push_back(LabelProperty::Anchor::right);
-    options.anchorFallback.push_back(LabelProperty::Anchor::bottom);
-    options.anchorFallback.push_back(LabelProperty::Anchor::left);
-    options.anchorFallback.push_back(LabelProperty::Anchor::top);
+    options.anchorFallbacks.set(LabelProperty::Anchor::right);
+    options.anchorFallbacks.set(LabelProperty::Anchor::bottom);
+    options.anchorFallbacks.set(LabelProperty::Anchor::left);
+    options.anchorFallbacks.set(LabelProperty::Anchor::top);
 
     options.offset = {0.0f, 0.0f};
 
@@ -240,7 +240,7 @@ TEST_CASE( "Ensure anchor fallback behavior when looping over all fallbacks with
 
     // anchor_fallback -> fading_out (all anchor tested)
     {
-        for (int i = 0; i < 2; ++i) {
+        for (int i = 0; i < 3; ++i) {
             l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
             l.occlude(true);
             l.evalState(screenSize, 1.f);
