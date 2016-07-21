@@ -25,8 +25,7 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _
     m_occludedLastFrame = false;
     m_occluded = false;
     m_parent = nullptr;
-    m_anchorFallbackCount = 0;
-    m_currentAnchorFallback = 0;
+    m_anchorFallbackIndex = 0;
 }
 
 Label::~Label() {}
@@ -174,6 +173,9 @@ void Label::enterState(const State& _state, float _alpha) {
 
     m_state = _state;
     setAlpha(_alpha);
+
+    // Reset anchor fallback index
+    m_anchorFallbackIndex = 0;
 }
 
 void Label::setAlpha(float _alpha) {
@@ -245,7 +247,7 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
     switch (m_state) {
         case State::visible:
             if (m_occluded || m_occludedLastFrame) {
-                if (m_options.anchorFallback.size() > 0) {
+                if (m_options.anchorFallbacks != 0) {
                     enterState(State::anchor_fallback, 0.0);
                 } else {
                     m_fade.reset(false, m_options.hideTransition.ease,
@@ -255,37 +257,36 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
                 }
 
                 animate = true;
-            } else if (m_currentAnchorFallback != 0) {
-                // TODO: try to place again to prefered fallback (0)
             }
             break;
         case State::anchor_fallback:
             if (m_occluded) {
-                if (m_anchorFallbackCount >= m_options.anchorFallback.size()) {
+                if (m_anchorFallbackIndex >= m_options.anchorFallbacks.size()) {
                     m_fade.reset(false, m_options.hideTransition.ease,
                                         m_options.hideTransition.time);
 
                     enterState(State::fading_out, m_transform.state.alpha);
-                    m_anchorFallbackCount = 0;
                 } else {
-                    m_anchorType = m_options.anchorFallback[m_anchorFallbackCount];
-                    m_currentAnchorFallback = m_anchorFallbackCount;
+                    // Find next valid anchor
+                    for (; m_anchorFallbackIndex < m_options.anchorFallbacks.size(); ++m_anchorFallbackIndex) {
+                        if (m_options.anchorFallbacks.test(m_anchorFallbackIndex)) {
+                            m_anchorType = (LabelProperty::Anchor) m_anchorFallbackIndex;
 
-                    if (m_parent) {
-                        alignFromParent(*m_parent);
-                    } else {
-                        applyAnchor(m_dim, glm::vec2(0.0), m_anchorType);
+                            // Apply new alignment
+                            if (m_parent) {
+                                alignFromParent(*m_parent);
+                            } else {
+                                applyAnchor(m_dim, glm::vec2(0.0), m_anchorType);
+                            }
+
+                            // Move to next one for upcoming frame
+                            m_anchorFallbackIndex++;
+                            break;
+                        }
                     }
                 }
-                m_anchorFallbackCount++;
             } else {
-                m_anchorFallbackCount = 0;
-
-                if (!m_occludedLastFrame) {
-                    enterState(State::visible, 1.0);
-                } else {
-                    enterState(State::sleep, 0.0);
-                }
+                enterState(State::visible, 1.0);
             }
             
             animate = true;
@@ -317,7 +318,7 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             break;
         case State::wait_occ:
             if (m_occluded) {
-                if (m_options.anchorFallback.size() > 0) {
+                if (m_options.anchorFallbacks.size() != 0) {
                     enterState(State::anchor_fallback, 0.0);
                     animate = true;
                 } else {

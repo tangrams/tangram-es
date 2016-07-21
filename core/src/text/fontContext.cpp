@@ -203,8 +203,11 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
 
     // Collect possible alignment from anchor fallbacks
     std::vector<TextLabelProperty::Align> alignments;
-    for (auto anchorFallback : _params.labelOptions.anchorFallback) {
-        TextLabelProperty::Align alignmentFallback = TextLabelProperty::alignFromAnchor(anchorFallback);
+    for (int i = 0; i < _params.labelOptions.anchorFallbacks.size(); ++i) {
+        if (!_params.labelOptions.anchorFallbacks[i]) {
+            continue;
+        }
+        TextLabelProperty::Align alignmentFallback = TextLabelProperty::alignFromAnchor((LabelProperty::Anchor)i);
         alignments.push_back(alignmentFallback);
     }
 

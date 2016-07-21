@@ -14,7 +14,7 @@
 #include <string>
 #include <limits>
 #include <memory>
-
+#include <bitset>
 
 namespace Tangram {
 
@@ -78,7 +78,7 @@ public:
         // the label hash based on its styling parameters
         size_t paramHash = 0;
 
-        std::vector<LabelProperty::Anchor> anchorFallback;
+        std::bitset<9> anchorFallbacks = 0;
     };
 
     static const float activation_distance_threshold;
@@ -152,8 +152,7 @@ private:
     // the label fade effect
     FadeEffect m_fade;
 
-    int m_anchorFallbackCount;
-    int m_currentAnchorFallback;
+    int m_anchorFallbackIndex;
 
 protected:
 

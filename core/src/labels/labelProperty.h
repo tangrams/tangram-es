@@ -9,7 +9,7 @@ namespace Tangram {
 namespace LabelProperty {
 
 enum Anchor {
-    center,
+    center = 0,
     top,
     bottom,
     left,
