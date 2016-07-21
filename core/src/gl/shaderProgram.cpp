@@ -13,14 +13,7 @@ namespace Tangram {
 
 
 ShaderProgram::ShaderProgram() {
-
-    m_glProgram = 0;
-    m_glFragmentShader = 0;
-    m_glVertexShader = 0;
-    m_needsBuild = true;
-    m_generation = -1;
-    m_invalidShaderSource = false;
-    m_description = "";
+    // Nothing to do.
 }
 
 ShaderProgram::~ShaderProgram() {
@@ -73,17 +66,17 @@ void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::strin
 
 GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 
-    // Get uniform location at this key, or create one valued at -2 if absent
-    GLint& location = m_attribMap[_attribName].loc;
+    auto it = m_attribMap.find(_attribName);
 
-    // -2 means this is a new entry
-    if (location == -2) {
-        // Get the actual location from OpenGL
-        location = glGetAttribLocation(m_glProgram, _attribName.c_str());
+    if (it == m_attribMap.end()) {
+        // If this is a new entry, get the actual location from OpenGL.
+        GLint location = glGetAttribLocation(m_glProgram, _attribName.c_str());
         GL_CHECK();
+        m_attribMap[_attribName] = location;
+        return location;
+    } else {
+        return it->second;
     }
-
-    return location;
 
 }
 
