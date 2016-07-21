@@ -41,6 +41,26 @@ public class MapData {
     }
 
     /**
+     * Causes all feature changes ({@link #addPoint(LngLat, Map<String, String>)}, 
+     * {@link #addPolyline(List<LngLat>, Map<String, String>)}, etc.)
+     * to not be immediately rendered until {@link #endChangeBlock()} is called.
+     * Useful to prevent flickering when clearing and redrawing features.
+     */
+    public void beginChangeBlock()
+    {
+	map.beginChangeBlock(pointer);
+    }
+
+    /**
+     * All feature changes since {@link #beginChangeBlock()} will be placed
+     * in the rendered scene.
+     */
+    public void endChangeBlock()
+    {
+	map.endChangeBlock(pointer);
+    }
+
+    /**
      * Get the name of this {@code MapData}.
      * @return The name.
      */
