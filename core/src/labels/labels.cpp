@@ -98,7 +98,7 @@ void Labels::skipTransitions(const std::vector<const Style*>& _styles, Tile& _ti
 
         for (auto& l0 : mesh0->getLabels()) {
             if (!l0->canOcclude()) { continue; }
-            if (l0->state() != Label::State::wait_occ) { continue; }
+            if (l0->state() != Label::State::none) { continue; }
 
             for (auto& l1 : mesh1->getLabels()) {
                 if (!l1->visibleState()) { continue; }
@@ -385,7 +385,7 @@ void Labels::drawDebug(const View& _view) {
         case Label::State::visible:
             Primitives::setColor(0x000000);
             break;
-        case Label::State::wait_occ:
+        case Label::State::none:
             Primitives::setColor(0x0000ff);
             break;
         case Label::State::dead:

@@ -10,13 +10,13 @@ namespace Tangram {
 const float Label::activation_distance_threshold = 2;
 
 Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _options, LabelProperty::Anchor _anchor)
-    : m_type(_type),
+    : m_state(State::none),
+      m_type(_type),
       m_transform(_transform),
       m_dim(_size),
       m_options(_options),
       m_anchorType(_anchor) {
 
-    m_state = State::wait_occ;
     if (!m_options.collide || m_type == Type::debug){
         enterState(State::visible, 1.0);
     } else {
@@ -140,7 +140,7 @@ bool Label::canOcclude() {
     }
 
     int occludeFlags = (State::visible |
-                        State::wait_occ |
+                        State::none |
                         State::skip_transition |
                         State::fading_in |
                         State::sleep |
@@ -189,7 +189,7 @@ void Label::resetState() {
 
     m_occludedLastFrame = false;
     m_occluded = false;
-    enterState(State::wait_occ, 0.0);
+    enterState(State::none, 0.0);
 }
 
 bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _drawAllLabels) {
@@ -289,7 +289,7 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             } else {
                 enterState(State::visible, 1.0);
             }
-            
+
             animate = true;
             break;
         case State::fading_in:
@@ -317,7 +317,7 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
                 enterState(State::sleep, 0.0);
             }
             break;
-        case State::wait_occ:
+        case State::none:
             if (m_occluded) {
                 if (m_options.anchorFallbacks != 0) {
                     enterState(State::anchor_fallback, 0.0);

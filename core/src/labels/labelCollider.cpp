@@ -210,7 +210,7 @@ void LabelCollider::process() {
         if (label->isOccluded()) {
             label->enterState(Label::State::dead, 0.0f);
         } else {
-            label->enterState(Label::State::wait_occ, 0.0f);
+            label->enterState(Label::State::none, 0.0f);
         }
     }
 
