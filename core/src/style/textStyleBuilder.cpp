@@ -357,7 +357,6 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     if (anchor) {
         // TODO: cache in style param and optimize
         std::string a = *anchor;
-        a.erase(std::remove(a.begin(), a.end(), ' '), a.end());
         std::vector<std::string> anchors = splitString(a, ',');
 
         for (size_t i = 0; i < anchors.size() && i < Label::Options::max_anchors; ++i) {
