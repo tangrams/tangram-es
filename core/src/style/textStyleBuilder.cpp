@@ -359,17 +359,18 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         std::string a = *anchor;
         std::vector<std::string> anchors = splitString(a, ',');
 
-        for (size_t i = 0; i < anchors.size() && i < Label::Options::max_anchors; ++i) {
+        for (size_t i = 0; i < anchors.size() && i < LabelProperty::max_anchors; ++i) {
             LabelProperty::Anchor labelAnchor;
             if (LabelProperty::anchor(anchors[i], labelAnchor)) {
                 p.labelOptions.anchors[i] = labelAnchor;
                 p.labelOptions.anchorCount++;
-                //p.labelOptions.anchorFallbacks.set(labelAnchor);
             } else {
                 LOG("Invalid anchor %s", anchors[i].c_str());
             }
         }
-
+    } else if (_rule.contains(StyleParamKey::point_text)) { // text attached to point
+        p.labelOptions.anchors = TextStyle::Parameters::defaultAnchorFallbacks();
+        p.labelOptions.anchorCount = 8;
     }
 
     if (auto* transform = _rule.get<std::string>(StyleParamKey::text_transform)) {
