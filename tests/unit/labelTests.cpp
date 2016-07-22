@@ -18,21 +18,26 @@ TextLabels dummy(dummyStyle);
 TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
     Label::Options options;
     options.offset = {0.0f, 0.0f};
+    options.anchors[0] = LabelProperty::Anchor::center;
+    options.anchorCount = 1;
+
     std::vector<TextRange> textRanges;
     textRanges.push_back({TextLabelProperty::Align::none, {}});
 
     return TextLabel(_transform, _type, options,
-            LabelProperty::Anchor::center, {}, {0, 0}, dummy, textRanges,
+            {}, {0, 0}, dummy, textRanges,
             TextLabelProperty::Align::none);
 }
 
 TextLabel makeLabelWithAnchorFallbacks() {
     Label::Options options;
 
-    options.anchorFallbacks.set(LabelProperty::Anchor::right);
-    options.anchorFallbacks.set(LabelProperty::Anchor::bottom);
-    options.anchorFallbacks.set(LabelProperty::Anchor::left);
-    options.anchorFallbacks.set(LabelProperty::Anchor::top);
+    options.anchors[0] = LabelProperty::Anchor::center;
+    options.anchors[1] = LabelProperty::Anchor::right;
+    options.anchors[2] = LabelProperty::Anchor::bottom;
+    options.anchors[3] = LabelProperty::Anchor::left;
+    options.anchors[4] = LabelProperty::Anchor::top;
+    options.anchorCount = 5;
 
     options.offset = {0.0f, 0.0f};
 
@@ -40,8 +45,7 @@ TextLabel makeLabelWithAnchorFallbacks() {
 
     textRanges.push_back({TextLabelProperty::Align::none, {}});
     return TextLabel({screenSize/2.f}, Label::Type::point, options,
-            LabelProperty::Anchor::right, {}, {0, 0},
-            dummy, textRanges, TextLabelProperty::Align::none);
+            {}, {0, 0}, dummy, textRanges, TextLabelProperty::Align::none);
 }
 
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {
@@ -272,4 +276,3 @@ TEST_CASE( "Ensure anchor fallback behavior when looping over all fallback and f
     REQUIRE(l.state() == Label::State::visible);
 }
 #endif
-

@@ -14,17 +14,17 @@ const float TextVertex::position_scale = 4.0f;
 const float TextVertex::alpha_scale = 65535.0f;
 
 TextLabel::TextLabel(Label::Transform _transform, Type _type, Label::Options _options,
-                     Anchor _anchor, TextLabel::FontVertexAttributes _attrib,
+                     TextLabel::FontVertexAttributes _attrib,
                      glm::vec2 _dim,  TextLabels& _labels, std::vector<TextRange> _textRanges,
                      Align _preferedAlignment)
-    : Label(_transform, _dim, _type, _options, _anchor),
+    : Label(_transform, _dim, _type, _options),
       m_textLabels(_labels),
       m_textRanges(_textRanges),
       m_fontAttrib(_attrib),
       m_preferedAlignment(_preferedAlignment) {
 
-    applyAnchor(_dim, glm::vec2(0.0), _anchor);
     m_textRangeIndex = 0;
+    applyAnchor(_dim, glm::vec2(0.0), m_options.anchors[0]);
 }
 
 void TextLabel::applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin, Anchor _anchor) {

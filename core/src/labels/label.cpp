@@ -9,13 +9,12 @@ namespace Tangram {
 
 const float Label::activation_distance_threshold = 2;
 
-Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _options, LabelProperty::Anchor _anchor)
+Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _options)
     : m_state(State::none),
       m_type(_type),
       m_transform(_transform),
       m_dim(_size),
-      m_options(_options),
-      m_anchorType(_anchor) {
+      m_options(_options) {
 
     if (!m_options.collide || m_type == Type::debug){
         enterState(State::visible, 1.0);
@@ -26,7 +25,7 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _
     m_occludedLastFrame = false;
     m_occluded = false;
     m_parent = nullptr;
-    m_anchorFallbackIndex = 0;
+    m_anchorIndex = 0;
 }
 
 Label::~Label() {}
@@ -105,7 +104,7 @@ void Label::alignFromParent(const Label& _parent) {
     glm::vec2 anchorDir = LabelProperty::anchorDirection(_parent.anchorType());
     glm::vec2 anchorOrigin = anchorDir * _parent.dimension() * 0.5f;
 
-    applyAnchor(m_dim + _parent.dimension(), anchorOrigin, m_anchorType);
+    applyAnchor(m_dim + _parent.dimension(), anchorOrigin, m_options.anchors[m_anchorIndex]);
     m_options.offset += _parent.options().offset;
 }
 
@@ -174,7 +173,7 @@ void Label::enterState(const State& _state, float _alpha) {
     setAlpha(_alpha);
 
     // Reset anchor fallback index
-    m_anchorFallbackIndex = 0;
+    m_anchorIndex = 0;
 }
 
 void Label::setAlpha(float _alpha) {
@@ -207,7 +206,7 @@ void Label::print() const {
         case State::out_of_screen: state = "out_of_screen"; break;
     }
     LOG("\tm_state: %s", state.c_str());
-    LOG("\tm_options.anchorFallback: %s", m_options.anchorFallbacks.to_string().c_str());
+    //LOG("\tm_options.anchorFallback: %s", m_options.anchorFallbacks.to_string().c_str());
 }
 
 bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _drawAllLabels) {
@@ -266,7 +265,7 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
     switch (m_state) {
         case State::visible:
             if (m_occluded || m_occludedLastFrame) {
-                if (m_options.anchorFallbacks != 0) {
+                if (m_options.anchorCount > 1) {
                     enterState(State::anchor_fallback, 0.0);
                 } else {
                     m_fade.reset(false, m_options.hideTransition.ease,
@@ -280,28 +279,19 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             break;
         case State::anchor_fallback:
             if (m_occluded) {
-                if (m_anchorFallbackIndex >= m_options.anchorFallbacks.size()) {
+                if (m_anchorIndex >= int(m_options.anchorCount)-1) {
                     m_fade.reset(false, m_options.hideTransition.ease,
                                         m_options.hideTransition.time);
 
                     enterState(State::fading_out, m_transform.state.alpha);
                 } else {
-                    // Find next valid anchor
-                    for (; m_anchorFallbackIndex < m_options.anchorFallbacks.size(); ++m_anchorFallbackIndex) {
-                        if (m_options.anchorFallbacks.test(m_anchorFallbackIndex)) {
-                            m_anchorType = (LabelProperty::Anchor) m_anchorFallbackIndex;
-
-                            // Apply new alignment
-                            if (m_parent) {
-                                alignFromParent(*m_parent);
-                            } else {
-                                applyAnchor(m_dim, glm::vec2(0.0), m_anchorType);
-                            }
-
-                            // Move to next one for upcoming frame
-                            m_anchorFallbackIndex++;
-                            break;
-                        }
+                    // Move to next one for upcoming frame
+                    m_anchorIndex++;
+                    // Apply new alignment
+                    if (m_parent) {
+                        alignFromParent(*m_parent);
+                    } else {
+                        applyAnchor(m_dim, glm::vec2(0.0), m_options.anchors[m_anchorIndex]);
                     }
                 }
             } else {
@@ -337,12 +327,12 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             break;
         case State::none:
             if (m_occluded) {
-                if (m_options.anchorFallbacks != 0) {
-                    enterState(State::anchor_fallback, 0.0);
-                    animate = true;
-                } else {
-                    enterState(State::sleep, 0.0);
-                }
+                // if (m_options.anchorCount > 0) {
+                //     enterState(State::anchor_fallback, 0.0);
+                //     animate = true;
+                // } else {
+                enterState(State::sleep, 0.0);
+                // }
             } else {
                 m_fade.reset(true, m_options.showTransition.ease,
                                    m_options.showTransition.time);

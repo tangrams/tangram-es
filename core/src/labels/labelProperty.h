@@ -8,7 +8,7 @@ namespace Tangram {
 
 namespace LabelProperty {
 
-enum Anchor {
+enum Anchor : uint8_t {
     center = 0,
     top,
     bottom,
