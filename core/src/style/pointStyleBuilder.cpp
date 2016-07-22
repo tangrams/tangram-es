@@ -270,7 +270,7 @@ void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
     bool textVisible = true;
     _rule.get(StyleParamKey::text_visible, textVisible);
 
-    if ( textVisible && _rule.contains(StyleParamKey::point_text) ) {
+    if (textVisible && _rule.contains(StyleParamKey::point_text)) {
         if (iconsCount == 0) { return; }
 
         auto& textStyleBuilder = static_cast<TextStyleBuilder&>(*m_textStyleBuilder);

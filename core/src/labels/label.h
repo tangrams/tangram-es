@@ -77,8 +77,7 @@ public:
         // the label hash based on its styling parameters
         size_t paramHash = 0;
 
-        static const int max_anchors = 9;
-        std::array<LabelProperty::Anchor, max_anchors> anchors;
+        LabelProperty::AnchorFallback anchors;
         int anchorCount = 0;
     };
 

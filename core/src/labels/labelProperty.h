@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <array>
 #include "util/util.h"
 #include "glm/vec2.hpp"
 
@@ -19,6 +20,10 @@ enum Anchor : uint8_t {
     bottom_left,
     bottom_right,
 };
+
+constexpr int max_anchors = 9;
+
+using AnchorFallback = std::array<LabelProperty::Anchor, LabelProperty::max_anchors>;
 
 bool anchor(const std::string& _transform, Anchor& _out);
 

@@ -37,6 +37,20 @@ public:
         TextLabelProperty::Align align = TextLabelProperty::Align::none;
         LabelProperty::Anchor anchor = LabelProperty::Anchor::center;
 
+        static inline LabelProperty::AnchorFallback defaultAnchorFallbacks() {
+            static LabelProperty::AnchorFallback defaultFallbacks = {
+                {LabelProperty::Anchor::bottom,
+                 LabelProperty::Anchor::top,
+                 LabelProperty::Anchor::right,
+                 LabelProperty::Anchor::left,
+                 LabelProperty::Anchor::bottom_right,
+                 LabelProperty::Anchor::bottom_left,
+                 LabelProperty::Anchor::top_right,
+                 LabelProperty::Anchor::top_left}
+            };
+            return defaultFallbacks;
+        }
+
         float fontScale = 1;
         float lineSpacing = 0;
     };
