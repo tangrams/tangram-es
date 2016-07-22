@@ -245,6 +245,14 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_ESCAPE:
                 glfwSetWindowShouldClose(main_window, true);
                 break;
+            case GLFW_KEY_F1:
+                map->setPosition(-74.00976419448854, 40.70532700869127);
+                map->setZoom(16);
+                break;
+            case GLFW_KEY_F2:
+                map->setPosition(8.82, 53.08);
+                map->setZoom(14);
+                break;
         default:
                 break;
         }
