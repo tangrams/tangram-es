@@ -197,6 +197,17 @@ bool SceneLoader::applyConfig(Node& config, const std::shared_ptr<Scene>& _scene
         }
     }
 
+    if (Node fonts = config["fonts"]) {
+        if (fonts.IsMap()) {
+            for (const auto& font : fonts) {
+                try { loadFont(font, _scene); }
+                catch (YAML::RepresentationException e) {
+                    LOGNode("Parsing font: '%s'", font, e.what());
+                }
+            }
+        }
+    }
+
     if (Node styles = config["styles"]) {
         StyleMixer mixer;
         try {
@@ -656,6 +667,32 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, const std::shar
         scene->spriteAtlases()[name] = atlas;
     }
     scene->textures().emplace(name, texture);
+}
+
+void loadFontDescription(Node node) {
+    if (node.IsMap()) {
+        for (const auto& fontDesc : node) {
+            const std::string& key = fontDesc.first.Scalar();
+            if (key == "weight") {
+            } else if (key == "style") {
+            } else if (key == "url") {
+            }
+            // TODO: push font description to font context
+        }
+    }
+}
+
+void SceneLoader::loadFont(const std::pair<Node, Node>& font, const std::shared_ptr<Scene>& scene) {
+    auto& fontContext = scene->fontContext();
+    const std::string& fontName = font.first.Scalar();
+
+    if (font.second.IsMap()) {
+        loadFontDescription(font.second);
+    } else if (font.second.IsSequence()) {
+        for (const auto& node : font.second) {
+            loadFontDescription(node);
+        }
+    }
 }
 
 void SceneLoader::loadStyleProps(Style& style, Node styleNode, const std::shared_ptr<Scene>& scene) {
