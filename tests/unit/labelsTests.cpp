@@ -26,11 +26,14 @@ std::unique_ptr<TextLabel> makeLabel(Label::Transform _transform, Label::Type _t
     options.properties = std::make_shared<Properties>();
     options.properties->set("id", id);
     options.interactive = true;
+    options.anchors[0] = LabelProperty::Anchor::center;
+    options.anchorCount = 1;
+
     std::vector<TextRange> textRanges;
     textRanges.push_back({TextLabelProperty::Align::none, {}});
 
     return std::unique_ptr<TextLabel>(new TextLabel(_transform, _type, options,
-            LabelProperty::Anchor::center, {}, {10, 10}, dummy, textRanges,
+            {}, {10, 10}, dummy, textRanges,
             TextLabelProperty::Align::none));
 }
 

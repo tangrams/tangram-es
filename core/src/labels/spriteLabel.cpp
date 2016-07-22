@@ -12,18 +12,18 @@ const float SpriteVertex::alpha_scale = 65535.0f;
 const float SpriteVertex::texture_scale = 65535.0f;
 
 SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Options _options,
-                         float _extrudeScale, LabelProperty::Anchor _anchor,
-                         SpriteLabels& _labels, size_t _labelsPos)
-    : Label(_transform, _size, Label::Type::point, _options, _anchor),
+                         float _extrudeScale, SpriteLabels& _labels, size_t _labelsPos)
+    : Label(_transform, _size, Label::Type::point, _options),
       m_labels(_labels),
       m_labelsPos(_labelsPos),
       m_extrudeScale(_extrudeScale) {
 
-    applyAnchor(m_dim, glm::vec2(0.0), _anchor);
+    applyAnchor(m_dim, glm::vec2(0.0), m_options.anchors[0]);
 }
 
 void SpriteLabel::applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
                               LabelProperty::Anchor _anchor) {
+
     // _dimension is not applied to the sprite anchor since fractionnal zoom
     // level would result in scaling the sprite size dynamically, instead we
     // store a factor between 0..1 to scale the sprite accordingly

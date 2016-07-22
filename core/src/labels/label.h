@@ -78,12 +78,14 @@ public:
         // the label hash based on its styling parameters
         size_t paramHash = 0;
 
-        std::bitset<9> anchorFallbacks = 0;
+        static const int max_anchors = 9;
+        std::array<LabelProperty::Anchor, max_anchors> anchors;
+        int anchorCount = 0;
     };
 
     static const float activation_distance_threshold;
 
-    Label(Transform _transform, glm::vec2 _size, Type _type, Options _options, LabelProperty::Anchor _anchor);
+    Label(Transform _transform, glm::vec2 _size, Type _type, Options _options);
 
     virtual ~Label();
 
@@ -130,7 +132,7 @@ public:
 
     void alignFromParent(const Label& _parent);
 
-    LabelProperty::Anchor anchorType() const { return m_anchorType; }
+    LabelProperty::Anchor anchorType() const { return m_options.anchors[0]; }
 
     virtual glm::vec2 center() const;
 
@@ -143,7 +145,7 @@ public:
 private:
 
     virtual void applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
-        LabelProperty::Anchor _anchor) = 0;
+                             LabelProperty::Anchor _anchor) = 0;
 
     bool offViewport(const glm::vec2& _screenSize);
 
@@ -154,7 +156,7 @@ private:
     // the label fade effect
     FadeEffect m_fade;
 
-    int m_anchorFallbackIndex;
+    int m_anchorIndex;
 
 protected:
 
@@ -173,7 +175,6 @@ protected:
     // label options
     Options m_options;
 
-    LabelProperty::Anchor m_anchorType;
     glm::vec2 m_anchor;
 
     const Label* m_parent;

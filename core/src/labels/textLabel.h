@@ -47,7 +47,7 @@ public:
     };
 
     TextLabel(Label::Transform _transform, Type _type, Label::Options _options,
-              LabelProperty::Anchor _anchor, TextLabel::FontVertexAttributes _attrib,
+              TextLabel::FontVertexAttributes _attrib,
               glm::vec2 _dim, TextLabels& _labels, std::vector<TextRange> _textRanges,
               TextLabelProperty::Align _preferedAlignment);
 

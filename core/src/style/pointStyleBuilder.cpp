@@ -136,6 +136,9 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
 
     LabelProperty::anchor(anchor, p.anchor);
 
+    p.labelOptions.anchors[0] = p.anchor;
+    p.labelOptions.anchorCount = 1;
+
     if (p.labelOptions.interactive) {
         p.labelOptions.properties = std::make_shared<Properties>(_props);
     }
@@ -153,7 +156,6 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
                                                      _params.size,
                                                      _params.labelOptions,
                                                      _params.extrudeScale,
-                                                     _params.anchor,
                                                      *m_spriteLabels,
                                                      m_quads.size()));
 

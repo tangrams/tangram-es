@@ -203,11 +203,10 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
 
     // Collect possible alignment from anchor fallbacks
     std::vector<TextLabelProperty::Align> alignments;
-    for (int i = 0; i < _params.labelOptions.anchorFallbacks.size(); ++i) {
-        if (!_params.labelOptions.anchorFallbacks[i]) {
-            continue;
-        }
-        TextLabelProperty::Align alignmentFallback = TextLabelProperty::alignFromAnchor((LabelProperty::Anchor)i);
+    for (int i = 0; i < _params.labelOptions.anchorCount; ++i) {
+        // TODO only need center/right/left align once!
+        TextLabelProperty::Align alignmentFallback =
+            TextLabelProperty::alignFromAnchor(_params.labelOptions.anchors[i]);
         alignments.push_back(alignmentFallback);
     }
 
@@ -217,7 +216,7 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
 
     if (_params.wordWrap) {
         m_textWrapper.clearWraps();
-        
+
         float width = m_textWrapper.getShapeRangeWidth(line, MIN_LINE_WIDTH, _params.maxLineWidth);
 
         for (auto& align : alignments) {
