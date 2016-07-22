@@ -14,7 +14,6 @@
 #include <string>
 #include <limits>
 #include <memory>
-#include <bitset>
 
 namespace Tangram {
 
