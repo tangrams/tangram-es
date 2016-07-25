@@ -255,7 +255,7 @@ void FontContext::download(const FontDescription& _ft) {
 
     resourceLoad++;
     if (std::regex_search(_ft.uri, match, regex)) {
-        startUrlRequest(_ft.uri, [&](std::vector<char>&& rawData) {
+        startUrlRequest(_ft.uri, [&, _ft](std::vector<char>&& rawData) {
             std::lock_guard<std::mutex> lock(m_mutex);
             char* data = reinterpret_cast<char*>(rawData.data());
 

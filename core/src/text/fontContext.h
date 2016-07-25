@@ -50,14 +50,10 @@ enum class FontType {
 struct FontDescription {
     std::string uri;
     std::string alias;
-    std::string bundleAlias;
 
-    FontType type;
-
-    FontDescription(std::string family, std::string style, std::string weight, std::string uri, FontType type = FontType::ttf)
-        : uri(uri), type(type) {
+    FontDescription(std::string family, std::string style, std::string weight, std::string uri)
+        : uri(uri) {
         alias = Alias(family, style, weight);
-        bundleAlias = BundleAlias(family, style, weight, type);
     }
 
     static std::string Alias(const std::string& family, const std::string& style, const std::string& weight) {

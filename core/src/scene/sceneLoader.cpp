@@ -669,28 +669,34 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, const std::shar
     scene->textures().emplace(name, texture);
 }
 
-void loadFontDescription(Node node) {
+void loadFontDescription(Node node, const std::string& family, const std::shared_ptr<Scene>& scene) {
     if (node.IsMap()) {
+        auto& fontContext = scene->fontContext();
+        std::string style = "normal", weight = "400", uri;
+
         for (const auto& fontDesc : node) {
             const std::string& key = fontDesc.first.Scalar();
             if (key == "weight") {
+                weight = fontDesc.second.Scalar();
             } else if (key == "style") {
+                style = fontDesc.second.Scalar();
             } else if (key == "url") {
+                uri = fontDesc.second.Scalar();
             }
-            // TODO: push font description to font context
         }
+
+        fontContext->download(FontDescription(family, style, weight, uri));
     }
 }
 
 void SceneLoader::loadFont(const std::pair<Node, Node>& font, const std::shared_ptr<Scene>& scene) {
-    auto& fontContext = scene->fontContext();
-    const std::string& fontName = font.first.Scalar();
+    const std::string& family = font.first.Scalar();
 
     if (font.second.IsMap()) {
-        loadFontDescription(font.second);
+        loadFontDescription(font.second, family, scene);
     } else if (font.second.IsSequence()) {
         for (const auto& node : font.second) {
-            loadFontDescription(node);
+            loadFontDescription(node, family, scene);
         }
     }
 }
