@@ -1,6 +1,7 @@
 #include "textDisplay.h"
 #include <cstdarg>
 #include "platform.h"
+#include "gl/error.h"
 #include "gl/vertexLayout.h"
 #include "gl/renderState.h"
 #include "glm/glm.hpp"
@@ -106,7 +107,7 @@ void TextDisplay::draw(RenderState& rs, const std::vector<std::string>& _infos) 
     rs.culling(GL_FALSE);
     rs.blending(GL_FALSE);
     rs.depthTest(GL_FALSE);
-    rs.depthWrite(GL_FALSE);
+    rs.depthMask(GL_FALSE);
 
     GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &boundbuffer));
     rs.vertexBuffer(0);

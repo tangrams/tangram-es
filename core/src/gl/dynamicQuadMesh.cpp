@@ -1,4 +1,5 @@
 #include "gl/dynamicQuadMesh.h"
+#include "gl/error.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 
@@ -10,10 +11,7 @@ int QuadIndices::quadGeneration = -1;
 void QuadIndices::load(RenderState& rs) {
 
     if (quadIndexBuffer != 0 && !rs.isValidGeneration(quadGeneration)) {
-
-        if (rs.indexBuffer.compare(quadIndexBuffer)) {
-            rs.indexBuffer.init(0, false);
-        }
+        rs.indexBufferUnset(quadIndexBuffer);
         GL_CHECK(glDeleteBuffers(1, &quadIndexBuffer));
         quadIndexBuffer = 0;
         quadGeneration = -1;

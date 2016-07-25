@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "scene/light.h"
+#include "gl/error.h"
 #include "gl/renderState.h"
 #include "glm/gtc/type_ptr.hpp"
 
@@ -33,9 +34,7 @@ void ShaderProgram::dispose(RenderState& rs) {
     }
     // Deleting a shader program being used ends up setting up the current shader program to 0
     // after the driver finishes using it, force this setup by setting the current program
-    if (rs.shaderProgram.compare(m_glProgram)) {
-        rs.shaderProgram.init(0, false);
-    }
+    rs.shaderProgramUnset(m_glProgram);
 
     m_attribMap.clear();
     m_uniformCache.clear();

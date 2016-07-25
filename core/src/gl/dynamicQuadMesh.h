@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gl/mesh.h"
+#include "gl/error.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 

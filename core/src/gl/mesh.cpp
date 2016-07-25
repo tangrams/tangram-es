@@ -3,6 +3,7 @@
 #include "renderState.h"
 #include "hardware.h"
 #include "platform.h"
+#include "gl/error.h"
 
 namespace Tangram {
 
@@ -39,15 +40,11 @@ void MeshBase::dispose(RenderState& rs) {
 
     if (rs.isValidGeneration(m_generation)) {
         if (m_glVertexBuffer) {
-            if (rs.vertexBuffer.compare(m_glVertexBuffer)) {
-                rs.vertexBuffer.init(0, false);
-            }
+            rs.vertexBufferUnset(m_glVertexBuffer);
             GL_CHECK(glDeleteBuffers(1, &m_glVertexBuffer));
         }
         if (m_glIndexBuffer) {
-            if (rs.indexBuffer.compare(m_glIndexBuffer)) {
-                rs.indexBuffer.init(0, false);
-            }
+            rs.indexBufferUnset(m_glIndexBuffer);
             GL_CHECK(glDeleteBuffers(1, &m_glIndexBuffer));
         }
     } else {

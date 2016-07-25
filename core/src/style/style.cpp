@@ -53,13 +53,13 @@ void Style::build(const Scene& _scene) {
         default:
             break;
     }
-    
+
     if (m_blend == Blending::inlay) {
         m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_BLEND_INLAY\n", false);
     } else if (m_blend == Blending::overlay) {
         m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_BLEND_OVERLAY\n", false);
     }
-    
+
     if (m_material.material) {
         m_material.uniforms = m_material.material->injectOnProgram(*m_shaderProgram);
     }
@@ -211,32 +211,32 @@ void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) 
             rs.blending(GL_FALSE);
             rs.blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             rs.depthTest(GL_TRUE);
-            rs.depthWrite(GL_TRUE);
+            rs.depthMask(GL_TRUE);
             break;
         case Blending::add:
             rs.blending(GL_TRUE);
             rs.blendingFunc(GL_ONE, GL_ONE);
             rs.depthTest(GL_FALSE);
-            rs.depthWrite(GL_TRUE);
+            rs.depthMask(GL_TRUE);
             break;
         case Blending::multiply:
             rs.blending(GL_TRUE);
             rs.blendingFunc(GL_ZERO, GL_SRC_COLOR);
             rs.depthTest(GL_FALSE);
-            rs.depthWrite(GL_TRUE);
+            rs.depthMask(GL_TRUE);
             break;
         case Blending::overlay:
             rs.blending(GL_TRUE);
             rs.blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             rs.depthTest(GL_FALSE);
-            rs.depthWrite(GL_FALSE);
+            rs.depthMask(GL_FALSE);
             break;
         case Blending::inlay:
             // TODO: inlay does not behave correctly for labels because they don't have a z position
             rs.blending(GL_TRUE);
             rs.blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             rs.depthTest(GL_TRUE);
-            rs.depthWrite(GL_FALSE);
+            rs.depthMask(GL_FALSE);
             break;
         default:
             break;

@@ -1,4 +1,5 @@
 #include "vao.h"
+#include "gl/error.h"
 #include "renderState.h"
 #include "shaderProgram.h"
 #include "vertexLayout.h"
@@ -40,10 +41,12 @@ void Vao::init(RenderState& rs, ShaderProgram& _program, const std::vector<std::
         int nVerts = vertexIndexOffset.second;
         GL_CHECK(glBindVertexArray(m_glVAOs[i]));
 
-        rs.vertexBuffer.init(_vertexBuffer, true);
+        rs.vertexBufferUnset(_vertexBuffer);
+        rs.vertexBuffer(_vertexBuffer);
 
         if (_indexBuffer != 0) {
-            rs.indexBuffer.init(_indexBuffer, true);
+            rs.indexBufferUnset(_indexBuffer);
+            rs.indexBuffer(_indexBuffer);
         }
 
         // Enable vertex layout on the specified locations

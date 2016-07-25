@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "util/geom.h"
+#include "gl/error.h"
 #include "gl/renderState.h"
 #include "gl/hardware.h"
 #include "tangram.h"
@@ -90,9 +91,7 @@ void Texture::dispose(RenderState& rs) {
                 // If the texture is bound, and deleted, the binding defaults to 0
                 // according to the OpenGL spec. In this case we need to force the
                 // currently bound texture to 0 in the render state.
-                if (rs.texture.compare(t, id)) {
-                    rs.texture.init(t, 0, false);
-                }
+                rs.textureUnset(t, id);
 
                 GL_CHECK(glDeleteTextures(1, &id));
             }

@@ -1,10 +1,6 @@
 #pragma once
 
 #include "gl.h"
-#include "gl/error.h"
-
-#include <tuple>
-#include <limits>
 
 namespace Tangram {
 
@@ -24,18 +20,6 @@ public:
     // Get the texture slot from a texture unit from 0 to TANGRAM_MAX_TEXTURE_UNIT-1.
     static GLuint getTextureUnit(GLuint _unit);
 
-    // Bind a vertex buffer.
-    static void bindVertexBuffer(GLuint _id);
-
-    // Bind an index buffer.
-    static void bindIndexBuffer(GLuint _id);
-
-    // Bind a texture for the specified target.
-    static void bindTexture(GLenum _target, GLuint _textureId);
-
-    // Set the currently active texture unit.
-    static void activeTextureUnit(GLuint _unit);
-
     // Get the currently active texture unit.
     int currentTextureUnit();
 
@@ -48,154 +32,117 @@ public:
     // Release one texture unit slot.
     void releaseTextureUnit();
 
-    template <typename T>
-    class State {
-    public:
-        void init(const typename T::Type& _default) {
-            T::set(_default);
-            m_current = _default;
-        }
+    bool blending(GLboolean enable);
 
-        inline void operator()(const typename T::Type& _value) {
-            if (m_current != _value) {
-                m_current = _value;
-                T::set(m_current);
-            }
-        }
-    private:
-        typename T::Type m_current;
-    };
+    bool blendingFunc(GLenum sfactor, GLenum dfactor);
 
-    template <GLenum N>
-    struct BoolSwitch {
-        using Type = GLboolean;
-        inline static void set(const Type& _type) {
-            if (_type) {
-                GL_CHECK(glEnable(N));
-            } else {
-                GL_CHECK(glDisable(N));
-            }
-        }
-    };
+    bool clearColor(GLclampf r, GLclampf g, GLclampf b, GLclampf a);
 
-    // http://stackoverflow.com/questions/7858817/unpacking-a-tuple-to-call-a-matching-function-pointer
-    // Generate integer sequence for getting values from 'params' tuple.
-    template<int ...> struct seq {};
-    template<int N, int ...S> struct gens : gens<N-1, N-1, S...> {};
-    template<int ...S> struct gens<0, S...>{ typedef seq<S...> type; };
+    bool colorMask(GLboolean r, GLboolean g, GLboolean b, GLboolean a);
 
-    template <typename F, F fn, typename ...Args>
-    struct StateWrap {
+    bool cullFace(GLenum face);
 
-        using Type = std::tuple<Args...>;
-        Type params;
+    bool culling(GLboolean enable);
 
-        void init(Args... _param, bool _force = true) {
-            params = std::make_tuple(_param...);
-            if (_force) {
-                call(typename gens<sizeof...(Args)>::type());
-            }
-        }
+    bool depthTest(GLboolean enable);
 
-        inline void operator()(Args... _args) {
-            auto _params = std::make_tuple(_args...);
+    bool depthMask(GLboolean enable);
 
-            if (_params != params) {
-                params = _params;
-                call(typename gens<sizeof...(Args)>::type());
-            }
-        }
+    bool frontFace(GLenum face);
 
-        inline bool compare(Args... _args) {
-            auto _params = std::make_tuple(_args...);
-            return _params == params;
-        }
+    bool stencilMask(GLuint mask);
 
-        template<int ...S>
-        inline void call(seq<S...>) {
-            GL_CHECK(fn(std::get<S>(params) ...));
-        }
-    };
+    bool stencilFunc(GLenum func, GLint ref, GLuint mask);
 
+    bool stencilOp(GLenum sfail, GLenum spassdfail, GLenum spassdpass);
 
-    using DepthTest = State<BoolSwitch<GL_DEPTH_TEST>>;
-    using StencilTest = State<BoolSwitch<GL_STENCIL_TEST>>;
-    using Blending = State<BoolSwitch<GL_BLEND>>;
-    using Culling = State<BoolSwitch<GL_CULL_FACE>>;
+    bool stencilTest(GLboolean enable);
 
-#define FUN(X) decltype((X)), X
+    bool shaderProgram(GLuint program);
 
-    using DepthWrite = StateWrap<FUN(glDepthMask),
-                                 GLboolean>; // enabled
+    bool texture(GLenum target, GLuint handle);
 
-    using BlendingFunc = StateWrap<FUN(glBlendFunc),
-                                   GLenum,  // sfactor
-                                   GLenum>; // dfactor
+    bool textureUnit(GLuint unit);
 
-    using StencilWrite = StateWrap<FUN(glStencilMask),
-                                   GLuint>; // mask
+    bool vertexBuffer(GLuint handle);
 
-    using StencilFunc = StateWrap<FUN(glStencilFunc),
-                                  GLenum,  // func
-                                  GLint,   // ref
-                                  GLuint>; // mask
+    bool indexBuffer(GLuint handle);
 
-    using StencilOp = StateWrap<FUN(glStencilOp),
-                                GLenum,  // stencil:fail
-                                GLenum,  // stencil:pass, depth:fail
-                                GLenum>; // both pass
+    void vertexBufferUnset(GLuint handle);
 
-    using ColorWrite = StateWrap<FUN(glColorMask),
-                                 GLboolean,  // red
-                                 GLboolean,  // green
-                                 GLboolean,  // blue
-                                 GLboolean>; // alpha
+    void indexBufferUnset(GLuint handle);
 
-    using FrontFace = StateWrap<FUN(glFrontFace),
-                                GLenum>;
+    void shaderProgramUnset(GLuint program);
 
-    using CullFace = StateWrap<FUN(glCullFace),
-                               GLenum>;
-
-    using VertexBuffer = StateWrap<FUN(bindVertexBuffer), GLuint>;
-    using IndexBuffer = StateWrap<FUN(bindIndexBuffer), GLuint>;
-
-    using ShaderProgram = StateWrap<FUN(glUseProgram), GLuint>;
-
-    using TextureUnit = StateWrap<FUN(activeTextureUnit), GLuint>;
-    using Texture = StateWrap<FUN(bindTexture), GLenum, GLuint>;
-
-    using ClearColor = StateWrap<FUN(glClearColor),
-                                 GLclampf,  // red
-                                 GLclampf,  // green
-                                 GLclampf,  // blue
-                                 GLclampf>; // alpha
-
-#undef FUN
-
-    DepthTest depthTest;
-    DepthWrite depthWrite;
-    Blending blending;
-    BlendingFunc blendingFunc;
-    StencilTest stencilTest;
-    StencilWrite stencilWrite;
-    StencilFunc stencilFunc;
-    StencilOp stencilOp;
-    ColorWrite colorWrite;
-    FrontFace frontFace;
-    CullFace cullFace;
-    Culling culling;
-    ShaderProgram shaderProgram;
-    VertexBuffer vertexBuffer;
-    IndexBuffer indexBuffer;
-    TextureUnit textureUnit;
-    Texture texture;
-    ClearColor clearColor;
+    void textureUnset(GLenum target, GLuint handle);
 
 private:
 
     int m_validGeneration = 0;
-    int m_textureUnit = -1;
+    int m_nextTextureUnit = 0;
+
+    struct {
+        GLboolean enabled = 0;
+        bool set = false;
+    } m_blending, m_culling, m_depthMask, m_depthTest, m_stencilTest;
+
+    struct {
+        GLenum sfactor = 0, dfactor = 0;
+        bool set = false;
+    } m_blendingFunc;
+
+    struct {
+        GLuint mask = 0;
+        bool set = false;
+    } m_stencilMask;
+
+    struct {
+        GLenum func = 0;
+        GLint ref = 0;
+        GLuint mask = 0;
+        bool set = false;
+    } m_stencilFunc;
+
+    struct {
+        GLenum sfail = 0, spassdfail = 0, spassdpass = 0;
+        bool set = false;
+    } m_stencilOp;
+
+    struct {
+        GLboolean r = 0, g = 0, b = 0, a = 0;
+        bool set = false;
+    } m_colorMask;
+
+    struct {
+        GLenum face = 0;
+        bool set = false;
+    } m_frontFace, m_cullFace;
+
+    struct {
+        GLuint handle = 0;
+        bool set = false;
+    } m_vertexBuffer, m_indexBuffer;
+
+    struct {
+        GLuint program = 0;
+        bool set = false;
+    } m_program;
+
+    struct {
+        GLclampf r = 0., g = 0., b = 0., a = 0.;
+        bool set = false;
+    } m_clearColor;
+
+    struct {
+        GLenum target = 0;
+        GLuint handle = 0;
+        bool set = false;
+    } m_texture;
+
+    struct {
+        GLuint unit = 0;
+        bool set = false;
+    } m_textureUnit;
 
 };
 

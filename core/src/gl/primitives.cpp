@@ -2,6 +2,7 @@
 
 #include "glm/mat4x4.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include "gl/error.h"
 #include "gl/shaderProgram.h"
 #include "gl/vertexLayout.h"
 #include "gl/renderState.h"
