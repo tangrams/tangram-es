@@ -130,7 +130,7 @@ public:
 
     void alignFromParent(const Label& _parent);
 
-    LabelProperty::Anchor anchorType() const { return m_options.anchors[0]; }
+    LabelProperty::Anchor anchorType() const { return m_options.anchors[m_anchorIndex]; }
 
     virtual glm::vec2 center() const;
 
