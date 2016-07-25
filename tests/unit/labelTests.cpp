@@ -245,7 +245,7 @@ TEST_CASE( "Ensure anchor fallback behavior when looping over all fallbacks with
         l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
         l.occlude(true);
         l.evalState(1.f);
-        REQUIRE(l.state() == Label::State::fading_out);
+        REQUIRE(l.state() == Label::State::sleep);
 
         l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
         l.occlude(true);
@@ -254,7 +254,6 @@ TEST_CASE( "Ensure anchor fallback behavior when looping over all fallbacks with
     }
 }
 
-#if 0
 TEST_CASE( "Ensure anchor fallback behavior when looping over all fallback and finding one", "[Core][Label]" ) {
     TextLabel l = makeLabelWithAnchorFallbacks();
 
@@ -276,4 +275,3 @@ TEST_CASE( "Ensure anchor fallback behavior when looping over all fallback and f
     REQUIRE(l.anchorType() == LabelProperty::Anchor::left);
     REQUIRE(l.state() == Label::State::visible);
 }
-#endif
