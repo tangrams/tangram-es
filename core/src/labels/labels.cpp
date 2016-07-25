@@ -416,7 +416,7 @@ void Labels::drawDebug(const View& _view) {
         Primitives::setColor(0x0000ff);
         Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
 
-        if (label->options().anchorCount > 1) {
+        if (label->options().anchors.count > 1) {
             Primitives::setColor(0xffffff);
             Primitives::drawPoly(&(label->obb().getQuad())[0], 4);
         }

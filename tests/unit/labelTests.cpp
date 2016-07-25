@@ -18,11 +18,10 @@ TextLabels dummy(dummyStyle);
 TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
     Label::Options options;
     options.offset = {0.0f, 0.0f};
-    options.anchors[0] = LabelProperty::Anchor::center;
-    options.anchorCount = 1;
+    options.anchors.anchor[0] = LabelProperty::Anchor::center;
+    options.anchors.count = 1;
 
-    std::vector<TextRange> textRanges;
-    textRanges.push_back({TextLabelProperty::Align::none, {}});
+    TextRange textRanges;
 
     return TextLabel(_transform, _type, options,
             {}, {0, 0}, dummy, textRanges,
@@ -32,18 +31,17 @@ TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
 TextLabel makeLabelWithAnchorFallbacks() {
     Label::Options options;
 
-    options.anchors[0] = LabelProperty::Anchor::center;
-    options.anchors[1] = LabelProperty::Anchor::right;
-    options.anchors[2] = LabelProperty::Anchor::bottom;
-    options.anchors[3] = LabelProperty::Anchor::left;
-    options.anchors[4] = LabelProperty::Anchor::top;
-    options.anchorCount = 5;
+    options.anchors.anchor[0] = LabelProperty::Anchor::center;
+    options.anchors.anchor[1] = LabelProperty::Anchor::right;
+    options.anchors.anchor[2] = LabelProperty::Anchor::bottom;
+    options.anchors.anchor[3] = LabelProperty::Anchor::left;
+    options.anchors.anchor[4] = LabelProperty::Anchor::top;
+    options.anchors.count = 5;
 
     options.offset = {0.0f, 0.0f};
 
-    std::vector<TextRange> textRanges;
+    TextRange textRanges;
 
-    textRanges.push_back({TextLabelProperty::Align::none, {}});
     return TextLabel({screenSize/2.f}, Label::Type::point, options,
             {}, {0, 0}, dummy, textRanges, TextLabelProperty::Align::none);
 }

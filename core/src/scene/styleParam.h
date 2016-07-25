@@ -1,5 +1,6 @@
 #pragma once
 
+#include "labels/labelProperty.h"
 #include "util/variant.h"
 #include "glm/vec2.hpp"
 #include <string>
@@ -130,7 +131,7 @@ struct StyleParam {
         }
     };
 
-    using Value = variant<none_type, bool, float, uint32_t, std::string, glm::vec2, Width>;
+    using Value = variant<none_type, bool, float, uint32_t, std::string, glm::vec2, Width, LabelProperty::Anchors>;
 
     StyleParam() :
         key(StyleParamKey::none),

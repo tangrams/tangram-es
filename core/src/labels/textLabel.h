@@ -17,10 +17,7 @@ struct GlyphQuad {
     } quad[4];
 };
 
-struct TextRange {
-    TextLabelProperty::Align align;
-    Range range;
-};
+using TextRange = std::array<Range, 3>;
 
 struct TextVertex {
     glm::i16vec2 pos;
@@ -48,12 +45,12 @@ public:
 
     TextLabel(Label::Transform _transform, Type _type, Label::Options _options,
               TextLabel::FontVertexAttributes _attrib,
-              glm::vec2 _dim, TextLabels& _labels, std::vector<TextRange> _textRanges,
+              glm::vec2 _dim, TextLabels& _labels, TextRange _textRanges,
               TextLabelProperty::Align _preferedAlignment);
 
     void updateBBoxes(float _zoomFract) override;
 
-    std::vector<TextRange>& textRanges() {
+    TextRange& textRanges() {
         return m_textRanges;
     }
 
@@ -69,8 +66,8 @@ private:
     // Back-pointer to owning container
     const TextLabels& m_textLabels;
 
-    // first vertex and count in m_textLabels quads
-    std::vector<TextRange> m_textRanges;
+    // first vertex and count in m_textLabels quads (left,right,center)
+    TextRange m_textRanges;
 
     // TextRange currently used for drawing
     int m_textRangeIndex;

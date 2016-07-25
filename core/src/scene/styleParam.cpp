@@ -2,6 +2,7 @@
 
 #include "csscolorparser.hpp"
 #include "platform.h"
+#include "style/textStyle.h"
 #include "util/builders.h" // for cap, join
 #include "util/extrude.h"
 #include "util/geom.h" // for CLAMP
@@ -199,9 +200,25 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         std::transform(normalized.begin(), normalized.end(), normalized.begin(), ::tolower);
         return normalized;
     }
-    case StyleParamKey::text_align:
     case StyleParamKey::anchor:
-    case StyleParamKey::text_anchor:
+    case StyleParamKey::text_anchor: {
+        LabelProperty::Anchors anchors;
+        for (auto& anchor : splitString(_value, ',')) {
+            if (anchors.count == LabelProperty::max_anchors) { break; }
+
+            LabelProperty::Anchor labelAnchor;
+            if (LabelProperty::anchor(anchor, labelAnchor)) {
+                anchors.anchor[anchors.count++] = labelAnchor;
+            } else {
+                LOG("Invalid anchor %s", anchor.c_str());
+            }
+        }
+        if (anchors.count == 0) {
+            anchors = TextStyle::Parameters::defaultAnchorFallbacks();
+        }
+        return anchors;
+    }
+    case StyleParamKey::text_align:
     case StyleParamKey::text_source:
     case StyleParamKey::text_transform:
     case StyleParamKey::sprite:
@@ -348,10 +365,11 @@ std::string StyleParam::toString() const {
     case StyleParamKey::sprite_default:
     case StyleParamKey::style:
     case StyleParamKey::text_align:
-    case StyleParamKey::anchor:
-    case StyleParamKey::text_anchor:
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
+    case StyleParamKey::anchor:
+    case StyleParamKey::text_anchor:
+        return "[anchor]"; // TODO
     case StyleParamKey::interactive:
     case StyleParamKey::text_interactive:
     case StyleParamKey::tile_edges:

@@ -180,7 +180,7 @@ void FontContext::bindTexture(alfons::AtlasID _id, GLuint _unit) {
 
 bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& _text,
                              std::vector<GlyphQuad>& _quads, std::bitset<max_textures>& _refs,
-                             glm::vec2& _size, std::vector<TextRange>& _textRanges) {
+                             glm::vec2& _size, TextRange& _textRanges) {
 
     std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -201,40 +201,52 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     size_t quadsStart = _quads.size();
     alfons::LineMetrics metrics;
 
-    // Collect possible alignment from anchor fallbacks
-    std::vector<TextLabelProperty::Align> alignments;
-    for (int i = 0; i < _params.labelOptions.anchorCount; ++i) {
-        // TODO only need center/right/left align once!
-        TextLabelProperty::Align alignmentFallback =
-            TextLabelProperty::alignFromAnchor(_params.labelOptions.anchors[i]);
-        alignments.push_back(alignmentFallback);
+    std::array<bool, 3> alignments = {};
+    if (_params.align != TextLabelProperty::Align::none) {
+        alignments[int(_params.align)] = true;
     }
 
-    if (alignments.empty()) {
-        alignments.push_back(TextLabelProperty::Align::center);
+    // Collect possible alignment from anchor fallbacks
+    for (int i = 0; i < _params.labelOptions.anchors.count; i++) {
+        auto anchor = _params.labelOptions.anchors[i];
+        TextLabelProperty::Align alignment = TextLabelProperty::alignFromAnchor(anchor);
+        if (alignment != TextLabelProperty::Align::none) {
+            alignments[int(alignment)] = true;
+        }
     }
 
     if (_params.wordWrap) {
         m_textWrapper.clearWraps();
 
-        float width = m_textWrapper.getShapeRangeWidth(line, MIN_LINE_WIDTH, _params.maxLineWidth);
+        float width = m_textWrapper.getShapeRangeWidth(line, MIN_LINE_WIDTH,
+                                                       _params.maxLineWidth);
 
-        for (auto& align : alignments) {
+        for (size_t i = 0; i < 3; i++) {
+
             int rangeStart = m_scratch.quads->size();
-            m_textWrapper.draw(m_batch, width, line, align, _params.lineSpacing, metrics);
+            if (!alignments[i]) {
+                _textRanges[i] = Range(rangeStart, 0);
+                continue;
+            }
+            m_textWrapper.draw(m_batch, width, line, TextLabelProperty::Align(i),
+                               _params.lineSpacing, metrics);
+
             int rangeEnd = m_scratch.quads->size();
 
-            _textRanges.push_back({align, {rangeStart, rangeEnd - rangeStart}});
+            _textRanges[i] = Range(rangeStart, rangeEnd - rangeStart);
         }
     } else {
-        glm::vec2 position(0);
-
-        for (auto& align : alignments) {
+        for (size_t i = 0; i < 3; i++) {
+            glm::vec2 position(0);
             int rangeStart = m_scratch.quads->size();
+            if (!alignments[i]) {
+                _textRanges[i] = Range(rangeStart, 0);
+                continue;
+            }
             m_batch.drawShapeRange(line, 0, line.shapes().size(), position, metrics);
             int rangeEnd = m_scratch.quads->size();
 
-            _textRanges.push_back({align, {rangeStart, rangeEnd - rangeStart}});
+            _textRanges[i] = Range(rangeStart, rangeEnd - rangeStart);
         }
     }
 

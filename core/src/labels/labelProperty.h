@@ -23,7 +23,24 @@ enum Anchor : uint8_t {
 
 constexpr int max_anchors = 9;
 
-using AnchorFallback = std::array<LabelProperty::Anchor, LabelProperty::max_anchors>;
+struct Anchors {
+    std::array<LabelProperty::Anchor, LabelProperty::max_anchors> anchor;
+    int count = 0;
+
+    LabelProperty::Anchor operator[](size_t _pos) const {
+        return anchor[_pos];
+    }
+
+    bool operator==(const Anchors& _other) const {
+        return anchor == _other.anchor && count == _other.count;
+    }
+
+    // For GCC<5
+    Anchors(std::array<LabelProperty::Anchor, LabelProperty::max_anchors> _anchor, int _count)
+        : anchor(_anchor), count(_count) {}
+
+    Anchors() : count(0) {}
+};
 
 bool anchor(const std::string& _transform, Anchor& _out);
 
@@ -41,10 +58,10 @@ enum class Transform {
 };
 
 enum class Align {
-    none,
-    right,
-    left,
-    center,
+    none   = -1,
+    right  = 0,
+    left   = 1,
+    center = 2,
 };
 
 bool transform(const std::string& _transform, Transform& _out);

@@ -77,8 +77,7 @@ public:
         // the label hash based on its styling parameters
         size_t paramHash = 0;
 
-        LabelProperty::AnchorFallback anchors;
-        int anchorCount = 0;
+        LabelProperty::Anchors anchors;
     };
 
     static const float activation_distance_threshold;
