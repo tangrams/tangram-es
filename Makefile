@@ -42,12 +42,14 @@ OSX_TARGET = tangram
 IOS_TARGET = tangram
 OSX_XCODE_PROJ = tangram.xcodeproj
 IOS_XCODE_PROJ = tangram.xcodeproj
+TANGRAM_APK_TARGET = tangram:assembleDebug
 
 ifdef DEBUG
 	BUILD_TYPE = -DCMAKE_BUILD_TYPE=Debug
 endif
 ifdef RELEASE
 	BUILD_TYPE = -DCMAKE_BUILD_TYPE=Release
+	TANGRAM_APK_TARGET = tangram:assembleRelease
 endif
 
 ifdef ANDROID_ARCH
@@ -189,7 +191,7 @@ android: android-demo-apk
 
 android-tangram-apk:
 	@cd android/ && \
-	./gradlew tangram:assembleDebug
+	./gradlew ${TANGRAM_APK_TARGET}
 
 android-demo-apk: android-native-lib
 	@cd android/ && \
