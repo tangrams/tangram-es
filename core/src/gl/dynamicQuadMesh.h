@@ -105,7 +105,7 @@ bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& _shader) {
         }
         size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
 
-        m_vertexLayout->enable(_shader, byteOffset);
+        m_vertexLayout->enable(rs, _shader, byteOffset);
 
         GL_CHECK(glDrawElements(m_drawMode, nVertices * 6 / 4, GL_UNSIGNED_SHORT, 0));
 

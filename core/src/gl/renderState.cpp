@@ -9,14 +9,11 @@
 
 namespace Tangram {
 
-static size_t max = std::numeric_limits<size_t>::max();
-
 GLuint RenderState::getTextureUnit(GLuint _unit) {
     return GL_TEXTURE0 + _unit;
 }
 
 void RenderState::invalidate() {
-    VertexLayout::clearCache();
 
     m_blending.set = false;
     m_blendingFunc.set = false;
@@ -34,6 +31,8 @@ void RenderState::invalidate() {
     m_vertexBuffer.set = false;
     m_texture.set = false;
     m_textureUnit.set = false;
+
+    attributeBindings.fill(0);
 
     GL_CHECK(glDepthFunc(GL_LESS));
     GL_CHECK(glClearDepthf(1.0));

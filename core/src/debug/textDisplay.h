@@ -52,7 +52,7 @@ private:
 
     TextDisplay();
 
-    void draw(const std::string& _text, int _posx, int _posy);
+    void draw(RenderState& rs, const std::string& _text, int _posx, int _posy);
 
     glm::vec2 m_textDisplayResolution;
     bool m_initialized;

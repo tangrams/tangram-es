@@ -199,7 +199,7 @@ bool MeshBase::draw(RenderState& rs, ShaderProgram& _shader) {
         if (!Hardware::supportsVAOs) {
             // Enable vertex attribs via vertex layout object
             size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
-            m_vertexLayout->enable(_shader, byteOffset);
+            m_vertexLayout->enable(rs,  _shader, byteOffset);
         } else {
             // Bind the corresponding vao relative to the current offset
             m_vaos->bind(i);

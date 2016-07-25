@@ -76,7 +76,7 @@ void TextDisplay::log(const char* fmt, ...) {
     }
 }
 
-void TextDisplay::draw(const std::string& _text, int _posx, int _posy) {
+void TextDisplay::draw(RenderState& rs, const std::string& _text, int _posx, int _posy) {
     static VertexLayout vertexLayout({{"a_position", 2, GL_FLOAT, false, 0}});
     std::vector<glm::vec2> vertices;
     int nquads;
@@ -94,7 +94,7 @@ void TextDisplay::draw(const std::string& _text, int _posx, int _posy) {
         vertices.push_back({data[(3 * 4) + stride], data[(3 * 4) + 1 + stride]});
         vertices.push_back({data[(0 * 4) + stride], data[(0 * 4) + 1 + stride]});
     }
-    vertexLayout.enable(*m_shader, 0, (void*)vertices.data());
+    vertexLayout.enable(rs, *m_shader, 0, (void*)vertices.data());
 
     GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, nquads * 6));
 }
@@ -119,7 +119,7 @@ void TextDisplay::draw(RenderState& rs, const std::vector<std::string>& _infos) 
     m_shader->setUniformf(rs, m_uColor, 0.f, 0.f, 0.f);
     int offset = 0;
     for (auto& text : _infos) {
-        draw(text, 3, 3 + offset);
+        draw(rs, text, 3, 3 + offset);
         offset += 10;
     }
 
@@ -127,7 +127,7 @@ void TextDisplay::draw(RenderState& rs, const std::vector<std::string>& _infos) 
     offset = 0;
     m_shader->setUniformf(rs, m_uColor, 51 / 255.f, 73 / 255.f, 120 / 255.f);
     for (int i = 0; i < LOG_CAPACITY; ++i) {
-        draw(m_log[i], 3, m_textDisplayResolution.y - 10 + offset);
+        draw(rs, m_log[i], 3, m_textDisplayResolution.y - 10 + offset);
         offset -= 10;
     }
 

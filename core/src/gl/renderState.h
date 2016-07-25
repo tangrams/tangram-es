@@ -1,12 +1,15 @@
 #pragma once
 
 #include "gl.h"
+#include <array>
 
 namespace Tangram {
 
 class RenderState {
 
 public:
+
+    static constexpr size_t MAX_ATTRIBUTES = 16;
 
     // Reset the render states.
     void invalidate();
@@ -75,6 +78,8 @@ public:
     void shaderProgramUnset(GLuint program);
 
     void textureUnset(GLenum target, GLuint handle);
+
+    std::array<GLuint, MAX_ATTRIBUTES> attributeBindings = { { 0 } };
 
 private:
 
