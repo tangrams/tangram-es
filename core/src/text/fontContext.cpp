@@ -35,6 +35,8 @@ FontContext::FontContext() :
     m_atlas(*this, GlyphTexture::size, m_sdfRadius),
     m_batch(m_atlas, m_scratch) {
 
+    resourceLoad = 0;
+
 // TODO: make this platform independent
 #if defined(PLATFORM_ANDROID)
     auto fontPath = systemFontPath("sans-serif", "400", "normal");
@@ -251,7 +253,7 @@ void FontContext::download(const FontDescription& _ft) {
     const static std::regex regex("^(http|https):/");
     std::smatch match;
 
-    m_resourceLoad++;
+    resourceLoad++;
     if (std::regex_search(_ft.uri, match, regex)) {
         startUrlRequest(_ft.uri, [&](std::vector<char>&& rawData) {
             std::lock_guard<std::mutex> lock(m_mutex);
@@ -263,13 +265,9 @@ void FontContext::download(const FontDescription& _ft) {
                 font->addFace(m_alfons.addFontFace(alfons::InputSource(data, rawData.size()), size));
             }
 
-            m_resourceLoad--;
+            resourceLoad--;
         });
     }
-}
-
-bool FontContext::isLoadingResources() const {
-    return m_resourceLoad > 0;
 }
 
 void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::AtlasGlyph& atlasGlyph) {

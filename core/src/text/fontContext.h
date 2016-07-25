@@ -18,6 +18,7 @@
 
 #include <bitset>
 #include <mutex>
+#include <atomic>
 
 namespace Tangram {
 
@@ -130,6 +131,8 @@ public:
 
     bool isLoadingResources() const;
 
+    std::atomic_ushort resourceLoad;
+
 private:
 
     float m_sdfRadius;
@@ -155,7 +158,6 @@ private:
     TextWrapper m_textWrapper;
     std::string m_sceneResourceRoot = "";
 
-    int m_resourceLoad = 0;
 };
 
 }

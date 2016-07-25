@@ -110,7 +110,7 @@ public:
     float pixelScale() { return m_pixelScale; }
     void setPixelScale(float _scale) { m_pixelScale = _scale; }
 
-    std::atomic_ushort m_resourceLoad;
+    std::atomic_ushort resourceLoad;
 
 private:
 
@@ -149,6 +149,7 @@ private:
     float m_pixelScale = 1.0f;
 
     float m_time = 0.0;
+
 };
 
 }

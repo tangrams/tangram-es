@@ -313,7 +313,7 @@ bool Map::update(float _dt) {
     bool tilesChanged = impl->tileManager.hasTileSetChanged();
     bool tilesLoading = impl->tileManager.hasLoadingTiles();
     bool labelsNeedUpdate = impl->labels.needUpdate();
-    bool resourceLoading = (impl->scene->m_resourceLoad > 0);
+    bool resourceLoading = (impl->scene->resourceLoad > 0);
     bool nextScene = bool(impl->nextScene);
 
     if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || resourceLoading || nextScene) {
