@@ -73,7 +73,7 @@ protected:
         uint32_t fill = 0;
         uint32_t stroke = 0;
         uint8_t fontScale = 0;
-        std::vector<TextRange> textRanges;
+        TextRange textRanges;
     } m_attributes;
 
     float m_tileSize = 0;

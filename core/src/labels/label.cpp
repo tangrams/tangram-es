@@ -281,7 +281,7 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
     switch (m_state) {
         case State::visible:
             if (m_occluded || m_occludedLastFrame) {
-                if (m_options.anchorCount > 1) {
+                if (m_options.anchors.count > 1) {
                     enterState(State::anchor_fallback, 0.0);
                 } else {
                     m_fade.reset(false, m_options.hideTransition.ease,
@@ -295,7 +295,7 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             break;
         case State::anchor_fallback:
             if (m_occluded) {
-                if (m_anchorIndex >= int(m_options.anchorCount)-1) {
+                if (m_anchorIndex >= int(m_options.anchors.count)-1) {
                     // Tried all anchors - deactivate label
                     m_fade.reset(false, m_options.hideTransition.ease,
                                         m_options.hideTransition.time);
@@ -337,7 +337,7 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             break;
         case State::none:
             if (m_occluded) {
-                if (m_options.anchorCount > 1) {
+                if (m_options.anchors.count > 1) {
                     enterState(State::anchor_fallback, 0.0);
                     animate = true;
                 } else {

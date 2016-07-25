@@ -37,16 +37,17 @@ public:
         TextLabelProperty::Align align = TextLabelProperty::Align::none;
         LabelProperty::Anchor anchor = LabelProperty::Anchor::center;
 
-        static inline LabelProperty::AnchorFallback defaultAnchorFallbacks() {
-            static LabelProperty::AnchorFallback defaultFallbacks = {
-                {LabelProperty::Anchor::bottom,
-                 LabelProperty::Anchor::top,
-                 LabelProperty::Anchor::right,
-                 LabelProperty::Anchor::left,
-                 LabelProperty::Anchor::bottom_right,
-                 LabelProperty::Anchor::bottom_left,
-                 LabelProperty::Anchor::top_right,
-                 LabelProperty::Anchor::top_left}
+        static inline LabelProperty::Anchors defaultAnchorFallbacks() {
+            static const LabelProperty::Anchors defaultFallbacks = {
+                {{LabelProperty::Anchor::bottom,
+                  LabelProperty::Anchor::top,
+                  LabelProperty::Anchor::right,
+                  LabelProperty::Anchor::left,
+                  LabelProperty::Anchor::bottom_right,
+                  LabelProperty::Anchor::bottom_left,
+                  LabelProperty::Anchor::top_right,
+                  LabelProperty::Anchor::top_left}},
+                8,
             };
             return defaultFallbacks;
         }
@@ -98,6 +99,8 @@ public:
     std::unique_ptr<StyleBuilder> createBuilder() const override;
 
     DynamicQuadMesh<TextVertex>& getMesh(size_t id) const;
+
+    auto& getMeshes() const { return m_meshes; }
 
     virtual size_t dynamicMeshSize() const override;
 

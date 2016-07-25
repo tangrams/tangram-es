@@ -69,12 +69,12 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
         for (auto& label : m_labels) {
             auto* textLabel = static_cast<TextLabel*>(label.get());
 
-            std::vector<TextRange>& ranges = textLabel->textRanges();
+            auto& ranges = textLabel->textRanges();
 
             bool active = textLabel->state() != Label::State::dead;
 
-            if (ranges.back().range.end() != quadPos) {
-                quadPos = ranges.back().range.end();
+            if (ranges.back().end() != quadPos) {
+                quadPos = ranges.back().end();
                 added = false;
             }
 
@@ -84,7 +84,9 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
             if (!added) {
                 added = true;
 
-                sumQuads += ranges[0].range.length * ranges.size();
+                for (auto& textRange : ranges) {
+                    sumQuads += textRange.length;
+                }
             }
         }
 
@@ -105,28 +107,29 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
             bool active = textLabel->state() != Label::State::dead;
             if (!active) { continue; }
 
-            std::vector<TextRange>& ranges = textLabel->textRanges();
+            auto& ranges = textLabel->textRanges();
 
             // Add the quads of line-labels only once
-            if (ranges.back().range.end() != quadPos) {
+            if (ranges.back().end() != quadPos) {
                 quadStart = quadEnd;
-                quadPos = ranges.back().range.end();
+                quadPos = ranges.back().end();
 
                 for (auto& textRange : ranges) {
-                    quadEnd += textRange.range.length;
+                    if (textRange.length > 0) {
+                        quadEnd += textRange.length;
 
-                    auto it = m_quads.begin() + textRange.range.start;
-                    quads.insert(quads.end(), it, it + textRange.range.length);
+                        auto it = m_quads.begin() + textRange.start;
+                        quads.insert(quads.end(), it, it + textRange.length);
+                    }
                 }
             }
 
             // Update TextRange
             auto start = quadStart;
-            auto nQuads = ranges[0].range.length;
 
             for (auto& textRange : ranges) {
-                textRange.range.start = start;
-                start += nQuads;
+                textRange.start = start;
+                start += textRange.length;
             }
 
             labels.push_back(std::move(label));
@@ -305,8 +308,6 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     _rule.get(StyleParamKey::text_font_stroke_width, p.strokeWidth);
     p.strokeWidth *= m_style.pixelScale();
 
-    const std::string* anchor = nullptr;
-
     uint32_t priority;
     if (_iconText) {
         if (_rule.get(StyleParamKey::text_priority, priority)) {
@@ -315,7 +316,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         _rule.get(StyleParamKey::text_collide, p.labelOptions.collide);
         _rule.get(StyleParamKey::text_interactive, p.interactive);
         _rule.get(StyleParamKey::text_offset, p.labelOptions.offset);
-        anchor = _rule.get<std::string>(StyleParamKey::text_anchor);
+        _rule.get(StyleParamKey::text_anchor, p.labelOptions.anchors);
     } else {
         if (_rule.get(StyleParamKey::priority, priority)) {
             p.labelOptions.priority = (float)priority;
@@ -323,7 +324,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         _rule.get(StyleParamKey::collide, p.labelOptions.collide);
         _rule.get(StyleParamKey::interactive, p.interactive);
         _rule.get(StyleParamKey::offset, p.labelOptions.offset);
-        anchor = _rule.get<std::string>(StyleParamKey::anchor);
+        _rule.get(StyleParamKey::anchor, p.labelOptions.anchors);
     }
 
     _rule.get(StyleParamKey::text_transition_hide_time, p.labelOptions.hideTransition.time);
@@ -352,25 +353,6 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     if (p.interactive) {
         p.labelOptions.properties = std::make_shared<Properties>(_props);
-    }
-
-    if (anchor) {
-        // TODO: cache in style param and optimize
-        std::string a = *anchor;
-        std::vector<std::string> anchors = splitString(a, ',');
-
-        for (size_t i = 0; i < anchors.size() && i < LabelProperty::max_anchors; ++i) {
-            LabelProperty::Anchor labelAnchor;
-            if (LabelProperty::anchor(anchors[i], labelAnchor)) {
-                p.labelOptions.anchors[i] = labelAnchor;
-                p.labelOptions.anchorCount++;
-            } else {
-                LOG("Invalid anchor %s", anchors[i].c_str());
-            }
-        }
-    } else if (_rule.contains(StyleParamKey::point_text)) { // text attached to point
-        p.labelOptions.anchors = TextStyle::Parameters::defaultAnchorFallbacks();
-        p.labelOptions.anchorCount = 8;
     }
 
     if (auto* transform = _rule.get<std::string>(StyleParamKey::text_transform)) {
@@ -499,7 +481,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     }
     m_attributes.quadsStart = m_quads.size();
 
-    m_attributes.textRanges.clear();
+    m_attributes.textRanges = TextRange{};
 
     glm::vec2 bbox(0);
     if (ctx->layoutText(_params, *renderText, m_quads, m_atlasRefs, bbox, m_attributes.textRanges)) {

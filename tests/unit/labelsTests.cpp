@@ -26,15 +26,12 @@ std::unique_ptr<TextLabel> makeLabel(Label::Transform _transform, Label::Type _t
     options.properties = std::make_shared<Properties>();
     options.properties->set("id", id);
     options.interactive = true;
-    options.anchors[0] = LabelProperty::Anchor::center;
-    options.anchorCount = 1;
-
-    std::vector<TextRange> textRanges;
-    textRanges.push_back({TextLabelProperty::Align::none, {}});
+    options.anchors.anchor[0] = LabelProperty::Anchor::center;
+    options.anchors.count = 1;
 
     return std::unique_ptr<TextLabel>(new TextLabel(_transform, _type, options,
-            {}, {10, 10}, dummy, textRanges,
-            TextLabelProperty::Align::none));
+                                                    {}, {10, 10}, dummy, {},
+                                                    TextLabelProperty::Align::none));
 }
 
 TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
