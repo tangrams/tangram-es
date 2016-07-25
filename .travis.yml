@@ -6,11 +6,11 @@ matrix:
           env: PLATFORM=osx
           compiler: clang
         - os: linux
-          env: PLATFORM=linux CXX=g++-4.9 CC=gcc-4.9
+          env: PLATFORM=linux CXX=g++-5 CC=gcc-5
           addons:
             apt:
               sources: [ 'kubuntu-backports', 'ubuntu-toolchain-r-test', 'george-edison55-precise-backports' ]
-              packages: [ 'cmake', 'gcc-4.9', 'g++-4.9', 'xorg-dev', 'libglu1-mesa-dev' ]
+              packages: [ 'cmake', 'gcc-5', 'g++-5', 'xorg-dev', 'libglu1-mesa-dev' ]
         - os: osx
           env: PLATFORM=ios
           compiler: clang
