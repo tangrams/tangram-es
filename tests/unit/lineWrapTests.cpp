@@ -43,8 +43,6 @@ void initFont(std::string _font = TEST_FONT) {
     font->addFace(face);
 }
 
-// TODO: Update
-
 TEST_CASE("Ensure empty line is given when giving empty shape to alfons", "[Core][Alfons]") {
     initFont();
     auto line = shaper.shape(font, "");
