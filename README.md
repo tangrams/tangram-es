@@ -58,7 +58,7 @@ open build/xcode/tangram.xcodeproj
 Note that any Xcode configuration change you make to the project won't be preserved when CMake runs again. Build configuration is defined only in the CMakeLists file(s).
 
 ### Ubuntu Linux ###
-To build on Ubuntu you will need a C++ toolchain with support for C++14. GCC 4.9 (or higher) and Clang 3.4 (or higher) are known to work.
+To build on Ubuntu you will need a C++ toolchain with support for C++14. GCC 5 (or higher) and Clang 3.4 (or higher) are known to work.
 
 You will also need to install development packages for libcurl, x11, and opengl:
 
@@ -126,17 +126,17 @@ Then install to a connected device or emulator. You can (re)install and run the 
 ```
 
 ### Raspberry Pi ###
-To build on Rasberry Pi you will need a C++ toolchain with support for C++14. GCC 4.9 (or higher) is known to work (refer [here](https://solarianprogrammer.com/2015/01/13/raspberry-pi-raspbian-install-gcc-compile-cpp-14-programs/) for instructions on getting GCC 4.9).
+To build on Rasberry Pi you will need a C++ toolchain with support for C++14. Clang 3.5 (or higher) is known to work.
 
-First, install CMake and libcurl:
+First, install Clang, CMake, and libcurl:
 
 ```
-sudo apt-get install cmake libcurl4-openssl-dev
+sudo apt-get install clang-3.5 cmake libcurl4-openssl-dev
 ```
 
 Before compiling, choose which compiler to use:
 ```
-export CXX=/usr/bin/g++-4.9
+export CXX=/usr/bin/clang++-3.5
 ```
 
 Then compile and run:
