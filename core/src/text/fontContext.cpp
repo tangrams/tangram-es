@@ -256,13 +256,17 @@ void FontContext::download(const FontDescription& _ft) {
     resourceLoad++;
     if (std::regex_search(_ft.uri, match, regex)) {
         startUrlRequest(_ft.uri, [&, _ft](std::vector<char>&& rawData) {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            char* data = reinterpret_cast<char*>(rawData.data());
+            if (rawData.size() == 0) {
+                LOGE("Bad URL request for font %s at URL %s", _ft.alias.c_str(), _ft.uri.c_str());
+            } else {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                char* data = reinterpret_cast<char*>(rawData.data());
 
-            int size = BASE_SIZE;
-            for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
-                auto font = m_alfons.getFont(_ft.alias, size);
-                font->addFace(m_alfons.addFontFace(alfons::InputSource(data, rawData.size()), size));
+                int size = BASE_SIZE;
+                for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
+                    auto font = m_alfons.getFont(_ft.alias, size);
+                    font->addFace(m_alfons.addFontFace(alfons::InputSource(data, rawData.size()), size));
+                }
             }
 
             resourceLoad--;
