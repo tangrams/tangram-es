@@ -58,7 +58,7 @@ TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[
 
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
     l.occlude(true);
-    l.evalState(screenSize, 0);
+    l.evalState(0);
 
     REQUIRE(l.state() == Label::State::sleep);
 }
@@ -70,13 +70,13 @@ TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens
 
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
     l.occlude(false);
-    l.evalState(screenSize, 0);
+    l.evalState(0);
 
     REQUIRE(l.state() == Label::State::fading_in);
     REQUIRE(l.canOcclude());
 
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
-    l.evalState(screenSize, 1.f);
+    l.evalState(1.f);
 
     REQUIRE(l.state() == Label::State::visible);
     REQUIRE(l.canOcclude());
@@ -87,14 +87,14 @@ TEST_CASE( "Ensure the end state after occlusion is leep state", "[Core][Label]"
 
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
     l.occlude(false);
-    l.evalState(screenSize, 0);
+    l.evalState(0);
 
     REQUIRE(l.state() == Label::State::fading_in);
     REQUIRE(l.canOcclude());
 
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
     l.occlude(true);
-    l.evalState(screenSize, 1.f);
+    l.evalState(1.f);
 
     // Depends whether fading-in labels fade out or set to sleep in evalState
     // REQUIRE(l.state() == Label::State::fading_out);
@@ -117,7 +117,7 @@ TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
     REQUIRE(l.canOcclude());
 
     l.update(glm::ortho(0.f, screenSize.x * 4.f, screenSize.y * 4.f, 0.f, -1.f, 1.f), screenSize, 0);
-    l.evalState(screenSize, 0);
+    l.evalState(0);
     REQUIRE(l.state() != Label::State::none);
 
     REQUIRE(l.state() == Label::State::visible);
@@ -131,7 +131,7 @@ TEST_CASE( "Ensure debug labels are always visible and cannot occlude", "[Core][
     REQUIRE(!l.canOcclude());
 
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
-    l.evalState(screenSize, 1.f);
+    l.evalState(1.f);
 
     REQUIRE(l.state() == Label::State::visible);
     REQUIRE(!l.canOcclude());
@@ -208,7 +208,7 @@ TEST_CASE( "Ensure anchor fallback behavior on first fallback", "[Core][Label]" 
 
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
     l.occlude(true);
-    l.evalState(screenSize, 1.f);
+    l.evalState(1.f);
 
     REQUIRE(l.state() == Label::State::anchor_fallback);
 }
@@ -222,7 +222,7 @@ TEST_CASE( "Ensure anchor fallback behavior when looping over all fallbacks with
 
         l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
         l.occlude(true);
-        l.evalState(screenSize, 1.f);
+        l.evalState(1.f);
 
         REQUIRE(l.state() == Label::State::anchor_fallback);
     }
@@ -232,7 +232,7 @@ TEST_CASE( "Ensure anchor fallback behavior when looping over all fallbacks with
         for (int i = 0; i < 3; ++i) {
             l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
             l.occlude(true);
-            l.evalState(screenSize, 1.f);
+            l.evalState(1.f);
 
             REQUIRE(l.state() == Label::State::anchor_fallback);
         }
@@ -244,12 +244,12 @@ TEST_CASE( "Ensure anchor fallback behavior when looping over all fallbacks with
     {
         l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
         l.occlude(true);
-        l.evalState(screenSize, 1.f);
+        l.evalState(1.f);
         REQUIRE(l.state() == Label::State::fading_out);
 
         l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
         l.occlude(true);
-        l.evalState(screenSize, 1.f);
+        l.evalState(1.f);
         REQUIRE(l.state() == Label::State::sleep);
     }
 }
@@ -264,14 +264,14 @@ TEST_CASE( "Ensure anchor fallback behavior when looping over all fallback and f
     for (int i = 0; i < 3; ++i) {
         l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
         l.occlude(true);
-        l.evalState(screenSize, 1.f);
+        l.evalState(1.f);
 
         REQUIRE(l.state() == Label::State::anchor_fallback);
     }
 
     l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
     l.occlude(false);
-    l.evalState(screenSize, 1.f);
+    l.evalState(1.f);
 
     REQUIRE(l.anchorType() == LabelProperty::Anchor::left);
     REQUIRE(l.state() == Label::State::visible);

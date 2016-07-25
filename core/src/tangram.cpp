@@ -293,9 +293,7 @@ bool Map::update(float _dt) {
 
         auto& tiles = impl->tileManager.getVisibleTiles();
 
-        const bool mustUpdateLabels = true;
-
-        if (mustUpdateLabels ||
+        if (impl->labels.needUpdate() == Label::EvalUpdate::relayout ||
             impl->view.changedOnLastUpdate() ||
             impl->tileManager.hasTileSetChanged()) {
 
@@ -315,7 +313,7 @@ bool Map::update(float _dt) {
     bool viewChanged = impl->view.changedOnLastUpdate();
     bool tilesChanged = impl->tileManager.hasTileSetChanged();
     bool tilesLoading = impl->tileManager.hasLoadingTiles();
-    bool labelsNeedUpdate = impl->labels.needUpdate();
+    bool labelsNeedUpdate = impl->labels.needUpdate() != Label::EvalUpdate::none;
     bool resourceLoading = (impl->scene->m_resourceLoad > 0);
     bool nextScene = bool(impl->nextScene);
 
@@ -324,7 +322,7 @@ bool Map::update(float _dt) {
     }
 
     // Request for render if labels are in fading in/out states
-    if (impl->labels.needUpdate()) { requestRender(); }
+    if (labelsNeedUpdate) { requestRender(); }
 
     return viewComplete;
 }

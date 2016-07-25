@@ -45,7 +45,7 @@ public:
                                                      const std::vector<std::shared_ptr<Tile>>& _tiles,
                                                      float _x, float _y, bool _visibleOnly = true);
 
-    bool needUpdate() const { return m_needUpdate; }
+    Label::EvalUpdate needUpdate() const { return m_needUpdate; }
 
 private:
 
@@ -66,7 +66,9 @@ private:
 
     PERF_TRACE bool withinRepeatDistance(Label *_label);
 
-    bool m_needUpdate;
+    void evalLabel(Label* _label, float _dt);
+
+    Label::EvalUpdate m_needUpdate;
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
 
