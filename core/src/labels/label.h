@@ -42,6 +42,12 @@ public:
         dead            = 1 << 8,
     };
 
+    enum class EvalUpdate {
+        none,
+        animate,
+        relayout,
+    };
+
     struct Transform {
         Transform(glm::vec2 _pos) : modelPosition1(_pos), modelPosition2(_pos) {}
         Transform(glm::vec2 _pos1, glm::vec2 _pos2) : modelPosition1(_pos1), modelPosition2(_pos2) {}
@@ -91,7 +97,7 @@ public:
     /* Push the pending transforms to the vbo by updating the vertices */
     virtual void pushTransform() = 0;
 
-    bool evalState(const glm::vec2& _screenSize, float _dt);
+    EvalUpdate evalState(float _dt);
 
     /* Update the screen position of the label */
     bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _drawAllLabels);

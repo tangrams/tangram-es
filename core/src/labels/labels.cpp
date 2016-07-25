@@ -21,7 +21,7 @@
 namespace Tangram {
 
 Labels::Labels()
-    : m_needUpdate(false),
+    : m_needUpdate(Label::EvalUpdate::none),
       m_lastZoom(0.0f) {}
 
 Labels::~Labels() {}
@@ -29,6 +29,14 @@ Labels::~Labels() {}
 // int Labels::LODDiscardFunc(float _maxZoom, float _zoom) {
 //     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 // }
+
+void Labels::evalLabel(Label* _label, float _dt) {
+    auto update = _label->evalState(_dt);
+    if (update == Label::EvalUpdate::relayout ||
+        m_needUpdate == Label::EvalUpdate::none) {
+        m_needUpdate = update;
+    }
+}
 
 void Labels::updateLabels(const View& _view, float _dt,
                           const std::vector<std::unique_ptr<Style>>& _styles,
@@ -38,7 +46,7 @@ void Labels::updateLabels(const View& _view, float _dt,
     // Keep labels for debugDraw
     if (!_onlyTransitions) { m_labels.clear(); }
 
-    m_needUpdate = false;
+    m_needUpdate = Label::EvalUpdate::none;
 
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
 
@@ -72,13 +80,13 @@ void Labels::updateLabels(const View& _view, float _dt,
 
                 if (_onlyTransitions) {
                     if (!label->canOcclude() || label->visibleState()) {
-                        m_needUpdate |= label->evalState(screenSize, _dt);
+                        evalLabel(label.get(), _dt);
                         label->pushTransform();
                     }
                 } else if (label->canOcclude()) {
                     m_labels.emplace_back(label.get(), proxyTile);
                 } else {
-                    m_needUpdate |= label->evalState(screenSize, _dt);
+                    evalLabel(label.get(), _dt);
                     label->pushTransform();
                 }
             }
@@ -298,12 +306,10 @@ void Labels::updateLabelSet(const View& _view, float _dt,
 
     /// Update label meshes
 
-    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
-
     for (auto& entry : m_labels) {
         Label* label = entry.label;
 
-        m_needUpdate |= label->evalState(screenSize, _dt);
+        evalLabel(label, _dt);
         label->pushTransform();
     }
 }

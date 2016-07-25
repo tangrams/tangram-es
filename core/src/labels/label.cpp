@@ -267,32 +267,35 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
     return true;
 }
 
-bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
+Label::EvalUpdate Label::evalState(float _dt) {
 
 #ifdef DEBUG
     if (Tangram::getDebugFlag(DebugFlags::draw_all_labels)) {
         enterState(State::visible, 1.0);
-        return false;
+        return EvalUpdate::none;
     }
 #endif
-
-    bool animate = false;
 
     switch (m_state) {
         case State::visible:
             if (m_occluded || m_occludedLastFrame) {
                 if (m_options.anchors.count > 1) {
                     enterState(State::anchor_fallback, 0.0);
+
+                    return EvalUpdate::relayout;
                 } else {
                     m_fade.reset(false, m_options.hideTransition.ease,
                                         m_options.hideTransition.time);
 
                     enterState(State::fading_out, 1.0);
+                    return EvalUpdate::animate;
                 }
 
-                animate = true;
+            } else if (m_anchorIndex != 0) {
+                // TODO: try to place again to prefered fallback (0)
             }
-            break;
+            return EvalUpdate::none;
+
         case State::anchor_fallback:
             if (m_occluded) {
                 if (m_anchorIndex >= int(m_options.anchors.count)-1) {
@@ -307,72 +310,73 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             } else {
                 enterState(State::visible, 1.0);
             }
+            return EvalUpdate::relayout;
 
-            animate = true;
-            break;
         case State::fading_in:
             if (m_occluded) {
                 enterState(State::sleep, 0.0);
-                break;
+                return EvalUpdate::none;
             }
-
             setAlpha(m_fade.update(_dt));
-            animate = true;
             if (m_fade.isFinished()) {
                 enterState(State::visible, 1.0);
+                return EvalUpdate::none;
             }
-            break;
+            return EvalUpdate::animate;
+
         case State::fading_out:
             if (!m_occluded) {
                 enterState(State::fading_in, m_transform.state.alpha);
-                animate = true;
-                break;
+                return EvalUpdate::animate;
             }
-
             setAlpha(m_fade.update(_dt));
-            animate = true;
             if (m_fade.isFinished()) {
                 enterState(State::sleep, 0.0);
+                return EvalUpdate::none;
             }
-            break;
+            return EvalUpdate::animate;
+
         case State::none:
             if (m_occluded) {
                 if (m_options.anchors.count > 1) {
                     enterState(State::anchor_fallback, 0.0);
-                    animate = true;
+                    return EvalUpdate::relayout;
                 } else {
                     enterState(State::sleep, 0.0);
+                    return EvalUpdate::none;
                 }
             } else {
                 m_fade.reset(true, m_options.showTransition.ease,
                                    m_options.showTransition.time);
 
                 enterState(State::fading_in, 0.0);
-                animate = true;
             }
-            break;
+            return EvalUpdate::animate;
+
         case State::skip_transition:
             if (m_occluded) {
                 enterState(State::sleep, 0.0);
             } else {
                 enterState(State::visible, 1.0);
             }
-            break;
+            return EvalUpdate::none;
+
         case State::sleep:
             if (!m_occluded) {
                 m_fade.reset(true, m_options.showTransition.ease,
                                    m_options.showTransition.time);
 
                 enterState(State::fading_in, 0.0);
-                animate = true;
+                return EvalUpdate::animate;
             }
-            break;
+            return EvalUpdate::none;
+
         case State::dead:
         case State::out_of_screen:
             break;
     }
 
-    return animate;
+    return EvalUpdate::none;
 }
 
 }
