@@ -80,6 +80,8 @@ void Labels::updateLabels(const View& _view, float _dt,
 
                 if (_onlyTransitions) {
                     if (!label->canOcclude() || label->visibleState()) {
+                        if (label->occludedLastFrame()) { label->occlude(); }
+
                         evalLabel(label.get(), _dt);
                         label->pushTransform();
                     }
