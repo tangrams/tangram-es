@@ -6,6 +6,7 @@
 #include "sdf.h"
 
 #include <memory>
+#include <regex>
 
 #define DEFAULT "fonts/NotoSans-Regular.ttf"
 #define FONT_AR "fonts/NotoNaskh-Regular.ttf"
@@ -16,20 +17,23 @@
 #if defined(PLATFORM_ANDROID)
 #define ANDROID_FONT_PATH "/system/fonts/"
 #endif
-#define BASE_SIZE 16
-#define STEP_SIZE 12
+#define BASE_SIZE   16
+#define STEP_SIZE   12
+#define MAX_STEPS   3
 
-#define SDF_WIDTH 6
+#define SDF_WIDTH   6
 
 #define MIN_LINE_WIDTH 4
+
+// TODO: more flexibility on this
+#define BUNDLE_FONT_PATH "fonts/"
 
 namespace Tangram {
 
 FontContext::FontContext() :
     m_sdfRadius(SDF_WIDTH),
     m_atlas(*this, GlyphTexture::size, m_sdfRadius),
-    m_batch(m_atlas, m_scratch),
-    m_sceneResourceRoot("") {
+    m_batch(m_atlas, m_scratch) {
 
 // TODO: make this platform independent
 #if defined(PLATFORM_ANDROID)
@@ -37,7 +41,7 @@ FontContext::FontContext() :
     LOGD("FONT %s", fontPath.c_str());
 
     int size = BASE_SIZE;
-    for (int i = 0; i < 3; i++, size += STEP_SIZE) {
+    for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
         m_font[i] = m_alfons.addFont("default", alfons::InputSource(fontPath), size);
     }
 
@@ -56,7 +60,7 @@ FontContext::FontContext() :
         LOGD("FALLBACK %s", fontPath.c_str());
 
         int size = BASE_SIZE;
-        for (int i = 0; i < 3; i++, size += STEP_SIZE) {
+        for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
             m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(fontPath), size));
         }
     }
@@ -67,7 +71,7 @@ FontContext::FontContext() :
         size_t dataSize;
         char* data = reinterpret_cast<char*>(bytesFromFile(path, dataSize));
         if (data) {
-            for (int i = 0; i < 3; i++, size += STEP_SIZE) {
+            for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
                 m_font[i] = m_alfons.addFont("default", alfons::InputSource(data, dataSize), size);
             }
             free(data);
@@ -77,7 +81,7 @@ FontContext::FontContext() :
         size_t dataSize;
         char* data = reinterpret_cast<char*>(bytesFromFile(path, dataSize));
         if (data) {
-            for (int i = 0; i < 3; i++, size += STEP_SIZE) {
+            for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
                     m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(data, dataSize), size));
             }
             free(data);
@@ -92,7 +96,7 @@ FontContext::FontContext() :
 
 #else
     int size = BASE_SIZE;
-    for (int i = 0; i < 3; i++, size += STEP_SIZE) {
+    for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
         m_font[i] = m_alfons.addFont("default", alfons::InputSource(DEFAULT), size);
         m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_AR), size));
         m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_HE), size));
@@ -242,6 +246,32 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     return true;
 }
 
+void FontContext::download(const FontDescription& _ft) {
+
+    const static std::regex regex("^(http|https):/");
+    std::smatch match;
+
+    m_resourceLoad++;
+    if (std::regex_search(_ft.uri, match, regex)) {
+        startUrlRequest(_ft.uri, [&](std::vector<char>&& rawData) {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            char* data = reinterpret_cast<char*>(rawData.data());
+
+            int size = BASE_SIZE;
+            for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
+                auto font = m_alfons.getFont(_ft.alias, size);
+                font->addFace(m_alfons.addFontFace(alfons::InputSource(data, rawData.size()), size));
+            }
+
+            m_resourceLoad--;
+        });
+    }
+}
+
+bool FontContext::isLoadingResources() const {
+    return m_resourceLoad > 0;
+}
+
 void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::AtlasGlyph& atlasGlyph) {
     if (atlasGlyph.atlas >= max_textures) { return; }
 
@@ -254,40 +284,30 @@ void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::
              {glm::vec2{q.x2, q.y2} * TextVertex::position_scale, {g.u2, g.v2}}}});
 }
 
-auto FontContext::getFont(const std::string& _family, const std::string& _style,
-                          const std::string& _weight, float _size) -> std::shared_ptr<alfons::Font> {
+std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, const std::string& _style,
+                                                   const std::string& _weight, float _size) {
 
     int sizeIndex = 0;
 
     // Pick the smallest font that does not scale down too much
     float fontSize = BASE_SIZE;
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < MAX_STEPS; i++) {
         sizeIndex = i;
 
         if (_size <= fontSize) { break; }
         fontSize += STEP_SIZE;
     }
-    //LOG(">> %f - %d ==> %f", _size, sizeIndex, _size / ((sizeIndex+1) * BASE_SIZE));
 
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    static std::string fontName;
-
-    fontName.clear();
-    fontName += _family;
-    fontName += '_';
-    fontName += _weight;
-    fontName += '_';
-    fontName += _style;
-
-    auto font = m_alfons.getFont(fontName, fontSize);
+    auto font =  m_alfons.getFont(FontDescription::Alias(_family, _style, _weight), fontSize);
     if (font->hasFaces()) { return font; }
 
     size_t dataSize = 0;
     unsigned char* data = nullptr;
 
     // Assuming bundled ttf file follows this convention
-    auto bundledFontPath = "fonts/" + _family + "-" + _weight + _style + ".ttf";
+    auto bundledFontPath = BUNDLE_FONT_PATH + FontDescription::BundleAlias(_family, _weight, _style, FontType::ttf);
 
     do {
         if (!m_sceneResourceRoot.empty()) {
@@ -305,7 +325,7 @@ auto FontContext::getFont(const std::string& _family, const std::string& _style,
     } while(0);
 
     if (!data) {
-        LOGE("Could not load font file %s", fontName.c_str());
+        LOGE("Could not load font file %s", FontDescription::BundleAlias(_family, _weight, _style, FontType::ttf).c_str());
         // add fallbacks from default font
         font->addFaces(*m_font[sizeIndex]);
         return font;

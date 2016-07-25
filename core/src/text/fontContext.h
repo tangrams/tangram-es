@@ -41,6 +41,38 @@ struct GlyphTexture {
     size_t refCount = 0;
 };
 
+enum class FontType {
+    wof,
+    ttf,
+};
+
+struct FontDescription {
+    std::string uri;
+    std::string alias;
+    std::string bundleAlias;
+
+    FontType type;
+
+    FontDescription(std::string family, std::string style, std::string weight, std::string uri, FontType type = FontType::ttf)
+        : uri(uri), type(type) {
+        alias = Alias(family, style, weight);
+        bundleAlias = BundleAlias(family, style, weight, type);
+    }
+
+    static std::string Alias(const std::string& family, const std::string& style, const std::string& weight) {
+        return family + "_" + weight + "_" + style;
+    }
+
+    static std::string BundleAlias(const std::string& family, const std::string& style, const std::string& weight, FontType type) {
+        std::string alias = family + "-" + weight + style;
+        switch(type) {
+            case FontType::wof: alias += ".woff"; break;
+            case FontType::ttf: alias += ".ttf"; break;
+        }
+        return alias;
+    }
+};
+
 class FontContext : public alfons::TextureCallback {
 
 public:
@@ -69,7 +101,7 @@ public:
     /* Update all textures batches, uploads the data to the GPU */
     void updateTextures();
 
-    std::shared_ptr<alfons::Font> getFont(const std::string& _name, const std::string& _style,
+    std::shared_ptr<alfons::Font> getFont(const std::string& _family, const std::string& _style,
                                           const std::string& _weight, float _size);
 
     size_t glyphTextureCount() {
@@ -92,7 +124,14 @@ public:
 
     void setSceneResourceRoot(const std::string& sceneResourceRoot) { m_sceneResourceRoot = sceneResourceRoot; }
 
+    void addFontDescription(FontDescription _ft);
+
+    void download(const FontDescription& _ft);
+
+    bool isLoadingResources() const;
+
 private:
+
     float m_sdfRadius;
     ScratchBuffer m_scratch;
     std::vector<unsigned char> m_sdfBuffer;
@@ -114,7 +153,9 @@ private:
     // textures and a MeshCallback implemented by TextStyleBuilder for adding glyph quads.
     alfons::TextBatch m_batch;
     TextWrapper m_textWrapper;
-    std::string m_sceneResourceRoot;
+    std::string m_sceneResourceRoot = "";
+
+    int m_resourceLoad = 0;
 };
 
 }
