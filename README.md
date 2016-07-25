@@ -58,7 +58,7 @@ open build/xcode/tangram.xcodeproj
 Note that any Xcode configuration change you make to the project won't be preserved when CMake runs again. Build configuration is defined only in the CMakeLists file(s).
 
 ### Ubuntu Linux ###
-To build on Ubuntu you will need a C++ toolchain with support for C++14. GCC 4.9 (or higher) and Clang 3.4 (or higher) are known to work.
+To build on Ubuntu you will need a C++ toolchain with support for C++14. GCC 5 (or higher) and Clang 3.4 (or higher) are known to work.
 
 You will also need to install development packages for libcurl, x11, and opengl:
 
