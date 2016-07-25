@@ -71,15 +71,23 @@ TEST_CASE() {
     float width = textWrap.getShapeRangeWidth(line, 4, 10);
     int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
     REQUIRE(nbLines == 2);
+
+    textWrap.clearWraps();
     width = textWrap.getShapeRangeWidth(line, 4, 4);
     nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
     REQUIRE(nbLines == 3);
+
+    textWrap.clearWraps();
     width = textWrap.getShapeRangeWidth(line, 0, 1);
     nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
     REQUIRE(nbLines == 4);
+
+    textWrap.clearWraps();
     width = textWrap.getShapeRangeWidth(line, 0, 3);
     nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
     REQUIRE(nbLines == 4);
+
+    textWrap.clearWraps();
     width = textWrap.getShapeRangeWidth(line, 2, 5);
     nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
     REQUIRE(nbLines == 4);
@@ -97,6 +105,8 @@ TEST_CASE() {
     float width = textWrap.getShapeRangeWidth(line, 0, 1);
     int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
     REQUIRE(nbLines == 3);
+
+    textWrap.clearWraps();
     width = textWrap.getShapeRangeWidth(line, 0, 10);
     nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
     REQUIRE(nbLines == 2);
