@@ -300,9 +300,7 @@ Label::EvalUpdate Label::evalState(float _dt) {
             if (m_occluded) {
                 if (m_anchorIndex >= int(m_options.anchors.count)-1) {
                     // Tried all anchors - deactivate label
-                    m_fade.reset(false, m_options.hideTransition.ease,
-                                        m_options.hideTransition.time);
-                    enterState(State::fading_out, m_transform.state.alpha);
+                    enterState(State::sleep, 0.0);
                 } else {
                     // Move to next one for upcoming frame
                     m_anchorIndex++;
