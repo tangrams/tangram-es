@@ -172,8 +172,14 @@ void Label::enterState(const State& _state, float _alpha) {
     m_state = _state;
     setAlpha(_alpha);
 
-    // Reset anchor fallback index
-    m_anchorIndex = 0;
+    if (m_state == State::sleep) {
+        // Reset anchor fallback index
+        m_anchorIndex = 0;
+    }
+
+    if (m_state == State::anchor_fallback) {
+        m_anchorIndex = 1;
+    }
 }
 
 void Label::setAlpha(float _alpha) {
@@ -186,6 +192,7 @@ void Label::resetState() {
 
     m_occludedLastFrame = false;
     m_occluded = false;
+    m_anchorIndex = 0;
     enterState(State::none, 0.0);
 }
 
@@ -219,6 +226,15 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
             m_occluded = true;
         } else {
             return false;
+        }
+    }
+
+    if (m_state == State::anchor_fallback) {
+        // Apply new alignment
+        if (m_parent) {
+            alignFromParent(*m_parent);
+        } else {
+            applyAnchor(m_dim, glm::vec2(0.0), m_options.anchors[m_anchorIndex]);
         }
     }
 
@@ -280,19 +296,13 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
         case State::anchor_fallback:
             if (m_occluded) {
                 if (m_anchorIndex >= int(m_options.anchorCount)-1) {
+                    // Tried all anchors - deactivate label
                     m_fade.reset(false, m_options.hideTransition.ease,
                                         m_options.hideTransition.time);
-
                     enterState(State::fading_out, m_transform.state.alpha);
                 } else {
                     // Move to next one for upcoming frame
                     m_anchorIndex++;
-                    // Apply new alignment
-                    if (m_parent) {
-                        alignFromParent(*m_parent);
-                    } else {
-                        applyAnchor(m_dim, glm::vec2(0.0), m_options.anchors[m_anchorIndex]);
-                    }
                 }
             } else {
                 enterState(State::visible, 1.0);
@@ -327,12 +337,12 @@ bool Label::evalState(const glm::vec2& _screenSize, float _dt) {
             break;
         case State::none:
             if (m_occluded) {
-                // if (m_options.anchorCount > 0) {
-                //     enterState(State::anchor_fallback, 0.0);
-                //     animate = true;
-                // } else {
-                enterState(State::sleep, 0.0);
-                // }
+                if (m_options.anchorCount > 1) {
+                    enterState(State::anchor_fallback, 0.0);
+                    animate = true;
+                } else {
+                    enterState(State::sleep, 0.0);
+                }
             } else {
                 m_fade.reset(true, m_options.showTransition.ease,
                                    m_options.showTransition.time);
