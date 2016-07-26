@@ -278,7 +278,7 @@ void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
 
         size_t textStart = textLabels.size();
 
-        textStyleBuilder.addFeatureCommon(_feat, _rule, true);
+        if (!textStyleBuilder.addFeatureCommon(_feat, _rule, true)) { return; }
 
         size_t textCount = textLabels.size() - textStart;
 

@@ -24,7 +24,7 @@ public:
         addFeatureCommon(_feature, _rule, false);
     }
 
-    void addFeatureCommon(const Feature& _feature, const DrawRule& _rule, bool _iconText);
+    bool addFeatureCommon(const Feature& _feature, const DrawRule& _rule, bool _iconText);
 
     void setup(const Tile& _tile) override;
 
