@@ -144,7 +144,7 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
     return std::move(m_textLabels);
 }
 
-void TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _rule, bool _iconText) {
+bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _rule, bool _iconText) {
     TextStyle::Parameters params = applyRule(_rule, _feat.props, _iconText);
 
     Label::Type labelType;
@@ -159,7 +159,7 @@ void TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
     size_t quadsStart = m_quads.size();
     size_t numLabels = m_labels.size();
 
-    if (!prepareLabel(params, labelType)) { return; }
+    if (!prepareLabel(params, labelType)) { return false; }
 
     if (_feat.geometryType == GeometryType::points) {
         for (auto& point : _feat.points) {
@@ -200,6 +200,7 @@ void TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
         // Drop quads when no label was added
         m_quads.resize(quadsStart);
     }
+    return true;
 }
 
 void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::Parameters& _params) {
