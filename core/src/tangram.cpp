@@ -54,13 +54,14 @@ public:
     std::mutex tilesMutex;
     std::mutex sceneMutex;
 
+    JobQueue jobQueue;
+    RenderState renderState;
     View view;
     Labels labels;
     AsyncWorker asyncWorker;
     InputHandler inputHandler{view};
-    TileWorker tileWorker{MAX_WORKERS};
+    TileWorker tileWorker{MAX_WORKERS, jobQueue};
     TileManager tileManager{tileWorker};
-    RenderState renderState;
 
     std::vector<SceneUpdate> sceneUpdates;
     std::array<Ease, 4> eases;
@@ -90,10 +91,7 @@ Map::Map() {
 }
 
 Map::~Map() {
-    // Explicitly destroy all member objects so that we have a chance
-    // to run any resulting jobs sent to the JobQueue.
-    impl.reset();
-    JobQueue::runJobsForCurrentThread();
+    // The unique_ptr to Impl will be automatically destroyed when Map is destroyed.
 }
 
 void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
@@ -169,14 +167,11 @@ void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapRead
         impl->nextScene->useScenePosition = _useScenePosition;
     }
 
-    JobQueue mainThreadJobQueue;
-    mainThreadJobQueue.makeCurrentThreadTarget();
-
-    runAsyncTask([scene = impl->nextScene, _platformCallback, mainThreadJobQueue, this](){
+    runAsyncTask([scene = impl->nextScene, _platformCallback, &jobQueue = impl->jobQueue, this](){
 
             bool ok = SceneLoader::loadScene(scene);
 
-            mainThreadJobQueue.add([scene, ok, _platformCallback, this]() {
+            jobQueue.add([scene, ok, _platformCallback, this]() {
                     {
                         std::lock_guard<std::mutex> lock(impl->sceneMutex);
                         if (scene == impl->nextScene) {
@@ -220,16 +215,13 @@ void Map::applySceneUpdates() {
         impl->sceneUpdates.clear();
     }
 
-    JobQueue mainThreadJobQueue;
-    mainThreadJobQueue.makeCurrentThreadTarget();
-
-    runAsyncTask([scene = impl->nextScene, updates = std::move(updates), mainThreadJobQueue, this](){
+    runAsyncTask([scene = impl->nextScene, updates = std::move(updates), &jobQueue = impl->jobQueue, this](){
 
             SceneLoader::applyUpdates(scene->config(), updates);
 
             bool ok = SceneLoader::applyConfig(scene->config(), scene);
 
-            mainThreadJobQueue.add([scene, ok, this]() {
+            jobQueue.add([scene, ok, this]() {
                     if (scene == impl->nextScene) {
                         std::lock_guard<std::mutex> lock(impl->sceneMutex);
                         impl->nextScene.reset();
@@ -260,7 +252,7 @@ bool Map::update(float _dt) {
 
     FrameInfo::beginUpdate();
 
-    JobQueue::runJobsForCurrentThread();
+    impl->jobQueue.runJobs();
 
     impl->scene->updateTime(_dt);
 

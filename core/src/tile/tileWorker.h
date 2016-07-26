@@ -12,6 +12,7 @@
 
 namespace Tangram {
 
+class JobQueue;
 class Scene;
 class TileBuilder;
 
@@ -19,7 +20,7 @@ class TileWorker : public TileTaskQueue {
 
 public:
 
-    TileWorker(int _num_worker);
+    TileWorker(int _num_worker, JobQueue& jobQueue);
 
     ~TileWorker();
 
@@ -51,7 +52,7 @@ private:
     std::mutex m_mutex;
     std::vector<std::shared_ptr<TileTask>> m_queue;
 
-    JobQueue m_mainThreadJobQueue;
+    JobQueue& m_mainThreadJobQueue;
 
 };
 

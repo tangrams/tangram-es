@@ -156,7 +156,8 @@ TEST_CASE( "Mock TileWorker Initialization", "[TileManager][Constructor]" ) {
 }
 
 TEST_CASE( "Real TileWorker Initialization", "[TileManager][Constructor]" ) {
-    TileWorker worker(1);
+    JobQueue jobQueue;
+    TileWorker worker(1, jobQueue);
     TileManager tileManager(worker);
 }
 

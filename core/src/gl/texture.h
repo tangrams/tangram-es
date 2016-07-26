@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gl.h"
-#include "util/jobQueue.h"
 
 #include <vector>
 #include <memory>
@@ -118,8 +117,6 @@ protected:
 private:
 
     size_t bytesPerPixel();
-
-    JobQueue m_mainThreadJobQueue;
 
     bool m_generateMipmaps;
 };

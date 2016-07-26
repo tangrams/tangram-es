@@ -86,6 +86,7 @@ Texture& Texture::operator=(Texture&& _other) {
 void Texture::dispose(RenderState& rs) {
     if (m_glHandle) {
 
+        /*
         m_mainThreadJobQueue.add([id = m_glHandle, t = m_target, g = m_generation, &rs]() {
             if (rs.isValidGeneration(g)) {
                 // If the texture is bound, and deleted, the binding defaults to 0
@@ -96,7 +97,7 @@ void Texture::dispose(RenderState& rs) {
                 GL_CHECK(glDeleteTextures(1, &id));
             }
         });
-
+        */
     }
 }
 
@@ -191,7 +192,6 @@ void Texture::generate(RenderState& rs, GLuint _textureUnit) {
 
     m_generation = rs.generation();
 
-    m_mainThreadJobQueue.makeCurrentThreadTarget();
 }
 
 void Texture::checkValidity(RenderState& rs) {

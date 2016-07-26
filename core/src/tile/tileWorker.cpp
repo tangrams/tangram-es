@@ -13,10 +13,8 @@
 
 namespace Tangram {
 
-TileWorker::TileWorker(int _num_worker) {
+TileWorker::TileWorker(int _num_worker, JobQueue& jobQueue) : m_mainThreadJobQueue(jobQueue) {
     m_running = true;
-
-    m_mainThreadJobQueue.makeCurrentThreadTarget();
 
     for (int i = 0; i < _num_worker; i++) {
         auto worker = std::make_unique<Worker>();
