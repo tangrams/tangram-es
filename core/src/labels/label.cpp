@@ -278,7 +278,7 @@ Label::EvalUpdate Label::evalState(float _dt) {
 
     switch (m_state) {
         case State::visible:
-            if (m_occluded || m_occludedLastFrame) {
+            if (m_occluded) {
                 if (m_options.anchors.count > 1) {
                     enterState(State::anchor_fallback, 0.0);
 
@@ -305,10 +305,10 @@ Label::EvalUpdate Label::evalState(float _dt) {
                     // Move to next one for upcoming frame
                     m_anchorIndex++;
                 }
-            } else {
-                enterState(State::visible, 1.0);
+                return EvalUpdate::relayout;
             }
-            return EvalUpdate::relayout;
+            enterState(State::visible, 1.0);
+            return EvalUpdate::none;
 
         case State::fading_in:
             if (m_occluded) {
@@ -343,12 +343,10 @@ Label::EvalUpdate Label::evalState(float _dt) {
                     enterState(State::sleep, 0.0);
                     return EvalUpdate::none;
                 }
-            } else {
-                m_fade.reset(true, m_options.showTransition.ease,
-                                   m_options.showTransition.time);
-
-                enterState(State::fading_in, 0.0);
             }
+            m_fade.reset(true, m_options.showTransition.ease,
+                         m_options.showTransition.time);
+            enterState(State::fading_in, 0.0);
             return EvalUpdate::animate;
 
         case State::skip_transition:
