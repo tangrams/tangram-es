@@ -296,8 +296,6 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     _rule.get(StyleParamKey::text_font_fill, p.fill);
 
-    p.labelOptions.offset *= m_style.pixelScale();
-
     _rule.get(StyleParamKey::text_font_stroke_color, p.strokeColor);
     _rule.get(StyleParamKey::text_font_stroke_width, p.strokeWidth);
     p.strokeWidth *= m_style.pixelScale();
@@ -311,6 +309,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         _rule.get(StyleParamKey::text_collide, p.labelOptions.collide);
         _rule.get(StyleParamKey::text_interactive, p.interactive);
         _rule.get(StyleParamKey::text_offset, p.labelOptions.offset);
+        p.labelOptions.offset *= m_style.pixelScale();
 
         _rule.get(StyleParamKey::text_anchor, p.labelOptions.anchors);
         if (p.labelOptions.anchors.count == 0) {
@@ -331,6 +330,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         _rule.get(StyleParamKey::collide, p.labelOptions.collide);
         _rule.get(StyleParamKey::interactive, p.interactive);
         _rule.get(StyleParamKey::offset, p.labelOptions.offset);
+        p.labelOptions.offset *= m_style.pixelScale();
 
         _rule.get(StyleParamKey::anchor, p.labelOptions.anchors);
         if (p.labelOptions.anchors.count == 0) {
@@ -364,6 +364,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     p.labelOptions.repeatDistance *= m_style.pixelScale();
 
     if (p.interactive) {
+        // TODO optimization: for icon-text use the parent's properties
         p.labelOptions.properties = std::make_shared<Properties>(_props);
     }
 
