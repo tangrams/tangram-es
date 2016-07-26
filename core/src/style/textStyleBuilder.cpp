@@ -22,7 +22,6 @@ namespace Tangram {
 
 const static std::string key_name("name");
 
-
 TextStyleBuilder::TextStyleBuilder(const TextStyle& _style)
     : StyleBuilder(_style),
       m_style(_style) {}
@@ -270,12 +269,6 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     TextStyle::Parameters p;
 
-    if (_iconText) {
-        p = m_style.defaultUnifiedParams();
-    }
-
-    glm::vec2 offset;
-
     _rule.get(StyleParamKey::text_source, p.text);
     if (!_rule.isJSFunction(StyleParamKey::text_source)) {
         if (p.text.empty()) {
@@ -310,13 +303,26 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     uint32_t priority;
     if (_iconText) {
+
         if (_rule.get(StyleParamKey::text_priority, priority)) {
             p.labelOptions.priority = (float)priority;
         }
         _rule.get(StyleParamKey::text_collide, p.labelOptions.collide);
         _rule.get(StyleParamKey::text_interactive, p.interactive);
         _rule.get(StyleParamKey::text_offset, p.labelOptions.offset);
+
         _rule.get(StyleParamKey::text_anchor, p.labelOptions.anchors);
+        if (p.labelOptions.anchors.count == 0) {
+            p.labelOptions.anchors = {{
+                    {LabelProperty::Anchor::bottom,
+                     LabelProperty::Anchor::top,
+                     LabelProperty::Anchor::right,
+                     LabelProperty::Anchor::left,
+                     LabelProperty::Anchor::bottom_right,
+                     LabelProperty::Anchor::bottom_left,
+                     LabelProperty::Anchor::top_right,
+                     LabelProperty::Anchor::top_left}}, 8};
+        }
     } else {
         if (_rule.get(StyleParamKey::priority, priority)) {
             p.labelOptions.priority = (float)priority;
@@ -324,7 +330,12 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         _rule.get(StyleParamKey::collide, p.labelOptions.collide);
         _rule.get(StyleParamKey::interactive, p.interactive);
         _rule.get(StyleParamKey::offset, p.labelOptions.offset);
+
         _rule.get(StyleParamKey::anchor, p.labelOptions.anchors);
+        if (p.labelOptions.anchors.count == 0) {
+            p.labelOptions.anchors = {{
+                    {LabelProperty::Anchor::center}}, 1};
+        }
     }
 
     _rule.get(StyleParamKey::text_transition_hide_time, p.labelOptions.hideTransition.time);
@@ -361,8 +372,8 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     if (auto* align = _rule.get<std::string>(StyleParamKey::text_align)) {
         bool res = TextLabelProperty::align(*align, p.align);
-        if (!res) {
-            p.align = TextLabelProperty::alignFromAnchor(p.anchor);
+        if (!res && p.labelOptions.anchors.count > 0) {
+            p.align = TextLabelProperty::alignFromAnchor(p.labelOptions.anchors[0]);
         }
     }
 
