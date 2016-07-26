@@ -184,7 +184,7 @@ private:
 
         std::shared_ptr<DataSource> source;
         std::map<TileID, TileEntry> tiles;
-        int64_t sourceGeneration;
+        int64_t sourceGeneration = 0;
         bool clientDataSource;
     };
 
