@@ -213,9 +213,6 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
                 LOG("Invalid anchor %s", anchor.c_str());
             }
         }
-        if (anchors.count == 0) {
-            anchors = TextStyle::Parameters::defaultAnchorFallbacks();
-        }
         return anchors;
     }
     case StyleParamKey::text_align:

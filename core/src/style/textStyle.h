@@ -35,22 +35,6 @@ public:
 
         TextLabelProperty::Transform transform = TextLabelProperty::Transform::none;
         TextLabelProperty::Align align = TextLabelProperty::Align::none;
-        LabelProperty::Anchor anchor = LabelProperty::Anchor::center;
-
-        static inline LabelProperty::Anchors defaultAnchorFallbacks() {
-            static const LabelProperty::Anchors defaultFallbacks = {
-                {{LabelProperty::Anchor::bottom,
-                  LabelProperty::Anchor::top,
-                  LabelProperty::Anchor::right,
-                  LabelProperty::Anchor::left,
-                  LabelProperty::Anchor::bottom_right,
-                  LabelProperty::Anchor::bottom_left,
-                  LabelProperty::Anchor::top_right,
-                  LabelProperty::Anchor::top_left}},
-                8,
-            };
-            return defaultFallbacks;
-        }
 
         float fontScale = 1;
         float lineSpacing = 0;
@@ -106,8 +90,6 @@ public:
 
     virtual ~TextStyle() override;
 
-    Parameters defaultUnifiedParams() const;
-
 private:
 
     const std::string& applyTextSource(const Parameters& _parameters, const Properties& _props) const;
@@ -134,7 +116,6 @@ namespace std {
             hash_combine(seed, p.maxLineWidth);
             hash_combine(seed, int(p.transform));
             hash_combine(seed, int(p.align));
-            hash_combine(seed, int(p.anchor));
             hash_combine(seed, optionsHash(p.labelOptions));
             return seed;
         }

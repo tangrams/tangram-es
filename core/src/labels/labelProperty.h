@@ -35,11 +35,6 @@ struct Anchors {
         return anchor == _other.anchor && count == _other.count;
     }
 
-    // For GCC<5
-    Anchors(std::array<LabelProperty::Anchor, LabelProperty::max_anchors> _anchor, int _count)
-        : anchor(_anchor), count(_count) {}
-
-    Anchors() : count(0) {}
 };
 
 bool anchor(const std::string& _transform, Anchor& _out);

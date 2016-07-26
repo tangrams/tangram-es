@@ -99,12 +99,6 @@ void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
     }
 }
 
-TextStyle::Parameters TextStyle::defaultUnifiedParams() const {
-    TextStyle::Parameters params;
-    params.anchor = LabelProperty::Anchor::bottom;
-    return params;
-}
-
 std::unique_ptr<StyleBuilder> TextStyle::createBuilder() const {
     return std::make_unique<TextStyleBuilder>(*this);
 }
