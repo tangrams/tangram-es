@@ -119,7 +119,6 @@ void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_
 
     auto& texData = m_textures[id].texData;
     auto& texture = m_textures[id].texture;
-    m_textures[id].dirty = true;
 
     uint16_t stride = GlyphTexture::size;
     uint16_t width =  GlyphTexture::size;
@@ -144,6 +143,7 @@ void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_
                                  &m_sdfBuffer[0]);
 
     texture.setDirty(gy, gh);
+    m_textures[id].dirty = true;
 }
 
 void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
