@@ -427,6 +427,18 @@ layers:
                         weight: 400
                         style: normal
                         size: 14.5pt
+    country:
+        data: { source: osm, layer: places }
+        country-labels:
+            filter: { name: true, population: true, kind: [country] }
+            draw:
+                text:
+                    font:
+                        # transform: uppercase
+                        family: Montserrat
+                        fill: black
+                        stroke: { color: white, width: 4 }
+                        size: 13px
     places:
         data: { source: osm }
         filter:
