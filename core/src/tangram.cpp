@@ -304,7 +304,7 @@ bool Map::update(float _dt) {
             }
 
             impl->labels.updateLabelSet(impl->view, _dt, impl->scene->styles(), tiles,
-                                        impl->tileManager.getTileCache());
+                                        *impl->tileManager.getTileCache());
         } else {
             impl->labels.updateLabels(impl->view, _dt, impl->scene->styles(), tiles);
         }

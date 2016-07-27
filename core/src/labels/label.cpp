@@ -190,6 +190,26 @@ void Label::resetState() {
     enterState(State::none, 0.0);
 }
 
+void Label::print() const {
+    LOG("Label - %p", this);
+    LOG("\tm_occludedLastFrame: %d", m_occludedLastFrame);
+    LOG("\tm_occluded: %d", m_occluded);
+    std::string state;
+    switch (m_state) {
+        case State::none: state = "none"; break;
+        case State::visible: state = "visible"; break;
+        case State::anchor_fallback: state = "anchor_fallback"; break;
+        case State::fading_in: state = "fading_in"; break;
+        case State::fading_out: state = "fading_out"; break;
+        case State::skip_transition: state = "skip_transition"; break;
+        case State::sleep: state = "sleep"; break;
+        case State::dead: state = "dead"; break;
+        case State::out_of_screen: state = "out_of_screen"; break;
+    }
+    LOG("\tm_state: %s", state.c_str());
+    LOG("\tm_options.anchorFallback: %s", m_options.anchorFallbacks.to_string().c_str());
+}
+
 bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _drawAllLabels) {
 
     m_occludedLastFrame = m_occluded;
