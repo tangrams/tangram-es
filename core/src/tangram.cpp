@@ -257,6 +257,11 @@ void Map::resize(int _newWidth, int _newHeight) {
 
 bool Map::update(float _dt) {
 
+    // Wait until font resources are fully loaded
+    if (impl->scene->fontContext()->resourceLoad > 0) {
+        return false;
+    }
+
     FrameInfo::beginUpdate();
 
     JobQueue::runJobsForCurrentThread();

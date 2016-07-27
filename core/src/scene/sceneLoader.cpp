@@ -59,6 +59,7 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
 
     if ((root = sceneImporter.applySceneImports(_scene->path(), _scene->resourceRoot())) ) {
         applyConfig(root, _scene);
+
         return true;
     }
     return false;

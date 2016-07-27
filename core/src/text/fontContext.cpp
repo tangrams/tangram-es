@@ -253,8 +253,8 @@ void FontContext::download(const FontDescription& _ft) {
     const static std::regex regex("^(http|https):/");
     std::smatch match;
 
-    resourceLoad++;
     if (std::regex_search(_ft.uri, match, regex)) {
+        resourceLoad++;
         startUrlRequest(_ft.uri, [&, _ft](std::vector<char>&& rawData) {
             if (rawData.size() == 0) {
                 LOGE("Bad URL request for font %s at URL %s", _ft.alias.c_str(), _ft.uri.c_str());
@@ -271,6 +271,9 @@ void FontContext::download(const FontDescription& _ft) {
 
             resourceLoad--;
         });
+    } else {
+        // TODO: load local font
+        LOG("Custom font is local %s", _ft.uri.c_str());
     }
 }
 
