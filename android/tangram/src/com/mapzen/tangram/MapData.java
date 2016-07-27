@@ -49,8 +49,9 @@ public class MapData {
     }
 
     /**
-     * Remove this {@code MapData} from the map it is currently associated with. After
-     * {@code remove} is called, this object can no longer apply changes to the map.
+     * Remove this {@code MapData} from the map it is currently associated with. Using this object
+     * after {@code remove} is called will cause an exception to be thrown. {@code remove} is called
+     * on every {@code MapData} associated with a map when its {@code MapController} is destroyed.
      */
     public void remove() {
         map.removeDataLayer(this);

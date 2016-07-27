@@ -16,6 +16,7 @@ import com.squareup.okhttp.Response;
 import java.io.IOException;
 import java.nio.IntBuffer;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -177,6 +178,9 @@ public class MapController implements Renderer {
         fontFileParser.parse();
 
         mapPointer = nativeInit(this, assetManager);
+        if (mapPointer <= 0) {
+            throw new RuntimeException("Unable to create a native Map object! There may be insufficient memory available.");
+        }
     }
 
     void dispose() {
@@ -184,6 +188,13 @@ public class MapController implements Renderer {
         queueEvent(new Runnable() {
             @Override
             public void run() {
+                // Dispose each data sources by first removing it from the HashMap values and then
+                // calling remove(), so that we don't improperly modify the HashMap while iterating.
+                for (Iterator<MapData> it = clientDataSources.values().iterator(); it.hasNext();) {
+                    MapData mapData = it.next();
+                    it.remove();
+                    mapData.remove();
+                }
                 nativeDispose(mapPointer);
                 mapPointer = 0;
                 clientDataSources.clear();
@@ -201,6 +212,7 @@ public class MapController implements Renderer {
      */
     public void loadSceneFile(String path) {
         scenePath = path;
+        checkPointer(mapPointer);
         nativeLoadScene(mapPointer, path);
         requestRender();
     }
@@ -219,6 +231,7 @@ public class MapController implements Renderer {
      * @param position LngLat of the position to set
      */
     public void setPosition(LngLat position) {
+        checkPointer(mapPointer);
         nativeSetPosition(mapPointer, position.longitude, position.latitude);
     }
 
@@ -239,6 +252,7 @@ public class MapController implements Renderer {
      */
     public void setPositionEased(LngLat position, int duration, EaseType ease) {
         float seconds = duration / 1000.f;
+        checkPointer(mapPointer);
         nativeSetPositionEased(mapPointer, position.longitude, position.latitude, seconds, ease.ordinal());
     }
 
@@ -257,6 +271,7 @@ public class MapController implements Renderer {
      */
     public LngLat getPosition(LngLat out) {
         double[] tmp = { 0, 0 };
+        checkPointer(mapPointer);
         nativeGetPosition(mapPointer, tmp);
         return out.set(tmp[0], tmp[1]);
     }
@@ -266,6 +281,7 @@ public class MapController implements Renderer {
      * @param zoom Zoom level; lower values show more area
      */
     public void setZoom(float zoom) {
+        checkPointer(mapPointer);
         nativeSetZoom(mapPointer, zoom);
     }
 
@@ -286,6 +302,7 @@ public class MapController implements Renderer {
      */
     public void setZoomEased(float zoom, int duration, EaseType ease) {
         float seconds = duration / 1000.f;
+        checkPointer(mapPointer);
         nativeSetZoomEased(mapPointer, zoom, seconds, ease.ordinal());
     }
 
@@ -294,6 +311,7 @@ public class MapController implements Renderer {
      * @return Zoom level; lower values show more area
      */
     public float getZoom() {
+        checkPointer(mapPointer);
         return nativeGetZoom(mapPointer);
     }
 
@@ -302,6 +320,7 @@ public class MapController implements Renderer {
      * @param rotation Counter-clockwise rotation in radians; 0 corresponds to North pointing up
      */
     public void setRotation(float rotation) {
+        checkPointer(mapPointer);
         nativeSetRotation(mapPointer, rotation);
     }
 
@@ -322,6 +341,7 @@ public class MapController implements Renderer {
      */
     public void setRotationEased(float rotation, int duration, EaseType ease) {
         float seconds = duration / 1000.f;
+        checkPointer(mapPointer);
         nativeSetRotationEased(mapPointer, rotation, seconds, ease.ordinal());
     }
 
@@ -330,6 +350,7 @@ public class MapController implements Renderer {
      * @return Counter-clockwise rotation in radians; 0 corresponds to North pointing up
      */
     public float getRotation() {
+        checkPointer(mapPointer);
         return nativeGetRotation(mapPointer);
     }
 
@@ -338,6 +359,7 @@ public class MapController implements Renderer {
      * @param tilt Tilt angle in radians; 0 corresponds to straight down
      */
     public void setTilt(float tilt) {
+        checkPointer(mapPointer);
         nativeSetTilt(mapPointer, tilt);
     }
 
@@ -358,6 +380,7 @@ public class MapController implements Renderer {
      */
     public void setTiltEased(float tilt, int duration, EaseType ease) {
         float seconds = duration / 1000.f;
+        checkPointer(mapPointer);
         nativeSetTiltEased(mapPointer, tilt, seconds, ease.ordinal());
     }
 
@@ -366,6 +389,7 @@ public class MapController implements Renderer {
      * @return Tilt angle in radians; 0 corresponds to straight down
      */
     public float getTilt() {
+        checkPointer(mapPointer);
         return nativeGetTilt(mapPointer);
     }
 
@@ -374,6 +398,7 @@ public class MapController implements Renderer {
      * @param type A {@code CameraType}
      */
     public void setCameraType(CameraType type) {
+        checkPointer(mapPointer);
         nativeSetCameraType(mapPointer, type.ordinal());
     }
 
@@ -382,6 +407,7 @@ public class MapController implements Renderer {
      * @return A {@code CameraType}
      */
     public CameraType getCameraType() {
+        checkPointer(mapPointer);
         return CameraType.values()[nativeGetCameraType(mapPointer)];
     }
 
@@ -393,6 +419,7 @@ public class MapController implements Renderer {
      */
     public LngLat screenPositionToLngLat(PointF screenPosition) {
         double[] tmp = { screenPosition.x, screenPosition.y };
+        checkPointer(mapPointer);
         if (nativeScreenPositionToLngLat(mapPointer, tmp)) {
             return new LngLat(tmp[0], tmp[1]);
         }
@@ -407,6 +434,7 @@ public class MapController implements Renderer {
      */
     public PointF lngLatToScreenPosition(LngLat lngLat) {
         double[] tmp = { lngLat.longitude, lngLat.latitude };
+        checkPointer(mapPointer);
         nativeLngLatToScreenPosition(mapPointer, tmp);
         return new PointF((float)tmp[0], (float)tmp[1]);
     }
@@ -424,6 +452,7 @@ public class MapController implements Renderer {
         if (mapData != null) {
             return mapData;
         }
+        checkPointer(mapPointer);
         long pointer = nativeAddDataSource(mapPointer, name);
         if (pointer <= 0) {
             throw new RuntimeException("Unable to create new data source");
@@ -439,6 +468,8 @@ public class MapController implements Renderer {
      */
     void removeDataLayer(MapData mapData) {
         clientDataSources.remove(mapData.name);
+        checkPointer(mapPointer);
+        checkPointer(mapData.pointer);
         nativeRemoveDataSource(mapPointer, mapData.pointer);
     }
 
@@ -616,6 +647,7 @@ public class MapController implements Renderer {
      */
     public void pickFeature(float posX, float posY) {
         if (featurePickListener != null) {
+            checkPointer(mapPointer);
             nativePickFeature(mapPointer, posX, posY, featurePickListener);
         }
     }
@@ -649,6 +681,7 @@ public class MapController implements Renderer {
      * @param value A YAML valid string (example "{ property: true }" or "true")
      */
     public void queueSceneUpdate(String componentPath, String value) {
+        checkPointer(mapPointer);
         nativeQueueSceneUpdate(mapPointer, componentPath, value);
     }
 
@@ -656,6 +689,7 @@ public class MapController implements Renderer {
      * Apply updates queued by queueSceneUpdate; this empties the current queue of updates
      */
     public void applySceneUpdates() {
+        checkPointer(mapPointer);
         nativeApplySceneUpdates(mapPointer);
     }
 
@@ -665,6 +699,7 @@ public class MapController implements Renderer {
      * @param use Whether to use a cached OpenGL state; false by default
      */
     public void useCachedGlState(boolean use) {
+        checkPointer(mapPointer);
         nativeUseCachedGlState(mapPointer, use);
     }
 
@@ -673,19 +708,33 @@ public class MapController implements Renderer {
     // =======================
 
     void removeDataSource(long sourcePtr) {
+        checkPointer(mapPointer);
+        checkPointer(sourcePtr);
         nativeRemoveDataSource(mapPointer, sourcePtr);
     }
 
     void clearDataSource(long sourcePtr) {
+        checkPointer(mapPointer);
+        checkPointer(sourcePtr);
         nativeClearDataSource(mapPointer, sourcePtr);
     }
 
     void addFeature(long sourcePtr, double[] coordinates, int[] rings, String[] properties) {
+        checkPointer(mapPointer);
+        checkPointer(sourcePtr);
         nativeAddFeature(mapPointer, sourcePtr, coordinates, rings, properties);
     }
 
     void addGeoJson(long sourcePtr, String geoJson) {
+        checkPointer(mapPointer);
+        checkPointer(sourcePtr);
         nativeAddGeoJson(mapPointer, sourcePtr, geoJson);
+    }
+
+    void checkPointer(long ptr) {
+        if (ptr <= 0) {
+            throw new RuntimeException("Tried to perform an operation on an invalid pointer! This means you may have used an object that has been disposed and is no longer valid.");
+        }
     }
 
     // Native methods
