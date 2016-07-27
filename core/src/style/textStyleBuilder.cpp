@@ -365,12 +365,10 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
                 LabelProperty::Anchor labelAnchor;
                 if (LabelProperty::anchor(anchors[i], labelAnchor)) {
                     p.labelOptions.anchorFallbacks.set(labelAnchor);
-                    LOG("Set label anchor, %d", (int)labelAnchor);
                 } else {
                     LOG("Invalid anchor %s", anchors[i].c_str());
                 }
             }
-            LOG("Label anchor %s", p.labelOptions.anchorFallbacks.to_string().c_str());
         }
 
         LabelProperty::anchor(anchors[0], p.anchor);

@@ -138,6 +138,8 @@ public:
 
     Type type() const { return m_type; }
 
+    void print() const;
+
 private:
 
     virtual void applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
