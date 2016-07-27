@@ -15,10 +15,10 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _
       m_options(_options),
       m_anchorType(_anchor) {
 
+    m_state = State::wait_occ;
     if (!m_options.collide || m_type == Type::debug){
         enterState(State::visible, 1.0);
     } else {
-        m_state = State::wait_occ;
         m_transform.state.alpha = 0.0;
     }
 
