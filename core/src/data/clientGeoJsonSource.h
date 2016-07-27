@@ -26,6 +26,13 @@ public:
     ClientGeoJsonSource(const std::string& _name, const std::string& _url, int32_t _maxZoom = 18);
     ~ClientGeoJsonSource();
 
+    // after this is called, any call to add*() and clearData() will not take effect
+    // until commitChangeBlock() is called
+    void beginChangeBlock();
+
+    // commits changes after beginChangeBlock() was called
+    void endChangeBlock();
+
     // Add geometry from a GeoJSON string
     void addData(const std::string& _data);
     void addPoint(const Properties& _tags, LngLat _point);
@@ -47,6 +54,8 @@ protected:
     mutable std::mutex m_mutexStore;
     std::vector<mapbox::util::geojsonvt::ProjectedFeature> m_features;
     bool m_hasPendingData = false;
+
+    bool m_inChangeBlock = false;
 
 };
 

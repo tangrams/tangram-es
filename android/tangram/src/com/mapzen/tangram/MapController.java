@@ -688,6 +688,16 @@ public class MapController implements Renderer {
         nativeAddGeoJson(mapPointer, sourcePtr, geoJson);
     }
 
+    void beginChangeBlock(long sourcePtr)
+    {
+	nativeBeginChangeBlock(mapPointer, sourcePtr);
+    }
+
+    void endChangeBlock(long sourcePtr)
+    {
+	nativeEndChangeBlock(mapPointer, sourcePtr);
+    }
+
     // Native methods
     // ==============
 
@@ -740,6 +750,9 @@ public class MapController implements Renderer {
     synchronized native void nativeClearDataSource(long mapPtr, long sourcePtr);
     synchronized native void nativeAddFeature(long mapPtr, long sourcePtr, double[] coordinates, int[] rings, String[] properties);
     synchronized native void nativeAddGeoJson(long mapPtr, long sourcePtr, String geoJson);
+
+    synchronized native void nativeBeginChangeBlock(long mapPtr, long sourcePtr);
+    synchronized native void nativeEndChangeBlock(long mapPtr, long sourcePtr);
 
     native void nativeSetDebugFlag(int flag, boolean on);
 
