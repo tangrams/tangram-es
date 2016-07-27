@@ -7,12 +7,12 @@ buildscript {
 apply plugin: 'com.android.application'
 
 android {
-  compileSdkVersion 23
-  buildToolsVersion "21.1.2"
+  compileSdkVersion 24
+  buildToolsVersion "24.0.0"
 
   defaultConfig {
     minSdkVersion 15
-    targetSdkVersion 23
+    targetSdkVersion 24
   }
 
   sourceSets.main {
