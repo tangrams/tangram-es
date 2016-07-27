@@ -248,12 +248,13 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     return true;
 }
 
-void FontContext::download(const FontDescription& _ft) {
+void FontContext::fetch(const FontDescription& _ft) {
 
     const static std::regex regex("^(http|https):/");
     std::smatch match;
 
     if (std::regex_search(_ft.uri, match, regex)) {
+        // Load remote
         resourceLoad++;
         startUrlRequest(_ft.uri, [&, _ft](std::vector<char>&& rawData) {
             if (rawData.size() == 0) {
@@ -272,9 +273,46 @@ void FontContext::download(const FontDescription& _ft) {
             resourceLoad--;
         });
     } else {
-        // TODO: load local font
-        LOG("Custom font is local %s", _ft.uri.c_str());
+        // Load from local storage
+        size_t dataSize = 0;
+        unsigned char* data = nullptr;
+
+        if (loadFontAlloc(_ft.bundleAlias, data, dataSize)) {
+            const char* rdata = reinterpret_cast<const char*>(data);
+
+            int size = BASE_SIZE;
+
+            for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
+                auto font = m_alfons.getFont(_ft.alias, size);
+                font->addFace(m_alfons.addFontFace(alfons::InputSource(rdata, dataSize), size));
+            }
+
+            free(data);
+        } else {
+            LOGW("Local font at path %s can't be found", _ft.uri.c_str());
+        }
     }
+}
+
+bool FontContext::loadFontAlloc(const std::string& _bundleFontPath, unsigned char* _data, size_t& _dataSize) {
+
+    if (!m_sceneResourceRoot.empty()) {
+        std::string resourceFontPath = m_sceneResourceRoot + _bundleFontPath;
+        _data = bytesFromFile(resourceFontPath.c_str(), _dataSize);
+
+        if (_data) {
+            return true;
+        }
+    }
+
+    _data = bytesFromFile(_bundleFontPath.c_str(), _dataSize);
+
+    if (_data) {
+        return true;
+    }
+
+
+    return false;
 }
 
 void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::AtlasGlyph& atlasGlyph) {
@@ -312,31 +350,25 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     unsigned char* data = nullptr;
 
     // Assuming bundled ttf file follows this convention
-    auto bundledFontPath = BUNDLE_FONT_PATH + FontDescription::BundleAlias(_family, _weight, _style, FontType::ttf);
+    std::string bundleFontPath = BUNDLE_FONT_PATH + FontDescription::BundleAlias(_family, _weight, _style);
 
-    do {
-        if (!m_sceneResourceRoot.empty()) {
-            auto resourceFontPath = m_sceneResourceRoot + bundledFontPath;
-            data = bytesFromFile(resourceFontPath.c_str(), dataSize);
-            if (data) { break; }
-        }
+    if (!loadFontAlloc(bundleFontPath, data, dataSize)) {
 
-        data = bytesFromFile(bundledFontPath.c_str(), dataSize);
-        if (data) { break; }
-
-        auto sysFontPath = systemFontPath(_family, _weight, _style);
+        // Try fallback
+        std::string sysFontPath = systemFontPath(_family, _weight, _style);
         data = bytesFromFile(sysFontPath.c_str(), dataSize);
 
-    } while(0);
+        if (!data) {
+            LOGE("Could not load font file %s", FontDescription::BundleAlias(_family, _weight, _style).c_str());
 
-    if (!data) {
-        LOGE("Could not load font file %s", FontDescription::BundleAlias(_family, _weight, _style, FontType::ttf).c_str());
-        // add fallbacks from default font
-        font->addFaces(*m_font[sizeIndex]);
-        return font;
+            // add fallbacks from default font
+            font->addFaces(*m_font[sizeIndex]);
+            return font;
+        }
     }
 
     font->addFace(m_alfons.addFontFace(alfons::InputSource(reinterpret_cast<char*>(data), dataSize), fontSize));
+
     free(data);
 
     // add fallbacks from default font

@@ -701,7 +701,8 @@ void loadFontDescription(Node node, const std::string& family, const std::shared
         std::transform(family.begin(), family.end(), familyNormalized.begin(), ::tolower);
         std::transform(style.begin(), style.end(), styleNormalized.begin(), ::tolower);
 
-        fontContext->download(FontDescription(familyNormalized, styleNormalized, weight, uri));
+        // Download/Load the font and add it to the context
+        fontContext->fetch(FontDescription(familyNormalized, styleNormalized, weight, uri));
     }
 }
 

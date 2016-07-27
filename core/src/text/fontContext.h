@@ -42,30 +42,24 @@ struct GlyphTexture {
     size_t refCount = 0;
 };
 
-enum class FontType {
-    wof,
-    ttf,
-};
-
 struct FontDescription {
     std::string uri;
     std::string alias;
+    std::string bundleAlias;
 
     FontDescription(std::string family, std::string style, std::string weight, std::string uri)
         : uri(uri) {
         alias = Alias(family, style, weight);
+        bundleAlias = BundleAlias(family, style, weight);
     }
 
     static std::string Alias(const std::string& family, const std::string& style, const std::string& weight) {
         return family + "_" + weight + "_" + style;
     }
 
-    static std::string BundleAlias(const std::string& family, const std::string& style, const std::string& weight, FontType type) {
-        std::string alias = family + "-" + weight + style;
-        switch(type) {
-            case FontType::wof: alias += ".woff"; break;
-            case FontType::ttf: alias += ".ttf"; break;
-        }
+    static std::string BundleAlias(const std::string& family, const std::string& style, const std::string& weight) {
+        // TODO: support .woff on bundle fonts
+        std::string alias = family + "-" + weight + style + ".ttf";
         return alias;
     }
 };
@@ -121,15 +115,13 @@ public:
 
     void setSceneResourceRoot(const std::string& sceneResourceRoot) { m_sceneResourceRoot = sceneResourceRoot; }
 
-    void addFontDescription(FontDescription _ft);
-
-    void download(const FontDescription& _ft);
-
-    bool isLoadingResources() const;
+    void fetch(const FontDescription& _ft);
 
     std::atomic_ushort resourceLoad;
 
 private:
+
+    bool loadFontAlloc(const std::string& _bundleFontPath, unsigned char* _data, size_t& _dataSize);
 
     float m_sdfRadius;
     ScratchBuffer m_scratch;
