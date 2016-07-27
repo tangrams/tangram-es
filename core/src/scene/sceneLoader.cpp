@@ -683,7 +683,14 @@ void loadFontDescription(Node node, const std::string& family, const std::shared
                 style = fontDesc.second.Scalar();
             } else if (key == "url") {
                 uri = fontDesc.second.Scalar();
+            } else if (key == "external") {
+                LOGW("external: within fonts: is a no-op in native version of tangram (%s)", family.c_str());
             }
+        }
+
+        if (uri.empty()) {
+            LOGW("Empty url: block within fonts: (%s)", family.c_str());
+            return;
         }
 
         std::string familyNormalized, styleNormalized;
