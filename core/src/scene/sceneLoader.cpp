@@ -686,7 +686,15 @@ void loadFontDescription(Node node, const std::string& family, const std::shared
             }
         }
 
-        fontContext->download(FontDescription(family, style, weight, uri));
+        std::string familyNormalized, styleNormalized;
+
+        familyNormalized.resize(family.size());
+        styleNormalized.resize(style.size());
+
+        std::transform(family.begin(), family.end(), familyNormalized.begin(), ::tolower);
+        std::transform(style.begin(), style.end(), styleNormalized.begin(), ::tolower);
+
+        fontContext->download(FontDescription(familyNormalized, styleNormalized, weight, uri));
     }
 }
 
