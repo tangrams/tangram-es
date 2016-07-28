@@ -70,6 +70,7 @@ std::string stringFromFile(const char* _path) {
 
     size_t length = 0;
     unsigned char* bytes = bytesFromFile(_path, length);
+    if (!bytes) { return {}; }
 
     std::string out(reinterpret_cast<char*>(bytes), length);
     free(bytes);

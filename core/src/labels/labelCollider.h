@@ -34,7 +34,7 @@ private:
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
 
-    float m_tileScale;
+    float m_tileScale = 1.f;
 
     glm::vec2 m_screenSize;
 };

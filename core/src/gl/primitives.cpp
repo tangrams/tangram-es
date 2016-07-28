@@ -18,7 +18,6 @@ static bool s_initialized;
 static std::unique_ptr<ShaderProgram> s_shader;
 static std::unique_ptr<VertexLayout> s_layout;
 static glm::vec2 s_resolution;
-static GLuint s_boundBuffer;
 
 static UniformLocation s_uColor{"u_color"};
 static UniformLocation s_uProj{"u_proj"};
@@ -41,18 +40,6 @@ void init() {
     }
 }
 
-void saveState() {
-    // save the current gl state
-    GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*) &s_boundBuffer));
-    RenderState::depthTest(GL_FALSE);
-    RenderState::vertexBuffer(0);
-}
-
-void popState() {
-    // undo modification on the gl states
-    RenderState::vertexBuffer(s_boundBuffer);
-}
-
 void drawLine(const glm::vec2& _origin, const glm::vec2& _destination) {
 
     init();
@@ -62,16 +49,19 @@ void drawLine(const glm::vec2& _origin, const glm::vec2& _destination) {
         glm::vec2(_destination.x, _destination.y)
     };
 
-    saveState();
+    if (!s_shader->use()) { return; }
 
-    s_shader->use();
+    GLint boundBuffer;
+    GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &boundBuffer));
+    RenderState::vertexBuffer(0);
+    RenderState::depthTest(GL_FALSE);
 
     // enable the layout for the line vertices
     s_layout->enable(*s_shader, 0, &verts);
 
     GL_CHECK(glDrawArrays(GL_LINES, 0, 2));
-    popState();
 
+    RenderState::vertexBuffer(boundBuffer);
 }
 
 void drawRect(const glm::vec2& _origin, const glm::vec2& _destination) {
@@ -84,15 +74,19 @@ void drawRect(const glm::vec2& _origin, const glm::vec2& _destination) {
 void drawPoly(const glm::vec2* _polygon, size_t _n) {
     init();
 
-    saveState();
+    if (!s_shader->use()) { return; }
 
-    s_shader->use();
+    GLint boundBuffer;
+    GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &boundBuffer));
+    RenderState::vertexBuffer(0);
+    RenderState::depthTest(GL_FALSE);
 
     // enable the layout for the _polygon vertices
     s_layout->enable(*s_shader, 0, (void*)_polygon);
 
     GL_CHECK(glDrawArrays(GL_LINE_LOOP, 0, _n));
-    popState();
+
+    RenderState::vertexBuffer(boundBuffer);
 }
 
 void setColor(unsigned int _color) {

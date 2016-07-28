@@ -54,7 +54,7 @@ private:
 
     std::unique_ptr<IconMesh> m_iconMesh;
 
-    float m_zoom;
+    float m_zoom = 0;
     std::unique_ptr<SpriteLabels> m_spriteLabels;
     std::unique_ptr<StyleBuilder> m_textStyleBuilder;
 

@@ -117,7 +117,7 @@ void StyleContext::parseSceneGlobals(const YAML::Node& node, const std::string& 
         case YAML::NodeType::Sequence:
             {
                 auto seqObj = duk_push_array(m_ctx);
-                for (int i = 0; i < node.size(); i++) {
+                for (size_t i = 0; i < node.size(); i++) {
                     parseSceneGlobals(node[i], "", i, seqObj);
                 }
                 duk_put_prop_string(m_ctx, seqObj-1, key.c_str());

@@ -4,7 +4,8 @@ set(PLATFORM_OSX ON)
 check_unsupported_compiler_version()
 
 # options
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -stdlib=libc++ -std=c++1y")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=c++1y")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wreturn-type -Wsign-compare")
 set(CXX_FLAGS_DEBUG "-g -O0")
 
 

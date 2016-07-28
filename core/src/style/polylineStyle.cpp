@@ -189,10 +189,10 @@ private:
 
     std::vector<MeshData<V>> m_meshData;
 
-    float m_tileUnitsPerMeter;
-    float m_tileSizePixels;
-    int m_zoom;
-    float m_overzoom2;
+    float m_tileUnitsPerMeter = 0;
+    float m_tileSizePixels = 0;
+    int m_zoom = 0;
+    float m_overzoom2 = 1;
 };
 
 template <class V>

@@ -128,7 +128,7 @@ void FrameInfo::draw(const View& _view, TileManager& _tileManager) {
         if (getDebugFlag(DebugFlags::tangram_stats)) {
             const int scale = 5 * _view.pixelScale();
 
-            for (int i = 0; i < updatetime.size(); i++) {
+            for (size_t i = 0; i < updatetime.size(); i++) {
                 float tupdate = updatetime[i] * scale;
                 float trender = rendertime[i] * scale;
                 float offsetx = i * 4 * _view.pixelScale();

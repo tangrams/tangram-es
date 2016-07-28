@@ -119,22 +119,21 @@ void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_
 
     auto& texData = m_textures[id].texData;
     auto& texture = m_textures[id].texture;
-    m_textures[id].dirty = true;
 
-    uint16_t stride = GlyphTexture::size;
-    uint16_t width =  GlyphTexture::size;
+    size_t stride = GlyphTexture::size;
+    size_t width =  GlyphTexture::size;
 
     unsigned char* dst = &texData[(gx + pad) + (gy + pad) * stride];
 
     for (size_t y = 0, pos = 0; y < gh; y++, pos += gw) {
-        std::memcpy(dst + y * stride, src + pos, gw);
+        std::memcpy(dst + (y * stride), src + pos, gw);
     }
 
-    dst = &texData[gx + gy * width];
+    dst = &texData[size_t(gx) + (size_t(gy) * width)];
     gw += pad * 2;
     gh += pad * 2;
 
-    size_t bytes = gw * gh * sizeof(float) * 3;
+    size_t bytes = size_t(gw) * size_t(gh) * sizeof(float) * 3;
     if (m_sdfBuffer.size() < bytes) {
         m_sdfBuffer.resize(bytes);
     }
@@ -144,6 +143,7 @@ void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_
                                  &m_sdfBuffer[0]);
 
     texture.setDirty(gy, gh);
+    m_textures[id].dirty = true;
 }
 
 void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
