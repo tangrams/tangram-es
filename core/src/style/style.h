@@ -109,7 +109,7 @@ protected:
 
     /* Unique name for a style instance */
     std::string m_name;
-    uint32_t m_id;
+    uint32_t m_id = 0;
 
     /* <ShaderProgram> used to draw meshes using this style */
     std::unique_ptr<ShaderProgram> m_shaderProgram;

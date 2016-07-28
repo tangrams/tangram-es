@@ -75,8 +75,7 @@ protected:
         uint8_t fontScale;
     } m_attributes;
 
-    float m_tileSize;
-    bool m_sdf;
+    float m_tileSize = 0;
 };
 
 }
