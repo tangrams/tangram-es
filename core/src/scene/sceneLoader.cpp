@@ -544,7 +544,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
                 std::lock_guard<std::mutex> lock(m_textureMutex);
 				auto texture = scene->getTexture(name);
                 if (texture) {
-                    if (!texture->loadImageFromMemory(ptr, dataSize, false)) {
+                    if (!texture->loadImageFromMemory(ptr, dataSize)) {
                         LOGE("Invalid texture data '%s'", url.c_str());
                     }
 
@@ -552,7 +552,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
                     scene->m_resourceLoad--;
                 }
             });
-        texture = std::make_shared<Texture>(nullptr, 0, options, generateMipmaps, true);
+        texture = std::make_shared<Texture>(nullptr, 0, options, generateMipmaps);
     } else {
 
         if (url.substr(0, 22) == "data:image/png;base64,") {
@@ -573,7 +573,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
             }
             texture = std::make_shared<Texture>(0, 0, options, generateMipmaps);
 
-            if (!texture->loadImageFromMemory(blob.data(), blob.size(), false)) {
+            if (!texture->loadImageFromMemory(blob.data(), blob.size())) {
                 LOGE("Invalid Base64 texture");
             }
 
@@ -587,7 +587,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
             }
             texture = std::make_shared<Texture>(0, 0, options, generateMipmaps);
 
-            if (!texture->loadImageFromMemory(blob, size, false)) {
+            if (!texture->loadImageFromMemory(blob, size)) {
                 LOGE("Invalid texture data '%s'", url.c_str());
             }
             free(blob);

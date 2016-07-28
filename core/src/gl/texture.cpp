@@ -23,20 +23,20 @@ Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _opti
     resize(_width, _height);
 }
 
-Texture::Texture(const unsigned char* data, size_t dataSize, TextureOptions options, bool generateMipmaps, bool _flipOnLoad)
+Texture::Texture(const unsigned char* data, size_t dataSize, TextureOptions options, bool generateMipmaps)
     : Texture(0u, 0u, options, generateMipmaps) {
 
-    loadImageFromMemory(data, dataSize, _flipOnLoad);
+    loadImageFromMemory(data, dataSize);
 }
 
-bool Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size, bool flipOnLoad) {
+bool Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size) {
     unsigned char* pixels = nullptr;
     int width, height, comp;
 
-    // stbi_load_from_memory loads the image as a serie of scanline starting from
-    // the top-left corner of the image. When shouldFlip is set to true, the image
-    // would be flipped vertically.
-    stbi_set_flip_vertically_on_load((int)flipOnLoad);
+    // stbi_load_from_memory loads the image as a series of scanlines starting from
+    // the top-left corner of the image. This call flips the output such that the data
+    // begins at the bottom-left corner, as required for OpenGL texture data.
+    stbi_set_flip_vertically_on_load(1);
 
     if (blob != nullptr && size != 0) {
         pixels = stbi_load_from_memory(blob, size, &width, &height, &comp, STBI_rgb_alpha);
