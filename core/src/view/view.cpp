@@ -132,6 +132,7 @@ void View::setOffset(int xPixels, int yPixels) {
 
     m_offset.x = xPixels;
     m_offset.y = yPixels;
+    m_dirtyMatrices = true;
 
 }
 
