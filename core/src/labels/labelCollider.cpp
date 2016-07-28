@@ -63,7 +63,7 @@ void LabelCollider::process() {
               [](auto* l1, auto* l2) {
                   if (l1->options().priority != l2->options().priority) {
                       // lower numeric priority means higher priority
-                      return l1->options().priority > l2->options().priority;
+                      return l1->options().priority < l2->options().priority;
                   }
                   if (l1->options().repeatGroup != l2->options().repeatGroup) {
                       return l1->options().repeatGroup < l2->options().repeatGroup;
@@ -123,7 +123,7 @@ void LabelCollider::process() {
 
                   if (l1->options().priority != l2->options().priority) {
                       // lower numeric priority means higher priority
-                      return l1->options().priority > l2->options().priority;
+                      return l1->options().priority < l2->options().priority;
                   }
 
                   if (l1->type() == Label::Type::line &&
