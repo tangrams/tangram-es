@@ -118,8 +118,8 @@ private:
 
     MeshData<V> m_meshData;
 
-    float m_tileUnitsPerMeter;
-    int m_zoom;
+    float m_tileUnitsPerMeter = 0;
+    int m_zoom = 0;
 
 };
 

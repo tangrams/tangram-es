@@ -64,15 +64,15 @@ protected:
 
     // Attributes of the currently prepared Label
     struct {
-        float width;
-        float height;
+        float width = 0;
+        float height =0 ;
 
         // start position in m_quads
-        size_t quadsStart;
+        size_t quadsStart = 0;
 
-        uint32_t fill;
-        uint32_t stroke;
-        uint8_t fontScale;
+        uint32_t fill = 0;
+        uint32_t stroke = 0;
+        uint8_t fontScale = 0;
     } m_attributes;
 
     float m_tileSize = 0;

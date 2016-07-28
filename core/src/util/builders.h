@@ -77,7 +77,7 @@ struct PolyLineBuilder {
     JoinTypes join;
     bool keepTileEdges;
     bool closedPolygon;
-    bool useTexCoords;
+    bool useTexCoords = false;
 
     PolyLineBuilder(PolyLineVertexFn _addVertex = [](auto&,auto&,auto&){},
                     CapTypes _cap = CapTypes::butt,
