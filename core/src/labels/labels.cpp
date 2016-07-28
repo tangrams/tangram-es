@@ -269,7 +269,7 @@ void Labels::handleOcclusions(const View& _view) {
             // Skip label if it intersects with a previous label.
             auto aabb = l->aabb();
             aabb.m_userData = static_cast<void*>(l);
-            
+
             m_isect2d.intersect(aabb, [](auto& a, auto& b) {
                 auto* l1 = static_cast<Label*>(a.m_userData);
                 auto* l2 = static_cast<Label*>(b.m_userData);
@@ -277,7 +277,7 @@ void Labels::handleOcclusions(const View& _view) {
                 if (l1->parent() == l2) {
                     return true;
                 }
-                
+
                 if (intersect(l1->obb(), l2->obb())) {
                     l1->occlude();
                     // Drop label
@@ -286,11 +286,11 @@ void Labels::handleOcclusions(const View& _view) {
                 // Continue
                 return true;
             });
-            
-            
+
+
             // Try next anchor
         } while (l->isOccluded() && l->nextAnchor());
-        
+
         // At this point, the label has a parent that is visible,
         // if it is a required label, turn the parent to occluded
         if (l->isOccluded()) {
