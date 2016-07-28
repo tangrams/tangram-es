@@ -101,15 +101,15 @@ void TextDisplay::draw(const std::string& _text, int _posx, int _posy) {
 void TextDisplay::draw(const std::vector<std::string>& _infos) {
     GLint boundbuffer = -1;
 
+    if (!m_shader->use()) { return; }
+
     RenderState::culling(GL_FALSE);
     RenderState::blending(GL_FALSE);
     RenderState::depthTest(GL_FALSE);
     RenderState::depthWrite(GL_FALSE);
 
-    GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*) &boundbuffer));
+    GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &boundbuffer));
     RenderState::vertexBuffer(0);
-
-    m_shader->use();
 
     glm::mat4 orthoProj = glm::ortho(0.f, (float)m_textDisplayResolution.x, (float)m_textDisplayResolution.y, 0.f, -1.f, 1.f);
     m_shader->setUniformMatrix4f(m_uOrthoProj, orthoProj);

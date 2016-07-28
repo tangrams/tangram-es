@@ -51,13 +51,17 @@ void drawLine(const glm::vec2& _origin, const glm::vec2& _destination) {
 
     if (!s_shader->use()) { return; }
 
-    RenderState::depthTest(GL_FALSE);
+    GLint boundBuffer;
+    GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &boundBuffer));
     RenderState::vertexBuffer(0);
+    RenderState::depthTest(GL_FALSE);
 
     // enable the layout for the line vertices
     s_layout->enable(*s_shader, 0, &verts);
 
     GL_CHECK(glDrawArrays(GL_LINES, 0, 2));
+
+    RenderState::vertexBuffer(boundBuffer);
 }
 
 void drawRect(const glm::vec2& _origin, const glm::vec2& _destination) {
@@ -72,13 +76,17 @@ void drawPoly(const glm::vec2* _polygon, size_t _n) {
 
     if (!s_shader->use()) { return; }
 
-    RenderState::depthTest(GL_FALSE);
+    GLint boundBuffer;
+    GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &boundBuffer));
     RenderState::vertexBuffer(0);
+    RenderState::depthTest(GL_FALSE);
 
     // enable the layout for the _polygon vertices
     s_layout->enable(*s_shader, 0, (void*)_polygon);
 
     GL_CHECK(glDrawArrays(GL_LINE_LOOP, 0, _n));
+
+    RenderState::vertexBuffer(boundBuffer);
 }
 
 void setColor(unsigned int _color) {
