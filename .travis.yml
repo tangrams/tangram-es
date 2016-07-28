@@ -3,6 +3,7 @@ language: android
 matrix:
     include:
         - os: osx
+          osx_image: xcode7.3
           env: PLATFORM=osx
           compiler: clang
         - os: linux
@@ -12,6 +13,7 @@ matrix:
               sources: [ 'kubuntu-backports', 'ubuntu-toolchain-r-test', 'george-edison55-precise-backports' ]
               packages: [ 'cmake', 'gcc-5', 'g++-5', 'xorg-dev', 'libglu1-mesa-dev' ]
         - os: osx
+          osx_image: xcode7.3
           env: PLATFORM=ios
           compiler: clang
         - os: linux
