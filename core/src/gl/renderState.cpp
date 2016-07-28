@@ -99,7 +99,7 @@ namespace RenderState {
     }
 
     int nextAvailableTextureUnit() {
-        if (s_textureUnit + 1 > Hardware::maxCombinedTextureUnits) {
+        if (s_textureUnit >= int(Hardware::maxCombinedTextureUnits)) {
             LOGE("Too many combined texture units are being used");
             LOGE("GPU supports %d combined texture units", Hardware::maxCombinedTextureUnits);
         }
