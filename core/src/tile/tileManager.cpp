@@ -174,7 +174,19 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
     std::set<TileID> mappedTiles;
     if (_view.zoom > _tileSet.source->maxZoom()) {
         for (const auto& id : _visibleTiles) {
-            mappedTiles.insert(id.withMaxSourceZoom(_tileSet.source->maxZoom()));
+            auto tile = id.withMaxSourceZoom(_tileSet.source->maxZoom());
+            // Replace tile with same coordinates and lower source zoom
+            auto other = std::find_if(mappedTiles.begin(), mappedTiles.end(),
+                             [&](auto& t) { return tile.x == t.x &&
+                                            tile.y == t.y &&
+                                            tile.z == t.z &&
+                                            tile.wrap == t.wrap; });
+            if (other == mappedTiles.end()) {
+                mappedTiles.insert(tile);
+            } else if (other->s < tile.s) {
+                mappedTiles.erase(other);
+                mappedTiles.insert(tile);
+            }
         }
         visibleTiles = &mappedTiles;
     }
