@@ -41,7 +41,7 @@ public:
 
     Texture(const unsigned char* data, size_t dataSize,
             TextureOptions _options = DEFAULT_TEXTURE_OPTION},
-            bool _generateMipmaps = false, bool _flipOnLoad = false);
+            bool _generateMipmaps = false);
 
     Texture(Texture&& _other);
     Texture& operator=(Texture&& _other);
@@ -85,7 +85,7 @@ public:
 
     static bool isRepeatWrapping(TextureWrapping _wrapping);
 
-    bool loadImageFromMemory(const unsigned char* blob, unsigned int size, bool flipOnLoad);
+    bool loadImageFromMemory(const unsigned char* blob, unsigned int size);
 
 protected:
 

@@ -7,11 +7,14 @@ SpriteAtlas::SpriteAtlas(std::shared_ptr<Texture> _texture) : m_texture(_texture
 
 void SpriteAtlas::addSpriteNode(const std::string& _name, glm::vec2 _origin, glm::vec2 _size) {
 
-    glm::vec2 atlasSize = {m_texture->getWidth(), m_texture->getHeight()};
-    glm::vec2 uvBL = _origin / atlasSize;
-    glm::vec2 uvTR = (_origin + _size) / atlasSize;
+    float atlasWidth = m_texture->getWidth();
+    float atlasHeight = m_texture->getHeight();
+    float uvL = _origin.x / atlasWidth;
+    float uvR = uvL + _size.x / atlasWidth;
+    float uvB = 1.f - _origin.y / atlasHeight;
+    float uvT = uvB - _size.y / atlasHeight;
 
-    m_spritesNodes[_name] = SpriteNode { uvBL, uvTR, _size, _origin };
+    m_spritesNodes[_name] = SpriteNode { { uvL, uvB }, { uvR, uvT }, _size, _origin };
 }
 
 bool SpriteAtlas::getSpriteNode(const std::string& _name, SpriteNode& _node) const {
