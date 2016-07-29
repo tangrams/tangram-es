@@ -113,11 +113,17 @@
 - (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer {
     CGPoint location = [tapRecognizer locationInView:self.view];
     self.map->handleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizeSingleTap:)]) {
+        [self.gestureDelegate recognizer:tapRecognizer didRecognizeSingleTap:[tapRecognizer locationInView:self.view]];
+    }
 }
 
 - (void)respondToDoubleTapGesture:(UITapGestureRecognizer *)doubleTapRecognizer {
     CGPoint location = [doubleTapRecognizer locationInView:self.view];
     self.map->handleDoubleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizeDoubleTap:)]) {
+        [self.gestureDelegate recognizer:doubleTapRecognizer didRecognizeDoubleTap:[doubleTapRecognizer locationInView:self.view]];
+    }
 }
 
 - (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer {
@@ -138,6 +144,10 @@
         default:
             break;
     }
+    
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizePanGesture:)]) {
+        [self.gestureDelegate recognizer:panRecognizer didRecognizePanGesture:[panRecognizer locationInView:self.view]];
+    }
 }
 
 - (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer {
@@ -145,6 +155,9 @@
     CGFloat scale = pinchRecognizer.scale;
     [pinchRecognizer setScale:1.0];
     self.map->handlePinchGesture(location.x * self.pixelScale, location.y * self.pixelScale, scale, pinchRecognizer.velocity);
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizePinchGesture:)]) {
+        [self.gestureDelegate recognizer:pinchRecognizer didRecognizePinchGesture:[pinchRecognizer locationInView:self.view]];
+    }
 }
 
 - (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer {
@@ -152,6 +165,9 @@
     CGFloat rotation = rotationRecognizer.rotation;
     [rotationRecognizer setRotation:0.0];
     self.map->handleRotateGesture(position.x * self.pixelScale, position.y * self.pixelScale, rotation);
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizeRotationGesture:)]) {
+        [self.gestureDelegate recognizer:rotationRecognizer didRecognizeRotationGesture:[rotationRecognizer locationInView:self.view]];
+    }
 }
 
 - (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer {
@@ -161,6 +177,9 @@
     // don't trigger shove on single touch gesture
     if ([shoveRecognizer numberOfTouches] == 2) {
         self.map->handleShoveGesture(displacement.y);
+        if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizeShoveGesture:)]) {
+            [self.gestureDelegate recognizer:shoveRecognizer didRecognizeShoveGesture:[shoveRecognizer locationInView:self.view]];
+        }
     }
 }
 
