@@ -70,7 +70,7 @@ int RenderState::currentTextureUnit() {
 }
 
 void RenderState::resetTextureUnit() {
-    m_nextTextureUnit = -1;
+    m_nextTextureUnit = 0;
 }
 
 inline void setGlFlag(GLenum flag, GLboolean enable) {

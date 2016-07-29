@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "scene/light.h"
+#include "gl/disposer.h"
 #include "gl/error.h"
 #include "gl/renderState.h"
 #include "glm/gtc/type_ptr.hpp"
@@ -17,31 +18,10 @@ ShaderProgram::ShaderProgram() {
     // Nothing to do.
 }
 
-void ShaderProgram::dispose(RenderState& rs) {
-
-    if (rs.isValidGeneration(m_generation)) {
-        if (m_glProgram != 0) {
-            GL_CHECK(glDeleteProgram(m_glProgram));
-        }
-
-        if (m_glFragmentShader != 0) {
-            GL_CHECK(glDeleteShader(m_glFragmentShader));
-        }
-
-        if (m_glVertexShader != 0) {
-            GL_CHECK(glDeleteShader(m_glVertexShader));
-        }
+ShaderProgram::~ShaderProgram() {
+    if (m_disposer) {
+        m_disposer->dispatchToRenderThread();
     }
-    // Deleting the shader program that is currently in-use sets the current shader program to 0
-    // so we un-set the current program in the render state.
-    rs.shaderProgramUnset(m_glProgram);
-
-    m_attribMap.clear();
-    m_uniformCache.clear();
-    m_glProgram = 0;
-    m_glVertexShader = 0;
-    m_glFragmentShader = 0;
-    m_generation = -1;
 }
 
 void ShaderProgram::setSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc){
@@ -166,6 +146,25 @@ bool ShaderProgram::build(RenderState& rs) {
     // Clear any cached shader locations
 
     m_attribMap.clear();
+
+    m_disposer.reset(new Disposer(rs, [=](RenderState& rs){
+        if (rs.isValidGeneration(m_generation)) {
+            if (m_glProgram != 0) {
+                GL_CHECK(glDeleteProgram(m_glProgram));
+            }
+
+            if (m_glFragmentShader != 0) {
+                GL_CHECK(glDeleteShader(m_glFragmentShader));
+            }
+
+            if (m_glVertexShader != 0) {
+                GL_CHECK(glDeleteShader(m_glVertexShader));
+            }
+        }
+        // Deleting the shader program that is currently in-use sets the current shader program to 0
+        // so we un-set the current program in the render state.
+        rs.shaderProgramUnset(m_glProgram);
+    }));
 
     return true;
 }

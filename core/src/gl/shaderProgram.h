@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gl.h"
+#include "gl/disposer.h"
 #include "uniform.h"
 #include "util/fastmap.h"
 
@@ -9,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 
 namespace Tangram {
 
@@ -22,6 +24,7 @@ class ShaderProgram {
 public:
 
     ShaderProgram();
+    ~ShaderProgram();
 
     // Set the vertex and fragment shader GLSL source to the given strings/
     void setSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc);
@@ -34,10 +37,6 @@ public:
     // this prints the compiler log, returns false, and keeps the program's previous state; if
     // successful it returns true.
     bool build(RenderState& rs);
-
-    // Destroy all OpenGL resources used by this ShaderProgram.
-    // This must be called explicitly before the object is destroyed.
-    void dispose(RenderState& rs);
 
     // Getters
     GLuint getGlProgram() const { return m_glProgram; };
@@ -133,6 +132,8 @@ private:
     std::string m_description;
 
     std::map<std::string, std::vector<std::string>> m_sourceBlocks;
+
+    std::unique_ptr<Disposer> m_disposer;
 
     bool m_needsBuild = true;
     bool m_invalidShaderSource = false;

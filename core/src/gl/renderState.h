@@ -1,9 +1,13 @@
 #pragma once
 
 #include "gl.h"
+#include "gl/disposer.h"
+#include "util/jobQueue.h"
 #include <array>
 
 namespace Tangram {
+
+class Disposer;
 
 class RenderState {
 
@@ -81,10 +85,12 @@ public:
 
     std::array<GLuint, MAX_ATTRIBUTES> attributeBindings = { { 0 } };
 
+    JobQueue jobQueue;
+
 private:
 
     int m_validGeneration = 0;
-    int m_nextTextureUnit = 0;
+    uint32_t m_nextTextureUnit = 0;
 
     struct {
         GLboolean enabled = 0;

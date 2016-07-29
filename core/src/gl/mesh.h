@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gl.h"
+#include "gl/disposer.h"
 #include "vertexLayout.h"
 #include "vao.h"
 #include "util/types.h"
@@ -32,7 +33,7 @@ public:
 
     MeshBase();
 
-    virtual ~MeshBase() {}
+    virtual ~MeshBase();
 
     /*
      * Set Vertex Layout for the mesh object
@@ -81,7 +82,9 @@ protected:
     size_t m_nVertices;
     GLuint m_glVertexBuffer;
 
-    std::unique_ptr<Vao> m_vaos;
+    Vao m_vaos;
+
+    std::unique_ptr<Disposer> m_disposer;
 
     // Compiled vertices for upload
     GLbyte* m_glVertexData = nullptr;

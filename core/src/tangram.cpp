@@ -330,6 +330,9 @@ void Map::render() {
         impl->renderState.invalidate();
     }
 
+    // Run render-thread tasks
+    impl->renderState.jobQueue.runJobs();
+
     // Set up openGL for new frame
     impl->renderState.depthMask(GL_TRUE);
     auto& color = impl->scene->background();

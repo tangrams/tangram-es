@@ -7,25 +7,12 @@
 
 namespace Tangram {
 
-Vao::Vao() {
-    m_glVAOs = nullptr;
-    m_glnVAOs = 0;
-}
-
-Vao::~Vao() {
-    if (m_glVAOs) {
-        GL_CHECK(glDeleteVertexArrays(m_glnVAOs, m_glVAOs));
-        delete[] m_glVAOs;
-    }
-}
-
-void Vao::init(RenderState& rs, ShaderProgram& _program, const std::vector<std::pair<uint32_t, uint32_t>>& _vertexOffsets,
+void Vao::initialize(RenderState& rs, ShaderProgram& _program, const std::vector<std::pair<uint32_t, uint32_t>>& _vertexOffsets,
                VertexLayout& _layout, GLuint _vertexBuffer, GLuint _indexBuffer) {
 
-    m_glnVAOs = _vertexOffsets.size();
-    m_glVAOs = new GLuint[m_glnVAOs];
+    m_glVAOs.resize(_vertexOffsets.size());
 
-    GL_CHECK(glGenVertexArrays(m_glnVAOs, m_glVAOs));
+    GL_CHECK(glGenVertexArrays(m_glVAOs.size(), m_glVAOs.data()));
 
     fastmap<std::string, GLuint> locations;
 
@@ -57,8 +44,12 @@ void Vao::init(RenderState& rs, ShaderProgram& _program, const std::vector<std::
 
 }
 
+bool Vao::isInitialized() {
+    return !m_glVAOs.empty();
+}
+
 void Vao::bind(unsigned int _index) {
-    if (_index < m_glnVAOs) {
+    if (_index < m_glVAOs.size()) {
         GL_CHECK(glBindVertexArray(m_glVAOs[_index]));
     }
 }
@@ -67,9 +58,11 @@ void Vao::unbind() {
     GL_CHECK(glBindVertexArray(0));
 }
 
-void Vao::discard() {
-    delete[] m_glVAOs;
-    m_glVAOs = nullptr;
+void Vao::dispose() {
+    if (!m_glVAOs.empty()) {
+        GL_CHECK(glDeleteVertexArrays(m_glVAOs.size(), m_glVAOs.data()));
+        m_glVAOs.clear();
+    }
 }
 
 }

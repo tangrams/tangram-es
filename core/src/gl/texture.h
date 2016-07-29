@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gl.h"
+#include "gl/disposer.h"
 
 #include <vector>
 #include <memory>
@@ -47,9 +48,7 @@ public:
     Texture(Texture&& _other);
     Texture& operator=(Texture&& _other);
 
-    virtual ~Texture() {}
-
-    virtual void dispose(RenderState& rs);
+    virtual ~Texture();
 
     /* Perform texture updates, should be called at least once and after adding data or resizing */
     virtual void update(RenderState& rs, GLuint _textureSlot);
@@ -104,6 +103,8 @@ protected:
         size_t max;
     };
     std::vector<DirtyRange> m_dirtyRanges;
+
+    std::unique_ptr<Disposer> m_disposer;
 
     bool m_shouldResize;
 

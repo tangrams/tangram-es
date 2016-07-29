@@ -34,21 +34,10 @@ MeshBase::MeshBase(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode
     setDrawMode(_drawMode);
 }
 
-void MeshBase::dispose(RenderState& rs) {
-    // Deleting a index/array buffer being used ends up setting up the current vertex/index buffer to 0
-    // after the driver finishes using it, force the render state to be 0 for vertex/index buffer
+MeshBase::~MeshBase() {
 
-    if (rs.isValidGeneration(m_generation)) {
-        if (m_glVertexBuffer) {
-            rs.vertexBufferUnset(m_glVertexBuffer);
-            GL_CHECK(glDeleteBuffers(1, &m_glVertexBuffer));
-        }
-        if (m_glIndexBuffer) {
-            rs.indexBufferUnset(m_glIndexBuffer);
-            GL_CHECK(glDeleteBuffers(1, &m_glIndexBuffer));
-        }
-    } else {
-        if (m_vaos) { m_vaos->discard(); }
+    if (m_disposer) {
+        m_disposer->dispatchToRenderThread();
     }
 
     if (m_glVertexData) {
@@ -58,6 +47,7 @@ void MeshBase::dispose(RenderState& rs) {
     if (m_glIndexData) {
         delete[] m_glIndexData;
     }
+
 }
 
 void MeshBase::setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout) {
@@ -150,6 +140,22 @@ void MeshBase::upload(RenderState& rs) {
 
     m_generation = rs.generation();
 
+    m_disposer.reset(new Disposer(rs, [=](RenderState& rs){
+        // Deleting a index/array buffer being used ends up setting up the current vertex/index buffer to 0
+        // after the driver finishes using it, force the render state to be 0 for vertex/index buffer
+        if (rs.isValidGeneration(m_generation)) {
+            if (m_glVertexBuffer) {
+                rs.vertexBufferUnset(m_glVertexBuffer);
+                GL_CHECK(glDeleteBuffers(1, &m_glVertexBuffer));
+            }
+            if (m_glIndexBuffer) {
+                rs.indexBufferUnset(m_glIndexBuffer);
+                GL_CHECK(glDeleteBuffers(1, &m_glIndexBuffer));
+            }
+            m_vaos.dispose();
+        }
+    }));
+
     m_isUploaded = true;
 }
 
@@ -173,11 +179,9 @@ bool MeshBase::draw(RenderState& rs, ShaderProgram& _shader) {
     }
 
     if (Hardware::supportsVAOs) {
-        if (!m_vaos) {
-            m_vaos = std::make_unique<Vao>();
-
+        if (!m_vaos.isInitialized()) {
             // Capture vao state
-            m_vaos->init(rs, _shader, m_vertexOffsets, *m_vertexLayout, m_glVertexBuffer, m_glIndexBuffer);
+            m_vaos.initialize(rs, _shader, m_vertexOffsets, *m_vertexLayout, m_glVertexBuffer, m_glIndexBuffer);
         }
     } else {
         // Bind buffers for drawing
@@ -202,7 +206,7 @@ bool MeshBase::draw(RenderState& rs, ShaderProgram& _shader) {
             m_vertexLayout->enable(rs,  _shader, byteOffset);
         } else {
             // Bind the corresponding vao relative to the current offset
-            m_vaos->bind(i);
+            m_vaos.bind(i);
         }
 
         // Draw as elements or arrays
@@ -218,7 +222,7 @@ bool MeshBase::draw(RenderState& rs, ShaderProgram& _shader) {
     }
 
     if (Hardware::supportsVAOs) {
-        m_vaos->unbind();
+        m_vaos.unbind();
     }
 
     return true;
@@ -229,7 +233,7 @@ bool MeshBase::checkValidity(RenderState& rs) {
         m_isUploaded = false;
         m_glVertexBuffer = 0;
         m_glIndexBuffer = 0;
-        m_vaos.reset();
+        m_vaos = {};
 
         m_generation = rs.generation();
 

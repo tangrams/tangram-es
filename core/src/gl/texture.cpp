@@ -30,6 +30,12 @@ Texture::Texture(const unsigned char* data, size_t dataSize, TextureOptions opti
     loadImageFromMemory(data, dataSize);
 }
 
+Texture::~Texture() {
+    if (m_disposer) {
+        m_disposer->dispatchToRenderThread();
+    }
+}
+
 bool Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size) {
     unsigned char* pixels = nullptr;
     int width, height, comp;
@@ -81,24 +87,6 @@ Texture& Texture::operator=(Texture&& _other) {
     m_generateMipmaps = _other.m_generateMipmaps;
 
     return *this;
-}
-
-void Texture::dispose(RenderState& rs) {
-    if (m_glHandle) {
-
-        /*
-        m_mainThreadJobQueue.add([id = m_glHandle, t = m_target, g = m_generation, &rs]() {
-            if (rs.isValidGeneration(g)) {
-                // If the texture is bound, and deleted, the binding defaults to 0
-                // according to the OpenGL spec. In this case we need to force the
-                // currently bound texture to 0 in the render state.
-                rs.textureUnset(t, id);
-
-                GL_CHECK(glDeleteTextures(1, &id));
-            }
-        });
-        */
-    }
 }
 
 void Texture::setData(const GLuint* _data, unsigned int _dataSize) {
@@ -192,6 +180,16 @@ void Texture::generate(RenderState& rs, GLuint _textureUnit) {
 
     m_generation = rs.generation();
 
+    m_disposer.reset(new Disposer(rs, [=](RenderState& rs){
+        if (rs.isValidGeneration(m_generation)) {
+            // If the currently-bound texture is deleted, the binding resets to 0
+            // according to the OpenGL spec, so unset this texture binding.
+            rs.textureUnset(m_target, m_glHandle);
+
+            GL_CHECK(glDeleteTextures(1, &m_glHandle));
+        }
+    }));
+
 }
 
 void Texture::checkValidity(RenderState& rs) {
@@ -203,8 +201,7 @@ void Texture::checkValidity(RenderState& rs) {
 }
 
 bool Texture::isValid(RenderState& rs) const {
-    return (rs.isValidGeneration(m_generation)
-        && m_glHandle != 0);
+    return (rs.isValidGeneration(m_generation) && m_glHandle != 0);
 }
 
 void Texture::update(RenderState& rs, GLuint _textureUnit) {
