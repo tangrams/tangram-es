@@ -8,7 +8,7 @@
 #define NDEBUG
 #endif
 
-#include "variant/variant.hpp"
+#include "variant/include/mapbox/variant.hpp"
 
 #ifndef KEEP_NDEBUG
 #undef NDEBUG
