@@ -3,7 +3,7 @@
 //  TangramiOS
 //
 //  Created by Matt Blair on 8/25/14.
-//  Updated by Matt Smollinger on 5/8/26.
+//  Updated by Matt Smollinger on 7/29/16.
 //  Copyright (c) 2016 Mapzen. All rights reserved.
 //
 

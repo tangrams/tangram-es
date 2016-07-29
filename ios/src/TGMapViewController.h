@@ -1,9 +1,10 @@
 //
-//  ViewController.h
+//  TGMapViewController.h
 //  TangramiOS
 //
 //  Created by Matt Blair on 8/25/14.
-//  Copyright (c) 2014 Mapzen. All rights reserved.
+//  Updated by Matt Smollinger on 7/29/16.
+//  Copyright (c) 2016 Mapzen. All rights reserved.
 //
 
 #include "tangram.h"
