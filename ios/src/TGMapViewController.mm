@@ -24,29 +24,29 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-
+    
     self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
     if (!self.context) {
-      NSLog(@"Failed to create ES context");
+        NSLog(@"Failed to create ES context");
     }
     self.pixelScale = [[UIScreen mainScreen] scale];
     self.renderRequested = YES;
     self.continuous = YES;
-
+    
     init(self);
-
+    
     GLKView *view = (GLKView *)self.view;
     view.context = self.context;
     view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
     view.drawableMultisample = GLKViewDrawableMultisample4X;
-
+    
     [self setupGestureRecognizers];
     [self setupGL];
-
+    
 }
 
 - (void)setupGestureRecognizers {
-  
+    
     /* Construct Gesture Recognizers */
     //1. Tap
     UITapGestureRecognizer *tapRecognizer = [[UITapGestureRecognizer alloc]
@@ -131,9 +131,9 @@
     CGPoint velocity = [panRecognizer velocityInView:self.view];
     CGPoint end = [panRecognizer locationInView:self.view];
     CGPoint start = {end.x - displacement.x, end.y - displacement.y};
-
+    
     [panRecognizer setTranslation:CGPointZero inView:self.view];
-
+    
     switch (panRecognizer.state) {
         case UIGestureRecognizerStateChanged:
             self.map->handlePanGesture(start.x * self.pixelScale, start.y * self.pixelScale, end.x * self.pixelScale, end.y * self.pixelScale);
@@ -173,7 +173,7 @@
 - (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer {
     CGPoint displacement = [shoveRecognizer translationInView:self.view];
     [shoveRecognizer setTranslation:{0, 0} inView:self.view];
-
+    
     // don't trigger shove on single touch gesture
     if ([shoveRecognizer numberOfTouches] == 2) {
         self.map->handleShoveGesture(displacement.y);
@@ -193,34 +193,34 @@
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
-
+    
     if ([self isViewLoaded] && ([[self view] window] == nil)) {
         self.view = nil;
-
+        
         if ([EAGLContext currentContext] == self.context) {
             [EAGLContext setCurrentContext:nil];
         }
         self.context = nil;
     }
-
+    
     // Dispose of any resources that can be recreated.
 }
 
 - (void)setupGL
 {
     [EAGLContext setCurrentContext:self.context];
-
+    
     if (!self.map) {
         self.map = new Tangram::Map();
         self.map->loadSceneAsync("scene.yaml");
     }
     self.map->setupGL();
-
+    
     int width = self.view.bounds.size.width;
     int height = self.view.bounds.size.height;
-
+    
     self.map->resize(width * self.pixelScale, height * self.pixelScale);
-
+    
     self.map->setPixelScale(self.pixelScale);
 }
 
@@ -257,7 +257,7 @@
 - (void)update
 {
     self.map->update([self timeSinceLastUpdate]);
-
+    
     if (!self.continuous && !self.renderRequested) {
         self.paused = YES;
     }
