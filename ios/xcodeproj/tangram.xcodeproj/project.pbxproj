@@ -678,6 +678,8 @@
 		DB4F2B461D2FCCA300813AAA /* NotoSansHebrew-Regular.ttf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 0BBB456DB9A54776A25E8D10 /* NotoSansHebrew-Regular.ttf */; };
 		DB4F2B471D2FCCA300813AAA /* firasans-medium.ttf in CopyFiles */ = {isa = PBXBuildFile; fileRef = FA3E0E6C9E3D4DD684F4CACD /* firasans-medium.ttf */; };
 		DB4F2B481D2FCCA300813AAA /* roboto-regular.ttf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 0C9A2400B104452A80709E65 /* roboto-regular.ttf */; };
+		DB7E43991D4B8A5400A6F40D /* labelCollider.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB7E43981D4B8A5400A6F40D /* labelCollider.cpp */; };
+		DB7E439C1D4B8A7200A6F40D /* jobQueue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB7E439A1D4B8A7200A6F40D /* jobQueue.cpp */; };
 		DBD889621D2FC0EF00D05B1F /* tangram_framework.h in Headers */ = {isa = PBXBuildFile; fileRef = DBD889611D2FC0EF00D05B1F /* tangram_framework.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DBD889691D2FC15400D05B1F /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3D5366AB89C14BD1ABA45234 /* ViewController.mm */; };
 		DBD8896A1D2FC15700D05B1F /* platform_ios.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1608DCBC5BAC421BB71A2708 /* platform_ios.mm */; };
@@ -2026,6 +2028,10 @@
 		D9F26FF465A54427A05F2765 /* debugTextStyle.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = debugTextStyle.h; path = core/src/style/debugTextStyle.h; sourceTree = SOURCE_ROOT; };
 		DA62633156A9465EB19C0D59 /* viewConstraint.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = viewConstraint.cpp; path = core/src/view/viewConstraint.cpp; sourceTree = SOURCE_ROOT; };
 		DAFEC74411BD434BA5EBFAC6 /* emit.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = emit.cpp; path = "external/yaml-cpp/src/emit.cpp"; sourceTree = SOURCE_ROOT; };
+		DB7E43971D4B8A5400A6F40D /* labelCollider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = labelCollider.h; path = core/src/labels/labelCollider.h; sourceTree = "<group>"; };
+		DB7E43981D4B8A5400A6F40D /* labelCollider.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = labelCollider.cpp; path = core/src/labels/labelCollider.cpp; sourceTree = "<group>"; };
+		DB7E439A1D4B8A7200A6F40D /* jobQueue.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jobQueue.cpp; path = core/src/util/jobQueue.cpp; sourceTree = "<group>"; };
+		DB7E439B1D4B8A7200A6F40D /* jobQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jobQueue.h; path = core/src/util/jobQueue.h; sourceTree = "<group>"; };
 		DB97698706544B96A6F3951D /* sceneLayer.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = sceneLayer.cpp; path = core/src/scene/sceneLayer.cpp; sourceTree = SOURCE_ROOT; };
 		DBBE42258D674F5DA25B28C5 /* CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; lastKnownFileType = text; name = CMakeLists.txt; path = "external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/CMakeLists.txt"; sourceTree = SOURCE_ROOT; };
 		DBD8895F1D2FC0EF00D05B1F /* tangram_framework.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = tangram_framework.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2426,6 +2432,8 @@
 				C157A9CA3D68479492C35EDA /* hash.h */,
 				AA7CF1E74BE04DEBB54B2D77 /* inputHandler.cpp */,
 				E726B1E618724A8EAE97E0BF /* inputHandler.h */,
+				DB7E439A1D4B8A7200A6F40D /* jobQueue.cpp */,
+				DB7E439B1D4B8A7200A6F40D /* jobQueue.h */,
 				42C87CDADD9243FDA3DBC106 /* json.cpp */,
 				0034DCD86BFA4ACBA36A551B /* json.h */,
 				EF041F4644DE4A7E871A0256 /* mapProjection.cpp */,
@@ -2461,6 +2469,8 @@
 				1BDF2C8FCACA4DF6B0F8A980 /* fadeEffect.h */,
 				AD87A211F8D745A0960C4E26 /* label.cpp */,
 				74A424F6865B457C9F1F6278 /* label.h */,
+				DB7E43971D4B8A5400A6F40D /* labelCollider.h */,
+				DB7E43981D4B8A5400A6F40D /* labelCollider.cpp */,
 				8206994BB689434896596EE9 /* labelProperty.cpp */,
 				ED9BADDB3B52483C9A564F12 /* labelProperty.h */,
 				03D371F06B354E3CA37EF9D4 /* labelSet.cpp */,
@@ -4333,6 +4343,7 @@
 				F250B8BAEB31477299E1282D /* error.cpp in Sources */,
 				36710266AFC4481B8400DD9F /* hardware.cpp in Sources */,
 				33866370595D45BF8E0041C1 /* mesh.cpp in Sources */,
+				DB7E439C1D4B8A7200A6F40D /* jobQueue.cpp in Sources */,
 				F81D40FB37A640B4A689DE53 /* primitives.cpp in Sources */,
 				F564BA80D8564B38814033F1 /* renderState.cpp in Sources */,
 				B8DC93E83C844D0DAB96B7C4 /* shaderProgram.cpp in Sources */,
@@ -4359,6 +4370,7 @@
 				A63338E49E1B47D492F1DB0F /* sceneLoader.cpp in Sources */,
 				71BFF63F50F241FAA550DC59 /* skybox.cpp in Sources */,
 				C361B28E266B4E918D440A0E /* spotLight.cpp in Sources */,
+				DB7E43991D4B8A5400A6F40D /* labelCollider.cpp in Sources */,
 				9AFCD4D6ADE4400E85E1355B /* spriteAtlas.cpp in Sources */,
 				010218B0DA5A49A4B7D39DE9 /* stops.cpp in Sources */,
 				AB325FE2C11F44DD994541FA /* styleContext.cpp in Sources */,
