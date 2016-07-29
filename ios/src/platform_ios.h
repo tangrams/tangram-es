@@ -6,6 +6,6 @@
 #include <OpenGLES/ES2/glext.h>
 
 #ifdef __OBJC__
-#import "ViewController.h"
-void init(ViewController* _controller);
+#import "TGMapViewController.h"
+void init(TGMapViewController* _controller);
 #endif

@@ -1,5 +1,5 @@
 //
-//  ViewController.mm
+//  TGMapViewController.mm
 //  TangramiOS
 //
 //  Created by Matt Blair on 8/25/14.
@@ -7,10 +7,10 @@
 //  Copyright (c) 2016 Mapzen. All rights reserved.
 //
 
-#import "ViewController.h"
+#import "TGMapViewController.h"
 #include "platform_ios.h"
 
-@interface ViewController ()
+@interface TGMapViewController ()
 
 @property (nullable, strong, nonatomic) EAGLContext *context;
 @property (assign, nonatomic) CGFloat pixelScale;
@@ -19,7 +19,7 @@
 @end
 
 
-@implementation ViewController
+@implementation TGMapViewController
 
 - (void)viewDidLoad
 {

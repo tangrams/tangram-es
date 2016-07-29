@@ -354,7 +354,7 @@
 		112559A149EA4DEE9D284727 /* cross.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = D48060EFA1CC45CB9FD02DCA /* cross.png */; settings = {COMPILER_FLAGS = ""; }; };
 		129F817BECA2442B847240A1 /* hb-shape-plan.cc in Sources */ = {isa = PBXBuildFile; fileRef = BACAAEFD426C4E3CAEEEC729 /* hb-shape-plan.cc */; settings = {COMPILER_FLAGS = ""; }; };
 		12D9E8370DF745CDA25385EC /* polylineStyle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C8E94A497F423E9D7C9C11 /* polylineStyle.cpp */; settings = {COMPILER_FLAGS = ""; }; };
-		13E0EA1D17764690B108B5E4 /* test.yaml in CopyFiles */ = {isa = PBXBuildFile; fileRef = BE80AF0E1C6F404A8CF00D04 /* test.yaml */; settings = {COMPILER_FLAGS = ""; }; };
+		13E0EA1D17764690B108B5E4 /* test.yaml in Copy Files */ = {isa = PBXBuildFile; fileRef = BE80AF0E1C6F404A8CF00D04 /* test.yaml */; settings = {COMPILER_FLAGS = ""; }; };
 		14D4DBF7B6AC4088944EFF62 /* bytestrie.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B0D6DA605D8F4F9CA978B5C4 /* bytestrie.cpp */; settings = {COMPILER_FLAGS = ""; }; };
 		156612B0394B47209CF10D33 /* platform_ios.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1608DCBC5BAC421BB71A2708 /* platform_ios.mm */; settings = {COMPILER_FLAGS = ""; }; };
 		157EE348F99D456380D30F16 /* hb-ot-shape-complex-myanmar.cc in Sources */ = {isa = PBXBuildFile; fileRef = C8B4627E31904B50BBB5E613 /* hb-ot-shape-complex-myanmar.cc */; settings = {COMPILER_FLAGS = ""; }; };
@@ -382,7 +382,6 @@
 		26EA088949494FBD92707DA8 /* ftgasp.c in Sources */ = {isa = PBXBuildFile; fileRef = 8F9E6FED24A0436CA6900665 /* ftgasp.c */; settings = {COMPILER_FLAGS = ""; }; };
 		27609DEB7D6A475C896647CB /* DroidSansFallback.ttf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7000A79E2D56438ABDC3A1E1 /* DroidSansFallback.ttf */; settings = {COMPILER_FLAGS = ""; }; };
 		28557452597E4F72A37ECECF /* unifunct.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D03B53B1F0E3499EBC82F65A /* unifunct.cpp */; settings = {COMPILER_FLAGS = ""; }; };
-		28DB3ED911234B4BAC60C3E1 /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3D5366AB89C14BD1ABA45234 /* ViewController.mm */; settings = {COMPILER_FLAGS = ""; }; };
 		2A6D13D40D2E4874A02914D0 /* rbbitblb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1A69EB15AAD8438881CAD282 /* rbbitblb.cpp */; settings = {COMPILER_FLAGS = ""; }; };
 		2AAAB07A7C004E8287B9F39F /* ucnvlat1.c in Sources */ = {isa = PBXBuildFile; fileRef = 9A59608F50904420B5393801 /* ucnvlat1.c */; settings = {COMPILER_FLAGS = ""; }; };
 		2ACC9D64544D40CC924C760F /* icuplug.c in Sources */ = {isa = PBXBuildFile; fileRef = BFBEB047CFDB4C5BB0101B5A /* icuplug.c */; settings = {COMPILER_FLAGS = ""; }; };
@@ -671,6 +670,9 @@
 		DA3BDFCB299D4298AFB35367 /* linebreakdef.c in Sources */ = {isa = PBXBuildFile; fileRef = 948B79370581424BAAC00539 /* linebreakdef.c */; settings = {COMPILER_FLAGS = ""; }; };
 		DA421623DA7046EDA2515218 /* unistr_titlecase_brkiter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30943BEF56DB4DC3A8BE3A43 /* unistr_titlecase_brkiter.cpp */; settings = {COMPILER_FLAGS = ""; }; };
 		DA7340830CB845EB81208013 /* grid.jpg in CopyFiles */ = {isa = PBXBuildFile; fileRef = 8DAA8B5D3CB045EB827CA073 /* grid.jpg */; settings = {COMPILER_FLAGS = ""; }; };
+		DB3C117A1D4BBE2600534CA9 /* TGMapViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = DB3C11791D4BBE2600534CA9 /* TGMapViewController.mm */; };
+		DB3C117B1D4BC11900534CA9 /* TGMapViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = DB3C11771D4BBE1F00534CA9 /* TGMapViewController.h */; };
+		DB3C117C1D4BC14800534CA9 /* TGMapViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = DB3C11791D4BBE2600534CA9 /* TGMapViewController.mm */; };
 		DB4F2B421D2FCCA300813AAA /* DroidSansFallback.ttf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7000A79E2D56438ABDC3A1E1 /* DroidSansFallback.ttf */; };
 		DB4F2B431D2FCCA300813AAA /* DroidSansJapanese.ttf in CopyFiles */ = {isa = PBXBuildFile; fileRef = BC4F78BEC5654CDCB906283C /* DroidSansJapanese.ttf */; };
 		DB4F2B441D2FCCA300813AAA /* NotoNaskh-Regular.ttf in CopyFiles */ = {isa = PBXBuildFile; fileRef = 668D0363F9B84A6CA84E1C0E /* NotoNaskh-Regular.ttf */; };
@@ -681,9 +683,7 @@
 		DB7E43991D4B8A5400A6F40D /* labelCollider.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB7E43981D4B8A5400A6F40D /* labelCollider.cpp */; };
 		DB7E439C1D4B8A7200A6F40D /* jobQueue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB7E439A1D4B8A7200A6F40D /* jobQueue.cpp */; };
 		DBD889621D2FC0EF00D05B1F /* tangram_framework.h in Headers */ = {isa = PBXBuildFile; fileRef = DBD889611D2FC0EF00D05B1F /* tangram_framework.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DBD889691D2FC15400D05B1F /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3D5366AB89C14BD1ABA45234 /* ViewController.mm */; };
 		DBD8896A1D2FC15700D05B1F /* platform_ios.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1608DCBC5BAC421BB71A2708 /* platform_ios.mm */; };
-		DBD8896B1D2FC19B00D05B1F /* ViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 82B1B4050E9447AFBC2E718A /* ViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DBD889841D2FC36500D05B1F /* platform_ios.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1608DCBC5BAC421BB71A2708 /* platform_ios.mm */; };
 		DBE8AA5457204CB7B92F2857 /* hb-ot-shape.cc in Sources */ = {isa = PBXBuildFile; fileRef = E0E275C4FCA2489E86AEF353 /* hb-ot-shape.cc */; settings = {COMPILER_FLAGS = ""; }; };
 		DC06A5B7C75A45E6A6A28C73 /* putil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BC321E5836D34A029CAE59AC /* putil.cpp */; settings = {COMPILER_FLAGS = ""; }; };
@@ -1354,14 +1354,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C93D231178474312A455332E /* CopyFiles */ = {
+		C93D231178474312A455332E /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = ../tangram.app/import;
 			dstSubfolderSpec = 6;
 			files = (
-				13E0EA1D17764690B108B5E4 /* test.yaml in CopyFiles */,
+				13E0EA1D17764690B108B5E4 /* test.yaml in Copy Files */,
 			);
+			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		DB4F2B411D2FCC9200813AAA /* CopyFiles */ = {
@@ -1570,7 +1571,6 @@
 		3C9196F938B1477385F27FE7 /* CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
 		3D281C4C25D34EBDBA2EE9CC /* nodebuilder.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = nodebuilder.h; path = "external/yaml-cpp/src/nodebuilder.h"; sourceTree = SOURCE_ROOT; };
 		3D479C79AEB745B1A343BE6B /* ftbzip2.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = ftbzip2.c; path = "external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/src/bzip2/ftbzip2.c"; sourceTree = SOURCE_ROOT; };
-		3D5366AB89C14BD1ABA45234 /* ViewController.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = ViewController.mm; path = ios/src/ViewController.mm; sourceTree = SOURCE_ROOT; };
 		3D5FB75672774BB68C957281 /* ustring.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ustring.cpp; path = "external/alfons/deps/harfbuzz-icu-freetype/icu/common/ustring.cpp"; sourceTree = SOURCE_ROOT; };
 		3D7EE01226884E699C85D35E /* hb-blob.cc */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = "hb-blob.cc"; path = "external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-blob.cc"; sourceTree = SOURCE_ROOT; };
 		3E4E85A4782B41B984D5B297 /* ptr.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ptr.h; path = "external/yaml-cpp/include/yaml-cpp/node/ptr.h"; sourceTree = SOURCE_ROOT; };
@@ -1782,7 +1782,6 @@
 		824D6B3D70B547C5A25B2F37 /* ustrcase_locale.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ustrcase_locale.cpp; path = "external/alfons/deps/harfbuzz-icu-freetype/icu/common/ustrcase_locale.cpp"; sourceTree = SOURCE_ROOT; };
 		824E57702F9F43798AE4FC9A /* normalizer2impl.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = normalizer2impl.cpp; path = "external/alfons/deps/harfbuzz-icu-freetype/icu/common/normalizer2impl.cpp"; sourceTree = SOURCE_ROOT; };
 		82631D0D19684BDF92EB36B9 /* ucnvbocu.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ucnvbocu.cpp; path = "external/alfons/deps/harfbuzz-icu-freetype/icu/common/ucnvbocu.cpp"; sourceTree = SOURCE_ROOT; };
-		82B1B4050E9447AFBC2E718A /* ViewController.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ViewController.h; path = ios/src/ViewController.h; sourceTree = SOURCE_ROOT; };
 		836584DFED184F0584A104A5 /* node.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = node.h; path = "external/yaml-cpp/include/yaml-cpp/node/node.h"; sourceTree = SOURCE_ROOT; };
 		83CC810132814F04B27C35D6 /* hb-ot-shape-complex-use-table.cc */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = "hb-ot-shape-complex-use-table.cc"; path = "external/alfons/deps/harfbuzz-icu-freetype/harfbuzz/src/hb-ot-shape-complex-use-table.cc"; sourceTree = SOURCE_ROOT; };
 		842905D2D96540FC968FC289 /* ftmodapi.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ftmodapi.h; path = "external/alfons/deps/harfbuzz-icu-freetype/freetype-2.6/include/freetype/ftmodapi.h"; sourceTree = SOURCE_ROOT; };
@@ -2028,6 +2027,8 @@
 		D9F26FF465A54427A05F2765 /* debugTextStyle.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = debugTextStyle.h; path = core/src/style/debugTextStyle.h; sourceTree = SOURCE_ROOT; };
 		DA62633156A9465EB19C0D59 /* viewConstraint.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = viewConstraint.cpp; path = core/src/view/viewConstraint.cpp; sourceTree = SOURCE_ROOT; };
 		DAFEC74411BD434BA5EBFAC6 /* emit.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = emit.cpp; path = "external/yaml-cpp/src/emit.cpp"; sourceTree = SOURCE_ROOT; };
+		DB3C11771D4BBE1F00534CA9 /* TGMapViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TGMapViewController.h; path = ios/src/TGMapViewController.h; sourceTree = "<group>"; };
+		DB3C11791D4BBE2600534CA9 /* TGMapViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGMapViewController.mm; path = ios/src/TGMapViewController.mm; sourceTree = "<group>"; };
 		DB7E43971D4B8A5400A6F40D /* labelCollider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = labelCollider.h; path = core/src/labels/labelCollider.h; sourceTree = "<group>"; };
 		DB7E43981D4B8A5400A6F40D /* labelCollider.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = labelCollider.cpp; path = core/src/labels/labelCollider.cpp; sourceTree = "<group>"; };
 		DB7E439A1D4B8A7200A6F40D /* jobQueue.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jobQueue.cpp; path = core/src/util/jobQueue.cpp; sourceTree = "<group>"; };
@@ -2639,7 +2640,7 @@
 			isa = PBXGroup;
 			children = (
 				2B6E1028F83F4E7AADDE152E /* AppDelegate.h */,
-				82B1B4050E9447AFBC2E718A /* ViewController.h */,
+				DB3C11771D4BBE1F00534CA9 /* TGMapViewController.h */,
 				45DBD82A9722480D89FB1B9B /* platform_ios.h */,
 			);
 			name = "Header Files";
@@ -2802,7 +2803,7 @@
 			isa = PBXGroup;
 			children = (
 				0BA5DC042F9640FFA77BDF79 /* AppDelegate.m */,
-				3D5366AB89C14BD1ABA45234 /* ViewController.mm */,
+				DB3C11791D4BBE2600534CA9 /* TGMapViewController.mm */,
 				3C88EC1FF3F945DAAE931700 /* main.m */,
 				1608DCBC5BAC421BB71A2708 /* platform_ios.mm */,
 			);
@@ -3616,7 +3617,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DBD889621D2FC0EF00D05B1F /* tangram_framework.h in Headers */,
-				DBD8896B1D2FC19B00D05B1F /* ViewController.h in Headers */,
+				DB3C117B1D4BC11900534CA9 /* TGMapViewController.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3798,7 +3799,7 @@
 				13DB7E1AF76B4DD69838FC86 /* CopyFiles */,
 				E369A94050A741F6B8EF3B92 /* CopyFiles */,
 				EDFDE97849274B458C454EF5 /* CopyFiles */,
-				C93D231178474312A455332E /* CopyFiles */,
+				C93D231178474312A455332E /* Copy Files */,
 				F93ECE791462429B842BAC07 /* Sources */,
 			);
 			buildRules = (
@@ -4708,7 +4709,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DBD889691D2FC15400D05B1F /* ViewController.mm in Sources */,
+				DB3C117A1D4BBE2600534CA9 /* TGMapViewController.mm in Sources */,
 				DBD8896A1D2FC15700D05B1F /* platform_ios.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4736,9 +4737,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				1E20C6E86AB94DEEA51DCC65 /* AppDelegate.m in Sources */,
-				28DB3ED911234B4BAC60C3E1 /* ViewController.mm in Sources */,
 				9673CE5410E4499181745C24 /* main.m in Sources */,
 				156612B0394B47209CF10D33 /* platform_ios.mm in Sources */,
+				DB3C117C1D4BC14800534CA9 /* TGMapViewController.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

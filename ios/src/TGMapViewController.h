@@ -22,7 +22,7 @@
 @end
 
 struct TileID;
-@interface ViewController : GLKViewController <UIGestureRecognizerDelegate>
+@interface TGMapViewController : GLKViewController <UIGestureRecognizerDelegate>
 
 @property (assign, nonatomic) Tangram::Map* map;
 @property (assign, nonatomic) BOOL continuous;
