@@ -337,7 +337,8 @@ void View::updateMatrices() {
 
     // viewport height in world space is such that each tile is [m_pixelsPerTile] px square in screen space
     float screenTileSize = s_pixelsPerTile * m_pixelScale;
-    m_height = (float)m_vpHeight * worldTileSize / screenTileSize;
+    float screenToWorldTileSize = worldTileSize / screenTileSize;
+    m_height = (float)m_vpHeight * screenToWorldTileSize;
     m_width = m_height * m_aspect;
 
     // set vertical field-of-view
@@ -363,6 +364,9 @@ void View::updateMatrices() {
     float maxTileDistance = worldTileSize * invLodFunc(MAX_LOD + 1);
     float near = m_pos.z / 50.f;
     float far = 1;
+    glm::vec2 worldOffset;
+    worldOffset.x = m_offset.x * screenToWorldTileSize;
+    worldOffset.y = m_offset.y * screenToWorldTileSize;
     float hw = 0.5 * m_width;
     float hh = 0.5 * m_height;
 
@@ -380,7 +384,8 @@ void View::updateMatrices() {
         case CameraType::flat:
             far = 2. * (m_pos.z + hh * std::abs(tan(m_pitch)));
             far = std::min(far, maxTileDistance);
-            m_proj = glm::ortho(-hw, hw, -hh, hh, near, far);
+            m_proj = glm::ortho(-hw - worldOffset.x, hw - worldOffset.x,
+                                -hh - worldOffset.y, hh - worldOffset.y, near, far);
             break;
     }
 
@@ -399,7 +404,7 @@ void View::updateMatrices() {
     }
 
     // Add the view offset (some call this the "principle point offset")
-    {
+    if (m_type == CameraType::perspective) {
         m_proj[2][0] = (-2.f * m_offset.x) / m_vpWidth; // (right + left) / (right - left);
         m_proj[2][1] = (-2.f * m_offset.y) / m_vpHeight; // (top + bottom) / (top - bottom);
     }
