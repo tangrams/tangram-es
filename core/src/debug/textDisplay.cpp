@@ -57,6 +57,13 @@ void TextDisplay::init() {
     m_initialized = true;
 }
 
+void TextDisplay::deinit() {
+
+    m_shader.reset(nullptr);
+    m_initialized = false;
+
+}
+
 void TextDisplay::log(const char* fmt, ...) {
     static char text[99999];
 

@@ -41,6 +41,7 @@ public:
     void setResolution(glm::vec2 _textDisplayResolution) { m_textDisplayResolution = _textDisplayResolution; }
 
     void init();
+    void deinit();
 
     /* Draw stacked messages added through log and draw _infos string list */
     void draw(RenderState& rs, const std::vector<std::string>& _infos);

@@ -27,7 +27,7 @@ void init() {
 
     // lazy init
     if (!s_initialized) {
-        s_shader = std::unique_ptr<ShaderProgram>(new ShaderProgram());
+        s_shader = std::make_unique<ShaderProgram>();
 
         s_shader->setSourceStrings(SHADER_SOURCE(debugPrimitive_fs),
                                    SHADER_SOURCE(debugPrimitive_vs));
@@ -39,6 +39,14 @@ void init() {
         s_initialized = true;
         GL_CHECK(glLineWidth(1.5f));
     }
+}
+
+void deinit() {
+
+    s_shader.reset(nullptr);
+    s_layout.reset(nullptr);
+    s_initialized = false;
+
 }
 
 void drawLine(RenderState& rs, const glm::vec2& _origin, const glm::vec2& _destination) {

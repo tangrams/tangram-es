@@ -8,6 +8,9 @@ class RenderState;
 
 namespace Primitives {
 
+void init();
+void deinit();
+
 /* Setup the debug resolution size */
 void setResolution(RenderState& rs, float _width, float _height);
 

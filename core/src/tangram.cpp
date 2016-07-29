@@ -54,8 +54,8 @@ public:
     std::mutex tilesMutex;
     std::mutex sceneMutex;
 
-    JobQueue jobQueue;
     RenderState renderState;
+    JobQueue jobQueue;
     View view;
     Labels labels;
     AsyncWorker asyncWorker;
@@ -92,6 +92,8 @@ Map::Map() {
 
 Map::~Map() {
     // The unique_ptr to Impl will be automatically destroyed when Map is destroyed.
+    TextDisplay::Instance().deinit();
+    Primitives::deinit();
 }
 
 void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
