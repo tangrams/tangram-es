@@ -104,8 +104,6 @@ protected:
     };
     std::vector<DirtyRange> m_dirtyRanges;
 
-    std::unique_ptr<Disposer> m_disposer;
-
     bool m_shouldResize;
 
     unsigned int m_width;
@@ -114,6 +112,8 @@ protected:
     GLenum m_target;
 
     int m_generation;
+
+    Disposer m_disposer;
 
 private:
 

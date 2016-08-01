@@ -36,9 +36,27 @@ MeshBase::MeshBase(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode
 
 MeshBase::~MeshBase() {
 
-    if (m_disposer) {
-        m_disposer->dispatchToRenderThread();
-    }
+    auto vaos = m_vaos;
+    auto generation = m_generation;
+    auto glVertexBuffer = m_glVertexBuffer;
+    auto glIndexBuffer = m_glIndexBuffer;
+
+    m_disposer([=](RenderState& rs) mutable {
+        // Deleting a index/array buffer being used ends up setting up the current vertex/index buffer to 0
+        // after the driver finishes using it, force the render state to be 0 for vertex/index buffer
+        if (rs.isValidGeneration(generation)) {
+            if (glVertexBuffer) {
+                rs.vertexBufferUnset(glVertexBuffer);
+                GL_CHECK(glDeleteBuffers(1, &glVertexBuffer));
+            }
+            if (glIndexBuffer) {
+                rs.indexBufferUnset(glIndexBuffer);
+                GL_CHECK(glDeleteBuffers(1, &glIndexBuffer));
+            }
+            vaos.dispose();
+        }
+    });
+
 
     if (m_glVertexData) {
         delete[] m_glVertexData;
@@ -139,22 +157,7 @@ void MeshBase::upload(RenderState& rs) {
     }
 
     m_generation = rs.generation();
-
-    m_disposer.reset(new Disposer(rs, [=](RenderState& rs){
-        // Deleting a index/array buffer being used ends up setting up the current vertex/index buffer to 0
-        // after the driver finishes using it, force the render state to be 0 for vertex/index buffer
-        if (rs.isValidGeneration(m_generation)) {
-            if (m_glVertexBuffer) {
-                rs.vertexBufferUnset(m_glVertexBuffer);
-                GL_CHECK(glDeleteBuffers(1, &m_glVertexBuffer));
-            }
-            if (m_glIndexBuffer) {
-                rs.indexBufferUnset(m_glIndexBuffer);
-                GL_CHECK(glDeleteBuffers(1, &m_glIndexBuffer));
-            }
-            m_vaos.dispose();
-        }
-    }));
+    m_disposer = Disposer(rs);
 
     m_isUploaded = true;
 }

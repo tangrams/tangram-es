@@ -31,9 +31,20 @@ Texture::Texture(const unsigned char* data, size_t dataSize, TextureOptions opti
 }
 
 Texture::~Texture() {
-    if (m_disposer) {
-        m_disposer->dispatchToRenderThread();
-    }
+
+    auto generation = m_generation;
+    auto glHandle = m_glHandle;
+    auto target = m_target;
+
+    m_disposer([=](RenderState& rs) {
+        if (rs.isValidGeneration(generation)) {
+            // If the currently-bound texture is deleted, the binding resets to 0
+            // according to the OpenGL spec, so unset this texture binding.
+            rs.textureUnset(target, glHandle);
+
+            GL_CHECK(glDeleteTextures(1, &glHandle));
+        }
+    });
 }
 
 bool Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size) {
@@ -85,6 +96,7 @@ Texture& Texture::operator=(Texture&& _other) {
     m_target = _other.m_target;
     m_generation = _other.m_generation;
     m_generateMipmaps = _other.m_generateMipmaps;
+    m_disposer = std::move(_other.m_disposer);
 
     return *this;
 }
@@ -179,17 +191,7 @@ void Texture::generate(RenderState& rs, GLuint _textureUnit) {
     GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.wrapping.wrapt));
 
     m_generation = rs.generation();
-
-    m_disposer.reset(new Disposer(rs, [=](RenderState& rs){
-        if (rs.isValidGeneration(m_generation)) {
-            // If the currently-bound texture is deleted, the binding resets to 0
-            // according to the OpenGL spec, so unset this texture binding.
-            rs.textureUnset(m_target, m_glHandle);
-
-            GL_CHECK(glDeleteTextures(1, &m_glHandle));
-        }
-    }));
-
+    m_disposer = Disposer(rs);
 }
 
 void Texture::checkValidity(RenderState& rs) {

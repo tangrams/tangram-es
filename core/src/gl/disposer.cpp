@@ -3,12 +3,10 @@
 
 namespace Tangram {
 
-Disposer::Disposer(RenderState& rs, std::function<void(RenderState&)> task) : m_rs(rs) {
-    m_task = std::bind(task, std::ref(rs));
-}
+void Disposer::operator()(std::function<void(RenderState&)> _task) {
+    if (!m_rs) { return; }
 
-void Disposer::dispatchToRenderThread() {
-    m_rs.jobQueue.add(m_task);
+    m_rs->jobQueue.add(std::bind(_task, std::ref(*m_rs)));
 }
 
 } // namespace Tangram

@@ -89,8 +89,6 @@ protected:
 
     Vao m_vaos;
 
-    std::unique_ptr<Disposer> m_disposer;
-
     // Compiled vertices for upload
     GLbyte* m_glVertexData = nullptr;
 
@@ -108,6 +106,8 @@ protected:
 
     GLsizei m_dirtySize;
     GLintptr m_dirtyOffset;
+
+    Disposer m_disposer;
 
     bool checkValidity(RenderState& rs);
 

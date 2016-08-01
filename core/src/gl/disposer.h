@@ -10,14 +10,14 @@ class Disposer {
 
 public:
 
-    Disposer(RenderState& rs, std::function<void(RenderState&)> task);
+    Disposer() : m_rs(nullptr){}
 
-    void dispatchToRenderThread();
+    Disposer(RenderState& _rs) : m_rs(&_rs) {}
+
+    void operator()(std::function<void(RenderState&)> _task);
 
 private:
-    RenderState& m_rs;
-    std::function<void()> m_task;
-
+    RenderState* m_rs = nullptr;
 };
 
 }

@@ -19,9 +19,30 @@ ShaderProgram::ShaderProgram() {
 }
 
 ShaderProgram::~ShaderProgram() {
-    if (m_disposer) {
-        m_disposer->dispatchToRenderThread();
-    }
+
+    auto generation = m_generation;
+    auto glProgram = m_glProgram;
+    auto glFragmentShader = m_glFragmentShader;
+    auto glVertexShader = m_glVertexShader;
+
+    m_disposer([=](RenderState& rs) {
+        if (rs.isValidGeneration(generation)) {
+            if (glProgram != 0) {
+                GL_CHECK(glDeleteProgram(glProgram));
+            }
+
+            if (glFragmentShader != 0) {
+                GL_CHECK(glDeleteShader(glFragmentShader));
+            }
+
+            if (glVertexShader != 0) {
+                GL_CHECK(glDeleteShader(glVertexShader));
+            }
+        }
+        // Deleting the shader program that is currently in-use sets the current shader program to 0
+        // so we un-set the current program in the render state.
+        rs.shaderProgramUnset(glProgram);
+    });
 }
 
 void ShaderProgram::setSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc){
@@ -146,25 +167,7 @@ bool ShaderProgram::build(RenderState& rs) {
     // Clear any cached shader locations
 
     m_attribMap.clear();
-
-    m_disposer.reset(new Disposer(rs, [=](RenderState& rs){
-        if (rs.isValidGeneration(m_generation)) {
-            if (m_glProgram != 0) {
-                GL_CHECK(glDeleteProgram(m_glProgram));
-            }
-
-            if (m_glFragmentShader != 0) {
-                GL_CHECK(glDeleteShader(m_glFragmentShader));
-            }
-
-            if (m_glVertexShader != 0) {
-                GL_CHECK(glDeleteShader(m_glVertexShader));
-            }
-        }
-        // Deleting the shader program that is currently in-use sets the current shader program to 0
-        // so we un-set the current program in the render state.
-        rs.shaderProgramUnset(m_glProgram);
-    }));
+    m_disposer = Disposer(rs);
 
     return true;
 }

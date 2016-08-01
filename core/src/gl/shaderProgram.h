@@ -133,10 +133,10 @@ private:
 
     std::map<std::string, std::vector<std::string>> m_sourceBlocks;
 
-    std::unique_ptr<Disposer> m_disposer;
-
     bool m_needsBuild = true;
     bool m_invalidShaderSource = false;
+
+    Disposer m_disposer;
 
     void checkValidity(RenderState& rs);
     GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
