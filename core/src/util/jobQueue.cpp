@@ -19,14 +19,11 @@ void JobQueue::add(Job job) {
 
 void JobQueue::runJobs() {
 
-    auto it = m_jobs.begin();
-    auto end = m_jobs.end();
-    while (it != end) {
+    for (size_t i = 0; i < m_jobs.size(); i++) {
         Job job;
         {
             std::lock_guard<std::mutex> lock(m_mutex);
-            job.swap(*it);
-            ++it;
+            job.swap(m_jobs[i]);
         }
         job();
     }
