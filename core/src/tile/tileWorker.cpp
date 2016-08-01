@@ -13,7 +13,7 @@
 
 namespace Tangram {
 
-TileWorker::TileWorker(int _num_worker, JobQueue& jobQueue) : m_mainThreadJobQueue(jobQueue) {
+TileWorker::TileWorker(int _num_worker) {
     m_running = true;
 
     for (int i = 0; i < _num_worker; i++) {
@@ -26,19 +26,6 @@ TileWorker::TileWorker(int _num_worker, JobQueue& jobQueue) : m_mainThreadJobQue
 TileWorker::~TileWorker(){
     if (m_running) {
         stop();
-    }
-}
-
-void TileWorker::disposeBuilder(std::unique_ptr<TileBuilder> _builder) {
-    if (_builder) {
-        // Create an std::function that will run on the main thread
-        // and dispose the TileBuilder, including its Scene reference
-        // with OpenGL resources, on the main thread. This ensures
-        // that no GL functions are called on the worker thread.
-        auto builderPtr = _builder.release();
-        m_mainThreadJobQueue.add([=]() {
-            delete builderPtr;
-        });
     }
 }
 
@@ -59,15 +46,12 @@ void TileWorker::run(Worker* instance) {
                 });
 
             if (instance->tileBuilder) {
-                disposeBuilder(std::move(builder));
-
                 builder = std::move(instance->tileBuilder);
                 LOG("Passed new TileBuilder to TileWorker");
             }
 
             // Check if thread should stop
             if (!m_running) {
-                disposeBuilder(std::move(builder));
                 break;
             }
 

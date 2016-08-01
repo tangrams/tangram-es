@@ -60,7 +60,7 @@ public:
     Labels labels;
     AsyncWorker asyncWorker;
     InputHandler inputHandler{view};
-    TileWorker tileWorker{MAX_WORKERS, jobQueue};
+    TileWorker tileWorker{MAX_WORKERS};
     TileManager tileManager{tileWorker};
 
     std::vector<SceneUpdate> sceneUpdates;
