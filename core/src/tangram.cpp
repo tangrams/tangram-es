@@ -86,7 +86,7 @@ static std::bitset<8> g_flags = 0;
 
 Map::Map() {
 
-    impl = std::make_unique<Impl>();
+    impl.reset(new Impl());
 
 }
 

@@ -33,6 +33,11 @@ public:
 
     MeshBase();
 
+    MeshBase(const MeshBase&) = delete;
+    MeshBase(MeshBase&&) = delete;
+    MeshBase& operator=(const MeshBase&) = delete;
+    MeshBase& operator=(MeshBase&&) = delete;
+
     virtual ~MeshBase();
 
     /*

@@ -15,6 +15,13 @@ public:
 
     static constexpr size_t MAX_ATTRIBUTES = 16;
 
+    RenderState() {}
+
+    RenderState(const RenderState&) = delete;
+    RenderState(RenderState&&) = delete;
+    RenderState& operator=(const RenderState&) = delete;
+    RenderState& operator=(RenderState&&) = delete;
+
     // Reset the render states.
     void invalidate();
 
