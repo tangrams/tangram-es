@@ -45,7 +45,7 @@ public:
                                                      const std::vector<std::shared_ptr<Tile>>& _tiles,
                                                      float _x, float _y, bool _visibleOnly = true);
 
-    Label::EvalUpdate needUpdate() const { return m_needUpdate; }
+    bool needUpdate() const { return m_needUpdate; }
 
 private:
 
@@ -62,13 +62,11 @@ private:
 
     PERF_TRACE void sortLabels();
 
-    PERF_TRACE void handleOcclusions();
+    PERF_TRACE void handleOcclusions(const View& _view);
 
     PERF_TRACE bool withinRepeatDistance(Label *_label);
 
-    void evalLabel(Label* _label, float _dt);
-
-    Label::EvalUpdate m_needUpdate;
+    bool m_needUpdate;
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
 
@@ -76,13 +74,14 @@ private:
 
     struct LabelEntry {
 
-        LabelEntry(Label* _label, bool _proxy)
+        LabelEntry(Label* _label, Tile* _tile, bool _proxy)
             : label(_label),
+              tile(_tile),
               priority(_label->options().priority),
               proxy(_proxy) {}
 
         Label* label;
-
+        Tile* tile;
         float priority;
         bool proxy;
     };

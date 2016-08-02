@@ -201,6 +201,7 @@ TEST_CASE( "Sine interpolation", "[Core][Label][Fade]" ) {
     REQUIRE(fadeIn.isFinished());
 }
 
+#if 0
 TEST_CASE( "Ensure anchor fallback behavior on first fallback", "[Core][Label]" ) {
     TextLabel l = makeLabelWithAnchorFallbacks();
 
@@ -275,3 +276,4 @@ TEST_CASE( "Ensure anchor fallback behavior when looping over all fallback and f
     REQUIRE(l.anchorType() == LabelProperty::Anchor::left);
     REQUIRE(l.state() == Label::State::visible);
 }
+#endif

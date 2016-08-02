@@ -293,8 +293,7 @@ bool Map::update(float _dt) {
 
         auto& tiles = impl->tileManager.getVisibleTiles();
 
-        if (impl->labels.needUpdate() == Label::EvalUpdate::relayout ||
-            impl->view.changedOnLastUpdate() ||
+        if (impl->view.changedOnLastUpdate() ||
             impl->tileManager.hasTileSetChanged()) {
 
             for (const auto& tile : tiles) {
@@ -313,7 +312,7 @@ bool Map::update(float _dt) {
     bool viewChanged = impl->view.changedOnLastUpdate();
     bool tilesChanged = impl->tileManager.hasTileSetChanged();
     bool tilesLoading = impl->tileManager.hasLoadingTiles();
-    bool labelsNeedUpdate = impl->labels.needUpdate() != Label::EvalUpdate::none;
+    bool labelsNeedUpdate = impl->labels.needUpdate();
     bool resourceLoading = (impl->scene->resourceLoad > 0);
     bool nextScene = bool(impl->nextScene);
 

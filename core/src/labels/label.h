@@ -37,15 +37,8 @@ public:
         visible         = 1 << 3,
         sleep           = 1 << 4,
         out_of_screen   = 1 << 5,
-        anchor_fallback = 1 << 6,
-        skip_transition = 1 << 7,
-        dead            = 1 << 8,
-    };
-
-    enum class EvalUpdate {
-        none,
-        animate,
-        relayout,
+        skip_transition = 1 << 6,
+        dead            = 1 << 7,
     };
 
     struct Transform {
@@ -94,10 +87,14 @@ public:
 
     bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _drawAllLabels = false);
 
+    void nextAnchor();
+    bool setAnchorIndex(int _index);
+    int anchorIndex() { return m_anchorIndex; }
+
     /* Push the pending transforms to the vbo by updating the vertices */
     virtual void pushTransform() = 0;
 
-    EvalUpdate evalState(float _dt);
+    bool evalState(float _dt);
 
     /* Update the screen position of the label */
     bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _drawAllLabels);
@@ -145,12 +142,12 @@ public:
 
     void print() const;
 
+    bool offViewport(const glm::vec2& _screenSize);
+
 private:
 
     virtual void applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
                              LabelProperty::Anchor _anchor) = 0;
-
-    bool offViewport(const glm::vec2& _screenSize);
 
     void setAlpha(float _alpha);
 

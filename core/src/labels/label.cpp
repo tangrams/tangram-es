@@ -141,7 +141,6 @@ bool Label::canOcclude() {
                         State::skip_transition |
                         State::fading_in |
                         State::sleep |
-                        State::anchor_fallback |
                         State::out_of_screen |
                         State::dead);
 
@@ -152,7 +151,6 @@ bool Label::visibleState() const {
     int visibleFlags = (State::visible |
                         State::fading_in |
                         State::fading_out |
-                        State::anchor_fallback |
                         State::skip_transition);
 
     return (visibleFlags & m_state);
@@ -177,9 +175,6 @@ void Label::enterState(const State& _state, float _alpha) {
         m_anchorIndex = 0;
     }
 
-    if (m_state == State::anchor_fallback) {
-        m_anchorIndex = 1;
-    }
 }
 
 void Label::setAlpha(float _alpha) {
@@ -204,7 +199,6 @@ void Label::print() const {
     switch (m_state) {
         case State::none: state = "none"; break;
         case State::visible: state = "visible"; break;
-        case State::anchor_fallback: state = "anchor_fallback"; break;
         case State::fading_in: state = "fading_in"; break;
         case State::fading_out: state = "fading_out"; break;
         case State::skip_transition: state = "skip_transition"; break;
@@ -214,6 +208,25 @@ void Label::print() const {
     }
     LOG("\tm_state: %s", state.c_str());
     //LOG("\tm_options.anchorFallback: %s", m_options.anchorFallbacks.to_string().c_str());
+}
+
+void Label::nextAnchor() {
+    setAnchorIndex((m_anchorIndex + 1) % m_options.anchors.count);
+}
+
+bool Label::setAnchorIndex(int _index) {
+    if (_index >= int(m_options.anchors.count) || _index < 0) {
+        return false;
+    }
+    m_anchorIndex = _index;
+
+    if (m_parent) {
+        alignFromParent(*m_parent);
+    } else {
+        applyAnchor(m_dim, glm::vec2(0.0), m_options.anchors[m_anchorIndex]);
+    }
+
+    return true;
 }
 
 bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _drawAllLabels) {
@@ -226,15 +239,6 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
             m_occluded = true;
         } else {
             return false;
-        }
-    }
-
-    if (m_state == State::anchor_fallback) {
-        // Apply new alignment
-        if (m_parent) {
-            alignFromParent(*m_parent);
-        } else {
-            applyAnchor(m_dim, glm::vec2(0.0), m_options.anchors[m_anchorIndex]);
         }
     }
 
@@ -260,6 +264,8 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
         if (m_occludedLastFrame) {
             enterState(State::sleep, 0.0);
         } else {
+            // Non-occluded out-of-screen label came into
+            // screen again. Skip fade-in transition.
             enterState(State::visible, 1.0);
         }
     }
@@ -267,87 +273,59 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
     return true;
 }
 
-Label::EvalUpdate Label::evalState(float _dt) {
+bool Label::evalState(float _dt) {
 
 #ifdef DEBUG
     if (Tangram::getDebugFlag(DebugFlags::draw_all_labels)) {
         enterState(State::visible, 1.0);
-        return EvalUpdate::none;
+        return false;
     }
 #endif
 
     switch (m_state) {
         case State::visible:
             if (m_occluded) {
-                if (m_options.anchors.count > 1) {
-                    enterState(State::anchor_fallback, 0.0);
+                m_fade.reset(false, m_options.hideTransition.ease,
+                             m_options.hideTransition.time);
 
-                    return EvalUpdate::relayout;
-                } else {
-                    m_fade.reset(false, m_options.hideTransition.ease,
-                                        m_options.hideTransition.time);
-
-                    enterState(State::fading_out, 1.0);
-                    return EvalUpdate::animate;
-                }
-
-            } else if (m_anchorIndex != 0) {
-                // TODO: try to place again to prefered fallback (0)
+                enterState(State::fading_out, 1.0);
+                return true;
             }
-            return EvalUpdate::none;
-
-        case State::anchor_fallback:
-            if (m_occluded) {
-                if (m_anchorIndex >= int(m_options.anchors.count)-1) {
-                    // Tried all anchors - deactivate label
-                    enterState(State::sleep, 0.0);
-                } else {
-                    // Move to next one for upcoming frame
-                    m_anchorIndex++;
-                }
-                return EvalUpdate::relayout;
-            }
-            enterState(State::visible, 1.0);
-            return EvalUpdate::none;
+            return false;
 
         case State::fading_in:
             if (m_occluded) {
                 enterState(State::sleep, 0.0);
-                return EvalUpdate::none;
+                return false;
             }
             setAlpha(m_fade.update(_dt));
             if (m_fade.isFinished()) {
                 enterState(State::visible, 1.0);
-                return EvalUpdate::none;
+                return false;
             }
-            return EvalUpdate::animate;
+            return true;
 
         case State::fading_out:
-            if (!m_occluded) {
-                enterState(State::fading_in, m_transform.state.alpha);
-                return EvalUpdate::animate;
-            }
+            // if (!m_occluded) {
+            //     enterState(State::fading_in, m_transform.state.alpha);
+            //     return true;
+            // }
             setAlpha(m_fade.update(_dt));
             if (m_fade.isFinished()) {
                 enterState(State::sleep, 0.0);
-                return EvalUpdate::none;
+                return false;
             }
-            return EvalUpdate::animate;
+            return true;
 
         case State::none:
             if (m_occluded) {
-                if (m_options.anchors.count > 1) {
-                    enterState(State::anchor_fallback, 0.0);
-                    return EvalUpdate::relayout;
-                } else {
-                    enterState(State::sleep, 0.0);
-                    return EvalUpdate::none;
-                }
+                enterState(State::sleep, 0.0);
+                return false;
             }
             m_fade.reset(true, m_options.showTransition.ease,
                          m_options.showTransition.time);
             enterState(State::fading_in, 0.0);
-            return EvalUpdate::animate;
+            return true;
 
         case State::skip_transition:
             if (m_occluded) {
@@ -355,7 +333,7 @@ Label::EvalUpdate Label::evalState(float _dt) {
             } else {
                 enterState(State::visible, 1.0);
             }
-            return EvalUpdate::none;
+            return true;
 
         case State::sleep:
             if (!m_occluded) {
@@ -363,16 +341,16 @@ Label::EvalUpdate Label::evalState(float _dt) {
                                    m_options.showTransition.time);
 
                 enterState(State::fading_in, 0.0);
-                return EvalUpdate::animate;
+                return true;
             }
-            return EvalUpdate::none;
+            return false;
 
         case State::dead:
         case State::out_of_screen:
             break;
     }
 
-    return EvalUpdate::none;
+    return false;
 }
 
 }
