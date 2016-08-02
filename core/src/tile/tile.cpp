@@ -58,6 +58,7 @@ void Tile::update(float _dt, const View& _view) {
     m_modelMatrix[3][0] = m_tileOrigin.x - viewOrigin.x;
     m_modelMatrix[3][1] = m_tileOrigin.y - viewOrigin.y;
 
+    m_mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
 }
 
 void Tile::resetState() {
