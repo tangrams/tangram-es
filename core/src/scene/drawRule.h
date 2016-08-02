@@ -76,7 +76,7 @@ struct DrawRule {
     int id;
     bool isOutlineOnly = false;
 
-    DrawRule(const DrawRuleData& _ruleData, const SceneLayer& _layer);
+    DrawRule(const DrawRuleData& _ruleData, const std::string& _layerName, size_t _layerDepth);
 
     void merge(const DrawRuleData& _ruleData, const SceneLayer& _layer);
 
@@ -121,6 +121,8 @@ public:
      */
     void apply(const Feature& _feature, const SceneLayer& _sceneLayer,
                StyleContext& _ctx, TileBuilder& _builder);
+
+    bool evaluateRuleForContext(DrawRule& rule, StyleContext& ctx);
 
     // internal
     bool match(const Feature& _feature, const SceneLayer& _layer, StyleContext& _ctx);

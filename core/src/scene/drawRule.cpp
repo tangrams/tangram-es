@@ -34,17 +34,14 @@ std::string DrawRuleData::toString() const {
     return str;
 }
 
-DrawRule::DrawRule(const DrawRuleData& _ruleData, const SceneLayer& _layer) :
+DrawRule::DrawRule(const DrawRuleData& _ruleData, const std::string& _layerName, size_t _layerDepth) :
     name(&_ruleData.name),
     id(_ruleData.id) {
-
-    const char* layerName = _layer.name().c_str();
-    const auto layerDepth = _layer.depth();
 
     for (const auto& param : _ruleData.parameters) {
         auto key = static_cast<uint8_t>(param.key);
         active[key] = true;
-        params[key] = { &param, layerName, layerDepth };
+        params[key] = { &param, _layerName.c_str(), _layerDepth };
     }
 }
 
@@ -168,49 +165,13 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
     for (auto& rule : m_matchedRules) {
 
         StyleBuilder* style = _builder.getStyleBuilder(rule.getStyleName());
+
         if (!style) {
             LOGN("Invalid style %s", rule.getStyleName().c_str());
             continue;
         }
 
-        bool visible;
-        if (rule.get(StyleParamKey::visible, visible) && !visible) {
-            continue;
-        }
-
-        bool valid = true;
-        for (size_t i = 0; i < StyleParamKeySize; ++i) {
-
-            if (!rule.active[i]) {
-                rule.params[i].param = nullptr;
-                continue;
-            }
-
-            auto*& param = rule.params[i].param;
-
-            // Evaluate JS functions and Stops
-            if (param->function >= 0) {
-
-                // Copy param into 'evaluated' and point param to the evaluated StyleParam.
-                m_evaluated[i] = *param;
-                param = &m_evaluated[i];
-
-                if (!_ctx.evalStyle(param->function, param->key, m_evaluated[i].value)) {
-                    if (StyleParam::isRequired(param->key)) {
-                        valid = false;
-                        break;
-                    } else {
-                        rule.active[i] = false;
-                    }
-                }
-            } else if (param->stops) {
-                m_evaluated[i] = *param;
-                param = &m_evaluated[i];
-
-                Stops::eval(*param->stops, param->key, _ctx.getKeywordZoom(),
-                            m_evaluated[i].value);
-            }
-        }
+        bool valid = evaluateRuleForContext(rule, _ctx);
 
         if (valid) {
 
@@ -234,6 +195,49 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
     }
 }
 
+bool DrawRuleMergeSet::evaluateRuleForContext(DrawRule& rule, StyleContext& ctx) {
+
+        bool visible;
+        if (rule.get(StyleParamKey::visible, visible) && !visible) {
+            return false;
+        }
+
+        bool valid = true;
+        for (size_t i = 0; i < StyleParamKeySize; ++i) {
+
+            if (!rule.active[i]) {
+                rule.params[i].param = nullptr;
+                continue;
+            }
+
+            auto*& param = rule.params[i].param;
+
+            // Evaluate JS functions and Stops
+            if (param->function >= 0) {
+
+                // Copy param into 'evaluated' and point param to the evaluated StyleParam.
+                m_evaluated[i] = *param;
+                param = &m_evaluated[i];
+
+                if (!ctx.evalStyle(param->function, param->key, m_evaluated[i].value)) {
+                    if (StyleParam::isRequired(param->key)) {
+                        valid = false;
+                        break;
+                    } else {
+                        rule.active[i] = false;
+                    }
+                }
+            } else if (param->stops) {
+                m_evaluated[i] = *param;
+                param = &m_evaluated[i];
+
+                Stops::eval(*param->stops, param->key, ctx.getKeywordZoom(), m_evaluated[i].value);
+            }
+        }
+
+        return valid;
+}
+
 void DrawRuleMergeSet::mergeRules(const SceneLayer& _layer) {
 
     size_t pos, end = m_matchedRules.size();
@@ -244,7 +248,7 @@ void DrawRuleMergeSet::mergeRules(const SceneLayer& _layer) {
         }
 
         if (pos == end) {
-            m_matchedRules.emplace_back(rule, _layer);
+            m_matchedRules.emplace_back(rule, _layer.name(), 0);
         } else {
             m_matchedRules[pos].merge(rule, _layer);
         }
