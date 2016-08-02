@@ -37,15 +37,15 @@ void TextLabel::updateBBoxes(float _zoomFract) {
     if (state() == State::dead) { dim -= 4; }
 
     m_obb = OBB(m_transform.state.screenPos,
-                m_transform.state.rotation,
+                glm::vec2{m_transform.state.rotation.x, -m_transform.state.rotation.y},
                 dim.x, dim.y);
 }
 
 void TextLabel::pushTransform() {
     if (!visibleState()) { return; }
 
-    bool rotate = (m_transform.state.rotation.x != 1.f);
-    glm::vec2 rotation = {m_transform.state.rotation.x, -m_transform.state.rotation.y};
+    glm::vec2 rotation = m_transform.state.rotation;
+    bool rotate = (rotation.x != 1.f);
 
     TextVertex::State state {
         m_fontAttrib.fill,
