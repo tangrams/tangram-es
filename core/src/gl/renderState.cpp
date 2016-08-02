@@ -13,6 +13,12 @@ GLuint RenderState::getTextureUnit(GLuint _unit) {
     return GL_TEXTURE0 + _unit;
 }
 
+RenderState::~RenderState() {
+
+    deleteQuadIndexBuffer();
+
+}
+
 void RenderState::invalidate() {
 
     m_blending.set = false;
@@ -41,6 +47,7 @@ void RenderState::invalidate() {
 }
 
 void RenderState::increaseGeneration() {
+    generateQuadIndexBuffer();
     m_validGeneration++;
 }
 
@@ -267,6 +274,40 @@ void RenderState::textureUnset(GLenum target, GLuint handle) {
     if (m_texture.handle == handle) {
         m_texture.set = false;
     }
+}
+
+GLuint RenderState::getQuadIndexBuffer() {
+    if (m_quadIndexBuffer == 0) {
+        generateQuadIndexBuffer();
+    }
+    return m_quadIndexBuffer;
+}
+
+void RenderState::deleteQuadIndexBuffer() {
+    indexBufferUnset(m_quadIndexBuffer);
+    GL_CHECK(glDeleteBuffers(1, &m_quadIndexBuffer));
+    m_quadIndexBuffer = 0;
+}
+
+void RenderState::generateQuadIndexBuffer() {
+
+    std::vector<GLushort> indices;
+    indices.reserve(MAX_QUAD_VERTICES / 4 * 6);
+
+    for (size_t i = 0; i < MAX_QUAD_VERTICES; i += 4) {
+        indices.push_back(i + 2);
+        indices.push_back(i + 0);
+        indices.push_back(i + 1);
+        indices.push_back(i + 1);
+        indices.push_back(i + 3);
+        indices.push_back(i + 2);
+    }
+
+    GL_CHECK(glGenBuffers(1, &m_quadIndexBuffer));
+    indexBuffer(m_quadIndexBuffer);
+    GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLushort),
+                 reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW));
+
 }
 
 } // namespace Tangram

@@ -11,18 +11,6 @@
 
 namespace Tangram {
 
-class QuadIndices {
-public :
-    static void load(RenderState& rs);
-
-    static const size_t maxVertices = 16384;
-
-private:
-    static GLuint quadIndexBuffer;
-    static int quadGeneration;
-};
-
-
 template<class T>
 class DynamicQuadMesh : public StyledMesh, protected MeshBase {
 
@@ -88,7 +76,7 @@ bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& _shader) {
 
     // Bind buffers for drawing
     rs.vertexBuffer(m_glVertexBuffer);
-    QuadIndices::load(rs);
+    rs.indexBuffer(rs.getQuadIndexBuffer());
 
     // Enable shader program
     if (!_shader.use(rs)) {
@@ -96,11 +84,12 @@ bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& _shader) {
     }
 
     size_t vertexOffset = 0;
+    size_t maxVertices = RenderState::MAX_QUAD_VERTICES;
 
-    for (size_t offset = 0; offset < m_nVertices; offset += QuadIndices::maxVertices) {
-        size_t nVertices = QuadIndices::maxVertices;
+    for (size_t offset = 0; offset < m_nVertices; offset += maxVertices) {
+        size_t nVertices = maxVertices;
 
-        if (offset + QuadIndices::maxVertices > m_nVertices) {
+        if (offset + maxVertices > m_nVertices) {
             nVertices = m_nVertices - offset;
         }
         size_t byteOffset = vertexOffset * m_vertexLayout->getStride();

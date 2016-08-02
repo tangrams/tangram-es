@@ -15,7 +15,10 @@ public:
 
     static constexpr size_t MAX_ATTRIBUTES = 16;
 
+    static constexpr size_t MAX_QUAD_VERTICES = 16384;
+
     RenderState() {}
+    ~RenderState();
 
     RenderState(const RenderState&) = delete;
     RenderState(RenderState&&) = delete;
@@ -90,6 +93,8 @@ public:
 
     void textureUnset(GLenum target, GLuint handle);
 
+    GLuint getQuadIndexBuffer();
+
     std::array<GLuint, MAX_ATTRIBUTES> attributeBindings = { { 0 } };
 
     JobQueue jobQueue;
@@ -98,6 +103,10 @@ private:
 
     int m_validGeneration = 0;
     uint32_t m_nextTextureUnit = 0;
+
+    GLuint m_quadIndexBuffer = 0;
+    void deleteQuadIndexBuffer();
+    void generateQuadIndexBuffer();
 
     struct {
         GLboolean enabled = 0;
