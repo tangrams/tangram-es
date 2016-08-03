@@ -88,14 +88,12 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
             screenPosition = ap1;
 
             rotation = (ap0.x <= ap2.x ? ap2 - ap0 : ap0 - ap2) / length;
-
+            rotation = glm::vec2{rotation.x, -rotation.y};
             break;
         }
     }
 
-    glm::vec2 offset = rotateBy(m_options.offset, rotation);
-    m_transform.state.screenPos = screenPosition + glm::vec2(offset.x, -offset.y);
-
+    m_transform.state.screenPos = screenPosition + rotateBy(m_options.offset, rotation);
     m_transform.state.rotation = rotation;
 
     return true;
