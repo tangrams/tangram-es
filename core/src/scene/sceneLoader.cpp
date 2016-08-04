@@ -302,8 +302,14 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, const std::shared
             const std::string& name = define.first.Scalar();
 
             // undefine any previous definitions
-            shader.addSourceBlock("defines", "#undef " + name);
-
+            {
+                auto pos = name.find('(');
+                if (pos == std::string::npos) {
+                    shader.addSourceBlock("defines", "#undef " + name);
+                } else {
+                    shader.addSourceBlock("defines", "#undef " + name.substr(0, pos));
+                }
+            }
             bool bValue;
 
             if (getBool(define.second, bValue)) {
