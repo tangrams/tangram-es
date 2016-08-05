@@ -15,7 +15,6 @@
 #include <limits>
 #include <memory>
 
-
 namespace Tangram {
 
 class Label {
@@ -28,18 +27,25 @@ public:
     enum class Type {
         point,
         line,
-        debug
+        debug,
     };
 
     enum State {
-        fading_in       = 1,
-        fading_out      = 1 << 1,
-        visible         = 1 << 2,
-        sleep           = 1 << 3,
-        out_of_screen   = 1 << 4,
-        wait_occ        = 1 << 5, // state waiting for first occlusion result
-        skip_transition = 1 << 6,
-        dead            = 1 << 7,
+        none            = 1 << 0,
+        fading_in       = 1 << 1,
+        fading_out      = 1 << 2,
+        visible         = 1 << 3,
+        sleep           = 1 << 4,
+        out_of_screen   = 1 << 5,
+        anchor_fallback = 1 << 6,
+        skip_transition = 1 << 7,
+        dead            = 1 << 8,
+    };
+
+    enum class EvalUpdate {
+        none,
+        animate,
+        relayout,
     };
 
     struct Transform {
@@ -76,24 +82,25 @@ public:
 
         // the label hash based on its styling parameters
         size_t paramHash = 0;
+
+        LabelProperty::Anchors anchors;
     };
 
     static const float activation_distance_threshold;
 
-    Label(Transform _transform, glm::vec2 _size, Type _type, Options _options, LabelProperty::Anchor _anchor);
+    Label(Transform _transform, glm::vec2 _size, Type _type, Options _options);
 
     virtual ~Label();
 
-    bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _allLabels = false);
+    bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _drawAllLabels = false);
 
     /* Push the pending transforms to the vbo by updating the vertices */
     virtual void pushTransform() = 0;
 
-    bool evalState(const glm::vec2& _screenSize, float _dt);
+    EvalUpdate evalState(float _dt);
 
     /* Update the screen position of the label */
-    bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize,
-                               bool _testVisibility = true);
+    bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _drawAllLabels);
 
     virtual void updateBBoxes(float _zoomFract) = 0;
 
@@ -124,19 +131,24 @@ public:
     bool occludedLastFrame() const { return m_occludedLastFrame; }
 
     const Label* parent() const { return m_parent; }
-    void setParent(const Label& parent, bool definePriority);
+    void setParent(const Label& _parent, bool _definePriority);
 
-    LabelProperty::Anchor anchorType() const { return m_anchorType; }
+    void alignFromParent(const Label& _parent);
+
+    LabelProperty::Anchor anchorType() const { return m_options.anchors[m_anchorIndex]; }
 
     virtual glm::vec2 center() const;
 
     void enterState(const State& _state, float _alpha = 1.0f);
 
     Type type() const { return m_type; }
+
+    void print() const;
+
 private:
 
     virtual void applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
-        LabelProperty::Anchor _anchor) = 0;
+                             LabelProperty::Anchor _anchor) = 0;
 
     bool offViewport(const glm::vec2& _screenSize);
 
@@ -146,6 +158,8 @@ private:
     State m_state;
     // the label fade effect
     FadeEffect m_fade;
+
+    int m_anchorIndex;
 
 protected:
 
@@ -164,7 +178,6 @@ protected:
     // label options
     Options m_options;
 
-    LabelProperty::Anchor m_anchorType;
     glm::vec2 m_anchor;
 
     const Label* m_parent;

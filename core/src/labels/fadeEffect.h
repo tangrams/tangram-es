@@ -35,6 +35,13 @@ public:
         return st;
     }
 
+    void reset(bool _in, Interpolation _interpolation, float _duration) {
+        m_in = _in;
+        m_interpolation = _interpolation;
+        m_duration = _duration;
+        m_step = 0.f;
+    }
+
     bool isFinished() {
         return m_step > m_duration;
     }

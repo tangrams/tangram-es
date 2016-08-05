@@ -35,7 +35,7 @@ public:
     void drawDebug(const View& _view);
 
     void updateLabelSet(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
-                        const std::vector<std::shared_ptr<Tile>>& _tiles, std::unique_ptr<TileCache>& _cache);
+                        const std::vector<std::shared_ptr<Tile>>& _tiles, TileCache& _cache);
 
     PERF_TRACE void updateLabels(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
                                  const std::vector<std::shared_ptr<Tile>>& _tiles, bool _onlyTransitions = true);
@@ -45,7 +45,7 @@ public:
                                                      const std::vector<std::shared_ptr<Tile>>& _tiles,
                                                      float _x, float _y, bool _visibleOnly = true);
 
-    bool needUpdate() const { return m_needUpdate; }
+    Label::EvalUpdate needUpdate() const { return m_needUpdate; }
 
 private:
 
@@ -56,7 +56,7 @@ private:
 
     void skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
                          const std::vector<std::shared_ptr<Tile>>& _tiles,
-                         std::unique_ptr<TileCache>& _cache, float _currentZoom) const;
+                         TileCache& _cache, float _currentZoom) const;
 
     PERF_TRACE void skipTransitions(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) const;
 
@@ -66,7 +66,9 @@ private:
 
     PERF_TRACE bool withinRepeatDistance(Label *_label);
 
-    bool m_needUpdate;
+    void evalLabel(Label* _label, float _dt);
+
+    Label::EvalUpdate m_needUpdate;
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
 

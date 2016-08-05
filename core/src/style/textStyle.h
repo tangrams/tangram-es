@@ -34,8 +34,7 @@ public:
         uint32_t maxLineWidth = 15;
 
         TextLabelProperty::Transform transform = TextLabelProperty::Transform::none;
-        TextLabelProperty::Align align = TextLabelProperty::Align::center;
-        LabelProperty::Anchor anchor = LabelProperty::Anchor::center;
+        TextLabelProperty::Align align = TextLabelProperty::Align::none;
 
         float fontScale = 1;
         float lineSpacing = 0;
@@ -85,11 +84,11 @@ public:
 
     DynamicQuadMesh<TextVertex>& getMesh(size_t id) const;
 
+    auto& getMeshes() const { return m_meshes; }
+
     virtual size_t dynamicMeshSize() const override;
 
     virtual ~TextStyle() override;
-
-    Parameters defaultUnifiedParams() const;
 
 private:
 
@@ -117,7 +116,6 @@ namespace std {
             hash_combine(seed, p.maxLineWidth);
             hash_combine(seed, int(p.transform));
             hash_combine(seed, int(p.align));
-            hash_combine(seed, int(p.anchor));
             hash_combine(seed, optionsHash(p.labelOptions));
             return seed;
         }

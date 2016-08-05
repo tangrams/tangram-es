@@ -24,7 +24,7 @@ public:
         addFeatureCommon(_feature, _rule, false);
     }
 
-    void addFeatureCommon(const Feature& _feature, const DrawRule& _rule, bool _iconText);
+    bool addFeatureCommon(const Feature& _feature, const DrawRule& _rule, bool _iconText);
 
     void setup(const Tile& _tile) override;
 
@@ -73,6 +73,7 @@ protected:
         uint32_t fill = 0;
         uint32_t stroke = 0;
         uint8_t fontScale = 0;
+        TextRange textRanges;
     } m_attributes;
 
     float m_tileSize = 0;

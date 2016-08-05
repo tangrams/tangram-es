@@ -179,7 +179,8 @@ void FontContext::bindTexture(alfons::AtlasID _id, GLuint _unit) {
 }
 
 bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& _text,
-                             std::vector<GlyphQuad>& _quads, std::bitset<max_textures>& _refs, glm::vec2& _size) {
+                             std::vector<GlyphQuad>& _quads, std::bitset<max_textures>& _refs,
+                             glm::vec2& _size, TextRange& _textRanges) {
 
     std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -200,22 +201,54 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     size_t quadsStart = _quads.size();
     alfons::LineMetrics metrics;
 
-    if (_params.wordWrap) {
-        m_textWrapper.draw(m_batch, line, MIN_LINE_WIDTH,
-                           _params.maxLineWidth, _params.align,
-                           _params.lineSpacing, metrics);
-    } else {
-        glm::vec2 position(0);
-        m_batch.drawShapeRange(line, 0, line.shapes().size(), position, metrics);
+    std::array<bool, 3> alignments = {};
+    if (_params.align != TextLabelProperty::Align::none) {
+        alignments[int(_params.align)] = true;
     }
 
-    // TextLabel parameter: Dimension
-    float width = metrics.aabb.z - metrics.aabb.x;
-    float height = metrics.aabb.w - metrics.aabb.y;
+    // Collect possible alignment from anchor fallbacks
+    for (int i = 0; i < _params.labelOptions.anchors.count; i++) {
+        auto anchor = _params.labelOptions.anchors[i];
+        TextLabelProperty::Align alignment = TextLabelProperty::alignFromAnchor(anchor);
+        if (alignment != TextLabelProperty::Align::none) {
+            alignments[int(alignment)] = true;
+        }
+    }
 
-    // Offset to center all glyphs around 0/0
-    glm::vec2 offset((metrics.aabb.x + width * 0.5) * TextVertex::position_scale,
-                     (metrics.aabb.y + height * 0.5) * TextVertex::position_scale);
+    if (_params.wordWrap) {
+        m_textWrapper.clearWraps();
+
+        float width = m_textWrapper.getShapeRangeWidth(line, MIN_LINE_WIDTH,
+                                                       _params.maxLineWidth);
+
+        for (size_t i = 0; i < 3; i++) {
+
+            int rangeStart = m_scratch.quads->size();
+            if (!alignments[i]) {
+                _textRanges[i] = Range(rangeStart, 0);
+                continue;
+            }
+            m_textWrapper.draw(m_batch, width, line, TextLabelProperty::Align(i),
+                               _params.lineSpacing, metrics);
+
+            int rangeEnd = m_scratch.quads->size();
+
+            _textRanges[i] = Range(rangeStart, rangeEnd - rangeStart);
+        }
+    } else {
+        for (size_t i = 0; i < 3; i++) {
+            glm::vec2 position(0);
+            int rangeStart = m_scratch.quads->size();
+            if (!alignments[i]) {
+                _textRanges[i] = Range(rangeStart, 0);
+                continue;
+            }
+            m_batch.drawShapeRange(line, 0, line.shapes().size(), position, metrics);
+            int rangeEnd = m_scratch.quads->size();
+
+            _textRanges[i] = Range(rangeStart, rangeEnd - rangeStart);
+        }
+    }
 
     auto it = _quads.begin() + quadsStart;
     if (it == _quads.end()) {
@@ -223,7 +256,17 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
         return false;
     }
 
-    while (it != _quads.end()) {
+    // TextLabel parameter: Dimension
+    float width = metrics.aabb.z - metrics.aabb.x;
+    float height = metrics.aabb.w - metrics.aabb.y;
+    _size = glm::vec2(width, height);
+
+    // Offset to center all glyphs around 0/0
+    glm::vec2 offset((metrics.aabb.x + width * 0.5) * TextVertex::position_scale,
+                     (metrics.aabb.y + height * 0.5) * TextVertex::position_scale);
+
+
+    for (; it != _quads.end(); ++it) {
 
         if (!_refs[it->atlas]) {
             _refs[it->atlas] = true;
@@ -234,10 +277,7 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
         it->quad[1].pos -= offset;
         it->quad[2].pos -= offset;
         it->quad[3].pos -= offset;
-        ++it;
     }
-
-    _size = glm::vec2(width, height);
 
     return true;
 }
@@ -246,6 +286,7 @@ void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::
     if (atlasGlyph.atlas >= max_textures) { return; }
 
     auto& g = *atlasGlyph.glyph;
+
     quads->push_back({
             atlasGlyph.atlas,
             {{glm::vec2{q.x1, q.y1} * TextVertex::position_scale, {g.u1, g.v1}},

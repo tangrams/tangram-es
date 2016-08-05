@@ -50,7 +50,10 @@ TEST_CASE("Ensure empty line is given when giving empty shape to alfons", "[Core
     REQUIRE(line.shapes().size() == 0);
     TextWrapper textWrap;
     alfons::LineMetrics metrics;
-    int nbLines = textWrap.draw(batch, line, 10, 4, TextLabelProperty::Align::center, 1.0, metrics);
+
+    float width = textWrap.getShapeRangeWidth(line, 10, 4);
+    int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
+
     REQUIRE(nbLines == 0);
 }
 
@@ -63,15 +66,28 @@ TEST_CASE() {
 
     TextWrapper textWrap;
     alfons::LineMetrics metrics;
-    int nbLines = textWrap.draw(batch, line, 4, 10, TextLabelProperty::Align::center, 1.0, metrics);
+    float width = textWrap.getShapeRangeWidth(line, 4, 10);
+    int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
     REQUIRE(nbLines == 2);
-    nbLines = textWrap.draw(batch, line, 4, 4, TextLabelProperty::Align::center, 1.0, metrics);
+
+    textWrap.clearWraps();
+    width = textWrap.getShapeRangeWidth(line, 4, 4);
+    nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
     REQUIRE(nbLines == 3);
-    nbLines = textWrap.draw(batch, line, 0, 1, TextLabelProperty::Align::center, 1.0, metrics);
+
+    textWrap.clearWraps();
+    width = textWrap.getShapeRangeWidth(line, 0, 1);
+    nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
     REQUIRE(nbLines == 4);
-    nbLines = textWrap.draw(batch, line, 0, 3, TextLabelProperty::Align::center, 1.0, metrics);
+
+    textWrap.clearWraps();
+    width = textWrap.getShapeRangeWidth(line, 0, 3);
+    nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
     REQUIRE(nbLines == 4);
-    nbLines = textWrap.draw(batch, line, 2, 5, TextLabelProperty::Align::center, 1.0, metrics);
+
+    textWrap.clearWraps();
+    width = textWrap.getShapeRangeWidth(line, 2, 5);
+    nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
     REQUIRE(nbLines == 4);
 }
 
@@ -83,9 +99,14 @@ TEST_CASE() {
 
     TextWrapper textWrap;
     alfons::LineMetrics metrics;
-    int nbLines = textWrap.draw(batch, line, 0, 1, TextLabelProperty::Align::center, 1.0, metrics);
+
+    float width = textWrap.getShapeRangeWidth(line, 0, 1);
+    int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
     REQUIRE(nbLines == 3);
-    nbLines = textWrap.draw(batch, line, 0, 10, TextLabelProperty::Align::center, 1.0, metrics);
+
+    textWrap.clearWraps();
+    width = textWrap.getShapeRangeWidth(line, 0, 10);
+    nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
     REQUIRE(nbLines == 2);
 }
 
@@ -97,7 +118,8 @@ TEST_CASE() {
 
     TextWrapper textWrap;
     alfons::LineMetrics metrics;
-    int nbLines = textWrap.draw(batch, line, 0, 1, TextLabelProperty::Align::center, 1.0, metrics);
+    float width = textWrap.getShapeRangeWidth(line, 0, 1);
+    int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
     REQUIRE(nbLines == 7);
 }
 
