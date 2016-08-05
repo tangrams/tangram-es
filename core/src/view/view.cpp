@@ -377,8 +377,8 @@ void View::updateMatrices() {
             far = std::min(far, maxTileDistance);
             m_proj = glm::perspective(fovy, m_aspect, near, far);
             // Adjust for vanishing point.
-            m_proj[2][0] -= m_vanishingPoint.x / getWidth();
-            m_proj[2][1] -= m_vanishingPoint.y / getHeight();
+            m_proj[2][0] -= 2.f * m_vanishingPoint.x / getWidth();
+            m_proj[2][1] -= 2.f * m_vanishingPoint.y / getHeight();
             break;
         case CameraType::isometric:
         case CameraType::flat:
@@ -405,8 +405,8 @@ void View::updateMatrices() {
 
     // Add the view offset (some call this the "principle point offset")
     if (m_type == CameraType::perspective) {
-        m_proj[2][0] = (-2.f * m_offset.x) / m_vpWidth; // (right + left) / (right - left);
-        m_proj[2][1] = (-2.f * m_offset.y) / m_vpHeight; // (top + bottom) / (top - bottom);
+        m_proj[2][0] -= (2.f * m_offset.x) / m_vpWidth; // (right + left) / (right - left);
+        m_proj[2][1] -= (2.f * m_offset.y) / m_vpHeight; // (top + bottom) / (top - bottom);
     }
 
     m_viewProj = m_proj * m_view;
