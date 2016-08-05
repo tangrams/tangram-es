@@ -234,26 +234,29 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
                 _textRanges[i] = Range(rangeStart, 0);
                 continue;
             }
-            m_textWrapper.draw(m_batch, width, line, TextLabelProperty::Align(i),
-                               _params.lineSpacing, metrics);
-
+            int numLines = m_textWrapper.draw(m_batch, width, line, TextLabelProperty::Align(i),
+                                              _params.lineSpacing, metrics);
             int rangeEnd = m_scratch.quads->size();
 
             _textRanges[i] = Range(rangeStart, rangeEnd - rangeStart);
+
+            // For single line text alignments are the same
+            if (i == 0 && numLines == 1) {
+                _textRanges[1] = Range(rangeEnd, 0);
+                _textRanges[2] = Range(rangeEnd, 0);
+                break;
+            }
         }
     } else {
-        for (size_t i = 0; i < 3; i++) {
-            glm::vec2 position(0);
-            int rangeStart = m_scratch.quads->size();
-            if (!alignments[i]) {
-                _textRanges[i] = Range(rangeStart, 0);
-                continue;
-            }
-            m_batch.drawShapeRange(line, 0, line.shapes().size(), position, metrics);
-            int rangeEnd = m_scratch.quads->size();
+        glm::vec2 position(0);
+        int rangeStart = m_scratch.quads->size();
+        m_batch.drawShapeRange(line, 0, line.shapes().size(), position, metrics);
+        int rangeEnd = m_scratch.quads->size();
 
-            _textRanges[i] = Range(rangeStart, rangeEnd - rangeStart);
-        }
+        _textRanges[0] = Range(rangeStart, rangeEnd - rangeStart);
+
+        _textRanges[1] = Range(rangeEnd, 0);
+        _textRanges[2] = Range(rangeEnd, 0);
     }
 
     auto it = _quads.begin() + quadsStart;

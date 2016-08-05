@@ -35,6 +35,10 @@ void TextLabel::applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origi
         m_textRangeIndex = int(m_preferedAlignment);
     }
 
+    if (m_textRanges[m_textRangeIndex].length == 0) {
+        m_textRangeIndex = 0;
+    }
+
     m_anchor = _origin + LabelProperty::anchorDirection(_anchor) * _dimension * 0.5f;
 }
 
