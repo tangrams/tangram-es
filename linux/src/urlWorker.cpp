@@ -1,7 +1,5 @@
 #include "urlWorker.h"
 
-#include <curl/curl.h>
-
 static size_t write_data(void *_buffer, size_t _size, size_t _nmemb, void *_dataPtr) {
 
     const size_t realSize = _size * _nmemb;
