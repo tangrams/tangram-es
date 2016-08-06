@@ -670,7 +670,7 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, const std::shar
     scene->textures().emplace(name, texture);
 }
 
-void loadFontDescription(Node node, const std::string& family, const std::shared_ptr<Scene>& scene) {
+void loadFontDescription(const Node& node, const std::string& family, const std::shared_ptr<Scene>& scene) {
     if (node.IsMap()) {
         auto& fontContext = scene->fontContext();
         std::string style = "normal", weight = "400", uri;
