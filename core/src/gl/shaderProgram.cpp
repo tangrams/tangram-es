@@ -221,11 +221,38 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
         GL_CHECK(glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLength));
 
         if (infoLength > 1) {
-            std::vector<GLchar> infoLog(infoLength);
-            GL_CHECK(glGetShaderInfoLog(shader, infoLength, NULL, &infoLog[0]));
+            std::string infoLog;
+            infoLog.resize(infoLength);
+
+            GL_CHECK(glGetShaderInfoLog(shader, infoLength, NULL, static_cast<GLchar*>(&infoLog[0])));
             LOGE("Shader compilation failed %s", m_description.c_str());
-            LOGE("%s", &infoLog[0]);
-            //logMsg("\n%s\n", source);
+
+            std::stringstream ss(source);
+            std::string item;
+            std::vector<std::string> sourceLines;
+            while (std::getline(ss, item, '\n')) { sourceLines.push_back(item); }
+
+            // Print errors with context
+            std::string line;
+            ss.str(infoLog);
+            while (std::getline(ss, line)) {
+                if (line.length() < 2) { continue; }
+
+                int lineNum = 0;
+                sscanf(line.c_str(), "%*d(%d)", &lineNum);
+                logMsg("\nError on line %d: %s\n", lineNum, line.c_str());
+
+                for (int i = std::max(0, lineNum-5); i < lineNum+5; i++) {
+                    if (size_t(i) >= sourceLines.size()) { break; }
+                    logMsg("%d: %s\n", i, sourceLines[i].c_str());
+                }
+            }
+
+            // Print full source with line numbers
+            // logMsg("\n\n");
+            // for (size_t i = 0; i < sourceLines.size(); i++) {
+            //     logMsg("%d: %s\n", i, sourceLines[i].c_str());
+            // }
         }
 
         GL_CHECK(glDeleteShader(shader));
