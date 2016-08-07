@@ -57,7 +57,7 @@ open build/xcode/tangram.xcodeproj
 
 Note that any Xcode configuration change you make to the project won't be preserved when CMake runs again. Build configuration is defined only in the CMakeLists file(s).
 
-### OS X (CLion) ###
+### CLion (OS X & Ubuntu Linux) ###
 You can easily run and debug from CLion if you prefer. 
 
 After cloning and updating your git submodules, open CLion and __Import Project from Sources__. Select the root of this repo. Choose __Open Project__. Do not overwrite CMakeLists.txt.
