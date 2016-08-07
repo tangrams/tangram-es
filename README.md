@@ -57,6 +57,15 @@ open build/xcode/tangram.xcodeproj
 
 Note that any Xcode configuration change you make to the project won't be preserved when CMake runs again. Build configuration is defined only in the CMakeLists file(s).
 
+### CLion (OS X & Ubuntu Linux) ###
+You can easily run and debug from CLion if you prefer. 
+
+After cloning and updating your git submodules, open CLion and __Import Project from Sources__. Select the root of this repo. Choose __Open Project__. Do not overwrite CMakeLists.txt.
+
+CLion will automatically set everything up, all you have to do is wait a minute for the project to get initialized. Then, select the __tangram__ target and hit run / debug.
+
+![CLion Tangram Target](images/clion-tangram-target.png)
+
 ### Ubuntu Linux ###
 To build on Ubuntu you will need a C++ toolchain with support for C++14. GCC 5 (or higher) and Clang 3.4 (or higher) are known to work.
 
