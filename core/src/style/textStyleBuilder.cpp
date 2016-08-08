@@ -300,6 +300,10 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     _rule.get(StyleParamKey::text_font_stroke_width, p.strokeWidth);
     p.strokeWidth *= m_style.pixelScale();
 
+    _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
+    _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
+    _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
+
     uint32_t priority;
     if (_iconText) {
 
@@ -323,6 +327,11 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
                      LabelProperty::Anchor::top_right,
                      LabelProperty::Anchor::top_left}}, 8};
         }
+
+        _rule.get(StyleParamKey::text_transition_hide_time, p.labelOptions.hideTransition.time);
+        _rule.get(StyleParamKey::text_transition_selected_time, p.labelOptions.selectTransition.time);
+        _rule.get(StyleParamKey::text_transition_show_time, p.labelOptions.showTransition.time);
+
     } else {
         if (_rule.get(StyleParamKey::priority, priority)) {
             p.labelOptions.priority = (float)priority;
@@ -339,9 +348,6 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         }
     }
 
-    _rule.get(StyleParamKey::text_transition_hide_time, p.labelOptions.hideTransition.time);
-    _rule.get(StyleParamKey::text_transition_selected_time, p.labelOptions.selectTransition.time);
-    _rule.get(StyleParamKey::text_transition_show_time, p.labelOptions.showTransition.time);
     _rule.get(StyleParamKey::text_wrap, p.maxLineWidth);
 
     size_t repeatGroupHash = 0;
