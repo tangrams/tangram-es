@@ -15,7 +15,6 @@ This openGL Material implementation follows from the WebGL version of Tangram
 
 namespace Tangram {
 
-class RenderState;
 class Texture;
 class ShaderProgram;
 
@@ -109,7 +108,7 @@ public:
     virtual std::unique_ptr<MaterialUniforms> injectOnProgram(ShaderProgram& _shader);
 
     /*  Method to pass it self as a uniform to the shader program */
-    virtual void setupProgram(RenderState& rs, MaterialUniforms& _uniforms);
+    virtual void setupProgram(MaterialUniforms& _uniforms);
 
     bool hasEmission() const { return m_bEmission; }
     bool hasAmbient() const { return m_bAmbient; }

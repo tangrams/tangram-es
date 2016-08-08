@@ -1,15 +1,13 @@
 #pragma once
 
 #include "gl.h"
-#include "gl/disposer.h"
+#include "util/jobQueue.h"
 
 #include <vector>
 #include <memory>
 #include <string>
 
 namespace Tangram {
-
-class RenderState;
 
 struct TextureFiltering {
     GLenum min;
@@ -51,9 +49,9 @@ public:
     virtual ~Texture();
 
     /* Perform texture updates, should be called at least once and after adding data or resizing */
-    virtual void update(RenderState& rs, GLuint _textureSlot);
+    virtual void update(GLuint _textureSlot);
 
-    virtual void update(RenderState& rs, GLuint _textureSlot, const GLuint* data);
+    virtual void update(GLuint _textureSlot, const GLuint* data);
 
     /* Resize the texture */
     void resize(const unsigned int _width, const unsigned int _height);
@@ -62,7 +60,7 @@ public:
     unsigned int getWidth() const { return m_width; }
     unsigned int getHeight() const { return m_height; }
 
-    void bind(RenderState& rs, GLuint _unit);
+    void bind(GLuint _unit);
 
     void setDirty(size_t yOffset, size_t height);
 
@@ -79,7 +77,7 @@ public:
                     uint16_t _width, uint16_t _height, uint16_t _stride);
 
     /* Checks whether the texture has valid data and has been successfully uploaded to GPU */
-    bool isValid(RenderState& rs) const;
+    bool isValid() const;
 
     typedef std::pair<GLuint, GLuint> TextureSlot;
 
@@ -91,8 +89,8 @@ public:
 
 protected:
 
-    void generate(RenderState& rs, GLuint _textureUnit);
-    void checkValidity(RenderState& rs);
+    void generate(GLuint _textureUnit);
+    void checkValidity();
 
     TextureOptions m_options;
     std::vector<GLuint> m_data;
@@ -113,11 +111,11 @@ protected:
 
     int m_generation;
 
-    Disposer m_disposer;
-
 private:
 
     size_t bytesPerPixel();
+
+    JobQueue m_mainThreadJobQueue;
 
     bool m_generateMipmaps;
 };

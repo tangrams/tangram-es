@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gl/mesh.h"
-#include "gl/error.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 
@@ -11,6 +10,22 @@
 
 namespace Tangram {
 
+class QuadIndices {
+public :
+    static void load();
+    static void ref();
+    static void unref();
+
+    static const size_t maxVertices = 16384;
+
+private:
+    static GLuint quadIndexBuffer;
+    static int quadGeneration;
+
+    static std::atomic<int> meshCounter;
+};
+
+
 template<class T>
 class DynamicQuadMesh : public StyledMesh, protected MeshBase {
 
@@ -18,9 +33,15 @@ public:
 
     DynamicQuadMesh(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode)
         : MeshBase(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW) {
+
+        QuadIndices::ref();
     }
 
-    bool draw(RenderState& rs, ShaderProgram& _shader) override;
+    ~DynamicQuadMesh() override {
+        QuadIndices::unref();
+    }
+
+    bool draw(ShaderProgram& _shader) override;
 
     size_t bufferSize() const override {
         return MeshBase::bufferSize();
@@ -35,7 +56,7 @@ public:
 
     size_t numberOfVertices() const { return m_vertices.size(); }
 
-    void upload(RenderState& rs) override;
+    void upload() override;
 
     bool isReady() { return m_isUploaded; }
 
@@ -53,48 +74,47 @@ private:
 };
 
 template<class T>
-void DynamicQuadMesh<T>::upload(RenderState& rs) {
+void DynamicQuadMesh<T>::upload() {
 
     if (m_nVertices == 0 || m_isUploaded) { return; }
 
-    MeshBase::checkValidity(rs);
+    MeshBase::checkValidity();
 
     // Generate vertex buffer, if needed
     if (m_glVertexBuffer == 0) {
         GL_CHECK(glGenBuffers(1, &m_glVertexBuffer));
     }
 
-    MeshBase::subDataUpload(rs, reinterpret_cast<GLbyte*>(m_vertices.data()));
+    MeshBase::subDataUpload(reinterpret_cast<GLbyte*>(m_vertices.data()));
 
     m_isUploaded = true;
 }
 
 template<class T>
-bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& _shader) {
+bool DynamicQuadMesh<T>::draw(ShaderProgram& _shader) {
 
     if (m_nVertices == 0) { return false; }
 
     // Bind buffers for drawing
-    rs.vertexBuffer(m_glVertexBuffer);
-    rs.indexBuffer(rs.getQuadIndexBuffer());
+    RenderState::vertexBuffer(m_glVertexBuffer);
+    QuadIndices::load();
 
     // Enable shader program
-    if (!_shader.use(rs)) {
+    if (!_shader.use()) {
         return false;
     }
 
     size_t vertexOffset = 0;
-    size_t maxVertices = RenderState::MAX_QUAD_VERTICES;
 
-    for (size_t offset = 0; offset < m_nVertices; offset += maxVertices) {
-        size_t nVertices = maxVertices;
+    for (size_t offset = 0; offset < m_nVertices; offset += QuadIndices::maxVertices) {
+        size_t nVertices = QuadIndices::maxVertices;
 
-        if (offset + maxVertices > m_nVertices) {
+        if (offset + QuadIndices::maxVertices > m_nVertices) {
             nVertices = m_nVertices - offset;
         }
         size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
 
-        m_vertexLayout->enable(rs, _shader, byteOffset);
+        m_vertexLayout->enable(_shader, byteOffset);
 
         GL_CHECK(glDrawElements(m_drawMode, nVertices * 6 / 4, GL_UNSIGNED_SHORT, 0));
 
