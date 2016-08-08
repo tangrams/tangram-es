@@ -217,6 +217,7 @@ void Labels::sortLabels() {
 void Labels::handleOcclusions(const View& _view) {
 
     glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
+    float dz = _view.getZoom() - std::floor(_view.getZoom());
 
     m_isect2d.clear();
     m_repeatGroups.clear();
@@ -224,11 +225,13 @@ void Labels::handleOcclusions(const View& _view) {
     for (auto& entry : m_labels){
         auto* l = entry.label;
 
-        // Parent must have been processed earlier so at this point
-        // its occlusion is determined for the current frame.
-        if (l->parent() && l->parent()->isOccluded()) {
-            l->occlude();
-            continue;
+        // Parent must have been processed earlier so at this point its
+        // occlusion and anchor position is determined for the current frame.
+        if (l->parent()) {
+            if (l->parent()->isOccluded() || !l->parent()->visibleState()) {
+                l->occlude();
+                continue;
+            }
         }
 
         // Skip label if another label of this repeatGroup is
@@ -242,7 +245,19 @@ void Labels::handleOcclusions(const View& _view) {
 
         int anchorIndex = l->anchorIndex();
 
-        while (!l->isOccluded()) {
+        do {
+            if (l->isOccluded()) {
+                // Update BBox for anchor fallback
+                l->updateBBoxes(dz);
+                if (anchorIndex == l->anchorIndex()) {
+                    // Reached first anchor again
+                    break;
+                }
+            }
+
+            if (l->offViewport(screenSize)) { continue; }
+
+            l->occlude(false);
 
             // Skip label if it intersects with a previous label.
             auto aabb = l->aabb();
@@ -265,30 +280,9 @@ void Labels::handleOcclusions(const View& _view) {
                     return true;
                 });
 
-            if (!l->isOccluded()) { break; }
 
             // Try next anchor
-            l->nextAnchor();
-            while (anchorIndex != l->anchorIndex()) {
-
-                if (l->updateScreenTransform(entry.tile->mvp(), screenSize, false)) {
-                    if (!l->offViewport(screenSize)) {
-                        l->occlude(false);
-                        l->updateBBoxes(0);
-                        break;
-                    }
-                }
-                l->nextAnchor();
-            }
-        }
-
-        if (anchorIndex != l->anchorIndex() &&
-            l->isOccluded() && l->visibleState()) {
-            // Reset to original position for fade-out
-            l->setAnchorIndex(anchorIndex);
-            l->updateScreenTransform(entry.tile->mvp(), screenSize, false);
-            l->updateBBoxes(0);
-        }
+        } while (l->isOccluded() && l->nextAnchor());
 
         if (l->options().repeatDistance > 0.f) {
             m_repeatGroups[l->options().repeatGroup].push_back(l);
@@ -436,25 +430,23 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
 
         Primitives::drawPoly(rs, &(label->obb().getQuad())[0], 4);
 
-        if (label->visibleState() && label->parent()) {
+        if (label->parent()) {
             Primitives::setColor(rs, 0xff0000);
             Primitives::drawLine(rs, sp, label->parent()->transform().state.screenPos);
         }
 
         // draw offset
         glm::vec2 rot = label->transform().state.rotation;
-        glm::vec2 offset = rotateBy(label->options().offset, rot);
+        glm::vec2 offset = label->options().offset;
+        if (label->parent()) { offset += label->parent()->options().offset; }
+        offset = rotateBy(offset, rot);
+
         Primitives::setColor(rs, 0x000000);
         Primitives::drawLine(rs, sp, sp - glm::vec2(offset.x, -offset.y));
 
         // draw projected anchor point
         Primitives::setColor(rs, 0x0000ff);
         Primitives::drawRect(rs, sp - glm::vec2(1.f), sp + glm::vec2(1.f));
-
-        if (label->options().anchors.count > 1) {
-            Primitives::setColor(rs, 0xffffff);
-            Primitives::drawPoly(rs, &(label->obb().getQuad())[0], 4);
-        }
 
 #if 0
         if (label->options().repeatGroup != 0 && label->state() == Label::State::visible) {

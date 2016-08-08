@@ -33,7 +33,6 @@ Label::~Label() {}
 bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _drawAllLabels) {
 
     glm::vec2 screenPosition;
-    glm::vec2 rotation = {1, 0};
     bool clipped = false;
 
     switch (m_type) {
@@ -44,12 +43,11 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 
             screenPosition = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
                                                 _screenSize, clipped);
-
             if (clipped) {
                 return false;
             }
 
-            screenPosition += m_anchor;
+            m_transform.state.screenPos = screenPosition + m_options.offset;
 
             break;
         }
@@ -88,34 +86,27 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
             // Keep screen position center at world center (less sliding in tilted view)
             screenPosition = ap1;
 
-            rotation = (ap0.x <= ap2.x ? ap2 - ap0 : ap0 - ap2) / length;
+            glm::vec2 rotation = (ap0.x <= ap2.x ? ap2 - ap0 : ap0 - ap2) / length;
             rotation = glm::vec2{rotation.x, -rotation.y};
+
+            m_transform.state.screenPos = screenPosition + rotateBy(m_options.offset, rotation);
+            m_transform.state.rotation = rotation;
+
             break;
         }
     }
 
-    m_transform.state.screenPos = screenPosition + rotateBy(m_options.offset, rotation);
-    m_transform.state.rotation = rotation;
-
     return true;
-}
-
-void Label::alignFromParent(const Label& _parent) {
-    glm::vec2 anchorDir = LabelProperty::anchorDirection(_parent.anchorType());
-    glm::vec2 anchorOrigin = anchorDir * _parent.dimension() * 0.5f;
-
-    applyAnchor(m_dim + _parent.dimension(), anchorOrigin, m_options.anchors[m_anchorIndex]);
-    m_options.offset += _parent.options().offset;
 }
 
 void Label::setParent(const Label& _parent, bool _definePriority) {
     m_parent = &_parent;
 
-    alignFromParent(_parent);
-
     if (_definePriority) {
         m_options.priority = _parent.options().priority + 0.5f;
     }
+
+    applyAnchor(m_options.anchors[m_anchorIndex]);
 }
 
 bool Label::offViewport(const glm::vec2& _screenSize) {
@@ -207,11 +198,16 @@ void Label::print() const {
         case State::out_of_screen: state = "out_of_screen"; break;
     }
     LOG("\tm_state: %s", state.c_str());
-    //LOG("\tm_options.anchorFallback: %s", m_options.anchorFallbacks.to_string().c_str());
+    LOG("\tm_anchorIndex: %d", m_anchorIndex);
+    LOG("\tscreenPos: %f/%f", m_transform.state.screenPos.x, m_transform.state.screenPos.y);
+
 }
 
-void Label::nextAnchor() {
-    setAnchorIndex((m_anchorIndex + 1) % m_options.anchors.count);
+bool Label::nextAnchor() {
+    int index = m_anchorIndex;
+    setAnchorIndex((index + 1) % m_options.anchors.count);
+
+    return m_anchorIndex != index;
 }
 
 bool Label::setAnchorIndex(int _index) {
@@ -220,11 +216,7 @@ bool Label::setAnchorIndex(int _index) {
     }
     m_anchorIndex = _index;
 
-    if (m_parent) {
-        alignFromParent(*m_parent);
-    } else {
-        applyAnchor(m_dim, glm::vec2(0.0), m_options.anchors[m_anchorIndex]);
-    }
+    applyAnchor(m_options.anchors[m_anchorIndex]);
 
     return true;
 }

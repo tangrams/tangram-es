@@ -166,6 +166,10 @@ void LabelCollider::process() {
             }
         }
 
+        // Dont let parents occlude their child
+        if (l1->parent() == l2 || l2->parent() == l1) {
+            continue;
+        }
         if (l1->parent() && l1->parent()->isOccluded()) {
             l1->occlude();
         }

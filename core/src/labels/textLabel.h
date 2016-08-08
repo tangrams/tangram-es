@@ -60,8 +60,7 @@ protected:
 
 private:
 
-    void applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
-                     LabelProperty::Anchor _anchor) override;
+    void applyAnchor(LabelProperty::Anchor _anchor) override;
 
     // Back-pointer to owning container
     const TextLabels& m_textLabels;

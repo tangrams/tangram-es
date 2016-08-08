@@ -50,7 +50,7 @@ public:
 
         struct {
             glm::vec2 screenPos;
-            glm::vec2 rotation;
+            glm::vec2 rotation = {1.f,0.f};
             float alpha = 0.f;
         } state;
     };
@@ -87,7 +87,7 @@ public:
 
     bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _drawAllLabels = false);
 
-    void nextAnchor();
+    bool nextAnchor();
     bool setAnchorIndex(int _index);
     int anchorIndex() { return m_anchorIndex; }
 
@@ -130,8 +130,6 @@ public:
     const Label* parent() const { return m_parent; }
     void setParent(const Label& _parent, bool _definePriority);
 
-    void alignFromParent(const Label& _parent);
-
     LabelProperty::Anchor anchorType() const { return m_options.anchors[m_anchorIndex]; }
 
     virtual glm::vec2 center() const;
@@ -146,8 +144,7 @@ public:
 
 private:
 
-    virtual void applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
-                             LabelProperty::Anchor _anchor) = 0;
+    virtual void applyAnchor(LabelProperty::Anchor _anchor) = 0;
 
     void setAlpha(float _alpha);
 
