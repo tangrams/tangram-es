@@ -67,13 +67,13 @@ void TextureCube::load(const std::string& _file) {
 
 }
 
-void TextureCube::update(RenderState& rs, GLuint _textureUnit) {
+void TextureCube::update(GLuint _textureUnit) {
 
-    checkValidity(rs);
+    checkValidity();
 
     if (m_glHandle != 0 || m_faces.size() == 0) { return; }
 
-    generate(rs, _textureUnit);
+    generate(_textureUnit);
 
     for (int i = 0; i < 6; ++i) {
         Face& f = m_faces[i];

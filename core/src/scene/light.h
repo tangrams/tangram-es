@@ -11,7 +11,6 @@
 
 namespace Tangram {
 
-class RenderState;
 class ShaderProgram;
 class View;
 
@@ -99,7 +98,7 @@ public:
     virtual std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) = 0;
 
     /*  Pass the uniforms for this particular DYNAMICAL light on the passed shader */
-    virtual void setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms);
+    virtual void setupProgram(const View& _view, LightUniforms& _uniforms);
 
     /*  STATIC Function that compose sourceBlocks with Lights on a ProgramShader */
     static void assembleLights(std::map<std::string, std::vector<std::string>>& _sourceBlocks);
