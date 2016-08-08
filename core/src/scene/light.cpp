@@ -60,10 +60,10 @@ void Light::injectSourceBlocks(ShaderProgram& _shader) {
     _shader.addSourceBlock("__lights_to_compute", getInstanceComputeBlock());
 }
 
-void Light::setupProgram(const View& _view, LightUniforms& _uniforms) {
-    _uniforms.shader.setUniformf(_uniforms.ambient, m_ambient);
-    _uniforms.shader.setUniformf(_uniforms.diffuse, m_diffuse);
-    _uniforms.shader.setUniformf(_uniforms.specular, m_specular);
+void Light::setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms) {
+    _uniforms.shader.setUniformf(rs, _uniforms.ambient, m_ambient);
+    _uniforms.shader.setUniformf(rs, _uniforms.diffuse, m_diffuse);
+    _uniforms.shader.setUniformf(rs, _uniforms.specular, m_specular);
 }
 
 void Light::assembleLights(std::map<std::string, std::vector<std::string>>& _sourceBlocks) {

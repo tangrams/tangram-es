@@ -60,41 +60,41 @@ void TextStyle::onBeginUpdate() {
     }
 }
 
-void TextStyle::onBeginFrame() {
+void TextStyle::onBeginFrame(RenderState& rs) {
 
     // Upload meshes and textures
-    m_context->updateTextures();
+    m_context->updateTextures(rs);
 
-    for (auto& mesh : m_meshes) { mesh->upload(); }
+    for (auto& mesh : m_meshes) { mesh->upload(rs); }
 }
 
-void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
+void TextStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {
 
-    Style::onBeginDrawFrame(_view, _scene);
+    Style::onBeginDrawFrame(rs, _view, _scene);
 
-    auto texUnit = RenderState::nextAvailableTextureUnit();
+    auto texUnit = rs.nextAvailableTextureUnit();
 
-    m_shaderProgram->setUniformf(m_uMaxStrokeWidth, m_context->maxStrokeWidth());
-    m_shaderProgram->setUniformf(m_uTexScaleFactor, glm::vec2(1.0f / GlyphTexture::size));
-    m_shaderProgram->setUniformi(m_uTex, texUnit);
-    m_shaderProgram->setUniformMatrix4f(m_uOrtho, _view.getOrthoViewportMatrix());
+    m_shaderProgram->setUniformf(rs, m_uMaxStrokeWidth, m_context->maxStrokeWidth());
+    m_shaderProgram->setUniformf(rs, m_uTexScaleFactor, glm::vec2(1.0f / GlyphTexture::size));
+    m_shaderProgram->setUniformi(rs, m_uTex, texUnit);
+    m_shaderProgram->setUniformMatrix4f(rs, m_uOrtho, _view.getOrthoViewportMatrix());
 
     if (m_sdf) {
-        m_shaderProgram->setUniformi(m_uPass, 1);
+        m_shaderProgram->setUniformi(rs, m_uPass, 1);
 
         for (size_t i = 0; i < m_meshes.size(); i++) {
             if (m_meshes[i]->isReady()) {
-                m_context->bindTexture(i, texUnit);
-                m_meshes[i]->draw(*m_shaderProgram);
+                m_context->bindTexture(rs, i, texUnit);
+                m_meshes[i]->draw(rs, *m_shaderProgram);
             }
         }
-        m_shaderProgram->setUniformi(m_uPass, 0);
+        m_shaderProgram->setUniformi(rs, m_uPass, 0);
     }
 
     for (size_t i = 0; i < m_meshes.size(); i++) {
         if (m_meshes[i]->isReady()) {
-            m_context->bindTexture(i, texUnit);
-            m_meshes[i]->draw(*m_shaderProgram);
+            m_context->bindTexture(rs, i, texUnit);
+            m_meshes[i]->draw(rs, *m_shaderProgram);
         }
     }
 }

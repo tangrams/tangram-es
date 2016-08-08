@@ -35,9 +35,9 @@ void SpriteAtlas::updateSpriteNodes(std::shared_ptr<Texture> _texture) {
     }
 }
 
-void SpriteAtlas::bind(GLuint _slot) {
-    m_texture->update(_slot);
-    m_texture->bind(_slot);
+void SpriteAtlas::bind(RenderState& rs, GLuint _slot) {
+    m_texture->update(rs, _slot);
+    m_texture->bind(rs, _slot);
 }
 
 }

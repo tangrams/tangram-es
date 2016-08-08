@@ -52,7 +52,7 @@ void FrameInfo::beginFrame() {
 }
 
 
-void FrameInfo::draw(const View& _view, TileManager& _tileManager) {
+void FrameInfo::draw(RenderState& rs, const View& _view, TileManager& _tileManager) {
 
     if (getDebugFlag(DebugFlags::tangram_infos) || getDebugFlag(DebugFlags::tangram_stats)) {
         static int cpt = 0;
@@ -122,7 +122,7 @@ void FrameInfo::draw(const View& _view, TileManager& _tileManager) {
             debuginfos.push_back("tilt:" + std::to_string(_view.getPitch() * 57.3) + "deg");
             debuginfos.push_back("pixel scale:" + std::to_string(_view.pixelScale()));
 
-            TextDisplay::Instance().draw(debuginfos);
+            TextDisplay::Instance().draw(rs, debuginfos);
         }
 
         if (getDebugFlag(DebugFlags::tangram_stats)) {
@@ -133,15 +133,15 @@ void FrameInfo::draw(const View& _view, TileManager& _tileManager) {
                 float trender = rendertime[i] * scale;
                 float offsetx = i * 4 * _view.pixelScale();
 
-                Primitives::setColor(0xfff000);
-                Primitives::drawLine(glm::vec2(offsetx, 0), glm::vec2(offsetx, tupdate));
-                Primitives::setColor(0x0000ff);
-                Primitives::drawLine(glm::vec2(offsetx, tupdate), glm::vec2(offsetx, tupdate + trender));
+                Primitives::setColor(rs, 0xfff000);
+                Primitives::drawLine(rs, glm::vec2(offsetx, 0), glm::vec2(offsetx, tupdate));
+                Primitives::setColor(rs, 0x0000ff);
+                Primitives::drawLine(rs, glm::vec2(offsetx, tupdate), glm::vec2(offsetx, tupdate + trender));
             }
 
             // Draw 16.6ms horizontal line
-            Primitives::setColor(0xff0000);
-            Primitives::drawLine(glm::vec2(0.0, 16.6 * scale),
+            Primitives::setColor(rs, 0xff0000);
+            Primitives::drawLine(rs, glm::vec2(0.0, 16.6 * scale),
                 glm::vec2(DEBUG_STATS_MAX_SIZE * 4 * _view.pixelScale() + 4, 16.6 * scale));
         }
     }

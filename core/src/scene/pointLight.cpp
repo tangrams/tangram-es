@@ -48,8 +48,8 @@ std::unique_ptr<LightUniforms> PointLight::injectOnProgram(ShaderProgram& _shade
     return std::make_unique<Uniforms>(_shader, getUniformName());
 }
 
-void PointLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
-    Light::setupProgram(_view, _uniforms);
+void PointLight::setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms) {
+    Light::setupProgram(rs, _view, _uniforms);
 
     glm::vec4 position = glm::vec4(m_position.value, 0.0);
 
@@ -82,18 +82,18 @@ void PointLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
 
     auto& u = static_cast<Uniforms&>(_uniforms);
 
-    u.shader.setUniformf(u.position, position);
+    u.shader.setUniformf(rs, u.position, position);
 
     if (m_attenuation != 0.0) {
-        u.shader.setUniformf(u.attenuation, m_attenuation);
+        u.shader.setUniformf(rs, u.attenuation, m_attenuation);
     }
 
     if (m_innerRadius != 0.0) {
-        u.shader.setUniformf(u.innerRadius, m_innerRadius);
+        u.shader.setUniformf(rs, u.innerRadius, m_innerRadius);
     }
 
     if (m_outerRadius != 0.0) {
-        u.shader.setUniformf(u.outerRadius, m_outerRadius);
+        u.shader.setUniformf(rs, u.outerRadius, m_outerRadius);
     }
 }
 

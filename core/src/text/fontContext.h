@@ -90,7 +90,7 @@ public:
     alfons::GlyphAtlas& atlas() { return m_atlas; }
 
     /* Update all textures batches, uploads the data to the GPU */
-    void updateTextures();
+    void updateTextures(RenderState& rs);
 
     std::shared_ptr<alfons::Font> getFont(const std::string& _family, const std::string& _style,
                                           const std::string& _weight, float _size);
@@ -100,7 +100,7 @@ public:
         return m_textures.size();
     }
 
-    void bindTexture(alfons::AtlasID _id, GLuint _unit);
+    void bindTexture(RenderState& rs, alfons::AtlasID _id, GLuint _unit);
 
     float maxStrokeWidth() { return m_sdfRadius; }
 

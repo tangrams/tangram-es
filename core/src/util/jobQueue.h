@@ -1,33 +1,34 @@
 #pragma once
 
 #include <functional>
-#include <thread>
+#include <mutex>
 #include <vector>
 
 namespace Tangram {
 
-// JobQueue allows you to send runnable jobs to a target thread:
-//   1. Set the target thread for the JobQueue by calling makeCurrentThreadTarget() once on the target thread.
-//   2. From any thread, call add() with the job you want to run on the target thread.
-//   3. Call JobQueue::runJobsForCurrentThread() on the target thread.
+// JobQueue allows you to queue a sequence of jobs to run later.
 // This is useful for OpenGL resources that must be created and destroyed on the GL thread.
 
 class JobQueue {
 
 public:
     using Job = std::function<void()>;
-    using ThreadId = std::thread::id;
 
     JobQueue() = default;
-    ~JobQueue() = default;
 
-    void makeCurrentThreadTarget();
-    void add(Job job) const;
+    // Any jobs left in the queue will be run in the destructor. This is thread-safe.
+    ~JobQueue();
 
-    static void runJobsForCurrentThread();
+    // Put a job on the queue. This is thread-safe.
+    void add(Job job);
+
+    // Run all jobs on the queue in the order they were added, then remove them. This is thread-safe.
+    void runJobs();
 
 private:
-    ThreadId m_threadId;
+
+    std::vector<Job> m_jobs;
+    std::mutex m_mutex;
 
 };
 

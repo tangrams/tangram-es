@@ -15,7 +15,7 @@ public:
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
     virtual std::unique_ptr<StyleBuilder> createBuilder() const override;
-    virtual void onBeginDrawFrame(const View& _view, Scene& _scene) override;
+    virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
     virtual ~PolylineStyle() {}
 
     void setDashArray(std::vector<int> _dashArray) { m_dashArray = _dashArray; }

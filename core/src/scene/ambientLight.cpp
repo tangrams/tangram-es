@@ -26,8 +26,8 @@ std::unique_ptr<LightUniforms> AmbientLight::injectOnProgram(ShaderProgram& _sha
     return std::make_unique<LightUniforms>(_shader, getUniformName());
 }
 
-void AmbientLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
-    Light::setupProgram(_view, _uniforms);
+void AmbientLight::setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms) {
+    Light::setupProgram(rs, _view, _uniforms);
 }
 
 std::string AmbientLight::getClassBlock() {

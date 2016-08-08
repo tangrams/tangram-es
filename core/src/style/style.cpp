@@ -53,13 +53,13 @@ void Style::build(const Scene& _scene) {
         default:
             break;
     }
-    
+
     if (m_blend == Blending::inlay) {
         m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_BLEND_INLAY\n", false);
     } else if (m_blend == Blending::overlay) {
         m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_BLEND_OVERLAY\n", false);
     }
-    
+
     if (m_material.material) {
         m_material.uniforms = m_material.material->injectOnProgram(*m_shaderProgram);
     }
@@ -85,7 +85,7 @@ void Style::setLightingType(LightingType _type) {
     m_lightingType = _type;
 }
 
-void Style::setupShaderUniforms(Scene& _scene) {
+void Style::setupShaderUniforms(RenderState& rs, Scene& _scene) {
     for (auto& uniformPair : m_styleUniforms) {
         const auto& name = uniformPair.first;
         auto& value = uniformPair.second;
@@ -100,24 +100,24 @@ void Style::setupShaderUniforms(Scene& _scene) {
                 continue;
             }
 
-            texture->update(RenderState::nextAvailableTextureUnit());
-            texture->bind(RenderState::currentTextureUnit());
+            texture->update(rs, rs.nextAvailableTextureUnit());
+            texture->bind(rs, rs.currentTextureUnit());
 
-            m_shaderProgram->setUniformi(name, RenderState::currentTextureUnit());
+            m_shaderProgram->setUniformi(rs, name, rs.currentTextureUnit());
         } else {
 
             if (value.is<bool>()) {
-                m_shaderProgram->setUniformi(name, value.get<bool>());
+                m_shaderProgram->setUniformi(rs, name, value.get<bool>());
             } else if(value.is<float>()) {
-                m_shaderProgram->setUniformf(name, value.get<float>());
+                m_shaderProgram->setUniformf(rs, name, value.get<float>());
             } else if(value.is<glm::vec2>()) {
-                m_shaderProgram->setUniformf(name, value.get<glm::vec2>());
+                m_shaderProgram->setUniformf(rs, name, value.get<glm::vec2>());
             } else if(value.is<glm::vec3>()) {
-                m_shaderProgram->setUniformf(name, value.get<glm::vec3>());
+                m_shaderProgram->setUniformf(rs, name, value.get<glm::vec3>());
             } else if(value.is<glm::vec4>()) {
-                m_shaderProgram->setUniformf(name, value.get<glm::vec4>());
+                m_shaderProgram->setUniformf(rs, name, value.get<glm::vec4>());
             } else if (value.is<UniformArray1f>()) {
-                m_shaderProgram->setUniformf(name, value.get<UniformArray1f>());
+                m_shaderProgram->setUniformf(rs, name, value.get<UniformArray1f>());
             } else if (value.is<UniformTextureArray>()) {
                 UniformTextureArray& textureUniformArray = value.get<UniformTextureArray>();
                 textureUniformArray.slots.clear();
@@ -131,13 +131,13 @@ void Style::setupShaderUniforms(Scene& _scene) {
                         continue;
                     }
 
-                    texture->update(RenderState::nextAvailableTextureUnit());
-                    texture->bind(RenderState::currentTextureUnit());
+                    texture->update(rs, rs.nextAvailableTextureUnit());
+                    texture->bind(rs, rs.currentTextureUnit());
 
-                    textureUniformArray.slots.push_back(RenderState::currentTextureUnit());
+                    textureUniformArray.slots.push_back(rs.currentTextureUnit());
                 }
 
-                m_shaderProgram->setUniformi(name, textureUniformArray);
+                m_shaderProgram->setUniformi(rs, name, textureUniformArray);
             }
         }
     }
@@ -173,77 +173,77 @@ void Style::setupRasters(const std::vector<std::shared_ptr<DataSource>>& _dataSo
     m_shaderProgram->addSourceBlock("raster", SHADER_SOURCE(rasters_glsl));
 }
 
-void Style::onBeginDrawFrame(const View& _view, Scene& _scene) {
+void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {
 
     // Reset the currently used texture unit to 0
-    RenderState::resetTextureUnit();
+    rs.resetTextureUnit();
 
     // Set time uniforms style's shader programs
-    m_shaderProgram->setUniformf(m_uTime, _scene.time());
+    m_shaderProgram->setUniformf(rs, m_uTime, _scene.time());
 
-    m_shaderProgram->setUniformf(m_uDevicePixelRatio, m_pixelScale);
+    m_shaderProgram->setUniformf(rs, m_uDevicePixelRatio, m_pixelScale);
 
     if (m_material.uniforms) {
-        m_material.material->setupProgram(*m_material.uniforms);
+        m_material.material->setupProgram(rs, *m_material.uniforms);
     }
 
     // Set up lights
     for (const auto& light : m_lights) {
-        light.light->setupProgram(_view, *light.uniforms);
+        light.light->setupProgram(rs, _view, *light.uniforms);
     }
 
     // Set Map Position
-    m_shaderProgram->setUniformf(m_uResolution, _view.getWidth(), _view.getHeight());
+    m_shaderProgram->setUniformf(rs, m_uResolution, _view.getWidth(), _view.getHeight());
 
     const auto& mapPos = _view.getPosition();
-    m_shaderProgram->setUniformf(m_uMapPosition, mapPos.x, mapPos.y, _view.getZoom());
-    m_shaderProgram->setUniformMatrix3f(m_uNormalMatrix, _view.getNormalMatrix());
-    m_shaderProgram->setUniformMatrix3f(m_uInverseNormalMatrix, _view.getInverseNormalMatrix());
-    m_shaderProgram->setUniformf(m_uMetersPerPixel, 1.0 / _view.pixelsPerMeter());
-    m_shaderProgram->setUniformMatrix4f(m_uView, _view.getViewMatrix());
-    m_shaderProgram->setUniformMatrix4f(m_uProj, _view.getProjectionMatrix());
+    m_shaderProgram->setUniformf(rs, m_uMapPosition, mapPos.x, mapPos.y, _view.getZoom());
+    m_shaderProgram->setUniformMatrix3f(rs, m_uNormalMatrix, _view.getNormalMatrix());
+    m_shaderProgram->setUniformMatrix3f(rs, m_uInverseNormalMatrix, _view.getInverseNormalMatrix());
+    m_shaderProgram->setUniformf(rs, m_uMetersPerPixel, 1.0 / _view.pixelsPerMeter());
+    m_shaderProgram->setUniformMatrix4f(rs, m_uView, _view.getViewMatrix());
+    m_shaderProgram->setUniformMatrix4f(rs, m_uProj, _view.getProjectionMatrix());
 
-    setupShaderUniforms(_scene);
+    setupShaderUniforms(rs, _scene);
 
     // Configure render state
     switch (m_blend) {
         case Blending::none:
-            RenderState::blending(GL_FALSE);
-            RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            RenderState::depthTest(GL_TRUE);
-            RenderState::depthWrite(GL_TRUE);
+            rs.blending(GL_FALSE);
+            rs.blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            rs.depthTest(GL_TRUE);
+            rs.depthMask(GL_TRUE);
             break;
         case Blending::add:
-            RenderState::blending(GL_TRUE);
-            RenderState::blendingFunc(GL_ONE, GL_ONE);
-            RenderState::depthTest(GL_FALSE);
-            RenderState::depthWrite(GL_TRUE);
+            rs.blending(GL_TRUE);
+            rs.blendingFunc(GL_ONE, GL_ONE);
+            rs.depthTest(GL_FALSE);
+            rs.depthMask(GL_TRUE);
             break;
         case Blending::multiply:
-            RenderState::blending(GL_TRUE);
-            RenderState::blendingFunc(GL_ZERO, GL_SRC_COLOR);
-            RenderState::depthTest(GL_FALSE);
-            RenderState::depthWrite(GL_TRUE);
+            rs.blending(GL_TRUE);
+            rs.blendingFunc(GL_ZERO, GL_SRC_COLOR);
+            rs.depthTest(GL_FALSE);
+            rs.depthMask(GL_TRUE);
             break;
         case Blending::overlay:
-            RenderState::blending(GL_TRUE);
-            RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            RenderState::depthTest(GL_FALSE);
-            RenderState::depthWrite(GL_FALSE);
+            rs.blending(GL_TRUE);
+            rs.blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            rs.depthTest(GL_FALSE);
+            rs.depthMask(GL_FALSE);
             break;
         case Blending::inlay:
             // TODO: inlay does not behave correctly for labels because they don't have a z position
-            RenderState::blending(GL_TRUE);
-            RenderState::blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            RenderState::depthTest(GL_TRUE);
-            RenderState::depthWrite(GL_FALSE);
+            rs.blending(GL_TRUE);
+            rs.blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            rs.depthTest(GL_TRUE);
+            rs.depthMask(GL_FALSE);
             break;
         default:
             break;
     }
 }
 
-void Style::draw(const Tile& _tile) {
+void Style::draw(RenderState& rs, const Tile& _tile) {
 
     auto& styleMesh = _tile.getMesh(*this);
 
@@ -259,9 +259,9 @@ void Style::draw(const Tile& _tile) {
         for (auto& raster : _tile.rasters()) {
             if (raster.isValid()) {
                 auto& texture = raster.texture;
-                auto texUnit = RenderState::nextAvailableTextureUnit();
-                texture->update(texUnit);
-                texture->bind(texUnit);
+                auto texUnit = rs.nextAvailableTextureUnit();
+                texture->update(rs, texUnit);
+                texture->bind(rs, texUnit);
 
                 textureIndexUniform.slots.push_back(texUnit);
                 rasterSizeUniform.push_back({texture->getWidth(), texture->getHeight()});
@@ -281,27 +281,27 @@ void Style::draw(const Tile& _tile) {
             }
         }
 
-        m_shaderProgram->setUniformi(m_uRasters, textureIndexUniform);
-        m_shaderProgram->setUniformf(m_uRasterSizes, rasterSizeUniform);
-        m_shaderProgram->setUniformf(m_uRasterOffsets, rasterOffsetsUniform);
+        m_shaderProgram->setUniformi(rs, m_uRasters, textureIndexUniform);
+        m_shaderProgram->setUniformf(rs, m_uRasterSizes, rasterSizeUniform);
+        m_shaderProgram->setUniformf(rs, m_uRasterOffsets, rasterOffsetsUniform);
     }
 
-    m_shaderProgram->setUniformMatrix4f(m_uModel, _tile.getModelMatrix());
-    m_shaderProgram->setUniformf(m_uProxyDepth, _tile.isProxy() ? 1.f : 0.f);
-    m_shaderProgram->setUniformf(m_uTileOrigin,
+    m_shaderProgram->setUniformMatrix4f(rs, m_uModel, _tile.getModelMatrix());
+    m_shaderProgram->setUniformf(rs, m_uProxyDepth, _tile.isProxy() ? 1.f : 0.f);
+    m_shaderProgram->setUniformf(rs, m_uTileOrigin,
                                  _tile.getOrigin().x,
                                  _tile.getOrigin().y,
                                  tileID.s,
                                  tileID.z);
 
-    if (!styleMesh->draw(*m_shaderProgram)) {
+    if (!styleMesh->draw(rs, *m_shaderProgram)) {
         LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
     }
 
     if (hasRasters()) {
         for (auto& raster : _tile.rasters()) {
             if (raster.isValid()) {
-                RenderState::releaseTextureUnit();
+                rs.releaseTextureUnit();
             }
         }
     }

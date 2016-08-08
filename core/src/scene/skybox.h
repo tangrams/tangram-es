@@ -20,7 +20,7 @@ public:
     ~Skybox() {}
 
     void init();
-    void draw(const View& _view);
+    void draw(RenderState& rs, const View& _view);
 
 private:
 

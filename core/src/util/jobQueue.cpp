@@ -1,40 +1,33 @@
 #include "jobQueue.h"
-#include <mutex>
-#include <unordered_map>
 
 namespace Tangram {
 
-std::unordered_map<JobQueue::ThreadId, std::vector<JobQueue::Job>> jobsForThreads;
-std::mutex jobMutex;
+JobQueue::~JobQueue() {
 
-void JobQueue::makeCurrentThreadTarget() {
-    m_threadId = std::this_thread::get_id();
-}
-
-void JobQueue::add(Job job) const {
-    std::lock_guard<std::mutex> lock(jobMutex);
-    jobsForThreads[m_threadId].push_back(job);
-}
-
-void JobQueue::runJobsForCurrentThread() {
-    auto currentThreadId = std::this_thread::get_id();
-
-    const auto& entry = jobsForThreads.find(currentThreadId);
-    if (entry == jobsForThreads.end()) {
-        // Nothing to do here.
-        return;
+    if (!m_jobs.empty()) {
+        runJobs();
     }
 
-    auto& jobs = entry->second;
-    while (!jobs.empty()) {
+}
+
+void JobQueue::add(Job job) {
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_jobs.push_back(job);
+
+}
+
+void JobQueue::runJobs() {
+
+    for (size_t i = 0; i < m_jobs.size(); i++) {
         Job job;
         {
-            std::lock_guard<std::mutex> lock(jobMutex);
-            job.swap(jobs.back());
-            jobs.pop_back();
+            std::lock_guard<std::mutex> lock(m_mutex);
+            job.swap(m_jobs[i]);
         }
         job();
     }
+    m_jobs.clear();
 
 }
 

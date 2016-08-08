@@ -58,30 +58,30 @@ void PointStyle::onBeginUpdate() {
     m_textStyle->onBeginUpdate();
 }
 
-void PointStyle::onBeginFrame() {
+void PointStyle::onBeginFrame(RenderState& rs) {
     // Upload meshes for next frame
-    m_mesh->upload();
-    m_textStyle->onBeginFrame();
+    m_mesh->upload(rs);
+    m_textStyle->onBeginFrame(rs);
 }
 
-void PointStyle::onBeginDrawFrame(const View& _view, Scene& _scene) {
-    Style::onBeginDrawFrame(_view, _scene);
+void PointStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {
+    Style::onBeginDrawFrame(rs, _view, _scene);
 
-    auto texUnit = RenderState::nextAvailableTextureUnit();
+    auto texUnit = rs.nextAvailableTextureUnit();
 
     if (m_spriteAtlas) {
-        m_spriteAtlas->bind(texUnit);
+        m_spriteAtlas->bind(rs, texUnit);
     } else if (m_texture) {
-        m_texture->update(texUnit);
-        m_texture->bind(texUnit);
+        m_texture->update(rs, texUnit);
+        m_texture->bind(rs, texUnit);
     }
 
-    m_shaderProgram->setUniformi(m_uTex, texUnit);
-    m_shaderProgram->setUniformMatrix4f(m_uOrtho, _view.getOrthoViewportMatrix());
+    m_shaderProgram->setUniformi(rs, m_uTex, texUnit);
+    m_shaderProgram->setUniformMatrix4f(rs, m_uOrtho, _view.getOrthoViewportMatrix());
 
-    m_mesh->draw(*m_shaderProgram);
+    m_mesh->draw(rs, *m_shaderProgram);
 
-    m_textStyle->onBeginDrawFrame(_view, _scene);
+    m_textStyle->onBeginDrawFrame(rs, _view, _scene);
 }
 
 std::unique_ptr<StyleBuilder> PointStyle::createBuilder() const {

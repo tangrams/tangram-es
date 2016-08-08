@@ -31,17 +31,17 @@ std::unique_ptr<LightUniforms> DirectionalLight::injectOnProgram(ShaderProgram& 
     return std::make_unique<Uniforms>(_shader, getUniformName());
 }
 
-void DirectionalLight::setupProgram(const View& _view, LightUniforms& _uniforms) {
+void DirectionalLight::setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms) {
 
     glm::vec3 direction = m_direction;
     if (m_origin == LightOrigin::world) {
         direction = _view.getNormalMatrix() * direction;
     }
 
-    Light::setupProgram(_view, _uniforms);
+    Light::setupProgram(rs, _view, _uniforms);
 
     auto& u = static_cast<DirectionalLight::Uniforms&>(_uniforms);
-    u.shader.setUniformf(u.direction, direction);
+    u.shader.setUniformf(rs, u.direction, direction);
 }
 
 std::string DirectionalLight::getClassBlock() {

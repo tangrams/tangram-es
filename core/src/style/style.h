@@ -26,6 +26,7 @@ class Scene;
 class ShaderProgram;
 class Style;
 class DataSource;
+class RenderState;
 
 enum class LightingType : char {
     none,
@@ -49,7 +50,7 @@ enum class RasterType {
 };
 
 struct StyledMesh {
-    virtual bool draw(ShaderProgram& _shader) = 0;
+    virtual bool draw(RenderState& rs, ShaderProgram& _shader) = 0;
     virtual size_t bufferSize() const = 0;
 
     virtual ~StyledMesh() {}
@@ -134,7 +135,7 @@ protected:
 
     /* Set uniform values when @_updateUniforms is true,
      */
-    void setupShaderUniforms(Scene& _scene);
+    void setupShaderUniforms(RenderState& rs, Scene& _scene);
 
     UniformLocation m_uTime{"u_time"};
     // View uniforms
@@ -218,7 +219,7 @@ public:
 
     virtual void onBeginUpdate() {}
 
-    virtual void onBeginFrame() {}
+    virtual void onBeginFrame(RenderState& rs) {}
 
     /* Create <VertexLayout> corresponding to this style; subclasses must
      * implement this and call it on construction
@@ -233,13 +234,13 @@ public:
     /* Perform any setup needed before drawing each frame
      * _textUnit is the next available texture unit
      */
-    virtual void onBeginDrawFrame(const View& _view, Scene& _scene);
+    virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene);
 
     /* Perform any unsetup needed after drawing each frame */
     virtual void onEndDrawFrame() {}
 
     /* Draws the geometry associated with this <Style> */
-    virtual void draw(const Tile& _tile);
+    virtual void draw(RenderState& rs, const Tile& _tile);
 
     virtual void setLightingType(LightingType _lType);
 
