@@ -163,61 +163,61 @@ std::unique_ptr<MaterialUniforms> Material::injectOnProgram(ShaderProgram& _shad
     return nullptr;
 }
 
-void Material::setupProgram(MaterialUniforms& _uniforms) {
+void Material::setupProgram(RenderState& rs, MaterialUniforms& _uniforms) {
 
     auto& u = _uniforms;
 
     if (m_bEmission) {
-        u.shader.setUniformf(u.emission, m_emission);
+        u.shader.setUniformf(rs, u.emission, m_emission);
 
         if (m_emission_texture.tex) {
-            m_emission_texture.tex->update(RenderState::nextAvailableTextureUnit());
-            m_emission_texture.tex->bind(RenderState::currentTextureUnit());
-            u.shader.setUniformi(u.emissionTexture, RenderState::currentTextureUnit());
-            u.shader.setUniformf(u.emissionScale, m_emission_texture.scale);
+            m_emission_texture.tex->update(rs, rs.nextAvailableTextureUnit());
+            m_emission_texture.tex->bind(rs, rs.currentTextureUnit());
+            u.shader.setUniformi(rs, u.emissionTexture, rs.currentTextureUnit());
+            u.shader.setUniformf(rs, u.emissionScale, m_emission_texture.scale);
         }
     }
 
     if (m_bAmbient) {
-        u.shader.setUniformf(u.ambient, m_ambient);
+        u.shader.setUniformf(rs, u.ambient, m_ambient);
 
         if (m_ambient_texture.tex) {
-            m_ambient_texture.tex->update(RenderState::nextAvailableTextureUnit());
-            m_ambient_texture.tex->bind(RenderState::currentTextureUnit());
-            u.shader.setUniformi(u.ambientTexture, RenderState::currentTextureUnit());
-            u.shader.setUniformf(u.ambientScale, m_ambient_texture.scale);
+            m_ambient_texture.tex->update(rs, rs.nextAvailableTextureUnit());
+            m_ambient_texture.tex->bind(rs, rs.currentTextureUnit());
+            u.shader.setUniformi(rs, u.ambientTexture, rs.currentTextureUnit());
+            u.shader.setUniformf(rs, u.ambientScale, m_ambient_texture.scale);
         }
     }
 
     if (m_bDiffuse) {
-        u.shader.setUniformf(u.diffuse, m_diffuse);
+        u.shader.setUniformf(rs, u.diffuse, m_diffuse);
 
         if (m_diffuse_texture.tex) {
-            m_diffuse_texture.tex->update(RenderState::nextAvailableTextureUnit());
-            m_diffuse_texture.tex->bind(RenderState::currentTextureUnit());
-            u.shader.setUniformi(u.diffuseTexture, RenderState::currentTextureUnit());
-            u.shader.setUniformf(u.diffuseScale, m_diffuse_texture.scale);
+            m_diffuse_texture.tex->update(rs, rs.nextAvailableTextureUnit());
+            m_diffuse_texture.tex->bind(rs, rs.currentTextureUnit());
+            u.shader.setUniformi(rs, u.diffuseTexture, rs.currentTextureUnit());
+            u.shader.setUniformf(rs, u.diffuseScale, m_diffuse_texture.scale);
         }
     }
 
     if (m_bSpecular) {
-        u.shader.setUniformf(u.specular, m_specular);
-        u.shader.setUniformf(u.shininess, m_shininess);
+        u.shader.setUniformf(rs, u.specular, m_specular);
+        u.shader.setUniformf(rs, u.shininess, m_shininess);
 
         if (m_specular_texture.tex) {
-            m_specular_texture.tex->update(RenderState::nextAvailableTextureUnit());
-            m_specular_texture.tex->bind(RenderState::currentTextureUnit());
-            u.shader.setUniformi(u.specularTexture, RenderState::currentTextureUnit());
-            u.shader.setUniformf(u.specularScale, m_specular_texture.scale);
+            m_specular_texture.tex->update(rs, rs.nextAvailableTextureUnit());
+            m_specular_texture.tex->bind(rs, rs.currentTextureUnit());
+            u.shader.setUniformi(rs, u.specularTexture, rs.currentTextureUnit());
+            u.shader.setUniformf(rs, u.specularScale, m_specular_texture.scale);
         }
     }
 
     if (m_normal_texture.tex) {
-        m_normal_texture.tex->update(RenderState::nextAvailableTextureUnit());
-        m_normal_texture.tex->bind(RenderState::currentTextureUnit());
-        u.shader.setUniformi(u.normalTexture, RenderState::currentTextureUnit());
-        u.shader.setUniformf(u.normalScale, m_normal_texture.scale);
-        u.shader.setUniformf(u.normalAmount, m_normal_texture.amount);
+        m_normal_texture.tex->update(rs, rs.nextAvailableTextureUnit());
+        m_normal_texture.tex->bind(rs, rs.currentTextureUnit());
+        u.shader.setUniformi(rs, u.normalTexture, rs.currentTextureUnit());
+        u.shader.setUniformf(rs, u.normalScale, m_normal_texture.scale);
+        u.shader.setUniformf(rs, u.normalAmount, m_normal_texture.amount);
     }
 }
 

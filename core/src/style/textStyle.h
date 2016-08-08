@@ -73,13 +73,13 @@ public:
     /* Upload the buffers of the text batches
      * Upload the texture atlases
      */
-    void onBeginFrame() override;
+    void onBeginFrame(RenderState& rs) override;
 
     /* Performs the actual drawing of the meshes in two passes
      * - First pass if signed distance field is on, draw outlines
      * - Second pass, draw the inner glyph pixels
      */
-    void onBeginDrawFrame(const View& _view, Scene& _scene) override;
+    void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
 
     std::unique_ptr<StyleBuilder> createBuilder() const override;
 

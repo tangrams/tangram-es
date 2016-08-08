@@ -364,7 +364,7 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
     return m_touchItems;
 }
 
-void Labels::drawDebug(const View& _view) {
+void Labels::drawDebug(RenderState& rs, const View& _view) {
 
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {
         return;
@@ -380,41 +380,41 @@ void Labels::drawDebug(const View& _view) {
         // draw bounding box
         switch (label->state()) {
         case Label::State::sleep:
-            Primitives::setColor(0x00ff00);
+            Primitives::setColor(rs, 0x00ff00);
             break;
         case Label::State::visible:
-            Primitives::setColor(0x000000);
+            Primitives::setColor(rs, 0x000000);
             break;
         case Label::State::wait_occ:
-            Primitives::setColor(0x0000ff);
+            Primitives::setColor(rs, 0x0000ff);
             break;
         case Label::State::dead:
-            Primitives::setColor(0xff00ff);
+            Primitives::setColor(rs, 0xff00ff);
             break;
         case Label::State::fading_in:
         case Label::State::fading_out:
-            Primitives::setColor(0xffff00);
+            Primitives::setColor(rs, 0xffff00);
             break;
         default:
-            Primitives::setColor(0x999999);
+            Primitives::setColor(rs, 0x999999);
         }
 
-        Primitives::drawPoly(&(label->obb().getQuad())[0], 4);
+        Primitives::drawPoly(rs, &(label->obb().getQuad())[0], 4);
 
         if (label->visibleState() && label->parent()) {
-            Primitives::setColor(0xff0000);
-            Primitives::drawLine(sp, label->parent()->transform().state.screenPos);
+            Primitives::setColor(rs, 0xff0000);
+            Primitives::drawLine(rs, sp, label->parent()->transform().state.screenPos);
         }
 
         // draw offset
         glm::vec2 rot = label->transform().state.rotation;
         glm::vec2 offset = rotateBy(label->options().offset, rot);
-        Primitives::setColor(0x000000);
-        Primitives::drawLine(sp, sp - glm::vec2(offset.x, -offset.y));
+        Primitives::setColor(rs, 0x000000);
+        Primitives::drawLine(rs, sp, sp - glm::vec2(offset.x, -offset.y));
 
         // draw projected anchor point
-        Primitives::setColor(0x0000ff);
-        Primitives::drawRect(sp - glm::vec2(1.f), sp + glm::vec2(1.f));
+        Primitives::setColor(rs, 0x0000ff);
+        Primitives::drawRect(rs, sp - glm::vec2(1.f), sp + glm::vec2(1.f));
 #if 0
         if (label->options().repeatGroup != 0 && label->state() == Label::State::visible) {
             size_t seed = 0;
@@ -442,12 +442,12 @@ void Labels::drawDebug(const View& _view) {
     const short xpad = short(ceilf(res.x / split.x));
     const short ypad = short(ceilf(res.y / split.y));
 
-    Primitives::setColor(0x7ef586);
+    Primitives::setColor(rs, 0x7ef586);
     short x = 0, y = 0;
     for (int j = 0; j < split.y; ++j) {
         for (int i = 0; i < split.x; ++i) {
             AABB cell(x, y, x + xpad, y + ypad);
-            Primitives::drawRect({x, y}, {x + xpad, y + ypad});
+            Primitives::drawRect(rs, {x, y}, {x + xpad, y + ypad});
             x += xpad;
             if (x >= res.x) {
                 x = 0;

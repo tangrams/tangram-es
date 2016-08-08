@@ -3,6 +3,7 @@
 #include "renderState.h"
 #include "hardware.h"
 #include "platform.h"
+#include "gl/error.h"
 
 namespace Tangram {
 
@@ -34,25 +35,28 @@ MeshBase::MeshBase(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode
 }
 
 MeshBase::~MeshBase() {
-    // Deleting a index/array buffer being used ends up setting up the current vertex/index buffer to 0
-    // after the driver finishes using it, force the render state to be 0 for vertex/index buffer
 
-    if (RenderState::isValidGeneration(m_generation)) {
-        if (m_glVertexBuffer) {
-            if (RenderState::vertexBuffer.compare(m_glVertexBuffer)) {
-                RenderState::vertexBuffer.init(0, false);
+    auto vaos = m_vaos;
+    auto generation = m_generation;
+    auto glVertexBuffer = m_glVertexBuffer;
+    auto glIndexBuffer = m_glIndexBuffer;
+
+    m_disposer([=](RenderState& rs) mutable {
+        // Deleting a index/array buffer being used ends up setting up the current vertex/index buffer to 0
+        // after the driver finishes using it, force the render state to be 0 for vertex/index buffer
+        if (rs.isValidGeneration(generation)) {
+            if (glVertexBuffer) {
+                rs.vertexBufferUnset(glVertexBuffer);
+                GL_CHECK(glDeleteBuffers(1, &glVertexBuffer));
             }
-            GL_CHECK(glDeleteBuffers(1, &m_glVertexBuffer));
-        }
-        if (m_glIndexBuffer) {
-            if (RenderState::indexBuffer.compare(m_glIndexBuffer)) {
-                RenderState::indexBuffer.init(0, false);
+            if (glIndexBuffer) {
+                rs.indexBufferUnset(glIndexBuffer);
+                GL_CHECK(glDeleteBuffers(1, &glIndexBuffer));
             }
-            GL_CHECK(glDeleteBuffers(1, &m_glIndexBuffer));
+            vaos.dispose();
         }
-    } else {
-        if (m_vaos) { m_vaos->discard(); }
-    }
+    });
+
 
     if (m_glVertexData) {
         delete[] m_glVertexData;
@@ -61,6 +65,7 @@ MeshBase::~MeshBase() {
     if (m_glIndexData) {
         delete[] m_glIndexData;
     }
+
 }
 
 void MeshBase::setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout) {
@@ -84,7 +89,7 @@ void MeshBase::setDrawMode(GLenum _drawMode) {
     }
 }
 
-void MeshBase::subDataUpload(GLbyte* _data) {
+void MeshBase::subDataUpload(RenderState& rs, GLbyte* _data) {
 
     if (!m_dirty && _data == nullptr) { return; }
 
@@ -95,7 +100,7 @@ void MeshBase::subDataUpload(GLbyte* _data) {
 
     GLbyte* data = _data ? _data : m_glVertexData;
 
-    RenderState::vertexBuffer(m_glVertexBuffer);
+    rs.vertexBuffer(m_glVertexBuffer);
 
     long vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
@@ -120,7 +125,7 @@ void MeshBase::subDataUpload(GLbyte* _data) {
     m_dirty = false;
 }
 
-void MeshBase::upload() {
+void MeshBase::upload(RenderState& rs) {
 
     // Generate vertex buffer, if needed
     if (m_glVertexBuffer == 0) {
@@ -130,7 +135,7 @@ void MeshBase::upload() {
     // Buffer vertex data
     int vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
-    RenderState::vertexBuffer(m_glVertexBuffer);
+    rs.vertexBuffer(m_glVertexBuffer);
     GL_CHECK(glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, m_hint));
 
     delete[] m_glVertexData;
@@ -143,7 +148,7 @@ void MeshBase::upload() {
         }
 
         // Buffer element index data
-        RenderState::indexBuffer(m_glIndexBuffer);
+        rs.indexBuffer(m_glIndexBuffer);
 
         GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_nIndices * sizeof(GLushort), m_glIndexData, m_hint));
 
@@ -151,43 +156,42 @@ void MeshBase::upload() {
         m_glIndexData = nullptr;
     }
 
-    m_generation = RenderState::generation();
+    m_generation = rs.generation();
+    m_disposer = Disposer(rs);
 
     m_isUploaded = true;
 }
 
-bool MeshBase::draw(ShaderProgram& _shader) {
+bool MeshBase::draw(RenderState& rs, ShaderProgram& _shader) {
 
-    checkValidity();
+    checkValidity(rs);
 
     if (!m_isCompiled) { return false; }
     if (m_nVertices == 0) { return false; }
 
     // Enable shader program
-    if (!_shader.use()) {
+    if (!_shader.use(rs)) {
         return false;
     }
 
     // Ensure that geometry is buffered into GPU
     if (!m_isUploaded) {
-        upload();
+        upload(rs);
     } else if (m_dirty) {
-        subDataUpload();
+        subDataUpload(rs);
     }
 
     if (Hardware::supportsVAOs) {
-        if (!m_vaos) {
-            m_vaos = std::make_unique<Vao>();
-
+        if (!m_vaos.isInitialized()) {
             // Capture vao state
-            m_vaos->init(_shader, m_vertexOffsets, *m_vertexLayout, m_glVertexBuffer, m_glIndexBuffer);
+            m_vaos.initialize(rs, _shader, m_vertexOffsets, *m_vertexLayout, m_glVertexBuffer, m_glIndexBuffer);
         }
     } else {
         // Bind buffers for drawing
-        RenderState::vertexBuffer(m_glVertexBuffer);
+        rs.vertexBuffer(m_glVertexBuffer);
 
         if (m_nIndices > 0) {
-            RenderState::indexBuffer(m_glIndexBuffer);
+            rs.indexBuffer(m_glIndexBuffer);
         }
     }
 
@@ -202,10 +206,10 @@ bool MeshBase::draw(ShaderProgram& _shader) {
         if (!Hardware::supportsVAOs) {
             // Enable vertex attribs via vertex layout object
             size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
-            m_vertexLayout->enable(_shader, byteOffset);
+            m_vertexLayout->enable(rs,  _shader, byteOffset);
         } else {
             // Bind the corresponding vao relative to the current offset
-            m_vaos->bind(i);
+            m_vaos.bind(i);
         }
 
         // Draw as elements or arrays
@@ -221,20 +225,20 @@ bool MeshBase::draw(ShaderProgram& _shader) {
     }
 
     if (Hardware::supportsVAOs) {
-        m_vaos->unbind();
+        m_vaos.unbind();
     }
 
     return true;
 }
 
-bool MeshBase::checkValidity() {
-    if (!RenderState::isValidGeneration(m_generation)) {
+bool MeshBase::checkValidity(RenderState& rs) {
+    if (!rs.isValidGeneration(m_generation)) {
         m_isUploaded = false;
         m_glVertexBuffer = 0;
         m_glIndexBuffer = 0;
-        m_vaos.reset();
+        m_vaos = {};
 
-        m_generation = RenderState::generation();
+        m_generation = rs.generation();
 
         return false;
     }

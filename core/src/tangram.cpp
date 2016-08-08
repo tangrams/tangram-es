@@ -54,6 +54,8 @@ public:
     std::mutex tilesMutex;
     std::mutex sceneMutex;
 
+    RenderState renderState;
+    JobQueue jobQueue;
     View view;
     Labels labels;
     AsyncWorker asyncWorker;
@@ -84,15 +86,14 @@ static std::bitset<8> g_flags = 0;
 
 Map::Map() {
 
-    impl = std::make_unique<Impl>();
+    impl.reset(new Impl());
 
 }
 
 Map::~Map() {
-    // Explicitly destroy all member objects so that we have a chance
-    // to run any resulting jobs sent to the JobQueue.
-    impl.reset();
-    JobQueue::runJobsForCurrentThread();
+    // The unique_ptr to Impl will be automatically destroyed when Map is destroyed.
+    TextDisplay::Instance().deinit();
+    Primitives::deinit();
 }
 
 void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
@@ -168,14 +169,11 @@ void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapRead
         impl->nextScene->useScenePosition = _useScenePosition;
     }
 
-    JobQueue mainThreadJobQueue;
-    mainThreadJobQueue.makeCurrentThreadTarget();
-
-    runAsyncTask([scene = impl->nextScene, _platformCallback, mainThreadJobQueue, this](){
+    runAsyncTask([scene = impl->nextScene, _platformCallback, &jobQueue = impl->jobQueue, this](){
 
             bool ok = SceneLoader::loadScene(scene);
 
-            mainThreadJobQueue.add([scene, ok, _platformCallback, this]() {
+            jobQueue.add([scene, ok, _platformCallback, this]() {
                     {
                         std::lock_guard<std::mutex> lock(impl->sceneMutex);
                         if (scene == impl->nextScene) {
@@ -219,16 +217,13 @@ void Map::applySceneUpdates() {
         impl->sceneUpdates.clear();
     }
 
-    JobQueue mainThreadJobQueue;
-    mainThreadJobQueue.makeCurrentThreadTarget();
-
-    runAsyncTask([scene = impl->nextScene, updates = std::move(updates), mainThreadJobQueue, this](){
+    runAsyncTask([scene = impl->nextScene, updates = std::move(updates), &jobQueue = impl->jobQueue, this](){
 
             SceneLoader::applyUpdates(scene->config(), updates);
 
             bool ok = SceneLoader::applyConfig(scene->config(), scene);
 
-            mainThreadJobQueue.add([scene, ok, this]() {
+            jobQueue.add([scene, ok, this]() {
                     if (scene == impl->nextScene) {
                         std::lock_guard<std::mutex> lock(impl->sceneMutex);
                         impl->nextScene.reset();
@@ -252,7 +247,7 @@ void Map::resize(int _newWidth, int _newHeight) {
 
     impl->view.setSize(_newWidth, _newHeight);
 
-    Primitives::setResolution(_newWidth, _newHeight);
+    Primitives::setResolution(impl->renderState, _newWidth, _newHeight);
 }
 
 bool Map::update(float _dt) {
@@ -264,7 +259,7 @@ bool Map::update(float _dt) {
 
     FrameInfo::beginUpdate();
 
-    JobQueue::runJobsForCurrentThread();
+    impl->jobQueue.runJobs();
 
     impl->scene->updateTime(_dt);
 
@@ -337,17 +332,20 @@ void Map::render() {
 
     // Invalidate render states for new frame
     if (!impl->cacheGlState) {
-        RenderState::invalidate();
+        impl->renderState.invalidate();
     }
 
+    // Run render-thread tasks
+    impl->renderState.jobQueue.runJobs();
+
     // Set up openGL for new frame
-    RenderState::depthWrite(GL_TRUE);
+    impl->renderState.depthMask(GL_TRUE);
     auto& color = impl->scene->background();
-    RenderState::clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
+    impl->renderState.clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
     GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
     for (const auto& style : impl->scene->styles()) {
-        style->onBeginFrame();
+        style->onBeginFrame(impl->renderState);
     }
 
     {
@@ -356,20 +354,20 @@ void Map::render() {
         // Loop over all styles
         for (const auto& style : impl->scene->styles()) {
 
-            style->onBeginDrawFrame(impl->view, *(impl->scene));
+            style->onBeginDrawFrame(impl->renderState, impl->view, *(impl->scene));
 
             // Loop over all tiles in m_tileSet
             for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                style->draw(*tile);
+                style->draw(impl->renderState, *tile);
             }
 
             style->onEndDrawFrame();
         }
     }
 
-    impl->labels.drawDebug(impl->view);
+    impl->labels.drawDebug(impl->renderState, impl->view);
 
-    FrameInfo::draw(impl->view, impl->tileManager);
+    FrameInfo::draw(impl->renderState, impl->view, impl->tileManager);
 }
 
 int Map::getViewportHeight() {
@@ -640,11 +638,11 @@ void Map::setupGL() {
     // Reconfigure the render states. Increases context 'generation'.
     // The OpenGL context has been destroyed since the last time resources were
     // created, so we invalidate all data that depends on OpenGL object handles.
-    RenderState::increaseGeneration();
-    RenderState::invalidate();
+    impl->renderState.increaseGeneration();
+    impl->renderState.invalidate();
 
     // Set default primitive render color
-    Primitives::setColor(0xffffff);
+    Primitives::setColor(impl->renderState, 0xffffff);
 
     // Load GL extensions and capabilities
     Hardware::loadExtensions();

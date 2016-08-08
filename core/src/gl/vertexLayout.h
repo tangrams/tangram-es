@@ -10,6 +10,7 @@
 
 namespace Tangram {
 
+class RenderState;
 class ShaderProgram;
 
 class VertexLayout {
@@ -26,9 +27,7 @@ public:
 
     VertexLayout(std::vector<VertexAttrib> _attribs);
 
-    virtual ~VertexLayout();
-
-    void enable(ShaderProgram& _program, size_t _byteOffset, void* _ptr = nullptr);
+    void enable(RenderState& rs, ShaderProgram& _program, size_t _byteOffset, void* _ptr = nullptr);
 
     void enable(const fastmap<std::string, GLuint>& _locations, size_t _bytOffset);
 
@@ -38,11 +37,7 @@ public:
 
     size_t getOffset(std::string _attribName);
 
-    static void clearCache();
-
 private:
-
-    static fastmap<GLint, GLuint> s_enabledAttribs; // Map from attrib locations to bound shader program
 
     std::vector<VertexAttrib> m_attribs;
     GLint m_stride;

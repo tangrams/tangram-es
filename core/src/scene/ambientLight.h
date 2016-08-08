@@ -10,7 +10,7 @@ public:
     AmbientLight(const std::string& _name, bool _dynamic = false);
     virtual ~AmbientLight();
     
-    virtual void setupProgram(const View& _view, LightUniforms& _uniforms) override;
+    virtual void setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms) override;
 
     std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) override;
 

@@ -1,11 +1,10 @@
 #include "gl/vertexLayout.h"
+#include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 #include "gl/error.h"
 #include "platform.h"
 
 namespace Tangram {
-
-fastmap<GLint, GLuint> VertexLayout::s_enabledAttribs = {};
 
 VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attribs) {
 
@@ -37,12 +36,6 @@ VertexLayout::VertexLayout(std::vector<VertexAttrib> _attribs) : m_attribs(_attr
         // TODO: Automatically add padding or warn if attributes are not byte-aligned
 
     }
-}
-
-VertexLayout::~VertexLayout() {
-
-    m_attribs.clear();
-
 }
 
 size_t VertexLayout::getOffset(std::string _attribName) {
@@ -77,11 +70,7 @@ void VertexLayout::enable(const fastmap<std::string, GLuint>& _locations, size_t
 
 }
 
-void VertexLayout::clearCache() {
-    s_enabledAttribs.clear();
-}
-
-void VertexLayout::enable(ShaderProgram& _program, size_t _byteOffset, void* _ptr) {
+void VertexLayout::enable(RenderState& rs, ShaderProgram& _program, size_t _byteOffset, void* _ptr) {
 
     GLuint glProgram = _program.getGlProgram();
 
@@ -91,7 +80,7 @@ void VertexLayout::enable(ShaderProgram& _program, size_t _byteOffset, void* _pt
         GLint location = _program.getAttribLocation(attrib.name);
 
         if (location != -1) {
-            auto& loc = s_enabledAttribs[location];
+            auto& loc = rs.attributeBindings[location];
             // Track currently enabled attribs by the program to which they are bound
             if (loc != glProgram) {
                 GL_CHECK(glEnableVertexAttribArray(location));
@@ -104,13 +93,12 @@ void VertexLayout::enable(ShaderProgram& _program, size_t _byteOffset, void* _pt
     }
 
     // Disable previously bound and now-unneeded attributes
-    for (auto& locationProgramPair : s_enabledAttribs) {
+    for (size_t i = 0; i < RenderState::MAX_ATTRIBUTES; ++i) {
 
-        const GLint& location = locationProgramPair.first;
-        GLuint& boundProgram = locationProgramPair.second;
+        GLuint& boundProgram = rs.attributeBindings[i];
 
         if (boundProgram != glProgram && boundProgram != 0) {
-            GL_CHECK(glDisableVertexAttribArray(location));
+            GL_CHECK(glDisableVertexAttribArray(i));
             boundProgram = 0;
         }
     }

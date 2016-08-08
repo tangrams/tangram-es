@@ -14,7 +14,7 @@ public:
     TextureCube(std::string _file,
             TextureOptions _options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}});
 
-    void update(GLuint _textureUnit) override;
+    void update(RenderState& rs, GLuint _textureUnit) override;
 
     void resize(const unsigned int _width, const unsigned int _height) = delete;
     void setData(const GLuint* _data, unsigned int _dataSize) = delete;

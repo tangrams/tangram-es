@@ -19,7 +19,7 @@ public:
 
     virtual void setCutoffExponent(float _exponent);
 
-    virtual void setupProgram(const View& _view, LightUniforms& _uniforms) override;
+    virtual void setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms) override;
 
     struct Uniforms : public PointLight::Uniforms {
 
