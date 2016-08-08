@@ -131,6 +131,7 @@ bool Label::canOcclude() {
                         State::none |
                         State::skip_transition |
                         State::fading_in |
+                        State::fading_out |
                         State::sleep |
                         State::out_of_screen |
                         State::dead);
@@ -298,10 +299,10 @@ bool Label::evalState(float _dt) {
             return true;
 
         case State::fading_out:
-            // if (!m_occluded) {
-            //     enterState(State::fading_in, m_transform.state.alpha);
-            //     return true;
-            // }
+            if (!m_occluded) {
+                enterState(State::fading_in, m_transform.state.alpha);
+                return true;
+            }
             setAlpha(m_fade.update(_dt));
             if (m_fade.isFinished()) {
                 enterState(State::sleep, 0.0);
