@@ -59,6 +59,7 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
 
     if ((root = sceneImporter.applySceneImports(_scene->path(), _scene->resourceRoot())) ) {
         applyConfig(root, _scene);
+
         return true;
     }
     return false;
@@ -193,6 +194,17 @@ bool SceneLoader::applyConfig(Node& config, const std::shared_ptr<Scene>& _scene
             try { loadTexture(texture, _scene); }
             catch (YAML::RepresentationException e) {
                 LOGNode("Parsing texture: '%s'", texture, e.what());
+            }
+        }
+    }
+
+    if (Node fonts = config["fonts"]) {
+        if (fonts.IsMap()) {
+            for (const auto& font : fonts) {
+                try { loadFont(font, _scene); }
+                catch (YAML::RepresentationException e) {
+                    LOGNode("Parsing font: '%s'", font, e.what());
+                }
             }
         }
     }
@@ -543,7 +555,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
     std::smatch match;
     // TODO: generalize using URI handlers
     if (std::regex_search(url, match, r)) {
-        scene->m_resourceLoad++;
+        scene->resourceLoad++;
         startUrlRequest(url, [=](std::vector<char>&& rawData) {
                 auto ptr = (unsigned char*)(rawData.data());
                 size_t dataSize = rawData.size();
@@ -555,7 +567,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
                     }
 
                     updateSpriteNodes(name, texture, scene);
-                    scene->m_resourceLoad--;
+                    scene->resourceLoad--;
                 }
             });
         texture = std::make_shared<Texture>(nullptr, 0, options, generateMipmaps);
@@ -662,6 +674,54 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, const std::shar
         scene->spriteAtlases()[name] = atlas;
     }
     scene->textures().emplace(name, texture);
+}
+
+void loadFontDescription(const Node& node, const std::string& family, const std::shared_ptr<Scene>& scene) {
+    if (node.IsMap()) {
+        auto& fontContext = scene->fontContext();
+        std::string style = "normal", weight = "400", uri;
+
+        for (const auto& fontDesc : node) {
+            const std::string& key = fontDesc.first.Scalar();
+            if (key == "weight") {
+                weight = fontDesc.second.Scalar();
+            } else if (key == "style") {
+                style = fontDesc.second.Scalar();
+            } else if (key == "url") {
+                uri = fontDesc.second.Scalar();
+            } else if (key == "external") {
+                LOGW("external: within fonts: is a no-op in native version of tangram (%s)", family.c_str());
+            }
+        }
+
+        if (uri.empty()) {
+            LOGW("Empty url: block within fonts: (%s)", family.c_str());
+            return;
+        }
+
+        std::string familyNormalized, styleNormalized;
+
+        familyNormalized.resize(family.size());
+        styleNormalized.resize(style.size());
+
+        std::transform(family.begin(), family.end(), familyNormalized.begin(), ::tolower);
+        std::transform(style.begin(), style.end(), styleNormalized.begin(), ::tolower);
+
+        // Download/Load the font and add it to the context
+        fontContext->fetch(FontDescription(familyNormalized, styleNormalized, weight, uri));
+    }
+}
+
+void SceneLoader::loadFont(const std::pair<Node, Node>& font, const std::shared_ptr<Scene>& scene) {
+    const std::string& family = font.first.Scalar();
+
+    if (font.second.IsMap()) {
+        loadFontDescription(font.second, family, scene);
+    } else if (font.second.IsSequence()) {
+        for (const auto& node : font.second) {
+            loadFontDescription(node, family, scene);
+        }
+    }
 }
 
 void SceneLoader::loadStyleProps(Style& style, Node styleNode, const std::shared_ptr<Scene>& scene) {
