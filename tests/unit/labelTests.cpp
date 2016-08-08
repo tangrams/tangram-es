@@ -28,24 +28,6 @@ TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
             TextLabelProperty::Align::none);
 }
 
-TextLabel makeLabelWithAnchorFallbacks() {
-    Label::Options options;
-
-    options.anchors.anchor[0] = LabelProperty::Anchor::center;
-    options.anchors.anchor[1] = LabelProperty::Anchor::right;
-    options.anchors.anchor[2] = LabelProperty::Anchor::bottom;
-    options.anchors.anchor[3] = LabelProperty::Anchor::left;
-    options.anchors.anchor[4] = LabelProperty::Anchor::top;
-    options.anchors.count = 5;
-
-    options.offset = {0.0f, 0.0f};
-
-    TextRange textRanges;
-
-    return TextLabel({screenSize/2.f}, Label::Type::point, options,
-            {}, {0, 0}, dummy, textRanges, TextLabelProperty::Align::none);
-}
-
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {
     TextLabel l(makeLabel({screenSize/2.f}, Label::Type::point));
 

@@ -47,7 +47,7 @@ public:
 
     bool needUpdate() const { return m_needUpdate; }
 
-private:
+protected:
 
     using AABB = isect2d::AABB<glm::vec2>;
     using OBB = isect2d::OBB<glm::vec2>;
