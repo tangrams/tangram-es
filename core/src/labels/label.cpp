@@ -254,13 +254,7 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
             return false;
         }
     } else if (m_state == State::out_of_screen) {
-        if (m_occludedLastFrame) {
-            enterState(State::sleep, 0.0);
-        } else {
-            // Non-occluded out-of-screen label came into
-            // screen again. Skip fade-in transition.
-            enterState(State::visible, 1.0);
-        }
+        enterState(State::sleep, 0.0);
     }
 
     return true;

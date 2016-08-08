@@ -102,7 +102,7 @@ TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
     l.evalState(0);
     REQUIRE(l.state() != Label::State::none);
 
-    REQUIRE(l.state() == Label::State::visible);
+    REQUIRE(l.state() == Label::State::fading_in);
     REQUIRE(l.canOcclude());
 }
 
