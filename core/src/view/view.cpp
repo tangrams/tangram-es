@@ -68,9 +68,9 @@ void View::setCameraType(CameraType _type) {
 
 void View::setSize(int _width, int _height) {
 
-    m_vpWidth = _width;
-    m_vpHeight = _height;
-    m_aspect = (float)_width / (float)_height;
+    m_vpWidth = std::max(_width, 1);
+    m_vpHeight = std::max(_height, 1);
+    m_aspect = (float)m_vpWidth/ (float)m_vpHeight;
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
 
