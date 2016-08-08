@@ -2,7 +2,6 @@
 
 #include "platform.h"
 #include "util/geom.h"
-#include "gl/error.h"
 #include "gl/renderState.h"
 #include "gl/hardware.h"
 #include "tangram.h"
@@ -28,23 +27,6 @@ Texture::Texture(const unsigned char* data, size_t dataSize, TextureOptions opti
     : Texture(0u, 0u, options, generateMipmaps) {
 
     loadImageFromMemory(data, dataSize);
-}
-
-Texture::~Texture() {
-
-    auto generation = m_generation;
-    auto glHandle = m_glHandle;
-    auto target = m_target;
-
-    m_disposer([=](RenderState& rs) {
-        if (rs.isValidGeneration(generation)) {
-            // If the currently-bound texture is deleted, the binding resets to 0
-            // according to the OpenGL spec, so unset this texture binding.
-            rs.textureUnset(target, glHandle);
-
-            GL_CHECK(glDeleteTextures(1, &glHandle));
-        }
-    });
 }
 
 bool Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size) {
@@ -96,9 +78,27 @@ Texture& Texture::operator=(Texture&& _other) {
     m_target = _other.m_target;
     m_generation = _other.m_generation;
     m_generateMipmaps = _other.m_generateMipmaps;
-    m_disposer = std::move(_other.m_disposer);
 
     return *this;
+}
+
+Texture::~Texture() {
+    if (m_glHandle) {
+
+        m_mainThreadJobQueue.add([id = m_glHandle, t = m_target, g = m_generation]() {
+            if (RenderState::isValidGeneration(g)) {
+                // If the texture is bound, and deleted, the binding defaults to 0
+                // according to the OpenGL spec. In this case we need to force the
+                // currently bound texture to 0 in the render state.
+                if (RenderState::texture.compare(t, id)) {
+                    RenderState::texture.init(t, 0, false);
+                }
+
+                GL_CHECK(glDeleteTextures(1, &id));
+            }
+        });
+
+    }
 }
 
 void Texture::setData(const GLuint* _data, unsigned int _dataSize) {
@@ -174,15 +174,15 @@ void Texture::setDirty(size_t _yoff, size_t _height) {
     }
 }
 
-void Texture::bind(RenderState& rs, GLuint _unit) {
-    rs.textureUnit(_unit);
-    rs.texture(m_target, m_glHandle);
+void Texture::bind(GLuint _unit) {
+    RenderState::textureUnit(_unit);
+    RenderState::texture(m_target, m_glHandle);
 }
 
-void Texture::generate(RenderState& rs, GLuint _textureUnit) {
+void Texture::generate(GLuint _textureUnit) {
     GL_CHECK(glGenTextures(1, &m_glHandle));
 
-    bind(rs, _textureUnit);
+    bind(_textureUnit);
 
     GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, m_options.filtering.min));
     GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, m_options.filtering.mag));
@@ -190,25 +190,27 @@ void Texture::generate(RenderState& rs, GLuint _textureUnit) {
     GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_WRAP_S, m_options.wrapping.wraps));
     GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.wrapping.wrapt));
 
-    m_generation = rs.generation();
-    m_disposer = Disposer(rs);
+    m_generation = RenderState::generation();
+
+    m_mainThreadJobQueue.makeCurrentThreadTarget();
 }
 
-void Texture::checkValidity(RenderState& rs) {
+void Texture::checkValidity() {
 
-    if (!rs.isValidGeneration(m_generation)) {
+    if (!RenderState::isValidGeneration(m_generation)) {
         m_shouldResize = true;
         m_glHandle = 0;
     }
 }
 
-bool Texture::isValid(RenderState& rs) const {
-    return (rs.isValidGeneration(m_generation) && m_glHandle != 0);
+bool Texture::isValid() const {
+    return (RenderState::isValidGeneration(m_generation)
+        && m_glHandle != 0);
 }
 
-void Texture::update(RenderState& rs, GLuint _textureUnit) {
+void Texture::update(GLuint _textureUnit) {
 
-    checkValidity(rs);
+    checkValidity();
 
     if (!m_shouldResize && m_dirtyRanges.empty()) {
         return;
@@ -223,12 +225,12 @@ void Texture::update(RenderState& rs, GLuint _textureUnit) {
 
     GLuint* data = m_data.size() > 0 ? m_data.data() : nullptr;
 
-    update(rs, _textureUnit, data);
+    update(_textureUnit, data);
 }
 
-void Texture::update(RenderState& rs, GLuint _textureUnit, const GLuint* data) {
+void Texture::update(GLuint _textureUnit, const GLuint* data) {
 
-    checkValidity(rs);
+    checkValidity();
 
     if (!m_shouldResize && m_dirtyRanges.empty()) {
         return;
@@ -236,9 +238,9 @@ void Texture::update(RenderState& rs, GLuint _textureUnit, const GLuint* data) {
 
     if (m_glHandle == 0) {
         // texture hasn't been initialized yet, generate it
-        generate(rs, _textureUnit);
+        generate(_textureUnit);
     } else {
-        bind(rs, _textureUnit);
+        bind(_textureUnit);
     }
 
     // resize or push data

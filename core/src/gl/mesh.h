@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gl.h"
-#include "gl/disposer.h"
 #include "vertexLayout.h"
 #include "vao.h"
 #include "util/types.h"
@@ -33,13 +32,6 @@ public:
 
     MeshBase();
 
-    MeshBase(const MeshBase&) = delete;
-    MeshBase(MeshBase&&) = delete;
-    MeshBase& operator=(const MeshBase&) = delete;
-    MeshBase& operator=(MeshBase&&) = delete;
-
-    virtual ~MeshBase();
-
     /*
      * Set Vertex Layout for the mesh object
      */
@@ -51,26 +43,26 @@ public:
     void setDrawMode(GLenum _drawMode = GL_TRIANGLES);
 
     /*
-     * Releases all OpenGL resources for this mesh
+     * Destructs this Mesh and releases all associated OpenGL resources
      */
-    void dispose(RenderState& rs);
+    ~MeshBase();
 
     /*
      * Copies all added vertices and indices into OpenGL buffer objects; After
      * geometry is uploaded, no more vertices or indices can be added
      */
-    virtual void upload(RenderState& rs);
+    virtual void upload();
 
     /*
      * Sub data upload of the mesh, returns true if this results in a buffer binding
      */
-    void subDataUpload(RenderState& rs, GLbyte* _data = nullptr);
+    void subDataUpload(GLbyte* _data = nullptr);
 
     /*
      * Renders the geometry in this mesh using the ShaderProgram _shader; if
      * geometry has not already been uploaded it will be uploaded at this point
      */
-    bool draw(RenderState& rs, ShaderProgram& _shader);
+    bool draw(ShaderProgram& _shader);
 
     size_t bufferSize() const;
 
@@ -87,7 +79,7 @@ protected:
     size_t m_nVertices;
     GLuint m_glVertexBuffer;
 
-    Vao m_vaos;
+    std::unique_ptr<Vao> m_vaos;
 
     // Compiled vertices for upload
     GLbyte* m_glVertexData = nullptr;
@@ -107,9 +99,7 @@ protected:
     GLsizei m_dirtySize;
     GLintptr m_dirtyOffset;
 
-    Disposer m_disposer;
-
-    bool checkValidity(RenderState& rs);
+    bool checkValidity();
 
     size_t compileIndices(const std::vector<std::pair<uint32_t, uint32_t>>& _offsets,
                           const std::vector<uint16_t>& _indices, size_t _offset);
@@ -152,8 +142,8 @@ public:
         return MeshBase::bufferSize();
     }
 
-    bool draw(RenderState& rs, ShaderProgram& shader) override {
-        return MeshBase::draw(rs, shader);
+    bool draw(ShaderProgram& _shader) override {
+        return MeshBase::draw(_shader);
     }
 
     void compile(const std::vector<MeshData<T>>& _meshes);

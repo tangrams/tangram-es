@@ -1,5 +1,4 @@
 #include "vao.h"
-#include "gl/error.h"
 #include "renderState.h"
 #include "shaderProgram.h"
 #include "vertexLayout.h"
@@ -7,12 +6,25 @@
 
 namespace Tangram {
 
-void Vao::initialize(RenderState& rs, ShaderProgram& _program, const std::vector<std::pair<uint32_t, uint32_t>>& _vertexOffsets,
+Vao::Vao() {
+    m_glVAOs = nullptr;
+    m_glnVAOs = 0;
+}
+
+Vao::~Vao() {
+    if (m_glVAOs) {
+        GL_CHECK(glDeleteVertexArrays(m_glnVAOs, m_glVAOs));
+        delete[] m_glVAOs;
+    }
+}
+
+void Vao::init(ShaderProgram& _program, const std::vector<std::pair<uint32_t, uint32_t>>& _vertexOffsets,
                VertexLayout& _layout, GLuint _vertexBuffer, GLuint _indexBuffer) {
 
-    m_glVAOs.resize(_vertexOffsets.size());
+    m_glnVAOs = _vertexOffsets.size();
+    m_glVAOs = new GLuint[m_glnVAOs];
 
-    GL_CHECK(glGenVertexArrays(m_glVAOs.size(), m_glVAOs.data()));
+    GL_CHECK(glGenVertexArrays(m_glnVAOs, m_glVAOs));
 
     fastmap<std::string, GLuint> locations;
 
@@ -28,12 +40,10 @@ void Vao::initialize(RenderState& rs, ShaderProgram& _program, const std::vector
         int nVerts = vertexIndexOffset.second;
         GL_CHECK(glBindVertexArray(m_glVAOs[i]));
 
-        rs.vertexBufferUnset(_vertexBuffer);
-        rs.vertexBuffer(_vertexBuffer);
+        RenderState::vertexBuffer.init(_vertexBuffer, true);
 
         if (_indexBuffer != 0) {
-            rs.indexBufferUnset(_indexBuffer);
-            rs.indexBuffer(_indexBuffer);
+            RenderState::indexBuffer.init(_indexBuffer, true);
         }
 
         // Enable vertex layout on the specified locations
@@ -44,12 +54,8 @@ void Vao::initialize(RenderState& rs, ShaderProgram& _program, const std::vector
 
 }
 
-bool Vao::isInitialized() {
-    return !m_glVAOs.empty();
-}
-
 void Vao::bind(unsigned int _index) {
-    if (_index < m_glVAOs.size()) {
+    if (_index < m_glnVAOs) {
         GL_CHECK(glBindVertexArray(m_glVAOs[_index]));
     }
 }
@@ -58,11 +64,9 @@ void Vao::unbind() {
     GL_CHECK(glBindVertexArray(0));
 }
 
-void Vao::dispose() {
-    if (!m_glVAOs.empty()) {
-        GL_CHECK(glDeleteVertexArrays(m_glVAOs.size(), m_glVAOs.data()));
-        m_glVAOs.clear();
-    }
+void Vao::discard() {
+    delete[] m_glVAOs;
+    m_glVAOs = nullptr;
 }
 
 }
