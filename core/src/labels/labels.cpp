@@ -71,9 +71,9 @@ void Labels::updateLabels(const View& _view, float _dt,
                 }
 
                 if (_onlyTransitions) {
-                    if (!label->canOcclude() || label->visibleState()) {
-                        if (label->occludedLastFrame()) { label->occlude(); }
+                    if (label->occludedLastFrame()) { label->occlude(); }
 
+                    if (label->visibleState() || !label->canOcclude()) {
                         m_needUpdate |= label->evalState(_dt);
                         label->pushTransform();
                     }
@@ -409,7 +409,7 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
         // draw bounding box
         switch (label->state()) {
         case Label::State::sleep:
-            Primitives::setColor(rs, 0x00ff00);
+            Primitives::setColor(rs, 0xdddddd);
             break;
         case Label::State::visible:
             Primitives::setColor(rs, 0x000000);
@@ -421,12 +421,27 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
             Primitives::setColor(rs, 0xff00ff);
             break;
         case Label::State::fading_in:
-        case Label::State::fading_out:
             Primitives::setColor(rs, 0xffff00);
+            break;
+        case Label::State::fading_out:
+            Primitives::setColor(rs, 0xff0000);
             break;
         default:
             Primitives::setColor(rs, 0x999999);
         }
+
+#if DEBUG_OCCLUSION
+        if (label->isOccluded()) {
+            Primitives::setColor(rs, 0xff0000);
+            if (label->occludedLastFrame()) {
+                Primitives::setColor(rs, 0xffff00);
+            }
+        } else if (label->occludedLastFrame()) {
+            Primitives::setColor(rs, 0x00ff00);
+        } else {
+            Primitives::setColor(rs, 0x000000);
+        }
+#endif
 
         Primitives::drawPoly(rs, &(label->obb().getQuad())[0], 4);
 
