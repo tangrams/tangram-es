@@ -179,9 +179,11 @@ bool Labels::labelComparator(const LabelEntry& _a, const LabelEntry& _b) {
     if (_a.proxy != _b.proxy) {
         return _b.proxy;
     }
-
     if (_a.priority != _b.priority) {
         return _a.priority < _b.priority;
+    }
+    if (_a.tile->getID().z != _b.tile->getID().z) {
+        return _a.tile->getID().z > _b.tile->getID().z;
     }
 
     auto l1 = _a.label;
@@ -191,6 +193,11 @@ bool Labels::labelComparator(const LabelEntry& _a, const LabelEntry& _b) {
     // navigation history.
     if (l1->occludedLastFrame() != l2->occludedLastFrame()) {
         return l2->occludedLastFrame();
+    }
+    // This prefers labels within screen over out_of_screen.
+    // Important for repeat groups!
+    if (l1->visibleState() != l2->visibleState()) {
+        return l1->visibleState();
     }
 
     // if (l1->options().repeatGroup != l2->options().repeatGroup) {
