@@ -321,11 +321,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
                     {LabelProperty::Anchor::bottom,
                      LabelProperty::Anchor::top,
                      LabelProperty::Anchor::right,
-                     LabelProperty::Anchor::left,
-                     LabelProperty::Anchor::bottom_right,
-                     LabelProperty::Anchor::bottom_left,
-                     LabelProperty::Anchor::top_right,
-                     LabelProperty::Anchor::top_left}}, 8};
+                     LabelProperty::Anchor::left}}, 4};
         }
 
         _rule.get(StyleParamKey::text_transition_hide_time, p.labelOptions.hideTransition.time);
