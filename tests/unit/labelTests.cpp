@@ -20,6 +20,8 @@ TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
     options.offset = {0.0f, 0.0f};
     options.anchors.anchor[0] = LabelProperty::Anchor::center;
     options.anchors.count = 1;
+    options.showTransition.time = 0.2;
+    options.hideTransition.time = 0.2;
 
     TextRange textRanges;
 

@@ -56,8 +56,8 @@ public:
     };
 
     struct Transition {
-        FadeEffect::Interpolation ease = FadeEffect::Interpolation::sine;
-        float time = 0.2;
+        FadeEffect::Interpolation ease = FadeEffect::Interpolation::linear;
+        float time = 0.0;
     };
 
     struct Options {

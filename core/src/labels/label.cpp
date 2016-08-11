@@ -270,15 +270,33 @@ bool Label::evalState(float _dt) {
 #endif
 
     switch (m_state) {
-        case State::visible:
+        case State::none:
+        case State::sleep:
             if (m_occluded) {
-                m_fade.reset(false, m_options.hideTransition.ease,
-                             m_options.hideTransition.time);
-
-                enterState(State::fading_out, 1.0);
-                return true;
+                enterState(State::sleep, 0.0);
+                return false;
             }
-            return false;
+            if (m_options.showTransition.time == 0.f) {
+                enterState(State::visible, 1.0);
+                return false;
+            }
+            m_fade.reset(true, m_options.showTransition.ease,
+                         m_options.showTransition.time);
+            enterState(State::fading_in, 0.0);
+            return true;
+
+        case State::visible:
+            if (!m_occluded) { return false; }
+
+            if (m_options.hideTransition.time == 0.f) {
+                enterState(State::sleep, 0.0);
+                return false;
+            }
+            m_fade.reset(false, m_options.hideTransition.ease,
+                         m_options.hideTransition.time);
+
+            enterState(State::fading_out, 1.0);
+            return true;
 
         case State::fading_in:
             if (m_occluded) {
@@ -304,16 +322,6 @@ bool Label::evalState(float _dt) {
             }
             return true;
 
-        case State::none:
-            if (m_occluded) {
-                enterState(State::sleep, 0.0);
-                return false;
-            }
-            m_fade.reset(true, m_options.showTransition.ease,
-                         m_options.showTransition.time);
-            enterState(State::fading_in, 0.0);
-            return true;
-
         case State::skip_transition:
             if (m_occluded) {
                 enterState(State::sleep, 0.0);
@@ -321,16 +329,6 @@ bool Label::evalState(float _dt) {
                 enterState(State::visible, 1.0);
             }
             return true;
-
-        case State::sleep:
-            if (!m_occluded) {
-                m_fade.reset(true, m_options.showTransition.ease,
-                                   m_options.showTransition.time);
-
-                enterState(State::fading_in, 0.0);
-                return true;
-            }
-            return false;
 
         case State::dead:
         case State::out_of_screen:
