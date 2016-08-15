@@ -66,6 +66,10 @@ struct BoundingBox {
     bool containsX(double x) const { return x >= min.x && x <= max.x; }
     bool containsY(double y) const { return y >= min.y && y <= max.y; }
     bool contains(double x, double y) const { return containsX(x) && containsY(y); }
+    void expand(double x, double y) {
+        min = { glm::min(min.x, x), glm::min(min.y, y) };
+        max = { glm::max(max.x, x), glm::max(max.y, y) };
+    }
 };
 
 template<class InputIt>
