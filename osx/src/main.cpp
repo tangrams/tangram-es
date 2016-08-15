@@ -12,6 +12,8 @@ void init_main_window(bool recreate);
 
 std::string sceneFile = "scene.yaml";
 
+std::string markerStyling = "{ style: 'lines', color: 'purple', width: 10px, order: 100 }";
+
 GLFWwindow* main_window = nullptr;
 Tangram::Map* map = nullptr;
 int width = 800;
@@ -41,6 +43,8 @@ using namespace Tangram;
 
 std::shared_ptr<ClientGeoJsonSource> data_source;
 LngLat last_point;
+std::vector<LngLat> taps;
+Marker* marker = nullptr;
 
 template<typename T>
 static constexpr T clamp(T val, T min, T max) {
@@ -96,21 +100,18 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         // Single tap recognized
         LngLat p1;
         map->screenPositionToLngLat(x, y, &p1.longitude, &p1.latitude);
+        taps.push_back(p1);
 
         if (!(last_point == LngLat{0, 0})) {
             LngLat p2 = last_point;
-            logMsg("add line %f %f - %f %f\n",
+            logMsg("add line (%f, %f)  (%f, %f)\n",
                    p1.longitude, p1.latitude,
                    p2.longitude, p2.latitude);
 
-            // data_source->addLine(Properties{{"type", "line" }}, {p1, p2});
-            // data_source->addPoint(Properties{{"type", "point" }}, p2);
-            Properties prop1;
-            prop1.set("type", "line");
-            data_source->addLine(prop1, {p1, p2});
-            Properties prop2;
-            prop2.set("type", "point");
-            data_source->addPoint(prop2, p2);
+            if (!marker) {
+                marker = map->markerAdd(markerStyling.c_str());
+            }
+            map->markerSetPolyline(marker, taps.data(), taps.size());
         }
         last_point = p1;
 
