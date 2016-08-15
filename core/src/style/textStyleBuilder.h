@@ -27,6 +27,7 @@ public:
     bool addFeatureCommon(const Feature& _feature, const DrawRule& _rule, bool _iconText);
 
     void setup(const Tile& _tile) override;
+    void setup(const Marker& _marker) override;
 
     std::unique_ptr<StyledMesh> build() override;
 

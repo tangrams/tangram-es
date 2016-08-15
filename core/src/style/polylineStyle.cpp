@@ -7,6 +7,7 @@
 #include "gl/mesh.h"
 #include "gl/texture.h"
 #include "gl/renderState.h"
+#include "marker/marker.h"
 #include "scene/stops.h"
 #include "scene/drawRule.h"
 #include "tile/tile.h"
@@ -160,6 +161,7 @@ public:
     };
 
     void setup(const Tile& _tile) override;
+    void setup(const Marker& _marker) override;
 
     const Style& style() const override { return m_style; }
 
@@ -205,6 +207,21 @@ void PolylineStyleBuilder<V>::setup(const Tile& tile) {
     m_overzoom2 = powf(2.f, id.s - id.z);
     m_tileUnitsPerMeter = tile.getInverseScale();
     m_tileSizePixels = tile.getProjection()->TileSize();
+
+    // When a tile is overzoomed, we are actually styling the area of its
+    // 'source' tile, which will have a larger effective pixel size at the
+    // 'style' zoom level. This scaling is performed in the vertex shader to
+    // prevent loss of precision for small dimensions in packed attributes.
+}
+
+template <class V>
+void PolylineStyleBuilder<V>::setup(const Marker& marker) {
+
+    // Use the 'style zoom' to evaluate style parameters.
+    m_zoom = 0;
+    m_overzoom2 = 0;
+    m_tileUnitsPerMeter = 1; // FIXME
+    m_tileSizePixels = 256; //FIXME
 
     // When a tile is overzoomed, we are actually styling the area of its
     // 'source' tile, which will have a larger effective pixel size at the

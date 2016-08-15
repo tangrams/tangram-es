@@ -98,6 +98,12 @@ public:
         m_meshData.clear();
     }
 
+    void setup(const Marker& _marker) override {
+        // m_tileUnitsPerMeter = _tile.getInverseScale();
+        m_zoom = 0;
+        m_meshData.clear();
+    }
+
     void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
 
     const Style& style() const override { return m_style; }

@@ -20,6 +20,7 @@ class Tile;
 class MapProjection;
 class Material;
 struct MaterialUniforms;
+class Marker;
 class VertexLayout;
 class View;
 class Scene;
@@ -64,6 +65,8 @@ public:
     virtual ~StyleBuilder() = default;
 
     virtual void setup(const Tile& _tile) = 0;
+
+    virtual void setup(const Marker& _marker) = 0;
 
     virtual void addFeature(const Feature& _feat, const DrawRule& _rule);
 
@@ -241,6 +244,8 @@ public:
 
     /* Draws the geometry associated with this <Style> */
     virtual void draw(RenderState& rs, const Tile& _tile);
+
+    virtual void draw(RenderState& rs, const Marker& _marker);
 
     virtual void setLightingType(LightingType _lType);
 

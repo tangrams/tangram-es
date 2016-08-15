@@ -12,6 +12,7 @@
 #include "tile/tile.h"
 #include "data/dataSource.h"
 #include "view/view.h"
+#include "marker/marker.h"
 #include "tangram.h"
 
 #include "shaders/rasters_glsl.h"
@@ -305,6 +306,23 @@ void Style::draw(RenderState& rs, const Tile& _tile) {
             }
         }
     }
+}
+
+void Style::draw(RenderState& rs, const Marker& marker) {
+
+    if (marker.styleId() != m_id) { return; }
+
+    auto* mesh = marker.mesh();
+
+    if (!mesh) { return; }
+
+    m_shaderProgram->setUniformMatrix4f(rs, m_uModel, marker.modelMatrix());
+    m_shaderProgram->setUniformf(rs, m_uTileOrigin, marker.origin().x, marker.origin().y, 0, 0);
+
+    if (!mesh->draw(rs, *m_shaderProgram)) {
+        LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
+    }
+
 }
 
 bool StyleBuilder::checkRule(const DrawRule& _rule) const {

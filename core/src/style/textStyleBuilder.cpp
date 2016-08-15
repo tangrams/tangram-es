@@ -6,6 +6,7 @@
 #include "labels/textLabels.h"
 
 #include "data/propertyItem.h" // Include wherever Properties is used!
+#include "marker/marker.h"
 #include "scene/drawRule.h"
 #include "tile/tile.h"
 #include "util/geom.h"
@@ -32,6 +33,18 @@ void TextStyleBuilder::setup(const Tile& _tile){
 
     float tileScale = pow(2, _tile.getID().s - _tile.getID().z);
     m_tileSize *= tileScale;
+
+    // add scale factor to the next zoom-level
+    m_tileSize *= 2;
+
+    m_atlasRefs.reset();
+
+    m_textLabels = std::make_unique<TextLabels>(m_style);
+}
+
+void TextStyleBuilder::setup(const Marker& marker){
+    m_tileSize = 256; //FIXME
+    m_tileSize *= m_style.pixelScale();
 
     // add scale factor to the next zoom-level
     m_tileSize *= 2;
