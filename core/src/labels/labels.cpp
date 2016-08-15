@@ -235,7 +235,7 @@ void Labels::handleOcclusions(const View& _view) {
         // Parent must have been processed earlier so at this point its
         // occlusion and anchor position is determined for the current frame.
         if (l->parent()) {
-            if (l->parent()->isOccluded() || !l->parent()->visibleState()) {
+            if (l->parent()->isOccluded()) {
                 l->occlude();
                 continue;
             }
