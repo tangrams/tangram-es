@@ -13,6 +13,8 @@
 #include "gl/shaderProgram.h"
 #include "gl/renderState.h"
 #include "gl/primitives.h"
+#include "marker/marker.h"
+#include "marker/markerManager.h"
 #include "util/asyncWorker.h"
 #include "util/inputHandler.h"
 #include "tile/tileCache.h"
@@ -62,6 +64,7 @@ public:
     InputHandler inputHandler{view};
     TileWorker tileWorker{MAX_WORKERS};
     TileManager tileManager{tileWorker};
+    MarkerManager markerManager;
 
     std::vector<SceneUpdate> sceneUpdates;
     std::array<Ease, 4> eases;
@@ -138,6 +141,7 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
     inputHandler.setView(view);
     tileManager.setDataSources(_scene->dataSources());
     tileWorker.setScene(_scene);
+    markerManager.setScene(_scene);
     setPixelScale(view.pixelScale());
 
     bool animated = scene->animated() == Scene::animate::yes;
@@ -305,7 +309,9 @@ bool Map::update(float _dt) {
             for (const auto& tile : tiles) {
                 tile->update(_dt, impl->view);
             }
-
+            for (const auto& marker : impl->markerManager.markers()) {
+                marker->update(_dt, impl->view);
+            }
             impl->labels.updateLabelSet(impl->view, _dt, impl->scene->styles(), tiles,
                                         *impl->tileManager.getTileCache());
         } else {
@@ -365,6 +371,10 @@ void Map::render() {
             // Loop over all tiles in m_tileSet
             for (const auto& tile : impl->tileManager.getVisibleTiles()) {
                 style->draw(impl->renderState, *tile);
+            }
+
+            for (const auto& marker : impl->markerManager.markers()) {
+                style->draw(impl->renderState, *marker);
             }
 
             style->onEndDrawFrame();
@@ -591,6 +601,30 @@ void Map::clearDataSource(DataSource& _source, bool _data, bool _tiles) {
     if (_data) { _source.clearData(); }
 
     requestRender();
+}
+
+Marker* Map::markerAdd(const char* _styling) {
+    return impl->markerManager.add(_styling);
+}
+
+bool Map::markerRemove(Marker* _marker) {
+    return impl->markerManager.remove(_marker);
+}
+
+bool Map::markerSetPoint(Marker* _marker, double _lng, double _lat) {
+    return impl->markerManager.setPoint(_marker, _lng, _lat);
+}
+
+bool Map::markerSetPolyline(Marker* _marker, double* _coordinates, int _count) {
+    return impl->markerManager.setPolyline(_marker, _coordinates, _count);
+}
+
+bool Map::markerSetPolygon(Marker* _marker, double** _coordinates, int* _counts, int _rings) {
+    return impl->markerManager.setPolygon(_marker, _coordinates, _counts, _rings);
+}
+
+bool Map::markerSetStyling(Marker* _marker, const char* _styling) {
+    return impl->markerManager.setStyling(_marker, _styling);
 }
 
 void Map::handleTapGesture(float _posX, float _posY) {

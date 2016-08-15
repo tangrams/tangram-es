@@ -9,6 +9,7 @@
 namespace Tangram {
 
 class DataSource;
+class Marker;
 
 struct TouchItem {
     std::shared_ptr<Properties> properties;
@@ -147,6 +148,18 @@ public:
     bool removeDataSource(DataSource& _source);
 
     void clearDataSource(DataSource& _source, bool _data, bool _tiles);
+
+    Marker* markerAdd(const char* _styling);
+
+    bool markerRemove(Marker* _marker);
+
+    bool markerSetPoint(Marker* _marker, double _lng, double _lat);
+
+    bool markerSetPolyline(Marker* _marker, double* _coordinates, int _count);
+
+    bool markerSetPolygon(Marker* _marker, double** _coordinates, int* _counts, int _rings);
+
+    bool markerSetStyling(Marker* _marker, const char* _styling);
 
     // Respond to a tap at the given screen coordinates (x right, y down)
     void handleTapGesture(float _posX, float _posY);
