@@ -311,10 +311,12 @@ bool Label::evalState(float _dt) {
             return true;
 
         case State::fading_out:
-            if (!m_occluded) {
-                enterState(State::fading_in, m_transform.state.alpha);
-                return true;
-            }
+            // if (!m_occluded) {
+            //     enterState(State::fading_in, m_transform.state.alpha);
+            //     m_fade.reset(false, m_options.hideTransition.ease,
+            //                  m_options.showTransition.time);
+            //     return true;
+            // }
             setAlpha(m_fade.update(_dt));
             if (m_fade.isFinished()) {
                 enterState(State::sleep, 0.0);
