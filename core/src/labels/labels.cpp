@@ -271,25 +271,33 @@ void Labels::handleOcclusions(const View& _view) {
             aabb.m_userData = static_cast<void*>(l);
 
             m_isect2d.intersect(aabb, [](auto& a, auto& b) {
-                    auto* l1 = static_cast<Label*>(a.m_userData);
-                    auto* l2 = static_cast<Label*>(b.m_userData);
-                    // Parents do not occlude their child
-                    if (l1->parent() == l2) {
-                        return true;
-                    }
-
-                    if (intersect(l1->obb(), l2->obb())) {
-                        l1->occlude();
-                        // Drop label
-                        return false;
-                    }
-                    // Continue
+                auto* l1 = static_cast<Label*>(a.m_userData);
+                auto* l2 = static_cast<Label*>(b.m_userData);
+                // Parents do not occlude their child
+                if (l1->parent() == l2) {
                     return true;
-                });
+                }
+
+                if (intersect(l1->obb(), l2->obb())) {
+                    l1->occlude();
+                    // Drop label
+                    return false;
+                }
+                // Continue
+                return true;
+            });
 
 
             // Try next anchor
         } while (l->isOccluded() && l->nextAnchor());
+
+        // At this point, the label has a parent that is visible,
+        // if it is a required label, turn the parent to occluded
+        if (l->isOccluded()) {
+            if (l->parent() && l->options().required) {
+                l->parent()->occlude();
+            }
+        }
 
         if (l->options().repeatDistance > 0.f) {
             m_repeatGroups[l->options().repeatGroup].push_back(l);

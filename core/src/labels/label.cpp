@@ -16,7 +16,7 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _
       m_dim(_size),
       m_options(_options) {
 
-    if (!m_options.collide || m_type == Type::debug){
+    if (!m_options.collide || m_type == Type::debug) {
         enterState(State::visible, 1.0);
     } else {
         m_transform.state.alpha = 0.0;
@@ -99,7 +99,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
     return true;
 }
 
-void Label::setParent(const Label& _parent, bool _definePriority) {
+void Label::setParent(Label& _parent, bool _definePriority) {
     m_parent = &_parent;
 
     if (_definePriority) {

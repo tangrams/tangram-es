@@ -279,6 +279,7 @@ layers:
                 #size: [[13, 12px], [15, 18px]]
                 #interactive: true
                 text:
+                    required: true
                     interactive: true
                     text_wrap: 20
                     font:

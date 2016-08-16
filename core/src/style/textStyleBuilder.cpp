@@ -381,6 +381,8 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         }
     }
 
+    _rule.get(StyleParamKey::text_required, p.labelOptions.required);
+
     // TODO style option?
     p.labelOptions.buffer = p.fontSize * 0.25f;
 

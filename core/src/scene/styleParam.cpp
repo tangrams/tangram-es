@@ -62,6 +62,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"text:font:style", StyleParamKey::text_font_style},
     {"text:font:transform", StyleParamKey::text_transform},
     {"text:font:weight", StyleParamKey::text_font_weight},
+    {"text:required", StyleParamKey::text_required},
     {"text:transition:hide:time", StyleParamKey::text_transition_hide_time},
     {"text:transition:selected:time", StyleParamKey::text_transition_selected_time},
     {"text:transition:show:time", StyleParamKey::text_transition_show_time},
@@ -239,10 +240,11 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::text_visible:
     case StyleParamKey::outline_visible:
     case StyleParamKey::collide:
+    case StyleParamKey::text_required:
     case StyleParamKey::text_collide:
         if (_value == "true") { return true; }
         if (_value == "false") { return false; }
-        LOGW("Bool value required for capitalized/visible. Using Default.");
+        LOGW("Invalid boolean value %s for key %s", _value.c_str(), StyleParam::keyName(key).c_str());
         break;
     case StyleParamKey::text_order:
         LOGW("text:order parameter is ignored.");
@@ -375,6 +377,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::outline_visible:
     case StyleParamKey::centroid:
     case StyleParamKey::collide:
+    case StyleParamKey::text_required:
     case StyleParamKey::text_collide:
         if (!value.is<bool>()) break;
         return k + std::to_string(value.get<bool>());

@@ -207,8 +207,14 @@ void LabelCollider::process() {
     for (auto* label : m_labels) {
 
         // Manage link occlusion (unified icon labels)
-        if (label->parent() && label->parent()->isOccluded()) {
-            label->occlude();
+        if (label->parent()) {
+            // First check if the child is required is occluded
+            if (label->parent()->isOccluded()) {
+                label->occlude();
+            } else if (label->options().required && label->isOccluded()) {
+                label->parent()->occlude();
+                label->parent()->enterState(Label::State::dead, 0.0f);
+            }
         }
 
         if (label->isOccluded()) {

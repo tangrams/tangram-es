@@ -77,6 +77,7 @@ public:
         size_t paramHash = 0;
 
         LabelProperty::Anchors anchors;
+        bool required = true;
     };
 
     static const float activation_distance_threshold;
@@ -127,8 +128,8 @@ public:
     bool isOccluded() const { return m_occluded; }
     bool occludedLastFrame() const { return m_occludedLastFrame; }
 
-    const Label* parent() const { return m_parent; }
-    void setParent(const Label& _parent, bool _definePriority);
+    Label* parent() const { return m_parent; }
+    void setParent(Label& parent, bool definePriority);
 
     LabelProperty::Anchor anchorType() const { return m_options.anchors[m_anchorIndex]; }
 
@@ -174,7 +175,7 @@ protected:
 
     glm::vec2 m_anchor;
 
-    const Label* m_parent;
+    Label* m_parent;
 
 };
 
