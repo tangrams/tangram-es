@@ -54,10 +54,7 @@ public:
     virtual void clearRasters();
     virtual void clearRaster(const TileID& id);
 
-    virtual bool equals(const DataSource& _other) const {
-        return m_name == _other.m_name &&
-               m_urlTemplate == _other.m_urlTemplate;
-    }
+    bool equals(const DataSource& _other) const;
 
     virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask = -1);
 
