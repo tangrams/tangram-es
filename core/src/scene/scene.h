@@ -94,6 +94,8 @@ public:
     int addIdForName(const std::string& _name);
     int getIdForName(const std::string& _name) const;
 
+    int addJsFunction(const std::string& _function);
+
     const int32_t id;
 
     bool useScenePosition = true;

@@ -1201,8 +1201,7 @@ Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
         const std::string& val = _filter.Scalar();
 
         if (val.compare(0, 8, "function") == 0) {
-            scene.functions().push_back(val);
-            return Filter::MatchFunction(scene.functions().size()-1);
+            return Filter::MatchFunction(scene.addJsFunction(val));
         }
         break;
     }
@@ -1365,8 +1364,7 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
 
             if (val.compare(0, 8, "function") == 0) {
                 StyleParam param(key, "");
-                param.function = scene->functions().size();
-                scene->functions().push_back(val);
+                param.function = scene->addJsFunction(val);
                 out.push_back(std::move(param));
             } else {
                 out.push_back(StyleParam{ key, val });
