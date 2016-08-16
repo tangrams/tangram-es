@@ -47,10 +47,10 @@ void TileManager::setDataSources(const std::vector<std::shared_ptr<DataSource>>&
         [&](auto& tileSet) {
             if (!tileSet.clientDataSource) {
                 auto sIt = std::find_if(_sources.begin(), _sources.end(),
-                                        [&](auto& source){ return source->name() == tileSet.source->name(); });
+                                        [&](auto& source){ return source->equals(*tileSet.source); });
 
                 if (sIt == _sources.end() || !(*sIt)->generateGeometry()) {
-                    DBG("remove source %s", tileSet.source->name().c_str());
+                    LOGD("remove source %s", tileSet.source->name().c_str());
                     return true;
                 }
             }
@@ -70,7 +70,7 @@ void TileManager::setDataSources(const std::vector<std::shared_ptr<DataSource>>&
                          }) == m_tileSets.end()
                 && source->generateGeometry()) {
 
-            DBG("add source %s", source.second->name().c_str());
+            LOGD("add source %s", source->name().c_str());
 
             m_tileSets.push_back({ source, false });
         }
