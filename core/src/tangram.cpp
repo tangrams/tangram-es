@@ -611,15 +611,15 @@ bool Map::markerRemove(Marker* _marker) {
     return impl->markerManager.remove(_marker);
 }
 
-bool Map::markerSetPoint(Marker* _marker, double _lng, double _lat) {
-    return impl->markerManager.setPoint(_marker, _lng, _lat);
+bool Map::markerSetPoint(Marker* _marker, LngLat _lngLat) {
+    return impl->markerManager.setPoint(_marker, _lngLat);
 }
 
-bool Map::markerSetPolyline(Marker* _marker, double* _coordinates, int _count) {
+bool Map::markerSetPolyline(Marker* _marker, LngLat* _coordinates, int _count) {
     return impl->markerManager.setPolyline(_marker, _coordinates, _count);
 }
 
-bool Map::markerSetPolygon(Marker* _marker, double** _coordinates, int* _counts, int _rings) {
+bool Map::markerSetPolygon(Marker* _marker, LngLat* _coordinates, int* _counts, int _rings) {
     return impl->markerManager.setPolygon(_marker, _coordinates, _counts, _rings);
 }
 

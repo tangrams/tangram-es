@@ -1,6 +1,7 @@
 #pragma once
 
 #include "data/properties.h"
+#include "util/types.h"
 #include <functional>
 #include <memory>
 #include <string>
@@ -153,11 +154,11 @@ public:
 
     bool markerRemove(Marker* _marker);
 
-    bool markerSetPoint(Marker* _marker, double _lng, double _lat);
+    bool markerSetPoint(Marker* _marker, LngLat _lngLat);
 
-    bool markerSetPolyline(Marker* _marker, double* _coordinates, int _count);
+    bool markerSetPolyline(Marker* _marker, LngLat* _coordinates, int _count);
 
-    bool markerSetPolygon(Marker* _marker, double** _coordinates, int* _counts, int _rings);
+    bool markerSetPolygon(Marker* _marker, LngLat* _coordinates, int* _counts, int _rings);
 
     bool markerSetStyling(Marker* _marker, const char* _styling);
 

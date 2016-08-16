@@ -57,7 +57,7 @@ bool MarkerManager::setStyling(Marker* marker, const char* styling) {
     return true;
 }
 
-bool MarkerManager::setPoint(Marker* marker, double lng, double lat) {
+bool MarkerManager::setPoint(Marker* marker, LngLat lngLat) {
     if (!marker || !contains(marker)) { return false; }
 
     // If the marker does not have a 'point' feature mesh built, build it.
@@ -70,13 +70,13 @@ bool MarkerManager::setPoint(Marker* marker, double lng, double lat) {
     }
 
     // Update the marker's bounds to the given coordinates.
-    auto origin = m_mapProjection->LonLatToMeters({ lng, lat });
+    auto origin = m_mapProjection->LonLatToMeters({ lngLat.longitude, lngLat.latitude });
     marker->setBounds({ origin, origin });
 
     return true;
 }
 
-bool MarkerManager::setPolyline(Marker* marker, double* coordinates, int count) {
+bool MarkerManager::setPolyline(Marker* marker, LngLat* coordinates, int count) {
     if (!marker || !contains(marker)) { return false; }
     if (!coordinates || count < 2) { return false; }
 
@@ -88,18 +88,18 @@ bool MarkerManager::setPolyline(Marker* marker, double* coordinates, int count) 
 
     // Determine the bounds of the polyline.
     BoundingBox bounds;
-    bounds.min = { coordinates[0], coordinates[1] };
+    bounds.min = { coordinates[0].longitude, coordinates[0].latitude };
     bounds.max = bounds.min;
     for (int i = 0; i < count; ++i) {
-        bounds.expand(coordinates[2 * i], coordinates[2 * i + 1]);
+        bounds.expand(coordinates[i].longitude, coordinates[i].latitude);
     }
     bounds.min = m_mapProjection->LonLatToMeters(bounds.min);
     bounds.max = m_mapProjection->LonLatToMeters(bounds.max);
 
     // Project and offset the coordinates into the marker-local coordinate system.
-    auto origin = glm::dvec2(bounds.min.x, bounds.max.y); // SW corner.
+    auto origin = bounds.min; // glm::dvec2(bounds.min.x, bounds.max.y); // SW corner.
     for (int i = 0; i < count; ++i) {
-        auto degrees = glm::dvec2(coordinates[2 * i], coordinates[2 * i + 1]);
+        auto degrees = glm::dvec2(coordinates[i].longitude, coordinates[i].latitude);
         auto meters = m_mapProjection->LonLatToMeters(degrees);
         line.emplace_back(meters.x - origin.x, meters.y - origin.y, 0.f);
     }
@@ -116,7 +116,7 @@ bool MarkerManager::setPolyline(Marker* marker, double* coordinates, int count) 
     return true;
 }
 
-bool MarkerManager::setPolygon(Marker* marker, double** coordinates, int* counts, int rings) {
+bool MarkerManager::setPolygon(Marker* marker, LngLat* coordinates, int* counts, int rings) {
     if (!marker || !contains(marker)) { return false; }
     if (!coordinates || !counts || rings < 1) { return false; }
 
@@ -128,32 +128,34 @@ bool MarkerManager::setPolygon(Marker* marker, double** coordinates, int* counts
 
     // Determine the bounds of the polygon.
     BoundingBox bounds;
+    LngLat* ring = coordinates;
     for (int i = 0; i < rings; ++i) {
         int count = counts[i];
-        double* ring = coordinates[i];
         for (int j = 0; j < count; ++j) {
             if (i == 0 && j == 0) {
-                bounds.min = { ring[0], ring[1] };
+                bounds.min = { ring[0].longitude, ring[0].latitude };
                 bounds.max = bounds.min;
             }
-            bounds.expand(ring[2 * j], ring[2 * j + 1]);
+            bounds.expand(ring[j].longitude, ring[j].latitude);
         }
+        ring += count;
     }
     bounds.min = m_mapProjection->LonLatToMeters(bounds.min);
     bounds.max = m_mapProjection->LonLatToMeters(bounds.max);
 
     // Project and offset the coordinates into the marker-local coordinate system.
     auto origin = glm::dvec2(bounds.min.x, bounds.max.y); // SW corner.
+    ring = coordinates;
     for (int i = 0; i < rings; ++i) {
         int count = counts[i];
-        double* ring = coordinates[i];
         polygon.emplace_back();
         auto& line = polygon.back();
         for (int j = 0; j < count; ++j) {
-            auto degrees = glm::dvec2(ring[2 * j], ring[2 * j + 1]);
+            auto degrees = glm::dvec2(ring[j].longitude, ring[j].latitude);
             auto meters = m_mapProjection->LonLatToMeters(degrees);
             line.emplace_back(meters.x - origin.x, meters.y - origin.y, 0.f);
         }
+        ring += count;
     }
 
     // Update the feature data for the marker.

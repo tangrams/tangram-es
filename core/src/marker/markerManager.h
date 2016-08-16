@@ -3,6 +3,7 @@
 #include "scene/styleContext.h"
 #include "scene/drawRule.h"
 #include "util/fastmap.h"
+#include "util/types.h"
 #include <memory>
 #include <vector>
 
@@ -25,11 +26,11 @@ public:
 
     bool setStyling(Marker* marker, const char* styling);
 
-    bool setPoint(Marker* marker, double lng, double lat);
+    bool setPoint(Marker* marker, LngLat lngLat);
 
-    bool setPolyline(Marker* marker, double* coordinates, int count);
+    bool setPolyline(Marker* marker, LngLat* coordinates, int count);
 
-    bool setPolygon(Marker* marker, double** coordinates, int* counts, int rings);
+    bool setPolygon(Marker* marker, LngLat* coordinates, int* counts, int rings);
 
     const std::vector<std::unique_ptr<Marker>>& markers() const;
 
