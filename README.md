@@ -58,7 +58,7 @@ open build/xcode/tangram.xcodeproj
 Note that any Xcode configuration change you make to the project won't be preserved when CMake runs again. Build configuration is defined only in the CMakeLists file(s).
 
 ### CLion (OS X & Ubuntu Linux) ###
-You can easily run and debug from CLion if you prefer. 
+You can easily run and debug from CLion if you prefer.
 
 After cloning and updating your git submodules, open CLion and __Import Project from Sources__. Select the root of this repo. Choose __Open Project__. Do not overwrite CMakeLists.txt.
 
@@ -118,6 +118,13 @@ open build/ios/tangram.xcodeproj
 ```
 
 If you run into problems deploying to an iOS device, see [this note](https://github.com/tangrams/tangram-es/wiki/iOS-Notes).
+
+### iOS Binary Framework  ###
+**EXPERIMENTAL**
+
+An iOS binary framework bundle targeted for ARM architectures can be produced by following the instructions for iOS Devices above, and then copying the Xcode project out of the `/ios` directory and overwriting the CMake produced project. Then, copy the `tangram_framework` folder out of `/ios` and drop that in the same directory as the Xcode project. This will allow you to open the Xcode project and build the `tangram_framework` target in Xcode.
+
+Future releases will include simulator support, and a more streamlined / automated system for moving files into place.
 
 ### Android ###
 To build for Android you'll need to have installed both the [Android SDK](http://developer.android.com/sdk/installing/index.html?pkg=tools) and the [Android NDK](https://developer.android.com/tools/sdk/ndk/index.html). Set an `ANDROID_HOME` environment variable with the root directory of your SDK and an `ANDROID_NDK` environment variable with the root directory of your NDK.
