@@ -37,7 +37,7 @@ std::unique_ptr<StyledMesh> PointStyleBuilder::build() {
     if (m_quads.empty()) { return nullptr; }
 
 
-    if (Tangram::getDebugFlag(DebugFlags::all_labels)) {
+    if (Tangram::getDebugFlag(DebugFlags::draw_all_labels)) {
 
         m_iconMesh->setLabels(m_labels);
 
@@ -136,6 +136,9 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
 
     LabelProperty::anchor(anchor, p.anchor);
 
+    p.labelOptions.anchors.anchor[0] = p.anchor;
+    p.labelOptions.anchors.count = 1;
+
     if (p.labelOptions.interactive) {
         p.labelOptions.properties = std::make_shared<Properties>(_props);
     }
@@ -153,7 +156,6 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
                                                      _params.size,
                                                      _params.labelOptions,
                                                      _params.extrudeScale,
-                                                     _params.anchor,
                                                      *m_spriteLabels,
                                                      m_quads.size()));
 
@@ -163,14 +165,17 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
     glm::vec2 uvTR = glm::vec2{_quad.z, _quad.w} * SpriteVertex::texture_scale;
     glm::vec2 uvBL = glm::vec2{_quad.x, _quad.y} * SpriteVertex::texture_scale;
 
+    float sx = size.x * 0.5f;
+    float sy = size.y * 0.5f;
+
     m_quads.push_back({
-            {{{0, 0},
+            {{{-sx, sy},
              {uvBL.x, uvTR.y}},
-            {{size.x, 0},
+            {{sx, sy},
              {uvTR.x, uvTR.y}},
-            {{0, -size.y},
+            {{-sx, -sy},
              {uvBL.x, uvBL.y}},
-            {{size.x, -size.y},
+            {{sx, -sy},
              {uvTR.x, uvBL.y}}},
             _params.color});
 }
@@ -268,7 +273,7 @@ void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
     bool textVisible = true;
     _rule.get(StyleParamKey::text_visible, textVisible);
 
-    if ( textVisible && _rule.contains(StyleParamKey::point_text) ) {
+    if (textVisible && _rule.contains(StyleParamKey::point_text)) {
         if (iconsCount == 0) { return; }
 
         auto& textStyleBuilder = static_cast<TextStyleBuilder&>(*m_textStyleBuilder);
@@ -276,7 +281,7 @@ void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
 
         size_t textStart = textLabels.size();
 
-        textStyleBuilder.addFeatureCommon(_feat, _rule, true);
+        if (!textStyleBuilder.addFeatureCommon(_feat, _rule, true)) { return; }
 
         size_t textCount = textLabels.size() - textStart;
 

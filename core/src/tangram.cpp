@@ -299,9 +299,9 @@ bool Map::update(float _dt) {
             for (const auto& tile : tiles) {
                 tile->update(_dt, impl->view);
             }
-            impl->labels.updateLabelSet(impl->view, _dt, impl->scene->styles(), tiles,
-                                        impl->tileManager.getTileCache());
 
+            impl->labels.updateLabelSet(impl->view, _dt, impl->scene->styles(), tiles,
+                                        *impl->tileManager.getTileCache());
         } else {
             impl->labels.updateLabels(impl->view, _dt, impl->scene->styles(), tiles);
         }
@@ -321,7 +321,7 @@ bool Map::update(float _dt) {
     }
 
     // Request for render if labels are in fading in/out states
-    if (impl->labels.needUpdate()) { requestRender(); }
+    if (labelsNeedUpdate) { requestRender(); }
 
     return viewComplete;
 }
@@ -685,6 +685,7 @@ void toggleDebugFlag(DebugFlags _flag) {
 
     // Rebuild tiles for debug modes that needs it
     // if (_flag == DebugFlags::proxy_colors
+    //  || _flag == DebugFlags::draw_all_labels
     //  || _flag == DebugFlags::tile_bounds
     //  || _flag == DebugFlags::tile_infos) {
     //     if (m_tileManager) {

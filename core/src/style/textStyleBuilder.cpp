@@ -16,12 +16,11 @@
 #include <cmath>
 #include <locale>
 #include <mutex>
-#include <sstream>
+#include <algorithm>
 
 namespace Tangram {
 
 const static std::string key_name("name");
-
 
 TextStyleBuilder::TextStyleBuilder(const TextStyle& _style)
     : StyleBuilder(_style),
@@ -50,7 +49,7 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
 
     if (m_quads.empty()) { return nullptr; }
 
-    if (Tangram::getDebugFlag(DebugFlags::all_labels)) {
+    if (Tangram::getDebugFlag(DebugFlags::draw_all_labels)) {
         m_textLabels->setLabels(m_labels);
 
         std::vector<GlyphQuad> quads(m_quads);
@@ -69,11 +68,12 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
         for (auto& label : m_labels) {
             auto* textLabel = static_cast<TextLabel*>(label.get());
 
-            auto& range = textLabel->quadRange();
+            auto& ranges = textLabel->textRanges();
+
             bool active = textLabel->state() != Label::State::dead;
 
-            if (range.end() != quadPos) {
-                quadPos = range.end();
+            if (ranges.back().end() != quadPos) {
+                quadPos = ranges.back().end();
                 added = false;
             }
 
@@ -82,7 +82,10 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
             sumLabels +=1;
             if (!added) {
                 added = true;
-                sumQuads += range.length;
+
+                for (auto& textRange : ranges) {
+                    sumQuads += textRange.length;
+                }
             }
         }
 
@@ -100,24 +103,33 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
         for (auto& label : m_labels) {
             auto* textLabel = static_cast<TextLabel*>(label.get());
 
-            auto& range = textLabel->quadRange();
             bool active = textLabel->state() != Label::State::dead;
-
-            if (range.end() != quadPos) {
-                quadStart = quadEnd;
-                quadPos = range.end();
-                added = false;
-            }
-
             if (!active) { continue; }
-            if (!added) {
-                added = true;
-                quadEnd += range.length;
 
-                auto it = m_quads.begin() + range.start;
-                quads.insert(quads.end(), it, it + range.length);
+            auto& ranges = textLabel->textRanges();
+
+            // Add the quads of line-labels only once
+            if (ranges.back().end() != quadPos) {
+                quadStart = quadEnd;
+                quadPos = ranges.back().end();
+
+                for (auto& textRange : ranges) {
+                    if (textRange.length > 0) {
+                        quadEnd += textRange.length;
+
+                        auto it = m_quads.begin() + textRange.start;
+                        quads.insert(quads.end(), it, it + textRange.length);
+                    }
+                }
             }
-            range.start = quadStart;
+
+            // Update TextRange
+            auto start = quadStart;
+
+            for (auto& textRange : ranges) {
+                textRange.start = start;
+                start += textRange.length;
+            }
 
             labels.push_back(std::move(label));
         }
@@ -132,7 +144,7 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
     return std::move(m_textLabels);
 }
 
-void TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _rule, bool _iconText) {
+bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _rule, bool _iconText) {
     TextStyle::Parameters params = applyRule(_rule, _feat.props, _iconText);
 
     Label::Type labelType;
@@ -147,7 +159,7 @@ void TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
     size_t quadsStart = m_quads.size();
     size_t numLabels = m_labels.size();
 
-    if (!prepareLabel(params, labelType)) { return; }
+    if (!prepareLabel(params, labelType)) { return false; }
 
     if (_feat.geometryType == GeometryType::points) {
         for (auto& point : _feat.points) {
@@ -188,6 +200,7 @@ void TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
         // Drop quads when no label was added
         m_quads.resize(quadsStart);
     }
+    return true;
 }
 
 void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::Parameters& _params) {
@@ -257,12 +270,6 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     TextStyle::Parameters p;
 
-    if (_iconText) {
-        p = m_style.defaultUnifiedParams();
-    }
-
-    glm::vec2 offset;
-
     _rule.get(StyleParamKey::text_source, p.text);
     if (!_rule.isJSFunction(StyleParamKey::text_source)) {
         if (p.text.empty()) {
@@ -289,23 +296,38 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     _rule.get(StyleParamKey::text_font_fill, p.fill);
 
-    p.labelOptions.offset *= m_style.pixelScale();
-
     _rule.get(StyleParamKey::text_font_stroke_color, p.strokeColor);
     _rule.get(StyleParamKey::text_font_stroke_width, p.strokeWidth);
     p.strokeWidth *= m_style.pixelScale();
 
-    const std::string* anchor = nullptr;
+    _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
+    _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
+    _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
 
     uint32_t priority;
     if (_iconText) {
+
         if (_rule.get(StyleParamKey::text_priority, priority)) {
             p.labelOptions.priority = (float)priority;
         }
         _rule.get(StyleParamKey::text_collide, p.labelOptions.collide);
         _rule.get(StyleParamKey::text_interactive, p.interactive);
         _rule.get(StyleParamKey::text_offset, p.labelOptions.offset);
-        anchor = _rule.get<std::string>(StyleParamKey::text_anchor);
+        p.labelOptions.offset *= m_style.pixelScale();
+
+        _rule.get(StyleParamKey::text_anchor, p.labelOptions.anchors);
+        if (p.labelOptions.anchors.count == 0) {
+            p.labelOptions.anchors = {{
+                    {LabelProperty::Anchor::bottom,
+                     LabelProperty::Anchor::top,
+                     LabelProperty::Anchor::right,
+                     LabelProperty::Anchor::left}}, 4};
+        }
+
+        _rule.get(StyleParamKey::text_transition_hide_time, p.labelOptions.hideTransition.time);
+        _rule.get(StyleParamKey::text_transition_selected_time, p.labelOptions.selectTransition.time);
+        _rule.get(StyleParamKey::text_transition_show_time, p.labelOptions.showTransition.time);
+
     } else {
         if (_rule.get(StyleParamKey::priority, priority)) {
             p.labelOptions.priority = (float)priority;
@@ -313,12 +335,15 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         _rule.get(StyleParamKey::collide, p.labelOptions.collide);
         _rule.get(StyleParamKey::interactive, p.interactive);
         _rule.get(StyleParamKey::offset, p.labelOptions.offset);
-        anchor = _rule.get<std::string>(StyleParamKey::anchor);
+        p.labelOptions.offset *= m_style.pixelScale();
+
+        _rule.get(StyleParamKey::anchor, p.labelOptions.anchors);
+        if (p.labelOptions.anchors.count == 0) {
+            p.labelOptions.anchors = {{
+                    {LabelProperty::Anchor::center}}, 1};
+        }
     }
 
-    _rule.get(StyleParamKey::text_transition_hide_time, p.labelOptions.hideTransition.time);
-    _rule.get(StyleParamKey::text_transition_selected_time, p.labelOptions.selectTransition.time);
-    _rule.get(StyleParamKey::text_transition_show_time, p.labelOptions.showTransition.time);
     _rule.get(StyleParamKey::text_wrap, p.maxLineWidth);
 
     size_t repeatGroupHash = 0;
@@ -341,11 +366,8 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     p.labelOptions.repeatDistance *= m_style.pixelScale();
 
     if (p.interactive) {
+        // TODO optimization: for icon-text use the parent's properties
         p.labelOptions.properties = std::make_shared<Properties>(_props);
-    }
-
-    if (anchor) {
-        LabelProperty::anchor(*anchor, p.anchor);
     }
 
     if (auto* transform = _rule.get<std::string>(StyleParamKey::text_transform)) {
@@ -354,23 +376,8 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     if (auto* align = _rule.get<std::string>(StyleParamKey::text_align)) {
         bool res = TextLabelProperty::align(*align, p.align);
-        if (!res) {
-            switch(p.anchor) {
-            case LabelProperty::Anchor::top_left:
-            case LabelProperty::Anchor::left:
-            case LabelProperty::Anchor::bottom_left:
-                p.align = TextLabelProperty::Align::right;
-                break;
-            case LabelProperty::Anchor::top_right:
-            case LabelProperty::Anchor::right:
-            case LabelProperty::Anchor::bottom_right:
-                p.align = TextLabelProperty::Align::left;
-                break;
-            case LabelProperty::Anchor::top:
-            case LabelProperty::Anchor::bottom:
-            case LabelProperty::Anchor::center:
-                break;
-            }
+        if (!res && p.labelOptions.anchors.count > 0) {
+            p.align = TextLabelProperty::alignFromAnchor(p.labelOptions.anchors[0]);
         }
     }
 
@@ -484,14 +491,15 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     m_attributes.fill = _params.fill;
     m_attributes.fontScale = _params.fontScale * 64.f;
     if (m_attributes.fontScale > 255) {
-        // FIXME: This warning should not be logged for every label
-        // LOGW("Too large font scale %f, maximal scale is 4", _params.fontScale);
+        LOGN("Too large font scale %f, maximal scale is 4", _params.fontScale);
         m_attributes.fontScale = 255;
     }
     m_attributes.quadsStart = m_quads.size();
 
+    m_attributes.textRanges = TextRange{};
+
     glm::vec2 bbox(0);
-    if (ctx->layoutText(_params, *renderText, m_quads, m_atlasRefs, bbox)) {
+    if (ctx->layoutText(_params, *renderText, m_quads, m_atlasRefs, bbox, m_attributes.textRanges)) {
         m_attributes.width = bbox.x;
         m_attributes.height = bbox.y;
         return true;
@@ -502,13 +510,11 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
                                 Label::Transform _transform) {
 
-    int quadsStart = m_attributes.quadsStart;
-    int quadsCount = m_quads.size() - quadsStart;
-
-    m_labels.emplace_back(new TextLabel(_transform, _type, _params.labelOptions, _params.anchor,
+    m_labels.emplace_back(new TextLabel(_transform, _type, _params.labelOptions,
                                         {m_attributes.fill, m_attributes.stroke, m_attributes.fontScale},
                                         {m_attributes.width, m_attributes.height},
-                                        *m_textLabels, {quadsStart, quadsCount}));
+                                        *m_textLabels, m_attributes.textRanges,
+                                        _params.align));
 }
 
 }

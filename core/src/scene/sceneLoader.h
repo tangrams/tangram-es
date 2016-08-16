@@ -84,7 +84,7 @@ struct SceneLoader {
 
     static void parseStyleParams(Node params, const std::shared_ptr<Scene>& scene, const std::string& propPrefix,
                                  std::vector<StyleParam>& out);
-    static void parseTransition(Node params, const std::shared_ptr<Scene>& scene, std::vector<StyleParam>& out);
+    static void parseTransition(Node params, const std::shared_ptr<Scene>& scene, std::string _prefix, std::vector<StyleParam>& out);
 
     static bool parseStyleUniforms(const Node& value, const std::shared_ptr<Scene>& scene, StyleUniform& styleUniform);
 

@@ -60,6 +60,8 @@ public:
 
     const glm::mat4& getModelMatrix() const { return m_modelMatrix; }
 
+    const glm::mat4& mvp() const { return m_mvp; }
+
     void initGeometry(uint32_t _size);
 
     const std::unique_ptr<StyledMesh>& getMesh(const Style& _style) const;
@@ -112,6 +114,8 @@ private:
     // Note that this matrix does not contain the relative translation from the global origin to the tile origin.
     // Distances from the global origin are too large to represent precisely in 32-bit floats, so we only apply the
     // relative translation from the view origin to the model origin immediately before drawing the tile.
+
+    glm::mat4 m_mvp;
 
     // Map of <Style>s and their associated <Mesh>es
     std::vector<std::unique_ptr<StyledMesh>> m_geometry;

@@ -560,7 +560,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
                 auto ptr = (unsigned char*)(rawData.data());
                 size_t dataSize = rawData.size();
                 std::lock_guard<std::mutex> lock(m_textureMutex);
-				auto texture = scene->getTexture(name);
+                auto texture = scene->getTexture(name);
                 if (texture) {
                     if (!texture->loadImageFromMemory(ptr, dataSize)) {
                         LOGE("Invalid texture data '%s'", url.c_str());
@@ -804,7 +804,7 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, const std::shared
             const std::string& textureName = textureNode.Scalar();
             auto& atlases = scene->spriteAtlases();
             auto atlasIt = atlases.find(textureName);
-			auto styleTexture = scene->getTexture(textureName);
+            auto styleTexture = scene->getTexture(textureName);
             if (atlasIt != atlases.end()) {
                 pointStyle->setSpriteAtlas(atlasIt->second);
             } else if (styleTexture){
@@ -1347,8 +1347,8 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
         } else {
             key = prop.first.Scalar();
         }
-        if (key == "transition") {
-            parseTransition(prop.second, scene, out);
+        if (key == "transition" || key == "text:transition") {
+            parseTransition(prop.second, scene, key, out);
             continue;
         }
 
@@ -1499,31 +1499,31 @@ bool SceneLoader::parseStyleUniforms(const Node& value, const std::shared_ptr<Sc
     return true;
 }
 
-void SceneLoader::parseTransition(Node params, const std::shared_ptr<Scene>& scene, std::vector<StyleParam>& out) {
-
-    static const std::string prefix = "transition";
+void SceneLoader::parseTransition(Node params, const std::shared_ptr<Scene>& scene, std::string _prefix, std::vector<StyleParam>& out) {
 
     for (const auto& prop : params) {
-        if (!prop.first) {
-            continue;
-        }
-        auto keys = prop.first.as<std::vector<std::string>>();
+        if (!prop.first) { continue; }
+        std::vector<std::string> keys;
 
+        if (prop.first.IsScalar()) {
+            keys.push_back(prop.first.as<std::string>());
+        } else if (prop.first.IsSequence()) {
+            keys = prop.first.as<std::vector<std::string>>();
+        }
         for (const auto& key : keys) {
             std::string prefixedKey;
             switch (prop.first.Type()) {
-                case YAML::NodeType::Sequence:
-                    prefixedKey = prefix + DELIMITER + key;
-                    break;
-                case YAML::NodeType::Scalar:
-                    prefixedKey = prefix + DELIMITER + prop.first.as<std::string>();
-                    break;
-                default:
-                    LOGW("Expected a scalar or sequence value for transition");
-                    continue;
-                    break;
+            case YAML::NodeType::Sequence:
+                prefixedKey = _prefix + DELIMITER + key;
+                break;
+            case YAML::NodeType::Scalar:
+                prefixedKey = _prefix + DELIMITER + prop.first.as<std::string>();
+                break;
+            default:
+                LOGW("Expected a scalar or sequence value for transition");
+                continue;
+                break;
             }
-
             for (auto child : prop.second) {
                 auto childKey = prefixedKey + DELIMITER + child.first.as<std::string>();
                 out.push_back(StyleParam{ childKey, child.second.as<std::string>() });

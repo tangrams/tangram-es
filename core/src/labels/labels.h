@@ -35,7 +35,7 @@ public:
     void drawDebug(RenderState& rs, const View& _view);
 
     void updateLabelSet(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
-                        const std::vector<std::shared_ptr<Tile>>& _tiles, std::unique_ptr<TileCache>& _cache);
+                        const std::vector<std::shared_ptr<Tile>>& _tiles, TileCache& _cache);
 
     PERF_TRACE void updateLabels(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
                                  const std::vector<std::shared_ptr<Tile>>& _tiles, bool _onlyTransitions = true);
@@ -47,7 +47,7 @@ public:
 
     bool needUpdate() const { return m_needUpdate; }
 
-private:
+protected:
 
     using AABB = isect2d::AABB<glm::vec2>;
     using OBB = isect2d::OBB<glm::vec2>;
@@ -56,13 +56,13 @@ private:
 
     void skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
                          const std::vector<std::shared_ptr<Tile>>& _tiles,
-                         std::unique_ptr<TileCache>& _cache, float _currentZoom) const;
+                         TileCache& _cache, float _currentZoom) const;
 
     PERF_TRACE void skipTransitions(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) const;
 
     PERF_TRACE void sortLabels();
 
-    PERF_TRACE void handleOcclusions();
+    PERF_TRACE void handleOcclusions(const View& _view);
 
     PERF_TRACE bool withinRepeatDistance(Label *_label);
 
@@ -74,13 +74,14 @@ private:
 
     struct LabelEntry {
 
-        LabelEntry(Label* _label, bool _proxy)
+        LabelEntry(Label* _label, Tile* _tile, bool _proxy)
             : label(_label),
+              tile(_tile),
               priority(_label->options().priority),
               proxy(_proxy) {}
 
         Label* label;
-
+        Tile* tile;
         float priority;
         bool proxy;
     };

@@ -26,8 +26,7 @@ class SpriteLabel : public Label {
 public:
 
     SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Options _options,
-                float _extrudeScale, LabelProperty::Anchor _anchor,
-                SpriteLabels& _labels, size_t _labelsPos);
+                float _extrudeScale, SpriteLabels& _labels, size_t _labelsPos);
 
     void updateBBoxes(float _zoomFract) override;
 
@@ -35,8 +34,7 @@ public:
 
 private:
 
-    void applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
-        LabelProperty::Anchor _anchor) override;
+    void applyAnchor(LabelProperty::Anchor _anchor) override;
     
     // Back-pointer to owning container and position
     const SpriteLabels& m_labels;

@@ -60,7 +60,7 @@ public class MapController implements Renderer {
         TILE_INFOS,
         LABELS,
         TANGRAM_INFOS,
-        ALL_LABELS,
+        DRAW_ALL_LABELS,
         TANGRAM_STATS,
     }
 

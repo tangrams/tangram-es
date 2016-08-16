@@ -12,41 +12,27 @@ const float SpriteVertex::alpha_scale = 65535.0f;
 const float SpriteVertex::texture_scale = 65535.0f;
 
 SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Options _options,
-                         float _extrudeScale, LabelProperty::Anchor _anchor,
-                         SpriteLabels& _labels, size_t _labelsPos)
-    : Label(_transform, _size, Label::Type::point, _options, _anchor),
+                         float _extrudeScale, SpriteLabels& _labels, size_t _labelsPos)
+    : Label(_transform, _size, Label::Type::point, _options),
       m_labels(_labels),
       m_labelsPos(_labelsPos),
       m_extrudeScale(_extrudeScale) {
 
-    applyAnchor(m_dim, glm::vec2(0.0), _anchor);
+    applyAnchor(m_options.anchors[0]);
 }
 
-void SpriteLabel::applyAnchor(const glm::vec2& _dimension, const glm::vec2& _origin,
-                              LabelProperty::Anchor _anchor) {
-    // _dimension is not applied to the sprite anchor since fractionnal zoom
-    // level would result in scaling the sprite size dynamically, instead we
-    // store a factor between 0..1 to scale the sprite accordingly
+void SpriteLabel::applyAnchor(LabelProperty::Anchor _anchor) {
 
-    glm::vec2 direction = LabelProperty::anchorDirection(_anchor);
-
-    // Transform anchor direction from anchor space (centered)
-    // to local sprite space (lower-left corner for the sprite)
-    m_anchor = direction * glm::vec2(-0.5, 0.5) + glm::vec2(0.5);
-
-    m_anchor.x = -(m_dim.x * m_anchor.x);
-    m_anchor.y =  (m_dim.y * m_anchor.y);
+    m_anchor = LabelProperty::anchorDirection(_anchor) * m_dim * 0.5f;
 }
 
 void SpriteLabel::updateBBoxes(float _zoomFract) {
-    glm::vec2 halfSize = m_dim * 0.5f;
     glm::vec2 sp = m_transform.state.screenPos;
     glm::vec2 dim = m_dim + glm::vec2(m_extrudeScale * 2.f * _zoomFract);
 
     if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
 
-    m_obb = OBB({sp.x + halfSize.x, sp.y - halfSize.y},
-                m_transform.state.rotation, dim.x, dim.y);
+    m_obb = OBB(sp, m_transform.state.rotation, dim.x, dim.y);
 }
 
 void SpriteLabel::pushTransform() {

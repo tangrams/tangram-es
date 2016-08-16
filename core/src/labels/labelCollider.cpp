@@ -166,6 +166,10 @@ void LabelCollider::process() {
             }
         }
 
+        // Dont let parents occlude their child
+        if (l1->parent() == l2 || l2->parent() == l1) {
+            continue;
+        }
         if (l1->parent() && l1->parent()->isOccluded()) {
             l1->occlude();
         }
@@ -210,7 +214,7 @@ void LabelCollider::process() {
         if (label->isOccluded()) {
             label->enterState(Label::State::dead, 0.0f);
         } else {
-            label->enterState(Label::State::wait_occ, 0.0f);
+            label->enterState(Label::State::none, 0.0f);
         }
     }
 
