@@ -96,12 +96,15 @@ bool MarkerManager::setPolyline(Marker* marker, LngLat* coordinates, int count) 
     bounds.min = m_mapProjection->LonLatToMeters(bounds.min);
     bounds.max = m_mapProjection->LonLatToMeters(bounds.max);
 
+    float scaleX = 1. / bounds.width();
+    float scaleY = 1. / bounds.height();
+
     // Project and offset the coordinates into the marker-local coordinate system.
     auto origin = bounds.min; // glm::dvec2(bounds.min.x, bounds.max.y); // SW corner.
     for (int i = 0; i < count; ++i) {
         auto degrees = glm::dvec2(coordinates[i].longitude, coordinates[i].latitude);
         auto meters = m_mapProjection->LonLatToMeters(degrees);
-        line.emplace_back(meters.x - origin.x, meters.y - origin.y, 0.f);
+        line.emplace_back((meters.x - origin.x) * scaleX, (meters.y - origin.y) * scaleY, 0.f);
     }
 
     // Update the feature data for the marker.
@@ -143,6 +146,9 @@ bool MarkerManager::setPolygon(Marker* marker, LngLat* coordinates, int* counts,
     bounds.min = m_mapProjection->LonLatToMeters(bounds.min);
     bounds.max = m_mapProjection->LonLatToMeters(bounds.max);
 
+    float scaleX = 1. / bounds.width();
+    float scaleY = 1. / bounds.height();
+
     // Project and offset the coordinates into the marker-local coordinate system.
     auto origin = glm::dvec2(bounds.min.x, bounds.max.y); // SW corner.
     ring = coordinates;
@@ -153,7 +159,7 @@ bool MarkerManager::setPolygon(Marker* marker, LngLat* coordinates, int* counts,
         for (int j = 0; j < count; ++j) {
             auto degrees = glm::dvec2(ring[j].longitude, ring[j].latitude);
             auto meters = m_mapProjection->LonLatToMeters(degrees);
-            line.emplace_back(meters.x - origin.x, meters.y - origin.y, 0.f);
+            line.emplace_back((meters.x - origin.x) * scaleX, (meters.y - origin.y) * scaleY, 0.f);
         }
         ring += count;
     }

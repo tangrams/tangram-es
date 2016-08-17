@@ -6,6 +6,7 @@
 #include "style/style.h"
 #include "view/view.h"
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/transform.hpp"
 
 namespace Tangram {
 
@@ -17,8 +18,7 @@ Marker::~Marker() {
 
 void Marker::setBounds(BoundingBox bounds) {
     m_bounds = bounds;
-    m_origin = { bounds.min.x, bounds.max.y }; // South-West corner
-    m_modelMatrix = glm::scale(glm::mat4(), glm::vec3(bounds.width()));
+    m_origin = bounds.min; // South-West corner
 }
 
 void Marker::setFeature(std::unique_ptr<Feature> feature) {
@@ -36,10 +36,11 @@ void Marker::setMesh(uint32_t styleId, std::unique_ptr<StyledMesh> mesh) {
 }
 
 void Marker::update(float dt, const View& view) {
-    // Apply tile-view translation to the model matrix
+    // Apply marker-view translation to the model matrix
     const auto& viewOrigin = view.getPosition();
-    m_modelMatrix[3][0] = m_origin.x - viewOrigin.x;
-    m_modelMatrix[3][1] = m_origin.y - viewOrigin.y;
+    auto scaling = glm::scale(glm::vec3(m_bounds.width(), m_bounds.height(), 1.f));
+    auto translation = glm::translate(glm::vec3(m_origin.x - viewOrigin.x, m_origin.y - viewOrigin.y, 0.f));
+    m_modelMatrix = translation * scaling;
 }
 
 uint32_t Marker::styleId() const {
