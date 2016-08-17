@@ -25,9 +25,6 @@
 
 #define MIN_LINE_WIDTH 4
 
-// TODO: more flexibility on this
-#define BUNDLE_FONT_PATH "fonts/"
-
 namespace Tangram {
 
 FontContext::FontContext() :
@@ -394,7 +391,7 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     unsigned char* data = nullptr;
 
     // Assuming bundled ttf file follows this convention
-    std::string bundleFontPath = BUNDLE_FONT_PATH + FontDescription::BundleAlias(_family, _weight, _style);
+    std::string bundleFontPath = m_bundlePath + FontDescription::BundleAlias(_family, _weight, _style);
 
     if (!loadFontAlloc(bundleFontPath, data, dataSize)) {
 
