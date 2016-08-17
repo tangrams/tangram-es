@@ -43,7 +43,7 @@ endif()
 check_unsupported_compiler_version()
 
 # compile definitions (adds -DPLATFORM_LINUX)
-set(CORE_COMPILE_DEFS PLATFORM_TIZEN PLATFORM_LINUX)
+set(CORE_COMPILE_DEFS PLATFORM_TIZEN)
 
 if (USE_EXTERNAL_LIBS)
 include(${EXTERNAL_LIBS_DIR}/core-dependencies.cmake)
