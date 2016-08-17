@@ -31,69 +31,70 @@ FontContext::FontContext() :
 
     resourceLoad = 0;
 
-// TODO: make this platform independent
-#if defined(PLATFORM_ANDROID)
-    auto fontPath = systemFontPath("sans-serif", "400", "normal");
-    LOGD("FONT %s", fontPath.c_str());
+    std::string systemFont = systemFontPath("sans-serif", "400", "normal");
 
-    int size = BASE_SIZE;
-    for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
-        m_font[i] = m_alfons.addFont("default", alfons::InputSource(fontPath), size);
+    // Load default font
+    if (!systemFont.empty()) {
+        int size = BASE_SIZE;
+        for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
+            m_font[i] = m_alfons.addFont("default", alfons::InputSource(systemFont), size);
+        }
+    } else {
+        int size = BASE_SIZE;
+        auto loadFonts = [&](const char* path) {
+            size_t dataSize;
+            char* data = reinterpret_cast<char*>(bytesFromFile(path, dataSize));
+            if (data) {
+                for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
+                    m_font[i] = m_alfons.addFont("default", alfons::InputSource(data, dataSize), size);
+                }
+                free(data);
+            } else {
+                LOGW("Default font %s not found", path);
+            }
+        };
+
+        loadFonts(DEFAULT);
     }
 
     std::string fallback = "";
     int importance = 0;
+    fallback = systemFontFallbackPath(importance++, 400);
 
-    while (importance < 100) {
-        fallback = systemFontFallbackPath(importance++, 400);
-        if (fallback.empty()) { break; }
-        LOGD("FALLBACK %s", fallback.c_str());
+    // Load fallback system fonts
+    if (!fallback.empty()) {
+        while (importance < 100) {
+            fallback = systemFontFallbackPath(importance++, 400);
+            if (fallback.empty()) { break; }
+            LOG("Font fallback at path %s", fallback.c_str());
+            int size = BASE_SIZE;
+            for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
+                m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(fallback), size));
+            }
+        }
+    } else {
+        LOGW("No system font fallback, loading bundled fonts");
 
         int size = BASE_SIZE;
-        for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
-            m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(fallback), size));
-        }
-    }
-#elif defined(PLATFORM_IOS)
-
-    int size = BASE_SIZE;
-    auto loadFonts = [&](const char* path) {
-        size_t dataSize;
-        char* data = reinterpret_cast<char*>(bytesFromFile(path, dataSize));
-        if (data) {
-            for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
-                m_font[i] = m_alfons.addFont("default", alfons::InputSource(data, dataSize), size);
-            }
-            free(data);
-        }
-    };
-    auto addFaces = [&](const char* path) {
-        size_t dataSize;
-        char* data = reinterpret_cast<char*>(bytesFromFile(path, dataSize));
-        if (data) {
-            for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
+        auto addFaces = [&](const char* path) {
+            size_t dataSize;
+            char* data = reinterpret_cast<char*>(bytesFromFile(path, dataSize));
+            if (data) {
+                LOG("Adding bundled font at path %s", path);
+                for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
                     m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(data, dataSize), size));
+                }
+                free(data);
+            } else {
+                LOGW("Bundle font %s not found", path);
             }
-            free(data);
-        }
-    };
+        };
 
-    loadFonts(DEFAULT);
-    addFaces(FONT_AR);
-    addFaces(FONT_HE);
-    addFaces(FONT_JA);
-    addFaces(FALLBACK);
-
-#else
-    int size = BASE_SIZE;
-    for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
-        m_font[i] = m_alfons.addFont("default", alfons::InputSource(DEFAULT), size);
-        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_AR), size));
-        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_HE), size));
-        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FONT_JA), size));
-        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(FALLBACK), size));
+        addFaces(FONT_AR);
+        addFaces(FONT_HE);
+        addFaces(FONT_JA);
+        addFaces(FALLBACK);
     }
-#endif
 }
 
 // Synchronized on m_mutex in layoutText(), called on tile-worker threads
