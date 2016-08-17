@@ -25,12 +25,12 @@
 namespace Tangram {
 
 FontContext::FontContext() :
+    resourceLoad(0),
     m_sdfRadius(SDF_WIDTH),
     m_atlas(*this, GlyphTexture::size, m_sdfRadius),
-    m_batch(m_atlas, m_scratch) {
+    m_batch(m_atlas, m_scratch) {}
 
-    resourceLoad = 0;
-
+void FontContext::loadFonts() {
     std::string systemFont = systemFontPath("sans-serif", "400", "normal");
 
     // Load default font

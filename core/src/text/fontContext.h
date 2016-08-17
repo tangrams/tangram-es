@@ -72,6 +72,8 @@ public:
 
     FontContext();
 
+    void loadFonts();
+
     /* Synchronized on m_mutex on tile-worker threads
      * Called from alfons when a texture atlas needs to be created
      * Triggered from TextStyleBuilder::prepareLabel
