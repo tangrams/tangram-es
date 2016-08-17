@@ -14,9 +14,6 @@
 #define FONT_JA "fonts/DroidSansJapanese.ttf"
 #define FALLBACK "fonts/DroidSansFallback.ttf"
 
-#if defined(PLATFORM_ANDROID)
-#define ANDROID_FONT_PATH "/system/fonts/"
-#endif
 #define BASE_SIZE   16
 #define STEP_SIZE   12
 #define MAX_STEPS   3
@@ -50,17 +47,11 @@ FontContext::FontContext() :
     while (importance < 100) {
         fallback = systemFontFallbackPath(importance++, 400);
         if (fallback.empty()) { break; }
-
-        if (fallback.find("UI-") != std::string::npos) {
-            continue;
-        }
-        fontPath = ANDROID_FONT_PATH;
-        fontPath += fallback;
-        LOGD("FALLBACK %s", fontPath.c_str());
+        LOGD("FALLBACK %s", fallback.c_str());
 
         int size = BASE_SIZE;
         for (int i = 0; i < MAX_STEPS; i++, size += STEP_SIZE) {
-            m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(fontPath), size));
+            m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(fallback), size));
         }
     }
 #elif defined(PLATFORM_IOS)

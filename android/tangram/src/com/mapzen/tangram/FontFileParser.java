@@ -135,7 +135,14 @@ class FontFileParser {
                                 fallbackFontDict.put(weight, new Vector<String>());
                             }
 
-                            fallbackFontDict.get(weight).add(filename);
+                            // Don't use UI fonts
+                            if (filename.indexOf("UI-") >= 0) {
+                                continue;
+                            }
+
+                            String fullFileName = "system/fonts/" + filename;
+
+                            fallbackFontDict.get(weight).add(fullFileName);
                         } else {
                             skip(parser);
                         }
@@ -156,10 +163,10 @@ class FontFileParser {
                         styleStr = (styleStr == null) ? "normal" : styleStr;
 
                         String filename = parser.nextText();
-                        String fullFilename = "/system/fonts/" + filename;
+                        String fullFileName = "/system/fonts/" + filename;
 
                         String key = name + "_" + weightStr + "_" + styleStr;
-                        fontDict.put(key, fullFilename);
+                        fontDict.put(key, fullFileName);
                     } else {
                         skip(parser);
                     }
