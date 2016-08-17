@@ -317,11 +317,9 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
         _rule.get(StyleParamKey::text_anchor, p.labelOptions.anchors);
         if (p.labelOptions.anchors.count == 0) {
-            p.labelOptions.anchors = {{
-                    {LabelProperty::Anchor::bottom,
-                     LabelProperty::Anchor::top,
-                     LabelProperty::Anchor::right,
-                     LabelProperty::Anchor::left}}, 4};
+            p.labelOptions.anchors.anchor = { LabelProperty::Anchor::bottom, LabelProperty::Anchor::top,
+                                              LabelProperty::Anchor::right, LabelProperty::Anchor::left };
+            p.labelOptions.anchors.count = 4;
         }
 
         _rule.get(StyleParamKey::text_transition_hide_time, p.labelOptions.hideTransition.time);
@@ -339,8 +337,8 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
         _rule.get(StyleParamKey::anchor, p.labelOptions.anchors);
         if (p.labelOptions.anchors.count == 0) {
-            p.labelOptions.anchors = {{
-                    {LabelProperty::Anchor::center}}, 1};
+            p.labelOptions.anchors.anchor = { LabelProperty::Anchor::center };
+            p.labelOptions.anchors.count = 1;
         }
     }
 

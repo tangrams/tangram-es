@@ -17,7 +17,7 @@ public:
 
     static constexpr size_t MAX_QUAD_VERTICES = 16384;
 
-    RenderState() {}
+    RenderState();
     ~RenderState();
 
     RenderState(const RenderState&) = delete;
@@ -109,66 +109,66 @@ private:
     void generateQuadIndexBuffer();
 
     struct {
-        GLboolean enabled = 0;
-        bool set = false;
+        GLboolean enabled;
+        bool set;
     } m_blending, m_culling, m_depthMask, m_depthTest, m_stencilTest;
 
     struct {
-        GLenum sfactor = 0, dfactor = 0;
-        bool set = false;
+        GLenum sfactor, dfactor;
+        bool set;
     } m_blendingFunc;
 
     struct {
-        GLuint mask = 0;
-        bool set = false;
+        GLuint mask;
+        bool set;
     } m_stencilMask;
 
     struct {
-        GLenum func = 0;
-        GLint ref = 0;
-        GLuint mask = 0;
-        bool set = false;
+        GLenum func;
+        GLint ref;
+        GLuint mask;
+        bool set;
     } m_stencilFunc;
 
     struct {
-        GLenum sfail = 0, spassdfail = 0, spassdpass = 0;
-        bool set = false;
+        GLenum sfail, spassdfail, spassdpass;
+        bool set;
     } m_stencilOp;
 
     struct {
-        GLboolean r = 0, g = 0, b = 0, a = 0;
-        bool set = false;
+        GLboolean r, g, b, a;
+        bool set;
     } m_colorMask;
 
     struct {
-        GLenum face = 0;
-        bool set = false;
+        GLenum face;
+        bool set;
     } m_frontFace, m_cullFace;
 
     struct {
-        GLuint handle = 0;
-        bool set = false;
+        GLuint handle;
+        bool set;
     } m_vertexBuffer, m_indexBuffer;
 
     struct {
-        GLuint program = 0;
-        bool set = false;
+        GLuint program;
+        bool set;
     } m_program;
 
     struct {
-        GLclampf r = 0., g = 0., b = 0., a = 0.;
-        bool set = false;
+        GLclampf r, g, b, a;
+        bool set;
     } m_clearColor;
 
     struct {
-        GLenum target = 0;
-        GLuint handle = 0;
-        bool set = false;
+        GLenum target;
+        GLuint handle;
+        bool set;
     } m_texture;
 
     struct {
-        GLuint unit = 0;
-        bool set = false;
+        GLuint unit;
+        bool set;
     } m_textureUnit;
 
 };
