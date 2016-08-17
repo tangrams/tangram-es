@@ -9,6 +9,28 @@
 
 namespace Tangram {
 
+RenderState::RenderState() {
+
+    m_blending = { 0, false };
+    m_culling = { 0, false };
+    m_depthMask = { 0, false };
+    m_depthTest = { 0, false };
+    m_stencilTest = { 0, false };
+    m_blendingFunc = { 0, 0, false };
+    m_stencilMask = { 0, false };
+    m_stencilFunc = { 0, 0, 0, false };
+    m_stencilOp = { 0, 0, 0, false };
+    m_colorMask = { 0, 0, 0, 0, false };
+    m_frontFace = { 0, false };
+    m_cullFace = { 0, false };
+    m_vertexBuffer = { 0, false };
+    m_indexBuffer = { 0, false };
+    m_program = { 0, false };
+    m_clearColor = { 0., 0., 0., 0., false };
+    m_texture = { 0, 0, false };
+    m_textureUnit = { 0, false };
+}
+
 GLuint RenderState::getTextureUnit(GLuint _unit) {
     return GL_TEXTURE0 + _unit;
 }
