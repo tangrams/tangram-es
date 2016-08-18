@@ -135,17 +135,17 @@ Then install to a connected device or emulator. You can (re)install and run the 
 ```
 
 ### Raspberry Pi ###
-To build on Rasberry Pi you will need a C++ toolchain with support for C++14. Clang 3.5 (or higher) is known to work.
+To build on Rasberry Pi you will need a C++ toolchain with support for C++14. GCC 4.9 (or higher) is known to work (refer [here](https://community.thinger.io/t/starting-with-the-raspberry-pi/36) for instructions on getting GCC 4.9).
 
-First, install Clang, CMake, and libcurl:
+First, install CMake and libcurl:
 
 ```
-sudo apt-get install clang-3.5 cmake libcurl4-openssl-dev
+sudo apt-get install cmake libcurl4-openssl-dev
 ```
 
 Before compiling, choose which compiler to use:
 ```
-export CXX=/usr/bin/clang++-3.5
+export CXX=/usr/bin/g++-4.9
 ```
 
 Then compile and run:
