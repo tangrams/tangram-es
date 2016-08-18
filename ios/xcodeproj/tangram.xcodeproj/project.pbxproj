@@ -332,7 +332,6 @@
 		057060CA2E4540A796FC92E3 /* fttype1.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C7DBE025A374E638B2E45AD /* fttype1.c */; settings = {COMPILER_FLAGS = ""; }; };
 		059F8B029E5F4E10A74B914F /* sceneLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB97698706544B96A6F3951D /* sceneLayer.cpp */; settings = {COMPILER_FLAGS = ""; }; };
 		063FD99A3DD141DFB7A175CE /* resbund.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D18D22924FA242029A921609 /* resbund.cpp */; settings = {COMPILER_FLAGS = ""; }; };
-		0653CE39A037493E94DDD064 /* dynamicQuadMesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8CB16FE27E73416C89E405B3 /* dynamicQuadMesh.cpp */; settings = {COMPILER_FLAGS = ""; }; };
 		06B4C726EA4D4F15844EE5DF /* dashArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD132164FF964FEAB3FD3984 /* dashArray.cpp */; settings = {COMPILER_FLAGS = ""; }; };
 		06EA80E7FD4F461CA1DAAC3B /* Main_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3847B717150243DCA53207A3 /* Main_iPhone.storyboard */; settings = {COMPILER_FLAGS = ""; }; };
 		07BEB67680864D0F8432CE1F /* parse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EAC42FC3422741B3A7FC0EF2 /* parse.cpp */; settings = {COMPILER_FLAGS = ""; }; };
@@ -670,6 +669,8 @@
 		DA3BDFCB299D4298AFB35367 /* linebreakdef.c in Sources */ = {isa = PBXBuildFile; fileRef = 948B79370581424BAAC00539 /* linebreakdef.c */; settings = {COMPILER_FLAGS = ""; }; };
 		DA421623DA7046EDA2515218 /* unistr_titlecase_brkiter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30943BEF56DB4DC3A8BE3A43 /* unistr_titlecase_brkiter.cpp */; settings = {COMPILER_FLAGS = ""; }; };
 		DA7340830CB845EB81208013 /* grid.jpg in CopyFiles */ = {isa = PBXBuildFile; fileRef = 8DAA8B5D3CB045EB827CA073 /* grid.jpg */; settings = {COMPILER_FLAGS = ""; }; };
+		DB1174E71D66105E00CD70DB /* disposer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB1174E51D66105E00CD70DB /* disposer.cpp */; };
+		DB1174E81D66105E00CD70DB /* disposer.h in Headers */ = {isa = PBXBuildFile; fileRef = DB1174E61D66105E00CD70DB /* disposer.h */; };
 		DB3C117A1D4BBE2600534CA9 /* TGMapViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = DB3C11791D4BBE2600534CA9 /* TGMapViewController.mm */; };
 		DB3C117B1D4BC11900534CA9 /* TGMapViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = DB3C11771D4BBE1F00534CA9 /* TGMapViewController.h */; };
 		DB3C117C1D4BC14800534CA9 /* TGMapViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = DB3C11791D4BBE2600534CA9 /* TGMapViewController.mm */; };
@@ -1805,7 +1806,6 @@
 		8B290E826E3E4F4896DFD97C /* chariter.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = chariter.cpp; path = "external/alfons/deps/harfbuzz-icu-freetype/icu/common/chariter.cpp"; sourceTree = SOURCE_ROOT; };
 		8B688FDCD6BD4A9FA471C42D /* mapProjection.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = mapProjection.h; path = core/src/util/mapProjection.h; sourceTree = SOURCE_ROOT; };
 		8BA40D864F32462381F35296 /* emitter.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = emitter.h; path = "external/yaml-cpp/include/yaml-cpp/emitter.h"; sourceTree = SOURCE_ROOT; };
-		8CB16FE27E73416C89E405B3 /* dynamicQuadMesh.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = dynamicQuadMesh.cpp; path = core/src/gl/dynamicQuadMesh.cpp; sourceTree = SOURCE_ROOT; };
 		8CCAC1B4EAE04A45809CF91D /* stops.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = stops.h; path = core/src/scene/stops.h; sourceTree = SOURCE_ROOT; };
 		8CD1B2679406443392D71BF8 /* yaml.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = yaml.h; path = "external/yaml-cpp/include/yaml-cpp/yaml.h"; sourceTree = SOURCE_ROOT; };
 		8CF4246515C2484EB800E1A1 /* propertyItem.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = propertyItem.h; path = core/src/data/propertyItem.h; sourceTree = SOURCE_ROOT; };
@@ -2027,6 +2027,8 @@
 		D9F26FF465A54427A05F2765 /* debugTextStyle.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = debugTextStyle.h; path = core/src/style/debugTextStyle.h; sourceTree = SOURCE_ROOT; };
 		DA62633156A9465EB19C0D59 /* viewConstraint.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = viewConstraint.cpp; path = core/src/view/viewConstraint.cpp; sourceTree = SOURCE_ROOT; };
 		DAFEC74411BD434BA5EBFAC6 /* emit.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = emit.cpp; path = "external/yaml-cpp/src/emit.cpp"; sourceTree = SOURCE_ROOT; };
+		DB1174E51D66105E00CD70DB /* disposer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = disposer.cpp; path = core/src/gl/disposer.cpp; sourceTree = "<group>"; };
+		DB1174E61D66105E00CD70DB /* disposer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = disposer.h; path = core/src/gl/disposer.h; sourceTree = "<group>"; };
 		DB3C11771D4BBE1F00534CA9 /* TGMapViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TGMapViewController.h; path = ios/src/TGMapViewController.h; sourceTree = "<group>"; };
 		DB3C11791D4BBE2600534CA9 /* TGMapViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGMapViewController.mm; path = ios/src/TGMapViewController.mm; sourceTree = "<group>"; };
 		DB7E43971D4B8A5400A6F40D /* labelCollider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = labelCollider.h; path = core/src/labels/labelCollider.h; sourceTree = "<group>"; };
@@ -2857,7 +2859,8 @@
 		9204DA1ECD874847B527196C /* gl */ = {
 			isa = PBXGroup;
 			children = (
-				8CB16FE27E73416C89E405B3 /* dynamicQuadMesh.cpp */,
+				DB1174E51D66105E00CD70DB /* disposer.cpp */,
+				DB1174E61D66105E00CD70DB /* disposer.h */,
 				662C79FC4DAA40218FF5C02E /* dynamicQuadMesh.h */,
 				5A8AF91DFAE3473ABDE6E850 /* error.cpp */,
 				8514A6A9553D44BE86584314 /* error.h */,
@@ -3612,6 +3615,14 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		DB62D18C1D551A5200D27226 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DB1174E81D66105E00CD70DB /* disposer.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DBD8895C1D2FC0EF00D05B1F /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -3858,6 +3869,7 @@
 			buildConfigurationList = 3A778D19DDA1405098B7FFDF /* Build configuration list for PBXNativeTarget "core" */;
 			buildPhases = (
 				476A1614768A47E9B3E76B04 /* Sources */,
+				DB62D18C1D551A5200D27226 /* Headers */,
 			);
 			buildRules = (
 			);
@@ -4340,7 +4352,6 @@
 				72CF719FBA7C46B6B5245EA7 /* topoJsonSource.cpp in Sources */,
 				3CD39CA66C09467DBF9126E6 /* frameInfo.cpp in Sources */,
 				DD9024C0440D4146A8F55A5E /* textDisplay.cpp in Sources */,
-				0653CE39A037493E94DDD064 /* dynamicQuadMesh.cpp in Sources */,
 				F250B8BAEB31477299E1282D /* error.cpp in Sources */,
 				36710266AFC4481B8400DD9F /* hardware.cpp in Sources */,
 				33866370595D45BF8E0041C1 /* mesh.cpp in Sources */,
@@ -4354,6 +4365,7 @@
 				7B76CA07A1DF456BBBE09014 /* vertexLayout.cpp in Sources */,
 				D551E67B65C54DE9B235F343 /* label.cpp in Sources */,
 				C5A4019BD1D44B07BCF16767 /* labelProperty.cpp in Sources */,
+				DB1174E71D66105E00CD70DB /* disposer.cpp in Sources */,
 				AD338F76539A421BA097B029 /* labelSet.cpp in Sources */,
 				F7983DDD3676494B9E417514 /* labels.cpp in Sources */,
 				C2A56EFCFA69475AB28C798B /* spriteLabel.cpp in Sources */,

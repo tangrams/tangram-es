@@ -24,7 +24,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
+
     self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
     if (!self.context) {
         NSLog(@"Failed to create ES context");
@@ -32,21 +32,21 @@
     self.pixelScale = [[UIScreen mainScreen] scale];
     self.renderRequested = YES;
     self.continuous = YES;
-    
+
     init(self);
-    
+
     GLKView *view = (GLKView *)self.view;
     view.context = self.context;
     view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
     view.drawableMultisample = GLKViewDrawableMultisample4X;
-    
+
     [self setupGestureRecognizers];
     [self setupGL];
-    
+
 }
 
 - (void)setupGestureRecognizers {
-    
+
     /* Construct Gesture Recognizers */
     //1. Tap
     UITapGestureRecognizer *tapRecognizer = [[UITapGestureRecognizer alloc]
@@ -54,37 +54,37 @@
     tapRecognizer.numberOfTapsRequired = 1;
     // TODO: Figure a way to have a delay set for it not to tap gesture not to wait long enough for a doubletap gesture to be recognized
     tapRecognizer.delaysTouchesEnded = NO;
-    
+
     //2. DoubleTap
     UITapGestureRecognizer *doubleTapRecognizer = [[UITapGestureRecognizer alloc]
                                                    initWithTarget:self action:@selector(respondToDoubleTapGesture:)];
     doubleTapRecognizer.numberOfTapsRequired = 2;
     // Distanle single tap when double tap occurs
     [tapRecognizer requireGestureRecognizerToFail:doubleTapRecognizer];
-    
+
     //3. Pan
     UIPanGestureRecognizer *panRecognizer = [[UIPanGestureRecognizer alloc]
                                              initWithTarget:self action:@selector(respondToPanGesture:)];
     panRecognizer.maximumNumberOfTouches = 1;
-    
+
     //4. Pinch
     UIPinchGestureRecognizer *pinchRecognizer = [[UIPinchGestureRecognizer alloc]
                                                  initWithTarget:self action:@selector(respondToPinchGesture:)];
-    
+
     //5. Rotate
     UIRotationGestureRecognizer *rotationRecognizer = [[UIRotationGestureRecognizer alloc]
                                                        initWithTarget:self action:@selector(respondToRotationGesture:)];
-    
+
     //6. Shove
     UIPanGestureRecognizer *shoveRecognizer = [[UIPanGestureRecognizer alloc]
                                                initWithTarget:self action:@selector(respondToShoveGesture:)];
     shoveRecognizer.minimumNumberOfTouches = 2;
-    
+
     // Use the delegate method 'shouldRecognizeSimultaneouslyWithGestureRecognizer' for gestures that can be concurrent
     panRecognizer.delegate = self;
     pinchRecognizer.delegate = self;
     rotationRecognizer.delegate = self;
-    
+
     /* Setup gesture recognizers */
     [self.view addGestureRecognizer:tapRecognizer];
     [self.view addGestureRecognizer:doubleTapRecognizer];
@@ -131,9 +131,9 @@
     CGPoint velocity = [panRecognizer velocityInView:self.view];
     CGPoint end = [panRecognizer locationInView:self.view];
     CGPoint start = {end.x - displacement.x, end.y - displacement.y};
-    
+
     [panRecognizer setTranslation:CGPointZero inView:self.view];
-    
+
     switch (panRecognizer.state) {
         case UIGestureRecognizerStateChanged:
             self.map->handlePanGesture(start.x * self.pixelScale, start.y * self.pixelScale, end.x * self.pixelScale, end.y * self.pixelScale);
@@ -144,7 +144,7 @@
         default:
             break;
     }
-    
+
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizePanGesture:)]) {
         [self.gestureDelegate recognizer:panRecognizer didRecognizePanGesture:[panRecognizer locationInView:self.view]];
     }
@@ -173,7 +173,7 @@
 - (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer {
     CGPoint displacement = [shoveRecognizer translationInView:self.view];
     [shoveRecognizer setTranslation:{0, 0} inView:self.view];
-    
+
     // don't trigger shove on single touch gesture
     if ([shoveRecognizer numberOfTouches] == 2) {
         self.map->handleShoveGesture(displacement.y);
@@ -193,34 +193,34 @@
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
-    
+
     if ([self isViewLoaded] && ([[self view] window] == nil)) {
         self.view = nil;
-        
+
         if ([EAGLContext currentContext] == self.context) {
             [EAGLContext setCurrentContext:nil];
         }
         self.context = nil;
     }
-    
+
     // Dispose of any resources that can be recreated.
 }
 
 - (void)setupGL
 {
     [EAGLContext setCurrentContext:self.context];
-    
+
     if (!self.map) {
         self.map = new Tangram::Map();
         self.map->loadSceneAsync("scene.yaml");
     }
     self.map->setupGL();
-    
+
     int width = self.view.bounds.size.width;
     int height = self.view.bounds.size.height;
-    
+
     self.map->resize(width * self.pixelScale, height * self.pixelScale);
-    
+
     self.map->setPixelScale(self.pixelScale);
 }
 
@@ -257,7 +257,7 @@
 - (void)update
 {
     self.map->update([self timeSinceLastUpdate]);
-    
+
     if (!self.continuous && !self.renderRequested) {
         self.paused = YES;
     }
