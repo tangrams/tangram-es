@@ -50,6 +50,8 @@ struct TestContext {
         }
         SceneLoader::applyConfig(sceneNode, scene);
 
+        scene->fontContext()->loadFonts();
+
         styleContext.initFunctions(*scene);
         styleContext.setKeywordZoom(0);
 
