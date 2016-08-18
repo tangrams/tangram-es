@@ -10,8 +10,8 @@
 
 #include "tizen_gl.h"
 
-#include <fontconfig.h>
 #include <dlog.h>
+#include <fontconfig/fontconfig.h>
 
 #ifdef  LOG_TAG
 #undef  LOG_TAG
