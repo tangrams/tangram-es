@@ -21,6 +21,12 @@ class FontFileParser {
     private Map<String, String> fontDict = new HashMap<String, String>();
     private Map<Integer, Vector<String>> fallbackFontDict = new HashMap<Integer, Vector<String>>();
 
+    private static String systemFontPath = "/system/fonts/";
+    // Android version >= 5.0
+    private static String fontXMLPath = "/system/etc/fonts.xml";
+    // Android version < 5.0
+    private static String fontXMLFallbackPath = "/etc/system_fonts.xml";
+
     private void processDocumentFallback(XmlPullParser parser) throws XmlPullParserException, IOException {
         parser.nextTag();
         parser.require(XmlPullParser.START_TAG, null, "familyset");
@@ -69,7 +75,7 @@ class FontFileParser {
 
                     for (String file : filesets) {
                         for (String name : namesets) {
-                            String fullFilename = "/system/fonts/" + file;
+                            String fullFilename = systemFontPath + file;
                             String style = "normal";
 
                             // The file structure in `/etc/system_fonts.xml` is quite undescriptive
@@ -140,7 +146,7 @@ class FontFileParser {
                                 continue;
                             }
 
-                            String fullFileName = "system/fonts/" + filename;
+                            String fullFileName = systemFontPath + filename;
 
                             fallbackFontDict.get(weight).add(fullFileName);
                         } else {
@@ -163,7 +169,7 @@ class FontFileParser {
                         styleStr = (styleStr == null) ? "normal" : styleStr;
 
                         String filename = parser.nextText();
-                        String fullFileName = "/system/fonts/" + filename;
+                        String fullFileName = systemFontPath + filename;
 
                         String key = name + "_" + weightStr + "_" + styleStr;
                         fontDict.put(key, fullFileName);
@@ -215,11 +221,6 @@ class FontFileParser {
     }
 
     public void parse() {
-        // Android version >= 5.0
-        String fontXMLPath = "/system/etc/fonts.xml";
-        // Android version < 5.0
-        String fontXMLFallbackPath = "/etc/system_fonts.xml";
-
         InputStream in = null;
         boolean fallbackXML = false;
         final File fontFile = new File(fontXMLPath);
