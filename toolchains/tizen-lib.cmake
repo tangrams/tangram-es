@@ -53,6 +53,8 @@ add_library(${LIB_NAME} SHARED ${SOURCES})
 
 include(FindPkgConfig)
 pkg_check_modules(EVAS REQUIRED "evas")
+pkg_check_modules(DLOG REQUIRED "dlog")
+pkg_check_modules(FONTCONFIG REQUIRED "fontconfig")
 
 # link to the core library, forcing all symbols to be added
 # (whole-archive must be turned off after core so that lc++ symbols aren't duplicated)
@@ -62,11 +64,15 @@ target_link_libraries(${LIB_NAME}
   ${CORE_LIBRARY}
   "-Wl,-no-whole-archive"
   PRIVATE
-  ${EVAS_LDFLAGS})
+  ${EVAS_LDFLAGS}
+  ${DLOG_LDFLAGS}
+  ${FONTCONFIG_LDFLAGS})
 
 target_include_directories(${LIB_NAME}
   PRIVATE
-  ${EVAS_INCLUDE_DIRS})
+  ${EVAS_INCLUDE_DIRS}
+  ${DLOG_INCLUDE_DIRS}
+  ${FONTCONFIG_INCLUDE_DIRS})
 
 target_compile_options(${LIB_NAME}
   PUBLIC
