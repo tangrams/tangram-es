@@ -166,8 +166,8 @@ void SceneLoader::parseGlobals(const Node& node, const std::shared_ptr<Scene>& s
 bool SceneLoader::applyConfig(Node& config, const std::shared_ptr<Scene>& _scene) {
 
     // Instantiate built-in styles
-    _scene->styles().emplace_back(new PolygonStyle("polygons"));
-    _scene->styles().emplace_back(new PolylineStyle("lines"));
+    // _scene->styles().emplace_back(new PolygonStyle("polygons"));
+    // _scene->styles().emplace_back(new PolylineStyle("lines"));
     _scene->styles().emplace_back(new DebugTextStyle("debugtext", true));
     _scene->styles().emplace_back(new TextStyle("text", _scene->fontContext(), true));
     _scene->styles().emplace_back(new DebugStyle("debug"));
@@ -229,6 +229,15 @@ bool SceneLoader::applyConfig(Node& config, const std::shared_ptr<Scene>& _scene
                 LOGNode("Parsing style: '%s'", entry, e.what());
             }
         }
+    }
+
+    if (!config["styles"] || !config["styles"]["polygons"]) {
+        LOG("ADD default polygon style");
+        _scene->styles().emplace_back(new PolygonStyle("polygons"));
+    }
+    if (!config["styles"] || !config["styles"]["lines"]) {
+        LOG("ADD default line style");
+        _scene->styles().emplace_back(new PolylineStyle("lines"));
     }
 
     // Styles that are opaque must be ordered first in the scene so that
@@ -835,20 +844,23 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, const std::sha
 
     const auto& builtIn = Style::builtInStyleNames();
 
-    if (std::find(builtIn.begin(), builtIn.end(), name) != builtIn.end()) {
-        LOGW("Cannot use built-in style name '%s' for new style", name.c_str());
-        return false;
-    }
+    Node baseNode;
+    std::string baseStyle = baseNode.Scalar();
 
-    Node baseNode = config["base"];
-    if (!baseNode) {
-        // No base style, this is an abstract style
-        return true;
+    if (std::find(builtIn.begin(), builtIn.end(), name) != builtIn.end()) {
+        LOGW("Override built-in style name '%s' for new style", name.c_str());
+        baseStyle = name;
+
+    } else {
+        if (!config["base"]) {
+            // No base style, this is an abstract style
+            return true;
+        }
+        baseStyle = config["base"].Scalar();
     }
 
     // Construct style instance using the merged properties
     std::unique_ptr<Style> style;
-    auto baseStyle = baseNode.Scalar();
     if (baseStyle == "polygons") {
         style = std::make_unique<PolygonStyle>(name);
     } else if (baseStyle == "lines") {

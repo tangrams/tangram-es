@@ -66,10 +66,9 @@ int main(int argc, char *argv[]) {
     // sceneFile.assign((std::istreambuf_iterator<char>(resource)),
     //                  std::istreambuf_iterator<char>());
     // resource.close();
-    auto sceneRelPath = setResourceRoot(argv[1]);
-    auto sceneString = stringFromFile(sceneRelPath.c_str(), PathType::resource);
+    auto scenePath = std::string(argv[1]);
+    auto sceneString = stringFromFile(argv[1]);
 
-    Scene scene;
     YAML::Node sceneNode;
 
     try { sceneNode = YAML::Load(sceneString); }
@@ -78,22 +77,24 @@ int main(int argc, char *argv[]) {
         return false;
     }
 
-    SceneLoader::loadScene(sceneNode, scene);
+    auto scene = std::make_shared<Scene>(scenePath);
 
-    LOG("got styles: %d", scene.styles().size());
+    SceneLoader::loadScene(scene);
+
+    LOG("got styles: %d", scene->styles().size());
 
     YAML::Node stylesNode = sceneNode["styles"];
     YAML::Node newStyles;
 
-    for (auto& style : scene.styles()) {
+    for (auto& style : scene->styles()) {
         static const auto builtIn = {
             "polygons", "lines", "points", "text", "debug", "debugtext"
         };
 
-        if (std::find(builtIn.begin(), builtIn.end(),
-                      style->getName()) != builtIn.end()) {
-            continue;
-        }
+        // if (std::find(builtIn.begin(), builtIn.end(),
+        //               style->getName()) != builtIn.end()) {
+        //     continue;
+        // }
 
         LOG("compile shader: %s", style->getName().c_str());
 
@@ -133,13 +134,13 @@ int main(int argc, char *argv[]) {
     LOG("\n ----------- Testing: %s -------------", argv[1]);
 
     StyleContext styleContext;
-    styleContext.initFunctions(scene);
+    styleContext.initFunctions(*scene);
     Feature feature;
-    feature.props.add("name", "check");
+    feature.props.set("name", "check");
     styleContext.setFeature(feature);
-    styleContext.setGlobal("$zoom", 15);
+    styleContext.setKeyword("$zoom", 15);
 
-    for (auto& layer : scene.layers()) {
+    for (auto& layer : scene->layers()) {
         testLayer(layer, styleContext, 0);
     }
 

@@ -5,6 +5,7 @@ extern "C" {
     GLenum glGetError( void ){ return 0; }
     const GLubyte* glGetString(GLenum name){ return nullptr; }
 
+    void glFinish(){}
     void glEnable(GLenum){}
     void glDisable(GLenum){}
     void glDepthFunc(GLenum func){}
@@ -155,5 +156,8 @@ extern "C" {
     void glBindVertexArray (GLuint array){}
     void glDeleteVertexArrays (GLsizei n, const GLuint *arrays){}
     void glGenVertexArrays (GLsizei n, GLuint *arrays){}
+
+    void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                      GLenum format, GLenum type, GLvoid* pixels) {}
 
 }
