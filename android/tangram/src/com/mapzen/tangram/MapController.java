@@ -450,6 +450,22 @@ public class MapController implements Renderer {
     public void setLongPressResponder(final TouchInput.LongPressResponder responder) {
         touchInput.setLongPressResponder(new TouchInput.LongPressResponder() {
             @Override
+            public void onLongPressUp(float x, float y) {
+                if (responder != null) {
+                    responder.onLongPressUp(x, y);
+                }
+            }
+
+            @Override
+            public boolean onLongPressPan(float startX, float startY, float endX, float endY) {
+                if (responder != null) {
+                    return responder.onLongPressPan(startX, startY, endX, endY);
+                }
+
+                return false;
+            }
+
+            @Override
             public void onLongPress(float x, float y) {
                 if (responder != null) {
                     responder.onLongPress(x, y);
@@ -460,7 +476,7 @@ public class MapController implements Renderer {
 
     /**
      * Set a responder for pan gestures
-     * @param responder PanResponder to call; if onPan returns true, normal panning behavior will not occur
+     * @param responder PanResponder to call; if onLongPressPan returns true, normal panning behavior will not occur
      */
     public void setPanResponder(final TouchInput.PanResponder responder) {
         touchInput.setPanResponder(new TouchInput.PanResponder() {

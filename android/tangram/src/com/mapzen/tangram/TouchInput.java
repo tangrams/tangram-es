@@ -27,6 +27,8 @@ import java.util.EnumSet;
 public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         OnRotateGestureListener, OnGestureListener, OnDoubleTapListener, OnShoveGestureListener {
 
+    private boolean longPressActive;
+
     /**
      * List of gestures that can be detected and responded to
      */
@@ -106,6 +108,24 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
          * @param y The y screen coordinate of the pressed point
          */
         void onLongPress(float x, float y);
+
+        /**
+         * Called when long press has stopped
+         *
+         * @param x The x screen coordinate of the pressed point
+         * @param y The y screen coordinate of the pressed point
+         */
+        void onLongPressUp(float x, float y);
+
+        /**
+         * Called repeatedly while a touch point is dragged after a long press
+         * @param startX The starting x screen coordinate for an interval of motion
+         * @param startY The starting y screen coordinate for an interval of motion
+         * @param endX The ending x screen coordinate for an interval of motion
+         * @param endY The ending y screen coordinate for an interval of motion
+         * @return True if the event is consumed, false if the event should continue to propagate
+         */
+        boolean onLongPressPan(float startX, float startY, float endX, float endY);
     }
 
     /**
@@ -180,6 +200,19 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     private static final long DOUBLE_TAP_TIMEOUT = ViewConfiguration.getDoubleTapTimeout(); // milliseconds
 
     private GestureDetector panTapGestureDetector;
+
+    /**
+     * This is used to detect long presses. It is the same as panTapGestureDetector, but with
+     * setIsLongpressEnabled() set to true. The problem is that after a longpress, GestureDetector
+     * will mute onScroll messages until the long press is finished. This doesn't work well for
+     * applications that use long press and onScroll events together (such as Tiny Travel Tracker).
+     * <p>
+     *     So by detecting long presses with this gesture detector, we are able to shutoff long
+     *     press detection in the panTapGestureDetector, so it will still report onScroll messages
+     *     even after a long press.
+     * </p>
+     */
+    private final GestureDetector longPressGestureDetector;
     private ScaleGestureDetector scaleGestureDetector;
     private RotateGestureDetector rotateGestureDetector;
     private ShoveGestureDetector shoveGestureDetector;
@@ -204,6 +237,15 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     public TouchInput(Context context) {
 
         this.panTapGestureDetector = new GestureDetector(context, this);
+        this.panTapGestureDetector.setIsLongpressEnabled(false);
+        this.longPressGestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener()
+        {
+            @Override
+            public void onLongPress(MotionEvent e) {
+                TouchInput.this.onLongPress(e);
+            }
+        }
+        );
         this.scaleGestureDetector = new ScaleGestureDetector(context, this);
         this.rotateGestureDetector = new RotateGestureDetector(context, this);
         this.shoveGestureDetector = new ShoveGestureDetector(context, this);
@@ -329,8 +371,20 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
+        if(event.getActionMasked() == MotionEvent.ACTION_UP)
+        {
+            //notify the responder that the long press is finished
+            if(longPressActive)
+            {
+                if(longPressResponder != null)
+                   longPressResponder.onLongPressUp(event.getX(), event.getY());
+                longPressActive = false;
+            }
+        }
+
 
         panTapGestureDetector.onTouchEvent(event);
+        longPressGestureDetector.onTouchEvent(event);
         scaleGestureDetector.onTouchEvent(event);
         shoveGestureDetector.onTouchEvent(event);
         rotateGestureDetector.onTouchEvent(event);
@@ -403,31 +457,44 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
 
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        if (isDetectionAllowed(Gestures.PAN)) {
-            int action = e2.getActionMasked();
-            boolean detected = !(action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP);
-            setGestureDetected(Gestures.PAN, detected);
-
-            if (panResponder == null) {
+        if(longPressActive)
+        {
+            if(longPressResponder == null)
                 return false;
-            }
-
-            // TODO: Predictive panning
-            // Use estimated velocity to counteract input->render lag
-
-            float x = 0, y = 0;
-            int n = e2.getPointerCount();
-            for (int i = 0; i < n; i++) {
-                x += e2.getX(i) / n;
-                y += e2.getY(i) / n;
-            }
-            return panResponder.onPan(x + distanceX, y + distanceY, x, y);
         }
-        return false;
+        else
+        {
+            if (isDetectionAllowed(Gestures.PAN)) {
+                int action = e2.getActionMasked();
+                boolean detected = !(action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP);
+                setGestureDetected(Gestures.PAN, detected);
+
+                if (panResponder == null) {
+                    return false;
+                }
+            }
+            else return false;
+        }
+
+        // TODO: Predictive panning
+        // Use estimated velocity to counteract input->render lag
+
+        float x = 0, y = 0;
+        int n = e2.getPointerCount();
+        for (int i = 0; i < n; i++) {
+            x += e2.getX(i) / n;
+            y += e2.getY(i) / n;
+        }
+
+        if(longPressActive)
+            return longPressResponder.onLongPressPan(x + distanceX, y + distanceY, x, y);
+        else
+            return panResponder.onPan(x + distanceX, y + distanceY, x, y);
     }
 
     @Override
     public void onLongPress(MotionEvent e) {
+        longPressActive = true;
         if (isDetectionAllowed(Gestures.LONG_PRESS) && longPressResponder != null) {
             longPressResponder.onLongPress(e.getX(), e.getY());
         }
