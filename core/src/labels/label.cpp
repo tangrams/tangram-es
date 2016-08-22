@@ -42,10 +42,34 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const MapProjection& _p
         {
             glm::vec2 p0 = m_transform.modelPosition1;
 
-            screenPosition = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
-                                                _screenSize, clipped);
-            if (clipped) {
-                return false;
+            if (m_options.flat) {
+                float tileResolution = (float)_projection.TileResolution(floorf(_tileID.z + 1));
+                glm::vec2 halfMetersDimension = m_dim * tileResolution * 0.5f;
+                BoundingBox tileBounds(_projection.TileBounds(_tileID));
+                glm::dvec2 tileOrigin = {tileBounds.min.x, tileBounds.max.y * -1.0};
+                float tileInverseScale = 1.0 / tileBounds.width();
+
+                glm::vec2 sw = p0 - halfMetersDimension * tileInverseScale;
+                glm::vec2 se = p0 + glm::vec2(halfMetersDimension.x, -halfMetersDimension.y) * tileInverseScale;
+                glm::vec2 nw = p0 + glm::vec2(-halfMetersDimension.x, halfMetersDimension.y) * tileInverseScale;
+                glm::vec2 ne = p0 + halfMetersDimension * tileInverseScale;
+
+                screenBillboard[0] = worldToScreenSpace(_mvp, glm::vec4(sw, 0.0, 1.0),
+                                                        _screenSize, clipped);
+                if (clipped) { return false; }
+                screenBillboard[1] = worldToScreenSpace(_mvp, glm::vec4(se, 0.0, 1.0),
+                                                        _screenSize, clipped);
+                if (clipped) { return false; }
+                screenBillboard[3] = worldToScreenSpace(_mvp, glm::vec4(ne, 0.0, 1.0),
+                                                        _screenSize, clipped);
+                if (clipped) { return false; }
+                screenBillboard[2] = worldToScreenSpace(_mvp, glm::vec4(nw, 0.0, 1.0),
+                                                        _screenSize, clipped);
+                if (clipped) { return false; }
+            } else {
+                screenPosition = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
+                                                    _screenSize, clipped);
+                if (clipped) { return false; }
             }
 
             m_transform.state.screenPos = screenPosition + m_options.offset;

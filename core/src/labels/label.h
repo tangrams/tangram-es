@@ -154,6 +154,8 @@ public:
 
     bool offViewport(const glm::vec2& _screenSize);
 
+    glm::vec2 screenBillboard[4];
+
 private:
 
     virtual void applyAnchor(LabelProperty::Anchor _anchor) = 0;

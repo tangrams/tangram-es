@@ -57,14 +57,20 @@ void SpriteLabel::pushTransform() {
 
     auto* quadVertices = style.getMesh()->pushQuad();
 
-    glm::i16vec2 sp = glm::i16vec2(m_transform.state.screenPos * SpriteVertex::position_scale);
+    glm::i16vec2 screenPosition = glm::i16vec2(m_transform.state.screenPos * SpriteVertex::position_scale);
 
     for (int i = 0; i < 4; i++) {
-        SpriteVertex& v = quadVertices[i];
-        v.pos = sp + quad.quad[i].pos;
-        v.uv = quad.quad[i].uv;
+        SpriteVertex& vertex = quadVertices[i];
+
+        if (m_options.flat) {
+            vertex.pos = SpriteVertex::position_scale * screenBillboard[i];
+        } else {
+            vertex.pos = screenPosition + quad.quad[i].pos;
+        }
+
+        vertex.uv = quad.quad[i].uv;
         //v.extrude = quad.quad[i].extrude;
-        v.state = state;
+        vertex.state = state;
     }
 }
 
