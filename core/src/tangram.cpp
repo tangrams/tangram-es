@@ -302,6 +302,7 @@ bool Map::update(float _dt) {
         impl->tileManager.updateTileSets(viewState, impl->view.getVisibleTiles());
 
         auto& tiles = impl->tileManager.getVisibleTiles();
+        auto& markers = impl->markerManager.markers();
 
         if (impl->view.changedOnLastUpdate() ||
             impl->tileManager.hasTileSetChanged()) {
@@ -309,13 +310,13 @@ bool Map::update(float _dt) {
             for (const auto& tile : tiles) {
                 tile->update(_dt, impl->view);
             }
-            for (const auto& marker : impl->markerManager.markers()) {
+            for (const auto& marker : markers) {
                 marker->update(_dt, impl->view);
             }
-            impl->labels.updateLabelSet(impl->view, _dt, impl->scene->styles(), tiles,
+            impl->labels.updateLabelSet(impl->view, _dt, impl->scene->styles(), tiles, markers,
                                         *impl->tileManager.getTileCache());
         } else {
-            impl->labels.updateLabels(impl->view, _dt, impl->scene->styles(), tiles);
+            impl->labels.updateLabels(impl->view, _dt, impl->scene->styles(), tiles, markers);
         }
     }
 

@@ -19,6 +19,7 @@
 namespace Tangram {
 
 class FontContext;
+class Marker;
 class Tile;
 class View;
 class Style;
@@ -34,11 +35,17 @@ public:
 
     void drawDebug(RenderState& rs, const View& _view);
 
-    void updateLabelSet(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
-                        const std::vector<std::shared_ptr<Tile>>& _tiles, TileCache& _cache);
+    void updateLabelSet(const View& _view, float _dt,
+                        const std::vector<std::unique_ptr<Style>>& _styles,
+                        const std::vector<std::shared_ptr<Tile>>& _tiles,
+                        const std::vector<std::unique_ptr<Marker>>& _markers,
+                        TileCache& _cache);
 
-    PERF_TRACE void updateLabels(const View& _view, float _dt, const std::vector<std::unique_ptr<Style>>& _styles,
-                                 const std::vector<std::shared_ptr<Tile>>& _tiles, bool _onlyTransitions = true);
+    PERF_TRACE void updateLabels(const View& _view, float _dt,
+                                 const std::vector<std::unique_ptr<Style>>& _styles,
+                                 const std::vector<std::shared_ptr<Tile>>& _tiles,
+                                 const std::vector<std::unique_ptr<Marker>>& _markers,
+                                 bool _onlyTransitions = true);
 
     const std::vector<TouchItem>& getFeaturesAtPoint(const View& _view, float _dt,
                                                      const std::vector<std::unique_ptr<Style>>& _styles,
@@ -65,6 +72,11 @@ protected:
     PERF_TRACE void handleOcclusions(const View& _view);
 
     PERF_TRACE bool withinRepeatDistance(Label *_label);
+
+    void processLabelUpdate(StyledMesh* mesh, Tile* tile,
+                            const glm::mat4& mvp, const glm::vec2& screen,
+                            float dt, float dz, bool drawAll,
+                            bool onlyTransitions, bool isProxy);
 
     bool m_needUpdate;
 

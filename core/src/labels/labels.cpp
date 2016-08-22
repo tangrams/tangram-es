@@ -12,6 +12,7 @@
 #include "tile/tileCache.h"
 #include "labels/labelSet.h"
 #include "labels/textLabel.h"
+#include "marker/marker.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -30,9 +31,41 @@ Labels::~Labels() {}
 //     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 // }
 
+void Labels::processLabelUpdate(StyledMesh* mesh, Tile* tile,
+                               const glm::mat4& mvp, const glm::vec2& screen,
+                               float dt, float dz, bool drawAll,
+                               bool onlyTransitions, bool isProxy) {
+
+    if (!mesh) { return; }
+    auto labelMesh = dynamic_cast<const LabelSet*>(mesh);
+    if (!labelMesh) { return; }
+
+    for (auto& label : labelMesh->getLabels()) {
+        if (!label->update(mvp, screen, dz, drawAll)) {
+            // skip dead labels
+            continue;
+        }
+
+        if (onlyTransitions) {
+            if (label->occludedLastFrame()) { label->occlude(); }
+
+            if (label->visibleState() || !label->canOcclude()) {
+                m_needUpdate |= label->evalState(dt);
+                label->pushTransform();
+            }
+        } else if (label->canOcclude()) {
+            m_labels.emplace_back(label.get(), tile, isProxy);
+        } else {
+            m_needUpdate |= label->evalState(dt);
+            label->pushTransform();
+        }
+    }
+}
+
 void Labels::updateLabels(const View& _view, float _dt,
                           const std::vector<std::unique_ptr<Style>>& _styles,
                           const std::vector<std::shared_ptr<Tile>>& _tiles,
+                          const std::vector<std::unique_ptr<Marker>>& _markers,
                           bool _onlyTransitions) {
 
     // Keep labels for debugDraw
@@ -60,30 +93,22 @@ void Labels::updateLabels(const View& _view, float _dt,
 
         for (const auto& style : _styles) {
             const auto& mesh = tile->getMesh(*style);
-            if (!mesh) { continue; }
+            processLabelUpdate(mesh.get(), tile.get(), mvp, screenSize, _dt, dz,
+                               drawAllLabels, _onlyTransitions, proxyTile);
+        }
+    }
 
-            auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
-            if (!labelMesh) { continue; }
-            for (auto& label : labelMesh->getLabels()) {
-                if (!label->update(mvp, screenSize, dz, drawAllLabels)) {
-                    // skip dead labels
-                    continue;
-                }
+    for (const auto& marker : _markers) {
 
-                if (_onlyTransitions) {
-                    if (label->occludedLastFrame()) { label->occlude(); }
+        glm::mat4 mvp = _view.getViewProjectionMatrix() * marker->modelMatrix();
 
-                    if (label->visibleState() || !label->canOcclude()) {
-                        m_needUpdate |= label->evalState(_dt);
-                        label->pushTransform();
-                    }
-                } else if (label->canOcclude()) {
-                    m_labels.emplace_back(label.get(), tile.get(), proxyTile);
-                } else {
-                    m_needUpdate |= label->evalState(_dt);
-                    label->pushTransform();
-                }
-            }
+        for (const auto& style : _styles) {
+
+            if (marker->styleId() != style->getID()) { continue; }
+
+            const auto& mesh = marker->mesh();
+            processLabelUpdate(mesh, nullptr, mvp, screenSize, _dt, dz,
+                               drawAllLabels, _onlyTransitions, false);
         }
     }
 }
@@ -181,6 +206,9 @@ bool Labels::labelComparator(const LabelEntry& _a, const LabelEntry& _b) {
     }
     if (_a.priority != _b.priority) {
         return _a.priority < _b.priority;
+    }
+    if (!_a.tile || !_b.tile) {
+        return (bool)_a.tile;
     }
     if (_a.tile->getID().z != _b.tile->getID().z) {
         return _a.tile->getID().z > _b.tile->getID().z;
@@ -323,10 +351,11 @@ bool Labels::withinRepeatDistance(Label *_label) {
 void Labels::updateLabelSet(const View& _view, float _dt,
                             const std::vector<std::unique_ptr<Style>>& _styles,
                             const std::vector<std::shared_ptr<Tile>>& _tiles,
+                            const std::vector<std::unique_ptr<Marker>>& _markers,
                             TileCache& _cache) {
 
     /// Collect and update labels from visible tiles
-    updateLabels(_view, _dt, _styles, _tiles, false);
+    updateLabels(_view, _dt, _styles, _tiles, _markers, false);
 
     sortLabels();
 
