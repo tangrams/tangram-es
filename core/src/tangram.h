@@ -156,6 +156,8 @@ public:
 
     bool markerSetPoint(Marker* _marker, LngLat _lngLat);
 
+    bool markerSetPointEased(Marker* _marker, LngLat _lngLat, float _duration, EaseType _ease);
+
     bool markerSetPolyline(Marker* _marker, LngLat* _coordinates, int _count);
 
     bool markerSetPolygon(Marker* _marker, LngLat* _coordinates, int* _counts, int _rings);

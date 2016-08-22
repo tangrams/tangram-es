@@ -2,6 +2,7 @@
 
 #include "glm/mat4x4.hpp"
 #include "glm/vec2.hpp"
+#include "util/ease.h"
 #include "util/geom.h"
 #include <memory>
 #include <string>
@@ -32,6 +33,8 @@ public:
 
     void setMesh(uint32_t styleId, std::unique_ptr<StyledMesh> mesh);
 
+    void setEase(const glm::dvec2& destination, float duration, EaseType ease);
+
     void update(float dt, const View& view);
 
     uint32_t styleId() const;
@@ -49,6 +52,8 @@ public:
     const glm::dvec2& origin() const;
 
     const glm::mat4& modelMatrix() const;
+
+    bool isEasing() const;
 
 protected:
 
@@ -72,6 +77,8 @@ protected:
     // Distances from the global origin are too large to represent precisely in 32-bit floats, so we only apply the
     // relative translation from the view origin to the model origin immediately before drawing the marker.
     glm::mat4 m_modelMatrix;
+
+    Ease m_ease;
 
 };
 

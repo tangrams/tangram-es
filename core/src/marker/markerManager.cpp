@@ -76,6 +76,20 @@ bool MarkerManager::setPoint(Marker* marker, LngLat lngLat) {
     return true;
 }
 
+bool MarkerManager::setPointEased(Marker* marker, LngLat lngLat, float duration, EaseType ease) {
+    if (!marker || !contains(marker)) { return false; }
+
+    // If the marker does not have a 'point' feature built, we can't ease it.
+    if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
+        return false;
+    }
+
+    auto dest = m_mapProjection->LonLatToMeters({ lngLat.longitude, lngLat.latitude });
+    marker->setEase(dest, duration, ease);
+
+    return true;
+}
+
 bool MarkerManager::setPolyline(Marker* marker, LngLat* coordinates, int count) {
     if (!marker || !contains(marker)) { return false; }
     if (!coordinates || count < 2) { return false; }

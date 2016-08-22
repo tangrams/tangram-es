@@ -2,6 +2,7 @@
 
 #include "scene/styleContext.h"
 #include "scene/drawRule.h"
+#include "util/ease.h"
 #include "util/fastmap.h"
 #include "util/types.h"
 #include <memory>
@@ -27,6 +28,8 @@ public:
     bool setStyling(Marker* marker, const char* styling);
 
     bool setPoint(Marker* marker, LngLat lngLat);
+
+    bool setPointEased(Marker* marker, LngLat lngLat, float duration, EaseType ease);
 
     bool setPolyline(Marker* marker, LngLat* coordinates, int count);
 

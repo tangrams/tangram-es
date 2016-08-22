@@ -35,7 +35,15 @@ void Marker::setMesh(uint32_t styleId, std::unique_ptr<StyledMesh> mesh) {
     m_styleId = styleId;
 }
 
+void Marker::setEase(const glm::dvec2& dest, float duration, EaseType e) {
+    auto origin = m_origin;
+    auto cb = [=](float t) { m_origin = { ease(origin.x, dest.x, t, e), ease(origin.y, dest.y, t, e) }; };
+    m_ease = { duration, cb };
+}
+
 void Marker::update(float dt, const View& view) {
+    // Update easing
+    if (!m_ease.finished()) { m_ease.update(dt); }
     // Apply marker-view translation to the model matrix
     const auto& viewOrigin = view.getPosition();
     auto scaling = glm::scale(glm::vec3(m_bounds.width(), m_bounds.height(), 1.f));
@@ -73,6 +81,10 @@ const glm::dvec2& Marker::origin() const {
 
 const glm::mat4& Marker::modelMatrix() const {
     return m_modelMatrix;
+}
+
+bool Marker::isEasing() const {
+    return !m_ease.finished();
 }
 
 } // namespace Tangram
