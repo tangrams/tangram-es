@@ -8,12 +8,12 @@
 #import <regex>
 
 #include "platform_ios.h"
-#include "ViewController.h"
+#include "TGMapViewController.h"
 
-static ViewController* viewController;
+static TGMapViewController* viewController;
 NSURLSession* defaultSession;
 
-void init(ViewController* _controller) {
+void init(TGMapViewController* _controller) {
 
     viewController = _controller;
 
