@@ -79,6 +79,7 @@ public:
 
         LabelProperty::Anchors anchors;
         bool required = true;
+        bool flat = false;
     };
 
     static const float activation_distance_threshold;

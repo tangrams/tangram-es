@@ -21,6 +21,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"collide", StyleParamKey::collide},
     {"color", StyleParamKey::color},
     {"extrude", StyleParamKey::extrude},
+    {"flat", StyleParamKey::flat},
     {"interactive", StyleParamKey::interactive},
     {"join", StyleParamKey::join},
     {"miter_limit", StyleParamKey::miter_limit},
@@ -233,6 +234,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         return fontSize;
     }
     case StyleParamKey::centroid:
+    case StyleParamKey::flat:
     case StyleParamKey::interactive:
     case StyleParamKey::text_interactive:
     case StyleParamKey::tile_edges:
@@ -370,6 +372,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::text_anchor:
         return "[anchor]"; // TODO
     case StyleParamKey::interactive:
+    case StyleParamKey::flat:
     case StyleParamKey::text_interactive:
     case StyleParamKey::tile_edges:
     case StyleParamKey::visible:

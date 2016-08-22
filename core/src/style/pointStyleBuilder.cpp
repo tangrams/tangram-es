@@ -116,6 +116,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
     _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
     _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
+    _rule.get(StyleParamKey::flat, p.labelOptions.flat);
     _rule.get(StyleParamKey::anchor, anchor);
 
     auto sizeParam = _rule.findParameter(StyleParamKey::size);
