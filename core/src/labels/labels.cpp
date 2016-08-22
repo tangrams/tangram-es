@@ -65,7 +65,7 @@ void Labels::updateLabels(const View& _view, float _dt,
             auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
             if (!labelMesh) { continue; }
             for (auto& label : labelMesh->getLabels()) {
-                if (!label->update(mvp, screenSize, dz, drawAllLabels)) {
+                if (!label->update(mvp, _view.getMapProjection(), screenSize, dz, tile->getID(), drawAllLabels)) {
                     // skip dead labels
                     continue;
                 }
@@ -386,7 +386,7 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
                 if (!options.interactive) { continue; }
 
                 if (!_visibleOnly) {
-                    label->updateScreenTransform(mvp, screenSize, false);
+                    label->updateScreenTransform(mvp, _view.getMapProjection(), screenSize, tile->getID(), false);
                     label->updateBBoxes(dz);
                 } else if (!label->visibleState()) {
                     continue;

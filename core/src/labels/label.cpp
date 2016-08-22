@@ -30,7 +30,8 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _
 
 Label::~Label() {}
 
-bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _drawAllLabels) {
+bool Label::updateScreenTransform(const glm::mat4& _mvp, const MapProjection& _projection,
+                                  const glm::vec2& _screenSize, TileID _tileID, bool _drawAllLabels) {
 
     glm::vec2 screenPosition;
     bool clipped = false;
@@ -226,7 +227,8 @@ bool Label::setAnchorIndex(int _index) {
     return true;
 }
 
-bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _drawAllLabels) {
+bool Label::update(const glm::mat4& _mvp, const MapProjection& _projection, const glm::vec2& _screenSize,
+                   float _zoomFract, TileID _tileID, bool _drawAllLabels) {
 
     m_occludedLastFrame = m_occluded;
     m_occluded = false;
@@ -239,7 +241,7 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
         }
     }
 
-    bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize, _drawAllLabels);
+    bool ruleSatisfied = updateScreenTransform(_mvp, _projection, _screenSize, _tileID, _drawAllLabels);
 
     // one of the label rules has not been satisfied
     if (!ruleSatisfied) {

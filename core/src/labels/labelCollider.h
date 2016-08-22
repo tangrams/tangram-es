@@ -2,6 +2,7 @@
 
 #include "isect2d.h"
 #include "glm_vec.h" // for isect2d.h
+#include "util/mapProjection.h"
 
 #include <memory>
 #include <vector>
@@ -18,7 +19,7 @@ public:
 
     void addLabels(std::vector<std::unique_ptr<Label>>& _labels);
 
-    void process();
+    void process(const MapProjection& _proj, TileID _tileID);
 
 private:
 

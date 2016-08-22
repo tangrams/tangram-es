@@ -74,7 +74,7 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
         builder.second->addLayoutItems(m_labelLayout);
     }
 
-    m_labelLayout.process();
+    m_labelLayout.process(*m_scene->mapProjection(), _tileID);
 
     for (auto& builder : m_styleBuilder) {
         tile->setMesh(builder.second->style(), builder.second->build());

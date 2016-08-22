@@ -10,6 +10,7 @@
 #include "util/hash.h"
 #include "data/properties.h"
 #include "labels/labelProperty.h"
+#include "util/mapProjection.h"
 
 #include <string>
 #include <limits>
@@ -86,7 +87,12 @@ public:
 
     virtual ~Label();
 
-    bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _drawAllLabels = false);
+    bool update(const glm::mat4& _mvp,
+                const MapProjection& _projection,
+                const glm::vec2& _screenSize,
+                float _zoomFract,
+                TileID _tileID,
+                bool _drawAllLabels = false);
 
     bool nextAnchor();
     bool setAnchorIndex(int _index);
@@ -98,7 +104,11 @@ public:
     bool evalState(float _dt);
 
     /* Update the screen position of the label */
-    bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _drawAllLabels);
+    bool updateScreenTransform(const glm::mat4& _mvp,
+                               const MapProjection& _projection,
+                               const glm::vec2& _screenSize,
+                               TileID _tileID,
+                               bool _drawAllLabels);
 
     virtual void updateBBoxes(float _zoomFract) = 0;
 
