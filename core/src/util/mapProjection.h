@@ -148,6 +148,8 @@ class MercatorProjection : public MapProjection {
      * Following define the boundry covered by this mercator projection
      */
     int m_TileSize;
+
+    //tim: this seems to be meters per tile at zoom level 1 (where one tile represents the earth)
     double m_Res;
 
 public:

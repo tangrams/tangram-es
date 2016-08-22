@@ -84,7 +84,7 @@ void ClientGeoJsonSource::clearData() {
 
     if(!m_inChangeBlock) {
       std::lock_guard<std::mutex> lock(m_mutexStore);
-      m_store.reset();
+      m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
       m_generation++;
     }
 }
