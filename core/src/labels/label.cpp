@@ -142,9 +142,16 @@ bool Label::offViewport(const glm::vec2& _screenSize) {
     const auto& quad = m_obb.getQuad();
 
     for (int i = 0; i < 4; ++i) {
-        const auto& p = quad[i];
-        if (p.x < _screenSize.x && p.y < _screenSize.y && p.x > 0 && p.y > 0) {
-            return false;
+        if (m_options.flat) {
+            if (screenBillboard[i].x < _screenSize.x && screenBillboard[i].x > 0 &&
+                screenBillboard[i].y < _screenSize.y && screenBillboard[i].y > 0) {
+                return false;
+            }
+        } else {
+            if (quad[i].x < _screenSize.x && quad[i].x > 0 &&
+                quad[i].y < _screenSize.y && quad[i].y > 0) {
+                return false;
+            }
         }
     }
 
