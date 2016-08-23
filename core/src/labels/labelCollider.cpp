@@ -92,7 +92,7 @@ void LabelCollider::process(const MapProjection& _proj, TileID _tileID) {
     for (auto* label : m_labels) {
         label->update(mvp, _proj, m_screenSize, 1, _tileID, true);
 
-         m_aabbs.push_back(label->aabb());
+        m_aabbs.push_back(label->aabb());
     }
 
     m_isect2d.resize({m_screenSize.x / 128, m_screenSize.y / 128}, m_screenSize);

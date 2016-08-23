@@ -27,12 +27,37 @@ void SpriteLabel::applyAnchor(LabelProperty::Anchor _anchor) {
 }
 
 void SpriteLabel::updateBBoxes(float _zoomFract) {
-    glm::vec2 sp = m_transform.state.screenPos;
-    glm::vec2 dim = m_dim + glm::vec2(m_extrudeScale * 2.f * _zoomFract);
+    glm::vec2 dim;
 
-    if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
+    if (m_options.flat) {
+        static float infinity = std::numeric_limits<float>::infinity();
 
-    m_obb = OBB(sp, m_transform.state.rotation, dim.x, dim.y);
+        float minx = infinity, miny = infinity;
+        float maxx = -infinity, maxy = -infinity;
+
+        for (int i = 0; i < 4; ++i) {
+            minx = std::min(minx, screenBillboard[i].x);
+            miny = std::min(miny, screenBillboard[i].y);
+            maxx = std::max(maxx, screenBillboard[i].x);
+            maxy = std::max(maxy, screenBillboard[i].y);
+        }
+
+        dim = glm::vec2(maxx - minx, maxy - miny);
+
+        if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
+
+        // TODO: Manage extrude scale
+
+        glm::vec2 obbCenter = glm::vec2((minx + maxx) * 0.5f, (miny + maxy) * 0.5f);
+
+        m_obb = OBB(obbCenter, glm::vec2(1.0, 0.0), dim.x, dim.y);
+    } else {
+        dim = m_dim + glm::vec2(m_extrudeScale * 2.f * _zoomFract);
+
+        if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
+
+        m_obb = OBB(m_transform.state.screenPos, m_transform.state.rotation, dim.x, dim.y);
+    }
 }
 
 void SpriteLabel::pushTransform() {
