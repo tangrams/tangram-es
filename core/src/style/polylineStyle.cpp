@@ -161,7 +161,7 @@ public:
     };
 
     void setup(const Tile& _tile) override;
-    void setup(const Marker& _marker) override;
+    void setup(const Marker& _marker, int zoom) override;
 
     const Style& style() const override { return m_style; }
 
@@ -215,18 +215,14 @@ void PolylineStyleBuilder<V>::setup(const Tile& tile) {
 }
 
 template <class V>
-void PolylineStyleBuilder<V>::setup(const Marker& marker) {
+void PolylineStyleBuilder<V>::setup(const Marker& marker, int zoom) {
 
-    // Use the 'style zoom' to evaluate style parameters.
-    m_zoom = 0;
+    m_zoom = zoom;
     m_overzoom2 = 0;
-    m_tileUnitsPerMeter = 1; // FIXME
-    m_tileSizePixels = 256; //FIXME
+    m_tileUnitsPerMeter = 1.f / marker.extent();
+    float metersPerTile = MapProjection::HALF_CIRCUMFERENCE / (1 << zoom);
+    m_tileSizePixels = 256 * (marker.extent() / metersPerTile);
 
-    // When a tile is overzoomed, we are actually styling the area of its
-    // 'source' tile, which will have a larger effective pixel size at the
-    // 'style' zoom level. This scaling is performed in the vertex shader to
-    // prevent loss of precision for small dimensions in packed attributes.
 }
 
 template <class V>

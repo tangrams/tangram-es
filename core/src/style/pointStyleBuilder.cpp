@@ -83,11 +83,11 @@ void PointStyleBuilder::setup(const Tile& _tile) {
     m_iconMesh = std::make_unique<IconMesh>();
 }
 
-void PointStyleBuilder::setup(const Marker& _marker) {
-    m_zoom = 0;
+void PointStyleBuilder::setup(const Marker& _marker, int zoom) {
+    m_zoom = zoom;
     m_spriteLabels = std::make_unique<SpriteLabels>(m_style);
 
-    m_textStyleBuilder->setup(_marker);
+    m_textStyleBuilder->setup(_marker, zoom);
     m_iconMesh = std::make_unique<IconMesh>();
 }
 

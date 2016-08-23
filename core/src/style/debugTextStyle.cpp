@@ -16,7 +16,7 @@ public:
         : TextStyleBuilder(_style) {}
 
     void setup(const Tile& _tile) override;
-    void setup(const Marker& _marker) override;
+    void setup(const Marker& _marker, int zoom) override;
 
     std::unique_ptr<StyledMesh> build() override;
 
@@ -35,14 +35,14 @@ void DebugTextStyleBuilder::setup(const Tile& _tile) {
     TextStyleBuilder::setup(_tile);
 }
 
-void DebugTextStyleBuilder::setup(const Marker& _marker) {
+void DebugTextStyleBuilder::setup(const Marker& _marker, int zoom) {
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::tile_infos)) {
         return;
     }
 
     m_tileID = "I AM A MARKER";
 
-    TextStyleBuilder::setup(_marker);
+    TextStyleBuilder::setup(_marker, zoom);
 }
 
 std::unique_ptr<StyledMesh> DebugTextStyleBuilder::build() {

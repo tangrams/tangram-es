@@ -42,8 +42,9 @@ void TextStyleBuilder::setup(const Tile& _tile){
     m_textLabels = std::make_unique<TextLabels>(m_style);
 }
 
-void TextStyleBuilder::setup(const Marker& marker){
-    m_tileSize = 256; //FIXME
+void TextStyleBuilder::setup(const Marker& marker, int zoom) {
+    float metersPerTile = MapProjection::HALF_CIRCUMFERENCE / (1 << zoom);
+    m_tileSize = 256 * (marker.extent() / metersPerTile);
     m_tileSize *= m_style.pixelScale();
 
     // add scale factor to the next zoom-level

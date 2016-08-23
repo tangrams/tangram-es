@@ -53,7 +53,7 @@ bool MarkerManager::setStyling(Marker* marker, const char* styling) {
     marker->setStyling(std::make_unique<DrawRuleData>("anonymous_marker_rule", 0, std::move(params)));
 
     // Build the feature mesh for the marker's current geometry.
-    build(*marker);
+    build(*marker, m_zoom);
     return true;
 }
 
@@ -66,7 +66,7 @@ bool MarkerManager::setPoint(Marker* marker, LngLat lngLat) {
         feature->geometryType = GeometryType::points;
         feature->points.emplace_back();
         marker->setFeature(std::move(feature));
-        build(*marker);
+        build(*marker, m_zoom);
     }
 
     // Update the marker's bounds to the given coordinates.
@@ -128,7 +128,7 @@ bool MarkerManager::setPolyline(Marker* marker, LngLat* coordinates, int count) 
     marker->setBounds(bounds);
 
     // Build a new mesh for the marker.
-    build(*marker);
+    build(*marker, m_zoom);
 
     return true;
 }
@@ -185,16 +185,32 @@ bool MarkerManager::setPolygon(Marker* marker, LngLat* coordinates, int* counts,
     marker->setBounds(bounds);
 
     // Build a new mesh for the marker.
-    build(*marker);
+    build(*marker, m_zoom);
 
     return true;
+}
+
+bool MarkerManager::update(int zoom) {
+
+    if (zoom == m_zoom) {
+         return false;
+    }
+    bool rebuilt = false;
+    for (auto& marker : m_markers) {
+        if (zoom != marker->builtZoomLevel()) {
+            build(*marker, zoom);
+            rebuilt = true;
+        }
+    }
+    m_zoom = zoom;
+    return rebuilt;
 }
 
 const std::vector<std::unique_ptr<Marker>>& MarkerManager::markers() const {
     return m_markers;
 }
 
-void MarkerManager::build(Marker& marker) {
+void MarkerManager::build(Marker& marker, int zoom) {
 
     auto rule = marker.drawRule();
     auto feature = marker.feature();
@@ -213,16 +229,14 @@ void MarkerManager::build(Marker& marker) {
         }
     }
 
-    // TODO: setup geometry dimensions for style builder as in setup(Tile&)
-
-    m_styleContext.setKeywordZoom(0); // TODO: use a meaningful zoom value
+    m_styleContext.setKeywordZoom(zoom);
 
     bool valid = m_ruleSet.evaluateRuleForContext(*rule, m_styleContext);
 
     if (valid) {
-        styler->setup(marker);
+        styler->setup(marker, zoom);
         styler->addFeature(*feature, *rule);
-        marker.setMesh(styler->style().getID(), styler->build());
+        marker.setMesh(styler->style().getID(), zoom, styler->build());
     }
 
 }

@@ -35,13 +35,15 @@ public:
 
     bool setPolygon(Marker* marker, LngLat* coordinates, int* counts, int rings);
 
+    bool update(int zoom);
+
     const std::vector<std::unique_ptr<Marker>>& markers() const;
 
 private:
 
     bool contains(Marker* marker);
 
-    void build(Marker& _marker);
+    void build(Marker& _marker, int zoom);
 
     DrawRuleMergeSet m_ruleSet;
     StyleContext m_styleContext;
@@ -49,6 +51,7 @@ private:
     std::vector<std::unique_ptr<Marker>> m_markers;
     fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilders;
     MapProjection* m_mapProjection = nullptr;
+    int m_zoom = 0;
 
 };
 

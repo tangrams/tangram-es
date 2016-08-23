@@ -287,6 +287,8 @@ bool Map::update(float _dt) {
 
     impl->view.update();
 
+    impl->markerManager.update(static_cast<int>(impl->view.getZoom()));
+
     for (const auto& style : impl->scene->styles()) {
         style->onBeginUpdate();
     }

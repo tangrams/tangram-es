@@ -9,7 +9,7 @@
 #include "gl/mesh.h"
 #include "tile/tile.h"
 #include "scene/drawRule.h"
-
+#include "marker/marker.h"
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "glm/gtc/type_precision.hpp"
@@ -98,9 +98,9 @@ public:
         m_meshData.clear();
     }
 
-    void setup(const Marker& _marker) override {
-        // m_tileUnitsPerMeter = _tile.getInverseScale();
-        m_zoom = 0;
+    void setup(const Marker& _marker, int zoom) override {
+        m_zoom = zoom;
+        m_tileUnitsPerMeter = 1.f / _marker.extent();
         m_meshData.clear();
     }
 

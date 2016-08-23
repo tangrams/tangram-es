@@ -30,9 +30,10 @@ void Marker::setStyling(std::unique_ptr<DrawRuleData> drawRuleData) {
     m_drawRule = std::make_unique<DrawRule>(*m_drawRuleData, "anonymous_marker_layer", 0);
 }
 
-void Marker::setMesh(uint32_t styleId, std::unique_ptr<StyledMesh> mesh) {
+void Marker::setMesh(uint32_t styleId, uint32_t zoom, std::unique_ptr<StyledMesh> mesh) {
     m_mesh = std::move(mesh);
     m_styleId = styleId;
+    m_builtZoomLevel = zoom;
 }
 
 void Marker::setEase(const glm::dvec2& dest, float duration, EaseType e) {
@@ -51,8 +52,16 @@ void Marker::update(float dt, const View& view) {
     m_modelMatrix = translation * scaling;
 }
 
+int Marker::builtZoomLevel() const {
+    return m_builtZoomLevel;
+}
+
 uint32_t Marker::styleId() const {
     return m_styleId;
+}
+
+float Marker::extent() const {
+    return glm::max(m_bounds.width(), m_bounds.height());
 }
 
 Feature* Marker::feature() const {

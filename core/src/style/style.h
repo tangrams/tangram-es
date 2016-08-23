@@ -66,7 +66,7 @@ public:
 
     virtual void setup(const Tile& _tile) = 0;
 
-    virtual void setup(const Marker& _marker) = 0;
+    virtual void setup(const Marker& _marker, int zoom) = 0;
 
     virtual void addFeature(const Feature& _feat, const DrawRule& _rule);
 

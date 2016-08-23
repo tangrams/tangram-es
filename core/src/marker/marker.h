@@ -31,13 +31,17 @@ public:
 
     void setStyling(std::unique_ptr<DrawRuleData> drawRuleData);
 
-    void setMesh(uint32_t styleId, std::unique_ptr<StyledMesh> mesh);
+    void setMesh(uint32_t styleId, uint32_t zoom, std::unique_ptr<StyledMesh> mesh);
 
     void setEase(const glm::dvec2& destination, float duration, EaseType ease);
 
     void update(float dt, const View& view);
 
     uint32_t styleId() const;
+
+    int builtZoomLevel() const;
+
+    float extent() const;
 
     StyledMesh* mesh() const;
 
@@ -65,6 +69,8 @@ protected:
     MapProjection* m_mapProjection = nullptr;
 
     uint32_t m_styleId = 0;
+
+    int m_builtZoomLevel = 0;
 
     // Origin of marker geometry relative to global projection space.
     glm::dvec2 m_origin;
