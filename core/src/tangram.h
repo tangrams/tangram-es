@@ -150,18 +150,43 @@ public:
 
     void clearDataSource(DataSource& _source, bool _data, bool _tiles);
 
+    // Add a marker object to the map and return a handle to it; _styling is a string of YAML
+    // that specifies a 'draw rule' according to the scene file syntax; The marker will not be
+    // drawn until it a point, line, or polygon is set for it with one of the functions below.
     Marker* markerAdd(const char* _styling);
 
+    // Remove a marker object from the map; returns true if the marker handle was found and
+    // successfully removed, otherwise returns false.
     bool markerRemove(Marker* _marker);
 
+    // Set the geometry of a marker to a point at the given coordinates; markers can have their
+    // geometry set multiple times with possibly different geometry types; returns true if the
+    // marker handle was found and successfully updated, otherwise returns false.
     bool markerSetPoint(Marker* _marker, LngLat _lngLat);
 
+    // Set the position of a marker with point geometry to ease to a new location over a duration
+    // in seconds with the given EaseType; returns true if the marker handle was found and has a
+    // point geometry, otherwise returns false.
     bool markerSetPointEased(Marker* _marker, LngLat _lngLat, float _duration, EaseType _ease);
 
+    // Set the geometry of a marker to a polyline along the given coordinates; _coordinates is a
+    // pointer to a sequence of _count LngLats; markers can have their geometry set multiple times
+    // with possibly different geometry types; returns true if the marker handle was found and
+    // successfully updated, otherwise returns false.
     bool markerSetPolyline(Marker* _marker, LngLat* _coordinates, int _count);
 
+    // Set the geometry of a marker to a polygon with the given coordinates; _counts is a pointer
+    // to a sequence of _rings integers and _coordinates is a pointer to a sequence of LngLats with
+    // a total length equal to the sum of _counts; for each integer n in _counts, a polygon is created
+    // by taking the next n LngLats from _coordinates, with winding order and internal polygons
+    // behaving according to the GeoJSON specification; markers can have their geometry set multiple
+    // times with possibly different geometry types; returns true if the marker handle was found and
+    // successfully updated, otherwise returns false.
     bool markerSetPolygon(Marker* _marker, LngLat* _coordinates, int* _counts, int _rings);
 
+    // Set the styling for a marker object; _styling is a string of YAML that specifies a 'draw rule'
+    // according to the scene file syntax; returns true if the marker handle was found and successfully
+    // updated, otherwise returns false.
     bool markerSetStyling(Marker* _marker, const char* _styling);
 
     // Respond to a tap at the given screen coordinates (x right, y down)
