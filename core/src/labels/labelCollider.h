@@ -19,7 +19,7 @@ public:
 
     void addLabels(std::vector<std::unique_ptr<Label>>& _labels);
 
-    void process(const MapProjection& _proj, TileID _tileID);
+    void process(TileID _tileID, float _tileResolution, float _tileInverseScale);
 
 private:
 

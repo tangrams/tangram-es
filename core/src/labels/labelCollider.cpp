@@ -56,7 +56,7 @@ void LabelCollider::handleRepeatGroup(size_t startPos) {
     }
 }
 
-void LabelCollider::process(const MapProjection& _proj, TileID _tileID) {
+void LabelCollider::process(TileID _tileID, float _tileResolution, float _tileInverseScale) {
 
     // Sort labels so that all labels of one repeat group are next to each other
     std::sort(m_labels.begin(), m_labels.end(),
@@ -90,7 +90,7 @@ void LabelCollider::process(const MapProjection& _proj, TileID _tileID) {
     mvp[3][1] = 1;
 
     for (auto* label : m_labels) {
-        label->update(mvp, _proj, m_screenSize, 1, _tileID, true);
+        label->update(mvp, _tileResolution, _tileInverseScale, m_screenSize, 1, true);
 
         m_aabbs.push_back(label->aabb());
     }

@@ -80,6 +80,7 @@ public:
         LabelProperty::Anchors anchors;
         bool required = true;
         bool flat = false;
+        float angle = 0.f;
     };
 
     static const float activation_distance_threshold;
@@ -89,10 +90,10 @@ public:
     virtual ~Label();
 
     bool update(const glm::mat4& _mvp,
-                const MapProjection& _projection,
+                float _tileResolution,
+                float _tileInverseScale,
                 const glm::vec2& _screenSize,
                 float _zoomFract,
-                TileID _tileID,
                 bool _drawAllLabels = false);
 
     bool nextAnchor();
@@ -106,9 +107,9 @@ public:
 
     /* Update the screen position of the label */
     bool updateScreenTransform(const glm::mat4& _mvp,
-                               const MapProjection& _projection,
+                               float _tileResolution,
+                               float _tileInverseScale,
                                const glm::vec2& _screenSize,
-                               TileID _tileID,
                                bool _drawAllLabels);
 
     virtual void updateBBoxes(float _zoomFract) = 0;

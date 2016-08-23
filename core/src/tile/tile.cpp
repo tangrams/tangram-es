@@ -20,6 +20,7 @@ Tile::Tile(TileID _id, const MapProjection& _projection, const DataSource* _sour
 
     m_scale = bounds.width();
     m_inverseScale = 1.0/m_scale;
+    m_resolution = _projection.TileResolution(m_id.z);
 
     updateTileOrigin(_id.wrap);
 
@@ -27,9 +28,7 @@ Tile::Tile(TileID _id, const MapProjection& _projection, const DataSource* _sour
     m_modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(m_scale));
 }
 
-Tile::~Tile() {
-
-}
+Tile::~Tile() {}
 
 //Note: This could set tile origin to be something different than the one if TileID's wrap is used.
 // But, this is required for wrapped tiles which are picked up from the cache

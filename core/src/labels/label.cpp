@@ -30,8 +30,8 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _
 
 Label::~Label() {}
 
-bool Label::updateScreenTransform(const glm::mat4& _mvp, const MapProjection& _projection,
-                                  const glm::vec2& _screenSize, TileID _tileID, bool _drawAllLabels) {
+bool Label::updateScreenTransform(const glm::mat4& _mvp, float _tileResolution, float _tileInverseScale,
+                                  const glm::vec2& _screenSize, bool _drawAllLabels) {
 
     glm::vec2 screenPosition;
     bool clipped = false;
@@ -43,16 +43,25 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const MapProjection& _p
             glm::vec2 p0 = m_transform.modelPosition1;
 
             if (m_options.flat) {
-                float tileResolution = (float)_projection.TileResolution(floorf(_tileID.z + 1));
-                glm::vec2 halfMetersDimension = m_dim * tileResolution * 0.5f;
-                BoundingBox tileBounds(_projection.TileBounds(_tileID));
-                glm::dvec2 tileOrigin = {tileBounds.min.x, tileBounds.max.y * -1.0};
-                float tileInverseScale = 1.0 / tileBounds.width();
+                glm::vec2 halfMetersDimension = m_dim * _tileResolution * 0.5f;
 
-                glm::vec2 sw = p0 - halfMetersDimension * tileInverseScale;
-                glm::vec2 se = p0 + glm::vec2(halfMetersDimension.x, -halfMetersDimension.y) * tileInverseScale;
-                glm::vec2 nw = p0 + glm::vec2(-halfMetersDimension.x, halfMetersDimension.y) * tileInverseScale;
-                glm::vec2 ne = p0 + halfMetersDimension * tileInverseScale;
+                glm::vec2 sw = p0 - halfMetersDimension * _tileInverseScale;
+                glm::vec2 se = p0 + glm::vec2(halfMetersDimension.x, -halfMetersDimension.y)
+                             * _tileInverseScale;
+                glm::vec2 nw = p0 + glm::vec2(-halfMetersDimension.x, halfMetersDimension.y)
+                             * _tileInverseScale;
+                glm::vec2 ne = p0 + halfMetersDimension * _tileInverseScale;
+
+                // Rotate in clockwise order on the ground plane
+                if (m_options.angle != 0.f) {
+                    glm::vec2 rotation(cos(DEG_TO_RAD * m_options.angle),
+                                       sin(DEG_TO_RAD * m_options.angle));
+
+                    sw = rotateBy(sw, rotation);
+                    se = rotateBy(se, rotation);
+                    nw = rotateBy(nw, rotation);
+                    ne = rotateBy(ne, rotation);
+                }
 
                 screenBillboard[0] = worldToScreenSpace(_mvp, glm::vec4(sw, 0.0, 1.0),
                                                         _screenSize, clipped);
@@ -258,8 +267,8 @@ bool Label::setAnchorIndex(int _index) {
     return true;
 }
 
-bool Label::update(const glm::mat4& _mvp, const MapProjection& _projection, const glm::vec2& _screenSize,
-                   float _zoomFract, TileID _tileID, bool _drawAllLabels) {
+bool Label::update(const glm::mat4& _mvp, float _tileResolution, float _tileInverseScale, const glm::vec2& _screenSize,
+                   float _zoomFract, bool _drawAllLabels) {
 
     m_occludedLastFrame = m_occluded;
     m_occluded = false;
@@ -272,7 +281,8 @@ bool Label::update(const glm::mat4& _mvp, const MapProjection& _projection, cons
         }
     }
 
-    bool ruleSatisfied = updateScreenTransform(_mvp, _projection, _screenSize, _tileID, _drawAllLabels);
+    bool ruleSatisfied = updateScreenTransform(_mvp, _tileResolution, _tileInverseScale,
+                                               _screenSize, _drawAllLabels);
 
     // one of the label rules has not been satisfied
     if (!ruleSatisfied) {

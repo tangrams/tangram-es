@@ -58,6 +58,8 @@ public:
     /* Returns the reciprocal of <getScale()> */
     float getInverseScale() const { return m_inverseScale; }
 
+    float getResolution() const { return m_resolution; }
+
     const glm::mat4& getModelMatrix() const { return m_modelMatrix; }
 
     const glm::mat4& mvp() const { return m_mvp; }
@@ -107,6 +109,8 @@ private:
     const int64_t m_sourceGeneration;
 
     bool m_proxyState = false;
+
+    float m_resolution;
 
     glm::dvec2 m_tileOrigin; // South-West corner of the tile in 2D projection space in meters (e.g. mercator meters)
 

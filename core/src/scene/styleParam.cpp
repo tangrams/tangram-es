@@ -16,6 +16,7 @@ using Color = CSSColorParser::Color;
 
 const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"anchor", StyleParamKey::anchor},
+    {"angle", StyleParamKey::angle},
     {"cap", StyleParamKey::cap},
     {"centroid", StyleParamKey::centroid},
     {"collide", StyleParamKey::collide},
@@ -295,6 +296,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
 
         return Width(width);
     }
+    case StyleParamKey::angle:
     case StyleParamKey::miter_limit:
     case StyleParamKey::outline_miter_limit:
     case StyleParamKey::text_font_stroke_width: {
@@ -408,6 +410,7 @@ std::string StyleParam::toString() const {
         if (!value.is<uint32_t>()) break;
         return k + std::to_string(value.get<uint32_t>());
     case StyleParamKey::miter_limit:
+    case StyleParamKey::angle:
     case StyleParamKey::outline_miter_limit:
         if (!value.is<float>()) break;
         return k + std::to_string(value.get<float>());
