@@ -419,7 +419,13 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
 
         if (label->type() == Label::Type::debug) { continue; }
 
-        glm::vec2 sp = label->transform().state.screenPos;
+        glm::vec2 sp;
+
+        if (label->options().flat) {
+            sp = label->screenBillboard[0];
+        } else {
+            sp = label->transform().state.screenPos;
+        }
 
         // draw bounding box
         switch (label->state()) {
@@ -460,7 +466,7 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
 
         Primitives::drawPoly(rs, &(label->obb().getQuad())[0], 4);
 
-        if (label->parent()) {
+        if (label->parent() && !label->parent()->options().flat) {
             Primitives::setColor(rs, 0xff0000);
             Primitives::drawLine(rs, sp, label->parent()->transform().state.screenPos);
         }
