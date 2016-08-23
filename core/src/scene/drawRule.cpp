@@ -248,7 +248,7 @@ void DrawRuleMergeSet::mergeRules(const SceneLayer& _layer) {
         }
 
         if (pos == end) {
-            m_matchedRules.emplace_back(rule, _layer.name(), 0);
+            m_matchedRules.emplace_back(rule, _layer.name(), _layer.depth());
         } else {
             m_matchedRules[pos].merge(rule, _layer);
         }
