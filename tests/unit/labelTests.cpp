@@ -1,6 +1,7 @@
 #include "catch.hpp"
 #include "tangram.h"
 #include "labels/label.h"
+#include "view/view.h"
 #include "style/textStyle.h"
 #include "labels/textLabel.h"
 #include "labels/textLabels.h"
@@ -15,7 +16,7 @@ glm::vec2 screenSize(500.f, 500.f);
 TextStyle dummyStyle("textStyle", nullptr);
 TextLabels dummy(dummyStyle);
 
-TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
+TextLabel makeLabel(Label::WorldTransform _transform, Label::Type _type) {
     Label::Options options;
     options.offset = {0.0f, 0.0f};
     options.anchors.anchor[0] = LabelProperty::Anchor::center;
@@ -30,17 +31,29 @@ TextLabel makeLabel(Label::Transform _transform, Label::Type _type) {
             TextLabelProperty::Align::none);
 }
 
+View makeView() {
+    View view(256, 256);
+
+    view.setPosition(0, 0);
+    view.setZoom(0);
+    view.update(false);
+
+    return view;
+}
+
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {
+    View view = makeView();
+
     TextLabel l(makeLabel({screenSize/2.f}, Label::Type::point));
 
     REQUIRE(l.state() == Label::State::none);
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), 0.0, view.state(), 0);
 
     REQUIRE(l.state() != Label::State::sleep);
     REQUIRE(l.state() == Label::State::none);
     REQUIRE(l.canOcclude());
 
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), 0.0, view.state(), 0);
     l.occlude(true);
     l.evalState(0);
 
@@ -48,18 +61,20 @@ TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[
 }
 
 TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens", "[Core][Label]" ) {
+    View view = makeView();
+
     TextLabel l(makeLabel({screenSize/2.f}, Label::Type::point));
 
     REQUIRE(l.state() == Label::State::none);
 
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), 0.0, view.state(), 0);
     l.occlude(false);
     l.evalState(0);
 
     REQUIRE(l.state() == Label::State::fading_in);
     REQUIRE(l.canOcclude());
 
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), 0.0, view.state(), 0);
     l.evalState(1.f);
 
     REQUIRE(l.state() == Label::State::visible);
@@ -67,40 +82,38 @@ TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens
 }
 
 TEST_CASE( "Ensure the end state after occlusion is leep state", "[Core][Label]" ) {
+    View view = makeView();
+
     TextLabel l(makeLabel({screenSize/2.f}, Label::Type::point));
 
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), 0.0, view.state(), 0);
     l.occlude(false);
     l.evalState(0);
 
     REQUIRE(l.state() == Label::State::fading_in);
     REQUIRE(l.canOcclude());
 
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), 0.0, view.state(), 0);
     l.occlude(true);
     l.evalState(1.f);
-
-    // Depends whether fading-in labels fade out or set to sleep in evalState
-    // REQUIRE(l.state() == Label::State::fading_out);
-    // l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
-    // l.occlude(true);
-    // l.evalState(screenSize, 1.f);
 
     REQUIRE(l.state() == Label::State::sleep);
     REQUIRE(l.canOcclude());
 }
 
 TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
+    View view = makeView();
+
     TextLabel l(makeLabel({screenSize*2.f}, Label::Type::point));
 
     REQUIRE(l.state() == Label::State::none);
 
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), 0.0, view.state(), 0);
 
     REQUIRE(l.state() == Label::State::out_of_screen);
     REQUIRE(l.canOcclude());
 
-    l.update(glm::ortho(0.f, screenSize.x * 4.f, screenSize.y * 4.f, 0.f, -1.f, 1.f), screenSize, 0);
+    l.update(glm::ortho(0.f, screenSize.x * 4.f, screenSize.y * 4.f, 0.f, -1.f, 1.f), 0.0, view.state(), 0);
     l.evalState(0);
     REQUIRE(l.state() != Label::State::none);
 
@@ -109,12 +122,14 @@ TEST_CASE( "Ensure the out of screen state transition", "[Core][Label]" ) {
 }
 
 TEST_CASE( "Ensure debug labels are always visible and cannot occlude", "[Core][Label]" ) {
+    View view = makeView();
+
     TextLabel l(makeLabel({screenSize/2.f}, Label::Type::debug));
 
     REQUIRE(l.state() == Label::State::visible);
     REQUIRE(!l.canOcclude());
 
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), 0.0, view.state(), 0);
     l.evalState(1.f);
 
     REQUIRE(l.state() == Label::State::visible);
@@ -184,80 +199,3 @@ TEST_CASE( "Sine interpolation", "[Core][Label][Fade]" ) {
 
     REQUIRE(fadeIn.isFinished());
 }
-
-#if 0
-TEST_CASE( "Ensure anchor fallback behavior on first fallback", "[Core][Label]" ) {
-    TextLabel l = makeLabelWithAnchorFallbacks();
-
-    REQUIRE(l.state() == Label::State::none);
-
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
-    l.occlude(true);
-    l.evalState(1.f);
-
-    REQUIRE(l.state() == Label::State::anchor_fallback);
-}
-
-TEST_CASE( "Ensure anchor fallback behavior when looping over all fallbacks without finding one", "[Core][Label]" ) {
-    TextLabel l = makeLabelWithAnchorFallbacks();
-
-    // none -> anchor_fallback
-    {
-        REQUIRE(l.state() == Label::State::none);
-
-        l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
-        l.occlude(true);
-        l.evalState(1.f);
-
-        REQUIRE(l.state() == Label::State::anchor_fallback);
-    }
-
-    // anchor_fallback -> anchor_fallback (move to fourth anchor)
-    {
-        for (int i = 0; i < 3; ++i) {
-            l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
-            l.occlude(true);
-            l.evalState(1.f);
-
-            REQUIRE(l.state() == Label::State::anchor_fallback);
-        }
-
-        REQUIRE(l.anchorType() == LabelProperty::Anchor::top);
-    }
-
-    // anchor_fallback -> fading_out (all anchor tested)
-    {
-        l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
-        l.occlude(true);
-        l.evalState(1.f);
-        REQUIRE(l.state() == Label::State::sleep);
-
-        l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
-        l.occlude(true);
-        l.evalState(1.f);
-        REQUIRE(l.state() == Label::State::sleep);
-    }
-}
-
-TEST_CASE( "Ensure anchor fallback behavior when looping over all fallback and finding one", "[Core][Label]" ) {
-    TextLabel l = makeLabelWithAnchorFallbacks();
-
-    REQUIRE(l.state() == Label::State::none);
-
-    // move to third anchor
-    for (int i = 0; i < 3; ++i) {
-        l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
-        l.occlude(true);
-        l.evalState(1.f);
-
-        REQUIRE(l.state() == Label::State::anchor_fallback);
-    }
-
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), screenSize, 0);
-    l.occlude(false);
-    l.evalState(1.f);
-
-    REQUIRE(l.anchorType() == LabelProperty::Anchor::left);
-    REQUIRE(l.state() == Label::State::visible);
-}
-#endif
