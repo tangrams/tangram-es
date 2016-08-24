@@ -14,7 +14,11 @@
 #include <unordered_map>
 #include <set>
 
+#ifdef _MSC_VER
+#define PERF_TRACE
+#else
 #define PERF_TRACE __attribute__ ((noinline))
+#endif
 
 namespace Tangram {
 
