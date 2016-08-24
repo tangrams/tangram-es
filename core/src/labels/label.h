@@ -129,7 +129,7 @@ public:
     bool occludedLastFrame() const { return m_occludedLastFrame; }
 
     Label* parent() const { return m_parent; }
-    void setParent(Label& parent, bool definePriority);
+    void setParent(Label& parent, bool definePriority, bool defineCollide);
 
     LabelProperty::Anchor anchorType() const { return m_options.anchors[m_anchorIndex]; }
 

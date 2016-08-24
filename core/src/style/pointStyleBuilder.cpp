@@ -287,13 +287,14 @@ void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
 
         if (iconsCount == textCount) {
             bool definePriority = !_rule.contains(StyleParamKey::text_priority);
+            bool defineCollide = _rule.contains(StyleParamKey::collide);
 
             for (size_t i = 0; i < textCount; ++i) {
                 auto& tLabel = textLabels[textStart + i];
                 auto& pLabel = m_labels[iconsStart + i];
 
                 // Link labels together
-                tLabel->setParent(*pLabel, definePriority);
+                tLabel->setParent(*pLabel, definePriority, defineCollide);
             }
         }
     }
