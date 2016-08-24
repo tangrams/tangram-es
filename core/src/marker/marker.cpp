@@ -47,7 +47,7 @@ void Marker::update(float dt, const View& view) {
     if (!m_ease.finished()) { m_ease.update(dt); }
     // Apply marker-view translation to the model matrix
     const auto& viewOrigin = view.getPosition();
-    auto scaling = glm::scale(glm::vec3(m_bounds.width(), m_bounds.height(), 1.f));
+    auto scaling = glm::scale(glm::vec3(extent()));
     auto translation = glm::translate(glm::vec3(m_origin.x - viewOrigin.x, m_origin.y - viewOrigin.y, 0.f));
     m_modelMatrix = translation * scaling;
 }

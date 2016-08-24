@@ -317,7 +317,8 @@ void Style::draw(RenderState& rs, const Marker& marker) {
     if (!mesh) { return; }
 
     m_shaderProgram->setUniformMatrix4f(rs, m_uModel, marker.modelMatrix());
-    m_shaderProgram->setUniformf(rs, m_uTileOrigin, marker.origin().x, marker.origin().y, 0, 0);
+    m_shaderProgram->setUniformf(rs, m_uTileOrigin, marker.origin().x, marker.origin().y,
+                                 marker.builtZoomLevel(), marker.builtZoomLevel());
 
     if (!mesh->draw(rs, *m_shaderProgram)) {
         LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());

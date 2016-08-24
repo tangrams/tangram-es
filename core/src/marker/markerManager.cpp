@@ -110,22 +110,21 @@ bool MarkerManager::setPolyline(Marker* marker, LngLat* coordinates, int count) 
     bounds.min = m_mapProjection->LonLatToMeters(bounds.min);
     bounds.max = m_mapProjection->LonLatToMeters(bounds.max);
 
-    float scaleX = 1. / bounds.width();
-    float scaleY = 1. / bounds.height();
+    // Update the marker's bounds.
+    marker->setBounds(bounds);
+
+    float scale = 1.f / marker->extent();
 
     // Project and offset the coordinates into the marker-local coordinate system.
-    auto origin = bounds.min; // glm::dvec2(bounds.min.x, bounds.max.y); // SW corner.
+    auto origin = marker->origin(); // SW corner.
     for (int i = 0; i < count; ++i) {
         auto degrees = glm::dvec2(coordinates[i].longitude, coordinates[i].latitude);
         auto meters = m_mapProjection->LonLatToMeters(degrees);
-        line.emplace_back((meters.x - origin.x) * scaleX, (meters.y - origin.y) * scaleY, 0.f);
+        line.emplace_back((meters.x - origin.x) * scale, (meters.y - origin.y) * scale, 0.f);
     }
 
     // Update the feature data for the marker.
     marker->setFeature(std::move(feature));
-
-    // Update the marker's bounds
-    marker->setBounds(bounds);
 
     // Build a new mesh for the marker.
     build(*marker, m_zoom);
@@ -160,11 +159,13 @@ bool MarkerManager::setPolygon(Marker* marker, LngLat* coordinates, int* counts,
     bounds.min = m_mapProjection->LonLatToMeters(bounds.min);
     bounds.max = m_mapProjection->LonLatToMeters(bounds.max);
 
-    float scaleX = 1. / bounds.width();
-    float scaleY = 1. / bounds.height();
+    // Update the marker's bounds.
+    marker->setBounds(bounds);
+
+    float scale = 1.f / marker->extent();
 
     // Project and offset the coordinates into the marker-local coordinate system.
-    auto origin = glm::dvec2(bounds.min.x, bounds.max.y); // SW corner.
+    auto origin = marker->origin(); // SW corner.
     ring = coordinates;
     for (int i = 0; i < rings; ++i) {
         int count = counts[i];
@@ -173,16 +174,13 @@ bool MarkerManager::setPolygon(Marker* marker, LngLat* coordinates, int* counts,
         for (int j = 0; j < count; ++j) {
             auto degrees = glm::dvec2(ring[j].longitude, ring[j].latitude);
             auto meters = m_mapProjection->LonLatToMeters(degrees);
-            line.emplace_back((meters.x - origin.x) * scaleX, (meters.y - origin.y) * scaleY, 0.f);
+            line.emplace_back((meters.x - origin.x) * scale, (meters.y - origin.y) * scale, 0.f);
         }
         ring += count;
     }
 
     // Update the feature data for the marker.
     marker->setFeature(std::move(feature));
-
-    // Update the marker's bounds
-    marker->setBounds(bounds);
 
     // Build a new mesh for the marker.
     build(*marker, m_zoom);

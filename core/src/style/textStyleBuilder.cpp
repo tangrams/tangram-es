@@ -43,11 +43,15 @@ void TextStyleBuilder::setup(const Tile& _tile){
 }
 
 void TextStyleBuilder::setup(const Marker& marker, int zoom) {
-    float metersPerTile = MapProjection::HALF_CIRCUMFERENCE / (1 << zoom);
-    m_tileSize = 256 * (marker.extent() / metersPerTile);
-    m_tileSize *= m_style.pixelScale();
+    float metersPerTile = 2.f * MapProjection::HALF_CIRCUMFERENCE * exp2(-zoom);
 
-    // add scale factor to the next zoom-level
+    // In general, a Marker won't cover the same area as a tile, so the effective
+    // "tile size" for building a Marker is the size of a tile in pixels multiplied
+    // by the ratio of the Marker's extent to the length of a tile side at this zoom.
+    m_tileSize = 256 * (marker.extent() / metersPerTile);
+
+    // (Copied from Tile setup function above, purpose unclear)
+    m_tileSize *= m_style.pixelScale();
     m_tileSize *= 2;
 
     m_atlasRefs.reset();
