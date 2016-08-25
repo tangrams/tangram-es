@@ -20,7 +20,6 @@ Tile::Tile(TileID _id, const MapProjection& _projection, const DataSource* _sour
 
     m_scale = bounds.width();
     m_inverseScale = 1.0/m_scale;
-    m_resolution = _projection.TileResolution(m_id.z);
 
     updateTileOrigin(_id.wrap);
 

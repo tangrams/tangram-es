@@ -4,6 +4,7 @@
 #include "glm/gtx/rotate_vector.hpp"
 #include "tangram.h"
 #include "platform.h"
+#include "view/view.h"
 
 namespace Tangram {
 
@@ -30,8 +31,8 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _
 
 Label::~Label() {}
 
-bool Label::updateScreenTransform(const glm::mat4& _mvp, float _tileResolution, float _tileInverseScale,
-                                  const glm::vec2& _screenSize, bool _drawAllLabels) {
+bool Label::updateScreenTransform(const glm::mat4& _mvp, float _tileInverseScale,
+                                  const ViewState& _viewState, bool _drawAllLabels) {
 
     glm::vec2 screenPosition;
     bool clipped = false;
@@ -43,14 +44,13 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, float _tileResolution, 
             glm::vec2 p0 = m_transform.modelPosition1;
 
             if (m_options.flat) {
-                glm::vec2 halfMetersDimension = m_dim * _tileResolution * 0.5f;
+                float unitsPerMeter = _viewState.metersPerPixel * _tileInverseScale;
+                glm::vec2 halfMetersDimension = m_dim * 0.5f * unitsPerMeter;
 
-                glm::vec2 sw = p0 - halfMetersDimension * _tileInverseScale;
-                glm::vec2 se = p0 + glm::vec2(halfMetersDimension.x, -halfMetersDimension.y)
-                             * _tileInverseScale;
-                glm::vec2 nw = p0 + glm::vec2(-halfMetersDimension.x, halfMetersDimension.y)
-                             * _tileInverseScale;
-                glm::vec2 ne = p0 + halfMetersDimension * _tileInverseScale;
+                glm::vec2 sw = p0 - halfMetersDimension;
+                glm::vec2 se = p0 + glm::vec2(halfMetersDimension.x, -halfMetersDimension.y);
+                glm::vec2 nw = p0 + glm::vec2(-halfMetersDimension.x, halfMetersDimension.y);
+                glm::vec2 ne = p0 + halfMetersDimension;
 
                 // Rotate in clockwise order on the ground plane
                 if (m_options.angle != 0.f) {
@@ -64,20 +64,20 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, float _tileResolution, 
                 }
 
                 screenBillboard[0] = worldToScreenSpace(_mvp, glm::vec4(sw, 0.0, 1.0),
-                                                        _screenSize, clipped);
+                                                        _viewState.viewportSize, clipped);
                 if (clipped) { return false; }
                 screenBillboard[1] = worldToScreenSpace(_mvp, glm::vec4(se, 0.0, 1.0),
-                                                        _screenSize, clipped);
+                                                        _viewState.viewportSize, clipped);
                 if (clipped) { return false; }
                 screenBillboard[3] = worldToScreenSpace(_mvp, glm::vec4(ne, 0.0, 1.0),
-                                                        _screenSize, clipped);
+                                                        _viewState.viewportSize, clipped);
                 if (clipped) { return false; }
                 screenBillboard[2] = worldToScreenSpace(_mvp, glm::vec4(nw, 0.0, 1.0),
-                                                        _screenSize, clipped);
+                                                        _viewState.viewportSize, clipped);
                 if (clipped) { return false; }
             } else {
                 screenPosition = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
-                                                    _screenSize, clipped);
+                                                    _viewState.viewportSize, clipped);
                 if (clipped) { return false; }
             }
 
@@ -93,9 +93,9 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, float _tileResolution, 
             glm::vec2 p2 = m_transform.modelPosition2;
 
             glm::vec2 ap0 = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
-                                               _screenSize, clipped);
+                                               _viewState.viewportSize, clipped);
             glm::vec2 ap2 = worldToScreenSpace(_mvp, glm::vec4(p2, 0.0, 1.0),
-                                               _screenSize, clipped);
+                                               _viewState.viewportSize, clipped);
 
             // check whether the label is behind the camera using the
             // perspective division factor
@@ -115,7 +115,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, float _tileResolution, 
             glm::vec2 p1 = glm::vec2(p2 + p0) * 0.5f;
 
             glm::vec2 ap1 = worldToScreenSpace(_mvp, glm::vec4(p1, 0.0, 1.0),
-                                               _screenSize, clipped);
+                                               _viewState.viewportSize, clipped);
 
             // Keep screen position center at world center (less sliding in tilted view)
             screenPosition = ap1;
@@ -267,8 +267,8 @@ bool Label::setAnchorIndex(int _index) {
     return true;
 }
 
-bool Label::update(const glm::mat4& _mvp, float _tileResolution, float _tileInverseScale, const glm::vec2& _screenSize,
-                   float _zoomFract, bool _drawAllLabels) {
+bool Label::update(const glm::mat4& _mvp, float _tileInverseScale,
+                   const ViewState& _viewState, bool _drawAllLabels) {
 
     m_occludedLastFrame = m_occluded;
     m_occluded = false;
@@ -281,8 +281,8 @@ bool Label::update(const glm::mat4& _mvp, float _tileResolution, float _tileInve
         }
     }
 
-    bool ruleSatisfied = updateScreenTransform(_mvp, _tileResolution, _tileInverseScale,
-                                               _screenSize, _drawAllLabels);
+    bool ruleSatisfied = updateScreenTransform(_mvp, _tileInverseScale,
+                                               _viewState, _drawAllLabels);
 
     // one of the label rules has not been satisfied
     if (!ruleSatisfied) {
@@ -291,10 +291,10 @@ bool Label::update(const glm::mat4& _mvp, float _tileResolution, float _tileInve
     }
 
     // update the view-space bouding box
-    updateBBoxes(_zoomFract);
+    updateBBoxes(_viewState.fractZoom);
 
     // checks whether the label is out of the viewport
-    if (offViewport(_screenSize)) {
+    if (offViewport(_viewState.viewportSize)) {
         enterState(State::out_of_screen, 0.0);
         if (m_occludedLastFrame) {
             m_occluded = true;

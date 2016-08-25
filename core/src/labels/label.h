@@ -10,13 +10,14 @@
 #include "util/hash.h"
 #include "data/properties.h"
 #include "labels/labelProperty.h"
-#include "util/mapProjection.h"
 
 #include <string>
 #include <limits>
 #include <memory>
 
 namespace Tangram {
+
+struct ViewState;
 
 class Label {
 
@@ -90,10 +91,8 @@ public:
     virtual ~Label();
 
     bool update(const glm::mat4& _mvp,
-                float _tileResolution,
                 float _tileInverseScale,
-                const glm::vec2& _screenSize,
-                float _zoomFract,
+                const ViewState& _viewState,
                 bool _drawAllLabels = false);
 
     bool nextAnchor();
@@ -107,9 +106,8 @@ public:
 
     /* Update the screen position of the label */
     bool updateScreenTransform(const glm::mat4& _mvp,
-                               float _tileResolution,
                                float _tileInverseScale,
-                               const glm::vec2& _screenSize,
+                               const ViewState& _viewState,
                                bool _drawAllLabels);
 
     virtual void updateBBoxes(float _zoomFract) = 0;

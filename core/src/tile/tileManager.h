@@ -19,13 +19,7 @@ namespace Tangram {
 
 class DataSource;
 class TileCache;
-
-struct ViewState {
-    const MapProjection& mapProjection;
-    bool changedOnLastUpdate;
-    glm::dvec2 center;
-    float zoom;
-};
+struct ViewState;
 
 /* Singleton container of <TileSet>s
  *

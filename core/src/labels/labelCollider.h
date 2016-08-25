@@ -10,6 +10,7 @@
 namespace Tangram {
 
 class Label;
+struct ViewState;
 
 class LabelCollider {
 
@@ -19,7 +20,7 @@ public:
 
     void addLabels(std::vector<std::unique_ptr<Label>>& _labels);
 
-    void process(TileID _tileID, float _tileResolution, float _tileInverseScale);
+    void process(TileID _tileID, float _tileInverseScale, const ViewState& _viewState);
 
 private:
 

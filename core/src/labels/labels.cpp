@@ -30,7 +30,7 @@ Labels::~Labels() {}
 //     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 // }
 
-void Labels::updateLabels(const View& _view, float _dt,
+void Labels::updateLabels(const ViewState& _viewState, float _dt,
                           const std::vector<std::unique_ptr<Style>>& _styles,
                           const std::vector<std::shared_ptr<Tile>>& _tiles,
                           bool _onlyTransitions) {
@@ -40,10 +40,7 @@ void Labels::updateLabels(const View& _view, float _dt,
 
     m_needUpdate = false;
 
-    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
-
     // int lodDiscard = LODDiscardFunc(View::s_maxZoom, _view.getZoom());
-    float dz = _view.getZoom() - std::floor(_view.getZoom());
 
     bool drawAllLabels = Tangram::getDebugFlag(DebugFlags::draw_all_labels);
 
@@ -65,8 +62,7 @@ void Labels::updateLabels(const View& _view, float _dt,
             auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
             if (!labelMesh) { continue; }
             for (auto& label : labelMesh->getLabels()) {
-                if (!label->update(mvp, tile->getResolution(), tile->getInverseScale(),
-                                   screenSize, dz, drawAllLabels)) {
+                if (!label->update(mvp, tile->getInverseScale(), _viewState, drawAllLabels)) {
                     // skip dead labels
                     continue;
                 }
@@ -222,10 +218,7 @@ void Labels::sortLabels() {
     std::sort(m_labels.begin(), m_labels.end(), Labels::labelComparator);
 }
 
-void Labels::handleOcclusions(const View& _view) {
-
-    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
-    float dz = _view.getZoom() - std::floor(_view.getZoom());
+void Labels::handleOcclusions(const ViewState& _viewState) {
 
     m_isect2d.clear();
     m_repeatGroups.clear();
@@ -256,14 +249,14 @@ void Labels::handleOcclusions(const View& _view) {
         do {
             if (l->isOccluded()) {
                 // Update BBox for anchor fallback
-                l->updateBBoxes(dz);
+                l->updateBBoxes(_viewState.fractZoom);
                 if (anchorIndex == l->anchorIndex()) {
                     // Reached first anchor again
                     break;
                 }
             }
 
-            if (l->offViewport(screenSize)) { continue; }
+            if (l->offViewport(_viewState.viewportSize)) { continue; }
 
             l->occlude(false);
 
@@ -321,27 +314,27 @@ bool Labels::withinRepeatDistance(Label *_label) {
     return false;
 }
 
-void Labels::updateLabelSet(const View& _view, float _dt,
+void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
                             const std::vector<std::unique_ptr<Style>>& _styles,
                             const std::vector<std::shared_ptr<Tile>>& _tiles,
                             TileCache& _cache) {
 
     /// Collect and update labels from visible tiles
-    updateLabels(_view, _dt, _styles, _tiles, false);
+    updateLabels(_viewState, _dt, _styles, _tiles, false);
 
     sortLabels();
 
     /// Mark labels to skip transitions
 
-    if (int(m_lastZoom) != int(_view.getZoom())) {
-        skipTransitions(_styles, _tiles, _cache, _view.getZoom());
-        m_lastZoom = _view.getZoom();
+    if (int(m_lastZoom) != int(_viewState.zoom)) {
+        skipTransitions(_styles, _tiles, _cache, _viewState.zoom);
+        m_lastZoom = _viewState.zoom;
     }
 
-    m_isect2d.resize({_view.getWidth() / 256, _view.getHeight() / 256},
-                     {_view.getWidth(), _view.getHeight()});
+    m_isect2d.resize({_viewState.viewportSize.x / 256, _viewState.viewportSize.y / 256},
+                     {_viewState.viewportSize.x, _viewState.viewportSize.y});
 
-    handleOcclusions(_view);
+    handleOcclusions(_viewState);
 
     /// Update label meshes
 
@@ -353,7 +346,7 @@ void Labels::updateLabelSet(const View& _view, float _dt,
     }
 }
 
-const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, float _dt,
+const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const ViewState& _viewState, float _dt,
                                                          const std::vector<std::unique_ptr<Style>>& _styles,
                                                          const std::vector<std::shared_ptr<Tile>>& _tiles,
                                                          float _x, float _y, bool _visibleOnly) {
@@ -362,13 +355,9 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
 
     m_touchItems.clear();
 
-    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
     glm::vec2 touchPoint(_x, _y);
 
     OBB obb(_x - thumbSize/2, _y - thumbSize/2, 0, thumbSize, thumbSize);
-
-    float z = _view.getZoom();
-    float dz = z - std::floor(z);
 
     for (const auto& tile : _tiles) {
 
@@ -387,9 +376,8 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
                 if (!options.interactive) { continue; }
 
                 if (!_visibleOnly) {
-                    label->updateScreenTransform(mvp, tile->getResolution(), tile->getInverseScale(),
-                                                 screenSize, false);
-                    label->updateBBoxes(dz);
+                    label->updateScreenTransform(mvp, tile->getInverseScale(), _viewState, false);
+                    label->updateBBoxes(_viewState.fractZoom);
                 } else if (!label->visibleState()) {
                     continue;
                 }

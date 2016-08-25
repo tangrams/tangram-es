@@ -5,6 +5,7 @@
 #include "tile/tile.h"
 #include "tileCache.h"
 #include "util/mapProjection.h"
+#include "view/view.h"
 
 #include "glm/gtx/norm.hpp"
 
@@ -327,7 +328,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             auto& task = entry.task;
 
             // Update tile distance to map center for load priority.
-            auto tileCenter = _view.mapProjection.TileCenter(id);
+            auto tileCenter = _view.mapProjection->TileCenter(id);
             double scaleDiv = exp2(id.z - _view.zoom);
             if (scaleDiv < 1) { scaleDiv = 0.1/scaleDiv; } // prefer parent tiles
             task->setPriority(glm::length2(tileCenter - _view.center) * scaleDiv);
@@ -355,7 +356,7 @@ void TileManager::enqueueTask(TileSet& _tileSet, const TileID& _tileID,
                               const ViewState& _view) {
 
     // Keep the items sorted by distance
-    auto tileCenter = _view.mapProjection.TileCenter(_tileID);
+    auto tileCenter = _view.mapProjection->TileCenter(_tileID);
     double distance = glm::length2(tileCenter - _view.center);
 
     auto it = std::upper_bound(m_loadTasks.begin(), m_loadTasks.end(), distance,

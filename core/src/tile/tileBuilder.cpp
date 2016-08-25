@@ -7,7 +7,6 @@
 #include "style/style.h"
 #include "tile/tile.h"
 #include "util/mapProjection.h"
-#include "view/view.h"
 
 namespace Tangram {
 
@@ -74,7 +73,11 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
         builder.second->addLayoutItems(m_labelLayout);
     }
 
-    m_labelLayout.process(_tileID, tile->getResolution(), tile->getInverseScale());
+    ViewState viewState = m_scene->viewState();
+    viewState.zoom = _tileID.z;
+    viewState.fractZoom = 1.f;
+
+    m_labelLayout.process(_tileID, tile->getInverseScale(), viewState);
 
     for (auto& builder : m_styleBuilder) {
         tile->setMesh(builder.second->style(), builder.second->build());

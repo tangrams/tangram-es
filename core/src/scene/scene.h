@@ -112,6 +112,9 @@ public:
 
     std::shared_ptr<Texture> getTexture(const std::string& name) const;
 
+    ViewState viewState() const { return m_viewState; }
+    void viewState(ViewState _viewState) { m_viewState = _viewState; }
+
     float pixelScale() { return m_pixelScale; }
     void setPixelScale(float _scale) { m_pixelScale = _scale; }
 
@@ -154,6 +157,8 @@ private:
     float m_pixelScale = 1.0f;
 
     float m_time = 0.0;
+
+    ViewState m_viewState;
 
 };
 
