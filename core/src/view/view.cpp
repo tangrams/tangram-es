@@ -67,7 +67,7 @@ void View::setCameraType(CameraType _type) {
 }
 
 ViewState View::state() const {
-    double minZoomMetersPerPixel = MapProjection::HALF_CIRCUMFERENCE / s_pixelsPerTile;
+    double minZoomMetersPerPixel = MapProjection::HALF_CIRCUMFERENCE / (s_pixelsPerTile * m_pixelScale);
     double metersPerPixel = minZoomMetersPerPixel / powf(2.f, m_zoom);
 
     return {
