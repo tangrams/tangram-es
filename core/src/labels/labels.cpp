@@ -107,8 +107,8 @@ void Labels::skipTransitions(const std::vector<const Style*>& _styles, Tile& _ti
                 if (l0->options().repeatGroup != l1->options().repeatGroup) { continue; }
                 // if (l0->hash() != l1->hash()) { continue; }
 
-                float d2 = glm::distance2(l0->transform().state.screenPos,
-                                          l1->transform().state.screenPos);
+                float d2 = glm::distance2(l0->screenTransform().position,
+                                          l1->screenTransform().position);
 
                 // The new label lies within the circle defined by the bbox of l0
                 if (sqrt(d2) < std::max(l0->dimension().x, l0->dimension().y)) {
@@ -203,8 +203,8 @@ bool Labels::labelComparator(const LabelEntry& _a, const LabelEntry& _b) {
 
     if (l1->type() == Label::Type::line && l2->type() == Label::Type::line) {
         // Prefer the label with longer line segment as it has a chance
-        return glm::length2(l1->transform().modelPosition1 - l1->transform().modelPosition2) >
-               glm::length2(l2->transform().modelPosition1 - l2->transform().modelPosition2);
+        return glm::length2(l1->worldTransform().positions[0] - l1->worldTransform().positions[1]) >
+               glm::length2(l2->worldTransform().positions[0] - l2->worldTransform().positions[1]);
     }
 
     if (l1->hash() != l2->hash()) {
@@ -383,7 +383,7 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const ViewState& _viewS
                 }
 
                 if (isect2d::intersect(label->obb(), obb)) {
-                    float distance = glm::length2(label->transform().state.screenPos - touchPoint);
+                    float distance = glm::length2(label->screenTransform().position - touchPoint);
                     auto labelCenter = label->center();
                     m_touchItems.push_back({options.properties, {labelCenter.x, labelCenter.y}, std::sqrt(distance)});
                 }
@@ -412,9 +412,9 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
         glm::vec2 sp;
 
         if (label->options().flat) {
-            sp = label->screenBillboard[0];
+            sp = label->screenTransform().positions[0];
         } else {
-            sp = label->transform().state.screenPos;
+            sp = label->screenTransform().position;
         }
 
         // draw bounding box
@@ -458,11 +458,11 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
 
         if (label->parent() && !label->parent()->options().flat) {
             Primitives::setColor(rs, 0xff0000);
-            Primitives::drawLine(rs, sp, label->parent()->transform().state.screenPos);
+            Primitives::drawLine(rs, sp, label->parent()->screenTransform().position);
         }
 
         // draw offset
-        glm::vec2 rot = label->transform().state.rotation;
+        glm::vec2 rot = label->screenTransform().rotation;
         glm::vec2 offset = label->options().offset;
         if (label->parent()) { offset += label->parent()->options().offset; }
         offset = rotateBy(offset, rot);

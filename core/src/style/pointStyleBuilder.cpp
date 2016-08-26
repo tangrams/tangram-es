@@ -154,7 +154,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
 void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
                                  const PointStyle::Parameters& _params) {
 
-    m_labels.push_back(std::make_unique<SpriteLabel>(Label::Transform{glm::vec2(_point)},
+    m_labels.push_back(std::make_unique<SpriteLabel>(Label::WorldTransform(glm::vec2(_point)),
                                                      _params.size,
                                                      _params.labelOptions,
                                                      _params.extrudeScale,

@@ -43,7 +43,7 @@ public:
         uint8_t fontScale;
     };
 
-    TextLabel(Label::Transform _transform, Type _type, Label::Options _options,
+    TextLabel(Label::WorldTransform _transform, Type _type, Label::Options _options,
               TextLabel::FontVertexAttributes _attrib,
               glm::vec2 _dim, TextLabels& _labels, TextRange _textRanges,
               TextLabelProperty::Align _preferedAlignment);

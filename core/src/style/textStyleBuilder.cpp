@@ -508,7 +508,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 }
 
 void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
-                                Label::Transform _transform) {
+                                Label::WorldTransform _transform) {
 
     m_labels.emplace_back(new TextLabel(_transform, _type, _params.labelOptions,
                                         {m_attributes.fill, m_attributes.stroke, m_attributes.fontScale},

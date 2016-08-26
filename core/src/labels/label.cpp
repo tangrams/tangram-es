@@ -10,17 +10,17 @@ namespace Tangram {
 
 const float Label::activation_distance_threshold = 2;
 
-Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _options)
+Label::Label(Label::WorldTransform _worldTransform, glm::vec2 _size, Type _type, Options _options)
     : m_state(State::none),
       m_type(_type),
-      m_transform(_transform),
+      m_worldTransform(_worldTransform),
       m_dim(_size),
       m_options(_options) {
 
     if (!m_options.collide || m_type == Type::debug) {
         enterState(State::visible, 1.0);
     } else {
-        m_transform.state.alpha = 0.0;
+        m_screenTransform.alpha = 0.0;
     }
 
     m_occludedLastFrame = false;
@@ -33,17 +33,16 @@ Label::~Label() {}
 
 bool Label::updateScreenTransform(const glm::mat4& _mvp, float _tileInverseScale,
                                   const ViewState& _viewState, bool _drawAllLabels) {
-
-    glm::vec2 screenPosition;
     bool clipped = false;
 
     switch (m_type) {
         case Type::debug:
         case Type::point:
         {
-            glm::vec2 p0 = m_transform.modelPosition1;
+            glm::vec2 p0 = m_worldTransform.position;
 
             if (m_options.flat) {
+                glm::vec2 positions[4];
                 float unitsPerMeter = _viewState.metersPerPixel * _tileInverseScale;
                 glm::vec2 metersDimension = m_dim * unitsPerMeter;
 
@@ -63,34 +62,44 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, float _tileInverseScale
                     ne = rotateBy(ne, rotation);
                 }
 
-                screenBillboard[0] = worldToScreenSpace(_mvp, glm::vec4(sw, 0.0, 1.0),
-                                                        _viewState.viewportSize, clipped);
+                positions[0] = worldToScreenSpace(_mvp, glm::vec4(sw, 0.0, 1.0),
+                                                  _viewState.viewportSize, clipped);
                 if (clipped) { return false; }
-                screenBillboard[1] = worldToScreenSpace(_mvp, glm::vec4(se, 0.0, 1.0),
-                                                        _viewState.viewportSize, clipped);
-                if (clipped) { return false; }
-                screenBillboard[3] = worldToScreenSpace(_mvp, glm::vec4(ne, 0.0, 1.0),
-                                                        _viewState.viewportSize, clipped);
-                if (clipped) { return false; }
-                screenBillboard[2] = worldToScreenSpace(_mvp, glm::vec4(nw, 0.0, 1.0),
-                                                        _viewState.viewportSize, clipped);
-                if (clipped) { return false; }
-            } else {
-                screenPosition = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
-                                                    _viewState.viewportSize, clipped);
-                if (clipped) { return false; }
-            }
 
-            m_transform.state.screenPos = screenPosition + m_options.offset;
+                positions[1] = worldToScreenSpace(_mvp, glm::vec4(se, 0.0, 1.0),
+                                                  _viewState.viewportSize, clipped);
+                if (clipped) { return false; }
+
+                positions[3] = worldToScreenSpace(_mvp, glm::vec4(ne, 0.0, 1.0),
+                                                  _viewState.viewportSize, clipped);
+                if (clipped) { return false; }
+
+                positions[2] = worldToScreenSpace(_mvp, glm::vec4(nw, 0.0, 1.0),
+                                                  _viewState.viewportSize, clipped);
+                if (clipped) { return false; }
+
+                for (int i = 0; i < 4; ++i) {
+                    positions[i] += m_options.offset;
+                }
+
+                std::copy(positions, positions + 4, m_screenTransform.positions);
+
+            } else {
+                glm::vec2 position = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
+                                                        _viewState.viewportSize, clipped);
+                if (clipped) { return false; }
+
+                m_screenTransform.position = position + m_options.offset;
+            }
 
             break;
         }
         case Type::line:
         {
-            // project label position from mercator world space to screen
-            // coordinates
-            glm::vec2 p0 = m_transform.modelPosition1;
-            glm::vec2 p2 = m_transform.modelPosition2;
+            // project label position from mercator world space to screen coordinates
+            glm::vec2 p0 = m_worldTransform.positions[0];
+            glm::vec2 p2 = m_worldTransform.positions[1];
+            glm::vec2 position;
 
             glm::vec2 ap0 = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
                                                _viewState.viewportSize, clipped);
@@ -118,13 +127,13 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, float _tileInverseScale
                                                _viewState.viewportSize, clipped);
 
             // Keep screen position center at world center (less sliding in tilted view)
-            screenPosition = ap1;
+            position = ap1;
 
             glm::vec2 rotation = (ap0.x <= ap2.x ? ap2 - ap0 : ap0 - ap2) / length;
             rotation = glm::vec2{rotation.x, -rotation.y};
 
-            m_transform.state.screenPos = screenPosition + rotateBy(m_options.offset, rotation);
-            m_transform.state.rotation = rotation;
+            m_screenTransform.position = position + rotateBy(m_options.offset, rotation);
+            m_screenTransform.rotation = rotation;
 
             break;
         }
@@ -152,8 +161,10 @@ bool Label::offViewport(const glm::vec2& _screenSize) {
 
     for (int i = 0; i < 4; ++i) {
         if (m_options.flat) {
-            if (screenBillboard[i].x < _screenSize.x && screenBillboard[i].x > 0 &&
-                screenBillboard[i].y < _screenSize.y && screenBillboard[i].y > 0) {
+            if (m_screenTransform.positions[i].x < _screenSize.x
+             && m_screenTransform.positions[i].x > 0
+             && m_screenTransform.positions[i].y < _screenSize.y
+             && m_screenTransform.positions[i].y > 0) {
                 return false;
             }
         } else {
@@ -215,7 +226,7 @@ void Label::enterState(const State& _state, float _alpha) {
 }
 
 void Label::setAlpha(float _alpha) {
-    m_transform.state.alpha = CLAMP(_alpha, 0.0, 1.0);
+    m_screenTransform.alpha = CLAMP(_alpha, 0.0, 1.0);
 }
 
 void Label::resetState() {
@@ -245,7 +256,7 @@ void Label::print() const {
     }
     LOG("\tm_state: %s", state.c_str());
     LOG("\tm_anchorIndex: %d", m_anchorIndex);
-    LOG("\tscreenPos: %f/%f", m_transform.state.screenPos.x, m_transform.state.screenPos.y);
+    LOG("\tscreenPos: %f/%f", m_screenTransform.position.x, m_screenTransform.position.y);
 
 }
 

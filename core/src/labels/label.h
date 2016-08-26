@@ -43,18 +43,28 @@ public:
         dead            = 1 << 7,
     };
 
-    struct Transform {
-        Transform(glm::vec2 _pos) : modelPosition1(_pos), modelPosition2(_pos) {}
-        Transform(glm::vec2 _pos1, glm::vec2 _pos2) : modelPosition1(_pos1), modelPosition2(_pos2) {}
+    struct WorldTransform {
+        WorldTransform(glm::vec2 _wp) : position(_wp) {}
+        WorldTransform(glm::vec2 _wp0, glm::vec2 _wp1) {
+            positions[0] = _wp0;
+            positions[1] = _wp1;
+        }
 
-        glm::vec2 modelPosition1;
-        glm::vec2 modelPosition2;
+        union {
+            glm::vec2 position;
+            glm::vec2 positions[2];
+        };
+    };
 
-        struct {
-            glm::vec2 screenPos;
-            glm::vec2 rotation = {1.f,0.f};
-            float alpha = 0.f;
-        } state;
+    struct ScreenTransform {
+        ScreenTransform() {}
+        union {
+            glm::vec2 position;
+            glm::vec2 positions[4];
+        };
+
+        glm::vec2 rotation = {1.f, 0.f};
+        float alpha = 0.f;
     };
 
     struct Transition {
@@ -86,7 +96,7 @@ public:
 
     static const float activation_distance_threshold;
 
-    Label(Transform _transform, glm::vec2 _size, Type _type, Options _options);
+    Label(WorldTransform _transform, glm::vec2 _size, Type _type, Options _options);
 
     virtual ~Label();
 
@@ -133,7 +143,11 @@ public:
     AABB aabb() const { return m_obb.getExtent(); }
     /* Gets the oriented bounding box of the label */
     const OBB& obb() const { return m_obb; }
-    const Transform& transform() const { return m_transform; }
+
+    const WorldTransform& worldTransform() const { return m_worldTransform; }
+
+    const ScreenTransform& screenTransform() const { return m_screenTransform; }
+
     State state() const { return m_state; }
     bool isOccluded() const { return m_occluded; }
     bool occludedLastFrame() const { return m_occludedLastFrame; }
@@ -152,8 +166,6 @@ public:
     void print() const;
 
     bool offViewport(const glm::vec2& _screenSize);
-
-    glm::vec2 screenBillboard[4];
 
 private:
 
@@ -178,8 +190,10 @@ protected:
     Type m_type;
     // the label oriented bounding box
     OBB m_obb;
-    // the label transforms
-    Transform m_transform;
+
+    WorldTransform m_worldTransform;
+    ScreenTransform m_screenTransform;
+
     // the dimension of the label
     glm::vec2 m_dim;
     // label options

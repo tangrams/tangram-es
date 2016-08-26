@@ -25,7 +25,7 @@ struct SpriteVertex {
 class SpriteLabel : public Label {
 public:
 
-    SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Options _options,
+    SpriteLabel(Label::WorldTransform _transform, glm::vec2 _size, Label::Options _options,
                 float _extrudeScale, SpriteLabels& _labels, size_t _labelsPos);
 
     void updateBBoxes(float _zoomFract) override;

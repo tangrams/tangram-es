@@ -11,7 +11,7 @@ const float SpriteVertex::position_scale = 4.0f;
 const float SpriteVertex::alpha_scale = 65535.0f;
 const float SpriteVertex::texture_scale = 65535.0f;
 
-SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Options _options,
+SpriteLabel::SpriteLabel(Label::WorldTransform _transform, glm::vec2 _size, Label::Options _options,
                          float _extrudeScale, SpriteLabels& _labels, size_t _labelsPos)
     : Label(_transform, _size, Label::Type::point, _options),
       m_labels(_labels),
@@ -36,10 +36,10 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
         float maxx = -infinity, maxy = -infinity;
 
         for (int i = 0; i < 4; ++i) {
-            minx = std::min(minx, screenBillboard[i].x);
-            miny = std::min(miny, screenBillboard[i].y);
-            maxx = std::max(maxx, screenBillboard[i].x);
-            maxy = std::max(maxy, screenBillboard[i].y);
+            minx = std::min(minx, m_screenTransform.positions[i].x);
+            miny = std::min(miny, m_screenTransform.positions[i].y);
+            maxx = std::max(maxx, m_screenTransform.positions[i].x);
+            maxy = std::max(maxy, m_screenTransform.positions[i].y);
         }
 
         dim = glm::vec2(maxx - minx, maxy - miny);
@@ -56,7 +56,7 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
 
         if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
 
-        m_obb = OBB(m_transform.state.screenPos, m_transform.state.rotation, dim.x, dim.y);
+        m_obb = OBB(m_screenTransform.position, m_screenTransform.rotation, dim.x, dim.y);
     }
 }
 
@@ -74,7 +74,7 @@ void SpriteLabel::pushTransform() {
 
     SpriteVertex::State state {
         quad.color,
-        uint16_t(m_transform.state.alpha * SpriteVertex::alpha_scale),
+        uint16_t(m_screenTransform.alpha * SpriteVertex::alpha_scale),
         0,
     };
 
@@ -82,13 +82,13 @@ void SpriteLabel::pushTransform() {
 
     auto* quadVertices = style.getMesh()->pushQuad();
 
-    glm::i16vec2 screenPosition = glm::i16vec2(m_transform.state.screenPos * SpriteVertex::position_scale);
+    glm::i16vec2 screenPosition = glm::i16vec2(m_screenTransform.position * SpriteVertex::position_scale);
 
     for (int i = 0; i < 4; i++) {
         SpriteVertex& vertex = quadVertices[i];
 
         if (m_options.flat) {
-            vertex.pos = SpriteVertex::position_scale * screenBillboard[i];
+            vertex.pos = SpriteVertex::position_scale * m_screenTransform.positions[i];
         } else {
             vertex.pos = screenPosition + quad.quad[i].pos;
         }

@@ -13,7 +13,7 @@ using namespace TextLabelProperty;
 const float TextVertex::position_scale = 4.0f;
 const float TextVertex::alpha_scale = 65535.0f;
 
-TextLabel::TextLabel(Label::Transform _transform, Type _type, Label::Options _options,
+TextLabel::TextLabel(Label::WorldTransform _transform, Type _type, Label::Options _options,
                      TextLabel::FontVertexAttributes _attrib,
                      glm::vec2 _dim,  TextLabels& _labels, TextRange _textRanges,
                      Align _preferedAlignment)
@@ -55,24 +55,24 @@ void TextLabel::updateBBoxes(float _zoomFract) {
     // FIXME: Only for testing
     if (state() == State::dead) { dim -= 4; }
 
-    glm::vec2 screenPosition = m_transform.state.screenPos;
+    glm::vec2 screenPosition = m_screenTransform.position;
     screenPosition += m_anchor;
 
     m_obb = OBB(screenPosition,
-                glm::vec2{m_transform.state.rotation.x, -m_transform.state.rotation.y},
+                glm::vec2(m_screenTransform.rotation.x, -m_screenTransform.rotation.y),
                 dim.x, dim.y);
 }
 
 void TextLabel::pushTransform() {
     if (!visibleState()) { return; }
 
-    glm::vec2 rotation = m_transform.state.rotation;
+    glm::vec2 rotation = m_screenTransform.rotation;
     bool rotate = (rotation.x != 1.f);
 
     TextVertex::State state {
         m_fontAttrib.fill,
         m_fontAttrib.stroke,
-        uint16_t(m_transform.state.alpha * TextVertex::alpha_scale),
+        uint16_t(m_screenTransform.alpha * TextVertex::alpha_scale),
         uint16_t(m_fontAttrib.fontScale),
     };
 
@@ -80,7 +80,7 @@ void TextLabel::pushTransform() {
     auto end = it + m_textRanges[m_textRangeIndex].length;
     auto& style = m_textLabels.style;
 
-    glm::vec2 screenPosition = m_transform.state.screenPos;
+    glm::vec2 screenPosition = m_screenTransform.position;
     screenPosition += m_anchor;
 
     glm::i16vec2 sp = glm::i16vec2(screenPosition * TextVertex::position_scale);

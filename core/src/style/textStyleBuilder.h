@@ -36,7 +36,7 @@ public:
 
     // Add label to the mesh using the prepared label data
     void addLabel(const TextStyle::Parameters& _params, Label::Type _type,
-                  Label::Transform _transform);
+                  Label::WorldTransform _transform);
 
     void addLineTextLabels(const Feature& _feature, const TextStyle::Parameters& _params);
 
