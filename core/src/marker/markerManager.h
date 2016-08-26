@@ -49,8 +49,10 @@ private:
     StyleContext m_styleContext;
     std::shared_ptr<Scene> m_scene;
     std::vector<std::unique_ptr<Marker>> m_markers;
+    std::vector<std::string> m_jsFnList;
     fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilders;
     MapProjection* m_mapProjection = nullptr;
+    size_t m_jsFnIndex = 0;
     int m_zoom = 0;
 
 };

@@ -11,6 +11,9 @@ void MarkerManager::setScene(std::shared_ptr<Scene> scene) {
     m_scene = scene;
     m_mapProjection = scene->mapProjection().get();
     m_styleContext.initFunctions(*scene);
+    m_jsFnIndex = scene->functions().size();
+
+    // FIXME: Styling data stored in the scene, like 'stops', will get trashed when a new scene is loaded!
 
     // Initialize StyleBuilders
     for (auto& style : scene->styles()) {
@@ -50,7 +53,15 @@ bool MarkerManager::setStyling(Marker* marker, const char* styling) {
     YAML::Node node = YAML::Load(styling);
     std::vector<StyleParam> params;
     SceneLoader::parseStyleParams(node, m_scene, "", params);
-    marker->setStyling(std::make_unique<DrawRuleData>("anonymous_marker_rule", 0, std::move(params)));
+
+    // Compile any new JS functions used for styling.
+    const auto& sceneJsFnList = m_scene->functions();
+    for (auto i = m_jsFnIndex; i < sceneJsFnList.size(); ++i) {
+        m_styleContext.addFunction(sceneJsFnList[i]);
+    }
+    m_jsFnIndex = sceneJsFnList.size();
+
+    marker->setStyling(std::make_unique<DrawRuleData>("", 0, std::move(params)));
 
     // Build the feature mesh for the marker's current geometry.
     build(*marker, m_zoom);
