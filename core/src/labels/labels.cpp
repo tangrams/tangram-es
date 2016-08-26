@@ -107,8 +107,7 @@ void Labels::skipTransitions(const std::vector<const Style*>& _styles, Tile& _ti
                 if (l0->options().repeatGroup != l1->options().repeatGroup) { continue; }
                 // if (l0->hash() != l1->hash()) { continue; }
 
-                float d2 = glm::distance2(l0->screenTransform().position,
-                                          l1->screenTransform().position);
+                float d2 = l0->screenDistance2(l1->center());
 
                 // The new label lies within the circle defined by the bbox of l0
                 if (sqrt(d2) < std::max(l0->dimension().x, l0->dimension().y)) {
@@ -203,8 +202,7 @@ bool Labels::labelComparator(const LabelEntry& _a, const LabelEntry& _b) {
 
     if (l1->type() == Label::Type::line && l2->type() == Label::Type::line) {
         // Prefer the label with longer line segment as it has a chance
-        return glm::length2(l1->worldTransform().positions[0] - l1->worldTransform().positions[1]) >
-               glm::length2(l2->worldTransform().positions[0] - l2->worldTransform().positions[1]);
+        return l1->worldLineLength2() > l2->worldLineLength2();
     }
 
     if (l1->hash() != l2->hash()) {
@@ -305,7 +303,7 @@ bool Labels::withinRepeatDistance(Label *_label) {
     auto it = m_repeatGroups.find(_label->options().repeatGroup);
     if (it != m_repeatGroups.end()) {
         for (auto* ll : it->second) {
-            float d2 = distance2(_label->center(), ll->center());
+            float d2 = glm::distance2(_label->center(), ll->center());
             if (d2 < threshold2) {
                 return true;
             }
@@ -383,9 +381,9 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const ViewState& _viewS
                 }
 
                 if (isect2d::intersect(label->obb(), obb)) {
-                    float distance = glm::length2(label->screenTransform().position - touchPoint);
-                    auto labelCenter = label->center();
-                    m_touchItems.push_back({options.properties, {labelCenter.x, labelCenter.y}, std::sqrt(distance)});
+                    float distance2 = label->screenDistance2(touchPoint);
+                    glm::vec2 center = label->center();
+                    m_touchItems.push_back({options.properties, {center.x, center.y}, std::sqrt(distance2)});
                 }
             }
         }
@@ -409,13 +407,7 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
 
         if (label->type() == Label::Type::debug) { continue; }
 
-        glm::vec2 sp;
-
-        if (label->options().flat) {
-            sp = label->screenTransform().positions[0];
-        } else {
-            sp = label->screenTransform().position;
-        }
+        glm::vec2 sp = label->center();
 
         // draw bounding box
         switch (label->state()) {
@@ -456,9 +448,9 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
 
         Primitives::drawPoly(rs, &(label->obb().getQuad())[0], 4);
 
-        if (label->parent() && !label->parent()->options().flat) {
+        if (label->parent()) {
             Primitives::setColor(rs, 0xff0000);
-            Primitives::drawLine(rs, sp, label->parent()->screenTransform().position);
+            Primitives::drawLine(rs, sp, label->parent()->center());
         }
 
         // draw offset

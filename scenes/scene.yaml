@@ -274,11 +274,12 @@ layers:
                 size: 20px
                 priority: 5
                 collide: true
+                flat: true
                 transition:
                     [show, hide]:
                         time: 1s
                 #size: [[13, 12px], [15, 18px]]
-                #interactive: true
+                interactive: true
                 text:
                     required: true
                     interactive: true
