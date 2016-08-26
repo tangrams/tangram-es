@@ -56,7 +56,7 @@ public:
 
 protected:
 
-    void pushTransform() override;
+    void updateVertexBuffer() override;
 
 private:
 

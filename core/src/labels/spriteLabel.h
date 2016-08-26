@@ -30,7 +30,7 @@ public:
 
     void updateBBoxes(float _zoomFract) override;
 
-    void pushTransform() override;
+    void updateVertexBuffer() override;
 
 private:
 

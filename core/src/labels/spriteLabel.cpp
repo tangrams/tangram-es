@@ -60,7 +60,7 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
     }
 }
 
-void SpriteLabel::pushTransform() {
+void SpriteLabel::updateVertexBuffer() {
 
     if (!visibleState()) { return; }
 

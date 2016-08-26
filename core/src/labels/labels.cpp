@@ -72,13 +72,13 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
 
                     if (label->visibleState() || !label->canOcclude()) {
                         m_needUpdate |= label->evalState(_dt);
-                        label->pushTransform();
+                        label->updateVertexBuffer();
                     }
                 } else if (label->canOcclude()) {
                     m_labels.emplace_back(label.get(), tile.get(), proxyTile);
                 } else {
                     m_needUpdate |= label->evalState(_dt);
-                    label->pushTransform();
+                    label->updateVertexBuffer();
                 }
             }
         }
@@ -342,7 +342,7 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
         Label* label = entry.label;
 
         m_needUpdate |= label->evalState(_dt);
-        label->pushTransform();
+        label->updateVertexBuffer();
     }
 }
 

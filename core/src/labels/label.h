@@ -110,7 +110,7 @@ public:
     int anchorIndex() { return m_anchorIndex; }
 
     /* Push the pending transforms to the vbo by updating the vertices */
-    virtual void pushTransform() = 0;
+    virtual void updateVertexBuffer() = 0;
 
     bool evalState(float _dt);
 
