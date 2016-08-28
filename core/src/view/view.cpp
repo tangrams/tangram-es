@@ -127,6 +127,32 @@ float View::getFocalLength() const {
 
 }
 
+
+void View::setMaxPitch(float degrees) {
+
+    m_maxPitch = degrees;
+    m_maxPitchStops = nullptr;
+    setPitch(m_pitch);
+
+}
+
+void View::setMaxPitchStops(std::shared_ptr<Stops> stops) {
+
+    m_maxPitchStops = stops;
+    setPitch(m_pitch);
+
+}
+
+float View::getMaxPitch() const {
+
+    if (m_maxPitchStops) {
+        return m_maxPitchStops->evalFloat(m_zoom);
+    }
+    return m_maxPitch;
+
+}
+
+
 void View::setPosition(double _x, double _y) {
 
     m_pos.x = _x;
@@ -152,12 +178,12 @@ void View::setRoll(float _roll) {
 
 void View::setPitch(float _pitch) {
 
-    float max_pitch = HALF_PI;
+    float maxPitchRadians = glm::radians(getMaxPitch());
     if (m_type != CameraType::perspective) {
         // Prevent projection plane from intersecting ground plane
-        max_pitch = atan2(m_pos.z, m_height * .5f);
+        maxPitchRadians = atan2(m_pos.z, m_height * .5f);
     }
-    m_pitch = glm::clamp(_pitch, 0.f, max_pitch);
+    m_pitch = glm::clamp(_pitch, 0.f, maxPitchRadians);
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
 
@@ -198,10 +224,11 @@ void View::update(bool _constrainToWorldBounds) {
         m_zoom -= std::log(m_constraint.getConstrainedScale()) / std::log(2);
     }
 
+    setPitch(m_pitch); // Ensure pitch is still valid for viewport
+
     if (m_dirtyMatrices) {
 
         updateMatrices(); // Resets dirty flag
-        setPitch(m_pitch); // Ensure pitch is still valid for viewport
         m_changed = true;
 
     }
