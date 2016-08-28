@@ -1176,6 +1176,14 @@ void SceneLoader::loadCamera(const Node& _camera, const std::shared_ptr<Scene>& 
         z = zoom.as<float>();
     }
 
+    if (Node maxTilt = _camera["max_tilt"]) {
+        if (maxTilt.IsSequence()) {
+            camera.maxTiltStops = std::make_shared<Stops>(Stops::Numbers(maxTilt));
+        } else if (maxTilt.IsScalar()) {
+            camera.maxTilt = maxTilt.as<float>(PI);
+        }
+    }
+
     _scene->startPosition = glm::dvec2(x, y);
     _scene->startZoom = z;
 }
