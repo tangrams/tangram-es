@@ -52,11 +52,11 @@ void FontContext::loadFonts() {
                     m_font[i] = m_alfons.addFont("default", alfons::InputSource(data, dataSize), size);
                 }
 
-            if (data) {
-                free(data);
-            } else {
-                LOGW("Default font %s not found", DEFAULT);
-            }
+                if (data) {
+                    free(data);
+                } else {
+                    LOGW("Default font %s not found", DEFAULT);
+                }
         }
     }
 
@@ -399,12 +399,7 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
             LOGN("Could not load font file %s", FontDescription::BundleAlias(_family, _weight, _style).c_str());
 
             // add fallbacks from default font
-            if (m_font[sizeIndex]) {
-                font->addFaces(*m_font[sizeIndex]);
-            } else {
-                LOGN("Default font fallback are not available");
-            }
-
+            font->addFaces(*m_font[sizeIndex]);
             return font;
         }
     }
