@@ -568,11 +568,15 @@ void TileManager::updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, Til
 
     // Try parent proxy
     auto parentID = _tileID.getParent();
-    if (updateProxyTile(_tileSet, _tile, parentID, ProxyID::parent)) {
+    auto minZoom = _tileSet.source->minZoom();
+    if (minZoom <= parentID.z
+            && updateProxyTile(_tileSet, _tile, parentID, ProxyID::parent)) {
         return;
     }
     // Try grandparent
-    if (updateProxyTile(_tileSet, _tile, parentID.getParent(), ProxyID::parent2)) {
+    auto grandparentID = parentID.getParent();
+    if (minZoom <= grandparentID.z
+            && updateProxyTile(_tileSet, _tile, grandparentID, ProxyID::parent2)) {
         return;
     }
     // Try children
