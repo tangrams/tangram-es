@@ -46,13 +46,13 @@ void FontContext::loadFonts() {
             size_t dataSize;
             char* data = reinterpret_cast<char*>(bytesFromFile(DEFAULT, dataSize));
 
-            if (data) {
                 LOG("Loading default font file %s", DEFAULT);
 
                 for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
                     m_font[i] = m_alfons.addFont("default", alfons::InputSource(data, dataSize), size);
                 }
 
+            if (data) {
                 free(data);
             } else {
                 LOGW("Default font %s not found", DEFAULT);
