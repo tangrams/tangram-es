@@ -614,27 +614,39 @@ Marker* Map::markerAdd(const char* _styling) {
 }
 
 bool Map::markerRemove(Marker* _marker) {
-    return impl->markerManager.remove(_marker);
+    bool success = impl->markerManager.remove(_marker);
+    requestRender();
+    return success;
 }
 
 bool Map::markerSetPoint(Marker* _marker, LngLat _lngLat) {
-    return impl->markerManager.setPoint(_marker, _lngLat);
+    bool success = impl->markerManager.setPoint(_marker, _lngLat);
+    requestRender();
+    return success;
 }
 
 bool Map::markerSetPointEased(Marker* _marker, LngLat _lngLat, float _duration, EaseType ease) {
-    return impl->markerManager.setPointEased(_marker, _lngLat, _duration, ease);
+    bool success = impl->markerManager.setPointEased(_marker, _lngLat, _duration, ease);
+    requestRender();
+    return success;
 }
 
 bool Map::markerSetPolyline(Marker* _marker, LngLat* _coordinates, int _count) {
-    return impl->markerManager.setPolyline(_marker, _coordinates, _count);
+    bool success = impl->markerManager.setPolyline(_marker, _coordinates, _count);
+    requestRender();
+    return success;
 }
 
 bool Map::markerSetPolygon(Marker* _marker, LngLat* _coordinates, int* _counts, int _rings) {
-    return impl->markerManager.setPolygon(_marker, _coordinates, _counts, _rings);
+    bool success = impl->markerManager.setPolygon(_marker, _coordinates, _counts, _rings);
+    requestRender();
+    return success;
 }
 
 bool Map::markerSetStyling(Marker* _marker, const char* _styling) {
-    return impl->markerManager.setStyling(_marker, _styling);
+    bool success = impl->markerManager.setStyling(_marker, _styling);
+    requestRender();
+    return success;
 }
 
 void Map::handleTapGesture(float _posX, float _posY) {
