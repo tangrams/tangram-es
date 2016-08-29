@@ -215,6 +215,12 @@ bool MarkerManager::update(int zoom) {
     return rebuilt;
 }
 
+void MarkerManager::removeAll() {
+
+    m_markers.clear();
+
+}
+
 const std::vector<std::unique_ptr<Marker>>& MarkerManager::markers() const {
     return m_markers;
 }

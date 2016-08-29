@@ -189,6 +189,10 @@ public:
     // updated, otherwise returns false.
     bool markerSetStyling(Marker* _marker, const char* _styling);
 
+    // Remove all marker objects from the map; Any marker handles previously returned from 'markerAdd'
+    // are invalidated after this.
+    void markerRemoveAll();
+
     // Respond to a tap at the given screen coordinates (x right, y down)
     void handleTapGesture(float _posX, float _posY);
 

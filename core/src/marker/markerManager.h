@@ -37,6 +37,8 @@ public:
 
     bool update(int zoom);
 
+    void removeAll();
+
     const std::vector<std::unique_ptr<Marker>>& markers() const;
 
 private:

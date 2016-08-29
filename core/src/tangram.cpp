@@ -649,6 +649,11 @@ bool Map::markerSetStyling(Marker* _marker, const char* _styling) {
     return success;
 }
 
+void Map::markerRemoveAll() {
+    impl->markerManager.removeAll();
+    requestRender();
+}
+
 void Map::handleTapGesture(float _posX, float _posY) {
 
     impl->inputHandler.handleTapGesture(_posX, _posY);
