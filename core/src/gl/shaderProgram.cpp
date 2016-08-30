@@ -265,7 +265,7 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
 
 std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fragShader) {
 
-    static const std::regex pragmaLine("^\\s*#pragma tangram:\\s+(\\w+).*$");
+    static const std::regex pragmaLine("\\s*#pragma tangram:\\s+(\\w+).*\r?\n");
 
     std::stringstream sourceOut;
     std::set<std::string> pragmas;
@@ -283,43 +283,33 @@ std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fra
     }
 
     auto sourcePos = source.begin();
-    size_t lineStart = 0, lineEnd;
 
-    while ((lineEnd = source.find('\n', lineStart)) != std::string::npos) {
+    auto linesBegin = std::sregex_iterator(source.begin(), source.end(), pragmaLine);
+    auto linesEnd = std::sregex_iterator();
 
-        if (lineEnd - lineStart == 0) {
-            // skip empty lines
-            lineStart += 1;
-            continue;
-        }
+    for (auto i = linesBegin; i != linesEnd; ++i) {
+        sm = *i;
+        std::string pragmaName = sm[1];
 
-        auto matchPos = source.begin() + lineStart;
-        auto matchEnd = source.begin() + lineEnd;
-        lineStart = lineEnd + 1;
+        bool unique;
+        std::tie(std::ignore, unique) = pragmas.emplace(std::move(pragmaName));
 
-        if (std::regex_match(matchPos, matchEnd, sm, pragmaLine)) {
+        // ignore duplicates
+        if (!unique) { continue; }
 
-            std::string pragmaName = sm[1];
+        auto block = m_sourceBlocks.find(sm[1]);
+        if (block == m_sourceBlocks.end()) { continue; }
 
-            bool unique;
-            std::tie(std::ignore, unique) = pragmas.emplace(std::move(pragmaName));
+        auto matchEnd = source.begin() + sm.position() + sm.length();
 
-            // ignore duplicates
-            if (!unique) { continue; }
+        // write from last source position to end of pragma
+        std::copy(sourcePos, matchEnd, std::ostream_iterator<char>(sourceOut));
+        sourcePos = matchEnd;
 
-            auto block = m_sourceBlocks.find(sm[1]);
-            if (block == m_sourceBlocks.end()) { continue; }
-
-            // write from last source position to end of pragma
+        // insert blocks
+        for (auto& source : block->second) {
+            sourceOut << source;
             sourceOut << '\n';
-            std::copy(sourcePos, matchEnd, std::ostream_iterator<char>(sourceOut));
-            sourcePos = matchEnd;
-
-            // insert blocks
-            for (auto& source : block->second) {
-                sourceOut << '\n';
-                sourceOut << source;
-            }
         }
     }
 
