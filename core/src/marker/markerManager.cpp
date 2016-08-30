@@ -44,8 +44,8 @@ bool MarkerManager::remove(MarkerID markerID) {
 }
 
 bool MarkerManager::setStyling(MarkerID markerID, const char* styling) {
-    Marker* marker = nullptr;
-    if (!markerID || !(marker = tryGet(markerID))) { return false; }
+    Marker* marker = getMarkerOrNull(markerID);
+    if (!marker) { return false; }
 
     // Update the draw rule for the marker.
     YAML::Node node = YAML::Load(styling);
@@ -67,8 +67,8 @@ bool MarkerManager::setStyling(MarkerID markerID, const char* styling) {
 }
 
 bool MarkerManager::setVisible(MarkerID markerID, bool visible) {
-    Marker* marker = nullptr;
-    if (!markerID || !(marker = tryGet(markerID))) { return false; }
+    Marker* marker = getMarkerOrNull(markerID);
+    if (!marker) { return false; }
 
     marker->setVisible(visible);
     return true;
@@ -76,8 +76,8 @@ bool MarkerManager::setVisible(MarkerID markerID, bool visible) {
 }
 
 bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
-    Marker* marker = nullptr;
-    if (!markerID || !(marker = tryGet(markerID))) { return false; }
+    Marker* marker = getMarkerOrNull(markerID);
+    if (!marker) { return false; }
 
     // If the marker does not have a 'point' feature mesh built, build it.
     if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
@@ -96,8 +96,8 @@ bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
 }
 
 bool MarkerManager::setPointEased(MarkerID markerID, LngLat lngLat, float duration, EaseType ease) {
-    Marker* marker = nullptr;
-    if (!markerID || !(marker = tryGet(markerID))) { return false; }
+    Marker* marker = getMarkerOrNull(markerID);
+    if (!marker) { return false; }
 
     // If the marker does not have a 'point' feature built, we can't ease it.
     if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
@@ -111,8 +111,8 @@ bool MarkerManager::setPointEased(MarkerID markerID, LngLat lngLat, float durati
 }
 
 bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int count) {
-    Marker* marker = nullptr;
-    if (!markerID || !(marker = tryGet(markerID))) { return false; }
+    Marker* marker = getMarkerOrNull(markerID);
+    if (!marker) { return false; }
     if (!coordinates || count < 2) { return false; }
 
     // Build a feature for the new set of polyline points.
@@ -154,8 +154,8 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
 }
 
 bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* counts, int rings) {
-    Marker* marker = nullptr;
-    if (!markerID || !(marker = tryGet(markerID))) { return false; }
+    Marker* marker = getMarkerOrNull(markerID);
+    if (!marker) { return false; }
     if (!coordinates || !counts || rings < 1) { return false; }
 
     // Build a feature for the new set of polygon points.
@@ -267,9 +267,10 @@ void MarkerManager::build(Marker& marker, int zoom) {
 
 }
 
-Marker* MarkerManager::tryGet(MarkerID markerID) {
-    for (auto it = m_markers.begin(), end = m_markers.end(); it != end; ++it) {
-        if (it->get()->id() == markerID) { return it->get(); }
+Marker* MarkerManager::getMarkerOrNull(MarkerID markerID) {
+    if (!markerID) { return nullptr; }
+    for (const auto& entry : m_markers) {
+        if (entry->id() == markerID) { return entry.get(); }
     }
     return nullptr;
 }

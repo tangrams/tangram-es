@@ -45,7 +45,7 @@ public:
 
 private:
 
-    Marker* tryGet(MarkerID markerID);
+    Marker* getMarkerOrNull(MarkerID markerID);
 
     void build(Marker& marker, int zoom);
 
