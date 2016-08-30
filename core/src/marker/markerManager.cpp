@@ -99,9 +99,9 @@ bool MarkerManager::setPointEased(MarkerID markerID, LngLat lngLat, float durati
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
-    // If the marker does not have a 'point' feature built, we can't ease it.
+    // If the marker does not have a 'point' feature built, set that point immediately.
     if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
-        return false;
+        return setPoint(markerID, lngLat);
     }
 
     auto dest = m_mapProjection->LonLatToMeters({ lngLat.longitude, lngLat.latitude });

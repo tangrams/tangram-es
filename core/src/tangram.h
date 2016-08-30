@@ -167,9 +167,9 @@ public:
     // marker handle was found and successfully updated, otherwise returns false.
     bool markerSetPoint(MarkerID _marker, LngLat _lngLat);
 
-    // Set the position of a marker with point geometry to ease to a new location over a duration
-    // in seconds with the given EaseType; returns true if the marker handle was found and has a
-    // point geometry, otherwise returns false.
+    // Set the geometry of a marker to a point at the given coordinates; if the marker was previously
+    // set to a point, this eases the position over the given duration in seconds with the given EaseType;
+    // returns true if the marker handle was found and successfully updated, otherwise returns false.
     bool markerSetPointEased(MarkerID _marker, LngLat _lngLat, float _duration, EaseType _ease);
 
     // Set the geometry of a marker to a polyline along the given coordinates; _coordinates is a
