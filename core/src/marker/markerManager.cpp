@@ -22,15 +22,11 @@ void MarkerManager::setScene(std::shared_ptr<Scene> scene) {
 
 }
 
-MarkerID MarkerManager::add(const char* styling) {
+MarkerID MarkerManager::add() {
 
     // Add a new empty marker object to the list of markers.
     auto id = ++m_idCounter;
     m_markers.push_back(std::make_unique<Marker>(id));
-
-    // Create a draw rule from the given styling string.
-    auto marker = m_markers.back().get();
-    setStyling(id, styling);
 
     // Return a handle for the marker.
     return id;

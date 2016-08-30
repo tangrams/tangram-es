@@ -21,7 +21,7 @@ public:
 
     void setScene(std::shared_ptr<Scene> scene);
 
-    MarkerID add(const char* styling);
+    MarkerID add();
 
     bool remove(MarkerID markerID);
 

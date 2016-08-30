@@ -609,8 +609,8 @@ void Map::clearDataSource(DataSource& _source, bool _data, bool _tiles) {
     requestRender();
 }
 
-MarkerID Map::markerAdd(const char* _styling) {
-    return impl->markerManager.add(_styling);
+MarkerID Map::markerAdd() {
+    return impl->markerManager.add();
 }
 
 bool Map::markerRemove(MarkerID _marker) {

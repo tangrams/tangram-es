@@ -109,7 +109,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                    p2.longitude, p2.latitude);
 
             if (!marker) {
-                marker = map->markerAdd(markerStyling.c_str());
+                marker = map->markerAdd();
+                map->markerSetStyling(marker, markerStyling.c_str());
             }
             map->markerSetPolyline(marker, taps.data(), taps.size());
         }
