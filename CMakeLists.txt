@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.0)
 
 project(tangram)
 
+# Options
+option(USE_SYSTEM_FONT_LIBS "Use system libraries Freetype, ICU and Harfbuzz via pkgconfig" OFF)
 
 include(${PROJECT_SOURCE_DIR}/toolchains/utils.cmake)
 
