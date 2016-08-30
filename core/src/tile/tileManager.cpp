@@ -123,6 +123,7 @@ void TileManager::updateTileSets(const ViewState& _view,
     m_tileSetChanged = false;
 
     for (auto& tileSet : m_tileSets) {
+        // check if tile set is active for zoom (zoom might be below min_zoom)
         if (tileSet.source->isActiveForZoom(_view.zoom)) {
             updateTileSet(tileSet, _view, _visibleTiles);
         }
@@ -386,13 +387,21 @@ void TileManager::loadSubTasks(std::vector<std::shared_ptr<DataSource>>& _subSou
         if (it != subTasks.end() && (*it)->subTaskId() == int(index)) { continue; }
 
         TileID subTileID = tileID;
-//        if (!subSource->isActiveForZoom((float)subTileID.z)) {
-//            continue;
-//        }
+
+        // get tile for lower zoom if we are past max zoom
         if (subTileID.z > subSource->maxZoom()) {
             subTileID = subTileID.withMaxSourceZoom(subSource->maxZoom());
         }
         auto subTask = subSource->createTask(subTileID, index);
+        // check if we are at valid zoom for source
+        if (!subSource->isActiveForZoom((float)subTileID.z)) {
+            // cancel subtask if it isnt active for this zoom
+            // we still want to insert it
+            subTasks.insert(it, subTask);
+            subTask->cancel();
+            requestRender();
+            continue;
+        }
         if (subTask->isReady()) {
             subTasks.insert(it, subTask);
             requestRender();
