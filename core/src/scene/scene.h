@@ -37,6 +37,9 @@ public:
     struct Camera {
         CameraType type;
 
+        float maxTilt = 90.f;
+        std::shared_ptr<Stops> maxTiltStops;
+
         // perspective
         glm::vec2 vanishingPoint = {0, 0};
         float fieldOfView = 0.25 * PI;

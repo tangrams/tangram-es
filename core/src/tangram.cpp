@@ -123,6 +123,12 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
         break;
     }
 
+    if (camera.maxTiltStops) {
+        view.setMaxPitchStops(camera.maxTiltStops);
+    } else {
+        view.setMaxPitch(camera.maxTilt);
+    }
+
     if (scene->useScenePosition) {
         glm::dvec2 projPos = view.getMapProjection().LonLatToMeters(scene->startPosition);
         view.setPosition(projPos.x, projPos.y);
