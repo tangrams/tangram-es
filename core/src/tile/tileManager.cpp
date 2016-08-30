@@ -9,6 +9,7 @@
 #include "glm/gtx/norm.hpp"
 
 #include <algorithm>
+#include <data/rasterSource.h>
 
 #define DBG(...) // LOGD(__VA_ARGS__)
 
@@ -395,14 +396,16 @@ void TileManager::loadSubTasks(std::vector<std::shared_ptr<DataSource>>& _subSou
         auto subTask = subSource->createTask(subTileID, index);
         // check if we are at valid zoom for source
         if (!subSource->isActiveForZoom((float)subTileID.z)) {
-            // cancel subtask if it isnt active for this zoom
-            // we still want to insert it
-            subTasks.insert(it, subTask);
-            subTask->cancel();
-            requestRender();
-            continue;
-        }
-        if (subTask->isReady()) {
+            // Right now all subSources are raster, but let's check anyway...
+            if (RasterSource* rasterSubSource = dynamic_cast<RasterSource*>(subSource.get())) {
+                subTasks.insert(it, subTask);
+                // If the subSource isn't active for the zoom, we should just
+                // load an empty texture and move on.
+                rasterSubSource->loadEmptyTexture(std::move(subTask));
+                assert(subTask->isReady());
+                requestRender();
+            }
+        } else if (subTask->isReady()) {
             subTasks.insert(it, subTask);
             requestRender();
 
