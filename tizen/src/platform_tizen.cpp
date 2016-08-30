@@ -38,11 +38,11 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 void cancelUrlRequest(const std::string& _url) {
 }
 
-void initUrlRequests() {
-    s_workers.start(4);
+void initUrlRequests(const char* proxyAddress) {
+    s_workers.start(4, proxyAddress);
 }
 
-void finishUrlRequests() {
+void stopUrlRequests() {
     s_workers.stop();
 }
 

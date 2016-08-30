@@ -26,10 +26,12 @@ public:
 
     void stop();
 
-    void start(int _numWorker);
-    ~UrlWorker();
+    void start(int _numWorker, const char* _proxyAddress = "");
+
+     ~UrlWorker();
 
 private:
+
     void run();
 
     std::mutex m_mutex;
@@ -37,6 +39,8 @@ private:
     std::condition_variable m_condition;
 
     bool m_running;
+
+    std::string m_proxyAddress;
 
     std::vector<std::unique_ptr<std::thread>> m_workers;
 

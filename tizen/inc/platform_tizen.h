@@ -8,6 +8,7 @@ bool shouldRender();
 
 void setRenderCallbackFunction(std::function<void()> callback);
 
-void finishUrlRequests();
-void initUrlRequests();
+void initUrlRequests(const char* proxyAddress);
+void stopUrlRequests();
+
 void setEvasGlAPI(Evas_GL_API *glApi);
