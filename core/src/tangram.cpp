@@ -649,6 +649,12 @@ bool Map::markerSetStyling(Marker* _marker, const char* _styling) {
     return success;
 }
 
+bool Map::markerSetVisible(Marker* _marker, bool _visible) {
+    bool success = impl->markerManager.setVisible(_marker, _visible);
+    requestRender();
+    return success;
+}
+
 void Map::markerRemoveAll() {
     impl->markerManager.removeAll();
     requestRender();

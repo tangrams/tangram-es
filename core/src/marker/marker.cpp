@@ -52,6 +52,10 @@ void Marker::update(float dt, const View& view) {
     m_modelMatrix = translation * scaling;
 }
 
+void Marker::setVisible(bool visible) {
+    m_visible = visible;
+}
+
 int Marker::builtZoomLevel() const {
     return m_builtZoomLevel;
 }
@@ -94,6 +98,10 @@ const glm::mat4& Marker::modelMatrix() const {
 
 bool Marker::isEasing() const {
     return !m_ease.finished();
+}
+
+bool Marker::isVisible() const {
+    return m_visible;
 }
 
 } // namespace Tangram

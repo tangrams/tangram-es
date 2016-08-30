@@ -316,6 +316,8 @@ void Style::draw(RenderState& rs, const Marker& marker) {
 
     if (!mesh) { return; }
 
+    if (!marker.isVisible()) { return; }
+
     m_shaderProgram->setUniformMatrix4f(rs, m_uModel, marker.modelMatrix());
     m_shaderProgram->setUniformf(rs, m_uTileOrigin, marker.origin().x, marker.origin().y,
                                  marker.builtZoomLevel(), marker.builtZoomLevel());

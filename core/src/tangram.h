@@ -189,6 +189,10 @@ public:
     // updated, otherwise returns false.
     bool markerSetStyling(Marker* _marker, const char* _styling);
 
+    // Set the visibility of a marker object; returns true if the marker handle was found and successfully
+    // updated, otherwise returns false.
+    bool markerSetVisible(Marker* _marker, bool _visible);
+
     // Remove all marker objects from the map; Any marker handles previously returned from 'markerAdd'
     // are invalidated after this.
     void markerRemoveAll();

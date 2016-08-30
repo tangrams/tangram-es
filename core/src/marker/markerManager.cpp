@@ -68,6 +68,14 @@ bool MarkerManager::setStyling(Marker* marker, const char* styling) {
     return true;
 }
 
+bool MarkerManager::setVisible(Marker* marker, bool visible) {
+    if (!marker || !contains(marker)) { return false; }
+
+    marker->setVisible(visible);
+    return true;
+
+}
+
 bool MarkerManager::setPoint(Marker* marker, LngLat lngLat) {
     if (!marker || !contains(marker)) { return false; }
 

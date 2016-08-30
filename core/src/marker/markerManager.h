@@ -27,6 +27,8 @@ public:
 
     bool setStyling(Marker* marker, const char* styling);
 
+    bool setVisible(Marker* marker, bool visible);
+
     bool setPoint(Marker* marker, LngLat lngLat);
 
     bool setPointEased(Marker* marker, LngLat lngLat, float duration, EaseType ease);

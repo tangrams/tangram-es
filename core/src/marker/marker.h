@@ -37,6 +37,8 @@ public:
 
     void update(float dt, const View& view);
 
+    void setVisible(bool visible);
+
     uint32_t styleId() const;
 
     int builtZoomLevel() const;
@@ -58,6 +60,8 @@ public:
     const glm::mat4& modelMatrix() const;
 
     bool isEasing() const;
+
+    bool isVisible() const;
 
 protected:
 
@@ -85,6 +89,8 @@ protected:
     glm::mat4 m_modelMatrix;
 
     Ease m_ease;
+
+    bool m_visible = true;
 
 };
 
