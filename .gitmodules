@@ -4,7 +4,7 @@
 [submodule "core/include/isect2d"]
 	path = core/include/isect2d
 	url = https://github.com/tangrams/isect2d.git
-[submodule "core/dependencies/csscolorparser"]
+[submodule "external/css-color-parser-cpp"]
 	path = external/css-color-parser-cpp
 	url = https://github.com/tangrams/css-color-parser-cpp
 [submodule "core/include/variant"]
@@ -13,10 +13,10 @@
 [submodule "core/include/earcut.hpp"]
 	path = core/include/earcut.hpp
 	url = https://github.com/tangrams/earcut.hpp
-[submodule "core/dependencies/geojson-vt-cpp"]
+[submodule "external/geojson-vt-cpp"]
 	path = external/geojson-vt-cpp
 	url = https://github.com/tangrams/geojson-vt-cpp.git
-[submodule "core/dependencies/duktape"]
+[submodule "external/duktape"]
 	path = external/duktape
 	url = https://github.com/tangrams/duktape.git
 [submodule "external/yaml-cpp"]

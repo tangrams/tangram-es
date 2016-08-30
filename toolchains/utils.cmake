@@ -112,3 +112,23 @@ macro(add_resources TARGET RESOURCE_DIR)
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${RESOURCE_DIR} ${CMAKE_BINARY_DIR}/bin)
 
 endmacro(add_resources)
+
+function(checkout_submodule PATH RECURSIVE)
+    set(GIT_PATH ${PROJECT_SOURCE_DIR}/${PATH}/.git)
+    if (NOT EXISTS ${GIT_PATH})
+
+        set(OPTIONS "")
+        if (RECURSIVE)
+            set(OPTIONS "--recursive")
+        endif()
+
+        execute_process(
+            COMMAND git submodule update --init ${OPTIONS} ${PATH}
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+
+        if(NOT EXISTS ${GIT_PATH})
+            message(SEND_ERROR "Missing submodule ${PATH} - Try run:\n 'git submodule update --init --recursive'")
+            exit()
+        endif()
+    endif()
+endfunction()
