@@ -2,7 +2,11 @@ cmake_minimum_required(VERSION 3.0)
 
 project(tangram)
 
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/alfons/deps/harfbuzz-icu-freetype/CMakeLists.txt")
+# Options
+option(USE_SYSTEM_FONT_LIBS "Use system libraries Freetype, ICU and Harfbuzz via pkgconfig" OFF)
+
+
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/harfbuzz-icu-freetype/harfbuzz/README")
   message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init --recursive'")
   return()
 endif()

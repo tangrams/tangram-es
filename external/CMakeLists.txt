@@ -134,6 +134,22 @@ if((BENCHMARK OR USE_EXTERNAL_LIBS) AND (PLATFORM_LINUX OR PLATFORM_OSX))
   endif()
 endif()
 
+
+if(NOT USE_SYSTEM_FONT_LIBS)
+  ## Harfbuzz - ICU-Common - UCDN - Freetype2 ##
+  ##############################################
+  set(HARFBUZZ_BUILD_ICU ON CACHE BOOL "Enable building of ICU")
+  set(HARFBUZZ_BUILD_UCDN ON CACHE BOOL "Enable building of UCDN")
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/harfbuzz-icu-freetype)
+
+  message(STATUS "harfbuzz" ${HARFBUZZ_LIBRARIES})
+
+  set(ALFONS_DEPS_LIBRARIES
+    ${ALFONS_DEPS_LIBRARIES}
+    harfbuzz ${HARFBUZZ_LIBRARIES}
+    CACHE INTERNAL "alfons-libs" FORCE)
+endif()
+
 ## alfons ##
 ############
 #set(GLM_ROOT ${PROJECT_SOURCE_DIR}/core/include/glm)
