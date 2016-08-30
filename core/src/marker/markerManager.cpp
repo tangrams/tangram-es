@@ -22,23 +22,24 @@ void MarkerManager::setScene(std::shared_ptr<Scene> scene) {
 
 }
 
-Marker* MarkerManager::add(const char* styling) {
+MarkerID MarkerManager::add(const char* styling) {
 
     // Add a new empty marker object to the list of markers.
-    m_markers.push_back(std::make_unique<Marker>());
+    auto id = ++m_idCounter;
+    m_markers.push_back(std::make_unique<Marker>(id));
 
     // Create a draw rule from the given styling string.
     auto marker = m_markers.back().get();
-    setStyling(marker, styling);
+    setStyling(id, styling);
 
-    // Return a pointer to the marker.
-    return marker;
+    // Return a handle for the marker.
+    return id;
 
 }
 
-bool MarkerManager::remove(Marker* marker) {
+bool MarkerManager::remove(MarkerID markerID) {
     for (auto it = m_markers.begin(), end = m_markers.end(); it != end; ++it) {
-        if (it->get() == marker) {
+        if (it->get()->id() == markerID) {
             m_markers.erase(it);
             return true;
         }
@@ -46,8 +47,9 @@ bool MarkerManager::remove(Marker* marker) {
     return false;
 }
 
-bool MarkerManager::setStyling(Marker* marker, const char* styling) {
-    if (!marker || !contains(marker)) { return false; }
+bool MarkerManager::setStyling(MarkerID markerID, const char* styling) {
+    Marker* marker = nullptr;
+    if (!markerID || !(marker = tryGet(markerID))) { return false; }
 
     // Update the draw rule for the marker.
     YAML::Node node = YAML::Load(styling);
@@ -68,16 +70,18 @@ bool MarkerManager::setStyling(Marker* marker, const char* styling) {
     return true;
 }
 
-bool MarkerManager::setVisible(Marker* marker, bool visible) {
-    if (!marker || !contains(marker)) { return false; }
+bool MarkerManager::setVisible(MarkerID markerID, bool visible) {
+    Marker* marker = nullptr;
+    if (!markerID || !(marker = tryGet(markerID))) { return false; }
 
     marker->setVisible(visible);
     return true;
 
 }
 
-bool MarkerManager::setPoint(Marker* marker, LngLat lngLat) {
-    if (!marker || !contains(marker)) { return false; }
+bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
+    Marker* marker = nullptr;
+    if (!markerID || !(marker = tryGet(markerID))) { return false; }
 
     // If the marker does not have a 'point' feature mesh built, build it.
     if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
@@ -95,8 +99,9 @@ bool MarkerManager::setPoint(Marker* marker, LngLat lngLat) {
     return true;
 }
 
-bool MarkerManager::setPointEased(Marker* marker, LngLat lngLat, float duration, EaseType ease) {
-    if (!marker || !contains(marker)) { return false; }
+bool MarkerManager::setPointEased(MarkerID markerID, LngLat lngLat, float duration, EaseType ease) {
+    Marker* marker = nullptr;
+    if (!markerID || !(marker = tryGet(markerID))) { return false; }
 
     // If the marker does not have a 'point' feature built, we can't ease it.
     if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
@@ -109,8 +114,9 @@ bool MarkerManager::setPointEased(Marker* marker, LngLat lngLat, float duration,
     return true;
 }
 
-bool MarkerManager::setPolyline(Marker* marker, LngLat* coordinates, int count) {
-    if (!marker || !contains(marker)) { return false; }
+bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int count) {
+    Marker* marker = nullptr;
+    if (!markerID || !(marker = tryGet(markerID))) { return false; }
     if (!coordinates || count < 2) { return false; }
 
     // Build a feature for the new set of polyline points.
@@ -151,8 +157,9 @@ bool MarkerManager::setPolyline(Marker* marker, LngLat* coordinates, int count) 
     return true;
 }
 
-bool MarkerManager::setPolygon(Marker* marker, LngLat* coordinates, int* counts, int rings) {
-    if (!marker || !contains(marker)) { return false; }
+bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* counts, int rings) {
+    Marker* marker = nullptr;
+    if (!markerID || !(marker = tryGet(markerID))) { return false; }
     if (!coordinates || !counts || rings < 1) { return false; }
 
     // Build a feature for the new set of polygon points.
@@ -264,11 +271,11 @@ void MarkerManager::build(Marker& marker, int zoom) {
 
 }
 
-bool MarkerManager::contains(Marker* marker) {
+Marker* MarkerManager::tryGet(MarkerID markerID) {
     for (auto it = m_markers.begin(), end = m_markers.end(); it != end; ++it) {
-        if (it->get() == marker) { return true; }
+        if (it->get()->id() == markerID) { return it->get(); }
     }
-    return false;
+    return nullptr;
 }
 
 } // namespace Tangram

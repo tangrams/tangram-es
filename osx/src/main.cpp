@@ -44,7 +44,7 @@ using namespace Tangram;
 std::shared_ptr<ClientGeoJsonSource> data_source;
 LngLat last_point;
 std::vector<LngLat> taps;
-Marker* marker = nullptr;
+MarkerID marker = 0;
 
 template<typename T>
 static constexpr T clamp(T val, T min, T max) {

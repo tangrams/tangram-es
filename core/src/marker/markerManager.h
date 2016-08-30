@@ -21,21 +21,21 @@ public:
 
     void setScene(std::shared_ptr<Scene> scene);
 
-    Marker* add(const char* styling);
+    MarkerID add(const char* styling);
 
-    bool remove(Marker* marker);
+    bool remove(MarkerID markerID);
 
-    bool setStyling(Marker* marker, const char* styling);
+    bool setStyling(MarkerID markerID, const char* styling);
 
-    bool setVisible(Marker* marker, bool visible);
+    bool setVisible(MarkerID markerID, bool visible);
 
-    bool setPoint(Marker* marker, LngLat lngLat);
+    bool setPoint(MarkerID markerID, LngLat lngLat);
 
-    bool setPointEased(Marker* marker, LngLat lngLat, float duration, EaseType ease);
+    bool setPointEased(MarkerID markerID, LngLat lngLat, float duration, EaseType ease);
 
-    bool setPolyline(Marker* marker, LngLat* coordinates, int count);
+    bool setPolyline(MarkerID markerID, LngLat* coordinates, int count);
 
-    bool setPolygon(Marker* marker, LngLat* coordinates, int* counts, int rings);
+    bool setPolygon(MarkerID markerID, LngLat* coordinates, int* counts, int rings);
 
     bool update(int zoom);
 
@@ -45,9 +45,9 @@ public:
 
 private:
 
-    bool contains(Marker* marker);
+    Marker* tryGet(MarkerID markerID);
 
-    void build(Marker& _marker, int zoom);
+    void build(Marker& marker, int zoom);
 
     DrawRuleMergeSet m_ruleSet;
     StyleContext m_styleContext;
@@ -57,6 +57,7 @@ private:
     fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilders;
     MapProjection* m_mapProjection = nullptr;
     size_t m_jsFnIndex = 0;
+    uint32_t m_idCounter = 0;
     int m_zoom = 0;
 
 };

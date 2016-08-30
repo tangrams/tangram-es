@@ -4,6 +4,7 @@
 #include "glm/vec2.hpp"
 #include "util/ease.h"
 #include "util/geom.h"
+#include "util/types.h"
 #include <memory>
 #include <string>
 
@@ -21,7 +22,7 @@ class Marker {
 
 public:
 
-    Marker();
+    Marker(MarkerID id);
 
     ~Marker();
 
@@ -38,6 +39,8 @@ public:
     void update(float dt, const View& view);
 
     void setVisible(bool visible);
+
+    MarkerID id() const;
 
     uint32_t styleId() const;
 
@@ -71,6 +74,8 @@ protected:
     std::unique_ptr<DrawRule> m_drawRule;
 
     MapProjection* m_mapProjection = nullptr;
+
+    MarkerID m_id = 0;
 
     uint32_t m_styleId = 0;
 

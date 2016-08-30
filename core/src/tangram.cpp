@@ -609,47 +609,47 @@ void Map::clearDataSource(DataSource& _source, bool _data, bool _tiles) {
     requestRender();
 }
 
-Marker* Map::markerAdd(const char* _styling) {
+MarkerID Map::markerAdd(const char* _styling) {
     return impl->markerManager.add(_styling);
 }
 
-bool Map::markerRemove(Marker* _marker) {
+bool Map::markerRemove(MarkerID _marker) {
     bool success = impl->markerManager.remove(_marker);
     requestRender();
     return success;
 }
 
-bool Map::markerSetPoint(Marker* _marker, LngLat _lngLat) {
+bool Map::markerSetPoint(MarkerID _marker, LngLat _lngLat) {
     bool success = impl->markerManager.setPoint(_marker, _lngLat);
     requestRender();
     return success;
 }
 
-bool Map::markerSetPointEased(Marker* _marker, LngLat _lngLat, float _duration, EaseType ease) {
+bool Map::markerSetPointEased(MarkerID _marker, LngLat _lngLat, float _duration, EaseType ease) {
     bool success = impl->markerManager.setPointEased(_marker, _lngLat, _duration, ease);
     requestRender();
     return success;
 }
 
-bool Map::markerSetPolyline(Marker* _marker, LngLat* _coordinates, int _count) {
+bool Map::markerSetPolyline(MarkerID _marker, LngLat* _coordinates, int _count) {
     bool success = impl->markerManager.setPolyline(_marker, _coordinates, _count);
     requestRender();
     return success;
 }
 
-bool Map::markerSetPolygon(Marker* _marker, LngLat* _coordinates, int* _counts, int _rings) {
+bool Map::markerSetPolygon(MarkerID _marker, LngLat* _coordinates, int* _counts, int _rings) {
     bool success = impl->markerManager.setPolygon(_marker, _coordinates, _counts, _rings);
     requestRender();
     return success;
 }
 
-bool Map::markerSetStyling(Marker* _marker, const char* _styling) {
+bool Map::markerSetStyling(MarkerID _marker, const char* _styling) {
     bool success = impl->markerManager.setStyling(_marker, _styling);
     requestRender();
     return success;
 }
 
-bool Map::markerSetVisible(Marker* _marker, bool _visible) {
+bool Map::markerSetVisible(MarkerID _marker, bool _visible) {
     bool success = impl->markerManager.setVisible(_marker, _visible);
     requestRender();
     return success;

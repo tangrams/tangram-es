@@ -10,7 +10,7 @@
 
 namespace Tangram {
 
-Marker::Marker() {
+Marker::Marker(MarkerID id) : m_id(id) {
 }
 
 Marker::~Marker() {
@@ -58,6 +58,10 @@ void Marker::setVisible(bool visible) {
 
 int Marker::builtZoomLevel() const {
     return m_builtZoomLevel;
+}
+
+MarkerID Marker::id() const {
+    return m_id;
 }
 
 uint32_t Marker::styleId() const {
