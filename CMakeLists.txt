@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 project(tangram)
 
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/alfons/deps/harfbuzz-icu-freetype/CMakeLists.txt")
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/harfbuzz-icu-freetype/harfbuzz/CMakeLists.txt")
   message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init --recursive'")
   return()
 endif()
