@@ -1,6 +1,8 @@
 # set for test in other cmake files
 set(PLATFORM_OSX ON)
 
+checkout_submodule(external/glfw 0)
+
 check_unsupported_compiler_version()
 
 # options

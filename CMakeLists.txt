@@ -9,7 +9,6 @@ include(${PROJECT_SOURCE_DIR}/toolchains/utils.cmake)
 
 checkout_submodule(external/harfbuzz-icu-freetype 1)
 checkout_submodule(external/alfons 0)
-checkout_submodule(external/glfw 0)
 checkout_submodule(external/yaml-cpp 0)
 checkout_submodule(external/geojson-vt-cpp 0)
 checkout_submodule(external/duktape 0)
