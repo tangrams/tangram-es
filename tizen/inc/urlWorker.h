@@ -27,9 +27,13 @@ public:
     void stop();
 
     void start(int _numWorker);
+    static void setProxyAddress(char* _proxyAddress);
+    static void resetProxyAddress() { s_proxyAddress = nullptr; }
     ~UrlWorker();
 
 private:
+    static char* s_proxyAddress;
+
     void run();
 
     std::mutex m_mutex;
