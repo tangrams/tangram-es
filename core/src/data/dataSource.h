@@ -72,6 +72,10 @@ public:
     int32_t minZoom() const { return m_minZoom; }
     int32_t maxZoom() const { return m_maxZoom; }
 
+    bool isActiveForZoom(const float _zoom) const {
+        return _zoom >= m_minZoom;
+    }
+
     /* assign/get raster datasources to this datasource */
     auto& rasterSources() { return m_rasterSources; }
     const auto& rasterSources() const { return m_rasterSources; }

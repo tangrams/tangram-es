@@ -123,7 +123,9 @@ void TileManager::updateTileSets(const ViewState& _view,
     m_tileSetChanged = false;
 
     for (auto& tileSet : m_tileSets) {
-        updateTileSet(tileSet, _view, _visibleTiles);
+        if (tileSet.source->isActiveForZoom(_view.zoom)) {
+            updateTileSet(tileSet, _view, _visibleTiles);
+        }
     }
 
     loadTiles();
@@ -384,6 +386,9 @@ void TileManager::loadSubTasks(std::vector<std::shared_ptr<DataSource>>& _subSou
         if (it != subTasks.end() && (*it)->subTaskId() == int(index)) { continue; }
 
         TileID subTileID = tileID;
+//        if (!subSource->isActiveForZoom((float)subTileID.z)) {
+//            continue;
+//        }
         if (subTileID.z > subSource->maxZoom()) {
             subTileID = subTileID.withMaxSourceZoom(subSource->maxZoom());
         }
