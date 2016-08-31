@@ -22,35 +22,49 @@ class Marker {
 
 public:
 
+    // Create an empty marker with the given ID. An ID of 0 indicates an invalid marker.
     Marker(MarkerID id);
 
     ~Marker();
 
+    // Set the axis-aligned bounding box for the feature geometry in Mercator meters;
+    // The points in the feature for this Marker should be made relative to a coordinate system
+    // whose origin is the South-West corner of the bounds and whose unit length is the
+    // maximum dimension (extent) of the bounds.
     void setBounds(BoundingBox bounds);
 
+    // Set the feature whose geometry will be used to build the marker.
     void setFeature(std::unique_ptr<Feature> feature);
 
+    // Set the draw rule that will be used to build the marker.
     void setStyling(std::unique_ptr<DrawRuleData> drawRuleData);
 
+    // Set the styled mesh for this marker with the associated style id and zoom level.
     void setMesh(uint32_t styleId, uint32_t zoom, std::unique_ptr<StyledMesh> mesh);
 
+    // Set an ease for the origin of this marker in Mercator meters.
     void setEase(const glm::dvec2& destination, float duration, EaseType ease);
 
+    // Set the model matrix for the marker using the current view and update any eases.
     void update(float dt, const View& view);
 
+    // Set whether this marker should be visible.
     void setVisible(bool visible);
 
+    // Get the unique identifier for this marker. An ID of 0 indicates an invalid marker.
     MarkerID id() const;
 
+    // Get the ID of the style that should draw the mesh for this marker.
     uint32_t styleId() const;
 
+    // Get the zoom level at which the mesh for this marker was built.
     int builtZoomLevel() const;
 
+    // Get the length of the maximum dimension of the bounds of this marker. This is used as
+    // the scale in the model matrix.
     float extent() const;
 
     StyledMesh* mesh() const;
-
-    // MapProjection* mapProjection() const;
 
     DrawRule* drawRule();
 
@@ -58,6 +72,8 @@ public:
 
     const BoundingBox& bounds() const;
 
+    // Get the origin of the geometry for this marker, i.e. the South-West corner of the bounds.
+    // This is used as the origin in the model matrix.
     const glm::dvec2& origin() const;
 
     const glm::mat4& modelMatrix() const;

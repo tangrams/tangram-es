@@ -149,32 +149,32 @@ public:
 
     void clearDataSource(DataSource& _source, bool _data, bool _tiles);
 
-    // Add a marker object to the map and return a handle to it; the marker will not be
-    // drawn until both styling and geometry are set using the functions below.
+    // Add a marker object to the map and return an ID for it; an ID of 0 indicates an invalid marker;
+    // the marker will not be drawn until both styling and geometry are set using the functions below.
     MarkerID markerAdd();
 
-    // Remove a marker object from the map; returns true if the marker handle was found and
-    // successfully removed, otherwise returns false.
+    // Remove a marker object from the map; returns true if the marker ID was found and successfully
+    // removed, otherwise returns false.
     bool markerRemove(MarkerID _marker);
 
     // Set the styling for a marker object; _styling is a string of YAML that specifies a 'draw rule'
-    // according to the scene file syntax; returns true if the marker handle was found and successfully
+    // according to the scene file syntax; returns true if the marker ID was found and successfully
     // updated, otherwise returns false.
     bool markerSetStyling(MarkerID _marker, const char* _styling);
 
     // Set the geometry of a marker to a point at the given coordinates; markers can have their
     // geometry set multiple times with possibly different geometry types; returns true if the
-    // marker handle was found and successfully updated, otherwise returns false.
+    // marker ID was found and successfully updated, otherwise returns false.
     bool markerSetPoint(MarkerID _marker, LngLat _lngLat);
 
     // Set the geometry of a marker to a point at the given coordinates; if the marker was previously
     // set to a point, this eases the position over the given duration in seconds with the given EaseType;
-    // returns true if the marker handle was found and successfully updated, otherwise returns false.
+    // returns true if the marker ID was found and successfully updated, otherwise returns false.
     bool markerSetPointEased(MarkerID _marker, LngLat _lngLat, float _duration, EaseType _ease);
 
     // Set the geometry of a marker to a polyline along the given coordinates; _coordinates is a
     // pointer to a sequence of _count LngLats; markers can have their geometry set multiple times
-    // with possibly different geometry types; returns true if the marker handle was found and
+    // with possibly different geometry types; returns true if the marker ID was found and
     // successfully updated, otherwise returns false.
     bool markerSetPolyline(MarkerID _marker, LngLat* _coordinates, int _count);
 
@@ -183,15 +183,15 @@ public:
     // a total length equal to the sum of _counts; for each integer n in _counts, a polygon is created
     // by taking the next n LngLats from _coordinates, with winding order and internal polygons
     // behaving according to the GeoJSON specification; markers can have their geometry set multiple
-    // times with possibly different geometry types; returns true if the marker handle was found and
+    // times with possibly different geometry types; returns true if the marker ID was found and
     // successfully updated, otherwise returns false.
     bool markerSetPolygon(MarkerID _marker, LngLat* _coordinates, int* _counts, int _rings);
 
-    // Set the visibility of a marker object; returns true if the marker handle was found and successfully
+    // Set the visibility of a marker object; returns true if the marker ID was found and successfully
     // updated, otherwise returns false.
     bool markerSetVisible(MarkerID _marker, bool _visible);
 
-    // Remove all marker objects from the map; Any marker handles previously returned from 'markerAdd'
+    // Remove all marker objects from the map; Any marker IDs previously returned from 'markerAdd'
     // are invalidated after this.
     void markerRemoveAll();
 

@@ -84,10 +84,6 @@ StyledMesh* Marker::mesh() const {
     return m_mesh.get();
 }
 
-// MapProjection* Marker::mapProjection() const {
-//     return m_mapProjection;
-// }
-
 const BoundingBox& Marker::bounds() const {
     return m_bounds;
 }
