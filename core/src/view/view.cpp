@@ -178,12 +178,7 @@ void View::setRoll(float _roll) {
 
 void View::setPitch(float _pitch) {
 
-    float maxPitchRadians = glm::radians(getMaxPitch());
-    if (m_type != CameraType::perspective) {
-        // Prevent projection plane from intersecting ground plane
-        maxPitchRadians = atan2(m_pos.z, m_height * .5f);
-    }
-    m_pitch = glm::clamp(_pitch, 0.f, maxPitchRadians);
+    m_pitch = _pitch;
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
 
@@ -224,7 +219,15 @@ void View::update(bool _constrainToWorldBounds) {
         m_zoom -= std::log(m_constraint.getConstrainedScale()) / std::log(2);
     }
 
-    setPitch(m_pitch); // Ensure pitch is still valid for viewport
+    // Ensure valid pitch angle.
+    {
+        float maxPitchRadians = glm::radians(getMaxPitch());
+        if (m_type != CameraType::perspective) {
+            // Prevent projection plane from intersecting ground plane.
+            maxPitchRadians = atan2(m_pos.z, m_height * .5f);
+        }
+        m_pitch = glm::clamp(m_pitch, 0.f, maxPitchRadians);
+    }
 
     if (m_dirtyMatrices) {
 
