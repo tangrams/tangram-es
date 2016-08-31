@@ -68,7 +68,7 @@
         case TangramEaseTypeCubic:
             return Tangram::EaseType::cubic;
         default:
-            return Tangram::EaseType::quint;
+            return Tangram::EaseType::cubic;
     }
 }
 
@@ -156,7 +156,6 @@
     }
     self.pixelScale = [[UIScreen mainScreen] scale];
     self.renderRequested = YES;
-    self.continuous = YES;
 
     init(self);
 
