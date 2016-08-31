@@ -26,13 +26,11 @@ public:
 
     void stop();
 
-    void start(int _numWorker);
-    static void setProxyAddress(char* _proxyAddress);
-    static void resetProxyAddress() { s_proxyAddress = nullptr; }
-    ~UrlWorker();
+    void start(int _numWorker, const char* _proxyAddress = "");
+
+     ~UrlWorker();
 
 private:
-    static char* s_proxyAddress;
 
     void run();
 
@@ -41,6 +39,8 @@ private:
     std::condition_variable m_condition;
 
     bool m_running;
+
+    std::string m_proxyAddress;
 
     std::vector<std::unique_ptr<std::thread>> m_workers;
 

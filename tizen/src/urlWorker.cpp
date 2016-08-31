@@ -11,15 +11,10 @@ static size_t write_data(void *_buffer, size_t _size, size_t _nmemb, void *_data
     return realSize;
 }
 
-char* UrlWorker::s_proxyAddress = nullptr;
-
-void UrlWorker::setProxyAddress(char* _proxyAddress) {
-    s_proxyAddress = _proxyAddress;
-}
-
-void UrlWorker::start(int _numWorker) {
-    if (m_running) {return;	}
+void UrlWorker::start(int _numWorker, const char* _proxyAddress) {
+    if (m_running) { return; }
     m_running = true;
+    m_proxyAddress = _proxyAddress;
 
     curl_global_init(CURL_GLOBAL_ALL);
 
@@ -44,7 +39,9 @@ void UrlWorker::run() {
         // set up curl to perform fetch
         curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, write_data);
         curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &stream);
-        curl_easy_setopt(curlHandle, CURLOPT_PROXY , s_proxyAddress);
+        if (!m_proxyAddress.empty()) {
+            curl_easy_setopt(curlHandle, CURLOPT_PROXY, m_proxyAddress.c_str());
+        }
         curl_easy_setopt(curlHandle, CURLOPT_HEADER, 0L);
         curl_easy_setopt(curlHandle, CURLOPT_VERBOSE, 0L);
         curl_easy_setopt(curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip");
