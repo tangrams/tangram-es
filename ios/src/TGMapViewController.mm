@@ -156,6 +156,7 @@
     }
     self.pixelScale = [[UIScreen mainScreen] scale];
     self.renderRequested = YES;
+    self.continuous = NO;
 
     init(self);
 
