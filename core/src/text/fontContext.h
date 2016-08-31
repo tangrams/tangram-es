@@ -72,6 +72,8 @@ public:
 
     FontContext();
 
+    void loadFonts();
+
     /* Synchronized on m_mutex on tile-worker threads
      * Called from alfons when a texture atlas needs to be created
      * Triggered from TextStyleBuilder::prepareLabel
@@ -116,6 +118,8 @@ public:
 
     void setSceneResourceRoot(const std::string& sceneResourceRoot) { m_sceneResourceRoot = sceneResourceRoot; }
 
+    void setBundlePath(const std::string& _bundlePath) { m_bundlePath = _bundlePath; }
+
     void fetch(const FontDescription& _ft);
 
     std::atomic_ushort resourceLoad;
@@ -146,6 +150,8 @@ private:
     alfons::TextBatch m_batch;
     TextWrapper m_textWrapper;
     std::string m_sceneResourceRoot = "";
+
+    std::string m_bundlePath = "fonts/";
 
 };
 

@@ -99,11 +99,15 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
     return true;
 }
 
-void Label::setParent(Label& _parent, bool _definePriority) {
+void Label::setParent(Label& _parent, bool _definePriority, bool _defineCollide) {
     m_parent = &_parent;
 
     if (_definePriority) {
         m_options.priority = _parent.options().priority + 0.5f;
+    }
+
+    if (_defineCollide) {
+        m_options.collide = _parent.options().collide;
     }
 
     applyAnchor(m_options.anchors[m_anchorIndex]);

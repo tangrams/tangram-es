@@ -26,6 +26,7 @@ cameras:
         position: [-74.00976419448854, 40.70532700869127, 16]
         type: perspective
         fov: 45
+        max_tilt: [[2, 0], [16, 90]]
         active: true
 
 lights:

@@ -60,6 +60,9 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
     if ((root = sceneImporter.applySceneImports(_scene->path(), _scene->resourceRoot())) ) {
         applyConfig(root, _scene);
 
+        // Load font resources
+        _scene->fontContext()->loadFonts();
+
         return true;
     }
     return false;
@@ -1171,6 +1174,14 @@ void SceneLoader::loadCamera(const Node& _camera, const std::shared_ptr<Scene>& 
 
     if (Node zoom = _camera["zoom"]) {
         z = zoom.as<float>();
+    }
+
+    if (Node maxTilt = _camera["max_tilt"]) {
+        if (maxTilt.IsSequence()) {
+            camera.maxTiltStops = std::make_shared<Stops>(Stops::Numbers(maxTilt));
+        } else if (maxTilt.IsScalar()) {
+            camera.maxTilt = maxTilt.as<float>(PI);
+        }
     }
 
     _scene->startPosition = glm::dvec2(x, y);

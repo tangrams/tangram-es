@@ -71,6 +71,15 @@ public:
     // field-of-view angle.
     float getFocalLength() const;
 
+    // Set the maximum pitch angle in degrees.
+    void setMaxPitch(float degrees);
+
+    // Set the maximum pitch angle in degrees as a series of stops over zooms.
+    void setMaxPitchStops(std::shared_ptr<Stops> stops);
+
+    // Get the maximum pitch angle for the current zoom.
+    float getMaxPitch() const;
+
     /* Sets the ratio of hardware pixels to logical pixels (for high-density screens)
      * If unset, default is 1.0
      */
@@ -182,6 +191,7 @@ protected:
 
     std::shared_ptr<MapProjection> m_projection;
     std::shared_ptr<Stops> m_fovStops;
+    std::shared_ptr<Stops> m_maxPitchStops;
     std::set<TileID> m_visibleTiles;
 
     ViewConstraint m_constraint;
@@ -212,6 +222,7 @@ protected:
     float m_aspect;
     float m_pixelScale = 1.0f;
     float m_fov = 0.25 * PI;
+    float m_maxPitch = 0.5 * PI;
 
     CameraType m_type;
 
