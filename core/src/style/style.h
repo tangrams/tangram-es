@@ -138,27 +138,30 @@ protected:
     /* Whether the style should generate texture coordinates */
     bool m_texCoordsGeneration = false;
 
-    /* Set uniform values when @_updateUniforms is true,
-     */
-    void setupShaderUniforms(RenderState& rs, Scene& _scene);
+    struct UniformBlock {
+        UniformLocation uTime{"u_time"};
+        // View uniforms
+        UniformLocation uDevicePixelRatio{"u_device_pixel_ratio"};
+        UniformLocation uResolution{"u_resolution"};
+        UniformLocation uMapPosition{"u_map_position"};
+        UniformLocation uNormalMatrix{"u_normal_matrix"};
+        UniformLocation uInverseNormalMatrix{"u_inverse_normal_matrix"};
+        UniformLocation uMetersPerPixel{"u_meters_per_pixel"};
+        UniformLocation uView{"u_view"};
+        UniformLocation uProj{"u_proj"};
+        // Tile uniforms
+        UniformLocation uModel{"u_model"};
+        UniformLocation uTileOrigin{"u_tile_origin"};
+        UniformLocation uProxyDepth{"u_proxy_depth"};
+        UniformLocation uRasters{"u_rasters"};
+        UniformLocation uRasterSizes{"u_raster_sizes"};
+        UniformLocation uRasterOffsets{"u_raster_offsets"};
 
-    UniformLocation m_uTime{"u_time"};
-    // View uniforms
-    UniformLocation m_uDevicePixelRatio{"u_device_pixel_ratio"};
-    UniformLocation m_uResolution{"u_resolution"};
-    UniformLocation m_uMapPosition{"u_map_position"};
-    UniformLocation m_uNormalMatrix{"u_normal_matrix"};
-    UniformLocation m_uInverseNormalMatrix{"u_inverse_normal_matrix"};
-    UniformLocation m_uMetersPerPixel{"u_meters_per_pixel"};
-    UniformLocation m_uView{"u_view"};
-    UniformLocation m_uProj{"u_proj"};
-    // Tile uniforms
-    UniformLocation m_uModel{"u_model"};
-    UniformLocation m_uTileOrigin{"u_tile_origin"};
-    UniformLocation m_uProxyDepth{"u_proxy_depth"};
-    UniformLocation m_uRasters{"u_rasters"};
-    UniformLocation m_uRasterSizes{"u_raster_sizes"};
-    UniformLocation m_uRasterOffsets{"u_raster_offsets"};
+        std::vector<StyleUniform> styleUniforms;
+    } m_uniforms[2];
+
+    static constexpr int mainShaderUniformBlock = 0;
+    static constexpr int selectionShaderUniformBlock = 1;
 
     RasterType m_rasterType = RasterType::none;
 
@@ -166,7 +169,11 @@ protected:
 
 private:
 
-    std::vector<StyleUniform> m_styleUniforms;
+    /* Set uniform values when @_updateUniforms is true,
+     */
+    void setupSceneShaderUniforms(RenderState& rs, Scene& _scene, int _uniformBlock);
+
+    void setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view, Scene& _scene, int _uniformBlock);
 
     struct LightHandle {
         LightHandle(Light* _light, std::unique_ptr<LightUniforms> _uniforms);
@@ -243,6 +250,8 @@ public:
      */
     virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene);
 
+    void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene);
+
     /* Perform any unsetup needed after drawing each frame */
     virtual void onEndDrawFrame() {}
 
@@ -250,6 +259,8 @@ public:
     virtual void draw(RenderState& rs, const Tile& _tile);
 
     virtual void draw(RenderState& rs, const Marker& _marker);
+
+    void drawSelectionFrame(RenderState& rs, const Tile& _tile);
 
     virtual void setLightingType(LightingType _lType);
 
@@ -280,7 +291,7 @@ public:
 
     void setupRasters(const std::vector<std::shared_ptr<DataSource>>& _dataSources);
 
-    std::vector<StyleUniform>& styleUniforms() { return m_styleUniforms; }
+    std::vector<StyleUniform>& styleUniforms() { return m_uniforms[Style::mainShaderUniformBlock].styleUniforms; }
 
     virtual std::unique_ptr<StyleBuilder> createBuilder() const = 0;
 
