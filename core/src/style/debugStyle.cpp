@@ -25,7 +25,7 @@ struct PosColVertex {
 
 
 DebugStyle::DebugStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
-    : Style(_name, _blendMode, _drawMode) {}
+    : Style(_name, _blendMode, _drawMode, false) {}
 
 void DebugStyle::constructVertexLayout() {
 
