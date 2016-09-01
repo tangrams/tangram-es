@@ -3,6 +3,7 @@
 #include "gl/texture.h"
 #include "gl/renderState.h"
 #include "gl/error.h"
+#include "log.h"
 
 namespace Tangram {
 
@@ -29,31 +30,31 @@ void FrameBuffer::applyAsRenderTarget(RenderState& _rs,
     _rs.depthMask(GL_TRUE);
 
     // TOOD: get viewport size from render state, re-enable when unbinding
-    GL_CHECK(glViewport(0, 0, _vpWidth, _vpHeight));
-    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    GL::viewport(0, 0, _vpWidth, _vpHeight);
+    GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // TODO: use render state
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, m_glFrameBufferHandle));
+    GL::bindFramebuffer(GL_FRAMEBUFFER, m_glFrameBufferHandle);
 }
 
 void FrameBuffer::init(RenderState& _rs, unsigned int _rtWidth, unsigned int _rtHeight) {
 
     // get previous bound fbo
 
-    GL_CHECK(glGenFramebuffers(1, &m_glFrameBufferHandle));
+    GL::genFramebuffers(1, &m_glFrameBufferHandle);
 
     // TOOD: use render state for binding
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, m_glFrameBufferHandle));
+    GL::bindFramebuffer(GL_FRAMEBUFFER, m_glFrameBufferHandle);
 
     // Setup color render target
     if (m_colorRenderBuffer) {
-        GL_CHECK(glGenRenderbuffers(1, &m_glColorRenderBufferHandle));
-        GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, m_glColorRenderBufferHandle));
-        GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA,
-                                       _rtWidth, _rtHeight));
+        GL::genRenderbuffers(1, &m_glColorRenderBufferHandle);
+        GL::bindRenderbuffer(GL_RENDERBUFFER, m_glColorRenderBufferHandle);
+        GL::renderbufferStorage(GL_RENDERBUFFER, GL_RGBA,
+                                _rtWidth, _rtHeight);
 
-        GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                           GL_RENDERBUFFER, m_glColorRenderBufferHandle));
+        GL::framebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                    GL_RENDERBUFFER, m_glColorRenderBufferHandle);
     } else {
         TextureOptions options =
             {GL_RGBA, GL_RGBA,
@@ -64,22 +65,22 @@ void FrameBuffer::init(RenderState& _rs, unsigned int _rtWidth, unsigned int _rt
         m_texture = std::make_unique<Texture>(_rtWidth, _rtHeight, options);
         m_texture->update(_rs, 0);
 
-        GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                        GL_TEXTURE_2D, m_texture->getGlHandle(), 0));
+        GL::framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                 GL_TEXTURE_2D, m_texture->getGlHandle(), 0);
     }
 
     {
         // Create depth render buffer
-        GL_CHECK(glGenRenderbuffers(1, &m_glDepthRenderBufferHandle));
-        GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, m_glDepthRenderBufferHandle));
-        GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
-                                       _rtWidth, _rtHeight));
+        GL::genRenderbuffers(1, &m_glDepthRenderBufferHandle);
+        GL::bindRenderbuffer(GL_RENDERBUFFER, m_glDepthRenderBufferHandle);
+        GL::renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
+                                _rtWidth, _rtHeight);
 
-        GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                                           GL_RENDERBUFFER, m_glDepthRenderBufferHandle));
+        GL::framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                    GL_RENDERBUFFER, m_glDepthRenderBufferHandle);
     }
 
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    GLenum status = GL::checkFramebufferStatus(GL_FRAMEBUFFER);
     GL_CHECK();
 
     if (status != GL_FRAMEBUFFER_COMPLETE) {
@@ -103,7 +104,7 @@ FrameBuffer::~FrameBuffer() {
             // TODO: unset render state for framebuffer binding
             // rs.framebufferUnset(glHandle);
 
-            GL_CHECK(glDeleteFramebuffers(1, &glHandle));
+            GL::deleteFramebuffers(1, &glHandle);
         }
     });
 }
