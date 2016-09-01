@@ -2,18 +2,28 @@ cmake_minimum_required(VERSION 3.0)
 
 project(tangram)
 
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/alfons/deps/harfbuzz-icu-freetype/CMakeLists.txt")
-  message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init --recursive'")
-  return()
-endif()
+# Options
+option(USE_SYSTEM_FONT_LIBS "Use system libraries Freetype, ICU and Harfbuzz via pkgconfig" OFF)
+
+include(${PROJECT_SOURCE_DIR}/toolchains/utils.cmake)
+
+checkout_submodule(external/harfbuzz-icu-freetype 1)
+checkout_submodule(external/alfons 0)
+checkout_submodule(external/yaml-cpp 0)
+checkout_submodule(external/geojson-vt-cpp 0)
+checkout_submodule(external/duktape 0)
+checkout_submodule(external/benchmark 0)
+checkout_submodule(external/css-color-parser-cpp 0)
+checkout_submodule(core/include/glm 0)
+checkout_submodule(core/include/variant 0)
+checkout_submodule(core/include/earcut.hpp 0)
+checkout_submodule(core/include/isect2d 0)
 
 set(APPLICATION ON)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
-
-include(${PROJECT_SOURCE_DIR}/toolchains/utils.cmake)
 
 # cmake output configuration
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)

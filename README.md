@@ -20,12 +20,6 @@ This project uses _CMake_ (minimum version **3.0**), you can download it [here](
 brew install cmake
 ```
 
-Make sure to update git submodules before you build:
-
-```bash
-git submodule update --init --recursive
-```
-
 Currently we are targeting five platforms: OS X, Ubuntu Linux, iOS, Android, and Raspberry Pi.
 
 ## platforms ##
@@ -202,4 +196,14 @@ sudo apt-get install clang-format
 Run clang-format with specified style (use -i to modify the contents of the specified file):
 ```
 clang-format -i -style=file [file]
+```
+
+
+Trouble Shooting
+================
+
+In case of errors make sure to update all git submodules before you build:
+
+```bash
+git submodule update --init --recursive
 ```

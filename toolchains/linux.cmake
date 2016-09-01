@@ -1,6 +1,8 @@
 # set for test in other cmake files
 set(PLATFORM_LINUX ON)
 
+checkout_submodule(external/glfw 0)
+
 # global compile options
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++1y")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
