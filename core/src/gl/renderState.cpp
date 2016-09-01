@@ -34,6 +34,9 @@ RenderState::RenderState() {
     m_clearColor = { 0., 0., 0., 0., false };
     m_texture = { 0, 0, false };
     m_textureUnit = { 0, false };
+    m_framebuffer = { 0, false };
+    m_viewport = { 0, 0, 0, 0, false };
+
 }
 
 GLuint RenderState::getTextureUnit(GLuint _unit) {
@@ -65,6 +68,8 @@ void RenderState::invalidate() {
     m_vertexBuffer.set = false;
     m_texture.set = false;
     m_textureUnit.set = false;
+    m_viewport.set = false;
+    m_framebuffer.set = false;
 
     attributeBindings.fill(0);
 
@@ -304,6 +309,12 @@ void RenderState::textureUnset(GLenum target, GLuint handle) {
     }
 }
 
+void RenderState::framebufferUnset(GLuint handle) {
+    if (m_framebuffer.handle == handle) {
+        m_framebuffer.set = false;
+    }
+}
+
 GLuint RenderState::getQuadIndexBuffer() {
     if (m_quadIndexBuffer == 0) {
         generateQuadIndexBuffer();
@@ -353,6 +364,36 @@ void RenderState::deleteDefaultPointTexture() {
 void RenderState::generateDefaultPointTexture() {
     TextureOptions options = { GL_RGBA, GL_RGBA, { GL_LINEAR, GL_LINEAR }, { GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE } };
     m_defaultPointTexture = new Texture(default_point_texture_data, default_point_texture_size, options, true);
+}
+
+bool RenderState::framebuffer(GLuint handle) {
+    if (!m_framebuffer.set || m_framebuffer.handle != handle) {
+        m_framebuffer = { handle, true };
+        GL::bindFramebuffer(GL_FRAMEBUFFER, handle);
+        return false;
+    }
+    return true;
+}
+
+bool RenderState::viewport(GLint x, GLint y, GLsizei width, GLsizei height) {
+    if (!m_viewport.set || m_viewport.x != x || m_viewport.y != y
+      || m_viewport.width != width || m_viewport.height != height) {
+        m_viewport = { x, y, width, height, true };
+        GL::viewport(x, y, width, height);
+        return false;
+    }
+    return true;
+}
+
+void RenderState::saveFramebufferState() {
+    m_savedFrameBufferState = m_framebuffer;
+    m_savedViewportState = m_viewport;
+}
+
+void RenderState::applySavedFramebufferState() {
+    framebuffer(m_savedFrameBufferState.handle);
+    viewport(m_savedViewportState.x, m_savedViewportState.y,
+             m_savedViewportState.width, m_savedViewportState.height);
 }
 
 } // namespace Tangram

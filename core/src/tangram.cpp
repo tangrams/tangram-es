@@ -290,7 +290,7 @@ void Map::resize(int _newWidth, int _newHeight) {
     LOGS("resize: %d x %d", _newWidth, _newHeight);
     LOG("resize: %d x %d", _newWidth, _newHeight);
 
-    GL::viewport(0, 0, _newWidth, _newHeight);
+    impl->renderState.viewport(0, 0, _newWidth, _newHeight);
 
     impl->view.setSize(_newWidth, _newHeight);
 

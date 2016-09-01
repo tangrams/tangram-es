@@ -23,14 +23,15 @@ uint32_t FeatureSelection::colorIdentifier(const Feature& _feature, const SceneL
 
 void FeatureSelection::beginRenderPass(Tangram::RenderState& _rs) {
 
-    m_framebuffer->applyAsRenderTarget(_rs, 512, 512, 512, 512);
+    _rs.saveFramebufferState();
+
+    m_framebuffer->applyAsRenderTarget(_rs, 256, 256);
 
 }
 
 void FeatureSelection::endRenderPass(Tangram::RenderState& _rs) {
 
-    // TODO: set inside framebuffer class unbind render target
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    _rs.applySavedFramebufferState();
 
 }
 
