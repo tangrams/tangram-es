@@ -21,7 +21,7 @@ public:
         : MeshBase(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW) {
     }
 
-    bool draw(RenderState& rs, ShaderProgram& _shader) override;
+    bool draw(RenderState& rs, ShaderProgram& _shader, bool _useVao = true) override;
 
     // Draw the mesh while swapping textures using the given texture unit.
     bool draw(RenderState& rs, ShaderProgram& _shader, int textureUnit);
@@ -94,7 +94,7 @@ void DynamicQuadMesh<T>::upload(RenderState& rs) {
 }
 
 template<class T>
-bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader) {
+bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader, bool useVao) {
     return draw(rs, shader, 0);
 }
 
