@@ -3,6 +3,7 @@
 #include "data/properties.h"
 #include "gl/framebuffer.h"
 #include <mutex>
+#include <map>
 
 namespace Tangram {
 
@@ -16,7 +17,7 @@ public:
 
     FeatureSelection();
 
-    uint32_t colorIdentifier(const Feature& _feature, const SceneLayer& _layer) const;
+    uint32_t colorIdentifier(const Feature& _feature, const SceneLayer& _layer);
 
     // TODO: return true when pending requests for a
     // screen location has been done from the tangram API
@@ -30,9 +31,13 @@ public:
 
 private:
 
-    mutable std::atomic<uint32_t> m_entry;
+    uint32_t m_entry;
 
     std::unique_ptr<FrameBuffer> m_framebuffer;
+
+    std::map<uint32_t, std::shared_ptr<Properties>> m_props;
+
+    std::mutex m_mutex;
 
 };
 
