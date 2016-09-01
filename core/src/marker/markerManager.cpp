@@ -13,11 +13,16 @@ void MarkerManager::setScene(std::shared_ptr<Scene> scene) {
     m_styleContext.initFunctions(*scene);
     m_jsFnIndex = scene->functions().size();
 
-    // FIXME: Styling data stored in the scene, like 'stops', will get trashed when a new scene is loaded!
 
-    // Initialize StyleBuilders
+    // Initialize StyleBuilders.
     for (auto& style : scene->styles()) {
         m_styleBuilders[style->getName()] = style->createBuilder();
+    }
+
+    // Rebuild any markers present.
+    for (auto& entry : m_markers) {
+        buildStyling(*entry);
+        buildGeometry(*entry, m_zoom);
     }
 
 }
@@ -47,22 +52,13 @@ bool MarkerManager::setStyling(MarkerID markerID, const char* styling) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
-    // Update the draw rule for the marker.
-    YAML::Node node = YAML::Load(styling);
-    std::vector<StyleParam> params;
-    SceneLoader::parseStyleParams(node, m_scene, "", params);
+    marker->setStylingString(std::string(styling));
 
-    // Compile any new JS functions used for styling.
-    const auto& sceneJsFnList = m_scene->functions();
-    for (auto i = m_jsFnIndex; i < sceneJsFnList.size(); ++i) {
-        m_styleContext.addFunction(sceneJsFnList[i]);
-    }
-    m_jsFnIndex = sceneJsFnList.size();
-
-    marker->setStyling(std::make_unique<DrawRuleData>("", 0, std::move(params)));
+    // Create a draw rule from the styling string.
+    buildStyling(*marker);
 
     // Build the feature mesh for the marker's current geometry.
-    build(*marker, m_zoom);
+    buildGeometry(*marker, m_zoom);
     return true;
 }
 
@@ -85,7 +81,7 @@ bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
         feature->geometryType = GeometryType::points;
         feature->points.emplace_back();
         marker->setFeature(std::move(feature));
-        build(*marker, m_zoom);
+        buildGeometry(*marker, m_zoom);
     }
 
     // Update the marker's bounds to the given coordinates.
@@ -148,7 +144,7 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
     marker->setFeature(std::move(feature));
 
     // Build a new mesh for the marker.
-    build(*marker, m_zoom);
+    buildGeometry(*marker, m_zoom);
 
     return true;
 }
@@ -205,7 +201,7 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
     marker->setFeature(std::move(feature));
 
     // Build a new mesh for the marker.
-    build(*marker, m_zoom);
+    buildGeometry(*marker, m_zoom);
 
     return true;
 }
@@ -218,7 +214,7 @@ bool MarkerManager::update(int zoom) {
     bool rebuilt = false;
     for (auto& marker : m_markers) {
         if (zoom != marker->builtZoomLevel()) {
-            build(*marker, zoom);
+            buildGeometry(*marker, zoom);
             rebuilt = true;
         }
     }
@@ -236,12 +232,29 @@ const std::vector<std::unique_ptr<Marker>>& MarkerManager::markers() const {
     return m_markers;
 }
 
-void MarkerManager::build(Marker& marker, int zoom) {
+void MarkerManager::buildStyling(Marker& marker) {
 
-    auto rule = marker.drawRule();
+    // Update the draw rule for the marker.
+    YAML::Node node = YAML::Load(marker.stylingString());
+    std::vector<StyleParam> params;
+    SceneLoader::parseStyleParams(node, m_scene, "", params);
+
+    // Compile any new JS functions used for styling.
+    const auto& sceneJsFnList = m_scene->functions();
+    for (auto i = m_jsFnIndex; i < sceneJsFnList.size(); ++i) {
+        m_styleContext.addFunction(sceneJsFnList[i]);
+    }
+    m_jsFnIndex = sceneJsFnList.size();
+
+    marker.setDrawRule(std::make_unique<DrawRuleData>("", 0, std::move(params)));
+
+}
+
+void MarkerManager::buildGeometry(Marker& marker, int zoom) {
+
     auto feature = marker.feature();
-
-    if (!rule || !feature) { return; }
+    auto rule = marker.drawRule();
+    if (!feature || !rule) { return; }
 
     StyleBuilder* styler = nullptr;
     {

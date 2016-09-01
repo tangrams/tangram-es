@@ -61,7 +61,8 @@ private:
 
     Marker* getMarkerOrNull(MarkerID markerID);
 
-    void build(Marker& marker, int zoom);
+    void buildStyling(Marker& marker);
+    void buildGeometry(Marker& marker, int zoom);
 
     DrawRuleMergeSet m_ruleSet;
     StyleContext m_styleContext;

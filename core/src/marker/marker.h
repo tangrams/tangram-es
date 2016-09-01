@@ -36,8 +36,11 @@ public:
     // Set the feature whose geometry will be used to build the marker.
     void setFeature(std::unique_ptr<Feature> feature);
 
+    // Set the string of YAML that will be used to style the marker.
+    void setStylingString(std::string stylingString);
+
     // Set the draw rule that will be used to build the marker.
-    void setStyling(std::unique_ptr<DrawRuleData> drawRuleData);
+    void setDrawRule(std::unique_ptr<DrawRuleData> drawRuleData);
 
     // Set the styled mesh for this marker with the associated style id and zoom level.
     void setMesh(uint32_t styleId, uint32_t zoom, std::unique_ptr<StyledMesh> mesh);
@@ -78,6 +81,8 @@ public:
 
     const glm::mat4& modelMatrix() const;
 
+    const std::string& stylingString() const;
+
     bool isEasing() const;
 
     bool isVisible() const;
@@ -89,7 +94,7 @@ protected:
     std::unique_ptr<DrawRuleData> m_drawRuleData;
     std::unique_ptr<DrawRule> m_drawRule;
 
-    MapProjection* m_mapProjection = nullptr;
+    std::string m_stylingString;
 
     MarkerID m_id = 0;
 

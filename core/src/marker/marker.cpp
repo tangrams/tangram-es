@@ -25,9 +25,13 @@ void Marker::setFeature(std::unique_ptr<Feature> feature) {
     m_feature = std::move(feature);
 }
 
-void Marker::setStyling(std::unique_ptr<DrawRuleData> drawRuleData) {
+void Marker::setStylingString(std::string stylingString) {
+    m_stylingString = stylingString;
+}
+
+void Marker::setDrawRule(std::unique_ptr<DrawRuleData> drawRuleData) {
     m_drawRuleData = std::move(drawRuleData);
-    m_drawRule = std::make_unique<DrawRule>(*m_drawRuleData, "anonymous_marker_layer", 0);
+    m_drawRule = std::make_unique<DrawRule>(*m_drawRuleData, "", 0);
 }
 
 void Marker::setMesh(uint32_t styleId, uint32_t zoom, std::unique_ptr<StyledMesh> mesh) {
@@ -94,6 +98,10 @@ const glm::dvec2& Marker::origin() const {
 
 const glm::mat4& Marker::modelMatrix() const {
     return m_modelMatrix;
+}
+
+const std::string& Marker::stylingString() const {
+    return m_stylingString;
 }
 
 bool Marker::isEasing() const {
