@@ -747,7 +747,7 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, const std::shared
 
     if (Node blendNode = styleNode["blend"]) {
         const std::string& blendMode = blendNode.Scalar();
-        if      (blendMode == "none")     { style.setBlendMode(Blending::none); }
+        if      (blendMode == "opaque")   { style.setBlendMode(Blending::opaque); }
         else if (blendMode == "add")      { style.setBlendMode(Blending::add); }
         else if (blendMode == "multiply") { style.setBlendMode(Blending::multiply); }
         else if (blendMode == "overlay")  { style.setBlendMode(Blending::overlay); }

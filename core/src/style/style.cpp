@@ -208,7 +208,7 @@ void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) 
 
     // Configure render state
     switch (m_blend) {
-        case Blending::none:
+        case Blending::opaque:
             rs.blending(GL_FALSE);
             rs.blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             rs.depthTest(GL_TRUE);

@@ -15,7 +15,7 @@ protected:
 
 public:
 
-    RasterStyle(std::string _name, Blending _blendMode = Blending::none, GLenum _drawMode = GL_TRIANGLES);
+    RasterStyle(std::string _name, Blending _blendMode = Blending::opaque, GLenum _drawMode = GL_TRIANGLES);
 
 };
 
