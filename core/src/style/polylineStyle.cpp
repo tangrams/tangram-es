@@ -31,29 +31,32 @@ namespace Tangram {
 
 struct PolylineVertexNoUVs {
     PolylineVertexNoUVs(glm::vec2 position, glm::vec2 extrude, glm::vec2 uv,
-                   glm::i16vec2 width, glm::i16vec2 height, GLuint abgr)
+                        glm::i16vec2 width, glm::i16vec2 height, GLuint abgr, GLuint selection)
         : pos(glm::i16vec2{ glm::round(position * position_scale)}, height),
           extrude(glm::i16vec2{extrude * extrusion_scale}, width),
-          abgr(abgr) {}
+          abgr(abgr),
+          selection(selection) {}
 
-    PolylineVertexNoUVs(PolylineVertexNoUVs v, short order, glm::i16vec2 width, GLuint abgr)
+    PolylineVertexNoUVs(PolylineVertexNoUVs v, short order, glm::i16vec2 width, GLuint abgr, GLuint selection)
         : pos(glm::i16vec4{glm::i16vec3{v.pos}, order}),
           extrude(glm::i16vec4{ v.extrude.x, v.extrude.y, width }),
-          abgr(abgr) {}
+          abgr(abgr),
+          selection(selection) {}
 
     glm::i16vec4 pos;
     glm::i16vec4 extrude;
     GLuint abgr;
+    GLuint selection;
 };
 
 struct PolylineVertex : PolylineVertexNoUVs {
     PolylineVertex(glm::vec2 position, glm::vec2 extrude, glm::vec2 uv,
-                   glm::i16vec2 width, glm::i16vec2 height, GLuint abgr)
-        : PolylineVertexNoUVs(position, extrude, uv, width, height, abgr),
+                   glm::i16vec2 width, glm::i16vec2 height, GLuint abgr, GLuint selection)
+        : PolylineVertexNoUVs(position, extrude, uv, width, height, abgr, selection),
           texcoord(uv * texture_scale) {}
 
-    PolylineVertex(PolylineVertex v, short order, glm::i16vec2 width, GLuint abgr)
-        : PolylineVertexNoUVs(v, order, width, abgr),
+    PolylineVertex(PolylineVertex v, short order, glm::i16vec2 width, GLuint abgr, GLuint selection)
+        : PolylineVertexNoUVs(v, order, width, abgr, selection),
           texcoord(v.texcoord) {}
 
     glm::u16vec2 texcoord;
@@ -71,6 +74,7 @@ void PolylineStyle::constructVertexLayout() {
             {"a_position", 4, GL_SHORT, false, 0},
             {"a_extrude", 4, GL_SHORT, false, 0},
             {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+            {"a_selection_color", 4, GL_UNSIGNED_BYTE, true, 0},
             {"a_texcoord", 2, GL_UNSIGNED_SHORT, false, 0},
         }));
     } else {
@@ -78,6 +82,7 @@ void PolylineStyle::constructVertexLayout() {
             {"a_position", 4, GL_SHORT, false, 0},
             {"a_extrude", 4, GL_SHORT, false, 0},
             {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+            {"a_selection_color", 4, GL_UNSIGNED_BYTE, true, 0},
         }));
     }
 
@@ -173,10 +178,10 @@ public:
         : StyleBuilder(_style), m_style(_style),
           m_meshData(2) {}
 
-    void addMesh(const Line& _line, const Parameters& _params);
+    void addMesh(const Line& _line, const Parameters& _params, const DrawRule& _rule);
 
     void buildLine(const Line& _line, const typename Parameters::Attributes& _att,
-                   MeshData<V>& _mesh);
+                   MeshData<V>& _mesh, GLuint _selection);
 
     Parameters parseRule(const DrawRule& _rule, const Properties& _props);
 
@@ -391,14 +396,14 @@ void PolylineStyleBuilder<V>::addFeature(const Feature& _feat, const DrawRule& _
         params.keepTileEdges = true;
 
         for (auto& line : _feat.lines) {
-            addMesh(line, params);
+            addMesh(line, params, _rule);
         }
     } else {
         params.closedPolygon = true;
 
         for (auto& polygon : _feat.polygons) {
             for (const auto& line : polygon) {
-                addMesh(line, params);
+                addMesh(line, params, _rule);
             }
         }
     }
@@ -406,12 +411,12 @@ void PolylineStyleBuilder<V>::addFeature(const Feature& _feat, const DrawRule& _
 
 template <class V>
 void PolylineStyleBuilder<V>::buildLine(const Line& _line, const typename Parameters::Attributes& _att,
-                        MeshData<V>& _mesh) {
+                                        MeshData<V>& _mesh, GLuint selection) {
 
     float zoom = m_overzoom2;
     m_builder.addVertex = [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
         _mesh.vertices.push_back({{ coord.x,coord.y }, normal, { uv.x, uv.y * zoom },
-                                  _att.width, _att.height, _att.color});
+                                  _att.width, _att.height, _att.color, selection});
     };
 
     Builders::buildPolyLine(_line, m_builder);
@@ -427,7 +432,7 @@ void PolylineStyleBuilder<V>::buildLine(const Line& _line, const typename Parame
 }
 
 template <class V>
-void PolylineStyleBuilder<V>::addMesh(const Line& _line, const Parameters& _params) {
+void PolylineStyleBuilder<V>::addMesh(const Line& _line, const Parameters& _params, const DrawRule& _rule) {
 
     m_builder.cap = _params.fill.cap;
     m_builder.join = _params.fill.join;
@@ -435,7 +440,7 @@ void PolylineStyleBuilder<V>::addMesh(const Line& _line, const Parameters& _para
     m_builder.keepTileEdges = _params.keepTileEdges;
     m_builder.closedPolygon = _params.closedPolygon;
 
-    if (_params.lineOn) { buildLine(_line, _params.fill, m_meshData[0]); }
+    if (_params.lineOn) { buildLine(_line, _params.fill, m_meshData[0], _rule.selectionColor); }
 
     if (!_params.outlineOn) { return; }
 
@@ -448,7 +453,7 @@ void PolylineStyleBuilder<V>::addMesh(const Line& _line, const Parameters& _para
         m_builder.join = _params.stroke.join;
         m_builder.miterLimit = _params.stroke.miterLimit;
 
-        buildLine(_line, _params.stroke, m_meshData[1]);
+        buildLine(_line, _params.stroke, m_meshData[1], _rule.selectionColor);
 
     } else {
         auto& fill = m_meshData[0];
@@ -471,7 +476,7 @@ void PolylineStyleBuilder<V>::addMesh(const Line& _line, const Parameters& _para
         short order = _params.stroke.height[1];
 
         for (; vertexIt != fill.vertices.end(); ++vertexIt) {
-            stroke.vertices.emplace_back(*vertexIt, order, width, abgr);
+            stroke.vertices.emplace_back(*vertexIt, order, width, abgr, _rule.selectionColor);
         }
     }
 }

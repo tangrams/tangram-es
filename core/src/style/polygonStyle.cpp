@@ -27,21 +27,23 @@ namespace Tangram {
 
 struct PolygonVertexNoUVs {
 
-    PolygonVertexNoUVs(glm::vec3 position, uint32_t order, glm::vec3 normal, glm::vec2 uv, GLuint abgr)
+    PolygonVertexNoUVs(glm::vec3 position, uint32_t order, glm::vec3 normal, glm::vec2 uv, GLuint abgr, GLuint selection)
         : pos(glm::i16vec4{ glm::round(position * position_scale), order }),
           norm(normal * normal_scale),
-          abgr(abgr) {}
+          abgr(abgr),
+          selection(selection) {}
 
     glm::i16vec4 pos; // pos.w contains layer (params.order)
     glm::i8vec3 norm;
     uint8_t padding = 0;
     GLuint abgr;
+    GLuint selection;
 };
 
 struct PolygonVertex : PolygonVertexNoUVs {
 
-    PolygonVertex(glm::vec3 position, uint32_t order, glm::vec3 normal, glm::vec2 uv, GLuint abgr)
-        : PolygonVertexNoUVs(position, order, normal, uv, abgr), texcoord(uv * texture_scale) {}
+    PolygonVertex(glm::vec3 position, uint32_t order, glm::vec3 normal, glm::vec2 uv, GLuint abgr, GLuint selection)
+        : PolygonVertexNoUVs(position, order, normal, uv, abgr, selection), texcoord(uv * texture_scale) {}
 
     glm::u16vec2 texcoord;
 };
@@ -57,6 +59,7 @@ void PolygonStyle::constructVertexLayout() {
             {"a_position", 4, GL_SHORT, false, 0},
             {"a_normal", 4, GL_BYTE, true, 0}, // The 4th byte is for padding
             {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+            {"a_selection_color", 4, GL_UNSIGNED_BYTE, true, 0},
             {"a_texcoord", 2, GL_UNSIGNED_SHORT, true, 0},
         }));
     } else {
@@ -64,6 +67,7 @@ void PolygonStyle::constructVertexLayout() {
             {"a_position", 4, GL_SHORT, false, 0},
             {"a_normal", 4, GL_BYTE, true, 0},
             {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+            {"a_selection_color", 4, GL_UNSIGNED_BYTE, true, 0},
         }));
     }
 
@@ -162,10 +166,10 @@ void PolygonStyleBuilder<V>::addPolygon(const Polygon& _polygon, const Propertie
 
     parseRule(_rule, _props);
 
-    m_builder.addVertex = [this](const glm::vec3& coord,
+    m_builder.addVertex = [this, _rule](const glm::vec3& coord,
                                  const glm::vec3& normal,
                                  const glm::vec2& uv) {
-        m_meshData.vertices.push_back({ coord, m_params.order, normal, uv, m_params.color });
+        m_meshData.vertices.push_back({ coord, m_params.order, normal, uv, m_params.color, _rule.selectionColor });
     };
 
     if (m_params.minHeight != m_params.height) {
