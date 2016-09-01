@@ -46,8 +46,8 @@ struct PolygonVertex : PolygonVertexNoUVs {
     glm::u16vec2 texcoord;
 };
 
-PolygonStyle::PolygonStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
-    : Style(_name, _blendMode, _drawMode)
+PolygonStyle::PolygonStyle(std::string _name, Blending _blendMode, GLenum _drawMode, bool _selection)
+    : Style(_name, _blendMode, _drawMode, _selection)
 {}
 
 void PolygonStyle::constructVertexLayout() {

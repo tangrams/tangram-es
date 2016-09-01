@@ -11,7 +11,7 @@ class PolygonStyle : public Style {
 
 public:
 
-    PolygonStyle(std::string _name, Blending _blendMode = Blending::opaque, GLenum _drawMode = GL_TRIANGLES);
+    PolygonStyle(std::string _name, Blending _blendMode = Blending::opaque, GLenum _drawMode = GL_TRIANGLES, bool _selection = true);
 
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;

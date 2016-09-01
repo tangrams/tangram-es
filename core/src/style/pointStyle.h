@@ -30,7 +30,7 @@ public:
     };
 
     PointStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
-               Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES);
+               Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES, bool _selection = false);
 
     virtual void onBeginUpdate() override;
     virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
