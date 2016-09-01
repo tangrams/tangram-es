@@ -235,19 +235,19 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
 
                 int lineNum = 0;
                 if (!sscanf(line.c_str(), "%*d%*[(:]%d", &lineNum)) { continue; }
-                logMsg("\nError on line %d: %s\n", lineNum, line.c_str());
+                LOGE("\nError on line %d: %s", lineNum, line.c_str());
 
                 for (int i = std::max(0, lineNum-5); i < lineNum+5; i++) {
                     if (size_t(i) >= sourceLines.size()) { break; }
-                    logMsg("%d: %s\n", i+1, sourceLines[i].c_str());
+                    LOGE("%d: %s", i+1, sourceLines[i].c_str());
                 }
             }
 
             // Print full source with line numbers
-            // logMsg("\n\n");
-            // for (size_t i = 0; i < sourceLines.size(); i++) {
-            //     logMsg("%d: %s\n", i, sourceLines[i].c_str());
-            // }
+            LOGD("\n\n");
+            for (size_t i = 0; i < sourceLines.size(); i++) {
+                LOGD("%d: %s", i, sourceLines[i].c_str());
+            }
         }
 
         GL::deleteShader(shader);
