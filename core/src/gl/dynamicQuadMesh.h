@@ -20,7 +20,7 @@ public:
         : MeshBase(_vertexLayout, _drawMode, GL_DYNAMIC_DRAW) {
     }
 
-    bool draw(RenderState& rs, ShaderProgram& _shader) override;
+    bool draw(RenderState& rs, ShaderProgram& _shader, bool _useVao = true) override;
 
     size_t bufferSize() const override {
         return MeshBase::bufferSize();
@@ -70,7 +70,7 @@ void DynamicQuadMesh<T>::upload(RenderState& rs) {
 }
 
 template<class T>
-bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& _shader) {
+bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& _shader, bool _useVao) {
 
     if (m_nVertices == 0) { return false; }
 
