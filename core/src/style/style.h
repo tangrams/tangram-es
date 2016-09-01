@@ -35,7 +35,7 @@ enum class LightingType : char {
 };
 
 enum class Blending : int8_t {
-    none = 0,
+    opaque = 0,
     add,
     multiply,
     inlay,
@@ -121,7 +121,7 @@ protected:
     /* <LightingType> to determine how lighting will be calculated for this style */
     LightingType m_lightingType = LightingType::fragment;
 
-    Blending m_blend = Blending::none;
+    Blending m_blend = Blending::opaque;
     int m_blendOrder = -1;
 
     /* Draw mode to pass into <Mesh>es created with this style */
@@ -192,7 +192,7 @@ public:
         const auto& orderA = a->blendOrder();
         const auto& orderB = b->blendOrder();
 
-        if (modeA != Blending::none && modeB != Blending::none) {
+        if (modeA != Blending::opaque && modeB != Blending::opaque) {
             if (orderA != orderB) {
                 return orderA < orderB;
             }
