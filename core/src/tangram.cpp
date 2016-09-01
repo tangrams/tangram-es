@@ -282,8 +282,6 @@ bool Map::update(float _dt) {
 
     impl->view.update();
 
-    impl->scene->viewState(impl->view.state());
-
     for (const auto& style : impl->scene->styles()) {
         style->onBeginUpdate();
     }

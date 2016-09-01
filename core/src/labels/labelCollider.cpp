@@ -1,6 +1,8 @@
 #include "labelCollider.h"
 
 #include "labels/labelSet.h"
+#include "view/view.h" // ViewState
+
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/norm.hpp"
 
@@ -8,13 +10,6 @@
 
 namespace Tangram {
 
-void LabelCollider::setup(float _tileSize, float _tileScale) {
-
-    // Maximum scale at which this tile is used (unless it's a proxy)
-    m_tileScale = _tileScale * MAX_SCALE;
-
-    m_screenSize = glm::vec2{ _tileSize * m_tileScale };
-}
 
 void LabelCollider::addLabels(std::vector<std::unique_ptr<Label>>& _labels) {
 
@@ -56,7 +51,7 @@ void LabelCollider::handleRepeatGroup(size_t startPos) {
     }
 }
 
-void LabelCollider::process(TileID _tileID, float _tileInverseScale, const ViewState& _viewState) {
+void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tileSize) {
 
     // Sort labels so that all labels of one repeat group are next to each other
     std::sort(m_labels.begin(), m_labels.end(),
@@ -88,13 +83,30 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, const ViewS
     mvp[3][0] = -1;
     mvp[3][1] = 1;
 
+    float m_tileScale = pow(2, _tileID.s - _tileID.z) * MAX_SCALE;
+
+    glm::vec2 screenSize{ _tileSize * m_tileScale };
+
+    double minZoomMetersPerPixel = (2.0 * MapProjection::HALF_CIRCUMFERENCE) / _tileSize;
+    double metersPerPixel = minZoomMetersPerPixel / powf(2.f, _tileID.z);
+
+    ViewState viewState {
+        nullptr, // mapProjection (unused)
+        false, // changedOnLastUpdate (unused)
+        glm::dvec2{}, // center (unused)
+        0.f, // zoom (unused)
+        m_tileScale, // fractZoom
+        screenSize, // viewPortSize
+        metersPerPixel
+    };
+
     for (auto* label : m_labels) {
-        label->update(mvp, _tileInverseScale, _viewState, true);
+        label->update(mvp, _tileInverseScale, viewState, true);
 
         m_aabbs.push_back(label->aabb());
     }
 
-    m_isect2d.resize({m_screenSize.x / 128, m_screenSize.y / 128}, m_screenSize);
+    m_isect2d.resize({screenSize.x / 128, screenSize.y / 128}, screenSize);
 
     m_isect2d.intersect(m_aabbs);
 

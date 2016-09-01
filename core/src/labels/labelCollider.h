@@ -16,11 +16,10 @@ class LabelCollider {
 
 public:
 
-    void setup(float _tileSize, float _tileScale);
 
     void addLabels(std::vector<std::unique_ptr<Label>>& _labels);
 
-    void process(TileID _tileID, float _tileInverseScale, const ViewState& _viewState);
+    void process(TileID _tileID, float _tileInverseScale, float _tileSize);
 
 private:
 
@@ -36,9 +35,6 @@ private:
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
 
-    float m_tileScale = 1.f;
-
-    glm::vec2 m_screenSize;
 };
 
 }
