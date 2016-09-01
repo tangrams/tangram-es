@@ -51,7 +51,7 @@ enum class RasterType {
 };
 
 struct StyledMesh {
-    virtual bool draw(RenderState& rs, ShaderProgram& _shader) = 0;
+    virtual bool draw(RenderState& rs, ShaderProgram& _shader, bool _useVao = true) = 0;
     virtual size_t bufferSize() const = 0;
 
     virtual ~StyledMesh() {}

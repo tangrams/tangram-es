@@ -326,19 +326,29 @@ struct GL {
     static void bufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void *data);
 
     // Framebuffers
-    GL_APICALL void GL_APIENTRY glBindFramebuffer(GLenum target, GLuint framebuffer);
-    GL_APICALL void GL_APIENTRY glGenFramebuffers(GLsizei n, GLuint *framebuffers);
-    GL_APICALL void GL_APIENTRY glFramebufferTexture2D(GLenum target, GLenum attachment,
-                        GLenum textarget, GLuint texture, GLint level);
-    GL_APICALL void GL_APIENTRY glRenderbufferStorage(GLenum target, GLenum internalformat,
-                        GLsizei width, GLsizei height);
-    GL_APICALL void GL_APIENTRY glFramebufferRenderbuffer(GLenum target, GLenum attachment,
-                        GLenum renderbuffertarget, GLuint renderbuffer);
-    GL_APICALL void GL_APIENTRY glGenRenderbuffers(GLsizei n, GLuint *renderbuffers);
-    GL_APICALL void GL_APIENTRY glBindRenderbuffer(GLenum target, GLuint renderbuffer);
-    GL_APICALL void GL_APIENTRY glDeleteFramebuffers(GLsizei n, const GLuint *framebuffers);
-    GL_APICALL void GL_APIENTRY glDeleteRenderbuffers(GLsizei n, const GLuint *renderbuffers);
-    GL_APICALL GLenum GL_APIENTRY glCheckFramebufferStatus(GLenum target);
+    static void bindFramebuffer(GLenum target, GLuint framebuffer);
+    static void genFramebuffers(GLsizei n, GLuint *framebuffers);
+    static void framebufferTexture2D(GLenum target,
+                                     GLenum attachment,
+                                     GLenum textarget,
+                                     GLuint texture,
+                                     GLint level);
+
+    static void renderbufferStorage(GLenum target,
+                                    GLenum internalformat,
+                                    GLsizei width,
+                                    GLsizei height);
+
+    static void framebufferRenderbuffer(GLenum target,
+                                        GLenum attachment,
+                                        GLenum renderbuffertarget,
+                                        GLuint renderbuffer);
+
+    static void genRenderbuffers(GLsizei n, GLuint *renderbuffers);
+    static void bindRenderbuffer(GLenum target, GLuint renderbuffer);
+    static void deleteFramebuffers(GLsizei n, const GLuint *framebuffers);
+    static void deleteRenderbuffers(GLsizei n, const GLuint *renderbuffers);
+    static GLenum checkFramebufferStatus(GLenum target);
 
     // Texture
     static void bindTexture(GLenum target, GLuint texture );

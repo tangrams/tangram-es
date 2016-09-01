@@ -70,7 +70,7 @@ public:
      * Renders the geometry in this mesh using the ShaderProgram _shader; if
      * geometry has not already been uploaded it will be uploaded at this point
      */
-    bool draw(RenderState& rs, ShaderProgram& _shader);
+    bool draw(RenderState& rs, ShaderProgram& _shader, bool _useVao = true);
 
     size_t bufferSize() const;
 
@@ -152,8 +152,8 @@ public:
         return MeshBase::bufferSize();
     }
 
-    bool draw(RenderState& rs, ShaderProgram& shader) override {
-        return MeshBase::draw(rs, shader);
+    bool draw(RenderState& rs, ShaderProgram& shader, bool useVao = true) override {
+        return MeshBase::draw(rs, shader, useVao);
     }
 
     void compile(const std::vector<MeshData<T>>& _meshes);
