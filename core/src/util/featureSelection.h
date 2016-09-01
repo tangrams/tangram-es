@@ -26,6 +26,8 @@ public:
 
     void endRenderPass(RenderState& _rs);
 
+    GLuint readBufferAt(RenderState& _rs, float _x, float _y, int _vpWidth, int _vpHeight) const;
+
 private:
 
     mutable std::atomic<uint32_t> m_entry;
