@@ -3,6 +3,7 @@
 #include <memory>
 #include <bitset>
 
+#include "glm/vec4.hpp"
 #include "gl/disposer.h"
 #include "gl.h"
 
@@ -19,7 +20,7 @@ public:
 
     ~FrameBuffer();
 
-    void applyAsRenderTarget(RenderState& _rs,
+    void applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor,
                              unsigned int _vpWidth, unsigned int _vpHeight);
 
     bool valid() const { return m_valid; }

@@ -15,7 +15,7 @@ FrameBuffer::FrameBuffer(bool _colorRenderBuffer) :
 
 }
 
-void FrameBuffer::applyAsRenderTarget(RenderState& _rs,
+void FrameBuffer::applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor,
                                       unsigned int _vpWidth, unsigned int _vpHeight) {
 
     if (!m_glFrameBufferHandle) {
@@ -32,6 +32,8 @@ void FrameBuffer::applyAsRenderTarget(RenderState& _rs,
     _rs.framebuffer(m_glFrameBufferHandle);
     _rs.depthMask(GL_TRUE);
     _rs.viewport(0, 0, _vpWidth, _vpHeight);
+
+    _rs.clearColor(_clearColor.r, _clearColor.g, _clearColor.b, _clearColor.a);
 
     GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 }

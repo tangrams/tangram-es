@@ -27,7 +27,7 @@ void FeatureSelection::beginRenderPass(Tangram::RenderState& _rs) {
 
     _rs.saveFramebufferState();
 
-    m_framebuffer->applyAsRenderTarget(_rs, 256, 256);
+    m_framebuffer->applyAsRenderTarget(_rs, {0.0, 0.0, 0.0, 0.0}, 256, 256);
 
 }
 
