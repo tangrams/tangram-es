@@ -99,8 +99,8 @@ void Style::setLightingType(LightingType _type) {
     m_lightingType = _type;
 }
 
-void Style::setupShaderUniforms(RenderState& rs, Scene& _scene) {
-    for (auto& uniformPair : m_styleUniforms) {
+void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, int _uniformBlock) {
+    for (auto& uniformPair : m_uniforms[_uniformBlock].styleUniforms) {
         const auto& name = uniformPair.first;
         auto& value = uniformPair.second;
 
@@ -187,15 +187,16 @@ void Style::setupRasters(const std::vector<std::shared_ptr<DataSource>>& _dataSo
     m_shaderProgram->addSourceBlock("raster", SHADER_SOURCE(rasters_glsl));
 }
 
-void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {
+
+void Style::setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view, Scene& _scene, int _uniformBlock) {
 
     // Reset the currently used texture unit to 0
     rs.resetTextureUnit();
 
     // Set time uniforms style's shader programs
-    m_shaderProgram->setUniformf(rs, m_uTime, _scene.time());
+    _program.setUniformf(rs, m_uniforms[_uniformBlock].uTime, _scene.time());
 
-    m_shaderProgram->setUniformf(rs, m_uDevicePixelRatio, m_pixelScale);
+    _program.setUniformf(rs, m_uniforms[_uniformBlock].uDevicePixelRatio, m_pixelScale);
 
     if (m_material.uniforms) {
         m_material.material->setupProgram(rs, *m_material.uniforms);
@@ -207,17 +208,23 @@ void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) 
     }
 
     // Set Map Position
-    m_shaderProgram->setUniformf(rs, m_uResolution, _view.getWidth(), _view.getHeight());
+    _program.setUniformf(rs, m_uniforms[_uniformBlock].uResolution, _view.getWidth(), _view.getHeight());
 
     const auto& mapPos = _view.getPosition();
-    m_shaderProgram->setUniformf(rs, m_uMapPosition, mapPos.x, mapPos.y, _view.getZoom());
-    m_shaderProgram->setUniformMatrix3f(rs, m_uNormalMatrix, _view.getNormalMatrix());
-    m_shaderProgram->setUniformMatrix3f(rs, m_uInverseNormalMatrix, _view.getInverseNormalMatrix());
-    m_shaderProgram->setUniformf(rs, m_uMetersPerPixel, 1.0 / _view.pixelsPerMeter());
-    m_shaderProgram->setUniformMatrix4f(rs, m_uView, _view.getViewMatrix());
-    m_shaderProgram->setUniformMatrix4f(rs, m_uProj, _view.getProjectionMatrix());
+    _program.setUniformf(rs, m_uniforms[_uniformBlock].uMapPosition, mapPos.x, mapPos.y, _view.getZoom());
+    _program.setUniformMatrix3f(rs, m_uniforms[_uniformBlock].uNormalMatrix, _view.getNormalMatrix());
+    _program.setUniformMatrix3f(rs, m_uniforms[_uniformBlock].uInverseNormalMatrix, _view.getInverseNormalMatrix());
+    _program.setUniformf(rs, m_uniforms[_uniformBlock].uMetersPerPixel, 1.0 / _view.pixelsPerMeter());
+    _program.setUniformMatrix4f(rs, m_uniforms[_uniformBlock].uView, _view.getViewMatrix());
+    _program.setUniformMatrix4f(rs, m_uniforms[_uniformBlock].uProj, _view.getProjectionMatrix());
 
-    setupShaderUniforms(rs, _scene);
+    setupSceneShaderUniforms(rs, _scene, _uniformBlock);
+
+}
+
+void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {
+
+    setupShaderUniforms(rs, *m_shaderProgram, _view, _scene, Style::mainShaderUniformBlock);
 
     // Configure render state
     switch (m_blend) {
@@ -255,6 +262,40 @@ void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) 
         default:
             break;
     }
+}
+
+void Style::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) {
+
+    if (!m_selection) {
+        return;
+    }
+
+    setupShaderUniforms(rs, *m_selectionProgram, _view, _scene, Style::selectionShaderUniformBlock);
+
+    rs.blending(GL_FALSE);
+    rs.depthTest(GL_TRUE);
+    rs.depthMask(GL_TRUE);
+}
+
+void Style::drawSelectionFrame(Tangram::RenderState& rs, const Tangram::Tile &_tile) {
+    auto& styleMesh = _tile.getMesh(*this);
+
+    if (!styleMesh) { return; }
+
+    TileID tileID = _tile.getID();
+
+    m_selectionProgram->setUniformMatrix4f(rs, m_uniforms[Style::selectionShaderUniformBlock].uModel, _tile.getModelMatrix());
+    m_selectionProgram->setUniformf(rs, m_uniforms[Style::selectionShaderUniformBlock].uProxyDepth, _tile.isProxy() ? 1.f : 0.f);
+    m_selectionProgram->setUniformf(rs, m_uniforms[Style::selectionShaderUniformBlock].uTileOrigin,
+                                    _tile.getOrigin().x,
+                                    _tile.getOrigin().y,
+                                    tileID.s,
+                                    tileID.z);
+
+    if (!styleMesh->draw(rs, *m_selectionProgram, false)) {
+        LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
+    }
+
 }
 
 void Style::draw(RenderState& rs, const Tile& _tile) {
@@ -295,14 +336,14 @@ void Style::draw(RenderState& rs, const Tile& _tile) {
             }
         }
 
-        m_shaderProgram->setUniformi(rs, m_uRasters, textureIndexUniform);
-        m_shaderProgram->setUniformf(rs, m_uRasterSizes, rasterSizeUniform);
-        m_shaderProgram->setUniformf(rs, m_uRasterOffsets, rasterOffsetsUniform);
+        m_shaderProgram->setUniformi(rs, m_uniforms[Style::mainShaderUniformBlock].uRasters, textureIndexUniform);
+        m_shaderProgram->setUniformf(rs, m_uniforms[Style::mainShaderUniformBlock].uRasterSizes, rasterSizeUniform);
+        m_shaderProgram->setUniformf(rs, m_uniforms[Style::mainShaderUniformBlock].uRasterOffsets, rasterOffsetsUniform);
     }
 
-    m_shaderProgram->setUniformMatrix4f(rs, m_uModel, _tile.getModelMatrix());
-    m_shaderProgram->setUniformf(rs, m_uProxyDepth, _tile.isProxy() ? 1.f : 0.f);
-    m_shaderProgram->setUniformf(rs, m_uTileOrigin,
+    m_shaderProgram->setUniformMatrix4f(rs, m_uniforms[Style::mainShaderUniformBlock].uModel, _tile.getModelMatrix());
+    m_shaderProgram->setUniformf(rs, m_uniforms[Style::mainShaderUniformBlock].uProxyDepth, _tile.isProxy() ? 1.f : 0.f);
+    m_shaderProgram->setUniformf(rs, m_uniforms[Style::mainShaderUniformBlock].uTileOrigin,
                                  _tile.getOrigin().x,
                                  _tile.getOrigin().y,
                                  tileID.s,
