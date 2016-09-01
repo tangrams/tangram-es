@@ -194,7 +194,39 @@ bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {
         LOGE("'fns' object not set");
     }
 
+    m_functionCount = id;
+
     DUMP("setFunctions\n");
+    return ok;
+}
+
+bool StyleContext::addFunction(const std::string& _function) {
+    // Get all functions (array) in context
+    if (!duk_get_global_string(m_ctx, FUNC_ID)) {
+        LOGE("AddFunction - functions array not initialized");
+        duk_pop(m_ctx); // pop [undefined] sitting at stack top
+        return false;
+    }
+
+    int id = m_functionCount;
+    bool ok = true;
+
+    duk_push_string(m_ctx, _function.c_str());
+    duk_push_string(m_ctx, "");
+
+    if (duk_pcompile(m_ctx, DUK_COMPILE_FUNCTION) == 0) {
+        duk_put_prop_index(m_ctx, -2, id);
+    } else {
+        LOGW("Compile failed: %s\n%s\n---",
+             duk_safe_to_string(m_ctx, -1),
+             _function.c_str());
+        duk_pop(m_ctx);
+        ok = false;
+    }
+
+    // Pop the functions array off the stack
+    duk_pop(m_ctx);
+
     return ok;
 }
 

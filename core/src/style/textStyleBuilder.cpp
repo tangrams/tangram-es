@@ -6,6 +6,7 @@
 #include "labels/textLabels.h"
 
 #include "data/propertyItem.h" // Include wherever Properties is used!
+#include "marker/marker.h"
 #include "scene/drawRule.h"
 #include "tile/tile.h"
 #include "util/geom.h"
@@ -34,6 +35,23 @@ void TextStyleBuilder::setup(const Tile& _tile){
     m_tileSize *= tileScale;
 
     // add scale factor to the next zoom-level
+    m_tileSize *= 2;
+
+    m_atlasRefs.reset();
+
+    m_textLabels = std::make_unique<TextLabels>(m_style);
+}
+
+void TextStyleBuilder::setup(const Marker& marker, int zoom) {
+    float metersPerTile = 2.f * MapProjection::HALF_CIRCUMFERENCE * exp2(-zoom);
+
+    // In general, a Marker won't cover the same area as a tile, so the effective
+    // "tile size" for building a Marker is the size of a tile in pixels multiplied
+    // by the ratio of the Marker's extent to the length of a tile side at this zoom.
+    m_tileSize = 256 * (marker.extent() / metersPerTile);
+
+    // (Copied from Tile setup function above, purpose unclear)
+    m_tileSize *= m_style.pixelScale();
     m_tileSize *= 2;
 
     m_atlasRefs.reset();
