@@ -8,6 +8,7 @@
 #include "tile/tile.h"
 #include "util/mapProjection.h"
 #include "view/view.h"
+#include "util/featureSelection.h"
 
 namespace Tangram {
 

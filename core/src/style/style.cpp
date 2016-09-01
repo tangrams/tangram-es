@@ -379,7 +379,10 @@ void Style::draw(RenderState& rs, const Marker& marker) {
     if (!mesh->draw(rs, *m_shaderProgram)) {
         LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
     }
+}
 
+uint32_t StyleBuilder::createSelectionIdentifier(const Feature& _feature, const SceneLayer& _layer) {
+    return m_featureSelection->colorIdentifier(_feature, _layer);
 }
 
 bool StyleBuilder::checkRule(const DrawRule& _rule) const {
@@ -433,6 +436,7 @@ StyleBuilder::StyleBuilder(const Style& _style) {
         blocks.find("raster") != blocks.end()) {
         m_hasColorShaderBlock = true;
     }
+    m_featureSelection = _style.getFeatureSelection();
 }
 
 void StyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {

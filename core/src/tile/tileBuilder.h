@@ -10,8 +10,9 @@ namespace Tangram {
 class DataLayer;
 class DataSource;
 class Tile;
-struct TileData;
 class StyleBuilder;
+class FeatureSelection;
+struct TileData;
 
 class TileBuilder {
 
