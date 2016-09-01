@@ -388,6 +388,28 @@ void Map::render() {
     // Run render-thread tasks
     impl->renderState.jobQueue.runJobs();
 
+    // Feature selection pass
+    if (impl->featureSelection->pendingRequests()) {
+
+        impl->featureSelection->beginRenderPass(impl->renderState);
+
+        {
+            std::lock_guard<std::mutex> lock(impl->tilesMutex);
+
+            for (const auto& style : impl->scene->styles()) {
+
+                style->onBeginDrawSelectionFrame(impl->renderState, impl->view, *(impl->scene));
+
+                for (const auto& tile : impl->tileManager.getVisibleTiles()) {
+                    style->drawSelectionFrame(impl->renderState, *tile);
+                }
+            }
+        }
+
+        impl->featureSelection->endRenderPass(impl->renderState);
+
+    }
+
     // Set up openGL for new frame
     impl->renderState.depthMask(GL_TRUE);
     auto& color = impl->scene->background();

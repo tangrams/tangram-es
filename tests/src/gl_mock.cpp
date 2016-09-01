@@ -197,5 +197,30 @@ void GL::deleteVertexArrays(GLsizei n, const GLuint *arrays) {
 void GL::genVertexArrays(GLsizei n, GLuint *arrays) {
 }
 
+// Framebuffer
+void GL::bindFramebuffer(GLenum target, GLuint framebuffer) {
+}
+void GL::genFramebuffers(GLsizei n, GLuint *framebuffers) {
+}
+void GL::framebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
+                              GLuint texture, GLint level) {
+}
+void GL::renderbufferStorage(GLenum target, GLenum internalformat, GLsizei width,
+                             GLsizei height) {
+}
+void GL::framebufferRenderbuffer(GLenum target, GLenum attachment,
+                                 GLenum renderbuffertarget, GLuint renderbuffer) {
+}
+void GL::genRenderbuffers(GLsizei n, GLuint *renderbuffers) {
+}
+void GL::bindRenderbuffer(GLenum target, GLuint renderbuffer) {
+}
+void GL::deleteFramebuffers(GLsizei n, const GLuint *framebuffers) {
+}
+void GL::deleteRenderbuffers(GLsizei n, const GLuint *renderbuffers) {
+}
+GLenum GL::checkFramebufferStatus(GLenum target) {
+    return 0;
+}
 
 }
