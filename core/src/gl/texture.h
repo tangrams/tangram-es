@@ -31,18 +31,18 @@ struct TextureOptions {
 #define DEFAULT_TEXTURE_OPTION \
     {GL_ALPHA, GL_ALPHA, \
     {GL_LINEAR, GL_LINEAR}, \
-    {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}
+    {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}}
 
 class Texture {
 
 public:
 
     Texture(unsigned int _width, unsigned int _height,
-            TextureOptions _options = DEFAULT_TEXTURE_OPTION},
+            TextureOptions _options = DEFAULT_TEXTURE_OPTION,
             bool _generateMipmaps = false);
 
     Texture(const unsigned char* data, size_t dataSize,
-            TextureOptions _options = DEFAULT_TEXTURE_OPTION},
+            TextureOptions _options = DEFAULT_TEXTURE_OPTION,
             bool _generateMipmaps = false);
 
     Texture(Texture&& _other);
