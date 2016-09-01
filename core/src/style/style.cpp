@@ -16,14 +16,18 @@
 #include "tangram.h"
 
 #include "shaders/rasters_glsl.h"
+#include "shaders/selection_fs.h"
+#include "shaders/selection_glsl.h"
 
 namespace Tangram {
 
-Style::Style(std::string _name, Blending _blendMode, GLenum _drawMode) :
+Style::Style(std::string _name, Blending _blendMode, GLenum _drawMode, bool _selection) :
     m_name(_name),
     m_shaderProgram(std::make_unique<ShaderProgram>()),
+    m_selectionProgram(std::make_unique<ShaderProgram>()),
     m_blend(_blendMode),
-    m_drawMode(_drawMode) {
+    m_drawMode(_drawMode),
+    m_selection(_selection) {
     m_material.material = std::make_shared<Material>();
 }
 
@@ -75,6 +79,15 @@ void Style::build(const Scene& _scene) {
     }
 
     setupRasters(_scene.dataSources());
+
+    if (m_selection) {
+        m_selectionProgram->setDescription("selection_program {style:" + m_name + "}");
+        m_selectionProgram->setSourceStrings(SHADER_SOURCE(selection_fs),
+                                             m_shaderProgram->getVertexShaderSource());
+
+        m_selectionProgram->addSourceBlock("defines", "#define TANGRAM_FEATURE_SELECTION\n", false);
+        m_selectionProgram->addSourceBlock("setup", SHADER_SOURCE(selection_glsl), false);
+    }
 }
 
 void Style::setMaterial(const std::shared_ptr<Material>& _material) {

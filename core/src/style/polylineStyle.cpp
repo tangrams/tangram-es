@@ -59,8 +59,8 @@ struct PolylineVertex : PolylineVertexNoUVs {
     glm::u16vec2 texcoord;
 };
 
-PolylineStyle::PolylineStyle(std::string _name, Blending _blendMode, GLenum _drawMode)
-    : Style(_name, _blendMode, _drawMode)
+PolylineStyle::PolylineStyle(std::string _name, Blending _blendMode, GLenum _drawMode, bool _selection)
+    : Style(_name, _blendMode, _drawMode, _selection)
 {}
 
 void PolylineStyle::constructVertexLayout() {

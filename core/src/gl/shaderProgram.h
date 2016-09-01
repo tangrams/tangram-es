@@ -43,6 +43,9 @@ public:
     GLuint getGlFragmentShader() const { return m_glFragmentShader; };
     GLuint getGlVertexShader() const { return m_glVertexShader; };
 
+    const std::string& getFragmentShaderSource() const { return m_fragmentShaderSource; }
+    const std::string& getVertexShaderSource() const { return m_vertexShaderSource; }
+
     // Fetch the location of a shader attribute, caching the result.
     GLint getAttribLocation(const std::string& _attribName);
 

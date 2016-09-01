@@ -16,8 +16,8 @@
 namespace Tangram {
 
 TextStyle::TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
-                     bool _sdf, Blending _blendMode, GLenum _drawMode)
-    : Style(_name, _blendMode, _drawMode), m_sdf(_sdf),
+                     bool _sdf, Blending _blendMode, GLenum _drawMode, bool _selection)
+    : Style(_name, _blendMode, _drawMode, _selection), m_sdf(_sdf),
       m_context(_fontContext ? _fontContext : std::make_shared<FontContext>()) {}
 
 TextStyle::~TextStyle() {}
