@@ -352,6 +352,13 @@ bool Map::update(float _dt) {
     return viewComplete;
 }
 
+unsigned int Map::readSelectionBufferAt(float _x, float _y) {
+
+    return impl->featureSelection->readBufferAt(impl->renderState, _x, _y,
+                                                impl->view.getWidth(), impl->view.getHeight());
+
+}
+
 void Map::render() {
 
     FrameInfo::beginFrame();

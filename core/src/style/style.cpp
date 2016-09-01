@@ -17,7 +17,6 @@
 
 #include "shaders/rasters_glsl.h"
 #include "shaders/selection_fs.h"
-#include "shaders/selection_glsl.h"
 
 namespace Tangram {
 
@@ -86,7 +85,6 @@ void Style::build(const Scene& _scene) {
                                              m_shaderProgram->getVertexShaderSource());
 
         m_selectionProgram->addSourceBlock("defines", "#define TANGRAM_FEATURE_SELECTION\n", false);
-        m_selectionProgram->addSourceBlock("setup", SHADER_SOURCE(selection_glsl), false);
     }
 }
 

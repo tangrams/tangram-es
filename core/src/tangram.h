@@ -226,6 +226,9 @@ public:
     // Run this task asynchronously to Tangram's main update loop.
     void runAsyncTask(std::function<void()> _task);
 
+    // TODO: Remove-me
+    unsigned int readSelectionBufferAt(float _x, float _y);
+
 private:
 
     class Impl;

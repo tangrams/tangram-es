@@ -149,6 +149,9 @@ void cursor_pos_callback(GLFWwindow* window, double x, double y) {
 
     last_time_moved = time;
 
+    unsigned int pixel = map->readSelectionBufferAt(x, y);
+    LOGS("pixel(%1.f,%1.f):%u", x, y, pixel);
+
 }
 
 void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
