@@ -29,6 +29,9 @@ RenderState::RenderState() {
     m_clearColor = { 0., 0., 0., 0., false };
     m_texture = { 0, 0, false };
     m_textureUnit = { 0, false };
+    m_framebuffer = { 0, false };
+    m_viewport = { 0, 0, 0, 0, false };
+
 }
 
 GLuint RenderState::getTextureUnit(GLuint _unit) {
@@ -59,6 +62,8 @@ void RenderState::invalidate() {
     m_vertexBuffer.set = false;
     m_texture.set = false;
     m_textureUnit.set = false;
+    m_viewport.set = false;
+    m_framebuffer.set = false;
 
     attributeBindings.fill(0);
 
@@ -298,6 +303,12 @@ void RenderState::textureUnset(GLenum target, GLuint handle) {
     }
 }
 
+void RenderState::framebufferUnset(GLuint handle) {
+    if (m_framebuffer.handle == handle) {
+        m_framebuffer.set = false;
+    }
+}
+
 GLuint RenderState::getQuadIndexBuffer() {
     if (m_quadIndexBuffer == 0) {
         generateQuadIndexBuffer();
@@ -330,6 +341,36 @@ void RenderState::generateQuadIndexBuffer() {
     GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLushort),
                  reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW));
 
+}
+
+bool RenderState::framebuffer(GLuint handle) {
+    if (!m_framebuffer.set || m_framebuffer.handle != handle) {
+        m_framebuffer = { handle, true };
+        GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, handle));
+        return false;
+    }
+    return true;
+}
+
+bool RenderState::viewport(GLint x, GLint y, GLsizei width, GLsizei height) {
+    if (!m_viewport.set || m_viewport.x != x || m_viewport.y != y
+      || m_viewport.width != width || m_viewport.height != height) {
+        m_viewport = { x, y, width, height, true };
+        GL_CHECK(glViewport(x, y, width, height));
+        return false;
+    }
+    return true;
+}
+
+void RenderState::saveFramebufferState() {
+    m_savedFrameBufferState = m_framebuffer;
+    m_savedViewportState = m_viewport;
+}
+
+void RenderState::applySavedFramebufferState() {
+    framebuffer(m_savedFrameBufferState.handle);
+    viewport(m_savedViewportState.x, m_savedViewportState.y,
+             m_savedViewportState.width, m_savedViewportState.height);
 }
 
 } // namespace Tangram

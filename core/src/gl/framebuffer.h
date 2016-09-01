@@ -20,8 +20,15 @@ public:
     ~FrameBuffer();
 
     void applyAsRenderTarget(RenderState& _rs,
-                             unsigned int _rtWidth, unsigned int _rtHeight,
                              unsigned int _vpWidth, unsigned int _vpHeight);
+
+    bool valid() const { return m_valid; }
+
+    int getWidth() const { return m_width; }
+
+    int getHeight() const { return m_height; }
+
+    void bind(RenderState& _rs) const;
 
 private:
 
@@ -42,6 +49,10 @@ private:
     bool m_valid;
 
     bool m_colorRenderBuffer;
+
+    int m_width;
+
+    int m_height;
 
 };
 

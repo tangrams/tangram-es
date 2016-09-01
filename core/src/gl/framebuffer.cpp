@@ -10,40 +10,44 @@ FrameBuffer::FrameBuffer(bool _colorRenderBuffer) :
     m_glFrameBufferHandle(0),
     m_generation(-1),
     m_valid(false),
-    m_colorRenderBuffer(_colorRenderBuffer) {
+    m_colorRenderBuffer(_colorRenderBuffer),
+    m_width(0), m_height(0) {
 
 }
 
 void FrameBuffer::applyAsRenderTarget(RenderState& _rs,
-                                      unsigned int _rtWidth, unsigned int _rtHeight,
                                       unsigned int _vpWidth, unsigned int _vpHeight) {
 
     if (!m_glFrameBufferHandle) {
-        init(_rs, _rtWidth, _rtHeight);
+        init(_rs, _vpWidth, _vpHeight);
+
+        m_width = _vpWidth;
+        m_height = _vpHeight;
     }
 
     if (!m_valid) {
         return;
     }
 
+    _rs.framebuffer(m_glFrameBufferHandle);
     _rs.depthMask(GL_TRUE);
+    _rs.viewport(0, 0, _vpWidth, _vpHeight);
 
-    // TOOD: get viewport size from render state, re-enable when unbinding
-    GL_CHECK(glViewport(0, 0, _vpWidth, _vpHeight));
     GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+}
 
-    // TODO: use render state
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, m_glFrameBufferHandle));
+void FrameBuffer::bind(RenderState& _rs) const {
+
+    if (m_valid) {
+        _rs.framebuffer(m_glFrameBufferHandle);
+    }
 }
 
 void FrameBuffer::init(RenderState& _rs, unsigned int _rtWidth, unsigned int _rtHeight) {
 
-    // get previous bound fbo
-
     GL_CHECK(glGenFramebuffers(1, &m_glFrameBufferHandle));
 
-    // TOOD: use render state for binding
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, m_glFrameBufferHandle));
+    _rs.framebuffer(m_glFrameBufferHandle);
 
     // Setup color render target
     if (m_colorRenderBuffer) {
@@ -100,8 +104,7 @@ FrameBuffer::~FrameBuffer() {
 
     m_disposer([=](RenderState& rs) {
         if (rs.isValidGeneration(generation)) {
-            // TODO: unset render state for framebuffer binding
-            // rs.framebufferUnset(glHandle);
+            rs.framebufferUnset(glHandle);
 
             GL_CHECK(glDeleteFramebuffers(1, &glHandle));
         }

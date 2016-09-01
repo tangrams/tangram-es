@@ -85,6 +85,10 @@ public:
 
     bool indexBuffer(GLuint handle);
 
+    bool framebuffer(GLuint handle);
+
+    bool viewport(GLint x, GLint y, GLsizei width, GLsizei height);
+
     void vertexBufferUnset(GLuint handle);
 
     void indexBufferUnset(GLuint handle);
@@ -92,6 +96,12 @@ public:
     void shaderProgramUnset(GLuint program);
 
     void textureUnset(GLenum target, GLuint handle);
+
+    void framebufferUnset(GLuint handle);
+
+    void saveFramebufferState();
+
+    void applySavedFramebufferState();
 
     GLuint getQuadIndexBuffer();
 
@@ -170,6 +180,22 @@ private:
         GLuint unit;
         bool set;
     } m_textureUnit;
+
+    struct FrameBufferState {
+        GLuint handle;
+        bool set;
+    } m_framebuffer;
+
+    struct ViewportState {
+        GLint x;
+        GLint y;
+        GLsizei width;
+        GLsizei height;
+        bool set;
+    } m_viewport;
+
+    FrameBufferState m_savedFrameBufferState;
+    ViewportState m_savedViewportState;
 
 };
 
