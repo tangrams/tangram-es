@@ -75,6 +75,7 @@ struct DrawRule {
     const std::string* name = nullptr;
     int id;
     bool isOutlineOnly = false;
+    uint32_t selectionColor = 0;
 
     DrawRule(const DrawRuleData& _ruleData, const std::string& _layerName, size_t _layerDepth);
 
