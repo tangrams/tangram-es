@@ -120,12 +120,20 @@ struct StyleParam {
 
         Width() = default;
         Width(float _value) :
-            ValueUnitPair(_value, Unit::meter) {}
+            ValueUnitPair(_value, Unit::meter),
+            slope(_value) {}
+
         Width(float _value, Unit _unit)
-            : ValueUnitPair(_value, _unit) {}
+            : ValueUnitPair(_value, _unit),
+              slope(_value) {}
+
+        Width(float _value, float _slope)
+            : ValueUnitPair(_value, Unit::pixel),
+              slope(_slope) {}
 
         Width(ValueUnitPair& _other) :
-            ValueUnitPair(_other) {}
+            ValueUnitPair(_other),
+            slope(_other.value) {}
 
         bool operator==(const Width& _other) const {
             return value == _other.value && unit == _other.unit;
@@ -133,6 +141,8 @@ struct StyleParam {
         bool operator!=(const Width& _other) const {
             return value != _other.value || unit != _other.unit;
         }
+
+        float slope;
     };
 
     struct Function {

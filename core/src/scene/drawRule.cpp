@@ -181,6 +181,27 @@ bool DrawRuleMergeSet::evaluateRuleForContext(DrawRule& rule, StyleContext& ctx)
                 // Set 'param' pointer to evaluated StyleParam
                 param = &m_evaluated[i];
             }
+            else if (param->value.is<Stops>()) {
+                auto& stops = param->value.get<Stops>();
+                float zoom = ctx.getKeywordZoom();
+
+                m_evaluated[i].key = param->key;
+                param = &m_evaluated[i];
+
+                if (StyleParam::isColor(param->key)) {
+                    m_evaluated[i].value = stops.evalColor(zoom);
+                } else if (StyleParam::isWidth(param->key)) {
+                    m_evaluated[i].value = StyleParam::Width {
+                        stops.evalWidth(zoom),
+                        stops.evalWidth(zoom + 1)
+                    };
+                } else if (StyleParam::isOffsets(param->key)) {
+                    m_evaluated[i].value = stops.evalVec2(zoom);
+                } else {
+                    m_evaluated[i].value = stops.evalFloat(zoom);
+                }
+            }
+
         }
 
         return valid;

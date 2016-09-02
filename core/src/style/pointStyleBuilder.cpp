@@ -6,7 +6,6 @@
 #include "marker/marker.h"
 #include "scene/drawRule.h"
 #include "scene/spriteAtlas.h"
-#include "scene/stops.h"
 #include "tangram.h"
 #include "tile/tile.h"
 #include "util/geom.h"
@@ -138,11 +137,14 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     _rule.get(StyleParamKey::angle, p.labelOptions.angle);
 
     const auto& sizeParam = _rule.findParameter(StyleParamKey::size);
-    if (sizeParam && sizeParam.value.is<Stops>() && sizeParam.value.is<float>()) {
-        float lowerSize = sizeParam.value.get<float>();
-        float higherSize = sizeParam.value.get<Stops>().evalWidth(m_zoom + 1);
+    if (sizeParam.value.is<StyleParam::Width>()) {
+        auto w = sizeParam.value.get<StyleParam::Width>();
+        float lowerSize = w.value;
+        float higherSize = w.slope;
+
         p.extrudeScale = (higherSize - lowerSize) * 0.5f - 1.f;
         p.size = glm::vec2(lowerSize);
+
     } else if (_rule.get(StyleParamKey::size, size)) {
         if (size.x == 0.f || std::isnan(size.y)) {
             p.size = glm::vec2(size.x);

@@ -318,8 +318,8 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
             p.stroke.cap = static_cast<CapTypes>(cap);
             p.stroke.join = static_cast<JoinTypes>(join);
 
-            if (!_rule.get(StyleParamKey::outline_color, p.stroke.color)) { return p; }
-            if (!evalWidth(strokeWidth, stroke.width, stroke.slope)) {
+            if (!_rule.get(StyleParamKey::outline_color, p.stroke.color) ||
+                !evalWidth(strokeWidth, stroke.width, stroke.slope)) {
                 return p;
             }
 
@@ -353,31 +353,21 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
 template <class V>
 bool PolylineStyleBuilder<V>::evalWidth(const StyleParam& _styleParam, float& width, float& slope) {
 
-    // NB: 0.5 because 'width' will be extruded in both directions
-    float pixelWidthScale = .5f * m_tileUnitsPerPixel;
-    float meterWidthScale = .5f * m_tileUnitsPerMeter * m_overzoom2;
-
-    if (_styleParam.value.is<Stops>()) {
-
-        width = _styleParam.value.get<Stops>().evalWidth(m_zoom);
-        width *= pixelWidthScale;
-
-        slope = _styleParam.value.get<Stops>().evalWidth(m_zoom + 1);
-        slope *= pixelWidthScale;
-        return true;
-    }
-
     if (_styleParam.value.is<StyleParam::Width>()) {
-        auto& widthParam = _styleParam.value.get<StyleParam::Width>();
 
-        width = widthParam.value;
+        auto& p = _styleParam.value.get<StyleParam::Width>();
 
-        if (widthParam.isMeter()) {
-            width *= meterWidthScale;
-            slope = width * 2;
+        if (p.isMeter()) {
+            float meterWidthScale = .5f * m_tileUnitsPerMeter * m_overzoom2;
+
+            width = p.value * meterWidthScale;
+            slope = p.slope * meterWidthScale * 2;
         } else {
-            width *= pixelWidthScale;
-            slope = width;
+            // NB: 0.5 because 'width' will be extruded in both directions
+            float pixelWidthScale = .5f * m_tileUnitsPerPixel;
+
+            width = p.value * pixelWidthScale;
+            slope = p.slope * pixelWidthScale;
         }
         return true;
     }
