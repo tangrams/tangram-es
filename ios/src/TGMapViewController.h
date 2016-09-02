@@ -56,7 +56,7 @@ struct TileID;
 @property (assign, nonatomic) TangramGeoPoint position;
 @property (assign, nonatomic) float zoom;
 @property (assign, nonatomic) float rotation;
-@property (assign, nonatomic) float cameraTilt;
+@property (assign, nonatomic) float tilt;
 
 - (void)renderOnce;
 

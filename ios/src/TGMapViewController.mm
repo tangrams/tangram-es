@@ -114,16 +114,16 @@
     return 0.0;
 }
 
-- (float)cameraTilt {
+- (float)tilt {
     if (self.map) {
         return self.map->getTilt();
     }
     return 0.0;
 }
 
-- (void)setCameraTilt:(float)cameraTilt {
+- (void)setTilt:(float)tilt {
     if (self.map) {
-        self.map->setTilt(cameraTilt);
+        self.map->setTilt(tilt);
     }
 }
 
