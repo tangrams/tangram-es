@@ -66,14 +66,6 @@ void DrawRule::merge(const DrawRuleData& _ruleData, const SceneLayer& _layer) {
     }
 }
 
-bool DrawRule::isJSFunction(StyleParamKey _key) const {
-    const auto& param = findParameter(_key);
-    if (!param) {
-        return false;
-    }
-    return param.value.is<StyleParam::Function>();
-}
-
 bool DrawRule::contains(StyleParamKey _key) const {
     return bool(findParameter(_key));
 }

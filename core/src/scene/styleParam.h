@@ -150,8 +150,19 @@ struct StyleParam {
         Function(){};
     };
 
-    using Value = variant<Undefined, none_type, bool, float, uint32_t, std::string, glm::vec2, Width,
-                          LabelProperty::Placement, LabelProperty::Anchors, Function, Stops>;
+    struct TextSource {
+        std::vector<std::string> keys;
+        bool operator==(const TextSource& _other) const {
+            if (keys.size() != _other.keys.size()) { return false; }
+            for (size_t i = 0; i < keys.size(); i++) {
+                if (!(keys[i] == _other.keys[i])) { return false;}
+            }
+            return true;
+        }
+    };
+
+    using Value = variant<none_type, Undefined, bool, float, uint32_t, std::string, glm::vec2, Width,
+                          LabelProperty::Placement, LabelProperty::Anchors, Function, Stops, TextSource>;
 
     StyleParam() :
         key(StyleParamKey::none),
