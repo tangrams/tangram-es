@@ -60,20 +60,20 @@ struct TileID;
 
 - (void)renderOnce;
 
-- (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)duration;
+- (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)seconds;
 
-- (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)duration withEaseType:(TangramEaseType)easeType;
+- (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)seconds withEaseType:(TangramEaseType)easeType;
 
-- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration;
+- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)seconds;
 
-- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration withEaseType:(TangramEaseType)easeType;
+- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)seconds withEaseType:(TangramEaseType)easeType;
 
-- (void)animateRotation:(float)rotation withDuration:(float)duration;
+- (void)animateToRotation:(float)radians withDuration:(float)seconds;
 
-- (void)animateRotation:(float)rotation withDuration:(float)duration withEaseType:(TangramEaseType)easeType;
+- (void)animateToRotation:(float)radians withDuration:(float)seconds withEaseType:(TangramEaseType)easeType;
 
-- (void)animateCameraTilt:(float)radians withDuration:(float)duration;
+- (void)animateToTilt:(float)radians withDuration:(float)seconds;
 
-- (void)animateCameraTilt:(float)radians withDuration:(float)duration withEaseType:(TangramEaseType)easeType;
+- (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TangramEaseType)easeType;
 
 @end

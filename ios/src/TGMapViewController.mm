@@ -90,20 +90,20 @@
     return 0.0;
 }
 
-- (void)animateRotation:(float)rotation withDuration:(float)duration {
-    [self animateRotation:rotation withDuration:duration withEaseType:TangramEaseTypeCubic];
+- (void)animateToRotation:(float)radians withDuration:(float)seconds {
+    [self animateToRotation:radians withDuration:seconds withEaseType:TangramEaseTypeCubic];
 }
 
-- (void)animateRotation:(float)rotation withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
+- (void)animateToRotation:(float)radians withDuration:(float)seconds withEaseType:(TangramEaseType)easeType {
     if (self.map) {
         Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
-        self.map->setRotationEased(rotation, duration, ease);
+        self.map->setRotationEased(radians, seconds, ease);
     }
 }
 
-- (void)setRotation:(float)rotation {
+- (void)setRotation:(float)radians {
     if (self.map) {
-        self.map->setRotation(rotation);
+        self.map->setRotation(radians);
     }
 }
 
@@ -121,20 +121,20 @@
     return 0.0;
 }
 
-- (void)setTilt:(float)tilt {
+- (void)setTilt:(float)radians {
     if (self.map) {
-        self.map->setTilt(tilt);
+        self.map->setTilt(radians);
     }
 }
 
-- (void)animateCameraTilt:(float)radians withDuration:(float)duration {
-  [self animateCameraTilt:radians withDuration:duration withEaseType:TangramEaseTypeCubic];
+- (void)animateToTilt:(float)radians withDuration:(float)seconds {
+  [self animateToTilt:radians withDuration:seconds withEaseType:TangramEaseTypeCubic];
 }
 
-- (void)animateCameraTilt:(float)radians withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
+- (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TangramEaseType)easeType {
   if (self.map) {
     Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
-    self.map->setTiltEased(radians, duration, ease);
+    self.map->setTiltEased(radians, seconds, ease);
   }
 }
 
