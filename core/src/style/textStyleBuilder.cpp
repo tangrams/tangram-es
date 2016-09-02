@@ -464,14 +464,21 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     TextStyle::Parameters p;
 
-    _rule.get(StyleParamKey::text_source, p.text);
-    if (!_rule.isJSFunction(StyleParamKey::text_source)) {
-        if (p.text.empty()) {
-            p.text = _props.getString(key_name);
-        } else {
-            p.text = resolveTextSource(p.text, _props);
+    auto& textSource = _rule.findParameter(StyleParamKey::text_source);
+
+    if (textSource.value.is<StyleParam::TextSource>()) {
+        for (auto& key : textSource.value.get<StyleParam::TextSource>().keys) {
+            p.text = _props.getString(key);
+            if (!p.text.empty()) { break; }
         }
+    } else if (textSource.value.is<std::string>()) {
+        // From function evaluation
+        p.text = textSource.value.get<std::string>();
+    } else {
+        // Use default key
+        p.text = _props.getString(key_name);
     }
+
     if (p.text.empty()) { return p; }
 
     auto fontFamily = _rule.get<std::string>(StyleParamKey::text_font_family);
@@ -498,7 +505,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
     _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
 
-    uint32_t priority;
+    uint32_t priority = 0;
     size_t repeatGroupHash = 0;
     std::string repeatGroup;
     StyleParam::Width repeatDistance;
@@ -637,32 +644,6 @@ void applyTextTransform(const TextStyle::Parameters& _params,
     default:
         break;
     }
-}
-
-std::string TextStyleBuilder::resolveTextSource(const std::string& textSource,
-                                                const Properties& props) const {
-
-    std::string tmp, item;
-
-    // Meaning we have a yaml sequence defining fallbacks
-    if (textSource.find(',') != std::string::npos) {
-        std::stringstream ss(textSource);
-
-        // Parse fallbacks
-        while (std::getline(ss, tmp, ',')) {
-            if (props.getAsString(tmp, item)) {
-                return item;
-            }
-        }
-    }
-
-    // Fallback to default text source
-    if (props.getAsString(textSource, item)) {
-        return item;
-    }
-
-    // Default to 'name'
-    return props.getString(key_name);
 }
 
 bool isComplexShapingScript(const icu::UnicodeString& _text) {
