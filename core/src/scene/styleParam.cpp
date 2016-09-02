@@ -329,7 +329,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
 std::string StyleParam::toString() const {
 
     std::string k(keyName(key));
-    k += " : ";
+    k += ", value type:" + std::to_string(value.which()) + " / ";
 
     // TODO: cap, join and color toString()
     if (value.is<none_type>()) {
@@ -421,7 +421,7 @@ std::string StyleParam::toString() const {
 
     }
 
-    return k + "undefined " + std::to_string(static_cast<uint8_t>(key));
+    return k + "undefined";
 
 }
 
