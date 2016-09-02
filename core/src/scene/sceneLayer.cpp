@@ -10,7 +10,7 @@ SceneLayer::SceneLayer(std::string _name, Filter _filter,
                        bool _visible) :
     m_filter(std::move(_filter)),
     m_name(_name),
-    m_rules(_rules),
+    m_rules(std::move(_rules)),
     m_sublayers(std::move(_sublayers)),
     m_visible(_visible) {
 

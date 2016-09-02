@@ -13,46 +13,49 @@ using namespace Tangram;
 const int dg1 = 0;
 const int dg2 = 1;
 
-DrawRuleData instance_a() {
+std::vector<DrawRuleData> instance_a() {
 
-    std::vector<StyleParam> params = {
-        { StyleParamKey::order, "value_0a" },
-        { StyleParamKey::join, "value_4a" },
-        { StyleParamKey::color, "value_1a" }
-    };
+    std::vector<StyleParam> params;
+    params.emplace_back(StyleParamKey::order, std::string{"value_0a"});
+    params.emplace_back(StyleParamKey::join, std::string{"value_4a"});
+    params.emplace_back(StyleParamKey::color, std::string{"value_1a"});
 
-    return { "dg1", dg1, std::move(params) };
-
+    std::vector<DrawRuleData> rules;
+    rules.emplace_back("dg1", dg1, std::move(params));
+    return rules;
 }
 
-DrawRuleData instance_b() {
+std::vector<DrawRuleData> instance_b() {
 
-    std::vector<StyleParam> params = {
-        { StyleParamKey::order, "value_0b" },
-        { StyleParamKey::width, "value_2b" },
-        { StyleParamKey::color, "value_1b" },
-        { StyleParamKey::cap, "value_3b" },
-        { StyleParamKey::style, "value_4b" }
-    };
+    std::vector<StyleParam> params;
+    params.emplace_back(StyleParamKey::order, std::string{"value_0b"});
+    params.emplace_back(StyleParamKey::width, std::string{"value_2b"});
+    params.emplace_back(StyleParamKey::color, std::string{"value_1b"});
+    params.emplace_back(StyleParamKey::cap, std::string{"value_3b"});
+    params.emplace_back(StyleParamKey::style, std::string{"value_4b"});
 
-    return { "dg1", dg1, std::move(params) };
-
+    std::vector<DrawRuleData> rules;
+    rules.emplace_back("dg1", dg1, std::move(params));
+    return rules;
 }
 
-DrawRuleData instance_c() {
+std::vector<DrawRuleData> instance_c() {
 
     std::vector<StyleParam> params = {};
 
     // changed from dg2 - styles will not be merged otherwise
-    return { "dg1", dg1, params };
 
+    std::vector<DrawRuleData> rules;
+    rules.emplace_back("dg1", dg1, std::move(params));
+    return rules;
 }
 
 TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
 
-    const SceneLayer layer_a = { "a", Filter(), { instance_a() }, {} };
-    const SceneLayer layer_b = { "b", Filter(), { instance_b() }, {} };
-    const SceneLayer layer_c = { "c", Filter(), { instance_c() }, {} };
+
+    const SceneLayer layer_a = { "a", Filter(), instance_a(), {} };
+    const SceneLayer layer_b = { "b", Filter(), instance_b(), {} };
+    const SceneLayer layer_c = { "c", Filter(), instance_c(), {} };
 
     // For parameters contained in multiple rules, the parameter from the last rule
     // (by lexicographical order) should result.
@@ -163,8 +166,8 @@ TEST_CASE("DrawRule locates and outputs a parameter that it contains", "[DrawRul
 
     std::string str;
 
-    const SceneLayer layer_a = { "a", Filter(), { instance_a() }, {} };
-    const SceneLayer layer_b = { "b", Filter(), { instance_b() }, {} };
+    const SceneLayer layer_a = { "a", Filter(), instance_a(), {} };
+    const SceneLayer layer_b = { "b", Filter(), instance_b(), {} };
 
     DrawRuleMergeSet a;
     a.mergeRules(layer_a);
@@ -187,18 +190,18 @@ TEST_CASE("DrawRule locates and outputs a parameter that it contains", "[DrawRul
 TEST_CASE("DrawRule correctly reports that it doesn't contain a parameter", "[DrawRule]") {
     std::string str;
 
-    const SceneLayer layer_a = { "a", Filter(), { instance_a() }, {} };
+    const SceneLayer layer_a = { "a", Filter(), instance_a(), {} };
     DrawRuleMergeSet a;
     a.mergeRules(layer_a);
     REQUIRE(!a.matchedRules()[0].get(StyleParamKey::width, str)); REQUIRE(str == "");
 
 
-    const SceneLayer layer_b = { "b", Filter(), { instance_b() }, {} };
+    const SceneLayer layer_b = { "b", Filter(), instance_b(), {} };
     DrawRuleMergeSet b;
     b.mergeRules(layer_b);
     REQUIRE(!b.matchedRules()[0].get(StyleParamKey::join, str)); REQUIRE(str == "");
 
-    const SceneLayer layer_c = { "c", Filter(), { instance_c() }, {} };
+    const SceneLayer layer_c = { "c", Filter(), instance_c(), {} };
     DrawRuleMergeSet c;
     c.mergeRules(layer_c);
     REQUIRE(!c.matchedRules()[0].get(StyleParamKey::order, str)); REQUIRE(str == "");

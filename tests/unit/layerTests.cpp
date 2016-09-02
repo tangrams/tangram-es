@@ -20,72 +20,111 @@ SceneLayer instance_a() {
 
     Filter f = Filter(); // passes everything
 
-    DrawRuleData rule = { "dg0", dg0, { { StyleParamKey::order, "value_a" } } };
+    std::vector<StyleParam> params;
+    params.emplace_back(StyleParamKey::order, std::string{"value_a"});
 
-    return { "layer_a", f, { rule }, {} };
+    std::vector<DrawRuleData> rules;
+    rules.emplace_back("dg0", dg0, std::move(params));
+
+    return { "layer_a", f, std::move(rules), {} };
 }
 
 SceneLayer instance_b() {
 
     Filter f = Filter::MatchAny({}); // passes nothing
 
-    DrawRuleData rule = { "dg1", dg1, { { StyleParamKey::order, "value_b" } } };
+    std::vector<StyleParam> params;
+    params.emplace_back(StyleParamKey::order, std::string{"value_b"});
 
-    return { "layer_b", f, { rule }, {} };
+    std::vector<DrawRuleData> rules;
+    rules.emplace_back("dg1", dg1, std::move(params));
+
+    return { "layer_b", f, std::move(rules), {} };
 }
 
 SceneLayer instance_c() {
 
     Filter f = Filter(); // passes everything
+    std::vector<StyleParam> params;
+    params.emplace_back(StyleParamKey::order, std::string{"value_c"});
 
-    DrawRuleData rule = { "dg2", dg2, { { StyleParamKey::order, "value_c" } } };
+    std::vector<DrawRuleData> rules;
+    rules.emplace_back("dg2", dg2, std::move(params));
 
-    return { "layer_c", f, { rule }, { instance_a(), instance_b() } };
+    std::vector<SceneLayer> sublayers;
+    sublayers.emplace_back(instance_a());
+    sublayers.emplace_back(instance_b());
+
+    return { "layer_c", f, std::move(rules), std::move(sublayers) };
 }
 
 SceneLayer instance_d() {
 
     Filter f = Filter(); // passes everything
 
-    DrawRuleData rule = { "dg0", dg0, { { StyleParamKey::order, "value_d" } } };
+    std::vector<StyleParam> params;
+    params.emplace_back(StyleParamKey::order, std::string{"value_d"});
 
-    return { "layer_d", f, { rule }, {} };
+    std::vector<DrawRuleData> rules;
+    rules.emplace_back("dg0", dg0, std::move(params));
+
+    return { "layer_d", f, std::move(rules), {} };
 }
 
 SceneLayer instance_e() {
 
     Filter f = Filter(); // passes everything
 
-    DrawRuleData rule = { "dg2", dg2, { { StyleParamKey::order, "value_e" } } };
+    std::vector<StyleParam> params;
+    params.emplace_back(StyleParamKey::order, std::string{"value_e"});
 
-    return { "layer_e", f, { rule }, { instance_c(), instance_d() } };
+    std::vector<DrawRuleData> rules;
+    rules.emplace_back("dg2", dg2, std::move(params));
+
+    std::vector<SceneLayer> sublayers;
+    sublayers.emplace_back(instance_c());
+    sublayers.emplace_back(instance_d());
+
+    return { "layer_e", f, std::move(rules), std::move(sublayers) };
 }
 
 SceneLayer instance_2() {
 
     Filter f = Filter::MatchExistence("two", true);
 
-    DrawRuleData rule = { "group2", group2, {} };
+    std::vector<StyleParam> params;
+    std::vector<DrawRuleData> rules;
+    rules.emplace_back("group2", group2, std::move(params));
 
-    return { "subLayer2", f, { rule }, {} };
+    return { "subLayer2", f, std::move(rules), {} };
 }
 
 SceneLayer instance_1() {
 
     Filter f = Filter::MatchExistence("one", true);
 
-    DrawRuleData rule = { "group1", group1, {} };
+    std::vector<StyleParam> params;
+    std::vector<DrawRuleData> rules;
+    rules.emplace_back("group1", group1, std::move(params));
 
-    return { "subLayer1", f, { rule }, {} };
+    return { "subLayer1", f, std::move(rules), {} };
 }
 
 SceneLayer instance() {
 
     Filter f = Filter::MatchExistence("base", true);
 
-    DrawRuleData rule = { "group1", group1, { {StyleParamKey::order, "a" } } };
+    std::vector<StyleParam> params;
+    params.emplace_back(StyleParamKey::order, std::string{"a"});
 
-    return { "layer", f, { rule }, { instance_1(), instance_2() } };
+    std::vector<DrawRuleData> rules;
+    rules.emplace_back("group1", group1, std::move(params));
+
+    std::vector<SceneLayer> sublayers;
+    sublayers.emplace_back(instance_1());
+    sublayers.emplace_back(instance_2());
+
+    return { "layer", f, std::move(rules), std::move(sublayers) };
 }
 
 TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {

@@ -67,15 +67,15 @@ void DrawRule::merge(const DrawRuleData& _ruleData, const SceneLayer& _layer) {
 }
 
 bool DrawRule::isJSFunction(StyleParamKey _key) const {
-    auto& param = findParameter(_key);
+    const auto& param = findParameter(_key);
     if (!param) {
         return false;
     }
-    return param.function >= 0;
+    return param.value.is<StyleParam::Function>();
 }
 
 bool DrawRule::contains(StyleParamKey _key) const {
-    return findParameter(_key) != false;
+    return bool(findParameter(_key));
 }
 
 const StyleParam& DrawRule::findParameter(StyleParamKey _key) const {
@@ -172,14 +172,13 @@ bool DrawRuleMergeSet::evaluateRuleForContext(DrawRule& rule, StyleContext& ctx)
 
             auto*& param = rule.params[i].param;
 
-            // Evaluate JS functions and Stops
-            if (param->function >= 0) {
+            if (param->value.is<StyleParam::Function>()) {
 
-                // Copy param into 'evaluated' and point param to the evaluated StyleParam.
-                m_evaluated[i] = *param;
-                param = &m_evaluated[i];
+                m_evaluated[i].key = param->key;
 
-                if (!ctx.evalStyle(param->function, param->key, m_evaluated[i].value)) {
+                if (!ctx.evalStyle(param->value.get<StyleParam::Function>().id,
+                                   param->key, m_evaluated[i].value)) {
+
                     if (StyleParam::isRequired(param->key)) {
                         valid = false;
                         break;
@@ -187,11 +186,8 @@ bool DrawRuleMergeSet::evaluateRuleForContext(DrawRule& rule, StyleContext& ctx)
                         rule.active[i] = false;
                     }
                 }
-            } else if (param->stops) {
-                m_evaluated[i] = *param;
+                // Set 'param' pointer to evaluated StyleParam
                 param = &m_evaluated[i];
-
-                Stops::eval(*param->stops, param->key, ctx.getKeywordZoom(), m_evaluated[i].value);
             }
         }
 

@@ -27,6 +27,10 @@ public:
                std::vector<SceneLayer> _sublayers,
                bool _visible = true);
 
+    SceneLayer(const SceneLayer&) = delete;
+    SceneLayer(SceneLayer&&) = default;
+    SceneLayer& operator=(const SceneLayer) = delete;
+
     const auto& name() const { return m_name; }
     const auto& filter() const { return m_filter; }
     const auto& rules() const { return m_rules; }
@@ -38,4 +42,3 @@ public:
 };
 
 }
-

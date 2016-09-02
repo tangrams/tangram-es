@@ -179,11 +179,9 @@ auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) ->
     return stops;
 }
 
-auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, const std::vector<Unit>& _units) -> Stops {
+auto Stops::Widths(const YAML::Node& _node, double _tileSize, const std::vector<Unit>& _units) -> Stops {
     Stops stops;
     if (!_node.IsSequence()) { return stops; }
-
-    double tileSize = _projection.TileSize();
 
     bool lastIsMeter = false;
     float lastKey = 0;
@@ -217,7 +215,7 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, co
             }
 
             if (width.unit == Unit::meter) {
-                float w = widthMeterToPixel(key, tileSize, width.value);
+                float w = widthMeterToPixel(key, _tileSize, width.value);
                 stops.frames.emplace_back(key, w);
 
                 lastIsMeter = true;
@@ -234,7 +232,7 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, co
     // Append stop at max-zoom to continue scaling after the last stop
     // TODO: define MAX_ZOOM == 24
     if (lastIsMeter && lastKey < 24) {
-        float w = widthMeterToPixel(24, tileSize, lastMeter);
+        float w = widthMeterToPixel(24, _tileSize, lastMeter);
         stops.frames.emplace_back(24, w);
     }
 
@@ -376,15 +374,15 @@ auto Stops::evalVec2(float _key) const -> glm::vec2 {
 
 }
 
-auto Stops::evalSize(float _key) const -> StyleParam::Value {
-    if (frames.empty()) { return 0.f; }
+auto Stops::evalSize(float _key) const -> glm::vec2 {
+    if (frames.empty()) { return glm::vec2(0.f); }
 
     if (frames[0].value.is<float>()) {
-        return evalExpFloat(_key);
+        return glm::vec2(evalExpFloat(_key));
     } else if (frames[0].value.is<glm::vec2>()) {
         return evalExpVec2(_key);
     }
-    return 0.f;
+    return glm::vec2(0.f);
 }
 
 auto Stops::nearestHigherFrame(float _key) const -> std::vector<Frame>::const_iterator {
@@ -393,18 +391,18 @@ auto Stops::nearestHigherFrame(float _key) const -> std::vector<Frame>::const_it
                             [](const Frame& f, float z) { return f.key < z; });
 }
 
-void Stops::eval(const Stops& _stops, StyleParamKey _key, float _zoom, StyleParam::Value& _result) {
-    if (StyleParam::isColor(_key)) {
-        _result = _stops.evalColor(_zoom);
-    } else if (StyleParam::isWidth(_key)) {
-        _result = _stops.evalExpFloat(_zoom);
-    } else if (StyleParam::isOffsets(_key)) {
-        _result = _stops.evalVec2(_zoom);
-    } else if (StyleParam::isSize(_key)) {
-        _result = _stops.evalSize(_zoom);
-    } else {
-        _result = _stops.evalFloat(_zoom);
-    }
-}
+// void Stops::eval(const Stops& _stops, StyleParamKey _key, float _zoom, StyleParam::Value& _result) {
+//     if (StyleParam::isColor(_key)) {
+//         _result = _stops.evalColor(_zoom);
+//     } else if (StyleParam::isWidth(_key)) {
+//         _result = _stops.evalExpFloat(_zoom);
+//     } else if (StyleParam::isOffsets(_key)) {
+//         _result = _stops.evalVec2(_zoom);
+//     } else if (StyleParam::isSize(_key)) {
+//         _result = _stops.evalSize(_zoom);
+//     } else {
+//         _result = _stops.evalFloat(_zoom);
+//     }
+// }
 
 }

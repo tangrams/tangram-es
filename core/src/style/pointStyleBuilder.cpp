@@ -132,18 +132,18 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     _rule.get(StyleParamKey::sprite_default, p.spriteDefault);
     _rule.get(StyleParamKey::placement, p.placement);
     StyleParam::Width placementSpacing;
-    auto placementSpacingParam = _rule.findParameter(StyleParamKey::placement_spacing);
-    if (placementSpacingParam.stops) {
-        p.placementSpacing = placementSpacingParam.stops->evalFloat(m_styleZoom);
-    } else if (_rule.get(StyleParamKey::placement_spacing, placementSpacing)) {
-        p.placementSpacing = placementSpacing.value;
-    }
-    auto placementMinLengthParam = _rule.findParameter(StyleParamKey::placement_min_length_ratio);
-    if (placementMinLengthParam.stops) {
-        p.placementMinLengthRatio = placementMinLengthParam.stops->evalFloat(m_styleZoom);
-    } else {
-        _rule.get(StyleParamKey::placement_min_length_ratio, p.placementMinLengthRatio);
-    }
+    // auto& placementSpacingParam = _rule.findParameter(StyleParamKey::placement_spacing);
+    // if (placementSpacingParam.stops) {
+    //     p.placementSpacing = placementSpacingParam.stops->evalFloat(m_styleZoom);
+    // } else if (_rule.get(StyleParamKey::placement_spacing, placementSpacing)) {
+    //     p.placementSpacing = placementSpacing.value;
+    // }
+    // auto& placementMinLengthParam = _rule.findParameter(StyleParamKey::placement_min_length_ratio);
+    // if (placementMinLengthParam.stops) {
+    //     p.placementMinLengthRatio = placementMinLengthParam.stops->evalFloat(m_styleZoom);
+    // } else {
+    //     _rule.get(StyleParamKey::placement_min_length_ratio, p.placementMinLengthRatio);
+    // }
     _rule.get(StyleParamKey::tile_edges, p.keepTileEdges);
     _rule.get(StyleParamKey::interactive, p.interactive);
     _rule.get(StyleParamKey::collide, p.labelOptions.collide);
@@ -178,23 +178,32 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
         p.autoAngle = true;
     }
 
-    auto sizeParam = _rule.findParameter(StyleParamKey::size);
-    if (sizeParam.stops) {
-        if (sizeParam.value.is<float>()) {
-            // Assume size here is 1D (TODO: 2D, in another PR)
-            // size to build this label from
-            float lowerSize = sizeParam.stops->evalSize(m_styleZoom).get<float>();
-            // size for next style zoom for interpolation
-            float higherSize = sizeParam.stops->evalSize(m_styleZoom + 1).get<float>();
-            p.extrudeScale = (higherSize - lowerSize);
-            p.size = glm::vec2(lowerSize);
-        } else if (sizeParam.value.is<glm::vec2>()) {
-            p.size = sizeParam.stops->evalExpVec2(m_styleZoom);
-            // NB: this assumes that the width/height ratio is
-            // constant for all stops
-            glm::vec2 higherSize = sizeParam.stops->evalExpVec2(m_styleZoom + 1);
-            p.extrudeScale = (higherSize.x - p.size.x);
-        }
+// <<<<<<< HEAD
+    //auto& sizeParam = _rule.findParameter(StyleParamKey::size);
+    // if (sizeParam.stops) {
+    //     if (sizeParam.value.is<float>()) {
+    //         // Assume size here is 1D (TODO: 2D, in another PR)
+    //         // size to build this label from
+    //         float lowerSize = sizeParam.stops->evalSize(m_styleZoom).get<float>();
+    //         // size for next style zoom for interpolation
+    //         float higherSize = sizeParam.stops->evalSize(m_styleZoom + 1).get<float>();
+    //         p.extrudeScale = (higherSize - lowerSize);
+    //         p.size = glm::vec2(lowerSize);
+    //     } else if (sizeParam.value.is<glm::vec2>()) {
+    //         p.size = sizeParam.stops->evalExpVec2(m_styleZoom);
+    //         // NB: this assumes that the width/height ratio is
+    //         // constant for all stops
+    //         glm::vec2 higherSize = sizeParam.stops->evalExpVec2(m_styleZoom + 1);
+    //         p.extrudeScale = (higherSize.x - p.size.x);
+    //     }
+// =======
+    const auto& sizeParam = _rule.findParameter(StyleParamKey::size);
+    if (sizeParam && sizeParam.value.is<Stops>()) {
+        auto lowerSize = sizeParam.value.get<Stops>().evalExpVec2(m_zoom);
+        auto higherSize = sizeParam.value.get<Stops>().evalExpVec2(m_zoom + 1);
+        p.extrudeScale = (higherSize.x - lowerSize.x) * 0.5f - 1.f;
+        p.size = glm::vec2(lowerSize);
+// >>>>>>> wip
     } else if (_rule.get(StyleParamKey::size, size)) {
         if (size.x == 0.f || std::isnan(size.y)) {
             p.size = glm::vec2(size.x);
