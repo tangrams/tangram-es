@@ -43,8 +43,6 @@ public:
 
     std::string applyTextTransform(const TextStyle::Parameters& _params, const std::string& _string);
 
-    std::string resolveTextSource(const std::string& textSource, const Properties& props) const;
-
     bool checkRule(const DrawRule& _rule) const override { return true; }
 
     std::vector<std::unique_ptr<Label>>* labels() { return &m_labels; }

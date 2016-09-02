@@ -204,6 +204,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::anchor:
     case StyleParamKey::text_anchor: {
         LabelProperty::Anchors anchors;
+        // FIXME remove white space
         for (auto& anchor : splitString(_value, ',')) {
             if (anchors.count == LabelProperty::max_anchors) { break; }
 
@@ -216,8 +217,22 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         return anchors;
     }
+
+    case StyleParamKey::text_source: {
+        TextSource textSource;
+        // FIXME remove white space
+        std::string tmp;
+        if (_value.find(',') != std::string::npos) {
+            std::stringstream ss(_value);
+            while (std::getline(ss, tmp, ',')) {
+                textSource.keys.push_back(tmp);
+            }
+        } else {
+            textSource.keys.push_back(_value);
+        }
+        return std::move(textSource);
+    }
     case StyleParamKey::text_align:
-    case StyleParamKey::text_source:
     case StyleParamKey::text_transform:
     case StyleParamKey::sprite:
     case StyleParamKey::sprite_default:
@@ -349,6 +364,13 @@ std::string StyleParam::toString() const {
         auto p = value.get<glm::vec2>();
         return k + "(" + std::to_string(p.x) + "px, " + std::to_string(p.y) + "px)";
     }
+    case StyleParamKey::text_source:
+        if (value.is<std::string>()) {
+            return k + value.get<std::string>();
+        } else if (value.is<TextSource>()) {
+            // TODO add more..
+            return k + value.get<TextSource>().keys[0];
+        }
     case StyleParamKey::transition_hide_time:
     case StyleParamKey::text_transition_hide_time:
     case StyleParamKey::transition_show_time:
@@ -358,7 +380,6 @@ std::string StyleParam::toString() const {
     case StyleParamKey::text_font_family:
     case StyleParamKey::text_font_weight:
     case StyleParamKey::text_font_style:
-    case StyleParamKey::text_source:
     case StyleParamKey::text_transform:
     case StyleParamKey::text_wrap:
     case StyleParamKey::text_repeat_group:
