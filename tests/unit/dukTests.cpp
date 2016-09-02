@@ -217,6 +217,27 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::extrude", "[Duktape][evalStyleFn]"
 
 }
 
+TEST_CASE( "Test evalStyleFn - StyleParamKey::text_source", "[Duktape][evalStyleFn]") {
+    Feature feat;
+    feat.props.set("name", "my name is my name");
+
+    StyleContext ctx;
+    ctx.setFeature(feat);
+    REQUIRE(ctx.setFunctions({
+                R"(function () { return 'hello!'; })",
+                R"(function () { return feature.name; })"}));
+
+    StyleParam::Value value;
+
+    REQUIRE(ctx.evalStyle(0, StyleParamKey::text_source, value) == true);
+    REQUIRE(value.is<std::string>());
+    REQUIRE(value.get<std::string>() == "hello!");
+
+    REQUIRE(ctx.evalStyle(1, StyleParamKey::text_source, value) == true);
+    REQUIRE(value.is<std::string>());
+    REQUIRE(value.get<std::string>() == "my name is my name");
+}
+
 TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFilter]") {
     Scene scene;
     YAML::Node n0 = YAML::Load(R"(filter: function() { return feature.sort_key === 2; })");

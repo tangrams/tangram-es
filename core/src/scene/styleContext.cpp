@@ -345,7 +345,15 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
 
     if (duk_is_string(m_ctx, -1)) {
         std::string value(duk_get_string(m_ctx, -1));
-        _val = StyleParam::parseString(_key, value);
+
+        switch (_key) {
+            case StyleParamKey::text_source:
+                _val = value;
+                break;
+            default:
+                _val = StyleParam::parseString(_key, value);
+                break;
+        }
 
     } else if (duk_is_boolean(m_ctx, -1)) {
         bool value = duk_get_boolean(m_ctx, -1);
