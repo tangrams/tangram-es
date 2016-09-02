@@ -27,11 +27,11 @@
     }
 }
 
-- (void)setPositionEasedAtPosition:(TangramGeoPoint)position withDuration:(float)duration {
-    [self setPositionEasedAtPosition:position withDuration:duration withEaseType:TangramEaseTypeQuint];
+- (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)duration {
+    [self animateToPosition:position withDuration:duration withEaseType:TangramEaseTypeCubic];
 }
 
-- (void)setPositionEasedAtPosition:(TangramGeoPoint)position withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
+- (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
     
     if (self.map) {
         Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
@@ -72,11 +72,11 @@
     }
 }
 
-- (void)setZoomEased:(float)zoomLevel withDuration:(float)duration {
-    [self setZoomEased:zoomLevel withDuration:duration withEaseType:TangramEaseTypeQuint];
+- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration {
+    [self animateToZoomLevel:zoomLevel withDuration:duration withEaseType:TangramEaseTypeCubic];
 }
 
--(void)setZoomEased:(float)zoomLevel withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
+- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
     if (self.map) {
         Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
         self.map->setZoomEased(zoomLevel, duration, ease);
@@ -90,11 +90,11 @@
     return 0.0;
 }
 
-- (void)setRotationEased:(float)rotation withDuration:(float)duration {
-    [self setRotationEased:rotation withDuration:duration withEaseType:TangramEaseTypeQuint];
+- (void)animateRotation:(float)rotation withDuration:(float)duration {
+    [self animateRotation:rotation withDuration:duration withEaseType:TangramEaseTypeCubic];
 }
 
-- (void)setRotationEased:(float)rotation withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
+- (void)animateRotation:(float)rotation withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
     if (self.map) {
         Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
         self.map->setRotationEased(rotation, duration, ease);
@@ -115,16 +115,27 @@
 }
 
 - (float)cameraTilt {
-    if (self.map){
+    if (self.map) {
         return self.map->getTilt();
     }
     return 0.0;
 }
 
 - (void)setCameraTilt:(float)cameraTilt {
-    if (self.map){
+    if (self.map) {
         self.map->setTilt(cameraTilt);
     }
+}
+
+- (void)animateCameraTilt:(float)radians withDuration:(float)duration {
+  [self animateCameraTilt:radians withDuration:duration withEaseType:TangramEaseTypeCubic];
+}
+
+- (void)animateCameraTilt:(float)radians withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
+  if (self.map) {
+    Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
+    self.map->setTiltEased(radians, duration, ease);
+  }
 }
 
 - (TangramCameraType)cameraType {
