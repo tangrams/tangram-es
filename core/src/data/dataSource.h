@@ -27,7 +27,7 @@ public:
      * each of '{x}', '{y}', and '{z}' which will be replaced by the x index, y index,
      * and zoom level of tiles to produce their URL.
      */
-    DataSource(const std::string& _name, const std::string& _urlTemplate, int32_t _maxZoom = 18);
+    DataSource(const std::string& _name, const std::string& _urlTemplate, int32_t _minZoom = 0, int32_t _maxZoom = 18);
 
     virtual ~DataSource();
 
@@ -69,6 +69,7 @@ public:
     /* Generation ID of DataSource state (incremented for each update, e.g. on clearData()) */
     int64_t generation() const { return m_generation; }
 
+    int32_t minZoom() const { return m_minZoom; }
     int32_t maxZoom() const { return m_maxZoom; }
 
     /* assign/get raster datasources to this datasource */
@@ -104,6 +105,9 @@ protected:
 
     // Name used to identify this source in the style sheet
     std::string m_name;
+
+    // Minimum zoom for which tiles will be requested
+    int32_t m_minZoom;
 
     // Maximum zoom for which tiles will be requested
     int32_t m_maxZoom;

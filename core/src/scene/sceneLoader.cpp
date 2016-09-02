@@ -891,8 +891,12 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
 
     std::string type = source["type"].Scalar();
     std::string url = source["url"].Scalar();
+    int32_t minZoom = 0;
     int32_t maxZoom = 18;
 
+    if (auto minZoomNode = source["min_zoom"]) {
+        minZoom = minZoomNode.as<int32_t>(minZoom);
+    }
     if (auto maxZoomNode = source["max_zoom"]) {
         maxZoom = maxZoomNode.as<int32_t>(maxZoom);
     }
@@ -932,14 +936,14 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
 
     if (type == "GeoJSON") {
         if (tiled) {
-            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url, maxZoom));
+            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url, minZoom, maxZoom));
         } else {
-            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, maxZoom));
+            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, minZoom, maxZoom));
         }
     } else if (type == "TopoJSON") {
-        sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, maxZoom));
+        sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, minZoom, maxZoom));
     } else if (type == "MVT") {
-        sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, maxZoom));
+        sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, minZoom, maxZoom));
     } else if (type == "Raster") {
         TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
         bool generateMipmaps = false;
@@ -948,7 +952,7 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
                 generateMipmaps = true;
             }
         }
-        sourcePtr = std::shared_ptr<DataSource>(new RasterSource(name, url, maxZoom, options, generateMipmaps));
+        sourcePtr = std::shared_ptr<DataSource>(new RasterSource(name, url, minZoom, maxZoom, options, generateMipmaps));
     } else {
         LOGW("Unrecognized data source type '%s', skipping", type.c_str());
     }

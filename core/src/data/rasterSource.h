@@ -32,7 +32,7 @@ protected:
 
 public:
 
-    RasterSource(const std::string& _name, const std::string& _urlTemplate, int32_t _maxZoom,
+    RasterSource(const std::string& _name, const std::string& _urlTemplate, int32_t _minZoom, int32_t _maxZoom,
                  TextureOptions _options, bool genMipmap = false);
 
     virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask) override;

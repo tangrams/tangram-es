@@ -13,7 +13,7 @@ protected:
 
 public:
 
-    GeoJsonSource(const std::string& _name, const std::string& _urlTemplate, int32_t _maxZoom);
+    GeoJsonSource(const std::string& _name, const std::string& _urlTemplate, int32_t _minZoom, int32_t _maxZoom);
 
 };
 
