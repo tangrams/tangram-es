@@ -2,6 +2,7 @@
 
 #include "labels/labelProperty.h"
 #include "util/variant.h"
+#include "scene/stops.h"
 #include "glm/vec2.hpp"
 #include <string>
 #include <vector>
@@ -74,7 +75,7 @@ enum class StyleParamKey : uint8_t {
 
 constexpr size_t StyleParamKeySize = static_cast<size_t>(StyleParamKey::NUM_ELEMENTS);
 
-enum class Unit { pixel, milliseconds, meter, seconds };
+enum class Unit : uint8_t { pixel, milliseconds, meter, seconds };
 
 static inline std::string unitString(Unit unit) {
     switch(unit) {
@@ -134,31 +135,37 @@ struct StyleParam {
         }
     };
 
-    using Value = variant<none_type, bool, float, uint32_t, std::string, glm::vec2, Width, LabelProperty::Anchors>;
+    struct Function {
+        explicit Function(int32_t _id) : id(_id) {}
+
+        int32_t id;
+        bool operator==(const Function& _other) const { return id == _other.id; }
+    };
+
+    using Value = variant<none_type, bool, float, uint32_t, std::string, glm::vec2, Width,
+                          LabelProperty::Anchors, Function, Stops>;
 
     StyleParam() :
         key(StyleParamKey::none),
         value(none_type{}) {};
 
-    StyleParam(const std::string& _key, const std::string& _value);
+    explicit StyleParam(const std::string& _key, const std::string& _value);
 
-    StyleParam(StyleParamKey _key, std::string _value) :
+
+    explicit StyleParam(StyleParamKey _key, Value _value) :
         key(_key),
         value(std::move(_value)) {}
 
-    StyleParam(StyleParamKey _key, Stops* _stops) :
-        key(_key),
-        value(none_type{}),
-        stops(_stops) {
-    }
+    StyleParam& operator=(const StyleParam&) = delete;
+    StyleParam(const StyleParam&) = delete;
+
+    StyleParam(StyleParam&&) = default;
 
     StyleParamKey key;
     Value value;
-    Stops* stops = nullptr;
-    int32_t function = -1;
 
     bool operator<(const StyleParam& _rhs) const { return key < _rhs.key; }
-    bool valid() const { return !value.is<none_type>() || stops != nullptr || function >= 0; }
+    bool valid() const { return !value.is<none_type>(); }
     operator bool() const { return valid(); }
 
     std::string toString() const;

@@ -137,10 +137,10 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
 
     _rule.get(StyleParamKey::angle, p.labelOptions.angle);
 
-    auto sizeParam = _rule.findParameter(StyleParamKey::size);
-    if (sizeParam.stops && sizeParam.value.is<float>()) {
+    const auto& sizeParam = _rule.findParameter(StyleParamKey::size);
+    if (sizeParam && sizeParam.value.is<Stops>() && sizeParam.value.is<float>()) {
         float lowerSize = sizeParam.value.get<float>();
-        float higherSize = sizeParam.stops->evalWidth(m_zoom + 1);
+        float higherSize = sizeParam.value.get<Stops>().evalWidth(m_zoom + 1);
         p.extrudeScale = (higherSize - lowerSize) * 0.5f - 1.f;
         p.size = glm::vec2(lowerSize);
     } else if (_rule.get(StyleParamKey::size, size)) {

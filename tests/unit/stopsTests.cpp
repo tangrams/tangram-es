@@ -1,6 +1,7 @@
 #include "catch.hpp"
 
 #include "scene/stops.h"
+#include "scene/styleParam.h"
 #include "yaml-cpp/yaml.h"
 #include "util/mapProjection.h"
 
@@ -100,7 +101,7 @@ TEST_CASE("Stops parses correctly from YAML distance values", "[Stops][YAML]") {
 
     MercatorProjection proj;
 
-    Stops stops(Stops::Widths(node, proj, {}));
+    Stops stops(Stops::Widths(node, proj.TileSize(), {}));
 
     // +1 added for meter end stop
     REQUIRE(stops.frames.size() == 5);
@@ -137,7 +138,7 @@ TEST_CASE("Regression test - Dont crash on evaluating empty stops", "[Stops][YAM
     {
         MercatorProjection proj{};
         std::vector<Unit> units = { Unit::meter };
-        Stops stops(Stops::Widths(node, proj, units));
+        Stops stops(Stops::Widths(node, proj.TileSize(), units));
         REQUIRE(stops.frames.size() == 0);
         stops.evalVec2(1);
     }

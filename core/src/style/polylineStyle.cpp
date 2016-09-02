@@ -274,8 +274,8 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
         float slope = 0.f;
     } fill, stroke;
 
-    auto& width = _rule.findParameter(StyleParamKey::width);
-    if (!evalWidth(width, fill.width, fill.slope)) {
+    const auto& width = _rule.findParameter(StyleParamKey::width);
+    if (!width || !evalWidth(width, fill.width, fill.slope)) {
         fill.width = 0;
         return p;
     }
@@ -304,11 +304,12 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
     p.stroke.join = p.fill.join;
     p.stroke.miterLimit = p.fill.miterLimit;
 
-    auto& strokeWidth = _rule.findParameter(StyleParamKey::outline_width);
+    const auto& strokeWidth = _rule.findParameter(StyleParamKey::outline_width);
     bool outlineVisible = true;
     _rule.get(StyleParamKey::outline_visible, outlineVisible);
+    // Note: StyleParamKey::outline_style is treated special in DrawRuleMergeSet::apply
     if ( outlineVisible && (!p.lineOn || !_rule.findParameter(StyleParamKey::outline_style)) ) {
-        if (strokeWidth |
+        if (bool(strokeWidth) |
             _rule.get(StyleParamKey::outline_order, stroke.order) |
             _rule.get(StyleParamKey::outline_cap, cap) |
             _rule.get(StyleParamKey::outline_join, join) |
@@ -356,12 +357,12 @@ bool PolylineStyleBuilder<V>::evalWidth(const StyleParam& _styleParam, float& wi
     float pixelWidthScale = .5f * m_tileUnitsPerPixel;
     float meterWidthScale = .5f * m_tileUnitsPerMeter * m_overzoom2;
 
-    if (_styleParam.stops) {
+    if (_styleParam.value.is<Stops>()) {
 
-        width = _styleParam.value.get<float>();
+        width = _styleParam.value.get<Stops>().evalWidth(m_zoom);
         width *= pixelWidthScale;
 
-        slope = _styleParam.stops->evalWidth(m_zoom + 1);
+        slope = _styleParam.value.get<Stops>().evalWidth(m_zoom + 1);
         slope *= pixelWidthScale;
         return true;
     }

@@ -73,7 +73,6 @@ public:
     auto& textures() { return m_textures; };
     auto& functions() { return m_jsFunctions; };
     auto& spriteAtlases() { return m_spriteAtlases; };
-    auto& stops() { return m_stops; }
     auto& background() { return m_background; }
     auto& fontContext() { return m_fontContext; }
     auto& globalRefs() { return m_globalRefs; }
@@ -152,7 +151,6 @@ private:
     std::vector<std::string> m_names;
 
     std::vector<std::string> m_jsFunctions;
-    std::list<Stops> m_stops;
 
     Color m_background;
 

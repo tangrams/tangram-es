@@ -286,19 +286,19 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
 
         if (style.key == StyleParamKey::color) {
             StyleParam::Value value;
-            REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
+            REQUIRE(ctx.evalStyle(style.value.get<StyleParam::Function>().id, style.key, value) == true);
             REQUIRE(value.is<uint32_t>() == true);
             REQUIRE(value.get<uint32_t>() == 0xffff00ff);
 
         } else if (style.key == StyleParamKey::width) {
             StyleParam::Value value;
-            REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
+            REQUIRE(ctx.evalStyle(style.value.get<StyleParam::Function>().id, style.key, value) == true);
             REQUIRE(value.is<StyleParam::Width>() == true);
             REQUIRE(value.get<StyleParam::Width>().value == 2);
 
         } else if (style.key == StyleParamKey::cap) {
             StyleParam::Value value;
-            REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
+            REQUIRE(ctx.evalStyle(style.value.get<StyleParam::Function>().id, style.key, value) == true);
             REQUIRE(value.is<uint32_t>() == true);
             REQUIRE(static_cast<CapTypes>(value.get<uint32_t>()) == CapTypes::round);
         } else {
@@ -338,25 +338,25 @@ TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
     for (auto& style : styles) {
         if (style.key == StyleParamKey::color) {
             StyleParam::Value value;
-            REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
+            REQUIRE(ctx.evalStyle(style.value.get<StyleParam::Function>().id, style.key, value) == true);
             REQUIRE(value.is<uint32_t>() == true);
             REQUIRE(value.get<uint32_t>() == 0xffff0000);
 
         } else if (style.key == StyleParamKey::width) {
             StyleParam::Value value;
-            REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
+            REQUIRE(ctx.evalStyle(style.value.get<StyleParam::Function>().id, style.key, value) == true);
             REQUIRE(value.is<StyleParam::Width>() == true);
             REQUIRE(value.get<StyleParam::Width>().value == 2);
 
         } else if (style.key == StyleParamKey::cap) {
             StyleParam::Value value;
-            REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
+            REQUIRE(ctx.evalStyle(style.value.get<StyleParam::Function>().id, style.key, value) == true);
             REQUIRE(value.is<uint32_t>() == true);
             REQUIRE(static_cast<CapTypes>(value.get<uint32_t>()) == CapTypes::round);
 
         } else if(style.key == StyleParamKey::text_source) {
             StyleParam::Value value;
-            REQUIRE(ctx.evalStyle(style.function, style.key, value) == true);
+            REQUIRE(ctx.evalStyle(style.value.get<StyleParam::Function>().id, style.key, value) == true);
             REQUIRE(value.is<std::string>() == true);
             REQUIRE(value.get<std::string>() == "function");
 
