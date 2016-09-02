@@ -7,7 +7,6 @@
 #include "log.h"
 #include "scene/drawRule.h"
 #include "scene/spriteAtlas.h"
-#include "scene/stops.h"
 #include "selection/featureSelection.h"
 #include "tangram.h"
 #include "tile/tile.h"
@@ -120,7 +119,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     _rule.get(StyleParamKey::sprite, p.sprite);
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
 
-    uint32_t priority;
+    uint32_t priority = 0;
     size_t repeatGroupHash = 0;
     std::string repeatGroup;
     StyleParam::Width repeatDistance;
@@ -198,12 +197,14 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     //     }
 // =======
     const auto& sizeParam = _rule.findParameter(StyleParamKey::size);
-    if (sizeParam && sizeParam.value.is<Stops>()) {
-        auto lowerSize = sizeParam.value.get<Stops>().evalExpVec2(m_zoom);
-        auto higherSize = sizeParam.value.get<Stops>().evalExpVec2(m_zoom + 1);
-        p.extrudeScale = (higherSize.x - lowerSize.x) * 0.5f - 1.f;
+    if (sizeParam.value.is<StyleParam::Width>()) {
+        auto w = sizeParam.value.get<StyleParam::Width>();
+        float lowerSize = w.value;
+        float higherSize = w.slope;
+
+        p.extrudeScale = (higherSize - lowerSize) * 0.5f - 1.f;
         p.size = glm::vec2(lowerSize);
-// >>>>>>> wip
+
     } else if (_rule.get(StyleParamKey::size, size)) {
         if (size.x == 0.f || std::isnan(size.y)) {
             p.size = glm::vec2(size.x);
