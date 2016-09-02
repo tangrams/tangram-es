@@ -187,7 +187,7 @@ public:
 
     Parameters parseRule(const DrawRule& _rule, const Properties& _props);
 
-    bool evalWidth(const StyleParam& _styleParam, float& width, float& slope);
+    bool evalWidth(const StyleParam::Width& _param, float& width, float& slope);
 
     PolyLineBuilder& polylineBuilder() { return m_builder; }
 
@@ -274,12 +274,14 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
         float slope = 0.f;
     } fill, stroke;
 
-    const auto& width = _rule.findParameter(StyleParamKey::width);
-    if (!width || !evalWidth(width, fill.width, fill.slope)) {
-        fill.width = 0;
+    StyleParam::Width width;
+    if (!_rule.get(StyleParamKey::width, width) ||
+        !evalWidth(width, fill.width, fill.slope)) {
         return p;
     }
+
     fill.slope -= fill.width;
+
     _rule.get(StyleParamKey::color, p.fill.color);
     _rule.get(StyleParamKey::cap, cap);
     _rule.get(StyleParamKey::join, join);
@@ -304,40 +306,42 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
     p.stroke.join = p.fill.join;
     p.stroke.miterLimit = p.fill.miterLimit;
 
-    const auto& strokeWidth = _rule.findParameter(StyleParamKey::outline_width);
+    StyleParam::Width strokeWidth;
+    if (!_rule.get(StyleParamKey::outline_width, strokeWidth) ||
+        !evalWidth(strokeWidth, stroke.width, stroke.slope)) {
+        return p;
+    }
+
     bool outlineVisible = true;
     _rule.get(StyleParamKey::outline_visible, outlineVisible);
     // Note: StyleParamKey::outline_style is treated special in DrawRuleMergeSet::apply
     if ( outlineVisible && (!p.lineOn || !_rule.findParameter(StyleParamKey::outline_style)) ) {
-        if (bool(strokeWidth) |
-            _rule.get(StyleParamKey::outline_order, stroke.order) |
-            _rule.get(StyleParamKey::outline_cap, cap) |
-            _rule.get(StyleParamKey::outline_join, join) |
-            _rule.get(StyleParamKey::outline_miter_limit, p.stroke.miterLimit)) {
+        _rule.get(StyleParamKey::outline_order, stroke.order);
+        _rule.get(StyleParamKey::outline_cap, cap);
+        _rule.get(StyleParamKey::outline_join, join);
+        _rule.get(StyleParamKey::outline_miter_limit, p.stroke.miterLimit);
 
-            p.stroke.cap = static_cast<CapTypes>(cap);
-            p.stroke.join = static_cast<JoinTypes>(join);
+        p.stroke.cap = static_cast<CapTypes>(cap);
+        p.stroke.join = static_cast<JoinTypes>(join);
 
-            if (!_rule.get(StyleParamKey::outline_color, p.stroke.color) ||
-                !evalWidth(strokeWidth, stroke.width, stroke.slope)) {
-                return p;
-            }
-
-            // NB: Multiply by 2 for the stroke to get the expected stroke pixel width.
-            stroke.width *= 2.0f;
-            stroke.slope *= 2.0f;
-            stroke.slope -= stroke.width;
-
-            stroke.width += fill.width;
-            stroke.slope += fill.slope;
-
-            stroke.order = std::min(stroke.order, fill.order);
-
-            p.stroke.set(stroke.width, stroke.slope,
-                    height, stroke.order - 0.5f);
-
-            p.outlineOn = true;
+        if (!_rule.get(StyleParamKey::outline_color, p.stroke.color)) {
+            return p;
         }
+
+        // NB: Multiply by 2 for the stroke to get the expected stroke pixel width.
+        stroke.width *= 2.0f;
+        stroke.slope *= 2.0f;
+        stroke.slope -= stroke.width;
+
+        stroke.width += fill.width;
+        stroke.slope += fill.slope;
+
+        stroke.order = std::min(stroke.order, fill.order);
+
+        p.stroke.set(stroke.width, stroke.slope,
+                     height, stroke.order - 0.5f);
+
+        p.outlineOn = true;
     }
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
@@ -351,29 +355,22 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
 }
 
 template <class V>
-bool PolylineStyleBuilder<V>::evalWidth(const StyleParam& _styleParam, float& width, float& slope) {
+bool PolylineStyleBuilder<V>::evalWidth(const StyleParam::Width& p, float& width, float& slope) {
 
-    if (_styleParam.value.is<StyleParam::Width>()) {
+    if (p.isMeter()) {
+        float meterWidthScale = .5f * m_tileUnitsPerMeter * m_overzoom2;
 
-        auto& p = _styleParam.value.get<StyleParam::Width>();
+        width = p.value * meterWidthScale;
+        slope = p.slope * meterWidthScale * 2;
+    } else {
+        // NB: 0.5 because 'width' will be extruded in both directions
+        float pixelWidthScale = .5f * m_tileUnitsPerPixel;
 
-        if (p.isMeter()) {
-            float meterWidthScale = .5f * m_tileUnitsPerMeter * m_overzoom2;
-
-            width = p.value * meterWidthScale;
-            slope = p.slope * meterWidthScale * 2;
-        } else {
-            // NB: 0.5 because 'width' will be extruded in both directions
-            float pixelWidthScale = .5f * m_tileUnitsPerPixel;
-
-            width = p.value * pixelWidthScale;
-            slope = p.slope * pixelWidthScale;
-        }
-        return true;
+        width = p.value * pixelWidthScale;
+        slope = p.slope * pixelWidthScale;
     }
 
-    LOGD("Invalid type for Width '%d'", _styleParam.value.which());
-    return false;
+    return width > 0.0f || slope > 0.0f;
 }
 
 template <class V>
