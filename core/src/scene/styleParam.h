@@ -142,9 +142,12 @@ struct StyleParam {
 
     struct Function {
         explicit Function(int32_t _id) : id(_id) {}
-
         int32_t id;
         bool operator==(const Function& _other) const { return id == _other.id; }
+
+        static Function get(int32_t id) { return Function { id }; }
+    private:
+        Function(){};
     };
 
     using Value = variant<Undefined, none_type, bool, float, uint32_t, std::string, glm::vec2, Width,

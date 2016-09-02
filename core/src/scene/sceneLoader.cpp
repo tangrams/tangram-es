@@ -1466,7 +1466,7 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
 
         if (key == "text") {
             // Add StyleParam to signify that icon uses text
-            out.emplace_back(StyleParamKey::point_text, StyleParam::Value{std::string("")});
+            out.emplace_back(StyleParamKey::point_text, StyleParam::Value{std::string{""}});
         }
 
         Node value = prop.second;

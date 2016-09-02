@@ -52,7 +52,6 @@ std::vector<DrawRuleData> instance_c() {
 
 TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
 
-
     const SceneLayer layer_a = { "a", Filter(), instance_a(), {} };
     const SceneLayer layer_b = { "b", Filter(), instance_b(), {} };
     const SceneLayer layer_c = { "c", Filter(), instance_c(), {} };
