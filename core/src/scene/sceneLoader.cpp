@@ -912,11 +912,18 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
     }
 
     std::string type = source["type"].Scalar();
-    std::string url = source["url"].Scalar();
+    std::string url;
+    std::string mbtiles;
     int32_t minDisplayZoom = -1;
     int32_t maxDisplayZoom = -1;
     int32_t maxZoom = 18;
 
+    if (auto urlNode = source["url"]) {
+        url = urlNode.Scalar();
+    }
+    if (auto mbtilesNode = source["mbtiles"]) {
+        mbtiles = mbtilesNode.Scalar();
+    }
     if (auto minDisplayZoomNode = source["min_display_zoom"]) {
         minDisplayZoom = minDisplayZoomNode.as<int32_t>(minDisplayZoom);
     }
@@ -954,7 +961,8 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
     }
 
     // distinguish tiled and non-tiled sources by url
-    bool tiled = url.find("{x}") != std::string::npos &&
+    bool tiled = url.size() > 0 &&
+        url.find("{x}") != std::string::npos &&
         url.find("{y}") != std::string::npos &&
         url.find("{z}") != std::string::npos;
 

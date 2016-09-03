@@ -34,3 +34,6 @@
 [submodule "external/harfbuzz-icu-freetype"]
 	path = external/harfbuzz-icu-freetype
 	url = https://github.com/tangrams/harfbuzz-icu-freetype.git
+[submodule "external/SQLiteCpp"]
+	path = external/SQLiteCpp
+	url = https://github.com/SRombauts/SQLiteCpp.git

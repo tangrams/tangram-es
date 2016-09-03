@@ -166,3 +166,10 @@ endif()
 set(GLM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../core/include/glm)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
+
+## SQLiteCpp ##
+###############
+set(SQLITECPP_RUN_CPPLINT OFF CACHE BOOL "")
+set(SQLITECPP_RUN_CPPCHECK OFF CACHE BOOL "")
+
+add_subdirectory(SQLiteCpp)
