@@ -51,6 +51,7 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/stb
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/pbf
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/rapidjson
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/SQLiteCpp
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/isect2d/include
     CACHE INTERNAL "core libraries include directories" FORCE)
 
@@ -65,7 +66,9 @@ target_link_libraries(${CORE_LIBRARY}
   css-color-parser-cpp
   geojson-vt-cpp
   yaml-cpp
-  alfons)
+  alfons
+  SQLiteCpp
+  sqlite3)
 
 target_include_directories(${CORE_LIBRARY}
   PUBLIC
