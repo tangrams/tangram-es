@@ -160,7 +160,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
             return std::numeric_limits<uint32_t>::max();
         }
         if (_value == "true") {
-            return 15; // DEFAULT
+            return uint32_t(15); // DEFAULT
         }
         if (parseInt(_value, textWrap) > 0 && textWrap > 0) {
              return static_cast<uint32_t>(textWrap);
