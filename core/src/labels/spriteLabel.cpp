@@ -26,11 +26,11 @@ void SpriteLabel::applyAnchor(LabelProperty::Anchor _anchor) {
     m_anchor = LabelProperty::anchorDirection(_anchor) * m_dim * 0.5f;
 }
 
-void SpriteLabel::updateBBoxes(float _zoomFract) {
+void SpriteLabel::updateBBoxes(float _zoomFract, bool _occluded) {
     glm::vec2 sp = m_transform.state.screenPos;
     glm::vec2 dim = m_dim + glm::vec2(m_extrudeScale * 2.f * _zoomFract);
 
-    if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
+    if (_occluded) { dim += Label::activation_distance_threshold; }
 
     m_obb = OBB(sp, m_transform.state.rotation, dim.x, dim.y);
 }

@@ -48,7 +48,7 @@ public:
               glm::vec2 _dim, TextLabels& _labels, TextRange _textRanges,
               TextLabelProperty::Align _preferedAlignment);
 
-    void updateBBoxes(float _zoomFract) override;
+    void updateBBoxes(float _zoomFract, bool _occluded) override;
 
     TextRange& textRanges() {
         return m_textRanges;

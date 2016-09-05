@@ -248,7 +248,7 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
     }
 
     // update the view-space bouding box
-    updateBBoxes(_zoomFract);
+    updateBBoxes(_zoomFract, m_occludedLastFrame);
 
     // checks whether the label is out of the viewport
     if (offViewport(_screenSize)) {
