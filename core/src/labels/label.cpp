@@ -116,9 +116,13 @@ void Label::setParent(Label& _parent, bool _definePriority, bool _defineCollide)
 bool Label::offViewport(const glm::vec2& _screenSize) {
     const auto& quad = m_obb.getQuad();
 
+    const float buffer = 256.f;
+    float width = _screenSize.x + buffer;
+    float height = _screenSize.y + buffer;
+
     for (int i = 0; i < 4; ++i) {
         const auto& p = quad[i];
-        if (p.x < _screenSize.x && p.y < _screenSize.y && p.x > 0 && p.y > 0) {
+        if (p.x < width && p.y < height && p.x > -buffer && p.y > -buffer) {
             return false;
         }
     }
