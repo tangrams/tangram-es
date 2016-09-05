@@ -23,6 +23,7 @@ public:
         Geometry geom;
         geom.m_points = _line;
         geom.m_lines = {_line.size()};
+        geom.type = GeometryType::lines;
         return geom;
     }
 
@@ -30,6 +31,7 @@ public:
         Geometry geom;
         // geom.m_points = _line;
         // geom.m_lines = {_line.size()};
+        geom.type = GeometryType::polygons;
         return geom;
     }
 
