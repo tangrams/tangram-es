@@ -266,33 +266,45 @@ void Filter::collectFilters(Filter& f, FiltersAndKeys& fk) {
     }
     case Filter::Data::type<Filter::EqualitySet>::value: {
         auto& d = f.data.get<Filter::EqualitySet>();
-        if (Filter::keywordType(d.key) == FilterKeyword::undefined) {
+        auto t = Filter::keywordType(d.key);
+        if (t == FilterKeyword::undefined) {
             fk.keys.push_back(d.key);
             fk.filters.push_back(&f);
+        } else {
+            d.keyID = static_cast<uint8_t>(t);
         }
         break;
     }
     case Filter::Data::type<Filter::EqualityString>::value: {
         auto& d = f.data.get<Filter::EqualityString>();
-        if (Filter::keywordType(d.key) == FilterKeyword::undefined) {
+        auto t = Filter::keywordType(d.key);
+        if (t == FilterKeyword::undefined) {
             fk.keys.push_back(d.key);
             fk.filters.push_back(&f);
+        } else {
+            d.keyID = static_cast<uint8_t>(t);
         }
         break;
     }
     case Filter::Data::type<Filter::EqualityNumber>::value: {
         auto& d = f.data.get<Filter::EqualityNumber>();
-        if (Filter::keywordType(d.key) == FilterKeyword::undefined) {
+        auto t = Filter::keywordType(d.key);
+        if (t == FilterKeyword::undefined) {
             fk.keys.push_back(d.key);
             fk.filters.push_back(&f);
+        } else {
+            d.keyID = static_cast<uint8_t>(t);
         }
         break;
     }
     case Filter::Data::type<Filter::Range>::value: {
         auto& d = f.data.get<Filter::Range>();
-        if (Filter::keywordType(d.key) == FilterKeyword::undefined) {
+        auto t = Filter::keywordType(d.key);
+        if (t == FilterKeyword::undefined) {
             fk.keys.push_back(d.key);
             fk.filters.push_back(&f);
+        } else {
+            d.keyID = static_cast<uint8_t>(t);
         }
         break;
     }
@@ -307,9 +319,7 @@ std::vector<std::string> Filter::assignPropertyKeys(FiltersAndKeys& fk) {
     fk.keys.insert(fk.keys.begin(), "$geometry");
     fk.keys.insert(fk.keys.begin(), "$zoom");
 
-    for (auto& k : fk.keys) {
-        LOG("key: %s", k.c_str());
-    }
+    // for (auto& k : fk.keys) { LOG("key: %s", k.c_str()); }
 
     for (auto* f : fk.filters) {
         std::string key = f->key();
@@ -317,6 +327,8 @@ std::vector<std::string> Filter::assignPropertyKeys(FiltersAndKeys& fk) {
         for (; id < fk.keys.size(); id++) {
             if (fk.keys[id] == key) { break; }
         }
+
+        // LOG("assign: %s -> %d", key.c_str(), id);
 
         switch (f->data.which()) {
         case Filter::Data::type<Filter::Existence>::value:
