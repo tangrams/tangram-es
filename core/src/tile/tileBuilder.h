@@ -11,7 +11,6 @@ class DataLayer;
 class DataSource;
 class Tile;
 class StyleBuilder;
-class FeatureSelection;
 struct TileData;
 
 class TileBuilder {

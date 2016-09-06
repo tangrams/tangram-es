@@ -276,6 +276,11 @@ void Style::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene&
 }
 
 void Style::drawSelectionFrame(Tangram::RenderState& rs, const Tangram::Tile &_tile) {
+
+    if (!m_selection) {
+        return;
+    }
+
     auto& styleMesh = _tile.getMesh(*this);
 
     if (!styleMesh) { return; }
@@ -379,8 +384,8 @@ void Style::draw(RenderState& rs, const Marker& marker) {
     }
 }
 
-uint32_t StyleBuilder::createSelectionIdentifier(const Feature& _feature, const SceneLayer& _layer) {
-    return m_featureSelection->colorIdentifier(_feature, _layer);
+uint32_t StyleBuilder::createSelectionIdentifier(const Feature& _feature, const TileID& _tileID) {
+    return m_featureSelection->colorIdentifier(_feature, _tileID);
 }
 
 bool StyleBuilder::checkRule(const DrawRule& _rule) const {

@@ -5,6 +5,7 @@
 #include "tile/tile.h"
 #include "tileCache.h"
 #include "util/mapProjection.h"
+#include "util/featureSelection.h"
 
 #include "glm/gtx/norm.hpp"
 
@@ -14,7 +15,9 @@
 
 namespace Tangram {
 
-TileManager::TileManager(TileTaskQueue& _tileWorker) : m_workers(_tileWorker) {
+TileManager::TileManager(TileTaskQueue& _tileWorker, std::shared_ptr<FeatureSelection> _featureSelection) :
+    m_workers(_tileWorker),
+    m_featureSelection(_featureSelection) {
 
     m_tileCache = std::unique_ptr<TileCache>(new TileCache(DEFAULT_CACHE_SIZE));
 
@@ -510,10 +513,12 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
         }
     }
 
-    //remove tile from set
+    // Remove tile from set
     _tileIt = _tileSet.tiles.erase(_tileIt);
     // Remove rasters from this DataSource
     _tileSet.source->clearRaster(id);
+    // Remove stored feature properties
+    m_featureSelection->clearFeaturesForTile(id);
 }
 
 bool TileManager::updateProxyTile(TileSet& _tileSet, TileEntry& _tile,

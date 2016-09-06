@@ -16,19 +16,16 @@ FeatureSelection::FeatureSelection() :
     m_framebuffer = std::make_unique<FrameBuffer>();
 }
 
-uint32_t FeatureSelection::colorIdentifier(const Feature& _feature,
-                                           const SceneLayer& _layer) {
+uint32_t FeatureSelection::colorIdentifier(const Feature& _feature, const TileID& _tileID) {
 
     std::lock_guard<std::mutex> guard(m_mutex);
 
     m_entry++;
 
-    uint32_t color = m_entry;
-    color = color | 0xff000000;
+    auto& tileFeatures = m_tileFeatures[_tileID];
+    tileFeatures[m_entry] = std::make_shared<Properties>(_feature.props);
 
-    m_props[m_entry] = std::make_shared<Properties>(_feature.props);
-
-    return color;
+    return m_entry;
 }
 
 bool FeatureSelection::beginRenderPass(Tangram::RenderState& _rs) {
@@ -42,6 +39,21 @@ void FeatureSelection::endRenderPass(Tangram::RenderState& _rs) {
 
     _rs.applySavedFramebufferState();
 
+}
+
+bool FeatureSelection::clearFeaturesForTile(const Tangram::TileID& _tileID) {
+
+    auto it = m_tileFeatures.find(_tileID);
+    if (it != m_tileFeatures.end()) {
+        {
+            std::lock_guard<std::mutex> guard(m_mutex);
+            m_tileFeatures.erase(it);
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 GLuint FeatureSelection::readBufferAt(RenderState& _rs, float _x, float _y,
@@ -60,13 +72,13 @@ GLuint FeatureSelection::readBufferAt(RenderState& _rs, float _x, float _y,
 
     _rs.applySavedFramebufferState();
 
-    uint32_t entry = 0x00ffffff & pixel;
-
-    auto it = m_props.find(entry);
-    if (it != m_props.end()) {
-        std::shared_ptr<Properties> props = it->second;
-        if (props->contains("name")) {
-            LOGS("props name: %s", props->getString("name").c_str());
+    for (const auto& tileFeatures : m_tileFeatures) {
+        auto it = tileFeatures.second.find(pixel);
+        if (it != tileFeatures.second.end()) {
+            std::shared_ptr<Properties> props = it->second;
+            if (props->contains("name")) {
+                LOGS("props name: %s", props->getString("name").c_str());
+            }
         }
     }
 

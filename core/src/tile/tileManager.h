@@ -19,6 +19,7 @@ namespace Tangram {
 
 class DataSource;
 class TileCache;
+class FeatureSelection;
 
 struct ViewState {
     const MapProjection& mapProjection;
@@ -39,7 +40,7 @@ class TileManager {
 
 public:
 
-    TileManager(TileTaskQueue& _tileWorker);
+    TileManager(TileTaskQueue& _tileWorker, std::shared_ptr<FeatureSelection> _featureSelection);
 
     virtual ~TileManager();
 
@@ -243,6 +244,7 @@ private:
     /* Temporary list of tiles that need to be loaded */
     std::vector<std::tuple<double, TileSet*, TileID>> m_loadTasks;
 
+    std::shared_ptr<FeatureSelection> m_featureSelection;
 
 };
 

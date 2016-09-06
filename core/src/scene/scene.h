@@ -24,6 +24,7 @@ class FontContext;
 class Light;
 class MapProjection;
 class SpriteAtlas;
+class FeatureSelection;
 struct Stops;
 
 /* Singleton container of <Style> information
@@ -74,6 +75,7 @@ public:
     auto& background() { return m_background; }
     auto& fontContext() { return m_fontContext; }
     auto& globals() { return m_globals; }
+    auto& featureSelection() { return m_featureSelection; }
     Style* findStyle(const std::string& _name);
 
     const auto& path() const { return m_path; }
@@ -87,6 +89,7 @@ public:
     const auto& mapProjection() const { return m_mapProjection; };
     const auto& fontContext() const { return m_fontContext; }
     const auto& globals() const { return m_globals; }
+    const auto& featureSelection() const { return m_featureSelection; }
 
     const Style* findStyle(const std::string& _name) const;
     const Light* findLight(const std::string& _name) const;
@@ -148,6 +151,8 @@ private:
     Color m_background;
 
     std::shared_ptr<FontContext> m_fontContext;
+
+    std::shared_ptr<FeatureSelection> m_featureSelection;
 
     animate m_animated = none;
 
