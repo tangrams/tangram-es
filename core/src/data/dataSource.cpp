@@ -88,8 +88,10 @@ struct RawCache {
     }
 };
 
-DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate, int32_t _minDisplayZoom, int32_t _maxZoom) :
-    m_name(_name), m_urlTemplate(_urlTemplate), m_minDisplayZoom(_minDisplayZoom), m_maxZoom(_maxZoom),
+DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate,
+                       int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom) :
+    m_name(_name), m_urlTemplate(_urlTemplate),
+    m_minDisplayZoom(_minDisplayZoom), m_maxDisplayZoom(_maxDisplayZoom), m_maxZoom(_maxZoom),
     m_cache(std::make_unique<RawCache>()){
 
     static std::atomic<int32_t> s_serial;

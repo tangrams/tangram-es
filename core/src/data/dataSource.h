@@ -27,7 +27,8 @@ public:
      * each of '{x}', '{y}', and '{z}' which will be replaced by the x index, y index,
      * and zoom level of tiles to produce their URL.
      */
-    DataSource(const std::string& _name, const std::string& _urlTemplate, int32_t _minDisplayZoom = 0, int32_t _maxZoom = 18);
+    DataSource(const std::string& _name, const std::string& _urlTemplate,
+               int32_t _minDisplayZoom = 0, int32_t _maxDisplayZoom = INT32_MAX, int32_t _maxZoom = 18);
 
     virtual ~DataSource();
 
@@ -73,7 +74,7 @@ public:
     int32_t maxZoom() const { return m_maxZoom; }
 
     bool isActiveForZoom(const float _zoom) const {
-        return _zoom >= m_minDisplayZoom;
+        return _zoom >= m_minDisplayZoom && _zoom <= m_maxDisplayZoom;
     }
 
     /* assign/get raster datasources to this datasource */
@@ -112,6 +113,9 @@ protected:
 
     // Minimum zoom for which tiles will be displayed
     int32_t m_minDisplayZoom;
+
+    // Maximum zoom for which tiles will be displayed
+    int32_t m_maxDisplayZoom;
 
     // Maximum zoom for which tiles will be requested
     int32_t m_maxZoom;
