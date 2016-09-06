@@ -253,7 +253,7 @@ void Map::resize(int _newWidth, int _newHeight) {
     LOGS("resize: %d x %d", _newWidth, _newHeight);
     LOG("resize: %d x %d", _newWidth, _newHeight);
 
-    glViewport(0, 0, _newWidth, _newHeight);
+    GL::viewport(0, 0, _newWidth, _newHeight);
 
     impl->view.setSize(_newWidth, _newHeight);
 
@@ -360,7 +360,7 @@ void Map::render() {
     impl->renderState.depthMask(GL_TRUE);
     auto& color = impl->scene->background();
     impl->renderState.clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
-    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for (const auto& style : impl->scene->styles()) {
         style->onBeginFrame(impl->renderState);
@@ -405,7 +405,7 @@ float Map::getPixelScale() {
 }
 
 void Map::captureSnapshot(unsigned int* _data) {
-    GL_CHECK(glReadPixels(0, 0, impl->view.getWidth(), impl->view.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)_data));
+    GL::readPixels(0, 0, impl->view.getWidth(), impl->view.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)_data);
 }
 
 void Map::Impl::setPositionNow(double _lon, double _lat) {

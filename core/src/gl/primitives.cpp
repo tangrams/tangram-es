@@ -37,7 +37,7 @@ void init() {
         }));
 
         s_initialized = true;
-        GL_CHECK(glLineWidth(1.5f));
+        GL::lineWidth(1.5f);
     }
 }
 
@@ -61,14 +61,14 @@ void drawLine(RenderState& rs, const glm::vec2& _origin, const glm::vec2& _desti
     if (!s_shader->use(rs)) { return; }
 
     GLint boundBuffer;
-    GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &boundBuffer));
+    GL::getIntegerv(GL_ARRAY_BUFFER_BINDING, &boundBuffer);
     rs.vertexBuffer(0);
     rs.depthTest(GL_FALSE);
 
     // enable the layout for the line vertices
     s_layout->enable(rs, *s_shader, 0, &verts);
 
-    GL_CHECK(glDrawArrays(GL_LINES, 0, 2));
+    GL::drawArrays(GL_LINES, 0, 2);
 
     rs.vertexBuffer(boundBuffer);
 }
@@ -86,14 +86,14 @@ void drawPoly(RenderState& rs, const glm::vec2* _polygon, size_t _n) {
     if (!s_shader->use(rs)) { return; }
 
     GLint boundBuffer;
-    GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &boundBuffer));
+    GL::getIntegerv(GL_ARRAY_BUFFER_BINDING, &boundBuffer);
     rs.vertexBuffer(0);
     rs.depthTest(GL_FALSE);
 
     // enable the layout for the _polygon vertices
     s_layout->enable(rs, *s_shader, 0, (void*)_polygon);
 
-    GL_CHECK(glDrawArrays(GL_LINE_LOOP, 0, _n));
+    GL::drawArrays(GL_LINE_LOOP, 0, _n);
 
     rs.vertexBuffer(boundBuffer);
 }

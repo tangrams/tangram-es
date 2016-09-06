@@ -43,7 +43,7 @@ void printAvailableExtensions() {
 }
 
 void loadExtensions() {
-    s_glExtensions = (char*) glGetString(GL_EXTENSIONS);
+    s_glExtensions = (char*) GL::getString(GL_EXTENSIONS);
 
     if (s_glExtensions == NULL) {
         LOGE("glGetString( GL_EXTENSIONS ) returned NULL");
@@ -63,10 +63,10 @@ void loadExtensions() {
 
 void loadCapabilities() {
     int val;
-    GL_CHECK(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &val));
+    GL::getIntegerv(GL_MAX_TEXTURE_SIZE, &val);
     maxTextureSize = val;
 
-    GL_CHECK(glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &val));
+    GL::getIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &val);
     maxCombinedTextureUnits = val;
 
     LOG("Hardware max texture size %d", maxTextureSize);

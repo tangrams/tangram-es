@@ -61,7 +61,7 @@ void DynamicQuadMesh<T>::upload(RenderState& rs) {
 
     // Generate vertex buffer, if needed
     if (m_glVertexBuffer == 0) {
-        GL_CHECK(glGenBuffers(1, &m_glVertexBuffer));
+        GL::genBuffers(1, &m_glVertexBuffer);
     }
 
     MeshBase::subDataUpload(rs, reinterpret_cast<GLbyte*>(m_vertices.data()));
@@ -96,7 +96,7 @@ bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& _shader) {
 
         m_vertexLayout->enable(rs, _shader, byteOffset);
 
-        GL_CHECK(glDrawElements(m_drawMode, nVertices * 6 / 4, GL_UNSIGNED_SHORT, 0));
+        GL::drawElements(m_drawMode, nVertices * 6 / 4, GL_UNSIGNED_SHORT, 0);
 
         vertexOffset += nVertices;
     }

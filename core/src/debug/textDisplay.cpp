@@ -103,7 +103,7 @@ void TextDisplay::draw(RenderState& rs, const std::string& _text, int _posx, int
     }
     vertexLayout.enable(rs, *m_shader, 0, (void*)vertices.data());
 
-    GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, nquads * 6));
+    GL::drawArrays(GL_TRIANGLES, 0, nquads * 6);
 }
 
 void TextDisplay::draw(RenderState& rs, const std::vector<std::string>& _infos) {
@@ -116,7 +116,7 @@ void TextDisplay::draw(RenderState& rs, const std::vector<std::string>& _infos) 
     rs.depthTest(GL_FALSE);
     rs.depthMask(GL_FALSE);
 
-    GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &boundbuffer));
+    GL::getIntegerv(GL_ARRAY_BUFFER_BINDING, &boundbuffer);
     rs.vertexBuffer(0);
 
     glm::mat4 orthoProj = glm::ortho(0.f, (float)m_textDisplayResolution.x, (float)m_textDisplayResolution.y, 0.f, -1.f, 1.f);

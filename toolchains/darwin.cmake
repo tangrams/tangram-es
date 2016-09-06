@@ -42,6 +42,9 @@ if(APPLICATION)
   file(GLOB_RECURSE OSX_RESOURCES "${PROJECT_SOURCE_DIR}/osx/resources/**")
   string(REGEX REPLACE "[.]DS_Store" "" OSX_RESOURCES "${OSX_RESOURCES}")
 
+  set(SOURCES ${SOURCES}
+    ${PROJECT_SOURCE_DIR}/core/common/platform_gl.cpp)
+
   add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES} ${OSX_RESOURCES})
 
   target_link_libraries(${EXECUTABLE_NAME}
