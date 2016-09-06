@@ -89,11 +89,10 @@ struct RawCache {
     }
 };
 
-DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate,
+DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate, const std::string& _mbtiles,
                        int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom) :
-    m_name(_name),
+    m_name(_name), m_urlTemplate(_urlTemplate), m_mbtiles(_mbtiles),
     m_minDisplayZoom(_minDisplayZoom), m_maxDisplayZoom(_maxDisplayZoom), m_maxZoom(_maxZoom),
-    m_urlTemplate(_urlTemplate),
     m_cache(std::make_unique<RawCache>()){
 
     static std::atomic<int32_t> s_serial;
@@ -181,16 +180,30 @@ void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
 
 bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
 
-    std::string url(constructURL(_task->tileId()));
+    /*
+     * If our data source doesn't have a URL to make a request,
+     * don't HTTP request data, we will fetch from MBTiles in a task.
+     */
+    if (isOfflineOnly()) {
+        _cb.func(std::move(_task));
+        return true;
+    }
+    /*
+     * If we have a URL, we should request a tile.
+     * We'll later cache it in MBTiles and / or memory
+     * in a task.
+     */
+    else {
+        std::string url(constructURL(_task->tileId()));
 
-    // lambda captured parameters are const by default, we want "task" (moved) to be non-const,
-    // hence "mutable"
-    // Refer: http://en.cppreference.com/w/cpp/language/lambda
-    return startUrlRequest(url,
-            [this, _cb, task = std::move(_task)](std::vector<char>&& rawData) mutable {
-                this->onTileLoaded(std::move(rawData), std::move(task), _cb);
-            });
-
+        // lambda captured parameters are const by default, we want "task" (moved) to be non-const,
+        // hence "mutable"
+        // Refer: http://en.cppreference.com/w/cpp/language/lambda
+        return startUrlRequest(url,
+                               [this, _cb, task = std::move(_task)](std::vector<char>&& rawData) mutable {
+                                   this->onTileLoaded(std::move(rawData), std::move(task), _cb);
+                               });
+    }
 }
 
 void DataSource::cancelLoadingTile(const TileID& _tileID) {
