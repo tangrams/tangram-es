@@ -103,6 +103,8 @@ public:
 
     void applySavedFramebufferState();
 
+    void cacheDefaultFramebuffer();
+
     GLuint getQuadIndexBuffer();
 
     std::array<GLuint, MAX_ATTRIBUTES> attributeBindings = { { 0 } };

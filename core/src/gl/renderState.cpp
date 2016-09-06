@@ -73,6 +73,13 @@ void RenderState::invalidate() {
 
 }
 
+void RenderState::cacheDefaultFramebuffer() {
+    GLint handle;
+
+    GL_CHECK(glGetIntegerv(GL_FRAMEBUFFER_BINDING, &handle));
+    m_framebuffer = { (GLuint)handle, false };
+}
+
 void RenderState::increaseGeneration() {
     generateQuadIndexBuffer();
     m_validGeneration++;
