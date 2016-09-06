@@ -148,6 +148,20 @@ extern "C" {
     void glVertexAttrib4ubv (GLuint index, const GLubyte *v){}
     void glVertexAttrib4uiv (GLuint index, const GLuint *v){}
     void glVertexAttrib4usv (GLuint index, const GLushort *v){}
+    void glBindFramebuffer(GLenum target, GLuint framebuffer) {}
+    void glGenFramebuffers(GLsizei n, GLuint *framebuffers) {}
+    void glFramebufferTexture2D(GLenum target, GLenum attachment,
+             GLenum textarget, GLuint texture, GLint level) {}
+    void glRenderbufferStorage(GLenum target, GLenum internalformat,
+             GLsizei width, GLsizei height) {}
+    void glFramebufferRenderbuffer(GLenum target, GLenum attachment,
+             GLenum renderbuffertarget, GLuint renderbuffer) {}
+    void glGenRenderbuffers(GLsizei n, GLuint *renderbuffers) {}
+    void glBindRenderbuffer(GLenum target, GLuint renderbuffer) {}
+    void glDeleteFramebuffers(GLsizei n, const GLuint *framebuffers) {}
+    void glDeleteRenderbuffers(GLsizei n, const GLuint *renderbuffers) {}
+    GLenum glCheckFramebufferStatus(GLenum target) {}
+
     void glFinish(void){}
 
     // mapbuffer

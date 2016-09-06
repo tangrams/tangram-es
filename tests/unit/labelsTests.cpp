@@ -8,6 +8,7 @@
 #include "labels/textLabel.h"
 #include "labels/textLabels.h"
 #include "gl/dynamicQuadMesh.h"
+#include "util/featureSelection.h"
 
 #include "view/view.h"
 #include "tile/tile.h"
@@ -18,6 +19,7 @@ namespace Tangram {
 
 TextStyle dummyStyle("textStyle", nullptr);
 TextLabels dummy(dummyStyle);
+std::shared_ptr<FeatureSelection> featureSelection = std::make_shared<FeatureSelection>();
 
 std::unique_ptr<TextLabel> makeLabel(Label::Transform _transform, Label::Type _type, std::string id) {
     Label::Options options;
@@ -71,7 +73,7 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
     labelMesh->addLabel(makeLabel(glm::vec2{1,0}, Label::Type::point, "1"));
     labelMesh->addLabel(makeLabel(glm::vec2{1,1}, Label::Type::point, "2"));
 
-    std::shared_ptr<Tile> tile(new Tile({0,0,0}, view.getMapProjection()));
+    std::shared_ptr<Tile> tile(new Tile({0,0,0}, view.getMapProjection(), featureSelection));
     tile->initGeometry(1);
     tile->setMesh(*textStyle.get(), std::move(labelMesh));
     tile->update(0, view);
@@ -107,7 +109,7 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
     view.setZoom(0);
     view.update(false);
 
-    Tile tile({0,0,0}, view.getMapProjection());
+    Tile tile({0,0,0}, view.getMapProjection(), featureSelection);
     tile.update(0, view);
 
     glm::vec2 screenSize = glm::vec2(view.getWidth(), view.getHeight());

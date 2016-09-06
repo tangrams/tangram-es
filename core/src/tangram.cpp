@@ -93,7 +93,6 @@ static std::bitset<8> g_flags = 0;
 Map::Map() {
 
     impl.reset(new Impl());
-
 }
 
 Map::~Map() {

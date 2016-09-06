@@ -5,12 +5,14 @@
 #include "tile/tileWorker.h"
 #include "util/mapProjection.h"
 #include "util/fastmap.h"
+#include "util/featureSelection.h"
 
 #include <deque>
 
 using namespace Tangram;
 
 MercatorProjection s_projection;
+std::shared_ptr<FeatureSelection> s_featureSelection = std::make_shared<FeatureSelection>();
 
 struct TestTileWorker : TileTaskQueue {
     int processedCount = 0;
@@ -38,7 +40,7 @@ struct TestTileWorker : TileTaskQueue {
                 continue;
             }
 
-            task->tile() = std::make_shared<Tile>(task->tileId(), s_projection, &task->source());
+            task->tile() = std::make_shared<Tile>(task->tileId(), s_projection, s_featureSelection, &task->source());
 
             pendingTiles = true;
             processedCount++;
@@ -50,7 +52,7 @@ struct TestTileWorker : TileTaskQueue {
         auto task = tasks[position];
         tasks.erase(tasks.begin() + position);
 
-        task->tile() = std::make_shared<Tile>(task->tileId(), s_projection, &task->source());
+        task->tile() = std::make_shared<Tile>(task->tileId(), s_projection, s_featureSelection, &task->source());
 
         pendingTiles = true;
         processedCount++;
@@ -106,7 +108,7 @@ struct TestDataSource : DataSource {
 
 TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TileManager tileManager(worker);
+    TileManager tileManager(worker, s_featureSelection);
     ViewState viewState { s_projection, true, glm::vec2(0), 1 };
 
     auto source = std::make_shared<TestDataSource>();
@@ -152,17 +154,17 @@ TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileMana
 TEST_CASE( "Mock TileWorker Initialization", "[TileManager][Constructor]" ) {
 
     TestTileWorker worker;
-    TileManager tileManager(worker);
+    TileManager tileManager(worker, s_featureSelection);
 }
 
 TEST_CASE( "Real TileWorker Initialization", "[TileManager][Constructor]" ) {
     TileWorker worker(1);
-    TileManager tileManager(worker);
+    TileManager tileManager(worker, s_featureSelection);
 }
 
 TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TileManager tileManager(worker);
+    TileManager tileManager(worker, s_featureSelection);
     ViewState viewState { s_projection, true, glm::vec2(0), 1 };
 
     auto source = std::make_shared<TestDataSource>();
@@ -188,7 +190,7 @@ TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
 
 TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TileManager tileManager(worker);
+    TileManager tileManager(worker, s_featureSelection);
     ViewState viewState { s_projection, true, glm::vec2(0), 1 };
 
     auto source = std::make_shared<TestDataSource>();
@@ -227,7 +229,7 @@ TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
 
 TEST_CASE( "Use proxy Tile - circular proxies", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TileManager tileManager(worker);
+    TileManager tileManager(worker, s_featureSelection);
     ViewState viewState { s_projection, true, glm::vec2(0), 1 };
 
     auto source = std::make_shared<TestDataSource>();
