@@ -54,6 +54,7 @@ void Marker::update(float dt, const View& view) {
     auto scaling = glm::scale(glm::vec3(extent()));
     auto translation = glm::translate(glm::vec3(m_origin.x - viewOrigin.x, m_origin.y - viewOrigin.y, 0.f));
     m_modelMatrix = translation * scaling;
+    m_modelViewProjectionMatrix = view.getViewProjectionMatrix() * m_modelMatrix;
 }
 
 void Marker::setVisible(bool visible) {
@@ -98,6 +99,10 @@ const glm::dvec2& Marker::origin() const {
 
 const glm::mat4& Marker::modelMatrix() const {
     return m_modelMatrix;
+}
+
+const glm::mat4& Marker::modelViewProjectionMatrix() const {
+    return m_modelViewProjectionMatrix;
 }
 
 const std::string& Marker::stylingString() const {
