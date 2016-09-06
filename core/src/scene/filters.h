@@ -7,13 +7,23 @@
 
 namespace Tangram {
 
+class SceneLayer;
 class StyleContext;
 struct Feature;
+struct Filter;
+
+// Reduce Filters for current zoom-level
+// Produce 3 filter sets for each geometry type
 
 enum class FilterKeyword : uint8_t {
-    undefined,
     zoom,
     geometry,
+    undefined,
+};
+
+struct FiltersAndKeys {
+    std::vector<Filter*> filters;
+    std::vector<std::string> keys;
 };
 
 struct Filter {
@@ -28,24 +38,25 @@ struct Filter {
     };
 
     struct EqualitySet {
-        std::string key;
+        size_t keyID;
         std::vector<Value> values;
-        FilterKeyword keyword;
+        std::string key;
     };
     struct Equality {
-        std::string key;
+        size_t keyID;
         Value value;
-        FilterKeyword keyword;
+        std::string key;
     };
     struct Range {
-        std::string key;
+        size_t keyID;
         float min;
         float max;
-        FilterKeyword keyword;
+        std::string key;
     };
     struct Existence {
-        std::string key;
+        size_t keyID;
         bool exists;
+        std::string key;
     };
     struct Function {
         uint32_t id;
@@ -64,7 +75,7 @@ struct Filter {
     Filter() : data(none_type{}) {}
     Filter(Data _data) : data(std::move(_data)) {}
 
-    bool eval(const Feature& feat, StyleContext& ctx) const;
+    bool eval(StyleContext& ctx) const;
 
     // Create an 'any', 'all', or 'none' filter
     inline static Filter MatchAny(std::vector<Filter> filters) {
@@ -81,19 +92,30 @@ struct Filter {
     }
     // Create an 'equality' filter
     inline static Filter MatchEquality(const std::string& k, const std::vector<Value>& vals) {
-        if (vals.size() == 1) {
-            return { Equality{ k, vals[0], keywordType(k) }};
+        auto t = keywordType(k);
+
+        if (t == FilterKeyword::geometry) {
+            if (vals.size() == 1) {
+                return { Equality{ 0, vals[0], k }};
+            } else {
+                return { EqualitySet{ 0, vals, k }};
+            }
+
         } else {
-            return { EqualitySet{ k, vals, keywordType(k) }};
+            if (vals.size() == 1) {
+                return { Equality{ 0, vals[0], k }};
+            } else {
+                return { EqualitySet{ 0, vals, k }};
+            }
         }
     }
     // Create a 'range' filter
     inline static Filter MatchRange(const std::string& k, float min, float max) {
-        return { Range{ k, min, max, keywordType(k) }};
+        return { Range{ 0, min, max, k }};
     }
     // Create an 'existence' filter
     inline static Filter MatchExistence(const std::string& k, bool ex) {
-        return { Existence{ k, ex }};
+        return { Existence{ 0, ex, k }};
     }
     // Create an 'function' filter with reference to Scene function id
     inline static Filter MatchFunction(uint32_t id) {
@@ -111,6 +133,10 @@ struct Filter {
 
     /* Public for testing */
     static void sort(std::vector<Filter>& filters);
+
+    static void collectFilters(Filter& f, FiltersAndKeys& fk);
+    static std::vector<std::string> assignPropertyKeys(FiltersAndKeys& fk);
+
     void print(int _indent = 0) const;
     int filterCost() const;
     const bool isOperator() const;

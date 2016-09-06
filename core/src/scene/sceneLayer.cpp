@@ -1,4 +1,7 @@
 #include "sceneLayer.h"
+#include "scene/filters.h"
+#include "data/properties.h"
+#include "platform.h"
 
 #include <algorithm>
 
@@ -26,6 +29,21 @@ void SceneLayer::setDepth(size_t _d) {
         layer.setDepth(m_depth + 1);
     }
 
+}
+
+void SceneLayer::buildPropertyTable(FiltersAndKeys& fk) {
+
+    std::function<void(SceneLayer&,FiltersAndKeys&)> traverseLayers;
+
+    traverseLayers = [&](SceneLayer& layer, FiltersAndKeys& fk) {
+        Filter::collectFilters(layer.m_filter, fk);
+
+        for (auto& l : layer.m_sublayers) {
+            traverseLayers(l, fk);
+        }
+    };
+
+    traverseLayers(*this, fk);
 }
 
 }

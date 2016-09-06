@@ -136,10 +136,14 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
     Context ctx;
 
     auto layer = instance();
+    FiltersAndKeys fk;
+    layer.buildPropertyTable(fk);
+    ctx.initPropFilters(Filter::assignPropertyKeys(fk));
 
     {
         DrawRuleMergeSet ruleSet;
         f1.props.set("base", "blah"); // Should match Base Layer
+        ctx.setFeature(f1);
         ruleSet.match(f1, layer, ctx);
         auto& matches = ruleSet.matchedRules();
 
@@ -151,6 +155,7 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
         DrawRuleMergeSet ruleSet;
         f2.props.set("one", "blah"); // Should match Base and subLayer1
         f2.props.set("base", "blah");
+        ctx.setFeature(f2);
         ruleSet.match(f2, layer, ctx);
         auto& matches = ruleSet.matchedRules();
 
@@ -163,6 +168,7 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
     {
         DrawRuleMergeSet ruleSet;
         f3.props.set("two", "blah"); // Should not match anything as uber layer will not be satisfied
+        ctx.setFeature(f3);
         ruleSet.match(f3, layer, ctx);
         auto& matches = ruleSet.matchedRules();
 
@@ -173,6 +179,7 @@ TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {
         DrawRuleMergeSet ruleSet;
         f4.props.set("two", "blah");
         f4.props.set("base", "blah"); // Should match Base and subLayer2
+        ctx.setFeature(f4);
         ruleSet.match(f4, layer, ctx);
         auto& matches = ruleSet.matchedRules();
 
@@ -193,7 +200,11 @@ TEST_CASE("SceneLayer matches correct rules for a feature and context", "[SceneL
     {
         DrawRuleMergeSet ruleSet;
         auto layer_a = instance_a();
+        FiltersAndKeys fk;
+        layer_a.buildPropertyTable(fk);
+        ctx.initPropFilters(Filter::assignPropertyKeys(fk));
 
+        ctx.setFeature(feat);
         ruleSet.match(feat, layer_a, ctx);
         auto& matches_a = ruleSet.matchedRules();
 
@@ -204,7 +215,11 @@ TEST_CASE("SceneLayer matches correct rules for a feature and context", "[SceneL
     {
         DrawRuleMergeSet ruleSet;
         auto layer_b = instance_b();
+        FiltersAndKeys fk;
+        layer_b.buildPropertyTable(fk);
+        ctx.initPropFilters(Filter::assignPropertyKeys(fk));
 
+        ctx.setFeature(feat);
         ruleSet.match(feat, layer_b, ctx);
         auto& matches_b = ruleSet.matchedRules();
 
@@ -220,7 +235,11 @@ TEST_CASE("SceneLayer matches correct sublayer rules for a feature and context",
     DrawRuleMergeSet ruleSet;
 
     auto layer_c = instance_c();
+    FiltersAndKeys fk;
+    layer_c.buildPropertyTable(fk);
+    ctx.initPropFilters(Filter::assignPropertyKeys(fk));
 
+    ctx.setFeature(feat);
     ruleSet.match(feat, layer_c, ctx);
     auto& matches = ruleSet.matchedRules();
 
@@ -238,7 +257,11 @@ TEST_CASE("SceneLayer correctly merges rules matched from sublayer", "[SceneLaye
     DrawRuleMergeSet ruleSet;
 
     auto layer_e = instance_e();
+    FiltersAndKeys fk;
+    layer_e.buildPropertyTable(fk);
+    ctx.initPropFilters(Filter::assignPropertyKeys(fk));
 
+    ctx.setFeature(feat);
     ruleSet.match(feat, layer_e, ctx);
     auto& matches = ruleSet.matchedRules();
 

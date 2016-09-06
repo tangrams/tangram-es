@@ -21,6 +21,7 @@ namespace Tangram {
 class Scene;
 struct Feature;
 struct StyleParam;
+struct PropertyItem;
 
 enum class StyleParamKey : uint8_t;
 enum class FilterKeyword : uint8_t;
@@ -45,12 +46,15 @@ public:
      */
     void setKeywordZoom(int _zoom);
 
-    /* Called from Filter::eval */
+    /* Called from DrawRule::evaluateRuleForContext() */
     float getKeywordZoom() const { return m_keywordZoom; }
 
     const Value& getKeyword(FilterKeyword _key) const {
         return m_keywords[static_cast<uint8_t>(_key)];
     }
+
+    const Value& getCachedProperty(size_t _keyID);
+    bool hasCachedProperty(size_t _keyID);
 
     /* Called from Filter::eval */
     bool evalFilter(FunctionID id);
@@ -62,6 +66,8 @@ public:
      * Setup filter and style functions from @_scene
      */
     void initFunctions(const Scene& _scene);
+
+    void initPropFilters(std::vector<std::string> _keys);
 
     /*
      * Unset Feature handle
@@ -83,7 +89,7 @@ private:
     void parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
     void parseSceneGlobals(const YAML::Node& node);
 
-    std::array<Value, 4> m_keywords;
+    std::array<Value, 2> m_keywords;
     int m_keywordGeom= -1;
     int m_keywordZoom = -1;
 
@@ -94,6 +100,9 @@ private:
     const Feature* m_feature = nullptr;
 
     mutable duk_context *m_ctx;
+
+    std::vector<std::string> m_propFilterKeys;
+    std::vector<const Value*> m_propFilterValues;
 };
 
 }

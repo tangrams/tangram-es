@@ -260,8 +260,8 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
     ctx.setFeature(feat1);
 
     // NB: feature parameter is ignored for Function evaluation
-    REQUIRE(filter0.eval(feat1, ctx) == true);
-    REQUIRE(filter1.eval(feat1, ctx) == true);
+    REQUIRE(filter0.eval(ctx) == true);
+    REQUIRE(filter1.eval(ctx) == true);
 
     // This is what happens in the above 'eval' internally
     REQUIRE(ctx.evalFilter(filter0.data.get<Filter::Function>().id) == true);
@@ -272,8 +272,8 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
     feat2.props.set("name", "nope");
     ctx.setFeature(feat2);
 
-    REQUIRE(filter0.eval(feat2, ctx) == false);
-    REQUIRE(filter1.eval(feat2, ctx) == false);
+    REQUIRE(filter0.eval(ctx) == false);
+    REQUIRE(filter1.eval(ctx) == false);
 
     REQUIRE(ctx.evalFilter(filter0.data.get<Filter::Function>().id) == false);
     REQUIRE(ctx.evalFilter(filter1.data.get<Filter::Function>().id) == false);

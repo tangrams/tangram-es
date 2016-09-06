@@ -1,4 +1,5 @@
 #include "filters.h"
+#include "scene/sceneLayer.h"
 #include "scene/styleContext.h"
 #include "data/tileData.h"
 #include "platform.h"
@@ -40,14 +41,12 @@ void Filter::print(int _indent) const {
     case Data::type<EqualitySet>::value: {
         auto& f = data.get<EqualitySet>();
         if (f.values[0].is<std::string>()) {
-            logMsg("%*s equality set - keyword:%d key:%s val:%s\n", _indent, "",
-                   f.keyword != FilterKeyword::undefined,
+            logMsg("%*s equality set - key:%s val:%s\n", _indent, "",
                    f.key.c_str(),
                    f.values[0].get<std::string>().c_str());
         }
         if (f.values[0].is<double>()) {
-            logMsg("%*s equality - keyword:%d key:%s val:%f\n", _indent, "",
-                   f.keyword != FilterKeyword::undefined,
+            logMsg("%*s equality - key:%s val:%f\n", _indent, "",
                    f.key.c_str(),
                    f.values[0].get<double>());
         }
@@ -56,14 +55,12 @@ void Filter::print(int _indent) const {
     case Data::type<Equality>::value: {
         auto& f = data.get<Equality>();
         if (f.value.is<std::string>()) {
-            logMsg("%*s equality - keyword:%d key:%s val:%s\n", _indent, "",
-                   f.keyword != FilterKeyword::undefined,
+            logMsg("%*s equality - key:%s val:%s\n", _indent, "",
                    f.key.c_str(),
                    f.value.get<std::string>().c_str());
         }
         if (f.value.is<double>()) {
-            logMsg("%*s equality - keyword:%d key:%s val:%f\n", _indent, "",
-                   f.keyword != FilterKeyword::undefined,
+            logMsg("%*s equality - key:%s val:%f\n", _indent, "",
                    f.key.c_str(),
                    f.value.get<double>());
         }
@@ -71,8 +68,7 @@ void Filter::print(int _indent) const {
     }
     case Data::type<Range>::value: {
         auto& f = data.get<Range>();
-        logMsg("%*s range - keyword:%d key:%s min:%f max:%f\n", _indent, "",
-               f.keyword != FilterKeyword::undefined,
+        logMsg("%*s range - key:%s min:%f max:%f\n", _indent, "",
                f.key.c_str(), f.min, f.max);
         return;
     }
@@ -83,8 +79,9 @@ void Filter::print(int _indent) const {
     default:
         break;
     }
-
 }
+
+
 
 
 int Filter::filterCost() const {
@@ -110,13 +107,9 @@ int Filter::filterCost() const {
         return 20;
 
     case Data::type<EqualitySet>::value:
-        return data.get<EqualitySet>().keyword == FilterKeyword::undefined ? 10 : 1;
-
     case Data::type<Equality>::value:
-        return data.get<Equality>().keyword == FilterKeyword::undefined ? 10 : 1;
-
     case Data::type<Filter::Range>::value:
-        return data.get<Range>().keyword == FilterKeyword::undefined ? 10 : 1;
+        return 1;
 
     case Data::type<Function>::value:
         // Most expensive filter should be checked last
@@ -208,6 +201,7 @@ int compareSetFilter(const Filter& a, const Filter& b) {
 
 
 void Filter::sort(std::vector<Filter>& _filters) {
+
     std::sort(_filters.begin(), _filters.end(),
               [](Filter& a, Filter& b) {
 
@@ -237,6 +231,101 @@ void Filter::sort(std::vector<Filter>& _filters) {
               });
 }
 
+
+void Filter::collectFilters(Filter& f, FiltersAndKeys& fk) {
+
+    switch (f.data.which()) {
+
+    case Filter::Data::type<Filter::OperatorAny>::value: {
+        for (auto& op : f.data.get<Filter::OperatorAny>().operands) {
+            collectFilters(op, fk);
+        }
+        break;
+    }
+    case Filter::Data::type<Filter::OperatorAll>::value: {
+        for (auto& op : f.data.get<Filter::OperatorAll>().operands) {
+            collectFilters(op, fk);
+        }
+        break;
+    }
+    case Filter::Data::type<Filter::OperatorNone>::value: {
+        for (auto& op : f.data.get<Filter::OperatorNone>().operands) {
+            collectFilters(op, fk);
+        }
+        break;
+    }
+    case Filter::Data::type<Filter::Existence>::value: {
+        auto& d = f.data.get<Filter::Existence>();
+        fk.keys.push_back(d.key);
+        fk.filters.push_back(&f);
+        break;
+    }
+    case Filter::Data::type<Filter::EqualitySet>::value: {
+        auto& d = f.data.get<Filter::EqualitySet>();
+        if (Filter::keywordType(d.key) == FilterKeyword::undefined) {
+            fk.keys.push_back(d.key);
+            fk.filters.push_back(&f);
+        }
+        break;
+    }
+    case Filter::Data::type<Filter::Equality>::value: {
+        auto& d = f.data.get<Filter::Equality>();
+        if (Filter::keywordType(d.key) == FilterKeyword::undefined) {
+            fk.keys.push_back(d.key);
+            fk.filters.push_back(&f);
+        }
+        break;
+    }
+    case Filter::Data::type<Filter::Range>::value: {
+        auto& d = f.data.get<Filter::Range>();
+        if (Filter::keywordType(d.key) == FilterKeyword::undefined) {
+            fk.keys.push_back(d.key);
+            fk.filters.push_back(&f);
+        }
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+std::vector<std::string> Filter::assignPropertyKeys(FiltersAndKeys& fk) {
+    std::sort(fk.keys.begin(), fk.keys.end(), Properties::keyComparator);
+    fk.keys.erase(std::unique(fk.keys.begin(), fk.keys.end()), fk.keys.end());
+    fk.keys.insert(fk.keys.begin(), "$geometry");
+    fk.keys.insert(fk.keys.begin(), "$zoom");
+
+    for (auto& k : fk.keys) {
+        LOG("key: %s", k.c_str());
+    }
+
+    for (auto* f : fk.filters) {
+        std::string key = f->key();
+        size_t id = 0;
+        for (; id < fk.keys.size(); id++) {
+            if (fk.keys[id] == key) { break; }
+        }
+
+        switch (f->data.which()) {
+        case Filter::Data::type<Filter::Existence>::value:
+            f->data.get<Filter::Existence>().keyID = id;
+            break;
+        case Filter::Data::type<Filter::EqualitySet>::value:
+            f->data.get<Filter::EqualitySet>().keyID = id;
+            break;
+        case Filter::Data::type<Filter::Equality>::value:
+            f->data.get<Filter::Equality>().keyID = id;
+            break;
+        case Filter::Data::type<Filter::Range>::value:
+            f->data.get<Filter::Range>().keyID = id;
+            break;
+        default:
+            break;
+
+        }
+    }
+    return fk.keys;
+}
 
 struct string_matcher {
     using result_type = bool;
@@ -317,10 +406,8 @@ struct match_range {
 struct matcher {
     using result_type = bool;
 
-    matcher(const Feature& feat, StyleContext& ctx) :
-        props(feat.props), ctx(ctx) {}
+    matcher(StyleContext& ctx) : ctx(ctx) {}
 
-    const Properties& props;
     StyleContext& ctx;
 
     bool eval(const Filter::Data& data) const {
@@ -346,27 +433,18 @@ struct matcher {
         return true;
     }
     bool operator() (const Filter::Existence& f) const {
-        return f.exists == props.contains(f.key);
+        return f.exists == ctx.hasCachedProperty(f.keyID);
     }
     bool operator() (const Filter::EqualitySet& f) const {
-        auto& value = (f.keyword == FilterKeyword::undefined)
-            ? props.get(f.key)
-            : ctx.getKeyword(f.keyword);
-
+        auto& value = ctx.getCachedProperty(f.keyID);
         return Value::visit(value, match_equal_set{f.values});
     }
     bool operator() (const Filter::Equality& f) const {
-        auto& value = (f.keyword == FilterKeyword::undefined)
-            ? props.get(f.key)
-            : ctx.getKeyword(f.keyword);
-
+        auto& value = ctx.getCachedProperty(f.keyID);
         return Value::visit(value, match_equal{f.value});
     }
     bool operator() (const Filter::Range& f) const {
-        auto& value = (f.keyword == FilterKeyword::undefined)
-            ? props.get(f.key)
-            : ctx.getKeyword(f.keyword);
-
+        auto& value = ctx.getCachedProperty(f.keyID);
         return Value::visit(value, match_range{f});
     }
     bool operator() (const Filter::Function& f) const {
@@ -377,8 +455,8 @@ struct matcher {
     }
 };
 
-bool Filter::eval(const Feature& feat, StyleContext& ctx) const {
-    return Data::visit(data, matcher(feat, ctx));
+bool Filter::eval(StyleContext& ctx) const {
+    return Data::visit(data, matcher(ctx));
 }
 
 }

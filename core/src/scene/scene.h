@@ -78,6 +78,7 @@ public:
     auto& globalRefs() { return m_globalRefs; }
     auto& featureSelection() { return m_featureSelection; }
     Style* findStyle(const std::string& _name);
+    auto& filterPropertyKeys() { return m_filterPropertyKeys; }
 
     const auto& path() const { return m_path; }
     const auto& resourceRoot() const { return m_resourceRoot; }
@@ -91,6 +92,7 @@ public:
     const auto& fontContext() const { return m_fontContext; }
     const auto& globalRefs() const { return m_globalRefs; }
     const auto& featureSelection() const { return m_featureSelection; }
+    const auto& filterPropertyKeys() const { return m_filterPropertyKeys; }
 
     const Style* findStyle(const std::string& _name) const;
     const Light* findLight(const std::string& _name) const;
@@ -163,6 +165,8 @@ private:
     float m_pixelScale = 1.0f;
 
     float m_time = 0.0;
+
+    std::vector<std::string> m_filterPropertyKeys;
 
 };
 

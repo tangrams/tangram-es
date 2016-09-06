@@ -77,6 +77,8 @@ StyleContext::StyleContext() {
     }
 
     DUMP("init\n");
+
+    m_propFilterValues.resize(2);
 }
 
 StyleContext::~StyleContext() {
@@ -171,6 +173,12 @@ void StyleContext::initFunctions(const Scene& _scene) {
     setFunctions(_scene.functions());
 }
 
+
+void StyleContext::initPropFilters(std::vector<std::string> _keys) {
+    m_propFilterValues.resize(_keys.size());
+    m_propFilterKeys = std::move(_keys);
+}
+
 bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {
 
     auto arr_idx = duk_push_array(m_ctx);
@@ -237,6 +245,35 @@ bool StyleContext::addFunction(const std::string& _function) {
 void StyleContext::setFeature(const Feature& _feature) {
 
     m_feature = &_feature;
+
+    m_propFilterValues.assign(m_propFilterValues.size(), nullptr);
+    m_propFilterValues[0] = &m_keywords[0];
+    m_propFilterValues[1] = &m_keywords[1];
+#if 0
+    const auto& props = _feature.props.items();
+
+    // skip $geom and $zoom
+    for (size_t i = 2, j = 0; i < m_propFilterKeys.size(); i++) {
+
+        auto& key = m_propFilterKeys[i];
+        size_t keySize = key.size();
+
+        for (; j < props.size(); j++) {
+
+            if (keySize > props[j].key.size()) { continue; }
+            if (keySize < props[j].key.size()) { break; }
+
+            int cmp = key.compare(0, keySize, props[j].key, 0, keySize);
+
+            if (cmp == 0) {
+                m_propFilterValues[i] = &props[j].value;
+                j++;
+                break;
+            }
+            if (cmp < 0) { break; }
+        }
+    }
+#endif
 
     if (m_keywordGeom != m_feature->geometryType) {
         setKeyword(key_geom, s_geometryStrings[m_feature->geometryType]);
@@ -518,6 +555,18 @@ duk_ret_t StyleContext::jsGetProperty(duk_context *_ctx) {
     // FIXME: Distinguish Booleans here as well
 
     return 1;
+}
+
+const Value& StyleContext::getCachedProperty(size_t _keyID) {
+    auto& v = m_propFilterValues[_keyID];
+    if (!v) { v = &m_feature->props.get(m_propFilterKeys[_keyID]); }
+    return *v;
+}
+
+bool StyleContext::hasCachedProperty(size_t _keyID) {
+    auto& v = m_propFilterValues[_keyID];
+    if (!v) { v = &m_feature->props.get(m_propFilterKeys[_keyID]); }
+    return !v->is<none_type>();
 }
 
 }

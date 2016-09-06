@@ -19,6 +19,7 @@ TileBuilder::TileBuilder(std::shared_ptr<Scene> _scene)
     : m_scene(_scene) {
 
     m_styleContext.initFunctions(*_scene);
+    m_styleContext.initPropFilters(_scene->filterPropertyKeys());
 
     // Initialize StyleBuilders
     for (auto& style : _scene->styles()) {
@@ -107,11 +108,15 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
             builder.second->setup(*tile);
     }
 
-    for (const auto& datalayer : m_scene->layers()) {
+    std::vector<const SceneLayer*> sceneLayers;
 
-        if (datalayer.source() != _source.name()) { continue; }
+    for (const auto& collection : _tileData.layers) {
 
-        for (const auto& collection : _tileData.layers) {
+        sceneLayers.clear();
+
+        for (const auto& datalayer : m_scene->layers()) {
+
+            if (datalayer.source() != _source.name()) { continue; }
 
             if (!collection.name.empty()) {
                 const auto& dlc = datalayer.collections();
@@ -120,9 +125,14 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
 
                 if (!layerContainsCollection) { continue; }
             }
+            sceneLayers.push_back(&datalayer);
+        }
 
-            for (const auto& feat : collection.features) {
-                applyStyling(feat, datalayer);
+        for (const auto& feat : collection.features) {
+            m_styleContext.setFeature(feat);
+
+            for (const auto& datalayer : sceneLayers) {
+                applyStyling(feat, *datalayer);
             }
         }
     }

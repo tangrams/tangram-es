@@ -63,6 +63,13 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
 
         applyConfig(_scene);
 
+        // Collect feature property keys from Filters and assign
+        // IDs for caching often used properties.
+        FiltersAndKeys fk;
+        for (auto& l : _scene->layers()) {
+            l.buildPropertyTable(fk);
+        }
+        _scene->filterPropertyKeys() = Filter::assignPropertyKeys(fk);
         return true;
     }
     return false;

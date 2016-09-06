@@ -107,7 +107,6 @@ void DrawRule::logGetError(StyleParamKey _expectedKey, const StyleParam& _param)
 
 bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, StyleContext& _ctx) {
 
-    _ctx.setFeature(_feature);
     m_matchedRules.clear();
     m_queuedLayers.clear();
 
@@ -117,7 +116,7 @@ bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, 
     }
 
     // If the first filter doesn't match, return immediately
-    if (!_layer.filter().eval(_feature, _ctx)) { return false; }
+    if (!_layer.filter().eval(_ctx)) { return false; }
 
     m_queuedLayers.push_back(&_layer);
 
@@ -138,7 +137,7 @@ bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, 
                 continue;
             }
 
-            if (sublayer.filter().eval(_feature, _ctx)) {
+            if (sublayer.filter().eval(_ctx)) {
                 m_queuedLayers.push_back(&sublayer);
             }
         }

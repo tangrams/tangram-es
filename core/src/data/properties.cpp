@@ -33,7 +33,7 @@ const Value& Properties::get(const std::string& key) const {
     //                                return keyComparator(item.key, key);
     //                            });
     // if (it == props.end() || it->key != key) {
-    //     return NOT_FOUND;
+    //     return NOT_A_VALUE
     // }
 
     return it->value;

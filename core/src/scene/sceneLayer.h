@@ -39,6 +39,8 @@ public:
     const auto& visible() const { return m_visible; }
 
     void setDepth(size_t _d);
+
+    void buildPropertyTable(FiltersAndKeys& fk);
 };
 
 }
