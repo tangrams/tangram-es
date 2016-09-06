@@ -15,7 +15,7 @@ FrameBuffer::FrameBuffer(bool _colorRenderBuffer) :
 
 }
 
-void FrameBuffer::applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor,
+bool FrameBuffer::applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor,
                                       unsigned int _vpWidth, unsigned int _vpHeight) {
 
     if (!m_glFrameBufferHandle) {
@@ -26,7 +26,7 @@ void FrameBuffer::applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor,
     }
 
     if (!m_valid) {
-        return;
+        return false;
     }
 
     _rs.framebuffer(m_glFrameBufferHandle);
@@ -36,6 +36,8 @@ void FrameBuffer::applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor,
     _rs.clearColor(_clearColor.r, _clearColor.g, _clearColor.b, _clearColor.a);
 
     GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
+    return true;
 }
 
 void FrameBuffer::bind(RenderState& _rs) const {
@@ -89,7 +91,25 @@ void FrameBuffer::init(RenderState& _rs, unsigned int _rtWidth, unsigned int _rt
     GL_CHECK();
 
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        LOGE("Framebuffer status is incomplete");
+        LOGE("Framebuffer status is incomplete:");
+
+        switch (status) {
+            case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                LOGE("\tGL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                LOGE("\tGL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+                LOGE("\tGL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+                break;
+            case GL_FRAMEBUFFER_UNSUPPORTED:
+                LOGE("\tGL_FRAMEBUFFER_UNSUPPORTED");
+                break;
+            default:
+                LOGE("\tUnknown framebuffer issue");
+                break;
+        }
     } else {
         m_valid = true;
     }

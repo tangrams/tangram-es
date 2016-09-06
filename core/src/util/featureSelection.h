@@ -23,7 +23,7 @@ public:
     // screen location has been done from the tangram API
     bool pendingRequests() const { return true; }
 
-    void beginRenderPass(RenderState& _rs);
+    bool beginRenderPass(RenderState& _rs);
 
     void endRenderPass(RenderState& _rs);
 

@@ -371,30 +371,27 @@ void Map::render() {
     // Run render-thread tasks
     impl->renderState.jobQueue.runJobs();
 
-    auto& color = impl->scene->background();
-    impl->renderState.clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
-
-    // Feature selection pass
+    // Render feature selection pass to offscreen framebuffer
     if (impl->featureSelection->pendingRequests()) {
 
-        impl->featureSelection->beginRenderPass(impl->renderState);
+        if (impl->featureSelection->beginRenderPass(impl->renderState)) {
+            {
+                std::lock_guard<std::mutex> lock(impl->tilesMutex);
+                for (const auto& style : impl->scene->styles()) {
+                    style->onBeginDrawSelectionFrame(impl->renderState, impl->view, *(impl->scene));
 
-        {
-            std::lock_guard<std::mutex> lock(impl->tilesMutex);
-
-            for (const auto& style : impl->scene->styles()) {
-
-                style->onBeginDrawSelectionFrame(impl->renderState, impl->view, *(impl->scene));
-
-                for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                    style->drawSelectionFrame(impl->renderState, *tile);
+                    for (const auto& tile : impl->tileManager.getVisibleTiles()) {
+                        style->drawSelectionFrame(impl->renderState, *tile);
+                    }
                 }
             }
+
+            impl->featureSelection->endRenderPass(impl->renderState);
         }
-
-        impl->featureSelection->endRenderPass(impl->renderState);
-
     }
+
+    auto& color = impl->scene->background();
+    impl->renderState.clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
 
     // Set up openGL for new frame
     impl->renderState.depthMask(GL_TRUE);

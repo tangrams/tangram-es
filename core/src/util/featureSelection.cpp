@@ -31,12 +31,11 @@ uint32_t FeatureSelection::colorIdentifier(const Feature& _feature,
     return color;
 }
 
-void FeatureSelection::beginRenderPass(Tangram::RenderState& _rs) {
+bool FeatureSelection::beginRenderPass(Tangram::RenderState& _rs) {
 
     _rs.saveFramebufferState();
 
-    m_framebuffer->applyAsRenderTarget(_rs, {0.0, 0.0, 0.0, 0.0}, 256, 256);
-
+    return m_framebuffer->applyAsRenderTarget(_rs, {0.0, 0.0, 0.0, 0.0}, 256, 256);
 }
 
 void FeatureSelection::endRenderPass(Tangram::RenderState& _rs) {
