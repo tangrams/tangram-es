@@ -20,7 +20,7 @@ public:
 
     ~FrameBuffer();
 
-    void applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor,
+    bool applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor,
                              unsigned int _vpWidth, unsigned int _vpHeight);
 
     bool valid() const { return m_valid; }
