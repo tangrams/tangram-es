@@ -88,8 +88,8 @@ struct RawCache {
     }
 };
 
-DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate, int32_t _minZoom, int32_t _maxZoom) :
-    m_name(_name), m_minZoom(_minZoom), m_maxZoom(_maxZoom), m_urlTemplate(_urlTemplate),
+DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate, int32_t _minDisplayZoom, int32_t _maxZoom) :
+    m_name(_name), m_urlTemplate(_urlTemplate), m_minDisplayZoom(_minDisplayZoom), m_maxZoom(_maxZoom),
     m_cache(std::make_unique<RawCache>()){
 
     static std::atomic<int32_t> s_serial;
@@ -143,7 +143,7 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
 bool DataSource::equals(const DataSource& other) const {
     if (m_name != other.m_name) { return false; }
     if (m_urlTemplate != other.m_urlTemplate) { return false; }
-    if (m_minZoom != other.m_minZoom) { return false; }
+    if (m_minDisplayZoom != other.m_minDisplayZoom) { return false; }
     if (m_maxZoom != other.m_maxZoom) { return false; }
     if (m_rasterSources.size() != other.m_rasterSources.size()) { return false; }
     for (size_t i = 0, end = m_rasterSources.size(); i < end; ++i) {
