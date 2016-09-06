@@ -13,7 +13,7 @@
 
 namespace Tangram {
 
-#define LOG_CAPACITY        10
+#define LOG_CAPACITY        20
 #define VERTEX_BUFFER_SIZE  99999
 
 typedef int FontID;
