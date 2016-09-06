@@ -15,11 +15,9 @@ using YAML::Node;
 
 using Context = StyleContext;
 
-Context ctx;
-
 Feature civic, bmw1, bike;
 
-Filter load(const std::string& filterYaml) {
+Filter load(Context& ctx, const std::string& filterYaml) {
     Scene scene;
     YAML::Node node = YAML::Load(filterYaml);
     auto filter = SceneLoader::generateFilter(node["filter"], scene);
@@ -32,7 +30,9 @@ Filter load(const std::string& filterYaml) {
     return filter;
 }
 
-void init() {
+Context init() {
+
+    Context ctx = Context{};
 
     civic.geometryType = GeometryType::lines;
     civic.props.clear();
@@ -66,12 +66,14 @@ void init() {
     //ctx.setKeyword("$geometry", Value(1));
     //ctx.setKeyword("$zoom", Value("false"));
     ctx.setKeywordZoom(12);
+
+    return ctx;
 }
 
 //1. basic predicate
 TEST_CASE( "yaml-filter-tests: basic predicate test", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: { series: !!str 3}");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: { series: !!str 3}");
 
     ctx.setFeature(civic);
     REQUIRE(!filter.eval(ctx));
@@ -84,8 +86,8 @@ TEST_CASE( "yaml-filter-tests: basic predicate test", "[filters][core][yaml]") {
 
 //2. predicate with valueList
 TEST_CASE( "yaml-filter-tests: predicate with valueList", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: { name : [civic, bmw320i] }");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: { name : [civic, bmw320i] }");
 
     ctx.setFeature(civic);
     REQUIRE(filter.eval(ctx));
@@ -98,8 +100,8 @@ TEST_CASE( "yaml-filter-tests: predicate with valueList", "[filters][core][yaml]
 
 //3. range min
 TEST_CASE( "yaml-filter-tests: range min", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: {wheel : {min : 3}}");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: {wheel : {min : 3}}");
 
     ctx.setFeature(civic);
     REQUIRE(filter.eval(ctx));
@@ -111,8 +113,8 @@ TEST_CASE( "yaml-filter-tests: range min", "[filters][core][yaml]") {
 
 //4. range max
 TEST_CASE( "yaml-filter-tests: range max", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: {wheel : {max : 2}}");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: {wheel : {max : 2}}");
 
     ctx.setFeature(civic);
     REQUIRE(!filter.eval(ctx));
@@ -124,8 +126,8 @@ TEST_CASE( "yaml-filter-tests: range max", "[filters][core][yaml]") {
 
 //5. range min max
 TEST_CASE( "yaml-filter-tests: range min max", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: {wheel : {min : 2, max : 5}}");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: {wheel : {min : 2, max : 5}}");
 
     ctx.setFeature(civic);
     REQUIRE(filter.eval(ctx));
@@ -137,8 +139,8 @@ TEST_CASE( "yaml-filter-tests: range min max", "[filters][core][yaml]") {
 
 //6. any
 TEST_CASE( "yaml-filter-tests: any", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: {any : [{name : civic}, {name : bmw320i}]}");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: {any : [{name : civic}, {name : bmw320i}]}");
 
     ctx.setFeature(civic);
     REQUIRE(filter.eval(ctx));
@@ -150,8 +152,8 @@ TEST_CASE( "yaml-filter-tests: any", "[filters][core][yaml]") {
 
 //7. all
 TEST_CASE( "yaml-filter-tests: all", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: {all : [ {name : civic}, {brand : honda}, {wheel: 4} ] }");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: {all : [ {name : civic}, {brand : honda}, {wheel: 4} ] }");
 
     ctx.setFeature(civic);
     REQUIRE(filter.eval(ctx));
@@ -163,8 +165,8 @@ TEST_CASE( "yaml-filter-tests: all", "[filters][core][yaml]") {
 
 //8. none
 TEST_CASE( "yaml-filter-tests: none", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: {none : [{name : civic}, {name : bmw320i}]}");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: {none : [{name : civic}, {name : bmw320i}]}");
 
     ctx.setFeature(civic);
     REQUIRE(!filter.eval(ctx));
@@ -176,8 +178,8 @@ TEST_CASE( "yaml-filter-tests: none", "[filters][core][yaml]") {
 
 //9. not
 TEST_CASE( "yaml-filter-tests: not", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: {not : { any: [{name : civic}, {name : bmw320i}]}}");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: {not : { any: [{name : civic}, {name : bmw320i}]}}");
 
     ctx.setFeature(civic);
     REQUIRE(!filter.eval(ctx));
@@ -189,8 +191,8 @@ TEST_CASE( "yaml-filter-tests: not", "[filters][core][yaml]") {
 
 //10. basic predicate with context
 TEST_CASE( "yaml-filter-tests: context filter", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: {$geometry : 1}");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: {$geometry : point}");
 
     ctx.setFeature(civic);
     REQUIRE(!filter.eval(ctx));
@@ -203,8 +205,8 @@ TEST_CASE( "yaml-filter-tests: context filter", "[filters][core][yaml]") {
 }
 
 TEST_CASE( "yaml-filter-tests: bogus filter", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: {max: bogus}");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: {max: bogus}");
 
     ctx.setFeature(civic);
     REQUIRE(!filter.eval(ctx));
@@ -215,8 +217,8 @@ TEST_CASE( "yaml-filter-tests: bogus filter", "[filters][core][yaml]") {
 }
 
 TEST_CASE( "yaml-filter-tests: boolean true filter as existence check", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: { drive : true }");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: { drive : true }");
 
     ctx.setFeature(civic);
     REQUIRE(filter.eval(ctx));
@@ -227,8 +229,8 @@ TEST_CASE( "yaml-filter-tests: boolean true filter as existence check", "[filter
 }
 
 TEST_CASE( "yaml-filter-tests: boolean false filter as existence check", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: { drive : false}");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: { drive : false}");
 
     ctx.setFeature(civic);
     REQUIRE(!filter.eval(ctx));
@@ -241,8 +243,8 @@ TEST_CASE( "yaml-filter-tests: boolean false filter as existence check", "[filte
 #if 0
 //What is this test for? same as line ~190
 TEST_CASE( "yaml-filter-tests: boolean true filter as existence check for keyword", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: {$geometry : 1}");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: {$geometry : 1}");
 
     ctx.setFeature(civic);
     REQUIRE(filter.eval(ctx));
@@ -254,8 +256,8 @@ TEST_CASE( "yaml-filter-tests: boolean true filter as existence check for keywor
 #endif
 
 TEST_CASE( "yaml-filter-tests: boolean false filter as existence check for keyword", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: {$zoom : 12}");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: {$zoom : 12}");
 
     ctx.setFeature(civic);
     REQUIRE(filter.eval(ctx));
@@ -266,8 +268,8 @@ TEST_CASE( "yaml-filter-tests: boolean false filter as existence check for keywo
 }
 
 TEST_CASE( "yaml-filter-tests: predicate with large integers", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: { serial : [4398046511104] }");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: { serial : [4398046511104] }");
 
     ctx.setFeature(civic);
     REQUIRE(!filter.eval(ctx));
@@ -278,8 +280,8 @@ TEST_CASE( "yaml-filter-tests: predicate with large integers", "[filters][core][
 }
 
 TEST_CASE("Filters specified as a javascript function evaluate correctly", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: 'function() { return false; }'");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: 'function() { return false; }'");
 
     ctx.setFeature(civic);
     REQUIRE(!filter.eval(ctx));
@@ -290,10 +292,13 @@ TEST_CASE("Filters specified as a javascript function evaluate correctly", "[fil
 }
 
 TEST_CASE("Sequences in filters implicitly create an 'any' filter", "[filters][core][yaml]") {
-    init();
-    Filter filter = load("filter: [ { brand: 'bmw' }, { type: 'car' } ]");
+    Context ctx = init();
+    Filter filter = load(ctx, "filter: [ { brand: 'bmw' }, { type: 'car' } ]");
 
-    REQUIRE(filter.eval(civic, ctx));
-    REQUIRE(filter.eval(bmw1, ctx));
-    REQUIRE(!filter.eval(bike, ctx));
+    ctx.setFeature(civic);
+    REQUIRE(filter.eval(ctx));
+    ctx.setFeature(bmw1);
+    REQUIRE(filter.eval(ctx));
+    ctx.setFeature(bike);
+    REQUIRE(!filter.eval(ctx));
 }
