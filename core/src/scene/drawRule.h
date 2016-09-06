@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scene/styleParam.h"
+#include "tile/tileID.h"
 
 #include <vector>
 #include <set>
@@ -121,7 +122,7 @@ public:
      * the result to @_tile
      */
     void apply(const Feature& _feature, const SceneLayer& _sceneLayer,
-               StyleContext& _ctx, TileBuilder& _builder);
+               StyleContext& _ctx, TileBuilder& _builder, const TileID& _tileID);
 
     bool evaluateRuleForContext(DrawRule& rule, StyleContext& ctx);
 

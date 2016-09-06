@@ -5,16 +5,19 @@
 #include "view/view.h"
 #include "tile/tileID.h"
 #include "labels/labelSet.h"
+#include "util/featureSelection.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 
 namespace Tangram {
 
-Tile::Tile(TileID _id, const MapProjection& _projection, const DataSource* _source) :
+Tile::Tile(TileID _id, const MapProjection& _projection, std::shared_ptr<FeatureSelection> _featureSelection,
+           const DataSource* _source) :
     m_id(_id),
     m_projection(&_projection),
     m_sourceId(_source ? _source->id() : 0),
-    m_sourceGeneration(_source ? _source->generation() : 0) {
+    m_sourceGeneration(_source ? _source->generation() : 0),
+    m_featureSelection(_featureSelection) {
 
     BoundingBox bounds(_projection.TileBounds(_id));
 
@@ -27,7 +30,9 @@ Tile::Tile(TileID _id, const MapProjection& _projection, const DataSource* _sour
     m_modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(m_scale));
 }
 
-Tile::~Tile() {}
+Tile::~Tile() {
+    m_featureSelection->clearFeaturesForTile(m_id);
+}
 
 //Note: This could set tile origin to be something different than the one if TileID's wrap is used.
 // But, this is required for wrapped tiles which are picked up from the cache

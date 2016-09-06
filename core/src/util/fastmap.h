@@ -57,6 +57,10 @@ struct fastmap {
         return map.end();
     }
 
+    iterator erase(const_iterator position) {
+        return map.erase(position);
+    }
+
     iterator begin() { return map.begin(); }
     iterator end() { return map.end(); }
 

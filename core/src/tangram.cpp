@@ -63,6 +63,10 @@ public:
     Labels labels;
     std::unique_ptr<AsyncWorker> asyncWorker = std::make_unique<AsyncWorker>();
     InputHandler inputHandler{view};
+    TileWorker tileWorker{MAX_WORKERS};
+    std::shared_ptr<FeatureSelection> featureSelection = std::make_shared<FeatureSelection>();
+    TileManager tileManager{tileWorker, featureSelection};
+    MarkerManager markerManager;
 
     std::vector<SceneUpdate> sceneUpdates;
     std::array<Ease, 4> eases;
@@ -79,7 +83,6 @@ public:
 
     bool cacheGlState;
 
-    std::shared_ptr<FeatureSelection> featureSelection;
 
 };
 
@@ -152,6 +155,7 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
     inputHandler.setView(view);
     tileManager.setDataSources(_scene->dataSources());
 
+    scene->featureSelection() = featureSelection;
     for (auto& style : scene->styles()) {
         style->setFeatureSelection(featureSelection);
     }
@@ -795,7 +799,6 @@ void Map::setupGL() {
 
     Hardware::printAvailableExtensions();
 
-    impl->featureSelection = std::make_shared<FeatureSelection>();
 }
 
 void Map::useCachedGlState(bool _useCache) {
