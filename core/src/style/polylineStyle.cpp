@@ -7,6 +7,7 @@
 #include "gl/mesh.h"
 #include "gl/texture.h"
 #include "gl/renderState.h"
+#include "marker/marker.h"
 #include "scene/stops.h"
 #include "scene/drawRule.h"
 #include "tile/tile.h"
@@ -160,6 +161,7 @@ public:
     };
 
     void setup(const Tile& _tile) override;
+    void setup(const Marker& _marker, int zoom) override;
 
     const Style& style() const override { return m_style; }
 
@@ -190,7 +192,7 @@ private:
     std::vector<MeshData<V>> m_meshData;
 
     float m_tileUnitsPerMeter = 0;
-    float m_tileSizePixels = 0;
+    float m_tileUnitsPerPixel = 0;
     int m_zoom = 0;
     float m_overzoom2 = 1;
 };
@@ -202,14 +204,29 @@ void PolylineStyleBuilder<V>::setup(const Tile& tile) {
 
     // Use the 'style zoom' to evaluate style parameters.
     m_zoom = id.s;
-    m_overzoom2 = powf(2.f, id.s - id.z);
+    m_overzoom2 = exp2(id.s - id.z);
     m_tileUnitsPerMeter = tile.getInverseScale();
-    m_tileSizePixels = tile.getProjection()->TileSize();
+    m_tileUnitsPerPixel = 1.f / tile.getProjection()->TileSize();
 
     // When a tile is overzoomed, we are actually styling the area of its
     // 'source' tile, which will have a larger effective pixel size at the
     // 'style' zoom level. This scaling is performed in the vertex shader to
     // prevent loss of precision for small dimensions in packed attributes.
+}
+
+template <class V>
+void PolylineStyleBuilder<V>::setup(const Marker& marker, int zoom) {
+
+    m_zoom = zoom;
+    m_overzoom2 = 1.f;
+    m_tileUnitsPerMeter = 1.f / marker.extent();
+    float metersPerTile = 2.f * MapProjection::HALF_CIRCUMFERENCE * exp2(-zoom);
+
+    // In general, a Marker won't cover the same area as a tile, so the effective
+    // "tile size" for building a Marker is the size of a tile in pixels multiplied
+    // by the ratio of the Marker's extent to the length of a tile side at this zoom.
+    m_tileUnitsPerPixel = metersPerTile / (marker.extent() * 256.f);
+
 }
 
 template <class V>
@@ -323,29 +340,20 @@ auto PolylineStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties&
     return p;
 }
 
-double widthMeterToPixel(int _zoom, double _tileSize, double _width) {
-    // pixel per meter at z == 0
-    double meterRes = _tileSize / (2.0 * MapProjection::HALF_CIRCUMFERENCE);
-    // pixel per meter at zoom
-    meterRes *= exp2(_zoom);
-
-    return _width * meterRes;
-}
-
 template <class V>
 bool PolylineStyleBuilder<V>::evalWidth(const StyleParam& _styleParam, float& width, float& slope) {
 
     // NB: 0.5 because 'width' will be extruded in both directions
-    float tileRes = 0.5 / m_tileSizePixels;
+    float pixelWidthScale = .5f * m_tileUnitsPerPixel;
+    float meterWidthScale = .5f * m_tileUnitsPerMeter * m_overzoom2;
 
-    // auto& styleParam = _rule.findParameter(_key);
     if (_styleParam.stops) {
 
         width = _styleParam.value.get<float>();
-        width *= tileRes;
+        width *= pixelWidthScale;
 
         slope = _styleParam.stops->evalWidth(m_zoom + 1);
-        slope *= tileRes;
+        slope *= pixelWidthScale;
         return true;
     }
 
@@ -355,11 +363,10 @@ bool PolylineStyleBuilder<V>::evalWidth(const StyleParam& _styleParam, float& wi
         width = widthParam.value;
 
         if (widthParam.isMeter()) {
-            width = widthMeterToPixel(m_zoom, m_tileSizePixels, width);
-            width *= tileRes;
+            width *= meterWidthScale;
             slope = width * 2;
         } else {
-            width *= tileRes;
+            width *= pixelWidthScale;
             slope = width;
         }
         return true;

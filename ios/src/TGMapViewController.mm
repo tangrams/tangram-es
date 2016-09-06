@@ -21,6 +21,142 @@
 
 @implementation TGMapViewController
 
+- (void)setPosition:(TangramGeoPoint)position {
+    if (self.map) {
+        self.map->setPosition(position.longitude, position.latitude);
+    }
+}
+
+- (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)duration {
+    [self animateToPosition:position withDuration:duration withEaseType:TangramEaseTypeCubic];
+}
+
+- (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
+    
+    if (self.map) {
+        Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
+        self.map->setPositionEased(position.longitude, position.latitude, duration, ease);
+    }
+}
+
+- (TangramGeoPoint)position {
+    TangramGeoPoint returnVal;
+    if (self.map){
+        self.map->getPosition(returnVal.longitude, returnVal.latitude);
+        return returnVal;
+    }
+    //Null Island
+    returnVal.latitude = 0.0;
+    returnVal.longitude = 0.0;
+    return returnVal;
+}
+
+- (void)setZoom:(float)zoom {
+    if (self.map) {
+        self.map->setZoom(zoom);
+    }
+}
+
+- (Tangram::EaseType)convertEaseTypeFrom:(TangramEaseType)ease {
+    switch (ease) {
+        case TangramEaseTypeLinear:
+            return Tangram::EaseType::linear;
+        case TangramEaseTypeSine:
+            return Tangram::EaseType::sine;
+        case TangramEaseTypeQuint:
+            return Tangram::EaseType::quint;
+        case TangramEaseTypeCubic:
+            return Tangram::EaseType::cubic;
+        default:
+            return Tangram::EaseType::cubic;
+    }
+}
+
+- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration {
+    [self animateToZoomLevel:zoomLevel withDuration:duration withEaseType:TangramEaseTypeCubic];
+}
+
+- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
+    if (self.map) {
+        Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
+        self.map->setZoomEased(zoomLevel, duration, ease);
+    }
+}
+
+- (float)zoom {
+    if (self.map) {
+        return self.map->getZoom();
+    }
+    return 0.0;
+}
+
+- (void)animateToRotation:(float)radians withDuration:(float)seconds {
+    [self animateToRotation:radians withDuration:seconds withEaseType:TangramEaseTypeCubic];
+}
+
+- (void)animateToRotation:(float)radians withDuration:(float)seconds withEaseType:(TangramEaseType)easeType {
+    if (self.map) {
+        Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
+        self.map->setRotationEased(radians, seconds, ease);
+    }
+}
+
+- (void)setRotation:(float)radians {
+    if (self.map) {
+        self.map->setRotation(radians);
+    }
+}
+
+- (float)rotation {
+    if (self.map) {
+        return self.map->getRotation();
+    }
+    return 0.0;
+}
+
+- (float)tilt {
+    if (self.map) {
+        return self.map->getTilt();
+    }
+    return 0.0;
+}
+
+- (void)setTilt:(float)radians {
+    if (self.map) {
+        self.map->setTilt(radians);
+    }
+}
+
+- (void)animateToTilt:(float)radians withDuration:(float)seconds {
+  [self animateToTilt:radians withDuration:seconds withEaseType:TangramEaseTypeCubic];
+}
+
+- (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TangramEaseType)easeType {
+  if (self.map) {
+    Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
+    self.map->setTiltEased(radians, seconds, ease);
+  }
+}
+
+- (TangramCameraType)cameraType {
+    switch (self.map->getCameraType()) {
+        case 0:
+            return TangramCameraTypePerspective;
+        case 1:
+            return TangramCameraTypeIsometric;
+        case 2:
+            return TangramCameraTypeFlat;
+        default:
+            return TangramCameraTypePerspective;
+    }
+}
+
+- (void)setCameraType:(TangramCameraType)cameraType {
+    if (self.map){
+        self.map->setCameraType(cameraType);
+    }
+}
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -31,7 +167,7 @@
     }
     self.pixelScale = [[UIScreen mainScreen] scale];
     self.renderRequested = YES;
-    self.continuous = YES;
+    self.continuous = NO;
 
     init(self);
 

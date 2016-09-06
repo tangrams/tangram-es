@@ -12,6 +12,7 @@
 #include "tile/tile.h"
 #include "data/dataSource.h"
 #include "view/view.h"
+#include "marker/marker.h"
 #include "tangram.h"
 
 #include "shaders/rasters_glsl.h"
@@ -207,7 +208,7 @@ void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) 
 
     // Configure render state
     switch (m_blend) {
-        case Blending::none:
+        case Blending::opaque:
             rs.blending(GL_FALSE);
             rs.blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             rs.depthTest(GL_TRUE);
@@ -305,6 +306,26 @@ void Style::draw(RenderState& rs, const Tile& _tile) {
             }
         }
     }
+}
+
+void Style::draw(RenderState& rs, const Marker& marker) {
+
+    if (marker.styleId() != m_id) { return; }
+
+    auto* mesh = marker.mesh();
+
+    if (!mesh) { return; }
+
+    if (!marker.isVisible()) { return; }
+
+    m_shaderProgram->setUniformMatrix4f(rs, m_uModel, marker.modelMatrix());
+    m_shaderProgram->setUniformf(rs, m_uTileOrigin, marker.origin().x, marker.origin().y,
+                                 marker.builtZoomLevel(), marker.builtZoomLevel());
+
+    if (!mesh->draw(rs, *m_shaderProgram)) {
+        LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
+    }
+
 }
 
 bool StyleBuilder::checkRule(const DrawRule& _rule) const {

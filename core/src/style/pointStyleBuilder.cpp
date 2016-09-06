@@ -83,6 +83,14 @@ void PointStyleBuilder::setup(const Tile& _tile) {
     m_iconMesh = std::make_unique<IconMesh>();
 }
 
+void PointStyleBuilder::setup(const Marker& _marker, int zoom) {
+    m_zoom = zoom;
+    m_spriteLabels = std::make_unique<SpriteLabels>(m_style);
+
+    m_textStyleBuilder->setup(_marker, zoom);
+    m_iconMesh = std::make_unique<IconMesh>();
+}
+
 bool PointStyleBuilder::checkRule(const DrawRule& _rule) const {
     uint32_t checkColor;
     // require a color or texture atlas/texture to be valid

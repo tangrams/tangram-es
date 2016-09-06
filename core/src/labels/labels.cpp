@@ -12,6 +12,7 @@
 #include "tile/tileCache.h"
 #include "labels/labelSet.h"
 #include "labels/textLabel.h"
+#include "marker/marker.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -30,9 +31,43 @@ Labels::~Labels() {}
 //     return (int) MIN(floor(((log(-_zoom + (_maxZoom + 2)) / log(_maxZoom + 2) * (_maxZoom )) * 0.5)), MAX_LOD);
 // }
 
+void Labels::processLabelUpdate(const ViewState& viewState,
+                                StyledMesh* mesh, Tile* tile,
+                                float inverseScale,
+                                const glm::mat4& mvp,
+                                float dt, bool drawAll,
+                                bool onlyTransitions, bool isProxy) {
+
+    if (!mesh) { return; }
+    auto labelMesh = dynamic_cast<const LabelSet*>(mesh);
+    if (!labelMesh) { return; }
+
+    for (auto& label : labelMesh->getLabels()) {
+        if (!label->update(mvp, inverseScale, viewState, drawAll)) {
+            // skip dead labels
+            continue;
+        }
+
+        if (onlyTransitions) {
+            if (label->occludedLastFrame()) { label->occlude(); }
+
+            if (label->visibleState() || !label->canOcclude()) {
+                m_needUpdate |= label->evalState(dt);
+                label->updateVertexBuffer();
+            }
+        } else if (label->canOcclude()) {
+            m_labels.emplace_back(label.get(), tile, isProxy);
+        } else {
+            m_needUpdate |= label->evalState(dt);
+            label->updateVertexBuffer();
+        }
+    }
+}
+
 void Labels::updateLabels(const ViewState& _viewState, float _dt,
                           const std::vector<std::unique_ptr<Style>>& _styles,
                           const std::vector<std::shared_ptr<Tile>>& _tiles,
+                          const std::vector<std::unique_ptr<Marker>>& _markers,
                           bool _onlyTransitions) {
 
     // Keep labels for debugDraw
@@ -57,30 +92,22 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
 
         for (const auto& style : _styles) {
             const auto& mesh = tile->getMesh(*style);
-            if (!mesh) { continue; }
+            processLabelUpdate(_viewState, mesh.get(), tile.get(), tile->getInverseScale(), mvp, _dt,
+                               drawAllLabels, _onlyTransitions, proxyTile);
+        }
+    }
 
-            auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
-            if (!labelMesh) { continue; }
-            for (auto& label : labelMesh->getLabels()) {
-                if (!label->update(mvp, tile->getInverseScale(), _viewState, drawAllLabels)) {
-                    // skip dead labels
-                    continue;
-                }
+    for (const auto& marker : _markers) {
+        for (const auto& style : _styles) {
 
-                if (_onlyTransitions) {
-                    if (label->occludedLastFrame()) { label->occlude(); }
+            if (marker->styleId() != style->getID()) { continue; }
 
-                    if (label->visibleState() || !label->canOcclude()) {
-                        m_needUpdate |= label->evalState(_dt);
-                        label->updateVertexBuffer();
-                    }
-                } else if (label->canOcclude()) {
-                    m_labels.emplace_back(label.get(), tile.get(), proxyTile);
-                } else {
-                    m_needUpdate |= label->evalState(_dt);
-                    label->updateVertexBuffer();
-                }
-            }
+            const auto& mesh = marker->mesh();
+
+            // FIXME: find scale factor for label markers
+            float inverseScale = 0.0;
+            processLabelUpdate(_viewState, mesh, nullptr, inverseScale, marker->modelViewProjectionMatrix(),
+                               _dt, drawAllLabels, _onlyTransitions, false);
         }
     }
 }
@@ -177,6 +204,9 @@ bool Labels::labelComparator(const LabelEntry& _a, const LabelEntry& _b) {
     }
     if (_a.priority != _b.priority) {
         return _a.priority < _b.priority;
+    }
+    if (!_a.tile || !_b.tile) {
+        return (bool)_a.tile;
     }
     if (_a.tile->getID().z != _b.tile->getID().z) {
         return _a.tile->getID().z > _b.tile->getID().z;
@@ -315,10 +345,11 @@ bool Labels::withinRepeatDistance(Label *_label) {
 void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
                             const std::vector<std::unique_ptr<Style>>& _styles,
                             const std::vector<std::shared_ptr<Tile>>& _tiles,
+                            const std::vector<std::unique_ptr<Marker>>& _markers,
                             TileCache& _cache) {
 
     /// Collect and update labels from visible tiles
-    updateLabels(_viewState, _dt, _styles, _tiles, false);
+    updateLabels(_viewState, _dt, _styles, _tiles, _markers, false);
 
     sortLabels();
 
