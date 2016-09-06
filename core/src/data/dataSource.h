@@ -74,7 +74,7 @@ public:
     /* Generation ID of DataSource state (incremented for each update, e.g. on clearData()) */
     int64_t generation() const { return m_generation; }
 
-    int32_t minZoom() const { return m_minDisplayZoom; }
+    int32_t minDisplayZoom() const { return m_minDisplayZoom; }
     int32_t maxZoom() const { return m_maxZoom; }
 
     bool isActiveForZoom(const float _zoom) const {

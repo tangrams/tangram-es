@@ -585,7 +585,7 @@ void TileManager::updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, Til
 
     // Try parent proxy
     auto parentID = _tileID.getParent();
-    auto minZoom = _tileSet.source->minZoom();
+    auto minZoom = _tileSet.source->minDisplayZoom();
     if (minZoom <= parentID.z
             && updateProxyTile(_tileSet, _tile, parentID, ProxyID::parent)) {
         return;
