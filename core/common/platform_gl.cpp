@@ -2,6 +2,7 @@
 
 #include "gl.h"
 #include "gl/error.h"
+
 namespace Tangram {
 
 GLenum GL::getError() {
