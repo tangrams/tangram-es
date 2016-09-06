@@ -6,9 +6,17 @@
 #define DESKTOP_GL false
 #endif
 
+#if defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI) || defined(PLATFORM_IOS)
+typedef long GLsizeiptr;
+typedef long GLintptr;
+#elif defined(PLATFORM_TIZEN)
+typedef signed long int  GLintptr;
+typedef signed long int  GLsizeiptr;
+#else
 #include <stddef.h>
 typedef ptrdiff_t GLsizeiptr;
 typedef ptrdiff_t GLintptr;
+#endif
 
 /*
  * Mesa 3-D graphics library
