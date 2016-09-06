@@ -104,6 +104,8 @@ public:
 
     void applySavedFramebufferState();
 
+    void cacheDefaultFramebuffer();
+
     GLuint getQuadIndexBuffer();
 
     Texture* getDefaultPointTexture();
