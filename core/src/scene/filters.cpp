@@ -12,23 +12,9 @@ void Filter::print(int _indent) const {
 
     switch (data.which()) {
 
-    case Data::type<OperatorAny>::value: {
-        logMsg("%*s any\n", _indent, "");
-        for (const auto& filt : data.get<OperatorAny>().operands) {
-            filt.print(_indent + 2);
-        }
-        break;
-    }
-    case Data::type<OperatorAll>::value: {
-        logMsg("%*s all\n", _indent, "");
-        for (const auto& filt : data.get<OperatorAll>().operands) {
-            filt.print(_indent + 2);
-        }
-        break;
-    }
-    case Data::type<OperatorNone>::value: {
-        logMsg("%*s none\n", _indent, "");
-        for (const auto& filt : data.get<OperatorNone>().operands) {
+    case Data::type<Operator>::value: {
+        logMsg("%*s operator\n", _indent, "");
+        for (const auto& filt : data.get<Operator>().operands) {
             filt.print(_indent + 2);
         }
         break;
@@ -89,15 +75,7 @@ int Filter::filterCost() const {
     int sum = 100;
 
     switch (data.which()) {
-    case Data::type<OperatorAny>::value:
-        for (auto& f : operands()) { sum += f.filterCost(); }
-        return sum;
-
-    case Data::type<OperatorAll>::value:
-        for (auto& f : operands()) { sum += f.filterCost(); }
-        return sum;
-
-    case Data::type<OperatorNone>::value:
+    case Data::type<Operator>::value:
         for (auto& f : operands()) { sum += f.filterCost(); }
         return sum;
 
@@ -149,15 +127,8 @@ const std::vector<Filter>& Filter::operands() const {
     static const std::vector<Filter> empty;
 
     switch (data.which()) {
-    case Data::type<OperatorAny>::value:
-        return data.get<OperatorAny>().operands;
-
-    case Data::type<OperatorAll>::value:
-        return data.get<OperatorAll>().operands;
-
-    case Data::type<OperatorNone>::value:
-        return data.get<OperatorNone>().operands;
-
+    case Data::type<Operator>::value:
+        return data.get<Operator>().operands;
     default:
         break;
     }
@@ -167,15 +138,8 @@ const std::vector<Filter>& Filter::operands() const {
 const bool Filter::isOperator() const {
 
     switch (data.which()) {
-    case Data::type<OperatorAny>::value:
+    case Data::type<Operator>::value:
         return true;
-
-    case Data::type<OperatorAll>::value:
-        return true;
-
-    case Data::type<OperatorNone>::value:
-        return true;
-
     default:
         break;
     }
@@ -240,20 +204,8 @@ void Filter::collectFilters(Filter& f, FiltersAndKeys& fk) {
 
     switch (f.data.which()) {
 
-    case Filter::Data::type<Filter::OperatorAny>::value: {
-        for (auto& op : f.data.get<Filter::OperatorAny>().operands) {
-            collectFilters(op, fk);
-        }
-        break;
-    }
-    case Filter::Data::type<Filter::OperatorAll>::value: {
-        for (auto& op : f.data.get<Filter::OperatorAll>().operands) {
-            collectFilters(op, fk);
-        }
-        break;
-    }
-    case Filter::Data::type<Filter::OperatorNone>::value: {
-        for (auto& op : f.data.get<Filter::OperatorNone>().operands) {
+    case Filter::Data::type<Filter::Operator>::value: {
+        for (auto& op : f.data.get<Filter::Operator>().operands) {
             collectFilters(op, fk);
         }
         break;
@@ -426,23 +378,11 @@ struct matcher {
         return Filter::Data::visit(data, *this);
     }
 
-    bool operator() (const Filter::OperatorAny& f) const {
+    bool operator() (const Filter::Operator& f) const {
         for (const auto& filt : f.operands) {
-            if (eval(filt.data)) { return true; }
+            if (f.all ^ eval(filt.data)) { return !f.value; }
         }
-        return false;
-    }
-    bool operator() (const Filter::OperatorAll& f) const {
-        for (const auto& filt : f.operands) {
-            if (!eval(filt.data)) { return false; }
-        }
-        return true;
-    }
-    bool operator() (const Filter::OperatorNone& f) const {
-        for (const auto& filt : f.operands) {
-            if (eval(filt.data)) { return false; }
-        }
-        return true;
+        return f.value;
     }
     bool operator() (const Filter::Existence& f) const {
         return f.exists == ctx.hasCachedProperty(f.keyID);

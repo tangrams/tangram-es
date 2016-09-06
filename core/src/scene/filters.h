@@ -27,13 +27,9 @@ struct FiltersAndKeys {
 };
 
 struct Filter {
-    struct OperatorAll {
-        std::vector<Filter> operands;
-    };
-    struct OperatorAny {
-        std::vector<Filter> operands;
-    };
-    struct OperatorNone {
+    struct Operator {
+        bool all;
+        bool value;
         std::vector<Filter> operands;
     };
 
@@ -67,9 +63,7 @@ struct Filter {
         uint32_t id;
     };
     using Data = variant<none_type,
-                         OperatorAll,
-                         OperatorNone,
-                         OperatorAny,
+                         Operator,
                          EqualitySet,
                          EqualityString,
                          EqualityNumber,
@@ -86,15 +80,15 @@ struct Filter {
     // Create an 'any', 'all', or 'none' filter
     inline static Filter MatchAny(std::vector<Filter> filters) {
         sort(filters);
-        return { OperatorAny{ std::move(filters) }};
+        return { Operator{ false, false, std::move(filters) }};
     }
     inline static Filter MatchAll(std::vector<Filter> filters) {
         sort(filters);
-        return { OperatorAll{ std::move(filters) }};
+        return { Operator{ true, true, std::move(filters) }};
     }
     inline static Filter MatchNone(std::vector<Filter> filters) {
         sort(filters);
-        return { OperatorNone{ std::move(filters) }};
+        return { Operator{ false, true, std::move(filters) }};
     }
     // Create an 'equality' filter
     inline static Filter MatchEquality(const std::string& k, const std::vector<Value>& vals) {
