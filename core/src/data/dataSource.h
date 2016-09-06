@@ -7,6 +7,10 @@
 
 #include "tile/tileTask.h"
 
+#ifndef INT32_MAX
+#define INT32_MAX 2147483647
+#endif
+
 namespace Tangram {
 
 class MapProjection;

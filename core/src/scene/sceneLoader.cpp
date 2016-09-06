@@ -43,6 +43,10 @@ using YAML::BadConversion;
 
 #define LOGNode(fmt, node, ...) LOGW(fmt ":\n'%s'\n", ## __VA_ARGS__, Dump(node).c_str())
 
+#ifndef INT32_MAX
+#define INT32_MAX 2147483647
+#endif
+
 namespace Tangram {
 
 const std::string DELIMITER = ":";
