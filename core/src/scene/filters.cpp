@@ -52,18 +52,18 @@ void Filter::print(int _indent) const {
         }
         break;
     }
-    case Data::type<Equality>::value: {
-        auto& f = data.get<Equality>();
-        if (f.value.is<std::string>()) {
+    case Data::type<EqualityString>::value: {
+        auto& f = data.get<EqualityString>();
             logMsg("%*s equality - key:%s val:%s\n", _indent, "",
                    f.key.c_str(),
-                   f.value.get<std::string>().c_str());
-        }
-        if (f.value.is<double>()) {
+                   f.value.c_str());
+        break;
+    }
+    case Data::type<EqualityNumber>::value: {
+        auto& f = data.get<EqualityNumber>();
             logMsg("%*s equality - key:%s val:%f\n", _indent, "",
                    f.key.c_str(),
-                   f.value.get<double>());
-        }
+                   f.value);
         break;
     }
     case Data::type<Range>::value: {
@@ -107,7 +107,8 @@ int Filter::filterCost() const {
         return 20;
 
     case Data::type<EqualitySet>::value:
-    case Data::type<Equality>::value:
+    case Data::type<EqualityString>::value:
+    case Data::type<EqualityNumber>::value:
     case Data::type<Filter::Range>::value:
         return 1;
 
@@ -129,8 +130,11 @@ const std::string& Filter::key() const {
     case Data::type<EqualitySet>::value:
         return data.get<EqualitySet>().key;
 
-    case Data::type<Equality>::value:
-        return data.get<Equality>().key;
+    case Data::type<EqualityString>::value:
+        return data.get<EqualityString>().key;
+
+    case Data::type<EqualityNumber>::value:
+        return data.get<EqualityNumber>().key;
 
     case Data::type<Filter::Range>::value:
         return data.get<Range>().key;
@@ -268,8 +272,16 @@ void Filter::collectFilters(Filter& f, FiltersAndKeys& fk) {
         }
         break;
     }
-    case Filter::Data::type<Filter::Equality>::value: {
-        auto& d = f.data.get<Filter::Equality>();
+    case Filter::Data::type<Filter::EqualityString>::value: {
+        auto& d = f.data.get<Filter::EqualityString>();
+        if (Filter::keywordType(d.key) == FilterKeyword::undefined) {
+            fk.keys.push_back(d.key);
+            fk.filters.push_back(&f);
+        }
+        break;
+    }
+    case Filter::Data::type<Filter::EqualityNumber>::value: {
+        auto& d = f.data.get<Filter::EqualityNumber>();
         if (Filter::keywordType(d.key) == FilterKeyword::undefined) {
             fk.keys.push_back(d.key);
             fk.filters.push_back(&f);
@@ -313,8 +325,11 @@ std::vector<std::string> Filter::assignPropertyKeys(FiltersAndKeys& fk) {
         case Filter::Data::type<Filter::EqualitySet>::value:
             f->data.get<Filter::EqualitySet>().keyID = id;
             break;
-        case Filter::Data::type<Filter::Equality>::value:
-            f->data.get<Filter::Equality>().keyID = id;
+        case Filter::Data::type<Filter::EqualityString>::value:
+            f->data.get<Filter::EqualityString>().keyID = id;
+            break;
+        case Filter::Data::type<Filter::EqualityNumber>::value:
+            f->data.get<Filter::EqualityNumber>().keyID = id;
             break;
         case Filter::Data::type<Filter::Range>::value:
             f->data.get<Filter::Range>().keyID = id;
@@ -332,7 +347,7 @@ struct string_matcher {
     const std::string& str;
 
     template <typename T>
-    bool operator()(T v) const { return false; }
+    bool operator()(const T& v) const { return false; }
     bool operator()(const std::string& v) const {
         return str == v;
     }
@@ -343,7 +358,7 @@ struct number_matcher {
     double num;
 
     template <typename T>
-    bool operator()(T v) const { return false; }
+    bool operator()(const T& v) const { return false; }
     bool operator()(const double& v) const {
         if (num == v) { return true; }
         return std::fabs(num - v) <= std::numeric_limits<double>::epsilon();
@@ -355,7 +370,7 @@ struct match_equal_set {
     const std::vector<Value>& values;
 
     template <typename T>
-    bool operator()(T) const { return false; }
+    bool operator()(const T&) const { return false; }
 
     bool operator()(const double& num) const {
         number_matcher m{num};
@@ -375,21 +390,6 @@ struct match_equal_set {
             }
         }
         return false;
-    }
-};
-
-struct match_equal {
-    using result_type = bool;
-    const Value& value;
-
-    template <typename T>
-    bool operator()(T) const { return false; }
-
-    bool operator()(const double& num) const {
-        return Value::visit(value, number_matcher{num});
-    }
-    bool operator()(const std::string& str) const {
-        return Value::visit(value, string_matcher{str});
     }
 };
 
@@ -439,9 +439,13 @@ struct matcher {
         auto& value = ctx.getCachedProperty(f.keyID);
         return Value::visit(value, match_equal_set{f.values});
     }
-    bool operator() (const Filter::Equality& f) const {
+    bool operator() (const Filter::EqualityString& f) const {
         auto& value = ctx.getCachedProperty(f.keyID);
-        return Value::visit(value, match_equal{f.value});
+        return Value::visit(value, string_matcher{f.value});
+    }
+    bool operator() (const Filter::EqualityNumber& f) const {
+        auto& value = ctx.getCachedProperty(f.keyID);
+        return Value::visit(value, number_matcher{f.value});
     }
     bool operator() (const Filter::Range& f) const {
         auto& value = ctx.getCachedProperty(f.keyID);

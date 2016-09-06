@@ -42,9 +42,14 @@ struct Filter {
         std::vector<Value> values;
         std::string key;
     };
-    struct Equality {
+    struct EqualityString {
         size_t keyID;
-        Value value;
+        std::string value;
+        std::string key;
+    };
+    struct EqualityNumber {
+        size_t keyID;
+        double value;
         std::string key;
     };
     struct Range {
@@ -66,7 +71,8 @@ struct Filter {
                          OperatorNone,
                          OperatorAny,
                          EqualitySet,
-                         Equality,
+                         EqualityString,
+                         EqualityNumber,
                          Range,
                          Existence,
                          Function>;
@@ -92,21 +98,17 @@ struct Filter {
     }
     // Create an 'equality' filter
     inline static Filter MatchEquality(const std::string& k, const std::vector<Value>& vals) {
-        auto t = keywordType(k);
-
-        if (t == FilterKeyword::geometry) {
-            if (vals.size() == 1) {
-                return { Equality{ 0, vals[0], k }};
-            } else {
-                return { EqualitySet{ 0, vals, k }};
+        if (vals.size() == 1) {
+            if (vals[0].is<std::string>()) {
+                return { EqualityString{ 0, vals[0].get<std::string>(), k }};
             }
-
+            if (vals[0].is<double>()) {
+                return { EqualityNumber{ 0, vals[0].get<double>(), k }};
+            }
+            // TODO WARN
+            return Filter::MatchNone({Filter{}});
         } else {
-            if (vals.size() == 1) {
-                return { Equality{ 0, vals[0], k }};
-            } else {
-                return { EqualitySet{ 0, vals, k }};
-            }
+            return { EqualitySet{ 0, vals, k }};
         }
     }
     // Create a 'range' filter
