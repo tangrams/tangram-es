@@ -34,7 +34,7 @@ StyleBuilder* TileBuilder::getStyleBuilder(const std::string& _name) {
 
 std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData, const DataSource& _source) {
 
-    auto tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), &_source);
+    auto tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), m_scene->featureSelection(), &_source);
 
     tile->initGeometry(m_scene->styles().size());
 
@@ -60,7 +60,7 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
             }
 
             for (const auto& feat : collection.features) {
-                m_ruleSet.apply(feat, datalayer, m_styleContext, *this);
+                m_ruleSet.apply(feat, datalayer, m_styleContext, *this, _tileID);
             }
         }
     }

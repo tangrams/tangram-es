@@ -16,6 +16,7 @@ class DataSource;
 class MapProjection;
 class Style;
 class View;
+class FeatureSelection;
 struct StyledMesh;
 
 struct Raster {
@@ -38,7 +39,8 @@ class Tile {
 
 public:
 
-    Tile(TileID _id, const MapProjection& _projection, const DataSource* _source = nullptr);
+    Tile(TileID _id, const MapProjection& _projection, std::shared_ptr<FeatureSelection> _featureSelection,
+         const DataSource* _source = nullptr);
 
 
     virtual ~Tile();
@@ -122,6 +124,8 @@ private:
     std::vector<Raster> m_rasters;
 
     mutable size_t m_memoryUsage = 0;
+
+    std::shared_ptr<FeatureSelection> m_featureSelection;
 };
 
 }

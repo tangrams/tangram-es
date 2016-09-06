@@ -20,6 +20,7 @@ namespace Tangram {
 class DataSource;
 class TileCache;
 struct ViewState;
+class FeatureSelection;
 
 /* Singleton container of <TileSet>s
  *
@@ -33,7 +34,7 @@ class TileManager {
 
 public:
 
-    TileManager(TileTaskQueue& _tileWorker);
+    TileManager(TileTaskQueue& _tileWorker, std::shared_ptr<FeatureSelection> _featureSelection);
 
     virtual ~TileManager();
 
@@ -237,6 +238,7 @@ private:
     /* Temporary list of tiles that need to be loaded */
     std::vector<std::tuple<double, TileSet*, TileID>> m_loadTasks;
 
+    std::shared_ptr<FeatureSelection> m_featureSelection;
 
 };
 

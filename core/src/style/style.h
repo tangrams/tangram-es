@@ -89,7 +89,7 @@ public:
 
     virtual const Style& style() const = 0;
 
-    uint32_t createSelectionIdentifier(const Feature& _feature, const SceneLayer& _layer);
+    uint32_t createSelectionIdentifier(const Feature& _feature, const TileID& _tileID);
 
 protected:
     bool m_hasColorShaderBlock = false;
@@ -281,9 +281,9 @@ public:
 
     void setTexCoordsGeneration(bool _texCoordsGeneration) { m_texCoordsGeneration = _texCoordsGeneration; }
 
-    void setFeatureSelection(std::shared_ptr<FeatureSelection>& _featureSelection) { m_featureSelection = _featureSelection; }
+    void setFeatureSelection(std::shared_ptr<FeatureSelection> _featureSelection) { m_featureSelection = _featureSelection; }
 
-    std::shared_ptr<FeatureSelection> getFeatureSelection() const { return m_featureSelection; }
+    const std::shared_ptr<FeatureSelection>& getFeatureSelection() const { return m_featureSelection; }
 
     bool genTexCoords() const { return m_texCoordsGeneration; }
 

@@ -34,6 +34,7 @@ struct TileID {
     bool operator<=(const TileID& _rhs) const { return !(*this > _rhs); }
     bool operator>=(const TileID& _rhs) const { return !(*this < _rhs); }
     bool operator==(const TileID& _rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z && s == _rhs.s && wrap == _rhs.wrap; }
+    bool operator!=(const TileID& _rhs) const { return !(*this == _rhs); }
 
     bool isValid() const {
         int max = 1 << z;
