@@ -7,10 +7,6 @@
 
 #include "tile/tileTask.h"
 
-#ifndef INT32_MAX
-#define INT32_MAX 2147483647
-#endif
-
 namespace Tangram {
 
 class MapProjection;
@@ -32,7 +28,7 @@ public:
      * and zoom level of tiles to produce their URL.
      */
     DataSource(const std::string& _name, const std::string& _urlTemplate,
-               int32_t _minDisplayZoom = 0, int32_t _maxDisplayZoom = INT32_MAX, int32_t _maxZoom = 18);
+               int32_t _minDisplayZoom = -1, int32_t _maxDisplayZoom = -1, int32_t _maxZoom = 18);
 
     virtual ~DataSource();
 
@@ -78,7 +74,7 @@ public:
     int32_t maxZoom() const { return m_maxZoom; }
 
     bool isActiveForZoom(const float _zoom) const {
-        return _zoom >= m_minDisplayZoom && _zoom <= m_maxDisplayZoom;
+        return _zoom >= m_minDisplayZoom && (m_maxDisplayZoom == -1 || _zoom <= m_maxDisplayZoom);
     }
 
     /* assign/get raster datasources to this datasource */

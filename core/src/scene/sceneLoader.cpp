@@ -43,10 +43,6 @@ using YAML::BadConversion;
 
 #define LOGNode(fmt, node, ...) LOGW(fmt ":\n'%s'\n", ## __VA_ARGS__, Dump(node).c_str())
 
-#ifndef INT32_MAX
-#define INT32_MAX 2147483647
-#endif
-
 namespace Tangram {
 
 const std::string DELIMITER = ":";
@@ -895,8 +891,8 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
 
     std::string type = source["type"].Scalar();
     std::string url = source["url"].Scalar();
-    int32_t minDisplayZoom = 0;
-    int32_t maxDisplayZoom = INT32_MAX;
+    int32_t minDisplayZoom = -1;
+    int32_t maxDisplayZoom = -1;
     int32_t maxZoom = 18;
 
     if (auto minDisplayZoomNode = source["min_display_zoom"]) {
