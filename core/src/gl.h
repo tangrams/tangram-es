@@ -6,9 +6,14 @@
 #define DESKTOP_GL false
 #endif
 
+#if defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI)
+typedef long GLsizeiptr;
+typedef long GLintptr;
+#else
 #include <stddef.h>
 typedef ptrdiff_t GLsizeiptr;
 typedef ptrdiff_t GLintptr;
+#endif
 
 /*
  * Mesa 3-D graphics library
