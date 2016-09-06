@@ -16,11 +16,13 @@
 
 #include <regex>
 
+#include <GLFW/glfw3.h>
+
 #define NUM_WORKERS 3
 
-PFNGLBINDVERTEXARRAYPROC glBindVertexArrayOESEXT = 0;
-PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArraysOESEXT = 0;
-PFNGLGENVERTEXARRAYSPROC glGenVertexArraysOESEXT = 0;
+// PFNGLBINDVERTEXARRAYPROC glBindVertexArrayOESEXT = 0;
+// PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArraysOESEXT = 0;
+// PFNGLGENVERTEXARRAYSPROC glGenVertexArraysOESEXT = 0;
 
 static bool s_isContinuousRendering = false;
 
@@ -156,8 +158,8 @@ void setCurrentThreadPriority(int priority){
 }
 
 void initGLExtensions() {
-     glBindVertexArrayOESEXT = (PFNGLBINDVERTEXARRAYPROC)glfwGetProcAddress("glBindVertexArray");
-     glDeleteVertexArraysOESEXT = (PFNGLDELETEVERTEXARRAYSPROC)glfwGetProcAddress("glDeleteVertexArrays");
-     glGenVertexArraysOESEXT = (PFNGLGENVERTEXARRAYSPROC)glfwGetProcAddress("glGenVertexArrays");
+     // glBindVertexArrayOESEXT = (PFNGLBINDVERTEXARRAYPROC)glfwGetProcAddress("glBindVertexArray");
+     // glDeleteVertexArraysOESEXT = (PFNGLDELETEVERTEXARRAYSPROC)glfwGetProcAddress("glDeleteVertexArrays");
+     // glGenVertexArraysOESEXT = (PFNGLGENVERTEXARRAYSPROC)glfwGetProcAddress("glGenVertexArrays");
 
 }

@@ -77,7 +77,7 @@ void FrameInfo::draw(RenderState& rs, const View& _view, TileManager& _tileManag
         updatetime.push_back(timeUpdate[cpt]);
 
         // Force opengl to finish commands (for accurate frame time)
-        GL_CHECK(glFinish());
+        GL::finish();
 
         s_endFrameTime = clock();
         timeRender[cpt] = TIME_TO_MS(s_startFrameTime, s_endFrameTime);
