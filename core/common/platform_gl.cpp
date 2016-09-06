@@ -36,12 +36,11 @@ extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
 #endif
 
 #ifdef PLATFORM_OSX
+#define GLFW_INCLUDE_GLEXT
 #include <GLFW/glfw3.h>
 /*
  * typedef to resolve name conflict in osx
  */
-// #define glClearDepthf glClearDepth
-// #define glDepthRangef glDepthRange
 #define glDeleteVertexArrays glDeleteVertexArraysAPPLE
 #define glGenVertexArrays glGenVertexArraysAPPLE
 #define glBindVertexArray glBindVertexArrayAPPLE
