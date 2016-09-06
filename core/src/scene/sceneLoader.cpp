@@ -913,11 +913,18 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
     }
 
     std::string type = source["type"].Scalar();
-    std::string url = source["url"].Scalar();
+    std::string url;
+    std::string mbtiles;
     int32_t minDisplayZoom = -1;
     int32_t maxDisplayZoom = -1;
     int32_t maxZoom = 18;
 
+    if (auto urlNode = source["url"]) {
+        url = urlNode.Scalar();
+    }
+    if (auto mbtilesNode = source["mbtiles"]) {
+        mbtiles = mbtilesNode.Scalar();
+    }
     if (auto minDisplayZoomNode = source["min_display_zoom"]) {
         minDisplayZoom = minDisplayZoomNode.as<int32_t>(minDisplayZoom);
     }
@@ -955,22 +962,28 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
     }
 
     // distinguish tiled and non-tiled sources by url
-    bool tiled = url.find("{x}") != std::string::npos &&
+    bool tiled = url.size() > 0 &&
+        url.find("{x}") != std::string::npos &&
         url.find("{y}") != std::string::npos &&
         url.find("{z}") != std::string::npos;
+
+    // If we have MBTiles, we know the source is tiled.
+    if (mbtiles.size() > 0) {
+        tiled = true;
+    }
 
     std::shared_ptr<DataSource> sourcePtr;
 
     if (type == "GeoJSON") {
         if (tiled) {
-            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
+            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url, mbtiles, minDisplayZoom, maxDisplayZoom, maxZoom));
         } else {
-            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
+            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, mbtiles, minDisplayZoom, maxDisplayZoom, maxZoom));
         }
     } else if (type == "TopoJSON") {
-        sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
+        sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, mbtiles, minDisplayZoom, maxDisplayZoom, maxZoom));
     } else if (type == "MVT") {
-        sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
+        sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, mbtiles, minDisplayZoom, maxDisplayZoom, maxZoom));
     } else if (type == "Raster") {
         TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
         bool generateMipmaps = false;
@@ -979,7 +992,7 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
                 generateMipmaps = true;
             }
         }
-        sourcePtr = std::shared_ptr<DataSource>(new RasterSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom, options, generateMipmaps));
+        sourcePtr = std::shared_ptr<DataSource>(new RasterSource(name, url, mbtiles, minDisplayZoom, maxDisplayZoom, maxZoom, options, generateMipmaps));
     } else {
         LOGW("Unrecognized data source type '%s', skipping", type.c_str());
     }
