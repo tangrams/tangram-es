@@ -6,7 +6,7 @@
 #define DESKTOP_GL false
 #endif
 
-#if defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI)
+#if defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI) || defined(PLATFORM_IOS)
 typedef long GLsizeiptr;
 typedef long GLintptr;
 #else
