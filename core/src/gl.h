@@ -161,6 +161,7 @@ typedef char            GLchar;
 #define GL_STENCIL                      0x1802
 #define GL_RGB                          0x1907
 #define GL_RGBA                         0x1908
+#define GL_RGBA8_OES                    0x8058
 
 #define GL_NEAREST                      0x2600
 #define GL_LINEAR                       0x2601

@@ -31,6 +31,8 @@ public:
 
     void bind(RenderState& _rs) const;
 
+    const std::unique_ptr<Texture>& getTexture() { return m_texture; }
+
 private:
 
     void init(RenderState& _rs, unsigned int _rtWidth, unsigned int _rtHeight);

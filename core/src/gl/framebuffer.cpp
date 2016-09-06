@@ -57,7 +57,7 @@ void FrameBuffer::init(RenderState& _rs, unsigned int _rtWidth, unsigned int _rt
     if (m_colorRenderBuffer) {
         GL_CHECK(glGenRenderbuffers(1, &m_glColorRenderBufferHandle));
         GL_CHECK(glBindRenderbuffer(GL_RENDERBUFFER, m_glColorRenderBufferHandle));
-        GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA,
+        GL_CHECK(glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8_OES,
                                        _rtWidth, _rtHeight));
 
         GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
