@@ -12,7 +12,7 @@
 
 namespace Tangram {
 
-TextDisplay::TextDisplay() : m_textDisplayResolution(200.0), m_initialized(false) {
+TextDisplay::TextDisplay() : m_textDisplayResolution(350.0), m_initialized(false) {
     m_vertexBuffer = new char[VERTEX_BUFFER_SIZE];
 }
 
