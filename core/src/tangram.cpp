@@ -389,6 +389,9 @@ unsigned int Map::readSelectionBufferAt(float _x, float _y) {
 
 void Map::render() {
 
+    // Cache default framebuffer handle used for rendering
+    impl->renderState.cacheDefaultFramebuffer();
+
     FrameInfo::beginFrame();
 
     // Invalidate render states for new frame
