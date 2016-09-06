@@ -13,6 +13,7 @@ void init_main_window(bool recreate);
 std::string sceneFile = "scene.yaml";
 
 std::string markerStyling = "{ style: 'lines', color: 'purple', width: 10px, order: 100 }";
+std::string poiMarkerStyling = "{ style: 'icons', sprite: bus, size: 20px, collide: false, flat: false }";
 
 GLFWwindow* main_window = nullptr;
 Tangram::Map* map = nullptr;
@@ -45,6 +46,7 @@ std::shared_ptr<ClientGeoJsonSource> data_source;
 LngLat last_point;
 std::vector<LngLat> taps;
 MarkerID marker = 0;
+MarkerID poiMarker = 0;
 
 template<typename T>
 static constexpr T clamp(T val, T min, T max) {
@@ -112,7 +114,12 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 marker = map->markerAdd();
                 map->markerSetStyling(marker, markerStyling.c_str());
             }
+            if (!poiMarker) {
+                poiMarker = map->markerAdd();
+                map->markerSetStyling(poiMarker, poiMarkerStyling.c_str());
+            }
             map->markerSetPolyline(marker, taps.data(), taps.size());
+            map->markerSetPoint(poiMarker, p1);
         }
         last_point = p1;
 
