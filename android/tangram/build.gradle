@@ -22,13 +22,29 @@ android {
     targetSdkVersion 24
     versionCode buildVersionCode()
     versionName VERSION_NAME
+    externalNativeBuild {
+      cmake {
+        targets "tangram"
+        arguments "-DPLATFORM_TARGET=android",
+                  "-DANDROID_TOOLCHAIN=clang",
+                  "-DANDROID_STL=c++_static",
+                  "-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE"
+        cppFlags "-fexceptions",
+                 "-frtti"
+        abiFilters "armeabi-v7a", "armeabi"
+      }
+    }
+  }
+
+  externalNativeBuild {
+    cmake {
+      path "../../CMakeLists.txt"
+    }
   }
 
   sourceSets.main {
     manifest.srcFile 'AndroidManifest.xml'
     java.srcDirs = ['src']
-    jni.srcDirs = []
-    jniLibs.srcDirs = ['libs']
   }
 }
 
