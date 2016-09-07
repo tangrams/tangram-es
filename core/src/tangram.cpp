@@ -42,6 +42,11 @@ class Map::Impl {
 
 public:
 
+    struct FeatureSelectionQuery {
+        float position[2];
+        std::function<void(const std::vector<TouchItem>&)> callback;
+    };
+
     void setScene(std::shared_ptr<Scene>& _scene);
 
     void setEase(EaseField _f, Ease _e);
@@ -81,7 +86,7 @@ public:
 
     bool cacheGlState;
 
-
+    std::vector<FeatureSelectionQuery> selectionQueries;
 };
 
 void Map::Impl::setEase(EaseField _f, Ease _e) {
@@ -377,19 +382,8 @@ bool Map::update(float _dt) {
     return viewComplete;
 }
 
-unsigned int Map::readSelectionBufferAt(float _x, float _y) {
-    float x = _x / impl->view.getWidth();
-    float y = (1.f - (_y / impl->view.getHeight()));
-
-    impl->renderState.cacheDefaultFramebuffer();
-    impl->selectionBuffer.bind(impl->renderState);
-
-    GLuint pixel = impl->selectionBuffer.readAt(impl->renderState, x, y);
-
-    impl->featureSelection->featureForEntry(pixel);
-    impl->renderState.framebuffer(impl->renderState.defaultFrameBuffer());
-
-    return pixel;
+void Map::pickFeaturesAt(float _x, float _y, std::function<void(const std::vector<TouchItem>&)> _onReadyCallback) {
+    impl->selectionQueries.push_back({{_x, _y}, _onReadyCallback});
 }
 
 void Map::render() {
@@ -408,7 +402,7 @@ void Map::render() {
     impl->renderState.jobQueue.runJobs();
 
     // Render feature selection pass to offscreen framebuffer
-    if (impl->featureSelection->pendingRequests()) {
+    if (impl->selectionQueries.size() > 0) {
 
         impl->selectionBuffer.applyAsRenderTarget(impl->renderState);
         {
@@ -421,6 +415,24 @@ void Map::render() {
                 }
             }
         }
+
+        for (const auto& query : impl->selectionQueries) {
+            std::vector<TouchItem> items;
+
+            float x = query.position[0] / impl->view.getWidth();
+            float y = (1.f - (query.position[1] / impl->view.getHeight()));
+
+            // TODO: read with a scalable thumb size
+            GLuint color = impl->selectionBuffer.readAt(x, y);
+            auto props = impl->featureSelection->featurePropertiesForEntry(color);
+
+            if (props) {
+                items.push_back({props, {x, y}, 0});
+            }
+            query.callback(items);
+        }
+
+        impl->selectionQueries.clear();
     }
 
     // Setup default framebuffer for a new frame
@@ -807,7 +819,7 @@ void Map::useCachedGlState(bool _useCache) {
     impl->cacheGlState = _useCache;
 }
 
-const std::vector<TouchItem>& Map::pickFeaturesAt(float _x, float _y) {
+const std::vector<TouchItem>& Map::pickFeatureLabelsAt(float _x, float _y) {
     return impl->labels.getFeaturesAtPoint(impl->view.state(), 0, impl->scene->styles(),
                                            impl->tileManager.getVisibleTiles(),
                                            _x, _y);

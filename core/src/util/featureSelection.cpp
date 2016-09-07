@@ -42,17 +42,16 @@ bool FeatureSelection::clearFeaturesForTile(const TileID& _tileID) {
     return false;
 }
 
-void FeatureSelection::featureForEntry(uint32_t entry) const {
+std::shared_ptr<Properties> FeatureSelection::featurePropertiesForEntry(uint32_t entry) const {
 
     for (const auto& tileFeatures : m_tileFeatures) {
         auto it = tileFeatures.second.find(entry);
         if (it != tileFeatures.second.end()) {
-            std::shared_ptr<Properties> props = it->second;
-            if (props->contains("name")) {
-                LOGS("props name: %s", props->getString("name").c_str());
-            }
+            return it->second;
         }
     }
+
+    return nullptr;
 }
 
 }

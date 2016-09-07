@@ -21,17 +21,9 @@ public:
 
     uint32_t colorIdentifier(const Feature& _feature, const TileID& _tileID);
 
-    // TODO: return true when pending requests for a
-    // screen location has been done from the tangram API
-    bool pendingRequests() const { return true; }
-
-    bool beginRenderPass(RenderState& _rs);
-
-    void endRenderPass(RenderState& _rs);
-
     bool clearFeaturesForTile(const TileID& _tileID);
 
-    void featureForEntry(uint32_t entry) const;
+    std::shared_ptr<Properties> featurePropertiesForEntry(uint32_t entry) const;
 
 private:
 

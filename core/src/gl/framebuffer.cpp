@@ -59,7 +59,7 @@ void FrameBuffer::bind(RenderState& _rs) const {
     }
 }
 
-GLuint FrameBuffer::readAt(RenderState& _rs, float _normalizedX, float _normalizedY) const {
+GLuint FrameBuffer::readAt(float _normalizedX, float _normalizedY) const {
 
     glm::vec2 position(_normalizedX * m_width, _normalizedY * m_height);
 

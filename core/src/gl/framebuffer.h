@@ -32,7 +32,7 @@ public:
 
     void bind(RenderState& _rs) const;
 
-    GLuint readAt(RenderState& _rs, float _normalizedX, float _normalizedY) const;
+    GLuint readAt(float _normalizedX, float _normalizedY) const;
 
 private:
 
