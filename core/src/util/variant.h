@@ -44,4 +44,6 @@ class Value : public detail::Value {
     using Base::Base;
 };
 
+const static Value NOT_A_VALUE(none_type{});
+
 }
