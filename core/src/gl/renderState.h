@@ -100,11 +100,9 @@ public:
 
     void framebufferUnset(GLuint handle);
 
-    void saveFramebufferState();
-
-    void applySavedFramebufferState();
-
     void cacheDefaultFramebuffer();
+
+    GLuint defaultFrameBuffer() const;
 
     GLuint getQuadIndexBuffer();
 
@@ -203,8 +201,7 @@ private:
         bool set;
     } m_viewport;
 
-    FrameBufferState m_savedFrameBufferState;
-    ViewportState m_savedViewportState;
+    GLint m_defaultFramebuffer = 0;
 
 };
 
