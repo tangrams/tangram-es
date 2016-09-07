@@ -4,6 +4,7 @@ project(tangram)
 
 # Options
 option(USE_SYSTEM_FONT_LIBS "Use system libraries Freetype, ICU and Harfbuzz via pkgconfig" OFF)
+option(USE_SYSTEM_GLFW_LIBS "Use system libraries for GLFW3 via pkgconfig" OFF)
 
 
 if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/harfbuzz-icu-freetype/harfbuzz/README")

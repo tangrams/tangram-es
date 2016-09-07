@@ -58,6 +58,7 @@ if(APPLICATION)
     -lcurl glfw
     # only used when not using external lib
     -ldl
+    -pthread
     ${GLFW_LIBRARIES}
     ${OPENGL_LIBRARIES})
 
