@@ -387,6 +387,11 @@ void Map::pickFeaturesAt(float _x, float _y, std::function<void(const std::vecto
 
 void Map::render() {
 
+    // Do not render if any texture resources are in process of being downloaded
+    if (impl->scene->pendingTextures > 0) {
+        return;
+    }
+
     bool drawSelectionBuffer = getDebugFlag(DebugFlags::selection_buffer);
 
     // Cache default framebuffer handle used for rendering

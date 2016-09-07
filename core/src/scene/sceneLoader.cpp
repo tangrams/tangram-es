@@ -539,6 +539,9 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
 
                     updateSpriteNodes(name, texture, scene);
                     scene->pendingTextures--;
+                    if (scene->pendingTextures == 0) {
+                        requestRender();
+                    }
                 }
             });
         texture = std::make_shared<Texture>(nullptr, 0, options, generateMipmaps);
