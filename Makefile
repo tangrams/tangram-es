@@ -25,7 +25,6 @@ all: android osx ios
 .PHONY: check-ndk
 .PHONY: cmake-osx
 .PHONY: cmake-xcode
-.PHONY: cmake-android
 .PHONY: cmake-ios
 .PHONY: cmake-ios-framework
 .PHONY: cmake-ios-framework-sim
@@ -33,7 +32,7 @@ all: android osx ios
 .PHONY: cmake-linux
 .PHONY: install-android
 
-ANDROID_BUILD_DIR = build/android
+ANDROID_BUILD_DIR = android/tangram/build
 OSX_BUILD_DIR = build/osx
 OSX_XCODE_BUILD_DIR = build/xcode
 IOS_BUILD_DIR = build/ios
@@ -71,45 +70,6 @@ ifdef RELEASE
 	BUILD_TYPE = -DCMAKE_BUILD_TYPE=Release
 endif
 
-ifdef ANDROID_ARCH
-	ANDROID_BUILD_DIR = build/android-${ANDROID_ARCH}
-	ifeq ($(ANDROID_ARCH), x86)
-		ANDROID_TOOLCHAIN = x86-clang3.6
-	endif
-	ifeq ($(ANDROID_ARCH), x86_64)
-		ANDROID_TOOLCHAIN = x86_64-clang3.6
-		ANDROID_API_LEVEL = android-21
-	endif
-	ifeq ($(ANDROID_ARCH), armeabi)
-		ANDROID_TOOLCHAIN = arm-linux-androideabi-clang3.6
-	endif
-	ifeq ($(ANDROID_ARCH), armeabi-v7a)
-		ANDROID_TOOLCHAIN = arm-linux-androideabi-clang3.6
-	endif
-	ifeq ($(ANDROID_ARCH), arm64-v8a)
-		ANDROID_TOOLCHAIN = aarch64-linux-android-clang3.6
-		ANDROID_API_LEVEL = android-21
-	endif
-	ifeq ($(ANDROID_ARCH), mips)
-		ANDROID_TOOLCHAIN = mipsel-linux-android-clang3.6
-	endif
-	ifeq ($(ANDROID_ARCH), mips64)
-		ANDROID_TOOLCHAIN = mips64el-linux-android-clang3.6
-		ANDROID_API_LEVEL = android-21
-	endif
-else
-	ANDROID_ARCH = armeabi-v7a
-	ANDROID_TOOLCHAIN = arm-linux-androideabi-clang3.6
-endif
-
-#$(info ANDROID_ARCH is ${ANDROID_ARCH})
-#$(info ANDROID_TOOLCHAIN is ${ANDROID_TOOLCHAIN})
-#$(info ANDROID_BUILD_DIR is ${ANDROID_BUILD_DIR})
-
-ifndef ANDROID_API_LEVEL
-	ANDROID_API_LEVEL = android-15
-endif
-
 ifndef TANGRAM_CMAKE_OPTIONS
 	TANGRAM_CMAKE_OPTIONS = \
 		-DBENCHMARK=0 \
@@ -125,19 +85,6 @@ UNIT_TESTS_CMAKE_PARAMS = \
 	-DUNIT_TESTS=1 \
 	-DAPPLICATION=0 \
 	-DCMAKE_BUILD_TYPE=Debug
-
-ANDROID_CMAKE_PARAMS = \
-        ${BUILD_TYPE} \
-        ${CMAKE_OPTIONS} \
-	-DPLATFORM_TARGET=android \
-	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/android.toolchain.cmake \
-	-DMAKE_BUILD_TOOL=$$ANDROID_NDK/prebuilt/darwin-x86_64/bin/make \
-	-DANDROID_ABI=${ANDROID_ARCH} \
-	-DANDROID_STL=c++_static \
-	-DANDROID_TOOLCHAIN_NAME=${ANDROID_TOOLCHAIN} \
-	-DANDROID_NATIVE_API_LEVEL=${ANDROID_API_LEVEL} \
-	-DLIBRARY_OUTPUT_PATH_ROOT=../../android/tangram \
-	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
 
 IOS_CMAKE_PARAMS = \
         ${BUILD_TYPE} \
@@ -211,10 +158,9 @@ clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean
 	clean-tizen-arm clean-tizen-x86
 
 clean-android:
-	rm -rf ${ANDROID_BUILD_DIR}
 	rm -rf android/build
 	rm -rf android/tangram/build
-	rm -rf android/tangram/libs
+	rm -rf android/tangram/.externalNativeBuild
 	rm -rf android/demo/build
 	rm -rf android/demo/libs
 
@@ -257,32 +203,16 @@ clean-ios-framework-sim:
 clean-ios-framework-universal:
 	rm -rf ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}
 
-android: android-demo-apk
+android: android-demo
 	@echo "run: 'adb install -r android/demo/build/outputs/apk/demo-debug.apk'"
 
-android-tangram-apk:
+android-sdk:
 	@cd android/ && \
 	./gradlew tangram:assembleDebug
 
-android-demo-apk: android-native-lib
+android-demo:
 	@cd android/ && \
 	./gradlew demo:assembleDebug
-
-android-native-lib: android/tangram/libs/${ANDROID_ARCH}/libtangram.so
-
-android/tangram/libs/${ANDROID_ARCH}/libtangram.so: install-android
-
-install-android: ${ANDROID_BUILD_DIR}/Makefile
-	@cd ${ANDROID_BUILD_DIR} && \
-	${MAKE} && \
-	${MAKE} install
-
-${ANDROID_BUILD_DIR}/Makefile: check-ndk cmake-android
-
-cmake-android:
-	@mkdir -p ${ANDROID_BUILD_DIR}
-	@cd ${ANDROID_BUILD_DIR} && \
-	cmake ../.. ${ANDROID_CMAKE_PARAMS}
 
 osx: ${OSX_BUILD_DIR}/Makefile
 	@cd ${OSX_BUILD_DIR} && \
@@ -393,11 +323,6 @@ benchmark:
 	@cd ${BENCH_BUILD_DIR} && \
 	cmake ../../ ${BENCH_CMAKE_PARAMS} && \
 	${MAKE}
-
-check-ndk:
-ifndef ANDROID_NDK
-	$(error ANDROID_NDK is undefined)
-endif
 
 format:
 	@for file in `git diff --diff-filter=ACMRTUXB --name-only -- '*.cpp' '*.h'`; do \
