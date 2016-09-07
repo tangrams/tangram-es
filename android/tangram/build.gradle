@@ -24,21 +24,23 @@ android {
     versionName VERSION_NAME
     externalNativeBuild {
       cmake {
-        targets "tangram"
-        arguments "-DPLATFORM_TARGET=android",
-                  "-DANDROID_TOOLCHAIN=clang",
-                  "-DANDROID_STL=c++_static",
-                  "-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE"
-        cppFlags "-fexceptions",
-                 "-frtti"
-        abiFilters "armeabi-v7a", "armeabi"
+        targets 'tangram'
+        arguments '-DPLATFORM_TARGET=android',
+                  '-DANDROID_TOOLCHAIN=clang',
+                  '-DANDROID_STL=c++_shared'
+        cppFlags '-std=c++14',
+                 '-pedantic',
+                 '-fPIC',
+                 '-fexceptions',
+                 '-frtti'
+        abiFilters 'armeabi-v7a'
       }
     }
   }
 
   externalNativeBuild {
     cmake {
-      path "../../CMakeLists.txt"
+      path '../../CMakeLists.txt'
     }
   }
 
