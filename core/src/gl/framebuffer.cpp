@@ -4,41 +4,52 @@
 #include "gl/renderState.h"
 #include "gl/error.h"
 #include "log.h"
+#include "glm/vec2.hpp"
 
 namespace Tangram {
 
-FrameBuffer::FrameBuffer(bool _colorRenderBuffer) :
+FrameBuffer::FrameBuffer(int _width, int _height, bool _colorRenderBuffer) :
     m_glFrameBufferHandle(0),
     m_generation(-1),
     m_valid(false),
     m_colorRenderBuffer(_colorRenderBuffer),
-    m_width(0), m_height(0) {
+    m_width(_width), m_height(_height) {
 
 }
 
-bool FrameBuffer::applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor,
-                                      unsigned int _vpWidth, unsigned int _vpHeight) {
+bool FrameBuffer::applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor) {
 
     if (!m_glFrameBufferHandle) {
-        init(_rs, _vpWidth, _vpHeight);
-
-        m_width = _vpWidth;
-        m_height = _vpHeight;
+        init(_rs);
     }
 
     if (!m_valid) {
         return false;
     }
 
-    _rs.framebuffer(m_glFrameBufferHandle);
-    _rs.depthMask(GL_TRUE);
-    _rs.viewport(0, 0, _vpWidth, _vpHeight);
-
-    _rs.clearColor(_clearColor.r, _clearColor.g, _clearColor.b, _clearColor.a);
-
-    GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    FrameBuffer::apply(_rs, m_glFrameBufferHandle, {m_width, m_height}, _clearColor);
 
     return true;
+}
+
+void FrameBuffer::apply(RenderState& _rs, GLuint _handle, glm::vec2 _viewport, glm::vec4 _clearColor) {
+
+    _rs.framebuffer(_handle);
+    _rs.viewport(0, 0, _viewport.x, _viewport.y);
+
+    _rs.clearColor(_clearColor.r / 255.f,
+                   _clearColor.g / 255.f,
+                   _clearColor.b / 255.f,
+                   _clearColor.a / 255.f);
+
+    // Enable depth testing
+    _rs.depthMask(GL_TRUE);
+
+    // Setup raster state
+    _rs.culling(GL_TRUE);
+    _rs.cullFace(GL_BACK);
+
+    GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void FrameBuffer::bind(RenderState& _rs) const {
@@ -48,7 +59,18 @@ void FrameBuffer::bind(RenderState& _rs) const {
     }
 }
 
-void FrameBuffer::init(RenderState& _rs, unsigned int _rtWidth, unsigned int _rtHeight) {
+GLuint FrameBuffer::readAt(RenderState& _rs, float _normalizedX, float _normalizedY) const {
+
+    glm::vec2 position(_normalizedX * m_width, _normalizedY * m_height);
+
+    GLuint pixel;
+    GL::readPixels(floorf(position.x), floorf(position.y),
+                   1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
+
+    return pixel;
+}
+
+void FrameBuffer::init(RenderState& _rs) {
 
     GL::genFramebuffers(1, &m_glFrameBufferHandle);
 
@@ -59,7 +81,7 @@ void FrameBuffer::init(RenderState& _rs, unsigned int _rtWidth, unsigned int _rt
         GL::genRenderbuffers(1, &m_glColorRenderBufferHandle);
         GL::bindRenderbuffer(GL_RENDERBUFFER, m_glColorRenderBufferHandle);
         GL::renderbufferStorage(GL_RENDERBUFFER, GL_RGBA8_OES,
-                                _rtWidth, _rtHeight);
+                                m_width, m_height);
 
         GL::framebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                     GL_RENDERBUFFER, m_glColorRenderBufferHandle);
@@ -70,7 +92,7 @@ void FrameBuffer::init(RenderState& _rs, unsigned int _rtWidth, unsigned int _rt
             {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}
         };
 
-        m_texture = std::make_unique<Texture>(_rtWidth, _rtHeight, options);
+        m_texture = std::make_unique<Texture>(m_width, m_height, options);
         m_texture->update(_rs, 0);
 
         GL::framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
@@ -82,7 +104,7 @@ void FrameBuffer::init(RenderState& _rs, unsigned int _rtWidth, unsigned int _rt
         GL::genRenderbuffers(1, &m_glDepthRenderBufferHandle);
         GL::bindRenderbuffer(GL_RENDERBUFFER, m_glDepthRenderBufferHandle);
         GL::renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
-                                _rtWidth, _rtHeight);
+                                m_width, m_height);
 
         GL::framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                                     GL_RENDERBUFFER, m_glDepthRenderBufferHandle);

@@ -80,10 +80,7 @@ void RenderState::invalidate() {
 }
 
 void RenderState::cacheDefaultFramebuffer() {
-    GLint handle;
-
-    GL::getIntegerv(GL_FRAMEBUFFER_BINDING, &handle);
-    m_framebuffer = { (GLuint)handle, false };
+    GL::getIntegerv(GL_FRAMEBUFFER_BINDING, &m_defaultFramebuffer);
 }
 
 void RenderState::increaseGeneration() {
@@ -392,15 +389,8 @@ bool RenderState::viewport(GLint x, GLint y, GLsizei width, GLsizei height) {
     return true;
 }
 
-void RenderState::saveFramebufferState() {
-    m_savedFrameBufferState = m_framebuffer;
-    m_savedViewportState = m_viewport;
-}
-
-void RenderState::applySavedFramebufferState() {
-    framebuffer(m_savedFrameBufferState.handle);
-    viewport(m_savedViewportState.x, m_savedViewportState.y,
-             m_savedViewportState.width, m_savedViewportState.height);
+GLuint RenderState::defaultFrameBuffer() const {
+    return (GLuint)m_defaultFramebuffer;
 }
 
 } // namespace Tangram

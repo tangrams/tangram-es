@@ -13,8 +13,6 @@ namespace Tangram {
 
 FeatureSelection::FeatureSelection() :
     m_entry(0) {
-
-    m_framebuffer = std::make_unique<FrameBuffer>();
 }
 
 uint32_t FeatureSelection::colorIdentifier(const Feature& _feature, const TileID& _tileID) {
@@ -27,19 +25,6 @@ uint32_t FeatureSelection::colorIdentifier(const Feature& _feature, const TileID
     tileFeatures[m_entry] = std::make_shared<Properties>(_feature.props);
 
     return m_entry;
-}
-
-bool FeatureSelection::beginRenderPass(Tangram::RenderState& _rs) {
-
-    _rs.saveFramebufferState();
-
-    return m_framebuffer->applyAsRenderTarget(_rs, {0.0, 0.0, 0.0, 0.0}, 256, 256);
-}
-
-void FeatureSelection::endRenderPass(Tangram::RenderState& _rs) {
-
-    _rs.applySavedFramebufferState();
-
 }
 
 bool FeatureSelection::clearFeaturesForTile(const TileID& _tileID) {
@@ -57,23 +42,10 @@ bool FeatureSelection::clearFeaturesForTile(const TileID& _tileID) {
     return false;
 }
 
-GLuint FeatureSelection::readBufferAt(RenderState& _rs, float _x, float _y,
-                                      int _vpWidth, int _vpHeight) const {
-
-    glm::vec2 fbPosition((_x / _vpWidth) * m_framebuffer->getWidth(),
-                        (1.f - (_y / _vpHeight)) * m_framebuffer->getHeight());
-
-    _rs.saveFramebufferState();
-
-    m_framebuffer->bind(_rs);
-
-    GLuint pixel;
-    GL::readPixels(floorf(fbPosition.x), floorf(fbPosition.y), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
-
-    _rs.applySavedFramebufferState();
+void FeatureSelection::featureForEntry(uint32_t entry) const {
 
     for (const auto& tileFeatures : m_tileFeatures) {
-        auto it = tileFeatures.second.find(pixel);
+        auto it = tileFeatures.second.find(entry);
         if (it != tileFeatures.second.end()) {
             std::shared_ptr<Properties> props = it->second;
             if (props->contains("name")) {
@@ -81,8 +53,6 @@ GLuint FeatureSelection::readBufferAt(RenderState& _rs, float _x, float _y,
             }
         }
     }
-
-    return pixel;
 }
 
 }
