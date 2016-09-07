@@ -1,11 +1,5 @@
 #pragma once
 
-#if defined(PLATFORM_OSX) || defined(PLATFORM_LINUX)
-#define DESKTOP_GL true
-#else
-#define DESKTOP_GL false
-#endif
-
 #if defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI) || defined(PLATFORM_IOS)
 typedef long GLsizeiptr;
 typedef long GLintptr;
