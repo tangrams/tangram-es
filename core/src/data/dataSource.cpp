@@ -212,4 +212,19 @@ void DataSource::clearRaster(const TileID& id) {
     }
 }
 
+void DataSource::addRasterSource(std::shared_ptr<DataSource> _rasterSource) {
+    /*
+     * We limit the parent source by any attached raster source's min/max.
+     */
+    int32_t rasterMinDisplayZoom = _rasterSource->minDisplayZoom();
+    int32_t rasterMaxDisplayZoom = _rasterSource->maxDisplayZoom();
+    if (rasterMinDisplayZoom > m_minDisplayZoom) {
+        m_minDisplayZoom = rasterMinDisplayZoom;
+    }
+    if (rasterMaxDisplayZoom < m_maxDisplayZoom) {
+        m_maxDisplayZoom = rasterMaxDisplayZoom;
+    }
+    m_rasterSources.push_back(_rasterSource);
+}
+
 }

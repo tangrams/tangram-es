@@ -394,18 +394,7 @@ void TileManager::loadSubTasks(std::vector<std::shared_ptr<DataSource>>& _subSou
             subTileID = subTileID.withMaxSourceZoom(subSource->maxZoom());
         }
         auto subTask = subSource->createTask(subTileID, index);
-        // check if we are at valid zoom for source
-        if (!subSource->isActiveForZoom((float)subTileID.z)) {
-            // Right now all subSources are raster, but let's check anyway...
-            if (RasterSource* rasterSubSource = dynamic_cast<RasterSource*>(subSource.get())) {
-                subTasks.insert(it, subTask);
-                // If the subSource isn't active for the zoom, we should just
-                // load an empty texture and move on.
-                rasterSubSource->loadEmptyTexture(std::move(subTask));
-                assert(subTask->isReady());
-                requestRender();
-            }
-        } else if (subTask->isReady()) {
+        if (subTask->isReady()) {
             subTasks.insert(it, subTask);
             requestRender();
 

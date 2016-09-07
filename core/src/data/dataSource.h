@@ -71,6 +71,7 @@ public:
     int64_t generation() const { return m_generation; }
 
     int32_t minDisplayZoom() const { return m_minDisplayZoom; }
+    int32_t maxDisplayZoom() const { return m_maxDisplayZoom; }
     int32_t maxZoom() const { return m_maxZoom; }
 
     bool isActiveForZoom(const float _zoom) const {
@@ -78,6 +79,7 @@ public:
     }
 
     /* assign/get raster datasources to this datasource */
+    void addRasterSource(std::shared_ptr<DataSource> _dataSource);
     auto& rasterSources() { return m_rasterSources; }
     const auto& rasterSources() const { return m_rasterSources; }
 

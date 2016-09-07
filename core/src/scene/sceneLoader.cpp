@@ -983,7 +983,7 @@ void SceneLoader::loadSourceRasters(std::shared_ptr<DataSource> &source, Node ra
                 LOGNode("Parsing sources: '%s'", sources[srcName], e.what());
                 return;
             }
-            source->rasterSources().push_back(scene->getDataSource(srcName));
+            source->addRasterSource(scene->getDataSource(srcName));
         }
     }
 }
