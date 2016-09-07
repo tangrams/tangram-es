@@ -9,7 +9,6 @@
 #include "glm/gtx/norm.hpp"
 
 #include <algorithm>
-#include <data/rasterSource.h>
 
 #define DBG(...) // LOGD(__VA_ARGS__)
 

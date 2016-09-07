@@ -40,8 +40,6 @@ public:
 
     virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) override;
 
-    void loadEmptyTexture(std::shared_ptr<TileTask>&& _task);
-
     virtual void clearRasters() override;
     virtual void clearRaster(const TileID& id) override;
     virtual bool isRaster() const override { return true; }

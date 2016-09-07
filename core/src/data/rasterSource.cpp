@@ -173,11 +173,6 @@ bool RasterSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _c
     return status;
 }
 
-void RasterSource::loadEmptyTexture(std::shared_ptr<TileTask>&& _task) {
-    auto& task = static_cast<RasterTileTask&>(*_task);
-    task.m_texture = m_emptyTexture;
-}
-
 Raster RasterSource::getRaster(const TileTask& _task) {
     TileID id(_task.tileId().x, _task.tileId().y, _task.tileId().z);
 
