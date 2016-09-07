@@ -53,13 +53,13 @@ void Labels::processLabelUpdate(const ViewState& viewState,
 
             if (label->visibleState() || !label->canOcclude()) {
                 m_needUpdate |= label->evalState(dt);
-                label->updateVertexBuffer();
+                label->addVerticesToMesh();
             }
         } else if (label->canOcclude()) {
             m_labels.emplace_back(label.get(), tile, isProxy);
         } else {
             m_needUpdate |= label->evalState(dt);
-            label->updateVertexBuffer();
+            label->addVerticesToMesh();
         }
     }
 }
@@ -371,7 +371,7 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
         Label* label = entry.label;
 
         m_needUpdate |= label->evalState(_dt);
-        label->updateVertexBuffer();
+        label->addVerticesToMesh();
     }
 }
 

@@ -56,7 +56,7 @@ public:
 
 protected:
 
-    void updateVertexBuffer() override;
+    void addVerticesToMesh() override;
 
 private:
 

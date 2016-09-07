@@ -30,12 +30,12 @@ public:
 
     void updateBBoxes(float _zoomFract) override;
 
-    void updateVertexBuffer() override;
+    void addVerticesToMesh() override;
 
 private:
 
     void applyAnchor(LabelProperty::Anchor _anchor) override;
-    
+
     // Back-pointer to owning container and position
     const SpriteLabels& m_labels;
     const size_t m_labelsPos;

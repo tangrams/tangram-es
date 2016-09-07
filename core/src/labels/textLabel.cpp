@@ -63,7 +63,7 @@ void TextLabel::updateBBoxes(float _zoomFract) {
                 dim.x, dim.y);
 }
 
-void TextLabel::updateVertexBuffer() {
+void TextLabel::addVerticesToMesh() {
     if (!visibleState()) { return; }
 
     glm::vec2 rotation = m_screenTransform.rotation;

@@ -97,8 +97,8 @@ public:
 
     virtual ~Label();
 
-    // Push the pending transforms to the vbo by updating the vertices
-    virtual void updateVertexBuffer() = 0;
+    // Add vertices for this label to its Style's shared Mesh
+    virtual void addVerticesToMesh() = 0;
     virtual glm::vec2 center() const;
     virtual void updateBBoxes(float _zoomFract) = 0;
 

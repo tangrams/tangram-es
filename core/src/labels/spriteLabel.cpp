@@ -60,7 +60,7 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
     }
 }
 
-void SpriteLabel::updateVertexBuffer() {
+void SpriteLabel::addVerticesToMesh() {
 
     if (!visibleState()) { return; }
 

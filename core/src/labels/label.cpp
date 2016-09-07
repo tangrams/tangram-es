@@ -45,12 +45,12 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, float _tileInverseScale
             if (m_options.flat) {
                 glm::vec2 positions[4];
                 float unitsPerMeter = _viewState.metersPerPixel * _tileInverseScale;
-                glm::vec2 metersDimension = m_dim * unitsPerMeter;
+                glm::vec2 unitsPerPixel = m_dim * unitsPerMeter;
 
-                glm::vec2 sw = p0 - metersDimension;
-                glm::vec2 se = p0 + glm::vec2(metersDimension.x, -metersDimension.y);
-                glm::vec2 nw = p0 + glm::vec2(-metersDimension.x, metersDimension.y);
-                glm::vec2 ne = p0 + metersDimension;
+                glm::vec2 sw = p0 - unitsPerPixel;
+                glm::vec2 se = p0 + glm::vec2(unitsPerPixel.x, -unitsPerPixel.y);
+                glm::vec2 nw = p0 + glm::vec2(-unitsPerPixel.x, unitsPerPixel.y);
+                glm::vec2 ne = p0 + unitsPerPixel;
 
                 // Rotate in clockwise order on the ground plane
                 if (m_options.angle != 0.f) {
