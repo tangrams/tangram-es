@@ -74,6 +74,8 @@ public:
     std::shared_ptr<Scene> scene = std::make_shared<Scene>();
     std::shared_ptr<Scene> nextScene = nullptr;
 
+    FrameBuffer selectionBuffer{256, 256};
+
     bool cacheGlState;
 
 
@@ -353,10 +355,18 @@ bool Map::update(float _dt) {
 }
 
 unsigned int Map::readSelectionBufferAt(float _x, float _y) {
+    float x = _x / impl->view.getWidth();
+    float y = (1.f - (_y / impl->view.getHeight()));
 
-    return impl->featureSelection->readBufferAt(impl->renderState, _x, _y,
-                                                impl->view.getWidth(), impl->view.getHeight());
+    impl->renderState.cacheDefaultFramebuffer();
+    impl->selectionBuffer.bind(impl->renderState);
 
+    GLuint pixel = impl->selectionBuffer.readAt(impl->renderState, x, y);
+
+    impl->featureSelection->featureForEntry(pixel);
+    impl->renderState.framebuffer(impl->renderState.defaultFrameBuffer());
+
+    return pixel;
 }
 
 void Map::render() {
@@ -377,28 +387,23 @@ void Map::render() {
     // Render feature selection pass to offscreen framebuffer
     if (impl->featureSelection->pendingRequests()) {
 
-        if (impl->featureSelection->beginRenderPass(impl->renderState)) {
-            {
-                std::lock_guard<std::mutex> lock(impl->tilesMutex);
-                for (const auto& style : impl->scene->styles()) {
-                    style->onBeginDrawSelectionFrame(impl->renderState, impl->view, *(impl->scene));
+        impl->selectionBuffer.applyAsRenderTarget(impl->renderState);
+        {
+            std::lock_guard<std::mutex> lock(impl->tilesMutex);
+            for (const auto& style : impl->scene->styles()) {
+                style->onBeginDrawSelectionFrame(impl->renderState, impl->view, *(impl->scene));
 
-                    for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                        style->drawSelectionFrame(impl->renderState, *tile);
-                    }
+                for (const auto& tile : impl->tileManager.getVisibleTiles()) {
+                    style->drawSelectionFrame(impl->renderState, *tile);
                 }
             }
-
-            impl->featureSelection->endRenderPass(impl->renderState);
         }
     }
 
-    auto& color = impl->scene->background();
-    impl->renderState.clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
-
-    // Set up openGL for new frame
-    impl->renderState.depthMask(GL_TRUE);
-    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    // Setup default framebuffer for a new frame
+    glm::vec2 viewport(impl->view.getWidth(), impl->view.getHeight());
+    FrameBuffer::apply(impl->renderState, impl->renderState.defaultFrameBuffer(),
+                       viewport, impl->scene->background().asVec4());
 
     for (const auto& style : impl->scene->styles()) {
         style->onBeginFrame(impl->renderState);

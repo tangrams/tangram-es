@@ -16,12 +16,13 @@ class FrameBuffer {
 
 public:
 
-    FrameBuffer(bool _colorRenderBuffer = true);
+    FrameBuffer(int _width, int _height, bool _colorRenderBuffer = true);
 
     ~FrameBuffer();
 
-    bool applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor,
-                             unsigned int _vpWidth, unsigned int _vpHeight);
+    bool applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor = glm::vec4(0.0));
+
+    static void apply(RenderState& _rs, GLuint _handle, glm::vec2 _viewport, glm::vec4 _clearColor);
 
     bool valid() const { return m_valid; }
 
@@ -31,11 +32,11 @@ public:
 
     void bind(RenderState& _rs) const;
 
-    const std::unique_ptr<Texture>& getTexture() { return m_texture; }
+    GLuint readAt(RenderState& _rs, float _normalizedX, float _normalizedY) const;
 
 private:
 
-    void init(RenderState& _rs, unsigned int _rtWidth, unsigned int _rtHeight);
+    void init(RenderState& _rs);
 
     std::unique_ptr<Texture> m_texture;
 

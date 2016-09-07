@@ -31,15 +31,13 @@ public:
 
     bool clearFeaturesForTile(const TileID& _tileID);
 
-    GLuint readBufferAt(RenderState& _rs, float _x, float _y, int _vpWidth, int _vpHeight) const;
+    void featureForEntry(uint32_t entry) const;
 
 private:
 
     using Entries = std::map<uint32_t, std::shared_ptr<Properties>>;
 
     uint32_t m_entry;
-
-    std::unique_ptr<FrameBuffer> m_framebuffer;
 
     fastmap<TileID, Entries> m_tileFeatures;
 
