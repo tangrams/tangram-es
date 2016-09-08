@@ -27,6 +27,7 @@ void PointStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 3, GL_FLOAT, false, 0},
         {"a_uv", 2, GL_UNSIGNED_SHORT, true, 0},
+        {"a_selection_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_alpha", 1, GL_UNSIGNED_SHORT, true, 0},
         {"a_scale", 1, GL_UNSIGNED_SHORT, false, 0},
@@ -43,6 +44,7 @@ void PointStyle::constructShaderProgram() {
     m_mesh = std::make_unique<DynamicQuadMesh<SpriteVertex>>(m_vertexLayout, m_drawMode);
 
     m_textStyle->constructShaderProgram();
+    m_textStyle->constructSelectionShaderProgram();
 }
 
 void PointStyle::onBeginUpdate() {
@@ -61,12 +63,26 @@ void PointStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _sc
 
     auto texUnit = rs.nextAvailableTextureUnit();
 
-    m_shaderProgram->setUniformi(rs, m_uTex, texUnit);
-    m_shaderProgram->setUniformMatrix4f(rs, m_uOrtho, _view.getOrthoViewportMatrix());
+    m_shaderProgram->setUniformi(rs, m_uniforms[Style::mainShaderUniformBlock].uTex, texUnit);
+    m_shaderProgram->setUniformMatrix4f(rs, m_uniforms[Style::mainShaderUniformBlock].uOrtho,
+                                        _view.getOrthoViewportMatrix());
 
     m_mesh->draw(rs, *m_shaderProgram, texUnit);
 
     m_textStyle->onBeginDrawFrame(rs, _view, _scene);
+}
+
+void PointStyle::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) {
+    m_mesh->upload(rs);
+
+    Style::onBeginDrawSelectionFrame(rs, _view, _scene);
+
+    m_selectionProgram->setUniformMatrix4f(rs, m_uniforms[Style::selectionShaderUniformBlock].uOrtho,
+                                           _view.getOrthoViewportMatrix());
+
+    m_mesh->draw(rs, *m_selectionProgram);
+
+    m_textStyle->onBeginDrawSelectionFrame(rs, _view, _scene);
 }
 
 std::unique_ptr<StyleBuilder> PointStyle::createBuilder() const {

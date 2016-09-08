@@ -46,11 +46,6 @@ public:
                                  const std::vector<std::unique_ptr<Marker>>& _markers,
                                  bool _onlyTransitions = true);
 
-    const std::vector<TouchItem>& getFeaturesAtPoint(const ViewState& _viewState, float _dt,
-                                                     const std::vector<std::unique_ptr<Style>>& _styles,
-                                                     const std::vector<std::shared_ptr<Tile>>& _tiles,
-                                                     float _x, float _y, bool _visibleOnly = true);
-
     bool needUpdate() const { return m_needUpdate; }
 
 protected:

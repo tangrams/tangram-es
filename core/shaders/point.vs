@@ -35,6 +35,11 @@ attribute float a_scale;
 attribute vec3 a_position;
 #endif
 
+#ifdef TANGRAM_FEATURE_SELECTION
+attribute vec4 a_selection_color;
+varying vec4 v_selection_color;
+#endif
+
 varying vec4 v_color;
 varying vec2 v_texcoords;
 #ifdef TANGRAM_TEXT
@@ -54,6 +59,10 @@ void main() {
     v_alpha = a_alpha;
     v_color = a_color;
 
+
+#ifdef TANGRAM_FEATURE_SELECTION
+    v_selection_color = a_selection_color;
+#endif
 
 #ifdef TANGRAM_TEXT
     vec2 vertex_pos = UNPACK_POSITION(a_position);

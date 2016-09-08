@@ -27,6 +27,7 @@ void TextStyle::constructVertexLayout() {
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_SHORT, false, 0},
         {"a_uv", 2, GL_UNSIGNED_SHORT, false, 0},
+        {"a_selection_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_stroke", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_alpha", 1, GL_UNSIGNED_SHORT, true, 0},
@@ -75,13 +76,16 @@ void TextStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _sce
 
     auto texUnit = rs.nextAvailableTextureUnit();
 
-    m_shaderProgram->setUniformf(rs, m_uMaxStrokeWidth, m_context->maxStrokeWidth());
-    m_shaderProgram->setUniformf(rs, m_uTexScaleFactor, glm::vec2(1.0f / GlyphTexture::size));
-    m_shaderProgram->setUniformi(rs, m_uTex, texUnit);
-    m_shaderProgram->setUniformMatrix4f(rs, m_uOrtho, _view.getOrthoViewportMatrix());
+    m_shaderProgram->setUniformf(rs, m_uniforms[Style::mainShaderUniformBlock].uMaxStrokeWidth,
+                                 m_context->maxStrokeWidth());
+    m_shaderProgram->setUniformf(rs, m_uniforms[Style::mainShaderUniformBlock].uTexScaleFactor,
+                                 glm::vec2(1.0f / GlyphTexture::size));
+    m_shaderProgram->setUniformi(rs, m_uniforms[Style::mainShaderUniformBlock].uTex, texUnit);
+    m_shaderProgram->setUniformMatrix4f(rs, m_uniforms[Style::mainShaderUniformBlock].uOrtho,
+                                        _view.getOrthoViewportMatrix());
 
     if (m_sdf) {
-        m_shaderProgram->setUniformi(rs, m_uPass, 1);
+        m_shaderProgram->setUniformi(rs, m_uniforms[Style::mainShaderUniformBlock].uPass, 1);
 
         for (size_t i = 0; i < m_meshes.size(); i++) {
             if (m_meshes[i]->isReady()) {
@@ -89,13 +93,29 @@ void TextStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _sce
                 m_meshes[i]->draw(rs, *m_shaderProgram);
             }
         }
-        m_shaderProgram->setUniformi(rs, m_uPass, 0);
+        m_shaderProgram->setUniformi(rs, m_uniforms[Style::mainShaderUniformBlock].uPass, 0);
     }
 
     for (size_t i = 0; i < m_meshes.size(); i++) {
         if (m_meshes[i]->isReady()) {
             m_context->bindTexture(rs, i, texUnit);
             m_meshes[i]->draw(rs, *m_shaderProgram);
+        }
+    }
+}
+
+void TextStyle::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) {
+
+    for (auto& mesh : m_meshes) { mesh->upload(rs); }
+
+    Style::onBeginDrawSelectionFrame(rs, _view, _scene);
+
+    m_selectionProgram->setUniformMatrix4f(rs, m_uniforms[Style::selectionShaderUniformBlock].uOrtho,
+                                           _view.getOrthoViewportMatrix());
+
+    for (size_t i = 0; i < m_meshes.size(); i++) {
+        if (m_meshes[i]->isReady()) {
+            m_meshes[i]->draw(rs, *m_selectionProgram);
         }
     }
 }

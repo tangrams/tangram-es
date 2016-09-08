@@ -5,7 +5,6 @@
 #include "labels/textLabel.h"
 #include "labels/textLabels.h"
 
-#include "data/propertyItem.h" // Include wherever Properties is used!
 #include "marker/marker.h"
 #include "scene/drawRule.h"
 #include "tile/tile.h"
@@ -380,11 +379,6 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     p.labelOptions.repeatGroup = repeatGroupHash;
     p.labelOptions.repeatDistance *= m_style.pixelScale();
 
-    if (p.interactive) {
-        // TODO optimization: for icon-text use the parent's properties
-        p.labelOptions.properties = std::make_shared<Properties>(_props);
-    }
-
     if (auto* transform = _rule.get<std::string>(StyleParamKey::text_transform)) {
         TextLabelProperty::transform(*transform, p.transform);
     }
@@ -405,6 +399,8 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     p.labelOptions.paramHash = hash(p);
 
     p.lineSpacing = 2 * m_style.pixelScale();
+
+    p.labelOptions.selectionColor = _rule.selectionColor;
 
     return p;
 }

@@ -417,6 +417,7 @@ void Map::render() {
         }
 
         for (const auto& query : impl->selectionQueries) {
+            LOG("Solving query %f %f", query.position[0], query.position[1]);
             std::vector<TouchItem> items;
 
             float x = query.position[0] / impl->view.getWidth();
@@ -817,12 +818,6 @@ void Map::setupGL() {
 
 void Map::useCachedGlState(bool _useCache) {
     impl->cacheGlState = _useCache;
-}
-
-const std::vector<TouchItem>& Map::pickFeatureLabelsAt(float _x, float _y) {
-    return impl->labels.getFeaturesAtPoint(impl->view.state(), 0, impl->scene->styles(),
-                                           impl->tileManager.getVisibleTiles(),
-                                           _x, _y);
 }
 
 void Map::runAsyncTask(std::function<void()> _task) {
