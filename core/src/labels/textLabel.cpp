@@ -171,6 +171,7 @@ void TextLabel::addVerticesToMesh() {
             }
             v.uv = quad.quad[i].uv;
             v.state = state;
+            v.selection = options().selectionColor;
         }
     }
 }

@@ -374,58 +374,6 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
     }
 }
 
-const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const ViewState& _viewState, float _dt,
-                                                         const std::vector<std::unique_ptr<Style>>& _styles,
-                                                         const std::vector<std::shared_ptr<Tile>>& _tiles,
-                                                         float _x, float _y, bool _visibleOnly) {
-    // FIXME dpi dependent threshold
-    const float thumbSize = 50;
-
-    m_touchItems.clear();
-
-    glm::vec2 touchPoint(_x, _y);
-
-    OBB obb(_x - thumbSize/2, _y - thumbSize/2, 0, thumbSize, thumbSize);
-
-    for (const auto& tile : _tiles) {
-
-        glm::mat4 mvp = tile->mvp();
-
-        for (const auto& style : _styles) {
-            const auto& mesh = tile->getMesh(*style);
-            if (!mesh) { continue; }
-
-            auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
-            if (!labelMesh) { continue; }
-
-            for (auto& label : labelMesh->getLabels()) {
-
-                auto& options = label->options();
-                if (!options.interactive) { continue; }
-
-                if (!_visibleOnly) {
-                    label->updateScreenTransform(mvp, _viewState, false);
-                    label->updateBBoxes(_viewState.fractZoom);
-                } else if (!label->visibleState()) {
-                    continue;
-                }
-
-                if (isect2d::intersect(label->obb(), obb)) {
-                    float distance2 = label->screenDistance2(touchPoint);
-                    glm::vec2 center = label->center();
-                    m_touchItems.push_back({options.properties, {center.x, center.y}, std::sqrt(distance2)});
-                }
-            }
-        }
-    }
-
-    std::sort(m_touchItems.begin(), m_touchItems.end(),
-              [](auto& a, auto& b){ return a.distance < b.distance; });
-
-
-    return m_touchItems;
-}
-
 void Labels::drawDebug(RenderState& rs, const View& _view) {
 
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {

@@ -152,12 +152,10 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     p.labelOptions.anchors.anchor[0] = p.anchor;
     p.labelOptions.anchors.count = 1;
 
-    if (p.labelOptions.interactive) {
-        p.labelOptions.properties = std::make_shared<Properties>(_props);
-    }
-
     std::hash<PointStyle::Parameters> hash;
     p.labelOptions.paramHash = hash(p);
+
+    p.labelOptions.selectionColor = _rule.selectionColor;
 
     return p;
 }

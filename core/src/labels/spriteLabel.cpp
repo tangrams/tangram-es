@@ -176,6 +176,7 @@ void SpriteLabel::addVerticesToMesh() {
 
             vertex.pos = m_projected[i];
             vertex.uv = quad.quad[i].uv;
+            vertex.selection = options().selectionColor;
             vertex.state = state;
         }
 
@@ -197,6 +198,7 @@ void SpriteLabel::addVerticesToMesh() {
             vertex.pos.z = 0;
 
             vertex.uv = quad.quad[i].uv;
+            vertex.selection = options().selectionColor;
             vertex.state = state;
         }
     }

@@ -41,6 +41,17 @@ const std::vector<std::string>& Style::builtInStyleNames() {
     return builtInStyleNames;
 }
 
+void Style::constructSelectionShaderProgram() {
+
+    if (m_selection) {
+        m_selectionProgram->setDescription("selection_program {style:" + m_name + "}");
+        m_selectionProgram->setSourceStrings(SHADER_SOURCE(selection_fs),
+                                             m_shaderProgram->getVertexShaderSource());
+
+        m_selectionProgram->addSourceBlock("defines", "#define TANGRAM_FEATURE_SELECTION\n", false);
+    }
+}
+
 void Style::build(const Scene& _scene) {
 
     constructVertexLayout();
@@ -80,13 +91,7 @@ void Style::build(const Scene& _scene) {
 
     setupRasters(_scene.dataSources());
 
-    if (m_selection) {
-        m_selectionProgram->setDescription("selection_program {style:" + m_name + "}");
-        m_selectionProgram->setSourceStrings(SHADER_SOURCE(selection_fs),
-                                             m_shaderProgram->getVertexShaderSource());
-
-        m_selectionProgram->addSourceBlock("defines", "#define TANGRAM_FEATURE_SELECTION\n", false);
-    }
+    constructSelectionShaderProgram();
 }
 
 void Style::setMaterial(const std::shared_ptr<Material>& _material) {

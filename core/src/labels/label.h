@@ -9,7 +9,6 @@
 #include "fadeEffect.h"
 #include "util/types.h"
 #include "util/hash.h"
-#include "data/properties.h"
 #include "labels/labelProperty.h"
 
 #include <string>
@@ -78,7 +77,6 @@ public:
         glm::vec2 offset;
         float priority = std::numeric_limits<float>::max();
         bool interactive = false;
-        std::shared_ptr<Properties> properties;
         bool collide = true;
         Transition selectTransition;
         Transition hideTransition;
@@ -87,6 +85,7 @@ public:
         float repeatDistance = 0;
         float buffer = 0.f;
         size_t paramHash = 0; // the label hash based on its styling parameters
+        uint32_t selectionColor = 0;
         LabelProperty::Anchors anchors;
         bool required = true;
         bool flat = false;

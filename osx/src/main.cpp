@@ -86,25 +86,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
         map->setPositionEased(p.longitude, p.latitude, 1.f);
 
-        logMsg("pick feature\n");
-
-        auto picks = map->pickFeatureLabelsAt(x, y);
-        std::string name;
-        logMsg("picked %d features\n", picks.size());
-        for (const auto& it : picks) {
-            if (it.properties->getString("name", name)) {
-                logMsg(" - %f\t %s\n", it.distance, name.c_str());
-            }
-        }
-
-        map->pickFeaturesAt(x, y, [](const auto& items) {
-            std::string name;
-            for (const auto& item : items) {
-                if (item.properties->getString("name", name)) {
-                    LOGS("%s", name.c_str());
-                }
-            }
-        });
     } else if ((time - last_time_pressed) < single_tap_time) {
         // Single tap recognized
         LngLat p;
@@ -115,6 +96,15 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         map->markerSetPoint(marker, p);
         map->markerSetDrawOrder(marker, mods);
         logMsg("Added marker with zOrder: %d\n", mods);
+
+        map->pickFeaturesAt(x, y, [](const auto& items) {
+            std::string name;
+            for (const auto& item : items) {
+                if (item.properties->getString("name", name)) {
+                    LOGS("%s", name.c_str());
+                }
+            }
+        });
 
         requestRender();
     }

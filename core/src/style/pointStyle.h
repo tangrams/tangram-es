@@ -30,11 +30,12 @@ public:
     };
 
     PointStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
-               Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES, bool _selection = false);
+               Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES, bool _selection = true);
 
     virtual void onBeginUpdate() override;
     virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
     virtual void onBeginFrame(RenderState& rs) override;
+    virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) override;
 
     void setSpriteAtlas(std::shared_ptr<SpriteAtlas> _spriteAtlas) { m_spriteAtlas = _spriteAtlas; }
     void setTexture(std::shared_ptr<Texture> _texture) { m_texture = _texture; }
@@ -60,8 +61,10 @@ protected:
     std::shared_ptr<SpriteAtlas> m_spriteAtlas;
     std::shared_ptr<Texture> m_texture;
 
-    UniformLocation m_uTex{"u_tex"};
-    UniformLocation m_uOrtho{"u_ortho"};
+    struct UniformBlock {
+        UniformLocation uTex{"u_tex"};
+        UniformLocation uOrtho{"u_ortho"};
+    } m_uniforms[2];
 
     mutable std::unique_ptr<DynamicQuadMesh<SpriteVertex>> m_mesh;
 

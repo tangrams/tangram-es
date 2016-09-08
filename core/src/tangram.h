@@ -231,8 +231,6 @@ public:
     // efficiency, but can cause errors if your application code makes OpenGL calls (false by default)
     void useCachedGlState(bool _use);
 
-    const std::vector<TouchItem>& pickFeatureLabelsAt(float _x, float _y);
-
     void pickFeaturesAt(float _x, float _y, std::function<void(const std::vector<TouchItem>&)> _onReadyCallback);
 
     // Run this task asynchronously to Tangram's main update loop.

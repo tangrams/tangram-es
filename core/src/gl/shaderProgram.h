@@ -43,6 +43,8 @@ public:
     GLuint getGlFragmentShader() const { return m_glFragmentShader; };
     GLuint getGlVertexShader() const { return m_glVertexShader; };
 
+    std::string getDescription() const { return m_description; }
+
     const std::string& getFragmentShaderSource() const { return m_fragmentShaderSource; }
     const std::string& getVertexShaderSource() const { return m_vertexShaderSource; }
 
