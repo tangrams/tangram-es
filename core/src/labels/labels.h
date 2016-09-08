@@ -73,7 +73,7 @@ protected:
     PERF_TRACE bool withinRepeatDistance(Label *_label);
 
     void processLabelUpdate(const ViewState& viewState, StyledMesh* mesh, Tile* tile,
-                            float inverseScale, const glm::mat4& mvp, float dt, bool drawAll,
+                            const glm::mat4& mvp, float dt, bool drawAll,
                             bool onlyTransitions, bool isProxy);
 
     bool m_needUpdate;

@@ -26,9 +26,10 @@ struct ViewState {
     bool changedOnLastUpdate;
     glm::dvec2 center;
     float zoom;
+    double zoomScale;
     float fractZoom;
     glm::vec2 viewportSize;
-    double metersPerPixel;
+    float tileSize;
 };
 
 /* View

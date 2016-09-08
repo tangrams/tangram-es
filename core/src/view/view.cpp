@@ -67,17 +67,16 @@ void View::setCameraType(CameraType _type) {
 }
 
 ViewState View::state() const {
-    double minZoomMetersPerPixel = MapProjection::HALF_CIRCUMFERENCE / (s_pixelsPerTile * m_pixelScale);
-    double metersPerPixel = minZoomMetersPerPixel / powf(2.f, m_zoom);
 
     return {
         m_projection.get(),
         m_changed,
         glm::dvec2(m_pos.x, -m_pos.y),
         m_zoom,
+        powf(2.f, m_zoom),
         m_zoom - std::floor(m_zoom),
         glm::vec2(m_vpWidth, m_vpHeight),
-        metersPerPixel,
+        s_pixelsPerTile * m_pixelScale
     };
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
 #include "glm/mat4x4.hpp"
 #include <climits> // needed in aabb.h
 #include "aabb.h"
@@ -44,14 +45,15 @@ public:
     };
 
     struct WorldTransform {
-        WorldTransform(glm::vec2 _wp) : position(_wp) {}
+        WorldTransform(glm::vec3 _wp) : position(_wp) {}
         WorldTransform(glm::vec2 _wp0, glm::vec2 _wp1) {
             positions[0] = _wp0;
             positions[1] = _wp1;
         }
 
         union {
-            glm::vec2 position;     // The label position if the label is not a line
+            glm::vec3 position;     // The label position if the label is not a line
+                                    // position.z stores the zoom-level
             glm::vec2 positions[2]; // The label positions if the label is a line
         };
     };
@@ -103,13 +105,11 @@ public:
     virtual void updateBBoxes(float _zoomFract) = 0;
 
     bool update(const glm::mat4& _mvp,
-                float _tileInverseScale,
                 const ViewState& _viewState,
                 bool _drawAllLabels = false);
 
     // Update the screen position of the label
     bool updateScreenTransform(const glm::mat4& _mvp,
-                               float _tileInverseScale,
                                const ViewState& _viewState,
                                bool _drawAllLabels);
 

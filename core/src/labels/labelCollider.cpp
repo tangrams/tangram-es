@@ -87,21 +87,19 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
 
     glm::vec2 screenSize{ _tileSize * m_tileScale };
 
-    double minZoomMetersPerPixel = (2.0 * MapProjection::HALF_CIRCUMFERENCE) / _tileSize;
-    double metersPerPixel = minZoomMetersPerPixel / powf(2.f, _tileID.z);
-
     ViewState viewState {
         nullptr, // mapProjection (unused)
         false, // changedOnLastUpdate (unused)
         glm::dvec2{}, // center (unused)
         0.f, // zoom (unused)
+        powf(2.f, _tileID.z) * MAX_SCALE, // zoomScale
         m_tileScale, // fractZoom
         screenSize, // viewPortSize
-        metersPerPixel
+        _tileSize, // screenTileSize
     };
 
     for (auto* label : m_labels) {
-        label->update(mvp, _tileInverseScale, viewState, true);
+        label->update(mvp, viewState, true);
 
         m_aabbs.push_back(label->aabb());
     }

@@ -33,7 +33,6 @@ Labels::~Labels() {}
 
 void Labels::processLabelUpdate(const ViewState& viewState,
                                 StyledMesh* mesh, Tile* tile,
-                                float inverseScale,
                                 const glm::mat4& mvp,
                                 float dt, bool drawAll,
                                 bool onlyTransitions, bool isProxy) {
@@ -43,7 +42,7 @@ void Labels::processLabelUpdate(const ViewState& viewState,
     if (!labelMesh) { return; }
 
     for (auto& label : labelMesh->getLabels()) {
-        if (!label->update(mvp, inverseScale, viewState, drawAll)) {
+        if (!label->update(mvp, viewState, drawAll)) {
             // skip dead labels
             continue;
         }
@@ -92,8 +91,8 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
 
         for (const auto& style : _styles) {
             const auto& mesh = tile->getMesh(*style);
-            processLabelUpdate(_viewState, mesh.get(), tile.get(), tile->getInverseScale(), mvp, _dt,
-                               drawAllLabels, _onlyTransitions, proxyTile);
+            processLabelUpdate(_viewState, mesh.get(), tile.get(), mvp,
+                               _dt, drawAllLabels, _onlyTransitions, proxyTile);
         }
     }
 
@@ -104,9 +103,8 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
 
             const auto& mesh = marker->mesh();
 
-            // FIXME: find scale factor for label markers
-            float inverseScale = 0.0;
-            processLabelUpdate(_viewState, mesh, nullptr, inverseScale, marker->modelViewProjectionMatrix(),
+            processLabelUpdate(_viewState, mesh, nullptr,
+                               marker->modelViewProjectionMatrix(),
                                _dt, drawAllLabels, _onlyTransitions, false);
         }
     }
@@ -405,7 +403,7 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const ViewState& _viewS
                 if (!options.interactive) { continue; }
 
                 if (!_visibleOnly) {
-                    label->updateScreenTransform(mvp, tile->getInverseScale(), _viewState, false);
+                    label->updateScreenTransform(mvp, _viewState, false);
                     label->updateBBoxes(_viewState.fractZoom);
                 } else if (!label->visibleState()) {
                     continue;

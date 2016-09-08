@@ -193,8 +193,7 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
             } else {
                 for (auto& line : polygon) {
                     for (auto& point : line) {
-                        auto p = glm::vec2(point);
-                        addLabel(params, Label::Type::point, { p });
+                        addLabel(params, Label::Type::point, { point });
                     }
                 }
             }
@@ -205,8 +204,7 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
         if (_iconText) {
             for (auto& line : _feat.lines) {
                 for (auto& point : line) {
-                    auto p = glm::vec2(point);
-                    addLabel(params, Label::Type::point, { p });
+                    addLabel(params, Label::Type::point, { point });
                 }
             }
         } else {

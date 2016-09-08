@@ -32,25 +32,25 @@ Label::Label(Label::WorldTransform _worldTransform, glm::vec2 _size, Type _type,
 
 Label::~Label() {}
 
-bool Label::updateScreenTransform(const glm::mat4& _mvp, float _tileInverseScale,
-                                  const ViewState& _viewState, bool _drawAllLabels) {
+bool Label::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) {
     bool clipped = false;
 
     switch (m_type) {
         case Type::debug:
         case Type::point:
         {
-            glm::vec2 p0 = m_worldTransform.position;
+            glm::vec2 p0 = glm::vec2(m_worldTransform.position);
 
             if (m_options.flat) {
                 glm::vec2 positions[4];
-                float unitsPerMeter = _viewState.metersPerPixel * _tileInverseScale;
-                glm::vec2 unitsPerPixel = m_dim * unitsPerMeter;
+                float sourceScale = pow(2, m_worldTransform.position.z);
+                float scale = float(sourceScale / (_viewState.zoomScale * _viewState.tileSize * 2.0));
+                glm::vec2 dim = m_dim * scale;
 
-                glm::vec2 sw = p0 - unitsPerPixel;
-                glm::vec2 se = p0 + glm::vec2(unitsPerPixel.x, -unitsPerPixel.y);
-                glm::vec2 nw = p0 + glm::vec2(-unitsPerPixel.x, unitsPerPixel.y);
-                glm::vec2 ne = p0 + unitsPerPixel;
+                glm::vec2 sw = p0 - dim;
+                glm::vec2 se = p0 + glm::vec2(dim.x, -dim.y);
+                glm::vec2 nw = p0 + glm::vec2(-dim.x, dim.y);
+                glm::vec2 ne = p0 + dim;
 
                 // Rotate in clockwise order on the ground plane
                 if (m_options.angle != 0.f) {
@@ -293,8 +293,7 @@ bool Label::setAnchorIndex(int _index) {
     return true;
 }
 
-bool Label::update(const glm::mat4& _mvp, float _tileInverseScale,
-                   const ViewState& _viewState, bool _drawAllLabels) {
+bool Label::update(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) {
 
     m_occludedLastFrame = m_occluded;
     m_occluded = false;
@@ -307,8 +306,7 @@ bool Label::update(const glm::mat4& _mvp, float _tileInverseScale,
         }
     }
 
-    bool ruleSatisfied = updateScreenTransform(_mvp, _tileInverseScale,
-                                               _viewState, _drawAllLabels);
+    bool ruleSatisfied = updateScreenTransform(_mvp, _viewState, _drawAllLabels);
 
     // one of the label rules has not been satisfied
     if (!ruleSatisfied) {
