@@ -143,6 +143,15 @@ protected:
     /* Whether the style should generate texture coordinates */
     bool m_texCoordsGeneration = false;
 
+    static constexpr int mainShaderUniformBlock = 0;
+    static constexpr int selectionShaderUniformBlock = 1;
+
+    RasterType m_rasterType = RasterType::none;
+
+    bool m_selection;
+
+private:
+
     struct UniformBlock {
         UniformLocation uTime{"u_time"};
         // View uniforms
@@ -164,15 +173,6 @@ protected:
 
         std::vector<StyleUniform> styleUniforms;
     } m_uniforms[2];
-
-    static constexpr int mainShaderUniformBlock = 0;
-    static constexpr int selectionShaderUniformBlock = 1;
-
-    RasterType m_rasterType = RasterType::none;
-
-    bool m_selection;
-
-private:
 
     /* Set uniform values when @_updateUniforms is true,
      */
@@ -252,12 +252,14 @@ public:
      */
     virtual void constructShaderProgram() = 0;
 
+    void constructSelectionShaderProgram();
+
     /* Perform any setup needed before drawing each frame
      * _textUnit is the next available texture unit
      */
     virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene);
 
-    void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene);
+    virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene);
 
     /* Perform any unsetup needed after drawing each frame */
     virtual void onEndDrawFrame() {}

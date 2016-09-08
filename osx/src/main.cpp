@@ -84,27 +84,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         LngLat p;
         map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
         map->setPositionEased(p.longitude, p.latitude, 1.f);
-
-        logMsg("pick feature\n");
         map->clearDataSource(*data_source, true, true);
 
-        auto picks = map->pickFeatureLabelsAt(x, y);
-        std::string name;
-        logMsg("picked %d features\n", picks.size());
-        for (const auto& it : picks) {
-            if (it.properties->getString("name", name)) {
-                logMsg(" - %f\t %s\n", it.distance, name.c_str());
-            }
-        }
-
-        map->pickFeaturesAt(x, y, [](const auto& items) {
-            std::string name;
-            for (const auto& item : items) {
-                if (item.properties->getString("name", name)) {
-                    LOGS("%s", name.c_str());
-                }
-            }
-        });
     } else if ((time - last_time_pressed) < single_tap_time) {
         // Single tap recognized
         LngLat p1;
@@ -124,6 +105,15 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             map->markerSetPolyline(marker, taps.data(), taps.size());
         }
         last_point = p1;
+
+        map->pickFeaturesAt(x, y, [](const auto& items) {
+            std::string name;
+            for (const auto& item : items) {
+                if (item.properties->getString("name", name)) {
+                    LOGS("%s", name.c_str());
+                }
+            }
+        });
 
         // Tangram::clearDataSource(*data_source, false, true);
         // This updates the tiles (maybe we need a recalcTiles())

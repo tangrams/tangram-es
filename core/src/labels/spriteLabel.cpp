@@ -63,6 +63,7 @@ void SpriteLabel::pushTransform() {
         SpriteVertex& v = quadVertices[i];
         v.pos = sp + quad.quad[i].pos;
         v.uv = quad.quad[i].uv;
+        v.selection = options().selectionColor;
         //v.extrude = quad.quad[i].extrude;
         v.state = state;
     }

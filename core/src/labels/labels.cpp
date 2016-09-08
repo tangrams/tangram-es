@@ -381,62 +381,6 @@ void Labels::updateLabelSet(const View& _view, float _dt,
     }
 }
 
-const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, float _dt,
-                                                         const std::vector<std::unique_ptr<Style>>& _styles,
-                                                         const std::vector<std::shared_ptr<Tile>>& _tiles,
-                                                         float _x, float _y, bool _visibleOnly) {
-    // FIXME dpi dependent threshold
-    const float thumbSize = 50;
-
-    m_touchItems.clear();
-
-    glm::vec2 screenSize = glm::vec2(_view.getWidth(), _view.getHeight());
-    glm::vec2 touchPoint(_x, _y);
-
-    OBB obb(_x - thumbSize/2, _y - thumbSize/2, 0, thumbSize, thumbSize);
-
-    float z = _view.getZoom();
-    float dz = z - std::floor(z);
-
-    for (const auto& tile : _tiles) {
-
-        glm::mat4 mvp = tile->mvp();
-
-        for (const auto& style : _styles) {
-            const auto& mesh = tile->getMesh(*style);
-            if (!mesh) { continue; }
-
-            auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
-            if (!labelMesh) { continue; }
-
-            for (auto& label : labelMesh->getLabels()) {
-
-                auto& options = label->options();
-                if (!options.interactive) { continue; }
-
-                if (!_visibleOnly) {
-                    label->updateScreenTransform(mvp, screenSize, false);
-                    label->updateBBoxes(dz);
-                } else if (!label->visibleState()) {
-                    continue;
-                }
-
-                if (isect2d::intersect(label->obb(), obb)) {
-                    float distance = glm::length2(label->transform().state.screenPos - touchPoint);
-                    auto labelCenter = label->center();
-                    m_touchItems.push_back({options.properties, {labelCenter.x, labelCenter.y}, std::sqrt(distance)});
-                }
-            }
-        }
-    }
-
-    std::sort(m_touchItems.begin(), m_touchItems.end(),
-              [](auto& a, auto& b){ return a.distance < b.distance; });
-
-
-    return m_touchItems;
-}
-
 void Labels::drawDebug(RenderState& rs, const View& _view) {
 
     if (!Tangram::getDebugFlag(Tangram::DebugFlags::labels)) {

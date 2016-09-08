@@ -22,6 +22,7 @@ using TextRange = std::array<Range, 3>;
 struct TextVertex {
     glm::i16vec2 pos;
     glm::u16vec2 uv;
+    uint32_t selection;
     struct State {
         uint32_t color;
         uint32_t stroke;

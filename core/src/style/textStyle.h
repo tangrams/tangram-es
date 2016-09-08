@@ -48,18 +48,20 @@ protected:
 
     std::shared_ptr<FontContext> m_context;
 
-    UniformLocation m_uTexScaleFactor{"u_uv_scale_factor"};
-    UniformLocation m_uTex{"u_tex"};
-    UniformLocation m_uOrtho{"u_ortho"};
-    UniformLocation m_uPass{"u_pass"};
-    UniformLocation m_uMaxStrokeWidth{"u_max_stroke_width"};
+    struct UniformBlock {
+        UniformLocation uTexScaleFactor{"u_uv_scale_factor"};
+        UniformLocation uTex{"u_tex"};
+        UniformLocation uOrtho{"u_ortho"};
+        UniformLocation uPass{"u_pass"};
+        UniformLocation uMaxStrokeWidth{"u_max_stroke_width"};
+    } m_uniforms[2];
 
     mutable std::vector<std::unique_ptr<DynamicQuadMesh<TextVertex>>> m_meshes;
 
 public:
 
     TextStyle(std::string _name, std::shared_ptr<FontContext> _fontContext, bool _sdf = false,
-              Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES, bool _selection = false);
+              Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES, bool _selection = true);
 
     void constructVertexLayout() override;
     void constructShaderProgram() override;
@@ -79,6 +81,8 @@ public:
      * - Second pass, draw the inner glyph pixels
      */
     void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
+
+    void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) override;
 
     std::unique_ptr<StyleBuilder> createBuilder() const override;
 

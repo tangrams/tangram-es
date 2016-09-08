@@ -11,6 +11,7 @@ class PointStyle;
 struct SpriteVertex {
     glm::i16vec2 pos;
     glm::u16vec2 uv;
+    uint32_t selection;
     struct State {
         uint32_t color;
         uint16_t alpha;
