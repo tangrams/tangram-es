@@ -123,7 +123,10 @@ void TileManager::updateTileSets(const ViewState& _view,
     m_tileSetChanged = false;
 
     for (auto& tileSet : m_tileSets) {
-        updateTileSet(tileSet, _view, _visibleTiles);
+        // check if tile set is active for zoom (zoom might be below min_zoom)
+        if (tileSet.source->isActiveForZoom(_view.zoom)) {
+            updateTileSet(tileSet, _view, _visibleTiles);
+        }
     }
 
     loadTiles();
@@ -384,6 +387,8 @@ void TileManager::loadSubTasks(std::vector<std::shared_ptr<DataSource>>& _subSou
         if (it != subTasks.end() && (*it)->subTaskId() == int(index)) { continue; }
 
         TileID subTileID = tileID;
+
+        // get tile for lower zoom if we are past max zoom
         if (subTileID.z > subSource->maxZoom()) {
             subTileID = subTileID.withMaxSourceZoom(subSource->maxZoom());
         }
@@ -568,11 +573,15 @@ void TileManager::updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, Til
 
     // Try parent proxy
     auto parentID = _tileID.getParent();
-    if (updateProxyTile(_tileSet, _tile, parentID, ProxyID::parent)) {
+    auto minZoom = _tileSet.source->minDisplayZoom();
+    if (minZoom <= parentID.z
+            && updateProxyTile(_tileSet, _tile, parentID, ProxyID::parent)) {
         return;
     }
     // Try grandparent
-    if (updateProxyTile(_tileSet, _tile, parentID.getParent(), ProxyID::parent2)) {
+    auto grandparentID = parentID.getParent();
+    if (minZoom <= grandparentID.z
+            && updateProxyTile(_tileSet, _tile, grandparentID, ProxyID::parent2)) {
         return;
     }
     // Try children

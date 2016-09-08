@@ -23,7 +23,8 @@ class ClientGeoJsonSource : public DataSource {
 
 public:
 
-    ClientGeoJsonSource(const std::string& _name, const std::string& _url, int32_t _maxZoom = 18);
+    ClientGeoJsonSource(const std::string& _name, const std::string& _url,
+                        int32_t _minDisplayZoom = -1, int32_t _maxDisplayZoom = -1, int32_t _maxZoom = 18);
     ~ClientGeoJsonSource();
 
     // Add geometry from a GeoJSON string

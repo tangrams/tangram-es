@@ -88,8 +88,10 @@ struct RawCache {
     }
 };
 
-DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate, int32_t _maxZoom) :
-    m_name(_name), m_maxZoom(_maxZoom), m_urlTemplate(_urlTemplate),
+DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate,
+                       int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom) :
+    m_name(_name), m_urlTemplate(_urlTemplate),
+    m_minDisplayZoom(_minDisplayZoom), m_maxDisplayZoom(_maxDisplayZoom), m_maxZoom(_maxZoom),
     m_cache(std::make_unique<RawCache>()){
 
     static std::atomic<int32_t> s_serial;
@@ -143,6 +145,8 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
 bool DataSource::equals(const DataSource& other) const {
     if (m_name != other.m_name) { return false; }
     if (m_urlTemplate != other.m_urlTemplate) { return false; }
+    if (m_minDisplayZoom != other.m_minDisplayZoom) { return false; }
+    if (m_maxDisplayZoom != other.m_maxDisplayZoom) { return false; }
     if (m_maxZoom != other.m_maxZoom) { return false; }
     if (m_rasterSources.size() != other.m_rasterSources.size()) { return false; }
     for (size_t i = 0, end = m_rasterSources.size(); i < end; ++i) {
@@ -206,6 +210,21 @@ void DataSource::clearRaster(const TileID& id) {
         TileID rasterID = id.withMaxSourceZoom(raster->maxZoom());
         raster->clearRaster(rasterID);
     }
+}
+
+void DataSource::addRasterSource(std::shared_ptr<DataSource> _rasterSource) {
+    /*
+     * We limit the parent source by any attached raster source's min/max.
+     */
+    int32_t rasterMinDisplayZoom = _rasterSource->minDisplayZoom();
+    int32_t rasterMaxDisplayZoom = _rasterSource->maxDisplayZoom();
+    if (rasterMinDisplayZoom > m_minDisplayZoom) {
+        m_minDisplayZoom = rasterMinDisplayZoom;
+    }
+    if (rasterMaxDisplayZoom < m_maxDisplayZoom) {
+        m_maxDisplayZoom = rasterMaxDisplayZoom;
+    }
+    m_rasterSources.push_back(_rasterSource);
 }
 
 }

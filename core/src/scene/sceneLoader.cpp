@@ -891,8 +891,16 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
 
     std::string type = source["type"].Scalar();
     std::string url = source["url"].Scalar();
+    int32_t minDisplayZoom = -1;
+    int32_t maxDisplayZoom = -1;
     int32_t maxZoom = 18;
 
+    if (auto minDisplayZoomNode = source["min_display_zoom"]) {
+        minDisplayZoom = minDisplayZoomNode.as<int32_t>(minDisplayZoom);
+    }
+    if (auto maxDisplayZoomNode = source["max_display_zoom"]) {
+        maxDisplayZoom = maxDisplayZoomNode.as<int32_t>(maxDisplayZoom);
+    }
     if (auto maxZoomNode = source["max_zoom"]) {
         maxZoom = maxZoomNode.as<int32_t>(maxZoom);
     }
@@ -932,14 +940,14 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
 
     if (type == "GeoJSON") {
         if (tiled) {
-            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url, maxZoom));
+            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
         } else {
-            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, maxZoom));
+            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
         }
     } else if (type == "TopoJSON") {
-        sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, maxZoom));
+        sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
     } else if (type == "MVT") {
-        sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, maxZoom));
+        sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
     } else if (type == "Raster") {
         TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
         bool generateMipmaps = false;
@@ -948,7 +956,7 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
                 generateMipmaps = true;
             }
         }
-        sourcePtr = std::shared_ptr<DataSource>(new RasterSource(name, url, maxZoom, options, generateMipmaps));
+        sourcePtr = std::shared_ptr<DataSource>(new RasterSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom, options, generateMipmaps));
     } else {
         LOGW("Unrecognized data source type '%s', skipping", type.c_str());
     }
@@ -975,7 +983,7 @@ void SceneLoader::loadSourceRasters(std::shared_ptr<DataSource> &source, Node ra
                 LOGNode("Parsing sources: '%s'", sources[srcName], e.what());
                 return;
             }
-            source->rasterSources().push_back(scene->getDataSource(srcName));
+            source->addRasterSource(scene->getDataSource(srcName));
         }
     }
 }
