@@ -252,6 +252,7 @@ enum DebugFlags {
     tangram_infos,      // Various text tangram debug info printed on the screen
     draw_all_labels,    // Draw all labels
     tangram_stats,      // Tangram frame graph stats
+    selection_buffer,   // Render selection framebuffer
 };
 
 // Set debug features on or off using a boolean (see debug.h)

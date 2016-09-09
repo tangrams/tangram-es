@@ -3,6 +3,7 @@
 
 #include "tangram.h"
 #include "data/clientGeoJsonSource.h"
+#include "debug/textDisplay.h"
 #include "platform_linux.h"
 
 #include <sys/types.h>
@@ -181,6 +182,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 break;
             case GLFW_KEY_8:
                 Tangram::toggleDebugFlag(Tangram::DebugFlags::tangram_stats);
+                break;
+            case GLFW_KEY_9:
+                Tangram::toggleDebugFlag(Tangram::DebugFlags::selection_buffer);
                 break;
             case GLFW_KEY_R:
                 map->loadSceneAsync(sceneFile.c_str());

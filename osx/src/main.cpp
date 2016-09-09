@@ -187,6 +187,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_8:
                 Tangram::toggleDebugFlag(Tangram::DebugFlags::tangram_stats);
                 break;
+            case GLFW_KEY_9:
+                Tangram::toggleDebugFlag(Tangram::DebugFlags::selection_buffer);
+                break;
             case GLFW_KEY_BACKSPACE:
                 recreate_context = true;
                 break;
