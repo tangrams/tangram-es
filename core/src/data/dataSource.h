@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <SQLiteCpp/Database.h>
 
 #include "tile/tileTask.h"
 
@@ -90,11 +91,11 @@ public:
     virtual bool isRaster() const { return false; }
 
     bool isOfflineOnly() {
-        return m_mbtiles.size() > 0 && m_urlTemplate.size() == 0;
+        return m_mbtilesPath.size() > 0 && m_urlTemplate.size() == 0;
     }
 
     bool hasMBTiles() {
-        return m_mbtiles.size() > 0;
+        return m_mbtilesPath.size() > 0;
     }
 
 protected:
@@ -125,7 +126,7 @@ protected:
     std::string m_urlTemplate;
 
     // The path to an mbtiles tile store. Empty string if not present.
-    std::string m_mbtiles;
+    std::string m_mbtilesPath;
 
     // Minimum zoom for which tiles will be displayed
     int32_t m_minDisplayZoom;
@@ -146,6 +147,10 @@ protected:
 
     /* vector of raster sources (as raster samplers) referenced by this datasource */
     std::vector<std::shared_ptr<DataSource>> m_rasterSources;
+
+    // Pointer to SQLite DB of MBTiles store
+    std::unique_ptr<SQLite::Database> m_mbtilesDb;
+
 };
 
 }
