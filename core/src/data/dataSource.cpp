@@ -7,6 +7,7 @@
 #include "tile/tile.h"
 #include "tile/tileManager.h"
 #include "tile/tileTask.h"
+#include "tile/mbtilesTileTask.cpp"
 #include "gl/texture.h"
 #include "log.h"
 
@@ -91,13 +92,19 @@ struct RawCache {
 
 DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate, const std::string& _mbtiles,
                        int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom) :
-    m_name(_name), m_urlTemplate(_urlTemplate), m_mbtiles(_mbtiles),
+    m_name(_name), m_urlTemplate(_urlTemplate), m_mbtilesPath(_mbtiles),
     m_minDisplayZoom(_minDisplayZoom), m_maxDisplayZoom(_maxDisplayZoom), m_maxZoom(_maxZoom),
     m_cache(std::make_unique<RawCache>()){
 
     static std::atomic<int32_t> s_serial;
 
     m_id = s_serial++;
+
+    // If we have a path to an MBTiles file,
+    // try to open up a SQLite database instance.
+    if (m_mbtilesPath.size() > 0) {
+        m_mbtilesDb = std::make_unique<SQLite::Database>(m_mbtilesPath);
+    }
 }
 
 DataSource::~DataSource() {
@@ -105,7 +112,12 @@ DataSource::~DataSource() {
 }
 
 std::shared_ptr<TileTask> DataSource::createTask(TileID _tileId, int _subTask) {
-    auto task = std::make_shared<DownloadTileTask>(_tileId, shared_from_this(), _subTask);
+    std::shared_ptr<DownloadTileTask> task;
+    if (hasMBTiles()) {
+        task = std::make_shared<MBTilesTileTask>(_tileId, shared_from_this(), _subTask);
+    } else {
+        task = std::make_shared<DownloadTileTask>(_tileId, shared_from_this(), _subTask);
+    }
 
     cacheGet(*task);
 
