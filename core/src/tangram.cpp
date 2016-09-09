@@ -95,7 +95,7 @@ void Map::Impl::clearEase(EaseField _f) {
     eases[static_cast<size_t>(_f)] = none;
 }
 
-static std::bitset<8> g_flags = 0;
+static std::bitset<9> g_flags = 0;
 
 Map::Map() {
 
@@ -365,6 +365,8 @@ void Map::pickFeaturesAt(float _x, float _y, std::function<void(const std::vecto
 
 void Map::render() {
 
+    bool drawSelectionBuffer = getDebugFlag(DebugFlags::selection_buffer);
+
     // Cache default framebuffer handle used for rendering
     impl->renderState.cacheDefaultFramebuffer();
 
@@ -379,9 +381,15 @@ void Map::render() {
     impl->renderState.jobQueue.runJobs();
 
     // Render feature selection pass to offscreen framebuffer
-    if (impl->selectionQueries.size() > 0) {
+    if (impl->selectionQueries.size() > 0 || drawSelectionBuffer) {
 
-        impl->selectionBuffer.applyAsRenderTarget(impl->renderState);
+        if (drawSelectionBuffer) {
+            glm::vec2 viewport(impl->view.getWidth(), impl->view.getHeight());
+            FrameBuffer::apply(impl->renderState, impl->renderState.defaultFrameBuffer(), viewport, glm::vec4(0.0));
+        } else {
+            impl->selectionBuffer.applyAsRenderTarget(impl->renderState);
+        }
+
         {
             std::lock_guard<std::mutex> lock(impl->tilesMutex);
             for (const auto& style : impl->scene->styles()) {
@@ -392,6 +400,9 @@ void Map::render() {
                 }
             }
         }
+
+        // early frame exit
+        if (drawSelectionBuffer) { return; }
 
         for (const auto& query : impl->selectionQueries) {
             LOG("Solving query %f %f", query.position[0], query.position[1]);
