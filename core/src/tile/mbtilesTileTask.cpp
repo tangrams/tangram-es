@@ -38,24 +38,18 @@ bool MBTilesTileTask::loadMBTilesData() {
         query.bind(2, m_tileId.x);
         query.bind(3, y);
         if (query.executeStep()) {
-            std::vector<char> rawDataVec;
-
+            rawTileData = std::make_shared<std::vector<char>>();
             SQLite::Column column = query.getColumn(0);
             const char* blob = (const char*) column.getBlob();
             const int length = column.getBytes();
-            rawDataVec.resize(length);
-            memcpy(rawDataVec.data(), blob, length);
-
-            if (!rawDataVec.empty()) {
-                rawTileData = std::make_shared<std::vector<char>>();
-                std::swap(*rawTileData, rawDataVec);
-                source().cachePut(m_tileId, rawTileData);
-                return true;
-            }
+            rawTileData->resize(length);
+            memcpy(rawTileData->data(), blob, length);
+            source().cachePut(m_tileId, rawTileData);
+            return true;
         }
 
-    } catch (...) {
-        return false;
+    } catch (std::exception& e) {
+        LOGE("MBTiles SQLite tile_data query failed: %s", e.what());
     }
 
     return false;
