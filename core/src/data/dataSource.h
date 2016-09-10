@@ -98,6 +98,10 @@ public:
         return m_mbtilesPath.size() > 0;
     }
 
+    std::shared_ptr<SQLite::Database> mbtilesDb() { return m_mbtilesDb; }
+
+    void cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef);
+
 protected:
 
     virtual void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
@@ -113,8 +117,6 @@ protected:
     }
 
     bool cacheGet(DownloadTileTask& _task);
-
-    void cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef);
 
     // This datasource is used to generate actual tile geometry
     bool m_generateGeometry = false;
@@ -149,7 +151,7 @@ protected:
     std::vector<std::shared_ptr<DataSource>> m_rasterSources;
 
     // Pointer to SQLite DB of MBTiles store
-    std::unique_ptr<SQLite::Database> m_mbtilesDb;
+    std::shared_ptr<SQLite::Database> m_mbtilesDb;
 
 };
 

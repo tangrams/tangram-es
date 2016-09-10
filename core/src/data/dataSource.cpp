@@ -103,7 +103,11 @@ DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate
     // If we have a path to an MBTiles file,
     // try to open up a SQLite database instance.
     if (m_mbtilesPath.size() > 0) {
-        m_mbtilesDb = std::make_unique<SQLite::Database>(m_mbtilesPath);
+        try {
+            m_mbtilesDb = std::make_shared<SQLite::Database>(m_mbtilesPath);
+        } catch (...) {
+
+        }
     }
 }
 
