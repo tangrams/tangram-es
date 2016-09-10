@@ -23,6 +23,41 @@ void MBTilesTileTask::process(TileBuilder &_tileBuilder) {
 }
 
 bool MBTilesTileTask::loadMBTilesData() {
+    std::shared_ptr<SQLite::Database> db = source().mbtilesDb();
+    if (!db) return false;
+
+    try {
+        SQLite::Statement query(*db, "SELECT tile_data FROM tiles WHERE zoom_level = ? AND tile_column = ? AND tile_row = ?;");
+
+        // Google TMS to WMTS
+        int z = m_tileId.z;
+        int ymax = 1 << z;
+        int y = ymax - m_tileId.y - 1;
+
+        query.bind(1, z);
+        query.bind(2, m_tileId.x);
+        query.bind(3, y);
+        if (query.executeStep()) {
+            std::vector<char> rawDataVec;
+
+            SQLite::Column column = query.getColumn(0);
+            const char* blob = (const char*) column.getBlob();
+            const int length = column.getBytes();
+            rawDataVec.resize(length);
+            memcpy(rawDataVec.data(), blob, length);
+
+            if (!rawDataVec.empty()) {
+                rawTileData = std::make_shared<std::vector<char>>();
+                std::swap(*rawTileData, rawDataVec);
+                source().cachePut(m_tileId, rawTileData);
+                return true;
+            }
+        }
+
+    } catch (...) {
+        return false;
+    }
+
     return false;
 }
 
