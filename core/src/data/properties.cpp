@@ -19,14 +19,13 @@ void Properties::setSorted(std::vector<Item>&& _items) {
 }
 
 const Value& Properties::get(const std::string& key) const {
-    const static Value NOT_FOUND(none_type{});
 
     const auto it = std::find_if(props.begin(), props.end(),
                                  [&](const auto& item) {
                                      return item.key == key;
                                  });
     if (it == props.end()) {
-        return NOT_FOUND;
+        return NOT_A_VALUE;
     }
 
     // auto it = std::lower_bound(props.begin(), props.end(), key,
