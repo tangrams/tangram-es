@@ -1,6 +1,15 @@
 #include "mbtilesTileTask.h"
 
+#include "platform.h"
+#include "data/dataSource.h"
+
 namespace Tangram {
+
+MBTilesTileTask::MBTilesTileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, int _subTask) :
+    m_db(_source->mbtilesDb()), DownloadTileTask(_tileId, _source, _subTask),
+    m_getTileDataStmt(m_db, "SELECT tile_data FROM tiles WHERE zoom_level = ? AND tile_column = ? AND tile_row = ?;") {
+
+}
 
 /**
  * An MBTilesTileTask is created when we have a path to an MBTiles file for the DataSource.
@@ -11,40 +20,40 @@ namespace Tangram {
  */
 void MBTilesTileTask::process(TileBuilder &_tileBuilder) {
     if (hasData()) {
+        // If the data did not come from the in-memory cache, it is new.
+        // It should be added to the MBTiles.
+        if (!dataFromCache) {
+            putMBTilesData();
+        }
         TileTask::process(_tileBuilder);
         return;
     }
 
-    if (loadMBTilesData()) {
+    if (getMBTilesData()) {
         TileTask::process(_tileBuilder);
     } else {
         cancel();
     }
 }
 
-bool MBTilesTileTask::loadMBTilesData() {
-    std::shared_ptr<SQLite::Database> db = source().mbtilesDb();
-    if (!db) return false;
-
+bool MBTilesTileTask::getMBTilesData() {
     try {
-        SQLite::Statement query(*db, "SELECT tile_data FROM tiles WHERE zoom_level = ? AND tile_column = ? AND tile_row = ?;");
-
         // Google TMS to WMTS
         int z = m_tileId.z;
         int ymax = 1 << z;
         int y = ymax - m_tileId.y - 1;
 
-        query.bind(1, z);
-        query.bind(2, m_tileId.x);
-        query.bind(3, y);
-        if (query.executeStep()) {
+        m_getTileDataStmt.bind(1, z);
+        m_getTileDataStmt.bind(2, m_tileId.x);
+        m_getTileDataStmt.bind(3, y);
+        if (m_getTileDataStmt.executeStep()) {
             rawTileData = std::make_shared<std::vector<char>>();
-            SQLite::Column column = query.getColumn(0);
+            SQLite::Column column = m_getTileDataStmt.getColumn(0);
             const char* blob = (const char*) column.getBlob();
             const int length = column.getBytes();
             rawTileData->resize(length);
             memcpy(rawTileData->data(), blob, length);
-            source().cachePut(m_tileId, rawTileData);
+            m_source->cachePut(m_tileId, rawTileData);
             return true;
         }
 
@@ -53,6 +62,10 @@ bool MBTilesTileTask::loadMBTilesData() {
     }
 
     return false;
+}
+
+void MBTilesTileTask::putMBTilesData() {
+    
 }
 
 }
