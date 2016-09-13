@@ -104,9 +104,9 @@ DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate
     // try to open up a SQLite database instance.
     if (m_mbtilesPath.size() > 0) {
         try {
-            m_mbtilesDb = std::make_unique<SQLite::Database>(m_mbtilesPath);
-        } catch (...) {
-
+            m_mbtilesDb = std::make_unique<SQLite::Database>(m_mbtilesPath, SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
+        } catch (std::exception& e) {
+            LOGE("Unable to open SQLite database: %s", e.what());
         }
     }
 }
