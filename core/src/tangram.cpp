@@ -221,6 +221,7 @@ void Map::applySceneUpdates() {
         if (impl->sceneUpdates.empty()) { return; }
 
         impl->nextScene = std::make_shared<Scene>(*impl->scene);
+        impl->nextScene->referencedGlobals() = impl->scene->referencedGlobals();
         impl->nextScene->useScenePosition = false;
 
         updates = impl->sceneUpdates;
@@ -229,7 +230,7 @@ void Map::applySceneUpdates() {
 
     runAsyncTask([scene = impl->nextScene, updates = std::move(updates), &jobQueue = impl->jobQueue, this](){
 
-            SceneLoader::applyUpdates(scene->config(), updates);
+            SceneLoader::applyUpdates(*scene, updates);
 
             bool ok = SceneLoader::applyConfig(scene->config(), scene);
 

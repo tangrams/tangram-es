@@ -68,7 +68,7 @@ TEST_CASE("Scene update tests") {
     updates.push_back({"global.non_existing_property1.non_existing_property_deep", "true"});
 
     // Tangram apply scene updates, reload the scene
-    SceneLoader::applyUpdates(scene.config(), updates);
+    SceneLoader::applyUpdates(scene, updates);
 
     const Node& root = scene.config();
 
@@ -101,7 +101,7 @@ TEST_CASE("Scene update tests, ensure update ordering is preserved") {
     updates.push_back({"lights.light2.ambient", "0.0"});
 
     // Tangram apply scene updates, reload the scene
-    SceneLoader::applyUpdates(scene.config(), updates);
+    SceneLoader::applyUpdates(scene, updates);
 
     const Node& root = scene.config();
 
