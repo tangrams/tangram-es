@@ -1,9 +1,11 @@
 #include "textLabel.h"
+
 #include "textLabels.h"
 #include "style/textStyle.h"
 #include "text/fontContext.h"
 #include "gl/dynamicQuadMesh.h"
 #include "util/geom.h"
+#include "view/view.h"
 
 namespace Tangram {
 
@@ -43,7 +45,71 @@ void TextLabel::applyAnchor(Anchor _anchor) {
     if (m_parent) { offset += m_parent->dimension(); }
 
     m_anchor = LabelProperty::anchorDirection(_anchor) * offset * 0.5f;
+}
 
+bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) {
+    bool clipped = false;
+
+    switch (m_type) {
+        case Type::debug:
+        case Type::point:
+        {
+            glm::vec2 p0 = glm::vec2(m_worldTransform.position);
+
+            glm::vec2 position = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
+                                                    _viewState.viewportSize, clipped);
+            if (clipped) { return false; }
+
+            m_screenTransform.position = position + m_options.offset;
+
+            break;
+        }
+        case Type::line:
+        {
+            // project label position from mercator world space to screen coordinates
+            glm::vec2 p0 = m_worldTransform.positions[0];
+            glm::vec2 p2 = m_worldTransform.positions[1];
+            glm::vec2 position;
+
+            glm::vec2 ap0 = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
+                                               _viewState.viewportSize, clipped);
+            glm::vec2 ap2 = worldToScreenSpace(_mvp, glm::vec4(p2, 0.0, 1.0),
+                                               _viewState.viewportSize, clipped);
+
+            // check whether the label is behind the camera using the
+            // perspective division factor
+            if (clipped) {
+                return false;
+            }
+
+            float length = glm::length(ap2 - ap0);
+
+            // default heuristic : allow label to be 30% wider than segment
+            float minLength = m_dim.x * 0.7;
+
+            if (!_drawAllLabels && length < minLength) {
+                return false;
+            }
+
+            glm::vec2 p1 = glm::vec2(p2 + p0) * 0.5f;
+
+            glm::vec2 ap1 = worldToScreenSpace(_mvp, glm::vec4(p1, 0.0, 1.0),
+                                               _viewState.viewportSize, clipped);
+
+            // Keep screen position center at world center (less sliding in tilted view)
+            position = ap1;
+
+            glm::vec2 rotation = (ap0.x <= ap2.x ? ap2 - ap0 : ap0 - ap2) / length;
+            rotation = glm::vec2{rotation.x, -rotation.y};
+
+            m_screenTransform.position = position + rotateBy(m_options.offset, rotation);
+            m_screenTransform.rotation = rotation;
+
+            break;
+        }
+    }
+
+    return true;
 }
 
 void TextLabel::updateBBoxes(float _zoomFract) {

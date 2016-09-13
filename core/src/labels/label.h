@@ -104,14 +104,12 @@ public:
     virtual glm::vec2 center() const;
     virtual void updateBBoxes(float _zoomFract) = 0;
 
+    // Update the screen position of the label
+    virtual bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) = 0;
+
     bool update(const glm::mat4& _mvp,
                 const ViewState& _viewState,
                 bool _drawAllLabels = false);
-
-    // Update the screen position of the label
-    bool updateScreenTransform(const glm::mat4& _mvp,
-                               const ViewState& _viewState,
-                               bool _drawAllLabels);
 
     bool evalState(float _dt);
 

@@ -25,12 +25,14 @@ uniform LOWP int u_pass;
 #pragma tangram: uniforms
 
 attribute vec2 a_uv;
-attribute vec2 a_position;
 attribute LOWP float a_alpha;
 attribute LOWP vec4 a_color;
 #ifdef TANGRAM_TEXT
+attribute vec2 a_position;
 attribute LOWP vec4 a_stroke;
 attribute float a_scale;
+#else
+attribute vec4 a_position;
 #endif
 
 varying vec4 v_color;
@@ -52,9 +54,9 @@ void main() {
     v_alpha = a_alpha;
     v_color = a_color;
 
-    vec2 vertex_pos = UNPACK_POSITION(a_position);
 
 #ifdef TANGRAM_TEXT
+    vec2 vertex_pos = UNPACK_POSITION(a_position);
     v_texcoords = UNPACK_TEXTURE(a_uv);
     v_sdf_scale = a_scale / 64.0;
 
@@ -82,13 +84,18 @@ void main() {
     } else {
         v_alpha = 0.0;
     }
-#else
-    v_texcoords = a_uv;
-#endif
 
     vec4 position = vec4(vertex_pos, 0.0, 1.0);
 
     #pragma tangram: position
 
     gl_Position = u_ortho * position;
+
+#else
+    v_texcoords = a_uv;
+
+    gl_Position = a_position;
+
+#endif
+
 }

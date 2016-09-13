@@ -1,6 +1,8 @@
 #include "labels/spriteLabel.h"
+
 #include "gl/dynamicQuadMesh.h"
 #include "style/pointStyle.h"
+#include "view/view.h"
 #include "platform.h"
 
 namespace Tangram {
@@ -24,6 +26,69 @@ SpriteLabel::SpriteLabel(Label::WorldTransform _transform, glm::vec2 _size, Labe
 void SpriteLabel::applyAnchor(LabelProperty::Anchor _anchor) {
 
     m_anchor = LabelProperty::anchorDirection(_anchor) * m_dim * 0.5f;
+}
+
+bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) {
+
+    switch (m_type) {
+        case Type::debug:
+        case Type::point:
+        {
+            glm::vec2 p0 = glm::vec2(m_worldTransform.position);
+
+            if (m_options.flat) {
+
+                auto& positions = m_screenTransform.positions;
+                float sourceScale = pow(2, m_worldTransform.position.z);
+                float scale = float(sourceScale / (_viewState.zoomScale * _viewState.tileSize * 2.0));
+                if (m_extrudeScale != 1.f) {
+                    scale *= pow(2, _viewState.fractZoom) * m_extrudeScale;
+                }
+                glm::vec2 dim = m_dim * scale;
+
+
+                positions[0] = p0 - dim;
+                positions[1] = p0 + glm::vec2(dim.x, -dim.y);
+                positions[2] = p0 + glm::vec2(-dim.x, dim.y);
+                positions[3] = p0 + dim;
+
+                // Rotate in clockwise order on the ground plane
+                if (m_options.angle != 0.f) {
+                    glm::vec2 rotation(cos(DEG_TO_RAD * m_options.angle),
+                                       sin(DEG_TO_RAD * m_options.angle));
+
+                    positions[0] = rotateBy(positions[0], rotation);
+                    positions[1] = rotateBy(positions[1], rotation);
+                    positions[2] = rotateBy(positions[2], rotation);
+                    positions[3] = rotateBy(positions[3], rotation);
+                }
+
+                for (size_t i = 0; i < 4; i++) {
+                    m_projected[i] = worldToClipSpace(_mvp, glm::vec4(positions[i], 0.f, 1.f));
+                    if (m_projected[i].w <= 0.0f) { return false; }
+
+                    positions[i] = clipToScreenSpace(m_projected[i], _viewState.viewportSize);
+                }
+
+            } else {
+                m_projected[0] = worldToClipSpace(_mvp, glm::vec4(p0, 0.f, 1.f));
+                if (m_projected[0].w <= 0.0f) { return false; }
+
+                glm::vec2 position = clipToScreenSpace(m_projected[0], _viewState.viewportSize);
+
+                m_screenTransform.position = position + m_options.offset;
+
+                m_viewportSize = _viewState.viewportSize;
+
+            }
+
+            break;
+        }
+        default:
+            break;
+    }
+
+    return true;
 }
 
 void SpriteLabel::updateBBoxes(float _zoomFract) {
@@ -82,20 +147,31 @@ void SpriteLabel::addVerticesToMesh() {
 
     auto* quadVertices = style.getMesh()->pushQuad();
 
-    glm::i16vec2 screenPosition = glm::i16vec2(m_screenTransform.position * SpriteVertex::position_scale);
 
-    for (int i = 0; i < 4; i++) {
-        SpriteVertex& vertex = quadVertices[i];
+    if (m_options.flat) {
+        for (int i = 0; i < 4; i++) {
+            SpriteVertex& vertex = quadVertices[i];
 
-        if (m_options.flat) {
-            vertex.pos = SpriteVertex::position_scale * m_screenTransform.positions[i];
-        } else {
-            vertex.pos = screenPosition + quad.quad[i].pos;
+            vertex.pos = m_projected[i];
+            vertex.uv = quad.quad[i].uv;
+            vertex.state = state;
         }
 
-        vertex.uv = quad.quad[i].uv;
-        //v.extrude = quad.quad[i].extrude;
-        vertex.state = state;
+    } else {
+
+        glm::vec2 scale = 2.0f / m_viewportSize;
+        scale.y *= -1;
+
+        glm::vec2 pos = glm::vec2(m_projected[0]) / m_projected[0].w;
+
+        for (int i = 0; i < 4; i++) {
+            SpriteVertex& vertex = quadVertices[i];
+
+            vertex.pos = glm::vec4(pos + (glm::vec2(quad.quad[i].pos) / SpriteVertex::position_scale) * scale , 0.f, 1.f);
+
+            vertex.uv = quad.quad[i].uv;
+            vertex.state = state;
+        }
     }
 }
 

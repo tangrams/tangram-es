@@ -25,7 +25,7 @@ PointStyle::~PointStyle() {}
 void PointStyle::constructVertexLayout() {
 
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-        {"a_position", 2, GL_SHORT, false, 0},
+        {"a_position", 4, GL_FLOAT, false, 0},
         {"a_uv", 2, GL_UNSIGNED_SHORT, true, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_alpha", 1, GL_UNSIGNED_SHORT, true, 0},

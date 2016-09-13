@@ -62,6 +62,8 @@ private:
 
     void applyAnchor(LabelProperty::Anchor _anchor) override;
 
+    bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) override;
+
     // Back-pointer to owning container
     const TextLabels& m_textLabels;
 

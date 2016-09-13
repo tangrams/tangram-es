@@ -3,13 +3,15 @@
 #include "labels/label.h"
 #include "labels/labelSet.h"
 
+#include <array>
+
 namespace Tangram {
 
 class SpriteLabels;
 class PointStyle;
 
 struct SpriteVertex {
-    glm::i16vec2 pos;
+    glm::vec4 pos;
     glm::u16vec2 uv;
     struct State {
         uint32_t color;
@@ -36,11 +38,17 @@ private:
 
     void applyAnchor(LabelProperty::Anchor _anchor) override;
 
+    bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) override;
+
     // Back-pointer to owning container and position
     const SpriteLabels& m_labels;
     const size_t m_labelsPos;
 
     float m_extrudeScale;
+
+    std::array<glm::vec4, 4> m_projected;
+
+    glm::vec2 m_viewportSize;
 };
 
 struct SpriteQuad {
