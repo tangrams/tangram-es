@@ -194,11 +194,6 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
         v3 = rotateBy(v3, rotation);
     }
 
-    v0 *= SpriteVertex::position_scale;
-    v1 *= SpriteVertex::position_scale;
-    v2 *= SpriteVertex::position_scale;
-    v3 *= SpriteVertex::position_scale;
-
     m_quads.push_back({{
         {v0, {uvBL.x, uvTR.y}},
         {v1, {uvTR.x, uvTR.y}},

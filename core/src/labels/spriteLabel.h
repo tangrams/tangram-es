@@ -19,7 +19,6 @@ struct SpriteVertex {
         uint16_t scale;
     } state;
 
-    static const float position_scale;
     static const float alpha_scale;
     static const float texture_scale;
 };
@@ -47,13 +46,11 @@ private:
     float m_extrudeScale;
 
     std::array<glm::vec4, 4> m_projected;
-
-    glm::vec2 m_viewportSize;
 };
 
 struct SpriteQuad {
     struct {
-        glm::i16vec2 pos;
+        glm::vec2 pos;
         glm::u16vec2 uv;
     } quad[4];
     // TODO color and stroke must not be stored per quad

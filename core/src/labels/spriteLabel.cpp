@@ -9,7 +9,6 @@ namespace Tangram {
 
 using namespace LabelProperty;
 
-const float SpriteVertex::position_scale = 4.0f;
 const float SpriteVertex::alpha_scale = 65535.0f;
 const float SpriteVertex::texture_scale = 65535.0f;
 
@@ -78,8 +77,8 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
 
                 m_screenTransform.position = position + m_options.offset;
 
-                m_viewportSize = _viewState.viewportSize;
-
+                m_projected[1].x = _viewState.viewportSize.x;
+                m_projected[1].y = _viewState.viewportSize.y;
             }
 
             break;
@@ -147,7 +146,6 @@ void SpriteLabel::addVerticesToMesh() {
 
     auto* quadVertices = style.getMesh()->pushQuad();
 
-
     if (m_options.flat) {
         for (int i = 0; i < 4; i++) {
             SpriteVertex& vertex = quadVertices[i];
@@ -159,15 +157,21 @@ void SpriteLabel::addVerticesToMesh() {
 
     } else {
 
-        glm::vec2 scale = 2.0f / m_viewportSize;
+        glm::vec2 pos = glm::vec2(m_projected[0]) / m_projected[0].w;
+        glm::vec2 scale = 2.0f / glm::vec2(m_projected[1]);
         scale.y *= -1;
 
-        glm::vec2 pos = glm::vec2(m_projected[0]) / m_projected[0].w;
+        pos += m_options.offset * scale;
 
         for (int i = 0; i < 4; i++) {
             SpriteVertex& vertex = quadVertices[i];
 
-            vertex.pos = glm::vec4(pos + (glm::vec2(quad.quad[i].pos) / SpriteVertex::position_scale) * scale , 0.f, 1.f);
+            glm::vec2 coord = pos + quad.quad[i].pos * scale;
+
+            vertex.pos.x = coord.x;
+            vertex.pos.y = coord.y;
+            vertex.pos.z = 0;
+            vertex.pos.w = 1;
 
             vertex.uv = quad.quad[i].uv;
             vertex.state = state;
