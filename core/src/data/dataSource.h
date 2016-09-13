@@ -95,10 +95,10 @@ public:
     }
 
     bool hasMBTiles() {
-        return m_mbtilesPath.size() > 0;
+        return m_mbtilesDb != nullptr;
     }
 
-    std::shared_ptr<SQLite::Database> mbtilesDb() { return m_mbtilesDb; }
+    SQLite::Database& mbtilesDb() { return *m_mbtilesDb; }
 
     void cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef);
 
@@ -151,7 +151,7 @@ protected:
     std::vector<std::shared_ptr<DataSource>> m_rasterSources;
 
     // Pointer to SQLite DB of MBTiles store
-    std::shared_ptr<SQLite::Database> m_mbtilesDb;
+    std::unique_ptr<SQLite::Database> m_mbtilesDb;
 
 };
 

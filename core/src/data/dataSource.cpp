@@ -46,7 +46,7 @@ struct RawCache {
             // Move cached entry to start of list
             m_cacheList.splice(m_cacheList.begin(), m_cacheList, it->second);
             _task.rawTileData = m_cacheList.front().second;
-
+            _task.dataFromCache = true;
             return true;
         }
 
@@ -104,7 +104,7 @@ DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate
     // try to open up a SQLite database instance.
     if (m_mbtilesPath.size() > 0) {
         try {
-            m_mbtilesDb = std::make_shared<SQLite::Database>(m_mbtilesPath);
+            m_mbtilesDb = std::make_unique<SQLite::Database>(m_mbtilesPath);
         } catch (...) {
 
         }
