@@ -8,6 +8,7 @@
 
 #include "urlWorker.h"
 #include "platform_linux.h"
+#include "gl/hardware.h"
 
 #include <libgen.h>
 #include <unistd.h>
@@ -16,11 +17,9 @@
 
 #include <regex>
 
-#define NUM_WORKERS 3
+#include <GLFW/glfw3.h>
 
-PFNGLBINDVERTEXARRAYPROC glBindVertexArrayOESEXT = 0;
-PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArraysOESEXT = 0;
-PFNGLGENVERTEXARRAYSPROC glGenVertexArraysOESEXT = 0;
+#define NUM_WORKERS 3
 
 static bool s_isContinuousRendering = false;
 
@@ -156,8 +155,5 @@ void setCurrentThreadPriority(int priority){
 }
 
 void initGLExtensions() {
-     glBindVertexArrayOESEXT = (PFNGLBINDVERTEXARRAYPROC)glfwGetProcAddress("glBindVertexArray");
-     glDeleteVertexArraysOESEXT = (PFNGLDELETEVERTEXARRAYSPROC)glfwGetProcAddress("glDeleteVertexArrays");
-     glGenVertexArraysOESEXT = (PFNGLGENVERTEXARRAYSPROC)glfwGetProcAddress("glGenVertexArrays");
-
+    Tangram::Hardware::supportsMapBuffer = true;
 }

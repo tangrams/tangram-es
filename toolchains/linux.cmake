@@ -51,7 +51,10 @@ if(APPLICATION)
     ${PROJECT_SOURCE_DIR}/linux/src/*.h
     ${PROJECT_SOURCE_DIR}/linux/src/*.cpp)
 
-  add_executable(${EXECUTABLE_NAME} ${SOURCES})
+  add_executable(${EXECUTABLE_NAME}
+    ${SOURCES}
+    ${PROJECT_SOURCE_DIR}/core/common/platform_gl.cpp
+    )
 
   target_link_libraries(${EXECUTABLE_NAME}
     ${CORE_LIBRARY}
