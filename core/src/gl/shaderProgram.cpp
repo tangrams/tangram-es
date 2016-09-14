@@ -285,13 +285,10 @@ std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fra
 
     auto sourcePos = source.begin();
 
-    auto linesBegin = std::sregex_iterator(source.begin(), source.end(), pragmaLine);
-    auto linesEnd = std::sregex_iterator();
+    for (auto it = source.begin(); std::regex_search(it, source.end(), sm, pragmaLine);) {
+        it += sm.position() + sm.length();
 
-    for (auto i = linesBegin; i != linesEnd; ++i) {
-        sm = *i;
         std::string pragmaName = sm[1];
-
         bool unique;
         std::tie(std::ignore, unique) = pragmas.emplace(std::move(pragmaName));
 
@@ -301,11 +298,9 @@ std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fra
         auto block = m_sourceBlocks.find(sm[1]);
         if (block == m_sourceBlocks.end()) { continue; }
 
-        auto matchEnd = source.begin() + sm.position() + sm.length();
-
         // write from last source position to end of pragma
-        std::copy(sourcePos, matchEnd, std::ostream_iterator<char>(sourceOut));
-        sourcePos = matchEnd;
+        std::copy(sourcePos, it, std::ostream_iterator<char>(sourceOut));
+        sourcePos = it;
 
         // insert blocks
         for (auto& source : block->second) {
