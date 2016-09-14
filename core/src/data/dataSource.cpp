@@ -7,7 +7,7 @@
 #include "tile/tile.h"
 #include "tile/tileManager.h"
 #include "tile/tileTask.h"
-#include "tile/mbtilesTileTask.cpp"
+#include "tile/mbtilesTileTask.h"
 #include "util/mbtiles.h"
 #include "gl/texture.h"
 #include "log.h"
