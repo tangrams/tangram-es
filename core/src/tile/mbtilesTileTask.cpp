@@ -6,7 +6,7 @@
 namespace Tangram {
 
 MBTilesTileTask::MBTilesTileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, int _subTask) :
-    m_db(_source->mbtilesDb()), DownloadTileTask(_tileId, _source, _subTask),
+    DownloadTileTask(_tileId, _source, _subTask), m_db(_source->mbtilesDb()),
     m_getTileDataStmt(m_db, "SELECT tile_data FROM tiles WHERE zoom_level = ? AND tile_column = ? AND tile_row = ?;"),
     m_putMapStmt(m_db, "REPLACE INTO map (zoom_level, tile_column, tile_row, tile_id) VALUES (?, ?, ?, ?);"),
     m_putImageStmt(m_db, "REPLACE INTO images (tile_id, tile_data) VALUES (?, ?);") {
@@ -79,8 +79,7 @@ void MBTilesTileTask::putMBTilesData() {
         m_putMapStmt.bind(2, m_tileId.x);
         m_putMapStmt.bind(3, y);
         m_putMapStmt.bind(4, id);
-        int rowsModified = m_putMapStmt.exec();
-        LOGN("m_putMapStmt rows modified: %d", rowsModified);
+        m_putMapStmt.exec();
     } catch (std::exception& e) {
         LOGE("MBTiles SQLite put map statement failed: %s", e.what());
     }
@@ -88,8 +87,7 @@ void MBTilesTileTask::putMBTilesData() {
     try {
         m_putImageStmt.bind(1, id);
         m_putImageStmt.bind(2, rawTileData->data(), rawTileData->size());
-        int rowsModified = m_putImageStmt.exec();
-        LOGN("m_putImageStmt rows modified: %d", rowsModified);
+        m_putImageStmt.exec();
     } catch (std::exception& e) {
         LOGE("MBTiles SQLite put image statement failed: %s", e.what());
     }
