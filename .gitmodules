@@ -30,7 +30,10 @@
 	url = https://github.com/google/benchmark
 [submodule "external/alfons"]
 	path = external/alfons
-	url = https://github.com/hjanetzek/alfons
+	url = https://github.com/lygstate/alfons
 [submodule "external/harfbuzz-icu-freetype"]
 	path = external/harfbuzz-icu-freetype
 	url = https://github.com/tangrams/harfbuzz-icu-freetype.git
+[submodule "external/libepoxy"]
+	path = external/libepoxy
+	url = https://github.com/lygstate/libepoxy.git
