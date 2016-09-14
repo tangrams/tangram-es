@@ -11,7 +11,7 @@ class SpriteLabels;
 class PointStyle;
 
 struct SpriteVertex {
-    glm::vec4 pos;
+    glm::vec3 pos;
     glm::u16vec2 uv;
     struct State {
         uint32_t color;
@@ -45,7 +45,7 @@ private:
 
     float m_extrudeScale;
 
-    std::array<glm::vec4, 4> m_projected;
+    std::array<glm::vec3, 4> m_projected;
 };
 
 struct SpriteQuad {

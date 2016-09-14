@@ -29,6 +29,8 @@ void SpriteLabel::applyAnchor(LabelProperty::Anchor _anchor) {
 
 bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) {
 
+    glm::vec2 halfScreen = glm::vec2(_viewState.viewportSize * 0.5f);
+
     switch (m_type) {
         case Type::debug:
         case Type::point:
@@ -63,19 +65,29 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
                 }
 
                 for (size_t i = 0; i < 4; i++) {
-                    m_projected[i] = worldToClipSpace(_mvp, glm::vec4(positions[i], 0.f, 1.f));
-                    if (m_projected[i].w <= 0.0f) { return false; }
+                    glm::vec4 projected = worldToClipSpace(_mvp, glm::vec4(positions[i], 0.f, 1.f));
+                    if (projected.w <= 0.0f) { return false; }
 
-                    positions[i] = clipToScreenSpace(m_projected[i], _viewState.viewportSize);
+                        m_projected[i] = glm::vec3(projected) / projected.w;
+
+                        // from normalized device coordinates to screen space coordinate system
+                        // top-left screen axis, y pointing down
+                        positions[i].x = 1 + m_projected[i].x;
+                        positions[i].y = 1 - m_projected[i].y;
+                        positions[i] *= halfScreen;
                 }
 
             } else {
-                m_projected[0] = worldToClipSpace(_mvp, glm::vec4(p0, 0.f, 1.f));
-                if (m_projected[0].w <= 0.0f) { return false; }
+                glm::vec4 projected = worldToClipSpace(_mvp, glm::vec4(p0, 0.f, 1.f));
+                if (projected.w <= 0.0f) { return false; }
 
-                glm::vec2 position = clipToScreenSpace(m_projected[0], _viewState.viewportSize);
+                m_projected[0] = glm::vec3(projected) / projected.w;
 
-                m_screenTransform.position = position + m_options.offset;
+                auto& position = m_screenTransform.position;
+                position.x = 1 + m_projected[0].x;
+                position.y = 1 - m_projected[0].y;
+                position *= halfScreen;
+                position += m_options.offset;
 
                 m_projected[1].x = _viewState.viewportSize.x;
                 m_projected[1].y = _viewState.viewportSize.y;
@@ -157,7 +169,7 @@ void SpriteLabel::addVerticesToMesh() {
 
     } else {
 
-        glm::vec2 pos = glm::vec2(m_projected[0]) / m_projected[0].w;
+        glm::vec2 pos = glm::vec2(m_projected[0]);
         glm::vec2 scale = 2.0f / glm::vec2(m_projected[1]);
         scale.y *= -1;
 
@@ -171,7 +183,6 @@ void SpriteLabel::addVerticesToMesh() {
             vertex.pos.x = coord.x;
             vertex.pos.y = coord.y;
             vertex.pos.z = 0;
-            vertex.pos.w = 1;
 
             vertex.uv = quad.quad[i].uv;
             vertex.state = state;

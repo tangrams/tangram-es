@@ -32,7 +32,7 @@ attribute vec2 a_position;
 attribute LOWP vec4 a_stroke;
 attribute float a_scale;
 #else
-attribute vec4 a_position;
+attribute vec3 a_position;
 #endif
 
 varying vec4 v_color;
@@ -94,7 +94,7 @@ void main() {
 #else
     v_texcoords = a_uv;
 
-    gl_Position = a_position;
+    gl_Position = vec4(a_position, 1.0);
 
 #endif
 
