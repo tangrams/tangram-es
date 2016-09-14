@@ -118,6 +118,8 @@ protected:
 
     bool cacheGet(DownloadTileTask& _task);
 
+    void setupMBTiles();
+
     // This datasource is used to generate actual tile geometry
     bool m_generateGeometry = false;
 

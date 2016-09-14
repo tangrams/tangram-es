@@ -8,6 +8,7 @@
 #include "tile/tileManager.h"
 #include "tile/tileTask.h"
 #include "tile/mbtilesTileTask.cpp"
+#include "util/mbtiles.h"
 #include "gl/texture.h"
 #include "log.h"
 
@@ -100,15 +101,7 @@ DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate
 
     m_id = s_serial++;
 
-    // If we have a path to an MBTiles file,
-    // try to open up a SQLite database instance.
-    if (m_mbtilesPath.size() > 0) {
-        try {
-            m_mbtilesDb = std::make_unique<SQLite::Database>(m_mbtilesPath, SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
-        } catch (std::exception& e) {
-            LOGE("Unable to open SQLite database: %s", e.what());
-        }
-    }
+    setupMBTiles();
 }
 
 DataSource::~DataSource() {
@@ -256,6 +249,23 @@ void DataSource::addRasterSource(std::shared_ptr<DataSource> _rasterSource) {
         m_maxDisplayZoom = rasterMaxDisplayZoom;
     }
     m_rasterSources.push_back(_rasterSource);
+}
+
+void DataSource::setupMBTiles() {
+    // If we have a path to an MBTiles file,
+    // try to open up a SQLite database instance.
+    if (m_mbtilesPath.size() > 0) {
+        try {
+            // Need to explicitly open a SQLite DB with OPEN_READWRITE and OPEN_CREATE flags to make a file and write.
+            m_mbtilesDb = std::make_unique<SQLite::Database>(m_mbtilesPath, SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
+
+            // If needed, setup the database by running the schema.sql.
+            MBTiles::setupDB(*m_mbtilesDb);
+
+        } catch (std::exception& e) {
+            LOGE("Unable to open SQLite database: %s", e.what());
+        }
+    }
 }
 
 }
