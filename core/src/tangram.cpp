@@ -652,6 +652,12 @@ bool Map::markerSetStyling(MarkerID _marker, const char* _styling) {
     return success;
 }
 
+bool Map::markerSetBitmap(MarkerID _marker, int _width, int _height, const unsigned int* _data) {
+    bool success = impl->markerManager.setBitmap(_marker, _width, _height, _data);
+    requestRender();
+    return success;
+}
+
 bool Map::markerSetVisible(MarkerID _marker, bool _visible) {
     bool success = impl->markerManager.setVisible(_marker, _visible);
     requestRender();
