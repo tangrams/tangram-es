@@ -64,11 +64,8 @@ void SpriteLabel::pushTransform() {
     else if (style.texture()) { tex = style.texture().get(); }
     else if (style.spriteAtlas()) { tex = style.spriteAtlas()->texture(); }
 
-    // If we don't have a texture ot push, the mesh will continue to use the last bound texture.
-    // Points without textures should be drawn as a "filled point" but that's disabled at the moment.
-    if (tex) {
-        style.getMesh()->pushTexture(tex);
-    }
+    // If tex is null, the mesh will use the default point texture.
+    style.getMesh()->pushTexture(tex);
 
     auto* quadVertices = style.getMesh()->pushQuad();
 

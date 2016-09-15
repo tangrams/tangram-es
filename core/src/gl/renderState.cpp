@@ -4,7 +4,11 @@
 #include "vertexLayout.h"
 #include "gl/error.h"
 #include "gl/hardware.h"
+#include "gl/texture.h"
 #include "log.h"
+
+// Default point texture data is included as an array literal.
+#include "defaultPointTextureData.h"
 
 #include <limits>
 
@@ -39,6 +43,7 @@ GLuint RenderState::getTextureUnit(GLuint _unit) {
 RenderState::~RenderState() {
 
     deleteQuadIndexBuffer();
+    deleteDefaultPointTexture();
 
 }
 
@@ -331,6 +336,23 @@ void RenderState::generateQuadIndexBuffer() {
     GL::bufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLushort),
                    reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW);
 
+}
+
+Texture* RenderState::getDefaultPointTexture() {
+    if (m_defaultPointTexture == nullptr) {
+        generateDefaultPointTexture();
+    }
+    return m_defaultPointTexture;
+}
+
+void RenderState::deleteDefaultPointTexture() {
+    delete m_defaultPointTexture;
+    m_defaultPointTexture = nullptr;
+}
+
+void RenderState::generateDefaultPointTexture() {
+    TextureOptions options = { GL_RGBA, GL_RGBA, { GL_LINEAR, GL_LINEAR }, { GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE } };
+    m_defaultPointTexture = new Texture(default_point_texture_data, default_point_texture_size, options, true);
 }
 
 } // namespace Tangram

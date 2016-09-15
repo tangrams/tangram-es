@@ -53,7 +53,8 @@ public:
     }
 
     // Signals that all vertices added until the next call to pushTexture
-    // are meant to be drawn with this texture.
+    // are meant to be drawn with this texture. Push a nullptr to use the
+    // default point texture.
     void pushTexture(Texture* texture);
 
 private:
@@ -123,7 +124,8 @@ bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader, int textur
             // This should always occur in the first loop iteration.
             bool hasNextTextureBatch = false;
             if (nextTextureBatch != m_batches.end()) {
-                auto& tex = nextTextureBatch->texture;
+                auto tex = nextTextureBatch->texture;
+                if (!tex) { tex = rs.getDefaultPointTexture(); }
                 tex->update(rs, textureUnit);
                 tex->bind(rs, textureUnit);
                 hasNextTextureBatch = (++nextTextureBatch != m_batches.end());

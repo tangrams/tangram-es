@@ -40,19 +40,6 @@ void PointStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(SHADER_SOURCE(point_fs),
                                       SHADER_SOURCE(point_vs));
 
-    // Disable the "filled point" rendering for styles that have no associated texture;
-    // When using the 'point' style with markers, there will be no texture for the style
-    // until the marker is added and configured, so we don't want to assume that we won't
-    // ever have a texture.
-
-    // std::string defines;
-
-    // if (!m_spriteAtlas && !m_texture) {
-    //     defines += "#define TANGRAM_POINT\n";
-    // }
-
-    // m_shaderProgram->addSourceBlock("defines", defines);
-
     m_mesh = std::make_unique<DynamicQuadMesh<SpriteVertex>>(m_vertexLayout, m_drawMode);
 
     m_textStyle->constructShaderProgram();

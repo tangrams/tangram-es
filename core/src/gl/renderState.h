@@ -8,6 +8,7 @@
 namespace Tangram {
 
 class Disposer;
+class Texture;
 
 class RenderState {
 
@@ -95,6 +96,8 @@ public:
 
     GLuint getQuadIndexBuffer();
 
+    Texture* getDefaultPointTexture();
+
     std::array<GLuint, MAX_ATTRIBUTES> attributeBindings = { { 0 } };
 
     JobQueue jobQueue;
@@ -107,6 +110,10 @@ private:
     GLuint m_quadIndexBuffer = 0;
     void deleteQuadIndexBuffer();
     void generateQuadIndexBuffer();
+
+    Texture* m_defaultPointTexture = nullptr;
+    void deleteDefaultPointTexture();
+    void generateDefaultPointTexture();
 
     struct {
         GLboolean enabled;
