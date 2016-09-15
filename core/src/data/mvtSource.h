@@ -14,7 +14,7 @@ protected:
 public:
 
     MVTSource(const std::string& _name, const std::string& _urlTemplate,
-              int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom);
+              int32_t _minDisplayZoom = -1, int32_t _maxDisplayZoom = -1, int32_t _maxZoom = 18);
 
 };
 
