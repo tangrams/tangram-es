@@ -6,6 +6,7 @@
 #include "gl/renderState.h"
 #include "gl/hardware.h"
 #include "tangram.h"
+#include "log.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"

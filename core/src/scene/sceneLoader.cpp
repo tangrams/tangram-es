@@ -27,6 +27,7 @@
 #include "util/base64.h"
 #include "util/yamlHelper.h"
 #include "view/view.h"
+#include "log.h"
 
 #include "csscolorparser.hpp"
 

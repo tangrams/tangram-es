@@ -13,6 +13,7 @@
 
 #include "platform_osx.h"
 #include "gl/hardware.h"
+#include "log.h"
 
 static bool s_isContinuousRendering = false;
 

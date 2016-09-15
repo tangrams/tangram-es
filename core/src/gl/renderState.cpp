@@ -4,6 +4,7 @@
 #include "vertexLayout.h"
 #include "gl/error.h"
 #include "gl/hardware.h"
+#include "log.h"
 
 #include <limits>
 
