@@ -98,6 +98,8 @@ public:
         return m_mbtilesDb != nullptr;
     }
 
+    bool setMBTiles(const std::string& _mbtilesPath, const bool _offlineOnly);
+
     SQLite::Database& mbtilesDb() { return *m_mbtilesDb; }
 
     void cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef);

@@ -112,6 +112,7 @@ void setupDB(SQLite::Database& _db) {
             else if (name == "grid_key") grid_key = true;
             else if (name == "keymap") keymap = true;
             else if (name == "grid_utfgrid") grid_utfgrid = true;
+            else if (name == "images") images = true;
             else if (name == "metadata") metadata = true;
             else if (name == "geocoder_data") geocoder_data = true;
             else if (name == "tiles") tiles = true;

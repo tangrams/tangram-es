@@ -155,6 +155,7 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
 bool DataSource::equals(const DataSource& other) const {
     if (m_name != other.m_name) { return false; }
     if (m_urlTemplate != other.m_urlTemplate) { return false; }
+    if (m_mbtilesPath != other.m_mbtilesPath) { return false; }
     if (m_minDisplayZoom != other.m_minDisplayZoom) { return false; }
     if (m_maxDisplayZoom != other.m_maxDisplayZoom) { return false; }
     if (m_maxZoom != other.m_maxZoom) { return false; }
@@ -258,6 +259,7 @@ void DataSource::setupMBTiles() {
         try {
             // Need to explicitly open a SQLite DB with OPEN_READWRITE and OPEN_CREATE flags to make a file and write.
             m_mbtilesDb = std::make_unique<SQLite::Database>(m_mbtilesPath, SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
+            LOG("MBTiles SQLite DB Opened at: %s", m_mbtilesPath.c_str());
 
             // If needed, setup the database by running the schema.sql.
             MBTiles::setupDB(*m_mbtilesDb);
@@ -266,6 +268,15 @@ void DataSource::setupMBTiles() {
             LOGE("Unable to open SQLite database: %s", e.what());
         }
     }
+}
+
+bool DataSource::setMBTiles(const std::string& _mbtilesPath, const bool _offlineOnly) {
+    m_mbtilesPath = _mbtilesPath;
+    setupMBTiles();
+    if (_offlineOnly) {
+        m_urlTemplate = "";
+    }
+    return hasMBTiles();
 }
 
 }
