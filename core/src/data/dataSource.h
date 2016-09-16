@@ -90,15 +90,13 @@ public:
     /* Avoid RTTI by adding a boolean check on the data source object */
     virtual bool isRaster() const { return false; }
 
-    bool isOfflineOnly() {
-        return m_mbtilesPath.size() > 0 && m_urlTemplate.size() == 0;
+    bool hasNoUrl() {
+        return m_urlTemplate.size() == 0;
     }
 
     bool hasMBTiles() {
         return m_mbtilesDb != nullptr;
     }
-
-    bool setMBTiles(const std::string& _mbtilesPath, const bool _offlineOnly);
 
     SQLite::Database& mbtilesDb() { return *m_mbtilesDb; }
 

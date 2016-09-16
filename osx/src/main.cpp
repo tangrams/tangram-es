@@ -172,10 +172,9 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
 }
 
 void mbtiles() {
-    map->setMBTiles("osm", "/Users/njh/osm-data/mbtiles/winters-mapzen-geojson.mbtiles", true);
-//    map->queueSceneUpdate("sources.osm.mbtiles", "/Users/njh/osm-data/mbtiles/winters-mapzen-geojson.mbtiles");
-//    map->applySceneUpdates();
-//    requestRender();
+    map->queueSceneUpdate("sources.osm.mbtiles", "/Users/njh/osm-data/mbtiles/winters-mapzen-geojson.mbtiles");
+    map->applySceneUpdates();
+    requestRender();
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
