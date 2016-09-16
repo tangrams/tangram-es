@@ -738,6 +738,16 @@ void Map::runAsyncTask(std::function<void()> _task) {
     impl->asyncWorker.enqueue(std::move(_task));
 }
 
+bool Map::setMBTiles(const std::string& _dataSourceName, const std::string& _mbtilesPath, const bool _offlineOnly) {
+    std::vector<std::shared_ptr<DataSource>> dataSources = impl->scene->dataSources();
+    for (const auto& dataSource : dataSources) {
+        if (_dataSourceName == dataSource->name()) {
+            return dataSource->setMBTiles(_mbtilesPath, _offlineOnly);
+        }
+    }
+    return false;
+}
+
 void setDebugFlag(DebugFlags _flag, bool _on) {
 
     g_flags.set(_flag, _on);
