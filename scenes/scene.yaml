@@ -80,11 +80,11 @@ styles:
 sources:
     osm:
         type: GeoJSON
-#        url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.json
+        url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.json
 #        mbtiles: /Users/njh/osm-data/mbtiles/winters-mapzen-geojson.mbtiles
         max_zoom: 16
-#        url_params:
-#            api_key: vector-tiles-tyHL4AY
+        url_params:
+            api_key: vector-tiles-tyHL4AY
 
 layers:
     touch:

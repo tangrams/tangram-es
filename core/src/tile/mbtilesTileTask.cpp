@@ -39,7 +39,6 @@ void MBTilesTileTask::process(TileBuilder &_tileBuilder) {
 }
 
 bool MBTilesTileTask::getMBTilesData() {
-    LOG("getMBTilesData");
     try {
         // Google TMS to WMTS
         // https://github.com/mapbox/node-mbtiles/blob/4bbfaf991969ce01c31b95184c4f6d5485f717c3/lib/mbtiles.js#L149
@@ -68,7 +67,6 @@ bool MBTilesTileTask::getMBTilesData() {
 }
 
 void MBTilesTileTask::putMBTilesData() {
-    LOG("putMBTilesData");
     int z = m_tileId.z;
     int y = (1 << z) - 1 - m_tileId.y;
 

@@ -345,4 +345,12 @@ extern "C" {
         map->applySceneUpdates();
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetMBTiles(JNIEnv* jnienv, jobject obj, jlong mapPtr, jstring dataSourceName, jstring mbtilesFilePath) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        const char* cDataSourceName = jnienv->GetStringUTFChars(dataSourceName, NULL);
+        const char* cMbtilesFilePath = jnienv->GetStringUTFChars(mbtilesFilePath, NULL);
+        map->setMBTiles(cDataSourceName, cMbtilesFilePath);
+    }
+
 }
