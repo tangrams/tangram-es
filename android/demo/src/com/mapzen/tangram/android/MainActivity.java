@@ -141,18 +141,10 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
     public void setupMBTiles() {
         File storageDir = Environment.getExternalStorageDirectory();
-        File mbtilesFile = new File(storageDir, "mbtiles/winters-mapzen-geojson.mbtiles");
-        String mbtilesPath = mbtilesFile.getAbsolutePath();
-        if (mbtilesFile.exists()) {
-            map.queueSceneUpdate("sources.osm.mbtiles", mbtilesPath);
-            map.applySceneUpdates();
-            map.requestRender();
-        } else {
-            Toast.makeText(getApplicationContext(),
-                    "Unable to find MBTiles file at: " + mbtilesPath,
-                    Toast.LENGTH_SHORT).show();
-        }
-
+        // If the MBTiles file does not exist,
+        // Tangram will attempt to create one with the given path.
+        File mbtilesFile = new File(storageDir, "tangram-geojson-cache.mbtiles");
+        map.setMBTiles("osm", mbtilesFile);
     }
 
     HttpHandler getHttpHandler() {

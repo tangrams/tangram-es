@@ -13,6 +13,7 @@ import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.IntBuffer;
 import java.util.HashMap;
@@ -694,6 +695,17 @@ public class MapController implements Renderer {
     }
 
     /**
+     * Set an MBTiles SQLite database file for a DataSource in the scene.
+     *
+     * @param dataSourceName the name of the data source.
+     * @param mbtilesFile the MBTiles file to assign to the data source
+     */
+    public void setMBTiles(String dataSourceName, File mbtilesFile) {
+        checkPointer(mapPointer);
+        nativeSetMBTiles(mapPointer, dataSourceName, mbtilesFile.getAbsolutePath());
+    }
+
+    /**
      * Set whether the OpenGL state will be cached between subsequent frames. This improves
      * rendering efficiency, but can cause errors if your application code makes OpenGL calls.
      * @param use Whether to use a cached OpenGL state; false by default
@@ -777,6 +789,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
     private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String value);
     private synchronized native void nativeApplySceneUpdates(long mapPtr);
+    private synchronized native void nativeSetMBTiles(long mapPtr, String dataSourceName, String mbtilesFilePath);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
     private synchronized native void nativeUseCachedGlState(long mapPtr, boolean use);
     private synchronized native void nativeCaptureSnapshot(long mapPtr, int[] buffer);
