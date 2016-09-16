@@ -359,6 +359,8 @@ void Map::render() {
     // Set up openGL for new frame
     impl->renderState.depthMask(GL_TRUE);
     auto& color = impl->scene->background();
+    impl->renderState.culling(GL_TRUE);
+    impl->renderState.cullFace(GL_BACK);
     impl->renderState.clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
     GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
