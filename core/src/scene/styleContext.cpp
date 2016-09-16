@@ -327,14 +327,10 @@ bool StyleContext::evalFunction(FunctionID id) {
 
 bool StyleContext::evalFilter(FunctionID _id) {
 
-    bool result = false;
-
     if (!evalFunction(_id)) { return false; };
 
-    // check for evaluated value sitting at value stack top
-    if (duk_is_boolean(m_ctx, -1)) {
-        result = duk_get_boolean(m_ctx, -1);
-    }
+    // Evaluate the "truthiness" of the function result at the top of the stack.
+    bool result = duk_to_boolean(m_ctx, -1);
 
     // pop result
     duk_pop(m_ctx);
