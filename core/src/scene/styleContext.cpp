@@ -518,6 +518,7 @@ duk_ret_t StyleContext::jsGetProperty(duk_context *_ctx) {
     } else {
         duk_push_undefined(_ctx);
     }
+    // FIXME: Distinguish Booleans here as well
 
     return 1;
 }
