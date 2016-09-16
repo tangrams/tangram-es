@@ -82,6 +82,9 @@ public:
     // Apply all previously requested scene updates
     void applySceneUpdates();
 
+    // Set an MBTiles SQLite database file for a DataSource in the scene.
+    void setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath);
+
     // Initialize graphics resources; OpenGL context must be created prior to calling this
     void setupGL();
 
