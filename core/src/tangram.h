@@ -236,8 +236,6 @@ public:
     // Run this task asynchronously to Tangram's main update loop.
     void runAsyncTask(std::function<void()> _task);
 
-    bool setMBTiles(const std::string& _dataSourceName, const std::string& _mbtilesPath, const bool _offlineOnly);
-
 private:
 
     class Impl;
