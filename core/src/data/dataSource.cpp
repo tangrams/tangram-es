@@ -194,7 +194,7 @@ bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb)
      * If our data source doesn't have a URL to make a request,
      * don't HTTP request data, we will fetch from MBTiles in a task.
      */
-    if (isOfflineOnly()) {
+    if (hasNoUrl()) {
         _cb.func(std::move(_task));
         return true;
     }
@@ -268,15 +268,6 @@ void DataSource::setupMBTiles() {
             LOGE("Unable to open SQLite database: %s", e.what());
         }
     }
-}
-
-bool DataSource::setMBTiles(const std::string& _mbtilesPath, const bool _offlineOnly) {
-    m_mbtilesPath = _mbtilesPath;
-    setupMBTiles();
-    if (_offlineOnly) {
-        m_urlTemplate = "";
-    }
-    return hasMBTiles();
 }
 
 }
