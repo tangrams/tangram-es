@@ -197,6 +197,13 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
 
 }
 
+void mbtiles() {
+    map->setMBTiles("osm", "/Users/njh/osm-data/mbtiles/winters-mapzen-geojson.mbtiles", true);
+//    map->queueSceneUpdate("sources.osm.mbtiles", "/Users/njh/osm-data/mbtiles/winters-mapzen-geojson.mbtiles");
+//    map->applySceneUpdates();
+//    requestRender();
+}
+
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
     if (action == GLFW_PRESS) {
@@ -236,6 +243,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 break;
             case GLFW_KEY_Z:
                 map->setZoomEased(map->getZoom() + 1.f, 1.5f);
+                break;
+            case GLFW_KEY_M:
+                mbtiles();
                 break;
             case GLFW_KEY_N:
                 map->setRotationEased(0.f, 1.f);
