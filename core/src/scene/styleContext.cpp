@@ -83,14 +83,28 @@ StyleContext::~StyleContext() {
     duk_destroy_heap(m_ctx);
 }
 
+// Convert a scalar node to a boolean, double, or string (in that order)
+// and for the first conversion that works, push it to the top of the JS stack.
+void pushYamlScalarAsJsObject(duk_context* ctx, const YAML::Node& node) {
+    bool booleanValue = false;
+    double numberValue = 0.;
+    if (YAML::convert<bool>::decode(node, booleanValue)) {
+        duk_push_boolean(ctx, booleanValue);
+    } else if (YAML::convert<double>::decode(node, numberValue)) {
+        duk_push_number(ctx, numberValue);
+    } else {
+        duk_push_string(ctx, node.Scalar().c_str());
+    }
+}
+
 void StyleContext::parseSceneGlobals(const YAML::Node& node, const std::string& key, int seqIndex,
                                      duk_idx_t dukObject) {
 
     switch(node.Type()) {
         case YAML::NodeType::Scalar:
             if (key.size() == 0) {
-                duk_push_string(m_ctx, node.Scalar().c_str());
-                duk_put_prop_index(m_ctx, dukObject, seqIndex);
+                pushYamlScalarAsJsObject(m_ctx, node);
+                duk_put_prop_index(m_ctx, dukObject, seqIndex); // push
             } else {
                 auto nodeValue = node.Scalar();
                 if (nodeValue.compare(0, 8, "function") == 0) {
@@ -110,7 +124,7 @@ void StyleContext::parseSceneGlobals(const YAML::Node& node, const std::string& 
                         duk_put_prop_string(m_ctx, dukObject, key.c_str());
                     }
                 } else {
-                    duk_push_string(m_ctx, nodeValue.c_str());
+                    pushYamlScalarAsJsObject(m_ctx, node);
                     duk_put_prop_string(m_ctx, dukObject, key.c_str());
                 }
             }
@@ -313,14 +327,10 @@ bool StyleContext::evalFunction(FunctionID id) {
 
 bool StyleContext::evalFilter(FunctionID _id) {
 
-    bool result = false;
-
     if (!evalFunction(_id)) { return false; };
 
-    // check for evaluated value sitting at value stack top
-    if (duk_is_boolean(m_ctx, -1)) {
-        result = duk_get_boolean(m_ctx, -1);
-    }
+    // Evaluate the "truthiness" of the function result at the top of the stack.
+    bool result = duk_to_boolean(m_ctx, -1);
 
     // pop result
     duk_pop(m_ctx);
@@ -508,6 +518,7 @@ duk_ret_t StyleContext::jsGetProperty(duk_context *_ctx) {
     } else {
         duk_push_undefined(_ctx);
     }
+    // FIXME: Distinguish Booleans here as well
 
     return 1;
 }
