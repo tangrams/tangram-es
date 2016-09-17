@@ -66,6 +66,7 @@ struct SceneLoader {
     static SceneLayer loadSublayer(Node layer, const std::string& name, const std::shared_ptr<Scene>& scene);
     static Filter generateFilter(Node filter, Scene& scene);
     static Filter generateAnyFilter(Node filter, Scene& scene);
+    static Filter generateAllFilter(Node filter, Scene& scene);
     static Filter generateNoneFilter(Node filter, Scene& scene);
     static Filter generatePredicate(Node filter, std::string _key);
     /* loads a texture with default texture properties */
