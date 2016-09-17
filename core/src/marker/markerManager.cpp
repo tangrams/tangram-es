@@ -1,4 +1,5 @@
 #include "data/tileData.h"
+#include "gl/texture.h"
 #include "marker/markerManager.h"
 #include "marker/marker.h"
 #include "scene/sceneLoader.h"
@@ -60,6 +61,19 @@ bool MarkerManager::setStyling(MarkerID markerID, const char* styling) {
 
     // Build the feature mesh for the marker's current geometry.
     buildGeometry(*marker, m_zoom);
+    return true;
+}
+
+bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const unsigned int* bitmapData) {
+    Marker* marker = getMarkerOrNull(markerID);
+    if (!marker) { return false; }
+
+    TextureOptions options = { GL_RGBA, GL_RGBA, { GL_LINEAR, GL_LINEAR }, { GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE } };
+    auto texture = std::make_unique<Texture>(width, height, options);
+    unsigned int size = width * height * 4;
+    texture->setData(bitmapData, size);
+
+    marker->setTexture(std::move(texture));
     return true;
 }
 

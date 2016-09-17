@@ -140,3 +140,6 @@ perf.data
 
 # shader generated headers
 core/include/shaders/*.h
+
+# texture data header
+core/include/defaultPointTextureData.h
