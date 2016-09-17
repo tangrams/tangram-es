@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "data/dataSource.h"
+#include "hash-library/md5.cpp"
 
 namespace Tangram {
 
@@ -70,23 +71,30 @@ void MBTilesTileTask::putMBTilesData() {
     int z = m_tileId.z;
     int y = (1 << z) - 1 - m_tileId.y;
 
-    // TODO: Replace with MD5 Hash
-    std::string str = std::to_string(z) + std::to_string(m_tileId.x) + std::to_string(y);
-    const char* id = str.c_str();
+    char* data = rawTileData->data();
+    size_t size = rawTileData->size();
+
+    /**
+     * We create an MD5 of the raw tile data. The MD5 functions as a hash
+     * between the map and images tables. With this, tiles with duplicate
+     * data will join to a single entry in the images table.
+     */
+    MD5 md5;
+    std::string md5id = md5(data, size);
 
     try {
         m_putMapStmt.bind(1, z);
         m_putMapStmt.bind(2, m_tileId.x);
         m_putMapStmt.bind(3, y);
-        m_putMapStmt.bind(4, id);
+        m_putMapStmt.bind(4, md5id);
         m_putMapStmt.exec();
     } catch (std::exception& e) {
         LOGE("MBTiles SQLite put map statement failed: %s", e.what());
     }
 
     try {
-        m_putImageStmt.bind(1, id);
-        m_putImageStmt.bind(2, rawTileData->data(), rawTileData->size());
+        m_putImageStmt.bind(1, md5id);
+        m_putImageStmt.bind(2, data, size);
         m_putImageStmt.exec();
     } catch (std::exception& e) {
         LOGE("MBTiles SQLite put image statement failed: %s", e.what());
