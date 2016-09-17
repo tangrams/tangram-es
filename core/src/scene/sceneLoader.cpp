@@ -1268,7 +1268,7 @@ Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
             } else if (key == "any") {
                 filters.push_back(generateAnyFilter(node, scene));
             } else if (key == "all") {
-                filters.push_back(generateFilter(node, scene));
+                filters.push_back(generateAllFilter(node, scene));
             } else {
                 filters.push_back(generatePredicate(node, key));
             }
@@ -1282,6 +1282,7 @@ Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
 
     if (filters.size() == 0) { return Filter(); }
     if (filters.size() == 1) { return std::move(filters.front()); }
+    if (_filter.IsSequence()) { return Filter::MatchAny(std::move(filters)); }
     return (Filter::MatchAll(std::move(filters)));
 }
 
@@ -1360,6 +1361,19 @@ Filter SceneLoader::generateAnyFilter(Node _filter, Scene& scene) {
         filters.emplace_back(generateFilter(filt, scene));
     }
     return Filter::MatchAny(std::move(filters));
+}
+
+Filter SceneLoader::generateAllFilter(Node _filter, Scene& scene) {
+    std::vector<Filter> filters;
+
+    if (!_filter.IsSequence()) {
+        LOGW("Invalid filter. 'All' expects a list.");
+        return Filter();
+    }
+    for (const auto& filt : _filter) {
+        filters.emplace_back(generateFilter(filt, scene));
+    }
+    return Filter::MatchAll(std::move(filters));
 }
 
 Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
