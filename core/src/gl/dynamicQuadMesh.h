@@ -48,7 +48,7 @@ public:
     // into m_vertices to write into 4 vertices.
     T* pushQuad() {
         m_nVertices += 4;
-        m_vertices.resize(m_nVertices);
+        m_vertices.insert(m_vertices.end(), 4, {});
         return &m_vertices[m_nVertices - 4];
     }
 
