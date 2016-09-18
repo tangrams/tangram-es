@@ -100,8 +100,6 @@ DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate
     static std::atomic<int32_t> s_serial;
 
     m_id = s_serial++;
-
-    setupMBTiles();
 }
 
 DataSource::~DataSource() {
@@ -262,7 +260,7 @@ void DataSource::setupMBTiles() {
             LOG("MBTiles SQLite DB Opened at: %s", m_mbtilesPath.c_str());
 
             // If needed, setup the database by running the schema.sql.
-            MBTiles::setupDB(*m_mbtilesDb);
+            MBTiles::setupDB(*this);
 
         } catch (std::exception& e) {
             LOGE("Unable to open SQLite database: %s", e.what());
