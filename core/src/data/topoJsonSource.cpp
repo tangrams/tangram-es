@@ -13,6 +13,10 @@ namespace Tangram {
 TopoJsonSource::TopoJsonSource(const std::string& _name, const std::string& _urlTemplate, const std::string& _mbtiles,
                                int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom) :
     DataSource(_name, _urlTemplate, _mbtiles, _minDisplayZoom, _maxDisplayZoom, _maxZoom) {
+
+    // Not called in parent constructor because
+    // setupMBTiles requires calling virtual mimeType() function.
+    setupMBTiles();
 }
 
 std::shared_ptr<TileData> TopoJsonSource::parse(const TileTask& _task,

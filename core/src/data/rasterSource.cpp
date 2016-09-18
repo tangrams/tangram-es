@@ -74,6 +74,10 @@ RasterSource::RasterSource(const std::string& _name, const std::string& _urlTemp
                            TextureOptions _options, bool _genMipmap)
     : DataSource(_name, _urlTemplate, _mbtiles, _minDisplayZoom, _maxDisplayZoom, _maxZoom), m_texOptions(_options), m_genMipmap(_genMipmap) {
 
+    // Not called in parent constructor because
+    // setupMBTiles requires calling virtual mimeType() function.
+    setupMBTiles();
+
     m_emptyTexture = std::make_shared<Texture>(nullptr, 0, m_texOptions, m_genMipmap);
 }
 

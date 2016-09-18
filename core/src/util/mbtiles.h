@@ -3,6 +3,9 @@
 #include "platform.h"
 
 #include <SQLiteCpp/Database.h>
+#include <data/geoJsonSource.h>
+#include <data/mvtSource.h>
+#include <data/topoJsonSource.h>
 
 namespace Tangram {
 namespace MBTiles {
@@ -98,14 +101,15 @@ COMMIT;)SQL_ESC";
  * We check to see if the database has the MBTiles Schema.
  * If not, we execute the schema SQL.
  *
- * @param _db A reference to an open SQLiteCpp instance
+ * @param _source A pointer to a the data source in which we will setup a db.
  */
-void setupDB(SQLite::Database& _db) {
+void setupDB(DataSource& _source) {
+    SQLite::Database& db = _source.mbtilesDb();
     bool map = false, grid_key = false, keymap = false, grid_utfgrid = false, images = false,
          metadata = false, geocoder_data = false, tiles = false, grids = false, grid_data = false;
 
     try {
-        SQLite::Statement query(_db, "SELECT name FROM sqlite_master WHERE type IN ('table', 'view')");
+        SQLite::Statement query(db, "SELECT name FROM sqlite_master WHERE type IN ('table', 'view')");
         while (query.executeStep()) {
             std::string name = query.getColumn(0);
             if (name == "map") map = true;
@@ -131,7 +135,45 @@ void setupDB(SQLite::Database& _db) {
 
     // Otherwise, we need to execute schema.sql to set up the db with the right schema.
     try {
-        _db.exec(SCHEMA);
+        // Execute schema.
+        db.exec(SCHEMA);
+
+        // Fill in metadata table.
+        // https://github.com/pnorman/mbtiles-spec/blob/2.0/2.0/spec.md#content
+        // https://github.com/mapbox/mbtiles-spec/pull/46
+        SQLite::Statement stmt(db, "REPLACE INTO metadata (name, value) VALUES (?, ?);");
+
+        // name, type, version, description, format, compression
+        stmt.bind(1, "name");
+        stmt.bind(2, _source.name());
+        stmt.exec();
+        stmt.reset();
+
+        stmt.bind(1, "type");
+        stmt.bind(2, "baselayer");
+        stmt.exec();
+        stmt.reset();
+
+        stmt.bind(1, "version");
+        stmt.bind(2, 1);
+        stmt.exec();
+        stmt.reset();
+
+        stmt.bind(1, "description");
+        stmt.bind(2, "MBTiles tile container created by Tangram ES.");
+        stmt.exec();
+        stmt.reset();
+
+        stmt.bind(1, "format");
+        stmt.bind(2, _source.mimeType());
+        stmt.exec();
+        stmt.reset();
+
+        // Compression not yet implemented.
+        stmt.bind(1, "compression");
+        stmt.bind(2, "");
+        stmt.exec();
+
     } catch (std::exception& e) {
         LOGE("Unable to setup SQLite MBTiles database: %s", e.what());
     }
