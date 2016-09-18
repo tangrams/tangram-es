@@ -11,7 +11,7 @@ android {
   buildToolsVersion '24.0.2'
 
   defaultConfig {
-    minSdkVersion 15
+    minSdkVersion 16
     targetSdkVersion 24
   }
 
@@ -34,4 +34,6 @@ android {
 
 dependencies {
   compile project(":tangram")
+  compile 'com.android.support:appcompat-v7:24.2.1'
+  compile 'com.android.support:support-v4:24.2.1'
 }
