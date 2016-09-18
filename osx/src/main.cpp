@@ -6,13 +6,16 @@
 #include <memory>
 #include <signal.h>
 #include <stdlib.h>
+#include "log.h"
 
 // Forward declaration
 void init_main_window(bool recreate);
 
 std::string sceneFile = "scene.yaml";
 
-std::string markerStyling = "{ style: 'lines', color: 'purple', width: 10px, order: 100 }";
+std::string markerStyling = "{ style: 'points', color: 'white', size: [25px, 25px], order: 100, collide: false }";
+
+const unsigned int bitmap[] = { 0xffffffff, 0xff000000, 0xff000000, 0xffffffff };
 
 GLFWwindow* main_window = nullptr;
 Tangram::Map* map = nullptr;
@@ -41,9 +44,6 @@ double last_y_velocity = 0.0;
 
 using namespace Tangram;
 
-std::shared_ptr<ClientGeoJsonSource> data_source;
-LngLat last_point;
-std::vector<LngLat> taps;
 MarkerID marker = 0;
 
 template<typename T>
@@ -86,7 +86,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         map->setPositionEased(p.longitude, p.latitude, 1.f);
 
         logMsg("pick feature\n");
-        map->clearDataSource(*data_source, true, true);
 
         auto picks = map->pickFeaturesAt(x, y);
         std::string name;
@@ -98,26 +97,15 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         }
     } else if ((time - last_time_pressed) < single_tap_time) {
         // Single tap recognized
-        LngLat p1;
-        map->screenPositionToLngLat(x, y, &p1.longitude, &p1.latitude);
-        taps.push_back(p1);
+        LngLat p;
+        map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
 
-        if (!(last_point == LngLat{0, 0})) {
-            LngLat p2 = last_point;
-            logMsg("add line (%f, %f)  (%f, %f)\n",
-                   p1.longitude, p1.latitude,
-                   p2.longitude, p2.latitude);
-
-            if (!marker) {
-                marker = map->markerAdd();
-                map->markerSetStyling(marker, markerStyling.c_str());
-            }
-            map->markerSetPolyline(marker, taps.data(), taps.size());
+        if (!marker) {
+            marker = map->markerAdd();
+            map->markerSetStyling(marker, markerStyling.c_str());
         }
-        last_point = p1;
+        map->markerSetPoint(marker, p);
 
-        // Tangram::clearDataSource(*data_source, false, true);
-        // This updates the tiles (maybe we need a recalcTiles())
         requestRender();
     }
 
@@ -332,9 +320,6 @@ void init_main_window(bool recreate) {
     int fWidth = 0, fHeight = 0;
     glfwGetFramebufferSize(main_window, &fWidth, &fHeight);
     framebuffer_size_callback(main_window, fWidth, fHeight);
-
-    data_source = std::make_shared<ClientGeoJsonSource>("touch", "");
-    map->addDataSource(data_source);
 
 }
 

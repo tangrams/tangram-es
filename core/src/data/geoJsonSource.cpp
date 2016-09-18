@@ -7,6 +7,7 @@
 #include "tile/tileTask.h"
 #include "util/geoJson.h"
 #include "platform.h"
+#include "log.h"
 
 namespace Tangram {
 

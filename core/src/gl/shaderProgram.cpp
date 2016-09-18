@@ -6,13 +6,13 @@
 #include "gl/error.h"
 #include "gl/renderState.h"
 #include "glm/gtc/type_ptr.hpp"
+#include "log.h"
 
 #include <sstream>
 #include <regex>
 #include <set>
 
 namespace Tangram {
-
 
 ShaderProgram::ShaderProgram() {
     // Nothing to do.
@@ -28,15 +28,15 @@ ShaderProgram::~ShaderProgram() {
     m_disposer([=](RenderState& rs) {
         if (rs.isValidGeneration(generation)) {
             if (glProgram != 0) {
-                GL_CHECK(glDeleteProgram(glProgram));
+                GL::deleteProgram(glProgram);
             }
 
             if (glFragmentShader != 0) {
-                GL_CHECK(glDeleteShader(glFragmentShader));
+                GL::deleteShader(glFragmentShader);
             }
 
             if (glVertexShader != 0) {
-                GL_CHECK(glDeleteShader(glVertexShader));
+                GL::deleteShader(glVertexShader);
             }
         }
         // Deleting the shader program that is currently in-use sets the current shader program to 0
@@ -74,8 +74,7 @@ GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 
     if (it == m_attribMap.end()) {
         // If this is a new entry, get the actual location from OpenGL.
-        GLint location = glGetAttribLocation(m_glProgram, _attribName.c_str());
-        GL_CHECK();
+        GLint location = GL::getAttribLocation(m_glProgram, _attribName.c_str());
         m_attribMap[_attribName] = location;
         return location;
     } else {
@@ -91,8 +90,7 @@ GLint ShaderProgram::getUniformLocation(const UniformLocation& _uniform) {
     }
 
     _uniform.generation = m_generation;
-    _uniform.location = glGetUniformLocation(m_glProgram, _uniform.name.c_str());
-    GL_CHECK();
+    _uniform.location = GL::getUniformLocation(m_glProgram, _uniform.name.c_str());
 
     return _uniform.location;
 }
@@ -140,7 +138,7 @@ bool ShaderProgram::build(RenderState& rs) {
     GLint fragmentShader = makeCompiledShader(fragSrc, GL_FRAGMENT_SHADER);
 
     if (fragmentShader == 0) {
-        GL_CHECK(glDeleteShader(vertexShader));
+        GL::deleteShader(vertexShader);
         return false;
     }
 
@@ -149,16 +147,16 @@ bool ShaderProgram::build(RenderState& rs) {
     GLint program = makeLinkedShaderProgram(fragmentShader, vertexShader);
 
     if (program == 0) {
-        GL_CHECK(glDeleteShader(vertexShader));
-        GL_CHECK(glDeleteShader(fragmentShader));
+        GL::deleteShader(vertexShader);
+        GL::deleteShader(fragmentShader);
         return false;
     }
 
     // Delete handles for old shaders and program; values of 0 are silently ignored
 
-    GL_CHECK(glDeleteShader(m_glFragmentShader));
-    GL_CHECK(glDeleteShader(m_glVertexShader));
-    GL_CHECK(glDeleteProgram(m_glProgram));
+    GL::deleteShader(m_glFragmentShader);
+    GL::deleteShader(m_glVertexShader);
+    GL::deleteProgram(m_glProgram);
 
     m_glFragmentShader = fragmentShader;
     m_glVertexShader = vertexShader;
@@ -174,27 +172,26 @@ bool ShaderProgram::build(RenderState& rs) {
 
 GLuint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader) {
 
-    GLuint program = glCreateProgram();
-    GL_CHECK();
+    GLuint program = GL::createProgram();
 
-    GL_CHECK(glAttachShader(program, _fragShader));
-    GL_CHECK(glAttachShader(program, _vertShader));
-    GL_CHECK(glLinkProgram(program));
+    GL::attachShader(program, _fragShader);
+    GL::attachShader(program, _vertShader);
+    GL::linkProgram(program);
 
     GLint isLinked;
-    GL_CHECK(glGetProgramiv(program, GL_LINK_STATUS, &isLinked));
+    GL::getProgramiv(program, GL_LINK_STATUS, &isLinked);
 
     if (isLinked == GL_FALSE) {
         GLint infoLength = 0;
-        GL_CHECK(glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLength));
+        GL::getProgramiv(program, GL_INFO_LOG_LENGTH, &infoLength);
 
         if (infoLength > 1) {
             std::vector<GLchar> infoLog(infoLength);
-            GL_CHECK(glGetProgramInfoLog(program, infoLength, NULL, &infoLog[0]));
+            GL::getProgramInfoLog(program, infoLength, NULL, &infoLog[0]);
             LOGE("linking program:\n%s", &infoLog[0]);
         }
 
-        GL_CHECK(glDeleteProgram(program));
+        GL::deleteProgram(program);
         m_invalidShaderSource = true;
         return 0;
     }
@@ -204,45 +201,45 @@ GLuint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShad
 
 GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) {
 
-    GLuint shader = glCreateShader(_type);
-    GL_CHECK();
+    GLuint shader = GL::createShader(_type);
 
     const GLchar* source = (const GLchar*) _src.c_str();
-    GL_CHECK(glShaderSource(shader, 1, &source, NULL));
-    GL_CHECK(glCompileShader(shader));
+    GL::shaderSource(shader, 1, &source, NULL);
+    GL::compileShader(shader);
 
     GLint isCompiled;
-    GL_CHECK(glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled));
+    GL::getShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
 
     if (isCompiled == GL_FALSE) {
         GLint infoLength = 0;
-        GL_CHECK(glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLength));
+        GL::getShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLength);
 
         if (infoLength > 1) {
             std::string infoLog;
             infoLog.resize(infoLength);
 
-            GL_CHECK(glGetShaderInfoLog(shader, infoLength, NULL, static_cast<GLchar*>(&infoLog[0])));
-            LOGE("Shader compilation failed %s", m_description.c_str());
+            GL::getShaderInfoLog(shader, infoLength, NULL, static_cast<GLchar*>(&infoLog[0]));
+            LOGE("Shader compilation failed for %s with log:\n%s", m_description.c_str(), infoLog.c_str());
 
-            std::stringstream ss(source);
+            std::stringstream sourceStream(source);
             std::string item;
             std::vector<std::string> sourceLines;
-            while (std::getline(ss, item, '\n')) { sourceLines.push_back(item); }
+            while (std::getline(sourceStream, item)) { sourceLines.push_back(item); }
 
             // Print errors with context
             std::string line;
-            ss.str(infoLog);
-            while (std::getline(ss, line)) {
+            std::stringstream logStream(infoLog);
+
+            while (std::getline(logStream, line)) {
                 if (line.length() < 2) { continue; }
 
                 int lineNum = 0;
-                sscanf(line.c_str(), "%*d(%d)", &lineNum);
+                if (!sscanf(line.c_str(), "%*d%*[(:]%d", &lineNum)) { continue; }
                 logMsg("\nError on line %d: %s\n", lineNum, line.c_str());
 
                 for (int i = std::max(0, lineNum-5); i < lineNum+5; i++) {
                     if (size_t(i) >= sourceLines.size()) { break; }
-                    logMsg("%d: %s\n", i, sourceLines[i].c_str());
+                    logMsg("%d: %s\n", i+1, sourceLines[i].c_str());
                 }
             }
 
@@ -253,7 +250,7 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
             // }
         }
 
-        GL_CHECK(glDeleteShader(shader));
+        GL::deleteShader(shader);
         m_invalidShaderSource = true;
         return 0;
     }
@@ -265,7 +262,7 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
 
 std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fragShader) {
 
-    static const std::regex pragmaLine("^\\s*#pragma tangram:\\s+(\\w+).*$");
+    static const std::regex pragmaLine("\\s*#pragma tangram:\\s+(\\w+).*\r?\n");
 
     std::stringstream sourceOut;
     std::set<std::string> pragmas;
@@ -283,43 +280,28 @@ std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fra
     }
 
     auto sourcePos = source.begin();
-    size_t lineStart = 0, lineEnd;
 
-    while ((lineEnd = source.find('\n', lineStart)) != std::string::npos) {
+    for (auto it = source.begin(); std::regex_search(it, source.end(), sm, pragmaLine);) {
+        it += sm.position() + sm.length();
 
-        if (lineEnd - lineStart == 0) {
-            // skip empty lines
-            lineStart += 1;
-            continue;
-        }
+        std::string pragmaName = sm[1];
+        bool unique;
+        std::tie(std::ignore, unique) = pragmas.emplace(std::move(pragmaName));
 
-        auto matchPos = source.begin() + lineStart;
-        auto matchEnd = source.begin() + lineEnd;
-        lineStart = lineEnd + 1;
+        // ignore duplicates
+        if (!unique) { continue; }
 
-        if (std::regex_match(matchPos, matchEnd, sm, pragmaLine)) {
+        auto block = m_sourceBlocks.find(sm[1]);
+        if (block == m_sourceBlocks.end()) { continue; }
 
-            std::string pragmaName = sm[1];
+        // write from last source position to end of pragma
+        std::copy(sourcePos, it, std::ostream_iterator<char>(sourceOut));
+        sourcePos = it;
 
-            bool unique;
-            std::tie(std::ignore, unique) = pragmas.emplace(std::move(pragmaName));
-
-            // ignore duplicates
-            if (!unique) { continue; }
-
-            auto block = m_sourceBlocks.find(sm[1]);
-            if (block == m_sourceBlocks.end()) { continue; }
-
-            // write from last source position to end of pragma
+        // insert blocks
+        for (auto& source : block->second) {
+            sourceOut << source;
             sourceOut << '\n';
-            std::copy(sourcePos, matchEnd, std::ostream_iterator<char>(sourceOut));
-            sourcePos = matchEnd;
-
-            // insert blocks
-            for (auto& source : block->second) {
-                sourceOut << '\n';
-                sourceOut << source;
-            }
         }
     }
 
@@ -368,7 +350,7 @@ void ShaderProgram::setUniformi(RenderState& rs, const UniformLocation& _loc, in
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
-        if (!cached) { GL_CHECK(glUniform1i(location, _value)); }
+        if (!cached) { GL::uniform1i(location, _value); }
     }
 }
 
@@ -377,7 +359,7 @@ void ShaderProgram::setUniformi(RenderState& rs, const UniformLocation& _loc, in
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, glm::vec2(_value0, _value1));
-        if (!cached) { GL_CHECK(glUniform2i(location, _value0, _value1)); }
+        if (!cached) { GL::uniform2i(location, _value0, _value1); }
     }
 }
 
@@ -386,7 +368,7 @@ void ShaderProgram::setUniformi(RenderState& rs, const UniformLocation& _loc, in
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, glm::vec3(_value0, _value1, _value2));
-        if (!cached) { GL_CHECK(glUniform3i(location, _value0, _value1, _value2)); }
+        if (!cached) { GL::uniform3i(location, _value0, _value1, _value2); }
     }
 }
 
@@ -395,7 +377,7 @@ void ShaderProgram::setUniformi(RenderState& rs, const UniformLocation& _loc, in
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, glm::vec4(_value0, _value1, _value2, _value3));
-        if (!cached) { GL_CHECK(glUniform4i(location, _value0, _value1, _value2, _value3)); }
+        if (!cached) { GL::uniform4i(location, _value0, _value1, _value2, _value3); }
     }
 }
 
@@ -404,7 +386,7 @@ void ShaderProgram::setUniformf(RenderState& rs, const UniformLocation& _loc, fl
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
-        if (!cached) { GL_CHECK(glUniform1f(location, _value)); }
+        if (!cached) { GL::uniform1f(location, _value); }
     }
 }
 
@@ -425,7 +407,7 @@ void ShaderProgram::setUniformf(RenderState& rs, const UniformLocation& _loc, co
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
-        if (!cached) { GL_CHECK(glUniform2f(location, _value.x, _value.y)); }
+        if (!cached) { GL::uniform2f(location, _value.x, _value.y); }
     }
 }
 
@@ -434,7 +416,7 @@ void ShaderProgram::setUniformf(RenderState& rs, const UniformLocation& _loc, co
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
-        if (!cached) { GL_CHECK(glUniform3f(location, _value.x, _value.y, _value.z)); }
+        if (!cached) { GL::uniform3f(location, _value.x, _value.y, _value.z); }
     }
 }
 
@@ -443,7 +425,7 @@ void ShaderProgram::setUniformf(RenderState& rs, const UniformLocation& _loc, co
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
-        if (!cached) { GL_CHECK(glUniform4f(location, _value.x, _value.y, _value.z, _value.w)); }
+        if (!cached) { GL::uniform4f(location, _value.x, _value.y, _value.z, _value.w); }
     }
 }
 
@@ -452,7 +434,7 @@ void ShaderProgram::setUniformMatrix2f(RenderState& rs, const UniformLocation& _
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = !_transpose && getFromCache(location, _value);
-        if (!cached) { GL_CHECK(glUniformMatrix2fv(location, 1, _transpose, glm::value_ptr(_value))); }
+        if (!cached) { GL::uniformMatrix2fv(location, 1, _transpose, glm::value_ptr(_value)); }
     }
 }
 
@@ -461,7 +443,7 @@ void ShaderProgram::setUniformMatrix3f(RenderState& rs, const UniformLocation& _
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = !_transpose && getFromCache(location, _value);
-        if (!cached) { GL_CHECK(glUniformMatrix3fv(location, 1, _transpose, glm::value_ptr(_value))); }
+        if (!cached) { GL::uniformMatrix3fv(location, 1, _transpose, glm::value_ptr(_value)); }
     }
 }
 
@@ -470,7 +452,7 @@ void ShaderProgram::setUniformMatrix4f(RenderState& rs, const UniformLocation& _
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = !_transpose && getFromCache(location, _value);
-        if (!cached) { GL_CHECK(glUniformMatrix4fv(location, 1, _transpose, glm::value_ptr(_value))); }
+        if (!cached) { GL::uniformMatrix4fv(location, 1, _transpose, glm::value_ptr(_value)); }
     }
 }
 
@@ -479,7 +461,7 @@ void ShaderProgram::setUniformf(RenderState& rs, const UniformLocation& _loc, co
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
-        if (!cached) { GL_CHECK(glUniform1fv(location, _value.size(), _value.data())); }
+        if (!cached) { GL::uniform1fv(location, _value.size(), _value.data()); }
     }
 }
 
@@ -488,7 +470,7 @@ void ShaderProgram::setUniformf(RenderState& rs, const UniformLocation& _loc, co
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
-        if (!cached) { glUniform2fv(location, _value.size(), (float*)_value.data()); }
+        if (!cached) { GL::uniform2fv(location, _value.size(), (float*)_value.data()); }
     }
 }
 
@@ -497,7 +479,7 @@ void ShaderProgram::setUniformf(RenderState& rs, const UniformLocation& _loc, co
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
-        if (!cached) { glUniform3fv(location, _value.size(), (float*)_value.data()); }
+        if (!cached) { GL::uniform3fv(location, _value.size(), (float*)_value.data()); }
     }
 }
 
@@ -506,7 +488,7 @@ void ShaderProgram::setUniformi(RenderState& rs, const UniformLocation& _loc, co
     GLint location = getUniformLocation(_loc);
     if (location >= 0) {
         bool cached = getFromCache(location, _value);
-        if (!cached) { GL_CHECK(glUniform1iv(location, _value.slots.size(), _value.slots.data())); }
+        if (!cached) { GL::uniform1iv(location, _value.slots.size(), _value.slots.data()); }
     }
 }
 

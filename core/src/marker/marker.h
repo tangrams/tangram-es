@@ -12,6 +12,7 @@ namespace Tangram {
 
 class MapProjection;
 class Scene;
+class Texture;
 class View;
 struct DrawRule;
 struct DrawRuleData;
@@ -45,6 +46,8 @@ public:
     // Set the styled mesh for this marker with the associated style id and zoom level.
     void setMesh(uint32_t styleId, uint32_t zoom, std::unique_ptr<StyledMesh> mesh);
 
+    void setTexture(std::unique_ptr<Texture> texture);
+
     // Set an ease for the origin of this marker in Mercator meters.
     void setEase(const glm::dvec2& destination, float duration, EaseType ease);
 
@@ -69,9 +72,11 @@ public:
 
     StyledMesh* mesh() const;
 
-    DrawRule* drawRule();
+    DrawRule* drawRule() const;
 
     Feature* feature() const;
+
+    Texture* texture() const;
 
     const BoundingBox& bounds() const;
 
@@ -93,6 +98,7 @@ protected:
     std::unique_ptr<StyledMesh> m_mesh;
     std::unique_ptr<DrawRuleData> m_drawRuleData;
     std::unique_ptr<DrawRule> m_drawRule;
+    std::unique_ptr<Texture> m_texture;
 
     std::string m_stylingString;
 

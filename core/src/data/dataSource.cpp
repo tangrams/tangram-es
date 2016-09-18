@@ -10,6 +10,7 @@
 #include "tile/mbtilesTileTask.h"
 #include "util/mbtiles.h"
 #include "gl/texture.h"
+#include "log.h"
 
 #include <atomic>
 #include <mutex>

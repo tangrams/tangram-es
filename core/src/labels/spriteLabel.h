@@ -7,6 +7,7 @@ namespace Tangram {
 
 class SpriteLabels;
 class PointStyle;
+class Texture;
 
 struct SpriteVertex {
     glm::i16vec2 pos;
@@ -26,7 +27,7 @@ class SpriteLabel : public Label {
 public:
 
     SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Options _options,
-                float _extrudeScale, SpriteLabels& _labels, size_t _labelsPos);
+                float _extrudeScale, Texture* _texture, SpriteLabels& _labels, size_t _labelsPos);
 
     void updateBBoxes(float _zoomFract) override;
 
@@ -35,10 +36,14 @@ public:
 private:
 
     void applyAnchor(LabelProperty::Anchor _anchor) override;
-    
+
     // Back-pointer to owning container and position
     const SpriteLabels& m_labels;
     const size_t m_labelsPos;
+
+    // Non-owning reference to a texture that is specific to this label.
+    // If non-null, this indicates a custom texture for a marker.
+    Texture* m_texture;
 
     float m_extrudeScale;
 };

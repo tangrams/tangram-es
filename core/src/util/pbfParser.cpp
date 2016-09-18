@@ -4,6 +4,7 @@
 #include "tile/tile.h"
 #include "platform.h"
 #include "util/geom.h"
+#include "log.h"
 
 #include <algorithm>
 #include <iterator>

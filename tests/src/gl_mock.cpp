@@ -1,162 +1,201 @@
 #include "gl.h"
 
-extern "C" {
+namespace Tangram {
 
-    GLenum glGetError( void ){ return 0; }
-    const GLubyte* glGetString(GLenum name){ return nullptr; }
+GLenum GL::getError() {
+    return 0;
+}
 
-    void glEnable(GLenum){}
-    void glDisable(GLenum){}
-    void glDepthFunc(GLenum func){}
-    void glDepthMask(GLboolean flag){}
+const GLubyte* GL::getString(GLenum name) {
+    return nullptr;
+}
 
-#ifdef PLATFORM_OSX
-    void glDepthRange(GLclampd n, GLclampd f){}
-    void glClearDepth(GLclampd d){}
-#else
-    void glDepthRangef(GLfloat n, GLfloat f){}
-    void glClearDepthf(GLfloat d){}
-#endif
+void GL::clear(GLbitfield mask) {
+}
+void GL::lineWidth(GLfloat width) {
+}
+void GL::viewport(GLint x, GLint y, GLsizei width, GLsizei height) {
+}
 
-    void glBlendFunc(GLenum sfactor, GLenum dfactor){}
-    void glStencilFunc(GLenum func, GLint ref, GLuint mask){}
-    void glStencilMask(GLuint mask){}
-    void glStencilOp(GLenum fail, GLenum zfail, GLenum zpass){}
-    void glClearStencil(GLint s){}
-    void glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha){}
-    void glCullFace(GLenum mode){}
-    void glFrontFace(GLenum mode){}
-    void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha){}
-    void glUseProgram(GLuint program){}
+void GL::enable(GLenum id) {
+}
+void GL::disable(GLenum id) {
+}
+void GL::depthFunc(GLenum func) {
+}
+void GL::depthMask(GLboolean flag) {
+}
+void GL::depthRange(GLfloat n, GLfloat f) {
+}
+void GL::clearDepth(GLfloat d) {
+}
+void GL::blendFunc(GLenum sfactor, GLenum dfactor) {
+}
+void GL::stencilFunc(GLenum func, GLint ref, GLuint mask) {
+}
+void GL::stencilMask(GLuint mask) {
+}
+void GL::stencilOp(GLenum fail, GLenum zfail, GLenum zpass) {
+}
+void GL::clearStencil(GLint s) {
+}
+void GL::colorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) {
+}
+void GL::cullFace(GLenum mode) {
+}
+void GL::frontFace(GLenum mode) {
+}
+void GL::clearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) {
+}
+void GL::getIntegerv(GLenum pname, GLint *params ) {
+}
 
-    void glClear( GLbitfield mask ){}
-    void glViewport( GLint x, GLint y, GLsizei width, GLsizei height ){}
-    void glLineWidth( GLfloat width ){}
+// Program
+void GL::useProgram(GLuint program) {
+}
+void GL::deleteProgram(GLuint program) {
+}
+void GL::deleteShader(GLuint shader) {
+}
+GLuint GL::createShader(GLenum type) {
+    return 0;
+}
+GLuint GL::createProgram() {
+    return 0;
+}
 
-    void glDeleteProgram (GLuint program) {}
-    void glDeleteShader (GLuint shader) {}
+void GL::compileShader(GLuint shader) {
+}
+void GL::attachShader(GLuint program, GLuint shader) {
+}
+void GL::linkProgram(GLuint program) {
+}
 
-    GLuint glCreateShader (GLenum type) { return 0; }
-    GLuint glCreateProgram () { return 0; }
-    void glShaderSource (GLuint shader, GLsizei count, const GLchar *const*string, const GLint *length){}
-    void glGetShaderiv (GLuint shader, GLenum pname, GLint *params){}
-    void glCompileShader (GLuint shader){}
-    void glAttachShader (GLuint program, GLuint shader){}
-    void glLinkProgram (GLuint program){}
-    void glDrawArrays( GLenum mode, GLint first, GLsizei count ){}
-    void glDrawElements( GLenum mode, GLsizei count,
-                         GLenum type, const GLvoid *indices ){}
+void GL::shaderSource(GLuint shader, GLsizei count, const GLchar **string, const GLint *length) {
+}
+void GL::getShaderInfoLog(GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog) {
+}
+void GL::getProgramInfoLog(GLuint program, GLsizei bufSize, GLsizei *length, GLchar *infoLog) {
+}
+GLint GL::getUniformLocation(GLuint program, const GLchar *name) {
+    return 0;
+}
+GLint GL::getAttribLocation(GLuint program, const GLchar *name) {
+    return 0;
+}
+void GL::getProgramiv(GLuint program, GLenum pname, GLint *params) {
+}
+void GL::getShaderiv(GLuint shader, GLenum pname, GLint *params) {
+}
 
-    void glEnableVertexAttribArray (GLuint index){}
-    void glDisableVertexAttribArray (GLuint index){}
-    void glEnableVertexArrayAttrib (GLuint vaobj, GLuint index){}
-    void glVertexAttribPointer (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer){}
+// Buffers
+void GL::bindBuffer(GLenum target, GLuint buffer) {
+}
+void GL::deleteBuffers(GLsizei n, const GLuint *buffers) {
+}
+void GL::genBuffers(GLsizei n, GLuint *buffers) {
+}
+void GL::bufferData(GLenum target, GLsizeiptr size, const void *data, GLenum usage) {
+}
+void GL::bufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void *data) {
+}
+void GL::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                    GLenum format, GLenum type, GLvoid* pixels) {
+}
 
-    void glGetProgramiv (GLuint program, GLenum pname, GLint *params){}
-    void glGetProgramInfoLog (GLuint program, GLsizei bufSize, GLsizei *length, GLchar *infoLog){}
-    void glGetShaderInfoLog (GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog){}
-    GLint glGetUniformLocation (GLuint program, const GLchar *name){ return 0; }
-    GLint glGetAttribLocation (GLuint program, const GLchar *name){ return 0; }
+// Texture
+void GL::bindTexture(GLenum target, GLuint texture ) {
+}
+void GL::activeTexture(GLenum texture) {
+}
+void GL::genTextures(GLsizei n, GLuint *textures ) {
+}
+void GL::deleteTextures(GLsizei n, const GLuint *textures) {
+}
+void GL::texParameteri(GLenum target, GLenum pname, GLint param ) {
+}
+void GL::texImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height,
+                    GLint border, GLenum format, GLenum type, const GLvoid *pixels) {
+}
+void GL::texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
+                       GLenum format, GLenum type, const GLvoid *pixels) {
+}
+void GL::generateMipmap(GLenum target) {
+}
 
-    void glBufferData (GLenum target, GLsizeiptr size, const void *data, GLenum usage) {}
-    void glBufferSubData (GLenum target, GLintptr offset, GLsizeiptr size, const void *data){}
+void GL::enableVertexAttribArray(GLuint index) {
+}
+void GL::disableVertexAttribArray(GLuint index) {
+}
+void GL::vertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized,
+                             GLsizei stride, const void *pointer) {
+}
 
-    void glGetBooleanv( GLenum pname, GLboolean *params ){}
-    void glGetDoublev( GLenum pname, GLdouble *params ){}
-    void glGetFloatv( GLenum pname, GLfloat *params ){}
-    void glGetIntegerv( GLenum pname, GLint *params ){}
-    void glBindTexture( GLenum target, GLuint texture ){}
-    void glActiveTexture (GLenum texture){}
-    void glGenTextures( GLsizei n, GLuint *textures ){}
+void GL::drawArrays(GLenum mode, GLint first, GLsizei count ) {
+}
+void GL::drawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices ) {
+}
 
-    void glDeleteTextures( GLsizei n, const GLuint *textures){}
+void GL::uniform1f(GLint location, GLfloat v0) {
+}
+void GL::uniform2f(GLint location, GLfloat v0, GLfloat v1) {
+}
+void GL::uniform3f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2) {
+}
+void GL::uniform4f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) {
+}
 
-    void glTexParameterf( GLenum target, GLenum pname, GLfloat param ){}
-    void glTexParameteri( GLenum target, GLenum pname, GLint param ){}
-    void glGenerateMipmap (GLenum target){}
-    void glTexImage2D( GLenum target, GLint level,
-                       GLint internalFormat,
-                       GLsizei width, GLsizei height,
-                       GLint border, GLenum format, GLenum type,
-                       const GLvoid *pixels ){}
+void GL::uniform1i(GLint location, GLint v0) {
+}
+void GL::uniform2i(GLint location, GLint v0, GLint v1) {
+}
+void GL::uniform3i(GLint location, GLint v0, GLint v1, GLint v2) {
+}
+void GL::uniform4i(GLint location, GLint v0, GLint v1, GLint v2, GLint v3) {
+}
 
-    void glTexSubImage2D( GLenum target, GLint level,
-                          GLint xoffset, GLint yoffset,
-                          GLsizei width, GLsizei height,
-                          GLenum format, GLenum type,
-                          const GLvoid *pixels ){}
+void GL::uniform1fv(GLint location, GLsizei count, const GLfloat *value) {
+}
+void GL::uniform2fv(GLint location, GLsizei count, const GLfloat *value) {
+}
+void GL::uniform3fv(GLint location, GLsizei count, const GLfloat *value) {
+}
+void GL::uniform4fv(GLint location, GLsizei count, const GLfloat *value) {
+}
+void GL::uniform1iv(GLint location, GLsizei count, const GLint *value) {
+}
+void GL::uniform2iv(GLint location, GLsizei count, const GLint *value) {
+}
+void GL::uniform3iv(GLint location, GLsizei count, const GLint *value) {
+}
+void GL::uniform4iv(GLint location, GLsizei count, const GLint *value) {
+}
 
-    void glBindBuffer (GLenum target, GLuint buffer){}
-    void glDeleteBuffers (GLsizei n, const GLuint *buffers){}
-    void glGenBuffers (GLsizei n, GLuint *buffers){}
-    void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                      GLenum format, GLenum type, GLvoid* pixels){}
+void GL::uniformMatrix2fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value) {
+}
+void GL::uniformMatrix3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value) {
+}
+void GL::uniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value) {
+}
 
-    void glUniform1f (GLint location, GLfloat v0){}
-    void glUniform2f (GLint location, GLfloat v0, GLfloat v1){}
-    void glUniform3f (GLint location, GLfloat v0, GLfloat v1, GLfloat v2){}
-    void glUniform4f (GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3){}
-    void glUniform1i (GLint location, GLint v0){}
-    void glUniform2i (GLint location, GLint v0, GLint v1){}
-    void glUniform3i (GLint location, GLint v0, GLint v1, GLint v2){}
-    void glUniform4i (GLint location, GLint v0, GLint v1, GLint v2, GLint v3){}
-    void glUniform1fv (GLint location, GLsizei count, const GLfloat *value){}
-    void glUniform2fv (GLint location, GLsizei count, const GLfloat *value){}
-    void glUniform3fv (GLint location, GLsizei count, const GLfloat *value){}
-    void glUniform4fv (GLint location, GLsizei count, const GLfloat *value){}
-    void glUniform1iv (GLint location, GLsizei count, const GLint *value){}
-    void glUniform2iv (GLint location, GLsizei count, const GLint *value){}
-    void glUniform3iv (GLint location, GLsizei count, const GLint *value){}
-    void glUniform4iv (GLint location, GLsizei count, const GLint *value){}
-    void glUniformMatrix2fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value){}
-    void glUniformMatrix3fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value){}
-    void glUniformMatrix4fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value){}
-    void glValidateProgram (GLuint program){}
-    void glVertexAttrib1d (GLuint index, GLdouble x){}
-    void glVertexAttrib1dv (GLuint index, const GLdouble *v){}
-    void glVertexAttrib1f (GLuint index, GLfloat x){}
-    void glVertexAttrib1fv (GLuint index, const GLfloat *v){}
-    void glVertexAttrib1s (GLuint index, GLshort x){}
-    void glVertexAttrib1sv (GLuint index, const GLshort *v){}
-    void glVertexAttrib2d (GLuint index, GLdouble x, GLdouble y){}
-    void glVertexAttrib2dv (GLuint index, const GLdouble *v){}
-    void glVertexAttrib2f (GLuint index, GLfloat x, GLfloat y){}
-    void glVertexAttrib2fv (GLuint index, const GLfloat *v){}
-    void glVertexAttrib2s (GLuint index, GLshort x, GLshort y){}
-    void glVertexAttrib2sv (GLuint index, const GLshort *v){}
-    void glVertexAttrib3d (GLuint index, GLdouble x, GLdouble y, GLdouble z){}
-    void glVertexAttrib3dv (GLuint index, const GLdouble *v){}
-    void glVertexAttrib3f (GLuint index, GLfloat x, GLfloat y, GLfloat z){}
-    void glVertexAttrib3fv (GLuint index, const GLfloat *v){}
-    void glVertexAttrib3s (GLuint index, GLshort x, GLshort y, GLshort z){}
-    void glVertexAttrib3sv (GLuint index, const GLshort *v){}
-    void glVertexAttrib4Nbv (GLuint index, const GLbyte *v){}
-    void glVertexAttrib4Niv (GLuint index, const GLint *v){}
-    void glVertexAttrib4Nsv (GLuint index, const GLshort *v){}
-    void glVertexAttrib4Nub (GLuint index, GLubyte x, GLubyte y, GLubyte z, GLubyte w){}
-    void glVertexAttrib4Nubv (GLuint index, const GLubyte *v){}
-    void glVertexAttrib4Nuiv (GLuint index, const GLuint *v){}
-    void glVertexAttrib4Nusv (GLuint index, const GLushort *v){}
-    void glVertexAttrib4bv (GLuint index, const GLbyte *v){}
-    void glVertexAttrib4d (GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w){}
-    void glVertexAttrib4dv (GLuint index, const GLdouble *v){}
-    void glVertexAttrib4f (GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w){}
-    void glVertexAttrib4fv (GLuint index, const GLfloat *v){}
-    void glVertexAttrib4iv (GLuint index, const GLint *v){}
-    void glVertexAttrib4s (GLuint index, GLshort x, GLshort y, GLshort z, GLshort w){}
-    void glVertexAttrib4sv (GLuint index, const GLshort *v){}
-    void glVertexAttrib4ubv (GLuint index, const GLubyte *v){}
-    void glVertexAttrib4uiv (GLuint index, const GLuint *v){}
-    void glVertexAttrib4usv (GLuint index, const GLushort *v){}
-    void glFinish(void){}
+// mapbuffer
+void* GL::mapBuffer(GLenum target, GLenum access) {
+    return nullptr;
+}
+GLboolean GL::unmapBuffer(GLenum target) {
+    return true;
+}
 
-    // mapbuffer
-    void* glMapBuffer(GLenum target, GLenum access){ return nullptr; }
-    GLboolean glUnmapBuffer(GLenum target){ return false; }
+void GL::finish(void) {
+}
 
-    // VAO
-    void glBindVertexArray (GLuint array){}
-    void glDeleteVertexArrays (GLsizei n, const GLuint *arrays){}
-    void glGenVertexArrays (GLsizei n, GLuint *arrays){}
+// VAO
+void GL::bindVertexArray(GLuint array) {
+}
+void GL::deleteVertexArrays(GLsizei n, const GLuint *arrays) {
+}
+void GL::genVertexArrays(GLsizei n, GLuint *arrays) {
+}
+
 
 }

@@ -1,6 +1,6 @@
 #include "tileWorker.h"
 
-#include "platform.h"
+#include "log.h"
 #include "data/dataSource.h"
 #include "tile/tileID.h"
 #include "tile/tileTask.h"

@@ -3,6 +3,7 @@
 #include "scene/styleParam.h"
 #include "util/mapProjection.h"
 #include "platform.h"
+#include "log.h"
 
 #include "csscolorparser.hpp"
 #include "yaml-cpp/yaml.h"

@@ -3,6 +3,7 @@
 #include "scene/sceneLoader.h"
 #include "util/topologicalSort.h"
 #include "yaml-cpp/yaml.h"
+#include "log.h"
 
 #include <regex>
 

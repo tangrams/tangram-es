@@ -1,6 +1,6 @@
 #include "mbtilesTileTask.h"
 
-#include "platform.h"
+#include "log.h"
 #include "data/dataSource.h"
 #include "hash-library/md5.cpp"
 

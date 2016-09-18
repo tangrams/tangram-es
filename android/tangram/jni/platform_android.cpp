@@ -325,6 +325,7 @@ void featurePickCallback(JNIEnv* jniEnv, jobject listener, const std::vector<Tan
     jniEnv->CallVoidMethod(listener, onFeaturePickMID, hashmap, position[0], position[1]);
 }
 
+
 void initGLExtensions() {
     void* libhandle = dlopen("libGLESv2.so", RTLD_LAZY);
 

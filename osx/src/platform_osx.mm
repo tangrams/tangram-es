@@ -12,6 +12,8 @@
 #include <sys/syscall.h>
 
 #include "platform_osx.h"
+#include "gl/hardware.h"
+#include "log.h"
 
 static bool s_isContinuousRendering = false;
 
@@ -197,6 +199,8 @@ void setCurrentThreadPriority(int priority) {
     setpriority(PRIO_PROCESS, tid, priority);
 }
 
-void initGLExtensions() {}
+void initGLExtensions() {
+    Tangram::Hardware::supportsMapBuffer = true;
+}
 
 #endif //PLATFORM_OSX

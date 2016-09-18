@@ -4,6 +4,7 @@
 #include "text/fontContext.h"
 #include "gl/dynamicQuadMesh.h"
 #include "util/geom.h"
+#include "log.h"
 
 namespace Tangram {
 

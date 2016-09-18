@@ -4,6 +4,7 @@
 #include "gl/error.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
+#include "gl/texture.h"
 
 #include <memory>
 #include <vector>
@@ -22,6 +23,9 @@ public:
 
     bool draw(RenderState& rs, ShaderProgram& _shader) override;
 
+    // Draw the mesh while swapping textures using the given texture unit.
+    bool draw(RenderState& rs, ShaderProgram& _shader, int textureUnit);
+
     size_t bufferSize() const override {
         return MeshBase::bufferSize();
     }
@@ -31,6 +35,7 @@ public:
         m_nVertices = 0;
         m_isUploaded = false;
         m_vertices.clear();
+        m_batches.clear();
     }
 
     size_t numberOfVertices() const { return m_vertices.size(); }
@@ -43,14 +48,33 @@ public:
     // into m_vertices to write into 4 vertices.
     T* pushQuad() {
         m_nVertices += 4;
-        m_vertices.resize(m_nVertices);
+        m_vertices.insert(m_vertices.end(), 4, {});
         return &m_vertices[m_nVertices - 4];
     }
 
+    // Signals that all vertices added until the next call to pushTexture
+    // are meant to be drawn with this texture. Push a nullptr to use the
+    // default point texture.
+    void pushTexture(Texture* texture);
+
 private:
 
+    struct TextureBatch {
+        TextureBatch(Texture* t, size_t s) : texture(t), startVertex(s) {}
+        Texture* texture = nullptr;
+        size_t startVertex = 0;
+    };
+
     std::vector<T> m_vertices;
+    std::vector<TextureBatch> m_batches;
 };
+
+template<class T>
+void DynamicQuadMesh<T>::pushTexture(Texture* texture) {
+    if (m_batches.empty() || m_batches.back().texture != texture) {
+        m_batches.push_back({ texture, m_vertices.size() });
+    }
+}
 
 template<class T>
 void DynamicQuadMesh<T>::upload(RenderState& rs) {
@@ -61,7 +85,7 @@ void DynamicQuadMesh<T>::upload(RenderState& rs) {
 
     // Generate vertex buffer, if needed
     if (m_glVertexBuffer == 0) {
-        GL_CHECK(glGenBuffers(1, &m_glVertexBuffer));
+        GL::genBuffers(1, &m_glVertexBuffer);
     }
 
     MeshBase::subDataUpload(rs, reinterpret_cast<GLbyte*>(m_vertices.data()));
@@ -70,8 +94,12 @@ void DynamicQuadMesh<T>::upload(RenderState& rs) {
 }
 
 template<class T>
-bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& _shader) {
+bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader) {
+    return draw(rs, shader, 0);
+}
 
+template<class T>
+bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader, int textureUnit) {
     if (m_nVertices == 0) { return false; }
 
     // Bind buffers for drawing
@@ -79,26 +107,51 @@ bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& _shader) {
     rs.indexBuffer(rs.getQuadIndexBuffer());
 
     // Enable shader program
-    if (!_shader.use(rs)) {
+    if (!shader.use(rs)) {
         return false;
     }
 
-    size_t vertexOffset = 0;
-    size_t maxVertices = RenderState::MAX_QUAD_VERTICES;
+    size_t verticesDrawn = 0;
+    size_t verticesIndexed = RenderState::MAX_QUAD_VERTICES;
+    size_t verticesTextured = 0;
+    auto nextTextureBatch = m_batches.begin();
 
-    for (size_t offset = 0; offset < m_nVertices; offset += maxVertices) {
-        size_t nVertices = maxVertices;
+    // Draw vertices in batches until the end of the mesh.
+    while (verticesDrawn < m_nVertices) {
 
-        if (offset + maxVertices > m_nVertices) {
-            nVertices = m_nVertices - offset;
+        if (verticesDrawn >= verticesTextured) {
+            // Switch to the next texture, if present.
+            // This should always occur in the first loop iteration.
+            bool hasNextTextureBatch = false;
+            if (nextTextureBatch != m_batches.end()) {
+                auto tex = nextTextureBatch->texture;
+                if (!tex) { tex = rs.getDefaultPointTexture(); }
+                tex->update(rs, textureUnit);
+                tex->bind(rs, textureUnit);
+                hasNextTextureBatch = (++nextTextureBatch != m_batches.end());
+            }
+            if (hasNextTextureBatch) {
+                verticesTextured = nextTextureBatch->startVertex;
+            } else {
+                verticesTextured = RenderState::MAX_QUAD_VERTICES;
+            }
         }
-        size_t byteOffset = vertexOffset * m_vertexLayout->getStride();
 
-        m_vertexLayout->enable(rs, _shader, byteOffset);
+        // Determine the largest batch of vertices we can draw at once,
+        // limited by either a texture swap or the max index value.
+        size_t verticesDrawable = std::min(std::min(verticesIndexed, verticesTextured), m_nVertices);
+        size_t verticesInBatch = verticesDrawable - verticesDrawn;
+        size_t elementsInBatch = verticesInBatch * 6 / 4;
 
-        GL_CHECK(glDrawElements(m_drawMode, nVertices * 6 / 4, GL_UNSIGNED_SHORT, 0));
+        // Set up and draw the batch.
+        size_t byteOffset = verticesDrawn * m_vertexLayout->getStride();
+        m_vertexLayout->enable(rs, shader, byteOffset);
+        GL::drawElements(m_drawMode, elementsInBatch, GL_UNSIGNED_SHORT, 0);
 
-        vertexOffset += nVertices;
+        // Update counters.
+        verticesDrawn += verticesInBatch;
+        verticesIndexed += RenderState::MAX_QUAD_VERTICES;
+
     }
 
     return true;

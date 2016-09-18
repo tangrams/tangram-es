@@ -23,7 +23,7 @@ matrix:
               sources: [ 'kubuntu-backports', 'george-edison55-precise-backports' ]
               packages: [ 'cmake', 'lib32z1-dev', 'lib32stdc++6', 's3cmd' ]
           android:
-            components: [ 'tools', 'build-tools-24.0.0', 'extra-android-m2repository', 'android-24' ]
+            components: [ 'tools', 'build-tools-24.0.2', 'extra-android-m2repository', 'android-24' ]
           jdk: oraclejdk8
 
 before_install:

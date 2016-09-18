@@ -86,7 +86,7 @@ protected:
 
     bool m_canceled = false;
 
-    std::atomic<double> m_priority;
+    std::atomic<float> m_priority;
     bool m_proxyState = false;
 };
 

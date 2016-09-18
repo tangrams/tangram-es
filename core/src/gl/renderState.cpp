@@ -4,6 +4,11 @@
 #include "vertexLayout.h"
 #include "gl/error.h"
 #include "gl/hardware.h"
+#include "gl/texture.h"
+#include "log.h"
+
+// Default point texture data is included as an array literal.
+#include "defaultPointTextureData.h"
 
 #include <limits>
 
@@ -38,6 +43,7 @@ GLuint RenderState::getTextureUnit(GLuint _unit) {
 RenderState::~RenderState() {
 
     deleteQuadIndexBuffer();
+    deleteDefaultPointTexture();
 
 }
 
@@ -62,9 +68,9 @@ void RenderState::invalidate() {
 
     attributeBindings.fill(0);
 
-    GL_CHECK(glDepthFunc(GL_LESS));
-    GL_CHECK(glClearDepthf(1.0));
-    GL_CHECK(glDepthRangef(0.0, 1.0));
+    GL::depthFunc(GL_LESS);
+    GL::clearDepth(1.0);
+    GL::depthRange(0.0, 1.0);
 
 }
 
@@ -104,9 +110,9 @@ void RenderState::resetTextureUnit() {
 
 inline void setGlFlag(GLenum flag, GLboolean enable) {
     if (enable) {
-        GL_CHECK(glEnable(flag));
+        GL::enable(flag);
     } else {
-        GL_CHECK(glDisable(flag));
+        GL::disable(flag);
     }
 }
 
@@ -122,7 +128,7 @@ bool RenderState::blending(GLboolean enable) {
 bool RenderState::blendingFunc(GLenum sfactor, GLenum dfactor) {
     if (!m_blendingFunc.set || m_blendingFunc.sfactor != sfactor || m_blendingFunc.dfactor != dfactor) {
         m_blendingFunc = { sfactor, dfactor, true };
-        GL_CHECK(glBlendFunc(sfactor, dfactor));
+        GL::blendFunc(sfactor, dfactor);
         return false;
     }
     return true;
@@ -131,7 +137,7 @@ bool RenderState::blendingFunc(GLenum sfactor, GLenum dfactor) {
 bool RenderState::clearColor(GLclampf r, GLclampf g, GLclampf b, GLclampf a) {
     if (!m_clearColor.set || m_clearColor.r != r || m_clearColor.g != g || m_clearColor.b != b || m_clearColor.a != a) {
         m_clearColor = { r, g, b, a, true };
-        GL_CHECK(glClearColor(r, g, b, a));
+        GL::clearColor(r, g, b, a);
         return false;
     }
     return true;
@@ -140,7 +146,7 @@ bool RenderState::clearColor(GLclampf r, GLclampf g, GLclampf b, GLclampf a) {
 bool RenderState::colorMask(GLboolean r, GLboolean g, GLboolean b, GLboolean a) {
     if (!m_colorMask.set || m_colorMask.r != r || m_colorMask.g != g || m_colorMask.b != b || m_colorMask.a != a) {
         m_colorMask = { r, g, b, a, true };
-        GL_CHECK(glColorMask(r, g, b, a));
+        GL::colorMask(r, g, b, a);
         return false;
     }
     return true;
@@ -149,7 +155,7 @@ bool RenderState::colorMask(GLboolean r, GLboolean g, GLboolean b, GLboolean a) 
 bool RenderState::cullFace(GLenum face) {
     if (!m_cullFace.set || m_cullFace.face != face) {
         m_cullFace = { face, true };
-        GL_CHECK(glCullFace(face));
+        GL::cullFace(face);
         return false;
     }
     return true;
@@ -176,7 +182,7 @@ bool RenderState::depthTest(GLboolean enable) {
 bool RenderState::depthMask(GLboolean enable) {
     if (!m_depthMask.set || m_depthMask.enabled != enable) {
         m_depthMask = { enable, true };
-        GL_CHECK(glDepthMask(enable));
+        GL::depthMask(enable);
         return false;
     }
     return true;
@@ -185,7 +191,7 @@ bool RenderState::depthMask(GLboolean enable) {
 bool RenderState::frontFace(GLenum face) {
     if (!m_frontFace.set || m_frontFace.face != face) {
         m_frontFace = { face, true };
-        GL_CHECK(glFrontFace(face));
+        GL::frontFace(face);
         return false;
     }
     return true;
@@ -194,7 +200,7 @@ bool RenderState::frontFace(GLenum face) {
 bool RenderState::stencilMask(GLuint mask) {
     if (!m_stencilMask.set || m_stencilMask.mask != mask) {
         m_stencilMask = { mask, true };
-        GL_CHECK(glStencilMask(mask));
+        GL::stencilMask(mask);
         return false;
     }
     return true;
@@ -203,7 +209,7 @@ bool RenderState::stencilMask(GLuint mask) {
 bool RenderState::stencilFunc(GLenum func, GLint ref, GLuint mask) {
     if (!m_stencilFunc.set || m_stencilFunc.func != func || m_stencilFunc.ref != ref || m_stencilFunc.mask != mask) {
         m_stencilFunc = { func, ref, mask, true };
-        GL_CHECK(glStencilFunc(func, ref, mask));
+        GL::stencilFunc(func, ref, mask);
         return false;
     }
     return true;
@@ -212,7 +218,7 @@ bool RenderState::stencilFunc(GLenum func, GLint ref, GLuint mask) {
 bool RenderState::stencilOp(GLenum sfail, GLenum spassdfail, GLenum spassdpass) {
     if (!m_stencilOp.set || m_stencilOp.sfail != sfail || m_stencilOp.spassdfail != spassdfail || m_stencilOp.spassdpass != spassdpass) {
         m_stencilOp = { sfail, spassdfail, spassdpass, true };
-        GL_CHECK(glStencilOp(sfail, spassdfail, spassdpass));
+        GL::stencilOp(sfail, spassdfail, spassdpass);
         return false;
     }
     return true;
@@ -230,7 +236,7 @@ bool RenderState::stencilTest(GLboolean enable) {
 bool RenderState::shaderProgram(GLuint program) {
     if (!m_program.set || m_program.program != program) {
         m_program = { program, true };
-        GL_CHECK(glUseProgram(program));
+        GL::useProgram(program);
         return false;
     }
     return true;
@@ -239,7 +245,7 @@ bool RenderState::shaderProgram(GLuint program) {
 bool RenderState::texture(GLenum target, GLuint handle) {
     if (!m_texture.set || m_texture.target != target || m_texture.handle != handle) {
         m_texture = { target, handle, true };
-        GL_CHECK(glBindTexture(target, handle));
+        GL::bindTexture(target, handle);
         return false;
     }
     return true;
@@ -250,7 +256,7 @@ bool RenderState::textureUnit(GLuint unit) {
         m_textureUnit = { unit, true };
         // Our cached texture handle is irrelevant on the new unit, so unset it.
         m_texture.set = false;
-        GL_CHECK(glActiveTexture(getTextureUnit(unit)));
+        GL::activeTexture(getTextureUnit(unit));
         return false;
     }
     return true;
@@ -259,7 +265,7 @@ bool RenderState::textureUnit(GLuint unit) {
 bool RenderState::vertexBuffer(GLuint handle) {
     if (!m_vertexBuffer.set || m_vertexBuffer.handle != handle) {
         m_vertexBuffer = { handle, true };
-        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, handle));
+        GL::bindBuffer(GL_ARRAY_BUFFER, handle);
         return false;
     }
     return true;
@@ -268,7 +274,7 @@ bool RenderState::vertexBuffer(GLuint handle) {
 bool RenderState::indexBuffer(GLuint handle) {
     if (!m_indexBuffer.set || m_indexBuffer.handle != handle) {
         m_indexBuffer = { handle, true };
-        GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle));
+        GL::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
         return false;
     }
     return true;
@@ -307,7 +313,7 @@ GLuint RenderState::getQuadIndexBuffer() {
 
 void RenderState::deleteQuadIndexBuffer() {
     indexBufferUnset(m_quadIndexBuffer);
-    GL_CHECK(glDeleteBuffers(1, &m_quadIndexBuffer));
+    GL::deleteBuffers(1, &m_quadIndexBuffer);
     m_quadIndexBuffer = 0;
 }
 
@@ -325,11 +331,28 @@ void RenderState::generateQuadIndexBuffer() {
         indices.push_back(i + 2);
     }
 
-    GL_CHECK(glGenBuffers(1, &m_quadIndexBuffer));
+    GL::genBuffers(1, &m_quadIndexBuffer);
     indexBuffer(m_quadIndexBuffer);
-    GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLushort),
-                 reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW));
+    GL::bufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLushort),
+                   reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW);
 
+}
+
+Texture* RenderState::getDefaultPointTexture() {
+    if (m_defaultPointTexture == nullptr) {
+        generateDefaultPointTexture();
+    }
+    return m_defaultPointTexture;
+}
+
+void RenderState::deleteDefaultPointTexture() {
+    delete m_defaultPointTexture;
+    m_defaultPointTexture = nullptr;
+}
+
+void RenderState::generateDefaultPointTexture() {
+    TextureOptions options = { GL_RGBA, GL_RGBA, { GL_LINEAR, GL_LINEAR }, { GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE } };
+    m_defaultPointTexture = new Texture(default_point_texture_data, default_point_texture_size, options, true);
 }
 
 } // namespace Tangram

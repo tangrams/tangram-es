@@ -3,6 +3,7 @@
 #include "data/propertyItem.h" // Include wherever Properties is used!
 #include "labels/labelCollider.h"
 #include "labels/spriteLabel.h"
+#include "marker/marker.h"
 #include "scene/drawRule.h"
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
@@ -89,6 +90,8 @@ void PointStyleBuilder::setup(const Marker& _marker, int zoom) {
 
     m_textStyleBuilder->setup(_marker, zoom);
     m_iconMesh = std::make_unique<IconMesh>();
+
+    m_texture = _marker.texture();
 }
 
 bool PointStyleBuilder::checkRule(const DrawRule& _rule) const {
@@ -164,6 +167,7 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
                                                      _params.size,
                                                      _params.labelOptions,
                                                      _params.extrudeScale,
+                                                     m_texture,
                                                      *m_spriteLabels,
                                                      m_quads.size()));
 

@@ -1,7 +1,8 @@
 #include "labels/spriteLabel.h"
 #include "gl/dynamicQuadMesh.h"
+#include "scene/spriteAtlas.h"
 #include "style/pointStyle.h"
-#include "platform.h"
+#include "log.h"
 
 namespace Tangram {
 
@@ -12,10 +13,11 @@ const float SpriteVertex::alpha_scale = 65535.0f;
 const float SpriteVertex::texture_scale = 65535.0f;
 
 SpriteLabel::SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Options _options,
-                         float _extrudeScale, SpriteLabels& _labels, size_t _labelsPos)
+                         float _extrudeScale, Texture* _texture, SpriteLabels& _labels, size_t _labelsPos)
     : Label(_transform, _size, Label::Type::point, _options),
       m_labels(_labels),
       m_labelsPos(_labelsPos),
+      m_texture(_texture),
       m_extrudeScale(_extrudeScale) {
 
     applyAnchor(m_options.anchors[0]);
@@ -54,6 +56,16 @@ void SpriteLabel::pushTransform() {
     };
 
     auto& style = m_labels.m_style;
+
+    // Before pushing our geometry to the mesh, we push the texture that should be
+    // used to draw this label. We check a few potential textures in order of priority.
+    Texture* tex = nullptr;
+    if (m_texture) { tex = m_texture; }
+    else if (style.texture()) { tex = style.texture().get(); }
+    else if (style.spriteAtlas()) { tex = style.spriteAtlas()->texture(); }
+
+    // If tex is null, the mesh will use the default point texture.
+    style.getMesh()->pushTexture(tex);
 
     auto* quadVertices = style.getMesh()->pushQuad();
 

@@ -28,6 +28,8 @@ public:
     /* Bind the atlas in the driver */
     void bind(RenderState& rs, GLuint _slot);
 
+    Texture* texture() { return m_texture.get(); }
+
 private:
     fastmap<std::string, SpriteNode> m_spritesNodes;
     std::shared_ptr<Texture> m_texture;

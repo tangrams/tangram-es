@@ -4,6 +4,7 @@
 #include "glm/gtx/rotate_vector.hpp"
 #include "tangram.h"
 #include "platform.h"
+#include "log.h"
 
 namespace Tangram {
 
