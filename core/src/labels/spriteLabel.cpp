@@ -14,6 +14,44 @@ using namespace LabelProperty;
 const float SpriteVertex::alpha_scale = 65535.0f;
 const float SpriteVertex::texture_scale = 65535.0f;
 
+struct BillboardTransform {
+    Label::ScreenTransform& m_transform;
+
+    BillboardTransform(Label::ScreenTransform& _transform)
+        : m_transform(_transform) {}
+
+    void set(glm::vec2 _position, glm::vec3 _projected, glm::vec2 _screenSize) {
+
+        m_transform.push_back(_position);
+        m_transform.push_back(_projected);
+        m_transform.push_back(_screenSize);
+    }
+
+    glm::vec2 position() { return glm::vec2(m_transform[0]); }
+    glm::vec3 projected() { return m_transform[1]; }
+    glm::vec2 screenSize() { return glm::vec2(m_transform[2]); }
+};
+
+struct FlatTransform {
+    Label::ScreenTransform& m_transform;
+
+    FlatTransform(Label::ScreenTransform& _transform)
+        : m_transform(_transform) {}
+
+    void set(const std::array<glm::vec2, 4>& _position,
+             const std::array<glm::vec3, 4>& _projected) {
+        for (size_t i = 0; i < 4; i++) {
+            m_transform.push_back(_position[i]);
+        }
+        for (size_t i = 0; i < 4; i++) {
+            m_transform.push_back(_projected[i]);
+        }
+    }
+
+    glm::vec2 position(size_t i) { return glm::vec2(m_transform[i]); }
+    glm::vec3 projected(size_t i) { return m_transform[4+i]; }
+};
+
 SpriteLabel::SpriteLabel(Label::WorldTransform _transform, glm::vec2 _size, Label::Options _options,
                          SpriteLabel::VertexAttributes _attrib, Texture* _texture,
                          SpriteLabels& _labels, size_t _labelsPos)
@@ -31,7 +69,8 @@ void SpriteLabel::applyAnchor(LabelProperty::Anchor _anchor) {
     m_anchor = LabelProperty::anchorDirection(_anchor) * m_dim * 0.5f;
 }
 
-bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, ScreenTransform& _transform, bool _drawAllLabels) {
+bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState,
+                                        ScreenTransform& _transform, bool _drawAllLabels) {
 
     glm::vec2 halfScreen = glm::vec2(_viewState.viewportSize * 0.5f);
 
@@ -43,7 +82,9 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
 
             if (m_options.flat) {
 
-                auto& positions = m_screenTransform.positions;
+                std::array<glm::vec2, 4> positions;
+                std::array<glm::vec3, 4> projected;
+
                 float sourceScale = pow(2, m_worldTransform.position.z);
                 float scale = float(sourceScale / (_viewState.zoomScale * _viewState.tileSize * 2.0));
                 if (m_vertexAttrib.extrudeScale != 1.f) {
@@ -61,41 +102,41 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
                     glm::vec2 rotation(cos(DEG_TO_RAD * m_options.angle),
                                        sin(DEG_TO_RAD * m_options.angle));
 
-                    positions[0] = rotateBy(positions[0], rotation);
-                    positions[1] = rotateBy(positions[1], rotation);
-                    positions[2] = rotateBy(positions[2], rotation);
-                    positions[3] = rotateBy(positions[3], rotation);
+                    for (size_t i = 0; i < 4; i++) {
+                        positions[i] = rotateBy(positions[i], rotation);
+                    }
                 }
 
                 for (size_t i = 0; i < 4; i++) {
-                    glm::vec4 projected = worldToClipSpace(_mvp, glm::vec4(positions[i], 0.f, 1.f));
-                    if (projected.w <= 0.0f) { return false; }
+                    glm::vec4 proj = worldToClipSpace(_mvp, glm::vec4(positions[i], 0.f, 1.f));
+                    if (proj.w <= 0.0f) { return false; }
 
-                        m_projected[i] = glm::vec3(projected) / projected.w;
+                    projected[i] = glm::vec3(proj) / proj.w;
 
-                        // from normalized device coordinates to screen space coordinate system
-                        // top-left screen axis, y pointing down
-                        positions[i].x = 1 + m_projected[i].x;
-                        positions[i].y = 1 - m_projected[i].y;
-                        positions[i] *= halfScreen;
+                    // from normalized device coordinates to screen space coordinate system
+                    // top-left screen axis, y pointing down
+                    positions[i].x = 1 + projected[i].x;
+                    positions[i].y = 1 - projected[i].y;
+                    positions[i] *= halfScreen;
                 }
+
+                FlatTransform(_transform).set(positions, projected);
 
             } else {
                 glm::vec4 projected = worldToClipSpace(_mvp, glm::vec4(p0, 0.f, 1.f));
                 if (projected.w <= 0.0f) { return false; }
 
-                m_projected[0] = glm::vec3(projected) / projected.w;
+                projected /=  projected.w;
 
-                auto& position = m_screenTransform.position;
-                position.x = 1 + m_projected[0].x;
-                position.y = 1 - m_projected[0].y;
+                glm::vec2 position;
+                position.x = 1 + projected.x;
+                position.y = 1 - projected.y;
                 position *= halfScreen;
                 position += m_options.offset;
 
-                m_projected[1].x = _viewState.viewportSize.x;
-                m_projected[1].y = _viewState.viewportSize.y;
+                BillboardTransform(_transform).set(position, glm::vec3(projected),
+                                                   _viewState.viewportSize);
             }
-
             break;
         }
         default:
@@ -105,13 +146,14 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
     return true;
 }
 
-void SpriteLabel::obbs(const ScreenTransform& _transform, std::vector<OBB>& _obbs,
+void SpriteLabel::obbs(ScreenTransform& _transform, std::vector<OBB>& _obbs,
                        Range& _range, bool _append) {
 
     if (_append) { _range.start = int(_obbs.size()); }
     _range.length = 1;
 
-    glm::vec2 dim;
+    glm::vec2 dim = m_dim + glm::vec2(m_vertexAttrib.extrudeScale * 2.f); // * _zoomFract);
+
     OBB obb;
 
     if (m_options.flat) {
@@ -121,10 +163,12 @@ void SpriteLabel::obbs(const ScreenTransform& _transform, std::vector<OBB>& _obb
         float maxx = -infinity, maxy = -infinity;
 
         for (int i = 0; i < 4; ++i) {
-            minx = std::min(minx, m_screenTransform.positions[i].x);
-            miny = std::min(miny, m_screenTransform.positions[i].y);
-            maxx = std::max(maxx, m_screenTransform.positions[i].x);
-            maxy = std::max(maxy, m_screenTransform.positions[i].y);
+
+            const auto& position = _transform[i];
+            minx = std::min(minx, position.x);
+            miny = std::min(miny, position.y);
+            maxx = std::max(maxx, position.x);
+            maxy = std::max(maxy, position.y);
         }
 
         dim = glm::vec2(maxx - minx, maxy - miny);
@@ -137,15 +181,13 @@ void SpriteLabel::obbs(const ScreenTransform& _transform, std::vector<OBB>& _obb
 
         obb = OBB(obbCenter, glm::vec2(1.0, 0.0), dim.x, dim.y);
     } else {
-        //dim = m_dim + glm::vec2(m_vertexAttrib.extrudeScale * 2.f * _zoomFract);
-        dim = m_dim;
 
         if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
 
-        obb = OBB(m_screenTransform.position + m_anchor, m_screenTransform.rotation, dim.x, dim.y);
-    }
+        BillboardTransform pointTransform(_transform);
 
-    //auto obb = OBB(sp, m_transform.state.rotation, dim.x, dim.y);
+        obb = OBB(pointTransform.position() + m_anchor, {1,0}, dim.x, dim.y);
+    }
 
     if (_append) {
         _obbs.push_back(obb);
@@ -169,7 +211,7 @@ void SpriteLabel::addVerticesToMesh(ScreenTransform& _transform) {
     SpriteVertex::State state {
         m_vertexAttrib.selectionColor,
         m_vertexAttrib.color,
-        uint16_t(m_screenTransform.alpha * SpriteVertex::alpha_scale),
+        uint16_t(m_alpha * SpriteVertex::alpha_scale),
         0,
     };
 
@@ -188,18 +230,22 @@ void SpriteLabel::addVerticesToMesh(ScreenTransform& _transform) {
     auto* quadVertices = style.getMesh()->pushQuad();
 
     if (m_options.flat) {
+        FlatTransform transform(_transform);
+
         for (int i = 0; i < 4; i++) {
             SpriteVertex& vertex = quadVertices[i];
 
-            vertex.pos = m_projected[i];
+            vertex.pos = transform.projected(i);
             vertex.uv = quad.quad[i].uv;
             vertex.state = state;
         }
 
     } else {
 
-        glm::vec2 pos = glm::vec2(m_projected[0]);
-        glm::vec2 scale = 2.0f / glm::vec2(m_projected[1]);
+        BillboardTransform transform(_transform);
+
+        glm::vec2 pos = glm::vec2(transform.projected());
+        glm::vec2 scale = 2.0f / transform.screenSize();
         scale.y *= -1;
 
         pos += m_options.offset * scale;

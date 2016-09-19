@@ -141,7 +141,7 @@ void Label::enterState(const State& _state, float _alpha) {
 }
 
 void Label::setAlpha(float _alpha) {
-    m_screenTransform.alpha = CLAMP(_alpha, 0.0, 1.0);
+    m_alpha = CLAMP(_alpha, 0.0, 1.0);
 }
 
 void Label::resetState() {
@@ -171,7 +171,7 @@ void Label::print() const {
     }
     LOG("\tm_state: %s", state.c_str());
     LOG("\tm_anchorIndex: %d", m_anchorIndex);
-    LOG("\tscreenPos: %f/%f", m_screenTransform.position.x, m_screenTransform.position.y);
+    //LOG("\tscreenPos: %f/%f", m_screenTransform.position.x, m_screenTransform.position.y);
 
 }
 

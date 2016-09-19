@@ -54,7 +54,7 @@ private:
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
 
-    std::vector<LineSamplerPoint> m_points;
+    std::vector<glm::vec3> m_points;
 };
 
 }

@@ -232,13 +232,13 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
 
     // float tolerance = pow(pixelScale * 2, 2);
 
-    LineSampler<std::vector<LineSamplerPoint>> sampler;
+    LineSampler<std::vector<glm::vec3>> sampler;
 
     auto addSegment = [&](const Line& line, size_t start, size_t end) {
         glm::vec2 center;
         glm::vec2 rotation;
-        float startLen = sampler.point(start).length;
-        float mid = (sampler.point(end-1).length - startLen) * 0.5;
+        float startLen = sampler.point(start).z;
+        float mid = (sampler.point(end-1).z - startLen) * 0.5;
 
         sampler.sample(mid, center, rotation);
         size_t offset = sampler.curSegment();
@@ -277,7 +277,7 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
             if (sqLen < sqDirLimit || glm::length2(dir0 + dir2) < sqDirLimit) {
                 //LOG("split %f,%f / %f,%f", dir1.x, dir1.y, dir2.x, dir2.y);
 
-                if (sampler.point(i).length - sampler.point(startPoint).length > minLength) {
+                if (sampler.point(i).z - sampler.point(startPoint).z > minLength) {
                     addSegment(line, startPoint, i);
                 }
 
@@ -292,7 +292,7 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
             dir1 = dir2;
         }
 
-        if (sampler.sumLength() - sampler.point(startPoint).length > minLength) {
+        if (sampler.sumLength() - sampler.point(startPoint).z > minLength) {
             addSegment(line, startPoint, line.size());
         }
 

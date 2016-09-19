@@ -4,12 +4,6 @@
 
 namespace Tangram {
 
-struct LineSamplerPoint {
-    LineSamplerPoint(glm::vec2 _coord, float _length) : coord(_coord), length(_length) {}
-    glm::vec2 coord;
-    float length;
-};
-
 template<typename Points>
 struct LineSampler {
 
@@ -32,7 +26,7 @@ struct LineSampler {
             float d = glm::distance(p, n);
             //if (d > 0.f) {
             sum += d;
-            m_points.push_back({{n.x, n.y}, sum});
+            m_points.push_back({n.x, n.y, sum});
             //}
             p = n;
         }
@@ -45,16 +39,16 @@ struct LineSampler {
         glm::vec2 p = { _point.x, _point.y };
 
         if (m_points.empty()) {
-            m_points.push_back({p, 0.f});
+            m_points.push_back(glm::vec3{p, 0.f});
             return;
         }
 
         size_t i = m_points.size()-1;
 
-        glm::vec2 prev = { m_points[i].coord.x, m_points[i].coord.y };
+        glm::vec2 prev = { m_points[i].x, m_points[i].y };
         float d = glm::distance(prev, p);
 
-        m_points.push_back({p, m_points[i].length + d});
+        m_points.push_back(glm::vec3{p, m_points[i].z + d});
     }
 
     void clearPoints() {
@@ -71,7 +65,7 @@ struct LineSampler {
         float sum = sumLength();
 
         std::reverse(m_points.begin(), m_points.end());
-        for (auto& p : m_points) { p.length = sum - p.length; }
+        for (auto& p : m_points) { p.z = sum - p.z; }
 
         m_curAdvance = 0.f;
         m_curPoint = 0;
@@ -80,28 +74,28 @@ struct LineSampler {
     float sumLength() {
         if (m_points.empty()) { return 0.f; }
 
-        return m_points[m_points.size()-1].length;
+        return m_points[m_points.size()-1].z;
     }
 
     size_t curSegment() {
         return m_curPoint;
     }
 
-    LineSamplerPoint point(size_t _pos) {
+    glm::vec3 point(size_t _pos) {
         return m_points[_pos];
     }
 
     float segmentLength(size_t _pos) {
         if (_pos >= m_points.size()-1) { return 0; }
 
-        return (m_points[_pos+1].length - m_points[_pos].length);
+        return (m_points[_pos+1].z - m_points[_pos].z);
     }
 
     glm::vec2 segmentDirection(size_t _pos) {
         if (_pos >= m_points.size()-1) { return {}; }
 
-        return (m_points[_pos+1].coord - m_points[_pos].coord) /
-            (m_points[_pos+1].length - m_points[_pos].length);
+        return (glm::vec2(m_points[_pos+1]) - glm::vec2(m_points[_pos])) /
+            (m_points[_pos+1].z - m_points[_pos].z);
     }
 
 
@@ -122,23 +116,23 @@ struct LineSampler {
                 const auto& next = m_points[m_curPoint+1];
 
                 // needed length from cur point
-                float length = end - curr.length;
+                float length = end - curr.z;
                 // length from cur to next point
-                float segmentLength = next.length - curr.length;
+                float segmentLength = next.z - curr.z;
 
                 if (length <= segmentLength) {
                     float f = length / segmentLength;
 
-                    _point = curr.coord + (next.coord - curr.coord) * f;
-                    _rotation = (next.coord - curr.coord) / segmentLength;
+                    _point = glm::vec2(curr) + (glm::vec2(next) - glm::vec2(curr)) * f;
+                    _rotation = (glm::vec2(next) - glm::vec2(curr)) / segmentLength;
 
                     m_curAdvance = end;
                     return true;
 
                 } else {
                     if (m_curPoint >= m_points.size()-2) {
-                        _point = next.coord;
-                        _rotation = (next.coord - curr.coord) / segmentLength;
+                        _point = glm::vec2(next);
+                        _rotation = (glm::vec2(next) - glm::vec2(curr)) / segmentLength;
                         m_curAdvance = sumLength();
                         return false;
                     }
@@ -152,24 +146,24 @@ struct LineSampler {
                 const auto& next = m_points[m_curPoint+1];
 
                 // needed length from cur point
-                float length = end - curr.length;
+                float length = end - curr.z;
 
                 // length from cur to next point
-                float segmentLength = next.length - curr.length;
+                float segmentLength = next.z - curr.z;
 
-                if (curr.length <= end) {
+                if (curr.z <= end) {
                     float f = length / segmentLength;
 
-                    _point = curr.coord + (next.coord - curr.coord) * f;
-                    _rotation = (next.coord - curr.coord) / segmentLength;
+                    _point = glm::vec2(curr) + (glm::vec2(next) - glm::vec2(curr)) * f;
+                    _rotation = (glm::vec2(next) - glm::vec2(curr)) / segmentLength;
 
                     m_curAdvance = end;
                     return true;
 
                 } else {
                     if (m_curPoint == 0) {
-                        _point = curr.coord;
-                        _rotation = (next.coord - curr.coord) / segmentLength;
+                        _point = glm::vec2(curr);
+                        _rotation = (glm::vec2(next) - glm::vec2(curr)) / segmentLength;
 
                         m_curAdvance = 0;
                         return false;

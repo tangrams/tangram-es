@@ -487,7 +487,7 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
         }
 
         // draw offset
-        glm::vec2 rot = label->screenTransform().rotation;
+        glm::vec2 rot = glm::vec2{};//label->screenTransform().rotation;
         glm::vec2 offset = label->options().offset;
         if (label->parent()) { offset += label->parent()->options().offset; }
         offset = rotateBy(offset, rot);

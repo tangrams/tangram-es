@@ -62,19 +62,9 @@ public:
         };
     };
 
-    struct ScreenTransform2 {
-        ScreenTransform2() {}
-        union {
-            glm::vec2 position;     // The label position if the label is not flattened
-            glm::vec2 positions[4]; // The label positions if the label is flattened
-        };
-
-        glm::vec2 rotation = {1.f, 0.f};
-        float alpha = 0.f;
-    };
 
     struct ScreenTransform {
-        ScreenTransform(std::vector<LineSamplerPoint>& _points, Range& _range, bool _initRange = false)
+        ScreenTransform(std::vector<glm::vec3>& _points, Range& _range, bool _initRange = false)
             : points(_points), range(_range) {
             if (_initRange) {
                 range.start = _points.size();
@@ -89,13 +79,18 @@ public:
 
         auto operator[](size_t _pos) const { return points[range.start + _pos]; }
 
-        void push_back(LineSamplerPoint _p) {
+        void push_back(glm::vec3 _p) {
             points.push_back(_p);
             range.length += 1;
         }
 
+        void push_back(glm::vec2 _p) {
+            points.emplace_back(_p, 0);
+            range.length += 1;
+        }
+
     private:
-        std::vector<LineSamplerPoint>& points;
+        std::vector<glm::vec3>& points;
         Range& range;
     };
 
@@ -166,10 +161,9 @@ public:
     const WorldTransform& worldTransform() const { return m_worldTransform; }
 
     // The label screen transform, in a top left coordinate axis, y pointing down
-    const ScreenTransform2& screenTransform() const { return m_screenTransform; }
 
     /* Adds the oriented bounding boxes of the label to _obbs, updates Range */
-    virtual void obbs(const ScreenTransform& _transform, std::vector<OBB>& _obbs,
+    virtual void obbs(ScreenTransform& _transform, std::vector<OBB>& _obbs,
                       Range& _range, bool _append = true) = 0;
 
     State state() const { return m_state; }
@@ -235,7 +229,6 @@ protected:
 
     WorldTransform m_worldTransform;
 
-    ScreenTransform2 m_screenTransform;
 
     glm::vec2 m_dim;
 
@@ -245,6 +238,7 @@ protected:
 
     Label* m_parent;
 
+    float m_alpha;
 };
 
 }
