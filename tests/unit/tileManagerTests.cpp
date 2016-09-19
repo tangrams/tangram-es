@@ -78,6 +78,8 @@ struct TestDataSource : DataSource {
 
     };
 
+    virtual const char* mimeType() override { return ""; };
+
     int tileTaskCount = 0;
 
     TestDataSource() : DataSource("", "") {
