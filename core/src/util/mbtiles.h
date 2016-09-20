@@ -170,8 +170,10 @@ void setupDB(DataSource& _source) {
         stmt.reset();
 
         // Compression not yet implemented.
+        // http://www.iana.org/assignments/http-parameters/http-parameters.xhtml#content-coding
+        // identity means no compression
         stmt.bind(1, "compression");
-        stmt.bind(2, "");
+        stmt.bind(2, "identity");
         stmt.exec();
 
     } catch (std::exception& e) {
