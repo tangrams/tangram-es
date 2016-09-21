@@ -93,6 +93,7 @@ public:
     void shaderProgramUnset(GLuint program);
 
     void textureUnset(GLenum target, GLuint handle);
+    void release();
 
     GLuint getQuadIndexBuffer();
 

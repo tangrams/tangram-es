@@ -355,4 +355,23 @@ void RenderState::generateDefaultPointTexture() {
     m_defaultPointTexture = new Texture(default_point_texture_data, default_point_texture_size, options, true);
 }
 
+//https://www.opengl.org/wiki/OpenGL_Object
+// http://flux242.blogspot.de/2013/07/opengl-core-profile-and-overlay-with.html
+void RenderState::release() {
+    blending(false);
+    depthTest(false);
+    depthMask(false);
+
+    m_program = { 0, false };
+    GL::useProgram(0);
+
+    GL::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    m_indexBuffer = { 0, false};
+
+
+    GL::bindBuffer(GL_ARRAY_BUFFER, 0);
+    m_vertexBuffer = { 0, true };
+}
+
+
 } // namespace Tangram

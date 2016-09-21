@@ -393,6 +393,7 @@ void Map::render() {
     impl->labels.drawDebug(impl->renderState, impl->view);
 
     FrameInfo::draw(impl->renderState, impl->view, impl->tileManager);
+    impl->renderState.release();
 }
 
 int Map::getViewportHeight() {
