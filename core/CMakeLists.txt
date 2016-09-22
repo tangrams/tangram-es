@@ -61,15 +61,28 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
 
 add_library(${CORE_LIBRARY} ${FOUND_SOURCES} ${FOUND_HEADERS})
 
-target_link_libraries(${CORE_LIBRARY}
-  PUBLIC
-  duktape
-  css-color-parser-cpp
-  geojson-vt-cpp
-  yaml-cpp
-  alfons
-  SQLiteCpp
-  sqlite3)
+if (UNIX AND NOT APPLE)
+  target_link_libraries(${CORE_LIBRARY}
+    PUBLIC
+    duktape
+    css-color-parser-cpp
+    geojson-vt-cpp
+    yaml-cpp
+    alfons
+    SQLiteCpp
+    sqlite3
+    dl)
+else()
+  target_link_libraries(${CORE_LIBRARY}
+    PUBLIC
+    duktape
+    css-color-parser-cpp
+    geojson-vt-cpp
+    yaml-cpp
+    alfons
+    SQLiteCpp
+    sqlite3)
+endif () 
 
 target_include_directories(${CORE_LIBRARY}
   PUBLIC
