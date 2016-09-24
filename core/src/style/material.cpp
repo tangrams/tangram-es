@@ -12,7 +12,7 @@ namespace Tangram {
 Material::Material() {
 }
 
-void Material::setEmission(glm::vec4 _emission){
+void Material::setEmission(const glm::vec4& _emission){
     m_emission = _emission;
     m_emission_texture.tex.reset();
     setEmissionEnabled(true);
@@ -24,7 +24,7 @@ void Material::setEmission(MaterialTexture _emissionTexture){
     setEmissionEnabled((bool)m_emission_texture.tex);
 }
 
-void Material::setAmbient(glm::vec4 _ambient){
+void Material::setAmbient(const glm::vec4& _ambient){
     m_ambient = _ambient;
     m_ambient_texture.tex.reset();
     setAmbientEnabled(true);
@@ -36,7 +36,7 @@ void Material::setAmbient(MaterialTexture _ambientTexture){
     setAmbientEnabled((bool)m_ambient_texture.tex);
 }
 
-void Material::setDiffuse(glm::vec4 _diffuse){
+void Material::setDiffuse(const glm::vec4& _diffuse){
     m_diffuse = _diffuse;
     m_diffuse_texture.tex.reset();
     setDiffuseEnabled(true);
@@ -48,7 +48,7 @@ void Material::setDiffuse(MaterialTexture _diffuseTexture){
     setDiffuseEnabled((bool)m_diffuse_texture.tex);
 }
 
-void Material::setSpecular(glm::vec4 _specular){
+void Material::setSpecular(const glm::vec4& _specular){
     m_specular = _specular;
     m_specular_texture.tex.reset();
     setSpecularEnabled(true);
