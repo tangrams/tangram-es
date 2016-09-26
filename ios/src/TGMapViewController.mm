@@ -6,6 +6,7 @@
 //  Updated by Matt Smollinger on 7/29/16.
 //  Copyright (c) 2016 Mapzen. All rights reserved.
 //
+#include "tangram.h"
 
 #import "TGMapViewController.h"
 #include "platform_ios.h"
@@ -15,6 +16,7 @@
 @property (nullable, strong, nonatomic) EAGLContext *context;
 @property (assign, nonatomic) CGFloat pixelScale;
 @property (assign, nonatomic) BOOL renderRequested;
+@property (assign, nonatomic, nullable) Tangram::Map* map;
 
 @end
 

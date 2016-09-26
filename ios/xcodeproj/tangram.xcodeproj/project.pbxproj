@@ -78,7 +78,6 @@
 				CED331D90DB64A848B493013 /* PBXTargetDependency */,
 				EE62E588204C41ED9793339F /* PBXTargetDependency */,
 				BDAAF571ED854F9CBD0EBAF7 /* PBXTargetDependency */,
-				CEF74CACC71A4A6DA2EFECFD /* PBXTargetDependency */,
 				853E7C3926E345E7A2C9EBA2 /* PBXTargetDependency */,
 				17CC0BFFC2314293BFC66FB2 /* PBXTargetDependency */,
 				48823124E1114E75B39E9F34 /* PBXTargetDependency */,
@@ -642,7 +641,7 @@
 		DB1174E71D66105E00CD70DB /* disposer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB1174E51D66105E00CD70DB /* disposer.cpp */; };
 		DB1174E81D66105E00CD70DB /* disposer.h in Headers */ = {isa = PBXBuildFile; fileRef = DB1174E61D66105E00CD70DB /* disposer.h */; };
 		DB3C117A1D4BBE2600534CA9 /* TGMapViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = DB3C11791D4BBE2600534CA9 /* TGMapViewController.mm */; };
-		DB3C117B1D4BC11900534CA9 /* TGMapViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = DB3C11771D4BBE1F00534CA9 /* TGMapViewController.h */; };
+		DB3C117B1D4BC11900534CA9 /* TGMapViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = DB3C11771D4BBE1F00534CA9 /* TGMapViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DB3C117C1D4BC14800534CA9 /* TGMapViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = DB3C11791D4BBE2600534CA9 /* TGMapViewController.mm */; };
 		DB44A83A1D996EFD00719BFB /* hb-blob.cc in Sources */ = {isa = PBXBuildFile; fileRef = DB44A80D1D996EFD00719BFB /* hb-blob.cc */; };
 		DB44A83C1D996EFD00719BFB /* hb-buffer.cc in Sources */ = {isa = PBXBuildFile; fileRef = DB44A80F1D996EFD00719BFB /* hb-buffer.cc */; };
@@ -746,20 +745,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		003B8EFBBABA462E89B2A517 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D8FA5D60A96745C3ACF1BC9D /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = ABBDAA98293E4207AFE4A442;
-			remoteInfo = ZERO_CHECK;
-		};
-		0149B31C0C6D48B083B72335 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D8FA5D60A96745C3ACF1BC9D /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 9461B6A3A0404FD68D5325F0;
-			remoteInfo = icucommon;
-		};
 		018232C15D2B455080D3F611 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D8FA5D60A96745C3ACF1BC9D /* Project object */;
@@ -1054,26 +1039,12 @@
 			remoteGlobalIDString = 110B8E59AA0848829E605DFA;
 			remoteInfo = alfons;
 		};
-		A72ECD065B474D7890E9A6CA /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D8FA5D60A96745C3ACF1BC9D /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 08BF3320EF0A434A9C866774;
-			remoteInfo = alfons_wrap;
-		};
 		AB681FFCC9224D0A94C7F984 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D8FA5D60A96745C3ACF1BC9D /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 7A6FBED9A04B4ADD8EF4453F;
 			remoteInfo = freetype;
-		};
-		ADAB1861307B4F9C8A96F707 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D8FA5D60A96745C3ACF1BC9D /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 110B8E59AA0848829E605DFA;
-			remoteInfo = alfons;
 		};
 		ADC33682A51A41A390606646 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1088,13 +1059,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 472AF0CE33A142AEA03A2848;
 			remoteInfo = "geojson-vt-cpp";
-		};
-		B33FB28A22E74AA3B6972601 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D8FA5D60A96745C3ACF1BC9D /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = B02B005F0C7848408139DAB3;
-			remoteInfo = linebreak;
 		};
 		B34AAF8612644D1B87B32677 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1144,13 +1108,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = A6D26DEAB769466088BD77C1;
 			remoteInfo = polyline_fs;
-		};
-		C2FE4FCDF55E4846BC42A2D8 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D8FA5D60A96745C3ACF1BC9D /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 7A6FBED9A04B4ADD8EF4453F;
-			remoteInfo = freetype;
 		};
 		CA89B600146742F3ACA8E6A4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1250,13 +1207,6 @@
 			remoteGlobalIDString = 110B8E59AA0848829E605DFA;
 			remoteInfo = alfons;
 		};
-		DBD8897E1D2FC1D800D05B1F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D8FA5D60A96745C3ACF1BC9D /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 08BF3320EF0A434A9C866774;
-			remoteInfo = alfons_wrap;
-		};
 		DBD889801D2FC1D800D05B1F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D8FA5D60A96745C3ACF1BC9D /* Project object */;
@@ -1319,13 +1269,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 472AF0CE33A142AEA03A2848;
 			remoteInfo = "geojson-vt-cpp";
-		};
-		F8B246990AB4419CA08BD487 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D8FA5D60A96745C3ACF1BC9D /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 595AA110554A4ABDAF673DC7;
-			remoteInfo = harfbuzz;
 		};
 		FB83B60042804568ACB96A33 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1537,7 +1480,6 @@
 		33EBD0B4ABEE4F4BB1BBE9E9 /* libfreetyped.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libfreetyped.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		3418AADB97104A90BD0A4063 /* CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; lastKnownFileType = text; name = CMakeLists.txt; path = core/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
 		3441011F320A4DF189D42404 /* uscript.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = uscript.c; path = "external/harfbuzz-icu-freetype/icu/common/uscript.c"; sourceTree = SOURCE_ROOT; };
-		34A120DD463049C0B4DC441B /* libalfons_wrap.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libalfons_wrap.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		35353C9387E14DD880274974 /* gl.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = gl.h; path = core/src/gl.h; sourceTree = SOURCE_ROOT; };
 		3663EF19BAA44F6890BB0B72 /* point.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode; fileEncoding = 4; name = point.fs; path = core/shaders/point.fs; sourceTree = SOURCE_ROOT; };
 		3847B717150243DCA53207A3 /* Main_iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = Main_iPhone.storyboard; path = ios/resources/Main_iPhone.storyboard; sourceTree = SOURCE_ROOT; };
@@ -2163,7 +2105,6 @@
 				9FDC9F5C088B419F82CF907A /* libicucommon.a */,
 				33EBD0B4ABEE4F4BB1BBE9E9 /* libfreetyped.a */,
 				3ED77B7A24B34274B96428CA /* libalfons.a */,
-				34A120DD463049C0B4DC441B /* libalfons_wrap.a */,
 				9745069B75EE48D79F08D9F9 /* liblinebreak.a */,
 				7D873DC3AA7B40FF82909987 /* libcore.a */,
 				DBD8895F1D2FC0EF00D05B1F /* tangram_framework.framework */,
@@ -3595,27 +3536,6 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		08BF3320EF0A434A9C866774 /* alfons_wrap */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 7571B68DFFBF4D24B5D23036 /* Build configuration list for PBXNativeTarget "alfons_wrap" */;
-			buildPhases = (
-				AA8A2531432F4170910BB39C /* Sources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				6C419F82FFB246F4B98A4053 /* PBXTargetDependency */,
-				4C0470919CE34FF3940EF549 /* PBXTargetDependency */,
-				0FB9FBF3A12B452681F9C437 /* PBXTargetDependency */,
-				EC447777DB274152A6897A94 /* PBXTargetDependency */,
-				2E32CF61F2B94EB78EA95E1E /* PBXTargetDependency */,
-				215E999513FB4461B54FDBD1 /* PBXTargetDependency */,
-			);
-			name = alfons_wrap;
-			productName = alfons_wrap;
-			productReference = 34A120DD463049C0B4DC441B /* libalfons_wrap.a */;
-			productType = "com.apple.product-type.library.static";
-		};
 		110B8E59AA0848829E605DFA /* alfons */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = EAECFB8D7EE143CF90B7FE11 /* Build configuration list for PBXNativeTarget "alfons" */;
@@ -3815,7 +3735,6 @@
 				DBD889791D2FC1D800D05B1F /* PBXTargetDependency */,
 				DBD8897B1D2FC1D800D05B1F /* PBXTargetDependency */,
 				DBD8897D1D2FC1D800D05B1F /* PBXTargetDependency */,
-				DBD8897F1D2FC1D800D05B1F /* PBXTargetDependency */,
 				DBD889811D2FC1D800D05B1F /* PBXTargetDependency */,
 				DBD889831D2FC1D800D05B1F /* PBXTargetDependency */,
 			);
@@ -3878,8 +3797,123 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				TargetAttributes = {
+					0C41B21D792C404FA5AB8D16 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					110B8E59AA0848829E605DFA = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					18FB8B8913DF474BAA35E61E = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					1C8E349C5B7048418B7E281A = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					40435E8D2545403FB68684AA = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					441599D8D0ED4F569C59E2AE = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					472AF0CE33A142AEA03A2848 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					4DC6D601129740A9ACCD2C3C = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					595AA110554A4ABDAF673DC7 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					5EF6728773D243A3A16C9956 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					69101BFA86C84CD493024E1D = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					716AE3BC09F9419FAB12383F = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					73C84822E36F4727A37CDAA0 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					7A6FBED9A04B4ADD8EF4453F = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					81F80F338AE54ED9A3F4C797 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					841DD1AB59E144F2859418B3 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					883E973B8158479CA6AB0D88 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					88FA58613CEF4970AA33621A = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					90A7FAD802A149F68399E789 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					9461B6A3A0404FD68D5325F0 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					9FD5C8ACE1E346D09BB4BFCA = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					A35E090E9A014CCC969277E8 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					A6D26DEAB769466088BD77C1 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					AAE76773E75C4377A4A57CF7 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					ABBDAA98293E4207AFE4A442 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					B02B005F0C7848408139DAB3 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					C0ABFE8C14DE4954BBA7D780 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					C41177EED60244C4A7751854 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					CD9C0C3F609C484BA511D513 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					D29D62E77F814DE485890F79 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					D455D32BEC034DB2A6F5D154 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					D5631D125C874E9EABE24458 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					D6D26B3C75474708962A06E3 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					D7B000CD12144ADFBEA3BDAC = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
 					DBD8895E1D2FC0EF00D05B1F = {
 						CreatedOnToolsVersion = 7.3.1;
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					DCBCA070F1D840C683B77231 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					E5E2F77E95B440E6BE091D88 = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					F029143B4C6A4E84B73279FF = {
+						DevelopmentTeam = LTQC954SPQ;
+					};
+					FC942AADA8744F68B2A3B230 = {
+						DevelopmentTeam = LTQC954SPQ;
 					};
 				};
 			};
@@ -3909,7 +3943,6 @@
 				0C41B21D792C404FA5AB8D16 /* dist */,
 				7A6FBED9A04B4ADD8EF4453F /* freetype */,
 				110B8E59AA0848829E605DFA /* alfons */,
-				08BF3320EF0A434A9C866774 /* alfons_wrap */,
 				B02B005F0C7848408139DAB3 /* linebreak */,
 				88FA58613CEF4970AA33621A /* ambientLight_glsl */,
 				FC942AADA8744F68B2A3B230 /* core */,
@@ -4671,13 +4704,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		AA8A2531432F4170910BB39C /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		DBD8895A1D2FC0EF00D05B1F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -4745,11 +4771,6 @@
 			target = 40435E8D2545403FB68684AA /* yaml-cpp */;
 			targetProxy = 699CB79D0EC84C3BA0791C34 /* PBXContainerItemProxy */;
 		};
-		0FB9FBF3A12B452681F9C437 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 7A6FBED9A04B4ADD8EF4453F /* freetype */;
-			targetProxy = C2FE4FCDF55E4846BC42A2D8 /* PBXContainerItemProxy */;
-		};
 		12C8F56EAB4F450B918A627F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = ABBDAA98293E4207AFE4A442 /* ZERO_CHECK */;
@@ -4770,11 +4791,6 @@
 			target = D29D62E77F814DE485890F79 /* duktape */;
 			targetProxy = FBF6A5C913A14781B97D0B54 /* PBXContainerItemProxy */;
 		};
-		215E999513FB4461B54FDBD1 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = ABBDAA98293E4207AFE4A442 /* ZERO_CHECK */;
-			targetProxy = 003B8EFBBABA462E89B2A517 /* PBXContainerItemProxy */;
-		};
 		296CCBDCE9674DB59C348DCE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = D7B000CD12144ADFBEA3BDAC /* tangram */;
@@ -4789,11 +4805,6 @@
 			isa = PBXTargetDependency;
 			target = 595AA110554A4ABDAF673DC7 /* harfbuzz */;
 			targetProxy = 6F210A228EDE4F42B51819E3 /* PBXContainerItemProxy */;
-		};
-		2E32CF61F2B94EB78EA95E1E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = B02B005F0C7848408139DAB3 /* linebreak */;
-			targetProxy = B33FB28A22E74AA3B6972601 /* PBXContainerItemProxy */;
 		};
 		31FC793E8D9842F48D07009C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -4814,11 +4825,6 @@
 			isa = PBXTargetDependency;
 			target = ABBDAA98293E4207AFE4A442 /* ZERO_CHECK */;
 			targetProxy = BEB020179C9B4816838DB20A /* PBXContainerItemProxy */;
-		};
-		4C0470919CE34FF3940EF549 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 9461B6A3A0404FD68D5325F0 /* icucommon */;
-			targetProxy = 0149B31C0C6D48B083B72335 /* PBXContainerItemProxy */;
 		};
 		4C8F41744023471D9771D918 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -4864,11 +4870,6 @@
 			isa = PBXTargetDependency;
 			target = 9461B6A3A0404FD68D5325F0 /* icucommon */;
 			targetProxy = 7143E71063904DF6A3237421 /* PBXContainerItemProxy */;
-		};
-		6C419F82FFB246F4B98A4053 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 595AA110554A4ABDAF673DC7 /* harfbuzz */;
-			targetProxy = F8B246990AB4419CA08BD487 /* PBXContainerItemProxy */;
 		};
 		6DE58F7DDFB240488EE414A8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -5045,11 +5046,6 @@
 			target = 9461B6A3A0404FD68D5325F0 /* icucommon */;
 			targetProxy = 3139A3E7CEBC4A49BB70054F /* PBXContainerItemProxy */;
 		};
-		CEF74CACC71A4A6DA2EFECFD /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 08BF3320EF0A434A9C866774 /* alfons_wrap */;
-			targetProxy = A72ECD065B474D7890E9A6CA /* PBXContainerItemProxy */;
-		};
 		D26FC95B3C0E4D5691850296 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 9FD5C8ACE1E346D09BB4BFCA /* material_glsl */;
@@ -5110,11 +5106,6 @@
 			target = 110B8E59AA0848829E605DFA /* alfons */;
 			targetProxy = DBD8897C1D2FC1D800D05B1F /* PBXContainerItemProxy */;
 		};
-		DBD8897F1D2FC1D800D05B1F /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 08BF3320EF0A434A9C866774 /* alfons_wrap */;
-			targetProxy = DBD8897E1D2FC1D800D05B1F /* PBXContainerItemProxy */;
-		};
 		DBD889811D2FC1D800D05B1F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = B02B005F0C7848408139DAB3 /* linebreak */;
@@ -5134,11 +5125,6 @@
 			isa = PBXTargetDependency;
 			target = 88FA58613CEF4970AA33621A /* ambientLight_glsl */;
 			targetProxy = 1444E9C6AA6441258AC4531A /* PBXContainerItemProxy */;
-		};
-		EC447777DB274152A6897A94 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 110B8E59AA0848829E605DFA /* alfons */;
-			targetProxy = ADAB1861307B4F9C8A96F707 /* PBXContainerItemProxy */;
 		};
 		EDA46961B6824507A5379EC1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -5291,72 +5277,6 @@
 				);
 			};
 			name = MinSizeRel;
-		};
-		067E622306BA497389DBA3A7 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = (
-					armv7,
-					armv7s,
-					arm64,
-				);
-				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Release";
-				EXECUTABLE_PREFIX = lib;
-				EXECUTABLE_SUFFIX = .a;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					PLATFORM_IOS,
-					"'U_STATIC_IMPLEMENTATION=1'",
-					PIC,
-					U_COMMON_IMPLEMENTATION,
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/external/alfons/src",
-					"$(SRCROOT)/external/../core/include/glm",
-					"$(SRCROOT)/external/alfons/src/logger",
-					"$(SRCROOT)/external/alfons/src/linebreak",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/harfbuzz-generated",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/harfbuzz/src",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/freetype-2.6/include",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/icu/common",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/icu/stubdata",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/icu/common/unicode",
-				);
-				INSTALL_PATH = "";
-				LIBRARY_STYLE = STATIC;
-				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CPLUSPLUSFLAGS = (
-					"-fvisibility=hidden",
-					"-fvisibility-inlines-hidden",
-					"-isysroot",
-					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk,
-					"-fobjc-abi-version=2",
-					"-fobjc-arc",
-					"-std=c++1y",
-					"-stdlib=libc++",
-					"-isysroot",
-					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk,
-				);
-				OTHER_LIBTOOLFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = alfons_wrap;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/src";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"$(inherited)",
-				);
-			};
-			name = Release;
 		};
 		09207954F7BF4578B0F8C41D /* MinSizeRel */ = {
 			isa = XCBuildConfiguration;
@@ -7853,72 +7773,6 @@
 			};
 			name = Debug;
 		};
-		7B352980ED104AE9A76C1F18 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = (
-					armv7,
-					armv7s,
-					arm64,
-				);
-				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/Debug";
-				EXECUTABLE_PREFIX = lib;
-				EXECUTABLE_SUFFIX = .a;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					PLATFORM_IOS,
-					"'U_STATIC_IMPLEMENTATION=1'",
-					PIC,
-					U_COMMON_IMPLEMENTATION,
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/external/alfons/src",
-					"$(SRCROOT)/external/../core/include/glm",
-					"$(SRCROOT)/external/alfons/src/logger",
-					"$(SRCROOT)/external/alfons/src/linebreak",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/harfbuzz-generated",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/harfbuzz/src",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/freetype-2.6/include",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/icu/common",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/icu/stubdata",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/icu/common/unicode",
-				);
-				INSTALL_PATH = "";
-				LIBRARY_STYLE = STATIC;
-				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CPLUSPLUSFLAGS = (
-					"-fvisibility=hidden",
-					"-fvisibility-inlines-hidden",
-					"-isysroot",
-					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk,
-					"-fobjc-abi-version=2",
-					"-fobjc-arc",
-					"-std=c++1y",
-					"-stdlib=libc++",
-					"-isysroot",
-					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk,
-				);
-				OTHER_LIBTOOLFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = alfons_wrap;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/src";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"$(inherited)",
-				);
-			};
-			name = Debug;
-		};
 		7B7E6DA5C7CD462FA3F3AF67 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -8178,72 +8032,6 @@
 				PRODUCT_NAME = polygon_fs;
 				SECTORDER_FLAGS = "";
 				SYMROOT = "$(SRCROOT)/build/ios/core";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"$(inherited)",
-				);
-			};
-			name = MinSizeRel;
-		};
-		867B764734BE47129BFE3FB6 /* MinSizeRel */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = (
-					armv7,
-					armv7s,
-					arm64,
-				);
-				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/MinSizeRel";
-				EXECUTABLE_PREFIX = lib;
-				EXECUTABLE_SUFFIX = .a;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					PLATFORM_IOS,
-					"'U_STATIC_IMPLEMENTATION=1'",
-					PIC,
-					U_COMMON_IMPLEMENTATION,
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/external/alfons/src",
-					"$(SRCROOT)/external/../core/include/glm",
-					"$(SRCROOT)/external/alfons/src/logger",
-					"$(SRCROOT)/external/alfons/src/linebreak",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/harfbuzz-generated",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/harfbuzz/src",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/freetype-2.6/include",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/icu/common",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/icu/stubdata",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/icu/common/unicode",
-				);
-				INSTALL_PATH = "";
-				LIBRARY_STYLE = STATIC;
-				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CPLUSPLUSFLAGS = (
-					"-fvisibility=hidden",
-					"-fvisibility-inlines-hidden",
-					"-isysroot",
-					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk,
-					"-fobjc-abi-version=2",
-					"-fobjc-arc",
-					"-std=c++1y",
-					"-stdlib=libc++",
-					"-isysroot",
-					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk,
-				);
-				OTHER_LIBTOOLFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = alfons_wrap;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/src";
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -9033,72 +8821,6 @@
 				);
 			};
 			name = Release;
-		};
-		9BD768F5B2384ABFB9719F0C /* RelWithDebInfo */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = (
-					armv7,
-					armv7s,
-					arm64,
-				);
-				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/build/ios/lib/RelWithDebInfo";
-				EXECUTABLE_PREFIX = lib;
-				EXECUTABLE_SUFFIX = .a;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					PLATFORM_IOS,
-					"'U_STATIC_IMPLEMENTATION=1'",
-					PIC,
-					U_COMMON_IMPLEMENTATION,
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/external/alfons/src",
-					"$(SRCROOT)/external/../core/include/glm",
-					"$(SRCROOT)/external/alfons/src/logger",
-					"$(SRCROOT)/external/alfons/src/linebreak",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/harfbuzz-generated",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/harfbuzz/src",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/freetype-2.6/include",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/harfbuzz/src/hb-ucdn",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/icu/common",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/icu/stubdata",
-					"$(SRCROOT)/external/harfbuzz-icu-freetype/icu/common/unicode",
-				);
-				INSTALL_PATH = "";
-				LIBRARY_STYLE = STATIC;
-				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CPLUSPLUSFLAGS = (
-					"-fvisibility=hidden",
-					"-fvisibility-inlines-hidden",
-					"-isysroot",
-					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk,
-					"-fobjc-abi-version=2",
-					"-fobjc-arc",
-					"-std=c++1y",
-					"-stdlib=libc++",
-					"-isysroot",
-					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk,
-				);
-				OTHER_LIBTOOLFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = alfons_wrap;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "$(SRCROOT)/build/ios/external/alfons/src";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"$(inherited)",
-				);
-			};
-			name = RelWithDebInfo;
 		};
 		A11C04E2E1C74BDD92CFA47E /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -12237,17 +11959,6 @@
 				0CF76743A52D480786EC0BC3 /* Release */,
 				DE8EFEA12E184B3DA938B586 /* MinSizeRel */,
 				3CDA802FB0534F2395398D61 /* RelWithDebInfo */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
-		};
-		7571B68DFFBF4D24B5D23036 /* Build configuration list for PBXNativeTarget "alfons_wrap" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				7B352980ED104AE9A76C1F18 /* Debug */,
-				067E622306BA497389DBA3A7 /* Release */,
-				867B764734BE47129BFE3FB6 /* MinSizeRel */,
-				9BD768F5B2384ABFB9719F0C /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
