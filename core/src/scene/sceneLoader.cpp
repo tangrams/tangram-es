@@ -40,7 +40,12 @@ using YAML::Node;
 using YAML::NodeType;
 using YAML::BadConversion;
 
-#define LOGNode(fmt, node, ...) LOGW(fmt ":\n'%s'\n", ## __VA_ARGS__, Dump(node).c_str())
+#if LOG_LEVEL >= 2
+#define LOGNode(fmt, node, ...) \
+do { logMsg("WARNING %s:%d: " fmt ":\n'%s'\n", __FILENAME__, __LINE__, ## __VA_ARGS__, Dump(node).c_str()); } while(0)
+#else
+#define LOGNode(fmt, ...)
+#endif
 
 namespace Tangram {
 
