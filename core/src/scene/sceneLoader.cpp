@@ -42,7 +42,11 @@ using YAML::BadConversion;
 
 #define COMPONENT_PATH_DELIMITER '.'
 
+#ifdef _MSC_VER
+#define LOGNode(fmt, node, ...) printf(fmt ":\n'%s'\n", __VA_ARGS__, Dump(node).c_str())
+#else
 #define LOGNode(fmt, node, ...) LOGW(fmt ":\n'%s'\n", ## __VA_ARGS__, Dump(node).c_str())
+#endif
 
 namespace Tangram {
 
