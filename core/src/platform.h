@@ -46,14 +46,15 @@ std::string stringFromFile(const char* _path);
 unsigned char* bytesFromFile(const char* _path, size_t& _size);
 
 /* Function type for receiving data from a successful network request */
-using UrlCallback = std::function<void(std::vector<char>&&)>;
+
+typedef void (*UrlCallback)(void* context, char* buffer, size_t sz);
 
 /* Start retrieving data from a URL asynchronously
  *
  * When the request is finished, the callback @_callback will be
  * run with the data that was retrieved from the URL @_url
  */
-bool startUrlRequest(const std::string& _url, UrlCallback _callback);
+bool startUrlRequest(void* context, const std::string& _url, UrlCallback _callback);
 
 /* Stop retrieving data from a URL that was previously requested
  */

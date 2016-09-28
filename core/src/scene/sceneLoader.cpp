@@ -589,20 +589,28 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
     // TODO: generalize using URI handlers
     if (std::regex_search(url, match, r)) {
         scene->resourceLoad++;
-        startUrlRequest(url, [=](std::vector<char>&& rawData) {
-                auto ptr = (unsigned char*)(rawData.data());
-                size_t dataSize = rawData.size();
+        typedef std::tuple<std::string, std::string, const std::shared_ptr<Scene>> SceneLoaderUrlRequestContext;
+        startUrlRequest(new SceneLoaderUrlRequestContext(name, url, std::move(scene)), url,
+            [](void*context, char*buffer, size_t sz) -> void {
+                auto contextTuplePtr = (SceneLoaderUrlRequestContext*)context;
+                auto &contextTuple = *contextTuplePtr;
+                std::string name = std::get<0>(contextTuple);
+                std::string url = std::get<1>(contextTuple);
+                auto scene = std::move(std::get<2>(contextTuple));
+                delete contextTuplePtr;
                 std::lock_guard<std::mutex> lock(m_textureMutex);
                 auto texture = scene->getTexture(name);
                 if (texture) {
-                    if (!texture->loadImageFromMemory(ptr, dataSize)) {
+                    if (!texture->loadImageFromMemory((const unsigned char*)buffer, sz)) {
                         LOGE("Invalid texture data '%s'", url.c_str());
                     }
 
                     updateSpriteNodes(name, texture, scene);
                     scene->resourceLoad--;
                 }
-            });
+            }
+        );
+
         texture = std::make_shared<Texture>(nullptr, 0, options, generateMipmaps);
     } else {
 

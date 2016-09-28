@@ -193,11 +193,8 @@ bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb)
     // lambda captured parameters are const by default, we want "task" (moved) to be non-const,
     // hence "mutable"
     // Refer: http://en.cppreference.com/w/cpp/language/lambda
-    return startUrlRequest(url,
-            [this, _cb, task = std::move(_task)](std::vector<char>&& rawData) mutable {
-                this->onTileLoaded(std::move(rawData), std::move(task), _cb);
-            });
-
+    auto context = new DataSourceUrlRequestContext(std::move(_task), _cb, this);
+    return startUrlRequest(context, url, DataSourceUrlRequestCallback);
 }
 
 void DataSource::cancelLoadingTile(const TileID& _tileID) {
@@ -234,6 +231,15 @@ void DataSource::addRasterSource(std::shared_ptr<DataSource> _rasterSource) {
         m_maxDisplayZoom = rasterMaxDisplayZoom;
     }
     m_rasterSources.push_back(_rasterSource);
+}
+
+void DataSourceUrlRequestCallback(void* context, char*buffer, size_t sz) {
+    auto contextTuplePtr = (DataSourceUrlRequestContext*)context;
+    auto &contextTuple = *contextTuplePtr;
+    auto source = std::get<2>(contextTuple);
+    std::vector<char> rawData(buffer, buffer + sz);
+    source->onTileLoaded(std::move(rawData), std::move(std::get<0>(contextTuple)), std::get<1>(contextTuple));
+    delete contextTuplePtr;
 }
 
 }

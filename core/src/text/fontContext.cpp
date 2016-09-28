@@ -297,21 +297,29 @@ void FontContext::fetch(const FontDescription& _ft) {
     if (std::regex_search(_ft.uri, match, regex)) {
         // Load remote
         resourceLoad++;
-        startUrlRequest(_ft.uri, [&, _ft](std::vector<char>&& rawData) {
-            if (rawData.size() == 0) {
-                LOGE("Bad URL request for font %s at URL %s", _ft.alias.c_str(), _ft.uri.c_str());
-            } else {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                char* data = reinterpret_cast<char*>(rawData.data());
+        typedef std::tuple<const FontDescription, FontContext*> FontContextUrlRequestContext;
 
-                for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-                    auto font = m_alfons.getFont(_ft.alias, size);
-                    font->addFace(m_alfons.addFontFace(alfons::InputSource(data, rawData.size()), size));
+        startUrlRequest(new FontContextUrlRequestContext(_ft, this), _ft.uri,
+            [](void*context, char*buffer, size_t sz) {
+                auto contextTuplePtr = (FontContextUrlRequestContext*)context;
+                auto &contextTuple = *contextTuplePtr;
+                auto _ft = std::get<0>(contextTuple);
+                auto fontContext = std::get<1>(contextTuple);
+                delete contextTuplePtr;
+
+                if (sz == 0) {
+                    LOGE("Bad URL request for font %s at URL %s", _ft.alias.c_str(), _ft.uri.c_str());
+                } else {
+                    std::lock_guard<std::mutex> lock(fontContext->m_mutex);
+                    for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
+                        auto font = fontContext->m_alfons.getFont(_ft.alias, size);
+                        font->addFace(fontContext->m_alfons.addFontFace(alfons::InputSource(buffer, sz), size));
+                    }
                 }
-            }
 
-            resourceLoad--;
-        });
+                fontContext->resourceLoad--;
+            }
+        );
     } else {
         // Load from local storage
         size_t dataSize = 0;

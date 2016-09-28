@@ -155,13 +155,8 @@ bool RasterSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _c
 
     auto copyTask = _task;
 
-    // lambda captured parameters are const by default, we want "task" (moved) to be non-const,
-    // hence "mutable"
-    // Refer: http://en.cppreference.com/w/cpp/language/lambda
-    bool status = startUrlRequest(url,
-            [this, _cb, task = std::move(_task)](std::vector<char>&& rawData) mutable {
-                this->onTileLoaded(std::move(rawData), std::move(task), _cb);
-            });
+    auto context = new DataSourceUrlRequestContext(std::move(_task), _cb, this);
+    bool status = startUrlRequest(context, url, DataSourceUrlRequestCallback);
 
     // For "dependent" raster datasources if this returns false make sure to create a black texture
     // for tileID in this task, and consider dependent raster ready

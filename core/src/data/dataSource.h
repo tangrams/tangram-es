@@ -4,10 +4,12 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <tuple>
 
 #include "tile/tileTask.h"
 
 namespace Tangram {
+typedef std::tuple<std::shared_ptr<TileTask>, TileTaskCb, DataSource*> DataSourceUrlRequestContext;
 
 class MapProjection;
 struct TileData;
@@ -89,10 +91,10 @@ public:
     /* Avoid RTTI by adding a boolean check on the data source object */
     virtual bool isRaster() const { return false; }
 
-protected:
 
     virtual void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
                               TileTaskCb _cb);
+protected:
 
     /* Constructs the URL of a tile using <m_urlTemplate> */
     virtual void constructURL(const TileID& _tileCoord, std::string& _url) const;
@@ -136,5 +138,7 @@ protected:
     /* vector of raster sources (as raster samplers) referenced by this datasource */
     std::vector<std::shared_ptr<DataSource>> m_rasterSources;
 };
+
+void DataSourceUrlRequestCallback(void* context, char*buffer, size_t sz);
 
 }

@@ -64,16 +64,22 @@ Node Importer::applySceneImports(const std::string& scenePath, const std::string
         // TODO: generic handling of uri
         if (isUrl(path)) {
             progressCounter++;
-            startUrlRequest(path,
-                    [&, p = path](std::vector<char>&& rawData) {
-
-                    if (!rawData.empty()) {
-                        std::unique_lock<std::mutex> lock(sceneMutex);
-                        processScene(p, std::string(rawData.data(), rawData.size()));
+            typedef std::tuple<std::string, Importer*> ImporterUrlRequestContext;
+            startUrlRequest(new ImporterUrlRequestContext(path, this), path,
+                [](void*context, char*buffer, size_t sz) -> void {
+                    auto contextTuplePtr = (ImporterUrlRequestContext*)context;
+                    auto &contextTuple = *contextTuplePtr;
+                    auto p = std::get<0>(contextTuple);
+                    auto importer= std::get<1>(contextTuple);
+                    delete contextTuplePtr;
+                    if (sz > 0) {
+                        std::unique_lock<std::mutex> lock(importer->sceneMutex);
+                        importer->processScene(p, std::string(buffer, sz));
                     }
                     progressCounter--;
-                    m_condition.notify_all();
-            });
+                    importer->m_condition.notify_all();
+                }
+            );
         } else {
             std::unique_lock<std::mutex> lock(sceneMutex);
             processScene(path, getSceneString(path));
