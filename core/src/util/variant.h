@@ -38,11 +38,7 @@ namespace detail {
 /* Common Value type for Feature Properties and Filter Values */
 using Value = variant<none_type, double, std::string>;
 }
-
-class Value : public detail::Value {
-    using Base = detail::Value;
-    using Base::Base;
-};
+using Value = detail::Value;
 
 const static Value NOT_A_VALUE(none_type{});
 
