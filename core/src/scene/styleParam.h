@@ -88,11 +88,11 @@ static inline std::string unitString(Unit unit) {
 
 template <typename T>
 struct UnitVec {
-    T value = T(0.0);
-    static constexpr int size = sizeof(value)/sizeof(value[0]);
+    T value;
+    static constexpr int size = sizeof(UnitVec::value)/sizeof(UnitVec::value[0]);
     Unit units[size];
 
-    UnitVec() {
+    UnitVec():value(0.0){
         for (int i = 0; i < size; ++i) {
             units[i] = Unit::meter;
         }
