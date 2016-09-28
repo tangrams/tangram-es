@@ -4,6 +4,7 @@
 #include "util/types.h"
 
 #include <mutex>
+#include <unordered_map>
 
 namespace mapbox {
 namespace util {
@@ -16,6 +17,7 @@ class ProjectedFeature;
 namespace Tangram {
 
 using GeoJSONVT = mapbox::util::geojsonvt::GeoJSONVT;
+using ProjectedFeature = mapbox::util::geojsonvt::ProjectedFeature;
 
 struct Properties;
 
@@ -32,6 +34,8 @@ public:
     void addPoint(const Properties& _tags, LngLat _point);
     void addLine(const Properties& _tags, const Coordinates& _line);
     void addPoly(const Properties& _tags, const std::vector<Coordinates>& _poly);
+    void addFeature(ProjectedFeature& feature);
+    void removeFeature(uint32_t featureId);
 
     virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) override;
     std::shared_ptr<TileTask> createTask(TileID _tileId, int _subTask) override;
@@ -46,7 +50,9 @@ protected:
 
     std::unique_ptr<GeoJSONVT> m_store;
     mutable std::mutex m_mutexStore;
-    std::vector<mapbox::util::geojsonvt::ProjectedFeature> m_features;
+    std::vector<ProjectedFeature> m_features;
+    uint32_t m_maxFeatureId;
+    std::unordered_map<uint32_t, size_t> m_featureIdMap;
     bool m_hasPendingData = false;
 
 };
