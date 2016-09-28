@@ -153,7 +153,7 @@ std::string Properties::toJson() const {
 
     json += " }";
 
-    return json;
+    return std::move(json);
 }
 
 }
