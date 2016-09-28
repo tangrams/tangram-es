@@ -130,15 +130,23 @@ void DataSource::clearData() {
     m_generation++;
 }
 
+void replaceAll(std::string &str, const char*pattern, int32_t value) {
+    int length = strlen(pattern);
+    while (true) {
+        size_t pos = str.find(pattern);
+        if (pos == std::string::npos) {
+            break;
+        }
+        str.replace(pos, length, std::to_string(value));
+    }
+}
+
 void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const {
     _url.assign(m_urlTemplate);
     try {
-        size_t xpos = _url.find("{x}");
-        _url.replace(xpos, 3, std::to_string(_tileCoord.x));
-        size_t ypos = _url.find("{y}");
-        _url.replace(ypos, 3, std::to_string(_tileCoord.y));
-        size_t zpos = _url.find("{z}");
-        _url.replace(zpos, 3, std::to_string(_tileCoord.z));
+        replaceAll(_url, "{x}", _tileCoord.x);
+        replaceAll(_url, "{y}", _tileCoord.y);
+        replaceAll(_url, "{z}", _tileCoord.z);
     } catch(...) {
         LOGE("Bad URL template!");
     }
