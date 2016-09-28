@@ -3,9 +3,10 @@
 #include <vector>
 #include <string>
 
+#include <util/variant.h>
+
 namespace Tangram {
 
-class Value;
 struct PropertyItem;
 
 struct Properties {
