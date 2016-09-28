@@ -26,11 +26,15 @@
 #endif
 
 namespace protobuf {
-
+#ifdef _MSC_VER
+#define FORCEINLINE inline
+#define NOINLINE
+#define PBF_INLINE FORCEINLINE
+#else
 #define FORCEINLINE inline __attribute__((always_inline))
 #define NOINLINE __attribute__((noinline))
 #define PBF_INLINE FORCEINLINE
-
+#endif
 class message {
     typedef const char * value_type;
     value_type data_;
