@@ -162,9 +162,18 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
         if (name.isEmpty()) {
             name = "unnamed";
         }
-        Toast.makeText(getApplicationContext(),
-                "Selected: " + name + " at: " + positionX + ", " + positionY,
-                Toast.LENGTH_SHORT).show();
+
+        Log.d("Tangram", "Picked: " + name);
+        final String message = name;
+        runOnUiThread(new Runnable() {
+                          @Override
+                          public void run() {
+                              Toast.makeText(getApplicationContext(),
+                                      "Selected: " + message,
+                                      Toast.LENGTH_SHORT).show();
+                          }
+                      });
+
     }
 }
 

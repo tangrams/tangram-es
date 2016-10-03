@@ -308,7 +308,9 @@ void setCurrentThreadPriority(int priority) {
     setpriority(PRIO_PROCESS, tid, priority);
 }
 
-void featurePickCallback(JNIEnv* jniEnv, jobject listener, const std::vector<Tangram::TouchItem>& items) {
+void featurePickCallback(jobject listener, const std::vector<Tangram::TouchItem>& items) {
+
+    JniThreadBinding jniEnv(jvm);
 
     auto result = items[0];
     auto properties = result.properties;
@@ -323,6 +325,7 @@ void featurePickCallback(JNIEnv* jniEnv, jobject listener, const std::vector<Tan
     }
 
     jniEnv->CallVoidMethod(listener, onFeaturePickMID, hashmap, position[0], position[1]);
+    jniEnv->DeleteGlobalRef(listener);
 }
 
 

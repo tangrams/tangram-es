@@ -384,6 +384,8 @@ bool Map::update(float _dt) {
 
 void Map::pickFeaturesAt(float _x, float _y, std::function<void(const std::vector<TouchItem>&)> _onReadyCallback) {
     impl->selectionQueries.push_back({{_x, _y}, _onReadyCallback});
+
+    requestRender();
 }
 
 void Map::render() {
