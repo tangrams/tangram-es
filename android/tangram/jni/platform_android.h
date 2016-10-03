@@ -14,6 +14,6 @@ namespace Tangram {
 struct TouchItem;
 }
 
-void featurePickCallback(JNIEnv* jniEnv, jobject listener, const std::vector<Tangram::TouchItem>& items);
+void featurePickCallback(jobject listener, const std::vector<Tangram::TouchItem>& items);
 
 std::string stringFromJString(JNIEnv* jniEnv, jstring string);
