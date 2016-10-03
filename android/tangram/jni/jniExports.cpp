@@ -214,10 +214,12 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickFeature(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat posX, jfloat posY, jobject listener) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        auto& items = map->pickFeatureLabelsAt(posX, posY);
-        if (!items.empty()) {
-            featurePickCallback(jniEnv, listener, items);
-        }
+        auto object = jniEnv->NewGlobalRef(listener);
+        map->pickFeaturesAt(posX, posY, [object](const auto& items) {
+            if (!items.empty()) {
+                featurePickCallback(object, items);
+            }
+        });
     }
 
     JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeAddDataSource(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring name) {
