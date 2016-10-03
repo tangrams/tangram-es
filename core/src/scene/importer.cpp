@@ -95,6 +95,7 @@ void Importer::processScene(const std::string &scenePath, const std::string &sce
         normalizeSceneImports(sceneNode, scenePath);
         normalizeSceneDataSources(sceneNode, scenePath);
         normalizeSceneTextures(sceneNode, scenePath);
+        normalizeFonts(sceneNode, scenePath);
 
         m_scenes[scenePath] = sceneNode;
 
@@ -234,6 +235,28 @@ void Importer::normalizeSceneTextures(Node& root, const std::string& parentPath)
                                 auto name = styleUniform.value.get<std::string>();
                                 setNormalizedTexture(uniformValue, {name}, parentPath);
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void Importer::normalizeFonts(Node& root, const std::string& parentPath) {
+    if (Node fonts = root["fonts"]) {
+        if (fonts.IsMap()) {
+            for (const auto& font : fonts) {
+                if (font.second.IsMap()) {
+                    auto urlNode = font.second["url"];
+                    if (urlNode.IsScalar()) {
+                        urlNode = normalizePath(urlNode.Scalar(), parentPath);
+                    }
+                } else if (font.second.IsSequence()) {
+                    for (auto& fontNode : font.second) {
+                        auto urlNode = fontNode["url"];
+                        if (urlNode.IsScalar()) {
+                            urlNode = normalizePath(urlNode.Scalar(), parentPath);
                         }
                     }
                 }
