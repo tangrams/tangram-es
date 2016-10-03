@@ -70,7 +70,7 @@ public:
     InputHandler inputHandler{view};
     TileWorker tileWorker{MAX_WORKERS};
     std::shared_ptr<FeatureSelection> featureSelection = std::make_shared<FeatureSelection>();
-    TileManager tileManager{tileWorker, featureSelection};
+    TileManager tileManager{tileWorker};
     MarkerManager markerManager;
 
     std::vector<SceneUpdate> sceneUpdates;
@@ -407,7 +407,6 @@ void Map::render() {
         if (drawSelectionBuffer) { return; }
 
         for (const auto& query : impl->selectionQueries) {
-            LOG("Solving query %f %f", query.position[0], query.position[1]);
             std::vector<TouchItem> items;
 
             float x = query.position[0] / impl->view.getWidth();
@@ -420,6 +419,7 @@ void Map::render() {
             if (props) {
                 items.push_back({props, {x, y}, 0});
             }
+
             query.callback(items);
         }
 
