@@ -21,7 +21,7 @@ public:
 
     uint32_t colorIdentifier(const Feature& _feature, const TileID& _tileID);
 
-    bool clearFeaturesForTile(const TileID& _tileID);
+    bool clearFeaturesForTile(TileID _tileID);
 
     std::shared_ptr<Properties> featurePropertiesForEntry(uint32_t entry) const;
 

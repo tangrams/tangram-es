@@ -27,7 +27,7 @@ uint32_t FeatureSelection::colorIdentifier(const Feature& _feature, const TileID
     return m_entry;
 }
 
-bool FeatureSelection::clearFeaturesForTile(const TileID& _tileID) {
+bool FeatureSelection::clearFeaturesForTile(TileID _tileID) {
 
     auto it = m_tileFeatures.find(_tileID);
     if (it != m_tileFeatures.end()) {
