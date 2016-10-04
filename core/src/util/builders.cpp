@@ -128,19 +128,19 @@ void Builders::buildPolygonExtrusion(const Polygon& _polygon, float _minHeight, 
 
             // 1st vertex top
             a.z = _maxHeight;
-            _ctx.addVertex(a, normalVector, glm::vec2(1.,0.));
+            _ctx.addVertex(a, normalVector, glm::vec2(1.,1.));
 
             // 2nd vertex top
             b.z = _maxHeight;
-            _ctx.addVertex(b, normalVector, glm::vec2(0.,0.));
+            _ctx.addVertex(b, normalVector, glm::vec2(0.,1.));
 
             // 1st vertex bottom
             a.z = _minHeight;
-            _ctx.addVertex(a, normalVector, glm::vec2(1.,1.));
+            _ctx.addVertex(a, normalVector, glm::vec2(1.,0.));
 
             // 2nd vertex bottom
             b.z = _minHeight;
-            _ctx.addVertex(b, normalVector, glm::vec2(0.,1.));
+            _ctx.addVertex(b, normalVector, glm::vec2(0.,0.));
 
             // Start the index from the previous state of the vertex Data
             _ctx.indices.push_back(vertexDataOffset);
