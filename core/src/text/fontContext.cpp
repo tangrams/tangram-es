@@ -317,35 +317,34 @@ void FontContext::fetch(const FontDescription& _ft) {
         size_t dataSize = 0;
         unsigned char* data = nullptr;
 
-        if (loadFontAlloc(_ft.bundleAlias, data, dataSize)) {
-            const char* rdata = reinterpret_cast<const char*>(data);
+        if (loadFontAlloc(_ft.uri, &data, dataSize)) {
+            LOGN("Add local font %s (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
 
             for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
                 auto font = m_alfons.getFont(_ft.alias, size);
-                font->addFace(m_alfons.addFontFace(alfons::InputSource(rdata, dataSize), size));
+                font->addFace(m_alfons.addFontFace(alfons::InputSource(reinterpret_cast<const char*>(data), dataSize), size));
             }
 
             free(data);
         } else {
-            LOGW("Local font at path %s can't be found", _ft.uri.c_str());
+            LOGW("Local font at path %s can't be found (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
         }
     }
 }
 
-bool FontContext::loadFontAlloc(const std::string& _bundleFontPath, unsigned char* _data, size_t& _dataSize) {
+bool FontContext::loadFontAlloc(const std::string& _bundleFontPath, unsigned char** _data, size_t& _dataSize) {
 
     if (!m_sceneResourceRoot.empty()) {
         std::string resourceFontPath = m_sceneResourceRoot + _bundleFontPath;
-        _data = bytesFromFile(resourceFontPath.c_str(), _dataSize);
-
+        *_data = bytesFromFile(resourceFontPath.c_str(), _dataSize);
         if (_data) {
             return true;
         }
     }
 
-    _data = bytesFromFile(_bundleFontPath.c_str(), _dataSize);
+    *_data = bytesFromFile(_bundleFontPath.c_str(), _dataSize);
 
-    if (_data) {
+    if (*_data) {
         return true;
     }
 
@@ -390,7 +389,7 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     // Assuming bundled ttf file follows this convention
     std::string bundleFontPath = m_bundlePath + FontDescription::BundleAlias(_family, _style, _weight);
 
-    if (!loadFontAlloc(bundleFontPath, data, dataSize)) {
+    if (!loadFontAlloc(bundleFontPath, &data, dataSize)) {
 
         // Try fallback
         std::string sysFontPath = systemFontPath(_family, _weight, _style);

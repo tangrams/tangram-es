@@ -126,7 +126,7 @@ public:
 
 private:
 
-    bool loadFontAlloc(const std::string& _bundleFontPath, unsigned char* _data, size_t& _dataSize);
+    bool loadFontAlloc(const std::string& _bundleFontPath, unsigned char** _data, size_t& _dataSize);
 
     float m_sdfRadius;
     ScratchBuffer m_scratch;
