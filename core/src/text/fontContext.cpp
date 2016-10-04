@@ -388,7 +388,7 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     unsigned char* data = nullptr;
 
     // Assuming bundled ttf file follows this convention
-    std::string bundleFontPath = m_bundlePath + FontDescription::BundleAlias(_family, _weight, _style);
+    std::string bundleFontPath = m_bundlePath + FontDescription::BundleAlias(_family, _style, _weight);
 
     if (!loadFontAlloc(bundleFontPath, data, dataSize)) {
 
@@ -397,7 +397,7 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
         data = bytesFromFile(sysFontPath.c_str(), dataSize);
 
         if (!data) {
-            LOGN("Could not load font file %s", FontDescription::BundleAlias(_family, _weight, _style).c_str());
+            LOGN("Could not load font file %s", FontDescription::BundleAlias(_family, _style, _weight).c_str());
 
             // add fallbacks from default font
             font->addFaces(*m_font[sizeIndex]);
