@@ -59,10 +59,10 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
     Importer sceneImporter;
 
     if ((root = sceneImporter.applySceneImports(_scene->path(), _scene->resourceRoot())) ) {
-        applyConfig(root, _scene);
-
         // Load font resources
         _scene->fontContext()->loadFonts();
+
+        applyConfig(root, _scene);
 
         return true;
     }

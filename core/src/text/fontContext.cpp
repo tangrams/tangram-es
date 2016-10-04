@@ -307,6 +307,9 @@ void FontContext::fetch(const FontDescription& _ft) {
                 for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
                     auto font = m_alfons.getFont(_ft.alias, size);
                     font->addFace(m_alfons.addFontFace(alfons::InputSource(data, rawData.size()), size));
+
+                    // add fallbacks from default font
+                    font->addFaces(*m_font[i]);
                 }
             }
 
@@ -323,6 +326,9 @@ void FontContext::fetch(const FontDescription& _ft) {
             for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
                 auto font = m_alfons.getFont(_ft.alias, size);
                 font->addFace(m_alfons.addFontFace(alfons::InputSource(reinterpret_cast<const char*>(data), dataSize), size));
+
+                // add fallbacks from default font
+                font->addFaces(*m_font[i]);
             }
 
             free(data);
