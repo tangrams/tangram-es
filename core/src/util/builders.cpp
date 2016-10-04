@@ -85,15 +85,14 @@ void Builders::buildPolygon(const Polygon& _polygon, float _height, PolygonBuild
 
         auto& p = _polygon[ring][src - offset];
         glm::vec3 coord(p.x, p.y, _height);
-        static const glm::vec3 normal(0.0, 0.0, 1.0);
 
         if (_ctx.useTexCoords) {
             glm::vec2 uv(mapValue(coord.x, min.x, max.x, 0., 1.),
                          mapValue(coord.y, min.y, max.y, 1., 0.));
 
-            _ctx.addVertex(coord, normal, uv);
+            _ctx.addVertex(coord, glm::vec3(0.0, 0.0, 1.0), uv);
         } else {
-            _ctx.addVertex(coord, normal, glm::vec2(0));
+            _ctx.addVertex(coord, glm::vec3(0.0, 0.0, 1.0), glm::vec2(0));
         }
     }
 

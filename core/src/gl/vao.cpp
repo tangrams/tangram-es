@@ -12,7 +12,7 @@ void Vao::initialize(RenderState& rs, ShaderProgram& _program, const std::vector
 
     m_glVAOs.resize(_vertexOffsets.size());
 
-    GL_CHECK(glGenVertexArrays(m_glVAOs.size(), m_glVAOs.data()));
+    GL::genVertexArrays(m_glVAOs.size(), m_glVAOs.data());
 
     fastmap<std::string, GLuint> locations;
 
@@ -26,7 +26,7 @@ void Vao::initialize(RenderState& rs, ShaderProgram& _program, const std::vector
     for (size_t i = 0; i < _vertexOffsets.size(); ++i) {
         auto vertexIndexOffset = _vertexOffsets[i];
         int nVerts = vertexIndexOffset.second;
-        GL_CHECK(glBindVertexArray(m_glVAOs[i]));
+        GL::bindVertexArray(m_glVAOs[i]);
 
         rs.vertexBufferUnset(_vertexBuffer);
         rs.vertexBuffer(_vertexBuffer);
@@ -50,17 +50,17 @@ bool Vao::isInitialized() {
 
 void Vao::bind(unsigned int _index) {
     if (_index < m_glVAOs.size()) {
-        GL_CHECK(glBindVertexArray(m_glVAOs[_index]));
+        GL::bindVertexArray(m_glVAOs[_index]);
     }
 }
 
 void Vao::unbind() {
-    GL_CHECK(glBindVertexArray(0));
+    GL::bindVertexArray(0);
 }
 
 void Vao::dispose() {
     if (!m_glVAOs.empty()) {
-        GL_CHECK(glDeleteVertexArrays(m_glVAOs.size(), m_glVAOs.data()));
+        GL::deleteVertexArrays(m_glVAOs.size(), m_glVAOs.data());
         m_glVAOs.clear();
     }
 }

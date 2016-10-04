@@ -1,6 +1,5 @@
 #pragma once
 
-#include "platform.h"
 #include "gl.h"
 #include <string>
 #include <unordered_map>

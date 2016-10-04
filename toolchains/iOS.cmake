@@ -56,6 +56,8 @@ macro(add_framework FWNAME APPNAME LIBPATH)
     endif()
 endmacro(add_framework)
 
+set(SOURCES ${SOURCES}
+  ${PROJECT_SOURCE_DIR}/core/common/platform_gl.cpp)
 
 add_executable(${EXECUTABLE_NAME} ${APP_TYPE} ${HEADERS} ${SOURCES} ${RESOURCES} ${IOS_RESOURCES})
 

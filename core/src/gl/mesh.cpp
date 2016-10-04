@@ -4,6 +4,7 @@
 #include "hardware.h"
 #include "platform.h"
 #include "gl/error.h"
+#include "log.h"
 
 namespace Tangram {
 
@@ -47,11 +48,11 @@ MeshBase::~MeshBase() {
         if (rs.isValidGeneration(generation)) {
             if (glVertexBuffer) {
                 rs.vertexBufferUnset(glVertexBuffer);
-                GL_CHECK(glDeleteBuffers(1, &glVertexBuffer));
+                GL::deleteBuffers(1, &glVertexBuffer);
             }
             if (glIndexBuffer) {
                 rs.indexBufferUnset(glIndexBuffer);
-                GL_CHECK(glDeleteBuffers(1, &glIndexBuffer));
+                GL::deleteBuffers(1, &glIndexBuffer);
             }
             vaos.dispose();
         }
@@ -105,21 +106,20 @@ void MeshBase::subDataUpload(RenderState& rs, GLbyte* _data) {
     long vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
     // invalidate/orphane the data store on the driver
-    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint));
+    GL::bufferData(GL_ARRAY_BUFFER, vertexBytes, NULL, m_hint);
 
     if (Hardware::supportsMapBuffer) {
-        GLvoid* dataStore = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-        GL_CHECK();
+        GLvoid* dataStore = GL::mapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 
         // write memory client side
         std::memcpy(dataStore, data, vertexBytes);
 
-        GL_CHECK(glUnmapBuffer(GL_ARRAY_BUFFER));
+        GL::unmapBuffer(GL_ARRAY_BUFFER);
     } else {
 
         // if this buffer is still used by gpu on current frame this call will not wait
         // for the frame to finish using the vbo but "directly" send command to upload the data
-        GL_CHECK(glBufferData(GL_ARRAY_BUFFER, vertexBytes, data, m_hint));
+        GL::bufferData(GL_ARRAY_BUFFER, vertexBytes, data, m_hint);
     }
 
     m_dirty = false;
@@ -129,14 +129,14 @@ void MeshBase::upload(RenderState& rs) {
 
     // Generate vertex buffer, if needed
     if (m_glVertexBuffer == 0) {
-        GL_CHECK(glGenBuffers(1, &m_glVertexBuffer));
+        GL::genBuffers(1, &m_glVertexBuffer);
     }
 
     // Buffer vertex data
     int vertexBytes = m_nVertices * m_vertexLayout->getStride();
 
     rs.vertexBuffer(m_glVertexBuffer);
-    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, m_hint));
+    GL::bufferData(GL_ARRAY_BUFFER, vertexBytes, m_glVertexData, m_hint);
 
     delete[] m_glVertexData;
     m_glVertexData = nullptr;
@@ -144,13 +144,13 @@ void MeshBase::upload(RenderState& rs) {
     if (m_glIndexData) {
 
         if (m_glIndexBuffer == 0) {
-            GL_CHECK(glGenBuffers(1, &m_glIndexBuffer));
+            GL::genBuffers(1, &m_glIndexBuffer);
         }
 
         // Buffer element index data
         rs.indexBuffer(m_glIndexBuffer);
 
-        GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_nIndices * sizeof(GLushort), m_glIndexData, m_hint));
+        GL::bufferData(GL_ELEMENT_ARRAY_BUFFER, m_nIndices * sizeof(GLushort), m_glIndexData, m_hint);
 
         delete[] m_glIndexData;
         m_glIndexData = nullptr;
@@ -214,10 +214,10 @@ bool MeshBase::draw(RenderState& rs, ShaderProgram& _shader) {
 
         // Draw as elements or arrays
         if (nIndices > 0) {
-            GL_CHECK(glDrawElements(m_drawMode, nIndices, GL_UNSIGNED_SHORT,
-                (void*)(indiceOffset * sizeof(GLushort))));
+            GL::drawElements(m_drawMode, nIndices, GL_UNSIGNED_SHORT,
+                             (void*)(indiceOffset * sizeof(GLushort)));
         } else if (nVertices > 0) {
-            GL_CHECK(glDrawArrays(m_drawMode, 0, nVertices));
+            GL::drawArrays(m_drawMode, 0, nVertices);
         }
 
         vertexOffset += nVertices;

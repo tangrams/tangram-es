@@ -14,6 +14,7 @@
 #include "view/view.h"
 #include "marker/marker.h"
 #include "tangram.h"
+#include "log.h"
 
 #include "shaders/rasters_glsl.h"
 
@@ -217,13 +218,13 @@ void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) 
         case Blending::add:
             rs.blending(GL_TRUE);
             rs.blendingFunc(GL_ONE, GL_ONE);
-            rs.depthTest(GL_FALSE);
+            rs.depthTest(GL_TRUE);
             rs.depthMask(GL_TRUE);
             break;
         case Blending::multiply:
             rs.blending(GL_TRUE);
             rs.blendingFunc(GL_ZERO, GL_SRC_COLOR);
-            rs.depthTest(GL_FALSE);
+            rs.depthTest(GL_TRUE);
             rs.depthMask(GL_TRUE);
             break;
         case Blending::overlay:

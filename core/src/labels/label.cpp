@@ -6,6 +6,7 @@
 #include "tangram.h"
 #include "platform.h"
 #include "view/view.h"
+#include "log.h"
 
 namespace Tangram {
 

@@ -1,8 +1,8 @@
 #include "marker/marker.h"
 #include "data/tileData.h"
+#include "gl/texture.h"
 #include "scene/drawRule.h"
 #include "scene/scene.h"
-
 #include "style/style.h"
 #include "view/view.h"
 #include "glm/gtc/matrix_transform.hpp"
@@ -48,6 +48,10 @@ void Marker::setMesh(uint32_t styleId, uint32_t zoom, std::unique_ptr<StyledMesh
     m_modelMatrix = glm::scale(glm::vec3(scale));
 }
 
+void Marker::setTexture(std::unique_ptr<Texture> texture) {
+    m_texture = std::move(texture);
+}
+
 void Marker::setEase(const glm::dvec2& dest, float duration, EaseType e) {
     auto origin = m_origin;
     auto cb = [=](float t) { m_origin = { ease(origin.x, dest.x, t, e), ease(origin.y, dest.y, t, e) }; };
@@ -89,12 +93,16 @@ Feature* Marker::feature() const {
     return m_feature.get();
 }
 
-DrawRule* Marker::drawRule() {
+DrawRule* Marker::drawRule() const {
     return m_drawRule.get();
 }
 
 StyledMesh* Marker::mesh() const {
     return m_mesh.get();
+}
+
+Texture* Marker::texture() const {
+    return m_texture.get();
 }
 
 const BoundingBox& Marker::bounds() const {

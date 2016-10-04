@@ -40,14 +40,6 @@ void PointStyle::constructShaderProgram() {
     m_shaderProgram->setSourceStrings(SHADER_SOURCE(point_fs),
                                       SHADER_SOURCE(point_vs));
 
-    std::string defines;
-
-    if (!m_spriteAtlas && !m_texture) {
-        defines += "#define TANGRAM_POINT\n";
-    }
-
-    m_shaderProgram->addSourceBlock("defines", defines);
-
     m_mesh = std::make_unique<DynamicQuadMesh<SpriteVertex>>(m_vertexLayout, m_drawMode);
 
     m_textStyle->constructShaderProgram();
@@ -69,17 +61,10 @@ void PointStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _sc
 
     auto texUnit = rs.nextAvailableTextureUnit();
 
-    if (m_spriteAtlas) {
-        m_spriteAtlas->bind(rs, texUnit);
-    } else if (m_texture) {
-        m_texture->update(rs, texUnit);
-        m_texture->bind(rs, texUnit);
-    }
-
     m_shaderProgram->setUniformi(rs, m_uTex, texUnit);
     m_shaderProgram->setUniformMatrix4f(rs, m_uOrtho, _view.getOrthoViewportMatrix());
 
-    m_mesh->draw(rs, *m_shaderProgram);
+    m_mesh->draw(rs, *m_shaderProgram, texUnit);
 
     m_textStyle->onBeginDrawFrame(rs, _view, _scene);
 }

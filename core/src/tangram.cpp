@@ -169,7 +169,7 @@ void Map::loadScene(const char* _scenePath, bool _useScenePosition) {
     }
 }
 
-void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _platformCallback) {
+void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _platformCallback, void *_cbData) {
     LOG("Loading scene file (async): %s", _scenePath);
 
     {
@@ -179,11 +179,11 @@ void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapRead
         impl->nextScene->useScenePosition = _useScenePosition;
     }
 
-    runAsyncTask([scene = impl->nextScene, _platformCallback, &jobQueue = impl->jobQueue, this](){
+    runAsyncTask([scene = impl->nextScene, _platformCallback, _cbData, &jobQueue = impl->jobQueue, this](){
 
             bool ok = SceneLoader::loadScene(scene);
 
-            jobQueue.add([scene, ok, _platformCallback, this]() {
+            jobQueue.add([scene, ok, _platformCallback, _cbData, this]() {
                     {
                         std::lock_guard<std::mutex> lock(impl->sceneMutex);
                         if (scene == impl->nextScene) {
@@ -195,7 +195,7 @@ void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapRead
                         auto s = scene;
                         impl->setScene(s);
                         applySceneUpdates();
-                        if (_platformCallback) { _platformCallback(); }
+                        if (_platformCallback) { _platformCallback(_cbData); }
                     }
                 });
         });
@@ -221,6 +221,7 @@ void Map::applySceneUpdates() {
         if (impl->sceneUpdates.empty()) { return; }
 
         impl->nextScene = std::make_shared<Scene>(*impl->scene);
+        impl->nextScene->referencedGlobals() = impl->scene->referencedGlobals();
         impl->nextScene->useScenePosition = false;
 
         updates = impl->sceneUpdates;
@@ -229,7 +230,7 @@ void Map::applySceneUpdates() {
 
     runAsyncTask([scene = impl->nextScene, updates = std::move(updates), &jobQueue = impl->jobQueue, this](){
 
-            SceneLoader::applyUpdates(scene->config(), updates);
+            SceneLoader::applyUpdates(*scene, updates);
 
             bool ok = SceneLoader::applyConfig(scene->config(), scene);
 
@@ -253,7 +254,7 @@ void Map::resize(int _newWidth, int _newHeight) {
     LOGS("resize: %d x %d", _newWidth, _newHeight);
     LOG("resize: %d x %d", _newWidth, _newHeight);
 
-    glViewport(0, 0, _newWidth, _newHeight);
+    GL::viewport(0, 0, _newWidth, _newHeight);
 
     impl->view.setSize(_newWidth, _newHeight);
 
@@ -353,8 +354,10 @@ void Map::render() {
     // Set up openGL for new frame
     impl->renderState.depthMask(GL_TRUE);
     auto& color = impl->scene->background();
+    impl->renderState.culling(GL_TRUE);
+    impl->renderState.cullFace(GL_BACK);
     impl->renderState.clearColor(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
-    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for (const auto& style : impl->scene->styles()) {
         style->onBeginFrame(impl->renderState);
@@ -399,7 +402,7 @@ float Map::getPixelScale() {
 }
 
 void Map::captureSnapshot(unsigned int* _data) {
-    GL_CHECK(glReadPixels(0, 0, impl->view.getWidth(), impl->view.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)_data));
+    GL::readPixels(0, 0, impl->view.getWidth(), impl->view.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)_data);
 }
 
 void Map::Impl::setPositionNow(double _lon, double _lat) {
@@ -639,6 +642,12 @@ bool Map::markerSetPolygon(MarkerID _marker, LngLat* _coordinates, int* _counts,
 
 bool Map::markerSetStyling(MarkerID _marker, const char* _styling) {
     bool success = impl->markerManager.setStyling(_marker, _styling);
+    requestRender();
+    return success;
+}
+
+bool Map::markerSetBitmap(MarkerID _marker, int _width, int _height, const unsigned int* _data) {
+    bool success = impl->markerManager.setBitmap(_marker, _width, _height, _data);
     requestRender();
     return success;
 }

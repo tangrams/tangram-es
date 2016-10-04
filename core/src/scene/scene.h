@@ -1,7 +1,6 @@
 #pragma once
 
 #include "util/color.h"
-#include "util/fastmap.h"
 #include "view/view.h"
 
 #include <atomic>
@@ -9,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <tuple>
 #include <unordered_map>
 
 #include "glm/vec2.hpp"
@@ -74,6 +74,8 @@ public:
     auto& background() { return m_background; }
     auto& fontContext() { return m_fontContext; }
     auto& globals() { return m_globals; }
+    auto& referencedGlobals() { return m_referencedGlobals; }
+    bool removeGlobalRef(const std::string& key);
     Style* findStyle(const std::string& _name);
 
     const auto& path() const { return m_path; }
@@ -87,6 +89,7 @@ public:
     const auto& mapProjection() const { return m_mapProjection; };
     const auto& fontContext() const { return m_fontContext; }
     const auto& globals() const { return m_globals; }
+    const auto& referencedGlobals() const { return m_referencedGlobals; }
 
     const Style* findStyle(const std::string& _name) const;
     const Light* findLight(const std::string& _name) const;
@@ -136,6 +139,8 @@ private:
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
     std::unordered_map<std::string, YAML::Node> m_globals;
+    // save the YAML Nodes for which global values have been swapped
+    std::vector<std::pair<std::string, YAML::Node>> m_referencedGlobals;
 
     // Container of all strings used in styling rules; these need to be
     // copied and compared frequently when applying styling, so rules use

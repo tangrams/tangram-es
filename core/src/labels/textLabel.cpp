@@ -6,6 +6,7 @@
 #include "gl/dynamicQuadMesh.h"
 #include "util/geom.h"
 #include "view/view.h"
+#include "log.h"
 
 namespace Tangram {
 

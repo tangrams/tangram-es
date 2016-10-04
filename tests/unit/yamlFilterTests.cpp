@@ -238,3 +238,12 @@ TEST_CASE("Filters specified as a javascript function evaluate correctly", "[fil
     REQUIRE(!filter.eval(bmw1, ctx));
     REQUIRE(!filter.eval(bike, ctx));
 }
+
+TEST_CASE("Sequences in filters implicitly create an 'any' filter", "[filters][core][yaml]") {
+    init();
+    Filter filter = load("filter: [ { brand: 'bmw' }, { type: 'car' } ]");
+
+    REQUIRE(filter.eval(civic, ctx));
+    REQUIRE(filter.eval(bmw1, ctx));
+    REQUIRE(!filter.eval(bike, ctx));
+}

@@ -59,6 +59,9 @@ private:
     std::unique_ptr<SpriteLabels> m_spriteLabels;
     std::unique_ptr<StyleBuilder> m_textStyleBuilder;
 
+    // Non-owning reference to a texture to use for the current feature.
+    Texture* m_texture = nullptr;
+
 };
 
 }

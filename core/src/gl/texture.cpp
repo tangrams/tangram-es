@@ -6,6 +6,7 @@
 #include "gl/renderState.h"
 #include "gl/hardware.h"
 #include "tangram.h"
+#include "log.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -42,7 +43,7 @@ Texture::~Texture() {
             // according to the OpenGL spec, so unset this texture binding.
             rs.textureUnset(target, glHandle);
 
-            GL_CHECK(glDeleteTextures(1, &glHandle));
+            GL::deleteTextures(1, &glHandle);
         }
     });
 }
@@ -180,15 +181,15 @@ void Texture::bind(RenderState& rs, GLuint _unit) {
 }
 
 void Texture::generate(RenderState& rs, GLuint _textureUnit) {
-    GL_CHECK(glGenTextures(1, &m_glHandle));
+    GL::genTextures(1, &m_glHandle);
 
     bind(rs, _textureUnit);
 
-    GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, m_options.filtering.min));
-    GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, m_options.filtering.mag));
+    GL::texParameteri(m_target, GL_TEXTURE_MIN_FILTER, m_options.filtering.min);
+    GL::texParameteri(m_target, GL_TEXTURE_MAG_FILTER, m_options.filtering.mag);
 
-    GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_WRAP_S, m_options.wrapping.wraps));
-    GL_CHECK(glTexParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.wrapping.wrapt));
+    GL::texParameteri(m_target, GL_TEXTURE_WRAP_S, m_options.wrapping.wraps);
+    GL::texParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.wrapping.wrapt);
 
     m_generation = rs.generation();
     m_disposer = Disposer(rs);
@@ -247,13 +248,13 @@ void Texture::update(RenderState& rs, GLuint _textureUnit, const GLuint* data) {
             LOGW("The hardware maximum texture size is currently reached");
         }
 
-        GL_CHECK(glTexImage2D(m_target, 0, m_options.internalFormat,
-                     m_width, m_height, 0, m_options.format,
-                     GL_UNSIGNED_BYTE, data));
+        GL::texImage2D(m_target, 0, m_options.internalFormat,
+                       m_width, m_height, 0, m_options.format,
+                       GL_UNSIGNED_BYTE, data);
 
         if (data && m_generateMipmaps) {
             // generate the mipmaps for this texture
-            GL_CHECK(glGenerateMipmap(m_target));
+            GL::generateMipmap(m_target);
         }
         m_shouldResize = false;
         m_dirtyRanges.clear();
@@ -264,9 +265,9 @@ void Texture::update(RenderState& rs, GLuint _textureUnit, const GLuint* data) {
 
     for (auto& range : m_dirtyRanges) {
         size_t offset =  (range.min * m_width) / divisor;
-        GL_CHECK(glTexSubImage2D(m_target, 0, 0, range.min, m_width, range.max - range.min,
-                        m_options.format, GL_UNSIGNED_BYTE,
-                        data + offset));
+        GL::texSubImage2D(m_target, 0, 0, range.min, m_width, range.max - range.min,
+                          m_options.format, GL_UNSIGNED_BYTE,
+                          data + offset);
     }
     m_dirtyRanges.clear();
 }

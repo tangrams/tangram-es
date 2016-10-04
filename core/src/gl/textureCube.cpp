@@ -3,6 +3,7 @@
 #include "platform.h"
 #include "stb_image.h"
 #include "gl/error.h"
+#include "log.h"
 
 #include <cstring> // for memcpy
 #include <cstdlib>
@@ -77,7 +78,7 @@ void TextureCube::update(RenderState& rs, GLuint _textureUnit) {
 
     for (int i = 0; i < 6; ++i) {
         Face& f = m_faces[i];
-        GL_CHECK(glTexImage2D(CubeMapFace[i], 0, m_options.internalFormat, m_width, m_height, 0, m_options.format, GL_UNSIGNED_BYTE, f.m_data.data()));
+        GL::texImage2D(CubeMapFace[i], 0, m_options.internalFormat, m_width, m_height, 0, m_options.format, GL_UNSIGNED_BYTE, f.m_data.data());
     }
 }
 

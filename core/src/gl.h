@@ -1,37 +1,15 @@
 #pragma once
 
-#if defined(PLATFORM_OSX) || defined(PLATFORM_LINUX)
-#define DESKTOP_GL true
-#else
-#define DESKTOP_GL false
-#endif
-
-#if defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI)
+#if defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI) || defined(PLATFORM_IOS)
 typedef long GLsizeiptr;
 typedef long GLintptr;
+#elif defined(PLATFORM_TIZEN)
+typedef signed long int  GLintptr;
+typedef signed long int  GLsizeiptr;
 #else
 #include <stddef.h>
 typedef ptrdiff_t GLsizeiptr;
 typedef ptrdiff_t GLintptr;
-#endif
-
-#ifdef PLATFORM_OSX
-#define glClearDepthf glClearDepth
-#define glDepthRangef glDepthRange
-#define glDeleteVertexArrays glDeleteVertexArraysAPPLE
-#define glGenVertexArrays glGenVertexArraysAPPLE
-#define glBindVertexArray glBindVertexArrayAPPLE
-#endif
-
-#if defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS) || defined(PLATFORM_RPI)
-#define glMapBuffer glMapBufferOES
-#define glUnmapBuffer glUnmapBufferOES
-#endif
-
-#if defined(PLATFORM_IOS)
-#define glDeleteVertexArrays glDeleteVertexArraysOES
-#define glGenVertexArrays glGenVertexArraysOES
-#define glBindVertexArray glBindVertexArrayOES
 #endif
 
 /*
@@ -270,156 +248,121 @@ typedef char            GLchar;
 #define GL_MAX_TEXTURE_SIZE             0x0D33
 #define GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS 0x8B4D
 
-#ifdef PLATFORM_ANDROID
-#define GL_APICALL  __attribute__((visibility("default")))
-#define GL_APIENTRY
-#define GL_APIENTRYP GL_APIENTRY*
-#else
-#define GL_APICALL
-#define GL_APIENTRY
-#endif
+namespace Tangram {
+struct GL {
+    static GLenum getError(void);
+    static const GLubyte* getString(GLenum name);
 
-extern "C" {
+    static void clear(GLbitfield mask);
+    static void lineWidth(GLfloat width);
+    static void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
-    GL_APICALL GLenum GL_APIENTRY glGetError(void);
-    GL_APICALL const GLubyte* GL_APIENTRY glGetString(GLenum name);
-
-    GL_APICALL void GL_APIENTRY glClear(GLbitfield mask);
-    GL_APICALL void GL_APIENTRY glLineWidth(GLfloat width);
-    GL_APICALL void GL_APIENTRY glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
-
-    GL_APICALL void GL_APIENTRY glEnable(GLenum);
-    GL_APICALL void GL_APIENTRY glDisable(GLenum);
-    GL_APICALL void GL_APIENTRY glDepthFunc(GLenum func);
-    GL_APICALL void GL_APIENTRY glDepthMask(GLboolean flag);
-#ifdef PLATFORM_OSX
-    GL_APICALL void GL_APIENTRY glDepthRange(GLclampd n, GLclampd f);
-    GL_APICALL void GL_APIENTRY glClearDepth(GLclampd d);
-#else
-    GL_APICALL void GL_APIENTRY glDepthRangef(GLfloat n, GLfloat f);
-    GL_APICALL void GL_APIENTRY glClearDepthf(GLfloat d);
-#endif
-    GL_APICALL void GL_APIENTRY glBlendFunc(GLenum sfactor, GLenum dfactor);
-    GL_APICALL void GL_APIENTRY glStencilFunc(GLenum func, GLint ref, GLuint mask);
-    GL_APICALL void GL_APIENTRY glStencilMask(GLuint mask);
-    GL_APICALL void GL_APIENTRY glStencilOp(GLenum fail, GLenum zfail, GLenum zpass);
-    GL_APICALL void GL_APIENTRY glClearStencil(GLint s);
-    GL_APICALL void GL_APIENTRY glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
-    GL_APICALL void GL_APIENTRY glCullFace(GLenum mode);
-    GL_APICALL void GL_APIENTRY glFrontFace(GLenum mode);
-    GL_APICALL void GL_APIENTRY glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
-    GL_APICALL void GL_APIENTRY glGetIntegerv(GLenum pname, GLint *params );
+    static void enable(GLenum);
+    static void disable(GLenum);
+    static void depthFunc(GLenum func);
+    static void depthMask(GLboolean flag);
+    static void depthRange(GLfloat n, GLfloat f);
+    static void clearDepth(GLfloat d);
+    static void blendFunc(GLenum sfactor, GLenum dfactor);
+    static void stencilFunc(GLenum func, GLint ref, GLuint mask);
+    static void stencilMask(GLuint mask);
+    static void stencilOp(GLenum fail, GLenum zfail, GLenum zpass);
+    static void clearStencil(GLint s);
+    static void colorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
+    static void cullFace(GLenum mode);
+    static void frontFace(GLenum mode);
+    static void clearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
+    static void getIntegerv(GLenum pname, GLint *params );
 
     // Program
-    GL_APICALL void GL_APIENTRY glUseProgram(GLuint program);
-    GL_APICALL void GL_APIENTRY glDeleteProgram(GLuint program);
-    GL_APICALL void GL_APIENTRY glDeleteShader(GLuint shader);
-    GL_APICALL GLuint GL_APIENTRY glCreateShader(GLenum type);
-    GL_APICALL GLuint GL_APIENTRY glCreateProgram();
-    GL_APICALL void GL_APIENTRY glCompileShader(GLuint shader);
-    GL_APICALL void GL_APIENTRY glAttachShader(GLuint program, GLuint shader);
-    GL_APICALL void GL_APIENTRY glLinkProgram(GLuint program);
-#if defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI)
-    GL_APICALL void GL_APIENTRY glShaderSource(GLuint shader, GLsizei count, const GLchar** string, const GLint *length);
-#else
-    GL_APICALL void GL_APIENTRY glShaderSource(GLuint shader, GLsizei count, const GLchar *const*string, const GLint *length);
-#endif
-    GL_APICALL void GL_APIENTRY glGetShaderInfoLog(GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
-    GL_APICALL void GL_APIENTRY glGetProgramInfoLog(GLuint program, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
-    GL_APICALL GLint GL_APIENTRY glGetUniformLocation(GLuint program, const GLchar *name);
-    GL_APICALL GLint GL_APIENTRY glGetAttribLocation(GLuint program, const GLchar *name);
-    GL_APICALL void GL_APIENTRY glGetProgramiv(GLuint program, GLenum pname, GLint *params);
-    GL_APICALL void GL_APIENTRY glGetShaderiv(GLuint shader, GLenum pname, GLint *params);
+    static void useProgram(GLuint program);
+    static void deleteProgram(GLuint program);
+    static void deleteShader(GLuint shader);
+    static GLuint createShader(GLenum type);
+    static GLuint createProgram();
+    static void compileShader(GLuint shader);
+    static void attachShader(GLuint program, GLuint shader);
+    static void linkProgram(GLuint program);
+    static void shaderSource(GLuint shader, GLsizei count, const GLchar** string, const GLint *length);
+    static void getShaderInfoLog(GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
+    static void getProgramInfoLog(GLuint program, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
+    static GLint getUniformLocation(GLuint program, const GLchar *name);
+    static GLint getAttribLocation(GLuint program, const GLchar *name);
+    static void getProgramiv(GLuint program, GLenum pname, GLint *params);
+    static void getShaderiv(GLuint shader, GLenum pname, GLint *params);
 
     // Buffers
-    GL_APICALL void GL_APIENTRY glBindBuffer(GLenum target, GLuint buffer);
-    GL_APICALL void GL_APIENTRY glDeleteBuffers(GLsizei n, const GLuint *buffers);
-    GL_APICALL void GL_APIENTRY glGenBuffers(GLsizei n, GLuint *buffers);
-    GL_APICALL void GL_APIENTRY glBufferData(GLenum target, GLsizeiptr size, const void *data, GLenum usage);
-    GL_APICALL void GL_APIENTRY glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void *data);
+    static void bindBuffer(GLenum target, GLuint buffer);
+    static void deleteBuffers(GLsizei n, const GLuint *buffers);
+    static void genBuffers(GLsizei n, GLuint *buffers);
+    static void bufferData(GLenum target, GLsizeiptr size, const void *data, GLenum usage);
+    static void bufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void *data);
 
     // Texture
-    GL_APICALL void GL_APIENTRY glBindTexture(GLenum target, GLuint texture );
-    GL_APICALL void GL_APIENTRY glActiveTexture(GLenum texture);
-    GL_APICALL void GL_APIENTRY glGenTextures(GLsizei n, GLuint *textures );
-    GL_APICALL void GL_APIENTRY glDeleteTextures(GLsizei n, const GLuint *textures);
-    GL_APICALL void GL_APIENTRY glTexParameteri(GLenum target, GLenum pname, GLint param );
-    GL_APICALL void GL_APIENTRY glTexImage2D(GLenum target, GLint level,
-                       GLint internalFormat,
-                       GLsizei width, GLsizei height,
-                       GLint border, GLenum format, GLenum type,
-                       const GLvoid *pixels);
+    static void bindTexture(GLenum target, GLuint texture );
+    static void activeTexture(GLenum texture);
+    static void genTextures(GLsizei n, GLuint *textures );
+    static void deleteTextures(GLsizei n, const GLuint *textures);
+    static void texParameteri(GLenum target, GLenum pname, GLint param );
+    static void texImage2D(GLenum target, GLint level,
+                           GLint internalFormat,
+                           GLsizei width, GLsizei height,
+                           GLint border, GLenum format, GLenum type,
+                           const GLvoid *pixels);
 
-    GL_APICALL void GL_APIENTRY glTexSubImage2D(GLenum target, GLint level,
-                          GLint xoffset, GLint yoffset,
-                          GLsizei width, GLsizei height,
-                          GLenum format, GLenum type,
-                          const GLvoid *pixels);
+    static void texSubImage2D(GLenum target, GLint level,
+                              GLint xoffset, GLint yoffset,
+                              GLsizei width, GLsizei height,
+                              GLenum format, GLenum type,
+                              const GLvoid *pixels);
 
-    GL_APICALL void GL_APIENTRY glGenerateMipmap(GLenum target);
+    static void generateMipmap(GLenum target);
 
 
-    GL_APICALL void GL_APIENTRY glEnableVertexAttribArray(GLuint index);
-    GL_APICALL void GL_APIENTRY glDisableVertexAttribArray(GLuint index);
-    GL_APICALL void GL_APIENTRY glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized,
-                                GLsizei stride, const void *pointer);
+    static void enableVertexAttribArray(GLuint index);
+    static void disableVertexAttribArray(GLuint index);
+    static void vertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized,
+                                    GLsizei stride, const void *pointer);
 
-    GL_APICALL void GL_APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count );
-    GL_APICALL void GL_APIENTRY glDrawElements(GLenum mode, GLsizei count,
-                         GLenum type, const GLvoid *indices );
+    static void drawArrays(GLenum mode, GLint first, GLsizei count );
+    static void drawElements(GLenum mode, GLsizei count,
+                             GLenum type, const GLvoid *indices );
 
-    GL_APICALL void GL_APIENTRY glUniform1f(GLint location, GLfloat v0);
-    GL_APICALL void GL_APIENTRY glUniform2f(GLint location, GLfloat v0, GLfloat v1);
-    GL_APICALL void GL_APIENTRY glUniform3f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
-    GL_APICALL void GL_APIENTRY glUniform4f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
+    static void uniform1f(GLint location, GLfloat v0);
+    static void uniform2f(GLint location, GLfloat v0, GLfloat v1);
+    static void uniform3f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
+    static void uniform4f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
 
-    GL_APICALL void GL_APIENTRY glUniform1i(GLint location, GLint v0);
-    GL_APICALL void GL_APIENTRY glUniform2i(GLint location, GLint v0, GLint v1);
-    GL_APICALL void GL_APIENTRY glUniform3i(GLint location, GLint v0, GLint v1, GLint v2);
-    GL_APICALL void GL_APIENTRY glUniform4i(GLint location, GLint v0, GLint v1, GLint v2, GLint v3);
+    static void uniform1i(GLint location, GLint v0);
+    static void uniform2i(GLint location, GLint v0, GLint v1);
+    static void uniform3i(GLint location, GLint v0, GLint v1, GLint v2);
+    static void uniform4i(GLint location, GLint v0, GLint v1, GLint v2, GLint v3);
 
-    GL_APICALL void GL_APIENTRY glUniform1fv(GLint location, GLsizei count, const GLfloat *value);
-    GL_APICALL void GL_APIENTRY glUniform2fv(GLint location, GLsizei count, const GLfloat *value);
-    GL_APICALL void GL_APIENTRY glUniform3fv(GLint location, GLsizei count, const GLfloat *value);
-    GL_APICALL void GL_APIENTRY glUniform4fv(GLint location, GLsizei count, const GLfloat *value);
-    GL_APICALL void GL_APIENTRY glUniform1iv(GLint location, GLsizei count, const GLint *value);
-    GL_APICALL void GL_APIENTRY glUniform2iv(GLint location, GLsizei count, const GLint *value);
-    GL_APICALL void GL_APIENTRY glUniform3iv(GLint location, GLsizei count, const GLint *value);
-    GL_APICALL void GL_APIENTRY glUniform4iv(GLint location, GLsizei count, const GLint *value);
+    static void uniform1fv(GLint location, GLsizei count, const GLfloat *value);
+    static void uniform2fv(GLint location, GLsizei count, const GLfloat *value);
+    static void uniform3fv(GLint location, GLsizei count, const GLfloat *value);
+    static void uniform4fv(GLint location, GLsizei count, const GLfloat *value);
+    static void uniform1iv(GLint location, GLsizei count, const GLint *value);
+    static void uniform2iv(GLint location, GLsizei count, const GLint *value);
+    static void uniform3iv(GLint location, GLsizei count, const GLint *value);
+    static void uniform4iv(GLint location, GLsizei count, const GLint *value);
 
-    GL_APICALL void GL_APIENTRY glUniformMatrix2fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
-    GL_APICALL void GL_APIENTRY glUniformMatrix3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
-    GL_APICALL void GL_APIENTRY glUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+    static void uniformMatrix2fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+    static void uniformMatrix3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+    static void uniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 
     // mapbuffer
-    GL_APICALL void *GL_APIENTRY glMapBuffer(GLenum target, GLenum access);
-    GL_APICALL GLboolean GL_APIENTRY glUnmapBuffer(GLenum target);
+    static void *mapBuffer(GLenum target, GLenum access);
+    static GLboolean unmapBuffer(GLenum target);
 
-    GL_APICALL void GL_APIENTRY glFinish(void);
+    static void finish(void);
 
-    GL_APICALL void GL_APIENTRY glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                            GLenum format, GLenum type, GLvoid* pixels);
+    static void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                           GLenum format, GLenum type, GLvoid* pixels);
 
-    // VAO
-#ifdef PLATFORM_ANDROID
-    typedef void (GL_APIENTRYP PFNGLBINDVERTEXARRAYOESPROC) (GLuint array);
-    typedef void (GL_APIENTRYP PFNGLDELETEVERTEXARRAYSOESPROC) (GLsizei n, const GLuint *arrays);
-    typedef void (GL_APIENTRYP PFNGLGENVERTEXARRAYSOESPROC) (GLsizei n, GLuint *arrays);
-    typedef GLboolean (GL_APIENTRYP PFNGLISVERTEXARRAYOESPROC) (GLuint array);
-
-    // defined in platform_android.cpp
-    extern PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT;
-    extern PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT;
-    extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
-
-    #define glDeleteVertexArrays glDeleteVertexArraysOESEXT
-    #define glGenVertexArrays glGenVertexArraysOESEXT
-    #define glBindVertexArray glBindVertexArrayOESEXT
-
-#else
-    GL_APICALL void GL_APIENTRY glBindVertexArray(GLuint array);
-    GL_APICALL void GL_APIENTRY glDeleteVertexArrays(GLsizei n, const GLuint *arrays);
-    GL_APICALL void GL_APIENTRY glGenVertexArrays(GLsizei n, GLuint *arrays);
-#endif
+    static void bindVertexArray(GLuint array);
+    static void deleteVertexArrays(GLsizei n, const GLuint *arrays);
+    static void genVertexArrays(GLsizei n, GLuint *arrays);
 
 };
+}

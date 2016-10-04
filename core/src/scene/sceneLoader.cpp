@@ -27,6 +27,7 @@
 #include "util/base64.h"
 #include "util/yamlHelper.h"
 #include "view/view.h"
+#include "log.h"
 
 #include "csscolorparser.hpp"
 
@@ -78,31 +79,47 @@ bool SceneLoader::loadConfig(const std::string& _sceneString, Node& root) {
     return true;
 }
 
-void SceneLoader::applyUpdates(Node& root, const std::vector<SceneUpdate>& updates) {
+void SceneLoader::applyUpdate(Node& root, const std::vector<std::string>& keys, Node value) {
 
+    auto node = root;
+    std::string key;
+    for (auto it = keys.begin(); it != keys.end(); ++it) {
+        key = *it;
+        if (it + 1 == keys.end()) { break; } // Stop before last key.
+        node.reset(node[key]); // Node safely becomes invalid is key is not present.
+    }
+
+    if (node) {
+        try {
+            node[key] = value;
+        } catch (YAML::ParserException e) {
+            LOGW("Cannot update scene - value invalid: %s", e.what());
+        }
+    } else {
+        std::string path;
+        for (const auto& k : keys) { path += "." + k; }
+        LOGW("Cannot update scene - key not found: %s", path.c_str());
+    }
+}
+
+void SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates) {
+    auto& root = scene.config();
     for (const auto& update : updates) {
-
+        scene.removeGlobalRef(update.keys);
         auto keys = splitString(update.keys, COMPONENT_PATH_DELIMITER);
-
-        auto node = root;
-        std::string key;
-        for (auto it = keys.begin(); it != keys.end(); ++it) {
-            key = *it;
-            if (it + 1 == keys.end()) { break; } // Stop before last key.
-            node.reset(node[key]); // Node safely becomes invalid is key is not present.
+        try {
+            auto valueNode = YAML::Load(update.value);
+            applyUpdate(root, keys, valueNode);
+        } catch (YAML::ParserException e) {
+            LOGE("Parsing scene update string failed. '%s'", e.what());
         }
+    }
+}
 
-        if (node) {
-            try {
-                node[key] = YAML::Load(update.value);
-            } catch (YAML::ParserException e) {
-                LOGW("Cannot update scene - value invalid: %s", e.what());
-            }
-        } else {
-            std::string path;
-            for (const auto& k : keys) { path += "." + k; }
-            LOGW("Cannot update scene - key not found: %s", path.c_str());
-        }
+void SceneLoader::applyGlobalRefUpdates(Node& root, const std::shared_ptr<Scene>& scene) {
+    for (const auto& referencedGlobal : scene->referencedGlobals()) {
+        auto keys = splitString(referencedGlobal.first, COMPONENT_PATH_DELIMITER);
+        applyUpdate(root, keys, referencedGlobal.second);
     }
 }
 
@@ -115,7 +132,7 @@ void printFilters(const SceneLayer& layer, int indent){
     }
 };
 
-void SceneLoader::applyGlobalProperties(Node& node, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::applyGlobalProperties(Node& node, const std::shared_ptr<Scene>& scene, const std::string& keys) {
     switch(node.Type()) {
     case NodeType::Scalar:
         {
@@ -124,17 +141,25 @@ void SceneLoader::applyGlobalProperties(Node& node, const std::shared_ptr<Scene>
                 key.replace(0, 7, "");
                 std::replace(key.begin(), key.end(), '.', DELIMITER[0]);
                 node = scene->globals()[key];
+                scene->referencedGlobals().emplace_back(keys, scene->globals()[key]);
             }
         }
         break;
     case NodeType::Sequence:
-        for (auto n : node) {
-            applyGlobalProperties(n, scene);
+        {
+            int i = 0;
+            for (auto n : node) {
+                std::string k = keys + COMPONENT_PATH_DELIMITER + std::to_string(i);
+                applyGlobalProperties(n, scene, k);
+                i++;
+            }
+            break;
         }
-        break;
     case NodeType::Map:
         for (auto n : node) {
-            applyGlobalProperties(n.second, scene);
+            std::string k = (n.first.IsScalar()) ? n.first.Scalar() : "";
+            k = (keys.size() > 0) ? (keys + COMPONENT_PATH_DELIMITER + k) : k;
+            applyGlobalProperties(n.second, scene, k);
         }
         break;
     default:
@@ -176,6 +201,7 @@ bool SceneLoader::applyConfig(Node& config, const std::shared_ptr<Scene>& _scene
 
     if (Node globals = config["global"]) {
         parseGlobals(globals, _scene);
+        applyGlobalRefUpdates(config, _scene);
         applyGlobalProperties(config, _scene);
     }
 
@@ -891,8 +917,16 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
 
     std::string type = source["type"].Scalar();
     std::string url = source["url"].Scalar();
+    int32_t minDisplayZoom = -1;
+    int32_t maxDisplayZoom = -1;
     int32_t maxZoom = 18;
 
+    if (auto minDisplayZoomNode = source["min_display_zoom"]) {
+        minDisplayZoom = minDisplayZoomNode.as<int32_t>(minDisplayZoom);
+    }
+    if (auto maxDisplayZoomNode = source["max_display_zoom"]) {
+        maxDisplayZoom = maxDisplayZoomNode.as<int32_t>(maxDisplayZoom);
+    }
     if (auto maxZoomNode = source["max_zoom"]) {
         maxZoom = maxZoomNode.as<int32_t>(maxZoom);
     }
@@ -932,14 +966,14 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
 
     if (type == "GeoJSON") {
         if (tiled) {
-            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url, maxZoom));
+            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
         } else {
-            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, maxZoom));
+            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
         }
     } else if (type == "TopoJSON") {
-        sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, maxZoom));
+        sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
     } else if (type == "MVT") {
-        sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, maxZoom));
+        sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
     } else if (type == "Raster") {
         TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
         bool generateMipmaps = false;
@@ -948,7 +982,7 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
                 generateMipmaps = true;
             }
         }
-        sourcePtr = std::shared_ptr<DataSource>(new RasterSource(name, url, maxZoom, options, generateMipmaps));
+        sourcePtr = std::shared_ptr<DataSource>(new RasterSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom, options, generateMipmaps));
     } else {
         LOGW("Unrecognized data source type '%s', skipping", type.c_str());
     }
@@ -975,7 +1009,7 @@ void SceneLoader::loadSourceRasters(std::shared_ptr<DataSource> &source, Node ra
                 LOGNode("Parsing sources: '%s'", sources[srcName], e.what());
                 return;
             }
-            source->rasterSources().push_back(scene->getDataSource(srcName));
+            source->addRasterSource(scene->getDataSource(srcName));
         }
     }
 }
@@ -1135,7 +1169,7 @@ void SceneLoader::loadCamera(const Node& _camera, const std::shared_ptr<Scene>& 
             } else if (fov.IsSequence()) {
                 camera.fovStops = std::make_shared<Stops>(Stops::Numbers(fov));
                 for (auto& f : camera.fovStops->frames) {
-                    f.value = f.value.get<float>() * DEG_TO_RAD;
+                    f.value = float(f.value.get<float>() * DEG_TO_RAD);
                 }
             }
         }
@@ -1234,7 +1268,7 @@ Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
             } else if (key == "any") {
                 filters.push_back(generateAnyFilter(node, scene));
             } else if (key == "all") {
-                filters.push_back(generateFilter(node, scene));
+                filters.push_back(generateAllFilter(node, scene));
             } else {
                 filters.push_back(generatePredicate(node, key));
             }
@@ -1248,6 +1282,7 @@ Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
 
     if (filters.size() == 0) { return Filter(); }
     if (filters.size() == 1) { return std::move(filters.front()); }
+    if (_filter.IsSequence()) { return Filter::MatchAny(std::move(filters)); }
     return (Filter::MatchAll(std::move(filters)));
 }
 
@@ -1326,6 +1361,19 @@ Filter SceneLoader::generateAnyFilter(Node _filter, Scene& scene) {
         filters.emplace_back(generateFilter(filt, scene));
     }
     return Filter::MatchAny(std::move(filters));
+}
+
+Filter SceneLoader::generateAllFilter(Node _filter, Scene& scene) {
+    std::vector<Filter> filters;
+
+    if (!_filter.IsSequence()) {
+        LOGW("Invalid filter. 'All' expects a list.");
+        return Filter();
+    }
+    for (const auto& filt : _filter) {
+        filters.emplace_back(generateFilter(filt, scene));
+    }
+    return Filter::MatchAll(std::move(filters));
 }
 
 Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {

@@ -1,4 +1,5 @@
 #include "error.h"
+#include "log.h"
 
 namespace Tangram {
 
@@ -13,7 +14,7 @@ std::unordered_map<GLenum, std::string> Error::s_GlErrorCodesToStrings = {
 
 bool Error::hadGlError(const std::string& _locationTag) {
 
-    GLenum error = glGetError();
+    GLenum error = GL::getError();
 
     if (error != GL_NO_ERROR) {
 
@@ -28,7 +29,7 @@ bool Error::hadGlError(const std::string& _locationTag) {
 }
 
 void Error::glError(const char* stmt, const char* fname, int line) {
-    GLenum err = glGetError();
+    GLenum err = GL::getError();
 
     while (err != GL_NO_ERROR) {
         auto it = s_GlErrorCodesToStrings.find(err);
@@ -37,7 +38,7 @@ void Error::glError(const char* stmt, const char* fname, int line) {
             LOGE("OpenGL error %s, at %s:%i - for %s\n", it->second.c_str(), fname, line, stmt);
         }
 
-        err = glGetError();
+        err = GL::getError();
     }
 }
 

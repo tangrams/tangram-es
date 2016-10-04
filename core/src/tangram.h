@@ -38,7 +38,8 @@ public:
     ~Map();
 
     // Load the scene at the given absolute file path asynchronously
-    void loadSceneAsync(const char* _scenePath, bool _useScenePosition = false, std::function<void(void)> _platformCallback = {});
+    void loadSceneAsync(const char* _scenePath, bool _useScenePosition = false,
+            std::function<void(void*)> _platformCallback = {}, void *_cbData = nullptr);
 
     // Load the scene at the given absolute file path synchronously
     void loadScene(const char* _scenePath, bool _useScenePosition = false);
@@ -161,6 +162,11 @@ public:
     // according to the scene file syntax; returns true if the marker ID was found and successfully
     // updated, otherwise returns false.
     bool markerSetStyling(MarkerID _marker, const char* _styling);
+
+    // Set a bitmap to use as the image for a point marker; _data is a buffer of RGBA pixel data with
+    // length of _width * _height; pixels are in row-major order beginning from the bottom-left of the
+    // image; returns true if the marker ID was found and successfully updated, otherwise returns false.
+    bool markerSetBitmap(MarkerID _marker, int _width, int _height, const unsigned int* _data);
 
     // Set the geometry of a marker to a point at the given coordinates; markers can have their
     // geometry set multiple times with possibly different geometry types; returns true if the

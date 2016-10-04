@@ -13,14 +13,16 @@ using namespace Tangram;
 const static std::string sceneString = R"END(
 global:
     default_order: function() { return feature.sort_key; }
+    isoactive: true
+    persactive: false
 
 cameras:
     iso-camera:
         type: isometric
-        active: false
+        active: global.isoactive
     perspective-camera:
         type: perspective
-        active: true
+        active: global.persactive
 
 lights:
     light1:
@@ -68,7 +70,7 @@ TEST_CASE("Scene update tests") {
     updates.push_back({"global.non_existing_property1.non_existing_property_deep", "true"});
 
     // Tangram apply scene updates, reload the scene
-    SceneLoader::applyUpdates(scene.config(), updates);
+    SceneLoader::applyUpdates(scene, updates);
 
     const Node& root = scene.config();
 
@@ -101,10 +103,56 @@ TEST_CASE("Scene update tests, ensure update ordering is preserved") {
     updates.push_back({"lights.light2.ambient", "0.0"});
 
     // Tangram apply scene updates, reload the scene
-    SceneLoader::applyUpdates(scene.config(), updates);
+    SceneLoader::applyUpdates(scene, updates);
 
     const Node& root = scene.config();
 
     REQUIRE(!root["lights"]["light1"]);
     REQUIRE(!root["lights"]["light2"]);
+}
+
+TEST_CASE("Scene update tests, multiple updates with globals") {
+    std::shared_ptr<Scene> scene = std::make_shared<Scene>();
+    std::vector<SceneUpdate> updates;
+
+    REQUIRE(!sceneString.empty());
+
+    REQUIRE(SceneLoader::loadConfig(sceneString, scene->config()));
+
+    Node& root = scene->config();
+
+    SceneLoader::parseGlobals(root["global"], scene);
+    SceneLoader::applyGlobalRefUpdates(root, scene);
+    SceneLoader::applyGlobalProperties(root, scene);
+
+    REQUIRE(root["cameras"]["iso-camera"]["active"].Scalar() == "true");
+    REQUIRE(root["cameras"]["perspective-camera"]["active"].Scalar() == "false");
+
+    // Update 1 - change 1 of the global values and explicitly set a value for the other
+    updates.push_back({"global.isoactive", "false"});
+    updates.push_back({"cameras.perspective-camera.active", "true"});
+    // Tangram apply scene updates, reload the scene
+    SceneLoader::applyUpdates(*scene, updates);
+    root = scene->config();
+    SceneLoader::parseGlobals(root["global"], scene);
+    SceneLoader::applyGlobalRefUpdates(root, scene);
+    SceneLoader::applyGlobalProperties(root, scene);
+    REQUIRE(root["cameras"]["iso-camera"]["active"].Scalar() == "false");
+    REQUIRE(root["cameras"]["perspective-camera"]["active"].Scalar() == "true");
+
+    updates.clear();
+
+    // Update 2 - swap globals
+    updates.push_back({"global.persactive", "true"});
+    updates.push_back({"cameras.iso-camera.active", "global.persactive"});
+    updates.push_back({"cameras.perspective-camera.active", "global.isoactive"});
+    // Tangram apply scene updates, reload the scene
+    SceneLoader::applyUpdates(*scene, updates);
+    root = scene->config();
+    SceneLoader::parseGlobals(root["global"], scene);
+    SceneLoader::applyGlobalRefUpdates(root, scene);
+    SceneLoader::applyGlobalProperties(root, scene);
+    REQUIRE(root["cameras"]["iso-camera"]["active"].Scalar() == "true");
+    REQUIRE(root["cameras"]["perspective-camera"]["active"].Scalar() == "false");
+
 }

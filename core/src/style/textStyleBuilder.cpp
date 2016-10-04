@@ -13,6 +13,7 @@
 #include "util/mapProjection.h"
 #include "view/view.h"
 #include "tangram.h"
+#include "log.h"
 
 #include <cmath>
 #include <locale>
@@ -333,8 +334,8 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
         _rule.get(StyleParamKey::text_anchor, p.labelOptions.anchors);
         if (p.labelOptions.anchors.count == 0) {
-            p.labelOptions.anchors.anchor = { LabelProperty::Anchor::bottom, LabelProperty::Anchor::top,
-                                              LabelProperty::Anchor::right, LabelProperty::Anchor::left };
+            p.labelOptions.anchors.anchor = { {LabelProperty::Anchor::bottom, LabelProperty::Anchor::top,
+                                               LabelProperty::Anchor::right, LabelProperty::Anchor::left} };
             p.labelOptions.anchors.count = 4;
         }
 
@@ -353,7 +354,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
         _rule.get(StyleParamKey::anchor, p.labelOptions.anchors);
         if (p.labelOptions.anchors.count == 0) {
-            p.labelOptions.anchors.anchor = { LabelProperty::Anchor::center };
+            p.labelOptions.anchors.anchor = { {LabelProperty::Anchor::center} };
             p.labelOptions.anchors.count = 1;
         }
     }
