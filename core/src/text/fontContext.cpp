@@ -302,11 +302,11 @@ void FontContext::fetch(const FontDescription& _ft) {
                 LOGE("Bad URL request for font %s at URL %s", _ft.alias.c_str(), _ft.uri.c_str());
             } else {
                 std::lock_guard<std::mutex> lock(m_mutex);
-                char* data = reinterpret_cast<char*>(rawData.data());
+                auto source = alfons::InputSource(reinterpret_cast<const char*>(rawData.data()), rawData.size());
 
                 for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
                     auto font = m_alfons.getFont(_ft.alias, size);
-                    font->addFace(m_alfons.addFontFace(alfons::InputSource(data, rawData.size()), size));
+                    font->addFace(m_alfons.addFontFace(source, size));
 
                     // add fallbacks from default font
                     font->addFaces(*m_font[i]);
@@ -321,11 +321,12 @@ void FontContext::fetch(const FontDescription& _ft) {
         unsigned char* data = nullptr;
 
         if (loadFontAlloc(_ft.uri, &data, dataSize)) {
+            auto source = alfons::InputSource(reinterpret_cast<const char*>(data), dataSize);
             LOGN("Add local font %s (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
 
             for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
                 auto font = m_alfons.getFont(_ft.alias, size);
-                font->addFace(m_alfons.addFontFace(alfons::InputSource(reinterpret_cast<const char*>(data), dataSize), size));
+                font->addFace(m_alfons.addFontFace(source, size));
 
                 // add fallbacks from default font
                 font->addFaces(*m_font[i]);
