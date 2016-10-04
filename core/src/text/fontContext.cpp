@@ -340,14 +340,6 @@ void FontContext::fetch(const FontDescription& _ft) {
 
 bool FontContext::loadFontAlloc(const std::string& _bundleFontPath, unsigned char** _data, size_t& _dataSize) {
 
-    if (!m_sceneResourceRoot.empty()) {
-        std::string resourceFontPath = m_sceneResourceRoot + _bundleFontPath;
-        *_data = bytesFromFile(resourceFontPath.c_str(), _dataSize);
-        if (_data) {
-            return true;
-        }
-    }
-
     *_data = bytesFromFile(_bundleFontPath.c_str(), _dataSize);
 
     if (*_data) {
