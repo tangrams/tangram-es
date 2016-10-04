@@ -53,6 +53,9 @@ struct TestContext {
 
         scene->fontContext()->loadFonts();
         scene->featureSelection() = s_featureSelection;
+        for (auto& style : scene->styles()) {
+            style->setFeatureSelection(s_featureSelection);
+        }
 
         styleContext.initFunctions(*scene);
         styleContext.setKeywordZoom(0);
