@@ -318,9 +318,8 @@ void FontContext::fetch(const FontDescription& _ft) {
     } else {
         // Load from local storage
         size_t dataSize = 0;
-        unsigned char* data = nullptr;
 
-        if (loadFontAlloc(_ft.uri, &data, dataSize)) {
+        if (unsigned char* data = bytesFromFile(_ft.uri.c_str(), dataSize)) {
             auto source = alfons::InputSource(reinterpret_cast<const char*>(data), dataSize);
             LOGN("Add local font %s (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
 
@@ -337,17 +336,6 @@ void FontContext::fetch(const FontDescription& _ft) {
             LOGW("Local font at path %s can't be found (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
         }
     }
-}
-
-bool FontContext::loadFontAlloc(const std::string& _bundleFontPath, unsigned char** _data, size_t& _dataSize) {
-
-    *_data = bytesFromFile(_bundleFontPath.c_str(), _dataSize);
-
-    if (*_data) {
-        return true;
-    }
-
-    return false;
 }
 
 void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::AtlasGlyph& atlasGlyph) {
@@ -382,14 +370,16 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     auto font =  m_alfons.getFont(FontDescription::Alias(_family, _style, _weight), fontSize);
     if (font->hasFaces()) { return font; }
 
-    size_t dataSize = 0;
     unsigned char* data = nullptr;
+    size_t dataSize = 0;
 
     // Assuming bundled ttf file follows this convention
-    std::string bundleFontPath = m_bundlePath + FontDescription::BundleAlias(_family, _style, _weight);
+    std::string bundleFontPath = m_sceneResourceRoot + "fonts/" +
+        FontDescription::BundleAlias(_family, _style, _weight);
 
-    if (!loadFontAlloc(bundleFontPath, &data, dataSize)) {
+    data = bytesFromFile(bundleFontPath.c_str(), dataSize);
 
+    if (!data) {
         // Try fallback
         std::string sysFontPath = systemFontPath(_family, _weight, _style);
         data = bytesFromFile(sysFontPath.c_str(), dataSize);
