@@ -133,7 +133,7 @@ bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader, int textur
             if (hasNextTextureBatch) {
                 verticesTextured = nextTextureBatch->startVertex;
             } else {
-                verticesTextured = RenderState::MAX_QUAD_VERTICES;
+                verticesTextured = verticesIndexed;
             }
         }
 
