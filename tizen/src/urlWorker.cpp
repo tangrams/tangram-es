@@ -34,7 +34,7 @@ void UrlWorker::run() {
     CURL* curlHandle;
 
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
+        std::lock_guard<std::mutex> lock(m_mutexInitCurl);
         curlHandle = curl_easy_init();
         // set up curl to perform fetch
         curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, write_data);
