@@ -7,15 +7,13 @@
 //  Copyright (c) 2016 Mapzen. All rights reserved.
 //
 
-#include "tangram.h"
-
 #import <UIKit/UIKit.h>
 #import <GLKit/GLKit.h>
 
 typedef NS_ENUM(NSInteger, TangramCameraType) {
-  TangramCameraTypePerspective = 0,
-  TangramCameraTypeIsometric,
-  TangramCameraTypeFlat
+    TangramCameraTypePerspective = 0,
+    TangramCameraTypeIsometric,
+    TangramCameraTypeFlat
 };
 
 typedef NS_ENUM(NSInteger, TangramEaseType){
@@ -47,7 +45,6 @@ NS_ASSUME_NONNULL_END
 struct TileID;
 @interface TGMapViewController : GLKViewController <UIGestureRecognizerDelegate>
 
-@property (assign, nonatomic, nullable) Tangram::Map* map;
 @property (assign, nonatomic) BOOL continuous;
 @property (weak, nonatomic, nullable) id<TangramGestureRecognizerDelegate> gestureDelegate;
 
