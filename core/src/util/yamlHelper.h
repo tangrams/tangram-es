@@ -11,6 +11,17 @@ using YAML::BadConversion;
 
 namespace Tangram {
 
+// A YamlPath encodes the location of a node in a yaml document in a string,
+// e.g. "lorem.ipsum#0" identifies root["lorem"]["ipsum"][0]
+struct YamlPath {
+    YamlPath();
+    YamlPath(const std::string& path);
+    YamlPath add(int index);
+    YamlPath add(const std::string& key);
+    YAML::Node get(YAML::Node root);
+    std::string codedPath;
+};
+
 template<typename T>
 inline T parseVec(const Node& node) {
     T vec;
