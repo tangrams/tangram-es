@@ -1,0 +1,6 @@
+framework module TangramMap {
+  umbrella header "TangramMap.h"
+
+  export *
+  module * { export * }
+}

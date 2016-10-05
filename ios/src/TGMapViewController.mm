@@ -9,12 +9,14 @@
 
 #import "TGMapViewController.h"
 #include "platform_ios.h"
+#include "tangram.h"
 
 @interface TGMapViewController ()
 
 @property (nullable, strong, nonatomic) EAGLContext *context;
 @property (assign, nonatomic) CGFloat pixelScale;
 @property (assign, nonatomic) BOOL renderRequested;
+@property (assign, nonatomic, nullable) Tangram::Map* map;
 
 @end
 
@@ -32,7 +34,7 @@
 }
 
 - (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
-    
+
     if (self.map) {
         Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
         self.map->setPositionEased(position.longitude, position.latitude, duration, ease);
