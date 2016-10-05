@@ -85,7 +85,7 @@ StyleContext::~StyleContext() {
 
 // Convert a scalar node to a boolean, double, or string (in that order)
 // and for the first conversion that works, push it to the top of the JS stack.
-void pushYamlScalarAsJsObject(duk_context* ctx, const YAML::Node& node) {
+void pushYamlScalarAsJsPrimitive(duk_context* ctx, const YAML::Node& node) {
     bool booleanValue = false;
     double numberValue = 0.;
     if (YAML::convert<bool>::decode(node, booleanValue)) {
@@ -97,76 +97,64 @@ void pushYamlScalarAsJsObject(duk_context* ctx, const YAML::Node& node) {
     }
 }
 
-void StyleContext::parseSceneGlobals(const YAML::Node& node, const std::string& key, int seqIndex,
-                                     duk_idx_t dukObject) {
-
-    switch(node.Type()) {
-        case YAML::NodeType::Scalar:
-            if (key.size() == 0) {
-                pushYamlScalarAsJsObject(m_ctx, node);
-                duk_put_prop_index(m_ctx, dukObject, seqIndex); // push
-            } else {
-                auto nodeValue = node.Scalar();
-                if (nodeValue.compare(0, 8, "function") == 0) {
-                    duk_push_string(m_ctx, key.c_str()); // push property key
-                    duk_push_string(m_ctx, nodeValue.c_str()); // push function string
-                    duk_push_string(m_ctx, "");
-                    if (duk_pcompile(m_ctx, DUK_COMPILE_FUNCTION) == 0) { // compile function
-                        duk_put_prop(m_ctx, -3); // put {key: function()}
-                    } else {
-                        LOGW("Compile failed in global function: %s\n%s\n---",
-                             duk_safe_to_string(m_ctx, -1),
-                             nodeValue.c_str());
-                        duk_pop(m_ctx); //pop error
-                        duk_pop(m_ctx); //pop key
-                        // push property as a string
-                        duk_push_string(m_ctx, nodeValue.c_str());
-                        duk_put_prop_string(m_ctx, dukObject, key.c_str());
-                    }
-                } else {
-                    pushYamlScalarAsJsObject(m_ctx, node);
-                    duk_put_prop_string(m_ctx, dukObject, key.c_str());
-                }
-            }
-            break;
-        case YAML::NodeType::Sequence:
-            {
-                auto seqObj = duk_push_array(m_ctx);
-                for (size_t i = 0; i < node.size(); i++) {
-                    parseSceneGlobals(node[i], "", i, seqObj);
-                }
-                duk_put_prop_string(m_ctx, seqObj-1, key.c_str());
-                break;
-            }
-        case YAML::NodeType::Map:
-            {
-                //duk_push_string(m_ctx, key.c_str());
-                auto mapObj = duk_push_object(m_ctx);
-                for (auto& mapNode : node) {
-                    auto itemKey = mapNode.first.Scalar();
-                    parseSceneGlobals(mapNode.second, itemKey, 0, mapObj);
-                }
-                duk_put_prop_string(m_ctx, mapObj-1, key.c_str());
-            }
-        default:
-            break;
+void pushYamlScalarAsJsFunctionOrString(duk_context* ctx, const YAML::Node& node) {
+    auto scalar = node.Scalar().c_str();
+    duk_push_string(ctx, scalar); // Push function source.
+    duk_push_string(ctx, ""); // Push a "filename".
+    if (duk_pcompile(ctx, DUK_COMPILE_FUNCTION) != 0) { // Compile function.
+        auto error = duk_safe_to_string(ctx, -1);
+        LOGW("Compile failed in global function: %s\n%s\n---", error, scalar);
+        duk_pop(ctx); // Pop error.
+        duk_push_string(ctx, scalar); // Push property as a string.
     }
-
-    return;
 }
 
-void StyleContext::setSceneGlobals(const std::unordered_map<std::string, YAML::Node>& sceneGlobals) {
+void StyleContext::parseSceneGlobals(const YAML::Node& node) {
+    switch(node.Type()) {
+    case YAML::NodeType::Scalar:
+        {
+            auto& scalar = node.Scalar();
+            if (scalar.compare(0, 8, "function") == 0) {
+                pushYamlScalarAsJsFunctionOrString(m_ctx, node);
+            } else {
+                pushYamlScalarAsJsPrimitive(m_ctx, node);
+            }
+            break;
+        }
+    case YAML::NodeType::Sequence:
+        {
+            auto seqObj = duk_push_array(m_ctx);
+            for (size_t i = 0; i < node.size(); i++) {
+                parseSceneGlobals(node[i]);
+                duk_put_prop_index(m_ctx, seqObj, i);
+            }
+            break;
+        }
+    case YAML::NodeType::Map:
+        {
+            auto mapObj = duk_push_object(m_ctx);
+            for (const auto& entry : node) {
+                if (!entry.first.IsScalar()) {
+                    continue; // Can't put non-scalar keys in JS objects.
+                }
+                parseSceneGlobals(entry.second);
+                duk_put_prop_string(m_ctx, mapObj, entry.first.Scalar().c_str());
+            }
+            break;
+        }
+    default:
+        break;
+    }
+}
 
-    if (sceneGlobals.size() == 0) { return; }
+void StyleContext::setSceneGlobals(const YAML::Node& sceneGlobals) {
+
+    if (!sceneGlobals) { return; }
 
     //[ "ctx" ]
     auto globalObject = duk_push_object(m_ctx);
 
-    for (auto& global : sceneGlobals) {
-        auto key = global.first;
-        if (key.find(":") != std::string::npos) { continue; }
-        parseSceneGlobals(global.second, key, 0, globalObject);
-    }
+    parseSceneGlobals(sceneGlobals);
 
     duk_put_global_string(m_ctx, "global");
 }
@@ -178,8 +166,8 @@ void StyleContext::initFunctions(const Scene& _scene) {
     }
     m_sceneId = _scene.id;
 
+    setSceneGlobals(_scene.config()["global"]);
     setFunctions(_scene.functions());
-    setSceneGlobals(_scene.globals());
 }
 
 bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {

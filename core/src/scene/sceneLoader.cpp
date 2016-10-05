@@ -128,25 +128,8 @@ void createGlobalRefsRecursive(Node node, Scene& scene, YamlPath path) {
     }
 }
 
-void parseGlobalsRecursive(const Node& node, Scene& scene, YamlPath path) {
-    switch (node.Type()) {
-    case NodeType::Scalar:
-    case NodeType::Sequence:
-        scene.globals()[path.codedPath] = node;
-        break;
-    case NodeType::Map:
-        scene.globals()[path.codedPath].reset(node);
-        for (const auto& entry : node) {
-            parseGlobalsRecursive(entry.second, scene, path.add(entry.first.Scalar()));
-        }
-    default:
-        break;
-    }
-}
-
 void SceneLoader::applyGlobals(Node root, Scene& scene) {
 
-    parseGlobalsRecursive(root["global"], scene, YamlPath("global"));
     createGlobalRefsRecursive(root, scene, YamlPath());
 
     for (auto& globalRef : scene.globalRefs()) {

@@ -75,7 +75,6 @@ public:
     auto& stops() { return m_stops; }
     auto& background() { return m_background; }
     auto& fontContext() { return m_fontContext; }
-    auto& globals() { return m_globals; }
     auto& globalRefs() { return m_globalRefs; }
     Style* findStyle(const std::string& _name);
 
@@ -89,7 +88,6 @@ public:
     const auto& functions() const { return m_jsFunctions; };
     const auto& mapProjection() const { return m_mapProjection; };
     const auto& fontContext() const { return m_fontContext; }
-    const auto& globals() const { return m_globals; }
     const auto& globalRefs() const { return m_globalRefs; }
 
     const Style* findStyle(const std::string& _name) const;
@@ -140,9 +138,6 @@ private:
     std::vector<std::unique_ptr<Light>> m_lights;
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
-
-    // Contains all global nodes mapped by their delimited path in the scene config.
-    std::unordered_map<std::string, YAML::Node> m_globals;
 
     // Records the YAML Nodes for which global values have been swapped; keys are
     // nodes that referenced globals, values are nodes of globals themselves.

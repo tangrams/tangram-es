@@ -70,7 +70,7 @@ public:
 
     bool setFunctions(const std::vector<std::string>& _functions);
     bool addFunction(const std::string& _function);
-    void setSceneGlobals(const std::unordered_map<std::string, YAML::Node>& sceneGlobals);
+    void setSceneGlobals(const YAML::Node& sceneGlobals);
 
     void setKeyword(const std::string& _key, Value _value);
     const Value& getKeyword(const std::string& _key) const;
@@ -81,7 +81,7 @@ private:
 
     bool evalFunction(FunctionID id);
     void parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
-    void parseSceneGlobals(const YAML::Node& node, const std::string& key, int seqIndex, int dukObject);
+    void parseSceneGlobals(const YAML::Node& node);
 
     std::array<Value, 4> m_keywords;
     int m_keywordGeom= -1;
