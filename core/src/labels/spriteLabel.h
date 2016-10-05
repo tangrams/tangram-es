@@ -29,7 +29,7 @@ public:
     SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Options _options,
                 float _extrudeScale, Texture* _texture, SpriteLabels& _labels, size_t _labelsPos);
 
-    void updateBBoxes(float _zoomFract) override;
+    void updateBBoxes(float _zoomFract, bool _occluded) override;
 
     void pushTransform() override;
 

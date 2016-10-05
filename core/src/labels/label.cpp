@@ -103,7 +103,7 @@ bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _scree
 void Label::setParent(Label& _parent, bool _definePriority, bool _defineCollide) {
     m_parent = &_parent;
 
-    if (_definePriority) {
+    if (_definePriority || m_options.required) {
         m_options.priority = _parent.options().priority + 0.5f;
     }
 
@@ -117,9 +117,13 @@ void Label::setParent(Label& _parent, bool _definePriority, bool _defineCollide)
 bool Label::offViewport(const glm::vec2& _screenSize) {
     const auto& quad = m_obb.getQuad();
 
+    const float buffer = 256.f;
+    float width = _screenSize.x + buffer;
+    float height = _screenSize.y + buffer;
+
     for (int i = 0; i < 4; ++i) {
         const auto& p = quad[i];
-        if (p.x < _screenSize.x && p.y < _screenSize.y && p.x > 0 && p.y > 0) {
+        if (p.x < width && p.y < height && p.x > -buffer && p.y > -buffer) {
             return false;
         }
     }
@@ -249,7 +253,7 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
     }
 
     // update the view-space bouding box
-    updateBBoxes(_zoomFract);
+    updateBBoxes(_zoomFract, m_occludedLastFrame);
 
     // checks whether the label is out of the viewport
     if (offViewport(_screenSize)) {

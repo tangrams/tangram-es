@@ -283,7 +283,7 @@ void Labels::handleOcclusions(const View& _view) {
         do {
             if (l->isOccluded()) {
                 // Update BBox for anchor fallback
-                l->updateBBoxes(dz);
+                l->updateBBoxes(dz, l->occludedLastFrame());
                 if (anchorIndex == l->anchorIndex()) {
                     // Reached first anchor again
                     break;
@@ -325,6 +325,9 @@ void Labels::handleOcclusions(const View& _view) {
             if (l->parent() && l->options().required) {
                 l->parent()->occlude();
             }
+        } else if (l->occludedLastFrame()){
+            // Update bbox to non-occluded state
+            l->updateBBoxes(dz, false);
         }
 
         if (l->options().repeatDistance > 0.f) {
@@ -416,7 +419,7 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const View& _view, floa
 
                 if (!_visibleOnly) {
                     label->updateScreenTransform(mvp, screenSize, false);
-                    label->updateBBoxes(dz);
+                    label->updateBBoxes(dz, label->occludedLastFrame());
                 } else if (!label->visibleState()) {
                     continue;
                 }
