@@ -16,4 +16,4 @@ FOUNDATION_EXPORT const unsigned char tangram_frameworkVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <tangram_framework/PublicHeader.h>
 
-#import <tangram_framework/ViewController.h>
+#import <tangram_framework/TGMapViewController.h>

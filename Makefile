@@ -11,6 +11,7 @@ all: android osx ios
 .PHONY: clean-shaders
 .PHONY: clean-tizen-arm
 .PHONY: clean-tizen-x86
+.PHONY: clean-ios-framework
 .PHONY: android
 .PHONY: osx
 .PHONY: xcode
@@ -25,6 +26,7 @@ all: android osx ios
 .PHONY: cmake-android
 .PHONY: cmake-ios
 .PHONY: cmake-ios-sim
+.PHONY: cmake-ios-framework
 .PHONY: cmake-rpi
 .PHONY: cmake-linux
 .PHONY: install-android
@@ -33,6 +35,7 @@ ANDROID_BUILD_DIR = build/android
 OSX_BUILD_DIR = build/osx
 OSX_XCODE_BUILD_DIR = build/xcode
 IOS_BUILD_DIR = build/ios
+IOS_FRAMEWORK_BUILD_DIR = build/ios-framework
 IOS_SIM_BUILD_DIR = build/ios-sim
 RPI_BUILD_DIR = build/rpi
 LINUX_BUILD_DIR = build/linux
@@ -129,6 +132,13 @@ IOS_CMAKE_PARAMS = \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/iOS.toolchain.cmake \
 	-G Xcode
 
+IOS_FRAMEWORK_CMAKE_PARAMS = \
+        ${BUILD_TYPE} \
+        ${CMAKE_OPTIONS} \
+	-DPLATFORM_TARGET=ios.framework \
+	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/iOS.toolchain.cmake \
+	-G Xcode
+
 DARWIN_XCODE_CMAKE_PARAMS = \
         ${BUILD_TYPE} \
         ${CMAKE_OPTIONS} \
@@ -222,6 +232,9 @@ clean-tizen-arm:
 clean-tizen-x86:
 	rm -rf ${TIZEN_X86_BUILD_DIR}
 
+clean-ios-framework:
+	rm -rf ${IOS_FRAMEWORK_BUILD_DIR}
+
 android: android-demo-apk
 	@echo "run: 'adb install -r android/demo/build/outputs/apk/demo-debug.apk'"
 
@@ -279,6 +292,11 @@ cmake-ios:
 	@mkdir -p ${IOS_BUILD_DIR}
 	@cd ${IOS_BUILD_DIR} && \
 	cmake ../.. ${IOS_CMAKE_PARAMS}
+
+cmake-ios-framework:
+	@mkdir -p ${IOS_FRAMEWORK_BUILD_DIR}
+	@cd ${IOS_FRAMEWORK_BUILD_DIR} && \
+	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS}
 
 ios-sim: ${IOS_SIM_BUILD_DIR}/${IOS_XCODE_PROJ}
 	xcodebuild -target ${IOS_TARGET} -project ${IOS_SIM_BUILD_DIR}/${IOS_XCODE_PROJ}
