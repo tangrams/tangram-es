@@ -12,147 +12,160 @@ using namespace Tangram;
 
 const static std::string sceneString = R"END(
 global:
-    default_order: function() { return feature.sort_key; }
-    isoactive: true
-    persactive: false
-
-cameras:
-    iso-camera:
-        type: isometric
-        active: global.isoactive
-    perspective-camera:
-        type: perspective
-        active: global.persactive
-
-lights:
-    light1:
-        type: directional
-        direction: [.1, .5, -1]
-        diffuse: .7
-        ambient: .5
-
-styles:
-    heightglow:
-        base: polygons
-        shaders:
-            uniforms:
-                u_time_expand: 10.0
-    heightglowline:
-        base: lines
-        mix: heightglow
-
-layers:
-    poi_icons:
-        draw:
-            icons:
-                interactive: true
-
+    a: global_a_value
+    b: global_b_value
+map:
+    a: map_a_value
+    b: global.b
+seq:
+    - seq_0_value
+    - global.a
+nest:
+    map:
+        a: nest_map_a_value
+        b: nest_map_b_value
+    seq:
+        - nest_seq_0_value
+        - nest_seq_1_value
 )END";
 
-TEST_CASE("Scene update tests") {
+TEST_CASE("Apply scene update to a top-level node") {
+    // Setup.
     Scene scene;
-
-    REQUIRE(!sceneString.empty());
-
     REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
-
-    std::vector<SceneUpdate> updates;
-    // Update
-    updates.push_back({"lights.light1.ambient", "0.9"});
-    updates.push_back({"lights.light1.type", "spotlight"});
-    updates.push_back({"lights.light1.origin", "ground"});
-    updates.push_back({"layers.poi_icons.draw.icons.interactive", "false"});
-    updates.push_back({"styles.heightglow.shaders.uniforms.u_time_expand", "5.0"});
-    updates.push_back({"cameras.iso-camera.active", "true"});
-    updates.push_back({"cameras.iso-camera.type", "perspective"});
-    updates.push_back({"global.default_order", "function() { return 0.0; }"});
-    updates.push_back({"global.non_existing_property0", "true"});
-    updates.push_back({"global.non_existing_property1.non_existing_property_deep", "true"});
-
-    // Tangram apply scene updates, reload the scene
+    // Add an update.
+    std::vector<SceneUpdate> updates = {{"map", "new_value"}};
+    // Apply scene updates, reload scene.
     SceneLoader::applyUpdates(scene, updates);
-
     const Node& root = scene.config();
-
-    REQUIRE(root["lights"]["light1"]["ambient"].Scalar() == "0.9");
-    REQUIRE(root["lights"]["light1"]["type"].Scalar() == "spotlight");
-    REQUIRE(root["lights"]["light1"]["origin"].Scalar() == "ground");
-    REQUIRE(root["layers"]["poi_icons"]["draw"]["icons"]["interactive"].Scalar() == "false");
-    REQUIRE(root["styles"]["heightglow"]["shaders"]["uniforms"]["u_time_expand"].Scalar() == "5.0");
-    REQUIRE(root["cameras"]["iso-camera"]["active"].Scalar() == "true");
-    REQUIRE(root["cameras"]["iso-camera"]["type"].Scalar() == "perspective");
-    REQUIRE(root["global"]["default_order"].Scalar() == "function() { return 0.0; }");
-    REQUIRE(root["global"]["non_existing_property0"].Scalar() == "true");
-    REQUIRE(!root["global"]["non_existing_property1"]);
+    REQUIRE(root["map"].Scalar() == "new_value");
 }
 
-TEST_CASE("Scene update tests, ensure update ordering is preserved") {
+TEST_CASE("Apply scene update to a map entry") {
+    // Setup.
     Scene scene;
-    std::vector<SceneUpdate> updates;
-
-    REQUIRE(!sceneString.empty());
-
     REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
-
-    // Update
-    updates.push_back({"lights.light1.ambient", "0.9"});
-    updates.push_back({"lights.light2.ambient", "0.0"});
-
-    // Delete lights
-    updates.push_back({"lights", "null"});
-    updates.push_back({"lights.light2.ambient", "0.0"});
-
-    // Tangram apply scene updates, reload the scene
+    // Add an update.
+    std::vector<SceneUpdate> updates = {{"map.a", "new_value"}};
+    // Apply scene updates, reload scene.
     SceneLoader::applyUpdates(scene, updates);
-
     const Node& root = scene.config();
-
-    REQUIRE(!root["lights"]["light1"]);
-    REQUIRE(!root["lights"]["light2"]);
+    REQUIRE(root["map"]["a"].Scalar() == "new_value");
 }
 
-TEST_CASE("Scene update tests, multiple updates with globals") {
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>();
-    std::vector<SceneUpdate> updates;
+TEST_CASE("Apply scene update to a nested map entry") {
+    // Setup.
+    Scene scene;
+    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    // Add an update.
+    std::vector<SceneUpdate> updates = {{"nest.map.a", "new_value"}};
+    // Apply scene updates, reload scene.
+    SceneLoader::applyUpdates(scene, updates);
+    const Node& root = scene.config();
+    REQUIRE(root["nest"]["map"]["a"].Scalar() == "new_value");
+}
 
-    REQUIRE(!sceneString.empty());
+TEST_CASE("Apply scene update to a sequence node") {
+    // Setup.
+    Scene scene;
+    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    // Add an update.
+    std::vector<SceneUpdate> updates = {{"seq", "new_value"}};
+    // Apply scene updates, reload scene.
+    SceneLoader::applyUpdates(scene, updates);
+    const Node& root = scene.config();
+    REQUIRE(root["seq"].Scalar() == "new_value");
+}
 
-    REQUIRE(SceneLoader::loadConfig(sceneString, scene->config()));
+TEST_CASE("Apply scene update to a nested sequence node") {
+    // Setup.
+    Scene scene;
+    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    // Add an update.
+    std::vector<SceneUpdate> updates = {{"nest.seq", "new_value"}};
+    // Apply scene updates, reload scene.
+    SceneLoader::applyUpdates(scene, updates);
+    const Node& root = scene.config();
+    REQUIRE(root["nest"]["seq"].Scalar() == "new_value");
+}
 
-    Node& root = scene->config();
+TEST_CASE("Apply scene update to a new map entry") {
+    // Setup.
+    Scene scene;
+    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    // Add an update.
+    std::vector<SceneUpdate> updates = {{"map.c", "new_value"}};
+    // Apply scene updates, reload scene.
+    SceneLoader::applyUpdates(scene, updates);
+    const Node& root = scene.config();
+    REQUIRE(root["map"]["c"].Scalar() == "new_value");
+}
 
-    SceneLoader::parseGlobals(root["global"], scene);
-    SceneLoader::applyGlobalRefUpdates(root, scene);
-    SceneLoader::applyGlobalProperties(root, scene);
+// This was previously enforced but it didn't seem clearly useful or desirable,
+// so I've now allowed updates like this. We'll see how it goes.
+/*
+TEST_CASE("Do not apply scene update to a non-existent node") {
+    // Setup.
+    Scene scene;
+    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    // Add an update.
+    std::vector<SceneUpdate> updates = {{"none.a", "new_value"}};
+    // Apply scene updates, reload scene.
+    SceneLoader::applyUpdates(scene, updates);
+    const Node& root = scene.config();
+    REQUIRE(!root["none"]);
+}
+*/
 
-    REQUIRE(root["cameras"]["iso-camera"]["active"].Scalar() == "true");
-    REQUIRE(root["cameras"]["perspective-camera"]["active"].Scalar() == "false");
+TEST_CASE("Apply scene update that removes a node") {
+    // Setup.
+    Scene scene;
+    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    // Add an update.
+    std::vector<SceneUpdate> updates = {{"nest.map", "null"}};
+    // Apply scene updates, reload scene.
+    SceneLoader::applyUpdates(scene, updates);
+    const Node& root = scene.config();
+    REQUIRE(!root["nest"]["map"]["a"]);
+}
 
-    // Update 1 - change 1 of the global values and explicitly set a value for the other
-    updates.push_back({"global.isoactive", "false"});
-    updates.push_back({"cameras.perspective-camera.active", "true"});
-    // Tangram apply scene updates, reload the scene
-    SceneLoader::applyUpdates(*scene, updates);
-    root = scene->config();
-    SceneLoader::parseGlobals(root["global"], scene);
-    SceneLoader::applyGlobalRefUpdates(root, scene);
-    SceneLoader::applyGlobalProperties(root, scene);
-    REQUIRE(root["cameras"]["iso-camera"]["active"].Scalar() == "false");
-    REQUIRE(root["cameras"]["perspective-camera"]["active"].Scalar() == "true");
+TEST_CASE("Apply multiple scene updates in order of request") {
+    // Setup.
+    Scene scene;
+    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    // Add an update.
+    std::vector<SceneUpdate> updates = {{"map.a", "first_value"}, {"map.a", "second_value"}};
+    // Apply scene updates, reload scene.
+    SceneLoader::applyUpdates(scene, updates);
+    const Node& root = scene.config();
+    REQUIRE(root["map"]["a"].Scalar() == "second_value");
+}
 
-    updates.clear();
-
-    // Update 2 - swap globals
-    updates.push_back({"global.persactive", "true"});
-    updates.push_back({"cameras.iso-camera.active", "global.persactive"});
-    updates.push_back({"cameras.perspective-camera.active", "global.isoactive"});
-    // Tangram apply scene updates, reload the scene
-    SceneLoader::applyUpdates(*scene, updates);
-    root = scene->config();
-    SceneLoader::parseGlobals(root["global"], scene);
-    SceneLoader::applyGlobalRefUpdates(root, scene);
-    SceneLoader::applyGlobalProperties(root, scene);
-    REQUIRE(root["cameras"]["iso-camera"]["active"].Scalar() == "true");
-    REQUIRE(root["cameras"]["perspective-camera"]["active"].Scalar() == "false");
-
+TEST_CASE("Apply and propogate repeated global value updates") {
+    // Setup.
+    Scene scene;
+    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    Node& root = scene.config();
+    // Apply initial globals.
+    SceneLoader::applyGlobals(root, scene);
+    REQUIRE(root["seq"][1].Scalar() == "global_a_value");
+    REQUIRE(root["map"]["b"].Scalar() == "global_b_value");
+    // Add an update.
+    std::vector<SceneUpdate> updates = {{"global.b", "new_global_b_value"}};
+    // Apply the update.
+    SceneLoader::applyUpdates(scene, updates);
+    REQUIRE(root["global"]["b"].Scalar() == "new_global_b_value");
+    // Apply updated globals.
+    SceneLoader::applyGlobals(root, scene);
+    REQUIRE(root["seq"][1].Scalar() == "global_a_value");
+    REQUIRE(root["map"]["b"].Scalar() == "new_global_b_value");
+    // Add an update.
+    updates = {{"global.b", "newer_global_b_value"}};
+    // Apply the update.
+    SceneLoader::applyUpdates(scene, updates);
+    REQUIRE(root["global"]["b"].Scalar() == "newer_global_b_value");
+    // Apply updated globals.
+    SceneLoader::applyGlobals(root, scene);
+    REQUIRE(root["seq"][1].Scalar() == "global_a_value");
+    REQUIRE(root["map"]["b"].Scalar() == "newer_global_b_value");
 }
