@@ -221,7 +221,6 @@ void Map::applySceneUpdates() {
         if (impl->sceneUpdates.empty()) { return; }
 
         impl->nextScene = std::make_shared<Scene>(*impl->scene);
-        impl->nextScene->referencedGlobals() = impl->scene->referencedGlobals();
         impl->nextScene->useScenePosition = false;
 
         updates = impl->sceneUpdates;

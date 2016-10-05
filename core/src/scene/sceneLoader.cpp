@@ -40,8 +40,6 @@ using YAML::Node;
 using YAML::NodeType;
 using YAML::BadConversion;
 
-#define COMPONENT_PATH_DELIMITER '.'
-
 #define LOGNode(fmt, node, ...) LOGW(fmt ":\n'%s'\n", ## __VA_ARGS__, Dump(node).c_str())
 
 namespace Tangram {
@@ -79,47 +77,19 @@ bool SceneLoader::loadConfig(const std::string& _sceneString, Node& root) {
     return true;
 }
 
-void SceneLoader::applyUpdate(Node& root, const std::vector<std::string>& keys, Node value) {
-
-    auto node = root;
-    std::string key;
-    for (auto it = keys.begin(); it != keys.end(); ++it) {
-        key = *it;
-        if (it + 1 == keys.end()) { break; } // Stop before last key.
-        node.reset(node[key]); // Node safely becomes invalid is key is not present.
-    }
-
-    if (node) {
-        try {
-            node[key] = value;
-        } catch (YAML::ParserException e) {
-            LOGW("Cannot update scene - value invalid: %s", e.what());
-        }
-    } else {
-        std::string path;
-        for (const auto& k : keys) { path += "." + k; }
-        LOGW("Cannot update scene - key not found: %s", path.c_str());
-    }
-}
-
 void SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates) {
     auto& root = scene.config();
     for (const auto& update : updates) {
-        scene.removeGlobalRef(update.keys);
-        auto keys = splitString(update.keys, COMPONENT_PATH_DELIMITER);
+        Node value;
         try {
-            auto valueNode = YAML::Load(update.value);
-            applyUpdate(root, keys, valueNode);
+            value = YAML::Load(update.value);
         } catch (YAML::ParserException e) {
             LOGE("Parsing scene update string failed. '%s'", e.what());
         }
-    }
-}
-
-void SceneLoader::applyGlobalRefUpdates(Node& root, const std::shared_ptr<Scene>& scene) {
-    for (const auto& referencedGlobal : scene->referencedGlobals()) {
-        auto keys = splitString(referencedGlobal.first, COMPONENT_PATH_DELIMITER);
-        applyUpdate(root, keys, referencedGlobal.second);
+        if (value) {
+            auto node = YamlPath(update.path).get(root);
+            node = value;
+        }
     }
 }
 
@@ -132,34 +102,25 @@ void printFilters(const SceneLayer& layer, int indent){
     }
 };
 
-void SceneLoader::applyGlobalProperties(Node& node, const std::shared_ptr<Scene>& scene, const std::string& keys) {
+void createGlobalRefsRecursive(Node node, Scene& scene, YamlPath path) {
     switch(node.Type()) {
-    case NodeType::Scalar:
-        {
-            std::string key = node.Scalar();
-            if (key.compare(0, 7, "global.") == 0) {
-                key.replace(0, 7, "");
-                std::replace(key.begin(), key.end(), '.', DELIMITER[0]);
-                node = scene->globals()[key];
-                scene->referencedGlobals().emplace_back(keys, scene->globals()[key]);
+    case NodeType::Scalar: {
+            const auto& value = node.Scalar();
+            if (value.compare(0, 7, "global.") == 0) {
+                scene.globalRefs().emplace_back(path, YamlPath(value));
             }
         }
         break;
-    case NodeType::Sequence:
-        {
+    case NodeType::Sequence: {
             int i = 0;
-            for (auto n : node) {
-                std::string k = keys + COMPONENT_PATH_DELIMITER + std::to_string(i);
-                applyGlobalProperties(n, scene, k);
-                i++;
+            for (const auto& entry : node) {
+                createGlobalRefsRecursive(entry, scene, path.add(i++));
             }
-            break;
         }
+        break;
     case NodeType::Map:
-        for (auto n : node) {
-            std::string k = (n.first.IsScalar()) ? n.first.Scalar() : "";
-            k = (keys.size() > 0) ? (keys + COMPONENT_PATH_DELIMITER + k) : k;
-            applyGlobalProperties(n.second, scene, k);
+        for (const auto& entry : node) {
+            createGlobalRefsRecursive(entry.second, scene, path.add(entry.first.Scalar()));
         }
         break;
     default:
@@ -167,24 +128,31 @@ void SceneLoader::applyGlobalProperties(Node& node, const std::shared_ptr<Scene>
     }
 }
 
-void SceneLoader::parseGlobals(const Node& node, const std::shared_ptr<Scene>& scene, const std::string& key) {
+void parseGlobalsRecursive(const Node& node, Scene& scene, YamlPath path) {
     switch (node.Type()) {
     case NodeType::Scalar:
     case NodeType::Sequence:
-        scene->globals()[key] = node;
+        scene.globals()[path.codedPath] = node;
         break;
     case NodeType::Map:
-        if (key.size() > 0) {
-            scene->globals()[key] = node;
-        }
-        for (const auto& g : node) {
-            std::string value = g.first.Scalar();
-            Node global = node[value];
-            std::string mapKey = (key.size() == 0) ? value : (key + DELIMITER + value);
-            parseGlobals(global, scene, mapKey);
+        scene.globals()[path.codedPath].reset(node);
+        for (const auto& entry : node) {
+            parseGlobalsRecursive(entry.second, scene, path.add(entry.first.Scalar()));
         }
     default:
         break;
+    }
+}
+
+void SceneLoader::applyGlobals(Node root, Scene& scene) {
+
+    parseGlobalsRecursive(root["global"], scene, YamlPath("global"));
+    createGlobalRefsRecursive(root, scene, YamlPath());
+
+    for (auto& globalRef : scene.globalRefs()) {
+        auto target = globalRef.first.get(root);
+        auto global = globalRef.second.get(root);
+        target = global;
     }
 }
 
@@ -199,10 +167,8 @@ bool SceneLoader::applyConfig(Node& config, const std::shared_ptr<Scene>& _scene
     _scene->styles().emplace_back(new PointStyle("points", _scene->fontContext()));
     _scene->styles().emplace_back(new RasterStyle("raster"));
 
-    if (Node globals = config["global"]) {
-        parseGlobals(globals, _scene);
-        applyGlobalRefUpdates(config, _scene);
-        applyGlobalProperties(config, _scene);
+    if (config["global"]) {
+        applyGlobals(config, *_scene);
     }
 
 
