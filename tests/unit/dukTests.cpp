@@ -326,8 +326,7 @@ TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
 
     std::vector<StyleParam> styles;
 
-    SceneLoader::parseGlobals(n0["global"], scene);
-    SceneLoader::applyGlobalProperties(n0, scene);
+    scene->config() = n0;
 
     SceneLoader::parseStyleParams(n0["draw"], scene, "", styles);
 
@@ -335,7 +334,6 @@ TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
 
     StyleContext ctx;
     ctx.initFunctions(*scene);
-    ctx.setSceneGlobals(scene->globals());
 
     for (auto& style : styles) {
         if (style.key == StyleParamKey::color) {
