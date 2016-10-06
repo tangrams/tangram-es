@@ -42,7 +42,7 @@ set(HEADERS
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.h)
 
 set(FRAMEWORK_HEADERS
-    ${PROJECT_SOURCE_DIR}/ios/framework/tangram_framework.h
+    ${PROJECT_SOURCE_DIR}/ios/framework/Tangram.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.h)
 
 add_library(${FRAMEWORK_NAME} SHARED ${HEADERS} ${FRAMEWORK_HEADERS} ${SOURCES})
@@ -58,7 +58,7 @@ set(IOS_FRAMEWORK_RESOURCES ${PROJECT_SOURCE_DIR}/ios/framework/Info.plist)
 set_target_properties(${FRAMEWORK_NAME} PROPERTIES
     FRAMEWORK TRUE
     FRAMEWORK_VERSION 1.0
-    MACOSX_FRAMEWORK_IDENTIFIER com.tangram-framework
+    MACOSX_FRAMEWORK_IDENTIFIER com.Mapzen.Tangram
     MACOSX_FRAMEWORK_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/framework/Info.plist
     VERSION 16.4.0
     SOVERSION 1.0.0
