@@ -26,7 +26,6 @@
 namespace Tangram {
 
 FontContext::FontContext() :
-    resourceLoad(0),
     m_sdfRadius(SDF_WIDTH),
     m_atlas(*this, GlyphTexture::size, m_sdfRadius),
     m_batch(m_atlas, m_scratch) {}
@@ -289,52 +288,17 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     return true;
 }
 
-void FontContext::fetch(const FontDescription& _ft) {
+void FontContext::addFont(const FontDescription& _ft, const alfons::InputSource& _source) {
 
-    const static std::regex regex("^(http|https):/");
-    std::smatch match;
+    // NB: Synchronize for calls from download thread
+    std::lock_guard<std::mutex> lock(m_mutex);
 
-    if (std::regex_search(_ft.uri, match, regex)) {
-        // Load remote
-        resourceLoad++;
-        startUrlRequest(_ft.uri, [&, _ft](std::vector<char>&& rawData) {
-            if (rawData.size() == 0) {
-                LOGE("Bad URL request for font %s at URL %s", _ft.alias.c_str(), _ft.uri.c_str());
-            } else {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                auto source = alfons::InputSource(reinterpret_cast<const char*>(rawData.data()), rawData.size());
+    for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
+        auto font = m_alfons.getFont(_ft.alias, size);
+        font->addFace(m_alfons.addFontFace(_source, size));
 
-                for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-                    auto font = m_alfons.getFont(_ft.alias, size);
-                    font->addFace(m_alfons.addFontFace(source, size));
-
-                    // add fallbacks from default font
-                    font->addFaces(*m_font[i]);
-                }
-            }
-
-            resourceLoad--;
-        });
-    } else {
-        // Load from local storage
-        size_t dataSize = 0;
-
-        if (unsigned char* data = bytesFromFile(_ft.uri.c_str(), dataSize)) {
-            auto source = alfons::InputSource(reinterpret_cast<const char*>(data), dataSize);
-            LOGN("Add local font %s (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
-
-            for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-                auto font = m_alfons.getFont(_ft.alias, size);
-                font->addFace(m_alfons.addFontFace(source, size));
-
-                // add fallbacks from default font
-                font->addFaces(*m_font[i]);
-            }
-
-            free(data);
-        } else {
-            LOGW("Local font at path %s can't be found (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
-        }
+        // add fallbacks from default font
+        font->addFaces(*m_font[i]);
     }
 }
 

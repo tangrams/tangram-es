@@ -584,7 +584,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
     std::smatch match;
     // TODO: generalize using URI handlers
     if (std::regex_search(url, match, r)) {
-        scene->resourceLoad++;
+        scene->pendingTextures++;
         startUrlRequest(url, [=](std::vector<char>&& rawData) {
                 auto ptr = (unsigned char*)(rawData.data());
                 size_t dataSize = rawData.size();
@@ -596,7 +596,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
                     }
 
                     updateSpriteNodes(name, texture, scene);
-                    scene->resourceLoad--;
+                    scene->pendingTextures--;
                 }
             });
         texture = std::make_shared<Texture>(nullptr, 0, options, generateMipmaps);
@@ -706,38 +706,69 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, const std::shar
 }
 
 void loadFontDescription(const Node& node, const std::string& family, const std::shared_ptr<Scene>& scene) {
-    if (node.IsMap()) {
-        auto& fontContext = scene->fontContext();
-        std::string style = "normal", weight = "400", uri;
+    if (!node.IsMap()) {
+        LOGW("");
+        return;
+    }
+    std::string style = "normal", weight = "400", uri;
 
-        for (const auto& fontDesc : node) {
-            const std::string& key = fontDesc.first.Scalar();
-            if (key == "weight") {
-                weight = fontDesc.second.Scalar();
-            } else if (key == "style") {
-                style = fontDesc.second.Scalar();
-            } else if (key == "url") {
-                uri = fontDesc.second.Scalar();
-            } else if (key == "external") {
-                LOGW("external: within fonts: is a no-op in native version of tangram (%s)", family.c_str());
+    for (const auto& fontDesc : node) {
+        const std::string& key = fontDesc.first.Scalar();
+        if (key == "weight") {
+            weight = fontDesc.second.Scalar();
+        } else if (key == "style") {
+            style = fontDesc.second.Scalar();
+        } else if (key == "url") {
+            uri = fontDesc.second.Scalar();
+        } else if (key == "external") {
+            LOGW("external: within fonts: is a no-op in native version of tangram (%s)", family.c_str());
+        }
+    }
+
+    if (uri.empty()) {
+        LOGW("Empty url: block within fonts: (%s)", family.c_str());
+        return;
+    }
+
+    std::string familyNormalized, styleNormalized;
+
+    familyNormalized.resize(family.size());
+    styleNormalized.resize(style.size());
+
+    std::transform(family.begin(), family.end(), familyNormalized.begin(), ::tolower);
+    std::transform(style.begin(), style.end(), styleNormalized.begin(), ::tolower);
+
+    // Download/Load the font and add it to the context
+    FontDescription _ft(familyNormalized, styleNormalized, weight, uri);
+
+    std::regex regex("^(http|https):/");
+    std::smatch match;
+
+    if (std::regex_search(uri, match, regex)) {
+        // Load remote
+        scene->pendingFonts++;
+        startUrlRequest(_ft.uri, [_ft, scene](std::vector<char>&& rawData) {
+            if (rawData.size() == 0) {
+                LOGE("Bad URL request for font %s at URL %s", _ft.alias.c_str(), _ft.uri.c_str());
+            } else {
+                auto source = alfons::InputSource(rawData);
+                scene->fontContext()->addFont(_ft, source);
             }
+            scene->pendingFonts--;
+        });
+    } else {
+        // Load from local storage
+        size_t dataSize = 0;
+
+        if (unsigned char* data = bytesFromFile(_ft.uri.c_str(), dataSize)) {
+            auto source = alfons::InputSource(reinterpret_cast<const char*>(data), dataSize);
+            free(data);
+
+            LOGN("Add local font %s (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
+            scene->fontContext()->addFont(_ft, source);
+        } else {
+            LOGW("Local font at path %s can't be found (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
         }
-
-        if (uri.empty()) {
-            LOGW("Empty url: block within fonts: (%s)", family.c_str());
-            return;
-        }
-
-        std::string familyNormalized, styleNormalized;
-
-        familyNormalized.resize(family.size());
-        styleNormalized.resize(style.size());
-
-        std::transform(family.begin(), family.end(), familyNormalized.begin(), ::tolower);
-        std::transform(style.begin(), style.end(), styleNormalized.begin(), ::tolower);
-
-        // Download/Load the font and add it to the context
-        fontContext->fetch(FontDescription(familyNormalized, styleNormalized, weight, uri));
     }
 }
 

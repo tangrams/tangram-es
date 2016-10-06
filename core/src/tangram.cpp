@@ -264,7 +264,7 @@ void Map::resize(int _newWidth, int _newHeight) {
 bool Map::update(float _dt) {
 
     // Wait until font resources are fully loaded
-    if (impl->scene->fontContext()->resourceLoad > 0) {
+    if (impl->scene->pendingFonts > 0) {
         return false;
     }
 
@@ -326,7 +326,7 @@ bool Map::update(float _dt) {
     bool tilesChanged = impl->tileManager.hasTileSetChanged();
     bool tilesLoading = impl->tileManager.hasLoadingTiles();
     bool labelsNeedUpdate = impl->labels.needUpdate();
-    bool resourceLoading = (impl->scene->resourceLoad > 0);
+    bool resourceLoading = (impl->scene->pendingTextures > 0);
     bool nextScene = bool(impl->nextScene);
 
     if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || resourceLoading || nextScene) {

@@ -118,9 +118,7 @@ public:
 
     void setSceneResourceRoot(const std::string& sceneResourceRoot) { m_sceneResourceRoot = sceneResourceRoot; }
 
-    void fetch(const FontDescription& _ft);
-
-    std::atomic_ushort resourceLoad;
+    void addFont(const FontDescription& _ft, const alfons::InputSource& _source);
 
 private:
 
