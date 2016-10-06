@@ -35,6 +35,7 @@ private:
     void run();
 
     std::mutex m_mutex;
+    std::mutex m_mutexInitCurl;
 
     std::condition_variable m_condition;
 
