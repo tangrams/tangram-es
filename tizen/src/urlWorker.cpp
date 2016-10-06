@@ -120,5 +120,8 @@ void UrlWorker::stop() {
     for (auto& worker : m_workers) {
         worker->join();
     }
+
+    m_workers.clear();
+
     curl_global_cleanup();
 }
