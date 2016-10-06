@@ -18,7 +18,6 @@
 
 #include <bitset>
 #include <mutex>
-#include <atomic>
 
 namespace Tangram {
 
