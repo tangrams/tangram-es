@@ -103,11 +103,11 @@ public:
 };
 
 struct TileTaskQueue {
-    virtual void enqueue(std::shared_ptr<TileTask>&& task) = 0;
+    virtual void enqueue(std::shared_ptr<TileTask> task) = 0;
 };
 
 struct TileTaskCb {
-    std::function<void(std::shared_ptr<TileTask>&&)> func;
+    std::function<void(std::shared_ptr<TileTask>)> func;
 };
 
 }

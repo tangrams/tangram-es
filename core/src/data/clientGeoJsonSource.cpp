@@ -34,7 +34,7 @@ Point transformPoint(geojsonvt::TilePoint pt) {
 // TODO: pass scene's resourcePath to constructor to be used with `stringFromFile`
 ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::string& _url,
                                          int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom)
-    : DataSource(_name, _url, _minDisplayZoom, _maxDisplayZoom, _maxZoom) {
+    : DataSource(_name, nullptr, _minDisplayZoom, _maxDisplayZoom, _maxZoom) {
 
     // TODO: handle network url for client datasource data
     // TODO: generic uri handling
@@ -74,7 +74,7 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
 
 }
 
-bool ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
+bool ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
 
     if (m_hasPendingData) {
         return false;

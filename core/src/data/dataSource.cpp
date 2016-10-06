@@ -89,12 +89,11 @@ struct RawCache {
     }
 };
 
-DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate,
+DataSource::DataSource(const std::string& _name, std::unique_ptr<RawDataSource> _sources,
                        int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom) :
     m_name(_name),
     m_minDisplayZoom(_minDisplayZoom), m_maxDisplayZoom(_maxDisplayZoom), m_maxZoom(_maxZoom),
-    m_urlTemplate(_urlTemplate),
-    m_cache(std::make_unique<RawCache>()){
+    m_sources(std::move(_sources)) {
 
     static std::atomic<int32_t> s_serial;
 
@@ -108,45 +107,34 @@ DataSource::~DataSource() {
 std::shared_ptr<TileTask> DataSource::createTask(TileID _tileId, int _subTask) {
     auto task = std::make_shared<DownloadTileTask>(_tileId, shared_from_this(), _subTask);
 
-    cacheGet(*task);
+    //cacheGet(*task);
 
     return task;
 }
 
-void DataSource::setCacheSize(size_t _cacheSize) {
+void MemoryCacheDataSource::setCacheSize(size_t _cacheSize) {
     m_cache->m_maxUsage = _cacheSize;
 }
 
-bool DataSource::cacheGet(DownloadTileTask& _task) {
+bool MemoryCacheDataSource::cacheGet(DownloadTileTask& _task) {
     return m_cache->get(_task);
 }
 
-void DataSource::cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef) {
+void MemoryCacheDataSource::cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef) {
     m_cache->put(_tileID, _rawDataRef);
 }
 
 void DataSource::clearData() {
-    m_cache->clear();
-    m_generation++;
-}
 
-void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const {
-    _url.assign(m_urlTemplate);
-    try {
-        size_t xpos = _url.find("{x}");
-        _url.replace(xpos, 3, std::to_string(_tileCoord.x));
-        size_t ypos = _url.find("{y}");
-        _url.replace(ypos, 3, std::to_string(_tileCoord.y));
-        size_t zpos = _url.find("{z}");
-        _url.replace(zpos, 3, std::to_string(_tileCoord.z));
-    } catch(...) {
-        LOGE("Bad URL template!");
-    }
+    if (m_sources) { m_sources->clear(); }
+
+    m_generation++;
 }
 
 bool DataSource::equals(const DataSource& other) const {
     if (m_name != other.m_name) { return false; }
-    if (m_urlTemplate != other.m_urlTemplate) { return false; }
+    // TODO compare RawDataSources instead
+    //if (m_urlTemplate != other.m_urlTemplate) { return false; }
     if (m_minDisplayZoom != other.m_minDisplayZoom) { return false; }
     if (m_maxDisplayZoom != other.m_maxDisplayZoom) { return false; }
     if (m_maxZoom != other.m_maxZoom) { return false; }
@@ -158,43 +146,18 @@ bool DataSource::equals(const DataSource& other) const {
     return true;
 }
 
-void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
-                              TileTaskCb _cb) {
+bool DataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
 
-    if (_task->isCanceled()) { return; }
+    if (m_sources) { return m_sources->loadTileData(_task, _cb); }
 
-    TileID tileID = _task->tileId();
-
-    if (!_rawData.empty()) {
-
-        auto rawDataRef = std::make_shared<std::vector<char>>();
-        std::swap(*rawDataRef, _rawData);
-
-        auto& task = static_cast<DownloadTileTask&>(*_task);
-        task.rawTileData = rawDataRef;
-
-        _cb.func(std::move(_task));
-
-        cachePut(tileID, rawDataRef);
-    }
+    return false;
 }
 
-bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
-
-    std::string url(constructURL(_task->tileId()));
-
-    // lambda captured parameters are const by default, we want "task" (moved) to be non-const,
-    // hence "mutable"
-    // Refer: http://en.cppreference.com/w/cpp/language/lambda
-    return startUrlRequest(url,
-            [this, _cb, task = std::move(_task)](std::vector<char>&& rawData) mutable {
-                this->onTileLoaded(std::move(rawData), std::move(task), _cb);
-            });
-
-}
 
 void DataSource::cancelLoadingTile(const TileID& _tileID) {
-    cancelUrlRequest(constructURL(_tileID));
+
+    if (m_sources) { return m_sources->cancelLoadingTile(_tileID); }
+
     for (auto& raster : m_rasterSources) {
         TileID rasterID = _tileID.withMaxSourceZoom(raster->maxZoom());
         raster->cancelLoadingTile(rasterID);
@@ -228,5 +191,98 @@ void DataSource::addRasterSource(std::shared_ptr<DataSource> _rasterSource) {
     }
     m_rasterSources.push_back(_rasterSource);
 }
+
+void NetworkDataSource::constructURL(const TileID& _tileCoord, std::string& _url) const {
+    _url.assign(m_urlTemplate);
+
+    try {
+        size_t xpos = _url.find("{x}");
+        _url.replace(xpos, 3, std::to_string(_tileCoord.x));
+        size_t ypos = _url.find("{y}");
+        _url.replace(ypos, 3, std::to_string(_tileCoord.y));
+        size_t zpos = _url.find("{z}");
+        _url.replace(zpos, 3, std::to_string(_tileCoord.z));
+    } catch(...) {
+        LOGE("Bad URL template!");
+    }
+}
+
+bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
+
+    std::string url(constructURL(_task->tileId()));
+
+    LOGW("network get: %s, %d", _task->tileId().toString().c_str());
+
+    return startUrlRequest(url,
+        [cb = _cb, task = _task](std::vector<char>&& _rawData) mutable {
+            if (task->isCanceled()) {
+                return;
+            }
+
+            if (!_rawData.empty()) {
+                auto rawDataRef = std::make_shared<std::vector<char>>();
+                std::swap(*rawDataRef, _rawData);
+
+                auto& dlTask = static_cast<DownloadTileTask&>(*task);
+                // NB: Sets hasData() state true
+                dlTask.rawTileData = rawDataRef;
+            }
+            cb.func(task);
+        });
+}
+
+void NetworkDataSource::cancelLoadingTile(const TileID& _tileID) {
+    cancelUrlRequest(constructURL(_tileID));
+}
+
+
+MemoryCacheDataSource::MemoryCacheDataSource() :
+    m_cache(std::make_unique<RawCache>()) {
+}
+
+MemoryCacheDataSource::~MemoryCacheDataSource() {}
+
+bool MemoryCacheDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
+
+    auto& task = static_cast<DownloadTileTask&>(*_task);
+    TileID tileID = _task->tileId();
+
+    LOGW("cache get: %s, %d", tileID.toString().c_str());
+
+    cacheGet(task);
+
+    if (task.hasData()) {
+        //LOGI("fromt cache %s", tileID);
+
+        _cb.func(_task);
+        return true;
+    }
+
+    if (next) {
+        TileTaskCb cb{[this, _cb](std::shared_ptr<TileTask> _task) {
+
+                auto& task = static_cast<DownloadTileTask&>(*_task);
+                TileID tileID = _task->tileId();
+                LOGW("cache tile: %s, %d", tileID.toString().c_str(), task.hasData());
+
+                if (task.hasData()) {
+                    cachePut(tileID, task.rawTileData);
+                }
+                _cb.func(_task);
+
+            }};
+
+        return next->loadTileData(_task, cb);
+    }
+
+    return false;
+}
+
+void MemoryCacheDataSource::clear() {
+    m_cache->clear();
+
+    if (next) { next->clear(); }
+}
+
 
 }
