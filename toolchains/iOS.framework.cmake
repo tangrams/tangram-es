@@ -41,7 +41,11 @@ set(HEADERS
     ${PROJECT_SOURCE_DIR}/ios/src/platform_ios.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.h)
 
-add_library(${FRAMEWORK_NAME} SHARED ${HEADERS} ${SOURCES})
+set(FRAMEWORK_HEADERS
+    ${PROJECT_SOURCE_DIR}/ios/framework/tangram_framework.h
+    ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.h)
+
+add_library(${FRAMEWORK_NAME} SHARED ${HEADERS} ${FRAMEWORK_HEADERS} ${SOURCES})
 
 target_link_libraries(${FRAMEWORK_NAME} ${CORE_LIBRARY})
 
@@ -49,18 +53,18 @@ message(STATUS "Building configuration for Tangram iOS Framework")
 
 #file(GLOB_RECURSE TANGRAM_BUNDLED_FONTS ${PROJECT_SOURCE_DIR}/scenes/fonts/**)
 #message(STATUS "Bundled fonts " ${TANGRAM_BUNDLED_FONTS})
-#set(IOS_FRAMEWORK_RESOURCES ${PROJECT_SOURCE_DIR}/ios/framework/Info.plist ${TANGRAM_BUNDLED_FONTS})
+set(IOS_FRAMEWORK_RESOURCES ${PROJECT_SOURCE_DIR}/ios/framework/Info.plist)
 
-set_target_properties(Tangram PROPERTIES
+set_target_properties(${FRAMEWORK_NAME} PROPERTIES
     FRAMEWORK TRUE
     FRAMEWORK_VERSION 1.0
     MACOSX_FRAMEWORK_IDENTIFIER com.tangram-framework
     MACOSX_FRAMEWORK_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/framework/Info.plist
     VERSION 16.4.0
     SOVERSION 1.0.0
-    PUBLIC_HEADER tangram_framework.h
+    PUBLIC_HEADER "${FRAMEWORK_HEADERS}"
     XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer"
-    #RESOURCE ${IOS_FRAMEWORK_RESOURCES}
+    RESOURCE "${IOS_FRAMEWORK_RESOURCES}"
     )
 
 macro(add_framework FWNAME APPNAME LIBPATH)
