@@ -24,7 +24,7 @@ public:
 
     ~TileWorker();
 
-    virtual void enqueue(std::shared_ptr<TileTask>&& task) override;
+    virtual void enqueue(std::shared_ptr<TileTask> task) override;
 
     void stop();
 

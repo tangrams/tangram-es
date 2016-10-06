@@ -407,7 +407,7 @@ void TileManager::loadSubTasks(std::vector<std::shared_ptr<DataSource>>& _subSou
         } else if (m_loadPending < MAX_DOWNLOADS) {
             subTasks.insert(it, subTask);
 
-            if (subSource->loadTileData(std::move(subTask), m_dataCallback)) {
+            if (subSource->loadTileData(subTask, m_dataCallback)) {
                 m_loadPending++;
 
             } else {
@@ -442,11 +442,11 @@ void TileManager::loadTiles() {
             // Note: Set implicit 'loading' state
             entry.task = task;
             loadSubTasks(tileSet.source->rasterSources(), entry.task, tileId);
-            m_dataCallback.func(std::move(task));
+            m_dataCallback.func(entry.task);
 
         } else if (m_loadPending < MAX_DOWNLOADS) {
             entry.task = task;
-            if (tileSet.source->loadTileData(std::move(task), m_dataCallback)) {
+            if (tileSet.source->loadTileData(entry.task, m_dataCallback)) {
                 m_loadPending++;
                 loadSubTasks(tileSet.source->rasterSources(), entry.task, tileId);
             } else {

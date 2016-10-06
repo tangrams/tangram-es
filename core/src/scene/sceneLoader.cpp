@@ -937,16 +937,25 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
 
     std::shared_ptr<DataSource> sourcePtr;
 
+    auto rawSources = std::make_unique<MemoryCacheDataSource>();
+    rawSources->setCacheSize(CACHE_SIZE);
+
     if (type == "GeoJSON") {
         if (tiled) {
-            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
+            rawSources->next = std::make_unique<NetworkDataSource>(url);
+            sourcePtr = std::make_shared<GeoJsonSource>(name, std::move(rawSources),
+                                                        minDisplayZoom, maxDisplayZoom, maxZoom);
         } else {
-            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
+            sourcePtr = std::make_shared<ClientGeoJsonSource>(name, url, minDisplayZoom, maxDisplayZoom, maxZoom);
         }
     } else if (type == "TopoJSON") {
-        sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
+        rawSources->next = std::make_unique<NetworkDataSource>(url);
+        sourcePtr = std::make_shared<TopoJsonSource>(name, std::move(rawSources),
+                                                     minDisplayZoom, maxDisplayZoom, maxZoom);
     } else if (type == "MVT") {
-        sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
+        rawSources->next = std::make_unique<NetworkDataSource>(url);
+        sourcePtr = std::make_shared<MVTSource>(name, std::move(rawSources),
+                                                minDisplayZoom, maxDisplayZoom, maxZoom);
     } else if (type == "Raster") {
         TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
         bool generateMipmaps = false;
@@ -955,13 +964,15 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
                 generateMipmaps = true;
             }
         }
-        sourcePtr = std::shared_ptr<DataSource>(new RasterSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom, options, generateMipmaps));
+        auto rawSources = std::make_unique<NetworkDataSource>(url);
+        sourcePtr = std::make_shared<RasterSource>(name, std::move(rawSources),
+                                                   minDisplayZoom, maxDisplayZoom, maxZoom,
+                                                   options, generateMipmaps);
     } else {
         LOGW("Unrecognized data source type '%s', skipping", type.c_str());
     }
 
     if (sourcePtr) {
-        sourcePtr->setCacheSize(CACHE_SIZE);
         _scene->dataSources().push_back(sourcePtr);
     }
 

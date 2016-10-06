@@ -19,11 +19,11 @@ struct TestTileWorker : TileTaskQueue {
 
     std::deque<std::shared_ptr<TileTask>> tasks;
 
-    virtual void enqueue(std::shared_ptr<TileTask>&& task) {
+    void enqueue(std::shared_ptr<TileTask> task) override{
         tasks.push_back(std::move(task));
     }
 
-    virtual bool checkProcessedTiles() {
+    bool checkProcessedTiles() {
         if (pendingTiles) {
             pendingTiles = false;
             return true;
@@ -80,11 +80,11 @@ struct TestDataSource : DataSource {
 
     int tileTaskCount = 0;
 
-    TestDataSource() : DataSource("", "") {
+    TestDataSource() : DataSource("", nullptr) {
         m_generateGeometry = true;
     }
 
-    bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) override {
+    bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override {
         tileTaskCount++;
         static_cast<Task*>(_task.get())->gotData = true;
         _cb.func(std::move(_task));

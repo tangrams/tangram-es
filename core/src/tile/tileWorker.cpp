@@ -108,7 +108,7 @@ void TileWorker::setScene(std::shared_ptr<Scene>& _scene) {
     }
 }
 
-void TileWorker::enqueue(std::shared_ptr<TileTask>&& task) {
+void TileWorker::enqueue(std::shared_ptr<TileTask> task) {
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         if (!m_running) {

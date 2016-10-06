@@ -69,10 +69,12 @@ public:
 };
 
 
-RasterSource::RasterSource(const std::string& _name, const std::string& _urlTemplate,
+RasterSource::RasterSource(const std::string& _name, std::unique_ptr<RawDataSource> _sources,
                            int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
                            TextureOptions _options, bool _genMipmap)
-    : DataSource(_name, _urlTemplate, _minDisplayZoom, _maxDisplayZoom, _maxZoom), m_texOptions(_options), m_genMipmap(_genMipmap) {
+    : DataSource(_name, std::move(_sources), _minDisplayZoom, _maxDisplayZoom, _maxZoom),
+      m_texOptions(_options),
+      m_genMipmap(_genMipmap) {
 
     m_emptyTexture = std::make_shared<Texture>(nullptr, 0, m_texOptions, m_genMipmap);
 }
@@ -125,52 +127,7 @@ std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, int _subTask)
         }
     }
 
-    // Try raw data cache
-    cacheGet(*task);
-
     return task;
-}
-
-void RasterSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
-                                TileTaskCb _cb) {
-
-    if (_task->isCanceled()) { return; }
-
-    TileID tileID = _task->tileId();
-
-    auto rawDataRef = std::make_shared<std::vector<char>>();
-    std::swap(*rawDataRef, _rawData);
-
-    auto& task = static_cast<DownloadTileTask&>(*_task);
-    task.rawTileData = rawDataRef;
-
-    _cb.func(std::move(_task));
-
-    cachePut(tileID, rawDataRef);
-}
-
-bool RasterSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
-
-    std::string url(constructURL(_task->tileId()));
-
-    auto copyTask = _task;
-
-    // lambda captured parameters are const by default, we want "task" (moved) to be non-const,
-    // hence "mutable"
-    // Refer: http://en.cppreference.com/w/cpp/language/lambda
-    bool status = startUrlRequest(url,
-            [this, _cb, task = std::move(_task)](std::vector<char>&& rawData) mutable {
-                this->onTileLoaded(std::move(rawData), std::move(task), _cb);
-            });
-
-    // For "dependent" raster datasources if this returns false make sure to create a black texture
-    // for tileID in this task, and consider dependent raster ready
-    if (!status) {
-        auto& task = static_cast<RasterTileTask&>(*copyTask);
-        task.m_texture = m_emptyTexture;
-    }
-
-    return status;
 }
 
 Raster RasterSource::getRaster(const TileTask& _task) {

@@ -33,7 +33,7 @@ public:
     void addLine(const Properties& _tags, const Coordinates& _line);
     void addPoly(const Properties& _tags, const std::vector<Coordinates>& _poly);
 
-    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) override;
+    virtual bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
     std::shared_ptr<TileTask> createTask(TileID _tileId, int _subTask) override;
 
     virtual void cancelLoadingTile(const TileID& _tile) override {};
