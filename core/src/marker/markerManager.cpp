@@ -87,6 +87,9 @@ bool MarkerManager::setVisible(MarkerID markerID, bool visible) {
 }
 
 bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
+
+    if (!m_scene) { return false; }
+
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
@@ -107,6 +110,9 @@ bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
 }
 
 bool MarkerManager::setPointEased(MarkerID markerID, LngLat lngLat, float duration, EaseType ease) {
+
+    if (!m_scene) { return false; }
+
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
@@ -122,6 +128,9 @@ bool MarkerManager::setPointEased(MarkerID markerID, LngLat lngLat, float durati
 }
 
 bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int count) {
+
+    if (!m_scene) { return false; }
+
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
     if (!coordinates || count < 2) { return false; }
@@ -165,6 +174,9 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
 }
 
 bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* counts, int rings) {
+
+    if (!m_scene) { return false; }
+
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
     if (!coordinates || !counts || rings < 1) { return false; }
@@ -248,6 +260,8 @@ const std::vector<std::unique_ptr<Marker>>& MarkerManager::markers() const {
 }
 
 void MarkerManager::buildStyling(Marker& marker) {
+
+    if (!m_scene) { return; }
 
     // Update the draw rule for the marker.
     YAML::Node node = YAML::Load(marker.stylingString());
