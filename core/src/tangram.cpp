@@ -265,6 +265,7 @@ bool Map::update(float _dt) {
 
     // Wait until font resources are fully loaded
     if (impl->scene->pendingFonts > 0) {
+        requestRender();
         return false;
     }
 
