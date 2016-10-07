@@ -42,6 +42,8 @@ class Map::Impl {
 
 public:
 
+    Impl() = default;
+    ~Impl();
     void setScene(std::shared_ptr<Scene>& _scene);
 
     void setEase(EaseField _f, Ease _e);
@@ -77,6 +79,10 @@ public:
     std::atomic_bool valid;
 
 };
+
+Map::Impl::~Impl() {
+    jobQueue.runJobs();
+}
 
 void Map::Impl::setEase(EaseField _f, Ease _e) {
     eases[static_cast<size_t>(_f)] = _e;
