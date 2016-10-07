@@ -30,6 +30,7 @@
 
 #include <cmath>
 #include <bitset>
+#include <atomic>
 
 namespace Tangram {
 
@@ -73,6 +74,7 @@ public:
     std::shared_ptr<Scene> nextScene = nullptr;
 
     bool cacheGlState;
+    std::atomic_bool valid;
 
 };
 
@@ -90,16 +92,21 @@ static std::bitset<8> g_flags = 0;
 Map::Map() {
 
     impl.reset(new Impl());
+    impl->valid.store(true);
 
 }
 
 Map::~Map() {
     // The unique_ptr to Impl will be automatically destroyed when Map is destroyed.
+    impl->valid.store(false);
     TextDisplay::Instance().deinit();
     Primitives::deinit();
 }
 
 void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
+
+    if (!valid.load()) { return; }
+
     {
         std::lock_guard<std::mutex> lock(sceneMutex);
         scene = _scene;
@@ -170,6 +177,9 @@ void Map::loadScene(const char* _scenePath, bool _useScenePosition) {
 }
 
 void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _platformCallback, void *_cbData) {
+
+    if (!impl->valid.load()) { return; }
+
     LOG("Loading scene file (async): %s", _scenePath);
 
     {
@@ -207,6 +217,8 @@ void Map::queueSceneUpdate(const char* _path, const char* _value) {
 }
 
 void Map::applySceneUpdates() {
+
+    if (!impl->valid.load()) { return; }
 
     LOG("Applying %d scene updates", impl->sceneUpdates.size());
 
