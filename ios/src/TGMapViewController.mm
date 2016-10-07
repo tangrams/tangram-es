@@ -9,12 +9,14 @@
 
 #import "TGMapViewController.h"
 #include "platform_ios.h"
+#include "tangram.h"
 
 @interface TGMapViewController ()
 
 @property (nullable, strong, nonatomic) EAGLContext *context;
 @property (assign, nonatomic) CGFloat pixelScale;
 @property (assign, nonatomic) BOOL renderRequested;
+@property (assign, nonatomic, nullable) Tangram::Map* map;
 
 @end
 
