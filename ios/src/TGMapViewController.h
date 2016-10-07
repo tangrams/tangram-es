@@ -11,9 +11,9 @@
 #import <GLKit/GLKit.h>
 
 typedef NS_ENUM(NSInteger, TangramCameraType) {
-  TangramCameraTypePerspective = 0,
-  TangramCameraTypeIsometric,
-  TangramCameraTypeFlat
+    TangramCameraTypePerspective = 0,
+    TangramCameraTypeIsometric,
+    TangramCameraTypeFlat
 };
 
 typedef NS_ENUM(NSInteger, TangramEaseType){

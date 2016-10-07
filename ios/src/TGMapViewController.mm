@@ -34,7 +34,7 @@
 }
 
 - (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
-    
+
     if (self.map) {
         Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
         self.map->setPositionEased(position.longitude, position.latitude, duration, ease);

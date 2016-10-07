@@ -45,8 +45,8 @@ set(FRAMEWORK_HEADERS
     ${PROJECT_SOURCE_DIR}/ios/framework/TangramMap.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.h)
 
-add_library(${FRAMEWORK_NAME} SHARED ${SOURCES})
-target_link_libraries(${FRAMEWORK_NAME} ${CORE_LIBRARY})
+add_library(${FRAMEWORK_NAME} SHARED ${SOURCES} ${HEADERS})
+target_link_libraries(${FRAMEWORK_NAME} "-all_load" ${CORE_LIBRARY})
 
 #file(GLOB_RECURSE TANGRAM_BUNDLED_FONTS ${PROJECT_SOURCE_DIR}/scenes/fonts/**)
 #message(STATUS "Bundled fonts " ${TANGRAM_BUNDLED_FONTS})
