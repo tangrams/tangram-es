@@ -92,6 +92,21 @@ std::shared_ptr<Texture> RasterSource::createTexture(const std::vector<char>& _r
     return texture;
 }
 
+bool RasterSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
+    TileTaskCb cb{[this, _cb](std::shared_ptr<TileTask> _task) {
+
+            if (!_task->hasData()) {
+                auto& task = static_cast<RasterTileTask&>(*_task);
+                task.m_texture = m_emptyTexture;
+            }
+            _cb.func(_task);
+        }};
+
+    if (m_sources) { return m_sources->loadTileData(_task, _cb); }
+
+    return false;
+}
+
 std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapProjection& _projection) const {
 
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();

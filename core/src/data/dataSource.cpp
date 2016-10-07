@@ -105,11 +105,7 @@ DataSource::~DataSource() {
 }
 
 std::shared_ptr<TileTask> DataSource::createTask(TileID _tileId, int _subTask) {
-    auto task = std::make_shared<DownloadTileTask>(_tileId, shared_from_this(), _subTask);
-
-    //cacheGet(*task);
-
-    return task;
+    return std::make_shared<DownloadTileTask>(_tileId, shared_from_this(), _subTask);
 }
 
 void MemoryCacheDataSource::setCacheSize(size_t _cacheSize) {
@@ -209,12 +205,31 @@ void NetworkDataSource::constructURL(const TileID& _tileCoord, std::string& _url
 
 bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
 
+    if (m_pending.size() >= m_maxDownloads) {
+        return false;
+    }
+
+    auto tileId = _task->tileId();
+
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+
+        if (std::find(m_pending.begin(), m_pending.end(), tileId) != m_pending.end()) {
+            return false;
+        }
+        m_pending.push_back(tileId);
+
+    }
+
     std::string url(constructURL(_task->tileId()));
 
-    LOGW("network get: %s, %d", _task->tileId().toString().c_str());
+    LOGW("network get: %s, downloads: %d", tileId.toString().c_str(), m_pending.size());
 
-    return startUrlRequest(url,
-        [cb = _cb, task = _task](std::vector<char>&& _rawData) mutable {
+    bool started = startUrlRequest(url,
+        [this, cb = _cb, task = _task](std::vector<char>&& _rawData) mutable {
+
+            removePending(task->tileId());
+
             if (task->isCanceled()) {
                 return;
             }
@@ -229,10 +244,27 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb
             }
             cb.func(task);
         });
+
+    if (!started) {
+        removePending(_task->tileId());
+
+        // Set canceled state, so that tile will not be tried
+        // for reloading until sourceGeneration increased.
+        _task->cancel();
+    }
+
+    return started;
 }
 
-void NetworkDataSource::cancelLoadingTile(const TileID& _tileID) {
-    cancelUrlRequest(constructURL(_tileID));
+void NetworkDataSource::removePending(const TileID& _tileId) {
+    std::unique_lock<std::mutex> lock(m_mutex);
+    auto it = std::find(m_pending.begin(), m_pending.end(), _tileId);
+    if (it != m_pending.end()) { m_pending.erase(it); }
+}
+
+void NetworkDataSource::cancelLoadingTile(const TileID& _tileId) {
+    removePending(_tileId);
+    cancelUrlRequest(constructURL(_tileId));
 }
 
 

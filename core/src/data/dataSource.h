@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <mutex>
 
 #include "tile/tileTask.h"
 
@@ -51,9 +52,16 @@ private:
         return url;
     }
 
+    void removePending(const TileID& _tileId);
+
     // URL template for requesting tiles from a network or filesystem
     std::string m_urlTemplate;
 
+    std::vector<TileID> m_pending;
+
+    size_t m_maxDownloads = 4;
+
+    std::mutex m_mutex;
 };
 
 class MemoryCacheDataSource : public RawDataSource {

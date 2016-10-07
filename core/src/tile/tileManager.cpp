@@ -121,7 +121,6 @@ void TileManager::clearTileSet(int32_t _sourceId) {
 void TileManager::updateTileSets(const ViewState& _view,
                                  const std::set<TileID>& _visibleTiles) {
     m_tiles.clear();
-    m_loadPending = 0;
     m_tilesInProgress = 0;
     m_tileSetChanged = false;
 
@@ -338,16 +337,6 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             if (scaleDiv < 1) { scaleDiv = 0.1/scaleDiv; } // prefer parent tiles
             task->setPriority(glm::length2(tileCenter - _view.center) * scaleDiv);
             task->setProxyState(entry.getProxyCounter() > 0);
-
-            // Count tiles that are currently being downloaded to
-            // limit download requests.
-            if (!task->hasData()) {
-                m_loadPending++;
-            }
-
-            for (auto& subTask : task->subTasks()) {
-                if (!subTask->hasData()) { m_loadPending++; }
-            }
         }
 
         if (entry.isReady()) {
@@ -400,22 +389,8 @@ void TileManager::loadSubTasks(std::vector<std::shared_ptr<DataSource>>& _subSou
             subTasks.insert(it, subTask);
             requestRender();
 
-        } else if (subTask->hasData()) {
+        } else if (subSource->loadTileData(subTask, m_dataCallback)) {
             subTasks.insert(it, subTask);
-            m_dataCallback.func(std::move(subTask));
-
-        } else if (m_loadPending < MAX_DOWNLOADS) {
-            subTasks.insert(it, subTask);
-
-            if (subSource->loadTileData(subTask, m_dataCallback)) {
-                m_loadPending++;
-
-            } else {
-                // dependent raster's loading failed..
-                // this subTask's rasterReady must have been set with black texture
-                assert(subTask->isReady());
-                requestRender();
-            }
         }
     }
 }
@@ -438,23 +413,9 @@ void TileManager::loadTiles() {
 
         auto task = tileSet.source->createTask(tileId);
 
-        if (task->hasData()) {
-            // Note: Set implicit 'loading' state
+        if (tileSet.source->loadTileData(task, m_dataCallback)) {
             entry.task = task;
             loadSubTasks(tileSet.source->rasterSources(), entry.task, tileId);
-            m_dataCallback.func(entry.task);
-
-        } else if (m_loadPending < MAX_DOWNLOADS) {
-            entry.task = task;
-            if (tileSet.source->loadTileData(entry.task, m_dataCallback)) {
-                m_loadPending++;
-                loadSubTasks(tileSet.source->rasterSources(), entry.task, tileId);
-            } else {
-                // Set canceled state, so that tile will not be tried
-                // for reloading until sourceGeneration increased.
-                entry.task->cancel();
-                continue;
-            }
         }
     }
 
