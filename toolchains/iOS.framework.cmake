@@ -4,6 +4,8 @@ add_definitions(-DPLATFORM_IOS)
 
 set(FRAMEWORK_NAME TangramMap)
 
+set(BUILD_IOS_FRAMEWORK TRUE)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}
     -fobjc-abi-version=2
     -fobjc-arc
@@ -46,10 +48,11 @@ set(FRAMEWORK_HEADERS
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.h)
 
 add_library(${FRAMEWORK_NAME} SHARED ${SOURCES} ${HEADERS})
-target_link_libraries(${FRAMEWORK_NAME} "-all_load" ${CORE_LIBRARY})
+target_link_libraries(${FRAMEWORK_NAME} ${CORE_LIBRARY})
 
-#file(GLOB_RECURSE TANGRAM_BUNDLED_FONTS ${PROJECT_SOURCE_DIR}/scenes/fonts/**)
-#message(STATUS "Bundled fonts " ${TANGRAM_BUNDLED_FONTS})
+# TODO
+# file(GLOB_RECURSE TANGRAM_BUNDLED_FONTS ${PROJECT_SOURCE_DIR}/scenes/fonts/**)
+# message(STATUS "Bundled fonts " ${TANGRAM_BUNDLED_FONTS})
 set(IOS_FRAMEWORK_RESOURCES ${PROJECT_SOURCE_DIR}/ios/framework/Info.plist)
 
 set_target_properties(${FRAMEWORK_NAME} PROPERTIES
