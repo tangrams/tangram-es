@@ -33,6 +33,9 @@ public:
                  int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
                  TextureOptions _options, bool genMipmap = false);
 
+
+    bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb);
+
     virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask) override;
 
     virtual void clearRasters() override;
