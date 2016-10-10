@@ -23,11 +23,11 @@ YamlPath YamlPath::add(const std::string& key) {
 }
 
 YAML::Node YamlPath::get(YAML::Node node) {
-    size_t beginToken = 0, endToken = 0;
+    size_t beginToken = 0, endToken = 0, pathSize = codedPath.size();
     auto delimiter = MAP_DELIM; // First token must be a map key.
-    while (endToken < codedPath.size()) {
+    while (endToken < pathSize) {
         beginToken = endToken;
-        endToken = codedPath.size();
+        endToken = pathSize;
         endToken = std::min(endToken, codedPath.find(SEQ_DELIM, beginToken));
         endToken = std::min(endToken, codedPath.find(MAP_DELIM, beginToken));
         if (delimiter == SEQ_DELIM) {
@@ -41,6 +41,9 @@ YAML::Node YamlPath::get(YAML::Node node) {
         }
         delimiter = codedPath[endToken]; // Get next character as the delimiter.
         ++endToken; // Move past the delimiter.
+        if (endToken < pathSize && !node) {
+            return Node(); // A node in the path was missing, return null node.
+        }
     }
     return node;
 }

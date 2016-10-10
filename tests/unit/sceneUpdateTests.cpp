@@ -109,9 +109,6 @@ TEST_CASE("Apply scene update to a new map entry") {
     CHECK(root["map"]["b"].Scalar() == "global.b");
 }
 
-// This was previously enforced but it didn't seem clearly useful or desirable,
-// so I've now allowed updates like this. We'll see how it goes.
-/*
 TEST_CASE("Do not apply scene update to a non-existent node") {
     // Setup.
     Scene scene;
@@ -123,7 +120,6 @@ TEST_CASE("Do not apply scene update to a non-existent node") {
     const Node& root = scene.config();
     REQUIRE(!root["none"]);
 }
-*/
 
 TEST_CASE("Apply scene update that removes a node") {
     // Setup.
