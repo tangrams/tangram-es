@@ -118,7 +118,8 @@ public:
     float pixelScale() { return m_pixelScale; }
     void setPixelScale(float _scale) { m_pixelScale = _scale; }
 
-    std::atomic_ushort resourceLoad;
+    std::atomic_ushort pendingTextures{0};
+    std::atomic_ushort pendingFonts{0};
 
 private:
 

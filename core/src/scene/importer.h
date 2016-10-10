@@ -52,6 +52,7 @@ protected:
             const std::string& parentPath);
     void normalizeSceneImports(Node& root, const std::string& parentPath);
     void normalizeSceneDataSources(Node& root, const std::string& parentPath);
+    void normalizeFonts(Node& root, const std::string& parentPath);
     std::string normalizePath(const std::string& path, const std::string& parentPath);
 
 private:

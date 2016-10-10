@@ -26,7 +26,6 @@
 namespace Tangram {
 
 FontContext::FontContext() :
-    resourceLoad(0),
     m_sdfRadius(SDF_WIDTH),
     m_atlas(*this, GlyphTexture::size, m_sdfRadius),
     m_batch(m_atlas, m_scratch) {}
@@ -289,67 +288,18 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     return true;
 }
 
-void FontContext::fetch(const FontDescription& _ft) {
+void FontContext::addFont(const FontDescription& _ft, const alfons::InputSource& _source) {
 
-    const static std::regex regex("^(http|https):/");
-    std::smatch match;
+    // NB: Synchronize for calls from download thread
+    std::lock_guard<std::mutex> lock(m_mutex);
 
-    if (std::regex_search(_ft.uri, match, regex)) {
-        // Load remote
-        resourceLoad++;
-        startUrlRequest(_ft.uri, [&, _ft](std::vector<char>&& rawData) {
-            if (rawData.size() == 0) {
-                LOGE("Bad URL request for font %s at URL %s", _ft.alias.c_str(), _ft.uri.c_str());
-            } else {
-                std::lock_guard<std::mutex> lock(m_mutex);
-                char* data = reinterpret_cast<char*>(rawData.data());
+    for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
+        auto font = m_alfons.getFont(_ft.alias, size);
+        font->addFace(m_alfons.addFontFace(_source, size));
 
-                for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-                    auto font = m_alfons.getFont(_ft.alias, size);
-                    font->addFace(m_alfons.addFontFace(alfons::InputSource(data, rawData.size()), size));
-                }
-            }
-
-            resourceLoad--;
-        });
-    } else {
-        // Load from local storage
-        size_t dataSize = 0;
-        unsigned char* data = nullptr;
-
-        if (loadFontAlloc(_ft.bundleAlias, data, dataSize)) {
-            const char* rdata = reinterpret_cast<const char*>(data);
-
-            for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-                auto font = m_alfons.getFont(_ft.alias, size);
-                font->addFace(m_alfons.addFontFace(alfons::InputSource(rdata, dataSize), size));
-            }
-
-            free(data);
-        } else {
-            LOGW("Local font at path %s can't be found", _ft.uri.c_str());
-        }
+        // add fallbacks from default font
+        font->addFaces(*m_font[i]);
     }
-}
-
-bool FontContext::loadFontAlloc(const std::string& _bundleFontPath, unsigned char* _data, size_t& _dataSize) {
-
-    if (!m_sceneResourceRoot.empty()) {
-        std::string resourceFontPath = m_sceneResourceRoot + _bundleFontPath;
-        _data = bytesFromFile(resourceFontPath.c_str(), _dataSize);
-
-        if (_data) {
-            return true;
-        }
-    }
-
-    _data = bytesFromFile(_bundleFontPath.c_str(), _dataSize);
-
-    if (_data) {
-        return true;
-    }
-
-    return false;
 }
 
 void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::AtlasGlyph& atlasGlyph) {
@@ -384,20 +334,22 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     auto font =  m_alfons.getFont(FontDescription::Alias(_family, _style, _weight), fontSize);
     if (font->hasFaces()) { return font; }
 
-    size_t dataSize = 0;
     unsigned char* data = nullptr;
+    size_t dataSize = 0;
 
     // Assuming bundled ttf file follows this convention
-    std::string bundleFontPath = m_bundlePath + FontDescription::BundleAlias(_family, _weight, _style);
+    std::string bundleFontPath = m_sceneResourceRoot + "fonts/" +
+        FontDescription::BundleAlias(_family, _style, _weight);
 
-    if (!loadFontAlloc(bundleFontPath, data, dataSize)) {
+    data = bytesFromFile(bundleFontPath.c_str(), dataSize);
 
+    if (!data) {
         // Try fallback
         std::string sysFontPath = systemFontPath(_family, _weight, _style);
         data = bytesFromFile(sysFontPath.c_str(), dataSize);
 
         if (!data) {
-            LOGN("Could not load font file %s", FontDescription::BundleAlias(_family, _weight, _style).c_str());
+            LOGN("Could not load font file %s", FontDescription::BundleAlias(_family, _style, _weight).c_str());
 
             // add fallbacks from default font
             font->addFaces(*m_font[sizeIndex]);
