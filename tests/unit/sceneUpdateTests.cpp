@@ -38,7 +38,7 @@ TEST_CASE("Apply scene update to a top-level node") {
     // Apply scene updates, reload scene.
     SceneLoader::applyUpdates(scene, updates);
     const Node& root = scene.config();
-    REQUIRE(root["map"].Scalar() == "new_value");
+    CHECK(root["map"].Scalar() == "new_value");
 }
 
 TEST_CASE("Apply scene update to a map entry") {
@@ -50,7 +50,9 @@ TEST_CASE("Apply scene update to a map entry") {
     // Apply scene updates, reload scene.
     SceneLoader::applyUpdates(scene, updates);
     const Node& root = scene.config();
-    REQUIRE(root["map"]["a"].Scalar() == "new_value");
+    CHECK(root["map"]["a"].Scalar() == "new_value");
+    // Check that nearby values are unchanged.
+    CHECK(root["map"]["b"].Scalar() == "global.b");
 }
 
 TEST_CASE("Apply scene update to a nested map entry") {
@@ -62,7 +64,9 @@ TEST_CASE("Apply scene update to a nested map entry") {
     // Apply scene updates, reload scene.
     SceneLoader::applyUpdates(scene, updates);
     const Node& root = scene.config();
-    REQUIRE(root["nest"]["map"]["a"].Scalar() == "new_value");
+    CHECK(root["nest"]["map"]["a"].Scalar() == "new_value");
+    // Check that nearby values are unchanged.
+    CHECK(root["nest"]["map"]["b"].Scalar() == "nest_map_b_value");
 }
 
 TEST_CASE("Apply scene update to a sequence node") {
@@ -74,7 +78,7 @@ TEST_CASE("Apply scene update to a sequence node") {
     // Apply scene updates, reload scene.
     SceneLoader::applyUpdates(scene, updates);
     const Node& root = scene.config();
-    REQUIRE(root["seq"].Scalar() == "new_value");
+    CHECK(root["seq"].Scalar() == "new_value");
 }
 
 TEST_CASE("Apply scene update to a nested sequence node") {
@@ -86,7 +90,9 @@ TEST_CASE("Apply scene update to a nested sequence node") {
     // Apply scene updates, reload scene.
     SceneLoader::applyUpdates(scene, updates);
     const Node& root = scene.config();
-    REQUIRE(root["nest"]["seq"].Scalar() == "new_value");
+    CHECK(root["nest"]["seq"].Scalar() == "new_value");
+    // Check that nearby values are unchanged.
+    CHECK(root["nest"]["map"]["a"].Scalar() == "nest_map_a_value");
 }
 
 TEST_CASE("Apply scene update to a new map entry") {
@@ -98,7 +104,9 @@ TEST_CASE("Apply scene update to a new map entry") {
     // Apply scene updates, reload scene.
     SceneLoader::applyUpdates(scene, updates);
     const Node& root = scene.config();
-    REQUIRE(root["map"]["c"].Scalar() == "new_value");
+    CHECK(root["map"]["c"].Scalar() == "new_value");
+    // Check that nearby values are unchanged.
+    CHECK(root["map"]["b"].Scalar() == "global.b");
 }
 
 // This was previously enforced but it didn't seem clearly useful or desirable,
@@ -126,7 +134,9 @@ TEST_CASE("Apply scene update that removes a node") {
     // Apply scene updates, reload scene.
     SceneLoader::applyUpdates(scene, updates);
     const Node& root = scene.config();
-    REQUIRE(!root["nest"]["map"]["a"]);
+    CHECK(!root["nest"]["map"]["a"]);
+    CHECK(root["nest"]["map"].IsNull());
+    CHECK(root["nest"]["seq"]);
 }
 
 TEST_CASE("Apply multiple scene updates in order of request") {
@@ -138,7 +148,9 @@ TEST_CASE("Apply multiple scene updates in order of request") {
     // Apply scene updates, reload scene.
     SceneLoader::applyUpdates(scene, updates);
     const Node& root = scene.config();
-    REQUIRE(root["map"]["a"].Scalar() == "second_value");
+    CHECK(root["map"]["a"].Scalar() == "second_value");
+    // Check that nearby values are unchanged.
+    CHECK(root["map"]["b"].Scalar() == "global.b");
 }
 
 TEST_CASE("Apply and propogate repeated global value updates") {
@@ -148,24 +160,24 @@ TEST_CASE("Apply and propogate repeated global value updates") {
     Node& root = scene.config();
     // Apply initial globals.
     SceneLoader::applyGlobals(root, scene);
-    REQUIRE(root["seq"][1].Scalar() == "global_a_value");
-    REQUIRE(root["map"]["b"].Scalar() == "global_b_value");
+    CHECK(root["seq"][1].Scalar() == "global_a_value");
+    CHECK(root["map"]["b"].Scalar() == "global_b_value");
     // Add an update.
     std::vector<SceneUpdate> updates = {{"global.b", "new_global_b_value"}};
     // Apply the update.
     SceneLoader::applyUpdates(scene, updates);
-    REQUIRE(root["global"]["b"].Scalar() == "new_global_b_value");
+    CHECK(root["global"]["b"].Scalar() == "new_global_b_value");
     // Apply updated globals.
     SceneLoader::applyGlobals(root, scene);
-    REQUIRE(root["seq"][1].Scalar() == "global_a_value");
-    REQUIRE(root["map"]["b"].Scalar() == "new_global_b_value");
+    CHECK(root["seq"][1].Scalar() == "global_a_value");
+    CHECK(root["map"]["b"].Scalar() == "new_global_b_value");
     // Add an update.
     updates = {{"global.b", "newer_global_b_value"}};
     // Apply the update.
     SceneLoader::applyUpdates(scene, updates);
-    REQUIRE(root["global"]["b"].Scalar() == "newer_global_b_value");
+    CHECK(root["global"]["b"].Scalar() == "newer_global_b_value");
     // Apply updated globals.
     SceneLoader::applyGlobals(root, scene);
-    REQUIRE(root["seq"][1].Scalar() == "global_a_value");
-    REQUIRE(root["map"]["b"].Scalar() == "newer_global_b_value");
+    CHECK(root["seq"][1].Scalar() == "global_a_value");
+    CHECK(root["map"]["b"].Scalar() == "newer_global_b_value");
 }
