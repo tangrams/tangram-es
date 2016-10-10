@@ -3,7 +3,50 @@
 #include "log.h"
 #include "csscolorparser.hpp"
 
+#define MAP_DELIM '.'
+#define SEQ_DELIM '#'
+
 namespace Tangram {
+
+YamlPath::YamlPath() {}
+
+YamlPath::YamlPath(const std::string& path)
+    : codedPath(path) {}
+
+YamlPath YamlPath::add(int index) {
+    return YamlPath(codedPath + SEQ_DELIM + std::to_string(index));
+}
+
+YamlPath YamlPath::add(const std::string& key) {
+    if (codedPath.empty()) { return YamlPath(key); }
+    return YamlPath(codedPath + MAP_DELIM + key);
+}
+
+YAML::Node YamlPath::get(YAML::Node node) {
+    size_t beginToken = 0, endToken = 0, pathSize = codedPath.size();
+    auto delimiter = MAP_DELIM; // First token must be a map key.
+    while (endToken < pathSize) {
+        beginToken = endToken;
+        endToken = pathSize;
+        endToken = std::min(endToken, codedPath.find(SEQ_DELIM, beginToken));
+        endToken = std::min(endToken, codedPath.find(MAP_DELIM, beginToken));
+        if (delimiter == SEQ_DELIM) {
+            int index = std::stoi(&codedPath[beginToken]);
+            node.reset(node[index]);
+        } else if (delimiter == MAP_DELIM) {
+            auto key = codedPath.substr(beginToken, endToken - beginToken);
+            node.reset(node[key]);
+        } else {
+            return Node(); // Path is malformed, return null node.
+        }
+        delimiter = codedPath[endToken]; // Get next character as the delimiter.
+        ++endToken; // Move past the delimiter.
+        if (endToken < pathSize && !node) {
+            return Node(); // A node in the path was missing, return null node.
+        }
+    }
+    return node;
+}
 
 glm::vec4 getColorAsVec4(const Node& node) {
     double val;

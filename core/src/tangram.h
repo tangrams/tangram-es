@@ -18,7 +18,7 @@ struct TouchItem {
 };
 
 struct SceneUpdate {
-    std::string keys;
+    std::string path;
     std::string value;
 };
 

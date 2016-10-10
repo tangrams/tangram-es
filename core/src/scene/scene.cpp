@@ -64,25 +64,12 @@ Scene::Scene(const Scene& _other)
     m_path = _other.m_path;
     m_resourceRoot = _other.m_resourceRoot;
 
+    m_globalRefs = _other.m_globalRefs;
+
     m_mapProjection.reset(new MercatorProjection());
 }
 
 Scene::~Scene() {}
-
-bool Scene::removeGlobalRef(const std::string& key) {
-    bool found = false;
-    for (auto& globalRef : m_referencedGlobals) {
-        if (globalRef.first == key) {
-            globalRef.swap(m_referencedGlobals.back());
-            m_referencedGlobals.pop_back();
-            LOG("Found keys: %s", key.c_str());
-            found = true;
-            break;
-        }
-    }
-
-    return found;
-}
 
 const Style* Scene::findStyle(const std::string& _name) const {
 

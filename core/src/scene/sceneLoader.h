@@ -44,9 +44,7 @@ struct SceneLoader {
     static bool loadConfig(const std::string& _sceneString, Node& _root);
     static bool applyConfig(Node& config, const std::shared_ptr<Scene>& scene);
     static void applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates);
-    static void applyUpdate(Node& root, const std::vector<std::string>& keys, Node value);
-    static void applyGlobalProperties(Node& node, const std::shared_ptr<Scene>& scene, const std::string& keys = "");
-    static void applyGlobalRefUpdates(Node& node, const std::shared_ptr<Scene>& scene);
+    static void applyGlobals(Node root, Scene& scene);
 
     /*** all public for testing ***/
 
@@ -91,7 +89,6 @@ struct SceneLoader {
 
     static bool parseStyleUniforms(const Node& value, const std::shared_ptr<Scene>& scene, StyleUniform& styleUniform);
 
-    static void parseGlobals(const Node& node, const std::shared_ptr<Scene>& scene, const std::string& key="");
     static void parseLightPosition(Node position, PointLight& light);
 
     static bool loadStyle(const std::string& styleName, Node config, const std::shared_ptr<Scene>& scene);
