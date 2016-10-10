@@ -262,7 +262,7 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
 }
 
 
-std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fragShader) {
+std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fragShader) const {
 
     static const std::regex pragmaLine("\\s*#pragma tangram:\\s+(\\w+).*\r?\n");
 

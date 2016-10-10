@@ -30,6 +30,9 @@ attribute vec3 a_normal;
 #endif
 
 #ifdef TANGRAM_FEATURE_SELECTION
+    // Make sure lighting is a no-op for feature selection pass
+    #undef TANGRAM_LIGHTING_VERTEX
+
     attribute vec4 a_selection_color;
     varying vec4 v_selection_color;
 #endif
@@ -72,11 +75,11 @@ vec4 modelPositionBaseZoom() {
 
 void main() {
 
-    // Initialize globals
-    #pragma tangram: setup
-
     #ifdef TANGRAM_FEATURE_SELECTION
         v_selection_color = a_selection_color;
+    #else
+        // Initialize globals
+        #pragma tangram: setup
     #endif
 
     vec4 position = vec4(UNPACK_POSITION(a_position.xyz), 1.0);
