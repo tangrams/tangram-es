@@ -2,6 +2,7 @@
 
 #include "isect2d.h"
 #include "glm_vec.h" // for isect2d.h
+#include "util/mapProjection.h"
 
 #include <memory>
 #include <vector>
@@ -9,16 +10,16 @@
 namespace Tangram {
 
 class Label;
+struct ViewState;
 
 class LabelCollider {
 
 public:
 
-    void setup(float _tileSize, float _tileScale);
 
     void addLabels(std::vector<std::unique_ptr<Label>>& _labels);
 
-    void process();
+    void process(TileID _tileID, float _tileInverseScale, float _tileSize);
 
 private:
 
@@ -34,9 +35,6 @@ private:
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
 
-    float m_tileScale = 1.f;
-
-    glm::vec2 m_screenSize;
 };
 
 }

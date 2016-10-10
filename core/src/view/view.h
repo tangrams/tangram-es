@@ -21,6 +21,17 @@ enum class CameraType : uint8_t {
 
 struct Stops;
 
+struct ViewState {
+    const MapProjection* mapProjection;
+    bool changedOnLastUpdate;
+    glm::dvec2 center;
+    float zoom;
+    double zoomScale;
+    float fractZoom;
+    glm::vec2 viewportSize;
+    float tileSize;
+};
+
 /* View
  * 1. Stores a representation of the current view into the map world
  * 2. Determines which tiles are visible in the current view
@@ -146,6 +157,8 @@ public:
 
     /* Returns the eye position in world space */
     const glm::vec3& getEye() const { return m_eye; }
+
+    ViewState state() const;
 
     /* Returns a rectangle of the current view range as [[x_min, y_min], [x_max, y_max]] */
     glm::dmat2 getBoundsRect() const;

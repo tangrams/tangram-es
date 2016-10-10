@@ -21,7 +21,6 @@ namespace Tangram {
 class FontContext;
 class Marker;
 class Tile;
-class View;
 class Style;
 class TileCache;
 struct TouchItem;
@@ -35,19 +34,19 @@ public:
 
     void drawDebug(RenderState& rs, const View& _view);
 
-    void updateLabelSet(const View& _view, float _dt,
+    void updateLabelSet(const ViewState& _viewState, float _dt,
                         const std::vector<std::unique_ptr<Style>>& _styles,
                         const std::vector<std::shared_ptr<Tile>>& _tiles,
                         const std::vector<std::unique_ptr<Marker>>& _markers,
                         TileCache& _cache);
 
-    PERF_TRACE void updateLabels(const View& _view, float _dt,
+    PERF_TRACE void updateLabels(const ViewState& _viewState, float _dt,
                                  const std::vector<std::unique_ptr<Style>>& _styles,
                                  const std::vector<std::shared_ptr<Tile>>& _tiles,
                                  const std::vector<std::unique_ptr<Marker>>& _markers,
                                  bool _onlyTransitions = true);
 
-    const std::vector<TouchItem>& getFeaturesAtPoint(const View& _view, float _dt,
+    const std::vector<TouchItem>& getFeaturesAtPoint(const ViewState& _viewState, float _dt,
                                                      const std::vector<std::unique_ptr<Style>>& _styles,
                                                      const std::vector<std::shared_ptr<Tile>>& _tiles,
                                                      float _x, float _y, bool _visibleOnly = true);
@@ -69,13 +68,12 @@ protected:
 
     PERF_TRACE void sortLabels();
 
-    PERF_TRACE void handleOcclusions(const View& _view);
+    PERF_TRACE void handleOcclusions(const ViewState& _viewState);
 
     PERF_TRACE bool withinRepeatDistance(Label *_label);
 
-    void processLabelUpdate(StyledMesh* mesh, Tile* tile,
-                            const glm::mat4& mvp, const glm::vec2& screen,
-                            float dt, float dz, bool drawAll,
+    void processLabelUpdate(const ViewState& viewState, StyledMesh* mesh, Tile* tile,
+                            const glm::mat4& mvp, float dt, bool drawAll,
                             bool onlyTransitions, bool isProxy);
 
     bool m_needUpdate;

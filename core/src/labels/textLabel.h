@@ -43,7 +43,7 @@ public:
         uint8_t fontScale;
     };
 
-    TextLabel(Label::Transform _transform, Type _type, Label::Options _options,
+    TextLabel(Label::WorldTransform _transform, Type _type, Label::Options _options,
               TextLabel::FontVertexAttributes _attrib,
               glm::vec2 _dim, TextLabels& _labels, TextRange _textRanges,
               TextLabelProperty::Align _preferedAlignment);
@@ -56,11 +56,13 @@ public:
 
 protected:
 
-    void pushTransform() override;
+    void addVerticesToMesh() override;
 
 private:
 
     void applyAnchor(LabelProperty::Anchor _anchor) override;
+
+    bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) override;
 
     // Back-pointer to owning container
     const TextLabels& m_textLabels;

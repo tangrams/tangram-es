@@ -3,6 +3,8 @@
 #include "labels/label.h"
 #include "labels/labelSet.h"
 
+#include <array>
+
 namespace Tangram {
 
 class SpriteLabels;
@@ -10,7 +12,7 @@ class PointStyle;
 class Texture;
 
 struct SpriteVertex {
-    glm::i16vec2 pos;
+    glm::vec3 pos;
     glm::u16vec2 uv;
     struct State {
         uint32_t color;
@@ -18,7 +20,6 @@ struct SpriteVertex {
         uint16_t scale;
     } state;
 
-    static const float position_scale;
     static const float alpha_scale;
     static const float texture_scale;
 };
@@ -26,16 +27,18 @@ struct SpriteVertex {
 class SpriteLabel : public Label {
 public:
 
-    SpriteLabel(Label::Transform _transform, glm::vec2 _size, Label::Options _options,
+    SpriteLabel(Label::WorldTransform _transform, glm::vec2 _size, Label::Options _options,
                 float _extrudeScale, Texture* _texture, SpriteLabels& _labels, size_t _labelsPos);
 
     void updateBBoxes(float _zoomFract) override;
 
-    void pushTransform() override;
+    void addVerticesToMesh() override;
 
 private:
 
     void applyAnchor(LabelProperty::Anchor _anchor) override;
+
+    bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) override;
 
     // Back-pointer to owning container and position
     const SpriteLabels& m_labels;
@@ -46,11 +49,13 @@ private:
     Texture* m_texture;
 
     float m_extrudeScale;
+
+    std::array<glm::vec3, 4> m_projected;
 };
 
 struct SpriteQuad {
     struct {
-        glm::i16vec2 pos;
+        glm::vec2 pos;
         glm::u16vec2 uv;
     } quad[4];
     // TODO color and stroke must not be stored per quad

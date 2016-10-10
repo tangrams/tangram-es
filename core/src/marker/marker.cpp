@@ -38,6 +38,14 @@ void Marker::setMesh(uint32_t styleId, uint32_t zoom, std::unique_ptr<StyledMesh
     m_mesh = std::move(mesh);
     m_styleId = styleId;
     m_builtZoomLevel = zoom;
+
+    float scale;
+    if (m_feature && m_feature->geometryType == GeometryType::points) {
+        scale = (MapProjection::HALF_CIRCUMFERENCE * 2) / (1 << zoom);
+    } else {
+        scale = extent();
+    }
+    m_modelMatrix = glm::scale(glm::vec3(scale));
 }
 
 void Marker::setTexture(std::unique_ptr<Texture> texture) {
@@ -55,9 +63,10 @@ void Marker::update(float dt, const View& view) {
     if (!m_ease.finished()) { m_ease.update(dt); }
     // Apply marker-view translation to the model matrix
     const auto& viewOrigin = view.getPosition();
-    auto scaling = glm::scale(glm::vec3(extent()));
-    auto translation = glm::translate(glm::vec3(m_origin.x - viewOrigin.x, m_origin.y - viewOrigin.y, 0.f));
-    m_modelMatrix = translation * scaling;
+    m_modelMatrix[3][0] = m_origin.x - viewOrigin.x;
+    m_modelMatrix[3][1] = m_origin.y - viewOrigin.y;
+
+    m_modelViewProjectionMatrix = view.getViewProjectionMatrix() * m_modelMatrix;
 }
 
 void Marker::setVisible(bool visible) {
@@ -106,6 +115,10 @@ const glm::dvec2& Marker::origin() const {
 
 const glm::mat4& Marker::modelMatrix() const {
     return m_modelMatrix;
+}
+
+const glm::mat4& Marker::modelViewProjectionMatrix() const {
+    return m_modelViewProjectionMatrix;
 }
 
 const std::string& Marker::stylingString() const {

@@ -19,7 +19,7 @@ namespace Tangram {
 TextStyle dummyStyle("textStyle", nullptr);
 TextLabels dummy(dummyStyle);
 
-std::unique_ptr<TextLabel> makeLabel(Label::Transform _transform, Label::Type _type, std::string id) {
+std::unique_ptr<TextLabel> makeLabel(glm::vec2 _transform, Label::Type _type, std::string id) {
     Label::Options options;
     options.offset = {0.0f, 0.0f};
     options.properties = std::make_shared<Properties>();
@@ -28,12 +28,12 @@ std::unique_ptr<TextLabel> makeLabel(Label::Transform _transform, Label::Type _t
     options.anchors.anchor[0] = LabelProperty::Anchor::center;
     options.anchors.count = 1;
 
-    return std::unique_ptr<TextLabel>(new TextLabel(_transform, _type, options,
+    return std::unique_ptr<TextLabel>(new TextLabel({glm::vec3(_transform, 0)}, _type, options,
                                                     {}, {10, 10}, dummy, {},
                                                     TextLabelProperty::Align::none));
 }
 
-TextLabel makeLabelWithAnchorFallbacks(Label::Transform _transform, glm::vec2 _offset = {0, 0}) {
+TextLabel makeLabelWithAnchorFallbacks(glm::vec2 _transform, glm::vec2 _offset = {0, 0}) {
     Label::Options options;
 
     // options.anchors.anchor[0] = LabelProperty::Anchor::center;
@@ -47,7 +47,7 @@ TextLabel makeLabelWithAnchorFallbacks(Label::Transform _transform, glm::vec2 _o
 
     TextRange textRanges;
 
-    return TextLabel(_transform, Label::Type::point, options,
+    return TextLabel({ glm::vec3(_transform, 0)}, Label::Type::point, options,
             {}, {10, 10}, dummy, textRanges, TextLabelProperty::Align::none);
 }
 
@@ -83,18 +83,18 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
 
     tiles.push_back(tile);
     {
-        auto& items = labels->getFeaturesAtPoint(view, 0, styles, tiles, 128, 128, false);
+        auto& items = labels->getFeaturesAtPoint(view.state(), 0, styles, tiles, 128, 128, false);
         REQUIRE(items.size() == 1);
         REQUIRE(items[0].properties->getString("id") == "0");
     }
     {
-        auto& items = labels->getFeaturesAtPoint(view, 0, styles, tiles, 256, 256, false);
+        auto& items = labels->getFeaturesAtPoint(view.state(), 0, styles, tiles, 256, 256, false);
         REQUIRE(items.size() == 1);
         REQUIRE(items[0].properties->getString("id") == "1");
     }
 
     {
-        auto& items = labels->getFeaturesAtPoint(view, 0, styles, tiles, 256, 0, false);
+        auto& items = labels->getFeaturesAtPoint(view.state(), 0, styles, tiles, 256, 0, false);
         REQUIRE(items.size() == 1);
         REQUIRE(items[0].properties->getString("id") == "2");
     }
@@ -110,15 +110,13 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
     Tile tile({0,0,0}, view.getMapProjection());
     tile.update(0, view);
 
-    glm::vec2 screenSize = glm::vec2(view.getWidth(), view.getHeight());
-
     class TestLabels : public Labels {
     public:
         TestLabels(View& _v) {
             m_isect2d.resize({1, 1}, {_v.getWidth(), _v.getHeight()});
         }
         void addLabel(Label* _l, Tile* _t) { m_labels.push_back({_l, _t, false}); }
-        void run(View& _v) { handleOcclusions(_v); }
+        void run(View& _v) { handleOcclusions(_v.state()); }
         void clear() { m_labels.clear(); }
     };
 
@@ -126,11 +124,11 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
 
     {
         TextLabel l1 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5});
-        l1.update(tile.mvp(), screenSize, true);
+        l1.update(tile.mvp(), view.state(), true);
         labels.addLabel(&l1, &tile);
 
         TextLabel l2 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5});
-        l2.update(tile.mvp(), screenSize, true);
+        l2.update(tile.mvp(), view.state(), true);
         labels.addLabel(&l2, &tile);
 
         labels.run(view);
@@ -144,12 +142,12 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
 
     {
         TextLabel l1 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5});
-        l1.update(tile.mvp(), screenSize, true);
+        l1.update(tile.mvp(), view.state(), true);
         labels.addLabel(&l1, &tile);
 
         // Second label is one pixel left of L1
         TextLabel l2 = makeLabelWithAnchorFallbacks(glm::vec2{0.5 - 1./256,0.5});
-        l2.update(tile.mvp(), screenSize, true);
+        l2.update(tile.mvp(), view.state(), true);
         labels.addLabel(&l2, &tile);
 
         labels.run(view);
@@ -166,12 +164,12 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
 
     {
         TextLabel l1 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5});
-        l1.update(tile.mvp(), screenSize, true);
+        l1.update(tile.mvp(), view.state(), true);
         labels.addLabel(&l1, &tile);
 
         // Second label is 10 pixel top of L1
         TextLabel l2 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5 + 10./256});
-        l2.update(tile.mvp(), screenSize, true);
+        l2.update(tile.mvp(), view.state(), true);
         labels.addLabel(&l2, &tile);
 
         labels.run(view);
@@ -186,12 +184,12 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
 
     {
         TextLabel l1 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5});
-        l1.update(tile.mvp(), screenSize, true);
+        l1.update(tile.mvp(), view.state(), true);
         labels.addLabel(&l1, &tile);
 
         // Second label is 10 pixel below of L1
         TextLabel l2 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5 - 10./256});
-        l2.update(tile.mvp(), screenSize, true);
+        l2.update(tile.mvp(), view.state(), true);
         labels.addLabel(&l2, &tile);
 
         labels.run(view);

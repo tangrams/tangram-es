@@ -2,25 +2,27 @@
 
 #include "util/geom.h"
 #include "glm/gtx/rotate_vector.hpp"
+#include "glm/gtx/norm.hpp"
 #include "tangram.h"
 #include "platform.h"
+#include "view/view.h"
 #include "log.h"
 
 namespace Tangram {
 
 const float Label::activation_distance_threshold = 2;
 
-Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _options)
+Label::Label(Label::WorldTransform _worldTransform, glm::vec2 _size, Type _type, Options _options)
     : m_state(State::none),
       m_type(_type),
-      m_transform(_transform),
+      m_worldTransform(_worldTransform),
       m_dim(_size),
       m_options(_options) {
 
     if (!m_options.collide || m_type == Type::debug) {
         enterState(State::visible, 1.0);
     } else {
-        m_transform.state.alpha = 0.0;
+        m_screenTransform.alpha = 0.0;
     }
 
     m_occludedLastFrame = false;
@@ -30,75 +32,6 @@ Label::Label(Label::Transform _transform, glm::vec2 _size, Type _type, Options _
 }
 
 Label::~Label() {}
-
-bool Label::updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _drawAllLabels) {
-
-    glm::vec2 screenPosition;
-    bool clipped = false;
-
-    switch (m_type) {
-        case Type::debug:
-        case Type::point:
-        {
-            glm::vec2 p0 = m_transform.modelPosition1;
-
-            screenPosition = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
-                                                _screenSize, clipped);
-            if (clipped) {
-                return false;
-            }
-
-            m_transform.state.screenPos = screenPosition + m_options.offset;
-
-            break;
-        }
-        case Type::line:
-        {
-            // project label position from mercator world space to screen
-            // coordinates
-            glm::vec2 p0 = m_transform.modelPosition1;
-            glm::vec2 p2 = m_transform.modelPosition2;
-
-            glm::vec2 ap0 = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
-                                               _screenSize, clipped);
-            glm::vec2 ap2 = worldToScreenSpace(_mvp, glm::vec4(p2, 0.0, 1.0),
-                                               _screenSize, clipped);
-
-            // check whether the label is behind the camera using the
-            // perspective division factor
-            if (clipped) {
-                return false;
-            }
-
-            float length = glm::length(ap2 - ap0);
-
-            // default heuristic : allow label to be 30% wider than segment
-            float minLength = m_dim.x * 0.7;
-
-            if (!_drawAllLabels && length < minLength) {
-                return false;
-            }
-
-            glm::vec2 p1 = glm::vec2(p2 + p0) * 0.5f;
-
-            glm::vec2 ap1 = worldToScreenSpace(_mvp, glm::vec4(p1, 0.0, 1.0),
-                                               _screenSize, clipped);
-
-            // Keep screen position center at world center (less sliding in tilted view)
-            screenPosition = ap1;
-
-            glm::vec2 rotation = (ap0.x <= ap2.x ? ap2 - ap0 : ap0 - ap2) / length;
-            rotation = glm::vec2{rotation.x, -rotation.y};
-
-            m_transform.state.screenPos = screenPosition + rotateBy(m_options.offset, rotation);
-            m_transform.state.rotation = rotation;
-
-            break;
-        }
-    }
-
-    return true;
-}
 
 void Label::setParent(Label& _parent, bool _definePriority, bool _defineCollide) {
     m_parent = &_parent;
@@ -114,13 +47,36 @@ void Label::setParent(Label& _parent, bool _definePriority, bool _defineCollide)
     applyAnchor(m_options.anchors[m_anchorIndex]);
 }
 
+float Label::screenDistance2(glm::vec2 _screenPosition) const {
+    return glm::length2(m_obb.getCentroid() - _screenPosition);
+}
+
+float Label::worldLineLength2() const {
+    float worldLength2 = 0.f;
+
+    if (m_type == Type::line) {
+        worldLength2 = glm::length2(m_worldTransform.positions[0] - m_worldTransform.positions[1]);
+    }
+
+    return worldLength2;
+}
+
 bool Label::offViewport(const glm::vec2& _screenSize) {
     const auto& quad = m_obb.getQuad();
 
     for (int i = 0; i < 4; ++i) {
-        const auto& p = quad[i];
-        if (p.x < _screenSize.x && p.y < _screenSize.y && p.x > 0 && p.y > 0) {
-            return false;
+        if (m_options.flat) {
+            if (m_screenTransform.positions[i].x < _screenSize.x
+             && m_screenTransform.positions[i].x > 0
+             && m_screenTransform.positions[i].y < _screenSize.y
+             && m_screenTransform.positions[i].y > 0) {
+                return false;
+            }
+        } else {
+            if (quad[i].x < _screenSize.x && quad[i].x > 0 &&
+                quad[i].y < _screenSize.y && quad[i].y > 0) {
+                return false;
+            }
         }
     }
 
@@ -175,7 +131,7 @@ void Label::enterState(const State& _state, float _alpha) {
 }
 
 void Label::setAlpha(float _alpha) {
-    m_transform.state.alpha = CLAMP(_alpha, 0.0, 1.0);
+    m_screenTransform.alpha = CLAMP(_alpha, 0.0, 1.0);
 }
 
 void Label::resetState() {
@@ -205,7 +161,7 @@ void Label::print() const {
     }
     LOG("\tm_state: %s", state.c_str());
     LOG("\tm_anchorIndex: %d", m_anchorIndex);
-    LOG("\tscreenPos: %f/%f", m_transform.state.screenPos.x, m_transform.state.screenPos.y);
+    LOG("\tscreenPos: %f/%f", m_screenTransform.position.x, m_screenTransform.position.y);
 
 }
 
@@ -227,7 +183,7 @@ bool Label::setAnchorIndex(int _index) {
     return true;
 }
 
-bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract, bool _drawAllLabels) {
+bool Label::update(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) {
 
     m_occludedLastFrame = m_occluded;
     m_occluded = false;
@@ -240,7 +196,7 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
         }
     }
 
-    bool ruleSatisfied = updateScreenTransform(_mvp, _screenSize, _drawAllLabels);
+    bool ruleSatisfied = updateScreenTransform(_mvp, _viewState, _drawAllLabels);
 
     // one of the label rules has not been satisfied
     if (!ruleSatisfied) {
@@ -249,10 +205,10 @@ bool Label::update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _z
     }
 
     // update the view-space bouding box
-    updateBBoxes(_zoomFract);
+    updateBBoxes(_viewState.fractZoom);
 
     // checks whether the label is out of the viewport
-    if (offViewport(_screenSize)) {
+    if (offViewport(_viewState.viewportSize)) {
         enterState(State::out_of_screen, 0.0);
         if (m_occludedLastFrame) {
             m_occluded = true;

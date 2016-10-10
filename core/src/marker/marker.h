@@ -86,6 +86,8 @@ public:
 
     const glm::mat4& modelMatrix() const;
 
+    const glm::mat4& modelViewProjectionMatrix() const;
+
     const std::string& stylingString() const;
 
     bool isEasing() const;
@@ -119,6 +121,8 @@ protected:
     // Distances from the global origin are too large to represent precisely in 32-bit floats, so we only apply the
     // relative translation from the view origin to the model origin immediately before drawing the marker.
     glm::mat4 m_modelMatrix;
+
+    glm::mat4 m_modelViewProjectionMatrix;
 
     Ease m_ease;
 

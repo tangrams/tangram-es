@@ -194,8 +194,7 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
             } else {
                 for (auto& line : polygon) {
                     for (auto& point : line) {
-                        auto p = glm::vec2(point);
-                        addLabel(params, Label::Type::point, { p });
+                        addLabel(params, Label::Type::point, { point });
                     }
                 }
             }
@@ -206,8 +205,7 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
         if (_iconText) {
             for (auto& line : _feat.lines) {
                 for (auto& point : line) {
-                    auto p = glm::vec2(point);
-                    addLabel(params, Label::Type::point, { p });
+                    addLabel(params, Label::Type::point, { point });
                 }
             }
         } else {
@@ -527,7 +525,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 }
 
 void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
-                                Label::Transform _transform) {
+                                Label::WorldTransform _transform) {
 
     m_labels.emplace_back(new TextLabel(_transform, _type, _params.labelOptions,
                                         {m_attributes.fill, m_attributes.stroke, m_attributes.fontScale},

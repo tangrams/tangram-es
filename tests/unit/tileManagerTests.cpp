@@ -5,6 +5,7 @@
 #include "tile/tileWorker.h"
 #include "util/mapProjection.h"
 #include "util/fastmap.h"
+#include "view/view.h"
 
 #include <deque>
 
@@ -107,7 +108,7 @@ struct TestDataSource : DataSource {
 TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
     TileManager tileManager(worker);
-    ViewState viewState { s_projection, true, glm::vec2(0), 1 };
+    ViewState viewState { &s_projection, true, glm::vec2(0), 1 };
 
     auto source = std::make_shared<TestDataSource>();
     std::vector<std::shared_ptr<DataSource>> sources = { source };
@@ -163,7 +164,7 @@ TEST_CASE( "Real TileWorker Initialization", "[TileManager][Constructor]" ) {
 TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
     TileManager tileManager(worker);
-    ViewState viewState { s_projection, true, glm::vec2(0), 1 };
+    ViewState viewState { &s_projection, true, glm::vec2(0), 1 };
 
     auto source = std::make_shared<TestDataSource>();
     std::vector<std::shared_ptr<DataSource>> sources = { source };
@@ -189,7 +190,7 @@ TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
 TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
     TileManager tileManager(worker);
-    ViewState viewState { s_projection, true, glm::vec2(0), 1 };
+    ViewState viewState { &s_projection, true, glm::vec2(0), 1 };
 
     auto source = std::make_shared<TestDataSource>();
     std::vector<std::shared_ptr<DataSource>> sources = { source };
@@ -228,7 +229,7 @@ TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
 TEST_CASE( "Use proxy Tile - circular proxies", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
     TileManager tileManager(worker);
-    ViewState viewState { s_projection, true, glm::vec2(0), 1 };
+    ViewState viewState { &s_projection, true, glm::vec2(0), 1 };
 
     auto source = std::make_shared<TestDataSource>();
     std::vector<std::shared_ptr<DataSource>> sources = { source };

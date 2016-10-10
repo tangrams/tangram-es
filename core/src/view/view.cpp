@@ -67,6 +67,20 @@ void View::setCameraType(CameraType _type) {
 
 }
 
+ViewState View::state() const {
+
+    return {
+        m_projection.get(),
+        m_changed,
+        glm::dvec2(m_pos.x, -m_pos.y),
+        m_zoom,
+        powf(2.f, m_zoom),
+        m_zoom - std::floor(m_zoom),
+        glm::vec2(m_vpWidth, m_vpHeight),
+        s_pixelsPerTile * m_pixelScale
+    };
+}
+
 void View::setSize(int _width, int _height) {
 
     m_vpWidth = std::max(_width, 1);

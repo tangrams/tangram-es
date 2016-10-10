@@ -13,6 +13,7 @@ struct Stops;
 enum class StyleParamKey : uint8_t {
     text_align,
     anchor,
+    angle,
     text_anchor,
     cap,
     centroid,
@@ -20,6 +21,7 @@ enum class StyleParamKey : uint8_t {
     text_collide,
     color,
     extrude,
+    flat,
     text_font_family,
     text_font_fill,
     text_font_size,

@@ -27,9 +27,7 @@ Tile::Tile(TileID _id, const MapProjection& _projection, const DataSource* _sour
     m_modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(m_scale));
 }
 
-Tile::~Tile() {
-
-}
+Tile::~Tile() {}
 
 //Note: This could set tile origin to be something different than the one if TileID's wrap is used.
 // But, this is required for wrapped tiles which are picked up from the cache

@@ -45,6 +45,7 @@ double last_y_velocity = 0.0;
 using namespace Tangram;
 
 MarkerID marker = 0;
+MarkerID poiMarker = 0;
 
 template<typename T>
 static constexpr T clamp(T val, T min, T max) {

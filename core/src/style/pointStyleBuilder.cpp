@@ -127,7 +127,9 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
     _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
     _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
+    _rule.get(StyleParamKey::flat, p.labelOptions.flat);
     _rule.get(StyleParamKey::anchor, anchor);
+    _rule.get(StyleParamKey::angle, p.labelOptions.angle);
 
     auto sizeParam = _rule.findParameter(StyleParamKey::size);
     if (sizeParam.stops && sizeParam.value.is<float>()) {
@@ -163,7 +165,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
 void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
                                  const PointStyle::Parameters& _params) {
 
-    m_labels.push_back(std::make_unique<SpriteLabel>(Label::Transform{glm::vec2(_point)},
+    m_labels.push_back(std::make_unique<SpriteLabel>(glm::vec3(glm::vec2(_point), m_zoom),
                                                      _params.size,
                                                      _params.labelOptions,
                                                      _params.extrudeScale,
@@ -171,7 +173,7 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
                                                      *m_spriteLabels,
                                                      m_quads.size()));
 
-    glm::i16vec2 size = _params.size * SpriteVertex::position_scale;
+    glm::i16vec2 size = _params.size;
 
     // Attribute will be normalized - scale to max short;
     glm::vec2 uvTR = glm::vec2{_quad.z, _quad.w} * SpriteVertex::texture_scale;
@@ -180,16 +182,28 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
     float sx = size.x * 0.5f;
     float sy = size.y * 0.5f;
 
-    m_quads.push_back({
-            {{{-sx, sy},
-             {uvBL.x, uvTR.y}},
-            {{sx, sy},
-             {uvTR.x, uvTR.y}},
-            {{-sx, -sy},
-             {uvBL.x, uvBL.y}},
-            {{sx, -sy},
-             {uvTR.x, uvBL.y}}},
-            _params.color});
+    glm::vec2 v0(-sx, sy);
+    glm::vec2 v1(sx, sy);
+    glm::vec2 v2(-sx, -sy);
+    glm::vec2 v3(sx, -sy);
+
+    if (_params.labelOptions.angle != 0.f) {
+        // Rotate the sprite icon quad vertices in clockwise order
+        glm::vec2 rotation(cos(-DEG_TO_RAD * _params.labelOptions.angle),
+                           sin(-DEG_TO_RAD * _params.labelOptions.angle));
+
+        v0 = rotateBy(v0, rotation);
+        v1 = rotateBy(v1, rotation);
+        v2 = rotateBy(v2, rotation);
+        v3 = rotateBy(v3, rotation);
+    }
+
+    m_quads.push_back({{
+        {v0, {uvBL.x, uvTR.y}},
+        {v1, {uvTR.x, uvTR.y}},
+        {v2, {uvBL.x, uvBL.y}},
+        {v3, {uvTR.x, uvBL.y}}},
+        _params.color});
 }
 
 bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const {

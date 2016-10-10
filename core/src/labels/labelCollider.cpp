@@ -1,6 +1,8 @@
 #include "labelCollider.h"
 
 #include "labels/labelSet.h"
+#include "view/view.h" // ViewState
+
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/norm.hpp"
 
@@ -8,13 +10,6 @@
 
 namespace Tangram {
 
-void LabelCollider::setup(float _tileSize, float _tileScale) {
-
-    // Maximum scale at which this tile is used (unless it's a proxy)
-    m_tileScale = _tileScale * MAX_SCALE;
-
-    m_screenSize = glm::vec2{ _tileSize * m_tileScale };
-}
 
 void LabelCollider::addLabels(std::vector<std::unique_ptr<Label>>& _labels) {
 
@@ -56,7 +51,7 @@ void LabelCollider::handleRepeatGroup(size_t startPos) {
     }
 }
 
-void LabelCollider::process() {
+void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tileSize) {
 
     // Sort labels so that all labels of one repeat group are next to each other
     std::sort(m_labels.begin(), m_labels.end(),
@@ -73,8 +68,7 @@ void LabelCollider::process() {
                       // Prefer the label with longer line segment as it has a chance
                       // to be shown earlier (also on the lower zoom-level)
                       // TODO compare fraction segment_length/label_width
-                      return glm::length2(l1->transform().modelPosition1 - l1->transform().modelPosition2) >
-                             glm::length2(l2->transform().modelPosition1 - l2->transform().modelPosition2);
+                      return l1->worldLineLength2() > l2->worldLineLength2();
                   }
 
                   return l1->hash() < l2->hash();
@@ -89,13 +83,28 @@ void LabelCollider::process() {
     mvp[3][0] = -1;
     mvp[3][1] = 1;
 
-    for (auto* label : m_labels) {
-        label->update(mvp, m_screenSize, 1, true);
+    float m_tileScale = pow(2, _tileID.s - _tileID.z) * MAX_SCALE;
 
-         m_aabbs.push_back(label->aabb());
+    glm::vec2 screenSize{ _tileSize * m_tileScale };
+
+    ViewState viewState {
+        nullptr, // mapProjection (unused)
+        false, // changedOnLastUpdate (unused)
+        glm::dvec2{}, // center (unused)
+        0.f, // zoom (unused)
+        powf(2.f, _tileID.z) * MAX_SCALE, // zoomScale
+        m_tileScale, // fractZoom
+        screenSize, // viewPortSize
+        _tileSize, // screenTileSize
+    };
+
+    for (auto* label : m_labels) {
+        label->update(mvp, viewState, true);
+
+        m_aabbs.push_back(label->aabb());
     }
 
-    m_isect2d.resize({m_screenSize.x / 128, m_screenSize.y / 128}, m_screenSize);
+    m_isect2d.resize({screenSize.x / 128, screenSize.y / 128}, screenSize);
 
     m_isect2d.intersect(m_aabbs);
 
@@ -131,10 +140,7 @@ void LabelCollider::process() {
                       // Prefer the label with longer line segment as it has a chance
                       // to be shown earlier (also on the lower zoom-level)
                       // TODO compare fraction segment_length/label_width
-
-                      return glm::length2(l1->transform().modelPosition1 - l1->transform().modelPosition2) >
-                             glm::length2(l2->transform().modelPosition1 - l2->transform().modelPosition2);
-
+                      return l1->worldLineLength2() > l2->worldLineLength2();
                   }
                   // just so it is consistent between two instances
                   return (l1->hash() < l2->hash());

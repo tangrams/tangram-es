@@ -296,14 +296,8 @@ bool Map::update(float _dt) {
 
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
-        ViewState viewState {
-            impl->view.getMapProjection(),
-            impl->view.changedOnLastUpdate(),
-            glm::dvec2{ impl->view.getPosition().x, -impl->view.getPosition().y },
-            impl->view.getZoom()
-        };
 
-        impl->tileManager.updateTileSets(viewState, impl->view.getVisibleTiles());
+        impl->tileManager.updateTileSets(impl->view.state(), impl->view.getVisibleTiles());
 
         auto& tiles = impl->tileManager.getVisibleTiles();
         auto& markers = impl->markerManager.markers();
@@ -319,10 +313,10 @@ bool Map::update(float _dt) {
             for (const auto& tile : tiles) {
                 tile->update(_dt, impl->view);
             }
-            impl->labels.updateLabelSet(impl->view, _dt, impl->scene->styles(), tiles, markers,
+            impl->labels.updateLabelSet(impl->view.state(), _dt, impl->scene->styles(), tiles, markers,
                                         *impl->tileManager.getTileCache());
         } else {
-            impl->labels.updateLabels(impl->view, _dt, impl->scene->styles(), tiles, markers);
+            impl->labels.updateLabels(impl->view.state(), _dt, impl->scene->styles(), tiles, markers);
         }
     }
 
@@ -738,7 +732,7 @@ void Map::useCachedGlState(bool _useCache) {
 }
 
 const std::vector<TouchItem>& Map::pickFeaturesAt(float _x, float _y) {
-    return impl->labels.getFeaturesAtPoint(impl->view, 0, impl->scene->styles(),
+    return impl->labels.getFeaturesAtPoint(impl->view.state(), 0, impl->scene->styles(),
                                            impl->tileManager.getVisibleTiles(),
                                            _x, _y);
 }
