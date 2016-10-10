@@ -46,7 +46,7 @@ public:
     std::string getDescription() const { return m_description; }
 
     const std::string& getFragmentShaderSource() const { return m_fragmentShaderSource; }
-    const std::string& getVertexShaderSource() const { return m_vertexShaderSource; }
+    const std::string getVertexShaderSource() const { return applySourceBlocks(m_vertexShaderSource, false); }
 
     // Fetch the location of a shader attribute, caching the result.
     GLint getAttribLocation(const std::string& _attribName);
@@ -147,7 +147,7 @@ private:
     GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
     GLuint makeCompiledShader(const std::string& _src, GLenum _type);
 
-    std::string applySourceBlocks(const std::string& source, bool fragShader);
+    std::string applySourceBlocks(const std::string& source, bool fragShader) const;
 
 };
 
