@@ -60,7 +60,7 @@ public:
     JobQueue jobQueue;
     View view;
     Labels labels;
-    AsyncWorker asyncWorker;
+    std::unique_ptr<AsyncWorker> asyncWorker = std::make_unique<AsyncWorker>();
     InputHandler inputHandler{view};
     TileWorker tileWorker{MAX_WORKERS};
     TileManager tileManager{tileWorker};
@@ -95,6 +95,10 @@ Map::Map() {
 
 Map::~Map() {
     // The unique_ptr to Impl will be automatically destroyed when Map is destroyed.
+    impl->tileWorker.stop();
+    impl->asyncWorker.reset();
+    impl->jobQueue.runJobs();
+
     TextDisplay::Instance().deinit();
     Primitives::deinit();
 }
@@ -740,7 +744,9 @@ const std::vector<TouchItem>& Map::pickFeaturesAt(float _x, float _y) {
 }
 
 void Map::runAsyncTask(std::function<void()> _task) {
-    impl->asyncWorker.enqueue(std::move(_task));
+    if (impl->asyncWorker) {
+        impl->asyncWorker->enqueue(std::move(_task));
+    }
 }
 
 void setDebugFlag(DebugFlags _flag, bool _on) {
