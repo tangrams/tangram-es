@@ -119,12 +119,22 @@ open build/ios/tangram.xcodeproj
 
 If you run into problems deploying to an iOS device, see [this note](https://github.com/tangrams/tangram-es/wiki/iOS-Notes).
 
-### iOS Binary Framework  ###
-**EXPERIMENTAL**
+### iOS Binary Framework (Debug) ###
 
-An iOS binary framework bundle targeted for ARM architectures can be produced by following the instructions for iOS Devices above, and then copying the Xcode project out of the `/ios` directory and overwriting the CMake produced project. Then, copy the `tangram_framework` folder out of `/ios` and drop that in the same directory as the Xcode project. This will allow you to open the Xcode project and build the `tangram_framework` target in Xcode.
+An iOS binary framework bundle targeted for ARM architectures can be produced by running the following:
 
-Future releases will include simulator support, and a more streamlined / automated system for moving files into place.
+```bash
+make ios-framework
+```
+
+The framework will be available under `/build/ios-framework/lib/Debug/TangramMap.framework`.
+
+To build a universal binary working on both device and simulator architectures run the following:
+```bash
+make ios-framework-universal
+```
+
+The universal framework will be under `/build/ios-framework-universal/Debug/`.
 
 ### Android ###
 To build for Android you'll need to have installed both the [Android SDK](http://developer.android.com/sdk/installing/index.html?pkg=tools) and the [Android NDK](https://developer.android.com/tools/sdk/ndk/index.html). Set an `ANDROID_HOME` environment variable with the root directory of your SDK and an `ANDROID_NDK` environment variable with the root directory of your NDK.
