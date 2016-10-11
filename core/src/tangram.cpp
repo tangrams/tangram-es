@@ -62,15 +62,19 @@ public:
     Labels labels;
     std::unique_ptr<AsyncWorker> asyncWorker = std::make_unique<AsyncWorker>();
     InputHandler inputHandler{view};
-    TileWorker tileWorker{MAX_WORKERS};
-    TileManager tileManager{tileWorker};
-    MarkerManager markerManager;
 
     std::vector<SceneUpdate> sceneUpdates;
     std::array<Ease, 4> eases;
 
     std::shared_ptr<Scene> scene = std::make_shared<Scene>();
     std::shared_ptr<Scene> nextScene = nullptr;
+
+    // NB: Destruction of (managed and loading) tiles must happen
+    // before implicit destruction of 'scene' above!
+    // In particular any references of Labels and Markers to FontContext
+    TileWorker tileWorker{MAX_WORKERS};
+    TileManager tileManager{tileWorker};
+    MarkerManager markerManager;
 
     bool cacheGlState;
 
