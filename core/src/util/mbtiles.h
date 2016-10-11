@@ -1,6 +1,6 @@
 #pragma once
 
-#include "platform.h"
+#include "log.h"
 
 #include <SQLiteCpp/Database.h>
 #include <data/geoJsonSource.h>
