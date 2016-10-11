@@ -37,61 +37,6 @@ struct RawDataSource {
     int level = 0;
 };
 
-class NetworkDataSource : public RawDataSource {
-public:
-    NetworkDataSource(const std::string& _urlTemplate)
-        : m_urlTemplate(_urlTemplate) {}
-
-    bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
-
-    void cancelLoadingTile(const TileID& _tile) override;
-
-private:
-    /* Constructs the URL of a tile using <m_urlTemplate> */
-    void constructURL(const TileID& _tileCoord, std::string& _url) const;
-
-    std::string constructURL(const TileID& _tileCoord) const {
-        std::string url;
-        constructURL(_tileCoord, url);
-        return url;
-    }
-
-    void removePending(const TileID& _tileId);
-
-    // URL template for requesting tiles from a network or filesystem
-    std::string m_urlTemplate;
-
-    std::vector<TileID> m_pending;
-
-    size_t m_maxDownloads = 4;
-
-    std::mutex m_mutex;
-};
-
-class MemoryCacheDataSource : public RawDataSource {
-public:
-
-    MemoryCacheDataSource();
-    ~MemoryCacheDataSource();
-
-    bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
-
-    void clear() override;
-
-    /* @_cacheSize: Set size of in-memory cache for tile data in bytes.
-     * This cache holds unprocessed tile data for fast recreation of recently used tiles.
-     */
-    void setCacheSize(size_t _cacheSize);
-
-private:
-    bool cacheGet(DownloadTileTask& _task);
-
-    void cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef);
-
-    std::unique_ptr<RawCache> m_cache;
-
-};
-
 class DataSource : public std::enable_shared_from_this<DataSource> {
 
 public:

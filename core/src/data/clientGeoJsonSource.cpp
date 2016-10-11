@@ -80,9 +80,14 @@ void ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask> _task, TileTask
         return;
     }
 
-    DataSource::loadTileData(_task, _cb);
+    if (_task->needsLoading()) {
+        _task->startedLoading();
 
-    _cb.func(_task);
+        _cb.func(_task);
+    }
+
+    // Load subsources
+    DataSource::loadTileData(_task, _cb);
 }
 
 void ClientGeoJsonSource::clearData() {
