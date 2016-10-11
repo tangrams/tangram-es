@@ -232,6 +232,7 @@ typedef char            GLchar;
 #define GL_ELEMENT_ARRAY_BUFFER_BINDING 0x8895
 #define GL_STATIC_DRAW                  0x88E4
 #define GL_DYNAMIC_DRAW                 0x88E8
+#define GL_BUFFER_SIZE                  0x8764
 
 // Program
 #define GL_FRAGMENT_SHADER              0x8B30
@@ -297,6 +298,8 @@ struct GL {
     static void genBuffers(GLsizei n, GLuint *buffers);
     static void bufferData(GLenum target, GLsizeiptr size, const void *data, GLenum usage);
     static void bufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void *data);
+    static void getBufferParameteriv(GLenum target, GLenum value, GLint * data);
+    static bool isBuffer(GLuint buffer);
 
     // Texture
     static void bindTexture(GLenum target, GLuint texture );

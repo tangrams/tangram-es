@@ -148,6 +148,15 @@ void GL::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                     GLenum format, GLenum type, GLvoid* pixels) {
     GL_CHECK(glReadPixels(x, y, width, height, format, type, pixels));
 }
+void GL::getBufferParameteriv(GLenum target, GLenum value, GLint * data) {
+    GL_CHECK(glGetBufferParameteriv(target, value, data));
+}
+bool GL::isBuffer(GLuint buffer) {
+    bool result = glIsBuffer(buffer);
+    GL_CHECK();
+    return result;
+}
+
 
 // Texture
 void GL::bindTexture(GLenum target, GLuint texture ) {

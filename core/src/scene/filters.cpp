@@ -122,7 +122,7 @@ int Filter::filterCost() const {
         // Most expensive filter should be checked last
         return 1000;
     }
-    assert(false);
+    //assert(false);
     return 0;
 }
 

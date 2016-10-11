@@ -11,6 +11,7 @@
 #include "defaultPointTextureData.h"
 
 #include <limits>
+#include <thread>
 
 namespace Tangram {
 
@@ -312,7 +313,14 @@ GLuint RenderState::getQuadIndexBuffer() {
 }
 
 void RenderState::deleteQuadIndexBuffer() {
+    LOG("deleting thread: %d", std::this_thread::get_id());
+    LOG("m_quadIndexBuffer: %d", m_quadIndexBuffer);
+    LOG("m_indexBuffer handle: %d, set: %d", m_indexBuffer.handle, m_indexBuffer.set);
+    GLint size = 0;
+    GL::getBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    LOG("buffer size: %d", size);
     indexBufferUnset(m_quadIndexBuffer);
+    LOG("Is Buffer: %d", GL::isBuffer(m_quadIndexBuffer));
     GL::deleteBuffers(1, &m_quadIndexBuffer);
     m_quadIndexBuffer = 0;
 }
@@ -331,10 +339,16 @@ void RenderState::generateQuadIndexBuffer() {
         indices.push_back(i + 2);
     }
 
+    LOG("generating thread: %d", std::this_thread::get_id());
+    LOG("m_quadIndexBuffer: %d", m_quadIndexBuffer);
+    LOG("m_indexBuffer handle: %d, set: %d", m_indexBuffer.handle, m_indexBuffer.set);
     GL::genBuffers(1, &m_quadIndexBuffer);
     indexBuffer(m_quadIndexBuffer);
+    LOG("generating buffer size: %d", indices.size() * sizeof(GLushort));
     GL::bufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLushort),
                    reinterpret_cast<GLbyte*>(indices.data()), GL_STATIC_DRAW);
+    LOG("m_quadIndexBuffer: %d", m_quadIndexBuffer);
+    LOG("m_indexBuffer handle: %d, set: %d", m_indexBuffer.handle, m_indexBuffer.set);
 
 }
 
