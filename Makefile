@@ -20,6 +20,7 @@ all: android osx ios
 .PHONY: rpi
 .PHONY: linux
 .PHONY: benchmark
+.PHONY: ios-framework
 .PHONY: check-ndk
 .PHONY: cmake-osx
 .PHONY: cmake-xcode
@@ -47,8 +48,10 @@ TIZEN_X86_BUILD_DIR = build/tizen-x86
 TOOLCHAIN_DIR = toolchains
 OSX_TARGET = tangram
 IOS_TARGET = tangram
+IOS_FRAMEWORK_TARGET = TangramMap
 OSX_XCODE_PROJ = tangram.xcodeproj
 IOS_XCODE_PROJ = tangram.xcodeproj
+IOS_FRAMEWORK_XCODE_PROJ = tangram.xcodeproj
 
 ifdef DEBUG
 	BUILD_TYPE = -DCMAKE_BUILD_TYPE=Debug
@@ -297,6 +300,9 @@ cmake-ios-framework:
 	@mkdir -p ${IOS_FRAMEWORK_BUILD_DIR}
 	@cd ${IOS_FRAMEWORK_BUILD_DIR} && \
 	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS}
+
+ios-framework: cmake-ios-framework
+	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ}
 
 ios-sim: ${IOS_SIM_BUILD_DIR}/${IOS_XCODE_PROJ}
 	xcodebuild -target ${IOS_TARGET} -project ${IOS_SIM_BUILD_DIR}/${IOS_XCODE_PROJ}
