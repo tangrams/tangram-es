@@ -92,7 +92,9 @@ std::shared_ptr<Texture> RasterSource::createTexture(const std::vector<char>& _r
     return texture;
 }
 
-bool RasterSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
+void RasterSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
+    // TODO, remove this
+    // Overwrite cb to set empty texture on failure
     TileTaskCb cb{[this, _cb](std::shared_ptr<TileTask> _task) {
 
             if (!_task->hasData()) {
@@ -102,9 +104,7 @@ bool RasterSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb)
             _cb.func(_task);
         }};
 
-    if (m_sources) { return m_sources->loadTileData(_task, _cb); }
-
-    return false;
+    DataSource::loadTileData(_task, cb);
 }
 
 std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapProjection& _projection) const {
@@ -130,6 +130,8 @@ std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapPr
 
 std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, int _subTask) {
     auto task = std::make_shared<RasterTileTask>(_tileId, shared_from_this(), _subTask);
+
+    createSubTasks(task);
 
     // First try existing textures cache
     {

@@ -105,7 +105,26 @@ DataSource::~DataSource() {
 }
 
 std::shared_ptr<TileTask> DataSource::createTask(TileID _tileId, int _subTask) {
-    return std::make_shared<DownloadTileTask>(_tileId, shared_from_this(), _subTask);
+    auto task = std::make_shared<DownloadTileTask>(_tileId, shared_from_this(), _subTask);
+
+    createSubTasks(task);
+
+    return task;
+}
+
+void DataSource::createSubTasks(std::shared_ptr<TileTask> _task) {
+    size_t index = 0;
+
+    for (auto& subSource : m_rasterSources) {
+        TileID subTileID = _task->tileId();
+
+        // get tile for lower zoom if we are past max zoom
+        if (subTileID.z > subSource->maxZoom()) {
+            subTileID = subTileID.withMaxSourceZoom(subSource->maxZoom());
+        }
+
+        _task->subTasks().push_back(subSource->createTask(subTileID, index++));
+    }
 }
 
 void MemoryCacheDataSource::setCacheSize(size_t _cacheSize) {
@@ -142,13 +161,20 @@ bool DataSource::equals(const DataSource& other) const {
     return true;
 }
 
-bool DataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
+void DataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
 
-    if (m_sources) { return m_sources->loadTileData(_task, _cb); }
+    if (m_sources) {
+        if (_task->needsLoading()) {
+            if (m_sources->loadTileData(_task, _cb)) {
+                _task->startedLoading();
+            }
+        }
+    }
 
-    return false;
+    for (auto& subTask : _task->subTasks()) {
+        subTask->source().loadTileData(subTask, _cb);
+    }
 }
-
 
 void DataSource::cancelLoadingTile(const TileID& _tileID) {
 
@@ -213,17 +239,15 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb
 
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-
         if (std::find(m_pending.begin(), m_pending.end(), tileId) != m_pending.end()) {
             return false;
         }
         m_pending.push_back(tileId);
-
     }
 
     std::string url(constructURL(_task->tileId()));
 
-    LOGW("network get: %s, downloads: %d", tileId.toString().c_str(), m_pending.size());
+    //LOGW("network get: %s, downloads: %d", url.c_str(), m_pending.size());
 
     bool started = startUrlRequest(url,
         [this, cb = _cb, task = _task](std::vector<char>&& _rawData) mutable {
@@ -277,25 +301,29 @@ MemoryCacheDataSource::~MemoryCacheDataSource() {}
 bool MemoryCacheDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
 
     auto& task = static_cast<DownloadTileTask&>(*_task);
-    TileID tileID = _task->tileId();
+    //TileID tileID = _task->tileId();
 
-    LOGW("cache get: %s, %d", tileID.toString().c_str());
+    if (_task->rawSource == this->level) {
+        //LOGW("cache get: %s, %d", tileID.toString().c_str());
 
-    cacheGet(task);
+        cacheGet(task);
 
-    if (task.hasData()) {
-        //LOGI("fromt cache %s", tileID);
+        if (task.hasData()) {
+            //LOGI("fromt cache %s", tileID);
 
-        _cb.func(_task);
-        return true;
+            _cb.func(_task);
+            return true;
+        }
     }
 
     if (next) {
+        _task->rawSource = next->level;
+
         TileTaskCb cb{[this, _cb](std::shared_ptr<TileTask> _task) {
 
                 auto& task = static_cast<DownloadTileTask&>(*_task);
                 TileID tileID = _task->tileId();
-                LOGW("cache tile: %s, %d", tileID.toString().c_str(), task.hasData());
+                //LOGW("cache tile: %s, %d", tileID.toString().c_str(), task.hasData());
 
                 if (task.hasData()) {
                     cachePut(tileID, task.rawTileData);

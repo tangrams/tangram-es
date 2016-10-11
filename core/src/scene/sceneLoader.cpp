@@ -942,18 +942,18 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
 
     if (type == "GeoJSON") {
         if (tiled) {
-            rawSources->next = std::make_unique<NetworkDataSource>(url);
+            rawSources->setNext(std::make_unique<NetworkDataSource>(url));
             sourcePtr = std::make_shared<GeoJsonSource>(name, std::move(rawSources),
                                                         minDisplayZoom, maxDisplayZoom, maxZoom);
         } else {
             sourcePtr = std::make_shared<ClientGeoJsonSource>(name, url, minDisplayZoom, maxDisplayZoom, maxZoom);
         }
     } else if (type == "TopoJSON") {
-        rawSources->next = std::make_unique<NetworkDataSource>(url);
+        rawSources->setNext(std::make_unique<NetworkDataSource>(url));
         sourcePtr = std::make_shared<TopoJsonSource>(name, std::move(rawSources),
                                                      minDisplayZoom, maxDisplayZoom, maxZoom);
     } else if (type == "MVT") {
-        rawSources->next = std::make_unique<NetworkDataSource>(url);
+        rawSources->setNext(std::make_unique<NetworkDataSource>(url));
         sourcePtr = std::make_shared<MVTSource>(name, std::move(rawSources),
                                                 minDisplayZoom, maxDisplayZoom, maxZoom);
     } else if (type == "Raster") {

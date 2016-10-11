@@ -74,15 +74,15 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
 
 }
 
-bool ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
+void ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
 
     if (m_hasPendingData) {
-        return false;
+        return;
     }
 
-    _cb.func(std::move(_task));
+    DataSource::loadTileData(_task, _cb);
 
-    return true;
+    _cb.func(_task);
 }
 
 void ClientGeoJsonSource::clearData() {
