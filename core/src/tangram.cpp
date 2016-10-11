@@ -198,6 +198,7 @@ void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapRead
                         if (_platformCallback) { _platformCallback(_cbData); }
                     }
                 });
+            requestRender();
         });
 }
 
@@ -245,6 +246,7 @@ void Map::applySceneUpdates() {
                         applySceneUpdates();
                     }
                 });
+            requestRender();
         });
 }
 
