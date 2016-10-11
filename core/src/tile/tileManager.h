@@ -97,12 +97,26 @@ private:
 
         bool isReady() { return bool(tile); }
         bool isLoading() { return bool(task) && !task->isCanceled(); }
-        size_t rastersPending() {
-            if (task) {
-                return (task->source().rasterSources().size() - task->subTasks().size());
+
+        bool needsLoading() {
+            //return !bool(task) || (task->needsLoading() && !task->isCanceled());
+            if (isReady()) { return false; }
+            if (!task) { return true; }
+            if (task->isCanceled()) { return false; }
+            if (task->needsLoading()) { return true; }
+
+            for (auto& subtask : task->subTasks()) {
+                if (subtask->needsLoading()) { return true; }
             }
-            return 0;
+            return false;
         }
+
+        // size_t rastersPending() {
+        //     if (task) {
+        //         return (task->source().rasterSources().size() - task->subTasks().size());
+        //     }
+        //     return 0;
+        // }
         bool isCanceled() { return bool(task) && task->isCanceled(); }
 
         // New Data only when
@@ -112,7 +126,7 @@ private:
         bool newData() {
             if (bool(task) && task->isReady()) {
 
-                if (rastersPending()) { return false; }
+                //if (rastersPending()) { return false; }
 
                 for (auto& rTask : task->subTasks()) {
                     if (!rTask->isReady()) { return false; }
@@ -187,8 +201,6 @@ private:
     void enqueueTask(TileSet& _tileSet, const TileID& _tileID, const ViewState& _view);
 
     void loadTiles();
-    void loadSubTasks(std::vector<std::shared_ptr<DataSource>>& subSources, std::shared_ptr<TileTask>& tileTask,
-                      const TileID& tileID);
 
     /*
      * Constructs a future (async) to load data of a new visible tile this is

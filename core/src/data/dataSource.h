@@ -29,8 +29,12 @@ struct RawDataSource {
 
     virtual void clear() { if (next) next->clear(); }
 
-
+    void setNext(std::unique_ptr<RawDataSource> _next) {
+        next = std::move(_next);
+        next->level = level + 1;
+    }
     std::unique_ptr<RawDataSource> next;
+    int level = 0;
 };
 
 class NetworkDataSource : public RawDataSource {
@@ -108,7 +112,7 @@ public:
      * the I/O task is complete, the tile data is added to a queue in @_tileManager for
      * further processing before it is renderable.
      */
-    virtual bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb);
+    virtual void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb);
 
     /* Stops any running I/O tasks pertaining to @_tile */
     virtual void cancelLoadingTile(const TileID& _tile);
@@ -154,6 +158,8 @@ public:
     virtual bool isRaster() const { return false; }
 
 protected:
+
+    void createSubTasks(std::shared_ptr<TileTask> _task);
 
     // This datasource is used to generate actual tile geometry
     bool m_generateGeometry = false;
