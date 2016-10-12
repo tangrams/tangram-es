@@ -46,8 +46,7 @@ endforeach()
 
 add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes" "${EXECUTABLE_NAME}.app")
 
-file(GLOB_RECURSE IOS_RESOURCES ${PROJECT_SOURCE_DIR}/ios/demo/resources/**)
-string(REGEX REPLACE "[.]DS_Store" "" IOS_RESOURCES "${IOS_RESOURCES}")
+file(GLOB_RECURSE IOS_DEMO_RESOURCES "${PROJECT_SOURCE_DIR}/ios/demo/resources/[^.]**")
 
 macro(add_framework FWNAME APPNAME LIBPATH)
     find_library(FRAMEWORK_${FWNAME} NAMES ${FWNAME} PATHS ${LIBPATH} PATH_SUFFIXES Frameworks NO_DEFAULT_PATH)
@@ -59,18 +58,24 @@ macro(add_framework FWNAME APPNAME LIBPATH)
     endif()
 endmacro(add_framework)
 
-set(SOURCES ${SOURCES}
-  ${PROJECT_SOURCE_DIR}/core/common/platform_gl.cpp)
+set(SOURCES ${SOURCES} ${PROJECT_SOURCE_DIR}/core/common/platform_gl.cpp)
 
-add_executable(${EXECUTABLE_NAME} ${APP_TYPE} ${HEADERS} ${SOURCES} ${RESOURCES} ${IOS_RESOURCES})
+file(GLOB_RECURSE IOS_DEMO_SOURCES ${PROJECT_SOURCE_DIR}/ios/demo/src/**)
+file(GLOB_RECURSE TANGRAM_SOURCES ${PROJECT_SOURCE_DIR}/ios/src/**)
+source_group("Resources\\tangram" FILES ${RESOURCES})
+source_group("Resources\\demo" FILES ${IOS_DEMO_RESOURCES})
+source_group("src" FILES ${IOS_DEMO_SOURCES})
+source_group("platform" FILES ${TANGRAM_SOURCES} ${PROJECT_SOURCE_DIR}/core/common/platform_gl.cpp)
+
+add_executable(${EXECUTABLE_NAME} ${APP_TYPE} ${HEADERS} ${SOURCES} ${RESOURCES} ${IOS_DEMO_RESOURCES})
 
 target_link_libraries(${EXECUTABLE_NAME}
-  ${CORE_LIBRARY})
+    ${CORE_LIBRARY})
 
 # setting xcode properties
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
-  MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/demo/resources/tangram-Info.plist
-  RESOURCE "${IOS_RESOURCES}")
+    MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/demo/resources/tangram-Info.plist
+    RESOURCE "${IOS_RESOURCES}")
 
 set_xcode_property(${EXECUTABLE_NAME} GCC_GENERATE_DEBUGGING_SYMBOLS YES)
 set_xcode_property(${EXECUTABLE_NAME} SUPPORTED_PLATFORMS "iphonesimulator iphoneos")
@@ -79,5 +84,5 @@ set_xcode_property(${EXECUTABLE_NAME} VALID_ARCHS "${ARCH}")
 set_xcode_property(${EXECUTABLE_NAME} TARGETED_DEVICE_FAMILY "1,2")
 
 foreach(_framework ${FRAMEWORKS})
-  add_framework(${_framework} ${EXECUTABLE_NAME} ${CMAKE_SYSTEM_FRAMEWORK_PATH})
+    add_framework(${_framework} ${EXECUTABLE_NAME} ${CMAKE_SYSTEM_FRAMEWORK_PATH})
 endforeach()
