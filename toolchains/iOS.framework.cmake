@@ -1,9 +1,9 @@
 include(${CMAKE_SOURCE_DIR}/toolchains/iOS.toolchain.cmake)
 
-add_definitions(-DPLATFORM_IOS)
-
 set(FRAMEWORK_NAME TangramMap)
 set(FRAMEWORK_VERSION "1.0")
+
+add_definitions(-DPLATFORM_IOS)
 
 set(BUILD_IOS_FRAMEWORK TRUE)
 
