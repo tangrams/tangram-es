@@ -3,6 +3,7 @@ include(${CMAKE_SOURCE_DIR}/toolchains/iOS.toolchain.cmake)
 add_definitions(-DPLATFORM_IOS)
 
 set(FRAMEWORK_NAME TangramMap)
+set(FRAMEWORK_VERSION "1.0")
 
 set(BUILD_IOS_FRAMEWORK TRUE)
 
@@ -55,11 +56,11 @@ set(IOS_FRAMEWORK_RESOURCES ${PROJECT_SOURCE_DIR}/ios/framework/Info.plist)
 set_target_properties(${FRAMEWORK_NAME} PROPERTIES
     CLEAN_DIRECT_OUTPUT 1
     FRAMEWORK TRUE
-    FRAMEWORK_VERSION 1.0
+    FRAMEWORK_VERSION ${FRAMEWORK_VERSION}
     MACOSX_FRAMEWORK_IDENTIFIER com.mapzen.tangramMap
-    MACOSX_FRAMEWORK_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/framework/Info.plist
-    VERSION 1.0.0
-    SOVERSION 1.0.0
+    MACOSX_FRAMEWORK_INFO_PLIST ${IOS_FRAMEWORK_RESOURCES}
+    #VERSION 1.0.0
+    #SOVERSION 1.0.0
     PUBLIC_HEADER "${FRAMEWORK_HEADERS}"
     RESOURCE "${IOS_FRAMEWORK_RESOURCES}"
     )
@@ -72,7 +73,7 @@ set_xcode_property(${FRAMEWORK_NAME} VALID_ARCHS "${ARCH}")
 set_xcode_property(${FRAMEWORK_NAME} ARCHS "${ARCH}")
 
 # Set RPATH to be within the application /Frameworks directory
-set_xcode_property(${FRAMEWORK_NAME} LD_DYLIB_INSTALL_NAME "@rpath/TangramMap.framework/TangramMap")
+set_xcode_property(${FRAMEWORK_NAME} LD_DYLIB_INSTALL_NAME "@rpath/${FRAMEWORK_NAME}.framework/${FRAMEWORK_NAME}")
 
 macro(add_framework FWNAME APPNAME LIBPATH)
     find_library(FRAMEWORK_${FWNAME} NAMES ${FWNAME} PATHS ${LIBPATH} PATH_SUFFIXES Frameworks NO_DEFAULT_PATH)
