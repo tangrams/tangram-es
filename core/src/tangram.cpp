@@ -60,17 +60,21 @@ public:
     JobQueue jobQueue;
     View view;
     Labels labels;
-    AsyncWorker asyncWorker;
+    std::unique_ptr<AsyncWorker> asyncWorker = std::make_unique<AsyncWorker>();
     InputHandler inputHandler{view};
-    TileWorker tileWorker{MAX_WORKERS};
-    TileManager tileManager{tileWorker};
-    MarkerManager markerManager;
 
     std::vector<SceneUpdate> sceneUpdates;
     std::array<Ease, 4> eases;
 
     std::shared_ptr<Scene> scene = std::make_shared<Scene>();
     std::shared_ptr<Scene> nextScene = nullptr;
+
+    // NB: Destruction of (managed and loading) tiles must happen
+    // before implicit destruction of 'scene' above!
+    // In particular any references of Labels and Markers to FontContext
+    TileWorker tileWorker{MAX_WORKERS};
+    TileManager tileManager{tileWorker};
+    MarkerManager markerManager;
 
     bool cacheGlState;
 
@@ -95,6 +99,10 @@ Map::Map() {
 
 Map::~Map() {
     // The unique_ptr to Impl will be automatically destroyed when Map is destroyed.
+    impl->tileWorker.stop();
+    impl->asyncWorker.reset();
+    impl->jobQueue.runJobs();
+
     TextDisplay::Instance().deinit();
     Primitives::deinit();
 }
@@ -740,7 +748,9 @@ const std::vector<TouchItem>& Map::pickFeaturesAt(float _x, float _y) {
 }
 
 void Map::runAsyncTask(std::function<void()> _task) {
-    impl->asyncWorker.enqueue(std::move(_task));
+    if (impl->asyncWorker) {
+        impl->asyncWorker->enqueue(std::move(_task));
+    }
 }
 
 void setDebugFlag(DebugFlags _flag, bool _on) {
