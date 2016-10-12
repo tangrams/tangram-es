@@ -71,6 +71,9 @@ set_xcode_property(${FRAMEWORK_NAME} ONLY_ACTIVE_ARCH "NO")
 set_xcode_property(${FRAMEWORK_NAME} VALID_ARCHS "${ARCH}")
 set_xcode_property(${FRAMEWORK_NAME} ARCHS "${ARCH}")
 
+# Set RPATH to be within the application /Frameworks directory
+set_xcode_property(${FRAMEWORK_NAME} LD_DYLIB_INSTALL_NAME "@rpath/TangramMap.framework/TangramMap")
+
 macro(add_framework FWNAME APPNAME LIBPATH)
     find_library(FRAMEWORK_${FWNAME} NAMES ${FWNAME} PATHS ${LIBPATH} PATH_SUFFIXES Frameworks NO_DEFAULT_PATH)
     if(${FRAMEWORK_${FWNAME}} STREQUAL FRAMEWORK_${FWNAME}-NOTFOUND)
