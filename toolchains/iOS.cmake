@@ -39,11 +39,14 @@ foreach(_ext ${IOS_EXTENSIONS_FILES})
     find_sources_and_include_directories(
         ${PROJECT_SOURCE_DIR}/ios/src/*.h
         ${PROJECT_SOURCE_DIR}/ios/src/${_ext})
+    find_sources_and_include_directories(
+        ${PROJECT_SOURCE_DIR}/ios/demo/src/*.h
+        ${PROJECT_SOURCE_DIR}/ios/demo/src/${_ext})
 endforeach()
 
 add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes" "${EXECUTABLE_NAME}.app")
 
-file(GLOB_RECURSE IOS_RESOURCES ${PROJECT_SOURCE_DIR}/ios/resources/**)
+file(GLOB_RECURSE IOS_RESOURCES ${PROJECT_SOURCE_DIR}/ios/demo/resources/**)
 string(REGEX REPLACE "[.]DS_Store" "" IOS_RESOURCES "${IOS_RESOURCES}")
 
 macro(add_framework FWNAME APPNAME LIBPATH)
@@ -66,7 +69,7 @@ target_link_libraries(${EXECUTABLE_NAME}
 
 # setting xcode properties
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
-  MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/resources/tangram-Info.plist
+  MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/demo/resources/tangram-Info.plist
   RESOURCE "${IOS_RESOURCES}")
 
 set_xcode_property(${EXECUTABLE_NAME} GCC_GENERATE_DEBUGGING_SYMBOLS YES)
