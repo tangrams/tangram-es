@@ -44,7 +44,7 @@ set(FRAMEWORK_HEADERS
     ${PROJECT_SOURCE_DIR}/ios/framework/TangramMap.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.h)
 
-add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes" ".")
+add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes/fonts" "./fonts")
 add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/ios/framework/Modules" "./Modules")
 
 add_library(${FRAMEWORK_NAME} SHARED ${SOURCES} ${HEADERS} ${RESOURCES})
