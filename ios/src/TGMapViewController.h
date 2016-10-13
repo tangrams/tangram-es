@@ -57,6 +57,16 @@ struct TileID;
 
 - (void)renderOnce;
 
+NS_ASSUME_NONNULL_BEGIN
+
+- (void)loadSceneFile:(NSString*)path;
+
+- (void)loadSceneFileAsync:(NSString*)path withCallback:(void (^)(id))callback callbackData:(id)data;
+
+- (void)loadSceneFileAsync:(NSString*)path;
+
+NS_ASSUME_NONNULL_END
+
 - (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)seconds;
 
 - (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)seconds withEaseType:(TangramEaseType)easeType;

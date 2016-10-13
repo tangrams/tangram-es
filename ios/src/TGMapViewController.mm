@@ -13,7 +13,8 @@
 
 @interface TGMapViewController ()
 
-@property (nullable, strong, nonatomic) EAGLContext *context;
+@property (nullable, nonatomic) NSString* scenePath;
+@property (nullable, strong, nonatomic) EAGLContext* context;
 @property (assign, nonatomic) CGFloat pixelScale;
 @property (assign, nonatomic) BOOL renderRequested;
 @property (assign, nonatomic, nullable) Tangram::Map* map;
@@ -22,6 +23,40 @@
 
 
 @implementation TGMapViewController
+
+- (void)loadSceneFile:(NSString*)path {
+    if (!self.map) {
+        return;
+    }
+
+    self.scenePath = path;
+    self.map->loadScene([path UTF8String]);
+    self.renderRequested = YES;
+}
+
+- (void)loadSceneFileAsync:(NSString*)path withCallback:(void (^)(id))callback callbackData:(id)data {
+    if (!self.map) {
+        return;
+    }
+
+    self.scenePath = path;
+
+    MapReady onReadyCallback = [self, callback](void* _userPtr) -> void {
+        id data = (__bridge id)_userPtr;
+
+        if (callback) {
+            callback(data);
+        }
+
+        self.renderRequested = YES;
+    };
+
+    self.map->loadSceneAsync([path UTF8String], false, onReadyCallback, (__bridge void*)data);
+}
+
+- (void)loadSceneFileAsync:(NSString*)path {
+    [self loadSceneFileAsync:path withCallback:nil callbackData:nil];
+}
 
 - (void)setPosition:(TangramGeoPoint)position {
     if (self.map) {
@@ -350,8 +385,8 @@
 
     if (!self.map) {
         self.map = new Tangram::Map();
-        self.map->loadSceneAsync("scene.yaml");
     }
+
     self.map->setupGL();
 
     int width = self.view.bounds.size.width;
