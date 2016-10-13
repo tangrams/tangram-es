@@ -51,8 +51,15 @@ extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
 #include "bcm_host.h"
 
 #include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+
+// Dummy VertexArray functions
+static void glBindVertexArray(GLuint array) {}
+static void glDeleteVertexArrays(GLsizei n, const GLuint *arrays) {}
+static void glGenVertexArrays(GLsizei n, GLuint *arrays) {}
+
 #endif
 
 #if defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS) || defined(PLATFORM_RPI)
