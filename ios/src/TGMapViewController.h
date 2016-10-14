@@ -65,6 +65,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)loadSceneFileAsync:(NSString*)path;
 
+- (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value;
+
 NS_ASSUME_NONNULL_END
 
 - (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)seconds;

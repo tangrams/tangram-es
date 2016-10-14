@@ -58,6 +58,14 @@
     [self loadSceneFileAsync:path withCallback:nil callbackData:nil];
 }
 
+- (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value {
+    if (!self.map) {
+        return;
+    }
+
+    self.map->queueSceneUpdate([componentPath UTF8String], [componentPath UTF8String]);
+}
+
 - (void)setPosition:(TangramGeoPoint)position {
     if (self.map) {
         self.map->setPosition(position.longitude, position.latitude);
