@@ -69,6 +69,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 NS_ASSUME_NONNULL_END
 
+- (void)requestRender;
+
+- (CGPoint)lngLatToScreenPosition:(TangramGeoPoint)lngLat;
+
+- (TangramGeoPoint)screenPositionToLngLat:(CGPoint)screenPosition;
+
 - (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)seconds;
 
 - (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)seconds withEaseType:(TangramEaseType)easeType;

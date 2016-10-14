@@ -35,9 +35,7 @@
 }
 
 - (void)loadSceneFileAsync:(NSString*)path withCallback:(void (^)(id))callback callbackData:(id)data {
-    if (!self.map) {
-        return;
-    }
+    if (!self.map) { return; }
 
     self.scenePath = path;
 
@@ -59,11 +57,43 @@
 }
 
 - (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value {
-    if (!self.map) {
-        return;
-    }
+    if (!self.map) { return; }
 
     self.map->queueSceneUpdate([componentPath UTF8String], [componentPath UTF8String]);
+}
+
+- (void)requestRender {
+    if (!self.map) { return; }
+
+    self.renderRequested = YES;
+}
+
+- (CGPoint)lngLatToScreenPosition:(TangramGeoPoint)lngLat {
+    static const CGPoint nullCGPoint = {(CGFloat)NAN, (CGFloat)NAN};
+
+    if (!self.map) { return nullCGPoint; }
+
+    double screenPosition[2];
+    if (self.map->lngLatToScreenPosition(lngLat.longitude, lngLat.latitude,
+        &screenPosition[0], &screenPosition[1])) {
+        return CGPointMake((CGFloat)screenPosition[0], (CGFloat)screenPosition[1]);
+    }
+
+    return nullCGPoint;
+}
+
+- (TangramGeoPoint)screenPositionToLngLat:(CGPoint)screenPosition {
+    static const TangramGeoPoint nullTangramGeoPoint = {NAN, NAN};
+
+    if (!self.map) { return nullTangramGeoPoint; }
+
+    TangramGeoPoint lngLat;
+    if (self.map->screenPositionToLngLat(screenPosition.x, screenPosition.y,
+        &lngLat.longitude, &lngLat.latitude)) {
+        return lngLat;
+    }
+
+    return nullTangramGeoPoint;
 }
 
 - (void)setPosition:(TangramGeoPoint)position {
