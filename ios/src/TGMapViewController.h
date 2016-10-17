@@ -9,6 +9,7 @@
 
 #import <UIKit/UIKit.h>
 #import <GLKit/GLKit.h>
+#import "TGMapViewDelegate.h"
 
 typedef NS_ENUM(NSInteger, TGCameraType) {
     TGCameraTypePerspective = 0,
@@ -47,6 +48,7 @@ struct TileID;
 
 @property (assign, nonatomic) BOOL continuous;
 @property (weak, nonatomic, nullable) id<TGRecognizerDelegate> gestureDelegate;
+@property (weak, nonatomic, nullable) id<TGMapViewDelegate> mapViewDelegate;
 
 // The following are computed property. They return sensible defaults when the above .map property is nil
 @property (assign, nonatomic) TGCameraType cameraType;
@@ -60,8 +62,6 @@ struct TileID;
 NS_ASSUME_NONNULL_BEGIN
 
 - (void)loadSceneFile:(NSString*)path;
-
-- (void)loadSceneFileAsync:(NSString*)path withCallback:(void (^)(id))callback callbackData:(id)data;
 
 - (void)loadSceneFileAsync:(NSString*)path;
 

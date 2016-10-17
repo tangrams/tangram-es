@@ -34,26 +34,20 @@
     self.renderRequested = YES;
 }
 
-- (void)loadSceneFileAsync:(NSString*)path withCallback:(void (^)(id))callback callbackData:(id)data {
+- (void)loadSceneFileAsync:(NSString*)path {
     if (!self.map) { return; }
 
     self.scenePath = path;
 
-    MapReady onReadyCallback = [self, callback](void* _userPtr) -> void {
-        id data = (__bridge id)_userPtr;
-
-        if (callback) {
-            callback(data);
+    MapReady onReadyCallback = [self, path](void* _userPtr) -> void {
+        if (self.mapViewDelegate && [self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadSceneAsync:)]) {
+            [self.mapViewDelegate mapView:self didLoadSceneAsync:path];
         }
 
         self.renderRequested = YES;
     };
 
-    self.map->loadSceneAsync([path UTF8String], false, onReadyCallback, (__bridge void*)data);
-}
-
-- (void)loadSceneFileAsync:(NSString*)path {
-    [self loadSceneFileAsync:path withCallback:nil callbackData:nil];
+    self.map->loadSceneAsync([path UTF8String], false, onReadyCallback, nullptr);
 }
 
 - (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value {
