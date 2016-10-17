@@ -73,8 +73,16 @@ void Marker::setVisible(bool visible) {
     m_visible = visible;
 }
 
+void Marker::setDrawOrder(int drawOrder) {
+    m_drawOrder = drawOrder;
+}
+
 int Marker::builtZoomLevel() const {
     return m_builtZoomLevel;
+}
+
+int Marker::drawOrder() const {
+    return m_drawOrder;
 }
 
 MarkerID Marker::id() const {
@@ -131,6 +139,10 @@ bool Marker::isEasing() const {
 
 bool Marker::isVisible() const {
     return m_visible;
+}
+
+bool Marker::compareByDrawOrder(const std::unique_ptr<Marker>& lhs, const std::unique_ptr<Marker>& rhs) {
+    return lhs->m_drawOrder < rhs->m_drawOrder;
 }
 
 } // namespace Tangram

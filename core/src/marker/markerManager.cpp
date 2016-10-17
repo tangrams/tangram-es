@@ -35,6 +35,9 @@ MarkerID MarkerManager::add() {
     auto id = ++m_idCounter;
     m_markers.push_back(std::make_unique<Marker>(id));
 
+    // Sort the marker list by draw order.
+    std::stable_sort(m_markers.begin(), m_markers.end(), Marker::compareByDrawOrder);
+
     // Return a handle for the marker.
     return id;
 
@@ -83,7 +86,17 @@ bool MarkerManager::setVisible(MarkerID markerID, bool visible) {
 
     marker->setVisible(visible);
     return true;
+}
 
+bool MarkerManager::setDrawOrder(MarkerID markerID, int drawOrder) {
+    Marker* marker = getMarkerOrNull(markerID);
+    if (!marker) { return false; }
+
+    marker->setDrawOrder(drawOrder);
+
+    // Sort the marker list by draw order.
+    std::stable_sort(m_markers.begin(), m_markers.end(), Marker::compareByDrawOrder);
+    return true;
 }
 
 bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {

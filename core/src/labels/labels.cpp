@@ -241,7 +241,8 @@ bool Labels::labelComparator(const LabelEntry& _a, const LabelEntry& _b) {
 }
 
 void Labels::sortLabels() {
-    std::sort(m_labels.begin(), m_labels.end(), Labels::labelComparator);
+    // Use stable sort so that relative ordering of markers is preserved.
+    std::stable_sort(m_labels.begin(), m_labels.end(), Labels::labelComparator);
 }
 
 void Labels::handleOcclusions(const ViewState& _viewState) {
