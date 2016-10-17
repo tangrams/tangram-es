@@ -68,7 +68,7 @@
     self.renderRequested = YES;
 }
 
-- (CGPoint)lngLatToScreenPosition:(TangramGeoPoint)lngLat {
+- (CGPoint)lngLatToScreenPosition:(TGGeoPoint)lngLat {
     static const CGPoint nullCGPoint = {(CGFloat)NAN, (CGFloat)NAN};
 
     if (!self.map) { return nullCGPoint; }
@@ -82,12 +82,12 @@
     return nullCGPoint;
 }
 
-- (TangramGeoPoint)screenPositionToLngLat:(CGPoint)screenPosition {
-    static const TangramGeoPoint nullTangramGeoPoint = {NAN, NAN};
+- (TGGeoPoint)screenPositionToLngLat:(CGPoint)screenPosition {
+    static const TGGeoPoint nullTangramGeoPoint = {NAN, NAN};
 
     if (!self.map) { return nullTangramGeoPoint; }
 
-    TangramGeoPoint lngLat;
+    TGGeoPoint lngLat;
     if (self.map->screenPositionToLngLat(screenPosition.x, screenPosition.y,
         &lngLat.longitude, &lngLat.latitude)) {
         return lngLat;
@@ -96,17 +96,17 @@
     return nullTangramGeoPoint;
 }
 
-- (void)setPosition:(TangramGeoPoint)position {
+- (void)setPosition:(TGGeoPoint)position {
     if (self.map) {
         self.map->setPosition(position.longitude, position.latitude);
     }
 }
 
-- (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)duration {
-    [self animateToPosition:position withDuration:duration withEaseType:TangramEaseTypeCubic];
+- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)duration {
+    [self animateToPosition:position withDuration:duration withEaseType:TGEaseTypeCubic];
 }
 
-- (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
+- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)duration withEaseType:(TGEaseType)easeType {
 
     if (self.map) {
         Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
@@ -114,8 +114,8 @@
     }
 }
 
-- (TangramGeoPoint)position {
-    TangramGeoPoint returnVal;
+- (TGGeoPoint)position {
+    TGGeoPoint returnVal;
     if (self.map){
         self.map->getPosition(returnVal.longitude, returnVal.latitude);
         return returnVal;
@@ -132,15 +132,15 @@
     }
 }
 
-- (Tangram::EaseType)convertEaseTypeFrom:(TangramEaseType)ease {
+- (Tangram::EaseType)convertEaseTypeFrom:(TGEaseType)ease {
     switch (ease) {
-        case TangramEaseTypeLinear:
+        case TGEaseTypeLinear:
             return Tangram::EaseType::linear;
-        case TangramEaseTypeSine:
+        case TGEaseTypeSine:
             return Tangram::EaseType::sine;
-        case TangramEaseTypeQuint:
+        case TGEaseTypeQuint:
             return Tangram::EaseType::quint;
-        case TangramEaseTypeCubic:
+        case TGEaseTypeCubic:
             return Tangram::EaseType::cubic;
         default:
             return Tangram::EaseType::cubic;
@@ -148,10 +148,10 @@
 }
 
 - (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration {
-    [self animateToZoomLevel:zoomLevel withDuration:duration withEaseType:TangramEaseTypeCubic];
+    [self animateToZoomLevel:zoomLevel withDuration:duration withEaseType:TGEaseTypeCubic];
 }
 
-- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
+- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration withEaseType:(TGEaseType)easeType {
     if (self.map) {
         Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
         self.map->setZoomEased(zoomLevel, duration, ease);
@@ -166,10 +166,10 @@
 }
 
 - (void)animateToRotation:(float)radians withDuration:(float)seconds {
-    [self animateToRotation:radians withDuration:seconds withEaseType:TangramEaseTypeCubic];
+    [self animateToRotation:radians withDuration:seconds withEaseType:TGEaseTypeCubic];
 }
 
-- (void)animateToRotation:(float)radians withDuration:(float)seconds withEaseType:(TangramEaseType)easeType {
+- (void)animateToRotation:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType {
     if (self.map) {
         Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
         self.map->setRotationEased(radians, seconds, ease);
@@ -203,30 +203,30 @@
 }
 
 - (void)animateToTilt:(float)radians withDuration:(float)seconds {
-  [self animateToTilt:radians withDuration:seconds withEaseType:TangramEaseTypeCubic];
+  [self animateToTilt:radians withDuration:seconds withEaseType:TGEaseType::TGEaseTypeCubic];
 }
 
-- (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TangramEaseType)easeType {
+- (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType {
   if (self.map) {
     Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
     self.map->setTiltEased(radians, seconds, ease);
   }
 }
 
-- (TangramCameraType)cameraType {
+- (TGCameraType)cameraType {
     switch (self.map->getCameraType()) {
         case 0:
-            return TangramCameraTypePerspective;
+            return TGCameraTypePerspective;
         case 1:
-            return TangramCameraTypeIsometric;
+            return TGCameraTypeIsometric;
         case 2:
-            return TangramCameraTypeFlat;
+            return TGCameraTypeFlat;
         default:
-            return TangramCameraTypePerspective;
+            return TGCameraTypePerspective;
     }
 }
 
-- (void)setCameraType:(TangramCameraType)cameraType {
+- (void)setCameraType:(TGCameraType)cameraType {
     if (self.map){
         self.map->setCameraType(cameraType);
     }
