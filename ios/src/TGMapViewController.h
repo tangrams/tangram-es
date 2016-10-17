@@ -69,6 +69,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 NS_ASSUME_NONNULL_END
 
+- (void)pickFeaturesAt:(CGPoint)screenPosition;
+
 - (void)requestRender;
 
 - (CGPoint)lngLatToScreenPosition:(TGGeoPoint)lngLat;

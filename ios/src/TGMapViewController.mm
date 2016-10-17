@@ -9,6 +9,7 @@
 
 #import "TGMapViewController.h"
 #include "platform_ios.h"
+#include "data/propertyItem.h"
 #include "tangram.h"
 
 @interface TGMapViewController ()
@@ -88,6 +89,30 @@
     }
 
     return nullTangramGeoPoint;
+}
+
+- (void)pickFeaturesAt:(CGPoint)screenPosition {
+    if (!self.map && !self.mapViewDelegate) { return; }
+
+    const auto& items = self.map->pickFeaturesAt(screenPosition.x, screenPosition.y);
+
+    if (items.size() == 0) { return; }
+
+    const auto& result = items[0];
+    const auto& properties = result.properties;
+    CGPoint position = CGPointMake(result.position[0], result.position[1]);
+
+    NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
+
+    for (const auto& item : properties->items()) {
+        NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
+        NSString* value = [NSString stringWithUTF8String:properties->asString(item.value).c_str()];
+        dictionary[key] = value;
+    }
+
+    if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeatures:atScreenPosition:)]) {
+        [self.mapViewDelegate mapView:self didSelectFeatures:dictionary atScreenPosition:position];
+    }
 }
 
 - (void)setPosition:(TGGeoPoint)position {

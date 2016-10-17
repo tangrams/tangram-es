@@ -14,4 +14,6 @@
 
 - (void)mapView:(TGMapViewController*)mapView didLoadSceneAsync:(NSString*)scene;
 
+- (void)mapView:(TGMapViewController*)mapView didSelectFeatures:(NSDictionary*)features atScreenPosition:(CGPoint)position;
+
 @end
