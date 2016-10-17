@@ -107,13 +107,14 @@ public:
 };
 
 BENCHMARK_DEFINE_F(TileLoadingFixture, BuildTest)(benchmark::State& st) {
-
+#if 0
     while (st.KeepRunning()) {
         ctx.parseTile();
         result = ctx.tileBuilder->build({0,0,10,10,0}, *ctx.tileData, *ctx.source);
 
         LOG("ok %d / bytes - %d", bool(result), result->getMemoryUsage());
     }
+#endif
 }
 
 BENCHMARK_REGISTER_F(TileLoadingFixture, BuildTest);
