@@ -28,17 +28,19 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
 
 @implementation TGMapViewController
 
-- (void)loadSceneFile:(NSString*)path {
-    if (!self.map) {
-        return;
-    }
+#pragma mark Scene loading interface
+
+- (void)loadSceneFile:(NSString*)path
+{
+    if (!self.map) { return; }
 
     self.scenePath = path;
     self.map->loadScene([path UTF8String]);
     self.renderRequested = YES;
 }
 
-- (void)loadSceneFileAsync:(NSString*)path {
+- (void)loadSceneFileAsync:(NSString*)path
+{
     if (!self.map) { return; }
 
     self.scenePath = path;
@@ -54,19 +56,19 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
     self.map->loadSceneAsync([path UTF8String], false, onReadyCallback, nullptr);
 }
 
-- (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value {
+#pragma mark Scene updates
+
+- (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value
+{
     if (!self.map) { return; }
 
     self.map->queueSceneUpdate([componentPath UTF8String], [componentPath UTF8String]);
 }
 
-- (void)requestRender {
-    if (!self.map) { return; }
+#pragma mark Longitude/Latitude - Screen position conversions
 
-    self.renderRequested = YES;
-}
-
-- (CGPoint)lngLatToScreenPosition:(TGGeoPoint)lngLat {
+- (CGPoint)lngLatToScreenPosition:(TGGeoPoint)lngLat
+{
     static const CGPoint nullCGPoint = {(CGFloat)NAN, (CGFloat)NAN};
 
     if (!self.map) { return nullCGPoint; }
@@ -80,7 +82,8 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
     return nullCGPoint;
 }
 
-- (TGGeoPoint)screenPositionToLngLat:(CGPoint)screenPosition {
+- (TGGeoPoint)screenPositionToLngLat:(CGPoint)screenPosition
+{
     static const TGGeoPoint nullTangramGeoPoint = {NAN, NAN};
 
     if (!self.map) { return nullTangramGeoPoint; }
@@ -97,7 +100,10 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
     return nullTangramGeoPoint;
 }
 
-- (void)pickFeaturesAt:(CGPoint)screenPosition {
+#pragma mark Feature picking
+
+- (void)pickFeaturesAt:(CGPoint)screenPosition
+{
     if (!self.map && !self.mapViewDelegate) { return; }
 
     screenPosition.x *= self.pixelScale;
@@ -124,6 +130,8 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
         }
     });
 }
+
+#pragma mark Marker implementation
 
 - (TGMapMarkerId)markerAdd
 {
@@ -192,109 +200,125 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
     return self.map->markerSetVisible(identifier, visible);
 }
 
+#pragma mark Map position implementation
+
 - (void)setPosition:(TGGeoPoint)position {
-    if (self.map) {
-        self.map->setPosition(position.longitude, position.latitude);
-    }
+    if (!self.map) { return; }
+
+    self.map->setPosition(position.longitude, position.latitude);
 }
 
-- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)duration {
+- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)duration
+{
     [self animateToPosition:position withDuration:duration withEaseType:TGEaseTypeCubic];
 }
 
-- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)duration withEaseType:(TGEaseType)easeType {
+- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)duration withEaseType:(TGEaseType)easeType
+{
+    if (!self.map) { return; }
 
-    if (self.map) {
-        Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
-        self.map->setPositionEased(position.longitude, position.latitude, duration, ease);
-    }
+    Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
+    self.map->setPositionEased(position.longitude, position.latitude, duration, ease);
 }
 
-- (TGGeoPoint)position {
+- (TGGeoPoint)position
+{
+    static const TGGeoPoint nullTangramGeoPoint = {NAN, NAN};
+
+    if (!self.map) { return nullTangramGeoPoint; }
+
     TGGeoPoint returnVal;
-    if (self.map){
-        self.map->getPosition(returnVal.longitude, returnVal.latitude);
-        return returnVal;
-    }
-    //Null Island
-    returnVal.latitude = 0.0;
-    returnVal.longitude = 0.0;
+
+    self.map->getPosition(returnVal.longitude, returnVal.latitude);
+
     return returnVal;
 }
 
-- (void)setZoom:(float)zoom {
-    if (self.map) {
-        self.map->setZoom(zoom);
-    }
+- (void)setZoom:(float)zoom
+{
+    if (!self.map) { return; }
+
+    self.map->setZoom(zoom);
 }
 
-- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration {
+- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration
+{
     [self animateToZoomLevel:zoomLevel withDuration:duration withEaseType:TGEaseTypeCubic];
 }
 
-- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration withEaseType:(TGEaseType)easeType {
-    if (self.map) {
-        Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
-        self.map->setZoomEased(zoomLevel, duration, ease);
-    }
+- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration withEaseType:(TGEaseType)easeType
+{
+    if (!self.map) { return; }
+
+    Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
+    self.map->setZoomEased(zoomLevel, duration, ease);
 }
 
-- (float)zoom {
-    if (self.map) {
-        return self.map->getZoom();
-    }
-    return 0.0;
+- (float)zoom
+{
+    if (!self.map) { return 0.0; }
+
+    return self.map->getZoom();
 }
 
-- (void)animateToRotation:(float)radians withDuration:(float)seconds {
+- (void)animateToRotation:(float)radians withDuration:(float)seconds
+{
     [self animateToRotation:radians withDuration:seconds withEaseType:TGEaseTypeCubic];
 }
 
-- (void)animateToRotation:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType {
-    if (self.map) {
-        Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
-        self.map->setRotationEased(radians, seconds, ease);
-    }
+- (void)animateToRotation:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType
+{
+    if (!self.map) { return; }
+
+    Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
+    self.map->setRotationEased(radians, seconds, ease);
 }
 
-- (void)setRotation:(float)radians {
-    if (self.map) {
-        self.map->setRotation(radians);
-    }
+- (void)setRotation:(float)radians
+{
+    if (!self.map) { return; }
+
+    self.map->setRotation(radians);
 }
 
-- (float)rotation {
-    if (self.map) {
-        return self.map->getRotation();
-    }
-    return 0.0;
+- (float)rotation
+{
+    if (!self.map) { return 0.0; }
+
+    return self.map->getRotation();
 }
 
-- (float)tilt {
-    if (self.map) {
-        return self.map->getTilt();
-    }
-    return 0.0;
+- (float)tilt
+{
+    if (!self.map) { return 0.0; }
+
+    return self.map->getTilt();
 }
 
-- (void)setTilt:(float)radians {
-    if (self.map) {
-        self.map->setTilt(radians);
-    }
+- (void)setTilt:(float)radians
+{
+    if (!self.map) { return; }
+
+    self.map->setTilt(radians);
 }
 
-- (void)animateToTilt:(float)radians withDuration:(float)seconds {
+- (void)animateToTilt:(float)radians withDuration:(float)seconds
+{
     [self animateToTilt:radians withDuration:seconds withEaseType:TGEaseType::TGEaseTypeCubic];
 }
 
-- (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType {
-    if (self.map) {
-        Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
-        self.map->setTiltEased(radians, seconds, ease);
-    }
+- (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType
+{
+    if (!self.map) { return; }
+
+    Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
+    self.map->setTiltEased(radians, seconds, ease);
 }
 
-- (TGCameraType)cameraType {
+#pragma mark Camera type
+
+- (TGCameraType)cameraType
+{
     switch (self.map->getCameraType()) {
         case 0:
             return TGCameraTypePerspective;
@@ -307,38 +331,17 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
     }
 }
 
-- (void)setCameraType:(TGCameraType)cameraType {
-    if (self.map){
-        self.map->setCameraType(cameraType);
-    }
-}
-
-- (void)viewDidLoad
+- (void)setCameraType:(TGCameraType)cameraType
 {
-    [super viewDidLoad];
+    if (!self.map){ return; }
 
-    self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-    if (!self.context) {
-        NSLog(@"Failed to create ES context");
-    }
-    self.pixelScale = [[UIScreen mainScreen] scale];
-    self.renderRequested = YES;
-    self.continuous = NO;
-
-    init(self);
-
-    GLKView *view = (GLKView *)self.view;
-    view.context = self.context;
-    view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
-    view.drawableMultisample = GLKViewDrawableMultisample4X;
-
-    [self setupGestureRecognizers];
-    [self setupGL];
-
+    self.map->setCameraType(cameraType);
 }
 
-- (void)setupGestureRecognizers {
+#pragma mark Gestures
 
+- (void)setupGestureRecognizers
+{
     /* Construct Gesture Recognizers */
     //1. Tap
     UITapGestureRecognizer* tapRecognizer = [[UITapGestureRecognizer alloc]
@@ -396,7 +399,8 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
     self.map->handlePanGesture(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
-- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+{
     // make shove gesture exclusive
     if ([gestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
         return [gestureRecognizer numberOfTouches] != 2;
@@ -407,28 +411,32 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
     return YES;
 }
 
-- (void)respondToLongPressGesture:(UILongPressGestureRecognizer *)longPressRecognizer {
+- (void)respondToLongPressGesture:(UILongPressGestureRecognizer *)longPressRecognizer
+{
     CGPoint location = [longPressRecognizer locationInView:self.view];
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeLongPressGesture:)]) {
         [self.gestureDelegate mapView:self recognizer:longPressRecognizer didRecognizeLongPressGesture:location];
     }
 }
 
-- (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer {
+- (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer
+{
     CGPoint location = [tapRecognizer locationInView:self.view];
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeSingleTapGesture:)]) {
         [self.gestureDelegate mapView:self recognizer:tapRecognizer didRecognizeSingleTapGesture:location];
     }
 }
 
-- (void)respondToDoubleTapGesture:(UITapGestureRecognizer *)doubleTapRecognizer {
+- (void)respondToDoubleTapGesture:(UITapGestureRecognizer *)doubleTapRecognizer
+{
     CGPoint location = [doubleTapRecognizer locationInView:self.view];
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeDoubleTapGesture:)]) {
         [self.gestureDelegate mapView:self recognizer:doubleTapRecognizer didRecognizeDoubleTapGesture:location];
     }
 }
 
-- (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer {
+- (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer
+{
     CGPoint displacement = [panRecognizer translationInView:self.view];
 
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizePanGesture:)]) {
@@ -453,7 +461,8 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
     }
 }
 
-- (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer {
+- (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer
+{
     CGPoint location = [pinchRecognizer locationInView:self.view];
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizePinchGesture:)]) {
         [self.gestureDelegate mapView:self recognizer:pinchRecognizer didRecognizePinchGesture:location];
@@ -464,7 +473,8 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
     }
 }
 
-- (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer {
+- (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer
+{
     CGPoint position = [rotationRecognizer locationInView:self.view];
     CGFloat rotation = rotationRecognizer.rotation;
     [rotationRecognizer setRotation:0.0];
@@ -475,7 +485,8 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
     }
 }
 
-- (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer {
+- (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer
+{
     CGPoint displacement = [shoveRecognizer translationInView:self.view];
     [shoveRecognizer setTranslation:{0, 0} inView:self.view];
 
@@ -487,6 +498,32 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
             self.map->handleShoveGesture(displacement.y);
         }
     }
+}
+
+#pragma mark Map view lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+
+    self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+    if (!self.context) {
+        NSLog(@"Failed to create ES context");
+    }
+    self.pixelScale = [[UIScreen mainScreen] scale];
+    self.renderRequested = YES;
+    self.continuous = NO;
+
+    init(self);
+
+    GLKView *view = (GLKView *)self.view;
+    view.context = self.context;
+    view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
+    view.drawableMultisample = GLKViewDrawableMultisample4X;
+
+    [self setupGestureRecognizers];
+    [self setupGL];
+
 }
 
 - (void)dealloc
@@ -532,16 +569,24 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
 
 - (void)tearDownGL
 {
-    if (self.map) {
-        delete self.map;
-        self.map = nullptr;
-    }
+    if (!self.map) { return; }
+
+    delete self.map;
+    self.map = nullptr;
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
     self.map->resize(size.width * self.pixelScale, size.height * self.pixelScale);
+
     [self renderOnce];
+}
+
+- (void)requestRender
+{
+    if (!self.map) { return; }
+
+    self.renderRequested = YES;
 }
 
 - (void)renderOnce
@@ -558,8 +603,6 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
     self.paused = !c;
 }
 
-#pragma mark - GLKView and GLKViewController delegate methods
-
 - (void)update
 {
     self.map->update([self timeSinceLastUpdate]);
@@ -567,6 +610,7 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
     if (!self.continuous && !self.renderRequested) {
         self.paused = YES;
     }
+
     self.renderRequested = NO;
 }
 
