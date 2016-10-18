@@ -54,7 +54,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 NS_ASSUME_NONNULL_END
 
-struct TileID;
 @interface TGMapViewController : GLKViewController <UIGestureRecognizerDelegate>
 
 @property (assign, nonatomic) BOOL continuous;
@@ -70,7 +69,7 @@ struct TileID;
 
 NS_ASSUME_NONNULL_BEGIN
 
-- (void)renderOnce;
+#pragma mark Marker interface
 
 - (void)markerRemoveAll;
 
@@ -90,19 +89,31 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)markerRemove:(TGMapMarkerId)marker;
 
+#pragma mark Scene loading - updates interface
+
 - (void)loadSceneFile:(NSString*)path;
 
 - (void)loadSceneFileAsync:(NSString*)path;
 
 - (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value;
 
+#pragma mark Feature picking interface
+
 - (void)pickFeaturesAt:(CGPoint)screenPosition;
 
+#pragma mark Map View lifecycle
+
 - (void)requestRender;
+
+- (void)renderOnce;
+
+#pragma mark Longitude/Latitude - Screen position conversions
 
 - (CGPoint)lngLatToScreenPosition:(TGGeoPoint)lngLat;
 
 - (TGGeoPoint)screenPositionToLngLat:(CGPoint)screenPosition;
+
+#pragma mark Map View animations - Position interface
 
 - (void)animateToPosition:(TGGeoPoint)position withDuration:(float)seconds;
 
