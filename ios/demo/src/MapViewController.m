@@ -21,7 +21,7 @@
     [mapView setPosition:newYork];
 }
 
-- (void)mapView:(TGMapViewController*)mapView didSelectFeatures:(NSDictionary *)features atScreenPosition:(CGPoint)position
+- (void)mapView:(TGMapViewController *)mapView didSelectFeatures:(NSDictionary *)features atScreenPosition:(CGPoint)position
 {
 
     // Not feature selected
@@ -60,7 +60,7 @@
 {
     NSLog(@"Did tap at %f %f", location.x, location.y);
 
-    // [view pickFeaturesAt:location];
+    [view pickFeaturesAt:location];
 }
 
 - (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location

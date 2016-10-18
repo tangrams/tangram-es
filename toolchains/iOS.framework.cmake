@@ -40,6 +40,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 set(SOURCES
     ${PROJECT_SOURCE_DIR}/core/common/platform_gl.cpp
     ${PROJECT_SOURCE_DIR}/ios/src/platform_ios.mm
+    ${PROJECT_SOURCE_DIR}/ios/src/Helpers.mm
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.mm)
 
 set(HEADERS

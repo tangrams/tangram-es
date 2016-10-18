@@ -8,9 +8,13 @@
 //
 
 #import "TGMapViewController.h"
+#import "Helpers.h"
+
 #include "platform_ios.h"
 #include "data/propertyItem.h"
 #include "tangram.h"
+
+__CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
 
 @interface TGMapViewController ()
 
@@ -21,7 +25,6 @@
 @property (assign, nonatomic, nullable) Tangram::Map* map;
 
 @end
-
 
 @implementation TGMapViewController
 
@@ -126,6 +129,73 @@
     });
 }
 
+- (TGMapMarkerId)markerAdd
+{
+    if (!self.map) { return 0; }
+
+    return (TGMapMarkerId)self.map->markerAdd();
+}
+
+- (BOOL)markerRemove:(TGMapMarkerId)marker
+{
+    if (!self.map) { return NO; }
+
+    return self.map->markerRemove(marker);
+}
+
+- (void)markerRemoveAll
+{
+    if (!self.map) { return; }
+
+    self.map->markerRemoveAll();
+}
+
+- (BOOL)markerSetStyling:(TGMapMarkerId)identifier styling:(NSString *)styling
+{
+    if (!self.map) { return NO; }
+
+    return self.map->markerSetStyling(identifier, [styling UTF8String]);
+}
+
+- (BOOL)markerSetPoint:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate
+{
+    if (!self.map) { return NO; }
+
+    Tangram::LngLat lngLat(coordinate.longitude, coordinate.latitude);
+
+    return self.map->markerSetPoint(identifier, lngLat);
+}
+
+- (BOOL)markerSetPointEased:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate duration:(float)duration easeType:(TGEaseType)ease
+{
+    if (!self.map) { return NO; }
+
+    Tangram::LngLat lngLat(coordinate.longitude, coordinate.latitude);
+
+    return self.map->markerSetPointEased(identifier, lngLat, duration, [Helpers convertEaseTypeFrom:ease]);
+}
+
+- (BOOL)markerSetPolyline:(TGMapMarkerId)identifier coordinates:(TGGeoPoint *)coordinates count:(int)count
+{
+    if (!self.map) { return NO; }
+
+    return self.map->markerSetPolyline(identifier, coordinates, count);
+}
+
+- (BOOL)markerSetPolygon:(TGMapMarkerId)identifier coordinates:(TGGeoPoint *)coordinates count:(int)count rings:(int)rings
+{
+    if (!self.map) { return NO; }
+
+    return self.map->markerSetPolygon(identifier, coordinates, count, rings);;
+}
+
+- (BOOL)markerSetVisible:(TGMapMarkerId)identifier visible:(BOOL)visible
+{
+    if (!self.map) { return NO; }
+
+    return self.map->markerSetVisible(identifier, visible);
+}
+
 - (void)setPosition:(TGGeoPoint)position {
     if (self.map) {
         self.map->setPosition(position.longitude, position.latitude);
@@ -139,7 +209,7 @@
 - (void)animateToPosition:(TGGeoPoint)position withDuration:(float)duration withEaseType:(TGEaseType)easeType {
 
     if (self.map) {
-        Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
+        Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
         self.map->setPositionEased(position.longitude, position.latitude, duration, ease);
     }
 }
@@ -162,28 +232,13 @@
     }
 }
 
-- (Tangram::EaseType)convertEaseTypeFrom:(TGEaseType)ease {
-    switch (ease) {
-        case TGEaseTypeLinear:
-            return Tangram::EaseType::linear;
-        case TGEaseTypeSine:
-            return Tangram::EaseType::sine;
-        case TGEaseTypeQuint:
-            return Tangram::EaseType::quint;
-        case TGEaseTypeCubic:
-            return Tangram::EaseType::cubic;
-        default:
-            return Tangram::EaseType::cubic;
-    }
-}
-
 - (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration {
     [self animateToZoomLevel:zoomLevel withDuration:duration withEaseType:TGEaseTypeCubic];
 }
 
 - (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration withEaseType:(TGEaseType)easeType {
     if (self.map) {
-        Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
+        Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
         self.map->setZoomEased(zoomLevel, duration, ease);
     }
 }
@@ -201,7 +256,7 @@
 
 - (void)animateToRotation:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType {
     if (self.map) {
-        Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
+        Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
         self.map->setRotationEased(radians, seconds, ease);
     }
 }
@@ -238,7 +293,7 @@
 
 - (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType {
     if (self.map) {
-        Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
+        Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
         self.map->setTiltEased(radians, seconds, ease);
     }
 }
