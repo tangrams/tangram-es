@@ -12,6 +12,7 @@ all: android osx ios
 .PHONY: clean-tizen-arm
 .PHONY: clean-tizen-x86
 .PHONY: clean-ios-framework
+.PHONY: clean-ios-framework-sim
 .PHONY: android
 .PHONY: osx
 .PHONY: xcode
@@ -21,6 +22,7 @@ all: android osx ios
 .PHONY: linux
 .PHONY: benchmark
 .PHONY: ios-framework
+.PHONY: ios-framework-universal
 .PHONY: check-ndk
 .PHONY: cmake-osx
 .PHONY: cmake-xcode
@@ -28,6 +30,7 @@ all: android osx ios
 .PHONY: cmake-ios
 .PHONY: cmake-ios-sim
 .PHONY: cmake-ios-framework
+.PHONY: cmake-ios-framework-sim
 .PHONY: cmake-rpi
 .PHONY: cmake-linux
 .PHONY: install-android
@@ -37,6 +40,8 @@ OSX_BUILD_DIR = build/osx
 OSX_XCODE_BUILD_DIR = build/xcode
 IOS_BUILD_DIR = build/ios
 IOS_FRAMEWORK_BUILD_DIR = build/ios-framework
+IOS_FRAMEWORK_SIM_BUILD_DIR = build/ios-framework-sim
+IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR = build/ios-framework-universal
 IOS_SIM_BUILD_DIR = build/ios-sim
 RPI_BUILD_DIR = build/rpi
 LINUX_BUILD_DIR = build/linux
@@ -52,6 +57,12 @@ IOS_FRAMEWORK_TARGET = TangramMap
 OSX_XCODE_PROJ = tangram.xcodeproj
 IOS_XCODE_PROJ = tangram.xcodeproj
 IOS_FRAMEWORK_XCODE_PROJ = tangram.xcodeproj
+
+# Default build type is Debug
+CONFIG = Debug
+ifdef RELEASE
+	CONFIG = Release
+endif
 
 ifdef DEBUG
 	BUILD_TYPE = -DCMAKE_BUILD_TYPE=Debug
@@ -238,6 +249,9 @@ clean-tizen-x86:
 clean-ios-framework:
 	rm -rf ${IOS_FRAMEWORK_BUILD_DIR}
 
+clean-ios-framework-sim:
+	rm -rf ${IOS_FRAMEWORK_SIM_BUILD_DIR}
+
 android: android-demo-apk
 	@echo "run: 'adb install -r android/demo/build/outputs/apk/demo-debug.apk'"
 
@@ -301,11 +315,24 @@ cmake-ios-framework:
 	@cd ${IOS_FRAMEWORK_BUILD_DIR} && \
 	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS}
 
+cmake-ios-framework-sim:
+	@mkdir -p ${IOS_FRAMEWORK_SIM_BUILD_DIR}
+	@cd ${IOS_FRAMEWORK_SIM_BUILD_DIR} && \
+	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS} -DIOS_PLATFORM=SIMULATOR
+
 ios-framework: cmake-ios-framework
 	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ}
 
+ios-framework-sim: cmake-ios-framework-sim
+	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_SIM_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ}
+
 ios-sim: ${IOS_SIM_BUILD_DIR}/${IOS_XCODE_PROJ}
 	xcodebuild -target ${IOS_TARGET} -project ${IOS_SIM_BUILD_DIR}/${IOS_XCODE_PROJ}
+
+ios-framework-universal: ios-framework ios-framework-sim
+	@mkdir -p ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}
+	@cp -r ${IOS_FRAMEWORK_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/
+	lipo ${IOS_FRAMEWORK_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework/TangramMap ${IOS_FRAMEWORK_SIM_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework/TangramMap -create -output ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}/TangramMap.framework/TangramMap
 
 ${IOS_SIM_BUILD_DIR}/${IOS_XCODE_PROJ}: cmake-ios-sim
 
