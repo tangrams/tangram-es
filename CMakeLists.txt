@@ -6,10 +6,13 @@ project(tangram)
 option(USE_SYSTEM_FONT_LIBS "Use system libraries Freetype, ICU and Harfbuzz via pkgconfig" OFF)
 option(USE_SYSTEM_GLFW_LIBS "Use system libraries for GLFW3 via pkgconfig" OFF)
 
+if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "")
+    message(STATUS "Build type configuration " ${CMAKE_BUILD_TYPE})
+endif()
 
 if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/harfbuzz-icu-freetype/harfbuzz/README")
-  message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init --recursive'")
-  return()
+    message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init --recursive'")
+    return()
 endif()
 
 set(APPLICATION ON)
