@@ -152,7 +152,8 @@ void StyleContext::setSceneGlobals(const YAML::Node& sceneGlobals) {
     if (!sceneGlobals) { return; }
 
     //[ "ctx" ]
-    auto globalObject = duk_push_object(m_ctx);
+    // globalObject
+    duk_push_object(m_ctx);
 
     parseSceneGlobals(sceneGlobals);
 
