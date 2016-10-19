@@ -1,7 +1,6 @@
 #include "importer.h"
 #include "platform.h"
 #include "scene/sceneLoader.h"
-#include "util/topologicalSort.h"
 #include "yaml-cpp/yaml.h"
 #include "log.h"
 
@@ -80,7 +79,10 @@ Node Importer::applySceneImports(const std::string& scenePath, const std::string
         }
     }
 
-    auto root = importScenes(fullPath);
+    Node root = Node();
+
+    LOGD("Processing scene import Stack:");
+    importScenes(root, fullPath);
 
     return root;
 }
@@ -287,46 +289,30 @@ std::vector<std::string> Importer::getScenesToImport(const Node& scene) {
     return scenePaths;
 }
 
-std::vector<std::string> Importer::getImportOrder(const std::string& baseScene) {
+void Importer::importScenes(Node& root, const std::string& scenePath) {
 
-    std::vector<std::pair<std::string, std::string>> dependencies;
+    LOGD("Starting importing Scene: %s", scenePath.c_str());
 
-    for (const auto& scene : m_scenes) {
-        const auto& name = scene.first;
-        const auto& sceneRoot = scene.second;
-        for (const auto& import : getScenesToImport(sceneRoot)) {
-            dependencies.push_back( {import, name} );
-        }
+    static std::unordered_set<std::string> stackedScenes = {};
+    if (stackedScenes.find(scenePath) != stackedScenes.end()) {
+        LOGE("%s will cause a cyclic import. Stopping this scene from being imported", scenePath.c_str());
+        return;
+    }
+    stackedScenes.insert(scenePath);
+
+    auto sceneNode = m_scenes[scenePath];
+
+    if (sceneNode.IsNull()) { return; }
+    if (!sceneNode.IsMap()) { return; }
+
+    auto imports = getScenesToImport(sceneNode);
+
+    for (const auto& importScene : imports) {
+        importScenes(root, importScene);
     }
 
-    auto sortedScenes = topologicalSort(dependencies);
-
-    if (sortedScenes.empty()) {
-        return { baseScene };
-    }
-
-    return sortedScenes;
-}
-
-Node Importer::importScenes(const std::string& scenePath) {
-
-    auto importScenesSorted = getImportOrder(scenePath);
-
-    if (importScenesSorted.size() == 1) {
-        return m_scenes[importScenesSorted[0]];
-    }
-
-    Node root = Node();
-
-    for (auto& import : importScenesSorted) {
-
-        const auto& importRoot = m_scenes[import];
-        if (!importRoot.IsMap()) { continue; }
-        mergeMapFields(root, importRoot);
-    }
-
-    return root;
-
+    stackedScenes.erase(scenePath);
+    mergeMapFields(root, sceneNode);
 }
 
 void Importer::mergeMapFields(Node& target, const Node& import) {
