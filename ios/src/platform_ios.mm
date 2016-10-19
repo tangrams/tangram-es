@@ -12,6 +12,7 @@
 #include "TGMapViewController.h"
 
 static TGMapViewController* viewController;
+static NSBundle* tangramFramework;
 NSURLSession* defaultSession;
 
 void init(TGMapViewController* _controller) {
@@ -30,6 +31,8 @@ void init(TGMapViewController* _controller) {
     /* create a default NSURLSession using the defaultConfigObject*/
     defaultSession = [NSURLSession sessionWithConfiguration: defaultConfigObject ];
 
+    // Get handle to tangram framework
+    tangramFramework = [NSBundle bundleWithIdentifier:@"com.mapzen.tangramMap"];
 }
 
 void logMsg(const char* fmt, ...) {
@@ -66,18 +69,39 @@ NSString* resolvePath(const char* _path) {
     if (*_path == '/') { return path; }
 
     NSString* resources = [[NSBundle mainBundle] resourcePath];
-    return [resources stringByAppendingPathComponent:path];
+    NSString* fullBundlePath = [resources stringByAppendingPathComponent:path];
+    NSFileManager* fileManager = [NSFileManager defaultManager];
+
+    if ([fileManager fileExistsAtPath:fullBundlePath]) {
+        return fullBundlePath;
+    }
+
+    if (tangramFramework) {
+        NSString* resources = [tangramFramework resourcePath];
+        fullBundlePath = [resources stringByAppendingPathComponent:path];
+
+        if ([fileManager fileExistsAtPath:fullBundlePath]) {
+            return fullBundlePath;
+        }
+    }
+
+    return nil;
 }
 
 std::string stringFromFile(const char* _path) {
 
     NSString* path = resolvePath(_path);
+
+    if (!path) {
+        return "";
+    }
+
     NSString* str = [NSString stringWithContentsOfFile:path
                                           usedEncoding:NULL
                                                  error:NULL];
 
     if (str == nil) {
-        logMsg("Failed to read file at path: %s\n", [path UTF8String]);
+        LOGW("Failed to read file at path: %s\n", [path UTF8String]);
         return std::string();
     }
 
@@ -90,7 +114,7 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
     NSMutableData* data = [NSMutableData dataWithContentsOfFile:path];
 
     if (data == nil) {
-        logMsg("Failed to read file at path: %s\n", [path UTF8String]);
+        LOGW("Failed to read file at path: %s\n", [path UTF8String]);
         _size = 0;
         return nullptr;
     }
