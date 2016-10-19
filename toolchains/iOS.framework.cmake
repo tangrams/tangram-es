@@ -19,10 +19,13 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}
     -fobjc-arc
     -isysroot ${CMAKE_IOS_SDK_ROOT}")
 
-set(ARCH "armv7 armv7s arm64")
-
-#set(ARCH_SIMULATOR)
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mios-simulator-version-min=6.0")
+if(${IOS_PLATFORM} STREQUAL "SIMULATOR")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mios-simulator-version-min=6.0")
+    set(ARCH "i386 x86_64")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    set(ARCH "armv7 armv7s arm64")
+endif()
 
 set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CFNetwork GLKit)
 
