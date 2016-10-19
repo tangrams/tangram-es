@@ -43,14 +43,14 @@ set(SOURCES
     ${PROJECT_SOURCE_DIR}/ios/src/Helpers.mm
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.mm)
 
-set(HEADERS
-    ${PROJECT_SOURCE_DIR}/ios/src/platform_ios.h
-    ${PROJECT_SOURCE_DIR}/ios/framework/TangramMap.h
-    ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.h)
-
 set(FRAMEWORK_HEADERS
     ${PROJECT_SOURCE_DIR}/ios/framework/TangramMap.h
+    ${PROJECT_SOURCE_DIR}/ios/src/Helpers.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.h)
+
+set(HEADERS
+    ${PROJECT_SOURCE_DIR}/ios/src/platform_ios.h
+    ${FRAMEWORK_HEADERS})
 
 add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes/fonts" "./fonts")
 add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/ios/framework/Modules" "./Modules")
