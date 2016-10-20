@@ -206,7 +206,7 @@ TIZEN_X86_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=tizen \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
 
-clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux clean-shaders clean-tizen-arm clean-tizen-x86
+clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux clean-shaders clean-tizen-arm clean-tizen-x86 clean-ios-framework clean-ios-framework-sim
 
 clean-android:
 	rm -rf ${ANDROID_BUILD_DIR}
@@ -313,12 +313,12 @@ cmake-ios:
 cmake-ios-framework:
 	@mkdir -p ${IOS_FRAMEWORK_BUILD_DIR}
 	@cd ${IOS_FRAMEWORK_BUILD_DIR} && \
-	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS}
+	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS} -DBUILD_IOS_FRAMEWORK=TRUE
 
 cmake-ios-framework-sim:
 	@mkdir -p ${IOS_FRAMEWORK_SIM_BUILD_DIR}
 	@cd ${IOS_FRAMEWORK_SIM_BUILD_DIR} && \
-	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS} -DIOS_PLATFORM=SIMULATOR
+	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS} -DIOS_PLATFORM=SIMULATOR -DBUILD_IOS_FRAMEWORK=TRUE
 
 ios-framework: cmake-ios-framework
 	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} -configuration ${CONFIG}

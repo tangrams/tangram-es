@@ -1,11 +1,11 @@
 include(${CMAKE_SOURCE_DIR}/toolchains/iOS.toolchain.cmake)
 
+message(STATUS "Build for iOS archs " ${CMAKE_OSX_ARCHITECTURES})
+
 set(FRAMEWORK_NAME TangramMap)
 set(FRAMEWORK_VERSION "1.0")
 
 add_definitions(-DPLATFORM_IOS)
-
-set(BUILD_IOS_FRAMEWORK TRUE)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}
     -fobjc-abi-version=2
