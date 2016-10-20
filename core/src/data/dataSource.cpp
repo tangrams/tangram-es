@@ -7,6 +7,8 @@
 #include "tile/tile.h"
 #include "tile/tileManager.h"
 #include "tile/tileTask.h"
+#include "tile/mbtilesTileTask.h"
+#include "util/mbtiles.h"
 #include "gl/texture.h"
 #include "log.h"
 
@@ -45,7 +47,7 @@ struct RawCache {
             // Move cached entry to start of list
             m_cacheList.splice(m_cacheList.begin(), m_cacheList, it->second);
             _task.rawTileData = m_cacheList.front().second;
-
+            _task.dataFromCache = true;
             return true;
         }
 
@@ -89,9 +91,9 @@ struct RawCache {
     }
 };
 
-DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate,
+DataSource::DataSource(const std::string& _name, const std::string& _urlTemplate, const std::string& _mbtiles,
                        int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom) :
-    m_name(_name), m_urlTemplate(_urlTemplate),
+    m_name(_name), m_urlTemplate(_urlTemplate), m_mbtilesPath(_mbtiles),
     m_minDisplayZoom(_minDisplayZoom), m_maxDisplayZoom(_maxDisplayZoom), m_maxZoom(_maxZoom),
     m_cache(std::make_unique<RawCache>()){
 
@@ -105,7 +107,12 @@ DataSource::~DataSource() {
 }
 
 std::shared_ptr<TileTask> DataSource::createTask(TileID _tileId, int _subTask) {
-    auto task = std::make_shared<DownloadTileTask>(_tileId, shared_from_this(), _subTask);
+    std::shared_ptr<DownloadTileTask> task;
+    if (hasMBTiles()) {
+        task = std::make_shared<MBTilesTileTask>(_tileId, shared_from_this(), _subTask);
+    } else {
+        task = std::make_shared<DownloadTileTask>(_tileId, shared_from_this(), _subTask);
+    }
 
     cacheGet(*task);
 
@@ -146,6 +153,7 @@ void DataSource::constructURL(const TileID& _tileCoord, std::string& _url) const
 bool DataSource::equals(const DataSource& other) const {
     if (m_name != other.m_name) { return false; }
     if (m_urlTemplate != other.m_urlTemplate) { return false; }
+    if (m_mbtilesPath != other.m_mbtilesPath) { return false; }
     if (m_minDisplayZoom != other.m_minDisplayZoom) { return false; }
     if (m_maxDisplayZoom != other.m_maxDisplayZoom) { return false; }
     if (m_maxZoom != other.m_maxZoom) { return false; }
@@ -180,16 +188,30 @@ void DataSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<Tile
 
 bool DataSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
 
-    std::string url(constructURL(_task->tileId()));
+    /*
+     * If our data source doesn't have a URL to make a request,
+     * don't HTTP request data, we will fetch from MBTiles in a task.
+     */
+    if (hasNoUrl()) {
+        _cb.func(std::move(_task));
+        return true;
+    }
+    /*
+     * If we have a URL, we should request a tile.
+     * We'll later cache it in MBTiles and / or memory
+     * in a task.
+     */
+    else {
+        std::string url(constructURL(_task->tileId()));
 
-    // lambda captured parameters are const by default, we want "task" (moved) to be non-const,
-    // hence "mutable"
-    // Refer: http://en.cppreference.com/w/cpp/language/lambda
-    return startUrlRequest(url,
-            [this, _cb, task = std::move(_task)](std::vector<char>&& rawData) mutable {
-                this->onTileLoaded(std::move(rawData), std::move(task), _cb);
-            });
-
+        // lambda captured parameters are const by default, we want "task" (moved) to be non-const,
+        // hence "mutable"
+        // Refer: http://en.cppreference.com/w/cpp/language/lambda
+        return startUrlRequest(url,
+                               [this, _cb, task = std::move(_task)](std::vector<char>&& rawData) mutable {
+                                   this->onTileLoaded(std::move(rawData), std::move(task), _cb);
+                               });
+    }
 }
 
 void DataSource::cancelLoadingTile(const TileID& _tileID) {
@@ -226,6 +248,24 @@ void DataSource::addRasterSource(std::shared_ptr<DataSource> _rasterSource) {
         m_maxDisplayZoom = rasterMaxDisplayZoom;
     }
     m_rasterSources.push_back(_rasterSource);
+}
+
+void DataSource::setupMBTiles() {
+    // If we have a path to an MBTiles file,
+    // try to open up a SQLite database instance.
+    if (m_mbtilesPath.size() > 0) {
+        try {
+            // Need to explicitly open a SQLite DB with OPEN_READWRITE and OPEN_CREATE flags to make a file and write.
+            m_mbtilesDb = std::make_unique<SQLite::Database>(m_mbtilesPath, SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
+            LOG("MBTiles SQLite DB Opened at: %s", m_mbtilesPath.c_str());
+
+            // If needed, setup the database by running the schema.sql.
+            MBTiles::setupDB(*this);
+
+        } catch (std::exception& e) {
+            LOGE("Unable to open SQLite database: %s", e.what());
+        }
+    }
 }
 
 }

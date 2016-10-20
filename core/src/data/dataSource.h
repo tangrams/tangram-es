@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <SQLiteCpp/Database.h>
 
 #include "tile/tileTask.h"
 
@@ -27,10 +28,15 @@ public:
      * each of '{x}', '{y}', and '{z}' which will be replaced by the x index, y index,
      * and zoom level of tiles to produce their URL.
      */
-    DataSource(const std::string& _name, const std::string& _urlTemplate,
+    DataSource(const std::string& _name, const std::string& _urlTemplate, const std::string& _mbtiles = "",
                int32_t _minDisplayZoom = -1, int32_t _maxDisplayZoom = -1, int32_t _maxZoom = 18);
 
     virtual ~DataSource();
+
+    /**
+     * @return the mime-type of the DataSource.
+     */
+    virtual const char* mimeType() = 0;
 
     /* Fetches data for the map tile specified by @_tileID
      *
@@ -89,6 +95,18 @@ public:
     /* Avoid RTTI by adding a boolean check on the data source object */
     virtual bool isRaster() const { return false; }
 
+    bool hasNoUrl() {
+        return m_urlTemplate.size() == 0;
+    }
+
+    bool hasMBTiles() {
+        return m_mbtilesDb != nullptr;
+    }
+
+    SQLite::Database& mbtilesDb() { return *m_mbtilesDb; }
+
+    void cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef);
+
 protected:
 
     virtual void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
@@ -105,13 +123,19 @@ protected:
 
     bool cacheGet(DownloadTileTask& _task);
 
-    void cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef);
+    void setupMBTiles();
 
     // This datasource is used to generate actual tile geometry
     bool m_generateGeometry = false;
 
     // Name used to identify this source in the style sheet
     std::string m_name;
+
+    // URL template for requesting tiles from a network or filesystem
+    std::string m_urlTemplate;
+
+    // The path to an mbtiles tile store. Empty string if not present.
+    std::string m_mbtilesPath;
 
     // Minimum zoom for which tiles will be displayed
     int32_t m_minDisplayZoom;
@@ -128,13 +152,14 @@ protected:
     // Generation of dynamic DataSource state (incremented for each update)
     int64_t m_generation = 1;
 
-    // URL template for requesting tiles from a network or filesystem
-    std::string m_urlTemplate;
-
     std::unique_ptr<RawCache> m_cache;
 
     /* vector of raster sources (as raster samplers) referenced by this datasource */
     std::vector<std::shared_ptr<DataSource>> m_rasterSources;
+
+    // Pointer to SQLite DB of MBTiles store
+    std::unique_ptr<SQLite::Database> m_mbtilesDb;
+
 };
 
 }

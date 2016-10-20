@@ -25,7 +25,7 @@ TileManager::TileManager(TileTaskQueue& _tileWorker) : m_workers(_tileWorker) {
          if (task->isReady()) {
              requestRender();
 
-        } else if (task->hasData()) {
+        } else if (task->hasData() || task->source().hasMBTiles()) {
             m_workers.enqueue(std::move(task));
 
         } else {

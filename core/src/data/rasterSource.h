@@ -32,9 +32,12 @@ protected:
 
 public:
 
-    RasterSource(const std::string& _name, const std::string& _urlTemplate,
+    RasterSource(const std::string& _name, const std::string& _urlTemplate, const std::string& _mbtiles,
                  int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
                  TextureOptions _options, bool genMipmap = false);
+
+    // TODO Is this always PNG or can it also be JPEG?
+    virtual const char* mimeType() override { return "image/png"; };
 
     virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask) override;
 

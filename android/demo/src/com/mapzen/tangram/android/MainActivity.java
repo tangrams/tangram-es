@@ -1,8 +1,13 @@
 package com.mapzen.tangram.android;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.os.Environment;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.Window;
 import android.widget.Toast;
@@ -27,7 +32,13 @@ import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends Activity implements OnMapReadyCallback, TapResponder,
-        DoubleTapResponder, LongPressResponder, FeaturePickListener {
+        DoubleTapResponder, LongPressResponder, FeaturePickListener, ActivityCompat.OnRequestPermissionsResultCallback {
+
+    static final int REQUEST_EXTERNAL_STORAGE = 1;
+    static final String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
 
     MapController map;
     MapView view;
@@ -75,8 +86,8 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     @Override
     public void onMapReady(MapController mapController) {
         map = mapController;
-        map.setZoom(16);
-        map.setPosition(new LngLat(-74.00976419448854, 40.70532700869127));
+        map.setZoom(12);
+        map.setPosition(new LngLat(-121.97, 38.52));
         map.setHttpHandler(getHttpHandler());
         map.setTapResponder(this);
         map.setDoubleTapResponder(this);
@@ -92,6 +103,48 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
                         });
                 }});
         markers = map.addDataLayer("touch");
+
+        askPermissionForExternalStorage();
+    }
+
+    private void askPermissionForExternalStorage() {
+        int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    this,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+        // If we already have MBTiles permission, let's use them.
+        else {
+            setupMBTiles();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == REQUEST_EXTERNAL_STORAGE) {
+            // If request is cancelled, the result arrays are empty.
+            if (grantResults.length > 0
+                    && grantResults[REQUEST_EXTERNAL_STORAGE] == PackageManager.PERMISSION_GRANTED) {
+                setupMBTiles();
+            } else {
+                Toast.makeText(getApplicationContext(),
+                        "Permission to access offline MBTiles denied. Using only online tiles.",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    public void setupMBTiles() {
+        File storageDir = Environment.getExternalStorageDirectory();
+        // If the MBTiles file does not exist,
+        // Tangram will attempt to create one with the given path.
+        File mbtilesFile = new File(storageDir, "tangram-geojson-cache.mbtiles");
+        map.setMBTiles("osm", mbtilesFile);
     }
 
     HttpHandler getHttpHandler() {

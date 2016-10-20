@@ -27,6 +27,9 @@ public:
                         int32_t _minDisplayZoom = -1, int32_t _maxDisplayZoom = -1, int32_t _maxZoom = 18);
     ~ClientGeoJsonSource();
 
+    // http://www.iana.org/assignments/media-types/application/geo+json
+    virtual const char* mimeType() override { return "application/geo+json"; };
+
     // Add geometry from a GeoJSON string
     void addData(const std::string& _data);
     void addPoint(const Properties& _tags, LngLat _point);

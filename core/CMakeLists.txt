@@ -41,6 +41,7 @@ list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/stb)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/glm)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/shaders)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/isect2d/include)
+list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/hash-library)
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
 set(CORE_LIBRARIES_INCLUDE_DIRS
@@ -51,6 +52,7 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/stb
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/pbf
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/rapidjson
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/SQLiteCpp
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/isect2d/include
     CACHE INTERNAL "core libraries include directories" FORCE)
 
@@ -59,13 +61,23 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
 
 add_library(${CORE_LIBRARY} ${FOUND_SOURCES} ${FOUND_HEADERS})
 
-target_link_libraries(${CORE_LIBRARY}
-  PUBLIC
-  duktape
-  css-color-parser-cpp
-  geojson-vt-cpp
-  yaml-cpp
-  alfons)
+set(LINK_LIBRARIES
+    ${CORE_LIBRARY}
+    PUBLIC
+    duktape
+    css-color-parser-cpp
+    geojson-vt-cpp
+    yaml-cpp
+    alfons
+    SQLiteCpp
+    sqlite3)
+
+if (UNIX AND NOT APPLE)
+  # SQLite needs dl dynamic library loader when Linux
+  target_link_libraries(${LINK_LIBRARIES} dl)
+else()
+  target_link_libraries(${LINK_LIBRARIES})
+endif () 
 
 target_include_directories(${CORE_LIBRARY}
   PUBLIC

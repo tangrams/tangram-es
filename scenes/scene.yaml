@@ -1,15 +1,15 @@
 global:
     default_order: function() { return feature.sort_key || 0; }
 
-fonts:
-    Montserrat:
-        url: https://fonts.gstatic.com/s/montserrat/v7/zhcz-_WihjSQC0oHJ9TCYL3hpw3pgy2gAi-Ip7WPMi0.woff
-    Open Sans:
-        - weight: 300
-          url: fonts/open sans-300normal.ttf
-        - weight: 300
-          style: italic
-          url: fonts/open sans-300italic.ttf
+#fonts:
+#    Montserrat:
+#        url: https://fonts.gstatic.com/s/montserrat/v7/zhcz-_WihjSQC0oHJ9TCYL3hpw3pgy2gAi-Ip7WPMi0.woff
+#    Open Sans:
+#        - weight: 300
+#          url: fonts/open sans-300normal.ttf
+#        - weight: 300
+#          style: italic
+#          url: fonts/open sans-300italic.ttf
 
 scene:
     background:
@@ -22,8 +22,8 @@ cameras:
         axis: [0, 1]
         active: false
     perspective-camera:
-        # Manhattan
-        position: [-74.00976419448854, 40.70532700869127, 16]
+        # Winters
+        position: [-121.97, 38.52, 12]
         type: perspective
         fov: 45
         max_tilt: [[2, 0], [16, 90]]
@@ -79,8 +79,9 @@ styles:
 
 sources:
     osm:
-        type: MVT
-        url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+        type: GeoJSON
+        url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.json
+        mbtiles: /Users/njh/osm-data/mbtiles/metatest11.mbtiles
         max_zoom: 16
         url_params:
             api_key: vector-tiles-tyHL4AY
@@ -429,18 +430,18 @@ layers:
                         weight: 400
                         style: normal
                         size: 14.5pt
-    country:
-        data: { source: osm, layer: places }
-        country-labels:
-            filter: { name: true, population: true, kind: [country] }
-            draw:
-                text:
-                    font:
-                        # transform: uppercase
-                        family: Montserrat
-                        fill: black
-                        stroke: { color: white, width: 4 }
-                        size: 13px
+#    country:
+#        data: { source: osm, layer: places }
+#        country-labels:
+#            filter: { name: true, population: true, kind: [country] }
+#            draw:
+#                text:
+#                    font:
+#                        # transform: uppercase
+#                        family: Montserrat
+#                        fill: black
+#                        stroke: { color: white, width: 4 }
+#                        size: 13px
     places:
         data: { source: osm }
         filter:

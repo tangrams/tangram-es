@@ -1,12 +1,11 @@
 #include "tileWorker.h"
 
-#include "platform.h"
+#include "log.h"
 #include "data/dataSource.h"
 #include "tile/tileID.h"
 #include "tile/tileTask.h"
 #include "tile/tileBuilder.h"
 #include "tangram.h"
-#include "log.h"
 
 #include <algorithm>
 
