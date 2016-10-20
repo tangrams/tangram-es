@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include "data/dataSource.h"
+#include "data/tileSource.h"
 #include "tile/tileManager.h"
 #include "tile/tileWorker.h"
 #include "util/mapProjection.h"
@@ -66,12 +66,12 @@ struct TestTileWorker : TileTaskQueue {
     }
 };
 
-struct TestDataSource : DataSource {
+struct TestTileSource : TileSource {
     class Task : public TileTask {
     public:
         bool gotData = false;
 
-        Task(TileID& _tileId, std::shared_ptr<DataSource> _source, bool _subTask)
+        Task(TileID& _tileId, std::shared_ptr<TileSource> _source, bool _subTask)
             : TileTask(_tileId, _source, _subTask) {}
 
         bool hasData() const override { return gotData; }
@@ -79,7 +79,7 @@ struct TestDataSource : DataSource {
 
     int tileTaskCount = 0;
 
-    TestDataSource() : DataSource("", nullptr) {
+    TestTileSource() : TileSource("", nullptr) {
         m_generateGeometry = true;
     }
 
@@ -109,9 +109,9 @@ TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileMana
     TileManager tileManager(worker);
     ViewState viewState { &s_projection, true, glm::vec2(0), 1 };
 
-    auto source = std::make_shared<TestDataSource>();
-    std::vector<std::shared_ptr<DataSource>> sources = { source };
-    tileManager.setDataSources(sources);
+    auto source = std::make_shared<TestTileSource>();
+    std::vector<std::shared_ptr<TileSource>> sources = { source };
+    tileManager.setTileSources(sources);
 
     /// Start loading tile 0/0/0
     std::set<TileID> visibleTiles_1 = { TileID{0,0,0} };
@@ -165,9 +165,9 @@ TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
     TileManager tileManager(worker);
     ViewState viewState { &s_projection, true, glm::vec2(0), 1 };
 
-    auto source = std::make_shared<TestDataSource>();
-    std::vector<std::shared_ptr<DataSource>> sources = { source };
-    tileManager.setDataSources(sources);
+    auto source = std::make_shared<TestTileSource>();
+    std::vector<std::shared_ptr<TileSource>> sources = { source };
+    tileManager.setTileSources(sources);
 
     std::set<TileID> visibleTiles = { TileID{0,0,0} };
     tileManager.updateTileSets(viewState, visibleTiles);
@@ -191,9 +191,9 @@ TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
     TileManager tileManager(worker);
     ViewState viewState { &s_projection, true, glm::vec2(0), 1 };
 
-    auto source = std::make_shared<TestDataSource>();
-    std::vector<std::shared_ptr<DataSource>> sources = { source };
-    tileManager.setDataSources(sources);
+    auto source = std::make_shared<TestTileSource>();
+    std::vector<std::shared_ptr<TileSource>> sources = { source };
+    tileManager.setTileSources(sources);
 
     std::set<TileID> visibleTiles = { TileID{0,0,0} };
     tileManager.updateTileSets(viewState, visibleTiles);
@@ -230,9 +230,9 @@ TEST_CASE( "Use proxy Tile - circular proxies", "[TileManager][updateTileSets]" 
     TileManager tileManager(worker);
     ViewState viewState { &s_projection, true, glm::vec2(0), 1 };
 
-    auto source = std::make_shared<TestDataSource>();
-    std::vector<std::shared_ptr<DataSource>> sources = { source };
-    tileManager.setDataSources(sources);
+    auto source = std::make_shared<TestTileSource>();
+    std::vector<std::shared_ptr<TileSource>> sources = { source };
+    tileManager.setTileSources(sources);
 
     /// Start loading tile 0/0/0
     std::set<TileID> visibleTiles_1 = { TileID{0,0,0} };

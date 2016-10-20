@@ -885,8 +885,8 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, const std::sha
 }
 
 void SceneLoader::loadSource(const std::string& name, const Node& source, const Node& sources, const std::shared_ptr<Scene>& _scene) {
-    if (_scene->getDataSource(name)) {
-        LOGW("Duplicate DataSource: %s", name.c_str());
+    if (_scene->getTileSource(name)) {
+        LOGW("Duplicate TileSource: %s", name.c_str());
         return;
     }
 
@@ -937,7 +937,7 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
         url.find("{y}") != std::string::npos &&
         url.find("{z}") != std::string::npos;
 
-    std::shared_ptr<DataSource> sourcePtr;
+    std::shared_ptr<TileSource> sourcePtr;
 
     auto rawSources = std::make_unique<MemoryCacheDataSource>();
     rawSources->setCacheSize(CACHE_SIZE);
@@ -975,7 +975,7 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
     }
 
     if (sourcePtr) {
-        _scene->dataSources().push_back(sourcePtr);
+        _scene->tileSources().push_back(sourcePtr);
     }
 
     if (auto rasters = source["rasters"]) {
@@ -984,7 +984,7 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
 
 }
 
-void SceneLoader::loadSourceRasters(std::shared_ptr<DataSource> &source, Node rasterNode, const Node& sources,
+void SceneLoader::loadSourceRasters(std::shared_ptr<TileSource> &source, Node rasterNode, const Node& sources,
                                     const std::shared_ptr<Scene>& scene) {
     if (rasterNode.IsSequence()) {
         for (const auto& raster : rasterNode) {
@@ -995,7 +995,7 @@ void SceneLoader::loadSourceRasters(std::shared_ptr<DataSource> &source, Node ra
                 LOGNode("Parsing sources: '%s'", sources[srcName], e.what());
                 return;
             }
-            source->addRasterSource(scene->getDataSource(srcName));
+            source->addRasterSource(scene->getTileSource(srcName));
         }
     }
 }
@@ -1626,7 +1626,7 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, const std::share
         if (Node data_source = data["source"]) {
             if (data_source.IsScalar()) {
                 source = data_source.Scalar();
-                auto dataSource = scene->getDataSource(source);
+                auto dataSource = scene->getTileSource(source);
                 if (dataSource) {
                     dataSource->generateGeometry(true);
                 } else {

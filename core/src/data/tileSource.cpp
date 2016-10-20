@@ -1,4 +1,4 @@
-#include "dataSource.h"
+#include "tileSource.h"
 
 #include "platform.h"
 #include "tileData.h"
@@ -12,7 +12,7 @@
 
 namespace Tangram {
 
-DataSource::DataSource(const std::string& _name, std::unique_ptr<RawDataSource> _sources,
+TileSource::TileSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
                        int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom) :
     m_name(_name),
     m_minDisplayZoom(_minDisplayZoom), m_maxDisplayZoom(_maxDisplayZoom), m_maxZoom(_maxZoom),
@@ -23,11 +23,11 @@ DataSource::DataSource(const std::string& _name, std::unique_ptr<RawDataSource> 
     m_id = s_serial++;
 }
 
-DataSource::~DataSource() {
+TileSource::~TileSource() {
     clearData();
 }
 
-std::shared_ptr<TileTask> DataSource::createTask(TileID _tileId, int _subTask) {
+std::shared_ptr<TileTask> TileSource::createTask(TileID _tileId, int _subTask) {
     auto task = std::make_shared<DownloadTileTask>(_tileId, shared_from_this(), _subTask);
 
     createSubTasks(task);
@@ -35,7 +35,7 @@ std::shared_ptr<TileTask> DataSource::createTask(TileID _tileId, int _subTask) {
     return task;
 }
 
-void DataSource::createSubTasks(std::shared_ptr<TileTask> _task) {
+void TileSource::createSubTasks(std::shared_ptr<TileTask> _task) {
     size_t index = 0;
 
     for (auto& subSource : m_rasterSources) {
@@ -50,16 +50,16 @@ void DataSource::createSubTasks(std::shared_ptr<TileTask> _task) {
     }
 }
 
-void DataSource::clearData() {
+void TileSource::clearData() {
 
     if (m_sources) { m_sources->clear(); }
 
     m_generation++;
 }
 
-bool DataSource::equals(const DataSource& other) const {
+bool TileSource::equals(const TileSource& other) const {
     if (m_name != other.m_name) { return false; }
-    // TODO compare RawDataSources instead
+    // TODO compare DataSources instead
     //if (m_urlTemplate != other.m_urlTemplate) { return false; }
     if (m_minDisplayZoom != other.m_minDisplayZoom) { return false; }
     if (m_maxDisplayZoom != other.m_maxDisplayZoom) { return false; }
@@ -72,7 +72,7 @@ bool DataSource::equals(const DataSource& other) const {
     return true;
 }
 
-void DataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
+void TileSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
 
     if (m_sources) {
         if (_task->needsLoading()) {
@@ -87,7 +87,7 @@ void DataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
     }
 }
 
-void DataSource::cancelLoadingTile(const TileID& _tileID) {
+void TileSource::cancelLoadingTile(const TileID& _tileID) {
 
     if (m_sources) { return m_sources->cancelLoadingTile(_tileID); }
 
@@ -97,20 +97,20 @@ void DataSource::cancelLoadingTile(const TileID& _tileID) {
     }
 }
 
-void DataSource::clearRasters() {
+void TileSource::clearRasters() {
     for (auto& raster : m_rasterSources) {
         raster->clearRasters();
     }
 }
 
-void DataSource::clearRaster(const TileID& id) {
+void TileSource::clearRaster(const TileID& id) {
     for (auto& raster : m_rasterSources) {
         TileID rasterID = id.withMaxSourceZoom(raster->maxZoom());
         raster->clearRaster(rasterID);
     }
 }
 
-void DataSource::addRasterSource(std::shared_ptr<DataSource> _rasterSource) {
+void TileSource::addRasterSource(std::shared_ptr<TileSource> _rasterSource) {
     /*
      * We limit the parent source by any attached raster source's min/max.
      */

@@ -9,7 +9,7 @@
 
 namespace Tangram {
 
-class DataSource;
+class TileSource;
 
 struct TouchItem {
     std::shared_ptr<Properties> properties;
@@ -140,15 +140,15 @@ public:
     // point is not visible on the screen, otherwise returns true
     bool lngLatToScreenPosition(double _lng, double _lat, double* _x, double* _y);
 
-    // Add a data source for adding drawable map data, which will be styled
+    // Add a tile source for adding drawable map data, which will be styled
     // according to the scene file using the provided data source name;
-    void addDataSource(std::shared_ptr<DataSource> _source);
+    void addTileSource(std::shared_ptr<TileSource> _source);
 
-    // Remove a data source from the map; returns true if the source was found
+    // Remove a tile source from the map; returns true if the source was found
     // and removed, otherwise returns false.
-    bool removeDataSource(DataSource& _source);
+    bool removeTileSource(TileSource& _source);
 
-    void clearDataSource(DataSource& _source, bool _data, bool _tiles);
+    void clearTileSource(TileSource& _source, bool _data, bool _tiles);
 
     // Add a marker object to the map and return an ID for it; an ID of 0 indicates an invalid marker;
     // the marker will not be drawn until both styling and geometry are set using the functions below.

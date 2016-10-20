@@ -1,13 +1,13 @@
 #pragma once
 
-#include "dataSource.h"
+#include "tileSource.h"
 
 namespace Tangram {
 
-class GeoJsonSource: public DataSource {
+class GeoJsonSource: public TileSource {
 
 public:
-    using DataSource::DataSource;
+    using TileSource::TileSource;
 
 protected:
 

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "dataSource.h"
+#include "tileSource.h"
 
 namespace Tangram {
 
-class MVTSource : public DataSource {
+class MVTSource : public TileSource {
 
 public:
-    using DataSource::DataSource;
+    using TileSource::TileSource;
 
 protected:
 

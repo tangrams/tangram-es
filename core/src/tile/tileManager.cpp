@@ -1,6 +1,6 @@
 #include "tileManager.h"
 
-#include "data/dataSource.h"
+#include "data/tileSource.h"
 #include "platform.h"
 #include "tile/tile.h"
 #include "tileCache.h"
@@ -40,7 +40,7 @@ TileManager::~TileManager() {
     m_tileSets.clear();
 }
 
-void TileManager::setDataSources(const std::vector<std::shared_ptr<DataSource>>& _sources) {
+void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>& _sources) {
 
     m_tileCache->clear();
 
@@ -48,7 +48,7 @@ void TileManager::setDataSources(const std::vector<std::shared_ptr<DataSource>>&
     auto it = std::remove_if(
         m_tileSets.begin(), m_tileSets.end(),
         [&](auto& tileSet) {
-            if (!tileSet.clientDataSource) {
+            if (!tileSet.clientTileSource) {
                 auto sIt = std::find_if(_sources.begin(), _sources.end(),
                                         [&](auto& source){ return source->equals(*tileSet.source); });
 
@@ -80,17 +80,17 @@ void TileManager::setDataSources(const std::vector<std::shared_ptr<DataSource>>&
     }
 }
 
-void TileManager::addClientDataSource(std::shared_ptr<DataSource> _dataSource) {
-    m_tileSets.push_back({ _dataSource, true });
+void TileManager::addClientTileSource(std::shared_ptr<TileSource> _tileSource) {
+    m_tileSets.push_back({ _tileSource, true });
 }
 
-bool TileManager::removeClientDataSource(DataSource& dataSource) {
+bool TileManager::removeClientTileSource(TileSource& _tileSource) {
     bool removed = false;
     for (auto it = m_tileSets.begin(); it != m_tileSets.end();) {
-        if (it->source.get() == &dataSource) {
-            // Remove the textures for this data source
+        if (it->source.get() == &_tileSource) {
+            // Remove the textures for this tile source
             it->source->clearRasters();
-            // Remove the tile set associated with this data source
+            // Remove the tile set associated with this tile source
             it = m_tileSets.erase(it);
             removed = true;
         } else {
@@ -435,7 +435,7 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
 
     // Remove tile from set
     _tileIt = _tileSet.tiles.erase(_tileIt);
-    // Remove rasters from this DataSource
+    // Remove rasters from this TileSource
     _tileSet.source->clearRaster(id);
 }
 

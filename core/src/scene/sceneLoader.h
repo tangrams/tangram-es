@@ -17,17 +17,17 @@
 
 namespace Tangram {
 
-class TileManager;
-class SceneLayer;
-class View;
-class ShaderProgram;
 class Material;
-class Style;
-struct StyleParam;
-struct MaterialTexture;
 class PointLight;
-class DataSource;
+class SceneLayer;
+class ShaderProgram;
+class Style;
+class TileManager;
+class TileSource;
+class View;
 struct Filter;
+struct MaterialTexture;
+struct StyleParam;
 struct TextureFiltering;
 struct TextureOptions;
 
@@ -49,7 +49,7 @@ struct SceneLoader {
 
     static void loadBackground(Node background, const std::shared_ptr<Scene>& scene);
     static void loadSource(const std::string& name, const Node& source, const Node& sources, const std::shared_ptr<Scene>& scene);
-    static void loadSourceRasters(std::shared_ptr<DataSource>& source, Node rasterNode, const Node& sources,
+    static void loadSourceRasters(std::shared_ptr<TileSource>& source, Node rasterNode, const Node& sources,
                                   const std::shared_ptr<Scene>& scene);
     static void loadTexture(const std::pair<Node, Node>& texture, const std::shared_ptr<Scene>& scene);
     static void loadLayer(const std::pair<Node, Node>& layer, const std::shared_ptr<Scene>& scene);

@@ -12,7 +12,7 @@ namespace Tangram {
 
 class RasterTileTask : public DownloadTileTask {
 public:
-    RasterTileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, int _subTask)
+    RasterTileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _subTask)
         : DownloadTileTask(_tileId, _source, _subTask) {}
 
     std::shared_ptr<Texture> m_texture;
@@ -69,10 +69,10 @@ public:
 };
 
 
-RasterSource::RasterSource(const std::string& _name, std::unique_ptr<RawDataSource> _sources,
+RasterSource::RasterSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
                            int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
                            TextureOptions _options, bool _genMipmap)
-    : DataSource(_name, std::move(_sources), _minDisplayZoom, _maxDisplayZoom, _maxZoom),
+    : TileSource(_name, std::move(_sources), _minDisplayZoom, _maxDisplayZoom, _maxZoom),
       m_texOptions(_options),
       m_genMipmap(_genMipmap) {
 
@@ -104,7 +104,7 @@ void RasterSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb)
             _cb.func(_task);
         }};
 
-    DataSource::loadTileData(_task, cb);
+    TileSource::loadTileData(_task, cb);
 }
 
 std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapProjection& _projection) const {

@@ -89,7 +89,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         // map->setPositionEased(p.longitude, p.latitude, 1.f);
 
         logMsg("pick feature\n");
-        map->clearDataSource(*data_source, true, true);
+        map->clearTileSource(*data_source, true, true);
 
         map->pickFeaturesAt(x, y, [](const auto& items) {
             for (const auto& item : items) {
@@ -300,7 +300,7 @@ void init_main_window(bool recreate) {
     map->resize(width, height);
 
     data_source = std::make_shared<ClientGeoJsonSource>("touch", "");
-    map->addDataSource(data_source);
+    map->addTileSource(data_source);
 }
 
 

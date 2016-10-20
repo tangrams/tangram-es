@@ -17,15 +17,15 @@
 
 namespace Tangram {
 
-class Style;
-class Texture;
-class DataSource;
 class DataLayer;
+class FeatureSelection;
 class FontContext;
 class Light;
 class MapProjection;
 class SpriteAtlas;
-class FeatureSelection;
+class Style;
+class Texture;
+class TileSource;
 struct Stops;
 
 
@@ -66,7 +66,7 @@ public:
 
     auto& resourceRoot() { return m_resourceRoot; }
     auto& config() { return m_config; }
-    auto& dataSources() { return m_dataSources; };
+    auto& tileSources() { return m_tileSources; };
     auto& layers() { return m_layers; };
     auto& styles() { return m_styles; };
     auto& lights() { return m_lights; };
@@ -83,7 +83,7 @@ public:
     const auto& path() const { return m_path; }
     const auto& resourceRoot() const { return m_resourceRoot; }
     const auto& config() const { return m_config; }
-    const auto& dataSources() const { return m_dataSources; };
+    const auto& tileSources() const { return m_tileSources; };
     const auto& layers() const { return m_layers; };
     const auto& styles() const { return m_styles; };
     const auto& lights() const { return m_lights; };
@@ -113,7 +113,7 @@ public:
     void animated(bool animated) { m_animated = animated ? yes : no; }
     animate animated() const { return m_animated; }
 
-    std::shared_ptr<DataSource> getDataSource(const std::string& name);
+    std::shared_ptr<TileSource> getTileSource(const std::string& name);
 
     std::shared_ptr<Texture> getTexture(const std::string& name) const;
 
@@ -136,7 +136,7 @@ private:
     std::unique_ptr<MapProjection> m_mapProjection;
 
     std::vector<DataLayer> m_layers;
-    std::vector<std::shared_ptr<DataSource>> m_dataSources;
+    std::vector<std::shared_ptr<TileSource>> m_tileSources;
     std::vector<std::unique_ptr<Style>> m_styles;
     std::vector<std::unique_ptr<Light>> m_lights;
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;

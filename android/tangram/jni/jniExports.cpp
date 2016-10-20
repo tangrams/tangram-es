@@ -220,29 +220,29 @@ extern "C" {
         });
     }
 
-    JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeAddDataSource(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring name) {
+    JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeAddTileSource(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring name) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto sourceName = stringFromJString(jniEnv, name);
-        auto source = std::shared_ptr<Tangram::DataSource>(new Tangram::ClientGeoJsonSource(sourceName, ""));
-        map->addDataSource(source);
+        auto source = std::shared_ptr<Tangram::TileSource>(new Tangram::ClientGeoJsonSource(sourceName, ""));
+        map->addTileSource(source);
         return reinterpret_cast<jlong>(source.get());
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeRemoveDataSource(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong sourcePtr) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeRemoveTileSource(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong sourcePtr) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         assert(sourcePtr > 0);
-        auto source = reinterpret_cast<Tangram::DataSource*>(sourcePtr);
-        map->removeDataSource(*source);
+        auto source = reinterpret_cast<Tangram::TileSource*>(sourcePtr);
+        map->removeTileSource(*source);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeClearDataSource(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong sourcePtr) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeClearTileSource(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong sourcePtr) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         assert(sourcePtr > 0);
-        auto source = reinterpret_cast<Tangram::DataSource*>(sourcePtr);
-        map->clearDataSource(*source, true, true);
+        auto source = reinterpret_cast<Tangram::TileSource*>(sourcePtr);
+        map->clearTileSource(*source, true, true);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeAddFeature(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong sourcePtr,

@@ -191,14 +191,14 @@ public class MapController implements Renderer {
             public void run() {
                 // Dispose each data sources by first removing it from the HashMap values and then
                 // calling remove(), so that we don't improperly modify the HashMap while iterating.
-                for (Iterator<MapData> it = clientDataSources.values().iterator(); it.hasNext();) {
+                for (Iterator<MapData> it = clientTileSources.values().iterator(); it.hasNext();) {
                     MapData mapData = it.next();
                     it.remove();
                     mapData.remove();
                 }
                 nativeDispose(mapPointer);
                 mapPointer = 0;
-                clientDataSources.clear();
+                clientTileSources.clear();
             }
         });
     }
@@ -449,17 +449,17 @@ public class MapController implements Renderer {
      * object will be returned.
      */
     public MapData addDataLayer(String name) {
-        MapData mapData = clientDataSources.get(name);
+        MapData mapData = clientTileSources.get(name);
         if (mapData != null) {
             return mapData;
         }
         checkPointer(mapPointer);
-        long pointer = nativeAddDataSource(mapPointer, name);
+        long pointer = nativeAddTileSource(mapPointer, name);
         if (pointer <= 0) {
             throw new RuntimeException("Unable to create new data source");
         }
         mapData = new MapData(name, pointer, this);
-        clientDataSources.put(name, mapData);
+        clientTileSources.put(name, mapData);
         return mapData;
     }
 
@@ -468,10 +468,10 @@ public class MapController implements Renderer {
      * @param mapData The {@code MapData} to remove
      */
     void removeDataLayer(MapData mapData) {
-        clientDataSources.remove(mapData.name);
+        clientTileSources.remove(mapData.name);
         checkPointer(mapPointer);
         checkPointer(mapData.pointer);
-        nativeRemoveDataSource(mapPointer, mapData.pointer);
+        nativeRemoveTileSource(mapPointer, mapData.pointer);
     }
 
     /**
@@ -708,16 +708,16 @@ public class MapController implements Renderer {
     // Package private methods
     // =======================
 
-    void removeDataSource(long sourcePtr) {
+    void removeTileSource(long sourcePtr) {
         checkPointer(mapPointer);
         checkPointer(sourcePtr);
-        nativeRemoveDataSource(mapPointer, sourcePtr);
+        nativeRemoveTileSource(mapPointer, sourcePtr);
     }
 
-    void clearDataSource(long sourcePtr) {
+    void clearTileSource(long sourcePtr) {
         checkPointer(mapPointer);
         checkPointer(sourcePtr);
-        nativeClearDataSource(mapPointer, sourcePtr);
+        nativeClearTileSource(mapPointer, sourcePtr);
     }
 
     void addFeature(long sourcePtr, double[] coordinates, int[] rings, String[] properties) {
@@ -785,9 +785,9 @@ public class MapController implements Renderer {
     private native void nativeOnUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private native void nativeOnUrlFailure(long callbackPtr);
 
-    synchronized native long nativeAddDataSource(long mapPtr, String name);
-    synchronized native void nativeRemoveDataSource(long mapPtr, long sourcePtr);
-    synchronized native void nativeClearDataSource(long mapPtr, long sourcePtr);
+    synchronized native long nativeAddTileSource(long mapPtr, String name);
+    synchronized native void nativeRemoveTileSource(long mapPtr, long sourcePtr);
+    synchronized native void nativeClearTileSource(long mapPtr, long sourcePtr);
     synchronized native void nativeAddFeature(long mapPtr, long sourcePtr, double[] coordinates, int[] rings, String[] properties);
     synchronized native void nativeAddGeoJson(long mapPtr, long sourcePtr, String geoJson);
 
@@ -809,7 +809,7 @@ public class MapController implements Renderer {
     private ViewCompleteListener viewCompleteListener;
     private FrameCaptureCallback frameCaptureCallback;
     private boolean frameCaptureAwaitCompleteView;
-    private Map<String, MapData> clientDataSources = new HashMap<>();
+    private Map<String, MapData> clientTileSources = new HashMap<>();
 
     // GLSurfaceView.Renderer methods
     // ==============================
