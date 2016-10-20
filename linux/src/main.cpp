@@ -18,6 +18,7 @@ using namespace Tangram;
 void init_main_window(bool recreate);
 
 std::string sceneFile = "scene.yaml";
+std::string markerStyling = "{ style: 'points', color: 'white', size: [25px, 25px], order: 100, collide: false }";
 
 GLFWwindow* main_window = nullptr;
 Tangram::Map* map = nullptr;
@@ -43,6 +44,7 @@ double last_y_down = 0.0;
 double last_x_velocity = 0.0;
 double last_y_velocity = 0.0;
 bool scene_editing_mode = false;
+MarkerID marker = 0;
 
 std::shared_ptr<ClientGeoJsonSource> data_source;
 LngLat last_point;
@@ -96,27 +98,14 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             }
         }
     } else if ((time - last_time_pressed) < single_tap_time) {
-        LngLat p1;
-        map->screenPositionToLngLat(x, y, &p1.longitude, &p1.latitude);
+        LngLat p;
+        map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
 
-        if (!(last_point == LngLat{0, 0})) {
-            LngLat p2 = last_point;
-
-            logMsg("add line %f %f - %f %f\n",
-                   p1.longitude, p1.latitude,
-                   p2.longitude, p2.latitude);
-
-            // Let's make variant public!
-            // data_source->addLine(Properties{{"type", "line" }}, {p1, p2});
-            // data_source->addPoint(Properties{{"type", "point" }}, p2);
-            Properties prop1;
-            prop1.set("type", "line");
-            data_source->addLine(prop1, {p1, p2});
-            Properties prop2;
-            prop2.set("type", "point");
-            data_source->addPoint(prop2, p2);
-        }
-        last_point = p1;
+        marker = map->markerAdd();
+        map->markerSetStyling(marker, markerStyling.c_str());
+        map->markerSetPoint(marker, p);
+        map->markerSetDrawOrder(marker, mods);
+        logMsg("Added marker with zOrder: %d\n", mods);
 
         // This updates the tiles (maybe we need a recalcTiles())
         requestRender();

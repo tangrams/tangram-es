@@ -57,6 +57,10 @@ public:
     // Set whether this marker should be visible.
     void setVisible(bool visible);
 
+    // Set the ordering of this marker relative to other markers.
+    // Markers with higher values are drawn 'above' those with lower values.
+    void setDrawOrder(int drawOrder);
+
     // Get the unique identifier for this marker. An ID of 0 indicates an invalid marker.
     MarkerID id() const;
 
@@ -65,6 +69,9 @@ public:
 
     // Get the zoom level at which the mesh for this marker was built.
     int builtZoomLevel() const;
+
+    // Get the ordering of this marker relative to other markers.
+    int drawOrder() const;
 
     // Get the length of the maximum dimension of the bounds of this marker. This is used as
     // the scale in the model matrix.
@@ -94,6 +101,8 @@ public:
 
     bool isVisible() const;
 
+    static bool compareByDrawOrder(const std::unique_ptr<Marker>& lhs, const std::unique_ptr<Marker>& rhs);
+
 protected:
 
     std::unique_ptr<Feature> m_feature;
@@ -109,6 +118,8 @@ protected:
     uint32_t m_styleId = 0;
 
     int m_builtZoomLevel = 0;
+
+    int m_drawOrder = 0;
 
     // Origin of marker geometry relative to global projection space.
     glm::dvec2 m_origin;

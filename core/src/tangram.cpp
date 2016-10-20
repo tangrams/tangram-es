@@ -668,6 +668,12 @@ bool Map::markerSetVisible(MarkerID _marker, bool _visible) {
     return success;
 }
 
+bool Map::markerSetDrawOrder(MarkerID _marker, int _drawOrder) {
+    bool success = impl->markerManager.setDrawOrder(_marker, _drawOrder);
+    requestRender();
+    return success;
+}
+
 void Map::markerRemoveAll() {
     impl->markerManager.removeAll();
     requestRender();

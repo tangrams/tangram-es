@@ -197,6 +197,10 @@ public:
     // updated, otherwise returns false.
     bool markerSetVisible(MarkerID _marker, bool _visible);
 
+    // Set the ordering of point marker object relative to other markers; higher values are drawn 'above';
+    // returns true if the marker ID was found and successfully updated, otherwise returns false.
+    bool markerSetDrawOrder(MarkerID _marker, int _drawOrder);
+
     // Remove all marker objects from the map; Any marker IDs previously returned from 'markerAdd'
     // are invalidated after this.
     void markerRemoveAll();

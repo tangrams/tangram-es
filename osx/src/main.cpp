@@ -101,11 +101,11 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         LngLat p;
         map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
 
-        if (!marker) {
-            marker = map->markerAdd();
-            map->markerSetStyling(marker, markerStyling.c_str());
-        }
+        marker = map->markerAdd();
+        map->markerSetStyling(marker, markerStyling.c_str());
         map->markerSetPoint(marker, p);
+        map->markerSetDrawOrder(marker, mods);
+        logMsg("Added marker with zOrder: %d\n", mods);
 
         requestRender();
     }

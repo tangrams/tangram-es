@@ -36,6 +36,9 @@ public:
     // Set whether a marker should be visible; returns true if the marker was found and updated.
     bool setVisible(MarkerID markerID, bool visible);
 
+    // Set the ordering of this marker relative to other markers. Higher values are drawn 'above' others.
+    bool setDrawOrder(MarkerID markerID, int drawOrder);
+
     // Set a marker to a point feature at the given position; returns true if the marker was found and updated.
     bool setPoint(MarkerID markerID, LngLat lngLat);
 
