@@ -2,7 +2,7 @@
 #include "gl.h"
 #include "platform.h"
 #include "log.h"
-#include "data/dataSource.h"
+#include "data/tileSource.h"
 #include "scene/sceneLoader.h"
 #include "scene/scene.h"
 #include "style/style.h"
@@ -30,7 +30,7 @@ struct TestContext {
     std::shared_ptr<Scene> scene;
     StyleContext styleContext;
 
-    std::shared_ptr<DataSource> source;
+    std::shared_ptr<TileSource> source;
 
     std::vector<char> rawTileData;
 
@@ -54,7 +54,7 @@ struct TestContext {
         styleContext.initFunctions(*scene);
         styleContext.setKeywordZoom(0);
 
-        source = *scene->dataSources().begin();
+        source = *scene->tileSources().begin();
         tileBuilder = std::make_unique<TileBuilder>(scene);
     }
 
@@ -76,7 +76,7 @@ struct TestContext {
 
     void parseTile() {
         Tile tile({0,0,10,10,0}, s_projection);
-        source = *scene->dataSources().begin();
+        source = *scene->tileSources().begin();
         auto task = source->createTask(tile.getID());
         auto& t = dynamic_cast<DownloadTileTask&>(*task);
         t.rawTileData = std::make_shared<std::vector<char>>(rawTileData);

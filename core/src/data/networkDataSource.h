@@ -1,10 +1,10 @@
 #pragma once
 
-#include "data/dataSource.h"
+#include "data/tileSource.h"
 
 namespace Tangram {
 
-class NetworkDataSource : public RawDataSource {
+class NetworkDataSource : public TileSource::DataSource {
 public:
     NetworkDataSource(const std::string& _urlTemplate)
         : m_urlTemplate(_urlTemplate) {}

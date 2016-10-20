@@ -3,7 +3,7 @@
 
 #include <tile/tileTask.h>
 #include "tile/tileHash.h"
-#include "dataSource.h"
+#include "tileSource.h"
 #include "gl/texture.h"
 
 #include <functional>
@@ -14,7 +14,7 @@ namespace Tangram {
 
 class RasterTileTask;
 
-class RasterSource : public DataSource {
+class RasterSource : public TileSource {
 
     TextureOptions m_texOptions;
     bool m_genMipmap;
@@ -29,7 +29,7 @@ protected:
 
 public:
 
-    RasterSource(const std::string& _name, std::unique_ptr<RawDataSource> _sources,
+    RasterSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
                  int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
                  TextureOptions _options, bool genMipmap = false);
 

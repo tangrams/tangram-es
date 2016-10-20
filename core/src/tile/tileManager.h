@@ -13,11 +13,11 @@
 #include <mutex>
 #include <tuple>
 #include <set>
-#include <data/dataSource.h>
+#include <data/tileSource.h>
 
 namespace Tangram {
 
-class DataSource;
+class TileSource;
 class TileCache;
 struct ViewState;
 
@@ -37,8 +37,8 @@ public:
 
     virtual ~TileManager();
 
-    /* Sets the tile DataSources */
-    void setDataSources(const std::vector<std::shared_ptr<DataSource>>& _sources);
+    /* Sets the tile TileSources */
+    void setTileSources(const std::vector<std::shared_ptr<TileSource>>& _sources);
 
     /* Updates visible tile set and load missing tiles */
     void updateTileSets(const ViewState& _view, const std::set<TileID>& _visibleTiles);
@@ -54,9 +54,9 @@ public:
 
     bool hasLoadingTiles() { return m_tilesInProgress > 0; }
 
-    void addClientDataSource(std::shared_ptr<DataSource> _dataSource);
+    void addClientTileSource(std::shared_ptr<TileSource> _source);
 
-    bool removeClientDataSource(DataSource& dataSource);
+    bool removeClientTileSource(TileSource& _source);
 
     std::unique_ptr<TileCache>& getTileCache() { return m_tileCache; }
 
@@ -187,13 +187,13 @@ private:
     };
 
     struct TileSet {
-        TileSet(std::shared_ptr<DataSource> _source, bool _clientDataSource)
-            : source(_source), clientDataSource(_clientDataSource) {}
+        TileSet(std::shared_ptr<TileSource> _source, bool _clientSource)
+            : source(_source), clientTileSource(_clientSource) {}
 
-        std::shared_ptr<DataSource> source;
+        std::shared_ptr<TileSource> source;
         std::map<TileID, TileEntry> tiles;
         int64_t sourceGeneration = 0;
-        bool clientDataSource;
+        bool clientTileSource;
     };
 
     void updateTileSet(TileSet& tileSet, const ViewState& _view, const std::set<TileID>& _visibleTiles);
@@ -240,7 +240,7 @@ private:
 
     bool m_tileSetChanged = false;
 
-    /* Callback for DataSource:
+    /* Callback for TileSource:
      * Passes TileTask back with data for further processing by <TileWorker>s
      */
     TileTaskCb m_dataCallback;

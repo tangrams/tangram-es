@@ -10,7 +10,7 @@
 #include "scene/scene.h"
 #include "scene/spriteAtlas.h"
 #include "tile/tile.h"
-#include "data/dataSource.h"
+#include "data/tileSource.h"
 #include "view/view.h"
 #include "marker/marker.h"
 #include "tangram.h"
@@ -89,7 +89,7 @@ void Style::build(const Scene& _scene) {
         }
     }
 
-    setupRasters(_scene.dataSources());
+    setupRasters(_scene.tileSources());
 
     constructSelectionShaderProgram();
 }
@@ -161,14 +161,14 @@ void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBloc
     }
 }
 
-void Style::setupRasters(const std::vector<std::shared_ptr<DataSource>>& _dataSources) {
+void Style::setupRasters(const std::vector<std::shared_ptr<TileSource>>& _sources) {
     if (!hasRasters()) {
         return;
     }
 
     int numRasterSource = 0;
-    for (const auto& dataSource : _dataSources) {
-        if (dataSource->isRaster()) {
+    for (const auto& source : _sources) {
+        if (source->isRaster()) {
             numRasterSource++;
         }
     }

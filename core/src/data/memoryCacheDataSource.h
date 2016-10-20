@@ -1,10 +1,10 @@
 #pragma once
 
-#include "data/dataSource.h"
+#include "data/tileSource.h"
 
 namespace Tangram {
 
-class MemoryCacheDataSource : public RawDataSource {
+class MemoryCacheDataSource : public TileSource::DataSource {
 public:
 
     MemoryCacheDataSource();

@@ -11,7 +11,7 @@ namespace Tangram {
 
 class TileManager;
 class TileBuilder;
-class DataSource;
+class TileSource;
 class Tile;
 class MapProjection;
 struct TileData;
@@ -21,7 +21,7 @@ class TileTask {
 
 public:
 
-    TileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, int _subTask);
+    TileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _subTask);
 
     // No copies
     TileTask(const TileTask& _other) = delete;
@@ -39,7 +39,7 @@ public:
 
     std::shared_ptr<Tile>& tile() { return m_tile; }
 
-    DataSource& source() { return *m_source; }
+    TileSource& source() { return *m_source; }
     int64_t sourceGeneration() const { return m_sourceGeneration; }
 
     TileID tileId() const { return m_tileId; }
@@ -84,7 +84,7 @@ protected:
     const int m_subTaskId;
 
     // Save shared reference to Datasource while building tile
-    std::shared_ptr<DataSource> m_source;
+    std::shared_ptr<TileSource> m_source;
 
     // Vector of tasks to download raster samplers
     std::vector<std::shared_ptr<TileTask>> m_subTasks;
@@ -103,13 +103,13 @@ protected:
 
 class DownloadTileTask : public TileTask {
 public:
-    DownloadTileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, int _subTask)
+    DownloadTileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _subTask)
         : TileTask(_tileId, _source, _subTask) {}
 
     virtual bool hasData() const override {
         return rawTileData && !rawTileData->empty();
     }
-    // Raw tile data that will be processed by DataSource.
+    // Raw tile data that will be processed by TileSource.
     std::shared_ptr<std::vector<char>> rawTileData;
 };
 
