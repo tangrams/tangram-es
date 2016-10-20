@@ -293,7 +293,7 @@ void Importer::importScenes(Node& root, const std::string& scenePath) {
 
     LOGD("Starting importing Scene: %s", scenePath.c_str());
 
-    static std::unordered_set<std::string> stackedScenes = {};
+    static std::unordered_set<std::string> stackedScenes = {{}};
     if (stackedScenes.find(scenePath) != stackedScenes.end()) {
         LOGE("%s will cause a cyclic import. Stopping this scene from being imported", scenePath.c_str());
         return;
