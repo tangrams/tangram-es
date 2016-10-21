@@ -21,6 +21,9 @@ uint32_t FeatureSelection::colorIdentifier(const Feature& _feature, const TileID
 
     m_entry++;
 
+    // skip zero after 2^32 features
+    if (m_entry == 0) { m_entry++; }
+
     auto& tileFeatures = m_tileFeatures[_tileID];
     tileFeatures[m_entry] = std::make_shared<Properties>(_feature.props);
 
@@ -29,12 +32,11 @@ uint32_t FeatureSelection::colorIdentifier(const Feature& _feature, const TileID
 
 bool FeatureSelection::clearFeaturesForTile(TileID _tileID) {
 
+    std::lock_guard<std::mutex> guard(m_mutex);
+
     auto it = m_tileFeatures.find(_tileID);
     if (it != m_tileFeatures.end()) {
-        {
-            std::lock_guard<std::mutex> guard(m_mutex);
-            m_tileFeatures.erase(it);
-        }
+        m_tileFeatures.erase(it);
 
         return true;
     }
