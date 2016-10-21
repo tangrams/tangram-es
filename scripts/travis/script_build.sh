@@ -17,7 +17,7 @@ fi
 
 if [[ ${PLATFORM} == "ios" ]]; then
     # Build ios project
-    echo "Building ios demo app and framework"
+    echo "Building ios framework for simulator"
     make ios-framework-sim
 fi
 
