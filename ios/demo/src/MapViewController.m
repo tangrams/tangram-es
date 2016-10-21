@@ -37,6 +37,13 @@
 - (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeSingleTap:(CGPoint)location
 {
     NSLog(@"Did tap at %f %f", location.x, location.y);
+
+    // TODO: return physical pixels from API
+    location.x *= view.pixelScale;
+    location.y *= view.pixelScale;
+
+    [view setPosition:[view screenPositionToLngLat:location]];
+
     [view pickFeaturesAt:location];
 }
 
