@@ -38,6 +38,7 @@ public:
 
         float fontScale = 1;
         float lineSpacing = 0;
+        uint32_t selectionColor = 0;
     };
 
     auto& context() const { return m_context; }

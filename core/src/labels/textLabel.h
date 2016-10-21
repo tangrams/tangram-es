@@ -22,8 +22,8 @@ using TextRange = std::array<Range, 3>;
 struct TextVertex {
     glm::i16vec2 pos;
     glm::u16vec2 uv;
-    uint32_t selection;
     struct State {
+        uint32_t selection;
         uint32_t color;
         uint32_t stroke;
         uint16_t alpha;
@@ -38,14 +38,15 @@ class TextLabel : public Label {
 
 public:
 
-    struct FontVertexAttributes {
+    struct VertexAttributes {
         uint32_t fill;
         uint32_t stroke;
         uint8_t fontScale;
+        uint32_t selectionColor;
     };
 
     TextLabel(Label::WorldTransform _transform, Type _type, Label::Options _options,
-              TextLabel::FontVertexAttributes _attrib,
+              TextLabel::VertexAttributes _attrib,
               glm::vec2 _dim, TextLabels& _labels, TextRange _textRanges,
               TextLabelProperty::Align _preferedAlignment);
 
@@ -74,7 +75,7 @@ private:
     // TextRange currently used for drawing
     int m_textRangeIndex;
 
-    FontVertexAttributes m_fontAttrib;
+    VertexAttributes m_fontAttrib;
 
     // The text LAbel prefered alignment
     TextLabelProperty::Align m_preferedAlignment;

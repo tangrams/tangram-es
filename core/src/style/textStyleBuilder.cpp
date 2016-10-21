@@ -400,7 +400,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     p.lineSpacing = 2 * m_style.pixelScale();
 
-    p.labelOptions.selectionColor = _rule.selectionColor;
+    p.selectionColor = _rule.selectionColor;
 
     return p;
 }
@@ -524,7 +524,10 @@ void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Typ
                                 Label::WorldTransform _transform) {
 
     m_labels.emplace_back(new TextLabel(_transform, _type, _params.labelOptions,
-                                        {m_attributes.fill, m_attributes.stroke, m_attributes.fontScale},
+                                        {m_attributes.fill,
+                                         m_attributes.stroke,
+                                         m_attributes.fontScale,
+                                         _params.selectionColor},
                                         {m_attributes.width, m_attributes.height},
                                         *m_textLabels, m_attributes.textRanges,
                                         _params.align));

@@ -17,7 +17,7 @@ const float TextVertex::position_scale = 4.0f;
 const float TextVertex::alpha_scale = 65535.0f;
 
 TextLabel::TextLabel(Label::WorldTransform _transform, Type _type, Label::Options _options,
-                     TextLabel::FontVertexAttributes _attrib,
+                     TextLabel::VertexAttributes _attrib,
                      glm::vec2 _dim,  TextLabels& _labels, TextRange _textRanges,
                      Align _preferedAlignment)
     : Label(_transform, _dim, _type, _options),
@@ -137,6 +137,7 @@ void TextLabel::addVerticesToMesh() {
     bool rotate = (rotation.x != 1.f);
 
     TextVertex::State state {
+        m_fontAttrib.selectionColor,
         m_fontAttrib.fill,
         m_fontAttrib.stroke,
         uint16_t(m_screenTransform.alpha * TextVertex::alpha_scale),
@@ -171,7 +172,6 @@ void TextLabel::addVerticesToMesh() {
             }
             v.uv = quad.quad[i].uv;
             v.state = state;
-            v.selection = options().selectionColor;
         }
     }
 }
