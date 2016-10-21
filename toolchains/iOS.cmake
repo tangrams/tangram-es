@@ -1,8 +1,14 @@
 include(${CMAKE_SOURCE_DIR}/toolchains/iOS.toolchain.cmake)
 
-set(EXECUTABLE_NAME "Tangram-iOS-Demo-App")
-set(TANGRAM_FRAMEWORK ${PROJECT_SOURCE_DIR}/build/ios-framework-universal/${CMAKE_BUILD_TYPE}/TangramMap.framework)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(ARCH "armv7 armv7s arm64 i386 x86_64")
+set(SUPPORTED_PLATFORMS "iphonesimulator iphoneos")
+set(TANGRAM_FRAMEWORK ${PROJECT_SOURCE_DIR}/${TANGRAM_FRAMEWORK})
+set(EXECUTABLE_NAME "tangram")
 set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CFNetwork GLKit)
+
+message(STATUS "Linking with Tangram Framework " ${TANGRAM_FRAMEWORK})
+message(STATUS "Building for architectures " ${ARCH})
 
 # ios source files
 set(IOS_EXTENSIONS_FILES *.mm *.cpp *.m)
@@ -14,7 +20,6 @@ endforeach()
 
 add_bundle_resources(IOS_DEMO_RESOURCES "${PROJECT_SOURCE_DIR}/ios/demo/resources/" "Resources")
 file(GLOB_RECURSE IOS_DEMO_SOURCES ${PROJECT_SOURCE_DIR}/ios/demo/src/**)
-#source_group("Resources" FILES ${IOS_DEMO_RESOURCES})
 
 add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${HEADERS} ${SOURCES}
     ${RESOURCES} ${IOS_DEMO_RESOURCES} ${TANGRAM_FRAMEWORK})
@@ -34,7 +39,7 @@ if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
     set_xcode_property(${EXECUTABLE_NAME} GCC_GENERATE_DEBUGGING_SYMBOLS YES)
 endif()
 
-set_xcode_property(${EXECUTABLE_NAME} SUPPORTED_PLATFORMS "iphonesimulator iphoneos")
+set_xcode_property(${EXECUTABLE_NAME} SUPPORTED_PLATFORMS ${SUPPORTED_PLATFORMS})
 set_xcode_property(${EXECUTABLE_NAME} ONLY_ACTIVE_ARCH "YES")
 set_xcode_property(${EXECUTABLE_NAME} VALID_ARCHS "${ARCH}")
 set_xcode_property(${EXECUTABLE_NAME} TARGETED_DEVICE_FAMILY "1,2")

@@ -12,12 +12,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}
     -fobjc-arc
     -std=c++14
     -stdlib=libc++
+    -w
     -isysroot ${CMAKE_IOS_SDK_ROOT}")
+
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}
     -fobjc-abi-version=2
     -fobjc-arc
+    -w
     -isysroot ${CMAKE_IOS_SDK_ROOT}")
 
 if(${IOS_PLATFORM} STREQUAL "SIMULATOR")

@@ -58,10 +58,10 @@ IOS_FRAMEWORK_XCODE_PROJ = tangram.xcodeproj
 
 XCPRETTY = eval `command -v xcpretty || echo 'xargs echo'`
 
-# Default build type is Debug
-CONFIG = Debug
-ifdef RELEASE
-	CONFIG = Release
+# Default build type is Release
+CONFIG = Release
+ifdef DEBUG
+	CONFIG = Debug
 endif
 
 ifdef DEBUG
@@ -144,6 +144,7 @@ IOS_CMAKE_PARAMS = \
         ${CMAKE_OPTIONS} \
 	-DPLATFORM_TARGET=ios \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/iOS.toolchain.cmake \
+	-DTANGRAM_FRAMEWORK=${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}/TangramMap.framework \
 	-G Xcode
 
 IOS_FRAMEWORK_CMAKE_PARAMS = \
@@ -302,7 +303,12 @@ cmake-osx:
 	cmake ../.. ${DARWIN_CMAKE_PARAMS}
 
 ios: ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
-	xcodebuild -target ${IOS_TARGET} -project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ} \
+	xcodebuild -target ${IOS_TARGET} ARCHS='i386 x86_64' \
+		ONLY_ACTIVE_ARCH=NO \
+		CODE_SIGN_IDENTITY="" \
+		CODE_SIGNING_REQUIRED=NO \
+		-sdk iphonesimulator \
+		-project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ} \
 		-configuration ${CONFIG} | ${XCPRETTY}
 
 ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}: cmake-ios

@@ -9,7 +9,7 @@ option(USE_SYSTEM_GLFW_LIBS "Use system libraries for GLFW3 via pkgconfig" OFF)
 if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "")
     message(STATUS "Build type configuration " ${CMAKE_BUILD_TYPE})
 else()
-    set(CMAKE_BUILD_TYPE Debug)
+    set(CMAKE_BUILD_TYPE Release)
 endif()
 
 if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/harfbuzz-icu-freetype/harfbuzz/README")
