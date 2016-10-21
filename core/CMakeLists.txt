@@ -70,7 +70,8 @@ set(LINK_LIBRARIES
     yaml-cpp
     alfons
     SQLiteCpp
-    sqlite3)
+    sqlite3
+    z)
 
 if (UNIX AND NOT APPLE)
   # SQLite needs dl dynamic library loader when Linux
