@@ -27,6 +27,7 @@ public:
         Label::Options labelOptions;
         LabelProperty::Anchor anchor = LabelProperty::Anchor::center;
         float extrudeScale = 1.f;
+        uint32_t selectionColor = 0;
     };
 
     PointStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,

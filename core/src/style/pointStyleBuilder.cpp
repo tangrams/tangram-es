@@ -155,7 +155,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     std::hash<PointStyle::Parameters> hash;
     p.labelOptions.paramHash = hash(p);
 
-    p.labelOptions.selectionColor = _rule.selectionColor;
+    p.selectionColor = _rule.selectionColor;
 
     return p;
 }
@@ -166,7 +166,7 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
     m_labels.push_back(std::make_unique<SpriteLabel>(glm::vec3(glm::vec2(_point), m_zoom),
                                                      _params.size,
                                                      _params.labelOptions,
-                                                     _params.extrudeScale,
+                                                     SpriteLabel::VertexAttributes{_params.color, _params.selectionColor, _params.extrudeScale },
                                                      m_texture,
                                                      *m_spriteLabels,
                                                      m_quads.size()));
@@ -200,8 +200,8 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
         {v0, {uvBL.x, uvTR.y}},
         {v1, {uvTR.x, uvTR.y}},
         {v2, {uvBL.x, uvBL.y}},
-        {v3, {uvTR.x, uvBL.y}}},
-        _params.color});
+        {v3, {uvTR.x, uvBL.y}}}
+        });
 }
 
 bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const {

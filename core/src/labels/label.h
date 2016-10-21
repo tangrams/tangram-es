@@ -85,7 +85,6 @@ public:
         float repeatDistance = 0;
         float buffer = 0.f;
         size_t paramHash = 0; // the label hash based on its styling parameters
-        uint32_t selectionColor = 0;
         LabelProperty::Anchors anchors;
         bool required = true;
         bool flat = false;

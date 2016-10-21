@@ -14,8 +14,8 @@ class Texture;
 struct SpriteVertex {
     glm::vec3 pos;
     glm::u16vec2 uv;
-    uint32_t selection;
     struct State {
+        uint32_t selection;
         uint32_t color;
         uint16_t alpha;
         uint16_t scale;
@@ -28,8 +28,15 @@ struct SpriteVertex {
 class SpriteLabel : public Label {
 public:
 
+    struct VertexAttributes {
+        uint32_t color;
+        uint32_t selectionColor;
+        float extrudeScale;
+    };
+
     SpriteLabel(Label::WorldTransform _transform, glm::vec2 _size, Label::Options _options,
-                float _extrudeScale, Texture* _texture, SpriteLabels& _labels, size_t _labelsPos);
+                SpriteLabel::VertexAttributes _attrib, Texture* _texture,
+                SpriteLabels& _labels, size_t _labelsPos);
 
     void updateBBoxes(float _zoomFract) override;
 
@@ -49,7 +56,7 @@ private:
     // If non-null, this indicates a custom texture for a marker.
     Texture* m_texture;
 
-    float m_extrudeScale;
+    VertexAttributes m_vertexAttrib;
 
     std::array<glm::vec3, 4> m_projected;
 };
@@ -59,8 +66,6 @@ struct SpriteQuad {
         glm::vec2 pos;
         glm::u16vec2 uv;
     } quad[4];
-    // TODO color and stroke must not be stored per quad
-    uint32_t color;
 };
 
 class SpriteLabels : public LabelSet {
