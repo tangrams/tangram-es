@@ -15,6 +15,12 @@
 
 @end
 
+@interface MapViewControllerRecognizerDelegate : NSObject <TGRecognizerDelegate>
+
+- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeSingleTap:(CGPoint)location;
+
+@end
+
 @interface MapViewController : TGMapViewController
 
 @end

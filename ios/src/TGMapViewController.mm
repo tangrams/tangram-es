@@ -343,17 +343,17 @@
 
 - (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer {
     CGPoint location = [tapRecognizer locationInView:self.view];
-    self.map->handleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizeSingleTap:)]) {
-        [self.gestureDelegate recognizer:tapRecognizer didRecognizeSingleTap:[tapRecognizer locationInView:self.view]];
+    // self.map->handleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeSingleTap:)]) {
+        [self.gestureDelegate mapView:self recognizer:tapRecognizer didRecognizeSingleTap:[tapRecognizer locationInView:self.view]];
     }
 }
 
 - (void)respondToDoubleTapGesture:(UITapGestureRecognizer *)doubleTapRecognizer {
     CGPoint location = [doubleTapRecognizer locationInView:self.view];
-    self.map->handleDoubleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizeDoubleTap:)]) {
-        [self.gestureDelegate recognizer:doubleTapRecognizer didRecognizeDoubleTap:[doubleTapRecognizer locationInView:self.view]];
+    // self.map->handleDoubleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeDoubleTap:)]) {
+        [self.gestureDelegate mapView:self recognizer:doubleTapRecognizer didRecognizeDoubleTap:[doubleTapRecognizer locationInView:self.view]];
     }
 }
 
@@ -376,8 +376,8 @@
             break;
     }
 
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizePanGesture:)]) {
-        [self.gestureDelegate recognizer:panRecognizer didRecognizePanGesture:[panRecognizer locationInView:self.view]];
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizePanGesture:)]) {
+        [self.gestureDelegate mapView:self recognizer:panRecognizer didRecognizePanGesture:[panRecognizer locationInView:self.view]];
     }
 }
 
@@ -386,8 +386,8 @@
     CGFloat scale = pinchRecognizer.scale;
     [pinchRecognizer setScale:1.0];
     self.map->handlePinchGesture(location.x * self.pixelScale, location.y * self.pixelScale, scale, pinchRecognizer.velocity);
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizePinchGesture:)]) {
-        [self.gestureDelegate recognizer:pinchRecognizer didRecognizePinchGesture:[pinchRecognizer locationInView:self.view]];
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizePinchGesture:)]) {
+        [self.gestureDelegate mapView:self recognizer:pinchRecognizer didRecognizePinchGesture:[pinchRecognizer locationInView:self.view]];
     }
 }
 
@@ -396,8 +396,8 @@
     CGFloat rotation = rotationRecognizer.rotation;
     [rotationRecognizer setRotation:0.0];
     self.map->handleRotateGesture(position.x * self.pixelScale, position.y * self.pixelScale, rotation);
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizeRotationGesture:)]) {
-        [self.gestureDelegate recognizer:rotationRecognizer didRecognizeRotationGesture:[rotationRecognizer locationInView:self.view]];
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeRotationGesture:)]) {
+        [self.gestureDelegate mapView:self recognizer:rotationRecognizer didRecognizeRotationGesture:[rotationRecognizer locationInView:self.view]];
     }
 }
 
@@ -409,7 +409,7 @@
     if ([shoveRecognizer numberOfTouches] == 2) {
         self.map->handleShoveGesture(displacement.y);
         if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizeShoveGesture:)]) {
-            [self.gestureDelegate recognizer:shoveRecognizer didRecognizeShoveGesture:[shoveRecognizer locationInView:self.view]];
+            [self.gestureDelegate mapView:self recognizer:shoveRecognizer didRecognizeShoveGesture:[shoveRecognizer locationInView:self.view]];
         }
     }
 }
