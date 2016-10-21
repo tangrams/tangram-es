@@ -17,7 +17,6 @@ all: android osx ios
 .PHONY: osx
 .PHONY: xcode
 .PHONY: ios
-.PHONY: ios-sim
 .PHONY: rpi
 .PHONY: linux
 .PHONY: benchmark
@@ -28,7 +27,6 @@ all: android osx ios
 .PHONY: cmake-xcode
 .PHONY: cmake-android
 .PHONY: cmake-ios
-.PHONY: cmake-ios-sim
 .PHONY: cmake-ios-framework
 .PHONY: cmake-ios-framework-sim
 .PHONY: cmake-rpi
@@ -57,6 +55,8 @@ IOS_FRAMEWORK_TARGET = TangramMap
 OSX_XCODE_PROJ = tangram.xcodeproj
 IOS_XCODE_PROJ = tangram.xcodeproj
 IOS_FRAMEWORK_XCODE_PROJ = tangram.xcodeproj
+
+XCPRETTY = eval `command -v xcpretty || echo 'xargs echo'`
 
 # Default build type is Debug
 CONFIG = Debug
@@ -206,7 +206,8 @@ TIZEN_X86_CMAKE_PARAMS = \
 	-DPLATFORM_TARGET=tizen \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
 
-clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux clean-shaders clean-tizen-arm clean-tizen-x86 clean-ios-framework clean-ios-framework-sim
+clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux clean-shaders \
+	clean-tizen-arm clean-tizen-x86 clean-ios-framework clean-ios-framework-sim
 
 clean-android:
 	rm -rf ${ANDROID_BUILD_DIR}
@@ -301,11 +302,12 @@ cmake-osx:
 	cmake ../.. ${DARWIN_CMAKE_PARAMS}
 
 ios: ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
-	xcodebuild -target ${IOS_TARGET} -project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ} -configuration ${CONFIG}
+	xcodebuild -target ${IOS_TARGET} -project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ} \
+		-configuration ${CONFIG} | ${XCPRETTY}
 
 ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}: cmake-ios
 
-cmake-ios:
+cmake-ios: ios-framework-universal
 	@mkdir -p ${IOS_BUILD_DIR}
 	@cd ${IOS_BUILD_DIR} && \
 	cmake ../.. ${IOS_CMAKE_PARAMS}
@@ -321,25 +323,19 @@ cmake-ios-framework-sim:
 	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS} -DIOS_PLATFORM=SIMULATOR -DBUILD_IOS_FRAMEWORK=TRUE
 
 ios-framework: cmake-ios-framework
-	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} -configuration ${CONFIG}
+	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} \
+		CODE_SIGNING_REQUIRED=NO -configuration ${CONFIG} | ${XCPRETTY}
 
 ios-framework-sim: cmake-ios-framework-sim
-	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_SIM_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} -configuration ${CONFIG}
-
-ios-sim: ${IOS_SIM_BUILD_DIR}/${IOS_XCODE_PROJ}
-	xcodebuild -target ${IOS_TARGET} -project ${IOS_SIM_BUILD_DIR}/${IOS_XCODE_PROJ} -configuration ${CONFIG}
+	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_SIM_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} \
+		CODE_SIGNING_REQUIRED=NO -configuration ${CONFIG} | ${XCPRETTY}
 
 ios-framework-universal: ios-framework ios-framework-sim
 	@mkdir -p ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}
 	@cp -r ${IOS_FRAMEWORK_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}
-	lipo ${IOS_FRAMEWORK_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework/TangramMap ${IOS_FRAMEWORK_SIM_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework/TangramMap -create -output ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}/TangramMap.framework/TangramMap
-
-${IOS_SIM_BUILD_DIR}/${IOS_XCODE_PROJ}: cmake-ios-sim
-
-cmake-ios-sim:
-	@mkdir -p ${IOS_SIM_BUILD_DIR}
-	@cd ${IOS_SIM_BUILD_DIR} && \
-	cmake ../.. ${IOS_CMAKE_PARAMS} -DIOS_PLATFORM=SIMULATOR
+	lipo ${IOS_FRAMEWORK_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework/TangramMap \
+		${IOS_FRAMEWORK_SIM_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework/TangramMap \
+		-create -output ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}/TangramMap.framework/TangramMap
 
 rpi: cmake-rpi
 	@cd ${RPI_BUILD_DIR} && \

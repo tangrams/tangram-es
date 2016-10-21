@@ -80,16 +80,6 @@ set_xcode_property(${FRAMEWORK_NAME} ARCHS "${ARCH}")
 # Set RPATH to be within the application /Frameworks directory
 set_xcode_property(${FRAMEWORK_NAME} LD_DYLIB_INSTALL_NAME "@rpath/${FRAMEWORK_NAME}.framework/${FRAMEWORK_NAME}")
 
-macro(add_framework FWNAME APPNAME LIBPATH)
-    find_library(FRAMEWORK_${FWNAME} NAMES ${FWNAME} PATHS ${LIBPATH} PATH_SUFFIXES Frameworks NO_DEFAULT_PATH)
-    if(${FRAMEWORK_${FWNAME}} STREQUAL FRAMEWORK_${FWNAME}-NOTFOUND)
-        message(ERROR ": Framework ${FWNAME} not found")
-    else()
-        target_link_libraries(${APPNAME} ${FRAMEWORK_${FWNAME}})
-        message(STATUS "Framework ${FWNAME} found")
-    endif()
-endmacro(add_framework)
-
 foreach(_framework ${FRAMEWORKS})
     add_framework(${_framework} ${FRAMEWORK_NAME} ${CMAKE_SYSTEM_FRAMEWORK_PATH})
 endforeach()

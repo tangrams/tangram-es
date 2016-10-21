@@ -112,3 +112,14 @@ macro(add_resources TARGET RESOURCE_DIR)
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${RESOURCE_DIR} ${CMAKE_BINARY_DIR}/bin)
 
 endmacro(add_resources)
+
+macro(add_framework FWNAME APPNAME LIBPATH)
+    find_library(FRAMEWORK_${FWNAME} NAMES ${FWNAME} PATHS ${LIBPATH} PATH_SUFFIXES Frameworks NO_DEFAULT_PATH)
+    if(${FRAMEWORK_${FWNAME}} STREQUAL FRAMEWORK_${FWNAME}-NOTFOUND)
+        message(ERROR ": Framework ${FWNAME} not found")
+    else()
+        target_link_libraries(${APPNAME} ${FRAMEWORK_${FWNAME}})
+        message(STATUS "Framework ${FWNAME} found")
+    endif()
+endmacro(add_framework)
+
