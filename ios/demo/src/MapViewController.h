@@ -8,8 +8,14 @@
 #import <UIKit/UIKit.h>
 #import <TangramMap/TangramMap.h>
 
-@interface MapViewController : TGMapViewController
+@interface MapViewControllerDelegate : NSObject <TGMapViewDelegate>
 
+- (void)mapView:(TGMapViewController *)mapView didLoadSceneAsync:(NSString *)scene;
+- (void)mapView:(TGMapViewController*)mapView didSelectFeatures:(NSDictionary *)features atScreenPosition:(CGPoint)position;
+
+@end
+
+@interface MapViewController : TGMapViewController
 
 @end
 
