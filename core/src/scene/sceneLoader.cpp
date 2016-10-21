@@ -5,6 +5,7 @@
 #include "data/clientGeoJsonSource.h"
 #include "data/geoJsonSource.h"
 #include "data/memoryCacheDataSource.h"
+#include "data/mbtilesDataSource.h"
 #include "data/mvtSource.h"
 #include "data/networkDataSource.h"
 #include "data/rasterSource.h"
@@ -897,6 +898,22 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
     int32_t maxDisplayZoom = -1;
     int32_t maxZoom = 18;
 
+    std::string mime;
+
+    if (type == "GeoJSON") {
+        mime = "application/geo+json";
+    } else if (type == "TopoJSON") {
+        mime =  "application/topo+json";
+    } else if (type == "MVT") {
+        mime =  "application/vnd.mapbox-vector-tile";
+    } else if (type == "Raster") {
+        // TODO try to guess from url
+        mime = "image/png";
+    } else {
+        LOGW("Unrecognized data source type '%s', skipping", type.c_str());
+        return;
+    }
+
     if (auto urlNode = source["url"]) {
         url = urlNode.Scalar();
     }
@@ -950,20 +967,32 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
     auto rawSources = std::make_unique<MemoryCacheDataSource>();
     rawSources->setCacheSize(CACHE_SIZE);
 
+    if (!mbtiles.empty()) {
+        // If we have MBTiles, we know the source is tiled.
+        tiled = true;
+
+        if (url.empty()) {
+            rawSources->setNext(std::make_unique<MBTilesDataSource>(name, mbtiles, mime));
+        } else {
+            rawSources->setNext(std::make_unique<MBTilesDataSource>(name, mbtiles, mime, true, true));
+            rawSources->next->setNext(std::make_unique<NetworkDataSource>(url));
+        }
+
+    } else if (tiled) {
+        rawSources->setNext(std::make_unique<NetworkDataSource>(url));
+    }
+
     if (type == "GeoJSON") {
         if (tiled) {
-            rawSources->setNext(std::make_unique<NetworkDataSource>(url));
             sourcePtr = std::make_shared<GeoJsonSource>(name, std::move(rawSources),
                                                         minDisplayZoom, maxDisplayZoom, maxZoom);
         } else {
             sourcePtr = std::make_shared<ClientGeoJsonSource>(name, url, minDisplayZoom, maxDisplayZoom, maxZoom);
         }
     } else if (type == "TopoJSON") {
-        rawSources->setNext(std::make_unique<NetworkDataSource>(url));
         sourcePtr = std::make_shared<TopoJsonSource>(name, std::move(rawSources),
                                                      minDisplayZoom, maxDisplayZoom, maxZoom);
     } else if (type == "MVT") {
-        rawSources->setNext(std::make_unique<NetworkDataSource>(url));
         sourcePtr = std::make_shared<MVTSource>(name, std::move(rawSources),
                                                 minDisplayZoom, maxDisplayZoom, maxZoom);
     } else if (type == "Raster") {
@@ -974,17 +1003,13 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
                 generateMipmaps = true;
             }
         }
-        auto rawSources = std::make_unique<NetworkDataSource>(url);
+
         sourcePtr = std::make_shared<RasterSource>(name, std::move(rawSources),
                                                    minDisplayZoom, maxDisplayZoom, maxZoom,
                                                    options, generateMipmaps);
-    } else {
-        LOGW("Unrecognized data source type '%s', skipping", type.c_str());
     }
 
-    if (sourcePtr) {
-        _scene->tileSources().push_back(sourcePtr);
-    }
+    _scene->tileSources().push_back(sourcePtr);
 
     if (auto rasters = source["rasters"]) {
         loadSourceRasters(sourcePtr, source["rasters"], sources, _scene);

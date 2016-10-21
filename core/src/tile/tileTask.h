@@ -75,6 +75,11 @@ public:
 
     bool needsLoading() const { return m_needsLoading; }
 
+    // Set whether DataSource should (re)try loading data
+    void setNeedsLoading(bool _needsLoading) {
+         m_needsLoading = _needsLoading;
+    }
+
     void startedLoading() { m_needsLoading = false; }
 
 protected:
