@@ -32,6 +32,10 @@ public:
     uint32_t addSelectionFeature(const Feature& _feature);
 
 private:
+
+    // Determine and apply DrawRules for a @_feature
+    void applyStyling(const Feature& _feature, const SceneLayer& _layer);
+
     std::shared_ptr<Scene> m_scene;
 
     StyleContext m_styleContext;

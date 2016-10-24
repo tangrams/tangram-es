@@ -155,59 +155,6 @@ bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, 
     return true;
 }
 
-void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
-                             StyleContext& _ctx, TileBuilder& _builder) {
-
-    // If no rules matched the feature, return immediately
-    if (!match(_feature, _layer, _ctx)) { return; }
-
-    uint32_t selectionColor = 0;
-
-    // For each matched rule, find the style to be used and
-    // build the feature with the rule's parameters
-    for (auto& rule : m_matchedRules) {
-
-        StyleBuilder* style = _builder.getStyleBuilder(rule.getStyleName());
-
-        if (!style) {
-            LOGN("Invalid style %s", rule.getStyleName().c_str());
-            continue;
-        }
-
-        bool valid = evaluateRuleForContext(rule, _ctx);
-
-        if (valid) {
-
-            bool interactive = false;
-            if (rule.get(StyleParamKey::interactive, interactive) && interactive) {
-                if (selectionColor == 0) {
-                    selectionColor = _builder.addSelectionFeature(_feature);
-                }
-                rule.selectionColor = selectionColor;
-            } else {
-                rule.selectionColor = 0;
-            }
-
-            // build outline explicitly with outline style
-            const auto& outlineStyleName = rule.findParameter(StyleParamKey::outline_style);
-            if (outlineStyleName) {
-                auto& styleName = outlineStyleName.value.get<std::string>();
-                auto* outlineStyle = _builder.getStyleBuilder(styleName);
-                if (!outlineStyle) {
-                    LOGN("Invalid style %s", styleName.c_str());
-                } else {
-                    rule.isOutlineOnly = true;
-                    outlineStyle->addFeature(_feature, rule);
-                    rule.isOutlineOnly = false;
-                }
-            }
-
-            // build feature with style
-            style->addFeature(_feature, rule);
-        }
-    }
-}
-
 bool DrawRuleMergeSet::evaluateRuleForContext(DrawRule& rule, StyleContext& ctx) {
 
         bool visible;

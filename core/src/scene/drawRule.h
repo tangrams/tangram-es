@@ -118,12 +118,6 @@ private:
 class DrawRuleMergeSet {
 
 public:
-    /* Determine and apply DrawRules for a @_feature and add
-     * the result to @_tile
-     */
-    void apply(const Feature& _feature, const SceneLayer& _sceneLayer,
-               StyleContext& _ctx, TileBuilder& _builder);
-
     bool evaluateRuleForContext(DrawRule& rule, StyleContext& ctx);
 
     // internal

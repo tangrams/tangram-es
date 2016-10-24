@@ -1,16 +1,17 @@
 #include "tile/tileBuilder.h"
 
 #include "data/dataSource.h"
+#include "data/properties.h"
+#include "data/propertyItem.h"
 #include "gl/mesh.h"
+#include "log.h"
 #include "scene/dataLayer.h"
 #include "scene/scene.h"
 #include "style/style.h"
 #include "tile/tile.h"
+#include "util/featureSelection.h"
 #include "util/mapProjection.h"
 #include "view/view.h"
-#include "util/featureSelection.h"
-#include "data/properties.h"
-#include "data/propertyItem.h"
 
 namespace Tangram {
 
@@ -39,6 +40,57 @@ uint32_t TileBuilder::addSelectionFeature(const Feature& _feature) {
     m_selectionFeatures[id] = std::make_shared<Properties>(_feature.props);
 
     return id;
+}
+
+void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer) {
+
+    // If no rules matched the feature, return immediately
+    if (!m_ruleSet.match(_feature, _layer, m_styleContext)) { return; }
+
+    uint32_t selectionColor = 0;
+
+    // For each matched rule, find the style to be used and
+    // build the feature with the rule's parameters
+    for (auto& rule : m_ruleSet.matchedRules()) {
+
+        StyleBuilder* style = getStyleBuilder(rule.getStyleName());
+
+        if (!style) {
+            LOGN("Invalid style %s", rule.getStyleName().c_str());
+            continue;
+        }
+
+        if (!m_ruleSet.evaluateRuleForContext(rule, m_styleContext)) {
+            continue;
+        }
+
+        bool interactive = false;
+        if (rule.get(StyleParamKey::interactive, interactive) && interactive) {
+            if (selectionColor == 0) {
+                selectionColor = addSelectionFeature(_feature);
+            }
+            rule.selectionColor = selectionColor;
+        } else {
+            rule.selectionColor = 0;
+        }
+
+        // build outline explicitly with outline style
+        const auto& outlineStyleName = rule.findParameter(StyleParamKey::outline_style);
+        if (outlineStyleName) {
+            auto& styleName = outlineStyleName.value.get<std::string>();
+            auto* outlineStyle = getStyleBuilder(styleName);
+            if (!outlineStyle) {
+                LOGN("Invalid style %s", styleName.c_str());
+            } else {
+                rule.isOutlineOnly = true;
+                outlineStyle->addFeature(_feature, rule);
+                rule.isOutlineOnly = false;
+            }
+        }
+
+        // build feature with style
+        style->addFeature(_feature, rule);
+    }
 }
 
 std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData, const DataSource& _source) {
@@ -71,7 +123,7 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
             }
 
             for (const auto& feat : collection.features) {
-                m_ruleSet.apply(feat, datalayer, m_styleContext, *this);
+                applyStyling(feat, datalayer);
             }
         }
     }
