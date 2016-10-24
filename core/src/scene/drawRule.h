@@ -122,7 +122,7 @@ public:
      * the result to @_tile
      */
     void apply(const Feature& _feature, const SceneLayer& _sceneLayer,
-               StyleContext& _ctx, TileBuilder& _builder, const TileID& _tileID);
+               StyleContext& _ctx, TileBuilder& _builder);
 
     bool evaluateRuleForContext(DrawRule& rule, StyleContext& ctx);
 

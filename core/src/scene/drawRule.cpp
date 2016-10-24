@@ -156,10 +156,12 @@ bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, 
 }
 
 void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
-                             StyleContext& _ctx, TileBuilder& _builder, const TileID& _tileID) {
+                             StyleContext& _ctx, TileBuilder& _builder) {
 
     // If no rules matched the feature, return immediately
     if (!match(_feature, _layer, _ctx)) { return; }
+
+    uint32_t selectionColor = 0;
 
     // For each matched rule, find the style to be used and
     // build the feature with the rule's parameters
@@ -178,7 +180,10 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
 
             bool interactive = false;
             if (rule.get(StyleParamKey::interactive, interactive) && interactive) {
-                rule.selectionColor = _builder.scene().featureSelection()->colorIdentifier(_feature, _tileID);
+                if (selectionColor == 0) {
+                    selectionColor = _builder.addSelectionFeature(_feature);
+                }
+                rule.selectionColor = selectionColor;
             } else {
                 rule.selectionColor = 0;
             }

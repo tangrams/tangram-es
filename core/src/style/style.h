@@ -4,7 +4,6 @@
 #include "gl/uniform.h"
 #include "util/fastmap.h"
 #include "data/tileData.h"
-#include "util/featureSelection.h"
 
 #include <memory>
 #include <string>
@@ -87,9 +86,9 @@ public:
 
     virtual void addLayoutItems(LabelCollider& _layout) {}
 
-    virtual const Style& style() const = 0;
+    virtual void addSelectionItems(LabelCollider& _layout) {}
 
-    uint32_t createSelectionIdentifier(const Feature& _feature, const TileID& _tileID);
+    virtual const Style& style() const = 0;
 
 protected:
     bool m_hasColorShaderBlock = false;

@@ -158,7 +158,7 @@ private:
 
     std::shared_ptr<FontContext> m_fontContext;
 
-    std::shared_ptr<FeatureSelection> m_featureSelection;
+    std::unique_ptr<FeatureSelection> m_featureSelection;
 
     animate m_animated = none;
 

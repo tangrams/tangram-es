@@ -8,7 +8,6 @@
 #include "style/style.h"
 #include "scene/styleContext.h"
 #include "util/mapProjection.h"
-#include "util/featureSelection.h"
 #include "tile/tile.h"
 #include "tile/tileBuilder.h"
 #include "tile/tileTask.h"
@@ -26,7 +25,6 @@ using namespace Tangram;
 struct TestContext {
 
     MercatorProjection s_projection;
-    std::shared_ptr<FeatureSelection> s_featureSelection = std::make_shared<FeatureSelection>();
     const char* sceneFile = "scene.yaml";
 
     std::shared_ptr<Scene> scene;
@@ -52,10 +50,6 @@ struct TestContext {
         SceneLoader::applyConfig(scene);
 
         scene->fontContext()->loadFonts();
-        scene->featureSelection() = s_featureSelection;
-        for (auto& style : scene->styles()) {
-            style->setFeatureSelection(s_featureSelection);
-        }
 
         styleContext.initFunctions(*scene);
         styleContext.setKeywordZoom(0);
@@ -81,7 +75,7 @@ struct TestContext {
     }
 
     void parseTile() {
-        Tile tile({0,0,10,10,0}, s_projection, s_featureSelection);
+        Tile tile({0,0,10,10,0}, s_projection);
         source = *scene->dataSources().begin();
         auto task = source->createTask(tile.getID());
         auto& t = dynamic_cast<DownloadTileTask&>(*task);
