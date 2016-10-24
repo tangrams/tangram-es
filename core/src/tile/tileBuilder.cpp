@@ -9,6 +9,8 @@
 #include "util/mapProjection.h"
 #include "view/view.h"
 #include "util/featureSelection.h"
+#include "data/properties.h"
+#include "data/propertyItem.h"
 
 namespace Tangram {
 
@@ -32,9 +34,18 @@ StyleBuilder* TileBuilder::getStyleBuilder(const std::string& _name) {
     return it->second.get();
 }
 
+uint32_t TileBuilder::addSelectionFeature(const Feature& _feature) {
+    auto id = m_scene->featureSelection()->colorIdentifier();
+    m_selectionFeatures[id] = std::make_shared<Properties>(_feature.props);
+
+    return id;
+}
+
 std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData, const DataSource& _source) {
 
-    auto tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), m_scene->featureSelection(), &_source);
+    m_selectionFeatures.clear();
+
+    auto tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), &_source);
 
     tile->initGeometry(m_scene->styles().size());
 
@@ -60,7 +71,7 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
             }
 
             for (const auto& feat : collection.features) {
-                m_ruleSet.apply(feat, datalayer, m_styleContext, *this, _tileID);
+                m_ruleSet.apply(feat, datalayer, m_styleContext, *this);
             }
         }
     }
@@ -77,6 +88,8 @@ std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileDa
     for (auto& builder : m_styleBuilder) {
         tile->setMesh(builder.second->style(), builder.second->build());
     }
+
+    tile->setSelectionFeatures(m_selectionFeatures);
 
     return tile;
 }

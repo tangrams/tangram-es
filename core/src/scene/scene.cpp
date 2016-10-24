@@ -10,6 +10,7 @@
 #include "style/material.h"
 #include "style/style.h"
 #include "text/fontContext.h"
+#include "util/featureSelection.h"
 #include "util/mapProjection.h"
 #include "util/util.h"
 #include "view/view.h"
@@ -27,7 +28,7 @@ Scene::Scene(const std::string& _path)
     : id(s_serial++),
       m_path(_path),
       m_fontContext(std::make_shared<FontContext>()),
-      m_featureSelection(std::make_shared<FeatureSelection>()) {
+      m_featureSelection(std::make_unique<FeatureSelection>()) {
 
     std::regex r("^(http|https):/");
     std::smatch match;
@@ -57,7 +58,8 @@ Scene::Scene(const std::string& _path)
 }
 
 Scene::Scene(const Scene& _other)
-    : id(s_serial++) {
+    : id(s_serial++),
+      m_featureSelection(std::make_unique<FeatureSelection>()) {
 
     m_config = _other.m_config;
     m_fontContext = _other.m_fontContext;

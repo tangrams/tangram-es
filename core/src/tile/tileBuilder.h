@@ -9,6 +9,8 @@ namespace Tangram {
 
 class DataLayer;
 class DataSource;
+class Feature;
+class Properties;
 class Tile;
 class StyleBuilder;
 struct TileData;
@@ -27,6 +29,8 @@ public:
 
     const Scene& scene() const { return *m_scene; }
 
+    uint32_t addSelectionFeature(const Feature& _feature);
+
 private:
     std::shared_ptr<Scene> m_scene;
 
@@ -36,6 +40,8 @@ private:
     LabelCollider m_labelLayout;
 
     fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilder;
+
+    fastmap<uint32_t, std::shared_ptr<Properties>> m_selectionFeatures;
 };
 
 }

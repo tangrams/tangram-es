@@ -3,7 +3,8 @@
 #include "glm/mat4x4.hpp"
 #include "glm/vec2.hpp"
 #include "gl/texture.h"
-#include "tileID.h"
+#include "tile/tileID.h"
+#include "util/fastmap.h"
 
 #include <map>
 #include <memory>
@@ -14,9 +15,9 @@ namespace Tangram {
 
 class DataSource;
 class MapProjection;
+class Properties;
 class Style;
 class View;
-class FeatureSelection;
 struct StyledMesh;
 
 struct Raster {
@@ -39,8 +40,7 @@ class Tile {
 
 public:
 
-    Tile(TileID _id, const MapProjection& _projection, std::shared_ptr<FeatureSelection> _featureSelection,
-         const DataSource* _source = nullptr);
+    Tile(TileID _id, const MapProjection& _projection, const DataSource* _source = nullptr);
 
 
     virtual ~Tile();
@@ -69,6 +69,10 @@ public:
     const std::unique_ptr<StyledMesh>& getMesh(const Style& _style) const;
 
     void setMesh(const Style& _style, std::unique_ptr<StyledMesh> _mesh);
+
+    void setSelectionFeatures(const fastmap<uint32_t, std::shared_ptr<Properties>> _selectionFeatures);
+
+    std::shared_ptr<Properties> getSelectionFeature(uint32_t _id);
 
     auto& rasters() { return m_rasters; }
     const auto& rasters() const { return m_rasters; }
@@ -125,7 +129,8 @@ private:
 
     mutable size_t m_memoryUsage = 0;
 
-    std::shared_ptr<FeatureSelection> m_featureSelection;
+    fastmap<uint32_t, std::shared_ptr<Properties>> m_selectionFeatures;
+
 };
 
 }

@@ -5,19 +5,16 @@
 #include "view/view.h"
 #include "tile/tileID.h"
 #include "labels/labelSet.h"
-#include "util/featureSelection.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 
 namespace Tangram {
 
-Tile::Tile(TileID _id, const MapProjection& _projection, std::shared_ptr<FeatureSelection> _featureSelection,
-           const DataSource* _source) :
+Tile::Tile(TileID _id, const MapProjection& _projection, const DataSource* _source) :
     m_id(_id),
     m_projection(&_projection),
     m_sourceId(_source ? _source->id() : 0),
-    m_sourceGeneration(_source ? _source->generation() : 0),
-    m_featureSelection(_featureSelection) {
+    m_sourceGeneration(_source ? _source->generation() : 0) {
 
     BoundingBox bounds(_projection.TileBounds(_id));
 
@@ -30,9 +27,7 @@ Tile::Tile(TileID _id, const MapProjection& _projection, std::shared_ptr<Feature
     m_modelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(m_scale));
 }
 
-Tile::~Tile() {
-    m_featureSelection->clearFeaturesForTile(m_id);
-}
+Tile::~Tile() {}
 
 //Note: This could set tile origin to be something different than the one if TileID's wrap is used.
 // But, this is required for wrapped tiles which are picked up from the cache
@@ -86,6 +81,18 @@ const std::unique_ptr<StyledMesh>& Tile::getMesh(const Style& _style) const {
     if (_style.getID() >= m_geometry.size()) { return NONE; }
 
     return m_geometry[_style.getID()];
+}
+
+void Tile::setSelectionFeatures(const fastmap<uint32_t, std::shared_ptr<Properties>> _selectionFeatures) {
+    m_selectionFeatures = _selectionFeatures;
+}
+
+std::shared_ptr<Properties> Tile::getSelectionFeature(uint32_t _id) {
+    auto it = m_selectionFeatures.find(_id);
+    if (it != m_selectionFeatures.end()) {
+        return it->second;
+    }
+    return nullptr;
 }
 
 size_t Tile::getMemoryUsage() const {

@@ -23,6 +23,7 @@
 #include "view/view.h"
 #include "data/clientGeoJsonSource.h"
 #include "gl.h"
+#include "gl/framebuffer.h"
 #include "gl/hardware.h"
 #include "util/ease.h"
 #include "util/jobQueue.h"
@@ -409,14 +410,13 @@ void Map::render() {
             impl->selectionBuffer.applyAsRenderTarget(impl->renderState);
         }
 
-        {
-            std::lock_guard<std::mutex> lock(impl->tilesMutex);
-            for (const auto& style : impl->scene->styles()) {
-                style->onBeginDrawSelectionFrame(impl->renderState, impl->view, *(impl->scene));
+        std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
-                for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                    style->drawSelectionFrame(impl->renderState, *tile);
-                }
+        for (const auto& style : impl->scene->styles()) {
+            style->onBeginDrawSelectionFrame(impl->renderState, impl->view, *(impl->scene));
+
+            for (const auto& tile : impl->tileManager.getVisibleTiles()) {
+                style->drawSelectionFrame(impl->renderState, *tile);
             }
         }
 
@@ -428,10 +428,11 @@ void Map::render() {
 
             // TODO: read with a scalable thumb size
             GLuint color = impl->selectionBuffer.readAt(x, y);
-            auto props = impl->scene->featureSelection()->featurePropertiesForEntry(color);
 
-            if (props) {
-                items.push_back({props, {x, y}, 0});
+            for (const auto& tile : impl->tileManager.getVisibleTiles()) {
+                if (auto props = tile->getSelectionFeature(color)) {
+                    items.push_back({props, {x, y}, 0});
+                }
             }
 
             query.callback(items);
