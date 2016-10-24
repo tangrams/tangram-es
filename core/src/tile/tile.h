@@ -15,7 +15,7 @@ namespace Tangram {
 
 class DataSource;
 class MapProjection;
-class Properties;
+struct Properties;
 class Style;
 class View;
 struct StyledMesh;

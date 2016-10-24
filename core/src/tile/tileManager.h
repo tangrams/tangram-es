@@ -20,7 +20,6 @@ namespace Tangram {
 class DataSource;
 class TileCache;
 struct ViewState;
-class FeatureSelection;
 
 /* Singleton container of <TileSet>s
  *
