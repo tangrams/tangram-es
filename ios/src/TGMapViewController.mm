@@ -14,7 +14,7 @@
 
 @interface TGMapViewController ()
 
-@property (nullable, nonatomic) NSString* scenePath;
+@property (nullable, copy, nonatomic) NSString* scenePath;
 @property (nullable, strong, nonatomic) EAGLContext* context;
 @property (assign, nonatomic) CGFloat pixelScale;
 @property (assign, nonatomic) BOOL renderRequested;
