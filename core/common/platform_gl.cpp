@@ -1,4 +1,8 @@
+#ifdef TANGRAM_USE_EPOXY
+#include "gl_choose.h"
+#else
 #include "platform_gl.h"
+#endif
 
 #include "gl.h"
 #include "gl/error.h"
