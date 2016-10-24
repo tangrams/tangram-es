@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <bitset>
 
 #include "glm/vec4.hpp"
 #include "gl/disposer.h"

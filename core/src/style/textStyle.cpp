@@ -113,9 +113,9 @@ void TextStyle::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Sc
     m_selectionProgram->setUniformMatrix4f(rs, m_uniforms[Style::selectionShaderUniformBlock].uOrtho,
                                            _view.getOrthoViewportMatrix());
 
-    for (size_t i = 0; i < m_meshes.size(); i++) {
-        if (m_meshes[i]->isReady()) {
-            m_meshes[i]->draw(rs, *m_selectionProgram);
+    for (const auto& mesh : m_meshes) {
+        if (mesh->isReady()) {
+            mesh->draw(rs, *m_selectionProgram);
         }
     }
 }
