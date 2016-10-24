@@ -68,7 +68,6 @@ public:
     Labels labels;
     std::unique_ptr<AsyncWorker> asyncWorker = std::make_unique<AsyncWorker>();
     InputHandler inputHandler{view};
-    std::shared_ptr<FeatureSelection> featureSelection = std::make_shared<FeatureSelection>();
 
     std::vector<SceneUpdate> sceneUpdates;
     std::array<Ease, 4> eases;
@@ -156,11 +155,6 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
 
     inputHandler.setView(view);
     tileManager.setDataSources(_scene->dataSources());
-
-    scene->featureSelection() = featureSelection;
-    for (auto& style : scene->styles()) {
-        style->setFeatureSelection(featureSelection);
-    }
 
     tileWorker.setScene(_scene);
     markerManager.setScene(_scene);
@@ -434,7 +428,7 @@ void Map::render() {
 
             // TODO: read with a scalable thumb size
             GLuint color = impl->selectionBuffer.readAt(x, y);
-            auto props = impl->featureSelection->featurePropertiesForEntry(color);
+            auto props = impl->scene->featureSelection()->featurePropertiesForEntry(color);
 
             if (props) {
                 items.push_back({props, {x, y}, 0});

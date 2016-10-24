@@ -391,10 +391,6 @@ void Style::draw(RenderState& rs, const Marker& marker) {
     }
 }
 
-uint32_t StyleBuilder::createSelectionIdentifier(const Feature& _feature, const TileID& _tileID) {
-    return m_featureSelection->colorIdentifier(_feature, _tileID);
-}
-
 bool StyleBuilder::checkRule(const DrawRule& _rule) const {
 
     uint32_t checkColor;
@@ -446,7 +442,6 @@ StyleBuilder::StyleBuilder(const Style& _style) {
         blocks.find("raster") != blocks.end()) {
         m_hasColorShaderBlock = true;
     }
-    m_featureSelection = _style.getFeatureSelection();
 }
 
 void StyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {

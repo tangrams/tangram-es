@@ -26,7 +26,8 @@ static std::atomic<int32_t> s_serial;
 Scene::Scene(const std::string& _path)
     : id(s_serial++),
       m_path(_path),
-      m_fontContext(std::make_shared<FontContext>()) {
+      m_fontContext(std::make_shared<FontContext>()),
+      m_featureSelection(std::make_shared<FeatureSelection>()) {
 
     std::regex r("^(http|https):/");
     std::smatch match;

@@ -94,7 +94,6 @@ public:
 protected:
     bool m_hasColorShaderBlock = false;
 
-    std::shared_ptr<FeatureSelection> m_featureSelection;
 };
 
 /* Means of constructing and rendering map geometry
@@ -198,8 +197,6 @@ private:
 
     MaterialHandle m_material;
 
-    std::shared_ptr<FeatureSelection> m_featureSelection;
-
 public:
 
     Style(std::string _name, Blending _blendMode, GLenum _drawMode, bool _selection);
@@ -282,10 +279,6 @@ public:
     void setRasterType(RasterType _rasterType) { m_rasterType = _rasterType; }
 
     void setTexCoordsGeneration(bool _texCoordsGeneration) { m_texCoordsGeneration = _texCoordsGeneration; }
-
-    void setFeatureSelection(std::shared_ptr<FeatureSelection> _featureSelection) { m_featureSelection = _featureSelection; }
-
-    const std::shared_ptr<FeatureSelection>& getFeatureSelection() const { return m_featureSelection; }
 
     bool genTexCoords() const { return m_texCoordsGeneration; }
 

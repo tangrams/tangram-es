@@ -178,7 +178,7 @@ void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
 
             bool interactive = false;
             if (rule.get(StyleParamKey::interactive, interactive) && interactive) {
-                rule.selectionColor = style->createSelectionIdentifier(_feature, _tileID);
+                rule.selectionColor = _builder.scene().featureSelection()->colorIdentifier(_feature, _tileID);
             } else {
                 rule.selectionColor = 0;
             }
