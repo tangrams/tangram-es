@@ -294,7 +294,8 @@ void Map::resize(int _newWidth, int _newHeight) {
     impl->renderState.viewport(0, 0, _newWidth, _newHeight);
 
     impl->view.setSize(_newWidth, _newHeight);
-    impl->selectionBuffer = std::make_unique<FrameBuffer>(_newWidth/2, _newHeight/2, false);
+
+    impl->selectionBuffer = std::make_unique<FrameBuffer>(_newWidth/2, _newHeight/2);
 
     Primitives::setResolution(impl->renderState, _newWidth, _newHeight);
 }

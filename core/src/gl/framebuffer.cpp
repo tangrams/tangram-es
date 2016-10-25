@@ -3,6 +3,7 @@
 #include "gl/error.h"
 #include "gl/primitives.h"
 #include "gl/renderState.h"
+#include "gl/hardware.h"
 #include "gl/texture.h"
 #include "log.h"
 #include "glm/vec2.hpp"
@@ -72,6 +73,12 @@ GLuint FrameBuffer::readAt(float _normalizedX, float _normalizedY) const {
 }
 
 void FrameBuffer::init(RenderState& _rs) {
+
+    if (!Hardware::supportsGLRGBA8OES && m_colorRenderBuffer) {
+        LOGW("Driver doesn't support GL_OES_rgb8_rgba8");
+        LOGW("Falling back to color texture attachment");
+        m_colorRenderBuffer = false;
+    }
 
     GL::genFramebuffers(1, &m_glFrameBufferHandle);
 
