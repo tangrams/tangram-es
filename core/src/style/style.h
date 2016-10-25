@@ -141,9 +141,6 @@ protected:
     /* Whether the style should generate texture coordinates */
     bool m_texCoordsGeneration = false;
 
-    static constexpr int mainShaderUniformBlock = 0;
-    static constexpr int selectionShaderUniformBlock = 1;
-
     RasterType m_rasterType = RasterType::none;
 
     bool m_selection;
@@ -170,13 +167,14 @@ private:
         UniformLocation uRasterOffsets{"u_raster_offsets"};
 
         std::vector<StyleUniform> styleUniforms;
-    } m_uniforms[2];
+    } m_mainUniforms, m_selectionUniforms;
 
     /* Set uniform values when @_updateUniforms is true,
      */
-    void setupSceneShaderUniforms(RenderState& rs, Scene& _scene, int _uniformBlock);
+    void setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBlock& _uniformBlock);
 
-    void setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view, Scene& _scene, int _uniformBlock);
+    void setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view, Scene& _scene,
+            UniformBlock& _uniformBlock);
 
     struct LightHandle {
         LightHandle(Light* _light, std::unique_ptr<LightUniforms> _uniforms);
@@ -296,7 +294,7 @@ public:
 
     void setupRasters(const std::vector<std::shared_ptr<DataSource>>& _dataSources);
 
-    std::vector<StyleUniform>& styleUniforms() { return m_uniforms[Style::mainShaderUniformBlock].styleUniforms; }
+    std::vector<StyleUniform>& styleUniforms() { return m_mainUniforms.styleUniforms; }
 
     virtual std::unique_ptr<StyleBuilder> createBuilder() const = 0;
 

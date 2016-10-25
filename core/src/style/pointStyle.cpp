@@ -63,8 +63,8 @@ void PointStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _sc
 
     auto texUnit = rs.nextAvailableTextureUnit();
 
-    m_shaderProgram->setUniformi(rs, m_uniforms[Style::mainShaderUniformBlock].uTex, texUnit);
-    m_shaderProgram->setUniformMatrix4f(rs, m_uniforms[Style::mainShaderUniformBlock].uOrtho,
+    m_shaderProgram->setUniformi(rs, m_mainUniforms.uTex, texUnit);
+    m_shaderProgram->setUniformMatrix4f(rs, m_mainUniforms.uOrtho,
                                         _view.getOrthoViewportMatrix());
 
     m_mesh->draw(rs, *m_shaderProgram, texUnit);
@@ -77,7 +77,7 @@ void PointStyle::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, S
 
     Style::onBeginDrawSelectionFrame(rs, _view, _scene);
 
-    m_selectionProgram->setUniformMatrix4f(rs, m_uniforms[Style::selectionShaderUniformBlock].uOrtho,
+    m_selectionProgram->setUniformMatrix4f(rs, m_selectionUniforms.uOrtho,
                                            _view.getOrthoViewportMatrix());
 
     m_mesh->draw(rs, *m_selectionProgram);

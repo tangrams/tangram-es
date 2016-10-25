@@ -103,8 +103,8 @@ void Style::setLightingType(LightingType _type) {
     m_lightingType = _type;
 }
 
-void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, int _uniformBlock) {
-    for (auto& uniformPair : m_uniforms[_uniformBlock].styleUniforms) {
+void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBlock& _uniformBlock) {
+    for (auto& uniformPair : _uniformBlock.styleUniforms) {
         const auto& name = uniformPair.first;
         auto& value = uniformPair.second;
 
@@ -192,15 +192,15 @@ void Style::setupRasters(const std::vector<std::shared_ptr<DataSource>>& _dataSo
 }
 
 
-void Style::setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view, Scene& _scene, int _uniformBlock) {
+void Style::setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view, Scene& _scene, UniformBlock& _uniforms) {
 
     // Reset the currently used texture unit to 0
     rs.resetTextureUnit();
 
     // Set time uniforms style's shader programs
-    _program.setUniformf(rs, m_uniforms[_uniformBlock].uTime, _scene.time());
+    _program.setUniformf(rs, _uniforms.uTime, _scene.time());
 
-    _program.setUniformf(rs, m_uniforms[_uniformBlock].uDevicePixelRatio, m_pixelScale);
+    _program.setUniformf(rs, _uniforms.uDevicePixelRatio, m_pixelScale);
 
     if (m_material.uniforms) {
         m_material.material->setupProgram(rs, *m_material.uniforms);
@@ -212,23 +212,23 @@ void Style::setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const 
     }
 
     // Set Map Position
-    _program.setUniformf(rs, m_uniforms[_uniformBlock].uResolution, _view.getWidth(), _view.getHeight());
+    _program.setUniformf(rs, _uniforms.uResolution, _view.getWidth(), _view.getHeight());
 
     const auto& mapPos = _view.getPosition();
-    _program.setUniformf(rs, m_uniforms[_uniformBlock].uMapPosition, mapPos.x, mapPos.y, _view.getZoom());
-    _program.setUniformMatrix3f(rs, m_uniforms[_uniformBlock].uNormalMatrix, _view.getNormalMatrix());
-    _program.setUniformMatrix3f(rs, m_uniforms[_uniformBlock].uInverseNormalMatrix, _view.getInverseNormalMatrix());
-    _program.setUniformf(rs, m_uniforms[_uniformBlock].uMetersPerPixel, 1.0 / _view.pixelsPerMeter());
-    _program.setUniformMatrix4f(rs, m_uniforms[_uniformBlock].uView, _view.getViewMatrix());
-    _program.setUniformMatrix4f(rs, m_uniforms[_uniformBlock].uProj, _view.getProjectionMatrix());
+    _program.setUniformf(rs, _uniforms.uMapPosition, mapPos.x, mapPos.y, _view.getZoom());
+    _program.setUniformMatrix3f(rs, _uniforms.uNormalMatrix, _view.getNormalMatrix());
+    _program.setUniformMatrix3f(rs, _uniforms.uInverseNormalMatrix, _view.getInverseNormalMatrix());
+    _program.setUniformf(rs, _uniforms.uMetersPerPixel, 1.0 / _view.pixelsPerMeter());
+    _program.setUniformMatrix4f(rs, _uniforms.uView, _view.getViewMatrix());
+    _program.setUniformMatrix4f(rs, _uniforms.uProj, _view.getProjectionMatrix());
 
-    setupSceneShaderUniforms(rs, _scene, _uniformBlock);
+    setupSceneShaderUniforms(rs, _scene, _uniforms);
 
 }
 
 void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {
 
-    setupShaderUniforms(rs, *m_shaderProgram, _view, _scene, Style::mainShaderUniformBlock);
+    setupShaderUniforms(rs, *m_shaderProgram, _view, _scene, m_mainUniforms);
 
     // Configure render state
     switch (m_blend) {
@@ -274,7 +274,7 @@ void Style::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene&
         return;
     }
 
-    setupShaderUniforms(rs, *m_selectionProgram, _view, _scene, Style::selectionShaderUniformBlock);
+    setupShaderUniforms(rs, *m_selectionProgram, _view, _scene, m_selectionUniforms);
 
     // Configure render state
     rs.blending(GL_FALSE);
@@ -311,9 +311,9 @@ void Style::drawSelectionFrame(Tangram::RenderState& rs, const Tangram::Tile &_t
 
     TileID tileID = _tile.getID();
 
-    m_selectionProgram->setUniformMatrix4f(rs, m_uniforms[Style::selectionShaderUniformBlock].uModel, _tile.getModelMatrix());
-    m_selectionProgram->setUniformf(rs, m_uniforms[Style::selectionShaderUniformBlock].uProxyDepth, _tile.isProxy() ? 1.f : 0.f);
-    m_selectionProgram->setUniformf(rs, m_uniforms[Style::selectionShaderUniformBlock].uTileOrigin,
+    m_selectionProgram->setUniformMatrix4f(rs, m_selectionUniforms.uModel, _tile.getModelMatrix());
+    m_selectionProgram->setUniformf(rs, m_selectionUniforms.uProxyDepth, _tile.isProxy() ? 1.f : 0.f);
+    m_selectionProgram->setUniformf(rs, m_selectionUniforms.uTileOrigin,
                                     _tile.getOrigin().x,
                                     _tile.getOrigin().y,
                                     tileID.s,
@@ -363,14 +363,14 @@ void Style::draw(RenderState& rs, const Tile& _tile) {
             }
         }
 
-        m_shaderProgram->setUniformi(rs, m_uniforms[Style::mainShaderUniformBlock].uRasters, textureIndexUniform);
-        m_shaderProgram->setUniformf(rs, m_uniforms[Style::mainShaderUniformBlock].uRasterSizes, rasterSizeUniform);
-        m_shaderProgram->setUniformf(rs, m_uniforms[Style::mainShaderUniformBlock].uRasterOffsets, rasterOffsetsUniform);
+        m_shaderProgram->setUniformi(rs, m_mainUniforms.uRasters, textureIndexUniform);
+        m_shaderProgram->setUniformf(rs, m_mainUniforms.uRasterSizes, rasterSizeUniform);
+        m_shaderProgram->setUniformf(rs, m_mainUniforms.uRasterOffsets, rasterOffsetsUniform);
     }
 
-    m_shaderProgram->setUniformMatrix4f(rs, m_uniforms[Style::mainShaderUniformBlock].uModel, _tile.getModelMatrix());
-    m_shaderProgram->setUniformf(rs, m_uniforms[Style::mainShaderUniformBlock].uProxyDepth, _tile.isProxy() ? 1.f : 0.f);
-    m_shaderProgram->setUniformf(rs, m_uniforms[Style::mainShaderUniformBlock].uTileOrigin,
+    m_shaderProgram->setUniformMatrix4f(rs, m_mainUniforms.uModel, _tile.getModelMatrix());
+    m_shaderProgram->setUniformf(rs, m_mainUniforms.uProxyDepth, _tile.isProxy() ? 1.f : 0.f);
+    m_shaderProgram->setUniformf(rs, m_mainUniforms.uTileOrigin,
                                  _tile.getOrigin().x,
                                  _tile.getOrigin().y,
                                  tileID.s,
@@ -399,8 +399,8 @@ void Style::draw(RenderState& rs, const Marker& marker) {
 
     if (!marker.isVisible()) { return; }
 
-    m_shaderProgram->setUniformMatrix4f(rs, m_uniforms[Style::mainShaderUniformBlock].uModel, marker.modelMatrix());
-    m_shaderProgram->setUniformf(rs, m_uniforms[Style::mainShaderUniformBlock].uTileOrigin,
+    m_shaderProgram->setUniformMatrix4f(rs, m_mainUniforms.uModel, marker.modelMatrix());
+    m_shaderProgram->setUniformf(rs, m_mainUniforms.uTileOrigin,
                                  marker.origin().x, marker.origin().y,
                                  marker.builtZoomLevel(), marker.builtZoomLevel());
 

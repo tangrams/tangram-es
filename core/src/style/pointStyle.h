@@ -65,7 +65,7 @@ protected:
     struct UniformBlock {
         UniformLocation uTex{"u_tex"};
         UniformLocation uOrtho{"u_ortho"};
-    } m_uniforms[2];
+    } m_mainUniforms, m_selectionUniforms;
 
     mutable std::unique_ptr<DynamicQuadMesh<SpriteVertex>> m_mesh;
 
