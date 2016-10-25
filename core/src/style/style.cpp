@@ -276,9 +276,27 @@ void Style::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene&
 
     setupShaderUniforms(rs, *m_selectionProgram, _view, _scene, Style::selectionShaderUniformBlock);
 
+    // Configure render state
     rs.blending(GL_FALSE);
-    rs.depthTest(GL_TRUE);
-    rs.depthMask(GL_TRUE);
+
+    switch (m_blend) {
+        case Blending::opaque:
+        case Blending::add:
+        case Blending::multiply:
+            rs.depthTest(GL_TRUE);
+            rs.depthMask(GL_TRUE);
+            break;
+        case Blending::overlay:
+            rs.depthTest(GL_FALSE);
+            rs.depthMask(GL_FALSE);
+            break;
+        case Blending::inlay:
+            rs.depthTest(GL_TRUE);
+            rs.depthMask(GL_FALSE);
+            break;
+        default:
+            break;
+    }
 }
 
 void Style::drawSelectionFrame(Tangram::RenderState& rs, const Tangram::Tile &_tile) {
