@@ -15,6 +15,7 @@ namespace Hardware {
 bool supportsMapBuffer = false;
 bool supportsVAOs = false;
 bool supportsTextureNPOT = false;
+bool supportsGLRGBA8OES = false;
 
 uint32_t maxTextureSize = 0;
 uint32_t maxCombinedTextureUnits = 0;
@@ -54,9 +55,12 @@ void loadExtensions() {
     supportsMapBuffer = isAvailable("mapbuffer");
     supportsVAOs = isAvailable("vertex_array_object");
     supportsTextureNPOT = isAvailable("texture_non_power_of_two");
+    supportsGLRGBA8OES = isAvailable("rgb8_rgba8");
 
     LOG("Driver supports map buffer: %d", supportsMapBuffer);
     LOG("Driver supports vaos: %d", supportsVAOs);
+    LOG("Driver supports rgb8_rgba8: %d", supportsGLRGBA8OES);
+    LOG("Driver supports NPOT texture: %d", supportsTextureNPOT);
 
     // find extension symbols if needed
     initGLExtensions();
