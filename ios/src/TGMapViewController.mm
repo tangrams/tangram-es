@@ -9,11 +9,13 @@
 
 #import "TGMapViewController.h"
 #include "platform_ios.h"
+#include "data/propertyItem.h"
 #include "tangram.h"
 
 @interface TGMapViewController ()
 
-@property (nullable, strong, nonatomic) EAGLContext *context;
+@property (nullable, copy, nonatomic) NSString* scenePath;
+@property (nullable, strong, nonatomic) EAGLContext* context;
 @property (assign, nonatomic) CGFloat pixelScale;
 @property (assign, nonatomic) BOOL renderRequested;
 @property (assign, nonatomic, nullable) Tangram::Map* map;
@@ -23,17 +25,107 @@
 
 @implementation TGMapViewController
 
-- (void)setPosition:(TangramGeoPoint)position {
+- (void)loadSceneFile:(NSString*)path {
+    if (!self.map) {
+        return;
+    }
+
+    self.scenePath = path;
+    self.map->loadScene([path UTF8String]);
+    self.renderRequested = YES;
+}
+
+- (void)loadSceneFileAsync:(NSString*)path {
+    if (!self.map) { return; }
+
+    self.scenePath = path;
+
+    MapReady onReadyCallback = [self, path](void* _userPtr) -> void {
+        if (self.mapViewDelegate && [self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadSceneAsync:)]) {
+            [self.mapViewDelegate mapView:self didLoadSceneAsync:path];
+        }
+
+        self.renderRequested = YES;
+    };
+
+    self.map->loadSceneAsync([path UTF8String], false, onReadyCallback, nullptr);
+}
+
+- (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value {
+    if (!self.map) { return; }
+
+    self.map->queueSceneUpdate([componentPath UTF8String], [componentPath UTF8String]);
+}
+
+- (void)requestRender {
+    if (!self.map) { return; }
+
+    self.renderRequested = YES;
+}
+
+- (CGPoint)lngLatToScreenPosition:(TGGeoPoint)lngLat {
+    static const CGPoint nullCGPoint = {(CGFloat)NAN, (CGFloat)NAN};
+
+    if (!self.map) { return nullCGPoint; }
+
+    double screenPosition[2];
+    if (self.map->lngLatToScreenPosition(lngLat.longitude, lngLat.latitude,
+        &screenPosition[0], &screenPosition[1])) {
+        return CGPointMake((CGFloat)screenPosition[0], (CGFloat)screenPosition[1]);
+    }
+
+    return nullCGPoint;
+}
+
+- (TGGeoPoint)screenPositionToLngLat:(CGPoint)screenPosition {
+    static const TGGeoPoint nullTangramGeoPoint = {NAN, NAN};
+
+    if (!self.map) { return nullTangramGeoPoint; }
+
+    TGGeoPoint lngLat;
+    if (self.map->screenPositionToLngLat(screenPosition.x, screenPosition.y,
+        &lngLat.longitude, &lngLat.latitude)) {
+        return lngLat;
+    }
+
+    return nullTangramGeoPoint;
+}
+
+- (void)pickFeaturesAt:(CGPoint)screenPosition {
+    if (!self.map && !self.mapViewDelegate) { return; }
+
+    const auto& items = self.map->pickFeaturesAt(screenPosition.x, screenPosition.y);
+
+    if (items.size() == 0) { return; }
+
+    const auto& result = items[0];
+    const auto& properties = result.properties;
+    CGPoint position = CGPointMake(result.position[0], result.position[1]);
+
+    NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
+
+    for (const auto& item : properties->items()) {
+        NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
+        NSString* value = [NSString stringWithUTF8String:properties->asString(item.value).c_str()];
+        dictionary[key] = value;
+    }
+
+    if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeatures:atScreenPosition:)]) {
+        [self.mapViewDelegate mapView:self didSelectFeatures:dictionary atScreenPosition:position];
+    }
+}
+
+- (void)setPosition:(TGGeoPoint)position {
     if (self.map) {
         self.map->setPosition(position.longitude, position.latitude);
     }
 }
 
-- (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)duration {
-    [self animateToPosition:position withDuration:duration withEaseType:TangramEaseTypeCubic];
+- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)duration {
+    [self animateToPosition:position withDuration:duration withEaseType:TGEaseTypeCubic];
 }
 
-- (void)animateToPosition:(TangramGeoPoint)position withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
+- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)duration withEaseType:(TGEaseType)easeType {
 
     if (self.map) {
         Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
@@ -41,8 +133,8 @@
     }
 }
 
-- (TangramGeoPoint)position {
-    TangramGeoPoint returnVal;
+- (TGGeoPoint)position {
+    TGGeoPoint returnVal;
     if (self.map){
         self.map->getPosition(returnVal.longitude, returnVal.latitude);
         return returnVal;
@@ -59,15 +151,15 @@
     }
 }
 
-- (Tangram::EaseType)convertEaseTypeFrom:(TangramEaseType)ease {
+- (Tangram::EaseType)convertEaseTypeFrom:(TGEaseType)ease {
     switch (ease) {
-        case TangramEaseTypeLinear:
+        case TGEaseTypeLinear:
             return Tangram::EaseType::linear;
-        case TangramEaseTypeSine:
+        case TGEaseTypeSine:
             return Tangram::EaseType::sine;
-        case TangramEaseTypeQuint:
+        case TGEaseTypeQuint:
             return Tangram::EaseType::quint;
-        case TangramEaseTypeCubic:
+        case TGEaseTypeCubic:
             return Tangram::EaseType::cubic;
         default:
             return Tangram::EaseType::cubic;
@@ -75,10 +167,10 @@
 }
 
 - (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration {
-    [self animateToZoomLevel:zoomLevel withDuration:duration withEaseType:TangramEaseTypeCubic];
+    [self animateToZoomLevel:zoomLevel withDuration:duration withEaseType:TGEaseTypeCubic];
 }
 
-- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration withEaseType:(TangramEaseType)easeType {
+- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration withEaseType:(TGEaseType)easeType {
     if (self.map) {
         Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
         self.map->setZoomEased(zoomLevel, duration, ease);
@@ -93,10 +185,10 @@
 }
 
 - (void)animateToRotation:(float)radians withDuration:(float)seconds {
-    [self animateToRotation:radians withDuration:seconds withEaseType:TangramEaseTypeCubic];
+    [self animateToRotation:radians withDuration:seconds withEaseType:TGEaseTypeCubic];
 }
 
-- (void)animateToRotation:(float)radians withDuration:(float)seconds withEaseType:(TangramEaseType)easeType {
+- (void)animateToRotation:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType {
     if (self.map) {
         Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
         self.map->setRotationEased(radians, seconds, ease);
@@ -130,30 +222,30 @@
 }
 
 - (void)animateToTilt:(float)radians withDuration:(float)seconds {
-  [self animateToTilt:radians withDuration:seconds withEaseType:TangramEaseTypeCubic];
+  [self animateToTilt:radians withDuration:seconds withEaseType:TGEaseType::TGEaseTypeCubic];
 }
 
-- (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TangramEaseType)easeType {
+- (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType {
   if (self.map) {
     Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
     self.map->setTiltEased(radians, seconds, ease);
   }
 }
 
-- (TangramCameraType)cameraType {
+- (TGCameraType)cameraType {
     switch (self.map->getCameraType()) {
         case 0:
-            return TangramCameraTypePerspective;
+            return TGCameraTypePerspective;
         case 1:
-            return TangramCameraTypeIsometric;
+            return TGCameraTypeIsometric;
         case 2:
-            return TangramCameraTypeFlat;
+            return TGCameraTypeFlat;
         default:
-            return TangramCameraTypePerspective;
+            return TGCameraTypePerspective;
     }
 }
 
-- (void)setCameraType:(TangramCameraType)cameraType {
+- (void)setCameraType:(TGCameraType)cameraType {
     if (self.map){
         self.map->setCameraType(cameraType);
     }
@@ -350,8 +442,8 @@
 
     if (!self.map) {
         self.map = new Tangram::Map();
-        self.map->loadSceneAsync("scene.yaml");
     }
+
     self.map->setupGL();
 
     int width = self.view.bounds.size.width;
