@@ -3,9 +3,9 @@
 #include "glm/vec4.hpp"
 
 namespace Tangram {
-    
+
 struct Color {
-    
+
     union {
         struct {
             uint8_t r, g, b, a;
@@ -17,7 +17,7 @@ struct Color {
     Color(uint32_t _abgr) : abgr(_abgr) {}
     Color(uint8_t _r, uint8_t _g, uint8_t _b, uint8_t _a) : r(_r), g(_g), b(_b), a(_a) {}
 
-    glm::vec4 asVec4() {
+    glm::ivec4 asIVec4() {
         return glm::vec4(r, g, b, a);
     }
 
