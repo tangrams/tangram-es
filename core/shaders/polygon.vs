@@ -75,14 +75,19 @@ vec4 modelPositionBaseZoom() {
 
 void main() {
 
+    vec4 position = vec4(UNPACK_POSITION(a_position.xyz), 1.0);
+
     #ifdef TANGRAM_FEATURE_SELECTION
         v_selection_color = a_selection_color;
+        // Skip non-selectable meshes
+        if (v_selection_color == vec4(0.0)) {
+            gl_Position = vec4(0.0);
+            return;
+        }
     #else
         // Initialize globals
         #pragma tangram: setup
     #endif
-
-    vec4 position = vec4(UNPACK_POSITION(a_position.xyz), 1.0);
 
     v_color = a_color;
 
