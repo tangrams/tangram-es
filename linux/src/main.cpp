@@ -86,28 +86,29 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
         LngLat p;
         map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
-        map->setPositionEased(p.longitude, p.latitude, 1.f);
+        // map->setPositionEased(p.longitude, p.latitude, 1.f);
 
         logMsg("pick feature\n");
         map->clearDataSource(*data_source, true, true);
 
         map->pickFeaturesAt(x, y, [](const auto& items) {
-            std::string name;
             for (const auto& item : items) {
-                if (item.properties->getString("name", name)) {
-                    LOGS("%s", name.c_str());
-                }
+                LOG("%s", item.properties->toJson().c_str());
+
+                std::string name = "noname";
+                item.properties->getString("name", name);
+                LOGS("%s", name.c_str());
             }
         });
     } else if ((time - last_time_pressed) < single_tap_time) {
-        LngLat p;
-        map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
+        // LngLat p;
+        // map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
 
-        marker = map->markerAdd();
-        map->markerSetStyling(marker, markerStyling.c_str());
-        map->markerSetPoint(marker, p);
-        map->markerSetDrawOrder(marker, mods);
-        logMsg("Added marker with zOrder: %d\n", mods);
+        // marker = map->markerAdd();
+        // map->markerSetStyling(marker, markerStyling.c_str());
+        // map->markerSetPoint(marker, p);
+        // map->markerSetDrawOrder(marker, mods);
+        // logMsg("Added marker with zOrder: %d\n", mods);
 
         // This updates the tiles (maybe we need a recalcTiles())
         requestRender();
