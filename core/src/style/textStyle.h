@@ -55,7 +55,7 @@ protected:
         UniformLocation uOrtho{"u_ortho"};
         UniformLocation uPass{"u_pass"};
         UniformLocation uMaxStrokeWidth{"u_max_stroke_width"};
-    } m_uniforms[2];
+    } m_mainUniforms, m_selectionUniforms;
 
     mutable std::vector<std::unique_ptr<DynamicQuadMesh<TextVertex>>> m_meshes;
 

@@ -76,16 +76,16 @@ void TextStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _sce
 
     auto texUnit = rs.nextAvailableTextureUnit();
 
-    m_shaderProgram->setUniformf(rs, m_uniforms[Style::mainShaderUniformBlock].uMaxStrokeWidth,
+    m_shaderProgram->setUniformf(rs, m_mainUniforms.uMaxStrokeWidth,
                                  m_context->maxStrokeWidth());
-    m_shaderProgram->setUniformf(rs, m_uniforms[Style::mainShaderUniformBlock].uTexScaleFactor,
+    m_shaderProgram->setUniformf(rs, m_mainUniforms.uTexScaleFactor,
                                  glm::vec2(1.0f / GlyphTexture::size));
-    m_shaderProgram->setUniformi(rs, m_uniforms[Style::mainShaderUniformBlock].uTex, texUnit);
-    m_shaderProgram->setUniformMatrix4f(rs, m_uniforms[Style::mainShaderUniformBlock].uOrtho,
+    m_shaderProgram->setUniformi(rs, m_mainUniforms.uTex, texUnit);
+    m_shaderProgram->setUniformMatrix4f(rs, m_mainUniforms.uOrtho,
                                         _view.getOrthoViewportMatrix());
 
     if (m_sdf) {
-        m_shaderProgram->setUniformi(rs, m_uniforms[Style::mainShaderUniformBlock].uPass, 1);
+        m_shaderProgram->setUniformi(rs, m_mainUniforms.uPass, 1);
 
         for (size_t i = 0; i < m_meshes.size(); i++) {
             if (m_meshes[i]->isReady()) {
@@ -93,7 +93,7 @@ void TextStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _sce
                 m_meshes[i]->draw(rs, *m_shaderProgram);
             }
         }
-        m_shaderProgram->setUniformi(rs, m_uniforms[Style::mainShaderUniformBlock].uPass, 0);
+        m_shaderProgram->setUniformi(rs, m_mainUniforms.uPass, 0);
     }
 
     for (size_t i = 0; i < m_meshes.size(); i++) {
@@ -110,7 +110,7 @@ void TextStyle::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Sc
 
     Style::onBeginDrawSelectionFrame(rs, _view, _scene);
 
-    m_selectionProgram->setUniformMatrix4f(rs, m_uniforms[Style::selectionShaderUniformBlock].uOrtho,
+    m_selectionProgram->setUniformMatrix4f(rs, m_selectionUniforms.uOrtho,
                                            _view.getOrthoViewportMatrix());
 
     for (const auto& mesh : m_meshes) {
