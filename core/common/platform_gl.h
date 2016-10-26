@@ -1,11 +1,5 @@
 #pragma once
 
-#ifdef TANGRAM_USE_EPOXY
-#include "epoxy/gl.h"
-#include "gl_choose.h"
-
-#else // TANGRAM_USE_EPOXY
-
 #ifdef PLATFORM_ANDROID
 #include <GLES2/gl2platform.h>
 
@@ -72,5 +66,3 @@ static void glGenVertexArrays(GLsizei n, GLuint *arrays) {}
     #define glMapBuffer glMapBufferOES
     #define glUnmapBuffer glUnmapBufferOES
 #endif
-
-#endif // TANGRAM_USE_EPOXY
