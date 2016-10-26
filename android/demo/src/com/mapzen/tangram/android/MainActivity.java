@@ -158,6 +158,11 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
     @Override
     public void onFeaturePick(Map<String, String> properties, float positionX, float positionY) {
+        if (properties.isEmpty()) {
+            Log.d("Tangram", "Empty selection");
+            return;
+        }
+
         String name = properties.get("name");
         if (name.isEmpty()) {
             name = "unnamed";
