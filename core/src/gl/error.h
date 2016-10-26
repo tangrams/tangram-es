@@ -28,7 +28,7 @@ private:
 #ifdef DEBUG
 #define GL_CHECK(STMT) do { STMT; Tangram::Error::glError(#STMT, __FILE__, __LINE__); } while (0)
 #else
-#define GL_CHECK(STMT) STMT;
+#define GL_CHECK(STMT) do { STMT; } while (0)
 #endif
 
 }
