@@ -216,9 +216,7 @@ extern "C" {
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto object = jniEnv->NewGlobalRef(listener);
         map->pickFeaturesAt(posX, posY, [object](const auto& items) {
-            if (!items.empty()) {
-                featurePickCallback(object, items);
-            }
+            featurePickCallback(object, items);
         });
     }
 

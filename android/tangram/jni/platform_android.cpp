@@ -312,16 +312,21 @@ void featurePickCallback(jobject listener, const std::vector<Tangram::TouchItem>
 
     JniThreadBinding jniEnv(jvm);
 
-    auto result = items[0];
-    auto properties = result.properties;
-    auto position = result.position;
-
     jobject hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
+    float position[2] = {0.0, 0.0};
 
-    for (const auto& item : properties->items()) {
-        jstring jkey = jniEnv->NewStringUTF(item.key.c_str());
-        jstring jvalue = jniEnv->NewStringUTF(properties->asString(item.value).c_str());
-        jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
+    if (items.size() > 0) {
+        auto result = items[0];
+        auto properties = result.properties;
+
+        position[0] = result.position[0];
+        position[1] = result.position[1];
+
+        for (const auto& item : properties->items()) {
+            jstring jkey = jniEnv->NewStringUTF(item.key.c_str());
+            jstring jvalue = jniEnv->NewStringUTF(properties->asString(item.value).c_str());
+            jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
+        }
     }
 
     jniEnv->CallVoidMethod(listener, onFeaturePickMID, hashmap, position[0], position[1]);
