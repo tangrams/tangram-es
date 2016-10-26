@@ -305,8 +305,6 @@ cmake-osx:
 ios: ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
 	xcodebuild -target ${IOS_TARGET} ARCHS='i386 x86_64' \
 		ONLY_ACTIVE_ARCH=NO \
-		CODE_SIGN_IDENTITY="" \
-		CODE_SIGNING_REQUIRED=NO \
 		-sdk iphonesimulator \
 		-project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ} \
 		-configuration ${CONFIG} | ${XCPRETTY}
@@ -330,11 +328,11 @@ cmake-ios-framework-sim:
 
 ios-framework: cmake-ios-framework
 	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} \
-		CODE_SIGNING_REQUIRED=NO -configuration ${CONFIG} | ${XCPRETTY}
+		-configuration ${CONFIG} | ${XCPRETTY}
 
 ios-framework-sim: cmake-ios-framework-sim
 	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_SIM_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} \
-		CODE_SIGNING_REQUIRED=NO -configuration ${CONFIG} | ${XCPRETTY}
+		-configuration ${CONFIG} | ${XCPRETTY}
 
 ios-framework-universal: ios-framework ios-framework-sim
 	@mkdir -p ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}

@@ -39,6 +39,7 @@ if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
     set_xcode_property(${EXECUTABLE_NAME} GCC_GENERATE_DEBUGGING_SYMBOLS YES)
 endif()
 
+set_xcode_property(${EXECUTABLE_NAME} CODE_SIGN_IDENTITY "iPhone Developer")
 set_xcode_property(${EXECUTABLE_NAME} SUPPORTED_PLATFORMS ${SUPPORTED_PLATFORMS})
 set_xcode_property(${EXECUTABLE_NAME} ONLY_ACTIVE_ARCH "YES")
 set_xcode_property(${EXECUTABLE_NAME} VALID_ARCHS "${ARCH}")

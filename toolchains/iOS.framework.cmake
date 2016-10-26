@@ -73,7 +73,11 @@ set_target_properties(${FRAMEWORK_NAME} PROPERTIES
     RESOURCE "${IOS_FRAMEWORK_RESOURCES}"
     )
 
-set_xcode_property(${FRAMEWORK_NAME} CODE_SIGN_IDENTITY "iPhone Developer")
+set_xcode_property(${FRAMEWORK_NAME} CODE_SIGN_IDENTITY "")
+set_xcode_property(${FRAMEWORK_NAME} CODE_SIGNING_REQUIRED "NO")
+set_xcode_property(${FRAMEWORK_NAME} CODE_SIGN_ENTITLEMENTS "")
+set_xcode_property(${FRAMEWORK_NAME} CODE_SIGNING_ALLOWED "NO")
+
 set_xcode_property(${FRAMEWORK_NAME} ENABLE_BITCODE "YES")
 set_xcode_property(${FRAMEWORK_NAME} SUPPORTED_PLATFORMS "iphonesimulator iphoneos")
 set_xcode_property(${FRAMEWORK_NAME} ONLY_ACTIVE_ARCH "NO")
