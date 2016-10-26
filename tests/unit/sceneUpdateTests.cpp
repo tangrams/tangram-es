@@ -4,7 +4,7 @@
 #include "scene/sceneLoader.h"
 #include "style/style.h"
 #include "scene/scene.h"
-#include "platform.h"
+#include "log.h"
 #include "tangram.h"
 
 using YAML::Node;
@@ -29,10 +29,20 @@ nest:
         - nest_seq_1_value
 )END";
 
+bool loadConfig(const std::string& _sceneString, Node& root) {
+
+    try { root = YAML::Load(_sceneString); }
+    catch (YAML::ParserException e) {
+        LOGE("Parsing scene config '%s'", e.what());
+        return false;
+    }
+    return true;
+}
+
 TEST_CASE("Apply scene update to a top-level node") {
     // Setup.
     Scene scene;
-    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"map", "new_value"}};
     // Apply scene updates, reload scene.
@@ -44,7 +54,7 @@ TEST_CASE("Apply scene update to a top-level node") {
 TEST_CASE("Apply scene update to a map entry") {
     // Setup.
     Scene scene;
-    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"map.a", "new_value"}};
     // Apply scene updates, reload scene.
@@ -58,7 +68,7 @@ TEST_CASE("Apply scene update to a map entry") {
 TEST_CASE("Apply scene update to a nested map entry") {
     // Setup.
     Scene scene;
-    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"nest.map.a", "new_value"}};
     // Apply scene updates, reload scene.
@@ -72,7 +82,7 @@ TEST_CASE("Apply scene update to a nested map entry") {
 TEST_CASE("Apply scene update to a sequence node") {
     // Setup.
     Scene scene;
-    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"seq", "new_value"}};
     // Apply scene updates, reload scene.
@@ -84,7 +94,7 @@ TEST_CASE("Apply scene update to a sequence node") {
 TEST_CASE("Apply scene update to a nested sequence node") {
     // Setup.
     Scene scene;
-    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"nest.seq", "new_value"}};
     // Apply scene updates, reload scene.
@@ -98,7 +108,7 @@ TEST_CASE("Apply scene update to a nested sequence node") {
 TEST_CASE("Apply scene update to a new map entry") {
     // Setup.
     Scene scene;
-    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"map.c", "new_value"}};
     // Apply scene updates, reload scene.
@@ -112,7 +122,7 @@ TEST_CASE("Apply scene update to a new map entry") {
 TEST_CASE("Do not apply scene update to a non-existent node") {
     // Setup.
     Scene scene;
-    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"none.a", "new_value"}};
     // Apply scene updates, reload scene.
@@ -124,7 +134,7 @@ TEST_CASE("Do not apply scene update to a non-existent node") {
 TEST_CASE("Apply scene update that removes a node") {
     // Setup.
     Scene scene;
-    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"nest.map", "null"}};
     // Apply scene updates, reload scene.
@@ -138,7 +148,7 @@ TEST_CASE("Apply scene update that removes a node") {
 TEST_CASE("Apply multiple scene updates in order of request") {
     // Setup.
     Scene scene;
-    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"map.a", "first_value"}, {"map.a", "second_value"}};
     // Apply scene updates, reload scene.
@@ -152,7 +162,7 @@ TEST_CASE("Apply multiple scene updates in order of request") {
 TEST_CASE("Apply and propogate repeated global value updates") {
     // Setup.
     Scene scene;
-    REQUIRE(SceneLoader::loadConfig(sceneString, scene.config()));
+    REQUIRE(loadConfig(sceneString, scene.config()));
     Node& root = scene.config();
     // Apply initial globals.
     SceneLoader::applyGlobals(root, scene);

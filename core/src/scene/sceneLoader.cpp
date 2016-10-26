@@ -68,16 +68,6 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
     return false;
 }
 
-bool SceneLoader::loadConfig(const std::string& _sceneString, Node& root) {
-
-    try { root = YAML::Load(_sceneString); }
-    catch (YAML::ParserException e) {
-        LOGE("Parsing scene config '%s'", e.what());
-        return false;
-    }
-    return true;
-}
-
 void SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates) {
     auto& root = scene.config();
     for (const auto& update : updates) {
