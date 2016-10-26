@@ -94,25 +94,26 @@
 - (void)pickFeaturesAt:(CGPoint)screenPosition {
     if (!self.map && !self.mapViewDelegate) { return; }
 
-    const auto& items = self.map->pickFeaturesAt(screenPosition.x, screenPosition.y);
+    self.map->pickFeaturesAt(screenPosition.x, screenPosition.y, [self](const auto& items) {
+        NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
+        CGPoint position = CGPointMake(0.0, 0.0);
 
-    if (items.size() == 0) { return; }
+        if (items.size() > 0) {
+            const auto& result = items[0];
+            const auto& properties = result.properties;
+            position = CGPointMake(result.position[0], result.position[1]);
 
-    const auto& result = items[0];
-    const auto& properties = result.properties;
-    CGPoint position = CGPointMake(result.position[0], result.position[1]);
+            for (const auto& item : properties->items()) {
+                NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
+                NSString* value = [NSString stringWithUTF8String:properties->asString(item.value).c_str()];
+                dictionary[key] = value;
+            }
+        }
 
-    NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
-
-    for (const auto& item : properties->items()) {
-        NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
-        NSString* value = [NSString stringWithUTF8String:properties->asString(item.value).c_str()];
-        dictionary[key] = value;
-    }
-
-    if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeatures:atScreenPosition:)]) {
-        [self.mapViewDelegate mapView:self didSelectFeatures:dictionary atScreenPosition:position];
-    }
+        if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeatures:atScreenPosition:)]) {
+            [self.mapViewDelegate mapView:self didSelectFeatures:dictionary atScreenPosition:position];
+        }
+    });
 }
 
 - (void)setPosition:(TGGeoPoint)position {
