@@ -187,21 +187,23 @@ void Map::loadScene(const char* _scenePath, bool _useScenePosition) {
 void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _platformCallback, void *_cbData) {
     LOG("Loading scene file (async): %s", _scenePath);
 
+    std::shared_ptr<Scene> nextScene;
     {
         std::lock_guard<std::mutex> lock(impl->sceneMutex);
         impl->sceneUpdates.clear();
         impl->nextScene = std::make_shared<Scene>(_scenePath);
         impl->nextScene->useScenePosition = _useScenePosition;
+        nextScene = impl->nextScene;
     }
 
-    runAsyncTask([scene = impl->nextScene, _platformCallback, _cbData, this](){
+    runAsyncTask([nextScene, _platformCallback, _cbData, this](){
 
-            bool ok = SceneLoader::loadScene(scene);
+            bool ok = SceneLoader::loadScene(nextScene);
 
-            impl->jobQueue.add([scene, ok, _platformCallback, _cbData, this]() {
+            impl->jobQueue.add([nextScene, ok, _platformCallback, _cbData, this]() {
                     {
                         std::lock_guard<std::mutex> lock(impl->sceneMutex);
-                        if (scene == impl->nextScene) {
+                        if (nextScene == impl->nextScene) {
                             impl->nextScene.reset();
                         } else {
                             // loadScene[Async] was called in the meantime.
@@ -210,7 +212,7 @@ void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapRead
                     }
 
                     if (ok) {
-                        auto s = scene;
+                        auto s = nextScene;
                         impl->setScene(s);
                         applySceneUpdates();
                         if (_platformCallback) { _platformCallback(_cbData); }
@@ -227,6 +229,7 @@ void Map::queueSceneUpdate(const char* _path, const char* _value) {
 
 void Map::applySceneUpdates() {
 
+    std::shared_ptr<Scene> nextScene;
     std::vector<SceneUpdate> updates;
     {
         std::lock_guard<std::mutex> lock(impl->sceneMutex);
@@ -243,18 +246,20 @@ void Map::applySceneUpdates() {
 
         updates = impl->sceneUpdates;
         impl->sceneUpdates.clear();
+
+        nextScene = impl->nextScene;
     }
 
-    runAsyncTask([scene = impl->nextScene, updates = std::move(updates), this](){
+    runAsyncTask([nextScene, updates = std::move(updates), this](){
 
-            SceneLoader::applyUpdates(*scene, updates);
+            SceneLoader::applyUpdates(*nextScene, updates);
 
-            bool ok = SceneLoader::applyConfig(scene);
+            bool ok = SceneLoader::applyConfig(nextScene);
 
-            impl->jobQueue.add([scene, ok, this]() {
+            impl->jobQueue.add([nextScene, ok, this]() {
                     {
                         std::lock_guard<std::mutex> lock(impl->sceneMutex);
-                        if (scene == impl->nextScene) {
+                        if (nextScene == impl->nextScene) {
                             impl->nextScene.reset();
                         } else {
                             // loadScene[Async] was called in the meantime.
@@ -263,7 +268,7 @@ void Map::applySceneUpdates() {
                     }
 
                     if (ok) {
-                        auto s = scene;
+                        auto s = nextScene;
                         impl->setScene(s);
                         applySceneUpdates();
                     }
