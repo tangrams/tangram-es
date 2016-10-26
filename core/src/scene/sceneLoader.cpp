@@ -52,15 +52,16 @@ std::mutex SceneLoader::m_textureMutex;
 
 bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
 
-    Node& root = _scene->config();
-
     Importer sceneImporter;
 
-    if ((root = sceneImporter.applySceneImports(_scene->path(), _scene->resourceRoot())) ) {
+    _scene->config() = sceneImporter.applySceneImports(_scene->path(), _scene->resourceRoot());
+
+    if (_scene->config()) {
+
         // Load font resources
         _scene->fontContext()->loadFonts();
 
-        applyConfig(root, _scene);
+        applyConfig(_scene);
 
         return true;
     }
@@ -139,7 +140,9 @@ void SceneLoader::applyGlobals(Node root, Scene& scene) {
     }
 }
 
-bool SceneLoader::applyConfig(Node& config, const std::shared_ptr<Scene>& _scene) {
+bool SceneLoader::applyConfig(const std::shared_ptr<Scene>& _scene) {
+
+    Node& config = _scene->config();
 
     // Instantiate built-in styles
     _scene->styles().emplace_back(new PolygonStyle("polygons"));

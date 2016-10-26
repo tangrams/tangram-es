@@ -42,7 +42,7 @@ struct SceneLoader {
 
     static bool loadScene(std::shared_ptr<Scene> _scene);
     static bool loadConfig(const std::string& _sceneString, Node& _root);
-    static bool applyConfig(Node& config, const std::shared_ptr<Scene>& scene);
+    static bool applyConfig(const std::shared_ptr<Scene>& scene);
     static void applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates);
     static void applyGlobals(Node root, Scene& scene);
 
