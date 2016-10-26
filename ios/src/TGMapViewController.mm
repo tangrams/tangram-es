@@ -109,6 +109,10 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
     screenPosition.x *= self.pixelScale;
     screenPosition.y *= self.pixelScale;
 
+    const auto& items = self.map->pickFeaturesAt(screenPosition.x, screenPosition.y);
+
+    if (items.size() == 0) { return; }
+
     self.map->pickFeaturesAt(screenPosition.x, screenPosition.y, [self](const auto& items) {
         NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
         CGPoint position = CGPointMake(0.0, 0.0);
