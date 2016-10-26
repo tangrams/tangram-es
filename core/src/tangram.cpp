@@ -240,7 +240,7 @@ void Map::applySceneUpdates() {
 
             SceneLoader::applyUpdates(*scene, updates);
 
-            bool ok = SceneLoader::applyConfig(scene->config(), scene);
+            bool ok = SceneLoader::applyConfig(scene);
 
             impl->jobQueue.add([scene, ok, this]() {
                     if (scene == impl->nextScene) {

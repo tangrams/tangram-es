@@ -42,14 +42,12 @@ struct TestContext {
         scene = std::make_shared<Scene>(sceneFile);
         auto sceneString = stringFromFile(sceneFile);
 
-        YAML::Node sceneNode;
-
-        try { sceneNode = YAML::Load(sceneString); }
+        try { scene->config() = YAML::Load(sceneString); }
         catch (YAML::ParserException e) {
             LOGE("Parsing scene config '%s'", e.what());
             return;
         }
-        SceneLoader::applyConfig(sceneNode, scene);
+        SceneLoader::applyConfig(scene);
 
         scene->fontContext()->loadFonts();
 
