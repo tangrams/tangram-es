@@ -30,8 +30,11 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 set(ANDROID_PROJECT_DIR ${PROJECT_SOURCE_DIR}/android/tangram)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-include(toolchains/android.gdb.cmake)
-android_ndk_gdb_enable()
+ if(POLICY CMP0026)
+   cmake_policy(SET CMP0026 OLD)
+ endif()
+ include(toolchains/android.gdb.cmake)
+ android_ndk_gdb_enable()
 endif()
 
 set(LIB_NAME tangram) # in order to have libtangram.so
@@ -61,7 +64,7 @@ target_compile_options(${LIB_NAME}
   -fPIC)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-android_ndk_gdb_debuggable(${LIB_NAME})
+  android_ndk_gdb_debuggable(${LIB_NAME})
 endif()
 
 # install to android library dir
