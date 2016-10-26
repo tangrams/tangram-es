@@ -23,10 +23,32 @@
 
 - (void)mapView:(TGMapViewController*)mapView didSelectFeatures:(NSDictionary *)features atScreenPosition:(CGPoint)position
 {
+
+    // Not feature selected
+    if (features.count == 0) {
+
+        // Convert the 2d screen position to the lat lon
+        TGGeoPoint latlon = [mapView screenPositionToLngLat:position];
+
+        // Set the map position
+        [mapView setPosition:latlon];
+        return;
+    }
+
     NSLog(@"Picked features:");
 
     for (id key in features) {
         NSLog(@"\t%@ -- %@", key, [features objectForKey:key]);
+
+        if ([key isEqualToString:@"name"]) {
+             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Selection callback"
+                                                             message:[features objectForKey:key]
+                                                            delegate:nil
+                                                   cancelButtonTitle:@"OK"
+                                                   otherButtonTitles:nil];
+             [alert show];
+             [alert release];
+        }
     }
 }
 
@@ -37,12 +59,6 @@
 - (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeSingleTap:(CGPoint)location
 {
     NSLog(@"Did tap at %f %f", location.x, location.y);
-
-    // TODO: return physical pixels from API
-    location.x *= view.pixelScale;
-    location.y *= view.pixelScale;
-
-    [view setPosition:[view screenPositionToLngLat:location]];
 
     [view pickFeaturesAt:location];
 }
@@ -55,20 +71,22 @@
 
 @implementation MapViewController
 
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super loadSceneFileAsync:@"https://tangrams.github.io/walkabout-style/walkabout-style.yaml"];
+}
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
 
     self.mapViewDelegate = [[MapViewControllerDelegate alloc] init];
     self.gestureDelegate = [[MapViewControllerRecognizerDelegate alloc] init];
-
-    [super loadSceneFileAsync:@"https://tangrams.github.io/walkabout-style/walkabout-style.yaml"];
 }
 
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
 
 @end
