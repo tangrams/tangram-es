@@ -82,6 +82,9 @@
 
     if (!self.map) { return nullTangramGeoPoint; }
 
+    screenPosition.x *= self.pixelScale;
+    screenPosition.y *= self.pixelScale;
+
     TGGeoPoint lngLat;
     if (self.map->screenPositionToLngLat(screenPosition.x, screenPosition.y,
         &lngLat.longitude, &lngLat.latitude)) {
@@ -93,6 +96,9 @@
 
 - (void)pickFeaturesAt:(CGPoint)screenPosition {
     if (!self.map && !self.mapViewDelegate) { return; }
+
+    screenPosition.x *= self.pixelScale;
+    screenPosition.y *= self.pixelScale;
 
     self.map->pickFeaturesAt(screenPosition.x, screenPosition.y, [self](const auto& items) {
         NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
@@ -396,7 +402,7 @@
     CGFloat rotation = rotationRecognizer.rotation;
     [rotationRecognizer setRotation:0.0];
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeRotationGesture:)]) {
-        [self.gestureDelegate mapView:self recognizer:rotationRecognizer didRecognizeRotationGesture:];
+        [self.gestureDelegate mapView:self recognizer:rotationRecognizer didRecognizeRotationGesture:position];
     } else {
         self.map->handleRotateGesture(position.x * self.pixelScale, position.y * self.pixelScale, rotation);
     }
