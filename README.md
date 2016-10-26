@@ -87,37 +87,23 @@ And run it from the output folder:
 cd build/linux/bin/ && ./tangram
 ```
 
-### iOS Simulator ###
-For running on the iOS simulator, generate and compile an Xcode project:
-
-```bash
-make ios-sim
-```
-
-Then just open the Xcode project and run/debug from there:
-
-```bash
-open build/ios-sim/tangram.xcodeproj
-```
-
 Note that any Xcode configuration change you make to the project won't be preserved when CMake runs again. Build configuration is defined only in the CMakeLists file(s).
 
-### iOS Devices ###
-For running on iOS devices you will need an iOS developer account, a valid code signing certificate, and a valid provisioning profile. Help on these topics can be found at [Apple's developer website](http://developer.apple.com).
+### iOS (demo application) ###
 
-First generate an Xcode project without compiling:
+A demo application using the Tangram iOS binary framework can be built by running the following:
 
 ```bash
-make cmake-ios
+make ios
 ```
 
-Then open the Xcode project and set up your developer account information to run on a device:
+This will generate an Xcode project that you can use to deploy on device or simulator:
 
 ```bash
 open build/ios/tangram.xcodeproj
 ```
 
-If you run into problems deploying to an iOS device, see [this note](https://github.com/tangrams/tangram-es/wiki/iOS-Notes).
+If you want to run on a device, be sure to set up the code signing identity
 
 ### iOS Binary Framework ###
 
