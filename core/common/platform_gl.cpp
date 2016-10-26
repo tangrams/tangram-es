@@ -116,10 +116,14 @@ void GL::getProgramInfoLog(GLuint program, GLsizei bufSize, GLsizei *length, GLc
     GL_CHECK(glGetProgramInfoLog(program, bufSize, length, infoLog));
 }
 GLint GL::getUniformLocation(GLuint program, const GLchar *name) {
-    return GL_CHECK(glGetUniformLocation(program, name));
+    auto result = glGetUniformLocation(program, name);
+    GL_CHECK();
+    return result;
 }
 GLint GL::getAttribLocation(GLuint program, const GLchar *name) {
-    return GL_CHECK(glGetAttribLocation(program, name));
+    auto result = glGetAttribLocation(program, name);
+    GL_CHECK();
+    return result;
 }
 void GL::getProgramiv(GLuint program, GLenum pname, GLint *params) {
     GL_CHECK(glGetProgramiv(program,pname,params));
