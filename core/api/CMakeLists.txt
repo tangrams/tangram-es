@@ -5,6 +5,7 @@ add_library(tangram-core SHARED
   "${CMAKE_CURRENT_SOURCE_DIR}/tangram-core.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/urlGet_${PLATFORM_TARGET}.cpp"
   ${PROJECT_SOURCE_DIR}/common/platform_gl.cpp
+  ${PROJECT_SOURCE_DIR}/common/gl_choose.cpp
 )
 
 if (PLATFORM_TARGET STREQUAL "linux")
@@ -24,6 +25,7 @@ endif()
 
 list(APPEND CORE_API_DEFINITIONS -DTANGRAM_CORE_EXPORT_NEEDED)
 list(APPEND CORE_API_DEFINITIONS -DTANGRAM_USE_EPOXY)
+list(APPEND CORE_API_DEFINITIONS -DEPOXY_IMPORTEXPORT=)
 list(APPEND CORE_API_DEFINITIONS -DLOG_LEVEL=2)
 
 target_compile_options(tangram-core

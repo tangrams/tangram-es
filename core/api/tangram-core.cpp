@@ -125,10 +125,6 @@ void cancelUrlRequest(const std::string& _url) {
 void setCurrentThreadPriority(int priority) {
 }
 
-void initGLExtensions() {
-}
-
-
 void readFile(const std::string &filePath, std::vector<char> &stream) {
     std::ifstream file(filePath, std::ios::binary | std::ios::ate);
     if (file.fail()) {

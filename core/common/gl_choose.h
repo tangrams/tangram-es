@@ -1,4 +1,5 @@
 #pragma once
+#include "epoxy/gl.h"
 
 #if defined(PLATFORM_IOS) || defined(PLATFORM_WINDOWS)
 #undef glDeleteVertexArrays
