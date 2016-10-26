@@ -165,10 +165,17 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
     }
 }
 
+// NB: Not thread-safe. Must be called on the main/render thread!
+// (Or externally synchronized with main/render thread)
 void Map::loadScene(const char* _scenePath, bool _useScenePosition) {
     LOG("Loading scene file: %s", _scenePath);
 
-    // Copy old scene
+    {
+        std::lock_guard<std::mutex> lock(impl->sceneMutex);
+        impl->sceneUpdates.clear();
+        impl->nextScene.reset();
+    }
+
     auto scene = std::make_shared<Scene>(_scenePath);
     scene->useScenePosition = _useScenePosition;
 
@@ -196,7 +203,10 @@ void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapRead
                         std::lock_guard<std::mutex> lock(impl->sceneMutex);
                         if (scene == impl->nextScene) {
                             impl->nextScene.reset();
-                        } else { return; }
+                        } else {
+                            // loadScene[Async] was called in the meantime.
+                            return;
+                        }
                     }
 
                     if (ok) {
@@ -217,17 +227,16 @@ void Map::queueSceneUpdate(const char* _path, const char* _value) {
 
 void Map::applySceneUpdates() {
 
-    LOG("Applying %d scene updates", impl->sceneUpdates.size());
-
-    if (impl->nextScene) {
-        // Changes are automatically applied once the scene is loaded
-        return;
-    }
-
     std::vector<SceneUpdate> updates;
     {
         std::lock_guard<std::mutex> lock(impl->sceneMutex);
         if (impl->sceneUpdates.empty()) { return; }
+
+        if (impl->nextScene) {
+            // Changes are automatically applied once the scene is loaded
+            return;
+        }
+        LOG("Applying %d scene updates", impl->sceneUpdates.size());
 
         impl->nextScene = std::make_shared<Scene>(*impl->scene);
         impl->nextScene->useScenePosition = false;
@@ -243,10 +252,15 @@ void Map::applySceneUpdates() {
             bool ok = SceneLoader::applyConfig(scene);
 
             impl->jobQueue.add([scene, ok, this]() {
-                    if (scene == impl->nextScene) {
+                    {
                         std::lock_guard<std::mutex> lock(impl->sceneMutex);
-                        impl->nextScene.reset();
-                    } else { return; }
+                        if (scene == impl->nextScene) {
+                            impl->nextScene.reset();
+                        } else {
+                            // loadScene[Async] was called in the meantime.
+                            return;
+                        }
+                    }
 
                     if (ok) {
                         auto s = scene;
