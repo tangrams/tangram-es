@@ -101,8 +101,10 @@ void FrameInfo::draw(RenderState& rs, const View& _view, TileManager& _tileManag
         avgTimeUpdate /= 60;
 
         size_t memused = 0;
+        size_t features = 0;
         for (const auto& tile : _tileManager.getVisibleTiles()) {
             memused += tile->getMemoryUsage();
+            features += tile->getSelectionFeatures().size();
         }
 
         if (getDebugFlag(DebugFlags::tangram_infos)) {
@@ -110,6 +112,8 @@ void FrameInfo::draw(RenderState& rs, const View& _view, TileManager& _tileManag
 
             debuginfos.push_back("visible tiles:"
                                  + std::to_string(_tileManager.getVisibleTiles().size()));
+            debuginfos.push_back("selectable features:"
+                                 + std::to_string(features));
             debuginfos.push_back("tile cache size:"
                                  + std::to_string(_tileManager.getTileCache()->getMemoryUsage() / 1024) + "kb");
             debuginfos.push_back("tile size:" + std::to_string(memused / 1024) + "kb");
