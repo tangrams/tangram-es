@@ -6,12 +6,14 @@
 #include "util/mapProjection.h"
 #include "util/fastmap.h"
 #include "view/view.h"
+#include "util/featureSelection.h"
 
 #include <deque>
 
 using namespace Tangram;
 
 MercatorProjection s_projection;
+std::shared_ptr<FeatureSelection> s_featureSelection = std::make_shared<FeatureSelection>();
 
 struct TestTileWorker : TileTaskQueue {
     int processedCount = 0;
@@ -39,7 +41,7 @@ struct TestTileWorker : TileTaskQueue {
                 continue;
             }
 
-            task->tile() = std::make_shared<Tile>(task->tileId(), s_projection, &task->source());
+            task->tile() = std::make_shared<Tile>(task->tileId(), s_projection, s_featureSelection, &task->source());
 
             pendingTiles = true;
             processedCount++;
@@ -51,7 +53,7 @@ struct TestTileWorker : TileTaskQueue {
         auto task = tasks[position];
         tasks.erase(tasks.begin() + position);
 
-        task->tile() = std::make_shared<Tile>(task->tileId(), s_projection, &task->source());
+        task->tile() = std::make_shared<Tile>(task->tileId(), s_projection, s_featureSelection, &task->source());
 
         pendingTiles = true;
         processedCount++;
