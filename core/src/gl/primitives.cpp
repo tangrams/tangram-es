@@ -6,10 +6,14 @@
 #include "gl/shaderProgram.h"
 #include "gl/vertexLayout.h"
 #include "gl/renderState.h"
-#include "platform.h"
+#include "gl/texture.h"
+#include "log.h"
 
 #include "shaders/debugPrimitive_vs.h"
 #include "shaders/debugPrimitive_fs.h"
+
+#include "shaders/debugTexture_vs.h"
+#include "shaders/debugTexture_fs.h"
 
 namespace Tangram {
 
@@ -22,6 +26,12 @@ static glm::vec2 s_resolution;
 
 static UniformLocation s_uColor{"u_color"};
 static UniformLocation s_uProj{"u_proj"};
+
+
+static std::unique_ptr<ShaderProgram> s_textureShader;
+static std::unique_ptr<VertexLayout> s_textureLayout;
+
+static UniformLocation s_uTextureProj{"u_proj"};
 
 void init() {
 
@@ -36,6 +46,18 @@ void init() {
             {"a_position", 2, GL_FLOAT, false, 0},
         }));
 
+
+        s_textureShader = std::make_unique<ShaderProgram>();
+
+        s_textureShader->setSourceStrings(SHADER_SOURCE(debugTexture_fs),
+                                          SHADER_SOURCE(debugTexture_vs));
+
+        s_textureLayout = std::unique_ptr<VertexLayout>(new VertexLayout({
+            {"a_position", 2, GL_FLOAT, false, 0},
+            {"a_uv", 2, GL_FLOAT, false, 0},
+        }));
+
+
         s_initialized = true;
         GL::lineWidth(1.5f);
     }
@@ -45,6 +67,8 @@ void deinit() {
 
     s_shader.reset(nullptr);
     s_layout.reset(nullptr);
+    s_textureShader.reset(nullptr);
+    s_textureLayout.reset(nullptr);
     s_initialized = false;
 
 }
@@ -98,6 +122,43 @@ void drawPoly(RenderState& rs, const glm::vec2* _polygon, size_t _n) {
     rs.vertexBuffer(boundBuffer);
 }
 
+void drawTexture(RenderState& rs, Texture& _tex, glm::vec2 _pos, glm::vec2 _dim) {
+    init();
+
+    if (!s_textureShader->use(rs)) { return; }
+
+    GLint boundBuffer;
+    GL::getIntegerv(GL_ARRAY_BUFFER_BINDING, &boundBuffer);
+    rs.vertexBuffer(0);
+    rs.depthTest(GL_FALSE);
+
+    float w = _tex.getWidth();
+    float h = _tex.getHeight();
+
+    if (_dim != glm::vec2(0)) {
+        w = _dim.x;
+        h = _dim.y;
+    }
+    glm::vec4 vertices[6] = {
+        {_pos.x, _pos.y, 0, 1},
+        {_pos.x, _pos.y + h, 0, 0},
+        {_pos.x + w, _pos.y, 1, 1},
+
+        {_pos.x + w, _pos.y, 1, 1},
+        {_pos.x, _pos.y + h, 0, 0},
+        {_pos.x + w, _pos.y + h, 1, 0},
+    };
+
+    _tex.bind(rs, 0);
+
+    // enable the layout for the _polygon vertices
+    s_textureLayout->enable(rs, *s_textureShader, 0, (void*)vertices);
+
+    GL::drawArrays(GL_TRIANGLES, 0, 6);
+
+    rs.vertexBuffer(boundBuffer);
+}
+
 void setColor(RenderState& rs, unsigned int _color) {
     init();
 
@@ -113,6 +174,7 @@ void setResolution(RenderState& rs, float _width, float _height) {
 
     glm::mat4 proj = glm::ortho(0.f, _width, _height, 0.f, -1.f, 1.f);
     s_shader->setUniformMatrix4f(rs, s_uProj, proj);
+    s_textureShader->setUniformMatrix4f(rs, s_uTextureProj, proj);
 }
 
 }
