@@ -235,42 +235,46 @@ bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _q
     return true;
 }
 
-void PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
+bool PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
                                  const DrawRule& _rule) {
 
     PointStyle::Parameters p = applyRule(_rule, _props);
     glm::vec4 uvsQuad;
 
     if (!getUVQuad(p, uvsQuad)) {
-        return;
+        return false;
     }
 
     addLabel(_point, uvsQuad, p);
+
+    return true;
 }
 
-void PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
+bool PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
                                 const DrawRule& _rule) {
 
     PointStyle::Parameters p = applyRule(_rule, _props);
     glm::vec4 uvsQuad;
 
     if (!getUVQuad(p, uvsQuad)) {
-        return;
+        return false;
     }
 
     for (size_t i = 0; i < _line.size(); ++i) {
         addLabel(_line[i], uvsQuad, p);
     }
+
+    return true;
 }
 
-void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props,
+bool PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props,
                                    const DrawRule& _rule) {
 
     PointStyle::Parameters p = applyRule(_rule, _props);
     glm::vec4 uvsQuad;
 
     if (!getUVQuad(p, uvsQuad)) {
-        return;
+        return false;
     }
 
     if (!p.centroid) {
@@ -284,13 +288,17 @@ void PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
 
         addLabel(Point{c,0}, uvsQuad, p);
     }
+
+    return true;
 }
 
-void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
+bool PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
     size_t iconsStart = m_labels.size();
 
-    StyleBuilder::addFeature(_feat, _rule);
+    if (!StyleBuilder::addFeature(_feat, _rule)) {
+        return false;
+    }
 
     size_t iconsCount = m_labels.size() - iconsStart;
 
@@ -298,14 +306,14 @@ void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
     _rule.get(StyleParamKey::text_visible, textVisible);
 
     if (textVisible && _rule.contains(StyleParamKey::point_text)) {
-        if (iconsCount == 0) { return; }
+        if (iconsCount == 0) { return true; }
 
         auto& textStyleBuilder = static_cast<TextStyleBuilder&>(*m_textStyleBuilder);
         auto& textLabels = *textStyleBuilder.labels();
 
         size_t textStart = textLabels.size();
 
-        if (!textStyleBuilder.addFeatureCommon(_feat, _rule, true)) { return; }
+        if (!textStyleBuilder.addFeatureCommon(_feat, _rule, true)) { return true; }
 
         size_t textCount = textLabels.size() - textStart;
 
@@ -322,6 +330,7 @@ void PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
             }
         }
     }
+    return true;
 }
 
 }

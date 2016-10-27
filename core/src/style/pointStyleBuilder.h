@@ -26,9 +26,9 @@ struct PointStyleBuilder : public StyleBuilder {
 
     bool checkRule(const DrawRule& _rule) const override;
 
-    void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
-    void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
-    void addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
+    bool addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
+    bool addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) override;
+    bool addPoint(const Point& _line, const Properties& _props, const DrawRule& _rule) override;
 
     std::unique_ptr<StyledMesh> build() override;
 
@@ -47,7 +47,7 @@ struct PointStyleBuilder : public StyleBuilder {
 
     void addLayoutItems(LabelCollider& _layout) override;
 
-    void addFeature(const Feature& _feat, const DrawRule& _rule) override;
+    bool addFeature(const Feature& _feat, const DrawRule& _rule) override;
 
 private:
     std::vector<std::unique_ptr<Label>> m_labels;

@@ -29,8 +29,6 @@ public:
 
     const Scene& scene() const { return *m_scene; }
 
-    uint32_t addSelectionFeature(const Feature& _feature);
-
 private:
 
     // Determine and apply DrawRules for a @_feature

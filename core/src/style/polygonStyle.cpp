@@ -109,7 +109,7 @@ public:
         m_meshData.clear();
     }
 
-    void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
+    bool addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) override;
 
     const Style& style() const override { return m_style; }
 
@@ -164,7 +164,7 @@ void PolygonStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties& 
 }
 
 template <class V>
-void PolygonStyleBuilder<V>::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
+bool PolygonStyleBuilder<V>::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
 
     parseRule(_rule, _props);
 
@@ -188,6 +188,8 @@ void PolygonStyleBuilder<V>::addPolygon(const Polygon& _polygon, const Propertie
     m_meshData.offsets.emplace_back(m_builder.indices.size(),
                                     m_builder.numVertices);
     m_builder.clear();
+
+    return true;
 }
 
 std::unique_ptr<StyleBuilder> PolygonStyle::createBuilder() const {

@@ -172,7 +172,7 @@ public:
 
     const Style& style() const override { return m_style; }
 
-    void addFeature(const Feature& _feat, const DrawRule& _rule) override;
+    bool addFeature(const Feature& _feat, const DrawRule& _rule) override;
 
     std::unique_ptr<StyledMesh> build() override;
 
@@ -386,14 +386,14 @@ bool PolylineStyleBuilder<V>::evalWidth(const StyleParam& _styleParam, float& wi
 }
 
 template <class V>
-void PolylineStyleBuilder<V>::addFeature(const Feature& _feat, const DrawRule& _rule) {
+bool PolylineStyleBuilder<V>::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
-    if (_feat.geometryType == GeometryType::points) { return; }
-    if (!checkRule(_rule)) { return; }
+    if (_feat.geometryType == GeometryType::points) { return false; }
+    if (!checkRule(_rule)) { return false; }
 
     Parameters params = parseRule(_rule, _feat.props);
 
-    if (params.fill.width[0] <= 0.0f && params.fill.width[1] <= 0.0f ) { return; }
+    if (params.fill.width[0] <= 0.0f && params.fill.width[1] <= 0.0f ) { return false; }
 
     if (_feat.geometryType == GeometryType::lines) {
         // Line geometries are never clipped to tiles, so keep all segments
@@ -411,6 +411,8 @@ void PolylineStyleBuilder<V>::addFeature(const Feature& _feat, const DrawRule& _
             }
         }
     }
+
+    return true;
 }
 
 template <class V>
