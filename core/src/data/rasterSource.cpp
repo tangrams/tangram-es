@@ -140,6 +140,10 @@ std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, int _subTask)
         auto texIt = m_textures.find(id);
         if (texIt != m_textures.end()) {
             task->m_texture = texIt->second;
+
+            // No more loading needed.
+            task->startedLoading();
+
             return task;
         }
     }
