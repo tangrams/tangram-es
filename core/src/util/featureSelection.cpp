@@ -42,7 +42,7 @@ void FeatureSelection::endRenderPass(Tangram::RenderState& _rs) {
 
 }
 
-bool FeatureSelection::clearFeaturesForTile(const Tangram::TileID& _tileID) {
+bool FeatureSelection::clearFeaturesForTile(const TileID& _tileID) {
 
     auto it = m_tileFeatures.find(_tileID);
     if (it != m_tileFeatures.end()) {
