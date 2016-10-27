@@ -1,8 +1,9 @@
 #include "framebuffer.h"
 
-#include "gl/texture.h"
-#include "gl/renderState.h"
 #include "gl/error.h"
+#include "gl/primitives.h"
+#include "gl/renderState.h"
+#include "gl/texture.h"
 #include "log.h"
 #include "glm/vec2.hpp"
 
@@ -154,6 +155,13 @@ FrameBuffer::~FrameBuffer() {
             GL::deleteFramebuffers(1, &glHandle);
         }
     });
+}
+
+void FrameBuffer::drawDebug(RenderState& _rs, glm::vec2 _dim) {
+
+    if (m_texture) {
+        Primitives::drawTexture(_rs, *m_texture, glm::vec2{}, _dim);
+    }
 }
 
 }
