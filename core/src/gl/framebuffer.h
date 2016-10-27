@@ -33,6 +33,8 @@ public:
 
     GLuint readAt(float _normalizedX, float _normalizedY) const;
 
+    void drawDebug(RenderState& _rs, glm::vec2 _dim);
+
 private:
 
     void init(RenderState& _rs);

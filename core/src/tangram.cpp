@@ -82,7 +82,7 @@ public:
     TileWorker tileWorker{MAX_WORKERS};
     TileManager tileManager{tileWorker};
     MarkerManager markerManager;
-    FrameBuffer selectionBuffer{256, 256};
+    std::unique_ptr<FrameBuffer> selectionBuffer = std::make_unique<FrameBuffer>(0, 0);
 
     bool cacheGlState;
 
@@ -294,6 +294,7 @@ void Map::resize(int _newWidth, int _newHeight) {
     impl->renderState.viewport(0, 0, _newWidth, _newHeight);
 
     impl->view.setSize(_newWidth, _newHeight);
+    impl->selectionBuffer = std::make_unique<FrameBuffer>(_newWidth/2, _newHeight/2, false);
 
     Primitives::setResolution(impl->renderState, _newWidth, _newHeight);
 }
@@ -403,12 +404,7 @@ void Map::render() {
     // Render feature selection pass to offscreen framebuffer
     if (impl->selectionQueries.size() > 0 || drawSelectionBuffer) {
 
-        if (drawSelectionBuffer) {
-            glm::vec2 viewport(impl->view.getWidth(), impl->view.getHeight());
-            FrameBuffer::apply(impl->renderState, impl->renderState.defaultFrameBuffer(), viewport, glm::vec4(0.0));
-        } else {
-            impl->selectionBuffer.applyAsRenderTarget(impl->renderState);
-        }
+        impl->selectionBuffer->applyAsRenderTarget(impl->renderState);
 
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
@@ -427,7 +423,7 @@ void Map::render() {
             float y = (1.f - (query.position[1] / impl->view.getHeight()));
 
             // TODO: read with a scalable thumb size
-            GLuint color = impl->selectionBuffer.readAt(x, y);
+            GLuint color = impl->selectionBuffer->readAt(x, y);
 
             for (const auto& tile : impl->tileManager.getVisibleTiles()) {
                 if (auto props = tile->getSelectionFeature(color)) {
@@ -439,15 +435,18 @@ void Map::render() {
         }
 
         impl->selectionQueries.clear();
-
-        // early frame exit
-        if (drawSelectionBuffer) { return; }
     }
 
     // Setup default framebuffer for a new frame
     glm::vec2 viewport(impl->view.getWidth(), impl->view.getHeight());
     FrameBuffer::apply(impl->renderState, impl->renderState.defaultFrameBuffer(),
                        viewport, impl->scene->background().asVec4());
+
+    if (drawSelectionBuffer) {
+        impl->selectionBuffer->drawDebug(impl->renderState, viewport);
+        FrameInfo::draw(impl->renderState, impl->view, impl->tileManager);
+        return;
+    }
 
     for (const auto& style : impl->scene->styles()) {
         style->onBeginFrame(impl->renderState);
