@@ -48,6 +48,7 @@ double last_y_velocity = 0.0;
 bool scene_editing_mode = false;
 MarkerID marker = 0;
 
+bool testClientDataSource = true;
 std::shared_ptr<ClientGeoJsonSource> data_source;
 LngLat last_point;
 
@@ -88,8 +89,11 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
         // map->setPositionEased(p.longitude, p.latitude, 1.f);
 
-        logMsg("pick feature\n");
-        map->clearTileSource(*data_source, true, true);
+        LOG("pick feature");
+
+        if (testClientDataSource) {
+            map->clearTileSource(*data_source, true, true);
+        }
 
         map->pickFeatureAt(x, y, [](auto item) {
             if (!item) { return; }
@@ -99,15 +103,30 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             LOGS("%s", name.c_str());
         });
     } else if ((time - last_time_pressed) < single_tap_time) {
-        // LngLat p;
-        // map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
+        LngLat p;
+        map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
 
-        // marker = map->markerAdd();
-        // map->markerSetStyling(marker, markerStyling.c_str());
-        // map->markerSetPoint(marker, p);
-        // map->markerSetDrawOrder(marker, mods);
-        // logMsg("Added marker with zOrder: %d\n", mods);
+        if (testClientDataSource) {
+            LOG("Added point %f,%f", p.longitude, p.latitude);
 
+            Properties prop;
+            prop.set("type", "point");
+            data_source->addPoint(prop, p);
+
+            if (!(last_point == LngLat{0, 0})) {
+                LngLat p2 = last_point;
+                Properties prop1;
+                prop1.set("type", "line");
+                data_source->addLine(prop1, {p, p2});
+            }
+            last_point = p;
+        } else {
+            marker = map->markerAdd();
+            map->markerSetStyling(marker, markerStyling.c_str());
+            map->markerSetPoint(marker, p);
+            map->markerSetDrawOrder(marker, mods);
+            LOG("Added marker with zOrder: %d", mods);
+        }
         // This updates the tiles (maybe we need a recalcTiles())
         requestRender();
     }
@@ -295,8 +314,10 @@ void init_main_window(bool recreate) {
     map->setupGL();
     map->resize(width, height);
 
-    data_source = std::make_shared<ClientGeoJsonSource>("touch", "");
-    map->addTileSource(data_source);
+    if (testClientDataSource) {
+        data_source = std::make_shared<ClientGeoJsonSource>("touch", "");
+        map->addTileSource(data_source);
+    }
 }
 
 
@@ -310,11 +331,11 @@ int main(int argc, char* argv[]) {
     // Give it a chance to shutdown cleanly on CTRL-C
     signal(SIGINT, [](int) {
             if (keepRunning) {
-                logMsg("shutdown\n");
+                LOG("shutdown");
                 keepRunning = false;
                 glfwPostEmptyEvent();
             } else {
-                logMsg("killed!\n");
+                LOG("killed!");
                 exit(1);
             }});
 
@@ -322,7 +343,7 @@ int main(int argc, char* argv[]) {
     while (++argi < argc) {
         if (strcmp(argv[argi - 1], "-f") == 0) {
             sceneFile = std::string(argv[argi]);
-            logMsg("File from command line: %s\n", argv[argi]);
+            LOG("File from command line: %s", argv[argi]);
             break;
         }
     }
@@ -334,7 +355,7 @@ int main(int argc, char* argv[]) {
 
     struct stat sb;
     //if (stat(sceneFile.c_str(), &sb) == -1) {
-        //logMsg("scene file not found!");
+        //LOG("scene file not found!");
         //exit(EXIT_FAILURE);
     //}
     auto last_mod = sb.st_mtime;
@@ -375,7 +396,7 @@ int main(int argc, char* argv[]) {
         }
 
         if (recreate_context) {
-            logMsg("recreate context\n");
+            LOG("recreate context");
              // Simulate GL context loss
             init_main_window(true);
             recreate_context = false;
