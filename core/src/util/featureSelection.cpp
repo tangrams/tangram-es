@@ -27,7 +27,7 @@ void FeatureSelection::beginRenderPass(Tangram::RenderState& _rs) {
 
     _rs.saveFramebufferState();
 
-    m_framebuffer->applyAsRenderTarget(_rs, 256, 256);
+    m_framebuffer->applyAsRenderTarget(_rs, {0.0, 0.0, 0.0, 0.0}, 256, 256);
 
 }
 
@@ -47,8 +47,7 @@ GLuint FeatureSelection::readBufferAt(RenderState& _rs, float _x, float _y, int 
     m_framebuffer->bind(_rs);
 
     GLuint pixel;
-    GL::readPixels(floorf(fbPosition.x), floorf(fbPosition.y), 1, 1, GL_RGBA,
-                   GL_UNSIGNED_BYTE, &pixel);
+    GL::readPixels(floorf(fbPosition.x), floorf(fbPosition.y), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
 
     _rs.applySavedFramebufferState();
 
