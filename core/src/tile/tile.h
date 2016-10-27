@@ -74,6 +74,8 @@ public:
 
     std::shared_ptr<Properties> getSelectionFeature(uint32_t _id);
 
+    const auto& getSelectionFeatures() const { return m_selectionFeatures; }
+
     auto& rasters() { return m_rasters; }
     const auto& rasters() const { return m_rasters; }
 
