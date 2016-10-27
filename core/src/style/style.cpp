@@ -427,30 +427,32 @@ bool StyleBuilder::checkRule(const DrawRule& _rule) const {
     return true;
 }
 
-void StyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
+bool StyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
-    if (!checkRule(_rule)) { return; }
+    if (!checkRule(_rule)) { return false; }
 
+    bool added = false;
     switch (_feat.geometryType) {
         case GeometryType::points:
             for (auto& point : _feat.points) {
-                addPoint(point, _feat.props, _rule);
+                added |= addPoint(point, _feat.props, _rule);
             }
             break;
         case GeometryType::lines:
             for (auto& line : _feat.lines) {
-                addLine(line, _feat.props, _rule);
+                added |= addLine(line, _feat.props, _rule);
             }
             break;
         case GeometryType::polygons:
             for (auto& polygon : _feat.polygons) {
-                addPolygon(polygon, _feat.props, _rule);
+                added |= addPolygon(polygon, _feat.props, _rule);
             }
             break;
         default:
             break;
     }
 
+    return added;
 }
 
 StyleBuilder::StyleBuilder(const Style& _style) {
@@ -462,16 +464,19 @@ StyleBuilder::StyleBuilder(const Style& _style) {
     }
 }
 
-void StyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
+bool StyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
     // No-op by default
+    return false;
 }
 
-void StyleBuilder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
+bool StyleBuilder::addLine(const Line& _line, const Properties& _props, const DrawRule& _rule) {
     // No-op by default
+    return false;
 }
 
-void StyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
+bool StyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
     // No-op by default
+    return false;
 }
 
 }

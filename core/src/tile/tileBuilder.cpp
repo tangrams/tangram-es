@@ -35,19 +35,13 @@ StyleBuilder* TileBuilder::getStyleBuilder(const std::string& _name) {
     return it->second.get();
 }
 
-uint32_t TileBuilder::addSelectionFeature(const Feature& _feature) {
-    auto id = m_scene->featureSelection()->colorIdentifier();
-    m_selectionFeatures[id] = std::make_shared<Properties>(_feature.props);
-
-    return id;
-}
-
 void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer) {
 
     // If no rules matched the feature, return immediately
     if (!m_ruleSet.match(_feature, _layer, m_styleContext)) { return; }
 
     uint32_t selectionColor = 0;
+    bool added = false;
 
     // For each matched rule, find the style to be used and
     // build the feature with the rule's parameters
@@ -67,7 +61,7 @@ void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer
         bool interactive = false;
         if (rule.get(StyleParamKey::interactive, interactive) && interactive) {
             if (selectionColor == 0) {
-                selectionColor = addSelectionFeature(_feature);
+                selectionColor = m_scene->featureSelection()->colorIdentifier();
             }
             rule.selectionColor = selectionColor;
         } else {
@@ -89,7 +83,11 @@ void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer
         }
 
         // build feature with style
-        style->addFeature(_feature, rule);
+        added |= style->addFeature(_feature, rule);
+    }
+
+    if (added && (selectionColor != 0)) {
+        m_selectionFeatures[selectionColor] = std::make_shared<Properties>(_feature.props);
     }
 }
 

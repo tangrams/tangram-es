@@ -68,16 +68,16 @@ public:
 
     virtual void setup(const Marker& _marker, int zoom) = 0;
 
-    virtual void addFeature(const Feature& _feat, const DrawRule& _rule);
+    virtual bool addFeature(const Feature& _feat, const DrawRule& _rule);
 
     /* Build styled vertex data for point geometry */
-    virtual void addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule);
+    virtual bool addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule);
 
     /* Build styled vertex data for line geometry */
-    virtual void addLine(const Line& _line, const Properties& _props, const DrawRule& _rule);
+    virtual bool addLine(const Line& _line, const Properties& _props, const DrawRule& _rule);
 
     /* Build styled vertex data for polygon geometry */
-    virtual void addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule);
+    virtual bool addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule);
 
     /* Create a new mesh object using the vertex layout corresponding to this style */
     virtual std::unique_ptr<StyledMesh> build() = 0;

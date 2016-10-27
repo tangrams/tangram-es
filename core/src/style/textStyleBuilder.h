@@ -20,8 +20,8 @@ public:
 
     const Style& style() const override { return m_style; }
 
-    void addFeature(const Feature& _feature, const DrawRule& _rule) override {
-        addFeatureCommon(_feature, _rule, false);
+    bool addFeature(const Feature& _feature, const DrawRule& _rule) override {
+        return addFeatureCommon(_feature, _rule, false);
     }
 
     bool addFeatureCommon(const Feature& _feature, const DrawRule& _rule, bool _iconText);
