@@ -15,6 +15,7 @@
 #include "tangram.h"
 
 __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
+__CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 @interface TGMapViewController ()
 
@@ -167,7 +168,7 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
 
 - (BOOL)markerSetPoint:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate
 {
-    if (!self.map) { return NO; }
+    if (!self.map || !identifier) { return NO; }
 
     Tangram::LngLat lngLat(coordinate.longitude, coordinate.latitude);
 
@@ -176,25 +177,41 @@ __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
 
 - (BOOL)markerSetPointEased:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate duration:(float)duration easeType:(TGEaseType)ease
 {
-    if (!self.map) { return NO; }
+    if (!self.map || !identifier) { return NO; }
 
     Tangram::LngLat lngLat(coordinate.longitude, coordinate.latitude);
 
     return self.map->markerSetPointEased(identifier, lngLat, duration, [Helpers convertEaseTypeFrom:ease]);
 }
 
-- (BOOL)markerSetPolyline:(TGMapMarkerId)identifier coordinates:(TGGeoPoint *)coordinates count:(int)count
+- (BOOL)markerSetPolyline:(TGMapMarkerId)identifier polyline:(TGGeoPolyline *)polyline
 {
-    if (!self.map) { return NO; }
+    if (polyline.count < 2 || !identifier) { return NO; }
 
-    return self.map->markerSetPolyline(identifier, coordinates, count);
+    return self.map->markerSetPolyline(identifier, reinterpret_cast<Tangram::LngLat*>([polyline data]), polyline.count);
 }
 
-- (BOOL)markerSetPolygon:(TGMapMarkerId)identifier coordinates:(TGGeoPoint *)coordinates count:(int)count rings:(int)rings
+- (BOOL)markerSetPolygon:(TGMapMarkerId)identifier polygon:(TGGeoPolygon *)polygon;
 {
-    if (!self.map) { return NO; }
+    if (polygon.count < 3 || !identifier) { return NO; }
 
-    return self.map->markerSetPolygon(identifier, coordinates, count, rings);;
+    using Ring = std::vector<TGGeoPoint>;
+    auto polygonRings = static_cast<std::vector<Ring>*>([polygon data]);
+
+    std::vector<Tangram::LngLat> coordinates;
+    coordinates.reserve(polygon.count);
+
+    std::vector<int> rings;
+    rings.reserve(polygonRings->size());
+
+    for (const auto& ring : *polygonRings) {
+        rings.push_back(ring.size());
+        for (const auto& coord : ring) {
+            coordinates.push_back({coord.longitude, coord.latitude});
+        }
+    }
+
+    return self.map->markerSetPolygon(identifier, coordinates.data(), rings.data(), rings.size());
 }
 
 - (BOOL)markerSetVisible:(TGMapMarkerId)identifier visible:(BOOL)visible
