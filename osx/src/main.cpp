@@ -14,6 +14,7 @@ void init_main_window(bool recreate);
 std::string sceneFile = "scene.yaml";
 
 std::string markerStyling = "{ style: 'points', color: 'white', size: [25px, 25px], order: 100, collide: false }";
+std::string polylineStyle = "{ style: lines, color: red, width: 20px, order: 5000 }";
 
 const unsigned int bitmap[] = { 0xffffffff, 0xff000000, 0xff000000, 0xffffffff };
 
@@ -46,6 +47,7 @@ using namespace Tangram;
 
 MarkerID marker = 0;
 MarkerID poiMarker = 0;
+MarkerID polyline = 0;
 
 template<typename T>
 static constexpr T clamp(T val, T min, T max) {
@@ -109,6 +111,24 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 }
             }
         });
+
+        static double last_x = 0, last_y = 0;
+
+        if (!polyline) {
+            polyline = map->markerAdd();
+            map->markerSetStyling(polyline, polylineStyle.c_str());
+        }
+
+        if (last_x != 0) {
+            LngLat coords[2];
+            map->screenPositionToLngLat(x, y, &coords[0].longitude, &coords[0].latitude);
+            map->screenPositionToLngLat(last_x, last_y, &coords[1].longitude, &coords[1].latitude);
+
+            map->markerSetPolyline(polyline, coords, 2);
+        }
+
+        last_x = x;
+        last_y = y;
 
         requestRender();
     }

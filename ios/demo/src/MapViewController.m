@@ -7,6 +7,13 @@
 
 #import "MapViewController.h"
 
+@interface MapViewController ()
+
+@property (assign, atomic) TGMapMarkerId polyline;
+@property (assign, atomic) TGMapMarkerId polygon;
+
+@end
+
 @implementation MapViewControllerDelegate
 
 - (void)mapView:(TGMapViewController *)mapView didLoadSceneAsync:(NSString *)scene
@@ -59,12 +66,60 @@
 - (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeSingleTap:(CGPoint)location
 {
     NSLog(@"Did tap at %f %f", location.x, location.y);
-    [view pickFeaturesAt:location];
+
+    MapViewController* vc = (MapViewController *)view;
+
+    TGGeoPoint coordinate = [vc screenPositionToLngLat:location];
+
+    // Add polyline marker
+    {
+        if (!vc.polyline) {
+            vc.polyline = [vc markerAdd];
+            [vc markerSetStyling:vc.polyline styling:@"{ style: 'lines', color: 'red', width: 20px, order: 5000 }"];
+        }
+
+        static TGGeoPolyline* line = nil;
+        if (!line) { line = [[TGGeoPolyline alloc] init]; }
+
+        if ([line count] > 0) {
+            [line addPoint:coordinate];
+            [vc markerSetPolyline:vc.polyline polyline:line];
+        } else {
+            [line addPoint:coordinate];
+        }
+    }
+
+    // Add polygon marker
+    {
+        if (!vc.polygon) {
+            vc.polygon = [vc markerAdd];
+            [vc markerSetStyling:vc.polygon styling:@" { style: 'polygons', color: 'blue', order: 5000 } "];
+        }
+
+        static TGGeoPolygon* polygon = nil;
+        if (!polygon) { polygon = [[TGGeoPolygon alloc] init]; }
+
+        if ([polygon count] == 0) {
+            [polygon startPath:coordinate withSize:5];
+        } else if ([polygon count] % 5 == 0) {
+            [vc markerSetPolygon:vc.polygon polygon:polygon];
+            [polygon removeAll];
+            [polygon startPath:coordinate withSize:5];
+        } else {
+            [polygon addPoint:coordinate];
+        }
+    }
+
+    // Add point marker
+    {
+        TGMapMarkerId mid = [vc markerAdd];
+        [vc markerSetStyling:mid styling:@"{ style: 'points', color: 'white', size: [25px, 25px], order:5000, collide: false }"];
+        [vc markerSetPoint:mid coordinates:coordinate];
+    }
+
+    // Request feature picking
+    [vc pickFeaturesAt:location];
 }
-
-@end
-
-@interface MapViewController ()
 
 @end
 
@@ -81,6 +136,9 @@
 
     self.mapViewDelegate = [[MapViewControllerDelegate alloc] init];
     self.gestureDelegate = [[MapViewControllerRecognizerDelegate alloc] init];
+
+    self.polyline = 0;
+    self.polygon = 0;
 }
 
 - (void)didReceiveMemoryWarning
