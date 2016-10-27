@@ -13,7 +13,7 @@ std::shared_ptr<TileData> MVTSource::parse(const TileTask& _task, const MapProje
 
     auto tileData = std::make_shared<TileData>();
 
-    auto& task = static_cast<const DownloadTileTask&>(_task);
+    auto& task = static_cast<const BinaryTileTask&>(_task);
 
     protobuf::message item(task.rawTileData->data(), task.rawTileData->size());
     PbfParser::ParserContext ctx(m_id);

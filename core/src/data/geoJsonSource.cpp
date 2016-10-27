@@ -14,7 +14,7 @@ namespace Tangram {
 std::shared_ptr<TileData> GeoJsonSource::parse(const TileTask& _task,
                                                const MapProjection& _projection) const {
 
-    auto& task = static_cast<const DownloadTileTask&>(_task);
+    auto& task = static_cast<const BinaryTileTask&>(_task);
 
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
 

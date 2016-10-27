@@ -57,7 +57,7 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb
                 auto rawDataRef = std::make_shared<std::vector<char>>();
                 std::swap(*rawDataRef, _rawData);
 
-                auto& dlTask = static_cast<DownloadTileTask&>(*task);
+                auto& dlTask = static_cast<BinaryTileTask&>(*task);
                 // NB: Sets hasData() state true
                 dlTask.rawTileData = rawDataRef;
             }

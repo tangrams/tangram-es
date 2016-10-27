@@ -101,9 +101,9 @@ protected:
     bool m_proxyState = false;
 };
 
-class DownloadTileTask : public TileTask {
+class BinaryTileTask : public TileTask {
 public:
-    DownloadTileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _subTask)
+    BinaryTileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _subTask)
         : TileTask(_tileId, _source, _subTask) {}
 
     virtual bool hasData() const override {

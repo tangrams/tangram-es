@@ -20,7 +20,7 @@ public:
     void setCacheSize(size_t _cacheSize);
 
 private:
-    bool cacheGet(DownloadTileTask& _task);
+    bool cacheGet(BinaryTileTask& _task);
 
     void cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef);
 

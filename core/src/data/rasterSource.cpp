@@ -10,10 +10,10 @@
 
 namespace Tangram {
 
-class RasterTileTask : public DownloadTileTask {
+class RasterTileTask : public BinaryTileTask {
 public:
     RasterTileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _subTask)
-        : DownloadTileTask(_tileId, _source, _subTask) {}
+        : BinaryTileTask(_tileId, _source, _subTask) {}
 
     std::shared_ptr<Texture> m_texture;
 
@@ -40,7 +40,7 @@ public:
 
         // Create tile geometries
         if (!isSubTask()) {
-            DownloadTileTask::process(_tileBuilder);
+            BinaryTileTask::process(_tileBuilder);
         }
     }
 
