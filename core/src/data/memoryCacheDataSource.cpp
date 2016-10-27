@@ -25,7 +25,7 @@ struct RawCache {
     int m_usage = 0;
     int m_maxUsage = 0;
 
-    bool get(DownloadTileTask& _task) {
+    bool get(BinaryTileTask& _task) {
 
         if (m_maxUsage <= 0) { return false; }
 
@@ -92,7 +92,7 @@ void MemoryCacheDataSource::setCacheSize(size_t _cacheSize) {
     m_cache->m_maxUsage = _cacheSize;
 }
 
-bool MemoryCacheDataSource::cacheGet(DownloadTileTask& _task) {
+bool MemoryCacheDataSource::cacheGet(BinaryTileTask& _task) {
     return m_cache->get(_task);
 }
 
@@ -102,7 +102,7 @@ void MemoryCacheDataSource::cachePut(const TileID& _tileID, std::shared_ptr<std:
 
 bool MemoryCacheDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
 
-    auto& task = static_cast<DownloadTileTask&>(*_task);
+    auto& task = static_cast<BinaryTileTask&>(*_task);
 
     if (_task->rawSource == this->level) {
 
@@ -121,7 +121,7 @@ bool MemoryCacheDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTa
 
         return next->loadTileData(_task, {[this, _cb](std::shared_ptr<TileTask> _task) {
 
-            auto& task = static_cast<DownloadTileTask&>(*_task);
+            auto& task = static_cast<BinaryTileTask&>(*_task);
 
             if (task.hasData()) { cachePut(task.tileId(), task.rawTileData); }
 

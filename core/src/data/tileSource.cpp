@@ -28,7 +28,7 @@ TileSource::~TileSource() {
 }
 
 std::shared_ptr<TileTask> TileSource::createTask(TileID _tileId, int _subTask) {
-    auto task = std::make_shared<DownloadTileTask>(_tileId, shared_from_this(), _subTask);
+    auto task = std::make_shared<BinaryTileTask>(_tileId, shared_from_this(), _subTask);
 
     createSubTasks(task);
 
