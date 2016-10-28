@@ -98,7 +98,7 @@ void PolylineStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& 
     }
 }
 
-void PolylineStyle::setDashBackgroundColor(const glm::vec4 _dashBackgroundColor) {
+void PolylineStyle::setDashBackgroundColor(const glm::vec4& _dashBackgroundColor) {
     m_dashBackgroundColor = _dashBackgroundColor;
     m_dashBackground = true;
 }

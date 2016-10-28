@@ -69,13 +69,13 @@ public:
     virtual void setInstanceName(const std::string &_name);
 
     /*  Set Ambient Color. Which is constant across the scene */
-    virtual void setAmbientColor(const glm::vec4 _ambient);
+    virtual void setAmbientColor(const glm::vec4&_ambient);
 
     /*  Set Diffuse Color. What we generaly understand for color of a light */
-    virtual void setDiffuseColor(const glm::vec4 _diffuse);
+    virtual void setDiffuseColor(const glm::vec4& _diffuse);
 
     /*  Set Specular Color. This are the intense reflections of a light. AKA shinny spot */
-    virtual void setSpecularColor(const glm::vec4 _specular);
+    virtual void setSpecularColor(const glm::vec4& _specular);
 
     /*  Set the origin relative to which this light will be positioned */
     void setOrigin(LightOrigin origin);

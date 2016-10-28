@@ -28,15 +28,15 @@ void Light::setInstanceName(const std::string &_name) {
     m_name = _name;
 }
 
-void Light::setAmbientColor(const glm::vec4 _ambient) {
+void Light::setAmbientColor(const glm::vec4& _ambient) {
     m_ambient = _ambient;
 }
 
-void Light::setDiffuseColor(const glm::vec4 _diffuse) {
+void Light::setDiffuseColor(const glm::vec4& _diffuse) {
     m_diffuse = _diffuse;
 }
 
-void Light::setSpecularColor(const glm::vec4 _specular) {
+void Light::setSpecularColor(const glm::vec4& _specular) {
     m_specular = _specular;
 }
 

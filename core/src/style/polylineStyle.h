@@ -21,7 +21,7 @@ public:
     void setDashArray(std::vector<int> _dashArray) { m_dashArray = _dashArray; }
     void setTexture(std::shared_ptr<Texture>& _texture) { m_texture = _texture; }
 
-    void setDashBackgroundColor(const glm::vec4 _dashBackgroundColor);
+    void setDashBackgroundColor(const glm::vec4& _dashBackgroundColor);
 
 private:
 
