@@ -45,12 +45,10 @@ set(SOURCES
 set(HEADERS
     ${PROJECT_SOURCE_DIR}/ios/src/platform_ios.h
     ${PROJECT_SOURCE_DIR}/ios/framework/TangramMap.h
-    ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewDelegate.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.h)
 
 set(FRAMEWORK_HEADERS
     ${PROJECT_SOURCE_DIR}/ios/framework/TangramMap.h
-    ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewDelegate.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.h)
 
 add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes/fonts" "./fonts")

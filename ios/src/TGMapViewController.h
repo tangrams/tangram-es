@@ -41,6 +41,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeShoveGesture:(CGPoint)location;
 @end
 
+@protocol TGMapViewDelegate <NSObject>
+@optional
+- (void)mapView:(TGMapViewController*)mapView didLoadSceneAsync:(NSString*)scene;
+- (void)mapView:(TGMapViewController*)mapView didSelectFeatures:(NSDictionary*)features atScreenPosition:(CGPoint)position;
+@end
+
 NS_ASSUME_NONNULL_END
 
 struct TileID;
