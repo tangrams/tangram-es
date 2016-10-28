@@ -90,6 +90,7 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
                 position.y = 1 - m_projected[0].y;
                 position *= halfScreen;
                 position += m_options.offset;
+                position += m_anchor;
 
                 m_projected[1].x = _viewState.viewportSize.x;
                 m_projected[1].y = _viewState.viewportSize.y;
@@ -187,6 +188,7 @@ void SpriteLabel::addVerticesToMesh() {
         scale.y *= -1;
 
         pos += m_options.offset * scale;
+        pos += m_anchor * scale;
 
         for (int i = 0; i < 4; i++) {
             SpriteVertex& vertex = quadVertices[i];

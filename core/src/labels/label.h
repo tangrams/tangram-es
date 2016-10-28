@@ -230,6 +230,9 @@ namespace std {
             hash_combine(seed, o.hideTransition.time);
             hash_combine(seed, (int)o.showTransition.ease);
             hash_combine(seed, o.showTransition.time);
+            for (int i = 0; i < o.anchors.count; ++i) {
+                hash_combine(seed, (int)o.anchors[i]);
+            }
             return seed;
         }
     };
