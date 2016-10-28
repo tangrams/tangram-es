@@ -91,7 +91,7 @@ Note that any Xcode configuration change you make to the project won't be preser
 
 ### iOS (demo application) ###
 
-A demo application using the Tangram iOS binary framework can be built by running the following:
+Building the iOS demo application requires Xcode 8.0 or newer. First, run:
 
 ```bash
 make ios
