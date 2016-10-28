@@ -653,6 +653,82 @@ public class MapController implements Renderer {
         }
     }
 
+//TODO: START OF NEW METHODS DOCUMENT THEM
+
+    /**
+     * Adds a marker to the map
+     * @return
+     */
+    //TODO: create java marker obj
+    public long addMarker() {
+        checkPointer(mapPointer);
+        return nativeMarkerAdd(mapPointer);
+    }
+
+    public boolean removeMarker(long markerId) {
+        checkPointer(mapPointer);
+        checkPointer(markerId);
+        return nativeMarkerRemove(mapPointer, markerId);
+    }
+
+    //TODO: ask if last param is scene path
+    public boolean setMarkerStyling(long markerId, String scenePath) {
+        checkPointer(mapPointer);
+        checkPointer(markerId);
+        return nativeMarkerSetStyling(mapPointer, markerId, scenePath);
+    }
+
+    public boolean setMarkerBitmap(long markerId, int width, int height, int[] data) {
+        checkPointer(mapPointer);
+        checkPointer(markerId);
+        return nativeMarkerSetBitmap(mapPointer, markerId, width, height, data);
+    }
+
+    public boolean setMarkerPoint(long markerId, double lng, double lat) {
+        checkPointer(mapPointer);
+        checkPointer(markerId);
+        return nativeMarkerSetPoint(mapPointer, markerId, lng, lat);
+    }
+
+    //TODO: add ease enum
+    public boolean setMarkerPointEased(long markerId, double lng, double lat, float duration, int ease) {
+        checkPointer(mapPointer);
+        checkPointer(markerId);
+        return nativeMarkerSetPointEased(mapPointer, markerId, lng, lat, duration, ease);
+    }
+
+    //TODO: what is count
+    public boolean setMarkerPolyline(long markerId, double[] jcoordinates, int count) {
+        checkPointer(mapPointer);
+        checkPointer(markerId);
+        return nativeMarkerSetPolyline(mapPointer, markerId, jcoordinates, count);
+    }
+
+    //TODO: what are counts
+    public boolean setMarkerPolygon(long markerId, double[] jcoordinates, int[] jcounts, int rings) {
+        checkPointer(mapPointer);
+        checkPointer(markerId);
+        return nativeMarkerSetPolygon(mapPointer, markerId, jcoordinates, jcounts, rings);
+    }
+
+    public boolean setMarkerVisible(long markerId, boolean visible) {
+        checkPointer(mapPointer);
+        checkPointer(markerId);
+        return nativeMarkerSetVisible(mapPointer, markerId, visible);
+    }
+
+    //TODO: what is draw order
+    public boolean setMarkerDrawOrder(long markerId, int drawOrder) {
+        checkPointer(mapPointer);
+        checkPointer(markerId);
+        return nativeMarkerSetDrawOrder(mapPointer, markerId, drawOrder);
+    }
+
+    public void removeAllMarkers() {
+        checkPointer(mapPointer);
+        nativeMarkerRemoveAll(mapPointer);
+    }
+
     /**
      */
     public void setViewCompleteListener(ViewCompleteListener listener) {
@@ -779,6 +855,18 @@ public class MapController implements Renderer {
     private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String value);
     private synchronized native void nativeApplySceneUpdates(long mapPtr);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
+    private synchronized native long nativeMarkerAdd(long mapPtr);
+    private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
+    private synchronized native boolean nativeMarkerSetStyling(long mapPtr, long markerID, String styling);
+    private synchronized native boolean nativeMarkerSetBitmap(long mapPtr, long markerID, int width, int height, int[] data);
+    private synchronized native boolean nativeMarkerSetPoint(long mapPtr, long markerID, double lng, double lat);
+    private synchronized native boolean nativeMarkerSetPointEased(long mapPtr, long markerID, double lng, double lat, float duration, int ease);
+    private synchronized native boolean nativeMarkerSetPolyline(long mapPtr, long markerID, double[] jcoordinates, int count);
+    private synchronized native boolean nativeMarkerSetPolygon(long mapPtr, long markerID, double[] jcoordinates, int[] jcounts, int rings);
+    private synchronized native boolean nativeMarkerSetVisible(long mapPtr, long markerID, boolean visible);
+    private synchronized native boolean nativeMarkerSetDrawOrder(long mapPtr, long markerID, int drawOrder);
+    private synchronized native void nativeMarkerRemoveAll(long mapPtr);
+
     private synchronized native void nativeUseCachedGlState(long mapPtr, boolean use);
     private synchronized native void nativeCaptureSnapshot(long mapPtr, int[] buffer);
 
