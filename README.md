@@ -103,7 +103,7 @@ This will generate an Xcode project that you can use to deploy on device or simu
 open build/ios/tangram.xcodeproj
 ```
 
-If you want to run on a device, be sure to set up the code signing identity
+If you want to run on a device, be sure to set up the code signing identity and code sign the framework on copy (select target _tangram_ > _Build Phases_ > _Copy Files_ > _TangramMap.framework_ > _Code Sign On Copy_).
 
 ### iOS Binary Framework ###
 
