@@ -109,7 +109,6 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
 
     PointStyle::Parameters p;
     glm::vec2 size;
-    std::string anchor;
 
     _rule.get(StyleParamKey::color, p.color);
     _rule.get(StyleParamKey::sprite, p.sprite);
@@ -128,7 +127,13 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
     _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
     _rule.get(StyleParamKey::flat, p.labelOptions.flat);
-    _rule.get(StyleParamKey::anchor, anchor);
+    _rule.get(StyleParamKey::anchor, p.labelOptions.anchors);
+
+    if (p.labelOptions.anchors.count == 0) {
+        p.labelOptions.anchors.anchor = { {LabelProperty::Anchor::center} };
+        p.labelOptions.anchors.count = 1;
+    }
+
     _rule.get(StyleParamKey::angle, p.labelOptions.angle);
 
     auto sizeParam = _rule.findParameter(StyleParamKey::size);
@@ -146,11 +151,6 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     } else {
         p.size = glm::vec2(NAN, NAN);
     }
-
-    LabelProperty::anchor(anchor, p.anchor);
-
-    p.labelOptions.anchors.anchor[0] = p.anchor;
-    p.labelOptions.anchors.count = 1;
 
     std::hash<PointStyle::Parameters> hash;
     p.labelOptions.paramHash = hash(p);

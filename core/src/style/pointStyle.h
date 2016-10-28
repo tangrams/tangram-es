@@ -25,7 +25,6 @@ public:
         glm::vec2 size;
         uint32_t color = 0xffffffff;
         Label::Options labelOptions;
-        LabelProperty::Anchor anchor = LabelProperty::Anchor::center;
         float extrudeScale = 1.f;
         uint32_t selectionColor = 0;
     };
@@ -83,7 +82,6 @@ namespace std {
             hash_combine(seed, p.centroid);
             hash_combine(seed, p.sprite);
             hash_combine(seed, p.color);
-            hash_combine(seed, (int)p.anchor);
             hash_combine(seed, p.size.x);
             hash_combine(seed, p.size.y);
             hash_combine(seed, optionsHash(p.labelOptions));
