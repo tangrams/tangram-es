@@ -18,12 +18,12 @@ set(EXPORTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/exports/${PLATFORM_TARGET})
 endif()
 
 
-## yaml-cpp ##
-##############
-set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "Enable testing and parse tools")
-set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "Enable contrib stuff in library")
-add_subdirectory("yaml-cpp")
-
+## libyaml ##
+#############
+add_subdirectory("libyaml")
+target_include_directories(yaml
+  PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/libyaml/include)
 
 ## css-color-parser-cpp ##
 ##########################
