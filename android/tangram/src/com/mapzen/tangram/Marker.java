@@ -45,10 +45,19 @@ public class Marker {
         int width = bitmap.getScaledWidth(DisplayMetrics.DENSITY_DEFAULT);
         int height = bitmap.getScaledHeight(DisplayMetrics.DENSITY_DEFAULT);
 
-        int[] data = new int[width * height];
-        bitmap.getPixels(data, 0, width, 0, 0, width, height);
+        int[] argb = new int[width * height];
+        bitmap.getPixels(argb, 0, width, 0, 0, width, height);
 
-        return map.setMarkerBitmap(pointer, width, height, data);
+        int[] abgr = new int[width * height];
+        for (int i = 0; i < argb.length; i++) {
+            int pix = argb[i];
+            int pb = (pix >> 16) & 0xff;
+            int pr = (pix << 16) & 0x00ff0000;
+            int pix1 = (pix & 0xff00ff00) | pr | pb;
+            abgr[i] = pix1;
+        }
+
+        return map.setMarkerBitmap(pointer, width, height, abgr);
     }
 
     public boolean setPoint(LngLat point) {
