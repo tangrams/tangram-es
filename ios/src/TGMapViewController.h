@@ -9,7 +9,8 @@
 
 #import <UIKit/UIKit.h>
 #import <GLKit/GLKit.h>
-#import "TGMapViewDelegate.h"
+
+@class TGMapViewController;
 
 typedef NS_ENUM(NSInteger, TGCameraType) {
     TGCameraTypePerspective = 0,
