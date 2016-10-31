@@ -147,7 +147,7 @@ bool MBTilesDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb
         m_worker->enqueue([this, _task, _cb](){
             TileID tileId = _task->tileId();
 
-            auto& task = static_cast<DownloadTileTask&>(*_task);
+            auto& task = static_cast<BinaryTileTask&>(*_task);
             task.rawTileData = std::make_shared<std::vector<char>>();
 
             getTileData(tileId, *task.rawTileData);
@@ -193,7 +193,7 @@ bool MBTilesDataSource::loadNextSource(std::shared_ptr<TileTask> _task, TileTask
             if (m_cacheMode) {
                 m_worker->enqueue([this, _task](){
 
-                        auto& task = static_cast<DownloadTileTask&>(*_task);
+                        auto& task = static_cast<BinaryTileTask&>(*_task);
 
                         LOGW("store tile: %s, %d", _task->tileId().toString().c_str(), task.hasData());
 
@@ -208,7 +208,7 @@ bool MBTilesDataSource::loadNextSource(std::shared_ptr<TileTask> _task, TileTask
 
             m_worker->enqueue([this, _task, _cb](){
 
-                auto& task = static_cast<DownloadTileTask&>(*_task);
+                auto& task = static_cast<BinaryTileTask&>(*_task);
                 task.rawTileData = std::make_shared<std::vector<char>>();
 
                 getTileData(_task->tileId(), *task.rawTileData);
