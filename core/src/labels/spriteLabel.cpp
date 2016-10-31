@@ -90,7 +90,6 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
                 position.y = 1 - m_projected[0].y;
                 position *= halfScreen;
                 position += m_options.offset;
-                position += m_anchor;
 
                 m_projected[1].x = _viewState.viewportSize.x;
                 m_projected[1].y = _viewState.viewportSize.y;
@@ -135,7 +134,7 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
 
         if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
 
-        m_obb = OBB(m_screenTransform.position, m_screenTransform.rotation, dim.x, dim.y);
+        m_obb = OBB(m_screenTransform.position + m_anchor, m_screenTransform.rotation, dim.x, dim.y);
     }
 }
 
