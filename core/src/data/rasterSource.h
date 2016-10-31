@@ -33,6 +33,8 @@ public:
                  int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
                  TextureOptions _options, bool genMipmap = false);
 
+    // TODO Is this always PNG or can it also be JPEG?
+    virtual const char* mimeType() override { return "image/png"; };
 
     void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb);
 
