@@ -6,8 +6,8 @@ namespace Tangram {
 
 class NetworkDataSource : public TileSource::DataSource {
 public:
-    NetworkDataSource(const std::string& _urlTemplate)
-        : m_urlTemplate(_urlTemplate) {}
+
+    NetworkDataSource(const std::string& _urlTemplate);
 
     bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
 
@@ -30,7 +30,7 @@ private:
 
     std::vector<TileID> m_pending;
 
-    size_t m_maxDownloads = 4;
+    size_t m_maxDownloads;
 
     std::mutex m_mutex;
 };

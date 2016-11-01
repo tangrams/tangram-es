@@ -2,7 +2,13 @@
 
 #include "log.h"
 
+#define MAX_DOWNLOADS 4
+
 namespace Tangram {
+
+NetworkDataSource::NetworkDataSource(const std::string& _urlTemplate)
+    : m_urlTemplate(_urlTemplate),
+      m_maxDownloads(MAX_DOWNLOADS) {}
 
 void NetworkDataSource::constructURL(const TileID& _tileCoord, std::string& _url) const {
     _url.assign(m_urlTemplate);
@@ -41,8 +47,6 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb
     }
 
     std::string url(constructURL(_task->tileId()));
-
-    //LOGW("network get: %s, downloads: %d", url.c_str(), m_pending.size());
 
     bool started = startUrlRequest(url,
         [this, cb = _cb, task = _task](std::vector<char>&& _rawData) mutable {

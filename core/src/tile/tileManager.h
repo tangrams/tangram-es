@@ -29,7 +29,6 @@ struct ViewState;
 class TileManager {
 
     const static size_t DEFAULT_CACHE_SIZE = 32*1024*1024; // 32 MB
-    const static int MAX_DOWNLOADS = 4;
 
 public:
 
