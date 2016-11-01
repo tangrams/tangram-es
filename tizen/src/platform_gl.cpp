@@ -271,4 +271,49 @@ void GL::deleteVertexArrays(GLsizei n, const GLuint *arrays) {
 void GL::genVertexArrays(GLsizei n, GLuint *arrays) {
     __evas_gl_glapi->glGenVertexArraysOES(n, arrays);
 }
+
+// Framebuffer
+void GL::bindFramebuffer(GLenum target, GLuint framebuffer) {
+    __evas_gl_glapi->glBindFramebuffer(target, framebuffer);
+}
+
+void GL::genFramebuffers(GLsizei n, GLuint *framebuffers) {
+    __evas_gl_glapi->glGenFramebuffers(n, framebuffers);
+}
+
+void GL::framebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
+                              GLuint texture, GLint level) {
+    __evas_gl_glapi->glFramebufferTexture2D(target, attachment, textarget, texture, level);
+}
+
+void GL::renderbufferStorage(GLenum target, GLenum internalformat, GLsizei width,
+                             GLsizei height) {
+    __evas_gl_glapi->glRenderbufferStorage(target, internalformat, width, height);
+}
+
+void GL::framebufferRenderbuffer(GLenum target, GLenum attachment,
+                                 GLenum renderbuffertarget, GLuint renderbuffer) {
+    __evas_gl_glapi->glFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
+}
+
+void GL::genRenderbuffers(GLsizei n, GLuint *renderbuffers) {
+    __evas_gl_glapi->glGenRenderbuffers(n, renderbuffers);
+}
+
+void GL::bindRenderbuffer(GLenum target, GLuint renderbuffer) {
+    __evas_gl_glapi->glBindRenderbuffer(target, renderbuffer);
+}
+
+void GL::deleteFramebuffers(GLsizei n, const GLuint *framebuffers) {
+    __evas_gl_glapi->glDeleteFramebuffers(n, framebuffers);
+}
+
+void GL::deleteRenderbuffers(GLsizei n, const GLuint *renderbuffers) {
+    __evas_gl_glapi->glDeleteRenderbuffers(n, renderbuffers);
+}
+
+GLenum GL::checkFramebufferStatus(GLenum target) {
+    return __evas_gl_glapi->glCheckFramebufferStatus(target);
+}
+
 }
