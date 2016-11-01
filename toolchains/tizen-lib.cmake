@@ -76,7 +76,8 @@ target_include_directories(${LIB_NAME}
 
 target_compile_options(${LIB_NAME}
   PUBLIC
-  -fPIC)
+  -fPIC
+  -Wl,-z,defs)
 
 # SET(CMAKE_INSTALL_PREFIX /usr)
 # SET(PREFIX ${CMAKE_INSTALL_PREFIX})
