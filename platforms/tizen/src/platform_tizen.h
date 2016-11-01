@@ -1,15 +1,3 @@
-#if 0
-#pragma once
-
-#include "platform.h"
-
-bool shouldRender();
-
-void initUrlRequests(const char* proxyAddress);
-void stopUrlRequests();
-
-#endif
-
 #pragma once
 
 #include "platform.h"
@@ -17,8 +5,6 @@ void stopUrlRequests();
 
 #include <functional>
 #include <Evas_GL.h>
-
-typedef struct _FcConfig    FcConfig;
 
 namespace Tangram {
 
@@ -56,10 +42,6 @@ protected:
     std::function<void()> m_renderCallbackFunction = nullptr;
 
     mutable bool m_update = false;
-
-    mutable std::vector<std::string> m_fallbackFonts;
-    mutable FcConfig* m_fcConfig = nullptr;
-
 };
 
 } // namespace Tangram
