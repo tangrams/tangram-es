@@ -77,6 +77,10 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     double screenPosition[2];
     if (self.map->lngLatToScreenPosition(lngLat.longitude, lngLat.latitude,
         &screenPosition[0], &screenPosition[1])) {
+
+        screenPosition[0] /= self.pixelScale;
+        screenPosition[1] /= self.pixelScale;
+
         return CGPointMake((CGFloat)screenPosition[0], (CGFloat)screenPosition[1]);
     }
 
@@ -110,14 +114,14 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     screenPosition.x *= self.pixelScale;
     screenPosition.y *= self.pixelScale;
 
-    self.map->pickFeaturesAt(screenPosition.x, screenPosition.y, [self](const auto& items) {
+    self.map->pickFeaturesAt(screenPosition.x, screenPosition.y, [screenPosition, self](const auto& items) {
         NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
-        CGPoint position = CGPointMake(0.0, 0.0);
+        CGPoint position = CGPointMake(screenPosition.x / self.pixelScale, screenPosition.y / self.pixelScale);
 
         if (items.size() > 0) {
             const auto& result = items[0];
             const auto& properties = result.properties;
-            position = CGPointMake(result.position[0], result.position[1]);
+            position = CGPointMake(result.position[0] / self.pixelScale, result.position[1] / self.pixelScale);
 
             for (const auto& item : properties->items()) {
                 NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
