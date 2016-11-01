@@ -73,6 +73,7 @@ public class Marker {
         BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
         bitmapDrawable.setTargetDensity(DisplayMetrics.DENSITY_DEFAULT);
         Bitmap bitmap = bitmapDrawable.getBitmap();
+        bitmap.setDensity(DisplayMetrics.DENSITY_DEFAULT);
         return setBitmap(bitmap);
     }
 
