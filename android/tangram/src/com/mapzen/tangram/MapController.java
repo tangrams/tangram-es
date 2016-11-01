@@ -3,7 +3,6 @@ package com.mapzen.tangram;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
-import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.util.DisplayMetrics;
@@ -14,7 +13,6 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
-import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -671,8 +669,8 @@ public class MapController implements Renderer {
      */
     public boolean removeMarker(Marker marker) {
         checkPointer(mapPointer);
-        checkPointer(marker.pointer);
-        return nativeMarkerRemove(mapPointer, marker.pointer);
+        checkPointer(marker.markerId);
+        return nativeMarkerRemove(mapPointer, marker.markerId);
     }
 
     /**

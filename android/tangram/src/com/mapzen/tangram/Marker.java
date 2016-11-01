@@ -17,19 +17,19 @@ import com.mapzen.tangram.geometry.Polyline;
 public class Marker {
 
     Context context;
-    long pointer = 0;
+    long markerId = 0;
     MapController map;
     boolean visible = true;
 
     /**
      * Package private constructor for creating a new {@link Marker}.
      * @param context the context to use for decoding bitmap resources
-     * @param pointer the marker id
+     * @param markerId the marker id
      * @param map the map this marker is added to
      */
-    Marker(Context context, long pointer, MapController map) {
+    Marker(Context context, long markerId, MapController map) {
         this.context = context;
-        this.pointer = pointer;
+        this.markerId = markerId;
         this.map = map;
     }
 
@@ -45,7 +45,7 @@ public class Marker {
      * @return whether the style was successfully set
      */
     public boolean setStyling(String styleStr) {
-        return map.setMarkerStyling(pointer, styleStr);
+        return map.setMarkerStyling(markerId, styleStr);
     }
 
     /**
@@ -92,7 +92,7 @@ public class Marker {
             abgr[i] = pix1;
         }
 
-        return map.setMarkerBitmap(pointer, width, height, abgr);
+        return map.setMarkerBitmap(markerId, width, height, abgr);
     }
 
     /**
@@ -101,7 +101,7 @@ public class Marker {
      * @return whether the point was successfully set
      */
     public boolean setPoint(LngLat point) {
-        return map.setMarkerPoint(pointer, point.longitude, point.latitude);
+        return map.setMarkerPoint(markerId, point.longitude, point.latitude);
     }
 
     /**
@@ -115,7 +115,7 @@ public class Marker {
         if (point == null) {
             return false;
         }
-        return map.setMarkerPointEased(pointer, point.longitude, point.latitude, duration, ease);
+        return map.setMarkerPointEased(markerId, point.longitude, point.latitude, duration, ease);
     }
 
     /**
@@ -128,7 +128,7 @@ public class Marker {
         if (polyline == null) {
             return false;
         }
-        return map.setMarkerPolyline(pointer, polyline.getCoordinateArray(),
+        return map.setMarkerPolyline(markerId, polyline.getCoordinateArray(),
                 polyline.getCoordinateArray().length/2);
     }
 
@@ -142,7 +142,7 @@ public class Marker {
         if (polygon == null) {
             return false;
         }
-        return map.setMarkerPolygon(pointer, polygon.getCoordinateArray(),
+        return map.setMarkerPolygon(markerId, polygon.getCoordinateArray(),
                 polygon.getRingArray(), polygon.getRingArray().length);
     }
 
@@ -152,7 +152,7 @@ public class Marker {
      * @return whether the marker's visibility was successfully set
      */
     public boolean setVisible(boolean visible) {
-        boolean success = map.setMarkerVisible(pointer, visible);
+        boolean success = map.setMarkerVisible(markerId, visible);
         if (success) {
             this.visible = visible;
         }
@@ -165,7 +165,7 @@ public class Marker {
      * @return whether the marker's draw order was successfully set
      */
     public boolean setDrawOrder(int drawOrder) {
-        return map.setMarkerDrawOrder(pointer, drawOrder);
+        return map.setMarkerDrawOrder(markerId, drawOrder);
     }
 
     /**

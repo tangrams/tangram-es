@@ -20,7 +20,7 @@ public class MapData {
     /**
      * For package-internal use only; create a new {@code MapData}
      * @param name The name of the associated data source
-     * @param pointer The pointer to the native data source, encoded as a long
+     * @param pointer The markerId to the native data source, encoded as a long
      * @param map The {@code MapController} associated with this data source
      */
     MapData(String name, long pointer, MapController map) {
