@@ -9,7 +9,12 @@
 
 #import <UIKit/UIKit.h>
 #import <GLKit/GLKit.h>
-#import "TGMapViewDelegate.h"
+
+@class TGMapViewController;
+
+#import "TGGeoPoint.h"
+#import "TGGeoPolygon.h"
+#import "TGGeoPolyline.h"
 
 typedef NS_ENUM(NSInteger, TGCameraType) {
     TGCameraTypePerspective = 0,
@@ -17,33 +22,35 @@ typedef NS_ENUM(NSInteger, TGCameraType) {
     TGCameraTypeFlat
 };
 
-typedef NS_ENUM(NSInteger, TGEaseType){
+typedef NS_ENUM(NSInteger, TGEaseType) {
     TGEaseTypeLinear = 0,
     TGEaseTypeCubic,
     TGEaseTypeQuint,
     TGEaseTypeSine
 };
 
-typedef struct {
-    double longitude;
-    double latitude;
-} TGGeoPoint;
+typedef uint32_t TGMapMarkerId;
 
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol TGRecognizerDelegate <NSObject>
 @optional
-- (void)recognizer:(UIGestureRecognizer *)recognizer didRecognizeSingleTap:(CGPoint)location;
-- (void)recognizer:(UIGestureRecognizer *)recognizer didRecognizeDoubleTap:(CGPoint)location;
-- (void)recognizer:(UIGestureRecognizer *)recognizer didRecognizePanGesture:(CGPoint)location;
-- (void)recognizer:(UIGestureRecognizer *)recognizer didRecognizePinchGesture:(CGPoint)location;
-- (void)recognizer:(UIGestureRecognizer *)recognizer didRecognizeRotationGesture:(CGPoint)location;
-- (void)recognizer:(UIGestureRecognizer *)recognizer didRecognizeShoveGesture:(CGPoint)location;
+- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeSingleTap:(CGPoint)location;
+- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeDoubleTap:(CGPoint)location;
+- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizePanGesture:(CGPoint)location;
+- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizePinchGesture:(CGPoint)location;
+- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeRotationGesture:(CGPoint)location;
+- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeShoveGesture:(CGPoint)location;
+@end
+
+@protocol TGMapViewDelegate <NSObject>
+@optional
+- (void)mapView:(TGMapViewController*)mapView didLoadSceneAsync:(NSString*)scene;
+- (void)mapView:(TGMapViewController*)mapView didSelectFeatures:(NSDictionary*)features atScreenPosition:(CGPoint)position;
 @end
 
 NS_ASSUME_NONNULL_END
 
-struct TileID;
 @interface TGMapViewController : GLKViewController <UIGestureRecognizerDelegate>
 
 @property (assign, nonatomic) BOOL continuous;
@@ -57,9 +64,29 @@ struct TileID;
 @property (assign, nonatomic) float rotation;
 @property (assign, nonatomic) float tilt;
 
-- (void)renderOnce;
-
 NS_ASSUME_NONNULL_BEGIN
+
+#pragma mark Marker interface
+
+- (void)markerRemoveAll;
+
+- (TGMapMarkerId)markerAdd;
+
+- (BOOL)markerSetStyling:(TGMapMarkerId)identifier styling:(NSString *)styling;
+
+- (BOOL)markerSetPoint:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate;
+
+- (BOOL)markerSetPointEased:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate duration:(float)duration easeType:(TGEaseType)ease;
+
+- (BOOL)markerSetPolyline:(TGMapMarkerId)identifier polyline:(TGGeoPolyline *)polyline;
+
+- (BOOL)markerSetPolygon:(TGMapMarkerId)identifier polygon:(TGGeoPolygon *)polygon;
+
+- (BOOL)markerSetVisible:(TGMapMarkerId)identifier visible:(BOOL)visible;
+
+- (BOOL)markerRemove:(TGMapMarkerId)marker;
+
+#pragma mark Scene loading - updates interface
 
 - (void)loadSceneFile:(NSString*)path;
 
@@ -67,15 +94,23 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value;
 
-NS_ASSUME_NONNULL_END
+#pragma mark Feature picking interface
 
 - (void)pickFeaturesAt:(CGPoint)screenPosition;
 
+#pragma mark Map View lifecycle
+
 - (void)requestRender;
+
+- (void)renderOnce;
+
+#pragma mark Longitude/Latitude - Screen position conversions
 
 - (CGPoint)lngLatToScreenPosition:(TGGeoPoint)lngLat;
 
 - (TGGeoPoint)screenPositionToLngLat:(CGPoint)screenPosition;
+
+#pragma mark Map View animations - Position interface
 
 - (void)animateToPosition:(TGGeoPoint)position withDuration:(float)seconds;
 
@@ -92,5 +127,7 @@ NS_ASSUME_NONNULL_END
 - (void)animateToTilt:(float)radians withDuration:(float)seconds;
 
 - (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType;
+
+NS_ASSUME_NONNULL_END
 
 @end

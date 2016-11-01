@@ -8,9 +8,14 @@
 //
 
 #import "TGMapViewController.h"
+#import "Helpers.h"
+
 #include "platform_ios.h"
 #include "data/propertyItem.h"
 #include "tangram.h"
+
+__CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
+__CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 @interface TGMapViewController ()
 
@@ -22,20 +27,21 @@
 
 @end
 
-
 @implementation TGMapViewController
 
-- (void)loadSceneFile:(NSString*)path {
-    if (!self.map) {
-        return;
-    }
+#pragma mark Scene loading interface
+
+- (void)loadSceneFile:(NSString*)path
+{
+    if (!self.map) { return; }
 
     self.scenePath = path;
     self.map->loadScene([path UTF8String]);
     self.renderRequested = YES;
 }
 
-- (void)loadSceneFileAsync:(NSString*)path {
+- (void)loadSceneFileAsync:(NSString*)path
+{
     if (!self.map) { return; }
 
     self.scenePath = path;
@@ -51,19 +57,19 @@
     self.map->loadSceneAsync([path UTF8String], false, onReadyCallback, nullptr);
 }
 
-- (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value {
+#pragma mark Scene updates
+
+- (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value
+{
     if (!self.map) { return; }
 
     self.map->queueSceneUpdate([componentPath UTF8String], [componentPath UTF8String]);
 }
 
-- (void)requestRender {
-    if (!self.map) { return; }
+#pragma mark Longitude/Latitude - Screen position conversions
 
-    self.renderRequested = YES;
-}
-
-- (CGPoint)lngLatToScreenPosition:(TGGeoPoint)lngLat {
+- (CGPoint)lngLatToScreenPosition:(TGGeoPoint)lngLat
+{
     static const CGPoint nullCGPoint = {(CGFloat)NAN, (CGFloat)NAN};
 
     if (!self.map) { return nullCGPoint; }
@@ -77,10 +83,14 @@
     return nullCGPoint;
 }
 
-- (TGGeoPoint)screenPositionToLngLat:(CGPoint)screenPosition {
+- (TGGeoPoint)screenPositionToLngLat:(CGPoint)screenPosition
+{
     static const TGGeoPoint nullTangramGeoPoint = {NAN, NAN};
 
     if (!self.map) { return nullTangramGeoPoint; }
+
+    screenPosition.x *= self.pixelScale;
+    screenPosition.y *= self.pixelScale;
 
     TGGeoPoint lngLat;
     if (self.map->screenPositionToLngLat(screenPosition.x, screenPosition.y,
@@ -91,17 +101,23 @@
     return nullTangramGeoPoint;
 }
 
-- (void)pickFeaturesAt:(CGPoint)screenPosition {
+#pragma mark Feature picking
+
+- (void)pickFeaturesAt:(CGPoint)screenPosition
+{
     if (!self.map && !self.mapViewDelegate) { return; }
 
-    self.map->pickFeaturesAt(screenPosition.x, screenPosition.y, [self](const auto& items) {
+    screenPosition.x *= self.pixelScale;
+    screenPosition.y *= self.pixelScale;
+
+    self.map->pickFeaturesAt(screenPosition.x, screenPosition.y, [screenPosition, self](const auto& items) {
         NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
-        CGPoint position = CGPointMake(0.0, 0.0);
+        CGPoint position = CGPointMake(screenPosition.x / self.pixelScale, screenPosition.y / self.pixelScale);
 
         if (items.size() > 0) {
             const auto& result = items[0];
             const auto& properties = result.properties;
-            position = CGPointMake(result.position[0], result.position[1]);
+            position = CGPointMake(result.position[0] / self.pixelScale, result.position[1] / self.pixelScale);
 
             for (const auto& item : properties->items()) {
                 NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
@@ -116,124 +132,210 @@
     });
 }
 
-- (void)setPosition:(TGGeoPoint)position {
-    if (self.map) {
-        self.map->setPosition(position.longitude, position.latitude);
-    }
+#pragma mark Marker implementation
+
+- (TGMapMarkerId)markerAdd
+{
+    if (!self.map) { return 0; }
+
+    return (TGMapMarkerId)self.map->markerAdd();
 }
 
-- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)duration {
+- (BOOL)markerRemove:(TGMapMarkerId)marker
+{
+    if (!self.map) { return NO; }
+
+    return self.map->markerRemove(marker);
+}
+
+- (void)markerRemoveAll
+{
+    if (!self.map) { return; }
+
+    self.map->markerRemoveAll();
+}
+
+- (BOOL)markerSetStyling:(TGMapMarkerId)identifier styling:(NSString *)styling
+{
+    if (!self.map) { return NO; }
+
+    return self.map->markerSetStyling(identifier, [styling UTF8String]);
+}
+
+- (BOOL)markerSetPoint:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate
+{
+    if (!self.map || !identifier) { return NO; }
+
+    Tangram::LngLat lngLat(coordinate.longitude, coordinate.latitude);
+
+    return self.map->markerSetPoint(identifier, lngLat);
+}
+
+- (BOOL)markerSetPointEased:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate duration:(float)duration easeType:(TGEaseType)ease
+{
+    if (!self.map || !identifier) { return NO; }
+
+    Tangram::LngLat lngLat(coordinate.longitude, coordinate.latitude);
+
+    return self.map->markerSetPointEased(identifier, lngLat, duration, [Helpers convertEaseTypeFrom:ease]);
+}
+
+- (BOOL)markerSetPolyline:(TGMapMarkerId)identifier polyline:(TGGeoPolyline *)polyline
+{
+    if (polyline.count < 2 || !identifier) { return NO; }
+
+    return self.map->markerSetPolyline(identifier, reinterpret_cast<Tangram::LngLat*>([polyline data]), polyline.count);
+}
+
+- (BOOL)markerSetPolygon:(TGMapMarkerId)identifier polygon:(TGGeoPolygon *)polygon;
+{
+    if (polygon.count < 3 || !identifier) { return NO; }
+
+    using Ring = std::vector<TGGeoPoint>;
+    auto polygonRings = static_cast<std::vector<Ring>*>([polygon data]);
+
+    std::vector<Tangram::LngLat> coordinates;
+    coordinates.reserve(polygon.count);
+
+    std::vector<int> rings;
+    rings.reserve(polygonRings->size());
+
+    for (const auto& ring : *polygonRings) {
+        rings.push_back(ring.size());
+        for (const auto& coord : ring) {
+            coordinates.push_back({coord.longitude, coord.latitude});
+        }
+    }
+
+    return self.map->markerSetPolygon(identifier, coordinates.data(), rings.data(), rings.size());
+}
+
+- (BOOL)markerSetVisible:(TGMapMarkerId)identifier visible:(BOOL)visible
+{
+    if (!self.map) { return NO; }
+
+    return self.map->markerSetVisible(identifier, visible);
+}
+
+#pragma mark Map position implementation
+
+- (void)setPosition:(TGGeoPoint)position {
+    if (!self.map) { return; }
+
+    self.map->setPosition(position.longitude, position.latitude);
+}
+
+- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)duration
+{
     [self animateToPosition:position withDuration:duration withEaseType:TGEaseTypeCubic];
 }
 
-- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)duration withEaseType:(TGEaseType)easeType {
+- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)duration withEaseType:(TGEaseType)easeType
+{
+    if (!self.map) { return; }
 
-    if (self.map) {
-        Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
-        self.map->setPositionEased(position.longitude, position.latitude, duration, ease);
-    }
+    Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
+    self.map->setPositionEased(position.longitude, position.latitude, duration, ease);
 }
 
-- (TGGeoPoint)position {
+- (TGGeoPoint)position
+{
+    static const TGGeoPoint nullTangramGeoPoint = {NAN, NAN};
+
+    if (!self.map) { return nullTangramGeoPoint; }
+
     TGGeoPoint returnVal;
-    if (self.map){
-        self.map->getPosition(returnVal.longitude, returnVal.latitude);
-        return returnVal;
-    }
-    //Null Island
-    returnVal.latitude = 0.0;
-    returnVal.longitude = 0.0;
+
+    self.map->getPosition(returnVal.longitude, returnVal.latitude);
+
     return returnVal;
 }
 
-- (void)setZoom:(float)zoom {
-    if (self.map) {
-        self.map->setZoom(zoom);
-    }
+- (void)setZoom:(float)zoom
+{
+    if (!self.map) { return; }
+
+    self.map->setZoom(zoom);
 }
 
-- (Tangram::EaseType)convertEaseTypeFrom:(TGEaseType)ease {
-    switch (ease) {
-        case TGEaseTypeLinear:
-            return Tangram::EaseType::linear;
-        case TGEaseTypeSine:
-            return Tangram::EaseType::sine;
-        case TGEaseTypeQuint:
-            return Tangram::EaseType::quint;
-        case TGEaseTypeCubic:
-            return Tangram::EaseType::cubic;
-        default:
-            return Tangram::EaseType::cubic;
-    }
-}
-
-- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration {
+- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration
+{
     [self animateToZoomLevel:zoomLevel withDuration:duration withEaseType:TGEaseTypeCubic];
 }
 
-- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration withEaseType:(TGEaseType)easeType {
-    if (self.map) {
-        Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
-        self.map->setZoomEased(zoomLevel, duration, ease);
-    }
+- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration withEaseType:(TGEaseType)easeType
+{
+    if (!self.map) { return; }
+
+    Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
+    self.map->setZoomEased(zoomLevel, duration, ease);
 }
 
-- (float)zoom {
-    if (self.map) {
-        return self.map->getZoom();
-    }
-    return 0.0;
+- (float)zoom
+{
+    if (!self.map) { return 0.0; }
+
+    return self.map->getZoom();
 }
 
-- (void)animateToRotation:(float)radians withDuration:(float)seconds {
+- (void)animateToRotation:(float)radians withDuration:(float)seconds
+{
     [self animateToRotation:radians withDuration:seconds withEaseType:TGEaseTypeCubic];
 }
 
-- (void)animateToRotation:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType {
-    if (self.map) {
-        Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
-        self.map->setRotationEased(radians, seconds, ease);
-    }
+- (void)animateToRotation:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType
+{
+    if (!self.map) { return; }
+
+    Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
+    self.map->setRotationEased(radians, seconds, ease);
 }
 
-- (void)setRotation:(float)radians {
-    if (self.map) {
-        self.map->setRotation(radians);
-    }
+- (void)setRotation:(float)radians
+{
+    if (!self.map) { return; }
+
+    self.map->setRotation(radians);
 }
 
-- (float)rotation {
-    if (self.map) {
-        return self.map->getRotation();
-    }
-    return 0.0;
+- (float)rotation
+{
+    if (!self.map) { return 0.0; }
+
+    return self.map->getRotation();
 }
 
-- (float)tilt {
-    if (self.map) {
-        return self.map->getTilt();
-    }
-    return 0.0;
+- (float)tilt
+{
+    if (!self.map) { return 0.0; }
+
+    return self.map->getTilt();
 }
 
-- (void)setTilt:(float)radians {
-    if (self.map) {
-        self.map->setTilt(radians);
-    }
+- (void)setTilt:(float)radians
+{
+    if (!self.map) { return; }
+
+    self.map->setTilt(radians);
 }
 
-- (void)animateToTilt:(float)radians withDuration:(float)seconds {
-  [self animateToTilt:radians withDuration:seconds withEaseType:TGEaseType::TGEaseTypeCubic];
+- (void)animateToTilt:(float)radians withDuration:(float)seconds
+{
+    [self animateToTilt:radians withDuration:seconds withEaseType:TGEaseType::TGEaseTypeCubic];
 }
 
-- (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType {
-  if (self.map) {
-    Tangram::EaseType ease = [self convertEaseTypeFrom:easeType];
+- (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType
+{
+    if (!self.map) { return; }
+
+    Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
     self.map->setTiltEased(radians, seconds, ease);
-  }
 }
 
-- (TGCameraType)cameraType {
+#pragma mark Camera type
+
+- (TGCameraType)cameraType
+{
     switch (self.map->getCameraType()) {
         case 0:
             return TGCameraTypePerspective;
@@ -246,38 +348,17 @@
     }
 }
 
-- (void)setCameraType:(TGCameraType)cameraType {
-    if (self.map){
-        self.map->setCameraType(cameraType);
-    }
-}
-
-- (void)viewDidLoad
+- (void)setCameraType:(TGCameraType)cameraType
 {
-    [super viewDidLoad];
+    if (!self.map){ return; }
 
-    self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-    if (!self.context) {
-        NSLog(@"Failed to create ES context");
-    }
-    self.pixelScale = [[UIScreen mainScreen] scale];
-    self.renderRequested = YES;
-    self.continuous = NO;
-
-    init(self);
-
-    GLKView *view = (GLKView *)self.view;
-    view.context = self.context;
-    view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
-    view.drawableMultisample = GLKViewDrawableMultisample4X;
-
-    [self setupGestureRecognizers];
-    [self setupGL];
-
+    self.map->setCameraType(cameraType);
 }
 
-- (void)setupGestureRecognizers {
+#pragma mark Gestures
 
+- (void)setupGestureRecognizers
+{
     /* Construct Gesture Recognizers */
     //1. Tap
     UITapGestureRecognizer *tapRecognizer = [[UITapGestureRecognizer alloc]
@@ -330,7 +411,8 @@
     self.map->handlePanGesture(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
-- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+{
     // make shove gesture exclusive
     if ([gestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
         return [gestureRecognizer numberOfTouches] != 2;
@@ -341,77 +423,111 @@
     return YES;
 }
 
-- (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer {
+- (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer
+{
     CGPoint location = [tapRecognizer locationInView:self.view];
-    self.map->handleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizeSingleTap:)]) {
-        [self.gestureDelegate recognizer:tapRecognizer didRecognizeSingleTap:[tapRecognizer locationInView:self.view]];
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeSingleTap:)]) {
+        [self.gestureDelegate mapView:self recognizer:tapRecognizer didRecognizeSingleTap:location];
     }
 }
 
-- (void)respondToDoubleTapGesture:(UITapGestureRecognizer *)doubleTapRecognizer {
+- (void)respondToDoubleTapGesture:(UITapGestureRecognizer *)doubleTapRecognizer
+{
     CGPoint location = [doubleTapRecognizer locationInView:self.view];
-    self.map->handleDoubleTapGesture(location.x * self.pixelScale, location.y * self.pixelScale);
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizeDoubleTap:)]) {
-        [self.gestureDelegate recognizer:doubleTapRecognizer didRecognizeDoubleTap:[doubleTapRecognizer locationInView:self.view]];
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeDoubleTap:)]) {
+        [self.gestureDelegate mapView:self recognizer:doubleTapRecognizer didRecognizeDoubleTap:location];
     }
 }
 
-- (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer {
+- (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer
+{
     CGPoint displacement = [panRecognizer translationInView:self.view];
-    CGPoint velocity = [panRecognizer velocityInView:self.view];
-    CGPoint end = [panRecognizer locationInView:self.view];
-    CGPoint start = {end.x - displacement.x, end.y - displacement.y};
 
-    [panRecognizer setTranslation:CGPointZero inView:self.view];
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizePanGesture:)]) {
+        [self.gestureDelegate mapView:self recognizer:panRecognizer didRecognizePanGesture:displacement];
+    } else {
+        CGPoint velocity = [panRecognizer velocityInView:self.view];
+        CGPoint end = [panRecognizer locationInView:self.view];
+        CGPoint start = {end.x - displacement.x, end.y - displacement.y};
 
-    switch (panRecognizer.state) {
-        case UIGestureRecognizerStateChanged:
-            self.map->handlePanGesture(start.x * self.pixelScale, start.y * self.pixelScale, end.x * self.pixelScale, end.y * self.pixelScale);
-            break;
-        case UIGestureRecognizerStateEnded:
-            self.map->handleFlingGesture(end.x * self.pixelScale, end.y * self.pixelScale, velocity.x * self.pixelScale, velocity.y * self.pixelScale);
-            break;
-        default:
-            break;
-    }
+        [panRecognizer setTranslation:CGPointZero inView:self.view];
 
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizePanGesture:)]) {
-        [self.gestureDelegate recognizer:panRecognizer didRecognizePanGesture:[panRecognizer locationInView:self.view]];
+        switch (panRecognizer.state) {
+            case UIGestureRecognizerStateChanged:
+                self.map->handlePanGesture(start.x * self.pixelScale, start.y * self.pixelScale, end.x * self.pixelScale, end.y * self.pixelScale);
+                break;
+            case UIGestureRecognizerStateEnded:
+                self.map->handleFlingGesture(end.x * self.pixelScale, end.y * self.pixelScale, velocity.x * self.pixelScale, velocity.y * self.pixelScale);
+                break;
+            default:
+                break;
+        }
     }
 }
 
-- (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer {
+- (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer
+{
     CGPoint location = [pinchRecognizer locationInView:self.view];
-    CGFloat scale = pinchRecognizer.scale;
-    [pinchRecognizer setScale:1.0];
-    self.map->handlePinchGesture(location.x * self.pixelScale, location.y * self.pixelScale, scale, pinchRecognizer.velocity);
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizePinchGesture:)]) {
-        [self.gestureDelegate recognizer:pinchRecognizer didRecognizePinchGesture:[pinchRecognizer locationInView:self.view]];
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizePinchGesture:)]) {
+        [self.gestureDelegate mapView:self recognizer:pinchRecognizer didRecognizePinchGesture:location];
+    } else {
+        CGFloat scale = pinchRecognizer.scale;
+        [pinchRecognizer setScale:1.0];
+        self.map->handlePinchGesture(location.x * self.pixelScale, location.y * self.pixelScale, scale, pinchRecognizer.velocity);
     }
 }
 
-- (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer {
+- (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer
+{
     CGPoint position = [rotationRecognizer locationInView:self.view];
     CGFloat rotation = rotationRecognizer.rotation;
     [rotationRecognizer setRotation:0.0];
-    self.map->handleRotateGesture(position.x * self.pixelScale, position.y * self.pixelScale, rotation);
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizeRotationGesture:)]) {
-        [self.gestureDelegate recognizer:rotationRecognizer didRecognizeRotationGesture:[rotationRecognizer locationInView:self.view]];
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeRotationGesture:)]) {
+        [self.gestureDelegate mapView:self recognizer:rotationRecognizer didRecognizeRotationGesture:position];
+    } else {
+        self.map->handleRotateGesture(position.x * self.pixelScale, position.y * self.pixelScale, rotation);
     }
 }
 
-- (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer {
+- (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer
+{
     CGPoint displacement = [shoveRecognizer translationInView:self.view];
     [shoveRecognizer setTranslation:{0, 0} inView:self.view];
 
     // don't trigger shove on single touch gesture
     if ([shoveRecognizer numberOfTouches] == 2) {
-        self.map->handleShoveGesture(displacement.y);
         if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizeShoveGesture:)]) {
-            [self.gestureDelegate recognizer:shoveRecognizer didRecognizeShoveGesture:[shoveRecognizer locationInView:self.view]];
+            [self.gestureDelegate mapView:self recognizer:shoveRecognizer didRecognizeShoveGesture:displacement];
+        } else {
+            self.map->handleShoveGesture(displacement.y);
         }
     }
+}
+
+#pragma mark Map view lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+
+    self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+    if (!self.context) {
+        NSLog(@"Failed to create ES context");
+    }
+    self.pixelScale = [[UIScreen mainScreen] scale];
+    self.renderRequested = YES;
+    self.continuous = NO;
+
+    init(self);
+
+    GLKView *view = (GLKView *)self.view;
+    view.context = self.context;
+    view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
+    view.drawableMultisample = GLKViewDrawableMultisample4X;
+
+    [self setupGestureRecognizers];
+    [self setupGL];
+
 }
 
 - (void)dealloc
@@ -457,16 +573,24 @@
 
 - (void)tearDownGL
 {
-    if (self.map) {
-        delete self.map;
-        self.map = nullptr;
-    }
+    if (!self.map) { return; }
+
+    delete self.map;
+    self.map = nullptr;
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
     self.map->resize(size.width * self.pixelScale, size.height * self.pixelScale);
+
     [self renderOnce];
+}
+
+- (void)requestRender
+{
+    if (!self.map) { return; }
+
+    self.renderRequested = YES;
 }
 
 - (void)renderOnce
@@ -483,8 +607,6 @@
     self.paused = !c;
 }
 
-#pragma mark - GLKView and GLKViewController delegate methods
-
 - (void)update
 {
     self.map->update([self timeSinceLastUpdate]);
@@ -492,6 +614,7 @@
     if (!self.continuous && !self.renderRequested) {
         self.paused = YES;
     }
+
     self.renderRequested = NO;
 }
 

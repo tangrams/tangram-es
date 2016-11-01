@@ -208,7 +208,7 @@ TIZEN_X86_CMAKE_PARAMS = \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
 
 clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux clean-shaders \
-	clean-tizen-arm clean-tizen-x86 clean-ios-framework clean-ios-framework-sim
+	clean-tizen-arm clean-tizen-x86
 
 clean-android:
 	rm -rf ${ANDROID_BUILD_DIR}
@@ -221,7 +221,7 @@ clean-android:
 clean-osx:
 	rm -rf ${OSX_BUILD_DIR}
 
-clean-ios:
+clean-ios: clean-ios-framework clean-ios-framework-sim clean-ios-framework-universal
 	rm -rf ${IOS_BUILD_DIR}
 
 clean-rpi:
@@ -253,6 +253,9 @@ clean-ios-framework:
 
 clean-ios-framework-sim:
 	rm -rf ${IOS_FRAMEWORK_SIM_BUILD_DIR}
+
+clean-ios-framework-universal:
+	rm -rf ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}
 
 android: android-demo-apk
 	@echo "run: 'adb install -r android/demo/build/outputs/apk/demo-debug.apk'"
