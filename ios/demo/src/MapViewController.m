@@ -56,11 +56,16 @@
 
 @implementation MapViewControllerRecognizerDelegate
 
-- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeSingleTap:(CGPoint)location
+- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeSingleTapGesture:(CGPoint)location
 {
     NSLog(@"Did tap at %f %f", location.x, location.y);
 
-    [view pickFeaturesAt:location];
+    // [view pickFeaturesAt:location];
+}
+
+- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location
+{
+    NSLog(@"Did long press at %f %f", location.x, location.y);
 }
 
 @end
