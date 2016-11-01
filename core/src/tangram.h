@@ -262,6 +262,9 @@ public:
     // Run this task asynchronously to Tangram's main update loop.
     void runAsyncTask(std::function<void()> _task);
 
+    // Add a TTF blob file to the font context of the current scene
+    void addTTFblob(char* _data, size_t _size, const char* _family, const char* _style, const char* _weight);
+
 private:
 
     class Impl;

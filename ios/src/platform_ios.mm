@@ -7,9 +7,11 @@
 #import <fstream>
 #import <regex>
 
+#import "TGMapViewController.h"
+#import "CGFontConverter.h"
+
 #include "platform_ios.h"
 #include "log.h"
-#include "TGMapViewController.h"
 
 static TGMapViewController* viewController;
 static NSBundle* tangramFramework;
@@ -33,6 +35,10 @@ void init(TGMapViewController* _controller) {
 
     // Get handle to tangram framework
     tangramFramework = [NSBundle bundleWithIdentifier:@"com.mapzen.tangramMap"];
+
+    NSString* fontName = @"Helvetica";
+    CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)fontName);
+    NSData* data = [CGFontConverter fontDataForCGFont:fontRef];
 }
 
 void logMsg(const char* fmt, ...) {
