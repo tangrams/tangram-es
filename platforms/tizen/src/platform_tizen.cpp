@@ -20,6 +20,9 @@
 
 namespace Tangram {
 
+static std::vector<std::string> s_fallbackFonts;
+static FcConfig* s_fcConfig = nullptr;
+
 void logMsg(const char* fmt, ...) {
     va_list vl;
     va_start(vl, fmt);
@@ -62,10 +65,10 @@ void TizenPlatform::cancelUrlRequest(const std::string& _url) {
 
 void TizenPlatform::initPlatformFontSetup() const {
 
-    static bool m_platformFontsInit = false;
-    if (m_platformFontsInit) { return; }
+    static bool s_platformFontsInit = false;
+    if (s_platformFontsInit) { return; }
 
-    m_fcConfig = FcInitLoadConfigAndFonts();
+    s_fcConfig = FcInitLoadConfigAndFonts();
 
     std::string style = "Regular";
 
@@ -86,18 +89,18 @@ void TizenPlatform::initPlatformFontSetup() const {
         FcPatternAdd(pat, FC_LANG, fcLangValue, true);
         //FcPatternPrint(pat);
 
-        FcConfigSubstitute(m_fcConfig, pat, FcMatchPattern);
+        FcConfigSubstitute(s_fcConfig, pat, FcMatchPattern);
         FcDefaultSubstitute(pat);
 
         FcResult res;
-        FcPattern* font = FcFontMatch(m_fcConfig, pat, &res);
+        FcPattern* font = FcFontMatch(s_fcConfig, pat, &res);
         if (font) {
             FcChar8* file = nullptr;
             if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
                 // Make sure this font file is not previously added.
-                if (std::find(m_fallbackFonts.begin(), m_fallbackFonts.end(),
-                              reinterpret_cast<char*>(file)) == m_fallbackFonts.end()) {
-                    m_fallbackFonts.emplace_back(reinterpret_cast<char*>(file));
+                if (std::find(s_fallbackFonts.begin(), s_fallbackFonts.end(),
+                              reinterpret_cast<char*>(file)) == s_fallbackFonts.end()) {
+                    s_fallbackFonts.emplace_back(reinterpret_cast<char*>(file));
                 }
             }
             FcPatternDestroy(font);
@@ -105,7 +108,7 @@ void TizenPlatform::initPlatformFontSetup() const {
         FcPatternDestroy(pat);
     }
     FcStrListDone(fcLangList);
-    m_platformFontsInit = true;
+    s_platformFontsInit = true;
 }
 
 std::vector<FontSourceHandle> TizenPlatform::systemFontFallbacksHandle() const {
@@ -114,7 +117,7 @@ std::vector<FontSourceHandle> TizenPlatform::systemFontFallbacksHandle() const {
 
     std::vector<FontSourceHandle> handles;
 
-    for (auto& path : m_fallbackFonts) {
+    for (auto& path : s_fallbackFonts) {
         handles.emplace_back(path);
     }
 
@@ -126,7 +129,7 @@ std::string TizenPlatform::fontPath(const std::string& _name, const std::string&
 
     initPlatformFontSetup();
 
-    if (!m_fcConfig) {
+    if (!s_fcConfig) {
         return "";
     }
 
@@ -146,11 +149,11 @@ std::string TizenPlatform::fontPath(const std::string& _name, const std::string&
     FcPatternAdd(pattern, FC_WEIGHT, fcWeight, true);
     //FcPatternPrint(pattern);
 
-    FcConfigSubstitute(m_fcConfig, pattern, FcMatchPattern);
+    FcConfigSubstitute(s_fcConfig, pattern, FcMatchPattern);
     FcDefaultSubstitute(pattern);
 
     FcResult res;
-    FcPattern* font = FcFontMatch(m_fcConfig, pattern, &res);
+    FcPattern* font = FcFontMatch(s_fcConfig, pattern, &res);
     if (font) {
         FcChar8* file = nullptr;
         FcChar8* fontFamily = nullptr;
