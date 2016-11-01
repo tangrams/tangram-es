@@ -286,36 +286,40 @@
 
     /* Construct Gesture Recognizers */
     //1. Tap
-    UITapGestureRecognizer *tapRecognizer = [[UITapGestureRecognizer alloc]
+    UITapGestureRecognizer* tapRecognizer = [[UITapGestureRecognizer alloc]
                                              initWithTarget:self action:@selector(respondToTapGesture:)];
     tapRecognizer.numberOfTapsRequired = 1;
     // TODO: Figure a way to have a delay set for it not to tap gesture not to wait long enough for a doubletap gesture to be recognized
     tapRecognizer.delaysTouchesEnded = NO;
 
     //2. DoubleTap
-    UITapGestureRecognizer *doubleTapRecognizer = [[UITapGestureRecognizer alloc]
+    UITapGestureRecognizer* doubleTapRecognizer = [[UITapGestureRecognizer alloc]
                                                    initWithTarget:self action:@selector(respondToDoubleTapGesture:)];
     doubleTapRecognizer.numberOfTapsRequired = 2;
     // Distanle single tap when double tap occurs
     [tapRecognizer requireGestureRecognizerToFail:doubleTapRecognizer];
 
     //3. Pan
-    UIPanGestureRecognizer *panRecognizer = [[UIPanGestureRecognizer alloc]
+    UIPanGestureRecognizer* panRecognizer = [[UIPanGestureRecognizer alloc]
                                              initWithTarget:self action:@selector(respondToPanGesture:)];
     panRecognizer.maximumNumberOfTouches = 1;
 
     //4. Pinch
-    UIPinchGestureRecognizer *pinchRecognizer = [[UIPinchGestureRecognizer alloc]
+    UIPinchGestureRecognizer* pinchRecognizer = [[UIPinchGestureRecognizer alloc]
                                                  initWithTarget:self action:@selector(respondToPinchGesture:)];
 
     //5. Rotate
-    UIRotationGestureRecognizer *rotationRecognizer = [[UIRotationGestureRecognizer alloc]
+    UIRotationGestureRecognizer* rotationRecognizer = [[UIRotationGestureRecognizer alloc]
                                                        initWithTarget:self action:@selector(respondToRotationGesture:)];
 
     //6. Shove
-    UIPanGestureRecognizer *shoveRecognizer = [[UIPanGestureRecognizer alloc]
+    UIPanGestureRecognizer* shoveRecognizer = [[UIPanGestureRecognizer alloc]
                                                initWithTarget:self action:@selector(respondToShoveGesture:)];
     shoveRecognizer.minimumNumberOfTouches = 2;
+
+    //7. Long press
+    UILongPressGestureRecognizer* longPressRecognizer = [[UILongPressGestureRecognizer alloc]
+                                                         initWithTarget:self action:@selector(respondToLongPressGesture:)];
 
     // Use the delegate method 'shouldRecognizeSimultaneouslyWithGestureRecognizer' for gestures that can be concurrent
     panRecognizer.delegate = self;
@@ -329,6 +333,7 @@
     [self.view addGestureRecognizer:pinchRecognizer];
     [self.view addGestureRecognizer:rotationRecognizer];
     [self.view addGestureRecognizer:shoveRecognizer];
+    [self.view addGestureRecognizer:longPressRecognizer];
 }
 
 // Implement touchesBegan to catch down events
@@ -347,17 +352,24 @@
     return YES;
 }
 
+- (void)respondToLongPressGesture:(UILongPressGestureRecognizer *)longPressRecognizer {
+    CGPoint location = [longPressRecognizer locationInView:self.view];
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeLongPressGesture:)]) {
+        [self.gestureDelegate mapView:self recognizer:longPressRecognizer didRecognizeLongPressGesture:location];
+    }
+}
+
 - (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer {
     CGPoint location = [tapRecognizer locationInView:self.view];
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeSingleTap:)]) {
-        [self.gestureDelegate mapView:self recognizer:tapRecognizer didRecognizeSingleTap:location];
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeSingleTapGesture:)]) {
+        [self.gestureDelegate mapView:self recognizer:tapRecognizer didRecognizeSingleTapGesture:location];
     }
 }
 
 - (void)respondToDoubleTapGesture:(UITapGestureRecognizer *)doubleTapRecognizer {
     CGPoint location = [doubleTapRecognizer locationInView:self.view];
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeDoubleTap:)]) {
-        [self.gestureDelegate mapView:self recognizer:doubleTapRecognizer didRecognizeDoubleTap:location];
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeDoubleTapGesture:)]) {
+        [self.gestureDelegate mapView:self recognizer:doubleTapRecognizer didRecognizeDoubleTapGesture:location];
     }
 }
 
