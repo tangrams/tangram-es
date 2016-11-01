@@ -18,7 +18,7 @@ struct Color {
     Color(uint8_t _r, uint8_t _g, uint8_t _b, uint8_t _a) : r(_r), g(_g), b(_b), a(_a) {}
 
     glm::ivec4 asIVec4() {
-        return glm::vec4(r, g, b, a);
+        return glm::ivec4(r, g, b, a);
     }
 
     static Color mix(const Color& _x, const Color& _y, float _a) {
