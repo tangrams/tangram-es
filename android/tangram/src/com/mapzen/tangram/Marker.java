@@ -76,25 +76,6 @@ public class Marker {
         return setBitmap(bitmap);
     }
 
-    private boolean setBitmap(Bitmap bitmap) {
-        int width = bitmap.getScaledWidth(DisplayMetrics.DENSITY_DEFAULT);
-        int height = bitmap.getScaledHeight(DisplayMetrics.DENSITY_DEFAULT);
-
-        int[] argb = new int[width * height];
-        bitmap.getPixels(argb, 0, width, 0, 0, width, height);
-
-        int[] abgr = new int[width * height];
-        for (int i = 0; i < argb.length; i++) {
-            int pix = argb[i];
-            int pb = (pix >> 16) & 0xff;
-            int pr = (pix << 16) & 0x00ff0000;
-            int pix1 = (pix & 0xff00ff00) | pr | pb;
-            abgr[i] = pix1;
-        }
-
-        return map.setMarkerBitmap(markerId, width, height, abgr);
-    }
-
     /**
      * Sets the coordinate location, where the marker should be displayed.
      * @param point lat/lng location
@@ -174,5 +155,24 @@ public class Marker {
      */
     public boolean isVisible() {
         return visible;
+    }
+
+    private boolean setBitmap(Bitmap bitmap) {
+        int width = bitmap.getScaledWidth(DisplayMetrics.DENSITY_DEFAULT);
+        int height = bitmap.getScaledHeight(DisplayMetrics.DENSITY_DEFAULT);
+
+        int[] argb = new int[width * height];
+        bitmap.getPixels(argb, 0, width, 0, 0, width, height);
+
+        int[] abgr = new int[width * height];
+        for (int i = 0; i < argb.length; i++) {
+            int pix = argb[i];
+            int pb = (pix >> 16) & 0xff;
+            int pr = (pix << 16) & 0x00ff0000;
+            int pix1 = (pix & 0xff00ff00) | pr | pb;
+            abgr[i] = pix1;
+        }
+
+        return map.setMarkerBitmap(markerId, width, height, abgr);
     }
 }
