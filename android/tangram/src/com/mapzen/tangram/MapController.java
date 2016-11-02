@@ -658,8 +658,8 @@ public class MapController implements Renderer {
      */
     public Marker addMarker() {
         checkPointer(mapPointer);
-        long pointer = nativeMarkerAdd(mapPointer);
-        return new Marker(mapView.getContext(), pointer, this);
+        long markerId = nativeMarkerAdd(mapPointer);
+        return new Marker(mapView.getContext(), markerId, this);
     }
 
     /**
@@ -669,7 +669,7 @@ public class MapController implements Renderer {
      */
     public boolean removeMarker(Marker marker) {
         checkPointer(mapPointer);
-        checkPointer(marker.markerId);
+        checkId(marker.markerId);
         return nativeMarkerRemove(mapPointer, marker.markerId);
     }
 
@@ -766,51 +766,57 @@ public class MapController implements Renderer {
         }
     }
 
+    void checkId(long id) {
+        if (id <= 0) {
+            throw new RuntimeException("Tried to perform an operation on an invalid id! This means you may have used an object that has been disposed and is no longer valid.");
+        }
+    }
+
     boolean setMarkerStyling(long markerId, String styleStr) {
         checkPointer(mapPointer);
-        checkPointer(markerId);
+        checkId(markerId);
         return nativeMarkerSetStyling(mapPointer, markerId, styleStr);
     }
 
     boolean setMarkerBitmap(long markerId, int width, int height, int[] data) {
         checkPointer(mapPointer);
-        checkPointer(markerId);
+        checkId(markerId);
         return nativeMarkerSetBitmap(mapPointer, markerId, width, height, data);
     }
 
     boolean setMarkerPoint(long markerId, double lng, double lat) {
         checkPointer(mapPointer);
-        checkPointer(markerId);
+        checkId(markerId);
         return nativeMarkerSetPoint(mapPointer, markerId, lng, lat);
     }
 
     boolean setMarkerPointEased(long markerId, double lng, double lat, float duration, EaseType ease) {
         checkPointer(mapPointer);
-        checkPointer(markerId);
+        checkId(markerId);
         return nativeMarkerSetPointEased(mapPointer, markerId, lng, lat, duration, ease.ordinal());
     }
 
     boolean setMarkerPolyline(long markerId, double[] coordinates, int count) {
         checkPointer(mapPointer);
-        checkPointer(markerId);
+        checkId(markerId);
         return nativeMarkerSetPolyline(mapPointer, markerId, coordinates, count);
     }
 
     boolean setMarkerPolygon(long markerId, double[] coordinates, int[] rings, int count) {
         checkPointer(mapPointer);
-        checkPointer(markerId);
+        checkId(markerId);
         return nativeMarkerSetPolygon(mapPointer, markerId, coordinates, rings, count);
     }
 
     boolean setMarkerVisible(long markerId, boolean visible) {
         checkPointer(mapPointer);
-        checkPointer(markerId);
+        checkId(markerId);
         return nativeMarkerSetVisible(mapPointer, markerId, visible);
     }
 
     boolean setMarkerDrawOrder(long markerId, int drawOrder) {
         checkPointer(mapPointer);
-        checkPointer(markerId);
+        checkId(markerId);
         return nativeMarkerSetDrawOrder(mapPointer, markerId, drawOrder);
     }
 
