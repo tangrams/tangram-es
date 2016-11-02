@@ -37,7 +37,7 @@ protected:
     std::vector<std::string> getScenesToImport(const Node& scene);
 
     // loads all the imported scenes and the master scene and returns a unified YAML root node.
-    void importScenes(Node& root, const std::string& sceneName);
+    void importScenes(Node& root, const std::string& sceneName, std::vector<std::string>& sceneStack);
 
     //void mergeMapFieldsTaskingLast(const std::string& key, Node target, const std::vector<Node>& imports);
     void mergeMapFields(Node& target, const Node& import);

@@ -82,7 +82,8 @@ Node Importer::applySceneImports(const std::string& scenePath, const std::string
     Node root = Node();
 
     LOGD("Processing scene import Stack:");
-    importScenes(root, fullPath);
+    std::vector<std::string> sceneStack;
+    importScenes(root, fullPath, sceneStack);
 
     return root;
 }
@@ -289,16 +290,18 @@ std::vector<std::string> Importer::getScenesToImport(const Node& scene) {
     return scenePaths;
 }
 
-void Importer::importScenes(Node& root, const std::string& scenePath) {
+void Importer::importScenes(Node& root, const std::string& scenePath, std::vector<std::string>& sceneStack) {
 
     LOGD("Starting importing Scene: %s", scenePath.c_str());
 
-    static std::unordered_set<std::string> stackedScenes = {{}};
-    if (stackedScenes.find(scenePath) != stackedScenes.end()) {
-        LOGE("%s will cause a cyclic import. Stopping this scene from being imported", scenePath.c_str());
-        return;
+    for (const auto& s : sceneStack) {
+        if (scenePath == s) {
+            LOGE("%s will cause a cyclic import. Stopping this scene from being imported", scenePath.c_str());
+            return;
+        }
     }
-    stackedScenes.insert(scenePath);
+
+    sceneStack.push_back(scenePath);
 
     auto sceneNode = m_scenes[scenePath];
 
@@ -308,10 +311,11 @@ void Importer::importScenes(Node& root, const std::string& scenePath) {
     auto imports = getScenesToImport(sceneNode);
 
     for (const auto& importScene : imports) {
-        importScenes(root, importScene);
+        importScenes(root, importScene, sceneStack);
     }
 
-    stackedScenes.erase(scenePath);
+    sceneStack.pop_back();
+
     mergeMapFields(root, sceneNode);
 }
 
