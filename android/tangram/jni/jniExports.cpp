@@ -299,7 +299,7 @@ extern "C" {
         for (size_t i = 0; i < rings; i++) {
             size_t ringCount = *(counts+i);
             for (size_t j = 0; j < ringCount; j++) {
-                polygonCoords.emplace_back(coordinates[coordsCount + 2 * i], coordinates[coordsCount + 2 * i + 1]);
+                polygonCoords.emplace_back(coordinates[coordsCount + 2 * j], coordinates[coordsCount + 2 * j + 1]);
             }
             coordsCount += ringCount;
         }
