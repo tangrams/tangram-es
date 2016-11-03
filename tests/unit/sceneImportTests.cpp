@@ -58,11 +58,28 @@ TestImporter::TestImporter() {
     m_testScenes["cycle.yaml"] = std::string(R"END(
                                     import: [cycleScene.yaml]
                                     imported: false
+                                    cycle: false
                                     )END");
 
     m_testScenes["/cycleScene.yaml"] = std::string(R"END(
                                     import: [cycle.yaml]
                                     cycle: true
+                                    )END");
+
+    m_testScenes["c.yaml"] = std::string(R"END(
+                                    import: [a.yaml, b.yaml]
+                                    name: c
+                                    )END");
+
+    m_testScenes["a.yaml"] = std::string(R"END(
+                                    import: b.yaml
+                                    name: a
+                                    value: a
+                                    )END");
+
+    m_testScenes["b.yaml"] = std::string(R"END(
+                                    name: b
+                                    value: b
                                     )END");
 
     m_testScenes["cycleScene.yaml"] = m_testScenes["/cycleScene.yaml"];
@@ -102,17 +119,17 @@ TestImporter::TestImporter() {
             )END");
 }
 
-TEST_CASE( "Cyclic Imports - only load the root scene", "[scene-import][core]") {
+TEST_CASE( "Cyclic Imports - Ignore the cycle.", "[scene-import][core]") {
 
     TestImporter importer;
 
     auto root = importer.applySceneImports("cycleScene.yaml");
     REQUIRE(root["import"].Scalar() == "");
-    REQUIRE(root["imported"].Scalar() == "");
+    REQUIRE(root["imported"].Scalar() == "false");
     REQUIRE(root["cycle"].Scalar() == "true");
 }
 
-TEST_CASE( "Cyclic Imports (absolute base scene path) - only load the root scene", "[scene-import][core]") {
+TEST_CASE( "Cyclic Imports (absolute base scene path) - ignore the cycle", "[scene-import][core]") {
 
     TestImporter importer;
 
@@ -121,6 +138,14 @@ TEST_CASE( "Cyclic Imports (absolute base scene path) - only load the root scene
     REQUIRE(root["imported"].Scalar() == "");
     REQUIRE(root["cycle"].Scalar() == "true");
 
+}
+
+TEST_CASE( "Multiple scene file import, without cycle", "[scene-import][core]") {
+    TestImporter importer;
+
+    auto root = importer.applySceneImports("c.yaml");
+    CHECK(root["name"].Scalar() == "c");
+    CHECK(root["value"].Scalar() == "b");
 }
 
 TEST_CASE( "Basic importing - property overriding", "[scene-import][core]") {
