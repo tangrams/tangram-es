@@ -264,11 +264,8 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
 
 std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fragShader) const {
 
-    static const std::regex pragmaLine("\\s*#pragma tangram:\\s+(\\w+).*\r?\n");
-
     std::stringstream sourceOut;
     std::set<std::string> pragmas;
-    std::smatch sm;
 
     sourceOut << "#define TANGRAM_EPSILON 0.00001\n";
     sourceOut << "#define TANGRAM_WORLD_POSITION_WRAP 100000.\n";
@@ -281,34 +278,39 @@ std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fra
         sourceOut << "#define TANGRAM_VERTEX_SHADER\n";
     }
 
-    auto sourcePos = source.begin();
+    std::stringstream sourceIn(source);
+    std::string line;
 
-    for (auto it = source.begin(); std::regex_search(it, source.end(), sm, pragmaLine);) {
-        it += sm.position() + sm.length();
+    while (std::getline(sourceIn, line)) {
+        if (line.empty()) {
+            continue;
+        }
 
-        std::string pragmaName = sm[1];
+        sourceOut << line << '\n';
+
+        char pragmaName[128];
+        // NB: The initial whitespace is to skip any number of whitespace chars
+        if (sscanf(line.c_str(), " #pragma tangram:%127s", pragmaName) == 0) {
+            continue;
+        }
+
+        auto block = m_sourceBlocks.find(pragmaName);
+        if (block == m_sourceBlocks.end()) {
+            continue;
+        }
+
         bool unique;
-        std::tie(std::ignore, unique) = pragmas.emplace(std::move(pragmaName));
-
-        // ignore duplicates
-        if (!unique) { continue; }
-
-        auto block = m_sourceBlocks.find(sm[1]);
-        if (block == m_sourceBlocks.end()) { continue; }
-
-        // write from last source position to end of pragma
-        std::copy(sourcePos, it, std::ostream_iterator<char>(sourceOut));
-        sourcePos = it;
+        std::tie(std::ignore, unique) = pragmas.emplace(pragmaName);
+        if (!unique) {
+            continue;
+        }
 
         // insert blocks
-        for (auto& source : block->second) {
-            sourceOut << source;
-            sourceOut << '\n';
+        for (auto& s : block->second) {
+            sourceOut << s << '\n';
         }
     }
 
-    // write from last written source position to end of source
-    std::copy(sourcePos, source.end(), std::ostream_iterator<char>(sourceOut));
 
     // for (auto& block : m_sourceBlocks) {
     //     if (pragmas.find(block.first) == pragmas.end()) {
@@ -321,10 +323,20 @@ std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fra
     // Example raster.glsl was having issues on s6 and note2 because of the "\"s in the glsl file.
     // This also makes sure if any "\"s are present in the shaders coming from style sheet will be
     // taken care of.
-    auto str = sourceOut.str();
-    std::regex backslashMatch("\\\\\\s*\\n");
 
-    return std::regex_replace(str, backslashMatch, " ");
+    // auto str = sourceOut.str();
+    // std::regex backslashMatch("\\\\\\s*\\n");
+    // return std::regex_replace(str, backslashMatch, " ");
+
+    auto out = sourceOut.str();
+    size_t start = 0;
+
+    // Replace blackslash+newline with spaces
+    while ((start = out.find("\\\n", start)) != std::string::npos) {
+        out.replace(start, 2, "  ");
+        start += 2;
+    }
+    return out;
 }
 
 void ShaderProgram::checkValidity(RenderState& rs) {
