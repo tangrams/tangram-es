@@ -61,7 +61,21 @@ void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::strin
         }
     }
 
-    m_sourceBlocks[_tagName].push_back(_glslSource);
+    size_t start = 0;
+    std::string sourceBlock = _glslSource;
+
+    // Certain graphics drivers have issues with shaders having line continuation backslashes "\".
+    // Example raster.glsl was having issues on s6 and note2 because of the "\"s in the glsl file.
+    // This also makes sure if any "\"s are present in the shaders coming from style sheet will be
+    // taken care of.
+
+    // Replace blackslash+newline with spaces (simplification of regex "\\\\\\s*\\n")
+    while ((start = sourceBlock.find("\\\n", start)) != std::string::npos) {
+        sourceBlock.replace(start, 2, "  ");
+        start += 2;
+    }
+
+    m_sourceBlocks[_tagName].push_back(sourceBlock);
     m_needsBuild = true;
 
     //  TODO:
@@ -311,7 +325,6 @@ std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fra
         }
     }
 
-
     // for (auto& block : m_sourceBlocks) {
     //     if (pragmas.find(block.first) == pragmas.end()) {
     //         logMsg("Warning: expected pragma '%s' in shader source\n",
@@ -319,24 +332,7 @@ std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fra
     //     }
     // }
 
-    // Certain graphics drivers have issues with shaders having line continuation backslashes "\".
-    // Example raster.glsl was having issues on s6 and note2 because of the "\"s in the glsl file.
-    // This also makes sure if any "\"s are present in the shaders coming from style sheet will be
-    // taken care of.
-
-    // auto str = sourceOut.str();
-    // std::regex backslashMatch("\\\\\\s*\\n");
-    // return std::regex_replace(str, backslashMatch, " ");
-
-    auto out = sourceOut.str();
-    size_t start = 0;
-
-    // Replace blackslash+newline with spaces
-    while ((start = out.find("\\\n", start)) != std::string::npos) {
-        out.replace(start, 2, "  ");
-        start += 2;
-    }
-    return out;
+    return sourceOut.str();
 }
 
 void ShaderProgram::checkValidity(RenderState& rs) {
