@@ -428,7 +428,7 @@ void Map::render() {
 
             for (const auto& tile : impl->tileManager.getVisibleTiles()) {
                 if (auto props = tile->getSelectionFeature(color)) {
-                    items.push_back({props, {x, y}, 0});
+                    items.push_back({props, {query.position[0], query.position[1]}, 0});
                 }
             }
 
