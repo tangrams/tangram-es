@@ -7,6 +7,9 @@
 #import <fstream>
 #import <regex>
 
+#include <iostream>
+#include <fstream>
+
 #import "TGMapViewController.h"
 #import "CGFontConverter.h"
 
@@ -39,6 +42,12 @@ void init(TGMapViewController* _controller) {
     NSString* fontName = @"Helvetica";
     CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)fontName);
     NSData* data = [CGFontConverter fontDataForCGFont:fontRef];
+
+    LOG("Helvetica file size %d", [data length]);
+    std::ofstream file;
+    file.open("/Users/karim/dev/tangram-es/font.ttf", std::ios::binary);
+    file.write((const char*)[data bytes], [data length]);
+    file.close();
 }
 
 void logMsg(const char* fmt, ...) {
