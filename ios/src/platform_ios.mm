@@ -38,16 +38,6 @@ void init(TGMapViewController* _controller) {
 
     // Get handle to tangram framework
     tangramFramework = [NSBundle bundleWithIdentifier:@"com.mapzen.tangramMap"];
-
-    NSString* fontName = @"Helvetica";
-    CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)fontName);
-    NSData* data = [CGFontConverter fontDataForCGFont:fontRef];
-
-    LOG("Helvetica file size %d", [data length]);
-    std::ofstream file;
-    file.open("/Users/karim/dev/tangram-es/font.ttf", std::ios::binary);
-    file.write((const char*)[data bytes], [data length]);
-    file.close();
 }
 
 void logMsg(const char* fmt, ...) {
@@ -149,6 +139,29 @@ std::string systemFontPath(const std::string& _name, const std::string& _weight,
 // No system fonts fallback implementation (yet!)
 std::string systemFontFallbackPath(int _importance, int _weightHint) {
     return "";
+}
+
+unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+    // TODO: use weight and face params
+
+    NSString* fontName = [NSString stringWithUTF8String:_name.c_str()];
+    CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)fontName);
+
+    if (!fontRef) {
+        *_size = 0;
+        return nullptr;
+    }
+
+    NSData* data = [CGFontConverter fontDataForCGFont:fontRef];
+
+    CGFontRelease(fontRef);
+
+    unsigned char* bytes = (unsigned char*)malloc([data length]);
+    std::memcpy(bytes, (unsigned char*)[data bytes], [data length]);
+
+    *_size = [data length];
+
+    return bytes;
 }
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {

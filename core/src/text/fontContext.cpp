@@ -345,32 +345,45 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     unsigned char* data = nullptr;
     size_t dataSize = 0;
 
-    // Assuming bundled ttf file follows this convention
-    std::string bundleFontPath = m_sceneResourceRoot + "fonts/" +
-        FontDescription::BundleAlias(_family, _style, _weight);
+    do {
+        // 1. Bundle
+        // Assuming bundled ttf file follows this convention
+        std::string bundleFontPath = m_sceneResourceRoot + "fonts/" +
+            FontDescription::BundleAlias(_family, _style, _weight);
 
-    data = bytesFromFile(bundleFontPath.c_str(), dataSize);
+        data = bytesFromFile(bundleFontPath.c_str(), dataSize);
 
-    if (!data) {
-        // Try fallback
+        if (data) { break; }
+
+        // 2. System font
+        data = systemFont(_family, _weight, _style, &dataSize);
+
+        if (data) { break; }
+
+        // 3. Fallback
         std::string sysFontPath = systemFontPath(_family, _weight, _style);
+
+        if (sysFontPath.empty()) { break; }
+
         data = bytesFromFile(sysFontPath.c_str(), dataSize);
 
-        if (!data) {
-            LOGN("Could not load font file %s", FontDescription::BundleAlias(_family, _style, _weight).c_str());
+    } while (false);
 
-            // add fallbacks from default font
-            font->addFaces(*m_font[sizeIndex]);
-            return font;
-        }
+
+    if (data) {
+        font->addFace(m_alfons.addFontFace(alfons::InputSource(reinterpret_cast<char*>(data), dataSize), fontSize));
+
+        free(data);
+
+        // add fallbacks from default font
+        font->addFaces(*m_font[sizeIndex]);
+
+    } else {
+        LOGN("Could not load font file %s", FontDescription::BundleAlias(_family, _style, _weight).c_str());
+
+        // add fallbacks from default font
+        font->addFaces(*m_font[sizeIndex]);
     }
-
-    font->addFace(m_alfons.addFontFace(alfons::InputSource(reinterpret_cast<char*>(data), dataSize), fontSize));
-
-    free(data);
-
-    // add fallbacks from default font
-    font->addFaces(*m_font[sizeIndex]);
 
     return font;
 }

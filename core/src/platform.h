@@ -71,4 +71,6 @@ std::string systemFontFallbackPath(int _importance, int _weightHint);
 /* get system path of a font file */
 std::string systemFontPath(const std::string& _name, const std::string& _weight, const std::string& _face);
 
+unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size);
+
 void initGLExtensions();

@@ -520,11 +520,19 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     }
 }
 
+#pragma mark System fonts
+
+- (void)loadSystemFontList
+{
+    NSLog(@"Font families: %@", [UIFont familyNames]);
+}
+
 #pragma mark Map view lifecycle
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    NSLog(@"Font families: %@", [UIFont familyNames]);
 
     self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
     if (!self.context) {
