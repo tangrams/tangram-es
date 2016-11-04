@@ -45,9 +45,11 @@ public class Marker {
      * Sets the styling to be used to display either a point, polyline, or bitmap for this marker.
      * If the marker is going to be used to display a bitmap, a 'points' style must be set.
      *
-     * ie. { style: 'points', color: 'white', size: [50px, 50px], order: 2000, collide: false }
-     * ie. { style: 'lines', color: '#06a6d4', width: 5px, order: 2000 }
-     * ie. { style: 'polygons', color: '#06a6d4', width: 5px, order: 2000 }
+     * <ul>
+     * <li>{ style: 'points', color: 'white', size: [50px, 50px], order: 2000, collide: false }</li>
+     * <li>{ style: 'lines', color: '#06a6d4', width: 5px, order: 2000 }</li>
+     * <li>{ style: 'polygons', color: '#06a6d4', width: 5px, order: 2000 }</li>
+     * </ul>
      *
      * @param styleStr the style string
      * @return whether the style was successfully set
