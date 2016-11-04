@@ -1,6 +1,7 @@
 #ifdef PLATFORM_IOS
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 #import <utility>
 #import <cstdio>
 #import <cstdarg>
@@ -142,10 +143,50 @@ std::string systemFontFallbackPath(int _importance, int _weightHint) {
 }
 
 unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
-    // TODO: use weight and face params
+    // TODO: use weight param
 
-    NSString* fontName = [NSString stringWithUTF8String:_name.c_str()];
-    CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)fontName);
+    if (_weight == "400") {
+        // "normal" face;
+    } else if (_weight == "700") {
+        // "bold" face
+    }
+
+    UIFont* font = [UIFont fontWithName:[NSString stringWithUTF8String:_name.c_str()] size:0.0];
+
+    if (font == nil) {
+        // Get the default system font
+        font = [UIFont systemFontOfSize:0.0];
+    }
+
+    NSString* weightTrait = UIFontWeightTrait;
+
+    if (_face != "normal") {
+        UIFontDescriptorSymbolicTraits traits;
+        UIFontDescriptor* descriptor = [font fontDescriptor];
+
+        static std::map<std::string, UIFontDescriptorSymbolicTraits> fontTraits = {
+            {"italic", UIFontDescriptorTraitItalic},
+            {"oblique", UIFontDescriptorTraitItalic},
+            {"bold", UIFontDescriptorTraitBold},
+            {"expanded", UIFontDescriptorTraitExpanded},
+            {"condensed", UIFontDescriptorTraitCondensed},
+            {"monospace", UIFontDescriptorTraitMonoSpace},
+        };
+
+        auto it = fontTraits.find(_face);
+        if (it != fontTraits.end()) {
+            traits = it->second;
+
+            // Create a new descriptor with the symbolic traits
+            descriptor = [descriptor fontDescriptorWithSymbolicTraits:traits];
+
+            if (descriptor != nil) {
+                font = [UIFont fontWithDescriptor:descriptor size:0.0];
+            }
+        }
+    }
+
+    CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)font.fontName);
 
     if (!fontRef) {
         *_size = 0;
