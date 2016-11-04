@@ -156,6 +156,13 @@ unsigned char* systemFont(const std::string& _name, const std::string& _weight, 
 
     CGFontRelease(fontRef);
 
+    if (data == nil) {
+        LOG("CoreGraphics font %s failed to decode", _name.c_str());
+
+        *_size = 0;
+        return nullptr;
+    }
+
     unsigned char* bytes = (unsigned char*)malloc([data length]);
     std::memcpy(bytes, (unsigned char*)[data bytes], [data length]);
 
