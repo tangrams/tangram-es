@@ -16,10 +16,10 @@ import com.mapzen.tangram.geometry.Polyline;
  */
 public class Marker {
 
-    Context context;
-    long markerId = 0;
-    MapController map;
-    boolean visible = true;
+    private Context context;
+    private long markerId = 0;
+    private MapController map;
+    private boolean visible = true;
 
     /**
      * Package private constructor for creating a new {@link Marker}.
@@ -31,6 +31,14 @@ public class Marker {
         this.context = context;
         this.markerId = markerId;
         this.map = map;
+    }
+
+    /**
+     * Returns the {@link Marker} id
+     * @return marker id
+     */
+    public long getMarkerId() {
+        return markerId;
     }
 
     /**

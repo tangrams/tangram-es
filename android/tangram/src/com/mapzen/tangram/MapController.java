@@ -669,8 +669,8 @@ public class MapController implements Renderer {
      */
     public boolean removeMarker(Marker marker) {
         checkPointer(mapPointer);
-        checkId(marker.markerId);
-        return nativeMarkerRemove(mapPointer, marker.markerId);
+        checkId(marker.getMarkerId());
+        return nativeMarkerRemove(mapPointer, marker.getMarkerId());
     }
 
     /**
