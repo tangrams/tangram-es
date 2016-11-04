@@ -59,9 +59,13 @@ void main() {
     v_alpha = a_alpha;
     v_color = a_color;
 
-
 #ifdef TANGRAM_FEATURE_SELECTION
     v_selection_color = a_selection_color;
+    // Skip non-selectable meshes
+    if (v_selection_color == vec4(0.0)) {
+        gl_Position = vec4(0.0);
+        return;
+    }
 #endif
 
 #ifdef TANGRAM_TEXT
