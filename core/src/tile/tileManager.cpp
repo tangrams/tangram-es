@@ -518,10 +518,11 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
         }
     }
 
-    // Remove tile from set
-    _tileIt = _tileSet.tiles.erase(_tileIt);
     // Remove rasters from this DataSource
     _tileSet.source->clearRaster(id);
+
+    // Remove tile from set
+    _tileIt = _tileSet.tiles.erase(_tileIt);
 }
 
 bool TileManager::updateProxyTile(TileSet& _tileSet, TileEntry& _tile,
