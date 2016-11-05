@@ -25,11 +25,15 @@ public:
     // Run all jobs on the queue in the order they were added, then remove them. This is thread-safe.
     void runJobs();
 
+    void stop() {
+        m_stopped = true;
+        runJobs();
+    }
 private:
 
     std::vector<Job> m_jobs;
     std::mutex m_mutex;
-
+    bool m_stopped = false;
 };
 
 }

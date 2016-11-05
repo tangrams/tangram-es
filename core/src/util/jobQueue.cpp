@@ -7,14 +7,16 @@ JobQueue::~JobQueue() {
     if (!m_jobs.empty()) {
         runJobs();
     }
-
 }
 
 void JobQueue::add(Job job) {
 
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_jobs.push_back(job);
-
+    if (!m_stopped) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_jobs.push_back(job);
+    } else {
+        job();
+    }
 }
 
 void JobQueue::runJobs() {
