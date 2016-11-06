@@ -13,22 +13,12 @@ namespace Tangram {
 
 std::atomic_uint Importer::progressCounter(0);
 
-bool isUrl(const std::string &path) {
-    static const std::regex r("^(http|https):/");
-    std::smatch match;
-    return std::regex_search(path, match, r);
-}
+Node Importer::applySceneImports(const Url& scenePath, const Url& resourceRoot) {
 
-bool isBase64Data(const std::string &path) {
-    return path.substr(0, 21) == "data:image/png;base64";
-}
+    Url path;
+    Url rootScenePath = scenePath.resolved(resourceRoot);
 
-Node Importer::applySceneImports(const std::string& scenePath, const std::string& resourceRoot) {
-
-    std::string path;
-    std::string fullPath = resourceRoot + scenePath;
-
-    m_sceneQueue.push_back(fullPath);
+    m_sceneQueue.push_back(rootScenePath);
 
     while (true) {
         {
@@ -60,18 +50,15 @@ Node Importer::applySceneImports(const std::string& scenePath, const std::string
             if (m_scenes.find(path) != m_scenes.end()) { continue; }
         }
 
-        // TODO: generic handling of uri
-        if (isUrl(path)) {
+        if (path.hasHttpScheme()) {
             progressCounter++;
-            startUrlRequest(path,
-                    [&, p = path](std::vector<char>&& rawData) {
-
-                    if (!rawData.empty()) {
-                        std::unique_lock<std::mutex> lock(sceneMutex);
-                        processScene(p, std::string(rawData.data(), rawData.size()));
-                    }
-                    progressCounter--;
-                    m_condition.notify_all();
+            startUrlRequest(path.string(), [&, path](std::vector<char>&& rawData) {
+                if (!rawData.empty()) {
+                    std::unique_lock<std::mutex> lock(sceneMutex);
+                    processScene(path, std::string(rawData.data(), rawData.size()));
+                }
+                progressCounter--;
+                m_condition.notify_all();
             });
         } else {
             std::unique_lock<std::mutex> lock(sceneMutex);
@@ -82,23 +69,20 @@ Node Importer::applySceneImports(const std::string& scenePath, const std::string
     Node root = Node();
 
     LOGD("Processing scene import Stack:");
-    std::vector<std::string> sceneStack;
-    importScenes(root, fullPath, sceneStack);
+    std::vector<Url> sceneStack;
+    importScenes(root, rootScenePath, sceneStack);
 
     return root;
 }
 
-void Importer::processScene(const std::string &scenePath, const std::string &sceneString) {
+void Importer::processScene(const Url& scenePath, const std::string &sceneString) {
 
-    LOGD("Process: '%s'", scenePath.c_str());
+    LOGD("Process: '%s'", scenePath.string().c_str());
 
     try {
         auto sceneNode = YAML::Load(sceneString);
 
-        normalizeSceneImports(sceneNode, scenePath);
-        normalizeSceneDataSources(sceneNode, scenePath);
-        normalizeSceneTextures(sceneNode, scenePath);
-        normalizeFonts(sceneNode, scenePath);
+        resolveSceneUrls(sceneNode, scenePath);
 
         m_scenes[scenePath] = sceneNode;
 
@@ -106,117 +90,91 @@ void Importer::processScene(const std::string &scenePath, const std::string &sce
             m_sceneQueue.push_back(import);
             m_condition.notify_all();
         }
-    }
-    catch (YAML::ParserException e) {
+    } catch (YAML::ParserException e) {
         LOGE("Parsing scene config '%s'", e.what());
     }
 }
 
-std::string Importer::normalizePath(const std::string &_path,
-                                    const std::string &_parentPath) {
+void Importer::setResolvedTextureUrl(Node& textureNode, const Url& base) {
 
-    std::string path;
+    if (!textureNode.IsScalar()) { return; }
 
-    // Check if absolute path or network url , return as it is
-    if (_path[0] == '/' || isUrl(_path)) {
-        path = _path;
-    } else {
-        auto r = std::regex("[^//]+$");
-        path = std::regex_replace(_parentPath, r, _path);
-    }
+    const auto& name = textureNode.Scalar();
 
-    LOGD("Normalize '%s', '%s' => '%s'", _parentPath.c_str(), _path.c_str(), path.c_str());
+    // If texture name matches a global texture then don't resolve it.
+    if (m_globalTextures.find(name) != m_globalTextures.end()) { return; }
 
-    return path;
+    // Assign resolved texture path to yaml node.
+    textureNode = Url(name).resolved(base).string();
 }
 
-void Importer::normalizeSceneImports(Node& root, const std::string& parentPath) {
+// Helper function; returns true if a node is a scalar that is not a null, bool, or number.
+bool isStringNode(const Node& node) {
+    bool booleanValue = false;
+    double numberValue = 0.;
+    if (node.IsNull() || !node.IsScalar()) { return false; }
+    if (YAML::convert<bool>::decode(node, booleanValue)) { return false; }
+    if (YAML::convert<double>::decode(node, numberValue)) { return false; }
+    return true;
+}
+
+void Importer::resolveSceneUrls(Node& root, const Url& base) {
+
+    // Resolve import URLs.
+
     if (Node import = root["import"]) {
         if (import.IsScalar()) {
-            import = normalizePath(import.Scalar(), parentPath);
+            import = Url(import.Scalar()).resolved(base).string();
         } else if (import.IsSequence()) {
-            for (Node imp : import) {
-                if (imp.IsScalar()) { imp = normalizePath(imp.Scalar(), parentPath); }
+            for (Node path : import) {
+                if (path.IsScalar()) {
+                    path = Url(path.Scalar()).resolved(base).string();
+                }
             }
         }
     }
-}
 
-void Importer::normalizeSceneDataSources(Node &root, const std::string &parentPath) {
+    // Resolve data source URLs.
+
     if (Node sources = root["sources"]) {
         for (auto source : sources) {
             if (Node sourceUrl = source.second["url"]) {
-                sourceUrl = normalizePath(sourceUrl.Scalar(), parentPath);
+                sourceUrl = Url(sourceUrl.Scalar()).resolved(base).string();
             }
         }
     }
-}
 
-void Importer::setNormalizedTexture(Node& texture, const std::vector<std::string>& names,
-                                    const std::string& parentPath) {
+    // Resolve global texture URLs.
 
-    for (size_t index = 0; index < names.size(); index++) {
-
-        auto& name = names[index];
-        if (isBase64Data(name)) {
-            continue;
-        }
-
-        std::string normTexPath;
-
-        // if texture url is a named texture then move on (this has been already resolved
-        if (m_globalTextures.find(name) != m_globalTextures.end()) { continue; }
-
-        // get normalized texture path
-        if (m_textureNames.find(name) == m_textureNames.end()) {
-            normTexPath = normalizePath(name, parentPath);
-            m_textureNames[name] = normTexPath;
-        } else {
-            normTexPath = m_textureNames.at(name);
-        }
-
-        // set yaml node with normalized texture path
-        if (names.size() > 1) {
-            texture[index] = normTexPath;
-        } else {
-            texture = normTexPath;
-        }
-    }
-}
-
-void Importer::normalizeSceneTextures(Node& root, const std::string& parentPath) {
-
-    if (Node textures = root["textures"]) {
-        for (auto texture : textures) {
-            if (Node textureUrl = texture.second["url"]) {
-                if (!isBase64Data(textureUrl.Scalar())) {
-                    setNormalizedTexture(textureUrl, {textureUrl.Scalar()}, parentPath);
+    if (Node texturesNode = root["textures"]) {
+        for (auto texture : texturesNode) {
+            if (Node textureUrlNode = texture.second["url"]) {
+                if (textureUrlNode.IsScalar()) {
+                    textureUrlNode = Url(textureUrlNode.Scalar()).resolved(base).string();
                 }
                 m_globalTextures.insert(texture.first.Scalar());
             }
         }
     }
 
+    // Resolve inline texture URLs.
+
     if (Node styles = root["styles"]) {
 
-        for (auto styleNode : styles) {
+        for (auto entry : styles) {
 
-            auto style = styleNode.second;
+            Node style = entry.second;
             //style->texture
             if (Node texture = style["texture"]) {
-                if (texture.IsScalar() && !isBase64Data(texture.Scalar())) {
-                    setNormalizedTexture(texture, {texture.Scalar()}, parentPath);
-                }
+                setResolvedTextureUrl(texture, base);
             }
 
             //style->material->texture
             if (Node material = style["material"]) {
                 for (auto& prop : {"emission", "ambient", "diffuse", "specular", "normal"}) {
-                    if (auto propNode = material[prop]) {
-                        if (auto matTexture = material[propNode]["texture"]) {
-                            if (matTexture.IsScalar()) {
-                                setNormalizedTexture(matTexture, {matTexture.Scalar()}, parentPath);
-                            }
+                    if (Node propNode = material[prop]) {
+                        if (Node matTexture = propNode["texture"]) {
+                            setResolvedTextureUrl(matTexture, base);
                         }
                     }
                 }
@@ -225,18 +183,15 @@ void Importer::normalizeSceneTextures(Node& root, const std::string& parentPath)
             //style->shader->uniforms->texture
             if (Node shaders = style["shaders"]) {
                 if (Node uniforms = shaders["uniforms"]) {
-                    for (auto uniformNode : uniforms) {
-                        StyleUniform styleUniform;
-                        auto uniformValue = uniformNode.second;
-                        if (SceneLoader::parseStyleUniforms(uniformValue, nullptr, styleUniform) &&
-                                styleUniform.type == "sampler2D") {
-                            if (styleUniform.value.is<UniformTextureArray>()) {
-                                setNormalizedTexture(uniformValue,
-                                             styleUniform.value.get<UniformTextureArray>().names,
-                                             parentPath);
-                            } else {
-                                auto name = styleUniform.value.get<std::string>();
-                                setNormalizedTexture(uniformValue, {name}, parentPath);
+                    for (auto uniformEntry : uniforms) {
+                        Node uniformValue = uniformEntry.second;
+                        if (isStringNode(uniformValue)) {
+                            setResolvedTextureUrl(uniformValue, base);
+                        } else if (uniformValue.IsSequence()) {
+                            for (auto u : uniformValue) {
+                                if (isStringNode(u)) {
+                                    setResolvedTextureUrl(u, base);
+                                }
                             }
                         }
                     }
@@ -244,22 +199,22 @@ void Importer::normalizeSceneTextures(Node& root, const std::string& parentPath)
             }
         }
     }
-}
 
-void Importer::normalizeFonts(Node& root, const std::string& parentPath) {
+    // Resolve font URLs.
+
     if (Node fonts = root["fonts"]) {
         if (fonts.IsMap()) {
             for (const auto& font : fonts) {
                 if (font.second.IsMap()) {
                     auto urlNode = font.second["url"];
                     if (urlNode.IsScalar()) {
-                        urlNode = normalizePath(urlNode.Scalar(), parentPath);
+                        urlNode = Url(urlNode.Scalar()).resolved(base).string();
                     }
                 } else if (font.second.IsSequence()) {
                     for (auto& fontNode : font.second) {
                         auto urlNode = fontNode["url"];
                         if (urlNode.IsScalar()) {
-                            urlNode = normalizePath(urlNode.Scalar(), parentPath);
+                            urlNode = Url(urlNode.Scalar()).resolved(base).string();
                         }
                     }
                 }
@@ -268,21 +223,22 @@ void Importer::normalizeFonts(Node& root, const std::string& parentPath) {
     }
 }
 
-std::string Importer::getSceneString(const std::string &scenePath) {
-    return stringFromFile(scenePath.c_str());
+std::string Importer::getSceneString(const Url& scenePath) {
+    return stringFromFile(scenePath.string().c_str());
 }
 
-std::vector<std::string> Importer::getScenesToImport(const Node& scene) {
+std::vector<Url> Importer::getScenesToImport(const Node& scene) {
 
-    std::vector<std::string> scenePaths;
+    std::vector<Url> scenePaths;
 
     if (const Node& import = scene["import"]) {
         if (import.IsScalar()) {
-            scenePaths.push_back(import.Scalar());
-        }
-        else if (import.IsSequence()) {
-            for (const auto& imp : import) {
-                if (imp.IsScalar()) { scenePaths.push_back(imp.Scalar()); }
+            scenePaths.push_back(Url(import.Scalar()));
+        } else if (import.IsSequence()) {
+            for (const auto& path : import) {
+                if (path.IsScalar()) {
+                    scenePaths.push_back(Url(path.Scalar()));
+                }
             }
         }
     }
@@ -290,13 +246,13 @@ std::vector<std::string> Importer::getScenesToImport(const Node& scene) {
     return scenePaths;
 }
 
-void Importer::importScenes(Node& root, const std::string& scenePath, std::vector<std::string>& sceneStack) {
+void Importer::importScenes(Node& root, const Url& scenePath, std::vector<Url>& sceneStack) {
 
-    LOGD("Starting importing Scene: %s", scenePath.c_str());
+    LOGD("Starting importing Scene: %s", scenePath.string().c_str());
 
     for (const auto& s : sceneStack) {
         if (scenePath == s) {
-            LOGE("%s will cause a cyclic import. Stopping this scene from being imported", scenePath.c_str());
+            LOGE("%s will cause a cyclic import. Stopping this scene from being imported", scenePath.string().c_str());
             return;
         }
     }
