@@ -15,183 +15,176 @@ public:
     TestImporter();
 
 protected:
-    virtual std::string getSceneString(const std::string& scenePath) override {
+    virtual std::string getSceneString(const Url& scenePath) override {
         return m_testScenes[scenePath];
     }
 
-    std::unordered_map<std::string, std::string> m_testScenes;
+    std::unordered_map<Url, std::string> m_testScenes;
 };
 
 TestImporter::TestImporter() {
-    m_testScenes["import/car.yaml"] = std::string(R"END(
-                                name: vehicle
-                                type: vehicle
-                                category: vehicle
-                                )END");
 
-    m_testScenes["car.yaml"] = std::string(R"END(
-                                import: import/car.yaml
-                                type: car
-                                )END");
+    m_testScenes["/root/a.yaml"] = R"END(
+        import: b.yaml
+        value: a
+        has_a: true
+    )END";
 
-    m_testScenes["thisCar.yaml"] = std::string(R"END(
-                                    import: [import/car.yaml, car.yaml]
-                                    name: thisCar
-                                    )END");
+    m_testScenes["/root/b.yaml"] = R"END(
+        value: b
+        has_b: true
+    )END";
 
-    m_testScenes["/absolutePath/car.yaml"] = std::string(R"END(
-                                import: import/car.yaml
-                                type: car
-                                )END");
+    m_testScenes["/root/c.yaml"] = R"END(
+        import: [a.yaml, b.yaml]
+        value: c
+        has_c: true
+    )END";
 
-    m_testScenes["/absolutePath/import/car.yaml"] = std::string(R"END(
-                                name: vehicle
-                                type: vehicle
-                                category: vehicle
-                                )END");
+    m_testScenes["/root/cycle_simple.yaml"] = R"END(
+        import: cycle_simple.yaml
+        value: cyclic
+    )END";
 
-    m_testScenes["/absolutePath/thisCar.yaml"] = std::string(R"END(
-                                    import: [import/car.yaml, car.yaml]
-                                    name: thisCar
-                                    )END");
+    m_testScenes["/root/cycle_tricky.yaml"] = R"END(
+        import: imports/cycle_tricky.yaml
+        has_cycle_tricky: true
+    )END";
 
-    m_testScenes["cycle.yaml"] = std::string(R"END(
-                                    import: [cycleScene.yaml]
-                                    imported: false
-                                    cycle: false
-                                    )END");
+    m_testScenes["/root/imports/cycle_tricky.yaml"] = R"END(
+        import: ../cycle_tricky.yaml
+        has_imports_cycle_tricky: true
+    )END";
 
-    m_testScenes["/cycleScene.yaml"] = std::string(R"END(
-                                    import: [cycle.yaml]
-                                    cycle: true
-                                    )END");
+    m_testScenes["/root/urls.yaml"] = R"END(
+        import: imports/urls.yaml
+        fonts: { fontA: { url: https://host/font.woff } }
+        sources: { sourceA: { url: "https://host/tiles/{z}/{y}/{x}.mvt" } }
+        textures:
+            tex1: { url: "path/to/texture.png" }
+            tex2: { url: "../up_a_directory.png" }
+        styles:
+            styleA:
+                texture: "path/to/texture.png"
+                shaders:
+                    uniforms:
+                        u_tex1: "/at_root.png"
+                        u_tex2: ["path/to/texture.png", tex2]
+                        u_bool: true
+                        u_float: 0.25
+    )END";
 
-    m_testScenes["c.yaml"] = std::string(R"END(
-                                    import: [a.yaml, b.yaml]
-                                    name: c
-                                    )END");
-
-    m_testScenes["a.yaml"] = std::string(R"END(
-                                    import: b.yaml
-                                    name: a
-                                    value: a
-                                    )END");
-
-    m_testScenes["b.yaml"] = std::string(R"END(
-                                    name: b
-                                    value: b
-                                    )END");
-
-    m_testScenes["cycleScene.yaml"] = m_testScenes["/cycleScene.yaml"];
-
-    // All about textures
-    // TODO: Handle test cases for named URLs
-    m_testScenes["import/import.yaml"] = std::string(
-            R"END(
-                textures:
-                    tex1: { url: "../resources/icons/poi.png" }
-                    tex4: { url: "../resources/icons/poi2.png" }
-                    tex5: { url: "importResources/tex.png" }
-                    tex6: { url: "/absPath/tex.png" }
-                styles:
-                    styleA:
-                        shaders:
-                            uniforms:
-                                u_tex3: "importResources/tex.png"
-                                u_tex4: tex1
-            )END");
-    m_testScenes["scene.yaml"] = std::string(
-            R"END(
-                import: import/import.yaml
-                textures:
-                    tex1: { url: "resources/icons/poi.png" }
-                    tex2: { url: "/absoluteTexPath/texture.png" }
-                    tex3: { url: "resources/tex/sameName.png" }
-                styles:
-                    styleA:
-                        texture: "resources/tex/sameName.png"
-                        shaders:
-                            uniforms:
-                                u_tex1: "resources/tex/sameName.png"
-                                u_tex2: ["uTex1.png", "resources/uTex2.png"]
-                    styleB:
-                        texture: tex5
-            )END");
+    m_testScenes["/root/imports/urls.yaml"] = R"END(
+        fonts: { fontB: [ { url: fonts/0.ttf }, { url: fonts/1.ttf } ] }
+        sources: { sourceB: { url: "tiles/{z}/{y}/{x}.mvt" } }
+        textures:
+            tex3: { url: "in_imports.png" }
+            tex4: { url: "../not_in_imports.png" }
+            tex5: { url: "/at_root.png" }
+        styles:
+            styleB:
+                texture: "in_imports.png"
+                shaders:
+                    uniforms:
+                        u_tex1: "in_imports.png"
+                        u_tex2: tex2
+    )END";
 }
 
-TEST_CASE( "Cyclic Imports - Ignore the cycle.", "[scene-import][core]") {
+TEST_CASE("Imported scenes are merged with the parent scene", "[import][core]") {
+
+    TestImporter importer;
+    auto root = importer.applySceneImports("a.yaml", "/root/");
+
+    CHECK(root["value"].Scalar() == "a");
+    CHECK(root["has_a"].Scalar() == "true");
+    CHECK(root["has_b"].Scalar() == "true");
+}
+
+TEST_CASE("Nested imports are merged recursively", "[import][core]") {
+
+    TestImporter importer;
+    auto root = importer.applySceneImports("c.yaml", "/root/");
+
+    CHECK(root["value"].Scalar() == "c");
+    CHECK(root["has_a"].Scalar() == "true");
+    CHECK(root["has_b"].Scalar() == "true");
+    CHECK(root["has_c"].Scalar() == "true");
+}
+
+TEST_CASE("Imports that would start a cycle are ignored", "[import][core]") {
 
     TestImporter importer;
 
-    auto root = importer.applySceneImports("cycleScene.yaml");
-    REQUIRE(root["import"].Scalar() == "");
-    REQUIRE(root["imported"].Scalar() == "false");
-    REQUIRE(root["cycle"].Scalar() == "true");
+    // If import cycles aren't checked for and stopped, this call won't return.
+    auto root = importer.applySceneImports("cycle_simple.yaml", "/root/");
+
+    // Check that the scene values were applied.
+    CHECK(root["value"].Scalar() == "cyclic");
 }
 
-TEST_CASE( "Cyclic Imports (absolute base scene path) - ignore the cycle", "[scene-import][core]") {
+TEST_CASE("Tricky import cycles are ignored", "[import][core]") {
 
     TestImporter importer;
 
-    auto root = importer.applySceneImports("/cycleScene.yaml");
-    REQUIRE(root["import"].Scalar() == "");
-    REQUIRE(root["imported"].Scalar() == "");
-    REQUIRE(root["cycle"].Scalar() == "true");
+    // The nested import should resolve to the same path as the original file,
+    // and so the importer should break the cycle.
+    auto root = importer.applySceneImports("cycle_tricky.yaml", "/root/");
 
+    // Check that the imported scene values were merged.
+    CHECK(root["has_cycle_tricky"].Scalar() == "true");
+    CHECK(root["has_imports_cycle_tricky"].Scalar() == "true");
 }
 
-TEST_CASE( "Multiple scene file import, without cycle", "[scene-import][core]") {
-    TestImporter importer;
-
-    auto root = importer.applySceneImports("c.yaml");
-    CHECK(root["name"].Scalar() == "c");
-    CHECK(root["value"].Scalar() == "b");
-}
-
-TEST_CASE( "Basic importing - property overriding", "[scene-import][core]") {
+TEST_CASE("Scene URLs are resolved against their parent during import", "[import][core]") {
 
     TestImporter importer;
-    auto root = importer.applySceneImports("thisCar.yaml");
+    auto root = importer.applySceneImports("urls.yaml", "/root/");
 
-    REQUIRE(root["import"].Scalar() == "");
-    REQUIRE(root["name"].Scalar() == "thisCar");
-    REQUIRE(root["type"].Scalar() == "car");
-    REQUIRE(root["category"].Scalar() == "vehicle");
+    // Check that global texture URLs are resolved correctly.
 
-}
+    auto textures = root["textures"];
 
-TEST_CASE( "Basic importing with absolute path scene file - property overriding", "[scene-import][core]") {
-    TestImporter importer;
-    auto root = importer.applySceneImports("/absolutePath/thisCar.yaml");
+    CHECK(textures["tex1"]["url"].Scalar() == "/root/path/to/texture.png");
+    CHECK(textures["tex2"]["url"].Scalar() == "/up_a_directory.png");
+    CHECK(textures["tex3"]["url"].Scalar() == "/root/imports/in_imports.png");
+    CHECK(textures["tex4"]["url"].Scalar() == "/root/not_in_imports.png");
+    CHECK(textures["tex5"]["url"].Scalar() == "/at_root.png");
 
-    REQUIRE(root["import"].Scalar() == "");
-    REQUIRE(root["name"].Scalar() == "thisCar");
-    REQUIRE(root["type"].Scalar() == "car");
-    REQUIRE(root["category"].Scalar() == "vehicle");
-}
+    // Check that "inline" texture URLs are resolved correctly.
 
-TEST_CASE( "Texture path tests after importing process", "[scene-import][core]") {
-    TestImporter importer;
-    auto root = importer.applySceneImports("scene.yaml");
+    auto styleA = root["styles"]["styleA"];
 
-    REQUIRE(root["import"].Scalar() == "");
-    const auto& texturesNode = root["textures"];
-    REQUIRE(texturesNode["tex1"]["url"].Scalar() == "resources/icons/poi.png");
-    REQUIRE(texturesNode["tex2"]["url"].Scalar() == "/absoluteTexPath/texture.png");
-    REQUIRE(texturesNode["tex3"]["url"].Scalar() == "resources/tex/sameName.png");
-    REQUIRE(texturesNode["tex4"]["url"].Scalar() == "import/../resources/icons/poi2.png");
-    REQUIRE(texturesNode["tex5"]["url"].Scalar() == "import/importResources/tex.png");
-    REQUIRE(texturesNode["tex6"]["url"].Scalar() == "/absPath/tex.png");
+    CHECK(styleA["texture"].Scalar() == "/root/path/to/texture.png");
 
-    const auto& styleNode = root["styles"]["styleA"];
-    const auto& uniformsNode = styleNode["shaders"]["uniforms"];
+    auto uniformsA = styleA["shaders"]["uniforms"];
 
-    REQUIRE(styleNode["texture"].Scalar() == "resources/tex/sameName.png");
-    REQUIRE(root["styles"]["styleB"]["texture"].Scalar() == "tex5");
+    CHECK(uniformsA["u_tex1"].Scalar() == "/at_root.png");
+    CHECK(uniformsA["u_tex2"][0].Scalar() == "/root/path/to/texture.png");
+    CHECK(uniformsA["u_tex2"][1].Scalar() == "tex2");
+    CHECK(uniformsA["u_bool"].Scalar() == "true");
+    CHECK(uniformsA["u_float"].Scalar() == "0.25");
 
-    REQUIRE(uniformsNode["u_tex1"].Scalar() == "resources/tex/sameName.png");
-    REQUIRE(uniformsNode["u_tex2"][0].Scalar() == "uTex1.png");
-    REQUIRE(uniformsNode["u_tex2"][1].Scalar() == "resources/uTex2.png");
-    REQUIRE(uniformsNode["u_tex3"].Scalar() == "import/importResources/tex.png");
-    REQUIRE(uniformsNode["u_tex4"].Scalar() == "tex1");
+    auto styleB = root["styles"]["styleB"];
+
+    CHECK(styleB["texture"].Scalar() == "/root/imports/in_imports.png");
+
+    auto uniformsB = styleB["shaders"]["uniforms"];
+
+    CHECK(uniformsB["u_tex1"].Scalar() == "/root/imports/in_imports.png");
+    CHECK(uniformsB["u_tex2"].Scalar() == "tex2");
+
+    // Check that data source URLs are resolved correctly.
+
+    CHECK(root["sources"]["sourceA"]["url"].Scalar() == "https://host/tiles/{z}/{y}/{x}.mvt");
+    CHECK(root["sources"]["sourceB"]["url"].Scalar() == "/root/imports/tiles/{z}/{y}/{x}.mvt");
+
+    // Check that font URLs are resolved correctly.
+
+    CHECK(root["fonts"]["fontA"]["url"].Scalar() == "https://host/font.woff");
+    CHECK(root["fonts"]["fontB"][0]["url"].Scalar() == "/root/imports/fonts/0.ttf");
+    CHECK(root["fonts"]["fontB"][1]["url"].Scalar() == "/root/imports/fonts/1.ttf");
+
+    // We don't explicitly check that import URLs are resolved correctly because if they were not,
+    // the scenes wouldn't be loaded and merged; i.e. we already test it implicitly.
 }
