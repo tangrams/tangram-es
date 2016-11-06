@@ -1,9 +1,9 @@
 #include "skybox.h"
-#include "view/view.h"
+
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 #include "gl/textureCube.h"
-#include "platform.h"
+#include "view/view.h"
 
 #include "shaders/cubemap_vs.h"
 #include "shaders/cubemap_fs.h"

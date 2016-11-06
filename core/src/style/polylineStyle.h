@@ -18,6 +18,9 @@ public:
     virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
     virtual ~PolylineStyle() {}
 
+    void buildFragmentShaderSource(ShaderSource& _out) override;
+    void buildVertexShaderSource(ShaderSource& _out, bool _selectionPass) override;
+
     void setDashArray(std::vector<int> _dashArray) { m_dashArray = _dashArray; }
     void setTexture(std::shared_ptr<Texture>& _texture) { m_texture = _texture; }
 

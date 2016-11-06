@@ -1,11 +1,10 @@
 #include "pointLight.h"
 
-#include "glm/gtx/string_cast.hpp"
-#include "platform.h"
 #include "gl/shaderProgram.h"
+#include "style/material.h"
 #include "view/view.h"
 
-#include "shaders/pointLight_glsl.h"
+#include "glm/gtx/string_cast.hpp"
 
 namespace Tangram {
 
@@ -40,12 +39,12 @@ void PointLight::setRadius(float _inner, float _outer) {
     m_outerRadius = _outer;
 }
 
-std::unique_ptr<LightUniforms> PointLight::injectOnProgram(ShaderProgram& _shader) {
-    injectSourceBlocks(_shader);
+std::unique_ptr<LightUniforms> PointLight::getUniforms(ShaderProgram& _shader) {
 
-    if (!m_dynamic) { return nullptr; }
-
-    return std::make_unique<Uniforms>(_shader, getUniformName());
+    if (m_dynamic) {
+        return std::make_unique<Uniforms>(_shader, getUniformName());
+    }
+    return nullptr;
 }
 
 void PointLight::setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms) {
@@ -97,43 +96,104 @@ void PointLight::setupProgram(RenderState& rs, const View& _view, LightUniforms&
     }
 }
 
-std::string PointLight::getClassBlock() {
-    return SHADER_SOURCE(pointLight_glsl);
+void PointLight::buildClassBlock(Material& _material, ShaderSource& out) {
+
+    out << "struct PointLight {";
+    out << "    vec4 ambient;";
+    out << "    vec4 diffuse;";
+    out << "    vec4 specular;";
+    out << "    vec4 position;";
+    if (m_attenuation != 0.0) {
+        out << "    float attenuationExponent;";
+    }
+    if (m_innerRadius != 0.0) {
+        out << "    float innerRadius;";
+    }
+    if (m_outerRadius != 0.0) {
+        out << "    float outerRadius;";
+    }
+    out << "};";
+
+    out << "void calculateLight(in PointLight _light, in vec3 _eyeToPoint, in vec3 _normal) {";
+    out << "    float dist = length(_light.position.xyz - _eyeToPoint);";
+    // Compute vector from surface to light position
+    out << "    vec3 VP = (_light.position.xyz - _eyeToPoint) / dist;";
+    // Normalize the vector from surface to light position
+    out << "    float nDotVP = clamp(dot(VP, _normal), 0.0, 1.0);";
+    // Attenuation defaults
+    out << "    float attenuation = 1.0;";
+    if (m_attenuation != 0.0) {
+        out << "    float Rin = 1.0;";
+        out << "    float e = _light.attenuationExponent;";
+        if (m_innerRadius != 0.0) {
+            out << "    Rin = _light.innerRadius;";
+        }
+        if (m_outerRadius != 0.0) {
+            out << "    float Rdiff = _light.outerRadius-Rin;";
+            out << "    float d = clamp(max(0.0,dist-Rin)/Rdiff, 0.0, 1.0);";
+            out << "    attenuation = 1.0-(pow(d,e));";
+        } else {
+            // If no outer is provide behaves like:
+            // https://imdoingitwrong.wordpress.com/2011/01/31/light-attenuation/
+            out << "    float d = max(0.0,dist-Rin)/Rin+1.0;";
+            out << "    attenuation = clamp(1.0/(pow(d,e)), 0.0, 1.0);";
+        }
+    } else {
+        out << "    float Rin = 0.0;";
+        if (m_innerRadius != 0.0) {
+            out << "    Rin = _light.innerRadius;";
+            if (m_outerRadius != 0.0) {
+                out << "    float Rdiff = _light.outerRadius-Rin;";
+                out << "    float d = clamp(max(0.0,dist-Rin)/Rdiff, 0.0, 1.0);";
+                out << "    attenuation = 1.0-d*d;";
+            } else {
+                // If no outer is provide behaves like:
+                // https://imdoingitwrong.wordpress.com/2011/01/31/light-attenuation/
+                out << "    float d = max(0.0,dist-Rin)/Rin+1.0;";
+                out << "    attenuation = clamp(1.0/d, 0.0, 1.0);";
+            }
+        } else {
+            if (m_outerRadius != 0.0) {
+                out << "    float d = clamp(dist/_light.outerRadius, 0.0, 1.0);";
+                out << "    attenuation = 1.0-d*d;";
+            } else {
+                out << "    attenuation = 1.0;";
+            }
+        }
+    }
+    // Computer accumulators
+    out << "    light_accumulator_ambient += _light.ambient * attenuation;";
+
+    if (_material.hasDiffuse()) {
+        out << "    light_accumulator_diffuse += _light.diffuse * nDotVP * attenuation;";
+    }
+    if (_material.hasSpecular()) {
+        // power factor for shiny speculars
+        out << "    float pf = 0.0;";
+        out << "    if (nDotVP > 0.0) {";
+        out << "        vec3 reflectVector = reflect(-VP, _normal);";
+        out << "        float eyeDotR = max(0.0, dot(-normalize(_eyeToPoint), reflectVector));";
+        out << "        pf = pow(eyeDotR, material.shininess);";
+        out << "    }";
+        out << "    light_accumulator_specular += _light.specular * pf * attenuation;";
+    }
+    out << "}";
 }
 
-std::string PointLight::getInstanceDefinesBlock() {
-    std::string defines = "";
-
-    if (m_attenuation!=0.0) {
-        defines += "#define TANGRAM_POINTLIGHT_ATTENUATION_EXPONENT\n";
-    }
-
-    if (m_innerRadius!=0.0) {
-        defines += "#define TANGRAM_POINTLIGHT_ATTENUATION_INNER_RADIUS\n";
-    }
-
-    if (m_outerRadius!=0.0) {
-        defines += "#define TANGRAM_POINTLIGHT_ATTENUATION_OUTER_RADIUS\n";
-    }
-    return defines;
-}
-
-std::string PointLight::getInstanceAssignBlock() {
-    std::string block = Light::getInstanceAssignBlock();
+void PointLight::buildInstanceAssignBlock(ShaderSource& out) {
+    Light::buildInstanceAssignBlock(out);
     if (!m_dynamic) {
-        block += ", " + glm::to_string(m_position.value);
-        if (m_attenuation!=0.0) {
-            block += ", " + std::to_string(m_attenuation);
+        out += ", " + glm::to_string(m_position.value);
+        if (m_attenuation != 0.0) {
+            out += ", " + std::to_string(m_attenuation);
         }
-        if (m_innerRadius!=0.0) {
-            block += ", " + std::to_string(m_innerRadius);
+        if (m_innerRadius != 0.0) {
+            out += ", " + std::to_string(m_innerRadius);
         }
-        if (m_outerRadius!=0.0) {
-            block += ", " + std::to_string(m_outerRadius);
+        if (m_outerRadius != 0.0) {
+            out += ", " + std::to_string(m_outerRadius);
         }
-        block += ")";
     }
-    return block;
 }
 
 const std::string& PointLight::getTypeName() {

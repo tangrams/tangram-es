@@ -34,7 +34,7 @@ struct PointStyleBuilder : public StyleBuilder {
 
     const Style& style() const override { return m_style; }
 
-    PointStyleBuilder(const PointStyle& _style) : StyleBuilder(_style), m_style(_style) {
+    PointStyleBuilder(const PointStyle& _style) : m_style(_style) {
         m_textStyleBuilder = m_style.textStyle().createBuilder();
     }
 

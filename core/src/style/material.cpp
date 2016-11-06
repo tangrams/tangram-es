@@ -1,11 +1,8 @@
 #include "material.h"
 
-#include "platform.h"
+#include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 #include "gl/texture.h"
-#include "gl/renderState.h"
-
-#include "shaders/material_glsl.h"
 
 namespace Tangram {
 
@@ -21,7 +18,7 @@ void Material::setEmission(glm::vec4 _emission){
 void Material::setEmission(MaterialTexture _emissionTexture){
     m_emission_texture = _emissionTexture;
     m_emission = glm::vec4(m_emission_texture.amount, 1.f);
-    setEmissionEnabled((bool)m_emission_texture.tex);
+    setEmissionEnabled(bool(m_emission_texture.tex));
 }
 
 void Material::setAmbient(glm::vec4 _ambient){
@@ -33,7 +30,7 @@ void Material::setAmbient(glm::vec4 _ambient){
 void Material::setAmbient(MaterialTexture _ambientTexture){
     m_ambient_texture = _ambientTexture;
     m_ambient = glm::vec4(m_ambient_texture.amount, 1.f);
-    setAmbientEnabled((bool)m_ambient_texture.tex);
+    setAmbientEnabled(bool(m_ambient_texture.tex));
 }
 
 void Material::setDiffuse(glm::vec4 _diffuse){
@@ -45,7 +42,7 @@ void Material::setDiffuse(glm::vec4 _diffuse){
 void Material::setDiffuse(MaterialTexture _diffuseTexture){
     m_diffuse_texture = _diffuseTexture;
     m_diffuse = glm::vec4(m_diffuse_texture.amount, 1.f);
-    setDiffuseEnabled((bool)m_diffuse_texture.tex);
+    setDiffuseEnabled(bool(m_diffuse_texture.tex));
 }
 
 void Material::setSpecular(glm::vec4 _specular){
@@ -57,7 +54,7 @@ void Material::setSpecular(glm::vec4 _specular){
 void Material::setSpecular(MaterialTexture _specularTexture){
     m_specular_texture = _specularTexture;
     m_specular = glm::vec4(m_specular_texture.amount, 1.f);
-    setSpecularEnabled((bool)m_specular_texture.tex);
+    setSpecularEnabled(bool(m_specular_texture.tex));
 }
 
 void Material::setShininess(float _shiny) {
@@ -87,75 +84,204 @@ std::string mappingTypeToString(MappingType type) {
     }
 }
 
-std::string Material::getDefinesBlock(){
-    std::string defines = "";
+void Material::buildMaterialBlock(ShaderSource& out) {
 
-    bool mappings[4] = { false };
+    out << "#define TANGRAM_SKEW vec2(0.0)";
 
+    out << "struct Material {";
     if (m_bEmission) {
-        defines += "#define TANGRAM_MATERIAL_EMISSION\n";
+        out << "    vec4 emission;";
         if (m_emission_texture.tex) {
-            defines += "#define TANGRAM_MATERIAL_EMISSION_TEXTURE\n";
-            defines += "#define TANGRAM_MATERIAL_EMISSION_TEXTURE_" +
-                mappingTypeToString(m_emission_texture.mapping) + "\n";
-            mappings[(int)m_emission_texture.mapping] = true;
+            out << "    vec3 emissionScale;";
         }
     }
-
     if (m_bAmbient) {
-        defines += "#define TANGRAM_MATERIAL_AMBIENT\n";
+        out << "    vec4 ambient;";
         if (m_ambient_texture.tex) {
-            defines += "#define TANGRAM_MATERIAL_AMBIENT_TEXTURE\n";
-            defines += "#define TANGRAM_MATERIAL_AMBIENT_TEXTURE_" +
-                mappingTypeToString(m_ambient_texture.mapping) + "\n";
-            mappings[(int)m_ambient_texture.mapping] = true;
+            out << "    vec3 ambientScale;";
         }
     }
-
     if (m_bDiffuse) {
-        defines += "#define TANGRAM_MATERIAL_DIFFUSE\n";
+        out << "    vec4 diffuse;";
         if (m_diffuse_texture.tex) {
-            defines += "#define TANGRAM_MATERIAL_DIFFUSE_TEXTURE\n";
-            defines += "#define TANGRAM_MATERIAL_DIFFUSE_TEXTURE_" +
-                mappingTypeToString(m_diffuse_texture.mapping) + "\n";
-            mappings[(int)m_diffuse_texture.mapping] = true;
+            out << "    vec3 diffuseScale;";
         }
     }
-
     if (m_bSpecular) {
-        defines += "#define TANGRAM_MATERIAL_SPECULAR\n";
+        out << "    vec4 specular;";
+        out << "    float shininess;";
         if (m_specular_texture.tex) {
-            defines += "#define TANGRAM_MATERIAL_SPECULAR_TEXTURE\n";
-            defines += "#define TANGRAM_MATERIAL_SPECULAR_TEXTURE_" +
-                mappingTypeToString(m_specular_texture.mapping) + "\n";
-            mappings[(int)m_specular_texture.mapping] = true;
+            out << "    vec3 specularScale;";
         }
     }
+    if (m_normal_texture.tex) {
+        out << "    vec3 normalScale;";
+        out << "    vec3 normalAmount;";
+    }
+    out << "};";
 
-    if (m_normal_texture.tex){
-        defines += "#define TANGRAM_MATERIAL_NORMAL_TEXTURE\n";
-        defines += "#define TANGRAM_MATERIAL_NORMAL_TEXTURE_" +
-            mappingTypeToString(m_normal_texture.mapping) + "\n";
-        mappings[(int)m_specular_texture.mapping] = true;
+    // Note: uniform is copied to a global instance to allow modification
+    out << "uniform Material u_material;";
+    out << "Material material;";
+}
+
+void Material::buildMaterialFragmentBlock(ShaderSource& out) {
+
+    if (m_emission_texture.tex) {
+        out << "uniform sampler2D u_material_emission_texture;";
+    }
+    if (m_ambient_texture.tex) {
+        out << "uniform sampler2D u_material_ambient_texture;";
+    }
+    if (m_diffuse_texture.tex) {
+        out << "uniform sampler2D u_material_diffuse_texture;";
+    }
+    if (m_specular_texture.tex) {
+        out << "uniform sampler2D u_material_specular_texture;";
+    }
+    if (m_normal_texture.tex) {
+        out << "uniform sampler2D u_material_normal_texture;";
     }
 
-    for (int i = 0; i < 4; i++) {
-        if (mappings[i]) {
-            defines += "#define TANGRAM_MATERIAL_TEXTURE_" + mappingTypeToString((MappingType)i) + "\n";
+    if (m_emission_texture.mapping == MappingType::spheremap ||
+        m_ambient_texture.mapping == MappingType::spheremap ||
+        m_diffuse_texture.mapping == MappingType::spheremap ||
+        m_normal_texture.mapping == MappingType::spheremap) {
+
+        out << "vec4 getSphereMap (in sampler2D _tex, in vec3 _eyeToPoint, in vec3 _normal, in vec2 _skew) {"
+            << "    vec3 eye = normalize(_eyeToPoint);"
+            << "    eye.xy -= _skew;"
+            << "    eye = normalize(eye);"
+            << "    vec3 r = reflect(eye, _normal);"
+            << "    r.z += 1.0;"
+            << "    float m = 2. * length(r);"
+            << "    vec2 uv = r.xy / m + .5;"
+            << "    return texture2D(_tex, uv);"
+            << "}";
+    }
+
+    if (m_emission_texture.mapping == MappingType::triplanar ||
+        m_ambient_texture.mapping == MappingType::triplanar ||
+        m_diffuse_texture.mapping == MappingType::triplanar ||
+        m_normal_texture.mapping == MappingType::triplanar) {
+
+        out << "vec3 getTriPlanarBlend (in vec3 _normal) {"
+            << "    vec3 blending = abs(_normal);"
+            << "    blending = normalize(max(blending, 0.00001));"
+            << "    float b = (blending.x + blending.y + blending.z);"
+            << "    return blending / b;"
+            << "}";
+
+        out << "vec4 getTriPlanar (in sampler2D _tex, in vec3 _pos, in vec3 _normal, in vec3 _scale) {"
+            << "    vec3 blending = getTriPlanarBlend(_normal);"
+            << "    vec4 xaxis = texture2D(_tex, fract(_pos.yz * _scale.x));"
+            << "    vec4 yaxis = texture2D(_tex, fract(_pos.xz * _scale.y));"
+            << "    vec4 zaxis = texture2D(_tex, fract(_pos.xy * _scale.z));"
+            << "    return  xaxis * blending.x + yaxis * blending.y + zaxis * blending.z;"
+            << "}";
+    }
+
+    if (m_emission_texture.mapping == MappingType::planar ||
+        m_ambient_texture.mapping == MappingType::planar ||
+        m_diffuse_texture.mapping == MappingType::planar ||
+        m_normal_texture.mapping == MappingType::planar) {
+
+        out << "vec4 getPlanar (in sampler2D _tex, in vec3 _pos, in vec2 _scale) {"
+            << "    return texture2D( _tex, fract(_pos.xy * _scale.x) );"
+            << "}";
+    }
+
+    if (m_normal_texture.tex) {
+        out << "void calculateNormal (inout vec3 _normal) {";
+        switch(m_normal_texture.mapping) {
+        case MappingType::uv:
+            out << "    _normal += texture2D(u_material_normal_texture, fract(v_texcoord*material.normalScale.xy)).rgb*2.0-1.0;";
+            break;
+        case MappingType::planar:
+            out << "    _normal += getPlanar(u_material_normal_texture, v_world_position.xyz, material.normalScale.xy).rgb*2.0-1.0;";
+            break;
+        case MappingType::triplanar:
+            out << "    _normal += getTriPlanar(u_material_normal_texture, v_world_position.xyz, _normal, material.normalScale).rgb*2.0-1.0;";
+            break;
+        default: break;
+        }
+        out << "    _normal = normalize(_normal);";
+        out << "}";
+    }
+
+    out << "void calculateMaterial (in vec3 _eyeToPoint, inout vec3 _normal) {";
+    if (m_emission_texture.tex) {
+        switch(m_emission_texture.mapping) {
+        case MappingType::uv:
+            out << "    material.emission *= texture2D(u_material_emission_texture, v_texcoord);";
+            break;
+        case MappingType::planar:
+            out << "    material.emission *= getPlanar(u_material_emission_texture, v_world_position.xyz, material.emissionScale.xy);";
+            break;
+        case MappingType::triplanar:
+            out << "    material.emission *= getTriPlanar(u_material_emission_texture, v_world_position.xyz, _normal, material.emissionScale);";
+            break;
+        case MappingType::spheremap:
+            out << "    material.emission *= getSphereMap(u_material_emission_texture, _eyeToPoint, _normal, TANGRAM_SKEW);";
+            break;
+        default: break;
         }
     }
-
-    return defines;
+    if (m_ambient_texture.tex) {
+        switch(m_ambient_texture.mapping) {
+        case MappingType::uv:
+            out << "    material.ambient *= texture2D(u_material_ambient_texture, v_texcoord);";
+            break;
+        case MappingType::planar:
+            out << "    material.ambient *= getPlanar(u_material_ambient_texture, v_world_position.xyz, material.ambientScale.xy);";
+            break;
+        case MappingType::triplanar:
+            out << "    material.ambient *= getTriPlanar(u_material_ambient_texture, v_world_position.xyz, _normal, material.ambientScale);";
+            break;
+        case MappingType::spheremap:
+            out << "    material.ambient *= getSphereMap(u_material_ambient_texture, _eyeToPoint, _normal, TANGRAM_SKEW);";
+            break;
+        default: break;
+        }
+    }
+    if (m_diffuse_texture.tex) {
+        switch(m_diffuse_texture.mapping) {
+        case MappingType::uv:
+            out << "    material.diffuse *= texture2D(u_material_diffuse_texture, v_texcoord);";
+            break;
+        case MappingType::planar:
+            out << "    material.diffuse *= getPlanar(u_material_diffuse_texture, v_world_position.xyz, material.diffuseScale.xy);";
+            break;
+        case MappingType::triplanar:
+            out << "    material.diffuse *= getTriPlanar(u_material_diffuse_texture, v_world_position.xyz, _normal, material.diffuseScale);";
+            break;
+        case MappingType::spheremap:
+            out << "    material.diffuse *= getSphereMap(u_material_diffuse_texture, _eyeToPoint, _normal, TANGRAM_SKEW);";
+            break;
+        default: break;
+        }
+    }
+    if (m_specular_texture.tex) {
+        switch(m_specular_texture.mapping) {
+        case MappingType::uv:
+            out << "    material.specular *= texture2D(u_material_specular_texture, v_texcoord);";
+            break;
+        case MappingType::planar:
+            out << "    material.specular *= getPlanar(u_material_specular_texture, v_world_position.xyz, material.specularScale.xy);";
+            break;
+        case MappingType::triplanar:
+            out << "    material.specular *= getTriPlanar(u_material_specular_texture, v_world_position.xyz, _normal, material.specularScale);";
+            break;
+        case MappingType::spheremap:
+            out << "    material.specular *= getSphereMap(u_material_specular_texture, _eyeToPoint, _normal, TANGRAM_SKEW);";
+            break;
+        default: break;
+        }
+    }
+    out << "}";
 }
 
-std::string Material::getClassBlock() {
-    return SHADER_SOURCE(material_glsl);
-}
-
-std::unique_ptr<MaterialUniforms> Material::injectOnProgram(ShaderProgram& _shader ) {
-    _shader.addSourceBlock("defines", getDefinesBlock(), false);
-    _shader.addSourceBlock("material", getClassBlock(), false);
-    _shader.addSourceBlock("setup", "material = u_material;", false);
+std::unique_ptr<MaterialUniforms> Material::getUniforms(ShaderProgram& _shader ) {
 
     if (m_bEmission || m_bAmbient || m_bDiffuse || m_bSpecular || m_normal_texture.tex) {
         return std::make_unique<MaterialUniforms>(_shader);

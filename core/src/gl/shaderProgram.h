@@ -29,9 +29,6 @@ public:
     // Set the vertex and fragment shader GLSL source to the given strings/
     void setSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc);
 
-    // Add a block of GLSL to be injected at "#pragma tangram: [_tagName]" in the shader sources.
-    void addSourceBlock(const std::string& _tagName, const std::string& _glslSource, bool _allowDuplicate = true);
-
     // Apply all source blocks to the source strings for this shader and attempt to compile
     // and then link the resulting vertex and fragment shaders; if compiling or linking fails
     // this prints the compiler log, returns false, and keeps the program's previous state; if
@@ -90,8 +87,6 @@ public:
 
     static std::string getExtensionDeclaration(const std::string& _extension);
 
-    auto getSourceBlocks() const { return  m_sourceBlocks; }
-
     void setDescription(std::string _description) { m_description = _description; }
 
     static std::string shaderSourceBlock(const unsigned char* data, size_t size) {
@@ -135,8 +130,6 @@ private:
 
     // An optional shader description printed on compile failure
     std::string m_description;
-
-    std::map<std::string, std::vector<std::string>> m_sourceBlocks;
 
     bool m_needsBuild = true;
     bool m_invalidShaderSource = false;
