@@ -7,6 +7,7 @@ This openGL Material implementation follows from the WebGL version of Tangram
 #pragma once
 
 #include "gl/uniform.h"
+#include "util/shaderSource.h"
 
 #include <memory>
 #include <string>
@@ -106,7 +107,7 @@ public:
     void setNormal(MaterialTexture _normalTexture);
 
     /*  Inject the needed lines of GLSL code on the shader to make this material work */
-    virtual std::unique_ptr<MaterialUniforms> injectOnProgram(ShaderProgram& _shader);
+    virtual std::unique_ptr<MaterialUniforms> getUniforms(ShaderProgram& _shader);
 
     /*  Method to pass it self as a uniform to the shader program */
     virtual void setupProgram(RenderState& rs, MaterialUniforms& _uniforms);
@@ -115,14 +116,13 @@ public:
     bool hasAmbient() const { return m_bAmbient; }
     bool hasDiffuse() const { return m_bDiffuse; }
     bool hasSpecular() const { return m_bSpecular; }
-
-private:
-
-    /* Get defines that need to be injected on top of the shader */
-    std::string getDefinesBlock();
+    bool hasNormalTexture() const { return bool(m_normal_texture.tex); }
 
     /* Get the GLSL struct and classes need to be injected */
-    std::string getClassBlock();
+    void buildMaterialBlock(ShaderSource& out);
+    void buildMaterialFragmentBlock(ShaderSource& out);
+
+private:
 
     bool m_bEmission = false;
     glm::vec4 m_emission = glm::vec4(1.f);

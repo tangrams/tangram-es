@@ -56,6 +56,9 @@ public:
     TextStyle& textStyle() const { return *m_textStyle; }
     virtual void setPixelScale(float _pixelScale) override;
 
+    void buildFragmentShaderSource(ShaderSource& _out) override;
+    void buildVertexShaderSource(ShaderSource& _out, bool _selectionPass) override;
+
 protected:
 
     std::shared_ptr<SpriteAtlas> m_spriteAtlas;

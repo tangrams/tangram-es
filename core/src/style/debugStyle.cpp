@@ -1,7 +1,6 @@
 #include "debugStyle.h"
 
 #include "tangram.h"
-#include "platform.h"
 #include "material.h"
 #include "tile/tile.h"
 #include "gl/shaderProgram.h"
@@ -36,11 +35,12 @@ void DebugStyle::constructVertexLayout() {
 
 }
 
-void DebugStyle::constructShaderProgram() {
+void DebugStyle::buildFragmentShaderSource(ShaderSource& out) {
+    out << SHADER_SOURCE(debug_fs);
+}
 
-    m_shaderProgram->setSourceStrings(SHADER_SOURCE(debug_fs),
-                                      SHADER_SOURCE(debug_vs));
-
+void DebugStyle::buildVertexShaderSource(ShaderSource& out, bool _selectionPass) {
+    out << SHADER_SOURCE(debug_vs);
 }
 
 struct DebugStyleBuilder : public StyleBuilder {
@@ -72,8 +72,7 @@ struct DebugStyleBuilder : public StyleBuilder {
 
     const Style& style() const override { return m_style; }
 
-    DebugStyleBuilder(const DebugStyle& _style)
-        : StyleBuilder(_style), m_style(_style) {}
+    DebugStyleBuilder(const DebugStyle& _style) : m_style(_style) {}
 
 };
 

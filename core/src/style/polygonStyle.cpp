@@ -1,20 +1,18 @@
 #include "polygonStyle.h"
 
-#include "tangram.h"
-#include "platform.h"
+#include "gl/mesh.h"
+#include "gl/shaderProgram.h"
+#include "marker/marker.h"
 #include "material.h"
+#include "scene/drawRule.h"
+#include "scene/lights.h"
+#include "tile/tile.h"
 #include "util/builders.h"
 #include "util/extrude.h"
-#include "gl/shaderProgram.h"
-#include "gl/mesh.h"
-#include "tile/tile.h"
-#include "scene/drawRule.h"
-#include "marker/marker.h"
+
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "glm/gtc/type_precision.hpp"
-#include "shaders/polygon_fs.h"
-#include "shaders/polygon_vs.h"
 
 #include <cmath>
 
@@ -70,17 +68,6 @@ void PolygonStyle::constructVertexLayout() {
             {"a_selection_color", 4, GL_UNSIGNED_BYTE, true, 0},
         }));
     }
-
-}
-
-void PolygonStyle::constructShaderProgram() {
-
-    m_shaderProgram->setSourceStrings(SHADER_SOURCE(polygon_fs),
-                                      SHADER_SOURCE(polygon_vs));
-
-    if (m_texCoordsGeneration) {
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_USE_TEX_COORDS\n");
-    }
 }
 
 template <class V>
@@ -115,7 +102,7 @@ public:
 
     std::unique_ptr<StyledMesh> build() override;
 
-    PolygonStyleBuilder(const PolygonStyle& _style) : StyleBuilder(_style), m_style(_style) {}
+    PolygonStyleBuilder(const PolygonStyle& _style) : m_style(_style) {}
 
     void parseRule(const DrawRule& _rule, const Properties& _props);
 
@@ -203,5 +190,133 @@ std::unique_ptr<StyleBuilder> PolygonStyle::createBuilder() const {
         return std::move(builder);
     }
 }
+
+static const char* s_uniforms = R"(
+uniform mat4 u_model;
+uniform mat4 u_view;
+uniform mat4 u_proj;
+uniform mat3 u_normal_matrix;
+uniform vec4 u_tile_origin;
+uniform vec3 u_map_position;
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform float u_meters_per_pixel;
+uniform float u_device_pixel_ratio;
+uniform float u_proxy_depth;
+uniform mat3 u_inverse_normal_matrix;)";
+
+static const char* s_varyings = R"(
+varying vec4 v_world_position;
+varying vec4 v_position;
+varying vec4 v_color;
+varying vec3 v_normal;)";
+
+void PolygonStyle::buildVertexShaderSource(ShaderSource& out, bool _selectionPass) {
+
+    out << "#define TANGRAM_DEPTH_DELTA 0.000030518"; // (2.0 / (1 << 16)
+    out << "#define TANGRAM_WORLD_POSITION_WRAP 100000.";
+    out << "#define UNPACK_POSITION(x) (x / " + std::to_string(position_scale) + ")";
+
+    insertShaderBlock("uniforms", out);
+    out << s_uniforms;
+
+    out << "attribute vec4 a_position;"
+        << "attribute vec4 a_color;"
+        << "attribute vec3 a_normal;";
+
+    if (m_texCoordsGeneration) {
+        out << "attribute vec2 a_texcoord;"
+            << "varying vec2 v_texcoord;";
+    }
+    if (_selectionPass) {
+        out << "attribute vec4 a_selection_color;"
+            << "varying vec4 v_selection_color;";
+    }
+    out << s_varyings;
+
+    out << "vec4 modelPosition() {"
+        << "   return vec4(UNPACK_POSITION(a_position.xyz) * exp2(u_tile_origin.z - u_tile_origin.w), 1.0);"
+        << "}"
+        << "vec4 worldPosition() { return v_world_position; }"
+        << "vec3 worldNormal() { return a_normal; }"
+        << "vec4 modelPositionBaseZoom() { return vec4(UNPACK_POSITION(a_position.xyz), 1.0); }";
+
+    buildMaterialAndLightGlobal(false, out);
+    insertShaderBlock("global", out);
+
+    out << "void main() {";
+    out << "    vec4 position = vec4(UNPACK_POSITION(a_position.xyz), 1.0);";
+    if (_selectionPass) {
+        out << "    v_selection_color = a_selection_color;"
+            // Skip non-selectable meshes
+            << "    if (v_selection_color == vec4(0.0)) {"
+            << "        gl_Position = vec4(0.0);"
+            << "        return;"
+            << "    }";
+    } else {
+        // Initialize globals
+        insertShaderBlock("setup", out);
+    }
+    out << "    v_color = a_color;";
+    if (m_texCoordsGeneration) {
+        out << "    v_texcoord = a_texcoord;";
+    }
+    out << "    v_normal = normalize(u_normal_matrix * a_normal);";
+    // Transform position into meters relative to map center
+    out << "    position = u_model * position;";
+    // World coordinates for 3d procedural textures
+    out << "    vec4 local_origin = vec4(u_map_position.xy, 0., 0.);";
+    out << "    local_origin = mod(local_origin, TANGRAM_WORLD_POSITION_WRAP);";
+    out << "    v_world_position = position + local_origin;";
+    // Modify position before lighting and camera projection
+    insertShaderBlock("position", out);
+    // Set position varying to the camera-space vertex position
+    out << "    v_position = u_view * position;";
+
+    if (!_selectionPass) {
+        buildMaterialAndLightBlock(false, out);
+    }
+    out << "    gl_Position = u_proj * v_position;";
+    // Proxy tiles are placed deeper in the depth buffer than non-proxy tiles
+    out << "    gl_Position.z += TANGRAM_DEPTH_DELTA * gl_Position.w * u_proxy_depth;"
+        << "    float layer = a_position.w;"
+        << "    gl_Position.z -= layer * TANGRAM_DEPTH_DELTA * gl_Position.w;";
+    out << "}";
+}
+
+void PolygonStyle::buildFragmentShaderSource(ShaderSource& out) {
+
+    out << s_uniforms;
+    insertShaderBlock("uniforms", out);
+
+    out << s_varyings;
+
+    if (m_texCoordsGeneration) {
+        out << "varying vec2 v_texcoord;";
+    }
+
+    out << "vec4 worldPosition() { return v_world_position; }"
+        << "vec3 worldNormal() { return normalize(u_inverse_normal_matrix * v_normal); }";
+
+    buildMaterialAndLightGlobal(true, out);
+    insertShaderBlock("global", out);
+
+    out << "void main() {"
+        << "    vec4 color = v_color;"
+        << "    vec3 normal = v_normal;";
+
+    // Initialize globals
+    insertShaderBlock("setup", out);
+
+    buildMaterialAndLightBlock(true, out);
+
+    // Modify color after lighting (filter-like effects that don't require
+    // a additional render passes)
+    insertShaderBlock("filter", out);
+    //color.rgb = pow(color.rgb, vec3(1.0/2.2)); // gamma correction
+    out << "    gl_FragColor = color;";
+    out << "}";
+}
+
 
 }
