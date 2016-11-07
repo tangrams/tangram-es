@@ -142,6 +142,7 @@ void finishUrlRequests() {
     for(auto& worker : s_Workers) {
         worker.join();
     }
+    s_urlTaskQueue.clear();
 }
 
 void setCurrentThreadPriority(int priority){
