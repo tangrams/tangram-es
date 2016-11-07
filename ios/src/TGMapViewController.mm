@@ -188,30 +188,16 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (polyline.count < 2 || !identifier) { return NO; }
 
-    return self.map->markerSetPolyline(identifier, reinterpret_cast<Tangram::LngLat*>([polyline data]), polyline.count);
+    return self.map->markerSetPolyline(identifier, reinterpret_cast<Tangram::LngLat*>([polyline coordinates]), polyline.count);
 }
 
 - (BOOL)markerSetPolygon:(TGMapMarkerId)identifier polygon:(TGGeoPolygon *)polygon;
 {
     if (polygon.count < 3 || !identifier) { return NO; }
 
-    using Ring = std::vector<TGGeoPoint>;
-    auto polygonRings = static_cast<std::vector<Ring>*>([polygon data]);
+    auto coords = reinterpret_cast<Tangram::LngLat*>([polygon coordinates]);
 
-    std::vector<Tangram::LngLat> coordinates;
-    coordinates.reserve(polygon.count);
-
-    std::vector<int> rings;
-    rings.reserve(polygonRings->size());
-
-    for (const auto& ring : *polygonRings) {
-        rings.push_back(ring.size());
-        for (const auto& coord : ring) {
-            coordinates.push_back({coord.longitude, coord.latitude});
-        }
-    }
-
-    return self.map->markerSetPolygon(identifier, coordinates.data(), rings.data(), rings.size());
+    return self.map->markerSetPolygon(identifier, coords, [polygon rings], [polygon ringsCount]);
 }
 
 - (BOOL)markerSetVisible:(TGMapMarkerId)identifier visible:(BOOL)visible

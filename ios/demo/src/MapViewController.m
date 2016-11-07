@@ -9,8 +9,8 @@
 
 @interface MapViewController ()
 
-@property (assign, atomic) TGMapMarkerId polyline;
-@property (assign, atomic) TGMapMarkerId polygon;
+@property (assign, nonatomic) TGMapMarkerId polyline;
+@property (assign, nonatomic) TGMapMarkerId polygon;
 
 @end
 
@@ -75,7 +75,7 @@
     {
         if (!vc.polyline) {
             vc.polyline = [vc markerAdd];
-            [vc markerSetStyling:vc.polyline styling:@"{ style: 'lines', color: 'red', width: 20px, order: 5000 }"];
+            [vc markerSetStyling:vc.polyline styling:@"{ style: 'lines', color: 'red', width: 20px, order: 500 }"];
         }
 
         static TGGeoPolyline* line = nil;
@@ -93,7 +93,7 @@
     {
         if (!vc.polygon) {
             vc.polygon = [vc markerAdd];
-            [vc markerSetStyling:vc.polygon styling:@" { style: 'polygons', color: 'blue', order: 5000 } "];
+            [vc markerSetStyling:vc.polygon styling:@" { style: 'polygons', color: 'blue', order: 500 } "];
         }
 
         static TGGeoPolygon* polygon = nil;
@@ -113,7 +113,7 @@
     // Add point marker
     {
         TGMapMarkerId mid = [vc markerAdd];
-        [vc markerSetStyling:mid styling:@"{ style: 'points', color: 'white', size: [25px, 25px], order:5000, collide: false }"];
+        [vc markerSetStyling:mid styling:@"{ style: 'points', color: 'white', size: [25px, 25px], order:500, collide: false }"];
         [vc markerSetPoint:mid coordinates:coordinate];
     }
 

@@ -11,17 +11,19 @@
 
 @interface TGGeoPolygon : NSObject
 
-- (id)init;
-
 - (void)startPath:(TGGeoPoint)latlon;
 
 - (void)startPath:(TGGeoPoint)latlon withSize:(unsigned int)size;
 
 - (void)addPoint:(TGGeoPoint)latlon;
 
-- (void*)data;
+- (TGGeoPoint*)coordinates;
+
+- (int*)rings;
 
 - (unsigned int)count;
+
+- (unsigned int)ringsCount;
 
 - (void)removeAll;
 
