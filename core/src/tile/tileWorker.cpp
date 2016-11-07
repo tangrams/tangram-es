@@ -130,6 +130,8 @@ void TileWorker::stop() {
     for (auto& worker : m_workers) {
         worker->thread.join();
     }
+
+    m_queue.clear();
 }
 
 }

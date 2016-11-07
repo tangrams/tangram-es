@@ -122,6 +122,7 @@ void UrlWorker::stop() {
     }
 
     m_workers.clear();
+    m_queue.clear();
 
     curl_global_cleanup();
 }

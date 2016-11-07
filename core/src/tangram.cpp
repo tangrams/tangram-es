@@ -109,7 +109,10 @@ Map::~Map() {
     // The unique_ptr to Impl will be automatically destroyed when Map is destroyed.
     impl->tileWorker.stop();
     impl->asyncWorker.reset();
-    impl->jobQueue.runJobs();
+
+    // Make sure other threads are stopped before calling stop()!
+    // All jobs will be executed immediately on add() afterwards.
+    impl->jobQueue.stop();
 
     TextDisplay::Instance().deinit();
     Primitives::deinit();

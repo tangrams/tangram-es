@@ -38,7 +38,7 @@ class Scene {
 public:
 
     struct Camera {
-        CameraType type;
+        CameraType type = CameraType::perspective;
 
         float maxTilt = 90.f;
         std::shared_ptr<Stops> maxTiltStops;
