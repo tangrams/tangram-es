@@ -17,7 +17,7 @@
 
 - (unsigned int)count;
 
-- (TGGeoPoint*)data;
+- (TGGeoPoint*)coordinates;
 
 - (void)removeAll;
 

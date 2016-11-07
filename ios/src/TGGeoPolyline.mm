@@ -11,7 +11,7 @@
 #include <vector>
 
 @interface TGGeoPolyline () {
-    std::vector<TGGeoPoint> points;
+    std::vector<TGGeoPoint> coordinates;
 }
 
 @end
@@ -23,7 +23,7 @@
     self = [super init];
 
     if (self) {
-        points.reserve(size);
+        coordinates.reserve(size);
     }
 
     return self;
@@ -31,22 +31,22 @@
 
 - (void)addPoint:(TGGeoPoint)latlon
 {
-    points.push_back(latlon);
+    coordinates.push_back(latlon);
 }
 
 - (unsigned int)count
 {
-    return points.size();
+    return coordinates.size();
 }
 
-- (TGGeoPoint*)data
+- (TGGeoPoint*)coordinates
 {
-    return points.data();
+    return coordinates.data();
 }
 
 - (void)removeAll
 {
-    points.clear();
+    coordinates.clear();
 }
 
 @end

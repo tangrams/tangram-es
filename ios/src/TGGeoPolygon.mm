@@ -10,23 +10,21 @@
 
 #include <vector>
 
-using Ring = std::vector<TGGeoPoint>;
-
 @interface TGGeoPolygon () {
-    std::vector<Ring> polygons;
-    unsigned int points;
+    std::vector<TGGeoPoint> coordinates;
+    std::vector<int> rings;
 }
 
 @end
 
 @implementation TGGeoPolygon
 
-- (id)init
+- (id)initWithSize:(unsigned int)size
 {
     self = [super init];
 
     if (self) {
-        points = 0;
+        coordinates.reserve(size);
     }
 
     return self;
@@ -34,11 +32,10 @@ using Ring = std::vector<TGGeoPoint>;
 
 - (void)startPath:(TGGeoPoint)latlon withSize:(unsigned int)size
 {
-    polygons.emplace_back();
-    polygons.back().reserve(size);
-    polygons.back().push_back(latlon);
+    coordinates.reserve(coordinates.size() + size);
+    coordinates.push_back(latlon);
 
-    points++;
+    rings.emplace_back(1);
 }
 
 - (void)startPath:(TGGeoPoint)latlon
@@ -48,25 +45,36 @@ using Ring = std::vector<TGGeoPoint>;
 
 - (void)addPoint:(TGGeoPoint)latlon
 {
-    if (polygons.size() == 0) { return; }
-    polygons.back().push_back(latlon);
+    if (rings.size() == 0) { return; }
 
-    points++;
+    coordinates.push_back(latlon);
+    rings.back()++;
 }
 
 - (unsigned int)count
 {
-    return points;
+    return coordinates.size();
 }
 
-- (void*)data
+- (unsigned int)ringsCount
 {
-    return (void*)&polygons;
+    return rings.size();
+}
+
+- (TGGeoPoint*)coordinates
+{
+    return coordinates.data();
+}
+
+- (int*)rings
+{
+    return rings.data();
 }
 
 - (void)removeAll
 {
-    polygons.clear();
+    coordinates.clear();
+    rings.clear();
 }
 
 @end
