@@ -79,7 +79,9 @@ target_compile_options(${LIB_NAME}
   -fPIC
   -Wl,-z,defs)
 
-# SET(CMAKE_INSTALL_PREFIX /usr)
-# SET(PREFIX ${CMAKE_INSTALL_PREFIX})
 
+if (${ARCH} MATCHES "x86_64" OR ${ARCH} MATCHES "aarch64")
+install(TARGETS ${LIB_NAME} DESTINATION lib64)
+else ()
 install(TARGETS ${LIB_NAME} DESTINATION lib)
+endif()

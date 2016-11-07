@@ -19,10 +19,20 @@ BuildRequires: 	pkgconfig(fontconfig)
 Requires(post):  /sbin/ldconfig
 Requires(postun):  /sbin/ldconfig
 
-%ifarch %{arm}
+%ifarch %arm
 %define ARCH arm
-%else
+%endif
+
+%ifarch aarch64
+%define ARCH aarch64
+%endif
+
+%ifarch %ix86
 %define ARCH i586
+%endif
+
+%ifarch x86_64
+%define ARCH x86_64
 %endif
 
 %description
@@ -54,7 +64,7 @@ MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 #echo "-------------------------------->>"
 #find .
 #echo "--------------------------------<<"
-cmake .  -DCMAKE_BUILD_TYPE=Debug -DPLATFORM_TARGET=tizen-lib -DCMAKE_INSTALL_PREFIX=%{_prefix} -DMAJORVER=${MAJORVER} -DFULLVER=%{version}
+cmake .  -DCMAKE_BUILD_TYPE=Debug -DARCH=%{ARCH} -DPLATFORM_TARGET=tizen-lib -DCMAKE_INSTALL_PREFIX=%{_prefix} -DMAJORVER=${MAJORVER} -DFULLVER=%{version}
 make %{?jobs:-j%jobs}
 
 %install
