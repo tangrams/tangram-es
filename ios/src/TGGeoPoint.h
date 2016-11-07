@@ -6,8 +6,7 @@
 //
 //
 
-#ifndef TGGeoPoint_h
-#define TGGeoPoint_h
+#pragma once
 
 struct TGGeoPoint {
     double longitude;
@@ -24,4 +23,3 @@ static inline TGGeoPoint TGGeoPointMake(double lat, double lon)
     return p;
 }
 
-#endif /* TGGeoPoint_h */
