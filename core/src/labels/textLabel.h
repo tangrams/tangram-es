@@ -52,6 +52,8 @@ public:
 
     void updateBBoxes(float _zoomFract) override;
 
+    LabelType renderType() const override { return LabelType::text; }
+
     TextRange& textRanges() {
         return m_textRanges;
     }

@@ -440,7 +440,21 @@ void Map::render() {
 
             for (const auto& tile : tiles) {
                 if (auto props = tile->getSelectionFeature(color)) {
-                    items.push_back({props, {query.position[0], query.position[1]}, 0});
+                    std::vector<TouchLabel> touchLabels;
+
+                    for (auto label : labels) {
+                        std::vector<LngLat> coordinates;
+
+                        if (label->type() != Label::Type::line) {
+                            glm::vec2 tileCoord = glm::vec2(label->worldTransform().position);
+                            glm::dvec2 degrees = tile->coordToLngLat(tileCoord, impl->view.getMapProjection());
+                            coordinates.push_back({degrees.x, degrees.y});
+                        }
+
+                        touchLabels.push_back({label->renderType(), coordinates});
+                    }
+
+                    items.push_back({props, touchLabels, {query.position[0], query.position[1]}, 0});
                 }
             }
 

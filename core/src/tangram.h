@@ -11,8 +11,19 @@ namespace Tangram {
 
 class DataSource;
 
+enum LabelType {
+    icon,
+    text,
+};
+
+struct TouchLabel {
+    LabelType type;
+    std::vector<LngLat> coordinates;
+};
+
 struct TouchItem {
     std::shared_ptr<Properties> properties;
+    std::vector<TouchLabel> labels;
     float position[2];
     float distance;
 };

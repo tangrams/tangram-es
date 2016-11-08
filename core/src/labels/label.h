@@ -10,6 +10,7 @@
 #include "util/types.h"
 #include "util/hash.h"
 #include "labels/labelProperty.h"
+#include "tangram.h"
 
 #include <string>
 #include <limits>
@@ -101,6 +102,8 @@ public:
     virtual void addVerticesToMesh() = 0;
     virtual glm::vec2 center() const;
     virtual void updateBBoxes(float _zoomFract) = 0;
+
+    virtual LabelType renderType() const = 0;
 
     // Update the screen position of the label
     virtual bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) = 0;
