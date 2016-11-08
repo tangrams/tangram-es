@@ -93,7 +93,7 @@ public:
 
     static const float activation_distance_threshold;
 
-    Label(WorldTransform _transform, glm::vec2 _size, Type _type, Options _options);
+    Label(WorldTransform _transform, glm::vec2 _size, uint32_t _selectionColor, Type _type, Options _options);
 
     virtual ~Label();
 
@@ -176,6 +176,8 @@ public:
 
     void setAlpha(float _alpha);
 
+    uint32_t selectionColor() { return m_selectionColor; }
+
 private:
 
     virtual void applyAnchor(LabelProperty::Anchor _anchor) = 0;
@@ -185,6 +187,8 @@ private:
     FadeEffect m_fade;
 
     int m_anchorIndex;
+
+    uint32_t m_selectionColor;
 
 protected:
 

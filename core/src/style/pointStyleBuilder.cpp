@@ -161,10 +161,11 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
 }
 
 void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
-                                 const PointStyle::Parameters& _params) {
+                                 const PointStyle::Parameters& _params, uint32_t _selectionColor) {
 
     m_labels.push_back(std::make_unique<SpriteLabel>(glm::vec3(glm::vec2(_point), m_zoom),
                                                      _params.size,
+                                                     _selectionColor,
                                                      _params.labelOptions,
                                                      SpriteLabel::VertexAttributes{_params.color, _params.selectionColor, _params.extrudeScale },
                                                      m_texture,
@@ -245,7 +246,7 @@ bool PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
         return false;
     }
 
-    addLabel(_point, uvsQuad, p);
+    addLabel(_point, uvsQuad, p, _rule.selectionColor);
 
     return true;
 }
@@ -261,7 +262,7 @@ bool PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
     }
 
     for (size_t i = 0; i < _line.size(); ++i) {
-        addLabel(_line[i], uvsQuad, p);
+        addLabel(_line[i], uvsQuad, p, _rule.selectionColor);
     }
 
     return true;
@@ -280,13 +281,13 @@ bool PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
     if (!p.centroid) {
         for (auto line : _polygon) {
             for (auto point : line) {
-                addLabel(point, uvsQuad, p);
+                addLabel(point, uvsQuad, p, _rule.selectionColor);
             }
         }
     } else {
         glm::vec2 c = centroid(_polygon);
 
-        addLabel(Point{c,0}, uvsQuad, p);
+        addLabel(Point{c,0}, uvsQuad, p, _rule.selectionColor);
     }
 
     return true;

@@ -63,6 +63,32 @@ void Labels::processLabelUpdate(const ViewState& viewState,
     }
 }
 
+
+std::vector<Label*> Labels::getLabels(const std::vector<std::unique_ptr<Style>>& _styles,
+                                      const std::vector<std::shared_ptr<Tile>>& _tiles,
+                                      uint32_t _selectionColor) {
+
+    std::vector<Label*> labels;
+
+    for (const auto& tile : _tiles) {
+        for (const auto& style : _styles) {
+            const auto& mesh = tile->getMesh(*style);
+            if (!mesh) { continue; }
+            auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
+            if (!labelMesh) { continue; }
+
+            for (auto& label : labelMesh->getLabels()) {
+                if (label->selectionColor() == _selectionColor) {
+                    labels.push_back(label.get());
+                }
+            }
+        }
+    }
+
+    return labels;
+}
+
+
 void Labels::updateLabels(const ViewState& _viewState, float _dt,
                           const std::vector<std::unique_ptr<Style>>& _styles,
                           const std::vector<std::shared_ptr<Tile>>& _tiles,

@@ -434,7 +434,11 @@ void Map::render() {
             // TODO: read with a scalable thumb size
             GLuint color = impl->selectionBuffer->readAt(x, y);
 
-            for (const auto& tile : impl->tileManager.getVisibleTiles()) {
+            // Retrieve labels for this selection color
+            auto& tiles = impl->tileManager.getVisibleTiles();
+            auto labels = impl->labels.getLabels(impl->scene->styles(), tiles, color);
+
+            for (const auto& tile : tiles) {
                 if (auto props = tile->getSelectionFeature(color)) {
                     items.push_back({props, {query.position[0], query.position[1]}, 0});
                 }

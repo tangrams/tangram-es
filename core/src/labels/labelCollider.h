@@ -21,6 +21,8 @@ public:
 
     void process(TileID _tileID, float _tileInverseScale, float _tileSize);
 
+    std::vector<Label*> labels();
+
 private:
 
     void handleRepeatGroup(size_t startPos);
