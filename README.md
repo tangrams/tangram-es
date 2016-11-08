@@ -124,7 +124,7 @@ make ios-framework-universal [RELEASE=1|DEBUG=1]
 The universal framework will be available in the configuration build type in `/build/ios-framework-universal/`.
 
 ### Android ###
-To build for Android you'll need to have installed both the [Android SDK](http://developer.android.com/sdk/installing/index.html?pkg=tools) and the [Android NDK](https://developer.android.com/tools/sdk/ndk/index.html). Set an `ANDROID_HOME` environment variable with the root directory of your SDK and an `ANDROID_NDK` environment variable with the root directory of your NDK.
+To build for Android you'll need to have installed both the [Android SDK](http://developer.android.com/sdk/installing/index.html?pkg=tools) and the [Android NDK](https://developer.android.com/tools/sdk/ndk/index.html). Please verify that you have version r10e of the NDK installed. Set an `ANDROID_HOME` environment variable with the root directory of your SDK and an `ANDROID_NDK` environment variable with the root directory of your NDK.
 
 Build an APK of the demo application and optionally specify an architecture (default is armeabi-v7a):
 
