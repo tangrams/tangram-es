@@ -34,3 +34,6 @@
 [submodule "external/SQLiteCpp"]
 	path = core/deps/SQLiteCpp
 	url = https://github.com/SRombauts/SQLiteCpp.git
+[submodule "core/deps/glproxy"]
+	path = core/deps/glproxy
+	url = https://github.com/glproxy/glproxy
