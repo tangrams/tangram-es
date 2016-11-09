@@ -36,7 +36,8 @@ float TextWrapper::getShapeRangeWidth(const alfons::LineLayout& _line,
 
         if (lastShape != 0 && (shape.mustBreak || charCount >= _maxLineChars)) {
             // only go to next line if chars have been added on the current line
-            if (shape.mustBreak || charCount - lastChar >= _minLineChars) {
+            if (shape.mustBreak || lastChar > _minLineChars) {
+
                 auto& endShape = _line.shapes()[lastShape-1];
 
                 if (endShape.isSpace) {
@@ -49,7 +50,6 @@ float TextWrapper::getShapeRangeWidth(const alfons::LineLayout& _line,
 
                 lineWidth -= lastWidth;
                 charCount -= lastChar;
-
                 lastShape = 0;
             }
         }
