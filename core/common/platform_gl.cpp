@@ -1,4 +1,8 @@
+#ifdef TANGRAM_USE_GLPROXY
+#include <glproxy/gl.h>
+#else
 #include "platform_gl.h"
+#endif
 
 #include "gl.h"
 #include "gl/error.h"
