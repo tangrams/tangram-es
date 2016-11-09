@@ -455,24 +455,44 @@ size_t Url::removeDotSegmentsFromRange(std::string& str, size_t start, size_t co
     size_t out = pos; // 'output' position.
 
     while (pos < end) {
-        if (str[pos] == '.' && str[pos + 1] == '.' && str[pos + 2] == '/') {
+        if (pos + 2 < end &&
+                   str[pos] == '.' &&
+                   str[pos + 1] == '.' &&
+                   str[pos + 2] == '/') {
             pos += 3;
-        } else if (str[pos] == '.' && str[pos + 1] == '/') {
+        } else if (pos + 1 < end &&
+                   str[pos] == '.' &&
+                   str[pos + 1] == '/') {
             pos += 2;
-        } else if (str[pos] == '/' && str[pos + 1] == '.' && str[pos + 2] == '/') {
+        } else if (pos + 2 < end &&
+                   str[pos] == '/' &&
+                   str[pos + 1] == '.' &&
+                   str[pos + 2] == '/') {
             pos += 2;
-        } else if (str[pos] == '/' && str[pos + 1] == '.' && pos + 2 == end) {
+        } else if (pos + 2 == end &&
+                   str[pos] == '/' &&
+                   str[pos + 1] == '.') {
             pos += 1;
             str[pos] = '/';
-        } else if (str[pos] == '/' && str[pos + 1] == '.' && str[pos + 2] == '.' && str[pos + 3] == '/') {
+        } else if (pos + 3 < end &&
+                   str[pos] == '/' &&
+                   str[pos + 1] == '.' &&
+                   str[pos + 2] == '.' &&
+                   str[pos + 3] == '/') {
             pos += 3;
             out = removeLastSegmentFromRange(str, start, out);
-        } else if (str[pos] == '/' && str[pos + 1] == '.' && str[pos + 2] == '.' && pos + 3 == end) {
+        } else if (pos + 3 == end &&
+                   str[pos] == '/' &&
+                   str[pos + 1] == '.' &&
+                   str[pos + 2] == '.') {
             pos += 3;
             out = removeLastSegmentFromRange(str, start, out);
-        } else if (str[pos] == '.' && pos + 1 == end) {
+        } else if (pos + 1 == end &&
+                   str[pos] == '.') {
             pos += 1;
-        } else if (str[pos] == '.' && str[pos + 1] == '.' && pos + 2 == end) {
+        } else if (pos + 2 == end &&
+                   str[pos] == '.' &&
+                   str[pos + 1] == '.') {
             pos += 2;
         } else {
             do {
