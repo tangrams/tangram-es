@@ -227,7 +227,11 @@ void Importer::importScenes(Node& root, const Url& scenePath, std::vector<Url>& 
     auto imports = getScenesToImport(sceneNode);
 
     for (const auto& importScene : imports) {
-        importScenes(root, importScene, sceneStack, globalTextures);
+        std::unordered_set<std::string> textures;
+
+        importScenes(root, importScene, sceneStack, textures);
+
+        for (auto& t : textures) { globalTextures.insert(t); }
     }
 
     // Resolve inline texture URLs after m_globalTextures are determined.
