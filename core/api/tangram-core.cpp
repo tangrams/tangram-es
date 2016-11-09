@@ -464,19 +464,15 @@ TANGRAM_CORE_EXPORT bool tangramLngLatToScreenPosition(tangram_map_t map, double
 // Add a data source for adding drawable map data, which will be styled
 // according to the scene file using the provided data source name;
 TANGRAM_CORE_EXPORT void tangramAddDataSource(tangram_map_t map, tangram_data_source_t _source) {
-    std::shared_ptr<Tangram::DataSource> source;
-    source.reset((Tangram::DataSource*)_source);
-    return ((Tangram::Map*)map)->addDataSource(source);
 }
 
 // Remove a data source from the map; returns true if the source was found
 // and removed, otherwise returns false.
 TANGRAM_CORE_EXPORT bool tangramRemoveDataSource(tangram_map_t map, tangram_data_source_t _source) {
-    return ((Tangram::Map*)map)->removeDataSource(*(Tangram::DataSource*)_source);
+    return false;
 }
 
 TANGRAM_CORE_EXPORT void tangramClearDataSource(tangram_map_t map, tangram_data_source_t _source, bool _data, bool _tiles) {
-    return ((Tangram::Map*)map)->clearDataSource(*(Tangram::DataSource*)_source, _data, _tiles);
 }
 
 // Respond to a tap at the given screen coordinates (x right, y down)

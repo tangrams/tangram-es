@@ -178,6 +178,11 @@ set(GLM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../core/include/glm)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
 
+## Zlib ##
+if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+add_subdirectory(zlib)
+endif ()
+
 ## SQLiteCpp ##
 ###############
 set(SQLITECPP_RUN_CPPLINT OFF CACHE BOOL "")

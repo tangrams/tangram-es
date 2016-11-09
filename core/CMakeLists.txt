@@ -39,10 +39,12 @@ list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/mapbox)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/sdf)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/stb)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/glm)
+list(APPEND INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/api)
+list(APPEND INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../external/zlib)
+list(APPEND INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/../external/zlib)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/shaders)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/isect2d/include)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/hash-library)
-list(APPEND INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/api")
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
 set(CORE_LIBRARIES_INCLUDE_DIRS
@@ -63,24 +65,31 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
 add_library(${CORE_LIBRARY} ${FOUND_SOURCES} ${FOUND_HEADERS})
 
 set(LINK_LIBRARIES
-    ${CORE_LIBRARY}
-    PUBLIC
     duktape
     css-color-parser-cpp
     geojson-vt-cpp
     yaml-cpp
     alfons
     SQLiteCpp
-    sqlite3
-    z)
+    sqlite3)
+
+if (WIN32)
+  list(APPEND LINK_LIBRARIES zlibstatic)
+  add_dependencies(${CORE_LIBRARY} zlibstatic)
+else ()
+  list(APPEND LINK_LIBRARIES z)
+endif ()
 
 if (UNIX AND NOT APPLE)
   # SQLite needs dl dynamic library loader when Linux
-  target_link_libraries(${LINK_LIBRARIES} dl)
-else()
-  target_link_libraries(${LINK_LIBRARIES})
+  list(APPEND LINK_LIBRARIES dl)
 endif () 
 
+target_link_libraries(
+  ${CORE_LIBRARY}
+  PUBLIC
+  ${LINK_LIBRARIES}
+)
 target_include_directories(${CORE_LIBRARY}
   PUBLIC
   ${INCLUDE_DIRS})

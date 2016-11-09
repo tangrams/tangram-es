@@ -40,3 +40,6 @@
 [submodule "external/glproxy"]
 	path = external/glproxy
 	url = https://github.com/glproxy/glproxy
+[submodule "external/zlib"]
+	path = external/zlib
+	url = https://github.com/lygstate/zlib.git
