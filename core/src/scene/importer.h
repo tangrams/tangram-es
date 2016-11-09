@@ -33,18 +33,19 @@ protected:
     std::vector<Url> getScenesToImport(const Node& scene);
 
     // loads all the imported scenes and the master scene and returns a unified YAML root node.
-    void importScenes(Node& root, const Url& scenePath, std::vector<Url>& sceneStack);
+    void importScenes(Node& root, const Url& scenePath, std::vector<Url>& sceneStack,
+                      std::unordered_set<std::string>& globalTextures);
 
     void mergeMapFields(Node& target, const Node& import);
 
-    void setResolvedTextureUrl(Node& textureNode, const Url& base);
+    void setResolvedTextureUrl(const std::unordered_set<std::string>& globalTextures,
+                               Node& textureNode, const Url& base);
 
     void resolveSceneUrls(Node& root, const Url& base);
 
 private:
     // import scene to respective root nodes
     std::unordered_map<Url, Node> m_scenes;
-    std::unordered_set<std::string> m_globalTextures;
 
     std::vector<Url> m_sceneQueue;
     static std::atomic_uint progressCounter;
