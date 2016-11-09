@@ -37,3 +37,6 @@
 [submodule "core/deps/glproxy"]
 	path = core/deps/glproxy
 	url = https://github.com/glproxy/glproxy
+[submodule "core/deps/zlib"]
+	path = core/deps/zlib
+	url = https://github.com/lygstate/zlib.git
