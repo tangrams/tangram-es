@@ -3,7 +3,7 @@
 
 #include <tile/tileTask.h>
 #include "tile/tileHash.h"
-#include "dataSource.h"
+#include "tileSource.h"
 #include "gl/texture.h"
 
 #include <functional>
@@ -14,7 +14,7 @@ namespace Tangram {
 
 class RasterTileTask;
 
-class RasterSource : public DataSource {
+class RasterSource : public TileSource {
 
     TextureOptions m_texOptions;
     bool m_genMipmap;
@@ -27,18 +27,18 @@ protected:
     virtual std::shared_ptr<TileData> parse(const TileTask& _task,
                                             const MapProjection& _projection) const override;
 
-    virtual void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
-                              TileTaskCb _cb) override;
-
 public:
 
-    RasterSource(const std::string& _name, const std::string& _urlTemplate,
+    RasterSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
                  int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
                  TextureOptions _options, bool genMipmap = false);
 
-    virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask) override;
+    // TODO Is this always PNG or can it also be JPEG?
+    virtual const char* mimeType() override { return "image/png"; };
 
-    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) override;
+    void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb);
+
+    virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask) override;
 
     virtual void clearRasters() override;
     virtual void clearRaster(const TileID& id) override;

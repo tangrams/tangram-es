@@ -96,7 +96,7 @@ void Importer::processScene(const std::string &scenePath, const std::string &sce
         auto sceneNode = YAML::Load(sceneString);
 
         normalizeSceneImports(sceneNode, scenePath);
-        normalizeSceneDataSources(sceneNode, scenePath);
+        normalizeSceneTileSources(sceneNode, scenePath);
         normalizeSceneTextures(sceneNode, scenePath);
         normalizeFonts(sceneNode, scenePath);
 
@@ -142,7 +142,7 @@ void Importer::normalizeSceneImports(Node& root, const std::string& parentPath) 
     }
 }
 
-void Importer::normalizeSceneDataSources(Node &root, const std::string &parentPath) {
+void Importer::normalizeSceneTileSources(Node &root, const std::string &parentPath) {
     if (Node sources = root["sources"]) {
         for (auto source : sources) {
             if (Node sourceUrl = source.second["url"]) {

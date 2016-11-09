@@ -158,8 +158,7 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
     }
 
     inputHandler.setView(view);
-    tileManager.setDataSources(_scene->dataSources());
-
+    tileManager.setTileSources(_scene->tileSources());
     tileWorker.setScene(_scene);
     markerManager.setScene(_scene);
     setPixelScale(view.pixelScale());
@@ -287,6 +286,12 @@ void Map::applySceneUpdates() {
                 });
             requestRender();
         });
+}
+
+void Map::setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath) {
+    std::string scenePath = std::string("sources.") + _dataSourceName + ".mbtiles";
+    queueSceneUpdate(scenePath.c_str(), _mbtilesFilePath);
+    applySceneUpdates();
 }
 
 void Map::resize(int _newWidth, int _newHeight) {
@@ -685,17 +690,17 @@ int Map::getCameraType() {
 
 }
 
-void Map::addDataSource(std::shared_ptr<DataSource> _source) {
+void Map::addTileSource(std::shared_ptr<TileSource> _source) {
     std::lock_guard<std::mutex> lock(impl->tilesMutex);
-    impl->tileManager.addClientDataSource(_source);
+    impl->tileManager.addClientTileSource(_source);
 }
 
-bool Map::removeDataSource(DataSource& source) {
+bool Map::removeTileSource(TileSource& source) {
     std::lock_guard<std::mutex> lock(impl->tilesMutex);
-    return impl->tileManager.removeClientDataSource(source);
+    return impl->tileManager.removeClientTileSource(source);
 }
 
-void Map::clearDataSource(DataSource& _source, bool _data, bool _tiles) {
+void Map::clearTileSource(TileSource& _source, bool _data, bool _tiles) {
     std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
     if (_tiles) { impl->tileManager.clearTileSet(_source.id()); }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dataSource.h"
+#include "tileSource.h"
 #include "util/types.h"
 
 #include <mutex>
@@ -21,13 +21,16 @@ using ProjectedFeature = mapbox::util::geojsonvt::ProjectedFeature;
 
 struct Properties;
 
-class ClientGeoJsonSource : public DataSource {
+class ClientGeoJsonSource : public TileSource {
 
 public:
 
     ClientGeoJsonSource(const std::string& _name, const std::string& _url,
                         int32_t _minDisplayZoom = -1, int32_t _maxDisplayZoom = -1, int32_t _maxZoom = 18);
     ~ClientGeoJsonSource();
+
+    // http://www.iana.org/assignments/media-types/application/geo+json
+    virtual const char* mimeType() override { return "application/geo+json"; };
 
     // Add geometry from a GeoJSON string
     void addData(const std::string& _data);
@@ -37,7 +40,7 @@ public:
     void addFeature(ProjectedFeature& feature);
     void removeFeature(uint32_t featureId);
 
-    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) override;
+    virtual void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
     std::shared_ptr<TileTask> createTask(TileID _tileId, int _subTask) override;
 
     virtual void cancelLoadingTile(const TileID& _tile) override {};
