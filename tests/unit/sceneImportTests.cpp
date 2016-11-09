@@ -59,7 +59,7 @@ TestImporter::TestImporter() {
     m_testScenes["/root/urls.yaml"] = R"END(
         import: imports/urls.yaml
         fonts: { fontA: { url: https://host/font.woff } }
-        sources: { sourceA: { url: "https://host/tiles/{z}/{y}/{x}.mvt" } }
+        sources: { sourceA: { url: 'https://host/tiles/{z}/{y}/{x}.mvt' } }
         textures:
             tex1: { url: "path/to/texture.png" }
             tex2: { url: "../up_a_directory.png" }
@@ -70,6 +70,7 @@ TestImporter::TestImporter() {
                     uniforms:
                         u_tex1: "/at_root.png"
                         u_tex2: ["path/to/texture.png", tex2]
+                        u_tex3: tex3
                         u_bool: true
                         u_float: 0.25
     )END";
@@ -164,6 +165,7 @@ TEST_CASE("Scene URLs are resolved against their parent during import", "[import
     CHECK(uniformsA["u_tex2"][1].Scalar() == "tex2");
     CHECK(uniformsA["u_bool"].Scalar() == "true");
     CHECK(uniformsA["u_float"].Scalar() == "0.25");
+    CHECK(uniformsA["u_tex3"].Scalar() == "tex3");
 
     auto styleB = root["styles"]["styleB"];
 
