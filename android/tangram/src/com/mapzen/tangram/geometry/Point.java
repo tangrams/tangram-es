@@ -2,8 +2,6 @@ package com.mapzen.tangram.geometry;
 
 import com.mapzen.tangram.LngLat;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 /**

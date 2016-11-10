@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -70,10 +71,11 @@ public class MapController implements Renderer {
         /**
          * Receive information about features found in a call to {@link #pickFeature(float, float)}
          * @param properties A mapping of string keys to string or number values
+         * @param labels The list of selected feature labels, empty otherwise
          * @param positionX The horizontal screen coordinate of the center of the feature
          * @param positionY The vertical screen coordinate of the center of the feature
          */
-        void onFeaturePick(Map<String, String> properties, float positionX, float positionY);
+        void onFeaturePick(Map<String, String> properties, List<TouchLabel> labels, float positionX, float positionY);
     }
 
     public interface ViewCompleteListener {

@@ -18,7 +18,7 @@ import com.mapzen.tangram.MapView.OnMapReadyCallback;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
-import com.squareup.okhttp.Callback;
+import com.mapzen.tangram.TouchLabel;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -157,7 +157,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     }
 
     @Override
-    public void onFeaturePick(Map<String, String> properties, float positionX, float positionY) {
+    public void onFeaturePick(Map<String, String> properties, List<TouchLabel> labels, float positionX, float positionY) {
         if (properties.isEmpty()) {
             Log.d("Tangram", "Empty selection");
             return;

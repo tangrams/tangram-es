@@ -47,10 +47,16 @@ static jmethodID cancelUrlRequestMID = 0;
 static jmethodID getFontFilePath = 0;
 static jmethodID getFontFallbackFilePath = 0;
 static jmethodID onFeaturePickMID = 0;
+static jmethodID touchLabelInitMID = 0;
 
+static jclass touchLabelClass = nullptr;
 static jclass hashmapClass = nullptr;
 static jmethodID hashmapInitMID = 0;
 static jmethodID hashmapPutMID = 0;
+
+static jclass listClass = nullptr;
+static jmethodID listAddMID = 0;
+static jmethodID listInitMID = 0;
 
 static AAssetManager* assetManager = nullptr;
 
@@ -80,7 +86,20 @@ void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager
     setRenderModeMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
 
     jclass featurePickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$FeaturePickListener");
-    onFeaturePickMID = jniEnv->GetMethodID(featurePickListenerClass, "onFeaturePick", "(Ljava/util/Map;FF)V");
+    onFeaturePickMID = jniEnv->GetMethodID(featurePickListenerClass, "onFeaturePick", "(Ljava/util/Map;Ljava/util/List;FF)V");
+
+    if (touchLabelClass) {
+        jniEnv->DeleteGlobalRef(touchLabelClass);
+    }
+    touchLabelClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/TouchLabel"));
+    touchLabelInitMID = jniEnv->GetMethodID(touchLabelClass, "<init>", "([DI)V");
+
+    if (listClass) {
+        jniEnv->DeleteGlobalRef(listClass);
+    }
+    listClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("java/util/ArrayList"));
+    listAddMID = jniEnv->GetMethodID(listClass, "add", "(Ljava/lang/Object;)Z");
+    listInitMID = jniEnv->GetMethodID(listClass, "<init>", "()V");
 
     if (hashmapClass) {
         jniEnv->DeleteGlobalRef(hashmapClass);
@@ -316,11 +335,13 @@ void featurePickCallback(jobject listener, const std::vector<Tangram::TouchItem>
     JniThreadBinding jniEnv(jvm);
 
     jobject hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
+    jobject list = jniEnv->NewObject(listClass, listInitMID);
     float position[2] = {0.0, 0.0};
 
     if (items.size() > 0) {
         auto result = items[0];
         auto properties = result.properties;
+        auto labels = result.labels;
 
         position[0] = result.position[0];
         position[1] = result.position[1];
@@ -330,9 +351,17 @@ void featurePickCallback(jobject listener, const std::vector<Tangram::TouchItem>
             jstring jvalue = jniEnv->NewStringUTF(properties->asString(item.value).c_str());
             jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
         }
+
+        for (auto label : labels) {
+            jdoubleArray darr = jniEnv->NewDoubleArray(label.coordinates.size() * 2);
+            jniEnv->SetDoubleArrayRegion(darr, 0, label.coordinates.size() * 2,
+                    reinterpret_cast<jdouble*>(label.coordinates.data()));
+            jobject touchLabel = jniEnv->NewObject(touchLabelClass, touchLabelInitMID, darr, label.type);
+            jniEnv->CallBooleanMethod(list, listAddMID, touchLabel);
+        }
     }
 
-    jniEnv->CallVoidMethod(listener, onFeaturePickMID, hashmap, position[0], position[1]);
+    jniEnv->CallVoidMethod(listener, onFeaturePickMID, hashmap, list, position[0], position[1]);
     jniEnv->DeleteGlobalRef(listener);
 }
 
