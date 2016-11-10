@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * {@code TouchLabel} represents labels that can be selected on the scree
+ * {@code TouchLabel} represents labels that can be selected on the screen
  */
 public class TouchLabel {
 
@@ -12,7 +12,7 @@ public class TouchLabel {
      * Options for the type of TouchLabel
      */
     public enum LabelType {
-        POINT,
+        ICON,
         TEXT,
     }
 
