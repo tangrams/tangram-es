@@ -80,6 +80,11 @@ void Importer::processScene(const Url& scenePath, const std::string &sceneString
 
     LOGD("Process: '%s'", scenePath.string().c_str());
 
+    // Don't load imports twice
+    if (m_scenes.find(scenePath) != m_scenes.end()) {
+        return;
+    }
+
     try {
         auto sceneNode = YAML::Load(sceneString);
 
