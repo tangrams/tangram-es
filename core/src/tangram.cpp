@@ -445,7 +445,13 @@ void Map::render() {
                     for (auto label : labels) {
                         std::vector<LngLat> coordinates;
 
-                        if (label->type() != Label::Type::line) {
+                        if (label->type() == Label::Type::line) {
+                            for (int i = 0; i < 2; ++i) {
+                                glm::vec2 tileCoord = glm::vec2(label->worldTransform().positions[i]);
+                                glm::dvec2 degrees = tile->coordToLngLat(tileCoord, impl->view.getMapProjection());
+                                coordinates.push_back({degrees.x, degrees.y});
+                            }
+                        } else {
                             glm::vec2 tileCoord = glm::vec2(label->worldTransform().position);
                             glm::dvec2 degrees = tile->coordToLngLat(tileCoord, impl->view.getMapProjection());
                             coordinates.push_back({degrees.x, degrees.y});
