@@ -3,7 +3,6 @@ package com.mapzen.tangram;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
-import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.util.DisplayMetrics;
@@ -14,7 +13,6 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
-import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -654,6 +652,36 @@ public class MapController implements Renderer {
     }
 
     /**
+     * Adds a {@link Marker} to the map which can be used to dynamically add points and polylines
+     * to the map.
+     * @return Newly created {@link Marker} object.
+     */
+    public Marker addMarker() {
+        checkPointer(mapPointer);
+        long markerId = nativeMarkerAdd(mapPointer);
+        return new Marker(mapView.getContext(), markerId, this);
+    }
+
+    /**
+     * Removes the passed in {@link Marker} from the map.
+     * @param marker to remove from the map.
+     * @return whether or not the marker was removed
+     */
+    public boolean removeMarker(Marker marker) {
+        checkPointer(mapPointer);
+        checkId(marker.getMarkerId());
+        return nativeMarkerRemove(mapPointer, marker.getMarkerId());
+    }
+
+    /**
+     * Remove all the {@link Marker} objects from the map.
+     */
+    public void removeAllMarkers() {
+        checkPointer(mapPointer);
+        nativeMarkerRemoveAll(mapPointer);
+    }
+
+    /**
      */
     public void setViewCompleteListener(ViewCompleteListener listener) {
         viewCompleteListener = listener;
@@ -738,6 +766,60 @@ public class MapController implements Renderer {
         }
     }
 
+    void checkId(long id) {
+        if (id <= 0) {
+            throw new RuntimeException("Tried to perform an operation on an invalid id! This means you may have used an object that has been disposed and is no longer valid.");
+        }
+    }
+
+    boolean setMarkerStyling(long markerId, String styleStr) {
+        checkPointer(mapPointer);
+        checkId(markerId);
+        return nativeMarkerSetStyling(mapPointer, markerId, styleStr);
+    }
+
+    boolean setMarkerBitmap(long markerId, int width, int height, int[] data) {
+        checkPointer(mapPointer);
+        checkId(markerId);
+        return nativeMarkerSetBitmap(mapPointer, markerId, width, height, data);
+    }
+
+    boolean setMarkerPoint(long markerId, double lng, double lat) {
+        checkPointer(mapPointer);
+        checkId(markerId);
+        return nativeMarkerSetPoint(mapPointer, markerId, lng, lat);
+    }
+
+    boolean setMarkerPointEased(long markerId, double lng, double lat, float duration, EaseType ease) {
+        checkPointer(mapPointer);
+        checkId(markerId);
+        return nativeMarkerSetPointEased(mapPointer, markerId, lng, lat, duration, ease.ordinal());
+    }
+
+    boolean setMarkerPolyline(long markerId, double[] coordinates, int count) {
+        checkPointer(mapPointer);
+        checkId(markerId);
+        return nativeMarkerSetPolyline(mapPointer, markerId, coordinates, count);
+    }
+
+    boolean setMarkerPolygon(long markerId, double[] coordinates, int[] rings, int count) {
+        checkPointer(mapPointer);
+        checkId(markerId);
+        return nativeMarkerSetPolygon(mapPointer, markerId, coordinates, rings, count);
+    }
+
+    boolean setMarkerVisible(long markerId, boolean visible) {
+        checkPointer(mapPointer);
+        checkId(markerId);
+        return nativeMarkerSetVisible(mapPointer, markerId, visible);
+    }
+
+    boolean setMarkerDrawOrder(long markerId, int drawOrder) {
+        checkPointer(mapPointer);
+        checkId(markerId);
+        return nativeMarkerSetDrawOrder(mapPointer, markerId, drawOrder);
+    }
+
     // Native methods
     // ==============
 
@@ -779,6 +861,18 @@ public class MapController implements Renderer {
     private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String value);
     private synchronized native void nativeApplySceneUpdates(long mapPtr);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
+    private synchronized native long nativeMarkerAdd(long mapPtr);
+    private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
+    private synchronized native boolean nativeMarkerSetStyling(long mapPtr, long markerID, String styling);
+    private synchronized native boolean nativeMarkerSetBitmap(long mapPtr, long markerID, int width, int height, int[] data);
+    private synchronized native boolean nativeMarkerSetPoint(long mapPtr, long markerID, double lng, double lat);
+    private synchronized native boolean nativeMarkerSetPointEased(long mapPtr, long markerID, double lng, double lat, float duration, int ease);
+    private synchronized native boolean nativeMarkerSetPolyline(long mapPtr, long markerID, double[] coordinates, int count);
+    private synchronized native boolean nativeMarkerSetPolygon(long mapPtr, long markerID, double[] coordinates, int[] rings, int count);
+    private synchronized native boolean nativeMarkerSetVisible(long mapPtr, long markerID, boolean visible);
+    private synchronized native boolean nativeMarkerSetDrawOrder(long mapPtr, long markerID, int drawOrder);
+    private synchronized native void nativeMarkerRemoveAll(long mapPtr);
+
     private synchronized native void nativeUseCachedGlState(long mapPtr, boolean use);
     private synchronized native void nativeCaptureSnapshot(long mapPtr, int[] buffer);
 
