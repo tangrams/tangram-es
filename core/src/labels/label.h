@@ -174,11 +174,11 @@ public:
 
     bool offViewport(const glm::vec2& _screenSize);
 
+    void setAlpha(float _alpha);
+
 private:
 
     virtual void applyAnchor(LabelProperty::Anchor _anchor) = 0;
-
-    void setAlpha(float _alpha);
 
     State m_state;
 

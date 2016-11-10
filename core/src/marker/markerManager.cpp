@@ -4,6 +4,7 @@
 #include "marker/marker.h"
 #include "scene/sceneLoader.h"
 #include "style/style.h"
+#include "labels/labelSet.h"
 #include "log.h"
 
 namespace Tangram {
@@ -83,6 +84,13 @@ bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const un
 bool MarkerManager::setVisible(MarkerID markerID, bool visible) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
+
+    auto labelMesh = dynamic_cast<const LabelSet*>(marker->mesh());
+    if (labelMesh) {
+        for (auto& label : labelMesh->getLabels()) {
+            label->setAlpha(visible ? 1.0 : 0.0);
+        }
+    }
 
     marker->setVisible(visible);
     return true;

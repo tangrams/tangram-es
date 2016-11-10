@@ -100,6 +100,11 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             map->markerSetPoint(marker, p);
             map->markerSetDrawOrder(marker, mods);
             logMsg("Added marker with zOrder: %d\n", mods);
+        } else {
+            static bool visible = true;
+            map->markerSetPoint(marker, p);
+            map->markerSetVisible(marker, visible);
+            visible = !visible;
         }
 
         map->pickFeaturesAt(x, y, [](const auto& items) {
