@@ -61,7 +61,7 @@ std::unique_ptr<StyledMesh> DebugTextStyleBuilder::build() {
         return nullptr;
     }
 
-    addLabel(params, Label::Type::debug, { glm::vec3(0.5f, 0.5f, 0.f) }, 0);
+    addLabel(params, Label::Type::debug, { glm::vec3(0.5f, 0.5f, 0.f) });
 
     m_textLabels->setLabels(m_labels);
 

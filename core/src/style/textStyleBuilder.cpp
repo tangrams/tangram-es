@@ -182,18 +182,18 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
     if (_feat.geometryType == GeometryType::points) {
         for (auto& point : _feat.points) {
             auto p = glm::vec2(point);
-            addLabel(params, Label::Type::point, { p, p }, _rule.selectionColor);
+            addLabel(params, Label::Type::point, { p, p });
         }
 
     } else if (_feat.geometryType == GeometryType::polygons) {
         for (auto& polygon : _feat.polygons) {
             if (_iconText) {
                 auto p = centroid(polygon);
-                addLabel(params, Label::Type::point, { p, p }, _rule.selectionColor);
+                addLabel(params, Label::Type::point, { p, p });
             } else {
                 for (auto& line : polygon) {
                     for (auto& point : line) {
-                        addLabel(params, Label::Type::point, { point }, _rule.selectionColor);
+                        addLabel(params, Label::Type::point, { point });
                     }
                 }
             }
@@ -204,11 +204,11 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
         if (_iconText) {
             for (auto& line : _feat.lines) {
                 for (auto& point : line) {
-                    addLabel(params, Label::Type::point, { point }, _rule.selectionColor);
+                    addLabel(params, Label::Type::point, { point });
                 }
             }
         } else {
-            addLineTextLabels(_feat, params, _rule.selectionColor);
+            addLineTextLabels(_feat, params);
         }
     }
 
@@ -219,7 +219,7 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
     return true;
 }
 
-void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::Parameters& _params, uint32_t _selectionColor) {
+void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::Parameters& _params) {
     float pixelScale = 1.0/m_tileSize;
     float minLength = m_attributes.width * pixelScale;
 
@@ -241,7 +241,7 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
 
                 if (j == next) {
                     if (segmentLength > minLength) {
-                        addLabel(_params, Label::Type::line, { p1, p }, _selectionColor);
+                        addLabel(_params, Label::Type::line, { p1, p });
                     }
                 } else {
                     glm::vec2 pp = glm::vec2(line[j-1]);
@@ -265,7 +265,7 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
                 glm::vec2 b = glm::vec2(p2 - p1) / float(run);
 
                 for (int r = 0; r < run; r++) {
-                    addLabel(_params, Label::Type::line, { a, a+b }, _selectionColor);
+                    addLabel(_params, Label::Type::line, { a, a+b });
                     a += b;
                 }
                 run *= 2;
@@ -521,9 +521,9 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 }
 
 void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
-                                Label::WorldTransform _transform, uint32_t _selectionColor) {
+                                Label::WorldTransform _transform) {
 
-    m_labels.emplace_back(new TextLabel(_transform, _type, _selectionColor, _params.labelOptions,
+    m_labels.emplace_back(new TextLabel(_transform, _type, _params.labelOptions,
                                         {m_attributes.fill,
                                          m_attributes.stroke,
                                          m_attributes.fontScale,

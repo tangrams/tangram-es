@@ -16,11 +16,11 @@ using namespace TextLabelProperty;
 const float TextVertex::position_scale = 4.0f;
 const float TextVertex::alpha_scale = 65535.0f;
 
-TextLabel::TextLabel(Label::WorldTransform _transform, Type _type, uint32_t _selectionColor, Label::Options _options,
+TextLabel::TextLabel(Label::WorldTransform _transform, Type _type, Label::Options _options,
                      TextLabel::VertexAttributes _attrib,
                      glm::vec2 _dim,  TextLabels& _labels, TextRange _textRanges,
                      Align _preferedAlignment)
-    : Label(_transform, _dim, _selectionColor, _type, _options),
+    : Label(_transform, _dim, _attrib.selectionColor, _type, _options),
       m_textLabels(_labels),
       m_textRanges(_textRanges),
       m_fontAttrib(_attrib),

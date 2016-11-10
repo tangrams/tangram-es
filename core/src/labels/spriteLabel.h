@@ -34,7 +34,7 @@ public:
         float extrudeScale;
     };
 
-    SpriteLabel(Label::WorldTransform _transform, glm::vec2 _size, uint32_t _selectionColor, Label::Options _options,
+    SpriteLabel(Label::WorldTransform _transform, glm::vec2 _size, Label::Options _options,
                 SpriteLabel::VertexAttributes _attrib, Texture* _texture,
                 SpriteLabels& _labels, size_t _labelsPos);
 
