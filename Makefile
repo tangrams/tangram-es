@@ -333,14 +333,3 @@ format:
 ### Android Helpers
 android-install:
 	@adb install -r android/demo/build/outputs/apk/demo-debug.apk
-
-android-debug:
-	@cd android/demo &&           \
-	cp -a ../tangram/libs . &&    \
-	mkdir -p jni &&               \
-	cp ../tangram/jni/*.mk jni && \
-	python2 $$ANDROID_NDK/ndk-gdb.py --verbose --start
-
-android-debug-attach:
-	@cd android/demo &&           \
-	python2 $$ANDROID_NDK/ndk-gdb.py --verbose

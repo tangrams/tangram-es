@@ -50,13 +50,6 @@ android {
   }
 }
 
-// Add gdb server to apk
-afterEvaluate {
-    Sync packageTask = project.getTasks().findByName("packageReleaseJniLibs")
-    if (packageTask) { packageTask.include(['**/gdbserver', '**/gdb.setup']) }
-
-    packageTask = project.getTasks().findByName("packageDebugJniLibs")
-    if (packageTask) { packageTask.include(['**/gdbserver', '**/gdb.setup']) }
 }
 
 dependencies {
