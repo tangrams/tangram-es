@@ -21,8 +21,3 @@ target_link_libraries(${LIB_NAME}
   # android libaries
   GLESv2 log z atomic android)
 
-# install to android library dir
-set(LIB_INSTALLATION_PATH ${CMAKE_SOURCE_DIR}/android/tangram/libs/${ANDROID_ABI})
-
-
-install(TARGETS ${LIB_NAME} DESTINATION ${LIB_INSTALLATION_PATH})

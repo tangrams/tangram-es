@@ -162,7 +162,6 @@ clean-android:
 	rm -rf android/tangram/build
 	rm -rf android/tangram/.externalNativeBuild
 	rm -rf android/demo/build
-	rm -rf android/demo/libs
 
 clean-osx:
 	rm -rf ${OSX_BUILD_DIR}
