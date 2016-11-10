@@ -34,8 +34,9 @@ Point transformPoint(geojsonvt::TilePoint pt) {
 // TODO: pass scene's resourcePath to constructor to be used with `stringFromFile`
 ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::string& _url,
                                          int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom)
-    : DataSource(_name, _url, _minDisplayZoom, _maxDisplayZoom, _maxZoom) {
+    : TileSource(_name, nullptr, _minDisplayZoom, _maxDisplayZoom, _maxZoom) {
 
+    m_maxFeatureId = 0;
     // TODO: handle network url for client datasource data
     // TODO: generic uri handling
     m_generateGeometry = true;
@@ -65,7 +66,7 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
     auto features = geojsonvt::GeoJSONVT::convertFeatures(_data);
 
     for (auto& f : features) {
-        m_features.push_back(std::move(f));
+        addFeature(f);
     }
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
@@ -74,15 +75,20 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
 
 }
 
-bool ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
+void ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
 
     if (m_hasPendingData) {
-        return false;
+        return;
     }
 
-    _cb.func(std::move(_task));
+    if (_task->needsLoading()) {
+        _task->startedLoading();
 
-    return true;
+        _cb.func(_task);
+    }
+
+    // Load subsources
+    TileSource::loadTileData(_task, _cb);
 }
 
 void ClientGeoJsonSource::clearData() {
@@ -104,7 +110,7 @@ void ClientGeoJsonSource::addPoint(const Properties& _tags, LngLat _point) {
                                               geojsonvt::ProjectedFeatureType::Point,
                                               container.members);
 
-    m_features.push_back(std::move(feature));
+    addFeature(feature);
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
     m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
@@ -119,8 +125,7 @@ void ClientGeoJsonSource::addLine(const Properties& _tags, const Coordinates& _l
     auto feature = geojsonvt::Convert::create(geojsonvt::Tags{std::make_shared<Properties>(_tags)},
                                               geojsonvt::ProjectedFeatureType::LineString,
                                               geometry);
-
-    m_features.push_back(std::move(feature));
+    addFeature(feature);
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
     m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
@@ -138,12 +143,32 @@ void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coo
     auto feature = geojsonvt::Convert::create(geojsonvt::Tags{std::make_shared<Properties>(_tags)},
                                               geojsonvt::ProjectedFeatureType::Polygon,
                                               geometry);
-
-    m_features.push_back(std::move(feature));
+    addFeature(feature);
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
     m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
     m_generation++;
+}
+void ClientGeoJsonSource::addFeature(ProjectedFeature& feature) {
+  feature.tags.map->sourceId = this->id();
+  feature.tags.map->set("featureId", m_maxFeatureId);
+  ++m_maxFeatureId;
+  m_features.push_back(std::move(feature));
+}
+
+void ClientGeoJsonSource::removeFeature(uint32_t featureId) {
+  auto featureIdIter = m_featureIdMap.find(featureId);
+  if (featureIdIter != m_featureIdMap.end()) {
+    return;
+  }
+  auto featurePos = featureIdIter->second;
+  size_t lastPos = m_features.size() - 1;
+  auto &feature = m_features[featurePos] = std::move(m_features[lastPos]);
+  m_features.pop_back();
+  auto lastFeatureIdDouble = feature.tags.map->getNumber("featureId");
+  uint32_t lastFeatureId = lastFeatureIdDouble;
+  m_featureIdMap[lastFeatureId] = featurePos;
+  m_featureIdMap.erase(featureId);
 }
 
 std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task,

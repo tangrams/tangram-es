@@ -13,11 +13,11 @@
 #include <mutex>
 #include <tuple>
 #include <set>
-#include <data/dataSource.h>
+#include <data/tileSource.h>
 
 namespace Tangram {
 
-class DataSource;
+class TileSource;
 class TileCache;
 struct ViewState;
 
@@ -37,8 +37,8 @@ public:
 
     virtual ~TileManager();
 
-    /* Sets the tile DataSources */
-    void setDataSources(const std::vector<std::shared_ptr<DataSource>>& _sources);
+    /* Sets the tile TileSources */
+    void setTileSources(const std::vector<std::shared_ptr<TileSource>>& _sources);
 
     /* Updates visible tile set and load missing tiles */
     void updateTileSets(const ViewState& _view, const std::set<TileID>& _visibleTiles);
@@ -54,9 +54,9 @@ public:
 
     bool hasLoadingTiles() { return m_tilesInProgress > 0; }
 
-    void addClientDataSource(std::shared_ptr<DataSource> _dataSource);
+    void addClientTileSource(std::shared_ptr<TileSource> _source);
 
-    bool removeClientDataSource(DataSource& dataSource);
+    bool removeClientTileSource(TileSource& _source);
 
     std::unique_ptr<TileCache>& getTileCache() { return m_tileCache; }
 
@@ -97,12 +97,26 @@ private:
 
         bool isReady() { return bool(tile); }
         bool isLoading() { return bool(task) && !task->isCanceled(); }
-        size_t rastersPending() {
-            if (task) {
-                return (task->source().rasterSources().size() - task->subTasks().size());
+
+        bool needsLoading() {
+            //return !bool(task) || (task->needsLoading() && !task->isCanceled());
+            if (isReady()) { return false; }
+            if (!task) { return true; }
+            if (task->isCanceled()) { return false; }
+            if (task->needsLoading()) { return true; }
+
+            for (auto& subtask : task->subTasks()) {
+                if (subtask->needsLoading()) { return true; }
             }
-            return 0;
+            return false;
         }
+
+        // size_t rastersPending() {
+        //     if (task) {
+        //         return (task->source().rasterSources().size() - task->subTasks().size());
+        //     }
+        //     return 0;
+        // }
         bool isCanceled() { return bool(task) && task->isCanceled(); }
 
         // New Data only when
@@ -112,7 +126,7 @@ private:
         bool newData() {
             if (bool(task) && task->isReady()) {
 
-                if (rastersPending()) { return false; }
+                //if (rastersPending()) { return false; }
 
                 for (auto& rTask : task->subTasks()) {
                     if (!rTask->isReady()) { return false; }
@@ -173,13 +187,13 @@ private:
     };
 
     struct TileSet {
-        TileSet(std::shared_ptr<DataSource> _source, bool _clientDataSource)
-            : source(_source), clientDataSource(_clientDataSource) {}
+        TileSet(std::shared_ptr<TileSource> _source, bool _clientSource)
+            : source(_source), clientTileSource(_clientSource) {}
 
-        std::shared_ptr<DataSource> source;
+        std::shared_ptr<TileSource> source;
         std::map<TileID, TileEntry> tiles;
         int64_t sourceGeneration = 0;
-        bool clientDataSource;
+        bool clientTileSource;
     };
 
     void updateTileSet(TileSet& tileSet, const ViewState& _view, const std::set<TileID>& _visibleTiles);
@@ -187,8 +201,6 @@ private:
     void enqueueTask(TileSet& _tileSet, const TileID& _tileID, const ViewState& _view);
 
     void loadTiles();
-    void loadSubTasks(std::vector<std::shared_ptr<DataSource>>& subSources, std::shared_ptr<TileTask>& tileTask,
-                      const TileID& tileID);
 
     /*
      * Constructs a future (async) to load data of a new visible tile this is
@@ -215,7 +227,6 @@ private:
      */
     void clearProxyTiles(TileSet& _tileSet, const TileID& _tileID, TileEntry& _tile, std::vector<TileID>& _removes);
 
-    int32_t m_loadPending = 0;
     int32_t m_tilesInProgress = 0;
 
     std::vector<TileSet> m_tileSets;
@@ -229,7 +240,7 @@ private:
 
     bool m_tileSetChanged = false;
 
-    /* Callback for DataSource:
+    /* Callback for TileSource:
      * Passes TileTask back with data for further processing by <TileWorker>s
      */
     TileTaskCb m_dataCallback;

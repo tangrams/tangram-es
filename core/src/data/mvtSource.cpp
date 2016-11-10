@@ -6,30 +6,29 @@
 #include "tile/tileTask.h"
 #include "util/pbfParser.h"
 #include "platform.h"
+#include "log.h"
 
 namespace Tangram {
-
-
-MVTSource::MVTSource(const std::string& _name, const std::string& _urlTemplate,
-                     int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom) :
-    DataSource(_name, _urlTemplate, _minDisplayZoom, _maxDisplayZoom, _maxZoom) {
-}
 
 std::shared_ptr<TileData> MVTSource::parse(const TileTask& _task, const MapProjection& _projection) const {
 
     auto tileData = std::make_shared<TileData>();
 
-    auto& task = static_cast<const DownloadTileTask&>(_task);
+    auto& task = static_cast<const BinaryTileTask&>(_task);
 
     protobuf::message item(task.rawTileData->data(), task.rawTileData->size());
     PbfParser::ParserContext ctx(m_id);
 
-    while(item.next()) {
-        if(item.tag == 3) {
-            tileData->layers.push_back(PbfParser::getLayer(ctx, item.getMessage()));
-        } else {
-            item.skip();
+    try {
+        while(item.next()) {
+            if(item.tag == 3) {
+                tileData->layers.push_back(PbfParser::getLayer(ctx, item.getMessage()));
+            } else {
+                item.skip();
+            }
         }
+    } catch(std::runtime_error e) {
+        LOGE("%s", e.what());
     }
     return tileData;
 }

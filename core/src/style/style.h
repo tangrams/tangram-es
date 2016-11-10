@@ -11,23 +11,23 @@
 
 namespace Tangram {
 
-struct DrawRule;
 class Label;
 class LabelCollider;
 class Light;
-struct LightUniforms;
-class Tile;
 class MapProjection;
-class Material;
-struct MaterialUniforms;
 class Marker;
-class VertexLayout;
-class View;
+class Material;
+class RenderState;
 class Scene;
 class ShaderProgram;
 class Style;
-class DataSource;
-class RenderState;
+class Tile;
+class TileSource;
+class VertexLayout;
+class View;
+struct DrawRule;
+struct LightUniforms;
+struct MaterialUniforms;
 
 enum class LightingType : char {
     none,
@@ -292,7 +292,7 @@ public:
 
     virtual bool hasRasters() const { return m_rasterType != RasterType::none; }
 
-    void setupRasters(const std::vector<std::shared_ptr<DataSource>>& _dataSources);
+    void setupRasters(const std::vector<std::shared_ptr<TileSource>>& _sources);
 
     std::vector<StyleUniform>& styleUniforms() { return m_mainUniforms.styleUniforms; }
 

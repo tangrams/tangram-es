@@ -23,6 +23,14 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
+if(MSVC)
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
+  set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
+endif()
+
+file(GLOB_RECURSE TANGRAM_EPOXY_HEADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/external/libepoxy/include/*.h")
+file(GLOB_RECURSE TANGRAM_EPOXY_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/external/libepoxy/src/*.c")
+
 include(${PROJECT_SOURCE_DIR}/toolchains/utils.cmake)
 
 # cmake output configuration
@@ -31,7 +39,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # platform lookup
-set(SUPPORTED_TARGETS darwin ios android raspberrypi linux tizen ios.framework)
+set(SUPPORTED_TARGETS darwin ios android raspberrypi linux tizen ios.framework windows)
 
 if(NOT PLATFORM_TARGET)
     string(TOLOWER "${CMAKE_SYSTEM_NAME}" varplatform)

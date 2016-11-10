@@ -52,9 +52,15 @@ target_include_directories(geojson-vt-cpp
 set_target_properties(geojson-vt-cpp
   PROPERTIES COMPILE_FLAGS -DGEOJSONVT_CUSTOM_TAGS)
 
-target_compile_options(geojson-vt-cpp
-  PUBLIC
-  -Wno-unknown-pragmas)
+if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    target_compile_options(geojson-vt-cpp
+      PUBLIC
+      -D_USE_MATH_DEFINES)
+else()
+    target_compile_options(geojson-vt-cpp
+      PUBLIC
+      -Wno-unknown-pragmas)
+endif()
 
 
 ## duktape ##
@@ -87,7 +93,7 @@ endif()
 
 ## GLFW ##
 ##########
-if(PLATFORM_LINUX OR PLATFORM_OSX)
+if(PLATFORM_LINUX OR PLATFORM_OSX OR PLATFORM_WINDOWS)
   if (USE_SYSTEM_GLFW_LIBS)
     include(FindPkgConfig)
     pkg_check_modules(GLFW REQUIRED glfw3)
@@ -97,21 +103,31 @@ if(PLATFORM_LINUX OR PLATFORM_OSX)
     set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs")
     set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation")
     set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
-
+    if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+      set(GLFW_USE_EGL ON CACHE BOOL "Generate installation target")
+    endif()
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/glfw)
 
     target_include_directories(glfw
       PUBLIC
       ${CMAKE_CURRENT_SOURCE_DIR}/glfw/include)
 
-    target_link_libraries(glfw
-      INTERFACE
-      "${GLFW_LIBRARIES}"
-      -ldl)
-
-    target_compile_options(glfw
-      PRIVATE
-      -O3 -DNDEBUG)
+    if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+      target_link_libraries(glfw
+        INTERFACE
+        "${GLFW_LIBRARIES}")
+      target_compile_options(glfw
+        PRIVATE
+        -DNDEBUG)
+    else()
+      target_link_libraries(glfw
+        INTERFACE
+        "${GLFW_LIBRARIES}"
+        -ldl)
+      target_compile_options(glfw
+        PRIVATE
+        -O3 -DNDEBUG)
+    endif()
 
     if(USE_EXTERNAL_LIBS)
       export(TARGETS glfw
@@ -161,3 +177,15 @@ endif()
 set(GLM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../core/include/glm)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
+
+## Zlib ##
+if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+add_subdirectory(zlib)
+endif ()
+
+## SQLiteCpp ##
+###############
+set(SQLITECPP_RUN_CPPLINT OFF CACHE BOOL "")
+set(SQLITECPP_RUN_CPPCHECK OFF CACHE BOOL "")
+
+add_subdirectory(SQLiteCpp)

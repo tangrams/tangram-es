@@ -1,6 +1,10 @@
 #include "urlWorker.h"
 #include "log.h"
 
+#ifndef CURLOPT_ACCEPT_ENCODING
+#define CURLOPT_ACCEPT_ENCODING CURLOPT_ENCODING
+#endif
+
 static size_t write_data(void *_buffer, size_t _size, size_t _nmemb, void *_dataPtr) {
 
     const size_t realSize = _size * _nmemb;

@@ -4,9 +4,12 @@
 #include "lights.h"
 #include "data/clientGeoJsonSource.h"
 #include "data/geoJsonSource.h"
+#include "data/memoryCacheDataSource.h"
+#include "data/mbtilesDataSource.h"
 #include "data/mvtSource.h"
-#include "data/topoJsonSource.h"
+#include "data/networkDataSource.h"
 #include "data/rasterSource.h"
+#include "data/topoJsonSource.h"
 #include "gl/shaderProgram.h"
 #include "style/material.h"
 #include "style/polygonStyle.h"
@@ -40,7 +43,12 @@ using YAML::Node;
 using YAML::NodeType;
 using YAML::BadConversion;
 
-#define LOGNode(fmt, node, ...) LOGW(fmt ":\n'%s'\n", ## __VA_ARGS__, Dump(node).c_str())
+#if LOG_LEVEL >= 2
+#define LOGNode(fmt, node, ...) \
+do { logMsg("WARNING %s:%d: " fmt ":\n'%s'\n", __FILENAME__, __LINE__, ## __VA_ARGS__, Dump(node).c_str()); } while(0)
+#else
+#define LOGNode(fmt, ...)
+#endif
 
 namespace Tangram {
 
@@ -886,17 +894,40 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, const std::sha
 }
 
 void SceneLoader::loadSource(const std::string& name, const Node& source, const Node& sources, const std::shared_ptr<Scene>& _scene) {
-    if (_scene->getDataSource(name)) {
-        LOGW("Duplicate DataSource: %s", name.c_str());
+    if (_scene->getTileSource(name)) {
+        LOGW("Duplicate TileSource: %s", name.c_str());
         return;
     }
 
     std::string type = source["type"].Scalar();
-    std::string url = source["url"].Scalar();
+    std::string url;
+    std::string mbtiles;
     int32_t minDisplayZoom = -1;
     int32_t maxDisplayZoom = -1;
     int32_t maxZoom = 18;
 
+    std::string mime;
+
+    if (type == "GeoJSON") {
+        mime = "application/geo+json";
+    } else if (type == "TopoJSON") {
+        mime =  "application/topo+json";
+    } else if (type == "MVT") {
+        mime =  "application/vnd.mapbox-vector-tile";
+    } else if (type == "Raster") {
+        // TODO try to guess from url
+        mime = "image/png";
+    } else {
+        LOGW("Unrecognized data source type '%s', skipping", type.c_str());
+        return;
+    }
+
+    if (auto urlNode = source["url"]) {
+        url = urlNode.Scalar();
+    }
+    if (auto mbtilesNode = source["mbtiles"]) {
+        mbtiles = mbtilesNode.Scalar();
+    }
     if (auto minDisplayZoomNode = source["min_display_zoom"]) {
         minDisplayZoom = minDisplayZoomNode.as<int32_t>(minDisplayZoom);
     }
@@ -934,22 +965,44 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
     }
 
     // distinguish tiled and non-tiled sources by url
-    bool tiled = url.find("{x}") != std::string::npos &&
+    bool tiled = url.size() > 0 &&
+        url.find("{x}") != std::string::npos &&
         url.find("{y}") != std::string::npos &&
         url.find("{z}") != std::string::npos;
 
-    std::shared_ptr<DataSource> sourcePtr;
+    std::shared_ptr<TileSource> sourcePtr;
+
+    auto rawSources = std::make_unique<MemoryCacheDataSource>();
+    rawSources->setCacheSize(CACHE_SIZE);
+
+    if (!mbtiles.empty()) {
+        // If we have MBTiles, we know the source is tiled.
+        tiled = true;
+
+        if (url.empty()) {
+            rawSources->setNext(std::make_unique<MBTilesDataSource>(name, mbtiles, mime));
+        } else {
+            rawSources->setNext(std::make_unique<MBTilesDataSource>(name, mbtiles, mime, true, true));
+            rawSources->next->setNext(std::make_unique<NetworkDataSource>(url));
+        }
+
+    } else if (tiled) {
+        rawSources->setNext(std::make_unique<NetworkDataSource>(url));
+    }
 
     if (type == "GeoJSON") {
         if (tiled) {
-            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
+            sourcePtr = std::make_shared<GeoJsonSource>(name, std::move(rawSources),
+                                                        minDisplayZoom, maxDisplayZoom, maxZoom);
         } else {
-            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
+            sourcePtr = std::make_shared<ClientGeoJsonSource>(name, url, minDisplayZoom, maxDisplayZoom, maxZoom);
         }
     } else if (type == "TopoJSON") {
-        sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
+        sourcePtr = std::make_shared<TopoJsonSource>(name, std::move(rawSources),
+                                                     minDisplayZoom, maxDisplayZoom, maxZoom);
     } else if (type == "MVT") {
-        sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
+        sourcePtr = std::make_shared<MVTSource>(name, std::move(rawSources),
+                                                minDisplayZoom, maxDisplayZoom, maxZoom);
     } else if (type == "Raster") {
         TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
         bool generateMipmaps = false;
@@ -958,15 +1011,13 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
                 generateMipmaps = true;
             }
         }
-        sourcePtr = std::shared_ptr<DataSource>(new RasterSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom, options, generateMipmaps));
-    } else {
-        LOGW("Unrecognized data source type '%s', skipping", type.c_str());
+
+        sourcePtr = std::make_shared<RasterSource>(name, std::move(rawSources),
+                                                   minDisplayZoom, maxDisplayZoom, maxZoom,
+                                                   options, generateMipmaps);
     }
 
-    if (sourcePtr) {
-        sourcePtr->setCacheSize(CACHE_SIZE);
-        _scene->dataSources().push_back(sourcePtr);
-    }
+    _scene->tileSources().push_back(sourcePtr);
 
     if (auto rasters = source["rasters"]) {
         loadSourceRasters(sourcePtr, source["rasters"], sources, _scene);
@@ -974,7 +1025,7 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
 
 }
 
-void SceneLoader::loadSourceRasters(std::shared_ptr<DataSource> &source, Node rasterNode, const Node& sources,
+void SceneLoader::loadSourceRasters(std::shared_ptr<TileSource> &source, Node rasterNode, const Node& sources,
                                     const std::shared_ptr<Scene>& scene) {
     if (rasterNode.IsSequence()) {
         for (const auto& raster : rasterNode) {
@@ -985,7 +1036,7 @@ void SceneLoader::loadSourceRasters(std::shared_ptr<DataSource> &source, Node ra
                 LOGNode("Parsing sources: '%s'", sources[srcName], e.what());
                 return;
             }
-            source->addRasterSource(scene->getDataSource(srcName));
+            source->addRasterSource(scene->getTileSource(srcName));
         }
     }
 }
@@ -1616,7 +1667,7 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, const std::share
         if (Node data_source = data["source"]) {
             if (data_source.IsScalar()) {
                 source = data_source.Scalar();
-                auto dataSource = scene->getDataSource(source);
+                auto dataSource = scene->getTileSource(source);
                 if (dataSource) {
                     dataSource->generateGeometry(true);
                 } else {

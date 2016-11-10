@@ -39,8 +39,14 @@ list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/mapbox)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/sdf)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/stb)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/glm)
+list(APPEND INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/api)
+if (WIN32)
+list(APPEND INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../external/zlib)
+list(APPEND INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/../external/zlib)
+endif ()
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/shaders)
 list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/isect2d/include)
+list(APPEND INCLUDE_DIRS ${INCLUDE_DIR}/hash-library)
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
 set(CORE_LIBRARIES_INCLUDE_DIRS
@@ -51,6 +57,7 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/stb
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/pbf
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/rapidjson
+    ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/SQLiteCpp
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/isect2d/include
     CACHE INTERNAL "core libraries include directories" FORCE)
 
@@ -59,14 +66,32 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
 
 add_library(${CORE_LIBRARY} ${FOUND_SOURCES} ${FOUND_HEADERS})
 
-target_link_libraries(${CORE_LIBRARY}
-  PUBLIC
-  duktape
-  css-color-parser-cpp
-  geojson-vt-cpp
-  yaml-cpp
-  alfons)
+set(LINK_LIBRARIES
+    duktape
+    css-color-parser-cpp
+    geojson-vt-cpp
+    yaml-cpp
+    alfons
+    SQLiteCpp
+    sqlite3)
 
+if (WIN32)
+  list(APPEND LINK_LIBRARIES zlibstatic)
+  add_dependencies(${CORE_LIBRARY} zlibstatic)
+else ()
+  list(APPEND LINK_LIBRARIES z)
+endif ()
+
+if (UNIX AND NOT APPLE)
+  # SQLite needs dl dynamic library loader when Linux
+  list(APPEND LINK_LIBRARIES dl)
+endif () 
+
+target_link_libraries(
+  ${CORE_LIBRARY}
+  PUBLIC
+  ${LINK_LIBRARIES}
+)
 target_include_directories(${CORE_LIBRARY}
   PUBLIC
   ${INCLUDE_DIRS})
@@ -79,8 +104,18 @@ target_compile_definitions(${CORE_LIBRARY}
   PUBLIC
   ${CORE_COMPILE_DEFS})
 
+if (PLATFORM_TARGET STREQUAL "linux" OR PLATFORM_TARGET STREQUAL "windows")
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/api)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/demo)
+endif()
+
 # make groups for xcode
 group_recursive_sources(src "src")
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  set(CMD_SCRIPT ${PROJECT_SOURCE_DIR}/../scripts/incbin.bat)
+else()
+  set(CMD_SCRIPT "bash" ${PROJECT_SOURCE_DIR}/../scripts/incbin.bat)
+endif()
 
 # add compile shader targets
 file(GLOB_RECURSE SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
@@ -99,7 +134,7 @@ foreach(_shader ${SHADER_FILES})
             OUTPUT ${SHADER_OUTPUT}
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..
             MAIN_DEPENDENCY ${_shader}
-            COMMAND ${PROJECT_SOURCE_DIR}/../scripts/incbin.sh
+            COMMAND ${CMD_SCRIPT}
                 ${_shader}
                 core/include/shaders/${_shader_name}.h
                 ${_shader_name})
@@ -115,6 +150,6 @@ add_custom_command(
   OUTPUT ${DEFAULT_POINT_TEXTURE_HEADER}
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..
   MAIN_DEPENDENCY ${DEFAULT_POINT_TEXTURE_IMAGE}
-  COMMAND ${PROJECT_SOURCE_DIR}/../scripts/incbin.sh ${DEFAULT_POINT_TEXTURE_IMAGE} ${DEFAULT_POINT_TEXTURE_HEADER} default_point_texture
+  COMMAND ${CMD_SCRIPT} ${DEFAULT_POINT_TEXTURE_IMAGE} ${DEFAULT_POINT_TEXTURE_HEADER} default_point_texture
   )
 add_dependencies(${CORE_LIBRARY} default_point_texture)

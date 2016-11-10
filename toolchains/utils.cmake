@@ -1,8 +1,13 @@
+if(POLICY CMP0054)
+    cmake_policy(SET CMP0054 NEW)
+endif()
+
 function(check_unsupported_compiler_version)
 
     set(MIN_GCC 4.9)
     set(MIN_CLANG 3.4)
     set(MIN_APPLECLANG 6.0)
+    set(MIN_MSVC 19.0.23918.0)
 
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS ${MIN_GCC})
@@ -16,8 +21,12 @@ function(check_unsupported_compiler_version)
         if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS ${MIN_APPLECLANG})
             message(FATAL_ERROR "Your Xcode version does not support C++14, please install version ${MIN_APPLECLANG} or higher")
         endif()
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS ${MIN_MSVC})
+            message(FATAL_ERROR "Your MSVC version does not support C++14, please install version ${MIN_MSVC} or higher")
+        endif()
     else()
-        message(WARNING "Compilation has only been tested with Clang, AppleClang, and GCC")
+        message(WARNING "Compilation has only been tested with Clang, AppleClang, and GCC, not ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
     endif()
 
 endfunction(check_unsupported_compiler_version)

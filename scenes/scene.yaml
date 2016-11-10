@@ -1,19 +1,20 @@
 global:
     default_order: function() { return feature.sort_key || 0; }
 
-fonts:
-    Montserrat:
-        url: https://fonts.gstatic.com/s/montserrat/v7/zhcz-_WihjSQC0oHJ9TCYL3hpw3pgy2gAi-Ip7WPMi0.woff
-    Open Sans:
-        - weight: 300
-          url: fonts/open sans-300normal.ttf
-        - weight: 300
-          style: italic
-          url: fonts/open sans-300italic.ttf
+#fonts:
+#    Montserrat:
+#        url: https://fonts.gstatic.com/s/montserrat/v7/zhcz-_WihjSQC0oHJ9TCYL3hpw3pgy2gAi-Ip7WPMi0.woff
+#    Open Sans:
+#        - weight: 300
+#          url: fonts/open sans-300normal.ttf
+#        - weight: 300
+#          style: italic
+#          url: fonts/open sans-300italic.ttf
 
 scene:
     background:
-        color: '#8db7d5'
+        #color: '#8db7d5'
+        color: '#efefef'
 cameras:
     iso-camera:
         # Manhattan
@@ -22,7 +23,8 @@ cameras:
         axis: [0, 1]
         active: false
     perspective-camera:
-        # Manhattan
+        # Winters
+        #position: [-121.97, 38.52, 12]
         position: [-74.00976419448854, 40.70532700869127, 16]
         type: perspective
         fov: 45
@@ -60,6 +62,12 @@ styles:
     flatcolor:
         base: polygons
         lighting: false
+    blendlines:
+        base: lines
+        blend: overlay
+    blendpolygons:
+        base: polygons
+        blend: overlay
     heightglow:
         base: polygons
         lighting: vertex
@@ -80,10 +88,11 @@ styles:
 sources:
     osm:
         type: MVT
-        url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+        #url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.json
+        mbtiles: nyc.mbtiles
         max_zoom: 16
-        url_params:
-            api_key: vector-tiles-tyHL4AY
+        # url_params:
+        #     api_key: vector-tiles-tyHL4AY
 
 layers:
     touch:
@@ -119,14 +128,14 @@ layers:
                 color: '#f0ebeb'
     landuse:
         data: { source: osm }
-        filter:
-            name: true
-            any:
-                - { $zoom: { min: 9 }, area: { min: 10000000 } }
-                - { $zoom: { min: 10 }, area: { min: 3300000 } }
-                - { $zoom: { min: 12 }, area: { min: 1000000 } }
-                - { $zoom: { min: 13 }, area: { min: 10000 } }
-                - { $zoom: { min: 15 } }
+        # filter:
+        #     name: true
+        #     any:
+        #         - { $zoom: { min: 9 }, area: { min: 10000000 } }
+        #         - { $zoom: { min: 10 }, area: { min: 3300000 } }
+        #         - { $zoom: { min: 12 }, area: { min: 1000000 } }
+        #         - { $zoom: { min: 13 }, area: { min: 10000 } }
+        #         - { $zoom: { min: 15 } }
         draw:
             polygons:
                 order: 1
@@ -148,21 +157,31 @@ layers:
             draw:
                 polygons:
                     color: '#D9CFC3'
+    landuse_overlay:
+        data: { source: osm }
+        draw:
+            blendpolygons:
+                order: 2
+                color: '#4489ab84'
 
     water:
         data: { source: osm }
-        filter:
-            any:
-                # show smaller water areas at higher zooms
-                - { $zoom: { min: 0 }, area: { min: 10000000 } }
-                - { $zoom: { min: 10 }, area: { min: 1000000 } }
-                - { $zoom: { min: 12 }, area: { min: 100000 } }
-                - { $zoom: { min: 15 }, area: { min: 1000 } }
-                - { $zoom: { min: 18 } }
+        # filter:
+        #     any:
+        #         # show smaller water areas at higher zooms
+        #         - { $zoom: { min: 0 }, area: { min: 10000000 } }
+        #         - { $zoom: { min: 10 }, area: { min: 1000000 } }
+        #         - { $zoom: { min: 12 }, area: { min: 100000 } }
+        #         - { $zoom: { min: 15 }, area: { min: 1000 } }
+        #         - { $zoom: { min: 18 } }
         draw:
             flatcolor:
                 order: 3
                 color: '#8db7d5'
+            # blendlines:
+            #     order: 5
+            #     width: 1px
+            #     color: '#22ff00ff'
 
     roads:
         data: { source: osm }
@@ -429,18 +448,18 @@ layers:
                         weight: 400
                         style: normal
                         size: 14.5pt
-    country:
-        data: { source: osm, layer: places }
-        country-labels:
-            filter: { name: true, population: true, kind: [country] }
-            draw:
-                text:
-                    font:
-                        # transform: uppercase
-                        family: Montserrat
-                        fill: black
-                        stroke: { color: white, width: 4 }
-                        size: 13px
+#    country:
+#        data: { source: osm, layer: places }
+#        country-labels:
+#            filter: { name: true, population: true, kind: [country] }
+#            draw:
+#                text:
+#                    font:
+#                        # transform: uppercase
+#                        family: Montserrat
+#                        fill: black
+#                        stroke: { color: white, width: 4 }
+#                        size: 13px
     places:
         data: { source: osm }
         filter:
