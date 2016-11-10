@@ -70,8 +70,7 @@ Node Importer::applySceneImports(const Url& scenePath, const Url& resourceRoot) 
 
     LOGD("Processing scene import Stack:");
     std::vector<Url> sceneStack;
-    std::unordered_set<std::string> globalTextures;
-    importScenes(root, rootScenePath, sceneStack, globalTextures);
+    importScenesRecursive(root, rootScenePath, sceneStack);
 
     return root;
 }
@@ -88,11 +87,9 @@ void Importer::processScene(const Url& scenePath, const std::string &sceneString
     try {
         auto sceneNode = YAML::Load(sceneString);
 
-        resolveSceneUrls(sceneNode, scenePath);
-
         m_scenes[scenePath] = sceneNode;
 
-        for (const auto& import : getScenesToImport(sceneNode)) {
+        for (const auto& import : getResolvedImportUrls(sceneNode, scenePath)) {
             m_sceneQueue.push_back(import);
             m_condition.notify_all();
         }
@@ -101,41 +98,81 @@ void Importer::processScene(const Url& scenePath, const std::string &sceneString
     }
 }
 
-void Importer::setResolvedTextureUrl(const std::unordered_set<std::string>& globalTextures,
-                                     Node& textureNode, const Url& base) {
+bool nodeIsTextureUrl(const Node& node, const Node& textures) {
 
-    if (!textureNode.IsScalar()) { return; }
+    // Check that the node is scalar and not null.
+    if (node.IsNull() || !node.IsScalar()) { return false; }
 
-    const auto& name = textureNode.Scalar();
-
-    // If texture name matches a global texture then don't resolve it.
-    if (globalTextures.find(name) != globalTextures.end()) { return; }
-
-    // Assign resolved texture path to yaml node.
-    textureNode = Url(name).resolved(base).string();
-}
-
-// Helper function; returns true if a node is a scalar that is not a null, bool, or number.
-bool isStringNode(const Node& node) {
+    // Check that the node is not a number or a boolean.
     bool booleanValue = false;
     double numberValue = 0.;
-    if (node.IsNull() || !node.IsScalar()) { return false; }
     if (YAML::convert<bool>::decode(node, booleanValue)) { return false; }
     if (YAML::convert<double>::decode(node, numberValue)) { return false; }
+
+    // Check that the node does not name a scene texture.
+    if (textures[node.Scalar()]) { return false; }
+
     return true;
 }
 
 void Importer::resolveSceneUrls(Node& root, const Url& base) {
 
-    // Resolve import URLs.
+    // Resolve global texture URLs.
 
-    if (Node import = root["import"]) {
-        if (import.IsScalar()) {
-            import = Url(import.Scalar()).resolved(base).string();
-        } else if (import.IsSequence()) {
-            for (Node path : import) {
-                if (path.IsScalar()) {
-                    path = Url(path.Scalar()).resolved(base).string();
+    Node textures = root["textures"];
+
+    if (textures) {
+        for (auto texture : textures) {
+            if (Node textureUrlNode = texture.second["url"]) {
+                if (textureUrlNode.IsScalar()) {
+                    textureUrlNode = Url(textureUrlNode.Scalar()).resolved(base).string();
+                }
+            }
+        }
+    }
+
+    // Resolve inline texture URLs.
+
+    if (Node styles = root["styles"]) {
+
+        for (auto entry : styles) {
+
+            Node style = entry.second;
+            //style->texture
+            if (Node texture = style["texture"]) {
+                if (nodeIsTextureUrl(texture, textures)) {
+                    texture = Url(texture.Scalar()).resolved(base).string();
+                }
+            }
+
+            //style->material->texture
+            if (Node material = style["material"]) {
+                for (auto& prop : {"emission", "ambient", "diffuse", "specular", "normal"}) {
+                    if (Node propNode = material[prop]) {
+                        if (Node matTexture = propNode["texture"]) {
+                            if (nodeIsTextureUrl(matTexture, textures)) {
+                                matTexture = Url(matTexture.Scalar()).resolved(base).string();
+                            }
+                        }
+                    }
+                }
+            }
+
+            //style->shader->uniforms->texture
+            if (Node shaders = style["shaders"]) {
+                if (Node uniforms = shaders["uniforms"]) {
+                    for (auto uniformEntry : uniforms) {
+                        Node uniformValue = uniformEntry.second;
+                        if (nodeIsTextureUrl(uniformValue, textures)) {
+                            uniformValue = Url(uniformValue.Scalar()).resolved(base).string();
+                        } else if (uniformValue.IsSequence()) {
+                            for (Node u : uniformValue) {
+                                if (nodeIsTextureUrl(u, textures)) {
+                                    u = Url(u.Scalar()).resolved(base).string();
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -178,17 +215,17 @@ std::string Importer::getSceneString(const Url& scenePath) {
     return stringFromFile(scenePath.string().c_str());
 }
 
-std::vector<Url> Importer::getScenesToImport(const Node& scene) {
+std::vector<Url> Importer::getResolvedImportUrls(const Node& scene, const Url& base) {
 
     std::vector<Url> scenePaths;
 
     if (const Node& import = scene["import"]) {
         if (import.IsScalar()) {
-            scenePaths.push_back(Url(import.Scalar()));
+            scenePaths.push_back(Url(import.Scalar()).resolved(base));
         } else if (import.IsSequence()) {
             for (const auto& path : import) {
                 if (path.IsScalar()) {
-                    scenePaths.push_back(Url(path.Scalar()));
+                    scenePaths.push_back(Url(path.Scalar()).resolved(base));
                 }
             }
         }
@@ -197,8 +234,7 @@ std::vector<Url> Importer::getScenesToImport(const Node& scene) {
     return scenePaths;
 }
 
-void Importer::importScenes(Node& root, const Url& scenePath, std::vector<Url>& sceneStack,
-                            std::unordered_set<std::string>& globalTextures) {
+void Importer::importScenesRecursive(Node& root, const Url& scenePath, std::vector<Url>& sceneStack) {
 
     LOGD("Starting importing Scene: %s", scenePath.string().c_str());
 
@@ -216,74 +252,19 @@ void Importer::importScenes(Node& root, const Url& scenePath, std::vector<Url>& 
     if (sceneNode.IsNull()) { return; }
     if (!sceneNode.IsMap()) { return; }
 
-    // Resolve global texture URLs.
-    Url base(scenePath);
-    if (Node texturesNode = sceneNode["textures"]) {
-        for (auto texture : texturesNode) {
-            if (Node textureUrlNode = texture.second["url"]) {
-                if (textureUrlNode.IsScalar()) {
-                    textureUrlNode = Url(textureUrlNode.Scalar()).resolved(base).string();
-                }
-                globalTextures.insert(texture.first.Scalar());
-            }
-        }
-    }
+    auto imports = getResolvedImportUrls(sceneNode, scenePath);
 
-    auto imports = getScenesToImport(sceneNode);
+    for (const auto& url : imports) {
 
-    for (const auto& importScene : imports) {
-        std::unordered_set<std::string> textures;
+        importScenesRecursive(root, url, sceneStack);
 
-        importScenes(root, importScene, sceneStack, textures);
-
-        for (auto& t : textures) { globalTextures.insert(t); }
-    }
-
-    // Resolve inline texture URLs after m_globalTextures are determined.
-    if (Node styles = sceneNode["styles"]) {
-
-        for (auto entry : styles) {
-
-            Node style = entry.second;
-            //style->texture
-            if (Node texture = style["texture"]) {
-                setResolvedTextureUrl(globalTextures, texture, base);
-            }
-
-            //style->material->texture
-            if (Node material = style["material"]) {
-                for (auto& prop : {"emission", "ambient", "diffuse", "specular", "normal"}) {
-                    if (Node propNode = material[prop]) {
-                        if (Node matTexture = propNode["texture"]) {
-                            setResolvedTextureUrl(globalTextures, matTexture, base);
-                        }
-                    }
-                }
-            }
-
-            //style->shader->uniforms->texture
-            if (Node shaders = style["shaders"]) {
-                if (Node uniforms = shaders["uniforms"]) {
-                    for (auto uniformEntry : uniforms) {
-                        Node uniformValue = uniformEntry.second;
-                        if (isStringNode(uniformValue)) {
-                            setResolvedTextureUrl(globalTextures, uniformValue, base);
-                        } else if (uniformValue.IsSequence()) {
-                            for (auto u : uniformValue) {
-                                if (isStringNode(u)) {
-                                    setResolvedTextureUrl(globalTextures, u, base);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 
     sceneStack.pop_back();
 
     mergeMapFields(root, sceneNode);
+
+    resolveSceneUrls(root, scenePath);
 }
 
 void Importer::mergeMapFields(Node& target, const Node& import) {
