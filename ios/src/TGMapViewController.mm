@@ -66,6 +66,13 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     self.map->queueSceneUpdate([componentPath UTF8String], [componentPath UTF8String]);
 }
 
+- (void)applySceneUpdates
+{
+    if (!self.map) { return; }
+
+    self.map->applySceneUpdates();
+}
+
 #pragma mark Longitude/Latitude - Screen position conversions
 
 - (CGPoint)lngLatToScreenPosition:(TGGeoPoint)lngLat
