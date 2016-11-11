@@ -1,5 +1,7 @@
 language: android
 
+sudo: enabled
+
 branches:
     only:
         - master
@@ -41,5 +43,3 @@ script:
 after_success:
     - source ./scripts/travis/script_deploy_android_snapshot.sh
     - source ./scripts/travis/script_deploy_android_demo.sh
-
-sudo: false
