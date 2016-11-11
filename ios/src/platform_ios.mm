@@ -143,35 +143,50 @@ std::string systemFontFallbackPath(int _importance, int _weightHint) {
 }
 
 unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
-    // TODO: use weight param
 
-    if (_weight == "400") {
-        // "normal" face;
-    } else if (_weight == "700") {
-        // "bold" face
-    }
+    static std::map<int, CGFloat> weightTraits = {
+        {100, UIFontWeightUltraLight},
+        {200, UIFontWeightThin},
+        {300, UIFontWeightLight},
+        {400, UIFontWeightRegular},
+        {500, UIFontWeightMedium},
+        {600, UIFontWeightSemibold},
+        {700, UIFontWeightBold},
+        {800, UIFontWeightHeavy},
+        {900, UIFontWeightBlack},
+    };
+
+    static std::map<std::string, UIFontDescriptorSymbolicTraits> fontTraits = {
+        {"italic", UIFontDescriptorTraitItalic},
+        {"oblique", UIFontDescriptorTraitItalic},
+        {"bold", UIFontDescriptorTraitBold},
+        {"expanded", UIFontDescriptorTraitExpanded},
+        {"condensed", UIFontDescriptorTraitCondensed},
+        {"monospace", UIFontDescriptorTraitMonoSpace},
+    };
 
     UIFont* font = [UIFont fontWithName:[NSString stringWithUTF8String:_name.c_str()] size:0.0];
 
     if (font == nil) {
         // Get the default system font
-        font = [UIFont systemFontOfSize:0.0];
-    }
+        if (_weight.empty()) {
+            font = [UIFont systemFontOfSize:0.0];
+        } else {
+            int weight = std::atoi(_weight.c_str());
 
-    NSString* weightTrait = UIFontWeightTrait;
+            // Default to 400 boldness
+            weight = (weight == 0) ? 400 : weight;
+
+            // Map weight value to range [100..900]
+            weight = std::min(std::max(100, (int)floor(weight / 100.0 + 0.5) * 100), 900);
+
+            font = [UIFont systemFontOfSize:0.0 weight:weightTraits[weight]];
+        }
+    }
 
     if (_face != "normal") {
         UIFontDescriptorSymbolicTraits traits;
         UIFontDescriptor* descriptor = [font fontDescriptor];
-
-        static std::map<std::string, UIFontDescriptorSymbolicTraits> fontTraits = {
-            {"italic", UIFontDescriptorTraitItalic},
-            {"oblique", UIFontDescriptorTraitItalic},
-            {"bold", UIFontDescriptorTraitBold},
-            {"expanded", UIFontDescriptorTraitExpanded},
-            {"condensed", UIFontDescriptorTraitCondensed},
-            {"monospace", UIFontDescriptorTraitMonoSpace},
-        };
 
         auto it = fontTraits.find(_face);
         if (it != fontTraits.end()) {
@@ -185,6 +200,8 @@ unsigned char* systemFont(const std::string& _name, const std::string& _weight, 
             }
         }
     }
+
+    LOG("Loading system font %s", [font.fontName UTF8String]);
 
     CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)font.fontName);
 

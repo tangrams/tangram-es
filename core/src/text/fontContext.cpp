@@ -355,7 +355,7 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
 
         if (data) { break; }
 
-        // 2. System font
+        // 2. System font (TODO: mutex lock decryption for iOS)
         data = systemFont(_family, _weight, _style, &dataSize);
 
         if (data) { break; }

@@ -59,7 +59,7 @@ set(HEADERS
     ${PROJECT_SOURCE_DIR}/ios/src/CGFontConverter.h
     ${FRAMEWORK_HEADERS})
 
-# add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes/fonts" "./fonts")
+add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes/fonts" "./fonts")
 add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/ios/framework/Modules" "./Modules")
 
 add_library(${FRAMEWORK_NAME} SHARED ${SOURCES} ${HEADERS} ${RESOURCES})

@@ -203,4 +203,8 @@ void initGLExtensions() {
     Tangram::Hardware::supportsMapBuffer = true;
 }
 
+unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+    return nullptr;
+}
+
 #endif //PLATFORM_OSX
