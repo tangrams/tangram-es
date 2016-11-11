@@ -254,6 +254,9 @@ void Importer::importScenesRecursive(Node& root, const Url& scenePath, std::vect
 
     auto imports = getResolvedImportUrls(sceneNode, scenePath);
 
+    // Don't want to merge imports, so remove them here.
+    sceneNode.remove("import");
+
     for (const auto& url : imports) {
 
         importScenesRecursive(root, url, sceneStack);
@@ -272,9 +275,6 @@ void Importer::mergeMapFields(Node& target, const Node& import) {
     for (const auto& entry : import) {
 
         const auto &key = entry.first.Scalar();
-
-        // do not merge ignore property
-        if (key == "import") { continue; }
 
         if (!target[key]) {
             target[key] = entry.second;
