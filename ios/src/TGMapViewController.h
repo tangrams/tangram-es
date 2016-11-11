@@ -95,6 +95,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value;
 
+- (void)applySceneUpdates;
+
 #pragma mark Feature picking interface
 
 - (void)pickFeaturesAt:(CGPoint)screenPosition;
