@@ -41,13 +41,15 @@ protected:
     void resolveSceneUrls(Node& root, const Url& base);
 
 private:
-    // import scene to respective root nodes
-    std::unordered_map<Url, Node> m_scenes;
+    // import scene to respective root nodes and whether imports have been resolved
+    std::unordered_map<Url, std::pair<Node, bool>> m_scenes;
 
     std::vector<Url> m_sceneQueue;
     static std::atomic_uint progressCounter;
     std::mutex sceneMutex;
     std::condition_variable m_condition;
+
+    std::set<std::string> m_globalTextures;
 
     const unsigned int MAX_SCENE_DOWNLOAD = 4;
 };
