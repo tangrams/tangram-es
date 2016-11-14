@@ -66,13 +66,14 @@ CLion will automatically set everything up, all you have to do is wait a minute 
 
 ![CLion Tangram Target](images/clion-tangram-target.png)
 
-### Ubuntu Linux ###
-To build on Ubuntu you will need a C++ toolchain with support for C++14. GCC 5 (or higher) and Clang 3.4 (or higher) are known to work.
+### Ubuntu or Debian Linux ###
+To build on Ubuntu or Debian you will need a C++ toolchain with support for C++14. GCC 5 (or higher) and Clang 3.4 (or higher) are known to work.
 
-You will also need to install development packages for libcurl, x11, and opengl:
+You will also need to install development packages for libcurl, x11, and opengl. On Ubuntu 16.04 or Debian Stretch all the required packages can be installed with
 
 ```bash
-sudo apt-get install libcurl4-openssl-dev xorg-dev libgl1-mesa-dev
+sudo apt-get install make g++ pkg-config libcurl4-openssl-dev \
+  libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libgl1-mesa-dev
 ```
 
 Then build an executable:
