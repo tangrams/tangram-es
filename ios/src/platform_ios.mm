@@ -132,14 +132,55 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
     return ptr;
 }
 
-// No system fonts implementation (yet!)
-std::string systemFontPath(const std::string& _name, const std::string& _weight, const std::string& _face) {
-    return "";
+unsigned char* loadUIFont(UIFont* _font, size_t* _size) {
+
+    LOG("Loading system font %s", [_font.fontName UTF8String]);
+
+    CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)_font.fontName);
+
+    if (!fontRef) {
+        *_size = 0;
+        return nullptr;
+    }
+
+    NSData* data = [CGFontConverter fontDataForCGFont:fontRef];
+
+    CGFontRelease(fontRef);
+
+    if (data == nil) {
+        LOG("CoreGraphics font failed to decode");
+
+        *_size = 0;
+        return nullptr;
+    }
+
+    unsigned char* bytes = (unsigned char*)malloc([data length]);
+    std::memcpy(bytes, (unsigned char*)[data bytes], [data length]);
+
+    *_size = [data length];
+
+    return bytes;
 }
 
-// No system fonts fallback implementation (yet!)
-std::string systemFontFallbackPath(int _importance, int _weightHint) {
-    return "";
+std::vector<FontSourceHandle> systemFontFallbacksHandle() {
+    UIFont* arabic = [UIFont fontWithName:@"Geeza Pro" size:0.0];
+
+    FontSourceHandle fontSourceHandle = [arabic]() -> std::vector<char> {
+        size_t dataSize = 0;
+
+        auto cdata = loadUIFont(arabic, &dataSize);
+        auto data = std::vector<char>(cdata, cdata + dataSize);
+
+        // TODO: reduce copies, move vector back
+
+        return data;
+    };
+
+    std::vector<FontSourceHandle> handles;
+
+    handles.push_back(fontSourceHandle);
+
+    return handles;
 }
 
 unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
@@ -201,32 +242,7 @@ unsigned char* systemFont(const std::string& _name, const std::string& _weight, 
         }
     }
 
-    LOG("Loading system font %s", [font.fontName UTF8String]);
-
-    CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)font.fontName);
-
-    if (!fontRef) {
-        *_size = 0;
-        return nullptr;
-    }
-
-    NSData* data = [CGFontConverter fontDataForCGFont:fontRef];
-
-    CGFontRelease(fontRef);
-
-    if (data == nil) {
-        LOG("CoreGraphics font %s failed to decode", _name.c_str());
-
-        *_size = 0;
-        return nullptr;
-    }
-
-    unsigned char* bytes = (unsigned char*)malloc([data length]);
-    std::memcpy(bytes, (unsigned char*)[data bytes], [data length]);
-
-    *_size = [data length];
-
-    return bytes;
+    return loadUIFont(font, _size);
 }
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {

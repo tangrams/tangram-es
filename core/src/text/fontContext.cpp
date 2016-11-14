@@ -32,6 +32,7 @@ FontContext::FontContext() :
 
 void FontContext::loadFonts() {
 
+#if 0
     // Load default fonts
     {
         std::string systemFont = systemFontPath("sans-serif", std::to_string(DEFAULT_BOLDNESS), "normal");
@@ -103,6 +104,7 @@ void FontContext::loadFonts() {
             }
         }
     }
+#endif
 }
 
 
@@ -360,12 +362,14 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
 
         if (data) { break; }
 
+        #if 0
         // 3. Fallback
         std::string sysFontPath = systemFontPath(_family, _weight, _style);
 
         if (sysFontPath.empty()) { break; }
 
         data = bytesFromFile(sysFontPath.c_str(), dataSize);
+        #endif
 
     } while (false);
 
