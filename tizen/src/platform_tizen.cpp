@@ -156,25 +156,32 @@ void initPlatformFontSetup() {
 std::vector<FontSourceHandle> systemFontFallbacksHandle() {
     std::vector<FontSourceHandle> handles;
 
-    // TODO
+    for (auto path : s_fallbackFonts) {
+        FontSourceHandle fontSourceHandle = [path]() -> std::vector<char> {
+            LOG("Loading font %s", path.c_str());
+            size_t dataSize = 0;
+
+            auto cdata = bytesFromFile(path.c_str(), dataSize);
+            auto data = std::vector<char>(cdata, cdata + dataSize);
+
+            return std::move(data);
+        };
+
+        handles.push_back(fontSourceHandle);
+    }
 
     return handles;
 }
 
 unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
-    // TODO
+    std::string path = fontPath(_name, _weight, _face);
+
+    if (path.empty()) { return nullptr; }
+
+    return bytesFromFile(path.c_str(), *_size);
 }
 
-std::string systemFontFallbackPath(int _importance, int _weightHint) {
-
-    if ((size_t)_importance >= s_fallbackFonts.size()) {
-        return "";
-    }
-
-    return s_fallbackFonts[_importance];
-}
-
-std::string systemFontPath(const std::string& _name, const std::string& _weight,
+std::string fontPath(const std::string& _name, const std::string& _weight,
                            const std::string& _face) {
 
     initPlatformFontSetup();
