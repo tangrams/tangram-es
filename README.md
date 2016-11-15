@@ -90,6 +90,18 @@ cd build/linux/bin/ && ./tangram
 
 Note that any Xcode configuration change you make to the project won't be preserved when CMake runs again. Build configuration is defined only in the CMakeLists file(s).
 
+Tangram ES can also be build with system font and GLFW libraries. This can be done with
+
+```bash
+CMAKE_OPTIONS=" -DUSE_SYSTEM_GLFW_LIBS=1 -DUSE_SYSTEM_FONT_LIBS=1" make linux
+```
+
+On Ubuntu 16.04 or Debian Stretch the additional packages required can be installed with
+
+```bash
+sudo apt-get install libglfw3-dev libicu-dev libfreetype6-dev libharfbuzz-dev
+```
+
 ### iOS (demo application) ###
 
 Building the iOS demo application requires Xcode 8.0 or newer. First, run:
