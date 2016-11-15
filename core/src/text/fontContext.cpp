@@ -105,6 +105,20 @@ void FontContext::loadFonts() {
         }
     }
 #endif
+
+    auto fallbacks = systemFontFallbacksHandle();
+
+    for (auto fallback : fallbacks) {
+        for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
+            auto source = alfons::InputSource(fallback);
+
+            if (!m_font[i]) {
+                m_font[i] = m_alfons.addFont("default", source, size);
+            } else {
+                m_font[i]->addFace(m_alfons.addFontFace(source, size));
+            }
+        }
+    }
 }
 
 

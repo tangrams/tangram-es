@@ -163,22 +163,26 @@ unsigned char* loadUIFont(UIFont* _font, size_t* _size) {
 }
 
 std::vector<FontSourceHandle> systemFontFallbacksHandle() {
-    UIFont* arabic = [UIFont fontWithName:@"Geeza Pro" size:0.0];
-
-    FontSourceHandle fontSourceHandle = [arabic]() -> std::vector<char> {
-        size_t dataSize = 0;
-
-        auto cdata = loadUIFont(arabic, &dataSize);
-        auto data = std::vector<char>(cdata, cdata + dataSize);
-
-        // TODO: reduce copies, move vector back
-
-        return data;
-    };
+    NSArray* fallbacks = @[@"Helvetica", @"GeezaPro"];
 
     std::vector<FontSourceHandle> handles;
 
-    handles.push_back(fontSourceHandle);
+    for (id fallback in fallbacks) {
+        UIFont* font = [UIFont fontWithName:fallback size:14.0];
+
+        FontSourceHandle fontSourceHandle = [font]() -> std::vector<char> {
+            LOG("Loading font %s", [[font fontName] UTF8String]);
+
+            size_t dataSize = 0;
+
+            auto cdata = loadUIFont(font, &dataSize);
+            auto data = std::vector<char>(cdata, cdata + dataSize);
+
+            return std::move(data);
+        };
+
+        handles.push_back(fontSourceHandle);
+    }
 
     return handles;
 }
