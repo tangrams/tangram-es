@@ -63,7 +63,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return; }
 
-    self.map->queueSceneUpdate([componentPath UTF8String], [componentPath UTF8String]);
+    self.map->queueSceneUpdate([componentPath UTF8String], [value UTF8String]);
 }
 
 - (void)applySceneUpdates
