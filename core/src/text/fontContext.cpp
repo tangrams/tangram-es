@@ -39,14 +39,6 @@ void FontContext::loadFonts() {
     }
 }
 
-
-void FontContext::addTTFblob(char* _data, size_t _size, FontDescription& _ft) {
-    for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-        auto font = m_alfons.getFont(_ft.alias, size);
-        font->addFace(m_alfons.addFontFace(alfons::InputSource(_data, _size), size));
-    }
-}
-
 // Synchronized on m_mutex in layoutText(), called on tile-worker threads
 void FontContext::addTexture(alfons::AtlasID id, uint16_t width, uint16_t height) {
     if (m_textures.size() == max_textures) {
@@ -297,13 +289,17 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
         free(data);
 
         // add fallbacks from default font
-        font->addFaces(*m_font[sizeIndex]);
+        if (m_font[sizeIndex]) {
+            font->addFaces(*m_font[sizeIndex]);
+        }
 
     } else {
         LOGN("Could not load font file %s", FontDescription::BundleAlias(_family, _style, _weight).c_str());
 
         // add fallbacks from default font
-        font->addFaces(*m_font[sizeIndex]);
+        if (m_font[sizeIndex]) {
+            font->addFaces(*m_font[sizeIndex]);
+        }
     }
 
     return font;

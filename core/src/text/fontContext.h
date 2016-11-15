@@ -119,8 +119,6 @@ public:
 
     void addFont(const FontDescription& _ft, const alfons::InputSource& _source);
 
-    void addTTFblob(char* data, size_t size, FontDescription& _ft);
-
 private:
 
     float m_sdfRadius;

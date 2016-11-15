@@ -10,10 +10,14 @@
 #include "platform_linux.h"
 #include "gl/hardware.h"
 
+#include "log.h"
+
 #include <libgen.h>
 #include <unistd.h>
 #include <sys/resource.h>
 #include <sys/syscall.h>
+
+#include "log.h"
 
 #include <regex>
 

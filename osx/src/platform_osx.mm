@@ -104,9 +104,14 @@ FontSourceHandle getFontHandle(const char* _path) {
         size_t dataSize = 0;
 
         auto cdata = bytesFromFile(_path, dataSize);
+
+        if (!cdata) { return {}; }
+
         auto data = std::vector<char>(cdata, cdata + dataSize);
 
-        return std::move(data);
+        free(cdata);
+
+        return data;
     };
 
     return fontSourceHandle;

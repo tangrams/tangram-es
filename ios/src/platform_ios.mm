@@ -143,23 +143,18 @@ unsigned char* loadUIFont(UIFont* _font, size_t* _size) {
         return nullptr;
     }
 
-    NSData* data = [CGFontConverter fontDataForCGFont:fontRef];
+    unsigned char* data = [CGFontConverter fontDataForCGFont:fontRef size:_size];
 
     CGFontRelease(fontRef);
 
-    if (data == nil) {
+    if (!data) {
         LOG("CoreGraphics font failed to decode");
 
         *_size = 0;
         return nullptr;
     }
 
-    unsigned char* bytes = (unsigned char*)malloc([data length]);
-    std::memcpy(bytes, (unsigned char*)[data bytes], [data length]);
-
-    *_size = [data length];
-
-    return bytes;
+    return data;
 }
 
 std::vector<FontSourceHandle> systemFontFallbacksHandle() {
@@ -176,9 +171,14 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
             size_t dataSize = 0;
 
             auto cdata = loadUIFont(font, &dataSize);
+
+            if (!cdata) { return {}; }
+
             auto data = std::vector<char>(cdata, cdata + dataSize);
 
-            return std::move(data);
+            free(cdata);
+
+            return data;
         };
 
         handles.push_back(fontSourceHandle);
@@ -215,7 +215,7 @@ unsigned char* systemFont(const std::string& _name, const std::string& _weight, 
     if (font == nil) {
         // Get the default system font
         if (_weight.empty()) {
-            font = [UIFont systemFontOfSize:0.0];
+            font = [UIFont systemFontOfSize:1.0];
         } else {
             int weight = std::atoi(_weight.c_str());
 
@@ -225,7 +225,7 @@ unsigned char* systemFont(const std::string& _name, const std::string& _weight, 
             // Map weight value to range [100..900]
             weight = std::min(std::max(100, (int)floor(weight / 100.0 + 0.5) * 100), 900);
 
-            font = [UIFont systemFontOfSize:0.0 weight:weightTraits[weight]];
+            font = [UIFont systemFontOfSize:1.0 weight:weightTraits[weight]];
         }
     }
 
@@ -241,7 +241,7 @@ unsigned char* systemFont(const std::string& _name, const std::string& _weight, 
             descriptor = [descriptor fontDescriptorWithSymbolicTraits:traits];
 
             if (descriptor != nil) {
-                font = [UIFont fontWithDescriptor:descriptor size:0.0];
+                font = [UIFont fontWithDescriptor:descriptor size:1.0];
             }
         }
     }

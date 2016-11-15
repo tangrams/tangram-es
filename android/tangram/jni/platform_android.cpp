@@ -190,10 +190,18 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
         size_t dataSize = 0;
 
         auto cdata = bytesFromFile(fallbackPath.c_str(), dataSize);
+
+        if (!cdata) {
+            fallbackPath = fontFallbackPath(importance++, weightHint);
+            continue;
+        }
+
         auto data = std::make_shared<std::vector<char>>(cdata, cdata + dataSize);
 
+        free(cdata);
+
         auto loadSource = [](auto&& _fontData) -> std::vector<char> {
-            return std::move(*_fontData);
+            return *_fontData;
         };
 
         FontSourceHandle fontSourceHandle(std::bind(loadSource, std::move(data)));

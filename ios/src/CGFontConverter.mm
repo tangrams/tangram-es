@@ -52,7 +52,7 @@ static uint32_t CalcTableDataRefCheckSum(CFDataRef dataRef)
 //http://skia.googlecode.com/svn-history/r1473/trunk/src/ports/SkFontHost_mac_coretext.cpp
 //https://gist.github.com/Jyczeal/1892760
 
-+ (NSData *)fontDataForCGFont:(CGFontRef)cgFont
++ (unsigned char *)fontDataForCGFont:(CGFontRef)cgFont size:(size_t *)size
 {
     if (!cgFont) {
         return nil;
@@ -147,11 +147,8 @@ static uint32_t CalcTableDataRefCheckSum(CFDataRef dataRef)
     CFRelease(cgFont);
     free(tableSizes);
 
-    NSData *fontData = [NSData dataWithBytesNoCopy:stream
-                                            length:totalSize
-                                      freeWhenDone:YES];
-
-    return fontData;
+    *size = totalSize;
+    return stream;
 }
 
 @end

@@ -11,7 +11,7 @@
 
 @interface CGFontConverter : NSObject
 
-+ (NSData *)fontDataForCGFont:(CGFontRef)cgFont;
++ (unsigned char *)fontDataForCGFont:(CGFontRef)cgFont size:(size_t *)size;
 
 @end
 
