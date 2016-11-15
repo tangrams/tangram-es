@@ -15,6 +15,12 @@
 #include "gl/hardware.h"
 #include "log.h"
 
+#define DEFAULT "fonts/NotoSans-Regular.ttf"
+#define FONT_AR "fonts/NotoNaskh-Regular.ttf"
+#define FONT_HE "fonts/NotoSansHebrew-Regular.ttf"
+#define FONT_JA "fonts/DroidSansJapanese.ttf"
+#define FALLBACK "fonts/DroidSansFallback.ttf"
+
 static bool s_isContinuousRendering = false;
 
 static bool s_stopUrlRequests = false;
@@ -92,14 +98,34 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
     return ptr;
 }
 
-// No system fonts implementation (yet!)
-std::string systemFontPath(const std::string& _name, const std::string& _weight, const std::string& _face) {
-    return "";
+FontSourceHandle getFontHandle(const char* _path) {
+    FontSourceHandle fontSourceHandle = [_path]() -> std::vector<char> {
+        LOG("Loading font %s", _path);
+        size_t dataSize = 0;
+
+        auto cdata = bytesFromFile(_path, dataSize);
+        auto data = std::vector<char>(cdata, cdata + dataSize);
+
+        return std::move(data);
+    };
+
+    return fontSourceHandle;
 }
 
-// No system fonts fallback implementation (yet!)
-std::string systemFontFallbackPath(int _importance, int _weightHint) {
-    return "";
+std::vector<FontSourceHandle> systemFontFallbacksHandle() {
+    std::vector<FontSourceHandle> handles;
+
+    handles.push_back(getFontHandle(DEFAULT));
+    handles.push_back(getFontHandle(FONT_AR));
+    handles.push_back(getFontHandle(FONT_HE));
+    handles.push_back(getFontHandle(FONT_JA));
+    handles.push_back(getFontHandle(FALLBACK));
+
+    return handles;
+}
+
+unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+    return nullptr;
 }
 
 void NSurlInit() {
@@ -201,10 +227,6 @@ void setCurrentThreadPriority(int priority) {
 
 void initGLExtensions() {
     Tangram::Hardware::supportsMapBuffer = true;
-}
-
-unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
-    return nullptr;
 }
 
 #endif //PLATFORM_OSX

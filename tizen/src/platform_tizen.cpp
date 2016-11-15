@@ -153,6 +153,18 @@ void initPlatformFontSetup() {
     s_platformFontsInit = true;
 }
 
+std::vector<FontSourceHandle> systemFontFallbacksHandle() {
+    std::vector<FontSourceHandle> handles;
+
+    // TODO
+
+    return handles;
+}
+
+unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+    // TODO
+}
+
 std::string systemFontFallbackPath(int _importance, int _weightHint) {
 
     if ((size_t)_importance >= s_fallbackFonts.size()) {

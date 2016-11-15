@@ -175,6 +175,18 @@ std::string systemFontPath(const std::string& _family, const std::string& _weigh
     return resultStr;
 }
 
+std::vector<FontSourceHandle> systemFontFallbacksHandle() {
+    std::vector<FontSourceHandle> handles;
+
+    // TODO
+
+    return handles;
+}
+
+unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+    // TODO
+}
+
 void setContinuousRendering(bool _isContinuous) {
 
     s_isContinuousRendering = _isContinuous;

@@ -9,16 +9,9 @@
 #include <memory>
 #include <regex>
 
-#define DEFAULT "fonts/NotoSans-Regular.ttf"
-#define FONT_AR "fonts/NotoNaskh-Regular.ttf"
-#define FONT_HE "fonts/NotoSansHebrew-Regular.ttf"
-#define FONT_JA "fonts/DroidSansJapanese.ttf"
-#define FALLBACK "fonts/DroidSansFallback.ttf"
-
 #define BASE_SIZE 16
 #define STEP_SIZE 12
 #define MAX_STEPS 3
-#define DEFAULT_BOLDNESS 400
 #define SDF_WIDTH 6
 
 #define MIN_LINE_WIDTH 4
@@ -31,81 +24,6 @@ FontContext::FontContext() :
     m_batch(m_atlas, m_scratch) {}
 
 void FontContext::loadFonts() {
-
-#if 0
-    // Load default fonts
-    {
-        std::string systemFont = systemFontPath("sans-serif", std::to_string(DEFAULT_BOLDNESS), "normal");
-
-        if (!systemFont.empty()) {
-            LOG("Adding default system font");
-
-            for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-                m_font[i] = m_alfons.addFont("default", alfons::InputSource(systemFont), size);
-            }
-        } else {
-            size_t dataSize;
-            char* data = reinterpret_cast<char*>(bytesFromFile(DEFAULT, dataSize));
-
-            if (data) {
-                LOG("Loading default font file %s", DEFAULT);
-
-                for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-                    m_font[i] = m_alfons.addFont("default", alfons::InputSource(data, dataSize), size);
-                }
-
-                free(data);
-            } else {
-                LOGW("Default font %s not found", DEFAULT);
-            }
-        }
-    }
-
-    // Treat fallback fonts
-    {
-        std::string fallback = "";
-        int importance = 0;
-        fallback = systemFontFallbackPath(importance++, DEFAULT_BOLDNESS);
-
-        if (fallback.empty()) {
-            LOGW("No system font fallback, loading bundled fonts");
-
-            auto addFaces = [&](const char* path) {
-                size_t dataSize;
-                char* data = reinterpret_cast<char*>(bytesFromFile(path, dataSize));
-
-                if (data) {
-                    LOG("Adding bundled font at path %s", path);
-
-                    for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-                        m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(data, dataSize), size));
-                    }
-
-                    free(data);
-                } else {
-                    LOGE("Bundle font %s not found", path);
-                }
-            };
-
-            addFaces(FONT_AR);
-            addFaces(FONT_HE);
-            addFaces(FONT_JA);
-            addFaces(FALLBACK);
-        } else {
-            // Add fallback system fonts faces paths
-            while (!fallback.empty()) {
-                LOG("Font fallback at path %s", fallback.c_str());
-
-                for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-                    m_font[i]->addFace(m_alfons.addFontFace(alfons::InputSource(fallback), size));
-                }
-
-                fallback = systemFontFallbackPath(importance++, DEFAULT_BOLDNESS);
-            }
-        }
-    }
-#endif
-
     auto fallbacks = systemFontFallbacksHandle();
 
     for (auto fallback : fallbacks) {
@@ -361,32 +279,17 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     unsigned char* data = nullptr;
     size_t dataSize = 0;
 
-    do {
-        // 1. Bundle
-        // Assuming bundled ttf file follows this convention
-        std::string bundleFontPath = m_sceneResourceRoot + "fonts/" +
-            FontDescription::BundleAlias(_family, _style, _weight);
+    // 1. Bundle
+    // Assuming bundled ttf file follows this convention
+    std::string bundleFontPath = m_sceneResourceRoot + "fonts/" +
+        FontDescription::BundleAlias(_family, _style, _weight);
 
-        data = bytesFromFile(bundleFontPath.c_str(), dataSize);
+    data = bytesFromFile(bundleFontPath.c_str(), dataSize);
 
-        if (data) { break; }
-
-        // 2. System font (TODO: mutex lock decryption for iOS)
+    // 2. System font
+    if (!data) {
         data = systemFont(_family, _weight, _style, &dataSize);
-
-        if (data) { break; }
-
-        #if 0
-        // 3. Fallback
-        std::string sysFontPath = systemFontPath(_family, _weight, _style);
-
-        if (sysFontPath.empty()) { break; }
-
-        data = bytesFromFile(sysFontPath.c_str(), dataSize);
-        #endif
-
-    } while (false);
-
+    }
 
     if (data) {
         font->addFace(m_alfons.addFontFace(alfons::InputSource(reinterpret_cast<char*>(data), dataSize), fontSize));
