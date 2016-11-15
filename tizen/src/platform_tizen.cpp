@@ -183,14 +183,6 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
     return handles;
 }
 
-unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
-    std::string path = fontPath(_name, _weight, _face);
-
-    if (path.empty()) { return nullptr; }
-
-    return bytesFromFile(path.c_str(), *_size);
-}
-
 std::string fontPath(const std::string& _name, const std::string& _weight,
                            const std::string& _face) {
 
@@ -238,6 +230,14 @@ std::string fontPath(const std::string& _name, const std::string& _weight,
     FcPatternDestroy(pattern);
 
     return fontFile;
+}
+
+unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+    std::string path = fontPath(_name, _weight, _face);
+
+    if (path.empty()) { return nullptr; }
+
+    return bytesFromFile(path.c_str(), *_size);
 }
 
 unsigned char* bytesFromFile(const char* _path, size_t& _size) {
