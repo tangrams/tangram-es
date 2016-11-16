@@ -62,13 +62,13 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
     return reinterpret_cast<unsigned char *>(cdata);
 }
 
-// No system fonts implementation (yet!)
-std::string systemFontPath(const std::string& _name, const std::string& _weight, const std::string& _face) {
-    return "";
+
+unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+    return nullptr;
 }
 
-std::string systemFontFallbackPath(int _importance, int _weightHint) {
-    return "";
+std::vector<FontSourceHandle> systemFontFallbacksHandle() {
+    return {};
 }
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
