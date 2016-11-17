@@ -98,7 +98,7 @@ protected:
     static bool labelComparator(const LabelEntry& _a, const LabelEntry& _b);
 
     std::vector<OBB> m_obbs;
-    Label::ScreenTransform::Buffer m_points;
+    ScreenTransform::Buffer m_transforms;
 
     std::vector<LabelEntry> m_labels;
     std::vector<LabelEntry> m_selectionLabels;

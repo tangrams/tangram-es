@@ -15,9 +15,9 @@ const float SpriteVertex::alpha_scale = 65535.0f;
 const float SpriteVertex::texture_scale = 65535.0f;
 
 struct BillboardTransform {
-    Label::ScreenTransform& m_transform;
+    ScreenTransform& m_transform;
 
-    BillboardTransform(Label::ScreenTransform& _transform)
+    BillboardTransform(ScreenTransform& _transform)
         : m_transform(_transform) {}
 
     void set(glm::vec2 _position, glm::vec3 _projected, glm::vec2 _screenSize) {
@@ -33,9 +33,9 @@ struct BillboardTransform {
 };
 
 struct FlatTransform {
-    Label::ScreenTransform& m_transform;
+    ScreenTransform& m_transform;
 
-    FlatTransform(Label::ScreenTransform& _transform)
+    FlatTransform(ScreenTransform& _transform)
         : m_transform(_transform) {}
 
     void set(const std::array<glm::vec2, 4>& _position,

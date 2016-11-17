@@ -54,7 +54,7 @@ private:
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
 
-    Label::ScreenTransform::Buffer m_points;
+    ScreenTransform::Buffer m_transforms;
 };
 
 }

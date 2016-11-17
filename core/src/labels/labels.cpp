@@ -48,7 +48,7 @@ void Labels::processLabelUpdate(const ViewState& viewState,
         }
 
         Range transformRange;
-        Label::ScreenTransform transform { m_points, transformRange, true };
+        ScreenTransform transform { m_transforms, transformRange, true };
 
         if (!label->update(mvp, viewState, transform, drawAll)) {
             // skip dead labels
@@ -302,7 +302,7 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
             }
         }
 
-        Label::ScreenTransform transform { m_points, entry.transform };
+        ScreenTransform transform { m_transforms, entry.transform };
 
         l->obbs(transform, m_obbs, entry.obbs);
 
@@ -404,7 +404,7 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
                             const std::vector<std::unique_ptr<Marker>>& _markers,
                             TileCache& _cache) {
 
-    m_points.clear();
+    m_transforms.clear();
     m_obbs.clear();
 
     /// Collect and update labels from visible tiles
@@ -426,7 +426,7 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
 
     // Update label meshes
     for (auto& entry : m_labels) {
-        Label::ScreenTransform transform { m_points, entry.transform };
+        ScreenTransform transform { m_transforms, entry.transform };
 
         m_needUpdate |= entry.label->evalState(_dt);
         entry.label->addVerticesToMesh(transform);
@@ -502,7 +502,8 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
                     Primitives::setColor(rs, 0x0000ff);
 
                 }
-                Primitives::drawLine(rs, glm::vec2(m_points.points[i]), glm::vec2(m_points.points[i+1]));
+                Primitives::drawLine(rs, glm::vec2(m_transforms.points[i]),
+                                     glm::vec2(m_transforms.points[i+1]));
             }
         }
         // draw offset

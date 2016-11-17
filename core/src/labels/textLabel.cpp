@@ -18,9 +18,9 @@ const float TextVertex::position_scale = 4.0f;
 const float TextVertex::alpha_scale = 65535.0f;
 
 struct PointTransform {
-    Label::ScreenTransform& m_transform;
+    ScreenTransform& m_transform;
 
-    PointTransform(Label::ScreenTransform& _transform)
+    PointTransform(ScreenTransform& _transform)
         : m_transform(_transform) {}
 
     void set(glm::vec2 _position, glm::vec2 _rotation) {
