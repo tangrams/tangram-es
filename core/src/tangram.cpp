@@ -669,7 +669,8 @@ void Map::Impl::setPixelScale(float _pixelsPerPoint) {
     for (auto& style : scene->styles()) {
         style->setPixelScale(_pixelsPerPoint);
     }
-
+    // Tiles must be rebuilt to apply the new pixel scale to labels.
+    tileManager.clearTileSets();
 }
 
 void Map::setCameraType(int _type) {

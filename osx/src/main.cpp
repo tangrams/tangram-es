@@ -239,7 +239,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 } else {
                     pixel_scale = 1.0;
                 }
-                map->loadSceneAsync(sceneFile.c_str());
                 map->setPixelScale(pixel_scale);
                 break;
             case GLFW_KEY_P:
