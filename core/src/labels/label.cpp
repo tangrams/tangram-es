@@ -22,10 +22,14 @@ Label::Label(Label::WorldTransform _worldTransform, glm::vec2 _size,
       m_dim(_size),
       m_options(_options) {
 
-    if (!m_options.collide || m_type == Type::debug) {
-        enterState(State::visible, 1.0);
+    if (m_type == Type::debug) {
+        m_options.collide = false;
+    }
+
+    if (m_options.collide) {
+        enterState(State::none, 0.0);
     } else {
-        m_screenTransform.alpha = 0.0;
+        enterState(State::visible, 1.0);
     }
 
     m_occludedLastFrame = false;
@@ -51,7 +55,7 @@ void Label::setParent(Label& _parent, bool _definePriority, bool _defineCollide)
 }
 
 float Label::screenDistance2(glm::vec2 _screenPosition) const {
-    return glm::length2(m_obb.getCentroid() - _screenPosition);
+    return 0; //glm::length2(m_obb.getCentroid() - _screenPosition);
 }
 
 LngLat Label::coordinates(const Tile& _tile, const MapProjection& _projection) {
@@ -80,42 +84,30 @@ float Label::worldLineLength2() const {
 }
 
 bool Label::offViewport(const glm::vec2& _screenSize) {
-    const auto& quad = m_obb.getQuad();
+    // const auto& quad = m_obb.getQuad();
 
-    for (int i = 0; i < 4; ++i) {
-        if (m_options.flat) {
-            if (m_screenTransform.positions[i].x < _screenSize.x
-             && m_screenTransform.positions[i].x > 0
-             && m_screenTransform.positions[i].y < _screenSize.y
-             && m_screenTransform.positions[i].y > 0) {
-                return false;
-            }
-        } else {
-            if (quad[i].x < _screenSize.x && quad[i].x > 0 &&
-                quad[i].y < _screenSize.y && quad[i].y > 0) {
-                return false;
-            }
-        }
-    }
+    // for (int i = 0; i < 4; ++i) {
+    //     if (m_options.flat) {
+    //         if (m_screenTransform.positions[i].x < _screenSize.x
+    //          && m_screenTransform.positions[i].x > 0
+    //          && m_screenTransform.positions[i].y < _screenSize.y
+    //          && m_screenTransform.positions[i].y > 0) {
+    //             return false;
+    //         }
+    //     } else {
+    //         if (quad[i].x < _screenSize.x && quad[i].x > 0 &&
+    //             quad[i].y < _screenSize.y && quad[i].y > 0) {
+    //             return false;
+    //         }
+    //     }
+    // }
 
-    return true;
+    // return true;
+    return false;
 }
 
 bool Label::canOcclude() {
-    if (!m_options.collide) {
-        return false;
-    }
-
-    int occludeFlags = (State::visible |
-                        State::none |
-                        State::skip_transition |
-                        State::fading_in |
-                        State::fading_out |
-                        State::sleep |
-                        State::out_of_screen |
-                        State::dead);
-
-    return (occludeFlags & m_state) && !(m_type == Type::debug);
+    return m_options.collide;
 }
 
 bool Label::visibleState() const {
@@ -132,7 +124,7 @@ void Label::skipTransitions() {
 }
 
 glm::vec2 Label::center() const {
-    return m_obb.getCentroid();
+    return glm::vec2{}; //m_worldTransform.position;
 }
 
 void Label::enterState(const State& _state, float _alpha) {
@@ -201,7 +193,8 @@ bool Label::setAnchorIndex(int _index) {
     return true;
 }
 
-bool Label::update(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) {
+bool Label::update(const glm::mat4& _mvp, const ViewState& _viewState,
+                   ScreenTransform& _transform, bool _drawAllLabels) {
 
     m_occludedLastFrame = m_occluded;
     m_occluded = false;
@@ -214,7 +207,7 @@ bool Label::update(const glm::mat4& _mvp, const ViewState& _viewState, bool _dra
         }
     }
 
-    bool ruleSatisfied = updateScreenTransform(_mvp, _viewState, _drawAllLabels);
+    bool ruleSatisfied = updateScreenTransform(_mvp, _viewState, _transform, _drawAllLabels);
 
     // one of the label rules has not been satisfied
     if (!ruleSatisfied) {
@@ -223,18 +216,18 @@ bool Label::update(const glm::mat4& _mvp, const ViewState& _viewState, bool _dra
     }
 
     // update the view-space bouding box
-    updateBBoxes(_viewState.fractZoom);
+    // updateBBoxes(_viewState.fractZoom);
 
-    // checks whether the label is out of the viewport
-    if (offViewport(_viewState.viewportSize)) {
-        enterState(State::out_of_screen, 0.0);
-        if (m_occludedLastFrame) {
-            m_occluded = true;
-            return false;
-        }
-    } else if (m_state == State::out_of_screen) {
-        enterState(State::sleep, 0.0);
-    }
+    // // checks whether the label is out of the viewport
+    // if (offViewport(_viewState.viewportSize)) {
+    //     enterState(State::out_of_screen, 0.0);
+    //     if (m_occludedLastFrame) {
+    //         m_occluded = true;
+    //         return false;
+    //     }
+    // } else if (m_state == State::out_of_screen) {
+    //     enterState(State::sleep, 0.0);
+    // }
 
     return true;
 }

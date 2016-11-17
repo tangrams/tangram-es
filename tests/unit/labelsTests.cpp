@@ -101,6 +101,7 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
 }
 #endif
 
+#if 0
 TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
 
     View view(256, 256);
@@ -203,5 +204,5 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
     }
 
 }
-
+#endif
 }

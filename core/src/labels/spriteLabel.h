@@ -38,13 +38,12 @@ public:
                 SpriteLabel::VertexAttributes _attrib, Texture* _texture,
                 SpriteLabels& _labels, size_t _labelsPos);
 
-    void updateBBoxes(float _zoomFract) override;
+    void addVerticesToMesh(ScreenTransform& _transform) override;
 
     LabelType renderType() const override { return LabelType::icon; }
 
-protected:
-
-    void addVerticesToMesh() override;
+    void obbs(const ScreenTransform& _transform, std::vector<OBB>& _obbs,
+              Range& _range, bool _append) override;
 
     uint32_t selectionColor() override {
         return m_vertexAttrib.selectionColor;
@@ -54,7 +53,8 @@ private:
 
     void applyAnchor(LabelProperty::Anchor _anchor) override;
 
-    bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) override;
+    bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState,
+                               ScreenTransform& _transform, bool _drawAllLabels) override;
 
     // Back-pointer to owning container and position
     const SpriteLabels& m_labels;

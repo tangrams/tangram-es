@@ -4,6 +4,7 @@
 #include "scene/spriteAtlas.h"
 #include "style/pointStyle.h"
 #include "view/view.h"
+#include "util/geom.h"
 #include "log.h"
 
 namespace Tangram {
@@ -30,7 +31,7 @@ void SpriteLabel::applyAnchor(LabelProperty::Anchor _anchor) {
     m_anchor = LabelProperty::anchorDirection(_anchor) * m_dim * 0.5f;
 }
 
-bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) {
+bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, ScreenTransform& _transform, bool _drawAllLabels) {
 
     glm::vec2 halfScreen = glm::vec2(_viewState.viewportSize * 0.5f);
 
@@ -104,8 +105,14 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
     return true;
 }
 
-void SpriteLabel::updateBBoxes(float _zoomFract) {
+void SpriteLabel::obbs(const ScreenTransform& _transform, std::vector<OBB>& _obbs,
+                       Range& _range, bool _append) {
+
+    if (_append) { _range.start = int(_obbs.size()); }
+    _range.length = 1;
+
     glm::vec2 dim;
+    OBB obb;
 
     if (m_options.flat) {
         static float infinity = std::numeric_limits<float>::infinity();
@@ -128,17 +135,26 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
 
         glm::vec2 obbCenter = glm::vec2((minx + maxx) * 0.5f, (miny + maxy) * 0.5f);
 
-        m_obb = OBB(obbCenter, glm::vec2(1.0, 0.0), dim.x, dim.y);
+        obb = OBB(obbCenter, glm::vec2(1.0, 0.0), dim.x, dim.y);
     } else {
-        dim = m_dim + glm::vec2(m_vertexAttrib.extrudeScale * 2.f * _zoomFract);
+        //dim = m_dim + glm::vec2(m_vertexAttrib.extrudeScale * 2.f * _zoomFract);
+        dim = m_dim;
 
         if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
 
-        m_obb = OBB(m_screenTransform.position + m_anchor, m_screenTransform.rotation, dim.x, dim.y);
+        obb = OBB(m_screenTransform.position + m_anchor, m_screenTransform.rotation, dim.x, dim.y);
+    }
+
+    //auto obb = OBB(sp, m_transform.state.rotation, dim.x, dim.y);
+
+    if (_append) {
+        _obbs.push_back(obb);
+    } else {
+        _obbs[_range.start] = obb;
     }
 }
 
-void SpriteLabel::addVerticesToMesh() {
+void SpriteLabel::addVerticesToMesh(ScreenTransform& _transform) {
 
     if (!visibleState()) { return; }
 

@@ -4,6 +4,8 @@
 #include "spriteLabel.h"
 #include "tile/tileID.h"
 #include "data/properties.h"
+#include "util/lineSampler.h"
+
 #include "isect2d.h"
 #include "glm_vec.h" // for isect2d.h
 
@@ -88,9 +90,15 @@ protected:
         Tile* tile;
         float priority;
         bool proxy;
+
+        Range obbs;
+        Range transform;
     };
 
     static bool labelComparator(const LabelEntry& _a, const LabelEntry& _b);
+
+    std::vector<OBB> m_obbs;
+    std::vector<LineSamplerPoint> m_points;
 
     std::vector<LabelEntry> m_labels;
     std::vector<LabelEntry> m_selectionLabels;

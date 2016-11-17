@@ -39,6 +39,9 @@ public:
     void addLabel(const TextStyle::Parameters& _params, Label::Type _type,
                   Label::WorldTransform _transform, const DrawRule& _rule);
 
+    void addLabel(const TextStyle::Parameters& _params, Label::WorldTransform _transform,
+                  size_t _anchor, std::vector<glm::vec2> _line);
+
     void addLineTextLabels(const Feature& _feature, const TextStyle::Parameters& _params, const DrawRule& _rule);
 
     std::string applyTextTransform(const TextStyle::Parameters& _params, const std::string& _string);

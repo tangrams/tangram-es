@@ -11,6 +11,7 @@
 #include "util/geom.h"
 #include "util/mapProjection.h"
 #include "util/featureSelection.h"
+#include "util/lineSampler.h"
 #include "view/view.h"
 #include "data/propertyItem.h"
 #include "tangram.h"
@@ -20,6 +21,8 @@
 #include <locale>
 #include <mutex>
 #include <algorithm>
+
+#include <glm/gtx/norm.hpp>
 
 namespace Tangram {
 
@@ -221,13 +224,79 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
     return true;
 }
 
-void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::Parameters& _params, const DrawRule& _rule) {
+void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::Parameters& _params,
+                                         const DrawRule& _rule) {
+
     float pixelScale = 1.0/m_tileSize;
     float minLength = m_attributes.width * pixelScale;
 
-    float tolerance = pow(pixelScale * 2, 2);
+    // float tolerance = pow(pixelScale * 2, 2);
+
+    LineSampler<std::vector<LineSamplerPoint>> sampler;
+
+    auto addSegment = [&](const Line& line, size_t start, size_t end) {
+        glm::vec2 center;
+        glm::vec2 rotation;
+        float startLen = sampler.point(start).length;
+        float mid = (sampler.point(end-1).length - startLen) * 0.5;
+
+        sampler.sample(mid, center, rotation);
+        size_t offset = sampler.curSegment();
+
+        std::vector<glm::vec2> l;
+        l.reserve(end - start + 1);
+
+        for (size_t j = start; j < end; j++) {
+            auto& p = line[j];
+            l.emplace_back(p.x, p.y);
+
+            if (j == offset) { l.push_back(center); }
+        }
+        addLabel(_params, Label::WorldTransform{{}}, offset+1, l);
+    };
+
+    static const float sqDirLimit = powf(1.6f, 2);
 
     for (auto& line : _feat.lines) {
+
+        sampler.set(line);
+
+        if (sampler.sumLength() < minLength) { continue; }
+
+        glm::vec2 dir0 = sampler.segmentDirection(0);
+        glm::vec2 dir1 = sampler.segmentDirection(0);
+        glm::vec2 dir2;
+
+        size_t startPoint = 0;
+
+        for (size_t i = 1; i < line.size()-1; i++) {
+            dir2 = sampler.segmentDirection(i);
+
+            float sqLen = glm::length2(dir1 + dir2);
+
+            if (sqLen < sqDirLimit || glm::length2(dir0 + dir2) < sqDirLimit) {
+                //LOG("split %f,%f / %f,%f", dir1.x, dir1.y, dir2.x, dir2.y);
+
+                if (sampler.point(i).length - sampler.point(startPoint).length > minLength) {
+                    addSegment(line, startPoint, i);
+                }
+
+                startPoint = i;
+
+                dir0 = sampler.segmentDirection(i);
+
+            // } else if (sampler.point(i).length - sampler.point(startPoint).length > minLength) {
+            //     addSegment(line, startPoint, i);
+            }
+
+            dir1 = dir2;
+        }
+
+        if (sampler.sumLength() - sampler.point(startPoint).length > minLength) {
+            addSegment(line, startPoint, line.size());
+        }
+
+#if 0
 
         for (size_t i = 0; i < line.size() - 1; i++) {
             glm::vec2 p1 = glm::vec2(line[i]);
@@ -242,18 +311,18 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
                 segmentLength = glm::length(p1 - p);
 
                 if (j == next) {
-                    if (segmentLength > minLength) {
-                        addLabel(_params, Label::Type::line, { p1, p }, _rule);
-                    }
+                    // if (segmentLength > minLength) {
+                    //     addLabel(_params, Label::Type::line, { p1, p }, _rule);
+                    // }
                 } else {
                     glm::vec2 pp = glm::vec2(line[j-1]);
 
                     float d = sqPointSegmentDistance(pp, p1, p);
                     if (d > tolerance) { break; }
 
-                    // Skip merged segment
-                    merged = true;
+                    // Skip merged segment in outer loop
                     i += 1;
+                    merged = true;
                 }
                 p2 = p;
             }
@@ -273,8 +342,8 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
                 run *= 2;
                 segmentLength /= 2.0f;
             }
-
         }
+#endif
     }
 }
 
@@ -543,6 +612,18 @@ void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Typ
                                         {m_attributes.width, m_attributes.height},
                                         *m_textLabels, m_attributes.textRanges,
                                         _params.align));
+}
+
+void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params,
+                                Label::WorldTransform _transform, size_t _anchor,
+                                std::vector<glm::vec2> _line) {
+
+    m_labels.emplace_back(new TextLabel(_transform, Label::Type::curved, _params.labelOptions,
+                                        {m_attributes.fill, m_attributes.stroke, m_attributes.fontScale},
+                                        {m_attributes.width, m_attributes.height},
+                                        *m_textLabels, m_attributes.textRanges,
+                                        TextLabelProperty::Align::center,
+                                        _anchor, _line));
 }
 
 }
