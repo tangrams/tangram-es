@@ -98,10 +98,19 @@ void Importer::processScene(const Url& scenePath, const std::string &sceneString
     }
 }
 
-bool nodeIsTextureUrl(const Node& node, const Node& textures) {
-
+bool nodeIsPotentialUrl(const Node& node) {
     // Check that the node is scalar and not null.
     if (node.IsNull() || !node.IsScalar()) { return false; }
+
+    // Check that the node does not contain a 'global' reference.
+    if (node.Scalar().compare(0, 7, "global.") == 0) { return false; }
+
+    return true;
+}
+
+bool nodeIsTextureUrl(const Node& node, const Node& textures) {
+
+    if (!nodeIsPotentialUrl(node)) { return false; }
 
     // Check that the node is not a number or a boolean.
     bool booleanValue = false;
@@ -124,7 +133,7 @@ void Importer::resolveSceneUrls(Node& root, const Url& base) {
     if (textures) {
         for (auto texture : textures) {
             if (Node textureUrlNode = texture.second["url"]) {
-                if (textureUrlNode.IsScalar()) {
+                if (nodeIsPotentialUrl(textureUrlNode)) {
                     textureUrlNode = Url(textureUrlNode.Scalar()).resolved(base).string();
                 }
             }
@@ -183,7 +192,9 @@ void Importer::resolveSceneUrls(Node& root, const Url& base) {
     if (Node sources = root["sources"]) {
         for (auto source : sources) {
             if (Node sourceUrl = source.second["url"]) {
-                sourceUrl = Url(sourceUrl.Scalar()).resolved(base).string();
+                if (nodeIsPotentialUrl(sourceUrl)) {
+                    sourceUrl = Url(sourceUrl.Scalar()).resolved(base).string();
+                }
             }
         }
     }
@@ -195,13 +206,13 @@ void Importer::resolveSceneUrls(Node& root, const Url& base) {
             for (const auto& font : fonts) {
                 if (font.second.IsMap()) {
                     auto urlNode = font.second["url"];
-                    if (urlNode.IsScalar()) {
+                    if (nodeIsPotentialUrl(urlNode)) {
                         urlNode = Url(urlNode.Scalar()).resolved(base).string();
                     }
                 } else if (font.second.IsSequence()) {
                     for (auto& fontNode : font.second) {
                         auto urlNode = fontNode["url"];
-                        if (urlNode.IsScalar()) {
+                        if (nodeIsPotentialUrl(urlNode)) {
                             urlNode = Url(urlNode.Scalar()).resolved(base).string();
                         }
                     }

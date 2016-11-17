@@ -90,6 +90,13 @@ TestImporter::TestImporter() {
                         u_tex1: "in_imports.png"
                         u_tex2: tex2
     )END";
+
+    m_testScenes["/root/globals.yaml"] = R"END(
+        fonts: { aFont: { url: global.fontUrl } }
+        sources: { aSource: { url: global.sourceUrl } }
+        textures: { aTexture: { url: global.textureUrl } }
+        styles: { aStyle: { texture: global.textureUrl, shaders: { uniforms: { aUniform: global.textureUrl } } } }
+    )END";
 }
 
 TEST_CASE("Imported scenes are merged with the parent scene", "[import][core]") {
@@ -190,4 +197,21 @@ TEST_CASE("Scene URLs are resolved against their parent during import", "[import
 
     // We don't explicitly check that import URLs are resolved correctly because if they were not,
     // the scenes wouldn't be loaded and merged; i.e. we already test it implicitly.
+}
+
+TEST_CASE("References to globals are not treated like URLs during importing", "[import][core]") {
+
+    TestImporter importer;
+    auto root = importer.applySceneImports("globals.yaml", "/root/");
+
+    // Check that font global references are preserved.
+    CHECK(root["fonts"]["aFont"]["url"].Scalar() == "global.fontUrl");
+
+    // Check that data source global references are preserved.
+    CHECK(root["sources"]["aSource"]["url"].Scalar() == "global.sourceUrl");
+
+    // Check that texture global references are preserved.
+    CHECK(root["textures"]["aTexture"]["url"].Scalar() == "global.textureUrl");
+    CHECK(root["styles"]["aStyle"]["texture"].Scalar() == "global.textureUrl");
+    CHECK(root["styles"]["aStyle"]["shaders"]["uniforms"]["aUniform"].Scalar() == "global.textureUrl");
 }
