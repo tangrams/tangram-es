@@ -696,7 +696,9 @@ void loadFontDescription(const Node& node, const std::string& family, const std:
             if (rawData.size() == 0) {
                 LOGE("Bad URL request for font %s at URL %s", _ft.alias.c_str(), _ft.uri.c_str());
             } else {
-                auto source = alfons::InputSource(rawData);
+                unsigned char* data = (unsigned char*)malloc(rawData.size());
+                std::memcpy(data, rawData.data(), rawData.size());
+                auto source = std::make_shared<alfons::InputSource>(data, rawData.size());
                 scene->fontContext()->addFont(_ft, source);
             }
             scene->pendingFonts--;
@@ -706,8 +708,7 @@ void loadFontDescription(const Node& node, const std::string& family, const std:
         size_t dataSize = 0;
 
         if (unsigned char* data = bytesFromFile(_ft.uri.c_str(), dataSize)) {
-            auto source = alfons::InputSource(reinterpret_cast<const char*>(data), dataSize);
-            free(data);
+            auto source = std::make_shared<alfons::InputSource>(data, dataSize);
 
             LOGN("Add local font %s (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
             scene->fontContext()->addFont(_ft, source);

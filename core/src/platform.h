@@ -65,7 +65,7 @@ void setCurrentThreadPriority(int priority);
 
 unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size);
 
-using FontSourceHandle = std::function<std::vector<char>()>;
+using FontSourceHandle = std::function<unsigned char*(size_t*)>;
 
 std::vector<FontSourceHandle> systemFontFallbacksHandle();
 

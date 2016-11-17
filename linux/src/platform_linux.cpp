@@ -10,8 +10,6 @@
 #include "platform_linux.h"
 #include "gl/hardware.h"
 
-#include "log.h"
-
 #include <libgen.h>
 #include <unistd.h>
 #include <sys/resource.h>
@@ -110,14 +108,12 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
 }
 
 FontSourceHandle getFontHandle(const char* _path) {
-    FontSourceHandle fontSourceHandle = [_path]() -> std::vector<char> {
+    FontSourceHandle fontSourceHandle = [_path](size_t* _size) -> unsigned char* {
         LOG("Loading font %s", _path);
-        size_t dataSize = 0;
 
-        auto cdata = bytesFromFile(_path, dataSize);
-        auto data = std::vector<char>(cdata, cdata + dataSize);
+        auto cdata = bytesFromFile(_path, *_size);
 
-        return std::move(data);
+        return cdata;
     };
 
     return fontSourceHandle;

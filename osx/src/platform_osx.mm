@@ -99,19 +99,12 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
 }
 
 FontSourceHandle getFontHandle(const char* _path) {
-    FontSourceHandle fontSourceHandle = [_path]() -> std::vector<char> {
+    FontSourceHandle fontSourceHandle = [_path](size_t* _size) -> unsigned char* {
         LOG("Loading font %s", _path);
-        size_t dataSize = 0;
 
-        auto cdata = bytesFromFile(_path, dataSize);
+        auto cdata = bytesFromFile(_path, *_size);
 
-        if (!cdata) { return {}; }
-
-        auto data = std::vector<char>(cdata, cdata + dataSize);
-
-        free(cdata);
-
-        return data;
+        return cdata;
     };
 
     return fontSourceHandle;

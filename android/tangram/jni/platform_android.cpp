@@ -196,15 +196,11 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
             continue;
         }
 
-        auto data = std::make_shared<std::vector<char>>(cdata, cdata + dataSize);
+        FontSourceHandle fontSourceHandle = [cdata, dataSize](size_t* _size) -> unsigned char* {
+            *_size = dataSize;
 
-        free(cdata);
-
-        auto loadSource = [](auto&& _fontData) -> std::vector<char> {
-            return *_fontData;
+            return cdata;
         };
-
-        FontSourceHandle fontSourceHandle(std::bind(loadSource, std::move(data)));
 
         handles.push_back(fontSourceHandle);
 

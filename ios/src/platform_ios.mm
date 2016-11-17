@@ -134,8 +134,6 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
 
 unsigned char* loadUIFont(UIFont* _font, size_t* _size) {
 
-    LOG("Loading system font %s", [_font.fontName UTF8String]);
-
     CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)_font.fontName);
 
     if (!fontRef) {
@@ -158,27 +156,23 @@ unsigned char* loadUIFont(UIFont* _font, size_t* _size) {
 }
 
 std::vector<FontSourceHandle> systemFontFallbacksHandle() {
-    NSArray* fallbacks = @[@"Helvetica", @"GeezaPro"];
+    NSArray* fallbacks = [UIFont familyNames];
 
     std::vector<FontSourceHandle> handles;
 
     for (id fallback in fallbacks) {
-        UIFont* font = [UIFont fontWithName:fallback size:14.0];
 
-        FontSourceHandle fontSourceHandle = [font]() -> std::vector<char> {
-            LOG("Loading font %s", [[font fontName] UTF8String]);
+        UIFont* font = [UIFont fontWithName:fallback size:1.0];
 
-            size_t dataSize = 0;
+        size_t dataSize = 0;
+        auto cdata = loadUIFont(font, &dataSize);
 
-            auto cdata = loadUIFont(font, &dataSize);
+        if (!cdata) { continue; }
 
-            if (!cdata) { return {}; }
+        FontSourceHandle fontSourceHandle = [cdata, dataSize](size_t* _size) -> unsigned char* {
+            *_size = dataSize;
 
-            auto data = std::vector<char>(cdata, cdata + dataSize);
-
-            free(cdata);
-
-            return data;
+            return cdata;
         };
 
         handles.push_back(fontSourceHandle);
@@ -210,7 +204,7 @@ unsigned char* systemFont(const std::string& _name, const std::string& _weight, 
         {"monospace", UIFontDescriptorTraitMonoSpace},
     };
 
-    UIFont* font = [UIFont fontWithName:[NSString stringWithUTF8String:_name.c_str()] size:0.0];
+    UIFont* font = [UIFont fontWithName:[NSString stringWithUTF8String:_name.c_str()] size:1.0];
 
     if (font == nil) {
         // Get the default system font
