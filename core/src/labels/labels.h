@@ -1,9 +1,11 @@
 #pragma once
 
-#include "label.h"
-#include "spriteLabel.h"
-#include "tile/tileID.h"
 #include "data/properties.h"
+#include "labels/label.h"
+#include "labels/screenTransform.h"
+#include "labels/spriteLabel.h"
+#include "tile/tileID.h"
+
 #include "isect2d.h"
 #include "glm_vec.h" // for isect2d.h
 
@@ -78,19 +80,26 @@ protected:
 
     struct LabelEntry {
 
-        LabelEntry(Label* _label, Tile* _tile, bool _proxy)
+        LabelEntry(Label* _label, Tile* _tile, bool _proxy, Range _screenTransform)
             : label(_label),
               tile(_tile),
               priority(_label->options().priority),
-              proxy(_proxy) {}
+              proxy(_proxy),
+              transform(_screenTransform) {}
 
         Label* label;
         Tile* tile;
         float priority;
         bool proxy;
+
+        Range transform;
+        Range obbs;
     };
 
     static bool labelComparator(const LabelEntry& _a, const LabelEntry& _b);
+
+    std::vector<OBB> m_obbs;
+    ScreenTransform::Buffer m_transforms;
 
     std::vector<LabelEntry> m_labels;
     std::vector<LabelEntry> m_selectionLabels;

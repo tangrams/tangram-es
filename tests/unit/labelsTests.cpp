@@ -18,6 +18,7 @@ namespace Tangram {
 
 TextStyle dummyStyle("textStyle", nullptr);
 TextLabels dummy(dummyStyle);
+Label::AABB* bounds = nullptr;
 
 std::unique_ptr<TextLabel> makeLabel(glm::vec2 _transform, Label::Type _type, std::string id) {
     Label::Options options;
@@ -27,7 +28,7 @@ std::unique_ptr<TextLabel> makeLabel(glm::vec2 _transform, Label::Type _type, st
     options.anchors.anchor[0] = LabelProperty::Anchor::center;
     options.anchors.count = 1;
 
-    return std::unique_ptr<TextLabel>(new TextLabel({glm::vec3(_transform, 0)}, _type, options,
+    return std::unique_ptr<TextLabel>(new TextLabel({{glm::vec3(_transform, 0)}}, _type, options,
                                                     {}, {10, 10}, dummy, {},
                                                     TextLabelProperty::Align::none));
 }
@@ -46,7 +47,7 @@ TextLabel makeLabelWithAnchorFallbacks(glm::vec2 _transform, glm::vec2 _offset =
 
     TextRange textRanges;
 
-    return TextLabel({ glm::vec3(_transform, 0)}, Label::Type::point, options,
+    return TextLabel({{glm::vec3(_transform, 0)}}, Label::Type::point, options,
             {}, {10, 10}, dummy, textRanges, TextLabelProperty::Align::none);
 }
 
@@ -111,26 +112,38 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
     Tile tile({0,0,0}, view.getMapProjection());
     tile.update(0, view);
 
+    struct TestTransform {
+        ScreenTransform transform;
+        TestTransform(ScreenTransform::Buffer& _buffer, Range& _range) : transform(_buffer, _range, true) {}
+    };
+
     class TestLabels : public Labels {
     public:
         TestLabels(View& _v) {
             m_isect2d.resize({1, 1}, {_v.getWidth(), _v.getHeight()});
         }
-        void addLabel(Label* _l, Tile* _t) { m_labels.push_back({_l, _t, false}); }
+
+        ScreenTransform& addLabel(Label* _l, Tile* _t) {
+            m_labels.push_back({_l, _t, false, {}});
+            tmpTransforms.emplace_back(m_transforms, m_labels.back().transform);
+            return tmpTransforms.back().transform;
+        }
         void run(View& _v) { handleOcclusions(_v.state()); }
         void clear() { m_labels.clear(); }
+
+        std::vector<TestTransform> tmpTransforms;
+
     };
 
-    TestLabels labels(view);
-
     {
+        TestLabels labels(view);
         TextLabel l1 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5});
-        l1.update(tile.mvp(), view.state(), true);
-        labels.addLabel(&l1, &tile);
+        auto& t1 = labels.addLabel(&l1, &tile);
+        l1.update(tile.mvp(), view.state(), bounds, t1);
 
         TextLabel l2 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5});
-        l2.update(tile.mvp(), view.state(), true);
-        labels.addLabel(&l2, &tile);
+        auto& t2 = labels.addLabel(&l2, &tile);
+        l2.update(tile.mvp(), view.state(), bounds, t2);
 
         labels.run(view);
         REQUIRE(l1.isOccluded() == false);
@@ -139,17 +152,17 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
         REQUIRE(l1.anchorType() == LabelProperty::Anchor::right);
         REQUIRE(l2.anchorType() == LabelProperty::Anchor::right);
     }
-    labels.clear();
 
     {
+        TestLabels labels(view);
         TextLabel l1 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5});
-        l1.update(tile.mvp(), view.state(), true);
-        labels.addLabel(&l1, &tile);
+        auto& t1 = labels.addLabel(&l1, &tile);
+        l1.update(tile.mvp(), view.state(), bounds, t1);
 
         // Second label is one pixel left of L1
         TextLabel l2 = makeLabelWithAnchorFallbacks(glm::vec2{0.5 - 1./256,0.5});
-        l2.update(tile.mvp(), view.state(), true);
-        labels.addLabel(&l2, &tile);
+        auto& t2 = labels.addLabel(&l2, &tile);
+        l2.update(tile.mvp(), view.state(), bounds, t2);
 
         labels.run(view);
         // l1.print();
@@ -161,17 +174,17 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
         // Check that left-of anchor fallback is used
         REQUIRE(l2.anchorType() == LabelProperty::Anchor::left);
     }
-    labels.clear();
 
     {
+        TestLabels labels(view);
         TextLabel l1 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5});
-        l1.update(tile.mvp(), view.state(), true);
-        labels.addLabel(&l1, &tile);
+        auto& t1 = labels.addLabel(&l1, &tile);
+        l1.update(tile.mvp(), view.state(), bounds, t1);
 
         // Second label is 10 pixel top of L1
         TextLabel l2 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5 + 10./256});
-        l2.update(tile.mvp(), view.state(), true);
-        labels.addLabel(&l2, &tile);
+        auto& t2 = labels.addLabel(&l2, &tile);
+        l2.update(tile.mvp(), view.state(), bounds, t2);
 
         labels.run(view);
         REQUIRE(l1.isOccluded() == false);
@@ -181,17 +194,17 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
         // Check that anchor fallback is used
         REQUIRE(l2.anchorType() == LabelProperty::Anchor::top);
     }
-    labels.clear();
 
     {
+        TestLabels labels(view);
         TextLabel l1 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5});
-        l1.update(tile.mvp(), view.state(), true);
-        labels.addLabel(&l1, &tile);
+        auto& t1 = labels.addLabel(&l1, &tile);
+        l1.update(tile.mvp(), view.state(), bounds, t1);
 
         // Second label is 10 pixel below of L1
         TextLabel l2 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5 - 10./256});
-        l2.update(tile.mvp(), view.state(), true);
-        labels.addLabel(&l2, &tile);
+        auto& t2 = labels.addLabel(&l2, &tile);
+        l2.update(tile.mvp(), view.state(), bounds, t2);
 
         labels.run(view);
         REQUIRE(l1.isOccluded() == false);
@@ -203,5 +216,4 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
     }
 
 }
-
 }

@@ -539,7 +539,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 }
 
 void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
-                                Label::WorldTransform _transform, const DrawRule& _rule) {
+                                TextLabel::Coordinates _coordinates, const DrawRule& _rule) {
 
     uint32_t selectionColor = 0;
 
@@ -551,7 +551,7 @@ void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Typ
         }
     }
 
-    m_labels.emplace_back(new TextLabel(_transform, _type, _params.labelOptions,
+    m_labels.emplace_back(new TextLabel(_coordinates, _type, _params.labelOptions,
                                         {m_attributes.fill,
                                          m_attributes.stroke,
                                          m_attributes.fontScale,

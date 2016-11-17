@@ -34,27 +34,34 @@ public:
         float extrudeScale;
     };
 
-    SpriteLabel(Label::WorldTransform _transform, glm::vec2 _size, Label::Options _options,
+    using Coordinates = glm::vec3;
+
+    SpriteLabel(Coordinates _coordinates, glm::vec2 _size, Label::Options _options,
                 SpriteLabel::VertexAttributes _attrib, Texture* _texture,
                 SpriteLabels& _labels, size_t _labelsPos);
 
-    void updateBBoxes(float _zoomFract) override;
-
     LabelType renderType() const override { return LabelType::icon; }
 
-protected:
+    bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState,
+                               const AABB* _bounds, ScreenTransform& _transform) override;
 
-    void addVerticesToMesh() override;
+    void obbs(ScreenTransform& _transform, LabelOBBs& _obbs) override;
+
+    void addVerticesToMesh(ScreenTransform& _transform, const glm::vec2& _screenSize) override;
+
+    void applyAnchor(LabelProperty::Anchor _anchor) override;
 
     uint32_t selectionColor() override {
         return m_vertexAttrib.selectionColor;
     }
 
+    glm::vec2 modelCenter() const override {
+        return glm::vec2(m_coordinates);
+    }
+
 private:
 
-    void applyAnchor(LabelProperty::Anchor _anchor) override;
-
-    bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) override;
+    const Coordinates m_coordinates;
 
     // Back-pointer to owning container and position
     const SpriteLabels& m_labels;
@@ -65,8 +72,6 @@ private:
     Texture* m_texture;
 
     VertexAttributes m_vertexAttrib;
-
-    std::array<glm::vec3, 4> m_projected;
 };
 
 struct SpriteQuad {

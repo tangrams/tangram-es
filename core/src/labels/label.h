@@ -18,9 +18,9 @@
 
 namespace Tangram {
 
+struct LabelOBBs;
+struct ScreenTransform;
 struct ViewState;
-class Tile;
-class MapProjection;
 
 class Label {
 
@@ -44,31 +44,6 @@ public:
         out_of_screen   = 1 << 5,
         skip_transition = 1 << 6,
         dead            = 1 << 7,
-    };
-
-    struct WorldTransform {
-        WorldTransform(glm::vec3 _wp) : position(_wp) {}
-        WorldTransform(glm::vec2 _wp0, glm::vec2 _wp1) {
-            positions[0] = _wp0;
-            positions[1] = _wp1;
-        }
-
-        union {
-            glm::vec3 position;     // The label position if the label is not a line
-                                    // position.z stores the zoom-level
-            glm::vec2 positions[2]; // The label positions if the label is a line
-        };
-    };
-
-    struct ScreenTransform {
-        ScreenTransform() {}
-        union {
-            glm::vec2 position;     // The label position if the label is not flattened
-            glm::vec2 positions[4]; // The label positions if the label is flattened
-        };
-
-        glm::vec2 rotation = {1.f, 0.f};
-        float alpha = 0.f;
     };
 
     struct Transition {
@@ -96,54 +71,48 @@ public:
 
     static const float activation_distance_threshold;
 
-    Label(WorldTransform _transform, glm::vec2 _size, Type _type, Options _options);
+    Label(glm::vec2 _size, Type _type, Options _options);
 
     virtual ~Label();
 
     // Add vertices for this label to its Style's shared Mesh
-    virtual void addVerticesToMesh() = 0;
-    virtual glm::vec2 center() const;
-    virtual void updateBBoxes(float _zoomFract) = 0;
+    virtual void addVerticesToMesh(ScreenTransform& _transform, const glm::vec2& _screenSize) = 0;
 
     virtual LabelType renderType() const = 0;
 
-    // Update the screen position of the label
-    virtual bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) = 0;
-
     virtual uint32_t selectionColor() = 0;
 
-    bool update(const glm::mat4& _mvp,
-                const ViewState& _viewState,
-                bool _drawAllLabels = false);
+    virtual glm::vec2 modelCenter() const = 0;
+
+    bool update(const glm::mat4& _mvp, const ViewState& _viewState,
+                const AABB* _bounds, ScreenTransform& _transform);
 
     bool evalState(float _dt);
+
+    // Update the screen position of the label
+    virtual bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState,
+                                       const AABB* _bounds, ScreenTransform& _transform) = 0;
+
+    // Current screen position of the label anchor
+    glm::vec2 screenCenter() const { return m_screenCenter; }
 
     // Occlude the label
     void occlude(bool _occlusion = true) { m_occluded = _occlusion; }
 
     // Checks whether the label is in a state where it can occlusion
-    bool canOcclude();
+    bool canOcclude() const { return m_options.collide; }
 
     void skipTransitions();
 
     size_t hash() const { return m_options.paramHash; }
 
-    const glm::vec2& dimension() const { return m_dim; }
+    glm::vec2 dimension() const { return m_dim; }
 
     // Gets for label options: color and offset
     const Options& options() const { return m_options; }
 
-    // Gets the extent of the oriented bounding box of the label
-    AABB aabb() const { return m_obb.getExtent(); }
-
-    // Gets the oriented bounding box of the label
-    const OBB& obb() const { return m_obb; }
-
-    // The label world transform (position with the tile, in tile units)
-    const WorldTransform& worldTransform() const { return m_worldTransform; }
-
-    // The label screen transform, in a top left coordinate axis, y pointing down
-    const ScreenTransform& screenTransform() const { return m_screenTransform; }
+    // Adds the oriented bounding boxes of the label to _obbs, updates Range
+    virtual void obbs(ScreenTransform& _transform, LabelOBBs& _obbs) = 0;
 
     State state() const { return m_state; }
 
@@ -154,7 +123,9 @@ public:
     Label* parent() const { return m_parent; }
     void setParent(Label& parent, bool definePriority, bool defineCollide);
 
-    LabelProperty::Anchor anchorType() const { return m_options.anchors[m_anchorIndex]; }
+    LabelProperty::Anchor anchorType() const {
+        return m_options.anchors[m_anchorIndex];
+    }
 
     int anchorIndex() { return m_anchorIndex; }
 
@@ -162,14 +133,8 @@ public:
 
     bool setAnchorIndex(int _index);
 
-    // Returns the list of lon/lat of the feature the label is associated with
-    LngLat coordinates(const Tile& _tile, const MapProjection& _projection);
-
-    // Returns the screen distance squared from a screen coordinate
-    float screenDistance2(glm::vec2 _screenPosition) const;
-
     // Returns the length of the segment the label is associated with
-    float worldLineLength2() const;
+    virtual float worldLineLength2() const { return 0; };
 
     void enterState(const State& _state, float _alpha = 1.0f);
 
@@ -182,42 +147,30 @@ public:
 
     void print() const;
 
-    bool offViewport(const glm::vec2& _screenSize);
-
     void setAlpha(float _alpha);
-
-private:
-
-    virtual void applyAnchor(LabelProperty::Anchor _anchor) = 0;
-
-    State m_state;
-
-    FadeEffect m_fade;
-
-    int m_anchorIndex;
 
 protected:
 
-    bool m_occludedLastFrame;
+    virtual void applyAnchor(LabelProperty::Anchor _anchor) = 0;
 
-    bool m_occluded;
-
-    Type m_type;
-
-    OBB m_obb;
-
-    WorldTransform m_worldTransform;
-
-    ScreenTransform m_screenTransform;
-
-    glm::vec2 m_dim;
+    const Type m_type;
+    const glm::vec2 m_dim;
 
     Options m_options;
 
-    glm::vec2 m_anchor;
-
     Label* m_parent;
 
+    State m_state;
+    FadeEffect m_fade;
+
+    int m_anchorIndex;
+    glm::vec2 m_anchor;
+
+    bool m_occludedLastFrame;
+    bool m_occluded;
+
+    glm::vec2 m_screenCenter;
+    float m_alpha;
 };
 
 }

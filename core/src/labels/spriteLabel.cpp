@@ -1,10 +1,12 @@
 #include "labels/spriteLabel.h"
 
 #include "gl/dynamicQuadMesh.h"
+#include "labels/screenTransform.h"
+#include "log.h"
 #include "scene/spriteAtlas.h"
 #include "style/pointStyle.h"
+#include "util/geom.h"
 #include "view/view.h"
-#include "log.h"
 
 namespace Tangram {
 
@@ -13,10 +15,50 @@ using namespace LabelProperty;
 const float SpriteVertex::alpha_scale = 65535.0f;
 const float SpriteVertex::texture_scale = 65535.0f;
 
-SpriteLabel::SpriteLabel(Label::WorldTransform _transform, glm::vec2 _size, Label::Options _options,
+struct BillboardTransform {
+    ScreenTransform& m_transform;
+
+    BillboardTransform(ScreenTransform& _transform)
+        : m_transform(_transform) {}
+
+    void set(glm::vec2 _position, glm::vec3 _projected, glm::vec2 _screenSize, float _fractZoom) {
+
+        m_transform.push_back(_position);
+        m_transform.push_back(_projected);
+        m_transform.push_back(glm::vec3(_screenSize, _fractZoom));
+    }
+
+    glm::vec2 position() const { return glm::vec2(m_transform[0]); }
+    glm::vec3 projected() const { return m_transform[1]; }
+    glm::vec2 screenSize() const { return glm::vec2(m_transform[2]); }
+    float fractZoom() const { return m_transform[2].z; }
+};
+
+struct FlatTransform {
+    ScreenTransform& m_transform;
+
+    FlatTransform(ScreenTransform& _transform)
+        : m_transform(_transform) {}
+
+    void set(const std::array<glm::vec2, 4>& _position,
+             const std::array<glm::vec3, 4>& _projected) {
+        for (size_t i = 0; i < 4; i++) {
+            m_transform.push_back(_position[i]);
+        }
+        for (size_t i = 0; i < 4; i++) {
+            m_transform.push_back(_projected[i]);
+        }
+    }
+
+    glm::vec2 position(size_t i) const { return glm::vec2(m_transform[i]); }
+    glm::vec3 projected(size_t i) const { return m_transform[4+i]; }
+};
+
+SpriteLabel::SpriteLabel(Coordinates _coordinates, glm::vec2 _size, Label::Options _options,
                          SpriteLabel::VertexAttributes _attrib, Texture* _texture,
                          SpriteLabels& _labels, size_t _labelsPos)
-    : Label(_transform, _size, Label::Type::point, _options),
+    : Label(_size, Label::Type::point, _options),
+      m_coordinates(_coordinates),
       m_labels(_labels),
       m_labelsPos(_labelsPos),
       m_texture(_texture),
@@ -30,121 +72,148 @@ void SpriteLabel::applyAnchor(LabelProperty::Anchor _anchor) {
     m_anchor = LabelProperty::anchorDirection(_anchor) * m_dim * 0.5f;
 }
 
-bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) {
+bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState,
+                                        const AABB* _bounds, ScreenTransform& _transform) {
 
     glm::vec2 halfScreen = glm::vec2(_viewState.viewportSize * 0.5f);
+    glm::vec2 p0 = m_coordinates;
 
-    switch (m_type) {
-        case Type::debug:
-        case Type::point:
-        {
-            glm::vec2 p0 = glm::vec2(m_worldTransform.position);
+    if (m_options.flat) {
 
-            if (m_options.flat) {
+        std::array<glm::vec2, 4> positions;
+        std::array<glm::vec3, 4> projected;
 
-                float sourceScale = pow(2, m_worldTransform.position.z);
+        float sourceScale = pow(2, m_coordinates.z);
 
-                float scale = float(sourceScale / (_viewState.zoomScale * _viewState.tileSize));
-                float zoomFactor = m_vertexAttrib.extrudeScale * _viewState.fractZoom;
+        float scale = float(sourceScale / (_viewState.zoomScale * _viewState.tileSize));
+        float zoomFactor = m_vertexAttrib.extrudeScale * _viewState.fractZoom;
 
-                glm::vec2 dim = (m_dim + zoomFactor) * scale;
+        glm::vec2 dim = (m_dim + zoomFactor) * scale;
 
-                // Center around 0,0
-                dim *= 0.5f;
+        // Center around 0,0
+        dim *= 0.5f;
 
-                auto& positions = m_screenTransform.positions;
-                positions[0] = -dim;
-                positions[1] = glm::vec2(dim.x, -dim.y);
-                positions[2] = glm::vec2(-dim.x, dim.y);
-                positions[3] = dim;
+        positions[0] = -dim;
+        positions[1] = glm::vec2(dim.x, -dim.y);
+        positions[2] = glm::vec2(-dim.x, dim.y);
+        positions[3] = dim;
 
-                // Rotate in clockwise order
-                if (m_options.angle != 0.f) {
-                    glm::vec2 rotation(cos(DEG_TO_RAD * m_options.angle),
-                                       sin(DEG_TO_RAD * m_options.angle));
+        // Rotate in clockwise order on the ground plane
+        if (m_options.angle != 0.f) {
+            glm::vec2 rotation(cos(DEG_TO_RAD * m_options.angle),
+                               sin(DEG_TO_RAD * m_options.angle));
 
-                    positions[0] = rotateBy(positions[0], rotation);
-                    positions[1] = rotateBy(positions[1], rotation);
-                    positions[2] = rotateBy(positions[2], rotation);
-                    positions[3] = rotateBy(positions[3], rotation);
-                }
-
-                for (size_t i = 0; i < 4; i++) {
-
-                    positions[i] += p0;
-
-                    glm::vec4 projected = worldToClipSpace(_mvp, glm::vec4(positions[i], 0.f, 1.f));
-                    if (projected.w <= 0.0f) { return false; }
-
-                        m_projected[i] = glm::vec3(projected) / projected.w;
-
-                        // from normalized device coordinates to screen space coordinate system
-                        // top-left screen axis, y pointing down
-                        positions[i].x = 1 + m_projected[i].x;
-                        positions[i].y = 1 - m_projected[i].y;
-                        positions[i] *= halfScreen;
-                }
-
-            } else {
-                glm::vec4 projected = worldToClipSpace(_mvp, glm::vec4(p0, 0.f, 1.f));
-                if (projected.w <= 0.0f) { return false; }
-
-                m_projected[0] = glm::vec3(projected) / projected.w;
-
-                auto& position = m_screenTransform.position;
-                position.x = 1 + m_projected[0].x;
-                position.y = 1 - m_projected[0].y;
-                position *= halfScreen;
-                position += m_options.offset;
-
-                m_projected[1].x = _viewState.viewportSize.x;
-                m_projected[1].y = _viewState.viewportSize.y;
+            for (size_t i = 0; i < 4; i++) {
+                positions[i] = rotateBy(positions[i], rotation);
             }
-
-            break;
         }
-        default:
-            break;
+
+        AABB aabb;
+        for (size_t i = 0; i < 4; i++) {
+
+            positions[i] += p0;
+
+            glm::vec4 proj = worldToClipSpace(_mvp, glm::vec4(positions[i], 0.f, 1.f));
+            if (proj.w <= 0.0f) { return false; }
+
+            projected[i] = glm::vec3(proj) / proj.w;
+
+            // from normalized device coordinates to screen space coordinate system
+            // top-left screen axis, y pointing down
+            positions[i].x = 1 + projected[i].x;
+            positions[i].y = 1 - projected[i].y;
+            positions[i] *= halfScreen;
+
+            aabb.include(positions[i].x, positions[i].y);
+        }
+
+        if (_bounds) {
+            if (!aabb.intersect(*_bounds)) { return false; }
+        }
+
+        FlatTransform(_transform).set(positions, projected);
+
+        {
+            glm::vec4 projected = worldToClipSpace(_mvp, glm::vec4(p0, 0.f, 1.f));
+            if (projected.w <= 0.0f) { return false; }
+
+            projected /= projected.w;
+
+            glm::vec2 position;
+            position.x = 1 + projected.x;
+            position.y = 1 - projected.y;
+            position *= halfScreen;
+            position += m_options.offset;
+            m_screenCenter = position;
+        }
+    } else {
+
+        glm::vec4 projected = worldToClipSpace(_mvp, glm::vec4(p0, 0.f, 1.f));
+        if (projected.w <= 0.0f) { return false; }
+
+        projected /= projected.w;
+
+        glm::vec2 position;
+        position.x = 1 + projected.x;
+        position.y = 1 - projected.y;
+        position *= halfScreen;
+        position += m_options.offset;
+
+        if (_bounds) {
+            auto aabb = m_options.anchors.extents(m_dim);
+            aabb.min += position + m_options.offset;
+            aabb.max += position + m_options.offset;
+            if (!aabb.intersect(*_bounds)) { return false; }
+        }
+
+        m_screenCenter = position;
+
+        BillboardTransform(_transform).set(position, glm::vec3(projected),
+                                           _viewState.viewportSize, _viewState.fractZoom);
     }
 
     return true;
 }
 
-void SpriteLabel::updateBBoxes(float _zoomFract) {
-    glm::vec2 dim;
+void SpriteLabel::obbs(ScreenTransform& _transform, LabelOBBs& _obbs) {
+    OBB obb;
 
     if (m_options.flat) {
         const float infinity = std::numeric_limits<float>::infinity();
-
         float minx = infinity, miny = infinity;
         float maxx = -infinity, maxy = -infinity;
 
         for (int i = 0; i < 4; ++i) {
-            minx = std::min(minx, m_screenTransform.positions[i].x);
-            miny = std::min(miny, m_screenTransform.positions[i].y);
-            maxx = std::max(maxx, m_screenTransform.positions[i].x);
-            maxy = std::max(maxy, m_screenTransform.positions[i].y);
+
+            const auto& position = _transform[i];
+            minx = std::min(minx, position.x);
+            miny = std::min(miny, position.y);
+            maxx = std::max(maxx, position.x);
+            maxy = std::max(maxy, position.y);
         }
 
-        dim = glm::vec2(maxx - minx, maxy - miny);
+        glm::vec2 dim = glm::vec2(maxx - minx, maxy - miny);
 
         if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
-
-        // TODO: Manage extrude scale
 
         glm::vec2 obbCenter = glm::vec2((minx + maxx) * 0.5f, (miny + maxy) * 0.5f);
 
-        m_obb = OBB(obbCenter, glm::vec2(1.0, 0.0), dim.x, dim.y);
+        obb = OBB(obbCenter, {1, 0}, dim.x, dim.y);
     } else {
-        dim = m_dim + glm::vec2(m_vertexAttrib.extrudeScale * _zoomFract);
+
+        BillboardTransform pointTransform(_transform);
+
+        glm::vec2 dim = m_dim + glm::vec2(m_vertexAttrib.extrudeScale * pointTransform.fractZoom());
 
         if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
 
-        m_obb = OBB(m_screenTransform.position + m_anchor, m_screenTransform.rotation, dim.x, dim.y);
+        obb = OBB(pointTransform.position() + m_anchor, {1, 0}, dim.x, dim.y);
     }
+
+    _obbs.append(obb);
 }
 
-void SpriteLabel::addVerticesToMesh() {
+void SpriteLabel::addVerticesToMesh(ScreenTransform& _transform, const glm::vec2& _screenSize) {
 
     if (!visibleState()) { return; }
 
@@ -159,7 +228,7 @@ void SpriteLabel::addVerticesToMesh() {
     SpriteVertex::State state {
         m_vertexAttrib.selectionColor,
         m_vertexAttrib.color,
-        uint16_t(m_screenTransform.alpha * SpriteVertex::alpha_scale),
+        uint16_t(m_alpha * SpriteVertex::alpha_scale),
         0,
     };
 
@@ -178,18 +247,21 @@ void SpriteLabel::addVerticesToMesh() {
     auto* quadVertices = style.getMesh()->pushQuad();
 
     if (m_options.flat) {
+        FlatTransform transform(_transform);
+
         for (int i = 0; i < 4; i++) {
             SpriteVertex& vertex = quadVertices[i];
 
-            vertex.pos = m_projected[i];
+            vertex.pos = transform.projected(i);
             vertex.uv = quad.quad[i].uv;
             vertex.state = state;
         }
 
     } else {
+        BillboardTransform transform(_transform);
 
-        glm::vec2 pos = glm::vec2(m_projected[0]);
-        glm::vec2 scale = 2.0f / glm::vec2(m_projected[1]);
+        glm::vec2 pos = glm::vec2(transform.projected());
+        glm::vec2 scale = 2.0f / transform.screenSize();
         scale.y *= -1;
 
         pos += m_options.offset * scale;
@@ -197,7 +269,6 @@ void SpriteLabel::addVerticesToMesh() {
 
         for (int i = 0; i < 4; i++) {
             SpriteVertex& vertex = quadVertices[i];
-
             glm::vec2 coord = pos + quad.quad[i].pos * scale;
 
             vertex.pos.x = coord.x;

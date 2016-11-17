@@ -31,6 +31,7 @@ struct TextVertex {
     } state;
 
     const static float position_scale;
+    const static float position_inv_scale;
     const static float alpha_scale;
 };
 
@@ -45,32 +46,45 @@ public:
         uint32_t selectionColor;
     };
 
-    TextLabel(Label::WorldTransform _transform, Type _type, Label::Options _options,
+    using Coordinates = std::array<glm::vec2, 2>;
+
+    TextLabel(Coordinates _coordinates, Type _type, Label::Options _options,
               TextLabel::VertexAttributes _attrib,
               glm::vec2 _dim, TextLabels& _labels, TextRange _textRanges,
               TextLabelProperty::Align _preferedAlignment);
 
-    void updateBBoxes(float _zoomFract) override;
-
     LabelType renderType() const override { return LabelType::text; }
+
+    bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState,
+                               const AABB* _bounds, ScreenTransform& _transform) override;
+
+    void obbs(ScreenTransform& _transform, LabelOBBs& _obbs) override;
+
+    void addVerticesToMesh(ScreenTransform& _transform, const glm::vec2& _screenSize) override;
+
+    void applyAnchor(LabelProperty::Anchor _anchor) override;
 
     TextRange& textRanges() {
         return m_textRanges;
     }
 
-protected:
-
-    void addVerticesToMesh() override;
-
     uint32_t selectionColor() override {
         return m_fontAttrib.selectionColor;
     }
 
-private:
+    glm::vec2 modelCenter() const override {
+        if (m_type == Label::Type::line) {
+            return (m_coordinates[0] + m_coordinates[1]) * 0.5f;
+        } else {
+            return m_coordinates[0];
+        }
+    }
 
-    void applyAnchor(LabelProperty::Anchor _anchor) override;
+    float worldLineLength2() const override;
 
-    bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) override;
+protected:
+
+    const Coordinates m_coordinates;
 
     // Back-pointer to owning container
     const TextLabels& m_textLabels;
@@ -85,7 +99,6 @@ private:
 
     // The text LAbel prefered alignment
     TextLabelProperty::Align m_preferedAlignment;
-
 };
 
 }
