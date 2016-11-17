@@ -72,7 +72,8 @@ public:
     // Gets the viewport width in physical pixels (framebuffer size)
     int getViewportWidth();
 
-    // Set the ratio of hardware pixels to logical pixels (defaults to 1.0)
+    // Set the ratio of hardware pixels to logical pixels (defaults to 1.0);
+    // this operation can be slow, so only perform this when necessary.
     void setPixelScale(float _pixelsPerPoint);
 
     // Gets the pixel scale
