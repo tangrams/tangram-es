@@ -3,7 +3,7 @@ global:
 
 fonts:
     Montserrat:
-        url: https://fonts.gstatic.com/s/montserrat/v7/zhcz-_WihjSQC0oHJ9TCYL3hpw3pgy2gAi-Ip7WPMi0.woff
+        url: http://fonts.gstatic.com/s/montserrat/v7/zhcz-_WihjSQC0oHJ9TCYL3hpw3pgy2gAi-Ip7WPMi0.woff
     Open Sans:
         - weight: 300
           url: fonts/open sans-300normal.ttf
@@ -13,7 +13,7 @@ fonts:
 
 scene:
     background:
-        color: '#8db7d5'
+        color: '#ddd'
 cameras:
     iso-camera:
         # Manhattan
@@ -80,7 +80,7 @@ styles:
 sources:
     osm:
         type: MVT
-        url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+        url:  http://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
         max_zoom: 16
         url_params:
             api_key: vector-tiles-tyHL4AY
@@ -137,7 +137,7 @@ layers:
             draw:
                 polygons:
                     order: 2
-                    color: '#89ab84'
+                    color: '#a9cb94'
         blue:
             filter: { kind: [commercial, industrial] }
             draw:
@@ -173,7 +173,8 @@ layers:
                 color: white
                 width: 12.
                 order: 'function() { return feature.sort_key + 5 || 0 }'
-                #outline:
+                outline:
+                    color: '#bba'
                 #    color: [[16, '#999'], [18, '#aaa']]
                 #    width: [[10, 0], [16, 2]]
 
@@ -225,15 +226,16 @@ layers:
             filter: { kind: minor_road }
             draw:
                 lines:
-                    color: '#bbbbb8'
+                    #color: '#bbbbb8'
+                    color: '#ddc'
                     width: [[13, 1px], [14, 1px], [15, 8]]
                     outline:
-                        width: [[17, 0], [18, 1]]
+                        width: [[15, 1.5px], [18, 1.5px]]
         paths:
             filter: { kind: path }
             draw:
                 lines:
-                    color: '#fff'
+                    color: '#ccc'
                     width: [[15, 1px], [17, 2px]]
                     outline:
                         width: 0
@@ -390,9 +392,9 @@ layers:
                     family: sans-serif
                     weight: 400
                     style: normal
-                    size: 1.em
-                    fill: black
-                    stroke: { color: white, width: 2 }
+                    size: 1.2em
+                    fill: white
+                    stroke: { color: '#555544', width: 2 }
         highway:
             filter: { kind: highway }
             draw:

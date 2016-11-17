@@ -35,14 +35,12 @@ struct PointTransform {
 TextLabel::TextLabel(Label::WorldTransform _transform, Type _type, Label::Options _options,
                      TextLabel::VertexAttributes _attrib,
                      glm::vec2 _dim,  TextLabels& _labels, TextRange _textRanges,
-                     Align _preferedAlignment, size_t _anchorPoint, const std::vector<glm::vec2>& _line)
+                     Align _preferedAlignment)
     : Label(_transform, _dim, _type, _options),
       m_textLabels(_labels),
       m_textRanges(_textRanges),
       m_fontAttrib(_attrib),
-      m_preferedAlignment(_preferedAlignment),
-      m_anchorPoint(_anchorPoint),
-      m_line(_line) {
+      m_preferedAlignment(_preferedAlignment) {
 
     m_options.repeatDistance = 0;
 
@@ -123,48 +121,14 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
 
 
         rotation = (ap0.x <= ap2.x ? ap2 - ap0 : ap0 - ap2) / length;
-
+        rotation = glm::vec2{ rotation.x, - rotation.y };
 
         PointTransform(_transform).set(position + rotateBy(m_options.offset, rotation), rotation);
 
         return true;
     }
 
-    /* Label::Type::curved */
-
-    LineSampler<ScreenTransform> sampler { _transform };
-
-    bool inside = false;
-
-    for (auto& p : m_line) {
-        glm::vec2 sp = worldToScreenSpace(_mvp, glm::vec4(p, 0.0, 1.0),
-                                          _viewState.viewportSize, clipped);
-
-        if (clipped) { return false; }
-
-        sampler.add(sp);
-
-        if (!inside){
-            if ((sp.x >= 0 && sp.x <= _viewState.viewportSize.x) ||
-                (sp.y >= 0 && sp.y <= _viewState.viewportSize.y)) {
-                inside = true;
-            }
-        }
-    }
-
-    float length = sampler.sumLength();
-
-    if (!inside || length < m_dim.x) {
-        return false;
-    }
-
-    float center = sampler.point(m_anchorPoint).z;
-
-    if (center - m_dim.x * 0.5f < 0 || center + m_dim.x * 0.5f > length) {
-        return false;
-    }
-
-    return true;
+    return false;
 }
 
 void TextLabel::obbs(ScreenTransform& _transform, std::vector<OBB>& _obbs,
@@ -184,58 +148,20 @@ void TextLabel::obbs(ScreenTransform& _transform, std::vector<OBB>& _obbs,
     // FIXME: Only for testing
     if (state() == State::dead) { dim -= 4; }
 
-    if (m_type == Label::Type::curved) {
-        float width = dim.x;
-        LineSampler<ScreenTransform> sampler { _transform };
+    PointTransform pointTransform(_transform);
 
-        auto center = sampler.point(m_anchorPoint).z;
-        auto start = center - width * 0.5f;
+    auto rotation = pointTransform.rotation();
 
-        glm::vec2 p1, p2, rotation;
-        sampler.sample(start, p1, rotation);
+    auto obb = OBB(pointTransform.position() + m_anchor,
+                   glm::vec2{rotation.x, -rotation.y},
+                   dim.x, dim.y);
 
-        float prevLength = start;
-
-        int count = 0;
-        for (size_t i = sampler.curSegment()+1; i < _transform.size(); i++) {
-
-            float currLength = sampler.point(i).z;
-            float segmentLength = currLength - prevLength;
-            count++;
-
-            if (start + width > currLength) {
-                p2 = glm::vec2(sampler.point(i));
-
-                rotation = sampler.segmentDirection(i-1);
-                _obbs.push_back({(p1 + p2) * 0.5f, rotation, segmentLength, dim.y});
-                prevLength = currLength;
-                p1 = p2;
-
-            } else {
-
-                segmentLength = (start + width) - prevLength;
-                sampler.sample(start + width, p2, rotation);
-                _obbs.push_back({(p1 + p2) * 0.5f, rotation, segmentLength, dim.y});
-                break;
-            }
-        }
-        _range.length = count;
+    if (_append) {
+        _obbs.push_back(obb);
     } else {
-        PointTransform pointTransform(_transform);
-
-        auto rotation = pointTransform.rotation();
-
-        auto obb = OBB(pointTransform.position() + m_anchor,
-                       glm::vec2{rotation.x, -rotation.y},
-                       dim.x, dim.y);
-
-        if (_append) {
-            _obbs.push_back(obb);
-        } else {
-            _obbs[_range.start] = obb;
-        }
-        _range.length = 1;
+        _obbs[_range.start] = obb;
     }
+    _range.length = 1;
 }
 
 void TextLabel::addVerticesToMesh(ScreenTransform& _transform) {
@@ -254,83 +180,29 @@ void TextLabel::addVerticesToMesh(ScreenTransform& _transform) {
     auto& style = m_textLabels.style;
 
     auto& meshes = style.getMeshes();
-    if (m_type == Label::Type::curved) {
-        glm::vec2 rotation;
-        LineSampler<ScreenTransform> sampler { _transform };
 
-        float width = m_dim.x;
+    PointTransform transform(_transform);
 
-        if (sampler.sumLength() < width) { return; }
+    glm::vec2 rotation = transform.rotation();
+    bool rotate = (rotation.x != 1.f);
 
-        float center = sampler.point(m_anchorPoint).z;
+    glm::vec2 screenPosition = transform.position();
+    screenPosition += m_anchor;
+    glm::i16vec2 sp = glm::i16vec2(screenPosition * TextVertex::position_scale);
 
-        glm::vec2 p1, p2;
-        sampler.sample(center + it->quad[0].pos.x / TextVertex::position_scale, p1, rotation);
-        // Check based on first charater whether labels needs to be flipped
-        // sampler.sample(center + it->quad[2].pos.x, p2, rotation);
-        sampler.sample(center + (end-1)->quad[2].pos.x / TextVertex::position_scale, p2, rotation);
+    for (; it != end; ++it) {
+        auto quad = *it;
+        auto* quadVertices = meshes[it->atlas]->pushQuad();
 
-
-        if (p1.x > p2.x) {
-            sampler.reversePoints();
-            center = sampler.sumLength() - center;
-        }
-
-        // if (center < width * 0.5f) {
-        //     center = width * 0.5f;
-        // } else if (sampler.sumLength() - center < width * 0.5f) {
-        //     center = width * 0.5f;
-        // }
-
-        for (; it != end; ++it) {
-            auto quad = *it;
-
-            glm::vec2 origin = {(quad.quad[0].pos.x + quad.quad[2].pos.x) * 0.5f, 0 };
-            glm::vec2 point;
-
-            if (!sampler.sample(center + origin.x / TextVertex::position_scale, point, rotation)) {
-                // break;
+        for (int i = 0; i < 4; i++) {
+            TextVertex& v = quadVertices[i];
+            if (rotate) {
+                v.pos = sp + glm::i16vec2{rotateBy(quad.quad[i].pos, rotation)};
+            } else {
+                v.pos = sp + quad.quad[i].pos;
             }
-
-            point *= TextVertex::position_scale;
-            rotation = {rotation.x, -rotation.y};
-
-            auto* quadVertices = meshes[it->atlas]->pushQuad();
-
-            for (int i = 0; i < 4; i++) {
-                TextVertex& v = quadVertices[i];
-
-                v.pos = glm::i16vec2{point + rotateBy(glm::vec2(quad.quad[i].pos) - origin, rotation)};
-
-                v.uv = quad.quad[i].uv;
-                v.state = state;
-            }
-        }
-    } else {
-
-        PointTransform transform(_transform);
-
-        glm::vec2 rotation = transform.rotation();
-        bool rotate = (rotation.x != 1.f);
-
-        glm::vec2 screenPosition = transform.position();
-        screenPosition += m_anchor;
-        glm::i16vec2 sp = glm::i16vec2(screenPosition * TextVertex::position_scale);
-
-        for (; it != end; ++it) {
-            auto quad = *it;
-            auto* quadVertices = meshes[it->atlas]->pushQuad();
-
-            for (int i = 0; i < 4; i++) {
-                TextVertex& v = quadVertices[i];
-                if (rotate) {
-                    v.pos = sp + glm::i16vec2{rotateBy(quad.quad[i].pos, rotation)};
-                } else {
-                    v.pos = sp + quad.quad[i].pos;
-                }
-                v.uv = quad.quad[i].uv;
-                v.state = state;
-            }
+            v.uv = quad.quad[i].uv;
+            v.state = state;
         }
     }
 }

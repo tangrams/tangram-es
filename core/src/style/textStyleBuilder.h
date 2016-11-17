@@ -44,6 +44,9 @@ public:
 
     void addLineTextLabels(const Feature& _feature, const TextStyle::Parameters& _params, const DrawRule& _rule);
 
+    bool addStraightTextLabels(const Line& _feature, const TextStyle::Parameters& _params, const DrawRule& _rule);
+    void addCurvedTextLabels(const Line& _feature, const TextStyle::Parameters& _params, const DrawRule& _rule);
+
     std::string applyTextTransform(const TextStyle::Parameters& _params, const std::string& _string);
 
     std::string resolveTextSource(const std::string& textSource, const Properties& props) const;
@@ -81,6 +84,7 @@ protected:
     } m_attributes;
 
     float m_tileSize = 0;
+    float m_tileScale = 0;
 };
 
 }

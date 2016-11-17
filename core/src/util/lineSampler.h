@@ -92,10 +92,13 @@ struct LineSampler {
     }
 
     glm::vec2 segmentDirection(size_t _pos) {
-        if (_pos >= m_points.size()-1) { return {}; }
+        if (_pos >= m_points.size()-1) {
+            //return {};
+            _pos = m_points.size()-2;
+        }
 
-        return (glm::vec2(m_points[_pos+1]) - glm::vec2(m_points[_pos])) /
-            (m_points[_pos+1].z - m_points[_pos].z);
+        return ((glm::vec2(m_points[_pos+1]) - glm::vec2(m_points[_pos])) /
+                (m_points[_pos+1].z - m_points[_pos].z));
     }
 
 

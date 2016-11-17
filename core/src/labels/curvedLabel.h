@@ -1,6 +1,7 @@
 #pragma once
 
 #include "labels/label.h"
+#include "labels/textLabel.h"
 
 #include <glm/glm.hpp>
 
@@ -9,32 +10,7 @@ namespace Tangram {
 class TextLabels;
 class TextStyle;
 
-struct GlyphQuad {
-    size_t atlas;
-    struct {
-        glm::i16vec2 pos;
-        glm::u16vec2 uv;
-    } quad[4];
-};
-
-using TextRange = std::array<Range, 3>;
-
-struct TextVertex {
-    glm::i16vec2 pos;
-    glm::u16vec2 uv;
-    struct State {
-        uint32_t selection;
-        uint32_t color;
-        uint32_t stroke;
-        uint16_t alpha;
-        uint16_t scale;
-    } state;
-
-    const static float position_scale;
-    const static float alpha_scale;
-};
-
-class TextLabel : public Label {
+class CurvedLabel : public Label {
 
 public:
 
@@ -45,10 +21,11 @@ public:
         uint32_t selectionColor;
     };
 
-    TextLabel(Label::WorldTransform _transform, Type _type, Label::Options _options,
-              TextLabel::VertexAttributes _attrib,
-              glm::vec2 _dim, TextLabels& _labels, TextRange _textRanges,
-              TextLabelProperty::Align _preferedAlignment);
+    CurvedLabel(Label::Options _options, float _prio,
+                TextLabel::VertexAttributes _attrib,
+                glm::vec2 _dim, TextLabels& _labels, TextRange _textRanges,
+                TextLabelProperty::Align _preferedAlignment,
+                size_t _anchorPoint, const std::vector<glm::vec2>& _line);
 
     LabelType renderType() const override { return LabelType::text; }
 
@@ -56,10 +33,13 @@ public:
         return m_textRanges;
     }
 
-
     void obbs(ScreenTransform& _transform, std::vector<OBB>& _obbs,
               Range& _range, bool _append) override;
 
+
+    float candidatePriority() const {
+        return m_prio;
+    }
 
 protected:
 
@@ -85,10 +65,17 @@ private:
     // TextRange currently used for drawing
     int m_textRangeIndex;
 
-    VertexAttributes m_fontAttrib;
+    TextLabel::VertexAttributes m_fontAttrib;
 
     // The text LAbel prefered alignment
     TextLabelProperty::Align m_preferedAlignment;
+
+    size_t m_anchorPoint;
+    std::vector<glm::vec2> m_line;
+
+    size_t m_screenAnchorPoint;
+
+    float m_prio = 0;
 };
 
 }

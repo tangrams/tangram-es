@@ -2,7 +2,7 @@
 
 #include "labels/labelSet.h"
 #include "view/view.h" // ViewState
-
+#include "labels/curvedLabel.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/norm.hpp"
 
@@ -74,6 +74,14 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
                       return l1->worldLineLength2() > l2->worldLineLength2();
                   }
 
+                  if (l1->hash() == l2->hash()) {
+                      if (l1->type() == Label::Type::curved &&
+                          l2->type() == Label::Type::curved) {
+                           return (static_cast<const CurvedLabel*>(l1)->candidatePriority() >
+                                   static_cast<const CurvedLabel*>(l2)->candidatePriority());
+                      }
+                  }
+
                   return l1->hash() < l2->hash();
               });
 
@@ -104,19 +112,24 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
     m_obbs.clear();
     m_points.clear();
 
-    for (auto& entry : m_labels) {
+    for (auto it = m_labels.begin(); it != m_labels.end(); ) {
+        auto& entry = *it;
         auto* label = entry.label;
         Label::ScreenTransform transform { m_points, entry.transform, true };
-        label->updateScreenTransform(mvp, viewState, transform, false);
+        if (label->updateScreenTransform(mvp, viewState, transform, false)) {
 
-        label->obbs(transform, m_obbs, entry.obbs);
+            label->obbs(transform, m_obbs, entry.obbs);
 
-        auto aabb = m_obbs[entry.obbs.start].getExtent();
-        for (int i = entry.obbs.start+1; i < entry.obbs.end(); i++) {
-            aabb = unionAABB(aabb, m_obbs[i].getExtent());
+            auto aabb = m_obbs[entry.obbs.start].getExtent();
+            for (int i = entry.obbs.start+1; i < entry.obbs.end(); i++) {
+                aabb = unionAABB(aabb, m_obbs[i].getExtent());
+            }
+
+            m_aabbs.push_back(aabb);
+            it++;
+        } else {
+            it = m_labels.erase(it);
         }
-
-        m_aabbs.push_back(aabb);
     }
 
     m_isect2d.resize({screenSize.x / 128, screenSize.y / 128}, screenSize);
@@ -159,6 +172,13 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
                       // to be shown earlier (also on the lower zoom-level)
                       // TODO compare fraction segment_length/label_width
                       return l1->worldLineLength2() > l2->worldLineLength2();
+                  }
+                  if (l1->hash() == l2->hash()) {
+                      if (l1->type() == Label::Type::curved &&
+                          l2->type() == Label::Type::curved) {
+                          return static_cast<const CurvedLabel*>(l1)->candidatePriority() >
+                              static_cast<const CurvedLabel*>(l2)->candidatePriority();
+                      }
                   }
                   // just so it is consistent between two instances
                   return (l1->hash() < l2->hash());
@@ -232,6 +252,18 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
                 l2->occlude();
             }
         } else {
+            if (l1->hash() == l2->hash()) {
+                if (l1->type() == Label::Type::curved &&
+                    l2->type() == Label::Type::curved) {
+                    if (static_cast<const CurvedLabel*>(l1)->candidatePriority() <
+                        static_cast<const CurvedLabel*>(l2)->candidatePriority()) {
+                        l1->occlude();
+                    } else {
+                        l2->occlude();
+                    }
+                }
+            }
+
             // just so it is consistent between two instances
             if (l1->hash() < l2->hash()) {
                 l1->occlude();

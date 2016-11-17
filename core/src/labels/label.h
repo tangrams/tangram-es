@@ -64,10 +64,22 @@ public:
 
 
     struct ScreenTransform {
-        ScreenTransform(std::vector<glm::vec3>& _points, Range& _range, bool _initRange = false)
-            : points(_points), range(_range) {
+
+        struct Buffer {
+            std::vector<glm::vec3> points;
+            std::vector<glm::vec2> path;
+            void clear() {
+                points.clear();
+                path.clear();
+            }
+        };
+
+        ScreenTransform(Buffer& _transformBuffer, Range& _range, bool _initRange = false)
+            : points(_transformBuffer.points),
+              m_scratchBuffer(_transformBuffer.path),
+              range(_range) {
             if (_initRange) {
-                range.start = _points.size();
+                range.start = points.size();
             }
         }
 
@@ -76,6 +88,10 @@ public:
 
         bool empty() const { return range.length == 0; }
         size_t size() const { return range.length; }
+        void clear() {
+            range.length = 0;
+            points.resize(range.start);
+        }
 
         auto operator[](size_t _pos) const { return points[range.start + _pos]; }
 
@@ -89,8 +105,14 @@ public:
             range.length += 1;
         }
 
+        auto& scratchBuffer() {
+            m_scratchBuffer.clear();
+            return m_scratchBuffer;
+        }
+
     private:
         std::vector<glm::vec3>& points;
+        std::vector<glm::vec2>& m_scratchBuffer;
         Range& range;
     };
 

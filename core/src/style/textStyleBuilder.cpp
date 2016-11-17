@@ -3,6 +3,7 @@
 #include "labels/labelCollider.h"
 #include "labels/labelSet.h"
 #include "labels/textLabel.h"
+#include "labels/curvedLabel.h"
 #include "labels/textLabels.h"
 
 #include "marker/marker.h"
@@ -13,7 +14,6 @@
 #include "util/featureSelection.h"
 #include "util/lineSampler.h"
 #include "view/view.h"
-#include "data/propertyItem.h"
 #include "tangram.h"
 #include "log.h"
 
@@ -36,11 +36,9 @@ void TextStyleBuilder::setup(const Tile& _tile){
     m_tileSize = _tile.getProjection()->TileSize();
     m_tileSize *= m_style.pixelScale();
 
-    float tileScale = pow(2, _tile.getID().s - _tile.getID().z);
-    m_tileSize *= tileScale;
-
-    // add scale factor to the next zoom-level
-    m_tileSize *= 2;
+    // < 1.0 when overzooming a tile
+    m_tileScale = pow(2, _tile.getID().s - _tile.getID().z);
+    m_tileSize *= m_tileScale;
 
     m_atlasRefs.reset();
 
@@ -57,7 +55,6 @@ void TextStyleBuilder::setup(const Marker& marker, int zoom) {
 
     // (Copied from Tile setup function above, purpose unclear)
     m_tileSize *= m_style.pixelScale();
-    m_tileSize *= 2;
 
     m_atlasRefs.reset();
 
@@ -224,126 +221,253 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
     return true;
 }
 
-void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::Parameters& _params,
-                                         const DrawRule& _rule) {
+bool TextStyleBuilder::addStraightTextLabels(const Line& _line, const TextStyle::Parameters& _params,
+                                             const DrawRule& _rule) {
 
-    float pixelScale = 1.0/m_tileSize;
-    float minLength = m_attributes.width * pixelScale;
+    // Size of pixel in tile coordinates
+    float pixelSize = 1.0/m_tileSize;
 
-    // float tolerance = pow(pixelScale * 2, 2);
+    // Minimal length of line needed for the label
+    float minLength = m_attributes.width * pixelSize;
+
+    // Allow labels to appear later than tile's min-zoom
+    minLength *= 0.6;
+
+    //float tolerance = pow(pixelScale * 2, 2);
+    float tolerance = pow(pixelSize * 1.5, 2);
+    float sqDirLimit = powf(1.99f, 2);
+
+    for (size_t i = 0; i < _line.size() - 1; i++) {
+        glm::vec2 p0 = glm::vec2(_line[i]);
+        glm::vec2 p1 = glm::vec2(_line[i+1]);
+
+        float segmentLength = glm::length(p0 - p1);
+
+        glm::vec2 dir0 = (p0 - p1) / segmentLength;
+        glm::vec2 dir1 = dir0;
+        glm::vec2 dir2;
+
+        bool merged = false;
+        //size_t next = i+1;
+
+        size_t j = i + 2;
+        for (; j < _line.size(); j++) {
+            glm::vec2 p2 = glm::vec2(_line[j]);
+
+            segmentLength = glm::length(p1 - p2);
+            dir2 = (p1 - p2) / segmentLength;
+
+            glm::vec2 pp = glm::vec2(_line[j-1]);
+            float d = sqPointSegmentDistance(pp, p0, p2);
+            if (d > tolerance) { break; }
+
+            if ((glm::length2(dir1 + dir2) < sqDirLimit) ||
+                (glm::length2(dir0 + dir2) < sqDirLimit)) {
+                break;
+            }
+
+            // Skip merged segment in outer loop
+            i += 1;
+            merged = true;
+
+            p1 = p2;
+            dir1 = dir2;
+        }
+
+        // place labels at segment-subdivisions
+        int run = merged ? 1 : 2;
+        segmentLength /= run;
+
+        while (segmentLength > minLength && run <= 4) {
+            glm::vec2 a = p0;
+            glm::vec2 b = glm::vec2(p1 - p0) / float(run);
+
+            for (int r = 0; r < run; r++) {
+                addLabel(_params, Label::Type::line, { a, a+b }, _rule);
+                a += b;
+            }
+            run *= 2;
+            segmentLength /= 2.0f;
+        }
+
+        if (i == 0 && j == _line.size()) {
+            // Single straight segment
+            return true;
+        }
+    }
+    return false;
+}
+
+void TextStyleBuilder::addCurvedTextLabels(const Line& _line, const TextStyle::Parameters& _params,
+                                           const DrawRule& _rule) {
+
+    // Size of pixel in tile coordinates
+    const float pixelSize = 1.0/m_tileSize;
+    // length of line needed for the label
+    const float labelLength = m_attributes.width * pixelSize;
+    // Allow labels to appear later than tile's min-zoom
+    const float minLength = labelLength * 0.6;
+
+    // Chord length for minimal ~110 degree inner angles (squared)
+    // sin(55)*2
+    //float sqDirLimit = powf(1.6f, 2);
+    const float sqDirLimit = powf(1.7f, 2);
+    // Range to check for angle changes
+    const float sampleWindow = pixelSize * 50;
+
+    // Minimal ~10 degree counts as change of direction
+    // cross(dir1,dir2) < sin(10)
+    const float flipTolerance = 0.17;
 
     LineSampler<std::vector<glm::vec3>> sampler;
 
-    auto addSegment = [&](const Line& line, size_t start, size_t end) {
+    sampler.set(_line);
+
+    if (sampler.sumLength() < minLength) { return; }
+
+    struct LineRange {
+        size_t start, end;
+        int flips;
+        float area;
+    };
+
+    std::vector<LineRange> ranges;
+
+    for (size_t i = 0; i < _line.size()-1; i++) {
+
+        int flips = 0;
+        float lastAngle = 0;
+        float sumAngle = 0;
+        size_t lastBreak = 0;
+
+        glm::vec2 dir1 = sampler.segmentDirection(i);
+
+        for (size_t j = i + 1; j < _line.size()-1; j++) {
+            glm::vec2 dir2 = sampler.segmentDirection(j);
+
+            float angle = crossProduct(dir1, dir2);
+
+
+            if (std::abs(angle) > flipTolerance) {
+                if (lastAngle > 0) {
+                    if (angle < 0) { flips++; }
+                } else if (lastAngle < 0) {
+                    if (angle > 0) { flips++; }
+                }
+                lastAngle = angle;
+            }
+
+
+            float length = sampler.point(j).z - sampler.point(i).z;
+
+            sumAngle += std::abs(angle);
+
+            bool splitLine = flips > 2;
+            if (!splitLine) {
+                // Go back within window to check for hard direction changes
+                for (int k = j - 1; k >= int(i); k--){
+                    if (glm::length2(sampler.segmentDirection(k) + dir2) < sqDirLimit) {
+                        //LOG("back break %s, %d %d", _params.text.c_str(), j, k);
+                        splitLine = true;
+                    }
+                    if (sampler.point(k).z < sampler.point(j).z - sampleWindow) {
+                        break;
+                    }
+                }
+            }
+
+            if (splitLine) {
+                // LOG("split %f,%f / %f,%f", dir1.x, dir1.y, dir2.x, dir2.y);
+
+                if (length > minLength) {
+                    //LOG("add break %s f:%d a:%f l:%f (%d/%d)", _params.text.c_str(), flips, sumArea, length, lastBreak, j+1);
+                    ranges.push_back(LineRange{i, j+1, flips, sumAngle});
+                } else {
+                    //LOG("drop break %s f:%d a:%f l:%f (%d/%d)", _params.text.c_str(), flips, sumArea, length, lastBreak, j+1);
+                }
+
+                lastBreak = j;
+                break;
+
+            } else {
+                dir1 = dir2;
+            }
+        }
+
+        // Add segment from 'i' unless line got split.
+        if (lastBreak == 0) {
+            float length = sampler.sumLength() - sampler.point(i).z;
+            if (length > minLength) {
+                //LOG("add last %s f:%d a:%f l:%f (%d/%d)", _params.text.c_str(), flips, sumArea, length, lastBreak, i);
+                ranges.push_back(LineRange{i, _line.size(), flips, sumAngle});
+
+                // TODO: if this is a single segment use straight label
+            }
+        }
+    }
+
+    // std::sort(ranges.begin(), ranges.end(), [](auto& a, auto& b){
+    //         return a.area < b.area;
+    //     });
+
+    for (auto& range : ranges) {
         glm::vec2 center;
         glm::vec2 rotation;
-        float startLen = sampler.point(start).z;
-        float mid = (sampler.point(end-1).z - startLen) * 0.5;
+        float startLen = sampler.point(range.start).z;
+        float length = (sampler.point(range.end-1).z - startLen);
+        float mid = startLen + length * 0.5;
 
         sampler.sample(mid, center, rotation);
         size_t offset = sampler.curSegment();
 
         std::vector<glm::vec2> l;
-        l.reserve(end - start + 1);
+        l.reserve(range.end - range.start + 1);
 
-        for (size_t j = start; j < end; j++) {
-            auto& p = line[j];
+        for (size_t j = range.start; j < range.end; j++) {
+            auto& p = _line[j];
             l.emplace_back(p.x, p.y);
 
-            if (j == offset) { l.push_back(center); }
+            if (j == offset) {
+                l.push_back(center);
+            }
         }
-        addLabel(_params, Label::WorldTransform{{}}, offset+1, l);
-    };
+        size_t anchor = offset - range.start + 1;
 
-    static const float sqDirLimit = powf(1.6f, 2);
+        //LOG("length: %f, %f", length, range.area);
+
+        //float prio = length / (1.f + range.area * m_tileSize);
+        float prio = length / (1.f + range.area);
+        //float prio = 1.0 / range.area;
+        //float prio = length;
+
+        uint32_t selectionColor = 0;
+
+        if (_params.interactive) {
+            selectionColor = _rule.featureSelection->nextColorIdentifier();
+        }
+
+        m_labels.emplace_back(new CurvedLabel( _params.labelOptions, prio,
+                                               {m_attributes.fill,
+                                                       m_attributes.stroke,
+                                                       m_attributes.fontScale,
+                                                       selectionColor},
+                                               {m_attributes.width, m_attributes.height},
+                                               *m_textLabels, m_attributes.textRanges,
+                                               TextLabelProperty::Align::center,
+                                               anchor, l));
+
+    }
+}
+
+void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::Parameters& _params,
+                                         const DrawRule& _rule) {
 
     for (auto& line : _feat.lines) {
 
-        sampler.set(line);
-
-        if (sampler.sumLength() < minLength) { continue; }
-
-        glm::vec2 dir0 = sampler.segmentDirection(0);
-        glm::vec2 dir1 = sampler.segmentDirection(0);
-        glm::vec2 dir2;
-
-        size_t startPoint = 0;
-
-        for (size_t i = 1; i < line.size()-1; i++) {
-            dir2 = sampler.segmentDirection(i);
-
-            float sqLen = glm::length2(dir1 + dir2);
-
-            if (sqLen < sqDirLimit || glm::length2(dir0 + dir2) < sqDirLimit) {
-                //LOG("split %f,%f / %f,%f", dir1.x, dir1.y, dir2.x, dir2.y);
-
-                if (sampler.point(i).z - sampler.point(startPoint).z > minLength) {
-                    addSegment(line, startPoint, i);
-                }
-
-                startPoint = i;
-
-                dir0 = sampler.segmentDirection(i);
-
-            // } else if (sampler.point(i).length - sampler.point(startPoint).length > minLength) {
-            //     addSegment(line, startPoint, i);
-            }
-
-            dir1 = dir2;
+        //if (!addStraightTextLabels(line, _params) && line.size() > 2) {
+        if (line.size() > 2) {
+            addCurvedTextLabels(line, _params, _rule);
         }
-
-        if (sampler.sumLength() - sampler.point(startPoint).z > minLength) {
-            addSegment(line, startPoint, line.size());
-        }
-
-#if 0
-
-        for (size_t i = 0; i < line.size() - 1; i++) {
-            glm::vec2 p1 = glm::vec2(line[i]);
-            glm::vec2 p2;
-
-            float segmentLength = 0;
-            bool merged = false;
-            size_t next = i+1;
-
-            for (size_t j = next; j < line.size(); j++) {
-                glm::vec2 p = glm::vec2(line[j]);
-                segmentLength = glm::length(p1 - p);
-
-                if (j == next) {
-                    // if (segmentLength > minLength) {
-                    //     addLabel(_params, Label::Type::line, { p1, p }, _rule);
-                    // }
-                } else {
-                    glm::vec2 pp = glm::vec2(line[j-1]);
-
-                    float d = sqPointSegmentDistance(pp, p1, p);
-                    if (d > tolerance) { break; }
-
-                    // Skip merged segment in outer loop
-                    i += 1;
-                    merged = true;
-                }
-                p2 = p;
-            }
-
-            // place labels at segment-subdivisions
-            int run = merged ? 1 : 2;
-            segmentLength /= run;
-
-            while (segmentLength > minLength && run <= 4) {
-                glm::vec2 a = p1;
-                glm::vec2 b = glm::vec2(p2 - p1) / float(run);
-
-                for (int r = 0; r < run; r++) {
-                    addLabel(_params, Label::Type::line, { a, a+b }, _rule);
-                    a += b;
-                }
-                run *= 2;
-                segmentLength /= 2.0f;
-            }
-        }
-#endif
     }
 }
 
@@ -398,9 +522,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
             p.labelOptions.priority = (float)priority;
         }
         _rule.get(StyleParamKey::text_collide, p.labelOptions.collide);
-        if (!_rule.get(StyleParamKey::text_interactive, p.interactive)) {
-            _rule.get(StyleParamKey::interactive, p.interactive);
-        }
+        _rule.get(StyleParamKey::text_interactive, p.interactive);
         _rule.get(StyleParamKey::text_offset, p.labelOptions.offset);
         p.labelOptions.offset *= m_style.pixelScale();
 
@@ -472,10 +594,6 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     p.labelOptions.paramHash = hash(p);
 
     p.lineSpacing = 2 * m_style.pixelScale();
-
-    if (p.interactive) {
-        p.labelOptions.featureId = _rule.selectionColor;
-    }
 
     return p;
 }
@@ -614,16 +732,5 @@ void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Typ
                                         _params.align));
 }
 
-void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params,
-                                Label::WorldTransform _transform, size_t _anchor,
-                                std::vector<glm::vec2> _line) {
-
-    m_labels.emplace_back(new TextLabel(_transform, Label::Type::curved, _params.labelOptions,
-                                        {m_attributes.fill, m_attributes.stroke, m_attributes.fontScale},
-                                        {m_attributes.width, m_attributes.height},
-                                        *m_textLabels, m_attributes.textRanges,
-                                        TextLabelProperty::Align::center,
-                                        _anchor, _line));
-}
 
 }
