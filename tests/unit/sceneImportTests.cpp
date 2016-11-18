@@ -14,6 +14,8 @@ class TestImporter : public Importer {
 public:
     TestImporter();
 
+    TestImporter(std::unordered_map<Url, std::string> _testScenes) : m_testScenes(_testScenes) {}
+
 protected:
     virtual std::string getSceneString(const Url& scenePath) override {
         return m_testScenes[scenePath];
@@ -214,4 +216,50 @@ TEST_CASE("References to globals are not treated like URLs during importing", "[
     CHECK(root["textures"]["aTexture"]["url"].Scalar() == "global.textureUrl");
     CHECK(root["styles"]["aStyle"]["texture"].Scalar() == "global.textureUrl");
     CHECK(root["styles"]["aStyle"]["shaders"]["uniforms"]["aUniform"].Scalar() == "global.textureUrl");
+}
+
+TEST_CASE("Map overwrites sequence", "[import][core]") {
+
+    std::unordered_map<Url, std::string> testScenes;
+    testScenes["/base.yaml"] = R"END(
+        import: [roads.yaml, roads-labels.yaml]
+    )END";
+
+    testScenes["/roads.yaml"] = R"END(
+            filter:
+                - kind: highway
+                - $zoom: { min: 8 }
+    )END";
+
+    testScenes["/roads-labels.yaml"] = R"END(
+                filter: { kind: highway }
+    )END";
+
+    TestImporter importer(testScenes);
+    auto root = importer.applySceneImports("base.yaml", "/");
+
+    CHECK(root["filter"].IsMap());
+    CHECK(root["filter"].size() == 1);
+    CHECK(root["filter"]["kind"].Scalar() == "highway");
+}
+
+TEST_CASE("Sequence overwrites map", "[import][core]") {
+
+    std::unordered_map<Url, std::string> testScenes;
+    testScenes["/base.yaml"] = R"END(
+        import: [map.yaml, sequence.yaml]
+    )END";
+    testScenes["/map.yaml"] = R"END(
+            a: { b: c }
+    )END";
+
+    testScenes["/sequence.yaml"] = R"END(
+            a: [ b, c]
+    )END";
+
+    TestImporter importer(testScenes);
+    auto root = importer.applySceneImports("base.yaml", "/");
+
+    CHECK(root["a"].IsSequence());
+    CHECK(root["a"].size() == 2);
 }
