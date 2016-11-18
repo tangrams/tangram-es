@@ -2,6 +2,7 @@ package com.mapzen.tangram;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * {@code TouchLabel} represents labels that can be selected on the screen
@@ -16,16 +17,13 @@ public class TouchLabel {
         TEXT,
     }
 
-    private List<LngLat> coordinates;
+    private LngLat coordinate;
     private LabelType type;
+    private Map<String, String> properties;
 
-    public TouchLabel(double[] coordinates, int type) {
-        this.coordinates = new ArrayList<>();
-
-        for (int i = 0; i < coordinates.length - 1; i += 2) {
-            this.coordinates.add(new LngLat(coordinates[i], coordinates[i + 1]));
-        }
-
+    public TouchLabel(double[] coordinates, int type, Map<String, String> properties) {
+        this.properties = properties;
+        this.coordinate = new LngLat(coordinates[0], coordinates[1]);
         this.type = LabelType.values()[type];
     }
 
@@ -33,7 +31,11 @@ public class TouchLabel {
         return this.type;
     }
 
-    public List<LngLat> getCoordinates() {
-        return this.coordinates;
+    public LngLat getCoordinate() {
+        return this.coordinate;
+    }
+
+    public Map<String, String> getProperties() {
+        return this.properties;
     }
 }

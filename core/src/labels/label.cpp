@@ -54,22 +54,25 @@ float Label::screenDistance2(glm::vec2 _screenPosition) const {
     return glm::length2(m_obb.getCentroid() - _screenPosition);
 }
 
-std::vector<LngLat> Label::coordinates(const Tile& _tile, const MapProjection& _projection) {
-    std::vector<LngLat> coordinates;
+LngLat Label::coordinate(const Tile& _tile, const MapProjection& _projection) {
+    LngLat coordinate;
 
     if (m_type == Type::line) {
         for (int i = 0; i < 2; ++i) {
             glm::vec2 tileCoord = glm::vec2(m_worldTransform.positions[i]);
             glm::dvec2 degrees = _tile.coordToLngLat(tileCoord, _projection);
-            coordinates.push_back({degrees.x, degrees.y});
+            coordinate.longitude += degrees.x;
+            coordinate.latitude += degrees.y;
         }
+        coordinate.longitude /= 2.0;
+        coordinate.latitude /= 2.0;
     } else {
         glm::vec2 tileCoord = glm::vec2(m_worldTransform.position);
         glm::dvec2 degrees = _tile.coordToLngLat(tileCoord, _projection);
-        coordinates.push_back({degrees.x, degrees.y});
+        coordinate = {degrees.x, degrees.y};
     }
 
-    return coordinates;
+    return coordinate;
 }
 
 float Label::worldLineLength2() const {

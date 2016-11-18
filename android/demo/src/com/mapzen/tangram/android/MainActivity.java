@@ -11,6 +11,7 @@ import com.mapzen.tangram.HttpHandler;
 import com.mapzen.tangram.LngLat;
 import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapController.FeaturePickListener;
+import com.mapzen.tangram.MapController.LabelPickListener;
 import com.mapzen.tangram.MapController.ViewCompleteListener;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
@@ -27,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends Activity implements OnMapReadyCallback, TapResponder,
-        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelsPickListener {
+        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener {
 
     MapController map;
     MapView view;
@@ -45,7 +46,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
         view = (MapView)findViewById(R.id.map);
         view.onCreate(savedInstanceState);
-        view.getMapAsync(this, "scene.yaml");
+        view.getMapAsync(this, "https://raw.githubusercontent.com/tangrams/cinnabar-style/gh-pages/cinnabar-style.yaml");
     }
 
     @Override
@@ -82,7 +83,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
         map.setDoubleTapResponder(this);
         map.setLongPressResponder(this);
         map.setFeaturePickListener(this);
-        map.setLabelsPickListener(this);
+        map.setLabelPickListener(this);
 
         map.setViewCompleteListener(new ViewCompleteListener() {
                 public void onViewComplete() {
@@ -132,6 +133,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
         lastTappedPoint = tappedPoint;
 
         map.pickFeature(x, y);
+        map.pickLabels(x, y);
 
         map.setPositionEased(tappedPoint, 1000);
 
@@ -158,7 +160,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     }
 
     @Override
-    public void onFeaturePick(Map<String, String> properties, List<TouchLabel> labels, float positionX, float positionY) {
+    public void onFeaturePick(Map<String, String> properties, float positionX, float positionY) {
         if (properties.isEmpty()) {
             Log.d("Tangram", "Empty selection");
             return;
@@ -183,18 +185,24 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     }
 
     @Override
-    public void onLabelsPick(List<TouchLabel> labels, float positionX, float positionY) {
-        if (labels.isEmpty()) {
-            Log.d("Tangram", "Empty selection of labels");
+    public void onLabelPick(TouchLabel label, float positionX, float positionY) {
+        if (label == null) {
+            Log.d("Tangram", "Empty label selection");
             return;
         }
 
-        Log.d("Tangram", "Picked label");
+        String name = label.getProperties().get("name");
+        if (name.isEmpty()) {
+            name = "unnamed";
+        }
+
+        Log.d("Tangram", "Picked label: " + name);
+        final String message = name;
         runOnUiThread(new Runnable() {
                           @Override
                           public void run() {
                               Toast.makeText(getApplicationContext(),
-                                      "Selected label",
+                                      "Selected label: " + message,
                                       Toast.LENGTH_SHORT).show();
                           }
                       });

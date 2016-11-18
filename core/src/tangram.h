@@ -26,7 +26,7 @@ using FeatureSelectionCallback = std::function<void(const std::vector<TouchItem>
 
 struct TouchLabel {
     LabelType type;
-    std::vector<LngLat> coordinate;
+    LngLat coordinate;
     TouchItem touchItem;
 };
 

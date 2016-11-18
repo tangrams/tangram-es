@@ -220,6 +220,15 @@ extern "C" {
         });
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickLabels(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat posX, jfloat posY, jobject listener) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        auto object = jniEnv->NewGlobalRef(listener);
+        map->pickLabelsAt(posX, posY, [object](const auto& labels) {
+            labelsPickCallback(object, labels);
+        });
+    }
+
     // NOTE unsigned int to jlong for precision... else we can do jint return
     JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerAdd(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
         assert(mapPtr > 0);

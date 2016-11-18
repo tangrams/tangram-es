@@ -447,9 +447,11 @@ void Map::render() {
             // TODO: read with a scalable thumb size
             GLuint color = impl->selectionBuffer->readAt(x, y);
 
-            for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                if (auto props = tile->getSelectionFeature(color)) {
-                    items.push_back({props, {selectionQuery.position.x, selectionQuery.position.y}, 0});
+            if (color != 0) {
+                for (const auto& tile : impl->tileManager.getVisibleTiles()) {
+                    if (auto props = tile->getSelectionFeature(color)) {
+                        items.push_back({props, {selectionQuery.position.x, selectionQuery.position.y}, 0});
+                    }
                 }
             }
 
@@ -470,14 +472,16 @@ void Map::render() {
             // TODO: read with a scalable thumb size and iterate over the read colors
             GLuint color = impl->selectionBuffer->readAt(x, y);
 
-            // Retrieve the label for this selection color
-            if (impl->labels.getLabel(impl->scene->styles(), impl->tileManager.getVisibleTiles(), color, label, tile)) {
-                std::vector<TouchLabel> touchLabels;
-                std::vector<LngLat> coordinates = label->coordinates(*tile, impl->view.getMapProjection());
-                float distance = sqrt(label->screenDistance2(labelQuery.position));
+            if (color != 0) {
+                // Retrieve the label for this selection color
+                if (impl->labels.getLabel(impl->scene->styles(), impl->tileManager.getVisibleTiles(), color, label, tile)) {
+                    std::vector<TouchLabel> touchLabels;
+                    LngLat coordinate = label->coordinate(*tile, impl->view.getMapProjection());
+                    float distance = sqrt(label->screenDistance2(labelQuery.position));
 
-                labels.push_back({label->renderType(), coordinates,
-                    {label->options().properties, {labelQuery.position.x, labelQuery.position.y}, distance}});
+                    labels.push_back({label->renderType(), coordinate,
+                        {label->options().properties, {labelQuery.position.x, labelQuery.position.y}, distance}});
+                }
             }
 
             // TODO: sort touch labels by distance
