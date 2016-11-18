@@ -117,5 +117,7 @@ struct Filter {
     const std::string& key() const;
     const std::vector<Filter>& operands() const;
 
+    bool isValid() const { return !data.is<none_type>(); }
+    operator bool() const { return isValid(); }
 };
 }

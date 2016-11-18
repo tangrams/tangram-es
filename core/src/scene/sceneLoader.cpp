@@ -1212,54 +1212,49 @@ void SceneLoader::loadCameras(Node _cameras, const std::shared_ptr<Scene>& _scen
 
 Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
 
-    if (!_filter) {  return Filter(); }
-
-    std::vector<Filter> filters;
-
     switch (_filter.Type()) {
     case NodeType::Scalar: {
 
         const std::string& val = _filter.Scalar();
-
         if (val.compare(0, 8, "function") == 0) {
             return Filter::MatchFunction(scene.addJsFunction(val));
         }
-        break;
+        return Filter();
     }
     case NodeType::Sequence: {
-        for (const auto& filtItr : _filter) {
-            filters.push_back(generateFilter(filtItr, scene));
-        }
-        break;
+        return generateAnyFilter(_filter, scene);
     }
     case NodeType::Map: {
+        std::vector<Filter> filters;
         for (const auto& filtItr : _filter) {
             const std::string& key = filtItr.first.Scalar();
             Node node = _filter[key];
-
+            Filter f;
             if (key == "none") {
-                filters.push_back(generateNoneFilter(node, scene));
+                f = generateNoneFilter(node, scene);
             } else if (key == "not") {
-                filters.push_back(generateNoneFilter(node, scene));
+                f = generateNoneFilter(node, scene);
             } else if (key == "any") {
-                filters.push_back(generateAnyFilter(node, scene));
+                f = generateAnyFilter(node, scene);
             } else if (key == "all") {
-                filters.push_back(generateAllFilter(node, scene));
+                f = generateAllFilter(node, scene);
             } else {
-                filters.push_back(generatePredicate(node, key));
+                f = generatePredicate(node, key);
             }
+
+            if (f.isValid()) { filters.push_back(std::move(f)); }
         }
-        break;
+
+        if (!filters.empty()) {
+            if (filters.size() == 1) { return filters.front(); }
+
+            return Filter::MatchAll(std::move(filters));
+        }
+        return Filter();
     }
     default:
-        // logMsg
-        break;
+        return Filter();
     }
-
-    if (filters.size() == 0) { return Filter(); }
-    if (filters.size() == 1) { return std::move(filters.front()); }
-    if (_filter.IsSequence()) { return Filter::MatchAny(std::move(filters)); }
-    return (Filter::MatchAll(std::move(filters)));
 }
 
 Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
@@ -1304,70 +1299,73 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
             if (valItr.first.Scalar() == "min") {
 
                 if (!getDouble(valItr.second, minVal, "min")) {
-                    LOGNode("Invalid  'filter'", _node);
                     return Filter();
                 }
             } else if (valItr.first.Scalar() == "max") {
 
                 if (!getDouble(valItr.second, maxVal, "max")) {
-                    LOGNode("Invalid  'filter'", _node);
                     return Filter();
                 }
             } else {
-                LOGNode("Invalid  'filter'", _node);
                 return Filter();
             }
         }
         return Filter::MatchRange(_key, minVal, maxVal);
     }
     default:
-        LOGNode("Invalid 'filter'", _node);
         return Filter();
     }
 }
 
 Filter SceneLoader::generateAnyFilter(Node _filter, Scene& scene) {
-    std::vector<Filter> filters;
 
-    if (!_filter.IsSequence()) {
-        LOGW("Invalid filter. 'Any' expects a list.");
-        return Filter();
+    if (_filter.IsSequence()) {
+        std::vector<Filter> filters;
+
+        for (const auto& filt : _filter) {
+            if (Filter f = generateFilter(filt, scene)) {
+                filters.push_back(std::move(f));
+            } else { return Filter(); }
+        }
+        return Filter::MatchAny(std::move(filters));
     }
-    for (const auto& filt : _filter) {
-        filters.emplace_back(generateFilter(filt, scene));
-    }
-    return Filter::MatchAny(std::move(filters));
+    return Filter();
 }
 
 Filter SceneLoader::generateAllFilter(Node _filter, Scene& scene) {
-    std::vector<Filter> filters;
 
-    if (!_filter.IsSequence()) {
-        LOGW("Invalid filter. 'All' expects a list.");
-        return Filter();
+    if (_filter.IsSequence()) {
+        std::vector<Filter> filters;
+
+        for (const auto& filt : _filter) {
+            if (Filter f = generateFilter(filt, scene)) {
+                filters.push_back(std::move(f));
+            } else { return Filter(); }
+        }
+        return Filter::MatchAll(std::move(filters));
     }
-    for (const auto& filt : _filter) {
-        filters.emplace_back(generateFilter(filt, scene));
-    }
-    return Filter::MatchAll(std::move(filters));
+    return Filter();
 }
 
 Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
 
-    std::vector<Filter> filters;
-
     if (_filter.IsSequence()) {
-        for (const auto& filt : _filter) {
-            filters.emplace_back(generateFilter(filt, scene));
-        }
-    } else if (_filter.IsMap() || _filter.IsScalar()) { // not case
-        filters.emplace_back(generateFilter(_filter, scene));
-    } else {
-        LOGW("Invalid filter. 'None' expects a list or an object.");
-        return Filter();
-    }
+        std::vector<Filter> filters;
 
-    return Filter::MatchNone(std::move(filters));
+        for (const auto& filt : _filter) {
+            if (Filter f = generateFilter(filt, scene)) {
+                filters.push_back(std::move(f));
+            } else { return Filter(); }
+        }
+        return Filter::MatchNone(std::move(filters));
+
+    } else if (_filter.IsMap() || _filter.IsScalar()) {
+        // 'not' case
+        if (Filter f = generateFilter(_filter, scene)) {
+            return Filter::MatchNone({std::move(f)});
+        }
+    }
+    return Filter();
 }
 
 void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& scene, const std::string& prefix,
@@ -1592,6 +1590,10 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, c
             }
         } else if (key == "filter") {
             filter = generateFilter(member.second, *scene);
+            if (!filter.isValid()) {
+                LOGNode("Invalid 'filter' in layer '%s'", member.second, layerName.c_str());
+                return { layerName, {}, {}, {}, false };
+            }
         } else if (key == "properties") {
             // TODO: ignored for now
         } else if (key == "visible") {
