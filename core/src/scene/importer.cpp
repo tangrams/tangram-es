@@ -298,14 +298,24 @@ void Importer::mergeMapFields(Node& target, const Node& import) {
             continue;
         }
 
-        switch(entry.second.Type()) {
+        if (target[key].Type() != entry.second.Type()) {
+            LOGN("Merging different node types: '%s'\n'%s'\n<==\n'%s'",
+                 key.c_str(), Dump(target[key]).c_str(), Dump(entry.second).c_str());
+        }
+
+        switch(target[key].Type()) {
             case NodeType::Scalar:
             case NodeType::Sequence:
                 target[key] = entry.second;
                 break;
+
             case NodeType::Map: {
-                Node newTarget = target[key];
-                mergeMapFields(newTarget, entry.second);
+                auto newTarget = target[key];
+                if (entry.second.IsMap()) {
+                    mergeMapFields(newTarget, entry.second);
+                } else {
+                    target[key] = entry.second;
+                }
                 break;
             }
             default:
