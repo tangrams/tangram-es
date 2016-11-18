@@ -7,6 +7,8 @@
 #include "platform.h"
 #include "view/view.h"
 #include "log.h"
+#include "tile/tile.h"
+#include "util/mapProjection.h"
 
 namespace Tangram {
 
@@ -14,10 +16,10 @@ const float Label::activation_distance_threshold = 2;
 
 Label::Label(Label::WorldTransform _worldTransform, glm::vec2 _size, uint32_t _selectionColor, Type _type, Options _options)
     : m_state(State::none),
+      m_selectionColor(_selectionColor),
       m_type(_type),
       m_worldTransform(_worldTransform),
       m_dim(_size),
-      m_selectionColor(_selectionColor),
       m_options(_options) {
 
     if (!m_options.collide || m_type == Type::debug) {
@@ -50,6 +52,24 @@ void Label::setParent(Label& _parent, bool _definePriority, bool _defineCollide)
 
 float Label::screenDistance2(glm::vec2 _screenPosition) const {
     return glm::length2(m_obb.getCentroid() - _screenPosition);
+}
+
+std::vector<LngLat> Label::coordinates(const Tile& _tile, const MapProjection& _projection) {
+    std::vector<LngLat> coordinates;
+
+    if (m_type == Type::line) {
+        for (int i = 0; i < 2; ++i) {
+            glm::vec2 tileCoord = glm::vec2(m_worldTransform.positions[i]);
+            glm::dvec2 degrees = _tile.coordToLngLat(tileCoord, _projection);
+            coordinates.push_back({degrees.x, degrees.y});
+        }
+    } else {
+        glm::vec2 tileCoord = glm::vec2(m_worldTransform.position);
+        glm::dvec2 degrees = _tile.coordToLngLat(tileCoord, _projection);
+        coordinates.push_back({degrees.x, degrees.y});
+    }
+
+    return coordinates;
 }
 
 float Label::worldLineLength2() const {

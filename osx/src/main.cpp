@@ -112,9 +112,11 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             for (const auto& item : items) {
                 if (item.properties->getString("name", name)) {
                     LOG("Selected %s", name.c_str());
-                    LOGS("%s with %d labels", name.c_str(), item.labels.size());
                 }
             }
+        });
+
+        map->pickLabelsAt(x, y, [](const auto& labels) {
         });
 
         static double last_x = 0, last_y = 0;

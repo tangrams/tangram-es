@@ -16,17 +16,21 @@ enum LabelType {
     text,
 };
 
-struct TouchLabel {
-    LabelType type;
-    std::vector<LngLat> coordinates;
-};
-
 struct TouchItem {
     std::shared_ptr<Properties> properties;
-    std::vector<TouchLabel> labels;
     float position[2];
     float distance;
 };
+
+using FeatureSelectionCallback = std::function<void(const std::vector<TouchItem>&)>;
+
+struct TouchLabel {
+    LabelType type;
+    std::vector<LngLat> coordinate;
+    TouchItem touchItem;
+};
+
+using LabelSelectionCallback = std::function<void(const std::vector<TouchLabel>&)>;
 
 struct SceneUpdate {
     std::string path;
@@ -243,7 +247,9 @@ public:
     // efficiency, but can cause errors if your application code makes OpenGL calls (false by default)
     void useCachedGlState(bool _use);
 
-    void pickFeaturesAt(float _x, float _y, std::function<void(const std::vector<TouchItem>&)> _onReadyCallback);
+    void pickFeaturesAt(float _x, float _y, FeatureSelectionCallback _onFeatureSelectCallback);
+
+    void pickLabelsAt(float _x, float _y, LabelSelectionCallback _onTouchLabelSelectCallback);
 
     // Run this task asynchronously to Tangram's main update loop.
     void runAsyncTask(std::function<void()> _task);

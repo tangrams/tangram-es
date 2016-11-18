@@ -19,6 +19,8 @@
 namespace Tangram {
 
 struct ViewState;
+class Tile;
+class MapProjection;
 
 class Label {
 
@@ -157,6 +159,9 @@ public:
     bool nextAnchor();
 
     bool setAnchorIndex(int _index);
+
+    // Returns the list of lon/lat of the feature the label is associated with
+    std::vector<LngLat> coordinates(const Tile& _tile, const MapProjection& _projection);
 
     // Returns the screen distance squared from a screen coordinate
     float screenDistance2(glm::vec2 _screenPosition) const;

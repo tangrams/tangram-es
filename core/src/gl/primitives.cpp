@@ -22,7 +22,6 @@ namespace Primitives {
 static bool s_initialized;
 static std::unique_ptr<ShaderProgram> s_shader;
 static std::unique_ptr<VertexLayout> s_layout;
-static glm::vec2 s_resolution;
 
 static UniformLocation s_uColor{"u_color"};
 static UniformLocation s_uProj{"u_proj"};

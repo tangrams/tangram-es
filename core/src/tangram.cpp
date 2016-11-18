@@ -44,8 +44,13 @@ class Map::Impl {
 public:
 
     struct FeatureSelectionQuery {
-        float position[2];
-        std::function<void(const std::vector<TouchItem>&)> callback;
+        glm::vec2 position;
+        FeatureSelectionCallback onFeatureSelection;
+    };
+
+    struct LabelSelectionQuery {
+        glm::vec2 position;
+        LabelSelectionCallback onLabelSelection;
     };
 
     void setScene(std::shared_ptr<Scene>& _scene);
@@ -86,7 +91,8 @@ public:
 
     bool cacheGlState;
 
-    std::vector<FeatureSelectionQuery> selectionQueries;
+    std::vector<FeatureSelectionQuery> featureSelectionQueries;
+    std::vector<LabelSelectionQuery> labelSelectionQueries;
 };
 
 void Map::Impl::setEase(EaseField _f, Ease _e) {
@@ -382,8 +388,14 @@ bool Map::update(float _dt) {
     return viewComplete;
 }
 
-void Map::pickFeaturesAt(float _x, float _y, std::function<void(const std::vector<TouchItem>&)> _onReadyCallback) {
-    impl->selectionQueries.push_back({{_x, _y}, _onReadyCallback});
+void Map::pickFeaturesAt(float _x, float _y, std::function<void(const std::vector<TouchItem>&)> _onFeatureSelectCallback) {
+    impl->featureSelectionQueries.push_back({{_x, _y}, _onFeatureSelectCallback});
+
+    requestRender();
+}
+
+void Map::pickLabelsAt(float _x, float _y, LabelSelectionCallback _onTouchLabelSelectCallback) {
+    impl->labelSelectionQueries.push_back({{_x, _y}, _onTouchLabelSelectCallback});
 
     requestRender();
 }
@@ -411,7 +423,7 @@ void Map::render() {
     impl->renderState.jobQueue.runJobs();
 
     // Render feature selection pass to offscreen framebuffer
-    if (impl->selectionQueries.size() > 0 || drawSelectionBuffer) {
+    if (impl->featureSelectionQueries.size() > 0 || impl->labelSelectionQueries.size() > 0 || drawSelectionBuffer) {
 
         impl->selectionBuffer->applyAsRenderTarget(impl->renderState);
 
@@ -425,49 +437,57 @@ void Map::render() {
             }
         }
 
-        for (const auto& query : impl->selectionQueries) {
+        // Resolve feature selection queries
+        for (const auto& selectionQuery : impl->featureSelectionQueries) {
             std::vector<TouchItem> items;
 
-            float x = query.position[0] / impl->view.getWidth();
-            float y = (1.f - (query.position[1] / impl->view.getHeight()));
+            float x = selectionQuery.position.x / impl->view.getWidth();
+            float y = (1.f - (selectionQuery.position.y / impl->view.getHeight()));
 
             // TODO: read with a scalable thumb size
             GLuint color = impl->selectionBuffer->readAt(x, y);
 
-            // Retrieve labels for this selection color
-            auto& tiles = impl->tileManager.getVisibleTiles();
-            auto labels = impl->labels.getLabels(impl->scene->styles(), tiles, color);
-
-            for (const auto& tile : tiles) {
+            for (const auto& tile : impl->tileManager.getVisibleTiles()) {
                 if (auto props = tile->getSelectionFeature(color)) {
-                    std::vector<TouchLabel> touchLabels;
-
-                    for (auto label : labels) {
-                        std::vector<LngLat> coordinates;
-
-                        if (label->type() == Label::Type::line) {
-                            for (int i = 0; i < 2; ++i) {
-                                glm::vec2 tileCoord = glm::vec2(label->worldTransform().positions[i]);
-                                glm::dvec2 degrees = tile->coordToLngLat(tileCoord, impl->view.getMapProjection());
-                                coordinates.push_back({degrees.x, degrees.y});
-                            }
-                        } else {
-                            glm::vec2 tileCoord = glm::vec2(label->worldTransform().position);
-                            glm::dvec2 degrees = tile->coordToLngLat(tileCoord, impl->view.getMapProjection());
-                            coordinates.push_back({degrees.x, degrees.y});
-                        }
-
-                        touchLabels.push_back({label->renderType(), coordinates});
-                    }
-
-                    items.push_back({props, touchLabels, {query.position[0], query.position[1]}, 0});
+                    items.push_back({props, {selectionQuery.position.x, selectionQuery.position.y}, 0});
                 }
             }
 
-            query.callback(items);
+            selectionQuery.onFeatureSelection(items);
         }
 
-        impl->selectionQueries.clear();
+        impl->featureSelectionQueries.clear();
+
+        // Resolve label selection queries
+        for (const auto& labelQuery : impl->labelSelectionQueries) {
+            std::vector<TouchLabel> labels;
+            Label* label = nullptr;
+            Tile* tile = nullptr;
+
+            float x = labelQuery.position.x / impl->view.getWidth();
+            float y = (1.f - (labelQuery.position.y / impl->view.getHeight()));
+
+            // TODO: read with a scalable thumb size and iterate over the read colors
+            GLuint color = impl->selectionBuffer->readAt(x, y);
+
+            // Retrieve the label for this selection color
+            if (impl->labels.getLabel(impl->scene->styles(), impl->tileManager.getVisibleTiles(), color, label, tile)) {
+                if (auto props = tile->getSelectionFeature(color)) {
+                    std::vector<TouchLabel> touchLabels;
+                    std::vector<LngLat> coordinates = label->coordinates(*tile, impl->view.getMapProjection());
+                    float distance = sqrt(label->screenDistance2(labelQuery.position));
+
+                    labels.push_back({label->renderType(), coordinates,
+                        {props, {labelQuery.position.x, labelQuery.position.y}, distance}});
+                }
+            }
+
+            // TODO: sort touch labels by distance
+
+            labelQuery.onLabelSelection(labels);
+        }
+
+        impl->labelSelectionQueries.clear();
     }
 
     // Setup default framebuffer for a new frame
