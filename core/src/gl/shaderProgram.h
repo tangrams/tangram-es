@@ -89,18 +89,6 @@ public:
 
     void setDescription(std::string _description) { m_description = _description; }
 
-    static std::string shaderSourceBlock(const unsigned char* data, size_t size) {
-        std::string block;
-        if (data[size - 1] == '\n') {
-            block.append(reinterpret_cast<const char*>(data), size);
-        } else {
-            block.reserve(size + 2);
-            block.append(reinterpret_cast<const char*>(data), size);
-            block += '\n';
-        }
-        return block;
-    }
-
 private:
 
     // Get a uniform value from the cache, and returns false when it's a cache miss
@@ -143,7 +131,5 @@ private:
     std::string applySourceBlocks(const std::string& source, bool fragShader) const;
 
 };
-
-#define SHADER_SOURCE(NAME) ShaderProgram::shaderSourceBlock(NAME ## _data, NAME ## _size)
 
 }
