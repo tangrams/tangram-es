@@ -115,10 +115,9 @@ bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
     if (!marker) { return false; }
 
     // If the marker does not have a 'point' feature mesh built, build it.
-    if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
+    if (!marker->mesh() || !marker->feature() || marker->feature()->geometry.type != GeometryType::points) {
         auto feature = std::make_unique<Feature>();
-        feature->geometryType = GeometryType::points;
-        feature->points.emplace_back();
+        feature->geometry.type = GeometryType::points;
         marker->setFeature(std::move(feature));
         buildGeometry(*marker, m_zoom);
     }
@@ -138,7 +137,7 @@ bool MarkerManager::setPointEased(MarkerID markerID, LngLat lngLat, float durati
     if (!marker) { return false; }
 
     // If the marker does not have a 'point' feature built, set that point immediately.
-    if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
+    if (!marker->mesh() || !marker->feature() || marker->feature()->geometry.type != GeometryType::points) {
         return setPoint(markerID, lngLat);
     }
 
@@ -158,9 +157,8 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
 
     // Build a feature for the new set of polyline points.
     auto feature = std::make_unique<Feature>();
-    feature->geometryType = GeometryType::lines;
-    feature->lines.emplace_back();
-    auto& line = feature->lines.back();
+    feature->geometry.type = GeometryType::lines;
+    auto& line = feature->geometry;
 
     // Determine the bounds of the polyline.
     BoundingBox bounds;
@@ -182,8 +180,9 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
     for (int i = 0; i < count; ++i) {
         auto degrees = glm::dvec2(coordinates[i].longitude, coordinates[i].latitude);
         auto meters = m_mapProjection->LonLatToMeters(degrees);
-        line.emplace_back((meters.x - origin.x) * scale, (meters.y - origin.y) * scale, 0.f);
+        line.addPoint(glm::vec3((meters.x - origin.x) * scale, (meters.y - origin.y) * scale, 0.f));
     }
+    line.endLine();
 
     // Update the feature data for the marker.
     marker->setFeature(std::move(feature));
@@ -204,9 +203,9 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
 
     // Build a feature for the new set of polygon points.
     auto feature = std::make_unique<Feature>();
-    feature->geometryType = GeometryType::polygons;
-    feature->polygons.emplace_back();
-    auto& polygon = feature->polygons.back();
+    feature->geometry.type = GeometryType::polygons;
+    //feature->polygons.emplace_back();
+    auto& polygon = feature->geometry;
 
     // Determine the bounds of the polygon.
     BoundingBox bounds;
@@ -235,15 +234,15 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
     ring = coordinates;
     for (int i = 0; i < rings; ++i) {
         int count = counts[i];
-        polygon.emplace_back();
-        auto& line = polygon.back();
         for (int j = 0; j < count; ++j) {
             auto degrees = glm::dvec2(ring[j].longitude, ring[j].latitude);
             auto meters = m_mapProjection->LonLatToMeters(degrees);
-            line.emplace_back((meters.x - origin.x) * scale, (meters.y - origin.y) * scale, 0.f);
+            polygon.addPoint(glm::vec3((meters.x - origin.x) * scale, (meters.y - origin.y) * scale, 0.f));
         }
+        polygon.endRing();
         ring += count;
     }
+    polygon.endPoly();
 
     // Update the feature data for the marker.
     marker->setFeature(std::move(feature));

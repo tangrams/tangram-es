@@ -57,13 +57,13 @@ TEST_CASE( "Test evalFilterFn with feature and keywords", "[Duktape][evalFilterF
 
 TEST_CASE( "Test evalFilterFn with feature and keyword geometry", "[Duktape][evalFilterFn]") {
     Feature points;
-    points.geometryType = GeometryType::points;
+    points.geometry.type = GeometryType::points;
 
     Feature lines;
-    lines.geometryType = GeometryType::lines;
+    lines.geometry.type = GeometryType::lines;
 
     Feature polygons;
-    polygons.geometryType = GeometryType::polygons;
+    polygons.geometry.type = GeometryType::polygons;
 
     StyleContext ctx;
 

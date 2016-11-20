@@ -17,15 +17,13 @@ namespace PbfParser {
     struct ParserContext {
         ParserContext(int32_t _sourceId) {
             values.reserve(256);
-            coordinates.reserve(256);
             feature.props.sourceId = _sourceId;
+            feature.geometry.points().reserve(512);
         }
 
         std::vector<std::string> keys;
         std::vector<TagValue> values;
         std::vector<protobuf::message> featureMsgs;
-        std::vector<Point> coordinates;
-        std::vector<int> numCoordinates;
         // Map Key ID -> Tag values
         std::vector<int> featureTags;
         std::vector<int> previousTags;

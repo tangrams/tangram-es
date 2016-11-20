@@ -5,6 +5,7 @@
 namespace Tangram {
 namespace TopoJson {
 
+
 Topology getTopology(const JsonDocument& _document, const Transform& _proj) {
 
     Topology topo;
@@ -39,23 +40,19 @@ Topology getTopology(const JsonDocument& _document, const Transform& _proj) {
     topo.arcs.reserve(jsonArcs.Size());
 
     // Decode and transform the points that make up 'arcs'
-    for (auto jsonArcsIt = jsonArcs.Begin(); jsonArcsIt != jsonArcs.End(); ++jsonArcsIt) {
-
-        const auto& jsonArc = *jsonArcsIt;
+    for (auto& jsonArc : jsonArcs) {
 
         if (!jsonArc.IsArray()) { // According to spec, jsonArc.Size() >= 2 should also hold
             continue;
         }
 
-        Line arc;
+        std::vector<Point> arc;
         arc.reserve(jsonArc.Size());
 
         // Quantized position
         glm::ivec2 q;
 
-        for (auto jsonCoordsIt = jsonArc.Begin(); jsonCoordsIt != jsonArc.End(); ++jsonCoordsIt) {
-
-            const auto& jsonCoords = *jsonCoordsIt;
+        for (auto& jsonCoords : jsonArc) {
 
             arc.push_back(getPoint(jsonCoords, topo, q));
         }
@@ -79,13 +76,11 @@ Point getPoint(const JsonValue& _coordinates, const Topology& _topology, glm::iv
 
 }
 
-Line getLine(const JsonValue& _arcs, const Topology& _topology) {
+bool getLine(const JsonValue& _arcs, const Topology& _topology, Geometry<Point>& _geom) {
 
-    Line line;
+    if (!_arcs.IsArray()) { return false; }
 
-    if (!_arcs.IsArray()) {
-        return line;
-    }
+    int numPoints = 0;
 
     for (auto arcIt = _arcs.Begin(); arcIt != _arcs.End(); ++arcIt) {
 
@@ -119,46 +114,49 @@ Line getLine(const JsonValue& _arcs, const Topology& _topology) {
         }
 
         for (auto pointIt = begin; pointIt != end; pointIt += inc) {
-            line.push_back(*pointIt);
+            _geom.addPoint(*pointIt);
+            numPoints++;
         }
-
     }
 
-    return line;
-
+    if (numPoints > 0) {
+        _geom.endLine();
+        return true;
+    }
+    return false;
 }
 
-Polygon getPolygon(const JsonValue& _arcSets, const Topology& _topology) {
+bool getPolygon(const JsonValue& _arcSets, const Topology& _topology, Geometry<Point>& _geom) {
 
-    Polygon polygon;
+    if (!_arcSets.IsArray()) { return false; }
 
-    if (!_arcSets.IsArray()) {
-        return polygon;
+    int numRings = 0;
+    for (auto& arcSet : _arcSets) {
+        if (getLine(arcSet, _topology, _geom)) {
+            numRings++;
+        }
+    }
+    if (numRings > 0) {
+        _geom.endPoly();
+        return true;
     }
 
-    for (auto arcSetIt = _arcSets.Begin(); arcSetIt != _arcSets.End(); ++arcSetIt) {
-
-        auto ring = getLine(*arcSetIt, _topology);
-        polygon.push_back(ring);
-
-    }
-
-    return polygon;
-
+    return false;
 }
 
-Feature getFeature(const JsonValue& _geometry, const Topology& _topology, int32_t _source) {
+void processFeature(const JsonValue& _geometry, const Topology& _topology, int32_t _source,
+                    Feature& _feature, TileDataSink& _sink) {
 
     static const JsonValue keyProperties("properties");
     static const JsonValue keyType("type");
     static const JsonValue keyCoordinates("coordinates");
     static const JsonValue keyArcs("arcs");
 
-    Feature feature;
+    _feature.geometry.clear();
 
     auto propertiesIt = _geometry.FindMember(keyProperties);
     if (propertiesIt != _geometry.MemberEnd() && propertiesIt->value.IsObject()) {
-        feature.props = GeoJson::getProperties(propertiesIt->value, _source);
+        _feature.props = GeoJson::getProperties(propertiesIt->value, _source);
     }
 
     std::string type;
@@ -167,59 +165,64 @@ Feature getFeature(const JsonValue& _geometry, const Topology& _topology, int32_
         type = typeIt->value.GetString();
     }
 
-    if (type == "Point") {
-        feature.geometryType = GeometryType::points;
-        auto coordinatesIt = _geometry.FindMember(keyCoordinates);
-        if (coordinatesIt != _geometry.MemberEnd()) {
-            glm::ivec2 cursor;
-            feature.points.push_back(getPoint(coordinatesIt->value, _topology, cursor));
-        }
-    } else if (type == "MultiPoint") {
-        feature.geometryType = GeometryType::points;
-        auto coordinatesIt = _geometry.FindMember(keyCoordinates);
-        if (coordinatesIt != _geometry.MemberEnd() && coordinatesIt->value.IsArray()) {
-            auto& coordinates = coordinatesIt->value;
-            for (auto point = coordinates.Begin(); point != coordinates.End(); ++point) {
-                glm::ivec2 cursor;
-                feature.points.push_back(getPoint(*point, _topology, cursor));
-            }
-        }
-    } else if (type == "LineString") {
-        feature.geometryType = GeometryType::lines;
-        auto arcsIt = _geometry.FindMember(keyArcs);
-        if (arcsIt != _geometry.MemberEnd()) {
-            feature.lines.push_back(getLine(arcsIt->value, _topology));
-        }
-    } else if (type == "MultiLineString") {
-        feature.geometryType = GeometryType::lines;
-        auto arcsIt = _geometry.FindMember(keyArcs);
-        if (arcsIt != _geometry.MemberEnd() && arcsIt->value.IsArray()) {
-            auto& arcs = arcsIt->value;
-            for (auto arcList = arcs.Begin(); arcList != arcs.End(); ++arcList) {
-                feature.lines.push_back(getLine(*arcList, _topology));
-            }
-        }
-    } else if (type == "Polygon") {
-        feature.geometryType = GeometryType::polygons;
-        auto arcsIt = _geometry.FindMember(keyArcs);
-        if (arcsIt != _geometry.MemberEnd()) {
-            feature.polygons.push_back(getPolygon(arcsIt->value, _topology));
-        }
-    } else if (type == "MultiPolygon") {
-        feature.geometryType = GeometryType::polygons;
-        auto arcsIt = _geometry.FindMember(keyArcs);
-        if (arcsIt != _geometry.MemberEnd() && arcsIt->value.IsArray()) {
-            auto& arcs = arcsIt->value;
-            for (auto arcList = arcs.Begin(); arcList != arcs.End(); ++arcList) {
-                feature.polygons.push_back(getPolygon(*arcList, _topology));
-            }
-        }
-    } else if (type == "GeometryCollection") {
-        // Not handled
+    if (type == "Point" || type == "MultiPoint") {
+        _feature.geometry.type = GeometryType::points;
+    } else if (type == "LineString" || type == "MultiLineString") {
+        _feature.geometry.type = GeometryType::lines;
+    } else if (type == "Polygon" || type == "MultiPolygon") {
+        _feature.geometry.type = GeometryType::polygons;
+    } else {
+        // TODO: Unhandled GeometryCollection
+        return;
     }
 
-    return feature;
+    if (!_sink.matchFeature(_feature)) {
+        return;
+    }
 
+    bool multi = type.compare(0, 5, "Multi") == 0;
+
+    if (_feature.geometry.type == GeometryType::points) {
+        auto coordinatesIt = _geometry.FindMember(keyCoordinates);
+        if (coordinatesIt != _geometry.MemberEnd()) {
+            if (!multi) {
+                glm::ivec2 cursor;
+                _feature.geometry.addPoint(getPoint(coordinatesIt->value,
+                                                    _topology, cursor));
+
+            } else if (coordinatesIt->value.IsArray()) {
+                for (auto& point : coordinatesIt->value) {
+                    glm::ivec2 cursor;
+                    _feature.geometry.addPoint(getPoint(point, _topology, cursor));
+                }
+            }
+        }
+    } else if (_feature.geometry.type == GeometryType::lines) {
+        auto arcsIt = _geometry.FindMember(keyArcs);
+        if (arcsIt != _geometry.MemberEnd()) {
+            if (!multi) {
+                getLine(arcsIt->value, _topology, _feature.geometry);
+
+            } else if (arcsIt->value.IsArray()) {
+                for (auto& arcList : arcsIt->value) {
+                    getLine(arcList, _topology, _feature.geometry);
+                }
+            }
+        }
+    } else if (_feature.geometry.type == GeometryType::polygons) {
+        auto arcsIt = _geometry.FindMember(keyArcs);
+        if (arcsIt != _geometry.MemberEnd()) {
+            if (!multi) {
+                getPolygon(arcsIt->value, _topology, _feature.geometry);
+
+            } else if (arcsIt->value.IsArray()) {
+                for (auto& arcList : arcsIt->value) {
+                    getPolygon(arcList, _topology, _feature.geometry);
+                }
+            }
+        }
+    }
+    _sink.addFeature(_feature);
 }
 
 bool processLayer(JsonValue::MemberIterator& _objectIt, const Topology& _topology,
@@ -229,25 +232,22 @@ bool processLayer(JsonValue::MemberIterator& _objectIt, const Topology& _topolog
         return false;
     }
 
+    Feature feature;
+
     JsonValue& object = _objectIt->value;
     auto type = object.FindMember("type");
-    if (type != object.MemberEnd() && strcmp("GeometryCollection", type->value.GetString()) == 0) {
+    if (type != object.MemberEnd() &&
+        strcmp("GeometryCollection", type->value.GetString()) == 0) {
+
         auto geometries = object.FindMember("geometries");
+
         if (geometries != object.MemberEnd() && geometries->value.IsArray()) {
-            for (auto it = geometries->value.Begin(); it != geometries->value.End(); ++it) {
-
-                auto feat = getFeature(*it, _topology, _source);
-
-                // TODO could be optimized by skipping geometry parsing for unmatched features
-                if (_sink.matchFeature(feat)) {
-                    _sink.addFeature(feat);
-                }
+            for (auto& it : geometries->value) {
+                processFeature(it, _topology, _source, feature, _sink);
             }
         }
     }
-
     return true;
-
 }
 
 }

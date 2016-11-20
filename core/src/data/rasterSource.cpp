@@ -96,14 +96,22 @@ bool RasterSource::process(const TileTask& _task, const MapProjection& _projecti
     std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
 
     Feature rasterFeature;
-    rasterFeature.geometryType = GeometryType::polygons;
-    rasterFeature.polygons = { { {
-                                         {0.0f, 0.0f, 0.0f},
-                                         {1.0f, 0.0f, 0.0f},
-                                         {1.0f, 1.0f, 0.0f},
-                                         {0.0f, 1.0f, 0.0f},
-                                         {0.0f, 0.0f, 0.0f}
-                                 } } };
+    rasterFeature.geometry.type = GeometryType::polygons;
+    // rasterFeature.geometry = Geometry<Point>::polygon { { {
+    //                                      {0.0f, 0.0f, 0.0f},
+    //                                      {1.0f, 0.0f, 0.0f},
+    //                                      {1.0f, 1.0f, 0.0f},
+    //                                      {0.0f, 1.0f, 0.0f},
+    //                                      {0.0f, 0.0f, 0.0f}
+    //                              } } };
+    rasterFeature.geometry.addPoint({0.0f, 0.0f, 0.0f});
+    rasterFeature.geometry.addPoint({1.0f, 0.0f, 0.0f});
+    rasterFeature.geometry.addPoint({1.0f, 1.0f, 0.0f});
+    rasterFeature.geometry.addPoint({0.0f, 1.0f, 0.0f});
+    rasterFeature.geometry.addPoint({0.0f, 0.0f, 0.0f});
+    rasterFeature.geometry.endRing();
+    rasterFeature.geometry.endPoly();
+
     rasterFeature.props = Properties();
 
     _sink.beginLayer("");
