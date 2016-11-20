@@ -38,7 +38,7 @@ struct TestContext {
 
     std::shared_ptr<TileData> tileData;
 
-    TileBuilder tileBuilder;
+    std::unique_ptr<TileBuilder> tileBuilder;
 
     void loadScene(const char* sceneFile) {
         scene = std::make_shared<Scene>(platform, sceneFile);
@@ -56,13 +56,8 @@ struct TestContext {
         styleContext.initFunctions(*scene);
         styleContext.setKeywordZoom(0);
 
-// <<<<<<< HEAD
-//         source = *scene->tileSources().begin();
-//         tileBuilder = std::make_unique<TileBuilder>(scene);
-// =======
-        source = scene->dataSources()[0];
-        tileBuilder.setScene(scene);
-// >>>>>>> wip: TileDataSink
+        source = scene->tileSources()[0];
+        tileBuilder = std::make_unique<TileBuilder>(scene);
     }
 
     void loadTile(const char* path){
@@ -81,25 +76,18 @@ struct TestContext {
         resource.close();
     }
 
-// <<<<<<< HEAD
-//     void parseTile() {
-//         Tile tile({0,0,10,10,0}, s_projection);
-//         source = *scene->tileSources().begin();
-// =======
     void processTile() {
         Tile tile(TileID{0,0,10,10,0}, s_projection);
-        source = scene->dataSources()[0];
-// >>>>>>> wip: TileDataSink
+        source = scene->tileSources()[0];
         auto task = source->createTask(tile.getID());
         auto& t = dynamic_cast<BinaryTileTask&>(*task);
         t.rawTileData = std::make_shared<std::vector<char>>(rawTileData);
 
+        t.process(*tileBuilder);
 
-        bool ok = tileBuilder.build(*task);
+        benchmark::DoNotOptimize(&tile);
 
-        benchmark::DoNotOptimize(ok);
-
-        LOG("ok %d / bytes - %d", ok, task->tile()->getMemoryUsage());
+        LOG("ok %d / bytes - %d", bool(t.tile()), t.tile()->getMemoryUsage());
 
     }
 };
