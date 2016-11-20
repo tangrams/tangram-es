@@ -36,7 +36,7 @@ struct TestContext {
 
     std::shared_ptr<TileData> tileData;
 
-    TileBuilder tileBuilder;
+    std::unique_ptr<TileBuilder> tileBuilder;
 
     void loadScene(const char* sceneFile) {
         scene = std::make_shared<Scene>(sceneFile);
@@ -55,7 +55,7 @@ struct TestContext {
         styleContext.setKeywordZoom(0);
 
         source = scene->dataSources()[0];
-        tileBuilder.setScene(scene);
+        tileBuilder = std::make_unique<TileBuilder>(scene);
     }
 
     void loadTile(const char* path){
@@ -81,12 +81,11 @@ struct TestContext {
         auto& t = dynamic_cast<DownloadTileTask&>(*task);
         t.rawTileData = std::make_shared<std::vector<char>>(rawTileData);
 
+        t.process(*tileBuilder);
 
-        bool ok = tileBuilder.build(*task);
+        benchmark::DoNotOptimize(&tile);
 
-        benchmark::DoNotOptimize(ok);
-
-        LOG("ok %d / bytes - %d", ok, task->tile()->getMemoryUsage());
+        LOG("ok %d / bytes - %d", bool(t.tile()), t.tile()->getMemoryUsage());
 
     }
 };

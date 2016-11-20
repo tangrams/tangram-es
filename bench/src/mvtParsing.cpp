@@ -1,5 +1,5 @@
 #include "tangram.h"
-#include "platform.h"
+#include "log.h"
 #include "data/dataSource.h"
 #include "data/mvtSource.h"
 #include "data/tileData.h"
@@ -46,7 +46,7 @@ struct TestContext {
     void loadTile(const char* path){
         std::ifstream resource(path, std::ifstream::ate | std::ifstream::binary);
         if(!resource.is_open()) {
-            LOGE("Failed to read file at path: %s", path.c_str());
+            LOGE("Failed to read file at path: %s", path);
             return;
         }
 
@@ -83,7 +83,7 @@ BENCHMARK_DEFINE_F(MVTParsingFixture, BuildTest)(benchmark::State& st) {
         TileID tileId{0,0,10,10,0};
         Tile tile(tileId, ctx.projection);
 
-        auto task = std::make_shared<DownloadTileTask>(tileId, ctx.source);
+        auto task = std::make_shared<DownloadTileTask>(tileId, ctx.source, -1);
         task->rawTileData = ctx.rawTileData;
 
         bool ok = ctx.source->process(*task, ctx.projection, ctx.sink);
