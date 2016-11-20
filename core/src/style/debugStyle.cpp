@@ -10,8 +10,27 @@
 #include <memory>
 #include <string>
 
-#include "shaders/debug_vs.h"
-#include "shaders/debug_fs.h"
+static const char* debug_vs = R"(
+uniform mat4 u_model;
+uniform mat4 u_view;
+uniform mat4 u_proj;
+attribute vec4 a_position;
+attribute vec4 a_color;
+varying vec4 v_color;
+
+void main() {
+    v_color = a_color;
+    gl_Position = u_proj * u_view * u_model * a_position;
+}
+)";
+
+static const char* debug_fs = R"(
+varying vec4 v_color;
+
+void main() {
+    gl_FragColor = v_color;
+}
+)";
 
 namespace Tangram {
 
@@ -36,11 +55,11 @@ void DebugStyle::constructVertexLayout() {
 }
 
 void DebugStyle::buildFragmentShaderSource(ShaderSource& out) {
-    out << SHADER_SOURCE(debug_fs);
+    out << debug_fs;
 }
 
 void DebugStyle::buildVertexShaderSource(ShaderSource& out, bool _selectionPass) {
-    out << SHADER_SOURCE(debug_vs);
+    out << debug_vs;
 }
 
 struct DebugStyleBuilder : public StyleBuilder {

@@ -15,8 +15,26 @@
 #include "marker/marker.h"
 #include "log.h"
 
-#include "shaders/rasters_glsl.h"
-#include "shaders/selection_fs.h"
+static const char* rasters_glsl = R"(
+#define adjustRasterUV(raster_index, uv) ((uv) * u_raster_offsets[raster_index].z + u_raster_offsets[raster_index].xy)
+#define currentRasterUV(raster_index) (adjustRasterUV(raster_index, v_modelpos_base_zoom.xy))
+#define currentRasterPixel(raster_index) (currentRasterUV(raster_index) * rasterPixelSize(raster_index))
+#define sampleRasterAtPixel(raster_index, pixel) (texture2D(u_rasters[raster_index], adjustRasterUV(raster_index, (pixel) / rasterPixelSize(raster_index))))
+#define sampleRaster(raster_index) (texture2D(u_rasters[raster_index], currentRasterUV(raster_index)))
+#define rasterPixelSize(raster_index) (u_raster_sizes[raster_index])
+)";
+
+static const char* selection_fs = R"(
+#ifdef GL_ES
+precision highp float;
+#endif
+
+varying vec4 v_selection_color;
+
+void main(void) {
+    gl_FragColor = v_selection_color;
+}
+)";
 
 namespace Tangram {
 
@@ -117,8 +135,7 @@ void Style::constructShaderProgram() {
         initShaderSource(out, false);
         buildVertexShaderSource(out, true);
 
-        m_selectionProgram->setSourceStrings(SHADER_SOURCE(selection_fs),
-                                             out.string);
+        m_selectionProgram->setSourceStrings(selection_fs, out.string);
     }
 }
 
@@ -126,7 +143,7 @@ void Style::buildMaterialAndLightGlobal(bool _fragment, ShaderSource& out) {
 
     if (hasRasters()) {
         if (_fragment) {
-            out << SHADER_SOURCE(rasters_glsl);
+            out << rasters_glsl;
             auto numSources = std::to_string(m_numRasterSources);
             out << "uniform sampler2D u_rasters[" + numSources +"];";
             out << "uniform vec2 u_raster_sizes[" + numSources +"];";
