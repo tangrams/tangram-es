@@ -75,7 +75,11 @@ public class MapController implements Renderer {
          * @param positionX The horizontal screen coordinate of the center of the feature
          * @param positionY The vertical screen coordinate of the center of the feature
          */
-        void onFeaturePick(Map<String, String> properties, List<TouchLabel> labels, float positionX, float positionY);
+        void onFeaturePick(Map<String, String> properties, float positionX, float positionY);
+    }
+
+    public interface LabelsPickListener {
+        void onLabelsPick(List<TouchLabel> labels, float positionX, float positionY);
     }
 
     public interface ViewCompleteListener {

@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends Activity implements OnMapReadyCallback, TapResponder,
-        DoubleTapResponder, LongPressResponder, FeaturePickListener {
+        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelsPickListener {
 
     MapController map;
     MapView view;
@@ -82,6 +82,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
         map.setDoubleTapResponder(this);
         map.setLongPressResponder(this);
         map.setFeaturePickListener(this);
+        map.setLabelsPickListener(this);
 
         map.setViewCompleteListener(new ViewCompleteListener() {
                 public void onViewComplete() {
@@ -179,6 +180,24 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
                           }
                       });
 
+    }
+
+    @Override
+    public void onLabelsPick(List<TouchLabel> labels, float positionX, float positionY) {
+        if (labels.isEmpty()) {
+            Log.d("Tangram", "Empty selection of labels");
+            return;
+        }
+
+        Log.d("Tangram", "Picked label");
+        runOnUiThread(new Runnable() {
+                          @Override
+                          public void run() {
+                              Toast.makeText(getApplicationContext(),
+                                      "Selected label",
+                                      Toast.LENGTH_SHORT).show();
+                          }
+                      });
     }
 }
 
