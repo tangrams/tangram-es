@@ -247,8 +247,7 @@ bool TextStyleBuilder::addStraightTextLabels(const Line& _line, const TextStyle:
         glm::vec2 dir1 = dir0;
         glm::vec2 dir2;
 
-        bool merged = false;
-        //size_t next = i+1;
+        int merged = 0;
 
         size_t j = i + 2;
         for (; j < _line.size(); j++) {
@@ -266,16 +265,14 @@ bool TextStyleBuilder::addStraightTextLabels(const Line& _line, const TextStyle:
                 break;
             }
 
-            // Skip merged segment in outer loop
-            i += 1;
-            merged = true;
+            merged++;
 
             p1 = p2;
             dir1 = dir2;
         }
 
         // place labels at segment-subdivisions
-        int run = merged ? 1 : 2;
+        int run = merged > 0 ? 1 : 2;
         segmentLength /= run;
 
         while (segmentLength > minLength && run <= 4) {
@@ -291,9 +288,13 @@ bool TextStyleBuilder::addStraightTextLabels(const Line& _line, const TextStyle:
         }
 
         if (i == 0 && j == _line.size()) {
-            // Single straight segment
+            // Simple straight line
             return true;
         }
+
+        // Skip merged segments in outer loop
+        i += merged;
+
     }
     return false;
 }
@@ -464,8 +465,7 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
 
     for (auto& line : _feat.lines) {
 
-        //if (!addStraightTextLabels(line, _params) && line.size() > 2) {
-        if (line.size() > 2) {
+        if (!addStraightTextLabels(line, _params, _rule) && line.size() > 2) {
             addCurvedTextLabels(line, _params, _rule);
         }
     }
