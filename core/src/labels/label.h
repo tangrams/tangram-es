@@ -79,7 +79,6 @@ public:
     struct Options {
         glm::vec2 offset;
         float priority = std::numeric_limits<float>::max();
-        bool interactive = false;
         bool collide = true;
         Transition selectTransition;
         Transition hideTransition;
@@ -92,6 +91,7 @@ public:
         bool required = true;
         bool flat = false;
         float angle = 0.f;
+        std::shared_ptr<Properties> properties;
     };
 
     static const float activation_distance_threshold;
@@ -232,7 +232,6 @@ namespace std {
             hash_combine(seed, o.offset.x);
             hash_combine(seed, o.offset.y);
             hash_combine(seed, o.priority);
-            hash_combine(seed, o.interactive);
             hash_combine(seed, o.collide);
             hash_combine(seed, o.repeatDistance);
             hash_combine(seed, o.repeatGroup);

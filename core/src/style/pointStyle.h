@@ -20,13 +20,13 @@ public:
 
     struct Parameters {
         bool centroid = false;
+        bool interactive = false;
         std::string sprite;
         std::string spriteDefault;
         glm::vec2 size;
         uint32_t color = 0xffffffff;
         Label::Options labelOptions;
         float extrudeScale = 1.f;
-        uint32_t selectionColor = 0;
     };
 
     PointStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,

@@ -10,7 +10,7 @@ public:
 
     FeatureSelection();
 
-    uint32_t colorIdentifier();
+    uint32_t nextColorIdentifier();
 
 private:
 

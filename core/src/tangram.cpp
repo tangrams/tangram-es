@@ -472,14 +472,12 @@ void Map::render() {
 
             // Retrieve the label for this selection color
             if (impl->labels.getLabel(impl->scene->styles(), impl->tileManager.getVisibleTiles(), color, label, tile)) {
-                if (auto props = tile->getSelectionFeature(color)) {
-                    std::vector<TouchLabel> touchLabels;
-                    std::vector<LngLat> coordinates = label->coordinates(*tile, impl->view.getMapProjection());
-                    float distance = sqrt(label->screenDistance2(labelQuery.position));
+                std::vector<TouchLabel> touchLabels;
+                std::vector<LngLat> coordinates = label->coordinates(*tile, impl->view.getMapProjection());
+                float distance = sqrt(label->screenDistance2(labelQuery.position));
 
-                    labels.push_back({label->renderType(), coordinates,
-                        {props, {labelQuery.position.x, labelQuery.position.y}, distance}});
-                }
+                labels.push_back({label->renderType(), coordinates,
+                    {label->options().properties, {labelQuery.position.x, labelQuery.position.y}, distance}});
             }
 
             // TODO: sort touch labels by distance

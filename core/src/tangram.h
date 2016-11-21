@@ -247,8 +247,15 @@ public:
     // efficiency, but can cause errors if your application code makes OpenGL calls (false by default)
     void useCachedGlState(bool _use);
 
+    // Create a query to select a feature marked as 'interactive'. The query runs on the next frame.
+    // Calls _onFeatureSelectCallback once the query has completed, and returns the collection
+    // of TouchItem and their associated properties.
     void pickFeaturesAt(float _x, float _y, FeatureSelectionCallback _onFeatureSelectCallback);
 
+    // Create a query to select a label created for a feature marked as 'interactive'. The query runs
+    // on the next frame.
+    // Calls _onTouchLabelSelectCallback once the query has completed, and returns the collection
+    // of TouchLabel and their associated properties.
     void pickLabelsAt(float _x, float _y, LabelSelectionCallback _onTouchLabelSelectCallback);
 
     // Run this task asynchronously to Tangram's main update loop.

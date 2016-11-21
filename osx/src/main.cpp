@@ -111,12 +111,19 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             std::string name;
             for (const auto& item : items) {
                 if (item.properties->getString("name", name)) {
-                    LOG("Selected %s", name.c_str());
+                    LOGS("Selected %s", name.c_str());
                 }
             }
         });
 
         map->pickLabelsAt(x, y, [](const auto& labels) {
+            for (auto label : labels) {
+                std::string type = label.type == LabelType::text ? "text" : "icon";
+                std::string name;
+                if (label.touchItem.properties->getString("name", name)) {
+                    LOGS("Touched label %s %s", type.c_str(), name.c_str());
+                }
+            }
         });
 
         static double last_x = 0, last_y = 0;

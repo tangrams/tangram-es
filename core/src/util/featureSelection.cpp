@@ -6,7 +6,7 @@ FeatureSelection::FeatureSelection() :
     m_entry(0) {
 }
 
-uint32_t FeatureSelection::colorIdentifier() {
+uint32_t FeatureSelection::nextColorIdentifier() {
 
     uint32_t entry = m_entry++;
 

@@ -10,6 +10,7 @@
 #include "tangram.h"
 #include "tile/tile.h"
 #include "util/geom.h"
+#include "util/featureSelection.h"
 
 namespace Tangram {
 
@@ -121,7 +122,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
 
     _rule.get(StyleParamKey::sprite_default, p.spriteDefault);
     _rule.get(StyleParamKey::centroid, p.centroid);
-    _rule.get(StyleParamKey::interactive, p.labelOptions.interactive);
+    _rule.get(StyleParamKey::interactive, p.interactive);
     _rule.get(StyleParamKey::collide, p.labelOptions.collide);
     _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
     _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
@@ -155,18 +156,26 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     std::hash<PointStyle::Parameters> hash;
     p.labelOptions.paramHash = hash(p);
 
-    p.selectionColor = _rule.selectionColor;
+    if (p.interactive) {
+        p.labelOptions.properties = std::make_shared<Properties>(_props);
+    }
 
     return p;
 }
 
 void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
-                                 const PointStyle::Parameters& _params) {
+                                 const PointStyle::Parameters& _params, const DrawRule& _rule) {
+
+    uint32_t selectionColor = 0;
+
+    if (_params.interactive) {
+        selectionColor = _rule.featureSelection->nextColorIdentifier();
+    }
 
     m_labels.push_back(std::make_unique<SpriteLabel>(glm::vec3(glm::vec2(_point), m_zoom),
                                                      _params.size,
                                                      _params.labelOptions,
-                                                     SpriteLabel::VertexAttributes{_params.color, _params.selectionColor, _params.extrudeScale },
+                                                     SpriteLabel::VertexAttributes{_params.color, selectionColor, _params.extrudeScale },
                                                      m_texture,
                                                      *m_spriteLabels,
                                                      m_quads.size()));
@@ -245,7 +254,7 @@ bool PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
         return false;
     }
 
-    addLabel(_point, uvsQuad, p);
+    addLabel(_point, uvsQuad, p, _rule);
 
     return true;
 }
@@ -261,7 +270,7 @@ bool PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
     }
 
     for (size_t i = 0; i < _line.size(); ++i) {
-        addLabel(_line[i], uvsQuad, p);
+        addLabel(_line[i], uvsQuad, p, _rule);
     }
 
     return true;
@@ -280,13 +289,13 @@ bool PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
     if (!p.centroid) {
         for (auto line : _polygon) {
             for (auto point : line) {
-                addLabel(point, uvsQuad, p);
+                addLabel(point, uvsQuad, p, _rule);
             }
         }
     } else {
         glm::vec2 c = centroid(_polygon);
 
-        addLabel(Point{c,0}, uvsQuad, p);
+        addLabel(Point{c,0}, uvsQuad, p, _rule);
     }
 
     return true;

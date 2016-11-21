@@ -66,7 +66,7 @@ void Labels::processLabelUpdate(const ViewState& viewState,
 
 bool Labels::getLabel(const std::vector<std::unique_ptr<Style>>& _styles,
                                       const std::vector<std::shared_ptr<Tile>>& _tiles,
-                                      uint32_t _selectionColor, Label* _label, Tile* _tile) {
+                                      uint32_t _selectionColor, Label*& _label, Tile*& _tile) {
 
     for (const auto& tile : _tiles) {
         for (const auto& style : _styles) {
