@@ -31,6 +31,7 @@ struct TextVertex {
     } state;
 
     const static float position_scale;
+    const static float position_inv_scale;
     const static float alpha_scale;
 };
 

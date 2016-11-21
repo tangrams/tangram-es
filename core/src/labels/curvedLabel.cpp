@@ -239,10 +239,10 @@ void CurvedLabel::addVerticesToMesh(ScreenTransform& _transform) {
     //auto center = sampler.sumLength() * 0.5;
 
     glm::vec2 p1, p2;
-    sampler.sample(center + it->quad[0].pos.x / TextVertex::position_scale, p1, rotation);
+    sampler.sample(center + it->quad[0].pos.x * TextVertex::position_inv_scale, p1, rotation);
     // Check based on first charater whether labels needs to be flipped
     // sampler.sample(center + it->quad[2].pos.x, p2, rotation);
-    sampler.sample(center + (end-1)->quad[2].pos.x / TextVertex::position_scale, p2, rotation);
+    sampler.sample(center + (end-1)->quad[2].pos.x * TextVertex::position_inv_scale, p2, rotation);
 
 
     if (p1.x > p2.x) {
@@ -259,7 +259,7 @@ void CurvedLabel::addVerticesToMesh(ScreenTransform& _transform) {
         glm::vec2 origin = {(quad.quad[0].pos.x + quad.quad[2].pos.x) * 0.5f, 0 };
 
         glm::vec2 point; //, pa, pb, ra, rb;
-        float px = origin.x / TextVertex::position_scale;
+        float px = origin.x * TextVertex::position_inv_scale;
 
         if (!sampler.sample(center + px, point, rotation)) {
             // break;
@@ -278,7 +278,8 @@ void CurvedLabel::addVerticesToMesh(ScreenTransform& _transform) {
         //     point =  (point + pa + pb) * 0.333333f;
         // }
 
-        point *= TextVertex::position_scale;
+        glm::i16vec2 p(point * TextVertex::position_scale);
+
         rotation = {rotation.x, -rotation.y};
 
         auto* quadVertices = meshes[it->atlas]->pushQuad();
@@ -286,7 +287,7 @@ void CurvedLabel::addVerticesToMesh(ScreenTransform& _transform) {
         for (int i = 0; i < 4; i++) {
             TextVertex& v = quadVertices[i];
 
-            v.pos = glm::i16vec2{point + rotateBy(glm::vec2(quad.quad[i].pos) - origin, rotation)};
+            v.pos = p + glm::i16vec2{rotateBy(glm::vec2(quad.quad[i].pos) - origin, rotation)};
 
             v.uv = quad.quad[i].uv;
             v.state = state;

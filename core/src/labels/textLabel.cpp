@@ -15,6 +15,7 @@ using namespace LabelProperty;
 using namespace TextLabelProperty;
 
 const float TextVertex::position_scale = 4.0f;
+const float TextVertex::position_inv_scale = 0.25f;
 const float TextVertex::alpha_scale = 65535.0f;
 
 struct PointTransform {
