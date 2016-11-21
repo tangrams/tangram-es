@@ -88,8 +88,7 @@ bool CurvedLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
         return false;
     }
 
-    // TODO only smooth within the range of the label
-
+#if 0
     //if (m_line.size() > 3) {
     auto& points = _transform;
 
@@ -153,6 +152,7 @@ bool CurvedLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
         curAnchor++;
     }
     length = sampler.sumLength();
+#endif
 
     return true;
 }
