@@ -9,7 +9,7 @@
 #import <iostream>
 
 #import "TGMapViewController.h"
-#import "CGFontConverter.h"
+#import "TGFontConverter.h"
 #import "platform_ios.h"
 #import "log.h"
 
@@ -137,7 +137,7 @@ unsigned char* loadUIFont(UIFont* _font, size_t* _size) {
         return nullptr;
     }
 
-    unsigned char* data = [CGFontConverter fontDataForCGFont:fontRef size:_size];
+    unsigned char* data = [TGFontConverter fontDataForCGFont:fontRef size:_size];
 
     CGFontRelease(fontRef);
 

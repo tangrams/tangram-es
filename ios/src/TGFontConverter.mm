@@ -1,12 +1,12 @@
 //
-//  CGFontConverter.m
+//  TGFontConverter.m
 //  tangram
 //
 //  Created by Karim Naaji on 11/01/16.
 //
 //
 
-#import "CGFontConverter.h"
+#import "TGFontConverter.h"
 
 #include <cstdio>
 
@@ -29,7 +29,7 @@ struct TableEntry {
 
 typedef struct TableEntry TableEntry;
 
-static uint32_t CalcTableCheckSum(const uint32_t *table, uint32_t numberOfBytesInTable)
+static uint32_t CalcTableCheckSum(const uint32_t* table, uint32_t numberOfBytesInTable)
 {
     uint32_t sum = 0;
     uint32_t nLongs = (numberOfBytesInTable + 3) / 4;
@@ -46,7 +46,7 @@ static uint32_t CalcTableDataRefCheckSum(CFDataRef dataRef)
     return CalcTableCheckSum(dataBuff, dataLength);
 }
 
-@implementation CGFontConverter
+@implementation TGFontConverter
 
 //Reference:
 //http://skia.googlecode.com/svn-history/r1473/trunk/src/ports/SkFontHost_mac_coretext.cpp
