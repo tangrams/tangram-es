@@ -1,21 +1,17 @@
 #ifdef PLATFORM_IOS
 
-#import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <utility>
 #import <cstdio>
 #import <cstdarg>
 #import <fstream>
 #import <regex>
-
-#include <iostream>
-#include <fstream>
+#import <iostream>
 
 #import "TGMapViewController.h"
 #import "CGFontConverter.h"
-
-#include "platform_ios.h"
-#include "log.h"
+#import "platform_ios.h"
+#import "log.h"
 
 static TGMapViewController* viewController;
 static NSBundle* tangramFramework;
