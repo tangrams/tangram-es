@@ -16,4 +16,6 @@ struct TouchItem;
 
 void featurePickCallback(jobject listener, const std::vector<Tangram::TouchItem>& items);
 
+std::string resolveScenePath(const char* path);
+
 std::string stringFromJString(JNIEnv* jniEnv, jstring string);

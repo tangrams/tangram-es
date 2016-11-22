@@ -3,6 +3,7 @@
 #include "platform_android.h"
 #include "data/properties.h"
 #include "data/propertyItem.h"
+#include "util/url.h"
 #include "tangram.h"
 
 #include <GLES2/gl2platform.h>
@@ -241,23 +242,25 @@ std::string stringFromFile(const char* _path) {
 
 unsigned char* bytesFromFile(const char* _path, size_t& _size) {
 
-    size_t len = strlen(_path);
-
-    if (len > 0) {
-        if (_path[0] == '/') {
-
-            return bytesFromFileSystem(_path, _size);
-
-        } else {
-            // For unclear reasons, the AAssetManager will fail to open a file at
-            // path "filepath" if the path is instead given as "./filepath"
-            if (len >= 2 && (_path[0] == '.') && (_path[1] == '/')) { _path += 2; }
-
-            return bytesFromAssetManager(_path, _size);
-        }
-    }
     _size = 0;
-    return nullptr;
+
+    // Android assets are distinguished from file paths by the "asset" scheme.
+    const char* aaPrefix = "asset:///";
+    const size_t aaPrefixLen = strlen(aaPrefix);
+
+    if (strncmp(_path, aaPrefix, aaPrefixLen) == 0) {
+        return bytesFromAssetManager(_path + aaPrefixLen, _size);
+    } else {
+        return bytesFromFileSystem(_path, _size);
+    }
+}
+
+std::string resolveScenePath(const char* path) {
+    // If the path is an absolute URL (like a file:// or http:// URL)
+    // then resolving it will return the same URL. Otherwise, we resolve
+    // it against the "asset" scheme to know later that this path is in
+    // the asset bundle.
+    return Tangram::Url(path).resolved("asset:///").string();
 }
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {

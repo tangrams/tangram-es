@@ -114,7 +114,7 @@ extern "C" {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         const char* cPath = jniEnv->GetStringUTFChars(path, NULL);
-        map->loadScene(cPath);
+        map->loadScene(resolveScenePath(cPath).c_str());
         jniEnv->ReleaseStringUTFChars(path, cPath);
     }
 
