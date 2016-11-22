@@ -133,7 +133,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
         lastTappedPoint = tappedPoint;
 
         map.pickFeature(x, y);
-        map.pickLabels(x, y);
+        map.pickLabel(x, y);
 
         map.setPositionEased(tappedPoint, 1000);
 

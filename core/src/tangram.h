@@ -16,21 +16,22 @@ enum LabelType {
     text,
 };
 
-struct TouchItem {
+struct FeaturePickResult {
     std::shared_ptr<Properties> properties;
     float position[2];
-    float distance;
 };
 
-using FeatureSelectionCallback = std::function<void(const std::vector<TouchItem>&)>;
+// Returns a pointer to the selected feature or null, only valid on the callback scope
+using FeaturePickCallback = std::function<void(const FeaturePickResult*)>;
 
-struct TouchLabel {
+struct LabelPickResult {
     LabelType type;
     LngLat coordinate;
-    TouchItem touchItem;
+    FeaturePickResult touchItem;
 };
 
-using LabelSelectionCallback = std::function<void(const std::vector<TouchLabel>&)>;
+// Returns a pointer to the selected label or null, only valid on the callback scope
+using LabelPickCallback = std::function<void(const LabelPickResult*)>;
 
 struct SceneUpdate {
     std::string path;
@@ -248,15 +249,15 @@ public:
     void useCachedGlState(bool _use);
 
     // Create a query to select a feature marked as 'interactive'. The query runs on the next frame.
-    // Calls _onFeatureSelectCallback once the query has completed, and returns the collection
-    // of TouchItem and their associated properties.
-    void pickFeaturesAt(float _x, float _y, FeatureSelectionCallback _onFeatureSelectCallback);
+    // Calls _onFeaturePickCallback once the query has completed, and returns the FeaturePickResult
+    // with its associated properties.
+    void pickFeatureAt(float _x, float _y, FeaturePickCallback _onFeaturePickCallback);
 
     // Create a query to select a label created for a feature marked as 'interactive'. The query runs
     // on the next frame.
-    // Calls _onTouchLabelSelectCallback once the query has completed, and returns the collection
-    // of TouchLabel and their associated properties.
-    void pickLabelsAt(float _x, float _y, LabelSelectionCallback _onTouchLabelSelectCallback);
+    // Calls _onLabelPickCallback once the query has completed, and returns the LabelPickResult
+    // with its associated properties.
+    void pickLabelAt(float _x, float _y, LabelPickCallback _onLabelPickCallback);
 
     // Run this task asynchronously to Tangram's main update loop.
     void runAsyncTask(std::function<void()> _task);

@@ -11,14 +11,14 @@ void onUrlSuccess(JNIEnv* jniEnv, jbyteArray jFetchedBytes, jlong jCallbackPtr);
 void onUrlFailure(JNIEnv* jniEnv, jlong jCallbackPtr);
 
 namespace Tangram {
-struct TouchItem;
-struct TouchLabel;
+struct LabelPickResult;
+struct FeaturePickResult;
 }
 
-void featurePickCallback(jobject listener, const std::vector<Tangram::TouchItem>& items);
+void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* featurePickResult);
 
 std::string resolveScenePath(const char* path);
 
-void labelsPickCallback(jobject listener, const std::vector<Tangram::TouchLabel>& labels);
+void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult);
 
 std::string stringFromJString(JNIEnv* jniEnv, jstring string);

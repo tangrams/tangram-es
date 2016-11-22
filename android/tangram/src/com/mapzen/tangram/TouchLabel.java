@@ -21,9 +21,9 @@ public class TouchLabel {
     private LabelType type;
     private Map<String, String> properties;
 
-    public TouchLabel(double[] coordinates, int type, Map<String, String> properties) {
+    private TouchLabel(double longitude, double latitude, int type, Map<String, String> properties) {
         this.properties = properties;
-        this.coordinate = new LngLat(coordinates[0], coordinates[1]);
+        this.coordinate = new LngLat(longitude, latitude);
         this.type = LabelType.values()[type];
     }
 
@@ -34,7 +34,7 @@ public class TouchLabel {
     /**
      * @return The coordinate of the feature for which this label has been created
      */
-    public LngLat getCoordinate() {
+    public LngLat getCoordinates() {
         return this.coordinate;
     }
 

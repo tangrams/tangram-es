@@ -677,10 +677,10 @@ public class MapController implements Renderer {
      * @param posX The horizontal screen coordinate
      * @param posY The vertical screen coordinate
      */
-    public void pickLabels(float posX, float posY) {
+    public void pickLabel(float posX, float posY) {
         if (labelPickListener != null) {
             checkPointer(mapPointer);
-            nativePickLabels(mapPointer, posX, posY, labelPickListener);
+            nativePickLabel(mapPointer, posX, posY, labelPickListener);
         }
     }
 
@@ -894,7 +894,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String value);
     private synchronized native void nativeApplySceneUpdates(long mapPtr);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
-    private synchronized native void nativePickLabels(long mapPtr, float posX, float posY, LabelPickListener listener);
+    private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
     private synchronized native long nativeMarkerAdd(long mapPtr);
     private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
     private synchronized native boolean nativeMarkerSetStyling(long mapPtr, long markerID, String styling);

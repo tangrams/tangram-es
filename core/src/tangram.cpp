@@ -45,12 +45,12 @@ public:
 
     struct FeatureSelectionQuery {
         glm::vec2 position;
-        FeatureSelectionCallback onFeatureSelection;
+        FeaturePickCallback onFeatureSelection;
     };
 
     struct LabelSelectionQuery {
         glm::vec2 position;
-        LabelSelectionCallback onLabelSelection;
+        LabelPickCallback onLabelSelection;
     };
 
     void setScene(std::shared_ptr<Scene>& _scene);
@@ -388,13 +388,13 @@ bool Map::update(float _dt) {
     return viewComplete;
 }
 
-void Map::pickFeaturesAt(float _x, float _y, std::function<void(const std::vector<TouchItem>&)> _onFeatureSelectCallback) {
+void Map::pickFeatureAt(float _x, float _y, FeaturePickCallback _onFeatureSelectCallback) {
     impl->featureSelectionQueries.push_back({{_x, _y}, _onFeatureSelectCallback});
 
     requestRender();
 }
 
-void Map::pickLabelsAt(float _x, float _y, LabelSelectionCallback _onTouchLabelSelectCallback) {
+void Map::pickLabelAt(float _x, float _y, LabelPickCallback _onTouchLabelSelectCallback) {
     impl->labelSelectionQueries.push_back({{_x, _y}, _onTouchLabelSelectCallback});
 
     requestRender();
@@ -439,7 +439,7 @@ void Map::render() {
 
         // Resolve feature selection queries
         for (const auto& selectionQuery : impl->featureSelectionQueries) {
-            std::vector<TouchItem> items;
+            std::unique_ptr<FeaturePickResult> queryResult;
 
             float x = selectionQuery.position.x / impl->view.getWidth();
             float y = (1.f - (selectionQuery.position.y / impl->view.getHeight()));
@@ -450,21 +450,23 @@ void Map::render() {
             if (color != 0) {
                 for (const auto& tile : impl->tileManager.getVisibleTiles()) {
                     if (auto props = tile->getSelectionFeature(color)) {
-                        items.push_back({props, {selectionQuery.position.x, selectionQuery.position.y}, 0});
+                        queryResult = std::unique_ptr<FeaturePickResult>(new FeaturePickResult
+                            {props, {selectionQuery.position.x, selectionQuery.position.y}});
+                        break;
                     }
                 }
             }
 
-            selectionQuery.onFeatureSelection(items);
+            selectionQuery.onFeatureSelection(queryResult.get());
         }
 
         impl->featureSelectionQueries.clear();
 
         // Resolve label selection queries
         for (const auto& labelQuery : impl->labelSelectionQueries) {
-            std::vector<TouchLabel> labels;
-            Label* label = nullptr;
-            Tile* tile = nullptr;
+            std::unique_ptr<LabelPickResult> queryResult;
+            Label* label;
+            Tile* tile;
 
             float x = labelQuery.position.x / impl->view.getWidth();
             float y = (1.f - (labelQuery.position.y / impl->view.getHeight()));
@@ -475,18 +477,16 @@ void Map::render() {
             if (color != 0) {
                 // Retrieve the label for this selection color
                 if (impl->labels.getLabel(impl->scene->styles(), impl->tileManager.getVisibleTiles(), color, label, tile)) {
-                    std::vector<TouchLabel> touchLabels;
                     LngLat coordinate = label->coordinate(*tile, impl->view.getMapProjection());
-                    float distance = sqrt(label->screenDistance2(labelQuery.position));
 
-                    labels.push_back({label->renderType(), coordinate,
-                        {label->options().properties, {labelQuery.position.x, labelQuery.position.y}, distance}});
+                    queryResult = std::unique_ptr<LabelPickResult>(new LabelPickResult {label->renderType(), coordinate,
+                        {label->options().properties, {labelQuery.position.x, labelQuery.position.y}}});
                 }
             }
 
             // TODO: sort touch labels by distance
 
-            labelQuery.onLabelSelection(labels);
+            labelQuery.onLabelSelection(queryResult.get());
         }
 
         impl->labelSelectionQueries.clear();

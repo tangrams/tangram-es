@@ -23,7 +23,6 @@ class Marker;
 class Tile;
 class Style;
 class TileCache;
-struct TouchItem;
 
 class Labels {
 
@@ -78,8 +77,6 @@ protected:
     bool m_needUpdate;
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
-
-    std::vector<TouchItem> m_touchItems;
 
     struct LabelEntry {
 

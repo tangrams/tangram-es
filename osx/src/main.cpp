@@ -107,25 +107,23 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             visible = !visible;
         }
 
-        map->pickFeaturesAt(x, y, [](const auto& items) {
+        map->pickFeatureAt(x, y, [](const FeaturePickResult* featurePickResult) {
+            if (!featurePickResult) { return; }
             std::string name;
-            for (const auto& item : items) {
-                if (item.properties->getString("name", name)) {
-                    LOGS("Selected %s", name.c_str());
-                }
+            if (featurePickResult->properties->getString("name", name)) {
+                LOGS("Selected %s", name.c_str());
             }
         });
 
-        map->pickLabelsAt(x, y, [](const auto& labels) {
-            for (auto label : labels) {
-                std::string type = label.type == LabelType::text ? "text" : "icon";
-                std::string name;
-                if (label.touchItem.properties->getString("name", name)) {
-                    LOGS("Touched label %s %s", type.c_str(), name.c_str());
-                }
-                map->markerSetPoint(marker, label.coordinate);
-                map->markerSetVisible(marker, true);
+        map->pickLabelAt(x, y, [](const LabelPickResult* labelPickResult) {
+            if (!labelPickResult) { return; }
+            std::string type = labelPickResult->type == LabelType::text ? "text" : "icon";
+            std::string name;
+            if (labelPickResult->touchItem.properties->getString("name", name)) {
+                LOGS("Touched label %s %s", type.c_str(), name.c_str());
             }
+            map->markerSetPoint(marker, labelPickResult->coordinate);
+            map->markerSetVisible(marker, true);
         });
 
         static double last_x = 0, last_y = 0;
