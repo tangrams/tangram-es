@@ -291,30 +291,32 @@ void Importer::mergeMapFields(Node& target, const Node& import) {
 
     for (const auto& entry : import) {
 
-        const auto &key = entry.first.Scalar();
+        const auto& key = entry.first.Scalar();
+        const auto& source = entry.second;
+        auto dest = target[key];
 
-        if (!target[key]) {
-            target[key] = entry.second;
+        if (!dest) {
+            dest = source;
             continue;
         }
 
-        if (target[key].Type() != entry.second.Type()) {
+        if (dest.Type() != source.Type()) {
             LOGN("Merging different node types: '%s'\n'%s'\n<==\n'%s'",
-                 key.c_str(), Dump(target[key]).c_str(), Dump(entry.second).c_str());
+                 key.c_str(), Dump(dest).c_str(), Dump(source).c_str());
         }
 
-        switch(target[key].Type()) {
+        switch(dest.Type()) {
             case NodeType::Scalar:
             case NodeType::Sequence:
-                target[key] = entry.second;
+                dest = source;
                 break;
 
             case NodeType::Map: {
-                auto newTarget = target[key];
-                if (entry.second.IsMap()) {
-                    mergeMapFields(newTarget, entry.second);
+                auto newTarget = dest;
+                if (source.IsMap()) {
+                    mergeMapFields(newTarget, source);
                 } else {
-                    target[key] = entry.second;
+                    dest = source;
                 }
                 break;
             }
