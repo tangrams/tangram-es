@@ -24,7 +24,6 @@ std::unique_ptr<TextLabel> makeLabel(glm::vec2 _transform, Label::Type _type, st
     options.offset = {0.0f, 0.0f};
     //options.properties = std::make_shared<Properties>();
     //options.properties->set("id", id);
-    options.interactive = true;
     options.anchors.anchor[0] = LabelProperty::Anchor::center;
     options.anchors.count = 1;
 
