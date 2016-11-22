@@ -123,6 +123,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 if (label.touchItem.properties->getString("name", name)) {
                     LOGS("Touched label %s %s", type.c_str(), name.c_str());
                 }
+                map->markerSetPoint(marker, label.coordinate);
+                map->markerSetVisible(marker, true);
             }
         });
 

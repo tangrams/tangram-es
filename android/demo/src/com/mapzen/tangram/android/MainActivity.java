@@ -46,7 +46,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
         view = (MapView)findViewById(R.id.map);
         view.onCreate(savedInstanceState);
-        view.getMapAsync(this, "https://raw.githubusercontent.com/tangrams/cinnabar-style/gh-pages/cinnabar-style.yaml");
+        view.getMapAsync(this, "scene.yaml");
     }
 
     @Override

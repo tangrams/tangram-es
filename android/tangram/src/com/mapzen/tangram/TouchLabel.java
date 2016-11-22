@@ -31,10 +31,16 @@ public class TouchLabel {
         return this.type;
     }
 
+    /**
+     * @return The coordinate of the feature for which this label has been created
+     */
     public LngLat getCoordinate() {
         return this.coordinate;
     }
 
+    /**
+     * @return A mapping of string keys to string or number values
+     */
     public Map<String, String> getProperties() {
         return this.properties;
     }
