@@ -426,10 +426,10 @@ std::string StyleParam::toString() const {
 
 }
 
+static const std::vector<std::string> s_units = { "px", "ms", "m", "s" };
+
 int StyleParam::parseValueUnitPair(const std::string& _value, size_t start,
                                    StyleParam::ValueUnitPair& _result) {
-
-    static const std::vector<std::string> units = { "px", "ms", "m", "s" };
 
     if (start >= _value.length()) { return -1; }
 
@@ -446,8 +446,8 @@ int StyleParam::parseValueUnitPair(const std::string& _value, size_t start,
 
     if (start >= _value.length()) { return start; }
 
-    for (size_t i = 0; i < units.size(); ++i) {
-        const auto& unit = units[i];
+    for (size_t i = 0; i < s_units.size(); ++i) {
+        const auto& unit = s_units[i];
         std::string valueUnit;
         if (unit == _value.substr(start, std::min<int>(_value.length(), unit.length()))) {
             _result.unit = static_cast<Unit>(i);
@@ -625,7 +625,6 @@ bool StyleParam::isWidth(StyleParamKey _key) {
     switch (_key) {
         case StyleParamKey::width:
         case StyleParamKey::outline_width:
-        case StyleParamKey::size:
         case StyleParamKey::text_font_stroke_width:
             return true;
         default:
@@ -637,6 +636,7 @@ bool StyleParam::isOffsets(StyleParamKey _key) {
     switch (_key) {
         case StyleParamKey::offset:
         case StyleParamKey::text_offset:
+        case StyleParamKey::size:
             return true;
         default:
             return false;
@@ -659,13 +659,13 @@ bool StyleParam::isRequired(StyleParamKey _key) {
     return std::find(requiredKeys.begin(), requiredKeys.end(), _key) != requiredKeys.end();
 }
 
-bool StyleParam::unitsForStyleParam(StyleParamKey _key, std::vector<Unit>& _unit) {
+const std::vector<Unit>& StyleParam::unitsForStyleParam(StyleParamKey _key) {
     auto it = s_StyleParamUnits.find(_key);
     if (it != s_StyleParamUnits.end()) {
-        _unit = it->second;
-        return true;
+        return it->second;
     }
-    return false;
+    static const std::vector<Unit> empty;
+    return empty;
 }
 
 }

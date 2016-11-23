@@ -1410,18 +1410,20 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
                 if (styleKey != StyleParamKey::none) {
 
                     if (StyleParam::isColor(styleKey)) {
+
                         scene->stops().push_back(Stops::Colors(value));
                         out.push_back(StyleParam{ styleKey, &(scene->stops().back()) });
+
                     } else if (StyleParam::isWidth(styleKey)) {
-                        std::vector<Unit> allowedUnits;
-                        StyleParam::unitsForStyleParam(styleKey, allowedUnits);
-                        scene->stops().push_back(Stops::Widths(value, *scene->mapProjection(), allowedUnits));
+                        scene->stops().push_back(Stops::Widths(value, *scene->mapProjection(),
+                                                              StyleParam::unitsForStyleParam(styleKey)));
+
                         out.push_back(StyleParam{ styleKey, &(scene->stops().back()) });
+
                     } else if (StyleParam::isOffsets(styleKey)) {
-                        std::vector<Unit> allowedUnits;
-                        StyleParam::unitsForStyleParam(styleKey, allowedUnits);
-                        scene->stops().push_back(Stops::Offsets(value, allowedUnits));
+                        scene->stops().push_back(Stops::Offsets(value, StyleParam::unitsForStyleParam(styleKey)));
                         out.push_back(StyleParam{ styleKey, &(scene->stops().back()) });
+
                     } else if (StyleParam::isFontSize(styleKey)) {
                         scene->stops().push_back(Stops::FontSize(value));
                         out.push_back(StyleParam{ styleKey, &(scene->stops().back()) });
