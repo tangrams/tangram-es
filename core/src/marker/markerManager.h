@@ -60,6 +60,9 @@ public:
     // Remove and destroy all markers.
     void removeAll();
 
+    // Rebuild all markers.
+    void rebuildAll();
+
     const std::vector<std::unique_ptr<Marker>>& markers() const;
 
 private:

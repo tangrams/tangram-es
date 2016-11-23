@@ -671,6 +671,9 @@ void Map::Impl::setPixelScale(float _pixelsPerPoint) {
     }
     // Tiles must be rebuilt to apply the new pixel scale to labels.
     tileManager.clearTileSets();
+
+    // Markers must be rebuilt to apply the new pixel scale.
+    markerManager.rebuildAll();
 }
 
 void Map::setCameraType(int _type) {
