@@ -625,7 +625,6 @@ bool StyleParam::isWidth(StyleParamKey _key) {
     switch (_key) {
         case StyleParamKey::width:
         case StyleParamKey::outline_width:
-        case StyleParamKey::size:
         case StyleParamKey::text_font_stroke_width:
             return true;
         default:
@@ -637,6 +636,7 @@ bool StyleParam::isOffsets(StyleParamKey _key) {
     switch (_key) {
         case StyleParamKey::offset:
         case StyleParamKey::text_offset:
+        case StyleParamKey::size:
             return true;
         default:
             return false;
