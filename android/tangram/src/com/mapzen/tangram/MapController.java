@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -82,11 +81,11 @@ public class MapController implements Renderer {
     public interface LabelPickListener {
         /**
          * Receive information about labels found in a call to {@link #pickLabels(float, float)}
-         * @param label The {@link TouchLabel} that has been selected
+         * @param label The {@link LabelPickResult} that has been selected
          * @param positionX The horizontal screen coordinate of the tapped location
          * @param positionY The vertical screen coordinate of the tapped location
          */
-        void onLabelPick(TouchLabel label, float positionX, float positionY);
+        void onLabelPick(LabelPickResult labelPickResult, float positionX, float positionY);
     }
 
     public interface ViewCompleteListener {

@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * {@code TouchLabel} represents labels that can be selected on the screen
+ * {@code LabelPickResult} represents labels that can be selected on the screen
  */
-public class TouchLabel {
+public class LabelPickResult {
 
     /**
-     * Options for the type of TouchLabel
+     * Options for the type of LabelPickResult
      */
     public enum LabelType {
         ICON,
@@ -21,7 +21,7 @@ public class TouchLabel {
     private LabelType type;
     private Map<String, String> properties;
 
-    private TouchLabel(double longitude, double latitude, int type, Map<String, String> properties) {
+    private LabelPickResult(double longitude, double latitude, int type, Map<String, String> properties) {
         this.properties = properties;
         this.coordinate = new LngLat(longitude, latitude);
         this.type = LabelType.values()[type];

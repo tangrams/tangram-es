@@ -48,9 +48,9 @@ static jmethodID getFontFilePath = 0;
 static jmethodID getFontFallbackFilePath = 0;
 static jmethodID onFeaturePickMID = 0;
 static jmethodID onLabelPickMID = 0;
-static jmethodID touchLabelInitMID = 0;
+static jmethodID labelPickResultInitMID = 0;
 
-static jclass touchLabelClass = nullptr;
+static jclass labelPickResultClass = nullptr;
 static jclass hashmapClass = nullptr;
 static jmethodID hashmapInitMID = 0;
 static jmethodID hashmapPutMID = 0;
@@ -85,13 +85,13 @@ void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager
     jclass featurePickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$FeaturePickListener");
     onFeaturePickMID = jniEnv->GetMethodID(featurePickListenerClass, "onFeaturePick", "(Ljava/util/Map;FF)V");
     jclass labelPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$LabelPickListener");
-    onLabelPickMID = jniEnv->GetMethodID(labelPickListenerClass, "onLabelPick", "(Lcom/mapzen/tangram/TouchLabel;FF)V");
+    onLabelPickMID = jniEnv->GetMethodID(labelPickListenerClass, "onLabelPick", "(Lcom/mapzen/tangram/LabelPickResult;FF)V");
 
-    if (touchLabelClass) {
-        jniEnv->DeleteGlobalRef(touchLabelClass);
+    if (labelPickResultClass) {
+        jniEnv->DeleteGlobalRef(labelPickResultClass);
     }
-    touchLabelClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/TouchLabel"));
-    touchLabelInitMID = jniEnv->GetMethodID(touchLabelClass, "<init>", "(DDILjava/util/Map;)V");
+    labelPickResultClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/LabelPickResult"));
+    labelPickResultInitMID = jniEnv->GetMethodID(labelPickResultClass, "<init>", "(DDILjava/util/Map;)V");
 
     if (hashmapClass) {
         jniEnv->DeleteGlobalRef(hashmapClass);
@@ -328,7 +328,7 @@ void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPi
 
     float position[2] = {0.0, 0.0};
 
-    jobject touchLabel = nullptr;
+    jobject labelPickResultObject = nullptr;
 
     if (labelPickResult) {
         auto properties = labelPickResult->touchItem.properties;
@@ -345,11 +345,11 @@ void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPi
         }
 
         jdoubleArray darr = jniEnv->NewDoubleArray(2);
-        touchLabel = jniEnv->NewObject(touchLabelClass, touchLabelInitMID, labelPickResult->coordinate.longitude,
+        labelPickResultObject = jniEnv->NewObject(labelPickResultClass, labelPickResultInitMID, labelPickResult->coordinate.longitude,
             labelPickResult->coordinate.latitude, labelPickResult->type, hashmap);
     }
 
-    jniEnv->CallVoidMethod(listener, onLabelPickMID, touchLabel, position[0], position[1]);
+    jniEnv->CallVoidMethod(listener, onLabelPickMID, labelPickResultObject, position[0], position[1]);
     jniEnv->DeleteGlobalRef(listener);
 }
 

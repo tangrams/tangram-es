@@ -19,7 +19,7 @@ import com.mapzen.tangram.MapView.OnMapReadyCallback;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
-import com.mapzen.tangram.TouchLabel;
+import com.mapzen.tangram.LabelPickResult;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -185,13 +185,13 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     }
 
     @Override
-    public void onLabelPick(TouchLabel label, float positionX, float positionY) {
-        if (label == null) {
+    public void onLabelPick(LabelPickResult labelPickResult, float positionX, float positionY) {
+        if (labelPickResult == null) {
             Log.d("Tangram", "Empty label selection");
             return;
         }
 
-        String name = label.getProperties().get("name");
+        String name = labelPickResult.getProperties().get("name");
         if (name.isEmpty()) {
             name = "unnamed";
         }
