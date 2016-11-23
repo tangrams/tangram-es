@@ -22,12 +22,7 @@ void MarkerManager::setScene(std::shared_ptr<Scene> scene) {
         m_styleBuilders[style->getName()] = style->createBuilder();
     }
 
-    // Rebuild any markers present.
-    for (auto& entry : m_markers) {
-        buildStyling(*entry);
-        buildGeometry(*entry, m_zoom);
-    }
-
+    rebuildAll();
 }
 
 MarkerID MarkerManager::add() {
@@ -273,6 +268,15 @@ bool MarkerManager::update(int zoom) {
 void MarkerManager::removeAll() {
 
     m_markers.clear();
+
+}
+
+void MarkerManager::rebuildAll() {
+
+    for (auto& entry : m_markers) {
+        buildStyling(*entry);
+        buildGeometry(*entry, m_zoom);
+    }
 
 }
 
