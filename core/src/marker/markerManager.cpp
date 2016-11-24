@@ -1,10 +1,12 @@
+#include "marker/markerManager.h"
+
 #include "data/tileData.h"
 #include "gl/texture.h"
-#include "marker/markerManager.h"
+#include "labels/labelSet.h"
 #include "marker/marker.h"
 #include "scene/sceneLoader.h"
 #include "style/style.h"
-#include "labels/labelSet.h"
+#include "util/yamlLoader.h"
 #include "log.h"
 
 namespace Tangram {
@@ -289,18 +291,23 @@ void MarkerManager::buildStyling(Marker& marker) {
     if (!m_scene) { return; }
 
     // Update the draw rule for the marker.
-    YAML::Node node = YAML::Load(marker.stylingString());
-    std::vector<StyleParam> params;
-    SceneLoader::parseStyleParams(node, m_scene, "", params);
+    try {
+        YAML::Node node = YamlLoader::load(marker.stylingString());
+        std::vector<StyleParam> params;
+        SceneLoader::parseStyleParams(node, m_scene, "", params);
 
-    // Compile any new JS functions used for styling.
-    const auto& sceneJsFnList = m_scene->functions();
-    for (auto i = m_jsFnIndex; i < sceneJsFnList.size(); ++i) {
-        m_styleContext.addFunction(sceneJsFnList[i]);
+        // Compile any new JS functions used for styling.
+        const auto& sceneJsFnList = m_scene->functions();
+        for (auto i = m_jsFnIndex; i < sceneJsFnList.size(); ++i) {
+            m_styleContext.addFunction(sceneJsFnList[i]);
+        }
+        m_jsFnIndex = sceneJsFnList.size();
+
+        marker.setDrawRule(std::make_unique<DrawRuleData>("", 0, std::move(params)));
+
+    } catch (YAML::ParserException e) {
+        LOGE("Parsing marker styling failed. '%s'", marker.stylingString().c_str());
     }
-    m_jsFnIndex = sceneJsFnList.size();
-
-    marker.setDrawRule(std::make_unique<DrawRuleData>("", 0, std::move(params)));
 
 }
 

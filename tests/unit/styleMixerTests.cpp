@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "scene/styleMixer.h"
+#include "util/yamlLoader.h"
 #include "yaml-cpp/yaml.h"
 #include <iostream>
 #include <set>
@@ -11,7 +12,7 @@ TEST_CASE("Find the correct set of styles to mix", "[mixing][yaml]") {
 
     StyleMixer mixer;
 
-    Node stylesMap = YAML::Load(R"END(
+    Node stylesMap = YamlLoader::load(R"END(
         styleA:
             base: baseA
         styleB:
@@ -39,7 +40,7 @@ TEST_CASE("Find the correct order of styles to mix", "[mixing][yaml]") {
 
     StyleMixer mixer;
 
-    Node stylesMap = YAML::Load(R"END(
+    Node stylesMap = YamlLoader::load(R"END(
         styleA:
             base: baseA
         styleB:
@@ -63,7 +64,7 @@ TEST_CASE("Correctly mix two shader configuration nodes", "[mixing][yaml]") {
 
     StyleMixer mixer;
 
-    Node shadersMap = YAML::Load(R"END(
+    Node shadersMap = YamlLoader::load(R"END(
         A:
             extensions: gl_arb_stuff
             uniforms:
@@ -191,7 +192,7 @@ TEST_CASE("Correctly mix two style config nodes", "[yaml][mixing]") {
 
     StyleMixer mixer;
 
-    Node stylesMap = YAML::Load(R"END(
+    Node stylesMap = YamlLoader::load(R"END(
         styleA:
             base: baseA
             animated: false
@@ -262,7 +263,7 @@ TEST_CASE("fix:mergeMapFieldTakingLast: Correctly mix two style config nodes", "
 
     StyleMixer mixer;
 
-    Node styles = YAML::Load(R"END(
+    Node styles = YamlLoader::load(R"END(
         styleA:
         styleB:
             base: styleA

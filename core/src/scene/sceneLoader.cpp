@@ -26,6 +26,7 @@
 #include "scene/styleParam.h"
 #include "util/base64.h"
 #include "util/yamlHelper.h"
+#include "util/yamlLoader.h"
 #include "view/view.h"
 #include "log.h"
 
@@ -71,15 +72,12 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
 void SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates) {
     auto& root = scene.config();
     for (const auto& update : updates) {
-        Node value;
         try {
-            value = YAML::Load(update.value);
-        } catch (YAML::ParserException e) {
-            LOGE("Parsing scene update string failed. '%s'", e.what());
-        }
-        if (value) {
+            Node value = YamlLoader::load(update.value);
             auto node = YamlPath(update.path).get(root);
             node = value;
+        } catch (YAML::ParserException e) {
+            LOGE("Parsing scene update string failed. '%s'", e.what());
         }
     }
 }

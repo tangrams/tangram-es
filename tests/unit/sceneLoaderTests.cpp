@@ -8,6 +8,7 @@
 #include "style/polylineStyle.h"
 #include "style/polygonStyle.h"
 #include "scene/pointLight.h"
+#include "util/yamlLoader.h"
 
 #include "platform.h"
 
@@ -28,7 +29,7 @@ TEST_CASE("Correctly instantiate a style from a YAML configuration") {
     scene->styles().emplace_back(new PolygonStyle("polygons"));
     scene->styles().emplace_back(new PolylineStyle("lines"));
 
-    YAML::Node node = YAML::Load(R"END(
+    YAML::Node node = YamlLoader::load(R"END(
         animated: true
         texcoords: true
         base: lines
@@ -56,7 +57,7 @@ TEST_CASE("Correctly instantiate a style from a YAML configuration") {
 }
 
 TEST_CASE("Test light parameter parsing") {
-    YAML::Node node = YAML::Load("position: [100px, 0, 20m]");
+    YAML::Node node = YamlLoader::load("position: [100px, 0, 20m]");
 
     auto light(std::make_unique<PointLight>("light"));
     SceneLoader::parseLightPosition(node["position"], *light);

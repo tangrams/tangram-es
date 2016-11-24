@@ -9,6 +9,7 @@
 #include "scene/sceneLoader.h"
 #include "scene/scene.h"
 #include "util/variant.h"
+#include "util/yamlLoader.h"
 
 using namespace Tangram;
 using YAML::Node;
@@ -16,7 +17,7 @@ using YAML::Node;
 TEST_CASE( "Style Uniforms Parsing and Injection Test: Float uniform value", "[StyleUniforms][core][yaml]") {
     std::shared_ptr<Scene> scene = std::make_shared<Scene>();
 
-    Node node = YAML::Load(R"END(
+    Node node = YamlLoader::load(R"END(
         u_float: 0.5
         )END");
 
@@ -31,7 +32,7 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: Float uniform value", "[S
 TEST_CASE( "Style Uniforms Parsing and Injection Test: Boolean uniform value", "[StyleUniforms][core][yaml]") {
     std::shared_ptr<Scene> scene = std::make_shared<Scene>();
 
-    Node node = YAML::Load(R"END(
+    Node node = YamlLoader::load(R"END(
         u_true: true
         u_false: false
         )END");
@@ -52,7 +53,7 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: Boolean uniform value", "
 TEST_CASE( "Style Uniforms Parsing and Injection Test: vec2, vec3, vec4 uniform value", "[StyleUniforms][core][yaml]") {
     std::shared_ptr<Scene> scene = std::make_shared<Scene>();
 
-    Node node = YAML::Load(R"END(
+    Node node = YamlLoader::load(R"END(
         u_vec2: [0.1, 0.2]
         u_vec3: [0.1, 0.2, 0.3]
         u_vec4: [0.1, 0.2, 0.3, 0.4]
@@ -94,7 +95,7 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: vec2, vec3, vec4 uniform 
 TEST_CASE( "Style Uniforms Parsing and Injection Test: textures uniform value", "[StyleUniforms][core][yaml]") {
     std::shared_ptr<Scene> scene = std::make_shared<Scene>();
 
-    Node node = YAML::Load(R"END(
+    Node node = YamlLoader::load(R"END(
         u_tex : img/cross.png
         u_tex2 : [img/cross.png, img/normals.jpg, img/sem.jpg]
         )END");
@@ -117,7 +118,7 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: textures uniform value", 
 TEST_CASE( "Style Uniforms Parsing failure Tests: textures uniform value", "[StyleUniforms][core][yaml]") {
     std::shared_ptr<Scene> scene = std::make_shared<Scene>();
 
-    Node node = YAML::Load(R"END(
+    Node node = YamlLoader::load(R"END(
         u_tex : not_a_texture
         u_tex2 : [not_a_texture_path2, not_a_texture_path_1]
         u_uniform_float0: 0.5f
