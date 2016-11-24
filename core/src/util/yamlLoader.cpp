@@ -24,14 +24,14 @@ YAML::Node YamlLoader::load(const char* bytes, size_t length) {
     yaml_parser_set_encoding(&parser, YAML_UTF8_ENCODING);
     yaml_stream_start_event_initialize(&event, YAML_UTF8_ENCODING);
 
-    std::map<std::string, YAML::anchor_t> anchors;
+    std::map<yaml_char_t*, YAML::anchor_t> anchors;
     YAML::anchor_t curAnchor = 0;
 
     bool ok = true;
 
-    auto anchorID = [&](const yaml_char_t* anchor) {
+    auto anchorID = [&](yaml_char_t* anchor) {
         if (anchor) {
-            anchors[reinterpret_cast<const char*>(anchor)] = ++curAnchor;
+            anchors[anchor] = ++curAnchor;
             return curAnchor;
         }
         return YAML::NullAnchor;
@@ -42,8 +42,6 @@ YAML::Node YamlLoader::load(const char* bytes, size_t length) {
     YAML::Mark mark;
 
     while (ok && event.type != YAML_STREAM_END_EVENT) {
-
-        yaml_event_delete(&event);
 
         if (!yaml_parser_parse(&parser, &event)) {
             LOGE("%s, line %s", parser.problem, parser.context_mark.line);
@@ -57,19 +55,26 @@ YAML::Node YamlLoader::load(const char* bytes, size_t length) {
         tag.clear();
 
         switch (event.type) {
-        case YAML_NO_EVENT:
         case YAML_STREAM_START_EVENT:
+        case YAML_NO_EVENT:
         case YAML_STREAM_END_EVENT:
+            // nothing allocated in event structure
             break;
+
         case YAML_DOCUMENT_START_EVENT:
             handler.OnDocumentStart(mark);
+            yaml_event_delete(&event);
             break;
+
         case YAML_DOCUMENT_END_EVENT:
             handler.OnDocumentEnd();
+            yaml_event_delete(&event);
             break;
+
         case YAML_SEQUENCE_START_EVENT: {
             if (event.data.sequence_start.tag) {
                 tag = reinterpret_cast<const char*>(event.data.sequence_start.tag);
+                free(event.data.sequence_start.tag);
             }
 
             auto style = static_cast<YAML::EmitterStyle::value>(event.data.sequence_start.style);
@@ -79,9 +84,11 @@ YAML::Node YamlLoader::load(const char* bytes, size_t length) {
         case YAML_SEQUENCE_END_EVENT:
             handler.OnSequenceEnd();
             break;
+
         case YAML_MAPPING_START_EVENT: {
             if (event.data.mapping_start.tag) {
                 tag = reinterpret_cast<const char*>(event.data.mapping_start.tag);
+                free(event.data.mapping_start.tag);
             }
             auto style = static_cast<YAML::EmitterStyle::value>(event.data.mapping_start.style);
             handler.OnMapStart(mark, tag, anchorID(event.data.mapping_start.anchor), style);
@@ -90,9 +97,10 @@ YAML::Node YamlLoader::load(const char* bytes, size_t length) {
         case YAML_MAPPING_END_EVENT:
             handler.OnMapEnd();
             break;
+
         case YAML_ALIAS_EVENT: {
 
-            auto it = anchors.find(reinterpret_cast<const char*>(event.data.alias.anchor));
+            auto it = anchors.find(event.data.alias.anchor);
             if (it != anchors.end()) {
                 handler.OnAlias(mark, it->second);
             } else {
@@ -105,10 +113,12 @@ YAML::Node YamlLoader::load(const char* bytes, size_t length) {
         case YAML_SCALAR_EVENT:
             if (event.data.scalar.tag) {
                 tag = reinterpret_cast<const char*>(event.data.scalar.tag);
+                free(event.data.scalar.tag);
             }
 
             if (event.data.scalar.value) {
                 value = reinterpret_cast<const char*>(event.data.scalar.value);
+                free(event.data.scalar.value);
             } else {
                 value.clear();
             }
@@ -124,6 +134,7 @@ YAML::Node YamlLoader::load(const char* bytes, size_t length) {
         }
     }
 
+    for (auto& a : anchors) { free(a.first); }
 
     yaml_event_delete(&event);
     yaml_parser_delete(&parser);
