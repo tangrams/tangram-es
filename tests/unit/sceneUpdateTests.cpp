@@ -140,7 +140,7 @@ TEST_CASE("Apply scene update that removes a node") {
     // Apply scene updates, reload scene.
     SceneLoader::applyUpdates(scene, updates);
     const Node& root = scene.config();
-    CHECK(!root["nest"]["map"]["a"]);
+    //CHECK(!root["nest"]["map"]["a"]);
     CHECK(root["nest"]["map"].IsNull());
     CHECK(root["nest"]["seq"]);
 }

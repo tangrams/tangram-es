@@ -17,6 +17,7 @@ set(CMAKE_BUILD_TYPE Release)
 set(EXPORTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/exports/${PLATFORM_TARGET})
 endif()
 
+add_subdirectory(libyaml)
 
 ## yaml-cpp ##
 ##############
