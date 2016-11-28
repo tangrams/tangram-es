@@ -263,26 +263,22 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
         }
     };
 
-    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
-
-    [httpHandler downloadAsync:nsUrl completionHandler:handler];
+    NSString* url = [NSString stringWithUTF8String:_url.c_str()];
+    [httpHandler downloadRequestAsync:url completionHandler:handler];
 
     return true;
 }
 
 void cancelUrlRequest(const std::string& _url) {
 
-    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
+    TGHttpHandler* httpHandler = [viewController httpHandler];
 
-    [[viewController.httpHandler session] getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
-        for(NSURLSessionTask* task in dataTasks) {
-            if([[task originalRequest].URL.absoluteString isEqualToString:nsUrl]) {
-                [task cancel];
-                break;
-            }
-        }
-    }];
+    if (!httpHandler) {
+        return;
+    }
 
+    NSString* url = [NSString stringWithUTF8String:_url.c_str()];
+    [httpHandler cancelDownloadRequestAsync:url];
 }
 
 void setCurrentThreadPriority(int priority) {}

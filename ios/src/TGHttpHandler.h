@@ -12,11 +12,14 @@ typedef void(^DownloadCompletionHandler)(NSData*, NSURLResponse*, NSError*);
 
 @interface TGHttpHandler : NSObject
 
+- (id)init;
+
 - (id)initWithCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity;
 
-- (void)downloadAsync:(NSString*)nsUrl completionHandler:(DownloadCompletionHandler)completionHandler;
+- (void)downloadRequestAsync:(NSString*)url completionHandler:(DownloadCompletionHandler)completionHandler;
 
-@property (readonly, nonatomic) NSURLSession* session;
+- (void)cancelDownloadRequestAsync:(NSString*)url;
 
+- (void)setCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity;
 
 @end

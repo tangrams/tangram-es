@@ -11,38 +11,77 @@
 @interface TGHttpHandler()
 
 @property (strong, nonatomic) NSURLSession* session;
+@property (strong, nonatomic) NSURLSessionConfiguration* configuration;
+
++ (NSURLSessionConfiguration*)defaultConfiguration;
 
 @end
 
 @implementation TGHttpHandler
+
+- (id)init
+{
+    self = [super init];
+
+    if (self) {
+        self.configuration = [TGHttpHandler defaultSessionConfiguration];
+        self.session = [NSURLSession sessionWithConfiguration:self.configuration];
+    }
+
+    return self;
+}
 
 - (id)initWithCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity
 {
     self = [super init];
 
     if (self) {
-        NSURLSessionConfiguration* defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
-        NSURLCache* tileCache = [[NSURLCache alloc] initWithMemoryCapacity:memoryCapacity
-                                                              diskCapacity:diskCapacity
-                                                                  diskPath:cachePath];
-
-        defaultConfigObject.URLCache = tileCache;
-        defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
-        defaultConfigObject.timeoutIntervalForRequest = 30;
-        defaultConfigObject.timeoutIntervalForResource = 60;
-
-        self.session = [NSURLSession sessionWithConfiguration: defaultConfigObject];
+        self.configuration = [TGHttpHandler defaultSessionConfiguration];
+        [self setCachePath:cachePath cacheMemoryCapacity:memoryCapacity cacheDiskCapacity:diskCapacity];
+        self.session = [NSURLSession sessionWithConfiguration:self.configuration];
     }
 
     return self;
 }
 
-- (void)downloadAsync:(NSString*)nsUrl completionHandler:(DownloadCompletionHandler)completionHandler
++ (NSURLSessionConfiguration*)defaultSessionConfiguration
 {
-    NSURLSessionDataTask* dataTask = [self.session dataTaskWithURL:[NSURL URLWithString:nsUrl]
+    NSURLSessionConfiguration* sessionConfiguration = [NSURLSessionConfiguration defaultSessionConfiguration];
+
+    sessionConfiguration.timeoutIntervalForRequest = 30;
+    sessionConfiguration.timeoutIntervalForResource = 60;
+
+    return sessionConfiguration;
+}
+
+- (void)setCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity
+{
+    NSURLCache* tileCache = [[NSURLCache alloc] initWithMemoryCapacity:memoryCapacity
+                                                          diskCapacity:diskCapacity
+                                                              diskPath:cachePath];
+
+    self.configuration.URLCache = tileCache;
+    self.configuration.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
+}
+
+- (void)downloadRequestAsync:(NSString*)url completionHandler:(DownloadCompletionHandler)completionHandler
+{
+    NSURLSessionDataTask* dataTask = [self.session dataTaskWithURL:[NSURL URLWithString:url]
                                                                       completionHandler:completionHandler];
 
     [dataTask resume];
+}
+
+- (void)cancelDownloadRequestAsync:(NSString*)url
+{
+    [self.session getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
+        for (NSURLSessionTask* task in dataTasks) {
+            if ([[task originalRequest].URL.absoluteString isEqualToString:url]) {
+                [task cancel];
+                break;
+            }
+        }
+    }];
 }
 
 @end
