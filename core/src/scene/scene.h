@@ -1,6 +1,7 @@
 #pragma once
 
 #include "util/color.h"
+#include "util/node.h"
 #include "view/view.h"
 
 #include <atomic>
@@ -12,8 +13,6 @@
 #include <unordered_map>
 
 #include "glm/vec2.hpp"
-#include "yaml-cpp/yaml.h"
-#include "util/yamlHelper.h"
 
 namespace Tangram {
 

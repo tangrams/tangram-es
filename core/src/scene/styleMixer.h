@@ -1,20 +1,15 @@
 #pragma once
 
+#include "util/node.h"
 #include <memory>
 #include <string>
 #include <vector>
-
-namespace YAML {
-    class Node;
-}
 
 namespace Tangram {
 
 class StyleMixer {
 
 public:
-
-    using Node = YAML::Node;
 
     // Get the sequence of style names that are designated to be mixed into the
     // input style node by its 'base' and 'mix' fields.

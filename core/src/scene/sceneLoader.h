@@ -3,6 +3,7 @@
 #include "gl/uniform.h"
 #include "scene/scene.h"
 #include "tangram.h"
+#include "util/node.h"
 #include <string>
 #include <vector>
 #include <memory>
@@ -10,7 +11,6 @@
 #include <sstream>
 #include <mutex>
 
-#include "yaml-cpp/yaml.h"
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "glm/vec4.hpp"
@@ -38,7 +38,6 @@ struct StyleUniform {
 };
 
 struct SceneLoader {
-    using Node = YAML::Node;
 
     static bool loadScene(std::shared_ptr<Scene> _scene, const std::vector<SceneUpdate>& updates = {});
     static bool applyConfig(const std::shared_ptr<Scene>& scene);
@@ -51,15 +50,15 @@ struct SceneLoader {
     static void loadSource(const std::string& name, const Node& source, const Node& sources, const std::shared_ptr<Scene>& scene);
     static void loadSourceRasters(std::shared_ptr<DataSource>& source, Node rasterNode, const Node& sources,
                                   const std::shared_ptr<Scene>& scene);
-    static void loadTexture(const std::pair<Node, Node>& texture, const std::shared_ptr<Scene>& scene);
-    static void loadLayer(const std::pair<Node, Node>& layer, const std::shared_ptr<Scene>& scene);
-    static void loadLight(const std::pair<Node, Node>& light, const std::shared_ptr<Scene>& scene);
+    static void loadTexture(const MappingMember& texture, const std::shared_ptr<Scene>& scene);
+    static void loadLayer(const MappingMember& layer, const std::shared_ptr<Scene>& scene);
+    static void loadLight(const MappingMember& light, const std::shared_ptr<Scene>& scene);
     static void loadCameras(Node cameras, const std::shared_ptr<Scene>& scene);
     static void loadCamera(const Node& camera, const std::shared_ptr<Scene>& scene);
     static void loadStyleProps(Style& style, Node styleNode, const std::shared_ptr<Scene>& scene);
     static void loadMaterial(Node matNode, Material& material, const std::shared_ptr<Scene>& scene, Style& style);
     static void loadShaderConfig(Node shaders, Style& style, const std::shared_ptr<Scene>& scene);
-    static void loadFont(const std::pair<Node, Node>& font, const std::shared_ptr<Scene>& scene);
+    static void loadFont(const MappingMember& font, const std::shared_ptr<Scene>& scene);
     static SceneLayer loadSublayer(Node layer, const std::string& name, const std::shared_ptr<Scene>& scene);
     static Filter generateFilter(Node filter, Scene& scene);
     static Filter generateAnyFilter(Node filter, Scene& scene);
