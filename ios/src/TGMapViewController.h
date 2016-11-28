@@ -15,6 +15,7 @@
 #import "TGGeoPoint.h"
 #import "TGGeoPolygon.h"
 #import "TGGeoPolyline.h"
+#import "TGHttpHandler.h"
 
 typedef NS_ENUM(NSInteger, TGCameraType) {
     TGCameraTypePerspective = 0,
@@ -50,8 +51,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)mapView:(TGMapViewController*)mapView didSelectFeature:(NSDictionary*)feature atScreenPosition:(CGPoint)position;
 @end
 
-NS_ASSUME_NONNULL_END
-
 @interface TGMapViewController : GLKViewController <UIGestureRecognizerDelegate>
 
 @property (assign, nonatomic) BOOL continuous;
@@ -64,8 +63,7 @@ NS_ASSUME_NONNULL_END
 @property (assign, nonatomic) float zoom;
 @property (assign, nonatomic) float rotation;
 @property (assign, nonatomic) float tilt;
-
-NS_ASSUME_NONNULL_BEGIN
+@property (strong, nonatomic) TGHttpHandler* httpHandler;
 
 #pragma mark Marker interface
 

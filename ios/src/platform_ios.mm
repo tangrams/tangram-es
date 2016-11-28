@@ -10,28 +10,16 @@
 
 #import "TGMapViewController.h"
 #import "TGFontConverter.h"
+#import "TGHttpHandler.h"
 #import "platform_ios.h"
 #import "log.h"
 
 static TGMapViewController* viewController;
 static NSBundle* tangramFramework;
-NSURLSession* defaultSession;
 
 void init(TGMapViewController* _controller) {
 
     viewController = _controller;
-
-    /* Setup NSURLSession configuration : cache path and size */
-    NSURLSessionConfiguration *defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
-    NSString *cachePath = @"/tile_cache";
-    NSURLCache *tileCache = [[NSURLCache alloc] initWithMemoryCapacity: 4 * 1024 * 1024 diskCapacity: 30 * 1024 * 1024 diskPath: cachePath];
-    defaultConfigObject.URLCache = tileCache;
-    defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
-    defaultConfigObject.timeoutIntervalForRequest = 30;
-    defaultConfigObject.timeoutIntervalForResource = 60;
-
-    /* create a default NSURLSession using the defaultConfigObject*/
-    defaultSession = [NSURLSession sessionWithConfiguration: defaultConfigObject ];
 
     // Get handle to tangram framework
     tangramFramework = [NSBundle bundleWithIdentifier:@"com.mapzen.tangramMap"];
@@ -272,8 +260,8 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
     };
 
-    NSURLSessionDataTask* dataTask = [defaultSession dataTaskWithURL:[NSURL URLWithString:nsUrl]
-                                                    completionHandler:handler];
+    NSURLSessionDataTask* dataTask = [[viewController.httpHandler session] dataTaskWithURL:[NSURL URLWithString:nsUrl]
+                                                          completionHandler:handler];
 
     [dataTask resume];
 
@@ -285,7 +273,7 @@ void cancelUrlRequest(const std::string& _url) {
 
     NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
 
-    [defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
+    [[viewController.httpHandler session] getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
         for(NSURLSessionTask* task in dataTasks) {
             if([[task originalRequest].URL.absoluteString isEqualToString:nsUrl]) {
                 [task cancel];
