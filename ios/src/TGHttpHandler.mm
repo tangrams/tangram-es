@@ -8,8 +8,7 @@
 
 #import "TGHttpHandler.h"
 
-@interface TGHttpHandler () {
-}
+@interface TGHttpHandler()
 
 @property (strong, nonatomic) NSURLSession* session;
 
@@ -36,6 +35,14 @@
     }
 
     return self;
+}
+
+- (void)downloadAsync:(NSString*)nsUrl completionHandler:(DownloadCompletionHandler)completionHandler
+{
+    NSURLSessionDataTask* dataTask = [self.session dataTaskWithURL:[NSURL URLWithString:nsUrl]
+                                                                      completionHandler:completionHandler];
+
+    [dataTask resume];
 }
 
 @end

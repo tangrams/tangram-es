@@ -227,9 +227,13 @@ unsigned char* systemFont(const std::string& _name, const std::string& _weight, 
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
-    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
+    TGHttpHandler* httpHandler = [viewController httpHandler];
 
-    void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
+    if (!httpHandler) {
+        return false;
+    }
+
+    DownloadCompletionHandler handler = ^void (NSData* data, NSURLResponse* response, NSError* error) {
 
         NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
 
@@ -257,16 +261,13 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
             _callback(std::move(rawDataVec));
 
         }
-
     };
 
-    NSURLSessionDataTask* dataTask = [[viewController.httpHandler session] dataTaskWithURL:[NSURL URLWithString:nsUrl]
-                                                          completionHandler:handler];
+    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
 
-    [dataTask resume];
+    [httpHandler downloadAsync:nsUrl completionHandler:handler];
 
     return true;
-
 }
 
 void cancelUrlRequest(const std::string& _url) {
