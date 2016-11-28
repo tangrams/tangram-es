@@ -10,7 +10,7 @@
 
 @interface TGHttpHandler : NSObject
 
-- (id)init;
+- (id)initWithCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity;
 
 @property (readonly, nonatomic) NSURLSession* session;
 

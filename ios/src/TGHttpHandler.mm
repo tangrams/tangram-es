@@ -17,14 +17,15 @@
 
 @implementation TGHttpHandler
 
-- (id)init
+- (id)initWithCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity
 {
     self = [super init];
 
     if (self) {
         NSURLSessionConfiguration* defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
-        NSString* cachePath = @"/tile_cache";
-        NSURLCache* tileCache = [[NSURLCache alloc] initWithMemoryCapacity: 4 * 1024 * 1024 diskCapacity: 30 * 1024 * 1024 diskPath: cachePath];
+        NSURLCache* tileCache = [[NSURLCache alloc] initWithMemoryCapacity:memoryCapacity
+                                                              diskCapacity:diskCapacity
+                                                                  diskPath:cachePath];
 
         defaultConfigObject.URLCache = tileCache;
         defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;

@@ -552,7 +552,9 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     self.renderRequested = YES;
     self.continuous = NO;
 
-    self.httpHandler = [[TGHttpHandler alloc] init];
+    self.httpHandler = [[TGHttpHandler alloc] initWithCachePath:@"tile_cache"
+                                            cacheMemoryCapacity:4*1024*1024
+                                              cacheDiskCapacity:30*1024*1024];
 
     init(self);
 
