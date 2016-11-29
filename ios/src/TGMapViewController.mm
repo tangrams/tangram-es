@@ -121,24 +121,30 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     screenPosition.x *= self.pixelScale;
     screenPosition.y *= self.pixelScale;
 
-    self.map->pickFeaturesAt(screenPosition.x, screenPosition.y, [screenPosition, self](const auto& items) {
+    self.map->pickFeatureAt(screenPosition.x, screenPosition.y, [screenPosition, self](const Tangram::FeaturePickResult* featureResult) {
         NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
-        CGPoint position = CGPointMake(screenPosition.x / self.pixelScale, screenPosition.y / self.pixelScale);
 
-        if (items.size() > 0) {
-            const auto& result = items[0];
-            const auto& properties = result.properties;
-            position = CGPointMake(result.position[0] / self.pixelScale, result.position[1] / self.pixelScale);
+        CGPoint position = CGPointMake(0.0, 0.0);
 
-            for (const auto& item : properties->items()) {
-                NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
-                NSString* value = [NSString stringWithUTF8String:properties->asString(item.value).c_str()];
-                dictionary[key] = value;
+        if (!featureResult) {
+            if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
+                [self.mapViewDelegate mapView:self didSelectFeature:dictionary atScreenPosition:position];
             }
+
+            return;
         }
 
-        if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeatures:atScreenPosition:)]) {
-            [self.mapViewDelegate mapView:self didSelectFeatures:dictionary atScreenPosition:position];
+        const auto& properties = featureResult->properties;
+        position = CGPointMake(featureResult->position[0] / self.pixelScale, featureResult->position[1] / self.pixelScale);
+
+        for (const auto& item : properties->items()) {
+            NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
+            NSString* value = [NSString stringWithUTF8String:properties->asString(item.value).c_str()];
+            dictionary[key] = value;
+        }
+
+        if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
+            [self.mapViewDelegate mapView:self didSelectFeature:dictionary atScreenPosition:position];
         }
     });
 }

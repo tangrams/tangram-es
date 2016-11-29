@@ -11,7 +11,7 @@
 @interface MapViewControllerDelegate : NSObject <TGMapViewDelegate>
 
 - (void)mapView:(TGMapViewController *)mapView didLoadSceneAsync:(NSString *)scene;
-- (void)mapView:(TGMapViewController*)mapView didSelectFeatures:(NSDictionary *)features atScreenPosition:(CGPoint)position;
+- (void)mapView:(TGMapViewController*)mapView didSelectFeature:(NSDictionary *)feature atScreenPosition:(CGPoint)position;
 
 @end
 

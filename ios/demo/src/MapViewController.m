@@ -28,11 +28,11 @@
     [mapView setPosition:newYork];
 }
 
-- (void)mapView:(TGMapViewController *)mapView didSelectFeatures:(NSDictionary *)features atScreenPosition:(CGPoint)position
+- (void)mapView:(TGMapViewController *)mapView didSelectFeature:(NSDictionary *)feature atScreenPosition:(CGPoint)position
 {
 
     // Not feature selected
-    if (features.count == 0) {
+    if (feature.count == 0) {
 
         // Convert the 2d screen position to the lat lon
         TGGeoPoint latlon = [mapView screenPositionToLngLat:position];
@@ -44,12 +44,12 @@
 
     NSLog(@"Picked features:");
 
-    for (id key in features) {
-        NSLog(@"\t%@ -- %@", key, [features objectForKey:key]);
+    for (id key in feature) {
+        NSLog(@"\t%@ -- %@", key, [feature objectForKey:key]);
 
         if ([key isEqualToString:@"name"]) {
              UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Selection callback"
-                                                             message:[features objectForKey:key]
+                                                             message:[feature objectForKey:key]
                                                             delegate:nil
                                                    cancelButtonTitle:@"OK"
                                                    otherButtonTitles:nil];
