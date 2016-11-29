@@ -134,7 +134,7 @@ struct StyleParam {
         }
     };
 
-    using Value = variant<none_type, bool, float, uint32_t, std::string, glm::vec2, Width, LabelProperty::Anchors>;
+    using Value = variant<Undefined, none_type, bool, float, uint32_t, std::string, glm::vec2, Width, LabelProperty::Anchors>;
 
     StyleParam() :
         key(StyleParamKey::none),

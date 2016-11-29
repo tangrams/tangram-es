@@ -17,6 +17,20 @@
 #include <string>
 
 namespace Tangram {
+// Primarily used when duk evaluated jsFunction results in a a null or undefined value
+struct Undefined {
+    template<typename T>
+    bool operator==(T const& rhs) const {
+        return false;
+    }
+    bool operator==(Undefined const& rhs) const {
+        return true;
+    }
+    bool operator<(Undefined const& rhs) const {
+        return false;
+    }
+};
+
 struct none_type {
     template<typename T>
     bool operator==(T const& rhs) const {
