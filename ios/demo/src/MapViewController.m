@@ -29,7 +29,7 @@
     cairo.latitude = 31.25;
 
     [mapView setZoom:15];
-    [mapView setPosition:cairo];
+    [mapView setPosition:newYork];
 }
 
 - (void)mapView:(TGMapViewController *)mapView didSelectFeature:(NSDictionary *)feature atScreenPosition:(CGPoint)position

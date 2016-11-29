@@ -118,6 +118,8 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
     return handles;
 }
 
+// System fonts are not available on Raspberry Pi yet, we will possibly use FontConfig in the future,
+// for references see the tizen platform implementation of system fonts
 unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
     return nullptr;
 }

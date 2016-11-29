@@ -11,25 +11,25 @@
 #include <cstdio>
 
 struct FontHeader {
-    int32_t fVersion;
-    uint16_t fNumTables;
-    uint16_t fSearchRange;
-    uint16_t fEntrySelector;
-    uint16_t fRangeShift;
+    int32_t version;
+    uint16_t numTables;
+    uint16_t searchRange;
+    uint16_t entrySelector;
+    uint16_t rangeShift;
 };
 
 typedef struct FontHeader FontHeader;
 
 struct TableEntry {
-    uint32_t fTag;
-    uint32_t fCheckSum;
-    uint32_t fOffset;
-    uint32_t fLength;
+    uint32_t tag;
+    uint32_t checkSum;
+    uint32_t offset;
+    uint32_t length;
 };
 
 typedef struct TableEntry TableEntry;
 
-static uint32_t CalcTableCheckSum(const uint32_t* table, uint32_t numberOfBytesInTable)
+static uint32_t calcTableCheckSum(const uint32_t* table, uint32_t numberOfBytesInTable)
 {
     uint32_t sum = 0;
     uint32_t nLongs = (numberOfBytesInTable + 3) / 4;
@@ -39,18 +39,18 @@ static uint32_t CalcTableCheckSum(const uint32_t* table, uint32_t numberOfBytesI
     return sum;
 }
 
-static uint32_t CalcTableDataRefCheckSum(CFDataRef dataRef)
+static uint32_t calcTableDataRefCheckSum(CFDataRef dataRef)
 {
     const uint32_t* dataBuff = (const uint32_t *)CFDataGetBytePtr(dataRef);
     uint32_t dataLength = (uint32_t)CFDataGetLength(dataRef);
-    return CalcTableCheckSum(dataBuff, dataLength);
+    return calcTableCheckSum(dataBuff, dataLength);
 }
 
 @implementation TGFontConverter
 
-//Reference:
-//http://skia.googlecode.com/svn-history/r1473/trunk/src/ports/SkFontHost_mac_coretext.cpp
-//https://gist.github.com/Jyczeal/1892760
+// References:
+// https://skia.googlesource.com/skia/+/master/src/ports/SkFontHost_mac.cpp
+// https://gist.github.com/Jyczeal/1892760
 
 + (unsigned char *)fontDataForCGFont:(CGFontRef)cgFont size:(size_t *)size
 {
@@ -71,8 +71,6 @@ static uint32_t CalcTableDataRefCheckSum(CFDataRef dataRef)
     size_t totalSize = sizeof(FontHeader) + sizeof(TableEntry) * tableCount;
 
     for (int index = 0; index < tableCount; ++index) {
-
-        //get size
         size_t tableSize = 0;
         intptr_t aTag = (intptr_t)CFArrayGetValueAtIndex(tags, index);
 
@@ -96,32 +94,39 @@ static uint32_t CalcTableDataRefCheckSum(CFDataRef dataRef)
     char* dataStart = (char*)stream;
     char* dataPtr = dataStart;
 
-    // compute font header entries
-    uint16_t entrySelector = 0;
-    uint16_t searchRange = 1;
-
-    while (searchRange < tableCount >> 1) {
-        entrySelector++;
-        searchRange <<= 1;
-    }
-    searchRange <<= 4;
-
-    uint16_t rangeShift = (tableCount << 4) - searchRange;
-
-    // write font header (also called sfnt header, offset subtable)
+    // Write font header (also called sfnt header, offset subtable)
     FontHeader* offsetTable = (FontHeader*)dataPtr;
 
-    //OpenType Font contains CFF Table use 'OTTO' as version, and with .otf extension
-    //otherwise 0001 0000
-    offsetTable->fVersion = containsCFFTable ? 'OTTO' : CFSwapInt16HostToBig(1);
-    offsetTable->fNumTables = CFSwapInt16HostToBig((uint16_t)tableCount);
-    offsetTable->fSearchRange = CFSwapInt16HostToBig((uint16_t)searchRange);
-    offsetTable->fEntrySelector = CFSwapInt16HostToBig((uint16_t)entrySelector);
-    offsetTable->fRangeShift = CFSwapInt16HostToBig((uint16_t)rangeShift);
+    // Compute font header entries
+    // c.f: Organization of an OpenType Font in:
+    // https://www.microsoft.com/typography/otspec/otff.htm
+    {
+        // (Maximum power of 2 <= numTables) x 16
+        uint16_t entrySelector = 0;
+        // Log2(maximum power of 2 <= numTables).
+        uint16_t searchRange = 1;
+
+        while (searchRange < tableCount >> 1) {
+            entrySelector++;
+            searchRange <<= 1;
+        }
+        searchRange <<= 4;
+
+        // NumTables x 16-searchRange.
+        uint16_t rangeShift = (tableCount << 4) - searchRange;
+
+        // OpenType Font contains CFF Table use 'OTTO' as version, and with .otf extension
+        // otherwise 0001 0000
+        offsetTable->version = containsCFFTable ? 'OTTO' : CFSwapInt16HostToBig(1);
+        offsetTable->numTables = CFSwapInt16HostToBig((uint16_t)tableCount);
+        offsetTable->searchRange = CFSwapInt16HostToBig((uint16_t)searchRange);
+        offsetTable->entrySelector = CFSwapInt16HostToBig((uint16_t)entrySelector);
+        offsetTable->rangeShift = CFSwapInt16HostToBig((uint16_t)rangeShift);
+    }
 
     dataPtr += sizeof(FontHeader);
 
-    // write tables
+    // Write tables
     TableEntry* entry = (TableEntry*)dataPtr;
     dataPtr += sizeof(TableEntry) * tableCount;
 
@@ -133,12 +138,12 @@ static uint32_t CalcTableDataRefCheckSum(CFDataRef dataRef)
 
         memcpy(dataPtr, CFDataGetBytePtr(tableDataRef), tableSize);
 
-        entry->fTag = CFSwapInt32HostToBig((uint32_t)aTag);
-        entry->fCheckSum = CFSwapInt32HostToBig(CalcTableCheckSum((uint32_t *)dataPtr, tableSize));
+        entry->tag = CFSwapInt32HostToBig((uint32_t)aTag);
+        entry->checkSum = CFSwapInt32HostToBig(calcTableCheckSum((uint32_t *)dataPtr, tableSize));
 
         uint32_t offset = dataPtr - dataStart;
-        entry->fOffset = CFSwapInt32HostToBig((uint32_t)offset);
-        entry->fLength = CFSwapInt32HostToBig((uint32_t)tableSize);
+        entry->offset = CFSwapInt32HostToBig((uint32_t)offset);
+        entry->length = CFSwapInt32HostToBig((uint32_t)tableSize);
         dataPtr += (tableSize + 3) & ~3;
         ++entry;
         CFRelease(tableDataRef);
