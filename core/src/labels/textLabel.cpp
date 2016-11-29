@@ -20,7 +20,7 @@ TextLabel::TextLabel(Label::WorldTransform _transform, Type _type, Label::Option
                      TextLabel::VertexAttributes _attrib,
                      glm::vec2 _dim,  TextLabels& _labels, TextRange _textRanges,
                      Align _preferedAlignment)
-    : Label(_transform, _dim, _type, _options),
+    : Label(_transform, _dim, _attrib.selectionColor, _type, _options),
       m_textLabels(_labels),
       m_textRanges(_textRanges),
       m_fontAttrib(_attrib),

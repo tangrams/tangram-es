@@ -91,14 +91,12 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         logMsg("pick feature\n");
         map->clearDataSource(*data_source, true, true);
 
-        map->pickFeaturesAt(x, y, [](const auto& items) {
-            for (const auto& item : items) {
-                LOG("%s", item.properties->toJson().c_str());
-
-                std::string name = "noname";
-                item.properties->getString("name", name);
-                LOGS("%s", name.c_str());
-            }
+        map->pickFeatureAt(x, y, [](auto item) {
+            if (!item) { return; }
+            LOG("%s", item->properties->toJson().c_str());
+            std::string name = "noname";
+            item->properties->getString("name", name);
+            LOGS("%s", name.c_str());
         });
     } else if ((time - last_time_pressed) < single_tap_time) {
         // LngLat p;

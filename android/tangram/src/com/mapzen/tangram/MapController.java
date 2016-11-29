@@ -70,10 +70,22 @@ public class MapController implements Renderer {
         /**
          * Receive information about features found in a call to {@link #pickFeature(float, float)}
          * @param properties A mapping of string keys to string or number values
-         * @param positionX The horizontal screen coordinate of the center of the feature
-         * @param positionY The vertical screen coordinate of the center of the feature
+         * @param positionX The horizontal screen coordinate of the tapped location
+         * @param positionY The vertical screen coordinate of the tapped location
          */
         void onFeaturePick(Map<String, String> properties, float positionX, float positionY);
+    }
+    /**
+     * Interface for a callback to receive information about labels picked from the map
+     */
+    public interface LabelPickListener {
+        /**
+         * Receive information about labels found in a call to {@link #pickLabels(float, float)}
+         * @param label The {@link LabelPickResult} that has been selected
+         * @param positionX The horizontal screen coordinate of the tapped location
+         * @param positionY The vertical screen coordinate of the tapped location
+         */
+        void onLabelPick(LabelPickResult labelPickResult, float positionX, float positionY);
     }
 
     public interface ViewCompleteListener {
@@ -639,7 +651,7 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Query the map for labeled features at the given screen coordinates; results will be returned
+     * Query the map for geometry features at the given screen coordinates; results will be returned
      * in a callback to the object set by {@link #setFeaturePickListener(FeaturePickListener)}
      * @param posX The horizontal screen coordinate
      * @param posY The vertical screen coordinate
@@ -648,6 +660,26 @@ public class MapController implements Renderer {
         if (featurePickListener != null) {
             checkPointer(mapPointer);
             nativePickFeature(mapPointer, posX, posY, featurePickListener);
+        }
+    }
+    /**
+     * Set a listener for label pick events
+     * @param listener Listener to call
+     */
+    public void setLabelPickListener(LabelPickListener listener) {
+        labelPickListener = listener;
+    }
+
+    /**
+     * Query the map for labeled features at the given screen coordinates; results will be returned
+     * in a callback to the object set by {@link #setLabelPickListener(LabelPickListener)}
+     * @param posX The horizontal screen coordinate
+     * @param posY The vertical screen coordinate
+     */
+    public void pickLabel(float posX, float posY) {
+        if (labelPickListener != null) {
+            checkPointer(mapPointer);
+            nativePickLabel(mapPointer, posX, posY, labelPickListener);
         }
     }
 
@@ -861,6 +893,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String value);
     private synchronized native void nativeApplySceneUpdates(long mapPtr);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
+    private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
     private synchronized native long nativeMarkerAdd(long mapPtr);
     private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
     private synchronized native boolean nativeMarkerSetStyling(long mapPtr, long markerID, String styling);
@@ -900,6 +933,7 @@ public class MapController implements Renderer {
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
     private FeaturePickListener featurePickListener;
+    private LabelPickListener labelPickListener;
     private ViewCompleteListener viewCompleteListener;
     private FrameCaptureCallback frameCaptureCallback;
     private boolean frameCaptureAwaitCompleteView;

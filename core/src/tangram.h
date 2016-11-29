@@ -11,11 +11,27 @@ namespace Tangram {
 
 class DataSource;
 
-struct TouchItem {
+enum LabelType {
+    icon,
+    text,
+};
+
+struct FeaturePickResult {
     std::shared_ptr<Properties> properties;
     float position[2];
-    float distance;
 };
+
+// Returns a pointer to the selected feature or null, only valid on the callback scope
+using FeaturePickCallback = std::function<void(const FeaturePickResult*)>;
+
+struct LabelPickResult {
+    LabelType type;
+    LngLat coordinate;
+    FeaturePickResult touchItem;
+};
+
+// Returns a pointer to the selected label or null, only valid on the callback scope
+using LabelPickCallback = std::function<void(const LabelPickResult*)>;
 
 struct SceneUpdate {
     std::string path;
@@ -232,7 +248,16 @@ public:
     // efficiency, but can cause errors if your application code makes OpenGL calls (false by default)
     void useCachedGlState(bool _use);
 
-    void pickFeaturesAt(float _x, float _y, std::function<void(const std::vector<TouchItem>&)> _onReadyCallback);
+    // Create a query to select a feature marked as 'interactive'. The query runs on the next frame.
+    // Calls _onFeaturePickCallback once the query has completed, and returns the FeaturePickResult
+    // with its associated properties.
+    void pickFeatureAt(float _x, float _y, FeaturePickCallback _onFeaturePickCallback);
+
+    // Create a query to select a label created for a feature marked as 'interactive'. The query runs
+    // on the next frame.
+    // Calls _onLabelPickCallback once the query has completed, and returns the LabelPickResult
+    // with its associated properties.
+    void pickLabelAt(float _x, float _y, LabelPickCallback _onLabelPickCallback);
 
     // Run this task asynchronously to Tangram's main update loop.
     void runAsyncTask(std::function<void()> _task);

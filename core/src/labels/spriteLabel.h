@@ -42,6 +42,8 @@ public:
 
     void addVerticesToMesh() override;
 
+    LabelType renderType() const override { return LabelType::icon; }
+
 private:
 
     void applyAnchor(LabelProperty::Anchor _anchor) override;

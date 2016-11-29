@@ -43,7 +43,7 @@ struct PointStyleBuilder : public StyleBuilder {
     PointStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
     void addLabel(const Point& _point, const glm::vec4& _quad,
-                  const PointStyle::Parameters& _params);
+                  const PointStyle::Parameters& _params, const DrawRule& _rule);
 
     void addLayoutItems(LabelCollider& _layout) override;
 

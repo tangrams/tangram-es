@@ -16,7 +16,7 @@ const float SpriteVertex::texture_scale = 65535.0f;
 SpriteLabel::SpriteLabel(Label::WorldTransform _transform, glm::vec2 _size, Label::Options _options,
                          SpriteLabel::VertexAttributes _attrib, Texture* _texture,
                          SpriteLabels& _labels, size_t _labelsPos)
-    : Label(_transform, _size, Label::Type::point, _options),
+    : Label(_transform, _size, _attrib.selectionColor, Label::Type::point, _options),
       m_labels(_labels),
       m_labelsPos(_labelsPos),
       m_texture(_texture),

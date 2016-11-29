@@ -61,9 +61,10 @@ void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer
         bool interactive = false;
         if (rule.get(StyleParamKey::interactive, interactive) && interactive) {
             if (selectionColor == 0) {
-                selectionColor = m_scene->featureSelection()->colorIdentifier();
+                selectionColor = m_scene->featureSelection()->nextColorIdentifier();
             }
             rule.selectionColor = selectionColor;
+            rule.featureSelection = m_scene->featureSelection().get();
         } else {
             rule.selectionColor = 0;
         }

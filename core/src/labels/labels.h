@@ -23,7 +23,6 @@ class Marker;
 class Tile;
 class Style;
 class TileCache;
-struct TouchItem;
 
 class Labels {
 
@@ -47,6 +46,10 @@ public:
                                  bool _onlyTransitions = true);
 
     bool needUpdate() const { return m_needUpdate; }
+
+    bool getLabel(const std::vector<std::unique_ptr<Style>>& _styles,
+                                  const std::vector<std::shared_ptr<Tile>>& _tiles,
+                                  uint32_t _selectionColor, Label*& _label, Tile*& _tile);
 
 protected:
 
@@ -74,8 +77,6 @@ protected:
     bool m_needUpdate;
 
     isect2d::ISect2D<glm::vec2> m_isect2d;
-
-    std::vector<TouchItem> m_touchItems;
 
     struct LabelEntry {
 

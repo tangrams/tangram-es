@@ -38,7 +38,6 @@ public:
 
         float fontScale = 1;
         float lineSpacing = 0;
-        uint32_t selectionColor = 0;
     };
 
     auto& context() const { return m_context; }
@@ -112,7 +111,6 @@ namespace std {
             // TODO
             //hash_combine(seed, p.fontId);
             hash_combine(seed, p.text);
-            hash_combine(seed, p.interactive);
             hash_combine(seed, p.fill);
             hash_combine(seed, p.strokeColor);
             hash_combine(seed, p.strokeWidth);

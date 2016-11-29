@@ -47,7 +47,10 @@ static jmethodID cancelUrlRequestMID = 0;
 static jmethodID getFontFilePath = 0;
 static jmethodID getFontFallbackFilePath = 0;
 static jmethodID onFeaturePickMID = 0;
+static jmethodID onLabelPickMID = 0;
+static jmethodID labelPickResultInitMID = 0;
 
+static jclass labelPickResultClass = nullptr;
 static jclass hashmapClass = nullptr;
 static jmethodID hashmapInitMID = 0;
 static jmethodID hashmapPutMID = 0;
@@ -81,6 +84,14 @@ void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager
 
     jclass featurePickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$FeaturePickListener");
     onFeaturePickMID = jniEnv->GetMethodID(featurePickListenerClass, "onFeaturePick", "(Ljava/util/Map;FF)V");
+    jclass labelPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$LabelPickListener");
+    onLabelPickMID = jniEnv->GetMethodID(labelPickListenerClass, "onLabelPick", "(Lcom/mapzen/tangram/LabelPickResult;FF)V");
+
+    if (labelPickResultClass) {
+        jniEnv->DeleteGlobalRef(labelPickResultClass);
+    }
+    labelPickResultClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/LabelPickResult"));
+    labelPickResultInitMID = jniEnv->GetMethodID(labelPickResultClass, "<init>", "(DDILjava/util/Map;)V");
 
     if (hashmapClass) {
         jniEnv->DeleteGlobalRef(hashmapClass);
@@ -311,19 +322,49 @@ void setCurrentThreadPriority(int priority) {
     setpriority(PRIO_PROCESS, tid, priority);
 }
 
-void featurePickCallback(jobject listener, const std::vector<Tangram::TouchItem>& items) {
+void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult) {
+
+    JniThreadBinding jniEnv(jvm);
+
+    float position[2] = {0.0, 0.0};
+
+    jobject labelPickResultObject = nullptr;
+
+    if (labelPickResult) {
+        auto properties = labelPickResult->touchItem.properties;
+
+        position[0] = labelPickResult->touchItem.position[0];
+        position[1] = labelPickResult->touchItem.position[1];
+
+        jobject hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
+
+        for (const auto& item : properties->items()) {
+            jstring jkey = jniEnv->NewStringUTF(item.key.c_str());
+            jstring jvalue = jniEnv->NewStringUTF(properties->asString(item.value).c_str());
+            jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
+        }
+
+        jdoubleArray darr = jniEnv->NewDoubleArray(2);
+        labelPickResultObject = jniEnv->NewObject(labelPickResultClass, labelPickResultInitMID, labelPickResult->coordinate.longitude,
+            labelPickResult->coordinate.latitude, labelPickResult->type, hashmap);
+    }
+
+    jniEnv->CallVoidMethod(listener, onLabelPickMID, labelPickResultObject, position[0], position[1]);
+    jniEnv->DeleteGlobalRef(listener);
+}
+
+void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* featurePickResult) {
 
     JniThreadBinding jniEnv(jvm);
 
     jobject hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
     float position[2] = {0.0, 0.0};
 
-    if (items.size() > 0) {
-        auto result = items[0];
-        auto properties = result.properties;
+    if (featurePickResult) {
+        auto properties = featurePickResult->properties;
 
-        position[0] = result.position[0];
-        position[1] = result.position[1];
+        position[0] = featurePickResult->position[0];
+        position[1] = featurePickResult->position[1];
 
         for (const auto& item : properties->items()) {
             jstring jkey = jniEnv->NewStringUTF(item.key.c_str());

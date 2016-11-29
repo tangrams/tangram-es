@@ -13,6 +13,7 @@ class TileBuilder;
 class Scene;
 class SceneLayer;
 class StyleContext;
+class FeatureSelection;
 
 /*
  * A draw rule is a named collection of style parameters. When a draw rule is found to match a
@@ -76,6 +77,7 @@ struct DrawRule {
     int id;
     bool isOutlineOnly = false;
     uint32_t selectionColor = 0;
+    FeatureSelection* featureSelection = nullptr;
 
     DrawRule(const DrawRuleData& _ruleData, const std::string& _layerName, size_t _layerDepth);
 

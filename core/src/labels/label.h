@@ -10,6 +10,7 @@
 #include "util/types.h"
 #include "util/hash.h"
 #include "labels/labelProperty.h"
+#include "tangram.h"
 
 #include <string>
 #include <limits>
@@ -18,6 +19,8 @@
 namespace Tangram {
 
 struct ViewState;
+class Tile;
+class MapProjection;
 
 class Label {
 
@@ -76,7 +79,6 @@ public:
     struct Options {
         glm::vec2 offset;
         float priority = std::numeric_limits<float>::max();
-        bool interactive = false;
         bool collide = true;
         Transition selectTransition;
         Transition hideTransition;
@@ -89,11 +91,12 @@ public:
         bool required = true;
         bool flat = false;
         float angle = 0.f;
+        std::shared_ptr<Properties> properties;
     };
 
     static const float activation_distance_threshold;
 
-    Label(WorldTransform _transform, glm::vec2 _size, Type _type, Options _options);
+    Label(WorldTransform _transform, glm::vec2 _size, uint32_t _selectionColor, Type _type, Options _options);
 
     virtual ~Label();
 
@@ -101,6 +104,8 @@ public:
     virtual void addVerticesToMesh() = 0;
     virtual glm::vec2 center() const;
     virtual void updateBBoxes(float _zoomFract) = 0;
+
+    virtual LabelType renderType() const = 0;
 
     // Update the screen position of the label
     virtual bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) = 0;
@@ -155,6 +160,9 @@ public:
 
     bool setAnchorIndex(int _index);
 
+    // Returns the list of lon/lat of the feature the label is associated with
+    LngLat coordinate(const Tile& _tile, const MapProjection& _projection);
+
     // Returns the screen distance squared from a screen coordinate
     float screenDistance2(glm::vec2 _screenPosition) const;
 
@@ -176,6 +184,8 @@ public:
 
     void setAlpha(float _alpha);
 
+    uint32_t selectionColor() { return m_selectionColor; }
+
 private:
 
     virtual void applyAnchor(LabelProperty::Anchor _anchor) = 0;
@@ -185,6 +195,8 @@ private:
     FadeEffect m_fade;
 
     int m_anchorIndex;
+
+    uint32_t m_selectionColor;
 
 protected:
 
@@ -220,7 +232,6 @@ namespace std {
             hash_combine(seed, o.offset.x);
             hash_combine(seed, o.offset.y);
             hash_combine(seed, o.priority);
-            hash_combine(seed, o.interactive);
             hash_combine(seed, o.collide);
             hash_combine(seed, o.repeatDistance);
             hash_combine(seed, o.repeatGroup);

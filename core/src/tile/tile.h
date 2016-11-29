@@ -64,6 +64,8 @@ public:
 
     const glm::mat4& mvp() const { return m_mvp; }
 
+    glm::dvec2 coordToLngLat(const glm::vec2& _tileCoord, const MapProjection& _projection) const;
+
     void initGeometry(uint32_t _size);
 
     const std::unique_ptr<StyledMesh>& getMesh(const Style& _style) const;
