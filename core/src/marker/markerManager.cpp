@@ -56,11 +56,10 @@ bool MarkerManager::setStyling(MarkerID markerID, const char* styling) {
     marker->setStylingString(std::string(styling));
 
     // Create a draw rule from the styling string.
-    buildStyling(*marker);
+    if (!buildStyling(*marker)) { return false; }
 
     // Build the feature mesh for the marker's current geometry.
-    buildGeometry(*marker, m_zoom);
-    return true;
+    return buildGeometry(*marker, m_zoom);
 }
 
 bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const unsigned int* bitmapData) {
@@ -284,9 +283,9 @@ const std::vector<std::unique_ptr<Marker>>& MarkerManager::markers() const {
     return m_markers;
 }
 
-void MarkerManager::buildStyling(Marker& marker) {
+bool MarkerManager::buildStyling(Marker& marker) {
 
-    if (!m_scene) { return; }
+    if (!m_scene) { return false; }
 
     // Update the draw rule for the marker.
     YAML::Node node = YAML::Load(marker.stylingString());
@@ -304,11 +303,11 @@ void MarkerManager::buildStyling(Marker& marker) {
 
 }
 
-void MarkerManager::buildGeometry(Marker& marker, int zoom) {
+bool MarkerManager::buildGeometry(Marker& marker, int zoom) {
 
     auto feature = marker.feature();
     auto rule = marker.drawRule();
-    if (!feature || !rule) { return; }
+    if (!feature || !rule) { return false; }
 
     StyleBuilder* styler = nullptr;
     {
@@ -318,7 +317,7 @@ void MarkerManager::buildGeometry(Marker& marker, int zoom) {
             styler = it->second.get();
         } else {
             LOGN("Invalid style %s", name.c_str());
-            return;
+            return false;
         }
     }
 
@@ -326,12 +325,15 @@ void MarkerManager::buildGeometry(Marker& marker, int zoom) {
 
     bool valid = m_ruleSet.evaluateRuleForContext(*rule, m_styleContext);
 
-    if (valid) {
-        styler->setup(marker, zoom);
-        styler->addFeature(*feature, *rule);
-        marker.setMesh(styler->style().getID(), zoom, styler->build());
-    }
+    if (!valid) { return false; }
 
+    styler->setup(marker, zoom);
+
+    if (!styler->addFeature(*feature, *rule)) { return false; }
+
+    marker.setMesh(styler->style().getID(), zoom, styler->build());
+
+    return true;
 }
 
 Marker* MarkerManager::getMarkerOrNull(MarkerID markerID) {
