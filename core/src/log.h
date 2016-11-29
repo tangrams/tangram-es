@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "debug/textDisplay.h"
+#include <atomic>
 
 /*
  * Log utilities:
@@ -38,22 +39,18 @@ do { logMsg("ERROR %s:%d: " fmt "\n", __FILENAME__, __LINE__, ## __VA_ARGS__); }
 #endif
 
 #if LOG_LEVEL >= 0
-#define LOGN(fmt, ...) do {                                                         \
-    static std::vector<std::string> logs;                                           \
-    static char buffer[TANGRAM_MAX_BUFFER_LOG_SIZE];                                \
-    snprintf(buffer, TANGRAM_MAX_BUFFER_LOG_SIZE - 1, "%s:%d:" fmt, __FILENAME__,   \
-        __LINE__, ## __VA_ARGS__);                                                  \
-    std::string log(buffer);                                                        \
-    if (std::find(logs.begin(), logs.end(), log) == logs.end()) {                   \
-        logs.push_back(log);                                                        \
-        logMsg("NOTIFY %s:%d: " fmt "\n", __FILENAME__, __LINE__, ## __VA_ARGS__);  \
-    }                                                                               \
-} while (0)
-#define LOG(fmt, ...) \
-do { logMsg("TANGRAM %s:%d: " fmt "\n", __FILENAME__, __LINE__, ## __VA_ARGS__); } while(0)
+// The 'please notice but don't be too annoying' logger:
+#define LOGN(fmt, ...)                                                                                                 \
+    do {                                                                                                               \
+        static std::atomic<size_t> _lock(0);                                                            \
+        if (_lock++ < 42) { logMsg("NOTIFY %s:%d: " fmt "\n", __FILENAME__, __LINE__, ##__VA_ARGS__); } \
+    } while (0)
+
+#define LOG(fmt, ...)                                                   \
+    do { logMsg("TANGRAM %s:%d: " fmt "\n", __FILENAME__, __LINE__, ##__VA_ARGS__); } while (0)
 #else
-#define LOGN(fmt, ...)
 #define LOG(fmt, ...)
+#define LOGN(fmt, ...)
 #endif
 
 #define LOGS(fmt, ...) \
