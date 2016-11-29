@@ -865,6 +865,8 @@ void Map::setupGL() {
 
     impl->tileManager.clearTileSets();
 
+    impl->markerManager.rebuildAll();
+
     // Reconfigure the render states. Increases context 'generation'.
     // The OpenGL context has been destroyed since the last time resources were
     // created, so we invalidate all data that depends on OpenGL object handles.
