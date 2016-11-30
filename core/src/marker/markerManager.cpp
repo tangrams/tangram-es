@@ -302,7 +302,6 @@ bool MarkerManager::buildStyling(Marker& marker) {
     marker.setDrawRule(std::make_unique<DrawRuleData>("", 0, std::move(params)));
 
     return true;
-
 }
 
 bool MarkerManager::buildGeometry(Marker& marker, int zoom) {
