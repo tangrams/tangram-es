@@ -220,6 +220,13 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     return self.map->markerSetVisible(identifier, visible);
 }
 
+- (BOOL)markerSetImage:(TGMapMarkerId)identifier image:(NSImage*)image
+{
+    if (!self.map) { return NO; }
+
+
+}
+
 #pragma mark Map position implementation
 
 - (void)setPosition:(TGGeoPoint)position {
