@@ -157,7 +157,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     p.labelOptions.paramHash = hash(p);
 
     if (p.interactive) {
-        p.labelOptions.properties = std::make_shared<Properties>(_props);
+        p.labelOptions.featureId = _rule.selectionColor;
     }
 
     return p;
@@ -175,7 +175,8 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
     m_labels.push_back(std::make_unique<SpriteLabel>(glm::vec3(glm::vec2(_point), m_zoom),
                                                      _params.size,
                                                      _params.labelOptions,
-                                                     SpriteLabel::VertexAttributes{_params.color, selectionColor, _params.extrudeScale },
+                                                     SpriteLabel::VertexAttributes{_params.color,
+                                                             selectionColor, _params.extrudeScale },
                                                      m_texture,
                                                      *m_spriteLabels,
                                                      m_quads.size()));

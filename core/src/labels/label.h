@@ -91,7 +91,7 @@ public:
         bool required = true;
         bool flat = false;
         float angle = 0.f;
-        std::shared_ptr<Properties> properties;
+        uint32_t featureId = 0;
     };
 
     static const float activation_distance_threshold;
