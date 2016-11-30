@@ -68,7 +68,7 @@ bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const un
 
     TextureOptions options = { GL_RGBA, GL_RGBA, { GL_LINEAR, GL_LINEAR }, { GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE } };
     auto texture = std::make_unique<Texture>(width, height, options);
-    unsigned int size = width * height * 4;
+    unsigned int size = width * height;
     texture->setData(bitmapData, size);
 
     marker->setTexture(std::move(texture));
