@@ -85,7 +85,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)markerSetVisible:(TGMapMarkerId)identifier visible:(BOOL)visible;
 
-- (BOOL)markerSetImage:(TGMapMarkerId)identifier image:(NSImage*)image;
+- (BOOL)markerSetImage:(TGMapMarkerId)identifier image:(UIImage *)image;
 
 - (BOOL)markerRemove:(TGMapMarkerId)marker;
 
