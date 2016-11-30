@@ -14,9 +14,9 @@ namespace Tangram {
 
 const float Label::activation_distance_threshold = 2;
 
-Label::Label(Label::WorldTransform _worldTransform, glm::vec2 _size, uint32_t _selectionColor, Type _type, Options _options)
+Label::Label(Label::WorldTransform _worldTransform, glm::vec2 _size,
+             Type _type, Options _options)
     : m_state(State::none),
-      m_selectionColor(_selectionColor),
       m_type(_type),
       m_worldTransform(_worldTransform),
       m_dim(_size),

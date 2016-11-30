@@ -40,9 +40,15 @@ public:
 
     void updateBBoxes(float _zoomFract) override;
 
+    LabelType renderType() const override { return LabelType::icon; }
+
+protected:
+
     void addVerticesToMesh() override;
 
-    LabelType renderType() const override { return LabelType::icon; }
+    uint32_t selectionColor() override {
+        return m_vertexAttrib.selectionColor;
+    }
 
 private:
 
