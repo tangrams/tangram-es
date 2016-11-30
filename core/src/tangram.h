@@ -66,6 +66,7 @@ public:
     // separated by a '.' and the value is a string of yaml to replace the current value
     // at the given path in the scene
     void queueSceneUpdate(const char* _path, const char* _value);
+    void queueSceneUpdate(std::vector<SceneUpdate> sceneUpdates);
 
     // Apply all previously requested scene updates
     void applySceneUpdates();
