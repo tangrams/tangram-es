@@ -224,7 +224,18 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return NO; }
 
+    CGImage* cgImage = [image CGImage];
+    size_t w = CGImageGetHeight(cgImage);
+    size_t h = CGImageGetWidth(cgImage);
+    std::vector<unsigned int> bitmap;
+    bitmap.resize(w * h);
 
+    CGColorSpaceRef colorSpace = CGImageGetColorSpace(cgImage);
+    CGContextRef cgContext = CGBitmapContextCreate(bitmap.data(), w, h, 8, w * 4, colorSpace, kCGImageAlphaPremultipliedLast);
+    CGContextDrawImage(cgContext, CGRectMake(0, 0, w, h), cgImage);
+    CGContextRelease(cgContext);
+
+    return self.map->markerSetBitmap(identifier, w, h, bitmap.data());
 }
 
 #pragma mark Map position implementation
