@@ -40,7 +40,7 @@ struct StyleUniform {
 struct SceneLoader {
     using Node = YAML::Node;
 
-    static bool loadScene(std::shared_ptr<Scene> _scene);
+    static bool loadScene(std::shared_ptr<Scene> _scene, const std::vector<SceneUpdate>& updates = {});
     static bool applyConfig(const std::shared_ptr<Scene>& scene);
     static void applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates);
     static void applyGlobals(Node root, Scene& scene);
