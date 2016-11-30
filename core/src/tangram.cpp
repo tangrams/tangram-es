@@ -471,9 +471,6 @@ void Map::render() {
         // Resolve label selection queries
         for (const auto& labelQuery : impl->labelSelectionQueries) {
 
-            Label* label;
-            Tile* tile;
-
             float x = labelQuery.position.x / impl->view.getWidth();
             float y = (1.f - (labelQuery.position.y / impl->view.getHeight()));
 
@@ -485,25 +482,24 @@ void Map::render() {
                 labelQuery.onLabelSelection(nullptr);
                 continue;
             }
-
-            if (impl->labels.getLabel(impl->scene->styles(),
-                                       impl->tileManager.getVisibleTiles(),
-                                       color, label, tile)) {
+            auto label = impl->labels.getLabel(color);
+            if (!label.first) {
                 labelQuery.onLabelSelection(nullptr);
                 continue;
             }
-
-            auto props = tile->getSelectionFeature(label->options().featureId);
+            auto props = label.second->getSelectionFeature(label.first->options().featureId);
             if (!props) {
                 labelQuery.onLabelSelection(nullptr);
                 continue;
             }
 
-            LngLat coordinate = label->coordinate(*tile, impl->view.getMapProjection());
+            LngLat coordinate = label.first->coordinate(*label.second,
+                                                        impl->view.getMapProjection());
+
             auto position = std::array<float, 2>{{labelQuery.position.x,
                                                   labelQuery.position.y}};
 
-            LabelPickResult queryResult(label->renderType(), coordinate,
+            LabelPickResult queryResult(label.first->renderType(), coordinate,
                                         FeaturePickResult(props, position));
 
             // TODO: sort touch labels by distance

@@ -64,28 +64,17 @@ void Labels::processLabelUpdate(const ViewState& viewState,
 }
 
 
-bool Labels::getLabel(const std::vector<std::unique_ptr<Style>>& _styles,
-                                      const std::vector<std::shared_ptr<Tile>>& _tiles,
-                                      uint32_t _selectionColor, Label*& _label, Tile*& _tile) {
+std::pair<Label*, Tile*> Labels::getLabel(uint32_t _selectionColor) {
 
-    for (const auto& tile : _tiles) {
-        for (const auto& style : _styles) {
-            const auto& mesh = tile->getMesh(*style);
-            if (!mesh) { continue; }
-            auto labelMesh = dynamic_cast<const LabelSet*>(mesh.get());
-            if (!labelMesh) { continue; }
+    for (auto& entry : m_labels) {
 
-            for (auto& label : labelMesh->getLabels()) {
-                if (label->selectionColor() == _selectionColor) {
-                    _label = label.get();
-                    _tile = tile.get();
-                    return true;
-                }
-            }
+        if (entry.label->visibleState() &&
+            entry.label->selectionColor() == _selectionColor) {
+
+            return { entry.label, entry.tile };
         }
     }
-
-    return false;
+    return {nullptr, nullptr};
 }
 
 
@@ -95,7 +84,6 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
                           const std::vector<std::unique_ptr<Marker>>& _markers,
                           bool _onlyTransitions) {
 
-    // Keep labels for debugDraw
     if (!_onlyTransitions) { m_labels.clear(); }
 
     m_needUpdate = false;
