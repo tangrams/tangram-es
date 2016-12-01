@@ -24,7 +24,11 @@
     newYork.longitude = -74.00976419448854;
     newYork.latitude = 40.70532700869127;
 
-    [mapView setZoom:16];
+    TGGeoPoint cairo;
+    cairo.longitude = 30.00;
+    cairo.latitude = 31.25;
+
+    [mapView setZoom:15];
     [mapView setPosition:newYork];
 }
 

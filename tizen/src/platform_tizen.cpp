@@ -12,6 +12,8 @@
 #include "platform_gl.h"
 #include "urlWorker.h"
 
+#include "log.h"
+
 #include <libgen.h>
 #include <unistd.h>
 #include <sys/resource.h>
@@ -153,16 +155,28 @@ void initPlatformFontSetup() {
     s_platformFontsInit = true;
 }
 
-std::string systemFontFallbackPath(int _importance, int _weightHint) {
+std::vector<FontSourceHandle> systemFontFallbacksHandle() {
 
-    if ((size_t)_importance >= s_fallbackFonts.size()) {
-        return "";
+    initPlatformFontSetup();
+
+    std::vector<FontSourceHandle> handles;
+
+    for (auto& path : s_fallbackFonts) {
+        FontSourceHandle fontSourceHandle = [&](size_t* _size) -> unsigned char* {
+            LOG("Loading font %s", path.c_str());
+
+            auto cdata = bytesFromFile(path.c_str(), *_size);
+
+            return cdata;
+        };
+
+        handles.push_back(fontSourceHandle);
     }
 
-    return s_fallbackFonts[_importance];
+    return handles;
 }
 
-std::string systemFontPath(const std::string& _name, const std::string& _weight,
+std::string fontPath(const std::string& _name, const std::string& _weight,
                            const std::string& _face) {
 
     initPlatformFontSetup();
@@ -209,6 +223,14 @@ std::string systemFontPath(const std::string& _name, const std::string& _weight,
     FcPatternDestroy(pattern);
 
     return fontFile;
+}
+
+unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+    std::string path = fontPath(_name, _weight, _face);
+
+    if (path.empty()) { return nullptr; }
+
+    return bytesFromFile(path.c_str(), *_size);
 }
 
 unsigned char* bytesFromFile(const char* _path, size_t& _size) {

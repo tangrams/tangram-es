@@ -13,7 +13,15 @@
 
 #include <regex>
 
+#include "log.h"
+
 #define NUM_WORKERS 3
+
+#define DEFAULT "fonts/NotoSans-Regular.ttf"
+#define FONT_AR "fonts/NotoNaskh-Regular.ttf"
+#define FONT_HE "fonts/NotoSansHebrew-Regular.ttf"
+#define FONT_JA "fonts/DroidSansJapanese.ttf"
+#define FALLBACK "fonts/DroidSansFallback.ttf"
 
 static bool s_isContinuousRendering = false;
 
@@ -86,15 +94,34 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
     return reinterpret_cast<unsigned char *>(cdata);
 }
 
-// No system fonts implementation (yet!)
-std::string systemFontPath(const std::string& _name, const std::string& _weight,
-                           const std::string& _face) {
-    return "";
+FontSourceHandle getFontHandle(const char* _path) {
+    FontSourceHandle fontSourceHandle = [_path](size_t* _size) -> unsigned char* {
+        LOG("Loading font %s", _path);
+
+        auto cdata = bytesFromFile(_path, *_size);
+
+        return cdata;
+    };
+
+    return fontSourceHandle;
 }
 
-// No system fonts fallback implementation (yet!)
-std::string systemFontFallbackPath(int _importance, int _weightHint) {
-    return "";
+std::vector<FontSourceHandle> systemFontFallbacksHandle() {
+    std::vector<FontSourceHandle> handles;
+
+    handles.push_back(getFontHandle(DEFAULT));
+    handles.push_back(getFontHandle(FONT_AR));
+    handles.push_back(getFontHandle(FONT_HE));
+    handles.push_back(getFontHandle(FONT_JA));
+    handles.push_back(getFontHandle(FALLBACK));
+
+    return handles;
+}
+
+// System fonts are not available on Raspberry Pi yet, we will possibly use FontConfig in the future,
+// for references see the tizen platform implementation of system fonts
+unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+    return nullptr;
 }
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {

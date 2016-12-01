@@ -1,15 +1,17 @@
 #ifdef PLATFORM_IOS
 
-#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 #import <utility>
 #import <cstdio>
 #import <cstdarg>
 #import <fstream>
 #import <regex>
+#import <iostream>
 
-#include "platform_ios.h"
-#include "log.h"
-#include "TGMapViewController.h"
+#import "TGMapViewController.h"
+#import "TGFontConverter.h"
+#import "platform_ios.h"
+#import "log.h"
 
 static TGMapViewController* viewController;
 static NSBundle* tangramFramework;
@@ -126,14 +128,115 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
     return ptr;
 }
 
-// No system fonts implementation (yet!)
-std::string systemFontPath(const std::string& _name, const std::string& _weight, const std::string& _face) {
-    return "";
+unsigned char* loadUIFont(UIFont* _font, size_t* _size) {
+
+    CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)_font.fontName);
+
+    if (!fontRef) {
+        *_size = 0;
+        return nullptr;
+    }
+
+    unsigned char* data = [TGFontConverter fontDataForCGFont:fontRef size:_size];
+
+    CGFontRelease(fontRef);
+
+    if (!data) {
+        LOG("CoreGraphics font failed to decode");
+
+        *_size = 0;
+        return nullptr;
+    }
+
+    return data;
 }
 
-// No system fonts fallback implementation (yet!)
-std::string systemFontFallbackPath(int _importance, int _weightHint) {
-    return "";
+std::vector<FontSourceHandle> systemFontFallbacksHandle() {
+    NSArray* fallbacks = [UIFont familyNames];
+
+    std::vector<FontSourceHandle> handles;
+
+    for (id fallback in fallbacks) {
+
+        UIFont* font = [UIFont fontWithName:fallback size:1.0];
+
+        size_t dataSize = 0;
+        auto cdata = loadUIFont(font, &dataSize);
+
+        if (!cdata) { continue; }
+
+        FontSourceHandle fontSourceHandle = [cdata, dataSize](size_t* _size) -> unsigned char* {
+            *_size = dataSize;
+
+            return cdata;
+        };
+
+        handles.push_back(fontSourceHandle);
+    }
+
+    return handles;
+}
+
+unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+
+    static std::map<int, CGFloat> weightTraits = {
+        {100, UIFontWeightUltraLight},
+        {200, UIFontWeightThin},
+        {300, UIFontWeightLight},
+        {400, UIFontWeightRegular},
+        {500, UIFontWeightMedium},
+        {600, UIFontWeightSemibold},
+        {700, UIFontWeightBold},
+        {800, UIFontWeightHeavy},
+        {900, UIFontWeightBlack},
+    };
+
+    static std::map<std::string, UIFontDescriptorSymbolicTraits> fontTraits = {
+        {"italic", UIFontDescriptorTraitItalic},
+        {"oblique", UIFontDescriptorTraitItalic},
+        {"bold", UIFontDescriptorTraitBold},
+        {"expanded", UIFontDescriptorTraitExpanded},
+        {"condensed", UIFontDescriptorTraitCondensed},
+        {"monospace", UIFontDescriptorTraitMonoSpace},
+    };
+
+    UIFont* font = [UIFont fontWithName:[NSString stringWithUTF8String:_name.c_str()] size:1.0];
+
+    if (font == nil) {
+        // Get the default system font
+        if (_weight.empty()) {
+            font = [UIFont systemFontOfSize:1.0];
+        } else {
+            int weight = std::atoi(_weight.c_str());
+
+            // Default to 400 boldness
+            weight = (weight == 0) ? 400 : weight;
+
+            // Map weight value to range [100..900]
+            weight = std::min(std::max(100, (int)floor(weight / 100.0 + 0.5) * 100), 900);
+
+            font = [UIFont systemFontOfSize:1.0 weight:weightTraits[weight]];
+        }
+    }
+
+    if (_face != "normal") {
+        UIFontDescriptorSymbolicTraits traits;
+        UIFontDescriptor* descriptor = [font fontDescriptor];
+
+        auto it = fontTraits.find(_face);
+        if (it != fontTraits.end()) {
+            traits = it->second;
+
+            // Create a new descriptor with the symbolic traits
+            descriptor = [descriptor fontDescriptorWithSymbolicTraits:traits];
+
+            if (descriptor != nil) {
+                font = [UIFont fontWithDescriptor:descriptor size:1.0];
+            }
+        }
+    }
+
+    return loadUIFont(font, _size);
 }
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {

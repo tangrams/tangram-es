@@ -29,6 +29,8 @@
 
 #include <regex>
 
+#include "log.h"
+
 /* Followed the following document for JavaVM tips when used with native threads
  * http://android.wooyd.org/JNIExample/#NWD1sCYeT-I
  * http://developer.android.com/training/articles/perf-jni.html and
@@ -147,7 +149,7 @@ void requestRender() {
     jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID);
 }
 
-std::string systemFontFallbackPath(int _importance, int _weightHint) {
+std::string fontFallbackPath(int _importance, int _weightHint) {
 
     JniThreadBinding jniEnv(jvm);
 
@@ -159,7 +161,7 @@ std::string systemFontFallbackPath(int _importance, int _weightHint) {
     return resultStr;
 }
 
-std::string systemFontPath(const std::string& _family, const std::string& _weight, const std::string& _style) {
+std::string fontPath(const std::string& _family, const std::string& _weight, const std::string& _style) {
 
     JniThreadBinding jniEnv(jvm);
 
@@ -173,6 +175,47 @@ std::string systemFontPath(const std::string& _family, const std::string& _weigh
     jniEnv->DeleteLocalRef(jkey);
 
     return resultStr;
+}
+
+std::vector<FontSourceHandle> systemFontFallbacksHandle() {
+    std::vector<FontSourceHandle> handles;
+
+    int importance = 0;
+    int weightHint = 400;
+
+    std::string fallbackPath = fontFallbackPath(importance, weightHint);
+
+    while (!fallbackPath.empty()) {
+        LOG("Loading font %s", fallbackPath.c_str());
+        size_t dataSize = 0;
+
+        auto cdata = bytesFromFile(fallbackPath.c_str(), dataSize);
+
+        if (!cdata) {
+            fallbackPath = fontFallbackPath(importance++, weightHint);
+            continue;
+        }
+
+        FontSourceHandle fontSourceHandle = [cdata, dataSize](size_t* _size) -> unsigned char* {
+            *_size = dataSize;
+
+            return cdata;
+        };
+
+        handles.push_back(fontSourceHandle);
+
+        fallbackPath = fontFallbackPath(importance++, weightHint);
+    }
+
+    return handles;
+}
+
+unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+    std::string path = fontPath(_name, _weight, _face);
+
+    if (path.empty()) { return nullptr; }
+
+    return bytesFromFile(path.c_str(), *_size);
 }
 
 void setContinuousRendering(bool _isContinuous) {

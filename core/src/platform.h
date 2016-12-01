@@ -27,8 +27,6 @@ void setContinuousRendering(bool _isContinuous);
 
 bool isContinuousRendering();
 
-/* get system path of a font file */
-std::string systemFontPath(const std::string& _name, const std::string& _weight, const std::string& _face);
 
 /* Read a file as a string
  *
@@ -65,9 +63,10 @@ void cancelUrlRequest(const std::string& _url);
  */
 void setCurrentThreadPriority(int priority);
 
-/* Get the font fallback ordered by importance, 0 being the first fallback
- * (e.g. the fallback more willing resolve the glyph codepoint)
- */
-std::string systemFontFallbackPath(int _importance, int _weightHint);
+unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size);
+
+using FontSourceHandle = std::function<unsigned char*(size_t*)>;
+
+std::vector<FontSourceHandle> systemFontFallbacksHandle();
 
 void initGLExtensions();
