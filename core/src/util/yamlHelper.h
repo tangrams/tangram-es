@@ -40,7 +40,8 @@ glm::vec4 getColorAsVec4(const Node& node);
 
 std::string parseSequence(const Node& node);
 
-bool getDouble(const Node& node, double& value, const char* name = nullptr);
+bool getDouble(const Node& node, double& value);
+bool getDouble(const Node& node, double& value, const char* name);
 
 bool getBool(const Node& node, bool& value, const char* name = nullptr);
 
