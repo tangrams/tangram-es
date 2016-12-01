@@ -38,11 +38,6 @@
     // Not feature selected
     if (feature.count == 0) {
 
-        // Convert the 2d screen position to the lat lon
-        TGGeoPoint latlon = [mapView screenPositionToLngLat:position];
-
-        // Set the map position
-        [mapView setPosition:latlon];
         return;
     }
 
