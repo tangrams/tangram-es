@@ -68,8 +68,6 @@ NSString* resolvePath(const char* _path) {
 
     NSString* path = [NSString stringWithUTF8String:_path];
 
-    if (*_path == '/') { return path; }
-
     NSString* resources = [[NSBundle mainBundle] resourcePath];
     NSString* fullBundlePath = [resources stringByAppendingPathComponent:path];
     NSFileManager* fileManager = [NSFileManager defaultManager];
