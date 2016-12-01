@@ -287,11 +287,16 @@ bool MarkerManager::buildStyling(Marker& marker) {
 
     if (!m_scene) { return false; }
 
-    // Update the draw rule for the marker.
-    YAML::Node node = YAML::Load(marker.stylingString());
     std::vector<StyleParam> params;
-    SceneLoader::parseStyleParams(node, m_scene, "", params);
-
+    try {
+        // Update the draw rule for the marker.
+        YAML::Node node = YAML::Load(marker.stylingString());
+        SceneLoader::parseStyleParams(node, m_scene, "", params);
+    } catch (YAML::Exception e) {
+        LOG("Invalid marker styling '%s', %s",
+            marker.stylingString().c_str(), e.what());
+        return false;
+    }
     // Compile any new JS functions used for styling.
     const auto& sceneJsFnList = m_scene->functions();
     for (auto i = m_jsFnIndex; i < sceneJsFnList.size(); ++i) {
