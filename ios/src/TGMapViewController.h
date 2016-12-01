@@ -20,14 +20,26 @@
 typedef NS_ENUM(NSInteger, TGCameraType) {
     TGCameraTypePerspective = 0,
     TGCameraTypeIsometric,
-    TGCameraTypeFlat
+    TGCameraTypeFlat,
 };
 
 typedef NS_ENUM(NSInteger, TGEaseType) {
     TGEaseTypeLinear = 0,
     TGEaseTypeCubic,
     TGEaseTypeQuint,
-    TGEaseTypeSine
+    TGEaseTypeSine,
+};
+
+typedef NS_ENUM(NSInteger, TGDebugFlag) {
+    TGFreezeTiles = 0,  // While on, the set of tiles currently being drawn will not update to match the view
+    TGProxyColors,      // Apply a color change to every other zoom level to visualize proxy tile behavior
+    TGTileBounds,       // Draw tile boundaries
+    TGTileInfos,        // Draw tile infos (tile coordinates)
+    TGLabels,           // Draw label bounding boxes and collision grid
+    TGTangramInfos,     // Draw tangram infos (framerate, debug log...)
+    TGDrawAllLabels,    // Draw all labels (including labels being occluded)
+    TGTangramStats,     // Draw tangram frame graph stats
+    TGSelectionBuffer,  // Draw feature selection framebuffer
 };
 
 typedef uint32_t TGMapMarkerId;
@@ -64,6 +76,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (assign, nonatomic) float rotation;
 @property (assign, nonatomic) float tilt;
 @property (strong, nonatomic) TGHttpHandler* httpHandler;
+
+- (void)setDebugFlag:(TGDebugFlag)debugFlag value:(BOOL)on;
+
+- (BOOL)getDebugFlag:(TGDebugFlag)debugFlag;
+
+- (void)toggleDebugFlag:(TGDebugFlag)debugFlag;
 
 #pragma mark Marker interface
 

@@ -29,6 +29,21 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 @implementation TGMapViewController
 
+- (void)setDebugFlag:(TGDebugFlag)debugFlag value:(BOOL)on
+{
+    Tangram::setDebugFlag((Tangram::DebugFlags)debugFlag, on);
+}
+
+- (BOOL)getDebugFlag:(TGDebugFlag)debugFlag
+{
+    return Tangram::getDebugFlag((Tangram::DebugFlags)debugFlag);
+}
+
+- (void)toggleDebugFlag:(TGDebugFlag)debugFlag
+{
+    Tangram::toggleDebugFlag((Tangram::DebugFlags)debugFlag);
+}
+
 #pragma mark Scene loading interface
 
 - (void)loadSceneFile:(NSString*)path
