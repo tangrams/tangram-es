@@ -37,7 +37,6 @@
 
     // Not feature selected
     if (feature.count == 0) {
-
         return;
     }
 
