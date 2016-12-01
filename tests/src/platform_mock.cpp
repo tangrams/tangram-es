@@ -31,11 +31,21 @@ bool isContinuousRendering() {
 
 std::string stringFromFile(const char* _path) {
 
-    size_t length = 0;
-    unsigned char* bytes = bytesFromFile(_path, length);
+    std::string out;
+    if (!_path || strlen(_path) == 0) { return out; }
 
-    std::string out(reinterpret_cast<char*>(bytes), length);
-    free(bytes);
+    std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
+
+    if(!resource.is_open()) {
+        logMsg("Failed to read file at path: %s\n", _path);
+        return out;
+    }
+
+    resource.seekg(0, std::ios::end);
+    out.resize(resource.tellg());
+    resource.seekg(0, std::ios::beg);
+    resource.read(&out[0], out.size());
+    resource.close();
 
     return out;
 }
