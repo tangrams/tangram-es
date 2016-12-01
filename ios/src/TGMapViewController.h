@@ -99,7 +99,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark Feature picking interface
 
-- (void)pickFeaturesAt:(CGPoint)screenPosition;
+- (void)pickFeatureAt:(CGPoint)screenPosition;
 
 #pragma mark Map View lifecycle
 

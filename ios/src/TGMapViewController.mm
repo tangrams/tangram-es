@@ -114,7 +114,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 #pragma mark Feature picking
 
-- (void)pickFeaturesAt:(CGPoint)screenPosition
+- (void)pickFeatureAt:(CGPoint)screenPosition
 {
     if (!self.map && !self.mapViewDelegate) { return; }
 
