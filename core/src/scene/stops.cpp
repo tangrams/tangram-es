@@ -75,6 +75,61 @@ auto Stops::FontSize(const YAML::Node& _node) -> Stops {
     return stops;
 }
 
+auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> Stops {
+    Stops stops;
+    if (!_node.IsSequence()) {
+        return stops;
+    }
+
+    for (auto& unit : _units) {
+        if (unit != Unit::pixel) {
+            LOGW("Size StyleParam can only take in pixel values.");
+            return stops;
+        }
+    }
+
+    float lastKey = 0;
+
+    for (const auto& frameNode : _node) {
+        if (!frameNode.IsSequence() || frameNode.size() != 2) { continue; }
+        float key = frameNode[0].as<float>();
+
+        if (lastKey > key) {
+            LOGW("Invalid stop order: key %f > %f\n", lastKey, key);
+            continue;
+        }
+        lastKey = key;
+
+        if (frameNode[1].IsScalar()) {
+            StyleParam::ValueUnitPair sizeValue;
+            sizeValue.unit = Unit::pixel;
+            size_t start = 0;
+
+            if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, sizeValue)) {
+                stops.frames.emplace_back(key, sizeValue.value);
+            } else {
+                LOGW("could not parse node %s\n", Dump(frameNode[1]).c_str());
+            }
+        } else if (frameNode[1].IsSequence()) {
+            std::vector<StyleParam::ValueUnitPair> sizeValues;
+
+            for (const auto& sequenceNode : frameNode[1]) {
+                StyleParam::ValueUnitPair sizeValue;
+                sizeValue.unit = Unit::pixel; // default to pixel
+                if (StyleParam::parseValueUnitPair(sequenceNode.Scalar(), 0, sizeValue)) {
+                    sizeValues.push_back(sizeValue);
+                } else {
+                    LOGW("could not parse node %s\n", Dump(sequenceNode).c_str());
+                }
+            }
+            if (sizeValues.size() == 2) {
+                stops.frames.emplace_back(key, glm::vec2(sizeValues[0].value, sizeValues[1].value));
+            }
+        }
+    }
+    return stops;
+}
+
 auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) -> Stops {
     Stops stops;
     if (!_node.IsSequence()) {
@@ -291,6 +346,17 @@ auto Stops::evalVec2(float _key) const -> glm::vec2 {
 
 }
 
+auto Stops::evalSize(float _key) const -> StyleParam::Value {
+    if (frames.empty()) { return 0.f; }
+
+    if (frames[0].value.is<float>()) {
+        return evalFloat(_key);
+    } else if (frames[0].value.is<glm::vec2>()) {
+        return evalVec2(_key);
+    }
+    return 0.f;
+}
+
 auto Stops::nearestHigherFrame(float _key) const -> std::vector<Frame>::const_iterator {
 
     return std::lower_bound(frames.begin(), frames.end(), _key,
@@ -304,6 +370,8 @@ void Stops::eval(const Stops& _stops, StyleParamKey _key, float _zoom, StylePara
         _result = _stops.evalWidth(_zoom);
     } else if (StyleParam::isOffsets(_key)) {
         _result = _stops.evalVec2(_zoom);
+    } else if (StyleParam::isSize(_key)) {
+        _result = _stops.evalSize(_zoom);
     } else {
         _result = _stops.evalFloat(_zoom);
     }

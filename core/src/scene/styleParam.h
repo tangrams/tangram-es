@@ -180,6 +180,7 @@ struct StyleParam {
     static Value parseString(StyleParamKey key, const std::string& _value);
 
     static bool isColor(StyleParamKey _key);
+    static bool isSize(StyleParamKey _key);
     static bool isWidth(StyleParamKey _key);
     static bool isOffsets(StyleParamKey _key);
     static bool isFontSize(StyleParamKey _key);

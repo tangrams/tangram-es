@@ -619,6 +619,15 @@ bool StyleParam::isColor(StyleParamKey _key) {
     }
 }
 
+bool StyleParam::isSize(StyleParamKey _key) {
+    switch (_key) {
+        case StyleParamKey::size:
+            return true;
+        default:
+            return false;
+    }
+}
+
 bool StyleParam::isWidth(StyleParamKey _key) {
     switch (_key) {
         case StyleParamKey::width:
@@ -634,7 +643,6 @@ bool StyleParam::isOffsets(StyleParamKey _key) {
     switch (_key) {
         case StyleParamKey::offset:
         case StyleParamKey::text_offset:
-        case StyleParamKey::size:
             return true;
         default:
             return false;
