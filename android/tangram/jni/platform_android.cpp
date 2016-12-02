@@ -391,8 +391,8 @@ void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPi
         }
 
         jdoubleArray darr = jniEnv->NewDoubleArray(2);
-        labelPickResultObject = jniEnv->NewObject(labelPickResultClass, labelPickResultInitMID, labelPickResult->coordinate.longitude,
-            labelPickResult->coordinate.latitude, labelPickResult->type, hashmap);
+        labelPickResultObject = jniEnv->NewObject(labelPickResultClass, labelPickResultInitMID, labelPickResult->coordinates.longitude,
+            labelPickResult->coordinates.latitude, labelPickResult->type, hashmap);
     }
 
     jniEnv->CallVoidMethod(listener, onLabelPickMID, labelPickResultObject, position[0], position[1]);

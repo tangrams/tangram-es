@@ -503,8 +503,8 @@ void Map::render() {
                 continue;
             }
 
-            LngLat coordinate = label.first->coordinate(*label.second,
-                                                        impl->view.getMapProjection());
+            LngLat coordinate = label.first->coordinates(*label.second,
+                                                         impl->view.getMapProjection());
 
             auto position = std::array<float, 2>{{labelQuery.position.x,
                                                   labelQuery.position.y}};

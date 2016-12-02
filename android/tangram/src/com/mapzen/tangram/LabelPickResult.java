@@ -17,13 +17,13 @@ public class LabelPickResult {
         TEXT,
     }
 
-    private LngLat coordinate;
+    private LngLat coordinates;
     private LabelType type;
     private Map<String, String> properties;
 
     private LabelPickResult(double longitude, double latitude, int type, Map<String, String> properties) {
         this.properties = properties;
-        this.coordinate = new LngLat(longitude, latitude);
+        this.coordinates = new LngLat(longitude, latitude);
         this.type = LabelType.values()[type];
     }
 
@@ -35,7 +35,7 @@ public class LabelPickResult {
      * @return The coordinate of the feature for which this label has been created
      */
     public LngLat getCoordinates() {
-        return this.coordinate;
+        return this.coordinates;
     }
 
     /**

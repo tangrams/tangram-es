@@ -235,7 +235,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
             dictionary[key] = value;
         }
 
-        TGGeoPoint coordinates = TGGeoPointMake(labelPickResult->coordinate.longitude, labelPickResult->coordinate.latitude);
+        TGGeoPoint coordinates = TGGeoPointMake(labelPickResult->coordinates.longitude, labelPickResult->coordinates.latitude);
         TGLabelPickResult* tgLabelPickResult = [[TGLabelPickResult alloc] initWithCoordinates:coordinates
                                                                                          type:(TGLabelType)labelPickResult->type
                                                                                    properties:dictionary];
@@ -276,20 +276,20 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     return self.map->markerSetStyling(identifier, [styling UTF8String]);
 }
 
-- (BOOL)markerSetPoint:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate
+- (BOOL)markerSetPoint:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinates
 {
     if (!self.map || !identifier) { return NO; }
 
-    Tangram::LngLat lngLat(coordinate.longitude, coordinate.latitude);
+    Tangram::LngLat lngLat(coordinates.longitude, coordinates.latitude);
 
     return self.map->markerSetPoint(identifier, lngLat);
 }
 
-- (BOOL)markerSetPointEased:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate duration:(float)duration easeType:(TGEaseType)ease
+- (BOOL)markerSetPointEased:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinates duration:(float)duration easeType:(TGEaseType)ease
 {
     if (!self.map || !identifier) { return NO; }
 
-    Tangram::LngLat lngLat(coordinate.longitude, coordinate.latitude);
+    Tangram::LngLat lngLat(coordinates.longitude, coordinates.latitude);
 
     return self.map->markerSetPointEased(identifier, lngLat, duration, [TGHelpers convertEaseTypeFrom:ease]);
 }
