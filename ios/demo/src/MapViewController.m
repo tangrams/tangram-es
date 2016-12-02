@@ -37,6 +37,27 @@
     [mapView setPosition:newYork];
 }
 
+- (void)mapView:(TGMapViewController *)mapView didSelectLabel:(TGLabelPickResult *)labelPickResult atScreenPosition:(CGPoint)position
+{
+    if (!labelPickResult) { return; }
+
+    NSLog(@"Picked label:");
+
+    for (id key in [labelPickResult properties]) {
+        NSLog(@"\t%@ -- %@", key, [[labelPickResult properties] objectForKey:key]);
+
+        if ([key isEqualToString:@"name"]) {
+             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Label selection callback"
+                                                             message:[[labelPickResult properties] objectForKey:key]
+                                                            delegate:nil
+                                                   cancelButtonTitle:@"OK"
+                                                   otherButtonTitles:nil];
+             [alert show];
+             [alert release];
+        }
+    }
+}
+
 - (void)mapView:(TGMapViewController *)mapView didSelectFeature:(NSDictionary *)feature atScreenPosition:(CGPoint)position
 {
     // Not feature selected
@@ -48,7 +69,7 @@
         NSLog(@"\t%@ -- %@", key, [feature objectForKey:key]);
 
         if ([key isEqualToString:@"name"]) {
-             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Selection callback"
+             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Feature selection callback"
                                                              message:[feature objectForKey:key]
                                                             delegate:nil
                                                    cancelButtonTitle:@"OK"
@@ -119,6 +140,7 @@
 
     // Request feature picking
     [vc pickFeatureAt:location];
+    [vc pickLabelAt:location];
 }
 
 - (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location

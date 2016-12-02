@@ -69,6 +69,8 @@ NS_ASSUME_NONNULL_END
 - (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView;
 @end
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface TGMapViewController : GLKViewController <UIGestureRecognizerDelegate>
 
 @property (assign, nonatomic) BOOL continuous;
