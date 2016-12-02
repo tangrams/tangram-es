@@ -64,21 +64,18 @@ glm::vec4 getColorAsVec4(const Node& node) {
 }
 
 std::string parseSequence(const Node& node) {
-    if (node.IsSequence()) { return ""; }
+    if (!node.IsSequence()) {
+        LOGW("Expected a plain sequence: '%'", Dump(node).c_str());
+        return "";
+    }
 
     std::stringstream sstream;
     for (const auto& val : node) {
         if (!val.IsScalar()) {
-            // LOG
+            LOGW("Expected a plain sequence: '%'", Dump(node).c_str());
             return "";
         }
-
-        double value;
-        if (getDouble(val, value)) {
-            sstream << value << ",";
-        } else {
-            sstream << val.as<std::string>() << ",";
-        }
+        sstream << val.Scalar() << ",";
     }
     return sstream.str();
 }
@@ -86,8 +83,8 @@ std::string parseSequence(const Node& node) {
 bool getDouble(const Node& node, double& value) {
 
     if (node.IsScalar()) {
-        const std::string& s = node.Scalar().c_str();
-        char* pos;;
+        const std::string& s = node.Scalar();
+        char* pos;
         value = strtod(s.c_str(), &pos);
         if (pos == s.c_str() + s.length()) {
             return true;

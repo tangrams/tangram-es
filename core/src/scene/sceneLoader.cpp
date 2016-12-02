@@ -1434,6 +1434,7 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
                 }
 
             } else {
+                // TODO optimize for color values
                 out.push_back(StyleParam{ key, parseSequence(value) });
             }
             break;
