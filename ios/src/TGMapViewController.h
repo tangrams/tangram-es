@@ -17,6 +17,7 @@
 #import "TGGeoPolyline.h"
 #import "TGSceneUpdate.h"
 #import "TGHttpHandler.h"
+#import "TGLabelPickResult.h"
 
 typedef NS_ENUM(NSInteger, TGCameraType) {
     TGCameraTypePerspective = 0,
@@ -60,8 +61,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol TGMapViewDelegate <NSObject>
 @optional
-- (void)mapView:(TGMapViewController*)mapView didLoadSceneAsync:(nonnull NSString*)scene;
-- (void)mapView:(TGMapViewController*)mapView didSelectFeature:(NSDictionary*)feature atScreenPosition:(CGPoint)position;
+- (void)mapView:(TGMapViewController *)mapView didLoadSceneAsync:(nonnull NSString *)scene;
+- (void)mapView:(TGMapViewController *)mapView didSelectFeature:(NSDictionary *)feature atScreenPosition:(CGPoint)position;
+- (void)mapView:(TGMapViewController *)mapView didSelectLabel:(TGLabelPickResult *)labelPickResult atScreenPosition:(CGPoint)position;
 - (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView;
 @end
 
@@ -126,6 +128,8 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Feature picking interface
 
 - (void)pickFeatureAt:(CGPoint)screenPosition;
+
+- (void)pickLabelAt:(CGPoint)screenPosition;
 
 #pragma mark Map View lifecycle
 

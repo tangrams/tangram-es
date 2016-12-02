@@ -39,11 +39,8 @@
 
 - (void)mapView:(TGMapViewController *)mapView didSelectFeature:(NSDictionary *)feature atScreenPosition:(CGPoint)position
 {
-
     // Not feature selected
-    if (feature.count == 0) {
-        return;
-    }
+    if (!feature) { return; }
 
     NSLog(@"Picked features:");
 

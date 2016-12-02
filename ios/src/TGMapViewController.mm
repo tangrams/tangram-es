@@ -178,17 +178,17 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     screenPosition.y *= self.contentScaleFactor;
 
     self.map->pickFeatureAt(screenPosition.x, screenPosition.y, [screenPosition, self](const Tangram::FeaturePickResult* featureResult) {
-        NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
-
         CGPoint position = CGPointMake(0.0, 0.0);
 
         if (!featureResult) {
             if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
-                [self.mapViewDelegate mapView:self didSelectFeature:dictionary atScreenPosition:position];
+                [self.mapViewDelegate mapView:self didSelectFeature:nil atScreenPosition:position];
             }
 
             return;
         }
+
+        NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
 
         const auto& properties = featureResult->properties;
         position = CGPointMake(featureResult->position[0] / self.contentScaleFactor, featureResult->position[1] / self.contentScaleFactor);
@@ -201,6 +201,47 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
         if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
             [self.mapViewDelegate mapView:self didSelectFeature:dictionary atScreenPosition:position];
+        }
+    });
+}
+
+- (void)pickLabelAt:(CGPoint)screenPosition
+{
+    if (!self.map && !self.mapViewDelegate) { return; }
+
+    screenPosition.x *= self.contentScaleFactor;
+    screenPosition.y *= self.contentScaleFactor;
+
+    self.map->pickLabelAt(screenPosition.x, screenPosition.y, [screenPosition, self](const Tangram::LabelPickResult* labelPickResult) {
+        CGPoint position = CGPointMake(0.0, 0.0);
+
+        if (!labelPickResult) {
+            if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectLabel:atScreenPosition:)]) {
+                [self.mapViewDelegate mapView:self didSelectLabel:nil atScreenPosition:position];
+            }
+
+            return;
+        }
+
+        NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
+
+        const auto& touchItem = labelPickResult->touchItem;
+        const auto& properties = touchItem.properties;
+        position = CGPointMake(touchItem.position[0] / self.contentScaleFactor, touchItem.position[1] / self.contentScaleFactor);
+
+        for (const auto& item : properties->items()) {
+            NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
+            NSString* value = [NSString stringWithUTF8String:properties->asString(item.value).c_str()];
+            dictionary[key] = value;
+        }
+
+        TGGeoPoint coordinates = TGGeoPointMake(labelPickResult->coordinate.longitude, labelPickResult->coordinate.latitude);
+        TGLabelPickResult* tgLabelPickResult = [[TGLabelPickResult alloc] initWithCoordinates:coordinates
+                                                                                         type:(TGLabelType)labelPickResult->type
+                                                                                   properties:dictionary];
+
+        if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectLabel:atScreenPosition:)]) {
+            [self.mapViewDelegate mapView:self didSelectLabel:tgLabelPickResult atScreenPosition:position];
         }
     });
 }
