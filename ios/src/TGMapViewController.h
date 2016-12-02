@@ -31,15 +31,15 @@ typedef NS_ENUM(NSInteger, TGEaseType) {
 };
 
 typedef NS_ENUM(NSInteger, TGDebugFlag) {
-    TGFreezeTiles = 0,  // While on, the set of tiles currently being drawn will not update to match the view
-    TGProxyColors,      // Apply a color change to every other zoom level to visualize proxy tile behavior
-    TGTileBounds,       // Draw tile boundaries
-    TGTileInfos,        // Draw tile infos (tile coordinates)
-    TGLabels,           // Draw label bounding boxes and collision grid
-    TGTangramInfos,     // Draw tangram infos (framerate, debug log...)
-    TGDrawAllLabels,    // Draw all labels (including labels being occluded)
-    TGTangramStats,     // Draw tangram frame graph stats
-    TGSelectionBuffer,  // Draw feature selection framebuffer
+    TGDebugFlagFreezeTiles = 0,  // While on, the set of tiles currently being drawn will not update to match the view
+    TGDebugFlagProxyColors,      // Apply a color change to every other zoom level to visualize proxy tile behavior
+    TGDebugFlagTileBounds,       // Draw tile boundaries
+    TGDebugFlagTileInfos,        // Draw tile infos (tile coordinates)
+    TGDebugFlagLabels,           // Draw label bounding boxes and collision grid
+    TGDebugFlagTangramInfos,     // Draw tangram infos (framerate, debug log...)
+    TGDebugFlagDrawAllLabels,    // Draw all labels (including labels being occluded)
+    TGDebugFlagTangramStats,     // Draw tangram frame graph stats
+    TGDebugFlagSelectionBuffer,  // Draw feature selection framebuffer
 };
 
 typedef uint32_t TGMapMarkerId;
