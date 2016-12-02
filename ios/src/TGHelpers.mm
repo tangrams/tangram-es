@@ -1,14 +1,14 @@
 //
-//  helpers.m
+//  TGHelpers.m
 //  tangram
 //
 //  Created by Karim Naaji on 10/18/16.
 //
 //
 
-#import "Helpers.h"
+#import "TGHelpers.h"
 
-@implementation Helpers
+@implementation TGHelpers
 
 + (Tangram::EaseType)convertEaseTypeFrom:(TGEaseType)ease;
 {

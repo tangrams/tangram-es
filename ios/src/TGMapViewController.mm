@@ -8,7 +8,7 @@
 //
 
 #import "TGMapViewController.h"
-#import "Helpers.h"
+#import "TGHelpers.h"
 
 #include "platform_ios.h"
 #include "data/propertyItem.h"
@@ -250,7 +250,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
     Tangram::LngLat lngLat(coordinate.longitude, coordinate.latitude);
 
-    return self.map->markerSetPointEased(identifier, lngLat, duration, [Helpers convertEaseTypeFrom:ease]);
+    return self.map->markerSetPointEased(identifier, lngLat, duration, [TGHelpers convertEaseTypeFrom:ease]);
 }
 
 - (BOOL)markerSetPolyline:(TGMapMarkerId)identifier polyline:(TGGeoPolyline *)polyline
@@ -311,7 +311,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return; }
 
-    Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
+    Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
     self.map->setPositionEased(position.longitude, position.latitude, duration, ease);
 }
 
@@ -344,7 +344,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return; }
 
-    Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
+    Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
     self.map->setZoomEased(zoomLevel, duration, ease);
 }
 
@@ -364,7 +364,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return; }
 
-    Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
+    Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
     self.map->setRotationEased(radians, seconds, ease);
 }
 
@@ -405,7 +405,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return; }
 
-    Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
+    Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
     self.map->setTiltEased(radians, seconds, ease);
 }
 
