@@ -59,6 +59,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeShoveGesture:(CGPoint)location;
 @end
 
+NS_ASSUME_NONNULL_END
+
 @protocol TGMapViewDelegate <NSObject>
 @optional
 - (void)mapView:(TGMapViewController *)mapView didLoadSceneAsync:(nonnull NSString *)scene;
