@@ -64,30 +64,41 @@ glm::vec4 getColorAsVec4(const Node& node) {
 }
 
 std::string parseSequence(const Node& node) {
+    if (!node.IsSequence()) {
+        LOGW("Expected a plain sequence: '%'", Dump(node).c_str());
+        return "";
+    }
+
     std::stringstream sstream;
     for (const auto& val : node) {
-        try {
-            sstream << val.as<double>() << ",";
-        } catch (const BadConversion& e) {
-            try {
-                sstream << val.as<std::string>() << ",";
-            } catch (const BadConversion& e) {
-                LOGE("Float or Unit expected for styleParam sequence value");
-            }
+        if (!val.IsScalar()) {
+            LOGW("Expected a plain sequence: '%'", Dump(node).c_str());
+            return "";
         }
+        sstream << val.Scalar() << ",";
     }
     return sstream.str();
 }
 
-bool getDouble(const Node& node, double& value, const char* name) {
-    try {
-        value = node.as<double>();
-        return true;
-    } catch (const BadConversion& e) {}
+bool getDouble(const Node& node, double& value) {
 
-    if (name) {
-        LOGW("Expected a floating point value for '%s' property.:\n%s\n", name, Dump(node).c_str());
+    if (node.IsScalar()) {
+        const std::string& s = node.Scalar();
+        char* pos;
+        value = strtod(s.c_str(), &pos);
+        if (pos == s.c_str() + s.length()) {
+            return true;
+        }
     }
+
+    return false;
+}
+
+bool getDouble(const Node& node, double& value, const char* name) {
+
+    if (getDouble(node, value)) { return true; }
+
+    LOGW("Expected a floating point value for '%s' property.:\n%s\n", name, Dump(node).c_str());
     return false;
 }
 
