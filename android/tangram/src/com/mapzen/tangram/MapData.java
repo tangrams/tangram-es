@@ -86,8 +86,9 @@ public class MapData {
     /**
      * Add a polygon feature to this collection.
      * @param polygon A list of rings describing the shape of the feature. Each
-     * ring is a list of coordinates. The first ring is taken as the "exterior" of the polygon and
-     * rings with opposite winding are considered "holes".
+     * ring is a list of coordinates in which the first point is the same as the last point. The
+     * first ring is taken as the "exterior" of the polygon and rings with opposite winding are
+     * considered "holes".
      * @param properties The properties of the feature, used for filtering and styling according to
      * the scene file used by the map; may be null.
      * @return This object, for chaining.
