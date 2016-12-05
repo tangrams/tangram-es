@@ -9,6 +9,7 @@
 #include "scene/sceneLoader.h"
 #include "scene/scene.h"
 #include "scene/styleContext.h"
+#include "util/yamlLoader.h"
 
 using namespace Tangram;
 using YAML::Node;
@@ -21,7 +22,7 @@ Feature civic, bmw1, bike;
 
 Filter load(const std::string& filterYaml) {
     Scene scene;
-    YAML::Node node = YAML::Load(filterYaml);
+    YAML::Node node = YamlLoader::load(filterYaml);
     auto filter = SceneLoader::generateFilter(node["filter"], scene);
     ctx.initFunctions(scene);
     return filter;

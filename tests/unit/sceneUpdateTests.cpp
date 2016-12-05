@@ -4,6 +4,7 @@
 #include "scene/sceneLoader.h"
 #include "style/style.h"
 #include "scene/scene.h"
+#include "util/yamlLoader.h"
 #include "log.h"
 #include "tangram.h"
 
@@ -31,7 +32,7 @@ nest:
 
 bool loadConfig(const std::string& _sceneString, Node& root) {
 
-    try { root = YAML::Load(_sceneString); }
+    try { root = YamlLoader::load(_sceneString); }
     catch (YAML::ParserException e) {
         LOGE("Parsing scene config '%s'", e.what());
         return false;

@@ -60,8 +60,8 @@ TestImporter::TestImporter() {
 
     m_testScenes["/root/urls.yaml"] = R"END(
         import: imports/urls.yaml
-        fonts: { fontA: { url: https://host/font.woff } }
-        sources: { sourceA: { url: 'https://host/tiles/{z}/{y}/{x}.mvt' } }
+        fonts: { fontA: { url: "https://host/font.woff" } }
+        sources: { sourceA: { url: "https://host/tiles/{z}/{y}/{x}.mvt" } }
         textures:
             tex1: { url: "path/to/texture.png" }
             tex2: { url: "../up_a_directory.png" }

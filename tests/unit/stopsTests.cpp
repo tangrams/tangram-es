@@ -3,6 +3,7 @@
 #include "scene/stops.h"
 #include "yaml-cpp/yaml.h"
 #include "util/mapProjection.h"
+#include "util/yamlLoader.h"
 
 using namespace Tangram;
 
@@ -96,7 +97,7 @@ TEST_CASE("Stops evaluate color values correctly at and between key frames", "[S
 
 TEST_CASE("Stops parses correctly from YAML distance values", "[Stops][YAML]") {
 
-    YAML::Node node = YAML::Load("[ [10, 0], [16, .04], [18, .2], [19, .2] ]");
+    YAML::Node node = YamlLoader::load("[ [10, 0], [16, .04], [18, .2], [19, .2] ]");
 
     MercatorProjection proj;
 
@@ -116,7 +117,7 @@ TEST_CASE("Stops parses correctly from YAML distance values", "[Stops][YAML]") {
 
 TEST_CASE("Stops parses correctly from YAML color values", "[Stops][YAML]") {
 
-    YAML::Node node = YAML::Load("[ [10, '#aaa'], [16, [0, .5, 1] ], [18, [0, .25, 1, .5] ] ]");
+    YAML::Node node = YamlLoader::load("[ [10, '#aaa'], [16, [0, .5, 1] ], [18, [0, .25, 1, .5] ] ]");
 
     Stops stops(Stops::Colors(node));
 
@@ -132,7 +133,7 @@ TEST_CASE("Stops parses correctly from YAML color values", "[Stops][YAML]") {
 
 TEST_CASE("Regression test - Dont crash on evaluating empty stops", "[Stops][YAML]") {
 
-    YAML::Node node = YAML::Load("[]");
+    YAML::Node node = YamlLoader::load("[]");
 
     {
         MercatorProjection proj{};

@@ -6,6 +6,7 @@
 #include "scene/scene.h"
 #include "scene/styleContext.h"
 #include "util/builders.h"
+#include "util/yamlLoader.h"
 #include "platform.h"
 
 using namespace Tangram;
@@ -219,8 +220,8 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::extrude", "[Duktape][evalStyleFn]"
 
 TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFilter]") {
     Scene scene;
-    YAML::Node n0 = YAML::Load(R"(filter: function() { return feature.sort_key === 2; })");
-    YAML::Node n1 = YAML::Load(R"(filter: function() { return feature.name === 'test'; })");
+    YAML::Node n0 = YamlLoader::load(R"(filter: function() { return feature.sort_key === 2; })");
+    YAML::Node n1 = YamlLoader::load(R"(filter: function() { return feature.name === 'test'; })");
 
     Filter filter0 = SceneLoader::generateFilter(n0["filter"], scene);
     Filter filter1 = SceneLoader::generateFilter(n1["filter"], scene);
@@ -261,7 +262,7 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
 
 TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][evalStyle]") {
     std::shared_ptr<Scene> scene = std::make_shared<Scene>();
-    YAML::Node n0 = YAML::Load(R"(
+    YAML::Node n0 = YamlLoader::load(R"(
             draw:
                 color: function() { return '#ffff00ff'; }
                 width: function() { return 2; }
@@ -309,7 +310,7 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
 
 TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
     std::shared_ptr<Scene> scene = std::make_shared<Scene>();
-    YAML::Node n0 = YAML::Load(R"(
+    YAML::Node n0 = YamlLoader::load(R"(
             global:
                 width: 2
                 mapNode:
