@@ -187,3 +187,17 @@ TEST_CASE("Apply and propogate repeated global value updates") {
     CHECK(root["seq"][1].Scalar() == "global_a_value");
     CHECK(root["map"]["b"].Scalar() == "newer_global_b_value");
 }
+
+TEST_CASE("Regression: scene update requesting a sequence from a scalar") {
+
+    // Setup.
+    Scene scene;
+    REQUIRE(loadConfig(sceneString, scene.config()));
+    // Add an update.
+    std::vector<SceneUpdate> updates = {{"map.a#0", "new_value"}};
+    // Apply scene updates, reload scene.
+    SceneLoader::applyUpdates(scene, updates);
+    const Node& root = scene.config();
+
+    // causes yaml exception 'operator[] call on a scalar'
+}

@@ -80,8 +80,12 @@ void SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& upd
             LOGE("Parsing scene update string failed. '%s'", e.what());
         }
         if (value) {
-            auto node = YamlPath(update.path).get(root);
-            node = value;
+            try {
+                auto node = YamlPath(update.path).get(root);
+                node = value;
+            } catch(YAML::Exception e) {
+                LOGE("Parsing scene update string failed. %s '%s'", update.path.c_str(), e.what());
+            }
         }
     }
 }
