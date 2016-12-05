@@ -65,6 +65,10 @@ PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT = 0;
 PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT = 0;
 PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT = 0;
 
+// Android assets are distinguished from file paths by the "asset" scheme.
+static const char* aaPrefix = "asset:///";
+static const size_t aaPrefixLen = 9;
+
 void bindJniEnvToThread(JNIEnv* jniEnv) {
     jniEnv->GetJavaVM(&jvm);
     jniRenderThreadEnv = jniEnv;
@@ -233,80 +237,79 @@ bool isContinuousRendering() {
 
 }
 
-unsigned char* bytesFromAssetManager(const char* _path, size_t& _size) {
-
-    unsigned char* data = nullptr;
+bool bytesFromAssetManager(const char* _path, std::function<char*(size_t)> _allocator) {
 
     AAsset* asset = AAssetManager_open(assetManager, _path, AASSET_MODE_UNKNOWN);
-
     if (asset == nullptr) {
         logMsg("Failed to open asset at path: %s\n", _path);
-        _size = 0;
-        return data;
+        return false;
     }
 
-    _size = AAsset_getLength(asset);
+    size_t size = AAsset_getLength(asset);
+    unsigned char* data = reinterpret_cast<unsigned char*>(_allocator(size));
 
-    data = (unsigned char*) malloc(sizeof(unsigned char) * _size);
-
-    int read = AAsset_read(asset, data, _size);
-
+    int read = AAsset_read(asset, data, size);
     if (read <= 0) {
         logMsg("Failed to read asset at path: %s\n", _path);
     }
-
     AAsset_close(asset);
 
-    return data;
+    return read > 0;
 }
 
-unsigned char* bytesFromFileSystem(const char* _path, size_t& _size) {
+bool bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator) {
 
     std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
 
     if(!resource.is_open()) {
         logMsg("Failed to read file at path: %s\n", _path);
-        _size = 0;
-        return nullptr;
+        return false;
     }
 
-    _size = resource.tellg();
+    size_t size = resource.tellg();
+    char* cdata = _allocator(size);
 
     resource.seekg(std::ifstream::beg);
-
-    char* cdata = (char*) malloc(sizeof(char) * _size);
-
-    resource.read(cdata, _size);
+    resource.read(cdata, size);
     resource.close();
 
-    return reinterpret_cast<unsigned char *>(cdata);
-
+    return true;
 }
 
 std::string stringFromFile(const char* _path) {
 
-    size_t length = 0;
-    unsigned char* bytes = bytesFromFile(_path, length);
-    std::string out(reinterpret_cast<char*>(bytes), length);
-    free(bytes);
+    std::string data;
 
-    return out;
+    auto allocator = [&](size_t size) {
+        data.resize(size);
+        return &data[0];
+    };
 
+    if (strncmp(_path, aaPrefix, aaPrefixLen) == 0) {
+        bytesFromAssetManager(_path + aaPrefixLen, allocator);
+    } else {
+        bytesFromFileSystem(_path, allocator);
+    }
+    return data;
 }
 
 unsigned char* bytesFromFile(const char* _path, size_t& _size) {
 
     _size = 0;
+    unsigned char* data = nullptr;
 
-    // Android assets are distinguished from file paths by the "asset" scheme.
-    const char* aaPrefix = "asset:///";
-    const size_t aaPrefixLen = strlen(aaPrefix);
+    auto allocator = [&](size_t size) {
+        _size = size;
+        data = (unsigned char*) malloc(sizeof(char) * size);
+        return reinterpret_cast<char*>(data);
+    };
 
     if (strncmp(_path, aaPrefix, aaPrefixLen) == 0) {
-        return bytesFromAssetManager(_path + aaPrefixLen, _size);
+        bytesFromAssetManager(_path + aaPrefixLen, allocator);
     } else {
-        return bytesFromFileSystem(_path, _size);
+        bytesFromFileSystem(_path, allocator);
     }
+    return data;
 }
 
 std::string resolveScenePath(const char* path) {
