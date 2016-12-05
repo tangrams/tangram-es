@@ -250,7 +250,7 @@ void Map::queueSceneUpdate(const char* _path, const char* _value) {
     impl->sceneUpdates.push_back({_path, _value});
 }
 
-void Map::queueSceneUpdate(std::vector<SceneUpdate> sceneUpdates) {
+void Map::queueSceneUpdate(const std::vector<SceneUpdate>& sceneUpdates) {
     std::lock_guard<std::mutex> lock(impl->sceneMutex);
     impl->sceneUpdates.insert(impl->sceneUpdates.end(), sceneUpdates.begin(), sceneUpdates.end());
 }
