@@ -62,6 +62,10 @@ protected:
 
     void addVerticesToMesh() override;
 
+    uint32_t selectionColor() override {
+        return m_fontAttrib.selectionColor;
+    }
+
 private:
 
     void applyAnchor(LabelProperty::Anchor _anchor) override;

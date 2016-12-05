@@ -47,9 +47,7 @@ public:
 
     bool needUpdate() const { return m_needUpdate; }
 
-    bool getLabel(const std::vector<std::unique_ptr<Style>>& _styles,
-                                  const std::vector<std::shared_ptr<Tile>>& _tiles,
-                                  uint32_t _selectionColor, Label*& _label, Tile*& _tile);
+    std::pair<Label*, Tile*> getLabel(uint32_t _selectionColor);
 
 protected:
 

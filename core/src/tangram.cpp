@@ -439,7 +439,6 @@ void Map::render() {
 
         // Resolve feature selection queries
         for (const auto& selectionQuery : impl->featureSelectionQueries) {
-            std::unique_ptr<FeaturePickResult> queryResult;
 
             float x = selectionQuery.position.x / impl->view.getWidth();
             float y = (1.f - (selectionQuery.position.y / impl->view.getHeight()));
@@ -447,26 +446,30 @@ void Map::render() {
             // TODO: read with a scalable thumb size
             GLuint color = impl->selectionBuffer->readAt(x, y);
 
+            auto position = std::array<float, 2>{{selectionQuery.position.x,
+                                                  selectionQuery.position.y}};
+            bool found = false;
             if (color != 0) {
                 for (const auto& tile : impl->tileManager.getVisibleTiles()) {
                     if (auto props = tile->getSelectionFeature(color)) {
-                        queryResult = std::unique_ptr<FeaturePickResult>(new FeaturePickResult
-                            {props, {selectionQuery.position.x, selectionQuery.position.y}});
+
+                        FeaturePickResult queryResult(props, position);
+                        selectionQuery.onFeatureSelection(&queryResult);
+                        found = true;
                         break;
                     }
                 }
             }
-
-            selectionQuery.onFeatureSelection(queryResult.get());
+            if (!found) {
+                selectionQuery.onFeatureSelection(nullptr);
+                continue;
+            }
         }
 
         impl->featureSelectionQueries.clear();
 
         // Resolve label selection queries
         for (const auto& labelQuery : impl->labelSelectionQueries) {
-            std::unique_ptr<LabelPickResult> queryResult;
-            Label* label;
-            Tile* tile;
 
             float x = labelQuery.position.x / impl->view.getWidth();
             float y = (1.f - (labelQuery.position.y / impl->view.getHeight()));
@@ -474,19 +477,34 @@ void Map::render() {
             // TODO: read with a scalable thumb size and iterate over the read colors
             GLuint color = impl->selectionBuffer->readAt(x, y);
 
-            if (color != 0) {
-                // Retrieve the label for this selection color
-                if (impl->labels.getLabel(impl->scene->styles(), impl->tileManager.getVisibleTiles(), color, label, tile)) {
-                    LngLat coordinate = label->coordinate(*tile, impl->view.getMapProjection());
-
-                    queryResult = std::unique_ptr<LabelPickResult>(new LabelPickResult {label->renderType(), coordinate,
-                        {label->options().properties, {labelQuery.position.x, labelQuery.position.y}}});
-                }
+            // Retrieve the label for this selection color
+            if (color == 0) {
+                labelQuery.onLabelSelection(nullptr);
+                continue;
             }
+            auto label = impl->labels.getLabel(color);
+            if (!label.first) {
+                labelQuery.onLabelSelection(nullptr);
+                continue;
+            }
+            auto props = label.second->getSelectionFeature(label.first->options().featureId);
+            if (!props) {
+                labelQuery.onLabelSelection(nullptr);
+                continue;
+            }
+
+            LngLat coordinate = label.first->coordinate(*label.second,
+                                                        impl->view.getMapProjection());
+
+            auto position = std::array<float, 2>{{labelQuery.position.x,
+                                                  labelQuery.position.y}};
+
+            LabelPickResult queryResult(label.first->renderType(), coordinate,
+                                        FeaturePickResult(props, position));
 
             // TODO: sort touch labels by distance
 
-            labelQuery.onLabelSelection(queryResult.get());
+            labelQuery.onLabelSelection(&queryResult);
         }
 
         impl->labelSelectionQueries.clear();

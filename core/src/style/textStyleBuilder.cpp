@@ -405,7 +405,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     p.lineSpacing = 2 * m_style.pixelScale();
 
     if (p.interactive) {
-        p.labelOptions.properties = std::make_shared<Properties>(_props);
+        p.labelOptions.featureId = _rule.selectionColor;
     }
 
     return p;

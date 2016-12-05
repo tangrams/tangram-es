@@ -91,12 +91,12 @@ public:
         bool required = true;
         bool flat = false;
         float angle = 0.f;
-        std::shared_ptr<Properties> properties;
+        uint32_t featureId = 0;
     };
 
     static const float activation_distance_threshold;
 
-    Label(WorldTransform _transform, glm::vec2 _size, uint32_t _selectionColor, Type _type, Options _options);
+    Label(WorldTransform _transform, glm::vec2 _size, Type _type, Options _options);
 
     virtual ~Label();
 
@@ -109,6 +109,8 @@ public:
 
     // Update the screen position of the label
     virtual bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) = 0;
+
+    virtual uint32_t selectionColor() = 0;
 
     bool update(const glm::mat4& _mvp,
                 const ViewState& _viewState,
@@ -183,8 +185,6 @@ public:
     bool offViewport(const glm::vec2& _screenSize);
 
     void setAlpha(float _alpha);
-
-    uint32_t selectionColor() { return m_selectionColor; }
 
 private:
 

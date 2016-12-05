@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <array>
 
 namespace Tangram {
 
@@ -17,14 +18,23 @@ enum LabelType {
 };
 
 struct FeaturePickResult {
+    FeaturePickResult(std::shared_ptr<Properties> _properties,
+                      std::array<float, 2> _position)
+        : properties(_properties), position(_position) {}
+
     std::shared_ptr<Properties> properties;
-    float position[2];
+    std::array<float, 2> position;
 };
 
 // Returns a pointer to the selected feature or null, only valid on the callback scope
 using FeaturePickCallback = std::function<void(const FeaturePickResult*)>;
 
 struct LabelPickResult {
+    LabelPickResult(LabelType _type, LngLat _coordinate,FeaturePickResult _touchItem)
+        : type(_type),
+          coordinate(_coordinate),
+          touchItem(_touchItem) {}
+
     LabelType type;
     LngLat coordinate;
     FeaturePickResult touchItem;
@@ -291,4 +301,3 @@ bool getDebugFlag(DebugFlags _flag);
 void toggleDebugFlag(DebugFlags _flag);
 
 }
-
