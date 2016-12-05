@@ -48,14 +48,32 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 - (void)loadSceneFile:(NSString*)path
 {
-    if (!self.map) { return; }
-
-    self.scenePath = path;
-    self.map->loadScene([path UTF8String]);
-    self.renderRequested = YES;
+    [self loadSceneFile:path sceneUpdates:nil];
 }
 
 - (void)loadSceneFileAsync:(NSString*)path
+{
+    [self loadSceneFileAsync:path sceneUpdates:nil];
+}
+
+- (void)loadSceneFile:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
+{
+    if (!self.map) { return; }
+
+    std::vector<Tangram::SceneUpdate> updates;
+
+    if (sceneUpdates) {
+        for (TGSceneUpdate* update in sceneUpdates) {
+            updates.push_back({std::string([update.path UTF8String]), std::string([update.value UTF8String])});
+        }
+    }
+
+    self.scenePath = path;
+    self.map->loadScene([path UTF8String], false, updates);
+    self.renderRequested = YES;
+}
+
+- (void)loadSceneFileAsync:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
 {
     if (!self.map) { return; }
 
@@ -69,10 +87,33 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         self.renderRequested = YES;
     };
 
-    self.map->loadSceneAsync([path UTF8String], false, onReadyCallback, nullptr);
+    std::vector<Tangram::SceneUpdate> updates;
+
+    if (sceneUpdates) {
+        for (TGSceneUpdate* update in sceneUpdates) {
+            updates.push_back({std::string([update.path UTF8String]), std::string([update.value UTF8String])});
+        }
+    }
+
+    self.map->loadSceneAsync([path UTF8String], false, onReadyCallback, nullptr, updates);
 }
 
 #pragma mark Scene updates
+
+- (void)queueSceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
+{
+    if (!self.map) { return; }
+
+    std::vector<Tangram::SceneUpdate> updates;
+
+    if (sceneUpdates) {
+        for (TGSceneUpdate* update in sceneUpdates) {
+            updates.push_back({std::string([update.path UTF8String]), std::string([update.value UTF8String])});
+        }
+    }
+
+    self.map->queueSceneUpdate(updates);
+}
 
 - (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value
 {
