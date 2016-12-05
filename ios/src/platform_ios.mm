@@ -10,28 +10,16 @@
 
 #import "TGMapViewController.h"
 #import "TGFontConverter.h"
+#import "TGHttpHandler.h"
 #import "platform_ios.h"
 #import "log.h"
 
 static TGMapViewController* viewController;
 static NSBundle* tangramFramework;
-NSURLSession* defaultSession;
 
 void init(TGMapViewController* _controller) {
 
     viewController = _controller;
-
-    /* Setup NSURLSession configuration : cache path and size */
-    NSURLSessionConfiguration *defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
-    NSString *cachePath = @"/tile_cache";
-    NSURLCache *tileCache = [[NSURLCache alloc] initWithMemoryCapacity: 4 * 1024 * 1024 diskCapacity: 30 * 1024 * 1024 diskPath: cachePath];
-    defaultConfigObject.URLCache = tileCache;
-    defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
-    defaultConfigObject.timeoutIntervalForRequest = 30;
-    defaultConfigObject.timeoutIntervalForResource = 60;
-
-    /* create a default NSURLSession using the defaultConfigObject*/
-    defaultSession = [NSURLSession sessionWithConfiguration: defaultConfigObject ];
 
     // Get handle to tangram framework
     tangramFramework = [NSBundle bundleWithIdentifier:@"com.mapzen.tangramMap"];
@@ -239,9 +227,13 @@ unsigned char* systemFont(const std::string& _name, const std::string& _weight, 
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
-    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
+    TGHttpHandler* httpHandler = [viewController httpHandler];
 
-    void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
+    if (!httpHandler) {
+        return false;
+    }
+
+    DownloadCompletionHandler handler = ^void (NSData* data, NSURLResponse* response, NSError* error) {
 
         NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
 
@@ -269,31 +261,24 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
             _callback(std::move(rawDataVec));
 
         }
-
     };
 
-    NSURLSessionDataTask* dataTask = [defaultSession dataTaskWithURL:[NSURL URLWithString:nsUrl]
-                                                    completionHandler:handler];
-
-    [dataTask resume];
+    NSString* url = [NSString stringWithUTF8String:_url.c_str()];
+    [httpHandler downloadRequestAsync:url completionHandler:handler];
 
     return true;
-
 }
 
 void cancelUrlRequest(const std::string& _url) {
 
-    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
+    TGHttpHandler* httpHandler = [viewController httpHandler];
 
-    [defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
-        for(NSURLSessionTask* task in dataTasks) {
-            if([[task originalRequest].URL.absoluteString isEqualToString:nsUrl]) {
-                [task cancel];
-                break;
-            }
-        }
-    }];
+    if (!httpHandler) {
+        return;
+    }
 
+    NSString* url = [NSString stringWithUTF8String:_url.c_str()];
+    [httpHandler cancelDownloadRequestAsync:url];
 }
 
 void setCurrentThreadPriority(int priority) {}

@@ -552,6 +552,12 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     self.renderRequested = YES;
     self.continuous = NO;
 
+    if (!self.httpHandler) {
+        self.httpHandler = [[TGHttpHandler alloc] initWithCachePath:@"/tangram_cache"
+                                                cacheMemoryCapacity:4*1024*1024
+                                                  cacheDiskCapacity:30*1024*1024];
+    }
+
     init(self);
 
     GLKView *view = (GLKView *)self.view;
