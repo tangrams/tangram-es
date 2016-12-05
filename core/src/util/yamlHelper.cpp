@@ -8,6 +8,33 @@
 
 namespace Tangram {
 
+YamlPath YamlPathBuffer::toYamlPath() {
+    size_t length = 0;
+
+    for(auto& element : m_path) {
+        if (element.key) {
+            length += element.key->length()+1;
+        } else {
+            int c = 1;
+            while (element.index >= pow(10, c)) { c += 1; }
+            length += c + 1;
+        }
+    }
+    std::string path;
+    path.reserve(length);
+
+    for(auto& element : m_path) {
+        if (element.key) {
+            if (!path.empty()) { path += '.'; }
+            path += *element.key;
+        } else {
+            path += '#';
+            path += std::to_string(element.index);
+        }
+    }
+    return YamlPath(path);
+}
+
 YamlPath::YamlPath() {}
 
 YamlPath::YamlPath(const std::string& path)

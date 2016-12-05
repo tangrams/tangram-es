@@ -48,6 +48,8 @@ const std::string DELIMITER = ":";
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
+static const std::string GLOBAL_PREFIX = "global.";
+
 std::mutex SceneLoader::m_textureMutex;
 
 bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene, const std::vector<SceneUpdate>& _updates) {
@@ -80,8 +82,12 @@ void SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& upd
             LOGE("Parsing scene update string failed. '%s'", e.what());
         }
         if (value) {
-            auto node = YamlPath(update.path).get(root);
-            node = value;
+            try {
+                auto node = YamlPath(update.path).get(root);
+                node = value;
+            } catch(YAML::Exception e) {
+                LOGE("Parsing scene update string failed. %s '%s'", update.path.c_str(), e.what());
+            }
         }
     }
 }
@@ -95,25 +101,30 @@ void printFilters(const SceneLayer& layer, int indent){
     }
 };
 
-void createGlobalRefsRecursive(Node node, Scene& scene, YamlPath path) {
+void createGlobalRefs(const Node& node, Scene& scene, YamlPathBuffer& path) {
     switch(node.Type()) {
     case NodeType::Scalar: {
             const auto& value = node.Scalar();
-            if (value.compare(0, 7, "global.") == 0) {
-                scene.globalRefs().emplace_back(path, YamlPath(value));
+            if (value.length() > 7 && value.compare(0, 7, GLOBAL_PREFIX) == 0) {
+                scene.globalRefs().emplace_back(path.toYamlPath(),
+                                                YamlPath(value.substr(GLOBAL_PREFIX.length())));
             }
         }
         break;
     case NodeType::Sequence: {
-            int i = 0;
+            path.pushSequence();
             for (const auto& entry : node) {
-                createGlobalRefsRecursive(entry, scene, path.add(i++));
+                createGlobalRefs(entry, scene, path);
+                path.increment();
             }
+            path.pop();
         }
         break;
     case NodeType::Map:
         for (const auto& entry : node) {
-            createGlobalRefsRecursive(entry.second, scene, path.add(entry.first.Scalar()));
+            path.pushMap(&entry.first.Scalar());
+            createGlobalRefs(entry.second, scene, path);
+            path.pop();
         }
         break;
     default:
@@ -123,12 +134,23 @@ void createGlobalRefsRecursive(Node node, Scene& scene, YamlPath path) {
 
 void SceneLoader::applyGlobals(Node root, Scene& scene) {
 
-    createGlobalRefsRecursive(root, scene, YamlPath());
+    YamlPathBuffer path;
+    createGlobalRefs(root, scene, path);
+    const auto& globals = root["global"];
+    if (!scene.globalRefs().empty() && !globals.IsMap()) {
+        LOGW("Missing global references");
+    }
 
     for (auto& globalRef : scene.globalRefs()) {
         auto target = globalRef.first.get(root);
-        auto global = globalRef.second.get(root);
-        target = global;
+        auto global = globalRef.second.get(globals);
+        if (target && global) {
+            target = global;
+        } else {
+            LOGW("Global reference is undefined: %s <= %s",
+                 globalRef.first.codedPath.c_str(),
+                 globalRef.second.codedPath.c_str());
+        }
     }
 }
 
