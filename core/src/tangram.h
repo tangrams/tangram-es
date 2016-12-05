@@ -65,15 +65,18 @@ public:
 
     // Load the scene at the given absolute file path asynchronously
     void loadSceneAsync(const char* _scenePath, bool _useScenePosition = false,
-            std::function<void(void*)> _platformCallback = {}, void *_cbData = nullptr);
+                        std::function<void(void*)> _platformCallback = {}, void *_cbData = nullptr,
+                        const std::vector<SceneUpdate>& sceneUpdates = {});
 
     // Load the scene at the given absolute file path synchronously
-    void loadScene(const char* _scenePath, bool _useScenePosition = false);
+    void loadScene(const char* _scenePath, bool _useScenePosition = false,
+                   const std::vector<SceneUpdate>& sceneUpdates = {});
 
     // Request an update to the scene configuration; the path is a series of yaml keys
     // separated by a '.' and the value is a string of yaml to replace the current value
     // at the given path in the scene
     void queueSceneUpdate(const char* _path, const char* _value);
+    void queueSceneUpdate(std::vector<SceneUpdate> sceneUpdates);
 
     // Apply all previously requested scene updates
     void applySceneUpdates();

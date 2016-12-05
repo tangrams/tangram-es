@@ -50,13 +50,15 @@ constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
 std::mutex SceneLoader::m_textureMutex;
 
-bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
+bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene, const std::vector<SceneUpdate>& _updates) {
 
     Importer sceneImporter;
 
     _scene->config() = sceneImporter.applySceneImports(_scene->path(), _scene->resourceRoot());
 
     if (_scene->config()) {
+
+        applyUpdates(*_scene, _updates);
 
         // Load font resources
         _scene->fontContext()->loadFonts();
