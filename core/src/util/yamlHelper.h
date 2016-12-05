@@ -22,6 +22,23 @@ struct YamlPath {
     std::string codedPath;
 };
 
+struct YamlPathBuffer {
+
+    struct PathElement {
+        size_t index;
+        const std::string* key;
+        PathElement(size_t index, const std::string* key) : index(index), key(key) {}
+    };
+
+    std::vector<PathElement> m_path;
+
+    void pushMap(const std::string* _p) { m_path.emplace_back(0, _p);}
+    void pushSequence() { m_path.emplace_back(0, nullptr); }
+    void increment() { m_path.back().index++; }
+    void pop() { m_path.pop_back(); }
+    YamlPath toYamlPath();
+};
+
 template<typename T>
 inline T parseVec(const Node& node) {
     T vec;
