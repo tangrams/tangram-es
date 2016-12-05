@@ -1,5 +1,9 @@
 language: android
 
+branches:
+    only:
+        - master
+
 matrix:
     include:
         - os: osx
