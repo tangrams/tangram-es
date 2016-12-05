@@ -49,6 +49,7 @@ NS_ASSUME_NONNULL_BEGIN
 @optional
 - (void)mapView:(TGMapViewController*)mapView didLoadSceneAsync:(NSString*)scene;
 - (void)mapView:(TGMapViewController*)mapView didSelectFeature:(NSDictionary*)feature atScreenPosition:(CGPoint)position;
+- (void)didCompleteView:(TGMapViewController *)mapView;
 @end
 
 @interface TGMapViewController : GLKViewController <UIGestureRecognizerDelegate>
@@ -106,6 +107,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)requestRender;
 
 - (void)renderOnce;
+
+- (void)update;
 
 #pragma mark Longitude/Latitude - Screen position conversions
 

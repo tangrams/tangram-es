@@ -16,6 +16,11 @@
 
 @implementation MapViewControllerDelegate
 
+- (void)didCompleteView:(TGMapViewController *)mapView
+{
+    NSLog(@"Did complete view");
+}
+
 - (void)mapView:(TGMapViewController *)mapView didLoadSceneAsync:(NSString *)scene
 {
     NSLog(@"Did load scene async %@", scene);
