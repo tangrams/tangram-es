@@ -21,7 +21,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 @property (nullable, copy, nonatomic) NSString* scenePath;
 @property (nullable, strong, nonatomic) EAGLContext* context;
-@property (assign, nonatomic) CGFloat pixelScale;
+@property (assign, nonatomic) CGFloat contentScaleFactor;
 @property (assign, nonatomic) BOOL renderRequested;
 @property (assign, nonatomic, nullable) Tangram::Map* map;
 
@@ -85,8 +85,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     if (self.map->lngLatToScreenPosition(lngLat.longitude, lngLat.latitude,
         &screenPosition[0], &screenPosition[1])) {
 
-        screenPosition[0] /= self.pixelScale;
-        screenPosition[1] /= self.pixelScale;
+        screenPosition[0] /= self.contentScaleFactor;
+        screenPosition[1] /= self.contentScaleFactor;
 
         return CGPointMake((CGFloat)screenPosition[0], (CGFloat)screenPosition[1]);
     }
@@ -100,8 +100,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
     if (!self.map) { return nullTangramGeoPoint; }
 
-    screenPosition.x *= self.pixelScale;
-    screenPosition.y *= self.pixelScale;
+    screenPosition.x *= self.contentScaleFactor;
+    screenPosition.y *= self.contentScaleFactor;
 
     TGGeoPoint lngLat;
     if (self.map->screenPositionToLngLat(screenPosition.x, screenPosition.y,
@@ -118,8 +118,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map && !self.mapViewDelegate) { return; }
 
-    screenPosition.x *= self.pixelScale;
-    screenPosition.y *= self.pixelScale;
+    screenPosition.x *= self.contentScaleFactor;
+    screenPosition.y *= self.contentScaleFactor;
 
     self.map->pickFeatureAt(screenPosition.x, screenPosition.y, [screenPosition, self](const Tangram::FeaturePickResult* featureResult) {
         NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
@@ -135,7 +135,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         }
 
         const auto& properties = featureResult->properties;
-        position = CGPointMake(featureResult->position[0] / self.pixelScale, featureResult->position[1] / self.pixelScale);
+        position = CGPointMake(featureResult->position[0] / self.contentScaleFactor, featureResult->position[1] / self.contentScaleFactor);
 
         for (const auto& item : properties->items()) {
             NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
@@ -488,10 +488,10 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
         switch (panRecognizer.state) {
             case UIGestureRecognizerStateChanged:
-                self.map->handlePanGesture(start.x * self.pixelScale, start.y * self.pixelScale, end.x * self.pixelScale, end.y * self.pixelScale);
+                self.map->handlePanGesture(start.x * self.contentScaleFactor, start.y * self.contentScaleFactor, end.x * self.contentScaleFactor, end.y * self.contentScaleFactor);
                 break;
             case UIGestureRecognizerStateEnded:
-                self.map->handleFlingGesture(end.x * self.pixelScale, end.y * self.pixelScale, velocity.x * self.pixelScale, velocity.y * self.pixelScale);
+                self.map->handleFlingGesture(end.x * self.contentScaleFactor, end.y * self.contentScaleFactor, velocity.x * self.contentScaleFactor, velocity.y * self.contentScaleFactor);
                 break;
             default:
                 break;
@@ -507,7 +507,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     } else {
         CGFloat scale = pinchRecognizer.scale;
         [pinchRecognizer setScale:1.0];
-        self.map->handlePinchGesture(location.x * self.pixelScale, location.y * self.pixelScale, scale, pinchRecognizer.velocity);
+        self.map->handlePinchGesture(location.x * self.contentScaleFactor, location.y * self.contentScaleFactor, scale, pinchRecognizer.velocity);
     }
 }
 
@@ -519,7 +519,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeRotationGesture:)]) {
         [self.gestureDelegate mapView:self recognizer:rotationRecognizer didRecognizeRotationGesture:position];
     } else {
-        self.map->handleRotateGesture(position.x * self.pixelScale, position.y * self.pixelScale, rotation);
+        self.map->handleRotateGesture(position.x * self.contentScaleFactor, position.y * self.contentScaleFactor, rotation);
     }
 }
 
@@ -548,7 +548,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     if (!self.context) {
         NSLog(@"Failed to create ES context");
     }
-    self.pixelScale = [[UIScreen mainScreen] scale];
+
     self.renderRequested = YES;
     self.continuous = NO;
 
@@ -560,10 +560,11 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
     init(self);
 
-    GLKView *view = (GLKView *)self.view;
+    GLKView* view = (GLKView *)self.view;
     view.context = self.context;
     view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
     view.drawableMultisample = GLKViewDrawableMultisample4X;
+    self.contentScaleFactor = view.contentScaleFactor;
 
     [self setupGestureRecognizers];
     [self setupGL];
@@ -606,9 +607,9 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     int width = self.view.bounds.size.width;
     int height = self.view.bounds.size.height;
 
-    self.map->resize(width * self.pixelScale, height * self.pixelScale);
+    self.map->resize(width * self.contentScaleFactor, height * self.contentScaleFactor);
 
-    self.map->setPixelScale(self.pixelScale);
+    self.map->setPixelScale(self.contentScaleFactor);
 }
 
 - (void)tearDownGL
@@ -621,7 +622,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
-    self.map->resize(size.width * self.pixelScale, size.height * self.pixelScale);
+    self.map->resize(size.width * self.contentScaleFactor, size.height * self.contentScaleFactor);
 
     [self renderOnce];
 }
