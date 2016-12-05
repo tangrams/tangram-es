@@ -215,7 +215,7 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
 }
 
 bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const {
-    _quad = glm::vec4(0.0, 0.0, 1.0, 1.0);
+    _quad = glm::vec4(0.0, 1.0, 1.0, 0.0);
 
     if (m_style.spriteAtlas()) {
         SpriteNode spriteNode;
