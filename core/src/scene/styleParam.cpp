@@ -559,17 +559,15 @@ bool StyleParam::parseVec3(const std::string& _value, const std::vector<Unit> un
 uint32_t StyleParam::parseColor(const std::string& _color) {
     Color color;
 
-    if (isdigit(_color.front())) {
-        // try to parse as comma-separated rgba components
-        float r, g, b, a = 1.;
-        if (sscanf(_color.c_str(), "%f,%f,%f,%f", &r, &g, &b, &a) >= 3) {
-            color = Color {
-                static_cast<uint8_t>(CLAMP((r * 255.), 0, 255)),
-                static_cast<uint8_t>(CLAMP((g * 255.), 0, 255)),
-                static_cast<uint8_t>(CLAMP((b * 255.), 0, 255)),
-                CLAMP(a, 0, 1)
-            };
-        }
+    // First, try to parse as comma-separated rgba components.
+    float r, g, b, a = 1.;
+    if (sscanf(_color.c_str(), "%f,%f,%f,%f", &r, &g, &b, &a) >= 3) {
+        color = Color {
+            static_cast<uint8_t>(CLAMP((r * 255.), 0, 255)),
+            static_cast<uint8_t>(CLAMP((g * 255.), 0, 255)),
+            static_cast<uint8_t>(CLAMP((b * 255.), 0, 255)),
+            CLAMP(a, 0, 1)
+        };
     } else {
         // parse as css color or #hex-num
         color = CSSColorParser::parse(_color);
