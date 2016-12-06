@@ -6,13 +6,13 @@ set -o pipefail
 if [[ ${PLATFORM} == "osx" ]]; then
     # Build osx project
     echo "Building osx project"
-    CMAKE_OPTIONS="-DUNIT_TESTS=1 -DBENCHMARK=1" make -j osx
+    CMAKE_OPTIONS="-DUNIT_TESTS=1 -DBENCHMARK=1 -GNinja" make osx
 fi
 
 if [[ ${PLATFORM} == "linux" ]]; then
     # Build linux project
     echo "Building linux project"
-    CMAKE_OPTIONS="-DUNIT_TESTS=1 -DBENCHMARK=1" make -j 4 linux
+    CMAKE_OPTIONS="-DUNIT_TESTS=1 -DBENCHMARK=1 -GNinja" make linux
 fi
 
 if [[ ${PLATFORM} == "ios" ]]; then
@@ -25,6 +25,6 @@ if [[ ${PLATFORM} == "android" ]]; then
     # Build android project
     echo "Building android project"
     export TERM=dumb
-    make android
+    CMAKE_OPTIONS="-GNinja" make android
 fi
 
