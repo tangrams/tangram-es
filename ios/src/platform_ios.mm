@@ -54,22 +54,31 @@ bool isContinuousRendering() {
 
 NSString* resolvePath(const char* _path) {
 
-    NSString* path = [NSString stringWithUTF8String:_path];
+    NSString* pathString = [NSString stringWithUTF8String:_path];
 
-    NSString* resources = [[NSBundle mainBundle] resourcePath];
-    NSString* fullBundlePath = [resources stringByAppendingPathComponent:path];
+    NSURL* resourceFolderUrl = [[NSBundle mainBundle] resourceURL];
+
+    NSURL* resolvedUrl = [NSURL URLWithString:pathString
+                                relativeToURL:resourceFolderUrl];
+
+    NSString* pathInAppBundle = [resolvedUrl path];
+
     NSFileManager* fileManager = [NSFileManager defaultManager];
 
-    if ([fileManager fileExistsAtPath:fullBundlePath]) {
-        return fullBundlePath;
+    if ([fileManager fileExistsAtPath:pathInAppBundle]) {
+        return pathInAppBundle;
     }
 
     if (tangramFramework) {
-        NSString* resources = [tangramFramework resourcePath];
-        fullBundlePath = [resources stringByAppendingPathComponent:path];
+        NSURL* frameworkResourcesUrl = [tangramFramework resourceURL];
 
-        if ([fileManager fileExistsAtPath:fullBundlePath]) {
-            return fullBundlePath;
+        NSURL* frameworkResolvedUrl = [NSURL URLWithString:pathString
+                                             relativeToURL:frameworkResourcesUrl];
+
+        NSString* pathInFramework = [frameworkResolvedUrl path];
+
+        if ([fileManager fileExistsAtPath:pathInFramework]) {
+            return pathInFramework;
         }
     }
 
