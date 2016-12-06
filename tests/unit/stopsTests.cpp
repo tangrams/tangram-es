@@ -68,18 +68,18 @@ TEST_CASE("Stops evaluate width values correctly at and between key frames", "[S
 
     });
 
-    REQUIRE(stops.evalWidth(-3) == 0.f);
-    REQUIRE(stops.evalWidth(0) == 0.f);
-    REQUIRE(std::abs(stops.evalWidth(0.3) - 2.31144f) < 0.00001);
-    REQUIRE(stops.evalWidth(1) == 10.f);
-    REQUIRE(stops.evalWidth(3) == 18.f);
-    REQUIRE(stops.evalWidth(5) == 50.f);
-    REQUIRE(std::abs(stops.evalWidth(6) - 33.33333f) < 0.00001);
-    REQUIRE(stops.evalWidth(7) == 0.f);
-    REQUIRE(stops.evalWidth(8) == 3.f);
-    REQUIRE(stops.evalWidth(8.4) == 3.f); // flat interpolation
-    REQUIRE(stops.evalWidth(9.3) == 3.f); // flat interpolation
-    REQUIRE(stops.evalWidth(10) == 3.f);
+    REQUIRE(stops.evalExpFloat(-3) == 0.f);
+    REQUIRE(stops.evalExpFloat(0) == 0.f);
+    REQUIRE(std::abs(stops.evalExpFloat(0.3) - 2.31144f) < 0.00001);
+    REQUIRE(stops.evalExpFloat(1) == 10.f);
+    REQUIRE(stops.evalExpFloat(3) == 18.f);
+    REQUIRE(stops.evalExpFloat(5) == 50.f);
+    REQUIRE(std::abs(stops.evalExpFloat(6) - 33.33333f) < 0.00001);
+    REQUIRE(stops.evalExpFloat(7) == 0.f);
+    REQUIRE(stops.evalExpFloat(8) == 3.f);
+    REQUIRE(stops.evalExpFloat(8.4) == 3.f); // flat interpolation
+    REQUIRE(stops.evalExpFloat(9.3) == 3.f); // flat interpolation
+    REQUIRE(stops.evalExpFloat(10) == 3.f);
 
 }
 
