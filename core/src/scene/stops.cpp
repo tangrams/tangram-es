@@ -58,7 +58,7 @@ auto Stops::FontSize(const YAML::Node& _node) -> Stops {
         float key = frameNode[0].as<float>();
 
         if (lastKey > key) {
-            LOGW("Invalid stop order: key %f > %f\n", lastKey, key);
+            LOGW("Invalid stop order: key %f > %f", lastKey, key);
             continue;
         }
 
@@ -75,6 +75,65 @@ auto Stops::FontSize(const YAML::Node& _node) -> Stops {
     return stops;
 }
 
+auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> Stops {
+    Stops stops;
+    if (!_node.IsSequence()) {
+        return stops;
+    }
+
+    float lastKey = 0;
+
+    for (const auto& frameNode : _node) {
+        if (!frameNode.IsSequence() || frameNode.size() != 2) { continue; }
+        float key = frameNode[0].as<float>();
+
+        if (lastKey > key) {
+            LOGW("Invalid stop order: key %f > %f", lastKey, key);
+            continue;
+        }
+        lastKey = key;
+
+        if (frameNode[1].IsScalar()) {
+            StyleParam::ValueUnitPair sizeValue;
+            sizeValue.unit = Unit::pixel;
+            size_t start = 0;
+
+            if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, sizeValue)) {
+                for (auto& unit : _units) {
+                    if (sizeValue.unit != unit) {
+                        LOGW("Size StyleParam can only take in pixel values in: %s", Dump(_node).c_str());
+                    }
+                }
+
+                stops.frames.emplace_back(key, sizeValue.value);
+            } else {
+                LOGW("could not parse node %s\n", Dump(frameNode[1]).c_str());
+            }
+        } else if (frameNode[1].IsSequence()) {
+            std::vector<StyleParam::ValueUnitPair> sizeValues;
+
+            for (const auto& sequenceNode : frameNode[1]) {
+                StyleParam::ValueUnitPair sizeValue;
+                sizeValue.unit = Unit::pixel; // default to pixel
+                if (StyleParam::parseValueUnitPair(sequenceNode.Scalar(), 0, sizeValue)) {
+                    for (auto& unit : _units) {
+                        if (sizeValue.unit != unit) {
+                            LOGW("Size StyleParam can only take in pixel values in: %s", Dump(_node).c_str());
+                        }
+                    }
+                    sizeValues.push_back(sizeValue);
+                } else {
+                    LOGW("could not parse node %s\n", Dump(sequenceNode).c_str());
+                }
+            }
+            if (sizeValues.size() == 2) {
+                stops.frames.emplace_back(key, glm::vec2(sizeValues[0].value, sizeValues[1].value));
+            }
+        }
+    }
+    return stops;
+}
+
 auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) -> Stops {
     Stops stops;
     if (!_node.IsSequence()) {
@@ -86,7 +145,7 @@ auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) ->
         float key = frameNode[0].as<float>();
 
         if (lastKey > key) {
-            LOGW("Invalid stop order: key %f > %f\n", lastKey, key);
+            LOGW("Invalid stop order: key %f > %f", lastKey, key);
             continue;
         }
         lastKey = key;
@@ -105,7 +164,7 @@ auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) ->
                     }
                     lastUnit = width.unit;
                 } else {
-                    LOGW("could not parse node %s\n", Dump(sequenceNode).c_str());
+                    LOGW("could not parse node %s", Dump(sequenceNode).c_str());
                 }
             }
             if (widths.size() == 2) {
@@ -205,7 +264,7 @@ auto Stops::Numbers(const YAML::Node& node) -> Stops {
     return stops;
 }
 
-auto Stops::evalWidth(float _key) const -> float {
+auto Stops::evalExpFloat(float _key) const -> float {
     if (frames.empty()) { return 0; }
 
     auto upper = nearestHigherFrame(_key);
@@ -268,6 +327,32 @@ auto Stops::evalColor(float _key) const -> uint32_t {
     return Color::mix(lower->value.get<Color>(), upper->value.get<Color>(), lerp).abgr;
 }
 
+auto Stops::evalExpVec2(float _key) const -> glm::vec2 {
+    if (frames.empty()) { return glm::vec2{0.f}; }
+
+    auto upper = nearestHigherFrame(_key);
+    auto lower = upper - 1;
+
+    if (upper == frames.end()) {
+        return lower->value.get<glm::vec2>();
+    }
+    if (lower < frames.begin()) {
+        return upper->value.get<glm::vec2>();
+    }
+
+    double range = exp2(upper->key - lower->key) - 1.0;
+    double pos = exp2(_key - lower->key) - 1.0;
+
+    double lerp = pos / range;
+
+    const glm::vec2& lowerVal = lower->value.get<glm::vec2>();
+    const glm::vec2& upperVal = upper->value.get<glm::vec2>();
+
+    return glm::vec2(lowerVal.x * (1 - lerp) + upperVal.x * lerp,
+                     lowerVal.y * (1 - lerp) + upperVal.y * lerp);
+
+}
+
 auto Stops::evalVec2(float _key) const -> glm::vec2 {
     if (frames.empty()) { return glm::vec2{0.f}; }
 
@@ -291,6 +376,17 @@ auto Stops::evalVec2(float _key) const -> glm::vec2 {
 
 }
 
+auto Stops::evalSize(float _key) const -> StyleParam::Value {
+    if (frames.empty()) { return 0.f; }
+
+    if (frames[0].value.is<float>()) {
+        return evalExpFloat(_key);
+    } else if (frames[0].value.is<glm::vec2>()) {
+        return evalExpVec2(_key);
+    }
+    return 0.f;
+}
+
 auto Stops::nearestHigherFrame(float _key) const -> std::vector<Frame>::const_iterator {
 
     return std::lower_bound(frames.begin(), frames.end(), _key,
@@ -301,9 +397,11 @@ void Stops::eval(const Stops& _stops, StyleParamKey _key, float _zoom, StylePara
     if (StyleParam::isColor(_key)) {
         _result = _stops.evalColor(_zoom);
     } else if (StyleParam::isWidth(_key)) {
-        _result = _stops.evalWidth(_zoom);
+        _result = _stops.evalExpFloat(_zoom);
     } else if (StyleParam::isOffsets(_key)) {
         _result = _stops.evalVec2(_zoom);
+    } else if (StyleParam::isSize(_key)) {
+        _result = _stops.evalSize(_zoom);
     } else {
         _result = _stops.evalFloat(_zoom);
     }

@@ -68,18 +68,18 @@ TEST_CASE("Stops evaluate width values correctly at and between key frames", "[S
 
     });
 
-    REQUIRE(stops.evalWidth(-3) == 0.f);
-    REQUIRE(stops.evalWidth(0) == 0.f);
-    REQUIRE(std::abs(stops.evalWidth(0.3) - 2.31144f) < 0.00001);
-    REQUIRE(stops.evalWidth(1) == 10.f);
-    REQUIRE(stops.evalWidth(3) == 18.f);
-    REQUIRE(stops.evalWidth(5) == 50.f);
-    REQUIRE(std::abs(stops.evalWidth(6) - 33.33333f) < 0.00001);
-    REQUIRE(stops.evalWidth(7) == 0.f);
-    REQUIRE(stops.evalWidth(8) == 3.f);
-    REQUIRE(stops.evalWidth(8.4) == 3.f); // flat interpolation
-    REQUIRE(stops.evalWidth(9.3) == 3.f); // flat interpolation
-    REQUIRE(stops.evalWidth(10) == 3.f);
+    REQUIRE(stops.evalExpFloat(-3) == 0.f);
+    REQUIRE(stops.evalExpFloat(0) == 0.f);
+    REQUIRE(std::abs(stops.evalExpFloat(0.3) - 2.31144f) < 0.00001);
+    REQUIRE(stops.evalExpFloat(1) == 10.f);
+    REQUIRE(stops.evalExpFloat(3) == 18.f);
+    REQUIRE(stops.evalExpFloat(5) == 50.f);
+    REQUIRE(std::abs(stops.evalExpFloat(6) - 33.33333f) < 0.00001);
+    REQUIRE(stops.evalExpFloat(7) == 0.f);
+    REQUIRE(stops.evalExpFloat(8) == 3.f);
+    REQUIRE(stops.evalExpFloat(8.4) == 3.f); // flat interpolation
+    REQUIRE(stops.evalExpFloat(9.3) == 3.f); // flat interpolation
+    REQUIRE(stops.evalExpFloat(10) == 3.f);
 
 }
 
@@ -158,5 +158,33 @@ TEST_CASE("Regression test - Dont crash on evaluating empty stops", "[Stops][YAM
         stops.evalVec2(1);
     }
 
+}
+
+TEST_CASE("2 dimension stops for icon sizes with mixed units", "[Stops][YAML]") {
+    YAML::Node node = YAML::Load(R"END(
+        [[6, [18.0 px, 14px]], [13, [20 m, 15px]], [16, [24, 18]]]
+    )END");
+
+    Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
+
+    REQUIRE(stops.frames.size() == 3);
+
+    REQUIRE(stops.evalSize(0).get<glm::vec2>() == glm::vec2(18, 14));
+    REQUIRE(stops.evalSize(13).get<glm::vec2>() == glm::vec2(20, 15));
+    REQUIRE(stops.evalSize(18).get<glm::vec2>() == glm::vec2(24, 18));
+}
+
+
+TEST_CASE("1 dimension stops for icon sizes", "[Stops][YAML]") {
+    YAML::Node node = YAML::Load(R"END(
+        [[6, 18], [13, 20]]
+    )END");
+
+    Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
+
+    REQUIRE(stops.frames.size() == 2);
+
+    REQUIRE(stops.evalSize(0).get<float>() == 18);
+    REQUIRE(stops.evalSize(18).get<float>() == 20);
 }
 
