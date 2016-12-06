@@ -81,13 +81,6 @@ auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> S
         return stops;
     }
 
-    for (auto& unit : _units) {
-        if (unit != Unit::pixel) {
-            LOGW("Size StyleParam can only take in pixel values.");
-            return stops;
-        }
-    }
-
     float lastKey = 0;
 
     for (const auto& frameNode : _node) {
@@ -106,6 +99,13 @@ auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> S
             size_t start = 0;
 
             if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, sizeValue)) {
+                for (auto& unit : _units) {
+                    if (sizeValue.unit != unit) {
+                        LOGW("Size StyleParam can only take in pixel values.");
+                        return {};
+                    }
+                }
+
                 stops.frames.emplace_back(key, sizeValue.value);
             } else {
                 LOGW("could not parse node %s\n", Dump(frameNode[1]).c_str());
@@ -117,6 +117,12 @@ auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> S
                 StyleParam::ValueUnitPair sizeValue;
                 sizeValue.unit = Unit::pixel; // default to pixel
                 if (StyleParam::parseValueUnitPair(sequenceNode.Scalar(), 0, sizeValue)) {
+                    for (auto& unit : _units) {
+                        if (sizeValue.unit != unit) {
+                            LOGW("Size StyleParam can only take in pixel values.");
+                            return {};
+                        }
+                    }
                     sizeValues.push_back(sizeValue);
                 } else {
                     LOGW("could not parse node %s\n", Dump(sequenceNode).c_str());
