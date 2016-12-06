@@ -27,9 +27,14 @@ void FontContext::loadFonts() {
     auto fallbacks = systemFontFallbacksHandle();
 
     for (auto fallback : fallbacks) {
-        for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-            auto source = std::make_shared<alfons::InputSource>(fallback);
+        std::shared_ptr<alfons::InputSource> source;
+        if (fallback.path.empty()) {
+            source = std::make_shared<alfons::InputSource>(fallback.load);
+        } else {
+            source = std::make_shared<alfons::InputSource>(fallback.path);
+        }
 
+        for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
             if (!m_font[i]) {
                 m_font[i] = m_alfons.addFont("default", source, size);
             } else {

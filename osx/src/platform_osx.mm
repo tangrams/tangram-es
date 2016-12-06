@@ -100,26 +100,14 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
     return ptr;
 }
 
-FontSourceHandle getFontHandle(const char* _path) {
-    FontSourceHandle fontSourceHandle = [_path](size_t* _size) -> unsigned char* {
-        LOG("Loading font %s", _path);
-
-        auto cdata = bytesFromFile(_path, *_size);
-
-        return cdata;
-    };
-
-    return fontSourceHandle;
-}
-
 std::vector<FontSourceHandle> systemFontFallbacksHandle() {
     std::vector<FontSourceHandle> handles;
 
-    handles.push_back(getFontHandle(DEFAULT));
-    handles.push_back(getFontHandle(FONT_AR));
-    handles.push_back(getFontHandle(FONT_HE));
-    handles.push_back(getFontHandle(FONT_JA));
-    handles.push_back(getFontHandle(FALLBACK));
+    handles.emplace_back(DEFAULT);
+    handles.emplace_back(FONT_AR);
+    handles.emplace_back(FONT_HE);
+    handles.emplace_back(FONT_JA);
+    handles.emplace_back(FALLBACK);
 
     return handles;
 }

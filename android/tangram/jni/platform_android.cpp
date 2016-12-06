@@ -189,22 +189,8 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
 
     while (!fallbackPath.empty()) {
         LOG("Loading font %s", fallbackPath.c_str());
-        size_t dataSize = 0;
 
-        auto cdata = bytesFromFile(fallbackPath.c_str(), dataSize);
-
-        if (!cdata) {
-            fallbackPath = fontFallbackPath(importance++, weightHint);
-            continue;
-        }
-
-        FontSourceHandle fontSourceHandle = [cdata, dataSize](size_t* _size) -> unsigned char* {
-            *_size = dataSize;
-
-            return cdata;
-        };
-
-        handles.push_back(fontSourceHandle);
+        handles.emplace_back(fallbackPath);
 
         fallbackPath = fontFallbackPath(importance++, weightHint);
     }
