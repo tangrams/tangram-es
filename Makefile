@@ -274,8 +274,7 @@ android/tangram/libs/${ANDROID_ARCH}/libtangram.so: install-android
 
 install-android: ${ANDROID_BUILD_DIR}/Makefile
 	@cd ${ANDROID_BUILD_DIR} && \
-	${MAKE} && \
-	${MAKE} install
+	cmake --build . --target install
 
 ${ANDROID_BUILD_DIR}/Makefile: check-ndk cmake-android
 
@@ -286,7 +285,7 @@ cmake-android:
 
 osx: ${OSX_BUILD_DIR}/Makefile
 	@cd ${OSX_BUILD_DIR} && \
-	${MAKE}
+	cmake --build .
 
 ${OSX_BUILD_DIR}/Makefile: cmake-osx
 
@@ -346,7 +345,7 @@ ios-framework-universal: ios-framework ios-framework-sim
 
 rpi: cmake-rpi
 	@cd ${RPI_BUILD_DIR} && \
-	${MAKE}
+	cmake --build .
 
 cmake-rpi:
 	@mkdir -p ${RPI_BUILD_DIR}
@@ -355,7 +354,7 @@ cmake-rpi:
 
 linux: cmake-linux
 	cd ${LINUX_BUILD_DIR} && \
-	${MAKE}
+	cmake --build .
 
 cmake-linux:
 	mkdir -p ${LINUX_BUILD_DIR}
@@ -364,7 +363,7 @@ cmake-linux:
 
 tizen-arm: cmake-tizen-arm
 	cd ${TIZEN_ARM_BUILD_DIR} && \
-	${MAKE}
+	cmake --build .
 
 cmake-tizen-arm:
 	mkdir -p ${TIZEN_ARM_BUILD_DIR}
@@ -373,7 +372,7 @@ cmake-tizen-arm:
 
 tizen-x86: cmake-tizen-x86
 	cd ${TIZEN_X86_BUILD_DIR} && \
-	${MAKE}
+	cmake --build .
 
 cmake-tizen-x86:
 	mkdir -p ${TIZEN_X86_BUILD_DIR}
@@ -386,13 +385,13 @@ unit-tests:
 	@mkdir -p ${TESTS_BUILD_DIR}
 	@cd ${TESTS_BUILD_DIR} && \
 	cmake ../.. ${UNIT_TESTS_CMAKE_PARAMS} && \
-	${MAKE}
+	cmake --build .
 
 benchmark:
 	@mkdir -p ${BENCH_BUILD_DIR}
 	@cd ${BENCH_BUILD_DIR} && \
 	cmake ../../ ${BENCH_CMAKE_PARAMS} && \
-	${MAKE}
+	cmake --build .
 
 check-ndk:
 ifndef ANDROID_NDK
