@@ -57,10 +57,14 @@ bool isContinuousRendering() {
 
 NSString* resolvePath(const char* _path) {
 
-    NSString* path = [NSString stringWithUTF8String:_path];
+    NSString* pathString = [NSString stringWithUTF8String:_path];
 
-    NSString* resources = [[NSBundle mainBundle] resourcePath];
-    return [resources stringByAppendingPathComponent:path];
+    NSURL* resourceFolderUrl = [[NSBundle mainBundle] resourceURL];
+
+    NSURL* resolvedUrl = [NSURL URLWithString:pathString
+                                relativeToURL:resourceFolderUrl];
+
+    return [resolvedUrl path];
 }
 
 std::string stringFromFile(const char* _path) {
