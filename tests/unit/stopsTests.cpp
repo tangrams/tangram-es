@@ -160,3 +160,31 @@ TEST_CASE("Regression test - Dont crash on evaluating empty stops", "[Stops][YAM
 
 }
 
+TEST_CASE("2 dimension stops for icon sizes with mixed units", "[Stops][YAML]") {
+    YAML::Node node = YAML::Load(R"END(
+        [[6, [18.0 px, 14px]], [13, [20 m, 15px]], [16, [24, 18]]]
+    )END");
+
+    Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
+
+    REQUIRE(stops.frames.size() == 3);
+
+    REQUIRE(stops.evalSize(0).get<glm::vec2>() == glm::vec2(18, 14));
+    REQUIRE(stops.evalSize(13).get<glm::vec2>() == glm::vec2(20, 15));
+    REQUIRE(stops.evalSize(18).get<glm::vec2>() == glm::vec2(24, 18));
+}
+
+
+TEST_CASE("1 dimension stops for icon sizes", "[Stops][YAML]") {
+    YAML::Node node = YAML::Load(R"END(
+        [[6, 18], [13, 20]]
+    )END");
+
+    Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
+
+    REQUIRE(stops.frames.size() == 2);
+
+    REQUIRE(stops.evalSize(0).get<float>() == 18);
+    REQUIRE(stops.evalSize(18).get<float>() == 20);
+}
+

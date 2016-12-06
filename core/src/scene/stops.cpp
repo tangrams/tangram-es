@@ -58,7 +58,7 @@ auto Stops::FontSize(const YAML::Node& _node) -> Stops {
         float key = frameNode[0].as<float>();
 
         if (lastKey > key) {
-            LOGW("Invalid stop order: key %f > %f\n", lastKey, key);
+            LOGW("Invalid stop order: key %f > %f", lastKey, key);
             continue;
         }
 
@@ -88,7 +88,7 @@ auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> S
         float key = frameNode[0].as<float>();
 
         if (lastKey > key) {
-            LOGW("Invalid stop order: key %f > %f\n", lastKey, key);
+            LOGW("Invalid stop order: key %f > %f", lastKey, key);
             continue;
         }
         lastKey = key;
@@ -101,8 +101,7 @@ auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> S
             if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, sizeValue)) {
                 for (auto& unit : _units) {
                     if (sizeValue.unit != unit) {
-                        LOGW("Size StyleParam can only take in pixel values.");
-                        return {};
+                        LOGW("Size StyleParam can only take in pixel values in: %s", Dump(_node).c_str());
                     }
                 }
 
@@ -119,8 +118,7 @@ auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> S
                 if (StyleParam::parseValueUnitPair(sequenceNode.Scalar(), 0, sizeValue)) {
                     for (auto& unit : _units) {
                         if (sizeValue.unit != unit) {
-                            LOGW("Size StyleParam can only take in pixel values.");
-                            return {};
+                            LOGW("Size StyleParam can only take in pixel values in: %s", Dump(_node).c_str());
                         }
                     }
                     sizeValues.push_back(sizeValue);
@@ -147,7 +145,7 @@ auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) ->
         float key = frameNode[0].as<float>();
 
         if (lastKey > key) {
-            LOGW("Invalid stop order: key %f > %f\n", lastKey, key);
+            LOGW("Invalid stop order: key %f > %f", lastKey, key);
             continue;
         }
         lastKey = key;
@@ -166,7 +164,7 @@ auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) ->
                     }
                     lastUnit = width.unit;
                 } else {
-                    LOGW("could not parse node %s\n", Dump(sequenceNode).c_str());
+                    LOGW("could not parse node %s", Dump(sequenceNode).c_str());
                 }
             }
             if (widths.size() == 2) {
