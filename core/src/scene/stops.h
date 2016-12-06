@@ -39,9 +39,10 @@ struct Stops {
     Stops() {}
 
     auto evalFloat(float _key) const -> float;
-    auto evalWidth(float _key) const -> float;
+    auto evalExpFloat(float _key) const -> float;
     auto evalColor(float _key) const -> uint32_t;
     auto evalVec2(float _key) const -> glm::vec2;
+    auto evalExpVec2(float _key) const -> glm::vec2;
     auto evalSize(float _key) const -> StyleParam::Value;
     auto nearestHigherFrame(float _key) const -> std::vector<Frame>::const_iterator;
 

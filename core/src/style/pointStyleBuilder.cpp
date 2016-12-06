@@ -141,11 +141,11 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     if (sizeParam.stops) {
         if (sizeParam.value.is<float>()) {
             float lowerSize = sizeParam.value.get<float>();
-            float higherSize = sizeParam.stops->evalFloat(m_zoom + 1);
+            float higherSize = sizeParam.stops->evalExpFloat(m_zoom + 1);
             p.extrudeScale = (higherSize - lowerSize) * 0.5f - 1.f;
             p.size = glm::vec2(lowerSize);
         } else if (sizeParam.value.is<glm::vec2>()) {
-            p.size = sizeParam.stops->evalVec2(m_zoom + 1);
+            p.size = sizeParam.stops->evalExpVec2(m_zoom + 1);
         } else {
             p.size = glm::vec2(NAN, NAN);
         }

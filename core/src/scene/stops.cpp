@@ -260,7 +260,7 @@ auto Stops::Numbers(const YAML::Node& node) -> Stops {
     return stops;
 }
 
-auto Stops::evalWidth(float _key) const -> float {
+auto Stops::evalExpFloat(float _key) const -> float {
     if (frames.empty()) { return 0; }
 
     auto upper = nearestHigherFrame(_key);
@@ -323,6 +323,32 @@ auto Stops::evalColor(float _key) const -> uint32_t {
     return Color::mix(lower->value.get<Color>(), upper->value.get<Color>(), lerp).abgr;
 }
 
+auto Stops::evalExpVec2(float _key) const -> glm::vec2 {
+    if (frames.empty()) { return glm::vec2{0.f}; }
+
+    auto upper = nearestHigherFrame(_key);
+    auto lower = upper - 1;
+
+    if (upper == frames.end()) {
+        return lower->value.get<glm::vec2>();
+    }
+    if (lower < frames.begin()) {
+        return upper->value.get<glm::vec2>();
+    }
+
+    double range = exp2(upper->key - lower->key) - 1.0;
+    double pos = exp2(_key - lower->key) - 1.0;
+
+    double lerp = pos / range;
+
+    const glm::vec2& lowerVal = lower->value.get<glm::vec2>();
+    const glm::vec2& upperVal = upper->value.get<glm::vec2>();
+
+    return glm::vec2(lowerVal.x * (1 - lerp) + upperVal.x * lerp,
+                     lowerVal.y * (1 - lerp) + upperVal.y * lerp);
+
+}
+
 auto Stops::evalVec2(float _key) const -> glm::vec2 {
     if (frames.empty()) { return glm::vec2{0.f}; }
 
@@ -350,9 +376,9 @@ auto Stops::evalSize(float _key) const -> StyleParam::Value {
     if (frames.empty()) { return 0.f; }
 
     if (frames[0].value.is<float>()) {
-        return evalFloat(_key);
+        return evalExpFloat(_key);
     } else if (frames[0].value.is<glm::vec2>()) {
-        return evalVec2(_key);
+        return evalExpVec2(_key);
     }
     return 0.f;
 }
@@ -367,7 +393,7 @@ void Stops::eval(const Stops& _stops, StyleParamKey _key, float _zoom, StylePara
     if (StyleParam::isColor(_key)) {
         _result = _stops.evalColor(_zoom);
     } else if (StyleParam::isWidth(_key)) {
-        _result = _stops.evalWidth(_zoom);
+        _result = _stops.evalExpFloat(_zoom);
     } else if (StyleParam::isOffsets(_key)) {
         _result = _stops.evalVec2(_zoom);
     } else if (StyleParam::isSize(_key)) {
