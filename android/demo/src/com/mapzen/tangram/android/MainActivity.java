@@ -14,6 +14,7 @@ import com.mapzen.tangram.MapController.FeaturePickListener;
 import com.mapzen.tangram.MapController.LabelPickListener;
 import com.mapzen.tangram.MapController.ViewCompleteListener;
 import com.mapzen.tangram.MapData;
+import com.mapzen.tangram.Marker;
 import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.MapView.OnMapReadyCallback;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
@@ -34,6 +35,10 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     MapView view;
     LngLat lastTappedPoint;
     MapData markers;
+
+    String pointStyle = "{ style: 'points', color: 'white', size: [50px, 50px], order: 2000, collide: false }";
+    ArrayList<Marker> pointMarkers = new ArrayList<Marker>();
+
     boolean showTileInfo = false;
 
     @Override
@@ -125,9 +130,10 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
             line.add(tappedPoint);
             markers.addPolyline(line, props);
 
-            props = new HashMap<>();
-            props.put("type", "point");
-            markers.addPoint(tappedPoint, props);
+            Marker p = map.addMarker();
+            p.setStyling(pointStyle);
+            p.setPoint(tappedPoint);
+            pointMarkers.add(p);
         }
 
         lastTappedPoint = tappedPoint;
@@ -154,6 +160,8 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
     @Override
     public void onLongPress(float x, float y) {
+        map.removeAllMarkers();
+        pointMarkers.clear();
         markers.clear();
         showTileInfo = !showTileInfo;
         map.setDebugFlag(MapController.DebugFlag.TILE_INFOS, showTileInfo);
