@@ -176,12 +176,16 @@ public class Marker {
         bitmap.getPixels(argb, 0, width, 0, 0, width, height);
 
         int[] abgr = new int[width * height];
+        int row, col;
         for (int i = 0; i < argb.length; i++) {
+            row = i % width;
+            col = i / width;
             int pix = argb[i];
             int pb = (pix >> 16) & 0xff;
             int pr = (pix << 16) & 0x00ff0000;
             int pix1 = (pix & 0xff00ff00) | pr | pb;
-            abgr[i] = pix1;
+            int flippedIndex = (height - 1 - row) * width + col;
+            abgr[flippedIndex] = pix1;
         }
 
         return map.setMarkerBitmap(markerId, width, height, abgr);
