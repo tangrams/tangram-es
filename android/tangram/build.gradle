@@ -8,13 +8,6 @@ apply from: 'versioning.gradle'
 
 android {
   compileSdkVersion 25
-
-  /*
-   * Ubuntu can't run the aapt on 64 bit before installing this packages
-   *    sudo apt-get install lib32stdc++6
-   *    sudo apt-get install lib32z1
-   */
-
   buildToolsVersion '25.0.0'
 
   defaultConfig {
@@ -44,6 +37,15 @@ android {
     }
   }
 
+  productFlavors {
+    slim {
+      // Default configuration
+    }
+    full {
+      externalNativeBuild.cmake.abiFilters 'armeabi', 'arm64-v8a', 'x86'
+    }
+  }
+  publishNonDefault true
 }
 
 dependencies {

@@ -14,8 +14,16 @@ android {
   }
 
   aaptOptions.ignoreAssetsPattern "!*.ttf"
+
+  buildTypes {
+    debug {
+      debuggable true
+      jniDebuggable true
+    }
+  }
 }
 
 dependencies {
-  compile project(":tangram")
+  debugCompile project(path: ':tangram', configuration: 'slimDebug')
+  releaseCompile project(path: ':tangram', configuration: 'slimRelease')
 }
