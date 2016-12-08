@@ -16,7 +16,7 @@
 
 @implementation MapViewControllerDelegate
 
-- (void)didCompleteView:(TGMapViewController *)mapView
+- (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView
 {
     NSLog(@"Did complete view");
 }

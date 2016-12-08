@@ -49,7 +49,7 @@ NS_ASSUME_NONNULL_BEGIN
 @optional
 - (void)mapView:(TGMapViewController*)mapView didLoadSceneAsync:(NSString*)scene;
 - (void)mapView:(TGMapViewController*)mapView didSelectFeature:(NSDictionary*)feature atScreenPosition:(CGPoint)position;
-- (void)didCompleteView:(TGMapViewController *)mapView;
+- (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView;
 @end
 
 @interface TGMapViewController : GLKViewController <UIGestureRecognizerDelegate>
