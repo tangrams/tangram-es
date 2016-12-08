@@ -69,20 +69,24 @@ public:
     /* Create the LabelMeshes associated with FontContext GlyphTexture<s>
      * No GL involved, called from Tangram::update()
      */
-    void onBeginUpdate() override;
+    virtual void onBeginUpdate() override;
 
     /* Upload the buffers of the text batches
      * Upload the texture atlases
      */
-    void onBeginFrame(RenderState& rs) override;
+    virtual void onBeginFrame(RenderState& rs) override;
 
     /* Performs the actual drawing of the meshes in two passes
      * - First pass if signed distance field is on, draw outlines
      * - Second pass, draw the inner glyph pixels
      */
-    void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
+    virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
 
-    void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) override;
+    virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) override;
+
+    virtual void draw(RenderState& rs, const Tile& _tile) override {}
+
+    virtual void draw(RenderState& rs, const Marker& _marker) override {}
 
     std::unique_ptr<StyleBuilder> createBuilder() const override;
 
