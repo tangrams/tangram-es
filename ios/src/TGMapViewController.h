@@ -20,14 +20,26 @@
 typedef NS_ENUM(NSInteger, TGCameraType) {
     TGCameraTypePerspective = 0,
     TGCameraTypeIsometric,
-    TGCameraTypeFlat
+    TGCameraTypeFlat,
 };
 
 typedef NS_ENUM(NSInteger, TGEaseType) {
     TGEaseTypeLinear = 0,
     TGEaseTypeCubic,
     TGEaseTypeQuint,
-    TGEaseTypeSine
+    TGEaseTypeSine,
+};
+
+typedef NS_ENUM(NSInteger, TGDebugFlag) {
+    TGDebugFlagFreezeTiles = 0,  // While on, the set of tiles currently being drawn will not update to match the view
+    TGDebugFlagProxyColors,      // Apply a color change to every other zoom level to visualize proxy tile behavior
+    TGDebugFlagTileBounds,       // Draw tile boundaries
+    TGDebugFlagTileInfos,        // Draw tile infos (tile coordinates)
+    TGDebugFlagLabels,           // Draw label bounding boxes and collision grid
+    TGDebugFlagTangramInfos,     // Draw tangram infos (framerate, debug log...)
+    TGDebugFlagDrawAllLabels,    // Draw all labels (including labels being occluded)
+    TGDebugFlagTangramStats,     // Draw tangram frame graph stats
+    TGDebugFlagSelectionBuffer,  // Draw feature selection framebuffer
 };
 
 typedef uint32_t TGMapMarkerId;
@@ -65,6 +77,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (assign, nonatomic) float tilt;
 @property (strong, nonatomic) TGHttpHandler* httpHandler;
 
+- (void)setDebugFlag:(TGDebugFlag)debugFlag value:(BOOL)on;
+
+- (BOOL)getDebugFlag:(TGDebugFlag)debugFlag;
+
+- (void)toggleDebugFlag:(TGDebugFlag)debugFlag;
+
 #pragma mark Marker interface
 
 - (void)markerRemoveAll;
@@ -99,7 +117,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark Feature picking interface
 
-- (void)pickFeaturesAt:(CGPoint)screenPosition;
+- (void)pickFeatureAt:(CGPoint)screenPosition;
 
 #pragma mark Map View lifecycle
 

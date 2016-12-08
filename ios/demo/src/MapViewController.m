@@ -37,7 +37,6 @@
 
     // Not feature selected
     if (feature.count == 0) {
-
         return;
     }
 
@@ -117,7 +116,7 @@
     }
 
     // Request feature picking
-    [vc pickFeaturesAt:location];
+    [vc pickFeatureAt:location];
 }
 
 - (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location
