@@ -60,7 +60,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol TGMapViewDelegate <NSObject>
 @optional
-- (void)mapView:(TGMapViewController*)mapView didLoadSceneAsync:(NSString*)scene;
+- (void)mapView:(TGMapViewController*)mapView didLoadSceneAsync:(nonnull NSString*)scene;
 - (void)mapView:(TGMapViewController*)mapView didSelectFeature:(NSDictionary*)feature atScreenPosition:(CGPoint)position;
 - (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView;
 @end

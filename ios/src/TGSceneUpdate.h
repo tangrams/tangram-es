@@ -10,9 +10,9 @@
 
 @interface TGSceneUpdate : NSObject
 
-- (id)initWithPath:(NSString *)path value:(NSString *)value;
+- (instancetype)initWithPath:(nullable NSString *)path value:(nullable NSString *)value;
 
-@property (strong, nonatomic) NSString* path;
-@property (strong, nonatomic) NSString* value;
+@property (copy, nonatomic) NSString* path;
+@property (copy, nonatomic) NSString* value;
 
 @end

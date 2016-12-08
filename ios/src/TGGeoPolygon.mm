@@ -19,7 +19,7 @@
 
 @implementation TGGeoPolygon
 
-- (id)initWithSize:(unsigned int)size
+- (instancetype)initWithSize:(unsigned int)size
 {
     self = [super init];
 

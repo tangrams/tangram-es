@@ -10,7 +10,7 @@
 
 @implementation TGSceneUpdate
 
-- (id)initWithPath:(NSString *)path value:(NSString *)value;
+- (instancetype)initWithPath:(nullable NSString *)path value:(nullable NSString *)value;
 {
     self = [super init];
 
