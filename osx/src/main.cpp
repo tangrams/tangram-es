@@ -13,7 +13,7 @@ void init_main_window(bool recreate);
 
 std::string sceneFile = "scene.yaml";
 
-std::string markerStyling = "{ style: 'points', color: 'white', size: [25px, 25px], order: 100, collide: false }";
+std::string markerStyling = "{ style: 'points', interactive: true, color: 'white', size: [25px, 25px], order: 100, collide: false }";
 std::string polylineStyle = "{ style: lines, color: red, width: 20px, order: 5000 }";
 
 const unsigned int bitmap[] = { 0xffffffff, 0xff000000, 0xff000000, 0xffffffff };
@@ -93,6 +93,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         LngLat p;
         map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
 
+
         if (!marker) {
             marker = map->markerAdd();
 
@@ -124,6 +125,11 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             }
             map->markerSetPoint(marker, labelPickResult->coordinates);
             map->markerSetVisible(marker, true);
+        });
+
+        map->pickMarkerAt(x, y, [](const MarkerPickResult* markerPickResult) {
+            if (!markerPickResult) { return; }
+            LOGS("Selected marker id %d", markerPickResult->id);
         });
 
         static double last_x = 0, last_y = 0;
