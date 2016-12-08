@@ -2,6 +2,7 @@
 
 #include "util/color.h"
 #include "util/node.h"
+#include "util/yamlHelper.h"
 #include "view/view.h"
 
 #include <atomic>
@@ -130,7 +131,7 @@ private:
     std::string m_resourceRoot;
 
     // The root node of the YAML scene configuration
-    YAML::Node m_config;
+    Node m_config;
 
     std::unique_ptr<MapProjection> m_mapProjection;
 

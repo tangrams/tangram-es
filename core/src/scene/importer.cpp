@@ -1,19 +1,16 @@
 #include "importer.h"
 #include "platform.h"
 #include "scene/sceneLoader.h"
-#include "yaml-cpp/yaml.h"
+#include "util/y2j.h"
 #include "log.h"
 
 #include <regex>
-
-using YAML::Node;
-using YAML::NodeType;
 
 namespace Tangram {
 
 std::atomic_uint Importer::progressCounter(0);
 
-Node Importer::applySceneImports(const Url& scenePath, const Url& resourceRoot) {
+JsonDocument Importer::applySceneImports(const Url& scenePath, const Url& resourceRoot) {
 
     Url path;
     Url rootScenePath = scenePath.resolved(resourceRoot);
@@ -66,7 +63,7 @@ Node Importer::applySceneImports(const Url& scenePath, const Url& resourceRoot) 
         }
     }
 
-    Node root = Node();
+    JsonDocument root;
 
     LOGD("Processing scene import Stack:");
     std::vector<Url> sceneStack;
@@ -84,26 +81,30 @@ void Importer::processScene(const Url& scenePath, const std::string &sceneString
         return;
     }
 
-    try {
-        auto sceneNode = YAML::Load(sceneString);
+    const char* errorMessage = nullptr;
+    size_t errorLine = 0;
+    JsonDocument document = yamlParseBytes(sceneString.data(), sceneString.length(), &errorMessage, &errorLine);
 
-        m_scenes[scenePath] = sceneNode;
+    if (!errorMessage) {
 
-        for (const auto& import : getResolvedImportUrls(sceneNode, scenePath)) {
+        for (const auto& import : getResolvedImportUrls(Node(&document), scenePath)) {
             m_sceneQueue.push_back(import);
             m_condition.notify_all();
         }
-    } catch (YAML::ParserException e) {
-        LOGE("Parsing scene config '%s'", e.what());
+
+        m_scenes[scenePath].Swap(document);
+
+    } else {
+        LOGE("Parsing scene config at line %d: '%s'", errorLine, errorMessage);
     }
 }
 
 bool nodeIsPotentialUrl(const Node& node) {
     // Check that the node is scalar and not null.
-    if (node.IsNull() || !node.IsScalar()) { return false; }
+    if (!node.isString()) { return false; }
 
     // Check that the node does not contain a 'global' reference.
-    if (node.Scalar().compare(0, 7, "global.") == 0) { return false; }
+    if (strncmp(node.getString(), "global.", 7) == 0) { return false; }
 
     return true;
 }
@@ -113,28 +114,28 @@ bool nodeIsTextureUrl(const Node& node, const Node& textures) {
     if (!nodeIsPotentialUrl(node)) { return false; }
 
     // Check that the node is not a number or a boolean.
-    bool booleanValue = false;
-    double numberValue = 0.;
-    if (YAML::convert<bool>::decode(node, booleanValue)) { return false; }
-    if (YAML::convert<double>::decode(node, numberValue)) { return false; }
+    if (!node.isString()) { return false; }
 
     // Check that the node does not name a scene texture.
-    if (textures[node.Scalar()]) { return false; }
+    if (textures[node.getString()]) { return false; }
 
     return true;
 }
 
-void Importer::resolveSceneUrls(Node& root, const Url& base) {
+void Importer::resolveSceneUrls(JsonDocument& doc, const Url& base) {
+
+    Node root(&doc);
 
     // Resolve global texture URLs.
 
     Node textures = root["textures"];
 
     if (textures) {
-        for (auto texture : textures) {
-            if (Node textureUrlNode = texture.second["url"]) {
+        for (auto texture : textures.getMapping()) {
+            if (Node textureUrlNode = texture.value["url"]) {
                 if (nodeIsPotentialUrl(textureUrlNode)) {
-                    textureUrlNode = Url(textureUrlNode.Scalar()).resolved(base).string();
+                    auto& urlString = Url(textureUrlNode.getString()).resolved(base).string();
+                    textureUrlNode.getValue()->SetString(urlString, doc.GetAllocator());
                 }
             }
         }
@@ -144,27 +145,29 @@ void Importer::resolveSceneUrls(Node& root, const Url& base) {
 
     if (Node styles = root["styles"]) {
 
-        for (auto entry : styles) {
+        for (auto& entry : styles.getMapping()) {
 
-            Node style = entry.second;
-            if (!style.IsMap()) { continue; }
+            Node style = entry.value;
+            if (!style.isMapping()) { continue; }
 
             //style->texture
             if (Node texture = style["texture"]) {
                 if (nodeIsTextureUrl(texture, textures)) {
-                    texture = Url(texture.Scalar()).resolved(base).string();
+                    auto& urlString = Url(texture.getString()).resolved(base).string();
+                    texture.getValue()->SetString(urlString, doc.GetAllocator());
                 }
             }
 
             //style->material->texture
             if (Node material = style["material"]) {
-                if (!material.IsMap()) { continue; }
+                if (!material.isMapping()) { continue; }
                 for (auto& prop : {"emission", "ambient", "diffuse", "specular", "normal"}) {
                     if (Node propNode = material[prop]) {
-                        if (!propNode.IsMap()) { continue; }
+                        if (!propNode.isMapping()) { continue; }
                         if (Node matTexture = propNode["texture"]) {
                             if (nodeIsTextureUrl(matTexture, textures)) {
-                                matTexture = Url(matTexture.Scalar()).resolved(base).string();
+                                auto& urlString = Url(matTexture.getString()).resolved(base).string();
+                                matTexture.getValue()->SetString(urlString, doc.GetAllocator());
                             }
                         }
                     }
@@ -173,16 +176,18 @@ void Importer::resolveSceneUrls(Node& root, const Url& base) {
 
             //style->shader->uniforms->texture
             if (Node shaders = style["shaders"]) {
-                if (!shaders.IsMap()) { continue; }
+                if (!shaders.isMapping()) { continue; }
                 if (Node uniforms = shaders["uniforms"]) {
-                    for (auto uniformEntry : uniforms) {
-                        Node uniformValue = uniformEntry.second;
+                    for (auto& uniformEntry : uniforms.getMapping()) {
+                        Node uniformValue = uniformEntry.value;
                         if (nodeIsTextureUrl(uniformValue, textures)) {
-                            uniformValue = Url(uniformValue.Scalar()).resolved(base).string();
-                        } else if (uniformValue.IsSequence()) {
+                            auto& urlString = Url(uniformValue.getString()).resolved(base).string();
+                            uniformValue.getValue()->SetString(urlString, doc.GetAllocator());
+                        } else if (uniformValue.isSequence()) {
                             for (Node u : uniformValue) {
                                 if (nodeIsTextureUrl(u, textures)) {
-                                    u = Url(u.Scalar()).resolved(base).string();
+                                    auto& urlString = Url(u.getString()).resolved(base).string();
+                                    u.getValue()->SetString(urlString, doc.GetAllocator());
                                 }
                             }
                         }
@@ -195,11 +200,12 @@ void Importer::resolveSceneUrls(Node& root, const Url& base) {
     // Resolve data source URLs.
 
     if (Node sources = root["sources"]) {
-        for (auto source : sources) {
-            if (!source.second.IsMap()) { continue; }
-            if (Node sourceUrl = source.second["url"]) {
+        for (auto& source : sources.getMapping()) {
+            if (!source.value.isMapping()) { continue; }
+            if (Node sourceUrl = source.value["url"]) {
                 if (nodeIsPotentialUrl(sourceUrl)) {
-                    sourceUrl = Url(sourceUrl.Scalar()).resolved(base).string();
+                    auto& urlString = Url(sourceUrl.getString()).resolved(base).string();
+                    sourceUrl.getValue()->SetString(urlString, doc.GetAllocator());
                 }
             }
         }
@@ -208,18 +214,20 @@ void Importer::resolveSceneUrls(Node& root, const Url& base) {
     // Resolve font URLs.
 
     if (Node fonts = root["fonts"]) {
-        if (fonts.IsMap()) {
-            for (const auto& font : fonts) {
-                if (font.second.IsMap()) {
-                    auto urlNode = font.second["url"];
+        if (fonts.isMapping()) {
+            for (const auto& font : fonts.getMapping()) {
+                if (font.value.isMapping()) {
+                    Node urlNode = font.value["url"];
                     if (nodeIsPotentialUrl(urlNode)) {
-                        urlNode = Url(urlNode.Scalar()).resolved(base).string();
+                        auto& urlString = Url(urlNode.getString()).resolved(base).string();
+                        urlNode.getValue()->SetString(urlString, doc.GetAllocator());
                     }
-                } else if (font.second.IsSequence()) {
-                    for (auto& fontNode : font.second) {
-                        auto urlNode = fontNode["url"];
+                } else if (font.value.isSequence()) {
+                    for (auto& fontNode : font.value.getSequence()) {
+                        Node urlNode = fontNode["url"];
                         if (nodeIsPotentialUrl(urlNode)) {
-                            urlNode = Url(urlNode.Scalar()).resolved(base).string();
+                            auto& urlString = Url(urlNode.getString()).resolved(base).string();
+                            urlNode.getValue()->SetString(urlString, doc.GetAllocator());
                         }
                     }
                 }
@@ -237,12 +245,12 @@ std::vector<Url> Importer::getResolvedImportUrls(const Node& scene, const Url& b
     std::vector<Url> scenePaths;
 
     if (const Node& import = scene["import"]) {
-        if (import.IsScalar()) {
-            scenePaths.push_back(Url(import.Scalar()).resolved(base));
-        } else if (import.IsSequence()) {
-            for (const auto& path : import) {
-                if (path.IsScalar()) {
-                    scenePaths.push_back(Url(path.Scalar()).resolved(base));
+        if (import.isString()) {
+            scenePaths.push_back(Url(import.getString()).resolved(base));
+        } else if (import.isSequence()) {
+            for (const auto& path : import.getSequence()) {
+                if (path.isString()) {
+                    scenePaths.push_back(Url(path.getString()).resolved(base));
                 }
             }
         }
@@ -251,7 +259,7 @@ std::vector<Url> Importer::getResolvedImportUrls(const Node& scene, const Url& b
     return scenePaths;
 }
 
-void Importer::importScenesRecursive(Node& root, const Url& scenePath, std::vector<Url>& sceneStack) {
+void Importer::importScenesRecursive(JsonDocument& root, const Url& scenePath, std::vector<Url>& sceneStack) {
 
     LOGD("Starting importing Scene: %s", scenePath.string().c_str());
 
@@ -264,15 +272,15 @@ void Importer::importScenesRecursive(Node& root, const Url& scenePath, std::vect
 
     sceneStack.push_back(scenePath);
 
-    auto sceneNode = m_scenes[scenePath];
+    auto& sceneDocument = m_scenes[scenePath];
+    Node sceneNode(&sceneDocument);
 
-    if (sceneNode.IsNull()) { return; }
-    if (!sceneNode.IsMap()) { return; }
+    if (!sceneNode.isMapping()) { return; }
 
     auto imports = getResolvedImportUrls(sceneNode, scenePath);
 
     // Don't want to merge imports, so remove them here.
-    sceneNode.remove("import");
+    sceneDocument.EraseMember("import");
 
     for (const auto& url : imports) {
 
@@ -282,46 +290,39 @@ void Importer::importScenesRecursive(Node& root, const Url& scenePath, std::vect
 
     sceneStack.pop_back();
 
-    mergeMapFields(root, sceneNode);
+    mergeMapFields(root, root, sceneDocument);
 
     resolveSceneUrls(root, scenePath);
 }
 
-void Importer::mergeMapFields(Node& target, const Node& import) {
+void Importer::mergeMapFields(JsonDocument& doc, JsonValue& target, const JsonValue& import) {
 
-    for (const auto& entry : import) {
+    for (const auto& entry : import.GetObject()) {
 
-        const auto& key = entry.first.Scalar();
-        const auto& source = entry.second;
-        auto dest = target[key];
+        const char* key = entry.name.GetString();
+        const auto& source = entry.value;
 
-        if (!dest) {
-            dest = source;
+        auto destIt = target.FindMember(key);
+        if (destIt == target.MemberEnd()) {
+            target.AddMember(entry.name, entry.value, doc.GetAllocator());
             continue;
         }
 
-        if (dest.Type() != source.Type()) {
-            LOGN("Merging different node types: '%s'\n'%s'\n<==\n'%s'",
-                 key.c_str(), Dump(dest).c_str(), Dump(source).c_str());
+        JsonValue& dest = destIt->value;
+
+        if (dest.GetType() != source.GetType()) {
+            LOGN("Merging different node types: '%s'\n'%d'\n<==\n'%d'",
+                 key, dest.GetType(), source.GetType());
         }
 
-        switch(dest.Type()) {
-            case NodeType::Scalar:
-            case NodeType::Sequence:
+        if (dest.IsObject()) {
+            if (source.IsObject()) {
+                mergeMapFields(doc, dest, source);
+            } else {
                 dest = source;
-                break;
-
-            case NodeType::Map: {
-                auto newTarget = dest;
-                if (source.IsMap()) {
-                    mergeMapFields(newTarget, source);
-                } else {
-                    dest = source;
-                }
-                break;
             }
-            default:
-                break;
+        } else {
+            dest = source;
         }
     }
 }

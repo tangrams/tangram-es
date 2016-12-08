@@ -6,29 +6,28 @@
 #include "log.h"
 
 #include "csscolorparser.hpp"
-#include "yaml-cpp/yaml.h"
 #include <algorithm>
 
 namespace Tangram {
 
-auto Stops::Colors(const YAML::Node& _node) -> Stops {
+auto Stops::Colors(const Node& _node) -> Stops {
     Stops stops;
-    if (!_node.IsSequence()) { return stops; }
+    if (!_node.isSequence()) { return stops; }
 
-    for (const auto& frameNode : _node) {
-        if (!frameNode.IsSequence() || frameNode.size() != 2) { continue; }
-        float key = frameNode[0].as<float>();
+    for (const auto& frameNode : _node.getSequence()) {
+        if (!frameNode.isSequence() || frameNode.getSequenceCount() != 2) { continue; }
+        float key = frameNode[0].getFloatOr(0.f);
 
         // parse color from sequence or string
         Color color;
-        YAML::Node colorNode = frameNode[1];
-        if (colorNode.IsScalar()) {
-            color.abgr = CSSColorParser::parse(colorNode.as<std::string>()).getInt();
-        } else if (colorNode.IsSequence() && colorNode.size() >= 3) {
-            color.r = colorNode[0].as<float>() * 255.;
-            color.g = colorNode[1].as<float>() * 255.;
-            color.b = colorNode[2].as<float>() * 255.;
-            float alpha = colorNode.size() > 3 ? colorNode[3].as<float>() : 1.f;
+        Node colorNode = frameNode[1];
+        if (colorNode.isString()) {
+            color.abgr = CSSColorParser::parse(colorNode.getString()).getInt();
+        } else if (colorNode.isSequence() && colorNode.getSequenceCount() >= 3) {
+            color.r = colorNode[0].getFloatOr(0.f) * 255.;
+            color.g = colorNode[1].getFloatOr(0.f) * 255.;
+            color.b = colorNode[2].getFloatOr(0.f) * 255.;
+            float alpha = colorNode.getSequenceCount() > 3 ? colorNode[3].getFloatOr(0.f) : 1.f;
             color.a = alpha * 255.;
         }
         stops.frames.emplace_back(key, color);
@@ -45,17 +44,17 @@ double widthMeterToPixel(float _zoom, double _tileSize, double _width) {
     return _width * meterRes;
 }
 
-auto Stops::FontSize(const YAML::Node& _node) -> Stops {
+auto Stops::FontSize(const Node& _node) -> Stops {
     Stops stops;
 
-    if (!_node.IsSequence()) {
+    if (!_node.isSequence()) {
         return stops;
     }
 
     float lastKey = 0;
-    for (const auto& frameNode : _node) {
-        if (!frameNode.IsSequence() || frameNode.size() != 2) { continue; }
-        float key = frameNode[0].as<float>();
+    for (const auto& frameNode : _node.getSequence()) {
+        if (!frameNode.isSequence() || frameNode.getSequenceCount() != 2) { continue; }
+        float key = frameNode[0].getFloatOr(0.f);
 
         if (lastKey > key) {
             LOGW("Invalid stop order: key %f > %f", lastKey, key);
@@ -65,27 +64,28 @@ auto Stops::FontSize(const YAML::Node& _node) -> Stops {
         lastKey = key;
         float pixelSize;
 
-        if (StyleParam::parseFontSize(frameNode[1].Scalar(), pixelSize)) {
+        if (StyleParam::parseFontSize(frameNode[1].getStringOr(nullptr), pixelSize)) {
             stops.frames.emplace_back(key, pixelSize);
         } else {
-            LOGW("Error while parsing font size stops: %f %s", key, Dump(frameNode[1]).c_str());
+            LOGW("Error while parsing font size stops: %f %s", key, frameNode[1].getStringOr("non-scalar node"));
         }
     }
 
     return stops;
 }
 
-auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> Stops {
+auto Stops::Sizes(const Node& _node, const std::vector<Unit>& _units) -> Stops {
     Stops stops;
-    if (!_node.IsSequence()) {
+    if (!_node.isSequence()) {
         return stops;
     }
 
     float lastKey = 0;
 
-    for (const auto& frameNode : _node) {
-        if (!frameNode.IsSequence() || frameNode.size() != 2) { continue; }
-        float key = frameNode[0].as<float>();
+    for (const auto& frameNode : _node.getSequence()) {
+        if (!frameNode.isSequence() || frameNode.getSequenceCount() != 2) { continue; }
+        float key = frameNode[0].getFloatOr(0.f);
+        Node value = frameNode[1];
 
         if (lastKey > key) {
             LOGW("Invalid stop order: key %f > %f", lastKey, key);
@@ -93,37 +93,42 @@ auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> S
         }
         lastKey = key;
 
-        if (frameNode[1].IsScalar()) {
+        if (value.isString()) {
             StyleParam::ValueUnitPair sizeValue;
             sizeValue.unit = Unit::pixel;
             size_t start = 0;
 
-            if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, sizeValue)) {
+            if (StyleParam::parseValueUnitPair(value.getString(), start, sizeValue)) {
                 for (auto& unit : _units) {
                     if (sizeValue.unit != unit) {
-                        LOGW("Size StyleParam can only take in pixel values in: %s", Dump(_node).c_str());
+                        LOGW("Size StyleParam can only take in pixel values in: %s", value.getString());
                     }
                 }
 
                 stops.frames.emplace_back(key, sizeValue.value);
             } else {
-                LOGW("could not parse node %s\n", Dump(frameNode[1]).c_str());
+                LOGW("could not parse node %s\n", value.getString());
             }
-        } else if (frameNode[1].IsSequence()) {
+        } else if (value.isNumber()) {
+            stops.frames.emplace_back(key, value.getFloat());
+        } else if (value.isSequence()) {
             std::vector<StyleParam::ValueUnitPair> sizeValues;
 
-            for (const auto& sequenceNode : frameNode[1]) {
+            for (const auto& item : value.getSequence()) {
                 StyleParam::ValueUnitPair sizeValue;
                 sizeValue.unit = Unit::pixel; // default to pixel
-                if (StyleParam::parseValueUnitPair(sequenceNode.Scalar(), 0, sizeValue)) {
+                if (item.isNumber()) {
+                    sizeValue.value = item.getFloat();
+                    sizeValues.push_back(sizeValue);
+                } else if (item.isString() && StyleParam::parseValueUnitPair(item.getString(), 0, sizeValue)) {
                     for (auto& unit : _units) {
                         if (sizeValue.unit != unit) {
-                            LOGW("Size StyleParam can only take in pixel values in: %s", Dump(_node).c_str());
+                            LOGW("Size StyleParam can only take in pixel values in: %s", item.getString());
                         }
                     }
                     sizeValues.push_back(sizeValue);
                 } else {
-                    LOGW("could not parse node %s\n", Dump(sequenceNode).c_str());
+                    LOGW("could not parse node %s\n", item.getString());
                 }
             }
             if (sizeValues.size() == 2) {
@@ -134,15 +139,16 @@ auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> S
     return stops;
 }
 
-auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) -> Stops {
+auto Stops::Offsets(const Node& _node, const std::vector<Unit>& _units) -> Stops {
     Stops stops;
-    if (!_node.IsSequence()) {
+    if (!_node.isSequence()) {
         return stops;
     }
     float lastKey = 0;
-    for (const auto& frameNode : _node) {
-        if (!frameNode.IsSequence() || frameNode.size() != 2) { continue; }
-        float key = frameNode[0].as<float>();
+    for (const auto& frameNode : _node.getSequence()) {
+        if (!frameNode.isSequence() || frameNode.getSequenceCount() != 2) { continue; }
+        float key = frameNode[0].getFloatOr(0.f);
+        Node value = frameNode[1];
 
         if (lastKey > key) {
             LOGW("Invalid stop order: key %f > %f", lastKey, key);
@@ -150,26 +156,28 @@ auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) ->
         }
         lastKey = key;
 
-        if (frameNode[1].IsSequence()) {
+        if (value.isSequence()) {
             std::vector<StyleParam::ValueUnitPair> widths;
             Unit lastUnit = Unit::pixel;
 
-            for (const auto& sequenceNode : frameNode[1]) {
+            for (const auto& item : value.getSequence()) {
                 StyleParam::ValueUnitPair width;
                 width.unit = Unit::pixel; // default to pixel
-                if (StyleParam::parseValueUnitPair(sequenceNode.Scalar(), 0, width)) {
+                if (item.isNumber()) {
+                    width.value = item.getFloat();
+                } else if (StyleParam::parseValueUnitPair(item.getString(), 0, width)) {
                     widths.push_back(width);
                     if (lastUnit != width.unit) {
-                        LOGW("Mixed units not allowed for stop values", Dump(frameNode[1]).c_str());
+                        LOGW("Mixed units not allowed for stop values", value.getString());
                     }
                     lastUnit = width.unit;
                 } else {
-                    LOGW("could not parse node %s", Dump(sequenceNode).c_str());
+                    LOGW("could not parse node %s", value.getString());
                 }
             }
             if (widths.size() == 2) {
                 if (widths[0].unit != Unit::pixel || widths[1].unit != Unit::pixel) {
-                    LOGW("Non-pixel unit not allowed for multidimensionnal stop values");
+                    LOGW("Non-pixel unit not allowed for multi-dimensional stop values");
                 }
                 stops.frames.emplace_back(key, glm::vec2(widths[0].value, widths[1].value));
             }
@@ -179,9 +187,9 @@ auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) ->
     return stops;
 }
 
-auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, const std::vector<Unit>& _units) -> Stops {
+auto Stops::Widths(const Node& _node, const MapProjection& _projection, const std::vector<Unit>& _units) -> Stops {
     Stops stops;
-    if (!_node.IsSequence()) { return stops; }
+    if (!_node.isSequence()) { return stops; }
 
     double tileSize = _projection.TileSize();
 
@@ -189,9 +197,10 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, co
     float lastKey = 0;
     float lastMeter = 0;
 
-    for (const auto& frameNode : _node) {
-        if (!frameNode.IsSequence() || frameNode.size() != 2) { continue; }
-        float key = frameNode[0].as<float>();
+    for (const auto& frameNode : _node.getSequence()) {
+        if (!frameNode.isSequence() || frameNode.getSequenceCount() != 2) { continue; }
+        float key = frameNode[0].getFloatOr(0.f);
+        Node value = frameNode[1];
 
         if (lastKey > key) {
             LOGW("Invalid stop order: key %f > %f\n", lastKey, key);
@@ -203,7 +212,9 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, co
         width.unit = Unit::meter;
         size_t start = 0;
 
-        if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, width)) {
+        if (value.isNumber()) {
+            width.value = value.getFloat();
+        } else if (value.isString() && StyleParam::parseValueUnitPair(value.getString(), start, width)) {
             bool valid = false;
             for (auto& unit : _units) {
                 if (width.unit == unit) {
@@ -213,7 +224,7 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, co
             }
 
             if (!valid) {
-                LOGW("Invalid unit is being used for stop %s", Dump(frameNode[1]).c_str());
+                LOGW("Invalid unit is being used for stop %s", value.getString());
             }
 
             if (width.unit == Unit::meter) {
@@ -228,7 +239,7 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, co
                 lastIsMeter = false;
             }
         } else {
-            LOGW("could not parse node %s\n", Dump(frameNode[1]).c_str());
+            LOGW("could not parse node %s\n", value.getString());
         }
     }
     // Append stop at max-zoom to continue scaling after the last stop
@@ -241,23 +252,23 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, co
     return stops;
 }
 
-auto Stops::Numbers(const YAML::Node& node) -> Stops {
+auto Stops::Numbers(const Node& node) -> Stops {
     Stops stops;
-    if (!node.IsSequence()) { return stops; }
+    if (!node.isSequence()) { return stops; }
 
     float lastKey = 0;
 
-    for (const auto frameNode : node) {
-        if (!frameNode.IsSequence() || frameNode.size() != 2) { continue; }
+    for (const auto frameNode : node.getSequence()) {
+        if (!frameNode.isSequence() || frameNode.getSequenceCount() != 2) { continue; }
 
-        float key = frameNode[0].as<float>();
+        float key = frameNode[0].getFloatOr(0.f);
         if (lastKey > key) {
             LOGW("Invalid stop order: key %f > %f\n", lastKey, key);
             continue;
         }
         lastKey = key;
 
-        float value = frameNode[1].as<float>();
+        float value = frameNode[1].getFloatOr(0.f);
         stops.frames.emplace_back(key, value);
     }
 

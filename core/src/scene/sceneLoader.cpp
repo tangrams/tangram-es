@@ -363,7 +363,7 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, const std::shar
 
     if (Node shininess = matNode["shininess"]) {
         if (shininess.isNumber()) {
-            material.setShininess(shininess.getDouble());
+            material.setShininess(shininess.getFloat());
         }
     }
 
@@ -558,7 +558,7 @@ bool SceneLoader::loadTexture(const std::string& url, const std::shared_ptr<Scen
     return false;
 }
 
-void SceneLoader::loadTexture(const MappingMember& node, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadTexture(const Node::MappingMember& node, const std::shared_ptr<Scene>& scene) {
 
     const std::string& name = node.name.getString();
     Node textureConfig = node.value;
@@ -674,7 +674,7 @@ void loadFontDescription(const Node& node, const std::string& family, const std:
     }
 }
 
-void SceneLoader::loadFont(const MappingMember& font, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadFont(const Node::MappingMember& font, const std::shared_ptr<Scene>& scene) {
     const std::string& family = font.name.getString();
 
     if (font.value.isMapping()) {
@@ -965,7 +965,7 @@ void SceneLoader::parseLightPosition(Node position, PointLight& light) {
     }
 }
 
-void SceneLoader::loadLight(const MappingMember& node, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadLight(const Node::MappingMember& node, const std::shared_ptr<Scene>& scene) {
 
     const Node light = node.value;
     const std::string& name = node.name.getString();
@@ -1519,14 +1519,14 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, c
     return { layerName, std::move(filter), rules, std::move(sublayers), visible };
 }
 
-void SceneLoader::loadLayer(const MappingMember& layer, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadLayer(const Node::MappingMember& layer, const std::shared_ptr<Scene>& scene) {
 
     const std::string& name = layer.name.getString();
 
     std::string source;
     std::vector<std::string> collections;
 
-    if (Node data = layer.second["data"]) {
+    if (Node data = layer.value["data"]) {
         if (Node data_source = data["source"]) {
             if (data_source.isString()) {
                 source = data_source.getString();

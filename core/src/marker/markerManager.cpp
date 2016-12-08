@@ -5,6 +5,7 @@
 #include "scene/sceneLoader.h"
 #include "style/style.h"
 #include "labels/labelSet.h"
+#include "util/y2j.h"
 #include "log.h"
 
 namespace Tangram {
@@ -288,15 +289,15 @@ bool MarkerManager::buildStyling(Marker& marker) {
     if (!m_scene) { return false; }
 
     std::vector<StyleParam> params;
-    try {
-        // Update the draw rule for the marker.
-        YAML::Node node = YAML::Load(marker.stylingString());
-        SceneLoader::parseStyleParams(node, m_scene, "", params);
-    } catch (YAML::Exception e) {
-        LOG("Invalid marker styling '%s', %s",
-            marker.stylingString().c_str(), e.what());
+    const auto& styling = marker.stylingString();
+    const char* errorMessage = nullptr;
+    size_t errorLine = 0;
+    JsonDocument document = yamlParseBytes(styling.data(), styling.size(), &errorMessage, &errorLine);
+    if (errorMessage) {
+        LOG("Invalid marker styling: '%s', %s", styling.data(), errorMessage);
         return false;
     }
+    SceneLoader::parseStyleParams(Node(&document), m_scene, "", params);
     // Compile any new JS functions used for styling.
     const auto& sceneJsFnList = m_scene->functions();
     for (auto i = m_jsFnIndex; i < sceneJsFnList.size(); ++i) {

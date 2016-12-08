@@ -10,7 +10,7 @@
 #include <condition_variable>
 
 #include "util/url.h"
-#include "yaml-cpp/yaml.h"
+#include "util/node.h"
 
 namespace Tangram {
 
@@ -18,10 +18,8 @@ class Importer {
 
 public:
 
-    using Node = YAML::Node;
-
     // Loads the main scene with deep merging dependent imported scenes.
-    Node applySceneImports(const Url& scenePath, const Url& resourceRoot = Url());
+    JsonDocument applySceneImports(const Url& scenePath, const Url& resourceRoot = Url());
 
 // protected for testing purposes, else could be private
 protected:
@@ -34,15 +32,15 @@ protected:
     std::vector<Url> getResolvedImportUrls(const Node& scene, const Url& base);
 
     // loads all the imported scenes and the master scene and returns a unified YAML root node.
-    void importScenesRecursive(Node& root, const Url& scenePath, std::vector<Url>& sceneStack);
+    void importScenesRecursive(JsonDocument& rootDocument, const Url& scenePath, std::vector<Url>& sceneStack);
 
-    void mergeMapFields(Node& target, const Node& import);
+    void mergeMapFields(JsonDocument& document, JsonValue& target, const JsonValue& import);
 
-    void resolveSceneUrls(Node& root, const Url& base);
+    void resolveSceneUrls(JsonDocument& doc, const Url& base);
 
 private:
     // import scene to respective root nodes
-    std::unordered_map<Url, Node> m_scenes;
+    std::unordered_map<Url, JsonDocument> m_scenes;
 
     std::vector<Url> m_sceneQueue;
     static std::atomic_uint progressCounter;

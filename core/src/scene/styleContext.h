@@ -2,6 +2,7 @@
 
 #include "scene/styleParam.h"
 #include "util/fastmap.h"
+#include "util/node.h"
 
 #include <string>
 #include <functional>
@@ -11,10 +12,6 @@
 
 struct duk_hthread;
 typedef struct duk_hthread duk_context;
-
-namespace YAML {
-    class Node;
-}
 
 namespace Tangram {
 
@@ -70,7 +67,7 @@ public:
 
     bool setFunctions(const std::vector<std::string>& _functions);
     bool addFunction(const std::string& _function);
-    void setSceneGlobals(const YAML::Node& sceneGlobals);
+    void setSceneGlobals(const Node& sceneGlobals);
 
     void setKeyword(const std::string& _key, Value _value);
     const Value& getKeyword(const std::string& _key) const;
@@ -81,7 +78,7 @@ private:
 
     bool evalFunction(FunctionID id);
     void parseStyleResult(StyleParamKey _key, StyleParam::Value& _val) const;
-    void parseSceneGlobals(const YAML::Node& node);
+    void parseSceneGlobals(const Node& node);
 
     std::array<Value, 4> m_keywords;
     int m_keywordGeom= -1;

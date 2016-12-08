@@ -1,14 +1,11 @@
 #pragma once
 
 #include "util/color.h"
+#include "util/node.h"
 #include "scene/styleParam.h"
 #include "variant.hpp"
 
 #include <vector>
-
-namespace YAML {
-    class Node;
-}
 
 namespace Tangram {
 
@@ -27,12 +24,12 @@ struct Stops {
     };
 
     std::vector<Frame> frames;
-    static Stops Colors(const YAML::Node& _node);
-    static Stops Widths(const YAML::Node& _node, const MapProjection& _projection, const std::vector<Unit>& _units);
-    static Stops FontSize(const YAML::Node& _node);
-    static Stops Sizes(const YAML::Node& _node, const std::vector<Unit>& _units);
-    static Stops Offsets(const YAML::Node& _node, const std::vector<Unit>& _units);
-    static Stops Numbers(const YAML::Node& node);
+    static Stops Colors(const Node& _node);
+    static Stops Widths(const Node& _node, const MapProjection& _projection, const std::vector<Unit>& _units);
+    static Stops FontSize(const Node& _node);
+    static Stops Sizes(const Node& _node, const std::vector<Unit>& _units);
+    static Stops Offsets(const Node& _node, const std::vector<Unit>& _units);
+    static Stops Numbers(const Node& node);
 
     Stops(const std::vector<Frame>& _frames) : frames(_frames) {}
     Stops(const Stops& rhs) = default;

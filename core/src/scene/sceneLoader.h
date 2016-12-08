@@ -50,15 +50,15 @@ struct SceneLoader {
     static void loadSource(const std::string& name, const Node& source, const Node& sources, const std::shared_ptr<Scene>& scene);
     static void loadSourceRasters(std::shared_ptr<DataSource>& source, Node rasterNode, const Node& sources,
                                   const std::shared_ptr<Scene>& scene);
-    static void loadTexture(const MappingMember& texture, const std::shared_ptr<Scene>& scene);
-    static void loadLayer(const MappingMember& layer, const std::shared_ptr<Scene>& scene);
-    static void loadLight(const MappingMember& light, const std::shared_ptr<Scene>& scene);
+    static void loadTexture(const Node::MappingMember& texture, const std::shared_ptr<Scene>& scene);
+    static void loadLayer(const Node::MappingMember& layer, const std::shared_ptr<Scene>& scene);
+    static void loadLight(const Node::MappingMember& light, const std::shared_ptr<Scene>& scene);
     static void loadCameras(Node cameras, const std::shared_ptr<Scene>& scene);
     static void loadCamera(const Node& camera, const std::shared_ptr<Scene>& scene);
     static void loadStyleProps(Style& style, Node styleNode, const std::shared_ptr<Scene>& scene);
     static void loadMaterial(Node matNode, Material& material, const std::shared_ptr<Scene>& scene, Style& style);
     static void loadShaderConfig(Node shaders, Style& style, const std::shared_ptr<Scene>& scene);
-    static void loadFont(const MappingMember& font, const std::shared_ptr<Scene>& scene);
+    static void loadFont(const Node::MappingMember& font, const std::shared_ptr<Scene>& scene);
     static SceneLayer loadSublayer(Node layer, const std::string& name, const std::shared_ptr<Scene>& scene);
     static Filter generateFilter(Node filter, Scene& scene);
     static Filter generateAnyFilter(Node filter, Scene& scene);
