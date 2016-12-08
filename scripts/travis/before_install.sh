@@ -26,16 +26,9 @@ if [[ ${PLATFORM} == "android" ]]; then
     echo $PATH
     echo "Done."
 
-    # Download android cmake package
-    echo "Downloading android cmake package..."
-    curl -L https://dl.google.com/android/repository/cmake-3.6.3155560-linux-x86_64.zip -o cmake.zip
-    echo "Done."
-
-    # Extract android cmake package
-    echo "Extracting android cmake package..."
-    mkdir -p ${ANDROID_HOME}/cmake
-    unzip -qq cmake.zip -d ${ANDROID_HOME}/cmake
-    echo "Done."
+    # Copy a license file into the SDK (needed to install CMake).
+    mkdir -p ${ANDROID_HOME}/licenses
+    cp ./scripts/travis/android-sdk-license ${ANDROID_HOME}/licenses/
 
 fi
 
