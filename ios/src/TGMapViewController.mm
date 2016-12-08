@@ -665,7 +665,11 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 - (void)update
 {
-    self.map->update([self timeSinceLastUpdate]);
+    bool viewComplete = self.map->update([self timeSinceLastUpdate]);
+
+    if (viewComplete && [self.mapViewDelegate respondsToSelector:@selector(mapViewDidCompleteLoading:)]) {
+        [self.mapViewDelegate mapViewDidCompleteLoading:self];
+    }
 
     if (!self.continuous && !self.renderRequested) {
         self.paused = YES;
