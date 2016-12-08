@@ -106,6 +106,8 @@ void TextStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _sce
 
 void TextStyle::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) {
 
+    if (!m_selection) { return; }
+
     for (auto& mesh : m_meshes) { mesh->upload(rs); }
 
     Style::onBeginDrawSelectionFrame(rs, _view, _scene);

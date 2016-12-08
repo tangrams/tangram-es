@@ -175,7 +175,11 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
     uint32_t selectionColor = 0;
 
     if (_params.interactive) {
-        selectionColor = _rule.featureSelection->nextColorIdentifier();
+        if (_rule.featureSelection) {
+            selectionColor = _rule.featureSelection->nextColorIdentifier();
+        } else {
+            selectionColor = _rule.selectionColor;
+        }
     }
 
     m_labels.push_back(std::make_unique<SpriteLabel>(glm::vec3(glm::vec2(_point), m_zoom),

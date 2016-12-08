@@ -73,6 +73,8 @@ void PointStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _sc
 }
 
 void PointStyle::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) {
+    if (!m_selection) { return; }
+
     m_mesh->upload(rs);
 
     Style::onBeginDrawSelectionFrame(rs, _view, _scene);
