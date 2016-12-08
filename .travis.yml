@@ -15,7 +15,7 @@ matrix:
           addons:
             apt:
               sources: [ 'kubuntu-backports', 'ubuntu-toolchain-r-test', 'george-edison55-precise-backports' ]
-              packages: [ 'cmake', 'gcc-4.9', 'g++-4.9', 'xorg-dev', 'libglu1-mesa-dev' ]
+              packages: [ 'cmake', 'gcc-4.9', 'g++-4.9', 'xorg-dev', 'libglu1-mesa-dev', 'valgrind' ]
         - os: osx
           osx_image: xcode7.3
           env: PLATFORM=ios

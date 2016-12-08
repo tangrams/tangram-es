@@ -110,7 +110,11 @@ std::string parseSequence(const Node& node) {
 bool getDouble(const Node& node, double& value) {
 
     if (node.IsScalar()) {
+
         const std::string& s = node.Scalar();
+        printf("%c - ", s[0]);
+        printf("'%s'\n", s.c_str());
+
         char* pos;
         value = strtod(s.c_str(), &pos);
         if (pos == s.c_str() + s.length()) {
