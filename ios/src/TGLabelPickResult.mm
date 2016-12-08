@@ -17,7 +17,7 @@
 
 @implementation TGLabelPickResult
 
-- (id) initWithCoordinates:(TGGeoPoint)coordinates type:(TGLabelType)type properties:(NSDictionary *)properties
+- (instancetype) initWithCoordinates:(TGGeoPoint)coordinates type:(TGLabelType)type properties:(NSDictionary *)properties
 {
     self = [super init];
 

@@ -43,7 +43,7 @@
 
     NSLog(@"Picked label:");
 
-    for (id key in [labelPickResult properties]) {
+    for (NSString* key in [labelPickResult properties]) {
         NSLog(@"\t%@ -- %@", key, [[labelPickResult properties] objectForKey:key]);
 
         if ([key isEqualToString:@"name"]) {
@@ -53,7 +53,6 @@
                                                    cancelButtonTitle:@"OK"
                                                    otherButtonTitles:nil];
              [alert show];
-             [alert release];
         }
     }
 }
@@ -75,7 +74,6 @@
                                                    cancelButtonTitle:@"OK"
                                                    otherButtonTitles:nil];
              [alert show];
-             [alert release];
         }
     }
 }

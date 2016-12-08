@@ -63,10 +63,10 @@ NS_ASSUME_NONNULL_END
 
 @protocol TGMapViewDelegate <NSObject>
 @optional
-- (void)mapView:(TGMapViewController *)mapView didLoadSceneAsync:(nonnull NSString *)scene;
-- (void)mapView:(TGMapViewController *)mapView didSelectFeature:(NSDictionary *)feature atScreenPosition:(CGPoint)position;
-- (void)mapView:(TGMapViewController *)mapView didSelectLabel:(TGLabelPickResult *)labelPickResult atScreenPosition:(CGPoint)position;
-- (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView;
+- (void)mapView:(nonnull TGMapViewController *)mapView didLoadSceneAsync:(nonnull NSString *)scene;
+- (void)mapView:(nonnull TGMapViewController *)mapView didSelectFeature:(nullable NSDictionary *)feature atScreenPosition:(CGPoint)position;
+- (void)mapView:(nonnull TGMapViewController *)mapView didSelectLabel:(nullable TGLabelPickResult *)labelPickResult atScreenPosition:(CGPoint)position;
+- (void)mapViewDidCompleteLoading:(nonnull TGMapViewController *)mapView;
 @end
 
 NS_ASSUME_NONNULL_BEGIN

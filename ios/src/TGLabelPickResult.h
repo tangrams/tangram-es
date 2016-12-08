@@ -15,10 +15,10 @@ typedef NS_ENUM(NSInteger, TGLabelType) {
 
 @interface TGLabelPickResult : NSObject
 
-- (id) initWithCoordinates:(TGGeoPoint)coordinates type:(TGLabelType)type properties:(NSDictionary *)properties;
+- (instancetype) initWithCoordinates:(TGGeoPoint)coordinates type:(TGLabelType)type properties:(nonnull NSDictionary *)properties;
 
 @property (readonly, nonatomic) TGGeoPoint coordinates;
 @property (readonly, nonatomic) TGLabelType type;
-@property (readonly, nonatomic) NSDictionary* properties;
+@property (readonly, strong, nonatomic) NSDictionary* properties;
 
 @end
