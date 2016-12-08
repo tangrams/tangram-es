@@ -18,8 +18,8 @@ matrix:
           env: PLATFORM=android
           addons:
             apt:
-              sources: [ 'kubuntu-backports', 'george-edison55-precise-backports' ]
-              packages: [ 'cmake', 'lib32z1-dev', 'lib32stdc++6', 's3cmd' ]
+              sources: [ 'ubuntu-toolchain-r-test' ]
+              packages: [ 'libstdc++6', 's3cmd' ]
           android:
             components: [ 'tools', 'build-tools-25.0.0', 'extra-android-m2repository', 'android-25' ]
           jdk: oraclejdk8
