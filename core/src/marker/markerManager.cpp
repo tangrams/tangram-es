@@ -5,6 +5,7 @@
 #include "scene/sceneLoader.h"
 #include "style/style.h"
 #include "labels/labelSet.h"
+#include "util/featureSelection.h"
 #include "log.h"
 
 namespace Tangram {
@@ -340,11 +341,33 @@ bool MarkerManager::buildGeometry(Marker& marker, int zoom) {
 
     styler->setup(marker, zoom);
 
+    uint32_t selectionColor = 0;
+    bool interactive = false;
+    if (rule->get(StyleParamKey::interactive, interactive) && interactive) {
+        if (selectionColor == 0) {
+            selectionColor = m_scene->featureSelection()->nextColorIdentifier();
+        }
+        rule->selectionColor = selectionColor;
+    } else {
+        rule->selectionColor = 0;
+    }
+
     if (!styler->addFeature(*feature, *rule)) { return false; }
 
+    marker.setSelectionColor(selectionColor);
     marker.setMesh(styler->style().getID(), zoom, styler->build());
 
     return true;
+}
+
+const Marker* MarkerManager::getMarkerOrNullBySelectionColor(uint32_t selectionColor) {
+    for (const auto& marker : m_markers) {
+        if (marker->selectionColor() == selectionColor) {
+            return marker.get();
+        }
+    }
+
+    return nullptr;
 }
 
 Marker* MarkerManager::getMarkerOrNull(MarkerID markerID) {

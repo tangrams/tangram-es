@@ -265,6 +265,8 @@ public:
 
     void drawSelectionFrame(RenderState& rs, const Tile& _tile);
 
+    void drawSelectionFrame(RenderState& _rs, const Marker& _marker);
+
     virtual void setLightingType(LightingType _lType);
 
     void setAnimated(bool _animated) { m_animated = _animated; }

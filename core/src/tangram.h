@@ -26,7 +26,7 @@ struct FeaturePickResult {
     std::array<float, 2> position;
 };
 
-// Returns a pointer to the selected feature or null, only valid on the callback scope
+// Returns a pointer to the selected feature pick result or null, only valid on the callback scope
 using FeaturePickCallback = std::function<void(const FeaturePickResult*)>;
 
 struct LabelPickResult {
@@ -40,8 +40,19 @@ struct LabelPickResult {
     FeaturePickResult touchItem;
 };
 
-// Returns a pointer to the selected label or null, only valid on the callback scope
+// Returns a pointer to the selected label pick result or null, only valid on the callback scope
 using LabelPickCallback = std::function<void(const LabelPickResult*)>;
+
+struct MarkerPickResult {
+    MarkerPickResult(MarkerID _id, std::array<float, 2> _position)
+        : id(_id), position(_position) {}
+
+    MarkerID id;
+    std::array<float, 2> position;
+};
+
+// Returns a pointer to the selected marker pick result or null, only valid on the callback scope
+using MarkerPickCallback = std::function<void(const MarkerPickResult*)>;
 
 struct SceneUpdate {
     std::string path;
@@ -272,6 +283,8 @@ public:
     // Calls _onLabelPickCallback once the query has completed, and returns the LabelPickResult
     // with its associated properties.
     void pickLabelAt(float _x, float _y, LabelPickCallback _onLabelPickCallback);
+
+    void pickMarkerAt(float _x, float _y, MarkerPickCallback _onMarkerPickCallback);
 
     // Run this task asynchronously to Tangram's main update loop.
     void runAsyncTask(std::function<void()> _task);
