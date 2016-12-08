@@ -299,6 +299,25 @@ void Style::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene&
     }
 }
 
+void Style::drawSelectionFrame(RenderState& _rs, const Marker& _marker) {
+    if (!m_selection || _marker.styleId() != m_id || !_marker.isVisible()) {
+        return;
+    }
+
+    auto* mesh = _marker.mesh();
+
+    if (!mesh) { return; }
+
+    m_selectionProgram->setUniformMatrix4f(_rs, m_selectionUniforms.uModel, _marker.modelMatrix());
+    m_selectionProgram->setUniformf(_rs, m_selectionUniforms.uTileOrigin,
+                                    _marker.origin().x, _marker.origin().y,
+                                    _marker.builtZoomLevel(), _marker.builtZoomLevel());
+
+    if (!mesh->draw(_rs, *m_selectionProgram)) {
+        LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
+    }
+}
+
 void Style::drawSelectionFrame(Tangram::RenderState& rs, const Tangram::Tile &_tile) {
 
     if (!m_selection) {
@@ -391,13 +410,11 @@ void Style::draw(RenderState& rs, const Tile& _tile) {
 
 void Style::draw(RenderState& rs, const Marker& marker) {
 
-    if (marker.styleId() != m_id) { return; }
+    if (marker.styleId() != m_id || !marker.isVisible()) { return; }
 
     auto* mesh = marker.mesh();
 
     if (!mesh) { return; }
-
-    if (!marker.isVisible()) { return; }
 
     m_shaderProgram->setUniformMatrix4f(rs, m_mainUniforms.uModel, marker.modelMatrix());
     m_shaderProgram->setUniformf(rs, m_mainUniforms.uTileOrigin,

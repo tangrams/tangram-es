@@ -77,6 +77,10 @@ void Marker::setDrawOrder(int drawOrder) {
     m_drawOrder = drawOrder;
 }
 
+void Marker::setSelectionColor(uint32_t selectionColor) {
+    m_selectionColor = selectionColor;
+}
+
 int Marker::builtZoomLevel() const {
     return m_builtZoomLevel;
 }
@@ -139,6 +143,10 @@ bool Marker::isEasing() const {
 
 bool Marker::isVisible() const {
     return m_visible;
+}
+
+uint32_t Marker::selectionColor() const {
+    return m_selectionColor;
 }
 
 bool Marker::compareByDrawOrder(const std::unique_ptr<Marker>& lhs, const std::unique_ptr<Marker>& rhs) {

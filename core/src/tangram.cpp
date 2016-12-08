@@ -53,6 +53,11 @@ public:
         LabelPickCallback onLabelSelection;
     };
 
+    struct MarkerSelectionQuery {
+        glm::vec2 position;
+        MarkerPickCallback onMarkerSelection;
+    };
+
     void setScene(std::shared_ptr<Scene>& _scene);
 
     void setEase(EaseField _f, Ease _e);
@@ -93,6 +98,7 @@ public:
 
     std::vector<FeatureSelectionQuery> featureSelectionQueries;
     std::vector<LabelSelectionQuery> labelSelectionQueries;
+    std::vector<MarkerSelectionQuery> markerSelectionQueries;
 };
 
 void Map::Impl::setEase(EaseField _f, Ease _e) {
@@ -398,14 +404,20 @@ bool Map::update(float _dt) {
     return viewComplete;
 }
 
-void Map::pickFeatureAt(float _x, float _y, FeaturePickCallback _onFeatureSelectCallback) {
-    impl->featureSelectionQueries.push_back({{_x, _y}, _onFeatureSelectCallback});
+void Map::pickFeatureAt(float _x, float _y, FeaturePickCallback _onFeaturePickCallback) {
+    impl->featureSelectionQueries.push_back({{_x, _y}, _onFeaturePickCallback});
 
     requestRender();
 }
 
-void Map::pickLabelAt(float _x, float _y, LabelPickCallback _onTouchLabelSelectCallback) {
-    impl->labelSelectionQueries.push_back({{_x, _y}, _onTouchLabelSelectCallback});
+void Map::pickLabelAt(float _x, float _y, LabelPickCallback _onLabelPickCallback) {
+    impl->labelSelectionQueries.push_back({{_x, _y}, _onLabelPickCallback});
+
+    requestRender();
+}
+
+void Map::pickMarkerAt(float _x, float _y, MarkerPickCallback _onMarkerPickCallback) {
+    impl->markerSelectionQueries.push_back({{_x, _y}, _onMarkerPickCallback});
 
     requestRender();
 }
@@ -432,8 +444,12 @@ void Map::render() {
     // Run render-thread tasks
     impl->renderState.jobQueue.runJobs();
 
+    bool selectionQuery = impl->featureSelectionQueries.size() > 0;
+    bool markerQuery = impl->markerSelectionQueries.size() > 0;
+    bool labelQuery = impl->labelSelectionQueries.size() > 0;
+
     // Render feature selection pass to offscreen framebuffer
-    if (impl->featureSelectionQueries.size() > 0 || impl->labelSelectionQueries.size() > 0 || drawSelectionBuffer) {
+    if (selectionQuery || markerQuery || labelQuery || drawSelectionBuffer) {
 
         impl->selectionBuffer->applyAsRenderTarget(impl->renderState);
 
@@ -442,10 +458,48 @@ void Map::render() {
         for (const auto& style : impl->scene->styles()) {
             style->onBeginDrawSelectionFrame(impl->renderState, impl->view, *(impl->scene));
 
-            for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                style->drawSelectionFrame(impl->renderState, *tile);
+            if (selectionQuery) {
+                for (const auto& tile : impl->tileManager.getVisibleTiles()) {
+                    style->drawSelectionFrame(impl->renderState, *tile);
+                }
             }
+
+            if (markerQuery) {
+                for (const auto& marker : impl->markerManager.markers()) {
+                    style->drawSelectionFrame(impl->renderState, *marker);
+                }
+            }
+
+            style->onEndDrawFrame();
         }
+
+        for (const auto& markerSelectionQuery : impl->markerSelectionQueries) {
+            float x = markerSelectionQuery.position.x / impl->view.getWidth();
+            float y = (1.f - (markerSelectionQuery.position.y / impl->view.getHeight()));
+
+            // TODO: read with a scalable thumb size
+            GLuint color = impl->selectionBuffer->readAt(x, y);
+
+            if (color == 0) {
+                markerSelectionQuery.onMarkerSelection(nullptr);
+                continue;
+            }
+
+            auto marker = impl->markerManager.getMarkerOrNullBySelectionColor(color);
+
+            if (!marker) {
+                markerSelectionQuery.onMarkerSelection(nullptr);
+                continue;
+            }
+
+            auto position = std::array<float, 2>{{markerSelectionQuery.position.x,
+                                                  markerSelectionQuery.position.y}};
+
+            MarkerPickResult markerResult(marker->id(), position);
+            markerSelectionQuery.onMarkerSelection(&markerResult);
+        }
+
+        impl->markerSelectionQueries.clear();
 
         // Resolve feature selection queries
         for (const auto& selectionQuery : impl->featureSelectionQueries) {
