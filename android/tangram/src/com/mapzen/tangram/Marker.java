@@ -67,7 +67,7 @@ public class Marker {
      */
     public boolean setDrawable(int drawableId) {
         BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inTargetDensity = DisplayMetrics.DENSITY_DEFAULT;
+        options.inTargetDensity = context.getResources().getDisplayMetrics().densityDpi;
         Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), drawableId, options);
         return setBitmap(bitmap);
     }
@@ -80,10 +80,11 @@ public class Marker {
      * @return whether the drawable's bitmap was successfully set
      */
     public boolean setDrawable(Drawable drawable) {
+        int density = context.getResources().getDisplayMetrics().densityDpi;
         BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
-        bitmapDrawable.setTargetDensity(DisplayMetrics.DENSITY_DEFAULT);
+        bitmapDrawable.setTargetDensity(density);
         Bitmap bitmap = bitmapDrawable.getBitmap();
-        bitmap.setDensity(DisplayMetrics.DENSITY_DEFAULT);
+        bitmap.setDensity(density);
         return setBitmap(bitmap);
     }
 
@@ -169,8 +170,9 @@ public class Marker {
     }
 
     private boolean setBitmap(Bitmap bitmap) {
-        int width = bitmap.getScaledWidth(DisplayMetrics.DENSITY_DEFAULT);
-        int height = bitmap.getScaledHeight(DisplayMetrics.DENSITY_DEFAULT);
+        int density = context.getResources().getDisplayMetrics().densityDpi;
+        int width = bitmap.getScaledWidth(density);
+        int height = bitmap.getScaledHeight(density);
 
         int[] argb = new int[width * height];
         bitmap.getPixels(argb, 0, width, 0, 0, width, height);
