@@ -48,7 +48,7 @@ public:
     void clearTileSet(int32_t _sourceId);
 
     /* Returns the set of currently visible tiles */
-    const auto& getVisibleTiles() { return m_tiles; }
+    const auto& getVisibleTiles() const { return m_tiles; }
 
     bool hasTileSetChanged() { return m_tileSetChanged; }
 
