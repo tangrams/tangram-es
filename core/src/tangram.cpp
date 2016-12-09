@@ -459,6 +459,8 @@ void Map::render() {
             }
         }
 
+        SelectionQuery::clearColorCache();
+
         // Resolve feature selection queries
         for (const auto& selectionQuery : impl->selectionQueries) {
             selectionQuery.process(impl->view, *impl->selectionBuffer, impl->markerManager, impl->tileManager, impl->labels);

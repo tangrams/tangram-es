@@ -12,6 +12,8 @@
 
 namespace Tangram {
 
+std::map<size_t, uint32_t> SelectionQuery::s_colorCache;
+
 SelectionQuery::SelectionQuery(glm::vec2 _position, QueryCallback _queryCallback, QueryType _type) :
     m_position(_position),
     m_queryCallback(_queryCallback),
@@ -20,7 +22,20 @@ SelectionQuery::SelectionQuery(glm::vec2 _position, QueryCallback _queryCallback
 void SelectionQuery::process(const View& _view, const FrameBuffer& _framebuffer, const MarkerManager& _markerManager, const TileManager& _tileManager, const Labels& _labels) const {
 
     glm::vec2 windowCoordinates = _view.normalizedWindowCoordinates(m_position.x, m_position.y);
-    GLuint color = _framebuffer.readAt(windowCoordinates.x, windowCoordinates.y);
+
+    GLuint color = 0;
+    size_t seed = 0;
+    hash_combine(seed, m_position.x);
+    hash_combine(seed, m_position.y);
+
+    auto it = s_colorCache.find(seed);
+
+    if (it == s_colorCache.end()) {
+        GLuint color = _framebuffer.readAt(windowCoordinates.x, windowCoordinates.y);
+        s_colorCache[seed] = color;
+    } else {
+        color = it->second;
+    }
 
     switch (m_type) {
         case QueryType::feature:
