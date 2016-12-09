@@ -313,7 +313,7 @@ void Style::drawSelectionFrame(RenderState& _rs, const Marker& _marker) {
                                     _marker.origin().x, _marker.origin().y,
                                     _marker.builtZoomLevel(), _marker.builtZoomLevel());
 
-    if (!mesh->draw(_rs, *m_selectionProgram)) {
+    if (!mesh->draw(_rs, *m_selectionProgram, false)) {
         LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
     }
 }

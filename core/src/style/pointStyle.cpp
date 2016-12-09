@@ -82,7 +82,7 @@ void PointStyle::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, S
     m_selectionProgram->setUniformMatrix4f(rs, m_selectionUniforms.uOrtho,
                                            _view.getOrthoViewportMatrix());
 
-    m_mesh->draw(rs, *m_selectionProgram);
+    m_mesh->draw(rs, *m_selectionProgram, false);
 
     m_textStyle->onBeginDrawSelectionFrame(rs, _view, _scene);
 }
