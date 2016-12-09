@@ -1,8 +1,8 @@
 #pragma once
 
-#include "util/variant.h"
 #include "glm/vec2.hpp"
 #include "tangram.h"
+#include "util/variant.h"
 #include <map>
 
 namespace Tangram {
@@ -28,7 +28,8 @@ public:
 
     static void clearColorCache() { s_colorCache.clear(); }
 
-    void process(const View& _view, const FrameBuffer& _framebuffer, const MarkerManager& _markerManager, const TileManager& _tileManager, const Labels& _labels) const;
+    void process(const View& _view, const FrameBuffer& _framebuffer, const MarkerManager& _markerManager,
+                 const TileManager& _tileManager, const Labels& _labels) const;
 
     QueryType type() const { return m_type; }
 
@@ -38,7 +39,5 @@ private:
     QueryType m_type;
 
     static std::map<size_t, uint32_t> s_colorCache;
-
 };
-
 }
