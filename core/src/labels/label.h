@@ -196,8 +196,6 @@ private:
 
     int m_anchorIndex;
 
-    uint32_t m_selectionColor;
-
 protected:
 
     bool m_occludedLastFrame;
