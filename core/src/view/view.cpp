@@ -277,7 +277,7 @@ double View::screenToGroundPlane(float& _screenX, float& _screenY) {
 }
 
 
-glm::vec2 View::normalizedWindowCoordinates(float _x, float _y) {
+glm::vec2 View::normalizedWindowCoordinates(float _x, float _y) const {
     return { _x / m_vpWidth, 1.0 - _y / m_vpHeight };
 }
 

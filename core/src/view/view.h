@@ -159,7 +159,7 @@ public:
     const glm::vec3& getEye() const { return m_eye; }
 
     /* Returns the window coordinates [0,1], lower left corner of the window is (0, 0) */
-    glm::vec2 normalizedWindowCoordinates(float _x, float _y);
+    glm::vec2 normalizedWindowCoordinates(float _x, float _y) const;
 
     ViewState state() const;
 
