@@ -493,24 +493,25 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     CGPoint displacement = [panRecognizer translationInView:self.view];
 
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizePanGesture:)]) {
-        [self.gestureDelegate mapView:self recognizer:panRecognizer didRecognizePanGesture:displacement];
-    } else {
-        CGPoint velocity = [panRecognizer velocityInView:self.view];
-        CGPoint end = [panRecognizer locationInView:self.view];
-        CGPoint start = {end.x - displacement.x, end.y - displacement.y};
-
-        [panRecognizer setTranslation:CGPointZero inView:self.view];
-
-        switch (panRecognizer.state) {
-            case UIGestureRecognizerStateChanged:
-                self.map->handlePanGesture(start.x * self.contentScaleFactor, start.y * self.contentScaleFactor, end.x * self.contentScaleFactor, end.y * self.contentScaleFactor);
-                break;
-            case UIGestureRecognizerStateEnded:
-                self.map->handleFlingGesture(end.x * self.contentScaleFactor, end.y * self.contentScaleFactor, velocity.x * self.contentScaleFactor, velocity.y * self.contentScaleFactor);
-                break;
-            default:
-                break;
+        if (![self.gestureDelegate mapView:self recognizer:panRecognizer didRecognizePanGesture:displacement]) {
+            return;
         }
+    }
+    CGPoint velocity = [panRecognizer velocityInView:self.view];
+    CGPoint end = [panRecognizer locationInView:self.view];
+    CGPoint start = {end.x - displacement.x, end.y - displacement.y};
+
+    [panRecognizer setTranslation:CGPointZero inView:self.view];
+
+    switch (panRecognizer.state) {
+        case UIGestureRecognizerStateChanged:
+            self.map->handlePanGesture(start.x * self.contentScaleFactor, start.y * self.contentScaleFactor, end.x * self.contentScaleFactor, end.y * self.contentScaleFactor);
+            break;
+        case UIGestureRecognizerStateEnded:
+            self.map->handleFlingGesture(end.x * self.contentScaleFactor, end.y * self.contentScaleFactor, velocity.x * self.contentScaleFactor, velocity.y * self.contentScaleFactor);
+            break;
+        default:
+            break;
     }
 }
 
@@ -518,12 +519,13 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     CGPoint location = [pinchRecognizer locationInView:self.view];
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizePinchGesture:)]) {
-        [self.gestureDelegate mapView:self recognizer:pinchRecognizer didRecognizePinchGesture:location];
-    } else {
-        CGFloat scale = pinchRecognizer.scale;
-        [pinchRecognizer setScale:1.0];
-        self.map->handlePinchGesture(location.x * self.contentScaleFactor, location.y * self.contentScaleFactor, scale, pinchRecognizer.velocity);
+        if (![self.gestureDelegate mapView:self recognizer:pinchRecognizer didRecognizePinchGesture:location]) {
+            return;
+        }
     }
+    CGFloat scale = pinchRecognizer.scale;
+    [pinchRecognizer setScale:1.0];
+    self.map->handlePinchGesture(location.x * self.contentScaleFactor, location.y * self.contentScaleFactor, scale, pinchRecognizer.velocity);
 }
 
 - (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer
@@ -532,10 +534,11 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     CGFloat rotation = rotationRecognizer.rotation;
     [rotationRecognizer setRotation:0.0];
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeRotationGesture:)]) {
-        [self.gestureDelegate mapView:self recognizer:rotationRecognizer didRecognizeRotationGesture:position];
-    } else {
-        self.map->handleRotateGesture(position.x * self.contentScaleFactor, position.y * self.contentScaleFactor, rotation);
+        if (![self.gestureDelegate mapView:self recognizer:rotationRecognizer didRecognizeRotationGesture:position]) {
+            return;
+        }
     }
+    self.map->handleRotateGesture(position.x * self.contentScaleFactor, position.y * self.contentScaleFactor, rotation);
 }
 
 - (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer
@@ -546,10 +549,11 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     // don't trigger shove on single touch gesture
     if ([shoveRecognizer numberOfTouches] == 2) {
         if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizeShoveGesture:)]) {
-            [self.gestureDelegate mapView:self recognizer:shoveRecognizer didRecognizeShoveGesture:displacement];
-        } else {
-            self.map->handleShoveGesture(displacement.y);
+            if (![self.gestureDelegate mapView:self recognizer:shoveRecognizer didRecognizeShoveGesture:displacement]) {
+                return;
+            }
         }
+        self.map->handleShoveGesture(displacement.y);
     }
 }
 
