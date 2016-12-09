@@ -360,7 +360,7 @@ bool MarkerManager::buildGeometry(Marker& marker, int zoom) {
     return true;
 }
 
-const Marker* MarkerManager::getMarkerOrNullBySelectionColor(uint32_t selectionColor) {
+const Marker* MarkerManager::getMarkerOrNullBySelectionColor(uint32_t selectionColor) const {
     for (const auto& marker : m_markers) {
         if (marker->selectionColor() == selectionColor) {
             return marker.get();

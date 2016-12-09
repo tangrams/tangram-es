@@ -64,7 +64,7 @@ void Labels::processLabelUpdate(const ViewState& viewState,
 }
 
 
-std::pair<Label*, Tile*> Labels::getLabel(uint32_t _selectionColor) {
+std::pair<Label*, Tile*> Labels::getLabel(uint32_t _selectionColor) const {
 
     for (auto& entry : m_labels) {
 

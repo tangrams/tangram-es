@@ -29,6 +29,7 @@
 #include "util/jobQueue.h"
 #include "debug/textDisplay.h"
 #include "debug/frameInfo.h"
+#include "selection/selectionQuery.h"
 
 #include <cmath>
 #include <bitset>
@@ -42,21 +43,6 @@ enum class EaseField { position, zoom, rotation, tilt };
 class Map::Impl {
 
 public:
-
-    struct FeatureSelectionQuery {
-        glm::vec2 position;
-        FeaturePickCallback onFeatureSelection;
-    };
-
-    struct LabelSelectionQuery {
-        glm::vec2 position;
-        LabelPickCallback onLabelSelection;
-    };
-
-    struct MarkerSelectionQuery {
-        glm::vec2 position;
-        MarkerPickCallback onMarkerSelection;
-    };
 
     void setScene(std::shared_ptr<Scene>& _scene);
 
@@ -96,9 +82,7 @@ public:
 
     bool cacheGlState;
 
-    std::vector<FeatureSelectionQuery> featureSelectionQueries;
-    std::vector<LabelSelectionQuery> labelSelectionQueries;
-    std::vector<MarkerSelectionQuery> markerSelectionQueries;
+    std::vector<SelectionQuery> selectionQueries;
 };
 
 void Map::Impl::setEase(EaseField _f, Ease _e) {
@@ -405,19 +389,19 @@ bool Map::update(float _dt) {
 }
 
 void Map::pickFeatureAt(float _x, float _y, FeaturePickCallback _onFeaturePickCallback) {
-    impl->featureSelectionQueries.push_back({{_x, _y}, _onFeaturePickCallback});
+    impl->selectionQueries.push_back({{_x, _y}, _onFeaturePickCallback, QueryType::feature});
 
     requestRender();
 }
 
 void Map::pickLabelAt(float _x, float _y, LabelPickCallback _onLabelPickCallback) {
-    impl->labelSelectionQueries.push_back({{_x, _y}, _onLabelPickCallback});
+    impl->selectionQueries.push_back({{_x, _y}, _onLabelPickCallback, QueryType::label});
 
     requestRender();
 }
 
 void Map::pickMarkerAt(float _x, float _y, MarkerPickCallback _onMarkerPickCallback) {
-    impl->markerSelectionQueries.push_back({{_x, _y}, _onMarkerPickCallback});
+    impl->selectionQueries.push_back({{_x, _y}, _onMarkerPickCallback, QueryType::marker});
 
     requestRender();
 }
@@ -444,12 +428,16 @@ void Map::render() {
     // Run render-thread tasks
     impl->renderState.jobQueue.runJobs();
 
-    bool selectionQuery = impl->featureSelectionQueries.size() > 0 || drawSelectionBuffer;
-    bool markerQuery = impl->markerSelectionQueries.size() > 0 || drawSelectionBuffer;
-    bool labelQuery = impl->labelSelectionQueries.size() > 0 || drawSelectionBuffer;
+    bool hasGeometryFeatureQuery = drawSelectionBuffer;
+    bool hasMarkerQuery = drawSelectionBuffer;
+
+    for (const auto& selectionQuery : impl->selectionQueries) {
+        if (selectionQuery.type() == QueryType::feature) { hasGeometryFeatureQuery = true; }
+        if (selectionQuery.type() == QueryType::marker) { hasMarkerQuery = true; }
+    }
 
     // Render feature selection pass to offscreen framebuffer
-    if (selectionQuery || markerQuery || labelQuery) {
+    if (hasGeometryFeatureQuery || hasMarkerQuery) {
 
         impl->selectionBuffer->applyAsRenderTarget(impl->renderState);
 
@@ -458,118 +446,25 @@ void Map::render() {
         for (const auto& style : impl->scene->styles()) {
             style->onBeginDrawSelectionFrame(impl->renderState, impl->view, *(impl->scene));
 
-            if (selectionQuery) {
+            if (hasGeometryFeatureQuery) {
                 for (const auto& tile : impl->tileManager.getVisibleTiles()) {
                     style->drawSelectionFrame(impl->renderState, *tile);
                 }
             }
 
-            if (markerQuery) {
+            if (hasMarkerQuery) {
                 for (const auto& marker : impl->markerManager.markers()) {
                     style->drawSelectionFrame(impl->renderState, *marker);
                 }
             }
         }
 
-        for (const auto& markerSelectionQuery : impl->markerSelectionQueries) {
-            float x = markerSelectionQuery.position.x / impl->view.getWidth();
-            float y = (1.f - (markerSelectionQuery.position.y / impl->view.getHeight()));
-
-            // TODO: read with a scalable thumb size
-            GLuint color = impl->selectionBuffer->readAt(x, y);
-
-            if (color == 0) {
-                markerSelectionQuery.onMarkerSelection(nullptr);
-                continue;
-            }
-
-            auto marker = impl->markerManager.getMarkerOrNullBySelectionColor(color);
-
-            if (!marker) {
-                markerSelectionQuery.onMarkerSelection(nullptr);
-                continue;
-            }
-
-            auto position = std::array<float, 2>{{markerSelectionQuery.position.x,
-                                                  markerSelectionQuery.position.y}};
-
-            MarkerPickResult markerResult(marker->id(), position);
-            markerSelectionQuery.onMarkerSelection(&markerResult);
-        }
-
-        impl->markerSelectionQueries.clear();
-
         // Resolve feature selection queries
-        for (const auto& selectionQuery : impl->featureSelectionQueries) {
-
-            float x = selectionQuery.position.x / impl->view.getWidth();
-            float y = (1.f - (selectionQuery.position.y / impl->view.getHeight()));
-
-            // TODO: read with a scalable thumb size
-            GLuint color = impl->selectionBuffer->readAt(x, y);
-
-            auto position = std::array<float, 2>{{selectionQuery.position.x,
-                                                  selectionQuery.position.y}};
-            bool found = false;
-            if (color != 0) {
-                for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                    if (auto props = tile->getSelectionFeature(color)) {
-
-                        FeaturePickResult queryResult(props, position);
-                        selectionQuery.onFeatureSelection(&queryResult);
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            if (!found) {
-                selectionQuery.onFeatureSelection(nullptr);
-                continue;
-            }
+        for (const auto& selectionQuery : impl->selectionQueries) {
+            selectionQuery.process(impl->view, *impl->selectionBuffer, impl->markerManager, impl->tileManager, impl->labels);
         }
 
-        impl->featureSelectionQueries.clear();
-
-        // Resolve label selection queries
-        for (const auto& labelQuery : impl->labelSelectionQueries) {
-
-            float x = labelQuery.position.x / impl->view.getWidth();
-            float y = (1.f - (labelQuery.position.y / impl->view.getHeight()));
-
-            // TODO: read with a scalable thumb size and iterate over the read colors
-            GLuint color = impl->selectionBuffer->readAt(x, y);
-
-            // Retrieve the label for this selection color
-            if (color == 0) {
-                labelQuery.onLabelSelection(nullptr);
-                continue;
-            }
-            auto label = impl->labels.getLabel(color);
-            if (!label.first) {
-                labelQuery.onLabelSelection(nullptr);
-                continue;
-            }
-            auto props = label.second->getSelectionFeature(label.first->options().featureId);
-            if (!props) {
-                labelQuery.onLabelSelection(nullptr);
-                continue;
-            }
-
-            LngLat coordinate = label.first->coordinates(*label.second,
-                                                         impl->view.getMapProjection());
-
-            auto position = std::array<float, 2>{{labelQuery.position.x,
-                                                  labelQuery.position.y}};
-
-            LabelPickResult queryResult(label.first->renderType(), coordinate,
-                                        FeaturePickResult(props, position));
-
-            // TODO: sort touch labels by distance
-
-            labelQuery.onLabelSelection(&queryResult);
-        }
-
-        impl->labelSelectionQueries.clear();
+        impl->selectionQueries.clear();
     }
 
     // Setup default framebuffer for a new frame
