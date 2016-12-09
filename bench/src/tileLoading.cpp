@@ -93,17 +93,17 @@ public:
 
     std::shared_ptr<Tile> result;
 
-    void SetUp(const ::benchmark::State& state) override {
+    void SetUp(benchmark::State& state) override {
         LOG("SETUP");
         ctx.loadScene(sceneFile);
         ctx.loadTile("tile.mvt");
         ctx.parseTile();
         LOG("Ready");
     }
-    void TearDown(const ::benchmark::State& state) override {
+    void TearDown(benchmark::State& state) override {
         result.reset();
 
-        // ctx.scene.reset();
+        ctx.scene.reset();
         // ctx.tileData.reset();
         // ctx.tileBuilder.reset();
 
