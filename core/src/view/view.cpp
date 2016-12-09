@@ -276,6 +276,11 @@ double View::screenToGroundPlane(float& _screenX, float& _screenY) {
     return t;
 }
 
+
+glm::vec2 View::normalizedWindowCoordinates(float _x, float _y) {
+    return { _x / m_vpWidth, 1.0 - _y / m_vpHeight };
+}
+
 double View::screenToGroundPlane(double& _screenX, double& _screenY) {
 
     if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
