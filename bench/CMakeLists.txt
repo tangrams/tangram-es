@@ -18,6 +18,7 @@ foreach(_src_file_path ${BENCH_SOURCES})
     ${CORE_LIBRARY}
     benchmark
     platform_mock
+    -lrt
     -lpthread)
 
   set_target_properties(${EXECUTABLE_NAME}
