@@ -2,6 +2,7 @@
 
 #include "yaml-cpp/yaml.h"
 #include "scene/sceneLoader.h"
+#include "scene/importer.h"
 #include "scene/scene.h"
 #include "style/material.h"
 #include "style/style.h"
@@ -10,6 +11,9 @@
 #include "scene/pointLight.h"
 
 #include "platform.h"
+
+#include <unistd.h>
+#include <stdio.h>
 
 using namespace Tangram;
 using YAML::Node;
@@ -69,4 +73,25 @@ TEST_CASE("Test light parameter parsing") {
     REQUIRE(pos.units[0] == Unit::pixel);
     REQUIRE(pos.units[1] == Unit::meter);
     REQUIRE(pos.units[2] == Unit::meter);
+}
+
+TEST_CASE("Test default scene yaml load") {
+    auto sceneString = stringFromFile("scene.yaml");
+    YAML::Load(sceneString);
+}
+
+TEST_CASE("Test default scene import") {
+    std::string sceneFile;
+
+    char path[FILENAME_MAX];
+    if (auto workingDir = getcwd(path, sizeof(path)))
+        sceneFile += workingDir;
+
+    sceneFile += "/scene.yaml";
+
+    std::shared_ptr<Scene> scene = std::make_shared<Scene>(sceneFile);
+
+    Importer sceneImporter;
+    scene->config() = sceneImporter.applySceneImports(scene->path(), scene->resourceRoot());
+
 }

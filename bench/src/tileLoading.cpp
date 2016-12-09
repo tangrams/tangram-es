@@ -102,9 +102,10 @@ public:
     }
     void TearDown() override {
         result.reset();
-        scene.reset();
-        tileData.reset();
-        tileBuilder.reset();
+
+        ctx.scene.reset();
+        ctx.tileData.reset();
+        ctx.tileBuilder.reset();
 
         LOG("TEARDOWN");
     }
