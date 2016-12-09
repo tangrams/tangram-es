@@ -25,7 +25,6 @@ using namespace Tangram;
 struct TestContext {
 
     MercatorProjection s_projection;
-    const char* sceneFile = "scene.yaml";
 
     std::shared_ptr<Scene> scene;
     StyleContext styleContext;
@@ -87,23 +86,23 @@ struct TestContext {
 
 class TileLoadingFixture : public benchmark::Fixture {
 public:
-    TestContext ctx;
-    MercatorProjection s_projection;
     const char* sceneFile = "scene.yaml";
 
-    std::shared_ptr<Tile> result;
+    std::unique_ptr<TestContext> ctx;
 
     void SetUp(benchmark::State& state) override {
+        if (!ctx) {
+            ctx = std::make_unique<TestContext>();
+        }
         LOG("SETUP");
-        ctx.loadScene(sceneFile);
-        ctx.loadTile("tile.mvt");
-        ctx.parseTile();
+        ctx->loadScene(sceneFile);
+        ctx->loadTile("tile.mvt");
+        ctx->parseTile();
         LOG("Ready");
     }
     void TearDown(benchmark::State& state) override {
-        result.reset();
-
-        ctx.scene.reset();
+        //result.reset();
+        // ctx.scene.reset();
         // ctx.tileData.reset();
         // ctx.tileBuilder.reset();
 
@@ -114,10 +113,11 @@ public:
 BENCHMARK_DEFINE_F(TileLoadingFixture, BuildTest)(benchmark::State& st) {
 
     while (st.KeepRunning()) {
-        ctx.parseTile();
-        result = ctx.tileBuilder->build({0,0,10,10,0}, *ctx.tileData, *ctx.source);
+        //ctx->parseTile();
 
-        LOG("ok %d / bytes - %d", bool(result), result->getMemoryUsage());
+        ctx->tileBuilder->build({0,0,10,10,0}, *ctx->tileData, *ctx->source);
+
+        //LOG("ok %d / bytes - %d", bool(result), result->getMemoryUsage());
     }
 }
 
