@@ -72,6 +72,11 @@ bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const un
     texture->setData(bitmapData, size);
 
     marker->setTexture(std::move(texture));
+
+    // The geometry is unchanged, but the mesh must be rebuilt because DynamicQuadMesh contains
+    // texture batches as part of its data.
+    buildGeometry(*marker, m_zoom);
+
     return true;
 }
 
