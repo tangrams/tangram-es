@@ -1,30 +1,34 @@
-language: android
-
 branches:
     only:
         - master
 
 matrix:
     include:
-        - os: osx
-          osx_image: xcode7.3
-          env: PLATFORM=osx
-          compiler: clang
+        # - os: osx
+        #   osx_image: xcode7.3
+        #   language: cpp
+        #   env: PLATFORM=osx
+        #   compiler: clang
         - os: linux
-          env: PLATFORM=linux CXX=g++-4.9 CC=gcc-4.9
+          dist: trusty
+          sudo: false
+          language: cpp
+          env: PLATFORM=linux
           addons:
             apt:
-              sources: [ 'kubuntu-backports', 'ubuntu-toolchain-r-test', 'george-edison55-precise-backports' ]
-              packages: [ 'cmake', 'gcc-4.9', 'g++-4.9', 'xorg-dev', 'libglu1-mesa-dev' ]
-        - os: osx
-          osx_image: xcode7.3
-          env: PLATFORM=ios
-          compiler: clang
+              packages: [ 'xorg-dev', 'libglu1-mesa-dev' ]
+        # - os: osx
+        #   osx_image: xcode7.3
+        #   language: cpp
+        #   env: PLATFORM=ios
+        #   compiler: clang
         - os: linux
+          dist: trusty
+          sudo: false
+          language: android
           env: PLATFORM=android
           addons:
             apt:
-              sources: [ 'kubuntu-backports', 'george-edison55-precise-backports' ]
               packages: [ 'cmake', 'lib32z1-dev', 'lib32stdc++6', 's3cmd' ]
           android:
             components: [ 'tools', 'build-tools-24.0.2', 'extra-android-m2repository', 'android-24' ]
@@ -49,5 +53,3 @@ script:
 after_success:
     - source ./scripts/travis/script_deploy_android_snapshot.sh
     - source ./scripts/travis/script_deploy_android_demo.sh
-
-sudo: false
