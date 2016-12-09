@@ -444,12 +444,12 @@ void Map::render() {
     // Run render-thread tasks
     impl->renderState.jobQueue.runJobs();
 
-    bool selectionQuery = impl->featureSelectionQueries.size() > 0;
-    bool markerQuery = impl->markerSelectionQueries.size() > 0;
-    bool labelQuery = impl->labelSelectionQueries.size() > 0;
+    bool selectionQuery = impl->featureSelectionQueries.size() > 0 || drawSelectionBuffer;
+    bool markerQuery = impl->markerSelectionQueries.size() > 0 || drawSelectionBuffer;
+    bool labelQuery = impl->labelSelectionQueries.size() > 0 || drawSelectionBuffer;
 
     // Render feature selection pass to offscreen framebuffer
-    if (selectionQuery || markerQuery || labelQuery || drawSelectionBuffer) {
+    if (selectionQuery || markerQuery || labelQuery) {
 
         impl->selectionBuffer->applyAsRenderTarget(impl->renderState);
 
@@ -469,8 +469,6 @@ void Map::render() {
                     style->drawSelectionFrame(impl->renderState, *marker);
                 }
             }
-
-            style->onEndDrawFrame();
         }
 
         for (const auto& markerSelectionQuery : impl->markerSelectionQueries) {
