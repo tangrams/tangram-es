@@ -102,6 +102,10 @@ public:
     }
     void TearDown() override {
         result.reset();
+        scene.reset();
+        tileData.reset();
+        tileBuilder.reset();
+
         LOG("TEARDOWN");
     }
 };
