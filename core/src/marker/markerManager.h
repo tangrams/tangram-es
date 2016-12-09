@@ -65,7 +65,7 @@ public:
 
     const std::vector<std::unique_ptr<Marker>>& markers() const;
 
-    const Marker* getMarkerOrNullBySelectionColor(uint32_t selectionColor);
+    const Marker* getMarkerOrNullBySelectionColor(uint32_t selectionColor) const;
 
 private:
 

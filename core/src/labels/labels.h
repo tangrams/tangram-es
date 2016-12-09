@@ -47,7 +47,7 @@ public:
 
     bool needUpdate() const { return m_needUpdate; }
 
-    std::pair<Label*, Tile*> getLabel(uint32_t _selectionColor);
+    std::pair<Label*, Tile*> getLabel(uint32_t _selectionColor) const;
 
 protected:
 
