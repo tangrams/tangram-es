@@ -14,7 +14,7 @@ if [[ ${PLATFORM} == "osx" || ${PLATFORM} == "linux" ]]; then
     for file in bench/*.out
         do
             echo "Running ${file}"
-            valgrind --leak-check=full $file
+            valgrind -v --track-origins=yes --leak-check=full $file
         done
     popd
 fi
