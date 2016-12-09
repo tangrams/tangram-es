@@ -14,7 +14,7 @@ void init_main_window(bool recreate);
 std::string sceneFile = "scene.yaml";
 
 std::string markerStyling = "{ style: 'points', interactive: true, color: 'white', size: [25px, 25px], order: 100, collide: false }";
-std::string polylineStyle = "{ style: lines, color: red, width: 20px, order: 5000 }";
+std::string polylineStyle = "{ style: lines, interactive: true, color: red, width: 20px, order: 5000 }";
 
 const unsigned int bitmap[] = { 0xffffffff, 0xff000000, 0xff000000, 0xffffffff };
 
