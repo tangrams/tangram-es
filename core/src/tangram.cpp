@@ -463,7 +463,8 @@ void Map::render() {
 
         // Resolve feature selection queries
         for (const auto& selectionQuery : impl->selectionQueries) {
-            selectionQuery.process(impl->view, *impl->selectionBuffer, impl->markerManager, impl->tileManager, impl->labels);
+            selectionQuery.process(impl->view, *impl->selectionBuffer, impl->markerManager,
+                                   impl->tileManager, impl->labels);
         }
 
         impl->selectionQueries.clear();
