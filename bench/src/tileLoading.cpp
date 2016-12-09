@@ -91,9 +91,8 @@ public:
     std::unique_ptr<TestContext> ctx;
 
     void SetUp(benchmark::State& state) override {
-        if (!ctx) {
-            ctx = std::make_unique<TestContext>();
-        }
+        ctx = std::make_unique<TestContext>();
+
         LOG("SETUP");
         ctx->loadScene(sceneFile);
         ctx->loadTile("tile.mvt");
@@ -101,6 +100,8 @@ public:
         LOG("Ready");
     }
     void TearDown(benchmark::State& state) override {
+        ctx.reset();
+
         //result.reset();
         // ctx.scene.reset();
         // ctx.tileData.reset();
