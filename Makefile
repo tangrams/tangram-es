@@ -207,7 +207,7 @@ android: android-demo
 
 android-sdk:
 	@cd android/ && \
-	./gradlew tangram:assembleDebug
+	./gradlew tangram:assembleFullRelease
 
 android-demo:
 	@cd android/ && \
