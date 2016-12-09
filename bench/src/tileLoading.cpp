@@ -103,9 +103,9 @@ public:
     void TearDown(const ::benchmark::State& state) override {
         result.reset();
 
-        ctx.scene.reset();
-        ctx.tileData.reset();
-        ctx.tileBuilder.reset();
+        // ctx.scene.reset();
+        // ctx.tileData.reset();
+        // ctx.tileBuilder.reset();
 
         LOG("TEARDOWN");
     }
