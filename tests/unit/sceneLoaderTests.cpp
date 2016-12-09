@@ -80,6 +80,8 @@ TEST_CASE("Test default scene yaml load") {
     YAML::Load(sceneString);
 }
 
+std::shared_ptr<Scene> s_scene;
+
 TEST_CASE("Test default scene import") {
     std::string sceneFile;
 
@@ -93,5 +95,7 @@ TEST_CASE("Test default scene import") {
 
     Importer sceneImporter;
     scene->config() = sceneImporter.applySceneImports(scene->path(), scene->resourceRoot());
+
+    s_scene = scene;
 
 }
