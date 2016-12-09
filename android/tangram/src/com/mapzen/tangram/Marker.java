@@ -178,8 +178,8 @@ public class Marker {
         int[] abgr = new int[width * height];
         int row, col;
         for (int i = 0; i < argb.length; i++) {
-            row = i % width;
-            col = i / width;
+            col = i % width;
+            row = i / width;
             int pix = argb[i];
             int pb = (pix >> 16) & 0xff;
             int pr = (pix << 16) & 0x00ff0000;
