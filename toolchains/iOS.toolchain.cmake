@@ -114,15 +114,11 @@ else (${IOS_PLATFORM} STREQUAL "OS")
 endif (${IOS_PLATFORM} STREQUAL "OS")
 
 # Setup iOS developer location unless specified manually with CMAKE_IOS_DEVELOPER_ROOT
-# Note Xcode 4.3 changed the installation location, choose the most recent one available
-set (XCODE_POST_43_ROOT "/Applications/Xcode.app/Contents/Developer/Platforms/${IOS_PLATFORM_LOCATION}/Developer")
-set (XCODE_PRE_43_ROOT "/Developer/Platforms/${IOS_PLATFORM_LOCATION}/Developer")
 if (NOT DEFINED CMAKE_IOS_DEVELOPER_ROOT)
-	if (EXISTS ${XCODE_POST_43_ROOT})
-		set (CMAKE_IOS_DEVELOPER_ROOT ${XCODE_POST_43_ROOT})
-	elseif(EXISTS ${XCODE_PRE_43_ROOT})
-		set (CMAKE_IOS_DEVELOPER_ROOT ${XCODE_PRE_43_ROOT})
-	endif (EXISTS ${XCODE_POST_43_ROOT})
+	execute_process(COMMAND xcrun --sdk iphonesimulator --show-sdk-platform-path OUTPUT_VARIABLE XCRUN_OUTPUT OUTPUT_STRIP_TRAILING_WHITESPACE)
+	if (DEFINED XCRUN_OUTPUT)
+		set (CMAKE_IOS_DEVELOPER_ROOT "${XCRUN_OUTPUT}/Developer")
+	endif (DEFINED XCRUN_OUTPUT)
 endif (NOT DEFINED CMAKE_IOS_DEVELOPER_ROOT)
 set (CMAKE_IOS_DEVELOPER_ROOT ${CMAKE_IOS_DEVELOPER_ROOT} CACHE PATH "Location of iOS Platform")
 
