@@ -20,10 +20,15 @@ endif()
 
 ## yaml-cpp ##
 ##############
-set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "Enable testing and parse tools")
-set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "Enable contrib stuff in library")
-add_subdirectory("yaml-cpp")
+set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "")
+set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "")
+set(YAML_CPP_INSTALL OFF CACHE BOOL "")
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp)
 
+target_include_directories(yaml-cpp
+  PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp/include
+)
 
 ## css-color-parser-cpp ##
 ##########################
