@@ -100,7 +100,7 @@ void Importer::processScene(const Url& scenePath, const std::string &sceneString
 
 bool nodeIsPotentialUrl(const Node& node) {
     // Check that the node is scalar and not null.
-    if (node.IsNull() || !node.IsScalar()) { return false; }
+    if (!node || !node.IsScalar()) { return false; }
 
     // Check that the node does not contain a 'global' reference.
     if (node.Scalar().compare(0, 7, "global.") == 0) { return false; }
