@@ -1,9 +1,9 @@
 package com.mapzen.tangram;
 
-import com.squareup.okhttp.Cache;
-import com.squareup.okhttp.Callback;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
+import com.squareup.okhttp3.Cache;
+import com.squareup.okhttp3.Callback;
+import com.squareup.okhttp3.OkHttpClient;
+import com.squareup.okhttp3.Request;
 
 import java.io.File;
 import java.io.IOException;

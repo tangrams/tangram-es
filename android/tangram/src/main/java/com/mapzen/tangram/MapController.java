@@ -8,9 +8,9 @@ import android.opengl.GLSurfaceView.Renderer;
 import android.util.DisplayMetrics;
 
 import com.mapzen.tangram.TouchInput.Gestures;
-import com.squareup.okhttp.Callback;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
+import com.squareup.okhttp3.Callback;
+import com.squareup.okhttp3.Request;
+import com.squareup.okhttp3.Response;
 
 import java.io.IOException;
 import java.util.ArrayList;
