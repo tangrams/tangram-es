@@ -687,6 +687,10 @@ public class MapController implements Renderer {
         labelPickListener = listener;
     }
 
+    public void setMarkerPickListener(MarkerPickListener listener) {
+        markerPickListener = listener;
+    }
+
     /**
      * Query the map for labeled features at the given screen coordinates; results will be returned
      * in a callback to the object set by {@link #setLabelPickListener(LabelPickListener)}
@@ -697,6 +701,13 @@ public class MapController implements Renderer {
         if (labelPickListener != null) {
             checkPointer(mapPointer);
             nativePickLabel(mapPointer, posX, posY, labelPickListener);
+        }
+    }
+
+    public void pickMarker(float posX, float posY) {
+        if (markerPickListener != null) {
+            checkPointer(mapPointer);
+            nativePickMarker(mapPointer, posX, posY, markerPickListener);
         }
     }
 
@@ -952,6 +963,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeApplySceneUpdates(long mapPtr);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
     private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
+    private synchronized native void nativePickMarker(long mapPtr, float posX, float posY, MarkerPickListener listener);
     private synchronized native long nativeMarkerAdd(long mapPtr);
     private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
     private synchronized native boolean nativeMarkerSetStyling(long mapPtr, long markerID, String styling);
@@ -992,6 +1004,7 @@ public class MapController implements Renderer {
     private HttpHandler httpHandler;
     private FeaturePickListener featurePickListener;
     private LabelPickListener labelPickListener;
+    private MarkerPickListener markerPickListener;
     private ViewCompleteListener viewCompleteListener;
     private FrameCaptureCallback frameCaptureCallback;
     private boolean frameCaptureAwaitCompleteView;
