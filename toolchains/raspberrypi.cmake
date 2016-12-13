@@ -20,6 +20,11 @@ find_sources_and_include_directories(
   ${PROJECT_SOURCE_DIR}/linux/src/urlWorker.*
   ${PROJECT_SOURCE_DIR}/linux/src/urlWorker.*)
 
+# add sources and include headers
+find_sources_and_include_directories(
+  ${PROJECT_SOURCE_DIR}/core/common/platform_gl.h
+  ${PROJECT_SOURCE_DIR}/core/common/platform_gl.cpp)
+
 # include headers for rpi-installed libraries
 include_directories(/opt/vc/include/)
 include_directories(/opt/vc/include/interface/vcos/pthreads)
