@@ -56,6 +56,9 @@ static jclass hashmapClass = nullptr;
 static jmethodID hashmapInitMID = 0;
 static jmethodID hashmapPutMID = 0;
 
+static jclass markerClass = nullptr;
+static jmethodID markerByIDMID = 0;
+
 static AAssetManager* assetManager = nullptr;
 
 static bool s_isContinuousRendering = false;
@@ -103,6 +106,9 @@ void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager
     hashmapClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("java/util/HashMap"));
     hashmapInitMID = jniEnv->GetMethodID(hashmapClass, "<init>", "()V");
     hashmapPutMID = jniEnv->GetMethodID(hashmapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+
+    markerClass = jniEnv->FindClass("com/mapzen/tangram/Marker");
+    markerByIDMID = jniEnv->GetMethodID(tangramClass, "markerById", "(J)Lcom/mapzen/tangram/Marker;");
 
     assetManager = AAssetManager_fromJava(jniEnv, _assetManager);
 
@@ -383,6 +389,10 @@ void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPi
 
     jniEnv->CallVoidMethod(listener, onLabelPickMID, labelPickResultObject, position[0], position[1]);
     jniEnv->DeleteGlobalRef(listener);
+}
+
+void markerPickCallback(jobject listener, const Tangram::MarkerPickResult* markerPickResult) {
+
 }
 
 void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* featurePickResult) {

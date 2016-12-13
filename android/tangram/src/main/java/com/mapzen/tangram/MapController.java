@@ -88,6 +88,10 @@ public class MapController implements Renderer {
         void onLabelPick(LabelPickResult labelPickResult, float positionX, float positionY);
     }
 
+    public interface MarkerPickListener {
+        void onMarkerPick(Marker marker, float positionX, float positionY);
+    }
+
     public interface ViewCompleteListener {
         /**
          * Called on the render-thread at the end of whenever the view is fully loaded and
@@ -702,6 +706,10 @@ public class MapController implements Renderer {
     public Marker addMarker() {
         checkPointer(mapPointer);
         long markerId = nativeMarkerAdd(mapPointer);
+
+        Marker marker = new Marker(mapView.getContext(), markerId, this);
+        markers.put(markerId, marker);
+
         return new Marker(mapView.getContext(), markerId, this);
     }
 
@@ -713,6 +721,7 @@ public class MapController implements Renderer {
     public boolean removeMarker(Marker marker) {
         checkPointer(mapPointer);
         checkId(marker.getMarkerId());
+        markers.remove(marker.getMarkerId());
         return nativeMarkerRemove(mapPointer, marker.getMarkerId());
     }
 
@@ -894,6 +903,10 @@ public class MapController implements Renderer {
         return nativeMarkerSetDrawOrder(mapPointer, markerId, drawOrder);
     }
 
+    Marker markerById(long markerId) {
+        return markers.get(markerId);
+    }
+
     // Native methods
     // ==============
 
@@ -981,6 +994,7 @@ public class MapController implements Renderer {
     private FrameCaptureCallback frameCaptureCallback;
     private boolean frameCaptureAwaitCompleteView;
     private Map<String, MapData> clientDataSources = new HashMap<>();
+    private Map<Long, Marker> markers = new HashMap<>();
 
     // GLSurfaceView.Renderer methods
     // ==============================
