@@ -15,6 +15,7 @@
 #import "TGGeoPoint.h"
 #import "TGGeoPolygon.h"
 #import "TGGeoPolyline.h"
+#import "TGSceneUpdate.h"
 #import "TGHttpHandler.h"
 
 typedef NS_ENUM(NSInteger, TGCameraType) {
@@ -59,7 +60,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol TGMapViewDelegate <NSObject>
 @optional
-- (void)mapView:(TGMapViewController*)mapView didLoadSceneAsync:(NSString*)scene;
+- (void)mapView:(TGMapViewController*)mapView didLoadSceneAsync:(nonnull NSString*)scene;
 - (void)mapView:(TGMapViewController*)mapView didSelectFeature:(NSDictionary*)feature atScreenPosition:(CGPoint)position;
 - (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView;
 @end
@@ -108,11 +109,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark Scene loading - updates interface
 
-- (void)loadSceneFile:(NSString*)path;
+- (void)loadSceneFile:(NSString *)path;
 
-- (void)loadSceneFileAsync:(NSString*)path;
+- (void)loadSceneFile:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
+
+- (void)loadSceneFileAsync:(NSString *)path;
+
+- (void)loadSceneFileAsync:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
 
 - (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value;
+
+- (void)queueSceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
 
 - (void)applySceneUpdates;
 

@@ -12,9 +12,9 @@ typedef void(^DownloadCompletionHandler)(NSData*, NSURLResponse*, NSError*);
 
 @interface TGHttpHandler : NSObject
 
-- (id)init;
+- (instancetype)init;
 
-- (id)initWithCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity;
+- (instancetype)initWithCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity;
 
 - (void)downloadRequestAsync:(NSString*)url completionHandler:(DownloadCompletionHandler)completionHandler;
 

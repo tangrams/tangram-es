@@ -19,7 +19,7 @@
 
 @implementation TGHttpHandler
 
-- (id)init
+- (instancetype)init
 {
     self = [super init];
 
@@ -31,7 +31,7 @@
     return self;
 }
 
-- (id)initWithCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity
+- (instancetype)initWithCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity
 {
     self = [super init];
 

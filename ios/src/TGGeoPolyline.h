@@ -11,7 +11,7 @@
 
 @interface TGGeoPolyline : NSObject
 
-- (id)initWithSize:(unsigned int)size;
+- (instancetype)initWithSize:(unsigned int)size;
 
 - (void)addPoint:(TGGeoPoint)latlon;
 

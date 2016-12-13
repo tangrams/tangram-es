@@ -45,6 +45,7 @@ set(SOURCES
     ${PROJECT_SOURCE_DIR}/ios/src/TGGeoPolyline.mm
     ${PROJECT_SOURCE_DIR}/ios/src/TGGeoPolygon.mm
     ${PROJECT_SOURCE_DIR}/ios/src/TGHttpHandler.mm
+    ${PROJECT_SOURCE_DIR}/ios/src/TGSceneUpdate.mm
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.mm)
 
 set(FRAMEWORK_HEADERS
@@ -52,6 +53,7 @@ set(FRAMEWORK_HEADERS
     ${PROJECT_SOURCE_DIR}/ios/src/TGGeoPolyline.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGGeoPolygon.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGGeoPoint.h
+    ${PROJECT_SOURCE_DIR}/ios/src/TGSceneUpdate.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGHttpHandler.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.h)
 
