@@ -13,6 +13,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -225,6 +226,26 @@ public class MapController implements Renderer {
         scenePath = path;
         checkPointer(mapPointer);
         nativeLoadScene(mapPointer, path);
+        requestRender();
+    }
+
+    /**
+     * Load a new scene file
+     * @param path Location of the YAML scene file within the application assets
+     * @param sceneUpdates List of path:value pairs to be applied when loading this scene
+     */
+    public void loadSceneFile(String path, ArrayList<SceneUpdate> sceneUpdates) {
+        String[] paths = new String[sceneUpdates.size()];
+        String[] values = new String[sceneUpdates.size()];
+        int index = 0;
+        for (SceneUpdate sceneUpdate : sceneUpdates) {
+            paths[index] = sceneUpdate.path;
+            values[index] = sceneUpdate.value;
+            index++;
+        }
+        scenePath = path;
+        checkPointer(mapPointer);
+        nativeLoadSceneWithUpdates(mapPointer, path, paths, values);
         requestRender();
     }
 
@@ -747,6 +768,18 @@ public class MapController implements Renderer {
     }
 
     /**
+     * Enqueue a scene component update with its corresponding YAML node value
+     * @param componentPath The YAML component path delimited by a '.' (example "scene.animated")
+     * @param value A YAML valid string (example "{ property: true }" or "true")
+     */
+    public void queueSceneUpdate(ArrayList<SceneUpdate> sceneUpdates) {
+        checkPointer(mapPointer);
+        for(SceneUpdate sceneUpdate : sceneUpdates) {
+            nativeQueueSceneUpdate(mapPointer, sceneUpdate.path, sceneUpdate.value);
+        }
+    }
+
+    /**
      * Apply updates queued by queueSceneUpdate; this empties the current queue of updates
      */
     public void applySceneUpdates() {
@@ -862,6 +895,7 @@ public class MapController implements Renderer {
     private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
     private synchronized native void nativeDispose(long mapPtr);
     private synchronized native void nativeLoadScene(long mapPtr, String path);
+    private synchronized native void nativeLoadSceneWithUpdates(long mapPtr, String path, String[] sceneUpdatePaths, String[] sceneUpdateValues);
     private synchronized native void nativeSetupGL(long mapPtr);
     private synchronized native void nativeResize(long mapPtr, int width, int height);
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);

@@ -118,6 +118,25 @@ extern "C" {
         jniEnv->ReleaseStringUTFChars(path, cPath);
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeLoadSceneWithUpdates(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring path, jobjectArray jsceneUpdatePaths, jobjectArray jsceneUpdateValues) {
+        assert(mapPtr > 0);
+        size_t n_sceneUpdates = (jsceneUpdatePaths == NULL)? 0 : jniEnv->GetArrayLength(jsceneUpdatePaths);
+
+        std::vector<Tangram::SceneUpdate> sceneUpdates;
+        for (size_t i = 0; i < n_sceneUpdates; i++) {
+            jstring path = (jstring) (jniEnv->GetObjectArrayElement(jsceneUpdatePaths, i));
+            jstring value = (jstring) (jniEnv->GetObjectArrayElement(jsceneUpdateValues, i));
+            sceneUpdates.emplace_back(stringFromJString(jniEnv, path), stringFromJString(jniEnv, value));
+            jniEnv->DeleteLocalRef(path);
+            jniEnv->DeleteLocalRef(value);
+        }
+
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        const char* cPath = jniEnv->GetStringUTFChars(path, NULL);
+        map->loadScene(resolveScenePath(cPath).c_str(), false, sceneUpdates);
+        jniEnv->ReleaseStringUTFChars(path, cPath);
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeResize(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jint width, jint height) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);

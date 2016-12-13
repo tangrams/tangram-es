@@ -8,6 +8,8 @@ import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
+import java.util.ArrayList;
+
 /**
  * {@code MapView} is a View for displaying a Tangram map.
  */
@@ -55,6 +57,20 @@ public class MapView extends FrameLayout {
     public void getMapAsync(@NonNull final OnMapReadyCallback callback,
                             @NonNull final String sceneFilePath) {
 
+        getMapAsync(callback, sceneFilePath, new ArrayList<SceneUpdate>());
+    }
+
+    /**
+     * Construct a {@code MapController} asynchronously; may only be called from the UI thread
+     * @param callback The object to receive the resulting MapController in a callback;
+     * the callback will be made on the UI thread
+     * @param sceneFilePath Location of the YAML scene file within the asset bundle
+     * @param sceneUpdates List of SceneUpdate to be applied when loading this scene
+     */
+    public void getMapAsync(@NonNull final OnMapReadyCallback callback,
+                            @NonNull final String sceneFilePath,
+                            final ArrayList<SceneUpdate> sceneUpdates) {
+
         disposeTask();
 
         final MapController mapInstance = getMapInstance();
@@ -65,7 +81,11 @@ public class MapView extends FrameLayout {
             @SuppressWarnings("WrongThread")
             protected Boolean doInBackground(Void... params) {
                 mapInstance.init();
-                mapInstance.loadSceneFile(sceneFilePath);
+                if (sceneUpdates.size() > 0) {
+                    mapInstance.loadSceneFile(sceneFilePath, sceneUpdates);
+                } else {
+                    mapInstance.loadSceneFile(sceneFilePath);
+                }
                 return true;
             }
 
