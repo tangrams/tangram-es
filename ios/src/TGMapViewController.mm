@@ -8,7 +8,7 @@
 //
 
 #import "TGMapViewController.h"
-#import "Helpers.h"
+#import "TGHelpers.h"
 
 #include "platform_ios.h"
 #include "data/propertyItem.h"
@@ -178,17 +178,17 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     screenPosition.y *= self.contentScaleFactor;
 
     self.map->pickFeatureAt(screenPosition.x, screenPosition.y, [screenPosition, self](const Tangram::FeaturePickResult* featureResult) {
-        NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
-
         CGPoint position = CGPointMake(0.0, 0.0);
 
         if (!featureResult) {
             if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
-                [self.mapViewDelegate mapView:self didSelectFeature:dictionary atScreenPosition:position];
+                [self.mapViewDelegate mapView:self didSelectFeature:nil atScreenPosition:position];
             }
 
             return;
         }
+
+        NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
 
         const auto& properties = featureResult->properties;
         position = CGPointMake(featureResult->position[0] / self.contentScaleFactor, featureResult->position[1] / self.contentScaleFactor);
@@ -201,6 +201,47 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
         if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
             [self.mapViewDelegate mapView:self didSelectFeature:dictionary atScreenPosition:position];
+        }
+    });
+}
+
+- (void)pickLabelAt:(CGPoint)screenPosition
+{
+    if (!self.map && !self.mapViewDelegate) { return; }
+
+    screenPosition.x *= self.contentScaleFactor;
+    screenPosition.y *= self.contentScaleFactor;
+
+    self.map->pickLabelAt(screenPosition.x, screenPosition.y, [screenPosition, self](const Tangram::LabelPickResult* labelPickResult) {
+        CGPoint position = CGPointMake(0.0, 0.0);
+
+        if (!labelPickResult) {
+            if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectLabel:atScreenPosition:)]) {
+                [self.mapViewDelegate mapView:self didSelectLabel:nil atScreenPosition:position];
+            }
+
+            return;
+        }
+
+        NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
+
+        const auto& touchItem = labelPickResult->touchItem;
+        const auto& properties = touchItem.properties;
+        position = CGPointMake(touchItem.position[0] / self.contentScaleFactor, touchItem.position[1] / self.contentScaleFactor);
+
+        for (const auto& item : properties->items()) {
+            NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
+            NSString* value = [NSString stringWithUTF8String:properties->asString(item.value).c_str()];
+            dictionary[key] = value;
+        }
+
+        TGGeoPoint coordinates = TGGeoPointMake(labelPickResult->coordinates.longitude, labelPickResult->coordinates.latitude);
+        TGLabelPickResult* tgLabelPickResult = [[TGLabelPickResult alloc] initWithCoordinates:coordinates
+                                                                                         type:(TGLabelType)labelPickResult->type
+                                                                                   properties:dictionary];
+
+        if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectLabel:atScreenPosition:)]) {
+            [self.mapViewDelegate mapView:self didSelectLabel:tgLabelPickResult atScreenPosition:position];
         }
     });
 }
@@ -235,22 +276,22 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     return self.map->markerSetStyling(identifier, [styling UTF8String]);
 }
 
-- (BOOL)markerSetPoint:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate
+- (BOOL)markerSetPoint:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinates
 {
     if (!self.map || !identifier) { return NO; }
 
-    Tangram::LngLat lngLat(coordinate.longitude, coordinate.latitude);
+    Tangram::LngLat lngLat(coordinates.longitude, coordinates.latitude);
 
     return self.map->markerSetPoint(identifier, lngLat);
 }
 
-- (BOOL)markerSetPointEased:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate duration:(float)duration easeType:(TGEaseType)ease
+- (BOOL)markerSetPointEased:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinates duration:(float)duration easeType:(TGEaseType)ease
 {
     if (!self.map || !identifier) { return NO; }
 
-    Tangram::LngLat lngLat(coordinate.longitude, coordinate.latitude);
+    Tangram::LngLat lngLat(coordinates.longitude, coordinates.latitude);
 
-    return self.map->markerSetPointEased(identifier, lngLat, duration, [Helpers convertEaseTypeFrom:ease]);
+    return self.map->markerSetPointEased(identifier, lngLat, duration, [TGHelpers convertEaseTypeFrom:ease]);
 }
 
 - (BOOL)markerSetPolyline:(TGMapMarkerId)identifier polyline:(TGGeoPolyline *)polyline
@@ -311,7 +352,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return; }
 
-    Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
+    Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
     self.map->setPositionEased(position.longitude, position.latitude, duration, ease);
 }
 
@@ -344,7 +385,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return; }
 
-    Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
+    Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
     self.map->setZoomEased(zoomLevel, duration, ease);
 }
 
@@ -364,7 +405,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return; }
 
-    Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
+    Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
     self.map->setRotationEased(radians, seconds, ease);
 }
 
@@ -405,7 +446,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return; }
 
-    Tangram::EaseType ease = [Helpers convertEaseTypeFrom:easeType];
+    Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
     self.map->setTiltEased(radians, seconds, ease);
 }
 

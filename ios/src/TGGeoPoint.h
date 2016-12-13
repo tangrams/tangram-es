@@ -15,7 +15,7 @@ struct TGGeoPoint {
 
 typedef struct TGGeoPoint TGGeoPoint;
 
-static inline TGGeoPoint TGGeoPointMake(double lat, double lon)
+static inline TGGeoPoint TGGeoPointMake(double lon, double lat)
 {
     TGGeoPoint p;
     p.latitude = lat;

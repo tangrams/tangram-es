@@ -30,13 +30,13 @@ struct FeaturePickResult {
 using FeaturePickCallback = std::function<void(const FeaturePickResult*)>;
 
 struct LabelPickResult {
-    LabelPickResult(LabelType _type, LngLat _coordinate,FeaturePickResult _touchItem)
+    LabelPickResult(LabelType _type, LngLat _coordinates, FeaturePickResult _touchItem)
         : type(_type),
-          coordinate(_coordinate),
+          coordinates(_coordinates),
           touchItem(_touchItem) {}
 
     LabelType type;
-    LngLat coordinate;
+    LngLat coordinates;
     FeaturePickResult touchItem;
 };
 

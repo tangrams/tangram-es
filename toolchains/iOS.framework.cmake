@@ -40,12 +40,13 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 set(SOURCES
     ${PROJECT_SOURCE_DIR}/core/common/platform_gl.cpp
     ${PROJECT_SOURCE_DIR}/ios/src/platform_ios.mm
-    ${PROJECT_SOURCE_DIR}/ios/src/Helpers.mm
+    ${PROJECT_SOURCE_DIR}/ios/src/TGHelpers.mm
     ${PROJECT_SOURCE_DIR}/ios/src/TGFontConverter.mm
     ${PROJECT_SOURCE_DIR}/ios/src/TGGeoPolyline.mm
     ${PROJECT_SOURCE_DIR}/ios/src/TGGeoPolygon.mm
     ${PROJECT_SOURCE_DIR}/ios/src/TGHttpHandler.mm
     ${PROJECT_SOURCE_DIR}/ios/src/TGSceneUpdate.mm
+    ${PROJECT_SOURCE_DIR}/ios/src/TGLabelPickResult.mm
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.mm)
 
 set(FRAMEWORK_HEADERS
@@ -55,11 +56,12 @@ set(FRAMEWORK_HEADERS
     ${PROJECT_SOURCE_DIR}/ios/src/TGGeoPoint.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGSceneUpdate.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGHttpHandler.h
+    ${PROJECT_SOURCE_DIR}/ios/src/TGLabelPickResult.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.h)
 
 set(HEADERS
     ${PROJECT_SOURCE_DIR}/ios/src/platform_ios.h
-    ${PROJECT_SOURCE_DIR}/ios/src/Helpers.h
+    ${PROJECT_SOURCE_DIR}/ios/src/TGHelpers.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGFontConverter.h
     ${FRAMEWORK_HEADERS})
 
