@@ -49,6 +49,7 @@ static jmethodID getFontFilePath = 0;
 static jmethodID getFontFallbackFilePath = 0;
 static jmethodID onFeaturePickMID = 0;
 static jmethodID onLabelPickMID = 0;
+static jmethodID onMarkerPickMID = 0;
 static jmethodID labelPickResultInitMID = 0;
 
 static jclass labelPickResultClass = nullptr;
@@ -109,6 +110,9 @@ void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager
 
     markerClass = jniEnv->FindClass("com/mapzen/tangram/Marker");
     markerByIDMID = jniEnv->GetMethodID(tangramClass, "markerById", "(J)Lcom/mapzen/tangram/Marker;");
+
+    jclass markerPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$MarkerPickListener");
+    onMarkerPickMID = jniEnv->GetMethodID(markerPickListenerClass, "onMarkerPick", "(Lcom/mapzen/tangram/Marker;FF)V");
 
     assetManager = AAssetManager_fromJava(jniEnv, _assetManager);
 
@@ -392,6 +396,21 @@ void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPi
 }
 
 void markerPickCallback(jobject listener, const Tangram::MarkerPickResult* markerPickResult) {
+
+    JniThreadBinding jniEnv(jvm);
+    float position[2] = {0.0, 0.0};
+
+    jobject marker = nullptr;
+
+    if (markerPickResult) {
+        position[0] = markerPickResult->position[0];
+        position[1] = markerPickResult->position[1];
+
+        marker = jniEnv->CallObjectMethod(tangramInstance, markerByIDMID, static_cast<jlong>(markerPickResult->id));
+    }
+
+    jniEnv->CallVoidMethod(listener, onMarkerPickMID, marker, position[0], position[1]);
+    jniEnv->DeleteGlobalRef(listener);
 
 }
 
