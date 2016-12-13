@@ -9,22 +9,7 @@ checkout:
     - git submodule sync
     - git submodule update --init --recursive
 test:
-  pre:
-    - set -o pipefail &&
-      mkdir build &&
-      cd build &&
-      cmake ..
-      -DPLATFORM_TARGET=ios.framework
-      -DIOS_PLATFORM=SIMULATOR
-      -DCMAKE_TOOLCHAIN_FILE=toolchains/iOS.toolchain.cmake
-      -DBUILD_IOS_FRAMEWORK=TRUE
-      -G Xcode
   override:
-    - set -o pipefail &&
-      xcodebuild
-      -project build/tangram.xcodeproj
-      -target TangramMap
-      -configuration Release |
-      xcpretty
+    - make ios
   post:
-    - mv build/lib/Release/TangramMap.framework ${CIRCLE_ARTIFACTS}/
+    - mv build/ios-framework-universal/Release/TangramMap.framework ${CIRCLE_ARTIFACTS}/

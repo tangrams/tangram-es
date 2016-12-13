@@ -115,7 +115,11 @@ endif (${IOS_PLATFORM} STREQUAL "OS")
 
 # Setup iOS developer location unless specified manually with CMAKE_IOS_DEVELOPER_ROOT
 if (NOT DEFINED CMAKE_IOS_DEVELOPER_ROOT)
-	execute_process(COMMAND xcrun --sdk iphonesimulator --show-sdk-platform-path OUTPUT_VARIABLE XCRUN_OUTPUT OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if (${IOS_PLATFORM} STREQUAL "SIMULATOR")
+        execute_process(COMMAND xcrun --sdk iphonesimulator --show-sdk-platform-path OUTPUT_VARIABLE XCRUN_OUTPUT OUTPUT_STRIP_TRAILING_WHITESPACE)
+    else()
+        execute_process(COMMAND xcrun --sdk iphoneos --show-sdk-platform-path OUTPUT_VARIABLE XCRUN_OUTPUT OUTPUT_STRIP_TRAILING_WHITESPACE)
+    endif()
 	if (DEFINED XCRUN_OUTPUT)
 		set (CMAKE_IOS_DEVELOPER_ROOT "${XCRUN_OUTPUT}/Developer")
 	endif (DEFINED XCRUN_OUTPUT)
