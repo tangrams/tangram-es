@@ -1,9 +1,10 @@
 package com.mapzen.tangram;
 
-import com.squareup.okhttp3.Cache;
-import com.squareup.okhttp3.Callback;
-import com.squareup.okhttp3.OkHttpClient;
-import com.squareup.okhttp3.Request;
+import okhttp3.Cache;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,16 +17,32 @@ import java.util.concurrent.TimeUnit;
 public class HttpHandler {
 
     private OkHttpClient okClient;
-    protected Request.Builder okRequestBuilder;
 
     /**
      * Construct an {@code HttpHandler} with default options.
      */
     public HttpHandler() {
-        okRequestBuilder = new Request.Builder();
-        okClient = new OkHttpClient();
-        okClient.setConnectTimeout(10, TimeUnit.SECONDS);
-        okClient.setReadTimeout(30, TimeUnit.SECONDS);
+        okClient = new OkHttpClient.Builder()
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build();
+    }
+
+    /**
+     * Construct an {@code HttpHandler} with cache.
+     * Cache map data in a directory with a specified size limit
+     * @param directory Directory in which map data will be cached
+     * @param maxSize Maximum size of data to cache, in bytes
+     */
+    public HttpHandler(File directory, long maxSize) {
+        Cache okTileCache = new Cache(directory, maxSize);
+        okClient = new OkHttpClient.Builder()
+                .cache(okTileCache)
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build();
     }
 
     /**
@@ -35,7 +52,10 @@ public class HttpHandler {
      * @return true if request was successfully started
      */
     public boolean onRequest(String url, Callback cb) {
-        Request request = okRequestBuilder.tag(url).url(url).build();
+        Request request = new Request.Builder()
+                .tag(url)
+                .url(url)
+                .build();
         okClient.newCall(request).enqueue(cb);
         return true;
     }
@@ -45,20 +65,22 @@ public class HttpHandler {
      * @param url URL of the request to be cancelled
      */
     public void onCancel(String url) {
-        okClient.cancel(url);
-    }
 
-    /**
-     * Cache map data in a directory with a specified size limit
-     * @param directory Directory in which map data will be cached
-     * @param maxSize Maximum size of data to cache, in bytes
-     * @return true if cache was successfully created
-     */
-    public boolean setCache(File directory, long maxSize) {
-        Cache okTileCache = new Cache(directory, maxSize);
-        okClient.setCache(okTileCache);
+        // check and cancel running call
+        for (Call runningCall : okClient.dispatcher().runningCalls()) {
+            if (runningCall.request().tag().equals(url)) {
+                runningCall.cancel();
+                return;
+            }
+        }
 
-        return true;
+        // check and cancel queued call
+        for (Call queuedCall : okClient.dispatcher().queuedCalls()) {
+            if (queuedCall.request().tag().equals(url)) {
+                queuedCall.cancel();
+                return;
+            }
+        }
     }
 
 }

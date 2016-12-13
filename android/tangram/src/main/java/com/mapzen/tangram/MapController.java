@@ -8,9 +8,10 @@ import android.opengl.GLSurfaceView.Renderer;
 import android.util.DisplayMetrics;
 
 import com.mapzen.tangram.TouchInput.Gestures;
-import com.squareup.okhttp3.Callback;
-import com.squareup.okhttp3.Request;
-import com.squareup.okhttp3.Response;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -1038,14 +1039,15 @@ public class MapController implements Renderer {
         if (httpHandler == null) {
             return false;
         }
+
         httpHandler.onRequest(url, new Callback() {
             @Override
-            public void onFailure(Request request, IOException e) {
+            public void onFailure(Call call, IOException e) {
                 nativeOnUrlFailure(callbackPtr);
             }
 
             @Override
-            public void onResponse(Response response) throws IOException {
+            public void onResponse(Call call, Response response) throws IOException {
                 if (!response.isSuccessful()) {
                     nativeOnUrlFailure(callbackPtr);
                     throw new IOException("Unexpected response code: " + response);
