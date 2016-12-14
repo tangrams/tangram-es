@@ -9,6 +9,7 @@ import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * {@code MapView} is a View for displaying a Tangram map.
@@ -69,7 +70,7 @@ public class MapView extends FrameLayout {
      */
     public void getMapAsync(@NonNull final OnMapReadyCallback callback,
                             @NonNull final String sceneFilePath,
-                            final ArrayList<SceneUpdate> sceneUpdates) {
+                            final List<SceneUpdate> sceneUpdates) {
 
         disposeTask();
 
@@ -81,11 +82,7 @@ public class MapView extends FrameLayout {
             @SuppressWarnings("WrongThread")
             protected Boolean doInBackground(Void... params) {
                 mapInstance.init();
-                if (sceneUpdates.size() > 0) {
-                    mapInstance.loadSceneFile(sceneFilePath, sceneUpdates);
-                } else {
-                    mapInstance.loadSceneFile(sceneFilePath);
-                }
+                mapInstance.loadSceneFile(sceneFilePath, sceneUpdates);
                 return true;
             }
 

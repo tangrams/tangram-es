@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -225,27 +226,32 @@ public class MapController implements Renderer {
     public void loadSceneFile(String path) {
         scenePath = path;
         checkPointer(mapPointer);
-        nativeLoadScene(mapPointer, path);
+        nativeLoadScene(mapPointer, path, new String[0], new String[0]);
         requestRender();
     }
 
     /**
      * Load a new scene file
      * @param path Location of the YAML scene file within the application assets
-     * @param sceneUpdates List of path:value pairs to be applied when loading this scene
+     * @param sceneUpdates List of {@code SceneUpdate}
      */
-    public void loadSceneFile(String path, ArrayList<SceneUpdate> sceneUpdates) {
-        String[] paths = new String[sceneUpdates.size()];
-        String[] values = new String[sceneUpdates.size()];
+    public void loadSceneFile(String path, List<SceneUpdate> sceneUpdates) {
+
+        if (sceneUpdates == null) {
+            // default to loading the scene file
+            loadSceneFile(path);
+        }
+        String[] componentPaths = new String[sceneUpdates.size()];
+        String[] componentValues = new String[sceneUpdates.size()];
         int index = 0;
         for (SceneUpdate sceneUpdate : sceneUpdates) {
-            paths[index] = sceneUpdate.path;
-            values[index] = sceneUpdate.value;
+            componentPaths[index] = sceneUpdate.path();
+            componentValues[index] = sceneUpdate.value();
             index++;
         }
         scenePath = path;
         checkPointer(mapPointer);
-        nativeLoadSceneWithUpdates(mapPointer, path, paths, values);
+        nativeLoadScene(mapPointer, path, componentPaths, componentValues);
         requestRender();
     }
 
@@ -759,24 +765,29 @@ public class MapController implements Renderer {
 
     /**
      * Enqueue a scene component update with its corresponding YAML node value
-     * @param componentPath The YAML component path delimited by a '.' (example "scene.animated")
-     * @param value A YAML valid string (example "{ property: true }" or "true")
+     * @param sceneUpdate A {@code SceneUpdate}
      */
-    public void queueSceneUpdate(String componentPath, String value) {
+    public void queueSceneUpdate(SceneUpdate sceneUpdate) {
         checkPointer(mapPointer);
-        nativeQueueSceneUpdate(mapPointer, componentPath, value);
+        nativeQueueSceneUpdate(mapPointer, sceneUpdate.path(), sceneUpdate.value());
     }
 
     /**
      * Enqueue a scene component update with its corresponding YAML node value
-     * @param componentPath The YAML component path delimited by a '.' (example "scene.animated")
-     * @param value A YAML valid string (example "{ property: true }" or "true")
+     * @param sceneUpdates List of {@code SceneUpdate}
      */
-    public void queueSceneUpdate(ArrayList<SceneUpdate> sceneUpdates) {
+    public void queueSceneUpdate(List<SceneUpdate> sceneUpdates) {
         checkPointer(mapPointer);
+        String[] componentPaths = new String[sceneUpdates.size()];
+        String[] componentValues = new String[sceneUpdates.size()];
+
+        int index = 0;
         for(SceneUpdate sceneUpdate : sceneUpdates) {
-            nativeQueueSceneUpdate(mapPointer, sceneUpdate.path, sceneUpdate.value);
+            componentPaths[index] = sceneUpdate.path();
+            componentValues[index] = sceneUpdate.value();
+            index++;
         }
+        nativeQueueSceneUpdates(mapPointer, componentPaths, componentValues);
     }
 
     /**
@@ -894,8 +905,7 @@ public class MapController implements Renderer {
 
     private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
     private synchronized native void nativeDispose(long mapPtr);
-    private synchronized native void nativeLoadScene(long mapPtr, String path);
-    private synchronized native void nativeLoadSceneWithUpdates(long mapPtr, String path, String[] sceneUpdatePaths, String[] sceneUpdateValues);
+    private synchronized native void nativeLoadScene(long mapPtr, String path, String[] componentPaths, String[] componentValues);
     private synchronized native void nativeSetupGL(long mapPtr);
     private synchronized native void nativeResize(long mapPtr, int width, int height);
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
@@ -924,7 +934,8 @@ public class MapController implements Renderer {
     private synchronized native void nativeHandlePinchGesture(long mapPtr, float posX, float posY, float scale, float velocity);
     private synchronized native void nativeHandleRotateGesture(long mapPtr, float posX, float posY, float rotation);
     private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
-    private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String value);
+    private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String componentValue);
+    private synchronized native void nativeQueueSceneUpdates(long mapPtr, String[] componentPaths, String[] componentValues);
     private synchronized native void nativeApplySceneUpdates(long mapPtr);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
     private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);

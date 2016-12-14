@@ -6,19 +6,20 @@ package com.mapzen.tangram;
 
 public class SceneUpdate {
 
-    public String path;
-    public String value;
+    private String componentPath;
+    private String componentValue;
 
-    public SceneUpdate() { this("", ""); }
-
+    /**
+     * Add a point feature to this collection.
+     * @param path Series of yaml keys separated by a ".". Represents the scene path to be updated
+     * @param value A yaml string which will update the value at the specified path
+     */
     public SceneUpdate(String path, String value) {
-        set(path, value);
+        this.componentPath = path;
+        this.componentValue = value;
     }
 
-    public SceneUpdate set(String p, String v) {
-        path = p;
-        value = v;
-        return this;
-    }
+    public String path() { return componentPath; }
+    public String value() { return componentValue; }
 
 }
