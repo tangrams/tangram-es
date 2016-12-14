@@ -174,6 +174,27 @@ TEST_CASE("Resolve a URL against a relative base URL", "[Url]") {
 
 }
 
+TEST_CASE("Resolve a relative URL against an empty base URL", "[Url]") {
+
+    Url base("");
+
+    CHECK(Url("g:h").resolved(base).string() == "g:h");
+    CHECK(Url("g").resolved(base).string() == "g");
+    CHECK(Url("./g").resolved(base).string() == "g");
+    CHECK(Url("g/").resolved(base).string() == "g/");
+    CHECK(Url("/g").resolved(base).string() == "/g");
+    CHECK(Url("?y").resolved(base).string() == "?y");
+    CHECK(Url("g?y").resolved(base).string() == "g?y");
+    CHECK(Url("#s").resolved(base).string() == "#s");
+    CHECK(Url("g#s").resolved(base).string() == "g#s");
+    CHECK(Url("g?y#s").resolved(base).string() == "g?y#s");
+    CHECK(Url(";x").resolved(base).string() == ";x");
+    CHECK(Url("g;x").resolved(base).string() == "g;x");
+    CHECK(Url("g;x?y#s").resolved(base).string() == "g;x?y#s");
+    CHECK(Url("").resolved(base).string() == "");
+
+}
+
 TEST_CASE("Resolve an abnormal relative URL against an absolute base URL", "[Url]") {
 
     // https://tools.ietf.org/html/rfc3986#section-5.4.2
