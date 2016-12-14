@@ -8,6 +8,12 @@
 #include "tangram.h"
 #include "log.h"
 
+// Enable only JPEG, PNG, GIF, TGA and PSD
+#define STBI_NO_BMP
+#define STBI_NO_HDR
+#define STBI_NO_PIC
+#define STBI_NO_PNM
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -52,19 +58,21 @@ bool Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size) 
     unsigned char* pixels = nullptr;
     int width, height, comp;
 
-    // stbi_load_from_memory loads the image as a series of scanlines starting from
-    // the top-left corner of the image. This call flips the output such that the data
-    // begins at the bottom-left corner, as required for OpenGL texture data.
-    stbi_set_flip_vertically_on_load(1);
-
     if (blob != nullptr && size != 0) {
         pixels = stbi_load_from_memory(blob, size, &width, &height, &comp, STBI_rgb_alpha);
     }
 
     if (pixels) {
+        // stbi_load_from_memory loads the image as a series of scanlines starting from
+        // the top-left corner of the image. This call flips the output such that the data
+        // begins at the bottom-left corner, as required for our OpenGL texture coordinates.
+        auto* rgbaPixels = reinterpret_cast<GLuint*>(pixels);
+
+        Texture::flipImageData(rgbaPixels, width, height);
+
         resize(width, height);
 
-        setData(reinterpret_cast<GLuint*>(pixels), width * height);
+        setData(rgbaPixels, width * height);
 
         stbi_image_free(pixels);
 
@@ -304,6 +312,64 @@ size_t Texture::bytesPerPixel() {
             return 3;
         default:
             return 4;
+    }
+}
+
+void Texture::flipImageData(unsigned char *result, int w, int h, int depth) {
+
+    assert(depth > 0 && w > 0 && h > 0 && bool(result));
+
+    const int step = 512;
+    unsigned char temp[step];
+
+    const int stride = w * depth;
+    const int end = stride % step;
+
+    for (int row = 0; row < h/2; row++) {
+        unsigned char* upper = result + row * stride;
+        unsigned char* lower = result + (h - row - 1) * stride;
+
+        for (int col = 0; col + step <= stride; col += step) {
+            std::copy(upper, upper + step, temp);
+            std::copy(lower, lower + step, upper);
+            std::copy(temp, temp + step, lower);
+            upper += step;
+            lower += step;
+        }
+        if (end != 0) {
+            std::copy(upper, upper + end, temp);
+            std::copy(lower, lower + end, upper);
+            std::copy(temp, temp + end, lower);
+        }
+    }
+}
+
+void Texture::flipImageData(GLuint *result, int w, int h) {
+
+    assert(w > 0 && h > 0 && bool(result));
+
+    const int step = 512;
+    GLuint temp[step];
+
+    const int stride = w;
+    const int end = stride % step;
+
+    for (int row = 0; row < h/2; row++) {
+        GLuint* upper = result + row * stride;
+        GLuint* lower = result + (h - row - 1) * stride;
+
+        for (int col = 0; col + step <= stride; col += step) {
+            std::copy(upper, upper + step, temp);
+            std::copy(lower, lower + step, upper);
+            std::copy(temp, temp + step, lower);
+            upper += step;
+            lower += step;
+        }
+        if (end != 0) {
+            std::copy(upper, upper + end, temp);
+            std::copy(lower, lower + end, upper);
+            std::copy(temp, temp + end, lower);
+        }
     }
 }
 

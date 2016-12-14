@@ -89,6 +89,9 @@ public:
 
     bool loadImageFromMemory(const unsigned char* blob, unsigned int size);
 
+    static void flipImageData(unsigned char *result, int w, int h, int depth);
+    static void flipImageData(GLuint *result, int w, int h);
+
 protected:
 
     void generate(RenderState& rs, GLuint _textureUnit);
