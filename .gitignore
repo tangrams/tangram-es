@@ -45,6 +45,7 @@ gen/
 
 # Gradle files
 .gradle/
+*.externalNativeBuild
 
 # Local configuration file (sdk path, etc)
 local.properties
