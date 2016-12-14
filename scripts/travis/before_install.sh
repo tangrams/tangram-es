@@ -24,4 +24,7 @@ if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
     # https://github.com/travis-ci/travis-ci/issues/6307
     rvm get head
 
+    brew update
+    brew install ninja
+
 fi
