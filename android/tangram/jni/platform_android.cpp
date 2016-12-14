@@ -40,7 +40,6 @@
 
 static JavaVM* jvm = nullptr;
 // JNI Env bound on androids render thread (our native main thread)
-static JNIEnv* jniRenderThreadEnv = nullptr;
 static jobject tangramInstance = nullptr;
 static jmethodID requestRenderMethodID = 0;
 static jmethodID setRenderModeMethodID = 0;
@@ -71,7 +70,6 @@ static const size_t aaPrefixLen = 9;
 
 void bindJniEnvToThread(JNIEnv* jniEnv) {
     jniEnv->GetJavaVM(&jvm);
-    jniRenderThreadEnv = jniEnv;
 }
 
 void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager) {
@@ -322,7 +320,8 @@ std::string resolveScenePath(const char* path) {
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
-    jstring jUrl = jniRenderThreadEnv->NewStringUTF(_url.c_str());
+    JniThreadBinding jniEnv(jvm);
+    jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
 
     // This is probably super dangerous. In order to pass a reference to our callback we have to convert it
     // to a Java type. We allocate a new callback object and then reinterpret the pointer to it as a Java long.
@@ -332,14 +331,15 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
     // to make sure nothing is leaked.
     jlong jCallbackPtr = reinterpret_cast<jlong>(new UrlCallback(_callback));
 
-    jboolean methodResult = jniRenderThreadEnv->CallBooleanMethod(tangramInstance, startUrlRequestMID, jUrl, jCallbackPtr);
+    jboolean methodResult = jniEnv->CallBooleanMethod(tangramInstance, startUrlRequestMID, jUrl, jCallbackPtr);
 
     return methodResult;
 }
 
 void cancelUrlRequest(const std::string& _url) {
-    jstring jUrl = jniRenderThreadEnv->NewStringUTF(_url.c_str());
-    jniRenderThreadEnv->CallVoidMethod(tangramInstance, cancelUrlRequestMID, jUrl);
+    JniThreadBinding jniEnv(jvm);
+    jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
+    jniEnv->CallVoidMethod(tangramInstance, cancelUrlRequestMID, jUrl);
 }
 
 void onUrlSuccess(JNIEnv* _jniEnv, jbyteArray _jBytes, jlong _jCallbackPtr) {
