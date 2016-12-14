@@ -67,10 +67,10 @@ unsigned char* systemFont(const std::string& _name, const std::string& _weight, 
 
 struct FontSourceHandle {
     FontSourceHandle(std::string _path) : path(_path) {}
-    FontSourceHandle(std::function<unsigned char*(size_t*)> _loader) : load(_loader) {}
+    FontSourceHandle(std::function<std::vector<char>()> _loader) : load(_loader) {}
 
     std::string path;
-    std::function<unsigned char*(size_t*)> load;
+    std::function<std::vector<char>()> load;
 };
 
 std::vector<FontSourceHandle> systemFontFallbacksHandle();

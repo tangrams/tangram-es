@@ -26,20 +26,21 @@ FontContext::FontContext() :
 void FontContext::loadFonts() {
     auto fallbacks = systemFontFallbacksHandle();
 
+    for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
+        m_font[i] = m_alfons.addFont("default", size);
+    }
+
     for (auto fallback : fallbacks) {
-        std::shared_ptr<alfons::InputSource> source;
+        alfons::InputSource source;
+
         if (fallback.path.empty()) {
-            source = std::make_shared<alfons::InputSource>(fallback.load);
+            source = alfons::InputSource(fallback.load);
         } else {
-            source = std::make_shared<alfons::InputSource>(fallback.path);
+            source = alfons::InputSource(fallback.path);
         }
 
         for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-            if (!m_font[i]) {
-                m_font[i] = m_alfons.addFont("default", source, size);
-            } else {
-                m_font[i]->addFace(m_alfons.addFontFace(source, size));
-            }
+            m_font[i]->addFace(m_alfons.addFontFace(source, size));
         }
     }
 }
@@ -227,7 +228,7 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     return true;
 }
 
-void FontContext::addFont(const FontDescription& _ft, std::shared_ptr<alfons::InputSource>& _source) {
+void FontContext::addFont(const FontDescription& _ft, alfons::InputSource _source) {
 
     // NB: Synchronize for calls from download thread
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -289,8 +290,8 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     }
 
     if (data) {
-        auto source = std::make_shared<alfons::InputSource>(data, dataSize);
-        font->addFace(m_alfons.addFontFace(source, fontSize));
+        font->addFace(m_alfons.addFontFace(alfons::InputSource(reinterpret_cast<char*>(data), dataSize), fontSize));
+        free(data);
 
         // add fallbacks from default font
         if (m_font[sizeIndex]) {

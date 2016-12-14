@@ -117,7 +117,7 @@ public:
 
     void setSceneResourceRoot(const std::string& sceneResourceRoot) { m_sceneResourceRoot = sceneResourceRoot; }
 
-    void addFont(const FontDescription& _ft, std::shared_ptr<alfons::InputSource>& _source);
+    void addFont(const FontDescription& _ft, alfons::InputSource _source);
 
 private:
 
