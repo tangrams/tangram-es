@@ -67,6 +67,8 @@ public class MapController implements Renderer {
 
     /**
      * Interface for a callback to receive information about features picked from the map
+     * Triggered after a call of {@link #pickFeature(float, float)}
+     * Listener should be set with {@link #setFeaturePickListener(FeaturePickListener)}
      */
     public interface FeaturePickListener {
         /**
@@ -79,6 +81,8 @@ public class MapController implements Renderer {
     }
     /**
      * Interface for a callback to receive information about labels picked from the map
+     * Triggered after a call of {@link #pickLabel(float, float)}
+     * Listener should be set with {@link #setLabelPickListener(LabelPickListener)}
      */
     public interface LabelPickListener {
         /**
@@ -90,7 +94,18 @@ public class MapController implements Renderer {
         void onLabelPick(LabelPickResult labelPickResult, float positionX, float positionY);
     }
 
+    /**
+     * Interface for a callback to receive the picked {@link Marker}
+     * Triggered after a call of {@link #pickMarker(float, float)}
+     * Listener should be set with {@link #setMarkerPickListener(MarkerPickListener)}
+     */
     public interface MarkerPickListener {
+        /**
+         * Receive the picked {@link Marker}
+         * @param marker The {@link Marker} the marker that has been selected
+         * @param positionX The horizontal screen coordinate of the tapped location
+         * @param positionY The vertical screen coordinate of the tapped location
+         */
         void onMarkerPick(Marker marker, float positionX, float positionY);
     }
 
@@ -661,10 +676,26 @@ public class MapController implements Renderer {
 
     /**
      * Set a listener for feature pick events
-     * @param listener Listener to call
+     * @param listener The {@link FeaturePickListener} to call
      */
     public void setFeaturePickListener(FeaturePickListener listener) {
         featurePickListener = listener;
+    }
+
+    /**
+     * Set a listener for label pick events
+     * @param listener The {@link LabelPickListener} to call
+     */
+    public void setLabelPickListener(LabelPickListener listener) {
+        labelPickListener = listener;
+    }
+
+    /**
+     * Set a listener for marker pick events
+     * @param listener The {@link MarkerPickListener} to call
+     */
+    public void setMarkerPickListener(MarkerPickListener listener) {
+        markerPickListener = listener;
     }
 
     /**
@@ -678,17 +709,6 @@ public class MapController implements Renderer {
             checkPointer(mapPointer);
             nativePickFeature(mapPointer, posX, posY, featurePickListener);
         }
-    }
-    /**
-     * Set a listener for label pick events
-     * @param listener Listener to call
-     */
-    public void setLabelPickListener(LabelPickListener listener) {
-        labelPickListener = listener;
-    }
-
-    public void setMarkerPickListener(MarkerPickListener listener) {
-        markerPickListener = listener;
     }
 
     /**
@@ -704,6 +724,12 @@ public class MapController implements Renderer {
         }
     }
 
+    /**
+     * Query the map for a {@link Marker} at the given screen coordinates; results will be returned
+     * in a callback to the object set by {@link #setMarkerPickListener(MarkerPickListener)}
+     * @param posX The horizontal screen coordinate
+     * @param posY The vertical screen coordinate
+     */
     public void pickMarker(float posX, float posY) {
         if (markerPickListener != null) {
             checkPointer(mapPointer);
