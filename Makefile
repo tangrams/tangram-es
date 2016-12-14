@@ -56,7 +56,7 @@ OSX_XCODE_PROJ = tangram.xcodeproj
 IOS_XCODE_PROJ = tangram.xcodeproj
 IOS_FRAMEWORK_XCODE_PROJ = tangram.xcodeproj
 
-# XCPRETTY = eval `command -v xcpretty || echo 'xargs echo'`
+XCPRETTY = `command -v xcpretty || echo 'xargs echo'`
 
 # Default build type is Release
 CONFIG = Release
@@ -310,7 +310,7 @@ ios: ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
 		ONLY_ACTIVE_ARCH=NO \
 		-sdk iphonesimulator \
 		-project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ} \
-		-configuration ${CONFIG} # | ${XCPRETTY}
+		-configuration ${CONFIG} | ${XCPRETTY}
 
 ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}: cmake-ios
 
@@ -331,11 +331,11 @@ cmake-ios-framework-sim:
 
 ios-framework: cmake-ios-framework
 	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} \
-		-configuration ${CONFIG} # | ${XCPRETTY}
+		-configuration ${CONFIG} | ${XCPRETTY}
 
 ios-framework-sim: cmake-ios-framework-sim
 	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_SIM_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} \
-		-configuration ${CONFIG} # | ${XCPRETTY}
+		-configuration ${CONFIG} | ${XCPRETTY}
 
 ios-framework-universal: ios-framework ios-framework-sim
 	@mkdir -p ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}
