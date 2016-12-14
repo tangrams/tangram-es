@@ -13,4 +13,5 @@ test:
   override:
     - make ios
   post:
-    - mv build/ios-framework-universal/Release/TangramMap.framework ${CIRCLE_ARTIFACTS}/
+    - cd build/ios-framework-universal/Release &&
+      zip -r ${CIRCLE_ARTIFACTS}/framework.zip TangramMap.framework
