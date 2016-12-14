@@ -1,8 +1,12 @@
 tangram-es
 ==========
+[![Gitter](https://badges.gitter.im/tangrams/tangram-chat.svg)](https://gitter.im/tangrams/tangram-chat?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
 
-[![Travis CI Build Status](https://travis-ci.org/tangrams/tangram-es.svg?branch=master)](https://travis-ci.org/tangrams/tangram-es/builds)
-[![Gitter](https://badges.gitter.im/pelias/pelias.svg)](https://gitter.im/tangrams/tangram-chat?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
+| Platform                                | Build status                       |
+| --------------------------------------- | ---------------------------------- |
+| Linux/Android                           | [![Travis CI BuildStatus](https://travis-ci.org/tangrams/tangram-es.svg?branch=master)](https://travis-ci.org/tangrams/tangram-es/builds) |
+| iOS | [![CircleCI](https://circleci.com/gh/tangrams/tangram-es.svg?style=shield&circle-token=741ff7f06a008b6eb491680c2d47968a7c4eaa3a)](https://circleci.com/gh/tangrams/tangram-es) |
+
 
 ![screenshot](images/screenshot.png)
 
