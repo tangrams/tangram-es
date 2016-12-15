@@ -93,6 +93,7 @@ protected:
     static bool labelComparator(const LabelEntry& _a, const LabelEntry& _b);
 
     std::vector<LabelEntry> m_labels;
+    std::vector<LabelEntry> m_allLabels;
 
     std::unordered_map<size_t, std::vector<Label*>> m_repeatGroups;
 
