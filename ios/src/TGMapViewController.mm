@@ -205,6 +205,32 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     });
 }
 
+- (void)pickMarkerAt:(CGPoint)screenPosition
+{
+    if (!self.map && !self.mapViewDelegate) { return; }
+
+    screenPosition.x *= self.contentScaleFactor;
+    screenPosition.y *= self.contentScaleFactor;
+
+    self.map->pickMarkerAt(screenPosition.x, screenPosition.y, [screenPosition, self](const Tangram::MarkerPickResult* markerPickResult) {
+        CGPoint position = CGPointMake(0.0, 0.0);
+
+        if (!markerPickResult) {
+            if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectMarker:atScreenPosition:)]) {
+                [self.mapViewDelegate mapView:self didSelectMarker:0 atScreenPosition:position];
+            }
+
+            return;
+        }
+
+        position = CGPointMake(markerPickResult->position[0] / self.contentScaleFactor, markerPickResult->position[1] / self.contentScaleFactor);
+
+        if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectMarker:atScreenPosition:)]) {
+            [self.mapViewDelegate mapView:self didSelectMarker:markerPickResult->id atScreenPosition:position];
+        }
+    });
+}
+
 - (void)pickLabelAt:(CGPoint)screenPosition
 {
     if (!self.map && !self.mapViewDelegate) { return; }

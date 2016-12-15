@@ -37,6 +37,22 @@
     [mapView setPosition:newYork];
 }
 
+- (void)mapView:(TGMapViewController *)mapView didSelectMarker:(TGMapMarkerId)markerId atScreenPosition:(CGPoint)position
+{
+    if (markerId == 0) {
+        return;
+    }
+
+    NSString* message = [NSString stringWithFormat:@"Marker %d", markerId];
+
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Marker pick callback"
+                                                    message:message
+                                                   delegate:nil
+                                          cancelButtonTitle:@"OK"
+                                          otherButtonTitles:nil];
+    [alert show];
+}
+
 - (void)mapView:(TGMapViewController *)mapView didSelectLabel:(TGLabelPickResult *)labelPickResult atScreenPosition:(CGPoint)position
 {
     if (!labelPickResult) { return; }
@@ -130,15 +146,17 @@
     }
 
     // Add point marker
-    {
-        TGMapMarkerId mid = [vc markerAdd];
-        [vc markerSetStyling:mid styling:@"{ style: 'points', color: 'white', size: [25px, 25px], order:500, collide: false }"];
+    static TGMapMarkerId mid = 0;
+    if (!mid) {
+        mid = [vc markerAdd];
+        [vc markerSetStyling:mid styling:@"{ style: 'points', interactive: true, color: 'white', size: [25px, 25px], order:500, collide: false }"];
         [vc markerSetPoint:mid coordinates:coordinate];
     }
 
     // Request feature picking
     [vc pickFeatureAt:location];
     [vc pickLabelAt:location];
+    [vc pickMarkerAt:location];
 }
 
 - (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location

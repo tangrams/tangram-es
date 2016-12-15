@@ -79,6 +79,7 @@ NS_ASSUME_NONNULL_END
 - (void)mapView:(nonnull TGMapViewController *)mapView didLoadSceneAsync:(nonnull NSString *)scene;
 - (void)mapView:(nonnull TGMapViewController *)mapView didSelectFeature:(nullable NSDictionary *)feature atScreenPosition:(CGPoint)position;
 - (void)mapView:(nonnull TGMapViewController *)mapView didSelectLabel:(nullable TGLabelPickResult *)labelPickResult atScreenPosition:(CGPoint)position;
+- (void)mapView:(nonnull TGMapViewController *)mapView didSelectMarker:(TGMapMarkerId)markerId atScreenPosition:(CGPoint)position;
 - (void)mapViewDidCompleteLoading:(nonnull TGMapViewController *)mapView;
 @end
 
@@ -147,6 +148,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)pickFeatureAt:(CGPoint)screenPosition;
 
 - (void)pickLabelAt:(CGPoint)screenPosition;
+
+- (void)pickMarkerAt:(CGPoint)screenPosition;
 
 #pragma mark Map View lifecycle
 
