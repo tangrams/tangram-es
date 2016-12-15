@@ -241,18 +241,14 @@ Url Url::resolve(const Url& b, const Url& r) {
         } else {
             // Merge the relative path with the base path.
             if (b.hasNetLocation() && !b.hasPath()) {
-                t.buffer.append("/");
+                t.buffer += '/';
                 t.buffer.append(r.buffer, r.parts.path.start, r.parts.path.count);
             } else {
                 // Add the base URL's path.
                 t.buffer.append(b.buffer, b.parts.path.start, b.parts.path.count);
-                // Remove the last segment of the base URL's path.
-                size_t end = removeLastSegmentFromRange(t.buffer, t.parts.path.start, t.buffer.size());
-                t.buffer.resize(end);
+                // Remove the last segment of the base URL's path, up to the last '/'.
+                while (!t.buffer.empty() && t.buffer.back() != '/') { t.buffer.pop_back(); }
                 // Add the relative URL's path.
-                if (r.buffer[r.parts.path.start] != '/') {
-                    t.buffer += '/';
-                }
                 t.buffer.append(r.buffer, r.parts.path.start, r.parts.path.count);
             }
         }
