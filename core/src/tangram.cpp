@@ -19,7 +19,6 @@
 #include "util/inputHandler.h"
 #include "tile/tileCache.h"
 #include "util/fastmap.h"
-#include "util/featureSelection.h"
 #include "view/view.h"
 #include "data/clientGeoJsonSource.h"
 #include "gl.h"

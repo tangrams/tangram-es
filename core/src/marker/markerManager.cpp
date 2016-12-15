@@ -5,7 +5,7 @@
 #include "scene/sceneLoader.h"
 #include "style/style.h"
 #include "labels/labelSet.h"
-#include "util/featureSelection.h"
+#include "selection/featureSelection.h"
 #include "log.h"
 
 namespace Tangram {
