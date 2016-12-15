@@ -10,7 +10,7 @@
 #include "tangram.h"
 #include "tile/tile.h"
 #include "util/geom.h"
-#include "util/featureSelection.h"
+#include "selection/featureSelection.h"
 
 namespace Tangram {
 

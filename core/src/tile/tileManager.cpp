@@ -6,7 +6,6 @@
 #include "tileCache.h"
 #include "util/mapProjection.h"
 #include "view/view.h"
-#include "util/featureSelection.h"
 
 #include "glm/gtx/norm.hpp"
 
