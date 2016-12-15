@@ -314,14 +314,13 @@ bool MarkerManager::buildStyling(Marker& marker) {
     return true;
 }
 
-bool MarkerManager::buildGeometry(Marker& marker, int zoom) {
+bool MarkerManager::buildGeometry(Marker& marker, int zoom, StyleBuilder* styler) {
 
     auto feature = marker.feature();
     auto rule = marker.drawRule();
     if (!feature || !rule) { return false; }
 
-    StyleBuilder* styler = nullptr;
-    {
+    if (!styler) {
         auto name = rule->getStyleName();
         auto it = m_styleBuilders.find(name);
         if (it != m_styleBuilders.end()) {

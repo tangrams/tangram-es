@@ -27,7 +27,9 @@ const static std::string key_name("name");
 
 TextStyleBuilder::TextStyleBuilder(const TextStyle& _style)
     : StyleBuilder(_style),
-      m_style(_style) {}
+      m_style(_style) {
+    m_textLabels = std::make_unique<TextLabels>(m_style);
+}
 
 void TextStyleBuilder::setup(const Tile& _tile){
     m_tileSize = _tile.getProjection()->TileSize();
@@ -179,23 +181,27 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
     size_t quadsStart = m_quads.size();
     size_t numLabels = m_labels.size();
 
+    auto selectionColor = [&]() {
+        return params.interactive ? _rule.featureSelection->nextColorIdentifier() : 0;
+    };
+
     if (!prepareLabel(params, labelType)) { return false; }
 
     if (_feat.geometryType == GeometryType::points) {
         for (auto& point : _feat.points) {
             auto p = glm::vec2(point);
-            addLabel(params, Label::Type::point, { p, p }, _rule);
+            addLabel(params, Label::Type::point, { p, p }, selectionColor());
         }
 
     } else if (_feat.geometryType == GeometryType::polygons) {
         for (auto& polygon : _feat.polygons) {
             if (_iconText) {
                 auto p = centroid(polygon);
-                addLabel(params, Label::Type::point, { p, p }, _rule);
+                addLabel(params, Label::Type::point, { p, p }, selectionColor());
             } else {
                 for (auto& line : polygon) {
                     for (auto& point : line) {
-                        addLabel(params, Label::Type::point, { point }, _rule);
+                        addLabel(params, Label::Type::point, { point }, selectionColor());
                     }
                 }
             }
@@ -206,7 +212,7 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
         if (_iconText) {
             for (auto& line : _feat.lines) {
                 for (auto& point : line) {
-                    addLabel(params, Label::Type::point, { point }, _rule);
+                    addLabel(params, Label::Type::point, { point }, selectionColor());
                 }
             }
         } else {
@@ -221,7 +227,10 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
     return true;
 }
 
-void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::Parameters& _params, const DrawRule& _rule) {
+void TextStyleBuilder::addLineTextLabels(const Feature& _feat,
+                                         const TextStyle::Parameters& _params,
+                                         const DrawRule& _rule) {
+
     float pixelScale = 1.0/m_tileSize;
     float minLength = m_attributes.width * pixelScale;
 
@@ -243,7 +252,8 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
 
                 if (j == next) {
                     if (segmentLength > minLength) {
-                        addLabel(_params, Label::Type::line, { p1, p }, _rule);
+                        addLabel(_params, Label::Type::line, { p1, p },
+                                 _params.interactive ? _rule.featureSelection->nextColorIdentifier() : 0);
                     }
                 } else {
                     glm::vec2 pp = glm::vec2(line[j-1]);
@@ -267,7 +277,8 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
                 glm::vec2 b = glm::vec2(p2 - p1) / float(run);
 
                 for (int r = 0; r < run; r++) {
-                    addLabel(_params, Label::Type::line, { a, a+b }, _rule);
+                    addLabel(_params, Label::Type::line, { a, a+b },
+                             _params.interactive ? _rule.featureSelection->nextColorIdentifier() : 0);
                     a += b;
                 }
                 run *= 2;
@@ -527,13 +538,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 }
 
 void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
-                                Label::WorldTransform _transform, const DrawRule& _rule) {
-
-    uint32_t selectionColor = 0;
-
-    if (_params.interactive) {
-        selectionColor = _rule.featureSelection->nextColorIdentifier();
-    }
+                                Label::WorldTransform _transform, uint32_t selectionColor) {
 
     m_labels.emplace_back(new TextLabel(_transform, _type, _params.labelOptions,
                                         {m_attributes.fill,
