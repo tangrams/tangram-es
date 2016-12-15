@@ -10,7 +10,7 @@
 #include "tile/tile.h"
 #include "util/geom.h"
 #include "util/mapProjection.h"
-#include "util/featureSelection.h"
+#include "selection/featureSelection.h"
 #include "view/view.h"
 #include "data/propertyItem.h"
 #include "tangram.h"
