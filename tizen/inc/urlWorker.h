@@ -24,6 +24,8 @@ class UrlWorker {
 public:
     void enqueue(std::unique_ptr<UrlTask> _task);
 
+    void cancel(const std::string& _url);
+
     void stop();
 
     void start(int _numWorker, const char* _proxyAddress = "");
@@ -31,8 +33,6 @@ public:
      ~UrlWorker();
 
 private:
-
-    void run();
 
     std::mutex m_mutex;
     std::mutex m_mutexInitCurl;
@@ -43,9 +43,16 @@ private:
 
     std::string m_proxyAddress;
 
-    std::vector<std::unique_ptr<std::thread>> m_workers;
+    struct Thread {
+        std::unique_ptr<std::thread> thread;
+        std::string activeUrl;
+        bool canceled;
+    };
+
+    void run(Thread* thread);
+
+    std::vector<Thread> m_workers;
 
     std::vector<std::unique_ptr<UrlTask>> m_queue;
 
 };
-

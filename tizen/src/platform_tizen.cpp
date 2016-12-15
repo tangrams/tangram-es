@@ -38,6 +38,7 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 }
 
 void cancelUrlRequest(const std::string& _url) {
+    s_workers.cancel(_url);
 }
 
 void initUrlRequests(const char* proxyAddress) {

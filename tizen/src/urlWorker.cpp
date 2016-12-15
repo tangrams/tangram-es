@@ -18,8 +18,12 @@ void UrlWorker::start(int _numWorker, const char* _proxyAddress) {
 
     curl_global_init(CURL_GLOBAL_ALL);
 
+    m_workers.reserve(_numWorker);
+
     for (int i = 0; i < _numWorker; i++) {
-        m_workers.emplace_back(new std::thread(&UrlWorker::run, this));
+        m_workers.emplace_back();
+        m_workers.back().thread.reset(new std::thread(&UrlWorker::run, this,
+                                                      &m_workers.back()));
     }
 }
 
@@ -29,7 +33,7 @@ UrlWorker::~UrlWorker() {
     }
 }
 
-void UrlWorker::run() {
+void UrlWorker::run(Thread* thread) {
     std::stringstream stream;
     CURL* curlHandle;
 
@@ -60,6 +64,11 @@ void UrlWorker::run() {
 
             task = std::move(m_queue.front());
             m_queue.erase(m_queue.begin());
+
+            if (task) {
+                thread->activeUrl = task->url;
+                thread->canceled = false;
+            }
         }
 
         if (!task) { continue; }
@@ -70,6 +79,10 @@ void UrlWorker::run() {
         // Reset stream
         stream.seekp(0);
         CURLcode result = curl_easy_perform(curlHandle);
+
+        if (thread->canceled) {
+            continue;
+        }
 
         long httpStatusCode = 0;
         curl_easy_getinfo(curlHandle, CURLINFO_RESPONSE_CODE, &httpStatusCode);
@@ -105,6 +118,24 @@ void UrlWorker::enqueue(std::unique_ptr<UrlTask> _task) {
     m_condition.notify_one();
 }
 
+void UrlWorker::cancel(const std::string& _url) {
+    std::unique_lock<std::mutex> lock(m_mutex);
+    if (!m_running) {
+        return;
+    }
+
+    for (auto& task : m_queue) {
+        if (task && task->url == _url) {
+            task.reset();
+        }
+    }
+    for (auto& worker : m_workers) {
+        if (worker.activeUrl == _url) {
+            worker.canceled = true;
+        }
+    }
+}
+
 void UrlWorker::stop() {
         bool isRunning;
     {
@@ -118,7 +149,7 @@ void UrlWorker::stop() {
     m_condition.notify_all();
 
     for (auto& worker : m_workers) {
-        worker->join();
+        worker.thread->join();
     }
 
     m_workers.clear();
