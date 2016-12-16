@@ -93,28 +93,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         LngLat p;
         map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
 
-        static bool added = false;
-        if (!added) {
-            Tangram::Properties properties;
-            auto source = std::make_shared<Tangram::ClientGeoJsonSource>("mz_current_location", "");
-            properties.set("Property 1", "props1");
-            source->addPoint(properties, p);
-            map->addDataSource(source);
-            added = true;
-        }
-
-        map->pickLabelAt(x, y, [](const LabelPickResult* labelPickResult) {
-            if (!labelPickResult) { return; }
-            std::string type = labelPickResult->type == LabelType::text ? "text" : "icon";
-            std::string name;
-            if (labelPickResult->touchItem.properties->getString("name", name)) {
-                LOGS("Touched label %s %s", type.c_str(), name.c_str());
-            }
-            map->markerSetPoint(marker, labelPickResult->coordinates);
-            map->markerSetVisible(marker, true);
-        });
-#if 0
-
         if (!marker) {
             marker = map->markerAdd();
 
@@ -165,7 +143,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
         last_x = x;
         last_y = y;
-#endif
 
         requestRender();
     }
@@ -341,11 +318,7 @@ void init_main_window(bool recreate) {
     // Setup tangram
     if (!map) {
         map = new Tangram::Map();
-        std::vector<Tangram::SceneUpdate> updates = {
-            {"layers.mz_current_location_gem.draw.ux-location-gem-overlay.interactive", "true"},
-        };
-        map->loadSceneAsync("https://raw.githubusercontent.com/tangrams/bubble-wrap/gh-pages/bubble-wrap.yaml",
-            true, nullptr, nullptr, updates);
+        map->loadSceneAsync(sceneFile.c_str(), true);
     }
 
     if (!recreate) {

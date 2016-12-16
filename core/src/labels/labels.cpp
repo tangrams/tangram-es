@@ -60,14 +60,16 @@ void Labels::processLabelUpdate(const ViewState& viewState,
             m_needUpdate |= label->evalState(dt);
             label->addVerticesToMesh();
         }
-        m_allLabels.emplace_back(label.get(), tile, isProxy);
+        if (label->selectionColor()) {
+            m_selectionLabels.emplace_back(label.get(), tile, isProxy);
+        }
     }
 }
 
 
 std::pair<Label*, Tile*> Labels::getLabel(uint32_t _selectionColor) {
 
-    for (auto& entry : m_allLabels) {
+    for (auto& entry : m_selectionLabels) {
 
         if (entry.label->visibleState() &&
             entry.label->selectionColor() == _selectionColor) {
@@ -87,7 +89,7 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
 
     if (!_onlyTransitions) { m_labels.clear(); }
 
-    m_allLabels.clear();
+    m_selectionLabels.clear();
 
     m_needUpdate = false;
 
