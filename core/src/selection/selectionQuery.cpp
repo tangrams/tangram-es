@@ -12,31 +12,33 @@
 
 namespace Tangram {
 
-std::map<size_t, uint32_t> SelectionQuery::s_colorCache;
+SelectionQuery::SelectionQuery(glm::vec2 _position, QueryCallback _queryCallback)
+    : m_position(_position), m_queryCallback(_queryCallback) {}
 
-SelectionQuery::SelectionQuery(glm::vec2 _position, QueryCallback _queryCallback, QueryType _type)
-    : m_position(_position), m_queryCallback(_queryCallback), m_type(_type) {}
+QueryType SelectionQuery::type() const {
+    return m_queryCallback.is<FeaturePickCallback>() ? QueryType::feature :
+          (m_queryCallback.is<LabelPickCallback>() ? QueryType::label : QueryType::marker);
+}
 
 void SelectionQuery::process(const View& _view, const FrameBuffer& _framebuffer, const MarkerManager& _markerManager,
-                             const TileManager& _tileManager, const Labels& _labels) const {
+                             const TileManager& _tileManager, const Labels& _labels, std::vector<SelectionColorRead>& _colorCache) const {
 
     glm::vec2 windowCoordinates = _view.normalizedWindowCoordinates(m_position.x, m_position.y);
 
     GLuint color = 0;
-    size_t seed = 0;
-    hash_combine(seed, m_position.x);
-    hash_combine(seed, m_position.y);
 
-    auto it = s_colorCache.find(seed);
+    auto it = std::find_if(_colorCache.begin(), _colorCache.end(), [=](const auto& _colorRead) {
+        return m_position == _colorRead.position;
+    });
 
-    if (it == s_colorCache.end()) {
-        GLuint color = _framebuffer.readAt(windowCoordinates.x, windowCoordinates.y);
-        s_colorCache[seed] = color;
+    if (it == _colorCache.end()) {
+        color = _framebuffer.readAt(windowCoordinates.x, windowCoordinates.y);
+        _colorCache.push_back({color, m_position});
     } else {
-        color = it->second;
+        color = it->color;
     }
 
-    switch (m_type) {
+    switch (type()) {
     case QueryType::feature: {
         auto& cb = m_queryCallback.get<FeaturePickCallback>();
 
@@ -70,7 +72,17 @@ void SelectionQuery::process(const View& _view, const FrameBuffer& _framebuffer,
             return;
         }
 
-        MarkerPickResult markerResult(marker->id(), {{m_position.x, m_position.y}});
+        glm::dvec2 bbCenter = marker->bounds().center();
+        glm::dvec2 lonLat = _view.getMapProjection().MetersToLonLat(bbCenter);
+        bool clipped;
+        glm::vec2 screenPosition = _view.lonLatToScreenPosition(lonLat.x, lonLat.y, clipped);
+
+        if (clipped) {
+            cb(nullptr);
+            return;
+        }
+
+        MarkerPickResult markerResult(marker->id(), {{screenPosition.x, screenPosition.y}});
 
         cb(&markerResult);
     } break;
@@ -84,7 +96,7 @@ void SelectionQuery::process(const View& _view, const FrameBuffer& _framebuffer,
 
         auto label = _labels.getLabel(color);
 
-        if (!label.first) {
+        if (!label.first || !label.second) {
             cb(nullptr);
             return;
         }
