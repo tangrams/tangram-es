@@ -19,7 +19,7 @@ public class SceneUpdate {
         this.componentValue = value;
     }
 
-    public String path() { return componentPath; }
-    public String value() { return componentValue; }
+    public String getPath() { return componentPath; }
+    public String getValue() { return componentValue; }
 
 }

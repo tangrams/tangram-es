@@ -245,8 +245,8 @@ public class MapController implements Renderer {
         String[] componentValues = new String[sceneUpdates.size()];
         int index = 0;
         for (SceneUpdate sceneUpdate : sceneUpdates) {
-            componentPaths[index] = sceneUpdate.path();
-            componentValues[index] = sceneUpdate.value();
+            componentPaths[index] = sceneUpdate.getPath();
+            componentValues[index] = sceneUpdate.getValue();
             index++;
         }
         scenePath = path;
@@ -769,7 +769,7 @@ public class MapController implements Renderer {
      */
     public void queueSceneUpdate(SceneUpdate sceneUpdate) {
         checkPointer(mapPointer);
-        nativeQueueSceneUpdate(mapPointer, sceneUpdate.path(), sceneUpdate.value());
+        nativeQueueSceneUpdate(mapPointer, sceneUpdate.getPath(), sceneUpdate.getValue());
     }
 
     /**
@@ -783,8 +783,8 @@ public class MapController implements Renderer {
 
         int index = 0;
         for(SceneUpdate sceneUpdate : sceneUpdates) {
-            componentPaths[index] = sceneUpdate.path();
-            componentValues[index] = sceneUpdate.value();
+            componentPaths[index] = sceneUpdate.getPath();
+            componentValues[index] = sceneUpdate.getValue();
             index++;
         }
         nativeQueueSceneUpdates(mapPointer, componentPaths, componentValues);
