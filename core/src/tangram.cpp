@@ -388,19 +388,19 @@ bool Map::update(float _dt) {
 }
 
 void Map::pickFeatureAt(float _x, float _y, FeaturePickCallback _onFeaturePickCallback) {
-    impl->selectionQueries.push_back({{_x, _y}, _onFeaturePickCallback, QueryType::feature});
+    impl->selectionQueries.push_back({{_x, _y}, _onFeaturePickCallback});
 
     requestRender();
 }
 
 void Map::pickLabelAt(float _x, float _y, LabelPickCallback _onLabelPickCallback) {
-    impl->selectionQueries.push_back({{_x, _y}, _onLabelPickCallback, QueryType::label});
+    impl->selectionQueries.push_back({{_x, _y}, _onLabelPickCallback});
 
     requestRender();
 }
 
 void Map::pickMarkerAt(float _x, float _y, MarkerPickCallback _onMarkerPickCallback) {
-    impl->selectionQueries.push_back({{_x, _y}, _onMarkerPickCallback, QueryType::marker});
+    impl->selectionQueries.push_back({{_x, _y}, _onMarkerPickCallback});
 
     requestRender();
 }
@@ -427,17 +427,8 @@ void Map::render() {
     // Run render-thread tasks
     impl->renderState.jobQueue.runJobs();
 
-    bool hasGeometryFeatureQuery = drawSelectionBuffer;
-    bool hasMarkerQuery = drawSelectionBuffer;
-
-    for (const auto& selectionQuery : impl->selectionQueries) {
-        if (selectionQuery.type() == QueryType::feature) { hasGeometryFeatureQuery = true; }
-        if (selectionQuery.type() == QueryType::marker) { hasMarkerQuery = true; }
-    }
-
     // Render feature selection pass to offscreen framebuffer
-    if (hasGeometryFeatureQuery || hasMarkerQuery) {
-
+    if (impl->selectionQueries.size() > 0 || drawSelectionBuffer) {
         impl->selectionBuffer->applyAsRenderTarget(impl->renderState);
 
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
@@ -445,25 +436,20 @@ void Map::render() {
         for (const auto& style : impl->scene->styles()) {
             style->onBeginDrawSelectionFrame(impl->renderState, impl->view, *(impl->scene));
 
-            if (hasGeometryFeatureQuery) {
-                for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                    style->drawSelectionFrame(impl->renderState, *tile);
-                }
+            for (const auto& tile : impl->tileManager.getVisibleTiles()) {
+                style->drawSelectionFrame(impl->renderState, *tile);
             }
 
-            if (hasMarkerQuery) {
-                for (const auto& marker : impl->markerManager.markers()) {
-                    style->drawSelectionFrame(impl->renderState, *marker);
-                }
+            for (const auto& marker : impl->markerManager.markers()) {
+                style->drawSelectionFrame(impl->renderState, *marker);
             }
         }
 
-        SelectionQuery::clearColorCache();
-
+        std::vector<SelectionColorRead> colorCache;
         // Resolve feature selection queries
         for (const auto& selectionQuery : impl->selectionQueries) {
             selectionQuery.process(impl->view, *impl->selectionBuffer, impl->markerManager,
-                                   impl->tileManager, impl->labels);
+                                   impl->tileManager, impl->labels, colorCache);
         }
 
         impl->selectionQueries.clear();
