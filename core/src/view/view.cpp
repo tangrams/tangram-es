@@ -422,7 +422,7 @@ void View::updateMatrices() {
 
 }
 
-glm::vec2 View::lonLatToScreenPosition(double lon, double lat, bool& clipped) {
+glm::vec2 View::lonLatToScreenPosition(double lon, double lat, bool& clipped) const {
     glm::dvec2 meters = m_projection->LonLatToMeters({lon, lat});
     glm::dvec4 lonLat(meters, 0.0, 1.0);
 
