@@ -224,10 +224,7 @@ public class MapController implements Renderer {
      * @param path Location of the YAML scene file within the application assets
      */
     public void loadSceneFile(String path) {
-        scenePath = path;
-        checkPointer(mapPointer);
-        nativeLoadScene(mapPointer, path, new String[0], new String[0]);
-        requestRender();
+        loadSceneFile(path, null);
     }
 
     /**
@@ -237,21 +234,19 @@ public class MapController implements Renderer {
      */
     public void loadSceneFile(String path, List<SceneUpdate> sceneUpdates) {
 
-        if (sceneUpdates == null) {
-            // default to loading the scene file
-            loadSceneFile(path);
-        }
-        String[] componentPaths = new String[sceneUpdates.size()];
-        String[] componentValues = new String[sceneUpdates.size()];
-        int index = 0;
-        for (SceneUpdate sceneUpdate : sceneUpdates) {
-            componentPaths[index] = sceneUpdate.getPath();
-            componentValues[index] = sceneUpdate.getValue();
-            index++;
+        String[] updateStrings = null;
+
+        if (sceneUpdates != null) {
+            updateStrings = new String[sceneUpdates.size() * 2];
+            int index = 0;
+            for (SceneUpdate sceneUpdate : sceneUpdates) {
+                updateStrings[index++] = sceneUpdate.getPath();
+                updateStrings[index++] = sceneUpdate.getValue();
+            }
         }
         scenePath = path;
         checkPointer(mapPointer);
-        nativeLoadScene(mapPointer, path, componentPaths, componentValues);
+        nativeLoadScene(mapPointer, path, updateStrings);
         requestRender();
     }
 
@@ -778,16 +773,14 @@ public class MapController implements Renderer {
      */
     public void queueSceneUpdate(List<SceneUpdate> sceneUpdates) {
         checkPointer(mapPointer);
-        String[] componentPaths = new String[sceneUpdates.size()];
-        String[] componentValues = new String[sceneUpdates.size()];
+        String[] updateStrings = new String[sceneUpdates.size() * 2];
 
         int index = 0;
-        for(SceneUpdate sceneUpdate : sceneUpdates) {
-            componentPaths[index] = sceneUpdate.getPath();
-            componentValues[index] = sceneUpdate.getValue();
-            index++;
+        for (SceneUpdate sceneUpdate : sceneUpdates) {
+            updateStrings[index++] = sceneUpdate.getPath();
+            updateStrings[index++] = sceneUpdate.getValue();
         }
-        nativeQueueSceneUpdates(mapPointer, componentPaths, componentValues);
+        nativeQueueSceneUpdates(mapPointer, updateStrings);
     }
 
     /**
@@ -905,7 +898,7 @@ public class MapController implements Renderer {
 
     private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
     private synchronized native void nativeDispose(long mapPtr);
-    private synchronized native void nativeLoadScene(long mapPtr, String path, String[] componentPaths, String[] componentValues);
+    private synchronized native void nativeLoadScene(long mapPtr, String path, String[] updateStrings);
     private synchronized native void nativeSetupGL(long mapPtr);
     private synchronized native void nativeResize(long mapPtr, int width, int height);
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
@@ -935,7 +928,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeHandleRotateGesture(long mapPtr, float posX, float posY, float rotation);
     private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
     private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String componentValue);
-    private synchronized native void nativeQueueSceneUpdates(long mapPtr, String[] componentPaths, String[] componentValues);
+    private synchronized native void nativeQueueSceneUpdates(long mapPtr, String[] updateStrings);
     private synchronized native void nativeApplySceneUpdates(long mapPtr);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
     private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
