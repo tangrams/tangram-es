@@ -153,20 +153,18 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
 
     for (id fallback in fallbacks) {
 
-        UIFont* font = [UIFont fontWithName:fallback size:1.0];
+        handles.emplace_back([fallback]() {
 
-        size_t dataSize = 0;
-        auto cdata = loadUIFont(font, &dataSize);
+            std::vector<char> data;
 
-        if (!cdata) { continue; }
-
-        FontSourceHandle fontSourceHandle = [cdata, dataSize](size_t* _size) -> unsigned char* {
-            *_size = dataSize;
-
-            return cdata;
-        };
-
-        handles.push_back(fontSourceHandle);
+            UIFont* font = [UIFont fontWithName:fallback size:1.0];
+            size_t dataSize = 0;
+            auto cdata = loadUIFont(font, &dataSize);
+            if (cdata) {
+                data.insert(data.begin(), cdata, cdata + dataSize);
+            }
+            return data;
+        });
     }
 
     return handles;

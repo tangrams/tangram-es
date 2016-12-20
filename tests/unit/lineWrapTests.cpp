@@ -33,15 +33,12 @@ alfons::FontManager fontManager;
 std::shared_ptr<alfons::Font> font;
 
 void initFont(std::string _font = TEST_FONT) {
-    auto defaultSource = std::make_shared<alfons::InputSource>(_font);
-    font = fontManager.addFont("default", defaultSource, TEST_FONT_SIZE);
+    font = fontManager.addFont("default", TEST_FONT_SIZE, alfons::InputSource(_font));
 
     size_t dataSize = 0;
-    unsigned char* data = bytesFromFile(_font.c_str(), dataSize);
-
-    auto source = std::make_shared<alfons::InputSource>(data, dataSize);
-    auto face = fontManager.addFontFace(source, TEST_FONT_SIZE);
-
+    char* data = reinterpret_cast<char*>(bytesFromFile(_font.c_str(), dataSize));
+    auto face = fontManager.addFontFace(alfons::InputSource(data, dataSize), TEST_FONT_SIZE);
+    free(data);
     font->addFace(face);
 }
 

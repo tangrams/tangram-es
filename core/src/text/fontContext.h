@@ -97,7 +97,7 @@ public:
                                           const std::string& _weight, float _size);
 
     size_t glyphTextureCount() {
-        std::lock_guard<std::mutex> lock(m_mutex);
+        std::lock_guard<std::mutex> lock(m_textureMutex);
         return m_textures.size();
     }
 
@@ -117,7 +117,7 @@ public:
 
     void setSceneResourceRoot(const std::string& sceneResourceRoot) { m_sceneResourceRoot = sceneResourceRoot; }
 
-    void addFont(const FontDescription& _ft, std::shared_ptr<alfons::InputSource>& _source);
+    void addFont(const FontDescription& _ft, alfons::InputSource _source);
 
 private:
 
@@ -125,7 +125,9 @@ private:
     ScratchBuffer m_scratch;
     std::vector<unsigned char> m_sdfBuffer;
 
-    std::mutex m_mutex;
+    std::mutex m_fontMutex;
+    std::mutex m_textureMutex;
+
     std::array<int, max_textures> m_atlasRefCount = {{0}};
     alfons::GlyphAtlas m_atlas;
 

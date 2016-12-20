@@ -9,6 +9,12 @@
 #include <libgen.h>
 //#include <sys/resource.h>
 
+#define DEFAULT "fonts/NotoSans-Regular.ttf"
+#define FONT_AR "fonts/NotoNaskh-Regular.ttf"
+#define FONT_HE "fonts/NotoSansHebrew-Regular.ttf"
+#define FONT_JA "fonts/DroidSansJapanese.ttf"
+#define FALLBACK "fonts/DroidSansFallback.ttf"
+
 static bool s_isContinuousRendering = false;
 
 void logMsg(const char* fmt, ...) {
@@ -78,7 +84,15 @@ unsigned char* systemFont(const std::string& _name, const std::string& _weight, 
 }
 
 std::vector<FontSourceHandle> systemFontFallbacksHandle() {
-    return {};
+    std::vector<FontSourceHandle> handles;
+
+    handles.emplace_back(DEFAULT);
+    handles.emplace_back(FONT_AR);
+    handles.emplace_back(FONT_HE);
+    handles.emplace_back(FONT_JA);
+    handles.emplace_back(FALLBACK);
+
+    return handles;
 }
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
