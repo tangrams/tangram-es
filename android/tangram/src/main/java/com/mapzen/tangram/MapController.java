@@ -230,6 +230,7 @@ public class MapController implements Renderer {
                 nativeDispose(mapPointer);
                 mapPointer = 0;
                 clientDataSources.clear();
+                markers.clear();
             }
         });
     }
