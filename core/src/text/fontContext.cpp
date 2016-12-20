@@ -47,6 +47,9 @@ void FontContext::loadFonts() {
 
 // Synchronized on m_mutex in layoutText(), called on tile-worker threads
 void FontContext::addTexture(alfons::AtlasID id, uint16_t width, uint16_t height) {
+
+    std::lock_guard<std::mutex> lock(m_textureMutex);
+
     if (m_textures.size() == max_textures) {
         LOGE("Way too many glyph textures!");
         return;
@@ -57,6 +60,8 @@ void FontContext::addTexture(alfons::AtlasID id, uint16_t width, uint16_t height
 // Synchronized on m_mutex in layoutText(), called on tile-worker threads
 void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_t gw, uint16_t gh,
                            const unsigned char* src, uint16_t pad) {
+
+    std::lock_guard<std::mutex> lock(m_textureMutex);
 
     if (id >= max_textures) { return; }
 
@@ -91,7 +96,7 @@ void FontContext::addGlyph(alfons::AtlasID id, uint16_t gx, uint16_t gy, uint16_
 
 void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
     if (!_refs.any()) { return; }
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_textureMutex);
     for (size_t i = 0; i < m_textures.size(); i++) {
         if (!_refs[i]) { continue; }
 
@@ -104,7 +109,7 @@ void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
 }
 
 void FontContext::updateTextures(RenderState& rs) {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_textureMutex);
 
     for (auto& gt : m_textures) {
         if (gt.dirty || !gt.texture.isValid(rs)) {
@@ -116,7 +121,7 @@ void FontContext::updateTextures(RenderState& rs) {
 }
 
 void FontContext::bindTexture(RenderState& rs, alfons::AtlasID _id, GLuint _unit) {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_textureMutex);
     m_textures[_id].texture.bind(rs, _unit);
 
 }
@@ -125,7 +130,7 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
                              std::vector<GlyphQuad>& _quads, std::bitset<max_textures>& _refs,
                              glm::vec2& _size, TextRange& _textRanges) {
 
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_fontMutex);
 
     alfons::LineLayout line = m_shaper.shape(_params.font, _text);
 
@@ -231,7 +236,7 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
 void FontContext::addFont(const FontDescription& _ft, alfons::InputSource _source) {
 
     // NB: Synchronize for calls from download thread
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_fontMutex);
 
     for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
         auto font = m_alfons.getFont(_ft.alias, size);
@@ -269,7 +274,7 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
         fontSize += STEP_SIZE;
     }
 
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_fontMutex);
 
     auto font =  m_alfons.getFont(FontDescription::Alias(_family, _style, _weight), fontSize);
     if (font->hasFaces()) { return font; }

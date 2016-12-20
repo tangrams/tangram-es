@@ -97,7 +97,7 @@ public:
                                           const std::string& _weight, float _size);
 
     size_t glyphTextureCount() {
-        std::lock_guard<std::mutex> lock(m_mutex);
+        std::lock_guard<std::mutex> lock(m_textureMutex);
         return m_textures.size();
     }
 
@@ -125,7 +125,9 @@ private:
     ScratchBuffer m_scratch;
     std::vector<unsigned char> m_sdfBuffer;
 
-    std::mutex m_mutex;
+    std::mutex m_fontMutex;
+    std::mutex m_textureMutex;
+
     std::array<int, max_textures> m_atlasRefCount = {{0}};
     alfons::GlyphAtlas m_atlas;
 
