@@ -35,6 +35,23 @@ struct LngLat {
 
 typedef std::vector<LngLat> Coordinates;
 
+enum class EaseType : char {
+    linear = 0,
+    cubic,
+    quint,
+    sine,
+};
+
+enum LabelType {
+    icon,
+    text,
+};
+
+struct SceneUpdate {
+    std::string path;
+    std::string value;
+};
+
 typedef uint32_t MarkerID;
 
 }

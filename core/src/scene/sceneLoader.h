@@ -1,8 +1,8 @@
 #pragma once
 
 #include "gl/uniform.h"
+#include "util/types.h"
 #include "scene/scene.h"
-#include "tangram.h"
 #include <string>
 #include <vector>
 #include <memory>

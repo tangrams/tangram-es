@@ -1,8 +1,9 @@
 #pragma once
 
-#include "tangram.h"
 #include <cmath>
 #include <functional>
+
+#include "util/types.h"
 
 namespace Tangram {
 

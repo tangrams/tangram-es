@@ -13,11 +13,6 @@ namespace Tangram {
 
 class DataSource;
 
-enum LabelType {
-    icon,
-    text,
-};
-
 struct FeaturePickResult {
     FeaturePickResult(std::shared_ptr<Properties> _properties,
                       std::array<float, 2> _position)
@@ -43,18 +38,6 @@ struct LabelPickResult {
 
 // Returns a pointer to the selected label or null, only valid on the callback scope
 using LabelPickCallback = std::function<void(const LabelPickResult*)>;
-
-struct SceneUpdate {
-    std::string path;
-    std::string value;
-};
-
-enum class EaseType : char {
-    linear = 0,
-    cubic,
-    quint,
-    sine,
-};
 
 class Map {
 
