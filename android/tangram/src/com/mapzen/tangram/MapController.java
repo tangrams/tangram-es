@@ -234,16 +234,7 @@ public class MapController implements Renderer {
      */
     public void loadSceneFile(String path, List<SceneUpdate> sceneUpdates) {
 
-        String[] updateStrings = null;
-
-        if (sceneUpdates != null) {
-            updateStrings = new String[sceneUpdates.size() * 2];
-            int index = 0;
-            for (SceneUpdate sceneUpdate : sceneUpdates) {
-                updateStrings[index++] = sceneUpdate.getPath();
-                updateStrings[index++] = sceneUpdate.getValue();
-            }
-        }
+        String[] updateStrings = bundleSceneUpdates(sceneUpdates);
         scenePath = path;
         checkPointer(mapPointer);
         nativeLoadScene(mapPointer, path, updateStrings);
@@ -773,13 +764,7 @@ public class MapController implements Renderer {
      */
     public void queueSceneUpdate(List<SceneUpdate> sceneUpdates) {
         checkPointer(mapPointer);
-        String[] updateStrings = new String[sceneUpdates.size() * 2];
-
-        int index = 0;
-        for (SceneUpdate sceneUpdate : sceneUpdates) {
-            updateStrings[index++] = sceneUpdate.getPath();
-            updateStrings[index++] = sceneUpdate.getValue();
-        }
+        String[] updateStrings = bundleSceneUpdates(sceneUpdates);
         nativeQueueSceneUpdates(mapPointer, updateStrings);
     }
 
@@ -839,6 +824,22 @@ public class MapController implements Renderer {
         if (id <= 0) {
             throw new RuntimeException("Tried to perform an operation on an invalid id! This means you may have used an object that has been disposed and is no longer valid.");
         }
+    }
+
+    private String[] bundleSceneUpdates(List<SceneUpdate> sceneUpdates) {
+
+        String[] updateStrings = null;
+
+        if (sceneUpdates != null) {
+            updateStrings = new String[sceneUpdates.size() * 2];
+            int index = 0;
+            for (SceneUpdate sceneUpdate : sceneUpdates) {
+                updateStrings[index++] = sceneUpdate.getPath();
+                updateStrings[index++] = sceneUpdate.getValue();
+            }
+        }
+
+        return updateStrings;
     }
 
     boolean setMarkerStyling(long markerId, String styleStr) {
