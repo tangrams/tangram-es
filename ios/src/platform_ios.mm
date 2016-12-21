@@ -123,24 +123,24 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
     return ptr;
 }
 
-unsigned char* loadUIFont(UIFont* _font, size_t* _size) {
+std::vector<char> loadUIFont(UIFont* _font) {
+
+    if (!_font) {
+        return {};
+    }
 
     CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)_font.fontName);
 
     if (!fontRef) {
-        *_size = 0;
-        return nullptr;
+        return {};
     }
 
-    unsigned char* data = [TGFontConverter fontDataForCGFont:fontRef size:_size];
+    std::vector<char> data = [TGFontConverter fontDataForCGFont:fontRef];
 
     CGFontRelease(fontRef);
 
-    if (!data) {
+    if (data.empty()) {
         LOG("CoreGraphics font failed to decode");
-
-        *_size = 0;
-        return nullptr;
     }
 
     return data;
@@ -154,15 +154,7 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
     for (id fallback in fallbacks) {
 
         handles.emplace_back([fallback]() {
-
-            std::vector<char> data;
-
-            UIFont* font = [UIFont fontWithName:fallback size:1.0];
-            size_t dataSize = 0;
-            auto cdata = loadUIFont(font, &dataSize);
-            if (cdata) {
-                data.insert(data.begin(), cdata, cdata + dataSize);
-            }
+            auto data = loadUIFont([UIFont fontWithName:fallback size:1.0]);
             return data;
         });
     }
@@ -170,7 +162,7 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
     return handles;
 }
 
-unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) {
 
     static std::map<int, CGFloat> weightTraits = {
         {100, UIFontWeightUltraLight},
@@ -229,7 +221,7 @@ unsigned char* systemFont(const std::string& _name, const std::string& _weight, 
         }
     }
 
-    return loadUIFont(font, _size);
+    return loadUIFont(font);
 }
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {

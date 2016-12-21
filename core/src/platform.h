@@ -63,7 +63,7 @@ void cancelUrlRequest(const std::string& _url);
  */
 void setCurrentThreadPriority(int priority);
 
-unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size);
+std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face);
 
 struct FontSourceHandle {
     FontSourceHandle(std::string _path) : path(_path) {}

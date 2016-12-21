@@ -8,7 +8,7 @@
 
 #import "TGFontConverter.h"
 
-#include <cstdio>
+#import <cstdio>
 
 struct FontHeader {
     int32_t version;
@@ -52,10 +52,10 @@ static uint32_t calcTableDataRefCheckSum(CFDataRef dataRef)
 // https://skia.googlesource.com/skia/+/master/src/ports/SkFontHost_mac.cpp
 // https://gist.github.com/Jyczeal/1892760
 
-+ (unsigned char *)fontDataForCGFont:(CGFontRef)cgFont size:(size_t *)size
++ (std::vector<char>)fontDataForCGFont:(CGFontRef)cgFont
 {
     if (!cgFont) {
-        return nil;
+        return {};
     }
 
     CFRetain(cgFont);
@@ -63,8 +63,8 @@ static uint32_t calcTableDataRefCheckSum(CFDataRef dataRef)
     CFArrayRef tags = CGFontCopyTableTags(cgFont);
     int tableCount = CFArrayGetCount(tags);
 
-    size_t* tableSizes = (size_t*)malloc(sizeof(size_t) * tableCount);
-    memset(tableSizes, 0, sizeof(size_t) * tableCount);
+    std::vector<size_t> tableSizes;
+    tableSizes.resize(tableCount);
 
     BOOL containsCFFTable = NO;
 
@@ -88,9 +88,10 @@ static uint32_t calcTableDataRefCheckSum(CFDataRef dataRef)
         tableSizes[index] = tableSize;
     }
 
-    unsigned char* stream = (unsigned char*)malloc(totalSize);
+    std::vector<char> data;
+    data.resize(totalSize);
+    unsigned char* stream = reinterpret_cast<unsigned char*>(data.data());
 
-    memset(stream, 0, totalSize);
     char* dataStart = (char*)stream;
     char* dataPtr = dataStart;
 
@@ -150,10 +151,8 @@ static uint32_t calcTableDataRefCheckSum(CFDataRef dataRef)
     }
 
     CFRelease(cgFont);
-    free(tableSizes);
 
-    *size = totalSize;
-    return stream;
+    return data;
 }
 
 @end

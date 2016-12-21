@@ -9,9 +9,11 @@
 #import <Foundation/Foundation.h>
 #import <CoreGraphics/CoreGraphics.h>
 
+#import <vector>
+
 @interface TGFontConverter : NSObject
 
-+ (unsigned char *)fontDataForCGFont:(CGFontRef)cgFont size:(size_t *)size;
++ (std::vector<char>)fontDataForCGFont:(CGFontRef)cgFont;
 
 @end
 

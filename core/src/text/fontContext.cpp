@@ -293,15 +293,19 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
         FontDescription::BundleAlias(_family, _style, _weight);
 
     data = bytesFromFile(bundleFontPath.c_str(), dataSize);
+    std::vector<char> systemFontData;
 
     // 2. System font
     if (!data) {
-        data = systemFont(_family, _weight, _style, &dataSize);
+        systemFontData = systemFont(_family, _weight, _style);
+    } else {
+        systemFontData.insert(systemFontData.begin(), reinterpret_cast<const char*>(data),
+                reinterpret_cast<const char*>(data + dataSize));
+        free(data);
     }
 
-    if (data) {
-        font->addFace(m_alfons.addFontFace(alfons::InputSource(reinterpret_cast<char*>(data), dataSize), fontSize));
-        free(data);
+    if (systemFontData.size() > 0) {
+        font->addFace(m_alfons.addFontFace(alfons::InputSource(systemFontData), fontSize));
 
         // add fallbacks from default font
         if (m_font[sizeIndex]) {

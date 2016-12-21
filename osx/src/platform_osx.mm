@@ -112,8 +112,8 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
     return handles;
 }
 
-unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
-    return nullptr;
+std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) {
+    return {};
 }
 
 void NSurlInit() {
