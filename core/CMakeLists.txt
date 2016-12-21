@@ -85,27 +85,38 @@ group_recursive_sources(src "src")
 # add compile shader targets
 file(GLOB_RECURSE SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
 set(SHADER_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/shaders)
+set(SHADER_OUTPUT)
+
 foreach(_shader ${SHADER_FILES})
-    get_filename_component(_shader_name ${_shader} NAME_WE)
-    get_filename_component(_shader_ext ${_shader} EXT)
-    string(REGEX REPLACE "\\." "" _shader_ext ${_shader_ext})
-    if(${_shader_ext} STREQUAL "fs" OR ${_shader_ext} STREQUAL "glsl" OR ${_shader_ext} STREQUAL "vs")
-        set(_shader_name ${_shader_name}_${_shader_ext})
-        set(SHADER_OUTPUT ${SHADER_OUTPUT_DIRECTORY}/${_shader_name}.h)
-        add_custom_target(
-            ${_shader_name}
-            DEPENDS ${SHADER_OUTPUT})
-        add_custom_command(
-            OUTPUT ${SHADER_OUTPUT}
-            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..
-            MAIN_DEPENDENCY ${_shader}
-            COMMAND ${PROJECT_SOURCE_DIR}/../scripts/incbin.sh
-                ${_shader}
-                core/include/shaders/${_shader_name}.h
-                ${_shader_name})
-        add_dependencies(${CORE_LIBRARY} ${_shader_name})
+  get_filename_component(_shader_name ${_shader} NAME_WE)
+  get_filename_component(_shader_ext ${_shader} EXT)
+  string(REGEX REPLACE "\\." "" _shader_ext ${_shader_ext})
+  if(${_shader_ext} STREQUAL "fs" OR ${_shader_ext} STREQUAL "glsl" OR ${_shader_ext} STREQUAL "vs")
+    set(_shader_name ${_shader_name}_${_shader_ext})
+    set(_shader_dest ${CMAKE_CURRENT_SOURCE_DIR}/include/shaders/${_shader_name}.h)
+
+    if (NOT SHADER_OUTPUT)
+      set(SHADER_OUTPUT ${SHADER_OUTPUT_DIRECTORY}/${_shader_name}.h)
+      add_custom_command(
+        OUTPUT ${SHADER_OUTPUT}
+        DEPENDS ${_shader}
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/incbin.sh
+          ${_shader} ${_shader_dest} ${_shader_name})
+    else()
+      add_custom_command(
+        OUTPUT ${SHADER_OUTPUT}
+        DEPENDS ${_shader}
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/incbin.sh
+          ${_shader} ${_shader_dest} ${_shader_name}
+        APPEND) # append command and depends to the first command
     endif()
+  endif()
 endforeach()
+
+add_custom_target(core_shaders
+  DEPENDS ${SHADER_OUTPUT})
+
+add_dependencies(${CORE_LIBRARY} core_shaders)
 
 # add target to transform the default point texture into a data header
 set(DEFAULT_POINT_TEXTURE_IMAGE ${CMAKE_CURRENT_SOURCE_DIR}/../images/default-point.png)
