@@ -37,7 +37,7 @@ static std::list<std::unique_ptr<UrlTask>> s_urlTaskQueue;
 void logMsg(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    vfprintf(stderr, fmt, args);
+    vfprintf(stdout, fmt, args);
     va_end(args);
 }
 

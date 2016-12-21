@@ -54,8 +54,6 @@ set(CORE_LIBRARIES_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/isect2d/include
     CACHE INTERNAL "core libraries include directories" FORCE)
 
-#include( ${PROJECT_SOURCE_DIR}/../../alfons/build/alfons-exports.cmake REQUIRED )
-#include( ${PROJECT_SOURCE_DIR}/../../alfons/debug/alfons-exports.cmake REQUIRED )
 
 add_library(${CORE_LIBRARY} ${FOUND_SOURCES} ${FOUND_HEADERS})
 
@@ -78,6 +76,19 @@ target_compile_options(${CORE_LIBRARY}
 target_compile_definitions(${CORE_LIBRARY}
   PUBLIC
   ${CORE_COMPILE_DEFS})
+
+# build shared library
+# - should decrease link time for tests and bindings
+set(CORE_LIBRARY_SHARED "tangram_shared")
+add_library(${CORE_LIBRARY_SHARED} SHARED ${FOUND_SOURCES} ${FOUND_HEADERS})
+target_link_libraries(${CORE_LIBRARY_SHARED}
+  PUBLIC ${CORE_LIBRARY})
+target_include_directories(${CORE_LIBRARY_SHARED}
+  PUBLIC ${INCLUDE_DIRS})
+target_compile_options(${CORE_LIBRARY_SHARED}
+  PUBLIC ${CORE_CXX_FLAGS})
+target_compile_definitions(${CORE_LIBRARY_SHARED}
+  PUBLIC ${CORE_COMPILE_DEFS})
 
 # make groups for xcode
 group_recursive_sources(src "src")

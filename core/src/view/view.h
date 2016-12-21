@@ -53,13 +53,13 @@ public:
     const MapProjection& getMapProjection() const { return *m_projection.get(); }
 
     void setCameraType(CameraType _type);
-    auto cameraType() const { return m_type; }
+    CameraType cameraType() const { return m_type; }
 
     void setObliqueAxis(float _x, float _y) { m_obliqueAxis = { _x, _y}; }
-    auto obliqueAxis() const { return m_obliqueAxis; }
+    glm::vec2 obliqueAxis() const { return m_obliqueAxis; }
 
     void setVanishingPoint(float x, float y) { m_vanishingPoint = { x, y }; }
-    auto vanishingPoint() const { return m_vanishingPoint; }
+    glm::vec2 vanishingPoint() const { return m_vanishingPoint; }
 
     // Set the vertical field-of-view angle, in radians.
     void setFieldOfView(float radians);

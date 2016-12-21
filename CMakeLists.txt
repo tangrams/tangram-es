@@ -99,3 +99,8 @@ if(BENCHMARK)
   message(STATUS "Build with benchmarks")
   add_subdirectory(${PROJECT_SOURCE_DIR}/bench)
 endif()
+
+#if(SWIG)
+  message(STATUS "Build with SWIG")
+  add_subdirectory(${PROJECT_SOURCE_DIR}/swig)
+#endif()

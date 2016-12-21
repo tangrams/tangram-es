@@ -104,6 +104,7 @@ public:
 
 struct TileTaskQueue {
     virtual void enqueue(std::shared_ptr<TileTask>&& task) = 0;
+    virtual ~TileTaskQueue() {}
 };
 
 struct TileTaskCb {

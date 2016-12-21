@@ -163,7 +163,7 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
         view.setZoom(scene->startZoom);
     }
 
-    inputHandler.setView(view);
+    //inputHandler.setView(view);
     tileManager.setDataSources(_scene->dataSources());
 
     tileWorker.setScene(_scene);

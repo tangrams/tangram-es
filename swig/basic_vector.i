@@ -1,0 +1,30 @@
+%include "std_vector.i"
+
+%define BASIC_VECTOR(NAME,TYPE)
+%ignore TYPE::__delitem__;
+%ignore TYPE::__delslice__;
+%ignore TYPE::__setitem__;
+%ignore TYPE::__setslice__;
+%ignore TYPE::append;
+%ignore TYPE::assign;
+%ignore TYPE::back;
+%ignore TYPE::begin;
+%ignore TYPE::capacity;
+%ignore TYPE::clear;
+%ignore TYPE::empty;
+%ignore TYPE::end;
+%ignore TYPE::erase;
+%ignore TYPE::front;
+%ignore TYPE::get_allocator;
+%ignore TYPE::insert;
+%ignore TYPE::pop;
+%ignore TYPE::pop_back;
+%ignore TYPE::push_back;
+%ignore TYPE::rbegin;
+%ignore TYPE::rend;
+%ignore TYPE::reserve;
+%ignore TYPE::resize;
+%ignore TYPE::size;
+%ignore TYPE::swap;
+%template(NAME) TYPE;
+%enddef

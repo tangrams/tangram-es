@@ -54,4 +54,4 @@ do { logMsg("ERROR %s:%d: " fmt "\n", __FILENAME__, __LINE__, ## __VA_ARGS__); }
 #endif
 
 #define LOGS(fmt, ...) \
-do { TextDisplay::Instance().log(fmt, ## __VA_ARGS__); } while(0)
+    do { Tangram::TextDisplay::Instance().log(fmt, ## __VA_ARGS__); } while(0)
