@@ -23,6 +23,9 @@ set_source_files_properties(tangram.i PROPERTIES CPLUSPLUS ON)
 set(CMAKE_CXX_FLAGS "-g ${CMAKE_CXX_FLAGS}")
 set(WRAPPER_LIB "tangram")
 
+# check if the includes files changed...
+set(SWIG_MODULE_${WRAPPER_LIB}_EXTRA_DEPS tangram_api.i basic_vector.i)
+
 swig_add_module(${WRAPPER_LIB} python tangram.i ${SOURCES})
 
 if(${PLATFORM_TARGET} MATCHES "linux")
