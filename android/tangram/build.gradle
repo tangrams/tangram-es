@@ -37,6 +37,13 @@ android {
     }
   }
 
+  buildTypes {
+    debug {
+      externalNativeBuild {
+        cmake.cppFlags '-g'
+      }
+    }
+  }
   productFlavors {
     slim {
       // Default configuration
