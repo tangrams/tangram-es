@@ -12,6 +12,8 @@ if True:
 
 class BasicMap:
     def __init__(self, scene_path):
+        tangram.init_globals()
+
         self.render_state = tangram.RenderState()
         self.view = tangram.View()
         self.input_handler = tangram.InputHandler(self.view)
@@ -38,14 +40,23 @@ class BasicMap:
         self.teardown()
 
     def teardown(self):
-        # Necessary order of desctruction!
+        # static Primitives hold reference to
+        # the instance RenderState...
+        tangram.teardown_globals()
+
+        # Necessary order of destruction!
         # Remove all references to Scene before disposing RenderState
-        self.tile_worker.stop()
+        if self.tile_worker:
+            self.tile_worker.stop()
+
         self.marker_manager = None
         self.tile_manager = None
         self.tile_worker = None
         self.scene = None
-        self.render_state = None
+
+        if self.render_state:
+            self.render_state.jobs_stop()
+            self.render_state = None
 
     def resize(self, width, height):
         self.render_state.viewport(0, 0, width, height)
@@ -82,7 +93,7 @@ class BasicMap:
         self.render_state.cache_default_framebuffer()
         self.render_state.invalidate()
 
-        # TODO run jobs...
+        self.render_state.jobs_run()
 
         tangram.frame_buffer_apply(self.render_state, self.view, self.scene)
 
@@ -120,7 +131,6 @@ class MapView:
             exit
 
         glfw.make_context_current(self.window)
-        tangram.init_globals()
 
         self.panning = False
         self.last_x_down = 0
@@ -140,8 +150,17 @@ class MapView:
         self.running = False
 
     def __del__(self):
-        self.m = None
-        tangram.teardown_globals()
+        self.teardown()
+
+    def teardown(self):
+        if self.m:
+            self.m.teardown()
+            self.m = None
+
+        if self.window:
+            glfw.destroy_window(self.window)
+            self.window = None
+
 
     def mouse_button_callback(self, win, button, action, mods):
         if self.panning:
@@ -190,7 +209,7 @@ class MapView:
         if action == glfw.PRESS:
             if key == glfw.KEY_ESCAPE:
                 print("shutting down...")
-                glfw.set_window_should_close(self.window, True)
+                self.running = False
             elif key == glfw.KEY_I:
                 # jump to interpreter
                 self.running = False
@@ -208,9 +227,7 @@ class MapView:
                 tangram.toggle_debug_flag(tangram.DRAW_ALL_LABELS)
             elif key == glfw.KEY_7:
                 tangram.toggle_debug_flag(tangram.TANGRAM_INFOS)
-                print("toggle infos: ", tangram.get_debug_flag(tangram.TANGRAM_INFOS))
             elif key == glfw.KEY_8:
-                print("toggle stats")
                 tangram.toggle_debug_flag(tangram.TANGRAM_STATS)
             elif key == glfw.KEY_9:
                 tangram.toggle_debug_flag(tangram.SELECTION_BUFFER)
@@ -236,13 +253,6 @@ class MapView:
             glfw.wait_events()
 
 
-
-
-# glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3)
-# glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 3)
-# glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, True)
-# glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
-
 if __name__ == "__main__":
     import argparse
     import os
@@ -263,8 +273,13 @@ if __name__ == "__main__":
         t.running = False
     signal.signal(signal.SIGINT, signal_handler)
 
-    t.loop()
+    try:
+        t.loop()
+    except Exception as e:
+        print("ERROR: ", e)
 
     tangram.drain_network_queue()
-    t = None
+
+    t.teardown()
+
     glfw.terminate()

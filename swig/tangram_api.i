@@ -1,25 +1,21 @@
+%module tangram_api
+
 %{
+#define SWIG_FILE_WITH_INIT
+#include "platform_linux.h"
 #include "tangram.h"
-#include "util/types.h"
+#include "debug/textDisplay.h"
+#include "log.h"
 %}
 
-%include "std_shared_ptr.i"
-%include "std_string.i"
+/// Python style names
+%rename("%(undercase)s", %$isfunction) "";
+%rename("%(undercase)s", %$isvariable) "";
+%rename("%(uppercase)s", %$isenumitem) "";
 
-%shared_ptr(Tangram::Properties);
 
-// TODO One getter returning both string and numbers, iterator for values
-namespace Tangram {
-struct Properties {
-    Properties() {}
-    void clear() { props.clear(); }
-    bool contains(const std::string& key) const;
-    double getNumber(const std::string& key) const;
-    const std::string& getString(const std::string& key) const;
-    void set(std::string key, std::string value);
-    void set(std::string key, double value);
-};
-}
+%include "properties.i"
+%include "util_types.i"
 
 // Wrapper for std::function callbacks, passing back swig types
 //
@@ -73,13 +69,6 @@ PY_CALLBACK(PyLabelPickCallback, const Tangram::LabelPickResult*, SWIGTYPE_p_Tan
     }
 }
 
-// Just to keep bindings a bit more clean:
-%ignore Tangram::Range;
-
-%ignore Tangram::LngLat::operator=(LngLat&& _other);
-%ignore Tangram::LngLat::operator=(const LngLat& _other);
-%ignore Tangram::LngLat::LngLat(LngLat&& _other);
-
 %ignore Tangram::LabelPickResult::FeaturePickResult;
 %immutable Tangram::LabelPickResult::touchItem;
 %immutable Tangram::LabelPickResult::type;
@@ -90,5 +79,17 @@ PY_CALLBACK(PyLabelPickCallback, const Tangram::LabelPickResult*, SWIGTYPE_p_Tan
 %immutable Tangram::FeaturePickResult::position;
 
 // Create bindings for these headers:
-%include "util/types.h"
 %include "tangram.h"
+%include "debug/debugFlags.h"
+
+%{
+void poke_network_queue() {
+    processNetworkQueue();
+}
+
+void drain_network_queue() {
+    finishUrlRequests();
+}
+%}
+void poke_network_queue();
+void drain_network_queue();

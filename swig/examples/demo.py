@@ -6,7 +6,7 @@ import sys
 # export PYTHONPATH=../lib
 if True:
     sys.path.append('../lib')
-    import tangram
+    import tangram_api as tangram
 
 
 class Tangram:
@@ -123,6 +123,8 @@ class Tangram:
             delta = currentTime - lastTime
             lastTime = currentTime
 
+            tangram.poke_network_queue()
+
             self.m.update(delta)
             self.m.render()
 
@@ -161,4 +163,6 @@ if __name__ == "__main__":
 
     t = Tangram(args.scene_path)
     t.loop()
+    tangram.drain_network_queue()
+
     terminate()

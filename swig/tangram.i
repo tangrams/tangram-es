@@ -12,6 +12,7 @@
 #include "tile/tileID.h"
 #include "util/mapProjection.h"
 #include "util/inputHandler.h"
+#include "util/types.h"
 #include "view/view.h"
 #include "gl/renderState.h"
 #include "gl/framebuffer.h"
@@ -25,9 +26,11 @@
 #include "marker/marker.h"
 #include "marker/markerManager.h"
 #include "labels/labels.h"
+#include "debug/debugFlags.h"
 %}
 
 %include "typemaps.i"
+
 %include "std_common.i"
 %include "std_string.i"
 %include "std_shared_ptr.i"
@@ -39,13 +42,12 @@ typedef int GLint;
 %rename("%(undercase)s", %$isfunction) "";
 %rename("%(undercase)s", %$isvariable) "";
 %rename("%(uppercase)s", %$isenumitem) "";
-//%rename("%(uppercase)s", %$isenum) "";
-%rename(EASE) EaseType;
 %rename(CAMERA) CameraType;
 
-/// Tangram::Map API
-%include "tangram_api.i"
+%include "properties.i"
+%include "util_types.i"
 
+%include "debug/debugFlags.h"
 
 %shared_ptr(Tangram::Tile);
 %shared_ptr(Tangram::Scene);
@@ -53,6 +55,14 @@ typedef int GLint;
 %ignore Tangram::RenderState::jobQueue;
 %ignore Tangram::RenderState::attributeBindings;
 %include "gl/renderState.h"
+%extend Tangram::RenderState {
+    void jobs_run() {
+        $self->jobQueue.runJobs();
+    }
+    void jobs_stop() {
+        $self->jobQueue.stop();
+    }
+}
 
 /// No default constructors needed yet
 %ignore Tangram::TileID::TileID;
