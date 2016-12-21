@@ -133,6 +133,8 @@ class MapView:
         glfw.set_cursor_pos_callback(self.window, self.cursor_pos_callback)
         glfw.set_key_callback(self.window, self.key_callback)
         glfw.set_scroll_callback(self.window, self.scroll_callback)
+        glfw.set_window_size_callback(self.window,
+                                      lambda win, w, h: self.m.resize(w, h))
 
         self.m.resize(self.width, self.height)
         self.running = False
