@@ -65,6 +65,8 @@ static uint32_t calcTableDataRefCheckSum(CFDataRef dataRef)
 
     std::vector<size_t> tableSizes;
     tableSizes.resize(tableCount);
+    std::vector<CFDataRef> dataRefs;
+    dataRefs.resize(tableCount);
 
     BOOL containsCFFTable = NO;
 
@@ -78,11 +80,12 @@ static uint32_t calcTableDataRefCheckSum(CFDataRef dataRef)
             containsCFFTable = YES;
         }
 
-        CFDataRef tableDataRef = CGFontCopyTableForTag(cgFont, aTag);
-        if (tableDataRef != NULL) {
-            tableSize = CFDataGetLength(tableDataRef);
-            CFRelease(tableDataRef);
+        dataRefs[index] = CGFontCopyTableForTag(cgFont, aTag);
+
+        if (dataRefs[index] != NULL) {
+            tableSize = CFDataGetLength(dataRefs[index]);
         }
+
         totalSize += (tableSize + 3) & ~3;
 
         tableSizes[index] = tableSize;
@@ -134,7 +137,10 @@ static uint32_t calcTableDataRefCheckSum(CFDataRef dataRef)
     for (int index = 0; index < tableCount; ++index) {
 
         intptr_t aTag = (intptr_t)CFArrayGetValueAtIndex(tags, index);
-        CFDataRef tableDataRef = CGFontCopyTableForTag(cgFont, aTag);
+        CFDataRef tableDataRef = dataRefs[index];
+
+        if (tableDataRef == NULL) { continue; }
+
         size_t tableSize = CFDataGetLength(tableDataRef);
 
         memcpy(dataPtr, CFDataGetBytePtr(tableDataRef), tableSize);
