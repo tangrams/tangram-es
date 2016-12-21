@@ -3,7 +3,7 @@
 #include "util/geom.h"
 #include "glm/gtx/rotate_vector.hpp"
 #include "glm/gtx/norm.hpp"
-#include "tangram.h"
+#include "debug/debugFlags.h"
 #include "platform.h"
 #include "view/view.h"
 #include "log.h"

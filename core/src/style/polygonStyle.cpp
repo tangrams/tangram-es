@@ -1,6 +1,6 @@
 #include "polygonStyle.h"
 
-#include "tangram.h"
+#include "debug/debugFlags.h"
 #include "platform.h"
 #include "material.h"
 #include "util/builders.h"

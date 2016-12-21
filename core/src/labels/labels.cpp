@@ -1,7 +1,6 @@
 #include "labels.h"
 
-#include "tangram.h"
-#include "platform.h"
+#include "debug/debugFlags.h"
 #include "gl/shaderProgram.h"
 #include "gl/primitives.h"
 #include "view/view.h"

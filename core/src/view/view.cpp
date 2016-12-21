@@ -1,7 +1,6 @@
 #include "view.h"
 
-#include "platform.h"
-#include "tangram.h"
+#include "debug/debugFlags.h"
 #include "util/rasterize.h"
 #include "scene/stops.h"
 #include "glm/gtc/matrix_transform.hpp"

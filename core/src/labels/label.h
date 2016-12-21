@@ -9,8 +9,8 @@
 #include "fadeEffect.h"
 #include "util/types.h"
 #include "util/hash.h"
+#include "util/types.h"
 #include "labels/labelProperty.h"
-#include "tangram.h"
 
 #include <string>
 #include <limits>

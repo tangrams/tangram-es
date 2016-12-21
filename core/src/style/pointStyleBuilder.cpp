@@ -1,13 +1,13 @@
 #include "pointStyleBuilder.h"
 
 #include "data/propertyItem.h" // Include wherever Properties is used!
+#include "debug/debugFlags.h"
 #include "labels/labelCollider.h"
 #include "labels/spriteLabel.h"
 #include "marker/marker.h"
 #include "scene/drawRule.h"
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
-#include "tangram.h"
 #include "tile/tile.h"
 #include "util/geom.h"
 #include "util/featureSelection.h"

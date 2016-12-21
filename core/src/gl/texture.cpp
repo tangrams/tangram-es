@@ -5,7 +5,6 @@
 #include "gl/error.h"
 #include "gl/renderState.h"
 #include "gl/hardware.h"
-#include "tangram.h"
 #include "log.h"
 
 // Enable only JPEG, PNG, GIF, TGA and PSD

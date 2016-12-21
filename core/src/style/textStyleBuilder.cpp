@@ -13,7 +13,7 @@
 #include "util/featureSelection.h"
 #include "view/view.h"
 #include "data/propertyItem.h"
-#include "tangram.h"
+#include "debug/debugFlags.h"
 #include "log.h"
 
 #include <cmath>

@@ -4,7 +4,6 @@
 #include "mapbox/geojsonvt/geojsonvt.hpp"
 #include "mapbox/geojsonvt/geojsonvt_convert.hpp"
 #include "platform.h"
-#include "tangram.h"
 #include "tile/tileTask.h"
 #include "util/geom.h"
 #include "data/propertyItem.h"

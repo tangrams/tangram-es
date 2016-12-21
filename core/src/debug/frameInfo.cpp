@@ -1,6 +1,6 @@
 #include "debug/frameInfo.h"
 
-#include "tangram.h"
+#include "debug/debugFlags.h"
 #include "debug/textDisplay.h"
 #include "tile/tileManager.h"
 #include "tile/tile.h"

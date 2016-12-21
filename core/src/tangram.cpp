@@ -29,9 +29,9 @@
 #include "util/jobQueue.h"
 #include "debug/textDisplay.h"
 #include "debug/frameInfo.h"
+#include "debug/debugFlags.h"
 
 #include <cmath>
-#include <bitset>
 
 namespace Tangram {
 
@@ -103,8 +103,6 @@ void Map::Impl::clearEase(EaseField _f) {
     static Ease none = {};
     eases[static_cast<size_t>(_f)] = none;
 }
-
-static std::bitset<9> g_flags = 0;
 
 Map::Map() {
 
@@ -920,36 +918,6 @@ void Map::runAsyncTask(std::function<void()> _task) {
     if (impl->asyncWorker) {
         impl->asyncWorker->enqueue(std::move(_task));
     }
-}
-
-void setDebugFlag(DebugFlags _flag, bool _on) {
-
-    g_flags.set(_flag, _on);
-    // m_view->setZoom(m_view->getZoom()); // Force the view to refresh
-
-}
-
-bool getDebugFlag(DebugFlags _flag) {
-
-    return g_flags.test(_flag);
-
-}
-
-void toggleDebugFlag(DebugFlags _flag) {
-
-    g_flags.flip(_flag);
-    // m_view->setZoom(m_view->getZoom()); // Force the view to refresh
-
-    // Rebuild tiles for debug modes that needs it
-    // if (_flag == DebugFlags::proxy_colors
-    //  || _flag == DebugFlags::draw_all_labels
-    //  || _flag == DebugFlags::tile_bounds
-    //  || _flag == DebugFlags::tile_infos) {
-    //     if (m_tileManager) {
-    //         std::lock_guard<std::mutex> lock(m_tilesMutex);
-    //         m_tileManager->clearTileSets();
-    //     }
-    // }
 }
 
 }

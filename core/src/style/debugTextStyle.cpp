@@ -1,10 +1,10 @@
 #include "debugTextStyle.h"
 
+#include "debug/debugFlags.h"
 #include "textStyleBuilder.h"
 #include "labels/textLabels.h"
 #include "scene/drawRule.h"
 
-#include "tangram.h"
 #include "tile/tile.h"
 
 namespace Tangram {
