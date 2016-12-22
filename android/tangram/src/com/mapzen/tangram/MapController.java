@@ -755,6 +755,9 @@ public class MapController implements Renderer {
      */
     public void queueSceneUpdate(SceneUpdate sceneUpdate) {
         checkPointer(mapPointer);
+        if (sceneUpdate == null) {
+            throw new IllegalArgumentException("sceneUpdate can not be null in queueSceneUpdates");
+        }
         nativeQueueSceneUpdate(mapPointer, sceneUpdate.getPath(), sceneUpdate.getValue());
     }
 
@@ -764,6 +767,9 @@ public class MapController implements Renderer {
      */
     public void queueSceneUpdate(List<SceneUpdate> sceneUpdates) {
         checkPointer(mapPointer);
+        if (sceneUpdates == null || sceneUpdates.size() == 0) {
+            throw new IllegalArgumentException("sceneUpdates can not be null or empty in queueSceneUpdates");
+        }
         String[] updateStrings = bundleSceneUpdates(sceneUpdates);
         nativeQueueSceneUpdates(mapPointer, updateStrings);
     }
