@@ -47,6 +47,7 @@ set(SOURCES
     ${PROJECT_SOURCE_DIR}/ios/src/TGHttpHandler.mm
     ${PROJECT_SOURCE_DIR}/ios/src/TGSceneUpdate.mm
     ${PROJECT_SOURCE_DIR}/ios/src/TGLabelPickResult.mm
+    ${PROJECT_SOURCE_DIR}/ios/src/TGMarkerPickResult.mm
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.mm)
 
 set(FRAMEWORK_HEADERS
@@ -57,6 +58,7 @@ set(FRAMEWORK_HEADERS
     ${PROJECT_SOURCE_DIR}/ios/src/TGSceneUpdate.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGHttpHandler.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGLabelPickResult.h
+    ${PROJECT_SOURCE_DIR}/ios/src/TGMarkerPickResult.h
     ${PROJECT_SOURCE_DIR}/ios/src/TGMapViewController.h)
 
 set(HEADERS

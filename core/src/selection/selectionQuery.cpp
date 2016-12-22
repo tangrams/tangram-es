@@ -74,15 +74,7 @@ void SelectionQuery::process(const View& _view, const FrameBuffer& _framebuffer,
 
         glm::dvec2 bbCenter = marker->bounds().center();
         glm::dvec2 lonLat = _view.getMapProjection().MetersToLonLat(bbCenter);
-        bool clipped;
-        glm::vec2 screenPosition = _view.lonLatToScreenPosition(lonLat.x, lonLat.y, clipped);
-
-        if (clipped) {
-            cb(nullptr);
-            return;
-        }
-
-        MarkerPickResult markerResult(marker->id(), {{screenPosition.x, screenPosition.y}});
+        MarkerPickResult markerResult(marker->id(), {lonLat.x, lonLat.y}, {{m_position.x, m_position.y}});
 
         cb(&markerResult);
     } break;

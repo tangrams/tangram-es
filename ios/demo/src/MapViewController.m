@@ -37,6 +37,22 @@
     [mapView setPosition:newYork];
 }
 
+- (void)mapView:(TGMapViewController *)mapView didSelectMarker:(TGMarkerPickResult *)markerPickResult atScreenPosition:(TGGeoPoint)position;
+{
+    if (!markerPickResult) {
+        return;
+    }
+
+    NSString* message = [NSString stringWithFormat:@"Marker %d", markerPickResult.identifier];
+
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Marker pick callback"
+                                                    message:message
+                                                   delegate:nil
+                                          cancelButtonTitle:@"OK"
+                                          otherButtonTitles:nil];
+    [alert show];
+}
+
 - (void)mapView:(TGMapViewController *)mapView didSelectLabel:(TGLabelPickResult *)labelPickResult atScreenPosition:(CGPoint)position
 {
     if (!labelPickResult) { return; }
