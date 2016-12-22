@@ -22,11 +22,7 @@ public class HttpHandler {
      * Construct an {@code HttpHandler} with default options.
      */
     public HttpHandler() {
-        okClient = new OkHttpClient.Builder()
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .writeTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .build();
+        this(null, 0);
     }
 
     /**
@@ -36,13 +32,16 @@ public class HttpHandler {
      * @param maxSize Maximum size of data to cache, in bytes
      */
     public HttpHandler(File directory, long maxSize) {
-        Cache okTileCache = new Cache(directory, maxSize);
-        okClient = new OkHttpClient.Builder()
-                .cache(okTileCache)
+        OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .writeTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .build();
+                .readTimeout(30, TimeUnit.SECONDS);
+
+        if (directory != null && maxSize > 0) {
+            builder.cache(new Cache(directory, maxSize));
+        }
+
+        okClient = builder.build();
     }
 
     /**
@@ -53,7 +52,6 @@ public class HttpHandler {
      */
     public boolean onRequest(String url, Callback cb) {
         Request request = new Request.Builder()
-                .tag(url)
                 .url(url)
                 .build();
         okClient.newCall(request).enqueue(cb);
@@ -68,17 +66,15 @@ public class HttpHandler {
 
         // check and cancel running call
         for (Call runningCall : okClient.dispatcher().runningCalls()) {
-            if (runningCall.request().tag().equals(url)) {
+            if (runningCall.request().url().toString().equals(url)) {
                 runningCall.cancel();
-                return;
             }
         }
 
         // check and cancel queued call
         for (Call queuedCall : okClient.dispatcher().queuedCalls()) {
-            if (queuedCall.request().tag().equals(url)) {
+            if (queuedCall.request().url().toString().equals(url)) {
                 queuedCall.cancel();
-                return;
             }
         }
     }
