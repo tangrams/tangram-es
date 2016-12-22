@@ -18,6 +18,7 @@
 #import "TGSceneUpdate.h"
 #import "TGHttpHandler.h"
 #import "TGLabelPickResult.h"
+#import "TGMarkerPickResult.h"
 
 typedef NS_ENUM(NSInteger, TGCameraType) {
     TGCameraTypePerspective = 0,
@@ -44,7 +45,6 @@ typedef NS_ENUM(NSInteger, TGDebugFlag) {
     TGDebugFlagSelectionBuffer,  // Draw feature selection framebuffer
 };
 
-typedef uint32_t TGMapMarkerId;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -79,6 +79,7 @@ NS_ASSUME_NONNULL_END
 - (void)mapView:(nonnull TGMapViewController *)mapView didLoadSceneAsync:(nonnull NSString *)scene;
 - (void)mapView:(nonnull TGMapViewController *)mapView didSelectFeature:(nullable NSDictionary *)feature atScreenPosition:(CGPoint)position;
 - (void)mapView:(nonnull TGMapViewController *)mapView didSelectLabel:(nullable TGLabelPickResult *)labelPickResult atScreenPosition:(CGPoint)position;
+- (void)mapView:(nonnull TGMapViewController *)mapView didSelectMarker:(nullable TGMarkerPickResult *)markerPickResult atScreenPosition:(CGPoint)position;
 - (void)mapViewDidCompleteLoading:(nonnull TGMapViewController *)mapView;
 @end
 

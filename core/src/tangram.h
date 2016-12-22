@@ -44,10 +44,11 @@ struct LabelPickResult {
 using LabelPickCallback = std::function<void(const LabelPickResult*)>;
 
 struct MarkerPickResult {
-    MarkerPickResult(MarkerID _id, std::array<float, 2> _position)
-        : id(_id), position(_position) {}
+    MarkerPickResult(MarkerID _id, LngLat _coordinates, std::array<float, 2> _position)
+        : id(_id), coordinates(_coordinates), position(_position) {}
 
     MarkerID id;
+    LngLat coordinates;
     std::array<float, 2> position;
 };
 
