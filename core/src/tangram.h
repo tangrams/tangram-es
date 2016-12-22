@@ -46,6 +46,7 @@ using LabelPickCallback = std::function<void(const LabelPickResult*)>;
 struct SceneUpdate {
     std::string path;
     std::string value;
+    SceneUpdate(std::string p, std::string v) : path(p), value(v) {}
 };
 
 enum class EaseType : char {

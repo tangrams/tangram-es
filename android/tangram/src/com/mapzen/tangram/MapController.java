@@ -13,8 +13,10 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -222,9 +224,20 @@ public class MapController implements Renderer {
      * @param path Location of the YAML scene file within the application assets
      */
     public void loadSceneFile(String path) {
+        loadSceneFile(path, null);
+    }
+
+    /**
+     * Load a new scene file
+     * @param path Location of the YAML scene file within the application assets
+     * @param sceneUpdates List of {@code SceneUpdate}
+     */
+    public void loadSceneFile(String path, List<SceneUpdate> sceneUpdates) {
+
+        String[] updateStrings = bundleSceneUpdates(sceneUpdates);
         scenePath = path;
         checkPointer(mapPointer);
-        nativeLoadScene(mapPointer, path);
+        nativeLoadScene(mapPointer, path, updateStrings);
         requestRender();
     }
 
@@ -738,12 +751,27 @@ public class MapController implements Renderer {
 
     /**
      * Enqueue a scene component update with its corresponding YAML node value
-     * @param componentPath The YAML component path delimited by a '.' (example "scene.animated")
-     * @param value A YAML valid string (example "{ property: true }" or "true")
+     * @param sceneUpdate A {@code SceneUpdate}
      */
-    public void queueSceneUpdate(String componentPath, String value) {
+    public void queueSceneUpdate(SceneUpdate sceneUpdate) {
         checkPointer(mapPointer);
-        nativeQueueSceneUpdate(mapPointer, componentPath, value);
+        if (sceneUpdate == null) {
+            throw new IllegalArgumentException("sceneUpdate can not be null in queueSceneUpdates");
+        }
+        nativeQueueSceneUpdate(mapPointer, sceneUpdate.getPath(), sceneUpdate.getValue());
+    }
+
+    /**
+     * Enqueue a scene component update with its corresponding YAML node value
+     * @param sceneUpdates List of {@code SceneUpdate}
+     */
+    public void queueSceneUpdate(List<SceneUpdate> sceneUpdates) {
+        checkPointer(mapPointer);
+        if (sceneUpdates == null || sceneUpdates.size() == 0) {
+            throw new IllegalArgumentException("sceneUpdates can not be null or empty in queueSceneUpdates");
+        }
+        String[] updateStrings = bundleSceneUpdates(sceneUpdates);
+        nativeQueueSceneUpdates(mapPointer, updateStrings);
     }
 
     /**
@@ -804,6 +832,22 @@ public class MapController implements Renderer {
         }
     }
 
+    private String[] bundleSceneUpdates(List<SceneUpdate> sceneUpdates) {
+
+        String[] updateStrings = null;
+
+        if (sceneUpdates != null) {
+            updateStrings = new String[sceneUpdates.size() * 2];
+            int index = 0;
+            for (SceneUpdate sceneUpdate : sceneUpdates) {
+                updateStrings[index++] = sceneUpdate.getPath();
+                updateStrings[index++] = sceneUpdate.getValue();
+            }
+        }
+
+        return updateStrings;
+    }
+
     boolean setMarkerStyling(long markerId, String styleStr) {
         checkPointer(mapPointer);
         checkId(markerId);
@@ -861,7 +905,7 @@ public class MapController implements Renderer {
 
     private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
     private synchronized native void nativeDispose(long mapPtr);
-    private synchronized native void nativeLoadScene(long mapPtr, String path);
+    private synchronized native void nativeLoadScene(long mapPtr, String path, String[] updateStrings);
     private synchronized native void nativeSetupGL(long mapPtr);
     private synchronized native void nativeResize(long mapPtr, int width, int height);
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
@@ -890,7 +934,8 @@ public class MapController implements Renderer {
     private synchronized native void nativeHandlePinchGesture(long mapPtr, float posX, float posY, float scale, float velocity);
     private synchronized native void nativeHandleRotateGesture(long mapPtr, float posX, float posY, float rotation);
     private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
-    private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String value);
+    private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String componentValue);
+    private synchronized native void nativeQueueSceneUpdates(long mapPtr, String[] updateStrings);
     private synchronized native void nativeApplySceneUpdates(long mapPtr);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
     private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
