@@ -217,17 +217,20 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
                      (metrics.aabb.y + height * 0.5) * TextVertex::position_scale);
 
 
-    for (; it != _quads.end(); ++it) {
+    {
+        std::lock_guard<std::mutex> lock(m_textureMutex);
+        for (; it != _quads.end(); ++it) {
 
-        if (!_refs[it->atlas]) {
-            _refs[it->atlas] = true;
-            m_atlasRefCount[it->atlas]++;
+            if (!_refs[it->atlas]) {
+                _refs[it->atlas] = true;
+                m_atlasRefCount[it->atlas]++;
+            }
+
+            it->quad[0].pos -= offset;
+            it->quad[1].pos -= offset;
+            it->quad[2].pos -= offset;
+            it->quad[3].pos -= offset;
         }
-
-        it->quad[0].pos -= offset;
-        it->quad[1].pos -= offset;
-        it->quad[2].pos -= offset;
-        it->quad[3].pos -= offset;
     }
 
     return true;
