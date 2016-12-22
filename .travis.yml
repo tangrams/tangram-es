@@ -1,5 +1,7 @@
 language: android
 
+sudo: enabled
+
 branches:
     only:
         - master
@@ -16,10 +18,10 @@ matrix:
           env: PLATFORM=android
           addons:
             apt:
-              sources: [ 'kubuntu-backports', 'george-edison55-precise-backports' ]
-              packages: [ 'cmake', 'lib32z1-dev', 'lib32stdc++6', 's3cmd' ]
+              sources: [ 'ubuntu-toolchain-r-test' ]
+              packages: [ 'libstdc++6', 's3cmd' ]
           android:
-            components: [ 'tools', 'build-tools-24.0.2', 'extra-android-m2repository', 'android-24' ]
+            components: [ 'tools', 'build-tools-25.0.0', 'extra-android-m2repository', 'android-25' ]
           jdk: oraclejdk8
 
 before_install:
@@ -41,5 +43,3 @@ script:
 after_success:
     - source ./scripts/travis/script_deploy_android_snapshot.sh
     - source ./scripts/travis/script_deploy_android_demo.sh
-
-sudo: false

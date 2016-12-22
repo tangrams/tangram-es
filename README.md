@@ -141,19 +141,25 @@ make ios-framework-universal [RELEASE=1|DEBUG=1]
 The universal framework will be available in the configuration build type in `/build/ios-framework-universal/`.
 
 ### Android ###
-To build for Android you'll need to have installed both the [Android SDK](http://developer.android.com/sdk/installing/index.html?pkg=tools) and the [Android NDK](https://developer.android.com/tools/sdk/ndk/index.html). Please verify that you have version r10e of the NDK installed. Set an `ANDROID_HOME` environment variable with the root directory of your SDK and an `ANDROID_NDK` environment variable with the root directory of your NDK.
+To build for Android you'll need to use [Android Studio](https://developer.android.com/studio/index.html) version **2.2** or newer on Mac OS X, Ubuntu, or Windows 10. Using the Android Studio SDK Manager, install or update the 'CMake', 'LLDB', and 'NDK' packages from the 'SDK Tools' tab. Once dependencies are installed, you can execute Android builds from either the command line or the Android Studio interface.
 
-Build an APK of the demo application and optionally specify an architecture (default is armeabi-v7a):
-
-```bash
-make android [ANDROID_ARCH=[x86|armeabi-v7a|armeabi]]
-```
-
-Then install to a connected device or emulator. You can (re)install and run the APK with a small script:
+To build the demo application for the ARMv7 architecture (covers most Android devices), run:
 
 ```bash
-./android/run.sh
+make android
 ```
+
+Or open the project in Android Studio and press the 'Run' button (^R). More options are provided through Gradle. 
+
+The Gradle project in the `android/` directory contains two modules: a library module called `tangram` containing the Tangram Android SDK and an application module called `demo`, containing a demo application that uses the `tangram` module. The `tangram` module has two `buildTypes`, `debug` and `release`, and two `productFlavors`, `slim` and `full`. The `slim` flavor includes native libraries for just the ARMv7 architecture, the `full` flavor includes all supported architectures (ARMv6, ARMv7, ARM64, and x86).
+
+To build the library or demo application from the `android/` folder using Gradle, use the conventional syntax, e.g.:
+
+```bash
+./gradlew tangram:assembleFullRelease
+```
+
+Android Studio supports debugging both the Java and C++ parts of tangram-es on a connected device or emulator. Choose one of the 'debug' build variants, set your desired breakpoints, and press the 'Debug' button (^D).
 
 ### Raspberry Pi ###
 To build on Rasberry Pi you will need a C++ toolchain with support for C++14. GCC 4.9 (or higher) is known to work (refer [here](https://community.thinger.io/t/starting-with-the-raspberry-pi/36) for instructions on getting GCC 4.9).
