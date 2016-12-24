@@ -11,6 +11,8 @@ android {
 
   sourceSets.main {
     assets.srcDirs = ['../../scenes']
+    // enable breaking in cpp code by declaring tangram library here
+    jniLibs.srcDirs = ['../tangram/build/intermediates/cmake/full/debug/obj']
   }
 
   aaptOptions.ignoreAssetsPattern "!*.ttf"
