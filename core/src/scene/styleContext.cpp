@@ -212,7 +212,7 @@ bool StyleContext::addFunction(const std::string& _function) {
         return false;
     }
 
-    int id = m_functionCount;
+    int id = m_functionCount++;
     bool ok = true;
 
     duk_push_string(m_ctx, _function.c_str());
