@@ -334,7 +334,7 @@ bool MarkerManager::buildGeometry(Marker& marker, int zoom) {
 
     m_styleContext.setKeywordZoom(zoom);
 
-    bool valid = m_ruleSet.evaluateRuleForContext(*rule, m_styleContext);
+    bool valid = marker.evaluateRuleForContext(m_styleContext);
 
     if (!valid) { return false; }
 

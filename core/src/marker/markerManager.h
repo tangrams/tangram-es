@@ -72,7 +72,6 @@ private:
     bool buildStyling(Marker& marker);
     bool buildGeometry(Marker& marker, int zoom);
 
-    DrawRuleMergeSet m_ruleSet;
     StyleContext m_styleContext;
     std::shared_ptr<Scene> m_scene;
     std::vector<std::unique_ptr<Marker>> m_markers;

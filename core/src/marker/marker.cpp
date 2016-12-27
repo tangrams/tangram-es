@@ -11,6 +11,7 @@
 namespace Tangram {
 
 Marker::Marker(MarkerID id) : m_id(id) {
+    m_ruleSet.reset(new DrawRuleMergeSet());
 }
 
 Marker::~Marker() {
@@ -27,6 +28,10 @@ void Marker::setFeature(std::unique_ptr<Feature> feature) {
 
 void Marker::setStylingString(std::string stylingString) {
     m_stylingString = stylingString;
+}
+
+bool Marker::evaluateRuleForContext(StyleContext& ctx) {
+    return m_ruleSet->evaluateRuleForContext(*m_drawRule, ctx);
 }
 
 void Marker::setDrawRule(std::unique_ptr<DrawRuleData> drawRuleData) {

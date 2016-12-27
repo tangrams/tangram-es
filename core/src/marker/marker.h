@@ -10,8 +10,10 @@
 
 namespace Tangram {
 
+class DrawRuleMergeSet;
 class MapProjection;
 class Scene;
+class StyleContext;
 class Texture;
 class View;
 struct DrawRule;
@@ -97,6 +99,8 @@ public:
 
     const std::string& stylingString() const;
 
+    bool evaluateRuleForContext(StyleContext& ctx);
+
     bool isEasing() const;
 
     bool isVisible() const;
@@ -109,6 +113,7 @@ protected:
     std::unique_ptr<StyledMesh> m_mesh;
     std::unique_ptr<DrawRuleData> m_drawRuleData;
     std::unique_ptr<DrawRule> m_drawRule;
+    std::unique_ptr<DrawRuleMergeSet> m_ruleSet;
     std::unique_ptr<Texture> m_texture;
 
     std::string m_stylingString;
