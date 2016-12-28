@@ -98,13 +98,7 @@ void FontContext::releaseAtlas(std::bitset<max_textures> _refs) {
     if (!_refs.any()) { return; }
     std::lock_guard<std::mutex> lock(m_textureMutex);
     for (size_t i = 0; i < m_textures.size(); i++) {
-        if (!_refs[i]) { continue; }
-
-        if (--m_atlasRefCount[i] == 0) {
-            LOGD("CLEAR ATLAS %d", i);
-            m_atlas.clear(i);
-            m_textures[i].texData.assign(GlyphTexture::size * GlyphTexture::size, 0);
-        }
+        if (_refs[i]) { m_atlasRefCount[i] -= 1; }
     }
 }
 
@@ -216,18 +210,29 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     glm::vec2 offset((metrics.aabb.x + width * 0.5) * TextVertex::position_scale,
                      (metrics.aabb.y + height * 0.5) * TextVertex::position_scale);
 
+    {
+        std::lock_guard<std::mutex> lock(m_textureMutex);
+        for (; it != _quads.end(); ++it) {
 
-    for (; it != _quads.end(); ++it) {
+            if (!_refs[it->atlas]) {
+                _refs[it->atlas] = true;
+                m_atlasRefCount[it->atlas]++;
+            }
 
-        if (!_refs[it->atlas]) {
-            _refs[it->atlas] = true;
-            m_atlasRefCount[it->atlas]++;
+            it->quad[0].pos -= offset;
+            it->quad[1].pos -= offset;
+            it->quad[2].pos -= offset;
+            it->quad[3].pos -= offset;
         }
 
-        it->quad[0].pos -= offset;
-        it->quad[1].pos -= offset;
-        it->quad[2].pos -= offset;
-        it->quad[3].pos -= offset;
+        // Clear unused textures
+        for (size_t i = 0; i < m_textures.size(); i++) {
+            if (m_atlasRefCount[i] == 0) {
+                m_atlas.clear(i);
+                m_textures[i].texData.assign(GlyphTexture::size *
+                                             GlyphTexture::size, 0);
+            }
+        }
     }
 
     return true;
