@@ -20,7 +20,6 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"anchor", StyleParamKey::anchor},
     {"angle", StyleParamKey::angle},
     {"cap", StyleParamKey::cap},
-    {"centroid", StyleParamKey::centroid},
     {"collide", StyleParamKey::collide},
     {"color", StyleParamKey::color},
     {"extrude", StyleParamKey::extrude},
@@ -47,6 +46,9 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"outline:style", StyleParamKey::outline_style},
     {"outline:visible", StyleParamKey::outline_visible},
     {"outline:width", StyleParamKey::outline_width},
+    {"placement", StyleParamKey::placement},
+    {"placement_spacing", StyleParamKey::placement_spacing},
+    {"placement_min_length_ratio", StyleParamKey::placement_min_length_ratio},
     {"priority", StyleParamKey::priority},
     {"repeat_distance", StyleParamKey::text_repeat_distance},
     {"repeat_group", StyleParamKey::text_repeat_group},
@@ -92,6 +94,7 @@ const std::map<StyleParamKey, std::vector<Unit>> s_StyleParamUnits = {
     {StyleParamKey::offset, {Unit::pixel}},
     {StyleParamKey::text_offset, {Unit::pixel}},
     {StyleParamKey::size, {Unit::pixel}},
+    {StyleParamKey::placement_spacing, {Unit::pixel}},
     {StyleParamKey::text_font_stroke_width, {Unit::pixel}},
     {StyleParamKey::width, {Unit::meter, Unit::pixel}},
     {StyleParamKey::outline_width, {Unit::meter, Unit::pixel}}
@@ -217,6 +220,13 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         return anchors;
     }
+    case StyleParamKey::placement: {
+        LabelProperty::Placement placement = LabelProperty::Placement::vertex;
+        if (!LabelProperty::placement(_value, placement)) {
+            LOG("Invalid placement parameter, Setting vertex as default.");
+        }
+        return placement;
+    }
     case StyleParamKey::text_align:
     case StyleParamKey::text_source:
     case StyleParamKey::text_transform:
@@ -233,7 +243,6 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         return fontSize;
     }
-    case StyleParamKey::centroid:
     case StyleParamKey::flat:
     case StyleParamKey::interactive:
     case StyleParamKey::text_interactive:
@@ -263,6 +272,23 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         LOGW("Invalid '%s' value '%s'", keyName(key).c_str(), _value.c_str());
         break;
+    }
+    case StyleParamKey::placement_spacing: {
+        ValueUnitPair placementSpacing;
+        placementSpacing.unit = Unit::pixel;
+
+        int pos = parseValueUnitPair(_value, 0, placementSpacing);
+        if (pos < 0) {
+            LOGW("Invalid placement spacing value '%s'", _value.c_str());
+            placementSpacing.value =  80.0f;
+            placementSpacing.unit = Unit::pixel;
+        } else {
+            if (placementSpacing.unit != Unit::pixel) {
+                LOGW("Invalid unit provided for placement spacing");
+            }
+        }
+
+        return Width(placementSpacing);
     }
     case StyleParamKey::text_repeat_distance: {
         ValueUnitPair repeatDistance;
@@ -295,9 +321,18 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
 
         return Width(width);
     }
-    case StyleParamKey::angle:
+    case StyleParamKey::angle: {
+        double num;
+        if (_value == "auto") {
+            return std::nanf("1");
+        } else if (parseFloat(_value, num) > 0) {
+            return static_cast<float>(num);
+        }
+        break;
+    }
     case StyleParamKey::miter_limit:
     case StyleParamKey::outline_miter_limit:
+    case StyleParamKey::placement_min_length_ratio:
     case StyleParamKey::text_font_stroke_width: {
         double num;
         if (parseFloat(_value, num) > 0) {
@@ -379,7 +414,6 @@ std::string StyleParam::toString() const {
     case StyleParamKey::visible:
     case StyleParamKey::text_visible:
     case StyleParamKey::outline_visible:
-    case StyleParamKey::centroid:
     case StyleParamKey::collide:
     case StyleParamKey::text_optional:
     case StyleParamKey::text_collide:
@@ -633,6 +667,7 @@ bool StyleParam::isWidth(StyleParamKey _key) {
         case StyleParamKey::width:
         case StyleParamKey::outline_width:
         case StyleParamKey::text_font_stroke_width:
+        case StyleParamKey::placement_spacing:
             return true;
         default:
             return false;

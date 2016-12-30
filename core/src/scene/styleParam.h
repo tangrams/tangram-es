@@ -16,7 +16,6 @@ enum class StyleParamKey : uint8_t {
     angle,
     text_anchor,
     cap,
-    centroid,
     collide,
     text_collide,
     color,
@@ -45,6 +44,9 @@ enum class StyleParamKey : uint8_t {
     outline_width,
     outline_style,
     outline_visible,
+    placement,
+    placement_spacing,
+    placement_min_length_ratio,
     priority,
     text_order,
     text_priority,
@@ -134,7 +136,8 @@ struct StyleParam {
         }
     };
 
-    using Value = variant<Undefined, none_type, bool, float, uint32_t, std::string, glm::vec2, Width, LabelProperty::Anchors>;
+    using Value = variant<Undefined, none_type, bool, float, uint32_t, std::string, glm::vec2,
+                            Width, LabelProperty::Placement, LabelProperty::Anchors>;
 
     StyleParam() :
         key(StyleParamKey::none),

@@ -121,7 +121,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     }
 
     _rule.get(StyleParamKey::sprite_default, p.spriteDefault);
-    _rule.get(StyleParamKey::centroid, p.centroid);
+    _rule.get(StyleParamKey::placement, p.placement);
     _rule.get(StyleParamKey::interactive, p.interactive);
     _rule.get(StyleParamKey::collide, p.labelOptions.collide);
     _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
@@ -297,7 +297,7 @@ bool PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
         return false;
     }
 
-    if (!p.centroid) {
+    if (p.placement != LabelProperty::centroid) {
         for (auto line : _polygon) {
             for (auto point : line) {
                 addLabel(point, uvsQuad, p, _rule);

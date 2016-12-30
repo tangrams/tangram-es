@@ -9,6 +9,13 @@ namespace Tangram {
 
 namespace LabelProperty {
 
+enum Placement : uint8_t {
+    vertex = 0,
+    midpoint,
+    spaced,
+    centroid,
+};
+
 enum Anchor : uint8_t {
     center = 0,
     top,
@@ -38,6 +45,7 @@ struct Anchors {
 };
 
 bool anchor(const std::string& _transform, Anchor& _out);
+bool placement(const std::string& placement, Placement& out);
 
 glm::vec2 anchorDirection(Anchor _anchor);
 

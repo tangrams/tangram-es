@@ -432,6 +432,11 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
             case StyleParamKey::extrude:
                 _val = glm::vec2(0.f, static_cast<float>(duk_get_number(m_ctx, -1)));
                 break;
+            case StyleParamKey::placement_spacing: {
+                double v = duk_get_number(m_ctx, -1);
+                _val = StyleParam::Width{static_cast<float>(v), Unit::pixel};
+                break;
+            }
             case StyleParamKey::width:
             case StyleParamKey::outline_width: {
                 // TODO more efficient way to return pixels.
