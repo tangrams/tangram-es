@@ -60,14 +60,14 @@ void Labels::processLabelUpdate(const ViewState& viewState,
 
             if (label->visibleState() || !label->canOcclude()) {
                 m_needUpdate |= label->evalState(dt);
-                label->addVerticesToMesh(transform);
+                label->addVerticesToMesh(transform, viewState.viewportSize);
             }
         } else if (label->canOcclude()) {
             m_labels.emplace_back(label.get(), tile, isProxy);
             m_labels.back().transform = transformRange;
         } else {
             m_needUpdate |= label->evalState(dt);
-            label->addVerticesToMesh(transform);
+            label->addVerticesToMesh(transform, viewState.viewportSize);
         }
         if (label->selectionColor()) {
             m_selectionLabels.emplace_back(label.get(), tile, isProxy);
@@ -162,7 +162,7 @@ void Labels::skipTransitions(const std::vector<const Style*>& _styles, Tile& _ti
                 if (l0->options().repeatGroup != l1->options().repeatGroup) { continue; }
                 // if (l0->hash() != l1->hash()) { continue; }
 
-                float d2 = l0->screenDistance2(l1->center());
+                float d2 = glm::distance2(l0->screenCenter(), l1->screenCenter());
 
                 // The new label lies within the circle defined by the bbox of l0
                 if (sqrt(d2) < std::max(l0->dimension().x, l0->dimension().y)) {
@@ -319,18 +319,16 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
             if (l->isOccluded()) {
                 // Update BBox for anchor fallback
                 l->obbs(transform, m_obbs, entry.obbs, false);
+
                 if (anchorIndex == l->anchorIndex()) {
                     // Reached first anchor again
                     break;
                 }
             }
 
-            if (l->offViewport(_viewState.viewportSize)) { continue; }
-
             l->occlude(false);
 
             // Skip label if it intersects with a previous label.
-
             for (int i = entry.obbs.start; i < entry.obbs.end(); i++) {
                 auto& obb = m_obbs[i];
 
@@ -338,7 +336,7 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
                         size_t other = reinterpret_cast<size_t>(b.m_userData);
 
                         if (l->parent()) {
-
+                            // Ignore intersection with parent label
                             // TODO: optimize
                             auto it = std::lower_bound(std::begin(m_labels), std::end(m_labels), int(other),
                                                        [](auto& p, int other) { return other > p.obbs.start; });
@@ -389,7 +387,7 @@ bool Labels::withinRepeatDistance(Label *_label) {
     auto it = m_repeatGroups.find(_label->options().repeatGroup);
     if (it != m_repeatGroups.end()) {
         for (auto* ll : it->second) {
-            float d2 = glm::distance2(_label->center(), ll->center());
+            float d2 = glm::distance2(_label->screenCenter(), ll->screenCenter());
             if (d2 < threshold2) {
                 return true;
             }
@@ -429,7 +427,7 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
         ScreenTransform transform { m_transforms, entry.transform };
 
         m_needUpdate |= entry.label->evalState(_dt);
-        entry.label->addVerticesToMesh(transform);
+        entry.label->addVerticesToMesh(transform, _viewState.viewportSize);
     }
 }
 
@@ -444,7 +442,7 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
 
         if (label->type() == Label::Type::debug) { continue; }
 
-        glm::vec2 sp = label->center();
+        glm::vec2 sp = label->screenCenter();
 
         // draw bounding box
         switch (label->state()) {
@@ -490,7 +488,7 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
 
         if (label->parent()) {
             Primitives::setColor(rs, 0xff0000);
-            Primitives::drawLine(rs, sp, label->parent()->center());
+            Primitives::drawLine(rs, sp, label->parent()->screenCenter());
         }
 
         if (label->type() == Label::Type::curved) {

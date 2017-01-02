@@ -10,7 +10,7 @@ namespace Tangram {
 class TextLabels;
 class TextStyle;
 
-class CurvedLabel : public Label {
+class CurvedLabel : public TextLabel {
 
 public:
 
@@ -21,16 +21,24 @@ public:
         uint32_t selectionColor;
     };
 
-    CurvedLabel(Label::Options _options, float _prio,
-                TextLabel::VertexAttributes _attrib,
-                glm::vec2 _dim, TextLabels& _labels, TextRange _textRanges,
-                TextLabelProperty::Align _preferedAlignment,
-                size_t _anchorPoint, const std::vector<glm::vec2>& _line);
+    using WorldTransform = std::vector<glm::vec2>;
 
-    LabelType renderType() const override { return LabelType::text; }
+    CurvedLabel(WorldTransform _worldTransform, Label::Options _options, float _prio,
+                TextLabel::VertexAttributes _attrib, glm::vec2 _dim,
+                TextLabels& _labels, TextRange _textRanges, TextLabelProperty::Align _preferedAlignment,
+                size_t _anchorPoint)
 
-    TextRange& textRanges() {
-        return m_textRanges;
+        : TextLabel({{}}, Label::Type::curved, _options, _attrib,
+                    _dim, _labels, _textRanges, _preferedAlignment),
+          m_worldTransform(std::move(_worldTransform)),
+          m_anchorPoint(_anchorPoint),
+          m_screenAnchorPoint(_anchorPoint),
+          m_prio(_prio) {
+
+        /// FIXME
+        m_options.repeatDistance = 0;
+
+        applyAnchor(m_options.anchors[0]);
     }
 
     void obbs(ScreenTransform& _transform, std::vector<OBB>& _obbs,
@@ -41,37 +49,22 @@ public:
         return m_prio;
     }
 
-protected:
-
-    void addVerticesToMesh(ScreenTransform& _transform) override;
-
-    uint32_t selectionColor() override {
-        return m_fontAttrib.selectionColor;
+    glm::vec2 modelCenter() const override {
+        return m_worldTransform[m_anchorPoint];
     }
 
-private:
+protected:
+
+    void addVerticesToMesh(ScreenTransform& _transform, const glm::vec2& _screenSize) override;
 
     void applyAnchor(LabelProperty::Anchor _anchor) override;
 
     bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState,
-                               ScreenTransform& _transform, bool _drawAllLabels) override;
+                               ScreenTransform& _transform) override;
 
-    // Back-pointer to owning container
-    const TextLabels& m_textLabels;
-
-    // first vertex and count in m_textLabels quads (left,right,center)
-    TextRange m_textRanges;
-
-    // TextRange currently used for drawing
-    int m_textRangeIndex;
-
-    TextLabel::VertexAttributes m_fontAttrib;
-
-    // The text LAbel prefered alignment
-    TextLabelProperty::Align m_preferedAlignment;
+    const std::vector<glm::vec2> m_worldTransform;
 
     size_t m_anchorPoint;
-    std::vector<glm::vec2> m_line;
 
     size_t m_screenAnchorPoint;
 

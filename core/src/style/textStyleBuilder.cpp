@@ -88,7 +88,7 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
         for (auto& label : m_labels) {
             auto* textLabel = static_cast<TextLabel*>(label.get());
 
-            auto& ranges = textLabel->textRanges();
+            const auto& ranges = textLabel->textRanges();
 
             bool active = textLabel->state() != Label::State::dead;
 
@@ -447,7 +447,7 @@ void TextStyleBuilder::addCurvedTextLabels(const Line& _line, const TextStyle::P
             selectionColor = _rule.featureSelection->nextColorIdentifier();
         }
 
-        m_labels.emplace_back(new CurvedLabel( _params.labelOptions, prio,
+        m_labels.emplace_back(new CurvedLabel(l, _params.labelOptions, prio,
                                                {m_attributes.fill,
                                                        m_attributes.stroke,
                                                        m_attributes.fontScale,
@@ -455,7 +455,7 @@ void TextStyleBuilder::addCurvedTextLabels(const Line& _line, const TextStyle::P
                                                {m_attributes.width, m_attributes.height},
                                                *m_textLabels, m_attributes.textRanges,
                                                TextLabelProperty::Align::center,
-                                               anchor, l));
+                                               anchor));
 
     }
 }
@@ -706,15 +706,23 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 
     glm::vec2 bbox(0);
     if (ctx->layoutText(_params, *renderText, m_quads, m_atlasRefs, bbox, m_attributes.textRanges)) {
+
+        int start = m_attributes.quadsStart;
+        for (auto& range : m_attributes.textRanges) {
+            assert(range.start == start);
+            assert(range.length >= 0);
+            start += range.length;
+        }
         m_attributes.width = bbox.x;
         m_attributes.height = bbox.y;
         return true;
     }
+
     return false;
 }
 
 void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
-                                Label::WorldTransform _transform, const DrawRule& _rule) {
+                                TextLabel::WorldTransform _transform, const DrawRule& _rule) {
 
     uint32_t selectionColor = 0;
 

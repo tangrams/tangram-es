@@ -43,7 +43,7 @@ void LabelCollider::handleRepeatGroup(size_t startPos) {
             Label* l2 = m_labels[j].label;
             if (l2->isOccluded()) { continue; }
 
-            float d2 = distance2(l1->center(), l2->center());
+            float d2 = distance2(l1->screenCenter(), l2->screenCenter());
             if (d2 < threshold2) {
                 l2->occlude();
             }
@@ -116,7 +116,7 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
         auto& entry = *it;
         auto* label = entry.label;
         ScreenTransform transform { m_transforms, entry.transform, true };
-        if (label->updateScreenTransform(mvp, viewState, transform, false)) {
+        if (label->updateScreenTransform(mvp, viewState, transform)) {
 
             label->obbs(transform, m_obbs, entry.obbs);
 

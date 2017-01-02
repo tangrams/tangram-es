@@ -34,11 +34,13 @@ public:
         float extrudeScale;
     };
 
-    SpriteLabel(Label::WorldTransform _transform, glm::vec2 _size, Label::Options _options,
+    using WorldTransform = glm::vec3;
+
+    SpriteLabel(WorldTransform _transform, glm::vec2 _size, Label::Options _options,
                 SpriteLabel::VertexAttributes _attrib, Texture* _texture,
                 SpriteLabels& _labels, size_t _labelsPos);
 
-    void addVerticesToMesh(ScreenTransform& _transform) override;
+    void addVerticesToMesh(ScreenTransform& _transform, const glm::vec2& _screenSize) override;
 
     LabelType renderType() const override { return LabelType::icon; }
 
@@ -49,12 +51,18 @@ public:
         return m_vertexAttrib.selectionColor;
     }
 
+    glm::vec2 modelCenter() const override {
+        return glm::vec2(m_worldTransform);
+    }
+
 private:
 
     void applyAnchor(LabelProperty::Anchor _anchor) override;
 
     bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState,
-                               ScreenTransform& _transform, bool _drawAllLabels) override;
+                               ScreenTransform& _transform) override;
+
+    const WorldTransform m_worldTransform;
 
     // Back-pointer to owning container and position
     const SpriteLabels& m_labels;

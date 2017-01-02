@@ -46,7 +46,9 @@ public:
         uint32_t selectionColor;
     };
 
-    TextLabel(Label::WorldTransform _transform, Type _type, Label::Options _options,
+    using WorldTransform = std::array<glm::vec2, 2>;
+
+    TextLabel(WorldTransform _transform, Type _type, Label::Options _options,
               TextLabel::VertexAttributes _attrib,
               glm::vec2 _dim, TextLabels& _labels, TextRange _textRanges,
               TextLabelProperty::Align _preferedAlignment);
@@ -62,20 +64,30 @@ public:
               Range& _range, bool _append) override;
 
 
-protected:
-
-    void addVerticesToMesh(ScreenTransform& _transform) override;
-
     uint32_t selectionColor() override {
         return m_fontAttrib.selectionColor;
     }
 
-private:
+    glm::vec2 modelCenter() const override {
+        if (m_type == Label::Type::line) {
+            return (m_worldTransform[0] + m_worldTransform[1]) * 0.5f;
+        } else {
+            return m_worldTransform[0];
+        }
+    }
+
+    float worldLineLength2() const override;
+
+protected:
+
+    void addVerticesToMesh(ScreenTransform& _transform, const glm::vec2& _screenSize) override;
 
     void applyAnchor(LabelProperty::Anchor _anchor) override;
 
     bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState,
-                               ScreenTransform& _transform, bool _drawAllLabels) override;
+                               ScreenTransform& _transform) override;
+
+    const WorldTransform m_worldTransform;
 
     // Back-pointer to owning container
     const TextLabels& m_textLabels;

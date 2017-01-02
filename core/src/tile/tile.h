@@ -64,7 +64,7 @@ public:
 
     const glm::mat4& mvp() const { return m_mvp; }
 
-    glm::dvec2 coordToLngLat(const glm::vec2& _tileCoord, const MapProjection& _projection) const;
+    glm::dvec2 coordToLngLat(const glm::vec2& _tileCoord) const;
 
     void initGeometry(uint32_t _size);
 

@@ -13,30 +13,9 @@
 
 namespace Tangram {
 
-using namespace LabelProperty;
-using namespace TextLabelProperty;
+void CurvedLabel::applyAnchor(LabelProperty::Anchor _anchor) {
 
-CurvedLabel::CurvedLabel(Label::Options _options, float _prio,
-                         TextLabel::VertexAttributes _attrib, glm::vec2 _dim,
-                         TextLabels& _labels, TextRange _textRanges, Align _preferedAlignment,
-                         size_t _anchorPoint, const std::vector<glm::vec2>& _line)
-
-    : Label({{}}, _dim, Label::Type::curved, _options),
-      m_textLabels(_labels),
-      m_textRanges(_textRanges),
-      m_fontAttrib(_attrib),
-      m_preferedAlignment(_preferedAlignment),
-      m_anchorPoint(_anchorPoint),
-      m_line(_line) {
-
-    m_prio = _prio;
-    m_options.repeatDistance = 0;
-    m_screenAnchorPoint = _anchorPoint;
-
-    applyAnchor(m_options.anchors[0]);
-}
-
-void CurvedLabel::applyAnchor(Anchor _anchor) {
+    using namespace TextLabelProperty;
 
     if (m_preferedAlignment == Align::none) {
         Align newAlignment = alignFromAnchor(_anchor);
@@ -56,16 +35,17 @@ void CurvedLabel::applyAnchor(Anchor _anchor) {
 }
 
 bool CurvedLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState,
-                                      ScreenTransform& _transform, bool _drawAllLabels) {
+                                      ScreenTransform& _transform) {
+
+    glm::vec2 min(-m_dim.y);
+    glm::vec2 max(_viewState.viewportSize + m_dim.y);
 
     bool clipped = false;
+    bool inside = false;
 
     LineSampler<ScreenTransform> sampler { _transform };
 
-    //bool inside = false;
-    bool inside = true;
-
-    for (auto& p : m_line) {
+    for (auto& p : m_worldTransform) {
         glm::vec2 sp = worldToScreenSpace(_mvp, glm::vec4(p, 0.0, 1.0),
                                           _viewState.viewportSize, clipped);
 
@@ -74,8 +54,8 @@ bool CurvedLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
         sampler.add(sp);
 
         if (!inside) {
-            if ((sp.x >= 0 && sp.x <= _viewState.viewportSize.x) ||
-                (sp.y >= 0 && sp.y <= _viewState.viewportSize.y)) {
+            if ((sp.x > min.x && sp.x < max.x &&
+                 sp.y > min.y && sp.y < max.y)) {
                 inside = true;
             }
         }
@@ -87,6 +67,9 @@ bool CurvedLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
         sampler.clearPoints();
         return false;
     }
+
+    auto center = sampler.point(m_anchorPoint);
+    m_screenCenter = glm::vec2(center.x, center.y);
 
 #if 0
     //if (m_line.size() > 3) {
@@ -211,7 +194,7 @@ void CurvedLabel::obbs(ScreenTransform& _transform, std::vector<OBB>& _obbs,
     _range.length = count;
 }
 
-void CurvedLabel::addVerticesToMesh(ScreenTransform& _transform) {
+void CurvedLabel::addVerticesToMesh(ScreenTransform& _transform, const glm::vec2& _screenSize) {
     if (!visibleState()) { return; }
 
     TextVertex::State state {
@@ -250,6 +233,11 @@ void CurvedLabel::addVerticesToMesh(ScreenTransform& _transform) {
         center = sampler.sumLength() - center;
     }
 
+    std::array<glm::i16vec2, 4> vertexPosition;
+
+    glm::i16vec2 min(-m_dim.y * TextVertex::position_scale);
+    glm::i16vec2 max((_screenSize + m_dim.y) * TextVertex::position_scale);
+
     for (; it != end; ++it) {
         auto quad = *it;
 
@@ -282,13 +270,28 @@ void CurvedLabel::addVerticesToMesh(ScreenTransform& _transform) {
 
         rotation = {rotation.x, -rotation.y};
 
+        bool visible = false;
+
+        for (int i = 0; i < 4; i++) {
+
+            vertexPosition[i] = p + glm::i16vec2{rotateBy(glm::vec2(quad.quad[i].pos) - origin, rotation)};
+
+            if (!visible &&
+                vertexPosition[i].x > min.x &&
+                vertexPosition[i].x < max.x &&
+                vertexPosition[i].y > min.y &&
+                vertexPosition[i].y < max.y) {
+                visible = true;
+            }
+        }
+
+        if (!visible) { continue; }
+
         auto* quadVertices = meshes[it->atlas]->pushQuad();
 
         for (int i = 0; i < 4; i++) {
             TextVertex& v = quadVertices[i];
-
-            v.pos = p + glm::i16vec2{rotateBy(glm::vec2(quad.quad[i].pos) - origin, rotation)};
-
+            v.pos = vertexPosition[i];
             v.uv = quad.quad[i].uv;
             v.state = state;
         }

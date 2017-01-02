@@ -1,9 +1,6 @@
 #include "label.h"
 
 #include "util/geom.h"
-#include "glm/gtx/rotate_vector.hpp"
-#include "glm/gtx/norm.hpp"
-#include "tangram.h"
 #include "platform.h"
 #include "view/view.h"
 #include "log.h"
@@ -14,11 +11,9 @@ namespace Tangram {
 
 const float Label::activation_distance_threshold = 2;
 
-Label::Label(Label::WorldTransform _worldTransform, glm::vec2 _size,
-             Type _type, Options _options)
+Label::Label(glm::vec2 _size, Type _type, Options _options)
     : m_state(State::none),
       m_type(_type),
-      m_worldTransform(_worldTransform),
       m_dim(_size),
       m_options(_options) {
 
@@ -54,58 +49,6 @@ void Label::setParent(Label& _parent, bool _definePriority, bool _defineCollide)
     applyAnchor(m_options.anchors[m_anchorIndex]);
 }
 
-float Label::screenDistance2(glm::vec2 _screenPosition) const {
-    return 0; //glm::length2(m_obb.getCentroid() - _screenPosition);
-}
-
-LngLat Label::coordinates(const Tile& _tile, const MapProjection& _projection) {
-    LngLat coordinates;
-    int coordCount = m_type == Type::line ? 2 : 1;
-    for (int i = 0; i < coordCount; ++i) {
-        glm::vec2 tileCoord = glm::vec2(m_worldTransform.positions[i]);
-        glm::dvec2 degrees = _tile.coordToLngLat(tileCoord, _projection);
-        coordinates.longitude += degrees.x;
-        coordinates.latitude += degrees.y;
-    }
-    coordinates.longitude /= coordCount;
-    coordinates.latitude /= coordCount;
-
-    return coordinates;
-}
-
-float Label::worldLineLength2() const {
-    float worldLength2 = 0.f;
-
-    if (m_type == Type::line) {
-        worldLength2 = glm::length2(m_worldTransform.positions[0] - m_worldTransform.positions[1]);
-    }
-
-    return worldLength2;
-}
-
-bool Label::offViewport(const glm::vec2& _screenSize) {
-    // const auto& quad = m_obb.getQuad();
-
-    // for (int i = 0; i < 4; ++i) {
-    //     if (m_options.flat) {
-    //         if (m_screenTransform.positions[i].x < _screenSize.x
-    //          && m_screenTransform.positions[i].x > 0
-    //          && m_screenTransform.positions[i].y < _screenSize.y
-    //          && m_screenTransform.positions[i].y > 0) {
-    //             return false;
-    //         }
-    //     } else {
-    //         if (quad[i].x < _screenSize.x && quad[i].x > 0 &&
-    //             quad[i].y < _screenSize.y && quad[i].y > 0) {
-    //             return false;
-    //         }
-    //     }
-    // }
-
-    // return true;
-    return false;
-}
-
 bool Label::canOcclude() {
     return m_options.collide;
 }
@@ -121,10 +64,6 @@ bool Label::visibleState() const {
 
 void Label::skipTransitions() {
     enterState(State::skip_transition, 0.0);
-}
-
-glm::vec2 Label::center() const {
-    return glm::vec2{}; //m_worldTransform.position;
 }
 
 void Label::enterState(const State& _state, float _alpha) {
@@ -171,8 +110,6 @@ void Label::print() const {
     }
     LOG("\tm_state: %s", state.c_str());
     LOG("\tm_anchorIndex: %d", m_anchorIndex);
-    //LOG("\tscreenPos: %f/%f", m_screenTransform.position.x, m_screenTransform.position.y);
-
 }
 
 bool Label::nextAnchor() {
@@ -207,7 +144,7 @@ bool Label::update(const glm::mat4& _mvp, const ViewState& _viewState,
         }
     }
 
-    bool ruleSatisfied = updateScreenTransform(_mvp, _viewState, _transform, _drawAllLabels);
+    bool ruleSatisfied = updateScreenTransform(_mvp, _viewState, _transform);
 
     // one of the label rules has not been satisfied
     if (!ruleSatisfied) {
@@ -215,8 +152,6 @@ bool Label::update(const glm::mat4& _mvp, const ViewState& _viewState,
         return false;
     }
 
-    // update the view-space bouding box
-    // updateBBoxes(_viewState.fractZoom);
 
     // // checks whether the label is out of the viewport
     // if (offViewport(_viewState.viewportSize)) {

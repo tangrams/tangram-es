@@ -9,6 +9,8 @@
 #include "view/view.h"
 #include "log.h"
 
+#include "glm/gtx/norm.hpp"
+
 namespace Tangram {
 
 using namespace LabelProperty;
@@ -33,11 +35,12 @@ struct PointTransform {
     glm::vec2 rotation() { return glm::vec2(m_transform[1]); }
 };
 
-TextLabel::TextLabel(Label::WorldTransform _transform, Type _type, Label::Options _options,
+TextLabel::TextLabel(WorldTransform _transform, Type _type, Label::Options _options,
                      TextLabel::VertexAttributes _attrib,
                      glm::vec2 _dim,  TextLabels& _labels, TextRange _textRanges,
                      Align _preferedAlignment)
-    : Label(_transform, _dim, _type, _options),
+    : Label(_dim, _type, _options),
+      m_worldTransform(_transform),
       m_textLabels(_labels),
       m_textRanges(_textRanges),
       m_fontAttrib(_attrib),
@@ -68,17 +71,19 @@ void TextLabel::applyAnchor(Anchor _anchor) {
 }
 
 bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState,
-                                      ScreenTransform& _transform, bool _drawAllLabels) {
+                                      ScreenTransform& _transform) {
 
     bool clipped = false;
 
     if (m_type == Type::point || m_type == Type::debug) {
-        glm::vec2 p0 = m_worldTransform.positions[0];
+        glm::vec2 p0 = m_worldTransform[0];
 
         glm::vec2 screenPosition = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
                                                       _viewState.viewportSize, clipped);
 
         if (clipped) { return false; }
+
+        m_screenCenter = screenPosition;
 
         PointTransform(_transform).set(screenPosition + m_options.offset, glm::vec2{1, 0});
 
@@ -91,8 +96,8 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
 
         // project label position from mercator world space to screen
         // coordinates
-        glm::vec2 p0 = m_worldTransform.positions[0];
-        glm::vec2 p2 = m_worldTransform.positions[1];
+        glm::vec2 p0 = m_worldTransform[0];
+        glm::vec2 p2 = m_worldTransform[1];
 
         glm::vec2 ap0 = worldToScreenSpace(_mvp, glm::vec4(p0, 0.0, 1.0),
                                            _viewState.viewportSize, clipped);
@@ -101,7 +106,7 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
 
         // check whether the label is behind the camera using the
         // perspective division factor
-        if (_drawAllLabels && clipped) {
+        if (clipped) {
             return false;
         }
 
@@ -110,21 +115,21 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
         // default heuristic : allow label to be 30% wider than segment
         float minLength = m_dim.x * 0.7;
 
-        if (_drawAllLabels && length < minLength) {
-            return false;
-        }
+        if (length < minLength) { return false; }
 
         glm::vec2 p1 = glm::vec2(p2 + p0) * 0.5f;
 
         // Keep screen position center at world center (less sliding in tilted view)
-        glm::vec2 position = worldToScreenSpace(_mvp, glm::vec4(p1, 0.0, 1.0),
+        glm::vec2 screenPosition = worldToScreenSpace(_mvp, glm::vec4(p1, 0.0, 1.0),
                                                 _viewState.viewportSize, clipped);
 
 
         rotation = (ap0.x <= ap2.x ? ap2 - ap0 : ap0 - ap2) / length;
         rotation = glm::vec2{ rotation.x, - rotation.y };
 
-        PointTransform(_transform).set(position + rotateBy(m_options.offset, rotation), rotation);
+        m_screenCenter = screenPosition;
+
+        PointTransform(_transform).set(screenPosition + rotateBy(m_options.offset, rotation), rotation);
 
         return true;
     }
@@ -132,13 +137,14 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
     return false;
 }
 
+float TextLabel::worldLineLength2() const {
+    if (m_type != Type::line) { return 0.f; }
+
+    return glm::length2(m_worldTransform[0] - m_worldTransform[1]);
+}
+
 void TextLabel::obbs(ScreenTransform& _transform, std::vector<OBB>& _obbs,
                      Range& _range, bool _append) {
-
-    if (m_type == Label::Type::curved) {
-        // Dont update curved label ranges for now (This isn't used anyway)
-        _append = true;
-    }
 
     if (_append) { _range.start = int(_obbs.size()); }
 
@@ -165,7 +171,7 @@ void TextLabel::obbs(ScreenTransform& _transform, std::vector<OBB>& _obbs,
     _range.length = 1;
 }
 
-void TextLabel::addVerticesToMesh(ScreenTransform& _transform) {
+void TextLabel::addVerticesToMesh(ScreenTransform& _transform, const glm::vec2& _screenSize) {
     if (!visibleState()) { return; }
 
     TextVertex::State state {
@@ -190,18 +196,43 @@ void TextLabel::addVerticesToMesh(ScreenTransform& _transform) {
     glm::vec2 screenPosition = transform.position();
     screenPosition += m_anchor;
     glm::i16vec2 sp = glm::i16vec2(screenPosition * TextVertex::position_scale);
+    std::array<glm::i16vec2, 4> vertexPosition;
+
+    // Expand screen bouding box by text height
+    // TODO: Better approximation.
+    glm::i16vec2 min(-m_dim.y * TextVertex::position_scale);
+    glm::i16vec2 max((_screenSize + m_dim.y) * TextVertex::position_scale);
 
     for (; it != end; ++it) {
         auto quad = *it;
+        bool visible = false;
+
+        if (rotate) {
+            for (int i = 0; i < 4; i++) {
+                vertexPosition[i] = sp + glm::i16vec2{rotateBy(quad.quad[i].pos, rotation)};
+            }
+        } else {
+            for (int i = 0; i < 4; i++) {
+                vertexPosition[i] = sp + quad.quad[i].pos;
+            }
+        }
+
+        for (int i = 0; i < 4; i++) {
+            if (!visible &&
+                vertexPosition[i].x > min.x &&
+                vertexPosition[i].x < max.x &&
+                vertexPosition[i].y > min.y &&
+                vertexPosition[i].y < max.y) {
+                visible = true;
+            }
+        }
+        if (!visible) { continue; }
+
         auto* quadVertices = meshes[it->atlas]->pushQuad();
 
         for (int i = 0; i < 4; i++) {
             TextVertex& v = quadVertices[i];
-            if (rotate) {
-                v.pos = sp + glm::i16vec2{rotateBy(quad.quad[i].pos, rotation)};
-            } else {
-                v.pos = sp + quad.quad[i].pos;
-            }
+            v.pos = vertexPosition[i];
             v.uv = quad.quad[i].uv;
             v.state = state;
         }
