@@ -51,13 +51,14 @@ static jmethodID onFeaturePickMID = 0;
 static jmethodID onLabelPickMID = 0;
 static jmethodID onMarkerPickMID = 0;
 static jmethodID labelPickResultInitMID = 0;
+static jmethodID markerPickResultInitMID = 0;
 
 static jclass labelPickResultClass = nullptr;
+static jclass markerPickResultClass = nullptr;
 static jclass hashmapClass = nullptr;
 static jmethodID hashmapInitMID = 0;
 static jmethodID hashmapPutMID = 0;
 
-static jclass markerClass = nullptr;
 static jmethodID markerByIDMID = 0;
 
 static AAssetManager* assetManager = nullptr;
@@ -101,6 +102,12 @@ void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager
     labelPickResultClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/LabelPickResult"));
     labelPickResultInitMID = jniEnv->GetMethodID(labelPickResultClass, "<init>", "(DDILjava/util/Map;)V");
 
+    if (markerPickResultClass) {
+        jniEnv->DeleteGlobalRef(markerPickResultClass);
+    }
+    markerPickResultClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/MarkerPickResult"));
+    markerPickResultInitMID = jniEnv->GetMethodID(markerPickResultClass, "<init>", "(Lcom/mapzen/tangram/Marker;DD)V");
+
     if (hashmapClass) {
         jniEnv->DeleteGlobalRef(hashmapClass);
     }
@@ -108,11 +115,10 @@ void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager
     hashmapInitMID = jniEnv->GetMethodID(hashmapClass, "<init>", "()V");
     hashmapPutMID = jniEnv->GetMethodID(hashmapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
-    markerClass = jniEnv->FindClass("com/mapzen/tangram/Marker");
     markerByIDMID = jniEnv->GetMethodID(tangramClass, "markerById", "(J)Lcom/mapzen/tangram/Marker;");
 
     jclass markerPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$MarkerPickListener");
-    onMarkerPickMID = jniEnv->GetMethodID(markerPickListenerClass, "onMarkerPick", "(Lcom/mapzen/tangram/Marker;FF)V");
+    onMarkerPickMID = jniEnv->GetMethodID(markerPickListenerClass, "onMarkerPick", "(Lcom/mapzen/tangram/MarkerPickResult;FF)V");
 
     assetManager = AAssetManager_fromJava(jniEnv, _assetManager);
 
@@ -386,7 +392,6 @@ void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPi
             jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
         }
 
-        jdoubleArray darr = jniEnv->NewDoubleArray(2);
         labelPickResultObject = jniEnv->NewObject(labelPickResultClass, labelPickResultInitMID, labelPickResult->coordinates.longitude,
             labelPickResult->coordinates.latitude, labelPickResult->type, hashmap);
     }
@@ -400,16 +405,25 @@ void markerPickCallback(jobject listener, const Tangram::MarkerPickResult* marke
     JniThreadBinding jniEnv(jvm);
     float position[2] = {0.0, 0.0};
 
-    jobject marker = nullptr;
+    jobject markerPickResultObject = nullptr;
 
     if (markerPickResult) {
+        jobject marker = nullptr;
+
         position[0] = markerPickResult->position[0];
         position[1] = markerPickResult->position[1];
 
         marker = jniEnv->CallObjectMethod(tangramInstance, markerByIDMID, static_cast<jlong>(markerPickResult->id));
+
+        if (marker) {
+            markerPickResultObject = jniEnv->NewObject(markerPickResultClass,
+                                                       markerPickResultInitMID, marker,
+                                                       markerPickResult->coordinates.longitude,
+                                                       markerPickResult->coordinates.latitude);
+        }
     }
 
-    jniEnv->CallVoidMethod(listener, onMarkerPickMID, marker, position[0], position[1]);
+    jniEnv->CallVoidMethod(listener, onMarkerPickMID, markerPickResultObject, position[0], position[1]);
     jniEnv->DeleteGlobalRef(listener);
 
 }
