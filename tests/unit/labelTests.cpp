@@ -14,8 +14,14 @@ using namespace Tangram;
 
 glm::vec2 screenSize(500.f, 500.f);
 TextStyle dummyStyle("textStyle", nullptr);
-//Label::ScreenTransform transform;
 TextLabels dummy(dummyStyle);
+
+struct TestTransform {
+    ScreenTransform::Buffer buffer;
+    Range range;
+    ScreenTransform transform;
+    TestTransform() : transform(buffer, range) {}
+};
 
 TextLabel makeLabel(glm::vec2 _transform, Label::Type _type) {
     Label::Options options;
@@ -42,20 +48,20 @@ View makeView() {
     return view;
 }
 
-#if 0
 TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[Core][Label]" ) {
     View view = makeView();
+    TestTransform t1, t2;
 
     TextLabel l(makeLabel({screenSize/2.f}, Label::Type::point));
 
     REQUIRE(l.state() == Label::State::none);
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), view.state(), 0, transform);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), view.state(), t1.transform, true);
 
     REQUIRE(l.state() != Label::State::sleep);
     REQUIRE(l.state() == Label::State::none);
     REQUIRE(l.canOcclude());
 
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), view.state(), 0, transform);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), view.state(), t2.transform, true);
     l.occlude(true);
     l.evalState(0);
 
@@ -64,19 +70,20 @@ TEST_CASE( "Ensure the transition from wait -> sleep when occlusion happens", "[
 
 TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens", "[Core][Label]" ) {
     View view = makeView();
+    TestTransform t1, t2;
 
     TextLabel l(makeLabel({screenSize/2.f}, Label::Type::point));
 
     REQUIRE(l.state() == Label::State::none);
 
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), view.state(), 0, transform);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), view.state(), t1.transform, true);
     l.occlude(false);
     l.evalState(0);
 
     REQUIRE(l.state() == Label::State::fading_in);
     REQUIRE(l.canOcclude());
 
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), view.state(), 0, transform);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), view.state(), t2.transform, true);
     l.evalState(1.f);
 
     REQUIRE(l.state() == Label::State::visible);
@@ -85,17 +92,18 @@ TEST_CASE( "Ensure the transition from wait -> visible when no occlusion happens
 
 TEST_CASE( "Ensure the end state after occlusion is leep state", "[Core][Label]" ) {
     View view = makeView();
+    TestTransform t1, t2;
 
     TextLabel l(makeLabel({screenSize/2.f}, Label::Type::point));
 
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), view.state(), 0, transform);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), view.state(), t1.transform, true);
     l.occlude(false);
     l.evalState(0);
 
     REQUIRE(l.state() == Label::State::fading_in);
     REQUIRE(l.canOcclude());
 
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), view.state(), 0, transform);
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), view.state(), t2.transform, true);
     l.occlude(true);
     l.evalState(1.f);
 
@@ -133,13 +141,13 @@ TEST_CASE( "Ensure debug labels are always visible and cannot occlude", "[Core][
     REQUIRE(l.state() == Label::State::visible);
     REQUIRE(!l.canOcclude());
 
-    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), view.state(), 0, transform);
+    TestTransform t1;
+    l.update(glm::ortho(0.f, screenSize.x, screenSize.y, 0.f, -1.f, 1.f), view.state(), t1.transform, true);
     l.evalState(1.f);
 
     REQUIRE(l.state() == Label::State::visible);
     REQUIRE(!l.canOcclude());
 }
-#endif
 
 TEST_CASE( "Linear interpolation", "[Core][Label][Fade]" ) {
     FadeEffect fadeOut(false, FadeEffect::Interpolation::linear, 1.0);
