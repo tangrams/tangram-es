@@ -72,8 +72,8 @@ public class MapController implements Renderer {
         /**
          * Receive information about features found in a call to {@link #pickFeature(float, float)}
          * @param properties A mapping of string keys to string or number values
-         * @param positionX The horizontal screen coordinate of the tapped location
-         * @param positionY The vertical screen coordinate of the tapped location
+         * @param positionX The horizontal screen coordinate of the picked location
+         * @param positionY The vertical screen coordinate of the picked location
          */
         void onFeaturePick(Map<String, String> properties, float positionX, float positionY);
     }
@@ -84,10 +84,10 @@ public class MapController implements Renderer {
      */
     public interface LabelPickListener {
         /**
-         * Receive information about labels found in a call to {@link #pickLabels(float, float)}
-         * @param label The {@link LabelPickResult} that has been selected
-         * @param positionX The horizontal screen coordinate of the tapped location
-         * @param positionY The vertical screen coordinate of the tapped location
+         * Receive information about labels found in a call to {@link #pickLabel(float, float)}
+         * @param labelPickResult The {@link LabelPickResult} that has been selected
+         * @param positionX The horizontal screen coordinate of the picked location
+         * @param positionY The vertical screen coordinate of the picked location
          */
         void onLabelPick(LabelPickResult labelPickResult, float positionX, float positionY);
     }
@@ -99,12 +99,12 @@ public class MapController implements Renderer {
      */
     public interface MarkerPickListener {
         /**
-         * Receive the picked {@link Marker}
-         * @param marker The {@link Marker} the marker that has been selected
-         * @param positionX The horizontal screen coordinate of the tapped location
-         * @param positionY The vertical screen coordinate of the tapped location
+         * Receive information about marker found in a call to {@link #pickMarker(float, float)}
+         * @param markerPickResult The {@link MarkerPickResult} the marker that has been selected
+         * @param positionX The horizontal screen coordinate of the picked location
+         * @param positionY The vertical screen coordinate of the picked location
          */
-        void onMarkerPick(Marker marker, float positionX, float positionY);
+        void onMarkerPick(MarkerPickResult markerPickResult, float positionX, float positionY);
     }
 
     public interface ViewCompleteListener {
@@ -748,7 +748,7 @@ public class MapController implements Renderer {
         Marker marker = new Marker(mapView.getContext(), markerId, this);
         markers.put(markerId, marker);
 
-        return new Marker(mapView.getContext(), markerId, this);
+        return marker;
     }
 
     /**

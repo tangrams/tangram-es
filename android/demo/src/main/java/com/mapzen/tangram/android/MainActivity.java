@@ -19,6 +19,7 @@ import com.mapzen.tangram.Marker;
 import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.MapView.OnMapReadyCallback;
 import com.mapzen.tangram.Marker;
+import com.mapzen.tangram.MarkerPickResult;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
@@ -219,14 +220,14 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     }
 
     @Override
-    public void onMarkerPick(Marker marker, float positionX, float positionY) {
-        if (marker == null) {
+    public void onMarkerPick(MarkerPickResult markerPickResult, float positionX, float positionY) {
+        if (markerPickResult == null) {
             Log.d("Tangram", "Empty marker selection");
             return;
         }
 
-        Log.d("Tangram", "Picked marker: " + marker.getMarkerId());
-        final String message = String.valueOf(marker.getMarkerId());
+        Log.d("Tangram", "Picked marker: " + markerPickResult.getMarker().getMarkerId());
+        final String message = String.valueOf(markerPickResult.getMarker().getMarkerId());
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
