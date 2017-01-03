@@ -185,7 +185,7 @@ public:
     bool changedOnLastUpdate() const { return m_changed; }
 
     /* TODO: API for setting these */
-    constexpr static float s_maxZoom = 20.5;
+    constexpr static float s_maxZoom = 22.5;
     constexpr static float s_minZoom = 0.0;
     constexpr static float s_pixelsPerTile = 256.0;
 
