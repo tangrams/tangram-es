@@ -102,13 +102,11 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     }
 
     HttpHandler getHttpHandler() {
-        HttpHandler handler = new HttpHandler();
         File cacheDir = getExternalCacheDir();
         if (cacheDir != null && cacheDir.exists()) {
-            handler.setCache(new File(cacheDir, "tile_cache"), 30 * 1024 * 1024);
+            return new HttpHandler(new File(cacheDir, "tile_cache"), 30 * 1024 * 1024);
         }
-
-        return handler;
+        return new HttpHandler();
     }
 
     @Override

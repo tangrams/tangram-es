@@ -8,9 +8,9 @@ import android.opengl.GLSurfaceView.Renderer;
 import android.util.DisplayMetrics;
 
 import com.mapzen.tangram.TouchInput.Gestures;
-import com.squareup.okhttp.Callback;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,8 +21,6 @@ import java.util.Map;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
-
-import okio.BufferedSource;
 
 /**
  * {@code MapController} is the main class for interacting with a Tangram map.
@@ -1038,20 +1036,20 @@ public class MapController implements Renderer {
         if (httpHandler == null) {
             return false;
         }
+
         httpHandler.onRequest(url, new Callback() {
             @Override
-            public void onFailure(Request request, IOException e) {
+            public void onFailure(Call call, IOException e) {
                 nativeOnUrlFailure(callbackPtr);
             }
 
             @Override
-            public void onResponse(Response response) throws IOException {
+            public void onResponse(Call call, Response response) throws IOException {
                 if (!response.isSuccessful()) {
                     nativeOnUrlFailure(callbackPtr);
                     throw new IOException("Unexpected response code: " + response);
                 }
-                BufferedSource source = response.body().source();
-                byte[] bytes = source.readByteArray();
+                byte[] bytes = response.body().bytes();
                 nativeOnUrlSuccess(bytes, callbackPtr);
             }
         });
