@@ -290,6 +290,14 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
     m_isect2d.clear();
     m_repeatGroups.clear();
 
+    auto isObbOfLabel = [&](Label* l, int obb) {
+        // TODO optimize
+        auto it = std::lower_bound(std::begin(m_labels), std::end(m_labels), obb,
+                                   [](auto& p, int obb) { return obb > p.obbs.start; });
+
+        return (it != std::end(m_labels)) && (l == it->label);
+    };
+
     for (auto& entry : m_labels){
         auto* l = entry.label;
 
@@ -335,17 +343,9 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
                 m_isect2d.intersect(obb.getExtent(), [&](auto& a, auto& b) {
                         size_t other = reinterpret_cast<size_t>(b.m_userData);
 
-                        if (l->parent()) {
-                            // Ignore intersection with parent label
-                            // TODO: optimize
-                            auto it = std::lower_bound(std::begin(m_labels), std::end(m_labels), int(other),
-                                                       [](auto& p, int other) { return other > p.obbs.start; });
-
-                            if (it != std::end(m_labels)) {
-                                if (l->parent() == it->label) {
-                                    return true;
-                                }
-                            }
+                        // Ignore intersection with parent label
+                        if (l->parent() && isObbOfLabel(l->parent(), other)) {
+                            return true;
                         }
 
                         if (intersect(obb, m_obbs[other])) {

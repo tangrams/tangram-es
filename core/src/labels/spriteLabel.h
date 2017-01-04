@@ -73,8 +73,6 @@ private:
     Texture* m_texture;
 
     VertexAttributes m_vertexAttrib;
-
-    std::array<glm::vec3, 4> m_projected;
 };
 
 struct SpriteQuad {

@@ -2,8 +2,12 @@
 
 namespace Tangram {
 
+
+// ScreenTransform is a view into ScreenTransform::Buffer
 struct ScreenTransform {
 
+    // ScreenTransform::Buffer holds screen space coordinates of multiple labels
+    // (used by LabelCollider and Labels class)
     struct Buffer {
         std::vector<glm::vec3> points;
         std::vector<glm::vec2> path;
@@ -14,9 +18,10 @@ struct ScreenTransform {
     };
 
     ScreenTransform(Buffer& _transformBuffer, Range& _range, bool _initRange = false)
-        : points(_transformBuffer.points),
-          m_scratchBuffer(_transformBuffer.path),
+        : buffer(_transformBuffer),
+          points(_transformBuffer.points),
           range(_range) {
+
         if (_initRange) {
             range.start = points.size();
         }
@@ -24,6 +29,9 @@ struct ScreenTransform {
 
     auto begin() { return points.begin() + range.start; }
     auto end() { return points.begin() + range.end(); }
+
+    auto begin() const { return points.begin() + range.start; }
+    auto end() const { return points.begin() + range.end(); }
 
     bool empty() const { return range.length == 0; }
     size_t size() const { return range.length; }
@@ -44,14 +52,15 @@ struct ScreenTransform {
         range.length += 1;
     }
 
-    auto& scratchBuffer() {
-        m_scratchBuffer.clear();
-        return m_scratchBuffer;
+    // Get a temporary coordinate buffer (used for curved labels line smoothing)
+    std::vector<glm::vec2>& scratchBuffer() {
+        buffer.path.clear();
+        return buffer.path;
     }
 
 private:
+    Buffer &buffer;
     std::vector<glm::vec3>& points;
-    std::vector<glm::vec2>& m_scratchBuffer;
     Range& range;
 };
 

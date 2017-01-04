@@ -49,10 +49,6 @@ void Label::setParent(Label& _parent, bool _definePriority, bool _defineCollide)
     applyAnchor(m_options.anchors[m_anchorIndex]);
 }
 
-bool Label::canOcclude() {
-    return m_options.collide;
-}
-
 bool Label::visibleState() const {
     int visibleFlags = (State::visible |
                         State::fading_in |
@@ -76,7 +72,6 @@ void Label::enterState(const State& _state, float _alpha) {
         // Reset anchor fallback index
         m_anchorIndex = 0;
     }
-
 }
 
 void Label::setAlpha(float _alpha) {
@@ -144,25 +139,11 @@ bool Label::update(const glm::mat4& _mvp, const ViewState& _viewState,
         }
     }
 
-    bool ruleSatisfied = updateScreenTransform(_mvp, _viewState, _transform);
-
-    // one of the label rules has not been satisfied
-    if (!ruleSatisfied) {
+    bool valid = updateScreenTransform(_mvp, _viewState, _transform);
+    if (!valid) {
         enterState(State::sleep, 0.0);
         return false;
     }
-
-
-    // // checks whether the label is out of the viewport
-    // if (offViewport(_viewState.viewportSize)) {
-    //     enterState(State::out_of_screen, 0.0);
-    //     if (m_occludedLastFrame) {
-    //         m_occluded = true;
-    //         return false;
-    //     }
-    // } else if (m_state == State::out_of_screen) {
-    //     enterState(State::sleep, 0.0);
-    // }
 
     return true;
 }

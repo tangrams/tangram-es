@@ -1,9 +1,10 @@
 #pragma once
 
-#include "label.h"
-#include "spriteLabel.h"
-#include "tile/tileID.h"
 #include "data/properties.h"
+#include "labels/label.h"
+#include "labels/screenTransform.h"
+#include "labels/spriteLabel.h"
+#include "tile/tileID.h"
 #include "util/lineSampler.h"
 
 #include "isect2d.h"

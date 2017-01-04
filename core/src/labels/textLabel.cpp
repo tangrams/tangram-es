@@ -1,13 +1,14 @@
 #include "textLabel.h"
 
-#include "textLabels.h"
 #include "gl/dynamicQuadMesh.h"
+#include "labels/textLabels.h"
+#include "labels/screenTransform.h"
+#include "log.h"
 #include "style/textStyle.h"
 #include "text/fontContext.h"
 #include "util/geom.h"
 #include "util/lineSampler.h"
 #include "view/view.h"
-#include "log.h"
 
 #include "glm/gtx/norm.hpp"
 
@@ -75,6 +76,9 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
 
     bool clipped = false;
 
+    float border = 256.0f;
+    AABB bounds(-border,-border,_viewState.viewportSize.x + border, _viewState.viewportSize.y + border);
+
     if (m_type == Type::point || m_type == Type::debug) {
         glm::vec2 p0 = m_worldTransform[0];
 
@@ -82,6 +86,12 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
                                                       _viewState.viewportSize, clipped);
 
         if (clipped) { return false; }
+
+        auto aabb = m_options.anchors.extents(m_dim);
+        aabb.min += screenPosition + m_options.offset;
+        aabb.max += screenPosition + m_options.offset;
+
+        if (!aabb.intersect(bounds)) { return false; }
 
         m_screenCenter = screenPosition;
 
@@ -106,9 +116,13 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
 
         // check whether the label is behind the camera using the
         // perspective division factor
-        if (clipped) {
-            return false;
-        }
+        if (clipped) { return false; }
+
+        AABB aabb;
+        aabb.include(ap0.x, ap0.y);
+        aabb.include(ap2.x, ap2.y);
+
+        if (!aabb.intersect(bounds)) { return false; }
 
         float length = glm::length(ap2 - ap0);
 
@@ -146,14 +160,9 @@ float TextLabel::worldLineLength2() const {
 void TextLabel::obbs(ScreenTransform& _transform, std::vector<OBB>& _obbs,
                      Range& _range, bool _append) {
 
-    if (_append) { _range.start = int(_obbs.size()); }
-
     glm::vec2 dim = m_dim - m_options.buffer;
 
     if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
-
-    // FIXME: Only for testing
-    if (state() == State::dead) { dim -= 4; }
 
     PointTransform pointTransform(_transform);
 
@@ -164,11 +173,12 @@ void TextLabel::obbs(ScreenTransform& _transform, std::vector<OBB>& _obbs,
                    dim.x, dim.y);
 
     if (_append) {
+        _range.start = int(_obbs.size());
+        _range.length = 1;
         _obbs.push_back(obb);
     } else {
         _obbs[_range.start] = obb;
     }
-    _range.length = 1;
 }
 
 void TextLabel::addVerticesToMesh(ScreenTransform& _transform, const glm::vec2& _screenSize) {

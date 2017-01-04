@@ -1,13 +1,15 @@
 #include "curvedLabel.h"
 
-#include "textLabels.h"
 #include "gl/dynamicQuadMesh.h"
+#include "labels/screenTransform.h"
+#include "log.h"
 #include "style/textStyle.h"
 #include "text/fontContext.h"
+#include "textLabels.h"
 #include "util/geom.h"
 #include "util/lineSampler.h"
 #include "view/view.h"
-#include "log.h"
+
 #include "alfons/path/splinePath.h"
 #include "alfons/path/ASPC.h"
 

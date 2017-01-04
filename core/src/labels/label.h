@@ -10,8 +10,6 @@
 #include "util/types.h"
 #include "util/hash.h"
 #include "labels/labelProperty.h"
-#include "labels/screenTransform.h"
-#include "util/lineSampler.h"
 #include "tangram.h"
 
 #include <string>
@@ -20,6 +18,7 @@
 
 namespace Tangram {
 
+struct ScreenTransform;
 struct ViewState;
 
 class Label {
@@ -101,7 +100,7 @@ public:
     void occlude(bool _occlusion = true) { m_occluded = _occlusion; }
 
     // Checks whether the label is in a state where it can occlusion
-    bool canOcclude();
+    bool canOcclude() const { return m_options.collide; }
 
     void skipTransitions();
 

@@ -1,11 +1,12 @@
 #include "labels/spriteLabel.h"
 
 #include "gl/dynamicQuadMesh.h"
+#include "labels/screenTransform.h"
+#include "log.h"
 #include "scene/spriteAtlas.h"
 #include "style/pointStyle.h"
-#include "view/view.h"
 #include "util/geom.h"
-#include "log.h"
+#include "view/view.h"
 
 namespace Tangram {
 
@@ -76,8 +77,10 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
     if (m_type != Type::point) { return false; }
 
     glm::vec2 halfScreen = glm::vec2(_viewState.viewportSize * 0.5f);
-
     glm::vec2 p0 = m_worldTransform;
+
+    float border = 256.0f;
+    AABB bounds(-border,-border,_viewState.viewportSize.x + border, _viewState.viewportSize.y + border);
 
     if (m_options.flat) {
 
@@ -106,6 +109,7 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
             }
         }
 
+        AABB aabb;
         for (size_t i = 0; i < 4; i++) {
             glm::vec4 proj = worldToClipSpace(_mvp, glm::vec4(positions[i], 0.f, 1.f));
             if (proj.w <= 0.0f) { return false; }
@@ -117,11 +121,16 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
             positions[i].x = 1 + projected[i].x;
             positions[i].y = 1 - projected[i].y;
             positions[i] *= halfScreen;
+
+            aabb.include(positions[i].x, positions[i].y);
         }
+
+        if (!aabb.intersect(bounds)) { return false; }
 
         FlatTransform(_transform).set(positions, projected);
 
     } else {
+
         glm::vec4 projected = worldToClipSpace(_mvp, glm::vec4(p0, 0.f, 1.f));
         if (projected.w <= 0.0f) { return false; }
 
@@ -132,6 +141,11 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
         position.y = 1 - projected.y;
         position *= halfScreen;
         position += m_options.offset;
+
+        auto aabb = m_options.anchors.extents(m_dim);
+        aabb.min += position + m_options.offset;
+        aabb.max += position + m_options.offset;
+        if (!aabb.intersect(bounds)) { return false; }
 
         m_screenCenter = position;
 
@@ -144,12 +158,10 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
 
 void SpriteLabel::obbs(ScreenTransform& _transform, std::vector<OBB>& _obbs,
                        Range& _range, bool _append) {
-
     OBB obb;
 
     if (m_options.flat) {
-        static float infinity = std::numeric_limits<float>::infinity();
-
+        const float infinity = std::numeric_limits<float>::infinity();
         float minx = infinity, miny = infinity;
         float maxx = -infinity, maxy = -infinity;
 
@@ -166,11 +178,9 @@ void SpriteLabel::obbs(ScreenTransform& _transform, std::vector<OBB>& _obbs,
 
         if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
 
-        // TODO: Manage extrude scale
-
         glm::vec2 obbCenter = glm::vec2((minx + maxx) * 0.5f, (miny + maxy) * 0.5f);
 
-        obb = OBB(obbCenter, glm::vec2(1.0, 0.0), dim.x, dim.y);
+        obb = OBB(obbCenter, {1, 0}, dim.x, dim.y);
     } else {
 
         glm::vec2 dim = m_dim + glm::vec2(m_vertexAttrib.extrudeScale * 2.f); // * _zoomFract);
@@ -179,7 +189,7 @@ void SpriteLabel::obbs(ScreenTransform& _transform, std::vector<OBB>& _obbs,
 
         BillboardTransform pointTransform(_transform);
 
-        obb = OBB(pointTransform.position() + m_anchor, {1,0}, dim.x, dim.y);
+        obb = OBB(pointTransform.position() + m_anchor, {1, 0}, dim.x, dim.y);
     }
 
     if (_append) {
