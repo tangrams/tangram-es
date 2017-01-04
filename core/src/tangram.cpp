@@ -3,8 +3,10 @@
 #include "platform.h"
 #include "scene/scene.h"
 #include "scene/sceneLoader.h"
+#include "scene/attribution.h"
 #include "style/material.h"
 #include "style/style.h"
+#include "style/textStyleBuilder.h"
 #include "labels/labels.h"
 #include "text/fontContext.h"
 #include "tile/tileManager.h"
@@ -26,6 +28,7 @@
 #include "gl/framebuffer.h"
 #include "gl/hardware.h"
 #include "util/ease.h"
+#include "util/geom.h"
 #include "util/jobQueue.h"
 #include "debug/textDisplay.h"
 #include "debug/frameInfo.h"
@@ -93,6 +96,8 @@ public:
 
     std::vector<FeatureSelectionQuery> featureSelectionQueries;
     std::vector<LabelSelectionQuery> labelSelectionQueries;
+
+    Attribution attribution;
 };
 
 void Map::Impl::setEase(EaseField _f, Ease _e) {
@@ -379,6 +384,9 @@ bool Map::update(float _dt) {
         }
     }
 
+    if (impl->attribution.isSetup()) {
+        impl->attribution.update(impl->view);
+    }
     FrameInfo::endUpdate();
 
     bool viewChanged = impl->view.changedOnLastUpdate();
@@ -554,6 +562,10 @@ void Map::render() {
 
             style->onEndDrawFrame();
         }
+    }
+
+    if (impl->attribution.isSetup()) {
+        impl->attribution.draw(impl->renderState, impl->view, *(impl->scene));
     }
 
     impl->labels.drawDebug(impl->renderState, impl->view);
@@ -780,6 +792,33 @@ void Map::clearDataSource(DataSource& _source, bool _data, bool _tiles) {
     if (_data) { _source.clearData(); }
 
     requestRender();
+}
+
+void Map::addMapAttribution(std::string attributionText, std::string attributionStyling) {
+
+    if (attributionText.size() == 0 || attributionStyling.size() == 0) {
+        LOGW("No Attribution set: Attribution text or attribution styling is empty");
+        return;
+    }
+
+    if (impl->scene->fontContext()) {
+
+        impl->attribution.setup(*(impl->scene), attributionText, attributionStyling);
+
+        if (!impl->markerManager.buildStyling(impl->attribution.marker())) {
+            LOGW("No Attribution set: Failed to build styling for the attribution");
+            impl->attribution.reset();
+            return;
+        }
+        if (!impl->markerManager.buildGeometry(impl->attribution.marker(), impl->view.getZoom(), impl->attribution.builder())) {
+            LOGW("No Attribution set: Failed to build geometry for the attribution");
+            impl->attribution.reset();
+            return;
+        }
+
+    } else {
+        LOGW("Can not set attribution text, no fonts setup done.");
+    }
 }
 
 MarkerID Map::markerAdd() {

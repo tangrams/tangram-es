@@ -65,12 +65,12 @@ public:
 
     const std::vector<std::unique_ptr<Marker>>& markers() const;
 
+    bool buildStyling(Marker& marker);
+    bool buildGeometry(Marker& marker, int zoom, StyleBuilder* builder = nullptr);
+
 private:
 
     Marker* getMarkerOrNull(MarkerID markerID);
-
-    bool buildStyling(Marker& marker);
-    bool buildGeometry(Marker& marker, int zoom);
 
     DrawRuleMergeSet m_ruleSet;
     StyleContext m_styleContext;

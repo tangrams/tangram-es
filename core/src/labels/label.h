@@ -186,6 +186,8 @@ public:
 
     void setAlpha(float _alpha);
 
+    void setScreenPosition(glm::vec2 _pos) { m_screenTransform.position = _pos; }
+
 private:
 
     virtual void applyAnchor(LabelProperty::Anchor _anchor) = 0;
@@ -195,8 +197,6 @@ private:
     FadeEffect m_fade;
 
     int m_anchorIndex;
-
-    uint32_t m_selectionColor;
 
 protected:
 

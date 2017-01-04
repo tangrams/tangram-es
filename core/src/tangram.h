@@ -181,6 +181,10 @@ public:
 
     void clearDataSource(DataSource& _source, bool _data, bool _tiles);
 
+    // Adds attribution text at bottom left of the map.
+    // TODO: specify relative position with respect to map dimentions (example: bottom_left, bottom_right, etc)
+    void addMapAttribution(std::string _attributionText, std::string _attributionStyling);
+
     // Add a marker object to the map and return an ID for it; an ID of 0 indicates an invalid marker;
     // the marker will not be drawn until both styling and geometry are set using the functions below.
     MarkerID markerAdd();

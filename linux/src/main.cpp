@@ -258,12 +258,18 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 
 }
 
+void cb(void* blah = nullptr) {
+    std::string stylingString = "{ style: 'attribution-overlay', collide: false, text_wrap: false, anchor: top-right, font: { size: 18px, fill: '#ff4444', stroke: { color: '#aaffff', width: 4px } } }";
+    std::string attribution = "© Mapzen. © OpenStreetMap";
+    map->addMapAttribution(attribution, stylingString);
+}
+
 void init_main_window(bool recreate) {
 
     // Setup tangram
     if (!map) {
         map = new Tangram::Map();
-        map->loadSceneAsync(sceneFile.c_str(), true);
+        map->loadSceneAsync(sceneFile.c_str(), true, cb);
     }
 
     if (!recreate) {
@@ -294,6 +300,7 @@ void init_main_window(bool recreate) {
     // Setup graphics
     map->setupGL();
     map->resize(width, height);
+
 
     data_source = std::make_shared<ClientGeoJsonSource>("touch", "");
     map->addDataSource(data_source);
