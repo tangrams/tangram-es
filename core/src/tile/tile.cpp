@@ -28,11 +28,11 @@ Tile::Tile(TileID _id, const MapProjection& _projection, const DataSource* _sour
 }
 
 
-glm::dvec2 Tile::coordToLngLat(const glm::vec2& _tileCoord, const MapProjection& _projection) const {
+glm::dvec2 Tile::coordToLngLat(const glm::vec2& _tileCoord) const {
     double scale = 1.0 / m_inverseScale;
 
     glm::dvec2 meters = glm::dvec2(_tileCoord) * scale + m_tileOrigin;
-    glm::dvec2 degrees = _projection.MetersToLonLat(meters);
+    glm::dvec2 degrees = m_projection->MetersToLonLat(meters);
 
     return {degrees.x, degrees.y};
 }

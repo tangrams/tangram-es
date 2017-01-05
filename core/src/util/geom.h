@@ -84,6 +84,15 @@ float signedArea(InputIt _begin, InputIt _end) {
     return 0.5 * area;
 }
 
+template<class T>
+float signedArea(const T& _a, const T& _b, const T& _c) {
+    return 0.5 * ((_b.y - _a.y) * (_c.x - _b.x) - (_b.x - _a.x) * (_c.y - _b.y));
+}
+
+inline float crossProduct(const glm::vec2& _a, const glm::vec2& _b) {
+    return (_a.x * _b.y) - (_a.y * _b.x);
+}
+
 /* Map a value from the range [_inputMin, _inputMax] into the range [_outputMin, _outputMax];
  * If _clamp is true, the output is strictly within the output range.
  * Ex: mapValue(5, 0, 10, 0, 360) == 180

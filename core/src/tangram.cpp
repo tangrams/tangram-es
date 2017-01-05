@@ -503,13 +503,11 @@ void Map::render() {
                 continue;
             }
 
-            LngLat coordinate = label.first->coordinates(*label.second,
-                                                         impl->view.getMapProjection());
+            auto coordinate = label.second->coordToLngLat(label.first->modelCenter());
 
-            auto position = std::array<float, 2>{{labelQuery.position.x,
-                                                  labelQuery.position.y}};
+            auto position = std::array<float, 2>{{labelQuery.position.x, labelQuery.position.y}};
 
-            LabelPickResult queryResult(label.first->renderType(), coordinate,
+            LabelPickResult queryResult(label.first->renderType(), LngLat{coordinate.x, coordinate.y},
                                         FeaturePickResult(props, position));
 
             // TODO: sort touch labels by distance

@@ -1,9 +1,12 @@
 #pragma once
 
-#include "label.h"
-#include "spriteLabel.h"
-#include "tile/tileID.h"
 #include "data/properties.h"
+#include "labels/label.h"
+#include "labels/screenTransform.h"
+#include "labels/spriteLabel.h"
+#include "tile/tileID.h"
+#include "util/lineSampler.h"
+
 #include "isect2d.h"
 #include "glm_vec.h" // for isect2d.h
 
@@ -88,9 +91,15 @@ protected:
         Tile* tile;
         float priority;
         bool proxy;
+
+        Range obbs;
+        Range transform;
     };
 
     static bool labelComparator(const LabelEntry& _a, const LabelEntry& _b);
+
+    std::vector<OBB> m_obbs;
+    ScreenTransform::Buffer m_transforms;
 
     std::vector<LabelEntry> m_labels;
     std::vector<LabelEntry> m_selectionLabels;

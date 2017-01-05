@@ -2,7 +2,7 @@
 
 #include "labels/labelSet.h"
 #include "view/view.h" // ViewState
-
+#include "labels/curvedLabel.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/norm.hpp"
 
@@ -22,28 +22,28 @@ void LabelCollider::addLabels(std::vector<std::unique_ptr<Label>>& _labels) {
 
 void LabelCollider::handleRepeatGroup(size_t startPos) {
 
-    float threshold2 = pow(m_labels[startPos]->options().repeatDistance, 2);
-    size_t repeatGroup = m_labels[startPos]->options().repeatGroup;
+    float threshold2 = pow(m_labels[startPos].label->options().repeatDistance, 2);
+    size_t repeatGroup = m_labels[startPos].label->options().repeatGroup;
 
     // Get the range
     size_t endPos = startPos;
     for (;startPos > 0; startPos--) {
-        if (m_labels[startPos-1]->options().repeatGroup != repeatGroup) { break; }
+        if (m_labels[startPos-1].label->options().repeatGroup != repeatGroup) { break; }
     }
     for (;endPos < m_labels.size()-1; endPos++) {
-        if (m_labels[endPos+1]->options().repeatGroup != repeatGroup) { break; }
+        if (m_labels[endPos+1].label->options().repeatGroup != repeatGroup) { break; }
     }
 
 
     for (size_t i = startPos; i < endPos; i++) {
-        Label* l1 = m_labels[i];
+        Label* l1 = m_labels[i].label;
         if (l1->isOccluded()) { continue; }
 
         for (size_t j = i+1; j <= endPos; j++) {
-            Label* l2 = m_labels[j];
+            Label* l2 = m_labels[j].label;
             if (l2->isOccluded()) { continue; }
 
-            float d2 = distance2(l1->center(), l2->center());
+            float d2 = distance2(l1->screenCenter(), l2->screenCenter());
             if (d2 < threshold2) {
                 l2->occlude();
             }
@@ -55,7 +55,10 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
 
     // Sort labels so that all labels of one repeat group are next to each other
     std::sort(m_labels.begin(), m_labels.end(),
-              [](auto* l1, auto* l2) {
+              [](auto& e1, auto& e2) {
+                  auto* l1 = e1.label;
+                  auto* l2 = e2.label;
+
                   if (l1->options().priority != l2->options().priority) {
                       // lower numeric priority means higher priority
                       return l1->options().priority < l2->options().priority;
@@ -69,6 +72,14 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
                       // to be shown earlier (also on the lower zoom-level)
                       // TODO compare fraction segment_length/label_width
                       return l1->worldLineLength2() > l2->worldLineLength2();
+                  }
+
+                  if (l1->hash() == l2->hash()) {
+                      if (l1->type() == Label::Type::curved &&
+                          l2->type() == Label::Type::curved) {
+                           return (static_cast<const CurvedLabel*>(l1)->candidatePriority() >
+                                   static_cast<const CurvedLabel*>(l2)->candidatePriority());
+                      }
                   }
 
                   return l1->hash() < l2->hash();
@@ -98,10 +109,27 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
         _tileSize, // screenTileSize
     };
 
-    for (auto* label : m_labels) {
-        label->update(mvp, viewState, true);
+    m_obbs.clear();
+    m_transforms.clear();
 
-        m_aabbs.push_back(label->aabb());
+    for (auto it = m_labels.begin(); it != m_labels.end(); ) {
+        auto& entry = *it;
+        auto* label = entry.label;
+        ScreenTransform transform { m_transforms, entry.transform, true };
+        if (label->updateScreenTransform(mvp, viewState, transform)) {
+
+            label->obbs(transform, m_obbs, entry.obbs);
+
+            auto aabb = m_obbs[entry.obbs.start].getExtent();
+            for (int i = entry.obbs.start+1; i < entry.obbs.end(); i++) {
+                aabb = unionAABB(aabb, m_obbs[i].getExtent());
+            }
+
+            m_aabbs.push_back(aabb);
+            it++;
+        } else {
+            it = m_labels.erase(it);
+        }
     }
 
     m_isect2d.resize({screenSize.x / 128, screenSize.y / 128}, screenSize);
@@ -111,8 +139,10 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
     // Set the first item to be the one with higher priority
     for (auto& pair : m_isect2d.pairs) {
 
-        auto* l1 = m_labels[pair.first];
-        auto* l2 = m_labels[pair.second];
+        auto& e1 = m_labels[pair.first];
+        auto& e2 = m_labels[pair.second];
+        auto* l1 = e1.label;
+        auto* l2 = e2.label;
 
         if (l1->options().priority > l2->options().priority) {
             std::swap(pair.first, pair.second);
@@ -127,8 +157,9 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
     // Sort by priority on the first item
     std::sort(m_isect2d.pairs.begin(), m_isect2d.pairs.end(),
               [&](auto& a, auto& b) {
-                  auto* l1 = m_labels[a.first];
-                  auto* l2 = m_labels[b.first];
+
+                  auto* l1 = m_labels[a.first].label;
+                  auto* l2 = m_labels[b.first].label;
 
                   if (l1->options().priority != l2->options().priority) {
                       // lower numeric priority means higher priority
@@ -141,6 +172,13 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
                       // to be shown earlier (also on the lower zoom-level)
                       // TODO compare fraction segment_length/label_width
                       return l1->worldLineLength2() > l2->worldLineLength2();
+                  }
+                  if (l1->hash() == l2->hash()) {
+                      if (l1->type() == Label::Type::curved &&
+                          l2->type() == Label::Type::curved) {
+                          return static_cast<const CurvedLabel*>(l1)->candidatePriority() >
+                              static_cast<const CurvedLabel*>(l2)->candidatePriority();
+                      }
                   }
                   // just so it is consistent between two instances
                   return (l1->hash() < l2->hash());
@@ -160,8 +198,10 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
     // Narrow Phase, resolve conflicts
     for (auto& pair : m_isect2d.pairs) {
 
-        auto* l1 = m_labels[pair.first];
-        auto* l2 = m_labels[pair.second];
+        auto& e1 = m_labels[pair.first];
+        auto& e2 = m_labels[pair.second];
+        auto* l1 = e1.label;
+        auto* l2 = e2.label;
 
         // Occlude labels within repeat group so that they don't occlude other labels
         if (repeatGroup != l1->options().repeatGroup) {
@@ -189,9 +229,20 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
             continue;
         }
 
-        if (!intersect(l1->obb(), l2->obb())) {
-            continue;
+        bool intersection = false;
+        for (int i = e1.obbs.start; i < e1.obbs.end(); i++) {
+            for (int j = e2.obbs.start; j < e2.obbs.end(); j++) {
+
+                if (intersect(m_obbs[i], m_obbs[j])) {
+                    intersection = true;
+
+                    // break out of outer loop
+                    i = e1.obbs.end();
+                    break;
+                }
+            }
         }
+        if (!intersection) { continue; }
 
         if (l1->options().priority != l2->options().priority) {
             // lower numeric priority means higher priority
@@ -201,6 +252,18 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
                 l2->occlude();
             }
         } else {
+            if (l1->hash() == l2->hash()) {
+                if (l1->type() == Label::Type::curved &&
+                    l2->type() == Label::Type::curved) {
+                    if (static_cast<const CurvedLabel*>(l1)->candidatePriority() <
+                        static_cast<const CurvedLabel*>(l2)->candidatePriority()) {
+                        l1->occlude();
+                    } else {
+                        l2->occlude();
+                    }
+                }
+            }
+
             // just so it is consistent between two instances
             if (l1->hash() < l2->hash()) {
                 l1->occlude();
@@ -210,7 +273,8 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
         }
     }
 
-    for (auto* label : m_labels) {
+    for (auto& entry : m_labels) {
+        auto* label = entry.label;
 
         // Manage link occlusion (unified icon labels)
         if (label->parent()) {
