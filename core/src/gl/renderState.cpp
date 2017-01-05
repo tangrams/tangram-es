@@ -367,7 +367,9 @@ void RenderState::deleteDefaultPointTexture() {
 
 void RenderState::generateDefaultPointTexture() {
     TextureOptions options = { GL_RGBA, GL_RGBA, { GL_LINEAR, GL_LINEAR }, { GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE } };
-    m_defaultPointTexture = new Texture(default_point_texture_data, default_point_texture_size, options, true);
+    std::vector<char> defaultPoint;
+    defaultPoint.insert(defaultPoint.begin(), default_point_texture_data, default_point_texture_data + default_point_texture_size);
+    m_defaultPointTexture = new Texture(defaultPoint, options, true);
 }
 
 bool RenderState::framebuffer(GLuint handle) {

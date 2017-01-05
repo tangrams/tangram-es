@@ -74,18 +74,16 @@ RasterSource::RasterSource(const std::string& _name, const std::string& _urlTemp
                            TextureOptions _options, bool _genMipmap)
     : DataSource(_name, _urlTemplate, _minDisplayZoom, _maxDisplayZoom, _maxZoom), m_texOptions(_options), m_genMipmap(_genMipmap) {
 
-    m_emptyTexture = std::make_shared<Texture>(nullptr, 0, m_texOptions, m_genMipmap);
+    std::vector<char> data = {};
+    m_emptyTexture = std::make_shared<Texture>(data, m_texOptions, m_genMipmap);
 }
 
 std::shared_ptr<Texture> RasterSource::createTexture(const std::vector<char>& _rawTileData) {
-    auto udata = reinterpret_cast<const unsigned char*>(_rawTileData.data());
-    size_t dataSize = _rawTileData.size();
-
-    if (dataSize == 0) {
+    if (_rawTileData.size() == 0) {
         return m_emptyTexture;
     }
 
-    auto texture = std::make_shared<Texture>(udata, dataSize, m_texOptions, m_genMipmap);
+    auto texture = std::make_shared<Texture>(_rawTileData, m_texOptions, m_genMipmap);
 
     return texture;
 }
