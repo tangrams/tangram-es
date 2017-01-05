@@ -46,8 +46,6 @@ TextLabel::TextLabel(Coordinates _coordinates, Type _type, Label::Options _optio
       m_fontAttrib(_attrib),
       m_preferedAlignment(_preferedAlignment) {
 
-    m_options.repeatDistance = 0;
-
     applyAnchor(m_options.anchors[0]);
 }
 
@@ -146,15 +144,17 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
 
             return true;
         }
+        default:
+            break;
     }
 
     return false;
 }
 
-float TextLabel::modelLineLength2() const {
+float TextLabel::candidatePriority() const {
     if (m_type != Type::line) { return 0.f; }
 
-    return glm::length2(m_coordinates[0] - m_coordinates[1]);
+    return 1.f / (glm::length2(m_coordinates[0] - m_coordinates[1]));
 }
 
 void TextLabel::obbs(ScreenTransform& _transform, OBBBuffer& _obbs) {
