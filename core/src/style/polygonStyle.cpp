@@ -161,6 +161,11 @@ void PolygonStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties& 
     m_params.height = getUpperExtrudeMeters(extrude, _props) * m_tileUnitsPerMeter;
 
     m_params.selectionColor = _rule.selectionColor;
+
+    if ((m_params.minHeight != m_params.height) && (m_params.selectionColor == 0)) {
+        // Draw extruded features to selection framebuffer
+        m_params.selectionColor = 1;
+    }
 }
 
 template <class V>

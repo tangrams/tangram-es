@@ -8,12 +8,13 @@ FeatureSelection::FeatureSelection() :
 
 uint32_t FeatureSelection::nextColorIdentifier() {
 
-    uint32_t entry = m_entry++;
+    uint32_t entry;
 
-    // skip zero every 2^32 features
-    while (entry == 0) {
+    // skip zero, used for non-selectable features
+    // skip one, used for non-selectable but occluding features
+    do  {
         entry = m_entry++;
-    }
+    } while (entry < 2);
 
     return entry;
 }
