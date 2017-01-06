@@ -9,7 +9,7 @@
 #include "scene/scene.h"
 #include "style/style.h"
 #include "tile/tile.h"
-#include "util/featureSelection.h"
+#include "selection/featureSelection.h"
 #include "util/mapProjection.h"
 #include "view/view.h"
 

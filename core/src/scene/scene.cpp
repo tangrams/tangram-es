@@ -10,7 +10,7 @@
 #include "style/material.h"
 #include "style/style.h"
 #include "text/fontContext.h"
-#include "util/featureSelection.h"
+#include "selection/featureSelection.h"
 #include "util/mapProjection.h"
 #include "util/util.h"
 #include "view/view.h"

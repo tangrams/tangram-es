@@ -65,27 +65,46 @@ public class MapController implements Renderer {
 
     /**
      * Interface for a callback to receive information about features picked from the map
+     * Triggered after a call of {@link #pickFeature(float, float)}
+     * Listener should be set with {@link #setFeaturePickListener(FeaturePickListener)}
      */
     public interface FeaturePickListener {
         /**
          * Receive information about features found in a call to {@link #pickFeature(float, float)}
          * @param properties A mapping of string keys to string or number values
-         * @param positionX The horizontal screen coordinate of the tapped location
-         * @param positionY The vertical screen coordinate of the tapped location
+         * @param positionX The horizontal screen coordinate of the picked location
+         * @param positionY The vertical screen coordinate of the picked location
          */
         void onFeaturePick(Map<String, String> properties, float positionX, float positionY);
     }
     /**
      * Interface for a callback to receive information about labels picked from the map
+     * Triggered after a call of {@link #pickLabel(float, float)}
+     * Listener should be set with {@link #setLabelPickListener(LabelPickListener)}
      */
     public interface LabelPickListener {
         /**
-         * Receive information about labels found in a call to {@link #pickLabels(float, float)}
-         * @param label The {@link LabelPickResult} that has been selected
-         * @param positionX The horizontal screen coordinate of the tapped location
-         * @param positionY The vertical screen coordinate of the tapped location
+         * Receive information about labels found in a call to {@link #pickLabel(float, float)}
+         * @param labelPickResult The {@link LabelPickResult} that has been selected
+         * @param positionX The horizontal screen coordinate of the picked location
+         * @param positionY The vertical screen coordinate of the picked location
          */
         void onLabelPick(LabelPickResult labelPickResult, float positionX, float positionY);
+    }
+
+    /**
+     * Interface for a callback to receive the picked {@link Marker}
+     * Triggered after a call of {@link #pickMarker(float, float)}
+     * Listener should be set with {@link #setMarkerPickListener(MarkerPickListener)}
+     */
+    public interface MarkerPickListener {
+        /**
+         * Receive information about marker found in a call to {@link #pickMarker(float, float)}
+         * @param markerPickResult The {@link MarkerPickResult} the marker that has been selected
+         * @param positionX The horizontal screen coordinate of the picked location
+         * @param positionY The vertical screen coordinate of the picked location
+         */
+        void onMarkerPick(MarkerPickResult markerPickResult, float positionX, float positionY);
     }
 
     public interface ViewCompleteListener {
@@ -209,6 +228,7 @@ public class MapController implements Renderer {
                 nativeDispose(mapPointer);
                 mapPointer = 0;
                 clientDataSources.clear();
+                markers.clear();
             }
         });
     }
@@ -655,10 +675,26 @@ public class MapController implements Renderer {
 
     /**
      * Set a listener for feature pick events
-     * @param listener Listener to call
+     * @param listener The {@link FeaturePickListener} to call
      */
     public void setFeaturePickListener(FeaturePickListener listener) {
         featurePickListener = listener;
+    }
+
+    /**
+     * Set a listener for label pick events
+     * @param listener The {@link LabelPickListener} to call
+     */
+    public void setLabelPickListener(LabelPickListener listener) {
+        labelPickListener = listener;
+    }
+
+    /**
+     * Set a listener for marker pick events
+     * @param listener The {@link MarkerPickListener} to call
+     */
+    public void setMarkerPickListener(MarkerPickListener listener) {
+        markerPickListener = listener;
     }
 
     /**
@@ -672,13 +708,6 @@ public class MapController implements Renderer {
             checkPointer(mapPointer);
             nativePickFeature(mapPointer, posX, posY, featurePickListener);
         }
-    }
-    /**
-     * Set a listener for label pick events
-     * @param listener Listener to call
-     */
-    public void setLabelPickListener(LabelPickListener listener) {
-        labelPickListener = listener;
     }
 
     /**
@@ -695,6 +724,19 @@ public class MapController implements Renderer {
     }
 
     /**
+     * Query the map for a {@link Marker} at the given screen coordinates; results will be returned
+     * in a callback to the object set by {@link #setMarkerPickListener(MarkerPickListener)}
+     * @param posX The horizontal screen coordinate
+     * @param posY The vertical screen coordinate
+     */
+    public void pickMarker(float posX, float posY) {
+        if (markerPickListener != null) {
+            checkPointer(mapPointer);
+            nativePickMarker(mapPointer, posX, posY, markerPickListener);
+        }
+    }
+
+    /**
      * Adds a {@link Marker} to the map which can be used to dynamically add points and polylines
      * to the map.
      * @return Newly created {@link Marker} object.
@@ -702,7 +744,11 @@ public class MapController implements Renderer {
     public Marker addMarker() {
         checkPointer(mapPointer);
         long markerId = nativeMarkerAdd(mapPointer);
-        return new Marker(mapView.getContext(), markerId, this);
+
+        Marker marker = new Marker(mapView.getContext(), markerId, this);
+        markers.put(markerId, marker);
+
+        return marker;
     }
 
     /**
@@ -713,6 +759,7 @@ public class MapController implements Renderer {
     public boolean removeMarker(Marker marker) {
         checkPointer(mapPointer);
         checkId(marker.getMarkerId());
+        markers.remove(marker.getMarkerId());
         return nativeMarkerRemove(mapPointer, marker.getMarkerId());
     }
 
@@ -894,6 +941,10 @@ public class MapController implements Renderer {
         return nativeMarkerSetDrawOrder(mapPointer, markerId, drawOrder);
     }
 
+    Marker markerById(long markerId) {
+        return markers.get(markerId);
+    }
+
     // Native methods
     // ==============
 
@@ -937,6 +988,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeApplySceneUpdates(long mapPtr);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
     private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
+    private synchronized native void nativePickMarker(long mapPtr, float posX, float posY, MarkerPickListener listener);
     private synchronized native long nativeMarkerAdd(long mapPtr);
     private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
     private synchronized native boolean nativeMarkerSetStyling(long mapPtr, long markerID, String styling);
@@ -977,10 +1029,12 @@ public class MapController implements Renderer {
     private HttpHandler httpHandler;
     private FeaturePickListener featurePickListener;
     private LabelPickListener labelPickListener;
+    private MarkerPickListener markerPickListener;
     private ViewCompleteListener viewCompleteListener;
     private FrameCaptureCallback frameCaptureCallback;
     private boolean frameCaptureAwaitCompleteView;
     private Map<String, MapData> clientDataSources = new HashMap<>();
+    private Map<Long, Marker> markers = new HashMap<>();
 
     // GLSurfaceView.Renderer methods
     // ==============================

@@ -26,7 +26,7 @@ struct FeaturePickResult {
     std::array<float, 2> position;
 };
 
-// Returns a pointer to the selected feature or null, only valid on the callback scope
+// Returns a pointer to the selected feature pick result or null, only valid on the callback scope
 using FeaturePickCallback = std::function<void(const FeaturePickResult*)>;
 
 struct LabelPickResult {
@@ -40,8 +40,20 @@ struct LabelPickResult {
     FeaturePickResult touchItem;
 };
 
-// Returns a pointer to the selected label or null, only valid on the callback scope
+// Returns a pointer to the selected label pick result or null, only valid on the callback scope
 using LabelPickCallback = std::function<void(const LabelPickResult*)>;
+
+struct MarkerPickResult {
+    MarkerPickResult(MarkerID _id, LngLat _coordinates, std::array<float, 2> _position)
+        : id(_id), coordinates(_coordinates), position(_position) {}
+
+    MarkerID id;
+    LngLat coordinates;
+    std::array<float, 2> position;
+};
+
+// Returns a pointer to the selected marker pick result or null, only valid on the callback scope
+using MarkerPickCallback = std::function<void(const MarkerPickResult*)>;
 
 struct SceneUpdate {
     std::string path;
@@ -264,14 +276,19 @@ public:
 
     // Create a query to select a feature marked as 'interactive'. The query runs on the next frame.
     // Calls _onFeaturePickCallback once the query has completed, and returns the FeaturePickResult
-    // with its associated properties.
+    // with its associated properties or null if no feature was found.
     void pickFeatureAt(float _x, float _y, FeaturePickCallback _onFeaturePickCallback);
 
     // Create a query to select a label created for a feature marked as 'interactive'. The query runs
     // on the next frame.
     // Calls _onLabelPickCallback once the query has completed, and returns the LabelPickResult
-    // with its associated properties.
+    // with its associated properties or null if no label was found.
     void pickLabelAt(float _x, float _y, LabelPickCallback _onLabelPickCallback);
+
+    // Create a query to select a marker that is 'interactive'. The query runs on the next frame.
+    // Calls _onLMarkerPickCallback once the query has completed, and returns the MarkerPickResult
+    // with its associated properties or null if no marker was found.
+    void pickMarkerAt(float _x, float _y, MarkerPickCallback _onMarkerPickCallback);
 
     // Run this task asynchronously to Tangram's main update loop.
     void runAsyncTask(std::function<void()> _task);

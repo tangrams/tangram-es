@@ -19,7 +19,6 @@
 #include "util/inputHandler.h"
 #include "tile/tileCache.h"
 #include "util/fastmap.h"
-#include "util/featureSelection.h"
 #include "view/view.h"
 #include "data/clientGeoJsonSource.h"
 #include "gl.h"
@@ -29,6 +28,7 @@
 #include "util/jobQueue.h"
 #include "debug/textDisplay.h"
 #include "debug/frameInfo.h"
+#include "selection/selectionQuery.h"
 
 #include <cmath>
 #include <bitset>
@@ -42,16 +42,6 @@ enum class EaseField { position, zoom, rotation, tilt };
 class Map::Impl {
 
 public:
-
-    struct FeatureSelectionQuery {
-        glm::vec2 position;
-        FeaturePickCallback onFeatureSelection;
-    };
-
-    struct LabelSelectionQuery {
-        glm::vec2 position;
-        LabelPickCallback onLabelSelection;
-    };
 
     void setScene(std::shared_ptr<Scene>& _scene);
 
@@ -91,8 +81,7 @@ public:
 
     bool cacheGlState;
 
-    std::vector<FeatureSelectionQuery> featureSelectionQueries;
-    std::vector<LabelSelectionQuery> labelSelectionQueries;
+    std::vector<SelectionQuery> selectionQueries;
 };
 
 void Map::Impl::setEase(EaseField _f, Ease _e) {
@@ -398,14 +387,20 @@ bool Map::update(float _dt) {
     return viewComplete;
 }
 
-void Map::pickFeatureAt(float _x, float _y, FeaturePickCallback _onFeatureSelectCallback) {
-    impl->featureSelectionQueries.push_back({{_x, _y}, _onFeatureSelectCallback});
+void Map::pickFeatureAt(float _x, float _y, FeaturePickCallback _onFeaturePickCallback) {
+    impl->selectionQueries.push_back({{_x, _y}, _onFeaturePickCallback});
 
     requestRender();
 }
 
-void Map::pickLabelAt(float _x, float _y, LabelPickCallback _onTouchLabelSelectCallback) {
-    impl->labelSelectionQueries.push_back({{_x, _y}, _onTouchLabelSelectCallback});
+void Map::pickLabelAt(float _x, float _y, LabelPickCallback _onLabelPickCallback) {
+    impl->selectionQueries.push_back({{_x, _y}, _onLabelPickCallback});
+
+    requestRender();
+}
+
+void Map::pickMarkerAt(float _x, float _y, MarkerPickCallback _onMarkerPickCallback) {
+    impl->selectionQueries.push_back({{_x, _y}, _onMarkerPickCallback});
 
     requestRender();
 }
@@ -433,8 +428,7 @@ void Map::render() {
     impl->renderState.jobQueue.runJobs();
 
     // Render feature selection pass to offscreen framebuffer
-    if (impl->featureSelectionQueries.size() > 0 || impl->labelSelectionQueries.size() > 0 || drawSelectionBuffer) {
-
+    if (impl->selectionQueries.size() > 0 || drawSelectionBuffer) {
         impl->selectionBuffer->applyAsRenderTarget(impl->renderState);
 
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
@@ -445,79 +439,20 @@ void Map::render() {
             for (const auto& tile : impl->tileManager.getVisibleTiles()) {
                 style->drawSelectionFrame(impl->renderState, *tile);
             }
+
+            for (const auto& marker : impl->markerManager.markers()) {
+                style->drawSelectionFrame(impl->renderState, *marker);
+            }
         }
 
+        std::vector<SelectionColorRead> colorCache;
         // Resolve feature selection queries
-        for (const auto& selectionQuery : impl->featureSelectionQueries) {
-
-            float x = selectionQuery.position.x / impl->view.getWidth();
-            float y = (1.f - (selectionQuery.position.y / impl->view.getHeight()));
-
-            // TODO: read with a scalable thumb size
-            GLuint color = impl->selectionBuffer->readAt(x, y);
-
-            auto position = std::array<float, 2>{{selectionQuery.position.x,
-                                                  selectionQuery.position.y}};
-            bool found = false;
-            if (color != 0) {
-                for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                    if (auto props = tile->getSelectionFeature(color)) {
-
-                        FeaturePickResult queryResult(props, position);
-                        selectionQuery.onFeatureSelection(&queryResult);
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            if (!found) {
-                selectionQuery.onFeatureSelection(nullptr);
-                continue;
-            }
+        for (const auto& selectionQuery : impl->selectionQueries) {
+            selectionQuery.process(impl->view, *impl->selectionBuffer, impl->markerManager,
+                                   impl->tileManager, impl->labels, colorCache);
         }
 
-        impl->featureSelectionQueries.clear();
-
-        // Resolve label selection queries
-        for (const auto& labelQuery : impl->labelSelectionQueries) {
-
-            float x = labelQuery.position.x / impl->view.getWidth();
-            float y = (1.f - (labelQuery.position.y / impl->view.getHeight()));
-
-            // TODO: read with a scalable thumb size and iterate over the read colors
-            GLuint color = impl->selectionBuffer->readAt(x, y);
-
-            // Retrieve the label for this selection color
-            if (color == 0) {
-                labelQuery.onLabelSelection(nullptr);
-                continue;
-            }
-            auto label = impl->labels.getLabel(color);
-            if (!label.first) {
-                labelQuery.onLabelSelection(nullptr);
-                continue;
-            }
-            auto props = label.second->getSelectionFeature(label.first->options().featureId);
-            if (!props) {
-                labelQuery.onLabelSelection(nullptr);
-                continue;
-            }
-
-            LngLat coordinate = label.first->coordinates(*label.second,
-                                                         impl->view.getMapProjection());
-
-            auto position = std::array<float, 2>{{labelQuery.position.x,
-                                                  labelQuery.position.y}};
-
-            LabelPickResult queryResult(label.first->renderType(), coordinate,
-                                        FeaturePickResult(props, position));
-
-            // TODO: sort touch labels by distance
-
-            labelQuery.onLabelSelection(&queryResult);
-        }
-
-        impl->labelSelectionQueries.clear();
+        impl->selectionQueries.clear();
     }
 
     // Setup default framebuffer for a new frame
