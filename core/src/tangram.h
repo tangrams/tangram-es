@@ -276,15 +276,18 @@ public:
 
     // Create a query to select a feature marked as 'interactive'. The query runs on the next frame.
     // Calls _onFeaturePickCallback once the query has completed, and returns the FeaturePickResult
-    // with its associated properties.
+    // with its associated properties or null if no feature was found.
     void pickFeatureAt(float _x, float _y, FeaturePickCallback _onFeaturePickCallback);
 
     // Create a query to select a label created for a feature marked as 'interactive'. The query runs
     // on the next frame.
     // Calls _onLabelPickCallback once the query has completed, and returns the LabelPickResult
-    // with its associated properties.
+    // with its associated properties or null if no label was found.
     void pickLabelAt(float _x, float _y, LabelPickCallback _onLabelPickCallback);
 
+    // Create a query to select a marker that is 'interactive'. The query runs on the next frame.
+    // Calls _onLMarkerPickCallback once the query has completed, and returns the MarkerPickResult
+    // with its associated properties or null if no marker was found.
     void pickMarkerAt(float _x, float _y, MarkerPickCallback _onMarkerPickCallback);
 
     // Run this task asynchronously to Tangram's main update loop.
