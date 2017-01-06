@@ -164,7 +164,8 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
     return std::move(m_textLabels);
 }
 
-bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _rule, bool _iconText) {
+bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _rule, bool _iconText,
+                                        const Line& _placedPoints) {
     TextStyle::Parameters params = applyRule(_rule, _feat.props, _iconText);
 
     Label::Type labelType;
@@ -188,10 +189,17 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
         }
 
     } else if (_feat.geometryType == GeometryType::polygons) {
+
         for (auto& polygon : _feat.polygons) {
             if (_iconText) {
-                auto p = centroid(polygon);
-                addLabel(params, Label::Type::point, { p, p }, _rule);
+                if (_placedPoints.empty()) {
+                    auto p = centroid(polygon);
+                    addLabel(params, Label::Type::point, {p, p}, _rule);
+                } else {
+                    for (auto& point : _placedPoints) {
+                        addLabel(params, Label::Type::point, { point }, _rule);
+                    }
+                }
             } else {
                 for (auto& line : polygon) {
                     for (auto& point : line) {
@@ -204,10 +212,8 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
     } else if (_feat.geometryType == GeometryType::lines) {
 
         if (_iconText) {
-            for (auto& line : _feat.lines) {
-                for (auto& point : line) {
-                    addLabel(params, Label::Type::point, { point }, _rule);
-                }
+            for (auto& point : _placedPoints) {
+                addLabel(params, Label::Type::point, { point }, _rule);
             }
         } else {
             addLineTextLabels(_feat, params, _rule);

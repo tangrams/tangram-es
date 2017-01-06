@@ -42,6 +42,10 @@ struct PointStyleBuilder : public StyleBuilder {
 
     PointStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
+    // Gets points for label placement and appropriate angle for each label (if `auto` angle is set)
+    void labelPointsPlacing(const Line& _line, const PointStyle::Parameters& params,
+                            std::vector<float>& angles);
+
     void addLabel(const Point& _point, const glm::vec4& _quad,
                   const PointStyle::Parameters& _params, const DrawRule& _rule);
 
@@ -50,6 +54,12 @@ struct PointStyleBuilder : public StyleBuilder {
     bool addFeature(const Feature& _feat, const DrawRule& _rule) override;
 
 private:
+
+
+    Point interpolateSegment(const Point& p, const Point& q, float distance);
+    Point interpolateLine(const Line& _line, float distance, const PointStyle::Parameters& params,
+                          std::vector<float>& angles);
+
     std::vector<std::unique_ptr<Label>> m_labels;
     std::vector<SpriteQuad> m_quads;
 
@@ -58,6 +68,7 @@ private:
     float m_zoom = 0;
     std::unique_ptr<SpriteLabels> m_spriteLabels;
     std::unique_ptr<StyleBuilder> m_textStyleBuilder;
+    Line m_placedPoints;
 
     // Non-owning reference to a texture to use for the current feature.
     Texture* m_texture = nullptr;

@@ -20,6 +20,7 @@ public:
 
     struct Parameters {
         bool interactive = false;
+        bool keepTileEdges = false;
         std::string sprite;
         std::string spriteDefault;
         glm::vec2 size;
@@ -27,6 +28,7 @@ public:
         Label::Options labelOptions;
         LabelProperty::Placement placement;
         float extrudeScale = 1.f;
+        float placementSpacing = 80.f;
     };
 
     PointStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,

@@ -1,3 +1,4 @@
+#include <view/view.h>
 #include "pointStyleBuilder.h"
 
 #include "data/propertyItem.h" // Include wherever Properties is used!
@@ -11,6 +12,7 @@
 #include "tile/tile.h"
 #include "util/geom.h"
 #include "selection/featureSelection.h"
+#include "log.h"
 
 namespace Tangram {
 
@@ -122,6 +124,8 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
 
     _rule.get(StyleParamKey::sprite_default, p.spriteDefault);
     _rule.get(StyleParamKey::placement, p.placement);
+    _rule.get(StyleParamKey::placement_spacing, p.placementSpacing);
+    _rule.get(StyleParamKey::tile_edges, p.keepTileEdges);
     _rule.get(StyleParamKey::interactive, p.interactive);
     _rule.get(StyleParamKey::collide, p.labelOptions.collide);
     _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
@@ -255,6 +259,131 @@ bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _q
     return true;
 }
 
+Point PointStyleBuilder::interpolateSegment(const Point& p, const Point& q, float distance) {
+
+    //TODO: cache distances between points ... will only have to do a sqrt once per pair of points
+    float len = glm::distance(p, q);
+    float ratio = distance/len;
+
+    return { ratio * p[0] + (1 - ratio) * q[0], ratio * p[1] + (1 - ratio) * q[1], 0.f };
+}
+
+Point PointStyleBuilder::interpolateLine(const Line& _line, float distance, const PointStyle::Parameters& params,
+                      std::vector<float>& angles) {
+    Point r;
+    float usedSpace = 0.;
+    for (size_t i = 0; i < _line.size() - 1; i++) {
+        auto &p = _line[i];
+        auto &q = _line[i + 1];
+        //TODO: cache distances between points ... will only have to do a sqrt once per pair of points
+        usedSpace += glm::distance(p, q);
+        if (usedSpace > distance) {
+            r = interpolateSegment(p, q, (usedSpace - distance));
+            if (std::isnan(params.labelOptions.angle)) {
+                angles.emplace_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
+            }
+            break;
+        }
+    }
+    return r;
+}
+
+bool isOutsideTile(const Point& p) {
+
+    float tolerance = 0.0005;
+    float tile_min = 0.0 + tolerance;
+    float tile_max = 1.0 - tolerance;
+
+    if ( (p.x < tile_min) || (p.x > tile_max) ||
+         (p.y < tile_min) || (p.y > tile_max) ) {
+        return true;
+    }
+
+    return false;
+}
+
+void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::Parameters& params,
+                                          std::vector<float>& angles) {
+    switch(params.placement) {
+        case LabelProperty::Placement::vertex:
+            for (size_t i = 0; i < _line.size() - 1; i++) {
+                auto& p = _line[i];
+                auto& q = _line[i+1];
+                if (params.keepTileEdges || !isOutsideTile(p)) {
+                    if (std::isnan(params.labelOptions.angle)) {
+                        angles.emplace_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
+                    }
+                    m_placedPoints.push_back(p);
+                }
+            }
+
+            // Place last label
+            {
+                auto &p = *(_line.rbegin() + 1);
+                auto &q = _line.back();
+                if (std::isnan(params.labelOptions.angle)) {
+                    angles.emplace_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
+                }
+                m_placedPoints.push_back(q);
+            }
+            break;
+        case LabelProperty::Placement::midpoint:
+            for (size_t i = 0; i < _line.size() - 1; i++) {
+                auto& p = _line[i];
+                auto& q = _line[i+1];
+                if (params.keepTileEdges || !isOutsideTile(p)) {
+                    if (std::isnan(params.labelOptions.angle)) {
+                        angles.emplace_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
+                    }
+                    m_placedPoints.push_back( {0.5 * (p.x + q.x), 0.5 * (p.y + q.y), 0.0f} );
+                }
+            }
+            break;
+        case LabelProperty::Placement::spaced: {
+            Line interpolatedLine;
+            std::vector<float> allAngles;
+
+            float spacing = params.placementSpacing * m_style.pixelScale() / View::s_pixelsPerTile;
+            float lineLength = 0;
+
+            for (size_t i = 0; i < _line.size() - 1; i++) {
+                //TODO: cache distances between points ... will only have to do a sqrt once per pair of points
+                lineLength += glm::distance(_line[i], _line[i+1]);
+            }
+
+            if (!lineLength) { break; }
+
+            int numLabels = glm::max(floor(lineLength/spacing), 1.0);
+            float remainderLength = lineLength - (numLabels - 1) * spacing;
+
+            float distance = 0.5 * remainderLength;
+            // interpolate line placement points based on the spacing distance
+            for (int i = 0; i < numLabels; i++) {
+                interpolatedLine.push_back(interpolateLine(_line, distance, params, allAngles));
+                distance += spacing;
+            }
+
+            assert(!allAngles.empty() || interpolatedLine.size() == allAngles.size());
+
+            for (size_t i = 0; i < interpolatedLine.size(); i++) {
+                auto p = interpolatedLine[i];
+                if (params.keepTileEdges || !isOutsideTile(p)) {
+                    if (std::isnan(params.labelOptions.angle) && !allAngles.empty()) {
+                        angles.push_back(allAngles[i]);
+                    }
+                    m_placedPoints.push_back(p);
+                }
+            }
+        }
+        break;
+        case LabelProperty::Placement::centroid:
+            // nothing to be done here.
+            break;
+        default:
+            LOG("Illegal placement parameter specified");
+    }
+}
+
 bool PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
                                  const DrawRule& _rule) {
 
@@ -280,8 +409,16 @@ bool PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
         return false;
     }
 
-    for (size_t i = 0; i < _line.size(); ++i) {
-        addLabel(_line[i], uvsQuad, p, _rule);
+    size_t prevPlaced = m_placedPoints.size();
+    std::vector<float> angles;
+    labelPointsPlacing(_line, p, angles);
+
+    for (size_t i = prevPlaced; i < m_placedPoints.size(); ++i) {
+        if (!angles.empty()) {
+            // override angle parameter for each label
+            p.labelOptions.angle = angles[i];
+        }
+        addLabel(m_placedPoints[i], uvsQuad, p, _rule);
     }
 
     return true;
@@ -299,13 +436,19 @@ bool PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
 
     if (p.placement != LabelProperty::centroid) {
         for (auto line : _polygon) {
-            for (auto point : line) {
-                addLabel(point, uvsQuad, p, _rule);
+            std::vector<float> angles;
+            auto prevPlaced = m_placedPoints.size();
+            labelPointsPlacing(line, p, angles);
+            for (size_t i = prevPlaced; i < m_placedPoints.size(); i++) {
+                if (!angles.empty()) {
+                    // override angle parameter for each label
+                    p.labelOptions.angle = angles[i];
+                }
+                addLabel(m_placedPoints[i], uvsQuad, p, _rule);
             }
         }
     } else {
         glm::vec2 c = centroid(_polygon);
-
         addLabel(Point{c,0}, uvsQuad, p, _rule);
     }
 
@@ -333,7 +476,7 @@ bool PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
 
         size_t textStart = textLabels.size();
 
-        if (!textStyleBuilder.addFeatureCommon(_feat, _rule, true)) { return true; }
+        if (!textStyleBuilder.addFeatureCommon(_feat, _rule, true, m_placedPoints)) { return true; }
 
         size_t textCount = textLabels.size() - textStart;
 
@@ -350,6 +493,7 @@ bool PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
             }
         }
     }
+    m_placedPoints.clear();
     return true;
 }
 

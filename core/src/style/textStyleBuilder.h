@@ -24,7 +24,8 @@ public:
         return addFeatureCommon(_feature, _rule, false);
     }
 
-    bool addFeatureCommon(const Feature& _feature, const DrawRule& _rule, bool _iconText);
+    bool addFeatureCommon(const Feature& _feature, const DrawRule& _rule, bool _iconText,
+                            const Line& _placedPoints = {});
 
     void setup(const Tile& _tile) override;
     void setup(const Marker& _marker, int zoom) override;
