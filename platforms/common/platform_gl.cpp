@@ -1,4 +1,8 @@
+#ifdef TANGRAM_USE_GLPROXY
+#include <glproxy/gl.h>
+#else
 #include "platform_gl.h"
+#endif
 
 #include "gl.h"
 #include "gl/error.h"
@@ -38,10 +42,28 @@ void GL::depthMask(GLboolean flag) {
     GL_CHECK(glDepthMask(flag));
 }
 void GL::depthRange(GLfloat n, GLfloat f) {
-    GL_CHECK(glDepthRangef(n, f));
+#ifdef TANGRAM_USE_GLPROXY
+    if (glproxy_is_desktop_gl() && glproxy_gl_version() < 40)
+    {
+        GL_CHECK(glDepthRange(n, f));
+    }
+    else
+#endif
+    {
+        GL_CHECK(glDepthRangef(n, f));
+    }
 }
 void GL::clearDepth(GLfloat d) {
-    GL_CHECK(glClearDepthf(d));
+#ifdef TANGRAM_USE_GLPROXY
+    if (glproxy_is_desktop_gl() && glproxy_gl_version() < 40)
+    {
+        GL_CHECK(glClearDepth(d));
+    }
+    else
+#endif
+    {
+        GL_CHECK(glClearDepthf(d));
+    }
 }
 void GL::blendFunc(GLenum sfactor, GLenum dfactor) {
     GL_CHECK(glBlendFunc(sfactor, dfactor));

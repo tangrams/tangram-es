@@ -23,7 +23,7 @@ public:
     struct Response {
         std::vector<char> data;
         bool successful = false;
-        bool canceled = false;
+        bool canceled = false; /* TODO: should be atomic */
     };
 
     UrlClient(Options options);
@@ -33,7 +33,6 @@ public:
 
     void cancelRequest(const std::string& url);
 
-private:
     struct Request {
         std::string url;
         UrlCallback callback;
@@ -44,7 +43,8 @@ private:
         Response response;
     };
 
-    void curlLoop(uint32_t index);
+private:
+    void fetchLoop(uint32_t index);
 
     std::vector<std::thread> m_threads;
     std::vector<Task> m_tasks;

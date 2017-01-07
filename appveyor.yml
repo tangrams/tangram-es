@@ -1,0 +1,10 @@
+build_script:
+  - del "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets"
+  - git submodule update --init
+  - mkdir build\windows
+  - cd build\windows
+  - cmake ../.. -DUNIT_TESTS:BOOL=ON
+  - cmake --build . --config Debug
+test_script:
+  - cd %APPVEYOR_BUILD_FOLDER%\build\windows
+  - ctest --output-on-failure -C Debug

@@ -1,11 +1,16 @@
+enable_testing()
 
 add_library(platform_test
   ${CMAKE_CURRENT_SOURCE_DIR}/src/catch.cpp)
 
+set (TANGRAM_TEST_LINK_LIBRARIES platform_mock)
+if (NOT WIN32)
+  list (APPEND TANGRAM_TEST_LINK_LIBRARIES -lpthread)
+endif()
 target_link_libraries(platform_test
   PUBLIC
-  platform_mock
-  -lpthread)
+  ${TANGRAM_TEST_LINK_LIBRARIES}
+)
 
 target_include_directories(platform_test
     PUBLIC
@@ -28,7 +33,13 @@ foreach(_src_file_path ${TEST_SOURCES})
   set_target_properties(${EXECUTABLE_NAME}
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/unit"
-    )
+  )
+
+  add_test(
+    NAME ${EXECUTABLE_NAME}
+    COMMAND $<TARGET_FILE:${EXECUTABLE_NAME}>
+    WORKING_DIRECTORY $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>
+  )
 
 endforeach()
 
