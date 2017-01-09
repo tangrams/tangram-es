@@ -303,8 +303,8 @@ bool isOutsideTile(const Point& p) {
     return false;
 }
 
-void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::Parameters& params,
-                                          std::vector<float>& angles) {
+void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::Parameters& params) {
+
     switch(params.placement) {
         case LabelProperty::Placement::vertex:
             for (size_t i = 0; i < _line.size() - 1; i++) {
@@ -312,7 +312,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
                 auto& q = _line[i+1];
                 if (params.keepTileEdges || !isOutsideTile(p)) {
                     if (std::isnan(params.labelOptions.angle)) {
-                        angles.emplace_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
+                        m_angleValues.emplace_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
                     }
                     m_placedPoints.push_back(p);
                 }
@@ -323,7 +323,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
                 auto &p = *(_line.rbegin() + 1);
                 auto &q = _line.back();
                 if (std::isnan(params.labelOptions.angle)) {
-                    angles.emplace_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
+                    m_angleValues.emplace_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
                 }
                 m_placedPoints.push_back(q);
             }
@@ -334,7 +334,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
                 auto& q = _line[i+1];
                 if (params.keepTileEdges || !isOutsideTile(p)) {
                     if (std::isnan(params.labelOptions.angle)) {
-                        angles.emplace_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
+                        m_angleValues.emplace_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
                     }
                     m_placedPoints.push_back( {0.5 * (p.x + q.x), 0.5 * (p.y + q.y), 0.0f} );
                 }
@@ -371,7 +371,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
                 auto p = interpolatedLine[i];
                 if (params.keepTileEdges || !isOutsideTile(p)) {
                     if (std::isnan(params.labelOptions.angle) && !allAngles.empty()) {
-                        angles.push_back(allAngles[i]);
+                        m_angleValues.push_back(allAngles[i]);
                     }
                     m_placedPoints.push_back(p);
                 }
@@ -412,13 +412,12 @@ bool PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
     }
 
     size_t prevPlaced = m_placedPoints.size();
-    std::vector<float> angles;
-    labelPointsPlacing(_line, p, angles);
+    labelPointsPlacing(_line, p);
 
     for (size_t i = prevPlaced; i < m_placedPoints.size(); ++i) {
-        if (!angles.empty()) {
+        if (!m_angleValues.empty()) {
             // override angle parameter for each label
-            p.labelOptions.angle = angles[i];
+            p.labelOptions.angle = m_angleValues[i];
         }
         addLabel(m_placedPoints[i], uvsQuad, p, _rule);
     }
@@ -438,13 +437,12 @@ bool PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
 
     if (p.placement != LabelProperty::centroid) {
         for (auto line : _polygon) {
-            std::vector<float> angles;
             auto prevPlaced = m_placedPoints.size();
-            labelPointsPlacing(line, p, angles);
+            labelPointsPlacing(line, p);
             for (size_t i = prevPlaced; i < m_placedPoints.size(); i++) {
-                if (!angles.empty()) {
+                if (!m_angleValues.empty()) {
                     // override angle parameter for each label
-                    p.labelOptions.angle = angles[i];
+                    p.labelOptions.angle = m_angleValues[i];
                 }
                 addLabel(m_placedPoints[i], uvsQuad, p, _rule);
             }
@@ -497,6 +495,7 @@ bool PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
     }
     m_placedPoints.clear();
     m_pointDistances.clear();
+    m_angleValues.clear();
     return true;
 }
 
