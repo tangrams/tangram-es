@@ -55,6 +55,8 @@ textures:
             info: [0, 1110, 32, 32]
             hotel: [0, 259, 32, 32]
             bookstore: [0, 333, 32, 32]
+            shield: [0, 1142, 32, 32]
+            arrow: [1, 1175, 22, 22]
 
 styles:
     heightglow:
@@ -301,6 +303,45 @@ layers:
                         outline:
                             color: orange
                             width: [[11, 0px], [12, 1px], [13, 2px], [15, 12.5]]
+        arrows:
+            # oneway arrows and shields are distinct groups!
+            filter: { oneway: yes, shield_text: false, $zoom: { min: 17 } }
+            draw:
+                icons:
+                    sprite: arrow
+                    size: [[17, 18px], [18, 20px], [20, 32px]]
+                    placement: spaced
+                    placement_spacing: [[17, 70px], [20, 175px]]
+                    angle: auto
+
+        shields:
+            filter:
+                network: 'US:I' # US interstates only in this demo
+                shield_text: true
+            draw:
+                icons:
+                    sprite: shield
+                    # sprite: function() { return feature.network }
+                    priority: 2
+                    color: white
+                    size: 24px
+                    placement: midpoint
+                    repeat_group: shields
+                    text:
+                        repeat_distance: 150px
+                        anchor: center
+                        text_source: shield_text
+                        font:
+                            family: sans-serif
+                            size: 11px
+                            fill: white
+
+            # thin-out shields at low-zoom
+            thinning:
+                filter: { $zoom: { max: 11 } }
+                draw:
+                    icons:
+                        repeat_distance: 75px
 
         labels:
             filter:
@@ -469,6 +510,7 @@ layers:
                     interactive: true
                     priority: 6
                     text:
+                        optional: true
                         visible: false
 
             # add text label at higher zoom
