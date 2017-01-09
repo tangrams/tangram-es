@@ -28,6 +28,7 @@ public:
         Label::Options labelOptions;
         LabelProperty::Placement placement;
         float extrudeScale = 1.f;
+        float placementMinLengthRatio = 1.0f;
         float placementSpacing = 80.f;
     };
 

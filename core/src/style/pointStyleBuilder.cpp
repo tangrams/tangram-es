@@ -125,6 +125,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     _rule.get(StyleParamKey::sprite_default, p.spriteDefault);
     _rule.get(StyleParamKey::placement, p.placement);
     _rule.get(StyleParamKey::placement_spacing, p.placementSpacing);
+    _rule.get(StyleParamKey::placement_min_length_ratio, p.placementMinLengthRatio);
     _rule.get(StyleParamKey::tile_edges, p.keepTileEdges);
     _rule.get(StyleParamKey::interactive, p.interactive);
     _rule.get(StyleParamKey::collide, p.labelOptions.collide);
@@ -270,18 +271,24 @@ Point PointStyleBuilder::interpolateSegment(const Line& _line, int i, int j, flo
     return { ratio * p[0] + (1 - ratio) * q[0], ratio * p[1] + (1 - ratio) * q[1], 0.f };
 }
 
-Point PointStyleBuilder::interpolateLine(const Line& _line, float distance, const PointStyle::Parameters& params,
-                      std::vector<float>& angles) {
-    Point r;
+Point PointStyleBuilder::interpolateLine(const Line& _line, float distance, float minLineLength,
+                                         const PointStyle::Parameters& params,
+                                         std::vector<float>& angles) {
+    Point r = {std::nanf("1"), std::nanf("1"), 0.0f};
     float usedSpace = 0.;
     for (size_t i = 0; i < _line.size() - 1; i++) {
         auto &p = _line[i];
         auto &q = _line[i + 1];
-        usedSpace += m_pointDistances[std::make_pair(i, i+1)];
+
+        auto pointPair = std::make_pair(i, i+1);
+        usedSpace += m_pointDistances[pointPair];
+
+        if (m_pointDistances[pointPair] <= minLineLength) { continue; }
+
         if (usedSpace > distance) {
             r = interpolateSegment(_line, i, i+1, (usedSpace - distance));
             if (std::isnan(params.labelOptions.angle)) {
-                angles.emplace_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
+                angles.push_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
             }
             break;
         }
@@ -305,6 +312,9 @@ bool isOutsideTile(const Point& p) {
 
 void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::Parameters& params) {
 
+    float minLineLength = glm::max(params.size[0], params.size[1]) * params.placementMinLengthRatio *
+                            m_style.pixelScale() / View::s_pixelsPerTile;
+
     switch(params.placement) {
         case LabelProperty::Placement::vertex:
             for (size_t i = 0; i < _line.size() - 1; i++) {
@@ -312,7 +322,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
                 auto& q = _line[i+1];
                 if (params.keepTileEdges || !isOutsideTile(p)) {
                     if (std::isnan(params.labelOptions.angle)) {
-                        m_angleValues.emplace_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
+                        m_angleValues.push_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
                     }
                     m_placedPoints.push_back(p);
                 }
@@ -323,7 +333,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
                 auto &p = *(_line.rbegin() + 1);
                 auto &q = _line.back();
                 if (std::isnan(params.labelOptions.angle)) {
-                    m_angleValues.emplace_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
+                    m_angleValues.push_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
                 }
                 m_placedPoints.push_back(q);
             }
@@ -332,9 +342,10 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
             for (size_t i = 0; i < _line.size() - 1; i++) {
                 auto& p = _line[i];
                 auto& q = _line[i+1];
-                if (params.keepTileEdges || !isOutsideTile(p)) {
+                if ( (params.keepTileEdges || !isOutsideTile(p)) &&
+                     (minLineLength == 0.0f || glm::distance(p, q) > minLineLength) ) {
                     if (std::isnan(params.labelOptions.angle)) {
-                        m_angleValues.emplace_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
+                        m_angleValues.push_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
                     }
                     m_placedPoints.push_back( {0.5 * (p.x + q.x), 0.5 * (p.y + q.y), 0.0f} );
                 }
@@ -353,7 +364,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
                 lineLength += m_pointDistances[p];
             }
 
-            if (!lineLength) { break; }
+            if (lineLength <= minLineLength) { break; }
 
             int numLabels = MAX(floor(lineLength/spacing), 1.0);
             float remainderLength = lineLength - (numLabels - 1) * spacing;
@@ -361,7 +372,10 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
             float distance = 0.5 * remainderLength;
             // interpolate line placement points based on the spacing distance
             for (int i = 0; i < numLabels; i++) {
-                interpolatedLine.push_back(interpolateLine(_line, distance, params, allAngles));
+                auto p = interpolateLine(_line, distance, minLineLength, params, allAngles);
+                if ( !(std::isnan(p.x) && std::isnan(p.y) )) {
+                    interpolatedLine.push_back(p);
+                }
                 distance += spacing;
             }
 
