@@ -6,10 +6,10 @@ fonts:
         url: https://fonts.gstatic.com/s/montserrat/v7/zhcz-_WihjSQC0oHJ9TCYL3hpw3pgy2gAi-Ip7WPMi0.woff
     Open Sans:
         - weight: 400
-          url: http://fonts.gstatic.com/s/opensans/v13/IgZJs4-7SA1XX_edsoXWog.ttf
+          url: https://fonts.gstatic.com/s/opensans/v13/wMws1cEtxWZc6AZZIpiqWALUuEpTyoUstqEm5AMlJo4.woff
         - weight: 400
           style: italic
-          url: http://fonts.gstatic.com/s/opensans/v13/O4NhV7_qs9r9seTo7fnsVKCWcynf_cDxXwCLxiixG1c.ttf
+          url: https://fonts.gstatic.com/s/opensans/v13/O4NhV7_qs9r9seTo7fnsVLO3LdcAZYWl9Si6vvxL-qU.woff
 
 scene:
     background:
