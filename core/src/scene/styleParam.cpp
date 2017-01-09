@@ -693,6 +693,15 @@ bool StyleParam::isFontSize(StyleParamKey _key) {
     }
 }
 
+bool StyleParam::isNumberType(StyleParamKey _key) {
+    switch (_key) {
+        case StyleParamKey::placement_min_length_ratio:
+            return true;
+        default:
+            return false;
+    }
+}
+
 bool StyleParam::isRequired(StyleParamKey _key) {
     static const std::vector<StyleParamKey> requiredKeys =
         { StyleParamKey::color, StyleParamKey::order, StyleParamKey::width };

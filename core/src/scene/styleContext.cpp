@@ -445,7 +445,8 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 _val = StyleParam::Width{static_cast<float>(v)};
                 break;
             }
-            case StyleParamKey::text_font_stroke_width: {
+            case StyleParamKey::text_font_stroke_width:
+            case StyleParamKey::placement_min_length_ratio: {
                 _val = static_cast<float>(duk_get_number(m_ctx, -1));
                 break;
             }

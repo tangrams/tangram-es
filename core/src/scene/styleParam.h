@@ -186,6 +186,7 @@ struct StyleParam {
     static bool isSize(StyleParamKey _key);
     static bool isWidth(StyleParamKey _key);
     static bool isOffsets(StyleParamKey _key);
+    static bool isNumberType(StyleParamKey _key);
     static bool isFontSize(StyleParamKey _key);
     static bool isRequired(StyleParamKey _key);
 
