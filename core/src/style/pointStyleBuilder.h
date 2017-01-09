@@ -5,6 +5,7 @@
 #include "style/textStyleBuilder.h"
 #include <vector>
 #include <memory>
+#include <map>
 
 namespace Tangram {
 
@@ -56,7 +57,7 @@ struct PointStyleBuilder : public StyleBuilder {
 private:
 
 
-    Point interpolateSegment(const Point& p, const Point& q, float distance);
+    Point interpolateSegment(const Line& _line, int i, int j, float distance);
     Point interpolateLine(const Line& _line, float distance, const PointStyle::Parameters& params,
                           std::vector<float>& angles);
 
@@ -69,6 +70,8 @@ private:
     std::unique_ptr<SpriteLabels> m_spriteLabels;
     std::unique_ptr<StyleBuilder> m_textStyleBuilder;
     Line m_placedPoints;
+    // cache point distances instead of calculating these again and again (sqrt is expensive)
+    std::map<std::pair<int, int>, float> m_pointDistances;
 
     // Non-owning reference to a texture to use for the current feature.
     Texture* m_texture = nullptr;

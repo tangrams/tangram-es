@@ -259,11 +259,13 @@ bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _q
     return true;
 }
 
-Point PointStyleBuilder::interpolateSegment(const Point& p, const Point& q, float distance) {
+Point PointStyleBuilder::interpolateSegment(const Line& _line, int i, int j, float distance) {
 
-    //TODO: cache distances between points ... will only have to do a sqrt once per pair of points
-    float len = glm::distance(p, q);
+    float len = m_pointDistances[std::make_pair(i, j)];
     float ratio = distance/len;
+
+    auto& p = _line[i];
+    auto& q = _line[j];
 
     return { ratio * p[0] + (1 - ratio) * q[0], ratio * p[1] + (1 - ratio) * q[1], 0.f };
 }
@@ -275,10 +277,9 @@ Point PointStyleBuilder::interpolateLine(const Line& _line, float distance, cons
     for (size_t i = 0; i < _line.size() - 1; i++) {
         auto &p = _line[i];
         auto &q = _line[i + 1];
-        //TODO: cache distances between points ... will only have to do a sqrt once per pair of points
-        usedSpace += glm::distance(p, q);
+        usedSpace += m_pointDistances[std::make_pair(i, i+1)];
         if (usedSpace > distance) {
-            r = interpolateSegment(p, q, (usedSpace - distance));
+            r = interpolateSegment(_line, i, i+1, (usedSpace - distance));
             if (std::isnan(params.labelOptions.angle)) {
                 angles.emplace_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
             }
@@ -347,8 +348,9 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
             float lineLength = 0;
 
             for (size_t i = 0; i < _line.size() - 1; i++) {
-                //TODO: cache distances between points ... will only have to do a sqrt once per pair of points
-                lineLength += glm::distance(_line[i], _line[i+1]);
+                auto p = std::make_pair(i, i+1);
+                m_pointDistances.emplace(p, glm::distance(_line[i], _line[i+1]));
+                lineLength += m_pointDistances[p];
             }
 
             if (!lineLength) { break; }
@@ -494,6 +496,7 @@ bool PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
         }
     }
     m_placedPoints.clear();
+    m_pointDistances.clear();
     return true;
 }
 
