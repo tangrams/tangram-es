@@ -355,7 +355,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
 
             if (!lineLength) { break; }
 
-            int numLabels = glm::max(floor(lineLength/spacing), 1.0);
+            int numLabels = MAX(floor(lineLength/spacing), 1.0);
             float remainderLength = lineLength - (numLabels - 1) * spacing;
 
             float distance = 0.5 * remainderLength;

@@ -87,7 +87,7 @@ namespace std {
             hash_combine(seed, p.color);
             hash_combine(seed, p.size.x);
             hash_combine(seed, p.size.y);
-            hash_combine(seed, p.placement);
+            hash_combine(seed, (int)p.placement);
             hash_combine(seed, optionsHash(p.labelOptions));
             return seed;
         }
