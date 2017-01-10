@@ -12,7 +12,6 @@ namespace Tangram {
 
 FrameBuffer::FrameBuffer(int _width, int _height, bool _colorRenderBuffer) :
     m_glFrameBufferHandle(0),
-    m_generation(-1),
     m_valid(false),
     m_colorRenderBuffer(_colorRenderBuffer),
     m_width(_width), m_height(_height) {
@@ -145,22 +144,17 @@ void FrameBuffer::init(RenderState& _rs) {
         m_valid = true;
     }
 
-    m_generation = _rs.generation();
-
     m_disposer = Disposer(_rs);
 }
 
 FrameBuffer::~FrameBuffer() {
 
-    int generation = m_generation;
     GLuint glHandle = m_glFrameBufferHandle;
 
     m_disposer([=](RenderState& rs) {
-        if (rs.isValidGeneration(generation)) {
-            rs.framebufferUnset(glHandle);
+        rs.framebufferUnset(glHandle);
 
-            GL::deleteFramebuffers(1, &glHandle);
-        }
+        GL::deleteFramebuffers(1, &glHandle);
     });
 }
 

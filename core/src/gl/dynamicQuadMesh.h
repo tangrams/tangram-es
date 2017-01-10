@@ -81,8 +81,6 @@ void DynamicQuadMesh<T>::upload(RenderState& rs) {
 
     if (m_nVertices == 0 || m_isUploaded) { return; }
 
-    MeshBase::checkValidity(rs);
-
     // Generate vertex buffer, if needed
     if (m_glVertexBuffer == 0) {
         GL::genBuffers(1, &m_glVertexBuffer);

@@ -49,8 +49,6 @@ private:
 
     GLuint m_glColorRenderBufferHandle;
 
-    int m_generation;
-
     bool m_valid;
 
     bool m_colorRenderBuffer;

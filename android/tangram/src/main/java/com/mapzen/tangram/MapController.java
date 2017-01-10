@@ -251,7 +251,6 @@ public class MapController implements Renderer {
      * @param sceneUpdates List of {@code SceneUpdate}
      */
     public void loadSceneFile(String path, List<SceneUpdate> sceneUpdates) {
-
         String[] updateStrings = bundleSceneUpdates(sceneUpdates);
         scenePath = path;
         checkPointer(mapPointer);

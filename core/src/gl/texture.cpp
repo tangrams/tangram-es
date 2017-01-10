@@ -27,7 +27,6 @@ Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _opti
     m_glHandle = 0;
     m_shouldResize = false;
     m_target = GL_TEXTURE_2D;
-    m_generation = -1;
     resize(_width, _height);
 }
 
@@ -39,18 +38,15 @@ Texture::Texture(const std::vector<char>& _data, TextureOptions options, bool ge
 
 Texture::~Texture() {
 
-    auto generation = m_generation;
     auto glHandle = m_glHandle;
     auto target = m_target;
 
     m_disposer([=](RenderState& rs) {
-        if (rs.isValidGeneration(generation)) {
-            // If the currently-bound texture is deleted, the binding resets to 0
-            // according to the OpenGL spec, so unset this texture binding.
-            rs.textureUnset(target, glHandle);
+        // If the currently-bound texture is deleted, the binding resets to 0
+        // according to the OpenGL spec, so unset this texture binding.
+        rs.textureUnset(target, glHandle);
 
-            GL::deleteTextures(1, &glHandle);
-        }
+        GL::deleteTextures(1, &glHandle);
     });
 }
 
@@ -103,7 +99,6 @@ Texture& Texture::operator=(Texture&& _other) {
     m_width = _other.m_width;
     m_height = _other.m_height;
     m_target = _other.m_target;
-    m_generation = _other.m_generation;
     m_generateMipmaps = _other.m_generateMipmaps;
     m_disposer = std::move(_other.m_disposer);
 
@@ -112,7 +107,7 @@ Texture& Texture::operator=(Texture&& _other) {
 
 void Texture::setData(const GLuint* _data, unsigned int _dataSize) {
 
-    if (m_data.size() > 0) { m_data.clear(); }
+    m_data.clear();
 
     m_data.insert(m_data.begin(), _data, _data + _dataSize);
 
@@ -199,25 +194,14 @@ void Texture::generate(RenderState& rs, GLuint _textureUnit) {
     GL::texParameteri(m_target, GL_TEXTURE_WRAP_S, m_options.wrapping.wraps);
     GL::texParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.wrapping.wrapt);
 
-    m_generation = rs.generation();
     m_disposer = Disposer(rs);
 }
 
-void Texture::checkValidity(RenderState& rs) {
-
-    if (!rs.isValidGeneration(m_generation)) {
-        m_shouldResize = true;
-        m_glHandle = 0;
-    }
-}
-
-bool Texture::isValid(RenderState& rs) const {
-    return (rs.isValidGeneration(m_generation) && m_glHandle != 0);
+bool Texture::isValid() const {
+    return m_glHandle != 0;
 }
 
 void Texture::update(RenderState& rs, GLuint _textureUnit) {
-
-    checkValidity(rs);
 
     if (!m_shouldResize && m_dirtyRanges.empty()) {
         return;
@@ -233,11 +217,11 @@ void Texture::update(RenderState& rs, GLuint _textureUnit) {
     GLuint* data = m_data.size() > 0 ? m_data.data() : nullptr;
 
     update(rs, _textureUnit, data);
+
+    m_data.clear();
 }
 
 void Texture::update(RenderState& rs, GLuint _textureUnit, const GLuint* data) {
-
-    checkValidity(rs);
 
     if (!m_shouldResize && m_dirtyRanges.empty()) {
         return;

@@ -79,7 +79,7 @@ public:
                     uint16_t _width, uint16_t _height, uint16_t _stride);
 
     /* Checks whether the texture has valid data and has been successfully uploaded to GPU */
-    bool isValid(RenderState& rs) const;
+    bool isValid() const;
 
     typedef std::pair<GLuint, GLuint> TextureSlot;
 
@@ -95,7 +95,6 @@ public:
 protected:
 
     void generate(RenderState& rs, GLuint _textureUnit);
-    void checkValidity(RenderState& rs);
 
     TextureOptions m_options;
     std::vector<GLuint> m_data;
@@ -113,8 +112,6 @@ protected:
     unsigned int m_height;
 
     GLenum m_target;
-
-    int m_generation;
 
     Disposer m_disposer;
 

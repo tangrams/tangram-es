@@ -53,7 +53,7 @@ public:
     GLint getUniformLocation(const UniformLocation& _uniformName);
 
     // Return true if this object represents a valid OpenGL shader program.
-    bool isValid(RenderState& rs) const { return m_glProgram != 0; };
+    bool isValid() const { return m_glProgram != 0; };
 
     // Bind the program in OpenGL if it is not already bound; If the shader sources
     // have been modified since the last time build() was called, also calls build().
@@ -123,7 +123,6 @@ private:
         return false;
     }
 
-    int m_generation = -1;
     GLuint m_glProgram = 0;
 
     fastmap<std::string, GLint> m_attribMap;
@@ -140,8 +139,6 @@ private:
     bool m_needsBuild = true;
 
     Disposer m_disposer;
-
-    void checkValidity(RenderState& rs);
 
     std::string applySourceBlocks(const std::string& source, bool fragShader) const;
 
