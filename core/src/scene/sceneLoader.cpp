@@ -731,7 +731,7 @@ void loadFontDescription(const Node& node, const std::string& family, const std:
             LOGW("Local font at path %s can't be found (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
         } else {
             LOGN("Adding local font %s (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
-            scene->fontContext()->addFont(_ft, alfons::InputSource(data));
+            scene->fontContext()->addFont(_ft, alfons::InputSource(std::move(data)));
         }
     }
 }

@@ -304,7 +304,7 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
             font->addFaces(*m_font[sizeIndex]);
         }
     } else {
-        font->addFace(m_alfons.addFontFace(alfons::InputSource(fontData), fontSize));
+        font->addFace(m_alfons.addFontFace(alfons::InputSource(std::move(fontData)), fontSize));
 
         if (m_font[sizeIndex]) {
             font->addFaces(*m_font[sizeIndex]);

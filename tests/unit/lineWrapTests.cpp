@@ -36,7 +36,7 @@ void initFont(std::string _font = TEST_FONT) {
     font = fontManager.addFont("default", TEST_FONT_SIZE, alfons::InputSource(_font));
 
     auto data = bytesFromFile(_font.c_str());
-    auto face = fontManager.addFontFace(alfons::InputSource(data), TEST_FONT_SIZE);
+    auto face = fontManager.addFontFace(alfons::InputSource(std::move(data)), TEST_FONT_SIZE);
     font->addFace(face);
 }
 
