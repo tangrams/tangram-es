@@ -284,34 +284,28 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     auto font =  m_alfons.getFont(FontDescription::Alias(_family, _style, _weight), fontSize);
     if (font->hasFaces()) { return font; }
 
-    unsigned char* data = nullptr;
-    size_t dataSize = 0;
-
     // 1. Bundle
     // Assuming bundled ttf file follows this convention
     std::string bundleFontPath = m_sceneResourceRoot + "fonts/" +
         FontDescription::BundleAlias(_family, _style, _weight);
 
-    data = bytesFromFile(bundleFontPath.c_str(), dataSize);
+    std::vector<char> fontData = bytesFromFile(bundleFontPath.c_str());
 
     // 2. System font
-    if (!data) {
-        data = systemFont(_family, _weight, _style, &dataSize);
+    if (fontData.size() == 0) {
+        fontData = systemFont(_family, _weight, _style);
     }
 
-    if (data) {
-        font->addFace(m_alfons.addFontFace(alfons::InputSource(reinterpret_cast<char*>(data), dataSize), fontSize));
-        free(data);
+    if (fontData.size() == 0) {
+        LOGN("Could not load font file %s", FontDescription::BundleAlias(_family, _style, _weight).c_str());
 
-        // add fallbacks from default font
+        // 3. Add fallbacks from default font
         if (m_font[sizeIndex]) {
             font->addFaces(*m_font[sizeIndex]);
         }
-
     } else {
-        LOGN("Could not load font file %s", FontDescription::BundleAlias(_family, _style, _weight).c_str());
+        font->addFace(m_alfons.addFontFace(alfons::InputSource(std::move(fontData)), fontSize));
 
-        // add fallbacks from default font
         if (m_font[sizeIndex]) {
             font->addFaces(*m_font[sizeIndex]);
         }

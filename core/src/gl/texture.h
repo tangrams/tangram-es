@@ -41,7 +41,7 @@ public:
             TextureOptions _options = DEFAULT_TEXTURE_OPTION,
             bool _generateMipmaps = false);
 
-    Texture(const unsigned char* data, size_t dataSize,
+    Texture(const std::vector<char>& _data,
             TextureOptions _options = DEFAULT_TEXTURE_OPTION,
             bool _generateMipmaps = false);
 
@@ -87,7 +87,7 @@ public:
 
     static bool isRepeatWrapping(TextureWrapping _wrapping);
 
-    bool loadImageFromMemory(const unsigned char* blob, unsigned int size);
+    bool loadImageFromMemory(const std::vector<char>& _data);
 
     static void flipImageData(unsigned char *result, int w, int h, int depth);
     static void flipImageData(GLuint *result, int w, int h);

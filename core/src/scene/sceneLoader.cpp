@@ -552,12 +552,10 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
     if (std::regex_search(url, match, r)) {
         scene->pendingTextures++;
         startUrlRequest(url, [=](std::vector<char>&& rawData) {
-                auto ptr = (unsigned char*)(rawData.data());
-                size_t dataSize = rawData.size();
                 std::lock_guard<std::mutex> lock(m_textureMutex);
                 auto texture = scene->getTexture(name);
                 if (texture) {
-                    if (!texture->loadImageFromMemory(ptr, dataSize)) {
+                    if (!texture->loadImageFromMemory(rawData)) {
                         LOGE("Invalid texture data '%s'", url.c_str());
                     }
 
@@ -568,7 +566,8 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
                     }
                 }
             });
-        texture = std::make_shared<Texture>(nullptr, 0, options, generateMipmaps);
+        std::vector<char> textureData = {};
+        texture = std::make_shared<Texture>(textureData, options, generateMipmaps);
     } else {
 
         if (url.substr(0, 22) == "data:image/png;base64,") {
@@ -589,24 +588,25 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
             }
             texture = std::make_shared<Texture>(0, 0, options, generateMipmaps);
 
-            if (!texture->loadImageFromMemory(blob.data(), blob.size())) {
+            std::vector<char> textureData;
+            auto cdata = reinterpret_cast<char*>(blob.data());
+            textureData.insert(textureData.begin(), cdata, cdata + blob.size());
+            if (!texture->loadImageFromMemory(textureData)) {
                 LOGE("Invalid Base64 texture");
             }
 
         } else {
-            size_t size = 0;
-            unsigned char* blob = bytesFromFile(url.c_str(), size);
+            auto data = bytesFromFile(url.c_str());
 
-            if (!blob) {
+            if (data.size() == 0) {
                 LOGE("Can't load texture resource at url '%s'", url.c_str());
                 return nullptr;
             }
-            texture = std::make_shared<Texture>(0, 0, options, generateMipmaps);
 
-            if (!texture->loadImageFromMemory(blob, size)) {
+            texture = std::make_shared<Texture>(0, 0, options, generateMipmaps);
+            if (!texture->loadImageFromMemory(data)) {
                 LOGE("Invalid texture data '%s'", url.c_str());
             }
-            free(blob);
         }
     }
 
@@ -725,15 +725,13 @@ void loadFontDescription(const Node& node, const std::string& family, const std:
             scene->pendingFonts--;
         });
     } else {
-        // Load from local storage
-        size_t dataSize = 0;
+        auto data = bytesFromFile(_ft.uri.c_str());
 
-        if (unsigned char* data = bytesFromFile(_ft.uri.c_str(), dataSize)) {
-
-            LOGN("Add local font %s (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
-            scene->fontContext()->addFont(_ft, alfons::InputSource(reinterpret_cast<char*>(data), dataSize));
-        } else {
+        if (data.size() == 0) {
             LOGW("Local font at path %s can't be found (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
+        } else {
+            LOGN("Adding local font %s (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
+            scene->fontContext()->addFont(_ft, alfons::InputSource(std::move(data)));
         }
     }
 }

@@ -207,36 +207,34 @@ std::string fontPath(const std::string& _name, const std::string& _weight,
     return fontFile;
 }
 
-unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
     std::string path = fontPath(_name, _weight, _face);
 
-    if (path.empty()) { return nullptr; }
+    if (path.empty()) { return {}; }
 
-    return bytesFromFile(path.c_str(), *_size);
+    return bytesFromFile(path.c_str());
 }
 
-unsigned char* bytesFromFile(const char* _path, size_t& _size) {
-
-    if (!_path || strlen(_path) == 0) { return nullptr; }
+std::vector<char> bytesFromFile(const char* _path) {
+    if (!_path || strlen(_path) == 0) { return {}; }
 
     std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
 
     if(!resource.is_open()) {
-        logMsg("Failed to read file at path: %s\n", _path);
-        _size = 0;
-        return nullptr;
+        LOG("Failed to read file at path: %s", _path);
+        return {};
     }
 
-    _size = resource.tellg();
+    std::vector<char> data;
+    size_t size = resource.tellg();
+    data.resize(size);
 
     resource.seekg(std::ifstream::beg);
 
-    char* cdata = (char*) malloc(sizeof(char) * (_size));
-
-    resource.read(cdata, _size);
+    resource.read(data.data(), size);
     resource.close();
 
-    return reinterpret_cast<unsigned char *>(cdata);
+    return data;
 }
 
 std::string stringFromFile(const char* _path) {
