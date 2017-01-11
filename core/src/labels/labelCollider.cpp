@@ -108,10 +108,10 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
     for (auto it = m_labels.begin(); it != m_labels.end(); ) {
         auto& entry = *it;
         auto* label = entry.label;
-        ScreenTransform transform { m_transforms, entry.transform, true };
+        ScreenTransform transform { m_transforms, entry.transform };
         if (label->updateScreenTransform(mvp, viewState, nullptr, transform)) {
 
-            OBBBuffer obbs { m_obbs, entry.obbs, true };
+            OBBBuffer obbs { m_obbs, entry.obbs };
 
             label->obbs(transform, obbs);
 

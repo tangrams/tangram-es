@@ -54,7 +54,7 @@ void Labels::processLabelUpdate(const ViewState& viewState,
         }
 
         Range transformRange;
-        ScreenTransform transform { m_transforms, transformRange, true };
+        ScreenTransform transform { m_transforms, transformRange };
 
         // Use extendedBounds when labels take part in collision detection.
         auto bounds = (onlyTransitions || !label->canOcclude())
@@ -325,7 +325,7 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
         }
 
         ScreenTransform transform { m_transforms, entry.transformRange };
-        OBBBuffer obbs { m_obbs, entry.obbsRange, true };
+        OBBBuffer obbs { m_obbs, entry.obbsRange };
 
         l->obbs(transform, obbs);
 

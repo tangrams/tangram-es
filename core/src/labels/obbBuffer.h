@@ -7,9 +7,9 @@ namespace Tangram {
 
 struct OBBBuffer {
 
-    OBBBuffer(std::vector<isect2d::OBB<glm::vec2>>& _obbs, Range& _range, bool _initRange = false)
+    OBBBuffer(std::vector<isect2d::OBB<glm::vec2>>& _obbs, Range& _range)
         : obbs(_obbs), range(_range) {
-        if (_initRange) {
+        if (!range.length) {
             range.start = obbs.size();
         }
     }

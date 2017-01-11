@@ -18,12 +18,12 @@ struct ScreenTransform {
         }
     };
 
-    ScreenTransform(Buffer& _transformBuffer, Range& _range, bool _initRange = false)
+    ScreenTransform(Buffer& _transformBuffer, Range& _range)
         : buffer(_transformBuffer),
           points(_transformBuffer.points),
           range(_range) {
 
-        if (_initRange) {
+        if (!range.length) {
             range.start = points.size();
         }
     }

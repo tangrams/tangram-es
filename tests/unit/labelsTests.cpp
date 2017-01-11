@@ -114,7 +114,7 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
 
     struct TestTransform {
         ScreenTransform transform;
-        TestTransform(ScreenTransform::Buffer& _buffer, Range& _range) : transform(_buffer, _range, true) {}
+        TestTransform(ScreenTransform::Buffer& _buffer, Range& _range) : transform(_buffer, _range) {}
     };
 
     class TestLabels : public Labels {
