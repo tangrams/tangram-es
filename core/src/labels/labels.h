@@ -85,15 +85,15 @@ protected:
               tile(_tile),
               priority(_label->options().priority),
               proxy(_proxy),
-              transform(_screenTransform) {}
+              transformRange(_screenTransform) {}
 
         Label* label;
         Tile* tile;
         float priority;
         bool proxy;
 
-        Range transform;
-        Range obbs;
+        Range transformRange;
+        Range obbsRange;
     };
 
     static bool labelComparator(const LabelEntry& _a, const LabelEntry& _b);

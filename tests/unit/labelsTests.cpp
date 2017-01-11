@@ -125,7 +125,7 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
 
         ScreenTransform& addLabel(Label* _l, Tile* _t) {
             m_labels.push_back({_l, _t, false, {}});
-            tmpTransforms.emplace_back(m_transforms, m_labels.back().transform);
+            tmpTransforms.emplace_back(m_transforms, m_labels.back().transformRange);
             return tmpTransforms.back().transform;
         }
         void run(View& _v) { handleOcclusions(_v.state()); }

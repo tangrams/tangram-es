@@ -290,7 +290,7 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
     // Find the label to which the obb belongs
     auto findLabel = [](iterator begin, iterator end, int obb) {
         for (auto it = begin; it != end; it++) {
-            if (obb >= it->obbs.start && obb < it->obbs.end()) {
+            if (obb >= it->obbsRange.start && obb < it->obbsRange.end()) {
                 return it->label;
             }
         }
@@ -324,8 +324,8 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
             }
         }
 
-        ScreenTransform transform { m_transforms, entry.transform };
-        OBBBuffer obbs { m_obbs, entry.obbs, true };
+        ScreenTransform transform { m_transforms, entry.transformRange };
+        OBBBuffer obbs { m_obbs, entry.obbsRange, true };
 
         l->obbs(transform, obbs);
 
@@ -376,7 +376,7 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
             }
         } else {
             // Insert into ISect2D grid
-            int obbPos = entry.obbs.start;
+            int obbPos = entry.obbsRange.start;
             for (auto& obb : obbs) {
                 auto aabb = obb.getExtent();
                 aabb.m_userData = reinterpret_cast<void*>(obbPos++);
@@ -435,12 +435,12 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
 
     // Update label meshes
     for (auto& entry : m_labels) {
-        ScreenTransform transform { m_transforms, entry.transform };
+        ScreenTransform transform { m_transforms, entry.transformRange };
 
         m_needUpdate |= entry.label->evalState(_dt);
 
         if (entry.label->visibleState()) {
-            for (auto& obb : OBBBuffer{ m_obbs, entry.obbs }) {
+            for (auto& obb : OBBBuffer{ m_obbs, entry.obbsRange }) {
 
                 if (obb.getExtent().intersect(screenBounds)) {
                     entry.label->addVerticesToMesh(transform, _viewState.viewportSize);
@@ -501,13 +501,13 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
         }
 #endif
 
-        for (auto& obb : OBBBuffer{ m_obbs, entry.obbs }) {
+        for (auto& obb : OBBBuffer{ m_obbs, entry.obbsRange }) {
             Primitives::drawPoly(rs, &(obb.getQuad())[0], 4);
         }
 
         if (label->parent() && label->parent()->visibleState() && !label->parent()->isOccluded()) {
             Primitives::setColor(rs, 0xff0000);
-            Primitives::drawLine(rs, m_obbs[entry.obbs.start].getCentroid(),
+            Primitives::drawLine(rs, m_obbs[entry.obbsRange.start].getCentroid(),
                                  label->parent()->screenCenter());
         }
 
