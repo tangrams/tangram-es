@@ -151,7 +151,7 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
     return false;
 }
 
-float TextLabel::worldLineLength2() const {
+float TextLabel::modelLineLength2() const {
     if (m_type != Type::line) { return 0.f; }
 
     return glm::length2(m_coordinates[0] - m_coordinates[1]);

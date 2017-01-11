@@ -134,7 +134,7 @@ public:
     bool setAnchorIndex(int _index);
 
     // Returns the length of the segment the label is associated with
-    virtual float worldLineLength2() const { return 0; };
+    virtual float modelLineLength2() const { return 0; };
 
     void enterState(const State& _state, float _alpha = 1.0f);
 

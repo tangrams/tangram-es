@@ -80,7 +80,7 @@ public:
         }
     }
 
-    float worldLineLength2() const override;
+    float modelLineLength2() const override;
 
 protected:
 

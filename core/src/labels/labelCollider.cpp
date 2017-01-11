@@ -70,7 +70,7 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
                       // Prefer the label with longer line segment as it has a chance
                       // to be shown earlier (also on the lower zoom-level)
                       // TODO compare fraction segment_length/label_width
-                      return l1->worldLineLength2() > l2->worldLineLength2();
+                      return l1->modelLineLength2() > l2->modelLineLength2();
                   }
 
                   return l1->hash() < l2->hash();
@@ -166,7 +166,7 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
                       // Prefer the label with longer line segment as it has a chance
                       // to be shown earlier (also on the lower zoom-level)
                       // TODO compare fraction segment_length/label_width
-                      return l1->worldLineLength2() > l2->worldLineLength2();
+                      return l1->modelLineLength2() > l2->modelLineLength2();
                   }
                   // just so it is consistent between two instances
                   return (l1->hash() < l2->hash());

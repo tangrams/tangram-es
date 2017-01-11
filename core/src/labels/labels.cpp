@@ -265,7 +265,7 @@ bool Labels::labelComparator(const LabelEntry& _a, const LabelEntry& _b) {
 
     if (l1->type() == Label::Type::line && l2->type() == Label::Type::line) {
         // Prefer the label with longer line segment as it has a chance
-        return l1->worldLineLength2() > l2->worldLineLength2();
+        return l1->modelLineLength2() > l2->modelLineLength2();
     }
 
     if (l1->hash() != l2->hash()) {
