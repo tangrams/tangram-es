@@ -127,7 +127,7 @@ std::string stringFromFile(const char* _path) {
 std::vector<char> bytesFromFile(const char* _path) {
     NSString* path = resolvePath(_path);
 
-    if (path) {
+    if (!path) {
         return {};
     }
 
