@@ -37,13 +37,8 @@ public:
 
     // Getters
     GLuint getGlProgram() const { return m_glProgram; };
-    GLuint getGlFragmentShader() const { return m_glFragmentShader; };
-    GLuint getGlVertexShader() const { return m_glVertexShader; };
 
     std::string getDescription() const { return m_description; }
-
-    const std::string& getFragmentShaderSource() const { return m_fragmentShaderSource; }
-    const std::string getVertexShaderSource() const { return applySourceBlocks(m_vertexShaderSource, false); }
 
     // Fetch the location of a shader attribute, caching the result.
     GLint getAttribLocation(const std::string& _attribName);
@@ -89,6 +84,9 @@ public:
 
     void setDescription(std::string _description) { m_description = _description; }
 
+    static GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
+    static GLuint makeCompiledShader(RenderState& rs, const std::string& _src, GLenum _type);
+
 private:
 
     // Get a uniform value from the cache, and returns false when it's a cache miss
@@ -107,8 +105,6 @@ private:
 
     int m_generation = -1;
     GLuint m_glProgram = 0;
-    GLuint m_glFragmentShader = 0;
-    GLuint m_glVertexShader = 0;
 
     fastmap<std::string, GLint> m_attribMap;
     fastmap<GLint, UniformValue> m_uniformCache;
@@ -120,15 +116,10 @@ private:
     std::string m_description;
 
     bool m_needsBuild = true;
-    bool m_invalidShaderSource = false;
 
     Disposer m_disposer;
 
     void checkValidity(RenderState& rs);
-    GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
-    GLuint makeCompiledShader(const std::string& _src, GLenum _type);
-
-    std::string applySourceBlocks(const std::string& source, bool fragShader) const;
 
 };
 

@@ -48,6 +48,15 @@ RenderState::~RenderState() {
     deleteQuadIndexBuffer();
     deleteDefaultPointTexture();
 
+    for (auto& s : vertexShaders) {
+        GL::deleteShader(s.second);
+    }
+    vertexShaders.clear();
+
+    for (auto& s : fragmentShaders) {
+        GL::deleteShader(s.second);
+    }
+    fragmentShaders.clear();
 }
 
 void RenderState::invalidate() {
@@ -77,6 +86,9 @@ void RenderState::invalidate() {
     GL::clearDepth(1.0);
     GL::depthRange(0.0, 1.0);
 
+    // No need to delete shaders after context loss
+    vertexShaders.clear();
+    fragmentShaders.clear();
 }
 
 void RenderState::cacheDefaultFramebuffer() {
