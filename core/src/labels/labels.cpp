@@ -67,7 +67,7 @@ void Labels::processLabelUpdate(const ViewState& viewState,
 }
 
 
-std::pair<Label*, Tile*> Labels::getLabel(uint32_t _selectionColor) {
+std::pair<Label*, Tile*> Labels::getLabel(uint32_t _selectionColor) const {
 
     for (auto& entry : m_selectionLabels) {
 
@@ -332,9 +332,9 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
         } while (l->isOccluded() && l->nextAnchor());
 
         // At this point, the label has a parent that is visible,
-        // if it is a required label, turn the parent to occluded
+        // if it is not an optional label, turn the parent to occluded
         if (l->isOccluded()) {
-            if (l->parent() && l->options().required) {
+            if (l->parent() && !l->options().optional) {
                 l->parent()->occlude();
             }
         }

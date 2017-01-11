@@ -26,6 +26,5 @@ android {
 }
 
 dependencies {
-  debugCompile project(path: ':tangram', configuration: 'slimDebug')
-  releaseCompile project(path: ':tangram', configuration: 'slimRelease')
+  compile project(path: ':tangram')
 }

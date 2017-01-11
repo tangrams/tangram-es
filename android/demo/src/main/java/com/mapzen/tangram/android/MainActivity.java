@@ -12,11 +12,14 @@ import com.mapzen.tangram.LngLat;
 import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapController.FeaturePickListener;
 import com.mapzen.tangram.MapController.LabelPickListener;
+import com.mapzen.tangram.MapController.MarkerPickListener;
 import com.mapzen.tangram.MapController.ViewCompleteListener;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.Marker;
 import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.MapView.OnMapReadyCallback;
+import com.mapzen.tangram.Marker;
+import com.mapzen.tangram.MarkerPickResult;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
@@ -29,14 +32,14 @@ import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends Activity implements OnMapReadyCallback, TapResponder,
-        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener {
+        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener {
 
     MapController map;
     MapView view;
     LngLat lastTappedPoint;
     MapData markers;
 
-    String pointStyle = "{ style: 'points', color: 'white', size: [50px, 50px], order: 2000, collide: false }";
+    String pointStyle = "{ style: 'points', interactive: true, color: 'white', size: [50px, 50px], order: 2000, collide: false }";
     ArrayList<Marker> pointMarkers = new ArrayList<Marker>();
 
     boolean showTileInfo = false;
@@ -89,6 +92,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
         map.setLongPressResponder(this);
         map.setFeaturePickListener(this);
         map.setLabelPickListener(this);
+        map.setMarkerPickListener(this);
 
         map.setViewCompleteListener(new ViewCompleteListener() {
                 public void onViewComplete() {
@@ -102,13 +106,11 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     }
 
     HttpHandler getHttpHandler() {
-        HttpHandler handler = new HttpHandler();
         File cacheDir = getExternalCacheDir();
         if (cacheDir != null && cacheDir.exists()) {
-            handler.setCache(new File(cacheDir, "tile_cache"), 30 * 1024 * 1024);
+            return new HttpHandler(new File(cacheDir, "tile_cache"), 30 * 1024 * 1024);
         }
-
-        return handler;
+        return new HttpHandler();
     }
 
     @Override
@@ -140,6 +142,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
         map.pickFeature(x, y);
         map.pickLabel(x, y);
+        map.pickMarker(x, y);
 
         map.setPositionEased(tappedPoint, 1000);
 
@@ -214,6 +217,25 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
                                       Toast.LENGTH_SHORT).show();
                           }
                       });
+    }
+
+    @Override
+    public void onMarkerPick(MarkerPickResult markerPickResult, float positionX, float positionY) {
+        if (markerPickResult == null) {
+            Log.d("Tangram", "Empty marker selection");
+            return;
+        }
+
+        Log.d("Tangram", "Picked marker: " + markerPickResult.getMarker().getMarkerId());
+        final String message = String.valueOf(markerPickResult.getMarker().getMarkerId());
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(),
+                        "Selected Marker: " + message,
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
 

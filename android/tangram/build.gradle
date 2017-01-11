@@ -52,11 +52,16 @@ android {
       externalNativeBuild.cmake.abiFilters 'armeabi', 'arm64-v8a', 'x86'
     }
   }
-  publishNonDefault true
+
+  if (project.hasProperty('doFullRelease')) {
+    defaultPublishConfig 'fullRelease'
+  } else {
+    defaultPublishConfig 'slimDebug'
+  }
 }
 
 dependencies {
-  compile 'com.squareup.okhttp:okhttp:2.5.0'
+  compile 'com.squareup.okhttp3:okhttp:3.5.0'
   compile 'xmlpull:xmlpull:1.1.3.1'
   compile 'com.android.support:support-annotations:25.0.0'
 }

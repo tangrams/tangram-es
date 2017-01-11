@@ -88,7 +88,7 @@ public:
         float buffer = 0.f;
         size_t paramHash = 0; // the label hash based on its styling parameters
         LabelProperty::Anchors anchors;
-        bool required = true;
+        bool optional = false;
         bool flat = false;
         float angle = 0.f;
         uint32_t featureId = 0;
@@ -195,8 +195,6 @@ private:
     FadeEffect m_fade;
 
     int m_anchorIndex;
-
-    uint32_t m_selectionColor;
 
 protected:
 

@@ -10,7 +10,7 @@
 #include "tile/tile.h"
 #include "util/geom.h"
 #include "util/mapProjection.h"
-#include "util/featureSelection.h"
+#include "selection/featureSelection.h"
 #include "view/view.h"
 #include "data/propertyItem.h"
 #include "tangram.h"
@@ -394,7 +394,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         }
     }
 
-    _rule.get(StyleParamKey::text_required, p.labelOptions.required);
+    _rule.get(StyleParamKey::text_optional, p.labelOptions.optional);
 
     // TODO style option?
     p.labelOptions.buffer = p.fontSize * 0.25f;
@@ -532,7 +532,11 @@ void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Typ
     uint32_t selectionColor = 0;
 
     if (_params.interactive) {
-        selectionColor = _rule.featureSelection->nextColorIdentifier();
+        if (_rule.featureSelection) {
+            selectionColor = _rule.featureSelection->nextColorIdentifier();
+        } else {
+            selectionColor = _rule.selectionColor;
+        }
     }
 
     m_labels.emplace_back(new TextLabel(_transform, _type, _params.labelOptions,

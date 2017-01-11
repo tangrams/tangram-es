@@ -11,27 +11,23 @@
 namespace Tangram {
 
 TextureCube::TextureCube(std::string _file, TextureOptions _options)
-    : Texture(0u, 0u, _options) {
+    : Texture(0, 0, _options) {
 
     m_target = GL_TEXTURE_CUBE_MAP;
     load(_file);
 }
 
 void TextureCube::load(const std::string& _file) {
-    size_t size;
-    unsigned char* data = bytesFromFile(_file.c_str(), size);
+    auto data = bytesFromFile(_file.c_str());
     unsigned char* pixels;
     int width, height, comp;
 
-    if (data == nullptr || size == 0) {
+    if (data.size() == 0) {
         LOGE("Texture not found! '%s'", _file.c_str());
-        free(data);
         return;
     }
 
-    pixels = stbi_load_from_memory(data, size, &width, &height, &comp, STBI_rgb_alpha);
-
-    size = width * height;
+    pixels = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(data.data()), data.size(), &width, &height, &comp, STBI_rgb_alpha);
 
     m_width = width / 4;
     m_height = height / 3;
@@ -63,7 +59,6 @@ void TextureCube::load(const std::string& _file) {
         }
     }
 
-    free(data);
     stbi_image_free(pixels);
 
 }

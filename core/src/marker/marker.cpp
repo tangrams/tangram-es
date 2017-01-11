@@ -11,6 +11,7 @@
 namespace Tangram {
 
 Marker::Marker(MarkerID id) : m_id(id) {
+    m_ruleSet.reset(new DrawRuleMergeSet());
 }
 
 Marker::~Marker() {
@@ -27,6 +28,10 @@ void Marker::setFeature(std::unique_ptr<Feature> feature) {
 
 void Marker::setStylingString(std::string stylingString) {
     m_stylingString = stylingString;
+}
+
+bool Marker::evaluateRuleForContext(StyleContext& ctx) {
+    return m_ruleSet->evaluateRuleForContext(*m_drawRule, ctx);
 }
 
 void Marker::setDrawRule(std::unique_ptr<DrawRuleData> drawRuleData) {
@@ -75,6 +80,10 @@ void Marker::setVisible(bool visible) {
 
 void Marker::setDrawOrder(int drawOrder) {
     m_drawOrder = drawOrder;
+}
+
+void Marker::setSelectionColor(uint32_t selectionColor) {
+    m_selectionColor = selectionColor;
 }
 
 int Marker::builtZoomLevel() const {
@@ -139,6 +148,10 @@ bool Marker::isEasing() const {
 
 bool Marker::isVisible() const {
     return m_visible;
+}
+
+uint32_t Marker::selectionColor() const {
+    return m_selectionColor;
 }
 
 bool Marker::compareByDrawOrder(const std::unique_ptr<Marker>& lhs, const std::unique_ptr<Marker>& rhs) {

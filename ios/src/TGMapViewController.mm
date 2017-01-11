@@ -172,19 +172,20 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 - (void)pickFeatureAt:(CGPoint)screenPosition
 {
-    if (!self.map && !self.mapViewDelegate) { return; }
+    if (!self.map) { return; }
 
     screenPosition.x *= self.contentScaleFactor;
     screenPosition.y *= self.contentScaleFactor;
 
     self.map->pickFeatureAt(screenPosition.x, screenPosition.y, [screenPosition, self](const Tangram::FeaturePickResult* featureResult) {
+        if (!self.mapViewDelegate && ![self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
+            return;
+        }
+
         CGPoint position = CGPointMake(0.0, 0.0);
 
         if (!featureResult) {
-            if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
-                [self.mapViewDelegate mapView:self didSelectFeature:nil atScreenPosition:position];
-            }
-
+            [self.mapViewDelegate mapView:self didSelectFeature:nil atScreenPosition:position];
             return;
         }
 
@@ -199,27 +200,53 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
             dictionary[key] = value;
         }
 
-        if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
-            [self.mapViewDelegate mapView:self didSelectFeature:dictionary atScreenPosition:position];
+        [self.mapViewDelegate mapView:self didSelectFeature:dictionary atScreenPosition:position];
+    });
+}
+
+- (void)pickMarkerAt:(CGPoint)screenPosition
+{
+    if (!self.map) { return; }
+
+    screenPosition.x *= self.contentScaleFactor;
+    screenPosition.y *= self.contentScaleFactor;
+
+    self.map->pickMarkerAt(screenPosition.x, screenPosition.y, [screenPosition, self](const Tangram::MarkerPickResult* markerPickResult) {
+        if (!self.mapViewDelegate && ![self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectMarker:atScreenPosition:)]) {
+            return;
         }
+
+        CGPoint position = CGPointMake(0.0, 0.0);
+
+        if (!markerPickResult) {
+            [self.mapViewDelegate mapView:self didSelectMarker:nil atScreenPosition:position];
+            return;
+        }
+
+        position = CGPointMake(markerPickResult->position[0] / self.contentScaleFactor, markerPickResult->position[1] / self.contentScaleFactor);
+        TGGeoPoint coordinates = TGGeoPointMake(markerPickResult->coordinates.longitude, markerPickResult->coordinates.latitude);
+        TGMarkerPickResult* result = [[TGMarkerPickResult alloc] initWithCoordinates:coordinates identifier:markerPickResult->id];
+
+        [self.mapViewDelegate mapView:self didSelectMarker:result atScreenPosition:position];
     });
 }
 
 - (void)pickLabelAt:(CGPoint)screenPosition
 {
-    if (!self.map && !self.mapViewDelegate) { return; }
+    if (!self.map) { return; }
 
     screenPosition.x *= self.contentScaleFactor;
     screenPosition.y *= self.contentScaleFactor;
 
     self.map->pickLabelAt(screenPosition.x, screenPosition.y, [screenPosition, self](const Tangram::LabelPickResult* labelPickResult) {
+        if (!self.mapViewDelegate && ![self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectLabel:atScreenPosition:)]) {
+            return;
+        }
+
         CGPoint position = CGPointMake(0.0, 0.0);
 
         if (!labelPickResult) {
-            if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectLabel:atScreenPosition:)]) {
-                [self.mapViewDelegate mapView:self didSelectLabel:nil atScreenPosition:position];
-            }
-
+            [self.mapViewDelegate mapView:self didSelectLabel:nil atScreenPosition:position];
             return;
         }
 
@@ -239,10 +266,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         TGLabelPickResult* tgLabelPickResult = [[TGLabelPickResult alloc] initWithCoordinates:coordinates
                                                                                          type:(TGLabelType)labelPickResult->type
                                                                                    properties:dictionary];
-
-        if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectLabel:atScreenPosition:)]) {
-            [self.mapViewDelegate mapView:self didSelectLabel:tgLabelPickResult atScreenPosition:position];
-        }
+        [self.mapViewDelegate mapView:self didSelectLabel:tgLabelPickResult atScreenPosition:position];
     });
 }
 
@@ -559,10 +583,10 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     CGPoint location = [longPressRecognizer locationInView:self.view];
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeLongPressGesture:)] ) {
         if (![self.gestureDelegate mapView:self recognizer:longPressRecognizer shouldRecognizeLongPressGesture:location]) { return; }
+    }
 
-        if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeLongPressGesture:)]) {
-            [self.gestureDelegate mapView:self recognizer:longPressRecognizer didRecognizeLongPressGesture:location];
-        }
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeLongPressGesture:)]) {
+        [self.gestureDelegate mapView:self recognizer:longPressRecognizer didRecognizeLongPressGesture:location];
     }
 }
 
@@ -571,10 +595,10 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     CGPoint location = [tapRecognizer locationInView:self.view];
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeSingleTapGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:tapRecognizer shouldRecognizeSingleTapGesture:location]) { return; }
+    }
 
-        if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeSingleTapGesture:)]) {
-            [self.gestureDelegate mapView:self recognizer:tapRecognizer didRecognizeSingleTapGesture:location];
-        }
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeSingleTapGesture:)]) {
+        [self.gestureDelegate mapView:self recognizer:tapRecognizer didRecognizeSingleTapGesture:location];
     }
 }
 
@@ -583,10 +607,10 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     CGPoint location = [doubleTapRecognizer locationInView:self.view];
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeDoubleTapGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:doubleTapRecognizer shouldRecognizeDoubleTapGesture:location]) { return; }
+    }
 
-        if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeDoubleTapGesture:)]) {
-            [self.gestureDelegate mapView:self recognizer:doubleTapRecognizer didRecognizeDoubleTapGesture:location];
-        }
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeDoubleTapGesture:)]) {
+        [self.gestureDelegate mapView:self recognizer:doubleTapRecognizer didRecognizeDoubleTapGesture:location];
     }
 }
 

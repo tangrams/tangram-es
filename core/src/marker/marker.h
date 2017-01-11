@@ -10,8 +10,10 @@
 
 namespace Tangram {
 
+class DrawRuleMergeSet;
 class MapProjection;
 class Scene;
+class StyleContext;
 class Texture;
 class View;
 struct DrawRule;
@@ -50,6 +52,8 @@ public:
 
     // Set an ease for the origin of this marker in Mercator meters.
     void setEase(const glm::dvec2& destination, float duration, EaseType ease);
+
+    void setSelectionColor(uint32_t selectionColor);
 
     // Set the model matrix for the marker using the current view and update any eases.
     void update(float dt, const View& view);
@@ -97,9 +101,13 @@ public:
 
     const std::string& stylingString() const;
 
+    bool evaluateRuleForContext(StyleContext& ctx);
+
     bool isEasing() const;
 
     bool isVisible() const;
+
+    uint32_t selectionColor() const;
 
     static bool compareByDrawOrder(const std::unique_ptr<Marker>& lhs, const std::unique_ptr<Marker>& rhs);
 
@@ -109,6 +117,7 @@ protected:
     std::unique_ptr<StyledMesh> m_mesh;
     std::unique_ptr<DrawRuleData> m_drawRuleData;
     std::unique_ptr<DrawRule> m_drawRule;
+    std::unique_ptr<DrawRuleMergeSet> m_ruleSet;
     std::unique_ptr<Texture> m_texture;
 
     std::string m_stylingString;
@@ -118,6 +127,8 @@ protected:
     uint32_t m_styleId = 0;
 
     int m_builtZoomLevel = 0;
+
+    uint32_t m_selectionColor = 0;
 
     int m_drawOrder = 0;
 

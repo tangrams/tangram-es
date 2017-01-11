@@ -41,7 +41,7 @@ std::string stringFromFile(const char* _path);
  * containing the contents of the file. The size of the memory in bytes is written to _size.
  * If the file cannot be read, nothing is allocated and nullptr is returned.
  */
-unsigned char* bytesFromFile(const char* _path, size_t& _size);
+std::vector<char> bytesFromFile(const char* _path);
 
 /* Function type for receiving data from a successful network request */
 using UrlCallback = std::function<void(std::vector<char>&&)>;
@@ -63,7 +63,7 @@ void cancelUrlRequest(const std::string& _url);
  */
 void setCurrentThreadPriority(int priority);
 
-unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size);
+std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face);
 
 struct FontSourceHandle {
     FontSourceHandle(std::string _path) : path(_path) {}

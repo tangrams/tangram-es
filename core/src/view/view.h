@@ -158,6 +158,9 @@ public:
     /* Returns the eye position in world space */
     const glm::vec3& getEye() const { return m_eye; }
 
+    /* Returns the window coordinates [0,1], lower left corner of the window is (0, 0) */
+    glm::vec2 normalizedWindowCoordinates(float _x, float _y) const;
+
     ViewState state() const;
 
     /* Returns a rectangle of the current view range as [[x_min, y_min], [x_max, y_max]] */
@@ -176,7 +179,7 @@ public:
     double screenToGroundPlane(float& _screenX, float& _screenY);
 
     /* Gets the screen position from a latitude/longitude */
-    glm::vec2 lonLatToScreenPosition(double lon, double lat, bool& clipped);
+    glm::vec2 lonLatToScreenPosition(double lon, double lat, bool& clipped) const;
 
     /* Returns the set of all tiles visible at the current position and zoom */
     const std::set<TileID>& getVisibleTiles() { return m_visibleTiles; }

@@ -36,6 +36,8 @@ public:
     virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
     virtual void onBeginFrame(RenderState& rs) override;
     virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) override;
+    virtual void draw(RenderState& rs, const Tile& _tile) override {}
+    virtual void draw(RenderState& rs, const Marker& _marker) override {}
 
     void setSpriteAtlas(std::shared_ptr<SpriteAtlas> _spriteAtlas) { m_spriteAtlas = _spriteAtlas; }
     void setTexture(std::shared_ptr<Texture> _texture) { m_texture = _texture; }

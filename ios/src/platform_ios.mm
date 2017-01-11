@@ -82,65 +82,85 @@ NSString* resolvePath(const char* _path) {
         }
     }
 
+    LOGW("Failed to resolve path: %s", _path);
+
     return nil;
 }
 
-std::string stringFromFile(const char* _path) {
+bool bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator) {
+    std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
 
+    if(!resource.is_open()) {
+        logMsg("Failed to read file at path: %s\n", _path);
+        return false;
+    }
+
+    size_t size = resource.tellg();
+    char* cdata = _allocator(size);
+
+    resource.seekg(std::ifstream::beg);
+    resource.read(cdata, size);
+    resource.close();
+
+    return true;
+}
+
+std::string stringFromFile(const char* _path) {
     NSString* path = resolvePath(_path);
 
     if (!path) {
         return "";
     }
 
-    NSString* str = [NSString stringWithContentsOfFile:path
-                                          usedEncoding:NULL
-                                                 error:NULL];
+    std::string data;
 
-    if (str == nil) {
-        LOGW("Failed to read file at path: %s\n", [path UTF8String]);
-        return std::string();
-    }
+    auto allocator = [&](size_t size) {
+        data.resize(size);
+        return &data[0];
+    };
 
-    return std::string([str UTF8String]);
+    bytesFromFileSystem([path UTF8String], allocator);
+
+    return data;
 }
 
-unsigned char* bytesFromFile(const char* _path, size_t& _size) {
-
+std::vector<char> bytesFromFile(const char* _path) {
     NSString* path = resolvePath(_path);
-    NSMutableData* data = [NSMutableData dataWithContentsOfFile:path];
 
-    if (data == nil) {
-        LOGW("Failed to read file at path: %s\n", [path UTF8String]);
-        _size = 0;
-        return nullptr;
+    if (!path) {
+        return {};
     }
 
-    _size = data.length;
-    unsigned char* ptr = (unsigned char*)malloc(_size);
-    [data getBytes:ptr length:_size];
+    std::vector<char> data;
 
-    return ptr;
+    auto allocator = [&](size_t size) {
+        data.resize(size);
+        return data.data();
+    };
+
+    bytesFromFileSystem([path UTF8String], allocator);
+
+    return data;
 }
 
-unsigned char* loadUIFont(UIFont* _font, size_t* _size) {
+std::vector<char> loadUIFont(UIFont* _font) {
+
+    if (!_font) {
+        return {};
+    }
 
     CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)_font.fontName);
 
     if (!fontRef) {
-        *_size = 0;
-        return nullptr;
+        return {};
     }
 
-    unsigned char* data = [TGFontConverter fontDataForCGFont:fontRef size:_size];
+    std::vector<char> data = [TGFontConverter fontDataForCGFont:fontRef];
 
     CGFontRelease(fontRef);
 
-    if (!data) {
+    if (data.empty()) {
         LOG("CoreGraphics font failed to decode");
-
-        *_size = 0;
-        return nullptr;
     }
 
     return data;
@@ -154,15 +174,7 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
     for (id fallback in fallbacks) {
 
         handles.emplace_back([fallback]() {
-
-            std::vector<char> data;
-
-            UIFont* font = [UIFont fontWithName:fallback size:1.0];
-            size_t dataSize = 0;
-            auto cdata = loadUIFont(font, &dataSize);
-            if (cdata) {
-                data.insert(data.begin(), cdata, cdata + dataSize);
-            }
+            auto data = loadUIFont([UIFont fontWithName:fallback size:1.0]);
             return data;
         });
     }
@@ -170,7 +182,7 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
     return handles;
 }
 
-unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) {
 
     static std::map<int, CGFloat> weightTraits = {
         {100, UIFontWeightUltraLight},
@@ -229,7 +241,7 @@ unsigned char* systemFont(const std::string& _name, const std::string& _weight, 
         }
     }
 
-    return loadUIFont(font, _size);
+    return loadUIFont(font);
 }
 
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {

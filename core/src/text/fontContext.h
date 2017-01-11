@@ -88,8 +88,6 @@ public:
 
     void releaseAtlas(std::bitset<max_textures> _refs);
 
-    alfons::GlyphAtlas& atlas() { return m_atlas; }
-
     /* Update all textures batches, uploads the data to the GPU */
     void updateTextures(RenderState& rs);
 

@@ -49,12 +49,17 @@ static jmethodID getFontFilePath = 0;
 static jmethodID getFontFallbackFilePath = 0;
 static jmethodID onFeaturePickMID = 0;
 static jmethodID onLabelPickMID = 0;
+static jmethodID onMarkerPickMID = 0;
 static jmethodID labelPickResultInitMID = 0;
+static jmethodID markerPickResultInitMID = 0;
 
 static jclass labelPickResultClass = nullptr;
+static jclass markerPickResultClass = nullptr;
 static jclass hashmapClass = nullptr;
 static jmethodID hashmapInitMID = 0;
 static jmethodID hashmapPutMID = 0;
+
+static jmethodID markerByIDMID = 0;
 
 static AAssetManager* assetManager = nullptr;
 
@@ -97,12 +102,23 @@ void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager
     labelPickResultClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/LabelPickResult"));
     labelPickResultInitMID = jniEnv->GetMethodID(labelPickResultClass, "<init>", "(DDILjava/util/Map;)V");
 
+    if (markerPickResultClass) {
+        jniEnv->DeleteGlobalRef(markerPickResultClass);
+    }
+    markerPickResultClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/MarkerPickResult"));
+    markerPickResultInitMID = jniEnv->GetMethodID(markerPickResultClass, "<init>", "(Lcom/mapzen/tangram/Marker;DD)V");
+
     if (hashmapClass) {
         jniEnv->DeleteGlobalRef(hashmapClass);
     }
     hashmapClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("java/util/HashMap"));
     hashmapInitMID = jniEnv->GetMethodID(hashmapClass, "<init>", "()V");
     hashmapPutMID = jniEnv->GetMethodID(hashmapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+
+    markerByIDMID = jniEnv->GetMethodID(tangramClass, "markerById", "(J)Lcom/mapzen/tangram/Marker;");
+
+    jclass markerPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$MarkerPickListener");
+    onMarkerPickMID = jniEnv->GetMethodID(markerPickListenerClass, "onMarkerPick", "(Lcom/mapzen/tangram/MarkerPickResult;FF)V");
 
     assetManager = AAssetManager_fromJava(jniEnv, _assetManager);
 
@@ -198,12 +214,14 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
     return handles;
 }
 
-unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) {
     std::string path = fontPath(_name, _weight, _face);
 
-    if (path.empty()) { return nullptr; }
+    if (path.empty()) { return {}; }
 
-    return bytesFromFile(path.c_str(), *_size);
+    auto data = bytesFromFile(path.c_str());
+
+    return data;
 }
 
 void setContinuousRendering(bool _isContinuous) {
@@ -277,15 +295,12 @@ std::string stringFromFile(const char* _path) {
     return data;
 }
 
-unsigned char* bytesFromFile(const char* _path, size_t& _size) {
-
-    _size = 0;
-    unsigned char* data = nullptr;
+std::vector<char> bytesFromFile(const char* _path) {
+    std::vector<char> data;
 
     auto allocator = [&](size_t size) {
-        _size = size;
-        data = (unsigned char*) malloc(sizeof(char) * size);
-        return reinterpret_cast<char*>(data);
+        data.resize(size);
+        return data.data();
     };
 
     if (strncmp(_path, aaPrefix, aaPrefixLen) == 0) {
@@ -293,6 +308,7 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
     } else {
         bytesFromFileSystem(_path, allocator);
     }
+
     return data;
 }
 
@@ -376,13 +392,40 @@ void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPi
             jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
         }
 
-        jdoubleArray darr = jniEnv->NewDoubleArray(2);
         labelPickResultObject = jniEnv->NewObject(labelPickResultClass, labelPickResultInitMID, labelPickResult->coordinates.longitude,
             labelPickResult->coordinates.latitude, labelPickResult->type, hashmap);
     }
 
     jniEnv->CallVoidMethod(listener, onLabelPickMID, labelPickResultObject, position[0], position[1]);
     jniEnv->DeleteGlobalRef(listener);
+}
+
+void markerPickCallback(jobject listener, const Tangram::MarkerPickResult* markerPickResult) {
+
+    JniThreadBinding jniEnv(jvm);
+    float position[2] = {0.0, 0.0};
+
+    jobject markerPickResultObject = nullptr;
+
+    if (markerPickResult) {
+        jobject marker = nullptr;
+
+        position[0] = markerPickResult->position[0];
+        position[1] = markerPickResult->position[1];
+
+        marker = jniEnv->CallObjectMethod(tangramInstance, markerByIDMID, static_cast<jlong>(markerPickResult->id));
+
+        if (marker) {
+            markerPickResultObject = jniEnv->NewObject(markerPickResultClass,
+                                                       markerPickResultInitMID, marker,
+                                                       markerPickResult->coordinates.longitude,
+                                                       markerPickResult->coordinates.latitude);
+        }
+    }
+
+    jniEnv->CallVoidMethod(listener, onMarkerPickMID, markerPickResultObject, position[0], position[1]);
+    jniEnv->DeleteGlobalRef(listener);
+
 }
 
 void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* featurePickResult) {

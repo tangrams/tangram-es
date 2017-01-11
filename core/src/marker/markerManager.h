@@ -65,6 +65,8 @@ public:
 
     const std::vector<std::unique_ptr<Marker>>& markers() const;
 
+    const Marker* getMarkerOrNullBySelectionColor(uint32_t selectionColor) const;
+
 private:
 
     Marker* getMarkerOrNull(MarkerID markerID);
@@ -72,7 +74,6 @@ private:
     bool buildStyling(Marker& marker);
     bool buildGeometry(Marker& marker, int zoom);
 
-    DrawRuleMergeSet m_ruleSet;
     StyleContext m_styleContext;
     std::shared_ptr<Scene> m_scene;
     std::vector<std::unique_ptr<Marker>> m_markers;
