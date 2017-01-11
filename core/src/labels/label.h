@@ -18,9 +18,9 @@
 
 namespace Tangram {
 
-struct LabelOBBs;
 struct ScreenTransform;
 struct ViewState;
+struct OBBBuffer;
 
 class Label {
 
@@ -112,7 +112,7 @@ public:
     const Options& options() const { return m_options; }
 
     // Adds the oriented bounding boxes of the label to _obbs, updates Range
-    virtual void obbs(ScreenTransform& _transform, LabelOBBs& _obbs) = 0;
+    virtual void obbs(ScreenTransform& _transform, OBBBuffer& _obbs) = 0;
 
     State state() const { return m_state; }
 

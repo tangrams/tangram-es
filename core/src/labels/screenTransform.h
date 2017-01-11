@@ -1,37 +1,8 @@
 #pragma once
 
 #include "glm/vec2.hpp"
-#include "obb.h"
 
 namespace Tangram {
-
-struct LabelOBBs {
-
-    LabelOBBs(std::vector<isect2d::OBB<glm::vec2>>& _obbs, Range& _range, bool _initRange = false)
-        : obbs(_obbs), range(_range) {
-        if (_initRange) {
-            range.start = obbs.size();
-        }
-    }
-
-    auto begin() { return obbs.begin() + range.start; }
-    auto end() { return obbs.begin() + range.end(); }
-
-    void clear() {
-        range.length = 0;
-        obbs.resize(range.start);
-    }
-
-    void append(isect2d::OBB<glm::vec2> _obb) {
-        obbs.push_back(_obb);
-        range.length += 1;
-    }
-
-private:
-    std::vector<isect2d::OBB<glm::vec2>>& obbs;
-    Range& range;
-
-};
 
 // ScreenTransform is a view into ScreenTransform::Buffer
 struct ScreenTransform {

@@ -45,7 +45,7 @@ public:
     bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState,
                                const AABB* _bounds, ScreenTransform& _transform) override;
 
-    void obbs(ScreenTransform& _transform, LabelOBBs& _obbs) override;
+    void obbs(ScreenTransform& _transform, OBBBuffer& _obbs) override;
 
     void addVerticesToMesh(ScreenTransform& _transform, const glm::vec2& _screenSize) override;
 

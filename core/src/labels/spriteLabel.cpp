@@ -2,6 +2,7 @@
 
 #include "gl/dynamicQuadMesh.h"
 #include "labels/screenTransform.h"
+#include "labels/obbBuffer.h"
 #include "log.h"
 #include "scene/spriteAtlas.h"
 #include "style/pointStyle.h"
@@ -175,7 +176,7 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
     return true;
 }
 
-void SpriteLabel::obbs(ScreenTransform& _transform, LabelOBBs& _obbs) {
+void SpriteLabel::obbs(ScreenTransform& _transform, OBBBuffer& _obbs) {
     OBB obb;
 
     if (m_options.flat) {

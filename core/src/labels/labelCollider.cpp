@@ -5,6 +5,7 @@
 
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/norm.hpp"
+#include "labels/obbBuffer.h"
 
 namespace Tangram {
 
@@ -110,7 +111,7 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
         ScreenTransform transform { m_transforms, entry.transform, true };
         if (label->updateScreenTransform(mvp, viewState, nullptr, transform)) {
 
-            LabelOBBs obbs { m_obbs, entry.obbs, true };
+            OBBBuffer obbs { m_obbs, entry.obbs, true };
 
             label->obbs(transform, obbs);
 

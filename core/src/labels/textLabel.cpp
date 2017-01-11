@@ -8,6 +8,7 @@
 #include "text/fontContext.h"
 #include "util/geom.h"
 #include "view/view.h"
+#include "labels/obbBuffer.h"
 
 #include "glm/gtx/norm.hpp"
 
@@ -156,7 +157,7 @@ float TextLabel::worldLineLength2() const {
     return glm::length2(m_coordinates[0] - m_coordinates[1]);
 }
 
-void TextLabel::obbs(ScreenTransform& _transform, LabelOBBs& _obbs) {
+void TextLabel::obbs(ScreenTransform& _transform, OBBBuffer& _obbs) {
 
     glm::vec2 dim = m_dim - m_options.buffer;
 
