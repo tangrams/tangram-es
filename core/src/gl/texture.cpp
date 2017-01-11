@@ -31,10 +31,10 @@ Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _opti
     resize(_width, _height);
 }
 
-Texture::Texture(const unsigned char* data, size_t dataSize, TextureOptions options, bool generateMipmaps)
+Texture::Texture(const std::vector<char>& _data, TextureOptions options, bool generateMipmaps)
     : Texture(0u, 0u, options, generateMipmaps) {
 
-    loadImageFromMemory(data, dataSize);
+    loadImageFromMemory(_data);
 }
 
 Texture::~Texture() {
@@ -54,12 +54,12 @@ Texture::~Texture() {
     });
 }
 
-bool Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size) {
+bool Texture::loadImageFromMemory(const std::vector<char>& _data) {
     unsigned char* pixels = nullptr;
     int width, height, comp;
 
-    if (blob != nullptr && size != 0) {
-        pixels = stbi_load_from_memory(blob, size, &width, &height, &comp, STBI_rgb_alpha);
+    if (_data.size() != 0) {
+        pixels = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(_data.data()), _data.size(), &width, &height, &comp, STBI_rgb_alpha);
     }
 
     if (pixels) {

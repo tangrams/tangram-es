@@ -217,7 +217,7 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
             // First check if the child is required is occluded
             if (label->parent()->isOccluded()) {
                 label->occlude();
-            } else if (label->options().required && label->isOccluded()) {
+            } else if (!label->options().optional && label->isOccluded()) {
                 label->parent()->occlude();
                 label->parent()->enterState(Label::State::dead, 0.0f);
             }

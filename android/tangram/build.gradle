@@ -52,7 +52,12 @@ android {
       externalNativeBuild.cmake.abiFilters 'armeabi', 'arm64-v8a', 'x86'
     }
   }
-  publishNonDefault true
+
+  if (project.hasProperty('doFullRelease')) {
+    defaultPublishConfig 'fullRelease'
+  } else {
+    defaultPublishConfig 'slimDebug'
+  }
 }
 
 dependencies {

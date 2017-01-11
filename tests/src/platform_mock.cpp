@@ -15,6 +15,8 @@
 #define FONT_JA "fonts/DroidSansJapanese.ttf"
 #define FALLBACK "fonts/DroidSansFallback.ttf"
 
+#include "log.h"
+
 static bool s_isContinuousRendering = false;
 
 void logMsg(const char* fmt, ...) {
@@ -56,31 +58,30 @@ std::string stringFromFile(const char* _path) {
     return out;
 }
 
-unsigned char* bytesFromFile(const char* _path, size_t& _size) {
+std::vector<char> bytesFromFile(const char* _path) {
+    if (!_path || strlen(_path) == 0) { return {}; }
 
     std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
 
     if(!resource.is_open()) {
-        logMsg("Failed to read file at path: %s\n", _path);
-        _size = 0;
-        return nullptr;
+        LOG("Failed to read file at path: %s", _path);
+        return {};
     }
 
-    _size = resource.tellg();
+    std::vector<char> data;
+    size_t size = resource.tellg();
+    data.resize(size);
 
     resource.seekg(std::ifstream::beg);
 
-    char* cdata = (char*) malloc(sizeof(char) * _size);
-
-    resource.read(cdata, _size);
+    resource.read(data.data(), size);
     resource.close();
 
-    return reinterpret_cast<unsigned char *>(cdata);
+    return data;
 }
 
-
-unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
-    return nullptr;
+std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) {
+    return {};
 }
 
 std::vector<FontSourceHandle> systemFontFallbacksHandle() {

@@ -61,7 +61,7 @@ enum class StyleParamKey : uint8_t {
     transition_hide_time,
     transition_selected_time,
     transition_show_time,
-    text_required,
+    text_optional,
     text_transition_hide_time,
     text_transition_selected_time,
     text_transition_show_time,

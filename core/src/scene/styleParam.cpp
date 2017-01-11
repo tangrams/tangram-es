@@ -71,7 +71,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"text:priority", StyleParamKey::text_priority},
     {"text:repeat_distance", StyleParamKey::text_repeat_distance},
     {"text:repeat_group", StyleParamKey::text_repeat_group},
-    {"text:required", StyleParamKey::text_required},
+    {"text:optional", StyleParamKey::text_optional},
     {"text:text_source", StyleParamKey::text_source},
     {"text:text_wrap", StyleParamKey::text_wrap},
     {"text:transition:hide:time", StyleParamKey::text_transition_hide_time},
@@ -242,7 +242,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::text_visible:
     case StyleParamKey::outline_visible:
     case StyleParamKey::collide:
-    case StyleParamKey::text_required:
+    case StyleParamKey::text_optional:
     case StyleParamKey::text_collide:
         if (_value == "true") { return true; }
         if (_value == "false") { return false; }
@@ -381,7 +381,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::outline_visible:
     case StyleParamKey::centroid:
     case StyleParamKey::collide:
-    case StyleParamKey::text_required:
+    case StyleParamKey::text_optional:
     case StyleParamKey::text_collide:
         if (!value.is<bool>()) break;
         return k + std::to_string(value.get<bool>());

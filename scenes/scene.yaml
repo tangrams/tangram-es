@@ -415,7 +415,6 @@ layers:
                 collide: true
                 transition: { show: { time: 0s }, hide: { time: 1s } }
                 text:
-                    required: true
                     interactive: true
                     font:
                         family: Open Sans
@@ -470,7 +469,6 @@ layers:
                     interactive: true
                     priority: 6
                     text:
-                        required: false
                         visible: false
 
             # add text label at higher zoom
@@ -481,7 +479,6 @@ layers:
                 draw:
                     icons:
                         text:
-                            required: true
                             visible: true
                             font:
                                 size: 12px
