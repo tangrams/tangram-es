@@ -9,11 +9,51 @@
 #include "gl/texture.h"
 #include "log.h"
 
-#include "shaders/debugPrimitive_vs.h"
-#include "shaders/debugPrimitive_fs.h"
+static const char* debugPrimitive_vs = R"(
+#ifdef GL_ES
+precision mediump float;
+#endif
+attribute vec2 a_position;
+uniform mat4 u_proj;
+void main() {
+    gl_Position = u_proj * vec4(a_position, 1.0, 1.0);
+}
+)";
 
-#include "shaders/debugTexture_vs.h"
-#include "shaders/debugTexture_fs.h"
+static const char* debugPrimitive_fs = R"(
+#ifdef GL_ES
+precision mediump float;
+#endif
+uniform vec3 u_color;
+void main() {
+    gl_FragColor = vec4(u_color, 1.0);
+}
+)";
+
+static const char* debugTexture_vs = R"(
+#ifdef GL_ES
+precision mediump float;
+#endif
+uniform mat4 u_proj;
+attribute vec2 a_position;
+attribute vec2 a_uv;
+varying vec2 uv;
+void main() {
+    uv = a_uv;
+    gl_Position = u_proj * vec4(a_position, 1.0, 1.0);
+}
+)";
+
+static const char* debugTexture_fs = R"(
+#ifdef GL_ES
+precision mediump float;
+#endif
+uniform sampler2D u_tex;
+varying vec2 uv;
+void main() {
+    gl_FragColor = texture2D(u_tex, uv);
+}
+)";
 
 namespace Tangram {
 
@@ -38,8 +78,7 @@ void init() {
     if (!s_initialized) {
         s_shader = std::make_unique<ShaderProgram>();
 
-        s_shader->setSourceStrings(SHADER_SOURCE(debugPrimitive_fs),
-                                   SHADER_SOURCE(debugPrimitive_vs));
+        s_shader->setSourceStrings(debugPrimitive_fs, debugPrimitive_vs);
 
         s_layout = std::unique_ptr<VertexLayout>(new VertexLayout({
             {"a_position", 2, GL_FLOAT, false, 0},
@@ -48,8 +87,7 @@ void init() {
 
         s_textureShader = std::make_unique<ShaderProgram>();
 
-        s_textureShader->setSourceStrings(SHADER_SOURCE(debugTexture_fs),
-                                          SHADER_SOURCE(debugTexture_vs));
+        s_textureShader->setSourceStrings(debugTexture_fs, debugTexture_vs);
 
         s_textureLayout = std::unique_ptr<VertexLayout>(new VertexLayout({
             {"a_position", 2, GL_FLOAT, false, 0},

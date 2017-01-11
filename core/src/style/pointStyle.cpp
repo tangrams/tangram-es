@@ -1,15 +1,12 @@
 #include "pointStyle.h"
 
-#include "platform.h"
+#include "gl/dynamicQuadMesh.h"
 #include "gl/shaderProgram.h"
 #include "gl/texture.h"
-#include "gl/dynamicQuadMesh.h"
 #include "gl/vertexLayout.h"
 #include "scene/spriteAtlas.h"
 #include "style/pointStyleBuilder.h"
 #include "view/view.h"
-#include "shaders/point_vs.h"
-#include "shaders/point_fs.h"
 
 namespace Tangram {
 
@@ -38,13 +35,11 @@ void PointStyle::constructVertexLayout() {
 
 void PointStyle::constructShaderProgram() {
 
-    m_shaderProgram->setSourceStrings(SHADER_SOURCE(point_fs),
-                                      SHADER_SOURCE(point_vs));
-
     m_mesh = std::make_unique<DynamicQuadMesh<SpriteVertex>>(m_vertexLayout, m_drawMode);
 
     m_textStyle->constructShaderProgram();
-    m_textStyle->constructSelectionShaderProgram();
+
+    Style::constructShaderProgram();
 }
 
 void PointStyle::onBeginUpdate() {
@@ -94,6 +89,79 @@ std::unique_ptr<StyleBuilder> PointStyle::createBuilder() const {
 void PointStyle::setPixelScale(float _pixelScale) {
     Style::setPixelScale(_pixelScale);
     m_textStyle->setPixelScale(_pixelScale);
+}
+
+static const char* s_uniforms = R"(
+uniform mat4 u_ortho;
+uniform vec4 u_tile_origin;
+uniform vec3 u_map_position;
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform float u_meters_per_pixel;
+uniform float u_device_pixel_ratio;)";
+
+static const char* s_varyings = R"(
+varying vec4 v_color;
+varying vec2 v_texcoords;
+varying float v_alpha;)";
+
+void PointStyle::buildVertexShaderSource(ShaderSource& out, bool _selectionPass) {
+
+    insertShaderBlock("uniforms", out);
+    out << s_uniforms;
+
+    out << "attribute vec2 a_uv;";
+    out << "attribute LOWP float a_alpha;";
+    out << "attribute LOWP vec4 a_color;";
+    out << "attribute vec3 a_position;";
+
+    if (_selectionPass) {
+        out << "attribute vec4 a_selection_color;";
+        out << "varying vec4 v_selection_color;";
+    }
+
+    out << s_varyings;
+
+    insertShaderBlock("global", out);
+
+    out << "void main() {";
+    out << "    v_alpha = a_alpha;";
+    out << "    v_color = a_color;";
+
+    if (_selectionPass) {
+        out << "    v_selection_color = a_selection_color;";
+        // Skip non-selectable meshes
+        out << "    if (v_selection_color == vec4(0.0)) {";
+        out << "        gl_Position = vec4(0.0);";
+        out << "        return;";
+        out << "    }";
+    }
+
+    out << "    v_texcoords = a_uv;";
+    out << "    gl_Position = vec4(a_position, 1.0);";
+    out << "}";
+}
+
+void PointStyle::buildFragmentShaderSource(ShaderSource& out) {
+
+    insertShaderBlock("uniforms", out);
+    out << s_uniforms;
+    out << "uniform sampler2D u_tex;";
+
+    out << s_varyings;
+
+    insertShaderBlock("global", out);
+
+    out << "void main(void) {";
+    out << "    vec4 texColor = texture2D(u_tex, v_texcoords);";
+    out << "    vec4 color = vec4(texColor.rgb * v_color.rgb, v_alpha * texColor.a * v_color.a);";
+
+    insertShaderBlock("color", out);
+    insertShaderBlock("filter", out);
+
+    out << "    gl_FragColor = color;";
+    out << "}";
+
 }
 
 }

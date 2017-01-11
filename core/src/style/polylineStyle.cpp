@@ -1,24 +1,20 @@
 #include "polylineStyle.h"
 
-#include "tangram.h"
-#include "platform.h"
-#include "material.h"
-#include "gl/shaderProgram.h"
 #include "gl/mesh.h"
-#include "gl/texture.h"
 #include "gl/renderState.h"
+#include "gl/shaderProgram.h"
+#include "gl/texture.h"
+#include "log.h"
 #include "marker/marker.h"
-#include "scene/stops.h"
 #include "scene/drawRule.h"
+#include "scene/lights.h"
+#include "scene/stops.h"
+#include "style/material.h"
 #include "tile/tile.h"
 #include "util/builders.h"
-#include "util/mapProjection.h"
-#include "util/extrude.h"
 #include "util/dashArray.h"
-#include "log.h"
-
-#include "shaders/polyline_vs.h"
-#include "shaders/polyline_fs.h"
+#include "util/extrude.h"
+#include "util/mapProjection.h"
 
 #include "glm/vec3.hpp"
 #include "glm/gtc/type_precision.hpp"
@@ -116,26 +112,9 @@ void PolylineStyle::constructShaderProgram() {
 
         m_texture = std::make_shared<Texture>(1, pixels.size(), options);
         m_texture->setData(pixels.data(), pixels.size());
-
-        if (m_dashBackground) {
-            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_BACKGROUND_COLOR vec3(" +
-                std::to_string(m_dashBackgroundColor.r) + ", " +
-                std::to_string(m_dashBackgroundColor.g) + ", " +
-                std::to_string(m_dashBackgroundColor.b) + ")");
-        }
     }
 
-    if (m_dashArray.size() > 0 || m_texture) {
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_TEXTURE\n", false);
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_ALPHA_TEST 0.25\n", false);
-    }
-
-    m_shaderProgram->setSourceStrings(SHADER_SOURCE(polyline_fs),
-                                      SHADER_SOURCE(polyline_vs));
-
-    if (m_texCoordsGeneration) {
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_USE_TEX_COORDS\n");
-    }
+    Style::constructShaderProgram();
 }
 
 template <class V>
@@ -177,8 +156,7 @@ public:
     std::unique_ptr<StyledMesh> build() override;
 
     PolylineStyleBuilder(const PolylineStyle& _style)
-        : StyleBuilder(_style), m_style(_style),
-          m_meshData(2) {}
+        : m_style(_style), m_meshData(2) {}
 
     void addMesh(const Line& _line, const Parameters& _params);
 
@@ -497,6 +475,188 @@ std::unique_ptr<StyleBuilder> PolylineStyle::createBuilder() const {
         builder->polylineBuilder().useTexCoords = false;
         return std::move(builder);
     }
+}
+
+static const char* s_uniforms = R"(
+uniform mat4 u_model;
+uniform mat4 u_view;
+uniform mat4 u_proj;
+uniform mat3 u_normal_matrix;
+uniform mat3 u_inverse_normal_matrix;
+uniform vec4 u_tile_origin;
+uniform vec3 u_map_position;
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform float u_meters_per_pixel;
+uniform float u_device_pixel_ratio;
+uniform float u_texture_ratio;
+uniform float u_proxy_depth;)";
+
+static const char* s_varyings = R"(
+varying vec4 v_world_position;
+varying vec4 v_position;
+varying vec4 v_color;
+varying vec3 v_normal;)";
+
+void PolylineStyle::buildVertexShaderSource(ShaderSource& out, bool _selectionPass) {
+
+    out << "#define UNPACK_POSITION(x) (x / " + std::to_string(position_scale) + ")"
+        << "#define UNPACK_EXTRUSION(x) (x / " + std::to_string(extrusion_scale) + ")"
+        << "#define UNPACK_ORDER(x) (x / " + std::to_string(order_scale) + ")"
+        << "#define UNPACK_TEXCOORD(x) (x / " + std::to_string(texture_scale) + ")"
+        << "#define TANGRAM_DEPTH_DELTA 0.000030518" // (2.0 / (1 << 16)
+        << "#define TANGRAM_WORLD_POSITION_WRAP 100000.";
+
+    insertShaderBlock("uniforms", out);
+    out << s_uniforms;
+
+    out << "attribute vec4 a_position;"
+        << "attribute vec4 a_color;"
+        << "attribute vec4 a_extrude;";
+
+    if (m_texCoordsGeneration) {
+        out << "attribute vec2 a_texcoord;"
+            << "varying vec2 v_texcoord;";
+    }
+
+    if (_selectionPass) {
+        out << "attribute vec4 a_selection_color;"
+            << "varying vec4 v_selection_color;";
+    }
+
+    out << s_varyings;
+
+    out << "vec4 modelPosition() {"
+        << "    return vec4(UNPACK_POSITION(a_position.xyz) * exp2(u_tile_origin.z - u_tile_origin.w), 1.0);"
+        << "}"
+        << "vec4 worldPosition() { return v_world_position; }"
+        << "vec3 worldNormal() { return vec3(0.0, 0.0, 1.0); }"
+        << "vec4 modelPositionBaseZoom() { return vec4(UNPACK_POSITION(a_position.xyz), 1.0); }";
+
+    buildMaterialAndLightGlobal(false, out);
+    insertShaderBlock("global", out);
+
+    out << "void main() {";
+    out << "    vec4 position = vec4(UNPACK_POSITION(a_position.xyz), 1.0);";
+
+    if (_selectionPass) {
+        out << "    v_selection_color = a_selection_color;"
+            // Skip non-selectable meshes
+            << "    if (v_selection_color == vec4(0.0)) {"
+            << "        gl_Position = vec4(0.0);"
+            << "        return;"
+            << "    }";
+    } else {
+        // Initialize globals
+        insertShaderBlock("setup", out);
+    }
+
+    out << "    v_color = a_color;";
+
+    if (m_texCoordsGeneration) {
+        out << "    v_texcoord = UNPACK_TEXCOORD(a_texcoord);";
+    }
+    out << "    v_normal = u_normal_matrix * vec3(0.,0.,1.);"
+        << "    vec4 extrude = UNPACK_EXTRUSION(a_extrude);"
+        << "    float width = extrude.z;"
+        << "    float dwdz = extrude.w;"
+        << "    float dz = u_map_position.z - u_tile_origin.z;"
+        // Interpolate between zoom levels
+        << "    width += dwdz * clamp(dz, 0.0, 1.0);"
+        // Scale pixel dimensions to be consistent in screen space
+        // and adjust scale for overzooming.
+        << "    width *= exp2(-dz + (u_tile_origin.w - u_tile_origin.z));";
+
+    // Modify line width in model space before extrusion
+    insertShaderBlock("width", out);
+
+    if (m_texCoordsGeneration) {
+        out << "    v_texcoord.y /= 2. * extrude.z;";
+    }
+
+    out << "    position.xy += extrude.xy * width;"
+        // Transform position into meters relative to map center
+        << "    position = u_model * position;"
+        // World coordinates for 3d procedural textures
+        << "    vec4 local_origin = vec4(u_map_position.xy, 0., 0.);"
+        << "    local_origin = mod(local_origin, TANGRAM_WORLD_POSITION_WRAP);"
+        << "    v_world_position = position + local_origin;";
+
+    // Modify position before lighting and camera projection
+    insertShaderBlock("position", out);
+
+    // Set position varying to the camera-space vertex position
+    out << "    v_position = u_view * position;";
+
+    if (!_selectionPass) {
+        buildMaterialAndLightBlock(false, out);
+    }
+
+    out << "    gl_Position = u_proj * v_position;"
+        // Proxy tiles are placed deeper in the depth buffer than non-proxy tiles
+        << "    gl_Position.z += TANGRAM_DEPTH_DELTA * gl_Position.w * u_proxy_depth;"
+        << "    float layer = UNPACK_ORDER(a_position.w);"
+        << "    gl_Position.z -= layer * TANGRAM_DEPTH_DELTA * gl_Position.w;"
+        << "}";
+}
+
+void PolylineStyle::buildFragmentShaderSource(ShaderSource& out) {
+
+    out << "#define TANGRAM_ALPHA_TEST 0.25";
+
+    insertShaderBlock("uniforms", out);
+    out << s_uniforms;
+    out << "uniform sampler2D u_texture;";
+
+    out << s_varyings;
+
+    if (m_texCoordsGeneration) {
+        out << "varying vec2 v_texcoord;";
+    }
+
+    out << "vec4 worldPosition() {  return v_world_position; }"
+        << "vec3 worldNormal() { return normalize(u_inverse_normal_matrix * v_normal); }";
+
+    buildMaterialAndLightGlobal(true, out);
+    insertShaderBlock("global", out);
+
+    out << "void main() {"
+        << "    vec4 color = v_color;"
+        << "    vec3 normal = v_normal;";
+
+    // Initialize globals
+    insertShaderBlock("setup", out);
+
+    //if (tangram_line_texture) {
+    if (m_dashArray.size() > 0 || m_texture) {
+        out << "    vec2 line_st = vec2(v_texcoord.x, fract(v_texcoord.y / u_texture_ratio));";
+        out << "    vec4 line_color = texture2D(u_texture, line_st);";
+        out << "    if (line_color.a < TANGRAM_ALPHA_TEST) {";
+        if (m_dashBackground) {
+            out << "        color.rgb = vec3(" +
+                std::to_string(m_dashBackgroundColor.r) + ", " +
+                std::to_string(m_dashBackgroundColor.g) + ", " +
+                std::to_string(m_dashBackgroundColor.b) + ");";
+        } else if (m_blend != Blending::overlay &&
+                   m_blend != Blending::inlay) {
+            out << "        discard;";
+            out << "        return;";
+        } else {
+            out << "        color.a = 0.0;";
+        }
+        out << "    } else {";
+        out << "        color *= line_color;";
+        out << "    }";
+    }
+
+    buildMaterialAndLightBlock(true, out);
+
+    // Modify color after lighting (filter-like effects that don't
+    // require a additional render passes)
+    insertShaderBlock("filter", out);
+
+    out << "    gl_FragColor = color;";
+    out << "}";
 }
 
 }

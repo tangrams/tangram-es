@@ -290,14 +290,12 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, const std::shared
 
     if (!shaders) { return; }
 
-    auto& shader = *(style.getShaderProgram());
-
     if (Node extNode = shaders["extensions_mixed"]) {
         if (extNode.IsScalar()) {
-            shader.addSourceBlock("extensions", ShaderProgram::getExtensionDeclaration(extNode.Scalar()));
+            style.addSourceBlock("extensions", ShaderProgram::getExtensionDeclaration(extNode.Scalar()));
         } else if (extNode.IsSequence()) {
             for (const auto& e : extNode) {
-                shader.addSourceBlock("extensions", ShaderProgram::getExtensionDeclaration(e.Scalar()));
+                style.addSourceBlock("extensions", ShaderProgram::getExtensionDeclaration(e.Scalar()));
             }
         }
     }
@@ -312,9 +310,9 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, const std::shared
             {
                 auto pos = name.find('(');
                 if (pos == std::string::npos) {
-                    shader.addSourceBlock("defines", "#undef " + name);
+                    style.addSourceBlock("defines", "#undef " + name);
                 } else {
-                    shader.addSourceBlock("defines", "#undef " + name.substr(0, pos));
+                    style.addSourceBlock("defines", "#undef " + name.substr(0, pos));
                 }
             }
             bool bValue;
@@ -323,11 +321,11 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, const std::shared
                 // specifying a define to be 'true' means that it is simply
                 // defined and has no value
                 if (bValue) {
-                    shader.addSourceBlock("defines", "#define " + name);
+                    style.addSourceBlock("defines", "#define " + name);
                 }
             } else {
                 const std::string& value = define.second.Scalar();
-                shader.addSourceBlock("defines", "#define " + name + " " + value);
+                style.addSourceBlock("defines", "#define " + name + " " + value);
             }
         }
     }
@@ -340,14 +338,14 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, const std::shared
             if (parseStyleUniforms(uniform.second, scene, styleUniform)) {
                 if (styleUniform.value.is<UniformArray1f>()) {
                     UniformArray1f& array = styleUniform.value.get<UniformArray1f>();
-                    shader.addSourceBlock("uniforms", "uniform float " + name +
+                    style.addSourceBlock("uniforms", "uniform float " + name +
                         "[" + std::to_string(array.size()) + "];");
                 } else if(styleUniform.value.is<UniformTextureArray>()) {
                     UniformTextureArray& textureArray = styleUniform.value.get<UniformTextureArray>();
-                    shader.addSourceBlock("uniforms", "uniform " + styleUniform.type + " " + name +
+                    style.addSourceBlock("uniforms", "uniform " + styleUniform.type + " " + name +
                         "[" + std::to_string(textureArray.names.size()) + "];");
                 } else {
-                    shader.addSourceBlock("uniforms", "uniform " + styleUniform.type + " " + name + ";");
+                    style.addSourceBlock("uniforms", "uniform " + styleUniform.type + " " + name + ";");
                 }
 
                 style.styleUniforms().emplace_back(name, styleUniform.value);
@@ -363,10 +361,10 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, const std::shared
             const auto& value = block.second;
             if (value.IsSequence()){
                 for (const auto& it : value) {
-                    shader.addSourceBlock(name, it.Scalar(), false);
+                    style.addSourceBlock(name, it.Scalar(), false);
                 }
             } else if (value.IsScalar()) {
-                shader.addSourceBlock(name, value.Scalar(), false);
+                style.addSourceBlock(name, value.Scalar(), false);
             }
         }
     }

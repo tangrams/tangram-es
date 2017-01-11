@@ -4,10 +4,12 @@
 #include "gl/uniform.h"
 #include "util/fastmap.h"
 #include "data/tileData.h"
+#include "util/shaderSource.h"
 
 #include <memory>
 #include <string>
 #include <vector>
+#include <map>
 
 namespace Tangram {
 
@@ -60,8 +62,6 @@ struct StyledMesh {
 class StyleBuilder {
 public:
 
-    StyleBuilder(const Style& _style);
-
     virtual ~StyleBuilder() = default;
 
     virtual void setup(const Tile& _tile) = 0;
@@ -89,10 +89,6 @@ public:
     virtual void addSelectionItems(LabelCollider& _layout) {}
 
     virtual const Style& style() const = 0;
-
-protected:
-    bool m_hasColorShaderBlock = false;
-
 };
 
 /* Means of constructing and rendering map geometry
@@ -142,8 +138,17 @@ protected:
     bool m_texCoordsGeneration = false;
 
     RasterType m_rasterType = RasterType::none;
+    int m_numRasterSources = 0;
 
     bool m_selection;
+
+    virtual void buildFragmentShaderSource(ShaderSource& _out) = 0;
+    virtual void buildVertexShaderSource(ShaderSource& _out, bool _selectionPass) = 0;
+
+    void initShaderSource(ShaderSource& out, bool _fragment);
+    void insertShaderBlock(const std::string& _name, ShaderSource& _out);
+    void buildMaterialAndLightGlobal(bool _fragmentShader, ShaderSource& _out);
+    void buildMaterialAndLightBlock(bool _fragment, ShaderSource& out);
 
 private:
 
@@ -173,8 +178,8 @@ private:
      */
     void setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBlock& _uniformBlock);
 
-    void setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view, Scene& _scene,
-            UniformBlock& _uniformBlock);
+    void setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view,
+                             Scene& _scene, UniformBlock& _uniformBlock);
 
     struct LightHandle {
         LightHandle(Light* _light, std::unique_ptr<LightUniforms> _uniforms);
@@ -184,7 +189,6 @@ private:
     };
     std::vector<LightHandle> m_lights;
 
-
     struct MaterialHandle {
         /* <Material> used for drawing meshes that use this style */
         std::shared_ptr<Material> material;
@@ -193,6 +197,8 @@ private:
     };
 
     MaterialHandle m_material;
+
+    std::map<std::string, std::vector<std::string>> m_sourceBlocks;
 
 public:
 
@@ -241,12 +247,13 @@ public:
      */
     virtual void constructVertexLayout() = 0;
 
-    /* Create <ShaderProgram> for this style; subclasses must implement
-     * this and call it on construction
-     */
-    virtual void constructShaderProgram() = 0;
+    /* Create <ShaderProgram> for this style; */
+    virtual void constructShaderProgram();
+    void initShaderSoure(ShaderSource& out, bool _fragment);
 
-    void constructSelectionShaderProgram();
+    // Add a block of GLSL to be injected at "#pragma tangram: [_tagName]" in the shader sources.
+    void addSourceBlock(const std::string& _tagName, const std::string& _glslSource, bool _allowDuplicate = true);
+    auto getSourceBlocks() const { return  m_sourceBlocks; }
 
     /* Perform any setup needed before drawing each frame
      * _textUnit is the next available texture unit
@@ -292,9 +299,9 @@ public:
 
     virtual size_t dynamicMeshSize() const { return 0; }
 
-    virtual bool hasRasters() const { return m_rasterType != RasterType::none; }
+    bool hasRasters() const { return m_rasterType != RasterType::none; }
 
-    void setupRasters(const std::vector<std::shared_ptr<DataSource>>& _dataSources);
+    bool hasColorShaderBlock() const;
 
     std::vector<StyleUniform>& styleUniforms() { return m_mainUniforms.styleUniforms; }
 

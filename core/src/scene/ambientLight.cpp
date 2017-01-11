@@ -1,7 +1,6 @@
 #include "ambientLight.h"
 
 #include "gl/shaderProgram.h"
-#include "shaders/ambientLight_glsl.h"
 
 #include "glm/gtx/string_cast.hpp"
 
@@ -18,33 +17,29 @@ AmbientLight::AmbientLight(const std::string& _name, bool _dynamic) :
 
 AmbientLight::~AmbientLight() {}
 
-std::unique_ptr<LightUniforms> AmbientLight::injectOnProgram(ShaderProgram& _shader) {
-    injectSourceBlocks(_shader);
+std::unique_ptr<LightUniforms> AmbientLight::getUniforms(ShaderProgram& _shader) {
 
-    if (!m_dynamic) { return nullptr; }
+    if (m_dynamic) {
+        return std::make_unique<LightUniforms>(_shader, getUniformName());
+    }
 
-    return std::make_unique<LightUniforms>(_shader, getUniformName());
+    return nullptr;
 }
 
 void AmbientLight::setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms) {
     Light::setupProgram(rs, _view, _uniforms);
 }
 
-std::string AmbientLight::getClassBlock() {
-    return SHADER_SOURCE(ambientLight_glsl);
-}
+void AmbientLight::buildClassBlock(Material& _material, ShaderSource& out) {
 
-std::string AmbientLight::getInstanceDefinesBlock() {
-    //  Ambient lights don't have defines.... yet.
-    return "\n";
-}
-
-std::string AmbientLight::getInstanceAssignBlock() {
-    std::string block = Light::getInstanceAssignBlock();
-    if (!m_dynamic) {
-        block += ")";
-    }
-    return block;
+    out << "struct AmbientLight {"
+        << "    vec4 ambient;"
+        << "    vec4 diffuse;"
+        << "    vec4 specular;"
+        << "};"
+        << "void calculateLight(in AmbientLight _light, in vec3 _eyeToPoint, in vec3 _normal) {"
+        << "    light_accumulator_ambient += _light.ambient;"
+        << "}";
 }
 
 const std::string& AmbientLight::getTypeName() {
