@@ -1,8 +1,8 @@
 #include "tile/tileBuilder.h"
 
-#include "data/dataSource.h"
 #include "data/properties.h"
 #include "data/propertyItem.h"
+#include "data/tileSource.h"
 #include "gl/mesh.h"
 #include "log.h"
 #include "scene/dataLayer.h"
@@ -92,7 +92,7 @@ void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer
     }
 }
 
-std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData, const DataSource& _source) {
+std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData, const TileSource& _source) {
 
     m_selectionFeatures.clear();
 

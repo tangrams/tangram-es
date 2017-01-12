@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <mutex>
 
 #include "tile/tileTask.h"
 
@@ -18,19 +19,37 @@ class TileManager;
 struct RawCache;
 class Texture;
 
-class DataSource : public std::enable_shared_from_this<DataSource> {
+class TileSource : public std::enable_shared_from_this<TileSource> {
 
 public:
+
+    struct DataSource {
+        virtual bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) = 0;
+
+        /* Stops any running I/O tasks pertaining to @_tile */
+        virtual void cancelLoadingTile(const TileID& _tile) {
+            if (next) { next->cancelLoadingTile(_tile); }
+        }
+
+        virtual void clear() { if (next) next->clear(); }
+
+        void setNext(std::unique_ptr<DataSource> _next) {
+            next = std::move(_next);
+            next->level = level + 1;
+        }
+        std::unique_ptr<DataSource> next;
+        int level = 0;
+    };
 
     /* Tile data sources must have a name and a URL template that defines where to find
      * a tile based on its coordinates. A URL template includes exactly one occurrance
      * each of '{x}', '{y}', and '{z}' which will be replaced by the x index, y index,
      * and zoom level of tiles to produce their URL.
      */
-    DataSource(const std::string& _name, const std::string& _urlTemplate,
+    TileSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
                int32_t _minDisplayZoom = -1, int32_t _maxDisplayZoom = -1, int32_t _maxZoom = 18);
 
-    virtual ~DataSource();
+    virtual ~TileSource();
 
     /* Fetches data for the map tile specified by @_tileID
      *
@@ -38,8 +57,7 @@ public:
      * the I/O task is complete, the tile data is added to a queue in @_tileManager for
      * further processing before it is renderable.
      */
-    virtual bool loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb);
-
+    virtual void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb);
 
     /* Stops any running I/O tasks pertaining to @_tile */
     virtual void cancelLoadingTile(const TileID& _tile);
@@ -47,7 +65,7 @@ public:
     /* Parse a <TileTask> with data into a <TileData>, returning an empty TileData on failure */
     virtual std::shared_ptr<TileData> parse(const TileTask& _task, const MapProjection& _projection) const = 0;
 
-    /* Clears all data associated with this DataSource */
+    /* Clears all data associated with this TileSource */
     virtual void clearData();
 
     const std::string& name() const { return m_name; }
@@ -55,19 +73,14 @@ public:
     virtual void clearRasters();
     virtual void clearRaster(const TileID& id);
 
-    bool equals(const DataSource& _other) const;
+    bool equals(const TileSource& _other) const;
 
     virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask = -1);
 
-    /* @_cacheSize: Set size of in-memory cache for tile data in bytes.
-     * This cache holds unprocessed tile data for fast recreation of recently used tiles.
-     */
-    void setCacheSize(size_t _cacheSize);
-
-    /* ID of this DataSource instance */
+    /* ID of this TileSource instance */
     int32_t id() const { return m_id; }
 
-    /* Generation ID of DataSource state (incremented for each update, e.g. on clearData()) */
+    /* Generation ID of TileSource state (incremented for each update, e.g. on clearData()) */
     int64_t generation() const { return m_generation; }
 
     int32_t minDisplayZoom() const { return m_minDisplayZoom; }
@@ -79,7 +92,7 @@ public:
     }
 
     /* assign/get raster datasources to this datasource */
-    void addRasterSource(std::shared_ptr<DataSource> _dataSource);
+    void addRasterSource(std::shared_ptr<TileSource> _dataSource);
     auto& rasterSources() { return m_rasterSources; }
     const auto& rasterSources() const { return m_rasterSources; }
 
@@ -91,21 +104,7 @@ public:
 
 protected:
 
-    virtual void onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
-                              TileTaskCb _cb);
-
-    /* Constructs the URL of a tile using <m_urlTemplate> */
-    virtual void constructURL(const TileID& _tileCoord, std::string& _url) const;
-
-    std::string constructURL(const TileID& _tileCoord) const {
-        std::string url;
-        constructURL(_tileCoord, url);
-        return url;
-    }
-
-    bool cacheGet(DownloadTileTask& _task);
-
-    void cachePut(const TileID& _tileID, std::shared_ptr<std::vector<char>> _rawDataRef);
+    void createSubTasks(std::shared_ptr<TileTask> _task);
 
     // This datasource is used to generate actual tile geometry
     bool m_generateGeometry = false;
@@ -122,19 +121,17 @@ protected:
     // Maximum zoom for which tiles will be requested
     int32_t m_maxZoom;
 
-    // Unique id for DataSource
+    // Unique id for TileSource
     int32_t m_id;
 
-    // Generation of dynamic DataSource state (incremented for each update)
+    // Generation of dynamic TileSource state (incremented for each update)
     int64_t m_generation = 1;
 
-    // URL template for requesting tiles from a network or filesystem
-    std::string m_urlTemplate;
-
-    std::unique_ptr<RawCache> m_cache;
-
     /* vector of raster sources (as raster samplers) referenced by this datasource */
-    std::vector<std::shared_ptr<DataSource>> m_rasterSources;
+    std::vector<std::shared_ptr<TileSource>> m_rasterSources;
+
+    std::unique_ptr<DataSource> m_sources;
+
 };
 
 }

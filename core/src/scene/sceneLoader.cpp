@@ -4,9 +4,11 @@
 #include "lights.h"
 #include "data/clientGeoJsonSource.h"
 #include "data/geoJsonSource.h"
+#include "data/memoryCacheDataSource.h"
 #include "data/mvtSource.h"
-#include "data/topoJsonSource.h"
+#include "data/networkDataSource.h"
 #include "data/rasterSource.h"
+#include "data/topoJsonSource.h"
 #include "gl/shaderProgram.h"
 #include "style/material.h"
 #include "style/polygonStyle.h"
@@ -905,8 +907,8 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, const std::sha
 }
 
 void SceneLoader::loadSource(const std::string& name, const Node& source, const Node& sources, const std::shared_ptr<Scene>& _scene) {
-    if (_scene->getDataSource(name)) {
-        LOGW("Duplicate DataSource: %s", name.c_str());
+    if (_scene->getTileSource(name)) {
+        LOGW("Duplicate TileSource: %s", name.c_str());
         return;
     }
 
@@ -957,18 +959,27 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
         url.find("{y}") != std::string::npos &&
         url.find("{z}") != std::string::npos;
 
-    std::shared_ptr<DataSource> sourcePtr;
+    std::shared_ptr<TileSource> sourcePtr;
+
+    auto rawSources = std::make_unique<MemoryCacheDataSource>();
+    rawSources->setCacheSize(CACHE_SIZE);
 
     if (type == "GeoJSON") {
         if (tiled) {
-            sourcePtr = std::shared_ptr<DataSource>(new GeoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
+            rawSources->setNext(std::make_unique<NetworkDataSource>(url));
+            sourcePtr = std::make_shared<GeoJsonSource>(name, std::move(rawSources),
+                                                        minDisplayZoom, maxDisplayZoom, maxZoom);
         } else {
-            sourcePtr = std::shared_ptr<DataSource>(new ClientGeoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
+            sourcePtr = std::make_shared<ClientGeoJsonSource>(name, url, minDisplayZoom, maxDisplayZoom, maxZoom);
         }
     } else if (type == "TopoJSON") {
-        sourcePtr = std::shared_ptr<DataSource>(new TopoJsonSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
+        rawSources->setNext(std::make_unique<NetworkDataSource>(url));
+        sourcePtr = std::make_shared<TopoJsonSource>(name, std::move(rawSources),
+                                                     minDisplayZoom, maxDisplayZoom, maxZoom);
     } else if (type == "MVT") {
-        sourcePtr = std::shared_ptr<DataSource>(new MVTSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom));
+        rawSources->setNext(std::make_unique<NetworkDataSource>(url));
+        sourcePtr = std::make_shared<MVTSource>(name, std::move(rawSources),
+                                                minDisplayZoom, maxDisplayZoom, maxZoom);
     } else if (type == "Raster") {
         TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
         bool generateMipmaps = false;
@@ -977,14 +988,16 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
                 generateMipmaps = true;
             }
         }
-        sourcePtr = std::shared_ptr<DataSource>(new RasterSource(name, url, minDisplayZoom, maxDisplayZoom, maxZoom, options, generateMipmaps));
+        auto rawSources = std::make_unique<NetworkDataSource>(url);
+        sourcePtr = std::make_shared<RasterSource>(name, std::move(rawSources),
+                                                   minDisplayZoom, maxDisplayZoom, maxZoom,
+                                                   options, generateMipmaps);
     } else {
         LOGW("Unrecognized data source type '%s', skipping", type.c_str());
     }
 
     if (sourcePtr) {
-        sourcePtr->setCacheSize(CACHE_SIZE);
-        _scene->dataSources().push_back(sourcePtr);
+        _scene->tileSources().push_back(sourcePtr);
     }
 
     if (auto rasters = source["rasters"]) {
@@ -993,7 +1006,7 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
 
 }
 
-void SceneLoader::loadSourceRasters(std::shared_ptr<DataSource> &source, Node rasterNode, const Node& sources,
+void SceneLoader::loadSourceRasters(std::shared_ptr<TileSource> &source, Node rasterNode, const Node& sources,
                                     const std::shared_ptr<Scene>& scene) {
     if (rasterNode.IsSequence()) {
         for (const auto& raster : rasterNode) {
@@ -1004,7 +1017,7 @@ void SceneLoader::loadSourceRasters(std::shared_ptr<DataSource> &source, Node ra
                 LOGNode("Parsing sources: '%s'", sources[srcName], e.what());
                 return;
             }
-            source->addRasterSource(scene->getDataSource(srcName));
+            source->addRasterSource(scene->getTileSource(srcName));
         }
     }
 }
@@ -1644,7 +1657,7 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, const std::share
         if (Node data_source = data["source"]) {
             if (data_source.IsScalar()) {
                 source = data_source.Scalar();
-                auto dataSource = scene->getDataSource(source);
+                auto dataSource = scene->getTileSource(source);
                 if (dataSource) {
                     dataSource->generateGeometry(true);
                 } else {

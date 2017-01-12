@@ -1,6 +1,6 @@
 #include "tile.h"
 
-#include "data/dataSource.h"
+#include "data/tileSource.h"
 #include "style/style.h"
 #include "view/view.h"
 #include "tile/tileID.h"
@@ -10,7 +10,7 @@
 
 namespace Tangram {
 
-Tile::Tile(TileID _id, const MapProjection& _projection, const DataSource* _source) :
+Tile::Tile(TileID _id, const MapProjection& _projection, const TileSource* _source) :
     m_id(_id),
     m_projection(&_projection),
     m_sourceId(_source ? _source->id() : 0),

@@ -1,6 +1,6 @@
 #include "scene.h"
 
-#include "data/dataSource.h"
+#include "data/tileSource.h"
 #include "gl/shaderProgram.h"
 #include "platform.h"
 #include "scene/dataLayer.h"
@@ -132,10 +132,10 @@ std::shared_ptr<Texture> Scene::getTexture(const std::string& textureName) const
     return texIt->second;
 }
 
-std::shared_ptr<DataSource> Scene::getDataSource(const std::string& name) {
-    auto it = std::find_if(m_dataSources.begin(), m_dataSources.end(),
+std::shared_ptr<TileSource> Scene::getTileSource(const std::string& name) {
+    auto it = std::find_if(m_tileSources.begin(), m_tileSources.end(),
                            [&](auto& s){ return s->name() == name; });
-    if (it != m_dataSources.end()) {
+    if (it != m_tileSources.end()) {
         return *it;
     }
     return nullptr;
