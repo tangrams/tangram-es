@@ -4,6 +4,7 @@
 #include "gl/disposer.h"
 #include "util/jobQueue.h"
 #include <array>
+#include <map>
 
 namespace Tangram {
 
@@ -111,6 +112,9 @@ public:
     std::array<GLuint, MAX_ATTRIBUTES> attributeBindings = { { 0 } };
 
     JobQueue jobQueue;
+
+    std::map<std::string, GLuint> fragmentShaders;
+    std::map<std::string, GLuint> vertexShaders;
 
 private:
 
