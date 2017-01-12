@@ -702,6 +702,16 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         }
     }
 }
+#pragma mark Standard Initializer
+
+- (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self != nil) {
+        self.map = new Tangram::Map();
+    }
+
+    return self;
+}
 
 #pragma mark Map view lifecycle
 
@@ -762,10 +772,6 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 - (void)setupGL
 {
     [EAGLContext setCurrentContext:self.context];
-
-    if (!self.map) {
-        self.map = new Tangram::Map();
-    }
 
     self.map->setupGL();
 
