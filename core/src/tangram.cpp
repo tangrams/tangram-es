@@ -79,7 +79,7 @@ public:
     MarkerManager markerManager;
     std::unique_ptr<FrameBuffer> selectionBuffer = std::make_unique<FrameBuffer>(0, 0);
 
-    bool cacheGlState;
+    bool cacheGlState = false;
 
     std::vector<SelectionQuery> selectionQueries;
 };
