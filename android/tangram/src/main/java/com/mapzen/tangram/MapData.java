@@ -113,7 +113,7 @@ public class MapData {
      * @return This object, for chaining.
      */
     public MapData clear() {
-        map.clearDataSource(pointer);
+        map.clearTileSource(pointer);
         return this;
     }
 

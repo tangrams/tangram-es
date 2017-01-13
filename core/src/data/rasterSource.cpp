@@ -10,10 +10,10 @@
 
 namespace Tangram {
 
-class RasterTileTask : public DownloadTileTask {
+class RasterTileTask : public BinaryTileTask {
 public:
-    RasterTileTask(TileID& _tileId, std::shared_ptr<DataSource> _source, int _subTask)
-        : DownloadTileTask(_tileId, _source, _subTask) {}
+    RasterTileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _subTask)
+        : BinaryTileTask(_tileId, _source, _subTask) {}
 
     std::shared_ptr<Texture> m_texture;
 
@@ -40,7 +40,7 @@ public:
 
         // Create tile geometries
         if (!isSubTask()) {
-            DownloadTileTask::process(_tileBuilder);
+            BinaryTileTask::process(_tileBuilder);
         }
     }
 
@@ -69,10 +69,12 @@ public:
 };
 
 
-RasterSource::RasterSource(const std::string& _name, const std::string& _urlTemplate,
+RasterSource::RasterSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
                            int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
                            TextureOptions _options, bool _genMipmap)
-    : DataSource(_name, _urlTemplate, _minDisplayZoom, _maxDisplayZoom, _maxZoom), m_texOptions(_options), m_genMipmap(_genMipmap) {
+    : TileSource(_name, std::move(_sources), _minDisplayZoom, _maxDisplayZoom, _maxZoom),
+      m_texOptions(_options),
+      m_genMipmap(_genMipmap) {
 
     std::vector<char> data = {};
     m_emptyTexture = std::make_shared<Texture>(data, m_texOptions, m_genMipmap);
@@ -86,6 +88,21 @@ std::shared_ptr<Texture> RasterSource::createTexture(const std::vector<char>& _r
     auto texture = std::make_shared<Texture>(_rawTileData, m_texOptions, m_genMipmap);
 
     return texture;
+}
+
+void RasterSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
+    // TODO, remove this
+    // Overwrite cb to set empty texture on failure
+    TileTaskCb cb{[this, _cb](std::shared_ptr<TileTask> _task) {
+
+            if (!_task->hasData()) {
+                auto& task = static_cast<RasterTileTask&>(*_task);
+                task.m_texture = m_emptyTexture;
+            }
+            _cb.func(_task);
+        }};
+
+    TileSource::loadTileData(_task, cb);
 }
 
 std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapProjection& _projection) const {
@@ -112,6 +129,8 @@ std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapPr
 std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, int _subTask) {
     auto task = std::make_shared<RasterTileTask>(_tileId, shared_from_this(), _subTask);
 
+    createSubTasks(task);
+
     // First try existing textures cache
     {
         TileID id(_tileId.x, _tileId.y, _tileId.z);
@@ -119,56 +138,15 @@ std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, int _subTask)
         auto texIt = m_textures.find(id);
         if (texIt != m_textures.end()) {
             task->m_texture = texIt->second;
+
+            // No more loading needed.
+            task->startedLoading();
+
             return task;
         }
     }
 
-    // Try raw data cache
-    cacheGet(*task);
-
     return task;
-}
-
-void RasterSource::onTileLoaded(std::vector<char>&& _rawData, std::shared_ptr<TileTask>&& _task,
-                                TileTaskCb _cb) {
-
-    if (_task->isCanceled()) { return; }
-
-    TileID tileID = _task->tileId();
-
-    auto rawDataRef = std::make_shared<std::vector<char>>();
-    std::swap(*rawDataRef, _rawData);
-
-    auto& task = static_cast<DownloadTileTask&>(*_task);
-    task.rawTileData = rawDataRef;
-
-    _cb.func(std::move(_task));
-
-    cachePut(tileID, rawDataRef);
-}
-
-bool RasterSource::loadTileData(std::shared_ptr<TileTask>&& _task, TileTaskCb _cb) {
-
-    std::string url(constructURL(_task->tileId()));
-
-    auto copyTask = _task;
-
-    // lambda captured parameters are const by default, we want "task" (moved) to be non-const,
-    // hence "mutable"
-    // Refer: http://en.cppreference.com/w/cpp/language/lambda
-    bool status = startUrlRequest(url,
-            [this, _cb, task = std::move(_task)](std::vector<char>&& rawData) mutable {
-                this->onTileLoaded(std::move(rawData), std::move(task), _cb);
-            });
-
-    // For "dependent" raster datasources if this returns false make sure to create a black texture
-    // for tileID in this task, and consider dependent raster ready
-    if (!status) {
-        auto& task = static_cast<RasterTileTask&>(*copyTask);
-        task.m_texture = m_emptyTexture;
-    }
-
-    return status;
 }
 
 Raster RasterSource::getRaster(const TileTask& _task) {
