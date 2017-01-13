@@ -71,6 +71,21 @@ GLuint FrameBuffer::readAt(float _normalizedX, float _normalizedY) const {
     return pixel;
 }
 
+FrameBuffer::PixelRect FrameBuffer::readRect(float _normalizedX, float _normalizedY, float _normalizedW, float _normalizedH) const {
+
+    PixelRect rect;
+    rect.left = _normalizedX * m_width;
+    rect.bottom =  _normalizedY * m_height;
+    rect.width = _normalizedW * m_width;
+    rect.height = _normalizedH * m_height;
+
+    rect.pixels.resize(rect.width * rect.height);
+
+    GL::readPixels(rect.left, rect.bottom, rect.width, rect.height, GL_RGBA, GL_UNSIGNED_BYTE, rect.pixels.data());
+
+    return rect;
+}
+
 void FrameBuffer::init(RenderState& _rs) {
 
     if (!Hardware::supportsGLRGBA8OES && m_colorRenderBuffer) {

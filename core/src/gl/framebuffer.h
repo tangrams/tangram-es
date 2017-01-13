@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "glm/vec4.hpp"
 #include "gl/disposer.h"
@@ -32,6 +33,13 @@ public:
     void bind(RenderState& _rs) const;
 
     GLuint readAt(float _normalizedX, float _normalizedY) const;
+
+    struct PixelRect {
+        std::vector<GLuint> pixels;
+        int32_t left = 0, bottom = 0, width = 0, height = 0;
+    };
+
+    PixelRect readRect(float _normalizedX, float _normalizedY, float _normalizedW, float _normalizedH) const;
 
     void drawDebug(RenderState& _rs, glm::vec2 _dim);
 
