@@ -274,6 +274,9 @@ public:
     // efficiency, but can cause errors if your application code makes OpenGL calls (false by default)
     void useCachedGlState(bool _use);
 
+    // Set the radius in pixels to use when picking features on the map (default is 0.5 pixels).
+    void setPickRadius(float _pixels);
+
     // Create a query to select a feature marked as 'interactive'. The query runs on the next frame.
     // Calls _onFeaturePickCallback once the query has completed, and returns the FeaturePickResult
     // with its associated properties or null if no feature was found.

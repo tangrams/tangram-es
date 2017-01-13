@@ -12,10 +12,8 @@
 
 namespace Tangram {
 
-static const float s_radius = 10.f;
-
-SelectionQuery::SelectionQuery(glm::vec2 _position, QueryCallback _queryCallback)
-    : m_position(_position), m_queryCallback(_queryCallback) {}
+SelectionQuery::SelectionQuery(glm::vec2 _position, float _radius, QueryCallback _queryCallback)
+    : m_position(_position), m_radius(_radius), m_queryCallback(_queryCallback) {}
 
 QueryType SelectionQuery::type() const {
     return m_queryCallback.is<FeaturePickCallback>() ? QueryType::feature :
@@ -25,14 +23,13 @@ QueryType SelectionQuery::type() const {
 void SelectionQuery::process(const View& _view, const FrameBuffer& _framebuffer, const MarkerManager& _markerManager,
                              const TileManager& _tileManager, const Labels& _labels, std::vector<SelectionColorRead>& _colorCache) const {
 
-    float radius = s_radius * _view.pixelScale();
-    glm::vec2 windowCoordinates = _view.normalizedWindowCoordinates(m_position.x - radius, m_position.y + radius);
-    glm::vec2 windowSize = _view.normalizedWindowCoordinates(m_position.x + radius, m_position.y - radius) - windowCoordinates;
+    glm::vec2 windowCoordinates = _view.normalizedWindowCoordinates(m_position.x - m_radius, m_position.y + m_radius);
+    glm::vec2 windowSize = _view.normalizedWindowCoordinates(m_position.x + m_radius, m_position.y - m_radius) - windowCoordinates;
 
     GLuint color = 0;
 
     auto it = std::find_if(_colorCache.begin(), _colorCache.end(), [=](const auto& _colorRead) {
-        return m_position == _colorRead.position;
+        return (m_position == _colorRead.position) && (m_radius == _colorRead.radius);
     });
 
     if (it == _colorCache.end()) {
@@ -51,7 +48,7 @@ void SelectionQuery::process(const View& _view, const FrameBuffer& _framebuffer,
             }
         }
         // Cache the resulting color for other queries.
-        _colorCache.push_back({color, m_position});
+        _colorCache.push_back({color, m_radius, m_position});
     } else {
         color = it->color;
     }
