@@ -48,14 +48,14 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
                 if (m_vertexAttrib.extrudeScale != 1.f) {
                     scale *= pow(2, _viewState.fractZoom) * m_vertexAttrib.extrudeScale;
                 }
+
                 glm::vec2 dim = m_dim * scale;
+                positions[0] = -dim;
+                positions[1] = glm::vec2(dim.x, -dim.y);
+                positions[2] = glm::vec2(-dim.x, dim.y);
+                positions[3] = dim;
 
-                positions[0] = p0 - dim;
-                positions[1] = p0 + glm::vec2(dim.x, -dim.y);
-                positions[2] = p0 + glm::vec2(-dim.x, dim.y);
-                positions[3] = p0 + dim;
-
-                // Rotate in clockwise order on the ground plane
+                // Rotate in clockwise order
                 if (m_options.angle != 0.f) {
                     glm::vec2 rotation(cos(DEG_TO_RAD * m_options.angle),
                                        sin(DEG_TO_RAD * m_options.angle));
@@ -67,6 +67,9 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
                 }
 
                 for (size_t i = 0; i < 4; i++) {
+
+                    positions[i] += p0;
+
                     glm::vec4 projected = worldToClipSpace(_mvp, glm::vec4(positions[i], 0.f, 1.f));
                     if (projected.w <= 0.0f) { return false; }
 
