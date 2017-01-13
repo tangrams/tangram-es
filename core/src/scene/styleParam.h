@@ -48,6 +48,8 @@ enum class StyleParamKey : uint8_t {
     placement_spacing,
     placement_min_length_ratio,
     priority,
+    repeat_distance,
+    repeat_group,
     text_order,
     text_priority,
     text_repeat_distance,

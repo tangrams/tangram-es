@@ -50,8 +50,8 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"placement_spacing", StyleParamKey::placement_spacing},
     {"placement_min_length_ratio", StyleParamKey::placement_min_length_ratio},
     {"priority", StyleParamKey::priority},
-    {"repeat_distance", StyleParamKey::text_repeat_distance},
-    {"repeat_group", StyleParamKey::text_repeat_group},
+    {"repeat_distance", StyleParamKey::repeat_distance},
+    {"repeat_group", StyleParamKey::repeat_group},
     {"size", StyleParamKey::size},
     {"sprite", StyleParamKey::sprite},
     {"sprite_default", StyleParamKey::sprite_default},
@@ -234,6 +234,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::sprite_default:
     case StyleParamKey::style:
     case StyleParamKey::outline_style:
+    case StyleParamKey::repeat_group:
     case StyleParamKey::text_repeat_group:
         return _value;
     case StyleParamKey::text_font_size: {
@@ -290,6 +291,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
 
         return Width(placementSpacing);
     }
+    case StyleParamKey::repeat_distance:
     case StyleParamKey::text_repeat_distance: {
         ValueUnitPair repeatDistance;
         repeatDistance.unit = Unit::pixel;
@@ -385,6 +387,7 @@ std::string StyleParam::toString() const {
         auto p = value.get<glm::vec2>();
         return k + "(" + std::to_string(p.x) + "px, " + std::to_string(p.y) + "px)";
     }
+    case StyleParamKey::repeat_group:
     case StyleParamKey::transition_hide_time:
     case StyleParamKey::text_transition_hide_time:
     case StyleParamKey::transition_show_time:
@@ -433,6 +436,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::color:
     case StyleParamKey::outline_color:
     case StyleParamKey::outline_style:
+    case StyleParamKey::repeat_distance:
     case StyleParamKey::text_font_fill:
     case StyleParamKey::text_font_stroke_color:
     case StyleParamKey::text_repeat_distance:
