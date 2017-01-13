@@ -18,6 +18,7 @@ class StyleBuilder;
 class MarkerManager {
 
 public:
+    std::mutex markerMutex;
 
     // Set the Scene object whose styling information will be used to build markers.
     void setScene(std::shared_ptr<Scene> scene);

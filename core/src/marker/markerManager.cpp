@@ -28,6 +28,8 @@ void MarkerManager::setScene(std::shared_ptr<Scene> scene) {
 
 MarkerID MarkerManager::add() {
 
+    std::lock_guard<std::mutex> lock(markerMutex);
+
     // Add a new empty marker object to the list of markers.
     auto id = ++m_idCounter;
     m_markers.push_back(std::make_unique<Marker>(id));
@@ -41,6 +43,8 @@ MarkerID MarkerManager::add() {
 }
 
 bool MarkerManager::remove(MarkerID markerID) {
+    std::lock_guard<std::mutex> lock(markerMutex);
+
     for (auto it = m_markers.begin(), end = m_markers.end(); it != end; ++it) {
         if (it->get()->id() == markerID) {
             m_markers.erase(it);
@@ -256,6 +260,8 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
 
 bool MarkerManager::update(int zoom) {
 
+    std::lock_guard<std::mutex> lock(markerMutex);
+
     if (zoom == m_zoom) {
          return false;
     }
@@ -271,6 +277,7 @@ bool MarkerManager::update(int zoom) {
 }
 
 void MarkerManager::removeAll() {
+    std::lock_guard<std::mutex> lock(markerMutex);
 
     m_markers.clear();
 
