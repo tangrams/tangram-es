@@ -34,7 +34,7 @@ public:
                  TextureOptions _options, bool genMipmap = false);
 
 
-    void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb);
+    void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
 
     virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask) override;
 
