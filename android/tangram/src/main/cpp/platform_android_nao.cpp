@@ -95,12 +95,14 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
     return handles;
 }
 
-unsigned char* systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) {
     std::string path = fontPath(_name, _weight, _face);
 
-    if (path.empty()) { return nullptr; }
+    if (path.empty()) { return {}; }
 
-    return bytesFromFile(path.c_str(), *_size);
+    auto data = bytesFromFile(path.c_str());
+
+    return data;
 }
 
 void setContinuousRendering(bool _isContinuous) {
@@ -168,15 +170,12 @@ std::string stringFromFile(const char* _path) {
     return data;
 }
 
-unsigned char* bytesFromFile(const char* _path, size_t& _size) {
-
-    _size = 0;
-    unsigned char* data = nullptr;
+std::vector<char> bytesFromFile(const char* _path) {
+    std::vector<char> data;
 
     auto allocator = [&](size_t size) {
-        _size = size;
-        data = (unsigned char*) malloc(sizeof(char) * size);
-        return reinterpret_cast<char*>(data);
+        data.resize(size);
+        return data.data();
     };
 
     if (strncmp(_path, aaPrefix, aaPrefixLen) == 0) {
@@ -184,6 +183,7 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
     } else {
         bytesFromFileSystem(_path, allocator);
     }
+
     return data;
 }
 
