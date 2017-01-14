@@ -387,8 +387,8 @@ bool Map::update(float _dt) {
     return viewComplete;
 }
 
-void Map::setPickRadius(float _pixels) {
-    impl->pickRadius = _pixels;
+void Map::setPickRadius(float _radius) {
+    impl->pickRadius = _radius;
 }
 
 void Map::pickFeatureAt(float _x, float _y, FeaturePickCallback _onFeaturePickCallback) {

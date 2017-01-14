@@ -23,8 +23,9 @@ QueryType SelectionQuery::type() const {
 void SelectionQuery::process(const View& _view, const FrameBuffer& _framebuffer, const MarkerManager& _markerManager,
                              const TileManager& _tileManager, const Labels& _labels, std::vector<SelectionColorRead>& _colorCache) const {
 
-    glm::vec2 windowCoordinates = _view.normalizedWindowCoordinates(m_position.x - m_radius, m_position.y + m_radius);
-    glm::vec2 windowSize = _view.normalizedWindowCoordinates(m_position.x + m_radius, m_position.y - m_radius) - windowCoordinates;
+    float radius = m_radius * _view.pixelScale();
+    glm::vec2 windowCoordinates = _view.normalizedWindowCoordinates(m_position.x - radius, m_position.y + radius);
+    glm::vec2 windowSize = _view.normalizedWindowCoordinates(m_position.x + radius, m_position.y - radius) - windowCoordinates;
 
     GLuint color = 0;
 
