@@ -674,6 +674,15 @@ public class MapController implements Renderer {
     }
 
     /**
+     * Set the radius to use when picking features on the map. The default radius is 0.5 dp.
+     * @param radius The radius in dp (density-independent pixels).
+     */
+    public void setPickRadius(float radius) {
+        checkPointer(mapPointer);
+        nativeSetPickRadius(mapPointer, radius);
+    }
+
+    /**
      * Set a listener for feature pick events
      * @param listener The {@link FeaturePickListener} to call
      */
@@ -986,6 +995,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String componentValue);
     private synchronized native void nativeQueueSceneUpdates(long mapPtr, String[] updateStrings);
     private synchronized native void nativeApplySceneUpdates(long mapPtr);
+    private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
     private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
     private synchronized native void nativePickMarker(long mapPtr, float posX, float posY, MarkerPickListener listener);
