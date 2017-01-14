@@ -32,6 +32,7 @@ void SpriteLabel::applyAnchor(LabelProperty::Anchor _anchor) {
 
 bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) {
 
+    // NOTE: _viewState is constructed in labelCollider during tile building (does not match view parameters
     glm::vec2 halfScreen = glm::vec2(_viewState.viewportSize * 0.5f);
 
     switch (m_type) {
@@ -45,11 +46,12 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
                 auto& positions = m_screenTransform.positions;
                 float sourceScale = pow(2, m_worldTransform.position.z);
                 float scale = float(sourceScale / (_viewState.zoomScale * _viewState.tileSize * 2.0));
-                if (m_vertexAttrib.extrudeScale != 1.f) {
-                    scale *= pow(2, _viewState.fractZoom) * m_vertexAttrib.extrudeScale;
+                float zoomFactor = 0.;
+                if (_viewState.fractZoom < 1.f) { // Only need to apply during updates and not during tile building
+                    zoomFactor = m_vertexAttrib.extrudeScale * scale * _viewState.fractZoom;
                 }
 
-                glm::vec2 dim = m_dim * scale;
+                glm::vec2 dim = m_dim * scale + glm::vec2(zoomFactor, zoomFactor);
                 positions[0] = -dim;
                 positions[1] = glm::vec2(dim.x, -dim.y);
                 positions[2] = glm::vec2(-dim.x, dim.y);
@@ -133,7 +135,7 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
 
         m_obb = OBB(obbCenter, glm::vec2(1.0, 0.0), dim.x, dim.y);
     } else {
-        dim = m_dim + glm::vec2(m_vertexAttrib.extrudeScale * 2.f * _zoomFract);
+        dim = m_dim + glm::vec2(m_vertexAttrib.extrudeScale * _zoomFract);
 
         if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
 

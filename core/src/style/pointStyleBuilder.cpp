@@ -81,6 +81,7 @@ std::unique_ptr<StyledMesh> PointStyleBuilder::build() {
 
 void PointStyleBuilder::setup(const Tile& _tile) {
     m_zoom = _tile.getID().z;
+    m_styleZoom = _tile.getID().s;
     m_spriteLabels = std::make_unique<SpriteLabels>(m_style);
 
     m_textStyleBuilder->setup(_tile);
@@ -89,6 +90,7 @@ void PointStyleBuilder::setup(const Tile& _tile) {
 
 void PointStyleBuilder::setup(const Marker& _marker, int zoom) {
     m_zoom = zoom;
+    m_styleZoom = zoom;
     m_spriteLabels = std::make_unique<SpriteLabels>(m_style);
 
     m_textStyleBuilder->setup(_marker, zoom);
@@ -144,16 +146,11 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
 
     auto sizeParam = _rule.findParameter(StyleParamKey::size);
     if (sizeParam.stops) {
-        if (sizeParam.value.is<float>()) {
-            float lowerSize = sizeParam.value.get<float>();
-            float higherSize = sizeParam.stops->evalExpFloat(m_zoom + 1);
-            p.extrudeScale = (higherSize - lowerSize) * 0.5f - 1.f;
-            p.size = glm::vec2(lowerSize);
-        } else if (sizeParam.value.is<glm::vec2>()) {
-            p.size = sizeParam.stops->evalExpVec2(m_zoom + 1);
-        } else {
-            p.size = glm::vec2(NAN, NAN);
-        }
+        // Assume size here is 1D (TODO: 2D, in another PR)
+        float lowerSize = sizeParam.stops->evalSize(m_styleZoom).get<float>(); //size to build this label from
+        float higherSize = sizeParam.stops->evalSize(m_styleZoom + 1).get<float>(); //size for next style zoom for interpolation
+        p.extrudeScale = (higherSize - lowerSize);
+        p.size = glm::vec2(lowerSize);
     } else if (_rule.get(StyleParamKey::size, size)) {
         if (size.x == 0.f || std::isnan(size.y)) {
             p.size = glm::vec2(size.x);
