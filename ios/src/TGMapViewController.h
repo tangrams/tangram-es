@@ -145,6 +145,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark Feature picking interface
 
+- (void)setPickRadius:(float)logicalPixels;
+
 - (void)pickFeatureAt:(CGPoint)screenPosition;
 
 - (void)pickLabelAt:(CGPoint)screenPosition;

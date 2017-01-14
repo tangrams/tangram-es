@@ -170,6 +170,13 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 #pragma mark Feature picking
 
+- (void)setPickRadius:(float)logicalPixels
+{
+    if (!self.map) { return; }
+
+    self.map->setPickRadius(logicalPixels);
+}
+
 - (void)pickFeatureAt:(CGPoint)screenPosition
 {
     if (!self.map) { return; }
