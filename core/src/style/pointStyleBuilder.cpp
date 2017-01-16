@@ -296,7 +296,8 @@ Point PointStyleBuilder::interpolateLine(const Line& _line, float distance, floa
     return r;
 }
 
-void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::Parameters& params) {
+void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& uvsQuad,
+                                           PointStyle::Parameters& params, const DrawRule& _rule) {
 
     if (_line.size() < 2) { return; }
 
@@ -322,9 +323,9 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
                 auto& q = _line[i+1];
                 if (params.keepTileEdges || !isOutsideTile(p)) {
                     if (params.autoAngle) {
-                        m_angleValues.push_back(angleBetween(p, q));
+                        params.labelOptions.angle = angleBetween(p, q);
                     }
-                    m_placedPoints.push_back(p);
+                    addLabel(p, uvsQuad, params, _rule);
                 }
             }
 
@@ -333,9 +334,9 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
             auto &q = _line.back();
             if (params.keepTileEdges || !isOutsideTile(q)) {
                 if (params.autoAngle) {
-                    m_angleValues.push_back(angleBetween(p, q));
+                    params.labelOptions.angle = angleBetween(p, q);
                 }
-                m_placedPoints.push_back(q);
+                addLabel(q, uvsQuad, params, _rule);
             }
             break;
         }
@@ -346,9 +347,10 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
                 if ( (params.keepTileEdges || !isOutsideTile(p)) &&
                      (minLineLength == 0.0f || glm::distance(p, q) > minLineLength) ) {
                     if (params.autoAngle) {
-                        m_angleValues.push_back(angleBetween(p, q));
+                        params.labelOptions.angle = angleBetween(p, q);
                     }
-                    m_placedPoints.push_back( {0.5 * (p.x + q.x), 0.5 * (p.y + q.y), 0.0f} );
+                    glm::vec3 midpoint(0.5f * (p.x + q.x), 0.5f * (p.y + q.y), 0.0f);
+                    addLabel(midpoint, uvsQuad, params, _rule);
                 }
             }
             break;
@@ -386,9 +388,9 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
                 auto p = interpolatedLine[i];
                 if (params.keepTileEdges || !isOutsideTile(p)) {
                     if (params.autoAngle && !allAngles.empty()) {
-                        m_angleValues.push_back(allAngles[i]);
+                        params.labelOptions.angle = allAngles[i];
                     }
-                    m_placedPoints.push_back(p);
+                    addLabel(p, uvsQuad, params, _rule);
                 }
             }
         }
@@ -424,16 +426,7 @@ bool PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
         return false;
     }
 
-    size_t prevPlaced = m_placedPoints.size();
-    labelPointsPlacing(_line, p);
-
-    for (size_t i = prevPlaced; i < m_placedPoints.size(); ++i) {
-        if (!m_angleValues.empty()) {
-            // override angle parameter for each label
-            p.labelOptions.angle = m_angleValues[i];
-        }
-        addLabel(m_placedPoints[i], uvsQuad, p, _rule);
-    }
+    labelPointsPlacing(_line, uvsQuad, p, _rule);
 
     return true;
 }
@@ -450,15 +443,7 @@ bool PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
 
     if (p.placement != LabelProperty::centroid) {
         for (auto line : _polygon) {
-            auto prevPlaced = m_placedPoints.size();
-            labelPointsPlacing(line, p);
-            for (size_t i = prevPlaced; i < m_placedPoints.size(); i++) {
-                if (!m_angleValues.empty()) {
-                    // override angle parameter for each label
-                    p.labelOptions.angle = m_angleValues[i];
-                }
-                addLabel(m_placedPoints[i], uvsQuad, p, _rule);
-            }
+            labelPointsPlacing(line, uvsQuad, p, _rule);
         }
     } else {
         glm::vec2 c = centroid(_polygon);
@@ -487,28 +472,25 @@ bool PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
         auto& textStyleBuilder = static_cast<TextStyleBuilder&>(*m_textStyleBuilder);
         auto& textLabels = *textStyleBuilder.labels();
 
-        size_t textStart = textLabels.size();
+        TextStyle::Parameters params = textStyleBuilder.applyRule(_rule, _feat.props, true);
 
-        if (!textStyleBuilder.addFeatureCommon(_feat, _rule, true, m_placedPoints)) { return true; }
+        if (textStyleBuilder.prepareLabel(params, Label::Type::point)) {
 
-        size_t textCount = textLabels.size() - textStart;
-
-        if (iconsCount == textCount) {
-            bool definePriority = !_rule.contains(StyleParamKey::text_priority);
-            bool defineCollide = _rule.contains(StyleParamKey::collide);
-
-            for (size_t i = 0; i < textCount; ++i) {
-                auto& tLabel = textLabels[textStart + i];
+            for (size_t i = 0; i < iconsCount; i++) {
                 auto& pLabel = m_labels[iconsStart + i];
+                auto p = pLabel->worldTransform();
+                textStyleBuilder.addLabel(params, Label::Type::point, p, _rule);
+
+                bool definePriority = !_rule.contains(StyleParamKey::text_priority);
+                bool defineCollide = _rule.contains(StyleParamKey::collide);
 
                 // Link labels together
-                tLabel->setParent(*pLabel, definePriority, defineCollide);
+                textLabels.back()->setParent(*pLabel, definePriority, defineCollide);
             }
         }
     }
-    m_placedPoints.clear();
+
     m_pointDistances.clear();
-    m_angleValues.clear();
     return true;
 }
 

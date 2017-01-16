@@ -20,12 +20,7 @@ public:
 
     const Style& style() const override { return m_style; }
 
-    bool addFeature(const Feature& _feature, const DrawRule& _rule) override {
-        return addFeatureCommon(_feature, _rule, false);
-    }
-
-    bool addFeatureCommon(const Feature& _feature, const DrawRule& _rule, bool _iconText,
-                            const Line& _placedPoints = {});
+    bool addFeature(const Feature& _feature, const DrawRule& _rule) override;
 
     void setup(const Tile& _tile) override;
     void setup(const Marker& _marker, int zoom) override;

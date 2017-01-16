@@ -44,7 +44,8 @@ struct PointStyleBuilder : public StyleBuilder {
     PointStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
     // Gets points for label placement and appropriate angle for each label (if `auto` angle is set)
-    void labelPointsPlacing(const Line& _line, const PointStyle::Parameters& params);
+    void labelPointsPlacing(const Line& _line, const glm::vec4& _quad,
+                            PointStyle::Parameters& _params, const DrawRule& _rule);
 
     void addLabel(const Point& _point, const glm::vec4& _quad,
                   const PointStyle::Parameters& _params, const DrawRule& _rule);
@@ -70,12 +71,6 @@ private:
     float m_styleZoom = 0;
     std::unique_ptr<SpriteLabels> m_spriteLabels;
     std::unique_ptr<StyleBuilder> m_textStyleBuilder;
-
-    // Store the calculated point placements to be passed to the child text style builder
-    Line m_placedPoints;
-
-    // Store the angles for the placed points, when scene file has an "auto" set for angle.
-    std::vector<float> m_angleValues;
 
     // cache point distances instead of calculating these again and again (sqrt is expensive)
     std::map<std::pair<int, int>, float> m_pointDistances;
