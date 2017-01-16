@@ -21,6 +21,7 @@ public:
     struct Parameters {
         bool interactive = false;
         bool keepTileEdges = false;
+        bool autoAngle = false;
         std::string sprite;
         std::string spriteDefault;
         glm::vec2 size;

@@ -143,6 +143,9 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     }
 
     _rule.get(StyleParamKey::angle, p.labelOptions.angle);
+    if (std::isnan(p.labelOptions.angle)) {
+        p.autoAngle = true;
+    }
 
     auto sizeParam = _rule.findParameter(StyleParamKey::size);
     if (sizeParam.stops) {
@@ -318,7 +321,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
                 auto& p = _line[i];
                 auto& q = _line[i+1];
                 if (params.keepTileEdges || !isOutsideTile(p)) {
-                    if (std::isnan(params.labelOptions.angle)) {
+                    if (params.autoAngle) {
                         m_angleValues.push_back(angleBetween(p, q));
                     }
                     m_placedPoints.push_back(p);
@@ -329,7 +332,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
             auto &p = *(_line.rbegin() + 1);
             auto &q = _line.back();
             if (params.keepTileEdges || !isOutsideTile(q)) {
-                if (std::isnan(params.labelOptions.angle)) {
+                if (params.autoAngle) {
                     m_angleValues.push_back(angleBetween(p, q));
                 }
                 m_placedPoints.push_back(q);
@@ -342,7 +345,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
                 auto& q = _line[i+1];
                 if ( (params.keepTileEdges || !isOutsideTile(p)) &&
                      (minLineLength == 0.0f || glm::distance(p, q) > minLineLength) ) {
-                    if (std::isnan(params.labelOptions.angle)) {
+                    if (params.autoAngle) {
                         m_angleValues.push_back(angleBetween(p, q));
                     }
                     m_placedPoints.push_back( {0.5 * (p.x + q.x), 0.5 * (p.y + q.y), 0.0f} );
@@ -382,7 +385,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
             for (size_t i = 0; i < interpolatedLine.size(); i++) {
                 auto p = interpolatedLine[i];
                 if (params.keepTileEdges || !isOutsideTile(p)) {
-                    if (std::isnan(params.labelOptions.angle) && !allAngles.empty()) {
+                    if (params.autoAngle && !allAngles.empty()) {
                         m_angleValues.push_back(allAngles[i]);
                     }
                     m_placedPoints.push_back(p);
