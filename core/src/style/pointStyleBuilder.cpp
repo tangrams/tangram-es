@@ -271,7 +271,7 @@ Point PointStyleBuilder::interpolateSegment(const Line& _line, int i, int j, flo
 Point PointStyleBuilder::interpolateLine(const Line& _line, float distance, float minLineLength,
                                          const PointStyle::Parameters& params,
                                          std::vector<float>& angles) {
-    Point r = {std::nanf("1"), std::nanf("1"), 0.0f};
+    Point r = {NAN, NAN, 0.0f};
     float usedSpace = 0.;
     for (size_t i = 0; i < _line.size() - 1; i++) {
         auto &p = _line[i];
@@ -293,48 +293,49 @@ Point PointStyleBuilder::interpolateLine(const Line& _line, float distance, floa
     return r;
 }
 
-bool isOutsideTile(const Point& p) {
-
-    float tolerance = 0.0005;
-    float tile_min = 0.0 + tolerance;
-    float tile_max = 1.0 - tolerance;
-
-    if ( (p.x < tile_min) || (p.x > tile_max) ||
-         (p.y < tile_min) || (p.y > tile_max) ) {
-        return true;
-    }
-
-    return false;
-}
-
 void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::Parameters& params) {
+
+    if (_line.size() < 2) { return; }
+
+    auto isOutsideTile = [](const Point& p) {
+        float tolerance = 0.0005;
+        float tile_min = 0.0 + tolerance;
+        float tile_max = 1.0 - tolerance;
+        return ((p.x < tile_min) || (p.x > tile_max) ||
+                (p.y < tile_min) || (p.y > tile_max));
+    };
+
+    auto angleBetween = [](const Point& p, const Point& q) {
+        return RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]);
+    };
 
     float minLineLength = glm::max(params.size[0], params.size[1]) * params.placementMinLengthRatio *
                             m_style.pixelScale() / View::s_pixelsPerTile;
 
     switch(params.placement) {
-        case LabelProperty::Placement::vertex:
+        case LabelProperty::Placement::vertex: {
             for (size_t i = 0; i < _line.size() - 1; i++) {
                 auto& p = _line[i];
                 auto& q = _line[i+1];
                 if (params.keepTileEdges || !isOutsideTile(p)) {
                     if (std::isnan(params.labelOptions.angle)) {
-                        m_angleValues.push_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
+                        m_angleValues.push_back(angleBetween(p, q));
                     }
                     m_placedPoints.push_back(p);
                 }
             }
 
-            // Place last label
-            {
-                auto &p = *(_line.rbegin() + 1);
-                auto &q = _line.back();
+            // Place label on endpoint
+            auto &p = *(_line.rbegin() + 1);
+            auto &q = _line.back();
+            if (params.keepTileEdges || !isOutsideTile(q)) {
                 if (std::isnan(params.labelOptions.angle)) {
-                    m_angleValues.push_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
+                    m_angleValues.push_back(angleBetween(p, q));
                 }
                 m_placedPoints.push_back(q);
             }
             break;
+        }
         case LabelProperty::Placement::midpoint:
             for (size_t i = 0; i < _line.size() - 1; i++) {
                 auto& p = _line[i];
@@ -342,7 +343,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
                 if ( (params.keepTileEdges || !isOutsideTile(p)) &&
                      (minLineLength == 0.0f || glm::distance(p, q) > minLineLength) ) {
                     if (std::isnan(params.labelOptions.angle)) {
-                        m_angleValues.push_back(RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]));
+                        m_angleValues.push_back(angleBetween(p, q));
                     }
                     m_placedPoints.push_back( {0.5 * (p.x + q.x), 0.5 * (p.y + q.y), 0.0f} );
                 }
@@ -363,7 +364,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
 
             if (lineLength <= minLineLength) { break; }
 
-            int numLabels = MAX(floor(lineLength/spacing), 1.0);
+            int numLabels = std::max(std::floor(lineLength / spacing), 1.0f);
             float remainderLength = lineLength - (numLabels - 1) * spacing;
 
             float distance = 0.5 * remainderLength;
@@ -392,8 +393,6 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const PointStyle::
         case LabelProperty::Placement::centroid:
             // nothing to be done here.
             break;
-        default:
-            LOG("Illegal placement parameter specified");
     }
 }
 
