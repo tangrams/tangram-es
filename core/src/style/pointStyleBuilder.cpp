@@ -153,11 +153,21 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
 
     auto sizeParam = _rule.findParameter(StyleParamKey::size);
     if (sizeParam.stops) {
-        // Assume size here is 1D (TODO: 2D, in another PR)
-        float lowerSize = sizeParam.stops->evalSize(m_styleZoom).get<float>(); //size to build this label from
-        float higherSize = sizeParam.stops->evalSize(m_styleZoom + 1).get<float>(); //size for next style zoom for interpolation
-        p.extrudeScale = (higherSize - lowerSize);
-        p.size = glm::vec2(lowerSize);
+        if (sizeParam.value.is<float>()) {
+            // Assume size here is 1D (TODO: 2D, in another PR)
+            // size to build this label from
+            float lowerSize = sizeParam.stops->evalSize(m_styleZoom).get<float>();
+            // size for next style zoom for interpolation
+            float higherSize = sizeParam.stops->evalSize(m_styleZoom + 1).get<float>();
+            p.extrudeScale = (higherSize - lowerSize);
+            p.size = glm::vec2(lowerSize);
+        } else if (sizeParam.value.is<glm::vec2>()) {
+            p.size = sizeParam.stops->evalExpVec2(m_styleZoom);
+            // NB: this assumes that the width/height ratio is
+            // constant for all stops
+            glm::vec2 higherSize = sizeParam.stops->evalExpVec2(m_styleZoom + 1);
+            p.extrudeScale = (higherSize.x - p.size.x);
+        }
     } else if (_rule.get(StyleParamKey::size, size)) {
         if (size.x == 0.f || std::isnan(size.y)) {
             p.size = glm::vec2(size.x);
