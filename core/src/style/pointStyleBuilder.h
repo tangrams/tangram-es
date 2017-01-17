@@ -72,9 +72,6 @@ private:
     std::unique_ptr<SpriteLabels> m_spriteLabels;
     std::unique_ptr<StyleBuilder> m_textStyleBuilder;
 
-    // cache point distances instead of calculating these again and again (sqrt is expensive)
-    std::map<std::pair<int, int>, float> m_pointDistances;
-
     // Non-owning reference to a texture to use for the current feature.
     Texture* m_texture = nullptr;
 
