@@ -126,6 +126,12 @@ struct LineSampler {
                 // length from cur to next point
                 float segmentLength = next.z - curr.z;
 
+                if (segmentLength <= m_minSampleLength) {
+                    m_curPoint += 1;
+                    if (m_curPoint >= m_points.size() - 2) { return false; }
+                    continue;
+                }
+
                 if (length <= segmentLength) {
                     float f = length / segmentLength;
 
@@ -157,6 +163,12 @@ struct LineSampler {
                 // length from cur to next point
                 float segmentLength = next.z - curr.z;
 
+                if (segmentLength <= m_minSampleLength) {
+                    m_curPoint -= 1;
+                    if (m_curPoint == 0) { return false; }
+                    continue;
+                }
+
                 if (curr.z <= end) {
                     float f = length / segmentLength;
 
@@ -182,6 +194,10 @@ struct LineSampler {
         return false;
     }
 
+    void setMinSampleLength(float _minLength) {
+        m_minSampleLength = _minLength;
+    }
+
     LineSampler(Points _points) : m_points(_points) { }
     LineSampler() { }
 private:
@@ -189,6 +205,7 @@ private:
 
     size_t m_curPoint = 0;
     float m_curAdvance = 0.f;
+    float m_minSampleLength = 0.f;
 
 };
 

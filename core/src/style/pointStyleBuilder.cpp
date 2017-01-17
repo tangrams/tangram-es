@@ -336,6 +336,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& u
             LineSampler<std::vector<Point>> sampler;
 
             sampler.set(_line);
+            sampler.setMinSampleLength(minLineLength);
 
             float lineLength = sampler.sumLength();
 
