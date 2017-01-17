@@ -128,10 +128,18 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     _rule.get(StyleParamKey::sprite_default, p.spriteDefault);
     _rule.get(StyleParamKey::placement, p.placement);
     StyleParam::Width placementSpacing;
-    if (_rule.get(StyleParamKey::placement_spacing, placementSpacing)) {
+    auto placementSpacingParam = _rule.findParameter(StyleParamKey::placement_spacing);
+    if (placementSpacingParam.stops) {
+        p.placementSpacing = placementSpacingParam.stops->evalFloat(m_styleZoom);
+    } else if (_rule.get(StyleParamKey::placement_spacing, placementSpacing)) {
         p.placementSpacing = placementSpacing.value;
     }
-    _rule.get(StyleParamKey::placement_min_length_ratio, p.placementMinLengthRatio);
+    auto placementMinLengthParam = _rule.findParameter(StyleParamKey::placement_min_length_ratio);
+    if (placementMinLengthParam.stops) {
+        p.placementMinLengthRatio = placementMinLengthParam.stops->evalFloat(m_styleZoom);
+    } else {
+        _rule.get(StyleParamKey::placement_min_length_ratio, p.placementMinLengthRatio);
+    }
     _rule.get(StyleParamKey::tile_edges, p.keepTileEdges);
     _rule.get(StyleParamKey::interactive, p.interactive);
     _rule.get(StyleParamKey::collide, p.labelOptions.collide);
