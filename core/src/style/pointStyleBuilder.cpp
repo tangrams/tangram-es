@@ -304,17 +304,11 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& u
                         params.labelOptions.angle = angleBetween(p, q);
                     }
                     addLabel(p, uvsQuad, params, _rule);
+                    if (i == _line.size() - 2) {
+                        // Place label on endpoint
+                        addLabel(q, uvsQuad, params, _rule);
+                    }
                 }
-            }
-
-            // Place label on endpoint
-            auto &p = *(_line.rbegin() + 1);
-            auto &q = _line.back();
-            if (params.keepTileEdges || !isOutsideTile(q)) {
-                if (params.autoAngle) {
-                    params.labelOptions.angle = angleBetween(p, q);
-                }
-                addLabel(q, uvsQuad, params, _rule);
             }
             break;
         }
