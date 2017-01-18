@@ -4,7 +4,8 @@
 #include "gl/disposer.h"
 #include "util/jobQueue.h"
 #include <array>
-#include <map>
+#include <string>
+#include <unordered_map>
 
 namespace Tangram {
 
@@ -113,8 +114,8 @@ public:
 
     JobQueue jobQueue;
 
-    std::map<std::string, GLuint> fragmentShaders;
-    std::map<std::string, GLuint> vertexShaders;
+    std::unordered_map<std::string, GLuint> fragmentShaders;
+    std::unordered_map<std::string, GLuint> vertexShaders;
 
 private:
 
