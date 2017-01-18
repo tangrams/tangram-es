@@ -32,7 +32,6 @@ void SpriteLabel::applyAnchor(LabelProperty::Anchor _anchor) {
 
 bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) {
 
-    // NOTE: _viewState is constructed in labelCollider during tile building (does not match view parameters
     glm::vec2 halfScreen = glm::vec2(_viewState.viewportSize * 0.5f);
 
     switch (m_type) {
@@ -43,15 +42,17 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
 
             if (m_options.flat) {
 
-                auto& positions = m_screenTransform.positions;
                 float sourceScale = pow(2, m_worldTransform.position.z);
-                float scale = float(sourceScale / (_viewState.zoomScale * _viewState.tileSize * 2.0));
-                float zoomFactor = 0.;
-                if (_viewState.fractZoom < 1.f) { // Only need to apply during updates and not during tile building
-                    zoomFactor = m_vertexAttrib.extrudeScale * scale * _viewState.fractZoom;
-                }
 
-                glm::vec2 dim = m_dim * scale + glm::vec2(zoomFactor, zoomFactor);
+                float scale = float(sourceScale / (_viewState.zoomScale * _viewState.tileSize));
+                float zoomFactor = m_vertexAttrib.extrudeScale * _viewState.fractZoom;
+
+                glm::vec2 dim = (m_dim + zoomFactor) * scale;
+
+                // Center around 0,0
+                dim *= 0.5f;
+
+                auto& positions = m_screenTransform.positions;
                 positions[0] = -dim;
                 positions[1] = glm::vec2(dim.x, -dim.y);
                 positions[2] = glm::vec2(-dim.x, dim.y);
@@ -113,7 +114,7 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
     glm::vec2 dim;
 
     if (m_options.flat) {
-        static float infinity = std::numeric_limits<float>::infinity();
+        const float infinity = std::numeric_limits<float>::infinity();
 
         float minx = infinity, miny = infinity;
         float maxx = -infinity, maxy = -infinity;

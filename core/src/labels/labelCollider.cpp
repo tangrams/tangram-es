@@ -6,8 +6,6 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/norm.hpp"
 
-#define MAX_SCALE 2
-
 namespace Tangram {
 
 
@@ -74,26 +72,28 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
                   return l1->hash() < l2->hash();
               });
 
+    // Set view parameters so that the tile is rendererd at
+    // style-zoom-level + 1. (scaled up by factor 2)
+    int overzoom = 1;
+    float tileScale = pow(2, _tileID.s - _tileID.z + overzoom);
+    glm::vec2 screenSize{ _tileSize * tileScale };
+
     // Project tile to NDC (-1 to 1, y-up)
     glm::mat4 mvp{1};
     // Scale tile to 'fullscreen'
-    mvp[0][0] = 2;
-    mvp[1][1] = -2;
+    mvp[0][0] = tileScale;
+    mvp[1][1] = -tileScale;
     // Place tile centered
-    mvp[3][0] = -1;
-    mvp[3][1] = 1;
-
-    float m_tileScale = pow(2, _tileID.s - _tileID.z) * MAX_SCALE;
-
-    glm::vec2 screenSize{ _tileSize * m_tileScale };
+    mvp[3][0] = -tileScale * 0.5;
+    mvp[3][1] = tileScale * 0.5;
 
     ViewState viewState {
         nullptr, // mapProjection (unused)
         false, // changedOnLastUpdate (unused)
         glm::dvec2{}, // center (unused)
         0.f, // zoom (unused)
-        powf(2.f, _tileID.z) * MAX_SCALE, // zoomScale
-        m_tileScale, // fractZoom
+        powf(2.f, _tileID.s + overzoom), // zoomScale
+        0.f, // fractZoom
         screenSize, // viewPortSize
         _tileSize, // screenTileSize
     };
