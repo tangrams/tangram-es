@@ -42,20 +42,23 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
 
             if (m_options.flat) {
 
-                auto& positions = m_screenTransform.positions;
                 float sourceScale = pow(2, m_worldTransform.position.z);
-                float scale = float(sourceScale / (_viewState.zoomScale * _viewState.tileSize * 2.0));
-                if (m_vertexAttrib.extrudeScale != 1.f) {
-                    scale *= pow(2, _viewState.fractZoom) * m_vertexAttrib.extrudeScale;
-                }
-                glm::vec2 dim = m_dim * scale;
 
-                positions[0] = p0 - dim;
-                positions[1] = p0 + glm::vec2(dim.x, -dim.y);
-                positions[2] = p0 + glm::vec2(-dim.x, dim.y);
-                positions[3] = p0 + dim;
+                float scale = float(sourceScale / (_viewState.zoomScale * _viewState.tileSize));
+                float zoomFactor = m_vertexAttrib.extrudeScale * _viewState.fractZoom;
 
-                // Rotate in clockwise order on the ground plane
+                glm::vec2 dim = (m_dim + zoomFactor) * scale;
+
+                // Center around 0,0
+                dim *= 0.5f;
+
+                auto& positions = m_screenTransform.positions;
+                positions[0] = -dim;
+                positions[1] = glm::vec2(dim.x, -dim.y);
+                positions[2] = glm::vec2(-dim.x, dim.y);
+                positions[3] = dim;
+
+                // Rotate in clockwise order
                 if (m_options.angle != 0.f) {
                     glm::vec2 rotation(cos(DEG_TO_RAD * m_options.angle),
                                        sin(DEG_TO_RAD * m_options.angle));
@@ -67,6 +70,9 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
                 }
 
                 for (size_t i = 0; i < 4; i++) {
+
+                    positions[i] += p0;
+
                     glm::vec4 projected = worldToClipSpace(_mvp, glm::vec4(positions[i], 0.f, 1.f));
                     if (projected.w <= 0.0f) { return false; }
 
@@ -108,7 +114,7 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
     glm::vec2 dim;
 
     if (m_options.flat) {
-        static float infinity = std::numeric_limits<float>::infinity();
+        const float infinity = std::numeric_limits<float>::infinity();
 
         float minx = infinity, miny = infinity;
         float maxx = -infinity, maxy = -infinity;
@@ -130,7 +136,7 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
 
         m_obb = OBB(obbCenter, glm::vec2(1.0, 0.0), dim.x, dim.y);
     } else {
-        dim = m_dim + glm::vec2(m_vertexAttrib.extrudeScale * 2.f * _zoomFract);
+        dim = m_dim + glm::vec2(m_vertexAttrib.extrudeScale * _zoomFract);
 
         if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
 

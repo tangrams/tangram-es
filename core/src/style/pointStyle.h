@@ -19,14 +19,18 @@ class PointStyle : public Style {
 public:
 
     struct Parameters {
-        bool centroid = false;
         bool interactive = false;
+        bool keepTileEdges = false;
+        bool autoAngle = false;
         std::string sprite;
         std::string spriteDefault;
         glm::vec2 size;
         uint32_t color = 0xffffffff;
         Label::Options labelOptions;
+        LabelProperty::Placement placement;
         float extrudeScale = 1.f;
+        float placementMinLengthRatio = 1.0f;
+        float placementSpacing = 80.f;
     };
 
     PointStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
@@ -81,11 +85,11 @@ namespace std {
         size_t operator() (const Tangram::PointStyle::Parameters& p) const {
             std::hash<Tangram::Label::Options> optionsHash;
             std::size_t seed = 0;
-            hash_combine(seed, p.centroid);
             hash_combine(seed, p.sprite);
             hash_combine(seed, p.color);
             hash_combine(seed, p.size.x);
             hash_combine(seed, p.size.y);
+            hash_combine(seed, (int)p.placement);
             hash_combine(seed, optionsHash(p.labelOptions));
             return seed;
         }

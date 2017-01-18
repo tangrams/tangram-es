@@ -4,6 +4,13 @@
 namespace Tangram {
 namespace LabelProperty {
 
+const std::map<std::string, Placement> s_PlacementMap = {
+    {"vertex", Placement::vertex},
+    {"midpoint", Placement::midpoint},
+    {"spaced", Placement::spaced},
+    {"centroid", Placement::centroid},
+};
+
 const std::map<std::string, Anchor> s_AnchorMap = {
     {"center", Anchor::center},
     {"top", Anchor::top},
@@ -18,6 +25,10 @@ const std::map<std::string, Anchor> s_AnchorMap = {
 
 bool anchor(const std::string& _anchor, Anchor& _out) {
     return tryFind(s_AnchorMap, _anchor, _out);
+}
+
+bool placement(const std::string& placement, Placement& out) {
+    return tryFind(s_PlacementMap, placement, out);
 }
 
 glm::vec2 anchorDirection(Anchor _anchor) {

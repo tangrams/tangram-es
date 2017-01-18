@@ -1,3 +1,4 @@
+#include <view/view.h>
 #include "pointStyleBuilder.h"
 
 #include "data/propertyItem.h" // Include wherever Properties is used!
@@ -10,7 +11,9 @@
 #include "tangram.h"
 #include "tile/tile.h"
 #include "util/geom.h"
+#include "util/lineSampler.h"
 #include "selection/featureSelection.h"
+#include "log.h"
 
 namespace Tangram {
 
@@ -79,6 +82,7 @@ std::unique_ptr<StyledMesh> PointStyleBuilder::build() {
 
 void PointStyleBuilder::setup(const Tile& _tile) {
     m_zoom = _tile.getID().z;
+    m_styleZoom = _tile.getID().s;
     m_spriteLabels = std::make_unique<SpriteLabels>(m_style);
 
     m_textStyleBuilder->setup(_tile);
@@ -87,6 +91,7 @@ void PointStyleBuilder::setup(const Tile& _tile) {
 
 void PointStyleBuilder::setup(const Marker& _marker, int zoom) {
     m_zoom = zoom;
+    m_styleZoom = zoom;
     m_spriteLabels = std::make_unique<SpriteLabels>(m_style);
 
     m_textStyleBuilder->setup(_marker, zoom);
@@ -121,7 +126,21 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     }
 
     _rule.get(StyleParamKey::sprite_default, p.spriteDefault);
-    _rule.get(StyleParamKey::centroid, p.centroid);
+    _rule.get(StyleParamKey::placement, p.placement);
+    StyleParam::Width placementSpacing;
+    auto placementSpacingParam = _rule.findParameter(StyleParamKey::placement_spacing);
+    if (placementSpacingParam.stops) {
+        p.placementSpacing = placementSpacingParam.stops->evalFloat(m_styleZoom);
+    } else if (_rule.get(StyleParamKey::placement_spacing, placementSpacing)) {
+        p.placementSpacing = placementSpacing.value;
+    }
+    auto placementMinLengthParam = _rule.findParameter(StyleParamKey::placement_min_length_ratio);
+    if (placementMinLengthParam.stops) {
+        p.placementMinLengthRatio = placementMinLengthParam.stops->evalFloat(m_styleZoom);
+    } else {
+        _rule.get(StyleParamKey::placement_min_length_ratio, p.placementMinLengthRatio);
+    }
+    _rule.get(StyleParamKey::tile_edges, p.keepTileEdges);
     _rule.get(StyleParamKey::interactive, p.interactive);
     _rule.get(StyleParamKey::collide, p.labelOptions.collide);
     _rule.get(StyleParamKey::transition_hide_time, p.labelOptions.hideTransition.time);
@@ -136,18 +155,26 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     }
 
     _rule.get(StyleParamKey::angle, p.labelOptions.angle);
+    if (std::isnan(p.labelOptions.angle)) {
+        p.autoAngle = true;
+    }
 
     auto sizeParam = _rule.findParameter(StyleParamKey::size);
     if (sizeParam.stops) {
         if (sizeParam.value.is<float>()) {
-            float lowerSize = sizeParam.value.get<float>();
-            float higherSize = sizeParam.stops->evalExpFloat(m_zoom + 1);
-            p.extrudeScale = (higherSize - lowerSize) * 0.5f - 1.f;
+            // Assume size here is 1D (TODO: 2D, in another PR)
+            // size to build this label from
+            float lowerSize = sizeParam.stops->evalSize(m_styleZoom).get<float>();
+            // size for next style zoom for interpolation
+            float higherSize = sizeParam.stops->evalSize(m_styleZoom + 1).get<float>();
+            p.extrudeScale = (higherSize - lowerSize);
             p.size = glm::vec2(lowerSize);
         } else if (sizeParam.value.is<glm::vec2>()) {
-            p.size = sizeParam.stops->evalExpVec2(m_zoom + 1);
-        } else {
-            p.size = glm::vec2(NAN, NAN);
+            p.size = sizeParam.stops->evalExpVec2(m_styleZoom);
+            // NB: this assumes that the width/height ratio is
+            // constant for all stops
+            glm::vec2 higherSize = sizeParam.stops->evalExpVec2(m_styleZoom + 1);
+            p.extrudeScale = (higherSize.x - p.size.x);
         }
     } else if (_rule.get(StyleParamKey::size, size)) {
         if (size.x == 0.f || std::isnan(size.y)) {
@@ -255,6 +282,90 @@ bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _q
     return true;
 }
 
+void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& uvsQuad,
+                                           PointStyle::Parameters& params, const DrawRule& _rule) {
+
+    if (_line.size() < 2) { return; }
+
+    auto isOutsideTile = [](const Point& p) {
+        float tolerance = 0.0005;
+        float tile_min = 0.0 + tolerance;
+        float tile_max = 1.0 - tolerance;
+        return ((p.x < tile_min) || (p.x > tile_max) ||
+                (p.y < tile_min) || (p.y > tile_max));
+    };
+
+    auto angleBetween = [](const Point& p, const Point& q) {
+        return RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]);
+    };
+
+    float minLineLength = std::max(params.size.x, params.size.y) * params.placementMinLengthRatio *
+                            m_style.pixelScale() / View::s_pixelsPerTile;
+
+    switch(params.placement) {
+        case LabelProperty::Placement::vertex: {
+            for (size_t i = 0; i < _line.size() - 1; i++) {
+                auto& p = _line[i];
+                auto& q = _line[i+1];
+                if (params.keepTileEdges || !isOutsideTile(p)) {
+                    if (params.autoAngle) {
+                        params.labelOptions.angle = angleBetween(p, q);
+                    }
+                    addLabel(p, uvsQuad, params, _rule);
+                    if (i == _line.size() - 2) {
+                        // Place label on endpoint
+                        addLabel(q, uvsQuad, params, _rule);
+                    }
+                }
+            }
+            break;
+        }
+        case LabelProperty::Placement::midpoint:
+            for (size_t i = 0; i < _line.size() - 1; i++) {
+                auto& p = _line[i];
+                auto& q = _line[i+1];
+                if ( (params.keepTileEdges || !isOutsideTile(p)) &&
+                     (minLineLength == 0.0f || glm::distance(p, q) > minLineLength) ) {
+                    if (params.autoAngle) {
+                        params.labelOptions.angle = angleBetween(p, q);
+                    }
+                    glm::vec3 midpoint(0.5f * (p.x + q.x), 0.5f * (p.y + q.y), 0.0f);
+                    addLabel(midpoint, uvsQuad, params, _rule);
+                }
+            }
+            break;
+        case LabelProperty::Placement::spaced: {
+            LineSampler<std::vector<Point>> sampler;
+
+            sampler.set(_line);
+            sampler.setMinSampleLength(minLineLength);
+
+            float lineLength = sampler.sumLength();
+
+            if (lineLength <= minLineLength) { break; }
+
+            float spacing = params.placementSpacing * m_style.pixelScale() / View::s_pixelsPerTile;
+            int numLabels = std::max(std::floor(lineLength / spacing), 1.0f);
+            float remainderLength = lineLength - (numLabels - 1) * spacing;
+            float distance = 0.5 * remainderLength;
+
+            glm::vec2 p, r;
+            sampler.advance(distance, p, r);
+            do {
+                if (params.autoAngle) {
+                    params.labelOptions.angle = RAD_TO_DEG * atan2(r.x, r.y);
+                }
+                addLabel({p.x, p.y, 0.f}, uvsQuad, params, _rule);
+
+            } while(sampler.advance(spacing, p, r));
+        }
+        break;
+        case LabelProperty::Placement::centroid:
+            // nothing to be done here.
+            break;
+    }
+}
+
 bool PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
                                  const DrawRule& _rule) {
 
@@ -280,9 +391,7 @@ bool PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
         return false;
     }
 
-    for (size_t i = 0; i < _line.size(); ++i) {
-        addLabel(_line[i], uvsQuad, p, _rule);
-    }
+    labelPointsPlacing(_line, uvsQuad, p, _rule);
 
     return true;
 }
@@ -297,15 +406,12 @@ bool PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
         return false;
     }
 
-    if (!p.centroid) {
+    if (p.placement != LabelProperty::centroid) {
         for (auto line : _polygon) {
-            for (auto point : line) {
-                addLabel(point, uvsQuad, p, _rule);
-            }
+            labelPointsPlacing(line, uvsQuad, p, _rule);
         }
     } else {
         glm::vec2 c = centroid(_polygon);
-
         addLabel(Point{c,0}, uvsQuad, p, _rule);
     }
 
@@ -331,25 +437,24 @@ bool PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
         auto& textStyleBuilder = static_cast<TextStyleBuilder&>(*m_textStyleBuilder);
         auto& textLabels = *textStyleBuilder.labels();
 
-        size_t textStart = textLabels.size();
+        TextStyle::Parameters params = textStyleBuilder.applyRule(_rule, _feat.props, true);
 
-        if (!textStyleBuilder.addFeatureCommon(_feat, _rule, true)) { return true; }
+        if (textStyleBuilder.prepareLabel(params, Label::Type::point)) {
 
-        size_t textCount = textLabels.size() - textStart;
-
-        if (iconsCount == textCount) {
-            bool definePriority = !_rule.contains(StyleParamKey::text_priority);
-            bool defineCollide = _rule.contains(StyleParamKey::collide);
-
-            for (size_t i = 0; i < textCount; ++i) {
-                auto& tLabel = textLabels[textStart + i];
+            for (size_t i = 0; i < iconsCount; i++) {
                 auto& pLabel = m_labels[iconsStart + i];
+                auto p = pLabel->worldTransform();
+                textStyleBuilder.addLabel(params, Label::Type::point, p, _rule);
+
+                bool definePriority = !_rule.contains(StyleParamKey::text_priority);
+                bool defineCollide = _rule.contains(StyleParamKey::collide);
 
                 // Link labels together
-                tLabel->setParent(*pLabel, definePriority, defineCollide);
+                textLabels.back()->setParent(*pLabel, definePriority, defineCollide);
             }
         }
     }
+
     return true;
 }
 

@@ -286,6 +286,10 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
         if (l->options().repeatDistance > 0.f) {
             if (withinRepeatDistance(l)) {
                 l->occlude();
+                // If this label is not marked optional, then mark the parent label as occluded
+                if (l->parent() && !l->options().optional) {
+                    l->parent()->occlude();
+                }
                 continue;
             }
         }
