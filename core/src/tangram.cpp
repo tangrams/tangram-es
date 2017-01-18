@@ -325,6 +325,12 @@ bool Map::update(float _dt) {
 
     impl->scene->updateTime(_dt);
 
+    if (impl->initialFrame) {
+        requestRender();
+        // DROP timing. don't start download/tile threads during shader ceration.
+        return false;
+    }
+
     bool viewComplete = true;
     bool markersNeedUpdate = false;
 
