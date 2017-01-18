@@ -82,6 +82,8 @@ public:
     bool cacheGlState;
 
     std::vector<SelectionQuery> selectionQueries;
+
+    bool initialFrame = true;
 };
 
 void Map::Impl::setEase(EaseField _f, Ease _e) {
@@ -169,6 +171,8 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
     if (animated != isContinuousRendering()) {
         setContinuousRendering(animated);
     }
+
+    initialFrame = true;
 }
 
 // NB: Not thread-safe. Must be called on the main/render thread!
@@ -409,6 +413,21 @@ void Map::render() {
     // Do not render if any texture resources are in process of being downloaded
     if (impl->scene->pendingTextures > 0) {
         return;
+    }
+
+    if (impl->initialFrame) {
+        clock_t begin = clock();
+        impl->initialFrame = false;
+        for (const auto& style : impl->scene->styles()) {
+            clock_t begin = clock();
+            //style->getShaderProgram()->use(impl->renderState);
+            style->onBeginDrawFrame(impl->renderState, impl->view, *impl->scene);
+
+            float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+            LOG("--------shader: %f - %s", loadTime, style->getName().c_str());
+        }
+        float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+        LOG("--------shaders %f", loadTime);
     }
 
     bool drawSelectionBuffer = getDebugFlag(DebugFlags::selection_buffer);
