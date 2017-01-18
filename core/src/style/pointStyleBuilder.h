@@ -57,11 +57,6 @@ struct PointStyleBuilder : public StyleBuilder {
 private:
 
 
-    Point interpolateSegment(const Line& _line, int i, int j, float distance);
-    Point interpolateLine(const Line& _line, float distance, float minLineLength,
-                          const PointStyle::Parameters& params,
-                          std::vector<float>& angles);
-
     std::vector<std::unique_ptr<Label>> m_labels;
     std::vector<SpriteQuad> m_quads;
 
