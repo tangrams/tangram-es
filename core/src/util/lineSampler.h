@@ -127,8 +127,13 @@ struct LineSampler {
                 float segmentLength = next.z - curr.z;
 
                 if (segmentLength <= m_minSampleLength) {
+                    if (m_curPoint >= m_points.size() - 2) {
+                        _point = glm::vec2(next);
+                        _rotation = (glm::vec2(next) - glm::vec2(curr)) / segmentLength;
+                        m_curAdvance = sumLength();
+                        return false;
+                    }
                     m_curPoint += 1;
-                    if (m_curPoint >= m_points.size() - 2) { return false; }
                     continue;
                 }
 
@@ -164,8 +169,13 @@ struct LineSampler {
                 float segmentLength = next.z - curr.z;
 
                 if (segmentLength <= m_minSampleLength) {
+                    if (m_curPoint == 0) {
+                        _point = glm::vec2(curr);
+                        _rotation = (glm::vec2(next) - glm::vec2(curr)) / segmentLength;
+                        m_curAdvance = 0;
+                        return false;
+                    }
                     m_curPoint -= 1;
-                    if (m_curPoint == 0) { return false; }
                     continue;
                 }
 
@@ -182,7 +192,6 @@ struct LineSampler {
                     if (m_curPoint == 0) {
                         _point = glm::vec2(curr);
                         _rotation = (glm::vec2(next) - glm::vec2(curr)) / segmentLength;
-
                         m_curAdvance = 0;
                         return false;
                     }
