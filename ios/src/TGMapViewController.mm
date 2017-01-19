@@ -709,7 +709,14 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     if (self != nil) {
         self.map = new Tangram::Map();
     }
+    return self;
+}
 
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+    self = [super initWithCoder:aDecoder];
+    if (self != nil) {
+        self.map = new Tangram::Map();
+    }
     return self;
 }
 
