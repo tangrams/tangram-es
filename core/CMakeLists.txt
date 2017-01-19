@@ -47,11 +47,11 @@ set(CORE_INCLUDE_DIRS
   ${DEPS_DIR}/sdf
   ${DEPS_DIR}/SQLiteCpp
   ${DEPS_DIR}/stb
+  ${DEPS_DIR}/geojson-vt-cpp/geometry.hpp/include
+  ${DEPS_DIR}/geojson-vt-cpp/geojson.hpp/include
+  ${DEPS_DIR}/geojson-vt-cpp/include
   CACHE INTERNAL "core include directories" FORCE)
 list(REMOVE_DUPLICATES CORE_INCLUDE_DIRS)
-
-#include( ${PROJECT_SOURCE_DIR}/../../alfons/build/alfons-exports.cmake REQUIRED )
-#include( ${PROJECT_SOURCE_DIR}/../../alfons/debug/alfons-exports.cmake REQUIRED )
 
 add_library(${CORE_LIBRARY} ${FOUND_SOURCES} ${FOUND_HEADERS})
 
@@ -64,7 +64,6 @@ set(LINK_LIBRARIES
     PUBLIC
     duktape
     css-color-parser-cpp
-    geojson-vt-cpp
     yaml-cpp
     alfons
     SQLiteCpp
