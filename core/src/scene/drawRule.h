@@ -127,6 +127,9 @@ public:
     // internal
     void mergeRules(const SceneLayer& _layer);
 
+    // merge rules for each layer in `_layers` in order of occurance
+    void mergeRules(const std::vector<const SceneLayer*>& _layers);
+
     auto& matchedRules() { return m_matchedRules; }
 
 private:

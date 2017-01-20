@@ -2,6 +2,7 @@
 
 #include "data/tileData.h"
 #include "gl/texture.h"
+#include "scene/dataLayer.h"
 #include "scene/drawRule.h"
 #include "scene/scene.h"
 #include "style/style.h"
@@ -13,7 +14,7 @@
 namespace Tangram {
 
 Marker::Marker(MarkerID id) : m_id(id) {
-    m_ruleSet.reset(new DrawRuleMergeSet());
+    m_drawRuleSet.reset(new DrawRuleMergeSet());
 }
 
 Marker::~Marker() {
@@ -28,17 +29,34 @@ void Marker::setFeature(std::unique_ptr<Feature> feature) {
     m_feature = std::move(feature);
 }
 
-void Marker::setStylingString(std::string stylingString) {
-    m_stylingString = stylingString;
+void Marker::setStyling(std::string styling, bool isPath) {
+    m_styling.string = styling;
+    m_styling.isPath = isPath;
 }
 
 bool Marker::evaluateRuleForContext(StyleContext& ctx) {
-    return m_ruleSet->evaluateRuleForContext(*m_drawRule, ctx);
+    return m_drawRuleSet->evaluateRuleForContext(*drawRule(), ctx);
 }
 
-void Marker::setDrawRule(std::unique_ptr<DrawRuleData> drawRuleData) {
+bool Marker::setDrawRule(std::unique_ptr<DrawRuleData> drawRuleData) {
+    // clear previous set
+    auto& drawRules = m_drawRuleSet->matchedRules();
+    drawRules.clear();
+
     m_drawRuleData = std::move(drawRuleData);
-    m_drawRule = std::make_unique<DrawRule>(*m_drawRuleData, "", 0);
+    drawRules.emplace_back(*m_drawRuleData, "", 0);
+    return true;
+}
+
+bool Marker::setDrawRule(const std::vector<const SceneLayer*>& layers) {
+    // clear previous set
+    auto& drawRules = m_drawRuleSet->matchedRules();
+    drawRules.clear();
+
+    m_drawRuleSet->mergeRules(layers);
+    if (drawRules.empty()) { return false; }
+
+    return true;
 }
 
 void Marker::setMesh(uint32_t styleId, uint32_t zoom, std::unique_ptr<StyledMesh> mesh) {
@@ -113,7 +131,22 @@ Feature* Marker::feature() const {
 }
 
 DrawRule* Marker::drawRule() const {
-    return m_drawRule.get();
+    auto& matchedRules = m_drawRuleSet->matchedRules();
+
+    if (matchedRules.empty()) { return nullptr; }
+    if (!m_styling.isPath) { return &matchedRules.front(); }
+
+    auto n = m_styling.string.rfind(LAYER_DELIMITER);
+    if (n == std::string::npos) { return nullptr; }
+    auto drawRuleGrp = m_styling.string.substr(n+1);
+
+    // TODO: Draw markers with multiple styles
+    for (auto& matchedRule : matchedRules) {
+        if (*(matchedRule.name) == drawRuleGrp) {
+            return &matchedRule;
+        }
+    }
+    return nullptr;
 }
 
 StyledMesh* Marker::mesh() const {
@@ -138,10 +171,6 @@ const glm::mat4& Marker::modelMatrix() const {
 
 const glm::mat4& Marker::modelViewProjectionMatrix() const {
     return m_modelViewProjectionMatrix;
-}
-
-const std::string& Marker::stylingString() const {
-    return m_stylingString;
 }
 
 bool Marker::isEasing() const {

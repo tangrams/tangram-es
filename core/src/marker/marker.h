@@ -11,6 +11,7 @@
 
 namespace Tangram {
 
+class SceneLayer;
 class DrawRuleMergeSet;
 class MapProjection;
 class Scene;
@@ -22,7 +23,14 @@ struct DrawRuleData;
 struct Feature;
 struct StyledMesh;
 
+const std::string LAYER_DELIMITER = ".";
+
 class Marker {
+
+    struct Styling {
+        std::string string;
+        bool isPath = false; // True if styling string is a path to a draw rule.
+    };
 
 public:
 
@@ -40,11 +48,14 @@ public:
     // Set the feature whose geometry will be used to build the marker.
     void setFeature(std::unique_ptr<Feature> feature);
 
-    // Set the string of YAML that will be used to style the marker.
-    void setStylingString(std::string stylingString);
+    // Sets the styling struct for the marker
+    void setStyling(std::string styling, bool isPath);
 
     // Set the draw rule that will be used to build the marker.
-    void setDrawRule(std::unique_ptr<DrawRuleData> drawRuleData);
+    bool setDrawRule(std::unique_ptr<DrawRuleData> drawRuleData);
+
+    // Set the draw rule from the scene layers.
+    bool setDrawRule(const std::vector<const SceneLayer*>& layers);
 
     // Set the styled mesh for this marker with the associated style id and zoom level.
     void setMesh(uint32_t styleId, uint32_t zoom, std::unique_ptr<StyledMesh> mesh);
@@ -100,7 +111,7 @@ public:
 
     const glm::mat4& modelViewProjectionMatrix() const;
 
-    const std::string& stylingString() const;
+    const Styling& styling() const { return m_styling; }
 
     bool evaluateRuleForContext(StyleContext& ctx);
 
@@ -116,12 +127,11 @@ protected:
 
     std::unique_ptr<Feature> m_feature;
     std::unique_ptr<StyledMesh> m_mesh;
-    std::unique_ptr<DrawRuleData> m_drawRuleData;
-    std::unique_ptr<DrawRule> m_drawRule;
-    std::unique_ptr<DrawRuleMergeSet> m_ruleSet;
     std::unique_ptr<Texture> m_texture;
+    std::unique_ptr<DrawRuleMergeSet> m_drawRuleSet;
+    std::unique_ptr<DrawRuleData> m_drawRuleData;
 
-    std::string m_stylingString;
+    Styling m_styling;
 
     MarkerID m_id = 0;
 

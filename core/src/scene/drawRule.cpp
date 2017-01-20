@@ -157,47 +157,52 @@ bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, 
 
 bool DrawRuleMergeSet::evaluateRuleForContext(DrawRule& rule, StyleContext& ctx) {
 
-        bool visible;
-        if (rule.get(StyleParamKey::visible, visible) && !visible) {
-            return false;
+    bool visible;
+    if (rule.get(StyleParamKey::visible, visible) && !visible) {
+        return false;
+    }
+
+    bool valid = true;
+    for (size_t i = 0; i < StyleParamKeySize; ++i) {
+
+        if (!rule.active[i]) {
+            rule.params[i].param = nullptr;
+            continue;
         }
 
-        bool valid = true;
-        for (size_t i = 0; i < StyleParamKeySize; ++i) {
+        auto*& param = rule.params[i].param;
 
-            if (!rule.active[i]) {
-                rule.params[i].param = nullptr;
-                continue;
-            }
+        // Evaluate JS functions and Stops
+        if (param->function >= 0) {
 
-            auto*& param = rule.params[i].param;
+            // Copy param into 'evaluated' and point param to the evaluated StyleParam.
+            m_evaluated[i] = *param;
+            param = &m_evaluated[i];
 
-            // Evaluate JS functions and Stops
-            if (param->function >= 0) {
-
-                // Copy param into 'evaluated' and point param to the evaluated StyleParam.
-                m_evaluated[i] = *param;
-                param = &m_evaluated[i];
-
-                if (!ctx.evalStyle(param->function, param->key, m_evaluated[i].value)) {
-                    if (StyleParam::isRequired(param->key)) {
-                        valid = false;
-                        break;
-                    } else {
-                        rule.active[i] = false;
-                    }
+            if (!ctx.evalStyle(param->function, param->key, m_evaluated[i].value)) {
+                if (StyleParam::isRequired(param->key)) {
+                    valid = false;
+                    break;
+                } else {
+                    rule.active[i] = false;
                 }
-            } else if (param->stops) {
-                m_evaluated[i] = *param;
-                param = &m_evaluated[i];
-
-                Stops::eval(*param->stops, param->key, ctx.getKeywordZoom(), m_evaluated[i].value);
             }
-        }
+        } else if (param->stops) {
+            m_evaluated[i] = *param;
+            param = &m_evaluated[i];
 
-        return valid;
+            Stops::eval(*param->stops, param->key, ctx.getKeywordZoom(), m_evaluated[i].value);
+        }
+    }
+
+    return valid;
 }
 
+void DrawRuleMergeSet::mergeRules(const std::vector<const SceneLayer*>& _layers) {
+    for (auto layer: _layers) {
+        mergeRules(*layer);
+    }
+}
 
 void DrawRuleMergeSet::mergeRules(const SceneLayer& _layer) {
 

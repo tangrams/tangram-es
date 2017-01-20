@@ -83,6 +83,57 @@ const Style* Scene::findStyle(const std::string& _name) const {
 
 }
 
+std::vector<const SceneLayer*> Scene::getLayerHierarchy(const std::string& _layersPath) const {
+
+    std::vector<const SceneLayer*> layers;
+
+    const std::string LAYERS = "layers" + DELIMITER;
+
+    auto n = _layersPath.find(LAYERS);
+    if (n == std::string::npos) { return layers; }
+
+    auto layersPath = _layersPath.substr(LAYERS.length());
+    LOG("layerNames: %s", layersPath.c_str());
+
+    auto layerNames = std::string(layersPath);
+
+    // Use the DELIMITER defined in the scene.h to extract out sublayer names
+    auto pos = layerNames.find(DELIMITER);
+    auto origPos = pos;
+    std::string layerName;
+
+    while( pos != std::string::npos || !layerNames.empty()) {
+        if (pos != std::string::npos) {
+            layerName = layersPath.substr(0, origPos);
+        } else {
+            layerName = layersPath;
+        }
+        if (layers.empty()) {
+            for (auto& layer: m_layers) {
+                if (layer.name() == layerName) {
+                    layers.push_back(&layer);
+                    break;
+                }
+            }
+        } else {
+            for (auto& sublayer: layers.back()->sublayers()) {
+                if (sublayer.name() == layerName) {
+                    layers.push_back(&sublayer);
+                    break;
+                }
+            }
+        }
+
+        if (pos != std::string::npos) {
+            layerNames = layerNames.substr(pos + 1);
+            pos = layerNames.find(DELIMITER);
+            origPos += (pos + 1);
+        } else { break; }
+    }
+
+    return layers;
+}
+
 Style* Scene::findStyle(const std::string& _name) {
 
     for (auto& style : m_styles) {
