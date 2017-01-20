@@ -16,7 +16,7 @@
 [submodule "core/dependencies/geojson-vt-cpp"]
 	path = external/geojson-vt-cpp
 	url = https://github.com/tangrams/geojson-vt-cpp.git
-[submodule "core/dependencies/duktape"]
+[submodule "external/duktape"]
 	path = external/duktape
 	url = https://github.com/tangrams/duktape.git
 [submodule "external/yaml-cpp"]

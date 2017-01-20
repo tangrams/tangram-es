@@ -101,30 +101,6 @@ glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosit
     return clipToScreenSpace(clipCoords, _screenSize);
 }
 
-glm::vec2 centroid(const std::vector<std::vector<glm::vec3>>& _polygon) {
-
-    if (_polygon.empty()) {
-        return glm::vec2();
-    }
-
-    // We will consider only the outer ring of the polygon when calculating
-    // the centroid - holes will be ignored. It would be possible to transform
-    // a polygon with holes into a polygon that covers the same set of points
-    // without any holes, but that seems overly complex for our needs.
-    const auto& ring = _polygon.front();
-    glm::vec2 centroid;
-    float area = 0.f;
-
-    for (auto curr = ring.begin(), prev = ring.end() - 1; curr != ring.end(); prev = curr, ++curr) {
-        float a = (prev->x * curr->y - curr->x * prev->y);
-        centroid.x += (prev->x + curr->x) * a;
-        centroid.y += (prev->y + curr->y) * a;
-        area += a;
-    }
-
-    return centroid / (3.f * area);
-}
-
 // square distance from a point <_p> to a segment <_p1,_p2>
 // http://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
 //

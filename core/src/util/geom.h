@@ -84,6 +84,22 @@ float signedArea(InputIt _begin, InputIt _end) {
     return 0.5 * area;
 }
 
+/* Calculate the area centroid of a closed polygon given as a sequence of vectors.
+ * If the polygon has no area, the coordinates returned are NaN.
+ */
+template<class InputIt, class Vector = typename InputIt::value_type>
+Vector centroid(InputIt begin, InputIt end) {
+    Vector centroid;
+    float area = 0.f;
+    for (auto curr = begin, prev = end - 1; curr != end; prev = curr, ++curr) {
+        float a = (prev->x * curr->y - curr->x * prev->y);
+        centroid.x += (prev->x + curr->x) * a;
+        centroid.y += (prev->y + curr->y) * a;
+        area += a;
+    }
+    return centroid / (3.f * area);
+}
+
 /* Map a value from the range [_inputMin, _inputMax] into the range [_outputMin, _outputMax];
  * If _clamp is true, the output is strictly within the output range.
  * Ex: mapValue(5, 0, 10, 0, 360) == 180

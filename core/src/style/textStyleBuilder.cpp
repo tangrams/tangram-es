@@ -164,8 +164,8 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
     return std::move(m_textLabels);
 }
 
-bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _rule, bool _iconText) {
-    TextStyle::Parameters params = applyRule(_rule, _feat.props, _iconText);
+bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
+    TextStyle::Parameters params = applyRule(_rule, _feat.props, false);
 
     Label::Type labelType;
     if (_feat.geometryType == GeometryType::lines) {
@@ -188,30 +188,18 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
         }
 
     } else if (_feat.geometryType == GeometryType::polygons) {
+
         for (auto& polygon : _feat.polygons) {
-            if (_iconText) {
-                auto p = centroid(polygon);
-                addLabel(params, Label::Type::point, { p, p }, _rule);
-            } else {
-                for (auto& line : polygon) {
-                    for (auto& point : line) {
-                        addLabel(params, Label::Type::point, { point }, _rule);
-                    }
+            for (auto& line : polygon) {
+                for (auto& point : line) {
+                    addLabel(params, Label::Type::point, { point }, _rule);
                 }
             }
         }
 
     } else if (_feat.geometryType == GeometryType::lines) {
 
-        if (_iconText) {
-            for (auto& line : _feat.lines) {
-                for (auto& point : line) {
-                    addLabel(params, Label::Type::point, { point }, _rule);
-                }
-            }
-        } else {
-            addLineTextLabels(_feat, params, _rule);
-        }
+        addLineTextLabels(_feat, params, _rule);
     }
 
     if (numLabels == m_labels.size()) {

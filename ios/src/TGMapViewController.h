@@ -149,6 +149,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)pickLabelAt:(CGPoint)screenPosition;
 
+- (void)pickMarkerAt:(CGPoint)screenPosition;
+
 #pragma mark Map View lifecycle
 
 - (void)requestRender;
