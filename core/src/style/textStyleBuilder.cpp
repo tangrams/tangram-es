@@ -311,6 +311,10 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
 
     uint32_t priority;
+    size_t repeatGroupHash = 0;
+    std::string repeatGroup;
+    StyleParam::Width repeatDistance;
+
     if (_iconText) {
 
         if (_rule.get(StyleParamKey::text_priority, priority)) {
@@ -330,6 +334,24 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
             p.labelOptions.anchors.count = 4;
         }
 
+        // child text's repeat group params
+        if (_rule.get(StyleParamKey::text_repeat_distance, repeatDistance)) {
+            p.labelOptions.repeatDistance = repeatDistance.value;
+        } else {
+            p.labelOptions.repeatDistance = View::s_pixelsPerTile;
+        }
+
+        if (p.labelOptions.repeatDistance > 0.f) {
+            if (_rule.get(StyleParamKey::text_repeat_group, repeatGroup)) {
+                hash_combine(repeatGroupHash, repeatGroup);
+            } else if (_rule.get(StyleParamKey::repeat_group, repeatGroup)) { //inherit from parent point
+                hash_combine(repeatGroupHash, repeatGroup);
+            } else {
+                repeatGroupHash = _rule.getParamSetHash();
+            }
+        }
+
+
         _rule.get(StyleParamKey::text_transition_hide_time, p.labelOptions.hideTransition.time);
         _rule.get(StyleParamKey::text_transition_selected_time, p.labelOptions.selectTransition.time);
         _rule.get(StyleParamKey::text_transition_show_time, p.labelOptions.showTransition.time);
@@ -348,28 +370,30 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
             p.labelOptions.anchors.anchor = { {LabelProperty::Anchor::center} };
             p.labelOptions.anchors.count = 1;
         }
+
+        if (_rule.get(StyleParamKey::repeat_distance, repeatDistance)) {
+            p.labelOptions.repeatDistance = repeatDistance.value;
+        } else {
+            p.labelOptions.repeatDistance = View::s_pixelsPerTile;
+        }
+
+        if (p.labelOptions.repeatDistance > 0.f) {
+            if (_rule.get(StyleParamKey::repeat_group, repeatGroup)) {
+                hash_combine(repeatGroupHash, repeatGroup);
+            } else {
+                repeatGroupHash = _rule.getParamSetHash();
+            }
+        }
+
+    }
+
+    if (p.labelOptions.repeatDistance > 0.f) {
+        hash_combine(repeatGroupHash, p.text);
+        p.labelOptions.repeatGroup = repeatGroupHash;
+        p.labelOptions.repeatDistance *= m_style.pixelScale();
     }
 
     _rule.get(StyleParamKey::text_wrap, p.maxLineWidth);
-
-    size_t repeatGroupHash = 0;
-    std::string repeatGroup;
-    if (_rule.get(StyleParamKey::text_repeat_group, repeatGroup)) {
-        hash_combine(repeatGroupHash, repeatGroup);
-    } else {
-        repeatGroupHash = _rule.getParamSetHash();
-    }
-
-    StyleParam::Width repeatDistance;
-    if (_rule.get(StyleParamKey::text_repeat_distance, repeatDistance)) {
-        p.labelOptions.repeatDistance = repeatDistance.value;
-    } else {
-        p.labelOptions.repeatDistance = View::s_pixelsPerTile;
-    }
-
-    hash_combine(repeatGroupHash, p.text);
-    p.labelOptions.repeatGroup = repeatGroupHash;
-    p.labelOptions.repeatDistance *= m_style.pixelScale();
 
     if (auto* transform = _rule.get<std::string>(StyleParamKey::text_transform)) {
         TextLabelProperty::transform(*transform, p.transform);

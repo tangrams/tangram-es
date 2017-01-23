@@ -121,6 +121,10 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
 
     uint32_t priority;
+    size_t repeatGroupHash = 0;
+    std::string repeatGroup;
+    StyleParam::Width repeatDistance;
+
     if (_rule.get(StyleParamKey::priority, priority)) {
         p.labelOptions.priority = (float)priority;
     }
@@ -148,6 +152,21 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
     _rule.get(StyleParamKey::flat, p.labelOptions.flat);
     _rule.get(StyleParamKey::anchor, p.labelOptions.anchors);
+
+    if (_rule.get(StyleParamKey::repeat_distance, repeatDistance)) {
+        p.labelOptions.repeatDistance = repeatDistance.value;
+    }
+
+    if (p.labelOptions.repeatDistance > 0.f) {
+        if (_rule.get(StyleParamKey::repeat_group, repeatGroup)) {
+            hash_combine(repeatGroupHash, repeatGroup);
+        } else {
+            repeatGroupHash = _rule.getParamSetHash();
+        }
+
+        p.labelOptions.repeatGroup = repeatGroupHash;
+        p.labelOptions.repeatDistance *= m_style.pixelScale();
+    }
 
     if (p.labelOptions.anchors.count == 0) {
         p.labelOptions.anchors.anchor = { {LabelProperty::Anchor::center} };
