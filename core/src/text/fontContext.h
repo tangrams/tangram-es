@@ -69,7 +69,7 @@ public:
 
     static constexpr int max_textures = 64;
 
-    FontContext();
+    FontContext(std::shared_ptr<const Platform> _platform);
 
     void loadFonts();
 
@@ -143,6 +143,8 @@ private:
     alfons::TextBatch m_batch;
     TextWrapper m_textWrapper;
     std::string m_sceneResourceRoot = "";
+
+    std::shared_ptr<const Platform> m_platform;
 
 };
 

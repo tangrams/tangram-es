@@ -2,12 +2,14 @@
 
 #include "data/tileSource.h"
 
+class Platform;
+
 namespace Tangram {
 
 class NetworkDataSource : public TileSource::DataSource {
 public:
 
-    NetworkDataSource(const std::string& _urlTemplate);
+    NetworkDataSource(std::shared_ptr<const Platform> _platform, const std::string& _urlTemplate);
 
     bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
 
@@ -25,6 +27,8 @@ private:
 
     void removePending(const TileID& _tileId);
 
+    std::shared_ptr<const Platform> m_platform;
+
     // URL template for requesting tiles from a network or filesystem
     std::string m_urlTemplate;
 
@@ -33,6 +37,7 @@ private:
     size_t m_maxDownloads;
 
     std::mutex m_mutex;
+
 };
 
 }

@@ -25,7 +25,7 @@
 
 namespace Tangram {
 
-InputHandler::InputHandler(View& _view) : m_view(_view) {}
+InputHandler::InputHandler(std::shared_ptr<Platform> _platform, View& _view) : m_platform(_platform), m_view(_view) {}
 
 void InputHandler::update(float _dt) {
 
@@ -42,7 +42,7 @@ void InputHandler::update(float _dt) {
         m_velocityZoom -= _dt * DAMPING_ZOOM * m_velocityZoom;
         m_view.zoom(m_velocityZoom * _dt);
 
-        requestRender();
+        m_platform->requestRender();
     }
 }
 
@@ -161,7 +161,7 @@ void InputHandler::cancelFling() {
 void InputHandler::onGesture() {
 
     setVelocity(0.f, { 0.f, 0.f });
-    requestRender();
+    m_platform->requestRender();
 
 }
 

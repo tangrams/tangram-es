@@ -14,6 +14,7 @@
 #include "util/mapProjection.h"
 #include "util/util.h"
 #include "view/view.h"
+#include "platform.h"
 #include "log.h"
 
 #include <atomic>
@@ -24,10 +25,10 @@ namespace Tangram {
 
 static std::atomic<int32_t> s_serial;
 
-Scene::Scene(const std::string& _path)
+Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _path)
     : id(s_serial++),
       m_path(_path),
-      m_fontContext(std::make_shared<FontContext>()),
+      m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()) {
 
     std::regex r("^(http|https):/");
