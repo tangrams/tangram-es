@@ -172,6 +172,7 @@ public class MapController implements Renderer {
         mapView = view;
         view.setRenderer(this);
         view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        view.setPreserveEGLContextOnPause(true);
 
         // Set a default HTTPHandler
         httpHandler = new HttpHandler();
