@@ -24,6 +24,8 @@ class TileSource : public std::enable_shared_from_this<TileSource> {
 public:
 
     struct DataSource {
+        virtual ~DataSource() {}
+
         virtual bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) = 0;
 
         /* Stops any running I/O tasks pertaining to @_tile */
