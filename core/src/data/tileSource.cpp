@@ -15,7 +15,9 @@ namespace Tangram {
 TileSource::TileSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
                        int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom) :
     m_name(_name),
-    m_minDisplayZoom(_minDisplayZoom), m_maxDisplayZoom(_maxDisplayZoom), m_maxZoom(_maxZoom),
+    m_minDisplayZoom(_minDisplayZoom),
+    m_maxDisplayZoom(_maxDisplayZoom),
+    m_maxZoom(_maxZoom),
     m_sources(std::move(_sources)) {
 
     static std::atomic<int32_t> s_serial;

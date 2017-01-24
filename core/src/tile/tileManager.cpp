@@ -15,16 +15,16 @@
 
 namespace Tangram {
 
-TileManager::TileManager(TileTaskQueue& _tileWorker) :
+TileManager::TileManager(std::shared_ptr<Platform> platform, TileTaskQueue& _tileWorker) :
     m_workers(_tileWorker) {
 
     m_tileCache = std::unique_ptr<TileCache>(new TileCache(DEFAULT_CACHE_SIZE));
 
     // Callback to pass task from Download-Thread to Worker-Queue
-    m_dataCallback = TileTaskCb{[this](std::shared_ptr<TileTask> task) {
+    m_dataCallback = TileTaskCb{[this, &platform](std::shared_ptr<TileTask> task) {
 
         if (task->isReady()) {
-             requestRender();
+             platform->requestRender();
 
         } else if (task->hasData()) {
             m_workers.enqueue(task);

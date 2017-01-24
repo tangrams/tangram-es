@@ -12,6 +12,8 @@
 #include "util/url.h"
 #include "yaml-cpp/yaml.h"
 
+class Platform;
+
 namespace Tangram {
 
 class Importer {
@@ -21,11 +23,11 @@ public:
     using Node = YAML::Node;
 
     // Loads the main scene with deep merging dependent imported scenes.
-    Node applySceneImports(const Url& scenePath, const Url& resourceRoot = Url());
+    Node applySceneImports(const std::shared_ptr<Platform>& platform, const Url& scenePath, const Url& resourceRoot = Url());
 
 // protected for testing purposes, else could be private
 protected:
-    virtual std::string getSceneString(const Url& scenePath);
+    virtual std::string getSceneString(const std::shared_ptr<Platform>& platform, const Url& scenePath);
 
     void processScene(const Url& scenePath, const std::string& sceneString);
 

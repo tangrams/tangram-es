@@ -10,6 +10,8 @@
 #include <mutex>
 #include <atomic>
 
+class Platform;
+
 namespace Tangram {
 
 class JobQueue;
@@ -20,7 +22,7 @@ class TileWorker : public TileTaskQueue {
 
 public:
 
-    TileWorker(int _num_worker);
+    TileWorker(std::shared_ptr<Platform> _platform, int _numWorker);
 
     ~TileWorker();
 
@@ -49,6 +51,8 @@ private:
 
     std::mutex m_mutex;
     std::vector<std::shared_ptr<TileTask>> m_queue;
+
+    std::shared_ptr<Platform> m_platform;
 };
 
 }
