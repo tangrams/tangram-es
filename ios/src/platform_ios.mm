@@ -14,46 +14,22 @@
 #import "platform_ios.h"
 #import "log.h"
 
-static TGMapViewController* viewController;
-static NSBundle* tangramFramework;
-
-void init(TGMapViewController* _controller) {
-
-    viewController = _controller;
-
-    // Get handle to tangram framework
-    tangramFramework = [NSBundle bundleWithIdentifier:@"com.mapzen.tangramMap"];
-}
-
 void logMsg(const char* fmt, ...) {
-
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
-
 }
 
-void requestRender() {
-
-    [viewController renderOnce];
-
+void setCurrentThreadPriority(int priority) {
+    // No-op
 }
 
-void setContinuousRendering(bool _isContinuous) {
-
-    [viewController setContinuous:_isContinuous];
-
-}
-
-bool isContinuousRendering() {
-
-    return [viewController continuous];
-
+void initGLExtensions() {
+    // No-op
 }
 
 NSString* resolvePath(const char* _path) {
-
     NSString* pathString = [NSString stringWithUTF8String:_path];
 
     NSURL* resourceFolderUrl = [[NSBundle mainBundle] resourceURL];
@@ -69,82 +45,12 @@ NSString* resolvePath(const char* _path) {
         return pathInAppBundle;
     }
 
-    if (tangramFramework) {
-        NSURL* frameworkResourcesUrl = [tangramFramework resourceURL];
-
-        NSURL* frameworkResolvedUrl = [NSURL URLWithString:pathString
-                                             relativeToURL:frameworkResourcesUrl];
-
-        NSString* pathInFramework = [frameworkResolvedUrl path];
-
-        if ([fileManager fileExistsAtPath:pathInFramework]) {
-            return pathInFramework;
-        }
-    }
-
     LOGW("Failed to resolve path: %s", _path);
 
     return nil;
 }
 
-bool bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator) {
-    std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
-
-    if(!resource.is_open()) {
-        logMsg("Failed to read file at path: %s\n", _path);
-        return false;
-    }
-
-    size_t size = resource.tellg();
-    char* cdata = _allocator(size);
-
-    resource.seekg(std::ifstream::beg);
-    resource.read(cdata, size);
-    resource.close();
-
-    return true;
-}
-
-std::string stringFromFile(const char* _path) {
-    NSString* path = resolvePath(_path);
-
-    if (!path) {
-        return "";
-    }
-
-    std::string data;
-
-    auto allocator = [&](size_t size) {
-        data.resize(size);
-        return &data[0];
-    };
-
-    bytesFromFileSystem([path UTF8String], allocator);
-
-    return data;
-}
-
-std::vector<char> bytesFromFile(const char* _path) {
-    NSString* path = resolvePath(_path);
-
-    if (!path) {
-        return {};
-    }
-
-    std::vector<char> data;
-
-    auto allocator = [&](size_t size) {
-        data.resize(size);
-        return data.data();
-    };
-
-    bytesFromFileSystem([path UTF8String], allocator);
-
-    return data;
-}
-
 std::vector<char> loadUIFont(UIFont* _font) {
-
     if (!_font) {
         return {};
     }
@@ -166,7 +72,30 @@ std::vector<char> loadUIFont(UIFont* _font) {
     return data;
 }
 
-std::vector<FontSourceHandle> systemFontFallbacksHandle() {
+iOSPlatform::iOSPlatform(TGMapViewController* _viewController) :
+    Platform(),
+    m_viewController(_viewController) {}
+
+void iOSPlatform::requestRender() const {
+    [m_viewController renderOnce];
+}
+
+void iOSPlatform::setContinuousRendering(bool _isContinuous) {
+    Platform::setContinuousRendering(_isContinuous);
+    [m_viewController setContinuous:_isContinuous];
+}
+
+std::string iOSPlatform::stringFromFile(const char* _path) const {
+    NSString* path = resolvePath(_path);
+    std::string data;
+
+    if (!path) { return data; }
+
+    data = Platform::stringFromFile([path UTF8String]);
+    return data;
+}
+
+std::vector<FontSourceHandle> iOSPlatform::systemFontFallbacksHandle() const {
     NSArray* fallbacks = [UIFont familyNames];
 
     std::vector<FontSourceHandle> handles;
@@ -182,8 +111,7 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
     return handles;
 }
 
-std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) {
-
+std::vector<char> iOSPlatform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
     static std::map<int, CGFloat> weightTraits = {
         {100, UIFontWeightUltraLight},
         {200, UIFontWeightThin},
@@ -244,9 +172,8 @@ std::vector<char> systemFont(const std::string& _name, const std::string& _weigh
     return loadUIFont(font);
 }
 
-bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
-
-    TGHttpHandler* httpHandler = [viewController httpHandler];
+bool iOSPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) const {
+    TGHttpHandler* httpHandler = [m_viewController httpHandler];
 
     if (!httpHandler) {
         return false;
@@ -288,20 +215,13 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
     return true;
 }
 
-void cancelUrlRequest(const std::string& _url) {
+void iOSPlatform::cancelUrlRequest(const std::string& _url) const {
+    TGHttpHandler* httpHandler = [m_viewController httpHandler];
 
-    TGHttpHandler* httpHandler = [viewController httpHandler];
-
-    if (!httpHandler) {
-        return;
-    }
+    if (!httpHandler) { return; }
 
     NSString* url = [NSString stringWithUTF8String:_url.c_str()];
     [httpHandler cancelDownloadRequestAsync:url];
 }
-
-void setCurrentThreadPriority(int priority) {}
-
-void initGLExtensions() {}
 
 #endif //PLATFORM_IOS

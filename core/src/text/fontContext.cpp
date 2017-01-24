@@ -18,13 +18,14 @@
 
 namespace Tangram {
 
-FontContext::FontContext() :
+FontContext::FontContext(std::shared_ptr<const Platform> _platform) :
     m_sdfRadius(SDF_WIDTH),
     m_atlas(*this, GlyphTexture::size, m_sdfRadius),
-    m_batch(m_atlas, m_scratch) {}
+    m_batch(m_atlas, m_scratch),
+    m_platform(_platform) {}
 
 void FontContext::loadFonts() {
-    auto fallbacks = systemFontFallbacksHandle();
+    auto fallbacks = m_platform->systemFontFallbacksHandle();
 
     for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
         m_font[i] = m_alfons.addFont("default", size);
@@ -293,11 +294,11 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     std::string bundleFontPath = m_sceneResourceRoot + "fonts/" +
         FontDescription::BundleAlias(_family, _style, _weight);
 
-    std::vector<char> fontData = bytesFromFile(bundleFontPath.c_str());
+    std::vector<char> fontData = m_platform->bytesFromFile(bundleFontPath.c_str());
 
     // 2. System font
     if (fontData.size() == 0) {
-        fontData = systemFont(_family, _weight, _style);
+        fontData = m_platform->systemFont(_family, _weight, _style);
     }
 
     if (fontData.size() == 0) {

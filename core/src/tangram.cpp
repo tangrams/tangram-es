@@ -42,6 +42,12 @@ enum class EaseField { position, zoom, rotation, tilt };
 class Map::Impl {
 
 public:
+    Impl(std::shared_ptr<Platform> _platform) :
+        platform(_platform),
+        inputHandler(_platform, view),
+        scene(std::make_shared<Scene>(_platform)),
+        tileWorker(_platform, MAX_WORKERS),
+        tileManager(_platform, tileWorker) {}
 
     void setScene(std::shared_ptr<Scene>& _scene);
 
@@ -63,19 +69,20 @@ public:
     View view;
     Labels labels;
     std::unique_ptr<AsyncWorker> asyncWorker = std::make_unique<AsyncWorker>();
-    InputHandler inputHandler{view};
+    std::shared_ptr<Platform> platform;
+    InputHandler inputHandler;
 
     std::vector<SceneUpdate> sceneUpdates;
     std::array<Ease, 4> eases;
 
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>();
+    std::shared_ptr<Scene> scene;
     std::shared_ptr<Scene> nextScene = nullptr;
 
     // NB: Destruction of (managed and loading) tiles must happen
     // before implicit destruction of 'scene' above!
     // In particular any references of Labels and Markers to FontContext
-    TileWorker tileWorker{MAX_WORKERS};
-    TileManager tileManager{tileWorker};
+    TileWorker tileWorker;
+    TileManager tileManager;
     MarkerManager markerManager;
     std::unique_ptr<FrameBuffer> selectionBuffer = std::make_unique<FrameBuffer>(0, 0);
 
@@ -86,8 +93,9 @@ public:
 
 void Map::Impl::setEase(EaseField _f, Ease _e) {
     eases[static_cast<size_t>(_f)] = _e;
-    requestRender();
+    platform->requestRender();
 }
+
 void Map::Impl::clearEase(EaseField _f) {
     static Ease none = {};
     eases[static_cast<size_t>(_f)] = none;
@@ -95,9 +103,8 @@ void Map::Impl::clearEase(EaseField _f) {
 
 static std::bitset<9> g_flags = 0;
 
-Map::Map() {
-
-    impl.reset(new Impl());
+Map::Map(std::shared_ptr<Platform> _platform) : platform(_platform) {
+    impl.reset(new Impl(_platform));
 }
 
 Map::~Map() {
@@ -166,8 +173,8 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
         }
     }
 
-    if (animated != isContinuousRendering()) {
-        setContinuousRendering(animated);
+    if (animated != platform->isContinuousRendering()) {
+        platform->setContinuousRendering(animated);
     }
 }
 
@@ -184,10 +191,10 @@ void Map::loadScene(const char* _scenePath, bool _useScenePosition,
         impl->nextScene.reset();
     }
 
-    auto scene = std::make_shared<Scene>(_scenePath);
+    auto scene = std::make_shared<Scene>(platform, _scenePath);
     scene->useScenePosition = _useScenePosition;
 
-    if (SceneLoader::loadScene(scene, _sceneUpdates)) {
+    if (SceneLoader::loadScene(platform, scene, _sceneUpdates)) {
         impl->setScene(scene);
     }
 }
@@ -202,14 +209,14 @@ void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition,
     {
         std::lock_guard<std::mutex> lock(impl->sceneMutex);
         impl->sceneUpdates.clear();
-        impl->nextScene = std::make_shared<Scene>(_scenePath);
+        impl->nextScene = std::make_shared<Scene>(platform, _scenePath);
         impl->nextScene->useScenePosition = _useScenePosition;
         nextScene = impl->nextScene;
     }
 
     runAsyncTask([nextScene, _platformCallback, _cbData, _sceneUpdates, this](){
 
-            bool ok = SceneLoader::loadScene(nextScene, _sceneUpdates);
+            bool ok = SceneLoader::loadScene(platform, nextScene, _sceneUpdates);
 
             impl->jobQueue.add([nextScene, ok, _platformCallback, _cbData, this]() {
                     {
@@ -229,7 +236,7 @@ void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition,
                         if (_platformCallback) { _platformCallback(_cbData); }
                     }
                 });
-            requestRender();
+            platform->requestRender();
         });
 }
 
@@ -270,7 +277,7 @@ void Map::applySceneUpdates() {
 
             SceneLoader::applyUpdates(*nextScene, updates);
 
-            bool ok = SceneLoader::applyConfig(nextScene);
+            bool ok = SceneLoader::applyConfig(platform, nextScene);
 
             impl->jobQueue.add([nextScene, ok, this]() {
                     {
@@ -289,7 +296,7 @@ void Map::applySceneUpdates() {
                         applySceneUpdates();
                     }
                 });
-            requestRender();
+            platform->requestRender();
         });
 }
 
@@ -311,7 +318,7 @@ bool Map::update(float _dt) {
 
     // Wait until font resources are fully loaded
     if (impl->scene->pendingFonts > 0) {
-        requestRender();
+        platform->requestRender();
         return false;
     }
 
@@ -381,7 +388,7 @@ bool Map::update(float _dt) {
     }
 
     // Request render if labels are in fading states or markers are easing.
-    if (labelsNeedUpdate || markersNeedUpdate) { requestRender(); }
+    if (labelsNeedUpdate || markersNeedUpdate) { platform->requestRender(); }
 
     return viewComplete;
 }
@@ -389,19 +396,19 @@ bool Map::update(float _dt) {
 void Map::pickFeatureAt(float _x, float _y, FeaturePickCallback _onFeaturePickCallback) {
     impl->selectionQueries.push_back({{_x, _y}, _onFeaturePickCallback});
 
-    requestRender();
+    platform->requestRender();
 }
 
 void Map::pickLabelAt(float _x, float _y, LabelPickCallback _onLabelPickCallback) {
     impl->selectionQueries.push_back({{_x, _y}, _onLabelPickCallback});
 
-    requestRender();
+    platform->requestRender();
 }
 
 void Map::pickMarkerAt(float _x, float _y, MarkerPickCallback _onMarkerPickCallback) {
     impl->selectionQueries.push_back({{_x, _y}, _onMarkerPickCallback});
 
-    requestRender();
+    platform->requestRender();
 }
 
 void Map::render() {
@@ -516,7 +523,7 @@ void Map::Impl::setPositionNow(double _lon, double _lat) {
     glm::dvec2 meters = view.getMapProjection().LonLatToMeters({ _lon, _lat});
     view.setPosition(meters.x, meters.y);
     inputHandler.cancelFling();
-    requestRender();
+    platform->requestRender();
 
 }
 
@@ -549,7 +556,7 @@ void Map::Impl::setZoomNow(float _z) {
 
     view.setZoom(_z);
     inputHandler.cancelFling();
-    requestRender();
+    platform->requestRender();
 
 }
 
@@ -577,7 +584,7 @@ float Map::getZoom() {
 void Map::Impl::setRotationNow(float _radians) {
 
     view.setRoll(_radians);
-    requestRender();
+    platform->requestRender();
 
 }
 
@@ -612,7 +619,7 @@ float Map::getRotation() {
 void Map::Impl::setTiltNow(float _radians) {
 
     view.setPitch(_radians);
-    requestRender();
+    platform->requestRender();
 
 }
 
@@ -693,7 +700,7 @@ void Map::Impl::setPixelScale(float _pixelsPerPoint) {
 void Map::setCameraType(int _type) {
 
     impl->view.setCameraType(static_cast<CameraType>(_type));
-    requestRender();
+    platform->requestRender();
 
 }
 
@@ -719,7 +726,7 @@ void Map::clearTileSource(TileSource& _source, bool _data, bool _tiles) {
     if (_tiles) { impl->tileManager.clearTileSet(_source.id()); }
     if (_data) { _source.clearData(); }
 
-    requestRender();
+    platform->requestRender();
 }
 
 MarkerID Map::markerAdd() {
@@ -728,61 +735,61 @@ MarkerID Map::markerAdd() {
 
 bool Map::markerRemove(MarkerID _marker) {
     bool success = impl->markerManager.remove(_marker);
-    requestRender();
+    platform->requestRender();
     return success;
 }
 
 bool Map::markerSetPoint(MarkerID _marker, LngLat _lngLat) {
     bool success = impl->markerManager.setPoint(_marker, _lngLat);
-    requestRender();
+    platform->requestRender();
     return success;
 }
 
 bool Map::markerSetPointEased(MarkerID _marker, LngLat _lngLat, float _duration, EaseType ease) {
     bool success = impl->markerManager.setPointEased(_marker, _lngLat, _duration, ease);
-    requestRender();
+    platform->requestRender();
     return success;
 }
 
 bool Map::markerSetPolyline(MarkerID _marker, LngLat* _coordinates, int _count) {
     bool success = impl->markerManager.setPolyline(_marker, _coordinates, _count);
-    requestRender();
+    platform->requestRender();
     return success;
 }
 
 bool Map::markerSetPolygon(MarkerID _marker, LngLat* _coordinates, int* _counts, int _rings) {
     bool success = impl->markerManager.setPolygon(_marker, _coordinates, _counts, _rings);
-    requestRender();
+    platform->requestRender();
     return success;
 }
 
 bool Map::markerSetStyling(MarkerID _marker, const char* _styling) {
     bool success = impl->markerManager.setStyling(_marker, _styling);
-    requestRender();
+    platform->requestRender();
     return success;
 }
 
 bool Map::markerSetBitmap(MarkerID _marker, int _width, int _height, const unsigned int* _data) {
     bool success = impl->markerManager.setBitmap(_marker, _width, _height, _data);
-    requestRender();
+    platform->requestRender();
     return success;
 }
 
 bool Map::markerSetVisible(MarkerID _marker, bool _visible) {
     bool success = impl->markerManager.setVisible(_marker, _visible);
-    requestRender();
+    platform->requestRender();
     return success;
 }
 
 bool Map::markerSetDrawOrder(MarkerID _marker, int _drawOrder) {
     bool success = impl->markerManager.setDrawOrder(_marker, _drawOrder);
-    requestRender();
+    platform->requestRender();
     return success;
 }
 
 void Map::markerRemoveAll() {
     impl->markerManager.removeAll();
-    requestRender();
+    platform->requestRender();
 }
 
 void Map::handleTapGesture(float _posX, float _posY) {

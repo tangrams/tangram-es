@@ -1,14 +1,16 @@
 #include "data/networkDataSource.h"
 
 #include "log.h"
+#include "platform.h"
 
 #define MAX_DOWNLOADS 4
 
 namespace Tangram {
 
-NetworkDataSource::NetworkDataSource(const std::string& _urlTemplate)
-    : m_urlTemplate(_urlTemplate),
-      m_maxDownloads(MAX_DOWNLOADS) {}
+NetworkDataSource::NetworkDataSource(std::shared_ptr<const Platform> _platform, const std::string& _urlTemplate) :
+    m_platform(_platform),
+    m_urlTemplate(_urlTemplate),
+    m_maxDownloads(MAX_DOWNLOADS) {}
 
 void NetworkDataSource::constructURL(const TileID& _tileCoord, std::string& _url) const {
     _url.assign(m_urlTemplate);
@@ -48,7 +50,7 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb
 
     std::string url(constructURL(_task->tileId()));
 
-    bool started = startUrlRequest(url,
+    bool started = m_platform->startUrlRequest(url,
         [this, cb = _cb, task = _task](std::vector<char>&& _rawData) mutable {
 
             removePending(task->tileId());
@@ -87,7 +89,7 @@ void NetworkDataSource::removePending(const TileID& _tileId) {
 
 void NetworkDataSource::cancelLoadingTile(const TileID& _tileId) {
     removePending(_tileId);
-    cancelUrlRequest(constructURL(_tileId));
+    m_platform->cancelUrlRequest(constructURL(_tileId));
 }
 
 }

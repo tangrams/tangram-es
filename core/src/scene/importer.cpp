@@ -13,7 +13,7 @@ namespace Tangram {
 
 std::atomic_uint Importer::progressCounter(0);
 
-Node Importer::applySceneImports(const Url& scenePath, const Url& resourceRoot) {
+Node Importer::applySceneImports(const std::shared_ptr<const Platform>& platform, const Url& scenePath, const Url& resourceRoot) {
 
     Url path;
     Url rootScenePath = scenePath.resolved(resourceRoot);
@@ -52,7 +52,7 @@ Node Importer::applySceneImports(const Url& scenePath, const Url& resourceRoot) 
 
         if (path.hasHttpScheme()) {
             progressCounter++;
-            startUrlRequest(path.string(), [&, path](std::vector<char>&& rawData) {
+            platform->startUrlRequest(path.string(), [&, path](std::vector<char>&& rawData) {
                 if (!rawData.empty()) {
                     std::unique_lock<std::mutex> lock(sceneMutex);
                     processScene(path, std::string(rawData.data(), rawData.size()));
@@ -62,7 +62,7 @@ Node Importer::applySceneImports(const Url& scenePath, const Url& resourceRoot) 
             });
         } else {
             std::unique_lock<std::mutex> lock(sceneMutex);
-            processScene(path, getSceneString(path));
+            processScene(path, getSceneString(platform, path));
         }
     }
 
@@ -228,8 +228,8 @@ void Importer::resolveSceneUrls(Node& root, const Url& base) {
     }
 }
 
-std::string Importer::getSceneString(const Url& scenePath) {
-    return stringFromFile(scenePath.string().c_str());
+std::string Importer::getSceneString(const std::shared_ptr<const Platform>& platform, const Url& scenePath) {
+    return platform->stringFromFile(scenePath.string().c_str());
 }
 
 std::vector<Url> Importer::getResolvedImportUrls(const Node& scene, const Url& base) {

@@ -15,6 +15,8 @@
 #include "yaml-cpp/yaml.h"
 #include "util/yamlHelper.h"
 
+class Platform;
+
 namespace Tangram {
 
 class DataLayer;
@@ -58,7 +60,7 @@ public:
         yes, no, none
     };
 
-    Scene(const std::string& _path = "");
+    Scene(std::shared_ptr<const Platform> _platform, const std::string& _path = "");
     Scene(const Scene& _other);
     ~Scene();
 
