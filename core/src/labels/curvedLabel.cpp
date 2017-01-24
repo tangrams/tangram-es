@@ -63,15 +63,51 @@ bool CurvedLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
         }
     }
 
-    float length = sampler.sumLength();
-
-    if (!inside || length < m_dim.x) {
+    if (!inside || sampler.sumLength() < m_dim.x) {
         sampler.clearPoints();
         return false;
     }
 
     auto center = sampler.point(m_anchorPoint);
-    m_screenCenter = glm::vec2(center.x, center.y);
+    m_screenCenter = glm::vec2(center);
+
+    // Chord length for minimal ~120 degree inner angles (squared)
+    // sin(60)*2
+    const float sqDirLimit = powf(1.7f, 2);
+    // Range to check for angle changes
+    const float sampleWindow = 20;
+
+    float width = m_dim.x;
+    float start = sampler.point(m_screenAnchorPoint).z - width * 0.5f;
+
+    if (start < 0 || start + width > sampler.sumLength()) {
+        sampler.clearPoints();
+        return false;
+    }
+
+    // Sets current segment to the segment on which the text starts.
+    glm::vec2 p, r; // unused
+    sampler.sample(start, p, r);
+    size_t startSegment = sampler.curSegment();
+
+    for (size_t i = startSegment + 1; i < _transform.size(); i++) {
+        float currLength = sampler.point(i).z;
+        glm::vec2 dir = sampler.segmentDirection(i);
+
+        // Go back within window to check for hard direction changes
+        for (int k = i - 1; k >= int(startSegment); k--) {
+            if (glm::length2(sampler.segmentDirection(k) + dir) < sqDirLimit) {
+                sampler.clearPoints();
+                return false;
+            }
+            if (sampler.point(k).z < sampler.point(i).z - sampleWindow) {
+                break;
+            }
+        }
+        if (currLength > start + width) {
+            break;
+        }
+    }
 
     return true;
 }
