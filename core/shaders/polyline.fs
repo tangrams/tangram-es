@@ -65,7 +65,7 @@ void main(void) {
     #endif
 
     #ifdef TANGRAM_LINE_TEXTURE
-        vec2 line_st = vec2(v_texcoord.x, fract(v_texcoord.y / u_texture_ratio));
+        vec2 line_st = vec2(v_texcoord.x, fract(v_texcoord.y * TANGRAM_DASHLINE_TEX_SCALE / u_texture_ratio));
         vec4 line_color = texture2D(u_texture, line_st);
 
         if (line_color.a < TANGRAM_ALPHA_TEST) {

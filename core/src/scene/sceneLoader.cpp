@@ -792,9 +792,9 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, const std::shared
     if (Node dashNode = styleNode["dash"]) {
         if (auto polylineStyle = dynamic_cast<PolylineStyle*>(&style)) {
             if (dashNode.IsSequence()) {
-                std::vector<int> dashValues;
+                std::vector<float> dashValues;
                 for (auto dashValue : dashNode) {
-                    dashValues.push_back(dashValue.as<int>());
+                    dashValues.push_back(dashValue.as<float>());
                 }
                 polylineStyle->setDashArray(dashValues);
                 polylineStyle->setTexCoordsGeneration(true);
