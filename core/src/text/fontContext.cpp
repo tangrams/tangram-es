@@ -132,6 +132,10 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
         LOGD("Empty text line");
         return false;
     }
+    if (line.missingGlyphs()) {
+        LOGD("Missing glyphs for %s", _text.c_str());
+        return false;
+    }
 
     line.setScale(_params.fontScale);
 

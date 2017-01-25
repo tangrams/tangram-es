@@ -100,9 +100,9 @@ void SelectionQuery::process(const View& _view, const FrameBuffer& _framebuffer,
             return;
         }
 
-        LngLat coordinates = label.first->coordinates(*label.second, _view.getMapProjection());
+        auto coordinate = label.second->coordToLngLat(label.first->modelCenter());
 
-        LabelPickResult queryResult(label.first->renderType(), coordinates,
+        LabelPickResult queryResult(label.first->renderType(), LngLat{coordinate.x, coordinate.y},
                                     FeaturePickResult(props, {{m_position.x, m_position.y}}));
 
         cb(&queryResult);

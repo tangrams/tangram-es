@@ -464,9 +464,9 @@ bool PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
         if (textStyleBuilder.prepareLabel(params, Label::Type::point)) {
 
             for (size_t i = 0; i < iconsCount; i++) {
-                auto& pLabel = m_labels[iconsStart + i];
-                auto p = pLabel->worldTransform();
-                textStyleBuilder.addLabel(params, Label::Type::point, p, _rule);
+                auto pLabel = static_cast<SpriteLabel*>(m_labels[iconsStart + i].get());
+                auto p = pLabel->modelCenter();
+                textStyleBuilder.addLabel(params, Label::Type::point, {{p, p}}, _rule);
 
                 bool definePriority = !_rule.contains(StyleParamKey::text_priority);
                 bool defineCollide = _rule.contains(StyleParamKey::collide);
