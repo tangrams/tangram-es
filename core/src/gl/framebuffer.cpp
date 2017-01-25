@@ -74,10 +74,10 @@ GLuint FrameBuffer::readAt(float _normalizedX, float _normalizedY) const {
 FrameBuffer::PixelRect FrameBuffer::readRect(float _normalizedX, float _normalizedY, float _normalizedW, float _normalizedH) const {
 
     PixelRect rect;
-    rect.left = floorf(_normalizedX * m_width);
-    rect.bottom = floorf(_normalizedY * m_height);
-    rect.width = ceilf(_normalizedW * m_width);
-    rect.height = ceilf(_normalizedH * m_height);
+    rect.left = fminf(fmaxf(floorf(_normalizedX * m_width), 0.f), m_width);
+    rect.bottom = fminf(fmaxf(floorf(_normalizedY * m_height), 0.f), m_height);
+    rect.width = fminf(fmaxf(ceilf(_normalizedW * m_width), 0.f), m_width - rect.left);
+    rect.height = fminf(fmaxf(ceilf(_normalizedH * m_height), 0.f), m_height - rect.bottom);
 
     rect.pixels.resize(rect.width * rect.height);
 
