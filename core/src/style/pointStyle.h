@@ -27,7 +27,7 @@ public:
         glm::vec2 size;
         uint32_t color = 0xffffffff;
         Label::Options labelOptions;
-        LabelProperty::Placement placement;
+        LabelProperty::Placement placement = LabelProperty::Placement::vertex;
         float extrudeScale = 1.f;
         float placementMinLengthRatio = 1.0f;
         float placementSpacing = 80.f;
