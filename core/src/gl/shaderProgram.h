@@ -40,8 +40,6 @@ public:
 
     // Getters
     GLuint getGlProgram() const { return m_glProgram; };
-    GLuint getGlFragmentShader() const { return m_glFragmentShader; };
-    GLuint getGlVertexShader() const { return m_glVertexShader; };
 
     std::string getDescription() const { return m_description; }
 
@@ -106,6 +104,9 @@ public:
         return block;
     }
 
+    static GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
+    static GLuint makeCompiledShader(RenderState& rs, const std::string& _src, GLenum _type);
+
 private:
 
     // Get a uniform value from the cache, and returns false when it's a cache miss
@@ -124,8 +125,6 @@ private:
 
     int m_generation = -1;
     GLuint m_glProgram = 0;
-    GLuint m_glFragmentShader = 0;
-    GLuint m_glVertexShader = 0;
 
     fastmap<std::string, GLint> m_attribMap;
     fastmap<GLint, UniformValue> m_uniformCache;
@@ -139,13 +138,10 @@ private:
     std::map<std::string, std::vector<std::string>> m_sourceBlocks;
 
     bool m_needsBuild = true;
-    bool m_invalidShaderSource = false;
 
     Disposer m_disposer;
 
     void checkValidity(RenderState& rs);
-    GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
-    GLuint makeCompiledShader(const std::string& _src, GLenum _type);
 
     std::string applySourceBlocks(const std::string& source, bool fragShader) const;
 

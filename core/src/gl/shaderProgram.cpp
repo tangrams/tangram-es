@@ -22,21 +22,11 @@ ShaderProgram::~ShaderProgram() {
 
     auto generation = m_generation;
     auto glProgram = m_glProgram;
-    auto glFragmentShader = m_glFragmentShader;
-    auto glVertexShader = m_glVertexShader;
 
     m_disposer([=](RenderState& rs) {
         if (rs.isValidGeneration(generation)) {
             if (glProgram != 0) {
                 GL::deleteProgram(glProgram);
-            }
-
-            if (glFragmentShader != 0) {
-                GL::deleteShader(glFragmentShader);
-            }
-
-            if (glVertexShader != 0) {
-                GL::deleteShader(glVertexShader);
             }
         }
         // Deleting the shader program that is currently in-use sets the current shader program to 0
@@ -129,55 +119,43 @@ bool ShaderProgram::use(RenderState& rs) {
 
 bool ShaderProgram::build(RenderState& rs) {
 
+    if (!m_needsBuild) { return false; }
     m_needsBuild = false;
     m_generation = rs.generation();
 
-    if (m_invalidShaderSource) { return false; }
+    // Delete handle for old program; values of 0 are silently ignored
+    GL::deleteProgram(m_glProgram);
+    m_glProgram = 0;
 
     // Inject source blocks
-
     Light::assembleLights(m_sourceBlocks);
 
     auto vertSrc = applySourceBlocks(m_vertexShaderSource, false);
     auto fragSrc = applySourceBlocks(m_fragmentShaderSource, true);
 
-    // Try to compile vertex and fragment shaders, releasing resources and quiting on failure
-
-    GLint vertexShader = makeCompiledShader(vertSrc, GL_VERTEX_SHADER);
-
+    // Compile vertex and fragment shaders
+    GLint vertexShader = makeCompiledShader(rs, vertSrc, GL_VERTEX_SHADER);
     if (vertexShader == 0) {
+        LOGE("Shader compilation failed for %s", m_description.c_str());
         return false;
     }
 
-    GLint fragmentShader = makeCompiledShader(fragSrc, GL_FRAGMENT_SHADER);
-
+    GLint fragmentShader = makeCompiledShader(rs, fragSrc, GL_FRAGMENT_SHADER);
     if (fragmentShader == 0) {
-        GL::deleteShader(vertexShader);
+        LOGE("Shader compilation failed for %s", m_description.c_str());
         return false;
     }
 
-    // Try to link shaders into a program, releasing resources and quiting on failure
-
+    // Link shaders into a program
     GLint program = makeLinkedShaderProgram(fragmentShader, vertexShader);
-
     if (program == 0) {
-        GL::deleteShader(vertexShader);
-        GL::deleteShader(fragmentShader);
+        LOGE("Shader compilation failed for %s", m_description.c_str());
         return false;
     }
 
-    // Delete handles for old shaders and program; values of 0 are silently ignored
-
-    GL::deleteShader(m_glFragmentShader);
-    GL::deleteShader(m_glVertexShader);
-    GL::deleteProgram(m_glProgram);
-
-    m_glFragmentShader = fragmentShader;
-    m_glVertexShader = vertexShader;
     m_glProgram = program;
 
     // Clear any cached shader locations
-
     m_attribMap.clear();
     m_disposer = Disposer(rs);
 
@@ -203,19 +181,23 @@ GLuint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShad
             std::vector<GLchar> infoLog(infoLength);
             GL::getProgramInfoLog(program, infoLength, NULL, &infoLog[0]);
             LOGE("linking program:\n%s", &infoLog[0]);
-            LOGD("Fragment shader source:\n%s", m_fragmentShaderSource.c_str());
-            LOGD("Vertex shader source:\n%s", m_vertexShaderSource.c_str());
         }
 
         GL::deleteProgram(program);
-        m_invalidShaderSource = true;
         return 0;
     }
 
     return program;
 }
 
-GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) {
+GLuint ShaderProgram::makeCompiledShader(RenderState& rs, const std::string& _src, GLenum _type) {
+
+    auto& cache = (_type == GL_VERTEX_SHADER) ? rs.vertexShaders : rs.fragmentShaders;
+
+    auto entry = cache.emplace(_src, 0);
+    if (!entry.second) {
+        return entry.first->second;
+    }
 
     GLuint shader = GL::createShader(_type);
 
@@ -235,7 +217,7 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
             infoLog.resize(infoLength);
 
             GL::getShaderInfoLog(shader, infoLength, NULL, static_cast<GLchar*>(&infoLog[0]));
-            LOGE("Shader compilation failed for %s with log:\n%s", m_description.c_str(), infoLog.c_str());
+            LOGE("Shader compilation failed\n%s", infoLog.c_str());
 
             std::stringstream sourceStream(source);
             std::string item;
@@ -267,14 +249,13 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
         }
 
         GL::deleteShader(shader);
-        m_invalidShaderSource = true;
         return 0;
     }
 
+    entry.first->second = shader;
+
     return shader;
-
 }
-
 
 std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fragShader) const {
 
@@ -338,8 +319,6 @@ std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fra
 void ShaderProgram::checkValidity(RenderState& rs) {
 
     if (!rs.isValidGeneration(m_generation)) {
-        m_glFragmentShader = 0;
-        m_glVertexShader = 0;
         m_glProgram = 0;
         m_needsBuild = true;
         m_uniformCache.clear();
