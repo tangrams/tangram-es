@@ -347,7 +347,11 @@ bool Map::update(float _dt) {
         impl->tileManager.updateTileSets(impl->view.state(), impl->view.getVisibleTiles());
 
         auto& tiles = impl->tileManager.getVisibleTiles();
+
+        std::lock_guard<std::mutex> markerLock(impl->markerManager.markerMutex);
+
         auto& markers = impl->markerManager.markers();
+
 
         for (const auto& marker : markers) {
             marker->update(_dt, impl->view);
@@ -431,19 +435,21 @@ void Map::render() {
         impl->selectionBuffer->applyAsRenderTarget(impl->renderState);
 
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
+        {
+            std::lock_guard<std::mutex> markerLock(impl->markerManager.markerMutex);
 
-        for (const auto& style : impl->scene->styles()) {
-            style->onBeginDrawSelectionFrame(impl->renderState, impl->view, *(impl->scene));
+            for (const auto& style : impl->scene->styles()) {
+                style->onBeginDrawSelectionFrame(impl->renderState, impl->view, *(impl->scene));
 
-            for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                style->drawSelectionFrame(impl->renderState, *tile);
-            }
+                for (const auto& tile : impl->tileManager.getVisibleTiles()) {
+                    style->drawSelectionFrame(impl->renderState, *tile);
+                }
 
-            for (const auto& marker : impl->markerManager.markers()) {
-                style->drawSelectionFrame(impl->renderState, *marker);
+                for (const auto& marker : impl->markerManager.markers()) {
+                    style->drawSelectionFrame(impl->renderState, *marker);
+                }
             }
         }
-
         std::vector<SelectionColorRead> colorCache;
         // Resolve feature selection queries
         for (const auto& selectionQuery : impl->selectionQueries) {
@@ -471,6 +477,7 @@ void Map::render() {
 
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
+        std::lock_guard<std::mutex> markerLock(impl->markerManager.markerMutex);
 
         // Loop over all styles
         for (const auto& style : impl->scene->styles()) {
@@ -483,7 +490,8 @@ void Map::render() {
             }
 
             for (const auto& marker : impl->markerManager.markers()) {
-                style->draw(impl->renderState, *marker);
+                if(marker)
+                    style->draw(impl->renderState, *marker);
             }
 
             style->onEndDrawFrame();

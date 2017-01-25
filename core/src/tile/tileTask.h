@@ -51,7 +51,7 @@ public:
         return m_priority.load();
     }
 
-    void setPriority(double _priority) {
+    void setPriority(float _priority) {
         m_priority.store(_priority);
     }
 
@@ -69,7 +69,7 @@ public:
     virtual void complete();
 
     // onDone for sub-tasks
-    virtual void complete(TileTask& _mainTask) {}
+    virtual void complete(TileTask& /*_mainTask*/) {}
 
     int rawSource = 0;
 

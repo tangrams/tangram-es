@@ -21,9 +21,9 @@ struct TileID {
     int8_t  s; // Styling zoom
     int16_t wrap;
 
-    TileID(int32_t _x, int32_t _y, int32_t _z, int32_t _s, int32_t _wrap) : x(_x), y(_y), z(_z), s(_s), wrap(_wrap) {}
+    TileID(int32_t _x, int32_t _y, int8_t _z, int8_t _s, int16_t _wrap) : x(_x), y(_y), z(_z), s(_s), wrap(_wrap) {}
 
-    TileID(int32_t _x, int32_t _y, int32_t _z) : TileID(_x, _y, _z, _z, 0) {}
+    TileID(int32_t _x, int32_t _y, int8_t _z) : TileID(_x, _y, _z, _z, 0) {}
 
     TileID(const TileID& _rhs) = default;
 
@@ -53,7 +53,7 @@ struct TileID {
 
         int32_t over = z - _max;
 
-        return TileID(x >> over, y >> over, _max, z, wrap);
+        return TileID(x >> over, y >> over, static_cast<int8_t>(_max), z, wrap);
     }
 
     TileID getParent() const {
