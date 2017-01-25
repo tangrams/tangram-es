@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gl/uniform.h"
+#include "util/shaderSource.h"
 
 #include "glm/vec4.hpp"
 
@@ -11,6 +12,7 @@
 
 namespace Tangram {
 
+class Material;
 class RenderState;
 class ShaderProgram;
 class View;
@@ -89,42 +91,32 @@ public:
     /*  Get the type of light, especially to identify the class and specific methods to it. */
     virtual LightType getType();
 
-    /*  GLSL line to compute the specific light instance */
-    virtual std::string getInstanceComputeBlock();
+    /*  Add the struct and function to compute a light */
+    virtual void buildClassBlock(Material& _material, ShaderSource& _out) = 0;
+
+    /*  Add the instances GLSL block where the light is defined inside the shader */
+    virtual void buildInstanceBlock(ShaderSource& _out);
+
+    /*  Add GLSL line to compute the specific light instance */
+    virtual void buildInstanceComputeBlock(ShaderSource& _out);
 
     /*
-     * Inject the needed lines of GLSL code on the shader to make this light work
      * Returns LightUniforms for passing to setupProgram if this light is dynamic
      */
-    virtual std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) = 0;
+    virtual std::unique_ptr<LightUniforms> getUniforms(ShaderProgram& _shader) = 0;
 
     /*  Pass the uniforms for this particular DYNAMICAL light on the passed shader */
     virtual void setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms);
 
-    /*  STATIC Function that compose sourceBlocks with Lights on a ProgramShader */
-    static void assembleLights(std::map<std::string, std::vector<std::string>>& _sourceBlocks);
+    void buildSetupBlock(ShaderSource& _out);
 
 protected:
-
-    /*
-     * Inject the needed lines of GLSL code on the shader to make this light work
-     */
-    void injectSourceBlocks(ShaderProgram& _shader);
 
     /*  Get the uniform name of the DYNAMICAL light */
     virtual std::string getUniformName();
 
-    /*  Get the struct and function to compute a light */
-    virtual std::string getClassBlock() = 0;
-
-    /*  Get the instances GLSL block where the light is defined inside the shader */
-    virtual std::string getInstanceBlock();
-
     /*  Get the instances GLSL block where NON DYNAMICAL light values are assigned inside the shader */
-    virtual std::string getInstanceAssignBlock();
-
-    /*  GLSL #defines flags for the instance of this light */
-    virtual std::string getInstanceDefinesBlock() = 0;
+    virtual void buildInstanceAssignBlock(ShaderSource& _out);
 
     /* Get the string name of the type of this light (as it would be declared in GLSL) */
     virtual const std::string& getTypeName() = 0;

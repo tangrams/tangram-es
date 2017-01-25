@@ -1,7 +1,6 @@
 #include "debugStyle.h"
 
 #include "tangram.h"
-#include "platform.h"
 #include "material.h"
 #include "tile/tile.h"
 #include "gl/shaderProgram.h"
@@ -11,8 +10,27 @@
 #include <memory>
 #include <string>
 
-#include "shaders/debug_vs.h"
-#include "shaders/debug_fs.h"
+static const char* debug_vs = R"(
+uniform mat4 u_model;
+uniform mat4 u_view;
+uniform mat4 u_proj;
+attribute vec4 a_position;
+attribute vec4 a_color;
+varying vec4 v_color;
+
+void main() {
+    v_color = a_color;
+    gl_Position = u_proj * u_view * u_model * a_position;
+}
+)";
+
+static const char* debug_fs = R"(
+varying vec4 v_color;
+
+void main() {
+    gl_FragColor = v_color;
+}
+)";
 
 namespace Tangram {
 
@@ -36,11 +54,12 @@ void DebugStyle::constructVertexLayout() {
 
 }
 
-void DebugStyle::constructShaderProgram() {
+void DebugStyle::buildFragmentShaderSource(ShaderSource& out) {
+    out << debug_fs;
+}
 
-    m_shaderProgram->setSourceStrings(SHADER_SOURCE(debug_fs),
-                                      SHADER_SOURCE(debug_vs));
-
+void DebugStyle::buildVertexShaderSource(ShaderSource& out, bool _selectionPass) {
+    out << debug_vs;
 }
 
 struct DebugStyleBuilder : public StyleBuilder {
@@ -72,8 +91,7 @@ struct DebugStyleBuilder : public StyleBuilder {
 
     const Style& style() const override { return m_style; }
 
-    DebugStyleBuilder(const DebugStyle& _style)
-        : StyleBuilder(_style), m_style(_style) {}
+    DebugStyleBuilder(const DebugStyle& _style) : m_style(_style) {}
 
 };
 

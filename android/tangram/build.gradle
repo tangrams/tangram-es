@@ -18,7 +18,8 @@ android {
     externalNativeBuild {
       cmake {
         targets 'tangram'
-        arguments '-DPLATFORM_TARGET=android',
+        arguments '-DCMAKE_BUILD_TYPE=Release',
+                  '-DPLATFORM_TARGET=android',
                   '-DANDROID_TOOLCHAIN=clang',
                   '-DANDROID_STL=c++_shared'
         cppFlags '-std=c++14',

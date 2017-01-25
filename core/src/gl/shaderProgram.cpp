@@ -22,8 +22,6 @@ ShaderProgram::~ShaderProgram() {
 
     auto generation = m_generation;
     auto glProgram = m_glProgram;
-    auto glFragmentShader = m_glFragmentShader;
-    auto glVertexShader = m_glVertexShader;
 
     m_disposer([=](RenderState& rs) {
         if (rs.isValidGeneration(generation)) {
@@ -31,13 +29,7 @@ ShaderProgram::~ShaderProgram() {
                 GL::deleteProgram(glProgram);
             }
 
-            if (glFragmentShader != 0) {
-                GL::deleteShader(glFragmentShader);
-            }
 
-            if (glVertexShader != 0) {
-                GL::deleteShader(glVertexShader);
-            }
         }
         // Deleting the shader program that is currently in-use sets the current shader program to 0
         // so we un-set the current program in the render state.
@@ -49,37 +41,6 @@ void ShaderProgram::setSourceStrings(const std::string& _fragSrc, const std::str
     m_fragmentShaderSource = std::string(_fragSrc);
     m_vertexShaderSource = std::string(_vertSrc);
     m_needsBuild = true;
-}
-
-void ShaderProgram::addSourceBlock(const std::string& _tagName, const std::string& _glslSource, bool _allowDuplicate){
-
-    if (!_allowDuplicate) {
-        for (auto& source : m_sourceBlocks[_tagName]) {
-            if (_glslSource == source) {
-                return;
-            }
-        }
-    }
-
-    size_t start = 0;
-    std::string sourceBlock = _glslSource;
-
-    // Certain graphics drivers have issues with shaders having line continuation backslashes "\".
-    // Example raster.glsl was having issues on s6 and note2 because of the "\"s in the glsl file.
-    // This also makes sure if any "\"s are present in the shaders coming from style sheet will be
-    // taken care of.
-
-    // Replace blackslash+newline with spaces (simplification of regex "\\\\\\s*\\n")
-    while ((start = sourceBlock.find("\\\n", start)) != std::string::npos) {
-        sourceBlock.replace(start, 2, "  ");
-        start += 2;
-    }
-
-    m_sourceBlocks[_tagName].push_back(sourceBlock);
-    m_needsBuild = true;
-
-    //  TODO:
-    //          - add Global Blocks
 }
 
 GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
@@ -132,52 +93,24 @@ bool ShaderProgram::build(RenderState& rs) {
     m_needsBuild = false;
     m_generation = rs.generation();
 
-    if (m_invalidShaderSource) { return false; }
-
-    // Inject source blocks
-
-    Light::assembleLights(m_sourceBlocks);
-
-    auto vertSrc = applySourceBlocks(m_vertexShaderSource, false);
-    auto fragSrc = applySourceBlocks(m_fragmentShaderSource, true);
-
-    // Try to compile vertex and fragment shaders, releasing resources and quiting on failure
-
-    GLint vertexShader = makeCompiledShader(vertSrc, GL_VERTEX_SHADER);
-
-    if (vertexShader == 0) {
-        return false;
-    }
-
-    GLint fragmentShader = makeCompiledShader(fragSrc, GL_FRAGMENT_SHADER);
-
-    if (fragmentShader == 0) {
-        GL::deleteShader(vertexShader);
-        return false;
-    }
-
-    // Try to link shaders into a program, releasing resources and quiting on failure
-
-    GLint program = makeLinkedShaderProgram(fragmentShader, vertexShader);
-
-    if (program == 0) {
-        GL::deleteShader(vertexShader);
-        GL::deleteShader(fragmentShader);
-        return false;
-    }
-
-    // Delete handles for old shaders and program; values of 0 are silently ignored
-
-    GL::deleteShader(m_glFragmentShader);
-    GL::deleteShader(m_glVertexShader);
+    // Delete handle for old program; values of 0 are silently ignored
     GL::deleteProgram(m_glProgram);
+    m_glProgram = 0;
 
-    m_glFragmentShader = fragmentShader;
-    m_glVertexShader = vertexShader;
+    // Compile vertex and fragment shaders, releasing resources and quiting on failure
+    GLint vertexShader = makeCompiledShader(rs, m_vertexShaderSource, GL_VERTEX_SHADER);
+    if (vertexShader == 0) { return false; }
+
+    GLint fragmentShader = makeCompiledShader(rs, m_fragmentShaderSource, GL_FRAGMENT_SHADER);
+    if (fragmentShader == 0) { return false; }
+
+    // Link shaders into a program, releasing resources and quiting on failure
+    GLint program = makeLinkedShaderProgram(fragmentShader, vertexShader);
+    if (program == 0) { return false; }
+
     m_glProgram = program;
 
     // Clear any cached shader locations
-
     m_attribMap.clear();
     m_disposer = Disposer(rs);
 
@@ -185,6 +118,8 @@ bool ShaderProgram::build(RenderState& rs) {
 }
 
 GLuint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader) {
+
+    const clock_t begin = clock();
 
     GLuint program = GL::createProgram();
 
@@ -203,25 +138,38 @@ GLuint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShad
             std::vector<GLchar> infoLog(infoLength);
             GL::getProgramInfoLog(program, infoLength, NULL, &infoLog[0]);
             LOGE("linking program:\n%s", &infoLog[0]);
-            LOGD("Fragment shader source:\n%s", m_fragmentShaderSource.c_str());
-            LOGD("Vertex shader source:\n%s", m_vertexShaderSource.c_str());
         }
 
         GL::deleteProgram(program);
-        m_invalidShaderSource = true;
         return 0;
     }
+
+    float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+    LOG(" link time %f", loadTime);
 
     return program;
 }
 
-GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) {
+GLuint ShaderProgram::makeCompiledShader(RenderState& rs, const std::string& _src, GLenum _type) {
+
+    auto& cache = (_type == GL_VERTEX_SHADER) ? rs.vertexShaders : rs.fragmentShaders;
+
+    auto entry = cache.emplace(_src, 0);
+    if (!entry.second) {
+        LOG("%d reuse shader %d", _type == GL_VERTEX_SHADER, entry.first->second);
+        return entry.first->second;
+    }
+
+    const clock_t begin = clock();
 
     GLuint shader = GL::createShader(_type);
 
     const GLchar* source = (const GLchar*) _src.c_str();
     GL::shaderSource(shader, 1, &source, NULL);
     GL::compileShader(shader);
+
+    float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+    LOG("shader %d compile time %f", shader, loadTime);
 
     GLint isCompiled;
     GL::getShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
@@ -235,7 +183,7 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
             infoLog.resize(infoLength);
 
             GL::getShaderInfoLog(shader, infoLength, NULL, static_cast<GLchar*>(&infoLog[0]));
-            LOGE("Shader compilation failed for %s with log:\n%s", m_description.c_str(), infoLog.c_str());
+            //LOGE("Shader compilation failed for %s with log:\n%s", m_description.c_str(), infoLog.c_str());
 
             std::stringstream sourceStream(source);
             std::string item;
@@ -255,91 +203,29 @@ GLuint ShaderProgram::makeCompiledShader(const std::string& _src, GLenum _type) 
 
                 for (int i = std::max(0, lineNum-5); i < lineNum+5; i++) {
                     if (size_t(i) >= sourceLines.size()) { break; }
-                    LOGE("%d: %s", i+1, sourceLines[i].c_str());
+                    logMsg("%d: %s\n", i+1, sourceLines[i].c_str());
                 }
             }
 
             // Print full source with line numbers
-            LOGD("\n\n");
+            LOG("\n\n");
             for (size_t i = 0; i < sourceLines.size(); i++) {
-                LOGD("%d: %s", i, sourceLines[i].c_str());
+                logMsg("%s\n", sourceLines[i].c_str());
             }
         }
 
         GL::deleteShader(shader);
-        m_invalidShaderSource = true;
         return 0;
     }
 
+    entry.first->second = shader;
+
     return shader;
-
-}
-
-
-std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fragShader) const {
-
-    std::stringstream sourceOut;
-    std::set<std::string> pragmas;
-
-    sourceOut << "#define TANGRAM_EPSILON 0.00001\n";
-    sourceOut << "#define TANGRAM_WORLD_POSITION_WRAP 100000.\n";
-
-    if (fragShader) {
-        sourceOut << "#define TANGRAM_FRAGMENT_SHADER\n";
-    } else {
-        float depthDelta = 2.f / (1 << 16);
-        sourceOut << "#define TANGRAM_DEPTH_DELTA " << std::to_string(depthDelta) << '\n';
-        sourceOut << "#define TANGRAM_VERTEX_SHADER\n";
-    }
-
-    std::stringstream sourceIn(source);
-    std::string line;
-
-    while (std::getline(sourceIn, line)) {
-        if (line.empty()) {
-            continue;
-        }
-
-        sourceOut << line << '\n';
-
-        char pragmaName[128];
-        // NB: The initial whitespace is to skip any number of whitespace chars
-        if (sscanf(line.c_str(), " #pragma tangram:%127s", pragmaName) == 0) {
-            continue;
-        }
-
-        auto block = m_sourceBlocks.find(pragmaName);
-        if (block == m_sourceBlocks.end()) {
-            continue;
-        }
-
-        bool unique;
-        std::tie(std::ignore, unique) = pragmas.emplace(pragmaName);
-        if (!unique) {
-            continue;
-        }
-
-        // insert blocks
-        for (auto& s : block->second) {
-            sourceOut << s << '\n';
-        }
-    }
-
-    // for (auto& block : m_sourceBlocks) {
-    //     if (pragmas.find(block.first) == pragmas.end()) {
-    //         logMsg("Warning: expected pragma '%s' in shader source\n",
-    //                block.first.c_str());
-    //     }
-    // }
-
-    return sourceOut.str();
 }
 
 void ShaderProgram::checkValidity(RenderState& rs) {
 
     if (!rs.isValidGeneration(m_generation)) {
-        m_glFragmentShader = 0;
-        m_glVertexShader = 0;
         m_glProgram = 0;
         m_needsBuild = true;
         m_uniformCache.clear();

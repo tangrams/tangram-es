@@ -39,14 +39,13 @@ public:
 
     auto getPosition() const -> UnitVec<glm::vec3> { return m_position; }
 
-    std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) override;
+    std::unique_ptr<LightUniforms> getUniforms(ShaderProgram& _shader) override;
 
 protected:
 
     /*  GLSL block code with structs and need functions for this light type */
-    virtual std::string getClassBlock() override;
-    virtual std::string getInstanceDefinesBlock() override;
-    virtual std::string getInstanceAssignBlock() override;
+    virtual void buildClassBlock(Material& _material, ShaderSource& _out) override;
+    virtual void buildInstanceAssignBlock(ShaderSource& _out) override;
     virtual const std::string& getTypeName() override;
 
     UnitVec<glm::vec3> m_position;

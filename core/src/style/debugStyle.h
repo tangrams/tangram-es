@@ -9,9 +9,11 @@ class DebugStyle : public Style {
 protected:
 
     virtual void constructVertexLayout() override;
-    virtual void constructShaderProgram() override;
 
     virtual std::unique_ptr<StyleBuilder> createBuilder() const override;
+
+    void buildFragmentShaderSource(ShaderSource& _out) override;
+    void buildVertexShaderSource(ShaderSource& _out, bool _selectionPass) override;
 
 public:
 
