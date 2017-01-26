@@ -32,7 +32,8 @@ public:
     enum class Type {
         point,
         line,
-        debug,
+        curved,
+        debug
     };
 
     enum State {
@@ -84,6 +85,9 @@ public:
 
     virtual glm::vec2 modelCenter() const = 0;
 
+    // Returns the candidate priority for a feature with multiple labels
+    virtual float candidatePriority() const { return 0; }
+
     bool update(const glm::mat4& _mvp, const ViewState& _viewState,
                 const AABB* _bounds, ScreenTransform& _transform);
 
@@ -132,9 +136,6 @@ public:
     bool nextAnchor();
 
     bool setAnchorIndex(int _index);
-
-    // Returns the length of the segment the label is associated with
-    virtual float modelLineLength2() const { return 0; };
 
     void enterState(const State& _state, float _alpha = 1.0f);
 

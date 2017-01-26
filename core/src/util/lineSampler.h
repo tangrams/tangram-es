@@ -96,7 +96,6 @@ struct LineSampler {
 
     glm::vec2 segmentDirection(size_t _pos) {
         if (_pos >= m_points.size()-1) {
-            //return {};
             _pos = m_points.size()-2;
         }
 

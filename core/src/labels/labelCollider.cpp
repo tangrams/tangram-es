@@ -2,7 +2,7 @@
 
 #include "labels/labelSet.h"
 #include "view/view.h" // ViewState
-
+#include "labels/curvedLabel.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/norm.hpp"
 #include "labels/obbBuffer.h"
@@ -66,11 +66,8 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
                       return l1->options().repeatGroup < l2->options().repeatGroup;
                   }
 
-                  if (l1->type() == Label::Type::line && l2->type() == Label::Type::line) {
-                      // Prefer the label with longer line segment as it has a chance
-                      // to be shown earlier (also on the lower zoom-level)
-                      // TODO compare fraction segment_length/label_width
-                      return l1->modelLineLength2() > l2->modelLineLength2();
+                  if (l1->type() == l2->type()) {
+                      return l1->candidatePriority() < l2->candidatePriority();
                   }
 
                   return l1->hash() < l2->hash();
@@ -161,12 +158,8 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
                       return l1->options().priority < l2->options().priority;
                   }
 
-                  if (l1->type() == Label::Type::line &&
-                      l2->type() == Label::Type::line) {
-                      // Prefer the label with longer line segment as it has a chance
-                      // to be shown earlier (also on the lower zoom-level)
-                      // TODO compare fraction segment_length/label_width
-                      return l1->modelLineLength2() > l2->modelLineLength2();
+                  if (l1->type() == l2->type()) {
+                      return l1->candidatePriority() < l2->candidatePriority();
                   }
                   // just so it is consistent between two instances
                   return (l1->hash() < l2->hash());
@@ -240,6 +233,14 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
                 l2->occlude();
             }
         } else {
+            if (l1->type() == l2->type()) {
+                if (l1->candidatePriority() > l2->candidatePriority()) {
+                    l1->occlude();
+                } else {
+                    l2->occlude();
+                }
+            }
+
             // just so it is consistent between two instances
             if (l1->hash() < l2->hash()) {
                 l1->occlude();

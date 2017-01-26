@@ -14,6 +14,7 @@
 #include "labels/textLabel.h"
 #include "marker/marker.h"
 #include "labels/obbBuffer.h"
+#include "labels/curvedLabel.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -114,6 +115,8 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
     bool drawAllLabels = Tangram::getDebugFlag(DebugFlags::draw_all_labels);
 
     for (const auto& tile : _tiles) {
+
+        //LOG("tile: %d/%d z:%d,%d", tile->getID().x, tile->getID().y, tile->getID().z, tile->getID().s);
 
         // discard based on level of detail
         // if ((zoom - tile->getID().z) > lodDiscard) {
@@ -263,9 +266,8 @@ bool Labels::labelComparator(const LabelEntry& _a, const LabelEntry& _b) {
         return l1->options().repeatGroup < l2->options().repeatGroup;
     }
 
-    if (l1->type() == Label::Type::line && l2->type() == Label::Type::line) {
-        // Prefer the label with longer line segment as it has a chance
-        return l1->modelLineLength2() > l2->modelLineLength2();
+    if (l1->type() == l2->type()) {
+        return l1->candidatePriority() < l2->candidatePriority();
     }
 
     if (l1->hash() != l2->hash()) {
@@ -302,6 +304,11 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
         auto& entry = *it;
         auto* l = entry.label;
 
+        ScreenTransform transform { m_transforms, entry.transformRange };
+        OBBBuffer obbs { m_obbs, entry.obbsRange };
+
+        l->obbs(transform, obbs);
+
         // Parent must have been processed earlier so at this point its
         // occlusion and anchor position is determined for the current frame.
         if (l->parent()) {
@@ -323,11 +330,6 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
                 continue;
             }
         }
-
-        ScreenTransform transform { m_transforms, entry.transformRange };
-        OBBBuffer obbs { m_obbs, entry.obbsRange };
-
-        l->obbs(transform, obbs);
 
         int anchorIndex = l->anchorIndex();
 
@@ -511,6 +513,19 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
                                  label->parent()->screenCenter());
         }
 
+        if (label->type() == Label::Type::curved) {
+            //for (int i = entry.transform.start; i < entry.transform.end()-2; i++) {
+            for (int i = entry.transformRange.start; i < entry.transformRange.end()-1; i++) {
+                if (i % 2 == 0) {
+                    Primitives::setColor(rs, 0xff0000);
+                } else {
+                    Primitives::setColor(rs, 0x0000ff);
+
+                }
+                Primitives::drawLine(rs, glm::vec2(m_transforms.points[i]),
+                                     glm::vec2(m_transforms.points[i+1]));
+            }
+        }
 #if 0
         // draw offset
         glm::vec2 rot = label->screenTransform().rotation;
