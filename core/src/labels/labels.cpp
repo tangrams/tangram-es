@@ -304,6 +304,11 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
         auto& entry = *it;
         auto* l = entry.label;
 
+        ScreenTransform transform { m_transforms, entry.transformRange };
+        OBBBuffer obbs { m_obbs, entry.obbsRange };
+
+        l->obbs(transform, obbs);
+
         // Parent must have been processed earlier so at this point its
         // occlusion and anchor position is determined for the current frame.
         if (l->parent()) {
@@ -325,11 +330,6 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
                 continue;
             }
         }
-
-        ScreenTransform transform { m_transforms, entry.transformRange };
-        OBBBuffer obbs { m_obbs, entry.obbsRange };
-
-        l->obbs(transform, obbs);
 
         int anchorIndex = l->anchorIndex();
 
