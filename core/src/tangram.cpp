@@ -79,7 +79,8 @@ public:
     MarkerManager markerManager;
     std::unique_ptr<FrameBuffer> selectionBuffer = std::make_unique<FrameBuffer>(0, 0);
 
-    bool cacheGlState;
+    bool cacheGlState = false;
+    float pickRadius = .5f;
 
     std::vector<SelectionQuery> selectionQueries;
 };
@@ -386,20 +387,24 @@ bool Map::update(float _dt) {
     return viewComplete;
 }
 
+void Map::setPickRadius(float _radius) {
+    impl->pickRadius = _radius;
+}
+
 void Map::pickFeatureAt(float _x, float _y, FeaturePickCallback _onFeaturePickCallback) {
-    impl->selectionQueries.push_back({{_x, _y}, _onFeaturePickCallback});
+    impl->selectionQueries.push_back({{_x, _y}, impl->pickRadius, _onFeaturePickCallback});
 
     requestRender();
 }
 
 void Map::pickLabelAt(float _x, float _y, LabelPickCallback _onLabelPickCallback) {
-    impl->selectionQueries.push_back({{_x, _y}, _onLabelPickCallback});
+    impl->selectionQueries.push_back({{_x, _y}, impl->pickRadius, _onLabelPickCallback});
 
     requestRender();
 }
 
 void Map::pickMarkerAt(float _x, float _y, MarkerPickCallback _onMarkerPickCallback) {
-    impl->selectionQueries.push_back({{_x, _y}, _onMarkerPickCallback});
+    impl->selectionQueries.push_back({{_x, _y}, impl->pickRadius, _onMarkerPickCallback});
 
     requestRender();
 }
