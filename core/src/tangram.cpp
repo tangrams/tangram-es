@@ -157,7 +157,6 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
     tileManager.setTileSources(_scene->tileSources());
     tileWorker.setScene(_scene);
     markerManager.setScene(_scene);
-    setPixelScale(view.pixelScale());
 
     bool animated = scene->animated() == Scene::animate::yes;
 
@@ -685,9 +684,7 @@ void Map::Impl::setPixelScale(float _pixelsPerPoint) {
     }
     view.setPixelScale(_pixelsPerPoint);
     scene->setPixelScale(_pixelsPerPoint);
-    for (auto& style : scene->styles()) {
-        style->setPixelScale(_pixelsPerPoint);
-    }
+
     // Tiles must be rebuilt to apply the new pixel scale to labels.
     tileManager.clearTileSets();
 
