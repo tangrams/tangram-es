@@ -106,7 +106,7 @@ void FontContext::updateTextures(RenderState& rs) {
     std::lock_guard<std::mutex> lock(m_textureMutex);
 
     for (auto& gt : m_textures) {
-        if (gt.dirty || !gt.texture.isValid(rs)) {
+        if (gt.dirty) {
             gt.dirty = false;
             auto td = reinterpret_cast<const GLuint*>(gt.texData.data());
             gt.texture.update(rs, 0, td);

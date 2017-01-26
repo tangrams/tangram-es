@@ -67,7 +67,9 @@ void TextStyle::onBeginFrame(RenderState& rs) {
     // Upload meshes and textures
     m_context->updateTextures(rs);
 
-    for (auto& mesh : m_meshes) { mesh->upload(rs); }
+    for (auto& mesh : m_meshes) {
+        mesh->upload(rs);
+    }
 }
 
 void TextStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {

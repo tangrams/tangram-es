@@ -172,6 +172,7 @@ public class MapController implements Renderer {
         mapView = view;
         view.setRenderer(this);
         view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        view.setPreserveEGLContextOnPause(true);
 
         // Set a default HTTPHandler
         httpHandler = new HttpHandler();
@@ -251,7 +252,6 @@ public class MapController implements Renderer {
      * @param sceneUpdates List of {@code SceneUpdate}
      */
     public void loadSceneFile(String path, List<SceneUpdate> sceneUpdates) {
-
         String[] updateStrings = bundleSceneUpdates(sceneUpdates);
         scenePath = path;
         checkPointer(mapPointer);

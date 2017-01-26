@@ -22,8 +22,6 @@ MeshBase::MeshBase() {
     m_dirty = false;
     m_isUploaded = false;
     m_isCompiled = false;
-
-    m_generation = -1;
 }
 
 MeshBase::MeshBase(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode, GLenum _hint)
@@ -38,24 +36,21 @@ MeshBase::MeshBase(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode
 MeshBase::~MeshBase() {
 
     auto vaos = m_vaos;
-    auto generation = m_generation;
     auto glVertexBuffer = m_glVertexBuffer;
     auto glIndexBuffer = m_glIndexBuffer;
 
     m_disposer([=](RenderState& rs) mutable {
         // Deleting a index/array buffer being used ends up setting up the current vertex/index buffer to 0
         // after the driver finishes using it, force the render state to be 0 for vertex/index buffer
-        if (rs.isValidGeneration(generation)) {
-            if (glVertexBuffer) {
-                rs.vertexBufferUnset(glVertexBuffer);
-                GL::deleteBuffers(1, &glVertexBuffer);
-            }
-            if (glIndexBuffer) {
-                rs.indexBufferUnset(glIndexBuffer);
-                GL::deleteBuffers(1, &glIndexBuffer);
-            }
-            vaos.dispose();
+        if (glVertexBuffer) {
+            rs.vertexBufferUnset(glVertexBuffer);
+            GL::deleteBuffers(1, &glVertexBuffer);
         }
+        if (glIndexBuffer) {
+            rs.indexBufferUnset(glIndexBuffer);
+            GL::deleteBuffers(1, &glIndexBuffer);
+        }
+        vaos.dispose();
     });
 
 
@@ -156,7 +151,6 @@ void MeshBase::upload(RenderState& rs) {
         m_glIndexData = nullptr;
     }
 
-    m_generation = rs.generation();
     m_disposer = Disposer(rs);
 
     m_isUploaded = true;
@@ -164,8 +158,6 @@ void MeshBase::upload(RenderState& rs) {
 
 bool MeshBase::draw(RenderState& rs, ShaderProgram& _shader, bool _useVao) {
     bool useVao = _useVao && Hardware::supportsVAOs;
-
-    checkValidity(rs);
 
     if (!m_isCompiled) { return false; }
     if (m_nVertices == 0) { return false; }
@@ -227,21 +219,6 @@ bool MeshBase::draw(RenderState& rs, ShaderProgram& _shader, bool _useVao) {
 
     if (useVao) {
         m_vaos.unbind();
-    }
-
-    return true;
-}
-
-bool MeshBase::checkValidity(RenderState& rs) {
-    if (!rs.isValidGeneration(m_generation)) {
-        m_isUploaded = false;
-        m_glVertexBuffer = 0;
-        m_glIndexBuffer = 0;
-        m_vaos = {};
-
-        m_generation = rs.generation();
-
-        return false;
     }
 
     return true;

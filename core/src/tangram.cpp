@@ -831,15 +831,16 @@ void Map::setupGL() {
 
     LOG("setup GL");
 
+    impl->renderState.invalidate();
+
     impl->tileManager.clearTileSets();
 
     impl->markerManager.rebuildAll();
 
-    // Reconfigure the render states. Increases context 'generation'.
-    // The OpenGL context has been destroyed since the last time resources were
-    // created, so we invalidate all data that depends on OpenGL object handles.
-    impl->renderState.increaseGeneration();
-    impl->renderState.invalidate();
+    if (impl->selectionBuffer->valid()) {
+        impl->selectionBuffer = std::make_unique<FrameBuffer>(impl->selectionBuffer->getWidth(),
+                                                              impl->selectionBuffer->getHeight());
+    }
 
     // Set default primitive render color
     Primitives::setColor(impl->renderState, 0xffffff);
@@ -849,7 +850,6 @@ void Map::setupGL() {
     Hardware::loadCapabilities();
 
     Hardware::printAvailableExtensions();
-
 }
 
 void Map::useCachedGlState(bool _useCache) {

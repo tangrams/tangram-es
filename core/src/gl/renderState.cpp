@@ -95,19 +95,6 @@ void RenderState::cacheDefaultFramebuffer() {
     GL::getIntegerv(GL_FRAMEBUFFER_BINDING, &m_defaultFramebuffer);
 }
 
-void RenderState::increaseGeneration() {
-    generateQuadIndexBuffer();
-    m_validGeneration++;
-}
-
-bool RenderState::isValidGeneration(int _generation) {
-    return _generation == m_validGeneration;
-}
-
-int RenderState::generation() {
-    return m_validGeneration;
-}
-
 int RenderState::nextAvailableTextureUnit() {
     if (m_nextTextureUnit >= Hardware::maxCombinedTextureUnits) {
         LOGE("Too many combined texture units are being used");

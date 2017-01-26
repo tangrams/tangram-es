@@ -204,8 +204,6 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
     std::string fallbackPath = fontFallbackPath(importance, weightHint);
 
     while (!fallbackPath.empty()) {
-        LOG("Loading font %s", fallbackPath.c_str());
-
         handles.emplace_back(fallbackPath);
 
         fallbackPath = fontFallbackPath(importance++, weightHint);
