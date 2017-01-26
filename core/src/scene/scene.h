@@ -118,7 +118,7 @@ public:
     std::shared_ptr<Texture> getTexture(const std::string& name) const;
 
     float pixelScale() { return m_pixelScale; }
-    void setPixelScale(float _scale) { m_pixelScale = _scale; }
+    void setPixelScale(float _scale);
 
     std::atomic_ushort pendingTextures{0};
     std::atomic_ushort pendingFonts{0};

@@ -141,4 +141,11 @@ std::shared_ptr<TileSource> Scene::getTileSource(const std::string& name) {
     return nullptr;
 }
 
+void Scene::setPixelScale(float _scale) {
+    m_pixelScale = _scale;
+    for (auto& style : m_styles) {
+        style->setPixelScale(_scale);
+    }
+}
+
 }
