@@ -192,7 +192,8 @@ void Style::setupRasters(const std::vector<std::shared_ptr<TileSource>>& _source
 }
 
 
-void Style::setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view, Scene& _scene, UniformBlock& _uniforms) {
+void Style::setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view,
+                                Scene& _scene, UniformBlock& _uniforms) {
 
     // Reset the currently used texture unit to 0
     rs.resetTextureUnit();
@@ -203,12 +204,12 @@ void Style::setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const 
     _program.setUniformf(rs, _uniforms.uDevicePixelRatio, m_pixelScale);
 
     if (m_material.uniforms) {
-        m_material.material->setupProgram(rs, *m_material.uniforms);
+        m_material.material->setupProgram(rs, *m_shaderProgram, *m_material.uniforms);
     }
 
     // Set up lights
     for (const auto& light : m_lights) {
-        light.light->setupProgram(rs, _view, *light.uniforms);
+        light.light->setupProgram(rs, _view, *m_shaderProgram, *light.uniforms);
     }
 
     // Set Map Position

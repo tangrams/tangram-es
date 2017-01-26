@@ -173,25 +173,23 @@ private:
      */
     void setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBlock& _uniformBlock);
 
-    void setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view, Scene& _scene,
-            UniformBlock& _uniformBlock);
+    void setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view,
+                             Scene& _scene, UniformBlock& _uniformBlock);
 
     struct LightHandle {
         LightHandle(Light* _light, std::unique_ptr<LightUniforms> _uniforms);
-
         Light *light;
         std::unique_ptr<LightUniforms> uniforms;
     };
-    std::vector<LightHandle> m_lights;
 
 
     struct MaterialHandle {
         /* <Material> used for drawing meshes that use this style */
         std::shared_ptr<Material> material;
-
         std::unique_ptr<MaterialUniforms> uniforms;
     };
 
+    std::vector<LightHandle> m_lights;
     MaterialHandle m_material;
 
 public:

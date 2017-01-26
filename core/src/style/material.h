@@ -35,10 +35,6 @@ struct MaterialTexture {
 
 struct MaterialUniforms {
 
-    MaterialUniforms(ShaderProgram& _shader) : shader(_shader) {}
-
-    ShaderProgram& shader;
-
     UniformLocation emission{"u_material.emission"};
     UniformLocation emissionTexture{"material_emission_texture"};
     UniformLocation emissionScale{"u_material.emissionScale"};
@@ -109,7 +105,8 @@ public:
     virtual std::unique_ptr<MaterialUniforms> injectOnProgram(ShaderProgram& _shader);
 
     /*  Method to pass it self as a uniform to the shader program */
-    virtual void setupProgram(RenderState& rs, MaterialUniforms& _uniforms);
+    virtual void setupProgram(RenderState& rs, ShaderProgram& _shader,
+                              MaterialUniforms& _uniforms);
 
     bool hasEmission() const { return m_bEmission; }
     bool hasAmbient() const { return m_bAmbient; }

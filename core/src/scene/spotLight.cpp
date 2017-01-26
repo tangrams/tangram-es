@@ -41,11 +41,12 @@ std::unique_ptr<LightUniforms> SpotLight::injectOnProgram(ShaderProgram& _shader
 
     if (!m_dynamic) { return nullptr; }
 
-    return std::make_unique<Uniforms>(_shader, getUniformName());
+    return std::make_unique<Uniforms>(getUniformName());
 }
 
-void SpotLight::setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms ) {
-    PointLight::setupProgram(rs, _view, _uniforms);
+void SpotLight::setupProgram(RenderState& rs, const View& _view, ShaderProgram& _shader,
+                             LightUniforms& _uniforms) {
+    PointLight::setupProgram(rs, _view, _shader, _uniforms);
 
     glm::vec3 direction = m_direction;
     if (m_origin == LightOrigin::world) {
@@ -53,9 +54,9 @@ void SpotLight::setupProgram(RenderState& rs, const View& _view, LightUniforms& 
     }
 
     auto& u = static_cast<Uniforms&>(_uniforms);
-    u.shader.setUniformf(rs, u.direction, direction);
-    u.shader.setUniformf(rs, u.spotCosCutoff, m_spotCosCutoff);
-    u.shader.setUniformf(rs, u.spotExponent, m_spotExponent);
+    _shader.setUniformf(rs, u.direction, direction);
+    _shader.setUniformf(rs, u.spotCosCutoff, m_spotCosCutoff);
+    _shader.setUniformf(rs, u.spotExponent, m_spotExponent);
 }
 
 std::string SpotLight::getClassBlock() {

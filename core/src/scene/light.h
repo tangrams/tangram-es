@@ -38,15 +38,12 @@ static inline std::string lightOriginString(LightOrigin origin) {
 }
 
 struct LightUniforms {
-    LightUniforms(ShaderProgram& _shader, const std::string& _name)
-        : shader(_shader),
-          ambient(_name+".ambient"),
+    LightUniforms(const std::string& _name)
+        : ambient(_name+".ambient"),
           diffuse(_name+".diffuse"),
           specular(_name+".specular") {}
 
     virtual ~LightUniforms() {}
-
-    ShaderProgram& shader;
 
     UniformLocation ambient;
     UniformLocation diffuse;
@@ -99,7 +96,8 @@ public:
     virtual std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) = 0;
 
     /*  Pass the uniforms for this particular DYNAMICAL light on the passed shader */
-    virtual void setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms);
+    virtual void setupProgram(RenderState& rs, const View& _view, ShaderProgram& _shader,
+                              LightUniforms& _uniforms);
 
     /*  STATIC Function that compose sourceBlocks with Lights on a ProgramShader */
     static void assembleLights(std::map<std::string, std::vector<std::string>>& _sourceBlocks);
