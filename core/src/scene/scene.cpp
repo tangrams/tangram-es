@@ -146,6 +146,7 @@ void Scene::setPixelScale(float _scale) {
     for (auto& style : m_styles) {
         style->setPixelScale(_scale);
     }
+    m_fontContext->setPixelScale(_scale);
 }
 
 }

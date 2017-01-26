@@ -23,6 +23,10 @@ FontContext::FontContext() :
     m_atlas(*this, GlyphTexture::size, m_sdfRadius),
     m_batch(m_atlas, m_scratch) {}
 
+void FontContext::setPixelScale(float _scale) {
+    m_sdfRadius = SDF_WIDTH * _scale;
+}
+
 void FontContext::loadFonts() {
     auto fallbacks = systemFontFallbacksHandle();
 
