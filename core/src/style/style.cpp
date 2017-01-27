@@ -122,41 +122,38 @@ void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBloc
             texture->bind(rs, rs.currentTextureUnit());
 
             m_shaderProgram->setUniformi(rs, name, rs.currentTextureUnit());
-        } else {
+        } else if (value.is<bool>()) {
+            m_shaderProgram->setUniformi(rs, name, value.get<bool>());
+        } else if(value.is<float>()) {
+            m_shaderProgram->setUniformf(rs, name, value.get<float>());
+        } else if(value.is<glm::vec2>()) {
+            m_shaderProgram->setUniformf(rs, name, value.get<glm::vec2>());
+        } else if(value.is<glm::vec3>()) {
+            m_shaderProgram->setUniformf(rs, name, value.get<glm::vec3>());
+        } else if(value.is<glm::vec4>()) {
+            m_shaderProgram->setUniformf(rs, name, value.get<glm::vec4>());
+        } else if (value.is<UniformArray1f>()) {
+            m_shaderProgram->setUniformf(rs, name, value.get<UniformArray1f>());
+        } else if (value.is<UniformTextureArray>()) {
+            UniformTextureArray& textureUniformArray = value.get<UniformTextureArray>();
+            textureUniformArray.slots.clear();
 
-            if (value.is<bool>()) {
-                m_shaderProgram->setUniformi(rs, name, value.get<bool>());
-            } else if(value.is<float>()) {
-                m_shaderProgram->setUniformf(rs, name, value.get<float>());
-            } else if(value.is<glm::vec2>()) {
-                m_shaderProgram->setUniformf(rs, name, value.get<glm::vec2>());
-            } else if(value.is<glm::vec3>()) {
-                m_shaderProgram->setUniformf(rs, name, value.get<glm::vec3>());
-            } else if(value.is<glm::vec4>()) {
-                m_shaderProgram->setUniformf(rs, name, value.get<glm::vec4>());
-            } else if (value.is<UniformArray1f>()) {
-                m_shaderProgram->setUniformf(rs, name, value.get<UniformArray1f>());
-            } else if (value.is<UniformTextureArray>()) {
-                UniformTextureArray& textureUniformArray = value.get<UniformTextureArray>();
-                textureUniformArray.slots.clear();
+            for (const auto& textureName : textureUniformArray.names) {
+                std::shared_ptr<Texture> texture = _scene.getTexture(textureName);
 
-                for (const auto& textureName : textureUniformArray.names) {
-                    std::shared_ptr<Texture> texture = _scene.getTexture(textureName);
-
-                    if (!texture) {
-                        LOGN("Texture with texture name %s is not available to be sent as uniform",
-                            textureName.c_str());
-                        continue;
-                    }
-
-                    texture->update(rs, rs.nextAvailableTextureUnit());
-                    texture->bind(rs, rs.currentTextureUnit());
-
-                    textureUniformArray.slots.push_back(rs.currentTextureUnit());
+                if (!texture) {
+                    LOGN("Texture with texture name %s is not available to be sent as uniform",
+                         textureName.c_str());
+                    continue;
                 }
 
-                m_shaderProgram->setUniformi(rs, name, textureUniformArray);
+                texture->update(rs, rs.nextAvailableTextureUnit());
+                texture->bind(rs, rs.currentTextureUnit());
+
+                textureUniformArray.slots.push_back(rs.currentTextureUnit());
             }
+
+            m_shaderProgram->setUniformi(rs, name, textureUniformArray);
         }
     }
 }
