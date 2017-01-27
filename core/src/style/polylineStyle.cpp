@@ -132,10 +132,9 @@ void PolylineStyle::constructShaderProgram() {
         m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_ALPHA_TEST 0.25\n", false);
         if (m_dashArray.size() > 0) {
             m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_DASHLINE_TEX_SCALE " +
-                                                std::to_string(dash_scale) + "\n", false);
+                                            std::to_string(dash_scale) + "\n", false);
         } else {
-            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_DASHLINE_TEX_SCALE 1\n",
-                                            false);
+            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_DASHLINE_TEX_SCALE 1.0\n", false);
         }
     }
 
