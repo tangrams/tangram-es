@@ -42,7 +42,7 @@ struct Filter {
         float min;
         float max;
         FilterKeyword keyword;
-        bool hasSqArea = false;
+        bool hasSqArea;
     };
     struct Existence {
         std::string key;

@@ -306,7 +306,7 @@ struct match_equal {
 
 struct match_range {
     const Filter::Range& f;
-    double scale = 1.f;
+    double scale;
 
     bool operator() (const double& num) const {
         return num >= f.min * scale && num < f.max * scale;
