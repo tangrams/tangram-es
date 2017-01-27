@@ -206,12 +206,26 @@ void CurvedLabel::addVerticesToMesh(ScreenTransform& _transform, const glm::vec2
         auto quad = *it;
 
         glm::vec2 origin = {(quad.quad[0].pos.x + quad.quad[2].pos.x) * 0.5f, 0 };
+        glm::vec2 point, p1, p2, r1, r2;
 
-        glm::vec2 point;
+        auto xStart = quad.quad[0].pos.x * TextVertex::position_inv_scale;
+        auto xEnd = quad.quad[2].pos.x * TextVertex::position_inv_scale;
+
         float px = origin.x * TextVertex::position_inv_scale;
-
         if (!sampler.sample(center + px, point, rotation)) {
             continue;
+        }
+
+        bool ok1 = sampler.sample(center + xStart, p1, r1);
+        bool ok2 = sampler.sample(center + xEnd, p2, r2);
+        if (ok1 && ok2) {
+            if (r1 == r2) {
+                rotation = r1;
+            } else {
+                rotation = glm::normalize(p2 - p1);
+            }
+            //point = (p1 + p2) * 0.5f;
+            point = point * 0.5f + (p1 + p2) * 0.25f;
         }
 
         glm::i16vec2 p(point * TextVertex::position_scale);
