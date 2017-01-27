@@ -489,7 +489,7 @@ std::string TextStyleBuilder::resolveTextSource(const std::string& textSource,
 bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type _type) {
 
     if (_params.text.empty() || _params.fontSize <= 0.f) {
-        LOGD("invalid params: '%s' %f", _params.text.c_str(), _params.fontSize);
+        // Nothing to render!
         return false;
     }
 

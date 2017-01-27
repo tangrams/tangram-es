@@ -464,8 +464,7 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 break;
         }
     } else if (duk_is_null_or_undefined(m_ctx, -1)) {
-        // Ignore setting value
-        LOGD("duk evaluates JS method to null or undefined.");
+        // Explicitly set value as 'undefined'. This is important for some styling rules.
         _val = Undefined();
     } else {
         LOGW("Unhandled return type from Javascript style function for %d.", _key);

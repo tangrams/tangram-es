@@ -129,7 +129,7 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& 
     alfons::LineLayout line = m_shaper.shape(_params.font, _text);
 
     if (line.shapes().size() == 0) {
-        LOGD("Empty text line");
+        // Nothing to do!
         return false;
     }
     if (line.missingGlyphs()) {
