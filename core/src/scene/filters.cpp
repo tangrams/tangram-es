@@ -306,9 +306,10 @@ struct match_equal {
 
 struct match_range {
     const Filter::Range& f;
+    double scale = 1.f;
 
     bool operator() (const double& num) const {
-        return num >= f.min && num < f.max;
+        return num >= f.min * scale && num < f.max * scale;
     }
     bool operator() (const std::string&) const { return false; }
     bool operator() (const none_type&) const { return false; }
@@ -363,11 +364,11 @@ struct matcher {
         return Value::visit(value, match_equal{f.value});
     }
     bool operator() (const Filter::Range& f) const {
+        auto scale = (f.hasSqArea) ? ctx.getSquareAreaScale() : 1.f;
         auto& value = (f.keyword == FilterKeyword::undefined)
             ? props.get(f.key)
             : ctx.getKeyword(f.keyword);
-
-        return Value::visit(value, match_range{f});
+        return Value::visit(value, match_range{f, scale});
     }
     bool operator() (const Filter::Function& f) const {
         return ctx.evalFilter(f.id);

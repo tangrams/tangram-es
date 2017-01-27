@@ -135,14 +135,7 @@ layers:
         data: { source: osm }
         filter:
             - { $zoom: { min: 16 } }
-            #TODO: "px2" range unit support for ES, and remove extended any area filter
-            - any:
-                - { $zoom: { min: 9 }, area: { min: 10000000 } }
-                - { $zoom: { min: 10 }, area: { min: 3300000 } }
-                - { $zoom: { min: 12 }, area: { min: 1000000 } }
-                - { $zoom: { min: 13 }, area: { min: 10000 } }
-                - { $zoom: { min: 15 } }
-            #- { area: { min: 500px2 } }
+            - { area: { min: 500px2 } }
         areas:
             draw:
                 polygons:
@@ -468,8 +461,7 @@ layers:
                 kind: [park, cemetery, graveyard]
                 any:
                     - { $zoom: { min: 16 } }
-                    #TODO: "px2" range unit support for ES
-                    #- { area: { min: 500px2 } }
+                    - { area: { min: 500px2 } }
             draw:
                 icons:
                     sprite: tree
