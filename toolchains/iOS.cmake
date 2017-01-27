@@ -28,7 +28,7 @@ target_link_libraries(${EXECUTABLE_NAME} ${TANGRAM_FRAMEWORK})
 
 # setting xcode properties
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
-    MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/demo/resources/tangram-Info.plist
+    MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/ios/demo/Info.plist
     MACOSX_FRAMEWORK_IDENTIFIER "com.mapzen.\${PRODUCT_NAME:{EXECUTABLE_NAME}}"
     RESOURCE "${IOS_DEMO_RESOURCES}")
 

@@ -39,11 +39,7 @@ if(APPLICATION)
 
   add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes" "Resources")
 
-  file(GLOB_RECURSE OSX_RESOURCES "${PROJECT_SOURCE_DIR}/osx/resources/**")
-  string(REGEX REPLACE "[.]DS_Store" "" OSX_RESOURCES "${OSX_RESOURCES}")
-
-  set(SOURCES ${SOURCES}
-    ${PROJECT_SOURCE_DIR}/core/common/platform_gl.cpp)
+  set(SOURCES ${SOURCES} ${PROJECT_SOURCE_DIR}/core/common/platform_gl.cpp)
 
   add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES} ${OSX_RESOURCES})
 
@@ -54,7 +50,7 @@ if(APPLICATION)
 
   # add resource files and property list
   set_target_properties(${EXECUTABLE_NAME} PROPERTIES
-    MACOSX_BUNDLE_INFO_PLIST "${PROJECT_SOURCE_DIR}/osx/resources/tangram-Info.plist"
+    MACOSX_BUNDLE_INFO_PLIST "${PROJECT_SOURCE_DIR}/osx/Info.plist"
     RESOURCE "${OSX_RESOURCES}")
 
 endif()
