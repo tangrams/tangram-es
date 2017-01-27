@@ -27,6 +27,7 @@ constexpr float extrusion_scale = 4096.0f;
 constexpr float position_scale = 8192.0f;
 constexpr float texture_scale = 8192.0f;
 constexpr float order_scale = 2.0f;
+constexpr float dash_scale = 20.f;
 
 namespace Tangram {
 
@@ -112,7 +113,8 @@ void PolylineStyle::constructShaderProgram() {
 
     if (m_dashArray.size() > 0) {
         TextureOptions options {GL_RGBA, GL_RGBA, {GL_NEAREST, GL_NEAREST}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
-        auto pixels = DashArray::render(m_dashArray);
+        // provides precision for dash patterns that are a fraction of line width
+        auto pixels = DashArray::render(m_dashArray, dash_scale);
 
         m_texture = std::make_shared<Texture>(1, pixels.size(), options);
         m_texture->setData(pixels.data(), pixels.size());
@@ -121,13 +123,19 @@ void PolylineStyle::constructShaderProgram() {
             m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_BACKGROUND_COLOR vec3(" +
                 std::to_string(m_dashBackgroundColor.r) + ", " +
                 std::to_string(m_dashBackgroundColor.g) + ", " +
-                std::to_string(m_dashBackgroundColor.b) + ")");
+                std::to_string(m_dashBackgroundColor.b) + ")\n");
         }
     }
 
     if (m_dashArray.size() > 0 || m_texture) {
         m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_TEXTURE\n", false);
         m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_ALPHA_TEST 0.25\n", false);
+        if (m_dashArray.size() > 0) {
+            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_DASHLINE_TEX_SCALE " +
+                                            std::to_string(dash_scale) + "\n", false);
+        } else {
+            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_DASHLINE_TEX_SCALE 1.0\n", false);
+        }
     }
 
     m_shaderProgram->setSourceStrings(SHADER_SOURCE(polyline_fs),
