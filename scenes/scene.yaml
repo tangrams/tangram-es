@@ -73,7 +73,7 @@ styles:
         texture: pois
     dashed:
         base: lines
-        dash: [2, 1]
+        dash: [3.0, 0.3]
     transit-lines:
         base: lines
         blend: overlay

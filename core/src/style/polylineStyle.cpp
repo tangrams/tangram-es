@@ -123,7 +123,7 @@ void PolylineStyle::constructShaderProgram() {
             m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_BACKGROUND_COLOR vec3(" +
                 std::to_string(m_dashBackgroundColor.r) + ", " +
                 std::to_string(m_dashBackgroundColor.g) + ", " +
-                std::to_string(m_dashBackgroundColor.b) + ")");
+                std::to_string(m_dashBackgroundColor.b) + ")\n");
         }
     }
 
@@ -134,7 +134,7 @@ void PolylineStyle::constructShaderProgram() {
             m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_DASHLINE_TEX_SCALE " +
                                                 std::to_string(dash_scale) + "\n", false);
         } else {
-            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_DASHLINE_TEX_SCALE 1",
+            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_DASHLINE_TEX_SCALE 1\n",
                                             false);
         }
     }
