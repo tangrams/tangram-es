@@ -1,8 +1,9 @@
+#include <cmath>
 #include "dashArray.h"
 
 namespace Tangram {
 
-std::vector<unsigned int> DashArray::render(std::vector<int> _pattern,
+std::vector<unsigned int> DashArray::render(std::vector<float> _pattern, float _dashScale,
     unsigned int _dashColor, unsigned int _backgroundColor)
 {
     std::vector<unsigned int> dashArray;
@@ -11,7 +12,8 @@ std::vector<unsigned int> DashArray::render(std::vector<int> _pattern,
     }
 
     bool dash = true;
-    for (int segment : _pattern) {
+    for (auto& pat : _pattern) {
+        int segment = std::floor(pat * _dashScale);
         for (int i = 0; i < segment; ++i) {
             dashArray.push_back(dash ? _dashColor : _backgroundColor);
         }

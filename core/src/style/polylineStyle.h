@@ -18,14 +18,14 @@ public:
     virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
     virtual ~PolylineStyle() {}
 
-    void setDashArray(std::vector<int> _dashArray) { m_dashArray = _dashArray; }
+    void setDashArray(std::vector<float> _dashArray) { m_dashArray = _dashArray; }
     void setTexture(std::shared_ptr<Texture>& _texture) { m_texture = _texture; }
 
     void setDashBackgroundColor(const glm::vec4 _dashBackgroundColor);
 
 private:
 
-    std::vector<int> m_dashArray;
+    std::vector<float> m_dashArray;
     std::shared_ptr<Texture> m_texture;
     bool m_dashBackground = false;
     glm::vec4 m_dashBackgroundColor;
