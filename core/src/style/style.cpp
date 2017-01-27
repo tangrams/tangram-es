@@ -82,10 +82,13 @@ void Style::build(const Scene& _scene) {
 
     if (m_lightingType != LightingType::none) {
         for (auto& light : _scene.lights()) {
-            auto uniforms = light->injectOnProgram(*m_shaderProgram);
+            auto uniforms = light->getUniforms();
             if (uniforms) {
                 m_lights.emplace_back(light.get(), std::move(uniforms));
             }
+        }
+        for (auto& block : _scene.lightBlocks()) {
+            m_shaderProgram->addSourceBlock(block.first, block.second);
         }
     }
 

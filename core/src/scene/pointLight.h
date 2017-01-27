@@ -40,7 +40,7 @@ public:
 
     auto getPosition() const -> UnitVec<glm::vec3> { return m_position; }
 
-    std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) override;
+    std::unique_ptr<LightUniforms> getUniforms() override;
 
 protected:
 

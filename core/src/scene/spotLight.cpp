@@ -36,8 +36,7 @@ void SpotLight::setCutoffExponent(float _exponent) {
     m_spotExponent = _exponent;
 }
 
-std::unique_ptr<LightUniforms> SpotLight::injectOnProgram(ShaderProgram& _shader) {
-    injectSourceBlocks(_shader);
+std::unique_ptr<LightUniforms> SpotLight::getUniforms() {
 
     if (!m_dynamic) { return nullptr; }
 

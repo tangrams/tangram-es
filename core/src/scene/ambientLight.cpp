@@ -18,8 +18,7 @@ AmbientLight::AmbientLight(const std::string& _name, bool _dynamic) :
 
 AmbientLight::~AmbientLight() {}
 
-std::unique_ptr<LightUniforms> AmbientLight::injectOnProgram(ShaderProgram& _shader) {
-    injectSourceBlocks(_shader);
+std::unique_ptr<LightUniforms> AmbientLight::getUniforms() {
 
     if (!m_dynamic) { return nullptr; }
 

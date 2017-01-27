@@ -262,6 +262,8 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
         _scene->lights().push_back(std::move(amb));
     }
 
+    _scene->lightBlocks() = Light::assembleLights(_scene->lights());
+
     if (Node camera = config["camera"]) {
         try { loadCamera(camera, _scene); }
         catch (YAML::RepresentationException e) {

@@ -1,7 +1,6 @@
 #include "shaderProgram.h"
 
 #include "platform.h"
-#include "scene/light.h"
 #include "gl/disposer.h"
 #include "gl/error.h"
 #include "gl/renderState.h"
@@ -115,8 +114,6 @@ bool ShaderProgram::build(RenderState& rs) {
     m_glProgram = 0;
 
     // Inject source blocks
-    Light::assembleLights(m_sourceBlocks);
-
     auto vertSrc = applySourceBlocks(m_vertexShaderSource, false);
     auto fragSrc = applySourceBlocks(m_fragmentShaderSource, true);
 

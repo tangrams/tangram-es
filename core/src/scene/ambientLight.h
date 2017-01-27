@@ -13,7 +13,7 @@ public:
     virtual void setupProgram(RenderState& rs, const View& _view, ShaderProgram& _shader,
                               LightUniforms& _uniforms) override;
 
-    std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) override;
+    std::unique_ptr<LightUniforms> getUniforms() override;
 
 protected:
 

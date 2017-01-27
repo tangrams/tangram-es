@@ -28,7 +28,7 @@ public:
     };
 
 
-    std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) override;
+    std::unique_ptr<LightUniforms> getUniforms() override;
 
 protected:
 

@@ -40,8 +40,7 @@ void PointLight::setRadius(float _inner, float _outer) {
     m_outerRadius = _outer;
 }
 
-std::unique_ptr<LightUniforms> PointLight::injectOnProgram(ShaderProgram& _shader) {
-    injectSourceBlocks(_shader);
+std::unique_ptr<LightUniforms> PointLight::getUniforms() {
 
     if (!m_dynamic) { return nullptr; }
 

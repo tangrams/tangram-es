@@ -35,7 +35,7 @@ public:
         UniformLocation spotExponent;
     };
 
-    std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) override;
+    std::unique_ptr<LightUniforms> getUniforms() override;
 
 protected:
     /*  GLSL block code with structs and need functions for this light type */
