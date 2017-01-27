@@ -3,7 +3,7 @@ include(${CMAKE_SOURCE_DIR}/toolchains/iOS.toolchain.cmake)
 message(STATUS "Build for iOS archs " ${CMAKE_OSX_ARCHITECTURES})
 
 set(FRAMEWORK_NAME TangramMap)
-set(FRAMEWORK_VERSION "0.4")
+set(FRAMEWORK_VERSION "0.4.0")
 
 add_definitions(-DPLATFORM_IOS)
 
