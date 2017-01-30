@@ -43,11 +43,11 @@ double last_y_down = 0.0;
 double last_x_velocity = 0.0;
 double last_y_velocity = 0.0;
 
-using namespace Tangram;
+Tangram::MarkerID marker = 0;
+Tangram::MarkerID poiMarker = 0;
+Tangram::MarkerID polyline = 0;
 
-MarkerID marker = 0;
-MarkerID poiMarker = 0;
-MarkerID polyline = 0;
+std::shared_ptr<Platform> platform;
 
 template<typename T>
 static constexpr T clamp(T val, T min, T max) {
@@ -84,13 +84,13 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
     if ((time - last_time_released) < double_tap_time) {
         // Double tap recognized
-        LngLat p;
+        Tangram::LngLat p;
         map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
         map->setPositionEased(p.longitude, p.latitude, 1.f);
 
     } else if ((time - last_time_pressed) < single_tap_time) {
         // Single tap recognized
-        LngLat p;
+        Tangram::LngLat p;
         map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
 
 
@@ -108,28 +108,28 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             visible = !visible;
         }
 
-        map->pickFeatureAt(x, y, [](const FeaturePickResult* featurePickResult) {
+        map->pickFeatureAt(x, y, [](const Tangram::FeaturePickResult* featurePickResult) {
             if (!featurePickResult) { return; }
             std::string name;
             if (featurePickResult->properties->getString("name", name)) {
-                LOGS("Selected %s", name.c_str());
+                LOG("Selected %s", name.c_str());
             }
         });
 
-        map->pickLabelAt(x, y, [](const LabelPickResult* labelPickResult) {
+        map->pickLabelAt(x, y, [](const Tangram::LabelPickResult* labelPickResult) {
             if (!labelPickResult) { return; }
-            std::string type = labelPickResult->type == LabelType::text ? "text" : "icon";
+            std::string type = labelPickResult->type == Tangram::LabelType::text ? "text" : "icon";
             std::string name;
             if (labelPickResult->touchItem.properties->getString("name", name)) {
-                LOGS("Touched label %s %s", type.c_str(), name.c_str());
+                LOG("Touched label %s %s", type.c_str(), name.c_str());
             }
             map->markerSetPoint(marker, labelPickResult->coordinates);
             map->markerSetVisible(marker, true);
         });
 
-        map->pickMarkerAt(x, y, [](const MarkerPickResult* markerPickResult) {
+        map->pickMarkerAt(x, y, [](const Tangram::MarkerPickResult* markerPickResult) {
             if (!markerPickResult) { return; }
-            LOGS("Selected marker id %d", markerPickResult->id);
+            LOG("Selected marker id %d", markerPickResult->id);
         });
 
         static double last_x = 0, last_y = 0;
@@ -140,7 +140,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         }
 
         if (last_x != 0) {
-            LngLat coords[2];
+            Tangram::LngLat coords[2];
             map->screenPositionToLngLat(x, y, &coords[0].longitude, &coords[0].latitude);
             map->screenPositionToLngLat(last_x, last_y, &coords[1].longitude, &coords[1].latitude);
 
@@ -150,7 +150,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         last_x = x;
         last_y = y;
 
-        requestRender();
+        platform->requestRender();
     }
 
     last_time_released = time;
@@ -267,11 +267,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_G:
                 static bool geoJSON = false;
                 if (!geoJSON) {
-                    LOGS("Switching to GeoJSON data source");
                     map->queueSceneUpdate("sources.osm.type", "GeoJSON");
                     map->queueSceneUpdate("sources.osm.url", "https://vector.mapzen.com/osm/all/{z}/{x}/{y}.json");
                 } else {
-                    LOGS("Switching to MVT data source");
                     map->queueSceneUpdate("sources.osm.type", "MVT");
                     map->queueSceneUpdate("sources.osm.url", "https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt");
                 }
@@ -323,7 +321,7 @@ void init_main_window(bool recreate) {
 
     // Setup tangram
     if (!map) {
-        map = new Tangram::Map();
+        map = new Tangram::Map(platform);
         map->loadSceneAsync(sceneFile.c_str(), true);
     }
 
@@ -365,6 +363,8 @@ void init_main_window(bool recreate) {
 
 int main(int argc, char* argv[]) {
 
+    platform = std::make_shared<OSXPlatform>();
+
     static bool keepRunning = true;
 
     // Give it a chance to shutdown cleanly on CTRL-C
@@ -386,9 +386,6 @@ int main(int argc, char* argv[]) {
             break;
         }
     }
-
-    // Initialize networking
-    NSurlInit();
 
     // Initialize the windowing library
     if (!glfwInit()) {
@@ -414,7 +411,7 @@ int main(int argc, char* argv[]) {
         glfwSwapBuffers(main_window);
 
         // Poll for and process events
-        if (isContinuousRendering()) {
+        if (platform->isContinuousRendering()) {
             glfwPollEvents();
         } else {
             glfwWaitEvents();
@@ -428,8 +425,6 @@ int main(int argc, char* argv[]) {
         }
 
     }
-
-    finishUrlRequests();
 
     if (map) {
         delete map;
