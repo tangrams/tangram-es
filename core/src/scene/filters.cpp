@@ -364,7 +364,7 @@ struct matcher {
         return Value::visit(value, match_equal{f.value});
     }
     bool operator() (const Filter::Range& f) const {
-        auto scale = (f.hasSqArea) ? ctx.getSquareAreaScale() : 1.f;
+        auto scale = (f.hasPixelArea) ? ctx.getPixelAreaScale() : 1.f;
         auto& value = (f.keyword == FilterKeyword::undefined)
             ? props.get(f.key)
             : ctx.getKeyword(f.keyword);
