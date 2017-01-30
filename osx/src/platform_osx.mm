@@ -1,6 +1,5 @@
 #ifdef PLATFORM_OSX
 
-#import <Foundation/Foundation.h>
 #import <utility>
 #import <cstdio>
 #import <cstdarg>
@@ -21,38 +20,15 @@
 #define FONT_JA "fonts/DroidSansJapanese.ttf"
 #define FALLBACK "fonts/DroidSansFallback.ttf"
 
-static bool s_isContinuousRendering = false;
-
-static bool s_stopUrlRequests = false;
-static std::mutex s_urlRequestsMutex;
-
-NSURLSession* defaultSession;
-
 void logMsg(const char* fmt, ...) {
-
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
-
 }
 
-void requestRender() {
-
+void OSXPlatform::requestRender() const {
     glfwPostEmptyEvent();
-
-}
-
-void setContinuousRendering(bool _isContinuous) {
-
-    s_isContinuousRendering = _isContinuous;
-
-}
-
-bool isContinuousRendering() {
-
-    return s_isContinuousRendering;
-
 }
 
 NSString* resolvePath(const char* _path) {
@@ -77,63 +53,43 @@ NSString* resolvePath(const char* _path) {
     return nil;
 }
 
-bool bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator) {
-    std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
+OSXPlatform::OSXPlatform() : m_stopUrlRequests(false) {
+    NSURLSessionConfiguration *defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
 
-    if(!resource.is_open()) {
-        logMsg("Failed to read file at path: %s\n", _path);
-        return false;
-    }
+    m_defaultSession = [NSURLSession sessionWithConfiguration: defaultConfigObject];
 
-    size_t size = resource.tellg();
-    char* cdata = _allocator(size);
-
-    resource.seekg(std::ifstream::beg);
-    resource.read(cdata, size);
-    resource.close();
-
-    return true;
+    NSString *cachePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"/tile_cache"];
+    NSURLCache *tileCache = [[NSURLCache alloc] initWithMemoryCapacity: 4 * 1024 * 1024 diskCapacity: 30 * 1024 * 1024 diskPath: cachePath];
+    defaultConfigObject.URLCache = tileCache;
+    defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
+    defaultConfigObject.timeoutIntervalForRequest = 30;
+    defaultConfigObject.timeoutIntervalForResource = 60;
 }
 
-std::string stringFromFile(const char* _path) {
-    NSString* path = resolvePath(_path);
-
-    if (!path) {
-        return "";
+OSXPlatform::~OSXPlatform() {
+    {
+        std::lock_guard<std::mutex> guard(m_urlRequestMutex);
+        m_stopUrlRequests = true;
     }
 
+    [m_defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
+        for(NSURLSessionTask* task in dataTasks) {
+            [task cancel];
+        }
+    }];
+}
+
+std::string OSXPlatform::stringFromFile(const char* _path) const {
+    NSString* path = resolvePath(_path);
     std::string data;
 
-    auto allocator = [&](size_t size) {
-        data.resize(size);
-        return &data[0];
-    };
+    if (!path) { return data; }
 
-    bytesFromFileSystem([path UTF8String], allocator);
-
+    data = Platform::stringFromFile([path UTF8String]);
     return data;
 }
 
-std::vector<char> bytesFromFile(const char* _path) {
-    NSString* path = resolvePath(_path);
-
-    if (!path) {
-        return {};
-    }
-
-    std::vector<char> data;
-
-    auto allocator = [&](size_t size) {
-        data.resize(size);
-        return data.data();
-    };
-
-    bytesFromFileSystem([path UTF8String], allocator);
-
-    return data;
-}
-
-std::vector<FontSourceHandle> systemFontFallbacksHandle() {
+std::vector<FontSourceHandle> OSXPlatform::systemFontFallbacksHandle() const {
     std::vector<FontSourceHandle> handles;
 
     handles.emplace_back(DEFAULT);
@@ -145,32 +101,15 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
     return handles;
 }
 
-std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) {
-    return {};
-}
-
-void NSurlInit() {
-    NSURLSessionConfiguration *defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
-    NSString *cachePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"/tile_cache"];
-    NSURLCache *tileCache = [[NSURLCache alloc] initWithMemoryCapacity: 4 * 1024 * 1024 diskCapacity: 30 * 1024 * 1024 diskPath: cachePath];
-    defaultConfigObject.URLCache = tileCache;
-    defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
-    defaultConfigObject.timeoutIntervalForRequest = 30;
-    defaultConfigObject.timeoutIntervalForResource = 60;
-
-    defaultSession = [NSURLSession sessionWithConfiguration: defaultConfigObject];
-}
-
-bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
+bool OSXPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) const {
 
     NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
 
     void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
-
         {
-            std::lock_guard<std::mutex> lock(s_urlRequestsMutex);
+            std::lock_guard<std::mutex> guard(m_urlRequestMutex);
 
-            if (s_stopUrlRequests) {
+            if (m_stopUrlRequests) {
                 LOGE("Response after Tangram shutdown.");
                 return;
             }
@@ -205,7 +144,7 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
     };
 
-    NSURLSessionDataTask* dataTask = [defaultSession dataTaskWithURL:[NSURL URLWithString:nsUrl] completionHandler:handler];
+    NSURLSessionDataTask* dataTask = [m_defaultSession dataTaskWithURL:[NSURL URLWithString:nsUrl] completionHandler:handler];
 
     [dataTask resume];
 
@@ -213,30 +152,16 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
 }
 
-void cancelUrlRequest(const std::string& _url) {
+void OSXPlatform::cancelUrlRequest(const std::string& _url) const {
 
     NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
 
-    [defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
+    [m_defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
         for(NSURLSessionTask* task in dataTasks) {
             if([[task originalRequest].URL.absoluteString isEqualToString:nsUrl]) {
                 [task cancel];
                 break;
             }
-        }
-    }];
-}
-
-void finishUrlRequests() {
-
-    {
-        std::lock_guard<std::mutex> lock(s_urlRequestsMutex);
-        s_stopUrlRequests = true;
-    }
-
-    [defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
-        for(NSURLSessionTask* task in dataTasks) {
-            [task cancel];
         }
     }];
 }
