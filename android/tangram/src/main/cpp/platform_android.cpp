@@ -74,7 +74,7 @@ void bindJniEnvToThread(JNIEnv* jniEnv) {
     jniEnv->GetJavaVM(&jvm);
 }
 
-void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance) {
+void setupJniEnv(JNIEnv* jniEnv) {
     bindJniEnvToThread(jniEnv);
 
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/MapController");
@@ -166,14 +166,15 @@ std::string AndroidPlatform::fontPath(const std::string& _family, const std::str
 AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance) {
     m_tangramInstance = _jniEnv->NewGlobalRef(_tangramInstance);
 
-    // TODO: delete global ref
-    // _jniEnv->DeleteGlobalRef(m_tangramInstance);
-
     m_assetManager = AAssetManager_fromJava(_jniEnv, _assetManager);
 
     if (m_assetManager == nullptr) {
         LOGE("Could not obtain Asset Manager reference");
     }
+}
+
+void AndroidPlatform::dispose(JNIEnv* _jniEnv) {
+    _jniEnv->DeleteGlobalRef(m_tangramInstance);
 }
 
 void AndroidPlatform::requestRender() const {
