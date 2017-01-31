@@ -5,6 +5,7 @@
 #include "data/tileData.h"
 #include "scene/filters.h"
 #include "scene/scene.h"
+#include "util/mapProjection.h"
 #include "util/builders.h"
 #include "log.h"
 
@@ -275,6 +276,13 @@ void StyleContext::setKeyword(const std::string& _key, Value _val) {
     }
 
     entry = std::move(_val);
+}
+
+float StyleContext::getPixelAreaScale() {
+    // scale the filter value with pixelsPerMeter
+    // used with `px2` area filtering
+    double metersPerPixel = 2.f * MapProjection::HALF_CIRCUMFERENCE * exp2(-m_keywordZoom) / View::s_pixelsPerTile;
+    return metersPerPixel * metersPerPixel;
 }
 
 const Value& StyleContext::getKeyword(const std::string& _key) const {

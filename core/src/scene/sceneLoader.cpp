@@ -1324,27 +1324,42 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
     case NodeType::Map: {
         double minVal = -std::numeric_limits<double>::infinity();
         double maxVal = std::numeric_limits<double>::infinity();
+        bool hasMinPixelArea = false;
+        bool hasMaxPixelArea = false;
 
-        for (const auto& valItr : _node) {
-            if (valItr.first.Scalar() == "min") {
-
-                if (!getDouble(valItr.second, minVal, "min")) {
+        for (const auto& n : _node) {
+            if (n.first.Scalar() == "min") {
+                if(!getFilterRangeValue(n.second, minVal, hasMinPixelArea)) {
                     return Filter();
                 }
-            } else if (valItr.first.Scalar() == "max") {
-
-                if (!getDouble(valItr.second, maxVal, "max")) {
+            } else if (n.first.Scalar() == "max") {
+                if (!getFilterRangeValue(n.second, maxVal, hasMaxPixelArea)) {
                     return Filter();
                 }
-            } else {
-                return Filter();
             }
         }
-        return Filter::MatchRange(_key, minVal, maxVal);
+
+        if (_node["max"].IsScalar() && _node["min"].IsScalar() &&
+                (hasMinPixelArea != hasMaxPixelArea)) { return Filter(); }
+
+        return Filter::MatchRange(_key, minVal, maxVal, hasMinPixelArea | hasMaxPixelArea);
     }
     default:
         return Filter();
     }
+}
+
+bool SceneLoader::getFilterRangeValue(const Node& node, double& val, bool& hasPixelArea) {
+    if (!getDouble(node, val)) {
+        auto strVal = node.Scalar();
+        auto n = strVal.find("px2");
+        if (n == std::string::npos) { return false; }
+        try {
+            val = std::stof(std::string(strVal, 0, n));
+            hasPixelArea = true;
+        } catch (std::invalid_argument) { return false; }
+    }
+    return true;
 }
 
 Filter SceneLoader::generateAnyFilter(Node _filter, Scene& scene) {

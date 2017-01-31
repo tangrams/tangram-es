@@ -42,6 +42,7 @@ struct Filter {
         float min;
         float max;
         FilterKeyword keyword;
+        bool hasPixelArea;
     };
     struct Existence {
         std::string key;
@@ -88,8 +89,8 @@ struct Filter {
         }
     }
     // Create a 'range' filter
-    inline static Filter MatchRange(const std::string& k, float min, float max) {
-        return { Range{ k, min, max, keywordType(k) }};
+    inline static Filter MatchRange(const std::string& k, float min, float max, bool sqA) {
+        return { Range{ k, min, max, keywordType(k), sqA }};
     }
     // Create an 'existence' filter
     inline static Filter MatchExistence(const std::string& k, bool ex) {

@@ -48,6 +48,9 @@ public:
     /* Called from Filter::eval */
     float getKeywordZoom() const { return m_keywordZoom; }
 
+    /* returns meters per pixels at current style zoom */
+    float getPixelAreaScale();
+
     const Value& getKeyword(FilterKeyword _key) const {
         return m_keywords[static_cast<uint8_t>(_key)];
     }
