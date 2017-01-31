@@ -741,7 +741,7 @@ public class MapController implements Renderer {
     public void pickMarker(float posX, float posY) {
         if (markerPickListener != null) {
             checkPointer(mapPointer);
-            nativePickMarker(mapPointer, posX, posY, markerPickListener);
+            nativePickMarker(this, mapPointer, posX, posY, markerPickListener);
         }
     }
 
@@ -998,7 +998,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
     private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
-    private synchronized native void nativePickMarker(long mapPtr, float posX, float posY, MarkerPickListener listener);
+    private synchronized native void nativePickMarker(MapController instance, long mapPtr, float posX, float posY, MarkerPickListener listener);
     private synchronized native long nativeMarkerAdd(long mapPtr);
     private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
     private synchronized native boolean nativeMarkerSetStyling(long mapPtr, long markerID, String styling);

@@ -32,6 +32,7 @@ void setCurrentThreadPriority(int priority);
 class Platform {
 
 public:
+
     Platform();
     virtual ~Platform();
 
@@ -67,9 +68,11 @@ public:
 
     virtual std::vector<FontSourceHandle> systemFontFallbacksHandle() const;
 
-private:
+protected:
 
     bool bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator) const;
+
+private:
 
     bool m_continuousRendering;
 
