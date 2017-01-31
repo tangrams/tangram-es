@@ -296,6 +296,8 @@ public:
     // Run this task asynchronously to Tangram's main update loop.
     void runAsyncTask(std::function<void()> _task);
 
+    std::shared_ptr<Platform> getPlatform() const;
+
 private:
 
     class Impl;

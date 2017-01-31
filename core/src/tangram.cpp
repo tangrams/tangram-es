@@ -250,6 +250,10 @@ void Map::queueSceneUpdate(const std::vector<SceneUpdate>& sceneUpdates) {
     impl->sceneUpdates.insert(impl->sceneUpdates.end(), sceneUpdates.begin(), sceneUpdates.end());
 }
 
+std::shared_ptr<Platform> Map::getPlatform() const {
+    return platform;
+}
+
 void Map::applySceneUpdates() {
 
     std::shared_ptr<Scene> nextScene;

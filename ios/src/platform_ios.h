@@ -9,7 +9,9 @@
 #import "TGMapViewController.h"
 
 class iOSPlatform : public Platform {
+
 public:
+
     iOSPlatform(TGMapViewController* _viewController);
     void requestRender() const override;
     void setContinuousRendering(bool _isContinuous) override;
@@ -20,7 +22,9 @@ public:
     void cancelUrlRequest(const std::string& _url) const override;
 
 private:
+
     TGMapViewController* m_viewController;
+
 };
 
 #endif

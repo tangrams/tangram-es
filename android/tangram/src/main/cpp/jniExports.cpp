@@ -99,8 +99,8 @@ extern "C" {
     }
 
     JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeInit(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
-        setupJniEnv(jniEnv, tangramInstance, assetManager);
-        auto map = new Tangram::Map();
+        setupJniEnv(jniEnv, tangramInstance);
+        auto map = new Tangram::Map(std::shared_ptr<Platform>(new AndroidPlatform(jniEnv, assetManager, tangramInstance)));
         return reinterpret_cast<jlong>(map);
     }
 
@@ -231,12 +231,13 @@ extern "C" {
         });
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickMarker(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat posX, jfloat posY, jobject listener) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickMarker(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jlong mapPtr, jfloat posX, jfloat posY, jobject listener) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto object = jniEnv->NewGlobalRef(listener);
-        map->pickMarkerAt(posX, posY, [object](auto pickMarkerResult) {
-            markerPickCallback(object, pickMarkerResult);
+        auto instance = jniEnv->NewGlobalRef(tangramInstance);
+        map->pickMarkerAt(posX, posY, [object, instance](auto pickMarkerResult) {
+            markerPickCallback(object, instance, pickMarkerResult);
         });
     }
 
@@ -361,7 +362,7 @@ extern "C" {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto sourceName = stringFromJString(jniEnv, name);
-        auto source = std::shared_ptr<Tangram::TileSource>(new Tangram::ClientGeoJsonSource(sourceName, ""));
+        auto source = std::shared_ptr<Tangram::TileSource>(new Tangram::ClientGeoJsonSource(map->getPlatform(), sourceName, ""));
         map->addTileSource(source);
         return reinterpret_cast<jlong>(source.get());
     }
@@ -387,7 +388,8 @@ extern "C" {
 
         assert(mapPtr > 0);
         assert(sourcePtr > 0);
-        auto source = reinterpret_cast<Tangram::ClientGeoJsonSource*>(sourcePtr);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        auto source = reinterpret_cast<Tangram::ClientGeoJsonSource*>(map->getPlatform(), sourcePtr);
 
         size_t n_points = jniEnv->GetArrayLength(jcoordinates) / 2;
         size_t n_rings = (jrings == NULL) ? 0 : jniEnv->GetArrayLength(jrings);
@@ -442,7 +444,8 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeAddGeoJson(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong sourcePtr, jstring geojson) {
         assert(mapPtr > 0);
         assert(sourcePtr > 0);
-        auto source = reinterpret_cast<Tangram::ClientGeoJsonSource*>(sourcePtr);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        auto source = reinterpret_cast<Tangram::ClientGeoJsonSource*>(map->getPlatform(), sourcePtr);
         auto data = stringFromJString(jniEnv, geojson);
         source->addData(data);
     }

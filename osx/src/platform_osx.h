@@ -11,6 +11,7 @@
 class OSXPlatform : public Platform {
 
 public:
+
     OSXPlatform();
     ~OSXPlatform() override;
     void requestRender() const override;
@@ -20,9 +21,11 @@ public:
     void cancelUrlRequest(const std::string& _url) const override;
 
 private:
+
     mutable std::mutex m_urlRequestMutex;
     bool m_stopUrlRequests;
     NSURLSession* m_defaultSession;
+
 };
 
 #endif
