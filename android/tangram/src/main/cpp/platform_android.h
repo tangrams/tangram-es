@@ -7,7 +7,7 @@
 #include <android/asset_manager.h>
 
 void bindJniEnvToThread(JNIEnv* jniEnv);
-void setupJniEnv(JNIEnv* _jniEnv, jobject _tangramInstance);
+void setupJniEnv(JNIEnv* _jniEnv);
 void onUrlSuccess(JNIEnv* jniEnv, jbyteArray jFetchedBytes, jlong jCallbackPtr);
 void onUrlFailure(JNIEnv* jniEnv, jlong jCallbackPtr);
 
@@ -30,6 +30,7 @@ class AndroidPlatform : public Platform {
 public:
 
     AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance);
+    void dispose(JNIEnv* _jniEnv);
     void requestRender() const override;
     std::vector<char> bytesFromFile(const char* _path) const override;
     void setContinuousRendering(bool _isContinuous) override;
