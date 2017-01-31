@@ -1,13 +1,10 @@
 #include "scene/sceneLoader.h"
 
 #include "data/clientGeoJsonSource.h"
-#include "data/geoJsonSource.h"
 #include "data/memoryCacheDataSource.h"
 #include "data/mbtilesDataSource.h"
-#include "data/mvtSource.h"
 #include "data/networkDataSource.h"
 #include "data/rasterSource.h"
-#include "data/topoJsonSource.h"
 #include "gl/shaderSource.h"
 #include "log.h"
 #include "platform.h"
@@ -944,29 +941,16 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         return;
     }
 
-    std::string type = source["type"].Scalar();
+    std::string type;
     std::string url;
     std::string mbtiles;
     int32_t minDisplayZoom = -1;
     int32_t maxDisplayZoom = -1;
     int32_t maxZoom = 18;
 
-    std::string mime;
-
-    if (type == "GeoJSON") {
-        mime = "application/geo+json";
-    } else if (type == "TopoJSON") {
-        mime =  "application/topo+json";
-    } else if (type == "MVT") {
-        mime =  "application/vnd.mapbox-vector-tile";
-    } else if (type == "Raster") {
-        // TODO try to guess from url
-        mime = "image/png";
-    } else {
-        LOGW("Unrecognized data source type '%s', skipping", type.c_str());
-        return;
+    if (auto typeNode = source["type"]) {
+        type = typeNode.Scalar();
     }
-
     if (auto urlNode = source["url"]) {
         url = urlNode.Scalar();
     }
@@ -1020,8 +1004,6 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         isMBTilesFile = urlLength > extLength && (url.compare(urlLength - extLength, extLength, extStr) == 0);
     }
 
-    std::shared_ptr<TileSource> sourcePtr;
-
     auto rawSources = std::make_unique<MemoryCacheDataSource>();
     rawSources->setCacheSize(CACHE_SIZE);
 
@@ -1029,24 +1011,15 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         // If we have MBTiles, we know the source is tiled.
         tiled = true;
         // Create an MBTiles data source from the file at the url and add it to the source chain.
-        rawSources->setNext(std::make_unique<MBTilesDataSource>(platform, name, url, mime));
+        rawSources->setNext(std::make_unique<MBTilesDataSource>(platform, name, url, ""));
     } else if (tiled) {
         rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url));
     }
 
-    if (type == "GeoJSON") {
-        if (tiled) {
-            sourcePtr = std::make_shared<GeoJsonSource>(name, std::move(rawSources),
-                                                        minDisplayZoom, maxDisplayZoom, maxZoom);
-        } else {
-            sourcePtr = std::make_shared<ClientGeoJsonSource>(platform, name, url, minDisplayZoom, maxDisplayZoom, maxZoom);
-        }
-    } else if (type == "TopoJSON") {
-        sourcePtr = std::make_shared<TopoJsonSource>(name, std::move(rawSources),
-                                                     minDisplayZoom, maxDisplayZoom, maxZoom);
-    } else if (type == "MVT") {
-        sourcePtr = std::make_shared<MVTSource>(name, std::move(rawSources),
-                                                minDisplayZoom, maxDisplayZoom, maxZoom);
+    std::shared_ptr<TileSource> sourcePtr;
+
+    if (type == "GeoJSON" && !tiled) {
+        sourcePtr = std::make_shared<ClientGeoJsonSource>(platform, name, url, minDisplayZoom, maxDisplayZoom, maxZoom);
     } else if (type == "Raster") {
         TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
         bool generateMipmaps = false;
@@ -1059,6 +1032,21 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         sourcePtr = std::make_shared<RasterSource>(name, std::move(rawSources),
                                                    minDisplayZoom, maxDisplayZoom, maxZoom,
                                                    options, generateMipmaps);
+    } else {
+        sourcePtr = std::make_shared<TileSource>(name, std::move(rawSources),
+                                                 minDisplayZoom, maxDisplayZoom, maxZoom);
+
+        if (type == "GeoJSON") {
+            sourcePtr->setFormat(TileSource::Format::GeoJson);
+        } else if (type == "TopoJSON") {
+            sourcePtr->setFormat(TileSource::Format::TopoJson);
+        } else if (type == "MVT") {
+            sourcePtr->setFormat(TileSource::Format::Mvt);
+        } else {
+            LOGE("Source '%s' does not have a valid type. Valid types are 'GeoJSON', 'TopoJSON', and 'MVT'. " \
+                "This source will be ignored.", name.c_str());
+            return;
+        }
     }
 
     _scene->tileSources().push_back(sourcePtr);

@@ -1,10 +1,13 @@
 #include "data/tileSource.h"
 
+#include "data/formats/geoJson.h"
+#include "data/formats/mvt.h"
+#include "data/formats/topoJson.h"
 #include "data/tileData.h"
+#include "platform.h"
 #include "tile/tileID.h"
 #include "tile/tile.h"
 #include "tile/tileTask.h"
-#include "platform.h"
 #include "log.h"
 
 #include <atomic>
@@ -27,6 +30,14 @@ TileSource::TileSource(const std::string& _name, std::unique_ptr<DataSource> _so
 
 TileSource::~TileSource() {
     clearData();
+}
+
+const char* TileSource::mimeType() const {
+    switch (m_format) {
+    case Format::GeoJson: return "application/geo+json";
+    case Format::TopoJson: return "application/topo+json";
+    case Format::Mvt: return "application/vnd.mapbox-vector-tile";
+    }
 }
 
 std::shared_ptr<TileTask> TileSource::createTask(TileID _tileId, int _subTask) {
@@ -86,6 +97,14 @@ void TileSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
 
     for (auto& subTask : _task->subTasks()) {
         subTask->source().loadTileData(subTask, _cb);
+    }
+}
+
+std::shared_ptr<TileData> TileSource::parse(const TileTask& _task, const MapProjection& _projection) const {
+    switch (m_format) {
+    case Format::TopoJson: return TopoJson::parseTile(_task, _projection, m_id);
+    case Format::GeoJson: return GeoJson::parseTile(_task, _projection, m_id);
+    case Format::Mvt: return Mvt::parseTile(_task, _projection, m_id);
     }
 }
 
