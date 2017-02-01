@@ -17,6 +17,9 @@
 #include "tangram.h"
 #include "log.h"
 
+#include "unicode/unistr.h"
+#include "unicode/schriter.h"
+
 #include <cmath>
 #include <locale>
 #include <mutex>
@@ -444,7 +447,8 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
 
     for (auto& line : _feat.lines) {
 
-        if (!addStraightTextLabels(line, _params, _rule) && line.size() > 2) {
+        if (!addStraightTextLabels(line, _params, _rule) &&
+            !_params.hasComplexShaping && line.size() > 2) {
             addCurvedTextLabels(line, _params, _rule);
         }
     }
@@ -664,6 +668,35 @@ std::string TextStyleBuilder::resolveTextSource(const std::string& textSource,
     return props.getString(key_name);
 }
 
+bool isComplexShapingScript(const icu::UnicodeString& _text) {
+
+    // Taken from:
+    // https://github.com/tangrams/tangram/blob/labels-rebase/src/styles/text/canvas_text.js#L538-L553
+    // See also http://r12a.github.io/scripts/featurelist/
+
+    icu::StringCharacterIterator iterator(_text);
+    for (UChar c = iterator.first(); c != CharacterIterator::DONE; c = iterator.next()) {
+        if (c >= u'\u0600') {
+            if ((c <= u'\u06FF') ||                   // Arabic:     "\u0600-\u06FF"
+                (c >= u'\u0900' && c <= u'\u097F') || // Devanagari: "\u0900-\u097F"
+                (c >= u'\u0980' && c <= u'\u09FF') || // Bengali:    "\u0980-\u09FF"
+                (c >= u'\u0A00' && c <= u'\u0A7F') || // Gurmukhi:   "\u0A00-\u0A7F"
+                (c >= u'\u0A80' && c <= u'\u0AFF') || // Gujarati:   "\u0A80-\u0AFF"
+                (c >= u'\u0B00' && c <= u'\u0B7f') || // Oriya:      "\u0B00-\u0B7F"
+                (c >= u'\u0B80' && c <= u'\u0BFF') || // Tamil:      "\u0B80-\u0BFF"
+                (c >= u'\u0C00' && c <= u'\u0C7F') || // Telugu:     "\u0C00-\u0C7F"
+                (c >= u'\u0E80' && c <= u'\u0EFF') || // Lao:        "\u0E80-\u0EFF"
+                (c >= u'\u0F00' && c <= u'\u0FFF') || // Tibetan:    "\u0F00-\u0FFF"
+                (c >= u'\u1000' && c <= u'\u109F') || // Burmese:    "\u1000-\u109F"
+                (c >= u'\u1780' && c <= u'\u17FF') || // Khmer:      "\u1780-\u17FF"
+                (c >= u'\u1800' && c <= u'\u18AF')) { // Mongolian:  "\u1800-\u18AF"
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type _type) {
 
     if (_params.text.empty() || _params.fontSize <= 0.f) {
@@ -673,13 +706,19 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 
     // Apply text transforms
     const std::string* renderText;
-    std::string text;
+    std::string transformedText;
 
     if (_params.transform == TextLabelProperty::Transform::none) {
         renderText = &_params.text;
     } else {
-        text = applyTextTransform(_params, _params.text);
-        renderText = &text;
+        transformedText = applyTextTransform(_params, _params.text);
+        renderText = &transformedText;
+    }
+
+    auto text = icu::UnicodeString::fromUTF8(*renderText);
+
+    if (_type == Label::Type::line) {
+        _params.hasComplexShaping = isComplexShapingScript(text);
     }
 
     // Scale factor by which the texture glyphs are scaled to match fontSize
