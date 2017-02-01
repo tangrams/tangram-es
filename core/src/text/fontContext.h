@@ -117,6 +117,8 @@ public:
 
     void addFont(const FontDescription& _ft, alfons::InputSource _source);
 
+    void setPixelScale(float _scale);
+
 private:
 
     float m_sdfRadius;
