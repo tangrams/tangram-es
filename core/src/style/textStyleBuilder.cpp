@@ -19,6 +19,8 @@
 
 #include "unicode/unistr.h"
 #include "unicode/schriter.h"
+#include "unicode/brkiter.h"
+#include "unicode/locid.h"
 
 #include <cmath>
 #include <locale>
@@ -605,41 +607,30 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     return p;
 }
 
-// TODO use icu transforms
-// http://source.icu-project.org/repos/icu/icu/trunk/source/samples/ustring/ustring.cpp
+void applyTextTransform(const TextStyle::Parameters& _params,
+                        icu::UnicodeString& _string) {
 
-std::string TextStyleBuilder::applyTextTransform(const TextStyle::Parameters& _params,
-                                                 const std::string& _string) {
-    std::locale loc;
-    std::string text = _string;
+    icu::Locale loc("en");
 
     switch (_params.transform) {
-        case TextLabelProperty::Transform::capitalize:
-            text[0] = toupper(text[0], loc);
-            if (text.size() > 1) {
-                for (size_t i = 1; i < text.length(); ++i) {
-                    if (text[i - 1] == ' ') {
-                        text[i] = std::toupper(text[i], loc);
-                    }
-                }
-            }
-            break;
-        case TextLabelProperty::Transform::lowercase:
-            for (size_t i = 0; i < text.length(); ++i) {
-                text[i] = std::tolower(text[i], loc);
-            }
-            break;
-        case TextLabelProperty::Transform::uppercase:
-            // TODO : use to wupper when any wide character is detected
-            for (size_t i = 0; i < text.length(); ++i) {
-                text[i] = std::toupper(text[i], loc);
-            }
-            break;
-        default:
-            break;
-    }
+    case TextLabelProperty::Transform::capitalize: {
+        UErrorCode status{U_ZERO_ERROR};
+        auto *wordIterator = BreakIterator::createWordInstance(loc, status);
 
-    return text;
+        if (U_SUCCESS(status)) { _string.toTitle(wordIterator); }
+
+        delete wordIterator;
+        break;
+    }
+    case TextLabelProperty::Transform::lowercase:
+        _string.toLower(loc);
+        break;
+    case TextLabelProperty::Transform::uppercase:
+        _string.toUpper(loc);
+        break;
+    default:
+        break;
+    }
 }
 
 std::string TextStyleBuilder::resolveTextSource(const std::string& textSource,
@@ -671,7 +662,7 @@ std::string TextStyleBuilder::resolveTextSource(const std::string& textSource,
 bool isComplexShapingScript(const icu::UnicodeString& _text) {
     icu::StringCharacterIterator iterator(_text);
     for (UChar c = iterator.first(); c != CharacterIterator::DONE; c = iterator.next()) {
-        if (c >= u'\u0600') {
+        if (c >= u'\u0600' && c <= u'\u18AF') {
             if ((c <= u'\u06FF') ||                   // Arabic:     "\u0600-\u06FF"
                 (c >= u'\u0900' && c <= u'\u097F') || // Devanagari: "\u0900-\u097F"
                 (c >= u'\u0980' && c <= u'\u09FF') || // Bengali:    "\u0980-\u09FF"
@@ -699,18 +690,9 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         return false;
     }
 
-    // Apply text transforms
-    const std::string* renderText;
-    std::string transformedText;
+    auto text = icu::UnicodeString::fromUTF8(_params.text);
 
-    if (_params.transform == TextLabelProperty::Transform::none) {
-        renderText = &_params.text;
-    } else {
-        transformedText = applyTextTransform(_params, _params.text);
-        renderText = &transformedText;
-    }
-
-    auto text = icu::UnicodeString::fromUTF8(*renderText);
+    applyTextTransform(_params, text);
 
     if (_type == Label::Type::line) {
         _params.hasComplexShaping = isComplexShapingScript(text);
@@ -742,7 +724,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     m_attributes.textRanges = TextRange{};
 
     glm::vec2 bbox(0);
-    if (ctx->layoutText(_params, *renderText, m_quads, m_atlasRefs, bbox, m_attributes.textRanges)) {
+    if (ctx->layoutText(_params, text, m_quads, m_atlasRefs, bbox, m_attributes.textRanges)) {
 
         int start = m_attributes.quadsStart;
         for (auto& range : m_attributes.textRanges) {

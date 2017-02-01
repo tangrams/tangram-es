@@ -103,7 +103,7 @@ public:
 
     float maxStrokeWidth() { return m_sdfRadius; }
 
-    bool layoutText(TextStyle::Parameters& _params, const std::string& _text,
+    bool layoutText(TextStyle::Parameters& _params, const icu::UnicodeString& _text,
                     std::vector<GlyphQuad>& _quads, std::bitset<max_textures>& _refs,
                     glm::vec2& _bbox, TextRange& _textRanges);
 
