@@ -322,10 +322,12 @@ void framebuffer_size_callback(GLFWwindow* window, int fWidth, int fHeight) {
 void init_main_window(bool recreate) {
 
     // Setup tangram
-    if (!map) {
-        map = new Tangram::Map();
-        map->loadSceneAsync(sceneFile.c_str(), true);
+    if (map) {
+        delete map;
     }
+
+    map = new Tangram::Map();
+    map->loadSceneAsync(sceneFile.c_str(), true);
 
     if (!recreate) {
         // Destroy old window
