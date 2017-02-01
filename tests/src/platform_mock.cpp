@@ -37,11 +37,11 @@ std::vector<FontSourceHandle> MockPlatform::systemFontFallbacksHandle() const {
     return handles;
 }
 
-bool MockPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) const {
+bool MockPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
     return true;
 }
 
-void MockPlatform::cancelUrlRequest(const std::string& _url) const {}
+void MockPlatform::cancelUrlRequest(const std::string& _url) {}
 
 void setCurrentThreadPriority(int priority) {}
 

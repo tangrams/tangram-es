@@ -6,6 +6,7 @@
 #include "util/mapProjection.h"
 #include "util/fastmap.h"
 #include "view/view.h"
+#include "platform_mock.h"
 
 #include <deque>
 
@@ -106,7 +107,7 @@ struct TestTileSource : TileSource {
 
 TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TileManager tileManager(worker);
+    TileManager tileManager(std::make_shared<MockPlatform>(), worker);
     ViewState viewState { &s_projection, true, glm::vec2(0), 1 };
 
     auto source = std::make_shared<TestTileSource>();
@@ -152,17 +153,18 @@ TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileMana
 TEST_CASE( "Mock TileWorker Initialization", "[TileManager][Constructor]" ) {
 
     TestTileWorker worker;
-    TileManager tileManager(worker);
+    TileManager tileManager(std::shared_ptr<MockPlatform>(), worker);
 }
 
 TEST_CASE( "Real TileWorker Initialization", "[TileManager][Constructor]" ) {
-    TileWorker worker(1);
-    TileManager tileManager(worker);
+    auto platform = std::make_shared<MockPlatform>();
+    TileWorker worker(platform, 1);
+    TileManager tileManager(platform, worker);
 }
 
 TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TileManager tileManager(worker);
+    TileManager tileManager(std::make_shared<MockPlatform>(), worker);
     ViewState viewState { &s_projection, true, glm::vec2(0), 1 };
 
     auto source = std::make_shared<TestTileSource>();
@@ -188,7 +190,7 @@ TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
 
 TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TileManager tileManager(worker);
+    TileManager tileManager(std::make_shared<MockPlatform>(), worker);
     ViewState viewState { &s_projection, true, glm::vec2(0), 1 };
 
     auto source = std::make_shared<TestTileSource>();
@@ -227,7 +229,7 @@ TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
 
 TEST_CASE( "Use proxy Tile - circular proxies", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TileManager tileManager(worker);
+    TileManager tileManager(std::make_shared<MockPlatform>(), worker);
     ViewState viewState { &s_projection, true, glm::vec2(0), 1 };
 
     auto source = std::make_shared<TestTileSource>();
