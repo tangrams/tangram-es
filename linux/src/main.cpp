@@ -281,7 +281,7 @@ void init_main_window(bool recreate) {
 
     // Setup tangram
     if (!map) {
-        map = new Tangram::Map();
+        map = new Tangram::Map(std::shared_ptr<Platform(new LinuxPlatform()));
         map->loadSceneAsync(sceneFile.c_str(), true);
     }
 
@@ -379,7 +379,7 @@ int main(int argc, char* argv[]) {
         double delta = currentTime - lastTime;
         lastTime = currentTime;
 
-        processNetworkQueue();
+        map->getPlatform()->processNetworkQueue();
 
         // Render
         map->update(delta);
@@ -411,8 +411,6 @@ int main(int argc, char* argv[]) {
             //}
         }
     }
-
-    finishUrlRequests();
 
     if (map) {
         delete map;
