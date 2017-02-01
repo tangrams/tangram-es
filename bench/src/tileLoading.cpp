@@ -1,6 +1,6 @@
 #include "tangram.h"
 #include "gl.h"
-#include "platform.h"
+#include "platform_mock.h"
 #include "log.h"
 #include "data/tileSource.h"
 #include "scene/sceneLoader.h"
@@ -27,6 +27,8 @@ struct TestContext {
     MercatorProjection s_projection;
     const char* sceneFile = "scene.yaml";
 
+    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
+
     std::shared_ptr<Scene> scene;
     StyleContext styleContext;
 
@@ -39,15 +41,15 @@ struct TestContext {
     std::unique_ptr<TileBuilder> tileBuilder;
 
     void loadScene(const char* sceneFile) {
-        scene = std::make_shared<Scene>(sceneFile);
-        auto sceneString = stringFromFile(sceneFile);
+        scene = std::make_shared<Scene>(platform, sceneFile);
+        auto sceneString = platform->stringFromFile(sceneFile);
 
         try { scene->config() = YAML::Load(sceneString); }
         catch (YAML::ParserException e) {
             LOGE("Parsing scene config '%s'", e.what());
             return;
         }
-        SceneLoader::applyConfig(scene);
+        SceneLoader::applyConfig(platform, scene);
 
         scene->fontContext()->loadFonts();
 

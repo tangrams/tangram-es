@@ -24,6 +24,7 @@ std::string markerStyling = "{ style: 'points', color: 'white', size: [25px, 25p
 
 GLFWwindow* main_window = nullptr;
 Tangram::Map* map = nullptr;
+std::shared_ptr<LinuxPlatform> platform = nullptr;
 int width = 800;
 int height = 600;
 bool recreate_context;
@@ -128,7 +129,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             LOG("Added marker with zOrder: %d", mods);
         }
         // This updates the tiles (maybe we need a recalcTiles())
-        requestRender();
+        platform->requestRender();
     }
 
     last_time_released = time;
@@ -211,11 +212,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_E:
                 if (scene_editing_mode) {
                     scene_editing_mode = false;
-                    setContinuousRendering(false);
+                    platform->setContinuousRendering(false);
                     glfwSwapInterval(0);
                 } else {
                     scene_editing_mode = true;
-                    setContinuousRendering(true);
+                    platform->setContinuousRendering(true);
                     glfwSwapInterval(1);
                 }
                 map->loadSceneAsync(sceneFile.c_str());
@@ -281,7 +282,7 @@ void init_main_window(bool recreate) {
 
     // Setup tangram
     if (!map) {
-        map = new Tangram::Map();
+        map = new Tangram::Map(platform);
         map->loadSceneAsync(sceneFile.c_str(), true);
     }
 
@@ -315,7 +316,7 @@ void init_main_window(bool recreate) {
     map->resize(width, height);
 
     if (testClientDataSource) {
-        data_source = std::make_shared<ClientGeoJsonSource>("touch", "");
+        data_source = std::make_shared<ClientGeoJsonSource>(platform, "touch", "");
         map->addTileSource(data_source);
     }
 }
@@ -325,6 +326,8 @@ void init_main_window(bool recreate) {
 // ============
 
 int main(int argc, char* argv[]) {
+
+    platform = std::make_shared<LinuxPlatform>();
 
     static bool keepRunning = true;
 
@@ -367,7 +370,7 @@ int main(int argc, char* argv[]) {
 
     double lastTime = glfwGetTime();
 
-    setContinuousRendering(false);
+    platform->setContinuousRendering(false);
     glfwSwapInterval(0);
 
     recreate_context = false;
@@ -379,7 +382,7 @@ int main(int argc, char* argv[]) {
         double delta = currentTime - lastTime;
         lastTime = currentTime;
 
-        processNetworkQueue();
+        platform->processNetworkQueue();
 
         // Render
         map->update(delta);
@@ -389,7 +392,7 @@ int main(int argc, char* argv[]) {
         glfwSwapBuffers(main_window);
 
         // Poll for and process events
-        if (isContinuousRendering()) {
+        if (platform->isContinuousRendering()) {
             glfwPollEvents();
         } else {
             glfwWaitEvents();
@@ -411,8 +414,6 @@ int main(int argc, char* argv[]) {
             //}
         }
     }
-
-    finishUrlRequests();
 
     if (map) {
         delete map;

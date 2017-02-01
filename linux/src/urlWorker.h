@@ -9,18 +9,20 @@
 
 #include <curl/curl.h>
 
+class Platform;
+
 struct UrlTask {
     UrlCallback callback;
     const std::string url;
     std::vector<char> content;
 
-    UrlTask(UrlTask&& _other) : 
+    UrlTask(UrlTask&& _other) :
         callback(std::move(_other.callback)),
         url(std::move(_other.url)),
         content(std::move(_other.content)) {
     }
 
-    UrlTask(const std::string& _url, const UrlCallback& _callback) : 
+    UrlTask(const std::string& _url, const UrlCallback& _callback) :
         callback(_callback),
         url(_url) {
     }
@@ -28,9 +30,9 @@ struct UrlTask {
 
 class UrlWorker {
     public:
-        void perform(std::unique_ptr<UrlTask> _task);
+        void perform(std::unique_ptr<UrlTask> _task, const Platform& _platform);
         void reset();
-        bool isAvailable() { return !bool(m_task); }
+        bool isAvailable() const { return !bool(m_task); }
         bool hasTask(const std::string& _url);
         void join();
 
