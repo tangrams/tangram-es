@@ -296,7 +296,11 @@ void Importer::importScenesRecursive(Node& root, const Url& scenePath, std::vect
 
     mergeMapFields(root, sceneNode);
 
-    resolveSceneUrls(root, scenePath);
+    try {
+        resolveSceneUrls(root, scenePath);
+    } catch (YAML::BadSubscript e) {
+        LOGE("%s", e.what());
+    }
 }
 
 void Importer::mergeMapFields(Node& target, const Node& import) {
