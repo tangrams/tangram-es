@@ -75,16 +75,6 @@ Node Importer::applySceneImports(const Url& scenePath, const Url& resourceRoot) 
     return root;
 }
 
-const char* eatBOM(const std::string& str) {
-    const unsigned char bom[] = { 0xEF, 0xBB, 0xBF };
-    const char* cstr = str.c_str();
-    if (str.size() > 2 && memcmp(cstr, bom, sizeof(bom)) == 0) {
-        // Found the UTF-8 BOM, eat it!
-        return cstr + sizeof(bom);
-    }
-    return cstr;
-}
-
 void Importer::processScene(const Url& scenePath, const std::string &sceneString) {
 
     LOGD("Process: '%s'", scenePath.string().c_str());
@@ -95,9 +85,7 @@ void Importer::processScene(const Url& scenePath, const std::string &sceneString
     }
 
     try {
-
-        auto rawSceneString = eatBOM(sceneString);
-        auto sceneNode = YAML::Load(rawSceneString);
+        auto sceneNode = YAML::Load(sceneString);
 
         m_scenes[scenePath] = sceneNode;
 
