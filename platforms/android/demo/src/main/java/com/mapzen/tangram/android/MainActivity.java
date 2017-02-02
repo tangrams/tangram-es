@@ -39,7 +39,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     LngLat lastTappedPoint;
     MapData markers;
 
-    String pointStyle = "{ style: 'points', interactive: true, color: 'white', size: [50px, 50px], order: 2000, collide: false }";
+    String pointStylingPath = "layers.touch.point.draw.icons";
     ArrayList<Marker> pointMarkers = new ArrayList<Marker>();
 
     boolean showTileInfo = false;
@@ -133,7 +133,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
             markers.addPolyline(line, props);
 
             Marker p = map.addMarker();
-            p.setStyling(pointStyle);
+            p.setStylingFromPath(pointStylingPath);
             p.setPoint(tappedPoint);
             pointMarkers.add(p);
         }

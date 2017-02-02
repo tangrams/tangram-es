@@ -273,11 +273,19 @@ extern "C" {
         return result;
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetStyling(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jstring styling) {
+    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetStylingFromString(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jstring styling) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto styleString = stringFromJString(jniEnv, styling);
-        auto result = map->markerSetStyling(static_cast<unsigned int>(markerID), styleString.c_str());
+        auto result = map->markerSetStylingFromString(static_cast<unsigned int>(markerID), styleString.c_str());
+        return result;
+    }
+
+    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetStylingFromPath(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jstring path) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        auto pathString = stringFromJString(jniEnv, path);
+        auto result = map->markerSetStylingFromPath(static_cast<unsigned int>(markerID), pathString.c_str());
         return result;
     }
 
