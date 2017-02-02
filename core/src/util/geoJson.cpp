@@ -64,8 +64,9 @@ Properties GeoJson::getProperties(const JsonValue& _in, int32_t _sourceId) {
             items.emplace_back(name, value.GetDouble());
         } else if (it->value.IsString()) {
             items.emplace_back(name, value.GetString());
+        } else if (it->value.IsBool()) {
+            items.emplace_back(name, double(value.GetBool()));
         }
-
     }
 
     Properties properties;
