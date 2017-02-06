@@ -32,9 +32,9 @@ Point transformPoint(geojsonvt::TilePoint pt) {
 }
 
 // TODO: pass scene's resourcePath to constructor to be used with `stringFromFile`
-ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::string& _url,
+ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<const Platform> _platform, const std::string& _name, const std::string& _url,
                                          int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom)
-    : TileSource(_name, nullptr, _minDisplayZoom, _maxDisplayZoom, _maxZoom) {
+    : TileSource(_name, nullptr, _minDisplayZoom, _maxDisplayZoom, _maxZoom), m_platform(_platform) {
 
     // TODO: handle network url for client datasource data
     // TODO: generic uri handling
@@ -44,7 +44,7 @@ ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::st
         std::regex r("^(http|https):/");
         std::smatch match;
         if (std::regex_search(_url, match, r)) {
-            startUrlRequest(_url,
+            m_platform->startUrlRequest(_url,
                     [&, this](std::vector<char>&& rawData) {
                         addData(std::string(rawData.begin(), rawData.end()));
                         m_hasPendingData = false;
@@ -52,7 +52,7 @@ ClientGeoJsonSource::ClientGeoJsonSource(const std::string& _name, const std::st
             m_hasPendingData = true;
         } else {
             // Load from file
-            const auto& string = stringFromFile(_url.c_str());
+            const auto& string = m_platform->stringFromFile(_url.c_str());
             addData(string);
         }
     }

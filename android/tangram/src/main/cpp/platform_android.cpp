@@ -17,7 +17,6 @@
 #include <dlfcn.h> // dlopen, dlsym
 
 #include <android/log.h>
-#include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 #include <cstdarg>
 
@@ -61,9 +60,7 @@ static jmethodID hashmapPutMID = 0;
 
 static jmethodID markerByIDMID = 0;
 
-static AAssetManager* assetManager = nullptr;
-
-static bool s_isContinuousRendering = false;
+static bool glExtensionsLoaded = false;
 
 PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT = 0;
 PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT = 0;
@@ -77,12 +74,9 @@ void bindJniEnvToThread(JNIEnv* jniEnv) {
     jniEnv->GetJavaVM(&jvm);
 }
 
-void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager) {
+void setupJniEnv(JNIEnv* jniEnv) {
     bindJniEnvToThread(jniEnv);
-    if (tangramInstance) {
-        jniEnv->DeleteGlobalRef(tangramInstance);
-    }
-    tangramInstance = jniEnv->NewGlobalRef(_tangramInstance);
+
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/MapController");
     startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)Z");
     cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(Ljava/lang/String;)V");
@@ -119,13 +113,6 @@ void setupJniEnv(JNIEnv* jniEnv, jobject _tangramInstance, jobject _assetManager
 
     jclass markerPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$MarkerPickListener");
     onMarkerPickMID = jniEnv->GetMethodID(markerPickListenerClass, "onMarkerPick", "(Lcom/mapzen/tangram/MarkerPickResult;FF)V");
-
-    assetManager = AAssetManager_fromJava(jniEnv, _assetManager);
-
-    if (assetManager == nullptr) {
-        logMsg("ERROR: Could not obtain Asset Manager reference\n");
-    }
-
 }
 
 void logMsg(const char* fmt, ...) {
@@ -160,33 +147,14 @@ public:
     }
 };
 
-void requestRender() {
-
-    JniThreadBinding jniEnv(jvm);
-
-    jniEnv->CallVoidMethod(tangramInstance, requestRenderMethodID);
-}
-
-std::string fontFallbackPath(int _importance, int _weightHint) {
-
-    JniThreadBinding jniEnv(jvm);
-
-    jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFallbackFilePath, _importance, _weightHint);
-
-    auto resultStr = stringFromJString(jniEnv, returnStr);
-    jniEnv->DeleteLocalRef(returnStr);
-
-    return resultStr;
-}
-
-std::string fontPath(const std::string& _family, const std::string& _weight, const std::string& _style) {
+std::string AndroidPlatform::fontPath(const std::string& _family, const std::string& _weight, const std::string& _style) const {
 
     JniThreadBinding jniEnv(jvm);
 
     std::string key = _family + "_" + _weight + "_" + _style;
 
     jstring jkey = jniEnv->NewStringUTF(key.c_str());
-    jstring returnStr = (jstring) jniEnv->CallObjectMethod(tangramInstance, getFontFilePath, jkey);
+    jstring returnStr = (jstring) jniEnv->CallObjectMethod(m_tangramInstance, getFontFilePath, jkey);
 
     auto resultStr = stringFromJString(jniEnv, returnStr);
     jniEnv->DeleteLocalRef(returnStr);
@@ -195,7 +163,40 @@ std::string fontPath(const std::string& _family, const std::string& _weight, con
     return resultStr;
 }
 
-std::vector<FontSourceHandle> systemFontFallbacksHandle() {
+AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance) {
+    m_tangramInstance = _jniEnv->NewGlobalRef(_tangramInstance);
+
+    m_assetManager = AAssetManager_fromJava(_jniEnv, _assetManager);
+
+    if (m_assetManager == nullptr) {
+        LOGE("Could not obtain Asset Manager reference");
+    }
+}
+
+void AndroidPlatform::dispose(JNIEnv* _jniEnv) {
+    _jniEnv->DeleteGlobalRef(m_tangramInstance);
+}
+
+void AndroidPlatform::requestRender() const {
+
+    JniThreadBinding jniEnv(jvm);
+
+    jniEnv->CallVoidMethod(m_tangramInstance, requestRenderMethodID);
+}
+
+std::string AndroidPlatform::fontFallbackPath(int _importance, int _weightHint) const {
+
+    JniThreadBinding jniEnv(jvm);
+
+    jstring returnStr = (jstring) jniEnv->CallObjectMethod(m_tangramInstance, getFontFallbackFilePath, _importance, _weightHint);
+
+    auto resultStr = stringFromJString(jniEnv, returnStr);
+    jniEnv->DeleteLocalRef(returnStr);
+
+    return resultStr;
+}
+
+std::vector<FontSourceHandle> AndroidPlatform::systemFontFallbacksHandle() const {
     std::vector<FontSourceHandle> handles;
 
     int importance = 0;
@@ -212,7 +213,7 @@ std::vector<FontSourceHandle> systemFontFallbacksHandle() {
     return handles;
 }
 
-std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) {
+std::vector<char> AndroidPlatform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
     std::string path = fontPath(_name, _weight, _face);
 
     if (path.empty()) { return {}; }
@@ -222,26 +223,19 @@ std::vector<char> systemFont(const std::string& _name, const std::string& _weigh
     return data;
 }
 
-void setContinuousRendering(bool _isContinuous) {
-
-    s_isContinuousRendering = _isContinuous;
+void AndroidPlatform::setContinuousRendering(bool _isContinuous) {
+    Platform::setContinuousRendering(_isContinuous);
 
     JniThreadBinding jniEnv(jvm);
 
-    jniEnv->CallVoidMethod(tangramInstance, setRenderModeMethodID, _isContinuous ? 1 : 0);
+    jniEnv->CallVoidMethod(m_tangramInstance, setRenderModeMethodID, _isContinuous ? 1 : 0);
 }
 
-bool isContinuousRendering() {
+bool AndroidPlatform::bytesFromAssetManager(const char* _path, std::function<char*(size_t)> _allocator) const {
 
-    return s_isContinuousRendering;
-
-}
-
-bool bytesFromAssetManager(const char* _path, std::function<char*(size_t)> _allocator) {
-
-    AAsset* asset = AAssetManager_open(assetManager, _path, AASSET_MODE_UNKNOWN);
+    AAsset* asset = AAssetManager_open(m_assetManager, _path, AASSET_MODE_UNKNOWN);
     if (asset == nullptr) {
-        logMsg("Failed to open asset at path: %s\n", _path);
+        LOGW("Failed to open asset at path: %s", _path);
         return false;
     }
 
@@ -250,33 +244,14 @@ bool bytesFromAssetManager(const char* _path, std::function<char*(size_t)> _allo
 
     int read = AAsset_read(asset, data, size);
     if (read <= 0) {
-        logMsg("Failed to read asset at path: %s\n", _path);
+        LOGW("Failed to read asset at path: %s", _path);
     }
     AAsset_close(asset);
 
     return read > 0;
 }
 
-bool bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator) {
-
-    std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
-
-    if(!resource.is_open()) {
-        logMsg("Failed to read file at path: %s\n", _path);
-        return false;
-    }
-
-    size_t size = resource.tellg();
-    char* cdata = _allocator(size);
-
-    resource.seekg(std::ifstream::beg);
-    resource.read(cdata, size);
-    resource.close();
-
-    return true;
-}
-
-std::string stringFromFile(const char* _path) {
+std::string AndroidPlatform::stringFromFile(const char* _path) const {
 
     std::string data;
 
@@ -288,12 +263,12 @@ std::string stringFromFile(const char* _path) {
     if (strncmp(_path, aaPrefix, aaPrefixLen) == 0) {
         bytesFromAssetManager(_path + aaPrefixLen, allocator);
     } else {
-        bytesFromFileSystem(_path, allocator);
+        Platform::bytesFromFileSystem(_path, allocator);
     }
     return data;
 }
 
-std::vector<char> bytesFromFile(const char* _path) {
+std::vector<char> AndroidPlatform::bytesFromFile(const char* _path) const {
     std::vector<char> data;
 
     auto allocator = [&](size_t size) {
@@ -304,7 +279,7 @@ std::vector<char> bytesFromFile(const char* _path) {
     if (strncmp(_path, aaPrefix, aaPrefixLen) == 0) {
         bytesFromAssetManager(_path + aaPrefixLen, allocator);
     } else {
-        bytesFromFileSystem(_path, allocator);
+        Platform::bytesFromFileSystem(_path, allocator);
     }
 
     return data;
@@ -318,7 +293,7 @@ std::string resolveScenePath(const char* path) {
     return Tangram::Url(path).resolved("asset:///").string();
 }
 
-bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
+bool AndroidPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) const {
 
     JniThreadBinding jniEnv(jvm);
     jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
@@ -331,15 +306,15 @@ bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
     // to make sure nothing is leaked.
     jlong jCallbackPtr = reinterpret_cast<jlong>(new UrlCallback(_callback));
 
-    jboolean methodResult = jniEnv->CallBooleanMethod(tangramInstance, startUrlRequestMID, jUrl, jCallbackPtr);
+    jboolean methodResult = jniEnv->CallBooleanMethod(m_tangramInstance, startUrlRequestMID, jUrl, jCallbackPtr);
 
     return methodResult;
 }
 
-void cancelUrlRequest(const std::string& _url) {
+void AndroidPlatform::cancelUrlRequest(const std::string& _url) const {
     JniThreadBinding jniEnv(jvm);
     jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
-    jniEnv->CallVoidMethod(tangramInstance, cancelUrlRequestMID, jUrl);
+    jniEnv->CallVoidMethod(m_tangramInstance, cancelUrlRequestMID, jUrl);
 }
 
 void onUrlSuccess(JNIEnv* _jniEnv, jbyteArray _jBytes, jlong _jCallbackPtr) {
@@ -398,7 +373,7 @@ void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPi
     jniEnv->DeleteGlobalRef(listener);
 }
 
-void markerPickCallback(jobject listener, const Tangram::MarkerPickResult* markerPickResult) {
+void markerPickCallback(jobject listener, jobject tangramInstance, const Tangram::MarkerPickResult* markerPickResult) {
 
     JniThreadBinding jniEnv(jvm);
     float position[2] = {0.0, 0.0};
@@ -423,7 +398,7 @@ void markerPickCallback(jobject listener, const Tangram::MarkerPickResult* marke
 
     jniEnv->CallVoidMethod(listener, onMarkerPickMID, markerPickResultObject, position[0], position[1]);
     jniEnv->DeleteGlobalRef(listener);
-
+    jniEnv->DeleteGlobalRef(tangramInstance);
 }
 
 void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* featurePickResult) {
@@ -452,11 +427,17 @@ void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* fea
 
 
 void initGLExtensions() {
+    if (glExtensionsLoaded) {
+        return;
+    }
+
     void* libhandle = dlopen("libGLESv2.so", RTLD_LAZY);
 
     glBindVertexArrayOESEXT = (PFNGLBINDVERTEXARRAYOESPROC) dlsym(libhandle, "glBindVertexArrayOES");
     glDeleteVertexArraysOESEXT = (PFNGLDELETEVERTEXARRAYSOESPROC) dlsym(libhandle, "glDeleteVertexArraysOES");
     glGenVertexArraysOESEXT = (PFNGLGENVERTEXARRAYSOESPROC) dlsym(libhandle, "glGenVertexArraysOES");
+
+    glExtensionsLoaded = true;
 }
 
 std::string stringFromJString(JNIEnv* jniEnv, jstring string) {

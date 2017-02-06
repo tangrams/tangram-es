@@ -9,10 +9,11 @@
 
 #import "TGMapViewController.h"
 #import "TGHelpers.h"
+#import "platform_ios.h"
+#import "data/propertyItem.h"
+#import "tangram.h"
 
-#include "platform_ios.h"
-#include "data/propertyItem.h"
-#include "tangram.h"
+#import <functional>
 
 __CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
 __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
@@ -714,7 +715,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 - (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self != nil) {
-        self.map = new Tangram::Map();
+        std::shared_ptr<Platform> platform(new iOSPlatform(self));
+        self.map = new Tangram::Map(platform);
     }
     return self;
 }
@@ -722,7 +724,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 - (instancetype)initWithCoder:(NSCoder *)aDecoder {
     self = [super initWithCoder:aDecoder];
     if (self != nil) {
-        self.map = new Tangram::Map();
+        std::shared_ptr<Platform> platform(new iOSPlatform(self));
+        self.map = new Tangram::Map(platform);
     }
     return self;
 }
@@ -746,8 +749,6 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
                                                 cacheMemoryCapacity:4*1024*1024
                                                   cacheDiskCapacity:30*1024*1024];
     }
-
-    init(self);
 
     GLKView* view = (GLKView *)self.view;
     view.context = self.context;
@@ -827,6 +828,17 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     }
 }
 
+#if 0
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+
+    if (!self.continuous) {
+        self.paused = NO;
+    }
+}
+#endif
+
 - (void)setContinuous:(BOOL)c
 {
     _continuous = c;
@@ -842,7 +854,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     }
 
     if (!self.continuous && !self.renderRequested) {
-        self.paused = YES;
+        // self.paused = YES;
     }
 
     self.renderRequested = NO;

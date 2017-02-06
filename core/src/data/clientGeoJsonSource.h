@@ -5,6 +5,8 @@
 
 #include <mutex>
 
+class Platform;
+
 namespace mapbox {
 namespace util {
 namespace geojsonvt {
@@ -23,7 +25,7 @@ class ClientGeoJsonSource : public TileSource {
 
 public:
 
-    ClientGeoJsonSource(const std::string& _name, const std::string& _url,
+    ClientGeoJsonSource(std::shared_ptr<const Platform> _platform, const std::string& _name, const std::string& _url,
                         int32_t _minDisplayZoom = -1, int32_t _maxDisplayZoom = -1, int32_t _maxZoom = 18);
     ~ClientGeoJsonSource();
 
@@ -48,6 +50,8 @@ protected:
     mutable std::mutex m_mutexStore;
     std::vector<mapbox::util::geojsonvt::ProjectedFeature> m_features;
     bool m_hasPendingData = false;
+
+     std::shared_ptr<const Platform> m_platform;
 
 };
 

@@ -54,11 +54,11 @@ static const std::string GLOBAL_PREFIX = "global.";
 
 std::mutex SceneLoader::m_textureMutex;
 
-bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene, const std::vector<SceneUpdate>& _updates) {
+bool SceneLoader::loadScene(const std::shared_ptr<const Platform>& _platform, std::shared_ptr<Scene> _scene, const std::vector<SceneUpdate>& _updates) {
 
     Importer sceneImporter;
 
-    _scene->config() = sceneImporter.applySceneImports(_scene->path(), _scene->resourceRoot());
+    _scene->config() = sceneImporter.applySceneImports(_platform, _scene->path(), _scene->resourceRoot());
 
     if (_scene->config()) {
 
@@ -67,7 +67,7 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene, const std::vector<Sce
         // Load font resources
         _scene->fontContext()->loadFonts();
 
-        applyConfig(_scene);
+        applyConfig(_platform, _scene);
 
         return true;
     }
@@ -156,14 +156,14 @@ void SceneLoader::applyGlobals(Node root, Scene& scene) {
     }
 }
 
-bool SceneLoader::applyConfig(const std::shared_ptr<Scene>& _scene) {
+bool SceneLoader::applyConfig(const std::shared_ptr<const Platform>& _platform, const std::shared_ptr<Scene>& _scene) {
 
     Node& config = _scene->config();
 
     // Instantiate built-in styles
     _scene->styles().emplace_back(new PolygonStyle("polygons"));
     _scene->styles().emplace_back(new PolylineStyle("lines"));
-    _scene->styles().emplace_back(new DebugTextStyle("debugtext", true));
+    _scene->styles().emplace_back(new DebugTextStyle("debugtext", std::make_shared<FontContext>(_platform), true));
     _scene->styles().emplace_back(new TextStyle("text", _scene->fontContext(), true));
     _scene->styles().emplace_back(new DebugStyle("debug"));
     _scene->styles().emplace_back(new PointStyle("points", _scene->fontContext()));
@@ -177,7 +177,7 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Scene>& _scene) {
     if (Node sources = config["sources"]) {
         for (const auto& source : sources) {
             std::string srcName = source.first.Scalar();
-            try { loadSource(srcName, source.second, sources, _scene); }
+            try { loadSource(_platform, srcName, source.second, sources, _scene); }
             catch (YAML::RepresentationException e) {
                 LOGNode("Parsing sources: '%s'", source, e.what());
             }
@@ -188,7 +188,7 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Scene>& _scene) {
 
     if (Node textures = config["textures"]) {
         for (const auto& texture : textures) {
-            try { loadTexture(texture, _scene); }
+            try { loadTexture(_platform, texture, _scene); }
             catch (YAML::RepresentationException e) {
                 LOGNode("Parsing texture: '%s'", texture, e.what());
             }
@@ -198,7 +198,7 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Scene>& _scene) {
     if (Node fonts = config["fonts"]) {
         if (fonts.IsMap()) {
             for (const auto& font : fonts) {
-                try { loadFont(font, _scene); }
+                try { loadFont(_platform, font, _scene); }
                 catch (YAML::RepresentationException e) {
                     LOGNode("Parsing font: '%s'", font, e.what());
                 }
@@ -217,7 +217,7 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Scene>& _scene) {
             try {
                 auto name = entry.first.Scalar();
                 auto config = entry.second;
-                loadStyle(name, config,_scene);
+                loadStyle(_platform, name, config, _scene);
             }
             catch (YAML::RepresentationException e) {
                 LOGNode("Parsing style: '%s'", entry, e.what());
@@ -288,7 +288,7 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Scene>& _scene) {
     return true;
 }
 
-void SceneLoader::loadShaderConfig(Node shaders, Style& style, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadShaderConfig(const std::shared_ptr<const Platform>& platform, Node shaders, Style& style, const std::shared_ptr<Scene>& scene) {
 
     if (!shaders) { return; }
 
@@ -337,7 +337,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, const std::shared
             const std::string& name = uniform.first.Scalar();
             StyleUniform styleUniform;
 
-            if (parseStyleUniforms(uniform.second, scene, styleUniform)) {
+            if (parseStyleUniforms(platform, uniform.second, scene, styleUniform)) {
                 if (styleUniform.value.is<UniformArray1f>()) {
                     UniformArray1f& array = styleUniform.value.get<UniformArray1f>();
                     shader.addSourceBlock("uniforms", "uniform float " + name +
@@ -396,26 +396,26 @@ glm::vec4 parseMaterialVec(const Node& prop) {
     return glm::vec4(0.0);
 }
 
-void SceneLoader::loadMaterial(Node matNode, Material& material, const std::shared_ptr<Scene>& scene, Style& style) {
+void SceneLoader::loadMaterial(const std::shared_ptr<const Platform>& platform, Node matNode, Material& material, const std::shared_ptr<Scene>& scene, Style& style) {
     if (!matNode.IsMap()) { return; }
 
     if (Node n = matNode["emission"]) {
         if (n.IsMap()) {
-            material.setEmission(loadMaterialTexture(n, scene, style));
+            material.setEmission(loadMaterialTexture(platform, n, scene, style));
         } else {
             material.setEmission(parseMaterialVec(n));
         }
     }
     if (Node n = matNode["diffuse"]) {
         if (n.IsMap()) {
-            material.setDiffuse(loadMaterialTexture(n, scene, style));
+            material.setDiffuse(loadMaterialTexture(platform, n, scene, style));
         } else {
             material.setDiffuse(parseMaterialVec(n));
         }
     }
     if (Node n = matNode["ambient"]) {
         if (n.IsMap()) {
-            material.setAmbient(loadMaterialTexture(n, scene, style));
+            material.setAmbient(loadMaterialTexture(platform, n, scene, style));
         } else {
             material.setAmbient(parseMaterialVec(n));
         }
@@ -423,7 +423,7 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, const std::shar
 
     if (Node n = matNode["specular"]) {
         if (n.IsMap()) {
-            material.setSpecular(loadMaterialTexture(n, scene, style));
+            material.setSpecular(loadMaterialTexture(platform, n, scene, style));
         } else {
             material.setSpecular(parseMaterialVec(n));
         }
@@ -436,10 +436,10 @@ void SceneLoader::loadMaterial(Node matNode, Material& material, const std::shar
         }
     }
 
-    material.setNormal(loadMaterialTexture(matNode["normal"], scene, style));
+    material.setNormal(loadMaterialTexture(platform, matNode["normal"], scene, style));
 }
 
-MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, const std::shared_ptr<Scene>& scene, Style& style) {
+MaterialTexture SceneLoader::loadMaterialTexture(const std::shared_ptr<const Platform>& platform, Node matCompNode, const std::shared_ptr<Scene>& scene, Style& style) {
 
     if (!matCompNode) { return MaterialTexture{}; }
 
@@ -460,7 +460,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, const std::sh
 
     if (!matTex.tex) {
         // Load inline material  textures
-        if (!loadTexture(name, scene)) {
+        if (!loadTexture(platform, name, scene)) {
             LOGW("Not able to load material texture: %s", name.c_str());
             return MaterialTexture();
         }
@@ -541,7 +541,7 @@ void SceneLoader::updateSpriteNodes(const std::string& texName,
     }
 }
 
-std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, const std::string& url,
+std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<const Platform>& platform, const std::string& name, const std::string& url,
         const TextureOptions& options, bool generateMipmaps, const std::shared_ptr<Scene>& scene) {
 
     std::shared_ptr<Texture> texture;
@@ -551,7 +551,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
     // TODO: generalize using URI handlers
     if (std::regex_search(url, match, r)) {
         scene->pendingTextures++;
-        startUrlRequest(url, [=](std::vector<char>&& rawData) {
+        platform->startUrlRequest(url, [=](std::vector<char>&& rawData) {
                 std::lock_guard<std::mutex> lock(m_textureMutex);
                 auto texture = scene->getTexture(name);
                 if (texture) {
@@ -562,7 +562,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
                     updateSpriteNodes(name, texture, scene);
                     scene->pendingTextures--;
                     if (scene->pendingTextures == 0) {
-                        requestRender();
+                        platform->requestRender();
                     }
                 }
             });
@@ -596,7 +596,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
             }
 
         } else {
-            auto data = bytesFromFile(url.c_str());
+            auto data = platform->bytesFromFile(url.c_str());
 
             if (data.size() == 0) {
                 LOGE("Can't load texture resource at url '%s'", url.c_str());
@@ -613,10 +613,10 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::string& name, cons
     return texture;
 }
 
-bool SceneLoader::loadTexture(const std::string& url, const std::shared_ptr<Scene>& scene) {
+bool SceneLoader::loadTexture(const std::shared_ptr<const Platform>& platform, const std::string& url, const std::shared_ptr<Scene>& scene) {
     TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
 
-    auto texture = fetchTexture(url, url, options, false, scene);
+    auto texture = fetchTexture(platform, url, url, options, false, scene);
     if (texture) {
         std::lock_guard<std::mutex> lock(m_textureMutex);
         scene->textures().emplace(url, texture);
@@ -626,7 +626,7 @@ bool SceneLoader::loadTexture(const std::string& url, const std::shared_ptr<Scen
     return false;
 }
 
-void SceneLoader::loadTexture(const std::pair<Node, Node>& node, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadTexture(const std::shared_ptr<const Platform>& platform, const std::pair<Node, Node>& node, const std::shared_ptr<Scene>& scene) {
 
     const std::string& name = node.first.Scalar();
     Node textureConfig = node.second;
@@ -649,7 +649,7 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, const std::shar
         }
     }
 
-    auto texture = fetchTexture(name, file, options, generateMipmaps, scene);
+    auto texture = fetchTexture(platform, name, file, options, generateMipmaps, scene);
     if (!texture) { return; }
 
     std::lock_guard<std::mutex> lock(m_textureMutex);
@@ -674,7 +674,7 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, const std::shar
     scene->textures().emplace(name, texture);
 }
 
-void loadFontDescription(const Node& node, const std::string& family, const std::shared_ptr<Scene>& scene) {
+void loadFontDescription(const std::shared_ptr<const Platform>& platform, const Node& node, const std::string& family, const std::shared_ptr<Scene>& scene) {
     if (!node.IsMap()) {
         LOGW("");
         return;
@@ -716,7 +716,7 @@ void loadFontDescription(const Node& node, const std::string& family, const std:
     if (std::regex_search(uri, match, regex)) {
         // Load remote
         scene->pendingFonts++;
-        startUrlRequest(_ft.uri, [_ft, scene](std::vector<char>&& rawData) {
+        platform->startUrlRequest(_ft.uri, [_ft, scene](std::vector<char>&& rawData) {
             if (rawData.size() == 0) {
                 LOGE("Bad URL request for font %s at URL %s", _ft.alias.c_str(), _ft.uri.c_str());
             } else {
@@ -725,7 +725,7 @@ void loadFontDescription(const Node& node, const std::string& family, const std:
             scene->pendingFonts--;
         });
     } else {
-        auto data = bytesFromFile(_ft.uri.c_str());
+        auto data = platform->bytesFromFile(_ft.uri.c_str());
 
         if (data.size() == 0) {
             LOGW("Local font at path %s can't be found (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
@@ -736,19 +736,19 @@ void loadFontDescription(const Node& node, const std::string& family, const std:
     }
 }
 
-void SceneLoader::loadFont(const std::pair<Node, Node>& font, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadFont(const std::shared_ptr<const Platform>& platform, const std::pair<Node, Node>& font, const std::shared_ptr<Scene>& scene) {
     const std::string& family = font.first.Scalar();
 
     if (font.second.IsMap()) {
-        loadFontDescription(font.second, family, scene);
+        loadFontDescription(platform, font.second, family, scene);
     } else if (font.second.IsSequence()) {
         for (const auto& node : font.second) {
-            loadFontDescription(node, family, scene);
+            loadFontDescription(platform, node, family, scene);
         }
     }
 }
 
-void SceneLoader::loadStyleProps(Style& style, Node styleNode, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadStyleProps(const std::shared_ptr<const Platform>& platform, Style& style, Node styleNode, const std::shared_ptr<Scene>& scene) {
 
     if (!styleNode) {
         LOGW("Can not parse style parameters, bad style YAML Node");
@@ -810,7 +810,7 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, const std::shared
     }
 
     if (Node shadersNode = styleNode["shaders"]) {
-        loadShaderConfig(shadersNode, style, scene);
+        loadShaderConfig(platform, shadersNode, style, scene);
     }
 
     if (Node lightingNode = styleNode["lighting"]) {
@@ -847,12 +847,12 @@ void SceneLoader::loadStyleProps(Style& style, Node styleNode, const std::shared
     }
 
     if (Node materialNode = styleNode["material"]) {
-        loadMaterial(materialNode, *(style.getMaterial()), scene, style);
+        loadMaterial(platform, materialNode, *(style.getMaterial()), scene, style);
     }
 
 }
 
-bool SceneLoader::loadStyle(const std::string& name, Node config, const std::shared_ptr<Scene>& scene) {
+bool SceneLoader::loadStyle(const std::shared_ptr<const Platform>& platform, const std::string& name, Node config, const std::shared_ptr<Scene>& scene) {
 
     const auto& builtIn = Style::builtInStyleNames();
 
@@ -897,14 +897,15 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, const std::sha
         }
     }
 
-    loadStyleProps(*style.get(), config, scene);
+    loadStyleProps(platform, *style.get(), config, scene);
 
     scene->styles().push_back(std::move(style));
 
     return true;
 }
 
-void SceneLoader::loadSource(const std::string& name, const Node& source, const Node& sources, const std::shared_ptr<Scene>& _scene) {
+void SceneLoader::loadSource(const std::shared_ptr<const Platform>& platform, const std::string& name,
+                             const Node& source, const Node& sources, const std::shared_ptr<Scene>& _scene) {
     if (_scene->getTileSource(name)) {
         LOGW("Duplicate TileSource: %s", name.c_str());
         return;
@@ -964,18 +965,18 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
 
     if (type == "GeoJSON") {
         if (tiled) {
-            rawSources->setNext(std::make_unique<NetworkDataSource>(url));
+            rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url));
             sourcePtr = std::make_shared<GeoJsonSource>(name, std::move(rawSources),
                                                         minDisplayZoom, maxDisplayZoom, maxZoom);
         } else {
-            sourcePtr = std::make_shared<ClientGeoJsonSource>(name, url, minDisplayZoom, maxDisplayZoom, maxZoom);
+            sourcePtr = std::make_shared<ClientGeoJsonSource>(platform, name, url, minDisplayZoom, maxDisplayZoom, maxZoom);
         }
     } else if (type == "TopoJSON") {
-        rawSources->setNext(std::make_unique<NetworkDataSource>(url));
+        rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url));
         sourcePtr = std::make_shared<TopoJsonSource>(name, std::move(rawSources),
                                                      minDisplayZoom, maxDisplayZoom, maxZoom);
     } else if (type == "MVT") {
-        rawSources->setNext(std::make_unique<NetworkDataSource>(url));
+        rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url));
         sourcePtr = std::make_shared<MVTSource>(name, std::move(rawSources),
                                                 minDisplayZoom, maxDisplayZoom, maxZoom);
     } else if (type == "Raster") {
@@ -986,7 +987,7 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
                 generateMipmaps = true;
             }
         }
-        auto rawSources = std::make_unique<NetworkDataSource>(url);
+        auto rawSources = std::make_unique<NetworkDataSource>(platform, url);
         sourcePtr = std::make_shared<RasterSource>(name, std::move(rawSources),
                                                    minDisplayZoom, maxDisplayZoom, maxZoom,
                                                    options, generateMipmaps);
@@ -999,18 +1000,18 @@ void SceneLoader::loadSource(const std::string& name, const Node& source, const 
     }
 
     if (auto rasters = source["rasters"]) {
-        loadSourceRasters(sourcePtr, source["rasters"], sources, _scene);
+        loadSourceRasters(platform, sourcePtr, source["rasters"], sources, _scene);
     }
 
 }
 
-void SceneLoader::loadSourceRasters(std::shared_ptr<TileSource> &source, Node rasterNode, const Node& sources,
+void SceneLoader::loadSourceRasters(const std::shared_ptr<const Platform>& platform, std::shared_ptr<TileSource> &source, Node rasterNode, const Node& sources,
                                     const std::shared_ptr<Scene>& scene) {
     if (rasterNode.IsSequence()) {
         for (const auto& raster : rasterNode) {
             std::string srcName = raster.Scalar();
             try {
-                loadSource(srcName, sources[srcName], sources, scene);
+                loadSource(platform, srcName, sources[srcName], sources, scene);
             } catch (YAML::RepresentationException e) {
                 LOGNode("Parsing sources: '%s'", sources[srcName], e.what());
                 return;
@@ -1496,7 +1497,7 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
     }
 }
 
-bool SceneLoader::parseStyleUniforms(const Node& value, const std::shared_ptr<Scene>& scene, StyleUniform& styleUniform) {
+bool SceneLoader::parseStyleUniforms(const std::shared_ptr<const Platform>& platform, const Node& value, const std::shared_ptr<Scene>& scene, StyleUniform& styleUniform) {
     if (value.IsScalar()) { // float, bool or string (texture)
         double fValue;
         bool bValue;
@@ -1514,7 +1515,7 @@ bool SceneLoader::parseStyleUniforms(const Node& value, const std::shared_ptr<Sc
             if (scene) {
                 std::shared_ptr<Texture> texture = scene->getTexture(strVal);
 
-                if (!texture && !loadTexture(strVal, scene)) {
+                if (!texture && !loadTexture(platform, strVal, scene)) {
                     LOGW("Can't load texture with name %s", strVal.c_str());
                     return false;
                 }
@@ -1562,7 +1563,7 @@ bool SceneLoader::parseStyleUniforms(const Node& value, const std::shared_ptr<Sc
                 if (scene) {
                     std::shared_ptr<Texture> texture = scene->getTexture(textureName);
 
-                    if (!texture && !loadTexture(textureName, scene)) {
+                    if (!texture && !loadTexture(platform, textureName, scene)) {
                         LOGW("Can't load texture with name %s", textureName.c_str());
                         return false;
                     }

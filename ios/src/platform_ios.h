@@ -7,5 +7,25 @@
 
 #ifdef __OBJC__
 #import "TGMapViewController.h"
-void init(TGMapViewController* _controller);
+
+class iOSPlatform : public Platform {
+
+public:
+
+    iOSPlatform(TGMapViewController* _viewController);
+    void requestRender() const override;
+    void setContinuousRendering(bool _isContinuous) override;
+    std::string stringFromFile(const char* _path) const override;
+    std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
+    std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const override;
+    bool startUrlRequest(const std::string& _url, UrlCallback _callback) const override;
+    void cancelUrlRequest(const std::string& _url) const override;
+
+private:
+
+    TGMapViewController* m_viewController;
+
+};
+
 #endif
+
