@@ -315,7 +315,7 @@ void TextStyleBuilder::addCurvedTextLabels(const Line& _line, const TextStyle::P
     struct LineRange {
         size_t start, end;
         int flips;
-        float area;
+        float sumAngle;
     };
 
     std::vector<LineRange> ranges;
@@ -331,30 +331,39 @@ void TextStyleBuilder::addCurvedTextLabels(const Line& _line, const TextStyle::P
 
         for (size_t j = i + 1; j < _line.size()-1; j++) {
             glm::vec2 dir2 = sampler.segmentDirection(j);
+            bool splitLine = false;
 
-            float angle = crossProduct(dir1, dir2);
+            if (glm::length2(dir1 + dir2) < sqDirLimit) {
+                // Split if the angle between current and next segment is
+                // not whithin 120 < a < 240 degree
+                splitLine = true;
+            } else {
+                // Take cross product of direction (unit-) vectors of the current
+                // and next segment. The magnitude of the cross product is the sine
+                // angle between dir1 and dir2.
+                float angle = crossProduct(dir1, dir2);
 
-            if (std::abs(angle) > flipTolerance) {
-                if (lastAngle > 0) {
-                    if (angle < 0) { flips++; }
-                } else if (lastAngle < 0) {
-                    if (angle > 0) { flips++; }
+                if (std::abs(angle) > flipTolerance) {
+                    if (lastAngle > 0) {
+                        if (angle < 0) { flips++; }
+                    } else if (lastAngle < 0) {
+                        if (angle > 0) { flips++; }
+                    }
+                    lastAngle = angle;
                 }
-                lastAngle = angle;
+
+                // Limit number of direction changes (Avoid squiggly labels)
+                if (flips > 2) {
+                    splitLine = true;
+                } else {
+                    sumAngle += std::abs(angle);
+                }
             }
-
-            float length = sampler.point(j).z - sampler.point(i).z;
-
-            sumAngle += std::abs(angle);
-
-            // Limit number of direction changes (Avoid squiggly labels)
-            bool splitLine = flips > 2;
 
             if (!splitLine) {
                 // Go back within window to check for hard direction changes
                 for (int k = j - 1; k >= int(i); k--){
                     if (glm::length2(sampler.segmentDirection(k) + dir2) < sqDirLimit) {
-                        //LOG("back break %s, %d %d", _params.text.c_str(), j, k);
                         splitLine = true;
                     }
                     if (sampler.point(k).z < sampler.point(j).z - sampleWindow) {
@@ -364,13 +373,9 @@ void TextStyleBuilder::addCurvedTextLabels(const Line& _line, const TextStyle::P
             }
 
             if (splitLine) {
-                // LOG("split %f,%f / %f,%f", dir1.x, dir1.y, dir2.x, dir2.y);
-
+                float length = sampler.point(j).z - sampler.point(i).z;
                 if (length > minLength) {
-                    //LOG("add break %s f:%d a:%f l:%f (%d/%d)", _params.text.c_str(), flips, sumArea, length, lastBreak, j+1);
                     ranges.push_back(LineRange{i, j+1, flips, sumAngle});
-                } else {
-                    //LOG("drop break %s f:%d a:%f l:%f (%d/%d)", _params.text.c_str(), flips, sumArea, length, lastBreak, j+1);
                 }
 
                 lastBreak = j;
@@ -385,7 +390,6 @@ void TextStyleBuilder::addCurvedTextLabels(const Line& _line, const TextStyle::P
         if (lastBreak == 0) {
             float length = sampler.sumLength() - sampler.point(i).z;
             if (length > minLength) {
-                //LOG("add last %s f:%d a:%f l:%f (%d/%d)", _params.text.c_str(), flips, sumArea, length, lastBreak, i);
                 ranges.push_back(LineRange{i, _line.size(), flips, sumAngle});
             }
         }
@@ -415,7 +419,7 @@ void TextStyleBuilder::addCurvedTextLabels(const Line& _line, const TextStyle::P
         size_t anchor = offset - range.start + 1;
 
         // NB: Just some heuristic to prefer longer and less curvy parts..
-        float prio = (1.f + range.area) / length;
+        float prio = (1.f + range.sumAngle) / length;
 
         uint32_t selectionColor = 0;
         if (_params.interactive) {
