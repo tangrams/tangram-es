@@ -15,12 +15,13 @@ find_sources_and_include_directories(
   ${PROJECT_SOURCE_DIR}/rpi/src/*.h
   ${PROJECT_SOURCE_DIR}/rpi/src/*.cpp)
 
-# add sources and include headers
-find_sources_and_include_directories(
-  ${PROJECT_SOURCE_DIR}/linux/src/urlWorker.*
-  ${PROJECT_SOURCE_DIR}/linux/src/urlWorker.*)
+# add linux dependencies
+set(LINUX_SOURCES
+    ${PROJECT_SOURCE_DIR}/linux/urlWorker.cpp
+    ${PROJECT_SOURCE_DIR}/linux/platform_linux.cpp)
 
-# add sources and include headers
+include_directories(${PROJECT_SOURCE_DIR}/linux/src)
+
 find_sources_and_include_directories(
   ${PROJECT_SOURCE_DIR}/core/common/platform_gl.h
   ${PROJECT_SOURCE_DIR}/core/common/platform_gl.cpp)
@@ -36,7 +37,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/external)
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
-add_executable(${EXECUTABLE_NAME} ${SOURCES})
+add_executable(${EXECUTABLE_NAME} ${SOURCES} ${LINUX_SOURCES})
 
 target_link_libraries(${EXECUTABLE_NAME}
     ${CORE_LIBRARY} -lcurl)

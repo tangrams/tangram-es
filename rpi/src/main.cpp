@@ -13,7 +13,7 @@
 
 #include "context.h"
 #include "tangram.h"
-#include "platform_rpi.h"
+#include "platform_linux.h"
 
 #include <iostream>
 #include "glm/trigonometric.hpp"
@@ -40,7 +40,7 @@ void newFrame();
 
 int main(int argc, char **argv){
 
-    platform = std::make_shared<RpiPlatform>();
+    platform = std::make_shared<LinuxPlatform>();
 
     // Start OpenGL context
     initGL(argc, argv);

@@ -98,10 +98,18 @@ LinuxPlatform::~LinuxPlatform() {
 }
 
 void setCurrentThreadPriority(int priority) {
+#if defined(PLATFORM_LINUX)
     int tid = syscall(SYS_gettid);
     setpriority(PRIO_PROCESS, tid, priority);
+#elif defined(PLATFORM_RPI)
+    // no-op
+#endif
 }
 
 void initGLExtensions() {
+#if defined(PLATFORM_LINUX)
     Tangram::Hardware::supportsMapBuffer = true;
+#elif defined(PLATFORM_RPI)
+    // no-op
+#endif
 }
