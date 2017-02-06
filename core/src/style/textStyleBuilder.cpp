@@ -189,11 +189,12 @@ bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
     } else if (_feat.geometryType == GeometryType::polygons) {
 
-        for (auto& polygon : _feat.polygons) {
-            for (auto& line : polygon) {
-                for (auto& point : line) {
-                    addLabel(params, Label::Type::point, { point }, _rule);
-                }
+        const auto& polygons = _feat.polygons;
+        for (const auto& polygon : polygons) {
+            if (!polygon.empty()) {
+                glm::vec3 c;
+                c = centroid(polygon.front().begin(), polygon.front().end());
+                addLabel(params, Label::Type::point, { c }, _rule);
             }
         }
 

@@ -430,11 +430,11 @@ bool PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
             labelPointsPlacing(line, uvsQuad, p, _rule);
         }
     } else {
-        glm::vec3 c;
         if (!_polygon.empty()) {
+            glm::vec3 c;
             c = centroid(_polygon.front().begin(), _polygon.front().end());
+            addLabel(c, uvsQuad, p, _rule);
         }
-        addLabel(c, uvsQuad, p, _rule);
     }
 
     return true;
