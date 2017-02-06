@@ -34,8 +34,6 @@ public:
 
     void setScene(std::shared_ptr<Scene>& _scene);
 
-    std::shared_ptr<const Platform> getPlatform() { return m_platform; }
-
 private:
 
     struct Worker {

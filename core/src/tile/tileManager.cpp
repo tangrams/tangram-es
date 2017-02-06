@@ -21,7 +21,7 @@ TileManager::TileManager(std::shared_ptr<Platform> platform, TileTaskQueue& _til
     m_tileCache = std::unique_ptr<TileCache>(new TileCache(DEFAULT_CACHE_SIZE));
 
     // Callback to pass task from Download-Thread to Worker-Queue
-    m_dataCallback = TileTaskCb{[this, &platform](std::shared_ptr<TileTask> task) {
+    m_dataCallback = TileTaskCb{[this, platform](std::shared_ptr<TileTask> task) {
 
         if (task->isReady()) {
              platform->requestRender();
