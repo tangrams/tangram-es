@@ -59,7 +59,7 @@ protected:
 
     const std::vector<glm::vec2> m_modelTransform;
 
-    size_t m_anchorPoint;
+    const size_t m_anchorPoint;
 
     size_t m_screenAnchorPoint;
 

@@ -72,6 +72,7 @@ bool CurvedLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
 
     // Set center for repeatGroup distance calculations
     m_screenCenter = glm::vec2(center);
+    m_screenAnchorPoint = m_anchorPoint;
 
     // Chord length for minimal ~120 degree inner angles (squared)
     // sin(60)*2
@@ -80,7 +81,7 @@ bool CurvedLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
     const float sampleWindow = 20;
 
     float width = m_dim.x;
-    float start = sampler.point(m_screenAnchorPoint).z - width * 0.5f;
+    float start = sampler.point(m_anchorPoint).z - width * 0.5f;
 
     if (start < 0 || start + width > sampler.sumLength()) {
         sampler.clearPoints();
@@ -88,13 +89,33 @@ bool CurvedLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
     }
 
     // Sets current segment to the segment on which the text starts.
-    glm::vec2 p, r; // unused
-    sampler.sample(start, p, r);
+    glm::vec2 startPos, r;
+    sampler.sample(start, startPos, r);
     size_t startSegment = sampler.curSegment();
+
+    glm::vec2 dir = sampler.segmentDirection(startSegment);
+
+    // Cannot reverse the direction when some glyphs must be
+    // placed in forward direction and vice versa.
+    const float flipTolerance = sin(DEG_TO_RAD * 45);
+    bool mustForward = dir.x > flipTolerance;
+    bool mustReverse = dir.x < -flipTolerance;
 
     for (size_t i = startSegment + 1; i < _transform.size(); i++) {
         float currLength = sampler.point(i).z;
-        glm::vec2 dir = sampler.segmentDirection(i);
+        dir = sampler.segmentDirection(i);
+
+        if (dir.x > flipTolerance) {
+            mustForward = true;
+        }
+        if (dir.x < -flipTolerance) {
+            mustReverse = true;
+        }
+
+        if (mustForward && mustReverse) {
+            sampler.clearPoints();
+            return false;
+        }
 
         // Go back within window to check for hard direction changes
         for (int k = i - 1; k >= int(startSegment); k--) {
@@ -109,6 +130,20 @@ bool CurvedLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
         if (currLength > start + width) {
             break;
         }
+    }
+
+    if (!mustReverse) {
+        // TODO use better heuristic to decide flipping
+        glm::vec2 endPos;
+        sampler.sample(start + width, endPos, r);
+        if (startPos.x > endPos.x) {
+            mustReverse = true;
+        }
+    }
+
+    if (mustReverse) {
+        sampler.reversePoints();
+        m_screenAnchorPoint = _transform.size() - m_anchorPoint - 1;
     }
 
     return true;
@@ -186,18 +221,6 @@ void CurvedLabel::addVerticesToMesh(ScreenTransform& _transform, const glm::vec2
     if (sampler.sumLength() < width) { return; }
 
     float center = sampler.point(m_screenAnchorPoint).z;
-
-    glm::vec2 p1, p2;
-    sampler.sample(center + it->quad[0].pos.x * TextVertex::position_inv_scale, p1, rotation);
-    // Check based on first charater whether labels needs to be flipped
-    // sampler.sample(center + it->quad[2].pos.x, p2, rotation);
-    sampler.sample(center + (end-1)->quad[2].pos.x * TextVertex::position_inv_scale, p2, rotation);
-
-
-    if (p1.x > p2.x) {
-        sampler.reversePoints();
-        center = sampler.sumLength() - center;
-    }
 
     std::array<glm::i16vec2, 4> vertexPosition;
 
