@@ -13,8 +13,7 @@
 
 #include "context.h"
 #include "tangram.h"
-#include "platform.h"
-#include "platform_rpi.h"
+#include "platform_linux.h"
 
 #include <iostream>
 #include "glm/trigonometric.hpp"
@@ -31,6 +30,7 @@ struct timeval tv;
 unsigned long long timePrev, timeStart;
 
 Tangram::Map* map = nullptr;
+std::shared_ptr<Platform> platform;
 
 static bool bUpdate = true;
 
@@ -39,6 +39,8 @@ void setup(int argc, char **argv);
 void newFrame();
 
 int main(int argc, char **argv){
+
+    platform = std::make_shared<LinuxPlatform>();
 
     // Start OpenGL context
     initGL(argc, argv);
@@ -56,7 +58,7 @@ int main(int argc, char **argv){
     while (bUpdate) {
         updateGL();
 
-        processNetworkQueue();
+        platform->processNetworkQueue();
 
         if (getRenderRequest()) {
             setRenderRequest(false);
@@ -105,7 +107,7 @@ void setup(int argc, char **argv) {
         }
     }
 
-    map = new Tangram::Map();
+    map = new Tangram::Map(platform);
     map->loadSceneAsync(scene.c_str());
     map->setupGL();
     map->resize(width, height);
@@ -169,15 +171,15 @@ void onKeyPress(int _key) {
         default:
             logMsg(" -> %i\n",_key);
     }
-    requestRender();
+    platform->requestRender();
 }
 
 void onMouseMove(float _x, float _y) {
-    requestRender();
+    platform->requestRender();
 }
 
 void onMouseClick(float _x, float _y, int _button) {
-    requestRender();
+    platform->requestRender();
 }
 
 void onMouseDrag(float _x, float _y, int _button) {
@@ -200,13 +202,13 @@ void onMouseDrag(float _x, float _y, int _button) {
         }
 
     }
-    requestRender();
+    platform->requestRender();
 }
 
 void onMouseRelease(float _x, float _y) {
-    requestRender();
+    platform->requestRender();
 }
 
 void onViewportResize(int _newWidth, int _newHeight) {
-    requestRender();
+    platform->requestRender();
 }

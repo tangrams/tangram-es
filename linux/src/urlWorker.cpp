@@ -23,7 +23,7 @@ UrlWorker::~UrlWorker() {
     curl_easy_cleanup(m_curlHandle);
 }
 
-void UrlWorker::perform(std::unique_ptr<UrlTask> _task) {
+void UrlWorker::perform(std::unique_ptr<UrlTask> _task, const Platform& _platform) {
 
     m_task = std::move(_task);
 
@@ -63,7 +63,7 @@ void UrlWorker::perform(std::unique_ptr<UrlTask> _task) {
         m_task.reset();
 
         // Run processNetworkQueue() for pending tasks
-        requestRender();
+        _platform.requestRender();
 
         return true;
     });

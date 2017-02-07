@@ -8,6 +8,8 @@
 #include <vector>
 #include <array>
 
+class Platform;
+
 namespace Tangram {
 
 class TileSource;
@@ -68,12 +70,13 @@ enum class EaseType : char {
     sine,
 };
 
+
 class Map {
 
 public:
 
     // Create an empty map object. To display a map, call either loadScene() or loadSceneAsync().
-    Map();
+    Map(std::shared_ptr<Platform> _platform);
     ~Map();
 
     // Load the scene at the given absolute file path asynchronously
@@ -296,10 +299,16 @@ public:
     // Run this task asynchronously to Tangram's main update loop.
     void runAsyncTask(std::function<void()> _task);
 
+    std::shared_ptr<Platform>& getPlatform();
+
 private:
 
     class Impl;
     std::unique_ptr<Impl> impl;
+
+protected:
+
+    std::shared_ptr<Platform> platform;
 
 };
 

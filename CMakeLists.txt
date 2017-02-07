@@ -77,27 +77,27 @@ set(EXTERNAL_LIBS_DIR ${CMAKE_SOURCE_DIR}/external/exports/${PLATFORM_TARGET}
 include(${CMAKE_TARGET_FILE})
 
 if(BENCHMARK OR UNIT_TESTS)
-  add_library(platform_mock
-    ${PROJECT_SOURCE_DIR}/tests/src/platform_mock.cpp
-    ${PROJECT_SOURCE_DIR}/tests/src/gl_mock.cpp)
+    add_library(platform_mock
+        ${PROJECT_SOURCE_DIR}/tests/src/platform_mock.cpp
+        ${PROJECT_SOURCE_DIR}/tests/src/gl_mock.cpp)
 
-  target_include_directories(platform_mock
-    PUBLIC ${CORE_LIBRARIES_INCLUDE_DIRS})
+    target_include_directories(platform_mock
+        PUBLIC ${CORE_LIBRARIES_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/tests/src)
 
-  target_compile_definitions(platform_mock
-    PUBLIC -DUNIT_TESTS)
+    target_compile_definitions(platform_mock
+        PUBLIC -DUNIT_TESTS)
 
-  target_link_libraries(platform_mock
-    PUBLIC core)
+    target_link_libraries(platform_mock
+        PUBLIC core)
 
 endif()
 
 if(UNIT_TESTS)
-  message(STATUS "Build with tests")
-  add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
+    message(STATUS "Build with tests")
+    add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 endif()
 
 if(BENCHMARK)
-  message(STATUS "Build with benchmarks")
-  add_subdirectory(${PROJECT_SOURCE_DIR}/bench)
+    message(STATUS "Build with benchmarks")
+    add_subdirectory(${PROJECT_SOURCE_DIR}/bench)
 endif()

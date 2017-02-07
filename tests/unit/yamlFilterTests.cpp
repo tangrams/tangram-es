@@ -9,6 +9,7 @@
 #include "scene/sceneLoader.h"
 #include "scene/scene.h"
 #include "scene/styleContext.h"
+#include "platform_mock.h"
 
 using namespace Tangram;
 using YAML::Node;
@@ -20,7 +21,8 @@ Context ctx;
 Feature civic, bmw1, bike;
 
 Filter load(const std::string& filterYaml) {
-    Scene scene;
+    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
+    Scene scene(platform);
     YAML::Node node = YAML::Load(filterYaml);
     auto filter = SceneLoader::generateFilter(node["filter"], scene);
     ctx.initFunctions(scene);

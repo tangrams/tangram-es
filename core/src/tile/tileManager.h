@@ -15,6 +15,8 @@
 #include <set>
 #include <data/tileSource.h>
 
+class Platform;
+
 namespace Tangram {
 
 class TileSource;
@@ -32,7 +34,7 @@ class TileManager {
 
 public:
 
-    TileManager(TileTaskQueue& _tileWorker);
+    TileManager(std::shared_ptr<Platform> platform, TileTaskQueue& _tileWorker);
 
     virtual ~TileManager();
 
