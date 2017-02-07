@@ -29,21 +29,21 @@ struct DrawRule;
 struct LightUniforms;
 struct MaterialUniforms;
 
-enum class LightingType : char {
+enum class LightingType : uint8_t {
     none,
     vertex,
     fragment
 };
 
-enum class Blending : int8_t {
-    opaque = 0,
+enum class Blending : uint8_t {
+    opaque,
     add,
     multiply,
     inlay,
     overlay,
 };
 
-enum class RasterType {
+enum class RasterType : uint8_t {
     none,
     color,
     normal,
