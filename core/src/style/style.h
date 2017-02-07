@@ -119,9 +119,9 @@ protected:
     uint32_t m_id = 0;
 
     /* <ShaderProgram> used to draw meshes using this style */
-    std::unique_ptr<ShaderProgram> m_shaderProgram;
+    std::shared_ptr<ShaderProgram> m_shaderProgram;
 
-    std::unique_ptr<ShaderProgram> m_selectionProgram;
+    std::shared_ptr<ShaderProgram> m_selectionProgram;
 
     /* <VertexLayout> shared between meshes using this style */
     std::shared_ptr<VertexLayout> m_vertexLayout;
@@ -283,7 +283,7 @@ public:
 
     std::shared_ptr<Material> getMaterial() { return m_material.material; }
 
-    const std::unique_ptr<ShaderProgram>& getShaderProgram() const { return m_shaderProgram; }
+    ShaderProgram& getShaderProgram() const { return *m_shaderProgram; }
 
     const std::string& getName() const { return m_name; }
     const uint32_t& getID() const { return m_id; }

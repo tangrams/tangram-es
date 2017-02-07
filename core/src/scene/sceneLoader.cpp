@@ -295,7 +295,7 @@ void SceneLoader::loadShaderConfig(const std::shared_ptr<Platform>& platform, No
 
     if (!shaders) { return; }
 
-    auto& shader = *(style.getShaderProgram());
+    auto shader = style.getShaderProgram();
 
     if (Node extNode = shaders["extensions_mixed"]) {
         if (extNode.IsScalar()) {

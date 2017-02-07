@@ -474,7 +474,7 @@ bool StyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 }
 
 StyleBuilder::StyleBuilder(const Style& _style) {
-    const auto& blocks = _style.getShaderProgram()->getSourceBlocks();
+    const auto& blocks = _style.getShaderProgram().getSourceBlocks();
     if (blocks.find("color") != blocks.end() ||
         blocks.find("filter") != blocks.end() ||
         blocks.find("raster") != blocks.end()) {
