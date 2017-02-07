@@ -80,7 +80,7 @@ public:
         }
     }
 
-    float modelLineLength2() const override;
+    float candidatePriority() const override;
 
 protected:
 
