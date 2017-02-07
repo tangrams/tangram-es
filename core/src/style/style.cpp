@@ -17,14 +17,14 @@
 #include "log.h"
 
 #include "shaders/rasters_glsl.h"
-#include "shaders/selection_fs.h"
 
 namespace Tangram {
 
 Style::Style(std::string _name, Blending _blendMode, GLenum _drawMode, bool _selection) :
     m_name(_name),
-    m_shaderProgram(std::make_unique<ShaderProgram>()),
-    m_selectionProgram(std::make_unique<ShaderProgram>()),
+    m_shaderSource(std::make_unique<ShaderSource>()),
+    m_shaderProgram(std::make_shared<ShaderProgram>()),
+    m_selectionProgram(std::make_shared<ShaderProgram>()),
     m_blend(_blendMode),
     m_drawMode(_drawMode),
     m_selection(_selection) {
@@ -41,17 +41,6 @@ const std::vector<std::string>& Style::builtInStyleNames() {
     return builtInStyleNames;
 }
 
-void Style::constructSelectionShaderProgram() {
-
-    if (m_selection) {
-        m_selectionProgram->setDescription("selection_program {style:" + m_name + "}");
-        m_selectionProgram->setSourceStrings(SHADER_SOURCE(selection_fs),
-                                             m_shaderProgram->getVertexShaderSource());
-
-        m_selectionProgram->addSourceBlock("defines", "#define TANGRAM_FEATURE_SELECTION\n", false);
-    }
-}
-
 void Style::build(const Scene& _scene) {
 
     constructVertexLayout();
@@ -59,28 +48,28 @@ void Style::build(const Scene& _scene) {
 
     m_shaderProgram->setDescription("{style:" + m_name + "}");
 
-    switch (m_lightingType) {
-        case LightingType::vertex:
-            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n", false);
-            break;
-        case LightingType::fragment:
-            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n", false);
-            break;
-        default:
-            break;
-    }
-
     if (m_blend == Blending::inlay) {
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_BLEND_INLAY\n", false);
+        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_BLEND_INLAY\n", false);
     } else if (m_blend == Blending::overlay) {
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_BLEND_OVERLAY\n", false);
+        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_BLEND_OVERLAY\n", false);
     }
 
     if (m_material.material) {
-        m_material.uniforms = m_material.material->injectOnProgram(*m_shaderProgram);
+        m_material.uniforms = m_material.material->injectOnProgram(*m_shaderSource);
     }
 
     if (m_lightingType != LightingType::none) {
+        switch (m_lightingType) {
+        case LightingType::vertex:
+            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n", false);
+            break;
+        case LightingType::fragment:
+            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n", false);
+            break;
+        default:
+            break;
+        }
+
         for (auto& light : _scene.lights()) {
             auto uniforms = light->getUniforms();
             if (uniforms) {
@@ -88,13 +77,20 @@ void Style::build(const Scene& _scene) {
             }
         }
         for (auto& block : _scene.lightBlocks()) {
-            m_shaderProgram->addSourceBlock(block.first, block.second);
+            m_shaderSource->addSourceBlock(block.first, block.second);
         }
     }
 
     setupRasters(_scene.tileSources());
 
-    constructSelectionShaderProgram();
+    m_shaderProgram->setShaderSource(m_shaderSource->vertexSource(),
+                                     m_shaderSource->fragmentSource());
+
+    if (m_selection) {
+        m_selectionProgram->setDescription("selection_program {style:" + m_name + "}");
+        m_selectionProgram->setShaderSource(m_shaderSource->selectionVertexSource(),
+                                            m_shaderSource->selectionFragmentSource());
+    }
 }
 
 void Style::setLightingType(LightingType _type) {
@@ -174,16 +170,16 @@ void Style::setupRasters(const std::vector<std::shared_ptr<TileSource>>& _source
 
     // Inject shader defines for raster sampling and uniforms
     if (m_rasterType == RasterType::normal) {
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_NORMAL\n", false);
+        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_NORMAL\n", false);
     } else if (m_rasterType == RasterType::color) {
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_COLOR\n", false);
+        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_COLOR\n", false);
     }
 
-    m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_NUM_RASTER_SOURCES "
+    m_shaderSource->addSourceBlock("defines", "#define TANGRAM_NUM_RASTER_SOURCES "
             + std::to_string(numRasterSource) + "\n", false);
-    m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n", false);
+    m_shaderSource->addSourceBlock("defines", "#define TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n", false);
 
-    m_shaderProgram->addSourceBlock("raster", SHADER_SOURCE(rasters_glsl));
+    m_shaderSource->addSourceBlock("raster", SHADER_SOURCE(rasters_glsl));
 }
 
 
@@ -469,7 +465,7 @@ bool StyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 }
 
 StyleBuilder::StyleBuilder(const Style& _style) {
-    const auto& blocks = _style.getShaderProgram().getSourceBlocks();
+    const auto& blocks = _style.getShaderSource().getSourceBlocks();
     if (blocks.find("color") != blocks.end() ||
         blocks.find("filter") != blocks.end() ||
         blocks.find("raster") != blocks.end()) {

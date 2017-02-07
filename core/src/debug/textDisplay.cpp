@@ -52,7 +52,7 @@ void TextDisplay::init() {
     )END";
 
     m_shader = std::make_unique<ShaderProgram>();
-    m_shader->setSourceStrings(fragShaderSrcStr, vertShaderSrcStr);
+    m_shader->setShaderSource(vertShaderSrcStr, fragShaderSrcStr);
 
     m_initialized = true;
 }

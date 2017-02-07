@@ -2,6 +2,7 @@
 
 #include "gl.h"
 #include "gl/disposer.h"
+#include "gl/shaderSource.h"
 #include "uniform.h"
 #include "util/fastmap.h"
 
@@ -9,7 +10,6 @@
 
 #include <string>
 #include <vector>
-#include <map>
 #include <memory>
 
 namespace Tangram {
@@ -26,11 +26,11 @@ public:
     ShaderProgram();
     ~ShaderProgram();
 
-    // Set the vertex and fragment shader GLSL source to the given strings/
-    void setSourceStrings(const std::string& _fragSrc, const std::string& _vertSrc);
-
-    // Add a block of GLSL to be injected at "#pragma tangram: [_tagName]" in the shader sources.
-    void addSourceBlock(const std::string& _tagName, const std::string& _glslSource, bool _allowDuplicate = true);
+    void setShaderSource(const std::string& _vertSrc, const std::string& _fragSrc) {
+        m_fragmentShaderSource = _fragSrc;
+        m_vertexShaderSource = _vertSrc;
+        m_needsBuild = true;
+    }
 
     // Apply all source blocks to the source strings for this shader and attempt to compile
     // and then link the resulting vertex and fragment shaders; if compiling or linking fails
@@ -42,9 +42,6 @@ public:
     GLuint getGlProgram() const { return m_glProgram; };
 
     std::string getDescription() const { return m_description; }
-
-    const std::string& getFragmentShaderSource() const { return m_fragmentShaderSource; }
-    const std::string getVertexShaderSource() const { return applySourceBlocks(m_vertexShaderSource, false); }
 
     // Fetch the location of a shader attribute, caching the result.
     GLint getAttribLocation(const std::string& _attribName);
@@ -86,23 +83,7 @@ public:
     void setUniformMatrix3f(RenderState& rs, const UniformLocation& _loc, const glm::mat3& _value, bool transpose = false);
     void setUniformMatrix4f(RenderState& rs, const UniformLocation& _loc, const glm::mat4& _value, bool transpose = false);
 
-    static std::string getExtensionDeclaration(const std::string& _extension);
-
-    auto getSourceBlocks() const { return  m_sourceBlocks; }
-
     void setDescription(std::string _description) { m_description = _description; }
-
-    static std::string shaderSourceBlock(const unsigned char* data, size_t size) {
-        std::string block;
-        if (data[size - 1] == '\n') {
-            block.append(reinterpret_cast<const char*>(data), size);
-        } else {
-            block.reserve(size + 2);
-            block.append(reinterpret_cast<const char*>(data), size);
-            block += '\n';
-        }
-        return block;
-    }
 
     static GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
     static GLuint makeCompiledShader(RenderState& rs, const std::string& _src, GLenum _type);
@@ -134,16 +115,10 @@ private:
     // An optional shader description printed on compile failure
     std::string m_description;
 
-    std::map<std::string, std::vector<std::string>> m_sourceBlocks;
-
     bool m_needsBuild = true;
 
     Disposer m_disposer;
 
-    std::string applySourceBlocks(const std::string& source, bool fragShader) const;
-
 };
-
-#define SHADER_SOURCE(NAME) ShaderProgram::shaderSourceBlock(NAME ## _data, NAME ## _size)
 
 }

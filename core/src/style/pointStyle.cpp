@@ -22,6 +22,14 @@ PointStyle::PointStyle(std::string _name, std::shared_ptr<FontContext> _fontCont
 
 PointStyle::~PointStyle() {}
 
+void PointStyle::build(const Scene& _scene) {
+    Style::build(_scene);
+
+    m_textStyle->build(_scene);
+
+    m_mesh = std::make_unique<DynamicQuadMesh<SpriteVertex>>(m_vertexLayout, m_drawMode);
+}
+
 void PointStyle::constructVertexLayout() {
 
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
@@ -32,19 +40,11 @@ void PointStyle::constructVertexLayout() {
         {"a_alpha", 1, GL_UNSIGNED_SHORT, true, 0},
         {"a_scale", 1, GL_UNSIGNED_SHORT, false, 0},
     }));
-
-    m_textStyle->constructVertexLayout();
 }
 
 void PointStyle::constructShaderProgram() {
-
-    m_shaderProgram->setSourceStrings(SHADER_SOURCE(point_fs),
-                                      SHADER_SOURCE(point_vs));
-
-    m_mesh = std::make_unique<DynamicQuadMesh<SpriteVertex>>(m_vertexLayout, m_drawMode);
-
-    m_textStyle->constructShaderProgram();
-    m_textStyle->constructSelectionShaderProgram();
+    m_shaderSource->setSourceStrings(SHADER_SOURCE(point_fs),
+                                     SHADER_SOURCE(point_vs));
 }
 
 void PointStyle::onBeginUpdate() {

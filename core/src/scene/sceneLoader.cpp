@@ -10,7 +10,7 @@
 #include "data/networkDataSource.h"
 #include "data/rasterSource.h"
 #include "data/topoJsonSource.h"
-#include "gl/shaderProgram.h"
+#include "gl/shaderSource.h"
 #include "style/material.h"
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
@@ -295,14 +295,14 @@ void SceneLoader::loadShaderConfig(const std::shared_ptr<Platform>& platform, No
 
     if (!shaders) { return; }
 
-    auto shader = style.getShaderProgram();
+    auto& shader = style.getShaderSource();
 
     if (Node extNode = shaders["extensions_mixed"]) {
         if (extNode.IsScalar()) {
-            shader.addSourceBlock("extensions", ShaderProgram::getExtensionDeclaration(extNode.Scalar()));
+            shader.addExtensionDeclaration(extNode.Scalar());
         } else if (extNode.IsSequence()) {
             for (const auto& e : extNode) {
-                shader.addSourceBlock("extensions", ShaderProgram::getExtensionDeclaration(e.Scalar()));
+                shader.addExtensionDeclaration(e.Scalar());
             }
         }
     }

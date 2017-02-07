@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "gl/shaderProgram.h"
+#include "gl/shaderSource.h"
 #include "gl/texture.h"
 #include "gl/renderState.h"
 
@@ -152,10 +153,10 @@ std::string Material::getClassBlock() {
     return SHADER_SOURCE(material_glsl);
 }
 
-std::unique_ptr<MaterialUniforms> Material::injectOnProgram(ShaderProgram& _shader ) {
-    _shader.addSourceBlock("defines", getDefinesBlock(), false);
-    _shader.addSourceBlock("material", getClassBlock(), false);
-    _shader.addSourceBlock("setup", "material = u_material;", false);
+std::unique_ptr<MaterialUniforms> Material::injectOnProgram(ShaderSource& _source ) {
+    _source.addSourceBlock("defines", getDefinesBlock(), false);
+    _source.addSourceBlock("material", getClassBlock(), false);
+    _source.addSourceBlock("setup", "material = u_material;", false);
 
     if (m_bEmission || m_bAmbient || m_bDiffuse || m_bSpecular || m_normal_texture.tex) {
         return std::make_unique<MaterialUniforms>();

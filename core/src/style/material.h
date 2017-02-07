@@ -18,6 +18,7 @@ namespace Tangram {
 class RenderState;
 class Texture;
 class ShaderProgram;
+class ShaderSource;
 
 enum class MappingType {
     uv,
@@ -102,7 +103,7 @@ public:
     void setNormal(MaterialTexture _normalTexture);
 
     /*  Inject the needed lines of GLSL code on the shader to make this material work */
-    virtual std::unique_ptr<MaterialUniforms> injectOnProgram(ShaderProgram& _shader);
+    virtual std::unique_ptr<MaterialUniforms> injectOnProgram(ShaderSource& _shader);
 
     /*  Method to pass it self as a uniform to the shader program */
     virtual void setupProgram(RenderState& rs, ShaderProgram& _shader,

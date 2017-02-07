@@ -38,8 +38,8 @@ void init() {
     if (!s_initialized) {
         s_shader = std::make_unique<ShaderProgram>();
 
-        s_shader->setSourceStrings(SHADER_SOURCE(debugPrimitive_fs),
-                                   SHADER_SOURCE(debugPrimitive_vs));
+        s_shader->setShaderSource(SHADER_SOURCE(debugPrimitive_vs),
+                                  SHADER_SOURCE(debugPrimitive_fs));
 
         s_layout = std::unique_ptr<VertexLayout>(new VertexLayout({
             {"a_position", 2, GL_FLOAT, false, 0},
@@ -48,8 +48,8 @@ void init() {
 
         s_textureShader = std::make_unique<ShaderProgram>();
 
-        s_textureShader->setSourceStrings(SHADER_SOURCE(debugTexture_fs),
-                                          SHADER_SOURCE(debugTexture_vs));
+        s_textureShader->setShaderSource(SHADER_SOURCE(debugTexture_vs),
+                                         SHADER_SOURCE(debugTexture_fs));
 
         s_textureLayout = std::unique_ptr<VertexLayout>(new VertexLayout({
             {"a_position", 2, GL_FLOAT, false, 0},

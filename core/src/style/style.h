@@ -20,6 +20,7 @@ class Material;
 class RenderState;
 class Scene;
 class ShaderProgram;
+class ShaderSource;
 class Style;
 class Tile;
 class TileSource;
@@ -117,6 +118,8 @@ protected:
     /* Unique name for a style instance */
     std::string m_name;
     uint32_t m_id = 0;
+
+    std::unique_ptr<ShaderSource> m_shaderSource;
 
     /* <ShaderProgram> used to draw meshes using this style */
     std::shared_ptr<ShaderProgram> m_shaderProgram;
@@ -244,8 +247,6 @@ public:
      */
     virtual void constructShaderProgram() = 0;
 
-    void constructSelectionShaderProgram();
-
     /* Perform any setup needed before drawing each frame
      * _textUnit is the next available texture unit
      */
@@ -281,7 +282,7 @@ public:
 
     Material& getMaterial() { return *m_material.material; }
 
-    ShaderProgram& getShaderProgram() const { return *m_shaderProgram; }
+    ShaderSource& getShaderSource() const { return *m_shaderSource; }
 
     const std::string& getName() const { return m_name; }
     const uint32_t& getID() const { return m_id; }
