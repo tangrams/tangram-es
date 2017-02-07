@@ -50,10 +50,10 @@ TEST_CASE("Correctly instantiate a style from a YAML configuration") {
 
     REQUIRE(styles[2]->isAnimated() == true);
 
-    REQUIRE(styles[2]->getMaterial()->hasEmission() == true);
-    REQUIRE(styles[2]->getMaterial()->hasDiffuse() == true);
-    REQUIRE(styles[2]->getMaterial()->hasAmbient() == false);
-    REQUIRE(styles[2]->getMaterial()->hasSpecular() == false);
+    REQUIRE(styles[2]->getMaterial().hasEmission() == true);
+    REQUIRE(styles[2]->getMaterial().hasDiffuse() == true);
+    REQUIRE(styles[2]->getMaterial().hasAmbient() == false);
+    REQUIRE(styles[2]->getMaterial().hasSpecular() == false);
 }
 
 TEST_CASE("Test light parameter parsing") {

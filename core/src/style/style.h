@@ -279,7 +279,7 @@ public:
 
     void setID(uint32_t _id) { m_id = _id; }
 
-    std::shared_ptr<Material> getMaterial() { return m_material.material; }
+    Material& getMaterial() { return *m_material.material; }
 
     ShaderProgram& getShaderProgram() const { return *m_shaderProgram; }
 

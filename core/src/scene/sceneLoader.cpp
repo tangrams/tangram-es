@@ -850,7 +850,7 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
     }
 
     if (Node materialNode = styleNode["material"]) {
-        loadMaterial(platform, materialNode, *(style.getMaterial()), scene, style);
+        loadMaterial(platform, materialNode, style.getMaterial(), scene, style);
     }
 
 }
