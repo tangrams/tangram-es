@@ -269,8 +269,6 @@ public:
 
     void setAnimated(bool _animated) { m_animated = _animated; }
 
-    void setMaterial(const std::shared_ptr<Material>& _material);
-
     virtual void setPixelScale(float _pixelScale) { m_pixelScale = _pixelScale; }
 
     void setRasterType(RasterType _rasterType) { m_rasterType = _rasterType; }

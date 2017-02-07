@@ -97,11 +97,6 @@ void Style::build(const Scene& _scene) {
     constructSelectionShaderProgram();
 }
 
-void Style::setMaterial(const std::shared_ptr<Material>& _material) {
-    m_material.material = _material;
-    m_material.uniforms.reset();
-}
-
 void Style::setLightingType(LightingType _type) {
     m_lightingType = _type;
 }
