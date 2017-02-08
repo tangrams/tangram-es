@@ -31,6 +31,7 @@ all: android osx ios
 .PHONY: cmake-rpi
 .PHONY: cmake-linux
 .PHONY: install-android
+.PHONY: ios-docs
 
 ANDROID_BUILD_DIR = android/tangram/build
 OSX_BUILD_DIR = build/osx
@@ -240,6 +241,10 @@ ios: ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
 		-sdk iphonesimulator \
 		-project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ} \
 		-configuration ${CONFIG} | ${XCPRETTY}
+
+ios-docs:
+	@cd ios && \
+	jazzy --config jazzy.yml
 
 ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}: cmake-ios
 
