@@ -1,7 +1,7 @@
 module: Mapzen
 author: Mapzen
+theme: fullwidth
 author_url: https://www.mapzen.com/
-module_version: 0.4.1
 output: docs/
 github_url: https://github.com/tangrams/tangram-es
 copyright: '© 2014–2017 [Mapzen](https://www.mapzen.com/).'

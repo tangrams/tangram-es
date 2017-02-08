@@ -581,12 +581,6 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 }
 
 #pragma mark - Gesture Recognizer Delegate Methods
-/*
- The general pattern here is first checking to see if gestureDelegate is available, then checking to see if it responds to "shouldRecognize*".
- If gestureDelegate responds to shouldRecgonize, then call it before proceeding with default implementation. If gestureDelegate doesn't, or
- it returns true, proceed with calling default recognition code. Finally, check to see if gestureDelegate implements didRecognize* and call
- if it does. Note, we should never call the didRecognize method if gestureDelegate says we should not recognize the gesture.
- */
 
 - (void)respondToLongPressGesture:(UILongPressGestureRecognizer *)longPressRecognizer
 {
@@ -714,7 +708,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 }
 #pragma mark Standard Initializer
 
-- (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
+- (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self != nil) {
         std::shared_ptr<Platform> platform(new iOSPlatform(self));
@@ -723,7 +718,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     return self;
 }
 
-- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
     self = [super initWithCoder:aDecoder];
     if (self != nil) {
         std::shared_ptr<Platform> platform(new iOSPlatform(self));
