@@ -14,6 +14,7 @@
 #include "style/debugStyle.h"
 #include "style/debugTextStyle.h"
 #include "style/material.h"
+#include "style/gridStyle.h"
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
 #include "style/textStyle.h"
@@ -912,6 +913,8 @@ bool SceneLoader::loadStyle(const std::shared_ptr<Platform>& platform, const std
         style = std::make_unique<PointStyle>(name, scene->fontContext());
     } else if (baseStyle == "raster") {
         style = std::make_unique<RasterStyle>(name);
+    } else if (baseStyle == "grid") {
+        style = std::make_unique<GridStyle>(name, 64);
     } else {
         LOGW("Base style '%s' not recognized, cannot instantiate.", baseStyle.c_str());
         return false;
