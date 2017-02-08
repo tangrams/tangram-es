@@ -1,7 +1,12 @@
 global:
-    sdk_mapzen_api_key: ''
+    sdk_mapzen_api_key: 'vector-tiles-tyHL4AY'
 
 sources:
+    terrain-elevation:
+        type: Raster
+        url: https://tile.mapzen.com/mapzen/terrain/v1/terrarium/{z}/{x}/{y}.png
+        url_params:
+            api_key: global.sdk_mapzen_api_key
     terrain-normals:
         type: Raster
         url: https://tile.mapzen.com/mapzen/terrain/v1/normal/{z}/{x}/{y}.png
@@ -10,35 +15,124 @@ sources:
     mapzen-osm:
         type: TopoJSON
         url: https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson
-        rasters: [terrain-normals]
-    basemap:
-        type: Raster
-        #url: http://a.tile.stamen.com/terrain-background/{z}/{x}/{y}.jpg
-        url: http://a.tile.openstreetmap.org/{z}/{x}/{y}.png
-        rasters: [terrain-normals]
-
+        url_params:
+            api_key: global.sdk_mapzen_api_key
+        rasters: [terrain-elevation, terrain-normals]
 styles:
-    normals:
-        base: polygons
+    terrain-grid:
+        base: grid
         raster: custom
         shaders:
             blocks:
-                color: |
-                    color = sampleRaster(0); // color from first raster (basemap)
+                global: |
+                    varying float v_elevation;
+                position: |
+                    vec4 encoded = sampleRaster(0); // encoded elevation data.
+                    v_elevation = (encoded.r * 256. * 256. + encoded.g * 256. + encoded.b) - 32768.;
+                    position.z = v_elevation;
                 normal: |
-                    normal = normalize(sampleRaster(1).xyz * 2. - 1.); // normal from second raster (normal tiles)
-
+                    normal = normalize(sampleRaster(1).xyz * 2. - 1.);
+                color: |
+                    color.b += 0.3 * step(0., -v_elevation);
 lights:
-    # point1:
-    #     type: point
-    #     position: [0, 0, 200px]
-    #     origin: ground
-    light2: { type: directional, direction: [1, 1, -.9], diffuse: 0.8, ambient: 0.3 }
-
+    sun:
+        type: directional
+        direction: [1, -1, -.9]
+        diffuse: 0.8
+        ambient: 0.3
 layers:
     earth:
-        data: { source: basemap }
+        data:
+            source: mapzen-osm
         draw:
-            normals:
+            terrain-grid:
                 color: white
                 order: 0
+    places:
+        data:
+            source: mapzen-osm
+        # city labels with points
+        city-points:
+            filter:
+                kind: locality
+                kind_detail: city
+                $zoom: { max: 11 }
+            visible: true
+            draw:
+                points:
+                    size: 8px
+                    color: darkred
+                    text:
+                        priority: 1
+                        font:
+                            family: Open Sans
+                            size: 12px
+                            fill: [0, 0, 0, .8]
+                            stroke: { color: white, width: 4 }
+                            transform: uppercase
+                            weight: bold
+                            size: [[8, 11px], [12, 16px]]
+        # places w/text-only labels (not accompanying point)
+        text-only:
+            draw:
+                text:
+                    visible: false
+                    priority: 1
+                    font:
+                        family: Open Sans
+                        size: 12px
+                        fill: [0, 0, 0, .8]
+                        stroke: { color: white, width: 4 }
+                        transform: uppercase
+            countries:
+                filter:
+                    kind: country
+                    any:
+                        - { population: { min: 100000000 } }
+                        - { $zoom: { min: 5, max: 8 }, population: { min: 1000000 } }
+                        # - population: { min: 10000000 }
+                draw:
+                    text:
+                        visible: true
+                        font:
+                            weight: bold
+                            size: [[6, 14px], [8, 20px]]
+            regions:
+                filter:
+                    kind: region
+                    kind_detail: [state, province]
+                    $zoom: { min: 5, max: 9 }
+                draw:
+                    text:
+                        visible: true
+                        font:
+                            # weight: bold
+                            size: [[6, 12px], [8, 16px]]
+                # use short name when available at low-zooms
+                short:
+                    filter: { $zoom: { max: 7 } }
+                    draw:
+                        text:
+                            text_source: 'name:short'
+            cities:
+                filter:
+                    kind: locality
+                    kind_detail: city
+                    $zoom: { min: 11 } # show city point labels below z11
+                draw:
+                    text:
+                        visible: true
+                        font:
+                            weight: bold
+                            size: [[8, 11px], [12, 16px]]
+            neighborhoods:
+                filter:
+                    - { kind: [neighbourhood, macrohood], $zoom: { min: 13 } }
+                    - { kind: microhood, $zoom: { min: 15 } }
+                draw:
+                    text:
+                        visible: true
+                        font:
+                            size: [[13, 11px], [14, 11px], [15, 13px]]
+                            style: italic
+                            fill: rgba(136, 45, 23, 0.9)
