@@ -3,6 +3,7 @@
 #include "util/asyncWorker.h"
 #include "util/zlibHelper.h"
 #include "log.h"
+#include "platform.h"
 
 #include <SQLiteCpp/Database.h>
 #include "hash-library/md5.cpp"
@@ -113,13 +114,14 @@ struct MBTilesQueries {
 
 };
 
-MBTilesDataSource::MBTilesDataSource(std::string _name, std::string _path,
-                                     std::string _mime, bool _cache, bool _offlineFallback)
+MBTilesDataSource::MBTilesDataSource(std::shared_ptr<Platform> _platform, std::string _name,
+                                     std::string _path, std::string _mime, bool _cache, bool _offlineFallback)
     : m_name(_name),
       m_path(_path),
       m_mime(_mime),
       m_cacheMode(_cache),
-      m_offlineMode(_offlineFallback) {
+      m_offlineMode(_offlineFallback),
+      m_platform(_platform) {
 
     m_worker = std::make_unique<AsyncWorker>();
 
@@ -166,7 +168,7 @@ bool MBTilesDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb
                     // Trigger TileManager update so that tile will be
                     // downloaded next time.
                     _task->setNeedsLoading(true);
-                    requestRender();
+                    m_platform->requestRender();
                 }
             } else {
                 LOGW("missing tile: %s, %d", _task->tileId().toString().c_str());

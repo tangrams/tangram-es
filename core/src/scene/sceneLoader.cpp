@@ -993,10 +993,10 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         tiled = true;
 
         if (url.empty()) {
-            rawSources->setNext(std::make_unique<MBTilesDataSource>(name, mbtiles, mime));
+            rawSources->setNext(std::make_unique<MBTilesDataSource>(platform, name, mbtiles, mime));
         } else {
-            rawSources->setNext(std::make_unique<MBTilesDataSource>(name, mbtiles, mime, true, true));
-            rawSources->next->setNext(std::make_unique<NetworkDataSource>(url));
+            rawSources->setNext(std::make_unique<MBTilesDataSource>(platform, name, mbtiles, mime, true, true));
+            rawSources->next->setNext(std::make_unique<NetworkDataSource>(platform, url));
         }
 
     } else if (tiled) {

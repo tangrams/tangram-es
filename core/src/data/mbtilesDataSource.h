@@ -6,6 +6,8 @@ namespace SQLite {
 class Database;
 }
 
+class Platform;
+
 namespace Tangram {
 
 struct MBTilesQueries;
@@ -14,7 +16,7 @@ class AsyncWorker;
 class MBTilesDataSource : public TileSource::DataSource {
 public:
 
-    MBTilesDataSource(std::string _name, std::string _path, std::string _mime,
+    MBTilesDataSource(std::shared_ptr<Platform> _platform, std::string _name, std::string _path, std::string _mime,
                       bool _cache = false, bool _offlineFallback = false);
 
     ~MBTilesDataSource();
@@ -48,6 +50,9 @@ private:
     std::unique_ptr<SQLite::Database> m_db;
     std::unique_ptr<MBTilesQueries> m_queries;
     std::unique_ptr<AsyncWorker> m_worker;
+
+    // Platform reference
+    std::shared_ptr<Platform> m_platform;
 
     enum class Compression {
         undefined,

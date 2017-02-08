@@ -206,7 +206,7 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
 void mbtiles() {
     map->queueSceneUpdate("sources.osm.mbtiles", "/Users/njh/osm-data/mbtiles/winters-mapzen-geojson.mbtiles");
     map->applySceneUpdates();
-    requestRender();
+    platform->requestRender();
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
