@@ -75,6 +75,11 @@ public:
 
     bool needsLoading() const { return m_needsLoading; }
 
+    // Set whether DataSource should (re)try loading data
+    void setNeedsLoading(bool _needsLoading) {
+         m_needsLoading = _needsLoading;
+    }
+
     void startedLoading() { m_needsLoading = false; }
 
 protected:
@@ -111,6 +116,8 @@ public:
     }
     // Raw tile data that will be processed by TileSource.
     std::shared_ptr<std::vector<char>> rawTileData;
+
+    bool dataFromCache = false;
 };
 
 struct TileTaskQueue {

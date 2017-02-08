@@ -304,6 +304,12 @@ void Map::applySceneUpdates() {
         });
 }
 
+void Map::setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath) {
+    std::string scenePath = std::string("sources.") + _dataSourceName + ".mbtiles";
+    queueSceneUpdate(scenePath.c_str(), _mbtilesFilePath);
+    applySceneUpdates();
+}
+
 void Map::resize(int _newWidth, int _newHeight) {
 
     LOGS("resize: %d x %d", _newWidth, _newHeight);
