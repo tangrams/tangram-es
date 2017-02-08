@@ -1,4 +1,4 @@
-#include "shaderSource.h"
+#include "gl/shaderSource.h"
 
 #include <set>
 #include <sstream>
@@ -112,7 +112,7 @@ void ShaderSource::addExtensionDeclaration(const std::string& _extension) {
     addSourceBlock("extensions", oss.str());
 }
 
-std::string ShaderSource::selectionFragmentSource() const {
+std::string ShaderSource::buildSelectionFragmentSource() const {
     return SHADER_SOURCE(selection_fs);
 }
 

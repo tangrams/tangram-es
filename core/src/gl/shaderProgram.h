@@ -88,6 +88,9 @@ public:
     static GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
     static GLuint makeCompiledShader(RenderState& rs, const std::string& _src, GLenum _type);
 
+    const std::string& vertexShaderSource() { return m_vertexShaderSource; }
+    const std::string& fragmentShaderSource() { return m_fragmentShaderSource; }
+
 private:
 
     // Get a uniform value from the cache, and returns false when it's a cache miss

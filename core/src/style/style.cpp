@@ -23,8 +23,6 @@ namespace Tangram {
 Style::Style(std::string _name, Blending _blendMode, GLenum _drawMode, bool _selection) :
     m_name(_name),
     m_shaderSource(std::make_unique<ShaderSource>()),
-    m_shaderProgram(std::make_shared<ShaderProgram>()),
-    m_selectionProgram(std::make_shared<ShaderProgram>()),
     m_blend(_blendMode),
     m_drawMode(_drawMode),
     m_selection(_selection) {
@@ -46,8 +44,6 @@ void Style::build(const Scene& _scene) {
     constructVertexLayout();
     constructShaderProgram();
 
-    m_shaderProgram->setDescription("{style:" + m_name + "}");
-
     if (m_blend == Blending::inlay) {
         m_shaderSource->addSourceBlock("defines", "#define TANGRAM_BLEND_INLAY\n", false);
     } else if (m_blend == Blending::overlay) {
@@ -59,6 +55,7 @@ void Style::build(const Scene& _scene) {
     }
 
     if (m_lightingType != LightingType::none) {
+
         switch (m_lightingType) {
         case LightingType::vertex:
             m_shaderSource->addSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n", false);
@@ -83,13 +80,44 @@ void Style::build(const Scene& _scene) {
 
     setupRasters(_scene.tileSources());
 
-    m_shaderProgram->setShaderSource(m_shaderSource->vertexSource(),
-                                     m_shaderSource->fragmentSource());
+    std::string vertSrc = m_shaderSource->buildVertexSource();
+    std::string fragSrc = m_shaderSource->buildFragmentSource();
+
+    for (auto& s : _scene.styles()) {
+        auto& prg = s->m_shaderProgram;
+        if (!prg) { break; }
+        if (prg->vertexShaderSource() == vertSrc &&
+            prg->fragmentShaderSource() == fragSrc) {
+            m_shaderProgram = prg;
+            break;
+        }
+    }
+    if (!m_shaderProgram) {
+        m_shaderProgram = std::make_shared<ShaderProgram>();
+        m_shaderProgram->setDescription("{style:" + m_name + "}");
+        m_shaderProgram->setShaderSource(vertSrc, fragSrc);
+    }
 
     if (m_selection) {
-        m_selectionProgram->setDescription("selection_program {style:" + m_name + "}");
-        m_selectionProgram->setShaderSource(m_shaderSource->selectionVertexSource(),
-                                            m_shaderSource->selectionFragmentSource());
+        std::string vertSrc = m_shaderSource->buildSelectionVertexSource();
+        std::string fragSrc = m_shaderSource->buildSelectionFragmentSource();
+
+        for (auto& s : _scene.styles()) {
+            if (!s->m_selection) { continue; }
+
+            auto& prg = s->m_selectionProgram;
+            if (!prg) { break; }
+            if (prg->vertexShaderSource() == vertSrc &&
+                prg->fragmentShaderSource() == fragSrc) {
+                m_selectionProgram = prg;
+                break;
+            }
+        }
+        if (!m_selectionProgram) {
+            m_selectionProgram = std::make_shared<ShaderProgram>();
+            m_selectionProgram->setDescription("selection_program {style:" + m_name + "}");
+            m_selectionProgram->setShaderSource(vertSrc, fragSrc);
+        }
     }
 }
 

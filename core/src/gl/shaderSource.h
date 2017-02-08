@@ -23,22 +23,22 @@ public:
     const auto& getSourceBlocks() const { return m_sourceBlocks; }
 
     // Build vertex shader source
-    std::string vertexSource() const {
+    std::string buildVertexSource() const {
         return applySourceBlocks(m_vertexShaderSource, false);
     }
 
     // Build fragment shader source
-    std::string fragmentSource() const {
+    std::string buildFragmentSource() const {
         return applySourceBlocks(m_fragmentShaderSource, true);
     }
 
     // Build selection vertex shader source
-    std::string selectionVertexSource() const  {
+    std::string buildSelectionVertexSource() const  {
         return applySourceBlocks(m_vertexShaderSource, false, true);
     }
 
     // Build selection fragment shader source
-    std::string selectionFragmentSource() const;
+    std::string buildSelectionFragmentSource() const;
 
 
     static std::string shaderSourceBlock(const unsigned char* data, size_t size) {
