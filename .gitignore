@@ -140,11 +140,8 @@ android/demo/gradlew*
 # perf files
 perf.data
 
-# shader generated headers
-core/include/shaders/*.h
-
-# texture data header
-core/include/defaultPointTextureData.h
+# generated headers
+core/generated/*.h
 
 # CLion build directories
 /cmake-build-debug/

@@ -78,7 +78,7 @@ if (UNIX AND NOT APPLE)
   target_link_libraries(${LINK_LIBRARIES} dl)
 else()
   target_link_libraries(${LINK_LIBRARIES})
-endif () 
+endif ()
 
 target_include_directories(${CORE_LIBRARY}
   PUBLIC
@@ -114,7 +114,7 @@ foreach(_shader ${SHADER_FILES})
             MAIN_DEPENDENCY ${_shader}
             COMMAND ${PROJECT_SOURCE_DIR}/../scripts/incbin.sh
                 ${_shader}
-                core/include/shaders/${_shader_name}.h
+                core/generated/${_shader_name}.h
                 ${_shader_name})
         add_dependencies(${CORE_LIBRARY} ${_shader_name})
     endif()
@@ -122,7 +122,7 @@ endforeach()
 
 # add target to transform the default point texture into a data header
 set(DEFAULT_POINT_TEXTURE_IMAGE ${CMAKE_CURRENT_SOURCE_DIR}/../images/default-point.png)
-set(DEFAULT_POINT_TEXTURE_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/defaultPointTextureData.h)
+set(DEFAULT_POINT_TEXTURE_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/generated/defaultPointTextureData.h)
 add_custom_target(default_point_texture DEPENDS ${DEFAULT_POINT_TEXTURE_HEADER})
 add_custom_command(
   OUTPUT ${DEFAULT_POINT_TEXTURE_HEADER}
