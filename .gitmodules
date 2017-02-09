@@ -23,7 +23,7 @@
 	path = core/deps/yaml-cpp
 	url = https://github.com/tangrams/yaml-cpp
 [submodule "external/glfw"]
-	path = external/glfw
+	path = platforms/common/glfw
 	url = https://github.com/glfw/glfw
 [submodule "external/benchmark"]
 	path = bench/benchmark
