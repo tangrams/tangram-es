@@ -26,7 +26,7 @@
 	path = external/glfw
 	url = https://github.com/glfw/glfw
 [submodule "external/benchmark"]
-	path = external/benchmark
+	path = bench/benchmark
 	url = https://github.com/google/benchmark
 [submodule "external/alfons"]
 	path = external/alfons
