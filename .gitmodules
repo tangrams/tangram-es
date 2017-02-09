@@ -1,17 +1,17 @@
 [submodule "core/include/glm"]
-	path = core/include/glm
+	path = core/deps/glm
 	url = https://github.com/g-truc/glm.git
 [submodule "core/include/isect2d"]
-	path = core/include/isect2d
+	path = core/deps/isect2d
 	url = https://github.com/tangrams/isect2d.git
 [submodule "core/dependencies/csscolorparser"]
 	path = core/deps/css-color-parser
 	url = https://github.com/tangrams/css-color-parser-cpp
 [submodule "core/include/variant"]
-	path = core/include/variant
+	path = core/deps/variant
 	url = https://github.com/tangrams/variant
 [submodule "core/include/earcut.hpp"]
-	path = core/include/earcut.hpp
+	path = core/deps/earcut
 	url = https://github.com/tangrams/earcut.hpp
 [submodule "core/dependencies/geojson-vt-cpp"]
 	path = core/deps/geojson-vt-cpp
