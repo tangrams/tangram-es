@@ -5,7 +5,7 @@
 	path = core/include/isect2d
 	url = https://github.com/tangrams/isect2d.git
 [submodule "core/dependencies/csscolorparser"]
-	path = external/css-color-parser-cpp
+	path = core/deps/css-color-parser
 	url = https://github.com/tangrams/css-color-parser-cpp
 [submodule "core/include/variant"]
 	path = core/include/variant
@@ -14,13 +14,13 @@
 	path = core/include/earcut.hpp
 	url = https://github.com/tangrams/earcut.hpp
 [submodule "core/dependencies/geojson-vt-cpp"]
-	path = external/geojson-vt-cpp
+	path = core/deps/geojson-vt-cpp
 	url = https://github.com/tangrams/geojson-vt-cpp.git
 [submodule "external/duktape"]
-	path = external/duktape
+	path = core/deps/duktape
 	url = https://github.com/tangrams/duktape.git
 [submodule "external/yaml-cpp"]
-	path = external/yaml-cpp
+	path = core/deps/yaml-cpp
 	url = https://github.com/tangrams/yaml-cpp
 [submodule "external/glfw"]
 	path = external/glfw
@@ -29,11 +29,11 @@
 	path = bench/benchmark
 	url = https://github.com/google/benchmark
 [submodule "external/alfons"]
-	path = external/alfons
+	path = core/deps/alfons
 	url = https://github.com/hjanetzek/alfons
 [submodule "external/harfbuzz-icu-freetype"]
-	path = external/harfbuzz-icu-freetype
+	path = core/deps/harfbuzz-icu-freetype
 	url = https://github.com/tangrams/harfbuzz-icu-freetype.git
 [submodule "external/SQLiteCpp"]
-	path = external/SQLiteCpp
+	path = core/deps/SQLiteCpp
 	url = https://github.com/SRombauts/SQLiteCpp.git
