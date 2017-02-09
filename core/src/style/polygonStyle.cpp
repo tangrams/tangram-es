@@ -115,7 +115,7 @@ public:
 
     std::unique_ptr<StyledMesh> build() override;
 
-    PolygonStyleBuilder(const PolygonStyle& _style) : StyleBuilder(_style), m_style(_style) {}
+    PolygonStyleBuilder(const PolygonStyle& _style) : m_style(_style) {}
 
     void parseRule(const DrawRule& _rule, const Properties& _props);
 

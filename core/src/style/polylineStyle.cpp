@@ -185,7 +185,7 @@ public:
     std::unique_ptr<StyledMesh> build() override;
 
     PolylineStyleBuilder(const PolylineStyle& _style)
-        : StyleBuilder(_style), m_style(_style),
+        : m_style(_style),
           m_meshData(2) {}
 
     void addMesh(const Line& _line, const Parameters& _params);

@@ -61,8 +61,6 @@ struct StyledMesh {
 class StyleBuilder {
 public:
 
-    StyleBuilder(const Style& _style);
-
     virtual ~StyleBuilder() = default;
 
     virtual void setup(const Tile& _tile) = 0;
@@ -90,10 +88,6 @@ public:
     virtual void addSelectionItems(LabelCollider& _layout) {}
 
     virtual const Style& style() const = 0;
-
-protected:
-    bool m_hasColorShaderBlock = false;
-
 };
 
 /* Means of constructing and rendering map geometry
@@ -143,6 +137,8 @@ protected:
 
     /* Whether the style should generate texture coordinates */
     bool m_texCoordsGeneration = false;
+
+    bool m_hasColorShaderBlock = false;
 
     RasterType m_rasterType = RasterType::none;
 
@@ -300,6 +296,8 @@ public:
     GLenum drawMode() const { return m_drawMode; }
     float pixelScale() const { return m_pixelScale; }
     const auto& vertexLayout() const { return m_vertexLayout; }
+
+    bool hasColorShaderBlock() const { return m_hasColorShaderBlock; }
 
 };
 

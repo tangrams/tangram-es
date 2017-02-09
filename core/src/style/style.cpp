@@ -80,6 +80,13 @@ void Style::build(const Scene& _scene) {
 
     setupRasters(_scene.tileSources());
 
+    const auto& blocks = m_shaderSource->getSourceBlocks();
+    if (blocks.find("color") != blocks.end() ||
+        blocks.find("filter") != blocks.end() ||
+        blocks.find("raster") != blocks.end()) {
+        m_hasColorShaderBlock = true;
+    }
+
     std::string vertSrc = m_shaderSource->buildVertexSource();
     std::string fragSrc = m_shaderSource->buildFragmentSource();
 
@@ -119,6 +126,9 @@ void Style::build(const Scene& _scene) {
             m_selectionProgram->setShaderSource(vertSrc, fragSrc);
         }
     }
+
+    // Clear ShaderSource builder
+    m_shaderSource.reset();
 }
 
 void Style::setLightingType(LightingType _type) {
@@ -452,7 +462,7 @@ bool StyleBuilder::checkRule(const DrawRule& _rule) const {
     uint32_t checkOrder;
 
     if (!_rule.get(StyleParamKey::color, checkColor)) {
-        if (!m_hasColorShaderBlock) {
+        if (!style().hasColorShaderBlock()) {
             return false;
         }
     }
@@ -490,15 +500,6 @@ bool StyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     }
 
     return added;
-}
-
-StyleBuilder::StyleBuilder(const Style& _style) {
-    const auto& blocks = _style.getShaderSource().getSourceBlocks();
-    if (blocks.find("color") != blocks.end() ||
-        blocks.find("filter") != blocks.end() ||
-        blocks.find("raster") != blocks.end()) {
-        m_hasColorShaderBlock = true;
-    }
 }
 
 bool StyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {
