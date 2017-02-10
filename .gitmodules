@@ -5,7 +5,7 @@
 	path = core/deps/isect2d
 	url = https://github.com/tangrams/isect2d.git
 [submodule "core/dependencies/csscolorparser"]
-	path = core/deps/css-color-parser
+	path = core/deps/css-color-parser-cpp
 	url = https://github.com/tangrams/css-color-parser-cpp
 [submodule "core/include/variant"]
 	path = core/deps/variant
