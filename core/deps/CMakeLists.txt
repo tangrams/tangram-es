@@ -50,9 +50,9 @@ target_include_directories(geojson-vt-cpp
   # use our variant and geojsonvt_types.hpp
   # instead of the provided ones
   PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/../core/src
-  ${CMAKE_CURRENT_SOURCE_DIR}/../core/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/../core/include/mapbox)
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/mapbox
+  ${CMAKE_CURRENT_SOURCE_DIR}/../include/tangram)
 
 set_target_properties(geojson-vt-cpp
   PROPERTIES COMPILE_FLAGS -DGEOJSONVT_CUSTOM_TAGS)
@@ -87,43 +87,6 @@ if(USE_EXTERNAL_LIBS)
     geojson-vt-cpp
     duktape
     FILE ${EXPORTS_DIR}/core-dependencies.cmake)
-endif()
-
-
-## GLFW ##
-##########
-if(PLATFORM_LINUX OR PLATFORM_OSX)
-  if (USE_SYSTEM_GLFW_LIBS)
-    include(FindPkgConfig)
-    pkg_check_modules(GLFW REQUIRED glfw3)
-  else()
-    # configure GLFW to build only the library
-    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
-    set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs")
-    set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation")
-    set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
-
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/glfw)
-
-    target_include_directories(glfw
-      PUBLIC
-      ${CMAKE_CURRENT_SOURCE_DIR}/glfw/include)
-
-    target_link_libraries(glfw
-      INTERFACE
-      "${GLFW_LIBRARIES}"
-      -ldl)
-
-    target_compile_options(glfw
-      PRIVATE
-      -O3 -DNDEBUG)
-
-    if(USE_EXTERNAL_LIBS)
-      export(TARGETS glfw
-        FILE ${EXPORTS_DIR}/glfw.cmake
-        EXPORT_LINK_INTERFACE_LIBRARIES)
-    endif()
-  endif()
 endif()
 
 
@@ -162,9 +125,7 @@ endif()
 
 ## alfons ##
 ############
-#set(GLM_ROOT ${PROJECT_SOURCE_DIR}/core/include/glm)
-set(GLM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../core/include/glm)
-
+set(GLM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/glm)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
 
 ## SQLiteCpp ##
