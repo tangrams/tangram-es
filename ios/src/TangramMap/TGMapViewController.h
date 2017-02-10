@@ -368,7 +368,7 @@ NS_ASSUME_NONNULL_BEGIN
  Creates a marker identifier which can be used to dynamically add points and polylines
  to the map.
 
- Example on how to add a point to the map for a location `coordinate`:
+ Example on how to add a point to the map for a geographic coordinate.
 
  ```objc
  TGMapMarkerId identifier = [view markerAdd];
@@ -377,7 +377,7 @@ NS_ASSUME_NONNULL_BEGIN
  ```
 
  @return a marker identifier
- @note The marker should be appropriately styled using `-[TGMapViewController markerSetStyling:styling:]`
+ @note The marker should be appropriately styled using `-markerSetStyling:styling:`
  and a type must be set (point, polyline, polygon) through `markerSetPoint*`, `markerSetPolyline` or `markerSetPolygon`
  for it to be visible.
  */
@@ -389,63 +389,68 @@ NS_ASSUME_NONNULL_BEGIN
  See the more detailed scene <a href="https://mapzen.com/documentation/tangram/Styles-Overview/">documentation</a>
  to get more styling informations.
 
- @param identifier the marker identifier created with `-[TGMapViewController markerAdd]`
+ @param identifier the marker identifier created with `-markerAdd`
  @return `YES` if this operation was successful, `NO` otherwise
  */
 - (BOOL)markerSetStyling:(TGMapMarkerId)identifier styling:(NSString *)styling;
 
 /**
- Sets a marker styled with a <a href="https://mapzen.com/documentation/tangram/Styles-Overview/#points">point style</a>
- to be at the location `coordinate`.
+ Sets a marker to be a single point geometry at a geographic coordinate.
 
- @param identifier the marker identifier created with `-[TGMapViewController markerAdd]`
+ @param identifier the marker identifier created with `-markerAdd`
  @param the longitude and latitude where the marker will be placed
  @return `YES` if this operation was successful, `NO` otherwise
  */
 - (BOOL)markerSetPoint:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate;
 
 /**
- Similar to `-[TGMapViewController markerSetPoint:coordinates:]` except that the point will transition to the coordinate
- with a transition of time `duration` and with an ease type function of type `ease` (See `TGEaseType`) from its previous
- coordinate, if point hasn't been set any coordinate yet, this method will act as
- `-[TGMapViewController markerSetPoint:coordinates:]`.
+ Similar to `-[TGMapViewController markerSetPoint:coordinates:]` except that the point will transition to the
+ geographic coordinate with a transition of time `duration` and with an ease type function of type `ease`
+ (See `TGEaseType`) from its previous coordinate, if a point geometry hasn't been set any coordinate yet,
+ this method will act as `-markerSetPoint:coordinates:`.
 
- @param identifier the marker identifier created with `-[TGMapViewController markerAdd]`
+ @param identifier the marker identifier created with `-markerAdd`
  @param the longitude and latitude where the marker will be placed
- @param duration the duration in milliseconds of the animated transition
+ @param duration the animation duration given in seconds
  @param ease the ease function to be used between animation timestep
  @return `YES` if this operation was successful, `NO` otherwise
  */
 - (BOOL)markerSetPointEased:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate duration:(float)duration easeType:(TGEaseType)ease;
 
 /**
+ Sets a marker styled to be a polyline (described in a `TGGeoPolyline`).
 
- @param identifier the marker identifier created with `-[TGMapViewController markerAdd]`
- @oaram polyline
+ @param identifier the marker identifier created with `-markerAdd`
+ @oaram polyline the polyline geometry to use for this marker
  @return `YES` if this operation was successful, `NO` otherwise
  */
 - (BOOL)markerSetPolyline:(TGMapMarkerId)identifier polyline:(TGGeoPolyline *)polyline;
 
 /**
+ Sets a marker to be a polygon geometry (described in a `TGGeoPolygon`).
 
  @param identifier the marker identifier created with `-[TGMapViewController markerAdd]`
- @param polygon
+ @param polygon the polygon geometry to use for this marker
  @return `YES` if this operation was successful, `NO` otherwise
  */
 - (BOOL)markerSetPolygon:(TGMapMarkerId)identifier polygon:(TGGeoPolygon *)polygon;
 
 /**
+ Adjusts marker visibility
 
- @param identifier the marker identifier created with `-[TGMapViewController markerAdd]`
- @param whether the marker is visible
+ @param identifier the marker identifier created with `- markerAdd`
+ @param whether the marker is set to visible
  @return `YES` if this operation was successful, `NO` otherwise
  */
 - (BOOL)markerSetVisible:(TGMapMarkerId)identifier visible:(BOOL)visible;
 
 /**
+ Sets an image loaded with a <a href="https://developer.apple.com/reference/uikit/uiimage">
+ UIImage</a> to a marker styled with a <a href="https://mapzen.com/documentation/tangram/Styles-Overview/#points">
+ points style</a>.
 
- @param identifier the marker identifier created with `-[TGMapViewController markerAdd]`
- @param the `UIImage` that will be used to be displayed for the marker
+ @param identifier the marker identifier created with `-markerAdd`
+ @param the `UIImage` that will be used to be displayed on the marker
  @return `YES` if this operation was successful, `NO` otherwise
 
  @note An image marker must be styled with a
@@ -454,69 +459,245 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)markerSetImage:(TGMapMarkerId)identifier image:(UIImage *)image;
 
 /**
- Removes a marker for a specific identifier.
+ Removes a marker for a marker identifier.
 
- @param identifier the marker identifier created with `-[TGMapViewController markerAdd]`
+ @param identifier the marker identifier created with `-markerAdd`
  @return `YES` if removal was succesful, `NO` otherwise
  */
 - (BOOL)markerRemove:(TGMapMarkerId)identifier;
 
 #pragma mark Scene loading - updates interface
 
+/**
+ Loads a scene file synchronously.
+
+ If the scene file is set as a resource in your application bundle, make sure to resolve
+ the path for this URL relative to your bundle (for example `Resources/scene.yaml`).
+
+ If your scene is hosted remotely (any path starting with `https://` is considered a remote scene file)
+ Tangram will automatically load that remote scene file.
+
+ @param path the scene path URL
+ */
 - (void)loadSceneFile:(NSString *)path;
 
+/**
+ Loads a scene file (similar to `-loadSceneFile:`), with a list of
+ updates to be applied to the scene.
+
+ @param path the scene path URL
+ @param sceneUpdates a list of `TGSceneUpdate` to apply to the scene
+ */
 - (void)loadSceneFile:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
 
+/**
+ Loads a scene file asynchronously, may call `-[TGMapViewDelegate mapView:didLoadSceneAsync:]`
+ if a `TGMapViewDelegate` is set to the map view.
+
+ @param path the scene path URL
+ */
 - (void)loadSceneFileAsync:(NSString *)path;
 
+/**
+ Loads a scene asynchronously (similar to `-loadSceneFileAsync:`), with a
+ list of updates to be applied to the scene.
+
+ @param path the scene path URL
+ @param sceneUpdates a list of `TGSceneUpdate` to apply to the scene
+ */
 - (void)loadSceneFileAsync:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
 
+/**
+ Queue a scene update.
+
+ The path is a series of yaml keys separated by a '.' and the value is a string
+ of yaml to replace the current value at the given path in the scene.
+
+ @param componentPath the path of the scene component to update
+ @value the value to assign to the YAML component selected with `componentPath`
+
+ @note Scene updates must be applied with `-applySceneUpdates:`
+ */
 - (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value;
 
+/**
+ Queue a list of scene updates.
+
+ @note Scene updates must be applied with `-applySceneUpdates:`
+ */
 - (void)queueSceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
 
+/**
+ Apply scene updates queued with `-queueSceneUpdate*` methods.
+ */
 - (void)applySceneUpdates;
 
 #pragma mark Feature picking interface
 
+/**
+ Set the radius in logical pixels to use when picking features on the map (default is `0.5`).
+
+ This affects the way `-pick*` method will behave, the large this value is, the more selectable
+ elements would get selected.
+
+ @param logicalPixels the pixel radius in logical pixel size
+ */
 - (void)setPickRadius:(float)logicalPixels;
 
+/**
+ Selects a feature marked as <a href="https://mapzen.com/documentation/tangram/draw/#interactive">
+ `interactive`</a> in the stylesheet.
+
+ @param screenPosition the logical screen position used for the feature selection query
+
+ @note to receive events you must implement set `TGMapViewDelegate` to the map view and implement
+ `[TGMapViewDelegate mapView:didSelectFeature:atScreenPosition:]`.
+ */
 - (void)pickFeatureAt:(CGPoint)screenPosition;
 
+/**
+ Selects a label (elements under <a href="https://mapzen.com/documentation/tangram/Styles-Overview/#points">
+ points style</a> or <a href="https://mapzen.com/documentation/tangram/Styles-Overview/#text">text styles</a>)
+ marked as <a href="https://mapzen.com/documentation/tangram/draw/#interactive">
+ `interactive`</a> in the stylesheet.
+
+ @param screenPosition the logical screen position used for the feature selection query
+
+ @note to receive events you must set a `TGMapViewDelegate` to the map view and implement
+ `[TGMapViewDelegate mapView:didSelectLabel:atScreenPosition:]`.
+ */
 - (void)pickLabelAt:(CGPoint)screenPosition;
 
+/**
+ Selects a marker.
+
+ @param screenPosition the logical screen position used for the feature selection query
+
+ @note to receive events you must set a `TGMapViewDelegate` to the map view and implement
+ `[TGMapViewDelegate mapView:didSelectMarker:atScreenPosition:]`.
+ */
 - (void)pickMarkerAt:(CGPoint)screenPosition;
 
 #pragma mark Map View lifecycle
 
+/**
+ Requests the view to draw another frame
+
+ @note This method should only be called if reimplemented in a class that inherits from `TGMapViewController`
+ */
 - (void)requestRender;
 
+/**
+ Draws a frame
+
+ @note This method should only be called if reimplemented in a class that inherits from `TGMapViewController`
+ */
 - (void)renderOnce;
 
+/**
+ Requests the view to update
+
+ @note This method should only be called if reimplemented in a class that inherits from `TGMapViewController`
+ */
 - (void)update;
 
 #pragma mark Longitude/Latitude - Screen position conversions
 
+/**
+ Converts a longitude and latitude to a screen position
+
+ @param lngLat the longitude and latitude of the geographic coordinate to convert
+
+ @return the screen position, `(nil, nil)` if the value is incoherent or not visible on the screen
+ */
 - (CGPoint)lngLatToScreenPosition:(TGGeoPoint)lngLat;
 
+/**
+ Given coordinates in screen space (`x` right, `y` down), set the output longitude and
+ latitude to the geographic location corresponding to that point.
+
+ @param screenPosition the 2d screen position to convert
+
+ @return the longitude and latitude, `(nil, nil)` if the point is not visible on the screen
+ */
 - (TGGeoPoint)screenPositionToLngLat:(CGPoint)screenPosition;
 
 #pragma mark Map View animations - Position interface
 
+/**
+ Animate the map view to another geographic coordinate.
+
+@param position the map view geographic coordinate
+ @param seconds the duration in seconds
+
+ @note default ease type for this animation is set to cubic, see `TGEaseType` for more details.
+ */
 - (void)animateToPosition:(TGGeoPoint)position withDuration:(float)seconds;
 
+/**
+ Animate the map view to another geographic coordinate with a specific animation ease.
+
+ @param position the map view geographic coordinate
+ @param seconds the duration of the animation given in seconds
+ @param easeType the ease type to use for the animation, see `TGEaseType` for more details.
+ */
 - (void)animateToPosition:(TGGeoPoint)position withDuration:(float)seconds withEaseType:(TGEaseType)easeType;
 
+/**
+ Animate the map view to another zoom.
+
+ @param zoomLevel the map view zoom level
+ @param seconds the duration of the animation given in seconds
+
+ @note default ease type for this animation is set to cubic, see `TGEaseType` for more details.
+ */
 - (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)seconds;
 
+/**
+ Animate the map view to another zoom level with a specific animation ease.
+
+ @param zoomLevel the map view zoom level
+ @param seconds the duration of the animation given in seconds
+ @param easeType the ease type to use for the animation, see `TGEaseType` for more details.
+ */
 - (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)seconds withEaseType:(TGEaseType)easeType;
 
+/**
+ Animate the map view to another rotation.
+
+ @param radians the map view rotation in radians
+ @param seconds the duration of the animation given in seconds
+
+ @note default ease type for this animation is set to cubic, see `TGEaseType` for more details.
+ */
 - (void)animateToRotation:(float)radians withDuration:(float)seconds;
 
+/**
+ Animate the map view to another rotation with a specific animation ease.
+
+ @param radians the map view rotation in radians
+ @param seconds the duration of the animation given in seconds
+ @param easeType the ease type to use for the animation, see `TGEaseType` for more details.
+ */
 - (void)animateToRotation:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType;
 
+/**
+ Animate the map view to another tilt.
+
+ @param radians the map view tilt in radians
+ @param seconds the duration of the animation given in seconds
+
+ @note default ease type for this animation is set to cubic, see `TGEaseType` for more details.
+ */
 - (void)animateToTilt:(float)radians withDuration:(float)seconds;
 
+/**
+ Animate the map view to another tilt with a specific animation ease.
+
+ @param radians the map view tilt in radians
+ @param seconds the duration of the animation given in seconds
+ @param easeType the ease type to use for the animation, see `TGEaseType` for more details.
+ */
 - (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType;
 
 NS_ASSUME_NONNULL_END
