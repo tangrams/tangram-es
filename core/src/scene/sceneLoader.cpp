@@ -5,6 +5,7 @@
 #include "data/clientGeoJsonSource.h"
 #include "data/geoJsonSource.h"
 #include "data/memoryCacheDataSource.h"
+#include "data/mbtilesDataSource.h"
 #include "data/mvtSource.h"
 #include "data/networkDataSource.h"
 #include "data/rasterSource.h"
@@ -912,11 +913,31 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
     }
 
     std::string type = source["type"].Scalar();
-    std::string url = source["url"].Scalar();
+    std::string url;
+    std::string mbtiles;
     int32_t minDisplayZoom = -1;
     int32_t maxDisplayZoom = -1;
     int32_t maxZoom = 18;
 
+    std::string mime;
+
+    if (type == "GeoJSON") {
+        mime = "application/geo+json";
+    } else if (type == "TopoJSON") {
+        mime =  "application/topo+json";
+    } else if (type == "MVT") {
+        mime =  "application/vnd.mapbox-vector-tile";
+    } else if (type == "Raster") {
+        // TODO try to guess from url
+        mime = "image/png";
+    } else {
+        LOGW("Unrecognized data source type '%s', skipping", type.c_str());
+        return;
+    }
+
+    if (auto urlNode = source["url"]) {
+        url = urlNode.Scalar();
+    }
     if (auto minDisplayZoomNode = source["min_display_zoom"]) {
         minDisplayZoom = minDisplayZoomNode.as<int32_t>(minDisplayZoom);
     }
@@ -954,29 +975,44 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
     }
 
     // distinguish tiled and non-tiled sources by url
-    bool tiled = url.find("{x}") != std::string::npos &&
+    bool tiled = url.size() > 0 &&
+        url.find("{x}") != std::string::npos &&
         url.find("{y}") != std::string::npos &&
         url.find("{z}") != std::string::npos;
+
+    bool isMBTilesFile = false;
+    {
+        const char* extStr = ".mbtiles";
+        const size_t extLength = strlen(extStr);
+        const size_t urlLength = url.length();
+        isMBTilesFile = urlLength > extLength && (url.compare(urlLength - extLength, extLength, extStr) == 0);
+    }
 
     std::shared_ptr<TileSource> sourcePtr;
 
     auto rawSources = std::make_unique<MemoryCacheDataSource>();
     rawSources->setCacheSize(CACHE_SIZE);
 
+    if (isMBTilesFile) {
+        // If we have MBTiles, we know the source is tiled.
+        tiled = true;
+        // Create an MBTiles data source from the file at the url and add it to the source chain.
+        rawSources->setNext(std::make_unique<MBTilesDataSource>(platform, name, url, mime));
+    } else if (tiled) {
+        rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url));
+    }
+
     if (type == "GeoJSON") {
         if (tiled) {
-            rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url));
             sourcePtr = std::make_shared<GeoJsonSource>(name, std::move(rawSources),
                                                         minDisplayZoom, maxDisplayZoom, maxZoom);
         } else {
             sourcePtr = std::make_shared<ClientGeoJsonSource>(platform, name, url, minDisplayZoom, maxDisplayZoom, maxZoom);
         }
     } else if (type == "TopoJSON") {
-        rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url));
         sourcePtr = std::make_shared<TopoJsonSource>(name, std::move(rawSources),
                                                      minDisplayZoom, maxDisplayZoom, maxZoom);
     } else if (type == "MVT") {
-        rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url));
         sourcePtr = std::make_shared<MVTSource>(name, std::move(rawSources),
                                                 minDisplayZoom, maxDisplayZoom, maxZoom);
     } else if (type == "Raster") {
@@ -987,17 +1023,13 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
                 generateMipmaps = true;
             }
         }
-        auto rawSources = std::make_unique<NetworkDataSource>(platform, url);
+
         sourcePtr = std::make_shared<RasterSource>(name, std::move(rawSources),
                                                    minDisplayZoom, maxDisplayZoom, maxZoom,
                                                    options, generateMipmaps);
-    } else {
-        LOGW("Unrecognized data source type '%s', skipping", type.c_str());
     }
 
-    if (sourcePtr) {
-        _scene->tileSources().push_back(sourcePtr);
-    }
+    _scene->tileSources().push_back(sourcePtr);
 
     if (auto rasters = source["rasters"]) {
         loadSourceRasters(platform, sourcePtr, source["rasters"], sources, _scene);

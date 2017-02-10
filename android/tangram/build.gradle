@@ -43,6 +43,11 @@ android {
         cmake.cppFlags '-g'
       }
     }
+    release {
+      externalNativeBuild {
+        cmake.cppFlags'-g0'
+      }
+    }
   }
   productFlavors {
     slim {

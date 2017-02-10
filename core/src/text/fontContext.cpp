@@ -125,13 +125,13 @@ void FontContext::bindTexture(RenderState& rs, alfons::AtlasID _id, GLuint _unit
 
 }
 
-bool FontContext::layoutText(TextStyle::Parameters& _params, const std::string& _text,
+bool FontContext::layoutText(TextStyle::Parameters& _params, const icu::UnicodeString& _text,
                              std::vector<GlyphQuad>& _quads, std::bitset<max_textures>& _refs,
                              glm::vec2& _size, TextRange& _textRanges) {
 
     std::lock_guard<std::mutex> lock(m_fontMutex);
 
-    alfons::LineLayout line = m_shaper.shape(_params.font, _text);
+    alfons::LineLayout line = m_shaper.shapeICU(_params.font, _text);
 
     if (line.shapes().size() == 0) {
         // Nothing to do!

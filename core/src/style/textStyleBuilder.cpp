@@ -17,6 +17,11 @@
 #include "tangram.h"
 #include "log.h"
 
+#include "unicode/unistr.h"
+#include "unicode/schriter.h"
+#include "unicode/brkiter.h"
+#include "unicode/locid.h"
+
 #include <cmath>
 #include <locale>
 #include <mutex>
@@ -259,8 +264,8 @@ bool TextStyleBuilder::addStraightTextLabels(const Line& _line, const TextStyle:
         }
 
         // place labels at segment-subdivisions
-        int run = merged > 0 ? 1 : 2;
-        segmentLength /= run;
+        int run = 1;
+        if (merged) { segmentLength = glm::length(p0 - p1); }
 
         while (segmentLength > minLength && run <= 4) {
             glm::vec2 a = p0;
@@ -444,7 +449,8 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
 
     for (auto& line : _feat.lines) {
 
-        if (!addStraightTextLabels(line, _params, _rule) && line.size() > 2) {
+        if (!addStraightTextLabels(line, _params, _rule) &&
+            !_params.hasComplexShaping && line.size() > 2) {
             addCurvedTextLabels(line, _params, _rule);
         }
     }
@@ -601,41 +607,30 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     return p;
 }
 
-// TODO use icu transforms
-// http://source.icu-project.org/repos/icu/icu/trunk/source/samples/ustring/ustring.cpp
+void applyTextTransform(const TextStyle::Parameters& _params,
+                        icu::UnicodeString& _string) {
 
-std::string TextStyleBuilder::applyTextTransform(const TextStyle::Parameters& _params,
-                                                 const std::string& _string) {
-    std::locale loc;
-    std::string text = _string;
+    icu::Locale loc("en");
 
     switch (_params.transform) {
-        case TextLabelProperty::Transform::capitalize:
-            text[0] = toupper(text[0], loc);
-            if (text.size() > 1) {
-                for (size_t i = 1; i < text.length(); ++i) {
-                    if (text[i - 1] == ' ') {
-                        text[i] = std::toupper(text[i], loc);
-                    }
-                }
-            }
-            break;
-        case TextLabelProperty::Transform::lowercase:
-            for (size_t i = 0; i < text.length(); ++i) {
-                text[i] = std::tolower(text[i], loc);
-            }
-            break;
-        case TextLabelProperty::Transform::uppercase:
-            // TODO : use to wupper when any wide character is detected
-            for (size_t i = 0; i < text.length(); ++i) {
-                text[i] = std::toupper(text[i], loc);
-            }
-            break;
-        default:
-            break;
-    }
+    case TextLabelProperty::Transform::capitalize: {
+        UErrorCode status{U_ZERO_ERROR};
+        auto *wordIterator = BreakIterator::createWordInstance(loc, status);
 
-    return text;
+        if (U_SUCCESS(status)) { _string.toTitle(wordIterator); }
+
+        delete wordIterator;
+        break;
+    }
+    case TextLabelProperty::Transform::lowercase:
+        _string.toLower(loc);
+        break;
+    case TextLabelProperty::Transform::uppercase:
+        _string.toUpper(loc);
+        break;
+    default:
+        break;
+    }
 }
 
 std::string TextStyleBuilder::resolveTextSource(const std::string& textSource,
@@ -664,6 +659,30 @@ std::string TextStyleBuilder::resolveTextSource(const std::string& textSource,
     return props.getString(key_name);
 }
 
+bool isComplexShapingScript(const icu::UnicodeString& _text) {
+    icu::StringCharacterIterator iterator(_text);
+    for (UChar c = iterator.first(); c != CharacterIterator::DONE; c = iterator.next()) {
+        if (c >= u'\u0600' && c <= u'\u18AF') {
+            if ((c <= u'\u06FF') ||                   // Arabic:     "\u0600-\u06FF"
+                (c >= u'\u0900' && c <= u'\u097F') || // Devanagari: "\u0900-\u097F"
+                (c >= u'\u0980' && c <= u'\u09FF') || // Bengali:    "\u0980-\u09FF"
+                (c >= u'\u0A00' && c <= u'\u0A7F') || // Gurmukhi:   "\u0A00-\u0A7F"
+                (c >= u'\u0A80' && c <= u'\u0AFF') || // Gujarati:   "\u0A80-\u0AFF"
+                (c >= u'\u0B00' && c <= u'\u0B7f') || // Oriya:      "\u0B00-\u0B7F"
+                (c >= u'\u0B80' && c <= u'\u0BFF') || // Tamil:      "\u0B80-\u0BFF"
+                (c >= u'\u0C00' && c <= u'\u0C7F') || // Telugu:     "\u0C00-\u0C7F"
+                (c >= u'\u0E80' && c <= u'\u0EFF') || // Lao:        "\u0E80-\u0EFF"
+                (c >= u'\u0F00' && c <= u'\u0FFF') || // Tibetan:    "\u0F00-\u0FFF"
+                (c >= u'\u1000' && c <= u'\u109F') || // Burmese:    "\u1000-\u109F"
+                (c >= u'\u1780' && c <= u'\u17FF') || // Khmer:      "\u1780-\u17FF"
+                (c >= u'\u1800' && c <= u'\u18AF')) { // Mongolian:  "\u1800-\u18AF"
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type _type) {
 
     if (_params.text.empty() || _params.fontSize <= 0.f) {
@@ -671,15 +690,12 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         return false;
     }
 
-    // Apply text transforms
-    const std::string* renderText;
-    std::string text;
+    auto text = icu::UnicodeString::fromUTF8(_params.text);
 
-    if (_params.transform == TextLabelProperty::Transform::none) {
-        renderText = &_params.text;
-    } else {
-        text = applyTextTransform(_params, _params.text);
-        renderText = &text;
+    applyTextTransform(_params, text);
+
+    if (_type == Label::Type::line) {
+        _params.hasComplexShaping = isComplexShapingScript(text);
     }
 
     // Scale factor by which the texture glyphs are scaled to match fontSize
@@ -708,7 +724,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     m_attributes.textRanges = TextRange{};
 
     glm::vec2 bbox(0);
-    if (ctx->layoutText(_params, *renderText, m_quads, m_atlasRefs, bbox, m_attributes.textRanges)) {
+    if (ctx->layoutText(_params, text, m_quads, m_atlasRefs, bbox, m_attributes.textRanges)) {
 
         int start = m_attributes.quadsStart;
         for (auto& range : m_attributes.textRanges) {

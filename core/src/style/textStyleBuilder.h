@@ -40,8 +40,6 @@ public:
     bool addStraightTextLabels(const Line& _feature, const TextStyle::Parameters& _params, const DrawRule& _rule);
     void addCurvedTextLabels(const Line& _feature, const TextStyle::Parameters& _params, const DrawRule& _rule);
 
-    std::string applyTextTransform(const TextStyle::Parameters& _params, const std::string& _string);
-
     std::string resolveTextSource(const std::string& textSource, const Properties& props) const;
 
     bool checkRule(const DrawRule& _rule) const override { return true; }
