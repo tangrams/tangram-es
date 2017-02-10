@@ -12,7 +12,7 @@ else()
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/harfbuzz-icu-freetype/harfbuzz/README")
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/core/deps/harfbuzz-icu-freetype/harfbuzz/README")
     message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init --recursive'")
     return()
 endif()
