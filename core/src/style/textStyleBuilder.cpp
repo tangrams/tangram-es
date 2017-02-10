@@ -1,33 +1,31 @@
-#include "textStyleBuilder.h"
+#include "style/textStyleBuilder.h"
 
+#include "labels/curvedLabel.h"
 #include "labels/labelCollider.h"
 #include "labels/labelSet.h"
 #include "labels/textLabel.h"
-#include "labels/curvedLabel.h"
 #include "labels/textLabels.h"
-
+#include "log.h"
 #include "marker/marker.h"
+#include "selection/featureSelection.h"
 #include "scene/drawRule.h"
+#include "tangram.h"
 #include "tile/tile.h"
 #include "util/geom.h"
 #include "util/mapProjection.h"
-#include "selection/featureSelection.h"
 #include "util/lineSampler.h"
 #include "view/view.h"
-#include "tangram.h"
-#include "log.h"
 
 #include "unicode/unistr.h"
 #include "unicode/schriter.h"
 #include "unicode/brkiter.h"
 #include "unicode/locid.h"
 
+#include <glm/gtx/norm.hpp>
+#include <algorithm>
 #include <cmath>
 #include <locale>
 #include <mutex>
-#include <algorithm>
-
-#include <glm/gtx/norm.hpp>
 
 namespace Tangram {
 

@@ -1,4 +1,4 @@
-#include "error.h"
+#include "gl/error.h"
 #include "log.h"
 
 namespace Tangram {

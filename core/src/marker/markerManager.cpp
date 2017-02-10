@@ -1,12 +1,13 @@
+#include "marker/markerManager.h"
+
 #include "data/tileData.h"
 #include "gl/texture.h"
-#include "marker/markerManager.h"
 #include "marker/marker.h"
 #include "scene/sceneLoader.h"
 #include "style/style.h"
 #include "labels/labelSet.h"
-#include "selection/featureSelection.h"
 #include "log.h"
+#include "selection/featureSelection.h"
 
 namespace Tangram {
 

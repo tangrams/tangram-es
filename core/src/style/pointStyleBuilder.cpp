@@ -1,19 +1,19 @@
-#include <view/view.h>
-#include "pointStyleBuilder.h"
+#include "style/pointStyleBuilder.h"
 
-#include "data/propertyItem.h" // Include wherever Properties is used!
+#include "data/propertyItem.h"
+#include "marker/marker.h"
 #include "labels/labelCollider.h"
 #include "labels/spriteLabel.h"
-#include "marker/marker.h"
+#include "log.h"
 #include "scene/drawRule.h"
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
+#include "selection/featureSelection.h"
 #include "tangram.h"
 #include "tile/tile.h"
 #include "util/geom.h"
 #include "util/lineSampler.h"
-#include "selection/featureSelection.h"
-#include "log.h"
+#include "view/view.h"
 
 namespace Tangram {
 

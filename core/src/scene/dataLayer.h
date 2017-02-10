@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scene/sceneLayer.h"
+
 #include <string>
 
 namespace Tangram {

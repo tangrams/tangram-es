@@ -1,9 +1,8 @@
-#include "debugTextStyle.h"
+#include "style/debugTextStyle.h"
 
-#include "textStyleBuilder.h"
 #include "labels/textLabels.h"
 #include "scene/drawRule.h"
-
+#include "style/textStyleBuilder.h"
 #include "tangram.h"
 #include "tile/tile.h"
 

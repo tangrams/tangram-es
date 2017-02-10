@@ -1,11 +1,11 @@
 #pragma once
 
-#include "glm/mat4x4.hpp"
-#include "glm/vec2.hpp"
 #include "gl/texture.h"
 #include "tile/tileID.h"
 #include "util/fastmap.h"
 
+#include "glm/mat4x4.hpp"
+#include "glm/vec2.hpp"
 #include <map>
 #include <memory>
 #include <string>

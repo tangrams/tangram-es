@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tileSource.h"
+#include "data/tileSource.h"
 
 namespace Tangram {
 

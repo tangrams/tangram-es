@@ -1,4 +1,4 @@
-#include "labelSet.h"
+#include "labels/labelSet.h"
 
 namespace Tangram {
 

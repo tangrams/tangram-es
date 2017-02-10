@@ -3,7 +3,7 @@
 #include "gl.h"
 #include "gl/disposer.h"
 #include "gl/shaderSource.h"
-#include "uniform.h"
+#include "gl/uniform.h"
 #include "util/fastmap.h"
 
 #include "glm/glm.hpp"

@@ -1,7 +1,7 @@
-#include "rasterStyle.h"
+#include "style/rasterStyle.h"
 
-#include "gl/shaderProgram.h"
 #include "gl/mesh.h"
+#include "gl/shaderProgram.h"
 
 namespace Tangram {
 

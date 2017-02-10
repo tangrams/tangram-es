@@ -1,10 +1,11 @@
 #pragma once
 
+#include "util/util.h"
+
+#include "aabb.h"
+#include "glm/vec2.hpp"
 #include <string>
 #include <array>
-#include "util/util.h"
-#include "glm/vec2.hpp"
-#include "aabb.h"
 
 namespace Tangram {
 

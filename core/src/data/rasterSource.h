@@ -1,10 +1,9 @@
 #pragma once
 
-
-#include <tile/tileTask.h>
-#include "tile/tileHash.h"
-#include "tileSource.h"
+#include "data/tileSource.h"
 #include "gl/texture.h"
+#include "tile/tileTask.h"
+#include "tile/tileHash.h"
 
 #include <functional>
 #include <unordered_map>

@@ -1,10 +1,10 @@
-#include "pbfParser.h"
+#include "util/pbfParser.h"
 
 #include "data/propertyItem.h"
 #include "tile/tile.h"
+#include "log.h"
 #include "platform.h"
 #include "util/geom.h"
-#include "log.h"
 
 #include <algorithm>
 #include <iterator>

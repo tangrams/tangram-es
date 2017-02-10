@@ -1,4 +1,4 @@
-#include "curvedLabel.h"
+#include "labels/curvedLabel.h"
 
 #include "gl/dynamicQuadMesh.h"
 #include "labels/obbBuffer.h"

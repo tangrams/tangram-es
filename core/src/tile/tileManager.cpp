@@ -1,9 +1,9 @@
-#include "tileManager.h"
+#include "tile/tileManager.h"
 
 #include "data/tileSource.h"
 #include "platform.h"
 #include "tile/tile.h"
-#include "tileCache.h"
+#include "tile/tileCache.h"
 #include "util/mapProjection.h"
 #include "view/view.h"
 

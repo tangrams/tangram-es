@@ -1,11 +1,11 @@
-#include "pointLight.h"
+#include "scene/pointLight.h"
 
-#include "glm/gtx/string_cast.hpp"
-#include "platform.h"
 #include "gl/shaderProgram.h"
+#include "platform.h"
+#include "pointLight_glsl.h"
 #include "view/view.h"
 
-#include "shaders/pointLight_glsl.h"
+#include "glm/gtx/string_cast.hpp"
 
 namespace Tangram {
 

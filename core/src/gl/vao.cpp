@@ -1,8 +1,8 @@
-#include "vao.h"
+#include "gl/vao.h"
 #include "gl/error.h"
-#include "renderState.h"
-#include "shaderProgram.h"
-#include "vertexLayout.h"
+#include "gl/renderState.h"
+#include "gl/shaderProgram.h"
+#include "gl/vertexLayout.h"
 #include <unordered_map>
 
 namespace Tangram {

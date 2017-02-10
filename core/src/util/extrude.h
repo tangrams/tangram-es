@@ -1,5 +1,7 @@
 #pragma once
+
 #include "data/properties.h"
+
 #include "glm/vec2.hpp"
 #include <string>
 

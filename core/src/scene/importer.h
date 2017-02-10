@@ -1,15 +1,15 @@
 #pragma once
 
-#include <memory>
-#include <string>
-#include <vector>
-#include <unordered_map>
-#include <unordered_set>
-#include <mutex>
+#include "util/url.h"
+
 #include <atomic>
 #include <condition_variable>
-
-#include "util/url.h"
+#include <memory>
+#include <mutex>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 #include "yaml-cpp/yaml.h"
 
 class Platform;

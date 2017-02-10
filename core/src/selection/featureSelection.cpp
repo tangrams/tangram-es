@@ -1,4 +1,4 @@
-#include "featureSelection.h"
+#include "selection/featureSelection.h"
 
 namespace Tangram {
 

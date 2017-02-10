@@ -2,11 +2,12 @@
 
 #include "data/properties.h"
 #include "util/types.h"
+
+#include <array>
 #include <functional>
 #include <memory>
 #include <string>
 #include <vector>
-#include <array>
 
 class Platform;
 

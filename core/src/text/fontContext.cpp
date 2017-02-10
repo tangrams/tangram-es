@@ -1,7 +1,7 @@
-#include "fontContext.h"
+#include "text/fontContext.h"
 
-#include "platform.h"
 #include "log.h"
+#include "platform.h"
 
 #define SDF_IMPLEMENTATION
 #include "sdf.h"

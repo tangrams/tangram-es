@@ -1,8 +1,8 @@
 #pragma once
 
+#include <functional>
 #include <string>
 #include <vector>
-#include <functional>
 
 // Function type for a mapReady callback
 using MapReady = std::function<void(void*)>;

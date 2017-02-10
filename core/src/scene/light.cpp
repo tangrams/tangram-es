@@ -1,11 +1,10 @@
-#include "light.h"
+#include "scene/light.h"
+
+#include "gl/shaderProgram.h"
+#include "lights_glsl.h"
+#include "platform.h"
 
 #include "glm/gtx/string_cast.hpp"
-#include "platform.h"
-#include "gl/shaderProgram.h"
-
-#include "shaders/lights_glsl.h"
-
 #include <sstream>
 #include <set>
 

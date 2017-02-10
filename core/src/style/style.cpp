@@ -1,22 +1,22 @@
-#include "style.h"
+#include "style/style.h"
 
-#include "material.h"
+#include "data/tileSource.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 #include "gl/mesh.h"
-#include "scene/light.h"
-#include "scene/styleParam.h"
+#include "log.h"
+#include "marker/marker.h"
 #include "scene/drawRule.h"
+#include "scene/light.h"
 #include "scene/scene.h"
 #include "scene/spriteAtlas.h"
-#include "tile/tile.h"
-#include "data/tileSource.h"
-#include "view/view.h"
-#include "marker/marker.h"
+#include "scene/styleParam.h"
+#include "style/material.h"
 #include "tangram.h"
-#include "log.h"
+#include "tile/tile.h"
+#include "view/view.h"
 
-#include "shaders/rasters_glsl.h"
+#include "rasters_glsl.h"
 
 namespace Tangram {
 

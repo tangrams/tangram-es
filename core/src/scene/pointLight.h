@@ -1,6 +1,6 @@
 #pragma once
 
-#include "light.h"
+#include "scene/light.h"
 #include "scene/styleParam.h"
 
 namespace Tangram {

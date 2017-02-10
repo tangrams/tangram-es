@@ -1,5 +1,5 @@
-#include "propertyItem.h"
-#include "properties.h"
+#include "data/propertyItem.h"
+#include "data/properties.h"
 #include <algorithm>
 
 namespace Tangram {

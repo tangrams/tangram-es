@@ -1,13 +1,14 @@
 #pragma once
 
-#include "style.h"
-#include "glm/vec2.hpp"
-#include "glm/vec3.hpp"
+#include "gl/dynamicQuadMesh.h"
 #include "labels/spriteLabel.h"
 #include "labels/labelProperty.h"
-#include "gl/dynamicQuadMesh.h"
-#include "style/textStyle.h"
 #include "labels/textLabels.h"
+#include "style/style.h"
+#include "style/textStyle.h"
+
+#include "glm/vec3.hpp"
+#include "glm/vec2.hpp"
 
 namespace Tangram {
 

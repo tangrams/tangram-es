@@ -1,12 +1,12 @@
 #pragma once
 
-#include "isect2d.h"
-#include "glm_vec.h" // for isect2d.h
-#include "util/mapProjection.h"
 #include "labels/label.h"
 #include "labels/screenTransform.h"
+#include "util/mapProjection.h"
 #include "util/types.h"
 
+#include "isect2d.h"
+#include "glm_vec.h" // for isect2d.h
 #include <memory>
 #include <vector>
 

@@ -1,6 +1,7 @@
-#include "textLabel.h"
+#include "labels/textLabel.h"
 
 #include "gl/dynamicQuadMesh.h"
+#include "labels/obbBuffer.h"
 #include "labels/textLabels.h"
 #include "labels/screenTransform.h"
 #include "log.h"
@@ -8,7 +9,6 @@
 #include "text/fontContext.h"
 #include "util/geom.h"
 #include "view/view.h"
-#include "labels/obbBuffer.h"
 
 #include "glm/gtx/norm.hpp"
 

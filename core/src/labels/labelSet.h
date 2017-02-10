@@ -1,9 +1,10 @@
 #pragma once
 
+#include "labels/label.h"
+#include "style/style.h"
+
 #include <vector>
 #include <memory>
-#include "label.h"
-#include "style/style.h"
 
 namespace Tangram {
 

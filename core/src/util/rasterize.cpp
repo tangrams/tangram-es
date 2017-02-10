@@ -1,4 +1,4 @@
-#include "rasterize.h"
+#include "util/rasterize.h"
 
 namespace Tangram {
 namespace Rasterize {

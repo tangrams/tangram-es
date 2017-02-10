@@ -1,8 +1,9 @@
-#include "inputHandler.h"
+#include "util/inputHandler.h"
 
-#include "glm/vec2.hpp"
-#include "glm/gtx/rotate_vector.hpp"
 #include "platform.h"
+
+#include "glm/gtx/rotate_vector.hpp"
+#include "glm/vec2.hpp"
 #include <cmath>
 
 // Damping factor for translation; reciprocal of the decay period in seconds

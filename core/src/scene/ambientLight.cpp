@@ -1,7 +1,7 @@
-#include "ambientLight.h"
+#include "scene/ambientLight.h"
 
 #include "gl/shaderProgram.h"
-#include "shaders/ambientLight_glsl.h"
+#include "ambientLight_glsl.h"
 
 #include "glm/gtx/string_cast.hpp"
 

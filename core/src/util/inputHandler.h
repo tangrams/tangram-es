@@ -1,8 +1,9 @@
 #pragma once
 
 #include "view/view.h"
-#include <memory>
+
 #include <bitset>
+#include <memory>
 
 class Platform;
 

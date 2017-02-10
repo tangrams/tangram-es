@@ -1,12 +1,12 @@
-#include "material.h"
+#include "style/material.h"
 
-#include "platform.h"
+#include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 #include "gl/shaderSource.h"
 #include "gl/texture.h"
-#include "gl/renderState.h"
+#include "platform.h"
 
-#include "shaders/material_glsl.h"
+#include "material_glsl.h"
 
 namespace Tangram {
 

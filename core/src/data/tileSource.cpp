@@ -1,10 +1,10 @@
-#include "tileSource.h"
+#include "data/tileSource.h"
 
-#include "platform.h"
-#include "tileData.h"
+#include "data/tileData.h"
 #include "tile/tileID.h"
 #include "tile/tile.h"
 #include "tile/tileTask.h"
+#include "platform.h"
 #include "log.h"
 
 #include <atomic>

@@ -1,10 +1,11 @@
-#include "importer.h"
+#include "scene/importer.h"
+
+#include "log.h"
 #include "platform.h"
 #include "scene/sceneLoader.h"
-#include "yaml-cpp/yaml.h"
-#include "log.h"
 
 #include <regex>
+#include "yaml-cpp/yaml.h"
 
 using YAML::Node;
 using YAML::NodeType;

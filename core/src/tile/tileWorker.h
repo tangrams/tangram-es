@@ -3,12 +3,12 @@
 #include "tile/tileTask.h"
 #include "util/jobQueue.h"
 
-#include <memory>
-#include <vector>
-#include <condition_variable>
-#include <thread>
-#include <mutex>
 #include <atomic>
+#include <condition_variable>
+#include <memory>
+#include <mutex>
+#include <thread>
+#include <vector>
 
 class Platform;
 

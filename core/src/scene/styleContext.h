@@ -3,10 +3,10 @@
 #include "scene/styleParam.h"
 #include "util/fastmap.h"
 
-#include <string>
+#include <array>
 #include <functional>
 #include <memory>
-#include <array>
+#include <string>
 #include <unordered_map>
 
 struct duk_hthread;

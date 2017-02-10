@@ -1,4 +1,5 @@
-#include "labelProperty.h"
+#include "labels/labelProperty.h"
+
 #include <map>
 
 namespace Tangram {

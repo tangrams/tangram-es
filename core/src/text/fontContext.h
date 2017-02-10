@@ -1,21 +1,17 @@
 #pragma once
 
-#include "textUtil.h"
-
-// For textParameters
-#include "style/textStyle.h"
+#include "gl/texture.h"
 #include "labels/textLabel.h"
+#include "style/textStyle.h"
+#include "text/textUtil.h"
 
 #include "alfons/alfons.h"
-#include "alfons/fontManager.h"
 #include "alfons/atlas.h"
+#include "alfons/font.h"
+#include "alfons/fontManager.h"
+#include "alfons/inputSource.h"
 #include "alfons/textBatch.h"
 #include "alfons/textShaper.h"
-#include "alfons/font.h"
-#include "alfons/inputSource.h"
-
-#include "gl/texture.h"
-
 #include <bitset>
 #include <mutex>
 

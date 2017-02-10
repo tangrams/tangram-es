@@ -1,4 +1,4 @@
-#include "disposer.h"
+#include "gl/disposer.h"
 #include "gl/renderState.h"
 
 namespace Tangram {

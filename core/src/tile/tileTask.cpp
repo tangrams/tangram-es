@@ -1,9 +1,10 @@
-#include "tileTask.h"
+#include "tile/tileTask.h"
+
 #include "data/tileSource.h"
-#include "tile/tileBuilder.h"
 #include "scene/scene.h"
-#include "util/mapProjection.h"
 #include "tile/tile.h"
+#include "tile/tileBuilder.h"
+#include "util/mapProjection.h"
 
 namespace Tangram {
 
@@ -31,7 +32,7 @@ void TileTask::complete() {
         assert(subTask->isReady());
         subTask->complete(*this);
     }
-    
+
 }
 
 }

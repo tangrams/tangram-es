@@ -1,6 +1,5 @@
-#include "mvtSource.h"
-
-#include "tileData.h"
+#include "data/mvtSource.h"
+#include "data/tileData.h"
 #include "tile/tileID.h"
 #include "tile/tile.h"
 #include "tile/tileTask.h"

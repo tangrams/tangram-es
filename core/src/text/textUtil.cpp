@@ -1,4 +1,4 @@
-#include "textUtil.h"
+#include "text/textUtil.h"
 
 #include "platform.h"
 

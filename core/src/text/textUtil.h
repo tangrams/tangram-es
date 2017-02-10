@@ -3,9 +3,8 @@
 #include "labels/labelProperty.h"
 
 #include "alfons/alfons.h"
-#include "alfons/textBatch.h"
 #include "alfons/lineLayout.h"
-
+#include "alfons/textBatch.h"
 #include <vector>
 
 namespace Tangram {

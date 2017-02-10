@@ -1,10 +1,10 @@
-#include "tile.h"
+#include "tile/tile.h"
 
 #include "data/tileSource.h"
-#include "style/style.h"
-#include "view/view.h"
-#include "tile/tileID.h"
 #include "labels/labelSet.h"
+#include "style/style.h"
+#include "tile/tileID.h"
+#include "view/view.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 

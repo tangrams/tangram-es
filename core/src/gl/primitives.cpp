@@ -9,11 +9,11 @@
 #include "gl/texture.h"
 #include "log.h"
 
-#include "shaders/debugPrimitive_vs.h"
-#include "shaders/debugPrimitive_fs.h"
+#include "debugPrimitive_vs.h"
+#include "debugPrimitive_fs.h"
 
-#include "shaders/debugTexture_vs.h"
-#include "shaders/debugTexture_fs.h"
+#include "debugTexture_vs.h"
+#include "debugTexture_fs.h"
 
 namespace Tangram {
 

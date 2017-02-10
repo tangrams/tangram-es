@@ -1,10 +1,11 @@
 #pragma once
 
-#include "glm/mat4x4.hpp"
-#include "glm/vec2.hpp"
 #include "util/ease.h"
 #include "util/geom.h"
 #include "util/types.h"
+
+#include "glm/mat4x4.hpp"
+#include "glm/vec2.hpp"
 #include <memory>
 #include <string>
 

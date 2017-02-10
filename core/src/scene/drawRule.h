@@ -2,9 +2,9 @@
 
 #include "scene/styleParam.h"
 
+#include <bitset>
 #include <vector>
 #include <set>
-#include <bitset>
 
 namespace Tangram {
 

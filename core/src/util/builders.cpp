@@ -1,6 +1,7 @@
-#include "builders.h"
+#include "util/builders.h"
 
-#include "geom.h"
+#include "util/geom.h"
+
 #include "glm/gtx/rotate_vector.hpp"
 #include "glm/gtx/norm.hpp"
 

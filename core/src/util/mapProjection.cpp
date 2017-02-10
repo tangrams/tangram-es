@@ -2,7 +2,7 @@
  * Reference used for implementation: http://www.maptiler.org/google-maps-coordinates-tile-bounds-projection/
  */
 
-#include "mapProjection.h"
+#include "util/mapProjection.h"
 
 #include <cmath>
 

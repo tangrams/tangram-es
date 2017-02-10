@@ -6,15 +6,15 @@
 #include "labels/spriteLabel.h"
 #include "tile/tileID.h"
 
-#include "isect2d.h"
 #include "glm_vec.h" // for isect2d.h
+#include "isect2d.h"
 
+#include <map>
 #include <memory>
 #include <mutex>
-#include <vector>
-#include <map>
-#include <unordered_map>
 #include <set>
+#include <unordered_map>
+#include <vector>
 
 #define PERF_TRACE __attribute__ ((noinline))
 

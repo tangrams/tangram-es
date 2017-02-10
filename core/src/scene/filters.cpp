@@ -1,7 +1,8 @@
-#include "filters.h"
-#include "scene/styleContext.h"
+#include "scene/filters.h"
+
 #include "data/tileData.h"
 #include "platform.h"
+#include "scene/styleContext.h"
 
 #include <cmath>
 

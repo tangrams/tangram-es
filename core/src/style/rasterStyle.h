@@ -1,7 +1,6 @@
 #pragma once
 
-#include "style.h"
-#include "polygonStyle.h"
+#include "style/polygonStyle.h"
 
 namespace Tangram {
 
