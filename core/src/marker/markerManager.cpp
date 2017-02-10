@@ -263,6 +263,7 @@ bool MarkerManager::update(int zoom) {
     for (auto& marker : m_markers) {
         if (zoom != marker->builtZoomLevel()) {
             buildGeometry(*marker, zoom);
+            setVisible(marker->id(), marker->isVisible());
             rebuilt = true;
         }
     }
@@ -362,7 +363,7 @@ bool MarkerManager::buildGeometry(Marker& marker, int zoom) {
 
 const Marker* MarkerManager::getMarkerOrNullBySelectionColor(uint32_t selectionColor) const {
     for (const auto& marker : m_markers) {
-        if (marker->selectionColor() == selectionColor) {
+        if (marker->isVisible() && marker->selectionColor() == selectionColor) {
             return marker.get();
         }
     }
