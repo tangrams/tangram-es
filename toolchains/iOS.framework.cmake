@@ -36,46 +36,45 @@ endif()
 set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CFNetwork GLKit)
 
 # load core library
-add_subdirectory(${PROJECT_SOURCE_DIR}/external)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
 set(SOURCES
-    ${PROJECT_SOURCE_DIR}/core/common/platform_gl.cpp
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/platform_ios.mm
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGHelpers.mm
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGFontConverter.mm
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGGeoPolyline.mm
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGGeoPolygon.mm
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGHttpHandler.mm
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGSceneUpdate.mm
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGLabelPickResult.mm
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGMarkerPickResult.mm
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGMapViewController.mm)
+    ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/platform_ios.mm
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHelpers.mm
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGFontConverter.mm
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGGeoPolyline.mm
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGGeoPolygon.mm
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHttpHandler.mm
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGSceneUpdate.mm
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGLabelPickResult.mm
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarkerPickResult.mm
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapViewController.mm)
 
 set(FRAMEWORK_HEADERS
-    ${PROJECT_SOURCE_DIR}/ios/framework/TangramMap.h
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGGeoPolyline.h
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGGeoPolygon.h
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGGeoPoint.h
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGSceneUpdate.h
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGHttpHandler.h
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGLabelPickResult.h
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGMarkerPickResult.h
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGMapViewController.h)
+    ${PROJECT_SOURCE_DIR}/platforms/ios/framework/TangramMap.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGGeoPolyline.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGGeoPolygon.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGGeoPoint.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGSceneUpdate.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHttpHandler.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGLabelPickResult.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarkerPickResult.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapViewController.h)
 
 set(HEADERS
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/platform_ios.h
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGHelpers.h
-    ${PROJECT_SOURCE_DIR}/ios/src/TangramMap/TGFontConverter.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/platform_ios.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHelpers.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGFontConverter.h
     ${FRAMEWORK_HEADERS})
 
 # add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes/fonts" "./fonts")
-add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/ios/framework/Modules" "./Modules")
+add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/platforms/ios/framework/Modules" "./Modules")
 
 add_library(${FRAMEWORK_NAME} SHARED ${SOURCES} ${HEADERS} ${RESOURCES})
 target_link_libraries(${FRAMEWORK_NAME} ${CORE_LIBRARY})
 
-set(IOS_FRAMEWORK_RESOURCES ${PROJECT_SOURCE_DIR}/ios/framework/Info.plist)
+set(IOS_FRAMEWORK_RESOURCES ${PROJECT_SOURCE_DIR}/platforms/ios/framework/Info.plist)
 
 set_target_properties(${FRAMEWORK_NAME} PROPERTIES
     CLEAN_DIRECT_OUTPUT 1
