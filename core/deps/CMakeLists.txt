@@ -90,24 +90,6 @@ if(USE_EXTERNAL_LIBS)
 endif()
 
 
-## benchmark ##
-###############
-if((BENCHMARK OR USE_EXTERNAL_LIBS) AND (PLATFORM_LINUX OR PLATFORM_OSX))
-  set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "")
-  set(BENCHMARK_ENABLE_LTO OFF CACHE BOOL "")
-
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/benchmark)
-  target_compile_options(benchmark
-    PRIVATE
-    -O3 -DNDEBUG)
-
-  if(USE_EXTERNAL_LIBS)
-    export(TARGETS benchmark
-      FILE ${EXPORTS_DIR}/benchmark.cmake)
-  endif()
-endif()
-
-
 if(NOT USE_SYSTEM_FONT_LIBS)
   ## Harfbuzz - ICU-Common - UCDN - Freetype2 ##
   ##############################################

@@ -1,6 +1,8 @@
-if (USE_EXTERNAL_LIBS)
-    include(${EXTERNAL_LIBS_DIR}/benchmark.cmake)
-endif()
+# Build Google Benchmark library.
+set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "")
+set(BENCHMARK_ENABLE_LTO OFF CACHE BOOL "")
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/benchmark)
+target_compile_options(benchmark PRIVATE -O3 -DNDEBUG)
 
 file(GLOB BENCH_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 
@@ -12,6 +14,10 @@ foreach(_src_file_path ${BENCH_SOURCES})
     set(EXECUTABLE_NAME "${bench_name}.out")
 
     add_executable(${EXECUTABLE_NAME} ${_src_file_path})
+
+    target_include_directories(${EXECUTABLE_NAME}
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/benchmark/include)
 
     target_link_libraries(${EXECUTABLE_NAME}
         ${CORE_LIBRARY}
