@@ -43,13 +43,6 @@ check_unsupported_compiler_version()
 # compile definitions (adds -DPLATFORM_LINUX)
 set(CORE_COMPILE_DEFS PLATFORM_TIZEN)
 
-if (USE_EXTERNAL_LIBS)
-include(${EXTERNAL_LIBS_DIR}/core-dependencies.cmake)
-include(${EXTERNAL_LIBS_DIR}/glfw.cmake)
-else()
-add_subdirectory(${PROJECT_SOURCE_DIR}/external)
-endif()
-
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
