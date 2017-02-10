@@ -259,8 +259,8 @@ bool TextStyleBuilder::addStraightTextLabels(const Line& _line, const TextStyle:
         }
 
         // place labels at segment-subdivisions
-        int run = merged > 0 ? 1 : 2;
-        segmentLength /= run;
+        int run = 1;
+        if (merged) { segmentLength = glm::length(p0 - p1); }
 
         while (segmentLength > minLength && run <= 4) {
             glm::vec2 a = p0;
