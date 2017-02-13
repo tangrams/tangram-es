@@ -30,7 +30,7 @@ struct timeval tv;
 unsigned long long timePrev, timeStart;
 
 Tangram::Map* map = nullptr;
-std::shared_ptr<Platform> platform;
+std::shared_ptr<LinuxPlatform> platform;
 
 static bool bUpdate = true;
 
@@ -59,8 +59,7 @@ int main(int argc, char **argv){
         updateGL();
 
         platform->processNetworkQueue();
-
-        if (getRenderRequest()) {
+        if (getRenderRequest() || platform->isContinuousRendering() ) {
             setRenderRequest(false);
             newFrame();
         }

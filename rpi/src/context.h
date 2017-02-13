@@ -12,10 +12,10 @@ void    closeGL();
 
 // SET
 void    setWindowSize(int _width, int _height);
-void    setRenderRequest(bool _request);
-void    setContinuousRendering(bool _continuous);
+void    setRenderRequest(bool _render);
 
 // GET
+bool    getRenderRequest();
 int     getWindowWidth();
 int     getWindowHeight();
 glm::vec2 getWindowSize();
@@ -32,8 +32,6 @@ glm::vec2 getMouseVelocity();
 int     getMouseButton();
 
 unsigned char getKeyPressed();
-
-bool    getRenderRequest();
 
 // EVENTS
 void    onKeyPress(int _key);

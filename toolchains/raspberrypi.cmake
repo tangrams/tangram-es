@@ -17,8 +17,8 @@ find_sources_and_include_directories(
 
 # add linux dependencies
 set(LINUX_SOURCES
-    ${PROJECT_SOURCE_DIR}/linux/urlWorker.cpp
-    ${PROJECT_SOURCE_DIR}/linux/platform_linux.cpp)
+    ${PROJECT_SOURCE_DIR}/linux/src/urlWorker.cpp
+    ${PROJECT_SOURCE_DIR}/linux/src/platform_linux.cpp)
 
 include_directories(${PROJECT_SOURCE_DIR}/linux/src)
 

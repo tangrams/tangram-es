@@ -17,7 +17,11 @@
 
 #include <regex>
 
+#if defined(PLATFORM_LINUX)
 #include <GLFW/glfw3.h>
+#elif defined(PLATFORM_RPI)
+#include "context.h"
+#endif
 
 #define DEFAULT "fonts/NotoSans-Regular.ttf"
 #define FONT_AR "fonts/NotoNaskh-Regular.ttf"
@@ -47,7 +51,11 @@ void LinuxPlatform::processNetworkQueue() {
 }
 
 void LinuxPlatform::requestRender() const {
+#if defined(PLATFORM_LINUX)
     glfwPostEmptyEvent();
+#elif defined(PLATFORM_RPI)
+    setRenderRequest(true);
+#endif
 }
 
 std::vector<FontSourceHandle> LinuxPlatform::systemFontFallbacksHandle() const {
