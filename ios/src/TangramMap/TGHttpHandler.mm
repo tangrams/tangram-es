@@ -64,7 +64,7 @@
     self.configuration.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
 }
 
-- (void)downloadRequestAsync:(NSString*)url completionHandler:(DownloadCompletionHandler)completionHandler
+- (void)downloadRequestAsync:(NSString*)url completionHandler:(TGDownloadCompletionHandler)completionHandler
 {
     NSURLSessionDataTask* dataTask = [self.session dataTaskWithURL:[NSURL URLWithString:url]
                                                                       completionHandler:completionHandler];

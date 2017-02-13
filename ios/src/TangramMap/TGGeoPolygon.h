@@ -10,7 +10,7 @@
 #import "TGGeoPoint.h"
 
 /**
- Helper class to contain polygon geometry for use in `-[TGMapViewController markerSetPolygon:polygon:]`.
+ Helper class to contain a polygon geometry for use in `-[TGMapViewController markerSetPolygon:polygon:]`.
 
  The polygon winding order and internal polygons must be set according to the <a href="http://geojson.org/geojson-spec.html#polygon">
  GeoJSON specification</a>.
@@ -48,7 +48,7 @@
 - (void)addPoint:(TGGeoPoint)latlon;
 
 /**
- Returns a pointer to a sequence of `TGGeoPoint` with a total length equal to `-[TGGeoPolygon count:]`.
+ Returns a pointer to a sequence of `TGGeoPoint` with a total array length equal to `-[TGGeoPolygon count:]`.
 
  @return a pointer to the list of polygons coordinates
  */

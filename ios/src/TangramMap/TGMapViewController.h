@@ -380,6 +380,8 @@ NS_ASSUME_NONNULL_BEGIN
  @note The marker should be appropriately styled using `-markerSetStyling:styling:`
  and a type must be set (point, polyline, polygon) through `markerSetPoint*`, `markerSetPolyline` or `markerSetPolygon`
  for it to be visible.
+
+ @note A marker identifier of 0 is non-valid.
  */
 - (TGMapMarkerId)markerAdd;
 
@@ -391,6 +393,8 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param identifier the marker identifier created with `-markerAdd`
  @return `YES` if this operation was successful, `NO` otherwise
+
+ @note It is possible to update the marker styling multiple times.
  */
 - (BOOL)markerSetStyling:(TGMapMarkerId)identifier styling:(NSString *)styling;
 
@@ -400,6 +404,8 @@ NS_ASSUME_NONNULL_BEGIN
  @param identifier the marker identifier created with `-markerAdd`
  @param the longitude and latitude where the marker will be placed
  @return `YES` if this operation was successful, `NO` otherwise
+
+ @note Markers can have their geometry set multiple time with possibly different geometry types.
  */
 - (BOOL)markerSetPoint:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate;
 
@@ -414,6 +420,8 @@ NS_ASSUME_NONNULL_BEGIN
  @param duration the animation duration given in seconds
  @param ease the ease function to be used between animation timestep
  @return `YES` if this operation was successful, `NO` otherwise
+
+ @note Markers can have their geometry set multiple time with possibly different geometry types.
  */
 - (BOOL)markerSetPointEased:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate duration:(float)duration easeType:(TGEaseType)ease;
 
@@ -423,6 +431,8 @@ NS_ASSUME_NONNULL_BEGIN
  @param identifier the marker identifier created with `-markerAdd`
  @oaram polyline the polyline geometry to use for this marker
  @return `YES` if this operation was successful, `NO` otherwise
+
+ @note Markers can have their geometry set multiple time wwith possibly different geometry types.
  */
 - (BOOL)markerSetPolyline:(TGMapMarkerId)identifier polyline:(TGGeoPolyline *)polyline;
 
@@ -432,6 +442,8 @@ NS_ASSUME_NONNULL_BEGIN
  @param identifier the marker identifier created with `-[TGMapViewController markerAdd]`
  @param polygon the polygon geometry to use for this marker
  @return `YES` if this operation was successful, `NO` otherwise
+
+ @note Markers can have their geometry set multiple time with possibly different geometry types.
  */
 - (BOOL)markerSetPolygon:(TGMapMarkerId)identifier polygon:(TGGeoPolygon *)polygon;
 
