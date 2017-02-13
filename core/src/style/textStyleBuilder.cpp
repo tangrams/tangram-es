@@ -511,7 +511,9 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
             p.labelOptions.priority = (float)priority;
         }
         _rule.get(StyleParamKey::text_collide, p.labelOptions.collide);
-        _rule.get(StyleParamKey::text_interactive, p.interactive);
+        if (!_rule.get(StyleParamKey::text_interactive, p.interactive)) {
+            _rule.get(StyleParamKey::interactive, p.interactive);
+        }
         _rule.get(StyleParamKey::text_offset, p.labelOptions.offset);
         p.labelOptions.offset *= m_style.pixelScale();
 
