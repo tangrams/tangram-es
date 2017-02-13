@@ -62,6 +62,10 @@ if(APPLICATION)
     ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp
     )
 
+  target_include_directories(${EXECUTABLE_NAME}
+    PUBLIC
+    ${GLFW_SOURCE_DIR}/include)
+
   target_link_libraries(${EXECUTABLE_NAME}
     ${CORE_LIBRARY}
     -lcurl glfw

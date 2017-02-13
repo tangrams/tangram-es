@@ -47,6 +47,10 @@ if(APPLICATION)
 
   add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES} ${OSX_RESOURCES})
 
+  target_include_directories(${EXECUTABLE_NAME}
+    PUBLIC
+    ${GLFW_SOURCE_DIR}/include)
+
   target_link_libraries(${EXECUTABLE_NAME}
     ${CORE_LIBRARY}
     glfw
