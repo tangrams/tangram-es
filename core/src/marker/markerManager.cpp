@@ -282,6 +282,7 @@ void MarkerManager::rebuildAll() {
     for (auto& entry : m_markers) {
         buildStyling(*entry);
         buildGeometry(*entry, m_zoom);
+        setVisible(entry->id(), entry->isVisible());
     }
 
 }
