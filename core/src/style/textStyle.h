@@ -38,6 +38,8 @@ public:
 
         float fontScale = 1;
         float lineSpacing = 0;
+
+        bool hasComplexShaping = false;
     };
 
     auto& context() const { return m_context; }
