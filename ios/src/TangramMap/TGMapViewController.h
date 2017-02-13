@@ -563,17 +563,24 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param screenPosition the logical screen position used for the feature selection query
 
- @note to receive events you must set a `TGMapViewDelegate` to the map view and implement
+ @note To receive events you must set a `TGMapViewDelegate` to the map view and implement
  `[TGMapViewDelegate mapView:didSelectLabel:atScreenPosition:]`.
  */
 - (void)pickLabelAt:(CGPoint)screenPosition;
 
 /**
- Selects a marker.
+ Selects a marker marked as <a href="https://mapzen.com/documentation/tangram/draw/#interactive">
+ `interactive`</a>.
+
+ To set a marker interactive, you must set it when styling it:
+
+ ```swift
+ markerSetStyling(markerIdentifier, styling: "{ style: 'points', interactive : true,  color: 'white', size: [30px, 30px], order: 500 }")
+ ```
 
  @param screenPosition the logical screen position used for the feature selection query
 
- @note to receive events you must set a `TGMapViewDelegate` to the map view and implement
+ @note To receive events you must set a `TGMapViewDelegate` to the map view and implement
  `[TGMapViewDelegate mapView:didSelectMarker:atScreenPosition:]`.
  */
 - (void)pickMarkerAt:(CGPoint)screenPosition;
