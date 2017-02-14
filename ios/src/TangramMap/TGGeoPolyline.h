@@ -9,6 +9,8 @@
 #import <Foundation/Foundation.h>
 #import "TGGeoPoint.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Helper class to contain a polyline geometry for use in `-[TGMapViewController markerSetPolyline:polyline:]`.
 
@@ -50,5 +52,7 @@
  Removes all coordinates of this polyline.
  */
 - (void)removeAll;
+
+NS_ASSUME_NONNULL_END
 
 @end

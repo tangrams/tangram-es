@@ -8,6 +8,8 @@
 #import <Foundation/Foundation.h>
 #import "TGGeoPoint.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  A label type used to differentiate icon and text labels when selecting them on a map view
  */
@@ -25,7 +27,7 @@ typedef NS_ENUM(NSInteger, TGLabelType) {
  */
 @interface TGLabelPickResult : NSObject
 
-- (instancetype) initWithCoordinates:(TGGeoPoint)coordinates type:(TGLabelType)type properties:(nonnull NSDictionary *)properties;
+- (instancetype) initWithCoordinates:(TGGeoPoint)coordinates type:(TGLabelType)type properties:(NSDictionary *)properties;
 
 /// The geographic coordinates of the selected label
 @property (readonly, nonatomic) TGGeoPoint coordinates;
@@ -35,5 +37,7 @@ typedef NS_ENUM(NSInteger, TGLabelType) {
 
 /// The set of data properties attached with the label
 @property (readonly, strong, nonatomic) NSDictionary* properties;
+
+NS_ASSUME_NONNULL_END
 
 @end

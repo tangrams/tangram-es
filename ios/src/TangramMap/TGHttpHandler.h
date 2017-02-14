@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  A network request completion callback, called when a download request of `TGHttpHandler`
  completed an asynchronous request.
@@ -70,5 +72,7 @@ typedef void(^TGDownloadCompletionHandler)(NSData*, NSURLResponse*, NSError*);
  @param diskCapacity the disk capacity of cache, in bytes
  */
 - (void)setCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity;
+
+NS_ASSUME_NONNULL_END
 
 @end

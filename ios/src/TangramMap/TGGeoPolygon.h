@@ -9,6 +9,8 @@
 #import <Foundation/Foundation.h>
 #import "TGGeoPoint.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Helper class to contain a polygon geometry for use in `-[TGMapViewController markerSetPolygon:polygon:]`.
 
@@ -80,5 +82,7 @@
  Removes all coordinates and rings of this polygon.
  */
 - (void)removeAll;
+
+NS_ASSUME_NONNULL_END
 
 @end

@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Represents a data structure to specify a YAML path and the corresponding value for a Tangram scene update.
 
@@ -38,12 +40,14 @@
 
  @return an initialized scene update
  */
-- (instancetype)initWithPath:(nullable NSString *)path value:(nullable NSString *)value;
+- (instancetype)initWithPath:(NSString *)path value:(NSString *)value;
 
 /// The YAML path for which the update will occur in the stylesheet used in the map view
 @property (copy, nonatomic) NSString* path;
 
 /// The YAML value to set in the update
 @property (copy, nonatomic) NSString* value;
+
+NS_ASSUME_NONNULL_END
 
 @end
