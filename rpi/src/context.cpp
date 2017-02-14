@@ -30,9 +30,8 @@ typedef struct {
     int     button;
 } Mouse;
 static Mouse mouse;
+static bool bRender;
 static unsigned char keyPressed;
-
-static bool bRender = true;
 
 // Mouse stuff
 //--------------------------------
@@ -463,10 +462,10 @@ unsigned char getKeyPressed(){
     return keyPressed;
 }
 
-void setRenderRequest(bool _request) {
-    bRender = _request;
+void setRenderRequest(bool _render) {
+    bRender = _render;
 }
 
 bool getRenderRequest() {
-    return bRender || isContinuousRendering();
+    return bRender;
 }
