@@ -361,6 +361,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
     CGColorSpaceRef colorSpace = CGImageGetColorSpace(cgImage);
     CGContextRef cgContext = CGBitmapContextCreate(bitmap.data(), w, h, 8, w * 4, colorSpace, kCGImageAlphaPremultipliedLast);
+    CGAffineTransform flipAffineTransform = CGAffineTransformMake(1, 0, 0, -1, 0, h);
+    CGContextConcatCTM(cgContext, flipAffineTransform);
     CGContextDrawImage(cgContext, CGRectMake(0, 0, w, h), cgImage);
     CGContextRelease(cgContext);
 
