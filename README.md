@@ -108,6 +108,12 @@ sudo apt-get install libglfw3-dev libicu-dev libfreetype6-dev libharfbuzz-dev
 
 ### iOS (demo application) ###
 
+Note: Make sure that xcpretty is installed on your machine. To install xcpretty:
+
+```bash
+gem install xcpretty
+```
+
 Building the iOS demo application requires Xcode 8.0 or newer. First, run:
 
 ```bash
@@ -120,7 +126,12 @@ This will generate an Xcode project that you can use to deploy on device or simu
 open build/ios/tangram.xcodeproj
 ```
 
-If you want to run on a device, be sure to set up the code signing identity and code sign the framework on copy (select target _tangram_ > _Build Phases_ > _Copy Files_ > _TangramMap.framework_ > _Code Sign On Copy_).
+Make sure to set up the code signing identity and code sign the framework on copy (select target _tangram_ > _Build Phases_ > _Copy Files_ > _TangramMap.framework_ > _Code Sign On Copy_).
+
+Note on Code Signing and Provisioning Profiles:
+* For Simulator: Does not need any code signing identity, so you can ignore any provionining profile failures on target _tangram_ > _General_ > _Signing_.
+* For Device: You will have to modify the _Bundle Identifier_ under target _tangram_ > _General_ > _Identity_ > _Bundle Identifier_, to something other than `com.mapzen.tangram`, since this needs to be unique. 
+
 
 ### iOS Binary Framework ###
 
