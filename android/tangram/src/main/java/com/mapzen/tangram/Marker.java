@@ -100,11 +100,11 @@ public class Marker {
     /**
      * Sets the coordinate location, where the marker should be displayed with animation.
      * @param point lat/lng location
-     * @param duration animation duration
+     * @param duration animation duration in milliseconds
      * @param ease animation type
      * @return whether the point was successfully set
      */
-    public boolean setPointEased(LngLat point, float duration, MapController.EaseType ease) {
+    public boolean setPointEased(LngLat point, int duration, MapController.EaseType ease) {
         if (point == null) {
             return false;
         }
