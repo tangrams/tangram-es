@@ -606,6 +606,10 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     p.lineSpacing = 2 * m_style.pixelScale();
 
+    if (p.interactive) {
+        p.labelOptions.featureId = _rule.selectionColor;
+    }
+
     return p;
 }
 
@@ -753,11 +757,7 @@ void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Typ
     uint32_t selectionColor = 0;
 
     if (_params.interactive) {
-        if (_rule.featureSelection) {
-            selectionColor = _rule.featureSelection->nextColorIdentifier();
-        } else {
-            selectionColor = _rule.selectionColor;
-        }
+        selectionColor = _rule.featureSelection->nextColorIdentifier();
     }
 
     m_labels.emplace_back(new TextLabel(_coordinates, _type, _params.labelOptions,
