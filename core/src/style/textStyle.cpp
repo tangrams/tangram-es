@@ -38,16 +38,14 @@ void TextStyle::constructVertexLayout() {
 void TextStyle::constructShaderProgram() {
 
     if (m_sdf) {
-        m_shaderProgram->setSourceStrings(SHADER_SOURCE(sdf_fs),
-                                          SHADER_SOURCE(point_vs));
+        m_shaderSource->setSourceStrings(SHADER_SOURCE(sdf_fs),
+                                         SHADER_SOURCE(point_vs));
     } else {
-        m_shaderProgram->setSourceStrings(SHADER_SOURCE(text_fs),
-                                          SHADER_SOURCE(point_vs));
+        m_shaderSource->setSourceStrings(SHADER_SOURCE(text_fs),
+                                         SHADER_SOURCE(point_vs));
     }
 
-    std::string defines = "#define TANGRAM_TEXT\n";
-
-    m_shaderProgram->addSourceBlock("defines", defines);
+    m_shaderSource->addSourceBlock("defines", "#define TANGRAM_TEXT\n");
 }
 
 void TextStyle::onBeginUpdate() {
@@ -130,7 +128,7 @@ std::unique_ptr<StyleBuilder> TextStyle::createBuilder() const {
 
 DynamicQuadMesh<TextVertex>& TextStyle::getMesh(size_t id) const {
     if (id >= m_meshes.size()) {
-        LOGE("Accesing inconsistent quad mesh");
+        LOGE("Accessing inconsistent quad mesh");
         assert(false);
         return *m_meshes[0];
     }

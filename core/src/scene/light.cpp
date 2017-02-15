@@ -7,6 +7,7 @@
 #include "shaders/lights_glsl.h"
 
 #include <sstream>
+#include <set>
 
 namespace Tangram {
 
@@ -45,59 +46,72 @@ void Light::setOrigin(LightOrigin origin) {
     m_origin = origin;
 }
 
-void Light::injectSourceBlocks(ShaderProgram& _shader) {
 
-    // Inject all needed #defines for this light instance
-    _shader.addSourceBlock("defines", getInstanceDefinesBlock(), false);
-
-    if (m_dynamic) {
-        // If the light is dynamic, initialize it using the corresponding uniform at the start of main()
-        _shader.addSourceBlock("setup", getInstanceName() + " = " + getUniformName() + ";", false);
-    }
-
-    _shader.addSourceBlock("__lighting", getClassBlock(), false);
-    _shader.addSourceBlock("__lighting", getInstanceBlock());
-    _shader.addSourceBlock("__lights_to_compute", getInstanceComputeBlock());
+void Light::setupProgram(RenderState& rs, const View& _view, ShaderProgram& _shader,
+                         LightUniforms& _uniforms) {
+    _shader.setUniformf(rs, _uniforms.ambient, m_ambient);
+    _shader.setUniformf(rs, _uniforms.diffuse, m_diffuse);
+    _shader.setUniformf(rs, _uniforms.specular, m_specular);
 }
 
-void Light::setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms) {
-    _uniforms.shader.setUniformf(rs, _uniforms.ambient, m_ambient);
-    _uniforms.shader.setUniformf(rs, _uniforms.diffuse, m_diffuse);
-    _uniforms.shader.setUniformf(rs, _uniforms.specular, m_specular);
-}
-
-void Light::assembleLights(std::map<std::string, std::vector<std::string>>& _sourceBlocks) {
+auto Light::assembleLights(const std::vector<std::unique_ptr<Light>>& _lights) ->
+    std::map<std::string, std::string> {
 
     // Create strings to contain the assembled lighting source code
     std::stringstream lighting;
 
-    // Concatenate all strings at the "__lighting" keys
-    // (struct definitions and function definitions)
-    for (const auto& string : _sourceBlocks["__lighting"]) {
-        lighting << '\n';
-        lighting << string;
+    std::map<std::string, std::string> sourceBlocks;
+
+    std::set<std::string> lightClasses;
+    std::set<std::string> lightDefines;
+    std::set<std::string> lightSetup;
+
+    for (auto& light : _lights) {
+        lightDefines.insert(light->getInstanceDefinesBlock());
+        lightClasses.insert(light->getClassBlock());
+        if (light->isDynamic()) {
+            lightSetup.insert(light->getInstanceName() + " = " + light->getUniformName() + ";");
+        }
     }
 
+    for (auto& string: lightClasses) {
+        lighting << '\n' << string;
+    }
+
+    std::stringstream definesBlock;
+    for (auto& string: lightDefines) {
+        definesBlock << '\n' << string;
+    }
+    sourceBlocks["defines"] = definesBlock.str();
+
+    std::stringstream setupBlock;
+    for (auto& string: lightSetup) {
+        setupBlock << '\n' << string;
+    }
+    sourceBlocks["setup"] = setupBlock.str();
+
+    for (auto& light : _lights) {
+        lighting << '\n' << light->getInstanceBlock();
+    }
     // After lights definitions are all added, add the main lighting functions
     std::string lightingBlock = SHADER_SOURCE(lights_glsl);
 
     // The main lighting functions each contain a tag where all light instances should be computed;
-    // Insert all of our "lights_to_compute" at this tag
-
-    std::string tag = "#pragma tangram: lights_to_compute";
     std::stringstream lights;
-    for (const auto& string : _sourceBlocks["__lights_to_compute"]) {
-        lights << '\n';
-        lights << string;
+    for (auto& light : _lights) {
+        lights << '\n' << light->getInstanceComputeBlock();
     }
 
+    const std::string tag = "#pragma tangram: lights_to_compute";
     size_t pos = lightingBlock.find(tag) + tag.length();
     lightingBlock.insert(pos, lights.str());
 
     // Place our assembled lighting source code back into the map of "source blocks";
     // The assembled strings will then be injected into a shader at the "vertex_lighting"
     // and "fragment_lighting" tags
-    _sourceBlocks["lighting"] = { lighting.str() + lightingBlock  };
+    sourceBlocks["lighting"] = lighting.str() + lightingBlock;
+
+    return sourceBlocks;
 }
 
 LightType Light::getType() {

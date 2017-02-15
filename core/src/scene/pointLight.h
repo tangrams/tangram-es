@@ -21,11 +21,12 @@ public:
     virtual void setRadius(float _outer);
     virtual void setRadius(float _inner, float _outer);
 
-    virtual void setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms) override;
+    virtual void setupProgram(RenderState& rs, const View& _view, ShaderProgram& _shader,
+                              LightUniforms& _uniforms) override;
 
     struct Uniforms : public LightUniforms {
-        Uniforms(ShaderProgram& _shader, const std::string& _name)
-            : LightUniforms(_shader, _name),
+        Uniforms(const std::string& _name)
+            : LightUniforms(_name),
               position(_name+".position"),
               attenuation(_name+".attenuation"),
               innerRadius(_name+".innerRadius"),
@@ -39,7 +40,7 @@ public:
 
     auto getPosition() const -> UnitVec<glm::vec3> { return m_position; }
 
-    std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) override;
+    std::unique_ptr<LightUniforms> getUniforms() override;
 
 protected:
 

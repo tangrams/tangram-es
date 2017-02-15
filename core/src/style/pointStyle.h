@@ -56,6 +56,8 @@ public:
 
     virtual std::unique_ptr<StyleBuilder> createBuilder() const override;
 
+    virtual void build(const Scene& _scene) override;
+
     virtual void constructVertexLayout() override;
     virtual void constructShaderProgram() override;
 

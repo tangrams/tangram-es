@@ -17,14 +17,12 @@
 #include "log.h"
 
 #include "shaders/rasters_glsl.h"
-#include "shaders/selection_fs.h"
 
 namespace Tangram {
 
 Style::Style(std::string _name, Blending _blendMode, GLenum _drawMode, bool _selection) :
     m_name(_name),
-    m_shaderProgram(std::make_unique<ShaderProgram>()),
-    m_selectionProgram(std::make_unique<ShaderProgram>()),
+    m_shaderSource(std::make_unique<ShaderSource>()),
     m_blend(_blendMode),
     m_drawMode(_drawMode),
     m_selection(_selection) {
@@ -41,62 +39,96 @@ const std::vector<std::string>& Style::builtInStyleNames() {
     return builtInStyleNames;
 }
 
-void Style::constructSelectionShaderProgram() {
-
-    if (m_selection) {
-        m_selectionProgram->setDescription("selection_program {style:" + m_name + "}");
-        m_selectionProgram->setSourceStrings(SHADER_SOURCE(selection_fs),
-                                             m_shaderProgram->getVertexShaderSource());
-
-        m_selectionProgram->addSourceBlock("defines", "#define TANGRAM_FEATURE_SELECTION\n", false);
-    }
-}
-
 void Style::build(const Scene& _scene) {
 
     constructVertexLayout();
     constructShaderProgram();
 
-    m_shaderProgram->setDescription("{style:" + m_name + "}");
-
-    switch (m_lightingType) {
-        case LightingType::vertex:
-            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n", false);
-            break;
-        case LightingType::fragment:
-            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n", false);
-            break;
-        default:
-            break;
-    }
-
     if (m_blend == Blending::inlay) {
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_BLEND_INLAY\n", false);
+        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_BLEND_INLAY\n", false);
     } else if (m_blend == Blending::overlay) {
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_BLEND_OVERLAY\n", false);
+        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_BLEND_OVERLAY\n", false);
     }
 
     if (m_material.material) {
-        m_material.uniforms = m_material.material->injectOnProgram(*m_shaderProgram);
+        m_material.uniforms = m_material.material->injectOnProgram(*m_shaderSource);
     }
 
     if (m_lightingType != LightingType::none) {
+
+        switch (m_lightingType) {
+        case LightingType::vertex:
+            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_LIGHTING_VERTEX\n", false);
+            break;
+        case LightingType::fragment:
+            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_LIGHTING_FRAGMENT\n", false);
+            break;
+        default:
+            break;
+        }
+
         for (auto& light : _scene.lights()) {
-            auto uniforms = light->injectOnProgram(*m_shaderProgram);
+            auto uniforms = light->getUniforms();
             if (uniforms) {
                 m_lights.emplace_back(light.get(), std::move(uniforms));
             }
+        }
+        for (auto& block : _scene.lightBlocks()) {
+            m_shaderSource->addSourceBlock(block.first, block.second);
         }
     }
 
     setupRasters(_scene.tileSources());
 
-    constructSelectionShaderProgram();
-}
+    const auto& blocks = m_shaderSource->getSourceBlocks();
+    if (blocks.find("color") != blocks.end() ||
+        blocks.find("filter") != blocks.end() ||
+        blocks.find("raster") != blocks.end()) {
+        m_hasColorShaderBlock = true;
+    }
 
-void Style::setMaterial(const std::shared_ptr<Material>& _material) {
-    m_material.material = _material;
-    m_material.uniforms.reset();
+    std::string vertSrc = m_shaderSource->buildVertexSource();
+    std::string fragSrc = m_shaderSource->buildFragmentSource();
+
+    for (auto& s : _scene.styles()) {
+        auto& prg = s->m_shaderProgram;
+        if (!prg) { break; }
+        if (prg->vertexShaderSource() == vertSrc &&
+            prg->fragmentShaderSource() == fragSrc) {
+            m_shaderProgram = prg;
+            break;
+        }
+    }
+    if (!m_shaderProgram) {
+        m_shaderProgram = std::make_shared<ShaderProgram>();
+        m_shaderProgram->setDescription("{style:" + m_name + "}");
+        m_shaderProgram->setShaderSource(vertSrc, fragSrc);
+    }
+
+    if (m_selection) {
+        std::string vertSrc = m_shaderSource->buildSelectionVertexSource();
+        std::string fragSrc = m_shaderSource->buildSelectionFragmentSource();
+
+        for (auto& s : _scene.styles()) {
+            if (!s->m_selection) { continue; }
+
+            auto& prg = s->m_selectionProgram;
+            if (!prg) { break; }
+            if (prg->vertexShaderSource() == vertSrc &&
+                prg->fragmentShaderSource() == fragSrc) {
+                m_selectionProgram = prg;
+                break;
+            }
+        }
+        if (!m_selectionProgram) {
+            m_selectionProgram = std::make_shared<ShaderProgram>();
+            m_selectionProgram->setDescription("selection_program {style:" + m_name + "}");
+            m_selectionProgram->setShaderSource(vertSrc, fragSrc);
+        }
+    }
+
+    // Clear ShaderSource builder
+    m_shaderSource.reset();
 }
 
 void Style::setLightingType(LightingType _type) {
@@ -122,41 +154,38 @@ void Style::setupSceneShaderUniforms(RenderState& rs, Scene& _scene, UniformBloc
             texture->bind(rs, rs.currentTextureUnit());
 
             m_shaderProgram->setUniformi(rs, name, rs.currentTextureUnit());
-        } else {
+        } else if (value.is<bool>()) {
+            m_shaderProgram->setUniformi(rs, name, value.get<bool>());
+        } else if(value.is<float>()) {
+            m_shaderProgram->setUniformf(rs, name, value.get<float>());
+        } else if(value.is<glm::vec2>()) {
+            m_shaderProgram->setUniformf(rs, name, value.get<glm::vec2>());
+        } else if(value.is<glm::vec3>()) {
+            m_shaderProgram->setUniformf(rs, name, value.get<glm::vec3>());
+        } else if(value.is<glm::vec4>()) {
+            m_shaderProgram->setUniformf(rs, name, value.get<glm::vec4>());
+        } else if (value.is<UniformArray1f>()) {
+            m_shaderProgram->setUniformf(rs, name, value.get<UniformArray1f>());
+        } else if (value.is<UniformTextureArray>()) {
+            UniformTextureArray& textureUniformArray = value.get<UniformTextureArray>();
+            textureUniformArray.slots.clear();
 
-            if (value.is<bool>()) {
-                m_shaderProgram->setUniformi(rs, name, value.get<bool>());
-            } else if(value.is<float>()) {
-                m_shaderProgram->setUniformf(rs, name, value.get<float>());
-            } else if(value.is<glm::vec2>()) {
-                m_shaderProgram->setUniformf(rs, name, value.get<glm::vec2>());
-            } else if(value.is<glm::vec3>()) {
-                m_shaderProgram->setUniformf(rs, name, value.get<glm::vec3>());
-            } else if(value.is<glm::vec4>()) {
-                m_shaderProgram->setUniformf(rs, name, value.get<glm::vec4>());
-            } else if (value.is<UniformArray1f>()) {
-                m_shaderProgram->setUniformf(rs, name, value.get<UniformArray1f>());
-            } else if (value.is<UniformTextureArray>()) {
-                UniformTextureArray& textureUniformArray = value.get<UniformTextureArray>();
-                textureUniformArray.slots.clear();
+            for (const auto& textureName : textureUniformArray.names) {
+                std::shared_ptr<Texture> texture = _scene.getTexture(textureName);
 
-                for (const auto& textureName : textureUniformArray.names) {
-                    std::shared_ptr<Texture> texture = _scene.getTexture(textureName);
-
-                    if (!texture) {
-                        LOGN("Texture with texture name %s is not available to be sent as uniform",
-                            textureName.c_str());
-                        continue;
-                    }
-
-                    texture->update(rs, rs.nextAvailableTextureUnit());
-                    texture->bind(rs, rs.currentTextureUnit());
-
-                    textureUniformArray.slots.push_back(rs.currentTextureUnit());
+                if (!texture) {
+                    LOGN("Texture with texture name %s is not available to be sent as uniform",
+                         textureName.c_str());
+                    continue;
                 }
 
-                m_shaderProgram->setUniformi(rs, name, textureUniformArray);
+                texture->update(rs, rs.nextAvailableTextureUnit());
+                texture->bind(rs, rs.currentTextureUnit());
+
+                textureUniformArray.slots.push_back(rs.currentTextureUnit());
             }
+
+            m_shaderProgram->setUniformi(rs, name, textureUniformArray);
         }
     }
 }
@@ -179,20 +208,21 @@ void Style::setupRasters(const std::vector<std::shared_ptr<TileSource>>& _source
 
     // Inject shader defines for raster sampling and uniforms
     if (m_rasterType == RasterType::normal) {
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_NORMAL\n", false);
+        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_NORMAL\n", false);
     } else if (m_rasterType == RasterType::color) {
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_COLOR\n", false);
+        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_RASTER_TEXTURE_COLOR\n", false);
     }
 
-    m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_NUM_RASTER_SOURCES "
+    m_shaderSource->addSourceBlock("defines", "#define TANGRAM_NUM_RASTER_SOURCES "
             + std::to_string(numRasterSource) + "\n", false);
-    m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n", false);
+    m_shaderSource->addSourceBlock("defines", "#define TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n", false);
 
-    m_shaderProgram->addSourceBlock("raster", SHADER_SOURCE(rasters_glsl));
+    m_shaderSource->addSourceBlock("raster", SHADER_SOURCE(rasters_glsl));
 }
 
 
-void Style::setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view, Scene& _scene, UniformBlock& _uniforms) {
+void Style::setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const View& _view,
+                                Scene& _scene, UniformBlock& _uniforms) {
 
     // Reset the currently used texture unit to 0
     rs.resetTextureUnit();
@@ -203,12 +233,12 @@ void Style::setupShaderUniforms(RenderState& rs, ShaderProgram& _program, const 
     _program.setUniformf(rs, _uniforms.uDevicePixelRatio, m_pixelScale);
 
     if (m_material.uniforms) {
-        m_material.material->setupProgram(rs, *m_material.uniforms);
+        m_material.material->setupProgram(rs, *m_shaderProgram, *m_material.uniforms);
     }
 
     // Set up lights
     for (const auto& light : m_lights) {
-        light.light->setupProgram(rs, _view, *light.uniforms);
+        light.light->setupProgram(rs, _view, *m_shaderProgram, *light.uniforms);
     }
 
     // Set Map Position
@@ -432,7 +462,7 @@ bool StyleBuilder::checkRule(const DrawRule& _rule) const {
     uint32_t checkOrder;
 
     if (!_rule.get(StyleParamKey::color, checkColor)) {
-        if (!m_hasColorShaderBlock) {
+        if (!style().hasColorShaderBlock()) {
             return false;
         }
     }
@@ -470,15 +500,6 @@ bool StyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     }
 
     return added;
-}
-
-StyleBuilder::StyleBuilder(const Style& _style) {
-    const auto& blocks = _style.getShaderProgram()->getSourceBlocks();
-    if (blocks.find("color") != blocks.end() ||
-        blocks.find("filter") != blocks.end() ||
-        blocks.find("raster") != blocks.end()) {
-        m_hasColorShaderBlock = true;
-    }
 }
 
 bool StyleBuilder::addPoint(const Point& _point, const Properties& _props, const DrawRule& _rule) {

@@ -111,6 +111,9 @@ void PolylineStyle::setDashBackgroundColor(const glm::vec4 _dashBackgroundColor)
 
 void PolylineStyle::constructShaderProgram() {
 
+    m_shaderSource->setSourceStrings(SHADER_SOURCE(polyline_fs),
+                                     SHADER_SOURCE(polyline_vs));
+
     if (m_dashArray.size() > 0) {
         TextureOptions options {GL_RGBA, GL_RGBA, {GL_NEAREST, GL_NEAREST}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
         // provides precision for dash patterns that are a fraction of line width
@@ -120,7 +123,7 @@ void PolylineStyle::constructShaderProgram() {
         m_texture->setData(pixels.data(), pixels.size());
 
         if (m_dashBackground) {
-            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_BACKGROUND_COLOR vec3(" +
+            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_LINE_BACKGROUND_COLOR vec3(" +
                 std::to_string(m_dashBackgroundColor.r) + ", " +
                 std::to_string(m_dashBackgroundColor.g) + ", " +
                 std::to_string(m_dashBackgroundColor.b) + ")\n");
@@ -128,21 +131,18 @@ void PolylineStyle::constructShaderProgram() {
     }
 
     if (m_dashArray.size() > 0 || m_texture) {
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_LINE_TEXTURE\n", false);
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_ALPHA_TEST 0.25\n", false);
+        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_LINE_TEXTURE\n", false);
+        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_ALPHA_TEST 0.25\n", false);
         if (m_dashArray.size() > 0) {
-            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_DASHLINE_TEX_SCALE " +
+            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_DASHLINE_TEX_SCALE " +
                                             std::to_string(dash_scale) + "\n", false);
         } else {
-            m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_DASHLINE_TEX_SCALE 1.0\n", false);
+            m_shaderSource->addSourceBlock("defines", "#define TANGRAM_DASHLINE_TEX_SCALE 1.0\n", false);
         }
     }
 
-    m_shaderProgram->setSourceStrings(SHADER_SOURCE(polyline_fs),
-                                      SHADER_SOURCE(polyline_vs));
-
     if (m_texCoordsGeneration) {
-        m_shaderProgram->addSourceBlock("defines", "#define TANGRAM_USE_TEX_COORDS\n");
+        m_shaderSource->addSourceBlock("defines", "#define TANGRAM_USE_TEX_COORDS\n");
     }
 }
 
@@ -185,7 +185,7 @@ public:
     std::unique_ptr<StyledMesh> build() override;
 
     PolylineStyleBuilder(const PolylineStyle& _style)
-        : StyleBuilder(_style), m_style(_style),
+        : m_style(_style),
           m_meshData(2) {}
 
     void addMesh(const Line& _line, const Parameters& _params);

@@ -38,15 +38,12 @@ static inline std::string lightOriginString(LightOrigin origin) {
 }
 
 struct LightUniforms {
-    LightUniforms(ShaderProgram& _shader, const std::string& _name)
-        : shader(_shader),
-          ambient(_name+".ambient"),
+    LightUniforms(const std::string& _name)
+        : ambient(_name+".ambient"),
           diffuse(_name+".diffuse"),
           specular(_name+".specular") {}
 
     virtual ~LightUniforms() {}
-
-    ShaderProgram& shader;
 
     UniformLocation ambient;
     UniformLocation diffuse;
@@ -96,20 +93,17 @@ public:
      * Inject the needed lines of GLSL code on the shader to make this light work
      * Returns LightUniforms for passing to setupProgram if this light is dynamic
      */
-    virtual std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) = 0;
+    virtual std::unique_ptr<LightUniforms> getUniforms() = 0;
 
     /*  Pass the uniforms for this particular DYNAMICAL light on the passed shader */
-    virtual void setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms);
+    virtual void setupProgram(RenderState& rs, const View& _view, ShaderProgram& _shader,
+                              LightUniforms& _uniforms);
 
     /*  STATIC Function that compose sourceBlocks with Lights on a ProgramShader */
-    static void assembleLights(std::map<std::string, std::vector<std::string>>& _sourceBlocks);
+    static std::map<std::string, std::string>  assembleLights(const std::vector<std::unique_ptr<Light>>& _lights);
 
+    bool isDynamic() const { return m_dynamic; }
 protected:
-
-    /*
-     * Inject the needed lines of GLSL code on the shader to make this light work
-     */
-    void injectSourceBlocks(ShaderProgram& _shader);
 
     /*  Get the uniform name of the DYNAMICAL light */
     virtual std::string getUniformName();

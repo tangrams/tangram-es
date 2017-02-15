@@ -38,8 +38,8 @@ void DebugStyle::constructVertexLayout() {
 
 void DebugStyle::constructShaderProgram() {
 
-    m_shaderProgram->setSourceStrings(SHADER_SOURCE(debug_fs),
-                                      SHADER_SOURCE(debug_vs));
+    m_shaderSource->setSourceStrings(SHADER_SOURCE(debug_fs),
+                                     SHADER_SOURCE(debug_vs));
 
 }
 
@@ -72,8 +72,7 @@ struct DebugStyleBuilder : public StyleBuilder {
 
     const Style& style() const override { return m_style; }
 
-    DebugStyleBuilder(const DebugStyle& _style)
-        : StyleBuilder(_style), m_style(_style) {}
+    DebugStyleBuilder(const DebugStyle& _style) : m_style(_style) {}
 
 };
 

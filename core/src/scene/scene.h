@@ -72,6 +72,7 @@ public:
     auto& layers() { return m_layers; };
     auto& styles() { return m_styles; };
     auto& lights() { return m_lights; };
+    auto& lightBlocks() { return m_lightShaderBlocks; };
     auto& textures() { return m_textures; };
     auto& functions() { return m_jsFunctions; };
     auto& spriteAtlases() { return m_spriteAtlases; };
@@ -89,6 +90,7 @@ public:
     const auto& layers() const { return m_layers; };
     const auto& styles() const { return m_styles; };
     const auto& lights() const { return m_lights; };
+    const auto& lightBlocks() const { return m_lightShaderBlocks; };
     const auto& functions() const { return m_jsFunctions; };
     const auto& mapProjection() const { return m_mapProjection; };
     const auto& fontContext() const { return m_fontContext; }
@@ -140,7 +142,10 @@ private:
     std::vector<DataLayer> m_layers;
     std::vector<std::shared_ptr<TileSource>> m_tileSources;
     std::vector<std::unique_ptr<Style>> m_styles;
+
     std::vector<std::unique_ptr<Light>> m_lights;
+    std::map<std::string, std::string> m_lightShaderBlocks;
+
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
 

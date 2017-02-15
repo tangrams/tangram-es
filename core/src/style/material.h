@@ -18,6 +18,7 @@ namespace Tangram {
 class RenderState;
 class Texture;
 class ShaderProgram;
+class ShaderSource;
 
 enum class MappingType {
     uv,
@@ -34,10 +35,6 @@ struct MaterialTexture {
 };
 
 struct MaterialUniforms {
-
-    MaterialUniforms(ShaderProgram& _shader) : shader(_shader) {}
-
-    ShaderProgram& shader;
 
     UniformLocation emission{"u_material.emission"};
     UniformLocation emissionTexture{"material_emission_texture"};
@@ -106,10 +103,11 @@ public:
     void setNormal(MaterialTexture _normalTexture);
 
     /*  Inject the needed lines of GLSL code on the shader to make this material work */
-    virtual std::unique_ptr<MaterialUniforms> injectOnProgram(ShaderProgram& _shader);
+    virtual std::unique_ptr<MaterialUniforms> injectOnProgram(ShaderSource& _shader);
 
     /*  Method to pass it self as a uniform to the shader program */
-    virtual void setupProgram(RenderState& rs, MaterialUniforms& _uniforms);
+    virtual void setupProgram(RenderState& rs, ShaderProgram& _shader,
+                              MaterialUniforms& _uniforms);
 
     bool hasEmission() const { return m_bEmission; }
     bool hasAmbient() const { return m_bAmbient; }

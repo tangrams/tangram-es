@@ -15,19 +15,20 @@ public:
     /*	Set the direction of the light */
     virtual void setDirection(const glm::vec3& _dir);
 
-    virtual void setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms) override;
+    virtual void setupProgram(RenderState& rs, const View& _view, ShaderProgram& _shader,
+                              LightUniforms& _uniforms) override;
 
     struct Uniforms : public LightUniforms {
 
-        Uniforms(ShaderProgram& _shader, const std::string& _name)
-            : LightUniforms(_shader, _name),
+        Uniforms(const std::string& _name)
+            : LightUniforms(_name),
               direction(_name+".direction") {}
 
         UniformLocation direction;
     };
 
 
-    std::unique_ptr<LightUniforms> injectOnProgram(ShaderProgram& _shader) override;
+    std::unique_ptr<LightUniforms> getUniforms() override;
 
 protected:
 

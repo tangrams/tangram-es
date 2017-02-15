@@ -23,25 +23,25 @@ void DirectionalLight::setDirection(const glm::vec3 &_dir) {
     m_direction = glm::normalize(_dir);
 }
 
-std::unique_ptr<LightUniforms> DirectionalLight::injectOnProgram(ShaderProgram& _shader) {
-    injectSourceBlocks(_shader);
+std::unique_ptr<LightUniforms> DirectionalLight::getUniforms() {
 
     if (!m_dynamic) { return nullptr; }
 
-    return std::make_unique<Uniforms>(_shader, getUniformName());
+    return std::make_unique<Uniforms>(getUniformName());
 }
 
-void DirectionalLight::setupProgram(RenderState& rs, const View& _view, LightUniforms& _uniforms) {
+void DirectionalLight::setupProgram(RenderState& rs, const View& _view, ShaderProgram& _shader,
+                                    LightUniforms& _uniforms) {
 
     glm::vec3 direction = m_direction;
     if (m_origin == LightOrigin::world) {
         direction = _view.getNormalMatrix() * direction;
     }
 
-    Light::setupProgram(rs, _view, _uniforms);
+    Light::setupProgram(rs, _view, _shader, _uniforms);
 
     auto& u = static_cast<DirectionalLight::Uniforms&>(_uniforms);
-    u.shader.setUniformf(rs, u.direction, direction);
+    _shader.setUniformf(rs, u.direction, direction);
 }
 
 std::string DirectionalLight::getClassBlock() {
