@@ -41,6 +41,7 @@ IOS_FRAMEWORK_BUILD_DIR = build/ios-framework
 IOS_FRAMEWORK_SIM_BUILD_DIR = build/ios-framework-sim
 IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR = build/ios-framework-universal
 IOS_SIM_BUILD_DIR = build/ios-sim
+IOS_DOCS_BUILD_DIR = build/ios-docs
 RPI_BUILD_DIR = build/rpi
 LINUX_BUILD_DIR = build/linux
 TESTS_BUILD_DIR = build/tests
@@ -243,6 +244,7 @@ ios: ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
 		-configuration ${CONFIG} | ${XCPRETTY}
 
 ios-docs:
+	@mkdir -p ${IOS_DOCS_BUILD_DIR}
 	@cd ios && \
 	jazzy --config jazzy.yml
 
