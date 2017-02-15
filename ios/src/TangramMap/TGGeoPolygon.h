@@ -1,9 +1,9 @@
 //
 //  TGGeoPolygon.h
-//  tangram
+//  TangramMap
 //
 //  Created by Karim Naaji on 10/27/16.
-//
+//  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -62,21 +62,21 @@ NS_ASSUME_NONNULL_BEGIN
 
  @return a pointer to the list of polygon rings.
  */
-- (int*)rings;
+- (int *)rings;
 
 /**
  The polygon coordinates count.
 
  @return the number of geographic coordinates of this polygon
  */
-- (unsigned int)count;
+- (NSUInteger)count;
 
 /**
  The polygon rings count.
 
  @return the number of rings of this polygon
  */
-- (unsigned int)ringsCount;
+- (NSUInteger)ringsCount;
 
 /**
  Removes all coordinates and rings of this polygon.

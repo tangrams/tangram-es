@@ -1,9 +1,9 @@
 //
-//  TGFontConverter.m
-//  tangram
+//  TGFontConverter.mm
+//  TangramMap
 //
 //  Created by Karim Naaji on 11/01/16.
-//
+//  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
 #import "TGFontConverter.h"

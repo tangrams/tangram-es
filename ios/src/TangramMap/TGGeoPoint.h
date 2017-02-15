@@ -1,9 +1,9 @@
 //
 //  TGGeoPoint.h
-//  tangram
+//  TangramMap
 //
 //  Created by Karim Naaji on 10/27/16.
-//
+//  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
 #pragma once
@@ -23,7 +23,7 @@ typedef struct TGGeoPoint TGGeoPoint;
 
  @param lon the longitude coordinate
  @param lat the latitude coordinate
- @return a `TGGoPoint` holding the longitude and latitude
+ @return a `TGGeoPoint` holding the longitude and latitude
  */
 static inline TGGeoPoint TGGeoPointMake(double lon, double lat)
 {

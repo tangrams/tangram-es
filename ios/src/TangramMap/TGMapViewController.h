@@ -1,10 +1,11 @@
 //
 //  TGMapViewController.h
-//  TangramiOS
+//  TangramMap
 //
 //  Created by Matt Blair on 8/25/14.
 //  Updated by Matt Smollinger on 7/29/16.
-//  Copyright (c) 2016 Mapzen. All rights reserved.
+//  Updated by Karim Naaji on 2/15/17.
+//  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
@@ -34,7 +35,7 @@ typedef NS_ENUM(NSInteger, TGCameraType) {
 };
 
 /**
- These defines describe an ease type function to be used for camera or other transition animation.
+ These enumerations describe an ease type function to be used for camera or other transition animation.
  The function is being used to interpolate between the start and end position of the animation.
  */
 typedef NS_ENUM(NSInteger, TGEaseType) {
@@ -88,9 +89,15 @@ NS_ASSUME_NONNULL_BEGIN
  method if so.
 
  @note Those methods are all **optional**.
+ All the screen positions in this interface are in _logical pixel_ or _drawing coordinate system_
+ (based on a `UIKit` coordinate system); which is independent of the phone pixel density. Refer the
+ <a href="https://developer.apple.com/library/content/documentation/2DDrawing/Conceptual/DrawingPrintingiOS/GraphicsDrawingOverview/GraphicsDrawingOverview.html">Apple documentation</a>
+ _Coordinate Systems and Drawing in iOS_ for more informations.
+
  */
 @protocol TGRecognizerDelegate <NSObject>
 @optional
+
 /**
  Whether the map view should handle a single tap gesture.
 
@@ -99,13 +106,7 @@ NS_ASSUME_NONNULL_BEGIN
  @return Whether the map view should proceed by handling this gesture behavior
  */
 - (BOOL)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer shouldRecognizeSingleTapGesture:(CGPoint)location;
-/**
- Called when the map view just handled a single tap gesture.
 
- @param recognizer the `UIGestureRecognizer` associated with the gesture
- @param location the logical pixel location of the recognized gesture
- */
-- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeSingleTapGesture:(CGPoint)location;
 /**
  Whether the map view should handle a double tap gesture.
 
@@ -114,13 +115,7 @@ NS_ASSUME_NONNULL_BEGIN
  @return Whether the map view should proceed by handling this gesture behavior
  */
 - (BOOL)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer shouldRecognizeDoubleTapGesture:(CGPoint)location;
-/**
- Called when the map view just handled a single double gesture.
 
- @param recognizer the `UIGestureRecognizer` associated with the gesture
- @param location the logical pixel location of the recognized gesture
- */
-- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeDoubleTapGesture:(CGPoint)location;
 /**
  Whether the map view should handle a long press gesture.
 
@@ -129,13 +124,7 @@ NS_ASSUME_NONNULL_BEGIN
  @return Whether the map view should proceed by handling this gesture behavior
  */
 - (BOOL)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer shouldRecognizeLongPressGesture:(CGPoint)location;
-/**
- Called when the map view just handled a long press gesture.
 
- @param recognizer the `UIGestureRecognizer` associated with the gesture
- @param location the logical pixel location of the recognized gesture
- */
-- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location;
 /**
  Whether the map view should handle a pan gesture.
 
@@ -144,13 +133,7 @@ NS_ASSUME_NONNULL_BEGIN
  @return Whether the map view should proceed by handling this gesture behavior
  */
 - (BOOL)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer shouldRecognizePanGesture:(CGPoint)displacement;
-/**
- Called when the map view just handled a pan gesture.
 
- @param recognizer the `UIGestureRecognizer` associated with the gesture
- @param displacement the logical pixel displacement of the recognized gesture
- */
-- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizePanGesture:(CGPoint)displacement;
 /**
  Whether the map view should handle a pinch gesture.
 
@@ -159,13 +142,8 @@ NS_ASSUME_NONNULL_BEGIN
  @return Whether the map view should proceed by handling this gesture behavior
  */
 - (BOOL)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer shouldRecognizePinchGesture:(CGPoint)location;
-/**
- Called when the map view just handled a pinch gesture.
 
- @param recognizer the `UIGestureRecognizer` associated with the gesture
- @param location the logical pixel location of the recognized gesture
- */
-- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizePinchGesture:(CGPoint)location;
+
 /**
  Whether the map view should handle a rotation gesture.
 
@@ -174,13 +152,7 @@ NS_ASSUME_NONNULL_BEGIN
  @return Whether the map view should proceed by handling this gesture behavior
  */
 - (BOOL)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer shouldRecognizeRotationGesture:(CGPoint)location;
-/**
- Called when the map view just handled a rotation gesture.
 
- @param recognizer the `UIGestureRecognizer` associated with the gesture
- @param location the logical pixel location of the recognized gesture
- */
-- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeRotationGesture:(CGPoint)location;
 /**
  Whether the map view should handle a shove gesture.
 
@@ -189,6 +161,55 @@ NS_ASSUME_NONNULL_BEGIN
  @return Whether the map view should proceed by handling this gesture behavior
  */
 - (BOOL)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer shouldRecognizeShoveGesture:(CGPoint)displacement;
+
+/**
+ Called when the map view just handled a single tap gesture.
+
+ @param recognizer the `UIGestureRecognizer` associated with the gesture
+ @param location the logical pixel location of the recognized gesture
+ */
+- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeSingleTapGesture:(CGPoint)location;
+
+/**
+ Called when the map view just handled a single double gesture.
+
+ @param recognizer the `UIGestureRecognizer` associated with the gesture
+ @param location the logical pixel location of the recognized gesture
+ */
+- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeDoubleTapGesture:(CGPoint)location;
+
+/**
+ Called when the map view just handled a long press gesture.
+
+ @param recognizer the `UIGestureRecognizer` associated with the gesture
+ @param location the logical pixel location of the recognized gesture
+ */
+- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location;
+
+/**
+ Called when the map view just handled a pan gesture.
+
+ @param recognizer the `UIGestureRecognizer` associated with the gesture
+ @param displacement the logical pixel displacement of the recognized gesture
+ */
+- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizePanGesture:(CGPoint)displacement;
+
+/**
+ Called when the map view just handled a pinch gesture.
+
+ @param recognizer the `UIGestureRecognizer` associated with the gesture
+ @param location the logical pixel location of the recognized gesture
+ */
+- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizePinchGesture:(CGPoint)location;
+
+/**
+ Called when the map view just handled a rotation gesture.
+
+ @param recognizer the `UIGestureRecognizer` associated with the gesture
+ @param location the logical pixel location of the recognized gesture
+ */
+- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeRotationGesture:(CGPoint)location;
+
 /**
  Called when the map view just handled a shove gesture.
 
@@ -196,6 +217,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param displacement the logical pixel displacement of the recognized gesture
  */
 - (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeShoveGesture:(CGPoint)displacement;
+
 @end
 
 NS_ASSUME_NONNULL_END
@@ -256,8 +278,8 @@ NS_ASSUME_NONNULL_END
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- `TGMapViewController` is a flexible and customizable map view, allowing you to embed
- it inside a <a href="https://developer.apple.com/reference/glkit/glkview">GLKView</a> component.
+ `TGMapViewController` is a flexible and customizable map view managing the lifecycle of a
+ <a href="https://developer.apple.com/reference/glkit/glkview">GLKView</a> component.
  This view provides default gesture handlers for tap, double tap, long press, pan,
  pinch, rotate and shove.
 
@@ -267,7 +289,7 @@ NS_ASSUME_NONNULL_BEGIN
  This view uses scenes descibed by the
   <a href="https://mapzen.com/documentation/tangram/">Tangram YAML scene syntax</a>
  allowing you to fully customize your map description using your own data.
- Some already made basemap styles can be found
+ Some pre-made basemap styles can be found
  <a href="https://mapzen.com/documentation/cartography/styles/">here</a> using Mapzen
  data sources.
 
@@ -278,20 +300,26 @@ NS_ASSUME_NONNULL_BEGIN
  let sceneURL = "https://mapzen.com/carto/walkabout-style-more-labels/walkabout-style-more-labels.yaml";
  view.loadSceneFile(sceneURL, sceneUpdates: [ TGSceneUpdate(path: "sources.mapzen.url_params", value: "{ api_key: \(YOUR_API_KEY) }") ]);
  ```
+ @note All the screen positions used in this inteface are in _logical pixel_ or _drawing coordinate
+ system_ (based on a `UIKit` coordinate system); which is independent of the phone pixel density. Refer the
+ <a href="https://developer.apple.com/library/content/documentation/2DDrawing/Conceptual/DrawingPrintingiOS/GraphicsDrawingOverview/GraphicsDrawingOverview.html">Apple documentation</a>
+ _Coordinate Systems and Drawing in iOS_ for more informations.
+
  */
 @interface TGMapViewController : GLKViewController <UIGestureRecognizerDelegate>
 
 /**
  If continuous rendering is set to `true`, the map view will render continuously, otherwise,
- the map will render only when necessary.
+ the map will render only when an event occurs on the map (gesture, animation, view update...).
+
  Some styles can be set to be `animated` and this default value will be set appropriately,
  see the <a href="https://mapzen.com/documentation/tangram/scene/#animated">
  style parameter</a> for more details.
 
  @note Any changes to this value will override the default induced value from the `animated`
  style parameter.
- Before making changes to this value, make sure battery usage is not something critical
- for your application.
+ Setting this parameter to true will negatively impact battery life if left set for extended periods
+ of time. Before setting, make sure battery usage is not something critical to your application.
  */
 @property (assign, nonatomic) BOOL continuous;
 
@@ -370,18 +398,18 @@ NS_ASSUME_NONNULL_BEGIN
 
  Example on how to add a point to the map for a geographic coordinate.
 
- ```objc
- TGMapMarkerId identifier = [view markerAdd];
- [view markerSetStyling:identifier styling:@"{ style: 'points', color: 'white', size: [25px, 25px], order:500 }"];
- [view markerSetPoint:identifier coordinates:coordinate];
+ ```swift
+ var identifier = view.markerAdd()
+ view.markerSetStyling(identifier, styling: "{ style: 'points', color: 'white', size: [25px, 25px], order:500 }")
+ view.markerSetPoint(identifier, coordinates: TGGeoPointMake(longitude, latitude))
  ```
 
- @return a marker identifier
+ @return a marker identifier, 0 if adding a marker failed
  @note The marker should be appropriately styled using `-markerSetStyling:styling:`
  and a type must be set (point, polyline, polygon) through `markerSetPoint*`, `markerSetPolyline` or `markerSetPolygon`
  for it to be visible.
 
- @note A marker identifier of 0 is non-valid.
+ @note May return 0 if adding a marker failed, a marker identifier of 0 is non-valid.
  */
 - (TGMapMarkerId)markerAdd;
 
@@ -411,19 +439,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Similar to `-[TGMapViewController markerSetPoint:coordinates:]` except that the point will transition to the
- geographic coordinate with a transition of time `duration` and with an ease type function of type `ease`
+ geographic coordinate with a transition of time `seconds` and with an ease type function of type `ease`
  (See `TGEaseType`) from its previous coordinate, if a point geometry hasn't been set any coordinate yet,
  this method will act as `-markerSetPoint:coordinates:`.
 
  @param identifier the marker identifier created with `-markerAdd`
  @param the longitude and latitude where the marker will be placed
- @param duration the animation duration given in seconds
+ @param seconds the animation duration given in seconds
  @param ease the ease function to be used between animation timestep
  @return `YES` if this operation was successful, `NO` otherwise
 
  @note Markers can have their geometry set multiple time with possibly different geometry types.
  */
-- (BOOL)markerSetPointEased:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate duration:(float)duration easeType:(TGEaseType)ease;
+- (BOOL)markerSetPointEased:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinate seconds:(float)seconds easeType:(TGEaseType)ease;
 
 /**
  Sets a marker styled to be a polyline (described in a `TGGeoPolyline`).
@@ -461,6 +489,13 @@ NS_ASSUME_NONNULL_BEGIN
  UIImage</a> to a marker styled with a <a href="https://mapzen.com/documentation/tangram/Styles-Overview/#points">
  points style</a>.
 
+ ```swift
+ var identifier = view.markerAdd()
+ view.markerSetStyling(identifier, styling: "{ style: 'points', color: 'white', size: [25px, 25px], order:500 }")
+ view.markerSetPoint(identifier, coordinates: TGGeoPointMake(longitude, latitude))
+ view.markerSetImage(identifier, image: UIIMage(name: "marker-image.png"))
+ ```
+
  @param identifier the marker identifier created with `-markerAdd`
  @param the `UIImage` that will be used to be displayed on the marker
  @return `YES` if this operation was successful, `NO` otherwise
@@ -486,7 +521,7 @@ NS_ASSUME_NONNULL_BEGIN
  If the scene file is set as a resource in your application bundle, make sure to resolve
  the path for this URL relative to your bundle (for example `Resources/scene.yaml`).
 
- If your scene is hosted remotely (any path starting with `https://` is considered a remote scene file)
+ If your scene is hosted remotely (any path starting with `https://` or `http://` is considered a remote scene file)
  Tangram will automatically load that remote scene file.
 
  @param path the scene path URL
@@ -535,6 +570,8 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Queue a list of scene updates.
 
+ @param sceneUpdates a list of updates to apply to the scene, see `TGSceneUpdate` for more infos
+
  @note Scene updates must be applied with `-applySceneUpdates:`
  */
 - (void)queueSceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
@@ -560,7 +597,9 @@ NS_ASSUME_NONNULL_BEGIN
  Selects a feature marked as <a href="https://mapzen.com/documentation/tangram/draw/#interactive">
  `interactive`</a> in the stylesheet.
 
- @param screenPosition the logical screen position used for the feature selection query
+ Returns the result in `[TGMapViewDelegate mapView:didSelectFeature:atScreenPosition:].
+
+ @param screenPosition the logical pixels screen position used for the feature selection query
 
  @note to receive events you must implement set `TGMapViewDelegate` to the map view and implement
  `[TGMapViewDelegate mapView:didSelectFeature:atScreenPosition:]`.
@@ -573,7 +612,9 @@ NS_ASSUME_NONNULL_BEGIN
  marked as <a href="https://mapzen.com/documentation/tangram/draw/#interactive">
  `interactive`</a> in the stylesheet.
 
- @param screenPosition the logical screen position used for the feature selection query
+ Returns the result in `[TGMapViewDelegate mapView:didSelectLabel:atScreenPosition:].
+
+ @param screenPosition the logical pixels screen position used for the feature selection query
 
  @note To receive events you must set a `TGMapViewDelegate` to the map view and implement
  `[TGMapViewDelegate mapView:didSelectLabel:atScreenPosition:]`.
@@ -582,7 +623,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Selects a marker marked as <a href="https://mapzen.com/documentation/tangram/draw/#interactive">
- `interactive`</a>.
+ `interactive`</a> and returns the result in `[TGMapViewDelegate mapView:didSelectMarker:atScreenPosition:].
 
  To set a marker interactive, you must set it when styling it:
 
@@ -590,7 +631,7 @@ NS_ASSUME_NONNULL_BEGIN
  markerSetStyling(markerIdentifier, styling: "{ style: 'points', interactive : true,  color: 'white', size: [30px, 30px], order: 500 }")
  ```
 
- @param screenPosition the logical screen position used for the feature selection query
+ @param screenPosition the logical pixels screen position used for the feature selection query
 
  @note To receive events you must set a `TGMapViewDelegate` to the map view and implement
  `[TGMapViewDelegate mapView:didSelectMarker:atScreenPosition:]`.
@@ -646,7 +687,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Animate the map view to another geographic coordinate.
 
-@param position the map view geographic coordinate
+ @param position the map view geographic coordinate
  @param seconds the duration in seconds
 
  @note default ease type for this animation is set to cubic, see `TGEaseType` for more details.

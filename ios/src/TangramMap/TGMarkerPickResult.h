@@ -1,8 +1,9 @@
 //
 //  TGMarkerPickResult.h
-//  tangram
+//  TangramMap
 //
 //  Created by Karim Naaji on 01/03/17.
+//  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -23,6 +24,17 @@ typedef uint32_t TGMapMarkerId;
  */
 @interface TGMarkerPickResult : NSObject
 
+/**
+ Initializes a `TGMarkerPickResult`.
+
+ @param coordinates the geographic coordinates of the label pick result
+ @param identifier the marker identifier
+
+ @return an initialized `TGMarkerPickResult`
+
+ @note You shouldn't have to create a `TGMarkerPickResult` yourself, those are returned as a result to
+ a selection query on the `TGMapViewController` and initialized by the latter.
+ */
 - (instancetype) initWithCoordinates:(TGGeoPoint)coordinates identifier:(TGMapMarkerId)identifier;
 
 /// The geographic coordinates of the selected label

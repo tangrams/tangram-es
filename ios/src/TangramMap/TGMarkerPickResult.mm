@@ -1,8 +1,9 @@
 //
 //  TGMarkerPickResult.mm
-//  tangram
+//  TangramMap
 //
 //  Created by Karim Naaji on 01/03/17.
+//  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
 #import "TGMarkerPickResult.h"

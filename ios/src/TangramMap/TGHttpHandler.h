@@ -1,20 +1,20 @@
 //
 //  TGHttpHandler.h
-//  tangram
+//  TangramMap
 //
 //  Created by Karim Naaji on 11/23/16.
-//
+//  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
-
-NS_ASSUME_NONNULL_BEGIN
 
 /**
  A network request completion callback, called when a download request of `TGHttpHandler`
  completed an asynchronous request.
 */
-typedef void(^TGDownloadCompletionHandler)(NSData*, NSURLResponse*, NSError*);
+typedef void(^TGDownloadCompletionHandler)(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error);
+
+NS_ASSUME_NONNULL_BEGIN
 
 /**
  A configurable http handler used in a `TGMapViewController`.
@@ -45,7 +45,7 @@ typedef void(^TGDownloadCompletionHandler)(NSData*, NSURLResponse*, NSError*);
  @param diskCapacity the disk capacity of cache, in bytes
  @return an initalized http handler with the provided configuration
  */
-- (instancetype)initWithCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity;
+- (instancetype)initWithCachePath:(NSString *)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity;
 
 /**
  Creates an asynchronous download request.
@@ -55,14 +55,14 @@ typedef void(^TGDownloadCompletionHandler)(NSData*, NSURLResponse*, NSError*);
 
  @note This method will be automatically called by the map view instance.
  */
-- (void)downloadRequestAsync:(NSString*)url completionHandler:(TGDownloadCompletionHandler)completionHandler;
+- (void)downloadRequestAsync:(NSString *)url completionHandler:(TGDownloadCompletionHandler)completionHandler;
 
 /**
  Cancels a download request for a specific URL.
 
  @param url the URL to cancel the network request for
  */
-- (void)cancelDownloadRequestAsync:(NSString*)url;
+- (void)cancelDownloadRequestAsync:(NSString *)url;
 
 /**
  Updates the http handler cache configuration.
@@ -71,7 +71,7 @@ typedef void(^TGDownloadCompletionHandler)(NSData*, NSURLResponse*, NSError*);
  @param memoryCapacity the memory capacity of the cache, in bytes
  @param diskCapacity the disk capacity of cache, in bytes
  */
-- (void)setCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity;
+- (void)setCachePath:(NSString *)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity;
 
 NS_ASSUME_NONNULL_END
 

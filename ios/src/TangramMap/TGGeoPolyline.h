@@ -1,9 +1,9 @@
 //
 //  TGGeoPolyline.h
-//  tangram
+//  TangramMap
 //
 //  Created by Karim Naaji on 10/27/16.
-//
+//  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -39,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  @return the number of geographic coordinates in this polyline
  */
-- (unsigned int)count;
+- (NSUInteger)count;
 
 /**
  Gets a pointer to the geographic coordinates describing this poyline of array length `-[TGGeoPolyline count:]`.

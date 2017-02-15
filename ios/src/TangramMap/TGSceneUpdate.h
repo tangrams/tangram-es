@@ -1,9 +1,9 @@
 //
 //  TGSceneUpdate.h
-//  tangram
+//  TangramMap
 //
 //  Created by Karim Naaji on 11/05/16.
-//
+//  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
