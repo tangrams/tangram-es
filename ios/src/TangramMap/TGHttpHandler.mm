@@ -1,9 +1,9 @@
 //
 //  TGHttpHandler.mm
-//  tangram
+//  TangramMap
 //
 //  Created by Karim Naaji on 11/23/16.
-//
+//  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
 #import "TGHttpHandler.h"
@@ -64,7 +64,7 @@
     self.configuration.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
 }
 
-- (void)downloadRequestAsync:(NSString*)url completionHandler:(DownloadCompletionHandler)completionHandler
+- (void)downloadRequestAsync:(NSString*)url completionHandler:(TGDownloadCompletionHandler)completionHandler
 {
     NSURLSessionDataTask* dataTask = [self.session dataTaskWithURL:[NSURL URLWithString:url]
                                                                       completionHandler:completionHandler];

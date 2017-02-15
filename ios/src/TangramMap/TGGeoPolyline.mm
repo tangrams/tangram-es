@@ -1,9 +1,9 @@
 //
 //  TGGeoPolyline.mm
-//  tangram
+//  TangramMap
 //
 //  Created by Karim Naaji on 10/27/16.
-//
+//  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
 #import "TGGeoPolyline.h"
@@ -34,7 +34,7 @@
     coordinates.push_back(latlon);
 }
 
-- (unsigned int)count
+- (NSUInteger)count
 {
     return coordinates.size();
 }

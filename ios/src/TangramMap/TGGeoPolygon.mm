@@ -1,9 +1,9 @@
 //
 //  TGGeoPolygon.mm
-//  tangram
+//  TangramMap
 //
 //  Created by Karim Naaji on 10/27/16.
-//
+//  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
 #import "TGGeoPolygon.h"
@@ -51,22 +51,22 @@
     rings.back()++;
 }
 
-- (unsigned int)count
+- (NSUInteger)count
 {
     return coordinates.size();
 }
 
-- (unsigned int)ringsCount
+- (NSUInteger)ringsCount
 {
     return rings.size();
 }
 
-- (TGGeoPoint*)coordinates
+- (TGGeoPoint *)coordinates
 {
     return coordinates.data();
 }
 
-- (int*)rings
+- (int *)rings
 {
     return rings.data();
 }

@@ -1,0 +1,15 @@
+module: Mapzen
+author: Mapzen
+theme: fullwidth
+author_url: https://www.mapzen.com/
+output: ../build/ios-docs/
+github_url: https://github.com/tangrams/tangram-es
+copyright: '© 2017 [Mapzen](https://www.mapzen.com/).'
+head: |
+    <link rel='shortcut icon' href='https://mapzen.com/common/styleguide/images/favicon.ico' type='image/x-icon' />
+objc: Yes
+framework_root: ./src/
+sdk: iphonesimulator
+umbrella_header: ./framework/TangramMap.h
+skip_undocumented: Yes
+#hide_documentation_coverage: Yes

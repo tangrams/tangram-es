@@ -31,6 +31,7 @@ all: android osx ios
 .PHONY: cmake-rpi
 .PHONY: cmake-linux
 .PHONY: install-android
+.PHONY: ios-docs
 
 ANDROID_BUILD_DIR = android/tangram/build
 OSX_BUILD_DIR = build/osx
@@ -40,6 +41,7 @@ IOS_FRAMEWORK_BUILD_DIR = build/ios-framework
 IOS_FRAMEWORK_SIM_BUILD_DIR = build/ios-framework-sim
 IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR = build/ios-framework-universal
 IOS_SIM_BUILD_DIR = build/ios-sim
+IOS_DOCS_BUILD_DIR = build/ios-docs
 RPI_BUILD_DIR = build/rpi
 LINUX_BUILD_DIR = build/linux
 TESTS_BUILD_DIR = build/tests
@@ -55,7 +57,8 @@ OSX_XCODE_PROJ = tangram.xcodeproj
 IOS_XCODE_PROJ = tangram.xcodeproj
 IOS_FRAMEWORK_XCODE_PROJ = tangram.xcodeproj
 
-XCPRETTY = `command -v xcpretty || echo 'xargs echo'`
+XCPRETTY = `command -v xcpretty`
+JAZZY = $(shell command -v jazzys 2> /dev/null)
 
 # Default build type is Release
 CONFIG = Release
@@ -234,6 +237,11 @@ cmake-osx:
 	@cd ${OSX_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_CMAKE_PARAMS}
 
+xcpretty:
+ifeq (, $(shell which xcpretty))
+	$(error "Please install xcpretty by running 'gem install xcpretty'")
+endif
+
 ios: ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
 	xcodebuild -target ${IOS_TARGET} ARCHS='i386 x86_64' \
 		ONLY_ACTIVE_ARCH=NO \
@@ -241,19 +249,27 @@ ios: ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
 		-project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ} \
 		-configuration ${CONFIG} | ${XCPRETTY}
 
+ios-docs:
+ifeq (, $(shell which jazzy))
+	$(error "Please install jazzy by running 'gem install jazzy'")
+endif
+	@mkdir -p ${IOS_DOCS_BUILD_DIR}
+	@cd ios && \
+	jazzy --config jazzy.yml
+
 ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}: cmake-ios
 
-cmake-ios: ios-framework-universal
+cmake-ios: ios-framework-universal xcpretty
 	@mkdir -p ${IOS_BUILD_DIR}
 	@cd ${IOS_BUILD_DIR} && \
 	cmake ../.. ${IOS_CMAKE_PARAMS}
 
-cmake-ios-framework:
+cmake-ios-framework: xcpretty
 	@mkdir -p ${IOS_FRAMEWORK_BUILD_DIR}
 	@cd ${IOS_FRAMEWORK_BUILD_DIR} && \
 	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS} -DBUILD_IOS_FRAMEWORK=TRUE
 
-cmake-ios-framework-sim:
+cmake-ios-framework-sim: xcpretty
 	@mkdir -p ${IOS_FRAMEWORK_SIM_BUILD_DIR}
 	@cd ${IOS_FRAMEWORK_SIM_BUILD_DIR} && \
 	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS} -DIOS_PLATFORM=SIMULATOR -DBUILD_IOS_FRAMEWORK=TRUE

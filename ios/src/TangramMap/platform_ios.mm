@@ -188,7 +188,7 @@ bool iOSPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback
         return false;
     }
 
-    DownloadCompletionHandler handler = ^void (NSData* data, NSURLResponse* response, NSError* error) {
+    TGDownloadCompletionHandler handler = ^void (NSData* data, NSURLResponse* response, NSError* error) {
 
         NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
 

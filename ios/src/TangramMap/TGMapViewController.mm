@@ -1,10 +1,11 @@
 //
 //  TGMapViewController.mm
-//  TangramiOS
+//  TangramMap
 //
 //  Created by Matt Blair on 8/25/14.
 //  Updated by Matt Smollinger on 7/29/16.
-//  Copyright (c) 2016 Mapzen. All rights reserved.
+//  Updated by Karim Naaji on 2/15/17.
+//  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
 #import "TGMapViewController.h"
@@ -317,13 +318,13 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     return self.map->markerSetPoint(identifier, lngLat);
 }
 
-- (BOOL)markerSetPointEased:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinates duration:(float)duration easeType:(TGEaseType)ease
+- (BOOL)markerSetPointEased:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinates seconds:(float)seconds easeType:(TGEaseType)ease
 {
     if (!self.map || !identifier) { return NO; }
 
     Tangram::LngLat lngLat(coordinates.longitude, coordinates.latitude);
 
-    return self.map->markerSetPointEased(identifier, lngLat, duration, [TGHelpers convertEaseTypeFrom:ease]);
+    return self.map->markerSetPointEased(identifier, lngLat, seconds, [TGHelpers convertEaseTypeFrom:ease]);
 }
 
 - (BOOL)markerSetPolyline:(TGMapMarkerId)identifier polyline:(TGGeoPolyline *)polyline
@@ -377,17 +378,17 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     self.map->setPosition(position.longitude, position.latitude);
 }
 
-- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)duration
+- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)seconds
 {
-    [self animateToPosition:position withDuration:duration withEaseType:TGEaseTypeCubic];
+    [self animateToPosition:position withDuration:seconds withEaseType:TGEaseTypeCubic];
 }
 
-- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)duration withEaseType:(TGEaseType)easeType
+- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)seconds withEaseType:(TGEaseType)easeType
 {
     if (!self.map) { return; }
 
     Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
-    self.map->setPositionEased(position.longitude, position.latitude, duration, ease);
+    self.map->setPositionEased(position.longitude, position.latitude, seconds, ease);
 }
 
 - (TGGeoPoint)position
@@ -410,17 +411,17 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     self.map->setZoom(zoom);
 }
 
-- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration
+- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)seconds
 {
-    [self animateToZoomLevel:zoomLevel withDuration:duration withEaseType:TGEaseTypeCubic];
+    [self animateToZoomLevel:zoomLevel withDuration:seconds withEaseType:TGEaseTypeCubic];
 }
 
-- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)duration withEaseType:(TGEaseType)easeType
+- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)seconds withEaseType:(TGEaseType)easeType
 {
     if (!self.map) { return; }
 
     Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
-    self.map->setZoomEased(zoomLevel, duration, ease);
+    self.map->setZoomEased(zoomLevel, seconds, ease);
 }
 
 - (float)zoom
@@ -581,12 +582,6 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 }
 
 #pragma mark - Gesture Recognizer Delegate Methods
-/*
- The general pattern here is first checking to see if gestureDelegate is available, then checking to see if it responds to "shouldRecognize*".
- If gestureDelegate responds to shouldRecgonize, then call it before proceeding with default implementation. If gestureDelegate doesn't, or
- it returns true, proceed with calling default recognition code. Finally, check to see if gestureDelegate implements didRecognize* and call
- if it does. Note, we should never call the didRecognize method if gestureDelegate says we should not recognize the gesture.
- */
 
 - (void)respondToLongPressGesture:(UILongPressGestureRecognizer *)longPressRecognizer
 {
@@ -714,7 +709,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 }
 #pragma mark Standard Initializer
 
-- (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
+- (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self != nil) {
         std::shared_ptr<Platform> platform(new iOSPlatform(self));
@@ -723,7 +719,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     return self;
 }
 
-- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
     self = [super initWithCoder:aDecoder];
     if (self != nil) {
         std::shared_ptr<Platform> platform(new iOSPlatform(self));
