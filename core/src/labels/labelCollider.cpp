@@ -1,11 +1,12 @@
-#include "labelCollider.h"
+#include "labels/labelCollider.h"
 
-#include "labels/labelSet.h"
-#include "view/view.h" // ViewState
 #include "labels/curvedLabel.h"
+#include "labels/labelSet.h"
+#include "labels/obbBuffer.h"
+#include "view/view.h" // ViewState
+
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/norm.hpp"
-#include "labels/obbBuffer.h"
 
 namespace Tangram {
 

@@ -1,10 +1,12 @@
 #include "marker/marker.h"
+
 #include "data/tileData.h"
 #include "gl/texture.h"
 #include "scene/drawRule.h"
 #include "scene/scene.h"
 #include "style/style.h"
 #include "view/view.h"
+
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/transform.hpp"
 

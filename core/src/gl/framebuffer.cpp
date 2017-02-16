@@ -1,4 +1,4 @@
-#include "framebuffer.h"
+#include "gl/framebuffer.h"
 
 #include "gl/error.h"
 #include "gl/primitives.h"

@@ -2,10 +2,10 @@
 
 #include "tile/tileID.h"
 
+#include <atomic>
+#include <functional>
 #include <memory>
 #include <vector>
-#include <functional>
-#include <atomic>
 
 namespace Tangram {
 

@@ -1,11 +1,11 @@
-#include "spotLight.h"
+#include "scene/spotLight.h"
 
-#include "glm/gtx/string_cast.hpp"
-#include "platform.h"
 #include "gl/shaderProgram.h"
+#include "platform.h"
+#include "spotLight_glsl.h"
 #include "view/view.h"
 
-#include "shaders/spotLight_glsl.h"
+#include "glm/gtx/string_cast.hpp"
 
 namespace Tangram {
 

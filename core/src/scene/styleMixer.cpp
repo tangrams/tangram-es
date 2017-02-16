@@ -1,10 +1,11 @@
-#include "styleMixer.h"
+#include "scene/styleMixer.h"
+
 #include "style/style.h"
 #include "util/topologicalSort.h"
-#include "yaml-cpp/yaml.h"
 
 #include <algorithm>
 #include <set>
+#include "yaml-cpp/yaml.h"
 
 namespace Tangram {
 

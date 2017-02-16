@@ -1,13 +1,13 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include <mutex>
-#include <cstdio>
 #include "gl/texture.h"
 #include "gl/mesh.h"
 #include "gl/shaderProgram.h"
 #include "glm/vec2.hpp"
+#include <string>
+#include <vector>
+#include <mutex>
+#include <cstdio>
 #include <sstream>
 #include <iomanip>
 

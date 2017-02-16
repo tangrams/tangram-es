@@ -1,15 +1,15 @@
-#include "clientGeoJsonSource.h"
+#include "data/clientGeoJsonSource.h"
 #define GEOJSONVT_CUSTOM_TAGS
 #include "mapbox/geojsonvt/geojsonvt_types.hpp"
 #include "mapbox/geojsonvt/geojsonvt.hpp"
 #include "mapbox/geojsonvt/geojsonvt_convert.hpp"
 #include "platform.h"
 #include "tangram.h"
-#include "tile/tileTask.h"
-#include "util/geom.h"
 #include "data/propertyItem.h"
 #include "data/tileData.h"
 #include "tile/tile.h"
+#include "tile/tileTask.h"
+#include "util/geom.h"
 #include "view/view.h"
 
 #include <regex>

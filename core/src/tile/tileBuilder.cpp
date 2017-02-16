@@ -7,9 +7,9 @@
 #include "log.h"
 #include "scene/dataLayer.h"
 #include "scene/scene.h"
+#include "selection/featureSelection.h"
 #include "style/style.h"
 #include "tile/tile.h"
-#include "selection/featureSelection.h"
 #include "util/mapProjection.h"
 #include "view/view.h"
 

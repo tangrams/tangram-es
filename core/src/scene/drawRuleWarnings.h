@@ -2,8 +2,8 @@
 
 #if defined(TANGRAM_WARN_ON_RULE_CONFLICT)
 
-#include <set>
 #include <mutex>
+#include <set>
 
 namespace Tangram {
 

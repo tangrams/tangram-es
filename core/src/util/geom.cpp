@@ -1,8 +1,8 @@
-#include "geom.h"
+#include "util/geom.h"
 
-#include <limits>
-#include <cmath>
 #include "glm/gtx/norm.hpp"
+#include <cmath>
+#include <limits>
 
 namespace Tangram {
 

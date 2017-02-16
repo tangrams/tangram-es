@@ -2,8 +2,8 @@
 
 #include "util/variant.h"
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace Tangram {
 

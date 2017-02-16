@@ -12,27 +12,24 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 # add sources and include headers
 find_sources_and_include_directories(
-  ${PROJECT_SOURCE_DIR}/rpi/src/*.h
-  ${PROJECT_SOURCE_DIR}/rpi/src/*.cpp)
+  ${PROJECT_SOURCE_DIR}/platforms/rpi/src/*.h
+  ${PROJECT_SOURCE_DIR}/platforms/rpi/src/*.cpp)
 
 # add linux dependencies
 set(LINUX_SOURCES
-    ${PROJECT_SOURCE_DIR}/linux/src/urlWorker.cpp
-    ${PROJECT_SOURCE_DIR}/linux/src/platform_linux.cpp)
+  ${PROJECT_SOURCE_DIR}/platforms/linux/src/urlWorker.cpp
+  ${PROJECT_SOURCE_DIR}/platforms/linux/src/platform_linux.cpp)
 
-include_directories(${PROJECT_SOURCE_DIR}/linux/src)
+include_directories(${PROJECT_SOURCE_DIR}/platforms/linux/src)
 
 find_sources_and_include_directories(
-  ${PROJECT_SOURCE_DIR}/core/common/platform_gl.h
-  ${PROJECT_SOURCE_DIR}/core/common/platform_gl.cpp)
+  ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.h
+  ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp)
 
 # include headers for rpi-installed libraries
 include_directories(/opt/vc/include/)
 include_directories(/opt/vc/include/interface/vcos/pthreads)
 include_directories(/opt/vc/include/interface/vmcs_host/linux)
-
-# load library dependencies
-add_subdirectory(${PROJECT_SOURCE_DIR}/external)
 
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
@@ -40,6 +37,6 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 add_executable(${EXECUTABLE_NAME} ${SOURCES} ${LINUX_SOURCES})
 
 target_link_libraries(${EXECUTABLE_NAME}
-    ${CORE_LIBRARY} -lcurl)
+  ${CORE_LIBRARY} -lcurl)
 
 add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes")

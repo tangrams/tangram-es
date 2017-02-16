@@ -1,9 +1,9 @@
-#include "mesh.h"
-#include "shaderProgram.h"
-#include "renderState.h"
-#include "hardware.h"
-#include "platform.h"
+#include "gl/mesh.h"
+#include "gl/shaderProgram.h"
+#include "gl/renderState.h"
+#include "gl/hardware.h"
 #include "gl/error.h"
+#include "platform.h"
 #include "log.h"
 
 namespace Tangram {

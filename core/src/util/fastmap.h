@@ -1,7 +1,8 @@
 #pragma once
-#include <vector>
-#include <string>
+
 #include <algorithm>
+#include <string>
+#include <vector>
 
 namespace Tangram {
 

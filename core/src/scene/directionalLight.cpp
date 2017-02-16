@@ -1,10 +1,11 @@
-#include "directionalLight.h"
+#include "scene/directionalLight.h"
+
+#include "gl/shaderProgram.h"
+#include "directionalLight_glsl.h"
+#include "platform.h"
+#include "view/view.h"
 
 #include "glm/gtx/string_cast.hpp"
-#include "platform.h"
-#include "gl/shaderProgram.h"
-#include "view/view.h"
-#include "shaders/directionalLight_glsl.h"
 
 namespace Tangram {
 

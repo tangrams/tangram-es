@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tangram.h"
+
 #include <cmath>
 #include <functional>
 

@@ -1,4 +1,4 @@
-#include "viewConstraint.h"
+#include "view/viewConstraint.h"
 
 namespace Tangram {
 

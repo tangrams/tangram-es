@@ -1,8 +1,9 @@
-#include "geoJson.h"
+#include "util/geoJson.h"
 
 #include "data/propertyItem.h"
-#include "glm/glm.hpp"
 #include "log.h"
+
+#include "glm/glm.hpp"
 
 namespace Tangram {
 

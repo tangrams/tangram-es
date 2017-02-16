@@ -1,15 +1,16 @@
-#include "pointStyle.h"
+#include "style/pointStyle.h"
 
-#include "platform.h"
+#include "gl/dynamicQuadMesh.h"
 #include "gl/shaderProgram.h"
 #include "gl/texture.h"
-#include "gl/dynamicQuadMesh.h"
 #include "gl/vertexLayout.h"
+#include "platform.h"
 #include "scene/spriteAtlas.h"
 #include "style/pointStyleBuilder.h"
 #include "view/view.h"
-#include "shaders/point_vs.h"
-#include "shaders/point_fs.h"
+
+#include "point_vs.h"
+#include "point_fs.h"
 
 namespace Tangram {
 

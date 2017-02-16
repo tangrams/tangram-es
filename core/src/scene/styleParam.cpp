@@ -1,15 +1,16 @@
-#include "styleParam.h"
+#include "scene/styleParam.h"
 
-#include "csscolorparser.hpp"
+#include "log.h"
 #include "platform.h"
 #include "style/textStyle.h"
 #include "util/builders.h" // for cap, join
 #include "util/extrude.h"
 #include "util/geom.h" // for CLAMP
-#include "log.h"
+
+#include "csscolorparser.hpp"
 #include <algorithm>
-#include <map>
 #include <cstring>
+#include <map>
 
 namespace Tangram {
 

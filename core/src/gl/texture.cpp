@@ -1,12 +1,12 @@
-#include "texture.h"
+#include "gl/texture.h"
 
-#include "platform.h"
-#include "util/geom.h"
 #include "gl/error.h"
 #include "gl/renderState.h"
 #include "gl/hardware.h"
-#include "tangram.h"
+#include "util/geom.h"
 #include "log.h"
+#include "platform.h"
+#include "tangram.h"
 
 // Enable only JPEG, PNG, GIF, TGA and PSD
 #define STBI_NO_BMP

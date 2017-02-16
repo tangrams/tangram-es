@@ -2,6 +2,7 @@
 
 #include "labels/labelProperty.h"
 #include "util/variant.h"
+
 #include "glm/vec2.hpp"
 #include <string>
 #include <vector>

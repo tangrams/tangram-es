@@ -3,12 +3,13 @@
 #include "gl/uniform.h"
 #include "scene/scene.h"
 #include "tangram.h"
-#include <string>
-#include <vector>
+
 #include <memory>
-#include <tuple>
-#include <sstream>
 #include <mutex>
+#include <sstream>
+#include <string>
+#include <tuple>
+#include <vector>
 
 #include "yaml-cpp/yaml.h"
 #include "glm/vec2.hpp"

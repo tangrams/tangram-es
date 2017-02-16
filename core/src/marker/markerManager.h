@@ -5,6 +5,7 @@
 #include "util/ease.h"
 #include "util/fastmap.h"
 #include "util/types.h"
+
 #include <memory>
 #include <vector>
 

@@ -2,10 +2,10 @@
 
 #include "data/tileData.h"
 
+#include "earcut.hpp"
 #include <functional>
 #include <vector>
 
-#include "earcut.hpp/include/earcut.hpp"
 
 namespace Tangram {
 

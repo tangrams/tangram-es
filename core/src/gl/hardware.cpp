@@ -1,13 +1,14 @@
-#include "hardware.h"
+#include "gl/hardware.h"
+
+#include "gl/error.h"
+#include "gl.h"
+#include "log.h"
+#include "platform.h"
 
 #include <cstring>
 #include <sstream>
 #include <algorithm>
 #include <iterator>
-#include "platform.h"
-#include "gl/error.h"
-#include "gl.h"
-#include "log.h"
 
 namespace Tangram {
 namespace Hardware {

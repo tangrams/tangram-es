@@ -1,13 +1,13 @@
 #pragma once
 
+#include "log.h"
 #include "tile/tile.h"
 #include "tile/tileHash.h"
 #include "tile/tileID.h"
-#include "log.h"
 
-#include <unordered_map>
 #include <list>
 #include <memory>
+#include <unordered_map>
 
 namespace Tangram {
 // TileSet serial + TileID

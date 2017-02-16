@@ -1,5 +1,6 @@
+#include "util/dashArray.h"
+
 #include <cmath>
-#include "dashArray.h"
 
 namespace Tangram {
 

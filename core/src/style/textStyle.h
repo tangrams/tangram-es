@@ -1,10 +1,10 @@
 #pragma once
 
-#include "style.h"
-#include "labels/textLabel.h"
-#include "labels/labelProperty.h"
-#include "util/hash.h"
 #include "gl/dynamicQuadMesh.h"
+#include "style/style.h"
+#include "labels/labelProperty.h"
+#include "labels/textLabel.h"
+#include "util/hash.h"
 
 #include <memory>
 #include <vector>

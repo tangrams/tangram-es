@@ -1,4 +1,4 @@
-#include "jobQueue.h"
+#include "util/jobQueue.h"
 
 namespace Tangram {
 

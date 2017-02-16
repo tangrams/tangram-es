@@ -1,8 +1,9 @@
 #pragma once
 
 #include "data/tileData.h"
-#include "glm/vec2.hpp"
 #include "util/json.h"
+
+#include "glm/vec2.hpp"
 #include <functional>
 
 namespace Tangram {

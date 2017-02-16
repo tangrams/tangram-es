@@ -1,9 +1,9 @@
 #pragma once
 
 #include "data/tileSource.h"
+#include "labels/labelCollider.h"
 #include "scene/styleContext.h"
 #include "scene/drawRule.h"
-#include "labels/labelCollider.h"
 
 namespace Tangram {
 

@@ -1,13 +1,13 @@
-#include "stops.h"
+#include "scene/stops.h"
 
-#include "scene/styleParam.h"
-#include "util/mapProjection.h"
 #include "platform.h"
 #include "log.h"
+#include "scene/styleParam.h"
+#include "util/mapProjection.h"
 
+#include <algorithm>
 #include "csscolorparser.hpp"
 #include "yaml-cpp/yaml.h"
-#include <algorithm>
 
 namespace Tangram {
 

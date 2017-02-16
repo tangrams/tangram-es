@@ -1,17 +1,17 @@
 #pragma once
 
+#include "labels/fadeEffect.h"
+#include "labels/labelProperty.h"
+#include "tangram.h"
+#include "util/types.h"
+#include "util/hash.h"
+
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "glm/mat4x4.hpp"
 #include <climits> // needed in aabb.h
 #include "aabb.h"
 #include "obb.h"
-#include "fadeEffect.h"
-#include "util/types.h"
-#include "util/hash.h"
-#include "labels/labelProperty.h"
-#include "tangram.h"
-
 #include <string>
 #include <limits>
 #include <memory>

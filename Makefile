@@ -33,7 +33,7 @@ all: android osx ios
 .PHONY: install-android
 .PHONY: ios-docs
 
-ANDROID_BUILD_DIR = android/tangram/build
+ANDROID_BUILD_DIR = platforms/android/tangram/build
 OSX_BUILD_DIR = build/osx
 OSX_XCODE_BUILD_DIR = build/xcode
 IOS_BUILD_DIR = build/ios
@@ -208,11 +208,11 @@ android: android-demo
 	@echo "run: 'adb install -r android/demo/build/outputs/apk/demo-debug.apk'"
 
 android-sdk:
-	@cd android/ && \
+	@cd platforms/android/ && \
 	./gradlew tangram:assembleFullRelease
 
 android-demo:
-	@cd android/ && \
+	@cd platforms/android/ && \
 	./gradlew demo:assembleDebug
 
 osx: ${OSX_BUILD_DIR}/Makefile
@@ -258,7 +258,7 @@ ifeq (, $(shell which jazzy))
 	$(error "Please install jazzy by running 'gem install jazzy'")
 endif
 	@mkdir -p ${IOS_DOCS_BUILD_DIR}
-	@cd ios && \
+	@cd platforms/ios && \
 	jazzy --config jazzy.yml
 
 ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}: cmake-ios
@@ -363,4 +363,4 @@ format:
 
 ### Android Helpers
 android-install:
-	@adb install -r android/demo/build/outputs/apk/demo-debug.apk
+	@adb install -r platforms/android/demo/build/outputs/apk/demo-debug.apk

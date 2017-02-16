@@ -1,19 +1,19 @@
 #pragma once
 
 #include "data/tileData.h"
-#include "tile/tileWorker.h"
+#include "data/tileSource.h"
 #include "tile/tile.h"
 #include "tile/tileID.h"
-#include "tileTask.h"
+#include "tile/tileTask.h"
+#include "tile/tileWorker.h"
 #include "util/fastmap.h"
 
 #include <map>
-#include <vector>
 #include <memory>
 #include <mutex>
 #include <tuple>
 #include <set>
-#include <data/tileSource.h>
+#include <vector>
 
 class Platform;
 

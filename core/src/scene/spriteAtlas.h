@@ -1,10 +1,11 @@
 #pragma once
 
-#include <map>
-#include <memory>
 #include "gl/texture.h"
 #include "util/fastmap.h"
+
 #include "glm/glm.hpp"
+#include <map>
+#include <memory>
 
 namespace Tangram {
 

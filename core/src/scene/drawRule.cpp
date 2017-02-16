@@ -1,15 +1,15 @@
-#include "drawRule.h"
+#include "scene/drawRule.h"
 
-#include "tile/tileBuilder.h"
+#include "drawRuleWarnings.h"
+#include "log.h"
+#include "platform.h"
 #include "scene/scene.h"
 #include "scene/sceneLayer.h"
 #include "scene/stops.h"
 #include "scene/styleContext.h"
 #include "style/style.h"
-#include "platform.h"
-#include "drawRuleWarnings.h"
+#include "tile/tileBuilder.h"
 #include "util/hash.h"
-#include "log.h"
 
 #include <algorithm>
 

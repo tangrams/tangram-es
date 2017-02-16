@@ -1,18 +1,18 @@
-#include "debugStyle.h"
+#include "style/debugStyle.h"
 
-#include "tangram.h"
-#include "platform.h"
-#include "material.h"
-#include "tile/tile.h"
-#include "gl/shaderProgram.h"
 #include "gl/mesh.h"
+#include "gl/shaderProgram.h"
+#include "platform.h"
+#include "tangram.h"
+#include "tile/tile.h"
+#include "style/material.h"
 
-#include <vector>
 #include <memory>
+#include <vector>
 #include <string>
 
-#include "shaders/debug_vs.h"
-#include "shaders/debug_fs.h"
+#include "debug_vs.h"
+#include "debug_fs.h"
 
 namespace Tangram {
 

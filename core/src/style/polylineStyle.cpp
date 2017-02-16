@@ -1,27 +1,27 @@
-#include "polylineStyle.h"
+#include "style/polylineStyle.h"
 
-#include "tangram.h"
-#include "platform.h"
-#include "material.h"
 #include "gl/shaderProgram.h"
 #include "gl/mesh.h"
 #include "gl/texture.h"
 #include "gl/renderState.h"
+#include "log.h"
 #include "marker/marker.h"
+#include "material.h"
+#include "platform.h"
 #include "scene/stops.h"
 #include "scene/drawRule.h"
+#include "tangram.h"
 #include "tile/tile.h"
 #include "util/builders.h"
-#include "util/mapProjection.h"
-#include "util/extrude.h"
 #include "util/dashArray.h"
-#include "log.h"
-
-#include "shaders/polyline_vs.h"
-#include "shaders/polyline_fs.h"
+#include "util/extrude.h"
+#include "util/mapProjection.h"
 
 #include "glm/vec3.hpp"
 #include "glm/gtc/type_precision.hpp"
+
+#include "polyline_vs.h"
+#include "polyline_fs.h"
 
 constexpr float extrusion_scale = 4096.0f;
 constexpr float position_scale = 8192.0f;

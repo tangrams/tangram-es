@@ -1,11 +1,11 @@
-#include "label.h"
+#include "labels/label.h"
 
-#include "util/geom.h"
-#include "platform.h"
-#include "view/view.h"
 #include "log.h"
+#include "platform.h"
 #include "tile/tile.h"
+#include "util/geom.h"
 #include "util/mapProjection.h"
+#include "view/view.h"
 
 namespace Tangram {
 

@@ -1,6 +1,5 @@
-#include "topoJsonSource.h"
-
-#include "tileData.h"
+#include "data/topoJsonSource.h"
+#include "data/tileData.h"
 #include "tile/tile.h"
 #include "tile/tileTask.h"
 #include "util/mapProjection.h"

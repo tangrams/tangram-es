@@ -1,13 +1,13 @@
-#include "styleContext.h"
+#include "scene/styleContext.h"
 
-#include "platform.h"
 #include "data/propertyItem.h"
 #include "data/tileData.h"
+#include "log.h"
+#include "platform.h"
 #include "scene/filters.h"
 #include "scene/scene.h"
 #include "util/mapProjection.h"
 #include "util/builders.h"
-#include "log.h"
 
 #include "duktape.h"
 

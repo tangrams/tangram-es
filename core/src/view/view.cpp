@@ -1,13 +1,13 @@
-#include "view.h"
+#include "view/view.h"
 
+#include "log.h"
 #include "platform.h"
 #include "tangram.h"
-#include "util/rasterize.h"
 #include "scene/stops.h"
+#include "util/rasterize.h"
+
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/rotate_vector.hpp"
-#include "log.h"
-
 #include <cmath>
 
 #define MAX_LOD 6

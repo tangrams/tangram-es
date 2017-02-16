@@ -1,7 +1,8 @@
 #pragma once
 
-#include "platform.h"
 #include "debug/textDisplay.h"
+#include "platform.h"
+
 #include <atomic>
 
 /*

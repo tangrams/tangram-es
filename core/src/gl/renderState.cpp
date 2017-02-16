@@ -1,11 +1,11 @@
-#include "renderState.h"
+#include "gl/renderState.h"
 
-#include "platform.h"
-#include "vertexLayout.h"
+#include "gl/vertexLayout.h"
 #include "gl/error.h"
 #include "gl/hardware.h"
 #include "gl/texture.h"
 #include "log.h"
+#include "platform.h"
 
 // Default point texture data is included as an array literal.
 #include "defaultPointTextureData.h"

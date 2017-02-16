@@ -1,24 +1,23 @@
-#include "scene.h"
+#include "scene/scene.h"
 
 #include "data/tileSource.h"
 #include "gl/shaderProgram.h"
+#include "log.h"
 #include "platform.h"
 #include "scene/dataLayer.h"
 #include "scene/light.h"
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
+#include "selection/featureSelection.h"
 #include "style/material.h"
 #include "style/style.h"
 #include "text/fontContext.h"
-#include "selection/featureSelection.h"
 #include "util/mapProjection.h"
 #include "util/util.h"
 #include "view/view.h"
-#include "platform.h"
-#include "log.h"
 
-#include <atomic>
 #include <algorithm>
+#include <atomic>
 #include <regex>
 
 namespace Tangram {

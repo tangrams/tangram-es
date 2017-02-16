@@ -1,6 +1,7 @@
 #pragma once
 
-#include "pointLight.h"
+#include "scene/pointLight.h"
+
 #include "glm/vec3.hpp"
 
 namespace Tangram {

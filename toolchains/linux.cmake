@@ -30,13 +30,6 @@ check_unsupported_compiler_version()
 # compile definitions (adds -DPLATFORM_LINUX)
 set(CORE_COMPILE_DEFS PLATFORM_LINUX)
 
-if (USE_EXTERNAL_LIBS)
-include(${EXTERNAL_LIBS_DIR}/core-dependencies.cmake)
-include(${EXTERNAL_LIBS_DIR}/glfw.cmake)
-else()
-add_subdirectory(${PROJECT_SOURCE_DIR}/external)
-endif()
-
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
@@ -46,15 +39,32 @@ if(APPLICATION)
 
   find_package(OpenGL REQUIRED)
 
+  # Build GLFW.
+  if (USE_SYSTEM_GLFW_LIBS)
+    include(FindPkgConfig)
+    pkg_check_modules(GLFW REQUIRED glfw3)
+  else()
+    # configure GLFW to build only the library
+    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
+    set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs")
+    set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation")
+    set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
+    add_subdirectory(${PROJECT_SOURCE_DIR}/platforms/common/glfw)
+  endif()
+
   # add sources and include headers
   find_sources_and_include_directories(
-    ${PROJECT_SOURCE_DIR}/linux/src/*.h
-    ${PROJECT_SOURCE_DIR}/linux/src/*.cpp)
+    ${PROJECT_SOURCE_DIR}/platforms/linux/src/*.h
+    ${PROJECT_SOURCE_DIR}/platforms/linux/src/*.cpp)
 
   add_executable(${EXECUTABLE_NAME}
     ${SOURCES}
-    ${PROJECT_SOURCE_DIR}/core/common/platform_gl.cpp
+    ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp
     )
+
+  target_include_directories(${EXECUTABLE_NAME}
+    PUBLIC
+    ${GLFW_SOURCE_DIR}/include)
 
   target_link_libraries(${EXECUTABLE_NAME}
     ${CORE_LIBRARY}

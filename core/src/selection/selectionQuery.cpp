@@ -1,4 +1,4 @@
-#include "selectionQuery.h"
+#include "selection/selectionQuery.h"
 
 #include "gl/framebuffer.h"
 #include "labels/label.h"

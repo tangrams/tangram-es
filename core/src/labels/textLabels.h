@@ -1,11 +1,11 @@
 #pragma once
 
-#include "text/fontContext.h"
 #include "labels/labelSet.h"
 #include "labels/textLabel.h"
+#include "text/fontContext.h"
 
-#include <vector>
 #include <bitset>
+#include <vector>
 
 namespace Tangram {
 

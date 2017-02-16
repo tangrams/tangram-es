@@ -3,9 +3,9 @@
 #include "style/style.h"
 #include "style/pointStyle.h"
 #include "style/textStyleBuilder.h"
-#include <vector>
-#include <memory>
 #include <map>
+#include <memory>
+#include <vector>
 
 namespace Tangram {
 

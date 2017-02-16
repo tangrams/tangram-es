@@ -1,11 +1,10 @@
-#include "geoJsonSource.h"
-#include "util/mapProjection.h"
-
-#include "tileData.h"
+#include "data/geoJsonSource.h"
+#include "data/tileData.h"
 #include "tile/tile.h"
 #include "tile/tileID.h"
 #include "tile/tileTask.h"
 #include "util/geoJson.h"
+#include "util/mapProjection.h"
 #include "platform.h"
 #include "log.h"
 

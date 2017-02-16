@@ -1,18 +1,18 @@
-#include "textStyle.h"
-#include "textStyleBuilder.h"
+#include "style/textStyle.h"
+#include "style/textStyleBuilder.h"
 
-#include "gl/shaderProgram.h"
+#include "gl/dynamicQuadMesh.h"
 #include "gl/mesh.h"
 #include "gl/renderState.h"
-#include "gl/dynamicQuadMesh.h"
+#include "gl/shaderProgram.h"
 #include "labels/textLabels.h"
+#include "log.h"
 #include "text/fontContext.h"
 #include "view/view.h"
-#include "log.h"
 
-#include "shaders/text_fs.h"
-#include "shaders/sdf_fs.h"
-#include "shaders/point_vs.h"
+#include "text_fs.h"
+#include "sdf_fs.h"
+#include "point_vs.h"
 
 namespace Tangram {
 

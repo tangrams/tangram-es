@@ -1,4 +1,5 @@
-#include "spriteAtlas.h"
+#include "scene/spriteAtlas.h"
+
 #include "platform.h"
 
 namespace Tangram {

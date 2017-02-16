@@ -1,11 +1,12 @@
-#include "textDisplay.h"
-#include <cstdarg>
+#include "debug/textDisplay.h"
+
 #include "platform.h"
 #include "gl/error.h"
 #include "gl/vertexLayout.h"
 #include "gl/renderState.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include <cstdarg>
 
 #define STB_EASY_FONT_IMPLEMENTATION
 #include "stb_easy_font.h"

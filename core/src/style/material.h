@@ -8,10 +8,10 @@ This openGL Material implementation follows from the WebGL version of Tangram
 
 #include "gl/uniform.h"
 
-#include <memory>
-#include <string>
 #include "glm/vec3.hpp"
 #include "glm/vec4.hpp"
+#include <memory>
+#include <string>
 
 namespace Tangram {
 

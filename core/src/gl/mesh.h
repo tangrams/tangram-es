@@ -2,11 +2,11 @@
 
 #include "gl.h"
 #include "gl/disposer.h"
-#include "vertexLayout.h"
-#include "vao.h"
+#include "gl/vertexLayout.h"
+#include "gl/vao.h"
+#include "style/style.h"
 #include "util/types.h"
 #include "platform.h"
-#include "style/style.h"
 
 #include <string>
 #include <vector>

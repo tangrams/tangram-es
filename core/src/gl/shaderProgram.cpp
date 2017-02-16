@@ -1,11 +1,12 @@
-#include "shaderProgram.h"
+#include "gl/shaderProgram.h"
 
-#include "platform.h"
 #include "gl/disposer.h"
 #include "gl/error.h"
 #include "gl/renderState.h"
 #include "glm/gtc/type_ptr.hpp"
+#include "scene/light.h"
 #include "log.h"
+#include "platform.h"
 
 namespace Tangram {
 

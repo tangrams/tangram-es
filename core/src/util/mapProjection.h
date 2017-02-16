@@ -4,7 +4,7 @@
 #define R_EARTH 6378137.0
 
 #include "tile/tileID.h"
-#include "geom.h"
+#include "util/geom.h"
 
 namespace Tangram {
 

@@ -1,7 +1,5 @@
-#include "platform.h"
-#include "scene.h"
-#include "sceneLoader.h"
-#include "lights.h"
+#include "scene/sceneLoader.h"
+
 #include "data/clientGeoJsonSource.h"
 #include "data/geoJsonSource.h"
 #include "data/memoryCacheDataSource.h"
@@ -11,33 +9,35 @@
 #include "data/rasterSource.h"
 #include "data/topoJsonSource.h"
 #include "gl/shaderSource.h"
+#include "log.h"
+#include "platform.h"
+#include "style/debugStyle.h"
+#include "style/debugTextStyle.h"
 #include "style/material.h"
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
 #include "style/textStyle.h"
-#include "style/debugStyle.h"
-#include "style/debugTextStyle.h"
 #include "style/pointStyle.h"
 #include "style/rasterStyle.h"
 #include "scene/dataLayer.h"
 #include "scene/filters.h"
 #include "scene/importer.h"
+#include "scene/scene.h"
 #include "scene/sceneLayer.h"
 #include "scene/spriteAtlas.h"
+#include "scene/lights.h"
 #include "scene/stops.h"
 #include "scene/styleMixer.h"
 #include "scene/styleParam.h"
 #include "util/base64.h"
 #include "util/yamlHelper.h"
 #include "view/view.h"
-#include "log.h"
 
 #include "csscolorparser.hpp"
-
-#include <vector>
 #include <algorithm>
 #include <iterator>
 #include <regex>
+#include <vector>
 
 using YAML::Node;
 using YAML::NodeType;

@@ -3,7 +3,6 @@
 #include "gl/uniform.h"
 
 #include "glm/vec4.hpp"
-
 #include <map>
 #include <memory>
 #include <string>
