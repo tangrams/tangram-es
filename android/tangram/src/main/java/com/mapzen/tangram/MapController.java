@@ -920,10 +920,11 @@ public class MapController implements Renderer {
         return nativeMarkerSetPoint(mapPointer, markerId, lng, lat);
     }
 
-    boolean setMarkerPointEased(long markerId, double lng, double lat, float duration, EaseType ease) {
+    boolean setMarkerPointEased(long markerId, double lng, double lat, int duration, EaseType ease) {
         checkPointer(mapPointer);
         checkId(markerId);
-        return nativeMarkerSetPointEased(mapPointer, markerId, lng, lat, duration, ease.ordinal());
+        float seconds = duration / 1000.f;
+        return nativeMarkerSetPointEased(mapPointer, markerId, lng, lat, seconds, ease.ordinal());
     }
 
     boolean setMarkerPolyline(long markerId, double[] coordinates, int count) {
