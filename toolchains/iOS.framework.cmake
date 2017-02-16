@@ -35,6 +35,9 @@ endif()
 
 set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CFNetwork GLKit)
 
+# Tell SQLiteCpp to not build its own copy of SQLite, we will use the system library instead.
+set(SQLITECPP_INTERNAL_SQLITE OFF)
+
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
@@ -73,6 +76,9 @@ add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/platforms/ios/framework/Mo
 
 add_library(${FRAMEWORK_NAME} SHARED ${SOURCES} ${HEADERS} ${RESOURCES})
 target_link_libraries(${FRAMEWORK_NAME} ${CORE_LIBRARY})
+
+# Link with SQLite, needed for MBTiles access.
+target_link_libraries(${FRAMEWORK_NAME} sqlite3)
 
 set(IOS_FRAMEWORK_RESOURCES ${PROJECT_SOURCE_DIR}/platforms/ios/framework/Info.plist)
 
