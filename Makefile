@@ -57,8 +57,7 @@ OSX_XCODE_PROJ = tangram.xcodeproj
 IOS_XCODE_PROJ = tangram.xcodeproj
 IOS_FRAMEWORK_XCODE_PROJ = tangram.xcodeproj
 
-XCPRETTY = `command -v xcpretty`
-JAZZY = $(shell command -v jazzys 2> /dev/null)
+XCPRETTY = $(shell command -v xcpretty 2> /dev/null)
 
 # Default build type is Release
 CONFIG = Release
@@ -222,8 +221,15 @@ osx: ${OSX_BUILD_DIR}/Makefile
 
 ${OSX_BUILD_DIR}/Makefile: cmake-osx
 
-xcode: ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}
+OSX_BUILD = \
 	xcodebuild -target ${OSX_TARGET} -project ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ} -configuration ${CONFIG}
+
+xcode: ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}
+ifeq (, $(shell which xcpretty))
+	${OSX_BUILD}
+else
+	${OSX_BUILD} | ${XCPRETTY}
+endif
 
 ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}: cmake-xcode
 
@@ -237,17 +243,15 @@ cmake-osx:
 	@cd ${OSX_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_CMAKE_PARAMS}
 
-xcpretty:
-ifeq (, $(shell which xcpretty))
-	$(error "Please install xcpretty by running 'gem install xcpretty'")
-endif
+IOS_BUILD = \
+	xcodebuild -target ${IOS_TARGET} ARCHS='i386 x86_64' ONLY_ACTIVE_ARCH=NO -sdk iphonesimulator -project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ} -configuration ${CONFIG}
 
 ios: ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
-	xcodebuild -target ${IOS_TARGET} ARCHS='i386 x86_64' \
-		ONLY_ACTIVE_ARCH=NO \
-		-sdk iphonesimulator \
-		-project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ} \
-		-configuration ${CONFIG} | ${XCPRETTY}
+ifeq (, $(shell which xcpretty))
+	${IOS_BUILD}
+else
+	${IOS_BUILD} | ${XCPRETTY}
+endif
 
 ios-docs:
 ifeq (, $(shell which jazzy))
@@ -259,28 +263,40 @@ endif
 
 ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}: cmake-ios
 
-cmake-ios: ios-framework-universal xcpretty
+cmake-ios: ios-framework-universal
 	@mkdir -p ${IOS_BUILD_DIR}
 	@cd ${IOS_BUILD_DIR} && \
 	cmake ../.. ${IOS_CMAKE_PARAMS}
 
-cmake-ios-framework: xcpretty
+cmake-ios-framework:
 	@mkdir -p ${IOS_FRAMEWORK_BUILD_DIR}
 	@cd ${IOS_FRAMEWORK_BUILD_DIR} && \
 	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS} -DBUILD_IOS_FRAMEWORK=TRUE
 
-cmake-ios-framework-sim: xcpretty
+cmake-ios-framework-sim:
 	@mkdir -p ${IOS_FRAMEWORK_SIM_BUILD_DIR}
 	@cd ${IOS_FRAMEWORK_SIM_BUILD_DIR} && \
 	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS} -DIOS_PLATFORM=SIMULATOR -DBUILD_IOS_FRAMEWORK=TRUE
 
+IOS_FRAMEWORK_BUILD = \
+	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} -configuration ${CONFIG}
+
 ios-framework: cmake-ios-framework
-	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} \
-		-configuration ${CONFIG} | ${XCPRETTY}
+ifeq (, $(shell which xcpretty))
+	${IOS_FRAMEWORK_BUILD}
+else
+	${IOS_FRAMEWORK_BUILD} | ${XCPRETTY}
+endif
+
+IOS_FRAMEWORK_SIM_BUILD = \
+	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_SIM_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} -configuration ${CONFIG}
 
 ios-framework-sim: cmake-ios-framework-sim
-	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_SIM_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} \
-		-configuration ${CONFIG} | ${XCPRETTY}
+ifeq (, $(shell which xcpretty))
+	${IOS_FRAMEWORK_SIM_BUILD}
+else
+	${IOS_FRAMEWORK_SIM_BUILD} | ${XCPRETTY}
+endif
 
 ios-framework-universal: ios-framework ios-framework-sim
 	@mkdir -p ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}
