@@ -2,7 +2,7 @@ module: Mapzen
 author: Mapzen
 theme: fullwidth
 author_url: https://www.mapzen.com/
-output: ../build/ios-docs/
+output: ../../build/ios-docs/
 github_url: https://github.com/tangrams/tangram-es
 copyright: '© 2017 [Mapzen](https://www.mapzen.com/).'
 head: |

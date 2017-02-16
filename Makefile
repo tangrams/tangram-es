@@ -258,7 +258,7 @@ ifeq (, $(shell which jazzy))
 	$(error "Please install jazzy by running 'gem install jazzy'")
 endif
 	@mkdir -p ${IOS_DOCS_BUILD_DIR}
-	@cd ios && \
+	@cd platforms/ios && \
 	jazzy --config jazzy.yml
 
 ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}: cmake-ios
