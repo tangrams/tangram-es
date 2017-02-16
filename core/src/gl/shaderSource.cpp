@@ -3,7 +3,7 @@
 #include <set>
 #include <sstream>
 
-#include "shaders/selection_fs.h"
+#include "selection_fs.h"
 
 namespace Tangram {
 
