@@ -420,6 +420,8 @@ NS_ASSUME_NONNULL_BEGIN
  to get more styling informations.
 
  @param identifier the marker identifier created with `-markerAdd`
+ @param styling the styling string in YAML syntax to set to the marker
+
  @return `YES` if this operation was successful, `NO` otherwise
 
  @note It is possible to update the marker styling multiple times.

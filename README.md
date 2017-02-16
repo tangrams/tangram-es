@@ -108,12 +108,6 @@ sudo apt-get install libglfw3-dev libicu-dev libfreetype6-dev libharfbuzz-dev
 
 ### iOS (demo application) ###
 
-Note: Make sure that xcpretty is installed on your machine. To install xcpretty:
-
-```bash
-gem install xcpretty
-```
-
 Building the iOS demo application requires Xcode 8.0 or newer. First, run:
 
 ```bash
@@ -130,7 +124,7 @@ Make sure to set up the code signing identity and code sign the framework on cop
 
 Note on Code Signing and Provisioning Profiles:
 * For Simulator: Does not need any code signing identity, so you can ignore any provionining profile failures on target _tangram_ > _General_ > _Signing_.
-* For Device: You will have to modify the _Bundle Identifier_ under target _tangram_ > _General_ > _Identity_ > _Bundle Identifier_, to something other than `com.mapzen.tangram`, since this needs to be unique. 
+* For Device: You will have to modify the _Bundle Identifier_ under target _tangram_ > _General_ > _Identity_ > _Bundle Identifier_, to something other than `com.mapzen.tangram`, since this needs to be unique.
 
 
 ### iOS Binary Framework ###
@@ -160,7 +154,7 @@ To build the demo application for the ARMv7 architecture (covers most Android de
 make android
 ```
 
-Or open the project in Android Studio and press the 'Run' button (^R). More options are provided through Gradle. 
+Or open the project in Android Studio and press the 'Run' button (^R). More options are provided through Gradle.
 
 The Gradle project in the `android/` directory contains two modules: a library module called `tangram` containing the Tangram Android SDK and an application module called `demo`, containing a demo application that uses the `tangram` module. The `tangram` module has two `buildTypes`, `debug` and `release`, and two `productFlavors`, `slim` and `full`. The `slim` flavor includes native libraries for just the ARMv7 architecture, the `full` flavor includes all supported architectures (ARMv6, ARMv7, ARM64, and x86).
 
