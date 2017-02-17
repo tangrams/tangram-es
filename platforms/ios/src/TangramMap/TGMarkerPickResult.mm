@@ -11,19 +11,19 @@
 @interface TGMarkerPickResult ()
 
 @property (assign, nonatomic) TGGeoPoint coordinates;
-@property (assign, nonatomic) TGMapMarkerId identifier;
+@property (weak, nonatomic) TGMarker* marker;
 
 @end
 
 @implementation TGMarkerPickResult
 
-- (instancetype) initWithCoordinates:(TGGeoPoint)coordinates identifier:(TGMapMarkerId)identifier
+- (instancetype) initWithCoordinates:(TGGeoPoint)coordinates identifier:(TGMarker *)marker
 {
     self = [super init];
 
     if (self) {
         self.coordinates = coordinates;
-        self.identifier = identifier;
+        self.marker = marker;
     }
 
     return self;

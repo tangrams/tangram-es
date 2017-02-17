@@ -9,6 +9,7 @@
 //
 
 #import "TGMapViewController.h"
+#import "TGMapViewController+Internal.h"
 #import "TGHelpers.h"
 #import "platform_ios.h"
 #import "data/propertyItem.h"
@@ -16,7 +17,6 @@
 
 #import <functional>
 
-__CG_STATIC_ASSERT(sizeof(TGMapMarkerId) == sizeof(Tangram::MarkerID));
 __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 @interface TGMapViewController ()
@@ -25,7 +25,6 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 @property (nullable, strong, nonatomic) EAGLContext* context;
 @property (assign, nonatomic) CGFloat contentScaleFactor;
 @property (assign, nonatomic) BOOL renderRequested;
-@property (assign, nonatomic, nullable) Tangram::Map* map;
 
 @end
 
@@ -234,7 +233,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
         position = CGPointMake(markerPickResult->position[0] / self.contentScaleFactor, markerPickResult->position[1] / self.contentScaleFactor);
         TGGeoPoint coordinates = TGGeoPointMake(markerPickResult->coordinates.longitude, markerPickResult->coordinates.latitude);
-        TGMarkerPickResult* result = [[TGMarkerPickResult alloc] initWithCoordinates:coordinates identifier:markerPickResult->id];
+        // TODO: retrieve marker by its id
+        TGMarkerPickResult* result = [[TGMarkerPickResult alloc] initWithCoordinates:coordinates marker:nil];
 
         [self.mapViewDelegate mapView:self didSelectMarker:result atScreenPosition:position];
     });
@@ -277,97 +277,6 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
                                                                                    properties:dictionary];
         [self.mapViewDelegate mapView:self didSelectLabel:tgLabelPickResult atScreenPosition:position];
     });
-}
-
-#pragma mark Marker implementation
-
-- (TGMapMarkerId)markerAdd
-{
-    if (!self.map) { return 0; }
-
-    return (TGMapMarkerId)self.map->markerAdd();
-}
-
-- (BOOL)markerRemove:(TGMapMarkerId)marker
-{
-    if (!self.map) { return NO; }
-
-    return self.map->markerRemove(marker);
-}
-
-- (void)markerRemoveAll
-{
-    if (!self.map) { return; }
-
-    self.map->markerRemoveAll();
-}
-
-- (BOOL)markerSetStyling:(TGMapMarkerId)identifier styling:(NSString *)styling
-{
-    if (!self.map) { return NO; }
-
-    return self.map->markerSetStyling(identifier, [styling UTF8String]);
-}
-
-- (BOOL)markerSetPoint:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinates
-{
-    if (!self.map || !identifier) { return NO; }
-
-    Tangram::LngLat lngLat(coordinates.longitude, coordinates.latitude);
-
-    return self.map->markerSetPoint(identifier, lngLat);
-}
-
-- (BOOL)markerSetPointEased:(TGMapMarkerId)identifier coordinates:(TGGeoPoint)coordinates seconds:(float)seconds easeType:(TGEaseType)ease
-{
-    if (!self.map || !identifier) { return NO; }
-
-    Tangram::LngLat lngLat(coordinates.longitude, coordinates.latitude);
-
-    return self.map->markerSetPointEased(identifier, lngLat, seconds, [TGHelpers convertEaseTypeFrom:ease]);
-}
-
-- (BOOL)markerSetPolyline:(TGMapMarkerId)identifier polyline:(TGGeoPolyline *)polyline
-{
-    if (polyline.count < 2 || !identifier) { return NO; }
-
-    return self.map->markerSetPolyline(identifier, reinterpret_cast<Tangram::LngLat*>([polyline coordinates]), polyline.count);
-}
-
-- (BOOL)markerSetPolygon:(TGMapMarkerId)identifier polygon:(TGGeoPolygon *)polygon;
-{
-    if (polygon.count < 3 || !identifier) { return NO; }
-
-    auto coords = reinterpret_cast<Tangram::LngLat*>([polygon coordinates]);
-
-    return self.map->markerSetPolygon(identifier, coords, [polygon rings], [polygon ringsCount]);
-}
-
-- (BOOL)markerSetVisible:(TGMapMarkerId)identifier visible:(BOOL)visible
-{
-    if (!self.map) { return NO; }
-
-    return self.map->markerSetVisible(identifier, visible);
-}
-
-- (BOOL)markerSetImage:(TGMapMarkerId)identifier image:(UIImage *)image
-{
-    if (!self.map) { return NO; }
-
-    CGImage* cgImage = [image CGImage];
-    size_t w = CGImageGetHeight(cgImage);
-    size_t h = CGImageGetWidth(cgImage);
-    std::vector<unsigned int> bitmap;
-    bitmap.resize(w * h);
-
-    CGColorSpaceRef colorSpace = CGImageGetColorSpace(cgImage);
-    CGContextRef cgContext = CGBitmapContextCreate(bitmap.data(), w, h, 8, w * 4, colorSpace, kCGImageAlphaPremultipliedLast);
-    CGAffineTransform flipAffineTransform = CGAffineTransformMake(1, 0, 0, -1, 0, h);
-    CGContextConcatCTM(cgContext, flipAffineTransform);
-    CGContextDrawImage(cgContext, CGRectMake(0, 0, w, h), cgImage);
-    CGContextRelease(cgContext);
-
-    return self.map->markerSetBitmap(identifier, w, h, bitmap.data());
 }
 
 #pragma mark Map position implementation

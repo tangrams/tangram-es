@@ -9,8 +9,8 @@
 
 @interface MapViewController ()
 
-@property (assign, nonatomic) TGMapMarkerId polyline;
-@property (assign, nonatomic) TGMapMarkerId polygon;
+@property (assign, nonatomic) TGMarker* markerPolyline;
+@property (assign, nonatomic) TGMarker* markerPolygon;
 
 @end
 
@@ -43,7 +43,9 @@
         return;
     }
 
-    NSString* message = [NSString stringWithFormat:@"Marker %d", markerPickResult.identifier];
+    NSString* message = [NSString stringWithFormat:@"Marker %f %f",
+        markerPickResult.marker.point.latitude,
+        markerPickResult.marker.point.longitude];
 
     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Marker pick callback"
                                                     message:message
@@ -108,9 +110,10 @@
 
     // Add polyline marker
     {
-        if (!vc.polyline) {
-            vc.polyline = [vc markerAdd];
-            [vc markerSetStyling:vc.polyline styling:@"{ style: 'lines', color: 'red', width: 20px, order: 500 }"];
+        if (!vc.markerPolyline) {
+            vc.markerPolyline = [[TGMarker alloc] init];
+            vc.markerPolyline.map = view;
+            vc.markerPolyline.styling = @"{ style: 'lines', color: 'red', width: 20px, order: 500 }";
         }
 
         static TGGeoPolyline* line = nil;
@@ -118,7 +121,7 @@
 
         if ([line count] > 0) {
             [line addPoint:coordinate];
-            [vc markerSetPolyline:vc.polyline polyline:line];
+            vc.markerPolyline.polyline = line;
         } else {
             [line addPoint:coordinate];
         }
@@ -126,9 +129,10 @@
 
     // Add polygon marker
     {
-        if (!vc.polygon) {
-            vc.polygon = [vc markerAdd];
-            [vc markerSetStyling:vc.polygon styling:@" { style: 'polygons', color: 'blue', order: 500 } "];
+        if (!vc.markerPolygon) {
+            vc.markerPolygon = [[TGMarker alloc] init];
+            vc.markerPolygon.map = view;
+            vc.markerPolygon.styling = @"{ style: 'polygons', color: 'blue', order: 500 }";
         }
 
         static TGGeoPolygon* polygon = nil;
@@ -137,7 +141,7 @@
         if ([polygon count] == 0) {
             [polygon startPath:coordinate withSize:5];
         } else if ([polygon count] % 5 == 0) {
-            [vc markerSetPolygon:vc.polygon polygon:polygon];
+            vc.markerPolygon.polygon = polygon;
             [polygon removeAll];
             [polygon startPath:coordinate withSize:5];
         } else {
@@ -147,9 +151,10 @@
 
     // Add point marker
     {
-        TGMapMarkerId mid = [vc markerAdd];
-        [vc markerSetStyling:mid styling:@"{ style: 'points', color: 'white', size: [25px, 25px], order:500, collide: false }"];
-        [vc markerSetPoint:mid coordinates:coordinate];
+        TGMarker* markerPoint = [[TGMarker alloc] init];
+        markerPoint.map = view;
+        markerPoint.styling = @"{ style: 'points', color: 'white', size: [25px, 25px], collide: false }";
+        markerPoint.point = coordinate;
     }
 
     // Request feature picking
@@ -177,9 +182,6 @@
 
     self.mapViewDelegate = [[MapViewControllerDelegate alloc] init];
     self.gestureDelegate = [[MapViewControllerRecognizerDelegate alloc] init];
-
-    self.polyline = 0;
-    self.polygon = 0;
 }
 
 - (void)didReceiveMemoryWarning
