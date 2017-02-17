@@ -10,6 +10,11 @@
 
 #include "mapbox/geojsonvt.hpp"
 
+// RapidJson parser
+#include "mapbox/geojson.hpp"
+#include <mapbox/geojson_impl.hpp>
+
+
 #include <regex>
 
 namespace Tangram {
@@ -40,40 +45,65 @@ ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<Platform> _platform,
     m_generateGeometry = true;
     m_store = std::make_unique<ClientGeoJsonData>();
 
-    // if (!_url.empty()) {
-    //     std::regex r("^(http|https):/");
-    //     std::smatch match;
-    //     if (std::regex_search(_url, match, r)) {
-    //         m_platform->startUrlRequest(_url,
-    //                 [&, this](std::vector<char>&& rawData) {
-    //                     addData(std::string(rawData.begin(), rawData.end()));
-    //                     m_hasPendingData = false;
-    //                 });
-    //         m_hasPendingData = true;
-    //     } else {
-    //         // Load from file
-    //         const auto& string = m_platform->stringFromFile(_url.c_str());
-    //         addData(string);
-    //     }
-    // }
+    if (!_url.empty()) {
+        std::regex r("^(http|https):/");
+        std::smatch match;
+        if (std::regex_search(_url, match, r)) {
+            m_platform->startUrlRequest(_url,
+                    [&, this](std::vector<char>&& rawData) {
+                        addData(std::string(rawData.begin(), rawData.end()));
+                        m_hasPendingData = false;
+                    });
+            m_hasPendingData = true;
+        } else {
+            // Load from file
+            addData(m_platform->stringFromFile(_url.c_str()));
+        }
+    }
 }
 
 ClientGeoJsonSource::~ClientGeoJsonSource() {}
 
 void ClientGeoJsonSource::addData(const std::string& _data) {
 
-    //const auto geojson = mapbox::geojson::parse(_data);
+    std::lock_guard<std::mutex> lock(m_mutexStore);
 
-    // auto features = geojsonvt::GeoJSONVT::convertFeatures(_data);
+    const auto json = geojson::parse(_data);
+    auto features = geojsonvt::geojson::visit(json, geojsonvt::ToFeatureCollection{});
 
-    // for (auto& f : features) {
-    //     m_features.push_back(std::move(f));
-    // }
+    for (auto& feature : features) {
 
-    // std::lock_guard<std::mutex> lock(m_mutexStore);
-    // m_store = std::make_unique<GeoJSONVT>(m_features, m_maxZoom, m_maxZoom, indexMaxPoints, tolerance);
-    // m_generation++;
+        feature.id = uint64_t(m_store->properties.size());
+        m_store->properties.emplace_back();
+        Properties& props = m_store->properties.back();
 
+        for (const auto& prop : feature.properties) {
+
+            if (prop.second.is<std::string>()) {
+                props.set(prop.first, prop.second.get<std::string>());
+
+            } else if (prop.second.is<bool>()) {
+                props.set(prop.first, double(prop.second.get<bool>()));
+
+            } else if (prop.second.is<uint64_t>()) {
+                props.set(prop.first, double(prop.second.get<uint64_t>()));
+
+            } else if (prop.second.is<int64_t>()) {
+                props.set(prop.first, double(prop.second.get<int64_t>()));
+
+            } else if (prop.second.is<double>()) {
+                props.set(prop.first, prop.second.get<double>());
+            }
+        }
+        feature.properties.clear();
+    }
+
+    m_store->features.insert(m_store->features.end(),
+                             std::make_move_iterator(features.begin()),
+                             std::make_move_iterator(features.end()));
+
+    m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features);
+    m_generation++;
 }
 
 void ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
@@ -115,7 +145,6 @@ void ClientGeoJsonSource::addPoint(const Properties& _tags, LngLat _point) {
     m_store->properties.emplace_back(_tags);
 
     m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features);
-
     m_generation++;
 }
 
@@ -135,7 +164,6 @@ void ClientGeoJsonSource::addLine(const Properties& _tags, const Coordinates& _l
     m_store->properties.emplace_back(_tags);
 
     m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features);
-
     m_generation++;
 }
 
@@ -159,7 +187,6 @@ void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coo
     m_store->properties.emplace_back(_tags);
 
     m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features);
-
     m_generation++;
 }
 
