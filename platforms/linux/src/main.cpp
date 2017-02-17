@@ -1,16 +1,15 @@
-#include <curl/curl.h>
-#include <memory>
-
 #include "tangram.h"
 #include "data/clientGeoJsonSource.h"
 #include "debug/textDisplay.h"
 #include "platform_linux.h"
 #include "log.h"
+#include "urlClient.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <cstdlib>
 #include <signal.h>
+#include <memory>
 
 #include <GLFW/glfw3.h>
 
@@ -327,7 +326,11 @@ void init_main_window(bool recreate) {
 
 int main(int argc, char* argv[]) {
 
-    platform = std::make_shared<LinuxPlatform>();
+    UrlClient::Environment urlClientEnvironment;
+
+    UrlClient::Options urlClientOptions;
+    urlClientOptions.numberOfThreads = 4;
+    platform = std::make_shared<LinuxPlatform>(urlClientOptions);
 
     static bool keepRunning = true;
 
@@ -365,9 +368,6 @@ int main(int argc, char* argv[]) {
 
     init_main_window(false);
 
-    // Initialize cURL
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-
     double lastTime = glfwGetTime();
 
     platform->setContinuousRendering(false);
@@ -381,8 +381,6 @@ int main(int argc, char* argv[]) {
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
         lastTime = currentTime;
-
-        platform->processNetworkQueue();
 
         // Render
         map->update(delta);
@@ -420,7 +418,6 @@ int main(int argc, char* argv[]) {
         map = nullptr;
     }
 
-    curl_global_cleanup();
     glfwTerminate();
     return 0;
 }
