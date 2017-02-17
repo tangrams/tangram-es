@@ -84,5 +84,9 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/alfons)
 ###############
 set(SQLITECPP_RUN_CPPLINT OFF CACHE BOOL "")
 set(SQLITECPP_RUN_CPPCHECK OFF CACHE BOOL "")
+set(SQLITE_ENABLE_COLUMN_METADATA OFF CACHE BOOL "")
 
 add_subdirectory(SQLiteCpp)
+
+# Extensions aren't needed for MBTiles and aren't available in older versions of sqlite3.
+target_compile_definitions(SQLiteCpp PRIVATE SQLITE_OMIT_LOAD_EXTENSION)
