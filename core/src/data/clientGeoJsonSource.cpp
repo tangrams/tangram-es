@@ -10,16 +10,21 @@
 
 #include "mapbox/geojsonvt.hpp"
 
-// RapidJson parser
 #include "mapbox/geojson.hpp"
 #include <mapbox/geojson_impl.hpp>
-
 
 #include <regex>
 
 namespace Tangram {
 
 using namespace mapbox;
+
+const uint32_t indexMaxPoints = 100000;
+const double tolerance = 1E-8;
+const uint16_t tileExtent = 4096;
+const uint16_t tileBuffer = 0;
+
+const geojsonvt::Options tileOptions = { 18, 5, indexMaxPoints, false, tolerance, tileExtent, tileBuffer };
 
 struct ClientGeoJsonData {
     std::unique_ptr<geojsonvt::GeoJSONVT> tiles;
@@ -66,7 +71,8 @@ ClientGeoJsonSource::~ClientGeoJsonSource() {}
 
 void ClientGeoJsonSource::addData(const std::string& _data) {
 
-    std::lock_guard<std::mutex> lock(m_mutexStore);
+    if (!m_edit) { m_mutexStore.lock(); }
+    auto& store = m_edit ? m_edit : m_store;
 
     const auto json = geojson::parse(_data);
     auto features = geojsonvt::geojson::visit(json, geojsonvt::ToFeatureCollection{});
@@ -98,12 +104,15 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
         feature.properties.clear();
     }
 
-    m_store->features.insert(m_store->features.end(),
-                             std::make_move_iterator(features.begin()),
-                             std::make_move_iterator(features.end()));
+    store->features.insert(store->features.end(),
+                           std::make_move_iterator(features.begin()),
+                           std::make_move_iterator(features.end()));
 
-    m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features);
-    m_generation++;
+    if (!m_edit) {
+        store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(store->features, tileOptions);
+        m_generation++;
+        m_mutexStore.unlock();
+    }
 }
 
 void ClientGeoJsonSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
@@ -126,51 +135,79 @@ void ClientGeoJsonSource::clearData() {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 
-    m_store->features.clear();
-    m_store->properties.clear();
-    m_store->tiles.reset();
+    auto& store = m_edit ? m_edit : m_store;
 
+    store->features.clear();
+    store->properties.clear();
+    store->tiles.reset();
+
+    m_generation++;
+}
+
+void ClientGeoJsonSource::edit(bool _clear) {
+
+    if (_clear) {
+        m_edit = std::make_unique<ClientGeoJsonData>();
+    } else {
+        std::lock_guard<std::mutex> lock(m_mutexStore);
+        m_edit = std::move(m_store);
+    }
+}
+
+void ClientGeoJsonSource::commit() {
+    if (!m_edit) { return; }
+
+    m_edit->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_edit->features, tileOptions);
+
+    std::lock_guard<std::mutex> lock(m_mutexStore);
+
+    m_store = std::move(m_edit);
     m_generation++;
 }
 
 void ClientGeoJsonSource::addPoint(const Properties& _tags, LngLat _point) {
 
-    std::lock_guard<std::mutex> lock(m_mutexStore);
+    if (!m_edit) { m_mutexStore.lock(); }
+    auto& store = m_edit ? m_edit : m_store;
 
     geometry::point<double> geom { _point.longitude, _point.latitude };
 
-    uint64_t id = m_store->features.size();
+    uint64_t id = store->features.size();
+    store->features.emplace_back(geom, id);
+    store->properties.emplace_back(_tags);
 
-    m_store->features.emplace_back(geom, id);
-    m_store->properties.emplace_back(_tags);
-
-    m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features);
-    m_generation++;
+    if (!m_edit) {
+        store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(store->features, tileOptions);
+        m_generation++;
+        m_mutexStore.unlock();
+    }
 }
 
 void ClientGeoJsonSource::addLine(const Properties& _tags, const Coordinates& _line) {
 
-
-    std::lock_guard<std::mutex> lock(m_mutexStore);
+    if (!m_edit) { m_mutexStore.lock(); }
+    auto& store = m_edit ? m_edit : m_store;
 
     geometry::line_string<double> geom;
     for (auto& p : _line) {
         geom.emplace_back(p.longitude, p.latitude);
     }
 
-    uint64_t id = m_store->features.size();
+    uint64_t id = store->features.size();
+    store->features.emplace_back(geom, id);
+    store->properties.emplace_back(_tags);
 
-    m_store->features.emplace_back(geom, id);
-    m_store->properties.emplace_back(_tags);
-
-    m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features);
-    m_generation++;
+    if (!m_edit) {
+        store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(store->features, tileOptions);
+        m_generation++;
+        m_mutexStore.unlock();
+    }
 }
 
 void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coordinates>& _poly) {
 
-
-    std::lock_guard<std::mutex> lock(m_mutexStore);
+    if (!m_edit) { m_mutexStore.lock(); }
+    auto& store = m_edit ? m_edit : m_store;
 
     geometry::polygon<double> geom;
     for (auto& ring : _poly) {
@@ -181,31 +218,34 @@ void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coo
         }
     }
 
-    uint64_t id = m_store->features.size();
+    uint64_t id = store->features.size();
+    store->features.emplace_back(geom, id);
+    store->properties.emplace_back(_tags);
 
-    m_store->features.emplace_back(geom, id);
-    m_store->properties.emplace_back(_tags);
-
-    m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features);
-    m_generation++;
+    if (!m_edit) {
+        store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(store->features, tileOptions);
+        m_generation++;
+        m_mutexStore.unlock();
+    }
 }
 
 struct add_geometry {
 
     static constexpr double extent = 4096.0;
 
+    Feature& feature;
+
     // Transform a geojsonvt::TilePoint into the corresponding Tangram::Point
     Point transformPoint(geometry::point<int16_t> pt) {
         return { pt.x / extent, 1. - pt.y / extent, 0 };
     }
-
-    Feature& feature;
 
     bool operator()(const geometry::point<int16_t>& p) {
         feature.geometryType = GeometryType::points;
         feature.points.push_back(transformPoint(p));
         return true;
     }
+
     bool operator()(const geometry::line_string<int16_t>& geom) {
         feature.geometryType = GeometryType::lines;
         feature.lines.emplace_back();
@@ -215,6 +255,7 @@ struct add_geometry {
         }
         return true;
     }
+
     bool operator()(const geometry::polygon<int16_t>& geom) {
         feature.geometryType = GeometryType::polygons;
         feature.polygons.emplace_back();
@@ -241,11 +282,12 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task,
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 
-    auto data = std::make_shared<TileData>();
+    if (!m_store || !m_store->tiles) { return nullptr; }
 
-    if (!m_store->tiles) { return nullptr; }
     auto tile = m_store->tiles->getTile(_task.tileId().z, _task.tileId().x, _task.tileId().y);
+    if (tile.features.empty()) { return nullptr; }
 
+    auto data = std::make_shared<TileData>();
     data->layers.emplace_back("");  // empty name will skip filtering by 'collection'
     Layer& layer = data->layers.back();
 
@@ -257,7 +299,6 @@ std::shared_ptr<TileData> ClientGeoJsonSource::parse(const TileTask& _task,
             layer.features.emplace_back(std::move(feature));
         }
     }
-
 
     return data;
 }

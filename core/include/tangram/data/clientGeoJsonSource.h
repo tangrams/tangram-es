@@ -32,6 +32,9 @@ public:
     void addLine(const Properties& _tags, const Coordinates& _line);
     void addPoly(const Properties& _tags, const std::vector<Coordinates>& _poly);
 
+    void edit(bool _clear = false);
+    void commit();
+
     virtual void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
     std::shared_ptr<TileTask> createTask(TileID _tileId, int _subTask) override;
 
@@ -44,6 +47,7 @@ protected:
                                             const MapProjection& _projection) const override;
 
     std::unique_ptr<ClientGeoJsonData> m_store;
+    std::unique_ptr<ClientGeoJsonData> m_edit;
 
     mutable std::mutex m_mutexStore;
     bool m_hasPendingData = false;
