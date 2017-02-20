@@ -25,7 +25,7 @@ matrix:
           jdk: oraclejdk8
 
 before_install:
-    - git submodule update --init --recursive
+    - git submodule update --init
     - source ./scripts/travis/before_install.sh
 
 install: ulimit -c

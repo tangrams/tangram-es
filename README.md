@@ -27,7 +27,7 @@ brew install cmake
 Make sure to update git submodules before you build:
 
 ```bash
-git submodule update --init --recursive
+git submodule update --init
 ```
 
 Currently we are targeting five platforms: OS X, Ubuntu Linux, iOS, Android, and Raspberry Pi.
