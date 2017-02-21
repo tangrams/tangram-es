@@ -87,7 +87,6 @@ afterEvaluate { project ->
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
     exclude '**/*.kt'
     exclude 'com/almeros/android/multitouch'
-    exclude 'com/mapzen/tangram/geometry'
 
     if (JavaVersion.current().isJava8Compatible()) {
       allprojects {

@@ -6,8 +6,6 @@ import java.util.Map;
 
 /**
  * {@code Point} is a single LngLat and its properties.
- *
- * Users of Tangram do not need to use this class.
  */
 public class Point extends Geometry {
 

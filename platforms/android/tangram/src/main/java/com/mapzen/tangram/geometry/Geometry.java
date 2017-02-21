@@ -4,8 +4,6 @@ import java.util.Map;
 
 /**
  * {@code Geometry} is an abstract container of LngLat points and associated properties.
- *
- * Users of Tangram do not need to use this class.
  */
 public abstract class Geometry {
 
