@@ -112,8 +112,10 @@
     {
         if (!vc.markerPolyline) {
             vc.markerPolyline = [[TGMarker alloc] init];
-            vc.markerPolyline.map = view;
             vc.markerPolyline.styling = @"{ style: 'lines', color: 'red', width: 20px, order: 500 }";
+
+            // Add the marker to the current view
+            vc.markerPolyline.map = view;
         }
 
         static TGGeoPolyline* line = nil;
@@ -131,8 +133,10 @@
     {
         if (!vc.markerPolygon) {
             vc.markerPolygon = [[TGMarker alloc] init];
-            vc.markerPolygon.map = view;
             vc.markerPolygon.styling = @"{ style: 'polygons', color: 'blue', order: 500 }";
+
+            // Add the marker to the current view
+            vc.markerPolygon.map = view;
         }
 
         static TGGeoPolygon* polygon = nil;
@@ -151,8 +155,7 @@
 
     // Add point marker
     {
-        TGMarker* markerPoint = [[TGMarker alloc] init];
-        markerPoint.map = view;
+        TGMarker* markerPoint = [[TGMarker alloc] initWithMapView:view];
         markerPoint.styling = @"{ style: 'points', color: 'white', size: [25px, 25px], collide: false }";
         markerPoint.point = coordinate;
     }
@@ -160,6 +163,7 @@
     // Request feature picking
     [vc pickFeatureAt:location];
     [vc pickLabelAt:location];
+    // [vc pickMarkerAt:location];
 }
 
 - (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location

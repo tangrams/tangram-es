@@ -9,8 +9,20 @@
 #import "TGMapViewController.h"
 #import "tangram.h"
 
+
 @interface TGMapViewController ()
+
+NS_ASSUME_NONNULL_BEGIN
+
+- (void)addMarker:(TGMarker *)marker withIdentifier:(Tangram::MarkerID)identifier;
+
+- (void)removeMarker:(Tangram::MarkerID)identifier;
+
+NS_ASSUME_NONNULL_END
+
+- (TGMarker *)getMarker:(Tangram::MarkerID)identifier;
 
 @property (assign, nonatomic, nullable) Tangram::Map* map;
 
 @end
+

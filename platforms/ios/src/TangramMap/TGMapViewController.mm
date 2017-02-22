@@ -15,6 +15,7 @@
 #import "data/propertyItem.h"
 #import "tangram.h"
 
+#import <unordered_map>
 #import <functional>
 
 __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
@@ -25,10 +26,23 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 @property (nullable, strong, nonatomic) EAGLContext* context;
 @property (assign, nonatomic) CGFloat contentScaleFactor;
 @property (assign, nonatomic) BOOL renderRequested;
+@property (strong, nonatomic) NSMutableDictionary* markers;
 
 @end
 
 @implementation TGMapViewController
+
+- (void)addMarker:(TGMarker *)marker withIdentifier:(Tangram::MarkerID)identifier;
+{
+    NSString* key = [NSString stringWithFormat:@"%d", (NSUInteger)identifier];
+    self.markers[key] = marker;
+}
+
+- (void)removeMarker:(Tangram::MarkerID)identifier
+{
+    NSString* key = [NSString stringWithFormat:@"%d", (NSUInteger)identifier];
+    [self.markers removeObjectForKey:key];
+}
 
 - (void)setDebugFlag:(TGDebugFlag)debugFlag value:(BOOL)on
 {
@@ -200,7 +214,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
 
         const auto& properties = featureResult->properties;
-        position = CGPointMake(featureResult->position[0] / self.contentScaleFactor, featureResult->position[1] / self.contentScaleFactor);
+        position = CGPointMake(featureResult->position[0] / self.contentScaleFactor,
+                               featureResult->position[1] / self.contentScaleFactor);
 
         for (const auto& item : properties->items()) {
             NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
@@ -231,11 +246,21 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
             return;
         }
 
-        position = CGPointMake(markerPickResult->position[0] / self.contentScaleFactor, markerPickResult->position[1] / self.contentScaleFactor);
-        TGGeoPoint coordinates = TGGeoPointMake(markerPickResult->coordinates.longitude, markerPickResult->coordinates.latitude);
-        // TODO: retrieve marker by its id
-        TGMarkerPickResult* result = [[TGMarkerPickResult alloc] initWithCoordinates:coordinates marker:nil];
+        NSString* key = [NSString stringWithFormat:@"%d", (NSUInteger)markerPickResult->id];
+        TGMarker* marker = [self.markers objectForKey:key];
 
+        if (!marker) {
+            [self.mapViewDelegate mapView:self didSelectMarker:nil atScreenPosition:position];
+            return;
+        }
+
+        position = CGPointMake(markerPickResult->position[0] / self.contentScaleFactor,
+                               markerPickResult->position[1] / self.contentScaleFactor);
+
+        TGGeoPoint coordinates = TGGeoPointMake(markerPickResult->coordinates.longitude,
+                                                markerPickResult->coordinates.latitude);
+
+        TGMarkerPickResult* result = [[TGMarkerPickResult alloc] initWithCoordinates:coordinates marker:marker];
         [self.mapViewDelegate mapView:self didSelectMarker:result atScreenPosition:position];
     });
 }
@@ -263,7 +288,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
         const auto& touchItem = labelPickResult->touchItem;
         const auto& properties = touchItem.properties;
-        position = CGPointMake(touchItem.position[0] / self.contentScaleFactor, touchItem.position[1] / self.contentScaleFactor);
+        position = CGPointMake(touchItem.position[0] / self.contentScaleFactor,
+                               touchItem.position[1] / self.contentScaleFactor);
 
         for (const auto& item : properties->items()) {
             NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
@@ -651,6 +677,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
     self.renderRequested = YES;
     self.continuous = NO;
+    self.markers = [[NSMutableDictionary alloc] init];
 
     if (!self.httpHandler) {
         self.httpHandler = [[TGHttpHandler alloc] initWithCachePath:@"/tangram_cache"

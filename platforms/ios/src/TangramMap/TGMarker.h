@@ -25,6 +25,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (instancetype)init;
 
+- (instancetype)initWithMapView:(TGMapViewController *)mapView;
+
 /**
  Similar to `-[TGMapViewController markerSetPoint:coordinates:]` except that the point will transition to the
  geographic coordinate with a transition of time `seconds` and with an ease type function of type `ease`

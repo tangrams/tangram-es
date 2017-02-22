@@ -21,6 +21,7 @@ enum class TGMarkerType {
 
 @interface TGMarker () {
     Tangram::Map* tangramInstance;
+    TGMapViewController* mapViewController;
     Tangram::MarkerID identifier;
     TGMarkerType type;
 }
@@ -34,8 +35,21 @@ enum class TGMarkerType {
     self = [super init];
 
     if (self) {
-        self.visible = YES;
         type = TGMarkerType::none;
+        self.visible = YES;
+    }
+
+    return self;
+}
+
+- (instancetype)initWithMapView:(TGMapViewController *)mapView
+{
+    self = [super init];
+
+    if (self) {
+        type = TGMarkerType::none;
+        self.visible = YES;
+        self.map = mapView;
     }
 
     return self;
@@ -135,20 +149,24 @@ enum class TGMarkerType {
     if (!mapView && tangramInstance && identifier) {
         tangramInstance->markerRemove(identifier);
         tangramInstance = nullptr;
+        mapViewController = nil;
         return;
     }
 
     if (![mapView map] || [mapView map] == tangramInstance) { return; }
 
     // Removes the marker from the previous map view
-    if (tangramInstance) {
+    if (tangramInstance && mapViewController) {
         tangramInstance->markerRemove(identifier);
+        [mapViewController removeMarker:identifier];
     }
 
     tangramInstance = [mapView map];
+    mapViewController = mapView;
 
     // Create a new marker identifier for this view
     identifier = tangramInstance->markerAdd();
+    [mapViewController addMarker:self withIdentifier:identifier];
 
     if (!identifier) { return NO; }
 
