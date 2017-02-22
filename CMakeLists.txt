@@ -13,7 +13,7 @@ else()
 endif()
 
 if(NOT EXISTS "${PROJECT_SOURCE_DIR}/core/deps/harfbuzz-icu-freetype/harfbuzz/README")
-    message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init --recursive'")
+    message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init'")
     return()
 endif()
 

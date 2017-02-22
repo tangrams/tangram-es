@@ -8,7 +8,7 @@ machine:
 checkout:
   post:
     - git submodule sync
-    - git submodule update --init --recursive
+    - git submodule update --init
     - gem install jazzy
 test:
   override:
