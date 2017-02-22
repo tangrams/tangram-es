@@ -1,6 +1,3 @@
-[submodule "core/include/glm"]
-	path = core/deps/glm
-	url = https://github.com/g-truc/glm.git
 [submodule "core/include/isect2d"]
 	path = core/deps/isect2d
 	url = https://github.com/tangrams/isect2d.git
