@@ -45,8 +45,9 @@ GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 
 GLint ShaderProgram::getUniformLocation(const UniformLocation& _uniform) {
 
-    _uniform.location = GL::getUniformLocation(m_glProgram, _uniform.name.c_str());
-
+    if (_uniform.location == -2) {
+        _uniform.location = GL::getUniformLocation(m_glProgram, _uniform.name.c_str());
+    }
     return _uniform.location;
 }
 
