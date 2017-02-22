@@ -1,17 +1,16 @@
 #pragma once
 
 #include "platform.h"
-#include "urlWorker.h"
-#include <list>
+#include "urlClient.h"
 
-void processNetworkQueue();
-
-#define NUM_WORKERS 3
+using Tangram::UrlClient;
 
 class LinuxPlatform : public Platform {
 
 public:
 
+    LinuxPlatform();
+    LinuxPlatform(UrlClient::Options urlClientOptions);
     ~LinuxPlatform() override;
     void requestRender() const override;
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
@@ -19,10 +18,9 @@ public:
     void cancelUrlRequest(const std::string& _url) override;
     void processNetworkQueue();
 
-private:
+protected:
 
-    UrlWorker m_workers[NUM_WORKERS];
-    std::list<std::unique_ptr<UrlTask>> m_urlTaskQueue;
+    UrlClient m_urlClient;
 
 };
 

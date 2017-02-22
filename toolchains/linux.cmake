@@ -60,11 +60,13 @@ if(APPLICATION)
   add_executable(${EXECUTABLE_NAME}
     ${SOURCES}
     ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp
+    ${PROJECT_SOURCE_DIR}/platforms/common/urlClient.cpp
     )
 
   target_include_directories(${EXECUTABLE_NAME}
     PUBLIC
-    ${GLFW_SOURCE_DIR}/include)
+    ${GLFW_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/platforms/common)
 
   target_link_libraries(${EXECUTABLE_NAME}
     ${CORE_LIBRARY}

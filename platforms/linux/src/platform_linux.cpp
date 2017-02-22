@@ -36,19 +36,11 @@ void logMsg(const char* fmt, ...) {
     va_end(args);
 }
 
-void LinuxPlatform::processNetworkQueue() {
-    // attach workers to NetWorkerData
-    auto taskItr = m_urlTaskQueue.begin();
-    for(auto& worker : m_workers) {
-        if(taskItr == m_urlTaskQueue.end()) {
-            break;
-        }
-        if(worker.isAvailable()) {
-            worker.perform(std::move(*taskItr), static_cast<const Platform&>(*this));
-            taskItr = m_urlTaskQueue.erase(taskItr);
-        }
-    }
-}
+LinuxPlatform::LinuxPlatform() :
+    m_urlClient(UrlClient::Options{}) {}
+
+LinuxPlatform::LinuxPlatform(UrlClient::Options urlClientOptions) :
+    m_urlClient(urlClientOptions) {}
 
 void LinuxPlatform::requestRender() const {
 #if defined(PLATFORM_LINUX)
@@ -72,38 +64,15 @@ std::vector<FontSourceHandle> LinuxPlatform::systemFontFallbacksHandle() const {
 
 bool LinuxPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
-    std::unique_ptr<UrlTask> task(new UrlTask(_url, _callback));
-    for (auto& worker : m_workers) {
-        if (worker.isAvailable()) {
-            worker.perform(std::move(task), static_cast<const Platform&>(*this));
-            return true;
-        }
-    }
-    m_urlTaskQueue.push_back(std::move(task));
-    return true;
-
+    return m_urlClient.addRequest(_url, _callback);
 }
 
 void LinuxPlatform::cancelUrlRequest(const std::string& _url) {
 
-    // Only clear this request if a worker has not started operating on it!!
-    // otherwise it gets too convoluted with curl!
-    auto itr = m_urlTaskQueue.begin();
-    while (itr != m_urlTaskQueue.end()) {
-        if ((*itr)->url == _url) {
-            itr = m_urlTaskQueue.erase(itr);
-        } else {
-            itr++;
-        }
-    }
+    m_urlClient.cancelRequest(_url);
 }
 
-LinuxPlatform::~LinuxPlatform() {
-    for(auto& worker : m_workers) {
-        worker.join();
-    }
-    m_urlTaskQueue.clear();
-}
+LinuxPlatform::~LinuxPlatform() {}
 
 void setCurrentThreadPriority(int priority) {
 #if defined(PLATFORM_LINUX)
