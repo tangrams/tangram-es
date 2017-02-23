@@ -330,6 +330,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (assign, nonatomic) float rotation;
 /// Assign a tilt angle in radians to the map view camera
 @property (assign, nonatomic) float tilt;
+/// Access the markers added to this map view
+@property (readonly, nonatomic) NSArray<TGMarker *>* markers;
 
 /**
  Assign `TGHttpHandler` for network request management.
@@ -486,7 +488,8 @@ NS_ASSUME_NONNULL_BEGIN
  To set a marker interactive, you must set it when styling it:
 
  ```swift
- markerSetStyling(markerIdentifier, styling: "{ style: 'points', interactive : true,  color: 'white', size: [30px, 30px], order: 500 }")
+ TGMarker marker;
+ marker.styling = "{ style: 'points', interactive : true,  color: 'white', size: [30px, 30px], order: 500 }"
  ```
 
  @param screenPosition the logical pixels screen position used for the feature selection query
@@ -495,6 +498,13 @@ NS_ASSUME_NONNULL_BEGIN
  `[TGMapViewDelegate mapView:didSelectMarker:atScreenPosition:]`.
  */
 - (void)pickMarkerAt:(CGPoint)screenPosition;
+
+#pragma mark Marker access
+
+/**
+ Removes all the markers added to the map view.
+ */
+- (void)markerRemoveAll;
 
 #pragma mark Map View lifecycle
 

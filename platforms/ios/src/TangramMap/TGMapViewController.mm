@@ -26,22 +26,41 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 @property (nullable, strong, nonatomic) EAGLContext* context;
 @property (assign, nonatomic) CGFloat contentScaleFactor;
 @property (assign, nonatomic) BOOL renderRequested;
-@property (strong, nonatomic) NSMutableDictionary* markers;
+@property (strong, nonatomic) NSMutableDictionary* markersById;
 
 @end
 
 @implementation TGMapViewController
 
+- (NSArray<TGMarker *> *)markers
+{
+    if (!self.map) {
+        NSArray* values = [[NSArray alloc] init];
+        return values;
+    }
+
+    return [self.markersById allValues];
+}
+
 - (void)addMarker:(TGMarker *)marker withIdentifier:(Tangram::MarkerID)identifier;
 {
     NSString* key = [NSString stringWithFormat:@"%d", (NSUInteger)identifier];
-    self.markers[key] = marker;
+    self.markersById[key] = marker;
 }
 
 - (void)removeMarker:(Tangram::MarkerID)identifier
 {
     NSString* key = [NSString stringWithFormat:@"%d", (NSUInteger)identifier];
-    [self.markers removeObjectForKey:key];
+    [self.markersById removeObjectForKey:key];
+}
+
+- (void)markerRemoveAll
+{
+    if (!self.map) { return; }
+
+    [self.markersById removeAllObjects];
+
+    self.map->markerRemoveAll();
 }
 
 - (void)setDebugFlag:(TGDebugFlag)debugFlag value:(BOOL)on
@@ -247,7 +266,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         }
 
         NSString* key = [NSString stringWithFormat:@"%d", (NSUInteger)markerPickResult->id];
-        TGMarker* marker = [self.markers objectForKey:key];
+        TGMarker* marker = [self.markersById objectForKey:key];
 
         if (!marker) {
             [self.mapViewDelegate mapView:self didSelectMarker:nil atScreenPosition:position];
@@ -677,7 +696,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
     self.renderRequested = YES;
     self.continuous = NO;
-    self.markers = [[NSMutableDictionary alloc] init];
+    self.markersById = [[NSMutableDictionary alloc] init];
 
     if (!self.httpHandler) {
         self.httpHandler = [[TGHttpHandler alloc] initWithCachePath:@"/tangram_cache"
