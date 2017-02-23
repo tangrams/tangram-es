@@ -12,13 +12,12 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- Helper class to contain a polyline geometry for use in `-[TGMapViewController markerSetPolyline:polyline:]`.
+ Helper class to contain a polyline geometry for use in `-[TGMarker polyline]`.
 
  Set the geometry of a marker to a polyline along the given coordinates; _coordinates is a
  pointer to a sequence of _count LngLats; markers can have their geometry set multiple times
  with possibly different geometry types; returns true if the marker ID was found and
  successfully updated, otherwise returns false.
-
  */
 @interface TGGeoPolyline : NSObject
 

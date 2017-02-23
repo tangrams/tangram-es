@@ -23,7 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
  Initializes a `TGMarkerPickResult`.
 
  @param coordinates the geographic coordinates of the label pick result
- @param identifier the marker identifier
+ @param marker the marker object selected
 
  @return an initialized `TGMarkerPickResult`
 
@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// The geographic coordinates of the selected label
 @property (readonly, nonatomic) TGGeoPoint coordinates;
 
-/// The identifier of the selected marker
+/// The selected marker
 @property (readonly, nonatomic) TGMarker* marker;
 
 NS_ASSUME_NONNULL_END
