@@ -37,6 +37,7 @@ enum class TGMarkerType {
     if (self) {
         type = TGMarkerType::none;
         self.visible = YES;
+        self.drawOrder = 0;
     }
 
     return self;
@@ -49,6 +50,7 @@ enum class TGMarkerType {
     if (self) {
         type = TGMarkerType::none;
         self.visible = YES;
+        self.drawOrder = 0;
         self.map = mapView;
     }
 
@@ -117,6 +119,15 @@ enum class TGMarkerType {
     if (!tangramInstance || !identifier) { return; }
 
     tangramInstance->markerSetVisible(identifier, visible);
+}
+
+- (void)setDrawOrder:(NSInteger)drawOrder
+{
+    _drawOrder = drawOrder;
+
+    if (!tangramInstance || !identifier) { return; }
+
+    tangramInstance->markerSetDrawOrder(identifier, (int)drawOrder);
 }
 
 - (void)setIcon:(UIImage *)icon
@@ -197,6 +208,7 @@ enum class TGMarkerType {
     }
 
     tangramInstance->markerSetVisible(identifier, self.visible);
+    tangramInstance->markerSetDrawOrder(identifier, (int)self.drawOrder);
 }
 
 @end

@@ -95,6 +95,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (assign, nonatomic) BOOL visible;
 
 /**
+ Set the ordering of point marker object relative to other markers; higher values are drawn 'above'.
+ */
+@property (assign, nonatomic) NSInteger drawOrder;
+
+/**
  Sets an icon loaded with a <a href="https://developer.apple.com/reference/uikit/uiimage">
  UIImage</a> to a marker styled with a <a href="https://mapzen.com/documentation/tangram/Styles-Overview/#points">
  points style</a>.
