@@ -5,11 +5,10 @@
 
 #include <mutex>
 
-class Platform;
-
 
 namespace Tangram {
 
+class Platform;
 
 struct Properties;
 

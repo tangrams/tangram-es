@@ -2,6 +2,8 @@
 
 #include "platform.h"
 
+namespace Tangram {
+
 class MockPlatform : public Platform {
 
 public:
@@ -13,4 +15,4 @@ public:
 
 };
 
-
+} // namespace Tangram

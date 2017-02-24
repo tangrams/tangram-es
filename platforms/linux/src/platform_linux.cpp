@@ -1,21 +1,12 @@
-#include <stdio.h>
-#include <stdarg.h>
-#include <iostream>
-#include <fstream>
-#include <functional>
-#include <string>
-
 #include "platform_linux.h"
 #include "gl/hardware.h"
-
+#include "log.h"
+#include <stdio.h>
+#include <stdarg.h>
 #include <libgen.h>
 #include <unistd.h>
 #include <sys/resource.h>
 #include <sys/syscall.h>
-
-#include "log.h"
-
-#include <regex>
 
 #if defined(PLATFORM_LINUX)
 #include <GLFW/glfw3.h>
@@ -28,6 +19,8 @@
 #define FONT_HE "fonts/NotoSansHebrew-Regular.ttf"
 #define FONT_JA "fonts/DroidSansJapanese.ttf"
 #define FALLBACK "fonts/DroidSansFallback.ttf"
+
+namespace Tangram {
 
 void logMsg(const char* fmt, ...) {
     va_list args;
@@ -90,3 +83,5 @@ void initGLExtensions() {
     // no-op
 #endif
 }
+
+} // namespace Tangram

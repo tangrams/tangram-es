@@ -6,9 +6,10 @@ namespace SQLite {
 class Database;
 }
 
-class Platform;
 
 namespace Tangram {
+
+class Platform;
 
 struct MBTilesQueries;
 class AsyncWorker;

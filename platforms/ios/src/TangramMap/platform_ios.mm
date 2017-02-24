@@ -14,20 +14,7 @@
 #import "platform_ios.h"
 #import "log.h"
 
-void logMsg(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    vfprintf(stderr, fmt, args);
-    va_end(args);
-}
-
-void setCurrentThreadPriority(int priority) {
-    // No-op
-}
-
-void initGLExtensions() {
-    // No-op
-}
+namespace Tangram {
 
 NSString* resolvePath(const char* _path) {
     NSString* pathString = [NSString stringWithUTF8String:_path];
@@ -70,6 +57,21 @@ std::vector<char> loadUIFont(UIFont* _font) {
     }
 
     return data;
+}
+
+void logMsg(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
+}
+
+void setCurrentThreadPriority(int priority) {
+    // No-op
+}
+
+void initGLExtensions() {
+    // No-op
 }
 
 iOSPlatform::iOSPlatform(TGMapViewController* _viewController) :
@@ -232,5 +234,7 @@ void iOSPlatform::cancelUrlRequest(const std::string& _url) {
     NSString* url = [NSString stringWithUTF8String:_url.c_str()];
     [httpHandler cancelDownloadRequestAsync:url];
 }
+
+} // namespace Tangram
 
 #endif //PLATFORM_IOS

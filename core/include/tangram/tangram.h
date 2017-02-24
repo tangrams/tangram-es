@@ -9,10 +9,9 @@
 #include <string>
 #include <vector>
 
-class Platform;
-
 namespace Tangram {
 
+class Platform;
 class TileSource;
 
 enum LabelType {

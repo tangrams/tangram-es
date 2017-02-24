@@ -30,7 +30,7 @@ struct timeval tv;
 unsigned long long timePrev, timeStart;
 
 Tangram::Map* map = nullptr;
-std::shared_ptr<LinuxPlatform> platform;
+std::shared_ptr<Tangram::LinuxPlatform> platform;
 
 static bool bUpdate = true;
 
@@ -45,7 +45,7 @@ int main(int argc, char **argv){
     UrlClient::Options urlClientOptions;
     urlClientOptions.numberOfThreads = 4;
 
-    platform = std::make_shared<LinuxPlatform>(urlClientOptions);
+    platform = std::make_shared<Tangram::LinuxPlatform>(urlClientOptions);
 
     // Start OpenGL context
     initGL(argc, argv);
