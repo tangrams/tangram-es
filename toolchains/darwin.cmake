@@ -43,13 +43,14 @@ if(APPLICATION)
 
   add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes" "Resources")
 
-  set(SOURCES ${SOURCES} ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp)
+  set(SOURCES ${SOURCES} ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp ${PROJECT_SOURCE_DIR}/platforms/common/glfwApp.cpp)
 
   add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES} ${OSX_RESOURCES})
 
   target_include_directories(${EXECUTABLE_NAME}
     PUBLIC
-    ${GLFW_SOURCE_DIR}/include)
+    ${GLFW_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/platforms/common)
 
   target_link_libraries(${EXECUTABLE_NAME}
     ${CORE_LIBRARY}
