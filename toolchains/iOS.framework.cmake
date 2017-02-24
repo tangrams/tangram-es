@@ -47,6 +47,7 @@ set(SOURCES
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGGeoPolyline.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGGeoPolygon.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHttpHandler.mm
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapData.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGSceneUpdate.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGLabelPickResult.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarkerPickResult.mm
@@ -61,6 +62,7 @@ set(FRAMEWORK_HEADERS
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarker.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGEaseType.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGSceneUpdate.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapData.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHttpHandler.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGLabelPickResult.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarkerPickResult.h

@@ -10,6 +10,7 @@
 
 #import "TGMapViewController.h"
 #import "TGMapViewController+Internal.h"
+#import "TGMapData+Internal.h"
 #import "TGHelpers.h"
 #import "platform_ios.h"
 #import "data/propertyItem.h"
@@ -76,6 +77,38 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 - (void)toggleDebugFlag:(TGDebugFlag)debugFlag
 {
     Tangram::toggleDebugFlag((Tangram::DebugFlags)debugFlag);
+}
+
+- (TGMapData *)createDataSource:(NSString *)name
+{
+    if (!self.map) { return nil; }
+
+    TGMapData* clientData = [[TGMapData alloc] initWithMapView:self name:name];
+    return clientData;
+}
+
+- (std::shared_ptr<Tangram::ClientGeoJsonSource>)addDataSource:(NSString *)name
+{
+    if (!self.map) { return; }
+
+    std::string sourceName = std::string([name UTF8String]);
+    auto source = std::make_shared<Tangram::ClientGeoJsonSource>(self.map->getPlatform(), sourceName, "");
+    self.map->addTileSource(source);
+    return source;
+}
+
+- (void)removeDataSource:(std::shared_ptr<Tangram::TileSource>)tileSource
+{
+    if (!self.map || !tileSource) { return; }
+
+    self.map->removeTileSource(*tileSource);
+}
+
+- (void)clearDataSource:(std::shared_ptr<Tangram::TileSource>)tileSource
+{
+    if (!self.map || !tileSource) { return; }
+
+    self.map->clearTileSource(*tileSource, true, true);
 }
 
 #pragma mark Scene loading interface

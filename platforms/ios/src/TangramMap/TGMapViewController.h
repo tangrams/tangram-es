@@ -13,6 +13,7 @@
 
 @class TGMapViewController;
 
+#import "TGMapData.h"
 #import "TGGeoPoint.h"
 #import "TGGeoPolygon.h"
 #import "TGGeoPolyline.h"
@@ -346,6 +347,8 @@ NS_ASSUME_NONNULL_BEGIN
  of `TGHttpHandler`.
  */
 @property (strong, nonatomic) TGHttpHandler* httpHandler;
+
+- (nullable TGMapData *)addDataSource:(NSString *)name;
 
 #pragma mark Debug toggles
 

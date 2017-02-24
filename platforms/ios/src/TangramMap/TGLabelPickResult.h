@@ -9,8 +9,6 @@
 #import <Foundation/Foundation.h>
 #import "TGGeoPoint.h"
 
-NS_ASSUME_NONNULL_BEGIN
-
 /**
  A label type used to differentiate icon and text labels when selecting them on a map view
  */
@@ -27,6 +25,8 @@ typedef NS_ENUM(NSInteger, TGLabelType) {
  See `-[TGMapViewController pickLabelAt:]` and `[TGMapViewDelegate mapView:didSelectLabel:atScreenPosition:]`.
  */
 @interface TGLabelPickResult : NSObject
+
+NS_ASSUME_NONNULL_BEGIN
 
 /**
  Initializes a `TGLabelPickResult`.
