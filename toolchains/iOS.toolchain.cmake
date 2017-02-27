@@ -146,13 +146,9 @@ set (CMAKE_OSX_SYSROOT ${CMAKE_IOS_SDK_ROOT} CACHE PATH "Sysroot used for iOS su
 # set the architecture for iOS
 # NOTE: Currently both ARCHS_STANDARD_32_BIT and ARCHS_UNIVERSAL_IPHONE_OS set armv7 only, so set both manually
 if (${IOS_PLATFORM} STREQUAL "OS")
-	set (IOS_ARCH armv7 armv7s arm64)
+    set (IOS_ARCH ${IOS_DEVICE_ARCHS})
 else (${IOS_PLATFORM} STREQUAL "OS")
-    if (BUILD_IOS_FRAMEWORK)
-        set (IOS_ARCH i386 x86_64)
-    else()
-        set (IOS_ARCH i386)
-    endif()
+    set (IOS_ARCH ${IOS_SIMULATOR_ARCHS})
 endif (${IOS_PLATFORM} STREQUAL "OS")
 
 set (CMAKE_OSX_ARCHITECTURES ${IOS_ARCH} CACHE string  "Build architecture for iOS")

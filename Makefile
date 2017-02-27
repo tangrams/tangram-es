@@ -81,8 +81,12 @@ endif
 # Build for iOS simulator architecture only
 ifdef TANGRAM_IOS_FRAMEWORK_SLIM
 	IOS_FRAMEWORK_PATH = ${IOS_FRAMEWORK_SIM_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework
+	IOS_FRAMEWORK_DEVICE_ARCHS = ''
+	IOS_FRAMEWORK_SIM_ARCHS = 'x86_64'
 else
 	IOS_FRAMEWORK_PATH = ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}/TangramMap.framework
+	IOS_FRAMEWORK_DEVICE_ARCHS = 'armv7 armv7s arm64'
+	IOS_FRAMEWORK_SIM_ARCHS = 'i386 x86_64'
 endif
 
 BENCH_CMAKE_PARAMS = \
@@ -107,6 +111,8 @@ IOS_FRAMEWORK_CMAKE_PARAMS = \
         ${BUILD_TYPE} \
         ${CMAKE_OPTIONS} \
 	-DPLATFORM_TARGET=ios.framework \
+	-DIOS_SIMULATOR_ARCHS=${IOS_FRAMEWORK_SIM_ARCHS} \
+	-DIOS_DEVICE_ARCHS=${IOS_FRAMEWORK_DEVICE_ARCHS} \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/iOS.toolchain.cmake \
 	-G Xcode
 
@@ -251,7 +257,7 @@ cmake-osx:
 	cmake ../.. ${DARWIN_CMAKE_PARAMS}
 
 IOS_BUILD = \
-	xcodebuild -target ${IOS_TARGET} ARCHS='i386 x86_64' ONLY_ACTIVE_ARCH=NO -sdk iphonesimulator -project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ} -configuration ${CONFIG}
+	xcodebuild -target ${IOS_TARGET} ARCHS=${IOS_FRAMEWORK_SIM_ARCHS} ONLY_ACTIVE_ARCH=NO -sdk iphonesimulator -project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ} -configuration ${CONFIG}
 
 ios: ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
 ifeq (, $(shell which xcpretty))
