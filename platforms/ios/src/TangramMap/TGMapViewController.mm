@@ -8,9 +8,10 @@
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
-#import "TGMapViewController.h"
 #import "TGMapViewController+Internal.h"
 #import "TGMapData+Internal.h"
+#import "TGMarkerPickResult+Internal.h"
+#import "TGLabelPickResult+Internal.h"
 #import "TGHelpers.h"
 #import "platform_ios.h"
 #import "data/propertyItem.h"

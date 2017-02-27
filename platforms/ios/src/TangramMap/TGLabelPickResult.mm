@@ -7,6 +7,7 @@
 //
 
 #import "TGLabelPickResult.h"
+#import "TGMarkerPickResult+Internal.h"
 
 @interface TGLabelPickResult ()
 
