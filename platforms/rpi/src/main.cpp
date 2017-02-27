@@ -58,7 +58,7 @@ int main(int argc, char **argv){
     while (bUpdate) {
         updateGL();
 
-        platform->processNetworkQueue();
+        // platform->processNetworkQueue();
         if (getRenderRequest() || platform->isContinuousRendering() ) {
             setRenderRequest(false);
             newFrame();
