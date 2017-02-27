@@ -40,7 +40,12 @@ void newFrame();
 
 int main(int argc, char **argv){
 
-    platform = std::make_shared<LinuxPlatform>();
+    UrlClient::Environment urlClientEnvironment;
+
+    UrlClient::Options urlClientOptions;
+    urlClientOptions.numberOfThreads = 4;
+
+    platform = std::make_shared<LinuxPlatform>(urlClientOptions);
 
     // Start OpenGL context
     initGL(argc, argv);
@@ -57,8 +62,6 @@ int main(int argc, char **argv){
 
     while (bUpdate) {
         updateGL();
-
-        platform->processNetworkQueue();
         if (getRenderRequest() || platform->isContinuousRendering() ) {
             setRenderRequest(false);
             newFrame();
