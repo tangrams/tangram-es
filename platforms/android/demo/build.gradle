@@ -10,7 +10,7 @@ android {
   }
 
   sourceSets.main {
-    assets.srcDirs = ['../../scenes']
+    assets.srcDirs = ['../../../scenes']
   }
 
   aaptOptions.ignoreAssetsPattern "!*.ttf"
