@@ -1,6 +1,6 @@
 include(${CMAKE_SOURCE_DIR}/toolchains/iOS.toolchain.cmake)
 
-message(STATUS "Build for iOS archs " ${CMAKE_OSX_ARCHITECTURES})
+message(STATUS "Build for iOS archs " ${IOS_ARCH})
 
 set(FRAMEWORK_NAME TangramMap)
 
@@ -24,9 +24,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}
 
 if(${IOS_PLATFORM} STREQUAL "SIMULATOR")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mios-simulator-version-min=6.0")
-    set(ARCH "i386 x86_64")
 else()
-    set(ARCH "armv7 armv7s arm64")
     if(${CMAKE_BUILD_TYPE} STREQUAL "Release")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fembed-bitcode")
         add_compile_options("-fembed-bitcode")
@@ -119,8 +117,8 @@ endif()
 
 set_xcode_property(${FRAMEWORK_NAME} SUPPORTED_PLATFORMS "iphonesimulator iphoneos")
 set_xcode_property(${FRAMEWORK_NAME} ONLY_ACTIVE_ARCH "NO")
-set_xcode_property(${FRAMEWORK_NAME} VALID_ARCHS "${ARCH}")
-set_xcode_property(${FRAMEWORK_NAME} ARCHS "${ARCH}")
+set_xcode_property(${FRAMEWORK_NAME} VALID_ARCHS "${IOS_ARCH}")
+set_xcode_property(${FRAMEWORK_NAME} ARCHS "${IOS_ARCH}")
 
 # Set RPATH to be within the application /Frameworks directory
 set_xcode_property(${FRAMEWORK_NAME} LD_DYLIB_INSTALL_NAME "@rpath/${FRAMEWORK_NAME}.framework/${FRAMEWORK_NAME}")

@@ -45,6 +45,7 @@ Note on Code Signing and Provisioning Profiles:
 * For Simulator: Does not need any code signing identity, so you can ignore any provionining profile failures on target _tangram_ > _General_ > _Signing_.
 * For Device: You will have to modify the _Bundle Identifier_ under target _tangram_ > _General_ > _Identity_ > _Bundle Identifier_, to something other than `com.mapzen.tangram`, since this needs to be unique.
 
+For development, you can use the Makefile option `TANGRAM_IOS_FRAMEWORK_SLIM` to build for simulator only and faster your build times.
 
 ### iOS Binary Framework ###
 
