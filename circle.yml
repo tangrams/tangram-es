@@ -12,10 +12,10 @@ checkout:
     - gem install jazzy
 test:
   override:
-    - make ios
+    - if [ $CIRCLE_BRANCH = 'master' ]; then make ios; else make ios TANGRAM_IOS_FRAMEWORK_SLIM=1; fi
     - make ios-docs
   post:
-    - cd build/ios-framework-universal/Release &&
-      zip -r ${CIRCLE_ARTIFACTS}/framework.zip TangramMap.framework
-    - cd build/ &&
-      zip -r ${CIRCLE_ARTIFACTS}/docs.zip ios-docs
+    - if [ $CIRCLE_BRANCH = 'master' ]; then cd build/ios-framework-universal/Release &&
+      zip -r ${CIRCLE_ARTIFACTS}/framework.zip TangramMap.framework; fi
+    - if [ $CIRCLE_BRANCH = 'master' ]; then cd build/ &&
+      zip -r ${CIRCLE_ARTIFACTS}/docs.zip ios-docs; fi

@@ -78,6 +78,13 @@ ifndef TANGRAM_CMAKE_OPTIONS
 		-DUNIT_TESTS=0
 endif
 
+# Build for iOS simulator architecture only
+ifdef TANGRAM_IOS_FRAMEWORK_SLIM
+	IOS_FRAMEWORK_PATH = ${IOS_FRAMEWORK_SIM_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework
+else
+	IOS_FRAMEWORK_PATH = ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}/TangramMap.framework
+endif
+
 BENCH_CMAKE_PARAMS = \
 	-DBENCHMARK=1 \
 	-DAPPLICATION=0 \
@@ -93,7 +100,7 @@ IOS_CMAKE_PARAMS = \
         ${CMAKE_OPTIONS} \
 	-DPLATFORM_TARGET=ios \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/iOS.toolchain.cmake \
-	-DTANGRAM_FRAMEWORK=${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}/TangramMap.framework \
+	-DTANGRAM_FRAMEWORK=${IOS_FRAMEWORK_PATH} \
 	-G Xcode
 
 IOS_FRAMEWORK_CMAKE_PARAMS = \
@@ -269,9 +276,11 @@ cmake-ios: ios-framework-universal
 	cmake ../.. ${IOS_CMAKE_PARAMS}
 
 cmake-ios-framework:
+ifndef TANGRAM_IOS_FRAMEWORK_SLIM
 	@mkdir -p ${IOS_FRAMEWORK_BUILD_DIR}
 	@cd ${IOS_FRAMEWORK_BUILD_DIR} && \
 	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS} -DBUILD_IOS_FRAMEWORK=TRUE
+endif
 
 cmake-ios-framework-sim:
 	@mkdir -p ${IOS_FRAMEWORK_SIM_BUILD_DIR}
@@ -282,10 +291,12 @@ IOS_FRAMEWORK_BUILD = \
 	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} -configuration ${CONFIG}
 
 ios-framework: cmake-ios-framework
+ifndef TANGRAM_IOS_FRAMEWORK_SLIM
 ifeq (, $(shell which xcpretty))
 	${IOS_FRAMEWORK_BUILD}
 else
 	${IOS_FRAMEWORK_BUILD} | ${XCPRETTY}
+endif
 endif
 
 IOS_FRAMEWORK_SIM_BUILD = \
@@ -299,11 +310,13 @@ else
 endif
 
 ios-framework-universal: ios-framework ios-framework-sim
+ifndef TANGRAM_IOS_FRAMEWORK_SLIM
 	@mkdir -p ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}
 	@cp -r ${IOS_FRAMEWORK_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}
 	lipo ${IOS_FRAMEWORK_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework/TangramMap \
 		${IOS_FRAMEWORK_SIM_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework/TangramMap \
 		-create -output ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}/TangramMap.framework/TangramMap
+endif
 
 rpi: cmake-rpi
 	@cd ${RPI_BUILD_DIR} && \
