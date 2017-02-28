@@ -46,6 +46,10 @@ static inline void tangramProperties(FeatureProperties* properties, Tangram::Pro
 
 - (void)addPoint:(TGGeoPoint)coordinates withProperties:(FeatureProperties *)properties
 {
+    if (!self.mapView) {
+        return;
+    }
+
     Tangram::Properties tgProperties;
     tangramProperties(properties, tgProperties);
 
@@ -55,6 +59,10 @@ static inline void tangramProperties(FeatureProperties* properties, Tangram::Pro
 
 - (void)addPolygon:(TGGeoPolygon *)polygon withProperties:(FeatureProperties *)properties
 {
+    if (!self.mapView) {
+        return;
+    }
+
     Tangram::Properties tgProperties;
     tangramProperties(properties, tgProperties);
 
@@ -80,6 +88,10 @@ static inline void tangramProperties(FeatureProperties* properties, Tangram::Pro
 
 - (void)addPolyline:(TGGeoPolyline *)polyline withProperties:(FeatureProperties *)properties
 {
+    if (!self.mapView) {
+        return;
+    }
+
     Tangram::Properties tgProperties;
     tangramProperties(properties, tgProperties);
 
@@ -91,13 +103,27 @@ static inline void tangramProperties(FeatureProperties* properties, Tangram::Pro
 
 - (void)addGeoJson:(NSString *)data
 {
+    if (!self.mapView) {
+        return;
+    }
+
     std::string sourceData = std::string([data UTF8String]);
     dataSource->addData(sourceData);
 }
 
 - (void)clear
 {
+    if (!self.mapView) {
+        return;
+    }
+
     [self.mapView clearDataSource:dataSource];
+}
+
+- (void)remove
+{
+    [self.mapView removeDataSource:dataSource];
+    self.mapView = nil;
 }
 
 @end

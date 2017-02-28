@@ -348,6 +348,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (strong, nonatomic) TGHttpHandler* httpHandler;
 
+/**
+ Adds a named data source to the map. See `TGMapData` for more details.
+
+ @param name the name of the data source.
+
+ @return the map data, nil if the data source can't be initialized
+ */
 - (nullable TGMapData *)addDataSource:(NSString *)name;
 
 #pragma mark Debug toggles
