@@ -12,6 +12,8 @@
 @property (assign, nonatomic) TGMarker* markerPolygon;
 @property (strong, nonatomic) TGMapData* mapData;
 
+- (void)addAlert:(NSString *)message withTitle:(NSString *)title;
+
 @end
 
 @implementation MapViewControllerDelegate
@@ -51,12 +53,7 @@
         markerPickResult.marker.point.latitude,
         markerPickResult.marker.point.longitude];
 
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Marker pick callback"
-                                                    message:message
-                                                   delegate:nil
-                                          cancelButtonTitle:@"OK"
-                                          otherButtonTitles:nil];
-    [alert show];
+    [(MapViewController*)mapView addAlert:message withTitle:@"Marker pick callback"];
 }
 
 - (void)mapView:(TGMapViewController *)mapView didSelectLabel:(TGLabelPickResult *)labelPickResult atScreenPosition:(CGPoint)position
@@ -69,12 +66,7 @@
         NSLog(@"\t%@ -- %@", key, [[labelPickResult properties] objectForKey:key]);
 
         if ([key isEqualToString:@"name"]) {
-             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Label selection callback"
-                                                             message:[[labelPickResult properties] objectForKey:key]
-                                                            delegate:nil
-                                                   cancelButtonTitle:@"OK"
-                                                   otherButtonTitles:nil];
-             [alert show];
+            [(MapViewController*)mapView addAlert:[[labelPickResult properties] objectForKey:key] withTitle:@"Label selection callback"];
         }
     }
 }
@@ -90,12 +82,7 @@
         NSLog(@"\t%@ -- %@", key, [feature objectForKey:key]);
 
         if ([key isEqualToString:@"name"]) {
-             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Feature selection callback"
-                                                             message:[feature objectForKey:key]
-                                                            delegate:nil
-                                                   cancelButtonTitle:@"OK"
-                                                   otherButtonTitles:nil];
-             [alert show];
+            [(MapViewController*)mapView addAlert:[[feature objectForKey:key] objectForKey:key] withTitle:@"Feature selection callback"];
         }
     }
 }
@@ -174,6 +161,19 @@
 @end
 
 @implementation MapViewController
+
+- (void)addAlert:(NSString *)message withTitle:(NSString *)title
+{
+    UIAlertController *alert = [[UIAlertController alloc] init];
+
+    alert.title = title;
+    alert.message = message;
+
+    UIAlertAction* okAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
+    [alert addAction:okAction];
+
+    [self presentViewController:alert animated:YES completion:nil];
+}
 
 - (void)viewWillAppear:(BOOL)animated
 {
