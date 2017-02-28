@@ -9,8 +9,8 @@
 
 @interface MapViewController ()
 
-@property (assign, nonatomic) TGMarker* markerPolyline;
 @property (assign, nonatomic) TGMarker* markerPolygon;
+@property (strong, nonatomic) TGMapData* mapData;
 
 @end
 
@@ -35,6 +35,10 @@
 
     [mapView setZoom:15];
     [mapView setPosition:newYork];
+
+    // Add a client data source, named 'mz_route_line_transit'
+    MapViewController* vc = (MapViewController *)mapView;
+    vc.mapData = [mapView addDataLayer:@"mz_route_line_transit"];
 }
 
 - (void)mapView:(TGMapViewController *)mapView didSelectMarker:(TGMarkerPickResult *)markerPickResult atScreenPosition:(TGGeoPoint)position;
@@ -106,27 +110,23 @@
 
     MapViewController* vc = (MapViewController *)view;
 
-    TGGeoPoint coordinate = [vc screenPositionToLngLat:location];
+    TGGeoPoint coordinates = [vc screenPositionToLngLat:location];
 
-    // Add polyline marker
+    // Add polyline data layer
     {
-        if (!vc.markerPolyline) {
-            vc.markerPolyline = [[TGMarker alloc] init];
-            vc.markerPolyline.styling = @"{ style: 'lines', color: 'red', width: 20px, order: 500 }";
+        FeatureProperties* properties = @{ @"type" : @"line", @"color" : @"#D2655F" };
+        static TGGeoPoint lastCoordinates = {NAN, NAN};
 
-            // Add the marker to the current view
-            vc.markerPolyline.map = view;
+        if (!isnan(lastCoordinates.latitude)) {
+            TGGeoPolyline* line = [[TGGeoPolyline alloc] init];
+
+            [line addPoint:lastCoordinates];
+            [line addPoint:coordinates];
+
+            [vc.mapData addPolyline:line withProperties:properties];
         }
 
-        static TGGeoPolyline* line = nil;
-        if (!line) { line = [[TGGeoPolyline alloc] init]; }
-
-        if ([line count] > 0) {
-            [line addPoint:coordinate];
-            vc.markerPolyline.polyline = line;
-        } else {
-            [line addPoint:coordinate];
-        }
+        lastCoordinates = coordinates;
     }
 
     // Add polygon marker
@@ -143,13 +143,13 @@
         if (!polygon) { polygon = [[TGGeoPolygon alloc] init]; }
 
         if ([polygon count] == 0) {
-            [polygon startPath:coordinate withSize:5];
+            [polygon startPath:coordinates withSize:5];
         } else if ([polygon count] % 5 == 0) {
             vc.markerPolygon.polygon = polygon;
             [polygon removeAll];
-            [polygon startPath:coordinate withSize:5];
+            [polygon startPath:coordinates withSize:5];
         } else {
-            [polygon addPoint:coordinate];
+            [polygon addPoint:coordinates];
         }
     }
 
@@ -157,7 +157,7 @@
     {
         TGMarker* markerPoint = [[TGMarker alloc] initWithMapView:view];
         markerPoint.styling = @"{ style: 'points', color: 'white', size: [25px, 25px], collide: false }";
-        markerPoint.point = coordinate;
+        markerPoint.point = coordinates;
     }
 
     // Request feature picking

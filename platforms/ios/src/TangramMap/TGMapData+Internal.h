@@ -7,12 +7,14 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <memory>
+#import "data/clientGeoJsonSource.h"
 
 @interface TGMapData ()
 
 NS_ASSUME_NONNULL_BEGIN
 
-- (instancetype)initWithMapView:(TGMapViewController *)mapView name:(NSString *)name;
+- (instancetype)initWithMapView:(TGMapViewController *)mapView name:(NSString *)name source:(std::shared_ptr<Tangram::TileSource>)source;
 
 NS_ASSUME_NONNULL_END
 

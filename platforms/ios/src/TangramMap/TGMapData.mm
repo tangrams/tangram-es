@@ -29,16 +29,14 @@ static inline void tangramProperties(FeatureProperties* properties, Tangram::Pro
 
 @implementation TGMapData
 
-- (instancetype)initWithMapView:(TGMapViewController *)mapView name:(NSString *)name
+- (instancetype)initWithMapView:(TGMapViewController *)mapView name:(NSString *)name source:(std::shared_ptr<Tangram::ClientGeoJsonSource>)source
 {
     self = [super init];
 
     if (self) {
         self.name = name;
         self.mapView = mapView;
-
-        // Create client data source with Tangram
-        dataSource = [self.mapView createDataSource:name];
+        dataSource = source;
     }
 
     return self;
@@ -122,7 +120,11 @@ static inline void tangramProperties(FeatureProperties* properties, Tangram::Pro
 
 - (void)remove
 {
-    [self.mapView removeDataSource:dataSource];
+    if (!self.mapView) {
+        return;
+    }
+
+    [self.mapView removeDataSource:dataSource name:self.name];
     self.mapView = nil;
 }
 
