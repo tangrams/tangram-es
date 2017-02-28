@@ -69,7 +69,7 @@ public:
     virtual void complete();
 
     // onDone for sub-tasks
-    virtual void complete(TileTask& _mainTask) {}
+    virtual void complete(TileTask& /*mainTask*/) {}
 
     int rawSource = 0;
 

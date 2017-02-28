@@ -81,7 +81,7 @@ const std::string& Properties::getString(const std::string& key) const {
     return EMPTY_STRING;
 }
 
-const bool Properties::getAsString(const std::string& key, std::string& value) const {
+bool Properties::getAsString(const std::string& key, std::string& value) const {
     auto& it = get(key);
 
     if (it.is<std::string>()) {
