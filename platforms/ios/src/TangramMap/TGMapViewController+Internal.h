@@ -20,8 +20,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 NS_ASSUME_NONNULL_END
 
-- (TGMarker *)getMarker:(Tangram::MarkerID)identifier;
-
 @property (assign, nonatomic, nullable) Tangram::Map* map;
 
 @end
