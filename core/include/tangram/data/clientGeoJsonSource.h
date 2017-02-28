@@ -7,19 +7,13 @@
 
 class Platform;
 
-namespace mapbox {
-namespace util {
-namespace geojsonvt {
-class GeoJSONVT;
-class TilePoint;
-class ProjectedFeature;
-}}}
 
 namespace Tangram {
 
-using GeoJSONVT = mapbox::util::geojsonvt::GeoJSONVT;
 
 struct Properties;
+
+struct ClientGeoJsonData;
 
 class ClientGeoJsonSource : public TileSource {
 
@@ -49,12 +43,12 @@ protected:
     virtual std::shared_ptr<TileData> parse(const TileTask& _task,
                                             const MapProjection& _projection) const override;
 
-    std::unique_ptr<GeoJSONVT> m_store;
+    std::unique_ptr<ClientGeoJsonData> m_store;
+
     mutable std::mutex m_mutexStore;
-    std::vector<mapbox::util::geojsonvt::ProjectedFeature> m_features;
     bool m_hasPendingData = false;
 
-     std::shared_ptr<Platform> m_platform;
+    std::shared_ptr<Platform> m_platform;
 
 };
 
