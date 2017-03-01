@@ -116,13 +116,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (strong, nonatomic) UIImage* icon;
 
+NS_ASSUME_NONNULL_END
+
 /*
  The map this marker is on.
  Setting this property will add the marker to the map, and setting it to `nil` will remove the marker from it.
  A marker can be only active at at most one `TGMapViewController` at a time.
  */
-@property (weak, nonatomic) TGMapViewController* map;
-
-NS_ASSUME_NONNULL_END
+@property (weak, nonatomic) TGMapViewController* _Nullable map;
 
 @end
