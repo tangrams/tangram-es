@@ -233,7 +233,7 @@ NS_ASSUME_NONNULL_END
 
  @note If no feature have been selected, `feature` will be `nil`, and `position` `(0, 0)`.
  */
-- (void)mapView:(nonnull TGMapViewController *)mapView didSelectFeature:(nullable NSDictionary *)feature atScreenPosition:(CGPoint)position;
+- (void)mapView:(nonnull TGMapViewController *)mapView didSelectFeature:(nullable TGFeatureProperties *)feature atScreenPosition:(CGPoint)position;
  /**
  Always called after the method `-[TGMapViewController pickLabelAt:]` is called on the map view.
 

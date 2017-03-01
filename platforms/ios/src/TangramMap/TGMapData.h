@@ -14,7 +14,9 @@
 /**
  Dictionary of feature properties keyed by their property name
  */
-typedef NSDictionary<NSString *, NSString *> FeatureProperties;
+typedef NSDictionary<NSString *, NSString *> TGFeatureProperties;
+
+@class TGMapViewController;
 
 /**
  A `TGMapData` is a convenience class to display point, polygons or polylines from a dynamic data layer.
@@ -62,7 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param coordinates the geographic coordinates of the point to add to the data source
  @param properties the feature properties
  */
-- (void)addPoint:(TGGeoPoint)coordinates withProperties:(FeatureProperties *)properties;
+- (void)addPoint:(TGGeoPoint)coordinates withProperties:(TGFeatureProperties *)properties;
 
 /**
  Adds a polygon geometry to the data source.
@@ -70,7 +72,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param polygon the polygon geometry to add to the data source
  @param properties the feature properties
  */
-- (void)addPolygon:(TGGeoPolygon *)polygon withProperties:(FeatureProperties *)properties;
+- (void)addPolygon:(TGGeoPolygon *)polygon withProperties:(TGFeatureProperties *)properties;
 
 /**
  Adds a polyline to the data source.
@@ -78,7 +80,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param polyline the polyline geometry to add to the data source
  @param properties the feature properties
  */
-- (void)addPolyline:(TGGeoPolyline *)polyline withProperties:(FeatureProperties *)properties;
+- (void)addPolyline:(TGGeoPolyline *)polyline withProperties:(TGFeatureProperties *)properties;
 
 /**
  Adds features described in a GeoJSON string to the data source. The string must be formatted according
