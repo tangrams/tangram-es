@@ -121,6 +121,7 @@ void TileManager::updateTileSets(const ViewState& _view,
                                  const std::set<TileID>& _visibleTiles) {
     m_tiles.clear();
     m_tilesInProgress = 0;
+    m_tilesInGeneration = 0;
     m_tileSetChanged = false;
 
     for (auto& tileSet : m_tileSets) {
@@ -237,6 +238,9 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
                 entry.task = _tileSet.source->createTask(visTileId);
                 enqueueTask(_tileSet, visTileId, _view);
                 m_tilesInProgress++;
+            } else if (!entry.needsLoading() && !entry.isReady()) {
+                // tile not generated yet!
+                m_tilesInGeneration++;
             }
 
             if (newTiles && entry.isLoading()) {
