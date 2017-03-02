@@ -12,7 +12,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- Helper class to contain a polygon geometry for use in `-[TGMapViewController markerSetPolygon:polygon:]`.
+ Helper class to contain a polygon geometry for use in `-[TGMarker polygon]`.
 
  The polygon winding order and internal polygons must be set according to the <a href="http://geojson.org/geojson-spec.html#polygon">
  GeoJSON specification</a>.
