@@ -4,6 +4,18 @@
 
 namespace Tangram {
 
+// Helper to cleanup double string values from trailing 0s
+std::string doubleToString(double _doubleValue) {
+    std::string value = std::to_string(_doubleValue);
+
+    // Remove trailing '0's
+    value.erase(value.find_last_not_of('0') + 1, std::string::npos);
+    // If last value is '.', clear it too
+    value.erase(value.find_last_not_of('.') + 1, std::string::npos);
+
+    return value;
+}
+
 Properties::Properties() : sourceId(0) {}
 
 Properties::~Properties() {}
@@ -88,7 +100,7 @@ const bool Properties::getAsString(const std::string& key, std::string& value) c
         value = it.get<std::string>();
         return true;
     } else if (it.is<double>()) {
-        value = std::to_string(it.get<double>());
+        value = doubleToString(it.get<double>());
         return true;
     }
 
@@ -99,7 +111,7 @@ std::string Properties::asString(const Value& value) const {
     if (value.is<std::string>()) {
         return value.get<std::string>();
     } else if (value.is<double>()) {
-        return std::to_string(value.get<double>());
+        return doubleToString(value.get<double>());
     }
     return "";
 }
