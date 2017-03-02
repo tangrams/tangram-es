@@ -25,7 +25,13 @@ android {
                  '-pedantic',
                  '-fPIC',
                  '-fexceptions',
-                 '-frtti'
+                 '-frtti',
+                 //warnings
+                 '-Wall',
+                 '-Wignored-qualifiers',
+                 '-Wtype-limits',
+                 '-Wmissing-field-initializers'
+
         abiFilters 'armeabi-v7a'
       }
     }
