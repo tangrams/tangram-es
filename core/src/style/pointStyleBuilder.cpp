@@ -357,26 +357,29 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& u
             LineSampler<std::vector<Point>> sampler;
 
             sampler.set(_line);
-            sampler.setMinSampleLength(minLineLength);
 
             float lineLength = sampler.sumLength();
-
             if (lineLength <= minLineLength) { break; }
 
             float spacing = params.placementSpacing * m_style.pixelScale() / View::s_pixelsPerTile;
             int numLabels = std::max(std::floor(lineLength / spacing), 1.0f);
             float remainderLength = lineLength - (numLabels - 1) * spacing;
             float distance = 0.5 * remainderLength;
-
             glm::vec2 p, r;
             sampler.advance(distance, p, r);
             do {
+
+                if (sampler.lengthToPrevSegment() < minLineLength*0.5 ||
+                    sampler.lengthToNextSegment() < minLineLength*0.5) {
+                    continue;
+                }
                 if (params.autoAngle) {
                     params.labelOptions.angle = RAD_TO_DEG * atan2(r.x, r.y);
                 }
+
                 addLabel({p.x, p.y, 0.f}, uvsQuad, params, _rule);
 
-            } while(sampler.advance(spacing, p, r));
+            } while (sampler.advance(spacing, p, r));
         }
         break;
         case LabelProperty::Placement::centroid:
