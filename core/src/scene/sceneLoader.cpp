@@ -54,7 +54,8 @@ static const std::string GLOBAL_PREFIX = "global.";
 
 std::mutex SceneLoader::m_textureMutex;
 
-bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::shared_ptr<Scene> _scene, const std::vector<SceneUpdate>& _updates) {
+bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::shared_ptr<Scene> _scene,
+                            const std::vector<SceneUpdate>& _updates, SceneUpdateCallback _onUpdate) {
 
     Importer sceneImporter;
 
@@ -62,7 +63,7 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
 
     if (_scene->config()) {
 
-        applyUpdates(*_scene, _updates);
+        applyUpdates(*_scene, _updates, _onUpdate);
 
         // Load font resources
         _scene->fontContext()->loadFonts();
@@ -74,23 +75,34 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
     return false;
 }
 
-void SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates) {
+void SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates, SceneUpdateCallback onUpdate) {
     auto& root = scene.config();
+    std::vector<SceneUpdateStatus> updateStatus;
+
     for (const auto& update : updates) {
         Node value;
         try {
             value = YAML::Load(update.value);
         } catch (YAML::ParserException e) {
             LOGE("Parsing scene update string failed. '%s'", e.what());
+            updateStatus.push_back({update, SceneUpdateError::value_yaml_syntax_error});
         }
         if (value) {
             try {
                 auto node = YamlPath(update.path).get(root);
+                if (node.Scalar().empty()) {
+                    updateStatus.push_back({update, SceneUpdateError::path_not_found});
+                }
                 node = value;
             } catch(YAML::Exception e) {
                 LOGE("Parsing scene update string failed. %s '%s'", update.path.c_str(), e.what());
+                updateStatus.push_back({update, SceneUpdateError::path_yaml_syntax_error});
             }
         }
+    }
+
+    if (onUpdate) {
+        onUpdate(updateStatus);
     }
 }
 
