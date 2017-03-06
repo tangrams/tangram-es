@@ -9,8 +9,10 @@
 
 @interface MapViewController ()
 
-@property (assign, nonatomic) TGMarker* markerPolyline;
 @property (assign, nonatomic) TGMarker* markerPolygon;
+@property (strong, nonatomic) TGMapData* mapData;
+
+- (void)addAlert:(NSString *)message withTitle:(NSString *)title;
 
 @end
 
@@ -35,6 +37,10 @@
 
     [mapView setZoom:15];
     [mapView setPosition:newYork];
+
+    // Add a client data source, named 'mz_route_line_transit'
+    MapViewController* vc = (MapViewController *)mapView;
+    vc.mapData = [mapView addDataLayer:@"mz_route_line_transit"];
 }
 
 - (void)mapView:(TGMapViewController *)mapView didSelectMarker:(TGMarkerPickResult *)markerPickResult atScreenPosition:(TGGeoPoint)position;
@@ -47,12 +53,7 @@
         markerPickResult.marker.point.latitude,
         markerPickResult.marker.point.longitude];
 
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Marker pick callback"
-                                                    message:message
-                                                   delegate:nil
-                                          cancelButtonTitle:@"OK"
-                                          otherButtonTitles:nil];
-    [alert show];
+    [(MapViewController*)mapView addAlert:message withTitle:@"Marker pick callback"];
 }
 
 - (void)mapView:(TGMapViewController *)mapView didSelectLabel:(TGLabelPickResult *)labelPickResult atScreenPosition:(CGPoint)position
@@ -65,12 +66,7 @@
         NSLog(@"\t%@ -- %@", key, [[labelPickResult properties] objectForKey:key]);
 
         if ([key isEqualToString:@"name"]) {
-             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Label selection callback"
-                                                             message:[[labelPickResult properties] objectForKey:key]
-                                                            delegate:nil
-                                                   cancelButtonTitle:@"OK"
-                                                   otherButtonTitles:nil];
-             [alert show];
+            [(MapViewController*)mapView addAlert:[[labelPickResult properties] objectForKey:key] withTitle:@"Label selection callback"];
         }
     }
 }
@@ -86,12 +82,7 @@
         NSLog(@"\t%@ -- %@", key, [feature objectForKey:key]);
 
         if ([key isEqualToString:@"name"]) {
-             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Feature selection callback"
-                                                             message:[feature objectForKey:key]
-                                                            delegate:nil
-                                                   cancelButtonTitle:@"OK"
-                                                   otherButtonTitles:nil];
-             [alert show];
+            [(MapViewController*)mapView addAlert:[[feature objectForKey:key] objectForKey:key] withTitle:@"Feature selection callback"];
         }
     }
 }
@@ -106,27 +97,23 @@
 
     MapViewController* vc = (MapViewController *)view;
 
-    TGGeoPoint coordinate = [vc screenPositionToLngLat:location];
+    TGGeoPoint coordinates = [vc screenPositionToLngLat:location];
 
-    // Add polyline marker
+    // Add polyline data layer
     {
-        if (!vc.markerPolyline) {
-            vc.markerPolyline = [[TGMarker alloc] init];
-            vc.markerPolyline.styling = @"{ style: 'lines', color: 'red', width: 20px, order: 500 }";
+        FeatureProperties* properties = @{ @"type" : @"line", @"color" : @"#D2655F" };
+        static TGGeoPoint lastCoordinates = {NAN, NAN};
 
-            // Add the marker to the current view
-            vc.markerPolyline.map = view;
+        if (!isnan(lastCoordinates.latitude)) {
+            TGGeoPolyline* line = [[TGGeoPolyline alloc] init];
+
+            [line addPoint:lastCoordinates];
+            [line addPoint:coordinates];
+
+            [vc.mapData addPolyline:line withProperties:properties];
         }
 
-        static TGGeoPolyline* line = nil;
-        if (!line) { line = [[TGGeoPolyline alloc] init]; }
-
-        if ([line count] > 0) {
-            [line addPoint:coordinate];
-            vc.markerPolyline.polyline = line;
-        } else {
-            [line addPoint:coordinate];
-        }
+        lastCoordinates = coordinates;
     }
 
     // Add polygon marker
@@ -143,13 +130,13 @@
         if (!polygon) { polygon = [[TGGeoPolygon alloc] init]; }
 
         if ([polygon count] == 0) {
-            [polygon startPath:coordinate withSize:5];
+            [polygon startPath:coordinates withSize:5];
         } else if ([polygon count] % 5 == 0) {
             vc.markerPolygon.polygon = polygon;
             [polygon removeAll];
-            [polygon startPath:coordinate withSize:5];
+            [polygon startPath:coordinates withSize:5];
         } else {
-            [polygon addPoint:coordinate];
+            [polygon addPoint:coordinates];
         }
     }
 
@@ -157,7 +144,7 @@
     {
         TGMarker* markerPoint = [[TGMarker alloc] initWithMapView:view];
         markerPoint.styling = @"{ style: 'points', color: 'white', size: [25px, 25px], collide: false }";
-        markerPoint.point = coordinate;
+        markerPoint.point = coordinates;
     }
 
     // Request feature picking
@@ -174,6 +161,19 @@
 @end
 
 @implementation MapViewController
+
+- (void)addAlert:(NSString *)message withTitle:(NSString *)title
+{
+    UIAlertController *alert = [[UIAlertController alloc] init];
+
+    alert.title = title;
+    alert.message = message;
+
+    UIAlertAction* okAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
+    [alert addAction:okAction];
+
+    [self presentViewController:alert animated:YES completion:nil];
+}
 
 - (void)viewWillAppear:(BOOL)animated
 {

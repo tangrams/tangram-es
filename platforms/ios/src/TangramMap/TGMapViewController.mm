@@ -8,8 +8,10 @@
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
-#import "TGMapViewController.h"
 #import "TGMapViewController+Internal.h"
+#import "TGMapData+Internal.h"
+#import "TGMarkerPickResult+Internal.h"
+#import "TGLabelPickResult+Internal.h"
 #import "TGHelpers.h"
 #import "platform_ios.h"
 #import "data/propertyItem.h"
@@ -27,6 +29,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 @property (assign, nonatomic) CGFloat contentScaleFactor;
 @property (assign, nonatomic) BOOL renderRequested;
 @property (strong, nonatomic) NSMutableDictionary* markersById;
+@property (strong, nonatomic) NSMutableDictionary* dataLayersByName;
 
 @end
 
@@ -76,6 +79,35 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 - (void)toggleDebugFlag:(TGDebugFlag)debugFlag
 {
     Tangram::toggleDebugFlag((Tangram::DebugFlags)debugFlag);
+}
+
+- (TGMapData *)addDataLayer:(NSString *)name
+{
+    if (!self.map) { return nil; }
+
+    std::string dataLayerName = std::string([name UTF8String]);
+    auto source = std::make_shared<Tangram::ClientGeoJsonSource>(self.map->getPlatform(), dataLayerName, "");
+    self.map->addTileSource(source);
+
+    TGMapData* clientData = [[TGMapData alloc] initWithMapView:self name:name source:source];
+    self.dataLayersByName[name] = clientData;
+
+    return clientData;
+}
+
+- (BOOL)removeDataSource:(std::shared_ptr<Tangram::TileSource>)tileSource name:(NSString *)name
+{
+    if (!self.map || !tileSource) { return; }
+
+    [self.dataLayersByName removeObjectForKey:name];
+    return self.map->removeTileSource(*tileSource);
+}
+
+- (void)clearDataSource:(std::shared_ptr<Tangram::TileSource>)tileSource
+{
+    if (!self.map || !tileSource) { return; }
+
+    self.map->clearTileSource(*tileSource, true, true);
 }
 
 #pragma mark Scene loading interface
@@ -697,6 +729,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     self.renderRequested = YES;
     self.continuous = NO;
     self.markersById = [[NSMutableDictionary alloc] init];
+    self.dataLayersByName = [[NSMutableDictionary alloc] init];
 
     if (!self.httpHandler) {
         self.httpHandler = [[TGHttpHandler alloc] initWithCachePath:@"/tangram_cache"

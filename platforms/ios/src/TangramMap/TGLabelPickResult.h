@@ -9,8 +9,6 @@
 #import <Foundation/Foundation.h>
 #import "TGGeoPoint.h"
 
-NS_ASSUME_NONNULL_BEGIN
-
 /**
  A label type used to differentiate icon and text labels when selecting them on a map view
  */
@@ -28,19 +26,7 @@ typedef NS_ENUM(NSInteger, TGLabelType) {
  */
 @interface TGLabelPickResult : NSObject
 
-/**
- Initializes a `TGLabelPickResult`.
-
- @param coordinates the geographic coordinates of the label pick result
- @param type the type of the label (text or icon)
- @param properties the set of properties associated to this label, keyed by their name
-
- @return an initialized `TGLabelPickResult`
-
- @note You shouldn't have to create a `TGLabelPickResult` yourself, those are returned as a result to
- a selection query on the `TGMapViewController` and initialized by the latter.
- */
-- (instancetype) initWithCoordinates:(TGGeoPoint)coordinates type:(TGLabelType)type properties:(NSDictionary *)properties;
+NS_ASSUME_NONNULL_BEGIN
 
 /// The geographic coordinates of the selected label
 @property (readonly, nonatomic) TGGeoPoint coordinates;

@@ -19,19 +19,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface TGMarkerPickResult : NSObject
 
-/**
- Initializes a `TGMarkerPickResult`.
-
- @param coordinates the geographic coordinates of the label pick result
- @param marker the marker object selected
-
- @return an initialized `TGMarkerPickResult`
-
- @note You shouldn't have to create a `TGMarkerPickResult` yourself, those are returned as a result to
- a selection query on the `TGMapViewController` and initialized by the latter.
- */
-- (instancetype) initWithCoordinates:(TGGeoPoint)coordinates marker:(TGMarker *)marker;
-
 /// The geographic coordinates of the selected label
 @property (readonly, nonatomic) TGGeoPoint coordinates;
 
