@@ -121,7 +121,6 @@ void TileManager::updateTileSets(const ViewState& _view,
                                  const std::set<TileID>& _visibleTiles) {
     m_tiles.clear();
     m_tilesInProgress = 0;
-    m_tilesInGeneration = 0;
     m_tileSetChanged = false;
 
     for (auto& tileSet : m_tileSets) {
@@ -230,17 +229,18 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             } else if (entry.needsLoading()) {
                 // Not yet available - enqueue for loading
                 enqueueTask(_tileSet, visTileId, _view);
-                m_tilesInProgress++;
 
             } else if (entry.isCanceled() &&
                        (entry.task->sourceGeneration() < generation)) {
                 // Tile needs update - enqueue for loading
                 entry.task = _tileSet.source->createTask(visTileId);
                 enqueueTask(_tileSet, visTileId, _view);
+            }
+
+            // - any tile which is not ready is in progress
+            // - any tile which needs updating because of map invalidation (new source generation)
+            if (!entry.isReady() || (entry.isReady() && entry.tile->sourceGeneration() < generation)) {
                 m_tilesInProgress++;
-            } else if (!entry.needsLoading() && !entry.isReady()) {
-                // tile not generated yet!
-                m_tilesInGeneration++;
             }
 
             if (newTiles && entry.isLoading()) {

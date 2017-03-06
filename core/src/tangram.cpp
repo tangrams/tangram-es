@@ -389,12 +389,11 @@ bool Map::update(float _dt) {
     bool viewChanged = impl->view.changedOnLastUpdate();
     bool tilesChanged = impl->tileManager.hasTileSetChanged();
     bool tilesLoading = impl->tileManager.hasLoadingTiles();
-    bool tilesGenerating = impl->tileManager.hasTilesGenerating();
     bool labelsNeedUpdate = impl->labels.needUpdate();
     bool resourceLoading = (impl->scene->pendingTextures > 0);
     bool nextScene = bool(impl->nextScene);
 
-    if (viewChanged || tilesChanged || tilesLoading || tilesGenerating || labelsNeedUpdate || resourceLoading || nextScene) {
+    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || resourceLoading || nextScene) {
         viewComplete = false;
     }
 

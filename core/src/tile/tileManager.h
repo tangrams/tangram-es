@@ -58,10 +58,6 @@ public:
         return m_tilesInProgress > 0;
     }
 
-    bool hasTilesGenerating() {
-        return m_tilesInGeneration > 0;
-    }
-
     void addClientTileSource(std::shared_ptr<TileSource> _source);
 
     bool removeClientTileSource(TileSource& _source);
@@ -236,7 +232,6 @@ private:
     void clearProxyTiles(TileSet& _tileSet, const TileID& _tileID, TileEntry& _tile, std::vector<TileID>& _removes);
 
     int32_t m_tilesInProgress = 0;
-    int32_t m_tilesInGeneration = 0;
 
     std::vector<TileSet> m_tileSets;
 
