@@ -46,12 +46,20 @@ static jmethodID onLabelPickMID = 0;
 static jmethodID onMarkerPickMID = 0;
 static jmethodID labelPickResultInitMID = 0;
 static jmethodID markerPickResultInitMID = 0;
+static jmethodID onSceneUpdateErrorMID = 0;
+static jmethodID sceneUpdateStatusInitMID = 0;
 
 static jclass labelPickResultClass = nullptr;
+static jclass sceneUpdateStatusClass = nullptr;
 static jclass markerPickResultClass = nullptr;
+
 static jclass hashmapClass = nullptr;
 static jmethodID hashmapInitMID = 0;
 static jmethodID hashmapPutMID = 0;
+
+static jclass arrayListClass = nullptr;
+static jmethodID arrayListInitMID = 0;
+static jmethodID arrayListAddMID = 0;
 
 static jmethodID markerByIDMID = 0;
 
@@ -96,6 +104,21 @@ void setupJniEnv(JNIEnv* jniEnv) {
     }
     markerPickResultClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/MarkerPickResult"));
     markerPickResultInitMID = jniEnv->GetMethodID(markerPickResultClass, "<init>", "(Lcom/mapzen/tangram/Marker;DD)V");
+
+    if (sceneUpdateStatusClass) {
+        jniEnv->DeleteGlobalRef(sceneUpdateStatusClass);
+    }
+    sceneUpdateStatusClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/SceneUpdateStatus"));
+    sceneUpdateStatusInitMID = jniEnv->GetMethodID(sceneUpdateStatusClass, "<init>", "(Ljava/lang/String;Ljava/lang/String;I)V");
+    jclass sceneUpdateErrorListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$SceneUpdateErrorListener");
+    onSceneUpdateErrorMID = jniEnv->GetMethodID(sceneUpdateErrorListenerClass, "onSceneUpdateError", "(Ljava/util/List;)V");
+
+    if (arrayListClass) {
+        jniEnv->DeleteGlobalRef(arrayListClass);
+    }
+    arrayListClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("java/util/ArrayList"));
+    arrayListInitMID = jniEnv->GetMethodID(arrayListClass, "<init>", "()V");
+    arrayListAddMID = jniEnv->GetMethodID(arrayListClass, "add", "(Ljava/lang/Object;)Z");
 
     if (hashmapClass) {
         jniEnv->DeleteGlobalRef(hashmapClass);
@@ -348,6 +371,26 @@ void AndroidPlatform::cancelUrlRequest(const std::string& _url) {
 void setCurrentThreadPriority(int priority) {
     int  tid = gettid();
     setpriority(PRIO_PROCESS, tid, priority);
+}
+
+void sceneUpdateCallback(jobject updateStatusCallbackRef, const std::vector<Tangram::SceneUpdateStatus>& sceneUpdateStatus) {
+
+    JniThreadBinding jniEnv(jvm);
+
+    jobject arrayList = jniEnv->NewObject(arrayListClass, arrayListInitMID);
+
+    for (auto updateStatus : sceneUpdateStatus) {
+        jstring jUpdateStatusPath = jniEnv->NewStringUTF(updateStatus.update.path.c_str());
+        jstring jUpdateStatusValue = jniEnv->NewStringUTF(updateStatus.update.value.c_str());
+        jint jError = (jint)updateStatus.error;
+        jobject jUpdateStatus = jniEnv->NewObject(sceneUpdateStatusClass, sceneUpdateStatusInitMID,
+                                                  jUpdateStatusPath, jUpdateStatusValue, jError);
+
+        jniEnv->CallBooleanMethod(arrayList, arrayListAddMID, jUpdateStatus);
+    }
+
+    jniEnv->CallVoidMethod(updateStatusCallbackRef, onSceneUpdateErrorMID, arrayList);
+    jniEnv->DeleteGlobalRef(updateStatusCallbackRef);
 }
 
 void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult) {

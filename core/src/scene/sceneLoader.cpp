@@ -90,7 +90,7 @@ void SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& upd
         if (value) {
             try {
                 auto node = YamlPath(update.path).get(root);
-                if (node.Scalar().empty()) {
+                if (node.Scalar().empty() && node != root) {
                     updateStatus.push_back({update, SceneUpdateError::path_not_found});
                 }
                 node = value;

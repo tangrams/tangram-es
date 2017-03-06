@@ -518,12 +518,16 @@ extern "C" {
         map->queueSceneUpdate(sceneUpdates);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeApplySceneUpdates(JNIEnv* jnienv, jobject obj, jlong mapPtr) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeApplySceneUpdates(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jobject updateStatusCallback) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->applySceneUpdates([](auto sceneUpdateStatus){
-            sceneUpdateCallback(sceneUpdateStatus);
-        });
+        if (updateStatusCallback) {
+            auto updateStatusCallbackRef = jniEnv->NewGlobalRef(updateStatusCallback);
+            map->applySceneUpdates([updateStatusCallbackRef](auto sceneUpdateStatus) {
+                sceneUpdateCallback(updateStatusCallbackRef, sceneUpdateStatus);
+            });
+        } else {
+            map->applySceneUpdates();
+        }
     }
-
 }

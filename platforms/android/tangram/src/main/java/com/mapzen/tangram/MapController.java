@@ -13,7 +13,7 @@ import okhttp3.Callback;
 import okhttp3.Response;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.function.Function;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -113,6 +113,10 @@ public class MapController implements Renderer {
          * no ease- or label-animation is running.
          */
         void onViewComplete();
+    }
+
+    public interface SceneUpdateErrorListener {
+        void onSceneUpdateError(List<SceneUpdateStatus> updateStatuses);
     }
 
     /**
@@ -690,6 +694,10 @@ public class MapController implements Renderer {
         featurePickListener = listener;
     }
 
+    public void setSceneUpdateErrorListener(SceneUpdateErrorListener listener) {
+        sceneUpdateErrorListener = listener;
+    }
+
     /**
      * Set a listener for label pick events
      * @param listener The {@link LabelPickListener} to call
@@ -833,7 +841,7 @@ public class MapController implements Renderer {
      */
     public void applySceneUpdates() {
         checkPointer(mapPointer);
-        nativeApplySceneUpdates(mapPointer);
+        nativeApplySceneUpdates(mapPointer, sceneUpdateErrorListener);
     }
 
     /**
@@ -1002,7 +1010,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
     private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String componentValue);
     private synchronized native void nativeQueueSceneUpdates(long mapPtr, String[] updateStrings);
-    private synchronized native void nativeApplySceneUpdates(long mapPtr);
+    private synchronized native void nativeApplySceneUpdates(long mapPtr, SceneUpdateErrorListener listener);
     private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
     private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
@@ -1047,6 +1055,7 @@ public class MapController implements Renderer {
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
     private FeaturePickListener featurePickListener;
+    private SceneUpdateErrorListener sceneUpdateErrorListener;
     private LabelPickListener labelPickListener;
     private MarkerPickListener markerPickListener;
     private ViewCompleteListener viewCompleteListener;

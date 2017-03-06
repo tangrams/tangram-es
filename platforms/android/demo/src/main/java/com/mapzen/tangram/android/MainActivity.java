@@ -14,8 +14,11 @@ import com.mapzen.tangram.MapController.FeaturePickListener;
 import com.mapzen.tangram.MapController.LabelPickListener;
 import com.mapzen.tangram.MapController.MarkerPickListener;
 import com.mapzen.tangram.MapController.ViewCompleteListener;
+import com.mapzen.tangram.MapController.SceneUpdateErrorListener;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.Marker;
+import com.mapzen.tangram.SceneUpdate;
+import com.mapzen.tangram.SceneUpdateStatus;
 import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.MapView.OnMapReadyCallback;
 import com.mapzen.tangram.Marker;
@@ -32,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends Activity implements OnMapReadyCallback, TapResponder,
-        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener {
+        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener, SceneUpdateErrorListener {
 
     MapController map;
     MapView view;
@@ -93,6 +96,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
         map.setFeaturePickListener(this);
         map.setLabelPickListener(this);
         map.setMarkerPickListener(this);
+        map.setSceneUpdateErrorListener(this);
 
         map.setViewCompleteListener(new ViewCompleteListener() {
                 public void onViewComplete() {
@@ -236,6 +240,15 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
                         Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    @Override
+    public void onSceneUpdateError(List<SceneUpdateStatus> updateStatuses) {
+        for (SceneUpdateStatus status : updateStatuses) {
+            Log.d("Tangram", "Scene update errors "
+                    + status.getSceneUpdate().toString()
+                    + " " + status.getError().toString());
+        }
     }
 }
 
