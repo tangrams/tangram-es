@@ -116,7 +116,7 @@ extern "C" {
         static_cast<Tangram::AndroidPlatform&>(*platform).dispose(jniEnv);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeLoadScene(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring path, jobjectArray updateStrings) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeLoadScene(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jobject updateStatusCallback, jstring path, jobjectArray updateStrings) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         const char* cPath = jniEnv->GetStringUTFChars(path, NULL);
@@ -131,7 +131,10 @@ extern "C" {
             jniEnv->DeleteLocalRef(value);
         }
 
-        map->loadScene(resolveScenePath(cPath).c_str(), false, sceneUpdates);
+        auto updateStatusCallbackRef = jniEnv->NewGlobalRef(updateStatusCallback);
+        map->loadScene(resolveScenePath(cPath).c_str(), false, sceneUpdates, [updateStatusCallbackRef](auto sceneUpdateStatus) {
+            sceneUpdateCallback(updateStatusCallbackRef, sceneUpdateStatus);
+        });
         jniEnv->ReleaseStringUTFChars(path, cPath);
     }
 
@@ -521,13 +524,9 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeApplySceneUpdates(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jobject updateStatusCallback) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        if (updateStatusCallback) {
-            auto updateStatusCallbackRef = jniEnv->NewGlobalRef(updateStatusCallback);
-            map->applySceneUpdates([updateStatusCallbackRef](auto sceneUpdateStatus) {
-                sceneUpdateCallback(updateStatusCallbackRef, sceneUpdateStatus);
-            });
-        } else {
-            map->applySceneUpdates();
-        }
+        auto updateStatusCallbackRef = jniEnv->NewGlobalRef(updateStatusCallback);
+        map->applySceneUpdates([updateStatusCallbackRef](auto sceneUpdateStatus) {
+            sceneUpdateCallback(updateStatusCallbackRef, sceneUpdateStatus);
+        });
     }
 }

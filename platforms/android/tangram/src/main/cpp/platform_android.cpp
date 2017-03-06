@@ -375,6 +375,10 @@ void setCurrentThreadPriority(int priority) {
 
 void sceneUpdateCallback(jobject updateStatusCallbackRef, const std::vector<Tangram::SceneUpdateStatus>& sceneUpdateStatus) {
 
+    if (!updateStatusCallbackRef) {
+        return;
+    }
+
     JniThreadBinding jniEnv(jvm);
 
     jobject arrayList = jniEnv->NewObject(arrayListClass, arrayListInitMID);

@@ -259,7 +259,7 @@ public class MapController implements Renderer {
         String[] updateStrings = bundleSceneUpdates(sceneUpdates);
         scenePath = path;
         checkPointer(mapPointer);
-        nativeLoadScene(mapPointer, path, updateStrings);
+        nativeLoadScene(mapPointer, sceneUpdateErrorListener, path, updateStrings);
         requestRender();
     }
 
@@ -979,7 +979,7 @@ public class MapController implements Renderer {
 
     private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
     private synchronized native void nativeDispose(long mapPtr);
-    private synchronized native void nativeLoadScene(long mapPtr, String path, String[] updateStrings);
+    private synchronized native void nativeLoadScene(long mapPtr, SceneUpdateErrorListener listener, String path, String[] updateStrings);
     private synchronized native void nativeSetupGL(long mapPtr);
     private synchronized native void nativeResize(long mapPtr, int width, int height);
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
