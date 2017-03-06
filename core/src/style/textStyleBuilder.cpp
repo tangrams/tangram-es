@@ -446,7 +446,9 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
     for (auto& line : _feat.lines) {
 
         if (!addStraightTextLabels(line, _params, _rule) &&
-            !_params.hasComplexShaping && line.size() > 2) {
+            line.size() > 2 && !_params.hasComplexShaping &&
+            // TODO: support line offset for curved labels
+            _params.labelOptions.offset == glm::vec2(0)) {
             addCurvedTextLabels(line, _params, _rule);
         }
     }
