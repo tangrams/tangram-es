@@ -83,6 +83,10 @@ std::unique_ptr<StyledMesh> PointStyleBuilder::build() {
 void PointStyleBuilder::setup(const Tile& _tile) {
     m_zoom = _tile.getID().z;
     m_styleZoom = _tile.getID().s;
+
+    // < 1.0 when overzooming a tile
+    m_tileScale = pow(2, _tile.getID().s - _tile.getID().z);
+
     m_spriteLabels = std::make_unique<SpriteLabels>(m_style);
 
     m_textStyleBuilder->setup(_tile);
@@ -318,8 +322,9 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& u
         return RAD_TO_DEG * atan2(q[0] - p[0], q[1] - p[1]);
     };
 
-    float minLineLength = std::max(params.size.x, params.size.y) * params.placementMinLengthRatio *
-                            m_style.pixelScale() / View::s_pixelsPerTile;
+    float minLineLength = std::max(params.size.x, params.size.y) *
+        params.placementMinLengthRatio * m_style.pixelScale() /
+        (View::s_pixelsPerTile * m_tileScale);
 
     switch(params.placement) {
         case LabelProperty::Placement::vertex: {
