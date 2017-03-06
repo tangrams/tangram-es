@@ -81,8 +81,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addPolyline:(TGGeoPolyline *)polyline withProperties:(FeatureProperties *)properties;
 
 /**
- Adds a GeoJSON string to the data source. The string must be formatted according to the
- <a href="http://geojson.org/geojson-spec.html">GeoJSON specifications</a>.
+ Adds features described in a GeoJSON string to the data source. The string must be formatted according
+ to the <a href="http://geojson.org/geojson-spec.html">GeoJSON specifications</a>.
 
  @param data the GeoJSON formatted string to add to the data source
  */

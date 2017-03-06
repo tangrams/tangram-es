@@ -10,6 +10,9 @@
 #import <memory>
 #import <vector>
 
+typedef std::vector<Tangram::LngLat> Line;
+typedef std::vector<Line> Polygon;
+
 @interface TGMapData () {
     std::shared_ptr<Tangram::ClientGeoJsonSource> dataSource;
 }
@@ -64,7 +67,7 @@ static inline void tangramProperties(FeatureProperties* properties, Tangram::Pro
     Tangram::Properties tgProperties;
     tangramProperties(properties, tgProperties);
 
-    std::vector<std::vector<Tangram::LngLat>> tgPolygon;
+    Polygon tgPolygon;
     Tangram::LngLat* coordinates = reinterpret_cast<Tangram::LngLat*>([polygon coordinates]);
     int* rings = reinterpret_cast<int*>([polygon rings]);
 
@@ -93,7 +96,7 @@ static inline void tangramProperties(FeatureProperties* properties, Tangram::Pro
     Tangram::Properties tgProperties;
     tangramProperties(properties, tgProperties);
 
-    std::vector<Tangram::LngLat> tgPolyline;
+    Line tgPolyline;
     Tangram::LngLat* coordinates = reinterpret_cast<Tangram::LngLat*>([polyline coordinates]);
     tgPolyline.insert(tgPolyline.begin(), coordinates, coordinates + [polyline count]);
     dataSource->addLine(tgProperties, tgPolyline);

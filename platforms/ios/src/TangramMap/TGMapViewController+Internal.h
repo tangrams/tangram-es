@@ -20,8 +20,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)removeMarker:(Tangram::MarkerID)identifier;
 
-- (std::shared_ptr<Tangram::ClientGeoJsonSource>)getDataSource:(NSString *)name;
-
 - (BOOL)removeDataSource:(std::shared_ptr<Tangram::ClientGeoJsonSource>)tileSource name:(NSString *)name;
 
 - (void)clearDataSource:(std::shared_ptr<Tangram::TileSource>)tileSource;
