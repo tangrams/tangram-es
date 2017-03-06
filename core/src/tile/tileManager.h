@@ -7,7 +7,6 @@
 #include "tile/tileTask.h"
 #include "tile/tileWorker.h"
 #include "util/fastmap.h"
-#include "log.h"
 
 #include <map>
 #include <memory>
