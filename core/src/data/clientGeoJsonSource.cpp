@@ -19,12 +19,19 @@ namespace Tangram {
 
 using namespace mapbox;
 
-const uint32_t indexMaxPoints = 100000;
-const double tolerance = 1E-8;
 const uint16_t tileExtent = 4096;
-const uint16_t tileBuffer = 0;
 
-const geojsonvt::Options tileOptions = { 18, 5, indexMaxPoints, false, tolerance, tileExtent, tileBuffer };
+geojsonvt::Options tileOptions() {
+    geojsonvt::Options options;
+    options.maxZoom = 18;
+    options.indexMaxZoom = 5;
+    options.indexMaxPoints = 100000;
+    options.solidChildren = true;
+    options.tolerance = 3;
+    options.extent = tileExtent;
+    options.buffer = 0;
+    return options;
+}
 
 struct ClientGeoJsonData {
     std::unique_ptr<geojsonvt::GeoJSONVT> tiles;
@@ -109,7 +116,7 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
                            std::make_move_iterator(features.end()));
 
     if (!m_edit) {
-        store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(store->features, tileOptions);
+        store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(store->features, tileOptions());
         m_generation++;
         m_mutexStore.unlock();
     }
@@ -157,7 +164,7 @@ void ClientGeoJsonSource::edit(bool _clear) {
 void ClientGeoJsonSource::commit() {
     if (!m_edit) { return; }
 
-    m_edit->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_edit->features, tileOptions);
+    m_edit->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_edit->features, tileOptions());
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 
@@ -177,7 +184,7 @@ void ClientGeoJsonSource::addPoint(const Properties& _tags, LngLat _point) {
     store->properties.emplace_back(_tags);
 
     if (!m_edit) {
-        store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(store->features, tileOptions);
+        store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(store->features, tileOptions());
         m_generation++;
         m_mutexStore.unlock();
     }
@@ -198,7 +205,7 @@ void ClientGeoJsonSource::addLine(const Properties& _tags, const Coordinates& _l
     store->properties.emplace_back(_tags);
 
     if (!m_edit) {
-        store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(store->features, tileOptions);
+        store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(store->features, tileOptions());
         m_generation++;
         m_mutexStore.unlock();
     }
@@ -223,7 +230,7 @@ void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coo
     store->properties.emplace_back(_tags);
 
     if (!m_edit) {
-        store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(store->features, tileOptions);
+        store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(store->features, tileOptions());
         m_generation++;
         m_mutexStore.unlock();
     }
