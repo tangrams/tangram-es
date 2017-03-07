@@ -396,8 +396,7 @@ extern "C" {
 
         assert(mapPtr > 0);
         assert(sourcePtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        auto source = reinterpret_cast<Tangram::ClientGeoJsonSource*>(map->getPlatform(), sourcePtr);
+        auto source = reinterpret_cast<Tangram::ClientGeoJsonSource*>(sourcePtr);
 
         size_t n_points = jniEnv->GetArrayLength(jcoordinates) / 2;
         size_t n_rings = (jrings == NULL) ? 0 : jniEnv->GetArrayLength(jrings);
