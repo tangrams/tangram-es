@@ -62,6 +62,8 @@ enum class StyleParamKey : uint8_t {
     sprite_default,
     style,
     text_source,
+    text_source_left,
+    text_source_right,
     text_wrap,
     tile_edges,
     text_transform,

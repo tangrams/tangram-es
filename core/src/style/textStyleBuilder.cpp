@@ -478,6 +478,32 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         // Use default key
         p.text = _props.getString(key_name);
     }
+    std::string textLeft, textRight;
+    auto& textSourceLeft = _rule.findParameter(StyleParamKey::text_source_left);
+    if (textSourceLeft.value.is<StyleParam::TextSource>()) {
+        for (auto& key : textSourceLeft.value.get<StyleParam::TextSource>().keys) {
+            p.textLeft = _props.getString(key);
+            if (!p.textLeft.empty()) { break; }
+        }
+    } else if (textSourceLeft.value.is<std::string>()) {
+        p.textLeft = textSourceLeft.value.get<std::string>();
+    }
+    auto& textSourceRight = _rule.findParameter(StyleParamKey::text_source_right);
+    if (textSourceRight.value.is<StyleParam::TextSource>()) {
+        for (auto& key : textSourceRight.value.get<StyleParam::TextSource>().keys) {
+            p.textRight = _props.getString(key);
+            if (!p.textRight.empty()) { break; }
+        }
+    } else if (textSourceRight.value.is<std::string>()) {
+        p.textRight = textSourceRight.value.get<std::string>();
+    }
+
+    if (!textSourceLeft.value.is<none_type>()) {
+        LOG("got left %s", textLeft.c_str());
+    }
+    if (!textSourceRight.value.is<none_type>()) {
+        LOG("got right %s", textRight.c_str());
+    }
 
     if (p.text.empty()) { return p; }
 
