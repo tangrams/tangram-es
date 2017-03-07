@@ -125,17 +125,6 @@ struct LineSampler {
                 // length from cur to next point
                 float segmentLength = next.z - curr.z;
 
-                if (segmentLength <= m_minSampleLength) {
-                    if (m_curPoint >= m_points.size() - 2) {
-                        _point = glm::vec2(next);
-                        _rotation = (glm::vec2(next) - glm::vec2(curr)) / segmentLength;
-                        m_curAdvance = sumLength();
-                        return false;
-                    }
-                    m_curPoint += 1;
-                    continue;
-                }
-
                 if (length <= segmentLength) {
                     float f = length / segmentLength;
 
@@ -167,17 +156,6 @@ struct LineSampler {
                 // length from cur to next point
                 float segmentLength = next.z - curr.z;
 
-                if (segmentLength <= m_minSampleLength) {
-                    if (m_curPoint == 0) {
-                        _point = glm::vec2(curr);
-                        _rotation = (glm::vec2(next) - glm::vec2(curr)) / segmentLength;
-                        m_curAdvance = 0;
-                        return false;
-                    }
-                    m_curPoint -= 1;
-                    continue;
-                }
-
                 if (curr.z <= end) {
                     float f = length / segmentLength;
 
@@ -202,19 +180,23 @@ struct LineSampler {
         return false;
     }
 
-    void setMinSampleLength(float _minLength) {
-        m_minSampleLength = _minLength;
+    float lengthToNextSegment() {
+        if (m_curPoint >= m_points.size()-1) { return 0; }
+        return m_points[m_curPoint + 1].z - m_curAdvance;
+    }
+    float lengthToPrevSegment() {
+        if (m_curPoint >= m_points.size()) { return 0; }
+        return m_curAdvance - m_points[m_curPoint].z;
     }
 
     LineSampler(Points _points) : m_points(_points) { }
     LineSampler() { }
+
 private:
     Points m_points;
 
     size_t m_curPoint = 0;
     float m_curAdvance = 0.f;
-    float m_minSampleLength = 0.f;
-
 };
 
 }
