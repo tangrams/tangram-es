@@ -125,7 +125,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
     _rule.get(StyleParamKey::buffer, p.labelOptions.buffer);
 
-    uint32_t priority;
+    uint32_t priority = 0;
     size_t repeatGroupHash = 0;
     std::string repeatGroup;
     StyleParam::Width repeatDistance;
@@ -472,12 +472,13 @@ bool PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
 
         TextStyle::Parameters params = textStyleBuilder.applyRule(_rule, _feat.props, true);
 
-        if (textStyleBuilder.prepareLabel(params, Label::Type::point)) {
+        TextStyleBuilder::LabelAttributes attrib;
+        if (textStyleBuilder.prepareLabel(params, Label::Type::point, attrib)) {
 
             for (size_t i = 0; i < iconsCount; i++) {
                 auto pLabel = static_cast<SpriteLabel*>(m_labels[iconsStart + i].get());
                 auto p = pLabel->modelCenter();
-                textStyleBuilder.addLabel(params, Label::Type::point, {{p, p}}, _rule);
+                textStyleBuilder.addLabel(Label::Type::point, {{p, p}}, params, attrib, _rule);
 
                 bool definePriority = !_rule.contains(StyleParamKey::text_priority);
                 bool defineCollide = _rule.contains(StyleParamKey::collide);

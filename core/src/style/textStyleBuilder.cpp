@@ -180,12 +180,14 @@ bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     size_t quadsStart = m_quads.size();
     size_t numLabels = m_labels.size();
 
-    if (!prepareLabel(params, labelType)) { return false; }
+    LabelAttributes attrib;
+
+    if (!prepareLabel(params, labelType, attrib)) { return false; }
 
     if (_feat.geometryType == GeometryType::points) {
         for (auto& point : _feat.points) {
             auto p = glm::vec2(point);
-            addLabel(params, Label::Type::point, {{ p, p }}, _rule);
+            addLabel(Label::Type::point, {{ p }}, params, attrib, _rule);
         }
 
     } else if (_feat.geometryType == GeometryType::polygons) {
@@ -195,11 +197,11 @@ bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
             if (!polygon.empty()) {
                 glm::vec3 c;
                 c = centroid(polygon.front().begin(), polygon.front().end());
-                addLabel(params, Label::Type::point, {{ c }}, _rule);
+                addLabel(Label::Type::point, {{ c }}, params, attrib, _rule);
             }
         }
     } else if (_feat.geometryType == GeometryType::lines) {
-        addLineTextLabels(_feat, params, _rule);
+        addLineTextLabels(_feat, params, attrib, _rule);
     }
 
     if (numLabels == m_labels.size()) {
@@ -210,13 +212,13 @@ bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 }
 
 bool TextStyleBuilder::addStraightTextLabels(const Line& _line, const TextStyle::Parameters& _params,
-                                             const DrawRule& _rule) {
+                                             const LabelAttributes& _attributes, const DrawRule& _rule) {
 
     // Size of pixel in tile coordinates
     float pixelSize = 1.0/m_tileSize;
 
     // Minimal length of line needed for the label
-    float minLength = m_attributes.width * pixelSize;
+    float minLength = _attributes.width * pixelSize;
 
     // Allow labels to appear later than tile's min-zoom
     minLength *= 0.6;
@@ -268,7 +270,7 @@ bool TextStyleBuilder::addStraightTextLabels(const Line& _line, const TextStyle:
             glm::vec2 b = glm::vec2(p1 - p0) / float(run);
 
             for (int r = 0; r < run; r++) {
-                addLabel(_params, Label::Type::line, {{ a, a+b }}, _rule);
+                addLabel(Label::Type::line, {{ a, a+b }}, _params, _attributes, _rule);
                 a += b;
             }
             run *= 2;
@@ -288,12 +290,12 @@ bool TextStyleBuilder::addStraightTextLabels(const Line& _line, const TextStyle:
 }
 
 void TextStyleBuilder::addCurvedTextLabels(const Line& _line, const TextStyle::Parameters& _params,
-                                           const DrawRule& _rule) {
+                                           const LabelAttributes& _attributes, const DrawRule& _rule) {
 
     // Size of pixel in tile coordinates
     const float pixelSize = 1.0/m_tileSize;
     // length of line needed for the label
-    const float labelLength = m_attributes.width * pixelSize;
+    const float labelLength = _attributes.width * pixelSize;
     // Allow labels to appear later than tile's min-zoom
     const float minLength = labelLength * 0.6;
 
@@ -428,12 +430,12 @@ void TextStyleBuilder::addCurvedTextLabels(const Line& _line, const TextStyle::P
         }
 
         m_labels.emplace_back(new CurvedLabel(l, _params.labelOptions, prio,
-                                               {m_attributes.fill,
-                                                       m_attributes.stroke,
-                                                       m_attributes.fontScale,
+                                               {_attributes.fill,
+                                                       _attributes.stroke,
+                                                       _attributes.fontScale,
                                                        selectionColor},
-                                               {m_attributes.width, m_attributes.height},
-                                               *m_textLabels, m_attributes.textRanges,
+                                               {_attributes.width, _attributes.height},
+                                               *m_textLabels, _attributes.textRanges,
                                                TextLabelProperty::Align::center,
                                                anchor));
 
@@ -441,15 +443,15 @@ void TextStyleBuilder::addCurvedTextLabels(const Line& _line, const TextStyle::P
 }
 
 void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::Parameters& _params,
-                                         const DrawRule& _rule) {
+                                         const LabelAttributes& _attributes, const DrawRule& _rule) {
 
     for (auto& line : _feat.lines) {
 
-        if (!addStraightTextLabels(line, _params, _rule) &&
+        if (!addStraightTextLabels(line, _params, _attributes, _rule) &&
             line.size() > 2 && !_params.hasComplexShaping &&
             // TODO: support line offset for curved labels
             _params.labelOptions.offset == glm::vec2(0)) {
-            addCurvedTextLabels(line, _params, _rule);
+            addCurvedTextLabels(line, _params, _attributes, _rule);
         }
     }
 }
@@ -701,7 +703,8 @@ bool isComplexShapingScript(const icu::UnicodeString& _text) {
     return false;
 }
 
-bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type _type) {
+bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type _type,
+                                    LabelAttributes& _attributes) {
 
     if (_params.text.empty() || _params.fontSize <= 0.f) {
         // Nothing to render!
@@ -730,31 +733,32 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
         LOGN("stroke_width too large: %f / %f", _params.strokeWidth, strokeAttrib/255.f);
         strokeAttrib = 255;
     }
-    m_attributes.stroke = (_params.strokeColor & 0x00ffffff) + (strokeAttrib << 24);
-    m_attributes.fill = _params.fill;
-    m_attributes.fontScale = std::min(int(_params.fontScale * 64.f), 255);
-    m_attributes.quadsStart = m_quads.size();
-    m_attributes.textRanges = TextRange{};
+    _attributes.stroke = (_params.strokeColor & 0x00ffffff) + (strokeAttrib << 24);
+    _attributes.fill = _params.fill;
+    _attributes.fontScale = std::min(int(_params.fontScale * 64.f), 255);
+    _attributes.quadsStart = m_quads.size();
+    _attributes.textRanges = TextRange{};
 
     glm::vec2 bbox(0);
-    if (ctx->layoutText(_params, text, m_quads, m_atlasRefs, bbox, m_attributes.textRanges)) {
+    if (ctx->layoutText(_params, text, m_quads, m_atlasRefs, bbox, _attributes.textRanges)) {
 
-        int start = m_attributes.quadsStart;
-        for (auto& range : m_attributes.textRanges) {
+        int start = _attributes.quadsStart;
+        for (auto& range : _attributes.textRanges) {
             assert(range.start == start);
             assert(range.length >= 0);
             start += range.length;
         }
-        m_attributes.width = bbox.x;
-        m_attributes.height = bbox.y;
+        _attributes.width = bbox.x;
+        _attributes.height = bbox.y;
         return true;
     }
 
     return false;
 }
 
-void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
-                                TextLabel::Coordinates _coordinates, const DrawRule& _rule) {
+void TextStyleBuilder::addLabel(Label::Type _type, TextLabel::Coordinates _coordinates,
+                                const TextStyle::Parameters& _params, const LabelAttributes& _attributes,
+                                const DrawRule& _rule) {
 
     uint32_t selectionColor = 0;
 
@@ -763,12 +767,12 @@ void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Typ
     }
 
     m_labels.emplace_back(new TextLabel(_coordinates, _type, _params.labelOptions,
-                                        {m_attributes.fill,
-                                         m_attributes.stroke,
-                                         m_attributes.fontScale,
+                                        {_attributes.fill,
+                                         _attributes.stroke,
+                                         _attributes.fontScale,
                                          selectionColor},
-                                        {m_attributes.width, m_attributes.height},
-                                        *m_textLabels, m_attributes.textRanges,
+                                        {_attributes.width, _attributes.height},
+                                        *m_textLabels, _attributes.textRanges,
                                         _params.align));
 }
 
