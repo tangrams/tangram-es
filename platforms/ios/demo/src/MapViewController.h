@@ -16,6 +16,7 @@
 - (void)mapView:(TGMapViewController *)mapView didSelectLabel:(TGLabelPickResult *)labelPickResult atScreenPosition:(CGPoint)position;
 - (void)mapView:(TGMapViewController *)mapView didSelectMarker:(TGMarkerPickResult *)markerPickResult atScreenPosition:(TGGeoPoint)position;
 - (void)mapView:(TGMapViewController *)view didCaptureScreenshot:(UIImage *)screenshot;
+- (void)mapView:(TGMapViewController *)mapView didCompleteSceneUpdatesWithErrors:(NSArray<TGSceneUpdateStatus *> *)updateStatuses;
 
 @end
 

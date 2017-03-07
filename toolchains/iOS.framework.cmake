@@ -50,6 +50,7 @@ set(SOURCES
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapData.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGSceneUpdate.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGLabelPickResult.mm
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGSceneUpdateStatus.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarkerPickResult.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarker.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapViewController.mm)
@@ -63,6 +64,7 @@ set(FRAMEWORK_HEADERS
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGEaseType.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGSceneUpdate.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapData.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGSceneUpdateStatus.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHttpHandler.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGLabelPickResult.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarkerPickResult.h

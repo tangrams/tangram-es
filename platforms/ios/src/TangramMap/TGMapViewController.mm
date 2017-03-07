@@ -12,6 +12,7 @@
 #import "TGMapData+Internal.h"
 #import "TGMarkerPickResult+Internal.h"
 #import "TGLabelPickResult+Internal.h"
+#import "TGSceneUpdateStatus+Internal.h"
 #import "TGHelpers.h"
 #import "platform_ios.h"
 #import "data/propertyItem.h"
@@ -138,7 +139,13 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     }
 
     self.scenePath = path;
-    self.map->loadScene([path UTF8String], false, updates);
+
+    auto updateCallbackStatus = [self](auto sceneUpdateStatuses) {
+        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didCompleteSceneUpdatesWithErrors:)]) { return; }
+        [self.mapViewDelegate mapView:self didCompleteSceneUpdatesWithErrors:[TGSceneUpdateStatus sceneUpdateStatuses:sceneUpdateStatuses]];
+    };
+
+    self.map->loadScene([path UTF8String], false, updates, updateCallbackStatus);
     self.renderRequested = YES;
 }
 
@@ -164,7 +171,12 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         }
     }
 
-    self.map->loadSceneAsync([path UTF8String], false, onReadyCallback, nullptr, updates);
+    auto updateCallbackStatus = [self](auto sceneUpdateStatuses) {
+        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didCompleteSceneUpdatesWithErrors:)]) { return; }
+        [self.mapViewDelegate mapView:self didCompleteSceneUpdatesWithErrors:[TGSceneUpdateStatus sceneUpdateStatuses:sceneUpdateStatuses]];
+    };
+
+    self.map->loadSceneAsync([path UTF8String], false, onReadyCallback, nullptr, updates, updateCallbackStatus);
 }
 
 #pragma mark Scene updates
@@ -195,7 +207,12 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return; }
 
-    self.map->applySceneUpdates();
+    auto updateCallbackStatus = [self](auto sceneUpdateStatuses) {
+        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didCompleteSceneUpdatesWithErrors:)]) { return; }
+        [self.mapViewDelegate mapView:self didCompleteSceneUpdatesWithErrors:[TGSceneUpdateStatus sceneUpdateStatuses:sceneUpdateStatuses]];
+    };
+
+    self.map->applySceneUpdates(updateCallbackStatus);
 }
 
 #pragma mark Longitude/Latitude - Screen position conversions

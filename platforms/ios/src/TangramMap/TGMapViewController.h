@@ -18,6 +18,7 @@
 #import "TGGeoPolygon.h"
 #import "TGGeoPolyline.h"
 #import "TGSceneUpdate.h"
+#import "TGSceneUpdateStatus.h"
 #import "TGHttpHandler.h"
 #import "TGLabelPickResult.h"
 #import "TGMarker.h"
@@ -268,6 +269,8 @@ NS_ASSUME_NONNULL_END
  @param screenshot the image object representing the screenshot
  */
 - (void)mapView:(nonnull TGMapViewController *)view didCaptureScreenshot:(nonnull UIImage *)screenshot;
+
+- (void)mapView:(nonnull TGMapViewController *)mapView didCompleteSceneUpdatesWithErrors:(NSArray<TGSceneUpdateStatus *> *)updateStatuses;
 @end
 
 NS_ASSUME_NONNULL_BEGIN

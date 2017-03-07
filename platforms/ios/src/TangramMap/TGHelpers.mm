@@ -26,4 +26,16 @@
     }
 }
 
++ (TGSceneUpdateError)convertSceneUpdateErrorTypeFrom:(Tangram::SceneUpdateError)error
+{
+    switch (error) {
+        case Tangram::SceneUpdateError::path_yaml_syntax_error:
+            return TGSceneUpdateErrorPathYAMLSyntaxError;
+        case Tangram::SceneUpdateError::path_not_found:
+            return TGSceneUpdateErrorPathNotFound;
+        case Tangram::SceneUpdateError::value_yaml_syntax_error:
+            return TGSceneUpdateErrorValueYamlSyntaxError;
+    }
+}
+
 @end
