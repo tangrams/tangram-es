@@ -391,6 +391,20 @@ extern "C" {
         map->clearTileSource(*source, true, true);
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeEditFeatures(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong sourcePtr, jboolean clear) {
+        assert(mapPtr > 0);
+        assert(sourcePtr > 0);
+        auto source = reinterpret_cast<Tangram::ClientGeoJsonSource*>(sourcePtr);
+        source->edit(clear);
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeCommitFeatures(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong sourcePtr) {
+        assert(mapPtr > 0);
+        assert(sourcePtr > 0);
+        auto source = reinterpret_cast<Tangram::ClientGeoJsonSource*>(sourcePtr);
+        source->commit();
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeAddFeature(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong sourcePtr,
         jdoubleArray jcoordinates, jintArray jrings, jobjectArray jproperties) {
 

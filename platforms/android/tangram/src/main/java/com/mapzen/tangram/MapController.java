@@ -868,6 +868,18 @@ public class MapController implements Renderer {
         nativeAddFeature(mapPointer, sourcePtr, coordinates, rings, properties);
     }
 
+    void editFeatures(long sourcePtr, boolean clear) {
+        checkPointer(mapPointer);
+        checkPointer(sourcePtr);
+        nativeEditFeatures(mapPointer, sourcePtr, clear);
+    }
+
+    void commitFeatures(long sourcePtr) {
+        checkPointer(mapPointer);
+        checkPointer(sourcePtr);
+        nativeCommitFeatures(mapPointer, sourcePtr);
+    }
+
     void addGeoJson(long sourcePtr, String geoJson) {
         checkPointer(mapPointer);
         checkPointer(sourcePtr);
@@ -1023,6 +1035,8 @@ public class MapController implements Renderer {
     synchronized native void nativeClearTileSource(long mapPtr, long sourcePtr);
     synchronized native void nativeAddFeature(long mapPtr, long sourcePtr, double[] coordinates, int[] rings, String[] properties);
     synchronized native void nativeAddGeoJson(long mapPtr, long sourcePtr, String geoJson);
+    synchronized native void nativeEditFeatures(long mapPtr, long sourcePtr, boolean clear);
+    synchronized native void nativeCommitFeatures(long mapPtr, long sourcePtr);
 
     native void nativeSetDebugFlag(int flag, boolean on);
 

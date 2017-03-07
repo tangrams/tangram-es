@@ -117,4 +117,24 @@ public class MapData {
         return this;
     }
 
+    /**
+     * Turn on edit mode. In edit mode multiple features can be added
+     * without updating the map view. Use 'commit()' to end edit mode.
+     * @param clear previous map features
+     * @return This object, for chaining.
+     */
+    public MapData edit(boolean clear) {
+        map.editFeatures(pointer, clear);
+        return this;
+    }
+
+    /**
+     * Update map with added features since the last call to 'edit()'.
+     * @return This object, for chaining.
+     */
+    public MapData commit() {
+        map.commitFeatures(pointer);
+        return this;
+    }
+
 }
