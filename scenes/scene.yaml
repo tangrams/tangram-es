@@ -564,6 +564,11 @@ layers:
                 width: 2px
                 color: wheat
 
+            text:
+                priority: 0
+                text_source:
+                    left: 'name:left'
+                    right: 'name:right'
         country:
             filter: { kind: country }
             draw:

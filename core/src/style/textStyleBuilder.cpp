@@ -165,6 +165,78 @@ std::unique_ptr<StyledMesh> TextStyleBuilder::build() {
     return std::move(m_textLabels);
 }
 
+bool getTextSource(const StyleParamKey _key, const DrawRule& _rule, const Properties& _props,
+                   std::string& _text) {
+
+    auto& textSource = _rule.findParameter(_key);
+    if (textSource.value.is<StyleParam::TextSource>()) {
+        for (auto& key : textSource.value.get<StyleParam::TextSource>().keys) {
+            _text = _props.getString(key);
+            if (!_text.empty()) { break; }
+        }
+    } else if (textSource.value.is<std::string>()) {
+        // From function evaluation
+        _text = textSource.value.get<std::string>();
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule& _rule,
+                                           const TextStyle::Parameters& _params) {
+    std::string leftText, rightText;
+
+    bool hasLeftSource = getTextSource(StyleParamKey::text_source_left, _rule, _feat.props, leftText);
+    bool hasRightSource = getTextSource(StyleParamKey::text_source_right, _rule, _feat.props, rightText);
+
+    if (!(hasLeftSource || hasRightSource)) { return false; }
+
+    if (_feat.geometryType != GeometryType::lines) { return true; }
+
+    LabelAttributes leftAttribs, rightAttribs;
+    TextStyle::Parameters rightParams = _params;
+    TextStyle::Parameters leftParams = _params;
+
+    //float labelWidth = 0.f;
+    bool hasLeftLabel = false;
+    if (hasLeftSource && !leftText.empty()) {
+        leftParams.text = leftText;
+        leftParams.labelOptions.offset.y = 15;
+
+        hash_combine(leftParams.labelOptions.repeatGroup, leftText);
+
+        hasLeftLabel = prepareLabel(leftParams, Label::Type::line, leftAttribs);
+    }
+
+    bool hasRightLabel = false;
+    if (hasRightSource && !rightText.empty()) {
+        rightParams.text = rightText;
+        rightParams.labelOptions.offset.y = -15;
+
+        hash_combine(rightParams.labelOptions.repeatGroup, rightText);
+
+        hasRightLabel = prepareLabel(rightParams, Label::Type::line, rightAttribs);
+    }
+
+    float labelWidth = std::max(leftAttribs.width, rightAttribs.width);
+
+    auto straightLabelCb = [&](glm::vec2 a, glm::vec2 b) {
+        if (hasLeftLabel) {
+            addLabel(Label::Type::line, {{ a, b }}, leftParams, leftAttribs, _rule);
+        }
+        if (hasRightLabel) {
+            addLabel(Label::Type::line, {{ a, b }}, rightParams, rightAttribs, _rule);
+        }
+    };
+
+    for (auto& line : _feat.lines) {
+        addStraightTextLabels(line, labelWidth, straightLabelCb);
+    }
+
+    return true;
+}
+
 bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     TextStyle::Parameters params = applyRule(_rule, _feat.props, false);
 
@@ -180,28 +252,30 @@ bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     size_t quadsStart = m_quads.size();
     size_t numLabels = m_labels.size();
 
-    LabelAttributes attrib;
+    if (!handleBoundaryLabel(_feat, _rule, params)) {
 
-    if (!prepareLabel(params, labelType, attrib)) { return false; }
+        LabelAttributes attrib;
+        if (!prepareLabel(params, labelType, attrib)) { return false; }
 
-    if (_feat.geometryType == GeometryType::points) {
-        for (auto& point : _feat.points) {
-            auto p = glm::vec2(point);
-            addLabel(Label::Type::point, {{ p }}, params, attrib, _rule);
-        }
-
-    } else if (_feat.geometryType == GeometryType::polygons) {
-
-        const auto& polygons = _feat.polygons;
-        for (const auto& polygon : polygons) {
-            if (!polygon.empty()) {
-                glm::vec3 c;
-                c = centroid(polygon.front().begin(), polygon.front().end());
-                addLabel(Label::Type::point, {{ c }}, params, attrib, _rule);
+        if (_feat.geometryType == GeometryType::points) {
+            for (auto& point : _feat.points) {
+                auto p = glm::vec2(point);
+                addLabel(Label::Type::point, {{ p }}, params, attrib, _rule);
             }
+
+        } else if (_feat.geometryType == GeometryType::polygons) {
+            const auto& polygons = _feat.polygons;
+            for (const auto& polygon : polygons) {
+                if (!polygon.empty()) {
+                    glm::vec3 c;
+                    c = centroid(polygon.front().begin(), polygon.front().end());
+                    addLabel(Label::Type::point, {{ c }}, params, attrib, _rule);
+                }
+            }
+
+        } else if (_feat.geometryType == GeometryType::lines) {
+            addLineTextLabels(_feat, params, attrib, _rule);
         }
-    } else if (_feat.geometryType == GeometryType::lines) {
-        addLineTextLabels(_feat, params, attrib, _rule);
     }
 
     if (numLabels == m_labels.size()) {
@@ -453,7 +527,6 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
     for (auto& line : _feat.lines) {
 
         if (!addStraightTextLabels(line, _attributes.width, straightLabelCb) &&
-
             line.size() > 2 && !_params.hasComplexShaping &&
             // TODO: support line offset for curved labels
             _params.labelOptions.offset == glm::vec2(0)) {
@@ -472,46 +545,11 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
     TextStyle::Parameters p;
 
-    auto& textSource = _rule.findParameter(StyleParamKey::text_source);
-
-    if (textSource.value.is<StyleParam::TextSource>()) {
-        for (auto& key : textSource.value.get<StyleParam::TextSource>().keys) {
-            p.text = _props.getString(key);
-            if (!p.text.empty()) { break; }
-        }
-    } else if (textSource.value.is<std::string>()) {
-        // From function evaluation
-        p.text = textSource.value.get<std::string>();
-    } else {
+    if (!getTextSource(StyleParamKey::text_source, _rule, _props, p.text)) {
         // Use default key
         p.text = _props.getString(key_name);
     }
-    std::string textLeft, textRight;
-    auto& textSourceLeft = _rule.findParameter(StyleParamKey::text_source_left);
-    if (textSourceLeft.value.is<StyleParam::TextSource>()) {
-        for (auto& key : textSourceLeft.value.get<StyleParam::TextSource>().keys) {
-            p.textLeft = _props.getString(key);
-            if (!p.textLeft.empty()) { break; }
-        }
-    } else if (textSourceLeft.value.is<std::string>()) {
-        p.textLeft = textSourceLeft.value.get<std::string>();
-    }
-    auto& textSourceRight = _rule.findParameter(StyleParamKey::text_source_right);
-    if (textSourceRight.value.is<StyleParam::TextSource>()) {
-        for (auto& key : textSourceRight.value.get<StyleParam::TextSource>().keys) {
-            p.textRight = _props.getString(key);
-            if (!p.textRight.empty()) { break; }
-        }
-    } else if (textSourceRight.value.is<std::string>()) {
-        p.textRight = textSourceRight.value.get<std::string>();
-    }
 
-    if (!textSourceLeft.value.is<none_type>()) {
-        LOG("got left %s", textLeft.c_str());
-    }
-    if (!textSourceRight.value.is<none_type>()) {
-        LOG("got right %s", textRight.c_str());
-    }
 
     if (p.text.empty()) { return p; }
 

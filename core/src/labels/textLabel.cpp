@@ -135,12 +135,20 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
             glm::vec2 screenPosition = worldToScreenSpace(_mvp, glm::vec4(p1, 0.0, 1.0),
                                                           _viewState.viewportSize, clipped);
 
-            rotation = (ap0.x <= ap2.x ? ap2 - ap0 : ap0 - ap2) / length;
+            auto offset = m_options.offset;
+
+            if (ap0.x <= ap2.x) {
+                rotation = (ap2 - ap0) / length;
+                offset = -offset;
+            } else {
+                rotation = (ap0 - ap2) / length;
+            }
+            //rotation = ( ?  : ap0 - ap2) / length;
             rotation = glm::vec2{ rotation.x, - rotation.y };
 
             m_screenCenter = screenPosition;
 
-            PointTransform(_transform).set(screenPosition + rotateBy(m_options.offset, rotation), rotation);
+            PointTransform(_transform).set(screenPosition + rotateBy(offset, rotation), rotation);
 
             return true;
         }
