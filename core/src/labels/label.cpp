@@ -13,7 +13,7 @@ const float Label::activation_distance_threshold = 2;
 
 Label::Label(glm::vec2 _size, Type _type, Options _options)
     : m_type(_type),
-      m_dim(_size),
+      m_dim(_size + _options.buffer),
       m_options(_options),
       m_state(State::none) {
 

@@ -123,6 +123,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     _rule.get(StyleParamKey::color, p.color);
     _rule.get(StyleParamKey::sprite, p.sprite);
     _rule.get(StyleParamKey::offset, p.labelOptions.offset);
+    _rule.get(StyleParamKey::buffer, p.labelOptions.buffer);
 
     uint32_t priority;
     size_t repeatGroupHash = 0;
