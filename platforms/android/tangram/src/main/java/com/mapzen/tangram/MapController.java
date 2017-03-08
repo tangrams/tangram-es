@@ -115,7 +115,17 @@ public class MapController implements Renderer {
         void onViewComplete();
     }
 
+    /**
+     * Interface for a callback to received additional error information in a {@link SceneUpdateStatus}
+     * Triggered after a call of {@link #applySceneUpdates()} or {@link #loadSceneFile(String, List<SceneUpdate>)}
+     * Listener should be set with {@link #setSceneUpdateErrorListener(SceneUpdateErrorListener)}
+     */
     public interface SceneUpdateErrorListener {
+        /**
+         * Receive error statuses after scene updates have been applied
+         * If no error happens, the list will be empty
+         * @param updateStatuses The list of {@link SceneUpdateStatus} holding error informations
+         */
         void onSceneUpdateError(List<SceneUpdateStatus> updateStatuses);
     }
 
@@ -694,6 +704,10 @@ public class MapController implements Renderer {
         featurePickListener = listener;
     }
 
+    /**
+     * Set a listener for scene update error statuses
+     * @param listener The {@link SceneUpdateErrorListener} to call after scene update are applied
+     */
     public void setSceneUpdateErrorListener(SceneUpdateErrorListener listener) {
         sceneUpdateErrorListener = listener;
     }

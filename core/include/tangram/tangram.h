@@ -74,6 +74,8 @@ struct SceneUpdateStatus {
     SceneUpdateError error;
 };
 
+// Returns a list of scene update statuses if scene update triggered error when applied to the scene
+// The list will be empty if all scene updates were applied successfully
 using SceneUpdateCallback = std::function<void(const std::vector<SceneUpdateStatus>&)>;
 
 enum class EaseType : char {
