@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "TGGeoPoint.h"
+#import "TGMapData.h"
 
 /**
  A label type used to differentiate icon and text labels when selecting them on a map view
@@ -35,7 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nonatomic) TGLabelType type;
 
 /// The set of data properties attached with the label
-@property (readonly, strong, nonatomic) NSDictionary* properties;
+@property (readonly, strong, nonatomic) TGFeatureProperties* properties;
 
 NS_ASSUME_NONNULL_END
 

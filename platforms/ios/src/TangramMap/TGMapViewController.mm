@@ -262,7 +262,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
             return;
         }
 
-        NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
+        NSMutableDictionary* featureProperties = [[NSMutableDictionary alloc] init];
 
         const auto& properties = featureResult->properties;
         position = CGPointMake(featureResult->position[0] / self.contentScaleFactor,
@@ -271,10 +271,10 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         for (const auto& item : properties->items()) {
             NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
             NSString* value = [NSString stringWithUTF8String:properties->asString(item.value).c_str()];
-            dictionary[key] = value;
+            featureProperties[key] = value;
         }
 
-        [self.mapViewDelegate mapView:self didSelectFeature:dictionary atScreenPosition:position];
+        [self.mapViewDelegate mapView:self didSelectFeature:featureProperties atScreenPosition:position];
     });
 }
 
@@ -335,7 +335,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
             return;
         }
 
-        NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
+        NSMutableDictionary* featureProperties = [[NSMutableDictionary alloc] init];
 
         const auto& touchItem = labelPickResult->touchItem;
         const auto& properties = touchItem.properties;
@@ -345,13 +345,13 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         for (const auto& item : properties->items()) {
             NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
             NSString* value = [NSString stringWithUTF8String:properties->asString(item.value).c_str()];
-            dictionary[key] = value;
+            featureProperties[key] = value;
         }
 
         TGGeoPoint coordinates = TGGeoPointMake(labelPickResult->coordinates.longitude, labelPickResult->coordinates.latitude);
         TGLabelPickResult* tgLabelPickResult = [[TGLabelPickResult alloc] initWithCoordinates:coordinates
                                                                                          type:(TGLabelType)labelPickResult->type
-                                                                                   properties:dictionary];
+                                                                                   properties:featureProperties];
         [self.mapViewDelegate mapView:self didSelectLabel:tgLabelPickResult atScreenPosition:position];
     });
 }
