@@ -12,7 +12,11 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -1132,6 +1136,32 @@ public class MapController implements Renderer {
     String getFontFallbackFilePath(int importance, int weightHint) {
 
         return fontFileParser.getFontFallback(importance, weightHint);
+    }
+
+    // Tmp Asset Path
+    // ==============
+    String copyAssetToTmpPath(String path) throws IOException {
+        String tmpDir = mapView.getContext().getExternalCacheDir().getAbsolutePath();
+        InputStream in = assetManager.open(path);
+        File outFile = new File(tmpDir, path);
+
+        if (!outFile.exists()) {
+            OutputStream out = new FileOutputStream(outFile);
+
+            // Copy File
+            byte[] buffer = new byte[1024];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+            }
+
+            in.close();
+            out.flush();
+            out.close();
+        }
+
+        return outFile.getAbsolutePath();
+
     }
 
 }
