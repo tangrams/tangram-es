@@ -87,17 +87,19 @@ void SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& upd
             LOGE("Parsing scene update string failed. '%s'", e.what());
             updateStatus.push_back({update, SceneUpdateError::value_yaml_syntax_error});
         }
-        if (value) {
-            try {
-                auto node = YamlPath(update.path).get(root);
-                if (node.Scalar().empty() && node != root) {
-                    updateStatus.push_back({update, SceneUpdateError::path_not_found});
-                }
-                node = value;
-            } catch(YAML::Exception e) {
-                LOGE("Parsing scene update string failed. %s '%s'", update.path.c_str(), e.what());
-                updateStatus.push_back({update, SceneUpdateError::path_yaml_syntax_error});
+        try {
+            // Dummy node to trigger YAML exception on YAML syntax errors
+            auto parse = YAML::Load(update.path);
+            auto node = YamlPath(update.path).get(root);
+            if (node.Scalar().empty() && node != root) {
+                updateStatus.push_back({update, SceneUpdateError::path_not_found});
             }
+            if (value) {
+                node = value;
+            }
+        } catch(YAML::Exception e) {
+            LOGE("Parsing scene update string failed. %s '%s'", update.path.c_str(), e.what());
+            updateStatus.push_back({update, SceneUpdateError::path_yaml_syntax_error});
         }
     }
 

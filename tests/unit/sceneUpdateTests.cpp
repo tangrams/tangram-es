@@ -202,3 +202,40 @@ TEST_CASE("Regression: scene update requesting a sequence from a scalar") {
 
     // causes yaml exception 'operator[] call on a scalar'
 }
+
+TEST_CASE("Scene update statuses") {
+    Scene scene(std::make_shared<MockPlatform>());
+    REQUIRE(loadConfig(sceneString, scene.config()));
+    Node& root = scene.config();
+    std::vector<SceneUpdate> updates = {{"map.a", "first_value"}, {"map.a", "second_value"}};
+    // Apply scene updates, reload scene.
+    SceneLoader::applyUpdates(scene, updates, [](auto updateStatuses) {
+        CHECK(updateStatuses.size() == 0);
+    });
+    updates = {{"map.a", "{ first_value"}};
+    // Apply scene updates, reload scene.
+    SceneLoader::applyUpdates(scene, updates, [](auto updateStatuses) {
+        CHECK(updateStatuses.size() == 1);
+        CHECK(updateStatuses[0].error == SceneUpdateError::value_yaml_syntax_error);
+    });
+    updates = {{"!map#0", "first_value"}};
+    // Apply scene updates, reload scene.
+    SceneLoader::applyUpdates(scene, updates, [](auto updateStatuses) {
+        CHECK(updateStatuses.size() == 1);
+        CHECK(updateStatuses[0].error == SceneUpdateError::path_yaml_syntax_error);
+    });
+    updates = {{"key_not_existing", "first_value"}};
+    // Apply scene updates, reload scene.
+    SceneLoader::applyUpdates(scene, updates, [](auto updateStatuses) {
+        CHECK(updateStatuses.size() == 1);
+        CHECK(updateStatuses[0].error == SceneUpdateError::path_not_found);
+    });
+    updates = {{"!map#0", "{ first_value"}};
+    // Apply scene updates, reload scene.
+    SceneLoader::applyUpdates(scene, updates, [](auto updateStatuses) {
+        CHECK(updateStatuses.size() == 2);
+        CHECK(updateStatuses[0].error == SceneUpdateError::value_yaml_syntax_error);
+        CHECK(updateStatuses[1].error == SceneUpdateError::path_yaml_syntax_error);
+    });
+}
+
