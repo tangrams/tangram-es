@@ -211,14 +211,14 @@ bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     return true;
 }
 
-bool TextStyleBuilder::addStraightTextLabels(const Line& _line, const TextStyle::Parameters& _params,
-                                             const LabelAttributes& _attributes, const DrawRule& _rule) {
+bool TextStyleBuilder::addStraightTextLabels(const Line& _line, float _labelWidth,
+                                             const std::function<void(glm::vec2,glm::vec2)>& _cb) {
 
     // Size of pixel in tile coordinates
     float pixelSize = 1.0/m_tileSize;
 
     // Minimal length of line needed for the label
-    float minLength = _attributes.width * pixelSize;
+    float minLength = _labelWidth * pixelSize;
 
     // Allow labels to appear later than tile's min-zoom
     minLength *= 0.6;
@@ -270,7 +270,8 @@ bool TextStyleBuilder::addStraightTextLabels(const Line& _line, const TextStyle:
             glm::vec2 b = glm::vec2(p1 - p0) / float(run);
 
             for (int r = 0; r < run; r++) {
-                addLabel(Label::Type::line, {{ a, a+b }}, _params, _attributes, _rule);
+                _cb(a, a+b);
+
                 a += b;
             }
             run *= 2;
@@ -445,9 +446,14 @@ void TextStyleBuilder::addCurvedTextLabels(const Line& _line, const TextStyle::P
 void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::Parameters& _params,
                                          const LabelAttributes& _attributes, const DrawRule& _rule) {
 
+    auto straightLabelCb = [&](glm::vec2 a, glm::vec2 b) {
+        addLabel(Label::Type::line, {{ a, b }}, _params, _attributes, _rule);
+    };
+
     for (auto& line : _feat.lines) {
 
-        if (!addStraightTextLabels(line, _params, _attributes, _rule) &&
+        if (!addStraightTextLabels(line, _attributes.width, straightLabelCb) &&
+
             line.size() > 2 && !_params.hasComplexShaping &&
             // TODO: support line offset for curved labels
             _params.labelOptions.offset == glm::vec2(0)) {

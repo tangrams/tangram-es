@@ -48,8 +48,8 @@ public:
     void addLineTextLabels(const Feature& _feature, const TextStyle::Parameters& _params,
                            const LabelAttributes& _attributes, const DrawRule& _rule);
 
-    bool addStraightTextLabels(const Line& _feature, const TextStyle::Parameters& _params,
-                               const LabelAttributes& _attributes, const DrawRule& _rule);
+    bool addStraightTextLabels(const Line& _feature, float _labelWidth,
+                               const std::function<void(glm::vec2,glm::vec2)>& _cb);
 
     void addCurvedTextLabels(const Line& _feature, const TextStyle::Parameters& _params,
                              const LabelAttributes& _attributes, const DrawRule& _rule);
