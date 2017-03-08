@@ -1,6 +1,7 @@
 #include "data/mbtilesDataSource.h"
 
 #include "util/asyncWorker.h"
+#include "util/url.h"
 #include "util/zlibHelper.h"
 #include "log.h"
 #include "platform.h"
@@ -125,7 +126,7 @@ MBTilesDataSource::MBTilesDataSource(std::shared_ptr<Platform> _platform, std::s
 
     m_worker = std::make_unique<AsyncWorker>();
 
-    openMBTiles();
+    openMBTiles(_platform);
 }
 
 MBTilesDataSource::~MBTilesDataSource() {
@@ -229,7 +230,7 @@ bool MBTilesDataSource::loadNextSource(std::shared_ptr<TileTask> _task, TileTask
     return next->loadTileData(_task, cb);
 }
 
-void MBTilesDataSource::openMBTiles() {
+void MBTilesDataSource::openMBTiles(const std::shared_ptr<Platform>& _platform) {
 
     try {
         auto mode = SQLite::OPEN_READONLY;
@@ -239,7 +240,8 @@ void MBTilesDataSource::openMBTiles() {
             mode = SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE;
         }
 
-        m_db = std::make_unique<SQLite::Database>(m_path, mode);
+        auto mbTilesPath = _platform->getAssetPath(Url(m_path));
+        m_db = std::make_unique<SQLite::Database>(mbTilesPath, mode);
         LOG("SQLite database opened: %s", m_path.c_str());
 
     } catch (std::exception& e) {

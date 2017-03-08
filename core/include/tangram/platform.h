@@ -14,6 +14,10 @@ using UrlCallback = std::function<void(std::vector<char>&&)>;
 
 using FontSourceLoader = std::function<std::vector<char>()>;
 
+namespace Tangram {
+    class Url;
+}
+
 struct FontSourceHandle {
     FontSourceHandle(std::string _path) : path(_path) {}
     FontSourceHandle(FontSourceLoader _loader) : load(_loader) {}
@@ -46,6 +50,12 @@ public:
     virtual void setContinuousRendering(bool _isContinuous);
 
     virtual bool isContinuousRendering() const;
+
+    // returns the path of an asset given the name of the asset
+    // ios: returns absolute path of the asset in the asset bundle
+    // android: returns a tmp path where the asset file is extracted from the apk
+    // other: returns the absolute path of the asset (should be by default)
+    virtual std::string getAssetPath(const Tangram::Url& _path) const;
 
     // Read a file as a string
     // Opens the file at the _path and returns a string with its contents.

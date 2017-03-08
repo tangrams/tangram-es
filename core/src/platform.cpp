@@ -1,5 +1,6 @@
 #include "platform.h"
 #include "log.h"
+#include "util/url.h"
 
 #include <fstream>
 #include <string>
@@ -16,6 +17,10 @@ void Platform::setContinuousRendering(bool _isContinuous) {
 
 bool Platform::isContinuousRendering() const {
     return m_continuousRendering;
+}
+
+std::string Platform::getAssetPath(const Tangram::Url& _path) const {
+    return _path.path();
 }
 
 bool Platform::bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator) const {
