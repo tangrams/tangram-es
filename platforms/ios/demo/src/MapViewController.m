@@ -18,9 +18,17 @@
 
 @implementation MapViewControllerDelegate
 
+- (void)mapView:(TGMapViewController *)view didCaptureScreenshot:(UIImage *)screenshot
+{
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString* filePath = [[paths objectAtIndex:0] stringByAppendingPathComponent:@"capture.png"];
+    [UIImagePNGRepresentation(screenshot) writeToFile:filePath atomically:YES];
+}
+
 - (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView
 {
     NSLog(@"Did complete view");
+    [mapView captureScreenshot:YES];
 }
 
 - (void)mapView:(TGMapViewController *)mapView didLoadSceneAsync:(NSString *)scene

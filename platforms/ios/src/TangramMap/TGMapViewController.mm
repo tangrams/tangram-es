@@ -22,7 +22,10 @@
 
 __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
-@interface TGMapViewController ()
+@interface TGMapViewController () {
+    BOOL captureFrameWaitForViewComplete;
+    BOOL viewComplete;
+}
 
 @property (nullable, copy, nonatomic) NSString* scenePath;
 @property (nullable, strong, nonatomic) EAGLContext* context;
@@ -726,6 +729,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         NSLog(@"Failed to create ES context");
     }
 
+    self->viewComplete = NO;
+    self->captureFrameWaitForViewComplete = YES;
     self.renderRequested = YES;
     self.continuous = NO;
     self.markersById = [[NSMutableDictionary alloc] init];
@@ -822,9 +827,15 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     self.paused = !c;
 }
 
+- (void)captureScreenshot:(BOOL)waitForViewComplete
+{
+    self->captureFrameWaitForViewComplete = waitForViewComplete;
+}
+
 - (void)update
 {
-    bool viewComplete = self.map->update([self timeSinceLastUpdate]);
+    self->viewComplete = self.map->update([self timeSinceLastUpdate]);
+    self->viewComplete = YES;
 
     if (viewComplete && [self.mapViewDelegate respondsToSelector:@selector(mapViewDidCompleteLoading:)]) {
         [self.mapViewDelegate mapViewDidCompleteLoading:self];
@@ -840,6 +851,35 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
     self.map->render();
+
+    if (self.mapViewDelegate && [self.mapViewDelegate respondsToSelector:@selector(mapView:didCaptureScreenshot:)]) {
+        if (!self->captureFrameWaitForViewComplete || self->viewComplete) {
+            unsigned int width = self.map->getViewportWidth();
+            unsigned int height = self.map->getViewportHeight();
+            unsigned int* pixels = new unsigned int[width * height];
+
+            self.map->captureSnapshot(pixels);
+
+            int bpp = sizeof(unsigned int);
+            int bitsPerComponent = 8;
+            int bitsPerPixel = bpp * bitsPerComponent;
+            int bytesPerRow = bpp * width;
+            CGDataProviderRef pixelDataProvider =
+                CGDataProviderCreateWithData(NULL, pixels, width * height * bpp, NULL);
+            CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+            CGImageRef cgImage = CGImageCreate(width, height, bitsPerComponent,
+                bitsPerPixel, bytesPerRow, colorSpace, kCGBitmapByteOrderDefault,
+                pixelDataProvider, NULL, NO, kCGRenderingIntentDefault);
+            UIImage* screenshot = [UIImage imageWithCGImage:cgImage];
+
+            delete pixels;
+            CGImageRelease(cgImage);
+            CGDataProviderRelease(pixelDataProvider);
+            CGColorSpaceRelease(colorSpace);
+
+            [self.mapViewDelegate mapView:self didCaptureScreenshot:screenshot];
+        }
+    }
 }
 
 @end

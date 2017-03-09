@@ -260,6 +260,8 @@ NS_ASSUME_NONNULL_END
  @param mapView a pointer to the map view
  */
 - (void)mapViewDidCompleteLoading:(nonnull TGMapViewController *)mapView;
+
+- (void)mapView:(nonnull TGMapViewController *)view didCaptureScreenshot:(nonnull UIImage *)screenshot;
 @end
 
 NS_ASSUME_NONNULL_BEGIN
@@ -359,6 +361,8 @@ NS_ASSUME_NONNULL_BEGIN
  object will be returned.
  */
 - (nullable TGMapData *)addDataLayer:(NSString *)name;
+
+- (void)captureScreenshot:(BOOL)waitForViewComplete;
 
 #pragma mark Debug toggles
 
