@@ -1140,27 +1140,34 @@ public class MapController implements Renderer {
 
     // Tmp Asset Path
     // ==============
-    String copyAssetToTmpPath(String path) throws IOException {
+    String copyAssetToTmpPath(String path) {
+
         String tmpDir = mapView.getContext().getExternalCacheDir().getAbsolutePath();
-        InputStream in = assetManager.open(path);
-        File outFile = new File(tmpDir, path);
 
-        if (!outFile.exists()) {
-            OutputStream out = new FileOutputStream(outFile);
+        try {
+            InputStream in = assetManager.open(path);
+            File outFile = new File(tmpDir, path);
 
-            // Copy File
-            byte[] buffer = new byte[1024];
-            int read;
-            while ((read = in.read(buffer)) != -1) {
-                out.write(buffer, 0, read);
+            if (!outFile.exists()) {
+                OutputStream out = new FileOutputStream(outFile);
+
+                // Copy File
+                byte[] buffer = new byte[1024];
+                int read;
+                while ((read = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, read);
+                }
+
+                in.close();
+                out.flush();
+                out.close();
             }
 
-            in.close();
-            out.flush();
-            out.close();
+            return outFile.getAbsolutePath();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
         }
-
-        return outFile.getAbsolutePath();
 
     }
 
