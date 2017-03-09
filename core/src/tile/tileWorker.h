@@ -10,11 +10,10 @@
 #include <thread>
 #include <vector>
 
-class Platform;
-
 namespace Tangram {
 
 class JobQueue;
+class Platform;
 class Scene;
 class TileBuilder;
 

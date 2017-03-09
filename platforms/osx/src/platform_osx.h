@@ -8,6 +8,8 @@
 #ifdef __OBJC__
 #import <Foundation/Foundation.h>
 
+namespace Tangram {
+
 class OSXPlatform : public Platform {
 
 public:
@@ -27,5 +29,7 @@ private:
     NSURLSession* m_defaultSession;
 
 };
+
+} // namespace Tangram
 
 #endif

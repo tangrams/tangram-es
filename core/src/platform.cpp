@@ -1,9 +1,10 @@
 #include "platform.h"
+#include "log.h"
 
 #include <fstream>
 #include <string>
 
-#include "log.h"
+namespace Tangram {
 
 Platform::Platform() : m_continuousRendering(false) {}
 
@@ -76,3 +77,4 @@ std::vector<FontSourceHandle> Platform::systemFontFallbacksHandle() const {
     return {};
 }
 
+} // namespace Tangram

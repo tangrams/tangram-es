@@ -100,14 +100,14 @@ extern "C" {
 
     JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeInit(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
         setupJniEnv(jniEnv);
-        auto map = new Tangram::Map(std::shared_ptr<Platform>(new AndroidPlatform(jniEnv, assetManager, tangramInstance)));
+        auto map = new Tangram::Map(std::shared_ptr<Tangram::Platform>(new Tangram::AndroidPlatform(jniEnv, assetManager, tangramInstance)));
         return reinterpret_cast<jlong>(map);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeDispose(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        AndroidPlatform& androidPlatform = static_cast<AndroidPlatform&>(*map->getPlatform());
+        Tangram::AndroidPlatform& androidPlatform = static_cast<Tangram::AndroidPlatform&>(*map->getPlatform());
         androidPlatform.dispose(jniEnv);
         delete map;
     }

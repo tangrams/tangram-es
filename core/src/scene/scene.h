@@ -15,7 +15,6 @@
 #include "yaml-cpp/yaml.h"
 #include "util/yamlHelper.h"
 
-class Platform;
 
 namespace Tangram {
 
@@ -24,6 +23,7 @@ class FeatureSelection;
 class FontContext;
 class Light;
 class MapProjection;
+class Platform;
 class SpriteAtlas;
 class Style;
 class Texture;
