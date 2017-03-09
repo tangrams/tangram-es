@@ -835,7 +835,6 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 - (void)update
 {
     self->viewComplete = self.map->update([self timeSinceLastUpdate]);
-    self->viewComplete = YES;
 
     if (viewComplete && [self.mapViewDelegate respondsToSelector:@selector(mapViewDidCompleteLoading:)]) {
         [self.mapViewDelegate mapViewDidCompleteLoading:self];
@@ -854,28 +853,10 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
     if (self.mapViewDelegate && [self.mapViewDelegate respondsToSelector:@selector(mapView:didCaptureScreenshot:)]) {
         if (!self->captureFrameWaitForViewComplete || self->viewComplete) {
-            unsigned int width = self.map->getViewportWidth();
-            unsigned int height = self.map->getViewportHeight();
-            unsigned int* pixels = new unsigned int[width * height];
-
-            self.map->captureSnapshot(pixels);
-
-            int bpp = sizeof(unsigned int);
-            int bitsPerComponent = 8;
-            int bitsPerPixel = bpp * bitsPerComponent;
-            int bytesPerRow = bpp * width;
-            CGDataProviderRef pixelDataProvider =
-                CGDataProviderCreateWithData(NULL, pixels, width * height * bpp, NULL);
-            CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-            CGImageRef cgImage = CGImageCreate(width, height, bitsPerComponent,
-                bitsPerPixel, bytesPerRow, colorSpace, kCGBitmapByteOrderDefault,
-                pixelDataProvider, NULL, NO, kCGRenderingIntentDefault);
-            UIImage* screenshot = [UIImage imageWithCGImage:cgImage];
-
-            delete pixels;
-            CGImageRelease(cgImage);
-            CGDataProviderRelease(pixelDataProvider);
-            CGColorSpaceRelease(colorSpace);
+            UIGraphicsBeginImageContext(self.view.frame.size);
+            [self.view drawViewHierarchyInRect:self.view.frame afterScreenUpdates:YES];
+            UIImage* screenshot = UIGraphicsGetImageFromCurrentImageContext();
+            UIGraphicsEndImageContext();
 
             [self.mapViewDelegate mapView:self didCaptureScreenshot:screenshot];
         }
