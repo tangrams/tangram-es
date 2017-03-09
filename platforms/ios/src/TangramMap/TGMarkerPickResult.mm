@@ -7,6 +7,7 @@
 //
 
 #import "TGMarkerPickResult.h"
+#import "TGMarkerPickResult+Internal.h"
 
 @interface TGMarkerPickResult ()
 

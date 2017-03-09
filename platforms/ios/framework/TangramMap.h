@@ -3,7 +3,8 @@
 //  TangramMap
 //
 //  Created by Matt Smollinger on 7/8/16.
-//
+//  Updated by Karim Naaji on 2/28/17.
+//  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
@@ -14,6 +15,16 @@ FOUNDATION_EXPORT double TangramMapVersionNumber;
 /// Project version string for TangramMap.
 FOUNDATION_EXPORT const unsigned char TangramMapVersionString[];
 
-// In this header, you should import all the public headers of your framework using statements like #import <TangramMap/PublicHeader.h>
-
 #import <TangramMap/TGMapViewController.h>
+#import <TangramMap/TGMapData.h>
+#import <TangramMap/TGGeoPoint.h>
+#import <TangramMap/TGGeoPolygon.h>
+#import <TangramMap/TGGeoPolyline.h>
+#import <TangramMap/TGEaseType.h>
+#import <TangramMap/TGHttpHandler.h>
+#import <TangramMap/TGMarker.h>
+#import <TangramMap/TGMapData.h>
+#import <TangramMap/TGSceneUpdate.h>
+#import <TangramMap/TGMarkerPickResult.h>
+#import <TangramMap/TGLabelPickResult.h>
+

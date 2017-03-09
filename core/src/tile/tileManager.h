@@ -53,7 +53,9 @@ public:
 
     bool hasTileSetChanged() { return m_tileSetChanged; }
 
-    bool hasLoadingTiles() { return m_tilesInProgress > 0; }
+    bool hasLoadingTiles() {
+        return m_tilesInProgress > 0;
+    }
 
     void addClientTileSource(std::shared_ptr<TileSource> _source);
 
