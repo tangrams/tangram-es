@@ -217,11 +217,14 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             auto& entry = curTilesIt->second;
             entry.setVisible(true);
 
+            auto sourceGeneration = (entry.isReady()) ?
+                entry.tile->sourceGeneration() : entry.task->sourceGeneration();
+
             if (entry.isReady()) {
                 m_tiles.push_back(entry.tile);
 
                 if (!entry.isLoading() &&
-                    (entry.tile->sourceGeneration() < generation)) {
+                    (sourceGeneration < generation)) {
                     // Tile needs update - enqueue for loading
                     entry.task = _tileSet.source->createTask(visTileId);
                     enqueueTask(_tileSet, visTileId, _view);
@@ -231,15 +234,16 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
                 enqueueTask(_tileSet, visTileId, _view);
 
             } else if (entry.isCanceled() &&
-                       (entry.task->sourceGeneration() < generation)) {
+                       (sourceGeneration < generation)) {
                 // Tile needs update - enqueue for loading
                 entry.task = _tileSet.source->createTask(visTileId);
                 enqueueTask(_tileSet, visTileId, _view);
             }
 
-            // - any tile which is not ready is in progress
-            // - any tile which needs updating because of map invalidation (new source generation)
-            if (!entry.isReady() || (entry.isReady() && entry.tile->sourceGeneration() < generation)) {
+            // - any tile which is not ready and not canceled is in progress
+            // - any tile which is currently loading including the ones needing updating
+            //   because of map invalidation (new source generation)
+            if ( (!entry.isCanceled() && !entry.isReady()) || entry.isLoading()) {
                 m_tilesInProgress++;
             }
 
