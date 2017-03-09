@@ -101,7 +101,7 @@
 
     // Add polyline data layer
     {
-        FeatureProperties* properties = @{ @"type" : @"line", @"color" : @"#D2655F" };
+        TGFeatureProperties* properties = @{ @"type" : @"line", @"color" : @"#D2655F" };
         static TGGeoPoint lastCoordinates = {NAN, NAN};
 
         if (!isnan(lastCoordinates.latitude)) {
