@@ -537,7 +537,7 @@ bool StyleParam::parseTime(const std::string &_value, float &_time) {
     return true;
 }
 
-bool StyleParam::parseVec2(const std::string& _value, const std::vector<Unit> units, UnitVec<glm::vec2>& _vec) {
+bool StyleParam::parseVec2(const std::string& _value, const std::vector<Unit>& units, UnitVec<glm::vec2>& _vec) {
     ValueUnitPair v1, v2;
 
     // initialize with defaults
@@ -568,7 +568,7 @@ bool StyleParam::parseVec2(const std::string& _value, const std::vector<Unit> un
     return true;
 }
 
-bool StyleParam::parseVec3(const std::string& _value, const std::vector<Unit> units, UnitVec<glm::vec3> & _vec) {
+bool StyleParam::parseVec3(const std::string& _value, const std::vector<Unit>& units, UnitVec<glm::vec3> & _vec) {
     ValueUnitPair v1, v2, v3;
 
     // initialize with defaults

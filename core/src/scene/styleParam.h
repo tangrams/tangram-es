@@ -179,8 +179,8 @@ struct StyleParam {
     static bool parseTime(const std::string& _value, float& _time);
 
     // values within _value string parameter must be delimited by ','
-    static bool parseVec2(const std::string& _value, const std::vector<Unit> _allowedUnits, UnitVec<glm::vec2>& _vec2);
-    static bool parseVec3(const std::string& _value, const std::vector<Unit> _allowedUnits, UnitVec<glm::vec3>& _vec3);
+    static bool parseVec2(const std::string& _value, const std::vector<Unit>& _allowedUnits, UnitVec<glm::vec2>& _vec2);
+    static bool parseVec3(const std::string& _value, const std::vector<Unit>& _allowedUnits, UnitVec<glm::vec3>& _vec3);
 
     static int parseValueUnitPair(const std::string& _value, size_t start,
                                   StyleParam::ValueUnitPair& _result);
