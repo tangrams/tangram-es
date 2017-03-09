@@ -98,9 +98,6 @@ std::vector<char> iOSPlatform::bytesFromFile(const char* _path) const {
 }
 
 std::string iOSPlatform::getAssetPath(const Tangram::Url& _path) const {
-    if (_path.isAbsolute()) {
-        return _path.path();
-    }
 
     NSString* path = resolvePath(_path.path().c_str());
     return [path UTF8String];
