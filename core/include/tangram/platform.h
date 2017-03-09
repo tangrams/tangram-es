@@ -14,9 +14,7 @@ using UrlCallback = std::function<void(std::vector<char>&&)>;
 
 using FontSourceLoader = std::function<std::vector<char>()>;
 
-namespace Tangram {
-    class Url;
-}
+class Url;
 
 struct FontSourceHandle {
     FontSourceHandle(std::string _path) : path(_path) {}
