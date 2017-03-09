@@ -163,6 +163,7 @@ bool DrawRuleMergeSet::evaluateRuleForContext(DrawRule& rule, StyleContext& ctx)
         }
 
         bool valid = true;
+        bool drawRuleSet = false;
         for (size_t i = 0; i < StyleParamKeySize; ++i) {
 
             if (!rule.active[i]) {
@@ -170,6 +171,7 @@ bool DrawRuleMergeSet::evaluateRuleForContext(DrawRule& rule, StyleContext& ctx)
                 continue;
             }
 
+            drawRuleSet = true;
             auto*& param = rule.params[i].param;
 
             // Evaluate JS functions and Stops
@@ -195,7 +197,7 @@ bool DrawRuleMergeSet::evaluateRuleForContext(DrawRule& rule, StyleContext& ctx)
             }
         }
 
-        return valid;
+        return (drawRuleSet && valid);
 }
 
 
