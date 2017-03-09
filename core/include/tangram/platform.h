@@ -53,7 +53,8 @@ public:
 
     // returns the path of an asset given the name of the asset
     // ios: returns absolute path of the asset in the asset bundle
-    // android: returns a tmp path where the asset file is extracted from the apk
+    // android: returns a tmp path where the asset file is extracted from the apk, given the path of
+    // the asset, OR absolute path of an external resource
     // other: returns the absolute path of the asset (should be by default)
     virtual std::string getAssetPath(const Tangram::Url& _path) const;
 
