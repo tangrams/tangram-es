@@ -12,7 +12,7 @@
 	url = https://github.com/tangrams/earcut.hpp
 [submodule "core/dependencies/geojson-vt-cpp"]
 	path = core/deps/geojson-vt-cpp
-	url = https://github.com/tangrams/geojson-vt-cpp.git
+	url = https://github.com/lygstate/geojson-vt-cpp.git
 [submodule "external/duktape"]
 	path = core/deps/duktape
 	url = https://github.com/tangrams/duktape.git
