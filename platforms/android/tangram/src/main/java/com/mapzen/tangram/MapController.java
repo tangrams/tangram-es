@@ -1161,6 +1161,8 @@ public class MapController implements Renderer {
                 in.close();
                 out.flush();
                 out.close();
+            } else {
+                in.close();
             }
 
             return outFile.getAbsolutePath();
