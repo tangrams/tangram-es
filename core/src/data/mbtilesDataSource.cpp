@@ -242,7 +242,7 @@ void MBTilesDataSource::openMBTiles() {
 
         auto url = Url(m_path);
         auto path = url.path();
-        const char* vfs = NULL;
+        const char* vfs = "";
         if (url.scheme() == "asset") {
             vfs = "ndk-asset";
             path.erase(path.begin()); // Remove leading '/'.
