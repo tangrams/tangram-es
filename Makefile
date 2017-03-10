@@ -65,11 +65,15 @@ ifdef DEBUG
 	CONFIG = Debug
 endif
 
+TANGRAM_APK_TARGET = tangram:assembleDebug
+
+
 ifdef DEBUG
 	BUILD_TYPE = -DCMAKE_BUILD_TYPE=Debug
 endif
 ifdef RELEASE
 	BUILD_TYPE = -DCMAKE_BUILD_TYPE=Release
+	TANGRAM_APK_TARGET = tangram:assembleRelease
 endif
 
 ifndef TANGRAM_CMAKE_OPTIONS
@@ -194,6 +198,9 @@ clean-tizen-arm:
 
 clean-tizen-x86:
 	rm -rf ${TIZEN_X86_BUILD_DIR}
+android-tangram-apk:
+	@cd android/ && \
+	./gradlew ${TANGRAM_APK_TARGET}
 
 clean-ios-framework:
 	rm -rf ${IOS_FRAMEWORK_BUILD_DIR}

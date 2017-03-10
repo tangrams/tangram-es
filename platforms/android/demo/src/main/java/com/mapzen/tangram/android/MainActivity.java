@@ -171,6 +171,15 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     }
 
     @Override
+    public void onLongPressUp(float x, float y) {
+    }
+
+    @Override
+    public boolean onLongPressPan(float startX, float startY, float endX, float endY) {
+        return false;
+    }
+
+    @Override
     public void onFeaturePick(Map<String, String> properties, float positionX, float positionY) {
         if (properties.isEmpty()) {
             Log.d("Tangram", "Empty selection");

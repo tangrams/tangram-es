@@ -65,6 +65,8 @@ protected:
 
     bool m_inChangeBlock = false;
 
+    bool m_inChangeBlock = false;
+
 };
 
 }

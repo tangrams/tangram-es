@@ -112,6 +112,7 @@ void ClientGeoJsonSource::clearData() {
 
     if(!m_inChangeBlock) {
       std::lock_guard<std::mutex> lock(m_mutexStore);
+
       m_store.reset();
       m_generation++;
     }
