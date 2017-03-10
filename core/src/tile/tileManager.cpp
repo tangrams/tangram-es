@@ -217,11 +217,14 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             auto& entry = curTilesIt->second;
             entry.setVisible(true);
 
+            auto sourceGeneration = (entry.isReady()) ?
+                entry.tile->sourceGeneration() : entry.task->sourceGeneration();
+
             if (entry.isReady()) {
                 m_tiles.push_back(entry.tile);
 
-                if (!entry.isLoading() &&
-                    (entry.tile->sourceGeneration() < generation)) {
+                if (!entry.isInProgress() &&
+                    (sourceGeneration < generation)) {
                     // Tile needs update - enqueue for loading
                     entry.task = _tileSet.source->createTask(visTileId);
                     enqueueTask(_tileSet, visTileId, _view);
@@ -231,19 +234,17 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
                 enqueueTask(_tileSet, visTileId, _view);
 
             } else if (entry.isCanceled() &&
-                       (entry.task->sourceGeneration() < generation)) {
+                       (sourceGeneration < generation)) {
                 // Tile needs update - enqueue for loading
                 entry.task = _tileSet.source->createTask(visTileId);
                 enqueueTask(_tileSet, visTileId, _view);
             }
 
-            // - any tile which is not ready is in progress
-            // - any tile which needs updating because of map invalidation (new source generation)
-            if (!entry.isReady() || (entry.isReady() && entry.tile->sourceGeneration() < generation)) {
+            if (entry.isInProgress()) {
                 m_tilesInProgress++;
             }
 
-            if (newTiles && entry.isLoading()) {
+            if (newTiles && entry.isInProgress()) {
                 // check again for proxies
                 updateProxyTiles(_tileSet, visTileId, entry);
             }
@@ -326,7 +327,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
              entry.task && entry.task->isCanceled());
 #endif
 
-        if (entry.isLoading()) {
+        if (entry.isInProgress()) {
             auto& id = it.first;
             auto& task = entry.task;
 
@@ -421,7 +422,7 @@ void TileManager::removeTile(TileSet& _tileSet, std::map<TileID, TileEntry>::ite
     auto& entry = _tileIt->second;
 
 
-    if (entry.isLoading()) {
+    if (entry.isInProgress()) {
         entry.clearTask();
 
         // 1. Remove from Datasource. Make sure to cancel
