@@ -1144,12 +1144,15 @@ public class MapController implements Renderer {
 
         String tmpDir = mapView.getContext().getExternalCacheDir().getAbsolutePath();
 
+        InputStream in = null;
+        OutputStream out = null;
+
         try {
-            InputStream in = assetManager.open(path);
+            in = assetManager.open(path);
             File outFile = new File(tmpDir, path);
 
             if (!outFile.exists()) {
-                OutputStream out = new FileOutputStream(outFile);
+                out = new FileOutputStream(outFile);
 
                 // Copy File
                 byte[] buffer = new byte[1024];
@@ -1158,17 +1161,20 @@ public class MapController implements Renderer {
                     out.write(buffer, 0, read);
                 }
 
-                in.close();
                 out.flush();
-                out.close();
-            } else {
-                in.close();
             }
 
             return outFile.getAbsolutePath();
         } catch (IOException e) {
             e.printStackTrace();
             return "";
+        } finally {
+            try {
+                if (in != null) { in.close(); }
+                if (out != null) { out.close(); }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
     }
