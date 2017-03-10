@@ -23,11 +23,13 @@ public:
     using Node = YAML::Node;
 
     // Loads the main scene with deep merging dependent imported scenes.
-    Node applySceneImports(const std::shared_ptr<Platform>& platform, const Url& scenePath, const Url& resourceRoot = Url());
+    Node applySceneImports(const std::shared_ptr<Platform>& platform, const Url& scenePath,
+            const Url& resourceRoot = Url());
 
 // protected for testing purposes, else could be private
 protected:
-    virtual std::string getSceneString(const std::shared_ptr<Platform>& platform, const Url& scenePath);
+    virtual std::string getSceneString(const std::shared_ptr<Platform>& platform,
+            const Url& scenePath);
 
     void processScene(const Url& scenePath, const std::string& sceneString);
 
@@ -36,11 +38,12 @@ protected:
     std::vector<Url> getResolvedImportUrls(const Node& scene, const Url& base);
 
     // loads all the imported scenes and the master scene and returns a unified YAML root node.
-    void importScenesRecursive(Node& root, const Url& scenePath, std::vector<Url>& sceneStack);
+    void importScenesRecursive(const std::shared_ptr<Platform>& platform, Node& root,
+            const Url& scenePath, std::vector<Url>& sceneStack);
 
     void mergeMapFields(Node& target, const Node& import);
 
-    void resolveSceneUrls(Node& root, const Url& base);
+    void resolveSceneUrls(const std::shared_ptr<Platform>& platform, Node& root, const Url& base);
 
 private:
     // import scene to respective root nodes
