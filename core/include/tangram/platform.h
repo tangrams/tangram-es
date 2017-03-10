@@ -47,6 +47,8 @@ public:
 
     virtual bool isContinuousRendering() const;
 
+    virtual std::string resolveAssetPath(const std::string& path) const;
+
     // Read a file as a string
     // Opens the file at the _path and returns a string with its contents.
     // If the file cannot be found or read, the returned string is empty.

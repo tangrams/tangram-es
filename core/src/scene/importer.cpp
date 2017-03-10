@@ -14,7 +14,8 @@ namespace Tangram {
 
 std::atomic_uint Importer::progressCounter(0);
 
-Node Importer::applySceneImports(const std::shared_ptr<Platform>& platform, const Url& scenePath, const Url& resourceRoot) {
+Node Importer::applySceneImports(const std::shared_ptr<Platform>& platform, const Url& scenePath,
+        const Url& resourceRoot) {
 
     Url path;
     Url rootScenePath = scenePath.resolved(resourceRoot);
@@ -71,7 +72,7 @@ Node Importer::applySceneImports(const std::shared_ptr<Platform>& platform, cons
 
     LOGD("Processing scene import Stack:");
     std::vector<Url> sceneStack;
-    importScenesRecursive(root, rootScenePath, sceneStack);
+    importScenesRecursive(platform, root, rootScenePath, sceneStack);
 
     return root;
 }
@@ -125,7 +126,8 @@ bool nodeIsTextureUrl(const Node& node, const Node& textures) {
     return true;
 }
 
-void Importer::resolveSceneUrls(Node& root, const Url& base) {
+void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform, Node& root,
+        const Url& base) {
 
     // Resolve global texture URLs.
 
@@ -200,7 +202,9 @@ void Importer::resolveSceneUrls(Node& root, const Url& base) {
             if (!source.second.IsMap()) { continue; }
             if (Node sourceUrl = source.second["url"]) {
                 if (nodeIsPotentialUrl(sourceUrl)) {
-                    sourceUrl = Url(sourceUrl.Scalar()).resolved(base).string();
+                    auto resolvedUrl = Url(sourceUrl.Scalar()).resolved(base);
+                    sourceUrl = (resolvedUrl.isAbsolute()) ?
+                            resolvedUrl.string() : platform->resolveAssetPath(resolvedUrl.string());
                 }
             }
         }
@@ -229,7 +233,8 @@ void Importer::resolveSceneUrls(Node& root, const Url& base) {
     }
 }
 
-std::string Importer::getSceneString(const std::shared_ptr<Platform>& platform, const Url& scenePath) {
+std::string Importer::getSceneString(const std::shared_ptr<Platform>& platform,
+        const Url& scenePath) {
     return platform->stringFromFile(scenePath.string().c_str());
 }
 
@@ -252,13 +257,15 @@ std::vector<Url> Importer::getResolvedImportUrls(const Node& scene, const Url& b
     return scenePaths;
 }
 
-void Importer::importScenesRecursive(Node& root, const Url& scenePath, std::vector<Url>& sceneStack) {
+void Importer::importScenesRecursive(const std::shared_ptr<Platform>& platform, Node& root,
+        const Url& scenePath, std::vector<Url>& sceneStack) {
 
     LOGD("Starting importing Scene: %s", scenePath.string().c_str());
 
     for (const auto& s : sceneStack) {
         if (scenePath == s) {
-            LOGE("%s will cause a cyclic import. Stopping this scene from being imported", scenePath.string().c_str());
+            LOGE("%s will cause a cyclic import. Stopping this scene from being imported",
+                    scenePath.string().c_str());
             return;
         }
     }
@@ -277,7 +284,7 @@ void Importer::importScenesRecursive(Node& root, const Url& scenePath, std::vect
 
     for (const auto& url : imports) {
 
-        importScenesRecursive(root, url, sceneStack);
+        importScenesRecursive(platform, root, url, sceneStack);
 
     }
 
@@ -285,7 +292,7 @@ void Importer::importScenesRecursive(Node& root, const Url& scenePath, std::vect
 
     mergeMapFields(root, sceneNode);
 
-    resolveSceneUrls(root, scenePath);
+    resolveSceneUrls(platform, root, scenePath);
 }
 
 void Importer::mergeMapFields(Node& target, const Node& import) {

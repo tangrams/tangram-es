@@ -17,6 +17,7 @@ public:
     iOSPlatform(TGMapViewController* _viewController);
     void requestRender() const override;
     void setContinuousRendering(bool _isContinuous) override;
+    std::string resolveAssetPath(const std::string& _path) const override;
     std::string stringFromFile(const char* _path) const override;
     std::vector<char> bytesFromFile(const char* _path) const override;
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
