@@ -24,7 +24,7 @@ std::shared_ptr<Platform> platform;
 
 std::string sceneFile;
 
-std::string markerStyling = "{ style: 'points', interactive: true, color: 'white', size: [25px, 25px], order: 100, collide: false }";
+std::string markerStylingPath = "layers.touch.point.draw.icons";
 std::string polylineStyle = "{ style: lines, interactive: true, color: red, width: 20px, order: 5000 }";
 
 GLFWwindow* main_window = nullptr;
@@ -194,7 +194,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
         if (!marker) {
             marker = map->markerAdd();
 
-            map->markerSetStyling(marker, markerStyling.c_str());
+            map->markerSetStylingFromPath(marker, markerStylingPath.c_str());
             map->markerSetPoint(marker, p);
             map->markerSetDrawOrder(marker, mods);
             logMsg("Added Marker with zOrder: %d\n", mods);
@@ -233,7 +233,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 
         if (!polyline) {
             polyline = map->markerAdd();
-            map->markerSetStyling(polyline, polylineStyle.c_str());
+            map->markerSetStylingFromString(polyline, polylineStyle.c_str());
         }
 
         if (last_x != 0) {
