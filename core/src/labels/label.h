@@ -54,6 +54,7 @@ public:
 
     struct Options {
         glm::vec2 offset;
+        glm::vec2 buffer;
         float priority = std::numeric_limits<float>::max();
         bool collide = true;
         Transition selectTransition;
@@ -61,7 +62,6 @@ public:
         Transition showTransition;
         size_t repeatGroup = 0;
         float repeatDistance = 0;
-        float buffer = 0.f;
         size_t paramHash = 0; // the label hash based on its styling parameters
         LabelProperty::Anchors anchors;
         bool optional = false;
