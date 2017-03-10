@@ -31,7 +31,7 @@ private:
     void storeTileData(const TileID& _tileId, const std::vector<char>& _data);
     bool loadNextSource(std::shared_ptr<TileTask> _task, TileTaskCb _cb);
 
-    void openMBTiles();
+    void openMBTiles(const std::shared_ptr<Platform>& _platform);
     bool testSchema(SQLite::Database& db);
     void initSchema(SQLite::Database& db, std::string _name, std::string _mimeType);
 

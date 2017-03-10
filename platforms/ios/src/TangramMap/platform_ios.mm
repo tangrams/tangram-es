@@ -12,6 +12,7 @@
 #import "TGFontConverter.h"
 #import "TGHttpHandler.h"
 #import "platform_ios.h"
+#import "util/url.h"
 #import "log.h"
 
 namespace Tangram {
@@ -94,6 +95,12 @@ std::vector<char> iOSPlatform::bytesFromFile(const char* _path) const {
 
     auto data = Platform::bytesFromFile([path UTF8String]);
     return data;
+}
+
+std::string iOSPlatform::getAssetPath(const Tangram::Url& _path) const {
+
+    NSString* path = resolvePath(_path.path().c_str());
+    return [path UTF8String];
 }
 
 std::string iOSPlatform::stringFromFile(const char* _path) const {

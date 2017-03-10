@@ -45,6 +45,7 @@ static jmethodID setRenderModeMethodID = 0;
 static jmethodID startUrlRequestMID = 0;
 static jmethodID cancelUrlRequestMID = 0;
 static jmethodID getFontFilePath = 0;
+static jmethodID copyAssetToTmpPath = 0;
 static jmethodID getFontFallbackFilePath = 0;
 static jmethodID onFeaturePickMID = 0;
 static jmethodID onLabelPickMID = 0;
@@ -81,6 +82,7 @@ void setupJniEnv(JNIEnv* jniEnv) {
     startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)Z");
     cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(Ljava/lang/String;)V");
     getFontFilePath = jniEnv->GetMethodID(tangramClass, "getFontFilePath", "(Ljava/lang/String;)Ljava/lang/String;");
+    copyAssetToTmpPath = jniEnv->GetMethodID(tangramClass, "copyAssetToTmpPath", "(Ljava/lang/String;)Ljava/lang/String;");
     getFontFallbackFilePath = jniEnv->GetMethodID(tangramClass, "getFontFallbackFilePath", "(II)Ljava/lang/String;");
     requestRenderMethodID = jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
@@ -267,6 +269,21 @@ void AndroidPlatform::setContinuousRendering(bool _isContinuous) {
     JniThreadBinding jniEnv(jvm);
 
     jniEnv->CallVoidMethod(m_tangramInstance, setRenderModeMethodID, _isContinuous ? 1 : 0);
+}
+
+std::string AndroidPlatform::getAssetPath(const Tangram::Url& _path) const {
+
+    if (_path.scheme() == "asset") {
+        JniThreadBinding jniEnv(jvm);
+        auto assetPath = _path.path()[0] == '/' ? _path.path().substr(1) : _path.path();
+        jstring jPath = jniEnv->NewStringUTF(assetPath.c_str());
+        jstring jtmpPath = (jstring) jniEnv->CallObjectMethod(m_tangramInstance, copyAssetToTmpPath, jPath);
+        auto assetTmpPath = stringFromJString(jniEnv, jtmpPath);
+        jniEnv->DeleteLocalRef(jtmpPath);
+        jniEnv->DeleteLocalRef(jPath);
+        return assetTmpPath;
+    }
+    return _path.path();
 }
 
 bool AndroidPlatform::bytesFromAssetManager(const char* _path, std::function<char*(size_t)> _allocator) const {

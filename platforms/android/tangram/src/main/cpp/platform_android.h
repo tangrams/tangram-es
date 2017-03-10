@@ -20,6 +20,7 @@ namespace Tangram {
 struct LabelPickResult;
 struct FeaturePickResult;
 struct MarkerPickResult;
+class Url;
 
 void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* featurePickResult);
 void markerPickCallback(jobject listener, jobject tangramInstance, const Tangram::MarkerPickResult* markerPickResult);
@@ -34,6 +35,7 @@ public:
     void requestRender() const override;
     std::vector<char> bytesFromFile(const char* _path) const override;
     void setContinuousRendering(bool _isContinuous) override;
+    std::string getAssetPath(const Tangram::Url& _path) const override;
     std::string stringFromFile(const char* _path) const override;
     std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const override;
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
