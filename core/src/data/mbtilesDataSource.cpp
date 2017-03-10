@@ -241,6 +241,11 @@ void MBTilesDataSource::openMBTiles(const std::shared_ptr<Platform>& _platform) 
         }
 
         auto mbTilesPath = _platform->getAssetPath(Url(m_path));
+        if (mbTilesPath.empty()) {
+            LOGW("Empty mbtiles asset path set.");
+            m_db.reset();
+            return;
+        }
         m_db = std::make_unique<SQLite::Database>(mbTilesPath, mode);
         LOG("SQLite database opened: %s", m_path.c_str());
 
