@@ -500,9 +500,9 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     size_t repeatGroupHash = 0;
     std::string repeatGroup;
     StyleParam::Width repeatDistance;
+    glm::vec2 defaultBuffer = glm::vec2(p.fontSize * 0.25f);
 
     if (_iconText) {
-
         if (_rule.get(StyleParamKey::text_priority, priority)) {
             p.labelOptions.priority = (float)priority;
         }
@@ -537,11 +537,13 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
             }
         }
 
-
         _rule.get(StyleParamKey::text_transition_hide_time, p.labelOptions.hideTransition.time);
         _rule.get(StyleParamKey::text_transition_selected_time, p.labelOptions.selectTransition.time);
         _rule.get(StyleParamKey::text_transition_show_time, p.labelOptions.showTransition.time);
 
+        if (!_rule.get(StyleParamKey::text_buffer, p.labelOptions.buffer)) {
+            p.labelOptions.buffer = defaultBuffer;
+        }
     } else {
         if (_rule.get(StyleParamKey::priority, priority)) {
             p.labelOptions.priority = (float)priority;
@@ -571,6 +573,9 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
             }
         }
 
+        if (!_rule.get(StyleParamKey::buffer, p.labelOptions.buffer)) {
+            p.labelOptions.buffer = defaultBuffer;
+        }
     }
 
     if (p.labelOptions.repeatDistance > 0.f) {
@@ -593,9 +598,6 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     }
 
     _rule.get(StyleParamKey::text_optional, p.labelOptions.optional);
-
-    // TODO style option?
-    p.labelOptions.buffer = p.fontSize * 0.25f;
 
     std::hash<TextStyle::Parameters> hash;
     p.labelOptions.paramHash = hash(p);

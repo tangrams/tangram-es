@@ -3,7 +3,7 @@
 #include "platform.h"
 #include "urlClient.h"
 
-using Tangram::UrlClient;
+namespace Tangram {
 
 class LinuxPlatform : public Platform {
 
@@ -23,3 +23,4 @@ protected:
 
 };
 
+} // namespace Tangram

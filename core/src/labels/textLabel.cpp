@@ -159,7 +159,7 @@ float TextLabel::candidatePriority() const {
 
 void TextLabel::obbs(ScreenTransform& _transform, OBBBuffer& _obbs) {
 
-    glm::vec2 dim = m_dim - m_options.buffer;
+    glm::vec2 dim = m_dim;
 
     if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
 

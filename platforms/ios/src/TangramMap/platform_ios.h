@@ -8,6 +8,8 @@
 #ifdef __OBJC__
 #import "TGMapViewController.h"
 
+namespace Tangram {
+
 class iOSPlatform : public Platform {
 
 public:
@@ -27,6 +29,8 @@ private:
     TGMapViewController* m_viewController;
 
 };
+
+} // namespace Tangram
 
 #endif
 

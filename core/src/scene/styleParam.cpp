@@ -20,6 +20,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"align", StyleParamKey::text_align},
     {"anchor", StyleParamKey::anchor},
     {"angle", StyleParamKey::angle},
+    {"buffer", StyleParamKey::buffer},
     {"cap", StyleParamKey::cap},
     {"collide", StyleParamKey::collide},
     {"color", StyleParamKey::color},
@@ -59,6 +60,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"style", StyleParamKey::style},
     {"text:align", StyleParamKey::text_align},
     {"text:anchor", StyleParamKey::text_anchor},
+    {"text:buffer", StyleParamKey::text_buffer},
     {"text:collide", StyleParamKey::text_collide},
     {"text:font:family", StyleParamKey::text_font_family},
     {"text:font:fill", StyleParamKey::text_font_fill},
@@ -94,6 +96,8 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
 const std::map<StyleParamKey, std::vector<Unit>> s_StyleParamUnits = {
     {StyleParamKey::offset, {Unit::pixel}},
     {StyleParamKey::text_offset, {Unit::pixel}},
+    {StyleParamKey::buffer, {Unit::pixel}},
+    {StyleParamKey::text_buffer, {Unit::pixel}},
     {StyleParamKey::size, {Unit::pixel}},
     {StyleParamKey::placement_spacing, {Unit::pixel}},
     {StyleParamKey::text_font_stroke_width, {Unit::pixel}},
@@ -177,6 +181,17 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         UnitVec<glm::vec2> vec;
         if (!parseVec2(_value, { Unit::pixel }, vec) || std::isnan(vec.value.y)) {
             LOGW("Invalid offset parameter '%s'.", _value.c_str());
+        }
+        return vec.value;
+    }
+    case StyleParamKey::text_buffer:
+    case StyleParamKey::buffer: {
+        UnitVec<glm::vec2> vec;
+        if (!parseVec2(_value, { Unit::pixel }, vec)) {
+            LOGW("Invalid buffer parameter '%s'.", _value.c_str());
+        }
+        if (std::isnan(vec.value.y)) {
+            vec.value.y = vec.value.x;
         }
         return vec.value;
     }
@@ -522,7 +537,7 @@ bool StyleParam::parseTime(const std::string &_value, float &_time) {
     return true;
 }
 
-bool StyleParam::parseVec2(const std::string& _value, const std::vector<Unit> units, UnitVec<glm::vec2>& _vec) {
+bool StyleParam::parseVec2(const std::string& _value, const std::vector<Unit>& units, UnitVec<glm::vec2>& _vec) {
     ValueUnitPair v1, v2;
 
     // initialize with defaults
@@ -553,7 +568,7 @@ bool StyleParam::parseVec2(const std::string& _value, const std::vector<Unit> un
     return true;
 }
 
-bool StyleParam::parseVec3(const std::string& _value, const std::vector<Unit> units, UnitVec<glm::vec3> & _vec) {
+bool StyleParam::parseVec3(const std::string& _value, const std::vector<Unit>& units, UnitVec<glm::vec3> & _vec) {
     ValueUnitPair v1, v2, v3;
 
     // initialize with defaults

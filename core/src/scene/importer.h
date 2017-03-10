@@ -12,9 +12,9 @@
 #include <vector>
 #include "yaml-cpp/yaml.h"
 
-class Platform;
-
 namespace Tangram {
+
+class Platform;
 
 class Importer {
 

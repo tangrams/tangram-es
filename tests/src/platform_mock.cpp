@@ -16,6 +16,8 @@
 
 #include "log.h"
 
+namespace Tangram {
+
 void logMsg(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -46,3 +48,5 @@ void MockPlatform::cancelUrlRequest(const std::string& _url) {}
 void setCurrentThreadPriority(int priority) {}
 
 void initGLExtensions() {}
+
+} // namespace Tangram

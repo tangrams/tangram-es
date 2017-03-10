@@ -20,6 +20,8 @@
 #define FONT_JA "fonts/DroidSansJapanese.ttf"
 #define FALLBACK "fonts/DroidSansFallback.ttf"
 
+namespace Tangram {
+
 void logMsg(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -27,8 +29,13 @@ void logMsg(const char* fmt, ...) {
     va_end(args);
 }
 
-void OSXPlatform::requestRender() const {
-    glfwPostEmptyEvent();
+void setCurrentThreadPriority(int priority) {
+    int tid = syscall(SYS_gettid);
+    setpriority(PRIO_PROCESS, tid, priority);
+}
+
+void initGLExtensions() {
+    Tangram::Hardware::supportsMapBuffer = true;
 }
 
 NSString* resolvePath(const char* _path) {
@@ -51,6 +58,10 @@ NSString* resolvePath(const char* _path) {
     LOGW("Failed to resolve path: %s", _path);
 
     return nil;
+}
+
+void OSXPlatform::requestRender() const {
+    glfwPostEmptyEvent();
 }
 
 OSXPlatform::OSXPlatform() : m_stopUrlRequests(false) {
@@ -166,13 +177,6 @@ void OSXPlatform::cancelUrlRequest(const std::string& _url) {
     }];
 }
 
-void setCurrentThreadPriority(int priority) {
-    int tid = syscall(SYS_gettid);
-    setpriority(PRIO_PROCESS, tid, priority);
-}
-
-void initGLExtensions() {
-    Tangram::Hardware::supportsMapBuffer = true;
-}
+} // namespace Tangram
 
 #endif //PLATFORM_OSX

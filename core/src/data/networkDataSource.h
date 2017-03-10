@@ -2,9 +2,9 @@
 
 #include "data/tileSource.h"
 
-class Platform;
-
 namespace Tangram {
+
+class Platform;
 
 class NetworkDataSource : public TileSource::DataSource {
 public:

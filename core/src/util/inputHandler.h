@@ -5,9 +5,9 @@
 #include <bitset>
 #include <memory>
 
-class Platform;
-
 namespace Tangram {
+
+class Platform;
 
 class InputHandler {
 

@@ -145,7 +145,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
     self.scenePath = path;
 
-    MapReady onReadyCallback = [self, path](void* _userPtr) -> void {
+    Tangram::MapReady onReadyCallback = [self, path](void* _userPtr) -> void {
         if (self.mapViewDelegate && [self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadSceneAsync:)]) {
             [self.mapViewDelegate mapView:self didLoadSceneAsync:path];
         }
@@ -699,7 +699,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self != nil) {
-        std::shared_ptr<Platform> platform(new iOSPlatform(self));
+        std::shared_ptr<Tangram::Platform> platform(new Tangram::iOSPlatform(self));
         self.map = new Tangram::Map(platform);
     }
     return self;
@@ -709,7 +709,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     self = [super initWithCoder:aDecoder];
     if (self != nil) {
-        std::shared_ptr<Platform> platform(new iOSPlatform(self));
+        std::shared_ptr<Tangram::Platform> platform(new Tangram::iOSPlatform(self));
         self.map = new Tangram::Map(platform);
     }
     return self;
