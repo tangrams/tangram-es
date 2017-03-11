@@ -40,8 +40,8 @@ Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _path
 
         auto split = _path.find_last_of("/");
         if (split == std::string::npos) {
-            m_resourceRoot = "";
-            m_path = _path;
+            m_resourceRoot = _platform->resourceRoot();
+            m_path = m_resourceRoot + _path;
         } else {
             m_resourceRoot = _path.substr(0, split + 1);
             m_path = _path.substr(split + 1);

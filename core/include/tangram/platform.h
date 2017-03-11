@@ -72,6 +72,8 @@ public:
 
     virtual std::vector<FontSourceHandle> systemFontFallbacksHandle() const;
 
+    virtual std::string resourceRoot() const;
+
 protected:
 
     bool bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator) const;
