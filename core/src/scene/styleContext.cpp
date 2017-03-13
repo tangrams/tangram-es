@@ -144,6 +144,7 @@ void StyleContext::parseSceneGlobals(const YAML::Node& node) {
             break;
         }
     default:
+        duk_push_null(m_ctx);
         break;
     }
 }
