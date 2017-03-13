@@ -13,10 +13,6 @@ namespace Tangram {
 class UrlClient {
 
 public:
-    struct Environment {
-        Environment();
-        ~Environment();
-    };
 
     struct Options {
         uint32_t numberOfThreads = 4;
