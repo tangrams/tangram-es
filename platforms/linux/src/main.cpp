@@ -10,8 +10,6 @@ using namespace Tangram;
 
 int main(int argc, char* argv[]) {
 
-    UrlClient::Environment env;
-
     auto platform = std::make_shared<LinuxPlatform>();
 
     std::string sceneFile = "scene.yaml";
