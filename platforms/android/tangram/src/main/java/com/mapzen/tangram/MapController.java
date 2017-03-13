@@ -578,6 +578,21 @@ public class MapController implements Renderer {
                     responder.onLongPress(x, y);
                 }
             }
+	    @Override
+	    public boolean onLongPressPan(float x1,float x2,float x3 ,float x4)
+		{
+		    if(responder != null) {
+			return responder.onLongPressPan(x1,x2,x3,x4);
+		    }
+		    return false;
+		}
+	    @Override
+	    public void onLongPressUp(float x, float y)
+		{
+		    if(responder != null) {
+			responder.onLongPressUp(x,y);
+		    }
+		}
         });
     }
 

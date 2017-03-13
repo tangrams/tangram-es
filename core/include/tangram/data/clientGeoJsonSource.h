@@ -64,9 +64,6 @@ protected:
      std::shared_ptr<Platform> m_platform;
 
     bool m_inChangeBlock = false;
-
-    bool m_inChangeBlock = false;
-
 };
 
 }
