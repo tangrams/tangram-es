@@ -4,6 +4,7 @@
 #include "util/zlibHelper.h"
 #include "log.h"
 #include "platform.h"
+#include "util/url.h"
 
 #include <SQLiteCpp/Database.h>
 #include "hash-library/md5.cpp"
@@ -239,8 +240,15 @@ void MBTilesDataSource::openMBTiles() {
             mode = SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE;
         }
 
-        m_db = std::make_unique<SQLite::Database>(m_path, mode);
-        LOG("SQLite database opened: %s", m_path.c_str());
+        auto url = Url(m_path);
+        auto path = url.path();
+        const char* vfs = "";
+        if (url.scheme() == "asset") {
+            vfs = "ndk-asset";
+            path.erase(path.begin()); // Remove leading '/'.
+        }
+        m_db = std::make_unique<SQLite::Database>(path, mode, 0, vfs);
+        LOG("SQLite database opened: %s", path.c_str());
 
     } catch (std::exception& e) {
         LOGE("Unable to open SQLite database: %s - %s", m_path.c_str(), e.what());

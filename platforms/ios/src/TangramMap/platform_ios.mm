@@ -87,6 +87,11 @@ void iOSPlatform::setContinuousRendering(bool _isContinuous) {
     [m_viewController setContinuous:_isContinuous];
 }
 
+std::string iOSPlatform::resolveAssetPath(const std::string& _path) const {
+    NSString* path = resolvePath(_path.c_str());
+    return [path UTF8String];
+}
+
 std::vector<char> iOSPlatform::bytesFromFile(const char* _path) const {
     NSString* path = resolvePath(_path);
 

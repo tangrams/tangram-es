@@ -1,12 +1,12 @@
 #ifdef PLATFORM_ANDROID
 
 #include "platform_android.h"
+
 #include "data/properties.h"
 #include "data/propertyItem.h"
+#include "log.h"
 #include "util/url.h"
 #include "tangram.h"
-
-#include <GLES2/gl2platform.h>
 
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES 1
@@ -14,21 +14,16 @@
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
-#include <dlfcn.h> // dlopen, dlsym
-
+#include <GLES2/gl2platform.h>
 #include <android/log.h>
 #include <android/asset_manager_jni.h>
 #include <cstdarg>
-
+#include <dlfcn.h> // dlopen, dlsym
 #include <libgen.h>
 #include <unistd.h>
 #include <sys/resource.h>
-#include <fstream>
-#include <algorithm>
 
-#include <regex>
-
-#include "log.h"
+#include "sqlite3ndk.h"
 
 /* Followed the following document for JavaVM tips when used with native threads
  * http://android.wooyd.org/JNIExample/#NWD1sCYeT-I
@@ -208,7 +203,10 @@ AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject
 
     if (m_assetManager == nullptr) {
         LOGE("Could not obtain Asset Manager reference");
+        return;
     }
+
+    sqlite3_ndk_init(m_assetManager);
 }
 
 void AndroidPlatform::dispose(JNIEnv* _jniEnv) {
