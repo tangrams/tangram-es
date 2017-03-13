@@ -367,7 +367,9 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& u
             float lineLength = sampler.sumLength();
             if (lineLength <= minLineLength) { break; }
 
-            float spacing = params.placementSpacing * m_style.pixelScale() / View::s_pixelsPerTile;
+            float spacing = params.placementSpacing * m_style.pixelScale() /
+                (View::s_pixelsPerTile * m_tileScale);
+
             int numLabels = std::max(std::floor(lineLength / spacing), 1.0f);
             float remainderLength = lineLength - (numLabels - 1) * spacing;
             float distance = 0.5 * remainderLength;
