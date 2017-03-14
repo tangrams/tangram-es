@@ -23,12 +23,22 @@ struct AtlasCallback : public alfons::TextureCallback {
             const unsigned char* src, uint16_t padding) override {}
 };
 
-AtlasCallback atlasCb;
-ScratchBuffer buffer;
 
 alfons::TextShaper shaper;
-alfons::GlyphAtlas atlas(atlasCb);
-alfons::TextBatch batch(atlas, buffer);
+
+struct TestTextBatch : public alfons::TextBatch {
+  TestTextBatch():
+    atlasCb(),
+    buffer(),
+    atlas(atlasCb),
+    alfons::TextBatch(atlas, buffer) {}
+
+  AtlasCallback atlasCb;
+  ScratchBuffer buffer;
+  alfons::GlyphAtlas atlas;
+};
+
+TestTextBatch batch;
 alfons::FontManager fontManager;
 std::shared_ptr<alfons::Font> font;
 

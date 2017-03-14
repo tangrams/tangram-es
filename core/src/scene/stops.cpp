@@ -268,13 +268,14 @@ auto Stops::evalExpFloat(float _key) const -> float {
     if (frames.empty()) { return 0; }
 
     auto upper = nearestHigherFrame(_key);
+    if (upper == frames.begin()) {
+        return upper->value.get<float>();
+    }
+
     auto lower = upper - 1;
 
     if (upper == frames.end())  {
         return lower->value.get<float>();
-    }
-    if (lower < frames.begin()) {
-        return upper->value.get<float>();
     }
 
     if (upper->key <= _key) {
@@ -296,13 +297,13 @@ auto Stops::evalFloat(float _key) const -> float {
     if (frames.empty()) { return 0; }
 
     auto upper = nearestHigherFrame(_key);
+    if (upper == frames.begin()) {
+        return upper->value.get<float>();
+    }
     auto lower = upper - 1;
 
     if (upper == frames.end()) {
         return lower->value.get<float>();
-    }
-    if (lower < frames.begin()) {
-        return upper->value.get<float>();
     }
 
     float lerp = (_key - lower->key) / (upper->key - lower->key);
@@ -314,12 +315,12 @@ auto Stops::evalColor(float _key) const -> uint32_t {
     if (frames.empty()) { return 0; }
 
     auto upper = nearestHigherFrame(_key);
+    if (upper == frames.begin()) {
+        return upper->value.get<Color>().abgr;
+    }
     auto lower = upper - 1;
     if (upper == frames.end())  {
         return lower->value.get<Color>().abgr;
-    }
-    if (lower < frames.begin()) {
-        return upper->value.get<Color>().abgr;
     }
 
     float lerp = (_key - lower->key) / (upper->key - lower->key);
@@ -331,13 +332,13 @@ auto Stops::evalExpVec2(float _key) const -> glm::vec2 {
     if (frames.empty()) { return glm::vec2{0.f}; }
 
     auto upper = nearestHigherFrame(_key);
+    if (upper == frames.begin()) {
+        return upper->value.get<glm::vec2>();
+    }
     auto lower = upper - 1;
 
     if (upper == frames.end()) {
         return lower->value.get<glm::vec2>();
-    }
-    if (lower < frames.begin()) {
-        return upper->value.get<glm::vec2>();
     }
 
     double range = exp2(upper->key - lower->key) - 1.0;
@@ -357,13 +358,13 @@ auto Stops::evalVec2(float _key) const -> glm::vec2 {
     if (frames.empty()) { return glm::vec2{0.f}; }
 
     auto upper = nearestHigherFrame(_key);
+    if (upper == frames.begin()) {
+        return upper->value.get<glm::vec2>();
+    }
     auto lower = upper - 1;
 
     if (upper == frames.end()) {
         return lower->value.get<glm::vec2>();
-    }
-    if (lower < frames.begin()) {
-        return upper->value.get<glm::vec2>();
     }
 
     float lerp = (_key - lower->key) / (upper->key - lower->key);

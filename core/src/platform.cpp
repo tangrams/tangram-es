@@ -81,4 +81,8 @@ std::vector<FontSourceHandle> Platform::systemFontFallbacksHandle() const {
     return {};
 }
 
+std::string Platform::resourceRoot() const {
+    return "";
+}
+
 } // namespace Tangram

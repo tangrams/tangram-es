@@ -361,7 +361,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 map->queueSceneUpdate("cameras", "{ main_camera: { type: isometric } }");
                 map->applySceneUpdates();
                 break;
-            case GLFW_KEY_G:
+            case GLFW_KEY_G: {
                 static bool geoJSON = false;
                 if (!geoJSON) {
                     map->queueSceneUpdate("sources.osm.type", "GeoJSON");
@@ -373,6 +373,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 geoJSON = !geoJSON;
                 map->applySceneUpdates();
                 break;
+            }
             case GLFW_KEY_ESCAPE:
                 glfwSetWindowShouldClose(window, true);
                 break;

@@ -17,6 +17,7 @@ find_sources_and_include_directories(
 
 set(COMMON_SOURCES
     ${PROJECT_SOURCE_DIR}/platforms/common/urlClient.cpp
+    ${PROJECT_SOURCE_DIR}/platforms/common/urlClientCurl.cpp
     ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp)
 include_directories(${PROJECT_SOURCE_DIR}/platforms/common)
 

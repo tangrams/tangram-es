@@ -38,6 +38,7 @@ set(CORE_INCLUDE_DIRS
   ${GENERATED_DIR}
   ${DEPS_DIR}
   ${DEPS_DIR}/glm
+  ${DEPS_DIR}/glproxy/include
   ${DEPS_DIR}/earcut/include
   ${DEPS_DIR}/isect2d/include
   ${DEPS_DIR}/hash-library
@@ -51,6 +52,10 @@ set(CORE_INCLUDE_DIRS
   ${DEPS_DIR}/geojson-vt-cpp/geojson.hpp/include
   ${DEPS_DIR}/geojson-vt-cpp/include
   CACHE INTERNAL "core include directories" FORCE)
+if (WIN32)
+  list(APPEND CORE_INCLUDE_DIRS ${DEPS_DIR}/zlib)
+  list(APPEND CORE_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/deps/zlib)
+endif ()
 list(REMOVE_DUPLICATES CORE_INCLUDE_DIRS)
 
 add_library(${CORE_LIBRARY} ${FOUND_SOURCES} ${FOUND_HEADERS})
@@ -68,9 +73,15 @@ set(LINK_LIBRARIES
     alfons
     SQLiteCpp
     sqlite3
-    z)
+)
 
-if (UNIX AND NOT APPLE)
+if (WIN32)
+  list(APPEND LINK_LIBRARIES zlibstatic)
+else ()
+  list(APPEND LINK_LIBRARIES z)
+endif ()
+
+if (UNIX AND NOT APPLE AND NOT WIN32)
   # SQLite needs dl dynamic library loader when Linux
   target_link_libraries(${LINK_LIBRARIES} dl)
 else()
@@ -91,6 +102,11 @@ target_compile_definitions(${CORE_LIBRARY}
 
 # make groups for xcode
 group_recursive_sources(src "src")
+if (WIN32)
+  set(CMD_SCRIPT ${PROJECT_SOURCE_DIR}/../scripts/incbin.bat)
+else()
+  set(CMD_SCRIPT "bash" ${PROJECT_SOURCE_DIR}/../scripts/incbin.bat)
+endif()
 
 # add compile shader targets
 file(GLOB_RECURSE SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
@@ -109,7 +125,7 @@ foreach(_shader ${SHADER_FILES})
             OUTPUT ${SHADER_OUTPUT}
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..
             MAIN_DEPENDENCY ${_shader}
-            COMMAND ${PROJECT_SOURCE_DIR}/../scripts/incbin.sh
+            COMMAND ${CMD_SCRIPT}
                 ${_shader}
                 core/generated/${_shader_name}.h
                 ${_shader_name})
@@ -125,6 +141,6 @@ add_custom_command(
   OUTPUT ${DEFAULT_POINT_TEXTURE_HEADER}
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..
   MAIN_DEPENDENCY ${DEFAULT_POINT_TEXTURE_IMAGE}
-  COMMAND ${PROJECT_SOURCE_DIR}/../scripts/incbin.sh ${DEFAULT_POINT_TEXTURE_IMAGE} ${DEFAULT_POINT_TEXTURE_HEADER} default_point_texture
+  COMMAND ${CMD_SCRIPT} ${DEFAULT_POINT_TEXTURE_IMAGE} ${DEFAULT_POINT_TEXTURE_HEADER} default_point_texture
   )
 add_dependencies(${CORE_LIBRARY} default_point_texture)

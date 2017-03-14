@@ -26,7 +26,7 @@ endif()
 include(${PROJECT_SOURCE_DIR}/toolchains/utils.cmake)
 
 # platform lookup
-set(SUPPORTED_TARGETS darwin ios android raspberrypi linux tizen ios.framework)
+set(SUPPORTED_TARGETS darwin ios android raspberrypi linux windows tizen ios.framework)
 
 if(NOT PLATFORM_TARGET)
     string(TOLOWER "${CMAKE_SYSTEM_NAME}" varplatform)
@@ -93,6 +93,7 @@ if(BENCHMARK OR UNIT_TESTS)
 endif()
 
 if(UNIT_TESTS)
+    include(CTest)
     message(STATUS "Build with tests")
     add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 endif()

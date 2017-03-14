@@ -62,6 +62,7 @@ if(APPLICATION)
     ${SOURCES}
     ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp
     ${PROJECT_SOURCE_DIR}/platforms/common/urlClient.cpp
+    ${PROJECT_SOURCE_DIR}/platforms/common/urlClientCurl.cpp
     ${PROJECT_SOURCE_DIR}/platforms/common/glfwApp.cpp
     )
 

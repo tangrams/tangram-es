@@ -12,7 +12,7 @@
 	url = https://github.com/tangrams/earcut.hpp
 [submodule "core/dependencies/geojson-vt-cpp"]
 	path = core/deps/geojson-vt-cpp
-	url = https://github.com/tangrams/geojson-vt-cpp.git
+	url = https://github.com/lygstate/geojson-vt-cpp.git
 [submodule "external/duktape"]
 	path = core/deps/duktape
 	url = https://github.com/tangrams/duktape.git
@@ -27,10 +27,16 @@
 	url = https://github.com/google/benchmark
 [submodule "external/alfons"]
 	path = core/deps/alfons
-	url = https://github.com/hjanetzek/alfons
+	url = https://github.com/lygstate/alfons
 [submodule "external/harfbuzz-icu-freetype"]
 	path = core/deps/harfbuzz-icu-freetype
 	url = https://github.com/tangrams/harfbuzz-icu-freetype.git
 [submodule "external/SQLiteCpp"]
 	path = core/deps/SQLiteCpp
 	url = https://github.com/SRombauts/SQLiteCpp.git
+[submodule "core/deps/glproxy"]
+	path = core/deps/glproxy
+	url = https://github.com/glproxy/glproxy
+[submodule "core/deps/zlib"]
+	path = core/deps/zlib
+	url = https://github.com/lygstate/zlib.git

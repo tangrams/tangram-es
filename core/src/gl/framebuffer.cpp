@@ -133,7 +133,7 @@ void FrameBuffer::init(RenderState& _rs) {
     }
 
     GLenum status = GL::checkFramebufferStatus(GL_FRAMEBUFFER);
-    GL_CHECK();
+    GL_CHECK(0);
 
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         LOGE("Framebuffer status is incomplete:");

@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <cassert>
+#include <algorithm>
 
 namespace Tangram {
 

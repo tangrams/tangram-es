@@ -40,8 +40,6 @@ void newFrame();
 
 int main(int argc, char **argv){
 
-    UrlClient::Environment urlClientEnvironment;
-
     UrlClient::Options urlClientOptions;
     urlClientOptions.numberOfThreads = 4;
 

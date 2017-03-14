@@ -25,6 +25,7 @@ Currently we are targeting five platforms:
  - [Mac OS X](platforms/osx)
  - [Ubuntu Linux](platforms/linux)
  - [Raspberry Pi](platforms/rpi)
+ - [Windows](platforms/windows)
 
 ## Code Style ##
 
