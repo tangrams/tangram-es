@@ -10,7 +10,6 @@
 
 namespace Tangram {
 
-
 void LabelCollider::addLabels(std::vector<std::unique_ptr<Label>>& _labels) {
 
     for (auto& label : _labels) {
@@ -75,19 +74,20 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
               });
 
     // Set view parameters so that the tile is rendererd at
-    // style-zoom-level + 1. (scaled up by factor 2)
-    int overzoom = 1;
+    // style-zoom-level + 2. (scaled up by factor 4). This
+    // filters out labels that are unlikely to become visible
+    // within the tiles zoom-range.
+    int overzoom = 2;
     float tileScale = pow(2, _tileID.s - _tileID.z + overzoom);
     glm::vec2 screenSize{ _tileSize * tileScale };
 
     // Project tile to NDC (-1 to 1, y-up)
     glm::mat4 mvp{1};
-    // Scale tile to 'fullscreen'
-    mvp[0][0] = tileScale;
-    mvp[1][1] = -tileScale;
+    mvp[0][0] = 1.0f;
+    mvp[1][1] = -1.f;
     // Place tile centered
-    mvp[3][0] = -tileScale * 0.5;
-    mvp[3][1] = tileScale * 0.5;
+    mvp[3][0] = -0.5f;
+    mvp[3][1] = 0.5f;
 
     ViewState viewState {
         nullptr, // mapProjection (unused)
