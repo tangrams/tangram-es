@@ -114,7 +114,7 @@ struct Filter {
     static void sort(std::vector<Filter>& filters);
     void print(int _indent = 0) const;
     int filterCost() const;
-    const bool isOperator() const;
+    bool isOperator() const;
     const std::string& key() const;
     const std::vector<Filter>& operands() const;
 

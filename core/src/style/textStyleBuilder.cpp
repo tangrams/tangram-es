@@ -723,13 +723,8 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     }
     m_attributes.stroke = (_params.strokeColor & 0x00ffffff) + (strokeAttrib << 24);
     m_attributes.fill = _params.fill;
-    m_attributes.fontScale = _params.fontScale * 64.f;
-    if (m_attributes.fontScale > 255) {
-        LOGN("Too large font scale %f, maximal scale is 4", _params.fontScale);
-        m_attributes.fontScale = 255;
-    }
+    m_attributes.fontScale = std::min(int(_params.fontScale * 64.f), 255);
     m_attributes.quadsStart = m_quads.size();
-
     m_attributes.textRanges = TextRange{};
 
     glm::vec2 bbox(0);
