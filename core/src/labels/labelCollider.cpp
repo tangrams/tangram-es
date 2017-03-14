@@ -19,35 +19,41 @@ void LabelCollider::addLabels(std::vector<std::unique_ptr<Label>>& _labels) {
     }
 }
 
-void LabelCollider::handleRepeatGroup(size_t startPos) {
+size_t LabelCollider::filterRepeatGroups(size_t startPos, size_t curPos) {
 
-    float threshold2 = pow(m_labels[startPos].label->options().repeatDistance, 2);
-    size_t repeatGroup = m_labels[startPos].label->options().repeatGroup;
+    size_t endGroup = m_labels[curPos].label->options().repeatGroup;
+    size_t endPos = curPos;
 
-    // Get the range
-    size_t endPos = startPos;
-    for (;startPos > 0; startPos--) {
-        if (m_labels[startPos-1].label->options().repeatGroup != repeatGroup) { break; }
-    }
-    for (;endPos < m_labels.size()-1; endPos++) {
-        if (m_labels[endPos+1].label->options().repeatGroup != repeatGroup) { break; }
-    }
+    for (size_t pos = startPos; pos <= curPos; pos = endPos + 1) {
+        size_t repeatGroup = m_labels[pos].label->options().repeatGroup;
+        float  threshold2 = pow(m_labels[pos].label->options().repeatDistance, 2);
 
+        // Find end of the current repeatGroup
+        endPos = pos;
 
-    for (size_t i = startPos; i < endPos; i++) {
-        Label* l1 = m_labels[i].label;
-        if (l1->isOccluded()) { continue; }
-
-        for (size_t j = i+1; j <= endPos; j++) {
-            Label* l2 = m_labels[j].label;
-            if (l2->isOccluded()) { continue; }
-
-            float d2 = distance2(l1->screenCenter(), l2->screenCenter());
-            if (d2 < threshold2) {
-                l2->occlude();
+        for (;endPos < m_labels.size()-1; endPos++) {
+            if (m_labels[endPos+1].label->options().repeatGroup != repeatGroup) {
+                break;
             }
         }
+
+        for (size_t i = pos; i < endPos; i++) {
+            Label* l1 = m_labels[i].label;
+            if (l1->isOccluded()) { continue; }
+
+            for (size_t j = i+1; j <= endPos; j++) {
+                Label* l2 = m_labels[j].label;
+                if (l2->isOccluded()) { continue; }
+
+                float d2 = distance2(l1->screenCenter(), l2->screenCenter());
+                if (d2 < threshold2) {
+                    l2->occlude();
+                }
+            }
+        }
+        if (repeatGroup == endGroup) { break; }
     }
+    return endPos;
 }
 
 void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tileSize) {
@@ -125,6 +131,8 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
         }
     }
 
+    if (m_labels.empty()) { return; }
+
     m_isect2d.resize({screenSize.x / 128, screenSize.y / 128}, screenSize);
 
     m_isect2d.intersect(m_aabbs);
@@ -161,6 +169,11 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
                       return l1->options().priority < l2->options().priority;
                   }
 
+                  // Required ordering for 'filterRepeatGroups()'
+                  if (l1->options().repeatGroup != l2->options().repeatGroup) {
+                      return l1->options().repeatGroup < l2->options().repeatGroup;
+                  }
+
                   if (l1->type() == l2->type() &&
                       l1->candidatePriority() != l2->candidatePriority()) {
                       return l1->candidatePriority() < l2->candidatePriority();
@@ -184,6 +197,7 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
     // This allows to remove repeated labels before they occlude other candidates
 
     size_t repeatGroup = 0;
+    size_t lastFilteredLabelIndex = 0;
 
     // Narrow Phase, resolve conflicts
     for (auto& pair : m_isect2d.pairs) {
@@ -198,7 +212,7 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
             repeatGroup = l1->options().repeatGroup;
 
             if (repeatGroup != 0) {
-                handleRepeatGroup(pair.first);
+                lastFilteredLabelIndex = filterRepeatGroups(lastFilteredLabelIndex, pair.first);
             }
         }
 
@@ -258,6 +272,8 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
             }
         }
     }
+
+    filterRepeatGroups(lastFilteredLabelIndex, m_labels.size()-1);
 
     for (auto& entry : m_labels) {
         auto* label = entry.label;
