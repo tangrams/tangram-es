@@ -26,7 +26,7 @@ public:
 
 private:
 
-    void handleRepeatGroup(size_t startPos);
+    size_t filterRepeatGroups(size_t startPos, size_t curPos);
 
     using AABB = isect2d::AABB<glm::vec2>;
     using OBB = isect2d::OBB<glm::vec2>;
