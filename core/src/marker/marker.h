@@ -23,8 +23,6 @@ struct DrawRuleData;
 struct Feature;
 struct StyledMesh;
 
-const std::string LAYER_DELIMITER = ".";
-
 class Marker {
 
     struct Styling {
@@ -51,11 +49,16 @@ public:
     // Sets the styling struct for the marker
     void setStyling(std::string styling, bool isPath);
 
-    // Set the draw rule that will be used to build the marker.
-    bool setDrawRule(std::unique_ptr<DrawRuleData> drawRuleData);
+    // Set the new draw rule data that will be used to build the marker.
+    void setDrawRuleData(std::unique_ptr<DrawRuleData> drawRuleData);
 
-    // Set the draw rule from the scene layers.
-    bool setDrawRule(const std::vector<const SceneLayer*>& layers);
+    // Merge draw rules from the given layer into the internal draw rule set.
+    void mergeRules(const SceneLayer& layer);
+
+    // From the set of merged draw rules, set the one with the given name as the
+    // Marker's draw rule and clear the internal draw rule set. Returns true if
+    // the named rule was found.
+    bool finalizeRuleMergingForName(const std::string& name);
 
     // Set the styled mesh for this marker with the associated style id and zoom level.
     void setMesh(uint32_t styleId, uint32_t zoom, std::unique_ptr<StyledMesh> mesh);
@@ -130,6 +133,7 @@ protected:
     std::unique_ptr<Texture> m_texture;
     std::unique_ptr<DrawRuleMergeSet> m_drawRuleSet;
     std::unique_ptr<DrawRuleData> m_drawRuleData;
+    std::unique_ptr<DrawRule> m_drawRule;
 
     Styling m_styling;
 

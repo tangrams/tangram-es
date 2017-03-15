@@ -102,9 +102,6 @@ public:
 
     const Style* findStyle(const std::string& _name) const;
 
-    // fills the vector with the hierarchy of layers found in the name (delimited by ":")
-    // Note: path here must starts with "layers." to identify layers yaml sub group
-    std::vector<const SceneLayer*> getLayerHierarchy(const std::string& _layersPath) const;
     const Light* findLight(const std::string& _name) const;
 
     void updateTime(float _dt) { m_time += _dt; }

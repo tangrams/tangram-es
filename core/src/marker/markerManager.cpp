@@ -318,29 +318,53 @@ bool MarkerManager::buildStyling(Marker& marker) {
 
     // If the Marker styling is a path, find the layers it specifies.
     if (markerStyling.isPath) {
-        auto& path = markerStyling.string;
-
-        //check for layers
-        const std::string LAYERS = "layers";
-        if (path.substr(0, LAYERS.length()) != LAYERS) { return false; }
-
-        //check for draw
-        const std::string DRAW = LAYER_DELIMITER + "draw" + LAYER_DELIMITER;
-        auto n = path.find(DRAW);
-        if (n == std::string::npos) { return false; }
-
-        auto layerPath = path.substr(0, n);
-
-        LOG("layerPath: %s" , layerPath.c_str());
-        // Replace the rule delimiter with scene's DELIMITER to extract sublayer
-        std::replace(layerPath.begin(), layerPath.end(), LAYER_DELIMITER[0], DELIMITER[0]);
-
-        std::vector<const SceneLayer*> layers = m_scene->getLayerHierarchy(layerPath);
-
-        return marker.setDrawRule(layers);
+        auto path = markerStyling.string;
+        // The DELIMITER used by layers is currently ":", but Marker paths use "." (scene.h).
+        std::replace(path.begin(), path.end(), '.', DELIMITER[0]);
+        // Start iterating over the delimited path components.
+        size_t start = 0, end = 0;
+        end = path.find(DELIMITER[0], start);
+        if (path.compare(start, end - start, "layers") != 0) {
+            // If the path doesn't begin with 'layers' it isn't a layer heirarchy.
+            return false;
+        }
+        // Find the DataLayer named in our path.
+        const SceneLayer* currentLayer = nullptr;
+        size_t layerStart = end + 1;
+        start = end + 1;
+        end = path.find(DELIMITER[0], start);
+        for (const auto& layer : m_scene->layers()) {
+            if (path.compare(layerStart, end - layerStart, layer.name()) == 0) {
+                currentLayer = &layer;
+                marker.mergeRules(layer);
+                break;
+            }
+        }
+        // Search sublayers recursively until we can't find another token or layer.
+        while (end != std::string::npos && currentLayer != nullptr) {
+            start = end + 1;
+            end = path.find(DELIMITER[0], start);
+            const auto& layers = currentLayer->sublayers();
+            currentLayer = nullptr;
+            for (const auto& layer : layers) {
+                if (path.compare(layerStart, end - layerStart, layer.name()) == 0) {
+                    currentLayer = &layer;
+                    marker.mergeRules(layer);
+                    break;
+                }
+            }
+        }
+        // The last token found should have been "draw".
+        if (path.compare(start, end - start, "draw") != 0) {
+            return false;
+        }
+        // The draw group name should come next.
+        start = end + 1;
+        end = path.find(DELIMITER[0], start);
+        // Find the rule in the merged set whose name matches the final token.
+        return marker.finalizeRuleMergingForName(path.substr(start, end - start));
     }
-
-    // If the styling is not a path, try to load is as a string of YAML.
+    // If the styling is not a path, try to load it as a string of YAML.
     try {
         YAML::Node node = YAML::Load(markerStyling.string);
         // Parse style parameters from the YAML node.
@@ -356,7 +380,9 @@ bool MarkerManager::buildStyling(Marker& marker) {
     }
     m_jsFnIndex = sceneJsFnList.size();
 
-    return marker.setDrawRule(std::make_unique<DrawRuleData>("", 0, std::move(params)));
+    marker.setDrawRuleData(std::make_unique<DrawRuleData>("", 0, std::move(params)));
+
+    return true;
 }
 
 bool MarkerManager::buildGeometry(Marker& marker, int zoom) {

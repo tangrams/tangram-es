@@ -38,25 +38,30 @@ bool Marker::evaluateRuleForContext(StyleContext& ctx) {
     return m_drawRuleSet->evaluateRuleForContext(*drawRule(), ctx);
 }
 
-bool Marker::setDrawRule(std::unique_ptr<DrawRuleData> drawRuleData) {
-    // clear previous set
-    auto& drawRules = m_drawRuleSet->matchedRules();
-    drawRules.clear();
-
+void Marker::setDrawRuleData(std::unique_ptr<DrawRuleData> drawRuleData) {
     m_drawRuleData = std::move(drawRuleData);
-    drawRules.emplace_back(*m_drawRuleData, "", 0);
-    return true;
+    m_drawRule = std::make_unique<DrawRule>(*m_drawRuleData, "", 0);
 }
 
-bool Marker::setDrawRule(const std::vector<const SceneLayer*>& layers) {
-    // clear previous set
-    auto& drawRules = m_drawRuleSet->matchedRules();
-    drawRules.clear();
+void Marker::mergeRules(const SceneLayer& layer) {
+    m_drawRuleSet->mergeRules(layer);
+}
 
-    m_drawRuleSet->mergeRules(layers);
-    if (drawRules.empty()) { return false; }
-
-    return true;
+bool Marker::finalizeRuleMergingForName(const std::string& name) {
+    bool found = false;
+    for (auto& rule : m_drawRuleSet->matchedRules()) {
+        if (name == *rule.name) {
+            m_drawRule = std::make_unique<DrawRule>(rule);
+            found = true;
+            break;
+        }
+    }
+    if (found) {
+        // Clear leftover data (outside the loop so we don't invalidate iterators).
+        m_drawRuleData.reset(nullptr);
+        m_drawRuleSet->matchedRules().clear();
+    }
+    return found;
 }
 
 void Marker::setMesh(uint32_t styleId, uint32_t zoom, std::unique_ptr<StyledMesh> mesh) {
@@ -131,22 +136,7 @@ Feature* Marker::feature() const {
 }
 
 DrawRule* Marker::drawRule() const {
-    auto& matchedRules = m_drawRuleSet->matchedRules();
-
-    if (matchedRules.empty()) { return nullptr; }
-    if (!m_styling.isPath) { return &matchedRules.front(); }
-
-    auto n = m_styling.string.rfind(LAYER_DELIMITER);
-    if (n == std::string::npos) { return nullptr; }
-    auto drawRuleGrp = m_styling.string.substr(n+1);
-
-    // TODO: Draw markers with multiple styles
-    for (auto& matchedRule : matchedRules) {
-        if (*(matchedRule.name) == drawRuleGrp) {
-            return &matchedRule;
-        }
-    }
-    return nullptr;
+    return m_drawRule.get();
 }
 
 StyledMesh* Marker::mesh() const {

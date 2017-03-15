@@ -198,12 +198,6 @@ bool DrawRuleMergeSet::evaluateRuleForContext(DrawRule& rule, StyleContext& ctx)
     return valid;
 }
 
-void DrawRuleMergeSet::mergeRules(const std::vector<const SceneLayer*>& _layers) {
-    for (auto layer: _layers) {
-        mergeRules(*layer);
-    }
-}
-
 void DrawRuleMergeSet::mergeRules(const SceneLayer& _layer) {
 
     size_t pos, end = m_matchedRules.size();
