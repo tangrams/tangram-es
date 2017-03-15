@@ -33,6 +33,14 @@ enum Anchor : uint8_t {
 constexpr int max_anchors = 9;
 
 struct Anchors {
+
+    Anchors() {}
+
+    Anchors(LabelProperty::Anchor _anchor) {
+        anchor[0] = _anchor;
+        count = 1;
+    }
+
     std::array<LabelProperty::Anchor, LabelProperty::max_anchors> anchor;
     int count = 0;
 

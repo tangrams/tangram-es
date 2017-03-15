@@ -137,13 +137,22 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
 
             auto offset = m_options.offset;
 
-            if (ap0.x <= ap2.x) {
-                rotation = (ap2 - ap0) / length;
-                offset = -offset;
-            } else {
+            bool flip = ap0.x > ap2.x;
+
+            if (flip) {
                 rotation = (ap0 - ap2) / length;
+            } else {
+                rotation = (ap2 - ap0) / length;
             }
-            //rotation = ( ?  : ap0 - ap2) / length;
+
+            if (m_options.anchors.anchor[0] == LabelProperty::Anchor::bottom) {
+                offset.y += (m_dim.y + Label::activation_distance_threshold + 1) * 0.5f;
+                if (flip) { offset = -offset; }
+            } else if (m_options.anchors.anchor[0] == LabelProperty::Anchor::top) {
+                offset.y += (m_dim.y + Label::activation_distance_threshold + 1) * 0.5f;
+                if (!flip) { offset = -offset; }
+            }
+
             rotation = glm::vec2{ rotation.x, - rotation.y };
 
             m_screenCenter = screenPosition;
@@ -174,9 +183,10 @@ void TextLabel::obbs(ScreenTransform& _transform, OBBBuffer& _obbs) {
     PointTransform pointTransform(_transform);
     auto rotation = pointTransform.rotation();
 
-    auto obb = OBB(pointTransform.position() + m_anchor,
-                   glm::vec2{rotation.x, -rotation.y},
-                   dim.x, dim.y);
+    auto position = pointTransform.position();
+    if (m_type != Type::line) { position += m_anchor; }
+
+    auto obb = OBB(position, glm::vec2{rotation.x, -rotation.y}, dim.x, dim.y);
 
     _obbs.append(obb);
 
@@ -205,7 +215,8 @@ void TextLabel::addVerticesToMesh(ScreenTransform& _transform, const glm::vec2& 
     bool rotate = (rotation.x != 1.f);
 
     glm::vec2 screenPosition = transform.position();
-    screenPosition += m_anchor;
+    if (m_type != Type::line) { screenPosition += m_anchor; }
+
     glm::i16vec2 sp = glm::i16vec2(screenPosition * TextVertex::position_scale);
     std::array<glm::i16vec2, 4> vertexPosition;
 

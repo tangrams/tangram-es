@@ -198,11 +198,11 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
     TextStyle::Parameters rightParams = _params;
     TextStyle::Parameters leftParams = _params;
 
-    //float labelWidth = 0.f;
     bool hasLeftLabel = false;
     if (hasLeftSource && !leftText.empty()) {
         leftParams.text = leftText;
-        leftParams.labelOptions.offset.y = 15;
+        leftParams.labelOptions.anchors = {LabelProperty::Anchor::top};
+        leftParams.labelOptions.buffer = glm::vec2(0);
 
         hash_combine(leftParams.labelOptions.repeatGroup, leftText);
 
@@ -212,7 +212,8 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
     bool hasRightLabel = false;
     if (hasRightSource && !rightText.empty()) {
         rightParams.text = rightText;
-        rightParams.labelOptions.offset.y = -15;
+        rightParams.labelOptions.anchors = {LabelProperty::Anchor::bottom};
+        rightParams.labelOptions.buffer = glm::vec2(0);
 
         hash_combine(rightParams.labelOptions.repeatGroup, rightText);
 
@@ -221,7 +222,7 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
 
     float labelWidth = std::max(leftAttribs.width, rightAttribs.width);
 
-    auto straightLabelCb = [&](glm::vec2 a, glm::vec2 b) {
+    auto cb = [&](glm::vec2 a, glm::vec2 b) {
         if (hasLeftLabel) {
             addLabel(Label::Type::line, {{ a, b }}, leftParams, leftAttribs, _rule);
         }
@@ -231,7 +232,7 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
     };
 
     for (auto& line : _feat.lines) {
-        addStraightTextLabels(line, labelWidth, straightLabelCb);
+        addStraightTextLabels(line, labelWidth, cb);
     }
 
     return true;
@@ -636,8 +637,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
 
         _rule.get(StyleParamKey::anchor, p.labelOptions.anchors);
         if (p.labelOptions.anchors.count == 0) {
-            p.labelOptions.anchors.anchor = { {LabelProperty::Anchor::center} };
-            p.labelOptions.anchors.count = 1;
+            p.labelOptions.anchors = {LabelProperty::Anchor::center};
         }
 
         if (_rule.get(StyleParamKey::repeat_distance, repeatDistance)) {
