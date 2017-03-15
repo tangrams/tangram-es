@@ -569,6 +569,13 @@ layers:
                 text_source:
                     left: 'name:left'
                     right: 'name:right'
+                font:
+                    family: Open Sans
+                    size: 12px
+                    fill: [0, 0, 0, .8]
+                    stroke: { color: white, width: 4 }
+                    transform: uppercase
+                    weight: bold
         country:
             filter: { kind: country }
             draw:
