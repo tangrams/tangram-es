@@ -13,6 +13,7 @@
 using namespace Tangram;
 
 MercatorProjection s_projection;
+ViewState viewState { &s_projection, true, glm::vec2(0), 1, 0, 1.f, glm::vec2(0), 256.f };
 
 struct TestTileWorker : TileTaskQueue {
     int processedCount = 0;
@@ -110,7 +111,6 @@ struct TestTileSource : TileSource {
 TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
     TileManager tileManager(std::make_shared<MockPlatform>(), worker);
-    ViewState viewState { &s_projection, true, glm::vec2(0), 1 };
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
@@ -167,7 +167,6 @@ TEST_CASE( "Real TileWorker Initialization", "[TileManager][Constructor]" ) {
 TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
     TileManager tileManager(std::make_shared<MockPlatform>(), worker);
-    ViewState viewState { &s_projection, true, glm::vec2(0), 1 };
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
@@ -193,7 +192,6 @@ TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
 TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
     TileManager tileManager(std::make_shared<MockPlatform>(), worker);
-    ViewState viewState { &s_projection, true, glm::vec2(0), 1 };
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
@@ -232,7 +230,6 @@ TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
 TEST_CASE( "Use proxy Tile - circular proxies", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
     TileManager tileManager(std::make_shared<MockPlatform>(), worker);
-    ViewState viewState { &s_projection, true, glm::vec2(0), 1 };
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
