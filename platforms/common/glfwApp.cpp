@@ -365,10 +365,10 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 static bool geoJSON = false;
                 if (!geoJSON) {
                     map->queueSceneUpdate("sources.osm.type", "GeoJSON");
-                    map->queueSceneUpdate("sources.osm.url", "https://vector.mapzen.com/osm/all/{z}/{x}/{y}.json");
+                    map->queueSceneUpdate("sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.json");
                 } else {
                     map->queueSceneUpdate("sources.osm.type", "MVT");
-                    map->queueSceneUpdate("sources.osm.url", "https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt");
+                    map->queueSceneUpdate("sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt");
                 }
                 geoJSON = !geoJSON;
                 map->applySceneUpdates();
