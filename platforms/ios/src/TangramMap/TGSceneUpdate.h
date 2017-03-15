@@ -19,7 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
  sources:
      osm:
          type: MVT
-         url:  https://vector.mapzen.com/osm/all/{z}/{x}/{y}.mvt
+         url:  https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt
          max_zoom: 16
          url_params:
              api_key: vector-tiles-tyHL4AY

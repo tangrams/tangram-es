@@ -8,7 +8,7 @@ TEST_CASE("Parse components of a correctly formatted URL", "[Url]") {
 
     // Tests conformance to https://tools.ietf.org/html/rfc1808#section-2.1
 
-    Url url("https://vector.mapzen.com/osm/all/0/0/0.mvt;param=val?api_key=mapsRcool#yolo");
+    Url url("https://tile.mapzen.com/mapzen/vector/v1/all/0/0/0.mvt;param=val?api_key=mapsRcool#yolo");
 
     CHECK(!url.isEmpty());
     CHECK(url.isAbsolute());
