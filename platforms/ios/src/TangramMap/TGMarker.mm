@@ -57,13 +57,24 @@ enum class TGMarkerType {
     return self;
 }
 
-- (void)setStyling:(NSString *)styling
+- (void)setStylingString:(NSString *)styling
 {
-    _styling = styling;
+    _stylingString = styling;
+    _stylingPath = nil;
 
     if (!tangramInstance || !identifier) { return; }
 
-    tangramInstance->markerSetStyling(identifier, [styling UTF8String]);
+    tangramInstance->markerSetStylingFromString(identifier, [styling UTF8String]);
+}
+
+- (void)setStylingPath:(NSString *)path
+{
+    _stylingPath = path;
+    _stylingString = nil;
+
+    if (!tangramInstance || !identifier) { return; }
+
+    tangramInstance->markerSetStylingFromPath(identifier, [path UTF8String]);
 }
 
 - (void)setPoint:(TGGeoPoint)coordinates
@@ -203,8 +214,11 @@ enum class TGMarkerType {
     }
 
     // Update styling
-    if (self.styling) {
-        tangramInstance->markerSetStyling(identifier, [self.styling UTF8String]);
+    if (self.stylingString) {
+        tangramInstance->markerSetStylingFromString(identifier, [self.stylingString UTF8String]);
+    }
+    if (self.stylingPath) {
+        tangramInstance->markerSetStylingFromPath(identifier, [self.stylingPath UTF8String]);
     }
 
     tangramInstance->markerSetVisible(identifier, self.visible);
