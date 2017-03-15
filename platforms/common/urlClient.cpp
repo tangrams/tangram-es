@@ -6,17 +6,18 @@
 
 namespace Tangram {
 
-static uint32_t globalUrlSessionEnvironments = 0;
 
-UrlClient::Environment::Environment() {
-    curl_global_init(CURL_GLOBAL_ALL);
-    globalUrlSessionEnvironments++;
-}
+struct CurlGlobals {
+    CurlGlobals() {
+        LOGD("curl global init");
+        curl_global_init(CURL_GLOBAL_ALL);
+    }
+    ~CurlGlobals() {
+        LOGD("curl global shutdown");
+        curl_global_cleanup();
+    }
+} s_curl;
 
-UrlClient::Environment::~Environment() {
-    curl_global_cleanup();
-    globalUrlSessionEnvironments--;
-}
 
 UrlClient::Response getCanceledResponse() {
     UrlClient::Response response;
@@ -25,7 +26,6 @@ UrlClient::Response getCanceledResponse() {
 }
 
 UrlClient::UrlClient(Options options) : m_options(options) {
-    assert(globalUrlSessionEnvironments > 0);
     assert(options.numberOfThreads > 0);
     // Start the curl threads.
     m_keepRunning = true;
