@@ -59,6 +59,24 @@ TestImporter::TestImporter() {
         has_imports_cycle_tricky: true
     )END";
 
+    m_testScenes["/root/imports/empty_node1.yaml"] = R"END(
+        textures:
+            tex1:
+    )END";
+
+    m_testScenes["/root/imports/empty_node2.yaml"] = R"END(
+        styles:
+    )END";
+
+    m_testScenes["/root/d.yaml"] = R"END(
+        import: imports/empty_node1.yaml imports/empty_node2.yaml
+
+        styles:
+            styleA:
+                base:polygons
+    )END";
+
+
     m_testScenes["/root/urls.yaml"] = R"END(
         import: imports/urls.yaml
         fonts: { fontA: { url: https://host/font.woff } }
@@ -217,6 +235,15 @@ TEST_CASE("References to globals are not treated like URLs during importing", "[
     CHECK(root["textures"]["aTexture"]["url"].Scalar() == "global.textureUrl");
     CHECK(root["styles"]["aStyle"]["texture"].Scalar() == "global.textureUrl");
     CHECK(root["styles"]["aStyle"]["shaders"]["uniforms"]["aUniform"].Scalar() == "global.textureUrl");
+}
+
+TEST_CASE("") {
+    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
+    TestImporter importer;
+    auto root = importer.applySceneImports(platform, "d.yaml", "/root/");
+
+    CHECK(root["styles"]["styleA"]);
+    CHECK(!root["textures"]["tex1"]);
 }
 
 TEST_CASE("Map overwrites sequence", "[import][core]") {

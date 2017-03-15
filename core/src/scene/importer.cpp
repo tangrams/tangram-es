@@ -303,6 +303,12 @@ void Importer::mergeMapFields(Node& target, const Node& import) {
         const auto& source = entry.second;
         auto dest = target[key];
 
+        if (source.IsNull()) {
+            LOGD("Skip merging nodes when source is Null: %s",
+                Dump(source).c_str());
+            continue;
+        }
+
         if (!dest) {
             dest = source;
             continue;
