@@ -8,7 +8,7 @@ TEST_CASE("Parse components of a correctly formatted URL", "[Url]") {
 
     // Tests conformance to https://tools.ietf.org/html/rfc1808#section-2.1
 
-    Url url("https://vector.mapzen.com/osm/all/0/0/0.mvt;param=val?api_key=mapsRcool#yolo");
+    Url url("https://some.domain:9000/path/to/file.html;param=val?api_key=mapsRcool#yolo");
 
     CHECK(!url.isEmpty());
     CHECK(url.isAbsolute());
@@ -19,9 +19,9 @@ TEST_CASE("Parse components of a correctly formatted URL", "[Url]") {
     CHECK(url.hasScheme());
     CHECK(url.scheme() == "https");
     CHECK(url.hasNetLocation());
-    CHECK(url.netLocation() == "vector.mapzen.com");
+    CHECK(url.netLocation() == "some.domain:9000");
     CHECK(url.hasPath());
-    CHECK(url.path() == "/osm/all/0/0/0.mvt");
+    CHECK(url.path() == "/path/to/file.html");
     CHECK(url.hasParameters());
     CHECK(url.parameters() == "param=val");
     CHECK(url.hasQuery());
