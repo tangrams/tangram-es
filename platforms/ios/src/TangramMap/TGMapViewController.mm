@@ -787,8 +787,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     self.map = nullptr;
 }
 
--(void)viewDidLayoutSubviews {
-  [super viewDidLayoutSubviews];
+-(void)viewWillLayoutSubviews {
+  [super viewWillLayoutSubviews];
   int width = self.view.bounds.size.width;
   int height = self.view.bounds.size.height;
   self.map->resize(width * self.contentScaleFactor, height * self.contentScaleFactor);
