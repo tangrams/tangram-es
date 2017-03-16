@@ -5,6 +5,7 @@
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 #include "gl/texture.h"
+#include "gl/vao.h"
 
 #include <memory>
 #include <vector>
@@ -24,7 +25,7 @@ public:
     bool draw(RenderState& rs, ShaderProgram& _shader, bool _useVao = true) override;
 
     // Draw the mesh while swapping textures using the given texture unit.
-    bool draw(RenderState& rs, ShaderProgram& _shader, int textureUnit);
+    bool draw(RenderState& rs, ShaderProgram& _shader, int textureUnit, bool _useVao = true);
 
     size_t bufferSize() const override {
         return MeshBase::bufferSize();
@@ -67,6 +68,7 @@ private:
 
     std::vector<T> m_vertices;
     std::vector<TextureBatch> m_batches;
+    Vao m_vaos;
 };
 
 template<class T>
@@ -93,20 +95,29 @@ void DynamicQuadMesh<T>::upload(RenderState& rs) {
 
 template<class T>
 bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader, bool useVao) {
-    return draw(rs, shader, 0);
+    return draw(rs, shader, 0, useVao);
 }
 
 template<class T>
-bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader, int textureUnit) {
+bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader, int textureUnit, bool useVao) {
     if (m_nVertices == 0) { return false; }
-
-    // Bind buffers for drawing
-    rs.vertexBuffer(m_glVertexBuffer);
-    rs.indexBuffer(rs.getQuadIndexBuffer());
 
     // Enable shader program
     if (!shader.use(rs)) {
         return false;
+    }
+
+    if (useVao) {
+        // Capture vao state for a default vertex offset of 0/0
+        if (!m_vaos.isInitialized()) {
+            VertexOffsets vertexOffsets;
+            vertexOffsets.emplace_back(0, 0);
+            m_vaos.initialize(rs, shader, vertexOffsets, *m_vertexLayout, m_glVertexBuffer, rs.getQuadIndexBuffer());
+        }
+    } else {
+        // Bind buffers for drawing
+        rs.vertexBuffer(m_glVertexBuffer);
+        rs.indexBuffer(rs.getQuadIndexBuffer());
     }
 
     size_t verticesDrawn = 0;
@@ -143,13 +154,25 @@ bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader, int textur
 
         // Set up and draw the batch.
         size_t byteOffset = verticesDrawn * m_vertexLayout->getStride();
-        m_vertexLayout->enable(rs, shader, byteOffset);
+
+        if (useVao && !byteOffset) {
+            // Use vao only for first batch of offsets, other vertices can use a
+            // different stride so just reuse the vertex layout with a different
+            // byte offset instead
+            m_vaos.bind(0);
+        } else {
+            m_vertexLayout->enable(rs, shader, byteOffset);
+        }
+
         GL::drawElements(m_drawMode, elementsInBatch, GL_UNSIGNED_SHORT, 0);
 
         // Update counters.
         verticesDrawn += verticesInBatch;
         verticesIndexed += RenderState::MAX_QUAD_VERTICES;
 
+        if (useVao) {
+            m_vaos.unbind();
+        }
     }
 
     return true;
