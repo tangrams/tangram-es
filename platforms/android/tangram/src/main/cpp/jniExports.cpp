@@ -107,9 +107,13 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeDispose(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        Tangram::AndroidPlatform& androidPlatform = static_cast<Tangram::AndroidPlatform&>(*map->getPlatform());
-        androidPlatform.dispose(jniEnv);
+        // Don't dispose MapController ref before map is teared down,
+        // delete map or worker threads might call back to it (e.g. requestRender)
+        auto platform = map->getPlatform();
+
         delete map;
+
+        static_cast<Tangram::AndroidPlatform&>(*platform).dispose(jniEnv);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeLoadScene(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring path, jobjectArray updateStrings) {
