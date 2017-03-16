@@ -74,35 +74,26 @@ void main() {
     v_sdf_scale = a_scale / 64.0;
 
     if (u_pass == 0) {
-        // fill
         v_sdf_threshold = 0.5;
-        //v_alpha = 0.0;
-    } else if (a_stroke.a > 0.0) {
-        // stroke
-        // (0.5 / 3.0) <= sdf change by pixel distance to outline == 0.083
-        float sdf_pixel = 0.5/u_max_stroke_width;
-
-        // de-normalize [0..1] -> [0..max_stroke_width]
-        float stroke_width = a_stroke.a * u_max_stroke_width;
-
-        // scale to sdf pixel
-        stroke_width *= sdf_pixel;
-
-        // scale sdf (texture is scaled depeding on font size)
-        stroke_width /= v_sdf_scale;
-
-        v_sdf_threshold = max(0.5 - stroke_width, 0.0);
-
-        v_color.rgb = a_stroke.rgb;
     } else {
-        v_alpha = 0.0;
+        if ((a_stroke.a > 0.0)) {
+            float stroke_width_2;
+            stroke_width_2 = ((a_stroke.a * u_max_stroke_width) * (0.5 / u_max_stroke_width));
+            stroke_width_2 = (stroke_width_2 / v_sdf_scale);
+            v_sdf_threshold = max ((0.5 - stroke_width_2), 0.0);
+            v_color.xyz = a_stroke.xyz;
+        } else {
+            v_alpha = 0.0;
+        }
     }
 
-    vec4 position = vec4(vertex_pos, 0.0, 1.0);
+    vec4 position;
+    position.zw = vec2(0.0, 1.0);
+    position.xy = vertex_pos;
 
     #pragma tangram: position
 
-    gl_Position = u_ortho * position;
+    gl_Position = (u_ortho * position);
 
 #else
     v_texcoords = a_uv;
