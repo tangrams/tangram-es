@@ -788,10 +788,10 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 }
 
 -(void)viewWillLayoutSubviews {
-  [super viewWillLayoutSubviews];
-  int width = self.view.bounds.size.width;
-  int height = self.view.bounds.size.height;
-  self.map->resize(width * self.contentScaleFactor, height * self.contentScaleFactor);
+    [super viewWillLayoutSubviews];
+    int width = self.view.bounds.size.width;
+    int height = self.view.bounds.size.height;
+    self.map->resize(width * self.contentScaleFactor, height * self.contentScaleFactor);
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
