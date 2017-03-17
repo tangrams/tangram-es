@@ -210,7 +210,12 @@ public:
     // Set the styling for a marker object; _styling is a string of YAML that specifies a 'draw rule'
     // according to the scene file syntax; returns true if the marker ID was found and successfully
     // updated, otherwise returns false.
-    bool markerSetStyling(MarkerID _marker, const char* _styling);
+    bool markerSetStylingFromString(MarkerID _marker, const char* _styling);
+
+    // Set an explicit draw group for a marker object; _path is a '.' delimited path to a draw rule
+    // in the current scene. The Marker will be styled using the draw rule specified at this path;
+    // returns true if the marker ID was found and successfully updated, otherwise returns false.
+    bool markerSetStylingFromPath(MarkerID _marker, const char* _path);
 
     // Set a bitmap to use as the image for a point marker; _data is a buffer of RGBA pixel data with
     // length of _width * _height; pixels are in row-major order beginning from the bottom-left of the

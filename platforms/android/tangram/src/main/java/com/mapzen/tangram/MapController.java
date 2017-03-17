@@ -902,10 +902,16 @@ public class MapController implements Renderer {
         return updateStrings;
     }
 
-    boolean setMarkerStyling(long markerId, String styleStr) {
+    boolean setMarkerStylingFromString(long markerId, String styleString) {
         checkPointer(mapPointer);
         checkId(markerId);
-        return nativeMarkerSetStyling(mapPointer, markerId, styleStr);
+        return nativeMarkerSetStylingFromString(mapPointer, markerId, styleString);
+    }
+
+    boolean setMarkerStylingFromPath(long markerId, String path) {
+        checkPointer(mapPointer);
+        checkId(markerId);
+        return nativeMarkerSetStylingFromPath(mapPointer, markerId, path);
     }
 
     boolean setMarkerBitmap(long markerId, int width, int height, int[] data) {
@@ -1002,7 +1008,8 @@ public class MapController implements Renderer {
     private synchronized native void nativePickMarker(MapController instance, long mapPtr, float posX, float posY, MarkerPickListener listener);
     private synchronized native long nativeMarkerAdd(long mapPtr);
     private synchronized native boolean nativeMarkerRemove(long mapPtr, long markerID);
-    private synchronized native boolean nativeMarkerSetStyling(long mapPtr, long markerID, String styling);
+    private synchronized native boolean nativeMarkerSetStylingFromString(long mapPtr, long markerID, String styling);
+    private synchronized native boolean nativeMarkerSetStylingFromPath(long mapPtr, long markerID, String path);
     private synchronized native boolean nativeMarkerSetBitmap(long mapPtr, long markerID, int width, int height, int[] data);
     private synchronized native boolean nativeMarkerSetPoint(long mapPtr, long markerID, double lng, double lat);
     private synchronized native boolean nativeMarkerSetPointEased(long mapPtr, long markerID, double lng, double lat, float duration, int ease);

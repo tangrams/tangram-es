@@ -42,6 +42,24 @@ public class Marker {
     }
 
     /**
+     * Used to style the marker
+     * Sets draw rules from a draw group of a scene layer in the scene file, used to load the scene.
+     * This draw group must be defined in the loaded scene file.
+     *
+     * <ul>
+     * <li>layers.layer_a.layer_b.draw.some_draw_rule</li>
+     * <li>layers.layer_c.draw.another_draw_rule</li>
+     * </ul>
+     *
+     * @param path Absolute path to a draw rule in the current scene, delimited with "."
+     * @return whether the styling was successfully set on the marker.
+     */
+    public boolean setStylingFromPath(String path) {
+        return map.setMarkerStylingFromPath(markerId, path);
+    }
+
+    /**
+     * Used to style the marker
      * Sets the styling to be used to display either a point, polyline, or bitmap for this marker.
      * If the marker is going to be used to display a bitmap, a 'points' style must be set.
      *
@@ -54,8 +72,8 @@ public class Marker {
      * @param styleStr the style string
      * @return whether the style was successfully set
      */
-    public boolean setStyling(String styleStr) {
-        return map.setMarkerStyling(markerId, styleStr);
+    public boolean setStylingFromString(String styleString) {
+        return map.setMarkerStylingFromString(markerId, styleString);
     }
 
     /**

@@ -59,14 +59,25 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)setPointEased:(TGGeoPoint)coordinates seconds:(float)seconds easeType:(TGEaseType)ease;
 
 /**
- Sets the styling for a marker.
+ Sets the styling for a marker with a string of YAML defining a 'draw rule'.
 
  See the more detailed scene <a href="https://mapzen.com/documentation/tangram/Styles-Overview/">documentation</a>
  to get more styling informations.
 
- @note It is possible to update the marker styling multiple times.
+ @note Setting the stylingString will overwrite any previously set stylingString or stylingPath.
  */
-@property (copy, nonatomic) NSString* styling;
+@property (copy, nonatomic) NSString* stylingString;
+
+/**
+ Sets the styling for a marker with a path, delimited by '.' that specifies a 'draw rule' in the
+ current scene.
+
+ See the more detailed scene <a href="https://mapzen.com/documentation/tangram/Styles-Overview/">documentation</a>
+ to get more styling informations.
+
+ @note Setting the stylingPath will overwrite any previously set stylingString or stylingPath.
+ */
+@property (copy, nonatomic) NSString* stylingPath;
 
 /**
  Sets a marker to be a single point geometry at a geographic coordinate.
