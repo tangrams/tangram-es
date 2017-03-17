@@ -264,3 +264,26 @@ TEST_CASE("Sequence overwrites map", "[import][core]") {
     CHECK(root["a"].IsSequence());
     CHECK(root["a"].size() == 2);
 }
+
+TEST_CASE("Scalar and null overwrite correctly", "[import][core]") {
+    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
+    std::unordered_map<Url, std::string> testScenes;
+    testScenes["/base.yaml"] = R"END(
+        import: [scalar.yaml, null.yaml]
+        scalar_at_end: scalar
+        null_at_end: null
+    )END";
+    testScenes["/scalar.yaml"] = R"END(
+            null_at_end: scalar
+    )END";
+
+    testScenes["/null.yaml"] = R"END(
+            scalar_at_end: null
+    )END";
+
+    TestImporter importer(testScenes);
+    auto root = importer.applySceneImports(platform, "base.yaml", "/");
+
+    CHECK(root["scalar_at_end"].Scalar() == "scalar");
+    CHECK(root["null_at_end"].IsNull());
+}
