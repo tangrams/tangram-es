@@ -120,7 +120,7 @@
     {
         if (!vc.markerPolygon) {
             vc.markerPolygon = [[TGMarker alloc] init];
-            vc.markerPolygon.styling = @"{ style: 'polygons', color: 'blue', order: 500 }";
+            vc.markerPolygon.stylingString = @"{ style: 'polygons', color: 'blue', order: 500 }";
 
             // Add the marker to the current view
             vc.markerPolygon.map = view;
@@ -143,7 +143,7 @@
     // Add point marker
     {
         TGMarker* markerPoint = [[TGMarker alloc] initWithMapView:view];
-        markerPoint.styling = @"{ style: 'points', color: 'white', size: [25px, 25px], collide: false }";
+        markerPoint.stylingString = @"{ style: 'points', color: 'white', size: [25px, 25px], collide: false }";
         markerPoint.point = coordinates;
     }
 
