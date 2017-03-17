@@ -7,9 +7,12 @@
 
 namespace Tangram {
 
-void MZ_ZIP_ARCHIVE_DELETER::operator()(void *zip) {
-    mz_free(zip);
-}
+struct ZipHandle {
+    std::unique_ptr<mz_zip_archive> archiveHandle;
+    std::map<std::string, unsigned int> fileIndices = {};
+
+    std::vector<char> data;
+};
 
 Asset::Asset(std::string name, std::string path, std::shared_ptr<ZipHandle> zipHandle,
         std::vector<char> zippedData) :
@@ -22,7 +25,7 @@ Asset::Asset(std::string name, std::string path, std::shared_ptr<ZipHandle> zipH
 
 Asset::~Asset() {
     if (m_zipHandle && m_zipHandle->archiveHandle) {
-        mz_zip_reader_end(static_cast<mz_zip_archive*>(m_zipHandle->archiveHandle.get()));
+        mz_zip_reader_end(m_zipHandle->archiveHandle.get());
     }
 }
 
@@ -40,11 +43,12 @@ void Asset::buildZipHandle(const std::vector<char>& zipData) {
     if (zipData.empty()) { return; }
 
     m_zipHandle = std::make_shared<ZipHandle>();
-    m_zipHandle->archiveHandle = ZipHandle::unique_ptr_zip_archive(new mz_zip_archive());
+    m_zipHandle->archiveHandle.reset(new mz_zip_archive());
+    m_zipHandle->data = zipData;
 
-    mz_zip_archive* zip = static_cast<mz_zip_archive*>(m_zipHandle->archiveHandle.get());
+    mz_zip_archive* zip = m_zipHandle->archiveHandle.get();
     memset(zip, 0, sizeof(mz_zip_archive));
-    if (!mz_zip_reader_init_mem(zip, zipData.data(), zipData.size(), 0)) {
+    if (!mz_zip_reader_init_mem(zip, m_zipHandle->data.data(), m_zipHandle->data.size(), 0)) {
         LOGE("ZippedAssetPackage: Could not open archive: %s", m_name.c_str());
         m_zipHandle.reset();
         return;
@@ -74,7 +78,7 @@ std::vector<char> Asset::readBytesFromAsset(const std::shared_ptr<Platform>& pla
 
     if (m_zipHandle) {
         if (m_zipHandle->archiveHandle) {
-            mz_zip_archive* zip = static_cast<mz_zip_archive*>(m_zipHandle->archiveHandle.get());
+            mz_zip_archive* zip = m_zipHandle->archiveHandle.get();
             auto it = m_zipHandle->fileIndices.find(filename);
 
             if (it != m_zipHandle->fileIndices.end()) {
