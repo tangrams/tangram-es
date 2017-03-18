@@ -4,10 +4,13 @@
 #include "gl/texture.h"
 #include "marker/marker.h"
 #include "scene/sceneLoader.h"
+#include "scene/dataLayer.h"
 #include "style/style.h"
 #include "labels/labelSet.h"
 #include "log.h"
 #include "selection/featureSelection.h"
+
+#include <algorithm>
 
 namespace Tangram {
 
@@ -51,11 +54,24 @@ bool MarkerManager::remove(MarkerID markerID) {
     return false;
 }
 
-bool MarkerManager::setStyling(MarkerID markerID, const char* styling) {
+bool MarkerManager::setStylingFromString(MarkerID markerID, const char* styling) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
-    marker->setStylingString(std::string(styling));
+    marker->setStyling(std::string(styling), false);
+
+    // Create a draw rule from the styling string.
+    if (!buildStyling(*marker)) { return false; }
+
+    // Build the feature mesh for the marker's current geometry.
+    return buildGeometry(*marker, m_zoom);
+}
+
+bool MarkerManager::setStylingFromPath(MarkerID markerID, const char* path) {
+    Marker* marker = getMarkerOrNull(markerID);
+    if (!marker) { return false; }
+
+    marker->setStyling(std::string(path), true);
 
     // Create a draw rule from the styling string.
     if (!buildStyling(*marker)) { return false; }
@@ -297,13 +313,64 @@ bool MarkerManager::buildStyling(Marker& marker) {
     if (!m_scene) { return false; }
 
     std::vector<StyleParam> params;
+
+    const auto& markerStyling = marker.styling();
+
+    // If the Marker styling is a path, find the layers it specifies.
+    if (markerStyling.isPath) {
+        auto path = markerStyling.string;
+        // The DELIMITER used by layers is currently ":", but Marker paths use "." (scene.h).
+        std::replace(path.begin(), path.end(), '.', DELIMITER[0]);
+        // Start iterating over the delimited path components.
+        size_t start = 0, end = 0;
+        end = path.find(DELIMITER[0], start);
+        if (path.compare(start, end - start, "layers") != 0) {
+            // If the path doesn't begin with 'layers' it isn't a layer heirarchy.
+            return false;
+        }
+        // Find the DataLayer named in our path.
+        const SceneLayer* currentLayer = nullptr;
+        size_t layerStart = end + 1;
+        start = end + 1;
+        end = path.find(DELIMITER[0], start);
+        for (const auto& layer : m_scene->layers()) {
+            if (path.compare(layerStart, end - layerStart, layer.name()) == 0) {
+                currentLayer = &layer;
+                marker.mergeRules(layer);
+                break;
+            }
+        }
+        // Search sublayers recursively until we can't find another token or layer.
+        while (end != std::string::npos && currentLayer != nullptr) {
+            start = end + 1;
+            end = path.find(DELIMITER[0], start);
+            const auto& layers = currentLayer->sublayers();
+            currentLayer = nullptr;
+            for (const auto& layer : layers) {
+                if (path.compare(layerStart, end - layerStart, layer.name()) == 0) {
+                    currentLayer = &layer;
+                    marker.mergeRules(layer);
+                    break;
+                }
+            }
+        }
+        // The last token found should have been "draw".
+        if (path.compare(start, end - start, "draw") != 0) {
+            return false;
+        }
+        // The draw group name should come next.
+        start = end + 1;
+        end = path.find(DELIMITER[0], start);
+        // Find the rule in the merged set whose name matches the final token.
+        return marker.finalizeRuleMergingForName(path.substr(start, end - start));
+    }
+    // If the styling is not a path, try to load it as a string of YAML.
     try {
-        // Update the draw rule for the marker.
-        YAML::Node node = YAML::Load(marker.stylingString());
+        YAML::Node node = YAML::Load(markerStyling.string);
+        // Parse style parameters from the YAML node.
         SceneLoader::parseStyleParams(node, m_scene, "", params);
     } catch (YAML::Exception e) {
-        LOG("Invalid marker styling '%s', %s",
-            marker.stylingString().c_str(), e.what());
+        LOG("Invalid marker styling '%s', %s", markerStyling.string.c_str(), e.what());
         return false;
     }
     // Compile any new JS functions used for styling.
@@ -313,7 +380,7 @@ bool MarkerManager::buildStyling(Marker& marker) {
     }
     m_jsFnIndex = sceneJsFnList.size();
 
-    marker.setDrawRule(std::make_unique<DrawRuleData>("", 0, std::move(params)));
+    marker.setDrawRuleData(std::make_unique<DrawRuleData>("", 0, std::move(params)));
 
     return true;
 }

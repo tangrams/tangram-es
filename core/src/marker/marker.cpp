@@ -2,6 +2,7 @@
 
 #include "data/tileData.h"
 #include "gl/texture.h"
+#include "scene/dataLayer.h"
 #include "scene/drawRule.h"
 #include "scene/scene.h"
 #include "style/style.h"
@@ -13,7 +14,7 @@
 namespace Tangram {
 
 Marker::Marker(MarkerID id) : m_id(id) {
-    m_ruleSet.reset(new DrawRuleMergeSet());
+    m_drawRuleSet.reset(new DrawRuleMergeSet());
 }
 
 Marker::~Marker() {
@@ -28,17 +29,39 @@ void Marker::setFeature(std::unique_ptr<Feature> feature) {
     m_feature = std::move(feature);
 }
 
-void Marker::setStylingString(std::string stylingString) {
-    m_stylingString = stylingString;
+void Marker::setStyling(std::string styling, bool isPath) {
+    m_styling.string = styling;
+    m_styling.isPath = isPath;
 }
 
 bool Marker::evaluateRuleForContext(StyleContext& ctx) {
-    return m_ruleSet->evaluateRuleForContext(*m_drawRule, ctx);
+    return m_drawRuleSet->evaluateRuleForContext(*drawRule(), ctx);
 }
 
-void Marker::setDrawRule(std::unique_ptr<DrawRuleData> drawRuleData) {
+void Marker::setDrawRuleData(std::unique_ptr<DrawRuleData> drawRuleData) {
     m_drawRuleData = std::move(drawRuleData);
     m_drawRule = std::make_unique<DrawRule>(*m_drawRuleData, "", 0);
+}
+
+void Marker::mergeRules(const SceneLayer& layer) {
+    m_drawRuleSet->mergeRules(layer);
+}
+
+bool Marker::finalizeRuleMergingForName(const std::string& name) {
+    bool found = false;
+    for (auto& rule : m_drawRuleSet->matchedRules()) {
+        if (name == *rule.name) {
+            m_drawRule = std::make_unique<DrawRule>(rule);
+            found = true;
+            break;
+        }
+    }
+    if (found) {
+        // Clear leftover data (outside the loop so we don't invalidate iterators).
+        m_drawRuleData.reset(nullptr);
+        m_drawRuleSet->matchedRules().clear();
+    }
+    return found;
 }
 
 void Marker::setMesh(uint32_t styleId, uint32_t zoom, std::unique_ptr<StyledMesh> mesh) {
@@ -138,10 +161,6 @@ const glm::mat4& Marker::modelMatrix() const {
 
 const glm::mat4& Marker::modelViewProjectionMatrix() const {
     return m_modelViewProjectionMatrix;
-}
-
-const std::string& Marker::stylingString() const {
-    return m_stylingString;
 }
 
 bool Marker::isEasing() const {

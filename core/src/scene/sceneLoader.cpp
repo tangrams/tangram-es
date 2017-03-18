@@ -47,7 +47,6 @@ using YAML::BadConversion;
 
 namespace Tangram {
 
-const std::string DELIMITER = ":";
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 

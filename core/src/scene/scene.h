@@ -24,12 +24,15 @@ class FontContext;
 class Light;
 class MapProjection;
 class Platform;
+class SceneLayer;
 class SpriteAtlas;
 class Style;
 class Texture;
 class TileSource;
 struct Stops;
 
+// Delimiter used in sceneloader for style params and layer-sublayer naming
+const std::string DELIMITER = ":";
 
 /* Singleton container of <Style> information
  *
@@ -98,6 +101,7 @@ public:
     const auto& featureSelection() const { return m_featureSelection; }
 
     const Style* findStyle(const std::string& _name) const;
+
     const Light* findLight(const std::string& _name) const;
 
     void updateTime(float _dt) { m_time += _dt; }

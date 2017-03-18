@@ -4,8 +4,8 @@
 #include "platform.h"
 #include "scene/sceneLoader.h"
 
-#include <regex>
 #include "yaml-cpp/yaml.h"
+#include <cassert>
 
 using YAML::Node;
 using YAML::NodeType;
@@ -314,6 +314,7 @@ void Importer::mergeMapFields(Node& target, const Node& import) {
         }
 
         switch(dest.Type()) {
+            case NodeType::Null:
             case NodeType::Scalar:
             case NodeType::Sequence:
                 dest = source;
@@ -329,6 +330,9 @@ void Importer::mergeMapFields(Node& target, const Node& import) {
                 break;
             }
             default:
+                // NodeType::Undefined is handled above by checking (!dest).
+                // All types are handled, so this should never be reached.
+                assert(false);
                 break;
         }
     }
