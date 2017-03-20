@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util/asset.h"
+#include "scene/asset.h"
 #include "util/color.h"
 #include "view/view.h"
 

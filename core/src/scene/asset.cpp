@@ -1,4 +1,4 @@
-#include "util/asset.h"
+#include "scene/asset.h"
 #include "platform.h"
 #include "log.h"
 
