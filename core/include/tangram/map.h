@@ -182,6 +182,8 @@ public:
     void setZoom(float _z);
     void setZoomEased(float _z, float _duration, EaseType _e = EaseType::quint);
 
+    void flyTo(double _lon, double _lat, float _z, float _duration);
+
     // Get the fractional zoom level of the view
     float getZoom();
 

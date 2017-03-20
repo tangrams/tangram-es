@@ -28,6 +28,7 @@
 #include "util/inputHandler.h"
 #include "util/ease.h"
 #include "util/jobQueue.h"
+#include "view/flyTo.h"
 #include "view/view.h"
 
 #include <bitset>
@@ -635,6 +636,29 @@ void Map::setZoomEased(float _z, float _duration, EaseType _e) {
     float z_start = getZoom();
     auto cb = [=](float t) { impl->setZoomNow(ease(z_start, _z, t, _e)); };
     impl->setEase(EaseField::zoom, { _duration, cb });
+
+}
+
+void Map::flyTo(double _lon, double _lat, float _z, float _duration) {
+
+    double lon_start = 0., lat_start = 0.;
+    getPosition(lon_start, lat_start);
+    float z_start = getZoom();
+    float z_max = getMinimumEnclosingZoom(lon_start, lat_start, _lon, _lat, impl->view, 0.2f);
+    auto zoom_fn = getFlyToZoomFunction(z_start, _z, z_max);
+    auto cb_zoom = [=](float t) {
+        float z_t = zoom_fn(t);
+        impl->setZoomNow(z_t);
+    };
+    auto pos_fn = getFlyToPositionFunction(12.f);
+    auto cb_pos = [=](float t) {
+        float r = pos_fn(t);
+        double lon = lon_start + (_lon - lon_start) * r;
+        double lat = lat_start + (_lat - lat_start) * r;
+        impl->setPositionNow(lon, lat);
+    };
+    impl->setEase(EaseField::zoom, { _duration, cb_zoom });
+    impl->setEase(EaseField::position, { _duration, cb_pos });
 
 }
 
