@@ -234,8 +234,8 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
             right = addLabel(Label::Type::line, {{ a, b }}, rightParams, rightAttribs, _rule);
         }
         if (hasRightLabel && hasLeftLabel) {
-            left->setParent(*right, false, false);
-            right->setParent(*left, false, false);
+            left->setRelative(*right, false, false);
+            right->setRelative(*left, false, false);
         }
     };
 

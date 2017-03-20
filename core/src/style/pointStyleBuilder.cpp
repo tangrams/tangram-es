@@ -484,7 +484,7 @@ bool PointStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) 
                 bool defineCollide = _rule.contains(StyleParamKey::collide);
 
                 // Link labels together
-                textLabels.back()->setParent(*pLabel, definePriority, defineCollide);
+                textLabels.back()->setRelative(*pLabel, definePriority, defineCollide);
             }
         }
     }

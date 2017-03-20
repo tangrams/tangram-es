@@ -202,14 +202,14 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
             }
         }
 
-        // Dont let parents occlude their child
-        if (l1->parent() == l2 || l2->parent() == l1) {
+        // Dont let relatives occlude their child
+        if (l1->relative() == l2 || l2->relative() == l1) {
             continue;
         }
-        if (l1->parent() && !l1->parent()->parent() && l1->parent()->isOccluded()) {
+        if (l1->isChild() && l1->relative()->isOccluded()) {
             l1->occlude();
         }
-        if (l2->parent() && !l2->parent()->parent() && l2->parent()->isOccluded()) {
+        if (l2->isChild() && l2->relative()->isOccluded()) {
             l2->occlude();
         }
 
@@ -263,13 +263,13 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
         auto* label = entry.label;
 
         // Manage link occlusion (unified icon labels)
-        if (label->parent()) {
+        if (label->relative()) {
             // First check if the child is required is occluded
-            if (label->parent()->isOccluded()) {
+            if (label->relative()->isOccluded()) {
                 label->occlude();
             } else if (!label->options().optional && label->isOccluded()) {
-                label->parent()->occlude();
-                label->parent()->enterState(Label::State::dead, 0.0f);
+                label->relative()->occlude();
+                label->relative()->enterState(Label::State::dead, 0.0f);
             }
         }
 
