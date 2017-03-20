@@ -206,10 +206,10 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
         if (l1->parent() == l2 || l2->parent() == l1) {
             continue;
         }
-        if (l1->parent() && l1->parent()->isOccluded()) {
+        if (l1->parent() && !l1->parent()->parent() && l1->parent()->isOccluded()) {
             l1->occlude();
         }
-        if (l2->parent() && l2->parent()->isOccluded()) {
+        if (l2->parent() && !l2->parent()->parent() && l2->parent()->isOccluded()) {
             l2->occlude();
         }
 

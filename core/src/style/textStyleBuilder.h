@@ -42,8 +42,8 @@ public:
     bool prepareLabel(TextStyle::Parameters& _params, Label::Type _type, LabelAttributes& _attributes);
 
     // Add label to the mesh using the prepared label data
-    void addLabel(Label::Type _type, TextLabel::Coordinates _coordinates, const TextStyle::Parameters& _params,
-                  const LabelAttributes& _attributes, const DrawRule& _rule);
+    Label* addLabel(Label::Type _type, TextLabel::Coordinates _coordinates, const TextStyle::Parameters& _params,
+                    const LabelAttributes& _attributes, const DrawRule& _rule);
 
     void addLineTextLabels(const Feature& _feature, const TextStyle::Parameters& _params,
                            const LabelAttributes& _attributes, const DrawRule& _rule);

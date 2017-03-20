@@ -311,7 +311,7 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
 
         // Parent must have been processed earlier so at this point its
         // occlusion and anchor position is determined for the current frame.
-        if (l->parent()) {
+        if (l->parent() && !bool(l->parent()->parent())) {
             if (l->parent()->isOccluded()) {
                 l->occlude();
                 continue;

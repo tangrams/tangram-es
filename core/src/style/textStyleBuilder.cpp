@@ -201,6 +201,7 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
     bool hasLeftLabel = false;
     if (hasLeftSource && !leftText.empty()) {
         leftParams.text = leftText;
+        leftParams.labelOptions.optional = true;
         leftParams.labelOptions.anchors = {LabelProperty::Anchor::top};
         leftParams.labelOptions.buffer = glm::vec2(0);
 
@@ -212,6 +213,7 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
     bool hasRightLabel = false;
     if (hasRightSource && !rightText.empty()) {
         rightParams.text = rightText;
+        rightParams.labelOptions.optional = true;
         rightParams.labelOptions.anchors = {LabelProperty::Anchor::bottom};
         rightParams.labelOptions.buffer = glm::vec2(0);
 
@@ -223,11 +225,17 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
     float labelWidth = std::max(leftAttribs.width, rightAttribs.width);
 
     auto cb = [&](glm::vec2 a, glm::vec2 b) {
+        Label* left;
+        Label* right;
         if (hasLeftLabel) {
-            addLabel(Label::Type::line, {{ a, b }}, leftParams, leftAttribs, _rule);
+            left = addLabel(Label::Type::line, {{ a, b }}, leftParams, leftAttribs, _rule);
         }
         if (hasRightLabel) {
-            addLabel(Label::Type::line, {{ a, b }}, rightParams, rightAttribs, _rule);
+            right = addLabel(Label::Type::line, {{ a, b }}, rightParams, rightAttribs, _rule);
+        }
+        if (hasRightLabel && hasLeftLabel) {
+            left->setParent(*right, false, false);
+            right->setParent(*left, false, false);
         }
     };
 
@@ -800,7 +808,7 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
     return false;
 }
 
-void TextStyleBuilder::addLabel(Label::Type _type, TextLabel::Coordinates _coordinates,
+Label* TextStyleBuilder::addLabel(Label::Type _type, TextLabel::Coordinates _coordinates,
                                 const TextStyle::Parameters& _params, const LabelAttributes& _attributes,
                                 const DrawRule& _rule) {
 
@@ -818,6 +826,8 @@ void TextStyleBuilder::addLabel(Label::Type _type, TextLabel::Coordinates _coord
                                         {_attributes.width, _attributes.height},
                                         *m_textLabels, _attributes.textRanges,
                                         _params.align));
+
+    return m_labels.back().get();
 }
 
 }

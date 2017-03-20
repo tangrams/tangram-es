@@ -63,7 +63,9 @@ void TextLabel::applyAnchor(Anchor _anchor) {
     }
 
     glm::vec2 offset = m_dim;
-    if (m_parent) { offset += m_parent->dimension(); }
+    if (m_parent && !m_parent->parent()) { // NOT sibling
+        offset += m_parent->dimension();
+    }
 
     m_anchor = LabelProperty::anchorDirection(_anchor) * offset * 0.5f;
 }
@@ -146,10 +148,10 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
             }
 
             if (m_options.anchors.anchor[0] == LabelProperty::Anchor::bottom) {
-                offset.y += (m_dim.y + Label::activation_distance_threshold + 1) * 0.5f;
+                offset.y += m_dim.y * 0.5f;
                 if (flip) { offset = -offset; }
             } else if (m_options.anchors.anchor[0] == LabelProperty::Anchor::top) {
-                offset.y += (m_dim.y + Label::activation_distance_threshold + 1) * 0.5f;
+                offset.y += m_dim.y * 0.5f;
                 if (!flip) { offset = -offset; }
             }
 
