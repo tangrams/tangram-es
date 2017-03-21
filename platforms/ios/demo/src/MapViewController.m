@@ -18,9 +18,15 @@
 
 @implementation MapViewControllerDelegate
 
+- (void)mapView:(TGMapViewController *)view didCaptureScreenshot:(UIImage *)screenshot
+{
+    NSLog(@"Did capture screenshot");
+}
+
 - (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView
 {
     NSLog(@"Did complete view");
+    [mapView captureScreenshot:YES];
 }
 
 - (void)mapView:(TGMapViewController *)mapView didLoadSceneAsync:(NSString *)scene
