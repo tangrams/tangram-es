@@ -261,6 +261,12 @@ NS_ASSUME_NONNULL_END
  */
 - (void)mapViewDidCompleteLoading:(nonnull TGMapViewController *)mapView;
 
+/**
+ Called whenever `-[TGMapViewController captureScreenshot:] is called on the map view.
+
+ @param mapView a pointer to the map view
+ @param screenshot the image object representing the screenshot
+ */
 - (void)mapView:(nonnull TGMapViewController *)view didCaptureScreenshot:(nonnull UIImage *)screenshot;
 @end
 
@@ -362,6 +368,15 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (nullable TGMapData *)addDataLayer:(NSString *)name;
 
+/**
+ Asks to capture a screenshot of the map view buffer.
+
+ A delegate should be set to the map view and `-[TGMapViewDelegate didCaptureScreenshot:view:screenshot]`
+ implemented to receive the screenshot image data.
+
+ @param waitForViewComplete whether the view should await for all of the map tiles of the current
+ view to complete building and rendering
+ */
 - (void)captureScreenshot:(BOOL)waitForViewComplete;
 
 #pragma mark Debug toggles
