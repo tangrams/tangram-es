@@ -584,7 +584,10 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
 
     auto& asset = scene->sceneAssets()[url];
     // asset must exist for this path (must be created during scene importing)
-    assert(asset);
+    if (!asset) {
+        LOGE("Missing asset for %s", url.c_str());
+        return texture;
+    }
 
     // TODO: generalize using URI handlers
     if (std::regex_search(url, match, r) && !asset->zipHandle()) {
@@ -689,7 +692,10 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
     }
 
     auto texture = fetchTexture(platform, name, file, options, generateMipmaps, scene);
-
+    if (!texture) {
+        LOGE("Missing texture %s", name.c_str());
+        return;
+    }
     std::lock_guard<std::mutex> lock(m_textureMutex);
     if (Node sprites = textureConfig["sprites"]) {
         std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture));
