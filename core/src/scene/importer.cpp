@@ -184,10 +184,13 @@ void  Importer::createSceneAsset(const std::shared_ptr<Platform>& platform, std:
     } else {
         auto& parentAsset = sceneAssets[baseStr];
 
-        if (parentAsset && parentAsset->zipHandle()) {
+        if (relativeUrl.isAbsolute() || (parentAsset && !parentAsset->zipHandle())) {
+            // Make sure to first check for cases when the asset does not belong within a zipBundle
+            sceneAssets[resolvedStr] = std::make_unique<Asset>(resolvedStr, relativeStr);
+        } else if (parentAsset && parentAsset->zipHandle()) {
+            // Asset is in zip bundle
             sceneAssets[resolvedStr] = std::make_unique<Asset>(resolvedStr, relativeStr, parentAsset->zipHandle());
-
-        } else if (relativeUrl.isAbsolute() || base.isEmpty() || parentAsset) {
+        } else {
             sceneAssets[resolvedStr] = std::make_unique<Asset>(resolvedStr, relativeStr);
         }
     }

@@ -584,10 +584,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
 
     auto& asset = scene->sceneAssets()[url];
     // asset must exist for this path (must be created during scene importing)
-    if (!asset) {
-        LOGE("Missing asset for %s", url.c_str());
-        return texture;
-    }
+    assert(asset);
 
     // TODO: generalize using URI handlers
     if (std::regex_search(url, match, r) && !asset->zipHandle()) {
@@ -665,6 +662,7 @@ bool SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
         return true;
     }
 
+    LOGE("Missing texture %s", url.c_str());
     return false;
 }
 

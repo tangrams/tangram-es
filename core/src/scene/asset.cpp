@@ -96,6 +96,10 @@ std::vector<char> Asset::readBytesFromAsset(const std::shared_ptr<Platform>& pla
         }
     }
 
+    if (fileData.empty()) {
+        LOGE("Asset \"%s\" read resulted in no data read. Verify the path in the scene.", m_name.c_str());
+    }
+
     return fileData;
 }
 
