@@ -882,6 +882,11 @@ public class MapController implements Renderer {
     // Package private methods
     // =======================
 
+    void onLowMemory() {
+        checkPointer(mapPointer);
+        nativeOnLowMemory(mapPointer);
+    }
+
     void removeTileSource(long sourcePtr) {
         checkPointer(mapPointer);
         checkPointer(sourcePtr);
@@ -1001,6 +1006,7 @@ public class MapController implements Renderer {
         System.loadLibrary("tangram");
     }
 
+    private synchronized native long nativeOnLowMemory(long mapPtr);
     private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
     private synchronized native void nativeDispose(long mapPtr);
     private synchronized native void nativeLoadScene(long mapPtr, SceneUpdateErrorListener listener, String path, String[] updateStrings);

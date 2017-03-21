@@ -330,6 +330,9 @@ public:
     // Run this task asynchronously to Tangram's main update loop.
     void runAsyncTask(std::function<void()> _task);
 
+    // Send a signal to Tangram that the platform received a memory warning
+    void onMemoryWarning();
+
     std::shared_ptr<Platform>& getPlatform();
 
 private:

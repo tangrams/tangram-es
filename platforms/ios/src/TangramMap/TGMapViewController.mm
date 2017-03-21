@@ -783,16 +783,9 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     [super didReceiveMemoryWarning];
 
-    if ([self isViewLoaded] && ([[self view] window] == nil)) {
-        self.view = nil;
-
-        if ([EAGLContext currentContext] == self.context) {
-            [EAGLContext setCurrentContext:nil];
-        }
-        self.context = nil;
+    if (self.map) {
+        self.map->onMemoryWarning();
     }
-
-    // Dispose of any resources that can be recreated.
 }
 
 - (void)setupGL

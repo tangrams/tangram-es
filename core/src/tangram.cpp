@@ -895,6 +895,14 @@ void Map::runAsyncTask(std::function<void()> _task) {
     }
 }
 
+void Map::onMemoryWarning() {
+    auto& tileCache = impl->tileManager.getTileCache();
+
+    if (tileCache) {
+        tileCache->clear();
+    }
+}
+
 void setDebugFlag(DebugFlags _flag, bool _on) {
 
     g_flags.set(_flag, _on);
