@@ -22,7 +22,10 @@
 
 __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
-@interface TGMapViewController ()
+@interface TGMapViewController () {
+    BOOL captureFrameWaitForViewComplete;
+    BOOL viewComplete;
+}
 
 @property (nullable, copy, nonatomic) NSString* scenePath;
 @property (nullable, strong, nonatomic) EAGLContext* context;
@@ -726,6 +729,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         NSLog(@"Failed to create ES context");
     }
 
+    self->viewComplete = NO;
+    self->captureFrameWaitForViewComplete = YES;
     self.renderRequested = YES;
     self.continuous = NO;
     self.markersById = [[NSMutableDictionary alloc] init];
@@ -822,9 +827,14 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     self.paused = !c;
 }
 
+- (void)captureScreenshot:(BOOL)waitForViewComplete
+{
+    self->captureFrameWaitForViewComplete = waitForViewComplete;
+}
+
 - (void)update
 {
-    bool viewComplete = self.map->update([self timeSinceLastUpdate]);
+    self->viewComplete = self.map->update([self timeSinceLastUpdate]);
 
     if (viewComplete && [self.mapViewDelegate respondsToSelector:@selector(mapViewDidCompleteLoading:)]) {
         [self.mapViewDelegate mapViewDidCompleteLoading:self];
@@ -840,6 +850,17 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
     self.map->render();
+
+    if (self.mapViewDelegate && [self.mapViewDelegate respondsToSelector:@selector(mapView:didCaptureScreenshot:)]) {
+        if (!self->captureFrameWaitForViewComplete || self->viewComplete) {
+            UIGraphicsBeginImageContext(self.view.frame.size);
+            [self.view drawViewHierarchyInRect:self.view.frame afterScreenUpdates:YES];
+            UIImage* screenshot = UIGraphicsGetImageFromCurrentImageContext();
+            UIGraphicsEndImageContext();
+
+            [self.mapViewDelegate mapView:self didCaptureScreenshot:screenshot];
+        }
+    }
 }
 
 @end
