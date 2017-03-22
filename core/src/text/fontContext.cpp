@@ -257,6 +257,24 @@ void FontContext::addFont(const FontDescription& _ft, alfons::InputSource _sourc
     }
 }
 
+void FontContext::releaseFonts() {
+    // Unload Freetype and Harfbuzz resources for all font faces
+    m_alfons.unload();
+
+    // Release system font fallbacks input source data from default fonts, since
+    // those are 'weak' resources (would be automatically reloaded by alfons from
+    // its URI or source callback.
+    for (auto& font : m_font) {
+        for (auto& face : font->faces()) {
+            alfons::InputSource& fontSource = face->descriptor().source;
+
+            if (fontSource.isUri() || fontSource.hasSourceCallback()) {
+                fontSource.clearData();
+            }
+        }
+    }
+}
+
 void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::AtlasGlyph& atlasGlyph) {
     if (atlasGlyph.atlas >= max_textures) { return; }
 
@@ -286,7 +304,7 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
 
     std::lock_guard<std::mutex> lock(m_fontMutex);
 
-    auto font =  m_alfons.getFont(FontDescription::Alias(_family, _style, _weight), fontSize);
+    auto font = m_alfons.getFont(FontDescription::Alias(_family, _style, _weight), fontSize);
     if (font->hasFaces()) { return font; }
 
     // 1. Bundle
@@ -318,6 +336,5 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
 
     return font;
 }
-
 
 }
