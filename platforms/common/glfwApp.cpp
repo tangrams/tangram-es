@@ -358,7 +358,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 map->applySceneUpdates();
                 break;
             case GLFW_KEY_I:
-                map->queueSceneUpdate("cameras#0", "{ main_camera: { type: isometric } }");
+                map->queueSceneUpdate("cameras", "{ main_camera: { type: isometric } }");
                 map->applySceneUpdates();
                 break;
             case GLFW_KEY_G:
