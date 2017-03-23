@@ -132,7 +132,6 @@ public class MapController implements Renderer {
     public interface SceneUpdateErrorListener {
         /**
          * Receive error status when a scene update failed
-         * If no error happens, the list will be empty
          * @param sceneUpdateError The  {@link SceneUpdateError} holding error informations
          */
         void onSceneUpdateError(SceneUpdateError sceneUpdateError);
@@ -271,6 +270,7 @@ public class MapController implements Renderer {
 
     /**
      * Load a new scene file
+     * If scene updates triggers an error, they won't be applied.
      * @param path Location of the YAML scene file within the application assets
      * @param sceneUpdates List of {@code SceneUpdate}
      */
@@ -715,7 +715,7 @@ public class MapController implements Renderer {
 
     /**
      * Set a listener for scene update error statuses
-     * @param listener The {@link SceneUpdateErrorListener} to call after scene update are applied
+     * @param listener The {@link SceneUpdateErrorListener} to call after scene update have failed
      */
     public void setSceneUpdateErrorListener(SceneUpdateErrorListener listener) {
         sceneUpdateErrorListener = listener;
@@ -861,6 +861,7 @@ public class MapController implements Renderer {
 
     /**
      * Apply updates queued by queueSceneUpdate; this empties the current queue of updates
+     * If a scene update is triggered, scene updates won't be applied.
      */
     public void applySceneUpdates() {
         checkPointer(mapPointer);

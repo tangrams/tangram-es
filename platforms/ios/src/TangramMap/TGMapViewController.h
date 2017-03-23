@@ -282,9 +282,10 @@ NS_ASSUME_NONNULL_END
 /**
  Called whenever scene updates have been applied to the scene file.
  The list of scene update statuses will be emtpy if all updates have been applied successfully.
+ Called whenever scene updates have failed to apply to the scene file.
 
  @param mapView a pointer to the map view
- @param updateStatuses the list of scene update error status, empty if all updates were successfull
+ @param sceneUpdateError a NSError containing information about the scene update that failed
  */
 - (void)mapView:(nonnull TGMapViewController *)mapView didFailSceneUpdateWithError:(NSError *)sceneUpdateError;
 
@@ -443,6 +444,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Loads a scene file (similar to `-loadSceneFile:`), with a list of
  updates to be applied to the scene.
+ If a scene update error happens, scene updates won't be applied.
 
  @param path the scene path URL
  @param sceneUpdates a list of `TGSceneUpdate` to apply to the scene
@@ -460,6 +462,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Loads a scene asynchronously (similar to `-loadSceneFileAsync:`), with a
  list of updates to be applied to the scene.
+ If a scene update error happens, scene updates won't be applied.
 
  @param path the scene path URL
  @param sceneUpdates a list of `TGSceneUpdate` to apply to the scene
@@ -490,6 +493,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Apply scene updates queued with `-queueSceneUpdate*` methods.
+ If a scene update error happens, scene udpates won't be applied.
  */
 - (void)applySceneUpdates;
 

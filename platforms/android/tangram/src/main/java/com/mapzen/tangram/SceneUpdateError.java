@@ -3,7 +3,7 @@ package com.mapzen.tangram;
 import com.mapzen.tangram.MapController.Error;
 
 /**
- * {@code SceneUpdateErrorStatus} Holds an error status and its associated scene updated
+ * {@code SceneUpdateError} Holds an error status and its associated scene updated
  */
 
 public class SceneUpdateError {
