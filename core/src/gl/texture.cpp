@@ -1,6 +1,6 @@
 #include "gl/texture.h"
 
-#include "gl/error.h"
+#include "gl/glError.h"
 #include "gl/renderState.h"
 #include "gl/hardware.h"
 #include "util/geom.h"

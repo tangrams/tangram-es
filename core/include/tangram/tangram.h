@@ -61,22 +61,24 @@ struct SceneUpdate {
     std::string path;
     std::string value;
     SceneUpdate(std::string p, std::string v) : path(p), value(v) {}
+    SceneUpdate() {}
 };
 
-enum SceneUpdateError {
-    path_not_found,
-    path_yaml_syntax_error,
-    value_yaml_syntax_error,
+enum Error {
+    scene_update_path_not_found,
+    scene_update_path_yaml_syntax_error,
+    scene_update_value_yaml_syntax_error,
 };
 
-struct SceneUpdateStatus {
+struct SceneUpdateError {
     SceneUpdate update;
-    SceneUpdateError error;
+    Error error;
 };
 
-// Returns a list of scene update statuses if scene update triggered error when applied to the scene
-// The list will be empty if all scene updates were applied successfully
-using SceneUpdateCallback = std::function<void(const std::vector<SceneUpdateStatus>&)>;
+using SceneUpdateErrorCallback = std::function<void(const SceneUpdateError&)>;
+
+// Function type for a mapReady callback
+using MapReady = std::function<void(void*)>;
 
 enum class EaseType : char {
     linear = 0,
@@ -84,7 +86,6 @@ enum class EaseType : char {
     quint,
     sine,
 };
-
 
 class Map {
 
@@ -95,15 +96,20 @@ public:
     ~Map();
 
     // Load the scene at the given absolute file path asynchronously
-    void loadSceneAsync(const char* _scenePath, bool _useScenePosition = false,
-                        std::function<void(void*)> _platformCallback = {}, void *_cbData = nullptr,
+    // Any pending scene update will be cleared
+    void loadSceneAsync(const char* _scenePath,
+                        bool _useScenePosition = false,
+                        MapReady _onMapReady = nullptr,
+                        void *_onMapReadyUserData = nullptr,
                         const std::vector<SceneUpdate>& sceneUpdates = {},
-                        SceneUpdateCallback _onUpdate = nullptr);
+                        SceneUpdateErrorCallback _onSceneUpdateError = nullptr);
 
     // Load the scene at the given absolute file path synchronously
-    void loadScene(const char* _scenePath, bool _useScenePosition = false,
+    // Any pending scene update will be cleared
+    void loadScene(const char* _scenePath,
+                   bool _useScenePosition = false,
                    const std::vector<SceneUpdate>& sceneUpdates = {},
-                   SceneUpdateCallback _onUpdate = nullptr);
+                   SceneUpdateErrorCallback _onSceneUpdateError = nullptr);
 
     // Request an update to the scene configuration; the path is a series of yaml keys
     // separated by a '.' and the value is a string of yaml to replace the current value
@@ -112,7 +118,7 @@ public:
     void queueSceneUpdate(const std::vector<SceneUpdate>& sceneUpdates);
 
     // Apply all previously requested scene updates
-    void applySceneUpdates(SceneUpdateCallback _onUpdate = nullptr);
+    void applySceneUpdates(SceneUpdateErrorCallback _onSceneUpdateError = nullptr);
 
     // Set an MBTiles SQLite database file for a DataSource in the scene.
     void setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath);

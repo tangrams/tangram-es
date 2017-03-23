@@ -20,12 +20,12 @@ namespace Tangram {
 struct LabelPickResult;
 struct FeaturePickResult;
 struct MarkerPickResult;
-struct SceneUpdateStatus;
+struct SceneUpdateError;
 
 void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* featurePickResult);
 void markerPickCallback(jobject listener, jobject tangramInstance, const Tangram::MarkerPickResult* markerPickResult);
 void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult);
-void sceneUpdateCallback(jobject updateStatusCallbackRef, const std::vector<Tangram::SceneUpdateStatus>& sceneUpdateStatus);
+void sceneUpdateErrorCallback(jobject updateStatusCallbackRef, const SceneUpdateError& sceneUpdateErrorStatus);
 
 class AndroidPlatform : public Platform {
 

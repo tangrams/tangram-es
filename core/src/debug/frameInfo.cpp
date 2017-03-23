@@ -8,7 +8,7 @@
 #include "gl/primitives.h"
 #include "view/view.h"
 #include "gl.h"
-#include "gl/error.h"
+#include "gl/glError.h"
 
 #include <deque>
 #include <ctime>

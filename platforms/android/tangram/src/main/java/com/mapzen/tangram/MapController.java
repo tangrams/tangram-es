@@ -46,6 +46,15 @@ public class MapController implements Renderer {
         FLAT,
     }
 
+    /**
+     * Options representing an error generated after from the map controller
+     */
+    public enum Error {
+        SCENE_UPDATE_PATH_NOT_FOUND,
+        SCENE_UPDATE_PATH_YAML_SYNTAX_ERROR,
+        SCENE_UPDATE_VALUE_YAML_SYNTAX_ERROR,
+    }
+
     protected static EaseType DEFAULT_EASE_TYPE = EaseType.CUBIC;
 
     /**
@@ -116,17 +125,17 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Interface for a callback to received additional error information in a {@link SceneUpdateStatus}
+     * Interface for a callback to received additional error information in a {@link SceneUpdateError}
      * Triggered after a call of {@link #applySceneUpdates()} or {@link #loadSceneFile(String, List<SceneUpdate>)}
      * Listener should be set with {@link #setSceneUpdateErrorListener(SceneUpdateErrorListener)}
      */
     public interface SceneUpdateErrorListener {
         /**
-         * Receive error statuses after scene updates have been applied
+         * Receive error status when a scene update failed
          * If no error happens, the list will be empty
-         * @param updateStatuses The list of {@link SceneUpdateStatus} holding error informations
+         * @param sceneUpdateError The  {@link SceneUpdateError} holding error informations
          */
-        void onSceneUpdateError(List<SceneUpdateStatus> updateStatuses);
+        void onSceneUpdateError(SceneUpdateError sceneUpdateError);
     }
 
     /**

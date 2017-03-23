@@ -23,13 +23,9 @@
     NSLog(@"Did capture screenshot");
 }
 
-- (void)mapView:(TGMapViewController *)mapView didCompleteSceneUpdatesWithErrors:(NSArray<TGSceneUpdateStatus *> *)updateStatuses
+- (void)mapView:(TGMapViewController *)mapView didFailSceneUpdateWithError:(NSError *)sceneUpdateError;
 {
-    for (TGSceneUpdateStatus* updateStatus in updateStatuses) {
-        NSLog(@"Scene update error for update with path %@ and value %@",
-            [[updateStatus sceneUpdate] path],
-            [[updateStatus sceneUpdate] value]);
-    }
+    NSLog(@"Scene update error for update with error %@", sceneUpdateError);
 }
 
 - (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView

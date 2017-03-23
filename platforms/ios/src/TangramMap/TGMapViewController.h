@@ -18,7 +18,6 @@
 #import "TGGeoPolygon.h"
 #import "TGGeoPolyline.h"
 #import "TGSceneUpdate.h"
-#import "TGSceneUpdateStatus.h"
 #import "TGHttpHandler.h"
 #import "TGLabelPickResult.h"
 #import "TGMarker.h"
@@ -35,6 +34,16 @@ typedef NS_ENUM(NSInteger, TGCameraType) {
     TGCameraTypeIsometric,
     /// Type for a <a href="https://mapzen.com/documentation/tangram/Cameras-Overview/#flat-camera">flat camera</a>
     TGCameraTypeFlat,
+};
+
+/// Description of error status from Tangram
+typedef NS_ENUM(NSInteger, TGError) {
+    /// The path of the scene update was not found on the scene file
+    TGErrorSceneUpdatePathNotFound,
+    /// The YAML syntax of the scene udpate path has a syntax error
+    TGErrorSceneUpdatePathYAMLSyntaxError,
+    /// The YAML syntax of the scene update value has a syntax error
+    TGErrorSceneUpdateValueYAMLSyntaxError,
 };
 
 /// Debug flags to render additional information about various map components
@@ -277,7 +286,7 @@ NS_ASSUME_NONNULL_END
  @param mapView a pointer to the map view
  @param updateStatuses the list of scene update error status, empty if all updates were successfull
  */
-- (void)mapView:(nonnull TGMapViewController *)mapView didCompleteSceneUpdatesWithErrors:(NSArray<TGSceneUpdateStatus *> *)updateStatuses;
+- (void)mapView:(nonnull TGMapViewController *)mapView didFailSceneUpdateWithError:(NSError *)sceneUpdateError;
 
 @end
 

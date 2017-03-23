@@ -18,7 +18,7 @@ import com.mapzen.tangram.MapController.SceneUpdateErrorListener;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.Marker;
 import com.mapzen.tangram.SceneUpdate;
-import com.mapzen.tangram.SceneUpdateStatus;
+import com.mapzen.tangram.SceneUpdateError;
 import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.MapView.OnMapReadyCallback;
 import com.mapzen.tangram.Marker;
@@ -243,12 +243,10 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     }
 
     @Override
-    public void onSceneUpdateError(List<SceneUpdateStatus> updateStatuses) {
-        for (SceneUpdateStatus status : updateStatuses) {
-            Log.d("Tangram", "Scene update errors "
-                    + status.getSceneUpdate().toString()
-                    + " " + status.getError().toString());
-        }
+    public void onSceneUpdateError(SceneUpdateError sceneUpdateError) {
+        Log.d("Tangram", "Scene update errors "
+                + sceneUpdateError.getSceneUpdate().toString()
+                + " " + sceneUpdateError.getError().toString());
     }
 }
 

@@ -6,7 +6,7 @@
 
 namespace Tangram {
 
-class Error {
+class GLError {
 
 public:
 
@@ -15,9 +15,9 @@ public:
      * If an error is found, it prints the GL error enum combined with the location tag passed in,
      * then returns true. This is intended to be used infrequently, in places where errors are likely or known.
      */
-    static bool hadGlError(const std::string& _locationTag);
+    static bool hadError(const std::string& _locationTag);
 
-    static void glError(const char* stmt, const char* fname, int line);
+    static void error(const char* stmt, const char* fname, int line);
 
 private:
 
@@ -26,7 +26,7 @@ private:
 };
 
 #ifdef DEBUG
-#define GL_CHECK(STMT) do { STMT; Tangram::Error::glError(#STMT, __FILE__, __LINE__); } while (0)
+#define GL_CHECK(STMT) do { STMT; Tangram::GLError::error(#STMT, __FILE__, __LINE__); } while (0)
 #else
 #define GL_CHECK(STMT) do { STMT; } while (0)
 #endif

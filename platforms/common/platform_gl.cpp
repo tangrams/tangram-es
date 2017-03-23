@@ -1,7 +1,7 @@
 #include "platform_gl.h"
 
 #include "gl.h"
-#include "gl/error.h"
+#include "gl/glError.h"
 
 namespace Tangram {
 

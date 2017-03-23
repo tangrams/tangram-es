@@ -1,5 +1,5 @@
 #include "gl/vao.h"
-#include "gl/error.h"
+#include "gl/glError.h"
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 #include "gl/vertexLayout.h"
