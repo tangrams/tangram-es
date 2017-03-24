@@ -1,4 +1,5 @@
 #include "gl/shaderSource.h"
+#include "util/fixfloat.h"
 
 #include <set>
 #include <sstream>
@@ -51,7 +52,7 @@ std::string ShaderSource::applySourceBlocks(const std::string& _source, bool _fr
         sourceOut << "#define TANGRAM_FRAGMENT_SHADER\n";
     } else {
         float depthDelta = 2.f / (1 << 16);
-        sourceOut << "#define TANGRAM_DEPTH_DELTA " << std::to_string(depthDelta) << '\n';
+        sourceOut << "#define TANGRAM_DEPTH_DELTA " << ff::to_string(depthDelta) << '\n';
         sourceOut << "#define TANGRAM_VERTEX_SHADER\n";
     }
 
@@ -98,7 +99,6 @@ std::string ShaderSource::applySourceBlocks(const std::string& _source, bool _fr
     //                block.first.c_str());
     //     }
     // }
-
     return sourceOut.str();
 }
 

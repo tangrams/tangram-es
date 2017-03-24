@@ -5,6 +5,7 @@
 #include "style/textStyle.h"
 #include "util/builders.h" // for cap, join
 #include "util/extrude.h"
+#include "util/fixfloat.h"
 #include "util/geom.h" // for CLAMP
 
 #include "csscolorparser.hpp"
@@ -122,15 +123,14 @@ static int parseInt(const std::string& _str, int& _value) {
 }
 
 static int parseFloat(const std::string& _str, double& _value) {
-    try {
-        size_t index;
-        _value = std::stof(_str, &index);
-        return index;
-    } catch (std::invalid_argument) {
-    } catch (std::out_of_range) {}
-    LOGW("Not a Float '%s'", _str.c_str());
+    int index = 0;
+    _value = ff::stod(_str.data(), _str.size(), &index);
+    if (index == 0) {
+        LOGW("Not a Float '%s'", _str.c_str());
+        return -1;
+    }
 
-    return -1;
+    return index;
 }
 
 const std::string& StyleParam::keyName(StyleParamKey _key) {
@@ -509,36 +509,36 @@ std::string StyleParam::toString() const {
 
 static const std::vector<std::string> s_units = { "px", "ms", "m", "s" };
 
-int StyleParam::parseValueUnitPair(const std::string& _value, size_t start,
+int StyleParam::parseValueUnitPair(const std::string& _value, size_t offset,
                                    StyleParam::ValueUnitPair& _result) {
 
-    if (start >= _value.length()) { return -1; }
+    if (offset >= _value.length()) { return -1; }
 
-    float num;
-    int end;
+    const char* str = _value.c_str();
+    int count;
+    _result.value = ff::stof(str + offset,
+                             _value.length() - offset, &count);
 
-    int ok = std::sscanf(_value.c_str() + start, "%f%n", &num, &end);
+    if (count == 0) { return -1; }
+    offset += count;
 
-    if (!ok) { return -1; }
-
-    _result.value = static_cast<float>(num);
-
-    start += end;
-
-    if (start >= _value.length()) { return start; }
+    if (offset >= _value.length()) { return offset; }
 
     for (size_t i = 0; i < s_units.size(); ++i) {
         const auto& unit = s_units[i];
         std::string valueUnit;
-        if (unit == _value.substr(start, std::min<int>(_value.length(), unit.length()))) {
+        if (unit == _value.substr(offset, std::min<int>(_value.length(), unit.length()))) {
             _result.unit = static_cast<Unit>(i);
-            start += unit.length();
+            offset += unit.length();
             break;
         }
     }
 
-    // TODO skip whitespace , whitespace
-    return std::min(_value.length(), start + 1);
+    // Skip next comma
+    while (str[offset] == ' ') { offset++; }
+    if (str[offset] == ',') { offset++; }
+
+    return offset;
 }
 
 bool StyleParam::parseTime(const std::string &_value, float &_time) {
@@ -564,90 +564,80 @@ bool StyleParam::parseTime(const std::string &_value, float &_time) {
     return true;
 }
 
+template<typename T>
+int parseVec(const std::string& _value, T& _vec) {
+
+    const size_t elements = _vec.length();
+    const char* str = _value.data();
+
+    const int length = _value.length();
+    int count = 0;
+    int offset = 0;
+
+    for (size_t i = 0; i < elements; i++) {
+
+        float v = ff::stof(str + offset, length - offset, &count);
+        if (count == 0) { return i; }
+
+        _vec[i] = v;
+        offset += count;
+
+        if (length - offset <= 0) { return i; }
+
+        // Skip next comma
+        while (str[offset] == ' ') { offset++; }
+        if (str[offset++] != ',') { return i; }
+    }
+
+    return elements;
+}
+
+template<typename T>
+int parseVec(const std::string& _value, const std::vector<Unit>& units, UnitVec<T>& _vec) {
+     // initialize with defaults
+    const size_t elements = _vec.size;
+    for (size_t i = 0; i < elements; i++) {
+        _vec.units[i] = units[0];
+        _vec.value[i] = NAN;
+    }
+
+    int offset = 0;
+    for (size_t i = 0; i < elements; i++) {
+        StyleParam::ValueUnitPair v;
+        offset = StyleParam::parseValueUnitPair(_value, offset, v);
+        if (offset < 0) { return i; }
+
+        if (std::find(units.begin(), units.end(), v.unit) == units.end()) {
+            return 0;
+        }
+        _vec.units[i] = v.unit;
+        _vec.value[i] = v.value;
+    }
+
+    return elements;
+}
+
 bool StyleParam::parseVec2(const std::string& _value, const std::vector<Unit>& units, UnitVec<glm::vec2>& _vec) {
-    ValueUnitPair v1, v2;
-
-    // initialize with defaults
-    v1.unit = v2.unit = units[0];
-
-    int pos = parseValueUnitPair(_value, 0, v1);
-    if (pos < 0) {
-        return false;
-    }
-
-    if (std::find(units.begin(), units.end(), v1.unit) == units.end()) {
-        return false;
-    }
-    _vec.units[0] = v1.unit;
-
-    pos = parseValueUnitPair(_value, pos, v2);
-    if (pos < 0) {
-        _vec.value = { v1.value, NAN };
-        return true;
-    }
-
-    if (std::find(units.begin(), units.end(), v2.unit) == units.end()) {
-        return false;
-    }
-    _vec.units[1] = v2.unit;
-    _vec.value = { v1.value, v2.value };
-
-    return true;
+    return parseVec(_value, units, _vec);
 }
 
 bool StyleParam::parseVec3(const std::string& _value, const std::vector<Unit>& units, UnitVec<glm::vec3> & _vec) {
-    ValueUnitPair v1, v2, v3;
-
-    // initialize with defaults
-    v1.unit = v2.unit = v3.unit = units[0];
-
-    int pos = parseValueUnitPair(_value, 0, v1);
-    if (pos < 0) {
-        return false;
-    }
-
-    if (std::find(units.begin(), units.end(), v1.unit) == units.end()) {
-        return false;
-    }
-    _vec.units[0] = v1.unit;
-
-    pos = parseValueUnitPair(_value, pos, v2);
-    if (pos < 0) {
-        _vec.value = { v1.value, NAN, NAN };
-        return true;
-    }
-
-    if (std::find(units.begin(), units.end(), v2.unit) == units.end()) {
-        return false;
-    }
-    _vec.units[1] = v2.unit;
-
-    pos = parseValueUnitPair(_value, pos, v3);
-    if (pos < 0) {
-        _vec.value = { v1.value, v2.value, NAN };
-        return true;
-    }
-
-    if (std::find(units.begin(), units.end(), v3.unit) == units.end()) {
-        return false;
-    }
-    _vec.units[2] = v3.unit;
-    _vec.value = { v1.value, v2.value,  v3.value };
-
-    return true;
+    return parseVec(_value, units, _vec);
 }
 
 uint32_t StyleParam::parseColor(const std::string& _color) {
     Color color;
 
     // First, try to parse as comma-separated rgba components.
-    float r, g, b, a = 1.;
-    if (sscanf(_color.c_str(), "%f,%f,%f,%f", &r, &g, &b, &a) >= 3) {
+    glm::vec4 rgba(1.0f);
+    int elements = parseVec(_color, rgba);
+
+    if (elements >= 3) {
         color = Color {
-            static_cast<uint8_t>(CLAMP((r * 255.), 0, 255)),
-            static_cast<uint8_t>(CLAMP((g * 255.), 0, 255)),
-            static_cast<uint8_t>(CLAMP((b * 255.), 0, 255)),
-            CLAMP(a, 0, 1)
+            static_cast<uint8_t>(CLAMP((rgba[0] * 255.), 0, 255)),
+            static_cast<uint8_t>(CLAMP((rgba[1] * 255.), 0, 255)),
+            static_cast<uint8_t>(CLAMP((rgba[2] * 255.), 0, 255)),
+            CLAMP(rgba[3], 0, 1)
         };
     } else {
         // parse as css color or #hex-num
