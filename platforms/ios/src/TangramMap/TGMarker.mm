@@ -21,10 +21,21 @@ enum class TGMarkerType {
 
 @interface TGMarker () {
     Tangram::Map* tangramInstance;
-    TGMapViewController* mapViewController;
     Tangram::MarkerID identifier;
     TGMarkerType type;
 }
+
+@property (copy, nonatomic) NSString* stylingString;
+@property (copy, nonatomic) NSString* stylingPath;
+@property (assign, nonatomic) TGGeoPoint point;
+@property (strong, nonatomic) TGGeoPolyline* polyline;
+@property (strong, nonatomic) TGGeoPolygon* polygon;
+@property (assign, nonatomic) BOOL visible;
+@property (assign, nonatomic) NSInteger drawOrder;
+@property (strong, nonatomic) UIImage* icon;
+@property (weak, nonatomic) TGMapViewController* map;
+
+- (NSError *)createNSError;
 
 @end
 
@@ -51,101 +62,148 @@ enum class TGMarkerType {
         type = TGMarkerType::none;
         self.visible = YES;
         self.drawOrder = 0;
-        self.map = mapView;
+        [self map:mapView];
     }
 
     return self;
 }
 
-- (void)setStylingString:(NSString *)styling
+- (NSError *)createNSError
+{
+    NSMutableDictionary* userInfo = [[NSMutableDictionary alloc] init];
+    // TODO: add enum for object error
+    // [userInfo setObject: forKey:@"TGMarker"];
+
+    return [NSError errorWithDomain:@"TGMarker"
+                               code:0
+                           userInfo:userInfo];
+}
+
+- (NSError *)stylingString:(NSString *)styling
 {
     _stylingString = styling;
     _stylingPath = nil;
 
-    if (!tangramInstance || !identifier) { return; }
+    if (!tangramInstance || !identifier) { return nil; }
 
-    tangramInstance->markerSetStylingFromString(identifier, [styling UTF8String]);
+     if (!tangramInstance->markerSetStylingFromString(identifier, [styling UTF8String])) {
+        return [self createNSError];
+    }
+
+    return nil;
 }
 
-- (void)setStylingPath:(NSString *)path
+- (NSError *)stylingPath:(NSString *)path
 {
     _stylingPath = path;
     _stylingString = nil;
 
-    if (!tangramInstance || !identifier) { return; }
+    if (!tangramInstance || !identifier) { return nil; }
 
-    tangramInstance->markerSetStylingFromPath(identifier, [path UTF8String]);
+    if (!tangramInstance->markerSetStylingFromPath(identifier, [path UTF8String])) {
+        return [self createNSError];
+    }
+
+    return nil;
 }
 
-- (void)setPoint:(TGGeoPoint)coordinates
+- (NSError *)point:(TGGeoPoint)coordinates
 {
     _point = coordinates;
     type = TGMarkerType::point;
 
-    if (!tangramInstance || !identifier) { return; }
-
     Tangram::LngLat lngLat(coordinates.longitude, coordinates.latitude);
 
-    tangramInstance->markerSetPoint(identifier, lngLat);
+    if (!tangramInstance || !identifier) { return nil; }
+
+    if (!tangramInstance->markerSetPoint(identifier, lngLat)) {
+        return [self createNSError];
+    }
+
+    return nil;
 }
 
-- (BOOL)setPointEased:(TGGeoPoint)coordinates seconds:(float)seconds easeType:(TGEaseType)ease
+- (NSError *)pointEased:(TGGeoPoint)coordinates seconds:(float)seconds easeType:(TGEaseType)ease
 {
     _point = coordinates;
     type = TGMarkerType::point;
 
-    if (!tangramInstance || !identifier) { return; }
+    if (!tangramInstance || !identifier) { return nil; }
 
     Tangram::LngLat lngLat(coordinates.longitude, coordinates.latitude);
 
-    tangramInstance->markerSetPointEased(identifier, lngLat, seconds, [TGHelpers convertEaseTypeFrom:ease]);
+    if (!tangramInstance->markerSetPointEased(identifier, lngLat, seconds, [TGHelpers convertEaseTypeFrom:ease])) {
+        return [self createNSError];
+    }
+
+    return nil;
 }
 
-- (void)setPolyline:(TGGeoPolyline *)polyline
+- (NSError *)polyline:(TGGeoPolyline *)polyline
 {
     _polyline = polyline;
     type = TGMarkerType::polyline;
 
-    if (polyline.count < 2 || !tangramInstance || !identifier) { return; }
+    if (polyline.count < 2 || !tangramInstance || !identifier) {
+        return nil;
+    }
 
-    tangramInstance->markerSetPolyline(identifier, reinterpret_cast<Tangram::LngLat*>([polyline coordinates]), polyline.count);
+    auto polylineCoords = reinterpret_cast<Tangram::LngLat*>([polyline coordinates]);
+
+    if (!tangramInstance->markerSetPolyline(identifier, polylineCoords, polyline.count)) {
+        return [self createNSError];
+    }
+
+    return nil;
 }
 
-- (void)setPolygon:(TGGeoPolygon *)polygon
+- (NSError *)polygon:(TGGeoPolygon *)polygon
 {
     _polygon = polygon;
     type = TGMarkerType::polygon;
 
-    if (polygon.count < 3 || !tangramInstance || !identifier) { return; }
+    if (polygon.count < 3 || !tangramInstance || !identifier) { return nil; }
 
-    auto coords = reinterpret_cast<Tangram::LngLat*>([polygon coordinates]);
+    auto polygonCoords = reinterpret_cast<Tangram::LngLat*>([polygon coordinates]);
 
-    tangramInstance->markerSetPolygon(identifier, coords, [polygon rings], [polygon ringsCount]);
+    if (!tangramInstance->markerSetPolygon(identifier, polygonCoords, [polygon rings], [polygon ringsCount])) {
+        return [self createNSError];
+    }
+
+    return nil;
 }
 
-- (void)setVisible:(BOOL)visible
+- (NSError *)visible:(BOOL)visible
 {
     _visible = visible;
 
-    if (!tangramInstance || !identifier) { return; }
+    if (!tangramInstance || !identifier) { return nil; }
 
-    tangramInstance->markerSetVisible(identifier, visible);
+    if (!tangramInstance->markerSetVisible(identifier, visible)) {
+        return [self createNSError];
+    }
+
+    return nil;
 }
 
-- (void)setDrawOrder:(NSInteger)drawOrder
+- (NSError *)drawOrder:(NSInteger)drawOrder
 {
     _drawOrder = drawOrder;
 
-    if (!tangramInstance || !identifier) { return; }
+    if (!tangramInstance || !identifier) { return nil; }
 
-    tangramInstance->markerSetDrawOrder(identifier, (int)drawOrder);
+     if (!tangramInstance->markerSetDrawOrder(identifier, (int)drawOrder)) {
+        return [self createNSError];
+    }
+
+    return nil;
 }
 
-- (void)setIcon:(UIImage *)icon
+- (NSError *)icon:(UIImage *)icon
 {
     _icon = icon;
 
-    if (!tangramInstance) { return; }
+    if (!tangramInstance || !identifier) { return nil; }
 
     CGImage* cgImage = [icon CGImage];
     size_t w = CGImageGetHeight(cgImage);
@@ -155,7 +213,8 @@ enum class TGMarkerType {
     bitmap.resize(w * h);
 
     CGColorSpaceRef colorSpace = CGImageGetColorSpace(cgImage);
-    CGContextRef cgContext = CGBitmapContextCreate(bitmap.data(), w, h, 8, w * 4, colorSpace, kCGImageAlphaPremultipliedLast);
+    CGContextRef cgContext = CGBitmapContextCreate(bitmap.data(), w, h, 8, w * 4,
+        colorSpace, kCGImageAlphaPremultipliedLast);
 
     // Flip image upside down-horizontally
     CGAffineTransform flipAffineTransform = CGAffineTransformMake(1, 0, 0, -1, 0, h);
@@ -164,52 +223,63 @@ enum class TGMarkerType {
     CGContextDrawImage(cgContext, CGRectMake(0, 0, w, h), cgImage);
     CGContextRelease(cgContext);
 
-    tangramInstance->markerSetBitmap(identifier, w, h, bitmap.data());
+    if (!tangramInstance->markerSetBitmap(identifier, w, h, bitmap.data())) {
+        return [self createNSError];
+    }
+
+    return nil;
 }
 
-- (void)setMap:(TGMapViewController *)mapView
+- (NSError *)map:(TGMapViewController *)mapView
 {
     // remove marker from current view
     if (!mapView && tangramInstance && identifier) {
-        tangramInstance->markerRemove(identifier);
+        if (!tangramInstance->markerRemove(identifier)) {
+            return [self createNSError];
+        }
+
         tangramInstance = nullptr;
-        mapViewController = nil;
-        return;
+        _map = nil;
+        return nil;
     }
 
-    if (![mapView map] || [mapView map] == tangramInstance) { return; }
+    if (![mapView map] || [mapView map] == tangramInstance) { return nil; }
 
     // Removes the marker from the previous map view
-    if (tangramInstance && mapViewController) {
-        tangramInstance->markerRemove(identifier);
-        [mapViewController removeMarker:identifier];
+    if (tangramInstance && _map) {
+        if (!tangramInstance->markerRemove(identifier)) {
+            return [self createNSError];
+        }
+
+        [_map removeMarker:identifier];
     }
 
     tangramInstance = [mapView map];
-    mapViewController = mapView;
+    _map = mapView;
 
     // Create a new marker identifier for this view
     identifier = tangramInstance->markerAdd();
-    [mapViewController addMarker:self withIdentifier:identifier];
 
-    if (!identifier) { return; }
+    if (!identifier) { return [self createNSError]; }
+
+    [_map addMarker:self withIdentifier:identifier];
 
     // Set the geometry type
     switch (type) {
         case TGMarkerType::point: {
-            [self setPoint:self.point];
+            [self point:self.point];
 
             if (self.icon) {
-                [self setIcon:self.icon];
+                [self icon:self.icon];
             }
         }
         break;
         case TGMarkerType::polygon: {
-            [self setPolygon:self.polygon];
+            [self polygon:self.polygon];
         }
         break;
         case TGMarkerType::polyline: {
-            [self setPolyline:self.polyline];
+            [self polyline:self.polyline];
         }
         case TGMarkerType::none:
         break;
@@ -217,14 +287,24 @@ enum class TGMarkerType {
 
     // Update styling
     if (self.stylingString) {
-        tangramInstance->markerSetStylingFromString(identifier, [self.stylingString UTF8String]);
-    }
-    if (self.stylingPath) {
-        tangramInstance->markerSetStylingFromPath(identifier, [self.stylingPath UTF8String]);
+        if (!tangramInstance->markerSetStylingFromString(identifier, [self.stylingString UTF8String])) {
+            return [self createNSError];
+        }
+    } else if (self.stylingPath) {
+        if (!tangramInstance->markerSetStylingFromPath(identifier, [self.stylingPath UTF8String])) {
+            return [self createNSError];
+        }
     }
 
-    tangramInstance->markerSetVisible(identifier, self.visible);
-    tangramInstance->markerSetDrawOrder(identifier, (int)self.drawOrder);
+    if (!tangramInstance->markerSetVisible(identifier, self.visible)) {
+        return [self createNSError];
+    }
+
+    if (!tangramInstance->markerSetDrawOrder(identifier, (int)self.drawOrder)) {
+        return [self createNSError];
+    }
+
+    return nil;
 }
 
 @end
