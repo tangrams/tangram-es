@@ -67,6 +67,7 @@ public:
     bool hasScheme() const;
     bool hasNetLocation() const;
     bool hasPath() const;
+    bool hasExt() const;
     bool hasParameters() const;
     bool hasQuery() const;
     bool hasFragment() const;
@@ -79,6 +80,7 @@ public:
     std::string scheme() const;
     std::string netLocation() const;
     std::string path() const;
+    std::string ext() const;
     std::string parameters() const;
     std::string query() const;
     std::string fragment() const;
@@ -115,7 +117,7 @@ private:
     struct Parts {
         struct Range {
             size_t start = 0, count = 0;
-        } scheme, location, path, parameters, query, fragment, media, data;
+        } scheme, location, path, ext, parameters, query, fragment, media, data;
     } parts;
 
     // flags contains Boolean information about the URL state.

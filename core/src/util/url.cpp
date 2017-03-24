@@ -92,6 +92,10 @@ bool Url::hasPath() const {
     return parts.path.count != 0;
 }
 
+bool Url::hasExt() const {
+    return parts.ext.count != 0;
+}
+
 bool Url::hasParameters() const {
     return parts.parameters.count != 0;
 }
@@ -122,6 +126,10 @@ std::string Url::netLocation() const {
 
 std::string Url::path() const {
     return std::string(buffer, parts.path.start, parts.path.count);
+}
+
+std::string Url::ext() const {
+    return std::string(buffer, parts.ext.start, parts.ext.count);
 }
 
 std::string Url::parameters() const {
@@ -177,6 +185,12 @@ Url Url::standardized() const {
 
         // Remove any extra parts of the old path from the string.
         t.buffer.erase(t.parts.path.start + t.parts.path.count, offset);
+
+        // Resolve extension
+        if (hasExt()) {
+            t.parts.ext.start = t.parts.path.start + t.parts.path.count - parts.ext.count;
+            t.parts.ext.count = parts.ext.count;
+        }
 
         // Adjust the locations of the URL parts after 'path'.
         t.parts.parameters.start -= offset;
@@ -279,6 +293,12 @@ Url Url::resolve(const Url& b, const Url& r) {
         t.buffer.append(b.buffer, b.parts.parameters.start, b.parts.parameters.count);
     }
     t.parts.parameters.count = t.buffer.size() - t.parts.parameters.start;
+
+    // Resolve extension
+    if (r.hasExt()) {
+        t.parts.ext.start = t.parts.path.start + t.parts.path.count - r.parts.ext.count;
+        t.parts.ext.count = r.parts.ext.count;
+    }
 
     // Resolve the query.
     t.parts.query.start = t.buffer.size();
@@ -433,6 +453,24 @@ void Url::parse() {
     parts.path.start = start;
     parts.path.count = end - start;
 
+    // Parse the extension for the path
+    {
+        auto& pathStart = parts.path.start;
+        auto& pathCount = parts.path.count;
+        auto pos = buffer.rfind(".", pathStart + pathCount);
+        auto slashPos = buffer.rfind("/", pathStart + pathCount);
+        /*
+         * 1. extension must have a "." with the path
+         * 2. file extension must be on the last component of the path
+         * 3. last component of the path starting with a "." is not considered as an extension
+         */
+        if ( pos != std::string::npos &&
+             pos > pathStart &&
+             ( slashPos == std::string::npos || slashPos < (pos-1)) ) {
+            parts.ext.start = pos;
+            parts.ext.count = pathStart + pathCount - pos;
+        }
+    }
 }
 
 size_t Url::removeLastSegmentFromRange(std::string& string, size_t start, size_t end) {

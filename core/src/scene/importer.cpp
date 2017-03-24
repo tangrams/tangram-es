@@ -15,10 +15,7 @@ namespace Tangram {
 std::atomic_uint Importer::progressCounter(0);
 
 bool isZipUrl(const Url& url) {
-    const char* extStr = ".zip";
-    const size_t extLength = strlen(extStr);
-    const size_t urlLength = url.string().length();
-    return (urlLength > extLength && (url.string().compare(urlLength - extLength, extLength, extStr) == 0));
+    return (url.hasExt() && url.ext() == ".zip");
 }
 
 Node Importer::applySceneImports(const std::shared_ptr<Platform>& platform,
@@ -28,7 +25,6 @@ Node Importer::applySceneImports(const std::shared_ptr<Platform>& platform,
     const Url& resourceRoot = scene->resourceRoot();
 
     Url path;
-    bool isZipped;
     Url rootScenePath = scenePath.resolved(resourceRoot);
 
     // Asset fills the m_path of the yaml asset with the yaml file in the zip bundle
@@ -67,7 +63,7 @@ Node Importer::applySceneImports(const std::shared_ptr<Platform>& platform,
             if (m_scenes.find(path) != m_scenes.end()) { continue; }
         }
 
-        isZipped = isZipUrl(path);
+        bool isZipped = isZipUrl(path);
         auto& asset = scene->sceneAssets()[path.string()];
         // An asset at this path must have been created by now.
         assert(asset);
@@ -164,7 +160,7 @@ void  Importer::createSceneAsset(const std::shared_ptr<Platform>& platform, std:
     if (sceneAssets.find(resolvedStr) != sceneAssets.end()) { return; }
 
     // needed to find apt file inside zipBundle
-    if (relativeStr[0] == '/') { relativeStr.erase(relativeStr.begin()); }
+    if (*relativeStr.begin() == '/') { relativeStr.erase(relativeStr.begin()); }
 
     if (isZipUrl(resolvedUrl)) {
         if (relativeUrl.hasHttpScheme() || (resolvedUrl.hasHttpScheme() && base.isEmpty())) {
