@@ -143,6 +143,8 @@ enum class TGMarkerType {
 
 - (void)setIcon:(UIImage *)icon
 {
+    _icon = icon;
+
     if (!tangramInstance) { return; }
 
     CGImage* cgImage = [icon CGImage];
@@ -190,7 +192,7 @@ enum class TGMarkerType {
     identifier = tangramInstance->markerAdd();
     [mapViewController addMarker:self withIdentifier:identifier];
 
-    if (!identifier) { return NO; }
+    if (!identifier) { return; }
 
     // Set the geometry type
     switch (type) {
