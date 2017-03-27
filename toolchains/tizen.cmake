@@ -3,16 +3,17 @@ if(NOT TIZEN_SDK)
     return()
 endif()
 
-# include(${CMAKE_SOURCE_DIR}/toolchains/tizen.toolchain.cmake)
-
 # set for test in other cmake files
 set(PLATFORM_TIZEN ON)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fPIC -ggdb")
+# Tell SQLiteCpp to not build its own copy of SQLite, we will use the system library instead.
+set(SQLITECPP_INTERNAL_SQLITE OFF)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fPIC")
 
 # global compile options
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++1y -fPIC")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -ggdb")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
 
 if (NOT ${TIZEN_DEVICE})
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=i486")

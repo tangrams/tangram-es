@@ -15,6 +15,7 @@ BuildRequires: 	pkgconfig(freetype2)
 BuildRequires: 	pkgconfig(harfbuzz)
 BuildRequires: 	pkgconfig(evas)
 BuildRequires: 	pkgconfig(fontconfig)
+BuildRequires: 	pkgconfig(sqlite3)
 
 Requires(post):  /sbin/ldconfig
 Requires(postun):  /sbin/ldconfig
