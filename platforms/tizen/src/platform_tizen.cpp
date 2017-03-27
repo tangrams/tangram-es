@@ -1,108 +1,71 @@
+#include "platform_tizen.h"
+#include "gl/hardware.h"
+#include "log.h"
 #include <stdio.h>
 #include <stdarg.h>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <list>
-#include <memory>
-#include <algorithm>
-#include <vector>
-
-#include "platform_tizen.h"
-#include "platform_gl.h"
-#include "urlWorker.h"
-
-#include "log.h"
-
 #include <libgen.h>
 #include <unistd.h>
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
+#include "tizen_gl.h"
+
 #include <fontconfig.h>
 #include <dlog.h>
 
-#define NUM_WORKERS 4
-
-static bool s_isContinuousRendering = false;
-static std::function<void()> s_renderCallbackFunction = nullptr;
-
-static std::vector<std::string> s_fallbackFonts;
-static FcConfig* s_fcConfig = nullptr;
-
-static UrlWorker s_workers;
-
-bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
-    s_workers.enqueue(std::make_unique<UrlTask>(_url, _callback));
-    return true;
-}
-
-void cancelUrlRequest(const std::string& _url) {
-    s_workers.cancel(_url);
-}
-
-void initUrlRequests(const char* proxyAddress) {
-    s_workers.start(4, proxyAddress);
-}
-
-void stopUrlRequests() {
-    s_workers.stop();
-}
-
-static bool s_update = false;
 #ifdef  LOG_TAG
 #undef  LOG_TAG
 #endif
 #define LOG_TAG "Tangram"
 
-void logMsg(const char* fmt, ...) {
+namespace Tangram {
 
+void logMsg(const char* fmt, ...) {
     va_list vl;
     va_start(vl, fmt);
     dlog_vprint(DLOG_WARN, LOG_TAG, fmt, vl);
     va_end(vl);
 }
 
-void setRenderCallbackFunction(std::function<void()> callback) {
-    s_renderCallbackFunction = callback;
-}
-
 void setEvasGlAPI(Evas_GL_API *glApi) {
     __evas_gl_glapi = glApi;
 }
 
-void requestRender() {
-    s_update = true;
-    if (s_renderCallbackFunction) {
-        s_renderCallbackFunction();
+TizenPlatform::TizenPlatform() :
+    m_urlClient(UrlClient::Options{}) {}
+
+TizenPlatform::TizenPlatform(UrlClient::Options urlClientOptions) :
+    m_urlClient(urlClientOptions) {}
+
+TizenPlatform::~TizenPlatform() {}
+
+void TizenPlatform::setRenderCallbackFunction(std::function<void()> callback) {
+    m_renderCallbackFunction = callback;
+}
+
+void TizenPlatform::requestRender() const {
+    m_update = true;
+    if (m_renderCallbackFunction) {
+        m_renderCallbackFunction();
     }
 }
 
-bool shouldRender() {
-    bool update = s_update;
-    s_update = false;
-    return update;
+bool TizenPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
+
+    return m_urlClient.addRequest(_url, _callback);
 }
 
+void TizenPlatform::cancelUrlRequest(const std::string& _url) {
 
-void setContinuousRendering(bool _isContinuous) {
-
-    s_isContinuousRendering = _isContinuous;
-
+    m_urlClient.cancelRequest(_url);
 }
 
-bool isContinuousRendering() {
+void TizenPlatform::initPlatformFontSetup() const {
 
-    return s_isContinuousRendering;
+    static bool m_platformFontsInit = false;
+    if (m_platformFontsInit) { return; }
 
-}
-
-void initPlatformFontSetup() {
-
-    static bool s_platformFontsInit = false;
-    if (s_platformFontsInit) { return; }
-
-    s_fcConfig = FcInitLoadConfigAndFonts();
+    m_fcConfig = FcInitLoadConfigAndFonts();
 
     std::string style = "Regular";
 
@@ -123,18 +86,18 @@ void initPlatformFontSetup() {
         FcPatternAdd(pat, FC_LANG, fcLangValue, true);
         //FcPatternPrint(pat);
 
-        FcConfigSubstitute(s_fcConfig, pat, FcMatchPattern);
+        FcConfigSubstitute(m_fcConfig, pat, FcMatchPattern);
         FcDefaultSubstitute(pat);
 
         FcResult res;
-        FcPattern* font = FcFontMatch(s_fcConfig, pat, &res);
+        FcPattern* font = FcFontMatch(m_fcConfig, pat, &res);
         if (font) {
             FcChar8* file = nullptr;
             if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
                 // Make sure this font file is not previously added.
-                if (std::find(s_fallbackFonts.begin(), s_fallbackFonts.end(),
-                              reinterpret_cast<char*>(file)) == s_fallbackFonts.end()) {
-                    s_fallbackFonts.emplace_back(reinterpret_cast<char*>(file));
+                if (std::find(m_fallbackFonts.begin(), m_fallbackFonts.end(),
+                              reinterpret_cast<char*>(file)) == m_fallbackFonts.end()) {
+                    m_fallbackFonts.emplace_back(reinterpret_cast<char*>(file));
                 }
             }
             FcPatternDestroy(font);
@@ -142,28 +105,28 @@ void initPlatformFontSetup() {
         FcPatternDestroy(pat);
     }
     FcStrListDone(fcLangList);
-    s_platformFontsInit = true;
+    m_platformFontsInit = true;
 }
 
-std::vector<FontSourceHandle> systemFontFallbacksHandle() {
+std::vector<FontSourceHandle> TizenPlatform::systemFontFallbacksHandle() const {
 
     initPlatformFontSetup();
 
     std::vector<FontSourceHandle> handles;
 
-    for (auto& path : s_fallbackFonts) {
+    for (auto& path : m_fallbackFonts) {
         handles.emplace_back(path);
     }
 
     return handles;
 }
 
-std::string fontPath(const std::string& _name, const std::string& _weight,
-                           const std::string& _face) {
+std::string TizenPlatform::fontPath(const std::string& _name, const std::string& _weight,
+                                    const std::string& _face) const {
 
     initPlatformFontSetup();
 
-    if (!s_fcConfig) {
+    if (!m_fcConfig) {
         return "";
     }
 
@@ -183,11 +146,11 @@ std::string fontPath(const std::string& _name, const std::string& _weight,
     FcPatternAdd(pattern, FC_WEIGHT, fcWeight, true);
     //FcPatternPrint(pattern);
 
-    FcConfigSubstitute(s_fcConfig, pattern, FcMatchPattern);
+    FcConfigSubstitute(m_fcConfig, pattern, FcMatchPattern);
     FcDefaultSubstitute(pattern);
 
     FcResult res;
-    FcPattern* font = FcFontMatch(s_fcConfig, pattern, &res);
+    FcPattern* font = FcFontMatch(m_fcConfig, pattern, &res);
     if (font) {
         FcChar8* file = nullptr;
         FcChar8* fontFamily = nullptr;
@@ -207,7 +170,8 @@ std::string fontPath(const std::string& _name, const std::string& _weight,
     return fontFile;
 }
 
-std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+std::vector<char> TizenPlatform::systemFont(const std::string& _name, const std::string& _weight,
+                                            const std::string& _face) const {
     std::string path = fontPath(_name, _weight, _face);
 
     if (path.empty()) { return {}; }
@@ -215,61 +179,13 @@ std::vector<char> systemFont(const std::string& _name, const std::string& _weigh
     return bytesFromFile(path.c_str());
 }
 
-std::vector<char> bytesFromFile(const char* _path) {
-    if (!_path || strlen(_path) == 0) { return {}; }
 
-    std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
-
-    if(!resource.is_open()) {
-        LOG("Failed to read file at path: %s", _path);
-        return {};
-    }
-
-    std::vector<char> data;
-    size_t size = resource.tellg();
-    data.resize(size);
-
-    resource.seekg(std::ifstream::beg);
-
-    resource.read(data.data(), size);
-    resource.close();
-
-    return data;
-}
-
-std::string stringFromFile(const char* _path) {
-
-    std::string out;
-    if (!_path || strlen(_path) == 0) { return out; }
-
-    std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
-
-    if(!resource.is_open()) {
-        logMsg("Failed to read file at path: %s\n", _path);
-        return out;
-    }
-
-    resource.seekg(0, std::ios::end);
-    out.resize(resource.tellg());
-    resource.seekg(0, std::ios::beg);
-    resource.read(&out[0], out.size());
-    resource.close();
-
-    return out;
-}
-
-void setCurrentThreadPriority(int priority){
+void setCurrentThreadPriority(int priority) {
     int tid = syscall(SYS_gettid);
-    //int  p1 = getpriority(PRIO_PROCESS, tid);
-
     setpriority(PRIO_PROCESS, tid, priority);
-
-    //int  p2 = getpriority(PRIO_PROCESS, tid);
-    //logMsg("set niceness: %d -> %d\n", p1, p2);
 }
 
 void initGLExtensions() {
-     // glBindVertexArrayOESEXT = (PFNGLBINDVERTEXARRAYPROC)glfwGetProcAddress("glBindVertexArray");
-     // glDeleteVertexArraysOESEXT = (PFNGLDELETEVERTEXARRAYSPROC)glfwGetProcAddress("glDeleteVertexArrays");
-     // glGenVertexArraysOESEXT = (PFNGLGENVERTEXARRAYSPROC)glfwGetProcAddress("glGenVertexArrays");
 }
+
+} // namespace Tangram

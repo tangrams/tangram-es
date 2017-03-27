@@ -8,11 +8,11 @@ endif()
 # set for test in other cmake files
 set(PLATFORM_TIZEN ON)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fPIC")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fPIC -ggdb")
 
 # global compile options
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++1y -fPIC")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -ggdb")
 
 if (NOT ${TIZEN_DEVICE})
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=i486")
@@ -48,12 +48,15 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
 set(LIB_NAME tangram) # in order to have libtangram.so
 
-# add sources and include headers
-find_sources_and_include_directories(
-  ${PROJECT_SOURCE_DIR}/tizen/inc/*.h
-  ${PROJECT_SOURCE_DIR}/tizen/src/*.cpp)
+add_library(${LIB_NAME} SHARED
+  ${PROJECT_SOURCE_DIR}/platforms/tizen/src/platform_tizen.cpp
+  ${PROJECT_SOURCE_DIR}/platforms/tizen/src/tizen_gl.cpp
+  ${PROJECT_SOURCE_DIR}/platforms/common/urlClient.cpp)
 
-add_library(${LIB_NAME} SHARED ${SOURCES})
+target_include_directories(${LIB_NAME}
+    PUBLIC
+    ${GLFW_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/platforms/common)
 
 # link to the core library, forcing all symbols to be added
 # (whole-archive must be turned off after core so that lc++ symbols aren't duplicated)
