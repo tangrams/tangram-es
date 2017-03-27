@@ -3,7 +3,10 @@
 set(PLATFORM_TIZEN ON)
 
 # use freetype2/icu/harfbuzz system libs for alfons
-set(USE_PKGCONFIG_LIBS ON)
+set(USE_SYSTEM_FONT_LIBS ON)
+
+# Tell SQLiteCpp to not build its own copy of SQLite, we will use the system library instead.
+set(SQLITECPP_INTERNAL_SQLITE OFF)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fPIC")
 
@@ -35,26 +38,21 @@ check_unsupported_compiler_version()
 # compile definitions (adds -DPLATFORM_LINUX)
 set(CORE_COMPILE_DEFS PLATFORM_TIZEN PLATFORM_LINUX)
 
-set(USE_SYSTEM_FONT_LIBS ON)
-
-add_subdirectory(${PROJECT_SOURCE_DIR}/external)
-
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
 set(LIB_NAME tangram) # in order to have libtangram.so
 
-# add sources and include headers
-find_sources_and_include_directories(
-  ${PROJECT_SOURCE_DIR}/tizen/inc/*.h
-  ${PROJECT_SOURCE_DIR}/tizen/src/*.cpp)
-
-add_library(${LIB_NAME} SHARED ${SOURCES})
+add_library(${LIB_NAME} SHARED
+  ${PROJECT_SOURCE_DIR}/platforms/tizen/src/platform_tizen.cpp
+  ${PROJECT_SOURCE_DIR}/platforms/tizen/src/tizen_gl.cpp
+  ${PROJECT_SOURCE_DIR}/platforms/common/urlClient.cpp)
 
 include(FindPkgConfig)
 pkg_check_modules(EVAS REQUIRED "evas")
 pkg_check_modules(DLOG REQUIRED "dlog")
 pkg_check_modules(FONTCONFIG REQUIRED "fontconfig")
+pkg_check_modules(SQLITE REQUIRED "sqlite3")
 
 # link to the core library, forcing all symbols to be added
 # (whole-archive must be turned off after core so that lc++ symbols aren't duplicated)
@@ -66,12 +64,15 @@ target_link_libraries(${LIB_NAME}
   PRIVATE
   ${EVAS_LDFLAGS}
   ${DLOG_LDFLAGS}
+  ${SQLITE_LDFLAGS}
   ${FONTCONFIG_LDFLAGS})
 
 target_include_directories(${LIB_NAME}
   PRIVATE
+  ${PROJECT_SOURCE_DIR}/platforms/common
   ${EVAS_INCLUDE_DIRS}
   ${DLOG_INCLUDE_DIRS}
+  ${SQLITE_INCLUDE_DIRS}
   ${FONTCONFIG_INCLUDE_DIRS})
 
 target_compile_options(${LIB_NAME}
