@@ -1,6 +1,7 @@
 #include "platform_tizen.h"
 #include "gl/hardware.h"
-#include "log.h"
+
+#include <algorithm>
 #include <stdio.h>
 #include <stdarg.h>
 #include <libgen.h>

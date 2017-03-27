@@ -12,10 +12,10 @@ else()
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/core/deps/harfbuzz-icu-freetype/harfbuzz/README")
-    message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init'")
-    return()
-endif()
+#if(NOT EXISTS "${PROJECT_SOURCE_DIR}/core/deps/harfbuzz-icu-freetype/harfbuzz/README")
+#    message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init'")
+#    return()
+#endif()
 
 set(APPLICATION ON)
 
@@ -66,8 +66,6 @@ set(CMAKE_TARGET_FILE ${PROJECT_SOURCE_DIR}/toolchains/${PLATFORM_TARGET}.cmake)
 
 message(STATUS "Including ${varplatform} dependent cmake file : ${CMAKE_TARGET_FILE}")
 
-set(EXTERNAL_LIBS_DIR ${CMAKE_SOURCE_DIR}/external/exports/${PLATFORM_TARGET}
-    CACHE INTERNAL "external-libs" FORCE)
 
 ## set platform configuration, build library and application.
 # adds targets:
