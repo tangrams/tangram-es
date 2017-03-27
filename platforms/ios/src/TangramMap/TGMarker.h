@@ -65,6 +65,8 @@ NS_ASSUME_NONNULL_BEGIN
  to get more styling informations.
 
  @note Setting the stylingString will overwrite any previously set stylingString or stylingPath.
+
+ @return An error if the marker can't be shown on the map
  */
 - (NSError *)stylingString:(NSString *)styling;
 
@@ -76,6 +78,8 @@ NS_ASSUME_NONNULL_BEGIN
  to get more styling informations.
 
  @note Setting the stylingPath will overwrite any previously set stylingString or stylingPath.
+
+ @return An error if the marker can't be shown on the map
  */
 - (NSError *)stylingPath:(NSString *)path;
 
@@ -83,6 +87,8 @@ NS_ASSUME_NONNULL_BEGIN
  Sets a marker to be a single point geometry at a geographic coordinate.
 
  @note Markers can have their geometry set multiple time with possibly different geometry types.
+
+ @return An error if the marker can't be shown on the map
  */
 - (NSError *)point:(TGGeoPoint)coordinates;
 
@@ -90,6 +96,8 @@ NS_ASSUME_NONNULL_BEGIN
  Sets a marker styled to be a polyline (described in a `TGGeoPolyline`).
 
  @note Markers can have their geometry set multiple time wwith possibly different geometry types.
+
+ @return An error if the marker can't be shown on the map
  */
 - (NSError *)polyline:(TGGeoPolyline *)polyline;
 
@@ -97,18 +105,24 @@ NS_ASSUME_NONNULL_BEGIN
  Sets a marker to be a polygon geometry (described in a `TGGeoPolygon`).
 
  @note Markers can have their geometry set multiple time with possibly different geometry types.
+
+ @return An error if the marker can't be shown on the map
  */
 - (NSError *)polygon:(TGGeoPolygon *)polygon;
 
 /**
  Adjusts marker visibility
+ 
+ @return An error if the marker can't be shown on the map
  */
 - (NSError *)visible:(BOOL)visible;
 
 /**
  Set the ordering of point marker object relative to other markers; higher values are drawn 'above'.
+
+ @return An error if the marker can't be shown on the map
  */
-- (NSError *)DrawOrder:(NSInteger)drawOrder;
+- (NSError *)drawOrder:(NSInteger)drawOrder;
 
 /**
  Sets an icon loaded with a <a href="https://developer.apple.com/reference/uikit/uiimage">
@@ -124,26 +138,42 @@ NS_ASSUME_NONNULL_BEGIN
 
  @note An icon marker must be styled with a
  <a href="https://mapzen.com/documentation/tangram/Styles-Overview/#points">point style</a>.
+
+ @return An error if the marker can't be shown on the map
  */
 - (NSError *)icon:(UIImage *)icon;
+
+/// Access the marker styling string (readonly)
+@property (readonly, nonatomic) NSString* stylingString;
+/// Access the marker styling path (readonly)
+@property (readonly, nonatomic) NSString* stylingPath;
+/// Access the marker coordinate (readonly)
+@property (readonly, nonatomic) TGGeoPoint point;
+/// Access the marker polyline (readonly)
+@property (readonly, nonatomic) TGGeoPolyline* polyline;
+/// Access the marker polygon (readonly)
+@property (readonly, nonatomic) TGGeoPolygon* polygon;
+/// Access whether the marker visibility (readonly)
+@property (readonly, nonatomic) BOOL visible;
+/// Access the marker draw order (readonly)
+@property (readonly, nonatomic) NSInteger drawOrder;
+/// Access the marker icon (readonly)
+@property (readonly, nonatomic) UIImage* icon;
 
 NS_ASSUME_NONNULL_END
 
 /*
  The map this marker is on.
- Setting this property will add the marker to the map, and setting it to `nil` will remove the marker from it.
- A marker can be only active at at most one `TGMapViewController` at a time.
- */
-- (NSError *)map:(TGMapViewController *)mapView;
+ Setting the map view will add the marker to the map, and setting it to `nil`
+ will remove the marker from it.
 
-@property (readonly, nonatomic) TGMapViewController* map;
-@property (readonly, nonatomic) NSString* stylingString;
-@property (readonly, nonatomic) NSString* stylingPath;
-@property (readonly, nonatomic) TGGeoPoint point;
-@property (readonly, nonatomic) TGGeoPolyline* polyline;
-@property (readonly, nonatomic) TGGeoPolygon* polygon;
-@property (readonly, nonatomic) BOOL visible;
-@property (readonly, nonatomic) NSInteger drawOrder;
-@property (readonly, nonatomic) UIImage* icon;
+ A marker can be only active at at most one `TGMapViewController` at a time.
+
+ @return An error if the marker can't be shown on the map
+ */
+- (NSError * _Nonnull)map:(nullable TGMapViewController *)mapView;
+
+/// Access the marker map view (readonly)
+@property (readonly, nonatomic) TGMapViewController* _Nullable map;
 
 @end
