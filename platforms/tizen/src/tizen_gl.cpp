@@ -1,4 +1,4 @@
-#include "platform_gl.h"
+#include "tizen_gl.h"
 
 ELEMENTARY_GLVIEW_GLOBAL_DEFINE()
 
