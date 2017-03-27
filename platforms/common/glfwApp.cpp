@@ -56,6 +56,7 @@ void create(std::shared_ptr<Platform> p, std::string f, int w, int h) {
     sceneFile = f;
     width = w;
     height = h;
+    const std::string& apiKey = "vector-tiles-tyHL4AY";
 
     if (!glfwInit()) {
         assert(false);
@@ -65,7 +66,8 @@ void create(std::shared_ptr<Platform> p, std::string f, int w, int h) {
     // Setup tangram
     if (!map) {
         map = new Tangram::Map(platform);
-        map->loadSceneAsync(sceneFile.c_str(), true);
+        map->loadSceneAsync(sceneFile.c_str(), true, {}, nullptr,
+                {SceneUpdate("global.sdk_mapzen_api_key", apiKey)});
     }
 
     // Create a windowed mode window and its OpenGL context

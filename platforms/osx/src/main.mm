@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
     while (++argi < argc) {
         if (strcmp(argv[argi - 1], "-f") == 0) {
             sceneFile = std::string(argv[argi]);
-            logMsg("File from command line: %s\n", argv[argi]);
+            LOG("File from command line: %s\n", argv[argi]);
             break;
         }
     }
