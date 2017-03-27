@@ -18,6 +18,7 @@ public:
         uint32_t numberOfThreads = 4;
         uint32_t connectionTimeoutMs = 3000;
         uint32_t requestTimeoutMs = 30000;
+        std::string proxyAddress;
     };
 
     struct Response {
@@ -26,7 +27,7 @@ public:
         bool canceled = false;
     };
 
-    UrlClient(Options options);
+    UrlClient(const Options& options);
     ~UrlClient();
 
     bool addRequest(const std::string& url, UrlCallback onComplete);

@@ -25,7 +25,9 @@ UrlClient::Response getCanceledResponse() {
     return response;
 }
 
-UrlClient::UrlClient(Options options) : m_options(options) {
+UrlClient::UrlClient(const Options& options)
+    : m_options(options) {
+
     assert(options.numberOfThreads > 0);
     // Start the curl threads.
     m_keepRunning = true;
@@ -131,6 +133,10 @@ void UrlClient::curlLoop(uint32_t index) {
     curl_easy_setopt(handle, CURLOPT_ERRORBUFFER, curlErrorString);
     curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT_MS, m_options.connectionTimeoutMs);
     curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_options.requestTimeoutMs);
+    if (!m_options.proxyAddress.empty()) {
+        curl_easy_setopt(handle, CURLOPT_PROXY, m_options.proxyAddress.c_str());
+    }
+
     // Loop until the session is destroyed.
     while (m_keepRunning) {
         bool haveRequest = false;
