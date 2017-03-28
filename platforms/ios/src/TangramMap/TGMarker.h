@@ -52,23 +52,26 @@ NS_ASSUME_NONNULL_BEGIN
  @param coordinates the longitude and latitude where the marker will be placed
  @param seconds the animation duration given in seconds
  @param ease the ease function to be used between animation timestep
- @return `YES` if this operation was successful, `NO` otherwise
+ @param error an error status pointer that will be assigned if non-nil and an error occured
+ @return Whether the marker coordinates were set succesfully
 
  @note Markers can have their geometry set multiple time with possibly different geometry types.
  */
-- (NSError *)pointEased:(TGGeoPoint)coordinates seconds:(float)seconds easeType:(TGEaseType)ease;
+- (BOOL)pointEased:(TGGeoPoint)coordinates seconds:(float)seconds easeType:(TGEaseType)ease error:(NSError **)error;
 
 /**
  Sets the styling for a marker with a string of YAML defining a 'draw rule'.
 
  See the more detailed scene <a href="https://mapzen.com/documentation/tangram/Styles-Overview/">documentation</a>
  to get more styling informations.
+ 
+ @param styling the styling to set to this marker
+ @param error an error status pointer that will be assigned if non-nil and an error occured
+ @return Whether the marker styling string was set successfully
 
  @note Setting the stylingString will overwrite any previously set stylingString or stylingPath.
-
- @return An error if the marker can't be shown on the map
  */
-- (NSError *)stylingString:(NSString *)styling;
+- (BOOL)stylingString:(NSString *)styling error:(NSError **)error;
 
 /**
  Sets the styling for a marker with a path, delimited by '.' that specifies a 'draw rule' in the
@@ -77,52 +80,66 @@ NS_ASSUME_NONNULL_BEGIN
  See the more detailed scene <a href="https://mapzen.com/documentation/tangram/Styles-Overview/">documentation</a>
  to get more styling informations.
 
- @note Setting the stylingPath will overwrite any previously set stylingString or stylingPath.
+ @param path the styling path to set to this marker
+ @param error an error status pointer that will be assigned if non-nil and an error occured
+ @return Whether the marker styling path was set successfully
 
- @return An error if the marker can't be shown on the map
+ @note Setting the stylingPath will overwrite any previously set stylingString or stylingPath.
  */
-- (NSError *)stylingPath:(NSString *)path;
+- (BOOL)stylingPath:(NSString *)path error:(NSError **)error;
 
 /**
  Sets a marker to be a single point geometry at a geographic coordinate.
 
- @note Markers can have their geometry set multiple time with possibly different geometry types.
+ @param coordinates the coordinates to set to this marker
+ @param error an error status pointer that will be assigned if non-nil and an error occured
+ @return Whether the marker coordinates were set successfully
 
- @return An error if the marker can't be shown on the map
+ @note Markers can have their geometry set multiple time with possibly different geometry types.
  */
-- (NSError *)point:(TGGeoPoint)coordinates;
+- (BOOL)point:(TGGeoPoint)coordinates error:(NSError **)error;
 
 /**
  Sets a marker styled to be a polyline (described in a `TGGeoPolyline`).
 
- @note Markers can have their geometry set multiple time wwith possibly different geometry types.
+ @param polyline the polyline geometry to set to this marker
+ @param error an error status pointer that will be assigned if non-nil and an error occured
+ @return Whether the marker polyline was set successfully
 
- @return An error if the marker can't be shown on the map
+ @note Markers can have their geometry set multiple time with possibly different geometry types.
  */
-- (NSError *)polyline:(TGGeoPolyline *)polyline;
+- (BOOL)polyline:(TGGeoPolyline *)polyline error:(NSError **)error;
 
 /**
  Sets a marker to be a polygon geometry (described in a `TGGeoPolygon`).
 
- @note Markers can have their geometry set multiple time with possibly different geometry types.
+ @param polygon the polygon geometry to set to this marker
+ @param error an error status pointer that will be assigned if non-nil and an error occured
+ @return Whether the marker polygon was set successfully
 
- @return An error if the marker can't be shown on the map
+ @note Markers can have their geometry set multiple time with possibly different geometry types.
  */
-- (NSError *)polygon:(TGGeoPolygon *)polygon;
+- (BOOL)polygon:(TGGeoPolygon *)polygon error:(NSError **)error;
 
 /**
  Adjusts marker visibility
  
- @return An error if the marker can't be shown on the map
+ @param visible whether the marker should be visible or not
+ @param error an error status pointer that will be assigned if non-nil and an error occured
+
+ @return Whether the marker visibility order was set successfully
  */
-- (NSError *)visible:(BOOL)visible;
+- (BOOL)visible:(BOOL)visible error:(NSError **)error;
 
 /**
  Set the ordering of point marker object relative to other markers; higher values are drawn 'above'.
 
- @return An error if the marker can't be shown on the map
+ @param drawOrder the draw order to set to this marker
+ @param error an error status pointer that will be assigned if non-nil and an error occured
+
+ @return Whether the marker draw order was set successfully
  */
-- (NSError *)drawOrder:(NSInteger)drawOrder;
+- (BOOL)drawOrder:(NSInteger)drawOrder error:(NSError **)error;
 
 /**
  Sets an icon loaded with a <a href="https://developer.apple.com/reference/uikit/uiimage">
@@ -139,9 +156,12 @@ NS_ASSUME_NONNULL_BEGIN
  @note An icon marker must be styled with a
  <a href="https://mapzen.com/documentation/tangram/Styles-Overview/#points">point style</a>.
 
- @return An error if the marker can't be shown on the map
+ @param icon the icon image to set to this marker
+ @param error an error status pointer that will be assigned if non-nil and an error occured
+
+ @return Whether the marker icon was set successfully
  */
-- (NSError *)icon:(UIImage *)icon;
+- (BOOL)icon:(UIImage *)icon error:(NSError **)error;
 
 /// Access the marker styling string (readonly)
 @property (readonly, nonatomic) NSString* stylingString;
@@ -169,9 +189,12 @@ NS_ASSUME_NONNULL_END
 
  A marker can be only active at at most one `TGMapViewController` at a time.
 
+ @param mapView the map view this marker should be added to, nil if it should be removed
+ @param error an error status pointer that will be assigned if non-nil and an error occured
+
  @return An error if the marker can't be shown on the map
  */
-- (NSError * _Nonnull)map:(nullable TGMapViewController *)mapView;
+- (BOOL)map:(nullable TGMapViewController *)mapView error:(NSError * _Nullable * _Nullable)error;
 
 /// Access the marker map view (readonly)
 @property (readonly, nonatomic) TGMapViewController* _Nullable map;

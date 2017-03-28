@@ -131,10 +131,10 @@
     {
         if (!vc.markerPolygon) {
             vc.markerPolygon = [[TGMarker alloc] init];
-            [vc.markerPolygon stylingString:@"{ style: 'polygons', color: 'blue', order: 500 }"];
+            [vc.markerPolygon stylingString:@"{ style: 'polygons', color: 'blue', order: 500 }" error:nil];
 
             // Add the marker to the current view
-            [vc.markerPolygon map:view];
+            [vc.markerPolygon map:view error:nil];
         }
 
         static TGGeoPolygon* polygon = nil;
@@ -154,8 +154,8 @@
     // Add point marker
     {
         TGMarker* markerPoint = [[TGMarker alloc] initWithMapView:view];
-        [markerPoint stylingString:@"{ style: 'points', color: 'white', size: [25px, 25px], collide: false }"];
-        [markerPoint point:coordinates];
+        [markerPoint stylingString:@"{ style: 'points', color: 'white', size: [25px, 25px], collide: false }" error:nil];
+        [markerPoint point:coordinates error:nil];
     }
 
     // Request feature picking
