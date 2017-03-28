@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.FileNotFoundException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -18,8 +20,18 @@ import android.util.Xml;
 
 class FontFileParser {
 
+    class FallbackFont {
+        FallbackFont(String _path, int _preference, int _order) {
+            path = _path;
+            preference = _preference;
+            order = _order;
+        }
+        String path;
+        int preference;
+        int order;
+    }
     private Map<String, String> fontDict = new HashMap<String, String>();
-    private Map<Integer, Vector<String>> fallbackFontDict = new HashMap<Integer, Vector<String>>();
+    private Map<Integer, ArrayList<FallbackFont>> fallbackFontDict = new HashMap<Integer, ArrayList<FallbackFont>>();
 
     private static String systemFontPath = "/system/fonts/";
     // Android version >= 5.0
@@ -121,6 +133,7 @@ class FontFileParser {
                 familyWeights.clear();
                 // Parse this family:
                 String name = parser.getAttributeValue(null, "name");
+                String lang = parser.getAttributeValue(null, "lang");
 
                 // fallback fonts
                 if (name == null) {
@@ -136,19 +149,40 @@ class FontFileParser {
 
                             String filename = parser.nextText();
 
-                            Integer weight = new Integer(weightStr);
-                            if (!fallbackFontDict.containsKey(weight)) {
-                                fallbackFontDict.put(weight, new Vector<String>());
-                            }
-
                             // Don't use UI fonts
                             if (filename.indexOf("UI-") >= 0) {
                                 continue;
                             }
+                            // Sorry - not yet supported
+                            if (filename.indexOf("Emoji") >= 0) {
+                                continue;
+                            }
 
                             String fullFileName = systemFontPath + filename;
+                            if (!new File(fullFileName).exists()) {
+                                continue;
+                            }
 
-                            fallbackFontDict.get(weight).add(fullFileName);
+                            Integer weight = new Integer(weightStr);
+                            if (!fallbackFontDict.containsKey(weight)) {
+                                fallbackFontDict.put(weight, new ArrayList<FallbackFont>());
+                            }
+
+                            int preference = 0;
+                            if (lang == null) {
+                                preference = 10;
+                            }
+                            if (filename.indexOf("Noto") >= 0) {
+                                preference += 3;
+                            } else if (filename.indexOf("Roboto") >= 0) {
+                                preference += 2;
+                            } else if (filename.indexOf("Droid") >= 0) {
+                                preference += 1;
+                            }
+
+                            ArrayList<FallbackFont> fallbacks = fallbackFontDict.get(weight);
+
+                            fallbacks.add(new FallbackFont(fullFileName, preference, fallbacks.size()));
                         } else {
                             skip(parser);
                         }
@@ -269,6 +303,18 @@ class FontFileParser {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        for (Map.Entry<Integer, ArrayList<FallbackFont>> entry : fallbackFontDict.entrySet()) {
+            Collections.sort(entry.getValue(), new Comparator<FallbackFont>() {
+                    public int compare(FallbackFont a, FallbackFont b) {
+                        if (a.preference != b.preference) {
+                            return a.preference > b.preference ? -1 : 1;
+                        }
+                        return a.order < b.order ? -1 : 1;
+                    }
+                });
+
+        }
     }
 
     public String getFontFile( String _key ) {
@@ -291,14 +337,14 @@ class FontFileParser {
         String fallback = "";
 
         while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry)it.next();
-            Integer diff = Math.abs((Integer) pair.getKey() - weightHint);
+            Map.Entry<Integer, ArrayList<FallbackFont>> pair = (Map.Entry)it.next();
+            Integer diff = Math.abs(pair.getKey() - weightHint);
 
             if (diff < diffWeight) {
-                Vector<String> fallbacks = (Vector<String>) pair.getValue();
+                ArrayList<FallbackFont> fallbacks = pair.getValue();
 
                 if (importance < fallbacks.size()) {
-                    fallback = fallbacks.elementAt(importance);
+                    fallback = fallbacks.get(importance).path;
                     diffWeight = diff;
                 }
             }
