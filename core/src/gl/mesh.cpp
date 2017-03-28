@@ -2,7 +2,7 @@
 #include "gl/shaderProgram.h"
 #include "gl/renderState.h"
 #include "gl/hardware.h"
-#include "gl/error.h"
+#include "gl/glError.h"
 #include "platform.h"
 #include "log.h"
 

@@ -22,4 +22,8 @@ public class SceneUpdate {
     public String getPath() { return componentPath; }
     public String getValue() { return componentValue; }
 
+    @Override
+    public String toString() {
+        return componentPath + " " + componentValue;
+    }
 }

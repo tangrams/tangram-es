@@ -6,8 +6,6 @@
 
 namespace Tangram {
 
-// Function type for a mapReady callback
-using MapReady = std::function<void(void*)>;
 
 // Function type for receiving data from a successful network request
 using UrlCallback = std::function<void(std::vector<char>&&)>;
