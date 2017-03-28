@@ -18,7 +18,7 @@ typedef std::vector<Line> Polygon;
 }
 
 @property (copy, nonatomic) NSString* name;
-@property (weak, nonatomic) TGMapViewController* mapView;
+@property (weak, nonatomic) TGMapViewController* map;
 
 @end
 
@@ -38,7 +38,7 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
 
     if (self) {
         self.name = name;
-        self.mapView = mapView;
+        self.map = mapView;
         dataSource = source;
     }
 
@@ -47,7 +47,7 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
 
 - (void)addPoint:(TGGeoPoint)coordinates withProperties:(TGFeatureProperties *)properties
 {
-    if (!self.mapView) {
+    if (!self.map) {
         return;
     }
 
@@ -60,7 +60,7 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
 
 - (void)addPolygon:(TGGeoPolygon *)polygon withProperties:(TGFeatureProperties *)properties
 {
-    if (!self.mapView) {
+    if (!self.map) {
         return;
     }
 
@@ -89,7 +89,7 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
 
 - (void)addPolyline:(TGGeoPolyline *)polyline withProperties:(TGFeatureProperties *)properties
 {
-    if (!self.mapView) {
+    if (!self.map) {
         return;
     }
 
@@ -104,7 +104,7 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
 
 - (void)addGeoJson:(NSString *)data
 {
-    if (!self.mapView) {
+    if (!self.map) {
         return;
     }
 
@@ -114,21 +114,21 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
 
 - (void)clear
 {
-    if (!self.mapView) {
+    if (!self.map) {
         return;
     }
 
-    [self.mapView clearDataSource:dataSource];
+    [self.map clearDataSource:dataSource];
 }
 
 - (void)remove
 {
-    if (!self.mapView) {
+    if (!self.map) {
         return;
     }
 
-    [self.mapView removeDataSource:dataSource name:self.name];
-    self.mapView = nil;
+    [self.map removeDataSource:dataSource name:self.name];
+    self.map = nil;
 }
 
 @end

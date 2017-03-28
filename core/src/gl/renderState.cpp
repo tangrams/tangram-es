@@ -1,7 +1,7 @@
 #include "gl/renderState.h"
 
 #include "gl/vertexLayout.h"
-#include "gl/error.h"
+#include "gl/glError.h"
 #include "gl/hardware.h"
 #include "gl/texture.h"
 #include "log.h"

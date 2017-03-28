@@ -138,7 +138,13 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     }
 
     self.scenePath = path;
-    self.map->loadScene([path UTF8String], false, updates);
+
+    auto updateCallbackStatus = [=](auto sceneUpdateError) {
+        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didFailSceneUpdateWithError:)]) { return; }
+        [self.mapViewDelegate mapView:self didFailSceneUpdateWithError:[TGHelpers errorFromSceneUpdateError:sceneUpdateError]];
+    };
+
+    self.map->loadScene([path UTF8String], false, updates, updateCallbackStatus);
     self.renderRequested = YES;
 }
 
@@ -148,7 +154,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
     self.scenePath = path;
 
-    Tangram::MapReady onReadyCallback = [self, path](void* _userPtr) -> void {
+    Tangram::MapReady onReadyCallback = [=](void* _userPtr) -> void {
         if (self.mapViewDelegate && [self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadSceneAsync:)]) {
             [self.mapViewDelegate mapView:self didLoadSceneAsync:path];
         }
@@ -164,7 +170,12 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         }
     }
 
-    self.map->loadSceneAsync([path UTF8String], false, onReadyCallback, nullptr, updates);
+    auto updateCallbackStatus = [=](auto sceneUpdateError) {
+        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didFailSceneUpdateWithError:)]) { return; }
+        [self.mapViewDelegate mapView:self didFailSceneUpdateWithError:[TGHelpers errorFromSceneUpdateError:sceneUpdateError]];
+    };
+
+    self.map->loadSceneAsync([path UTF8String], false, onReadyCallback, nullptr, updates, updateCallbackStatus);
 }
 
 #pragma mark Scene updates
@@ -195,7 +206,13 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return; }
 
-    self.map->applySceneUpdates();
+    auto updateCallbackError = [=](auto sceneUpdateError) {
+        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didFailSceneUpdateWithError:)]) { return; }
+
+        [self.mapViewDelegate mapView:self didFailSceneUpdateWithError:[TGHelpers errorFromSceneUpdateError:sceneUpdateError]];
+    };
+
+    self.map->applySceneUpdates(updateCallbackError);
 }
 
 #pragma mark Longitude/Latitude - Screen position conversions
@@ -253,7 +270,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     screenPosition.x *= self.contentScaleFactor;
     screenPosition.y *= self.contentScaleFactor;
 
-    self.map->pickFeatureAt(screenPosition.x, screenPosition.y, [screenPosition, self](const Tangram::FeaturePickResult* featureResult) {
+    self.map->pickFeatureAt(screenPosition.x, screenPosition.y, [=](const Tangram::FeaturePickResult* featureResult) {
         if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
             return;
         }
@@ -288,7 +305,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     screenPosition.x *= self.contentScaleFactor;
     screenPosition.y *= self.contentScaleFactor;
 
-    self.map->pickMarkerAt(screenPosition.x, screenPosition.y, [screenPosition, self](const Tangram::MarkerPickResult* markerPickResult) {
+    self.map->pickMarkerAt(screenPosition.x, screenPosition.y, [=](const Tangram::MarkerPickResult* markerPickResult) {
         if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectMarker:atScreenPosition:)]) {
             return;
         }
@@ -326,7 +343,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     screenPosition.x *= self.contentScaleFactor;
     screenPosition.y *= self.contentScaleFactor;
 
-    self.map->pickLabelAt(screenPosition.x, screenPosition.y, [screenPosition, self](const Tangram::LabelPickResult* labelPickResult) {
+    self.map->pickLabelAt(screenPosition.x, screenPosition.y, [=](const Tangram::LabelPickResult* labelPickResult) {
         if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectLabel:atScreenPosition:)]) {
             return;
         }

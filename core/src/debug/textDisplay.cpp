@@ -1,7 +1,7 @@
 #include "debug/textDisplay.h"
 
 #include "platform.h"
-#include "gl/error.h"
+#include "gl/glError.h"
 #include "gl/vertexLayout.h"
 #include "gl/renderState.h"
 #include "glm/glm.hpp"

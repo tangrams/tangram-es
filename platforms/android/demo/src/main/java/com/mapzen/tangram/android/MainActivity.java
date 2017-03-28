@@ -14,12 +14,16 @@ import com.mapzen.tangram.MapController.FeaturePickListener;
 import com.mapzen.tangram.MapController.LabelPickListener;
 import com.mapzen.tangram.MapController.MarkerPickListener;
 import com.mapzen.tangram.MapController.ViewCompleteListener;
+import com.mapzen.tangram.MapController.SceneUpdateErrorListener;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.Marker;
+import com.mapzen.tangram.SceneUpdate;
+import com.mapzen.tangram.SceneUpdateError;
 import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.MapView.OnMapReadyCallback;
 import com.mapzen.tangram.Marker;
 import com.mapzen.tangram.MarkerPickResult;
+import com.mapzen.tangram.SceneUpdate;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
@@ -32,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends Activity implements OnMapReadyCallback, TapResponder,
-        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener {
+        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener, SceneUpdateErrorListener {
 
     MapController map;
     MapView view;
@@ -46,6 +50,9 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        final ArrayList<SceneUpdate> sceneUpdates = new ArrayList<>(1);
+        final String apiKey = "vector-tiles-tyHL4AY";
+        sceneUpdates.add(new SceneUpdate("global.sdk_mapzen_api_key", apiKey));
         super.onCreate(savedInstanceState);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -54,7 +61,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
         view = (MapView)findViewById(R.id.map);
         view.onCreate(savedInstanceState);
-        view.getMapAsync(this, "scene.yaml");
+        view.getMapAsync(this, "scene.yaml", sceneUpdates);
     }
 
     @Override
@@ -93,6 +100,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
         map.setFeaturePickListener(this);
         map.setLabelPickListener(this);
         map.setMarkerPickListener(this);
+        map.setSceneUpdateErrorListener(this);
 
         map.setViewCompleteListener(new ViewCompleteListener() {
                 public void onViewComplete() {
@@ -236,6 +244,13 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
                         Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    @Override
+    public void onSceneUpdateError(SceneUpdateError sceneUpdateError) {
+        Log.d("Tangram", "Scene update errors "
+                + sceneUpdateError.getSceneUpdate().toString()
+                + " " + sceneUpdateError.getError().toString());
     }
 }
 
