@@ -12,10 +12,10 @@ namespace Tangram {
 //
 // URLs are decomposed as:
 //
-// foo://user:pword@host.com:80/over/there;type=a?name=ferret#nose
-// \_/   \____________________/\_________/ \____/ \_________/ \__/
-//  |              |               |         |         |       |
-// scheme      netLocation        path   parameters  query  fragment
+// foo://user:pword@host.com:80/over/there.txt;type=a?name=ferret#nose
+// \_/   \____________________/\_____________/ \____/ \_________/ \__/
+//  |              |                  |          |        |        |
+// scheme      netLocation           path   parameters  query  fragment
 //
 // Data URIs are decomposed as:
 //
@@ -67,7 +67,6 @@ public:
     bool hasScheme() const;
     bool hasNetLocation() const;
     bool hasPath() const;
-    bool hasExt() const;
     bool hasParameters() const;
     bool hasQuery() const;
     bool hasFragment() const;
@@ -80,7 +79,6 @@ public:
     std::string scheme() const;
     std::string netLocation() const;
     std::string path() const;
-    std::string ext() const;
     std::string parameters() const;
     std::string query() const;
     std::string fragment() const;
@@ -108,6 +106,10 @@ public:
     // and return a modified copy of the string.
     static std::string removeDotSegmentsFromString(std::string path);
 
+    // Get the file extension for a path. The extension may be empty.
+    // e.g. getPathExtension("example.com/a/b/c.txt") == "txt"
+    static std::string getPathExtension(const std::string& path);
+
 private:
 
     // buffer contains the actual text of the URL.
@@ -117,7 +119,7 @@ private:
     struct Parts {
         struct Range {
             size_t start = 0, count = 0;
-        } scheme, location, path, ext, parameters, query, fragment, media, data;
+        } scheme, location, path, parameters, query, fragment, media, data;
     } parts;
 
     // flags contains Boolean information about the URL state.

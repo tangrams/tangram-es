@@ -15,7 +15,7 @@ namespace Tangram {
 std::atomic_uint Importer::progressCounter(0);
 
 bool isZipUrl(const Url& url) {
-    return (url.hasExt() && url.ext() == ".zip");
+    return (Url::getPathExtension(url.path()) == "zip");
 }
 
 Node Importer::applySceneImports(const std::shared_ptr<Platform>& platform,
