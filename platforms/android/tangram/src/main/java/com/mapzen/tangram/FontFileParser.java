@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.ArrayList;
-import java.util.Vector;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -19,13 +18,27 @@ import android.util.Xml;
 class FontFileParser {
 
     private Map<String, String> fontDict = new HashMap<String, String>();
-    private Map<Integer, Vector<String>> fallbackFontDict = new HashMap<Integer, Vector<String>>();
+    private Map<Integer, ArrayList<String>> fallbackFontDict = new HashMap<Integer, ArrayList<String>>();
 
     private static String systemFontPath = "/system/fonts/";
     // Android version >= 5.0
     private static String fontXMLPath = "/system/etc/fonts.xml";
     // Android version < 5.0
     private static String fontXMLFallbackPath = "/etc/system_fonts.xml";
+
+    private void addFallback(Integer weight, String filename) {
+        String fullFileName = systemFontPath + filename;
+        if (!new File(fullFileName).exists()) {
+            return;
+        }
+
+        if (!fallbackFontDict.containsKey(weight)) {
+            fallbackFontDict.put(weight, new ArrayList<String>());
+        }
+
+        fallbackFontDict.get(weight).add(fullFileName);
+    }
+
 
     private void processDocumentFallback(XmlPullParser parser) throws XmlPullParserException, IOException {
         parser.nextTag();
@@ -121,6 +134,7 @@ class FontFileParser {
                 familyWeights.clear();
                 // Parse this family:
                 String name = parser.getAttributeValue(null, "name");
+                String lang = parser.getAttributeValue(null, "lang");
 
                 // fallback fonts
                 if (name == null) {
@@ -136,45 +150,50 @@ class FontFileParser {
 
                             String filename = parser.nextText();
 
-                            Integer weight = new Integer(weightStr);
-                            if (!fallbackFontDict.containsKey(weight)) {
-                                fallbackFontDict.put(weight, new Vector<String>());
-                            }
-
                             // Don't use UI fonts
                             if (filename.indexOf("UI-") >= 0) {
                                 continue;
                             }
+                            // Sorry - not yet supported
+                            if (filename.indexOf("Emoji") >= 0) {
+                                continue;
+                            }
 
-                            String fullFileName = systemFontPath + filename;
-
-                            fallbackFontDict.get(weight).add(fullFileName);
+                            addFallback(new Integer(weightStr), filename);
                         } else {
                             skip(parser);
                         }
                     }
-                    continue;
-                }
-                while (parser.next() != XmlPullParser.END_TAG) {
-                    if (parser.getEventType() != XmlPullParser.START_TAG) {
-                        continue;
-                    }
-                    String tag = parser.getName();
-                    if ("font".equals(tag)) {
-                        String weightStr = parser.getAttributeValue(null, "weight");
-                        if (weightStr != null) { familyWeights.add(weightStr); }
-                        weightStr = (weightStr == null) ? "400" : weightStr;
 
-                        String styleStr = parser.getAttributeValue(null, "style");
-                        styleStr = (styleStr == null) ? "normal" : styleStr;
+                } else {
+                    while (parser.next() != XmlPullParser.END_TAG) {
+                        if (parser.getEventType() != XmlPullParser.START_TAG) {
+                            continue;
+                        }
+                        String tag = parser.getName();
+                        if ("font".equals(tag)) {
+                            String weightStr = parser.getAttributeValue(null, "weight");
+                            if (weightStr != null) {
+                                familyWeights.add(weightStr);
+                            }
+                            weightStr = (weightStr == null) ? "400" : weightStr;
 
-                        String filename = parser.nextText();
-                        String fullFileName = systemFontPath + filename;
+                            String styleStr = parser.getAttributeValue(null, "style");
+                            styleStr = (styleStr == null) ? "normal" : styleStr;
 
-                        String key = name + "_" + weightStr + "_" + styleStr;
-                        fontDict.put(key, fullFileName);
-                    } else {
-                        skip(parser);
+                            String filename = parser.nextText();
+                            String fullFileName = systemFontPath + filename;
+
+                            String key = name + "_" + weightStr + "_" + styleStr;
+                            fontDict.put(key, fullFileName);
+
+                            if ("sans-serif".equals(name) && "normal".equals(styleStr)) {
+                                addFallback(new Integer(weightStr), filename);
+                            }
+
+                        } else {
+                            skip(parser);
+                        }
                     }
                 }
             } else if ("alias".equals(parser.getName())) {
@@ -291,19 +310,18 @@ class FontFileParser {
         String fallback = "";
 
         while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry)it.next();
-            Integer diff = Math.abs((Integer) pair.getKey() - weightHint);
+            Map.Entry<Integer, ArrayList<String>> pair = (Map.Entry)it.next();
+            Integer diff = Math.abs(pair.getKey() - weightHint);
 
             if (diff < diffWeight) {
-                Vector<String> fallbacks = (Vector<String>) pair.getValue();
+                ArrayList<String> fallbacks = pair.getValue();
 
                 if (importance < fallbacks.size()) {
-                    fallback = fallbacks.elementAt(importance);
+                    fallback = fallbacks.get(importance);
                     diffWeight = diff;
                 }
             }
         }
-
         return fallback;
     }
 
