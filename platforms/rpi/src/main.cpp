@@ -87,6 +87,7 @@ void setup(int argc, char **argv) {
     double lat = 0.0f;
     double lon = 0.0f;
     std::string scene = "scene.yaml";
+    const std::string& apiKey = "vector-tiles-tyHL4AY";
 
     for (int i = 1; i < argc - 1; i++) {
         std::string argName(argv[i]), argValue(argv[i + 1]);
@@ -110,7 +111,7 @@ void setup(int argc, char **argv) {
     }
 
     map = new Tangram::Map(platform);
-    map->loadSceneAsync(scene.c_str());
+    map->loadSceneAsync(scene.c_str(), false, {}, nullptr, {SceneUpdate("global.sdk_mapzen_api_key", apiKey)});
     map->setupGL();
     map->resize(width, height);
     if (lon != 0.0f && lat != 0.0f) {

@@ -23,6 +23,7 @@ import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.MapView.OnMapReadyCallback;
 import com.mapzen.tangram.Marker;
 import com.mapzen.tangram.MarkerPickResult;
+import com.mapzen.tangram.SceneUpdate;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
@@ -49,6 +50,9 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        final ArrayList<SceneUpdate> sceneUpdates = new ArrayList<>(1);
+        final String apiKey = "vector-tiles-tyHL4AY";
+        sceneUpdates.add(new SceneUpdate("global.sdk_mapzen_api_key", apiKey));
         super.onCreate(savedInstanceState);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -57,7 +61,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
         view = (MapView)findViewById(R.id.map);
         view.onCreate(savedInstanceState);
-        view.getMapAsync(this, "scene.yaml");
+        view.getMapAsync(this, "scene.yaml", sceneUpdates);
     }
 
     @Override
