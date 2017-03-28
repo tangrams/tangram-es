@@ -151,6 +151,8 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
     std::sort(m_isect2d.pairs.begin(), m_isect2d.pairs.end(),
               [&](auto& a, auto& b) {
 
+                  if (a.first == b.first) { return a.second < b.second; }
+
                   auto* l1 = m_labels[a.first].label;
                   auto* l2 = m_labels[b.first].label;
 
@@ -159,11 +161,17 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
                       return l1->options().priority < l2->options().priority;
                   }
 
-                  if (l1->type() == l2->type()) {
+                  if (l1->type() == l2->type() &&
+                      l1->candidatePriority() != l2->candidatePriority()) {
                       return l1->candidatePriority() < l2->candidatePriority();
                   }
+
+                  if (l1->hash() != l2->hash()) {
+                      return (l1->hash() < l2->hash());
+                  }
+
                   // just so it is consistent between two instances
-                  return (l1->hash() < l2->hash());
+                  return a.first < b.first;
               });
 
     // The collision pairs are sorted in a way that:
