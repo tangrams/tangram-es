@@ -26,4 +26,32 @@
     }
 }
 
++ (TGError)convertTGErrorTypeFrom:(Tangram::Error)error
+{
+    switch (error) {
+        case Tangram::Error::scene_update_path_yaml_syntax_error:
+            return TGErrorSceneUpdatePathYAMLSyntaxError;
+        case Tangram::Error::scene_update_path_not_found:
+            return TGErrorSceneUpdatePathNotFound;
+        case Tangram::Error::scene_update_value_yaml_syntax_error:
+            return TGErrorSceneUpdateValueYAMLSyntaxError;
+    }
+}
+
++ (NSError *)errorFromSceneUpdateError:(Tangram::SceneUpdateError)updateError
+{
+    NSString* path = [NSString stringWithUTF8String:updateError.update.path.c_str()];
+    NSString* value = [NSString stringWithUTF8String:updateError.update.value.c_str()];
+    TGSceneUpdate* udpate = [[TGSceneUpdate alloc] initWithPath:path value:value];
+
+    NSMutableDictionary* userInfo = [[NSMutableDictionary alloc] init];
+    [userInfo setObject:udpate forKey:@"TGUpdate"];
+
+    NSError* error = [NSError errorWithDomain:@"TGMapViewController:applySceneUpdates"
+                                         code:(NSInteger)updateError.error
+                                     userInfo:userInfo];
+
+    return error;
+}
+
 @end

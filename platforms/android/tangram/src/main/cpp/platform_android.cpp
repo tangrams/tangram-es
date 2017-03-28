@@ -46,9 +46,13 @@ static jmethodID onLabelPickMID = 0;
 static jmethodID onMarkerPickMID = 0;
 static jmethodID labelPickResultInitMID = 0;
 static jmethodID markerPickResultInitMID = 0;
+static jmethodID onSceneUpdateErrorMID = 0;
+static jmethodID sceneUpdateErrorInitMID = 0;
 
 static jclass labelPickResultClass = nullptr;
+static jclass sceneUpdateErrorClass = nullptr;
 static jclass markerPickResultClass = nullptr;
+
 static jclass hashmapClass = nullptr;
 static jmethodID hashmapInitMID = 0;
 static jmethodID hashmapPutMID = 0;
@@ -96,6 +100,14 @@ void setupJniEnv(JNIEnv* jniEnv) {
     }
     markerPickResultClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/MarkerPickResult"));
     markerPickResultInitMID = jniEnv->GetMethodID(markerPickResultClass, "<init>", "(Lcom/mapzen/tangram/Marker;DD)V");
+
+    if (sceneUpdateErrorClass) {
+        jniEnv->DeleteGlobalRef(sceneUpdateErrorClass);
+    }
+    sceneUpdateErrorClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/SceneUpdateError"));
+    sceneUpdateErrorInitMID = jniEnv->GetMethodID(sceneUpdateErrorClass, "<init>", "(Ljava/lang/String;Ljava/lang/String;I)V");
+    jclass sceneUpdateErrorListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$SceneUpdateErrorListener");
+    onSceneUpdateErrorMID = jniEnv->GetMethodID(sceneUpdateErrorListenerClass, "onSceneUpdateError", "(Lcom/mapzen/tangram/SceneUpdateError;)V");
 
     if (hashmapClass) {
         jniEnv->DeleteGlobalRef(hashmapClass);
@@ -348,6 +360,24 @@ void AndroidPlatform::cancelUrlRequest(const std::string& _url) {
 void setCurrentThreadPriority(int priority) {
     int  tid = gettid();
     setpriority(PRIO_PROCESS, tid, priority);
+}
+
+void sceneUpdateErrorCallback(jobject updateCallbackRef, const SceneUpdateError& sceneUpdateError) {
+
+    if (!updateCallbackRef) {
+        return;
+    }
+
+    JniThreadBinding jniEnv(jvm);
+
+    jstring jUpdateStatusPath = jniEnv->NewStringUTF(sceneUpdateError.update.path.c_str());
+    jstring jUpdateStatusValue = jniEnv->NewStringUTF(sceneUpdateError.update.value.c_str());
+    jint jError = (jint)sceneUpdateError.error;
+    jobject jUpdateErrorStatus = jniEnv->NewObject(sceneUpdateErrorClass, sceneUpdateErrorInitMID,
+                                                   jUpdateStatusPath, jUpdateStatusValue, jError);
+
+    jniEnv->CallVoidMethod(updateCallbackRef, onSceneUpdateErrorMID, jUpdateErrorStatus);
+    jniEnv->DeleteGlobalRef(updateCallbackRef);
 }
 
 void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult) {

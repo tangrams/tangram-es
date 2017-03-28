@@ -1,7 +1,7 @@
 #include "gl/shaderProgram.h"
 
 #include "gl/disposer.h"
-#include "gl/error.h"
+#include "gl/glError.h"
 #include "gl/renderState.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "scene/light.h"

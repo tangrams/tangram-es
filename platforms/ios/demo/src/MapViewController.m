@@ -23,6 +23,11 @@
     NSLog(@"Did capture screenshot");
 }
 
+- (void)mapView:(TGMapViewController *)mapView didFailSceneUpdateWithError:(NSError *)sceneUpdateError;
+{
+    NSLog(@"Scene update error for update with error %@", sceneUpdateError);
+}
+
 - (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView
 {
     NSLog(@"Did complete view");

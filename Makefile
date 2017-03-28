@@ -173,10 +173,10 @@ clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean
 	clean-tizen-arm clean-tizen-x86
 
 clean-android:
-	rm -rf android/build
-	rm -rf android/tangram/build
-	rm -rf android/tangram/.externalNativeBuild
-	rm -rf android/demo/build
+	rm -rf platforms/android/build
+	rm -rf platforms/android/tangram/build
+	rm -rf platforms/android/tangram/.externalNativeBuild
+	rm -rf platforms/android/demo/build
 
 clean-osx:
 	rm -rf ${OSX_BUILD_DIR}

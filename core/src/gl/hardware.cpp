@@ -1,6 +1,5 @@
 #include "gl/hardware.h"
 
-#include "gl/error.h"
 #include "gl.h"
 #include "log.h"
 #include "platform.h"

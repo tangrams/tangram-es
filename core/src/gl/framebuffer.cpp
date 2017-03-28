@@ -1,6 +1,6 @@
 #include "gl/framebuffer.h"
 
-#include "gl/error.h"
+#include "gl/glError.h"
 #include "gl/primitives.h"
 #include "gl/renderState.h"
 #include "gl/hardware.h"

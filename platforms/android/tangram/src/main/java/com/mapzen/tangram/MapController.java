@@ -13,7 +13,7 @@ import okhttp3.Callback;
 import okhttp3.Response;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.function.Function;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -44,6 +44,15 @@ public class MapController implements Renderer {
         PERSPECTIVE,
         ISOMETRIC,
         FLAT,
+    }
+
+    /**
+     * Options representing an error generated after from the map controller
+     */
+    public enum Error {
+        SCENE_UPDATE_PATH_NOT_FOUND,
+        SCENE_UPDATE_PATH_YAML_SYNTAX_ERROR,
+        SCENE_UPDATE_VALUE_YAML_SYNTAX_ERROR,
     }
 
     protected static EaseType DEFAULT_EASE_TYPE = EaseType.CUBIC;
@@ -113,6 +122,19 @@ public class MapController implements Renderer {
          * no ease- or label-animation is running.
          */
         void onViewComplete();
+    }
+
+    /**
+     * Interface for a callback to received additional error information in a {@link SceneUpdateError}
+     * Triggered after a call of {@link #applySceneUpdates()} or {@link #loadSceneFile(String, List<SceneUpdate>)}
+     * Listener should be set with {@link #setSceneUpdateErrorListener(SceneUpdateErrorListener)}
+     */
+    public interface SceneUpdateErrorListener {
+        /**
+         * Receive error status when a scene update failed
+         * @param sceneUpdateError The  {@link SceneUpdateError} holding error informations
+         */
+        void onSceneUpdateError(SceneUpdateError sceneUpdateError);
     }
 
     /**
@@ -248,6 +270,7 @@ public class MapController implements Renderer {
 
     /**
      * Load a new scene file
+     * If scene updates triggers an error, they won't be applied.
      * @param path Location of the YAML scene file within the application assets
      * @param sceneUpdates List of {@code SceneUpdate}
      */
@@ -255,7 +278,7 @@ public class MapController implements Renderer {
         String[] updateStrings = bundleSceneUpdates(sceneUpdates);
         scenePath = path;
         checkPointer(mapPointer);
-        nativeLoadScene(mapPointer, path, updateStrings);
+        nativeLoadScene(mapPointer, sceneUpdateErrorListener, path, updateStrings);
         requestRender();
     }
 
@@ -691,6 +714,14 @@ public class MapController implements Renderer {
     }
 
     /**
+     * Set a listener for scene update error statuses
+     * @param listener The {@link SceneUpdateErrorListener} to call after scene update have failed
+     */
+    public void setSceneUpdateErrorListener(SceneUpdateErrorListener listener) {
+        sceneUpdateErrorListener = listener;
+    }
+
+    /**
      * Set a listener for label pick events
      * @param listener The {@link LabelPickListener} to call
      */
@@ -830,10 +861,11 @@ public class MapController implements Renderer {
 
     /**
      * Apply updates queued by queueSceneUpdate; this empties the current queue of updates
+     * If a scene update is triggered, scene updates won't be applied.
      */
     public void applySceneUpdates() {
         checkPointer(mapPointer);
-        nativeApplySceneUpdates(mapPointer);
+        nativeApplySceneUpdates(mapPointer, sceneUpdateErrorListener);
     }
 
     /**
@@ -971,7 +1003,7 @@ public class MapController implements Renderer {
 
     private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
     private synchronized native void nativeDispose(long mapPtr);
-    private synchronized native void nativeLoadScene(long mapPtr, String path, String[] updateStrings);
+    private synchronized native void nativeLoadScene(long mapPtr, SceneUpdateErrorListener listener, String path, String[] updateStrings);
     private synchronized native void nativeSetupGL(long mapPtr);
     private synchronized native void nativeResize(long mapPtr, int width, int height);
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
@@ -1002,7 +1034,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
     private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String componentValue);
     private synchronized native void nativeQueueSceneUpdates(long mapPtr, String[] updateStrings);
-    private synchronized native void nativeApplySceneUpdates(long mapPtr);
+    private synchronized native void nativeApplySceneUpdates(long mapPtr, SceneUpdateErrorListener listener);
     private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
     private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
@@ -1047,6 +1079,7 @@ public class MapController implements Renderer {
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
     private FeaturePickListener featurePickListener;
+    private SceneUpdateErrorListener sceneUpdateErrorListener;
     private LabelPickListener labelPickListener;
     private MarkerPickListener markerPickListener;
     private ViewCompleteListener viewCompleteListener;
