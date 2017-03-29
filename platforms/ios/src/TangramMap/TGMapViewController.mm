@@ -23,6 +23,7 @@
 __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 @interface TGMapViewController () {
+    BOOL shouldCaptureFrame;
     BOOL captureFrameWaitForViewComplete;
     BOOL viewComplete;
 }
@@ -748,6 +749,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
     self->viewComplete = NO;
     self->captureFrameWaitForViewComplete = YES;
+    self->shouldCaptureFrame = NO;
     self.renderRequested = YES;
     self.continuous = NO;
     self.markersById = [[NSMutableDictionary alloc] init];
@@ -847,6 +849,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 - (void)captureScreenshot:(BOOL)waitForViewComplete
 {
     self->captureFrameWaitForViewComplete = waitForViewComplete;
+    self->shouldCaptureFrame = YES;
 }
 
 - (void)update
@@ -869,13 +872,15 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     self.map->render();
 
     if (self.mapViewDelegate && [self.mapViewDelegate respondsToSelector:@selector(mapView:didCaptureScreenshot:)]) {
-        if (!self->captureFrameWaitForViewComplete || self->viewComplete) {
+        if (self->shouldCaptureFrame && (!self->captureFrameWaitForViewComplete || self->viewComplete)) {
             UIGraphicsBeginImageContext(self.view.frame.size);
             [self.view drawViewHierarchyInRect:self.view.frame afterScreenUpdates:YES];
             UIImage* screenshot = UIGraphicsGetImageFromCurrentImageContext();
             UIGraphicsEndImageContext();
 
             [self.mapViewDelegate mapView:self didCaptureScreenshot:screenshot];
+
+            self->shouldCaptureFrame = NO;
         }
     }
 }
