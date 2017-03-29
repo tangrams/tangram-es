@@ -18,7 +18,8 @@ public:
     TestImporter(std::unordered_map<Url, std::string> _testScenes) : m_testScenes(_testScenes) {}
 
 protected:
-    virtual std::string getSceneString(const std::shared_ptr<Platform>& platform, const Url& scenePath) override {
+    virtual std::string getSceneString(const std::shared_ptr<Platform>& platform,
+            const Url& scenePath, const std::unique_ptr<Asset>& asset = nullptr) override {
         return m_testScenes[scenePath];
     }
 
@@ -105,7 +106,10 @@ TestImporter::TestImporter() {
 TEST_CASE("Imported scenes are merged with the parent scene", "[import][core]") {
     std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
     TestImporter importer;
-    auto root = importer.applySceneImports(platform, "a.yaml", "/root/");
+
+    auto scene = std::make_shared<Scene>(platform,  "a.yaml");
+    scene->resourceRoot() = "/root/";
+    auto root = importer.applySceneImports(platform, scene);
 
     CHECK(root["value"].Scalar() == "a");
     CHECK(root["has_a"].Scalar() == "true");
@@ -115,7 +119,10 @@ TEST_CASE("Imported scenes are merged with the parent scene", "[import][core]") 
 TEST_CASE("Nested imports are merged recursively", "[import][core]") {
     std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
     TestImporter importer;
-    auto root = importer.applySceneImports(platform, "c.yaml", "/root/");
+
+    auto scene = std::make_shared<Scene>(platform,  "c.yaml");
+    scene->resourceRoot() = "/root/";
+    auto root = importer.applySceneImports(platform, scene);
 
     CHECK(root["value"].Scalar() == "c");
     CHECK(root["has_a"].Scalar() == "true");
@@ -128,7 +135,9 @@ TEST_CASE("Imports that would start a cycle are ignored", "[import][core]") {
     TestImporter importer;
 
     // If import cycles aren't checked for and stopped, this call won't return.
-    auto root = importer.applySceneImports(platform, "cycle_simple.yaml", "/root/");
+    auto scene = std::make_shared<Scene>(platform,  "cycle_simple.yaml");
+    scene->resourceRoot() = "/root/";
+    auto root = importer.applySceneImports(platform, scene);
 
     // Check that the scene values were applied.
     CHECK(root["value"].Scalar() == "cyclic");
@@ -140,7 +149,9 @@ TEST_CASE("Tricky import cycles are ignored", "[import][core]") {
 
     // The nested import should resolve to the same path as the original file,
     // and so the importer should break the cycle.
-    auto root = importer.applySceneImports(platform, "cycle_tricky.yaml", "/root/");
+    auto scene = std::make_shared<Scene>(platform,  "cycle_tricky.yaml");
+    scene->resourceRoot() = "/root/";
+    auto root = importer.applySceneImports(platform, scene);
 
     // Check that the imported scene values were merged.
     CHECK(root["has_cycle_tricky"].Scalar() == "true");
@@ -150,7 +161,10 @@ TEST_CASE("Tricky import cycles are ignored", "[import][core]") {
 TEST_CASE("Scene URLs are resolved against their parent during import", "[import][core]") {
     std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
     TestImporter importer;
-    auto root = importer.applySceneImports(platform, "urls.yaml", "/root/");
+
+    auto scene = std::make_shared<Scene>(platform,  "urls.yaml");
+    scene->resourceRoot() = "/root/";
+    auto root = importer.applySceneImports(platform, scene);
 
     // Check that global texture URLs are resolved correctly.
 
@@ -205,7 +219,10 @@ TEST_CASE("Scene URLs are resolved against their parent during import", "[import
 TEST_CASE("References to globals are not treated like URLs during importing", "[import][core]") {
     std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
     TestImporter importer;
-    auto root = importer.applySceneImports(platform, "globals.yaml", "/root/");
+
+    auto scene = std::make_shared<Scene>(platform,  "globals.yaml");
+    scene->resourceRoot() = "/root/";
+    auto root = importer.applySceneImports(platform, scene);
 
     // Check that font global references are preserved.
     CHECK(root["fonts"]["aFont"]["url"].Scalar() == "global.fontUrl");
@@ -237,7 +254,10 @@ TEST_CASE("Map overwrites sequence", "[import][core]") {
     )END";
 
     TestImporter importer(testScenes);
-    auto root = importer.applySceneImports(platform, "base.yaml", "/");
+
+    auto scene = std::make_shared<Scene>(platform,  "base.yaml");
+    scene->resourceRoot() = "/";
+    auto root = importer.applySceneImports(platform, scene);
 
     CHECK(root["filter"].IsMap());
     CHECK(root["filter"].size() == 1);
@@ -259,7 +279,10 @@ TEST_CASE("Sequence overwrites map", "[import][core]") {
     )END";
 
     TestImporter importer(testScenes);
-    auto root = importer.applySceneImports(platform, "base.yaml", "/");
+
+    auto scene = std::make_shared<Scene>(platform,  "base.yaml");
+    scene->resourceRoot() = "/";
+    auto root = importer.applySceneImports(platform, scene);
 
     CHECK(root["a"].IsSequence());
     CHECK(root["a"].size() == 2);
@@ -282,7 +305,10 @@ TEST_CASE("Scalar and null overwrite correctly", "[import][core]") {
     )END";
 
     TestImporter importer(testScenes);
-    auto root = importer.applySceneImports(platform, "base.yaml", "/");
+
+    auto scene = std::make_shared<Scene>(platform,  "base.yaml");
+    scene->resourceRoot() = "/";
+    auto root = importer.applySceneImports(platform, scene);
 
     CHECK(root["scalar_at_end"].Scalar() == "scalar");
     CHECK(root["null_at_end"].IsNull());
