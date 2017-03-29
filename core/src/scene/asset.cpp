@@ -24,16 +24,30 @@ ZipHandle::~ZipHandle() {
     }
 }
 
-Asset::Asset(std::string name, std::string path, std::shared_ptr<ZipHandle> zipHandle,
-        std::vector<char> zippedData) :
-        m_name(name),
-        m_path(path),
+
+/* Asset Class Implementation */
+Asset::Asset(std::string name) : m_name(name) {}
+
+std::vector<char> Asset::readBytesFromAsset(const std::shared_ptr<Platform> &platform) const {
+    return platform->bytesFromFile(m_name.c_str());
+}
+
+std::string Asset::readStringFromAsset(const std::shared_ptr<Platform> &platform) const {
+    return platform->stringFromFile(m_name.c_str());
+}
+
+
+/* ZippedAsset Class Implementation */
+ZippedAsset::ZippedAsset(std::string name, std::string path, std::shared_ptr<ZipHandle> zipHandle,
+             std::vector<char> zippedData) :
+        Asset(name),
+        m_resourcePath(path),
         m_zipHandle(zipHandle) {
 
     buildZipHandle(zippedData);
 }
 
-bool Asset::isBaseYaml(const std::string& filePath) {
+bool ZippedAsset::isBaseSceneYaml(const std::string& filePath) const {
     auto extLoc = filePath.find(".yaml");
     if (extLoc == std::string::npos) { return false; }
 
@@ -42,7 +56,7 @@ bool Asset::isBaseYaml(const std::string& filePath) {
     return true;
 }
 
-void Asset::buildZipHandle(std::vector<char>& zipData) {
+void ZippedAsset::buildZipHandle(std::vector<char>& zipData) {
 
     if (zipData.empty()) { return; }
 
@@ -69,14 +83,14 @@ void Asset::buildZipHandle(std::vector<char>& zipData) {
             LOGE("ZippedAssetPackage: Could not read file stats: %s", st.m_filename);
             continue;
         }
-        if (isBaseYaml(st.m_filename)) {
-            m_path = st.m_filename;
+        if (isBaseSceneYaml(st.m_filename)) {
+            m_resourcePath = st.m_filename;
         }
         m_zipHandle->fileInfo[st.m_filename] = std::pair<unsigned int, size_t>(i, st.m_uncomp_size);
     }
 }
 
-bool Asset::bytesFromAsset(const std::string& filePath, std::function<char*(size_t)> allocator) {
+bool ZippedAsset::bytesFromAsset(const std::string& filePath, std::function<char*(size_t)> allocator) const{
 
     if (m_zipHandle->archiveHandle) {
         mz_zip_archive* zip = m_zipHandle->archiveHandle.get();
@@ -100,9 +114,10 @@ bool Asset::bytesFromAsset(const std::string& filePath, std::function<char*(size
 
 }
 
-std::vector<char> Asset::readBytesFromAsset(const std::shared_ptr<Platform>& platform, const std::string& filePath) {
+std::vector<char> ZippedAsset::readBytesFromAsset(const std::shared_ptr<Platform>& platform,
+                                                  const std::string& filePath) const {
 
-    if (!zipHandle()) { return {}; }
+    if (!m_zipHandle) { return {}; }
 
     std::vector<char> fileData;
 
@@ -120,14 +135,12 @@ std::vector<char> Asset::readBytesFromAsset(const std::shared_ptr<Platform>& pla
     return fileData;
 }
 
-std::vector<char> Asset::readBytesFromAsset(const std::shared_ptr<Platform> &platform) {
-    if (m_zipHandle) {
-        return readBytesFromAsset(platform, m_path);
-    }
-    return platform->bytesFromFile(m_name.c_str());
+std::vector<char> ZippedAsset::readBytesFromAsset(const std::shared_ptr<Platform> &platform) const {
+    return readBytesFromAsset(platform, m_resourcePath);
 }
 
-std::string Asset::readStringFromAsset(const std::shared_ptr<Platform>& platform, const std::string& filePath) {
+std::string ZippedAsset::readStringFromAsset(const std::shared_ptr<Platform>& platform,
+                                             const std::string& filePath) const {
 
     if (!m_zipHandle) { return ""; }
 
@@ -148,13 +161,8 @@ std::string Asset::readStringFromAsset(const std::shared_ptr<Platform>& platform
 }
 
 
-std::string Asset::readStringFromAsset(const std::shared_ptr<Platform> &platform) {
-
-    if (m_zipHandle) {
-        return readStringFromAsset(platform, m_path);
-    }
-
-    return platform->stringFromFile(m_name.c_str());
+std::string ZippedAsset::readStringFromAsset(const std::shared_ptr<Platform> &platform) const {
+    return readStringFromAsset(platform, m_resourcePath);
 }
 
 

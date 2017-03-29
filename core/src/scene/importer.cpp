@@ -75,7 +75,8 @@ Node Importer::applySceneImports(const std::shared_ptr<Platform>& platform,
                     std::unique_lock<std::mutex> lock(sceneMutex);
                     auto& asset = scene->sceneAssets()[path.string()];
                     if (isZipped) {
-                        asset->buildZipHandle(rawData);
+                        auto& zippedAsset = static_cast<ZippedAsset&>(*asset);
+                        zippedAsset.buildZipHandle(rawData);
                         processScene(platform, scene, path, asset->readStringFromAsset(platform));
                     } else {
                         processScene(platform, scene, path, std::string(rawData.data(), rawData.size()));
@@ -165,16 +166,16 @@ void  Importer::createSceneAsset(const std::shared_ptr<Platform>& platform, std:
     if (isZipUrl(resolvedUrl)) {
         if (relativeUrl.hasHttpScheme() || (resolvedUrl.hasHttpScheme() && base.isEmpty())) {
             // Data to be fetched later (and zipHandle created) in network callback
-            sceneAssets[resolvedStr] = std::make_unique<Asset>(resolvedStr, relativeStr);
+            sceneAssets[resolvedStr] = std::make_unique<ZippedAsset>(resolvedStr, relativeStr);
 
         } else if (relativeUrl.isAbsolute() || base.isEmpty()) {
-            sceneAssets[resolvedStr] = std::make_unique<Asset>(resolvedStr, relativeStr, nullptr,
+            sceneAssets[resolvedStr] = std::make_unique<ZippedAsset>(resolvedStr, relativeStr, nullptr,
                                                                platform->bytesFromFile(resolvedStr.c_str()));
         } else {
-            auto& parentAsset = sceneAssets[baseStr];
+            auto parentAsset = static_cast<ZippedAsset*>(sceneAssets[baseStr].get());
             // Parent asset (for base Str) must have been created by now
             assert(parentAsset);
-            sceneAssets[resolvedStr] = std::make_unique<Asset>(resolvedStr, relativeStr, nullptr,
+            sceneAssets[resolvedStr] = std::make_unique<ZippedAsset>(resolvedStr, relativeStr, nullptr,
                                                                parentAsset->readBytesFromAsset(platform, relativeStr));
         }
     } else {
@@ -182,12 +183,12 @@ void  Importer::createSceneAsset(const std::shared_ptr<Platform>& platform, std:
 
         if (relativeUrl.isAbsolute() || (parentAsset && !parentAsset->zipHandle())) {
             // Make sure to first check for cases when the asset does not belong within a zipBundle
-            sceneAssets[resolvedStr] = std::make_unique<Asset>(resolvedStr, relativeStr);
+            sceneAssets[resolvedStr] = std::make_unique<Asset>(resolvedStr);
         } else if (parentAsset && parentAsset->zipHandle()) {
             // Asset is in zip bundle
-            sceneAssets[resolvedStr] = std::make_unique<Asset>(resolvedStr, relativeStr, parentAsset->zipHandle());
+            sceneAssets[resolvedStr] = std::make_unique<ZippedAsset>(resolvedStr, relativeStr, parentAsset->zipHandle());
         } else {
-            sceneAssets[resolvedStr] = std::make_unique<Asset>(resolvedStr, relativeStr);
+            sceneAssets[resolvedStr] = std::make_unique<Asset>(resolvedStr);
         }
     }
 }
