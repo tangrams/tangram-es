@@ -5,6 +5,7 @@
 #include "gl/renderState.h"
 #include "gl/shaderProgram.h"
 #include "gl/texture.h"
+#include "gl/hardware.h"
 #include "gl/vao.h"
 
 #include <memory>
@@ -100,6 +101,8 @@ bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader, bool useVa
 
 template<class T>
 bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader, int textureUnit, bool useVao) {
+    useVao = useVao && Hardware::supportsVAOs;
+
     if (m_nVertices == 0) { return false; }
 
     // Enable shader program
