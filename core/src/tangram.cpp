@@ -902,6 +902,10 @@ void Map::onMemoryWarning() {
         tileCache->clear();
     }
 
+    for (auto& tileSet : impl->tileManager.getTileSets()) {
+        tileSet.source->clearData();
+    }
+
     if (impl->scene && impl->scene->fontContext()) {
         impl->scene->fontContext()->releaseFonts();
     }
