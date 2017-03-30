@@ -50,7 +50,7 @@ void Labels::processLabelUpdate(const ViewState& viewState,
                       viewState.viewportSize.y);
 
     for (auto& label : labelMesh->getLabels()) {
-        if (!drawAll && label->state() == Label::State::dead) {
+        if (!drawAll && (label->state() == Label::State::dead || label->forceInvisible()) ) {
             continue;
         }
 
@@ -65,6 +65,7 @@ void Labels::processLabelUpdate(const ViewState& viewState,
         if (!label->update(mvp, viewState, &bounds, transform)) {
             continue;
         }
+
 
         if (onlyTransitions) {
             if (label->occludedLastFrame()) { label->occlude(); }
@@ -143,7 +144,7 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
 
             processLabelUpdate(_viewState, mesh, nullptr,
                                marker->modelViewProjectionMatrix(),
-                               _dt, drawAllLabels, _onlyTransitions, false);
+                               _dt, drawAllLabels, _onlyRender, false);
         }
     }
 }

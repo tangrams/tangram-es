@@ -41,6 +41,9 @@ public:
                         const std::vector<std::unique_ptr<Marker>>& _markers,
                         TileCache& _cache);
 
+    /* onlyTransitions: when the view and tiles have not changed one does not need to update the set of
+     * active labels. We just need to render these the labels in this case
+     */
     PERF_TRACE void updateLabels(const ViewState& _viewState, float _dt,
                                  const std::vector<std::unique_ptr<Style>>& _styles,
                                  const std::vector<std::shared_ptr<Tile>>& _tiles,
