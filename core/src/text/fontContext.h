@@ -115,6 +115,8 @@ public:
 
     void setPixelScale(float _scale);
 
+    void releaseFonts();
+
 private:
 
     float m_sdfRadius;
