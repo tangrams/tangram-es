@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
 
     auto platform = std::make_shared<OSXPlatform>();
 
-    std::string sceneFile = "scene.yaml";
+    std::string sceneFile = "raster-terrain.yaml";
     // Load file from command line, if given.
     int argi = 0;
     while (++argi < argc) {
