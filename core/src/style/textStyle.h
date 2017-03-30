@@ -24,6 +24,8 @@ public:
     struct Parameters {
         std::shared_ptr<alfons::Font> font;
         std::string text = "";
+        std::string textLeft = "";
+        std::string textRight = "";
         bool interactive = false;
         uint32_t fill = 0xff000000;
         uint32_t strokeColor = 0xffffffff;

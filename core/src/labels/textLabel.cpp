@@ -63,7 +63,7 @@ void TextLabel::applyAnchor(Anchor _anchor) {
     }
 
     glm::vec2 offset = m_dim;
-    if (m_parent) { offset += m_parent->dimension(); }
+    if (isChild()) { offset += m_relative->dimension(); }
 
     m_anchor = LabelProperty::anchorDirection(_anchor) * offset * 0.5f;
 }
@@ -135,12 +135,29 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
             glm::vec2 screenPosition = worldToScreenSpace(_mvp, glm::vec4(p1, 0.0, 1.0),
                                                           _viewState.viewportSize, clipped);
 
-            rotation = (ap0.x <= ap2.x ? ap2 - ap0 : ap0 - ap2) / length;
+            auto offset = m_options.offset;
+
+            bool flip = ap0.x > ap2.x;
+
+            if (flip) {
+                rotation = (ap0 - ap2) / length;
+            } else {
+                rotation = (ap2 - ap0) / length;
+            }
+
+            if (m_options.anchors.anchor[0] == LabelProperty::Anchor::bottom) {
+                offset.y += m_dim.y * 0.5f;
+                if (flip) { offset = -offset; }
+            } else if (m_options.anchors.anchor[0] == LabelProperty::Anchor::top) {
+                offset.y += m_dim.y * 0.5f;
+                if (!flip) { offset = -offset; }
+            }
+
             rotation = glm::vec2{ rotation.x, - rotation.y };
 
             m_screenCenter = screenPosition;
 
-            PointTransform(_transform).set(screenPosition + rotateBy(m_options.offset, rotation), rotation);
+            PointTransform(_transform).set(screenPosition + rotateBy(offset, rotation), rotation);
 
             return true;
         }
@@ -166,9 +183,10 @@ void TextLabel::obbs(ScreenTransform& _transform, OBBBuffer& _obbs) {
     PointTransform pointTransform(_transform);
     auto rotation = pointTransform.rotation();
 
-    auto obb = OBB(pointTransform.position() + m_anchor,
-                   glm::vec2{rotation.x, -rotation.y},
-                   dim.x, dim.y);
+    auto position = pointTransform.position();
+    if (m_type != Type::line) { position += m_anchor; }
+
+    auto obb = OBB(position, glm::vec2{rotation.x, -rotation.y}, dim.x, dim.y);
 
     _obbs.append(obb);
 
@@ -197,7 +215,8 @@ void TextLabel::addVerticesToMesh(ScreenTransform& _transform, const glm::vec2& 
     bool rotate = (rotation.x != 1.f);
 
     glm::vec2 screenPosition = transform.position();
-    screenPosition += m_anchor;
+    if (m_type != Type::line) { screenPosition += m_anchor; }
+
     glm::i16vec2 sp = glm::i16vec2(screenPosition * TextVertex::position_scale);
     std::array<glm::i16vec2, 4> vertexPosition;
 

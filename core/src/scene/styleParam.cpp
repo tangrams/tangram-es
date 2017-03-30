@@ -78,12 +78,16 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"text:repeat_group", StyleParamKey::text_repeat_group},
     {"text:optional", StyleParamKey::text_optional},
     {"text:text_source", StyleParamKey::text_source},
+    {"text:text_source:left", StyleParamKey::text_source_left},
+    {"text:text_source:right", StyleParamKey::text_source_right},
     {"text:text_wrap", StyleParamKey::text_wrap},
     {"text:transition:hide:time", StyleParamKey::text_transition_hide_time},
     {"text:transition:selected:time", StyleParamKey::text_transition_selected_time},
     {"text:transition:show:time", StyleParamKey::text_transition_show_time},
     {"text:visible", StyleParamKey::text_visible},
     {"text_source", StyleParamKey::text_source},
+    {"text_source:left", StyleParamKey::text_source_left},
+    {"text_source:right", StyleParamKey::text_source_right},
     {"text_wrap", StyleParamKey::text_wrap},
     {"tile_edges", StyleParamKey::tile_edges},
     {"transition:hide:time", StyleParamKey::transition_hide_time},
@@ -243,8 +247,23 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         }
         return placement;
     }
-    case StyleParamKey::text_align:
     case StyleParamKey::text_source:
+    case StyleParamKey::text_source_left:
+    case StyleParamKey::text_source_right: {
+        TextSource textSource;
+        // FIXME remove white space
+        std::string tmp;
+        if (_value.find(',') != std::string::npos) {
+            std::stringstream ss(_value);
+            while (std::getline(ss, tmp, ',')) {
+                textSource.keys.push_back(tmp);
+            }
+        } else {
+            textSource.keys.push_back(_value);
+        }
+        return std::move(textSource);
+    }
+    case StyleParamKey::text_align:
     case StyleParamKey::text_transform:
     case StyleParamKey::sprite:
     case StyleParamKey::sprite_default:
@@ -403,7 +422,15 @@ std::string StyleParam::toString() const {
         auto p = value.get<glm::vec2>();
         return k + "(" + std::to_string(p.x) + "px, " + std::to_string(p.y) + "px)";
     }
-    case StyleParamKey::repeat_group:
+    case StyleParamKey::text_source:
+    case StyleParamKey::text_source_left:
+    case StyleParamKey::text_source_right:
+        if (value.is<std::string>()) {
+            return k + value.get<std::string>();
+        } else if (value.is<TextSource>()) {
+            // TODO add more..
+            return k + value.get<TextSource>().keys[0];
+        }
     case StyleParamKey::transition_hide_time:
     case StyleParamKey::text_transition_hide_time:
     case StyleParamKey::transition_show_time:
@@ -413,9 +440,9 @@ std::string StyleParam::toString() const {
     case StyleParamKey::text_font_family:
     case StyleParamKey::text_font_weight:
     case StyleParamKey::text_font_style:
-    case StyleParamKey::text_source:
     case StyleParamKey::text_transform:
     case StyleParamKey::text_wrap:
+    case StyleParamKey::repeat_group:
     case StyleParamKey::text_repeat_group:
     case StyleParamKey::sprite:
     case StyleParamKey::sprite_default:
