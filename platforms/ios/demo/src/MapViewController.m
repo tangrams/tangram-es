@@ -136,7 +136,6 @@
             // Add the marker to the current view
             [vc.markerPolygon map:view error:nil];
         }
-
         static TGGeoPolygon* polygon = nil;
         if (!polygon) { polygon = [[TGGeoPolygon alloc] init]; }
 

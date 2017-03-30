@@ -20,6 +20,7 @@ public class Marker {
     private long markerId = 0;
     private MapController map;
     private boolean visible = true;
+    private Object userData = null;
 
     /**
      * Package private constructor for creating a new {@link Marker}.
@@ -31,6 +32,22 @@ public class Marker {
         this.context = context;
         this.markerId = markerId;
         this.map = map;
+    }
+
+    /**
+     * Custom user data storage.
+     * @param userData The user data to hold in this marker.
+     */
+    public void setUserData(Object userData) {
+        this.userData = userData;
+    }
+
+    /**
+     * Gets custom user data.
+     * @return The user data held by this marker.
+     */
+    public Object getUserData() {
+        return this.userData;
     }
 
     /**
