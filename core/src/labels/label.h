@@ -154,6 +154,8 @@ public:
     void setAlpha(float _alpha);
 
     void setForceInvisible(bool visible);
+
+    // make the label not part of the visible set (used for marker visibility)
     bool forceInvisible() { return m_forceInvisible; }
 
 protected:
