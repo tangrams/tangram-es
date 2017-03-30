@@ -179,6 +179,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nonatomic) NSInteger drawOrder;
 /// Access the marker icon (readonly)
 @property (readonly, nonatomic) UIImage* icon;
+/// A custom user data
+@property (assign, nonatomic) void* userData;
 
 NS_ASSUME_NONNULL_END
 
