@@ -150,6 +150,11 @@ public:
 
     void setAlpha(float _alpha);
 
+    void setForceInvisible(bool visible);
+
+    // make the label not part of the visible set (used for marker visibility)
+    bool forceInvisible() { return m_forceInvisible; }
+
 protected:
 
     virtual void applyAnchor(LabelProperty::Anchor _anchor) = 0;
@@ -169,6 +174,7 @@ protected:
 
     bool m_occludedLastFrame;
     bool m_occluded;
+    bool m_forceInvisible;
 
     glm::vec2 m_screenCenter;
     float m_alpha;
