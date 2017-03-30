@@ -41,11 +41,14 @@ public:
                         const std::vector<std::unique_ptr<Marker>>& _markers,
                         TileCache& _cache);
 
+    /* onlyRender: when the view and tiles have not changed one does not need to update the set of
+     * active labels. We just need to render these the labels in this case
+     */
     PERF_TRACE void updateLabels(const ViewState& _viewState, float _dt,
                                  const std::vector<std::unique_ptr<Style>>& _styles,
                                  const std::vector<std::shared_ptr<Tile>>& _tiles,
                                  const std::vector<std::unique_ptr<Marker>>& _markers,
-                                 bool _onlyTransitions = true);
+                                 bool _onlyRender = true);
 
     bool needUpdate() const { return m_needUpdate; }
 
@@ -72,7 +75,7 @@ protected:
 
     void processLabelUpdate(const ViewState& viewState, StyledMesh* mesh, Tile* tile,
                             const glm::mat4& mvp, float dt, bool drawAll,
-                            bool onlyTransitions, bool isProxy);
+                            bool onlyRender, bool isProxy);
 
     bool m_needUpdate;
 

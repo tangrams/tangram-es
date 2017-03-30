@@ -33,7 +33,7 @@ void Labels::processLabelUpdate(const ViewState& viewState,
                                 StyledMesh* mesh, Tile* tile,
                                 const glm::mat4& mvp,
                                 float dt, bool drawAll,
-                                bool onlyTransitions, bool isProxy) {
+                                bool onlyRender, bool isProxy) {
 
     if (!mesh) { return; }
     auto labelMesh = dynamic_cast<const LabelSet*>(mesh);
@@ -50,7 +50,7 @@ void Labels::processLabelUpdate(const ViewState& viewState,
                       viewState.viewportSize.y);
 
     for (auto& label : labelMesh->getLabels()) {
-        if (!drawAll && label->state() == Label::State::dead) {
+        if (!drawAll && (label->state() == Label::State::dead || label->forceInvisible()) ) {
             continue;
         }
 
@@ -58,7 +58,7 @@ void Labels::processLabelUpdate(const ViewState& viewState,
         ScreenTransform transform { m_transforms, transformRange };
 
         // Use extendedBounds when labels take part in collision detection.
-        auto bounds = (onlyTransitions || !label->canOcclude())
+        auto bounds = (onlyRender || !label->canOcclude())
             ? screenBounds
             : extendedBounds;
 
@@ -66,7 +66,8 @@ void Labels::processLabelUpdate(const ViewState& viewState,
             continue;
         }
 
-        if (onlyTransitions) {
+
+        if (onlyRender) {
             if (label->occludedLastFrame()) { label->occlude(); }
 
             if (label->visibleState() || !label->canOcclude()) {
@@ -102,9 +103,9 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
                           const std::vector<std::unique_ptr<Style>>& _styles,
                           const std::vector<std::shared_ptr<Tile>>& _tiles,
                           const std::vector<std::unique_ptr<Marker>>& _markers,
-                          bool _onlyTransitions) {
+                          bool _onlyRender) {
 
-    if (!_onlyTransitions) { m_labels.clear(); }
+    if (!_onlyRender) { m_labels.clear(); }
 
     m_selectionLabels.clear();
 
@@ -130,7 +131,7 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
         for (const auto& style : _styles) {
             const auto& mesh = tile->getMesh(*style);
             processLabelUpdate(_viewState, mesh.get(), tile.get(), mvp,
-                               _dt, drawAllLabels, _onlyTransitions, proxyTile);
+                               _dt, drawAllLabels, _onlyRender, proxyTile);
         }
     }
 
@@ -143,7 +144,7 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
 
             processLabelUpdate(_viewState, mesh, nullptr,
                                marker->modelViewProjectionMatrix(),
-                               _dt, drawAllLabels, _onlyTransitions, false);
+                               _dt, drawAllLabels, _onlyRender, false);
         }
     }
 }

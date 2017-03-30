@@ -29,6 +29,7 @@ Label::Label(glm::vec2 _size, Type _type, Options _options)
 
     m_occludedLastFrame = false;
     m_occluded = false;
+    m_forceInvisible = false;
     m_relative = nullptr;
     m_anchorIndex = 0;
 }
@@ -76,6 +77,10 @@ void Label::enterState(const State& _state, float _alpha) {
 
 void Label::setAlpha(float _alpha) {
     m_alpha = CLAMP(_alpha, 0.0, 1.0);
+}
+
+void Label::setForceInvisible(bool visible) {
+    m_forceInvisible = visible;
 }
 
 void Label::resetState() {
