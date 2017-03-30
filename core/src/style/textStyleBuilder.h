@@ -45,6 +45,9 @@ public:
     Label* addLabel(Label::Type _type, TextLabel::Coordinates _coordinates, const TextStyle::Parameters& _params,
                     const LabelAttributes& _attributes, const DrawRule& _rule);
 
+    Label*  addLabel(Label::Type _type, TextLabel::Coordinates _coordinates, const TextStyle::Parameters& _params,
+                     const LabelAttributes& _attributes, uint32_t _selectionColor);
+
     void addLineTextLabels(const Feature& _feature, const TextStyle::Parameters& _params,
                            const LabelAttributes& _attributes, const DrawRule& _rule);
 

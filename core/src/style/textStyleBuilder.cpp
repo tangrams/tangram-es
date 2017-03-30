@@ -31,7 +31,10 @@ namespace Tangram {
 
 const static std::string key_name("name");
 
-TextStyleBuilder::TextStyleBuilder(const TextStyle& _style) : m_style(_style) {}
+TextStyleBuilder::TextStyleBuilder(const TextStyle& _style)
+    : m_style(_style) {
+    m_textLabels = std::make_unique<TextLabels>(m_style);
+}
 
 void TextStyleBuilder::setup(const Tile& _tile){
     m_tileSize = _tile.getProjection()->TileSize();
@@ -814,7 +817,25 @@ bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type 
 
 Label* TextStyleBuilder::addLabel(Label::Type _type, TextLabel::Coordinates _coordinates,
                                 const TextStyle::Parameters& _params, const LabelAttributes& _attributes,
-                                const DrawRule& _rule) {
+                                uint32_t _selectionColor) {
+
+
+    m_labels.emplace_back(new TextLabel(_coordinates, _type, _params.labelOptions,
+                                        {_attributes.fill,
+                                         _attributes.stroke,
+                                         _attributes.fontScale,
+                                         _selectionColor},
+                                        {_attributes.width, _attributes.height},
+                                        *m_textLabels, _attributes.textRanges,
+                                        _params.align));
+
+        return m_labels.back().get();
+
+}
+
+Label* TextStyleBuilder::addLabel(Label::Type _type, TextLabel::Coordinates _coordinates,
+                                  const TextStyle::Parameters& _params, const LabelAttributes& _attributes,
+                                  const DrawRule& _rule) {
 
     uint32_t selectionColor = 0;
 
@@ -822,16 +843,7 @@ Label* TextStyleBuilder::addLabel(Label::Type _type, TextLabel::Coordinates _coo
         selectionColor = _rule.featureSelection->nextColorIdentifier();
     }
 
-    m_labels.emplace_back(new TextLabel(_coordinates, _type, _params.labelOptions,
-                                        {_attributes.fill,
-                                         _attributes.stroke,
-                                         _attributes.fontScale,
-                                         selectionColor},
-                                        {_attributes.width, _attributes.height},
-                                        *m_textLabels, _attributes.textRanges,
-                                        _params.align));
-
-    return m_labels.back().get();
+    return addLabel(_type, _coordinates, _params, _attributes, selectionColor);
 }
 
 }
