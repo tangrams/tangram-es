@@ -19,6 +19,7 @@
 #include "selection/selectionQuery.h"
 #include "style/material.h"
 #include "style/style.h"
+#include "style/textStyleBuilder.h"
 #include "text/fontContext.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
@@ -29,7 +30,6 @@
 #include "util/ease.h"
 #include "util/jobQueue.h"
 #include "view/view.h"
-
 #include <bitset>
 #include <cmath>
 
@@ -90,6 +90,13 @@ public:
     float pickRadius = .5f;
 
     std::vector<SelectionQuery> selectionQueries;
+    struct {
+        std::unique_ptr<StyledMesh> mesh = nullptr;
+        std::unique_ptr<TextStyle> style = nullptr;
+        bool ready = false;;
+    } overlay;
+    void initOverlay(Scene& scene);
+    void renderOverlay();
 };
 
 void Map::Impl::setEase(EaseField _f, Ease _e) {
@@ -119,6 +126,69 @@ Map::~Map() {
 
     TextDisplay::Instance().deinit();
     Primitives::deinit();
+}
+
+
+void Map::Impl::initOverlay(Scene& scene) {
+
+    overlay.mesh = nullptr;
+    overlay.style = nullptr;
+
+    if (scene.fontContext()) {
+        overlay.style = std::make_unique<TextStyle>("overlay", scene.fontContext(), true);
+        overlay.style->build(scene);
+        auto builder = overlay.style->createBuilder();
+
+        TextStyle::Parameters p;
+        p.font = scene.fontContext()->getFont("default", "normal", "400", 18);
+        p.text = "© Mapzen. © OpenStreetMap";
+        p.strokeWidth = 4;
+        p.fontSize = 18;
+        p.fill = 0xff444444;
+        p.strokeColor = 0xaaffffff;
+        p.wordWrap = false;
+        p.labelOptions.anchors.anchor = { {LabelProperty::Anchor::top_right} };
+        p.labelOptions.anchors.count = 1;
+
+        TextStyleBuilder* b = static_cast<TextStyleBuilder*>(builder.get());
+        TextStyleBuilder::LabelAttributes attrib;
+        b->prepareLabel(p, Label::Type::point, attrib);
+        b->addLabel(Label::Type::point, TextLabel::Coordinates{}, p, attrib, 0);
+        overlay.mesh = builder->build();
+
+        auto* mesh = dynamic_cast<const LabelSet*>(overlay.mesh.get());
+        if (!mesh || mesh->getLabels().empty()) {
+            LOGE("Failed to create overlay");
+            overlay.mesh = nullptr;
+            overlay.style = nullptr;
+        }
+
+        overlay.ready = false;
+    }
+}
+
+void Map::Impl::renderOverlay() {
+    if (overlay.mesh) {
+        if (!overlay.ready) {
+            overlay.ready = true;
+            overlay.style->onBeginUpdate();
+
+            auto* mesh = dynamic_cast<const LabelSet*>(overlay.mesh.get());
+            auto& l = mesh->getLabels()[0];
+            l->enterState(Label::State::visible);
+            l->evalState(0);
+            ScreenTransform::Buffer buf;
+            buf.points.push_back({10.f, view.getHeight(), 0.f});
+            buf.points.push_back({1.f, 0.f, 0.f});
+            Range range(0,2);
+            glm::vec2 screenSize(view.getWidth(), view.getHeight());
+            ScreenTransform transform(buf, range);
+            l->addVerticesToMesh(transform, screenSize);
+        }
+        overlay.style->onBeginFrame(renderState);
+        overlay.style->onBeginDrawFrame(renderState, view, *scene);
+        overlay.style->onEndDrawFrame();
+    }
 }
 
 void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
@@ -176,6 +246,8 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
     if (animated != platform->isContinuousRendering()) {
         platform->setContinuousRendering(animated);
     }
+
+    initOverlay(*scene);
 }
 
 // NB: Not thread-safe. Must be called on the main/render thread!
@@ -330,6 +402,8 @@ void Map::resize(int _newWidth, int _newHeight) {
     impl->selectionBuffer = std::make_unique<FrameBuffer>(_newWidth/2, _newHeight/2);
 
     Primitives::setResolution(impl->renderState, _newWidth, _newHeight);
+
+    impl->overlay.ready = false;
 }
 
 bool Map::update(float _dt) {
@@ -518,6 +592,8 @@ void Map::render() {
             style->onEndDrawFrame();
         }
     }
+
+    impl->renderOverlay();
 
     impl->labels.drawDebug(impl->renderState, impl->view);
 
@@ -874,6 +950,8 @@ void Map::setupGL() {
         impl->selectionBuffer = std::make_unique<FrameBuffer>(impl->selectionBuffer->getWidth(),
                                                               impl->selectionBuffer->getHeight());
     }
+
+    impl->overlay.ready = false;
 
     // Set default primitive render color
     Primitives::setColor(impl->renderState, 0xffffff);
