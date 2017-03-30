@@ -147,11 +147,7 @@ struct StyleParam {
     struct TextSource {
         std::vector<std::string> keys;
         bool operator==(const TextSource& _other) const {
-            if (keys.size() != _other.keys.size()) { return false; }
-            for (size_t i = 0; i < keys.size(); i++) {
-                if (!(keys[i] == _other.keys[i])) { return false;}
-            }
-            return true;
+            return keys == _other.keys;
         }
     };
 

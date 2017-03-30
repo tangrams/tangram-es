@@ -198,6 +198,10 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
     TextStyle::Parameters rightParams = _params;
     TextStyle::Parameters leftParams = _params;
 
+    // Deactivate offset horizontally for boundary labels
+    rightParams.labelOptions.offset.x = 0.0f;
+    leftParams.labelOptions.offset.x = 0.0f;
+
     bool hasLeftLabel = false;
     if (hasLeftSource && !leftText.empty()) {
         leftParams.text = leftText;
@@ -224,7 +228,7 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
 
     float labelWidth = std::max(leftAttribs.width, rightAttribs.width);
 
-    auto cb = [&](glm::vec2 a, glm::vec2 b) {
+    auto onAddLabel = [&](glm::vec2 a, glm::vec2 b) {
         Label* left;
         Label* right;
         if (hasLeftLabel) {
@@ -240,7 +244,7 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
     };
 
     for (auto& line : _feat.lines) {
-        addStraightTextLabels(line, labelWidth, cb);
+        addStraightTextLabels(line, labelWidth, onAddLabel);
     }
 
     return true;
@@ -295,7 +299,7 @@ bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 }
 
 bool TextStyleBuilder::addStraightTextLabels(const Line& _line, float _labelWidth,
-                                             const std::function<void(glm::vec2,glm::vec2)>& _cb) {
+                                             const std::function<void(glm::vec2,glm::vec2)>& _onAddLabel) {
 
     // Size of pixel in tile coordinates
     float pixelSize = 1.0/m_tileSize;
@@ -353,7 +357,7 @@ bool TextStyleBuilder::addStraightTextLabels(const Line& _line, float _labelWidt
             glm::vec2 b = glm::vec2(p1 - p0) / float(run);
 
             for (int r = 0; r < run; r++) {
-                _cb(a, a+b);
+                _onAddLabel(a, a+b);
 
                 a += b;
             }
