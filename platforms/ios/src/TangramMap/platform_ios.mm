@@ -16,13 +16,11 @@
 
 namespace Tangram {
 
-NSString* resolvePath(const char* _path) {
+NSString* resolvePath(const char* _path, NSURL* _resourceRoot) {
     NSString* pathString = [NSString stringWithUTF8String:_path];
 
-    NSURL* resourceFolderUrl = [[NSBundle mainBundle] resourceURL];
-
     NSURL* resolvedUrl = [NSURL URLWithString:pathString
-                                relativeToURL:resourceFolderUrl];
+                                relativeToURL:_resourceRoot];
 
     NSString* pathInAppBundle = [resolvedUrl path];
 
@@ -76,10 +74,17 @@ void initGLExtensions() {
 
 iOSPlatform::iOSPlatform(TGMapViewController* _viewController) :
     Platform(),
-    m_viewController(_viewController) {}
+    m_viewController(_viewController)
+{
+    m_resourceRoot = [[NSBundle mainBundle] resourceURL];
+}
 
 void iOSPlatform::requestRender() const {
     [m_viewController renderOnce];
+}
+
+void iOSPlatform::setResourceRoot(NSURL* _resourceRoot) {
+    m_resourceRoot = _resourceRoot;
 }
 
 void iOSPlatform::setContinuousRendering(bool _isContinuous) {
@@ -88,12 +93,12 @@ void iOSPlatform::setContinuousRendering(bool _isContinuous) {
 }
 
 std::string iOSPlatform::resolveAssetPath(const std::string& _path) const {
-    NSString* path = resolvePath(_path.c_str());
+    NSString* path = resolvePath(_path.c_str(), m_resourceRoot);
     return [path UTF8String];
 }
 
 std::vector<char> iOSPlatform::bytesFromFile(const char* _path) const {
-    NSString* path = resolvePath(_path);
+    NSString* path = resolvePath(_path, m_resourceRoot);
 
     if (!path) { return {}; }
 
@@ -102,7 +107,7 @@ std::vector<char> iOSPlatform::bytesFromFile(const char* _path) const {
 }
 
 std::string iOSPlatform::stringFromFile(const char* _path) const {
-    NSString* path = resolvePath(_path);
+    NSString* path = resolvePath(_path, m_resourceRoot);
     std::string data;
 
     if (!path) { return data; }
