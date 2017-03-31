@@ -895,6 +895,22 @@ void Map::runAsyncTask(std::function<void()> _task) {
     }
 }
 
+void Map::onMemoryWarning() {
+    auto& tileCache = impl->tileManager.getTileCache();
+
+    if (tileCache) {
+        tileCache->clear();
+    }
+
+    for (auto& tileSet : impl->tileManager.getTileSets()) {
+        tileSet.source->clearData();
+    }
+
+    if (impl->scene && impl->scene->fontContext()) {
+        impl->scene->fontContext()->releaseFonts();
+    }
+}
+
 void setDebugFlag(DebugFlags _flag, bool _on) {
 
     g_flags.set(_flag, _on);

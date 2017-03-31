@@ -62,6 +62,8 @@ enum class StyleParamKey : uint8_t {
     sprite_default,
     style,
     text_source,
+    text_source_left,
+    text_source_right,
     text_wrap,
     tile_edges,
     text_transform,
@@ -141,8 +143,16 @@ struct StyleParam {
         }
     };
 
-    using Value = variant<Undefined, none_type, bool, float, uint32_t, std::string, glm::vec2,
-                            Width, LabelProperty::Placement, LabelProperty::Anchors>;
+
+    struct TextSource {
+        std::vector<std::string> keys;
+        bool operator==(const TextSource& _other) const {
+            return keys == _other.keys;
+        }
+    };
+
+    using Value = variant<none_type, Undefined, bool, float, uint32_t, std::string, glm::vec2, Width,
+                          LabelProperty::Placement, LabelProperty::Anchors, TextSource>;
 
     StyleParam() :
         key(StyleParamKey::none),

@@ -529,4 +529,10 @@ extern "C" {
             Tangram::sceneUpdateErrorCallback(updateErrorCallbackRef, sceneUpdateErrorStatus);
         });
     }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeOnLowMemory(JNIEnv* jnienv, jobject obj, jlong mapPtr) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        map->onMemoryWarning();
+    }
 }

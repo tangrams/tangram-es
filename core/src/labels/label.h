@@ -124,8 +124,11 @@ public:
 
     bool occludedLastFrame() const { return m_occludedLastFrame; }
 
-    Label* parent() const { return m_parent; }
-    void setParent(Label& parent, bool definePriority, bool defineCollide);
+    Label* relative() const { return m_relative; }
+    bool isChild() const { return bool(m_relative); }
+    bool isSibling() const { return bool(m_relative) && bool(m_relative->relative()); }
+
+    void setRelative(Label& _relative, bool _definePriority, bool _defineCollide);
 
     LabelProperty::Anchor anchorType() const {
         return m_options.anchors[m_anchorIndex];
@@ -150,6 +153,11 @@ public:
 
     void setAlpha(float _alpha);
 
+    void setForceInvisible(bool visible);
+
+    // make the label not part of the visible set (used for marker visibility)
+    bool forceInvisible() { return m_forceInvisible; }
+
 protected:
 
     virtual void applyAnchor(LabelProperty::Anchor _anchor) = 0;
@@ -159,7 +167,7 @@ protected:
 
     Options m_options;
 
-    Label* m_parent;
+    Label* m_relative;
 
     State m_state;
     FadeEffect m_fade;
@@ -169,6 +177,7 @@ protected:
 
     bool m_occludedLastFrame;
     bool m_occluded;
+    bool m_forceInvisible;
 
     glm::vec2 m_screenCenter;
     float m_alpha;

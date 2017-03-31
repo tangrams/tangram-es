@@ -29,21 +29,22 @@ Label::Label(glm::vec2 _size, Type _type, Options _options)
 
     m_occludedLastFrame = false;
     m_occluded = false;
-    m_parent = nullptr;
+    m_forceInvisible = false;
+    m_relative = nullptr;
     m_anchorIndex = 0;
 }
 
 Label::~Label() {}
 
-void Label::setParent(Label& _parent, bool _definePriority, bool _defineCollide) {
-    m_parent = &_parent;
+void Label::setRelative(Label& _relative, bool _definePriority, bool _defineCollide) {
+    m_relative = &_relative;
 
     if (_definePriority) {
-        m_options.priority = _parent.options().priority + 0.5f;
+        m_options.priority = _relative.options().priority + 0.5f;
     }
 
     if (_defineCollide) {
-        m_options.collide = _parent.options().collide;
+        m_options.collide = _relative.options().collide;
     }
 
     applyAnchor(m_options.anchors[m_anchorIndex]);
@@ -76,6 +77,10 @@ void Label::enterState(const State& _state, float _alpha) {
 
 void Label::setAlpha(float _alpha) {
     m_alpha = CLAMP(_alpha, 0.0, 1.0);
+}
+
+void Label::setForceInvisible(bool visible) {
+    m_forceInvisible = visible;
 }
 
 void Label::resetState() {

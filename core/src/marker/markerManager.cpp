@@ -105,7 +105,7 @@ bool MarkerManager::setVisible(MarkerID markerID, bool visible) {
     auto labelMesh = dynamic_cast<const LabelSet*>(marker->mesh());
     if (labelMesh) {
         for (auto& label : labelMesh->getLabels()) {
-            label->setAlpha(visible ? 1.0 : 0.0);
+            label->setForceInvisible(!visible);
         }
     }
 

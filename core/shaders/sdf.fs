@@ -25,7 +25,7 @@ varying vec4 v_color;
 varying vec2 v_texcoords;
 varying float v_sdf_threshold;
 varying float v_alpha;
-varying float v_sdf_scale;
+varying float v_sdf_pixel;
 
 #pragma tangram: global
 
@@ -51,9 +51,8 @@ void main(void) {
     //   When the glyph is scaled down, 's' must be increased
     //   (used to interpolate 1px of the scaled glyph around v_sdf_threshold)
 
-    float sdf_pixel = 0.5 / (u_max_stroke_width * v_sdf_scale);
     float add_smooth = 0.25;
-    float filter_width = (sdf_pixel * (0.5 + add_smooth));
+    float filter_width = (v_sdf_pixel * (0.5 + add_smooth));
 
     float start = max(v_sdf_threshold - filter_width, 0.0);
     float end = v_sdf_threshold + filter_width;

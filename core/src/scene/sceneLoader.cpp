@@ -1645,33 +1645,26 @@ bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, 
 
 void SceneLoader::parseTransition(Node params, const std::shared_ptr<Scene>& scene, std::string _prefix, std::vector<StyleParam>& out) {
 
-    for (const auto& prop : params) {
-        if (!prop.first) { continue; }
-        std::vector<std::string> keys;
-
-        if (prop.first.IsScalar()) {
-            keys.push_back(prop.first.as<std::string>());
-        } else if (prop.first.IsSequence()) {
-            keys = prop.first.as<std::vector<std::string>>();
+    // First iterate over the mapping of 'events', we currently recognize 'hide', 'selected', and 'show'.
+    for (const auto& event : params) {
+        if (!event.first.IsScalar() || !event.second.IsMap()) {
+            LOGW("Can't parse 'transitions' entry, expected a mapping of strings to mappings at: %s", _prefix.c_str());
+            continue;
         }
-        for (const auto& key : keys) {
-            std::string prefixedKey;
-            switch (prop.first.Type()) {
-            case YAML::NodeType::Sequence:
-                prefixedKey = _prefix + DELIMITER + key;
-                break;
-            case YAML::NodeType::Scalar:
-                prefixedKey = _prefix + DELIMITER + prop.first.as<std::string>();
-                break;
-            default:
-                LOGW("Expected a scalar or sequence value for transition");
+
+        // Add the event to our key, so it's now 'transition:event'.
+        std::string transitionEvent = _prefix + DELIMITER + event.first.Scalar();
+
+        // Iterate over the parameters in the 'event', we currently only recognize 'time'.
+        for (const auto& param : event.second) {
+            if (!param.first.IsScalar() || !param.second.IsScalar()) {
+                LOGW("Expected a mapping of strings to strings or numbers in: %s", transitionEvent.c_str());
                 continue;
-                break;
             }
-            for (auto child : prop.second) {
-                auto childKey = prefixedKey + DELIMITER + child.first.as<std::string>();
-                out.push_back(StyleParam{ childKey, child.second.as<std::string>() });
-            }
+            // Add the parameter to our key, so it's now 'transition:event:param'.
+            std::string transitionEventParam = transitionEvent + DELIMITER + param.first.Scalar();
+            // Create a style parameter from the key and value.
+            out.push_back(StyleParam{ transitionEventParam, param.second.Scalar() });
         }
     }
 }

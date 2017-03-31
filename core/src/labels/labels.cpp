@@ -33,7 +33,7 @@ void Labels::processLabelUpdate(const ViewState& viewState,
                                 StyledMesh* mesh, Tile* tile,
                                 const glm::mat4& mvp,
                                 float dt, bool drawAll,
-                                bool onlyTransitions, bool isProxy) {
+                                bool onlyRender, bool isProxy) {
 
     if (!mesh) { return; }
     auto labelMesh = dynamic_cast<const LabelSet*>(mesh);
@@ -50,7 +50,7 @@ void Labels::processLabelUpdate(const ViewState& viewState,
                       viewState.viewportSize.y);
 
     for (auto& label : labelMesh->getLabels()) {
-        if (!drawAll && label->state() == Label::State::dead) {
+        if (!drawAll && (label->state() == Label::State::dead || label->forceInvisible()) ) {
             continue;
         }
 
@@ -58,7 +58,7 @@ void Labels::processLabelUpdate(const ViewState& viewState,
         ScreenTransform transform { m_transforms, transformRange };
 
         // Use extendedBounds when labels take part in collision detection.
-        auto bounds = (onlyTransitions || !label->canOcclude())
+        auto bounds = (onlyRender || !label->canOcclude())
             ? screenBounds
             : extendedBounds;
 
@@ -66,7 +66,8 @@ void Labels::processLabelUpdate(const ViewState& viewState,
             continue;
         }
 
-        if (onlyTransitions) {
+
+        if (onlyRender) {
             if (label->occludedLastFrame()) { label->occlude(); }
 
             if (label->visibleState() || !label->canOcclude()) {
@@ -102,9 +103,9 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
                           const std::vector<std::unique_ptr<Style>>& _styles,
                           const std::vector<std::shared_ptr<Tile>>& _tiles,
                           const std::vector<std::unique_ptr<Marker>>& _markers,
-                          bool _onlyTransitions) {
+                          bool _onlyRender) {
 
-    if (!_onlyTransitions) { m_labels.clear(); }
+    if (!_onlyRender) { m_labels.clear(); }
 
     m_selectionLabels.clear();
 
@@ -130,7 +131,7 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
         for (const auto& style : _styles) {
             const auto& mesh = tile->getMesh(*style);
             processLabelUpdate(_viewState, mesh.get(), tile.get(), mvp,
-                               _dt, drawAllLabels, _onlyTransitions, proxyTile);
+                               _dt, drawAllLabels, _onlyRender, proxyTile);
         }
     }
 
@@ -143,7 +144,7 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
 
             processLabelUpdate(_viewState, mesh, nullptr,
                                marker->modelViewProjectionMatrix(),
-                               _dt, drawAllLabels, _onlyTransitions, false);
+                               _dt, drawAllLabels, _onlyRender, false);
         }
     }
 }
@@ -311,8 +312,8 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
 
         // Parent must have been processed earlier so at this point its
         // occlusion and anchor position is determined for the current frame.
-        if (l->parent()) {
-            if (l->parent()->isOccluded()) {
+        if (l->isChild()) {
+            if (l->relative()->isOccluded()) {
                 l->occlude();
                 continue;
             }
@@ -323,9 +324,9 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
         if (l->options().repeatDistance > 0.f) {
             if (withinRepeatDistance(l)) {
                 l->occlude();
-                // If this label is not marked optional, then mark the parent label as occluded
-                if (l->parent() && !l->options().optional) {
-                    l->parent()->occlude();
+                // If this label is not marked optional, then mark the relative label as occluded
+                if (l->relative() && !l->options().optional) {
+                    l->relative()->occlude();
                 }
                 continue;
             }
@@ -357,8 +358,8 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
                         if (!intersect(obb, m_obbs[other])) {
                             return true;
                         }
-                        // Ignore intersection with parent label
-                        if (l->parent() && l->parent() == findLabel(std::begin(m_labels), it, other)) {
+                        // Ignore intersection with relative label
+                        if (l->relative() && l->relative() == findLabel(std::begin(m_labels), it, other)) {
                             return true;
                         }
                         l->occlude();
@@ -370,11 +371,11 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
             }
         } while (l->isOccluded() && l->nextAnchor());
 
-        // At this point, the label has a parent that is visible,
-        // if it is not an optional label, turn the parent to occluded
+        // At this point, the label has a relative that is visible,
+        // if it is not an optional label, turn the relative to occluded
         if (l->isOccluded()) {
-            if (l->parent() && !l->options().optional) {
-                l->parent()->occlude();
+            if (l->relative() && !l->options().optional) {
+                l->relative()->occlude();
             }
         } else {
             // Insert into ISect2D grid
@@ -507,10 +508,10 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
             Primitives::drawPoly(rs, &(obb.getQuad())[0], 4);
         }
 
-        if (label->parent() && label->parent()->visibleState() && !label->parent()->isOccluded()) {
+        if (label->relative() && label->relative()->visibleState() && !label->relative()->isOccluded()) {
             Primitives::setColor(rs, 0xff0000);
             Primitives::drawLine(rs, m_obbs[entry.obbsRange.start].getCentroid(),
-                                 label->parent()->screenCenter());
+                                 label->relative()->screenCenter());
         }
 
         if (label->type() == Label::Type::curved) {
@@ -530,7 +531,7 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
         // draw offset
         glm::vec2 rot = label->screenTransform().rotation;
         glm::vec2 offset = label->options().offset;
-        if (label->parent()) { offset += label->parent()->options().offset; }
+        if (label->relative()) { offset += label->relative()->options().offset; }
         offset = rotateBy(offset, rot);
 
         Primitives::setColor(rs, 0x000000);

@@ -10,7 +10,6 @@
 
 namespace Tangram {
 
-
 void LabelCollider::addLabels(std::vector<std::unique_ptr<Label>>& _labels) {
 
     for (auto& label : _labels) {
@@ -20,35 +19,41 @@ void LabelCollider::addLabels(std::vector<std::unique_ptr<Label>>& _labels) {
     }
 }
 
-void LabelCollider::handleRepeatGroup(size_t startPos) {
+size_t LabelCollider::filterRepeatGroups(size_t startPos, size_t curPos) {
 
-    float threshold2 = pow(m_labels[startPos].label->options().repeatDistance, 2);
-    size_t repeatGroup = m_labels[startPos].label->options().repeatGroup;
+    size_t endGroup = m_labels[curPos].label->options().repeatGroup;
+    size_t endPos = curPos;
 
-    // Get the range
-    size_t endPos = startPos;
-    for (;startPos > 0; startPos--) {
-        if (m_labels[startPos-1].label->options().repeatGroup != repeatGroup) { break; }
-    }
-    for (;endPos < m_labels.size()-1; endPos++) {
-        if (m_labels[endPos+1].label->options().repeatGroup != repeatGroup) { break; }
-    }
+    for (size_t pos = startPos; pos <= curPos; pos = endPos + 1) {
+        size_t repeatGroup = m_labels[pos].label->options().repeatGroup;
+        float  threshold2 = pow(m_labels[pos].label->options().repeatDistance, 2);
 
+        // Find end of the current repeatGroup
+        endPos = pos;
 
-    for (size_t i = startPos; i < endPos; i++) {
-        Label* l1 = m_labels[i].label;
-        if (l1->isOccluded()) { continue; }
-
-        for (size_t j = i+1; j <= endPos; j++) {
-            Label* l2 = m_labels[j].label;
-            if (l2->isOccluded()) { continue; }
-
-            float d2 = distance2(l1->screenCenter(), l2->screenCenter());
-            if (d2 < threshold2) {
-                l2->occlude();
+        for (;endPos < m_labels.size()-1; endPos++) {
+            if (m_labels[endPos+1].label->options().repeatGroup != repeatGroup) {
+                break;
             }
         }
+
+        for (size_t i = pos; i < endPos; i++) {
+            Label* l1 = m_labels[i].label;
+            if (l1->isOccluded()) { continue; }
+
+            for (size_t j = i+1; j <= endPos; j++) {
+                Label* l2 = m_labels[j].label;
+                if (l2->isOccluded()) { continue; }
+
+                float d2 = distance2(l1->screenCenter(), l2->screenCenter());
+                if (d2 < threshold2) {
+                    l2->occlude();
+                }
+            }
+        }
+        if (repeatGroup == endGroup) { break; }
     }
+    return endPos;
 }
 
 void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tileSize) {
@@ -75,19 +80,20 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
               });
 
     // Set view parameters so that the tile is rendererd at
-    // style-zoom-level + 1. (scaled up by factor 2)
-    int overzoom = 1;
+    // style-zoom-level + 2. (scaled up by factor 4). This
+    // filters out labels that are unlikely to become visible
+    // within the tiles zoom-range.
+    int overzoom = 2;
     float tileScale = pow(2, _tileID.s - _tileID.z + overzoom);
     glm::vec2 screenSize{ _tileSize * tileScale };
 
     // Project tile to NDC (-1 to 1, y-up)
     glm::mat4 mvp{1};
-    // Scale tile to 'fullscreen'
-    mvp[0][0] = tileScale;
-    mvp[1][1] = -tileScale;
+    mvp[0][0] = 1.0f;
+    mvp[1][1] = -1.f;
     // Place tile centered
-    mvp[3][0] = -tileScale * 0.5;
-    mvp[3][1] = tileScale * 0.5;
+    mvp[3][0] = -0.5f;
+    mvp[3][1] = 0.5f;
 
     ViewState viewState {
         nullptr, // mapProjection (unused)
@@ -125,6 +131,8 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
         }
     }
 
+    if (m_labels.empty()) { return; }
+
     m_isect2d.resize({screenSize.x / 128, screenSize.y / 128}, screenSize);
 
     m_isect2d.intersect(m_aabbs);
@@ -161,6 +169,11 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
                       return l1->options().priority < l2->options().priority;
                   }
 
+                  // Required ordering for 'filterRepeatGroups()'
+                  if (l1->options().repeatGroup != l2->options().repeatGroup) {
+                      return l1->options().repeatGroup < l2->options().repeatGroup;
+                  }
+
                   if (l1->type() == l2->type() &&
                       l1->candidatePriority() != l2->candidatePriority()) {
                       return l1->candidatePriority() < l2->candidatePriority();
@@ -184,6 +197,7 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
     // This allows to remove repeated labels before they occlude other candidates
 
     size_t repeatGroup = 0;
+    size_t lastFilteredLabelIndex = 0;
 
     // Narrow Phase, resolve conflicts
     for (auto& pair : m_isect2d.pairs) {
@@ -198,18 +212,18 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
             repeatGroup = l1->options().repeatGroup;
 
             if (repeatGroup != 0) {
-                handleRepeatGroup(pair.first);
+                lastFilteredLabelIndex = filterRepeatGroups(lastFilteredLabelIndex, pair.first);
             }
         }
 
-        // Dont let parents occlude their child
-        if (l1->parent() == l2 || l2->parent() == l1) {
+        // Dont let relatives occlude their child
+        if (l1->relative() == l2 || l2->relative() == l1) {
             continue;
         }
-        if (l1->parent() && l1->parent()->isOccluded()) {
+        if (l1->isChild() && l1->relative()->isOccluded()) {
             l1->occlude();
         }
-        if (l2->parent() && l2->parent()->isOccluded()) {
+        if (l2->isChild() && l2->relative()->isOccluded()) {
             l2->occlude();
         }
 
@@ -259,17 +273,19 @@ void LabelCollider::process(TileID _tileID, float _tileInverseScale, float _tile
         }
     }
 
+    filterRepeatGroups(lastFilteredLabelIndex, m_labels.size()-1);
+
     for (auto& entry : m_labels) {
         auto* label = entry.label;
 
         // Manage link occlusion (unified icon labels)
-        if (label->parent()) {
+        if (label->relative()) {
             // First check if the child is required is occluded
-            if (label->parent()->isOccluded()) {
+            if (label->relative()->isOccluded()) {
                 label->occlude();
             } else if (!label->options().optional && label->isOccluded()) {
-                label->parent()->occlude();
-                label->parent()->enterState(Label::State::dead, 0.0f);
+                label->relative()->occlude();
+                label->relative()->enterState(Label::State::dead, 0.0f);
             }
         }
 

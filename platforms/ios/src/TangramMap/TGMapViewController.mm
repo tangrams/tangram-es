@@ -763,8 +763,12 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
     GLKView* view = (GLKView *)self.view;
     view.context = self.context;
+
+    view.drawableColorFormat = GLKViewDrawableColorFormatRGBA8888;
     view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
-    view.drawableMultisample = GLKViewDrawableMultisample4X;
+    view.drawableStencilFormat = GLKViewDrawableStencilFormatNone;
+    view.drawableMultisample = GLKViewDrawableMultisampleNone;
+
     self.contentScaleFactor = view.contentScaleFactor;
 
     [self setupGestureRecognizers];
@@ -783,16 +787,9 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     [super didReceiveMemoryWarning];
 
-    if ([self isViewLoaded] && ([[self view] window] == nil)) {
-        self.view = nil;
-
-        if ([EAGLContext currentContext] == self.context) {
-            [EAGLContext setCurrentContext:nil];
-        }
-        self.context = nil;
+    if (self.map) {
+        self.map->onMemoryWarning();
     }
-
-    // Dispose of any resources that can be recreated.
 }
 
 - (void)setupGL
