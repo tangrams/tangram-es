@@ -763,8 +763,12 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
     GLKView* view = (GLKView *)self.view;
     view.context = self.context;
+
+    view.drawableColorFormat = GLKViewDrawableColorFormatRGBA8888;
     view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
-    view.drawableMultisample = GLKViewDrawableMultisample4X;
+    view.drawableStencilFormat = GLKViewDrawableStencilFormatNone;
+    view.drawableMultisample = GLKViewDrawableMultisampleNone;
+
     self.contentScaleFactor = view.contentScaleFactor;
 
     [self setupGestureRecognizers];
