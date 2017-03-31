@@ -22,7 +22,7 @@ SceneLayer instance_a() {
 
     DrawRuleData rule = { "dg0", dg0, { { StyleParamKey::order, "value_a" } } };
 
-    return { "layer_a", f, { rule }, {} };
+    return { "layer_a", f, { rule }, {}, true };
 }
 
 SceneLayer instance_b() {
@@ -31,7 +31,7 @@ SceneLayer instance_b() {
 
     DrawRuleData rule = { "dg1", dg1, { { StyleParamKey::order, "value_b" } } };
 
-    return { "layer_b", f, { rule }, {} };
+    return { "layer_b", f, { rule }, {}, true };
 }
 
 SceneLayer instance_c() {
@@ -40,7 +40,7 @@ SceneLayer instance_c() {
 
     DrawRuleData rule = { "dg2", dg2, { { StyleParamKey::order, "value_c" } } };
 
-    return { "layer_c", f, { rule }, { instance_a(), instance_b() } };
+    return { "layer_c", f, { rule }, { instance_a(), instance_b() }, true };
 }
 
 SceneLayer instance_d() {
@@ -49,7 +49,7 @@ SceneLayer instance_d() {
 
     DrawRuleData rule = { "dg0", dg0, { { StyleParamKey::order, "value_d" } } };
 
-    return { "layer_d", f, { rule }, {} };
+    return { "layer_d", f, { rule }, {}, true };
 }
 
 SceneLayer instance_e() {
@@ -58,7 +58,7 @@ SceneLayer instance_e() {
 
     DrawRuleData rule = { "dg2", dg2, { { StyleParamKey::order, "value_e" } } };
 
-    return { "layer_e", f, { rule }, { instance_c(), instance_d() } };
+    return { "layer_e", f, { rule }, { instance_c(), instance_d() }, true };
 }
 
 SceneLayer instance_2() {
@@ -67,7 +67,7 @@ SceneLayer instance_2() {
 
     DrawRuleData rule = { "group2", group2, {} };
 
-    return { "subLayer2", f, { rule }, {} };
+    return { "subLayer2", f, { rule }, {}, true };
 }
 
 SceneLayer instance_1() {
@@ -76,7 +76,7 @@ SceneLayer instance_1() {
 
     DrawRuleData rule = { "group1", group1, {} };
 
-    return { "subLayer1", f, { rule }, {} };
+    return { "subLayer1", f, { rule }, {}, true };
 }
 
 SceneLayer instance() {
@@ -85,7 +85,7 @@ SceneLayer instance() {
 
     DrawRuleData rule = { "group1", group1, { {StyleParamKey::order, "a" } } };
 
-    return { "layer", f, { rule }, { instance_1(), instance_2() } };
+    return { "layer", f, { rule }, { instance_1(), instance_2() }, true };
 }
 
 TEST_CASE("SceneLayer", "[SceneLayer][Filter][DrawRule][Match][Merge]") {

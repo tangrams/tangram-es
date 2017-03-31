@@ -50,9 +50,9 @@ DrawRuleData instance_c() {
 
 TEST_CASE("DrawRule correctly merges with another DrawRule", "[DrawRule]") {
 
-    const SceneLayer layer_a = { "a", Filter(), { instance_a() }, {} };
-    const SceneLayer layer_b = { "b", Filter(), { instance_b() }, {} };
-    const SceneLayer layer_c = { "c", Filter(), { instance_c() }, {} };
+    const SceneLayer layer_a = { "a", Filter(), { instance_a() }, {}, true };
+    const SceneLayer layer_b = { "b", Filter(), { instance_b() }, {}, true };
+    const SceneLayer layer_c = { "c", Filter(), { instance_c() }, {}, true };
 
     // For parameters contained in multiple rules, the parameter from the last rule
     // (by lexicographical order) should result.
@@ -163,8 +163,8 @@ TEST_CASE("DrawRule locates and outputs a parameter that it contains", "[DrawRul
 
     std::string str;
 
-    const SceneLayer layer_a = { "a", Filter(), { instance_a() }, {} };
-    const SceneLayer layer_b = { "b", Filter(), { instance_b() }, {} };
+    const SceneLayer layer_a = { "a", Filter(), { instance_a() }, {}, true };
+    const SceneLayer layer_b = { "b", Filter(), { instance_b() }, {}, true };
 
     DrawRuleMergeSet a;
     a.mergeRules(layer_a);
@@ -187,18 +187,18 @@ TEST_CASE("DrawRule locates and outputs a parameter that it contains", "[DrawRul
 TEST_CASE("DrawRule correctly reports that it doesn't contain a parameter", "[DrawRule]") {
     std::string str;
 
-    const SceneLayer layer_a = { "a", Filter(), { instance_a() }, {} };
+    const SceneLayer layer_a = { "a", Filter(), { instance_a() }, {}, true };
     DrawRuleMergeSet a;
     a.mergeRules(layer_a);
     REQUIRE(!a.matchedRules()[0].get(StyleParamKey::width, str)); REQUIRE(str == "");
 
 
-    const SceneLayer layer_b = { "b", Filter(), { instance_b() }, {} };
+    const SceneLayer layer_b = { "b", Filter(), { instance_b() }, {}, true };
     DrawRuleMergeSet b;
     b.mergeRules(layer_b);
     REQUIRE(!b.matchedRules()[0].get(StyleParamKey::join, str)); REQUIRE(str == "");
 
-    const SceneLayer layer_c = { "c", Filter(), { instance_c() }, {} };
+    const SceneLayer layer_c = { "c", Filter(), { instance_c() }, {}, true };
     DrawRuleMergeSet c;
     c.mergeRules(layer_c);
     REQUIRE(!c.matchedRules()[0].get(StyleParamKey::order, str)); REQUIRE(str == "");
