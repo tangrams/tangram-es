@@ -156,27 +156,23 @@ void  Importer::createSceneAsset(const std::shared_ptr<Platform>& platform, std:
     auto& sceneAssets = scene->sceneAssets();
     auto& resolvedStr = resolvedUrl.string();
     auto& baseStr = base.string();
-    auto relativeStr = relativeUrl.string();
 
     if (sceneAssets.find(resolvedStr) != sceneAssets.end()) { return; }
-
-    // needed to find apt file inside zipBundle
-    if (*relativeStr.begin() == '/') { relativeStr.erase(relativeStr.begin()); }
 
     if (isZipUrl(resolvedUrl)) {
         if (relativeUrl.hasHttpScheme() || (resolvedUrl.hasHttpScheme() && base.isEmpty())) {
             // Data to be fetched later (and zipHandle created) in network callback
-            sceneAssets[resolvedStr] = std::make_unique<ZippedAsset>(resolvedStr, relativeStr);
+            sceneAssets[resolvedStr] = std::make_unique<ZippedAsset>(resolvedStr);
 
         } else if (relativeUrl.isAbsolute() || base.isEmpty()) {
-            sceneAssets[resolvedStr] = std::make_unique<ZippedAsset>(resolvedStr, relativeStr, nullptr,
+            sceneAssets[resolvedStr] = std::make_unique<ZippedAsset>(resolvedStr, nullptr,
                                                                platform->bytesFromFile(resolvedStr.c_str()));
         } else {
             auto parentAsset = static_cast<ZippedAsset*>(sceneAssets[baseStr].get());
             // Parent asset (for base Str) must have been created by now
             assert(parentAsset);
-            sceneAssets[resolvedStr] = std::make_unique<ZippedAsset>(resolvedStr, relativeStr, nullptr,
-                                                               parentAsset->readBytesFromAsset(platform, relativeStr));
+            sceneAssets[resolvedStr] = std::make_unique<ZippedAsset>(resolvedStr, nullptr,
+                                                               parentAsset->readBytesFromAsset(platform, resolvedStr));
         }
     } else {
         auto& parentAsset = sceneAssets[baseStr];
@@ -186,7 +182,7 @@ void  Importer::createSceneAsset(const std::shared_ptr<Platform>& platform, std:
             sceneAssets[resolvedStr] = std::make_unique<Asset>(resolvedStr);
         } else if (parentAsset && parentAsset->zipHandle()) {
             // Asset is in zip bundle
-            sceneAssets[resolvedStr] = std::make_unique<ZippedAsset>(resolvedStr, relativeStr, parentAsset->zipHandle());
+            sceneAssets[resolvedStr] = std::make_unique<ZippedAsset>(resolvedStr, parentAsset->zipHandle());
         } else {
             sceneAssets[resolvedStr] = std::make_unique<Asset>(resolvedStr);
         }

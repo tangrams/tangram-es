@@ -15,6 +15,8 @@ struct ZipHandle {
     std::unique_ptr<mz_zip_archive> archiveHandle;
     std::unordered_map<std::string, std::pair<unsigned int, size_t>> fileInfo;
 
+    // Path to the zip bundle (helps in resolving zip resource path)
+    std::string bundlePath = "";
     std::vector<char> data;
 };
 
@@ -38,10 +40,8 @@ std::string Asset::readStringFromAsset(const std::shared_ptr<Platform> &platform
 
 
 /* ZippedAsset Class Implementation */
-ZippedAsset::ZippedAsset(std::string name, std::string path, std::shared_ptr<ZipHandle> zipHandle,
-             std::vector<char> zippedData) :
+ZippedAsset::ZippedAsset(std::string name, std::shared_ptr<ZipHandle> zipHandle, std::vector<char> zippedData) :
         Asset(name),
-        m_resourcePath(path),
         m_zipHandle(zipHandle) {
 
     buildZipHandle(zippedData);
@@ -72,6 +72,9 @@ void ZippedAsset::buildZipHandle(std::vector<char>& zipData) {
         return;
     }
 
+    auto lastPathSegment = m_name.rfind('/');
+    m_zipHandle->bundlePath = (lastPathSegment == std::string::npos) ? "" : m_name.substr(0, lastPathSegment+1);
+
     /* Instead of using mz_zip_reader_locate_file, maintaining a map of file name to index,
      * for performance reasons.
      * https://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/lxr/source/src/util/compress/api/miniz/miniz.c
@@ -84,7 +87,7 @@ void ZippedAsset::buildZipHandle(std::vector<char>& zipData) {
             continue;
         }
         if (isBaseSceneYaml(st.m_filename)) {
-            m_resourcePath = st.m_filename;
+            m_name = m_zipHandle->bundlePath + st.m_filename;
         }
         m_zipHandle->fileInfo[st.m_filename] = std::pair<unsigned int, size_t>(i, st.m_uncomp_size);
     }
@@ -92,9 +95,18 @@ void ZippedAsset::buildZipHandle(std::vector<char>& zipData) {
 
 bool ZippedAsset::bytesFromAsset(const std::string& filePath, std::function<char*(size_t)> allocator) const{
 
+    auto pos = filePath.find(m_zipHandle->bundlePath);
+    if (pos != 0) {
+        LOGE("Invalid asset path: %s", m_name.c_str());
+        return false;
+    }
+
+    auto resourcePath = filePath.substr(m_zipHandle->bundlePath.size());
+    if (*resourcePath.begin() == '/') { resourcePath.erase(resourcePath.begin()); }
+
     if (m_zipHandle->archiveHandle) {
         mz_zip_archive* zip = m_zipHandle->archiveHandle.get();
-        auto it = m_zipHandle->fileInfo.find(filePath);
+        auto it = m_zipHandle->fileInfo.find(resourcePath);
 
         if (it != m_zipHandle->fileInfo.end()) {
             std::size_t elementSize = it->second.second;
@@ -129,14 +141,14 @@ std::vector<char> ZippedAsset::readBytesFromAsset(const std::shared_ptr<Platform
     bytesFromAsset(filePath, allocator);
 
     if (fileData.empty()) {
-        LOGE("Asset \"%s\" read resulted in no data read. Verify the path in the scene.", m_name.c_str());
+        LOGE("Asset \"%s\" read resulted in no data read. Verify the path in the scene.", filePath.c_str());
     }
 
     return fileData;
 }
 
 std::vector<char> ZippedAsset::readBytesFromAsset(const std::shared_ptr<Platform> &platform) const {
-    return readBytesFromAsset(platform, m_resourcePath);
+    return readBytesFromAsset(platform, m_name);
 }
 
 std::string ZippedAsset::readStringFromAsset(const std::shared_ptr<Platform>& platform,
@@ -162,7 +174,7 @@ std::string ZippedAsset::readStringFromAsset(const std::shared_ptr<Platform>& pl
 
 
 std::string ZippedAsset::readStringFromAsset(const std::shared_ptr<Platform> &platform) const {
-    return readStringFromAsset(platform, m_resourcePath);
+    return readStringFromAsset(platform, m_name);
 }
 
 

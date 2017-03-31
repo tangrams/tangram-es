@@ -40,19 +40,17 @@ protected:
  */
 class ZippedAsset : public Asset {
 public:
-    ZippedAsset(std::string name, std::string resourcePath, std::shared_ptr<ZipHandle> zipHandle = nullptr,
-            std::vector<char> zippedData = {});
+    ZippedAsset(std::string name, std::shared_ptr<ZipHandle> zipHandle = nullptr, std::vector<char> zippedData = {});
 
     std::shared_ptr<ZipHandle> zipHandle() const override { return m_zipHandle; }
-    const std::string& resourcePath() const { return m_resourcePath; }
 
     // builds zipHandle (if not already built, from raw Data)
     void buildZipHandle(std::vector<char>& zippedData);
 
-    // returns the string from resource at m_resourcePath in zip archive
+    // returns the string from resource from asset's path (relative to zip bundle path) in zip archive
     std::string readStringFromAsset(const std::shared_ptr<Platform>& platform) const override;
 
-    // returns the raw bytes from resource at m_resourcePath in zip archive
+    // returns the raw bytes from resource from asset's path (relative to zip bundle path) in zip archive
     std::vector<char> readBytesFromAsset(const std::shared_ptr<Platform>& platform) const override;
 
     // returns the string from file bundled within the zip archive
@@ -62,8 +60,6 @@ public:
     std::vector<char> readBytesFromAsset(const std::shared_ptr<Platform>& platform, const std::string& filename) const;
 
 private:
-    // path within a zip, empty for a non zipped asset
-    std::string m_resourcePath;
     std::shared_ptr<ZipHandle> m_zipHandle = nullptr;
 
     // Check if the filePath is the base scene yaml
