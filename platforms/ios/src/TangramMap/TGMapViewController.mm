@@ -843,6 +843,15 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     self.paused = !c;
 }
 
+- (void)setResourceRoot:(NSURL *)resourceRoot
+{
+    if (!self.map) { return; }
+
+    Tangram::iOSPlatform& platform = static_cast<Tangram::iOSPlatform&>(*self.map->getPlatform());
+
+    platform.setResourceRoot(resourceRoot);
+}
+
 - (void)captureScreenshot:(BOOL)waitForViewComplete
 {
     self->captureFrameWaitForViewComplete = waitForViewComplete;
