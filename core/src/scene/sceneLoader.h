@@ -63,7 +63,7 @@ struct SceneLoader {
     static void loadMaterial(const std::shared_ptr<Platform>& platform, Node matNode, Material& material, const std::shared_ptr<Scene>& scene, Style& style);
     static void loadShaderConfig(const std::shared_ptr<Platform>& platform, Node shaders, Style& style, const std::shared_ptr<Scene>& scene);
     static void loadFont(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& font, const std::shared_ptr<Scene>& scene);
-    static SceneLayer loadSublayer(Node layer, const std::string& name, const std::shared_ptr<Scene>& scene);
+    static SceneLayer loadSublayer(const Node& layer, const std::string& name, const std::shared_ptr<Scene>& scene);
     static Filter generateFilter(Node filter, Scene& scene);
     static Filter generateAnyFilter(Node filter, Scene& scene);
     static Filter generateAllFilter(Node filter, Scene& scene);

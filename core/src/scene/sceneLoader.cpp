@@ -1669,7 +1669,7 @@ void SceneLoader::parseTransition(Node params, const std::shared_ptr<Scene>& sce
     }
 }
 
-SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, const std::shared_ptr<Scene>& scene) {
+SceneLayer SceneLoader::loadSublayer(const Node& layer, const std::string& layerName, const std::shared_ptr<Scene>& scene) {
 
     std::vector<SceneLayer> sublayers;
     std::vector<DrawRuleData> rules;
