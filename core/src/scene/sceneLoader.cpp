@@ -1669,12 +1669,12 @@ void SceneLoader::parseTransition(Node params, const std::shared_ptr<Scene>& sce
     }
 }
 
-SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, const std::shared_ptr<Scene>& scene) {
+SceneLayer SceneLoader::loadSublayer(const Node& layer, const std::string& layerName, const std::shared_ptr<Scene>& scene) {
 
     std::vector<SceneLayer> sublayers;
     std::vector<DrawRuleData> rules;
     Filter filter;
-    bool visible = true;
+    bool enabled = true;
 
     for (const auto& member : layer) {
 
@@ -1700,17 +1700,19 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, c
                 LOGNode("Invalid 'filter' in layer '%s'", member.second, layerName.c_str());
                 return { layerName, {}, {}, {}, false };
             }
-        } else if (key == "properties") {
-            // TODO: ignored for now
         } else if (key == "visible") {
-            getBool(member.second, visible, "visible");
+            if (!layer["enabled"].IsDefined()) {
+                YAML::convert<bool>::decode(member.second, enabled);
+            }
+        } else if (key == "enabled") {
+            YAML::convert<bool>::decode(member.second, enabled);
         } else {
             // Member is a sublayer
             sublayers.push_back(loadSublayer(member.second, (layerName + DELIMITER + key), scene));
         }
     }
 
-    return { layerName, std::move(filter), rules, std::move(sublayers), visible };
+    return { layerName, std::move(filter), rules, std::move(sublayers), enabled };
 }
 
 void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, const std::shared_ptr<Scene>& scene) {

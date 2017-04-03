@@ -128,6 +128,7 @@ set_xcode_property(${FRAMEWORK_NAME} SUPPORTED_PLATFORMS "iphonesimulator iphone
 set_xcode_property(${FRAMEWORK_NAME} ONLY_ACTIVE_ARCH "NO")
 set_xcode_property(${FRAMEWORK_NAME} VALID_ARCHS "${IOS_ARCH}")
 set_xcode_property(${FRAMEWORK_NAME} ARCHS "${IOS_ARCH}")
+set_xcode_property(${FRAMEWORK_NAME} DEFINES_MODULE "YES")
 
 # Set RPATH to be within the application /Frameworks directory
 set_xcode_property(${FRAMEWORK_NAME} LD_DYLIB_INSTALL_NAME "@rpath/${FRAMEWORK_NAME}.framework/${FRAMEWORK_NAME}")

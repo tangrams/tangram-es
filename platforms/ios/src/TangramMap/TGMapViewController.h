@@ -378,6 +378,17 @@ NS_ASSUME_NONNULL_BEGIN
 @property (strong, nonatomic) TGHttpHandler* httpHandler;
 
 /**
+ Assign the default resource root for this map view.
+ The resource root is the default directory where Tangram will try to load resources and scene
+ assets.
+
+ Must be non`-nil`.
+
+ @note By default the resource root is the main bundle resource URL.
+ */
+@property (strong, nonatomic) NSURL* resourceRoot;
+
+/**
  Adds a named data layer to the map. See `TGMapData` for more details.
 
  @param name the name of the data layer.
