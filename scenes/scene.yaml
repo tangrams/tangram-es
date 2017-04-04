@@ -90,7 +90,8 @@ styles:
 sources:
     osm:
         type: MVT
-        url: https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt
+        url: https://tile.mapzen.com/mapzen/vector/v1/512/all/{z}/{x}/{y}.mvt
+        tile_size: 512
         max_zoom: 16
         url_params:
             api_key: global.sdk_mapzen_api_key
