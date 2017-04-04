@@ -195,6 +195,7 @@ enum class TGMarkerType {
     auto polygonCoords = reinterpret_cast<Tangram::LngLat*>([polygon coordinates]);
 
     if (!tangramInstance->markerSetPolygon(identifier, polygonCoords, [polygon rings], [polygon ringsCount])) {
+        [self createNSError:error];
         return NO;
     }
 
