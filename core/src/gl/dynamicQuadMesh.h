@@ -117,10 +117,6 @@ bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader, int textur
             vertexOffsets.emplace_back(0, 0);
             m_vaos.initialize(rs, shader, vertexOffsets, *m_vertexLayout, m_glVertexBuffer, rs.getQuadIndexBuffer());
         }
-    } else {
-        // Bind buffers for drawing
-        rs.vertexBuffer(m_glVertexBuffer);
-        rs.indexBuffer(rs.getQuadIndexBuffer());
     }
 
     size_t verticesDrawn = 0;
@@ -164,6 +160,9 @@ bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader, int textur
             // byte offset instead
             m_vaos.bind(0);
         } else {
+            rs.vertexBuffer(m_glVertexBuffer);
+            rs.indexBuffer(rs.getQuadIndexBuffer());
+
             m_vertexLayout->enable(rs, shader, byteOffset);
         }
 
