@@ -176,24 +176,25 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
     const auto* visibleTiles = &_visibleTiles;
 
     std::set<TileID> mappedTiles;
-    if (_view.zoom > _tileSet.source->maxZoom()) {
-        for (const auto& id : _visibleTiles) {
-            auto tile = id.withMaxSourceZoom(_tileSet.source->maxZoom());
-            // Replace tile with same coordinates and lower source zoom
-            auto other = std::find_if(mappedTiles.begin(), mappedTiles.end(),
-                             [&](auto& t) { return tile.x == t.x &&
-                                            tile.y == t.y &&
-                                            tile.z == t.z &&
-                                            tile.wrap == t.wrap; });
-            if (other == mappedTiles.end()) {
-                mappedTiles.insert(tile);
-            } else if (other->s < tile.s) {
-                mappedTiles.erase(other);
-                mappedTiles.insert(tile);
-            }
+    for (const auto& id : _visibleTiles) {
+        // TODO: tile scale is configurable and set for the datasource
+        auto scaleTileID = id.scaled(1);
+        auto tile = (_view.zoom < _tileSet.source->maxZoom()) ? scaleTileID :
+                scaleTileID.withMaxSourceZoom(_tileSet.source->maxZoom());
+        // Replace tile with same coordinates and lower source zoom
+        auto other = std::find_if(mappedTiles.begin(), mappedTiles.end(),
+                         [&](auto& t) { return tile.x == t.x &&
+                                        tile.y == t.y &&
+                                        tile.z == t.z &&
+                                        tile.wrap == t.wrap; });
+        if (other == mappedTiles.end()) {
+            mappedTiles.insert(tile);
+        } else if (other->s < tile.s) {
+            mappedTiles.erase(other);
+            mappedTiles.insert(tile);
         }
-        visibleTiles = &mappedTiles;
     }
+    visibleTiles = &mappedTiles;
 
     // Loop over visibleTiles and add any needed tiles to tileSet
     auto curTilesIt = tiles.begin();
@@ -384,6 +385,7 @@ void TileManager::loadTiles() {
 
 bool TileManager::addTile(TileSet& _tileSet, const TileID& _tileID) {
 
+    LOG("Adding tile: %s", _tileID.toString().c_str());
     auto tile = m_tileCache->get(_tileSet.source->id(), _tileID);
 
     if (tile) {

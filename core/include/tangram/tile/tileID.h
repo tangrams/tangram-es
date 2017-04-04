@@ -56,6 +56,11 @@ struct TileID {
         return TileID(x >> over, y >> over, _max, z, wrap);
     }
 
+    TileID scaled(int8_t scale) const {
+        auto scaledZ = std::max(0, z - scale);
+        return TileID(x >> scale, y >> scale, scaledZ, z, wrap);
+    }
+
     TileID getParent() const {
 
         if (s > z) {
