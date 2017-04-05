@@ -1,6 +1,6 @@
-project(ffloat)
+project(double-conversion)
 
-add_library(ffloat
+add_library(double-conversion
   src/bignum-dtoa.cc
   src/bignum.cc
   src/cached-powers.cc
@@ -10,7 +10,7 @@ add_library(ffloat
   src/fixed-dtoa.cc
   src/strtod.cc)
 
-target_include_directories(ffloat
+target_include_directories(double-conversion
   PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   PRIVATE
