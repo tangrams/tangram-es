@@ -1,6 +1,6 @@
 #include "util/yamlHelper.h"
 
-#include "util/fixfloat.h"
+#include "util/floatFormatter.h"
 #include "log.h"
 #include "csscolorparser.hpp"
 

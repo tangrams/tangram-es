@@ -5,7 +5,7 @@
 #include "style/textStyle.h"
 #include "util/builders.h" // for cap, join
 #include "util/extrude.h"
-#include "util/fixfloat.h"
+#include "util/floatFormatter.h"
 #include "util/geom.h" // for CLAMP
 
 #include "csscolorparser.hpp"

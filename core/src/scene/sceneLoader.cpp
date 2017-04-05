@@ -30,7 +30,7 @@
 #include "scene/styleMixer.h"
 #include "scene/styleParam.h"
 #include "util/base64.h"
-#include "util/fixfloat.h"
+#include "util/floatFormatter.h"
 #include "util/yamlHelper.h"
 #include "view/view.h"
 

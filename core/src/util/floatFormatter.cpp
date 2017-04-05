@@ -1,4 +1,4 @@
-#include "util/fixfloat.h"
+#include "util/floatFormatter.h"
 
 #include "double-conversion.h"
 #include <cmath>

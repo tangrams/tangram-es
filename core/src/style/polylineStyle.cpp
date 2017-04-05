@@ -15,7 +15,7 @@
 #include "util/builders.h"
 #include "util/dashArray.h"
 #include "util/extrude.h"
-#include "util/fixfloat.h"
+#include "util/floatFormatter.h"
 #include "util/mapProjection.h"
 
 #include "glm/vec3.hpp"

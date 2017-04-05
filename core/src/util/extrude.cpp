@@ -1,6 +1,6 @@
 #include "util/extrude.h"
 
-#include "util/fixfloat.h"
+#include "util/floatFormatter.h"
 
 #include <cmath>
 #include <cstdlib>

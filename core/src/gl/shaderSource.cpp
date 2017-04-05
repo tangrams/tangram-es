@@ -1,5 +1,5 @@
 #include "gl/shaderSource.h"
-#include "util/fixfloat.h"
+#include "util/floatFormatter.h"
 
 #include <set>
 #include <sstream>

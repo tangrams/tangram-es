@@ -3,7 +3,7 @@
 #include "gl/shaderProgram.h"
 #include "directionalLight_glsl.h"
 #include "platform.h"
-#include "util/fixfloat.h"
+#include "util/floatFormatter.h"
 #include "view/view.h"
 
 namespace Tangram {

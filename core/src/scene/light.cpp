@@ -3,7 +3,7 @@
 #include "gl/shaderProgram.h"
 #include "lights_glsl.h"
 #include "platform.h"
-#include "util/fixfloat.h"
+#include "util/floatFormatter.h"
 
 #include <set>
 #include <sstream>
