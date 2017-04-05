@@ -1,19 +1,5 @@
 #ifdef PLATFORM_ANDROID
 
-#include "platform_android.h"
-
-#include "data/properties.h"
-#include "data/propertyItem.h"
-#include "log.h"
-#include "util/url.h"
-#include "tangram.h"
-
-#include <functional>
-
-#ifndef GL_GLEXT_PROTOTYPES
-#define GL_GLEXT_PROTOTYPES 1
-#endif
-
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <GLES2/gl2platform.h>
@@ -24,8 +10,20 @@
 #include <libgen.h>
 #include <unistd.h>
 #include <sys/resource.h>
+#include <functional>
 
+#include "platform_android.h"
+#include "data/properties.h"
+#include "data/propertyItem.h"
+#include "log.h"
+#include "util/url.h"
+#include "tangram.h"
 #include "sqlite3ndk.h"
+#include "helpers_android.h"
+
+#ifndef GL_GLEXT_PROTOTYPES
+#define GL_GLEXT_PROTOTYPES 1
+#endif
 
 /* Followed the following document for JavaVM tips when used with native threads
  * http://android.wooyd.org/JNIExample/#NWD1sCYeT-I
@@ -40,8 +38,8 @@ static jmethodID requestRenderMethodID = 0;
 static jmethodID setRenderModeMethodID = 0;
 static jmethodID startUrlRequestMID = 0;
 static jmethodID cancelUrlRequestMID = 0;
-static jmethodID getFontFilePath = 0;
-static jmethodID getFontFallbackFilePath = 0;
+static jmethodID getFontFilePathMID = 0;
+static jmethodID getFontFallbackFilePathMID = 0;
 static jmethodID onFeaturePickMID = 0;
 static jmethodID onLabelPickMID = 0;
 static jmethodID onMarkerPickMID = 0;
@@ -51,17 +49,15 @@ static jmethodID onSceneUpdateErrorMID = 0;
 static jmethodID sceneUpdateErrorInitMID = 0;
 static jmethodID postOnUIThreadMID = 0;
 static jmethodID initUITTaskMID = 0;
-
-static jclass UITaskClass = nullptr;
-static jclass labelPickResultClass = nullptr;
-static jclass sceneUpdateErrorClass = nullptr;
-static jclass markerPickResultClass = nullptr;
-
-static jclass hashmapClass = nullptr;
 static jmethodID hashmapInitMID = 0;
 static jmethodID hashmapPutMID = 0;
-
 static jmethodID markerByIDMID = 0;
+
+static std::unique_ptr<ScopedGlobalRef> UITaskClass;
+static std::unique_ptr<ScopedGlobalRef> labelPickResultClass;
+static std::unique_ptr<ScopedGlobalRef> sceneUpdateErrorClass;
+static std::unique_ptr<ScopedGlobalRef> markerPickResultClass;
+static std::unique_ptr<ScopedGlobalRef> hashmapClass;
 
 static bool glExtensionsLoaded = false;
 
@@ -80,57 +76,53 @@ void bindJniEnvToThread(JNIEnv* jniEnv) {
 void setupJniEnv(JNIEnv* jniEnv) {
     bindJniEnvToThread(jniEnv);
 
-    jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/MapController");
-    startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)Z");
-    cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(Ljava/lang/String;)V");
-    getFontFilePath = jniEnv->GetMethodID(tangramClass, "getFontFilePath", "(Ljava/lang/String;)Ljava/lang/String;");
-    getFontFallbackFilePath = jniEnv->GetMethodID(tangramClass, "getFontFallbackFilePath", "(II)Ljava/lang/String;");
-    requestRenderMethodID = jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
-    setRenderModeMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
-
-    jclass featurePickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$FeaturePickListener");
-    onFeaturePickMID = jniEnv->GetMethodID(featurePickListenerClass, "onFeaturePick", "(Ljava/util/Map;FF)V");
-    jclass labelPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$LabelPickListener");
-    onLabelPickMID = jniEnv->GetMethodID(labelPickListenerClass, "onLabelPick", "(Lcom/mapzen/tangram/LabelPickResult;FF)V");
-
-    if (labelPickResultClass) {
-        jniEnv->DeleteGlobalRef(labelPickResultClass);
+    // Globally referenced classes
+    {
+        labelPickResultClass = std::make_unique<ScopedGlobalRef>(jvm, jniEnv, jniEnv->FindClass("com/mapzen/tangram/LabelPickResult"));
+        markerPickResultClass = std::make_unique<ScopedGlobalRef>(jvm, jniEnv, jniEnv->FindClass("com/mapzen/tangram/MarkerPickResult"));
+        sceneUpdateErrorClass = std::make_unique<ScopedGlobalRef>(jvm, jniEnv, jniEnv->FindClass("com/mapzen/tangram/SceneUpdateError"));
+        UITaskClass = std::make_unique<ScopedGlobalRef>(jvm, jniEnv, jniEnv->FindClass("com/mapzen/tangram/UITask"));
+        hashmapClass = std::make_unique<ScopedGlobalRef>(jvm, jniEnv, jniEnv->FindClass("java/util/HashMap"));
     }
-    labelPickResultClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/LabelPickResult"));
-    labelPickResultInitMID = jniEnv->GetMethodID(labelPickResultClass, "<init>", "(DDILjava/util/Map;)V");
 
-    if (markerPickResultClass) {
-        jniEnv->DeleteGlobalRef(markerPickResultClass);
+    // TangramMapController method initialization
+    {
+        jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/MapController");
+
+        startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)Z");
+        cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(Ljava/lang/String;)V");
+        getFontFilePathMID = jniEnv->GetMethodID(tangramClass, "getFontFilePath", "(Ljava/lang/String;)Ljava/lang/String;");
+        getFontFallbackFilePathMID = jniEnv->GetMethodID(tangramClass, "getFontFallbackFilePath", "(II)Ljava/lang/String;");
+        requestRenderMethodID = jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
+        setRenderModeMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
+        postOnUIThreadMID = jniEnv->GetMethodID(tangramClass, "postUIThreadTask", "(Ljava/lang/Runnable;)V");
+        markerByIDMID = jniEnv->GetMethodID(tangramClass, "markerById", "(J)Lcom/mapzen/tangram/Marker;");
     }
-    markerPickResultClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/MarkerPickResult"));
-    markerPickResultInitMID = jniEnv->GetMethodID(markerPickResultClass, "<init>", "(Lcom/mapzen/tangram/Marker;DD)V");
 
-    if (sceneUpdateErrorClass) {
-        jniEnv->DeleteGlobalRef(sceneUpdateErrorClass);
+    // Listener classes and methods initialization
+    {
+        jclass featurePickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$FeaturePickListener");
+        jclass labelPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$LabelPickListener");
+        jclass markerPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$MarkerPickListener");
+        jclass sceneUpdateErrorListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$SceneUpdateErrorListener");
+
+        onMarkerPickMID = jniEnv->GetMethodID(markerPickListenerClass, "onMarkerPick", "(Lcom/mapzen/tangram/MarkerPickResult;FF)V");
+        onFeaturePickMID = jniEnv->GetMethodID(featurePickListenerClass, "onFeaturePick", "(Ljava/util/Map;FF)V");
+        onLabelPickMID = jniEnv->GetMethodID(labelPickListenerClass, "onLabelPick", "(Lcom/mapzen/tangram/LabelPickResult;FF)V");
+        onSceneUpdateErrorMID = jniEnv->GetMethodID(sceneUpdateErrorListenerClass, "onSceneUpdateError", "(Lcom/mapzen/tangram/SceneUpdateError;)V");
+
+        sceneUpdateErrorInitMID = jniEnv->GetMethodID(sceneUpdateErrorClass->get<jclass>(), "<init>", "(Ljava/lang/String;Ljava/lang/String;I)V");
+        labelPickResultInitMID = jniEnv->GetMethodID(labelPickResultClass->get<jclass>(), "<init>", "(DDILjava/util/Map;)V");
+        markerPickResultInitMID = jniEnv->GetMethodID(markerPickResultClass->get<jclass>(), "<init>", "(Lcom/mapzen/tangram/Marker;DD)V");
+
+        hashmapInitMID = jniEnv->GetMethodID(hashmapClass->get<jclass>(), "<init>", "()V");
+        hashmapPutMID = jniEnv->GetMethodID(hashmapClass->get<jclass>(), "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
     }
-    sceneUpdateErrorClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/SceneUpdateError"));
-    sceneUpdateErrorInitMID = jniEnv->GetMethodID(sceneUpdateErrorClass, "<init>", "(Ljava/lang/String;Ljava/lang/String;I)V");
-    jclass sceneUpdateErrorListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$SceneUpdateErrorListener");
-    onSceneUpdateErrorMID = jniEnv->GetMethodID(sceneUpdateErrorListenerClass, "onSceneUpdateError", "(Lcom/mapzen/tangram/SceneUpdateError;)V");
 
-    if (hashmapClass) {
-        jniEnv->DeleteGlobalRef(hashmapClass);
+    // UITask method initialization
+    {
+        initUITTaskMID = jniEnv->GetMethodID(UITaskClass->get<jclass>(), "<init>", "(J)V");
     }
-    hashmapClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("java/util/HashMap"));
-    hashmapInitMID = jniEnv->GetMethodID(hashmapClass, "<init>", "()V");
-    hashmapPutMID = jniEnv->GetMethodID(hashmapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-
-    postOnUIThreadMID = jniEnv->GetMethodID(tangramClass, "postUIThreadTask", "(Ljava/lang/Runnable;)V");
-    if (UITaskClass) {
-        jniEnv->DeleteGlobalRef(UITaskClass);
-    }
-    UITaskClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/UITask"));
-    initUITTaskMID = jniEnv->GetMethodID(UITaskClass, "<init>", "(J)V");
-
-    markerByIDMID = jniEnv->GetMethodID(tangramClass, "markerById", "(J)Lcom/mapzen/tangram/Marker;");
-
-    jclass markerPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$MarkerPickListener");
-    onMarkerPickMID = jniEnv->GetMethodID(markerPickListenerClass, "onMarkerPick", "(Lcom/mapzen/tangram/MarkerPickResult;FF)V");
 }
 
 void onUrlSuccess(JNIEnv* _jniEnv, jbyteArray _jBytes, jlong _jCallbackPtr) {
@@ -169,30 +161,6 @@ std::string resolveScenePath(const char* path) {
     return Tangram::Url(path).resolved("asset:///").string();
 }
 
-class JniThreadBinding {
-private:
-    JavaVM* jvm;
-    JNIEnv *jniEnv;
-    int status;
-public:
-    JniThreadBinding(JavaVM* _jvm) : jvm(_jvm) {
-        status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
-        if (status == JNI_EDETACHED) { jvm->AttachCurrentThread(&jniEnv, NULL);}
-    }
-
-    ~JniThreadBinding() {
-        if (status == JNI_EDETACHED) { jvm->DetachCurrentThread(); }
-    }
-
-    JNIEnv* operator->() const {
-        return jniEnv;
-    }
-
-    operator JNIEnv*() const {
-        return jniEnv;
-    }
-};
-
 namespace Tangram {
 
 void logMsg(const char* fmt, ...) {
@@ -211,7 +179,7 @@ std::string AndroidPlatform::fontPath(const std::string& _family, const std::str
     std::string key = _family + "_" + _weight + "_" + _style;
 
     jstring jkey = jniEnv->NewStringUTF(key.c_str());
-    jstring returnStr = (jstring) jniEnv->CallObjectMethod(m_tangramInstance, getFontFilePath, jkey);
+    jstring returnStr = (jstring) jniEnv->CallObjectMethod(m_tangramInstance, getFontFilePathMID, jkey);
 
     auto resultStr = stringFromJString(jniEnv, returnStr);
     jniEnv->DeleteLocalRef(returnStr);
@@ -248,7 +216,7 @@ std::string AndroidPlatform::fontFallbackPath(int _importance, int _weightHint) 
 
     JniThreadBinding jniEnv(jvm);
 
-    jstring returnStr = (jstring) jniEnv->CallObjectMethod(m_tangramInstance, getFontFallbackFilePath, _importance, _weightHint);
+    jstring returnStr = (jstring) jniEnv->CallObjectMethod(m_tangramInstance, getFontFallbackFilePathMID, _importance, _weightHint);
 
     auto resultStr = stringFromJString(jniEnv, returnStr);
     jniEnv->DeleteLocalRef(returnStr);
@@ -304,7 +272,7 @@ void AndroidPlatform::setContinuousRendering(bool _isContinuous) {
      }
 
      if (!pendingTasks) {
-         jobject UITaskRunnable = jniEnv->NewObject(UITaskClass, initUITTaskMID, m_mapPtr);
+         jobject UITaskRunnable = jniEnv->NewObject(UITaskClass->get<jclass>(), initUITTaskMID, m_mapPtr);
 
          // Trigger an event for main thread to pick
          jniEnv->CallVoidMethod(m_tangramInstance, postOnUIThreadMID, UITaskRunnable);
@@ -426,7 +394,7 @@ void sceneUpdateErrorCallback(jobject updateCallbackRef, const SceneUpdateError&
     jstring jUpdateStatusPath = jniEnv->NewStringUTF(sceneUpdateError.update.path.c_str());
     jstring jUpdateStatusValue = jniEnv->NewStringUTF(sceneUpdateError.update.value.c_str());
     jint jError = (jint)sceneUpdateError.error;
-    jobject jUpdateErrorStatus = jniEnv->NewObject(sceneUpdateErrorClass, sceneUpdateErrorInitMID,
+    jobject jUpdateErrorStatus = jniEnv->NewObject(sceneUpdateErrorClass->get<jclass>(), sceneUpdateErrorInitMID,
                                                    jUpdateStatusPath, jUpdateStatusValue, jError);
 
     jniEnv->CallVoidMethod(updateCallbackRef, onSceneUpdateErrorMID, jUpdateErrorStatus);
@@ -447,7 +415,7 @@ void labelPickCallback(AndroidPlatform& platform, jobject listenerRef, const Lab
         position[0] = labelPickResult->touchItem.position[0];
         position[1] = labelPickResult->touchItem.position[1];
 
-        jobject hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
+        jobject hashmap = jniEnv->NewObject(hashmapClass->get<jclass>(), hashmapInitMID);
 
         for (const auto& item : properties->items()) {
             jstring jkey = jniEnv->NewStringUTF(item.key.c_str());
@@ -455,7 +423,7 @@ void labelPickCallback(AndroidPlatform& platform, jobject listenerRef, const Lab
             jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
         }
 
-        labelPickResultObject = jniEnv->NewObject(labelPickResultClass, labelPickResultInitMID, labelPickResult->coordinates.longitude,
+        labelPickResultObject = jniEnv->NewObject(labelPickResultClass->get<jclass>(), labelPickResultInitMID, labelPickResult->coordinates.longitude,
             labelPickResult->coordinates.latitude, labelPickResult->type, hashmap);
     }
 
@@ -486,7 +454,7 @@ void markerPickCallback(AndroidPlatform& platform, jobject listenerRef, jobject 
         jniEnv->DeleteGlobalRef(tangramRef);
 
         if (marker) {
-            markerPickResultObject = jniEnv->NewObject(markerPickResultClass,
+            markerPickResultObject = jniEnv->NewObject(markerPickResultClass->get<jclass>(),
                                                        markerPickResultInitMID, marker,
                                                        markerPickResult->coordinates.longitude,
                                                        markerPickResult->coordinates.latitude);
@@ -507,7 +475,7 @@ void featurePickCallback(AndroidPlatform& platform, jobject listenerRef, const F
 
     JniThreadBinding jniEnv(jvm);
 
-    jobject hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
+    jobject hashmap = jniEnv->NewObject(hashmapClass->get<jclass>(), hashmapInitMID);
     float position[2] = {0.0, 0.0};
 
     if (featurePickResult) {
