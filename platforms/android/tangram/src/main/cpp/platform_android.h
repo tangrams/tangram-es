@@ -60,9 +60,9 @@ private:
 
 };
 
-void featurePickCallback(AndroidPlatform& platform, jobject listenerRef, const Tangram::FeaturePickResult* featurePickResult);
-void markerPickCallback(AndroidPlatform& platform, jobject listenerRef, jobject tangramRef, const Tangram::MarkerPickResult* markerPickResult);
-void labelPickCallback(AndroidPlatform& platform, jobject listenerRef, const Tangram::LabelPickResult* labelPickResult);
+void featurePickCallback(AndroidPlatform& platform, jobject listenerRef, const FeaturePickResult* featurePickResult);
+void markerPickCallback(AndroidPlatform& platform, jobject listenerRef, jobject tangramRef, const MarkerPickResult* markerPickResult);
+void labelPickCallback(AndroidPlatform& platform, jobject listenerRef, const LabelPickResult* labelPickResult);
 void sceneUpdateErrorCallback(jobject updateStatusCallbackRef, const SceneUpdateError& sceneUpdateErrorStatus);
 
 } // namespace Tangram

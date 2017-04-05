@@ -433,7 +433,7 @@ void sceneUpdateErrorCallback(jobject updateCallbackRef, const SceneUpdateError&
     jniEnv->DeleteGlobalRef(updateCallbackRef);
 }
 
-void labelPickCallback(AndroidPlatform& platform, jobject listenerRef, const Tangram::LabelPickResult* labelPickResult) {
+void labelPickCallback(AndroidPlatform& platform, jobject listenerRef, const LabelPickResult* labelPickResult) {
 
     JniThreadBinding jniEnv(jvm);
 
@@ -469,7 +469,7 @@ void labelPickCallback(AndroidPlatform& platform, jobject listenerRef, const Tan
     });
 }
 
-void markerPickCallback(AndroidPlatform& platform, jobject listenerRef, jobject tangramRef, const Tangram::MarkerPickResult* markerPickResult) {
+void markerPickCallback(AndroidPlatform& platform, jobject listenerRef, jobject tangramRef, const MarkerPickResult* markerPickResult) {
 
     JniThreadBinding jniEnv(jvm);
     float position[2] = {0.0, 0.0};
@@ -503,7 +503,7 @@ void markerPickCallback(AndroidPlatform& platform, jobject listenerRef, jobject 
     });
 }
 
-void featurePickCallback(AndroidPlatform& platform, jobject listenerRef, const Tangram::FeaturePickResult* featurePickResult) {
+void featurePickCallback(AndroidPlatform& platform, jobject listenerRef, const FeaturePickResult* featurePickResult) {
 
     JniThreadBinding jniEnv(jvm);
 
