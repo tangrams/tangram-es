@@ -3,10 +3,10 @@
 #include "gl/shaderProgram.h"
 #include "lights_glsl.h"
 #include "platform.h"
+#include "util/floatFormatter.h"
 
-#include "glm/gtx/string_cast.hpp"
-#include <sstream>
 #include <set>
+#include <sstream>
 
 namespace Tangram {
 
@@ -140,12 +140,13 @@ std::string Light::getInstanceBlock() {
 }
 
 std::string Light::getInstanceAssignBlock() {
+
     std::string block = "";
     const std::string& typeName = getTypeName();
     if (!m_dynamic) {
-        block += " = " + typeName + "(" + glm::to_string(m_ambient);
-        block += ", " + glm::to_string(m_diffuse);
-        block += ", " + glm::to_string(m_specular);
+        block += " = " + typeName + "(" + ff::to_string(m_ambient);
+        block += ", " + ff::to_string(m_diffuse);
+        block += ", " + ff::to_string(m_specular);
     }
     return block;
 }

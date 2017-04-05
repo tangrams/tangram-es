@@ -50,6 +50,7 @@ set(CORE_INCLUDE_DIRS
   ${DEPS_DIR}/geojson-vt-cpp/geometry.hpp/include
   ${DEPS_DIR}/geojson-vt-cpp/geojson.hpp/include
   ${DEPS_DIR}/geojson-vt-cpp/include
+  ${DEPS_DIR}/double-conversion/include
   CACHE INTERNAL "core include directories" FORCE)
 list(REMOVE_DUPLICATES CORE_INCLUDE_DIRS)
 
@@ -68,6 +69,7 @@ set(LINK_LIBRARIES
     alfons
     SQLiteCpp
     sqlite3
+    double-conversion
     z)
 
 if (UNIX AND NOT APPLE)

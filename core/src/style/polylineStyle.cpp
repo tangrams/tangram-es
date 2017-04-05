@@ -15,6 +15,7 @@
 #include "util/builders.h"
 #include "util/dashArray.h"
 #include "util/extrude.h"
+#include "util/floatFormatter.h"
 #include "util/mapProjection.h"
 
 #include "glm/vec3.hpp"
@@ -124,9 +125,9 @@ void PolylineStyle::constructShaderProgram() {
 
         if (m_dashBackground) {
             m_shaderSource->addSourceBlock("defines", "#define TANGRAM_LINE_BACKGROUND_COLOR vec3(" +
-                std::to_string(m_dashBackgroundColor.r) + ", " +
-                std::to_string(m_dashBackgroundColor.g) + ", " +
-                std::to_string(m_dashBackgroundColor.b) + ")\n");
+                ff::to_string(m_dashBackgroundColor.r) + ", " +
+                ff::to_string(m_dashBackgroundColor.g) + ", " +
+                ff::to_string(m_dashBackgroundColor.b) + ")\n");
         }
     }
 
@@ -135,7 +136,7 @@ void PolylineStyle::constructShaderProgram() {
         m_shaderSource->addSourceBlock("defines", "#define TANGRAM_ALPHA_TEST 0.25\n", false);
         if (m_dashArray.size() > 0) {
             m_shaderSource->addSourceBlock("defines", "#define TANGRAM_DASHLINE_TEX_SCALE " +
-                                            std::to_string(dash_scale) + "\n", false);
+                                            ff::to_string(dash_scale) + "\n", false);
         } else {
             m_shaderSource->addSourceBlock("defines", "#define TANGRAM_DASHLINE_TEX_SCALE 1.0\n", false);
         }

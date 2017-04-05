@@ -1,5 +1,7 @@
 #include "util/extrude.h"
 
+#include "util/floatFormatter.h"
+
 #include <cmath>
 #include <cstdlib>
 
@@ -21,22 +23,32 @@ Extrude parseExtrudeString(const std::string& _str) {
     }
 
     // Parse the first of two possible numbers
-    const char* pos = _str.c_str();
-    char* end = nullptr;
+    const char* str = _str.c_str();
 
     // Get a float if possible & advance pos to the end of the number
-    first = std::strtof(pos, &end);
-    if (pos == end) {
+    const int length = _str.length();
+    int count = 0;
+    int offset = 0;
+
+    first = ff::stof(str, length, &count);
+    if (count == 0) {
         // No numbers found, return zero extrusion
         return Extrude(0, 0);
     }
 
     // Advance and skip the delimiter character
-    pos = end + 1;
+    offset += count;
+    if (length - offset <= 0) {
+        return Extrude(0, first);
+    }
+    while (str[offset] == ' ') { offset++; }
+    if (str[offset++] != ',') {
+        return Extrude(0, first);
+    }
 
     // Get a float if possible & advance pos to the end of the number
-    second = std::strtof(pos, &end);
-    if (pos == end) {
+    second = ff::stof(str + offset, length - offset, &count);
+    if (count == 0) {
         // No second number, so return an extrusion from 0 to the first number
         return Extrude(0, first);
     }

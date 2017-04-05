@@ -3,9 +3,8 @@
 #include "gl/shaderProgram.h"
 #include "platform.h"
 #include "pointLight_glsl.h"
+#include "util/floatFormatter.h"
 #include "view/view.h"
-
-#include "glm/gtx/string_cast.hpp"
 
 namespace Tangram {
 
@@ -121,15 +120,15 @@ std::string PointLight::getInstanceDefinesBlock() {
 std::string PointLight::getInstanceAssignBlock() {
     std::string block = Light::getInstanceAssignBlock();
     if (!m_dynamic) {
-        block += ", " + glm::to_string(m_position.value);
+        block += ", " + ff::to_string(m_position.value);
         if (m_attenuation!=0.0) {
-            block += ", " + std::to_string(m_attenuation);
+            block += ", " + ff::to_string(m_attenuation);
         }
         if (m_innerRadius!=0.0) {
-            block += ", " + std::to_string(m_innerRadius);
+            block += ", " + ff::to_string(m_innerRadius);
         }
         if (m_outerRadius!=0.0) {
-            block += ", " + std::to_string(m_outerRadius);
+            block += ", " + ff::to_string(m_outerRadius);
         }
         block += ")";
     }

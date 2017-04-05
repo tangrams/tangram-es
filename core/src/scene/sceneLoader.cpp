@@ -30,6 +30,7 @@
 #include "scene/styleMixer.h"
 #include "scene/styleParam.h"
 #include "util/base64.h"
+#include "util/floatFormatter.h"
 #include "util/yamlHelper.h"
 #include "view/view.h"
 
@@ -1247,8 +1248,8 @@ void SceneLoader::loadCamera(const Node& _camera, const std::shared_ptr<Scene>& 
         if (Node vanishing = _camera["vanishing_point"]) {
             if (vanishing.IsSequence() && vanishing.size() >= 2) {
                 // Values are pixels, unit strings are ignored.
-                float x = std::stof(vanishing[0].Scalar());
-                float y = std::stof(vanishing[1].Scalar());
+                float x = ff::stof(vanishing[0].Scalar());
+                float y = ff::stof(vanishing[1].Scalar());
                 camera.vanishingPoint = { x, y };
             }
         }
@@ -1419,7 +1420,7 @@ bool SceneLoader::getFilterRangeValue(const Node& node, double& val, bool& hasPi
         auto n = strVal.find("px2");
         if (n == std::string::npos) { return false; }
         try {
-            val = std::stof(std::string(strVal, 0, n));
+            val = ff::stof(std::string(strVal, 0, n));
             hasPixelArea = true;
         } catch (std::invalid_argument) { return false; }
     }

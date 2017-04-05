@@ -1,5 +1,6 @@
 #include "util/yamlHelper.h"
 
+#include "util/floatFormatter.h"
 #include "log.h"
 #include "csscolorparser.hpp"
 
@@ -111,9 +112,9 @@ bool getDouble(const Node& node, double& value) {
 
     if (node.IsScalar()) {
         const std::string& s = node.Scalar();
-        char* pos;
-        value = strtod(s.c_str(), &pos);
-        if (pos == s.c_str() + s.length()) {
+        int count;
+        value = ff::stod(s.c_str(), s.length(), &count);
+        if (count == int(s.length())) {
             return true;
         }
     }
