@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
+import android.os.Handler;
 import android.util.DisplayMetrics;
 
 import com.mapzen.tangram.TouchInput.Gestures;
@@ -1093,6 +1094,7 @@ public class MapController implements Renderer {
     private boolean frameCaptureAwaitCompleteView;
     private Map<String, MapData> clientTileSources = new HashMap<>();
     private Map<Long, Marker> markers = new HashMap<>();
+    private Handler mainThreadHandler;
 
     // GLSurfaceView.Renderer methods
     // ==============================
@@ -1179,6 +1181,16 @@ public class MapController implements Renderer {
     String getFontFallbackFilePath(int importance, int weightHint) {
 
         return fontFileParser.getFontFallback(importance, weightHint);
+    }
+
+    // Main thread messaging
+    // =====================
+    void setMainThreadHandler(Handler mainThreadHandler) {
+        this.mainThreadHandler = mainThreadHandler;
+    }
+
+    void postUIThreadTask(Runnable task) {
+        mainThreadHandler.post(task);
     }
 
 }

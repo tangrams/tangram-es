@@ -8,6 +8,8 @@
 #include "util/url.h"
 #include "tangram.h"
 
+#include <functional>
+
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES 1
 #endif
@@ -34,7 +36,6 @@
 
 static JavaVM* jvm = nullptr;
 // JNI Env bound on androids render thread (our native main thread)
-static jobject tangramInstance = nullptr;
 static jmethodID requestRenderMethodID = 0;
 static jmethodID setRenderModeMethodID = 0;
 static jmethodID startUrlRequestMID = 0;
@@ -48,7 +49,10 @@ static jmethodID labelPickResultInitMID = 0;
 static jmethodID markerPickResultInitMID = 0;
 static jmethodID onSceneUpdateErrorMID = 0;
 static jmethodID sceneUpdateErrorInitMID = 0;
+static jmethodID postOnUIThreadMID = 0;
+static jmethodID initUITTaskMID = 0;
 
+static jclass UITaskClass = nullptr;
 static jclass labelPickResultClass = nullptr;
 static jclass sceneUpdateErrorClass = nullptr;
 static jclass markerPickResultClass = nullptr;
@@ -116,6 +120,13 @@ void setupJniEnv(JNIEnv* jniEnv) {
     hashmapInitMID = jniEnv->GetMethodID(hashmapClass, "<init>", "()V");
     hashmapPutMID = jniEnv->GetMethodID(hashmapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
+    postOnUIThreadMID = jniEnv->GetMethodID(tangramClass, "postUIThreadTask", "(Ljava/lang/Runnable;)V");
+    if (UITaskClass) {
+        jniEnv->DeleteGlobalRef(UITaskClass);
+    }
+    UITaskClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/UITask"));
+    initUITTaskMID = jniEnv->GetMethodID(UITaskClass, "<init>", "(J)V");
+
     markerByIDMID = jniEnv->GetMethodID(tangramClass, "markerById", "(J)Lcom/mapzen/tangram/Marker;");
 
     jclass markerPickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$MarkerPickListener");
@@ -168,6 +179,7 @@ public:
         status = jvm->GetEnv((void**)&jniEnv, JNI_VERSION_1_6);
         if (status == JNI_EDETACHED) { jvm->AttachCurrentThread(&jniEnv, NULL);}
     }
+
     ~JniThreadBinding() {
         if (status == JNI_EDETACHED) { jvm->DetachCurrentThread(); }
     }
@@ -279,6 +291,47 @@ void AndroidPlatform::setContinuousRendering(bool _isContinuous) {
     jniEnv->CallVoidMethod(m_tangramInstance, setRenderModeMethodID, _isContinuous ? 1 : 0);
 }
 
+ void AndroidPlatform::queueUITask(AndroidUITask _task) {
+
+     JniThreadBinding jniEnv(jvm);
+
+     bool pendingTasks = false;
+
+     {
+         std::lock_guard<std::mutex> guard(m_UIThreadTaskMutex);
+         pendingTasks = m_UITasks.size() > 0;
+         m_UITasks.push_front(_task);
+     }
+
+     if (!pendingTasks) {
+         jobject UITaskRunnable = jniEnv->NewObject(UITaskClass, initUITTaskMID, m_mapPtr);
+
+         // Trigger an event for main thread to pick
+         jniEnv->CallVoidMethod(m_tangramInstance, postOnUIThreadMID, UITaskRunnable);
+     }
+}
+
+void AndroidPlatform::executeUITasks() {
+
+    JniThreadBinding jniEnv(jvm);
+
+    while (true) {
+        AndroidUITask task;
+        {
+            std::lock_guard<std::mutex> guard(m_UIThreadTaskMutex);
+
+            if (m_UITasks.empty()) {
+                break;
+            }
+
+            task = m_UITasks.back();
+            m_UITasks.pop_back();
+        }
+
+        task(jniEnv);
+    }
+}
+
 bool AndroidPlatform::bytesFromAssetManager(const char* _path, std::function<char*(size_t)> _allocator) const {
 
     AAsset* asset = AAssetManager_open(m_assetManager, _path, AASSET_MODE_UNKNOWN);
@@ -380,7 +433,7 @@ void sceneUpdateErrorCallback(jobject updateCallbackRef, const SceneUpdateError&
     jniEnv->DeleteGlobalRef(updateCallbackRef);
 }
 
-void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult) {
+void labelPickCallback(AndroidPlatform& platform, jobject listenerRef, const Tangram::LabelPickResult* labelPickResult) {
 
     JniThreadBinding jniEnv(jvm);
 
@@ -406,11 +459,17 @@ void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPi
             labelPickResult->coordinates.latitude, labelPickResult->type, hashmap);
     }
 
-    jniEnv->CallVoidMethod(listener, onLabelPickMID, labelPickResultObject, position[0], position[1]);
-    jniEnv->DeleteGlobalRef(listener);
+    jobject labelPickResultRef = jniEnv->NewGlobalRef(labelPickResultObject);
+
+    platform.queueUITask([=](JNIEnv* _jniEnv) {
+        _jniEnv->CallVoidMethod(listenerRef, onLabelPickMID, labelPickResultRef, position[0], position[1]);
+
+        _jniEnv->DeleteGlobalRef(labelPickResultRef);
+        _jniEnv->DeleteGlobalRef(listenerRef);
+    });
 }
 
-void markerPickCallback(jobject listener, jobject tangramInstance, const Tangram::MarkerPickResult* markerPickResult) {
+void markerPickCallback(AndroidPlatform& platform, jobject listenerRef, jobject tangramRef, const Tangram::MarkerPickResult* markerPickResult) {
 
     JniThreadBinding jniEnv(jvm);
     float position[2] = {0.0, 0.0};
@@ -423,7 +482,8 @@ void markerPickCallback(jobject listener, jobject tangramInstance, const Tangram
         position[0] = markerPickResult->position[0];
         position[1] = markerPickResult->position[1];
 
-        marker = jniEnv->CallObjectMethod(tangramInstance, markerByIDMID, static_cast<jlong>(markerPickResult->id));
+        marker = jniEnv->CallObjectMethod(tangramRef, markerByIDMID, static_cast<jlong>(markerPickResult->id));
+        jniEnv->DeleteGlobalRef(tangramRef);
 
         if (marker) {
             markerPickResultObject = jniEnv->NewObject(markerPickResultClass,
@@ -433,12 +493,17 @@ void markerPickCallback(jobject listener, jobject tangramInstance, const Tangram
         }
     }
 
-    jniEnv->CallVoidMethod(listener, onMarkerPickMID, markerPickResultObject, position[0], position[1]);
-    jniEnv->DeleteGlobalRef(listener);
-    jniEnv->DeleteGlobalRef(tangramInstance);
+    jobject markerPickResultRef = jniEnv->NewGlobalRef(markerPickResultObject);
+
+    platform.queueUITask([=](JNIEnv* _jniEnv) {
+        _jniEnv->CallVoidMethod(listenerRef, onMarkerPickMID, markerPickResultRef, position[0], position[1]);
+
+        _jniEnv->DeleteGlobalRef(markerPickResultRef);
+        _jniEnv->DeleteGlobalRef(listenerRef);
+    });
 }
 
-void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* featurePickResult) {
+void featurePickCallback(AndroidPlatform& platform, jobject listenerRef, const Tangram::FeaturePickResult* featurePickResult) {
 
     JniThreadBinding jniEnv(jvm);
 
@@ -458,8 +523,14 @@ void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* fea
         }
     }
 
-    jniEnv->CallVoidMethod(listener, onFeaturePickMID, hashmap, position[0], position[1]);
-    jniEnv->DeleteGlobalRef(listener);
+    jobject hashmapRef = jniEnv->NewGlobalRef(hashmap);
+
+    platform.queueUITask([=](JNIEnv* _jniEnv) {
+        _jniEnv->CallVoidMethod(listenerRef, onFeaturePickMID, hashmapRef, position[0], position[1]);
+
+        _jniEnv->DeleteGlobalRef(hashmapRef);
+        _jniEnv->DeleteGlobalRef(listenerRef);
+    });
 }
 
 void initGLExtensions() {
