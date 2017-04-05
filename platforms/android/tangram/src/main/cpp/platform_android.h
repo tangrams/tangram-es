@@ -4,6 +4,8 @@
 
 #include <memory>
 #include <jni.h>
+#include <mutex>
+#include <deque>
 #include <android/asset_manager.h>
 
 void bindJniEnvToThread(JNIEnv* jniEnv);
@@ -22,10 +24,7 @@ struct FeaturePickResult;
 struct MarkerPickResult;
 struct SceneUpdateError;
 
-void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* featurePickResult);
-void markerPickCallback(jobject listener, jobject tangramInstance, const Tangram::MarkerPickResult* markerPickResult);
-void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult);
-void sceneUpdateErrorCallback(jobject updateStatusCallbackRef, const SceneUpdateError& sceneUpdateErrorStatus);
+typedef std::function<void(JNIEnv*)> AndroidUITask;
 
 class AndroidPlatform : public Platform {
 
@@ -42,15 +41,28 @@ public:
     bool startUrlRequest(const std::string& _url, UrlCallback _callback) override;
     void cancelUrlRequest(const std::string& _url) override;
 
+    void queueUITask(AndroidUITask _task);
+    void executeUITasks();
+
+    void setMapPtr(jlong _mapPtr) { m_mapPtr = _mapPtr; }
+
 private:
 
     bool bytesFromAssetManager(const char* _path, std::function<char*(size_t)> _allocator) const;
     std::string fontPath(const std::string& _family, const std::string& _weight, const std::string& _style) const;
     std::string fontFallbackPath(int _importance, int _weightHint) const;
 
+    jlong m_mapPtr;
     jobject m_tangramInstance;
     AAssetManager* m_assetManager;
+    std::mutex m_UIThreadTaskMutex;
+    std::deque<AndroidUITask> m_UITasks;
 
 };
+
+void featurePickCallback(AndroidPlatform& platform, jobject listenerRef, const Tangram::FeaturePickResult* featurePickResult);
+void markerPickCallback(AndroidPlatform& platform, jobject listenerRef, jobject tangramRef, const Tangram::MarkerPickResult* markerPickResult);
+void labelPickCallback(AndroidPlatform& platform, jobject listenerRef, const Tangram::LabelPickResult* labelPickResult);
+void sceneUpdateErrorCallback(jobject updateStatusCallbackRef, const SceneUpdateError& sceneUpdateErrorStatus);
 
 } // namespace Tangram
