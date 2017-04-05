@@ -16,11 +16,13 @@
 namespace Tangram {
 
 TileSource::TileSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
-                       int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom) :
+                       int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
+                       int32_t _tileScale) :
     m_name(_name),
     m_minDisplayZoom(_minDisplayZoom),
     m_maxDisplayZoom(_maxDisplayZoom),
     m_maxZoom(_maxZoom),
+    m_tileScale(_tileScale),
     m_sources(std::move(_sources)) {
 
     static std::atomic<int32_t> s_serial;
@@ -79,6 +81,7 @@ bool TileSource::equals(const TileSource& other) const {
     if (m_minDisplayZoom != other.m_minDisplayZoom) { return false; }
     if (m_maxDisplayZoom != other.m_maxDisplayZoom) { return false; }
     if (m_maxZoom != other.m_maxZoom) { return false; }
+    if (m_tileScale != other.m_tileScale) { return false; }
     if (m_rasterSources.size() != other.m_rasterSources.size()) { return false; }
     for (size_t i = 0, end = m_rasterSources.size(); i < end; ++i) {
         if (!m_rasterSources[i]->equals(*other.m_rasterSources[i])) { return false; }

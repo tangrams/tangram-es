@@ -19,7 +19,8 @@ class ClientGeoJsonSource : public TileSource {
 public:
 
     ClientGeoJsonSource(std::shared_ptr<Platform> _platform, const std::string& _name, const std::string& _url,
-                        int32_t _minDisplayZoom = -1, int32_t _maxDisplayZoom = -1, int32_t _maxZoom = 18);
+                        int32_t _minDisplayZoom = -1, int32_t _maxDisplayZoom = -1, int32_t _maxZoom = 18,
+                        int32_t _tileScale = 1);
     ~ClientGeoJsonSource();
 
     // http://www.iana.org/assignments/media-types/application/geo+json

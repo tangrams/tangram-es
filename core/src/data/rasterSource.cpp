@@ -69,8 +69,8 @@ public:
 
 RasterSource::RasterSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
                            int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
-                           TextureOptions _options, bool _genMipmap)
-    : TileSource(_name, std::move(_sources), _minDisplayZoom, _maxDisplayZoom, _maxZoom),
+                           int32_t _tileScale, TextureOptions _options, bool _genMipmap)
+    : TileSource(_name, std::move(_sources), _minDisplayZoom, _maxDisplayZoom, _maxZoom, _tileScale),
       m_texOptions(_options),
       m_genMipmap(_genMipmap) {
 
