@@ -1,10 +1,7 @@
-#include "fixfloat.h"
+#include "util/fixfloat.h"
 
 #include "double-conversion.h"
-
-#include <locale>
-#include <iomanip>
-#include <sstream>
+#include <cmath>
 
 namespace Tangram {
 
@@ -16,11 +13,13 @@ StringToDoubleConverter S2D = {
     StringToDoubleConverter::ALLOW_LEADING_SPACES,
     0.0, NAN, "inf", "nan" };
 
-class DecimalPoint: public std::numpunct<char> {
-protected: char do_decimal_point() const { return '.'; }
-};
+DoubleToStringConverter D2S = {
+    DoubleToStringConverter::EMIT_TRAILING_DECIMAL_POINT |
+    DoubleToStringConverter::EMIT_TRAILING_ZERO_AFTER_POINT |
+    DoubleToStringConverter::UNIQUE_ZERO,
+    "inf", "nan", 'e', -10, 10, 6, 6 };
 
-std::locale C_LOCALE(std::locale(), new DecimalPoint);
+const size_t StringBuilderBufferSize = 256;
 
 double ff::stod(const char* _string, int _length, int* _end) {
     return S2D.StringToDouble(_string, _length, _end);
@@ -31,39 +30,49 @@ float ff::stof(const char* _string, int _length, int* _end) {
 }
 
 std::string ff::to_string(glm::vec2 _vec) {
-        std::stringstream out;
-        out.imbue(C_LOCALE);
-        out << std::fixed;
+    char buffer[StringBuilderBufferSize];
+    StringBuilder builder(buffer, StringBuilderBufferSize);
+    builder.AddString("vec2(");
+    D2S.ToShortest(_vec[0], &builder);
+    builder.AddCharacter(',');
+    D2S.ToShortest(_vec[1], &builder);
+    builder.AddCharacter(')');
+    return std::string(builder.Finalize());
+}
 
-        out << "vec2(" << _vec[0] << "," << _vec[1] << ")";
-        return out.str();
-    }
+std::string ff::to_string(glm::vec3 _vec) {
+    char buffer[StringBuilderBufferSize];
+    StringBuilder builder(buffer, StringBuilderBufferSize);
+    builder.AddString("vec3(");
+    D2S.ToShortest(_vec[0], &builder);
+    builder.AddCharacter(',');
+    D2S.ToShortest(_vec[1], &builder);
+    builder.AddCharacter(',');
+    D2S.ToShortest(_vec[2], &builder);
+    builder.AddCharacter(')');
+    return std::string(builder.Finalize());
+}
 
- std::string ff::to_string(glm::vec3 _vec) {
-        std::stringstream out;
-        out.imbue(C_LOCALE);
-        out << std::fixed;
+std::string ff::to_string(glm::vec4 _vec) {
+    char buffer[StringBuilderBufferSize];
+    StringBuilder builder(buffer, StringBuilderBufferSize);
+    builder.AddString("vec4(");
+    D2S.ToShortest(_vec[0], &builder);
+    builder.AddCharacter(',');
+    D2S.ToShortest(_vec[1], &builder);
+    builder.AddCharacter(',');
+    D2S.ToShortest(_vec[2], &builder);
+    builder.AddCharacter(',');
+    D2S.ToShortest(_vec[3], &builder);
+    builder.AddCharacter(')');
+    return std::string(builder.Finalize());
+}
 
-        out << "vec3(" << _vec[0] << "," << _vec[1] << "," << _vec[2] << ")";
-        return out.str();
-    }
-
- std::string ff::to_string(glm::vec4 _vec) {
-        std::stringstream out;
-        out.imbue(C_LOCALE);
-        out << std::fixed;
-
-        out << "vec4(" << _vec[0] << "," << _vec[1] << "," << _vec[2] << "," << _vec[3] << ")";
-        return out.str();
-    }
-
- std::string ff::to_string(float _value) {
-        std::stringstream out;
-        out.imbue(C_LOCALE);
-        out << std::fixed;
-
-        out << _value;
-        return out.str();
-    }
+std::string ff::to_string(float _value) {
+    char buffer[StringBuilderBufferSize];
+    StringBuilder builder(buffer, StringBuilderBufferSize);
+    D2S.ToShortest(_value, &builder);
+    return std::string(builder.Finalize());
+}
 
 }
