@@ -1006,7 +1006,7 @@ public class MapController implements Renderer {
         System.loadLibrary("tangram");
     }
 
-    private synchronized native long nativeOnLowMemory(long mapPtr);
+    private synchronized native void nativeOnLowMemory(long mapPtr);
     private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
     private synchronized native void nativeDispose(long mapPtr);
     private synchronized native void nativeLoadScene(long mapPtr, SceneUpdateErrorListener listener, String path, String[] updateStrings);
