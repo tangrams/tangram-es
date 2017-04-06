@@ -135,8 +135,9 @@ extern "C" {
         }
 
         auto updateErrorCallbackRef = jniEnv->NewGlobalRef(updateErrorCallback);
-        map->loadScene(resolveScenePath(cPath).c_str(), false, sceneUpdates, [updateErrorCallbackRef](auto sceneUpdateErrorStatus) {
-            Tangram::sceneUpdateErrorCallback(updateErrorCallbackRef, sceneUpdateErrorStatus);
+        map->loadScene(resolveScenePath(cPath).c_str(), false, sceneUpdates, [=](auto sceneUpdateErrorStatus) {
+            Tangram::AndroidPlatform& platform = static_cast<Tangram::AndroidPlatform&>(*map->getPlatform());
+            Tangram::sceneUpdateErrorCallback(platform, updateErrorCallbackRef, sceneUpdateErrorStatus);
         });
         jniEnv->ReleaseStringUTFChars(path, cPath);
     }
@@ -533,8 +534,9 @@ extern "C" {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto updateErrorCallbackRef = jniEnv->NewGlobalRef(updateErrorCallback);
-        map->applySceneUpdates([updateErrorCallbackRef](auto sceneUpdateErrorStatus) {
-            Tangram::sceneUpdateErrorCallback(updateErrorCallbackRef, sceneUpdateErrorStatus);
+        map->applySceneUpdates([=](auto sceneUpdateErrorStatus) {
+            Tangram::AndroidPlatform& platform = static_cast<Tangram::AndroidPlatform&>(*map->getPlatform());
+            Tangram::sceneUpdateErrorCallback(platform, updateErrorCallbackRef, sceneUpdateErrorStatus);
         });
     }
 

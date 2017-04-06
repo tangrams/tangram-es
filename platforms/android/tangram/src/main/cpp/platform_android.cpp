@@ -415,7 +415,7 @@ void setCurrentThreadPriority(int priority) {
     setpriority(PRIO_PROCESS, tid, priority);
 }
 
-void sceneUpdateErrorCallback(jobject updateCallbackRef, const SceneUpdateError& sceneUpdateError) {
+void sceneUpdateErrorCallback(AndroidPlatform& platform, jobject updateCallbackRef, const SceneUpdateError& sceneUpdateError) {
 
     if (!updateCallbackRef) {
         return;
@@ -429,8 +429,14 @@ void sceneUpdateErrorCallback(jobject updateCallbackRef, const SceneUpdateError&
     jobject jUpdateErrorStatus = jniEnv->NewObject(sceneUpdateErrorClass, sceneUpdateErrorInitMID,
                                                    jUpdateStatusPath, jUpdateStatusValue, jError);
 
-    jniEnv->CallVoidMethod(updateCallbackRef, onSceneUpdateErrorMID, jUpdateErrorStatus);
-    jniEnv->DeleteGlobalRef(updateCallbackRef);
+    jobject jUpdateErrorStatusRef = jniEnv->NewGlobalRef(jUpdateErrorStatus);
+
+    platform.queueUITask([=](JNIEnv* _jniEnv) {
+        _jniEnv->CallVoidMethod(updateCallbackRef, onSceneUpdateErrorMID, jUpdateErrorStatusRef);
+
+        _jniEnv->DeleteGlobalRef(updateCallbackRef);
+        _jniEnv->DeleteGlobalRef(jUpdateErrorStatusRef);
+    });
 }
 
 void labelPickCallback(AndroidPlatform& platform, jobject listenerRef, const LabelPickResult* labelPickResult) {
