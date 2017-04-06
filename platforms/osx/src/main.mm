@@ -172,6 +172,12 @@ int main(int argc, char* argv[]) {
     [TGPreferences setup];
 
     GlfwApp::parseArgs(argc, argv);
+    
+    NSString* sceneInputString = [NSString stringWithUTF8String:GlfwApp::sceneFile.c_str()];
+    NSURL* resourceDirectoryUrl = [[NSBundle mainBundle] resourceURL];
+    NSURL* sceneFileUrl = [NSURL URLWithString:sceneInputString relativeToURL:resourceDirectoryUrl];
+    
+    GlfwApp::sceneFile = std::string([[sceneFileUrl absoluteString] UTF8String]);
 
     // Give it a chance to shutdown cleanly on CTRL-C
     signal(SIGINT, &GlfwApp::stop);
