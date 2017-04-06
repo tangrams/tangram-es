@@ -45,7 +45,7 @@ public:
     Impl(std::shared_ptr<Platform> _platform) :
         platform(_platform),
         inputHandler(_platform, view),
-        scene(std::make_shared<Scene>(_platform)),
+        scene(std::make_shared<Scene>(_platform, Url())),
         tileWorker(_platform, MAX_WORKERS),
         tileManager(_platform, tileWorker) {}
 
