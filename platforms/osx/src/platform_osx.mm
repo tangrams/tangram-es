@@ -1,11 +1,13 @@
-#ifdef PLATFORM_OSX
-
-#import <cstdio>
-#import <cstdarg>
-
 #include "platform_osx.h"
 #include "gl/hardware.h"
 #include "log.h"
+
+#include <GLFW/glfw3.h>
+
+#include <cstdio>
+#include <cstdarg>
+#include <sys/resource.h>
+#include <sys/syscall.h>
 
 #define DEFAULT "fonts/NotoSans-Regular.ttf"
 #define FONT_AR "fonts/NotoNaskh-Regular.ttf"
@@ -33,66 +35,28 @@ void initGLExtensions() {
     Tangram::Hardware::supportsMapBuffer = true;
 }
 
-NSString* resolvePath(const char* _path) {
-
-    NSString* pathString = [NSString stringWithUTF8String:_path];
-
-    NSURL* resourceFolderUrl = [[NSBundle mainBundle] resourceURL];
-
-    NSURL* resolvedUrl = [NSURL URLWithString:pathString
-                                relativeToURL:resourceFolderUrl];
-
-    NSFileManager* fileManager = [NSFileManager defaultManager];
-
-    NSString* pathInAppBundle = [resolvedUrl path];
-
-    if ([fileManager fileExistsAtPath:pathInAppBundle]) {
-        return pathInAppBundle;
-    }
-
-    LOGW("Failed to resolve path: %s", _path);
-
-    return nil;
-}
-
 void OSXPlatform::requestRender() const {
     glfwPostEmptyEvent();
 }
 
-OSXPlatform::OSXPlatform() : m_stopUrlRequests(false) {
-    NSURLSessionConfiguration *defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
-
-    m_defaultSession = [NSURLSession sessionWithConfiguration: defaultConfigObject];
-
+OSXPlatform::OSXPlatform() {
+    NSURLSessionConfiguration* configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
     NSString *cachePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"/tile_cache"];
     NSURLCache *tileCache = [[NSURLCache alloc] initWithMemoryCapacity: 4 * 1024 * 1024 diskCapacity: 30 * 1024 * 1024 diskPath: cachePath];
-    defaultConfigObject.URLCache = tileCache;
-    defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
-    defaultConfigObject.timeoutIntervalForRequest = 30;
-    defaultConfigObject.timeoutIntervalForResource = 60;
+    configuration.URLCache = tileCache;
+    configuration.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
+    configuration.timeoutIntervalForRequest = 30;
+    configuration.timeoutIntervalForResource = 60;
+
+    m_urlSession = [NSURLSession sessionWithConfiguration: configuration];
 }
 
 OSXPlatform::~OSXPlatform() {
-    {
-        std::lock_guard<std::mutex> guard(m_urlRequestMutex);
-        m_stopUrlRequests = true;
-    }
-
-    [m_defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
+    [m_urlSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
         for(NSURLSessionTask* task in dataTasks) {
             [task cancel];
         }
     }];
-}
-
-std::string OSXPlatform::stringFromFile(const char* _path) const {
-    NSString* path = resolvePath(_path);
-    std::string data;
-
-    if (!path) { return data; }
-
-    data = Platform::stringFromFile([path UTF8String]);
-    return data;
 }
 
 std::vector<FontSourceHandle> OSXPlatform::systemFontFallbacksHandle() const {
@@ -107,64 +71,56 @@ std::vector<FontSourceHandle> OSXPlatform::systemFontFallbacksHandle() const {
     return handles;
 }
 
-bool OSXPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
-
-    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
+UrlRequestHandle OSXPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
 
     void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
-        {
-            std::lock_guard<std::mutex> guard(m_urlRequestMutex);
 
-            if (m_stopUrlRequests) {
-                LOGE("Response after Tangram shutdown.");
-                return;
+        // Create our response object. The '__block' specifier is to allow mutation in the data-copy block below.
+        __block UrlResponse urlResponse;
+
+        // Check for errors from NSURLSession, then check for HTTP errors.
+        if (error != nil) {
+
+            urlResponse.error = [error.localizedDescription UTF8String];
+
+        } else if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+
+            NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
+            int statusCode = [httpResponse statusCode];
+            if (statusCode >= 400) {
+                urlResponse.error = [[NSHTTPURLResponse localizedStringForStatusCode: statusCode] UTF8String];
             }
         }
 
-        NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
+        // Copy the data from the NSURLResponse into our URLResponse.
+        // First we allocate the total data size.
+        urlResponse.content.resize([data length]);
+        // NSData may be stored in several ranges, so the 'bytes' method may incur extra copy operations.
+        // To avoid that we copy the data in ranges provided by the NSData.
+        [data enumerateByteRangesUsingBlock:^(const void * _Nonnull bytes, NSRange byteRange, BOOL * _Nonnull stop) {
+            memcpy(urlResponse.content.data() + byteRange.location, bytes, byteRange.length);
+        }];
 
-        int statusCode = [httpResponse statusCode];
-
-        std::vector<char> rawDataVec;
-
-        if (error != nil) {
-
-            LOGE("Response \"%s\" with error \"%s\".", response, [error.localizedDescription UTF8String]);
-
-        } else if (statusCode < 200 || statusCode >= 300) {
-
-            LOGE("Unsuccessful status code %d: \"%s\" from: %s",
-                statusCode,
-                [[NSHTTPURLResponse localizedStringForStatusCode: statusCode] UTF8String],
-                [response.URL.absoluteString UTF8String]);
-            _callback(std::move(rawDataVec));
-
-        } else {
-
-            int dataLength = [data length];
-            rawDataVec.resize(dataLength);
-            memcpy(rawDataVec.data(), (char *)[data bytes], dataLength);
-            _callback(std::move(rawDataVec));
-
+        // Run the callback from the requester.
+        if (_callback) {
+            _callback(urlResponse);
         }
-
     };
 
-    NSURLSessionDataTask* dataTask = [m_defaultSession dataTaskWithURL:[NSURL URLWithString:nsUrl] completionHandler:handler];
+    NSURL* nsUrl = [NSURL URLWithString:[NSString stringWithUTF8String:_url.string().c_str()]];
+    NSURLSessionDataTask* dataTask = [m_urlSession dataTaskWithURL:nsUrl completionHandler:handler];
 
     [dataTask resume];
 
-    return true;
+    return [dataTask taskIdentifier];
 
 }
 
-void OSXPlatform::cancelUrlRequest(const std::string& _url) {
+void OSXPlatform::cancelUrlRequest(UrlRequestHandle handle) {
 
-    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
-
-    [m_defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
-        for(NSURLSessionTask* task in dataTasks) {
-            if([[task originalRequest].URL.absoluteString isEqualToString:nsUrl]) {
+    [m_urlSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
+        for (NSURLSessionTask* task in dataTasks) {
+            if ([task taskIdentifier] == handle) {
                 [task cancel];
                 break;
             }
@@ -173,5 +129,3 @@ void OSXPlatform::cancelUrlRequest(const std::string& _url) {
 }
 
 } // namespace Tangram
-
-#endif //PLATFORM_OSX
