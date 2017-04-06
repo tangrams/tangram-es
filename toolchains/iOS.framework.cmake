@@ -34,7 +34,7 @@ endif()
 set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CFNetwork GLKit)
 
 # Tell SQLiteCpp to not build its own copy of SQLite, we will use the system library instead.
-set(SQLITECPP_INTERNAL_SQLITE OFF)
+set(SQLITECPP_INTERNAL_SQLITE OFF CACHE BOOL "")
 
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
