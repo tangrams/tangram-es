@@ -67,3 +67,7 @@ add_subdirectory(SQLiteCpp)
 
 # Extensions aren't needed for MBTiles and aren't available in older versions of sqlite3.
 target_compile_definitions(SQLiteCpp PRIVATE SQLITE_OMIT_LOAD_EXTENSION)
+
+## double-conversion ##
+#######################
+add_subdirectory(double-conversion)

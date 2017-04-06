@@ -3,9 +3,8 @@
 #include "gl/shaderProgram.h"
 #include "platform.h"
 #include "spotLight_glsl.h"
+#include "util/floatFormatter.h"
 #include "view/view.h"
-
-#include "glm/gtx/string_cast.hpp"
 
 namespace Tangram {
 
@@ -66,21 +65,20 @@ std::string SpotLight::getInstanceAssignBlock() {
     std::string block = Light::getInstanceAssignBlock();
 
     if (!m_dynamic) {
-        block += ", " + glm::to_string(m_position.value);
+        block += ", " + ff::to_string(m_position.value);
         if (m_attenuation!=0.0) {
-            block += ", " + std::to_string(m_attenuation);
+            block += ", " + ff::to_string(m_attenuation);
         }
         if (m_innerRadius!=0.0) {
-            block += ", " + std::to_string(m_innerRadius);
+            block += ", " + ff::to_string(m_innerRadius);
         }
         if (m_outerRadius!=0.0) {
-            block += ", " + std::to_string(m_outerRadius);
+            block += ", " + ff::to_string(m_outerRadius);
         }
 
-        block += ", " + glm::to_string(m_direction);
-        block += ", " + std::to_string(m_spotCosCutoff);
-        block += ", " + std::to_string(m_spotExponent);
-
+        block += ", " + ff::to_string(m_direction);
+        block += ", " + ff::to_string(m_spotCosCutoff);
+        block += ", " + ff::to_string(m_spotExponent);
         block += ")";
     }
     return block;

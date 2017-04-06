@@ -3,9 +3,8 @@
 #include "gl/shaderProgram.h"
 #include "directionalLight_glsl.h"
 #include "platform.h"
+#include "util/floatFormatter.h"
 #include "view/view.h"
-
-#include "glm/gtx/string_cast.hpp"
 
 namespace Tangram {
 
@@ -57,7 +56,7 @@ std::string DirectionalLight::getInstanceDefinesBlock() {
 std::string DirectionalLight::getInstanceAssignBlock() {
     std::string block = Light::getInstanceAssignBlock();
     if (!m_dynamic) {
-        block += ", " + glm::to_string(m_direction) + ")";
+        block += ", " + ff::to_string(m_direction) + ")";
     }
     return block;
 }
