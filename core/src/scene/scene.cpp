@@ -2,7 +2,6 @@
 
 #include "data/tileSource.h"
 #include "gl/shaderProgram.h"
-#include "log.h"
 #include "platform.h"
 #include "scene/dataLayer.h"
 #include "scene/light.h"
@@ -18,56 +17,29 @@
 #include "view/view.h"
 
 #include <algorithm>
-#include <atomic>
-#include <regex>
 
 namespace Tangram {
 
 static std::atomic<int32_t> s_serial;
 
-Scene::Scene() : id(s_serial++) {}
-
-Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _path)
+Scene::Scene(std::shared_ptr<const Platform> _platform, const Url& _url)
     : id(s_serial++),
+      m_url(_url),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()) {
-
-    std::regex r("^(http|https):/");
-    std::smatch match;
-
-    if (std::regex_search(_path, match, r)) {
-        m_resourceRoot = "";
-        m_path = _path;
-    } else {
-
-        auto split = _path.find_last_of("/");
-        if (split == std::string::npos) {
-            m_resourceRoot = "";
-            m_path = _path;
-        } else {
-            m_resourceRoot = _path.substr(0, split + 1);
-            m_path = _path.substr(split + 1);
-        }
-    }
-
-    LOGD("Scene '%s' => '%s' : '%s'", _path.c_str(), m_resourceRoot.c_str(), m_path.c_str());
-
-    m_fontContext->setSceneResourceRoot(m_resourceRoot);
 
     // For now we only have one projection..
     // TODO how to share projection with view?
     m_mapProjection.reset(new MercatorProjection());
 }
 
-Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _yaml, const std::string& _resourceRoot)
+Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _yaml, const Url& _url)
     : id(s_serial++),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()) {
 
-    m_resourceRoot = _resourceRoot;
+    m_url = _url;
     m_yaml = _yaml;
-
-    m_fontContext->setSceneResourceRoot(m_resourceRoot);
 
     m_mapProjection.reset(new MercatorProjection());
 }
@@ -79,9 +51,8 @@ void Scene::copyConfig(const Scene& _other) {
     m_config = _other.m_config;
     m_fontContext = _other.m_fontContext;
 
-    m_path = _other.m_path;
+    m_url = _other.m_url;
     m_yaml = _other.m_yaml;
-    m_resourceRoot = _other.m_resourceRoot;
 
     m_globalRefs = _other.m_globalRefs;
 

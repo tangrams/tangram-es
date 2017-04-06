@@ -560,31 +560,54 @@ bool SceneLoader::extractTexFiltering(Node& filtering, TextureFiltering& filter)
     }
 }
 
-std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platform>& platform,
-                                                   const std::string& name, const std::string& url,
-                                                   const TextureOptions& options, bool generateMipmaps,
-                                                   const std::shared_ptr<Scene>& scene) {
+
+std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platform>& platform, const std::string& name, const std::string& urlString,
+        const TextureOptions& options, bool generateMipmaps, const std::shared_ptr<Scene>& scene) {
 
     std::shared_ptr<Texture> texture;
 
-    std::regex r("^(http|https):/");
-    std::smatch match;
+    Url url(urlString);
+    
+    auto& asset = scene->sceneAssets()[url];
+    // asset must exist for this path (must be created during scene importing)
+    assert(asset);
+    
+    // FIXME: Zip assets aren't handled by the paths below.
 
-    auto& asset = scene->assets()[url];
-    if (!asset) {
-        LOGE("Asset missing at path: %s.", url.c_str());
-        return texture;
-    }
+    if (url.hasBase64Data() && url.mediaType() == "image/png") {
+        auto data = url.data();
 
-    // TODO: generalize using URI handlers
-    if (std::regex_search(url, match, r) && !asset->zipHandle()) {
+        std::vector<unsigned char> blob;
+
+        try {
+            blob = Base64::decode(data);
+        } catch(std::runtime_error e) {
+            LOGE("Can't decode Base64 texture '%s'", e.what());
+        }
+
+        if (blob.empty()) {
+            LOGE("Can't decode Base64 texture");
+            return nullptr;
+        }
+        texture = std::make_shared<Texture>(0, 0, options, generateMipmaps);
+
+        std::vector<char> textureData;
+        auto cdata = reinterpret_cast<char*>(blob.data());
+        textureData.insert(textureData.begin(), cdata, cdata + blob.size());
+        if (!texture->loadImageFromMemory(textureData)) {
+            LOGE("Invalid Base64 texture");
+        }
+    } else {
         scene->pendingTextures++;
-        platform->startUrlRequest(url, [=](std::vector<char>&& rawData) {
+        platform->startUrlRequest(url, [=](UrlResponse response) {
+                if (response.error) {
+                    LOGE("Error retrieving URL '%s': %s", url.string().c_str(), response.error);
+                }
                 std::lock_guard<std::mutex> lock(m_textureMutex);
                 auto texture = scene->getTexture(name);
                 if (texture) {
-                    if (!texture->loadImageFromMemory(rawData)) {
-                        LOGE("Invalid texture data '%s'", url.c_str());
+                    if (!texture->loadImageFromMemory(std::move(response.content))) {
+                        LOGE("Invalid texture data from URL '%s'", url.string().c_str());
                     }
 
                     if (texture->spriteAtlas()) {
@@ -599,47 +622,6 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
             });
         std::vector<char> textureData = {};
         texture = std::make_shared<Texture>(textureData, options, generateMipmaps);
-    } else {
-
-        if (url.substr(0, 22) == "data:image/png;base64,") {
-            // Skip data: prefix
-            auto data = url.substr(22);
-
-            std::vector<unsigned char> blob;
-
-            try {
-                blob = Base64::decode(data);
-            } catch(std::runtime_error e) {
-                LOGE("Can't decode Base64 texture '%s'", e.what());
-            }
-
-            if (blob.empty()) {
-                LOGE("Can't decode Base64 texture");
-                return nullptr;
-            }
-            texture = std::make_shared<Texture>(0, 0, options, generateMipmaps);
-
-            std::vector<char> textureData;
-            auto cdata = reinterpret_cast<char*>(blob.data());
-            textureData.insert(textureData.begin(), cdata, cdata + blob.size());
-            if (!texture->loadImageFromMemory(textureData)) {
-                LOGE("Invalid Base64 texture");
-            }
-
-        } else {
-
-            auto data = asset->readBytesFromAsset(platform);
-
-            if (data.size() == 0) {
-                LOGE("Can't load texture resource at url '%s'", url.c_str());
-                return nullptr;
-            }
-
-            texture = std::make_shared<Texture>(0, 0, options, generateMipmaps);
-            if (!texture->loadImageFromMemory(data)) {
-                LOGE("Invalid texture data '%s'", url.c_str());
-            }
-        }
     }
 
     return texture;
@@ -750,39 +732,26 @@ void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& 
     std::transform(family.begin(), family.end(), familyNormalized.begin(), ::tolower);
     std::transform(style.begin(), style.end(), styleNormalized.begin(), ::tolower);
 
-    // Download/Load the font and add it to the context
     FontDescription _ft(familyNormalized, styleNormalized, weight, uri);
 
-    std::regex regex("^(http|https):/");
-    std::smatch match;
+    Url url(uri);
 
-    auto& asset = scene->assets()[_ft.uri];
-    if (!asset) {
-        LOGE("Asset missing at path: %s.", _ft.uri.c_str());
-        return;
-    }
-
-    if (std::regex_search(uri, match, regex) && !asset->zipHandle()) {
-        // Load remote
-        scene->pendingFonts++;
-        platform->startUrlRequest(_ft.uri, [_ft, scene](std::vector<char>&& rawData) {
-            if (rawData.size() == 0) {
-                LOGE("Bad URL request for font %s at URL %s", _ft.alias.c_str(), _ft.uri.c_str());
-            } else {
-                scene->fontContext()->addFont(_ft, alfons::InputSource(std::move(rawData)));
-            }
-            scene->pendingFonts--;
-        });
-    } else {
-        auto data = asset->readBytesFromAsset(platform);
-
-        if (data.size() == 0) {
-            LOGW("Local font at path %s can't be found (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
+    auto& asset = scene->sceneAssets()[_ft.uri];
+    // asset must exist for this path (must be created during scene importing)
+    assert(asset);
+    
+    // FIXME: Zip assets aren't handled by the URL request below.
+    
+    // Load font file.
+    scene->pendingFonts++;
+    platform->startUrlRequest(url, [_ft, scene](UrlResponse response) {
+        if (response.error) {
+            LOGE("Error retrieving font '%s' at %s: ", _ft.alias.c_str(), _ft.uri.c_str(), response.error);
         } else {
-            LOGN("Adding local font %s (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
-            scene->fontContext()->addFont(_ft, alfons::InputSource(std::move(data)));
+            scene->fontContext()->addFont(_ft, alfons::InputSource(std::move(response.content)));
         }
-    }
+        scene->pendingFonts--;
+    });
 }
 
 void SceneLoader::loadFont(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& font,

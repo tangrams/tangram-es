@@ -3,10 +3,6 @@
 #include "log.h"
 #include "platform.h"
 
-#include <algorithm>
-
-#define MAX_DOWNLOADS 4
-
 namespace Tangram {
 
 NetworkDataSource::NetworkDataSource(std::shared_ptr<Platform> _platform, const std::string& _urlTemplate,
@@ -14,111 +10,99 @@ NetworkDataSource::NetworkDataSource(std::shared_ptr<Platform> _platform, const 
     m_platform(_platform),
     m_urlTemplate(_urlTemplate),
     m_urlSubdomains(std::move(_urlSubdomains)),
-    m_isTms(isTms),
-    m_maxDownloads(MAX_DOWNLOADS) {}
+    m_isTms(isTms) {}
 
-std::string NetworkDataSource::constructURL(const TileID& _tileCoord, size_t _subdomainIndex) const {
+std::string NetworkDataSource::buildUrlForTile(const TileID& tile, size_t subdomainIndex) const {
+
     std::string url = m_urlTemplate;
 
     size_t xPos = url.find("{x}");
     if (xPos != std::string::npos) {
-        url.replace(xPos, 3, std::to_string(_tileCoord.x));
+        url.replace(xPos, 3, std::to_string(tile.x));
     }
     size_t yPos = url.find("{y}");
     if (yPos != std::string::npos) {
-        int y = _tileCoord.y;
-        int z = _tileCoord.z;
+        int y = tile.y;
+        int z = tile.z;
         if (m_isTms) {
             // Convert XYZ to TMS
-            y = (1 << z) - 1 - _tileCoord.y;
+            y = (1 << z) - 1 - tile.y;
         }
         url.replace(yPos, 3, std::to_string(y));
     }
     size_t zPos = url.find("{z}");
     if (zPos != std::string::npos) {
-        url.replace(zPos, 3, std::to_string(_tileCoord.z));
+        url.replace(zPos, 3, std::to_string(tile.z));
     }
-    if (_subdomainIndex < m_urlSubdomains.size()) {
+    if (subdomainIndex < m_urlSubdomains.size()) {
         size_t sPos = url.find("{s}");
         if (sPos != std::string::npos) {
-            url.replace(sPos, 3, m_urlSubdomains[_subdomainIndex]);
+            url.replace(sPos, 3, m_urlSubdomains[subdomainIndex]);
         }
     }
-
     return url;
 }
 
-bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
+bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb callback) {
 
-    if (_task->rawSource != this->level) {
+    if (task->rawSource != this->level) {
         LOGE("NetworkDataSource must be last!");
         return false;
     }
 
-    if (m_pending.size() >= m_maxDownloads) {
-        return false;
-    }
+    auto tileId = task->tileId();
 
-    auto tileId = _task->tileId();
-
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        if (std::find(m_pending.begin(), m_pending.end(), tileId) != m_pending.end()) {
-            return false;
-        }
-        m_pending.push_back(tileId);
-    }
-
-    std::string url = constructURL(_task->tileId(), m_urlSubdomainIndex);
+    Url url(buildUrlForTile(tileId, m_urlSubdomainIndex));
 
     if (!m_urlSubdomains.empty()) {
         m_urlSubdomainIndex = (m_urlSubdomainIndex + 1) % m_urlSubdomains.size();
     }
 
-    bool started = m_platform->startUrlRequest(url,
-        [this, cb = _cb, task = _task](std::vector<char>&& _rawData) mutable {
+    UrlCallback onRequestFinish = [this, callback, task, url](UrlResponse response) mutable {
 
-            removePending(task->tileId());
+        removePending(task->tileId(), false);
 
-            if (task->isCanceled()) {
-                return;
-            }
+        if (task->isCanceled()) {
+            return;
+        }
 
-            if (!_rawData.empty()) {
-                auto rawDataRef = std::make_shared<std::vector<char>>();
-                std::swap(*rawDataRef, _rawData);
+        if (response.error) {
+            LOGE("Error for URL request '%s': %s", url.string().c_str(), response.error);
+            return;
+        }
 
-                auto& dlTask = static_cast<BinaryTileTask&>(*task);
-                // NB: Sets hasData() state true
-                dlTask.rawTileData = rawDataRef;
-            }
-            cb.func(task);
-        });
+        if (!response.content.empty()) {
+            auto& dlTask = static_cast<BinaryTileTask&>(*task);
+            dlTask.rawTileData = std::make_shared<std::vector<char>>(std::move(response.content));
+        }
+        callback.func(task);
+    };
 
-    if (!started) {
-        removePending(_task->tileId());
-
-        // Set canceled state, so that tile will not be tried
-        // for reloading until sourceGeneration increased.
-        _task->cancel();
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        auto requestHandle = m_platform->startUrlRequest(url, onRequestFinish);
+        m_pending.push_back({ tileId, requestHandle });
     }
 
-    return started;
+    return true;
 }
 
-void NetworkDataSource::removePending(const TileID& _tileId) {
+void NetworkDataSource::removePending(const TileID& tile, bool cancelRequest) {
     std::unique_lock<std::mutex> lock(m_mutex);
-    auto it = std::find(m_pending.begin(), m_pending.end(), _tileId);
-    if (it != m_pending.end()) { m_pending.erase(it); }
+    for (auto it = m_pending.begin(); it != m_pending.end(); ++it) {
+        if (it->tile == tile) {
+            if (cancelRequest) {
+                m_platform->cancelUrlRequest(it->request);
+            }
+            // This invalidates our iterators, so we return immediately.
+            m_pending.erase(it);
+            return;
+        }
+    }
 }
 
-void NetworkDataSource::cancelLoadingTile(const TileID& _tileId) {
-    removePending(_tileId);
-    // cancel all possible requests for this tile
-    auto maxIndex = m_urlSubdomains.empty() ? 1 : m_urlSubdomains.size();
-    for (size_t index = 0; index < maxIndex; index++) {
-        m_platform->cancelUrlRequest(constructURL(_tileId, index));
-    }
+void NetworkDataSource::cancelLoadingTile(const TileID& tile) {
+    removePending(tile, true);
 }
 
 }
