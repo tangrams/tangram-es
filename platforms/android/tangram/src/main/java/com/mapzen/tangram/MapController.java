@@ -77,6 +77,7 @@ public class MapController implements Renderer {
      * Interface for a callback to receive information about features picked from the map
      * Triggered after a call of {@link #pickFeature(float, float)}
      * Listener should be set with {@link #setFeaturePickListener(FeaturePickListener)}
+     * The callback will be run on the main (UI) thread.
      */
     public interface FeaturePickListener {
         /**
@@ -91,6 +92,7 @@ public class MapController implements Renderer {
      * Interface for a callback to receive information about labels picked from the map
      * Triggered after a call of {@link #pickLabel(float, float)}
      * Listener should be set with {@link #setLabelPickListener(LabelPickListener)}
+     * The callback will be run on the main (UI) thread.
      */
     public interface LabelPickListener {
         /**
@@ -106,6 +108,7 @@ public class MapController implements Renderer {
      * Interface for a callback to receive the picked {@link Marker}
      * Triggered after a call of {@link #pickMarker(float, float)}
      * Listener should be set with {@link #setMarkerPickListener(MarkerPickListener)}
+     * The callback will be run on the main (UI) thread.
      */
     public interface MarkerPickListener {
         /**
@@ -129,6 +132,7 @@ public class MapController implements Renderer {
      * Interface for a callback to received additional error information in a {@link SceneUpdateError}
      * Triggered after a call of {@link #applySceneUpdates()} or {@link #loadSceneFile(String, List<SceneUpdate>)}
      * Listener should be set with {@link #setSceneUpdateErrorListener(SceneUpdateErrorListener)}
+     * The callback will be run on the main (UI) thread.
      */
     public interface SceneUpdateErrorListener {
         /**
