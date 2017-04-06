@@ -99,8 +99,8 @@ extern "C" {
     }
 
     JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeInit(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
-        setupJniEnv(jniEnv);
-        auto androidPlatform = new Tangram::AndroidPlatform(jniEnv, assetManager, tangramInstance);
+        JavaVM* jvm = setupJniEnv(jniEnv);
+        auto androidPlatform = new Tangram::AndroidPlatform(jniEnv, jvm, assetManager, tangramInstance);
         auto map = new Tangram::Map(std::shared_ptr<Tangram::Platform>(androidPlatform));
         jlong mapPtr = reinterpret_cast<jlong>(map);
         androidPlatform->setMapPtr(mapPtr);
@@ -134,9 +134,10 @@ extern "C" {
             jniEnv->DeleteLocalRef(value);
         }
 
-        auto updateErrorCallbackRef = jniEnv->NewGlobalRef(updateErrorCallback);
-        map->loadScene(resolveScenePath(cPath).c_str(), false, sceneUpdates, [updateErrorCallbackRef](auto sceneUpdateErrorStatus) {
-            Tangram::sceneUpdateErrorCallback(updateErrorCallbackRef, sceneUpdateErrorStatus);
+        auto platform = static_cast<Tangram::AndroidPlatform*>(map->getPlatform().get());
+        auto updateErrorCallbackRef = std::make_shared<ScopedGlobalRef>(platform->getJVM(), jniEnv, updateErrorCallback);
+        map->loadScene(resolveScenePath(cPath).c_str(), false, sceneUpdates, [=](auto sceneUpdateErrorStatus) {
+            Tangram::sceneUpdateErrorCallback(platform, updateErrorCallbackRef, sceneUpdateErrorStatus);
         });
         jniEnv->ReleaseStringUTFChars(path, cPath);
     }
@@ -160,9 +161,10 @@ extern "C" {
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetupGL(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
-        bindJniEnvToThread(jniEnv);
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        Tangram::AndroidPlatform& platform = static_cast<Tangram::AndroidPlatform&>(*map->getPlatform());
+        platform.bindJniEnvToThread(jniEnv);
         map->setupGL();
     }
 
@@ -243,10 +245,10 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickFeature(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat posX, jfloat posY, jobject listener) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        auto listenerRef = jniEnv->NewGlobalRef(listener);
+        auto platform = static_cast<Tangram::AndroidPlatform*>(map->getPlatform().get());
+        auto listenerRef = std::make_shared<ScopedGlobalRef>(platform->getJVM(), jniEnv, listener);
 
         map->pickFeatureAt(posX, posY, [=](auto pickResult) {
-            Tangram::AndroidPlatform& platform = static_cast<Tangram::AndroidPlatform&>(*map->getPlatform());
             Tangram::featurePickCallback(platform, listenerRef, pickResult);
         });
     }
@@ -254,21 +256,22 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickMarker(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jlong mapPtr, jfloat posX, jfloat posY, jobject listener) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        auto listenerRef = jniEnv->NewGlobalRef(listener);
-        auto tangramRef = jniEnv->NewGlobalRef(tangramInstance);
+        auto platform = static_cast<Tangram::AndroidPlatform*>(map->getPlatform().get());
+        auto listenerRef = std::make_shared<ScopedGlobalRef>(platform->getJVM(), jniEnv, listener);
+        auto tangramRef = std::make_shared<ScopedGlobalRef>(platform->getJVM(), jniEnv, tangramInstance);
 
         map->pickMarkerAt(posX, posY, [=](auto pickMarkerResult) {
-            Tangram::AndroidPlatform& platform = static_cast<Tangram::AndroidPlatform&>(*map->getPlatform());
-            Tangram::markerPickCallback(platform, listenerRef, tangramRef, pickMarkerResult); });
+            Tangram::markerPickCallback(platform, listenerRef, tangramRef, pickMarkerResult);
+        });
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativePickLabel(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat posX, jfloat posY, jobject listener) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        auto listenerRef = jniEnv->NewGlobalRef(listener);
+        auto platform = static_cast<Tangram::AndroidPlatform*>(map->getPlatform().get());
+        auto listenerRef = std::make_shared<ScopedGlobalRef>(platform->getJVM(), jniEnv, listener);
 
         map->pickLabelAt(posX, posY, [=](auto pickResult) {
-            Tangram::AndroidPlatform& platform = static_cast<Tangram::AndroidPlatform&>(*map->getPlatform());
             Tangram::labelPickCallback(platform, listenerRef, pickResult);
         });
     }
@@ -532,9 +535,10 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeApplySceneUpdates(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jobject updateErrorCallback) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        auto updateErrorCallbackRef = jniEnv->NewGlobalRef(updateErrorCallback);
-        map->applySceneUpdates([updateErrorCallbackRef](auto sceneUpdateErrorStatus) {
-            Tangram::sceneUpdateErrorCallback(updateErrorCallbackRef, sceneUpdateErrorStatus);
+        auto platform = static_cast<Tangram::AndroidPlatform*>(map->getPlatform().get());
+        auto updateErrorCallbackRef = std::make_shared<ScopedGlobalRef>(platform->getJVM(), jniEnv, updateErrorCallback);
+        map->applySceneUpdates([=](auto sceneUpdateErrorStatus) {
+            Tangram::sceneUpdateErrorCallback(platform, updateErrorCallbackRef, sceneUpdateErrorStatus);
         });
     }
 

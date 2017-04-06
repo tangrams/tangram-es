@@ -19,7 +19,6 @@
 #include "util/url.h"
 #include "tangram.h"
 #include "sqlite3ndk.h"
-#include "helpers_android.h"
 
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES 1
@@ -32,7 +31,6 @@
  * http://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/invocation.html
  */
 
-static JavaVM* jvm = nullptr;
 // JNI Env bound on androids render thread (our native main thread)
 static jmethodID requestRenderMethodID = 0;
 static jmethodID setRenderModeMethodID = 0;
@@ -69,12 +67,10 @@ PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT = 0;
 static const char* aaPrefix = "asset:///";
 static const size_t aaPrefixLen = 9;
 
-void bindJniEnvToThread(JNIEnv* jniEnv) {
-    jniEnv->GetJavaVM(&jvm);
-}
+JavaVM* setupJniEnv(JNIEnv* jniEnv) {
+    JavaVM* jvm;
 
-void setupJniEnv(JNIEnv* jniEnv) {
-    bindJniEnvToThread(jniEnv);
+    jniEnv->GetJavaVM(&jvm);
 
     // Globally referenced classes
     {
@@ -123,6 +119,8 @@ void setupJniEnv(JNIEnv* jniEnv) {
     {
         initUITTaskMID = jniEnv->GetMethodID(UITaskClass->get<jclass>(), "<init>", "(J)V");
     }
+
+    return jvm;
 }
 
 void onUrlSuccess(JNIEnv* _jniEnv, jbyteArray _jBytes, jlong _jCallbackPtr) {
@@ -174,7 +172,7 @@ void logMsg(const char* fmt, ...) {
 
 std::string AndroidPlatform::fontPath(const std::string& _family, const std::string& _weight, const std::string& _style) const {
 
-    JniThreadBinding jniEnv(jvm);
+    JniThreadBinding jniEnv(m_jvm);
 
     std::string key = _family + "_" + _weight + "_" + _style;
 
@@ -188,15 +186,12 @@ std::string AndroidPlatform::fontPath(const std::string& _family, const std::str
     return resultStr;
 }
 
-AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject _tangramInstance) {
+AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, JavaVM* _jvm, jobject _assetManager, jobject _tangramInstance) : m_jvm(_jvm) {
     m_tangramInstance = _jniEnv->NewGlobalRef(_tangramInstance);
 
     m_assetManager = AAssetManager_fromJava(_jniEnv, _assetManager);
 
-    if (m_assetManager == nullptr) {
-        LOGE("Could not obtain Asset Manager reference");
-        return;
-    }
+    assert(m_assetManager);
 
     sqlite3_ndk_init(m_assetManager);
 }
@@ -207,14 +202,14 @@ void AndroidPlatform::dispose(JNIEnv* _jniEnv) {
 
 void AndroidPlatform::requestRender() const {
 
-    JniThreadBinding jniEnv(jvm);
+    JniThreadBinding jniEnv(m_jvm);
 
     jniEnv->CallVoidMethod(m_tangramInstance, requestRenderMethodID);
 }
 
 std::string AndroidPlatform::fontFallbackPath(int _importance, int _weightHint) const {
 
-    JniThreadBinding jniEnv(jvm);
+    JniThreadBinding jniEnv(m_jvm);
 
     jstring returnStr = (jstring) jniEnv->CallObjectMethod(m_tangramInstance, getFontFallbackFilePathMID, _importance, _weightHint);
 
@@ -254,14 +249,14 @@ std::vector<char> AndroidPlatform::systemFont(const std::string& _name, const st
 void AndroidPlatform::setContinuousRendering(bool _isContinuous) {
     Platform::setContinuousRendering(_isContinuous);
 
-    JniThreadBinding jniEnv(jvm);
+    JniThreadBinding jniEnv(m_jvm);
 
     jniEnv->CallVoidMethod(m_tangramInstance, setRenderModeMethodID, _isContinuous ? 1 : 0);
 }
 
  void AndroidPlatform::queueUITask(AndroidUITask _task) {
 
-     JniThreadBinding jniEnv(jvm);
+     JniThreadBinding jniEnv(m_jvm);
 
      bool pendingTasks = false;
 
@@ -281,7 +276,7 @@ void AndroidPlatform::setContinuousRendering(bool _isContinuous) {
 
 void AndroidPlatform::executeUITasks() {
 
-    JniThreadBinding jniEnv(jvm);
+    JniThreadBinding jniEnv(m_jvm);
 
     while (true) {
         AndroidUITask task;
@@ -320,6 +315,10 @@ bool AndroidPlatform::bytesFromAssetManager(const char* _path, std::function<cha
     return read > 0;
 }
 
+void AndroidPlatform::bindJniEnvToThread(JNIEnv* _jniEnv) {
+    _jniEnv->GetJavaVM(&m_jvm);
+}
+
 std::string AndroidPlatform::stringFromFile(const char* _path) const {
 
     std::string data;
@@ -356,7 +355,7 @@ std::vector<char> AndroidPlatform::bytesFromFile(const char* _path) const {
 
 bool AndroidPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
-    JniThreadBinding jniEnv(jvm);
+    JniThreadBinding jniEnv(m_jvm);
     jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
 
     // This is probably super dangerous. In order to pass a reference to our callback we have to convert it
@@ -373,7 +372,7 @@ bool AndroidPlatform::startUrlRequest(const std::string& _url, UrlCallback _call
 }
 
 void AndroidPlatform::cancelUrlRequest(const std::string& _url) {
-    JniThreadBinding jniEnv(jvm);
+    JniThreadBinding jniEnv(m_jvm);
     jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
     jniEnv->CallVoidMethod(m_tangramInstance, cancelUrlRequestMID, jUrl);
 }
@@ -383,13 +382,13 @@ void setCurrentThreadPriority(int priority) {
     setpriority(PRIO_PROCESS, tid, priority);
 }
 
-void sceneUpdateErrorCallback(jobject updateCallbackRef, const SceneUpdateError& sceneUpdateError) {
+void sceneUpdateErrorCallback(AndroidPlatform* platform, std::shared_ptr<ScopedGlobalRef> updateCallbackRef, const SceneUpdateError& sceneUpdateError) {
 
     if (!updateCallbackRef) {
         return;
     }
 
-    JniThreadBinding jniEnv(jvm);
+    JniThreadBinding jniEnv(platform->getJVM());
 
     jstring jUpdateStatusPath = jniEnv->NewStringUTF(sceneUpdateError.update.path.c_str());
     jstring jUpdateStatusValue = jniEnv->NewStringUTF(sceneUpdateError.update.value.c_str());
@@ -397,13 +396,12 @@ void sceneUpdateErrorCallback(jobject updateCallbackRef, const SceneUpdateError&
     jobject jUpdateErrorStatus = jniEnv->NewObject(sceneUpdateErrorClass->get<jclass>(), sceneUpdateErrorInitMID,
                                                    jUpdateStatusPath, jUpdateStatusValue, jError);
 
-    jniEnv->CallVoidMethod(updateCallbackRef, onSceneUpdateErrorMID, jUpdateErrorStatus);
-    jniEnv->DeleteGlobalRef(updateCallbackRef);
+    jniEnv->CallVoidMethod(updateCallbackRef->get(), onSceneUpdateErrorMID, jUpdateErrorStatus);
 }
 
-void labelPickCallback(AndroidPlatform& platform, jobject listenerRef, const LabelPickResult* labelPickResult) {
+void labelPickCallback(AndroidPlatform* platform, std::shared_ptr<ScopedGlobalRef> listenerRef, const LabelPickResult* labelPickResult) {
 
-    JniThreadBinding jniEnv(jvm);
+    JniThreadBinding jniEnv(platform->getJVM());
 
     float position[2] = {0.0, 0.0};
 
@@ -429,17 +427,14 @@ void labelPickCallback(AndroidPlatform& platform, jobject listenerRef, const Lab
 
     jobject labelPickResultRef = jniEnv->NewGlobalRef(labelPickResultObject);
 
-    platform.queueUITask([=](JNIEnv* _jniEnv) {
-        _jniEnv->CallVoidMethod(listenerRef, onLabelPickMID, labelPickResultRef, position[0], position[1]);
-
-        _jniEnv->DeleteGlobalRef(labelPickResultRef);
-        _jniEnv->DeleteGlobalRef(listenerRef);
+    platform->queueUITask([=](JNIEnv* _jniEnv) {
+        _jniEnv->CallVoidMethod(listenerRef->get(), onLabelPickMID, labelPickResultRef, position[0], position[1]);
     });
 }
 
-void markerPickCallback(AndroidPlatform& platform, jobject listenerRef, jobject tangramRef, const MarkerPickResult* markerPickResult) {
+void markerPickCallback(AndroidPlatform* platform, std::shared_ptr<ScopedGlobalRef> listenerRef, std::shared_ptr<ScopedGlobalRef> tangramRef, const MarkerPickResult* markerPickResult) {
 
-    JniThreadBinding jniEnv(jvm);
+    JniThreadBinding jniEnv(platform->getJVM());
     float position[2] = {0.0, 0.0};
 
     jobject markerPickResultObject = nullptr;
@@ -450,8 +445,7 @@ void markerPickCallback(AndroidPlatform& platform, jobject listenerRef, jobject 
         position[0] = markerPickResult->position[0];
         position[1] = markerPickResult->position[1];
 
-        marker = jniEnv->CallObjectMethod(tangramRef, markerByIDMID, static_cast<jlong>(markerPickResult->id));
-        jniEnv->DeleteGlobalRef(tangramRef);
+        marker = jniEnv->CallObjectMethod(tangramRef->get(), markerByIDMID, static_cast<jlong>(markerPickResult->id));
 
         if (marker) {
             markerPickResultObject = jniEnv->NewObject(markerPickResultClass->get<jclass>(),
@@ -461,19 +455,16 @@ void markerPickCallback(AndroidPlatform& platform, jobject listenerRef, jobject 
         }
     }
 
-    jobject markerPickResultRef = jniEnv->NewGlobalRef(markerPickResultObject);
+    auto markerPickResultRef = std::make_shared<ScopedGlobalRef>(platform->getJVM(), jniEnv, markerPickResultObject);
 
-    platform.queueUITask([=](JNIEnv* _jniEnv) {
-        _jniEnv->CallVoidMethod(listenerRef, onMarkerPickMID, markerPickResultRef, position[0], position[1]);
-
-        _jniEnv->DeleteGlobalRef(markerPickResultRef);
-        _jniEnv->DeleteGlobalRef(listenerRef);
+    platform->queueUITask([=](JNIEnv* _jniEnv) {
+        _jniEnv->CallVoidMethod(listenerRef->get(), onMarkerPickMID, markerPickResultRef->get(), position[0], position[1]);
     });
 }
 
-void featurePickCallback(AndroidPlatform& platform, jobject listenerRef, const FeaturePickResult* featurePickResult) {
+void featurePickCallback(AndroidPlatform* platform, std::shared_ptr<ScopedGlobalRef> listenerRef, const FeaturePickResult* featurePickResult) {
 
-    JniThreadBinding jniEnv(jvm);
+    JniThreadBinding jniEnv(platform->getJVM());
 
     jobject hashmap = jniEnv->NewObject(hashmapClass->get<jclass>(), hashmapInitMID);
     float position[2] = {0.0, 0.0};
@@ -493,11 +484,8 @@ void featurePickCallback(AndroidPlatform& platform, jobject listenerRef, const F
 
     jobject hashmapRef = jniEnv->NewGlobalRef(hashmap);
 
-    platform.queueUITask([=](JNIEnv* _jniEnv) {
-        _jniEnv->CallVoidMethod(listenerRef, onFeaturePickMID, hashmapRef, position[0], position[1]);
-
-        _jniEnv->DeleteGlobalRef(hashmapRef);
-        _jniEnv->DeleteGlobalRef(listenerRef);
+    platform->queueUITask([=](JNIEnv* _jniEnv) {
+        _jniEnv->CallVoidMethod(listenerRef->get(), onFeaturePickMID, hashmapRef, position[0], position[1]);
     });
 }
 

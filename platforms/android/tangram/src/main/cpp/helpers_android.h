@@ -17,13 +17,8 @@ public:
         if (status == JNI_EDETACHED) { jvm->DetachCurrentThread(); }
     }
 
-    JNIEnv* operator->() const {
-        return jniEnv;
-    }
-
-    operator JNIEnv*() const {
-        return jniEnv;
-    }
+    JNIEnv* operator->() const { return jniEnv; }
+    operator JNIEnv*() const { return jniEnv; }
 };
 
 class ScopedGlobalRef {
@@ -41,7 +36,6 @@ public:
     }
 
     template<class T>
-    T get() const {
-        return static_cast<T>(globalRef);
-    }
+    T get() const { return static_cast<T>(globalRef); }
+    jobject get() const { return globalRef; }
 };
