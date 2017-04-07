@@ -374,13 +374,16 @@ NS_ASSUME_NONNULL_BEGIN
 @property (strong, nonatomic) TGHttpHandler* httpHandler;
 
 /**
- Assign the default resource root for this map view.
- The resource root is the default directory where Tangram will try to load resources and scene
- assets.
+ Assign the resource root for this map view. Scene file URLs will be resolved
+ relative to this URL.
 
  Must be non`-nil`.
 
- @note By default the resource root is the main bundle resource URL.
+ @note By default the resource root is the main bundle resource URL. Using the
+ default resource root: `scene.yaml` is resolved to
+ `file://<main bundle path>/Resources/scene.yaml`, `/path/scene.yaml` is
+ resolved to `file:///path/scene.yaml`, and `https://my.host/scene.yaml` is
+ resolved to itself.
  */
 @property (strong, nonatomic) NSURL* resourceRoot;
 
