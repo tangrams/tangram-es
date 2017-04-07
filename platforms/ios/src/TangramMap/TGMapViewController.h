@@ -572,6 +572,8 @@ NS_ASSUME_NONNULL_BEGIN
  Removes all the markers added to the map view.
  */
 - (void)markerRemoveAll;
+- (TGMarker*)markerAdd;
+- (void)markerRemove:(TGMarker*)marker;
 
 #pragma mark Map View lifecycle
 
