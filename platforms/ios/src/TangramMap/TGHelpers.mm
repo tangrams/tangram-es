@@ -7,6 +7,7 @@
 //
 
 #import "TGHelpers.h"
+#import "TGTypes.h"
 
 @implementation TGHelpers
 
@@ -47,7 +48,7 @@
     NSMutableDictionary* userInfo = [[NSMutableDictionary alloc] init];
     [userInfo setObject:udpate forKey:@"TGUpdate"];
 
-    NSError* error = [NSError errorWithDomain:@"TGMapViewController:applySceneUpdates"
+    NSError* error = [NSError errorWithDomain:TGErrorDomain
                                          code:(NSInteger)updateError.error
                                      userInfo:userInfo];
 
