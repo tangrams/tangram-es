@@ -1,35 +1,14 @@
-#ifdef PLATFORM_IOS
-
-#import <UIKit/UIKit.h>
-#import <cstdio>
-#import <cstdarg>
-
 #import "TGMapViewController.h"
 #import "TGFontConverter.h"
 #import "TGHttpHandler.h"
 #import "platform_ios.h"
 #import "log.h"
 
+#import <cstdarg>
+#import <cstdio>
+#import <UIKit/UIKit.h>
+
 namespace Tangram {
-
-NSString* resolvePath(const char* _path, NSURL* _resourceRoot) {
-    NSString* pathString = [NSString stringWithUTF8String:_path];
-
-    NSURL* resolvedUrl = [NSURL URLWithString:pathString
-                                relativeToURL:_resourceRoot];
-
-    NSString* pathInAppBundle = [resolvedUrl path];
-
-    NSFileManager* fileManager = [NSFileManager defaultManager];
-
-    if ([fileManager fileExistsAtPath:pathInAppBundle]) {
-        return pathInAppBundle;
-    }
-
-    LOGW("Failed to resolve path: %s", _path);
-
-    return nil;
-}
 
 std::vector<char> loadUIFont(UIFont* _font) {
     if (!_font) {
@@ -73,46 +52,15 @@ void initGLExtensions() {
 
 iOSPlatform::iOSPlatform(TGMapViewController* _viewController) :
     Platform(),
-    m_viewController(_viewController)
-{
-    m_resourceRoot = [[NSBundle mainBundle] resourceURL];
-}
+    m_viewController(_viewController) {}
 
 void iOSPlatform::requestRender() const {
     [m_viewController renderOnce];
 }
 
-void iOSPlatform::setResourceRoot(NSURL* _resourceRoot) {
-    m_resourceRoot = _resourceRoot;
-}
-
 void iOSPlatform::setContinuousRendering(bool _isContinuous) {
     Platform::setContinuousRendering(_isContinuous);
     [m_viewController setContinuous:_isContinuous];
-}
-
-std::string iOSPlatform::resolveAssetPath(const std::string& _path) const {
-    NSString* path = resolvePath(_path.c_str(), m_resourceRoot);
-    return [path UTF8String];
-}
-
-std::vector<char> iOSPlatform::bytesFromFile(const char* _path) const {
-    NSString* path = resolvePath(_path, m_resourceRoot);
-
-    if (!path) { return {}; }
-
-    auto data = Platform::bytesFromFile([path UTF8String]);
-    return data;
-}
-
-std::string iOSPlatform::stringFromFile(const char* _path) const {
-    NSString* path = resolvePath(_path, m_resourceRoot);
-    std::string data;
-
-    if (!path) { return data; }
-
-    data = Platform::stringFromFile([path UTF8String]);
-    return data;
 }
 
 std::vector<FontSourceHandle> iOSPlatform::systemFontFallbacksHandle() const {
@@ -192,7 +140,7 @@ std::vector<char> iOSPlatform::systemFont(const std::string& _name, const std::s
     return loadUIFont(font);
 }
 
-bool iOSPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
+UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
     TGHttpHandler* httpHandler = [m_viewController httpHandler];
 
     if (!httpHandler) {
@@ -201,49 +149,50 @@ bool iOSPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback
 
     TGDownloadCompletionHandler handler = ^void (NSData* data, NSURLResponse* response, NSError* error) {
 
-        NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
+        // Create our response object. The '__block' specifier is to allow mutation in the data-copy block below.
+        __block UrlResponse urlResponse;
 
-        int statusCode = [httpResponse statusCode];
-
-        std::vector<char> rawDataVec;
-
+        // Check for errors from NSURLSession, then check for HTTP errors.
         if (error != nil) {
 
-            LOGE("Response \"%s\" with error \"%s\".", response, [error.localizedDescription UTF8String]);
+            urlResponse.error = [error.localizedDescription UTF8String];
 
-        } else if (statusCode < 200 || statusCode >= 300) {
+        } else if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
 
-            LOGE("Unsuccessful status code %d: \"%s\" from: %s",
-                statusCode,
-                [[NSHTTPURLResponse localizedStringForStatusCode: statusCode] UTF8String],
-                [response.URL.absoluteString UTF8String]);
-            _callback(std::move(rawDataVec));
+            NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
+            int statusCode = [httpResponse statusCode];
+            if (statusCode >= 400) {
+                urlResponse.error = [[NSHTTPURLResponse localizedStringForStatusCode: statusCode] UTF8String];
+            }
+        }
 
-        } else {
+        // Copy the data from the NSURLResponse into our URLResponse.
+        // First we allocate the total data size.
+        urlResponse.content.resize([data length]);
+        // NSData may be stored in several ranges, so the 'bytes' method may incur extra copy operations.
+        // To avoid that we copy the data in ranges provided by the NSData.
+        [data enumerateByteRangesUsingBlock:^(const void * _Nonnull bytes, NSRange byteRange, BOOL * _Nonnull stop) {
+            memcpy(urlResponse.content.data() + byteRange.location, bytes, byteRange.length);
+        }];
 
-            int dataLength = [data length];
-            rawDataVec.resize(dataLength);
-            memcpy(rawDataVec.data(), (char *)[data bytes], dataLength);
-            _callback(std::move(rawDataVec));
-
+        // Run the callback from the requester.
+        if (_callback) {
+            _callback(urlResponse);
         }
     };
 
-    NSString* url = [NSString stringWithUTF8String:_url.c_str()];
-    [httpHandler downloadRequestAsync:url completionHandler:handler];
+    NSString* url = [NSString stringWithUTF8String:_url.string().c_str()];
+    NSUInteger taskIdentifier = [httpHandler downloadRequestAsync:url completionHandler:handler];
 
-    return true;
+    return taskIdentifier;
 }
 
-void iOSPlatform::cancelUrlRequest(const std::string& _url) {
+void iOSPlatform::cancelUrlRequest(UrlRequestHandle _request) {
     TGHttpHandler* httpHandler = [m_viewController httpHandler];
 
     if (!httpHandler) { return; }
 
-    NSString* url = [NSString stringWithUTF8String:_url.c_str()];
-    [httpHandler cancelDownloadRequestAsync:url];
+    [httpHandler cancelDownloadRequestAsync:_request];
 }
 
 } // namespace Tangram
-
-#endif //PLATFORM_IOS

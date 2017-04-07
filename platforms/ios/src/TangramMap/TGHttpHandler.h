@@ -52,17 +52,18 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param url the URL of the download request
  @param completionHandler a handler to be called once the network request completed
+ @return an integer that uniquely identifies the resulting task within this handler
 
  @note This method will be automatically called by the map view instance.
  */
-- (void)downloadRequestAsync:(NSString *)url completionHandler:(TGDownloadCompletionHandler)completionHandler;
+- (NSUInteger)downloadRequestAsync:(NSString *)url completionHandler:(TGDownloadCompletionHandler)completionHandler;
 
 /**
  Cancels a download request for a specific URL.
 
  @param url the URL to cancel the network request for
  */
-- (void)cancelDownloadRequestAsync:(NSString *)url;
+- (void)cancelDownloadRequestAsync:(NSUInteger)taskIdentifier;
 
 /**
  Updates the http handler cache configuration.

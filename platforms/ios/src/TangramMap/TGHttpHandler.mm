@@ -64,19 +64,21 @@
     self.configuration.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
 }
 
-- (void)downloadRequestAsync:(NSString*)url completionHandler:(TGDownloadCompletionHandler)completionHandler
+- (NSUInteger)downloadRequestAsync:(NSString*)url completionHandler:(TGDownloadCompletionHandler)completionHandler
 {
     NSURLSessionDataTask* dataTask = [self.session dataTaskWithURL:[NSURL URLWithString:url]
                                                                       completionHandler:completionHandler];
 
     [dataTask resume];
+
+    return [dataTask taskIdentifier];
 }
 
-- (void)cancelDownloadRequestAsync:(NSString*)url
+- (void)cancelDownloadRequestAsync:(NSUInteger)taskIdentifier
 {
     [self.session getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
         for (NSURLSessionTask* task in dataTasks) {
-            if ([[task originalRequest].URL.absoluteString isEqualToString:url]) {
+            if ([task taskIdentifier] == taskIdentifier) {
                 [task cancel];
                 break;
             }
