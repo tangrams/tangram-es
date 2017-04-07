@@ -47,6 +47,8 @@ enum class TGMarkerType {
 
     if (self) {
         type = TGMarkerType::none;
+        identifier = 0;
+        tangramInstance = nullptr;
         self.visible = YES;
         self.drawOrder = 0;
     }
@@ -60,7 +62,7 @@ enum class TGMarkerType {
 
     if (self) {
         type = TGMarkerType::none;
-
+        identifier = 0;
         self.visible = YES;
         self.drawOrder = 0;
 
@@ -92,7 +94,6 @@ enum class TGMarkerType {
     _stylingPath = nil;
 
     if (!tangramInstance || !identifier) {
-        [self createNSError:error];
         return NO;
     }
 
@@ -110,7 +111,6 @@ enum class TGMarkerType {
     _stylingString = nil;
 
     if (!tangramInstance || !identifier) {
-        [self createNSError:error];
         return NO;
     }
 
@@ -130,7 +130,6 @@ enum class TGMarkerType {
     Tangram::LngLat lngLat(coordinates.longitude, coordinates.latitude);
 
     if (!tangramInstance || !identifier) {
-        [self createNSError:error];
         return NO;
     }
 
@@ -148,7 +147,6 @@ enum class TGMarkerType {
     type = TGMarkerType::point;
 
     if (!tangramInstance || !identifier) {
-        [self createNSError:error];
         return NO;
     }
 
@@ -167,8 +165,7 @@ enum class TGMarkerType {
     _polyline = polyline;
     type = TGMarkerType::polyline;
 
-    if (polyline.count < 2 || !tangramInstance || !identifier) {
-        [self createNSError:error];
+    if (!tangramInstance || !identifier) {
         return NO;
     }
 
@@ -187,8 +184,7 @@ enum class TGMarkerType {
     _polygon = polygon;
     type = TGMarkerType::polygon;
 
-    if (polygon.count < 3 || !tangramInstance || !identifier) {
-        [self createNSError:error];
+    if (!tangramInstance || !identifier) {
         return NO;
     }
 
@@ -207,7 +203,6 @@ enum class TGMarkerType {
     _visible = visible;
 
     if (!tangramInstance || !identifier) {
-        [self createNSError:error];
         return NO;
     }
 
@@ -224,7 +219,6 @@ enum class TGMarkerType {
     _drawOrder = drawOrder;
 
     if (!tangramInstance || !identifier) {
-        [self createNSError:error];
         return NO;
     }
 
@@ -241,7 +235,6 @@ enum class TGMarkerType {
     _icon = icon;
 
     if (!tangramInstance || !identifier) {
-        [self createNSError:error];
         return NO;
     }
 
