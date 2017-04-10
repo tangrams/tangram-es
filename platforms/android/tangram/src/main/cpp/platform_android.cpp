@@ -177,7 +177,7 @@ std::string AndroidPlatform::fontPath(const std::string& _family, const std::str
     std::string key = _family + "_" + _weight + "_" + _style;
 
     jstring jkey = jniEnv->NewStringUTF(key.c_str());
-    jstring returnStr = (jstring) jniEnv->CallObjectMethod(m_tangramInstance, getFontFilePathMID, jkey);
+    jstring returnStr = (jstring) jniEnv->CallObjectMethod(m_tangramInstance->get(), getFontFilePathMID, jkey);
 
     auto resultStr = stringFromJString(jniEnv, returnStr);
     jniEnv->DeleteLocalRef(returnStr);
@@ -187,7 +187,7 @@ std::string AndroidPlatform::fontPath(const std::string& _family, const std::str
 }
 
 AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, JavaVM* _jvm, jobject _assetManager, jobject _tangramInstance) : m_jvm(_jvm) {
-    m_tangramInstance = _jniEnv->NewGlobalRef(_tangramInstance);
+    m_tangramInstance = std::make_unique<ScopedGlobalRef>(_jvm, _jniEnv, _tangramInstance);
 
     m_assetManager = AAssetManager_fromJava(_jniEnv, _assetManager);
 
@@ -197,21 +197,21 @@ AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, JavaVM* _jvm, jobject _assetMa
 }
 
 void AndroidPlatform::dispose(JNIEnv* _jniEnv) {
-    _jniEnv->DeleteGlobalRef(m_tangramInstance);
+    m_tangramInstance.reset();
 }
 
 void AndroidPlatform::requestRender() const {
 
     JniThreadBinding jniEnv(m_jvm);
 
-    jniEnv->CallVoidMethod(m_tangramInstance, requestRenderMethodID);
+    jniEnv->CallVoidMethod(m_tangramInstance->get(), requestRenderMethodID);
 }
 
 std::string AndroidPlatform::fontFallbackPath(int _importance, int _weightHint) const {
 
     JniThreadBinding jniEnv(m_jvm);
 
-    jstring returnStr = (jstring) jniEnv->CallObjectMethod(m_tangramInstance, getFontFallbackFilePathMID, _importance, _weightHint);
+    jstring returnStr = (jstring) jniEnv->CallObjectMethod(m_tangramInstance->get(), getFontFallbackFilePathMID, _importance, _weightHint);
 
     auto resultStr = stringFromJString(jniEnv, returnStr);
     jniEnv->DeleteLocalRef(returnStr);
@@ -251,7 +251,7 @@ void AndroidPlatform::setContinuousRendering(bool _isContinuous) {
 
     JniThreadBinding jniEnv(m_jvm);
 
-    jniEnv->CallVoidMethod(m_tangramInstance, setRenderModeMethodID, _isContinuous ? 1 : 0);
+    jniEnv->CallVoidMethod(m_tangramInstance->get(), setRenderModeMethodID, _isContinuous ? 1 : 0);
 }
 
  void AndroidPlatform::queueUITask(AndroidUITask _task) {
@@ -270,7 +270,7 @@ void AndroidPlatform::setContinuousRendering(bool _isContinuous) {
          jobject UITaskRunnable = jniEnv->NewObject(UITaskClass->get<jclass>(), initUITTaskMID, m_mapPtr);
 
          // Trigger an event for main thread to pick
-         jniEnv->CallVoidMethod(m_tangramInstance, postOnUIThreadMID, UITaskRunnable);
+         jniEnv->CallVoidMethod(m_tangramInstance->get(), postOnUIThreadMID, UITaskRunnable);
      }
 }
 
@@ -366,7 +366,7 @@ bool AndroidPlatform::startUrlRequest(const std::string& _url, UrlCallback _call
     // to make sure nothing is leaked.
     jlong jCallbackPtr = reinterpret_cast<jlong>(new UrlCallback(_callback));
 
-    jboolean methodResult = jniEnv->CallBooleanMethod(m_tangramInstance, startUrlRequestMID, jUrl, jCallbackPtr);
+    jboolean methodResult = jniEnv->CallBooleanMethod(m_tangramInstance->get(), startUrlRequestMID, jUrl, jCallbackPtr);
 
     return methodResult;
 }
@@ -374,7 +374,7 @@ bool AndroidPlatform::startUrlRequest(const std::string& _url, UrlCallback _call
 void AndroidPlatform::cancelUrlRequest(const std::string& _url) {
     JniThreadBinding jniEnv(m_jvm);
     jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
-    jniEnv->CallVoidMethod(m_tangramInstance, cancelUrlRequestMID, jUrl);
+    jniEnv->CallVoidMethod(m_tangramInstance->get(), cancelUrlRequestMID, jUrl);
 }
 
 void setCurrentThreadPriority(int priority) {
@@ -482,10 +482,10 @@ void featurePickCallback(AndroidPlatform* platform, std::shared_ptr<ScopedGlobal
         }
     }
 
-    jobject hashmapRef = jniEnv->NewGlobalRef(hashmap);
+    auto hashmapRef = std::make_shared<ScopedGlobalRef>(platform->getJVM(), jniEnv, hashmap);
 
     platform->queueUITask([=](JNIEnv* _jniEnv) {
-        _jniEnv->CallVoidMethod(listenerRef->get(), onFeaturePickMID, hashmapRef, position[0], position[1]);
+        _jniEnv->CallVoidMethod(listenerRef->get(), onFeaturePickMID, hashmapRef->get(), position[0], position[1]);
     });
 }
 

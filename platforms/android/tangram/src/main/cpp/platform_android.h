@@ -55,7 +55,7 @@ private:
     std::string fontFallbackPath(int _importance, int _weightHint) const;
 
     jlong m_mapPtr;
-    jobject m_tangramInstance;
+    std::unique_ptr<ScopedGlobalRef> m_tangramInstance;
     AAssetManager* m_assetManager;
     JavaVM* m_jvm;
     std::mutex m_UIThreadTaskMutex;

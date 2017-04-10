@@ -163,8 +163,8 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetupGL(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        Tangram::AndroidPlatform& platform = static_cast<Tangram::AndroidPlatform&>(*map->getPlatform());
-        platform.bindJniEnvToThread(jniEnv);
+        auto platform = static_cast<Tangram::AndroidPlatform*>(map->getPlatform().get());
+        platform->bindJniEnvToThread(jniEnv);
         map->setupGL();
     }
 
