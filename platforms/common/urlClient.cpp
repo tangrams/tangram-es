@@ -6,7 +6,6 @@
 
 namespace Tangram {
 
-
 struct CurlGlobals {
     CurlGlobals() {
         LOGD("curl global init");
@@ -18,12 +17,7 @@ struct CurlGlobals {
     }
 } s_curl;
 
-
-UrlClient::Response getCanceledResponse() {
-    UrlClient::Response response;
-    response.canceled = true;
-    return response;
-}
+const char* requestCancelledError = "Request cancelled";
 
 UrlClient::UrlClient(Options options) : m_options(options) {
     assert(options.numberOfThreads > 0);
@@ -36,18 +30,20 @@ UrlClient::UrlClient(Options options) : m_options(options) {
 }
 
 UrlClient::~UrlClient() {
-    // Make all tasks cancelled.
+    // Make all tasks canceled.
     {
+        // Lock the mutex to prevent concurrent modification of the list by the curl loop thread.
         std::lock_guard<std::mutex> lock(m_requestMutex);
+        // For all requests that have not started, finish them now with a canceled response.
         for (auto& request : m_requests) {
             if (request.callback) {
                 auto response = getCanceledResponse();
-                request.callback(std::move(response.data));
+                request.callback(response);
             }
         }
         m_requests.clear();
         for (auto& task : m_tasks) {
-            task.response.canceled = true;
+            task.request.canceled = true;
         }
     }
     // Stop the curl threads.
@@ -58,9 +54,10 @@ UrlClient::~UrlClient() {
     }
 }
 
-bool UrlClient::addRequest(const std::string& url, UrlCallback onComplete) {
+UrlRequestHandle UrlClient::addRequest(const std::string& url, UrlCallback onComplete) {
     // Create a new request.
-    Request request = {url, onComplete};
+    m_requestCount++;
+    Request request = {url, onComplete, m_requestCount, false};
     // Add the request to our list.
     {
         // Lock the mutex to prevent concurrent modification of the list by the curl loop thread.
@@ -69,36 +66,49 @@ bool UrlClient::addRequest(const std::string& url, UrlCallback onComplete) {
     }
     // Notify a thread to start the transfer.
     m_requestCondition.notify_one();
-    return true;
+    return m_requestCount;
 }
 
-void UrlClient::cancelRequest(const std::string& url) {
-    std::lock_guard<std::mutex> lock(m_requestMutex);
+void UrlClient::cancelRequest(UrlRequestHandle handle) {
+    UrlCallback callback;
     // First check the pending request list.
-    for (auto it = m_requests.begin(), end = m_requests.end(); it != end; ++it) {
-        auto& request = *it;
-        if (request.url == url) {
-            // Found the request! Now run its callback and remove it.
-            auto response = getCanceledResponse();
-            if (request.callback) {
-                request.callback(std::move(response.data));
+    {
+        // Lock the mutex to prevent concurrent modification of the list by the curl loop thread.
+        std::lock_guard<std::mutex> lock(m_requestMutex);
+        for (auto it = m_requests.begin(), end = m_requests.end(); it != end; ++it) {
+            auto& request = *it;
+            if (request.handle == handle) {
+                // Found the request! Now run its callback and remove it.
+                callback = std::move(request.callback);
+                m_requests.erase(it);
+                break;
             }
-            m_requests.erase(it);
-            return;
         }
     }
+    // We run the callback outside of the mutex lock to prevent deadlock in case the callback
+    // makes further calls into this UrlClient.
+    if (callback) {
+        callback(getCanceledResponse());
+    }
+
     // Next check the active request list.
     for (auto& task : m_tasks) {
-        if (task.request.url == url) {
-            task.response.canceled = true;
+        if (task.request.handle == handle) {
+            task.request.canceled = true;
         }
     }
 }
 
-size_t curlWriteCallback(char* ptr, size_t size, size_t n, void* user) {
+UrlClient::Response UrlClient::getCanceledResponse() {
+    UrlClient::Response response;
+    response.error = requestCancelledError;
+    return response;
+}
+
+size_t UrlClient::curlWriteCallback(char* ptr, size_t size, size_t n, void* user) {
     // Writes data received by libCURL.
     auto* response = reinterpret_cast<UrlClient::Response*>(user);
-    auto& buffer = response->data;
+    auto& buffer = response->content;
     auto addedSize = size * n;
     auto oldSize = buffer.size();
     buffer.resize(oldSize + addedSize);
@@ -106,10 +116,10 @@ size_t curlWriteCallback(char* ptr, size_t size, size_t n, void* user) {
     return addedSize;
 }
 
-int curlProgressCallback(void* user, double dltotal, double dlnow, double ultotal, double ulnow) {
+int UrlClient::curlProgressCallback(void* user, double dltotal, double dlnow, double ultotal, double ulnow) {
     // Signals libCURL to abort the request if marked as canceled.
-    auto* response = reinterpret_cast<UrlClient::Response*>(user);
-    return static_cast<int>(response->canceled);
+    auto* task = reinterpret_cast<UrlClient::Task*>(user);
+    return static_cast<int>(task->request.canceled);
 }
 
 void UrlClient::curlLoop(uint32_t index) {
@@ -117,18 +127,19 @@ void UrlClient::curlLoop(uint32_t index) {
     Task& task = m_tasks[index];
     LOGD("curlLoop %u starting", index);
     // Create a buffer for curl error messages.
-    char curlErrorString[CURL_ERROR_SIZE];
+    char curlErrorString[CURL_ERROR_SIZE] = {0};
     // Set up an easy handle for reuse.
     auto handle = curl_easy_init();
     curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, &curlWriteCallback);
     curl_easy_setopt(handle, CURLOPT_WRITEDATA, &task.response);
     curl_easy_setopt(handle, CURLOPT_PROGRESSFUNCTION, &curlProgressCallback);
-    curl_easy_setopt(handle, CURLOPT_PROGRESSDATA, &task.response);
+    curl_easy_setopt(handle, CURLOPT_PROGRESSDATA, &task);
     curl_easy_setopt(handle, CURLOPT_NOPROGRESS, 0L);
     curl_easy_setopt(handle, CURLOPT_HEADER, 0L);
     curl_easy_setopt(handle, CURLOPT_VERBOSE, 0L);
     curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "gzip");
     curl_easy_setopt(handle, CURLOPT_ERRORBUFFER, curlErrorString);
+    curl_easy_setopt(handle, CURLOPT_FAILONERROR, 1L);
     curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT_MS, m_options.connectionTimeoutMs);
     curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_options.requestTimeoutMs);
     // Loop until the session is destroyed.
@@ -157,29 +168,26 @@ void UrlClient::curlLoop(uint32_t index) {
             LOGD("curlLoop %u starting request for url: %s", index, url);
             // Perform the request.
             auto result = curl_easy_perform(handle);
-            // Get the result status code.
-            long httpStatus = 0;
-            curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &httpStatus);
             // Handle success or error.
-            if (result == CURLE_OK && httpStatus >= 200 && httpStatus < 300) {
-                LOGD("curlLoop %u succeeded with http status: %d for url: %s",
-                     index, httpStatus, url);
+            if (result == CURLE_OK) {
+                LOGD("curlLoop %u succeeded for url: %s", index, url);
+                task.response.error = nullptr;
             } else if (result == CURLE_ABORTED_BY_CALLBACK) {
-                LOGD("curlLoop %u request aborted for url: %s", index, url);
-                task.response.data.clear();
+                LOGD("curlLoop %u aborted request for url: %s", index, url);
+                task.response.error = requestCancelledError;
             } else {
-                LOGE("curlLoop %u failed: '%s' with http status: %d for url: %s",
-                    index, curlErrorString, httpStatus, url);
-                task.response.data.clear();
+                LOGD("curlLoop %u failed with error '%s' for url: %s", index, curlErrorString, url);
+                task.response.error = curlErrorString;
             }
+            // If a callback is given, always run it regardless of request result.
             if (task.request.callback) {
                 LOGD("curlLoop %u performing request callback", index);
-                task.request.callback(std::move(task.response.data));
+                task.request.callback(task.response);
             }
         }
         // Reset the response.
-        task.response.data.clear();
-        task.response.canceled = false;
+        task.response.content.clear();
+        task.response.error = nullptr;
     }
     LOGD("curlLoop %u exiting", index);
     // Clean up our easy handle.
