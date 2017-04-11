@@ -13,7 +13,6 @@ import okhttp3.Callback;
 import okhttp3.Response;
 
 import java.io.IOException;
-import java.util.function.Function;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -1061,8 +1060,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeUseCachedGlState(long mapPtr, boolean use);
     private synchronized native void nativeCaptureSnapshot(long mapPtr, int[] buffer);
 
-    private native void nativeOnUrlSuccess(byte[] rawDataBytes, long callbackPtr);
-    private native void nativeOnUrlFailure(long callbackPtr);
+    private native void nativeOnUrlComplete(long mapPtr, long requestHandle, byte[] rawDataBytes, String errorMessage);
 
     synchronized native long nativeAddTileSource(long mapPtr, String name);
     synchronized native void nativeRemoveTileSource(long mapPtr, long sourcePtr);
@@ -1137,35 +1135,36 @@ public class MapController implements Renderer {
     // Networking methods
     // ==================
 
-    void cancelUrlRequest(String url) {
+    void cancelUrlRequest(long requestHandle) {
         if (httpHandler == null) {
             return;
         }
-        httpHandler.onCancel(url);
+        httpHandler.onCancel(requestHandle);
     }
 
-    boolean startUrlRequest(String url, final long callbackPtr) throws Exception {
+    void startUrlRequest(String url, final long requestHandle) {
         if (httpHandler == null) {
-            return false;
+            return;
         }
 
-        httpHandler.onRequest(url, new Callback() {
+        Callback callback = new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                nativeOnUrlFailure(callbackPtr);
+                nativeOnUrlComplete(mapPointer, requestHandle, null, e.getMessage());
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (!response.isSuccessful()) {
-                    nativeOnUrlFailure(callbackPtr);
+                    nativeOnUrlComplete(mapPointer, requestHandle, null, response.message());
                     throw new IOException("Unexpected response code: " + response);
                 }
                 byte[] bytes = response.body().bytes();
-                nativeOnUrlSuccess(bytes, callbackPtr);
+                nativeOnUrlComplete(mapPointer, requestHandle, bytes, null);
             }
-        });
-        return true;
+        };
+
+        httpHandler.onRequest(url, callback, requestHandle);
     }
 
     // Font Fetching
