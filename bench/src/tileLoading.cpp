@@ -77,7 +77,7 @@ struct TestContext {
     }
 
     void parseTile() {
-        Tile tile({0,0,10,10,0}, s_projection);
+        Tile tile({0,0,10,10,10,0}, s_projection);
         source = *scene->tileSources().begin();
         auto task = source->createTask(tile.getID());
         auto& t = dynamic_cast<BinaryTileTask&>(*task);
