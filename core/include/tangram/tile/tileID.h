@@ -18,22 +18,23 @@ struct TileID {
     int32_t x; // Index from left edge of projection space
     int32_t y; // Index from top edge of projection space
     int8_t  z; // Data zoom
+    int8_t  oZ; // original zoom before scale adjustment
     int8_t  s; // Styling zoom
     int16_t wrap;
 
-    TileID(int32_t _x, int32_t _y, int32_t _z, int32_t _s, int32_t _wrap) : x(_x), y(_y), z(_z), s(_s), wrap(_wrap) {}
+    TileID(int32_t _x, int32_t _y, int32_t _z, int32_t _oZ, int32_t _s, int32_t _wrap) : x(_x), y(_y), z(_z), oZ(_oZ), s(_s), wrap(_wrap) {}
 
-    TileID(int32_t _x, int32_t _y, int32_t _z) : TileID(_x, _y, _z, _z, 0) {}
+    TileID(int32_t _x, int32_t _y, int32_t _z) : TileID(_x, _y, _z, _z, _z, 0) {}
 
     TileID(const TileID& _rhs) = default;
 
     bool operator< (const TileID& _rhs) const {
-        return s > _rhs.s || (s == _rhs.s && (z > _rhs.z || (z == _rhs.z && (x < _rhs.x || (x == _rhs.x && (y < _rhs.y || (y == _rhs.y && wrap < _rhs.wrap)))))));
+        return s > _rhs.s || (s == _rhs.s && (oZ > _rhs.oZ || (oZ == _rhs.oZ && (z > _rhs.z || (z == _rhs.z && (x < _rhs.x || (x == _rhs.x && (y < _rhs.y || (y == _rhs.y && wrap < _rhs.wrap)))))))));
     }
     bool operator> (const TileID& _rhs) const { return _rhs < const_cast<TileID&>(*this); }
     bool operator<=(const TileID& _rhs) const { return !(*this > _rhs); }
     bool operator>=(const TileID& _rhs) const { return !(*this < _rhs); }
-    bool operator==(const TileID& _rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z && s == _rhs.s && wrap == _rhs.wrap; }
+    bool operator==(const TileID& _rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z && oZ == _rhs.oZ && s == _rhs.s && wrap == _rhs.wrap; }
     bool operator!=(const TileID& _rhs) const { return !(*this == _rhs); }
 
     bool isValid() const {
@@ -53,27 +54,31 @@ struct TileID {
 
         int32_t over = z - _max;
 
-        return TileID(x >> over, y >> over, _max, z, wrap);
+        int32_t newOz = _max + (oZ - z);
+        return TileID(x >> over, y >> over, _max, newOz, s, wrap);
     }
 
     TileID scaled(int8_t scale) const {
+        auto o = z;
         auto scaledZ = std::max(0, z - scale);
-        return TileID(x >> scale, y >> scale, scaledZ, z, wrap);
+        return TileID(x >> scale, y >> scale, scaledZ, o, z, wrap);
     }
 
     TileID getParent() const {
 
-        if (s > z) {
+        // Needs the original zoom level (and not the scaled zoom) to determine parent in case of
+        // overzoomed scaled tile
+        if (s > oZ) {
             // Over-zoomed, keep the same data coordinates
-            return TileID(x, y, z, s - 1, wrap);
+            return TileID(x, y, z, oZ, s - 1, wrap);
         }
-        return TileID(x >> 1, y >> 1, z-1, z-1, wrap);
+        return TileID(x >> 1, y >> 1, z-1, oZ - 1, oZ-1, wrap);
     }
 
     TileID getChild(int32_t _index) const {
 
         if (_index > 3 || _index < 0) {
-            return TileID(-1, -1, -1, -1, -1);
+            return TileID(-1, -1, -1, -1, -1, -1);
         }
 
         int i = _index / 2;
@@ -83,7 +88,7 @@ struct TileID {
         // i:      0, 0, 1, 1
         // j:      0, 1, 0, 1
 
-        return TileID((x<<1)+i, (y<<1)+j, z+1, z+1, wrap);
+        return TileID((x<<1)+i, (y<<1)+j, z+1, z+1, z+1, wrap);
     }
 
     TileID getChild(int32_t _index, int32_t _maxSourceZoom) const {
@@ -96,6 +101,6 @@ struct TileID {
 
 };
 
-static const TileID NOT_A_TILE(-1, -1, -1, -1, -1);
+static const TileID NOT_A_TILE(-1, -1, -1, -1, -1, -1);
 
 }

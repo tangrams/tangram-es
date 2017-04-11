@@ -535,7 +535,7 @@ void View::updateTiles() {
         tile.w = (x - tile.x) >> opt.zoom; // wrap
 
         if (tile != opt.last) {
-            opt.tiles.emplace(tile.x, tile.y, tile.z, tile.z, tile.w);
+            opt.tiles.emplace(tile.x, tile.y, tile.z, tile.z, tile.z, tile.w);
             opt.last = tile;
         }
     };

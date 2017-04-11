@@ -387,7 +387,7 @@ void TileManager::loadTiles() {
 
 bool TileManager::addTile(TileSet& _tileSet, const TileID& _tileID) {
 
-    LOG("Adding tile: %s", _tileID.toString().c_str());
+    LOGD("Adding tile: %s: Parent tile: %s", _tileID.toString().c_str(), _tileID.getParent().toString().c_str());
     auto tile = m_tileCache->get(_tileSet.source->id(), _tileID);
 
     if (tile) {
