@@ -970,7 +970,7 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         const auto BaseTileSize = 256;
         auto tileSize = tileSizeNode.as<int32_t>();
         if (tileSize && !( tileSize & (tileSize - 1))) {
-            tileScale = std::log2(static_cast<float>(tileSize)/static_cast<float>(BaseTileSize));
+            tileScale = std::log(static_cast<float>(tileSize)/static_cast<float>(BaseTileSize))/std::log(2);
         } else {
             LOGW("Illegal tile_size defined. Must be power of 2. Default tileSize of 256px set");
         }
