@@ -1,12 +1,8 @@
 #ifdef PLATFORM_IOS
 
 #import <UIKit/UIKit.h>
-#import <utility>
 #import <cstdio>
 #import <cstdarg>
-#import <fstream>
-#import <regex>
-#import <iostream>
 
 #import "TGMapViewController.h"
 #import "TGFontConverter.h"
@@ -65,7 +61,10 @@ void logMsg(const char* fmt, ...) {
 }
 
 void setCurrentThreadPriority(int priority) {
-    // No-op
+    // POSIX thread priority is between -20 (highest) and 19 (lowest),
+    // NSThread priority is between 0.0 (lowest) and 1.0 (highest).
+    double p = (20 - priority) / 40.0;
+    [[NSThread currentThread] setThreadPriority:p];
 }
 
 void initGLExtensions() {
