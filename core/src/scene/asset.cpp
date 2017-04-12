@@ -2,8 +2,12 @@
 #include "platform.h"
 #include "log.h"
 
-#define MINIZ_HEADER_FILE_ONLY
-#include <miniz.c>
+// Define MINIZ_NO_ZLIB_APIS to remove all ZLIB-style compression/decompression API's.
+#define MINIZ_NO_ZLIB_APIS
+// Define MINIZ_NO_ZLIB_COMPATIBLE_NAME to disable zlib names, to prevent conflicts against stock zlib.
+#define MINIZ_NO_ZLIB_COMPATIBLE_NAMES
+
+#include <miniz.h>
 
 #include <unordered_map>
 #include <tuple>
