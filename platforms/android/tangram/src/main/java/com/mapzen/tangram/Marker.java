@@ -227,4 +227,8 @@ public class Marker {
 
         return map.setMarkerBitmap(markerId, width, height, abgr);
     }
+
+    void invalidate() {
+        this.markerId = 0;
+    }
 }

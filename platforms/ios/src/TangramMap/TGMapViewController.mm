@@ -153,6 +153,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     };
 
     self.map->loadScene([path UTF8String], false, updates, updateCallbackStatus);
+    [self.markersById removeAllObjects];
+
     self.renderRequested = YES;
 }
 
@@ -167,6 +169,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
             [self.mapViewDelegate mapView:self didLoadSceneAsync:path];
         }
 
+        [self.markersById removeAllObjects];
         self.renderRequested = YES;
     };
 

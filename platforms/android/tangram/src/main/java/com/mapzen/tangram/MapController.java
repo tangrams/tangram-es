@@ -285,6 +285,7 @@ public class MapController implements Renderer {
         scenePath = path;
         checkPointer(mapPointer);
         nativeLoadScene(mapPointer, sceneUpdateErrorListener, path, updateStrings);
+        removeAllMarkers();
         requestRender();
     }
 
@@ -855,6 +856,13 @@ public class MapController implements Renderer {
     public void removeAllMarkers() {
         checkPointer(mapPointer);
         nativeMarkerRemoveAll(mapPointer);
+
+        // Invalidate all markers so their ids are unusable
+        for (Marker marker : markers.values()) {
+            marker.invalidate();
+        }
+
+        markers.clear();
     }
 
     /**
