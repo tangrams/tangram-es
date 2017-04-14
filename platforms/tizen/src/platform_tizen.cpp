@@ -9,8 +9,6 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
-#include "tizen_gl.h"
-
 #include <dlog.h>
 #include <fontconfig/fontconfig.h>
 
@@ -29,10 +27,6 @@ void logMsg(const char* fmt, ...) {
     va_start(vl, fmt);
     dlog_vprint(DLOG_WARN, LOG_TAG, fmt, vl);
     va_end(vl);
-}
-
-void setEvasGlAPI(Evas_GL_API *glApi) {
-    __evas_gl_glapi = glApi;
 }
 
 TizenPlatform::TizenPlatform() :
@@ -68,8 +62,11 @@ void TizenPlatform::initPlatformFontSetup() const {
 
     static bool s_platformFontsInit = false;
     if (s_platformFontsInit) { return; }
+    s_platformFontsInit = true;
 
     s_fcConfig = FcInitLoadConfigAndFonts();
+
+    return;
 
     std::string style = "Regular";
 
@@ -95,9 +92,13 @@ void TizenPlatform::initPlatformFontSetup() const {
 
         FcResult res;
         FcPattern* font = FcFontMatch(s_fcConfig, pat, &res);
+
         if (font) {
             FcChar8* file = nullptr;
-            if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
+            bool hasFile = FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch;
+            logMsg("TANGRAM: Fallback: %s - %s\n", fcLang, file);
+
+            if (hasFile) {
                 // Make sure this font file is not previously added.
                 if (std::find(s_fallbackFonts.begin(), s_fallbackFonts.end(),
                               reinterpret_cast<char*>(file)) == s_fallbackFonts.end()) {
@@ -109,18 +110,39 @@ void TizenPlatform::initPlatformFontSetup() const {
         FcPatternDestroy(pat);
     }
     FcStrListDone(fcLangList);
-    s_platformFontsInit = true;
 }
 
 std::vector<FontSourceHandle> TizenPlatform::systemFontFallbacksHandle() const {
 
-    initPlatformFontSetup();
+    // initPlatformFontSetup();
 
     std::vector<FontSourceHandle> handles;
 
-    for (auto& path : s_fallbackFonts) {
-        handles.emplace_back(path);
-    }
+    handles.emplace_back("/usr/share/fonts/SamsungOneUI-RegularCondensed.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/BreezeSansArmenian-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/BreezeSansBengali-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/BreezeSansGeorgian-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/BreezeSansGujarathi-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/BreezeSansHindi-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/BreezeSansJapanese-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/BreezeSansKannada-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/BreezeSansKhmer-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/BreezeSansMalayalam-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/BreezeSansMyanmar-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/BreezeSansPunjabi-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/BreezeSansSinhala-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/BreezeSansTamil-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/BreezeSansTelugu-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/BreezeSansThai-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/SamsungOneUIArabic-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/SamsungOneUIEthiopic-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/SamsungOneUIHebrew-Regular.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/SamsungOneUIKorean-RegularCondensed.ttf");
+    handles.emplace_back("/usr/share/fallback_fonts/SamsungOneUILao-Regular.ttf");
+
+    // for (auto& path : s_fallbackFonts) {
+    //     handles.emplace_back(path);
+    // }
 
     return handles;
 }
@@ -156,9 +178,15 @@ std::string TizenPlatform::fontPath(const std::string& _name, const std::string&
     FcResult res;
     FcPattern* font = FcFontMatch(s_fcConfig, pattern, &res);
     if (font) {
+
         FcChar8* file = nullptr;
         FcChar8* fontFamily = nullptr;
-        if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch &&
+
+        bool hasFile = FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch;
+
+        logMsg("TANGRAM: Font: %s\n", file);
+
+        if (hasFile &&
             FcPatternGetString(font, FC_FAMILY, 0, &fontFamily) == FcResultMatch) {
             // We do not want the "best" match, but an "exact" or at least the same "family" match
             // We have fallbacks to cover rest here.

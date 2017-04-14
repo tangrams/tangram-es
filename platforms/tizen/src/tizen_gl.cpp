@@ -4,6 +4,10 @@ ELEMENTARY_GLVIEW_GLOBAL_DEFINE()
 
 namespace Tangram {
 
+void setEvasGlAPI(Evas_GL_API *glApi) {
+    __evas_gl_glapi = glApi;
+}
+
 GLenum GL::getError() {
     return __evas_gl_glapi->glGetError();
 }

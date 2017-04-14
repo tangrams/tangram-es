@@ -35,7 +35,7 @@
 
 namespace Tangram {
 
-const static size_t MAX_WORKERS = 2;
+const static size_t MAX_WORKERS = 1;
 
 enum class EaseField { position, zoom, rotation, tilt };
 
@@ -247,7 +247,7 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
         platform->setContinuousRendering(animated);
     }
 
-    initOverlay(*scene);
+    //initOverlay(*scene);
 }
 
 // NB: Not thread-safe. Must be called on the main/render thread!
@@ -420,19 +420,20 @@ bool Map::update(float _dt) {
 
     impl->scene->updateTime(_dt);
 
-    bool viewComplete = true;
+    bool viewChanged;
     bool markersNeedUpdate = false;
 
     for (auto& ease : impl->eases) {
         if (!ease.finished()) {
             ease.update(_dt);
-            viewComplete = false;
+            viewChanged = true;
         }
     }
 
     impl->inputHandler.update(_dt);
 
     impl->view.update();
+    viewChanged |= impl->view.changedOnLastUpdate();
 
     impl->markerManager.update(static_cast<int>(impl->view.getZoom()));
 
@@ -468,21 +469,18 @@ bool Map::update(float _dt) {
 
     FrameInfo::endUpdate();
 
-    bool viewChanged = impl->view.changedOnLastUpdate();
     bool tilesChanged = impl->tileManager.hasTileSetChanged();
     bool tilesLoading = impl->tileManager.hasLoadingTiles();
     bool labelsNeedUpdate = impl->labels.needUpdate();
     bool resourceLoading = (impl->scene->pendingTextures > 0);
     bool nextScene = bool(impl->nextScene);
 
-    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || resourceLoading || nextScene) {
-        viewComplete = false;
+    // Request render if labels are in fading states or markers are easing.
+    if (labelsNeedUpdate || markersNeedUpdate) {
+        platform->requestRender();
     }
 
-    // Request render if labels are in fading states or markers are easing.
-    if (labelsNeedUpdate || markersNeedUpdate) { platform->requestRender(); }
-
-    return viewComplete;
+    return !(viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || resourceLoading || nextScene);
 }
 
 void Map::setPickRadius(float _radius) {

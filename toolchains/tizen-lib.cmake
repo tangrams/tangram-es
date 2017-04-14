@@ -3,7 +3,7 @@
 set(PLATFORM_TIZEN ON)
 
 # use freetype2/icu/harfbuzz system libs for alfons
-set(USE_SYSTEM_FONT_LIBS ON)
+# set(USE_SYSTEM_FONT_LIBS ON)
 
 # Tell SQLiteCpp to not build its own copy of SQLite, we will use the system library instead.
 set(SQLITECPP_INTERNAL_SQLITE OFF)

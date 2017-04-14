@@ -49,7 +49,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
 set(LIB_NAME tangram) # in order to have libtangram.so
 
-add_library(${LIB_NAME} SHARED
+add_library(${LIB_NAME} # SHARED
   ${PROJECT_SOURCE_DIR}/platforms/tizen/src/platform_tizen.cpp
   ${PROJECT_SOURCE_DIR}/platforms/tizen/src/tizen_gl.cpp
   ${PROJECT_SOURCE_DIR}/platforms/common/urlClient.cpp)

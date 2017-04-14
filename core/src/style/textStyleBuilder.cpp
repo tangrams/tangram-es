@@ -658,7 +658,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
         if (_rule.get(StyleParamKey::repeat_distance, repeatDistance)) {
             p.labelOptions.repeatDistance = repeatDistance.value;
         } else {
-            p.labelOptions.repeatDistance = View::s_pixelsPerTile;
+            p.labelOptions.repeatDistance = View::s_pixelsPerTile * 0.5f;
         }
 
         if (p.labelOptions.repeatDistance > 0.f) {
