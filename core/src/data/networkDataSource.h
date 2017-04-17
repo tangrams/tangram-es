@@ -9,7 +9,7 @@ class Platform;
 class NetworkDataSource : public TileSource::DataSource {
 public:
 
-    NetworkDataSource(std::shared_ptr<Platform> _platform, const std::string& _urlTemplate);
+    NetworkDataSource(std::shared_ptr<Platform> _platform, std::vector<std::string>&& _urlTemplates);
 
     bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
 
@@ -17,11 +17,11 @@ public:
 
 private:
     /* Constructs the URL of a tile using <m_urlTemplate> */
-    void constructURL(const TileID& _tileCoord, std::string& _url) const;
+    void constructURL(const TileID& _tileCoord, std::string& _url, int32_t index) const;
 
-    std::string constructURL(const TileID& _tileCoord) const {
+    std::string constructURL(const TileID& _tileCoord, int32_t index) const {
         std::string url;
-        constructURL(_tileCoord, url);
+        constructURL(_tileCoord, url, index);
         return url;
     }
 
@@ -30,7 +30,8 @@ private:
     std::shared_ptr<Platform> m_platform;
 
     // URL template for requesting tiles from a network or filesystem
-    std::string m_urlTemplate;
+    std::vector<std::string> m_urlTemplates;
+    int32_t m_urlIndex = -1;
 
     std::vector<TileID> m_pending;
 

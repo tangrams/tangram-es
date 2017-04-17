@@ -116,9 +116,10 @@ struct MBTilesQueries {
 };
 
 MBTilesDataSource::MBTilesDataSource(std::shared_ptr<Platform> _platform, std::string _name,
-                                     std::string _path, std::string _mime, bool _cache, bool _offlineFallback)
+                                     std::vector<std::string>&& _paths, std::string _mime, bool _cache,
+                                     bool _offlineFallback)
     : m_name(_name),
-      m_path(_path),
+      m_paths(std::move(_paths)),
       m_mime(_mime),
       m_cacheMode(_cache),
       m_offlineMode(_offlineFallback),
@@ -232,6 +233,7 @@ bool MBTilesDataSource::loadNextSource(std::shared_ptr<TileTask> _task, TileTask
 
 void MBTilesDataSource::openMBTiles() {
 
+    m_pathIndex = (++m_pathIndex) % m_paths.size();
     try {
         auto mode = SQLite::OPEN_READONLY;
         if (m_cacheMode) {
@@ -240,7 +242,7 @@ void MBTilesDataSource::openMBTiles() {
             mode = SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE;
         }
 
-        auto url = Url(m_path);
+        auto url = Url(m_paths[m_pathIndex]);
         auto path = url.path();
         const char* vfs = "";
         if (url.scheme() == "asset") {
@@ -251,7 +253,7 @@ void MBTilesDataSource::openMBTiles() {
         LOG("SQLite database opened: %s", path.c_str());
 
     } catch (std::exception& e) {
-        LOGE("Unable to open SQLite database: %s - %s", m_path.c_str(), e.what());
+        LOGE("Unable to open SQLite database: %s - %s", m_paths[m_pathIndex].c_str(), e.what());
         m_db.reset();
         return;
     }

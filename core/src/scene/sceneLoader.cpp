@@ -944,6 +944,8 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
     std::string type;
     std::string url;
     std::string mbtiles;
+    std::vector<std::string> urls;
+
     int32_t minDisplayZoom = -1;
     int32_t maxDisplayZoom = -1;
     int32_t maxZoom = 18;
@@ -990,6 +992,25 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         url = urlStream.str();
     }
 
+    auto constructUrls = [&](int loc, const std::string& subD) {
+        urls.push_back(url);
+        urls.back().replace(loc, 3, subD);
+    };
+
+    if (Node subDomainNode = source["url_subdomains"]) {
+        auto loc = url.find("{s}");
+        if (loc != std::string::npos && subDomainNode.IsSequence()) {
+            for (const auto& domain : subDomainNode) {
+                if (domain.IsScalar()) {
+                    constructUrls(loc, domain.Scalar());
+                }
+            }
+        }
+    }
+    if (urls.empty()) {
+        urls.push_back(url);
+    }
+
     // distinguish tiled and non-tiled sources by url
     bool tiled = url.size() > 0 &&
         url.find("{x}") != std::string::npos &&
@@ -1011,9 +1032,9 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         // If we have MBTiles, we know the source is tiled.
         tiled = true;
         // Create an MBTiles data source from the file at the url and add it to the source chain.
-        rawSources->setNext(std::make_unique<MBTilesDataSource>(platform, name, url, ""));
+        rawSources->setNext(std::make_unique<MBTilesDataSource>(platform, name, std::move(urls), ""));
     } else if (tiled) {
-        rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url));
+        rawSources->setNext(std::make_unique<NetworkDataSource>(platform, std::move(urls)));
     }
 
     std::shared_ptr<TileSource> sourcePtr;

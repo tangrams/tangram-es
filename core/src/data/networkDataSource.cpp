@@ -7,13 +7,14 @@
 
 namespace Tangram {
 
-NetworkDataSource::NetworkDataSource(std::shared_ptr<Platform> _platform, const std::string& _urlTemplate) :
+NetworkDataSource::NetworkDataSource(std::shared_ptr<Platform> _platform,
+        std::vector<std::string>&& _urlTemplates) :
     m_platform(_platform),
-    m_urlTemplate(_urlTemplate),
+    m_urlTemplates(std::move(_urlTemplates)),
     m_maxDownloads(MAX_DOWNLOADS) {}
 
-void NetworkDataSource::constructURL(const TileID& _tileCoord, std::string& _url) const {
-    _url.assign(m_urlTemplate);
+void NetworkDataSource::constructURL(const TileID& _tileCoord, std::string& _url, int32_t index) const {
+    _url.assign(m_urlTemplates[index]);
 
     try {
         size_t xpos = _url.find("{x}");
@@ -48,7 +49,8 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb
         m_pending.push_back(tileId);
     }
 
-    std::string url(constructURL(_task->tileId()));
+    m_urlIndex = (++m_urlIndex) % m_urlTemplates.size();
+    std::string url(constructURL(_task->tileId(), m_urlIndex));
 
     bool started = m_platform->startUrlRequest(url,
         [this, cb = _cb, task = _task](std::vector<char>&& _rawData) mutable {
@@ -89,7 +91,10 @@ void NetworkDataSource::removePending(const TileID& _tileId) {
 
 void NetworkDataSource::cancelLoadingTile(const TileID& _tileId) {
     removePending(_tileId);
-    m_platform->cancelUrlRequest(constructURL(_tileId));
+    // cancel all possible requests for this tile
+    for (size_t index = 0; index < m_urlTemplates.size(); index++) {
+        m_platform->cancelUrlRequest(constructURL(_tileId, index));
+    }
 }
 
 }
