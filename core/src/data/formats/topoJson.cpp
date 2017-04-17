@@ -1,12 +1,14 @@
-#include "util/topoJson.h"
-
+#include "data/formats/topoJson.h"
+#include "data/formats/geoJson.h"
 #include "data/propertyItem.h"
-#include "util/geoJson.h"
+#include "tile/tileTask.h"
+#include "util/geom.h"
+#include "util/mapProjection.h"
+#include "log.h"
 
 namespace Tangram {
-namespace TopoJson {
 
-Topology getTopology(const JsonDocument& _document, const Transform& _proj) {
+TopoJson::Topology TopoJson::getTopology(const JsonDocument& _document, const Transform& _proj) {
 
     Topology topo;
 
@@ -67,7 +69,7 @@ Topology getTopology(const JsonDocument& _document, const Transform& _proj) {
     return topo;
 }
 
-Point getPoint(const JsonValue& _coordinates, const Topology& _topology, glm::ivec2& _cursor) {
+Point TopoJson::getPoint(const JsonValue& _coordinates, const Topology& _topology, glm::ivec2& _cursor) {
 
     if (!_coordinates.IsArray() || _coordinates.Size() < 2) {
         return Point();
@@ -80,7 +82,7 @@ Point getPoint(const JsonValue& _coordinates, const Topology& _topology, glm::iv
 
 }
 
-Line getLine(const JsonValue& _arcs, const Topology& _topology) {
+Line TopoJson::getLine(const JsonValue& _arcs, const Topology& _topology) {
 
     Line line;
 
@@ -129,7 +131,7 @@ Line getLine(const JsonValue& _arcs, const Topology& _topology) {
 
 }
 
-Polygon getPolygon(const JsonValue& _arcSets, const Topology& _topology) {
+Polygon TopoJson::getPolygon(const JsonValue& _arcSets, const Topology& _topology) {
 
     Polygon polygon;
 
@@ -148,7 +150,7 @@ Polygon getPolygon(const JsonValue& _arcSets, const Topology& _topology) {
 
 }
 
-Feature getFeature(const JsonValue& _geometry, const Topology& _topology, int32_t _source) {
+Feature TopoJson::getFeature(const JsonValue& _geometry, const Topology& _topology, int32_t _source) {
 
     static const JsonValue keyProperties("properties");
     static const JsonValue keyType("type");
@@ -223,7 +225,7 @@ Feature getFeature(const JsonValue& _geometry, const Topology& _topology, int32_
 
 }
 
-Layer getLayer(JsonValue::MemberIterator& _objectIt, const Topology& _topology, int32_t _source) {
+Layer TopoJson::getLayer(JsonValue::MemberIterator& _objectIt, const Topology& _topology, int32_t _source) {
 
     Layer layer(_objectIt->name.GetString());
 
@@ -242,5 +244,50 @@ Layer getLayer(JsonValue::MemberIterator& _objectIt, const Topology& _topology, 
 
 }
 
+std::shared_ptr<TileData> TopoJson::parseTile(const TileTask& _task, const MapProjection& _projection, int32_t _source) {
+
+    auto& task = static_cast<const BinaryTileTask&>(_task);
+
+    std::shared_ptr<TileData> tileData = std::make_shared<TileData>();
+
+    // Parse data into a JSON document
+    const char* error;
+    size_t offset;
+    auto document = JsonParseBytes(task.rawTileData->data(), task.rawTileData->size(), &error, &offset);
+
+    if (error) {
+        LOGE("Json parsing failed on tile [%s]: %s (%u)", task.tileId().toString().c_str(), error, offset);
+        return tileData;
+    }
+
+    // Transform JSON data into a TileData using TopoJson functions
+    BoundingBox tileBounds(_projection.TileBounds(task.tileId()));
+    glm::dvec2 tileOrigin = {tileBounds.min.x, tileBounds.max.y*-1.0};
+    double tileInverseScale = 1.0 / tileBounds.width();
+
+    const auto projFn = [&](glm::dvec2 _lonLat){
+        glm::dvec2 tmp = _projection.LonLatToMeters(_lonLat);
+        return Point {
+            (tmp.x - tileOrigin.x) * tileInverseScale,
+            (tmp.y - tileOrigin.y) * tileInverseScale,
+             0
+        };
+    };
+
+    // Parse topology and transform
+    auto topology = TopoJson::getTopology(document, projFn);
+
+    // Parse each TopoJson object as a data layer
+    auto objectsIt = document.FindMember("objects");
+    if (objectsIt == document.MemberEnd()) { return tileData; }
+    auto& objects = objectsIt->value;
+    for (auto layer = objects.MemberBegin(); layer != objects.MemberEnd(); ++layer) {
+        tileData->layers.push_back(TopoJson::getLayer(layer, topology, _source));
+    }
+
+    // Discard JSON object and return TileData
+    return tileData;
+
 }
-}
+
+} // namespace Tangram
