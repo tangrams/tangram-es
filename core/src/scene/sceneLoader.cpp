@@ -1032,7 +1032,7 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         // If we have MBTiles, we know the source is tiled.
         tiled = true;
         // Create an MBTiles data source from the file at the url and add it to the source chain.
-        rawSources->setNext(std::make_unique<MBTilesDataSource>(platform, name, std::move(urls), ""));
+        rawSources->setNext(std::make_unique<MBTilesDataSource>(platform, name, url, ""));
     } else if (tiled) {
         rawSources->setNext(std::make_unique<NetworkDataSource>(platform, std::move(urls)));
     }

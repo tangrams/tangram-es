@@ -17,9 +17,8 @@ class AsyncWorker;
 class MBTilesDataSource : public TileSource::DataSource {
 public:
 
-    MBTilesDataSource(std::shared_ptr<Platform> _platform, std::string _name,
-            std::vector<std::string>&& _path, std::string _mime, bool _cache = false,
-            bool _offlineFallback = false);
+    MBTilesDataSource(std::shared_ptr<Platform> _platform, std::string _name, std::string _path, std::string _mime,
+                      bool _cache = false, bool _offlineFallback = false);
 
     ~MBTilesDataSource();
 
@@ -39,8 +38,7 @@ private:
     std::string m_name;
 
     // The path to an mbtiles tile store.
-    std::vector<std::string> m_paths;
-    int32_t m_pathIndex = -1;
+    std::string m_path;
     std::string m_mime;
 
     // Store tiles from next source
