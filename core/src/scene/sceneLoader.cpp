@@ -992,6 +992,7 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         url = urlStream.str();
     }
 
+    // Apply URL subdomain configuration.
     if (Node subDomainNode = source["url_subdomains"]) {
         if (subDomainNode.IsSequence()) {
             for (const auto& domain : subDomainNode) {
@@ -1000,6 +1001,15 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
                 }
             }
         }
+    }
+
+    // Check whether the URL template and subdomains make sense together, and warn if not.
+    bool hasSubdomainPlaceholder = (url.find("{s}") != std::string::npos);
+    if (hasSubdomainPlaceholder && subdomains.empty()) {
+        LOGW("The URL for source '%s' includes the subdomain placeholder '{s}', but no subdomains were given.", name.c_str());
+    }
+    if (!hasSubdomainPlaceholder && !subdomains.empty()) {
+        LOGW("The URL for source '%s' has subdomains specified, but does not include the subdomain placeholder '{s}'.", name.c_str());
     }
 
     // distinguish tiled and non-tiled sources by url

@@ -18,13 +18,7 @@ public:
 
 private:
     /* Constructs the URL of a tile using <m_urlTemplate> */
-    void constructURL(const TileID& _tileCoord, std::string& _url, int32_t index) const;
-
-    std::string constructURL(const TileID& _tileCoord, int32_t index) const {
-        std::string url;
-        constructURL(_tileCoord, url, index);
-        return url;
-    }
+    std::string constructURL(const TileID& _tileCoord, size_t index) const;
 
     void removePending(const TileID& _tileId);
 
@@ -33,7 +27,7 @@ private:
     // URL template for requesting tiles from a network or filesystem
     std::string m_urlTemplate;
     std::vector<std::string> m_urlSubdomains;
-    int32_t m_urlIndex = -1;
+    size_t m_urlSubdomainIndex = 0;
 
     std::vector<TileID> m_pending;
 
