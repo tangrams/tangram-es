@@ -2,7 +2,8 @@ sources:
     stamen-terrain:
         type: Raster
         #url: http://a.tile.stamen.com/terrain-background/{z}/{x}/{y}.jpg
-        url: http://a.tile.openstreetmap.org/{z}/{x}/{y}.png
+        url: http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
+        url_subdomains: [a, b, c]
 
 layers:
     terrain:

@@ -126,12 +126,6 @@ protected:
     // Name used to identify this source in the style sheet
     std::string m_name;
 
-    // URL template for requesting tiles from a network or filesystem
-    std::string m_urlTemplate;
-
-    // The path to an mbtiles tile store. Empty string if not present.
-    std::string m_mbtilesPath;
-
     // Minimum zoom for which tiles will be displayed
     int32_t m_minDisplayZoom;
 

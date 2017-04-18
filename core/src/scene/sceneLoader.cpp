@@ -944,6 +944,8 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
     std::string type;
     std::string url;
     std::string mbtiles;
+    std::vector<std::string> subdomains;
+
     int32_t minDisplayZoom = -1;
     int32_t maxDisplayZoom = -1;
     int32_t maxZoom = 18;
@@ -990,6 +992,26 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         url = urlStream.str();
     }
 
+    // Apply URL subdomain configuration.
+    if (Node subDomainNode = source["url_subdomains"]) {
+        if (subDomainNode.IsSequence()) {
+            for (const auto& domain : subDomainNode) {
+                if (domain.IsScalar()) {
+                    subdomains.push_back(domain.Scalar());
+                }
+            }
+        }
+    }
+
+    // Check whether the URL template and subdomains make sense together, and warn if not.
+    bool hasSubdomainPlaceholder = (url.find("{s}") != std::string::npos);
+    if (hasSubdomainPlaceholder && subdomains.empty()) {
+        LOGW("The URL for source '%s' includes the subdomain placeholder '{s}', but no subdomains were given.", name.c_str());
+    }
+    if (!hasSubdomainPlaceholder && !subdomains.empty()) {
+        LOGW("The URL for source '%s' has subdomains specified, but does not include the subdomain placeholder '{s}'.", name.c_str());
+    }
+
     // distinguish tiled and non-tiled sources by url
     bool tiled = url.size() > 0 &&
         url.find("{x}") != std::string::npos &&
@@ -1013,7 +1035,7 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         // Create an MBTiles data source from the file at the url and add it to the source chain.
         rawSources->setNext(std::make_unique<MBTilesDataSource>(platform, name, url, ""));
     } else if (tiled) {
-        rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url));
+        rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url, std::move(subdomains)));
     }
 
     std::shared_ptr<TileSource> sourcePtr;
