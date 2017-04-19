@@ -22,15 +22,15 @@ void Vao::initialize(RenderState& rs, ShaderProgram& _program, const VertexOffse
         locations[attrib.name] = location;
     }
 
+    rs.vertexBuffer(_vertexBuffer);
+
     int vertexOffset = 0;
     for (size_t i = 0; i < _vertexOffsets.size(); ++i) {
         auto vertexIndexOffset = _vertexOffsets[i];
         int nVerts = vertexIndexOffset.second;
         GL::bindVertexArray(m_glVAOs[i]);
 
-        rs.vertexBufferUnset(_vertexBuffer);
-        rs.vertexBuffer(_vertexBuffer);
-
+        // ELEMENT_ARRAY_BUFFER must be bound after bindVertexArray to be used by VAO
         if (_indexBuffer != 0) {
             rs.indexBufferUnset(_indexBuffer);
             rs.indexBuffer(_indexBuffer);
@@ -43,6 +43,9 @@ void Vao::initialize(RenderState& rs, ShaderProgram& _program, const VertexOffse
     }
 
     GL::bindVertexArray(0);
+
+    rs.vertexBuffer(0);
+    rs.indexBuffer(0);
 }
 
 bool Vao::isInitialized() {
