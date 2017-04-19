@@ -229,15 +229,15 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
     float labelWidth = std::max(leftAttribs.width, rightAttribs.width);
 
     auto onAddLabel = [&](glm::vec2 a, glm::vec2 b) {
-        Label* left;
-        Label* right;
+        Label* left = nullptr;
+        Label* right = nullptr;
         if (hasLeftLabel) {
             left = addLabel(Label::Type::line, {{ a, b }}, leftParams, leftAttribs, _rule);
         }
         if (hasRightLabel) {
             right = addLabel(Label::Type::line, {{ a, b }}, rightParams, rightAttribs, _rule);
         }
-        if (hasRightLabel && hasLeftLabel) {
+        if (left && right) {
             left->setRelative(*right, false, false);
             right->setRelative(*left, false, false);
         }
