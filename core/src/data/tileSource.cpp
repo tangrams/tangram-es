@@ -38,6 +38,8 @@ const char* TileSource::mimeType() const {
     case Format::TopoJson: return "application/topo+json";
     case Format::Mvt: return "application/vnd.mapbox-vector-tile";
     }
+    assert(false);
+    return "";
 }
 
 std::shared_ptr<TileTask> TileSource::createTask(TileID _tileId, int _subTask) {
@@ -108,6 +110,8 @@ std::shared_ptr<TileData> TileSource::parse(const TileTask& _task, const MapProj
     case Format::GeoJson: return GeoJson::parseTile(_task, _projection, m_id);
     case Format::Mvt: return Mvt::parseTile(_task, _projection, m_id);
     }
+    assert(false);
+    return nullptr;
 }
 
 void TileSource::cancelLoadingTile(const TileID& _tileID) {
