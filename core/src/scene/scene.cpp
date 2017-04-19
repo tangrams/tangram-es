@@ -26,6 +26,7 @@ static std::atomic<int32_t> s_serial;
 
 Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _path)
     : id(s_serial++),
+      m_resourceLoad(0),
       m_path(_path),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()) {
