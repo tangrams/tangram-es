@@ -378,13 +378,16 @@ NS_ASSUME_NONNULL_BEGIN
 @property (strong, nonatomic) TGHttpHandler* httpHandler;
 
 /**
- Assign the default resource root for this map view.
- The resource root is the default directory where Tangram will try to load resources and scene
- assets.
+ Assign the resource root for this map view. Scene file URLs will be resolved
+ relative to this URL.
 
  Must be non`-nil`.
 
- @note By default the resource root is the main bundle resource URL.
+ @note By default the resource root is the main bundle resource URL. Using the
+ default resource root: `scene.yaml` is resolved to
+ `file://<main bundle path>/Resources/scene.yaml`, `/path/scene.yaml` is
+ resolved to `file:///path/scene.yaml`, and `https://my.host/scene.yaml` is
+ resolved to itself.
  */
 @property (strong, nonatomic) NSURL* resourceRoot;
 
@@ -442,43 +445,47 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Loads a scene file synchronously.
 
- If the scene file is set as a resource in your application bundle, make sure to resolve
- the path for this URL relative to your bundle (for example `Resources/scene.yaml`).
+ The URL string is resolved against the current "resource root" (by default
+ this is the main bundle resource folder, see `resourceRoot`). The URL string
+ may specify an absolute URL using the `http://`, `https://`, or `file://`
+ schemes.
 
- If your scene is hosted remotely (any path starting with `https://` or `http://` is considered a remote scene file)
- Tangram will automatically load that remote scene file.
-
- @param path the scene path URL
+ @param url the scene file URL
  */
-- (void)loadSceneFile:(NSString *)path;
+- (void)loadSceneFile:(NSString *)url;
 
 /**
- Loads a scene file (similar to `-loadSceneFile:`), with a list of
- updates to be applied to the scene.
- If a scene update error happens, scene updates won't be applied.
+ Loads a scene file (as described by `-loadSceneFile:`), with a list of updates
+ to apply to the scene.
 
- @param path the scene path URL
+ If a scene update error occurs, no updates will be applied.
+
+ @param url the scene file URL
  @param sceneUpdates a list of `TGSceneUpdate` to apply to the scene
  */
-- (void)loadSceneFile:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
+- (void)loadSceneFile:(NSString *)url sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
 
 /**
- Loads a scene file asynchronously, may call `-[TGMapViewDelegate mapView:didLoadSceneAsync:]`
- if a `TGMapViewDelegate` is set to the map view.
+ Loads a scene file (as described by `-loadSceneFile:`) with asynchronous
+ execution.
 
- @param path the scene path URL
+ If a `TGMapViewDelegate` is set to the map view, then
+ `-[TGMapViewDelegate mapView:didLoadSceneAsync:]` will be called on completion.
+
+ @param url the scene file URL
  */
-- (void)loadSceneFileAsync:(NSString *)path;
+- (void)loadSceneFileAsync:(NSString *)url;
 
 /**
- Loads a scene asynchronously (similar to `-loadSceneFileAsync:`), with a
- list of updates to be applied to the scene.
- If a scene update error happens, scene updates won't be applied.
+ Loads a scene file asynchronously (as described by `-loadSceneFileAsync:`)
+ with list of updates to apply to the scene.
 
- @param path the scene path URL
+ If a scene update error occurs, no scene updates will be applied.
+
+ @param url the scene file URL
  @param sceneUpdates a list of `TGSceneUpdate` to apply to the scene
  */
-- (void)loadSceneFileAsync:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
+- (void)loadSceneFileAsync:(NSString *)url sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
 
 /**
  Queue a scene update.

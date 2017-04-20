@@ -307,22 +307,13 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     auto font = m_alfons.getFont(FontDescription::Alias(_family, _style, _weight), fontSize);
     if (font->hasFaces()) { return font; }
 
-    // 1. Bundle
-    // Assuming bundled ttf file follows this convention
-    std::string bundleFontPath = m_sceneResourceRoot + "fonts/" +
-        FontDescription::BundleAlias(_family, _style, _weight);
-
-    std::vector<char> fontData = m_platform->bytesFromFile(bundleFontPath.c_str());
-
-    // 2. System font
-    if (fontData.size() == 0) {
-        fontData = m_platform->systemFont(_family, _weight, _style);
-    }
+    // Try system font.
+    std::vector<char> fontData = m_platform->systemFont(_family, _weight, _style);
 
     if (fontData.size() == 0) {
         LOGN("Could not load font file %s", FontDescription::BundleAlias(_family, _style, _weight).c_str());
 
-        // 3. Add fallbacks from default font
+        // Add fallbacks from default font.
         if (m_font[sizeIndex]) {
             font->addFaces(*m_font[sizeIndex]);
         }

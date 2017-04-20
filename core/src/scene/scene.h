@@ -1,6 +1,8 @@
 #pragma once
 
 #include "util/color.h"
+#include "util/url.h"
+#include "util/yamlHelper.h"
 #include "view/view.h"
 
 #include <atomic>
@@ -13,8 +15,6 @@
 
 #include "glm/vec2.hpp"
 #include "yaml-cpp/yaml.h"
-#include "util/yamlHelper.h"
-
 
 namespace Tangram {
 
@@ -63,13 +63,12 @@ public:
         yes, no, none
     };
 
-    Scene(std::shared_ptr<const Platform> _platform, const std::string& _path = "");
+    Scene(std::shared_ptr<const Platform> _platform, const Url& _url);
     Scene(const Scene& _other);
     ~Scene();
 
     auto& camera() { return m_camera; }
 
-    auto& resourceRoot() { return m_resourceRoot; }
     auto& config() { return m_config; }
     auto& tileSources() { return m_tileSources; };
     auto& layers() { return m_layers; };
@@ -86,8 +85,7 @@ public:
     auto& featureSelection() { return m_featureSelection; }
     Style* findStyle(const std::string& _name);
 
-    const auto& path() const { return m_path; }
-    const auto& resourceRoot() const { return m_resourceRoot; }
+    const auto& url() const { return m_url; }
     const auto& config() const { return m_config; }
     const auto& tileSources() const { return m_tileSources; };
     const auto& layers() const { return m_layers; };
@@ -133,10 +131,8 @@ public:
 
 private:
 
-    // The file path from which this scene was loaded
-    std::string m_path;
-
-    std::string m_resourceRoot;
+    // The URL from which this scene was loaded
+    Url m_url;
 
     // The root node of the YAML scene configuration
     YAML::Node m_config;

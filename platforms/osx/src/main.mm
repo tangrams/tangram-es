@@ -12,16 +12,22 @@ int main(int argc, char* argv[]) {
 
     auto platform = std::make_shared<OSXPlatform>();
 
-    std::string sceneFile = "scene.yaml";
+    NSString* sceneInputString = @"scene.yaml";
+
     // Load file from command line, if given.
     int argi = 0;
     while (++argi < argc) {
         if (strcmp(argv[argi - 1], "-f") == 0) {
-            sceneFile = std::string(argv[argi]);
+            sceneInputString = [NSString stringWithUTF8String:argv[argi]];
             LOG("File from command line: %s\n", argv[argi]);
             break;
         }
     }
+
+    NSURL* resourceDirectoryUrl = [[NSBundle mainBundle] resourceURL];
+    NSURL* sceneFileUrl = [NSURL URLWithString:sceneInputString relativeToURL:resourceDirectoryUrl];
+
+    std::string sceneFile([[sceneFileUrl absoluteString] UTF8String]);
 
     // Create the windowed app.
     GlfwApp::create(platform, sceneFile, 1024, 768);

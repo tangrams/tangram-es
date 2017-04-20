@@ -28,7 +28,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     BOOL viewComplete;
 }
 
-@property (nullable, copy, nonatomic) NSString* scenePath;
+@property (nullable, copy, nonatomic) NSURL* sceneUrl;
 @property (nullable, strong, nonatomic) EAGLContext* context;
 @property (assign, nonatomic) CGFloat contentScaleFactor;
 @property (assign, nonatomic) BOOL renderRequested;
@@ -116,17 +116,17 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 #pragma mark Scene loading interface
 
-- (void)loadSceneFile:(NSString*)path
+- (void)loadSceneFile:(NSString*)url
 {
-    [self loadSceneFile:path sceneUpdates:nil];
+    [self loadSceneFile:url sceneUpdates:nil];
 }
 
-- (void)loadSceneFileAsync:(NSString*)path
+- (void)loadSceneFileAsync:(NSString*)url
 {
-    [self loadSceneFileAsync:path sceneUpdates:nil];
+    [self loadSceneFileAsync:url sceneUpdates:nil];
 }
 
-- (void)loadSceneFile:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
+- (void)loadSceneFile:(NSString *)url sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
 {
     if (!self.map) { return; }
 
@@ -138,26 +138,26 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         }
     }
 
-    self.scenePath = path;
+    self.sceneUrl = [NSURL URLWithString:url relativeToURL:self.resourceRoot];
 
     auto updateCallbackStatus = [=](auto sceneUpdateError) {
         if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didFailSceneUpdateWithError:)]) { return; }
         [self.mapViewDelegate mapView:self didFailSceneUpdateWithError:[TGHelpers errorFromSceneUpdateError:sceneUpdateError]];
     };
 
-    self.map->loadScene([path UTF8String], false, updates, updateCallbackStatus);
+    self.map->loadScene([[self.sceneUrl absoluteString] UTF8String], false, updates, updateCallbackStatus);
     self.renderRequested = YES;
 }
 
-- (void)loadSceneFileAsync:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
+- (void)loadSceneFileAsync:(NSString *)url sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
 {
     if (!self.map) { return; }
 
-    self.scenePath = path;
+    self.sceneUrl = [NSURL URLWithString:url relativeToURL:self.resourceRoot];
 
     Tangram::MapReady onReadyCallback = [=](void* _userPtr) -> void {
         if (self.mapViewDelegate && [self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadSceneAsync:)]) {
-            [self.mapViewDelegate mapView:self didLoadSceneAsync:path];
+            [self.mapViewDelegate mapView:self didLoadSceneAsync:url];
         }
 
         self.renderRequested = YES;
@@ -176,7 +176,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         [self.mapViewDelegate mapView:self didFailSceneUpdateWithError:[TGHelpers errorFromSceneUpdateError:sceneUpdateError]];
     };
 
-    self.map->loadSceneAsync([path UTF8String], false, onReadyCallback, nullptr, updates, updateCallbackStatus);
+    self.map->loadSceneAsync([[self.sceneUrl absoluteString] UTF8String], false, onReadyCallback, nullptr, updates, updateCallbackStatus);
 }
 
 #pragma mark Scene updates
@@ -754,6 +754,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     self.continuous = NO;
     self.markersById = [[NSMutableDictionary alloc] init];
     self.dataLayersByName = [[NSMutableDictionary alloc] init];
+    self.resourceRoot = [[NSBundle mainBundle] resourceURL];
 
     if (!self.httpHandler) {
         self.httpHandler = [[TGHttpHandler alloc] initWithCachePath:@"/tangram_cache"
@@ -841,15 +842,6 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     _continuous = c;
     self.paused = !c;
-}
-
-- (void)setResourceRoot:(NSURL *)resourceRoot
-{
-    if (!self.map) { return; }
-
-    Tangram::iOSPlatform& platform = static_cast<Tangram::iOSPlatform&>(*self.map->getPlatform());
-
-    platform.setResourceRoot(resourceRoot);
 }
 
 - (void)captureScreenshot:(BOOL)waitForViewComplete

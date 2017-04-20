@@ -1,5 +1,7 @@
 #pragma once
 
+#include "util/url.h"
+
 #include <functional>
 #include <string>
 #include <vector>
@@ -7,8 +9,22 @@
 namespace Tangram {
 
 
-// Function type for receiving data from a successful network request
-using UrlCallback = std::function<void(std::vector<char>&&)>;
+// Identifier type for URL requests. This handle is interpreted differently for
+// each platform type, so do not perform any application logic with its value.
+using UrlRequestHandle = uint64_t;
+
+// Result of a URL request. If the request could not be completed or if the
+// host returned an HTTP status code >= 400, a non-null error string will be
+// present. This error string is only valid in the scope of the UrlCallback
+// that provides the response. The content of the error string may be different
+// for each platform type.
+struct UrlResponse {
+    std::vector<char> content;
+    const char* error = nullptr;
+};
+
+// Function type for receiving data from a URL request.
+using UrlCallback = std::function<void(UrlResponse)>;
 
 using FontSourceLoader = std::function<std::vector<char>()>;
 
@@ -45,26 +61,16 @@ public:
 
     virtual bool isContinuousRendering() const;
 
-    virtual std::string resolveAssetPath(const std::string& path) const;
+    // Start retrieving data from a URL asynchronously. When the request is
+    // finished, the callback _callback will be run with the data or error that
+    // was retrieved from the URL _url. The callback may run on a different
+    // thread than the original call to startUrlRequest.
+    virtual UrlRequestHandle startUrlRequest(Url _url, UrlCallback _callback) = 0;
 
-    // Read a file as a string
-    // Opens the file at the _path and returns a string with its contents.
-    // If the file cannot be found or read, the returned string is empty.
-    virtual std::string stringFromFile(const char* _path) const;
-
-    // Read a file into memory
-    // Opens the file at _path then allocates and returns a pointer to memory
-    // containing the contents of the file. The size of the memory in bytes is written to _size.
-    // If the file cannot be read, nothing is allocated and nullptr is returned.
-    virtual std::vector<char> bytesFromFile(const char* _path) const;
-
-    // Start retrieving data from a URL asynchronously
-    // When the request is finished, the callback _callback will be
-    // run with the data that was retrieved from the URL _url
-    virtual bool startUrlRequest(const std::string& _url, UrlCallback _callback) = 0;
-
-    // Stop retrieving data from a URL that was previously requested
-    virtual void cancelUrlRequest(const std::string& _url) = 0;
+    // Stop retrieving data from a URL that was previously requested. When a
+    // request is canceled its callback will still be run, but the response
+    // will have an error string and the data may not be complete.
+    virtual void cancelUrlRequest(UrlRequestHandle _request) = 0;
 
     virtual std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const;
 
