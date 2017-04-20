@@ -88,16 +88,24 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> task, TileTaskCb 
 }
 
 void NetworkDataSource::removePending(const TileID& tile, bool cancelRequest) {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    for (auto it = m_pending.begin(); it != m_pending.end(); ++it) {
-        if (it->tile == tile) {
-            if (cancelRequest) {
-                m_platform->cancelUrlRequest(it->request);
+    UrlRequestHandle pendingRequestToCancel = 0;
+    bool foundRequest = false;
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        for (auto it = m_pending.begin(); it != m_pending.end(); ++it) {
+            if (it->tile == tile) {
+                pendingRequestToCancel = it->request;
+                foundRequest = true;
+                // This invalidates our iterators, so we break immediately.
+                m_pending.erase(it);
+                break;
             }
-            // This invalidates our iterators, so we return immediately.
-            m_pending.erase(it);
-            return;
         }
+    }
+    // Cancelling a request will run its callback, which can call into this function again,
+    // so we must perform the cancellation outside the mutex lock or we'll deadlock.
+    if (cancelRequest && foundRequest) {
+        m_platform->cancelUrlRequest(pendingRequestToCancel);
     }
 }
 
