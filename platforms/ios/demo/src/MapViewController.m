@@ -131,7 +131,7 @@
     {
         if (!vc.markerPolygon) {
             vc.markerPolygon = [view markerAdd];
-            [vc.markerPolygon stylingString:@"{ style: 'polygons', color: 'blue', order: 500 }" error:nil];
+            vc.markerPolygon.stylingString = @"{ style: 'polygons', color: 'blue', order: 500 }";
         }
         static TGGeoPolygon* polygon = nil;
         if (!polygon) { polygon = [[TGGeoPolygon alloc] init]; }
@@ -139,7 +139,7 @@
         if ([polygon count] == 0) {
             [polygon startPath:coordinates withSize:5];
         } else if ([polygon count] % 5 == 0) {
-            [vc.markerPolygon polygon:polygon error:nil];
+            vc.markerPolygon.polygon = polygon;
             [polygon removeAll];
             [polygon startPath:coordinates withSize:5];
         } else {
@@ -150,8 +150,8 @@
     // Add point marker
     {
         TGMarker* markerPoint = [view markerAdd];
-        [markerPoint stylingString:@"{ style: 'points', color: 'white', size: [25px, 25px], collide: false }" error:nil];
-        [markerPoint point:coordinates error:nil];
+        markerPoint.stylingString = @"{ style: 'points', color: 'white', size: [25px, 25px], collide: false }";
+        markerPoint.point = coordinates;
     }
 
     // Request feature picking
