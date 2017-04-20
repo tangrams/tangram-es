@@ -5,6 +5,7 @@
 #include <memory>
 #include <signal.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 using namespace Tangram;
 
@@ -22,8 +23,14 @@ int main(int argc, char* argv[]) {
             break;
         }
     }
+    // Resolve the input path against the current directory.
+    Url baseUrl("file:///");
+    char pathBuffer[PATH_MAX] = {0};
+    if (getcwd(pathBuffer, PATH_MAX) != nullptr) {
+        baseUrl = Url(std::string(pathBuffer) + "/").resolved(baseUrl);
+    }
 
-    Url baseUrl = Url(argv[0]).resolved("file:///");
+    LOG("Base URL: %s", baseUrl.string().c_str());
     Url sceneUrl = Url(inputString).resolved(baseUrl);
 
     // Create the windowed app.
