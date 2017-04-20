@@ -36,6 +36,16 @@ target_include_directories(duktape
   PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/duktape)
 
+## miniz ##
+###########
+add_library(miniz
+    ${CMAKE_CURRENT_SOURCE_DIR}/miniz/miniz.c)
+
+target_include_directories(miniz
+  PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/miniz)
+
+
 
 if(NOT USE_SYSTEM_FONT_LIBS)
   ## Harfbuzz - ICU-Common - UCDN - Freetype2 ##

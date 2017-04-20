@@ -4,6 +4,7 @@
 #include "scene/scene.h"
 #include "tangram.h"
 
+#include <cassert>
 #include <memory>
 #include <mutex>
 #include <sstream>

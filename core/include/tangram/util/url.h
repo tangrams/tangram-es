@@ -12,10 +12,10 @@ namespace Tangram {
 //
 // URLs are decomposed as:
 //
-// foo://user:pword@host.com:80/over/there;type=a?name=ferret#nose
-// \_/   \____________________/\_________/ \____/ \_________/ \__/
-//  |              |               |         |         |       |
-// scheme      netLocation        path   parameters  query  fragment
+// foo://user:pword@host.com:80/over/there.txt;type=a?name=ferret#nose
+// \_/   \____________________/\_____________/ \____/ \_________/ \__/
+//  |              |                  |          |        |        |
+// scheme      netLocation           path   parameters  query  fragment
 //
 // Data URIs are decomposed as:
 //
@@ -105,6 +105,10 @@ public:
     // Remove any '.' or '..' segments from a string containing a heirarchical path
     // and return a modified copy of the string.
     static std::string removeDotSegmentsFromString(std::string path);
+
+    // Get the file extension for a path. The extension may be empty.
+    // e.g. getPathExtension("example.com/a/b/c.txt") == "txt"
+    static std::string getPathExtension(const std::string& path);
 
 private:
 
