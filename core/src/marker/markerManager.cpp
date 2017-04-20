@@ -64,7 +64,9 @@ bool MarkerManager::setStylingFromString(MarkerID markerID, const char* styling)
     if (!buildStyling(*marker)) { return false; }
 
     // Build the feature mesh for the marker's current geometry.
-    return buildGeometry(*marker, m_zoom);
+    buildGeometry(*marker, m_zoom);
+
+    return true;
 }
 
 bool MarkerManager::setStylingFromPath(MarkerID markerID, const char* path) {
@@ -77,7 +79,9 @@ bool MarkerManager::setStylingFromPath(MarkerID markerID, const char* path) {
     if (!buildStyling(*marker)) { return false; }
 
     // Build the feature mesh for the marker's current geometry.
-    return buildGeometry(*marker, m_zoom);
+    buildGeometry(*marker, m_zoom);
+
+    return true;
 }
 
 bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const unsigned int* bitmapData) {
