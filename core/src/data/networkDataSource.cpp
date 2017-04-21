@@ -7,24 +7,36 @@
 
 namespace Tangram {
 
-NetworkDataSource::NetworkDataSource(std::shared_ptr<Platform> _platform, const std::string& _urlTemplate) :
+NetworkDataSource::NetworkDataSource(std::shared_ptr<Platform> _platform, const std::string& _urlTemplate,
+        std::vector<std::string>&& _urlSubdomains) :
     m_platform(_platform),
     m_urlTemplate(_urlTemplate),
+    m_urlSubdomains(std::move(_urlSubdomains)),
     m_maxDownloads(MAX_DOWNLOADS) {}
 
-void NetworkDataSource::constructURL(const TileID& _tileCoord, std::string& _url) const {
-    _url.assign(m_urlTemplate);
+std::string NetworkDataSource::constructURL(const TileID& _tileCoord, size_t _subdomainIndex) const {
+    std::string url = m_urlTemplate;
 
-    try {
-        size_t xpos = _url.find("{x}");
-        _url.replace(xpos, 3, std::to_string(_tileCoord.x));
-        size_t ypos = _url.find("{y}");
-        _url.replace(ypos, 3, std::to_string(_tileCoord.y));
-        size_t zpos = _url.find("{z}");
-        _url.replace(zpos, 3, std::to_string(_tileCoord.z));
-    } catch(...) {
-        LOGE("Bad URL template!");
+    size_t xPos = url.find("{x}");
+    if (xPos != std::string::npos) {
+        url.replace(xPos, 3, std::to_string(_tileCoord.x));
     }
+    size_t yPos = url.find("{y}");
+    if (yPos != std::string::npos) {
+        url.replace(yPos, 3, std::to_string(_tileCoord.y));
+    }
+    size_t zPos = url.find("{z}");
+    if (zPos != std::string::npos) {
+        url.replace(zPos, 3, std::to_string(_tileCoord.z));
+    }
+    if (_subdomainIndex < m_urlSubdomains.size()) {
+        size_t sPos = url.find("{s}");
+        if (sPos != std::string::npos) {
+            url.replace(sPos, 3, m_urlSubdomains[_subdomainIndex]);
+        }
+    }
+
+    return url;
 }
 
 bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
@@ -48,7 +60,11 @@ bool NetworkDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb
         m_pending.push_back(tileId);
     }
 
-    std::string url(constructURL(_task->tileId()));
+    std::string url = constructURL(_task->tileId(), m_urlSubdomainIndex);
+
+    if (!m_urlSubdomains.empty()) {
+        m_urlSubdomainIndex = (m_urlSubdomainIndex + 1) % m_urlSubdomains.size();
+    }
 
     bool started = m_platform->startUrlRequest(url,
         [this, cb = _cb, task = _task](std::vector<char>&& _rawData) mutable {
@@ -89,7 +105,11 @@ void NetworkDataSource::removePending(const TileID& _tileId) {
 
 void NetworkDataSource::cancelLoadingTile(const TileID& _tileId) {
     removePending(_tileId);
-    m_platform->cancelUrlRequest(constructURL(_tileId));
+    // cancel all possible requests for this tile
+    auto maxIndex = m_urlSubdomains.empty() ? 1 : m_urlSubdomains.size();
+    for (size_t index = 0; index < maxIndex; index++) {
+        m_platform->cancelUrlRequest(constructURL(_tileId, index));
+    }
 }
 
 }

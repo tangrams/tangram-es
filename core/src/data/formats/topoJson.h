@@ -5,8 +5,12 @@
 
 #include "glm/vec2.hpp"
 #include <functional>
+#include <memory>
 
 namespace Tangram {
+
+class TileTask;
+class MapProjection;
 
 namespace TopoJson {
 
@@ -31,6 +35,8 @@ Feature getFeature(const JsonValue& _geometry, const Topology& _topology, int32_
 
 Layer getLayer(JsonValue::MemberIterator& _object, const Topology& _topology, int32_t _sourceId);
 
-}
+std::shared_ptr<TileData> parseTile(const TileTask& _task, const MapProjection& _projection, int32_t _sourceId);
 
-}
+} // namespace TopoJson
+
+} // namespace Tangram

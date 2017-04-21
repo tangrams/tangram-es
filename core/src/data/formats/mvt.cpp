@@ -1,7 +1,7 @@
-#include "util/pbfParser.h"
-
+#include "data/formats/mvt.h"
 #include "data/propertyItem.h"
 #include "tile/tile.h"
+#include "tile/tileTask.h"
 #include "log.h"
 #include "platform.h"
 #include "util/geom.h"
@@ -14,7 +14,6 @@
 #define FEATURE_TYPE 3
 #define FEATURE_GEOM 4
 
-
 #define LAYER_NAME 1
 #define LAYER_FEATURE 2
 #define LAYER_KEY 3
@@ -23,11 +22,11 @@
 
 namespace Tangram {
 
-PbfParser::Geometry PbfParser::getGeometry(ParserContext& _ctx, protobuf::message _geomIn) {
+Mvt::Geometry Mvt::getGeometry(ParserContext& _ctx, protobuf::message _geomIn) {
 
     Geometry geometry;
 
-    pbfGeomCmd cmd = pbfGeomCmd::moveTo;
+    GeomCmd cmd = GeomCmd::moveTo;
     uint32_t cmdRepeat = 0;
 
     double invTileExtent = (1.0/(_ctx.tileExtent-1.0));
@@ -41,13 +40,13 @@ PbfParser::Geometry PbfParser::getGeometry(ParserContext& _ctx, protobuf::messag
 
         if(cmdRepeat == 0) { // get new command, length and parameters..
             uint32_t cmdData = static_cast<uint32_t>(_geomIn.varint());
-            cmd = static_cast<pbfGeomCmd>(cmdData & 0x7); //first 3 bits of the cmdData
+            cmd = static_cast<GeomCmd>(cmdData & 0x7); //first 3 bits of the cmdData
             cmdRepeat = cmdData >> 3; //last 5 bits
         }
 
-        if(cmd == pbfGeomCmd::moveTo || cmd == pbfGeomCmd::lineTo) { // get parameters/points
+        if(cmd == GeomCmd::moveTo || cmd == GeomCmd::lineTo) { // get parameters/points
             // if cmd is move then move to a new line/set of points and save this line
-            if(cmd == pbfGeomCmd::moveTo) {
+            if(cmd == GeomCmd::moveTo) {
                 if (geometry.coordinates.size() > 0) {
                     geometry.sizes.push_back(numCoordinates);
                 }
@@ -66,7 +65,7 @@ PbfParser::Geometry PbfParser::getGeometry(ParserContext& _ctx, protobuf::messag
                 geometry.coordinates.push_back(p);
                 numCoordinates++;
             }
-        } else if(cmd == pbfGeomCmd::closePath) {
+        } else if(cmd == GeomCmd::closePath) {
             // end of a polygon, push first point in this line as last and push line to poly
             geometry.coordinates.push_back(geometry.coordinates[geometry.coordinates.size() - numCoordinates]);
             geometry.sizes.push_back(numCoordinates + 1);
@@ -84,7 +83,7 @@ PbfParser::Geometry PbfParser::getGeometry(ParserContext& _ctx, protobuf::messag
     return geometry;
 }
 
-Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn) {
+Feature Mvt::getFeature(ParserContext& _ctx, protobuf::message _featureIn) {
 
     Feature feature(_ctx.sourceId);
 
@@ -214,7 +213,7 @@ Feature PbfParser::getFeature(ParserContext& _ctx, protobuf::message _featureIn)
     return feature;
 }
 
-Layer PbfParser::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
+Layer Mvt::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
 
     Layer layer("");
 
@@ -318,6 +317,35 @@ Layer PbfParser::getLayer(ParserContext& _ctx, protobuf::message _layerIn) {
     }
 
     return layer;
+}
+
+std::shared_ptr<TileData> Mvt::parseTile(const TileTask& _task, const MapProjection& _projection, int32_t _sourceId) {
+
+    auto tileData = std::make_shared<TileData>();
+
+    auto& task = static_cast<const BinaryTileTask&>(_task);
+
+    protobuf::message item(task.rawTileData->data(), task.rawTileData->size());
+    ParserContext ctx(_sourceId);
+
+    try {
+        while(item.next()) {
+            if(item.tag == 3) {
+                tileData->layers.push_back(getLayer(ctx, item.getMessage()));
+            } else {
+                item.skip();
+            }
+        }
+    } catch(const std::invalid_argument& e) {
+        LOGE("Cannot parse tile %s: %s", _task.tileId().toString().c_str(), e.what());
+        return {};
+    } catch(const std::runtime_error& e) {
+        LOGE("Cannot parse tile %s: %s", _task.tileId().toString().c_str(), e.what());
+        return {};
+    } catch(...) {
+        return {};
+    }
+    return tileData;
 }
 
 }

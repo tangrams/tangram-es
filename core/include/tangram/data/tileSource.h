@@ -42,6 +42,12 @@ public:
         int level = 0;
     };
 
+    enum class Format {
+        GeoJson,
+        TopoJson,
+        Mvt,
+    };
+
     /* Tile data sources must have a name and a URL template that defines where to find
      * a tile based on its coordinates. A URL template includes exactly one occurrance
      * each of '{x}', '{y}', and '{z}' which will be replaced by the x index, y index,
@@ -55,7 +61,7 @@ public:
     /**
      * @return the mime-type of the DataSource.
      */
-    virtual const char* mimeType() = 0;
+    virtual const char* mimeType() const;
 
     /* Fetches data for the map tile specified by @_tileID
      *
@@ -69,7 +75,7 @@ public:
     virtual void cancelLoadingTile(const TileID& _tile);
 
     /* Parse a <TileTask> with data into a <TileData>, returning an empty TileData on failure */
-    virtual std::shared_ptr<TileData> parse(const TileTask& _task, const MapProjection& _projection) const = 0;
+    virtual std::shared_ptr<TileData> parse(const TileTask& _task, const MapProjection& _projection) const;
 
     /* Clears all data associated with this TileSource */
     virtual void clearData();
@@ -108,6 +114,8 @@ public:
     /* Avoid RTTI by adding a boolean check on the data source object */
     virtual bool isRaster() const { return false; }
 
+    void setFormat(Format format) { m_format = format; }
+
 protected:
 
     void createSubTasks(std::shared_ptr<TileTask> _task);
@@ -117,12 +125,6 @@ protected:
 
     // Name used to identify this source in the style sheet
     std::string m_name;
-
-    // URL template for requesting tiles from a network or filesystem
-    std::string m_urlTemplate;
-
-    // The path to an mbtiles tile store. Empty string if not present.
-    std::string m_mbtilesPath;
 
     // Minimum zoom for which tiles will be displayed
     int32_t m_minDisplayZoom;
@@ -138,6 +140,8 @@ protected:
 
     // Generation of dynamic TileSource state (incremented for each update)
     int64_t m_generation = 1;
+
+    Format m_format = Format::GeoJson;
 
     /* vector of raster sources (as raster samplers) referenced by this datasource */
     std::vector<std::shared_ptr<TileSource>> m_rasterSources;

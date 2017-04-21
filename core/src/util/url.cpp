@@ -432,7 +432,6 @@ void Url::parse() {
     // Parse the path. After the preceding steps, the remaining string is the URL path.
     parts.path.start = start;
     parts.path.count = end - start;
-
 }
 
 size_t Url::removeLastSegmentFromRange(std::string& string, size_t start, size_t end) {
@@ -499,6 +498,28 @@ size_t Url::removeDotSegmentsFromRange(std::string& str, size_t start, size_t co
     }
 
     return out - start;
+}
+
+std::string Url::getPathExtension(const std::string& path) {
+    std::string ext;
+
+    // Isolate the last segment of the path.
+    auto lastPathSegment = path.rfind('/');
+    if (lastPathSegment == std::string::npos) {
+        // If path has no delimiters, the whole path is the last segment.
+        lastPathSegment = 0;
+    }
+
+    // Find the last extension delimiter in the last segment.
+    auto lastDotPos = path.rfind('.');
+    if (lastDotPos != std::string::npos && lastDotPos > lastPathSegment + 1) {
+        // If an extension delimiter is found within the last segment, but not
+        // at its start, then the extension is the string between this delimiter
+        // and the end of the path.
+        ext = path.substr(lastDotPos + 1);
+    }
+
+    return ext;
 }
 
 } // namespace Tangram

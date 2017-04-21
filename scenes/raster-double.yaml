@@ -11,6 +11,8 @@ sources:
         type: TopoJSON
         url: https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson
         rasters: [basemap, terrain-normals]
+        url_params:
+            api_key: global.sdk_mapzen_api_key
     basemap:
         type: Raster
         #url: http://a.tile.stamen.com/terrain-background/{z}/{x}/{y}.jpg

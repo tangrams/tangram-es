@@ -48,6 +48,7 @@ TEST_CASE("Parse components of a correctly formatted data URI", "[Url]") {
     CHECK(url.hasScheme());
     CHECK(url.scheme() == "data");
     CHECK(!url.hasNetLocation());
+    CHECK(!url.hasPath());
     CHECK(!url.hasParameters());
     CHECK(!url.hasQuery());
     CHECK(!url.hasFragment());
@@ -215,6 +216,19 @@ TEST_CASE("Resolve an abnormal relative URL against an absolute base URL", "[Url
     CHECK(Url("g/../h").resolved(base).string() == "http://a/b/c/h");
     CHECK(Url("g;x=1/./y").resolved(base).string() == "http://a/b/c/g;x=1/./y"); // See [1] below.
     CHECK(Url("g;x=1/../y").resolved(base).string() == "http://a/b/c/g;x=1/../y"); // See [1] below.
+
+}
+
+TEST_CASE("Retrieve the file extension from a path string", "[Url]") {
+
+    CHECK(Url::getPathExtension("file.txt") == "txt");
+    CHECK(Url::getPathExtension("file.txt.gz") == "gz");
+    CHECK(Url::getPathExtension("/path/to/a/file.txt") == "txt");
+    CHECK(Url::getPathExtension("/path/to/some/other/.././file.txt") == "txt");
+    CHECK(Url::getPathExtension("/path/to/some/other/.././folder") == "");
+    CHECK(Url::getPathExtension("/path/to/a/file") == "");
+    CHECK(Url::getPathExtension("/path/to/a/.txt") == "");
+    CHECK(Url::getPathExtension("/path/to/a/file.") == "");
 
 }
 

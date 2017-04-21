@@ -3,7 +3,6 @@
 #include "data/tileData.h"
 #include "tile/tile.h"
 #include "tile/tileTask.h"
-#include "util/geoJson.h"
 #include "util/mapProjection.h"
 #include "platform.h"
 

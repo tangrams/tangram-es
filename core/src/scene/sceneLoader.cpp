@@ -1,13 +1,10 @@
 #include "scene/sceneLoader.h"
 
 #include "data/clientGeoJsonSource.h"
-#include "data/geoJsonSource.h"
 #include "data/memoryCacheDataSource.h"
 #include "data/mbtilesDataSource.h"
-#include "data/mvtSource.h"
 #include "data/networkDataSource.h"
 #include "data/rasterSource.h"
-#include "data/topoJsonSource.h"
 #include "gl/shaderSource.h"
 #include "log.h"
 #include "platform.h"
@@ -36,6 +33,7 @@
 
 #include "csscolorparser.hpp"
 #include <algorithm>
+#include <cassert>
 #include <iterator>
 #include <regex>
 #include <vector>
@@ -60,7 +58,7 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
 
     Importer sceneImporter;
 
-    _scene->config() = sceneImporter.applySceneImports(_platform, _scene->path(), _scene->resourceRoot());
+    _scene->config() = sceneImporter.applySceneImports(_platform, _scene);
 
     if (!_scene->config()) {
         return false;
@@ -74,6 +72,8 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
     _scene->fontContext()->loadFonts();
 
     applyConfig(_platform, _scene);
+
+    _scene->sceneAssets().clear();
 
     return true;
 }
@@ -581,8 +581,13 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
 
     std::regex r("^(http|https):/");
     std::smatch match;
+
+    auto& asset = scene->sceneAssets()[url];
+    // asset must exist for this path (must be created during scene importing)
+    assert(asset);
+
     // TODO: generalize using URI handlers
-    if (std::regex_search(url, match, r)) {
+    if (std::regex_search(url, match, r) && !asset->zipHandle()) {
         scene->pendingTextures++;
         platform->startUrlRequest(url, [=](std::vector<char>&& rawData) {
                 std::lock_guard<std::mutex> lock(m_textureMutex);
@@ -629,7 +634,8 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
             }
 
         } else {
-            auto data = platform->bytesFromFile(url.c_str());
+
+            auto data = asset->readBytesFromAsset(platform);
 
             if (data.size() == 0) {
                 LOGE("Can't load texture resource at url '%s'", url.c_str());
@@ -656,6 +662,7 @@ bool SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
         return true;
     }
 
+    LOGE("Missing texture %s", url.c_str());
     return false;
 }
 
@@ -683,8 +690,10 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
     }
 
     auto texture = fetchTexture(platform, name, file, options, generateMipmaps, scene);
-    if (!texture) { return; }
-
+    if (!texture) {
+        LOGE("Missing texture %s", name.c_str());
+        return;
+    }
     std::lock_guard<std::mutex> lock(m_textureMutex);
     if (Node sprites = textureConfig["sprites"]) {
         std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture));
@@ -746,7 +755,11 @@ void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& 
     std::regex regex("^(http|https):/");
     std::smatch match;
 
-    if (std::regex_search(uri, match, regex)) {
+    auto& asset = scene->sceneAssets()[_ft.uri];
+    // asset must exist for this path (must be created during scene importing)
+    assert(asset);
+
+    if (std::regex_search(uri, match, regex) && !asset->zipHandle()) {
         // Load remote
         scene->pendingFonts++;
         platform->startUrlRequest(_ft.uri, [_ft, scene](std::vector<char>&& rawData) {
@@ -758,7 +771,7 @@ void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& 
             scene->pendingFonts--;
         });
     } else {
-        auto data = platform->bytesFromFile(_ft.uri.c_str());
+        auto data = asset->readBytesFromAsset(platform);
 
         if (data.size() == 0) {
             LOGW("Local font at path %s can't be found (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
@@ -944,29 +957,18 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         return;
     }
 
-    std::string type = source["type"].Scalar();
+    std::string type;
     std::string url;
     std::string mbtiles;
+    std::vector<std::string> subdomains;
+
     int32_t minDisplayZoom = -1;
     int32_t maxDisplayZoom = -1;
     int32_t maxZoom = 18;
 
-    std::string mime;
-
-    if (type == "GeoJSON") {
-        mime = "application/geo+json";
-    } else if (type == "TopoJSON") {
-        mime =  "application/topo+json";
-    } else if (type == "MVT") {
-        mime =  "application/vnd.mapbox-vector-tile";
-    } else if (type == "Raster") {
-        // TODO try to guess from url
-        mime = "image/png";
-    } else {
-        LOGW("Unrecognized data source type '%s', skipping", type.c_str());
-        return;
+    if (auto typeNode = source["type"]) {
+        type = typeNode.Scalar();
     }
-
     if (auto urlNode = source["url"]) {
         url = urlNode.Scalar();
     }
@@ -1006,6 +1008,26 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         url = urlStream.str();
     }
 
+    // Apply URL subdomain configuration.
+    if (Node subDomainNode = source["url_subdomains"]) {
+        if (subDomainNode.IsSequence()) {
+            for (const auto& domain : subDomainNode) {
+                if (domain.IsScalar()) {
+                    subdomains.push_back(domain.Scalar());
+                }
+            }
+        }
+    }
+
+    // Check whether the URL template and subdomains make sense together, and warn if not.
+    bool hasSubdomainPlaceholder = (url.find("{s}") != std::string::npos);
+    if (hasSubdomainPlaceholder && subdomains.empty()) {
+        LOGW("The URL for source '%s' includes the subdomain placeholder '{s}', but no subdomains were given.", name.c_str());
+    }
+    if (!hasSubdomainPlaceholder && !subdomains.empty()) {
+        LOGW("The URL for source '%s' has subdomains specified, but does not include the subdomain placeholder '{s}'.", name.c_str());
+    }
+
     // distinguish tiled and non-tiled sources by url
     bool tiled = url.size() > 0 &&
         url.find("{x}") != std::string::npos &&
@@ -1020,8 +1042,6 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         isMBTilesFile = urlLength > extLength && (url.compare(urlLength - extLength, extLength, extStr) == 0);
     }
 
-    std::shared_ptr<TileSource> sourcePtr;
-
     auto rawSources = std::make_unique<MemoryCacheDataSource>();
     rawSources->setCacheSize(CACHE_SIZE);
 
@@ -1029,24 +1049,15 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         // If we have MBTiles, we know the source is tiled.
         tiled = true;
         // Create an MBTiles data source from the file at the url and add it to the source chain.
-        rawSources->setNext(std::make_unique<MBTilesDataSource>(platform, name, url, mime));
+        rawSources->setNext(std::make_unique<MBTilesDataSource>(platform, name, url, ""));
     } else if (tiled) {
-        rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url));
+        rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url, std::move(subdomains)));
     }
 
-    if (type == "GeoJSON") {
-        if (tiled) {
-            sourcePtr = std::make_shared<GeoJsonSource>(name, std::move(rawSources),
-                                                        minDisplayZoom, maxDisplayZoom, maxZoom);
-        } else {
-            sourcePtr = std::make_shared<ClientGeoJsonSource>(platform, name, url, minDisplayZoom, maxDisplayZoom, maxZoom);
-        }
-    } else if (type == "TopoJSON") {
-        sourcePtr = std::make_shared<TopoJsonSource>(name, std::move(rawSources),
-                                                     minDisplayZoom, maxDisplayZoom, maxZoom);
-    } else if (type == "MVT") {
-        sourcePtr = std::make_shared<MVTSource>(name, std::move(rawSources),
-                                                minDisplayZoom, maxDisplayZoom, maxZoom);
+    std::shared_ptr<TileSource> sourcePtr;
+
+    if (type == "GeoJSON" && !tiled) {
+        sourcePtr = std::make_shared<ClientGeoJsonSource>(platform, name, url, minDisplayZoom, maxDisplayZoom, maxZoom);
     } else if (type == "Raster") {
         TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
         bool generateMipmaps = false;
@@ -1059,6 +1070,21 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         sourcePtr = std::make_shared<RasterSource>(name, std::move(rawSources),
                                                    minDisplayZoom, maxDisplayZoom, maxZoom,
                                                    options, generateMipmaps);
+    } else {
+        sourcePtr = std::make_shared<TileSource>(name, std::move(rawSources),
+                                                 minDisplayZoom, maxDisplayZoom, maxZoom);
+
+        if (type == "GeoJSON") {
+            sourcePtr->setFormat(TileSource::Format::GeoJson);
+        } else if (type == "TopoJSON") {
+            sourcePtr->setFormat(TileSource::Format::TopoJson);
+        } else if (type == "MVT") {
+            sourcePtr->setFormat(TileSource::Format::Mvt);
+        } else {
+            LOGE("Source '%s' does not have a valid type. Valid types are 'GeoJSON', 'TopoJSON', and 'MVT'. " \
+                "This source will be ignored.", name.c_str());
+            return;
+        }
     }
 
     _scene->tileSources().push_back(sourcePtr);
