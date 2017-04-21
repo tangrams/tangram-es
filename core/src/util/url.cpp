@@ -451,7 +451,11 @@ size_t Url::removeDotSegmentsFromRange(std::string& str, size_t start, size_t co
     size_t out = pos; // 'output' position.
 
     while (pos < end) {
-        if (pos + 2 < end &&
+        if (pos + 1 < end &&
+                   str[pos] == '/' &&
+                   str[pos + 1] == '/') {
+            pos += 1;
+        } else if (pos + 2 < end &&
                    str[pos] == '.' &&
                    str[pos + 1] == '.' &&
                    str[pos + 2] == '/') {

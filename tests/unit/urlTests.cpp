@@ -91,7 +91,7 @@ TEST_CASE("Remove dot segments from a path", "[Url]") {
     CHECK(Url::removeDotSegmentsFromString("..") == "");
     CHECK(Url::removeDotSegmentsFromString("a/b/../../..") == "");
     CHECK(Url::removeDotSegmentsFromString("a/b/../c/../d/./e/..") == "a/d");
-    CHECK(Url::removeDotSegmentsFromString("a//b//c") == "a//b//c");
+    CHECK(Url::removeDotSegmentsFromString("a//b//c") == "a/b/c");
     CHECK(Url::removeDotSegmentsFromString("a./b../..c/.d") == "a./b../..c/.d");
 
 }
@@ -237,3 +237,10 @@ TEST_CASE("Retrieve the file extension from a path string", "[Url]") {
 // in our implementation because the interpretation of the parameters string in RFC 3986 is
 // in conflict with RFC 1808, which many URL utilities adhere to (e.g. NSURL). In RFC 1808
 // the 'path' component stops at a ';', but in RFC 3986 it goes up to a '?'.
+
+TEST_CASE("Resolve relative URL against an non-normalized absolute base URL", "[Url]") {
+
+    Url base("http://a/b//c/");
+
+    CHECK(Url("../../g").resolved(base).string() == "http://a/g");
+}
