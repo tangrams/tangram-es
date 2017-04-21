@@ -109,6 +109,7 @@ bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader, int textur
         return false;
     }
 
+#ifdef DYNAMIC_MESH_VAOS
     useVao &= Hardware::supportsVAOs;
 
     if (useVao) {
@@ -120,6 +121,7 @@ bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader, int textur
                               m_glVertexBuffer, rs.getQuadIndexBuffer());
         }
     }
+#endif
 
     const size_t verticesIndexed = RenderState::MAX_QUAD_VERTICES;
     size_t vertexPos = 0;
@@ -153,12 +155,15 @@ bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader, int textur
         size_t verticesInBatch = std::min(vertexBatchEnd - vertexPos, verticesIndexed);
 
         // Set up and draw the batch.
+#ifdef DYNAMIC_MESH_VAOS
         if (useVao && vertexPos == 0) {
             // Use vao only for first batch of offsets, other vertices can use a
             // different stride so just reuse the vertex layout with a different
             // byte offset instead
             m_vaos.bind(0);
-        } else {
+        } else
+#endif
+        {
             rs.vertexBuffer(m_glVertexBuffer);
             rs.indexBuffer(rs.getQuadIndexBuffer());
 
