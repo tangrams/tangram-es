@@ -1,11 +1,19 @@
 package com.mapzen.tangram.android;
 
-import android.app.Activity;
+import android.content.Context;
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.View;
 import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Filter;
+import android.widget.Spinner;
 import android.widget.Toast;
+import android.widget.AutoCompleteTextView;
 
 import com.mapzen.tangram.HttpHandler;
 import com.mapzen.tangram.LngLat;
@@ -31,17 +39,89 @@ import com.mapzen.tangram.LabelPickResult;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MainActivity extends Activity implements OnMapReadyCallback, TapResponder,
-        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener, SceneUpdateErrorListener {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, TapResponder,
+        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener, SceneUpdateErrorListener,
+        AdapterView.OnItemSelectedListener, AdapterView.OnItemClickListener {
+
+    /* Override ArrayAdaptor to include any text */
+    private class CustomArrayAdapter extends ArrayAdapter {
+
+        List<String> suggestions;
+
+        Filter nameFilter = new Filter() {
+            @Override
+            public CharSequence convertResultToString(Object resultValue) {
+                return resultValue.toString().toLowerCase();
+            }
+
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                if (constraint != null) {
+                    suggestions.clear();
+                    for (String scene: scenes) {
+                        if (scene.toLowerCase().contains(constraint.toString().toLowerCase())) {
+                            suggestions.add(scene);
+                        }
+                    }
+                    if (suggestions.isEmpty()) {
+                        suggestions.add(constraint.toString().toLowerCase()); //include the text when nothing matches
+                    }
+
+                    FilterResults filterResults = new FilterResults();
+                    filterResults.values = suggestions;
+                    filterResults.count = suggestions.size();
+                    return filterResults;
+                } else {
+                    return new FilterResults();
+                }
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                List<String> filterList = (ArrayList<String>) results.values;
+                if (results != null && results.count > 0) {
+                    clear();
+                    for (String scene: filterList) {
+                        add(scene);
+                        notifyDataSetChanged();
+                    }
+                }
+            }
+        };
+
+        CustomArrayAdapter(Context context, int resource, List<String> objects) {
+            super(context, resource, objects);
+            suggestions = new ArrayList<>();
+        }
+
+        @Override public Filter getFilter() {
+            return nameFilter;
+        }
+    }
 
     MapController map;
     MapView view;
     LngLat lastTappedPoint;
     MapData markers;
+
+    private final String[] scenes = {
+        "scene.yaml",
+        "https://mapzen.com/carto/bubble-wrap-style/bubble-wrap-style.zip",
+        "https://mapzen.com/carto/refill-style/refill-style.zip",
+        "https://mapzen.com/carto/walkabout-style/walkabout-style.zip",
+        "https://mapzen.com/carto/tron-style/tron-style.zip",
+        "https://mapzen.com/carto/cinnabar-style/cinnabar-style.zip",
+        "https://mapzen.com/carto/zinc-style/zinc-style.zip"
+    };
+
+    AutoCompleteTextView sceneString;
+    CustomArrayAdapter customAdapter;
+    Spinner spinner;
 
     String pointStylingPath = "layers.touch.point.draw.icons";
     ArrayList<Marker> pointMarkers = new ArrayList<Marker>();
@@ -59,8 +139,29 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
         setContentView(R.layout.main);
 
+        /* setup autocompletetextview adapter */
+        sceneString = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView);
+        List<String> lst = new ArrayList<String>(Arrays.asList(scenes));
+        customAdapter = new CustomArrayAdapter(this, android.R.layout.simple_list_item_1, lst);
+        sceneString.setAdapter(customAdapter);
+        sceneString.setThreshold(1);
+        sceneString.setOnItemClickListener(this);
+
+        /* setup spinner style selecter */
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        spinner = (Spinner) findViewById(R.id.spinner);
+        ArrayAdapter<CharSequence> sceneSelector =
+                ArrayAdapter.createFromResource(this, R.array.style_array, R.layout.simple_spinner_item);
+        sceneSelector.setDropDownViewResource(R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(sceneSelector);
+        spinner.setOnItemSelectedListener(this);
+
+        /* setup map view */
         view = (MapView)findViewById(R.id.map);
         view.onCreate(savedInstanceState);
+        sceneString.setText(scenes[0]);
         view.getMapAsync(this, "scene.yaml", sceneUpdates);
     }
 
@@ -86,6 +187,63 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
     public void onLowMemory() {
         super.onLowMemory();
         view.onLowMemory();
+    }
+
+    @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        final ArrayList<SceneUpdate> sceneUpdates = new ArrayList<>(1);
+        final String apiKey = "vector-tiles-tyHL4AY";
+        sceneUpdates.add(new SceneUpdate("global.sdk_mapzen_api_key", apiKey));
+        spinner.setSelection(7);
+        map.loadSceneFile(sceneString.getText().toString(),sceneUpdates);
+    }
+
+    @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        if (map == null) { return; }
+
+        final ArrayList<SceneUpdate> sceneUpdates = new ArrayList<>(1);
+        final String apiKey = "vector-tiles-tyHL4AY";
+        sceneUpdates.add(new SceneUpdate("global.sdk_mapzen_api_key", apiKey));
+
+        switch (position) {
+            case 0:
+                sceneString.setText(scenes[0]);
+                map.loadSceneFile(scenes[0], sceneUpdates);
+                break;
+            case 1: // Latest Bubble-wrap Release
+                sceneString.setText(scenes[1]);
+                map.loadSceneFile(scenes[1], sceneUpdates);
+                break;
+            case 2: // Latest Refill Release
+                sceneString.setText(scenes[2]);
+                map.loadSceneFile(scenes[2], sceneUpdates);
+                break;
+            case 3: // Latest Walkabout Release
+                sceneString.setText(scenes[3]);
+                map.loadSceneFile(scenes[3], sceneUpdates);
+                break;
+            case 4: // Latest Tron Release
+                sceneString.setText(scenes[4]);
+                map.loadSceneFile(scenes[4], sceneUpdates);
+                break;
+            case 5: // Latest Cinnabar Release
+                sceneString.setText(scenes[5]);
+                map.loadSceneFile(scenes[5], sceneUpdates);
+                break;
+            case 6:
+                sceneString.setText(scenes[6]);
+                map.loadSceneFile(scenes[6], sceneUpdates);
+                break;
+            case 7:
+                break;
+            default:
+                sceneString.setText(scenes[0]);
+                map.loadSceneFile(scenes[0], sceneUpdates);
+                break;
+        }
+    }
+
+    @Override public void onNothingSelected(AdapterView<?> parent) {
+        // Do nothing.
     }
 
     @Override
