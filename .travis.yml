@@ -38,7 +38,7 @@ before_script:
 script:
     - source ./scripts/travis/script_build.sh
     - source ./scripts/travis/script_run_tests.sh
-    - source ./scripts/travis/script_run_bench.sh
+    # - source ./scripts/travis/script_run_bench.sh
 
 after_success:
     - source ./scripts/travis/script_deploy_android_snapshot.sh
