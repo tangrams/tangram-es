@@ -701,12 +701,19 @@ void Map::setPixelScale(float _pixelsPerPoint) {
 
 void Map::Impl::setPixelScale(float _pixelsPerPoint) {
 
+    // Make sure to always update the styles with the pixelScale
+    // Note: New styles could be added since last call to `setPixelScale`
+    for (auto& style : scene->styles()) {
+        style->setPixelScale(_pixelsPerPoint);
+    }
+
     // If the pixel scale changes we need to re-build all the tiles.
     // This is expensive, so first check whether the new value is different.
     if (_pixelsPerPoint == view.pixelScale()) {
         // Nothing to do!
         return;
     }
+
     view.setPixelScale(_pixelsPerPoint);
     scene->setPixelScale(_pixelsPerPoint);
 
