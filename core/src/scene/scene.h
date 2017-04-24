@@ -2,6 +2,7 @@
 
 #include "scene/asset.h"
 #include "util/color.h"
+#include "util/fastmap.h"
 #include "view/view.h"
 
 #include <atomic>
@@ -157,7 +158,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
 
     // path as key
-    std::unordered_map<std::string, std::unique_ptr<Asset>> m_sceneAssets;
+    fastmap<std::string, std::shared_ptr<Asset>> m_sceneAssets;
 
     // Records the YAML Nodes for which global values have been swapped; keys are
     // nodes that referenced globals, values are nodes of globals themselves.

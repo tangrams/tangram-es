@@ -19,7 +19,7 @@ public:
 
 protected:
     virtual std::string getSceneString(const std::shared_ptr<Platform>& platform,
-            const Url& scenePath, const std::unique_ptr<Asset>& asset = nullptr) override {
+            const Url& scenePath, const std::shared_ptr<Asset>& asset = nullptr) override {
         return m_testScenes[scenePath];
     }
 

@@ -73,8 +73,6 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
 
     applyConfig(_platform, _scene);
 
-    _scene->sceneAssets().clear();
-
     return true;
 }
 

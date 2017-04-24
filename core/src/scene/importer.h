@@ -31,7 +31,7 @@ public:
 protected:
     // Overriden in unit testing
     virtual std::string getSceneString(const std::shared_ptr<Platform>& platform,
-            const Url& scenePath, const std::unique_ptr<Asset>& asset = nullptr);
+            const Url& scenePath, const std::shared_ptr<Asset>& asset = nullptr);
 
     void processScene(const std::shared_ptr<Platform>& platform, std::shared_ptr<Scene>& scene,
             const Url& scenePath, const std::string& sceneString);
