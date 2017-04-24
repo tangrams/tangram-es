@@ -8,6 +8,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Filter;
@@ -47,6 +48,9 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, TapResponder,
         DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener, SceneUpdateErrorListener,
         AdapterView.OnItemSelectedListener, AdapterView.OnItemClickListener {
+
+    private final String apiKey = "vector-tiles-tyHL4AY";
+    private ArrayList<SceneUpdate> sceneUpdates = new ArrayList<>();
 
     /* Override ArrayAdaptor to include any text */
     private class CustomArrayAdapter extends ArrayAdapter {
@@ -119,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         "https://mapzen.com/carto/zinc-style/zinc-style.zip"
     };
 
-    AutoCompleteTextView sceneString;
+    AutoCompleteTextView autoCompleteView;
     CustomArrayAdapter customAdapter;
     Spinner spinner;
 
@@ -130,8 +134,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        final ArrayList<SceneUpdate> sceneUpdates = new ArrayList<>(1);
-        final String apiKey = "vector-tiles-tyHL4AY";
         sceneUpdates.add(new SceneUpdate("global.sdk_mapzen_api_key", apiKey));
         super.onCreate(savedInstanceState);
 
@@ -140,12 +142,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.main);
 
         /* setup autocompletetextview adapter */
-        sceneString = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView);
+        autoCompleteView = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView);
         List<String> lst = new ArrayList<String>(Arrays.asList(scenes));
         customAdapter = new CustomArrayAdapter(this, android.R.layout.simple_list_item_1, lst);
-        sceneString.setAdapter(customAdapter);
-        sceneString.setThreshold(1);
-        sceneString.setOnItemClickListener(this);
+        autoCompleteView.setAdapter(customAdapter);
+        autoCompleteView.setThreshold(1);
+        autoCompleteView.setOnItemClickListener(this);
 
         /* setup spinner style selecter */
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -161,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         /* setup map view */
         view = (MapView)findViewById(R.id.map);
         view.onCreate(savedInstanceState);
-        sceneString.setText(scenes[0]);
+        autoCompleteView.setText(scenes[0]);
         view.getMapAsync(this, "scene.yaml", sceneUpdates);
     }
 
@@ -190,55 +192,34 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        final ArrayList<SceneUpdate> sceneUpdates = new ArrayList<>(1);
-        final String apiKey = "vector-tiles-tyHL4AY";
-        sceneUpdates.add(new SceneUpdate("global.sdk_mapzen_api_key", apiKey));
-        spinner.setSelection(7);
-        map.loadSceneFile(sceneString.getText().toString(),sceneUpdates);
+        int selectedIndex = 7; // custom
+        String sceneText = autoCompleteView.getText().toString();
+        for (int i = 0; i < scenes.length; i++) {
+            if (sceneText.equals(scenes[i])) {
+                selectedIndex = i;
+                break;
+            }
+        }
+        spinner.setSelection(selectedIndex);
+
+        autoCompleteView.clearFocus();
+        InputMethodManager in = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        in.hideSoftInputFromWindow(autoCompleteView.getWindowToken(), 0);
+
+        map.loadSceneFile(autoCompleteView.getText().toString(),sceneUpdates);
     }
 
     @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         if (map == null) { return; }
 
-        final ArrayList<SceneUpdate> sceneUpdates = new ArrayList<>(1);
-        final String apiKey = "vector-tiles-tyHL4AY";
-        sceneUpdates.add(new SceneUpdate("global.sdk_mapzen_api_key", apiKey));
-
-        switch (position) {
-            case 0:
-                sceneString.setText(scenes[0]);
-                map.loadSceneFile(scenes[0], sceneUpdates);
-                break;
-            case 1: // Latest Bubble-wrap Release
-                sceneString.setText(scenes[1]);
-                map.loadSceneFile(scenes[1], sceneUpdates);
-                break;
-            case 2: // Latest Refill Release
-                sceneString.setText(scenes[2]);
-                map.loadSceneFile(scenes[2], sceneUpdates);
-                break;
-            case 3: // Latest Walkabout Release
-                sceneString.setText(scenes[3]);
-                map.loadSceneFile(scenes[3], sceneUpdates);
-                break;
-            case 4: // Latest Tron Release
-                sceneString.setText(scenes[4]);
-                map.loadSceneFile(scenes[4], sceneUpdates);
-                break;
-            case 5: // Latest Cinnabar Release
-                sceneString.setText(scenes[5]);
-                map.loadSceneFile(scenes[5], sceneUpdates);
-                break;
-            case 6:
-                sceneString.setText(scenes[6]);
-                map.loadSceneFile(scenes[6], sceneUpdates);
-                break;
-            case 7:
-                break;
-            default:
-                sceneString.setText(scenes[0]);
-                map.loadSceneFile(scenes[0], sceneUpdates);
-                break;
+        if (position < scenes.length) {
+            autoCompleteView.setText(scenes[position]);
+            map.loadSceneFile(scenes[position], sceneUpdates);
+        } else {
+            autoCompleteView.setText(null);
+            autoCompleteView.requestFocus();
+            InputMethodManager in = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            in.showSoftInput(autoCompleteView, 0);
         }
     }
 
