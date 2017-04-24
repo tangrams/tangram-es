@@ -6,7 +6,6 @@
 #include "scene/sceneLoader.h"
 #include "scene/scene.h"
 #include "style/style.h"
-#include "scene/importer.h"
 #include "scene/styleContext.h"
 #include "util/mapProjection.h"
 #include "tile/tile.h"
@@ -42,13 +41,10 @@ struct TestContext {
     std::unique_ptr<TileBuilder> tileBuilder;
 
     void loadScene(const char* sceneFile) {
-
-        Importer sceneImporter;
         scene = std::make_shared<Scene>(platform, sceneFile);
+        auto sceneString = platform->stringFromFile(sceneFile);
 
-        try {
-            scene->config() = sceneImporter.applySceneImports(platform, scene);
-        }
+        try { scene->config() = YAML::Load(sceneString); }
         catch (YAML::ParserException e) {
             LOGE("Parsing scene config '%s'", e.what());
             return;

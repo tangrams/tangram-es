@@ -33,7 +33,6 @@
 
 #include "csscolorparser.hpp"
 #include <algorithm>
-#include <cassert>
 #include <iterator>
 #include <regex>
 #include <vector>
@@ -58,7 +57,7 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
 
     Importer sceneImporter;
 
-    _scene->config() = sceneImporter.applySceneImports(_platform, _scene);
+    _scene->config() = sceneImporter.applySceneImports(_platform, _scene->path(), _scene->resourceRoot());
 
     if (!_scene->config()) {
         return false;
@@ -72,8 +71,6 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
     _scene->fontContext()->loadFonts();
 
     applyConfig(_platform, _scene);
-
-    _scene->sceneAssets().clear();
 
     return true;
 }
@@ -581,13 +578,8 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
 
     std::regex r("^(http|https):/");
     std::smatch match;
-
-    auto& asset = scene->sceneAssets()[url];
-    // asset must exist for this path (must be created during scene importing)
-    assert(asset);
-
     // TODO: generalize using URI handlers
-    if (std::regex_search(url, match, r) && !asset->zipHandle()) {
+    if (std::regex_search(url, match, r)) {
         scene->pendingTextures++;
         platform->startUrlRequest(url, [=](std::vector<char>&& rawData) {
                 std::lock_guard<std::mutex> lock(m_textureMutex);
@@ -634,8 +626,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
             }
 
         } else {
-
-            auto data = asset->readBytesFromAsset(platform);
+            auto data = platform->bytesFromFile(url.c_str());
 
             if (data.size() == 0) {
                 LOGE("Can't load texture resource at url '%s'", url.c_str());
@@ -662,7 +653,6 @@ bool SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
         return true;
     }
 
-    LOGE("Missing texture %s", url.c_str());
     return false;
 }
 
@@ -690,10 +680,8 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
     }
 
     auto texture = fetchTexture(platform, name, file, options, generateMipmaps, scene);
-    if (!texture) {
-        LOGE("Missing texture %s", name.c_str());
-        return;
-    }
+    if (!texture) { return; }
+
     std::lock_guard<std::mutex> lock(m_textureMutex);
     if (Node sprites = textureConfig["sprites"]) {
         std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture));
@@ -755,11 +743,7 @@ void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& 
     std::regex regex("^(http|https):/");
     std::smatch match;
 
-    auto& asset = scene->sceneAssets()[_ft.uri];
-    // asset must exist for this path (must be created during scene importing)
-    assert(asset);
-
-    if (std::regex_search(uri, match, regex) && !asset->zipHandle()) {
+    if (std::regex_search(uri, match, regex)) {
         // Load remote
         scene->pendingFonts++;
         platform->startUrlRequest(_ft.uri, [_ft, scene](std::vector<char>&& rawData) {
@@ -771,7 +755,7 @@ void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& 
             scene->pendingFonts--;
         });
     } else {
-        auto data = asset->readBytesFromAsset(platform);
+        auto data = platform->bytesFromFile(_ft.uri.c_str());
 
         if (data.size() == 0) {
             LOGW("Local font at path %s can't be found (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
