@@ -82,7 +82,7 @@ public:
 
 protected:
 
-    bool bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator) const;
+    static bool bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator);
 
 private:
 
