@@ -136,10 +136,15 @@ std::vector<FontSourceHandle> iOSPlatform::systemFontFallbacksHandle() const {
     
         if (!allowedFamily(fallback)) { continue; }
 
-        handles.emplace_back([fallback]() {
-            auto data = loadUIFont([UIFont fontWithName:fallback size:1.0]);
-            return data;
-        });
+        for (id fontName in [UIFont fontNamesForFamilyName:fallback]) {
+            if ( ![fontName containsString:@"-"] || [fontName containsString:@"-Regular"]) {
+                handles.emplace_back([fontName]() {
+                    auto data = loadUIFont([UIFont fontWithName:fontName size:1.0]);
+                    return data;
+                });
+                break;
+            }
+        }
     }
 
     return handles;
