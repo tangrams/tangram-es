@@ -18,7 +18,7 @@ bool Platform::isContinuousRendering() const {
     return m_continuousRendering;
 }
 
-bool Platform::bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator) const {
+bool Platform::bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator) {
     std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
 
     if(!resource.is_open()) {

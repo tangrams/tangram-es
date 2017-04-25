@@ -21,8 +21,7 @@ Context ctx;
 Feature civic, bmw1, bike;
 
 Filter load(const std::string& filterYaml) {
-    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
-    Scene scene(platform);
+    Scene scene(std::make_shared<MockPlatform>(), Url());
     YAML::Node node = YAML::Load(filterYaml);
     auto filter = SceneLoader::generateFilter(node["filter"], scene);
     ctx.initFunctions(scene);

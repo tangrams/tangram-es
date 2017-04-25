@@ -42,7 +42,7 @@ bool loadConfig(const std::string& _sceneString, Node& root) {
 
 TEST_CASE("Apply scene update to a top-level node") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    Scene scene(std::make_shared<MockPlatform>(), Url());
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"map", "new_value"}};
@@ -54,7 +54,7 @@ TEST_CASE("Apply scene update to a top-level node") {
 
 TEST_CASE("Apply scene update to a map entry") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    Scene scene(std::make_shared<MockPlatform>(), Url());
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"map.a", "new_value"}};
@@ -68,7 +68,7 @@ TEST_CASE("Apply scene update to a map entry") {
 
 TEST_CASE("Apply scene update to a nested map entry") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    Scene scene(std::make_shared<MockPlatform>(), Url());
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"nest.map.a", "new_value"}};
@@ -82,7 +82,7 @@ TEST_CASE("Apply scene update to a nested map entry") {
 
 TEST_CASE("Apply scene update to a sequence node") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    Scene scene(std::make_shared<MockPlatform>(), Url());
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"seq", "new_value"}};
@@ -94,7 +94,7 @@ TEST_CASE("Apply scene update to a sequence node") {
 
 TEST_CASE("Apply scene update to a nested sequence node") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    Scene scene(std::make_shared<MockPlatform>(), Url());
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"nest.seq", "new_value"}};
@@ -108,7 +108,7 @@ TEST_CASE("Apply scene update to a nested sequence node") {
 
 TEST_CASE("Apply scene update to a new map entry") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    Scene scene(std::make_shared<MockPlatform>(), Url());
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"map.c", "new_value"}};
@@ -122,7 +122,7 @@ TEST_CASE("Apply scene update to a new map entry") {
 
 TEST_CASE("Do not apply scene update to a non-existent node") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    Scene scene(std::make_shared<MockPlatform>(), Url());
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"none.a", "new_value"}};
@@ -134,7 +134,7 @@ TEST_CASE("Do not apply scene update to a non-existent node") {
 
 TEST_CASE("Apply scene update that removes a node") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    Scene scene(std::make_shared<MockPlatform>(), Url());
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"nest.map", "null"}};
@@ -148,7 +148,7 @@ TEST_CASE("Apply scene update that removes a node") {
 
 TEST_CASE("Apply multiple scene updates in order of request") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    Scene scene(std::make_shared<MockPlatform>(), Url());
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"map.a", "first_value"}, {"map.a", "second_value"}};
@@ -162,7 +162,7 @@ TEST_CASE("Apply multiple scene updates in order of request") {
 
 TEST_CASE("Apply and propogate repeated global value updates") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    Scene scene(std::make_shared<MockPlatform>(), Url());
     REQUIRE(loadConfig(sceneString, scene.config()));
     Node& root = scene.config();
     // Apply initial globals.
@@ -192,7 +192,7 @@ TEST_CASE("Apply and propogate repeated global value updates") {
 TEST_CASE("Regression: scene update requesting a sequence from a scalar") {
 
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    Scene scene(std::make_shared<MockPlatform>(), Url());
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"map.a#0", "new_value"}};
@@ -204,7 +204,7 @@ TEST_CASE("Regression: scene update requesting a sequence from a scalar") {
 }
 
 TEST_CASE("Scene update statuses") {
-    Scene scene(std::make_shared<MockPlatform>());
+    Scene scene(std::make_shared<MockPlatform>(), Url());
     REQUIRE(loadConfig(sceneString, scene.config()));
     Node& root = scene.config();
     std::vector<SceneUpdate> updates = {{"map.a", "{ first_value"}};
