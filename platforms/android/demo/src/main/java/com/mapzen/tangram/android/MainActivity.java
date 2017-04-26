@@ -4,15 +4,9 @@ import android.content.Context;
 import android.graphics.PointF;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Filter;
-import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.AutoCompleteTextView;
 
@@ -40,92 +34,22 @@ import com.mapzen.tangram.LabelPickResult;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, TapResponder,
-        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener, SceneUpdateErrorListener,
-        AdapterView.OnItemSelectedListener, AdapterView.OnItemClickListener {
+        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener, SceneUpdateErrorListener {
 
     private final String apiKey = "vector-tiles-tyHL4AY";
     private ArrayList<SceneUpdate> sceneUpdates = new ArrayList<>();
-
-    /* Override ArrayAdaptor to include any text */
-    private class CustomArrayAdapter extends ArrayAdapter {
-
-        List<String> suggestions;
-
-        Filter nameFilter = new Filter() {
-            @Override
-            public CharSequence convertResultToString(Object resultValue) {
-                return resultValue.toString().toLowerCase();
-            }
-
-            @Override
-            protected FilterResults performFiltering(CharSequence constraint) {
-                if (constraint != null) {
-                    suggestions.clear();
-                    for (String scene: scenes) {
-                        if (scene.toLowerCase().contains(constraint.toString().toLowerCase())) {
-                            suggestions.add(scene);
-                        }
-                    }
-                    if (suggestions.isEmpty()) {
-                        suggestions.add(constraint.toString().toLowerCase()); //include the text when nothing matches
-                    }
-
-                    FilterResults filterResults = new FilterResults();
-                    filterResults.values = suggestions;
-                    filterResults.count = suggestions.size();
-                    return filterResults;
-                } else {
-                    return new FilterResults();
-                }
-            }
-
-            @Override
-            protected void publishResults(CharSequence constraint, FilterResults results) {
-                List<String> filterList = (ArrayList<String>) results.values;
-                if (results != null && results.count > 0) {
-                    clear();
-                    for (String scene: filterList) {
-                        add(scene);
-                        notifyDataSetChanged();
-                    }
-                }
-            }
-        };
-
-        CustomArrayAdapter(Context context, int resource, List<String> objects) {
-            super(context, resource, objects);
-            suggestions = new ArrayList<>();
-        }
-
-        @Override public Filter getFilter() {
-            return nameFilter;
-        }
-    }
 
     MapController map;
     MapView view;
     LngLat lastTappedPoint;
     MapData markers;
 
-    private final String[] scenes = {
-        "scene.yaml",
-        "https://mapzen.com/carto/bubble-wrap-style/bubble-wrap-style.zip",
-        "https://mapzen.com/carto/refill-style/refill-style.zip",
-        "https://mapzen.com/carto/walkabout-style/walkabout-style.zip",
-        "https://mapzen.com/carto/tron-style/tron-style.zip",
-        "https://mapzen.com/carto/cinnabar-style/cinnabar-style.zip",
-        "https://mapzen.com/carto/zinc-style/zinc-style.zip"
-    };
-
-    AutoCompleteTextView autoCompleteView;
-    CustomArrayAdapter customAdapter;
-    Spinner spinner;
+    DemoSceneManager sceneManager;
 
     String pointStylingPath = "layers.touch.point.draw.icons";
     ArrayList<Marker> pointMarkers = new ArrayList<Marker>();
@@ -141,30 +65,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         setContentView(R.layout.main);
 
-        /* setup autocompletetextview adapter */
-        autoCompleteView = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView);
-        List<String> lst = new ArrayList<String>(Arrays.asList(scenes));
-        customAdapter = new CustomArrayAdapter(this, android.R.layout.simple_list_item_1, lst);
-        autoCompleteView.setAdapter(customAdapter);
-        autoCompleteView.setThreshold(1);
-        autoCompleteView.setOnItemClickListener(this);
+        LoadSceneCallback loadSceneCallback = new LoadSceneCallback() {
+            @Override
+            public void loadSceneCallback(String scene) {
+                map.loadSceneFile(scene, sceneUpdates);
+            }
+        };
 
-        /* setup spinner style selecter */
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        spinner = (Spinner) findViewById(R.id.spinner);
-        ArrayAdapter<CharSequence> sceneSelector =
-                ArrayAdapter.createFromResource(this, R.array.style_array, R.layout.simple_spinner_item);
-        sceneSelector.setDropDownViewResource(R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(sceneSelector);
-        spinner.setOnItemSelectedListener(this);
+        sceneManager = new DemoSceneManager((AutoCompleteTextView)findViewById(R.id.autoCompleteTextView),
+                                            (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE),
+                                            loadSceneCallback);
 
         /* setup map view */
         view = (MapView)findViewById(R.id.map);
         view.onCreate(savedInstanceState);
-        autoCompleteView.setText(scenes[0]);
-        view.getMapAsync(this, "scene.yaml", sceneUpdates);
+        view.getMapAsync(this, sceneManager.getCurrentScene(), sceneUpdates);
     }
 
     @Override
@@ -191,41 +106,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         view.onLowMemory();
     }
 
-    @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        int selectedIndex = 7; // custom
-        String sceneText = autoCompleteView.getText().toString();
-        for (int i = 0; i < scenes.length; i++) {
-            if (sceneText.equals(scenes[i])) {
-                selectedIndex = i;
-                break;
-            }
-        }
-        spinner.setSelection(selectedIndex);
-
-        autoCompleteView.clearFocus();
-        InputMethodManager in = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        in.hideSoftInputFromWindow(autoCompleteView.getWindowToken(), 0);
-
-        map.loadSceneFile(autoCompleteView.getText().toString(),sceneUpdates);
-    }
-
-    @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        if (map == null) { return; }
-
-        if (position < scenes.length) {
-            autoCompleteView.setText(scenes[position]);
-            map.loadSceneFile(scenes[position], sceneUpdates);
-        } else {
-            autoCompleteView.setText(null);
-            autoCompleteView.requestFocus();
-            InputMethodManager in = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            in.showSoftInput(autoCompleteView, 0);
-        }
-    }
-
-    @Override public void onNothingSelected(AdapterView<?> parent) {
-        // Do nothing.
-    }
 
     @Override
     public void onMapReady(MapController mapController) {

@@ -1,14 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="style_array">
-        <item>Default Scene</item>
-        <item>Bubble Wrap</item>
-        <item>Refill</item>
-        <item>Walkabout</item>
-        <item>Tron</item>
-        <item>Cinnabar</item>
-        <item>Zinc</item>
-        <item>Custom Scene</item>
-    </string-array>
     <string name="app_name">Tangram</string>
 </resources>
