@@ -51,6 +51,7 @@ MarkerID MarkerManager::add() {
 }
 
 bool MarkerManager::remove(MarkerID markerID) {
+
     for (auto it = m_markers.begin(), end = m_markers.end(); it != end; ++it) {
         if (it->get()->id() == markerID) {
             m_markers.erase(it);
@@ -116,6 +117,8 @@ bool MarkerManager::setVisible(MarkerID markerID, bool visible) {
     }
 
     marker->setVisible(visible);
+
+    m_dirty = true;
     return true;
 }
 
@@ -127,18 +130,19 @@ bool MarkerManager::setDrawOrder(MarkerID markerID, int drawOrder) {
 
     // Sort the marker list by draw order.
     std::stable_sort(m_markers.begin(), m_markers.end(), Marker::compareByDrawOrder);
+
+    m_dirty = true;
     return true;
 }
 
 bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
 
-    if (!m_scene) { return false; }
-
     Marker* marker = getMarkerOrNull(markerID);
-    if (!marker) { return false; }
+    if (!marker || !m_scene) { return false; }
 
     // If the marker does not have a 'point' feature mesh built, build it.
-    if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
+    if (!marker->mesh() || !marker->feature() ||
+        marker->feature()->geometryType != GeometryType::points) {
         auto feature = std::make_unique<Feature>();
         feature->geometryType = GeometryType::points;
         feature->points.emplace_back();
@@ -150,34 +154,32 @@ bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
     auto origin = m_mapProjection->LonLatToMeters({ lngLat.longitude, lngLat.latitude });
     marker->setBounds({ origin, origin });
 
+    m_dirty = true;
     return true;
 }
 
 bool MarkerManager::setPointEased(MarkerID markerID, LngLat lngLat, float duration, EaseType ease) {
 
-    if (!m_scene) { return false; }
-
     Marker* marker = getMarkerOrNull(markerID);
-    if (!marker) { return false; }
+    if (!marker || !m_scene) { return false; }
 
     // If the marker does not have a 'point' feature built, set that point immediately.
-    if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
+    if (!marker->mesh() || !marker->feature() ||
+        marker->feature()->geometryType != GeometryType::points) {
         return setPoint(markerID, lngLat);
     }
 
     auto dest = m_mapProjection->LonLatToMeters({ lngLat.longitude, lngLat.latitude });
     marker->setEase(dest, duration, ease);
 
+    m_dirty = true;
     return true;
 }
 
 bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int count) {
 
-    if (!m_scene) { return false; }
-
     Marker* marker = getMarkerOrNull(markerID);
-    if (!marker) { return false; }
-    if (!coordinates || count < 2) { return false; }
+    if (!marker || !m_scene || !coordinates || count < 2) { return false; }
 
     // Build a feature for the new set of polyline points.
     auto feature = std::make_unique<Feature>();
@@ -214,16 +216,14 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
     // Build a new mesh for the marker.
     buildGeometry(*marker, m_zoom);
 
+    m_dirty = true;
     return true;
 }
 
 bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* counts, int rings) {
 
-    if (!m_scene) { return false; }
-
     Marker* marker = getMarkerOrNull(markerID);
-    if (!marker) { return false; }
-    if (!coordinates || !counts || rings < 1) { return false; }
+    if (!marker || !m_scene || !coordinates || !counts || rings < 1) { return false; }
 
     // Build a feature for the new set of polygon points.
     auto feature = std::make_unique<Feature>();
@@ -274,29 +274,41 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
     // Build a new mesh for the marker.
     buildGeometry(*marker, m_zoom);
 
+    m_dirty = true;
     return true;
 }
 
 bool MarkerManager::update(int zoom) {
 
-    if (zoom == m_zoom) {
+    if (!m_dirty && zoom == m_zoom) {
          return false;
     }
+
+    m_visibleMarkers.clear();
+
     bool rebuilt = false;
     for (auto& marker : m_markers) {
+        if (!marker->isVisible()) { continue; }
+
         if (zoom != marker->builtZoomLevel()) {
             buildGeometry(*marker, zoom);
             rebuilt = true;
         }
+        if (marker->mesh()) {
+            m_visibleMarkers.push_back(marker.get());
+        }
     }
+
     m_zoom = zoom;
+    m_dirty = false;
+
     return rebuilt;
 }
 
 void MarkerManager::removeAll() {
 
     m_markers.clear();
-
+    m_visibleMarkers.clear();
 }
 
 void MarkerManager::rebuildAll() {
@@ -306,10 +318,8 @@ void MarkerManager::rebuildAll() {
         buildGeometry(*entry, m_zoom);
     }
 
-}
-
-const std::vector<std::unique_ptr<Marker>>& MarkerManager::markers() const {
-    return m_markers;
+    m_visibleMarkers.clear();
+    m_dirty = true;
 }
 
 bool MarkerManager::buildStyling(Marker& marker) {
@@ -379,7 +389,7 @@ bool MarkerManager::buildStyling(Marker& marker) {
         YAML::Node node = YAML::Load(markerStyling.string);
         // Parse style parameters from the YAML node.
         SceneLoader::parseStyleParams(node, m_scene, "", params);
-    } catch (YAML::Exception e) {
+    } catch (const YAML::Exception& e) {
         LOG("Invalid marker styling '%s', %s", markerStyling.string.c_str(), e.what());
         return false;
     }

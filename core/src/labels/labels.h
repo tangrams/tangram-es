@@ -38,7 +38,7 @@ public:
     void updateLabelSet(const ViewState& _viewState, float _dt,
                         const std::vector<std::unique_ptr<Style>>& _styles,
                         const std::vector<std::shared_ptr<Tile>>& _tiles,
-                        const std::vector<std::unique_ptr<Marker>>& _markers,
+                        const std::vector<Marker*>& _markers,
                         TileCache& _cache);
 
     /* onlyRender: when the view and tiles have not changed one does not need to update the set of
@@ -47,7 +47,7 @@ public:
     PERF_TRACE void updateLabels(const ViewState& _viewState, float _dt,
                                  const std::vector<std::unique_ptr<Style>>& _styles,
                                  const std::vector<std::shared_ptr<Tile>>& _tiles,
-                                 const std::vector<std::unique_ptr<Marker>>& _markers,
+                                 const std::vector<Marker*>& _markers,
                                  bool _onlyRender = true);
 
     bool needUpdate() const { return m_needUpdate; }

@@ -102,7 +102,7 @@ std::pair<Label*, Tile*> Labels::getLabel(uint32_t _selectionColor) const {
 void Labels::updateLabels(const ViewState& _viewState, float _dt,
                           const std::vector<std::unique_ptr<Style>>& _styles,
                           const std::vector<std::shared_ptr<Tile>>& _tiles,
-                          const std::vector<std::unique_ptr<Marker>>& _markers,
+                          const std::vector<Marker*>& _markers,
                           bool _onlyRender) {
 
     if (!_onlyRender) { m_labels.clear(); }
@@ -411,7 +411,7 @@ bool Labels::withinRepeatDistance(Label *_label) {
 void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
                             const std::vector<std::unique_ptr<Style>>& _styles,
                             const std::vector<std::shared_ptr<Tile>>& _tiles,
-                            const std::vector<std::unique_ptr<Marker>>& _markers,
+                            const std::vector<Marker*>& _markers,
                             TileCache& _cache) {
 
     m_transforms.clear();
