@@ -314,6 +314,8 @@ const std::vector<std::unique_ptr<Marker>>& MarkerManager::markers() const {
 
 bool MarkerManager::buildStyling(Marker& marker) {
 
+    marker.setDrawRuleData(nullptr);
+
     if (!m_scene) { return false; }
 
     std::vector<StyleParam> params;
@@ -392,6 +394,9 @@ bool MarkerManager::buildStyling(Marker& marker) {
 }
 
 bool MarkerManager::buildGeometry(Marker& marker, int zoom) {
+
+    // Make sure old mesh gets invalidated
+    marker.setMesh(0, zoom, nullptr);
 
     auto feature = marker.feature();
     auto rule = marker.drawRule();
