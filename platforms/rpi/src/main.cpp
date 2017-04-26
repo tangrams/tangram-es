@@ -26,11 +26,13 @@
 #define KEY_RIGHT    115    // s
 #define KEY_DOWN     122    // z
 
+using namespace Tangram;
+
 struct timeval tv;
 unsigned long long timePrev, timeStart;
 
-Tangram::Map* map = nullptr;
-std::shared_ptr<Tangram::LinuxPlatform> platform;
+Map* map = nullptr;
+std::shared_ptr<LinuxPlatform> platform;
 
 static bool bUpdate = true;
 
@@ -40,18 +42,13 @@ void newFrame();
 
 int main(int argc, char **argv){
 
-    UrlClient::Environment urlClientEnvironment;
-
     UrlClient::Options urlClientOptions;
     urlClientOptions.numberOfThreads = 4;
 
-    platform = std::make_shared<Tangram::LinuxPlatform>(urlClientOptions);
+    platform = std::make_shared<LinuxPlatform>(urlClientOptions);
 
     // Start OpenGL context
     initGL(argc, argv);
-
-    /* Do Curl Init */
-    curl_global_init(CURL_GLOBAL_DEFAULT);
 
     // Set background color and clear buffers
     setup(argc, argv);
@@ -73,7 +70,6 @@ int main(int argc, char **argv){
         map = nullptr;
     }
 
-    curl_global_cleanup();
     closeGL();
     return 0;
 }
@@ -110,7 +106,7 @@ void setup(int argc, char **argv) {
         }
     }
 
-    map = new Tangram::Map(platform);
+    map = new Map(platform);
     map->loadSceneAsync(scene.c_str(), false, {}, nullptr, {SceneUpdate("global.sdk_mapzen_api_key", apiKey)});
     map->setupGL();
     map->resize(width, height);
