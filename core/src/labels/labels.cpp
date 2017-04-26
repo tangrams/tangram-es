@@ -50,7 +50,7 @@ void Labels::processLabelUpdate(const ViewState& viewState,
                       viewState.viewportSize.y);
 
     for (auto& label : labelMesh->getLabels()) {
-        if (!drawAll && (label->state() == Label::State::dead || label->forceInvisible()) ) {
+        if (!drawAll && (label->state() == Label::State::dead) ) {
             continue;
         }
 
