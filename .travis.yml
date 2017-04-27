@@ -5,6 +5,7 @@ sudo: enabled
 branches:
     only:
         - master
+        - patch-0.6.2
 
 matrix:
     include:

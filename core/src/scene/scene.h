@@ -1,6 +1,5 @@
 #pragma once
 
-#include "scene/asset.h"
 #include "util/color.h"
 #include "view/view.h"
 
@@ -79,7 +78,6 @@ public:
     auto& lightBlocks() { return m_lightShaderBlocks; };
     auto& textures() { return m_textures; };
     auto& functions() { return m_jsFunctions; };
-    auto& sceneAssets() { return m_sceneAssets; };
     auto& spriteAtlases() { return m_spriteAtlases; };
     auto& stops() { return m_stops; }
     auto& background() { return m_background; }
@@ -101,7 +99,6 @@ public:
     const auto& fontContext() const { return m_fontContext; }
     const auto& globalRefs() const { return m_globalRefs; }
     const auto& featureSelection() const { return m_featureSelection; }
-    const auto& sceneAssets() const { return m_sceneAssets; };
 
     const Style* findStyle(const std::string& _name) const;
 
@@ -155,9 +152,6 @@ private:
 
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
-
-    // path as key
-    std::unordered_map<std::string, std::unique_ptr<Asset>> m_sceneAssets;
 
     // Records the YAML Nodes for which global values have been swapped; keys are
     // nodes that referenced globals, values are nodes of globals themselves.
