@@ -5,20 +5,20 @@
     android:focusableInTouchMode="true"
     tools:context=".MainActivity">
 
-    <AutoCompleteTextView
-        android:id="@+id/autoCompleteTextView"
+    <com.mapzen.tangram.android.PresetSelectionTextView
+        android:id="@+id/sceneSelector"
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:imeOptions="actionGo"
+        android:completionThreshold="1"
         android:inputType="textUri"
-        android:selectAllOnFocus="true"
-        android:text="AutoCompleteTextView"/>
+        android:selectAllOnFocus="true"/>
 
     <com.mapzen.tangram.MapView
         android:id="@+id/map"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/autoCompleteTextView">
+        android:layout_below="@+id/sceneSelector">
 
     </com.mapzen.tangram.MapView>
 

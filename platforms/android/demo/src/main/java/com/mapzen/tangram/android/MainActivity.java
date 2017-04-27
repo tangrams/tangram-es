@@ -1,13 +1,10 @@
 package com.mapzen.tangram.android;
 
-import android.content.Context;
 import android.graphics.PointF;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Window;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.AutoCompleteTextView;
 import android.widget.Toast;
 
 import com.mapzen.tangram.HttpHandler;
@@ -32,6 +29,7 @@ import com.mapzen.tangram.TouchInput.TapResponder;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +37,18 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, TapResponder,
         DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener, SceneUpdateErrorListener {
 
-    private final String apiKey = "vector-tiles-tyHL4AY";
+    private static final String API_KEY = "vector-tiles-tyHL4AY";
+
+    private static final String[] SCENE_PRESETS = {
+            "asset:///scene.yaml",
+            "https://mapzen.com/carto/bubble-wrap-style-more-labels/bubble-wrap-style-more-labels.zip",
+            "https://mapzen.com/carto/refill-style-more-labels/refill-style-more-labels.zip",
+            "https://mapzen.com/carto/walkabout-style-more-labels/walkabout-style-more-labels.zip",
+            "https://mapzen.com/carto/tron-style-more-labels/tron-style-more-labels.zip",
+            "https://mapzen.com/carto/cinnabar-style-more-labels/cinnabar-style-more-labels.zip",
+            "https://mapzen.com/carto/zinc-style-more-labels/zinc-style-more-labels.zip"
+    };
+
     private ArrayList<SceneUpdate> sceneUpdates = new ArrayList<>();
 
     MapController map;
@@ -47,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     LngLat lastTappedPoint;
     MapData markers;
 
-    DemoSceneManager sceneManager;
+    PresetSelectionTextView sceneSelector;
 
     String pointStylingPath = "layers.touch.point.draw.icons";
     ArrayList<Marker> pointMarkers = new ArrayList<Marker>();
@@ -56,25 +65,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        sceneUpdates.add(new SceneUpdate("global.sdk_mapzen_api_key", apiKey));
         super.onCreate(savedInstanceState);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         setContentView(R.layout.main);
 
-        DemoSceneManager.LoadSceneCallback loadSceneCallback = new DemoSceneManager.LoadSceneCallback() {
+        // Create a scene update to apply our API key in the scene.
+        sceneUpdates.add(new SceneUpdate("global.sdk_mapzen_api_key", API_KEY));
+
+        // Set up a text view to allow selecting preset and custom scene URLs.
+        sceneSelector = (PresetSelectionTextView)findViewById(R.id.sceneSelector);
+        sceneSelector.setText(SCENE_PRESETS[0]);
+        sceneSelector.setPresetStrings(Arrays.asList(SCENE_PRESETS));
+        sceneSelector.setOnSelectionListener(new PresetSelectionTextView.OnSelectionListener() {
             @Override
-            public void loadSceneCallback(String scene) {
-                map.loadSceneFile(scene, sceneUpdates);
+            public void onSelection(String selection) {
+                map.loadSceneFile(selection, sceneUpdates);
             }
-        };
+        });
 
-        sceneManager = new DemoSceneManager((AutoCompleteTextView)findViewById(R.id.autoCompleteTextView),
-                                            (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE),
-                                            loadSceneCallback);
-
-        /* setup map view */
+        // Grab a reference to our map view.
         view = (MapView)findViewById(R.id.map);
     }
 
@@ -84,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // The AutoCompleteTextView preserves its contents from previous instances, so if a URL was
         // set previously we want to apply it again. The text is restored in onRestoreInstanceState,
         // which occurs after onCreate and onStart, but before onPostCreate, so we get the URL here.
-        String sceneUrl = sceneManager.getCurrentScene();
+        String sceneUrl = sceneSelector.getCurrentString();
         view.getMapAsync(this, sceneUrl, sceneUpdates);
     }
 
