@@ -115,17 +115,36 @@ std::string iOSPlatform::stringFromFile(const char* _path) const {
     return data;
 }
 
+bool allowedFamily(NSString* familyName) {
+    const NSArray<NSString *> *allowedFamilyList = @[ @"Hebrew", @"Kohinoor", @"Gumurki", @"Thonburi", @"Tamil",
+                                                    @"Gurmukhi", @"Kailasa", @"Sangam", @"PingFang", @"Geeza",
+                                                    @"Mishafi", @"Farah", @"Hiragino", @"Gothic" ];
+
+    for (NSString* allowedFamily in allowedFamilyList) {
+        if ( [familyName containsString:allowedFamily] ) { return true; }
+    }
+    return false;
+}
+
 std::vector<FontSourceHandle> iOSPlatform::systemFontFallbacksHandle() const {
-    NSArray* fallbacks = [UIFont familyNames];
+
+    NSArray<NSString *> *fallbacks = [UIFont familyNames];
 
     std::vector<FontSourceHandle> handles;
 
-    for (id fallback in fallbacks) {
+    for (NSString* fallback in fallbacks) {
+    
+        if (!allowedFamily(fallback)) { continue; }
 
-        handles.emplace_back([fallback]() {
-            auto data = loadUIFont([UIFont fontWithName:fallback size:1.0]);
-            return data;
-        });
+        for (NSString* fontName in [UIFont fontNamesForFamilyName:fallback]) {
+            if ( ![fontName containsString:@"-"] || [fontName containsString:@"-Regular"]) {
+                handles.emplace_back([fontName]() {
+                    auto data = loadUIFont([UIFont fontWithName:fontName size:1.0]);
+                    return data;
+                });
+                break;
+            }
+        }
     }
 
     return handles;
