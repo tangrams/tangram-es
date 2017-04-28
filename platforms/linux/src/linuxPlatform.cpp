@@ -8,7 +8,8 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
-#if defined(TANGRAM_LINUX)
+#if defined(TANGRAM_HEADLESS)
+#elif defined(TANGRAM_LINUX)
 #include <GLFW/glfw3.h>
 #elif defined(TANGRAM_RPI)
 #include "context.h"
@@ -36,7 +37,9 @@ LinuxPlatform::LinuxPlatform(UrlClient::Options urlClientOptions) :
     m_urlClient(urlClientOptions) {}
 
 void LinuxPlatform::requestRender() const {
-#if defined(PLATFORM_LINUX)
+#if defined(PLATFORM_HEADLESS)
+
+#elif defined(PLATFORM_LINUX)
     glfwPostEmptyEvent();
 #elif defined(PLATFORM_RPI)
     setRenderRequest(true);

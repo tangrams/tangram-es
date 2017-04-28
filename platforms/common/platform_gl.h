@@ -1,5 +1,15 @@
 #pragma once
 
+#ifdef TANGRAM_HEADLESS
+
+#ifndef GL_GLEXT_PROTOTYPES
+#define GL_GLEXT_PROTOTYPES 1
+#endif
+
+#include "GL/gl.h"
+#include "GL/glext.h"
+#else
+
 #ifdef TANGRAM_ANDROID
 #include <GLES2/gl2platform.h>
 
@@ -62,4 +72,6 @@ static void glGenVertexArrays(GLsizei n, GLuint *arrays) {}
 #if defined(TANGRAM_ANDROID) || defined(TANGRAM_IOS) || defined(TANGRAM_RPI)
     #define glMapBuffer glMapBufferOES
     #define glUnmapBuffer glUnmapBufferOES
-#endif // defined(TANGRAM_ANDROID) || defined(TANGRAM_IOS) || defined(TANGRAM_RPI)
+#endif
+
+#endif // !TANGRAM_HEADLESS
