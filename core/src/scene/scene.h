@@ -32,6 +32,7 @@ class Style;
 class Texture;
 class TileSource;
 struct Stops;
+class Url;
 
 // Delimiter used in sceneloader for style params and layer-sublayer naming
 const std::string DELIMITER = ":";
@@ -103,6 +104,9 @@ public:
     const auto& globalRefs() const { return m_globalRefs; }
     const auto& featureSelection() const { return m_featureSelection; }
     const auto& sceneAssets() const { return m_sceneAssets; };
+
+    void createSceneAsset(const std::shared_ptr<Platform>& platform, const Url& resolvedUrl, const Url& relativeUrl,
+                          const Url& base);
 
     const Style* findStyle(const std::string& _name) const;
 

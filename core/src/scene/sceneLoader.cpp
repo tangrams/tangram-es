@@ -581,7 +581,14 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
     std::smatch match;
 
     auto& asset = scene->sceneAssets()[url];
-    // asset must exist for this path (must be created during scene importing)
+    if (!asset) {
+        // Possible a new asset url was added because of a scene update
+        auto base = Url(scene->path()).resolved(Url(scene->resourceRoot()));
+        auto resolvedTextureUrl = Url(url).resolved(base);
+        scene->createSceneAsset(platform, resolvedTextureUrl.string(), url, base);
+        asset = scene->sceneAssets()[resolvedTextureUrl.string()];
+    }
+    // asset must exist for this path (must be created during scene importing, or above in case of scene updates)
     assert(asset);
 
     // TODO: generalize using URI handlers
@@ -754,6 +761,13 @@ void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& 
     std::smatch match;
 
     auto& asset = scene->sceneAssets()[_ft.uri];
+    if (!asset) {
+        // Possible a new asset url was added because of a scene update
+        auto base = Url(scene->path()).resolved(Url(scene->resourceRoot()));
+        auto resolvedFontUrl = Url(_ft.uri).resolved(base);
+        scene->createSceneAsset(platform, resolvedFontUrl.string(), _ft.uri, base);
+        asset = scene->sceneAssets()[resolvedFontUrl.string()];
+    }
     // asset must exist for this path (must be created during scene importing)
     assert(asset);
 

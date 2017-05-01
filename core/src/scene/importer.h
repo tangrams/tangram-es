@@ -49,8 +49,6 @@ protected:
 
     void resolveSceneUrls(const std::shared_ptr<Platform>& platform, std::shared_ptr<Scene>& scene,
             Node& root, const Url& base);
-    void createSceneAsset(const std::shared_ptr<Platform>& platform, std::shared_ptr<Scene>& scene,
-            const Url& resolvedUrl, const Url& relativeUrl, const Url& base);
 
 private:
     // import scene to respective root nodes
