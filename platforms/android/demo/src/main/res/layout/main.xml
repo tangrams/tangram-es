@@ -9,8 +9,10 @@
         android:id="@+id/autoCompleteTextView"
         android:layout_width="match_parent"
         android:layout_height="80dp"
+        android:imeOptions="actionGo"
+        android:inputType="textUri"
         android:selectAllOnFocus="true"
-        android:text="AutoCompleteTextView" />
+        android:text="AutoCompleteTextView"/>
 
     <com.mapzen.tangram.MapView
         android:id="@+id/map"

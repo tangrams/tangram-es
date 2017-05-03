@@ -2,12 +2,15 @@ package com.mapzen.tangram.android;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Filter;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,7 +20,7 @@ import java.util.List;
  * DemoSceneManager handles entering a scene file URL in a text view using a list of suggestions.
  */
 
-class DemoSceneManager implements AdapterView.OnItemClickListener {
+class DemoSceneManager implements AdapterView.OnItemClickListener, TextView.OnEditorActionListener {
 
     interface LoadSceneCallback {
         void loadSceneCallback(String scene);
@@ -42,9 +45,6 @@ class DemoSceneManager implements AdapterView.OnItemClickListener {
                         if (scene.toLowerCase().contains(constraint.toString().toLowerCase())) {
                             suggestions.add(scene);
                         }
-                    }
-                    if (suggestions.isEmpty()) {
-                        suggestions.add(constraint.toString().toLowerCase()); //include the text when nothing matches
                     }
 
                     FilterResults filterResults = new FilterResults();
@@ -104,14 +104,27 @@ class DemoSceneManager implements AdapterView.OnItemClickListener {
         autoCompleteView.setAdapter(urlLoaderAdapter);
         autoCompleteView.setThreshold(1);
         autoCompleteView.setOnItemClickListener(this);
+        autoCompleteView.setOnEditorActionListener(this);
         autoCompleteView.setText(scenes[0]);
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        completeSelection();
+    }
+
+    @Override
+    public boolean onEditorAction(TextView textView, int action, KeyEvent keyEvent) {
+        if (action == EditorInfo.IME_ACTION_GO) {
+            completeSelection();
+            return true;
+        }
+        return false;
+    }
+
+    private void completeSelection() {
         autoCompleteView.clearFocus();
         inputMethodService.hideSoftInputFromWindow(autoCompleteView.getWindowToken(), 0);
-
         loadSceneCb.loadSceneCallback(autoCompleteView.getText().toString());
     }
 
