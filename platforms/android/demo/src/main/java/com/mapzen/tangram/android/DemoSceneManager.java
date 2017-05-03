@@ -1,6 +1,7 @@
 package com.mapzen.tangram.android;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -13,14 +14,14 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by varuntalwar on 4/26/17.
+ * DemoSceneManager handles entering a scene file URL in a text view using a list of suggestions.
  */
 
-interface LoadSceneCallback {
-    void loadSceneCallback(String scene);
-}
-
 class DemoSceneManager implements AdapterView.OnItemClickListener {
+
+    interface LoadSceneCallback {
+        void loadSceneCallback(String scene);
+    }
 
     // Override ArrayAdaptor to include any text
     private class SceneAutoCompleteArrayAdapter extends ArrayAdapter {
@@ -73,7 +74,8 @@ class DemoSceneManager implements AdapterView.OnItemClickListener {
             suggestions = new ArrayList<>();
         }
 
-        @Override public Filter getFilter() {
+        @Override @NonNull
+        public Filter getFilter() {
             return nameFilter;
         }
     }
@@ -105,12 +107,13 @@ class DemoSceneManager implements AdapterView.OnItemClickListener {
         autoCompleteView.setText(scenes[0]);
     }
 
-    @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         autoCompleteView.clearFocus();
         inputMethodService.hideSoftInputFromWindow(autoCompleteView.getWindowToken(), 0);
 
         loadSceneCb.loadSceneCallback(autoCompleteView.getText().toString());
-    };
+    }
 
     String getCurrentScene() {
         return autoCompleteView.getText().toString();

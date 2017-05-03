@@ -7,30 +7,28 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Toast;
 import android.widget.AutoCompleteTextView;
+import android.widget.Toast;
 
 import com.mapzen.tangram.HttpHandler;
+import com.mapzen.tangram.LabelPickResult;
 import com.mapzen.tangram.LngLat;
 import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapController.FeaturePickListener;
 import com.mapzen.tangram.MapController.LabelPickListener;
 import com.mapzen.tangram.MapController.MarkerPickListener;
-import com.mapzen.tangram.MapController.ViewCompleteListener;
 import com.mapzen.tangram.MapController.SceneUpdateErrorListener;
+import com.mapzen.tangram.MapController.ViewCompleteListener;
 import com.mapzen.tangram.MapData;
-import com.mapzen.tangram.Marker;
-import com.mapzen.tangram.SceneUpdate;
-import com.mapzen.tangram.SceneUpdateError;
 import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.MapView.OnMapReadyCallback;
 import com.mapzen.tangram.Marker;
 import com.mapzen.tangram.MarkerPickResult;
 import com.mapzen.tangram.SceneUpdate;
+import com.mapzen.tangram.SceneUpdateError;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
-import com.mapzen.tangram.LabelPickResult;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -65,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         setContentView(R.layout.main);
 
-        LoadSceneCallback loadSceneCallback = new LoadSceneCallback() {
+        DemoSceneManager.LoadSceneCallback loadSceneCallback = new DemoSceneManager.LoadSceneCallback() {
             @Override
             public void loadSceneCallback(String scene) {
                 map.loadSceneFile(scene, sceneUpdates);
