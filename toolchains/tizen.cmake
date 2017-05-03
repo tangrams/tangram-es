@@ -7,7 +7,7 @@ endif()
 set(PLATFORM_TIZEN ON)
 
 # Tell SQLiteCpp to not build its own copy of SQLite, we will use the system library instead.
-set(SQLITECPP_INTERNAL_SQLITE OFF)
+#set(SQLITECPP_INTERNAL_SQLITE OFF)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fPIC")
 
