@@ -174,9 +174,11 @@ bool DynamicQuadMesh<T>::draw(RenderState& rs, ShaderProgram& shader, int textur
         size_t elementsInBatch = verticesInBatch * 6 / 4;
         GL::drawElements(m_drawMode, elementsInBatch, GL_UNSIGNED_SHORT, 0);
 
+#ifdef DYNAMIC_MESH_VAOS
         if (useVao && vertexPos == 0) {
             m_vaos.unbind();
         }
+#endif
 
         // Update counters.
         vertexPos += verticesInBatch;
