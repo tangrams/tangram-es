@@ -71,7 +71,7 @@ Scene::Scene(const Scene& _other)
     m_globalRefs = _other.m_globalRefs;
 
     m_mapProjection.reset(new MercatorProjection());
-    m_sceneAssets = _other.sceneAssets();
+    m_assets = _other.assets();
 }
 
 Scene::~Scene() {}
@@ -158,7 +158,7 @@ void Scene::createSceneAsset(const std::shared_ptr<Platform>& platform, const Ur
     auto& baseStr = base.string();
     std::shared_ptr<Asset> asset;
 
-    if (m_sceneAssets.find(resolvedStr) != m_sceneAssets.end()) { return; }
+    if (m_assets.find(resolvedStr) != m_assets.end()) { return; }
 
     if ( (Url::getPathExtension(resolvedUrl.path()) == "zip") ){
         if (relativeUrl.hasHttpScheme() || (resolvedUrl.hasHttpScheme() && base.isEmpty())) {
@@ -168,14 +168,14 @@ void Scene::createSceneAsset(const std::shared_ptr<Platform>& platform, const Ur
         } else if (relativeUrl.isAbsolute() || base.isEmpty()) {
             asset = std::make_shared<ZippedAsset>(resolvedStr, nullptr, platform->bytesFromFile(resolvedStr.c_str()));
         } else {
-            auto parentAsset = static_cast<ZippedAsset*>(m_sceneAssets[baseStr].get());
+            auto parentAsset = static_cast<ZippedAsset*>(m_assets[baseStr].get());
             // Parent asset (for base Str) must have been created by now
             assert(parentAsset);
             asset = std::make_shared<ZippedAsset>(resolvedStr, nullptr,
                                                                        parentAsset->readBytesFromAsset(platform, resolvedStr));
         }
     } else {
-        const auto& parentAsset = m_sceneAssets[baseStr];
+        const auto& parentAsset = m_assets[baseStr];
 
         if (relativeUrl.isAbsolute() || (parentAsset && !parentAsset->zipHandle())) {
             // Make sure to first check for cases when the asset does not belong within a zipBundle
@@ -188,7 +188,7 @@ void Scene::createSceneAsset(const std::shared_ptr<Platform>& platform, const Ur
         }
     }
 
-    m_sceneAssets[resolvedStr] = asset;
+    m_assets[resolvedStr] = asset;
 }
 
 }

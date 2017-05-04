@@ -584,7 +584,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
     std::regex r("^(http|https):/");
     std::smatch match;
 
-    auto& asset = scene->sceneAssets()[url];
+    auto& asset = scene->assets()[url];
     if (!asset) {
         LOGE("Asset missing at path: %s.", url.c_str());
         return texture;
@@ -759,7 +759,7 @@ void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& 
     std::regex regex("^(http|https):/");
     std::smatch match;
 
-    auto& asset = scene->sceneAssets()[_ft.uri];
+    auto& asset = scene->assets()[_ft.uri];
     if (!asset) {
         LOGE("Asset missing at path: %s.", _ft.uri.c_str());
         return;

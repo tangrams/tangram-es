@@ -60,7 +60,7 @@ Node Importer::applySceneImports(const std::shared_ptr<Platform>& platform,
         }
 
         bool isZipped = (Url::getPathExtension(path.path()) == "zip");
-        auto& asset = scene->sceneAssets()[path.string()];
+        auto& asset = scene->assets()[path.string()];
         // An asset at this path must have been created by now.
         assert(asset);
 
@@ -69,7 +69,7 @@ Node Importer::applySceneImports(const std::shared_ptr<Platform>& platform,
             platform->startUrlRequest(path.string(), [&, isZipped, path](std::vector<char>&& rawData) {
                 if (!rawData.empty()) {
                     std::unique_lock<std::mutex> lock(sceneMutex);
-                    auto& asset = scene->sceneAssets()[path.string()];
+                    auto& asset = scene->assets()[path.string()];
                     if (isZipped) {
                         auto& zippedAsset = static_cast<ZippedAsset&>(*asset);
                         zippedAsset.buildZipHandle(rawData);
