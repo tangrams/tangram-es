@@ -76,8 +76,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         /* setup map view */
         view = (MapView)findViewById(R.id.map);
-        view.onCreate(savedInstanceState);
-        view.getMapAsync(this, sceneManager.getCurrentScene(), sceneUpdates);
+    }
+
+    @Override
+    public void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        // The AutoCompleteTextView preserves its contents from previous instances, so if a URL was
+        // set previously we want to apply it again. The text is restored in onRestoreInstanceState,
+        // which occurs after onCreate and onStart, but before onPostCreate, so we get the URL here.
+        String sceneUrl = sceneManager.getCurrentScene();
+        view.getMapAsync(this, sceneUrl, sceneUpdates);
     }
 
     @Override
