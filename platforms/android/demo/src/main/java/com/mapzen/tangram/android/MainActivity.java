@@ -37,7 +37,7 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, TapResponder,
         DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener, SceneUpdateErrorListener {
 
-    private static final String API_KEY = "vector-tiles-tyHL4AY";
+    private static final String MAPZEN_API_KEY = BuildConfig.MAPZEN_API_KEY;
 
     private static final String[] SCENE_PRESETS = {
             "asset:///scene.yaml",
@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.main);
 
         // Create a scene update to apply our API key in the scene.
-        sceneUpdates.add(new SceneUpdate("global.sdk_mapzen_api_key", API_KEY));
+        sceneUpdates.add(new SceneUpdate("global.sdk_mapzen_api_key", MAPZEN_API_KEY));
 
         // Set up a text view to allow selecting preset and custom scene URLs.
         sceneSelector = (PresetSelectionTextView)findViewById(R.id.sceneSelector);
