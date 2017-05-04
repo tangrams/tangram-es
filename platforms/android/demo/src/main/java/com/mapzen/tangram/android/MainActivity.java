@@ -1,33 +1,34 @@
 package com.mapzen.tangram.android;
 
-import android.app.Activity;
+import android.content.Context;
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Window;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.AutoCompleteTextView;
 import android.widget.Toast;
 
 import com.mapzen.tangram.HttpHandler;
+import com.mapzen.tangram.LabelPickResult;
 import com.mapzen.tangram.LngLat;
 import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapController.FeaturePickListener;
 import com.mapzen.tangram.MapController.LabelPickListener;
 import com.mapzen.tangram.MapController.MarkerPickListener;
-import com.mapzen.tangram.MapController.ViewCompleteListener;
 import com.mapzen.tangram.MapController.SceneUpdateErrorListener;
+import com.mapzen.tangram.MapController.ViewCompleteListener;
 import com.mapzen.tangram.MapData;
-import com.mapzen.tangram.Marker;
-import com.mapzen.tangram.SceneUpdate;
-import com.mapzen.tangram.SceneUpdateError;
 import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.MapView.OnMapReadyCallback;
 import com.mapzen.tangram.Marker;
 import com.mapzen.tangram.MarkerPickResult;
 import com.mapzen.tangram.SceneUpdate;
+import com.mapzen.tangram.SceneUpdateError;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
-import com.mapzen.tangram.LabelPickResult;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -35,13 +36,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MainActivity extends Activity implements OnMapReadyCallback, TapResponder,
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, TapResponder,
         DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener, SceneUpdateErrorListener {
+
+    private final String apiKey = "vector-tiles-tyHL4AY";
+    private ArrayList<SceneUpdate> sceneUpdates = new ArrayList<>();
 
     MapController map;
     MapView view;
     LngLat lastTappedPoint;
     MapData markers;
+
+    DemoSceneManager sceneManager;
 
     String pointStylingPath = "layers.touch.point.draw.icons";
     ArrayList<Marker> pointMarkers = new ArrayList<Marker>();
@@ -50,8 +56,6 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        final ArrayList<SceneUpdate> sceneUpdates = new ArrayList<>(1);
-        final String apiKey = "vector-tiles-tyHL4AY";
         sceneUpdates.add(new SceneUpdate("global.sdk_mapzen_api_key", apiKey));
         super.onCreate(savedInstanceState);
 
@@ -59,9 +63,29 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
 
         setContentView(R.layout.main);
 
+        DemoSceneManager.LoadSceneCallback loadSceneCallback = new DemoSceneManager.LoadSceneCallback() {
+            @Override
+            public void loadSceneCallback(String scene) {
+                map.loadSceneFile(scene, sceneUpdates);
+            }
+        };
+
+        sceneManager = new DemoSceneManager((AutoCompleteTextView)findViewById(R.id.autoCompleteTextView),
+                                            (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE),
+                                            loadSceneCallback);
+
+        /* setup map view */
         view = (MapView)findViewById(R.id.map);
-        view.onCreate(savedInstanceState);
-        view.getMapAsync(this, "scene.yaml", sceneUpdates);
+    }
+
+    @Override
+    public void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        // The AutoCompleteTextView preserves its contents from previous instances, so if a URL was
+        // set previously we want to apply it again. The text is restored in onRestoreInstanceState,
+        // which occurs after onCreate and onStart, but before onPostCreate, so we get the URL here.
+        String sceneUrl = sceneManager.getCurrentScene();
+        view.getMapAsync(this, sceneUrl, sceneUpdates);
     }
 
     @Override
@@ -87,6 +111,7 @@ public class MainActivity extends Activity implements OnMapReadyCallback, TapRes
         super.onLowMemory();
         view.onLowMemory();
     }
+
 
     @Override
     public void onMapReady(MapController mapController) {
