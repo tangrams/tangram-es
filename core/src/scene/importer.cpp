@@ -146,8 +146,7 @@ bool nodeIsTextureUrl(const Node& node, const Node& textures) {
     return true;
 }
 
-void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform,
-        std::shared_ptr<Scene>& scene, Node& root, const Url& base) {
+void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform, Scene& scene, Node& root, const Url& base) {
 
     // Resolve global texture URLs.
     std::string relativeUrl = "";
@@ -160,7 +159,7 @@ void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform,
                 if (nodeIsPotentialUrl(textureUrlNode)) {
                     relativeUrl = textureUrlNode.Scalar();
                     textureUrlNode = Url(textureUrlNode.Scalar()).resolved(base).string();
-                    scene->createSceneAsset(platform, textureUrlNode.Scalar(), relativeUrl, base);
+                    scene.createSceneAsset(platform, textureUrlNode.Scalar(), relativeUrl, base);
                 }
             }
         }
@@ -180,7 +179,7 @@ void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform,
                 if (nodeIsTextureUrl(texture, textures)) {
                     relativeUrl = texture.Scalar();
                     texture = Url(texture.Scalar()).resolved(base).string();
-                    scene->createSceneAsset(platform, texture.Scalar(), relativeUrl, base);
+                    scene.createSceneAsset(platform, texture.Scalar(), relativeUrl, base);
                 }
             }
 
@@ -194,7 +193,7 @@ void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform,
                             if (nodeIsTextureUrl(matTexture, textures)) {
                                 relativeUrl = matTexture.Scalar();
                                 matTexture = Url(matTexture.Scalar()).resolved(base).string();
-                                scene->createSceneAsset(platform, matTexture.Scalar(), relativeUrl, base);
+                                scene.createSceneAsset(platform, matTexture.Scalar(), relativeUrl, base);
                             }
                         }
                     }
@@ -210,13 +209,13 @@ void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform,
                         if (nodeIsTextureUrl(uniformValue, textures)) {
                             relativeUrl = uniformValue.Scalar();
                             uniformValue = Url(uniformValue.Scalar()).resolved(base).string();
-                            scene->createSceneAsset(platform, uniformValue.Scalar(), relativeUrl, base);
+                            scene.createSceneAsset(platform, uniformValue.Scalar(), relativeUrl, base);
                         } else if (uniformValue.IsSequence()) {
                             for (Node u : uniformValue) {
                                 if (nodeIsTextureUrl(u, textures)) {
                                     relativeUrl = u.Scalar();
                                     u = Url(u.Scalar()).resolved(base).string();
-                                    scene->createSceneAsset(platform, u.Scalar(), relativeUrl, base);
+                                    scene.createSceneAsset(platform, u.Scalar(), relativeUrl, base);
                                 }
                             }
                         }
@@ -252,7 +251,7 @@ void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform,
                     if (nodeIsPotentialUrl(urlNode)) {
                         relativeUrl = urlNode.Scalar();
                         urlNode = Url(urlNode.Scalar()).resolved(base).string();
-                        scene->createSceneAsset(platform, urlNode.Scalar(), relativeUrl, base);
+                        scene.createSceneAsset(platform, urlNode.Scalar(), relativeUrl, base);
                     }
                 } else if (font.second.IsSequence()) {
                     for (auto& fontNode : font.second) {
@@ -260,7 +259,7 @@ void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform,
                         if (nodeIsPotentialUrl(urlNode)) {
                             relativeUrl = urlNode.Scalar();
                             urlNode = Url(urlNode.Scalar()).resolved(base).string();
-                            scene->createSceneAsset(platform, urlNode.Scalar(), relativeUrl, base);
+                            scene.createSceneAsset(platform, urlNode.Scalar(), relativeUrl, base);
                         }
                     }
                 }
@@ -335,7 +334,7 @@ void Importer::importScenesRecursive(const std::shared_ptr<Platform>& platform,
 
     mergeMapFields(root, sceneNode);
 
-    resolveSceneUrls(platform, scene, root, scenePath);
+    resolveSceneUrls(platform, *scene, root, scenePath);
 }
 
 void Importer::mergeMapFields(Node& target, const Node& import) {

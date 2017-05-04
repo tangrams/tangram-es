@@ -64,7 +64,7 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
         return false;
     }
 
-    if (!applyUpdates(*_scene, _updates, _onSceneUpdateError)) {
+    if (!applyUpdates(_platform, *_scene, _updates, _onSceneUpdateError)) {
         LOGW("Scene updates failed when loading scene");
     }
 
@@ -76,7 +76,8 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
     return true;
 }
 
-bool SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates, SceneUpdateErrorCallback onSceneUpdateError) {
+bool SceneLoader::applyUpdates(const std::shared_ptr<Platform>& platform, Scene& scene,
+                               const std::vector<SceneUpdate>& updates, SceneUpdateErrorCallback onSceneUpdateError) {
     auto& root = scene.config();
 
     for (const auto& update : updates) {
@@ -119,6 +120,9 @@ bool SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& upd
             return false;
         }
     }
+
+    Importer importer;
+    importer.resolveSceneUrls(platform, scene, root, Url(scene.path()).resolved(Url(scene.resourceRoot())));
 
     return true;
 }
@@ -582,14 +586,9 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
 
     auto& asset = scene->sceneAssets()[url];
     if (!asset) {
-        // Possible a new asset url was added because of a scene update
-        auto base = Url(scene->path()).resolved(Url(scene->resourceRoot()));
-        auto resolvedTextureUrl = Url(url).resolved(base);
-        scene->createSceneAsset(platform, resolvedTextureUrl.string(), url, base);
-        asset = scene->sceneAssets()[resolvedTextureUrl.string()];
+        LOGE("Asset missing at path: %s.", url.c_str());
+        return texture;
     }
-    // asset must exist for this path (must be created during scene importing, or above in case of scene updates)
-    assert(asset);
 
     // TODO: generalize using URI handlers
     if (std::regex_search(url, match, r) && !asset->zipHandle()) {
@@ -762,14 +761,9 @@ void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& 
 
     auto& asset = scene->sceneAssets()[_ft.uri];
     if (!asset) {
-        // Possible a new asset url was added because of a scene update
-        auto base = Url(scene->path()).resolved(Url(scene->resourceRoot()));
-        auto resolvedFontUrl = Url(_ft.uri).resolved(base);
-        scene->createSceneAsset(platform, resolvedFontUrl.string(), _ft.uri, base);
-        asset = scene->sceneAssets()[resolvedFontUrl.string()];
+        LOGE("Asset missing at path: %s.", _ft.uri.c_str());
+        return;
     }
-    // asset must exist for this path (must be created during scene importing)
-    assert(asset);
 
     if (std::regex_search(uri, match, regex) && !asset->zipHandle()) {
         // Load remote

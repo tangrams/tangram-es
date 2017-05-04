@@ -71,9 +71,7 @@ Scene::Scene(const Scene& _other)
     m_globalRefs = _other.m_globalRefs;
 
     m_mapProjection.reset(new MercatorProjection());
-    for (auto& sceneAsset: _other.sceneAssets()) {
-        m_sceneAssets[sceneAsset.first.k] = sceneAsset.second;
-    }
+    m_sceneAssets = _other.sceneAssets();
 }
 
 Scene::~Scene() {}
