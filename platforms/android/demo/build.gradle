@@ -25,4 +25,5 @@ android {
 
 dependencies {
   compile project(path: ':tangram')
+  compile 'com.android.support:design:25.3.1'
 }
