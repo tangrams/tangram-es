@@ -1,6 +1,7 @@
 #include "mops.h"
 
 #include <memory>
+#include <network/net_connection.h>
 
 #include "platform_tizen.h"
 
@@ -520,11 +521,39 @@ static void create_base_gui(App *ad) {
 	}, ad);
 }
 
+
+static bool get_proxy_address(char **proxyAddress)
+{
+	*proxyAddress = nullptr;
+
+	connection_h con = nullptr;
+	int errorCode = CONNECTION_ERROR_NOT_SUPPORTED;
+
+	errorCode = connection_create(&con);
+
+	if (errorCode == CONNECTION_ERROR_NONE) {
+		errorCode = connection_get_proxy(con, CONNECTION_ADDRESS_FAMILY_IPV4, proxyAddress);
+	}
+
+	if (con)
+		connection_destroy(con);
+
+	return errorCode == CONNECTION_ERROR_NONE;
+}
+
 static bool app_create(void *data) {
 
 	LOG(">>> APP_CREATE");
-	App *ad = (App*) data;
-	ad->platform = std::make_shared<Tangram::TizenPlatform>();
+	App *ad = static_cast<App*>(data);
+
+	Tangram::UrlClient::Options urlOptions;
+	char* proxyAddress = nullptr;
+	if (get_proxy_address(&proxyAddress) && proxyAddress) {
+		urlOptions.proxyAddress = proxyAddress;
+	}
+	free(proxyAddress);
+
+	ad->platform = std::make_shared<Tangram::TizenPlatform>(urlOptions);
 
 	ad->map = new Tangram::Map(ad->platform);
 	ad->map->setPixelScale(1.75f);
