@@ -538,13 +538,12 @@ static bool app_create(void *data) {
 	create_base_gui(ad);
 
 	ad->platform->setRenderCallbackFunction([ad](){
-
 		ad->dirty = true;
 
 		ecore_main_loop_thread_safe_call_async([](void* data){
-			//LOG("CHANGED: %p", data);
-			//auto glview = reinterpret_cast<Evas_Object*>(data);
-			//elm_glview_changed_set(glview);
+		    // Doing elm_glview_changed_set here seems not reliably triggering
+			// a redraw. Force to run the mainloop this way and set changed in
+			// next idle_enterer.
 			ecore_timer_add(0.0, [](void*){return EINA_FALSE;}, nullptr);
 		}, ad->glview);
 	});
@@ -552,8 +551,6 @@ static bool app_create(void *data) {
 	ad->idler = ecore_idle_enterer_add([](void* data){
 		auto ad = reinterpret_cast<App*>(data);
 		if (ad->dirty) {
-			//LOG("DIRTY");
-					;
 			elm_glview_changed_set(ad->glview);
 			ad->dirty = false;
 		}
