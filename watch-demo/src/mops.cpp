@@ -32,7 +32,7 @@ struct App {
 		bool panning = false;
 	} event;
 
-	Tangram::Map *map = nullptr;
+	std::unique_ptr<Tangram::Map> map;
 	std::shared_ptr<Tangram::TizenPlatform> platform;
 
 	Ecore_Idle_Enterer *idler = nullptr;
@@ -45,8 +45,6 @@ struct App {
 	std::string resourcePath = "";
 };
 
-
-
 static void _draw_gl(Evas_Object *obj) {
 
 	App* ad = (App*) evas_object_data_get(obj, "App");
@@ -58,14 +56,9 @@ static void _draw_gl(Evas_Object *obj) {
 	}
 	ad->time = time;
 
-	//LOG(">>> DRAW GL %f", t);
-
 	ad->map->update(t);
-	//LOG("<<< RENDER");
 
 	ad->map->render();
-
-	//LOG("<<< DRAW GL");
 }
 
 static void _resize_gl(Evas_Object *obj) {
@@ -383,8 +376,6 @@ static void create_base_gui(App *ad) {
 	 when indicator or virtual keypad is visible. */
 	ad->conform = elm_conformant_add(ad->win);
 
-	//Eext_Circle_Surface *sur = eext_circle_surface_conformant_add(ad->conform);
-
 	elm_win_indicator_mode_set(ad->win, ELM_WIN_INDICATOR_HIDE);
 	elm_win_indicator_opacity_set(ad->win, ELM_WIN_INDICATOR_TRANSPARENT);
 	evas_object_size_hint_weight_set(ad->conform, EVAS_HINT_EXPAND,	EVAS_HINT_EXPAND);
@@ -462,9 +453,6 @@ static void create_base_gui(App *ad) {
 	elm_gesture_layer_cb_set(g, ELM_GESTURE_N_LINES, ELM_GESTURE_STATE_END, line_end, ad);
 	elm_gesture_layer_cb_set(g, ELM_GESTURE_N_LINES, ELM_GESTURE_STATE_ABORT, line_abort, ad);
 
-	//elm_gesture_layer_line_min_length_set(g, 1000);
-	//elm_gesture_layer_line_distance_tolerance_set(g, 0);
-
 	elm_gesture_layer_rotate_angular_tolerance_set(g, 5);
 	elm_gesture_layer_zoom_distance_tolerance_set(g, 20);
 
@@ -472,11 +460,6 @@ static void create_base_gui(App *ad) {
 
 	evas_object_size_hint_align_set(ad->glview, EVAS_HINT_FILL, EVAS_HINT_FILL);
 	evas_object_size_hint_weight_set(ad->glview, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-
-	//elm_object_content_set(ad->conform, obj);
-	//elm_object_focus_set(obj, EINA_TRUE);
-
-
 
 	eext_rotary_object_event_callback_add(ad->glview,
 			[](void *data, Evas_Object *obj, Eext_Rotary_Event_Info *info) {
@@ -498,11 +481,6 @@ static void create_base_gui(App *ad) {
 
 	evas_object_show(ad->glview);
 	elm_object_part_content_set(options, "elm.swallow.content", ad->glview);
-
-	//elm_naviframe_item_simple_push(nf, ad->glview);
-
-	//evas_object_raise(options);
-
 
 	evas_object_show(nf);
 
@@ -555,7 +533,8 @@ static bool app_create(void *data) {
 
 	ad->platform = std::make_shared<Tangram::TizenPlatform>(urlOptions);
 
-	ad->map = new Tangram::Map(ad->platform);
+	ad->map = std::make_unique<Tangram::Map>(ad->platform);
+
 	ad->map->setPixelScale(1.75f);
 
 	char *app_res = app_get_resource_path();
@@ -612,7 +591,9 @@ static void app_terminate(void *data) {
 	if (ad->idler) {
 		ecore_idle_enterer_del(ad->idler);
 	}
-	delete ad->map;
+
+	ad->map.reset();
+
 	LOG("<<< TERMINATE");
 }
 
@@ -642,34 +623,38 @@ static void ui_app_low_memory(app_event_info_h event_info, void *user_data) {
 
 int main(int argc, char *argv[]) {
 
-	App app;
-
 	int ret = 0;
 
-	ui_app_lifecycle_callback_s event_callback = { 0, };
-	app_event_handler_h handlers[5] = { NULL, };
+	{
+		App app{};
 
-	event_callback.create = app_create;
-	event_callback.terminate = app_terminate;
-	event_callback.pause = app_pause;
-	event_callback.resume = app_resume;
-	event_callback.app_control = app_control;
+		ui_app_lifecycle_callback_s event_callback = { 0, };
+		app_event_handler_h handlers[5] = { NULL, };
 
-	ui_app_add_event_handler(&handlers[APP_EVENT_LOW_BATTERY],
-			APP_EVENT_LOW_BATTERY, ui_app_low_battery, &app);
-	ui_app_add_event_handler(&handlers[APP_EVENT_LOW_MEMORY],
-			APP_EVENT_LOW_MEMORY, ui_app_low_memory, &app);
-	ui_app_add_event_handler(&handlers[APP_EVENT_DEVICE_ORIENTATION_CHANGED],
-			APP_EVENT_DEVICE_ORIENTATION_CHANGED, ui_app_orient_changed, &app);
-	ui_app_add_event_handler(&handlers[APP_EVENT_LANGUAGE_CHANGED],
-			APP_EVENT_LANGUAGE_CHANGED, ui_app_lang_changed, &app);
-	ui_app_add_event_handler(&handlers[APP_EVENT_REGION_FORMAT_CHANGED],
-			APP_EVENT_REGION_FORMAT_CHANGED, ui_app_region_changed, &app);
+		event_callback.create = app_create;
+		event_callback.terminate = app_terminate;
+		event_callback.pause = app_pause;
+		event_callback.resume = app_resume;
+		event_callback.app_control = app_control;
 
-	ret = ui_app_main(argc, argv, &event_callback, &app);
-	if (ret != APP_ERROR_NONE) {
-		dlog_print(DLOG_ERROR, TAG, "app_main() is failed. err = %d", ret);
+		ui_app_add_event_handler(&handlers[APP_EVENT_LOW_BATTERY],
+				APP_EVENT_LOW_BATTERY, ui_app_low_battery, &app);
+		ui_app_add_event_handler(&handlers[APP_EVENT_LOW_MEMORY],
+				APP_EVENT_LOW_MEMORY, ui_app_low_memory, &app);
+		ui_app_add_event_handler(&handlers[APP_EVENT_DEVICE_ORIENTATION_CHANGED],
+				APP_EVENT_DEVICE_ORIENTATION_CHANGED, ui_app_orient_changed, &app);
+		ui_app_add_event_handler(&handlers[APP_EVENT_LANGUAGE_CHANGED],
+				APP_EVENT_LANGUAGE_CHANGED, ui_app_lang_changed, &app);
+		ui_app_add_event_handler(&handlers[APP_EVENT_REGION_FORMAT_CHANGED],
+				APP_EVENT_REGION_FORMAT_CHANGED, ui_app_region_changed, &app);
+
+		ret = ui_app_main(argc, argv, &event_callback, &app);
+		if (ret != APP_ERROR_NONE) {
+			dlog_print(DLOG_ERROR, TAG, "app_main() is failed. err = %d", ret);
+		}
+		LOG(">>> CLEANUP <<<");
 	}
+
 	LOG(">>> TERMINATED NICELY <<<");
 
 	return ret;
