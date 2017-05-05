@@ -9,6 +9,7 @@ option(TANGRAM_USE_SYSTEM_GLFW_LIBS "Use system libraries for GLFW3 via pkgconfi
 option(TANGRAM_BUILD_TESTS "Build unit tests" OFF)
 option(TANGRAM_BUNDLE_TESTS "Compile all tests into a single binary" ON)
 option(TANGRAM_BUILD_BENCHMARKS "Build benchmarks" OFF)
+option(TANGRAM_BUILD_SCENE_COMPILER "Build Scene compiler" OFF)
 option(TANGRAM_DEV_MODE "For developers only: Don't omit the frame pointer" OFF)
 
 message(STATUS "Build type configuration: ${CMAKE_BUILD_TYPE}")
@@ -83,4 +84,10 @@ endif()
 if(TANGRAM_BUILD_BENCHMARKS)
   message(STATUS "Building benchmarks")
   add_subdirectory(bench)
+endif()
+
+if(TANGRAM_BUILD_SCENE_COMPILER)
+  if (TANGRAM_PLATFORM STREQUAL "linux" OR TANGRAM_PLATFORM STREQUAL "osx")
+    add_subdirectory(tools/scenecompiler)
+  endif()
 endif()
