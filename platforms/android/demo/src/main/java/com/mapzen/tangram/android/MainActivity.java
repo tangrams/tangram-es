@@ -228,15 +228,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         Log.d("Tangram", "Picked: " + name);
         final String message = name;
-        runOnUiThread(new Runnable() {
-                          @Override
-                          public void run() {
-                              Toast.makeText(getApplicationContext(),
-                                      "Selected: " + message,
-                                      Toast.LENGTH_SHORT).show();
-                          }
-                      });
-
+        Toast.makeText(getApplicationContext(), "Selected: " + message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -253,14 +245,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         Log.d("Tangram", "Picked label: " + name);
         final String message = name;
-        runOnUiThread(new Runnable() {
-                          @Override
-                          public void run() {
-                              Toast.makeText(getApplicationContext(),
-                                      "Selected label: " + message,
-                                      Toast.LENGTH_SHORT).show();
-                          }
-                      });
+        Toast.makeText(getApplicationContext(), "Selected label: " + message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -272,14 +257,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         Log.d("Tangram", "Picked marker: " + markerPickResult.getMarker().getMarkerId());
         final String message = String.valueOf(markerPickResult.getMarker().getMarkerId());
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(getApplicationContext(),
-                        "Selected Marker: " + message,
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
+        Toast.makeText(getApplicationContext(), "Selected Marker: " + message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
