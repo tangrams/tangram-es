@@ -1144,7 +1144,7 @@ public class MapController implements Renderer {
         httpHandler.onCancel(url);
     }
 
-    boolean startUrlRequest(String url, final long callbackPtr) throws Exception {
+    boolean startUrlRequest(final String url, final long callbackPtr) throws Exception {
         if (httpHandler == null) {
             return false;
         }
@@ -1152,16 +1152,21 @@ public class MapController implements Renderer {
         httpHandler.onRequest(url, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
+                android.util.Log.e("Tangram", "Failed url request: " + url + " " + e.toString());
                 nativeOnUrlFailure(callbackPtr);
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
+
                 if (!response.isSuccessful()) {
+                    android.util.Log.e("Tangram", "Failed url request: " + url +
+                            " Unexpected response code: " + response);
                     nativeOnUrlFailure(callbackPtr);
-                    throw new IOException("Unexpected response code: " + response);
+                    return;
                 }
                 byte[] bytes = response.body().bytes();
+
                 nativeOnUrlSuccess(bytes, callbackPtr);
             }
         });
