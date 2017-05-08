@@ -6,6 +6,7 @@
         <icon>tangram.png</icon>
     </ui-application>
     <privileges>
+        <privilege>http://tizen.org/privilege/network.get</privilege>
         <privilege>http://tizen.org/privilege/internet</privilege>
     </privileges>
 </manifest>
