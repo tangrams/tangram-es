@@ -7,8 +7,8 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
+import android.os.Handler;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -104,7 +104,9 @@ public class MapView extends FrameLayout {
     }
 
     protected MapController getMapInstance() {
-        return MapController.getInstance(glSurfaceView);
+        MapController mapController = MapController.getInstance(glSurfaceView);
+        mapController.setMainThreadHandler(new Handler(getContext().getMainLooper()));
+        return mapController;
     }
 
     protected void configureGLSurfaceView() {
