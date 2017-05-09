@@ -80,9 +80,9 @@ endif()
 
 #if (HEADLESS)
 
-  set(EXECUTABLE_NAME "headless")
+include(${PROJECT_SOURCE_DIR}/toolchains/mesa.cmake)
 
-  set(OPENGL_LIBRARIES -lOSMesa -lGL)
+  set(EXECUTABLE_NAME "headless")
 
   add_executable(${EXECUTABLE_NAME}
     ${PROJECT_SOURCE_DIR}/platforms/linux/src/headless.cpp
@@ -97,20 +97,23 @@ endif()
     ${PROJECT_SOURCE_DIR}/platforms/common
     ${PROJECT_SOURCE_DIR}/platforms/linux
     ${PROJECT_SOURCE_DIR}/platforms/headless
-    ${OPENGL_INCLUDE_DIRS}
-    ${PROJECT_SOURCE_DIR}/../mesa-17.0.4/include
+    ${OSMesa_INCLUDE_DIRS}
     )
 
   target_compile_definitions(${EXECUTABLE_NAME}
     PRIVATE
-    PLATFORM_HEADLESS=1
-    )
+    PLATFORM_HEADLESS=1)
+
+  link_directories(${OSMesa_LIBRARY_DIR})
+
   target_link_libraries(${EXECUTABLE_NAME}
     ${CORE_LIBRARY}
     -lcurl
-    # only used when not using external lib
     -ldl
     -pthread
-    ${OPENGL_LIBRARIES})
+    -lOSMesa
+    -lGL)
+
+  add_dependencies(${EXECUTABLE_NAME} OSMesa)
 
 #endif()
