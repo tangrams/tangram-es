@@ -10,10 +10,15 @@
 # Read more: https://github.com/tangrams/walkabout-style
 #
 
+import:
+    # Layers
+    - layers/bike-interlay.yaml
+    - layers/path-interlay.yaml
+
 global:
     # Sign up for a Mapzen API key to enjoy higher rate limits
     # https://mapzen.com/documentation/overview/#developer-accounts-and-api-keys
-    sdk_mapzen_api_key: 'mapzen-y6KCsnw'     # set this value to your Mapzen API key
+    sdk_mapzen_api_key: 'mapzen-y6KCsnw'
 
     #ux/ui
     ux_language: false             # l10n language code, trusting OSM in v0.10 tiles, fixed in v1.0 tiles
@@ -204,7 +209,7 @@ global:
     sdk_shield_text_color: white
     #
     # enable interactivity for key features
-    interactive: false
+    interactive: true
     #
     # default order for basemap features
     feature_order: function() { return feature.sort_rank; }
@@ -218,8 +223,8 @@ global:
     icon_visible_populated_places:  true
     text_visible_neighbourhoods:    true
     text_visible_neighbourhoods_e:  true
-    text_visible_building:          true           # false for default
-    text_visible_address:           true           # false for default
+    text_visible_building:          true            # false for default
+    text_visible_address:           true            # false for default
     text_visible_water_labels:      true
     label_visible_landuse_green:    true            #this needs work
     icon_visible_landuse_green:     true            #this needs work
@@ -298,7 +303,7 @@ global:
     minor_casing1:              white                     # same as highway_casing1
     minor_casing2:              white                     # zoomed out
     minor_tunnel1:              [0.929,0.929,0.929]
-    minor_tunnel_casing1:       [1.00, 1.00, 1.00]
+    minor_tunnel_casing1:       [0.695,0.739,0.790]
     service_road1:              [0.935, 0.935, 0.935]
     service_road2:              white
     service_road_casing1:       [0.40, 0.40, 0.40]
@@ -421,7 +426,7 @@ cameras:
 
 scene:
     background:
-        color: [0.894,0.902,0.898]
+        color: [0.945,0.945,0.945]   #f2f2f2
     # animated: true
 
 fonts:
@@ -452,37 +457,38 @@ textures:
         filtering: mipmap
         sprites:
             # define sprites: [x origin, y origin, width, height]
-            'US:CA-1char': [688, 786, 82, 92]
-            'US:CA-2char': [588, 786, 92, 92]
-            'US:CA-3char': [468, 786, 112, 92]
-            'US:CA-4char': [336, 786, 124, 92]
-            'US:CA-5char': [200, 786, 128, 92]
-            'US:I-1char': [514, 890, 90, 100]
-            'US:I-2char': [0, 502, 102, 102]
-            'US:I-3char': [856, 370, 134, 100]
-            'US:I-4char': [708, 370, 140, 100]
-            'US:I-5char': [548, 370, 152, 100]
-            'US:NY-1char': [656, 606, 72, 88]
-            'US:NY-2char': [0, 606, 88, 88]
-            'US:NY-3char': [880, 502, 104, 86]
-            'US:NY-4char': [756, 502, 116, 86]
-            'US:NY-5char': [628, 502, 120, 86]
-            'US:PA-1char': [576, 606, 72, 88]
-            'US:PA-2char': [480, 606, 88, 88]
-            'US:PA-3char': [360, 606, 112, 88]
-            'US:PA-4char': [232, 606, 120, 88]
-            'US:PA-5char': [96, 606, 128, 88]
-            'US:US-1char': [420, 890, 88, 94]
-            'US:US-2char': [308, 892, 106, 94]
-            'US:US-3char': [162, 890, 136, 100]
-            'US:US-4char': [0, 890, 156, 100]
-            'US:US-5char': [776, 786, 164, 100]
+            'US:CA-1char': [220, 854, 82, 92]
+            'US:CA-2char': [120, 854, 94, 94]
+            'US:CA-3char': [0, 854, 112, 92]
+            'US:CA-4char': [876, 758, 126, 92]
+            'US:CA-5char': [740, 758, 128, 92]
+            'US:I-1char': [0, 958, 90, 100]
+            'US:I-2char': [446, 470, 102, 102]
+            'US:I-3char': [308, 470, 132, 100]
+            'US:I-4char': [160, 470, 140, 100]
+            'US:I-5char': [0, 470, 152, 100]
+            'US:NY-1char': [176, 666, 72, 88]
+            'US:NY-2char': [460, 574, 88, 88]
+            'US:NY-3char': [348, 574, 104, 86]
+            'US:NY-4char': [224, 574, 116, 86]
+            'US:NY-5char': [96, 574, 120, 86]
+            'US:PA-1char': [96, 666, 72, 88]
+            'US:PA-2char': [0, 666, 88, 88]
+            'US:PA-3char': [820, 574, 112, 88]
+            'US:PA-4char': [692, 574, 120, 88]
+            'US:PA-5char': [556, 574, 128, 88]
+            'US:US-1char': [900, 854, 88, 96]
+            'US:US-2char': [788, 854, 106, 94]
+            'US:US-3char': [642, 854, 138, 100]
+            'US:US-4char': [478, 854, 158, 100]
+            'US:US-5char': [308, 854, 164, 100]
             airport: [952, 0, 38, 38]
             aerodrome: [952, 0, 38, 38]
-            allotments: [460, 252, 38, 38]
-            aquarium: [824, 168, 38, 38]
+            allotments: [874, 252, 38, 38]
+            aquarium: [230, 210, 38, 38]
+            arrow: [552, 294, 38, 38]
             atm: [0, 168, 38, 38]
-            attraction: [458, 210, 38, 38]
+            attraction: [872, 210, 38, 38]
             bakery: [640, 168, 38, 38]
             bank: [46, 168, 38, 38]
             category-predicate-money: [46, 168, 38, 38]
@@ -491,18 +497,27 @@ textures:
             category-predicate-drink: [322, 168, 38, 38]
             baseball: [552, 84, 38, 38]
             basketball: [506, 84, 38, 38]
-            battlefield: [732, 210, 38, 38]
-            bbq: [138, 252, 38, 38]
+            battlefield: [138, 252, 38, 38]
+            bbq: [552, 252, 38, 38]
             beach: [690, 84, 38, 38]
-            beach_resort: [640, 210, 38, 38]
+            beach_resort: [46, 252, 38, 38]
             bench: [630, 0, 38, 38]
             bicycle: [964, 126, 38, 38]
             bicycle_rental: [964, 126, 38, 38]
             bicycle_rental_station: [964, 126, 38, 38]
             bicycle_parking: [736, 126, 38, 38]
-            biergarten: [366, 210, 38, 38]
-            brewery: [366, 210, 38, 38]
-            boat_rental: [506, 252, 38, 38]
+            biergarten: [780, 210, 38, 38]
+            brewery: [780, 210, 38, 38]
+            bike_bicycle: [962, 168, 38, 38]
+            bike_bicycle_parking: [92, 210, 38, 38]
+            bike_bicycle_rental_station: [46, 210, 38, 38]
+            bike_bicycle_repair_station: [0, 210, 38, 38]
+            bike_cafe: [824, 168, 38, 38]
+            bike_cycle_barrier: [732, 168, 38, 38]
+            bike_drinking_water: [870, 168, 38, 38]
+            bike_pub: [778, 168, 38, 38]
+            bike_toilets: [916, 168, 38, 38]
+            boat_rental: [920, 252, 38, 38]
             books: [918, 126, 38, 38]
             bridge: [966, 84, 38, 38]
             buddhist: [828, 84, 38, 38]
@@ -517,48 +532,48 @@ textures:
             butcher: [0, 84, 38, 38]
             cafe: [594, 168, 38, 38]
             camp_site: [874, 84, 38, 38]
-            capital-l: [268, 294, 32, 32]
-            capital-m: [236, 294, 24, 24]
-            capital-s: [206, 294, 20, 20]
-            capital-xl: [356, 294, 40, 40]
-            capital-xs: [184, 294, 16, 16]
+            capital-l: [726, 296, 32, 32]
+            capital-m: [694, 296, 24, 24]
+            capital-s: [664, 296, 20, 20]
+            capital-xl: [814, 296, 40, 40]
+            capital-xs: [642, 296, 16, 16]
             car: [872, 126, 38, 38]
             category-namespace-mobility: [872, 126, 38, 38]
             category-predicate-mobility: [872, 126, 38, 38]
             car_repair: [92, 168, 38, 38]
             car_sharing: [676, 0, 38, 38]
-            caravan_site: [870, 210, 38, 38]
+            caravan_site: [276, 252, 38, 38]
             castle: [460, 42, 38, 38]
             fort: [460, 42, 38, 38]
             cemetery: [782, 84, 38, 38]
             grave_yard: [782, 84, 38, 38]
             christian: [276, 126, 38, 38]
-            cinema: [870, 168, 38, 38]
-            clothes: [916, 168, 38, 38]
-            fashion: [916, 168, 38, 38]
-            college: [962, 168, 38, 38]
-            university: [962, 168, 38, 38]
-            confectionery: [90, 210, 38, 38]
+            cinema: [276, 210, 38, 38]
+            clothes: [322, 210, 38, 38]
+            fashion: [322, 210, 38, 38]
+            college: [368, 210, 38, 38]
+            university: [368, 210, 38, 38]
+            confectionery: [504, 210, 38, 38]
             convenience: [138, 84, 38, 38]
-            county_shield-1char: [736, 606, 72, 72]
-            county_shield-2char: [532, 502, 88, 72]
-            county_shield-3char: [420, 502, 104, 72]
-            county_shield-4char: [276, 502, 136, 72]
-            county_shield-5char: [108, 502, 160, 72]
+            county_shield-1char: [256, 666, 72, 72]
+            county_shield-2char: [0, 574, 88, 72]
+            county_shield-3char: [868, 470, 104, 72]
+            county_shield-4char: [724, 470, 136, 72]
+            county_shield-5char: [556, 470, 160, 72]
             courthouse: [446, 0, 38, 38]
-            dam: [966, 252, 38, 38]
+            dam: [368, 294, 38, 38]
             dentist: [266, 0, 38, 38]
             department_store: [826, 126, 38, 38]
             doctors: [224, 0, 38, 38]
             clinic: [224, 0, 38, 38]
-            dog_park: [46, 252, 38, 38]
-            dot-black: [92, 294, 38, 38]
-            dot-white: [920, 252, 38, 38]
-            drinking_water: [320, 210, 38, 38]
+            dog_park: [460, 252, 38, 38]
+            dot-black: [506, 294, 38, 38]
+            dot-white: [322, 294, 38, 38]
+            drinking_water: [734, 210, 38, 38]
             dry_cleaning: [92, 84, 38, 38]
             electronics: [690, 126, 38, 38]
             computer: [690, 126, 38, 38]
-            enclosure: [0, 294, 38, 38]
+            enclosure: [414, 294, 38, 38]
             estate_agent: [184, 42, 38, 38]
             factory: [460, 168, 38, 38]
             industrial: [460, 168, 38, 38]
@@ -570,37 +585,37 @@ textures:
             plant: [460, 168, 38, 38]
             generator: [460, 168, 38, 38]
             category-predicate-industry: [460, 168, 38, 38]
-            fast_food: [228, 210, 38, 38]
+            fast_food: [642, 210, 38, 38]
             ferry: [906, 0, 38, 38]
             ferry_terminal: [906, 0, 38, 38]
             fire_station: [400, 0, 38, 38]
-            firepit: [0, 252, 38, 38]
-            fishing: [916, 210, 38, 38]
-            fishing_area: [916, 210, 38, 38]
+            firepit: [414, 252, 38, 38]
+            fishing: [322, 252, 38, 38]
+            fishing_area: [322, 252, 38, 38]
             fitness: [966, 42, 38, 38]
             fitness_station: [966, 42, 38, 38]
             florist: [230, 126, 38, 38]
-            forest: [136, 210, 38, 38]
-            natural_forest: [136, 210, 38, 38]
-            nature_reserve: [136, 210, 38, 38]
-            conservation: [136, 210, 38, 38]
-            protected_area: [136, 210, 38, 38]
-            grass: [136, 210, 38, 38]
+            forest: [550, 210, 38, 38]
+            natural_forest: [550, 210, 38, 38]
+            nature_reserve: [550, 210, 38, 38]
+            conservation: [550, 210, 38, 38]
+            protected_area: [550, 210, 38, 38]
+            grass: [550, 210, 38, 38]
             fountain: [368, 126, 38, 38]
-            fuel: [44, 210, 38, 38]
-            gallery: [732, 168, 38, 38]
+            fuel: [458, 210, 38, 38]
+            gallery: [138, 210, 38, 38]
             garden: [736, 84, 38, 38]
-            gas_canister: [644, 252, 38, 38]
-            gate: [46, 294, 38, 38]
-            generic: [138, 294, 38, 38]
-            category-namespace-other: [138, 294, 38, 38]
-            category-predicate-addressing: [138, 294, 38, 38]
-            generic_shield-1char: [404, 698, 72, 72]
-            generic_shield-2char: [300, 698, 98, 72]
-            generic_shield-3char: [160, 698, 132, 72]
-            generic_shield-4char: [0, 698, 152, 72]
-            generic_shield-5char: [816, 606, 180, 72]
-            geyser: [594, 210, 38, 38]
+            gas_canister: [46, 294, 38, 38]
+            gate: [460, 294, 38, 38]
+            generic: [596, 294, 38, 38]
+            category-namespace-other: [596, 294, 38, 38]
+            category-predicate-addressing: [596, 294, 38, 38]
+            generic_shield-1char: [928, 666, 72, 72]
+            generic_shield-2char: [824, 666, 98, 72]
+            generic_shield-3char: [684, 666, 132, 72]
+            generic_shield-4char: [524, 666, 152, 72]
+            generic_shield-5char: [336, 666, 180, 72]
+            geyser: [0, 252, 38, 38]
             gift: [184, 126, 38, 38]
             golf_course: [460, 84, 38, 38]
             government: [230, 168, 38, 38]
@@ -621,9 +636,9 @@ textures:
             motel: [814, 0, 38, 38]
             hostel: [814, 0, 38, 38]
             category-predicate-sleep: [814, 0, 38, 38]
-            hunting: [548, 210, 38, 38]
-            ice_cream: [412, 210, 38, 38]
-            information: [504, 210, 38, 38]
+            hunting: [962, 210, 38, 38]
+            ice_cream: [826, 210, 38, 38]
+            information: [918, 210, 38, 38]
             jewelry: [782, 42, 38, 38]
             jewish: [44, 0, 38, 38]
             landmark: [354, 0, 38, 38]
@@ -643,19 +658,19 @@ textures:
             dock: [184, 168, 38, 38]
             mine: [828, 42, 38, 38]
             mobile_phone: [552, 42, 38, 38]
-            motorcycle: [276, 252, 38, 38]
+            motorcycle: [690, 252, 38, 38]
             museum: [92, 126, 38, 38]
             music: [414, 42, 38, 38]
             muslim: [90, 0, 38, 38]
             newspaper: [368, 42, 38, 38]
             kiosk: [368, 42, 38, 38]
-            observatory: [598, 252, 38, 38]
+            observatory: [0, 294, 38, 38]
             office: [644, 84, 38, 38]
             insurance: [644, 84, 38, 38]
             company: [644, 84, 38, 38]
             category-predicate-service: [644, 84, 38, 38]
             optician: [322, 42, 38, 38]
-            outdoor: [736, 252, 38, 38]
+            outdoor: [138, 294, 38, 38]
             park: [322, 126, 38, 38]
             national_park: [322, 126, 38, 38]
             protected_area: [322, 126, 38, 38]
@@ -666,8 +681,8 @@ textures:
             pharmacy: [46, 84, 38, 38]
             photographic_laboratory: [230, 42, 38, 38]
             photographer: [230, 42, 38, 38]
-            picnic_site: [230, 252, 38, 38]
-            picnic_table: [230, 252, 38, 38]
+            picnic_site: [644, 252, 38, 38]
+            picnic_table: [644, 252, 38, 38]
             pier: [722, 0, 38, 38]
             place_of_worship: [368, 168, 38, 38]
             chapel: [368, 168, 38, 38]
@@ -679,12 +694,12 @@ textures:
             quarry: [874, 42, 38, 38]
             mineshaft: [874, 42, 38, 38]
             adit: [874, 42, 38, 38]
-            ranger_station: [184, 252, 38, 38]
-            recreation_track: [368, 252, 38, 38]
+            ranger_station: [598, 252, 38, 38]
+            recreation_track: [782, 252, 38, 38]
             recycling: [138, 42, 38, 38]
-            restaurant: [182, 210, 38, 38]
-            category-namespace-eat_and_drink: [182, 210, 38, 38]
-            category-predicate-eat: [182, 210, 38, 38]
+            restaurant: [596, 210, 38, 38]
+            category-namespace-eat_and_drink: [596, 210, 38, 38]
+            category-predicate-eat: [596, 210, 38, 38]
             retail: [644, 42, 38, 38]
             store: [644, 42, 38, 38]
             category-namespace-shop_and_service: [644, 42, 38, 38]
@@ -696,22 +711,22 @@ textures:
             kindergarten: [598, 84, 38, 38]
             category-namespace-education_and_religion: [598, 84, 38, 38]
             category-predicate-education: [598, 84, 38, 38]
-            scuba_diving: [690, 252, 38, 38]
-            dive_centre: [690, 252, 38, 38]
-            sdk_shield-1char: [484, 698, 84, 84]
-            sdk_shield-2char: [576, 698, 112, 84]
-            sdk_shield-3char: [696, 698, 144, 84]
-            sdk_shield-4char: [848, 698, 168, 84]
-            sdk_shield-5char: [0, 786, 192, 84]
+            scuba_diving: [92, 294, 38, 38]
+            dive_centre: [92, 294, 38, 38]
+            sdk_shield-1char: [0, 758, 84, 84]
+            sdk_shield-2char: [92, 758, 112, 84]
+            sdk_shield-3char: [212, 758, 144, 84]
+            sdk_shield-4char: [364, 758, 168, 84]
+            sdk_shield-5char: [540, 758, 192, 84]
             shoemaker: [598, 42, 38, 38]
-            shower: [824, 210, 38, 38]
+            shower: [230, 252, 38, 38]
             ski: [414, 126, 38, 38]
             winter_sports: [414, 126, 38, 38]
             ski_rental: [414, 126, 38, 38]
             ski_school: [414, 126, 38, 38]
             ski_jumping: [414, 126, 38, 38]
             skiing: [414, 126, 38, 38]
-            slipway: [778, 210, 38, 38]
+            slipway: [184, 252, 38, 38]
             soccer: [414, 84, 38, 38]
             sports: [276, 168, 38, 38]
             pitch: [276, 168, 38, 38]
@@ -720,57 +735,57 @@ textures:
             spring: [368, 84, 38, 38]
             stadium: [506, 126, 38, 38]
             subway_entrance: [538, 0, 38, 38]
-            summer_camp: [414, 252, 38, 38]
+            summer_camp: [828, 252, 38, 38]
             supermarket: [644, 126, 38, 38]
             greengrocer: [644, 126, 38, 38]
-            swimming_area: [962, 210, 38, 38]
+            swimming_area: [368, 252, 38, 38]
             swimming_pool: [552, 126, 38, 38]
             tailor: [46, 42, 38, 38]
-            telescope: [552, 252, 38, 38]
+            telescope: [966, 252, 38, 38]
             tennis: [460, 126, 38, 38]
             theatre: [686, 168, 38, 38]
             category-predicate-fun: [686, 168, 38, 38]
             theme_park: [46, 126, 38, 38]
             amusement_ride: [46, 126, 38, 38]
             toilets: [920, 84, 38, 38]
-            townspot-l: [656, 294, 32, 32]
-            townspot-l-rev: [484, 294, 32, 32]
-            townspot-m: [624, 294, 24, 24]
-            townspot-m-rev: [452, 294, 24, 24]
-            townspot-s: [596, 294, 20, 20]
-            townspot-s-rev: [424, 294, 20, 20]
-            townspot-xl: [696, 294, 40, 40]
-            townspot-xl-rev: [524, 294, 38, 38]
-            townspot-xs: [572, 294, 16, 16]
-            townspot-xs-rev: [404, 294, 12, 12]
+            townspot-l: [132, 338, 32, 32]
+            townspot-l-rev: [942, 296, 32, 32]
+            townspot-m: [100, 338, 24, 24]
+            townspot-m-rev: [910, 296, 24, 24]
+            townspot-s: [72, 338, 20, 20]
+            townspot-s-rev: [882, 296, 20, 20]
+            townspot-xl: [172, 338, 40, 40]
+            townspot-xl-rev: [0, 340, 40, 40]
+            townspot-xs: [48, 338, 16, 16]
+            townspot-xs-rev: [862, 296, 12, 12]
             toys: [0, 42, 38, 38]
-            traffic_signals: [0, 210, 38, 38]
-            trailhead: [782, 252, 38, 38]
+            traffic_signals: [414, 210, 38, 38]
+            trailhead: [184, 294, 38, 38]
             train_station: [492, 0, 38, 38]
             station: [492, 0, 38, 38]
             category-predicate-transport: [492, 0, 38, 38]
-            tree: [828, 252, 38, 38]
-            tree-s: [874, 252, 38, 38]
-            ux-current-location: [294, 370, 88, 88]
-            ux-locate-off: [824, 294, 72, 72]
-            ux-locate-on: [744, 294, 72, 72]
-            ux-route-arrow: [0, 370, 128, 128]
-            ux-route-start: [214, 370, 72, 92]
-            ux-route-stop: [136, 370, 72, 92]
-            ux-search-active: [388, 370, 72, 108]
-            ux-search-inactive: [468, 370, 72, 108]
-            ux-transit-stop: [308, 296, 42, 36]
+            tree: [230, 294, 38, 38]
+            tree-s: [276, 294, 38, 38]
+            ux-current-location: [674, 338, 88, 88]
+            ux-locate-off: [300, 338, 72, 72]
+            ux-locate-on: [220, 338, 72, 72]
+            ux-route-arrow: [380, 338, 128, 128]
+            ux-route-start: [594, 338, 72, 92]
+            ux-route-stop: [516, 338, 72, 92]
+            ux-search-active: [768, 338, 72, 108]
+            ux-search-inactive: [848, 338, 72, 108]
+            ux-transit-stop: [766, 296, 42, 36]
             veterinary: [136, 0, 38, 38]
-            viewpoint: [778, 168, 38, 38]
-            category-namespace-do_and_see: [778, 168, 38, 38]
-            category-predicate-attraction: [778, 168, 38, 38]
+            viewpoint: [184, 210, 38, 38]
+            category-namespace-do_and_see: [184, 210, 38, 38]
+            category-predicate-attraction: [184, 210, 38, 38]
             vineyard: [138, 168, 38, 38]
             volcano: [184, 84, 38, 38]
-            water_park: [686, 210, 38, 38]
-            water_slide: [686, 210, 38, 38]
-            water_tower: [322, 252, 38, 38]
-            waterfall: [92, 252, 38, 38]
-            wine: [274, 210, 38, 38]
+            water_park: [92, 252, 38, 38]
+            water_slide: [92, 252, 38, 38]
+            water_tower: [736, 252, 38, 38]
+            waterfall: [506, 252, 38, 38]
+            wine: [688, 210, 38, 38]
             winery: [548, 168, 38, 38]
             zoo: [0, 126, 38, 38]
 
@@ -781,21 +796,21 @@ textures:
 
 sources:
     mapzen:
-        type: MVT
+        type: TopoJSON
         # prod
-        url:  https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt
+        url:  https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson
         # dev
         #url:  https://tile.dev.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson
         url_params:
             api_key: global.sdk_mapzen_api_key
-        # rasters: [normals]
+        rasters: [normals]
         max_zoom: 16
-#    normals: # normals
-#        type: Raster
-#        url: https://tile.mapzen.com/mapzen/terrain/v1/normal/{z}/{x}/{y}.png
-#        url_params:
-#            api_key: global.sdk_mapzen_api_key
-#        max_zoom: 15
+    normals: # normals
+        type: Raster
+        url: https://tile.mapzen.com/mapzen/terrain/v1/normal/{z}/{x}/{y}.png
+        url_params:
+            api_key: global.sdk_mapzen_api_key
+        max_zoom: 15
 
 #    # Only enable this for local debug, should not be enabled for prod (app inserts these at runtime)
 #    # These are all in San Francisco, California
@@ -874,8 +889,12 @@ styles:
                     color.a = 1.- step(dotSize, dot(st,st)*2.);
     dashed:
         base: lines
-        dash: [1.25, 1.25]
+        dash: [2.25, 1.25]
         dash_background_color: [0.808,0.860,0.851]
+    dashed_steps:
+        base: lines
+        dash: [0.5, 0.25]
+        dash_background_color: [0.760,0.785,0.805]
     dashed_small:
         base: lines
         dash: [0.5, 0.5]
@@ -890,10 +909,8 @@ styles:
         #dash_background_color: red
     terrain:
         base: polygons
-    terrain2:
-        base: polygons
         lighting: false
-        raster: custom
+        raster: normal
         shaders:
             uniforms:
                 # u_envmap: images/relief-shading-environment-map.jpg
@@ -903,10 +920,6 @@ styles:
                 u_brightness: 1.
             blocks:
                 global: |
-                    varying vec2 v_tex_coord;
-                    #ifdef TANGRAM_VERTEX_SHADER
-                    uniform vec3 u_raster_offsets[TANGRAM_NUM_RASTER_SOURCES];
-                    #endif
                     // Simplified view-independent environment map
                     vec4 terrainEnvmap (in sampler2D _tex, in vec3 _normal) {
                         const vec3 eye = vec3(0.,0.,-1.);
@@ -917,24 +930,17 @@ styles:
                         return texture2D(_tex, uv);
                     }
                     const float e = 2.71828;
-                setup: |
-                    #ifdef TANGRAM_VERTEX_SHADER
-                    v_tex_coord = modelPositionBaseZoom().xy * u_raster_offsets[0].z + u_raster_offsets[0].xy;
-                    #endif
                 color: |
                     // scale up normals with a function
                     // https://www.desmos.com/calculator/bv4mzh8erz
                     //float scale = 10./(u_map_position.z-.7) + 1.8;
                     float scale1 = 20./(u_map_position.z) + 1.5;
-
-                    vec3 tex_normal = normalize(texture2D(u_rasters[0], v_tex_coord).xyz * 2.0 - 1.0);
-                    tex_normal.z /= scale1; // turn terrain exaggeration up/down
-
+                    normal.z /= scale1; // turn terrain exaggeration up/down
                     // fade out spheremap normals with a function
                     // https://www.desmos.com/calculator/ptgkzcnfyc
                     float m = 3.5 * (u_map_position.z - 0.8) * pow(e, u_map_position.z * -.29);
                     m = clamp(m, 0., 1.5);
-                    color = terrainEnvmap(u_envmap, tex_normal);
+                    color = terrainEnvmap(u_envmap, normal);
 
                     // Apply contrast
                     float contrast = m;
@@ -944,6 +950,38 @@ styles:
                     color.rgb += brightness;
 
                     color *= v_color; // apply layer color
+
+    terrain-park:
+        base: polygons
+        lighting: false
+        raster: normal
+        shaders:
+            uniforms:
+                u_envmap: images/walkabout-green1.jpg
+            blocks:
+                global: |
+                    vec4 terrainEnvmap (in sampler2D _tex, in vec3 _normal) {
+                        const vec3 eye = vec3(0.,0.,-1.);
+                        vec3 r = reflect(eye, _normal);
+                        r.z += 1.;
+                        float m = 2. * length(r);
+                        vec2 uv = r.xy / m + .5;
+                        return texture2D(_tex, uv);
+                    }
+                    const float e = 2.71828;
+                color: |
+                    float scale1 = 20./(u_map_position.z) + 1.5;
+                    normal.z /= scale1;
+                    float m = 3.95 * (u_map_position.z - 0.8) * pow(e, u_map_position.z * -.29);
+                    m = clamp(m, 0., 1.5);
+                    color = terrainEnvmap(u_envmap, normal);
+
+                    float contrast = m;
+                    color.rgb = ((color.rgb - 0.5) * max(contrast, 0.)) + 0.5;
+                    float brightness = .5 - m * .5;
+                    color.rgb += brightness;
+
+                    color *= v_color;
 
     # HSV/RGB functions
     hsv:
@@ -1310,7 +1348,7 @@ layers:
         draw:
             terrain:
                 order: function() { return feature.sort_rank; }
-                color: [0.94, 0.94, 0.93]
+                color: [1.0, 1.0, 1.0]
 
     water:
         data: { source: mapzen, layer: water }
@@ -1577,6 +1615,19 @@ layers:
                     weight: 500
                     fill: global.text_fill
 
+        arrows:
+            # oneway arrows and shields are distinct groups!
+            filter: { oneway: yes, shield_text: false, $zoom: { min: 17 } }
+            draw:
+                icons:
+                    flat: true
+                    visible: true
+                    sprite: arrow
+                    size: [[17, 6px], [20, 14px]]
+                    placement: spaced
+                    placement_spacing: [[17, 70px], [20, 175px]]
+                    angle: auto
+
         early:
             filter: { $zoom: { max: 14 } }
             draw:
@@ -1636,7 +1687,7 @@ layers:
             draw:
                 lines:
                     color: [[8, [0.457,0.438,0.457]], [10, [0.548,0.483,0.491]], [11, [1.00,1.00,1.00]]]
-                    width: [[8, 1.25px], [12, 1.5px], [14, 2.5px], [16, 5.5px], [17, 10px], [18, 10m]]
+                    width: [[8, 1.25px], [12, 1.5px], [14, 2.5px], [16, 6.5px], [17, 10px], [18, 10m]]
                     outline:
                         color: [[8, [0.969,0.969,0.969]], [10, [0.969,0.969,0.969]], [11, [0.548,0.483,0.491]]]
                         width: [[8, 1px], [10, 1px], [12, 1.5px], [14, 1.75px], [16, 2.5px], [18, 4px]]
@@ -1711,10 +1762,10 @@ layers:
                 draw:
                     lines:
                         color: [[10, [0.603,0.620,0.642]], [11, [1.00,1.00,1.00]]]
-                        width: [[8, 0.5px], [10, 1px], [12, 1px], [14, 2.5px], [16, 4px], [17, 6px], [18, 9m]]
+                        width: [[8, 0.5px], [10, 1px], [12, 1px], [14, 2.5px], [16, 6px], [17, 8.25px], [18, 10m]]
                         outline:
-                            color: [[8, [0.969,0.969,0.969]], [10, [0.969,0.969,0.969]], [11, [0.629,0.612,0.615]], [14, [0.714,0.694,0.706]]]
-                            width: [[8, 0.5px], [10, 1px], [14, 1px], [16, 2.25px], [17, 2px], [18, 4px]]
+                            color: [[8, [0.969,0.969,0.969]], [10, [0.969,0.969,0.969]], [11, [0.629,0.612,0.615]], [14, [0.659,0.626,0.648]]]
+                            width: [[8, 0.5px], [10, 1px], [14, 1px], [16, 2.25px], [17, 3px], [18, 4px]]
                 early:
                     filter: { $zoom: { max: 14 } }
                     draw:
@@ -1733,10 +1784,10 @@ layers:
                     draw:
                         lines:
                             color: [[8, [0.603,0.620,0.642]], [10, [0.603,0.620,0.642]], [11, [1.00,1.00,1.00]]]
-                            width: [[8, 1px], [12, 1px], [14, 2.5px], [16, 5px], [17, 8px], [18, 9m]]
+                            width: [[8, 1px], [12, 1px], [14, 2.5px], [16, 6.5px], [17, 9px], [18, 10m]]
                             outline:
-                                color: [[8, [0.969,0.969,0.969]], [10, [0.969,0.969,0.969]], [11, [0.629,0.612,0.615]], [14, [0.670,0.623,0.654]]]
-                                width: [[9, 1px], [10, 1px], [12, 1.25px], [16, 2.25px], [17, 4px]]
+                                color: [[8, [0.969,0.969,0.969]], [10, [0.969,0.969,0.969]], [11, [0.629,0.612,0.615]], [14, [0.659,0.626,0.648]]]
+                                width: [[9, 1px], [10, 1px], [12, 1.25px], [16, 2.25px], [17, 3px], [18, 4px]]
                     early:
                         filter: { $zoom: { max: 13 } }
                         draw:
@@ -1820,9 +1871,9 @@ layers:
                 draw:
                     lines:
                         color: [1.00,1.00,1.00]
-                        width: [[10, 0px], [11, 0px], [12, 1px], [14, 2px], [16, 4px], [17, 6px], [18, 9m]]
+                        width: [[10, 0px], [11, 0px], [12, 1px], [14, 2px], [16, 5px], [17, 7.5px], [18, 9m]]
                         outline:
-                            color: [[9, [0.906,0.906,0.906]], [10, [0.788,0.780,0.800]], [11, [0.787,0.763,0.767]], [14, [0.700,0.665,0.688]]]
+                            color: [[9, [0.906,0.906,0.906]], [10, [0.788,0.780,0.800]], [11, [0.787,0.763,0.767]], [14, [0.659,0.626,0.648]]]
                             width: [[10, 0px], [11, 0.5px], [12, 1px], [14, 1px], [16, 2.25px], [18, 4px]]
                 early:
                     filter: { $zoom: { max: 14 } }
@@ -1842,9 +1893,9 @@ layers:
                     draw:
                         lines:
                             color: [[10, [0.584,0.604,0.624]], [11, [1.00, 1.00, 1.00]]]
-                            width: [[8, 0px], [10, 0.7px], [11, 1px], [12, 1px], [14, 2px], [16, 4px], [18, 9m]]
+                            width: [[8, 0px], [10, 0.7px], [11, 1px], [12, 1px], [14, 2px], [16, 5px], [17, 7.5px], [18, 9m]]
                             outline:
-                                color: [[9, [0.906,0.906,0.906]], [10, [0.906,0.906,0.906]], [11, [0.787,0.763,0.767]], [14, [0.700,0.665,0.688]]]
+                                color: [[9, [0.906,0.906,0.906]], [10, [0.906,0.906,0.906]], [11, [0.787,0.763,0.767]], [14, [0.659,0.626,0.648]]]
                                 width: [[9, 0.25px], [10, 0.75px], [11, 0.75px], [12, 1px], [14, 1px], [16, 2.25px], [18, 4px]]
                     early:
                         filter: { $zoom: { max: 14 } }
@@ -1962,7 +2013,7 @@ layers:
                     color: [1.00,1.00,1.00] #[[12, [0.850,0.850,0.850]], [13, [0.714,0.733,0.760]], [16, [1.00,1.00,1.00]]]
                     width: [[11, 0px], [12, 0.5px], [13, 0.5px], [14, 1px], [16, 3px], [18, 9m]]
                     outline:
-                        color: [[12, [0.900,0.900,0.900]], [13, [0.774,0.797,0.823]], [14, [0.798,0.823,0.847]]]
+                        color: [[12, [0.900,0.900,0.900]], [13, [0.774,0.797,0.823]], [14, [0.756,0.779,0.798]]]
                         width: [[11, 0px], [12, 0px], [13, 0px], [14, 1px], [16, 1.5px], [17, 2px], [18, 3px]]
             early:
                 filter: { $zoom: { max: 14 } }
@@ -1971,11 +2022,15 @@ layers:
                         order: 350
                         outline:
                             order: 351
-            motor_vehicle_no:
-                filter: { kind_detail: unclassified, motor_vehicle: no }
-                draw:
-                    lines:
-                        visible: false
+            # Example on Angle island
+            # 17/37.86478/-122.43399
+            # For Walkabout which is mostly walking focused these roads should always be on, including for biking.
+            # For other styles (like Bubble Wrap), TBD
+            # motor_vehicle_no:
+            #     filter: { kind_detail: unclassified, motor_vehicle: no }
+            #     draw:
+            #         lines:
+            #             visible: false
 
             # Is this junk code?
             round:
@@ -2023,7 +2078,7 @@ layers:
                     color: [1.00,1.00,1.00]
                     width: [[14, 1px], [16, 2px], [18, 4m]]
                     outline:
-                        color: [[12, [0.900,0.900,0.900]], [14, [0.791,0.816,0.840]]]
+                        color: [[12, [0.900,0.900,0.900]], [14, [0.756,0.779,0.798]]]
                         width: [[13, 0px], [14, 0.5px], [16, 1px], [18, 2px]]
             early:
                 filter: { $zoom: { max: 15 } }
@@ -2041,8 +2096,8 @@ layers:
                         visible: global.text_visible_service_road
                         font:
                             fill: [0.536,0.556,0.581]
-                            size: [[17, 12px], [18, 13px]]
-                            stroke: { color: [0.969,0.973,0.973], width: 4px }
+                            size: [[15, 9px], [16, 12px], [17, 12px], [18, 13px]]
+                            stroke: { color: [[15, global.text_stroke], [17,[0.969,0.973,0.973]]], width: 4px }
 
 
         shields:
@@ -2586,238 +2641,119 @@ layers:
                 all:
                     - kind: [path, portage_way]
                 not:
-                    - kind_detail: [footway, steps, track, cycleway]
                     - kind_detail: [pier]
             draw:
-                dashed_small:
+                lines:
                     order: function() { return feature.sort_rank; }
-                    visible: false
-                    color: [0.350,0.350,0.350]
-                    width: [[14, 0.35px], [15, 0.5px], [16, 1px], [17, 2px], [18, 3px], [19, 4px]]
-                    # outline:
-                    #     color: [0.790,0.790,0.790]
-                    #     width: [[14, 0.0px], [15, 0.35px], [16, 0.45px], [17, 0.85px], [18, 1px]]
-            early:
+                    color: [1.00,1.00,1.00]
+                    width: [[13, 0.65px], [14, 0.85px], [15, 1px], [17, 2.5m]]
+                    outline:
+                        color: [[12, [0.900,0.900,0.900]], [13, [0.774,0.797,0.823]], [14, [0.774,0.797,0.819]], [16, [0.725,0.747,0.766]]]
+                        width: [[14, 0px], [15, 0.75px], [16, 1px], [17, 1px], [18, 3px]]
+            paths:
                 filter:
-                    $zoom: { max: 17 }
+                    any:
+                        - kind_detail: path
+                        - all:
+                            - kind_detail: track
+                            - motor_vehicle: no
                 draw:
                     lines:
-                        order: 351
+                        visible: true
+
+                labels-path:
+                    draw:
+                        text-blend-order:
+                            priority: 58
+                            visible: global.text_visible_path
+                            font:
+                                fill: [0.536,0.556,0.581]
+                                size: [[15, 9px], [18, 13px]]
+                                stroke: { color: [[15, global.text_stroke], [17,[0.969,0.973,0.973]]], width: [[15, 2px], [17, 4px]] }
+
+
+            footway:
+                filter: { kind_detail: [footway] }
+                draw:
+                    lines:
+                        # footway is narrower than default
+                        width: [[13, 0.35px], [14, 0.5px], [15, 1px], [17, 2.5m]]
                         outline:
-                            order: 350
-            portage_way:
-                filter: { kind: portage_way }
-                draw:
-                    lines:
-                        color: [0.350,0.350,0.350]
+                            # casing for footway starts at  z16
+                            width: [[14, 0px], [15, 0px], [16, 1px], [17, 1px], [18, 3px]]
+
+                sidewalk-crossing:
+                    filter: { footway: [sidewalk, crossing], not: { walking_network: true }, $zoom: { max: 19 } }
+                    draw:
+                        lines:
+                            outline:
+                                color: [0.816,0.840,0.861]
+
+                labels-footpaths:
+                    filter: { $zoom: { min: 15 } }
+                    draw:
+                        text-blend-order:
+                            priority: 58
+                            visible: global.text_visible_path
+                            font:
+                                fill: [0.536,0.556,0.581]
+                                size: [[15, 9px], [18, 13px]]
+                                stroke: { color: [[15, global.text_stroke], [17,[0.969,0.973,0.973]]], width: [[15, 2px], [17, 4px]] }
+
+
             pedestrian:
-                filter: { kind_detail: pedestrian }
+                filter:
+                    kind_detail: [cycleway, pedestrian]
+                    not: { kind_detail: [pedestrian], walking_network: true }
                 draw:
                     lines:
-                        color: [[16,[0.749,0.749,0.749]]]
-                        width: [[14, 0.35px], [15, 0.35px], [16, 1px], [17, 2px], [18, 3px], [19, 4px]]
-                        # outline:
-                        #     color: [0.790,0.790,0.790]
-                        #     width: [[14, 0.0px], [15, 0.35px], [16, 0.45px], [17, 0.85px], [18, 1px]]
-            bridge:
-                filter: { is_bridge: true }
-                draw:
-                    lines:
-                        width: [[14, 0.35px], [15, 0px], [16, 0.25px], [17, 3px], [18, 3px], [19, 4px]]
-                        cap: round
-                        outline:
-                            color: [[15, global.path_bridge_casing2],[16, global.path_bridge_casing1]]
-                            width: [[14, 0.0px], [15, 0.35px], [16, 0.45px], [17, 0.85px], [18, 1px]]
-                            cap: butt
-            in_park:
-                filter: { landuse_kind: [park,nature_reserve,conservation,golf_course,garden] }
-                draw:
-                    dashed_small:
-                        color: [0.350,0.350,0.350]
-                        # outline:
-                        #     color: [0.790,0.790,0.790]
-                        #     width: [[14, 0.0px], [15, 0.35px], [16, 0.45px], [17, 0.85px], [18, 1px]]
-            #     golf_course:
-            #         filter: { landuse_kind: golf_course }
-            #         draw:
-            #             lines:
-            #                 color: [[14, [0.790,0.790,0.790]], [15, [1.00,1.00,1.00]]]
-            #                 outline:
-            #                     color: [0.790,0.790,0.790]
-            #                     width: [[14, 0.0px], [15, 0.35px], [16, 0.45px], [17, 0.85px], [18, 1px]]
-            #     nature_reserve:
-            #         filter: { landuse_kind: nature_reserve }
-            #         draw:
-            #             lines:
-            #                 color: [[14, [0.790,0.790,0.790]], [15, [1.00,1.00,1.00]]]
-            #                 outline:
-            #                     color: [0.790,0.790,0.790]
-            #                     width: [[14, 0.0px], [15, 0.35px], [16, 0.45px], [17, 0.85px], [18, 1px]]
-            #     conservation:
-            #         filter: { landuse_kind: conservation }
-            #         draw:
-            #             lines:
-            #                 color: [[14, [0.790,0.790,0.790]], [15, [1.00,1.00,1.00]]]
-            #                 outline:
-            #                     color: [0.790,0.790,0.790]
-            #                     width: [[14, 0.0px], [15, 0.35px], [16, 0.45px], [17, 0.85px], [18, 1px]]
-            # in_cemetery_garden:
-            #     filter: { landuse_kind: [cemetery,garden] }
-            #     draw:
-            #         lines:
-            #             color: [[14, [0.790,0.790,0.790]], [15, [1.00,1.00,1.00]]]
-            #             width: [[14, 0.35px], [15, 0px], [16, 0.25px], [17, 3px], [18, 3px], [19, 4px]]
-            #             outline:
-            #                 color: [0.790,0.790,0.790]
-            #                 width: [[14, 0.0px], [15, 0.35px], [16, 0.45px], [17, 0.85px], [18, 1px]]
-            # in_zoo:
-            #     filter: { landuse_kind: zoo }
-            #     draw:
-            #         lines:
-            #             color: [[14, [0.790,0.790,0.790]], [15, [1.00,1.00,1.00]]]
-            #             width: [[14, 0.35px], [15, 0px], [16, 0.25px], [17, 3px], [18, 3px], [19, 4px]]
-            #             outline:
-            #                 color: [0.790,0.790,0.790]
-            #                 width: [[14, 0.0px], [15, 0.35px], [16, 0.45px], [17, 0.85px], [18, 1px]]
-            # in_university:
-            #     filter: { landuse_kind: university }
-            #     draw:
-            #         lines:
-            #             color: [[14, [0.790,0.790,0.790]], [15, [1.00,1.00,1.00]]]
-            #             width: [[14, 0.35px], [15, 0px], [16, 0.25px], [17, 3px], [18, 3px], [19, 4px]]
-            #             outline:
-            #                 color: [0.790,0.790,0.790]
-            #                 width: [[14, 0.0px], [15, 0.35px], [16, 0.45px], [17, 0.85px], [18, 1px]]
-            # in_hospital:
-            #     filter: { landuse_kind: hospital }
-            #     draw:
-            #         lines:
-            #             color: [[14, [0.790,0.790,0.790]], [15, [1.00,1.00,1.00]]]
-            #             width: [[14, 0.35px], [15, 0px], [16, 0.25px], [17, 3px], [18, 3px], [19, 4px]]
-            #             outline:
-            #                 color: [0.790,0.790,0.790]
-            #                 width: [[14, 0.0px], [15, 0.35px], [16, 0.45px], [17, 0.85px], [18, 1px]]
-            labels-path:
-                filter: { $zoom: { min: 17 } }
+                        visible: true
+
+                labels-pedestrian:
+                    filter: { $zoom: { min: 14 } }
+                    draw:
+                        text-blend-order:
+                            priority: 58
+                            visible: global.text_visible_path
+                            font:
+                                fill: [0.536,0.556,0.581]
+                                size: [[15, 9px], [18, 13px]]
+                                stroke: { color: [[15, global.text_stroke], [17,[0.969,0.973,0.973]]], width: [[15, 2px], [17, 4px]] }
+
+        track:
+            filter:
+                kind: path
+                kind_detail: [track]
+                motor_vehicle: [false, no]
+            draw:
+                lines:
+                    order: function() { return feature.sort_rank; }
+                    color: [1.00,1.00,1.00]
+                    width: [[13, 0.65px], [14, 0.85px], [15, 1px], [17, 2.5m]]
+                    outline:
+                        color: [[12, [0.900,0.900,0.900]], [13, [0.774,0.797,0.823]], [14, [0.774,0.797,0.819]], [16, [0.725,0.747,0.766]]]
+                        width: [[14, 0px], [15, 0.75px], [16, 1px], [17, 1px], [18, 3px]]
+            labels-track:
                 draw:
                     text-blend-order:
-                        priority: 61
+                        priority: 58
                         visible: global.text_visible_path
                         font:
                             fill: [0.536,0.556,0.581]
-                            size: 12px
-                            stroke: { color: global.text_stroke, width: 4 }
-        track:
-            filter: { kind: path, kind_detail: track }
-            draw:
-                lines:
-                    color: [[14, [0.790,0.790,0.790]], [15, [1.00,1.00,1.00]]]
-                    width: [[13, 0px], [14, 0.35px], [15, 0px], [16, 0.25px], [17, 3px], [18, 3px], [19, 4px]]
-                    cap: butt
-                    join: round
-                    outline:
-                        color: [0.790,0.790,0.790]
-                        width: [[14, 0.0px], [15, 0.35px], [16, 0.45px], [17, 0.85px], [18, 1px]]
-            bridge:
-                filter: { is_bridge: true }
-                draw:
-                    lines:
-                        cap: butt
-                        width: [[13, 0px], [14, 0.35px], [15, 0px], [16, 0.25px], [17, 3px], [18, 3px], [19, 4px]]
-                        cap: round
-                        outline:
-                            color: [1.0,1.0,1.0]
-                            width: [[14, 0.0px], [15, 0.35px], [16, 0.45px], [17, 0.85px], [18, 1px]]
-                            cap: butt
-            in_park:
-                filter: { landuse_kind: [park,national_park,nature_reserve,conservation,golf_course,garden,battlefield] }
-                draw:
-                    lines:
-                        color: [[14, [0.790,0.790,0.790]], [15, [1.00,1.00,1.00]]]
-                        width: [[13, 0px], [14, 0.35px], [15, 0px], [16, 0.25px], [17, 3px], [18, 3px], [19, 4px]]
-                        outline:
-                            color: [0.790,0.790,0.790]
-                            width: [[14, 0.0px], [15, 0.35px], [16, 0.45px], [17, 0.85px], [18, 1px]]
+                            size: [[15, 9px], [18, 13px]]
+                            stroke: { color: [[15, global.text_stroke], [17,[0.969,0.973,0.973]]], width: [[15, 2px], [17, 4px]] }
+
         steps:
             filter:
                 all:
                     - kind: path
                     - kind_detail: steps
             draw:
-                dashed:
+                dashed_steps:
                     #order: function() { return feature.sort_rank; }
                     order: 1005
-                    color: [0.501,0.650,0.650]
-                    width: [[15, 0.6], [16, 1px], [17, 1px], [18, 4px], [19, 1.5m]]
-                lines:
-                    visible: false
-                    order: 1000
-                    #width: [[13, 0.75px], [14, 0.85px], [15, 1.1px], [16, 2px], [17, 6px], [18, 7px], [19, 10px]]
-                    #color: [[15,[0.120,0.600,0.520]],[16,[0.623,0.820,0.797]]]
-                    color: [[14,[0.510,0.752,0.695]],[15,[0.671,0.839,0.820]],[16,[0.671,0.839,0.820]]]
-                    width: [[13, 0.75px], [14, 0.6px], [15, 1px], [16, 2px], [17, 3px], [18, 4px], [19, 4px]]
-                    visible: true
-                    #color: purple
-            steps-late:
-                filter: { $zoom: { min: 17 } }
-                draw:
-                    # lines:
-                    #     color: [0.707,0.884,0.872]
-                    #     visible: true
-                    #     outline:
-                    #         width: [[17, 0px], [18, 1px], [19, 2px]]
-                    #         color: [0.850,0.850,0.850]
-                    dashed:
-                        width: [[17, 2px], [18, 3px], [19, 3.5px]]
-                        color: [0.501,0.650,0.650]
-            early-show-as-lines-z14:
-                filter: { $zoom: { max: 16 } }
-                draw:
-                    dashed:
-                        visible: false
-                    lines:
-                        visible: true
-            networked:
-                filter: { walking_network: true }
-                draw:
-                    lines:
-                        width: [[13, 0.75px], [14, 1px], [15, 2px], [16, 2px], [17, 3px], [18, 4px], [19, 4px]]
-                    dashed:
-                        width: [[13, 1.25px],[14, 2px],[15, 1.75px],[16, 2px], [17, 4px], [18, 5px], [19, 8px]]
-                    highlight:
-                        order: 980
-                        color: [[12,[0.900,1.000,0.850]],[14,[0.930,1.000,0.850]],[15,[1.000,1.000,0.870]]]
-                        width: [[12, 3px], [13, 4px], [14, 5px], [15, 6px], [16, 8px], [17, 10px], [18, 14px], [19, 16px]]
-                        join: round
-                early:
-                    filter: { $zoom: { max: 15 } }
-                    draw:
-                        lines:
-                            color: [0.120,0.600,0.520]
-                networked-steps-late:
-                    filter: { $zoom: { min: 18 } }
-                    draw:
-                        dashed:
-                            color: [0.120,0.600,0.520]
-            in_park:
-                filter: { landuse_kind: [park,nature_reserve,conservation,golf_course,garden] }
-                draw:
-                    dashed:
-                        color: [0.120,0.600,0.520]
-            # in_university:
-            #     filter: { landuse_kind: university }
-            #     draw:
-            #         dashed:
-            #             color: global.path_steps1_b
-            #             outline:
-            #                 color: [1.0,1.0,1.0]
-            # in_hospital:
-            #     filter: { landuse_kind: hospital }
-            #     draw:
-            #         dashed:
-            #             color: global.path_steps1_b
-            #             outline:
-            #                 color: [1.0,1.0,1.0]
+                    color: [1.00,1.00,1.00]
+                    width: [[15, 0.6], [16, 1px], [17, 2.5m]]
             labels-steps:
                 filter: { $zoom: { min: 17 } }
                 draw:
@@ -2828,6 +2764,51 @@ layers:
                             fill: [0.45,0.45,0.45]
                             size: 11px
                             stroke: { color: global.text_stroke, width: 4 }
+
+        other-roads-no-motorvehicle-overlay:
+            filter:
+                not: { kind: [path,ferry] }
+                motor_vehicle: no
+            draw:
+                lines:
+                    order: function() { return feature.sort_rank; }
+                    color: [1.00,1.00,1.00]
+                    width: [[13, 0.65px], [14, 0.85px], [15, 1px], [17, 2.5m]]
+                    outline:
+                        color: [[12, [0.900,0.900,0.900]], [13, [0.774,0.797,0.823]], [14, [0.774,0.797,0.819]], [16, [0.725,0.747,0.766]]]
+                        width: [[14, 0px], [15, 0.75px], [16, 1px], [17, 1px], [18, 3px]]
+            labels-track:
+                draw:
+                    text-blend-order:
+                        priority: 58
+                        visible: global.text_visible_path
+                        font:
+                            fill: [0.536,0.556,0.581]
+                            size: [[15, 9px], [18, 13px]]
+                            stroke: { color: [[15, global.text_stroke], [17,[0.969,0.973,0.973]]], width: [[15, 2px], [17, 4px]] }
+
+        other-roads-walking-network-only:
+            filter:
+                all:
+                - walking_network: true
+                - not:
+                    any:
+                        - { kind: [path,ferry], not: { kind_detail: pedestrian } }
+                        - kind_detail: [track]
+            draw:
+                lines:
+                    order: function() { return feature.sort_rank; }
+                    color: [1.00,1.00,1.00]
+                    width: [[13, 0.65px], [14, 0.85px], [15, 1px], [17, 2.5m]]
+                    outline:
+                        color: [[12, [0.900,0.900,0.900]], [13, [0.774,0.797,0.823]], [14, [0.774,0.797,0.819]], [16, [0.725,0.747,0.766]]]
+                        width: [[14, 0px], [15, 0.75px], [16, 1px], [17, 1px], [18, 3px]]
+
+
+
+
+
+
         winter_sport_pistes:
             filter: { kind: piste }
             draw:
@@ -3000,7 +2981,7 @@ layers:
     buildings:
         data: { source: mapzen, layer: buildings }
         filter:
-            not: { location: underground }
+            not: { location: underground, layer: -1 }
         # set default footprint and extrusion draw properties, but don't draw by default (rules below will turn visibility on)
         draw:
             polygons:
@@ -3345,9 +3326,9 @@ layers:
                     $zoom: [2,3]
                 draw:
                     text-blend-order:
-                        priority: 10
-                        buffer: 10px
                         font:
+                            priority: 10
+                            buffer: 10px
                             weight: 200
                             size: 11px
                 early-ones-z2:
@@ -3485,7 +3466,7 @@ layers:
                             transform: uppercase
 
             region-z7-z8:
-                filter: { $zoom: [7] }
+                filter: { $zoom: [7,8] }
                 draw:
                     text-blend-order:
                         visible: global.text_visible_admin
@@ -3651,7 +3632,7 @@ layers:
                     text-blend-order:
                         priority: 6
                         font:
-                            size: [[2,11px],[6,17px],[8,19px],[12,21px],[13,0px]]
+                            size: [[2,11px],[6,17px],[8,19px],[12,21x],[13,0px]]
                 capital:
                     filter: { country_capital: true, $zoom: { min: 5 } }
                     draw:
@@ -4126,7 +4107,7 @@ layers:
                 - $geometry: point
                 # White list a few kinds to "always" show per the tile zoom inclusion, else test feature's min_zoom
                 #- function() { return feature.min_zoom <= $zoom }
-                - function() { if( feature.kind == 'attraction' || feature.kind == 'landmark' || feature.kind == 'hunting' || feature.kind == 'dive_centre' || feature.kind == 'gas_canister' || feature.kind == 'hunting' || feature.kind == 'fishing_area' || feature.kind == 'playground' || feature.kind == 'toilets' ) { return true } else { return feature.min_zoom <= $zoom } }
+                - function() { if( feature.kind == 'attraction' || feature.kind == 'landmark' || feature.kind == 'hunting' || feature.kind == 'dive_centre' || feature.kind == 'gas_canister' || feature.kind == 'hunting' || feature.kind == 'fishing_area' || feature.kind == 'playground' || feature.kind == 'toilets' || feature.kind == 'drinking_water' || feature.kind == 'cycle_barrier' || feature.kind == 'bicycle_rental_station' ) { return true; } else { return feature.min_zoom <= $zoom; } }
         draw:
             icons:
                 visible: global.icon_visible_poi_landuse
@@ -4168,55 +4149,25 @@ layers:
                         # some pois have really long names
                         max_lines: 5
 
-        text-colours:
-            greens:
-                filter:
-                    kind: [park, national_park, conservation, protected_area, nature_reserve, forest, grass, beach, battlefield]
-                draw:
-                    icons:
-                        text:
-                            font:
-                                fill: [0.032,0.522,0.530]
-                                style: italic
-                                size: [[13,11px],[14,11px],[18,12px]]
+        greens-text-colours:
+            filter:
+                kind: [park, national_park, conservation, protected_area, nature_reserve, forest, grass, beach, battlefield]
+            draw:
+                icons:
+                    text:
+                        font:
+                            fill: [0.032,0.522,0.530]
+                            style: italic
+                            size: [[13,11px],[14,11px],[18,12px]]
 
         has-name:
             filter: { name: true }
-            # match 1:1 correlations between data and sprite name
-            # draw:
-            #     icons:
-            #         visible: false
-            direct-match:
-                filter:
-                    area: false
-                draw:
-                    icons:
-                        # sprite_source: kind
-                        sprite: function() { return feature.kind; }
-                        visible: global.icon_visible_poi_landuse
-            # add generic icon at high zoom, if direct match fails
-            generic-icons:
-                filter: { $zoom: { min: 18 }, area: false }
-                draw:
-                    icons:
-                        priority: 47
-                        sprite_default: generic
-                        visible: global.icon_visible_poi_landuse
 
-            # add generic icon at high zoom
-            default-label-names:
-                filter: { $zoom: { min: 13 }, area: false }
-                draw:
-                    icons:
-                        text:
-                            visible: global.text_visible_poi_landuse
             peak:
                 filter: { kind: [peak, volcano] }
                 draw:
                     icons:
-                        visible: global.icon_visible_poi_landuse
                         priority: 43
-                        text:  { visible: global.text_visible_poi_landuse }
                 low-priority-early-z11:
                     filter: { kind_tile_rank: { min: 3 }, $zoom: [11,12] }
                     draw:
@@ -4237,10 +4188,6 @@ layers:
                                 text_source: function() { if( feature.name && feature.elevation ) { return feature.name + "\n" + feature.elevation + "m"; } else { if( feature.name ) { return feature.name; } else { return feature.elevation; } } }
             waterfall-early:
                 filter: { kind: [waterfall], $zoom: { max: 14 } }
-                draw:
-                    icons:
-                        visible: global.icon_visible_poi_landuse
-                        text:  { visible: global.text_visible_poi_landuse }
                 low-priority-early-z11:
                     filter: { kind_tile_rank: { min: 3 }, $zoom: [11,12] }
                     draw:
@@ -4271,13 +4218,7 @@ layers:
                         - { $zoom: { min: 17 }, area: true }
                 draw:
                     icons:
-                        visible: global.icon_visible_poi_landuse
                         priority: 41
-                        text:
-                            visible: global.text_visible_poi_landuse
-                            # font:
-                            #     size: 10px
-                            #     stroke: { color: global.text_stroke, width: 4 }
             tourism-related:
                 filter:
                     all:
@@ -4307,18 +4248,18 @@ layers:
                 filter: { kind: [bicycle_repair_station, cycle_barrier, life_ring, waste_disposal, watering_place, water_point, lifeguard_tower, power_pole, power_tower, petroleum_well, communications_tower, putin, egress, hazard, put_in_egress, rapid, beacon, cross, mineshaft, adit, water_well, saddle, dune, sinkhole, rock, stone, bicycle_junction, walking_junction, dam, boat_storage, windmill, fishing, recreation_track, horse, fire_lookout, fee_station, rest_area] }
                 draw:
                     icons:
-                        order: 41
-                        sprite: generic
+                        priority: 41
+                        #sprite: generic
             outdoor-has-icons:
                 filter: { kind: [outdoor, lighthouse, saddle, picnic_area, picnic_table, camp_site, ski, mine, zoo, museum, gas, gas_canister, slipway, mineshaft, adit, recreation_track, playground, allotments, attraction, landmark] }
                 draw:
                     icons:
-                        order: 41
+                        priority: 41
             not-outdoor-not-landuse:
                 filter: { area: false, not: { kind: [park, national_park, outdoor, bicycle_repair_station, life_ring, waste_disposal, watering_place, water_point, lifeguard_tower, power_pole, power_tower, petroleum_well, bicycle_junction, walking_junction, dam, boat_storage, windmill, playground, allotments, attraction, landmark] } }
                 draw:
                     icons:
-                        order: 45
+                        priority: 45
 
         # source icon sprite from something other than kind
         sports-pitch:
@@ -4326,9 +4267,6 @@ layers:
             draw:
                 icons:
                     sprite: function() { return feature.kind_detail; }
-                    # needs a better recreation icon, so just use generic (default) for now
-                    #sprite_default: sports
-                    #visible: global.icon_visible_poi_landuse_e
                     priority: 69
         place_of_worship:
             filter:
@@ -4372,9 +4310,10 @@ layers:
                     icons:
                         visible: false
             # we agree with server value, always show
-            always-show:
+            # the z- in the layer name is important here
+            z-always-show:
                 filter:
-                    kind: [bbq,bicycle_junction,firepit,fishing_area,geyser,hot_spring,observatory,picnic_site,picnic_table,playground,power_pole,power_tower,pylon,shower,slipway,swimming_area,toilets,trailhead,walking_junction,water_tower]
+                    kind: [bbq,firepit,fishing_area,geyser,hot_spring,observatory,picnic_site,picnic_table,playground,power_pole,power_tower,pylon,shower,slipway,swimming_area,toilets,trailhead,walking_junction,water_tower]
                 draw:   { icons: { visible: global.icon_visible_poi_landuse_e } }
 
             # probaly difference with server, selectively show by zoom
@@ -4457,7 +4396,7 @@ layers:
                 draw: { icons: { visible: false } }
 
             outdoor-special-priority:
-                filter: { kind: [beacon,bicycle_junction,bicycle_repair_station,boat_storage,communications_tower,cross,dam,dune,egress,fee_station,fire_lookout,hazard,horse,life_ring,lifeguard_tower,petroleum_well,power_pole,power_tower,put_in_egress,putin,rapid,rest_area,rock,saddle,silo,sinkhole,stone,walking_junction,waste_disposal,water_point,water_well,watering_place,windmill] }
+                filter: { kind: [beacon,bicycle_repair_station,boat_storage,communications_tower,cross,dam,dune,egress,fee_station,fire_lookout,hazard,horse,life_ring,lifeguard_tower,petroleum_well,power_pole,power_tower,put_in_egress,putin,rapid,rest_area,rock,saddle,silo,sinkhole,stone,walking_junction,waste_disposal,water_point,water_well,watering_place,windmill] }
                 draw:
                     icons:
                         priority: 43
@@ -4557,7 +4496,8 @@ layers:
             hide-until-z16-no-area:
                 filter:
                     area: false
-                    kind: [allotments, college, garden, university]
+                    # dissagreements over toilets
+                    kind: [bicycle, allotments, college, garden, university, toilets]
                     $zoom: { max: 16 }
                 draw:
                     icons:
@@ -4583,7 +4523,7 @@ layers:
                     area: false
                     $zoom: { max: 17 }
                     # note: atm and drinking_water appear hear and in area versions
-                    kind: [accountant, administrative, advertising_agency, animal, architect, association, atm, bakery, bed_and_breakfast, bicycle, bicycle_parking, bicycle_rental_station, books, butcher, car, car_repair, chalet, clothes, company, computer, consulting, convenience, doityourself, drinking_water, dry_cleaning, educational_institution, emergency_phone, employment_agency, estate_agent, fashion, financial, florist, foundation, gift, government, greengrocer, guest_house, hairdresser, hostel, hotel, insurance, it, jewelry, lawyer, mast, memorial, mobile_phone, motel, newspaper, ngo, notary, optician, parking, pet, physician, political_party, post_box, religion, research, subway_entrance, tax_advisor, telecommunication, telephone, theatre, therapist, toilets, traffic_signals, travel_agent, water_tower]
+                    kind: [accountant, administrative, advertising_agency, animal, architect, association, atm, bakery, bed_and_breakfast, bicycle_rental_station, books, butcher, car, car_repair, chalet, clothes, company, computer, consulting, convenience, doityourself, drinking_water, dry_cleaning, educational_institution, emergency_phone, employment_agency, estate_agent, fashion, financial, florist, foundation, gift, government, greengrocer, guest_house, hairdresser, hostel, hotel, insurance, it, jewelry, lawyer, mast, memorial, mobile_phone, motel, newspaper, ngo, notary, optician, parking, pet, physician, political_party, post_box, religion, research, subway_entrance, tax_advisor, telecommunication, telephone, theatre, therapist, traffic_signals, travel_agent, water_tower]
                 draw:
                     icons:
                         visible: false
@@ -4726,11 +4666,11 @@ layers:
 
 
         # set special priority, sprite, and text styles per kind
-        # has-area:
-        #     filter: { area: true }
-        #     draw:
-        #         icons:
-        #             priority: 41
+        has-area:
+            filter: { area: true }
+            draw:
+                icons:
+                    priority: 41
 
         national-park-protected-areas:
             filter:
@@ -4864,7 +4804,6 @@ layers:
                             style: italic
                             fill: global.text_fill_park
 
-        # natural_forest, natural_park, natural_wood
         # landuse-labels-not-any-above:
         #     filter:
         #         not: { kind: [aerodrome, airport, allotments, aquarium, attraction, battlefield, beach, cemetery, college, conservation, forest, garden, glacier, golf_course, grass, kindergarten, landmark, maze, national_park, nature_reserve, park, playground, protected_area, resort, school, stadium, station, theme_park, university, winery, winter_sports, zoo] }
@@ -5168,6 +5107,10 @@ layers:
                 order: function() { return feature.sort_rank; }
                 visible: false
 
+            terrain-park:
+                order: function() { return feature.sort_rank; }
+                visible: false
+
         landuse-labels:
             filter:
                 all:
@@ -5240,7 +5183,7 @@ layers:
                         - not: { operator: [ "United States Forest Service" ] }
                         - protect_class: ['2','3','5']
                 draw:
-                    terrain:
+                    terrain-park:
                         interactive: false
                         color: [0.890,1.00,1.00]
                         # todo: what is this?
@@ -5253,9 +5196,9 @@ layers:
                             - operator: [ "United States National Park Service" ]
                             - protect_class: ['2','3','5']
                     draw:
-                        terrain:
+                        terrain-park:
                             visible: true
-                            color: [0.890,1.00,1.00]
+                            color: [0.920,1.000,1.000]
 
         tier2:
             # filter:
@@ -5284,9 +5227,9 @@ layers:
                         - kind: [protected_area, nature_reserve, national_park]
                         - not: { protect_class: [2,3,5]}
                 draw:
-                    terrain:
-                        # color: [1.00,0.974,0.950]
-                        color: [0.88,0.99,0.88]
+                    terrain-park:
+                        #color: [0.880,0.990,0.880]
+                        color: [1.000,1.000,0.930]
                         visible: true
                     # outline:
                     #     style: lines
@@ -5301,8 +5244,8 @@ layers:
                         - protect_class: ['6']
                         - operator: ['United States Forest Service']
                 draw:
-                    terrain:
-                        color: [0.945,0.995,0.945] #global.green7
+                    terrain-park:
+                        color: [0.995,1.000,0.985] #global.green7
                         visible: true
 
             parks-and-national-forests-not-national-park:
@@ -5315,8 +5258,10 @@ layers:
                         - not: { protect_class: ['2','3','5','6'] }
                 # default for national forests and more?
                 draw:
-                    terrain:
-                        color: [0.880,1.000,0.950]
+                    terrain-park:
+                        # color: [0.880,1.000,0.950]
+                        color: [0.940,1.000,0.970] #[[4, [0.900,1.000,0.990]], [13, [0.827,0.941,0.894]]]
+                        # color: [1.0,1.0,1.0]
                         visible: true
                 national_park:
                     #filter: function() { return feature.name && (feature.name.indexOf('National Park') > -1); }
@@ -5325,7 +5270,7 @@ layers:
                             - kind: national_park
                             - not: [ protect_class: ['2','3','5','6'], operator: [ "United States National Park Service"] ]
                     draw:
-                        terrain:
+                        terrain-park:
                             color: [0.890,1.00,1.00]
                             visible: true
 
@@ -5342,8 +5287,8 @@ layers:
             forest:
                 filter: { kind: [forest, wood, natural_wood, natural_forest, natural_park], $zoom: { min: 10 }, not: { operator: [ "United States Forest Service"] } }
                 draw:
-                    terrain:
-                        color: [0.956,0.99,0.966]
+                    terrain-park:
+                        color: [0.946,1.000,0.966]
                         visible: true
 
             # nature_reserve:
@@ -5431,14 +5376,14 @@ layers:
                 filter:
                     kind: cemetery
                 draw:
-                    terrain:
+                    terrain-park:
                         color: [0.982,1.000,0.960]
                         visible: true
             golf_course:
                 filter:
                     kind: golf_course
                 draw:
-                    terrain:
+                    terrain-park:
                         color: [0.890,1.000,0.892]
                         # color: [0.840,1.000,0.907]
                         visible: true
@@ -5625,20 +5570,20 @@ layers:
             filter:
                 kind: [pitch, meadow, village_green, grass, farmland, playground]
             draw:
-                terrain:
+                terrain-park:
                     color: [0.808,0.962,0.951]
                     visible: true
             farmland_friends:
                 filter: { kind: [farmland] }
                 draw:
-                    terrain:
-                        color: [0.965,0.996,0.965]
+                    terrain-park:
+                        color: [1.000,1.000,1.000]
                         #visible: false
             meadow_friends:
                 filter: { kind: [meadow, grass] }
                 draw:
-                    terrain:
-                        color: [0.825,0.976,0.895]
+                    terrain-park:
+                        color: [0.900,1.000,0.955]
             pitch_later:
                 filter: { kind: pitch, $zoom: { min: 17 } }
                 draw:
@@ -5785,422 +5730,6 @@ layers:
                             size: 10px
                             style: italic
                             stroke: { color: [0.894,0.906,0.914], width: 3 }
-
-    path-overlay:
-        data: { source: mapzen, layer: roads }
-        filter:
-            all:
-                - kind: path
-            not:
-                - kind_detail: [pier]
-        draw:
-            lines:
-                color: [[11,[0.408,0.741,0.690]],[15,[0.131,0.667,0.575]]] #[11,[0.252,0.509,0.60]],[12,[0.120,0.600,0.520]]
-            dashed_small:
-                color: [0.120,0.600,0.520]
-            dots-lines:
-                color: [0.120,0.600,0.520]
-                # color: [0.257,0.520,0.802] ## added red
-                # color: [0.302,0.649,0.740] ## more blue
-                # color: [0.292,0.650,0.644] ## more green
-                # color: [0.416,0.750,0.746]
-        # bigger path, sometimes paved (walk with friends side-by-side), also tracks that are no vehicles
-        paths:
-            filter:
-                any:
-                    - kind_detail: path
-                    - all:
-                        - kind_detail: track
-                        - motor_vehicle: no
-            draw:
-                lines:
-                    join: round
-                    cap: round
-                    color: [[13, [0.510,0.752,0.695]], [14,[0.412,0.710,0.665]], [15, [0.298,0.686,0.627]], [16, [0.860,1.000,0.977]], [17, [0.860,1.000,0.977]]]
-                    width: [[13, 1px], [14, 1.1px], [15, 1.4px], [16, 0px], [17, 1px], [18, 1.75px], [19, 2.25px]]
-                    order: 1003
-                    outline:
-                        color: [0.120,0.600,0.520]
-                        width: [[15, 0px], [16, 0.8px], [17, 1.25px], [18, 2.5px]]
-            networked:
-                filter: { walking_network: true }
-                draw:
-                    lines:
-                        width: [[12, 1px], [13, 1px], [14, 1.1px], [15, 1.5px], [16, 0px], [17, 1.5px], [18, 1.75px], [19, 2.25px]]
-                    highlight:
-                        order: 980
-                        color: [[12,[1.000,1.000,0.870]],[15,[1.000,1.000,0.870]]]
-                        width: [[12, 3px], [13, 4px], [14, 5px], [15, 6px], [16, 7px], [17, 10px], [18, 14px], [19, 16px]]
-                        join: round
-            no_name_early_not_designated:
-                filter: { name: false, $zoom: { max: 14 } }
-                draw:
-                    lines:
-                        width: [[0,1px]]
-            in_zoo_golf_course:
-                filter: { landuse_kind: [zoo, golf_course, garden, university, cemetery, allotments] }
-                draw:
-                    lines:
-                        width: [[13, 0.5px], [15, 0.65px], [16, 0px], [17, 1.5px], [18, 1.75px], [19, 2.25px]]
-                early:
-                    filter: { $zoom: { max: 15 } }
-                    draw:
-                        lines:
-                            visible: false
-            labels-path:
-                #filter: { $zoom: { min: 17 } }
-                draw:
-                    text-blend-order:
-                        priority: 58
-                        visible: global.text_visible_path
-                        font:
-                            fill: [0.143,0.544,0.481]
-                            # fill: [0.256,0.570,0.565]
-                            size: 12px
-                            stroke: { color: global.text_stroke, width: 4 }
-                in_zoo_golf_course:
-                    filter: { landuse_kind: [zoo, golf_course, garden, university, cemetery, allotments], $zoom: { max: 15 } }
-                    draw:
-                        text-blend-order:
-                            visible: false
-
-
-        # single hiking path
-        footway:
-            filter: { kind_detail: [footway] }
-            draw:
-                dots-lines:
-                    order: 1002
-                    color: [0.120,0.600,0.520]
-                    #width: [[13, 0.75px], [14, 0.85px], [15, 1.1px], [16, 3px], [17, 6px], [18, 7px], [19, 10px]]
-                    width: [[13, 0.75px], [14, 1px], [15, 3.5px], [16, 3px], [17, 4px], [18, 5px], [19, 8px]]
-                    visible: true
-                    #color: purple
-                lines:
-                    order: 1000
-                    #width: [[13, 0.75px], [14, 0.85px], [15, 1.1px], [16, 2px], [17, 6px], [18, 7px], [19, 10px]]
-                    #color: [[15,[0.120,0.600,0.520]],[16,[0.623,0.820,0.797]]]
-                    color: [[14,[0.510,0.752,0.695]],[15,[0.671,0.839,0.820]],[16,[0.671,0.839,0.820]]]
-                    width: [[13, 0.75px], [14, 0.6px], [15, 1px], [16, 2px], [17, 3px], [18, 4px], [19, 4px]]
-                    visible: true
-                    #color: purple
-                dashed_small:
-                    order: 1005
-            early-show-as-lines-z14:
-                filter: { $zoom: { max: 15 } }
-                draw:
-                    dots-lines:
-                        visible: false
-                    lines:
-                        visible: true
-            early-show-as-lines-z15:
-                filter: { $zoom: [15] }
-                draw:
-                    dots-lines:
-                        visible: true
-                    lines:
-                        visible: true
-            networked:
-                filter: { walking_network: true }
-                draw:
-                    lines:
-                        #width: [[12, 0.75px], [13, 1px], [14, 1px], [15, 1.25px], [16, 0px], [17, 1.5px], [18, 1.75px], [19, 2.25px]]
-                        width: [[13, 1.25px],[14, 1.4px],[15, 1.75px],[16, 2px], [17, 4px], [18, 5px], [19, 8px]]
-                        #color: [[15,[0.120,0.600,0.520]],[16,[0.623,0.820,0.797]]]
-                    highlight:
-                        order: 980
-                        color: [[12,[0.900,1.000,0.850]],[14,[0.930,1.000,0.850]],[15,[1.000,1.000,0.870]]]
-                        width: [[12, 3px], [13, 4px], [14, 5px], [15, 6px], [16, 8px], [17, 10px], [18, 14px], [19, 16px]]
-                        join: round
-                early:
-                    filter: { $zoom: { max: 15 } }
-                    draw:
-                        lines:
-                            color: [0.120,0.600,0.520]
-            # de-emphasize less important trails at early zooms
-            # where less important are trails without names, trails in less interesting landuse, or just early
-            in_zoo_golf_course:
-                filter:
-                    all:
-                        - landuse_kind: [zoo, enclosure, petting_zoo, golf_course, garden, university, parking, pedestrian, attraction, residential, stadium, playground, allotments]
-                        - $zoom: { max: 17 }
-                draw:
-                    lines:
-                        visible: true
-                early:
-                    filter: { $zoom: { max: 16 } }
-                    draw:
-                        dots-lines:
-                            visible: false
-                early-z15:
-                    filter: { $zoom: { max: 16 } }
-                    draw:
-                        lines:
-                            color: [0.120,0.600,0.520]
-                            width: [[14,0.4px],[15,0.5px]]
-                garden-early:
-                    filter: { kind: [garden] }
-                    draw:
-                        lines:
-                            width: [[14,0.1px],[15,0.3px]]
-            in_cemetery:
-                filter:
-                    all:
-                        - landuse_kind: [cemetery]
-                draw:
-                    lines:
-                        visible: true
-                        color: [0.863,0.941,0.867]
-                    dots-lines:
-                        color: [0.510,0.752,0.695]
-                early:
-                    filter: { $zoom: { max: 16 } }
-                    draw:
-                        dots-lines:
-                            visible: false
-                early-z15:
-                    filter: { $zoom: { max: 16 } }
-                    draw:
-                        lines:
-                            color: [0.510,0.752,0.695]
-                            width: [[14,0.25px],[15,0.5px]]
-            sidewalk-crossing:
-                filter: { footway: [sidewalk, crossing], not: { walking_network: true } }
-                draw:
-                    lines:
-                        order: 350 # function() { return feature.sort_rank; }
-                    dots-lines:
-                        order: 351 # function() { return (feature.sort_rank + 1); }
-                    dashed_small:
-                        visible: false
-                early-z17:
-                    filter: { $zoom: { max: 18 } }
-                    draw:
-                        lines:
-                            visible: false
-                        dots-lines:
-                            visible: false
-                early-z17-lines:
-                    filter: { $zoom: [17] }
-                    draw:
-                        lines:
-                            visible: true
-                            width: 1.5px
-            labels-footpaths:
-                filter: { $zoom: { min: 15 } }
-                draw:
-                    text-blend-order:
-                        priority: 58
-                        visible: global.text_visible_path
-                        font:
-                            fill: [0.143,0.544,0.481]
-                            size: 12px
-                            stroke: { color: global.text_stroke, width: 4 }
-                in_zoo_golf_course:
-                    filter: { landuse_kind: [zoo, golf_course, garden, university, cemetery, allotments], $zoom: { max: 15 } }
-                    draw:
-                        text-blend-order:
-                            visible: false
-
-        cycleway_pedestrian:
-            filter:
-                all:
-                    - kind_detail: [cycleway, pedestrian]
-                    - not: { kind_detail: [pedestrian], walking_network: true }
-            draw:
-                lines:
-#                    color: blue #[0.120,0.600,0.520]
-#                    width: [[13, 1px], [14, 1.45px], [15, 1.1px], [16, 1.5px], [17, 2px], [18, 5px], [19, 6px]]
-#                    order: 1004
-                    color: [[11,[0.120,0.600,0.520]],[14,[0.120,0.600,0.520]],[15,[1.00,1.00,1.00]]]
-                    #width: [[11, 0.25px], [12, 0.35px], [13, 0.55px],[14,1px],[15,0px]]
-                    width: [[13, 0.75px], [14, 1.1px], [15, 1.1px], [16, 1.5px], [17, 2.2px], [18, 5px], [19, 6px]]
-                    # let roads sort themselves past zoom 14
-                    order: 1004
-                    outline:
-                        color: [0.120,0.600,0.520]
-                        width: [[11, 0px],[14, 0px],[15, 0.5px],[16, 1px]]
-            networked:
-                filter: { walking_network: true }
-                draw:
-                    lines:
-                        color: [[11,[0.120,0.600,0.520]],[14,[0.120,0.600,0.520]],[15,[1.00,1.00,1.00]]]
-                        width: [[13, 0.75px], [14, 1.1px], [15, 1.1px], [16, 1.5px], [17, 2.2px], [18, 5px], [19, 6px]]
-                    highlight:
-                        order: 980
-                        color: [[12,[0.900,1.000,0.850]],[14,[0.930,1.000,0.850]],[15,[1.000,1.000,0.880]]]
-                        width: [[12, 0px], [13, 4px], [14, 5px], [15, 7px], [16, 10px], [17, 12px], [18, 14px], [19, 16px]]
-                        join: round
-            late:
-                filter: { $zoom: { min: 15 } }
-                draw:
-                    lines:
-                        color: [1.00,1.00,1.00]#[0.145,0.745,0.643] #[[17,'#c8ecf7'],[18,'#a9d9e8']] #white
-                        join: round
-                        cap: round
-                        outline:
-                            #color: [0.120,0.600,0.520]
-                            join: round
-                            cap: round
-                            width: [[15, 1px], [16, 1.5px], [17, 1.6px], [18, 2px], [19, 2px]]
-                            order: 999
-            labels-cycleway:
-                filter: { $zoom: { min: 14 } }
-                draw:
-                    text-blend-order:
-                        priority: 58
-                        visible: global.text_visible_path
-                        font:
-                            fill: [0.120,0.600,0.520]
-                            size: 12px
-                            stroke: { color: global.text_stroke, width: 4 }
-
-    track-overlay:
-        data: { source: mapzen, layer: roads }
-        filter:
-            all:
-                - kind: path
-                - kind_detail: [track]
-                - motor_vehicle: false
-        draw:
-            lines:
-                color: [[13,[0.773,0.705,0.605]],[14,[0.630,0.519,0.418]]]
-                # color: [0.756,0.563,0.499]
-                width: [[13, 0.6px], [14, 1px], [15, 1.1px], [16, 1.25px], [17, 1.5px], [18, 5px], [19, 6px]]
-                order: 990
-        late:
-            filter: { $zoom: { min: 16 } }
-            draw:
-                lines:
-                    color: white
-                    join: round
-                    cap: round
-                    outline:
-                        color: [0.630,0.519,0.418]
-                        # color: [0.756,0.563,0.499]
-                        join: round
-                        cap: round
-                        width: [[16, 1px], [17, 1.5px], [18, 2px], [19, 2px]]
-                        order: 999
-        in_zoo_golf_course:
-            filter: { landuse_kind: [zoo, golf_course, garden, university, cemetery, allotments] }
-            draw:
-                lines:
-                    width: [[13, 1px], [14, 1.45px], [15, 1.1px], [16, 1.5px], [17, 2px], [18, 5px], [19, 6px]]
-            early:
-                filter: { $zoom: { max: 15 } }
-                draw:
-                    lines:
-                        visible: false
-        networked:
-            filter: { walking_network: true }
-            draw:
-                lines:
-                    width: [[13, 1px], [14, 1.2px], [15, 1.5px], [16, 1.25px], [17, 1.5px], [18, 3px], [19, 4px]]
-                highlight:
-                    order: 980
-                    color: [[12,[1.000,1.000,0.870]],[15,[1.000,1.000,0.870]]]
-                    width: [[12, 2.5px], [13, 4px], [14, 5px], [15, 6px], [16, 8px], [17, 10px], [18, 14px], [19, 16px]]
-                    join: round
-            early:
-                filter: { landuse_kind: [zoo, golf_course, garden, university, cemetery, allotments], $zoom: { max: 15 } }
-                draw:
-                    lines:
-                        visible: true
-        labels-track:
-            #filter: { $zoom: { min: 17 } }
-            draw:
-                text-blend-order:
-                    priority: 58
-                    visible: global.text_visible_path
-                    font:
-                        fill: [0.536,0.451,0.378]
-                        size: 12px
-                        stroke: { color: global.text_stroke, width: 4 }
-            in_zoo_golf_course-early:
-                filter: { landuse_kind: [zoo, golf_course, garden, university, cemetery, allotments], $zoom: { max: 15 } }
-                draw:
-                    text-blend-order:
-                        visible: false
-    other-roads-no-motorvehicle-overlay:
-        data: { source: mapzen, layer: roads }
-        filter:
-            all:
-                - not: { kind: [path,ferry] }
-                - motor_vehicle: no
-        draw:
-            lines:
-                color: [0.710,0.553,0.522]
-                width: [[11, 0.25px], [12, 0.35px], [13, 0.55px], [14, 1px], [15, 0px], [16, 1.5px], [17, 3px], [18, 3m]]
-                order: 990
-        late:
-            filter: { $zoom: { min: 15 } }
-            draw:
-                lines:
-                    color: [0.940,0.940,0.940]
-                    join: round
-                    cap: round
-                    outline:
-                        color: [0.710,0.553,0.522]
-                        join: round
-                        cap: round
-                        width: [[15, 0.5px], [16, 1.25px], [17, 1.5px], [18, 1.5px], [19, 3px]]
-                        order: 999
-        labels-track:
-            #filter: { $zoom: { min: 17 } }
-            draw:
-                text-blend-order:
-                    priority: 58
-                    visible: global.text_visible_path
-                    font:
-                        fill: [0.536,0.451,0.378]
-                        size: 12px
-                        stroke: { color: global.text_stroke, width: 4 }
-
-
-    other-roads-walking-network-only:
-        data: { source: mapzen, layer: roads }
-        filter:
-            all:
-                - walking_network: true
-                - not:
-                    any:
-                        - { kind: [path,ferry], not: { kind_detail: pedestrian } }
-                        #- motor_vehicle: [no,false]
-                        - kind_detail: [track]
-        draw:
-            lines:
-                color: [0.120,0.600,0.520]
-                width: [[11, 0.25px], [12, 0.35px], [13, 0.55px], [14, 1px], [15, 0px], [16, 1px], [17, 6px], [18, 9m]]
-                order: 990
-        double-lines:
-            filter: { $zoom: { min: 16 } }
-            draw:
-                lines:
-                    color: [1.000,1.000,0.870]
-                    width: [[15,0px],[16,1px],[17,4px],[18,6m]]
-                    outline:
-                        color: [0.120,0.600,0.520]
-                        width: [[15, 0.5px],[16, 1.5px],[17, 1.5px],[18, 2.5px],[19, 1m]]
-        the_network:
-            draw:
-                lines:
-                    width: [[13, 0.9px], [14, 1.2px], [15, 2.0px], [16, 1px], [17, 2px], [18, 6m]]
-                highlight:
-                    order: 980
-                    color: [[12,[0.900,1.000,0.850]],[14,[0.930,1.000,0.850]],[15,[1.000,1.000,0.870]]]
-                    width: [[12, 3px], [13, 4px], [14, 5px], [15, 6px], [16, 10px], [17, 12px], [18, 14px], [19, 16px]]
-                    join: round
-        hide-most-till-mid-zooms:
-            filter:
-                all:
-                    - $zoom: { max: 12 }
-                    - walking_network: [lwn,rwn]
-            draw:
-                lines:
-                    visible: false
-                highlight:
-                    visible: false
 
     transit-overlay-rail-lines:
         data: { source: mapzen, layer: transit }
