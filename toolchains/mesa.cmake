@@ -12,6 +12,8 @@ ExternalProject_Add(
 
   BUILD_COMMAND make -j8
 
+  INSTALL_COMMAND make install
+
   UPDATE_COMMAND ""
   PATCH_COMMAND ""
   TEST_COMMAND ""
@@ -24,10 +26,22 @@ message(STATUS "MESA ${install_dir} - ${CMAKE_BINARY_DIR}")
 
 ExternalProject_Add_Step(
   OSMesa CopyToBin
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${install_dir}/lib ${CMAKE_BINARY_DIR}/bin}
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${install_dir}/lib ${CMAKE_BINARY_DIR}/lib}
   DEPENDEES install
 )
 
 set(OSMesa_INCLUDE_DIRS "${install_dir}/include")
 set(OSMesa_LIBRARIES "${CMAKE_SHARED_LIBRARY_PREFIX}OSMesa${CMAKE_SHARED_LIBRARY_SUFFIX}")
 set(OSMesa_LIBRARY_DIR "${install_dir}/lib")
+
+
+# use, i.e. don't skip the full RPATH for the build tree
+SET(CMAKE_SKIP_BUILD_RPATH FALSE)
+SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+SET(CMAKE_INSTALL_RPATH ${CMAKE_BINARY_DIR}/OSMesa-prefix/lib ${CMAKE_INSTALL_RPATH})
+link_directories(${CMAKE_BINARY_DIR}/OSMesa-prefix/lib)
+
+#SET(CMAKE_INSTALL_RPATH ${CMAKE_BINARY_DIR}/lib ${CMAKE_INSTALL_RPATH})
+#link_directories(${CMAKE_BINARY_DIR}/lib)

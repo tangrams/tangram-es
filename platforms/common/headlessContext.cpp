@@ -2,9 +2,12 @@
 
 #include "log.h"
 
+#define IMAGE_DEPTH 4
+
 namespace Tangram {
 
 bool HeadlessContext::init() {
+
    m_ctx = OSMesaCreateContextExt(OSMESA_RGBA, 16, 8, 0, NULL );
    if (!m_ctx) {
       LOGE("OSMesaCreateContext failed!");
@@ -28,7 +31,7 @@ bool HeadlessContext::resize(uint32_t w, uint32_t h) {
     m_width = w;
     m_height = h;
 
-    m_buffer = static_cast<GLubyte*>(malloc(m_width * m_height * 4 * sizeof(GLubyte)));
+    m_buffer = static_cast<GLubyte*>(malloc(m_width * m_height * IMAGE_DEPTH * sizeof(GLubyte)));
     if (!m_buffer) {
         LOGE("Alloc image buffer failed!");
         return false;
@@ -45,6 +48,8 @@ bool HeadlessContext::makeCurrent() {
         LOGE("OSMesaMakeCurrent failed!");
         return false;
     }
+    OSMesaPixelStore(OSMESA_Y_UP, 0);
+
     return true;
 }
 
@@ -70,9 +75,9 @@ bool HeadlessContext::writeImage(const char *filename) {
 
     f = fopen(filename, "ab");
 
-    for (int y = m_height-1; y >= 0; y--) {
+    for (int y = 0; y < m_height; y++) {
         for (int x = 0; x < m_width; x++) {
-            int i = (y * m_width + x) * 4;
+            int i = (y * m_width + x) * IMAGE_DEPTH;
             fputc(ptr[i], f);
             fputc(ptr[i+1], f);
             fputc(ptr[i+2], f);

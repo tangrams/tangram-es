@@ -17,10 +17,12 @@ public:
     bool startUrlRequest(const std::string& _url, UrlCallback _callback) override;
     void cancelUrlRequest(const std::string& _url) override;
 
+    void setRenderCallbackFunction(std::function<void()> callback);
 protected:
 
     UrlClient m_urlClient;
 
+    std::function<void()> m_renderCallbackFunction = nullptr;
 };
 
 } // namespace Tangram

@@ -18,6 +18,10 @@ public:
     void destroy();
     bool writeImage(const char *filename);
 
+    auto buffer() const { return m_buffer; }
+    auto height() const { return m_height; }
+    auto width() const { return m_width; }
+
 private:
     GLubyte* m_buffer = nullptr;
     OSMesaContext m_ctx;

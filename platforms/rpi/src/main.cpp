@@ -53,6 +53,10 @@ int main(int argc, char **argv){
     // Start OpenGL context
     initGL(argc, argv);
 
+    platform->setRenderCallbackFunction() {
+        setRenderRequest(true);
+    }
+
     // Set background color and clear buffers
     setup(argc, argv);
 

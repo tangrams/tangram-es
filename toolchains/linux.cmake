@@ -30,6 +30,20 @@ add_definitions(-DTANGRAM_LINUX)
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
+add_library(platform_linux
+  ${PROJECT_SOURCE_DIR}/platforms/linux/src/platform_linux.cpp
+  ${PROJECT_SOURCE_DIR}/platforms/common/urlClient.cpp)
+
+target_include_directories(platform_linux
+  PUBLIC
+  ${PROJECT_SOURCE_DIR}/platforms/linux
+  ${PROJECT_SOURCE_DIR}/platforms/common)
+
+target_link_libraries(platform_linux
+  ${CORE_LIBRARY}
+  -lcurl
+  -pthread)
+
 if(TANGRAM_APPLICATION)
 
   set(EXECUTABLE_NAME "tangram")
@@ -56,7 +70,6 @@ if(TANGRAM_APPLICATION)
     ${PROJECT_SOURCE_DIR}/platforms/linux/src/linuxPlatform.cpp
     ${PROJECT_SOURCE_DIR}/platforms/linux/src/main.cpp
     ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp
-    ${PROJECT_SOURCE_DIR}/platforms/common/urlClient.cpp
     ${PROJECT_SOURCE_DIR}/platforms/common/glfwApp.cpp
     )
 
@@ -66,11 +79,12 @@ if(TANGRAM_APPLICATION)
     ${PROJECT_SOURCE_DIR}/platforms/common)
 
   target_link_libraries(${EXECUTABLE_NAME}
+    PUBLIC
     ${CORE_LIBRARY}
-    -lcurl glfw
+    platform_linux
+    glfw
     # only used when not using external lib
     -ldl
-    -pthread
     ${GLFW_LIBRARIES}
     ${OPENGL_LIBRARIES})
 
@@ -87,42 +101,37 @@ if (HEADLESS)
     include(${PROJECT_SOURCE_DIR}/toolchains/mesa.cmake)
   endif()
 
-  set(EXECUTABLE_NAME "headless")
-
-  add_executable(${EXECUTABLE_NAME}
-    ${PROJECT_SOURCE_DIR}/platforms/linux/src/headless.cpp
-    ${PROJECT_SOURCE_DIR}/platforms/linux/src/platform_linux.cpp
+  add_library(headless_context
     ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp
-    ${PROJECT_SOURCE_DIR}/platforms/common/headlessContext.cpp
-    ${PROJECT_SOURCE_DIR}/platforms/common/urlClient.cpp
-    )
+    ${PROJECT_SOURCE_DIR}/platforms/common/headlessContext.cpp)
 
-  target_include_directories(${EXECUTABLE_NAME}
+  target_include_directories(headless_context
     PUBLIC
-    ${PROJECT_SOURCE_DIR}/platforms/common
-    ${PROJECT_SOURCE_DIR}/platforms/linux
-    ${PROJECT_SOURCE_DIR}/platforms/headless
-    ${OSMesa_INCLUDE_DIRS}
-    )
+    ${PROJECT_SOURCE_DIR}/platforms/common)
 
-  target_compile_definitions(${EXECUTABLE_NAME}
-    PRIVATE
-    PLATFORM_HEADLESS=1)
-
-
-  target_link_libraries(${EXECUTABLE_NAME}
+  target_link_libraries(headless_context
+    PUBLIC
     ${CORE_LIBRARY}
-    -lcurl
-    -ldl
-    -pthread
     -lOSMesa
     -lGL)
 
+  target_compile_definitions(headless_context
+    PUBLIC
+    PLATFORM_HEADLESS=1)
+
   if (USE_SYSTEM_OSMESA_LIBS)
-  else()
-    # if ExternalProject
-    add_dependencies(${EXECUTABLE_NAME} OSMesa)
-    # link_directories(${OSMesa_LIBRARY_DIR})
+  else() # if use ExternalProject
+    add_dependencies(headless_context OSMesa)
   endif()
+
+  add_executable(headless_demo
+    ${PROJECT_SOURCE_DIR}/platforms/linux/src/headless.cpp)
+
+  target_link_libraries(headless_demo
+    ${CORE_LIBRARY}
+    headless_context
+    platform_linux
+    -ldl
+    -pthread)
 
 endif()

@@ -48,6 +48,8 @@ void FrameBuffer::apply(RenderState& _rs, GLuint _handle, glm::vec2 _viewport, g
     // Enable depth testing
     _rs.depthMask(GL_TRUE);
 
+    _rs.colorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+
     // Setup raster state
     _rs.culling(GL_TRUE);
     _rs.cullFace(GL_BACK);
