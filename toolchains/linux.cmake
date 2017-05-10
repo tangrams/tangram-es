@@ -78,9 +78,14 @@ if(TANGRAM_APPLICATION)
 
 endif()
 
-#if (HEADLESS)
+if (HEADLESS)
 
-include(${PROJECT_SOURCE_DIR}/toolchains/mesa.cmake)
+  if (USE_SYSTEM_OSMESA_LIBS)
+    include(FindPkgConfig)
+    pkg_check_modules(OSMesa REQUIRED osmesa)
+  else ()
+    include(${PROJECT_SOURCE_DIR}/toolchains/mesa.cmake)
+  endif()
 
   set(EXECUTABLE_NAME "headless")
 
@@ -104,7 +109,6 @@ include(${PROJECT_SOURCE_DIR}/toolchains/mesa.cmake)
     PRIVATE
     PLATFORM_HEADLESS=1)
 
-  link_directories(${OSMesa_LIBRARY_DIR})
 
   target_link_libraries(${EXECUTABLE_NAME}
     ${CORE_LIBRARY}
@@ -114,6 +118,11 @@ include(${PROJECT_SOURCE_DIR}/toolchains/mesa.cmake)
     -lOSMesa
     -lGL)
 
-  add_dependencies(${EXECUTABLE_NAME} OSMesa)
+  if (USE_SYSTEM_OSMESA_LIBS)
+  else()
+    # if ExternalProject
+    add_dependencies(${EXECUTABLE_NAME} OSMesa)
+    # link_directories(${OSMesa_LIBRARY_DIR})
+  endif()
 
-#endif()
+endif()
