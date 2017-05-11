@@ -194,7 +194,7 @@ global:
     sdk_shield_text_color: white
     #
     # enable interactivity for key features
-    sdk_interactive: true
+    sdk_interactive: false
     #
     # default order for basemap features
     feature_order: function() { return feature.sort_rank; }
@@ -5041,11 +5041,11 @@ layers:
                         visible: false
 
         # set special priority, sprite, and text styles per kind
-        has-area:
-            filter: { area: true }
-            draw:
-                icons:
-                    priority: 41
+        # has-area:
+        #     filter: { area: true }
+        #     draw:
+        #         icons:
+        #             priority: 41
 
         national-park-protected-areas:
             filter:
@@ -5157,12 +5157,12 @@ layers:
                             style: italic
                             fill: '#4ba3c5'
 
-        landuse-labels-not-any-above:
-            filter:
-                not: { kind: [aerodrome, airport, allotments, aquarium, attraction, battlefield, beach, cemetery, college, conservation, forest, garden, glacier, golf_course, grass, kindergarten, landmark, maze, national_park, nature_reserve, park, playground, protected_area, resort, school, stadium, station, theme_park, university, winery, winter_sports, zoo] }
-            draw:
-                icons:
-                    priority: 43
+        # landuse-labels-not-any-above:
+        #     filter:
+        #         not: { kind: [aerodrome, airport, allotments, aquarium, attraction, battlefield, beach, cemetery, college, conservation, forest, garden, glacier, golf_course, grass, kindergarten, landmark, maze, national_park, nature_reserve, park, playground, protected_area, resort, school, stadium, station, theme_park, university, winery, winter_sports, zoo] }
+        #     draw:
+        #         icons:
+        #             priority: 43
 
         building-like:
             filter: { kind: [commercial,residential,warehouse,public,dormitory], osm_relation: false }
@@ -5565,7 +5565,8 @@ layers:
                     color: [[8,[0.845,0.845,0.845]],[14,[0.835,0.835,0.835]],[15,[0.780,0.780,0.780]]]
                     visible: true
         power:
-            filter: { kind: [plant, generator, substation] }
+            #filter: { kind: [plant, generator, substation] }
+            filter: { kind: [plant, generator] }
             draw:
                 dots:
                     color: [0.679,0.679,0.679]
