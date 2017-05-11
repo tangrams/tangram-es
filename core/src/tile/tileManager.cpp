@@ -176,9 +176,12 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
     const auto* visibleTiles = &_visibleTiles;
 
     std::set<TileID> mappedTiles;
-    if (_view.zoom > _tileSet.source->maxZoom()) {
+    if (_view.zoom > _tileSet.source->maxZoom() || _tileSet.source->tileScale() > 0) {
         for (const auto& id : _visibleTiles) {
-            auto tile = id.withMaxSourceZoom(_tileSet.source->maxZoom());
+            auto scaleTileID = (_tileSet.source->tileScale() <= 0) ? id :
+                id.scaled(_tileSet.source->tileScale());
+            auto tile = (_view.zoom < _tileSet.source->maxZoom()) ? scaleTileID :
+                    scaleTileID.withMaxSourceZoom(_tileSet.source->maxZoom());
             // Replace tile with same coordinates and lower source zoom
             auto other = std::find_if(mappedTiles.begin(), mappedTiles.end(),
                              [&](auto& t) { return tile.x == t.x &&
@@ -384,6 +387,7 @@ void TileManager::loadTiles() {
 
 bool TileManager::addTile(TileSet& _tileSet, const TileID& _tileID) {
 
+    LOGD("Adding tile: %s: Parent tile: %s", _tileID.toString().c_str(), _tileID.getParent().toString().c_str());
     auto tile = m_tileCache->get(_tileSet.source->id(), _tileID);
 
     if (tile) {
