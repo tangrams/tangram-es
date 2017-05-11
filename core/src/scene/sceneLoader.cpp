@@ -64,7 +64,7 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
         return false;
     }
 
-    if (!applyUpdates(*_scene, _updates, _onSceneUpdateError)) {
+    if (!applyUpdates(_platform, *_scene, _updates, _onSceneUpdateError)) {
         LOGW("Scene updates failed when loading scene");
     }
 
@@ -73,12 +73,11 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
 
     applyConfig(_platform, _scene);
 
-    _scene->sceneAssets().clear();
-
     return true;
 }
 
-bool SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates, SceneUpdateErrorCallback onSceneUpdateError) {
+bool SceneLoader::applyUpdates(const std::shared_ptr<Platform>& platform, Scene& scene,
+                               const std::vector<SceneUpdate>& updates, SceneUpdateErrorCallback onSceneUpdateError) {
     auto& root = scene.config();
 
     for (const auto& update : updates) {
@@ -121,6 +120,9 @@ bool SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& upd
             return false;
         }
     }
+
+    Importer importer;
+    importer.resolveSceneUrls(platform, scene, root, Url(scene.path()).resolved(Url(scene.resourceRoot())));
 
     return true;
 }
@@ -582,9 +584,11 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
     std::regex r("^(http|https):/");
     std::smatch match;
 
-    auto& asset = scene->sceneAssets()[url];
-    // asset must exist for this path (must be created during scene importing)
-    assert(asset);
+    auto& asset = scene->assets()[url];
+    if (!asset) {
+        LOGE("Asset missing at path: %s.", url.c_str());
+        return texture;
+    }
 
     // TODO: generalize using URI handlers
     if (std::regex_search(url, match, r) && !asset->zipHandle()) {
@@ -755,9 +759,11 @@ void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& 
     std::regex regex("^(http|https):/");
     std::smatch match;
 
-    auto& asset = scene->sceneAssets()[_ft.uri];
-    // asset must exist for this path (must be created during scene importing)
-    assert(asset);
+    auto& asset = scene->assets()[_ft.uri];
+    if (!asset) {
+        LOGE("Asset missing at path: %s.", _ft.uri.c_str());
+        return;
+    }
 
     if (std::regex_search(uri, match, regex) && !asset->zipHandle()) {
         // Load remote

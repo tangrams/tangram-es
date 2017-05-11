@@ -45,7 +45,8 @@ struct SceneLoader {
     static bool loadScene(const std::shared_ptr<Platform>& _platform, std::shared_ptr<Scene> _scene,
                           const std::vector<SceneUpdate>& updates = {}, SceneUpdateErrorCallback _onSceneUpdateError = nullptr);
     static bool applyConfig(const std::shared_ptr<Platform>& platform, const std::shared_ptr<Scene>& scene);
-    static bool applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates, SceneUpdateErrorCallback onSceneUpdateError = nullptr);
+    static bool applyUpdates(const std::shared_ptr<Platform>& platform, Scene& scene,
+                             const std::vector<SceneUpdate>& updates, SceneUpdateErrorCallback onSceneUpdateError = nullptr);
     static void applyGlobals(Node root, Scene& scene);
 
     /*** all public for testing ***/

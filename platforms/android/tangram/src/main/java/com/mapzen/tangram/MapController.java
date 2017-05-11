@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
+import android.os.Handler;
 import android.util.DisplayMetrics;
 
 import com.mapzen.tangram.TouchInput.Gestures;
@@ -13,7 +14,6 @@ import okhttp3.Callback;
 import okhttp3.Response;
 
 import java.io.IOException;
-import java.util.function.Function;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -76,6 +76,7 @@ public class MapController implements Renderer {
      * Interface for a callback to receive information about features picked from the map
      * Triggered after a call of {@link #pickFeature(float, float)}
      * Listener should be set with {@link #setFeaturePickListener(FeaturePickListener)}
+     * The callback will be run on the main (UI) thread.
      */
     public interface FeaturePickListener {
         /**
@@ -90,6 +91,7 @@ public class MapController implements Renderer {
      * Interface for a callback to receive information about labels picked from the map
      * Triggered after a call of {@link #pickLabel(float, float)}
      * Listener should be set with {@link #setLabelPickListener(LabelPickListener)}
+     * The callback will be run on the main (UI) thread.
      */
     public interface LabelPickListener {
         /**
@@ -105,6 +107,7 @@ public class MapController implements Renderer {
      * Interface for a callback to receive the picked {@link Marker}
      * Triggered after a call of {@link #pickMarker(float, float)}
      * Listener should be set with {@link #setMarkerPickListener(MarkerPickListener)}
+     * The callback will be run on the main (UI) thread.
      */
     public interface MarkerPickListener {
         /**
@@ -118,8 +121,8 @@ public class MapController implements Renderer {
 
     public interface ViewCompleteListener {
         /**
-         * Called on the render-thread at the end of whenever the view is fully loaded and
-         * no ease- or label-animation is running.
+         * Called on the UI thread at the end of whenever the view is stationary, fully loaded, and
+         * no animations are running.
          */
         void onViewComplete();
     }
@@ -128,6 +131,7 @@ public class MapController implements Renderer {
      * Interface for a callback to received additional error information in a {@link SceneUpdateError}
      * Triggered after a call of {@link #applySceneUpdates()} or {@link #loadSceneFile(String, List<SceneUpdate>)}
      * Listener should be set with {@link #setSceneUpdateErrorListener(SceneUpdateErrorListener)}
+     * The callback will be run on the main (UI) thread.
      */
     public interface SceneUpdateErrorListener {
         /**
@@ -212,6 +216,8 @@ public class MapController implements Renderer {
         touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.SCALE, false);
         touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.PAN, false);
         touchInput.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.LONG_PRESS, false);
+
+        uiThreadHandler = new Handler(view.getContext().getMainLooper());
     }
 
     /**
@@ -709,32 +715,72 @@ public class MapController implements Renderer {
      * Set a listener for feature pick events
      * @param listener The {@link FeaturePickListener} to call
      */
-    public void setFeaturePickListener(FeaturePickListener listener) {
-        featurePickListener = listener;
+    public void setFeaturePickListener(final FeaturePickListener listener) {
+        featurePickListener = new FeaturePickListener() {
+            @Override
+            public void onFeaturePick(final Map<String, String> properties, final float positionX, final float positionY) {
+                uiThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onFeaturePick(properties, positionX, positionY);
+                    }
+                });
+            }
+        };
     }
 
     /**
      * Set a listener for scene update error statuses
      * @param listener The {@link SceneUpdateErrorListener} to call after scene update have failed
      */
-    public void setSceneUpdateErrorListener(SceneUpdateErrorListener listener) {
-        sceneUpdateErrorListener = listener;
+    public void setSceneUpdateErrorListener(final SceneUpdateErrorListener listener) {
+        sceneUpdateErrorListener = new SceneUpdateErrorListener() {
+            @Override
+            public void onSceneUpdateError(final SceneUpdateError sceneUpdateError) {
+                uiThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onSceneUpdateError(sceneUpdateError);
+                    }
+                });
+            }
+        };
     }
 
     /**
      * Set a listener for label pick events
      * @param listener The {@link LabelPickListener} to call
      */
-    public void setLabelPickListener(LabelPickListener listener) {
-        labelPickListener = listener;
+    public void setLabelPickListener(final LabelPickListener listener) {
+        labelPickListener = new LabelPickListener() {
+            @Override
+            public void onLabelPick(final LabelPickResult labelPickResult, final float positionX, final float positionY) {
+                uiThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onLabelPick(labelPickResult, positionX, positionY);
+                    }
+                });
+            }
+        };
     }
 
     /**
      * Set a listener for marker pick events
      * @param listener The {@link MarkerPickListener} to call
      */
-    public void setMarkerPickListener(MarkerPickListener listener) {
-        markerPickListener = listener;
+    public void setMarkerPickListener(final MarkerPickListener listener) {
+        markerPickListener = new MarkerPickListener() {
+            @Override
+            public void onMarkerPick(final MarkerPickResult markerPickResult, final float positionX, final float positionY) {
+                uiThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onMarkerPick(markerPickResult, positionX, positionY);
+                    }
+                });
+            }
+        };
     }
 
     /**
@@ -812,9 +858,21 @@ public class MapController implements Renderer {
     }
 
     /**
+     * Set a listener for view complete events.
+     * @param listener The {@link ViewCompleteListener} to call when the view is complete
      */
-    public void setViewCompleteListener(ViewCompleteListener listener) {
-        viewCompleteListener = listener;
+    public void setViewCompleteListener(final ViewCompleteListener listener) {
+        viewCompleteListener = new ViewCompleteListener() {
+            @Override
+            public void onViewComplete() {
+                uiThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onViewComplete();
+                    }
+                });
+            }
+        };
     }
 
     /**
@@ -1093,6 +1151,7 @@ public class MapController implements Renderer {
     private boolean frameCaptureAwaitCompleteView;
     private Map<String, MapData> clientTileSources = new HashMap<>();
     private Map<Long, Marker> markers = new HashMap<>();
+    private Handler uiThreadHandler;
 
     // GLSurfaceView.Renderer methods
     // ==============================

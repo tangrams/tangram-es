@@ -42,24 +42,26 @@ bool loadConfig(const std::string& _sceneString, Node& root) {
 
 TEST_CASE("Apply scene update to a top-level node") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    auto platform_mock = std::make_shared<MockPlatform>();
+    Scene scene(platform_mock);
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"map", "new_value"}};
     // Apply scene updates, reload scene.
-    SceneLoader::applyUpdates(scene, updates);
+    SceneLoader::applyUpdates(platform_mock, scene, updates);
     const Node& root = scene.config();
     CHECK(root["map"].Scalar() == "new_value");
 }
 
 TEST_CASE("Apply scene update to a map entry") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    auto platform_mock = std::make_shared<MockPlatform>();
+    Scene scene(platform_mock);
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"map.a", "new_value"}};
     // Apply scene updates, reload scene.
-    SceneLoader::applyUpdates(scene, updates);
+    SceneLoader::applyUpdates(platform_mock, scene, updates);
     const Node& root = scene.config();
     CHECK(root["map"]["a"].Scalar() == "new_value");
     // Check that nearby values are unchanged.
@@ -68,12 +70,13 @@ TEST_CASE("Apply scene update to a map entry") {
 
 TEST_CASE("Apply scene update to a nested map entry") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    auto platform_mock = std::make_shared<MockPlatform>();
+    Scene scene(platform_mock);
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"nest.map.a", "new_value"}};
     // Apply scene updates, reload scene.
-    SceneLoader::applyUpdates(scene, updates);
+    SceneLoader::applyUpdates(platform_mock, scene, updates);
     const Node& root = scene.config();
     CHECK(root["nest"]["map"]["a"].Scalar() == "new_value");
     // Check that nearby values are unchanged.
@@ -82,24 +85,26 @@ TEST_CASE("Apply scene update to a nested map entry") {
 
 TEST_CASE("Apply scene update to a sequence node") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    auto platform_mock = std::make_shared<MockPlatform>();
+    Scene scene(platform_mock);
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"seq", "new_value"}};
     // Apply scene updates, reload scene.
-    SceneLoader::applyUpdates(scene, updates);
+    SceneLoader::applyUpdates(platform_mock, scene, updates);
     const Node& root = scene.config();
     CHECK(root["seq"].Scalar() == "new_value");
 }
 
 TEST_CASE("Apply scene update to a nested sequence node") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    auto platform_mock = std::make_shared<MockPlatform>();
+    Scene scene(platform_mock);
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"nest.seq", "new_value"}};
     // Apply scene updates, reload scene.
-    SceneLoader::applyUpdates(scene, updates);
+    SceneLoader::applyUpdates(platform_mock, scene, updates);
     const Node& root = scene.config();
     CHECK(root["nest"]["seq"].Scalar() == "new_value");
     // Check that nearby values are unchanged.
@@ -108,12 +113,13 @@ TEST_CASE("Apply scene update to a nested sequence node") {
 
 TEST_CASE("Apply scene update to a new map entry") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    auto platform_mock = std::make_shared<MockPlatform>();
+    Scene scene(platform_mock);
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"map.c", "new_value"}};
     // Apply scene updates, reload scene.
-    SceneLoader::applyUpdates(scene, updates);
+    SceneLoader::applyUpdates(platform_mock, scene, updates);
     const Node& root = scene.config();
     CHECK(root["map"]["c"].Scalar() == "new_value");
     // Check that nearby values are unchanged.
@@ -122,24 +128,26 @@ TEST_CASE("Apply scene update to a new map entry") {
 
 TEST_CASE("Do not apply scene update to a non-existent node") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    auto platform_mock = std::make_shared<MockPlatform>();
+    Scene scene(platform_mock);
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"none.a", "new_value"}};
     // Apply scene updates, reload scene.
-    SceneLoader::applyUpdates(scene, updates);
+    SceneLoader::applyUpdates(platform_mock, scene, updates);
     const Node& root = scene.config();
     REQUIRE(!root["none"]);
 }
 
 TEST_CASE("Apply scene update that removes a node") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    auto platform_mock = std::make_shared<MockPlatform>();
+    Scene scene(platform_mock);
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"nest.map", "null"}};
     // Apply scene updates, reload scene.
-    SceneLoader::applyUpdates(scene, updates);
+    SceneLoader::applyUpdates(platform_mock, scene, updates);
     const Node& root = scene.config();
     CHECK(!root["nest"]["map"]["a"]);
     CHECK(root["nest"]["map"].IsNull());
@@ -148,12 +156,13 @@ TEST_CASE("Apply scene update that removes a node") {
 
 TEST_CASE("Apply multiple scene updates in order of request") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    auto platform_mock = std::make_shared<MockPlatform>();
+    Scene scene(platform_mock);
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"map.a", "first_value"}, {"map.a", "second_value"}};
     // Apply scene updates, reload scene.
-    SceneLoader::applyUpdates(scene, updates);
+    SceneLoader::applyUpdates(platform_mock, scene, updates);
     const Node& root = scene.config();
     CHECK(root["map"]["a"].Scalar() == "second_value");
     // Check that nearby values are unchanged.
@@ -162,7 +171,8 @@ TEST_CASE("Apply multiple scene updates in order of request") {
 
 TEST_CASE("Apply and propogate repeated global value updates") {
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    auto platform_mock = std::make_shared<MockPlatform>();
+    Scene scene(platform_mock);
     REQUIRE(loadConfig(sceneString, scene.config()));
     Node& root = scene.config();
     // Apply initial globals.
@@ -172,7 +182,7 @@ TEST_CASE("Apply and propogate repeated global value updates") {
     // Add an update.
     std::vector<SceneUpdate> updates = {{"global.b", "new_global_b_value"}};
     // Apply the update.
-    SceneLoader::applyUpdates(scene, updates);
+    SceneLoader::applyUpdates(platform_mock, scene, updates);
     CHECK(root["global"]["b"].Scalar() == "new_global_b_value");
     // Apply updated globals.
     SceneLoader::applyGlobals(root, scene);
@@ -181,7 +191,7 @@ TEST_CASE("Apply and propogate repeated global value updates") {
     // Add an update.
     updates = {{"global.b", "newer_global_b_value"}};
     // Apply the update.
-    SceneLoader::applyUpdates(scene, updates);
+    SceneLoader::applyUpdates(platform_mock, scene, updates);
     CHECK(root["global"]["b"].Scalar() == "newer_global_b_value");
     // Apply updated globals.
     SceneLoader::applyGlobals(root, scene);
@@ -192,35 +202,37 @@ TEST_CASE("Apply and propogate repeated global value updates") {
 TEST_CASE("Regression: scene update requesting a sequence from a scalar") {
 
     // Setup.
-    Scene scene(std::make_shared<MockPlatform>());
+    auto platform_mock = std::make_shared<MockPlatform>();
+    Scene scene(platform_mock);
     REQUIRE(loadConfig(sceneString, scene.config()));
     // Add an update.
     std::vector<SceneUpdate> updates = {{"map.a#0", "new_value"}};
     // Apply scene updates, reload scene.
-    SceneLoader::applyUpdates(scene, updates);
+    SceneLoader::applyUpdates(platform_mock, scene, updates);
     const Node& root = scene.config();
 
     // causes yaml exception 'operator[] call on a scalar'
 }
 
 TEST_CASE("Scene update statuses") {
-    Scene scene(std::make_shared<MockPlatform>());
+ auto platform_mock = std::make_shared<MockPlatform>();
+    Scene scene(platform_mock);
     REQUIRE(loadConfig(sceneString, scene.config()));
     Node& root = scene.config();
     std::vector<SceneUpdate> updates = {{"map.a", "{ first_value"}};
-    SceneLoader::applyUpdates(scene, updates, [](auto updateError) {
+    SceneLoader::applyUpdates(platform_mock, scene, updates, [](auto updateError) {
         CHECK(updateError.error == Error::scene_update_value_yaml_syntax_error);
     });
     updates = {{"!map#0", "first_value"}};
-    SceneLoader::applyUpdates(scene, updates, [](auto updateError) {
+    SceneLoader::applyUpdates(platform_mock, scene, updates, [](auto updateError) {
         CHECK(updateError.error == Error::scene_update_path_yaml_syntax_error);
     });
     updates = {{"key_not_existing", "first_value"}};
-    SceneLoader::applyUpdates(scene, updates, [](auto updateError) {
+    SceneLoader::applyUpdates(platform_mock, scene, updates, [](auto updateError) {
         CHECK(updateError.error == Error::scene_update_path_not_found);
     });
     updates = {{"!map#0", "{ first_value"}};
-    SceneLoader::applyUpdates(scene, updates, [](auto updateError) {
+    SceneLoader::applyUpdates(platform_mock, scene, updates, [](auto updateError) {
         CHECK(updateError.error == Error::scene_update_value_yaml_syntax_error);
     });
 }

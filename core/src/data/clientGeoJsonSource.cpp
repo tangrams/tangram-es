@@ -21,6 +21,18 @@ namespace Tangram {
 
 using namespace mapbox;
 
+geojsonvt::Options options() {
+    geojsonvt::Options opt;
+    opt.maxZoom = 18;
+    opt.indexMaxZoom = 5;
+    opt.indexMaxPoints = 100000;
+    opt.solidChildren = true;
+    opt.tolerance = 3;
+    opt.extent = 4096;
+    opt.buffer = 0;
+    return opt;
+}
+
 struct ClientGeoJsonData {
     std::unique_ptr<geojsonvt::GeoJSONVT> tiles;
     mapbox::geometry::feature_collection<double> features;
@@ -102,7 +114,7 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
                              std::make_move_iterator(features.begin()),
                              std::make_move_iterator(features.end()));
 
-    m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features);
+    m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features, options());
     m_generation++;
 }
 
@@ -144,7 +156,7 @@ void ClientGeoJsonSource::addPoint(const Properties& _tags, LngLat _point) {
     m_store->features.emplace_back(geom, id);
     m_store->properties.emplace_back(_tags);
 
-    m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features);
+    m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features, options());
     m_generation++;
 }
 
@@ -163,7 +175,7 @@ void ClientGeoJsonSource::addLine(const Properties& _tags, const Coordinates& _l
     m_store->features.emplace_back(geom, id);
     m_store->properties.emplace_back(_tags);
 
-    m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features);
+    m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features, options());
     m_generation++;
 }
 
@@ -186,7 +198,7 @@ void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coo
     m_store->features.emplace_back(geom, id);
     m_store->properties.emplace_back(_tags);
 
-    m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features);
+    m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features, options());
     m_generation++;
 }
 

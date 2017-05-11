@@ -27,11 +27,13 @@ public:
     // Loads the main scene with deep merging dependent imported scenes.
     Node applySceneImports(const std::shared_ptr<Platform>& platform, std::shared_ptr<Scene>& scene);
 
+    void resolveSceneUrls(const std::shared_ptr<Platform>& platform, Scene& scene, Node& root, const Url& base);
+
 // protected for testing purposes, else could be private
 protected:
     // Overriden in unit testing
     virtual std::string getSceneString(const std::shared_ptr<Platform>& platform,
-            const Url& scenePath, const std::unique_ptr<Asset>& asset = nullptr);
+            const Url& scenePath, const std::shared_ptr<Asset>& asset = nullptr);
 
     void processScene(const std::shared_ptr<Platform>& platform, std::shared_ptr<Scene>& scene,
             const Url& scenePath, const std::string& sceneString);
@@ -46,11 +48,6 @@ protected:
             Node& root, const Url& scenePath, std::vector<Url>& sceneStack);
 
     void mergeMapFields(Node& target, const Node& import);
-
-    void resolveSceneUrls(const std::shared_ptr<Platform>& platform, std::shared_ptr<Scene>& scene,
-            Node& root, const Url& base);
-    void createSceneAsset(const std::shared_ptr<Platform>& platform, std::shared_ptr<Scene>& scene,
-            const Url& resolvedUrl, const Url& relativeUrl, const Url& base);
 
 private:
     // import scene to respective root nodes
