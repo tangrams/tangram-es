@@ -284,7 +284,7 @@ void Map::applySceneUpdates(SceneUpdateErrorCallback _onSceneUpdateError) {
 
     runAsyncTask([nextScene, updates = std::move(updates), _onSceneUpdateError, this](){
 
-            if (!SceneLoader::applyUpdates(*nextScene, updates, _onSceneUpdateError)) {
+            if (!SceneLoader::applyUpdates(platform, *nextScene, updates, _onSceneUpdateError)) {
                 LOGW("Scene updates not applied to current scene");
                 return;
             }

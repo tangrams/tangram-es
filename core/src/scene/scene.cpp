@@ -14,6 +14,7 @@
 #include "text/fontContext.h"
 #include "util/mapProjection.h"
 #include "util/util.h"
+#include "util/url.h"
 #include "view/view.h"
 
 #include <algorithm>
@@ -70,6 +71,7 @@ Scene::Scene(const Scene& _other)
     m_globalRefs = _other.m_globalRefs;
 
     m_mapProjection.reset(new MercatorProjection());
+    m_assets = _other.assets();
 }
 
 Scene::~Scene() {}
@@ -147,6 +149,46 @@ void Scene::setPixelScale(float _scale) {
         style->setPixelScale(_scale);
     }
     m_fontContext->setPixelScale(_scale);
+}
+
+void Scene::createSceneAsset(const std::shared_ptr<Platform>& platform, const Url& resolvedUrl,
+                                 const Url& relativeUrl, const Url& base) {
+
+    auto& resolvedStr = resolvedUrl.string();
+    auto& baseStr = base.string();
+    std::shared_ptr<Asset> asset;
+
+    if (m_assets.find(resolvedStr) != m_assets.end()) { return; }
+
+    if ( (Url::getPathExtension(resolvedUrl.path()) == "zip") ){
+        if (relativeUrl.hasHttpScheme() || (resolvedUrl.hasHttpScheme() && base.isEmpty())) {
+            // Data to be fetched later (and zipHandle created) in network callback
+            asset = std::make_shared<ZippedAsset>(resolvedStr);
+
+        } else if (relativeUrl.isAbsolute() || base.isEmpty()) {
+            asset = std::make_shared<ZippedAsset>(resolvedStr, nullptr, platform->bytesFromFile(resolvedStr.c_str()));
+        } else {
+            auto parentAsset = static_cast<ZippedAsset*>(m_assets[baseStr].get());
+            // Parent asset (for base Str) must have been created by now
+            assert(parentAsset);
+            asset = std::make_shared<ZippedAsset>(resolvedStr, nullptr,
+                                                                       parentAsset->readBytesFromAsset(platform, resolvedStr));
+        }
+    } else {
+        const auto& parentAsset = m_assets[baseStr];
+
+        if (relativeUrl.isAbsolute() || (parentAsset && !parentAsset->zipHandle())) {
+            // Make sure to first check for cases when the asset does not belong within a zipBundle
+            asset = std::make_shared<Asset>(resolvedStr);
+        } else if (parentAsset && parentAsset->zipHandle()) {
+            // Asset is in zip bundle
+            asset = std::make_shared<ZippedAsset>(resolvedStr, parentAsset->zipHandle());
+        } else {
+            asset = std::make_shared<Asset>(resolvedStr);
+        }
+    }
+
+    m_assets[resolvedStr] = asset;
 }
 
 }

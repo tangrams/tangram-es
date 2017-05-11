@@ -2,6 +2,7 @@
 
 #include "scene/asset.h"
 #include "util/color.h"
+#include "util/fastmap.h"
 #include "view/view.h"
 
 #include <atomic>
@@ -31,6 +32,7 @@ class Style;
 class Texture;
 class TileSource;
 struct Stops;
+class Url;
 
 // Delimiter used in sceneloader for style params and layer-sublayer naming
 const std::string DELIMITER = ":";
@@ -79,7 +81,7 @@ public:
     auto& lightBlocks() { return m_lightShaderBlocks; };
     auto& textures() { return m_textures; };
     auto& functions() { return m_jsFunctions; };
-    auto& sceneAssets() { return m_sceneAssets; };
+    auto& assets() { return m_assets; };
     auto& spriteAtlases() { return m_spriteAtlases; };
     auto& stops() { return m_stops; }
     auto& background() { return m_background; }
@@ -101,7 +103,10 @@ public:
     const auto& fontContext() const { return m_fontContext; }
     const auto& globalRefs() const { return m_globalRefs; }
     const auto& featureSelection() const { return m_featureSelection; }
-    const auto& sceneAssets() const { return m_sceneAssets; };
+    const auto& assets() const { return m_assets; };
+
+    void createSceneAsset(const std::shared_ptr<Platform>& platform, const Url& resolvedUrl, const Url& relativeUrl,
+                          const Url& base);
 
     const Style* findStyle(const std::string& _name) const;
 
@@ -157,7 +162,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
 
     // path as key
-    std::unordered_map<std::string, std::unique_ptr<Asset>> m_sceneAssets;
+    fastmap<std::string, std::shared_ptr<Asset>> m_assets;
 
     // Records the YAML Nodes for which global values have been swapped; keys are
     // nodes that referenced globals, values are nodes of globals themselves.
