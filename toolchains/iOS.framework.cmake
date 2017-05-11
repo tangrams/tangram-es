@@ -74,6 +74,7 @@ set(HEADERS
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGLabelPickResult+Internal.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapViewController+Internal.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapData+Internal.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarker+Internal.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHelpers.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGFontConverter.h
     ${FRAMEWORK_HEADERS})

@@ -26,23 +26,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface TGMarker : NSObject
 
-/*
- Initializes a `TGMarker`.
-
- @note the marker will not be visible on any map view, if you want to add this marker to a view make sure
- to set a map view to this marker object with `-[TGMarker map]`, style it and set its geometry.
- */
-- (instancetype)init;
-
-/*
- Initializes a `TGMarker` and adds it to the map view.
-
- @param mapView the map view to add this marker to
-
- @note the marker will not be visible on the map view until you set its styling and set its geometry.
- */
-- (instancetype)initWithMapView:(TGMapViewController *)mapView;
-
 /**
  Similar to `-[TGMarker point]` except that the point will transition to the
  geographic coordinate with a transition of time `seconds` and with an ease type function of type `ease`
@@ -52,8 +35,9 @@ NS_ASSUME_NONNULL_BEGIN
  @param coordinates the longitude and latitude where the marker will be placed
  @param seconds the animation duration given in seconds
  @param ease the ease function to be used between animation timestep
- @param error an error status pointer that will be assigned if non-nil and an error occured
- @return Whether the marker coordinates were set succesfully
+ @param error an error status pointer that will be assigned if the return status is NO
+
+ @return YES if the operation succeeded, NO otherwise
 
  @note Markers can have their geometry set multiple time with possibly different geometry types.
  */
@@ -64,10 +48,11 @@ NS_ASSUME_NONNULL_BEGIN
 
  See the more detailed scene <a href="https://mapzen.com/documentation/tangram/Styles-Overview/">documentation</a>
  to get more styling informations.
- 
+
  @param styling the styling to set to this marker
- @param error an error status pointer that will be assigned if non-nil and an error occured
- @return Whether the marker styling string was set successfully
+ @param error an error status pointer that will be assigned if the return status is NO
+
+ @return YES if the operation succeeded, NO otherwise
 
  @note Setting the stylingString will overwrite any previously set stylingString or stylingPath.
  */
@@ -81,8 +66,9 @@ NS_ASSUME_NONNULL_BEGIN
  to get more styling informations.
 
  @param path the styling path to set to this marker
- @param error an error status pointer that will be assigned if non-nil and an error occured
- @return Whether the marker styling path was set successfully
+ @param error an error status pointer that will be assigned if the return status is NO
+
+ @return YES if the operation succeeded, NO otherwise
 
  @note Setting the stylingPath will overwrite any previously set stylingString or stylingPath.
  */
@@ -92,8 +78,9 @@ NS_ASSUME_NONNULL_BEGIN
  Sets a marker to be a single point geometry at a geographic coordinate.
 
  @param coordinates the coordinates to set to this marker
- @param error an error status pointer that will be assigned if non-nil and an error occured
- @return Whether the marker coordinates were set successfully
+ @param error an error status pointer that will be assigned if the return status is NO
+
+ @return YES if the operation succeeded, NO otherwise
 
  @note Markers can have their geometry set multiple time with possibly different geometry types.
  */
@@ -104,7 +91,9 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param polyline the polyline geometry to set to this marker
  @param error an error status pointer that will be assigned if non-nil and an error occured
- @return Whether the marker polyline was set successfully
+ @param error an error status pointer that will be assigned if the return status is NO
+
+ @return YES if the operation succeeded, NO otherwise
 
  @note Markers can have their geometry set multiple time with possibly different geometry types.
  */
@@ -114,8 +103,9 @@ NS_ASSUME_NONNULL_BEGIN
  Sets a marker to be a polygon geometry (described in a `TGGeoPolygon`).
 
  @param polygon the polygon geometry to set to this marker
- @param error an error status pointer that will be assigned if non-nil and an error occured
- @return Whether the marker polygon was set successfully
+ @param error an error status pointer that will be assigned if the return status is NO
+
+ @return YES if the operation succeeded, NO otherwise
 
  @note Markers can have their geometry set multiple time with possibly different geometry types.
  */
@@ -123,11 +113,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Adjusts marker visibility
- 
- @param visible whether the marker should be visible or not
- @param error an error status pointer that will be assigned if non-nil and an error occured
 
- @return Whether the marker visibility order was set successfully
+ @param visible whether the marker should be visible or not
+ @param error an error status pointer that will be assigned if the return status is NO
+
+ @return YES if the operation succeeded, NO otherwise
  */
 - (BOOL)visible:(BOOL)visible error:(NSError **)error;
 
@@ -135,9 +125,9 @@ NS_ASSUME_NONNULL_BEGIN
  Set the ordering of point marker object relative to other markers; higher values are drawn 'above'.
 
  @param drawOrder the draw order to set to this marker
- @param error an error status pointer that will be assigned if non-nil and an error occured
+ @param error an error status pointer that will be assigned if the return status is NO
 
- @return Whether the marker draw order was set successfully
+ @return YES if the operation succeeded, NO otherwise
  */
 - (BOOL)drawOrder:(NSInteger)drawOrder error:(NSError **)error;
 
@@ -157,9 +147,9 @@ NS_ASSUME_NONNULL_BEGIN
  <a href="https://mapzen.com/documentation/tangram/Styles-Overview/#points">point style</a>.
 
  @param icon the icon image to set to this marker
- @param error an error status pointer that will be assigned if non-nil and an error occured
+ @param error an error status pointer that will be assigned if the return status is NO
 
- @return Whether the marker icon was set successfully
+ @return YES if the operation succeeded, NO otherwise
  */
 - (BOOL)icon:(UIImage *)icon error:(NSError **)error;
 
@@ -183,22 +173,5 @@ NS_ASSUME_NONNULL_BEGIN
 @property (assign, nonatomic) void* userData;
 
 NS_ASSUME_NONNULL_END
-
-/*
- The map this marker is on.
- Setting the map view will add the marker to the map, and setting it to `nil`
- will remove the marker from it.
-
- A marker can be only active at at most one `TGMapViewController` at a time.
-
- @param mapView the map view this marker should be added to, nil if it should be removed
- @param error an error status pointer that will be assigned if non-nil and an error occured
-
- @return An error if the marker can't be shown on the map
- */
-- (BOOL)map:(nullable TGMapViewController *)mapView error:(NSError * _Nullable * _Nullable)error;
-
-/// Access the marker map view (readonly)
-@property (readonly, nonatomic) TGMapViewController* _Nullable map;
 
 @end

@@ -7,22 +7,14 @@
 //
 
 #import "TGMarker.h"
+#import "TGMarker+Internal.h"
 #import "TGMapViewController.h"
 #import "TGMapViewController+Internal.h"
 #import "TGHelpers.h"
 #import "tangram.h"
 
-enum class TGMarkerType {
-    point,
-    polygon,
-    polyline,
-    none,
-};
-
 @interface TGMarker () {
     Tangram::Map* tangramInstance;
-    Tangram::MarkerID identifier;
-    TGMarkerType type;
 }
 
 @property (copy, nonatomic) NSString* stylingString;
@@ -33,20 +25,21 @@ enum class TGMarkerType {
 @property (assign, nonatomic) BOOL visible;
 @property (assign, nonatomic) NSInteger drawOrder;
 @property (strong, nonatomic) UIImage* icon;
-@property (weak, nonatomic) TGMapViewController* map;
 
 - (void)createNSError:(NSError **)error;
+- (void)clearGeometry;
 
 @end
 
 @implementation TGMarker
 
-- (instancetype)init
+- (instancetype)initWithMap:(Tangram::Map*)map
 {
     self = [super init];
 
     if (self) {
-        type = TGMarkerType::none;
+        tangramInstance = map;
+        self.identifier = tangramInstance->markerAdd();
         self.visible = YES;
         self.drawOrder = 0;
     }
@@ -54,20 +47,11 @@ enum class TGMarkerType {
     return self;
 }
 
-- (instancetype)initWithMapView:(TGMapViewController *)mapView
+- (void)clearGeometry
 {
-    self = [super init];
-
-    if (self) {
-        type = TGMarkerType::none;
-
-        self.visible = YES;
-        self.drawOrder = 0;
-
-        [self map:mapView error:nil];
-    }
-
-    return self;
+    self.polyline = nil;
+    self.polygon = nil;
+    self.point = {NAN, NAN};
 }
 
 - (void)createNSError:(NSError **)error
@@ -91,12 +75,7 @@ enum class TGMarkerType {
     _stylingString = styling;
     _stylingPath = nil;
 
-    if (!tangramInstance || !identifier) {
-        [self createNSError:error];
-        return NO;
-    }
-
-     if (!tangramInstance->markerSetStylingFromString(identifier, [styling UTF8String])) {
+    if (!tangramInstance->markerSetStylingFromString(self.identifier, [styling UTF8String])) {
         [self createNSError:error];
         return NO;
     }
@@ -109,32 +88,7 @@ enum class TGMarkerType {
     _stylingPath = path;
     _stylingString = nil;
 
-    if (!tangramInstance || !identifier) {
-        [self createNSError:error];
-        return NO;
-    }
-
-    if (!tangramInstance->markerSetStylingFromPath(identifier, [path UTF8String])) {
-        [self createNSError:error];
-        return NO;
-    }
-
-    return YES;
-}
-
-- (BOOL)point:(TGGeoPoint)coordinates error:(NSError **)error
-{
-    _point = coordinates;
-    type = TGMarkerType::point;
-
-    Tangram::LngLat lngLat(coordinates.longitude, coordinates.latitude);
-
-    if (!tangramInstance || !identifier) {
-        [self createNSError:error];
-        return NO;
-    }
-
-    if (!tangramInstance->markerSetPoint(identifier, lngLat)) {
+    if (!tangramInstance->markerSetStylingFromPath(self.identifier, [path UTF8String])) {
         [self createNSError:error];
         return NO;
     }
@@ -144,17 +98,27 @@ enum class TGMarkerType {
 
 - (BOOL)pointEased:(TGGeoPoint)coordinates seconds:(float)seconds easeType:(TGEaseType)ease error:(NSError **)error
 {
+    [self clearGeometry];
     _point = coordinates;
-    type = TGMarkerType::point;
 
-    if (!tangramInstance || !identifier) {
+    Tangram::LngLat lngLat(coordinates.longitude, coordinates.latitude);
+
+    if (!tangramInstance->markerSetPointEased(self.identifier, lngLat, seconds, [TGHelpers convertEaseTypeFrom:ease])) {
         [self createNSError:error];
         return NO;
     }
 
+    return YES;
+}
+
+- (BOOL)point:(TGGeoPoint)coordinates error:(NSError **)error
+{
+    [self clearGeometry];
+    _point = coordinates;
+
     Tangram::LngLat lngLat(coordinates.longitude, coordinates.latitude);
 
-    if (!tangramInstance->markerSetPointEased(identifier, lngLat, seconds, [TGHelpers convertEaseTypeFrom:ease])) {
+    if (!tangramInstance->markerSetPoint(self.identifier, lngLat)) {
         [self createNSError:error];
         return NO;
     }
@@ -164,17 +128,12 @@ enum class TGMarkerType {
 
 - (BOOL)polyline:(TGGeoPolyline *)polyline error:(NSError **)error
 {
+    [self clearGeometry];
     _polyline = polyline;
-    type = TGMarkerType::polyline;
-
-    if (polyline.count < 2 || !tangramInstance || !identifier) {
-        [self createNSError:error];
-        return NO;
-    }
 
     auto polylineCoords = reinterpret_cast<Tangram::LngLat*>([polyline coordinates]);
 
-    if (!tangramInstance->markerSetPolyline(identifier, polylineCoords, polyline.count)) {
+    if (!tangramInstance->markerSetPolyline(self.identifier, polylineCoords, polyline.count)) {
         [self createNSError:error];
         return NO;
     }
@@ -184,34 +143,22 @@ enum class TGMarkerType {
 
 - (BOOL)polygon:(TGGeoPolygon *)polygon error:(NSError **)error
 {
+    [self clearGeometry];
     _polygon = polygon;
-    type = TGMarkerType::polygon;
-
-    if (polygon.count < 3 || !tangramInstance || !identifier) {
-        [self createNSError:error];
-        return NO;
-    }
 
     auto polygonCoords = reinterpret_cast<Tangram::LngLat*>([polygon coordinates]);
 
-    if (!tangramInstance->markerSetPolygon(identifier, polygonCoords, [polygon rings], [polygon ringsCount])) {
+    if (!tangramInstance->markerSetPolygon(self.identifier, polygonCoords, [polygon rings], [polygon ringsCount])) {
         [self createNSError:error];
         return NO;
     }
-
-    return YES;
 }
 
 - (BOOL)visible:(BOOL)visible error:(NSError **)error
 {
     _visible = visible;
 
-    if (!tangramInstance || !identifier) {
-        [self createNSError:error];
-        return NO;
-    }
-
-    if (!tangramInstance->markerSetVisible(identifier, visible)) {
+    if (!tangramInstance->markerSetVisible(self.identifier, visible)) {
         [self createNSError:error];
         return NO;
     }
@@ -223,12 +170,7 @@ enum class TGMarkerType {
 {
     _drawOrder = drawOrder;
 
-    if (!tangramInstance || !identifier) {
-        [self createNSError:error];
-        return NO;
-    }
-
-     if (!tangramInstance->markerSetDrawOrder(identifier, (int)drawOrder)) {
+    if (!tangramInstance->markerSetDrawOrder(self.identifier, (int)drawOrder)) {
         [self createNSError:error];
         return NO;
     }
@@ -239,11 +181,6 @@ enum class TGMarkerType {
 - (BOOL)icon:(UIImage *)icon error:(NSError **)error
 {
     _icon = icon;
-
-    if (!tangramInstance || !identifier) {
-        [self createNSError:error];
-        return NO;
-    }
 
     CGImage* cgImage = [icon CGImage];
     size_t w = CGImageGetHeight(cgImage);
@@ -263,96 +200,7 @@ enum class TGMarkerType {
     CGContextDrawImage(cgContext, CGRectMake(0, 0, w, h), cgImage);
     CGContextRelease(cgContext);
 
-    if (!tangramInstance->markerSetBitmap(identifier, w, h, bitmap.data())) {
-        [self createNSError:error];
-        return NO;
-    }
-
-    return YES;
-}
-
-- (BOOL)map:(nullable TGMapViewController *)mapView error:(NSError **)error
-{
-    // remove marker from current view
-    if (!mapView && tangramInstance && identifier) {
-        if (!tangramInstance->markerRemove(identifier)) {
-            [self createNSError:error];
-            return NO;
-        }
-
-        tangramInstance = nullptr;
-        _map = nil;
-        return YES;
-    }
-
-    if (![mapView map] || [mapView map] == tangramInstance) {
-        [self createNSError:error];
-        return NO;
-    }
-
-    // Removes the marker from the previous map view
-    if (tangramInstance && _map) {
-        if (!tangramInstance->markerRemove(identifier)) {
-            [self createNSError:error];
-            return NO;
-        }
-
-        [_map removeMarker:identifier];
-    }
-
-    tangramInstance = [mapView map];
-    _map = mapView;
-
-    // Create a new marker identifier for this view
-    identifier = tangramInstance->markerAdd();
-
-    if (!identifier) {
-        [self createNSError:error];
-        return NO;
-    }
-
-    [_map addMarker:self withIdentifier:identifier];
-
-    // Set the geometry type
-    switch (type) {
-        case TGMarkerType::point: {
-            if (![self point:self.point error:error]) { return NO; }
-
-            if (self.icon) {
-                if (![self icon:self.icon error:error]) { return NO; }
-            }
-        }
-        break;
-        case TGMarkerType::polygon: {
-            if (![self polygon:self.polygon error:error]) { return NO; }
-        }
-        break;
-        case TGMarkerType::polyline: {
-            if (![self polyline:self.polyline error:error]) { return NO; }
-        }
-        case TGMarkerType::none:
-        break;
-    }
-
-    // Update styling
-    if (self.stylingString) {
-        if (!tangramInstance->markerSetStylingFromString(identifier, [self.stylingString UTF8String])) {
-            [self createNSError:error];
-            return NO;
-        }
-    } else if (self.stylingPath) {
-        if (!tangramInstance->markerSetStylingFromPath(identifier, [self.stylingPath UTF8String])) {
-            [self createNSError:error];
-            return NO;
-        }
-    }
-
-    if (!tangramInstance->markerSetVisible(identifier, self.visible)) {
-        [self createNSError:error];
-        return NO;
-    }
-
-    if (!tangramInstance->markerSetDrawOrder(identifier, (int)self.drawOrder)) {
+    if (!tangramInstance->markerSetBitmap(self.identifier, w, h, bitmap.data())) {
         [self createNSError:error];
         return NO;
     }
