@@ -3,6 +3,7 @@
 #include "log.h"
 #include "platform.h"
 #include "tangram.h"
+#include "data/tileSource.h"
 #include "scene/stops.h"
 #include "util/rasterize.h"
 
@@ -223,7 +224,7 @@ void View::pitch(float _dpitch) {
 
 }
 
-void View::update(bool _constrainToWorldBounds) {
+void View::update(const std::vector<std::shared_ptr<TileSource>>& tileSources, bool _constrainToWorldBounds) {
 
     m_changed = false;
 
@@ -253,7 +254,7 @@ void View::update(bool _constrainToWorldBounds) {
 
     if (m_dirtyTiles && !Tangram::getDebugFlag(Tangram::DebugFlags::freeze_tiles)) {
 
-        updateTiles(); // Resets dirty flag
+        updateTiles(tileSources); // Resets dirty flag
         m_changed = true;
 
     }
@@ -434,7 +435,7 @@ glm::vec2 View::lonLatToScreenPosition(double lon, double lat, bool& clipped) co
     return screenPosition;
 }
 
-void View::updateTiles() {
+void View::updateTiles(const std::vector<std::shared_ptr<TileSource>>& tileSources) {
 
     m_visibleTiles.clear();
 
@@ -478,10 +479,10 @@ void View::updateTiles() {
     // Scan options - avoid heap allocation for std::function
     // [1] http://www.drdobbs.com/cpp/efficient-use-of-lambda-expressions-and/232500059?pgno=2
     struct ScanParams {
-        ScanParams(std::set<TileID>& _tiles, int _zoom)
+        ScanParams(std::unordered_map<std::string, std::set<TileID>>& _tiles, int _zoom)
             : tiles(_tiles), zoom(_zoom) {}
 
-        std::set<TileID>& tiles;
+        std::unordered_map<std::string, std::set<TileID>>& tiles;
         int zoom;
         int maxZoom = int(s_maxZoom);
 
@@ -515,7 +516,7 @@ void View::updateTiles() {
         }
     }
 
-    Rasterize::ScanCallback s = [&opt](int x, int y) {
+    Rasterize::ScanCallback s = [&opt, &tileSources](int x, int y) {
 
         int lod = 0;
         while (lod < MAX_LOD && x >= opt.x_limit_pos[lod]) { lod++; }
@@ -535,8 +536,10 @@ void View::updateTiles() {
         tile.w = (x - tile.x) >> opt.zoom; // wrap
 
         if (tile != opt.last) {
-            opt.tiles.emplace(tile.x, tile.y, tile.z, tile.z, tile.w);
-            opt.last = tile;
+            for (const auto& source : tileSources) {
+                opt.tiles[source->name()].emplace(tile.x, tile.y, tile.z, tile.z, tile.w);
+                opt.last = tile;
+            }
         }
     };
 

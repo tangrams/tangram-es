@@ -117,7 +117,7 @@ void TileManager::clearTileSet(int32_t _sourceId) {
 }
 
 void TileManager::updateTileSets(const ViewState& _view,
-                                 const std::set<TileID>& _visibleTiles) {
+                                 const std::unordered_map<std::string, std::set<TileID>>& _visibleTiles) {
     m_tiles.clear();
     m_tilesInProgress = 0;
     m_tileSetChanged = false;
@@ -125,7 +125,9 @@ void TileManager::updateTileSets(const ViewState& _view,
     for (auto& tileSet : m_tileSets) {
         // check if tile set is active for zoom (zoom might be below min_zoom)
         if (tileSet.source->isActiveForZoom(_view.zoom)) {
-            updateTileSet(tileSet, _view, _visibleTiles);
+            auto it = _visibleTiles.find(tileSet.source->name());
+            if (it == _visibleTiles.end()) { continue; }
+            updateTileSet(tileSet, _view, it->second);
         }
     }
 

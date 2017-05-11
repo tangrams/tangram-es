@@ -358,7 +358,7 @@ bool Map::update(float _dt) {
 
     impl->inputHandler.update(_dt);
 
-    impl->view.update();
+    impl->view.update(impl->scene->tileSources());
 
     impl->markerManager.update(static_cast<int>(impl->view.getZoom()));
 

@@ -6,7 +6,6 @@
 #include "tile/tileID.h"
 #include "tile/tileTask.h"
 #include "tile/tileWorker.h"
-#include "util/fastmap.h"
 
 #include <map>
 #include <memory>
@@ -14,6 +13,7 @@
 #include <tuple>
 #include <set>
 #include <vector>
+#include <unordered_map>
 
 class Platform;
 
@@ -42,7 +42,8 @@ public:
     void setTileSources(const std::vector<std::shared_ptr<TileSource>>& _sources);
 
     /* Updates visible tile set and load missing tiles */
-    void updateTileSets(const ViewState& _view, const std::set<TileID>& _visibleTiles);
+    void updateTileSets(const ViewState& _view,
+                        const std::unordered_map<std::string, std::set<TileID>>& _visibleTiles);
 
     void clearTileSets();
 
