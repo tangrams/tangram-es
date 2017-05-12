@@ -117,7 +117,7 @@ void TileManager::clearTileSet(int32_t _sourceId) {
 }
 
 void TileManager::updateTileSets(const ViewState& _view,
-                                 const std::unordered_map<std::string, std::set<TileID>>& _visibleTiles) {
+                                 const std::unordered_map<int32_t, std::set<TileID>>& _visibleTiles) {
     m_tiles.clear();
     m_tilesInProgress = 0;
     m_tileSetChanged = false;
@@ -125,7 +125,7 @@ void TileManager::updateTileSets(const ViewState& _view,
     for (auto& tileSet : m_tileSets) {
         // check if tile set is active for zoom (zoom might be below min_zoom)
         if (tileSet.source->isActiveForZoom(_view.zoom)) {
-            auto it = _visibleTiles.find(tileSet.source->name());
+            auto it = _visibleTiles.find(tileSet.source->id());
             if (it == _visibleTiles.end()) { continue; }
             updateTileSet(tileSet, _view, it->second);
         }
@@ -174,37 +174,15 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
         }
     }
 
-    const auto* visibleTiles = &_visibleTiles;
-
-    std::set<TileID> mappedTiles;
-    if (_view.zoom > _tileSet.source->maxZoom()) {
-        for (const auto& id : _visibleTiles) {
-            auto tile = id.withMaxSourceZoom(_tileSet.source->maxZoom());
-            // Replace tile with same coordinates and lower source zoom
-            auto other = std::find_if(mappedTiles.begin(), mappedTiles.end(),
-                             [&](auto& t) { return tile.x == t.x &&
-                                            tile.y == t.y &&
-                                            tile.z == t.z &&
-                                            tile.wrap == t.wrap; });
-            if (other == mappedTiles.end()) {
-                mappedTiles.insert(tile);
-            } else if (other->s < tile.s) {
-                mappedTiles.erase(other);
-                mappedTiles.insert(tile);
-            }
-        }
-        visibleTiles = &mappedTiles;
-    }
-
     // Loop over visibleTiles and add any needed tiles to tileSet
     auto curTilesIt = tiles.begin();
-    auto visTilesIt = visibleTiles->begin();
+    auto visTilesIt = _visibleTiles.begin();
 
     auto generation = _tileSet.source->generation();
 
-    while (visTilesIt != visibleTiles->end() || curTilesIt != tiles.end()) {
+    while (visTilesIt != _visibleTiles.end() || curTilesIt != tiles.end()) {
 
-        auto& visTileId = visTilesIt == visibleTiles->end()
+        auto& visTileId = visTilesIt == _visibleTiles.end()
             ? NOT_A_TILE : *visTilesIt;
 
         auto& curTileId = curTilesIt == tiles.end()
@@ -212,7 +190,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
 
         if (visTileId == curTileId) {
             // tiles in both sets match
-            assert(visTilesIt != visibleTiles->end() &&
+            assert(visTilesIt != _visibleTiles.end() &&
                    curTilesIt != tiles.end());
 
             auto& entry = curTilesIt->second;
@@ -258,7 +236,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             // NB: if (curTileId == NOT_A_TILE) it is always > visTileId
             //     and if curTileId > visTileId, then visTileId cannot be
             //     NOT_A_TILE. (for the current implementation of > operator)
-            assert(visTilesIt != visibleTiles->end());
+            assert(visTilesIt != _visibleTiles.end());
 
             if (!addTile(_tileSet, visTileId)) {
                 // Not in cache - enqueue for loading
@@ -496,22 +474,24 @@ void TileManager::updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, Til
     // child proxies would be more appropriate
 
     // Try parent proxy
-    auto parentID = _tileID.getParent();
+    auto tileScale = _tileSet.source->tileScale();
+    auto maxZoom = _tileSet.source->maxZoom();
+    auto parentID = _tileID.getParent(tileScale);
     auto minZoom = _tileSet.source->minDisplayZoom();
     if (minZoom <= parentID.z
             && updateProxyTile(_tileSet, _tile, parentID, ProxyID::parent)) {
         return;
     }
     // Try grandparent
-    auto grandparentID = parentID.getParent();
+    auto grandparentID = parentID.getParent(tileScale);
     if (minZoom <= grandparentID.z
             && updateProxyTile(_tileSet, _tile, grandparentID, ProxyID::parent2)) {
         return;
     }
     // Try children
-    if (_tileSet.source->maxZoom() > _tileID.z) {
+    if (maxZoom > _tileID.z) {
         for (int i = 0; i < 4; i++) {
-            auto childID = _tileID.getChild(i, _tileSet.source->maxZoom());
+            auto childID = _tileID.getChild(i, maxZoom);
             updateProxyTile(_tileSet, _tile, childID, static_cast<ProxyID>(1 << i));
         }
     }
@@ -520,6 +500,8 @@ void TileManager::updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, Til
 void TileManager::clearProxyTiles(TileSet& _tileSet, const TileID& _tileID, TileEntry& _tile,
                                   std::vector<TileID>& _removes) {
     auto& tiles = _tileSet.tiles;
+    auto tileScale = _tileSet.source->tileScale();
+    auto maxZoom = _tileSet.source->maxZoom();
 
     auto removeProxy = [&tiles,&_removes](TileID id) {
         auto it = tiles.find(id);
@@ -533,20 +515,20 @@ void TileManager::clearProxyTiles(TileSet& _tileSet, const TileID& _tileID, Tile
     };
     // Check if grand parent proxy is present
     if (_tile.unsetProxy(ProxyID::parent2)) {
-        TileID gparentID(_tileID.getParent().getParent());
+        TileID gparentID(_tileID.getParent(tileScale).getParent(tileScale));
         removeProxy(gparentID);
     }
 
     // Check if parent proxy is present
     if (_tile.unsetProxy(ProxyID::parent)) {
-        TileID parentID(_tileID.getParent());
+        TileID parentID(_tileID.getParent(tileScale));
         removeProxy(parentID);
     }
 
     // Check if child proxies are present
     for (int i = 0; i < 4; i++) {
         if (_tile.unsetProxy(static_cast<ProxyID>(1 << i))) {
-            TileID childID(_tileID.getChild(i));
+            TileID childID(_tileID.getChild(i, maxZoom));
             removeProxy(childID);
         }
     }

@@ -479,10 +479,10 @@ void View::updateTiles(const std::vector<std::shared_ptr<TileSource>>& tileSourc
     // Scan options - avoid heap allocation for std::function
     // [1] http://www.drdobbs.com/cpp/efficient-use-of-lambda-expressions-and/232500059?pgno=2
     struct ScanParams {
-        ScanParams(std::unordered_map<std::string, std::set<TileID>>& _tiles, int _zoom)
+        ScanParams(std::unordered_map<int32_t, std::set<TileID>>& _tiles, int _zoom)
             : tiles(_tiles), zoom(_zoom) {}
 
-        std::unordered_map<std::string, std::set<TileID>>& tiles;
+        std::unordered_map<int32_t, std::set<TileID>>& tiles;
         int zoom;
         int maxZoom = int(s_maxZoom);
 
@@ -537,7 +537,11 @@ void View::updateTiles(const std::vector<std::shared_ptr<TileSource>>& tileSourc
 
         if (tile != opt.last) {
             for (const auto& source : tileSources) {
-                opt.tiles[source->name()].emplace(tile.x, tile.y, tile.z, tile.z, tile.w);
+                auto tileScale = source->tileScale();
+                auto maxZoom = source->maxZoom();
+                // Insert scaled and maxZoom mapped tileID in the visible set
+                auto tileID = TileID(tile.x, tile.y, tile.z, tile.z, tile.w);
+                opt.tiles[source->id()].insert(tileID.scaled(tileScale).withMaxSourceZoom(maxZoom));
                 opt.last = tile;
             }
         }

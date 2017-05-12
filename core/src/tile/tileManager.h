@@ -43,7 +43,7 @@ public:
 
     /* Updates visible tile set and load missing tiles */
     void updateTileSets(const ViewState& _view,
-                        const std::unordered_map<std::string, std::set<TileID>>& _visibleTiles);
+                        const std::unordered_map<int32_t, std::set<TileID>>& _visibleTiles);
 
     void clearTileSets();
 

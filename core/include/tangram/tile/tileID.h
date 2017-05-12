@@ -45,28 +45,33 @@ struct TileID {
         return isValid() && z <= _maxZoom;
     }
 
-    TileID withMaxSourceZoom(int32_t _max) const {
+    TileID withMaxSourceZoom(int32_t _maxZoom) const {
 
-        if (z <= _max) {
+        if (z <= _maxZoom) {
             return *this;
         }
 
-        int32_t over = z - _max;
+        int32_t over = z - _maxZoom;
 
-        return TileID(x >> over, y >> over, _max, z, wrap);
+        return TileID(x >> over, y >> over, _maxZoom, s, wrap);
     }
 
-    TileID getParent() const {
+    TileID scaled(int32_t _tileScale) const {
+        if (_tileScale <= 0) { return *this; }
 
-        if (s > z) {
+        auto scaledZ = std::max(0, z - _tileScale);
+        return TileID(x >> _tileScale, y >> _tileScale, scaledZ, z, wrap);
+    }
+
+    TileID getParent(int32_t _tileScale = 0) const {
+        if (s > (z + _tileScale)) {
             // Over-zoomed, keep the same data coordinates
             return TileID(x, y, z, s - 1, wrap);
         }
-        return TileID(x >> 1, y >> 1, z-1, z-1, wrap);
+        return TileID(x >> 1, y >> 1, z - 1, s - 1, wrap);
     }
 
-    TileID getChild(int32_t _index) const {
-
+    TileID getChild(int32_t _index, int32_t _maxZoom) const {
         if (_index > 3 || _index < 0) {
             return TileID(-1, -1, -1, -1, -1);
         }
@@ -78,15 +83,12 @@ struct TileID {
         // i:      0, 0, 1, 1
         // j:      0, 1, 0, 1
 
-        return TileID((x<<1)+i, (y<<1)+j, z+1, z+1, wrap);
-    }
-
-    TileID getChild(int32_t _index, int32_t _maxSourceZoom) const {
-        return getChild(_index).withMaxSourceZoom(_maxSourceZoom);
+        auto childID = TileID((x<<1)+i, (y<<1)+j, z + 1, s + 1, wrap);
+        return childID.withMaxSourceZoom(_maxZoom);
     }
 
     std::string toString() const {
-        return std::to_string(x) + "/" + std::to_string(y) + "/" + std::to_string(z);
+        return std::to_string(x) + "/" + std::to_string(y) + "/" + std::to_string(z) + "/" + std::to_string(s);
     }
 
 };

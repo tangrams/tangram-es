@@ -54,7 +54,8 @@ public:
      * and zoom level of tiles to produce their URL.
      */
     TileSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
-               int32_t _minDisplayZoom = -1, int32_t _maxDisplayZoom = -1, int32_t _maxZoom = 18);
+               int32_t _minDisplayZoom = -1, int32_t _maxDisplayZoom = -1, int32_t _maxZoom = 18,
+               int32_t _tileScale = 0);
 
     virtual ~TileSource();
 
@@ -96,6 +97,7 @@ public:
     int32_t minDisplayZoom() const { return m_minDisplayZoom; }
     int32_t maxDisplayZoom() const { return m_maxDisplayZoom; }
     int32_t maxZoom() const { return m_maxZoom; }
+    int32_t tileScale() const { return m_tileScale; }
 
     bool isActiveForZoom(const float _zoom) const {
         return _zoom >= m_minDisplayZoom && (m_maxDisplayZoom == -1 || _zoom <= m_maxDisplayZoom);
@@ -132,6 +134,9 @@ protected:
 
     // Maximum zoom for which tiles will be requested
     int32_t m_maxZoom;
+
+    // Pixel at which the data source tiles are fetched
+    int32_t m_tileScale;
 
     // Unique id for TileSource
     int32_t m_id;

@@ -183,7 +183,7 @@ public:
     glm::vec2 lonLatToScreenPosition(double lon, double lat, bool& clipped) const;
 
     /* Returns the set of all tiles visible at the current position and zoom */
-    const std::unordered_map<std::string, std::set<TileID>>& getVisibleTiles() { return m_visibleTiles; }
+    const std::unordered_map<int32_t, std::set<TileID>>& getVisibleTiles() { return m_visibleTiles; }
 
     /* Returns true if the view properties have changed since the last call to update() */
     bool changedOnLastUpdate() const { return m_changed; }
@@ -209,7 +209,7 @@ protected:
     std::shared_ptr<MapProjection> m_projection;
     std::shared_ptr<Stops> m_fovStops;
     std::shared_ptr<Stops> m_maxPitchStops;
-    std::unordered_map<std::string, std::set<TileID>> m_visibleTiles;
+    std::unordered_map<int32_t, std::set<TileID>> m_visibleTiles;
 
     ViewConstraint m_constraint;
 

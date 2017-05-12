@@ -134,6 +134,15 @@ std::shared_ptr<Texture> Scene::getTexture(const std::string& textureName) const
     return texIt->second;
 }
 
+std::shared_ptr<TileSource> Scene::getTileSource(int32_t id) {
+    auto it = std::find_if(m_tileSources.begin(), m_tileSources.end(),
+                           [&](auto& s){ return s->id() == id; });
+    if (it != m_tileSources.end()) {
+        return *it;
+    }
+    return nullptr;
+}
+
 std::shared_ptr<TileSource> Scene::getTileSource(const std::string& name) {
     auto it = std::find_if(m_tileSources.begin(), m_tileSources.end(),
                            [&](auto& s){ return s->name() == name; });

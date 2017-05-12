@@ -24,6 +24,7 @@ class FontContext;
 class Marker;
 class Tile;
 class Style;
+class Scene;
 class TileCache;
 
 class Labels {
@@ -36,7 +37,7 @@ public:
     void drawDebug(RenderState& rs, const View& _view);
 
     void updateLabelSet(const ViewState& _viewState, float _dt,
-                        const std::vector<std::unique_ptr<Style>>& _styles,
+                        const std::shared_ptr<Scene>& _scene,
                         const std::vector<std::shared_ptr<Tile>>& _tiles,
                         const std::vector<std::unique_ptr<Marker>>& _markers,
                         TileCache& _cache);
@@ -61,7 +62,7 @@ protected:
     using CollisionPairs = std::vector<isect2d::ISect2D<glm::vec2>::Pair>;
 
 
-    void skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
+    void skipTransitions(const std::shared_ptr<Scene>& _scene,
                          const std::vector<std::shared_ptr<Tile>>& _tiles,
                          TileCache& _cache, float _currentZoom) const;
 
