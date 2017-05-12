@@ -81,7 +81,7 @@ struct TestTileSource : TileSource {
 
     int tileTaskCount = 0;
 
-    TestTileSource() : TileSource("", nullptr) {
+    TestTileSource() : TileSource("test", nullptr) {
         m_generateGeometry = true;
     }
 
@@ -115,7 +115,7 @@ TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileMana
     tileManager.setTileSources(sources);
 
     /// Start loading tile 0/0/0
-    std::set<TileID> visibleTiles_1 = { TileID{0,0,0} };
+    std::unordered_map<int32_t, std::set<TileID>> visibleTiles_1 = { {0, {TileID{0,0,0}}} };
     tileManager.updateTileSets(viewState, visibleTiles_1);
 
     REQUIRE(tileManager.getVisibleTiles().size() == 0);
@@ -123,7 +123,7 @@ TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileMana
     REQUIRE(worker.processedCount == 0);
 
     /// Start loading tile 0/0/1 - uses 0/0/0 as proxy
-    std::set<TileID> visibleTiles_2 = { TileID{0,0,1} };
+    std::unordered_map<int32_t, std::set<TileID>> visibleTiles_2 = { {0, {TileID{0,0,1}}} };
     tileManager.updateTileSets(viewState, visibleTiles_2);
 
     REQUIRE(tileManager.getVisibleTiles().size() == 0);
@@ -170,7 +170,7 @@ TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
     std::vector<std::shared_ptr<TileSource>> sources = { source };
     tileManager.setTileSources(sources);
 
-    std::set<TileID> visibleTiles = { TileID{0,0,0} };
+    std::unordered_map<int32_t, std::set<TileID>> visibleTiles = { {1, {TileID{0,0,0}}} };
     tileManager.updateTileSets(viewState, visibleTiles);
     worker.processTask();
 
@@ -195,7 +195,7 @@ TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
     std::vector<std::shared_ptr<TileSource>> sources = { source };
     tileManager.setTileSources(sources);
 
-    std::set<TileID> visibleTiles = { TileID{0,0,0} };
+    std::unordered_map<int32_t, std::set<TileID>> visibleTiles = { {2, {TileID{0,0,0}}} };
     tileManager.updateTileSets(viewState, visibleTiles);
     worker.processTask();
 
@@ -203,7 +203,7 @@ TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
     REQUIRE(source->tileTaskCount == 1);
     REQUIRE(worker.processedCount == 1);
 
-    std::set<TileID> visibleTiles2 = { TileID{0,0,1} };
+    std::unordered_map<int32_t, std::set<TileID>> visibleTiles2 = { {2, {TileID{0,0,1}}} };
     tileManager.updateTileSets(viewState, visibleTiles2);
     worker.processTask();
 
@@ -234,7 +234,7 @@ TEST_CASE( "Use proxy Tile - circular proxies", "[TileManager][updateTileSets]" 
     tileManager.setTileSources(sources);
 
     /// Start loading tile 0/0/0
-    std::set<TileID> visibleTiles_1 = { TileID{0,0,0} };
+    std::unordered_map<int32_t, std::set<TileID>> visibleTiles_1 = { {3, {TileID{0,0,0}}} };
     tileManager.updateTileSets(viewState, visibleTiles_1);
 
     REQUIRE(tileManager.getVisibleTiles().size() == 0);
@@ -242,7 +242,7 @@ TEST_CASE( "Use proxy Tile - circular proxies", "[TileManager][updateTileSets]" 
     REQUIRE(worker.processedCount == 0);
 
     /// Start loading tile 0/0/1 - add 0/0/0 as proxy
-    std::set<TileID> visibleTiles_2 = { TileID{0,0,1} };
+    std::unordered_map<int32_t, std::set<TileID>> visibleTiles_2 = { {3, {TileID{0,0,1}}} };
     tileManager.updateTileSets(viewState, visibleTiles_2);
 
     REQUIRE(tileManager.getVisibleTiles().size() == 0);

@@ -45,7 +45,7 @@ View makeView() {
 
     view.setPosition(0, 0);
     view.setZoom(0);
-    view.update(false);
+    view.update({}, false);
 
     return view;
 }
