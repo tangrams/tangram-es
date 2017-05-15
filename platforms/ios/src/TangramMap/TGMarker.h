@@ -104,6 +104,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 NS_ASSUME_NONNULL_END
 
+/*
+ Returns whether the usage of this marker resulted in internal errors
+
+ @param error a pointer to output error
+ @return YES if an error has been set to the input paramater, NO otherwise
+
+ @note The internal marker error will remain until you access it,
+ make sure to check for errors on the marker after critical API calls or property access.
+ */
 - (BOOL)getError:(NSError**)error;
 
 @end

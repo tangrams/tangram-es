@@ -524,10 +524,27 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Marker access
 
 /**
- Removes all the markers added to the map view.
+ Removes all the markers added to the map view
  */
 - (void)markerRemoveAll;
+
+/**
+ Creates a marker to the map and add it
+
+ @return the created marker
+
+ @note The default marker will not be usable until you set its styling, geometry or image depending
+ on your use case.
+ */
 - (TGMarker*)markerAdd;
+
+/**
+ Removes a specific marker
+
+ @param marker The marker pointer to remove
+
+ @note the marker will be unusable after being removed
+ */
 - (void)markerRemove:(TGMarker*)marker;
 
 #pragma mark Map View lifecycle
