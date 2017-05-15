@@ -12,8 +12,8 @@ matrix:
           env: PLATFORM=linux CXX=g++-4.9 CC=gcc-4.9
           addons:
             apt:
-              sources: [ 'kubuntu-backports', 'ubuntu-toolchain-r-test', 'george-edison55-precise-backports' ]
-              packages: [ 'cmake', 'gcc-4.9', 'g++-4.9', 'xorg-dev', 'libglu1-mesa-dev' ]
+              sources: [ 'ubuntu-toolchain-r-test', 'george-edison55-precise-backports' ]
+              packages: [ 'cmake', 'cmake-data', 'gcc-4.9', 'g++-4.9', 'xorg-dev', 'libglu1-mesa-dev' ]
         - os: linux
           env: PLATFORM=android
           addons:
