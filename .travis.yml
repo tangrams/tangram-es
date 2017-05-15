@@ -5,7 +5,7 @@ sudo: enabled
 branches:
     only:
         - master
-        - 0.5.2-patch
+        - 0.5.3-patch
 
 matrix:
     include:
