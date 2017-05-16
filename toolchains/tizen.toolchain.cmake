@@ -6,13 +6,12 @@ message(STATUS "Tizen SDK path: ${TIZEN_SDK}, Device: ${TIZEN_DEVICE}")
 set(CMAKE_C_COMPILER_WORKS TRUE)
 set(CMAKE_CXX_COMPILER_WORKS TRUE)
 
-if (${TIZEN_DEVICE})
-  set(CMAKE_C_COMPILER ${TIZEN_SDK}/tools/arm-linux-gnueabi-gcc-4.9/bin/arm-linux-gnueabi-gcc)
-  set(CMAKE_CXX_COMPILER ${TIZEN_SDK}/tools/arm-linux-gnueabi-gcc-4.9/bin/arm-linux-gnueabi-g++)
-else() # Emulator
-  set(CMAKE_C_COMPILER ${TIZEN_SDK}/tools/i386-linux-gnueabi-gcc-4.9/bin/i386-linux-gnueabi-gcc)
-  set(CMAKE_CXX_COMPILER ${TIZEN_SDK}/tools/i386-linux-gnueabi-gcc-4.9/bin/i386-linux-gnueabi-g++)
-endif()
+set(CMAKE_C_COMPILER ${TIZEN_SDK}/tools/${TIZEN_ARCH}-linux-gnueabi-gcc-6.2/bin/${TIZEN_ARCH}-linux-gnueabi-gcc)
+set(CMAKE_CXX_COMPILER ${TIZEN_SDK}/tools/${TIZEN_ARCH}-linux-gnueabi-gcc-6.2/bin/${TIZEN_ARCH}-linux-gnueabi-g++)
+
+# Optimize for size and strip symbols and relocation information for release builds.
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os -s")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -s")
 
 set(CMAKE_FIND_ROOT_PATH ${TIZEN_SYSROOT})
 set(CMAKE_SYSROOT ${TIZEN_SYSROOT})
