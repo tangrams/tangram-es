@@ -1,11 +1,10 @@
 tar -czvf packaging/deps.tar.gz \
-	--anchored core/deps/alfons --exclude external/alfons/fonts \
-	--anchored core/deps/geojson-vt-cpp \
+	--anchored core/deps/alfons \
 	--anchored core/deps/css-color-parser-cpp \
 	--anchored core/deps/duktape \
-	--anchored core/deps/yaml-cpp --exclude external/yaml-cpp/test \
-	--anchored core/deps/SQLiteCpp \
-	--anchored core/deps/earcut \
-	--anchored core/deps/variant \
+	--anchored core/deps/earcut --exclude core/deps/earcut/glfw \
+	--anchored core/deps/geojson-vt-cpp --exclude core/deps/geojson-vt-cpp/.mason \
 	--anchored core/deps/isect2d \
-	--anchored core/include/glm --exclude core/include/glm/doc --exclude core/include/glm/test
+	--anchored core/deps/SQLiteCpp --exclude core/deps/SQLiteCpp/googletest \
+	--anchored core/deps/variant --exclude core/deps/variant/.mason \
+	--anchored core/deps/yaml-cpp --exclude core/deps/yaml-cpp/test

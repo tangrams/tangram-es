@@ -42,14 +42,15 @@ Tangram-ES Map Library.
 %prep
 %setup -q
 
-rmdir external/alfons
-rmdir external/geojson-vt-cpp
-rmdir external/yaml-cpp
-rmdir core/include/glm
-rmdir core/include/variant
-rmdir core/include/isect2d
-rmdir core/include/earcut.hpp
-rmdir external/duktape
+rmdir core/deps/alfons
+rmdir core/deps/css-color-parser-cpp
+rmdir core/deps/duktape
+rmdir core/deps/earcut
+rmdir core/deps/geojson-vt-cpp
+rmdir core/deps/isect2d
+rmdir core/deps/SQLiteCpp
+rmdir core/deps/variant
+rmdir core/deps/yaml-cpp
 
 %setup -q -T -D -a 1
 
