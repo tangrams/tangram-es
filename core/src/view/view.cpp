@@ -265,21 +265,28 @@ glm::dmat2 View::getBoundsRect() const {
 }
 
 double View::screenToGroundPlane(float& _screenX, float& _screenY) {
+
+    if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
+
     double x = _screenX, y = _screenY;
-    double t = screenToGroundPlane(x, y);
+    double t = screenToGroundPlaneInternal(x, y);
     _screenX = x;
     _screenY = y;
     return t;
 }
 
+double View::screenToGroundPlane(double& _screenX, double& _screenY) {
+
+    if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
+
+    return screenToGroundPlaneInternal(_screenX, _screenY);
+}
 
 glm::vec2 View::normalizedWindowCoordinates(float _x, float _y) const {
     return { _x / m_vpWidth, 1.0 - _y / m_vpHeight };
 }
 
-double View::screenToGroundPlane(double& _screenX, double& _screenY) {
-
-    if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
+double View::screenToGroundPlaneInternal(double& _screenX, double& _screenY) const {
 
     // Cast a ray and find its intersection with the z = 0 plane,
     // following the technique described here: http://antongerdelan.net/opengl/raycasting.html
@@ -430,7 +437,7 @@ glm::vec2 View::lonLatToScreenPosition(double lon, double lat, bool& clipped) co
     return screenPosition;
 }
 
-void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) {
+void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
 
     int zoom = int(m_zoom);
     int maxTileIndex = 1 << zoom;
@@ -441,10 +448,10 @@ void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) {
     glm::dvec2 viewTR = { m_vpWidth, 0.f        }; // top right
     glm::dvec2 viewTL = { 0.f,       0.f        }; // top left
 
-    double t0 = screenToGroundPlane(viewBL.x, viewBL.y);
-    double t1 = screenToGroundPlane(viewBR.x, viewBR.y);
-    double t2 = screenToGroundPlane(viewTR.x, viewTR.y);
-    double t3 = screenToGroundPlane(viewTL.x, viewTL.y);
+    double t0 = screenToGroundPlaneInternal(viewBL.x, viewBL.y);
+    double t1 = screenToGroundPlaneInternal(viewBR.x, viewBR.y);
+    double t2 = screenToGroundPlaneInternal(viewTR.x, viewTR.y);
+    double t3 = screenToGroundPlaneInternal(viewTL.x, viewTL.y);
 
     // if all of our raycasts have a negative intersection distance, we have no area to cover
     if (t0 < .0 && t1 < 0. && t2 < 0. && t3 < 0.) {

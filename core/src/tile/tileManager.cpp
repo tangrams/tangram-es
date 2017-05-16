@@ -117,7 +117,7 @@ void TileManager::clearTileSet(int32_t _sourceId) {
     m_tileSetChanged = true;
 }
 
-void TileManager::updateTileSets(View& _view) {
+void TileManager::updateTileSets(const View& _view) {
 
     m_tiles.clear();
     m_tilesInProgress = 0;

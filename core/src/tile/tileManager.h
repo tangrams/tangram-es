@@ -43,7 +43,7 @@ public:
     void setTileSources(const std::vector<std::shared_ptr<TileSource>>& _sources);
 
     /* Updates visible tile set and load missing tiles */
-    void updateTileSets(View& _view);
+    void updateTileSets(const View& _view);
 
     void clearTileSets();
 
