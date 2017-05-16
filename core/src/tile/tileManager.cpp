@@ -2,6 +2,7 @@
 
 #include "data/tileSource.h"
 #include "platform.h"
+#include "tangram.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
 #include "util/mapProjection.h"
@@ -116,18 +117,35 @@ void TileManager::clearTileSet(int32_t _sourceId) {
     m_tileSetChanged = true;
 }
 
-void TileManager::updateTileSets(const ViewState& _view,
-                                 const std::unordered_map<int32_t, std::set<TileID>>& _visibleTiles) {
+void TileManager::updateTileSets(View& _view) {
+
     m_tiles.clear();
     m_tilesInProgress = 0;
     m_tileSetChanged = false;
 
+    if (_view.changedOnLastUpdate() && !Tangram::getDebugFlag(Tangram::DebugFlags::freeze_tiles)) {
+
+        for (auto& tileSet : m_tileSets) {
+            tileSet.visibleTiles.clear();
+        }
+
+        auto tileCb = [&, zoom = _view.getZoom()](TileID _tileID){
+            for (auto& tileSet : m_tileSets) {
+                auto tileScale = tileSet.source->tileScale();
+                auto maxZoom = tileSet.source->maxZoom();
+
+                // Insert scaled and maxZoom mapped tileID in the visible set
+                tileSet.visibleTiles.insert(_tileID.scaled(tileScale).withMaxSourceZoom(maxZoom));
+            }
+        };
+
+        _view.getVisibleTiles(tileCb);
+    }
+
     for (auto& tileSet : m_tileSets) {
         // check if tile set is active for zoom (zoom might be below min_zoom)
-        if (tileSet.source->isActiveForZoom(_view.zoom)) {
-            auto it = _visibleTiles.find(tileSet.source->id());
-            if (it == _visibleTiles.end()) { continue; }
-            updateTileSet(tileSet, _view, it->second);
+        if (tileSet.source->isActiveForZoom(_view.getZoom())) {
+            updateTileSet(tileSet, _view.state());
         }
     }
 
@@ -142,8 +160,7 @@ void TileManager::updateTileSets(const ViewState& _view,
     m_tiles.erase(std::unique(m_tiles.begin(), m_tiles.end()), m_tiles.end());
 }
 
-void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
-                                const std::set<TileID>& _visibleTiles) {
+void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
 
     bool newTiles = false;
 
@@ -174,15 +191,17 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
         }
     }
 
+    const auto& visibleTiles = _tileSet.visibleTiles;
+
     // Loop over visibleTiles and add any needed tiles to tileSet
     auto curTilesIt = tiles.begin();
-    auto visTilesIt = _visibleTiles.begin();
+    auto visTilesIt = visibleTiles.begin();
 
     auto generation = _tileSet.source->generation();
 
-    while (visTilesIt != _visibleTiles.end() || curTilesIt != tiles.end()) {
+    while (visTilesIt != visibleTiles.end() || curTilesIt != tiles.end()) {
 
-        auto& visTileId = visTilesIt == _visibleTiles.end()
+        auto& visTileId = visTilesIt == visibleTiles.end()
             ? NOT_A_TILE : *visTilesIt;
 
         auto& curTileId = curTilesIt == tiles.end()
@@ -190,7 +209,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
 
         if (visTileId == curTileId) {
             // tiles in both sets match
-            assert(visTilesIt != _visibleTiles.end() &&
+            assert(visTilesIt != visibleTiles.end() &&
                    curTilesIt != tiles.end());
 
             auto& entry = curTilesIt->second;
@@ -236,7 +255,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             // NB: if (curTileId == NOT_A_TILE) it is always > visTileId
             //     and if curTileId > visTileId, then visTileId cannot be
             //     NOT_A_TILE. (for the current implementation of > operator)
-            assert(visTilesIt != _visibleTiles.end());
+            assert(visTilesIt != visibleTiles.end());
 
             if (!addTile(_tileSet, visTileId)) {
                 // Not in cache - enqueue for loading

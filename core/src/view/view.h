@@ -20,7 +20,6 @@ enum class CameraType : uint8_t {
 };
 
 struct Stops;
-class TileSource;
 
 struct ViewState {
     const MapProjection* mapProjection;
@@ -135,8 +134,8 @@ public:
     /* Get the current pitch angle in radians */
     float getPitch() const { return m_pitch; }
 
-    /* Updates the view and projection matrices if properties have changed */
-    void update(const std::vector<std::shared_ptr<TileSource>>& tileSources, bool _constrainToWorldBounds = true);
+    /* Updates the view and projection matrices if properties have changed  */
+    void update(bool _constrainToWorldBounds = true);
 
     /* Gets the position of the view in projection units (z is the effective 'height' determined from zoom) */
     const glm::dvec3& getPosition() const { return m_pos; }
@@ -183,7 +182,7 @@ public:
     glm::vec2 lonLatToScreenPosition(double lon, double lat, bool& clipped) const;
 
     /* Returns the set of all tiles visible at the current position and zoom */
-    const std::unordered_map<int32_t, std::set<TileID>>& getVisibleTiles() { return m_visibleTiles; }
+    void getVisibleTiles(const std::function<void(TileID)>& _tileCb);
 
     /* Returns true if the view properties have changed since the last call to update() */
     bool changedOnLastUpdate() const { return m_changed; }
@@ -204,12 +203,10 @@ public:
 protected:
 
     void updateMatrices();
-    void updateTiles(const std::vector<std::shared_ptr<TileSource>>& tileSources);
 
     std::shared_ptr<MapProjection> m_projection;
     std::shared_ptr<Stops> m_fovStops;
     std::shared_ptr<Stops> m_maxPitchStops;
-    std::unordered_map<int32_t, std::set<TileID>> m_visibleTiles;
 
     ViewConstraint m_constraint;
 

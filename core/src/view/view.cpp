@@ -1,9 +1,6 @@
 #include "view/view.h"
 
 #include "log.h"
-#include "platform.h"
-#include "tangram.h"
-#include "data/tileSource.h"
 #include "scene/stops.h"
 #include "util/rasterize.h"
 
@@ -224,7 +221,7 @@ void View::pitch(float _dpitch) {
 
 }
 
-void View::update(const std::vector<std::shared_ptr<TileSource>>& tileSources, bool _constrainToWorldBounds) {
+void View::update(bool _constrainToWorldBounds) {
 
     m_changed = false;
 
@@ -252,13 +249,11 @@ void View::update(const std::vector<std::shared_ptr<TileSource>>& tileSources, b
 
     }
 
-    if (m_dirtyTiles && !Tangram::getDebugFlag(Tangram::DebugFlags::freeze_tiles)) {
+    if (m_dirtyTiles) {
 
-        updateTiles(tileSources); // Resets dirty flag
         m_changed = true;
-
+        m_dirtyTiles = false;
     }
-
 }
 
 glm::dmat2 View::getBoundsRect() const {
@@ -435,9 +430,7 @@ glm::vec2 View::lonLatToScreenPosition(double lon, double lat, bool& clipped) co
     return screenPosition;
 }
 
-void View::updateTiles(const std::vector<std::shared_ptr<TileSource>>& tileSources) {
-
-    m_visibleTiles.clear();
+void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) {
 
     int zoom = int(m_zoom);
     int maxTileIndex = 1 << zoom;
@@ -479,10 +472,8 @@ void View::updateTiles(const std::vector<std::shared_ptr<TileSource>>& tileSourc
     // Scan options - avoid heap allocation for std::function
     // [1] http://www.drdobbs.com/cpp/efficient-use-of-lambda-expressions-and/232500059?pgno=2
     struct ScanParams {
-        ScanParams(std::unordered_map<int32_t, std::set<TileID>>& _tiles, int _zoom)
-            : tiles(_tiles), zoom(_zoom) {}
+        explicit ScanParams(int _zoom) : zoom(_zoom) {}
 
-        std::unordered_map<int32_t, std::set<TileID>>& tiles;
         int zoom;
         int maxZoom = int(s_maxZoom);
 
@@ -497,7 +488,7 @@ void View::updateTiles(const std::vector<std::shared_ptr<TileSource>>& tileSourc
         glm::ivec4 last = glm::ivec4{-1};
     };
 
-    ScanParams opt{ m_visibleTiles, zoom };
+    ScanParams opt{ zoom };
 
     if (m_type == CameraType::perspective) {
 
@@ -516,7 +507,7 @@ void View::updateTiles(const std::vector<std::shared_ptr<TileSource>>& tileSourc
         }
     }
 
-    Rasterize::ScanCallback s = [&opt, &tileSources](int x, int y) {
+    Rasterize::ScanCallback s = [&opt, &_tileCb](int x, int y) {
 
         int lod = 0;
         while (lod < MAX_LOD && x >= opt.x_limit_pos[lod]) { lod++; }
@@ -536,14 +527,9 @@ void View::updateTiles(const std::vector<std::shared_ptr<TileSource>>& tileSourc
         tile.w = (x - tile.x) >> opt.zoom; // wrap
 
         if (tile != opt.last) {
-            for (const auto& source : tileSources) {
-                auto tileScale = source->tileScale();
-                auto maxZoom = source->maxZoom();
-                // Insert scaled and maxZoom mapped tileID in the visible set
-                auto tileID = TileID(tile.x, tile.y, tile.z, tile.z, tile.w);
-                opt.tiles[source->id()].insert(tileID.scaled(tileScale).withMaxSourceZoom(maxZoom));
-                opt.last = tile;
-            }
+            opt.last = tile;
+
+            _tileCb(TileID(tile.x, tile.y, tile.z, tile.z, tile.w));
         }
     };
 
@@ -555,9 +541,6 @@ void View::updateTiles(const std::vector<std::shared_ptr<TileSource>>& tileSourc
     // of the view trapezoid. This is necessary to not cull any geometry with height in these tiles
     // (which should remain visible, even though the base of the tile is not).
     Rasterize::scanTriangle(a, b, e, 0, maxTileIndex, s);
-
-    m_dirtyTiles = false;
-
 }
 
 }

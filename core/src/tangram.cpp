@@ -358,7 +358,7 @@ bool Map::update(float _dt) {
 
     impl->inputHandler.update(_dt);
 
-    impl->view.update(impl->scene->tileSources());
+    impl->view.update();
 
     impl->markerManager.update(static_cast<int>(impl->view.getZoom()));
 
@@ -369,7 +369,7 @@ bool Map::update(float _dt) {
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
-        impl->tileManager.updateTileSets(impl->view.state(), impl->view.getVisibleTiles());
+        impl->tileManager.updateTileSets(impl->view);
 
         auto& tiles = impl->tileManager.getVisibleTiles();
         auto& markers = impl->markerManager.markers();
