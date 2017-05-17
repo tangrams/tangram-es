@@ -372,7 +372,7 @@ bool Map::update(float _dt) {
         impl->tileManager.updateTileSets(impl->view.state(), impl->view.getVisibleTiles());
 
         auto& tiles = impl->tileManager.getVisibleTiles();
-        auto& markers = impl->markerManager.markers();
+        auto& markers = impl->markerManager.getVisibleMarkers();
 
         for (const auto& marker : markers) {
             marker->update(_dt, impl->view);
@@ -468,7 +468,7 @@ void Map::render() {
                 style->drawSelectionFrame(impl->renderState, *tile);
             }
 
-            for (const auto& marker : impl->markerManager.markers()) {
+            for (const auto& marker : impl->markerManager.getVisibleMarkers()) {
                 style->drawSelectionFrame(impl->renderState, *marker);
             }
         }
@@ -511,7 +511,7 @@ void Map::render() {
                 style->draw(impl->renderState, *tile);
             }
 
-            for (const auto& marker : impl->markerManager.markers()) {
+            for (const auto& marker : impl->markerManager.getVisibleMarkers()) {
                 style->draw(impl->renderState, *marker);
             }
 

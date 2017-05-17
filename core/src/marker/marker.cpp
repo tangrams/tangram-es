@@ -39,8 +39,13 @@ bool Marker::evaluateRuleForContext(StyleContext& ctx) {
 }
 
 void Marker::setDrawRuleData(std::unique_ptr<DrawRuleData> drawRuleData) {
-    m_drawRuleData = std::move(drawRuleData);
-    m_drawRule = std::make_unique<DrawRule>(*m_drawRuleData, "", 0);
+    if (drawRuleData) {
+        m_drawRuleData = std::move(drawRuleData);
+        m_drawRule = std::make_unique<DrawRule>(*m_drawRuleData, "", 0);
+    } else {
+        m_drawRuleData.reset();
+        m_drawRule.reset();
+    }
 }
 
 void Marker::mergeRules(const SceneLayer& layer) {

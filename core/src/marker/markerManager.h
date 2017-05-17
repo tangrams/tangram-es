@@ -1,6 +1,5 @@
 #pragma once
 
-#include "scene/styleContext.h"
 #include "scene/drawRule.h"
 #include "util/ease.h"
 #include "util/fastmap.h"
@@ -15,10 +14,14 @@ class MapProjection;
 class Marker;
 class Scene;
 class StyleBuilder;
+class StyleContext;
 
 class MarkerManager {
 
 public:
+
+    MarkerManager();
+    ~MarkerManager();
 
     // Set the Scene object whose styling information will be used to build markers.
     void setScene(std::shared_ptr<Scene> scene);
@@ -67,7 +70,7 @@ public:
     // Rebuild all markers.
     void rebuildAll();
 
-    const std::vector<std::unique_ptr<Marker>>& markers() const;
+    auto& getVisibleMarkers() const { return m_visibleMarkers; }
 
     const Marker* getMarkerOrNullBySelectionColor(uint32_t selectionColor) const;
 
@@ -78,15 +81,18 @@ private:
     bool buildStyling(Marker& marker);
     bool buildGeometry(Marker& marker, int zoom);
 
-    StyleContext m_styleContext;
+    std::unique_ptr<StyleContext> m_styleContext;
     std::shared_ptr<Scene> m_scene;
     std::vector<std::unique_ptr<Marker>> m_markers;
     std::vector<std::string> m_jsFnList;
     fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilders;
     MapProjection* m_mapProjection = nullptr;
-    size_t m_jsFnIndex = 0;
+
     uint32_t m_idCounter = 0;
     int m_zoom = 0;
+    bool m_dirty = false;
+
+    std::vector<Marker*> m_visibleMarkers;
 
 };
 
