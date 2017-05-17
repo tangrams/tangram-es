@@ -12,6 +12,7 @@
 #import "TGMapData+Internal.h"
 #import "TGMarkerPickResult+Internal.h"
 #import "TGLabelPickResult+Internal.h"
+#import "TGMarker+Internal.h"
 #import "TGHelpers.h"
 #import "platform_ios.h"
 #import "data/propertyItem.h"
@@ -49,24 +50,30 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     return [self.markersById allValues];
 }
 
-- (void)addMarker:(TGMarker *)marker withIdentifier:(Tangram::MarkerID)identifier;
+- (TGMarker*)markerAdd
 {
-    NSString* key = [NSString stringWithFormat:@"%d", (NSUInteger)identifier];
+    TGMarker* marker = [[TGMarker alloc] initWithMap:self.map];
+    NSString* key = [NSString stringWithFormat:@"%d", (NSUInteger)marker.identifier];
     self.markersById[key] = marker;
+    return marker;
 }
 
-- (void)removeMarker:(Tangram::MarkerID)identifier
+- (void)markerRemove:(TGMarker *)marker
 {
-    NSString* key = [NSString stringWithFormat:@"%d", (NSUInteger)identifier];
+    NSString* key = [NSString stringWithFormat:@"%d", (NSUInteger)marker.identifier];
+    self.map->markerRemove(marker.identifier);
     [self.markersById removeObjectForKey:key];
+    marker.identifier = 0;
 }
 
 - (void)markerRemoveAll
 {
     if (!self.map) { return; }
-
+    for (id markerId in self.markersById) {
+        TGMarker* marker = [self.markersById objectForKey:markerId];
+        marker.identifier = 0;
+    }
     [self.markersById removeAllObjects];
-
     self.map->markerRemoveAll();
 }
 

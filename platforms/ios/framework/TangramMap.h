@@ -20,7 +20,7 @@ FOUNDATION_EXPORT const unsigned char TangramMapVersionString[];
 #import <TangramMap/TGGeoPoint.h>
 #import <TangramMap/TGGeoPolygon.h>
 #import <TangramMap/TGGeoPolyline.h>
-#import <TangramMap/TGEaseType.h>
+#import <TangramMap/TGTypes.h>
 #import <TangramMap/TGHttpHandler.h>
 #import <TangramMap/TGMarker.h>
 #import <TangramMap/TGMapData.h>
