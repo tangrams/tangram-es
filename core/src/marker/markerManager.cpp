@@ -5,6 +5,7 @@
 #include "marker/marker.h"
 #include "scene/sceneLoader.h"
 #include "scene/dataLayer.h"
+#include "scene/styleContext.h"
 #include "style/style.h"
 #include "labels/labelSet.h"
 #include "log.h"
@@ -14,15 +15,20 @@
 
 namespace Tangram {
 
+MarkerManager::MarkerManager() {}
+
+MarkerManager::~MarkerManager() {}
+
 void MarkerManager::setScene(std::shared_ptr<Scene> scene) {
 
     m_scene = scene;
     m_mapProjection = scene->mapProjection().get();
-    m_styleContext.initFunctions(*scene);
-    m_jsFnIndex = scene->functions().size();
 
+    m_styleContext = std::make_unique<StyleContext>();
+    m_styleContext->initFunctions(*scene);
 
     // Initialize StyleBuilders.
+    m_styleBuilders.clear();
     for (auto& style : scene->styles()) {
         m_styleBuilders[style->getName()] = style->createBuilder();
     }
@@ -105,13 +111,6 @@ bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const un
 bool MarkerManager::setVisible(MarkerID markerID, bool visible) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
-
-    auto labelMesh = dynamic_cast<const LabelSet*>(marker->mesh());
-    if (labelMesh) {
-        for (auto& label : labelMesh->getLabels()) {
-            label->setForceInvisible(!visible);
-        }
-    }
 
     marker->setVisible(visible);
     return true;
@@ -366,7 +365,11 @@ bool MarkerManager::buildStyling(Marker& marker) {
         // Find the rule in the merged set whose name matches the final token.
         return marker.finalizeRuleMergingForName(path.substr(start, end - start));
     }
+
     // If the styling is not a path, try to load it as a string of YAML.
+    const auto& sceneJsFnList = m_scene->functions();
+    auto jsFnIndex = sceneJsFnList.size();
+
     try {
         YAML::Node node = YAML::Load(markerStyling.string);
         // Parse style parameters from the YAML node.
@@ -376,11 +379,9 @@ bool MarkerManager::buildStyling(Marker& marker) {
         return false;
     }
     // Compile any new JS functions used for styling.
-    const auto& sceneJsFnList = m_scene->functions();
-    for (auto i = m_jsFnIndex; i < sceneJsFnList.size(); ++i) {
-        m_styleContext.addFunction(sceneJsFnList[i]);
+    for (auto i = jsFnIndex; i < sceneJsFnList.size(); ++i) {
+        m_styleContext->addFunction(sceneJsFnList[i]);
     }
-    m_jsFnIndex = sceneJsFnList.size();
 
     marker.setDrawRuleData(std::make_unique<DrawRuleData>("", 0, std::move(params)));
 
@@ -405,9 +406,9 @@ bool MarkerManager::buildGeometry(Marker& marker, int zoom) {
         }
     }
 
-    m_styleContext.setKeywordZoom(zoom);
+    m_styleContext->setKeywordZoom(zoom);
 
-    bool valid = marker.evaluateRuleForContext(m_styleContext);
+    bool valid = marker.evaluateRuleForContext(*m_styleContext);
 
     if (!valid) { return false; }
 
