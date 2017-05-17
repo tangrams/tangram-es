@@ -54,6 +54,19 @@ void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer
             continue;
         }
 
+        if (style->style().defaultDrawRule()) {
+            for (auto& param : style->style().defaultDrawRule()->parameters) {
+                auto key = static_cast<uint8_t>(param.key);
+                if (!rule.active[key]) {
+                    rule.active[key] = true;
+                    // NOTE: layername and layer depth are actually immaterial here, since these are
+                    // only used during layer draw rules merging. Adding a default string for
+                    // debugging purposes.
+                    rule.params[key] = { &param, "default_style_draw_rule", 0 };
+                }
+            }
+        }
+
         if (!m_ruleSet.evaluateRuleForContext(rule, m_styleContext)) {
             continue;
         }

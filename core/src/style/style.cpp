@@ -6,7 +6,6 @@
 #include "gl/mesh.h"
 #include "log.h"
 #include "marker/marker.h"
-#include "scene/drawRule.h"
 #include "scene/light.h"
 #include "scene/scene.h"
 #include "scene/spriteAtlas.h"
@@ -454,6 +453,10 @@ void Style::draw(RenderState& rs, const Marker& marker) {
     if (!mesh->draw(rs, *m_shaderProgram)) {
         LOGN("Mesh built by style %s cannot be drawn", m_name.c_str());
     }
+}
+
+void Style::setDefaultDrawRule(std::unique_ptr<DrawRuleData>&& _rule) {
+    m_defaultDrawRule = std::move(_rule);
 }
 
 bool StyleBuilder::checkRule(const DrawRule& _rule) const {
