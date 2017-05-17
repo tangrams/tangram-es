@@ -18,6 +18,18 @@ foreach(_ext ${IOS_EXTENSIONS_FILES})
         ${PROJECT_SOURCE_DIR}/platforms/ios/demo/src/${_ext})
 endforeach()
 
+if("${MAPZEN_API_KEY}" STREQUAL "")
+    message(SEND_ERROR
+        "Make sure to provide an api key to build the demo application, "
+        "you can create an API key at https://mapzen.com/developers. "
+        "Then run 'export MAPZEN_API_KEY mapzen-xxxx' or 'make ios MAPZEN_API_KEY=mapzen-xxxx")
+    return()
+endif()
+
+# Generate demo app configuration plist file to inject API key
+configure_file(${PROJECT_SOURCE_DIR}/platforms/ios/demo/Config.plist.in
+    ${PROJECT_SOURCE_DIR}/platforms/ios/demo/resources/Config.plist)
+
 add_bundle_resources(IOS_DEMO_RESOURCES "${PROJECT_SOURCE_DIR}/platforms/ios/demo/resources/" "Resources")
 file(GLOB_RECURSE IOS_DEMO_SOURCES ${PROJECT_SOURCE_DIR}/platforms/ios/demo/src/**)
 
