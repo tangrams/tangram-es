@@ -184,8 +184,14 @@
 
 - (void)viewWillAppear:(BOOL)animated
 {
+    NSString* configPListPath = [[NSBundle mainBundle] pathForResource: @"Config" ofType: @"plist"];
+    NSMutableDictionary* configDict =[[NSMutableDictionary alloc] initWithContentsOfFile:configPListPath];
+    NSString* apiKey = [configDict valueForKey:@"MapzenApiKey"];
+    NSAssert(apiKey, @"Please provide a valid API key by setting the environment variable MAPZEN_API_KEY at build time");
+
     NSMutableArray<TGSceneUpdate *>* updates = [[NSMutableArray alloc]init];
-    [updates addObject:[[TGSceneUpdate alloc]initWithPath:@"global.sdk_mapzen_api_key" value:@"vector-tiles-tyHL4AY"]];
+    [updates addObject:[[TGSceneUpdate alloc]initWithPath:@"global.sdk_mapzen_api_key" value:apiKey]];
+
     [super loadSceneFileAsync:@"https://tangrams.github.io/walkabout-style/walkabout-style.yaml" sceneUpdates:updates];
 }
 
