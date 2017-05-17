@@ -42,9 +42,9 @@
 
 - (void)clearGeometry
 {
-    self.polyline = nil;
-    self.polygon = nil;
-    self.point = {NAN, NAN};
+    _polyline = nil;
+    _polygon = nil;
+    _point = {NAN, NAN};
 }
 
 - (void)createNSError
