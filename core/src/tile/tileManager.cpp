@@ -50,7 +50,7 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
         m_tileSets.begin(), m_tileSets.end(),
         [&](auto& tileSet) {
             if (!tileSet.clientTileSource) {
-                LOGD("remove source %s", tileSet.source->name().c_str());
+                LOGN("Remove source %s", tileSet.source->name().c_str());
                 return true;
             }
             // Clear cache
@@ -69,9 +69,7 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
                          [&](const TileSet& a) {
                              return a.source->name() == source->name();
                          }) == m_tileSets.end()) {
-
-            LOGD("add source %s", source->name().c_str());
-
+            LOGN("add source %s", source->name().c_str());
             m_tileSets.push_back({ source, false });
         } else {
             LOGW("Duplicate named datasource (not added): %s", source->name().c_str());
@@ -153,8 +151,11 @@ void TileManager::updateTileSets(const View& _view) {
 
     // Make m_tiles an unique list of tiles for rendering sorted from
     // high to low zoom-levels.
-    std::sort(m_tiles.begin(), m_tiles.end(), [](auto& a, auto& b){
-            return a->getID() < b->getID(); });
+    std::sort(m_tiles.begin(), m_tiles.end(), [](auto& a, auto& b) {
+            return a->sourceID() == b->sourceID() ?
+                a->getID() < b->getID() :
+                a->sourceID() < b->sourceID(); }
+        );
 
     // Remove duplicates: Proxy tiles could have been added more than once
     m_tiles.erase(std::unique(m_tiles.begin(), m_tiles.end()), m_tiles.end());
