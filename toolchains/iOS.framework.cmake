@@ -1,5 +1,7 @@
 include(${CMAKE_SOURCE_DIR}/toolchains/iOS.toolchain.cmake)
 
+set(FRAMEWORK_VERSION "0.6.4-dev")
+
 message(STATUS "Build for iOS archs " ${IOS_ARCH})
 
 set(FRAMEWORK_NAME TangramMap)
@@ -131,6 +133,7 @@ set_xcode_property(${FRAMEWORK_NAME} ONLY_ACTIVE_ARCH "NO")
 set_xcode_property(${FRAMEWORK_NAME} VALID_ARCHS "${IOS_ARCH}")
 set_xcode_property(${FRAMEWORK_NAME} ARCHS "${IOS_ARCH}")
 set_xcode_property(${FRAMEWORK_NAME} DEFINES_MODULE "YES")
+set_xcode_property(${FRAMEWORK_NAME} CURRENT_PROJECT_VERSION "${FRAMEWORK_VERSION}")
 
 # Set RPATH to be within the application /Frameworks directory
 set_xcode_property(${FRAMEWORK_NAME} LD_DYLIB_INSTALL_NAME "@rpath/${FRAMEWORK_NAME}.framework/${FRAMEWORK_NAME}")
