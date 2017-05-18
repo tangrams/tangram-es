@@ -33,7 +33,7 @@ void MarkerManager::setScene(std::shared_ptr<Scene> scene) {
         m_styleBuilders[style->getName()] = style->createBuilder();
     }
 
-    rebuildAll();
+    removeAll();
 }
 
 MarkerID MarkerManager::add() {
