@@ -54,6 +54,9 @@ void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer
             continue;
         }
 
+        // Apply defaul draw rules defined for this style
+        style->style().applyDefaultDrawRules(rule);
+
         if (!m_ruleSet.evaluateRuleForContext(rule, m_styleContext)) {
             continue;
         }

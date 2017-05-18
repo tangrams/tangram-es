@@ -1,5 +1,7 @@
 include(${CMAKE_SOURCE_DIR}/toolchains/iOS.toolchain.cmake)
 
+set(FRAMEWORK_VERSION "0.6.4-dev")
+
 message(STATUS "Build for iOS archs " ${IOS_ARCH})
 
 set(FRAMEWORK_NAME TangramMap)
@@ -52,6 +54,7 @@ set(SOURCES
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGLabelPickResult.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarkerPickResult.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarker.mm
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGTypes.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapViewController.mm)
 
 set(FRAMEWORK_HEADERS
@@ -60,9 +63,9 @@ set(FRAMEWORK_HEADERS
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGGeoPolygon.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGGeoPoint.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarker.h
-    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGEaseType.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGSceneUpdate.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapData.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGTypes.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHttpHandler.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGLabelPickResult.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarkerPickResult.h
@@ -74,6 +77,7 @@ set(HEADERS
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGLabelPickResult+Internal.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapViewController+Internal.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapData+Internal.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarker+Internal.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHelpers.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGFontConverter.h
     ${FRAMEWORK_HEADERS})
@@ -129,6 +133,7 @@ set_xcode_property(${FRAMEWORK_NAME} ONLY_ACTIVE_ARCH "NO")
 set_xcode_property(${FRAMEWORK_NAME} VALID_ARCHS "${IOS_ARCH}")
 set_xcode_property(${FRAMEWORK_NAME} ARCHS "${IOS_ARCH}")
 set_xcode_property(${FRAMEWORK_NAME} DEFINES_MODULE "YES")
+set_xcode_property(${FRAMEWORK_NAME} CURRENT_PROJECT_VERSION "${FRAMEWORK_VERSION}")
 
 # Set RPATH to be within the application /Frameworks directory
 set_xcode_property(${FRAMEWORK_NAME} LD_DYLIB_INSTALL_NAME "@rpath/${FRAMEWORK_NAME}.framework/${FRAMEWORK_NAME}")

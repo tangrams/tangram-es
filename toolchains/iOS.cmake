@@ -18,6 +18,12 @@ foreach(_ext ${IOS_EXTENSIONS_FILES})
         ${PROJECT_SOURCE_DIR}/platforms/ios/demo/src/${_ext})
 endforeach()
 
+check_mapzen_api_key()
+
+# Generate demo app configuration plist file to inject API key
+configure_file(${PROJECT_SOURCE_DIR}/platforms/ios/demo/Config.plist.in
+    ${PROJECT_SOURCE_DIR}/platforms/ios/demo/resources/Config.plist)
+
 add_bundle_resources(IOS_DEMO_RESOURCES "${PROJECT_SOURCE_DIR}/platforms/ios/demo/resources/" "Resources")
 file(GLOB_RECURSE IOS_DEMO_SOURCES ${PROJECT_SOURCE_DIR}/platforms/ios/demo/src/**)
 

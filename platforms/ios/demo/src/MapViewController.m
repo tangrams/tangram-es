@@ -130,11 +130,8 @@
     // Add polygon marker
     {
         if (!vc.markerPolygon) {
-            vc.markerPolygon = [[TGMarker alloc] init];
-            [vc.markerPolygon stylingString:@"{ style: 'polygons', color: 'blue', order: 500 }" error:nil];
-
-            // Add the marker to the current view
-            [vc.markerPolygon map:view error:nil];
+            vc.markerPolygon = [view markerAdd];
+            vc.markerPolygon.stylingString = @"{ style: 'polygons', color: 'blue', order: 500 }";
         }
         static TGGeoPolygon* polygon = nil;
         if (!polygon) { polygon = [[TGGeoPolygon alloc] init]; }
@@ -142,7 +139,7 @@
         if ([polygon count] == 0) {
             [polygon startPath:coordinates withSize:5];
         } else if ([polygon count] % 5 == 0) {
-            [vc.markerPolygon polygon:polygon];
+            vc.markerPolygon.polygon = polygon;
             [polygon removeAll];
             [polygon startPath:coordinates withSize:5];
         } else {
@@ -152,9 +149,9 @@
 
     // Add point marker
     {
-        TGMarker* markerPoint = [[TGMarker alloc] initWithMapView:view];
-        [markerPoint stylingString:@"{ style: 'points', color: 'white', size: [25px, 25px], collide: false }" error:nil];
-        [markerPoint point:coordinates error:nil];
+        TGMarker* markerPoint = [view markerAdd];
+        markerPoint.stylingString = @"{ style: 'points', color: 'white', size: [25px, 25px], collide: false }";
+        markerPoint.point = coordinates;
     }
 
     // Request feature picking
@@ -187,8 +184,14 @@
 
 - (void)viewWillAppear:(BOOL)animated
 {
+    NSString* configPListPath = [[NSBundle mainBundle] pathForResource: @"Config" ofType: @"plist"];
+    NSMutableDictionary* configDict =[[NSMutableDictionary alloc] initWithContentsOfFile:configPListPath];
+    NSString* apiKey = [configDict valueForKey:@"MapzenApiKey"];
+    NSAssert(apiKey, @"Please provide a valid API key by setting the environment variable MAPZEN_API_KEY at build time");
+
     NSMutableArray<TGSceneUpdate *>* updates = [[NSMutableArray alloc]init];
-    [updates addObject:[[TGSceneUpdate alloc]initWithPath:@"global.sdk_mapzen_api_key" value:@"vector-tiles-tyHL4AY"]];
+    [updates addObject:[[TGSceneUpdate alloc]initWithPath:@"global.sdk_mapzen_api_key" value:apiKey]];
+
     [super loadSceneFileAsync:@"https://tangrams.github.io/walkabout-style/walkabout-style.yaml" sceneUpdates:updates];
 }
 

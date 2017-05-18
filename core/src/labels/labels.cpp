@@ -50,7 +50,7 @@ void Labels::processLabelUpdate(const ViewState& viewState,
                       viewState.viewportSize.y);
 
     for (auto& label : labelMesh->getLabels()) {
-        if (!drawAll && (label->state() == Label::State::dead || label->forceInvisible()) ) {
+        if (!drawAll && (label->state() == Label::State::dead) ) {
             continue;
         }
 
@@ -136,6 +136,9 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
     }
 
     for (const auto& marker : _markers) {
+
+        if (!marker->isVisible() || !marker->mesh()) { continue; }
+
         for (const auto& style : _styles) {
 
             if (marker->styleId() != style->getID()) { continue; }

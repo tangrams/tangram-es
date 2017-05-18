@@ -14,6 +14,9 @@ set(CORE_COMPILE_DEFS PLATFORM_OSX)
 # Build core library with dependencies.
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
+check_mapzen_api_key()
+add_definitions( -DMAPZEN_API_KEY="$ENV{MAPZEN_API_KEY}" )
+
 if(APPLICATION)
 
   set(EXECUTABLE_NAME "tangram")

@@ -902,6 +902,18 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
         loadMaterial(platform, materialNode, style.getMaterial(), scene, style);
     }
 
+    if (const Node& drawNode = styleNode["draw"]) {
+        std::vector<StyleParam> params;
+        int ruleID = scene->addIdForName(style.getName());
+        parseStyleParams(drawNode, scene, "", params);
+        /*Note:  ruleID and name is immaterial here, as these are only used for rule merging, but
+         * style's default styling rules are applied post rule merging for any style parameter which
+         * was not assigned during merging step.
+         */
+        auto rule = std::make_unique<DrawRuleData>(style.getName(), ruleID, std::move(params));
+        style.setDefaultDrawRule(std::move(rule));
+    }
+
 }
 
 bool SceneLoader::loadStyle(const std::shared_ptr<Platform>& platform, const std::string& name, Node config, const std::shared_ptr<Scene>& scene) {

@@ -3,6 +3,7 @@
 #include "data/tileData.h"
 #include "gl.h"
 #include "gl/uniform.h"
+#include "scene/drawRule.h"
 #include "util/fastmap.h"
 
 #include <memory>
@@ -122,6 +123,9 @@ protected:
 
     /* <VertexLayout> shared between meshes using this style */
     std::shared_ptr<VertexLayout> m_vertexLayout;
+
+    /* Stores default style draw rules*/
+    std::unique_ptr<DrawRuleData> m_defaultDrawRule = nullptr;
 
     /* <LightingType> to determine how lighting will be calculated for this style */
     LightingType m_lightingType = LightingType::fragment;
@@ -290,6 +294,9 @@ public:
     void setupRasters(const std::vector<std::shared_ptr<TileSource>>& _sources);
 
     std::vector<StyleUniform>& styleUniforms() { return m_mainUniforms.styleUniforms; }
+
+    void setDefaultDrawRule(std::unique_ptr<DrawRuleData>&& _rule);
+    void applyDefaultDrawRules(DrawRule& _rule) const;
 
     virtual std::unique_ptr<StyleBuilder> createBuilder() const = 0;
 
