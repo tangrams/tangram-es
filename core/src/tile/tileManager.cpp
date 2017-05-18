@@ -43,18 +43,14 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
 
     m_tileCache->clear();
 
-    // remove sources that are not in new scene - there must be a better way..
+    // Remove all (non-client datasources) sources and respective tileSets not present in the
+    // new scene
     auto it = std::remove_if(
         m_tileSets.begin(), m_tileSets.end(),
         [&](auto& tileSet) {
             if (!tileSet.clientTileSource) {
-                auto sIt = std::find_if(_sources.begin(), _sources.end(),
-                                        [&](auto& source){ return source->equals(*tileSet.source); });
-
-                if (sIt == _sources.end() || !(*sIt)->generateGeometry()) {
-                    LOGD("remove source %s", tileSet.source->name().c_str());
-                    return true;
-                }
+                LOGD("remove source %s", tileSet.source->name().c_str());
+                return true;
             }
             // Clear cache
             tileSet.tiles.clear();
@@ -66,15 +62,18 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
     // add new sources
     for (const auto& source : _sources) {
 
+        if (!source->generateGeometry()) { continue; }
+
         if (std::find_if(m_tileSets.begin(), m_tileSets.end(),
                          [&](const TileSet& a) {
                              return a.source->name() == source->name();
-                         }) == m_tileSets.end()
-                && source->generateGeometry()) {
+                         }) == m_tileSets.end()) {
 
             LOGD("add source %s", source->name().c_str());
 
             m_tileSets.push_back({ source, false });
+        } else {
+            LOGW("Duplicate named datasource (not added): %s", source->name().c_str());
         }
     }
 }

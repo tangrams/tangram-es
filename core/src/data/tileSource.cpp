@@ -72,21 +72,6 @@ void TileSource::clearData() {
     m_generation++;
 }
 
-bool TileSource::equals(const TileSource& other) const {
-    if (m_name != other.m_name) { return false; }
-    // TODO compare DataSources instead
-    //if (m_urlTemplate != other.m_urlTemplate) { return false; }
-    if (m_minDisplayZoom != other.m_minDisplayZoom) { return false; }
-    if (m_maxDisplayZoom != other.m_maxDisplayZoom) { return false; }
-    if (m_maxZoom != other.m_maxZoom) { return false; }
-    if (m_rasterSources.size() != other.m_rasterSources.size()) { return false; }
-    for (size_t i = 0, end = m_rasterSources.size(); i < end; ++i) {
-        if (!m_rasterSources[i]->equals(*other.m_rasterSources[i])) { return false; }
-    }
-
-    return true;
-}
-
 void TileSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) {
 
     if (m_sources) {
