@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 #include <string>
 
@@ -56,15 +57,17 @@ struct TileID {
         return TileID(x >> over, y >> over, _maxZoom, s, wrap);
     }
 
-    TileID scaled(int32_t _tileScale) const {
-        if (_tileScale <= 0) { return *this; }
+    TileID zoomBiasAdjusted(int32_t _zoomBias) const {
+        assert(_zoomBias >= 0);
 
-        auto scaledZ = std::max(0, z - _tileScale);
-        return TileID(x >> _tileScale, y >> _tileScale, scaledZ, z, wrap);
+        if (!_zoomBias) { return *this; }
+
+        auto scaledZ = std::max(0, z - _zoomBias);
+        return TileID(x >> _zoomBias, y >> _zoomBias, scaledZ, z, wrap);
     }
 
-    TileID getParent(int32_t _tileScale = 0) const {
-        if (s > (z + _tileScale)) {
+    TileID getParent(int32_t _zoomBias = 0) const {
+        if (s > (z + _zoomBias)) {
             // Over-zoomed, keep the same data coordinates
             return TileID(x, y, z, s - 1, wrap);
         }

@@ -121,7 +121,7 @@ void TileManager::updateTileSets(const View& _view) {
     m_tilesInProgress = 0;
     m_tileSetChanged = false;
 
-    if (_view.changedOnLastUpdate() && !Tangram::getDebugFlag(Tangram::DebugFlags::freeze_tiles)) {
+    if (_view.changedOnLastUpdate() && !getDebugFlag(DebugFlags::freeze_tiles)) {
 
         for (auto& tileSet : m_tileSets) {
             tileSet.visibleTiles.clear();
@@ -129,11 +129,11 @@ void TileManager::updateTileSets(const View& _view) {
 
         auto tileCb = [&, zoom = _view.getZoom()](TileID _tileID){
             for (auto& tileSet : m_tileSets) {
-                auto tileScale = tileSet.source->tileScale();
+                auto zoomBias = tileSet.source->zoomBias();
                 auto maxZoom = tileSet.source->maxZoom();
 
                 // Insert scaled and maxZoom mapped tileID in the visible set
-                tileSet.visibleTiles.insert(_tileID.scaled(tileScale).withMaxSourceZoom(maxZoom));
+                tileSet.visibleTiles.insert(_tileID.zoomBiasAdjusted(zoomBias).withMaxSourceZoom(maxZoom));
             }
         };
 
@@ -494,16 +494,16 @@ void TileManager::updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, Til
     // child proxies would be more appropriate
 
     // Try parent proxy
-    auto tileScale = _tileSet.source->tileScale();
+    auto zoomBias = _tileSet.source->zoomBias();
     auto maxZoom = _tileSet.source->maxZoom();
-    auto parentID = _tileID.getParent(tileScale);
+    auto parentID = _tileID.getParent(zoomBias);
     auto minZoom = _tileSet.source->minDisplayZoom();
     if (minZoom <= parentID.z
             && updateProxyTile(_tileSet, _tile, parentID, ProxyID::parent)) {
         return;
     }
     // Try grandparent
-    auto grandparentID = parentID.getParent(tileScale);
+    auto grandparentID = parentID.getParent(zoomBias);
     if (minZoom <= grandparentID.z
             && updateProxyTile(_tileSet, _tile, grandparentID, ProxyID::parent2)) {
         return;
@@ -520,7 +520,7 @@ void TileManager::updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, Til
 void TileManager::clearProxyTiles(TileSet& _tileSet, const TileID& _tileID, TileEntry& _tile,
                                   std::vector<TileID>& _removes) {
     auto& tiles = _tileSet.tiles;
-    auto tileScale = _tileSet.source->tileScale();
+    auto zoomBias = _tileSet.source->zoomBias();
     auto maxZoom = _tileSet.source->maxZoom();
 
     auto removeProxy = [&tiles,&_removes](TileID id) {
@@ -535,13 +535,13 @@ void TileManager::clearProxyTiles(TileSet& _tileSet, const TileID& _tileID, Tile
     };
     // Check if grand parent proxy is present
     if (_tile.unsetProxy(ProxyID::parent2)) {
-        TileID gparentID(_tileID.getParent(tileScale).getParent(tileScale));
+        TileID gparentID(_tileID.getParent(zoomBias).getParent(zoomBias));
         removeProxy(gparentID);
     }
 
     // Check if parent proxy is present
     if (_tile.unsetProxy(ProxyID::parent)) {
-        TileID parentID(_tileID.getParent(tileScale));
+        TileID parentID(_tileID.getParent(zoomBias));
         removeProxy(parentID);
     }
 

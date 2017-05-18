@@ -48,9 +48,9 @@ std::shared_ptr<TileTask> ClientGeoJsonSource::createTask(TileID _tileId, int _s
 ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<Platform> _platform,
                                          const std::string& _name, const std::string& _url,
                                          int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
-                                         int32_t _tileScale)
+                                         int32_t _zoomBias)
 
-    : TileSource(_name, nullptr, _minDisplayZoom, _maxDisplayZoom, _maxZoom, _tileScale),
+    : TileSource(_name, nullptr, _minDisplayZoom, _maxDisplayZoom, _maxZoom, _zoomBias),
       m_platform(_platform) {
 
     // TODO: handle network url for client datasource data

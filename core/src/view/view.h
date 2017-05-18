@@ -7,9 +7,8 @@
 #include "glm/mat4x4.hpp"
 #include "glm/vec4.hpp"
 #include "glm/vec3.hpp"
-#include <set>
+#include <functional>
 #include <memory>
-#include <unordered_map>
 
 namespace Tangram {
 
@@ -134,7 +133,7 @@ public:
     /* Get the current pitch angle in radians */
     float getPitch() const { return m_pitch; }
 
-    /* Updates the view and projection matrices if properties have changed  */
+    /* Updates the view and projection matrices if properties have changed */
     void update(bool _constrainToWorldBounds = true);
 
     /* Gets the position of the view in projection units (z is the effective 'height' determined from zoom) */

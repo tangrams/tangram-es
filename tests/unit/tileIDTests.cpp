@@ -105,7 +105,7 @@ TEST_CASE("TileID correctly applies source zoom limits", "[Core][TileID]") {
 TEST_CASE("TileID correctly applies source zoom limits for scaled tiles", "[Core][TileID]") {
     // maxZoom: 6, scale: 1
     auto aScaled = TileID(8, 4, 6);
-    aScaled = aScaled.scaled(1);
+    aScaled = aScaled.zoomBiasAdjusted(1);
     aScaled = aScaled.withMaxSourceZoom(6);
     auto aScaledMax5 = aScaled.withMaxSourceZoom(5);
     auto aScaledMax4 = aScaled.withMaxSourceZoom(4);

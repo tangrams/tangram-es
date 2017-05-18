@@ -23,6 +23,8 @@
 #include "glm/gtx/rotate_vector.hpp"
 #include "glm/gtx/norm.hpp"
 
+#include <cassert>
+
 namespace Tangram {
 
 Labels::Labels()
@@ -220,10 +222,11 @@ void Labels::skipTransitions(const std::shared_ptr<Scene>& _scene,
         std::shared_ptr<Tile> proxy;
 
         const auto& source = _scene->getTileSource(tile->sourceID());
+        if (!source) { continue; }
 
         if (m_lastZoom < _currentZoom) {
             // zooming in, add the one cached parent tile
-            proxy = findProxy(tile->sourceID(), tileID.getParent(source->tileScale()), _tiles, _cache);
+            proxy = findProxy(tile->sourceID(), tileID.getParent(source->zoomBias()), _tiles, _cache);
             if (proxy) { skipTransitions(styles, *tile, *proxy); }
         } else {
             // zooming out, add the 4 cached children tiles
