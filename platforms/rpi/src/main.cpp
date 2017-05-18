@@ -10,13 +10,16 @@
 #include <termios.h>
 
 #include <curl/curl.h>
+#include <cstdlib>
 
 #include "context.h"
 #include "tangram.h"
 #include "platform_linux.h"
+#include "log.h"
 
 #include <iostream>
 #include "glm/trigonometric.hpp"
+
 
 #define KEY_ESC      113    // q
 #define KEY_ZOOM_IN  45     // -
@@ -83,7 +86,11 @@ void setup(int argc, char **argv) {
     double lat = 0.0f;
     double lon = 0.0f;
     std::string scene = "scene.yaml";
-    const std::string& apiKey = "vector-tiles-tyHL4AY";
+
+#ifndef MAPZEN_API_KEY
+    LOG("Environment variable MAPZEN_API_KEY not set. Kindly set this environment variable and relaunch.");
+    exit(1);
+#endif
 
     for (int i = 1; i < argc - 1; i++) {
         std::string argName(argv[i]), argValue(argv[i + 1]);
@@ -107,7 +114,7 @@ void setup(int argc, char **argv) {
     }
 
     map = new Map(platform);
-    map->loadSceneAsync(scene.c_str(), false, {}, nullptr, {SceneUpdate("global.sdk_mapzen_api_key", apiKey)});
+    map->loadSceneAsync(scene.c_str(), false, {}, nullptr, {SceneUpdate("global.sdk_mapzen_api_key", MAPZEN_API_KEY)});
     map->setupGL();
     map->resize(width, height);
     if (lon != 0.0f && lat != 0.0f) {

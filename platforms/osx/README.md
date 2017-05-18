@@ -15,6 +15,20 @@ Make sure to update git submodules before you build:
 git submodule update --init
 ```
 
+The demo application uses the Mapzen vector tile service, so you will need a Mapzen API key to build and run the demo. 
+
+ 1. Visit https://mapzen.com/documentation/overview/#get-started-developing-with-mapzen to get an API key.
+
+ 2. Setup an environment variable (`MAPZEN_API_KEY`) to point to your API key. 
+ If you are using an IDE on osx, you need to do the following:
+    ```bash
+    launchctl setenv MAPZEN_API_KEY YOUR_API_KEY
+    ```
+ If you are running the app from a terminal you need to do the following:
+    ```bash
+    export MAPZEN_API_KEY=YOUR_API_KEY
+    ```
+
 ## Build ##
 
 There are several ways you can build the tangram-es library and demo application on Mac OS X:

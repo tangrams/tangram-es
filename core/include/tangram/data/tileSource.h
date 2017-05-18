@@ -85,8 +85,6 @@ public:
     virtual void clearRasters();
     virtual void clearRaster(const TileID& id);
 
-    bool equals(const TileSource& _other) const;
-
     virtual std::shared_ptr<TileTask> createTask(TileID _tile, int _subTask = -1);
 
     /* ID of this TileSource instance */

@@ -2,6 +2,8 @@
 #include "data/clientGeoJsonSource.h"
 #include "debug/textDisplay.h"
 #include <GLFW/glfw3.h>
+#include "log.h"
+#include <cstdlib>
 
 namespace Tangram {
 
@@ -56,18 +58,22 @@ void create(std::shared_ptr<Platform> p, std::string f, int w, int h) {
     sceneFile = f;
     width = w;
     height = h;
-    const std::string& apiKey = "vector-tiles-tyHL4AY";
 
     if (!glfwInit()) {
         assert(false);
         return;
     }
 
+#ifndef MAPZEN_API_KEY
+    LOG("Environment variable MAPZEN_API_KEY not set. Kindly set this environment variable and relaunch.");
+    exit(1);
+#endif
+
     // Setup tangram
     if (!map) {
         map = new Tangram::Map(platform);
         map->loadSceneAsync(sceneFile.c_str(), true, {}, nullptr,
-                {SceneUpdate("global.sdk_mapzen_api_key", apiKey)});
+                {SceneUpdate("global.sdk_mapzen_api_key", MAPZEN_API_KEY)});
     }
 
     // Create a windowed mode window and its OpenGL context
@@ -398,7 +404,8 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 void dropCallback(GLFWwindow* window, int count, const char** paths) {
 
     sceneFile = std::string(paths[0]);
-    map->loadSceneAsync(sceneFile.c_str());
+    map->loadSceneAsync(sceneFile.c_str(), true, {}, nullptr,
+                        {SceneUpdate("global.sdk_mapzen_api_key", MAPZEN_API_KEY)});
 
 }
 
