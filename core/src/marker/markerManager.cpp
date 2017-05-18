@@ -406,6 +406,9 @@ bool MarkerManager::buildGeometry(Marker& marker, int zoom) {
         }
     }
 
+    // Apply defaul draw rules defined for this style
+    styler->style().applyDefaultDrawRules(*rule);
+
     m_styleContext->setKeywordZoom(zoom);
 
     bool valid = marker.evaluateRuleForContext(*m_styleContext);

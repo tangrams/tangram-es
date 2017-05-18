@@ -103,6 +103,7 @@ void StyleMixer::applyStyleMixins(Node _style, const std::vector<Node>& _mixins)
 
     // Merge map fields with newer values taking precedence.
     mergeMapFieldTakingLast("material", _style, _mixins);
+    mergeMapFieldTakingLast("draw", _style, _mixins);
 
     // Produce a list of all 'mixins' with shader nodes and merge those separately.
     std::vector<Node> shaderMixins;
