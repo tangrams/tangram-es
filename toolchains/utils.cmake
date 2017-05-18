@@ -22,6 +22,19 @@ function(check_unsupported_compiler_version)
 
 endfunction(check_unsupported_compiler_version)
 
+function(check_mapzen_api_key)
+
+    if("$ENV{MAPZEN_API_KEY}" STREQUAL "")
+        message(SEND_ERROR
+            "Make sure to provide an api key to build the demo application, "
+            "you can create an API key at https://mapzen.com/developers. "
+            "Then run 'export MAPZEN_API_KEY mapzen-xxxx' or specify `MAPZEN_API_KEY=mapzen-xxxx` as an argument to the make command")
+        return()
+    endif()
+
+endfunction(check_mapzen_api_key)
+
+
 function(find_sources_and_include_directories HEADERS_PATH SOURCES_PATH)
     include_recursive_dirs(${HEADERS_PATH})
     file(GLOB_RECURSE FOUND_SOURCES ${SOURCES_PATH})

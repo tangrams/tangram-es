@@ -24,6 +24,15 @@ sudo apt-get install make g++ pkg-config libcurl4-openssl-dev \
   libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libgl1-mesa-dev
 ```
 
+The demo application uses the Mapzen vector tile service, so you will need a Mapzen API key to build and run the demo. 
+
+ 1. Visit https://mapzen.com/documentation/overview/#get-started-developing-with-mapzen to get an API key.
+
+ 2. Setup an environment variable (`MAPZEN_API_KEY`) to point to your API key.
+    ```bash
+    export MAPZEN_API_KEY=YOUR_API_KEY
+    ```
+
 ## Build ##
 
 There are two ways to build the tangram-es library and demo application on Linux:
