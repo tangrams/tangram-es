@@ -296,7 +296,7 @@ public:
     std::vector<StyleUniform>& styleUniforms() { return m_mainUniforms.styleUniforms; }
 
     void setDefaultDrawRule(std::unique_ptr<DrawRuleData>&& _rule);
-    const auto& defaultDrawRule() const { return m_defaultDrawRule; }
+    void applyDefaultDrawRules(DrawRule& _rule) const;
 
     virtual std::unique_ptr<StyleBuilder> createBuilder() const = 0;
 

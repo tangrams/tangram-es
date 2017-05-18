@@ -459,6 +459,21 @@ void Style::setDefaultDrawRule(std::unique_ptr<DrawRuleData>&& _rule) {
     m_defaultDrawRule = std::move(_rule);
 }
 
+void Style::applyDefaultDrawRules(DrawRule& _rule) const {
+    if (m_defaultDrawRule) {
+        for (auto& param : m_defaultDrawRule->parameters) {
+            auto key = static_cast<uint8_t>(param.key);
+            if (!_rule.active[key]) {
+                _rule.active[key] = true;
+                // NOTE: layername and layer depth are actually immaterial here, since these are
+                // only used during layer draw rules merging. Adding a default string for
+                // debugging purposes.
+                _rule.params[key] = { &param, "default_style_draw_rule", 0 };
+            }
+        }
+    }
+}
+
 bool StyleBuilder::checkRule(const DrawRule& _rule) const {
 
     uint32_t checkColor;
