@@ -81,7 +81,7 @@ struct TestTileSource : TileSource {
 
     int tileTaskCount = 0;
 
-    TestTileSource() : TileSource("", nullptr) {
+    TestTileSource() : TileSource("test", nullptr) {
         m_generateGeometry = true;
     }
 
@@ -106,25 +106,56 @@ struct TestTileSource : TileSource {
     }
 };
 
+class TestTileManager : public TileManager {
+public:
+    using Base = TileManager;
+    using Base::Base;
+
+    void updateTiles(const ViewState& _view, std::set<TileID> _visibleTiles) {
+        // Mimic TileManager::updateTileSets(View& _view)
+        m_tiles.clear();
+        m_tilesInProgress = 0;
+        m_tileSetChanged = false;
+
+        TileSet& tileSet = m_tileSets[0];
+
+        tileSet.visibleTiles = _visibleTiles;
+
+        TileManager::updateTileSet(tileSet, _view);
+
+        loadTiles();
+
+        // Make m_tiles an unique list of tiles for rendering sorted from
+        // high to low zoom-levels.
+        std::sort(m_tiles.begin(), m_tiles.end(), [](auto& a, auto& b){
+                return a->getID() < b->getID(); });
+
+        // Remove duplicates: Proxy tiles could have been added more than once
+        m_tiles.erase(std::unique(m_tiles.begin(), m_tiles.end()), m_tiles.end());
+
+    }
+};
+
 TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TileManager tileManager(std::make_shared<MockPlatform>(), worker);
+    TestTileManager tileManager(std::make_shared<MockPlatform>(), worker);
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
     tileManager.setTileSources(sources);
 
     /// Start loading tile 0/0/0
-    std::set<TileID> visibleTiles_1 = { TileID{0,0,0} };
-    tileManager.updateTileSets(viewState, visibleTiles_1);
+    std::set<TileID> visibleTiles_1 = {TileID{0,0,0}};
+    tileManager.updateTiles(viewState, visibleTiles_1);
 
     REQUIRE(tileManager.getVisibleTiles().size() == 0);
     REQUIRE(source->tileTaskCount == 1);
     REQUIRE(worker.processedCount == 0);
 
     /// Start loading tile 0/0/1 - uses 0/0/0 as proxy
-    std::set<TileID> visibleTiles_2 = { TileID{0,0,1} };
-    tileManager.updateTileSets(viewState, visibleTiles_2);
+    std::set<TileID> visibleTiles_2 = {TileID{0,0,1}};
+
+    tileManager.updateTiles(viewState, visibleTiles_2);
 
     REQUIRE(tileManager.getVisibleTiles().size() == 0);
     REQUIRE(source->tileTaskCount == 2);
@@ -134,7 +165,7 @@ TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileMana
     worker.processTask(1);
 
     /// Go back to tile 0/0/0 - uses 0/0/1 as proxy
-    tileManager.updateTileSets(viewState, visibleTiles_1);
+    tileManager.updateTiles(viewState, visibleTiles_1);
 
     REQUIRE(tileManager.getVisibleTiles().size() == 1);
     REQUIRE(source->tileTaskCount == 2);
@@ -144,7 +175,7 @@ TEST_CASE( "Use proxy Tile - Dont remove proxy if it is now visible", "[TileMana
 
     // Process tile task 0/0/0
     worker.processTask(0);
-    tileManager.updateTileSets(viewState, visibleTiles_1);
+    tileManager.updateTiles(viewState, visibleTiles_1);
     REQUIRE(tileManager.getVisibleTiles().size() == 1);
     REQUIRE(tileManager.getVisibleTiles()[0]->isProxy() == false);
     REQUIRE(tileManager.getVisibleTiles()[0]->getID() == TileID(0,0,0));
@@ -164,21 +195,21 @@ TEST_CASE( "Real TileWorker Initialization", "[TileManager][Constructor]" ) {
 
 TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TileManager tileManager(std::make_shared<MockPlatform>(), worker);
+    TestTileManager tileManager(std::make_shared<MockPlatform>(), worker);
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
     tileManager.setTileSources(sources);
 
-    std::set<TileID> visibleTiles = { TileID{0,0,0} };
-    tileManager.updateTileSets(viewState, visibleTiles);
+    std::set<TileID> visibleTiles = {TileID{0,0,0}};
+    tileManager.updateTiles(viewState, visibleTiles);
     worker.processTask();
 
     REQUIRE(tileManager.getVisibleTiles().size() == 0);
     REQUIRE(source->tileTaskCount == 1);
     REQUIRE(worker.processedCount == 1);
 
-    tileManager.updateTileSets(viewState, visibleTiles);
+    tileManager.updateTiles(viewState, visibleTiles);
 
     REQUIRE(tileManager.getVisibleTiles().size() == 1);
     REQUIRE(source->tileTaskCount == 1);
@@ -189,22 +220,22 @@ TEST_CASE( "Load visible Tile", "[TileManager][updateTileSets]" ) {
 
 TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TileManager tileManager(std::make_shared<MockPlatform>(), worker);
+    TestTileManager tileManager(std::make_shared<MockPlatform>(), worker);
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
     tileManager.setTileSources(sources);
 
-    std::set<TileID> visibleTiles = { TileID{0,0,0} };
-    tileManager.updateTileSets(viewState, visibleTiles);
+    std::set<TileID> visibleTiles = {TileID{0,0,0}};
+    tileManager.updateTiles(viewState, visibleTiles);
     worker.processTask();
 
     REQUIRE(tileManager.getVisibleTiles().size() == 0);
     REQUIRE(source->tileTaskCount == 1);
     REQUIRE(worker.processedCount == 1);
 
-    std::set<TileID> visibleTiles2 = { TileID{0,0,1} };
-    tileManager.updateTileSets(viewState, visibleTiles2);
+    std::set<TileID> visibleTiles2 = {TileID{0,0,1}};
+    tileManager.updateTiles(viewState, visibleTiles2);
     worker.processTask();
 
     REQUIRE(tileManager.getVisibleTiles().size() == 1);
@@ -213,7 +244,7 @@ TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
     REQUIRE(source->tileTaskCount == 2);
     REQUIRE(worker.processedCount == 2);
 
-    tileManager.updateTileSets(viewState, visibleTiles2);
+    tileManager.updateTiles(viewState, visibleTiles2);
     worker.processTask();
 
     REQUIRE(tileManager.getVisibleTiles().size() == 1);
@@ -227,23 +258,23 @@ TEST_CASE( "Use proxy Tile", "[TileManager][updateTileSets]" ) {
 
 TEST_CASE( "Use proxy Tile - circular proxies", "[TileManager][updateTileSets]" ) {
     TestTileWorker worker;
-    TileManager tileManager(std::make_shared<MockPlatform>(), worker);
+    TestTileManager tileManager(std::make_shared<MockPlatform>(), worker);
 
     auto source = std::make_shared<TestTileSource>();
     std::vector<std::shared_ptr<TileSource>> sources = { source };
     tileManager.setTileSources(sources);
 
     /// Start loading tile 0/0/0
-    std::set<TileID> visibleTiles_1 = { TileID{0,0,0} };
-    tileManager.updateTileSets(viewState, visibleTiles_1);
+    std::set<TileID> visibleTiles_1 = {TileID{0,0,0}};
+    tileManager.updateTiles(viewState, visibleTiles_1);
 
     REQUIRE(tileManager.getVisibleTiles().size() == 0);
     REQUIRE(source->tileTaskCount == 1);
     REQUIRE(worker.processedCount == 0);
 
     /// Start loading tile 0/0/1 - add 0/0/0 as proxy
-    std::set<TileID> visibleTiles_2 = { TileID{0,0,1} };
-    tileManager.updateTileSets(viewState, visibleTiles_2);
+    std::set<TileID> visibleTiles_2 = {TileID{0,0,1}};
+    tileManager.updateTiles(viewState, visibleTiles_2);
 
     REQUIRE(tileManager.getVisibleTiles().size() == 0);
     REQUIRE(source->tileTaskCount == 2);
@@ -251,7 +282,7 @@ TEST_CASE( "Use proxy Tile - circular proxies", "[TileManager][updateTileSets]" 
 
     /// Go back to tile 0/0/0
     /// NB: does not add 0/0/1 as proxy, since no newTiles were loaded
-    tileManager.updateTileSets(viewState, visibleTiles_1);
+    tileManager.updateTiles(viewState, visibleTiles_1);
 
     REQUIRE(tileManager.getVisibleTiles().size() == 0);
     REQUIRE(source->tileTaskCount == 2);
@@ -264,7 +295,7 @@ TEST_CASE( "Use proxy Tile - circular proxies", "[TileManager][updateTileSets]" 
     REQUIRE(worker.tasks[1]->isCanceled() == true);
 
     worker.processTask();
-    tileManager.updateTileSets(viewState, visibleTiles_1);
+    tileManager.updateTiles(viewState, visibleTiles_1);
 
     REQUIRE(tileManager.getVisibleTiles().size() == 1);
     REQUIRE(tileManager.getVisibleTiles()[0]->isProxy() == false);

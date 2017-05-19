@@ -1,5 +1,6 @@
 #include "labels/labels.h"
 
+#include "data/tileSource.h"
 #include "gl/primitives.h"
 #include "gl/shaderProgram.h"
 #include "labels/curvedLabel.h"
@@ -8,18 +9,22 @@
 #include "labels/textLabel.h"
 #include "marker/marker.h"
 #include "platform.h"
+#include "scene/scene.h"
 #include "style/pointStyle.h"
 #include "style/style.h"
 #include "style/textStyle.h"
 #include "tangram.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
+#include "tile/tileManager.h"
 #include "view/view.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 #include "glm/gtx/norm.hpp"
+
+#include <cassert>
 
 namespace Tangram {
 
@@ -200,13 +205,13 @@ std::shared_ptr<Tile> findProxy(int32_t _sourceID, const TileID& _proxyID,
     return nullptr;
 }
 
-void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
+void Labels::skipTransitions(const std::shared_ptr<Scene>& _scene,
                              const std::vector<std::shared_ptr<Tile>>& _tiles,
-                             TileCache& _cache, float _currentZoom) const {
+                             TileManager& _tileManager, float _currentZoom) const {
 
     std::vector<const Style*> styles;
 
-    for (const auto& style : _styles) {
+    for (const auto& style : _scene->styles()) {
         if (dynamic_cast<const TextStyle*>(style.get()) ||
             dynamic_cast<const PointStyle*>(style.get())) {
             styles.push_back(style.get());
@@ -217,23 +222,26 @@ void Labels::skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
         TileID tileID = tile->getID();
         std::shared_ptr<Tile> proxy;
 
+        auto source = _scene->getTileSource(tile->sourceID());
+        if (!source) {
+            source = _tileManager.getClientTileSource(tile->sourceID());
+            // If tiles for this source exist, this source must exist (either tile or client source)
+            assert(source);
+            continue;
+        }
+
         if (m_lastZoom < _currentZoom) {
             // zooming in, add the one cached parent tile
-            proxy = findProxy(tile->sourceID(), tileID.getParent(), _tiles, _cache);
+            proxy = findProxy(tile->sourceID(), tileID.getParent(source->zoomBias()), _tiles,
+                              *_tileManager.getTileCache());
             if (proxy) { skipTransitions(styles, *tile, *proxy); }
         } else {
             // zooming out, add the 4 cached children tiles
-            proxy = findProxy(tile->sourceID(), tileID.getChild(0), _tiles, _cache);
-            if (proxy) { skipTransitions(styles, *tile, *proxy); }
-
-            proxy = findProxy(tile->sourceID(), tileID.getChild(1), _tiles, _cache);
-            if (proxy) { skipTransitions(styles, *tile, *proxy); }
-
-            proxy = findProxy(tile->sourceID(), tileID.getChild(2), _tiles, _cache);
-            if (proxy) { skipTransitions(styles, *tile, *proxy); }
-
-            proxy = findProxy(tile->sourceID(), tileID.getChild(3), _tiles, _cache);
-            if (proxy) { skipTransitions(styles, *tile, *proxy); }
+            for (int i = 0; i < 4; i++) {
+                proxy = findProxy(tile->sourceID(), tileID.getChild(i, source->maxZoom()), _tiles,
+                                  *_tileManager.getTileCache());
+                if (proxy) { skipTransitions(styles, *tile, *proxy); }
+            }
         }
     }
 }
@@ -412,23 +420,23 @@ bool Labels::withinRepeatDistance(Label *_label) {
 }
 
 void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
-                            const std::vector<std::unique_ptr<Style>>& _styles,
+                            const std::shared_ptr<Scene>& _scene,
                             const std::vector<std::shared_ptr<Tile>>& _tiles,
                             const std::vector<std::unique_ptr<Marker>>& _markers,
-                            TileCache& _cache) {
+                            TileManager& _tileManager) {
 
     m_transforms.clear();
     m_obbs.clear();
 
     /// Collect and update labels from visible tiles
-    updateLabels(_viewState, _dt, _styles, _tiles, _markers, false);
+    updateLabels(_viewState, _dt, _scene->styles(), _tiles, _markers, false);
 
     sortLabels();
 
     /// Mark labels to skip transitions
 
     if (int(m_lastZoom) != int(_viewState.zoom)) {
-        skipTransitions(_styles, _tiles, _cache, _viewState.zoom);
+        skipTransitions(_scene, _tiles, _tileManager, _viewState.zoom);
         m_lastZoom = _viewState.zoom;
     }
 

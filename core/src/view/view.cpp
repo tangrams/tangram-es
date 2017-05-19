@@ -1,8 +1,6 @@
 #include "view/view.h"
 
 #include "log.h"
-#include "platform.h"
-#include "tangram.h"
 #include "scene/stops.h"
 #include "util/rasterize.h"
 
@@ -251,13 +249,11 @@ void View::update(bool _constrainToWorldBounds) {
 
     }
 
-    if (m_dirtyTiles && !Tangram::getDebugFlag(Tangram::DebugFlags::freeze_tiles)) {
+    if (m_dirtyTiles) {
 
-        updateTiles(); // Resets dirty flag
         m_changed = true;
-
+        m_dirtyTiles = false;
     }
-
 }
 
 glm::dmat2 View::getBoundsRect() const {
@@ -269,21 +265,28 @@ glm::dmat2 View::getBoundsRect() const {
 }
 
 double View::screenToGroundPlane(float& _screenX, float& _screenY) {
+
+    if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
+
     double x = _screenX, y = _screenY;
-    double t = screenToGroundPlane(x, y);
+    double t = screenToGroundPlaneInternal(x, y);
     _screenX = x;
     _screenY = y;
     return t;
 }
 
+double View::screenToGroundPlane(double& _screenX, double& _screenY) {
+
+    if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
+
+    return screenToGroundPlaneInternal(_screenX, _screenY);
+}
 
 glm::vec2 View::normalizedWindowCoordinates(float _x, float _y) const {
     return { _x / m_vpWidth, 1.0 - _y / m_vpHeight };
 }
 
-double View::screenToGroundPlane(double& _screenX, double& _screenY) {
-
-    if (m_dirtyMatrices) { updateMatrices(); } // Need the view matrices to be up-to-date
+double View::screenToGroundPlaneInternal(double& _screenX, double& _screenY) const {
 
     // Cast a ray and find its intersection with the z = 0 plane,
     // following the technique described here: http://antongerdelan.net/opengl/raycasting.html
@@ -434,9 +437,7 @@ glm::vec2 View::lonLatToScreenPosition(double lon, double lat, bool& clipped) co
     return screenPosition;
 }
 
-void View::updateTiles() {
-
-    m_visibleTiles.clear();
+void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
 
     int zoom = int(m_zoom);
     int maxTileIndex = 1 << zoom;
@@ -447,10 +448,10 @@ void View::updateTiles() {
     glm::dvec2 viewTR = { m_vpWidth, 0.f        }; // top right
     glm::dvec2 viewTL = { 0.f,       0.f        }; // top left
 
-    double t0 = screenToGroundPlane(viewBL.x, viewBL.y);
-    double t1 = screenToGroundPlane(viewBR.x, viewBR.y);
-    double t2 = screenToGroundPlane(viewTR.x, viewTR.y);
-    double t3 = screenToGroundPlane(viewTL.x, viewTL.y);
+    double t0 = screenToGroundPlaneInternal(viewBL.x, viewBL.y);
+    double t1 = screenToGroundPlaneInternal(viewBR.x, viewBR.y);
+    double t2 = screenToGroundPlaneInternal(viewTR.x, viewTR.y);
+    double t3 = screenToGroundPlaneInternal(viewTL.x, viewTL.y);
 
     // if all of our raycasts have a negative intersection distance, we have no area to cover
     if (t0 < .0 && t1 < 0. && t2 < 0. && t3 < 0.) {
@@ -478,10 +479,8 @@ void View::updateTiles() {
     // Scan options - avoid heap allocation for std::function
     // [1] http://www.drdobbs.com/cpp/efficient-use-of-lambda-expressions-and/232500059?pgno=2
     struct ScanParams {
-        ScanParams(std::set<TileID>& _tiles, int _zoom)
-            : tiles(_tiles), zoom(_zoom) {}
+        explicit ScanParams(int _zoom) : zoom(_zoom) {}
 
-        std::set<TileID>& tiles;
         int zoom;
         int maxZoom = int(s_maxZoom);
 
@@ -496,7 +495,7 @@ void View::updateTiles() {
         glm::ivec4 last = glm::ivec4{-1};
     };
 
-    ScanParams opt{ m_visibleTiles, zoom };
+    ScanParams opt{ zoom };
 
     if (m_type == CameraType::perspective) {
 
@@ -515,7 +514,7 @@ void View::updateTiles() {
         }
     }
 
-    Rasterize::ScanCallback s = [&opt](int x, int y) {
+    Rasterize::ScanCallback s = [&opt, &_tileCb](int x, int y) {
 
         int lod = 0;
         while (lod < MAX_LOD && x >= opt.x_limit_pos[lod]) { lod++; }
@@ -535,8 +534,9 @@ void View::updateTiles() {
         tile.w = (x - tile.x) >> opt.zoom; // wrap
 
         if (tile != opt.last) {
-            opt.tiles.emplace(tile.x, tile.y, tile.z, tile.z, tile.w);
             opt.last = tile;
+
+            _tileCb(TileID(tile.x, tile.y, tile.z, tile.z, tile.w));
         }
     };
 
@@ -548,9 +548,6 @@ void View::updateTiles() {
     // of the view trapezoid. This is necessary to not cull any geometry with height in these tiles
     // (which should remain visible, even though the base of the tile is not).
     Rasterize::scanTriangle(a, b, e, 0, maxTileIndex, s);
-
-    m_dirtyTiles = false;
-
 }
 
 }

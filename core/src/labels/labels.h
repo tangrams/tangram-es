@@ -24,7 +24,8 @@ class FontContext;
 class Marker;
 class Tile;
 class Style;
-class TileCache;
+class Scene;
+class TileManager;
 
 class Labels {
 
@@ -36,10 +37,10 @@ public:
     void drawDebug(RenderState& rs, const View& _view);
 
     void updateLabelSet(const ViewState& _viewState, float _dt,
-                        const std::vector<std::unique_ptr<Style>>& _styles,
+                        const std::shared_ptr<Scene>& _scene,
                         const std::vector<std::shared_ptr<Tile>>& _tiles,
                         const std::vector<std::unique_ptr<Marker>>& _markers,
-                        TileCache& _cache);
+                        TileManager& tileManager);
 
     /* onlyRender: when the view and tiles have not changed one does not need to update the set of
      * active labels. We just need to render these the labels in this case
@@ -61,9 +62,9 @@ protected:
     using CollisionPairs = std::vector<isect2d::ISect2D<glm::vec2>::Pair>;
 
 
-    void skipTransitions(const std::vector<std::unique_ptr<Style>>& _styles,
+    void skipTransitions(const std::shared_ptr<Scene>& _scene,
                          const std::vector<std::shared_ptr<Tile>>& _tiles,
-                         TileCache& _cache, float _currentZoom) const;
+                         TileManager& _tileManager, float _currentZoom) const;
 
     PERF_TRACE void skipTransitions(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) const;
 

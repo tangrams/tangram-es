@@ -9,6 +9,7 @@
 #include "tile/tile.h"
 #include "tile/tileTask.h"
 #include "log.h"
+#include "util/geom.h"
 
 #include <atomic>
 #include <functional>
@@ -16,11 +17,13 @@
 namespace Tangram {
 
 TileSource::TileSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
-                       int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom) :
+                       int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
+                       int32_t _zoomBias) :
     m_name(_name),
     m_minDisplayZoom(_minDisplayZoom),
     m_maxDisplayZoom(_maxDisplayZoom),
     m_maxZoom(_maxZoom),
+    m_zoomBias(_zoomBias),
     m_sources(std::move(_sources)) {
 
     static std::atomic<int32_t> s_serial;
@@ -30,6 +33,20 @@ TileSource::TileSource(const std::string& _name, std::unique_ptr<DataSource> _so
 
 TileSource::~TileSource() {
     clearData();
+}
+
+int32_t TileSource::zoomBiasFromTileSize(int32_t tileSize) {
+    const auto BaseTileSize = 256;
+
+    // zero tileSize (log(0) is undefined)
+    if (!tileSize) { return 0; }
+
+    if (isPowerOfTwo(tileSize)) {
+        return std::log(static_cast<float>(tileSize)/static_cast<float>(BaseTileSize)) / std::log(2);
+    }
+
+    LOGW("Illegal tile_size defined. Must be power of 2. Default tileSize of 256px set");
+    return 0;
 }
 
 const char* TileSource::mimeType() const {

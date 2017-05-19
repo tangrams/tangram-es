@@ -369,7 +369,7 @@ bool Map::update(float _dt) {
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
-        impl->tileManager.updateTileSets(impl->view.state(), impl->view.getVisibleTiles());
+        impl->tileManager.updateTileSets(impl->view);
 
         auto& tiles = impl->tileManager.getVisibleTiles();
         auto& markers = impl->markerManager.markers();
@@ -385,8 +385,8 @@ bool Map::update(float _dt) {
             for (const auto& tile : tiles) {
                 tile->update(_dt, impl->view);
             }
-            impl->labels.updateLabelSet(impl->view.state(), _dt, impl->scene->styles(), tiles, markers,
-                                        *impl->tileManager.getTileCache());
+            impl->labels.updateLabelSet(impl->view.state(), _dt, impl->scene, tiles, markers,
+                                        impl->tileManager);
         } else {
             impl->labels.updateLabels(impl->view.state(), _dt, impl->scene->styles(), tiles, markers);
         }

@@ -129,6 +129,7 @@ public:
     void animated(bool animated) { m_animated = animated ? yes : no; }
     animate animated() const { return m_animated; }
 
+    std::shared_ptr<TileSource> getTileSource(int32_t id);
     std::shared_ptr<TileSource> getTileSource(const std::string& name);
 
     std::shared_ptr<Texture> getTexture(const std::string& name) const;

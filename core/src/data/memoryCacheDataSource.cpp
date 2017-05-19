@@ -30,7 +30,8 @@ struct RawCache {
         if (m_maxUsage <= 0) { return false; }
 
         std::lock_guard<std::mutex> lock(m_mutex);
-        TileID id(_task.tileId().x, _task.tileId().y, _task.tileId().z);
+        const auto& taskTileID = _task.tileId();
+        TileID id(taskTileID.x, taskTileID.y, taskTileID.z);
 
         auto it = m_cacheMap.find(id);
         if (it != m_cacheMap.end()) {

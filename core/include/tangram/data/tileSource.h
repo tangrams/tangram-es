@@ -22,6 +22,13 @@ class TileSource : public std::enable_shared_from_this<TileSource> {
 
 public:
 
+    /* Calculate the zoom level bias to be applied given tileSize in pixel units.
+     * 256  pixel -> 0
+     * 512  pixel -> 1
+     * 1024 pixel -> 2
+     */
+    static int32_t zoomBiasFromTileSize(int32_t tileSize);
+
     struct DataSource {
         virtual ~DataSource() {}
 
@@ -54,7 +61,8 @@ public:
      * and zoom level of tiles to produce their URL.
      */
     TileSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
-               int32_t _minDisplayZoom = -1, int32_t _maxDisplayZoom = -1, int32_t _maxZoom = 18);
+               int32_t _minDisplayZoom = -1, int32_t _maxDisplayZoom = -1, int32_t _maxZoom = 18,
+               int32_t _zoomBias = 0);
 
     virtual ~TileSource();
 
@@ -96,6 +104,7 @@ public:
     int32_t minDisplayZoom() const { return m_minDisplayZoom; }
     int32_t maxDisplayZoom() const { return m_maxDisplayZoom; }
     int32_t maxZoom() const { return m_maxZoom; }
+    int32_t zoomBias() const { return m_zoomBias; }
 
     bool isActiveForZoom(const float _zoom) const {
         return _zoom >= m_minDisplayZoom && (m_maxDisplayZoom == -1 || _zoom <= m_maxDisplayZoom);
@@ -132,6 +141,12 @@ protected:
 
     // Maximum zoom for which tiles will be requested
     int32_t m_maxZoom;
+
+    // controls the zoom level for the tiles of the tilesource to scale the tiles to
+    // apt pixel
+    // 0: 256 pixel tiles
+    // 1: 512 pixel tiles
+    int32_t m_zoomBias;
 
     // Unique id for TileSource
     int32_t m_id;
