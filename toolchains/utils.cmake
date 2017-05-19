@@ -22,9 +22,11 @@ function(check_unsupported_compiler_version)
 
 endfunction(check_unsupported_compiler_version)
 
-function(check_mapzen_api_key)
+function(get_mapzen_api_key KEY_RESULT)
 
-    if("$ENV{MAPZEN_API_KEY}" STREQUAL "")
+    set(${KEY_RESULT} $ENV{MAPZEN_API_KEY} PARENT_SCOPE)
+
+    if(${KEY_RESULT} STREQUAL "")
         message(SEND_ERROR
             "Make sure to provide an api key to build the demo application, "
             "you can create an API key at https://mapzen.com/developers. "
@@ -32,7 +34,7 @@ function(check_mapzen_api_key)
         return()
     endif()
 
-endfunction(check_mapzen_api_key)
+endfunction(get_mapzen_api_key)
 
 
 function(find_sources_and_include_directories HEADERS_PATH SOURCES_PATH)
