@@ -12,7 +12,7 @@ fi
 if [[ ${PLATFORM} == "linux" ]]; then
     # Build linux project
     echo "Building linux project"
-    CMAKE_OPTIONS="-DUNIT_TESTS=1 -DBENCHMARK=1" make -j 4 linux
+    CMAKE_OPTIONS="-DUSE_SYSTEM_FONT_LIBS=1 -DUNIT_TESTS=1 -DBENCHMARK=1" make -j 4 linux
 fi
 
 if [[ ${PLATFORM} == "ios" ]]; then
