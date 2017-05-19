@@ -6,7 +6,6 @@
 #include "tile/tileID.h"
 #include "tile/tileTask.h"
 #include "tile/tileWorker.h"
-#include "util/fastmap.h"
 
 #include <map>
 #include <memory>
@@ -21,6 +20,7 @@ namespace Tangram {
 
 class TileSource;
 class TileCache;
+class View;
 struct ViewState;
 
 /* Singleton container of <TileSet>s
@@ -42,7 +42,7 @@ public:
     void setTileSources(const std::vector<std::shared_ptr<TileSource>>& _sources);
 
     /* Updates visible tile set and load missing tiles */
-    void updateTileSets(const ViewState& _view, const std::set<TileID>& _visibleTiles);
+    void updateTileSets(const View& _view);
 
     void clearTileSets();
 
@@ -57,6 +57,8 @@ public:
         return m_tilesInProgress > 0;
     }
 
+    std::shared_ptr<TileSource> getClientTileSource(int32_t sourceID);
+
     void addClientTileSource(std::shared_ptr<TileSource> _source);
 
     bool removeClientTileSource(TileSource& _source);
@@ -70,7 +72,7 @@ public:
      */
     void setCacheSize(size_t _cacheSize);
 
-private:
+protected:
 
     enum class ProxyID : uint8_t {
         no_proxies = 0,
@@ -194,12 +196,15 @@ private:
             : source(_source), clientTileSource(_clientSource) {}
 
         std::shared_ptr<TileSource> source;
+
+        std::set<TileID> visibleTiles;
         std::map<TileID, TileEntry> tiles;
+
         int64_t sourceGeneration = 0;
         bool clientTileSource;
     };
 
-    void updateTileSet(TileSet& tileSet, const ViewState& _view, const std::set<TileID>& _visibleTiles);
+    void updateTileSet(TileSet& tileSet, const ViewState& _view);
 
     void enqueueTask(TileSet& _tileSet, const TileID& _tileID, const ViewState& _view);
 

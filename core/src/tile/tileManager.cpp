@@ -2,6 +2,7 @@
 
 #include "data/tileSource.h"
 #include "platform.h"
+#include "tangram.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
 #include "util/mapProjection.h"
@@ -49,7 +50,7 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
         m_tileSets.begin(), m_tileSets.end(),
         [&](auto& tileSet) {
             if (!tileSet.clientTileSource) {
-                LOGD("remove source %s", tileSet.source->name().c_str());
+                LOGN("Remove source %s", tileSet.source->name().c_str());
                 return true;
             }
             // Clear cache
@@ -68,14 +69,21 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
                          [&](const TileSet& a) {
                              return a.source->name() == source->name();
                          }) == m_tileSets.end()) {
-
-            LOGD("add source %s", source->name().c_str());
-
+            LOGN("add source %s", source->name().c_str());
             m_tileSets.push_back({ source, false });
         } else {
             LOGW("Duplicate named datasource (not added): %s", source->name().c_str());
         }
     }
+}
+
+std::shared_ptr<TileSource> TileManager::getClientTileSource(int32_t sourceID) {
+    for (const auto& tileSet : m_tileSets) {
+        if (tileSet.clientTileSource && tileSet.source->id() == sourceID) {
+            return tileSet.source;
+        }
+    }
+    return nullptr;
 }
 
 void TileManager::addClientTileSource(std::shared_ptr<TileSource> _tileSource) {
@@ -116,16 +124,35 @@ void TileManager::clearTileSet(int32_t _sourceId) {
     m_tileSetChanged = true;
 }
 
-void TileManager::updateTileSets(const ViewState& _view,
-                                 const std::set<TileID>& _visibleTiles) {
+void TileManager::updateTileSets(const View& _view) {
+
     m_tiles.clear();
     m_tilesInProgress = 0;
     m_tileSetChanged = false;
 
+    if (_view.changedOnLastUpdate() && !getDebugFlag(DebugFlags::freeze_tiles)) {
+
+        for (auto& tileSet : m_tileSets) {
+            tileSet.visibleTiles.clear();
+        }
+
+        auto tileCb = [&, zoom = _view.getZoom()](TileID _tileID){
+            for (auto& tileSet : m_tileSets) {
+                auto zoomBias = tileSet.source->zoomBias();
+                auto maxZoom = tileSet.source->maxZoom();
+
+                // Insert scaled and maxZoom mapped tileID in the visible set
+                tileSet.visibleTiles.insert(_tileID.zoomBiasAdjusted(zoomBias).withMaxSourceZoom(maxZoom));
+            }
+        };
+
+        _view.getVisibleTiles(tileCb);
+    }
+
     for (auto& tileSet : m_tileSets) {
         // check if tile set is active for zoom (zoom might be below min_zoom)
-        if (tileSet.source->isActiveForZoom(_view.zoom)) {
-            updateTileSet(tileSet, _view, _visibleTiles);
+        if (tileSet.source->isActiveForZoom(_view.getZoom())) {
+            updateTileSet(tileSet, _view.state());
         }
     }
 
@@ -133,15 +160,17 @@ void TileManager::updateTileSets(const ViewState& _view,
 
     // Make m_tiles an unique list of tiles for rendering sorted from
     // high to low zoom-levels.
-    std::sort(m_tiles.begin(), m_tiles.end(), [](auto& a, auto& b){
-            return a->getID() < b->getID(); });
+    std::sort(m_tiles.begin(), m_tiles.end(), [](auto& a, auto& b) {
+            return a->sourceID() == b->sourceID() ?
+                a->getID() < b->getID() :
+                a->sourceID() < b->sourceID(); }
+        );
 
     // Remove duplicates: Proxy tiles could have been added more than once
     m_tiles.erase(std::unique(m_tiles.begin(), m_tiles.end()), m_tiles.end());
 }
 
-void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
-                                const std::set<TileID>& _visibleTiles) {
+void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
 
     bool newTiles = false;
 
@@ -172,37 +201,17 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
         }
     }
 
-    const auto* visibleTiles = &_visibleTiles;
-
-    std::set<TileID> mappedTiles;
-    if (_view.zoom > _tileSet.source->maxZoom()) {
-        for (const auto& id : _visibleTiles) {
-            auto tile = id.withMaxSourceZoom(_tileSet.source->maxZoom());
-            // Replace tile with same coordinates and lower source zoom
-            auto other = std::find_if(mappedTiles.begin(), mappedTiles.end(),
-                             [&](auto& t) { return tile.x == t.x &&
-                                            tile.y == t.y &&
-                                            tile.z == t.z &&
-                                            tile.wrap == t.wrap; });
-            if (other == mappedTiles.end()) {
-                mappedTiles.insert(tile);
-            } else if (other->s < tile.s) {
-                mappedTiles.erase(other);
-                mappedTiles.insert(tile);
-            }
-        }
-        visibleTiles = &mappedTiles;
-    }
+    const auto& visibleTiles = _tileSet.visibleTiles;
 
     // Loop over visibleTiles and add any needed tiles to tileSet
     auto curTilesIt = tiles.begin();
-    auto visTilesIt = visibleTiles->begin();
+    auto visTilesIt = visibleTiles.begin();
 
     auto generation = _tileSet.source->generation();
 
-    while (visTilesIt != visibleTiles->end() || curTilesIt != tiles.end()) {
+    while (visTilesIt != visibleTiles.end() || curTilesIt != tiles.end()) {
 
-        auto& visTileId = visTilesIt == visibleTiles->end()
+        auto& visTileId = visTilesIt == visibleTiles.end()
             ? NOT_A_TILE : *visTilesIt;
 
         auto& curTileId = curTilesIt == tiles.end()
@@ -210,7 +219,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
 
         if (visTileId == curTileId) {
             // tiles in both sets match
-            assert(visTilesIt != visibleTiles->end() &&
+            assert(visTilesIt != visibleTiles.end() &&
                    curTilesIt != tiles.end());
 
             auto& entry = curTilesIt->second;
@@ -256,7 +265,7 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view,
             // NB: if (curTileId == NOT_A_TILE) it is always > visTileId
             //     and if curTileId > visTileId, then visTileId cannot be
             //     NOT_A_TILE. (for the current implementation of > operator)
-            assert(visTilesIt != visibleTiles->end());
+            assert(visTilesIt != visibleTiles.end());
 
             if (!addTile(_tileSet, visTileId)) {
                 // Not in cache - enqueue for loading
@@ -494,22 +503,24 @@ void TileManager::updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, Til
     // child proxies would be more appropriate
 
     // Try parent proxy
-    auto parentID = _tileID.getParent();
+    auto zoomBias = _tileSet.source->zoomBias();
+    auto maxZoom = _tileSet.source->maxZoom();
+    auto parentID = _tileID.getParent(zoomBias);
     auto minZoom = _tileSet.source->minDisplayZoom();
     if (minZoom <= parentID.z
             && updateProxyTile(_tileSet, _tile, parentID, ProxyID::parent)) {
         return;
     }
     // Try grandparent
-    auto grandparentID = parentID.getParent();
+    auto grandparentID = parentID.getParent(zoomBias);
     if (minZoom <= grandparentID.z
             && updateProxyTile(_tileSet, _tile, grandparentID, ProxyID::parent2)) {
         return;
     }
     // Try children
-    if (_tileSet.source->maxZoom() > _tileID.z) {
+    if (maxZoom > _tileID.z) {
         for (int i = 0; i < 4; i++) {
-            auto childID = _tileID.getChild(i, _tileSet.source->maxZoom());
+            auto childID = _tileID.getChild(i, maxZoom);
             updateProxyTile(_tileSet, _tile, childID, static_cast<ProxyID>(1 << i));
         }
     }
@@ -518,6 +529,8 @@ void TileManager::updateProxyTiles(TileSet& _tileSet, const TileID& _tileID, Til
 void TileManager::clearProxyTiles(TileSet& _tileSet, const TileID& _tileID, TileEntry& _tile,
                                   std::vector<TileID>& _removes) {
     auto& tiles = _tileSet.tiles;
+    auto zoomBias = _tileSet.source->zoomBias();
+    auto maxZoom = _tileSet.source->maxZoom();
 
     auto removeProxy = [&tiles,&_removes](TileID id) {
         auto it = tiles.find(id);
@@ -531,20 +544,20 @@ void TileManager::clearProxyTiles(TileSet& _tileSet, const TileID& _tileID, Tile
     };
     // Check if grand parent proxy is present
     if (_tile.unsetProxy(ProxyID::parent2)) {
-        TileID gparentID(_tileID.getParent().getParent());
+        TileID gparentID(_tileID.getParent(zoomBias).getParent(zoomBias));
         removeProxy(gparentID);
     }
 
     // Check if parent proxy is present
     if (_tile.unsetProxy(ProxyID::parent)) {
-        TileID parentID(_tileID.getParent());
+        TileID parentID(_tileID.getParent(zoomBias));
         removeProxy(parentID);
     }
 
     // Check if child proxies are present
     for (int i = 0; i < 4; i++) {
         if (_tile.unsetProxy(static_cast<ProxyID>(1 << i))) {
-            TileID childID(_tileID.getChild(i));
+            TileID childID(_tileID.getChild(i, maxZoom));
             removeProxy(childID);
         }
     }

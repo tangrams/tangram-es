@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 #include <string>
 
@@ -45,28 +46,35 @@ struct TileID {
         return isValid() && z <= _maxZoom;
     }
 
-    TileID withMaxSourceZoom(int32_t _max) const {
+    TileID withMaxSourceZoom(int32_t _maxZoom) const {
 
-        if (z <= _max) {
+        if (z <= _maxZoom) {
             return *this;
         }
 
-        int32_t over = z - _max;
+        int32_t over = z - _maxZoom;
 
-        return TileID(x >> over, y >> over, _max, z, wrap);
+        return TileID(x >> over, y >> over, _maxZoom, s, wrap);
     }
 
-    TileID getParent() const {
+    TileID zoomBiasAdjusted(int32_t _zoomBias) const {
+        assert(_zoomBias >= 0);
 
-        if (s > z) {
+        if (!_zoomBias) { return *this; }
+
+        auto scaledZ = std::max(0, z - _zoomBias);
+        return TileID(x >> _zoomBias, y >> _zoomBias, scaledZ, z, wrap);
+    }
+
+    TileID getParent(int32_t _zoomBias = 0) const {
+        if (s > (z + _zoomBias)) {
             // Over-zoomed, keep the same data coordinates
             return TileID(x, y, z, s - 1, wrap);
         }
-        return TileID(x >> 1, y >> 1, z-1, z-1, wrap);
+        return TileID(x >> 1, y >> 1, z - 1, s - 1, wrap);
     }
 
-    TileID getChild(int32_t _index) const {
-
+    TileID getChild(int32_t _index, int32_t _maxZoom) const {
         if (_index > 3 || _index < 0) {
             return TileID(-1, -1, -1, -1, -1);
         }
@@ -78,15 +86,12 @@ struct TileID {
         // i:      0, 0, 1, 1
         // j:      0, 1, 0, 1
 
-        return TileID((x<<1)+i, (y<<1)+j, z+1, z+1, wrap);
-    }
-
-    TileID getChild(int32_t _index, int32_t _maxSourceZoom) const {
-        return getChild(_index).withMaxSourceZoom(_maxSourceZoom);
+        auto childID = TileID((x<<1)+i, (y<<1)+j, z + 1, s + 1, wrap);
+        return childID.withMaxSourceZoom(_maxZoom);
     }
 
     std::string toString() const {
-        return std::to_string(x) + "/" + std::to_string(y) + "/" + std::to_string(z);
+        return std::to_string(x) + "/" + std::to_string(y) + "/" + std::to_string(z) + "/" + std::to_string(s);
     }
 
 };

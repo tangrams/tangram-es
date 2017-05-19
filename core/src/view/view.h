@@ -7,7 +7,7 @@
 #include "glm/mat4x4.hpp"
 #include "glm/vec4.hpp"
 #include "glm/vec3.hpp"
-#include <set>
+#include <functional>
 #include <memory>
 
 namespace Tangram {
@@ -174,14 +174,14 @@ public:
      * @return the un-normalized distance 'into the screen' to the ground plane
      * (if < 0, intersection is behind the screen)
      */
-    double screenToGroundPlane(double& _screenX, double& _screenY);
     double screenToGroundPlane(float& _screenX, float& _screenY);
+    double screenToGroundPlane(double& _screenX, double& _screenY);
 
     /* Gets the screen position from a latitude/longitude */
     glm::vec2 lonLatToScreenPosition(double lon, double lat, bool& clipped) const;
 
     /* Returns the set of all tiles visible at the current position and zoom */
-    const std::set<TileID>& getVisibleTiles() { return m_visibleTiles; }
+    void getVisibleTiles(const std::function<void(TileID)>& _tileCb) const;
 
     /* Returns true if the view properties have changed since the last call to update() */
     bool changedOnLastUpdate() const { return m_changed; }
@@ -202,12 +202,12 @@ public:
 protected:
 
     void updateMatrices();
-    void updateTiles();
+
+    double screenToGroundPlaneInternal(double& _screenX, double& _screenY) const;
 
     std::shared_ptr<MapProjection> m_projection;
     std::shared_ptr<Stops> m_fovStops;
     std::shared_ptr<Stops> m_maxPitchStops;
-    std::set<TileID> m_visibleTiles;
 
     ViewConstraint m_constraint;
 

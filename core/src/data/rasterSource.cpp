@@ -69,8 +69,8 @@ public:
 
 RasterSource::RasterSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
                            int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
-                           TextureOptions _options, bool _genMipmap)
-    : TileSource(_name, std::move(_sources), _minDisplayZoom, _maxDisplayZoom, _maxZoom),
+                           int32_t _zoomBias, TextureOptions _options, bool _genMipmap)
+    : TileSource(_name, std::move(_sources), _minDisplayZoom, _maxDisplayZoom, _maxZoom, _zoomBias),
       m_texOptions(_options),
       m_genMipmap(_genMipmap) {
 
@@ -148,7 +148,8 @@ std::shared_ptr<TileTask> RasterSource::createTask(TileID _tileId, int _subTask)
 }
 
 Raster RasterSource::getRaster(const TileTask& _task) {
-    TileID id(_task.tileId().x, _task.tileId().y, _task.tileId().z);
+    const auto& taskTileID = _task.tileId();
+    TileID id(taskTileID.x, taskTileID.y, taskTileID.z);
 
     auto texIt = m_textures.find(id);
     if (texIt != m_textures.end()) {

@@ -5,6 +5,7 @@
 #include "data/mbtilesDataSource.h"
 #include "data/networkDataSource.h"
 #include "data/rasterSource.h"
+#include "data/tileSource.h"
 #include "gl/shaderSource.h"
 #include "log.h"
 #include "platform.h"
@@ -983,6 +984,7 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
     int32_t minDisplayZoom = -1;
     int32_t maxDisplayZoom = -1;
     int32_t maxZoom = 18;
+    int32_t zoomBias = 0;
 
     if (auto typeNode = source["type"]) {
         type = typeNode.Scalar();
@@ -998,6 +1000,9 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
     }
     if (auto maxZoomNode = source["max_zoom"]) {
         maxZoom = maxZoomNode.as<int32_t>(maxZoom);
+    }
+    if (auto tileSizeNode = source["tile_size"]) {
+        zoomBias = TileSource::zoomBiasFromTileSize(tileSizeNode.as<int32_t>());
     }
 
     // Parse and append any URL parameters.
@@ -1075,7 +1080,7 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
     std::shared_ptr<TileSource> sourcePtr;
 
     if (type == "GeoJSON" && !tiled) {
-        sourcePtr = std::make_shared<ClientGeoJsonSource>(platform, name, url, minDisplayZoom, maxDisplayZoom, maxZoom);
+        sourcePtr = std::make_shared<ClientGeoJsonSource>(platform, name, url, minDisplayZoom, maxDisplayZoom, maxZoom, zoomBias);
     } else if (type == "Raster") {
         TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
         bool generateMipmaps = false;
@@ -1086,11 +1091,11 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         }
 
         sourcePtr = std::make_shared<RasterSource>(name, std::move(rawSources),
-                                                   minDisplayZoom, maxDisplayZoom, maxZoom,
+                                                   minDisplayZoom, maxDisplayZoom, maxZoom, zoomBias,
                                                    options, generateMipmaps);
     } else {
         sourcePtr = std::make_shared<TileSource>(name, std::move(rawSources),
-                                                 minDisplayZoom, maxDisplayZoom, maxZoom);
+                                                 minDisplayZoom, maxDisplayZoom, maxZoom, zoomBias);
 
         if (type == "GeoJSON") {
             sourcePtr->setFormat(TileSource::Format::GeoJson);
