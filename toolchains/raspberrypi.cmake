@@ -10,8 +10,8 @@ check_unsupported_compiler_version()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
-check_mapzen_api_key()
-add_definitions( -DMAPZEN_API_KEY="$ENV{MAPZEN_API_KEY}" )
+get_mapzen_api_key(MAPZEN_API_KEY)
+add_definitions(-DMAPZEN_API_KEY="${MAPZEN_API_KEY}")
 
 # add sources and include headers
 find_sources_and_include_directories(
