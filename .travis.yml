@@ -1,6 +1,5 @@
 language: android
 
-dist: trusty
 sudo: enabled
 
 branches:
@@ -10,6 +9,7 @@ branches:
 matrix:
     include:
         - os: linux
+          dist: trusty
           env: PLATFORM=linux CXX=g++-4.9 CC=gcc-4.9
           addons:
             apt:
