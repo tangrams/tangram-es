@@ -25,7 +25,7 @@ class Marker;
 class Tile;
 class Style;
 class Scene;
-class TileCache;
+class TileManager;
 
 class Labels {
 
@@ -40,7 +40,7 @@ public:
                         const std::shared_ptr<Scene>& _scene,
                         const std::vector<std::shared_ptr<Tile>>& _tiles,
                         const std::vector<std::unique_ptr<Marker>>& _markers,
-                        TileCache& _cache);
+                        TileManager& tileManager);
 
     /* onlyRender: when the view and tiles have not changed one does not need to update the set of
      * active labels. We just need to render these the labels in this case
@@ -64,7 +64,7 @@ protected:
 
     void skipTransitions(const std::shared_ptr<Scene>& _scene,
                          const std::vector<std::shared_ptr<Tile>>& _tiles,
-                         TileCache& _cache, float _currentZoom) const;
+                         TileManager& _tileManager, float _currentZoom) const;
 
     PERF_TRACE void skipTransitions(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) const;
 

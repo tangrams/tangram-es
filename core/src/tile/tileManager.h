@@ -57,6 +57,8 @@ public:
         return m_tilesInProgress > 0;
     }
 
+    std::shared_ptr<TileSource> getClientTileSource(int32_t sourceID);
+
     void addClientTileSource(std::shared_ptr<TileSource> _source);
 
     bool removeClientTileSource(TileSource& _source);

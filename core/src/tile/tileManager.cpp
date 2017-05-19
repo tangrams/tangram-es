@@ -77,6 +77,15 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
     }
 }
 
+std::shared_ptr<TileSource> TileManager::getClientTileSource(int32_t sourceID) {
+    for (const auto& tileSet : m_tileSets) {
+        if (tileSet.clientTileSource && tileSet.source->id() == sourceID) {
+            return tileSet.source;
+        }
+    }
+    return nullptr;
+}
+
 void TileManager::addClientTileSource(std::shared_ptr<TileSource> _tileSource) {
     m_tileSets.push_back({ _tileSource, true });
 }

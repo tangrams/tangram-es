@@ -386,7 +386,7 @@ bool Map::update(float _dt) {
                 tile->update(_dt, impl->view);
             }
             impl->labels.updateLabelSet(impl->view.state(), _dt, impl->scene, tiles, markers,
-                                        *impl->tileManager.getTileCache());
+                                        impl->tileManager);
         } else {
             impl->labels.updateLabels(impl->view.state(), _dt, impl->scene->styles(), tiles, markers);
         }

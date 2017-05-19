@@ -16,6 +16,7 @@
 #include "tangram.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
+#include "tile/tileManager.h"
 #include "view/view.h"
 
 #include "glm/glm.hpp"
@@ -206,7 +207,7 @@ std::shared_ptr<Tile> findProxy(int32_t _sourceID, const TileID& _proxyID,
 
 void Labels::skipTransitions(const std::shared_ptr<Scene>& _scene,
                              const std::vector<std::shared_ptr<Tile>>& _tiles,
-                             TileCache& _cache, float _currentZoom) const {
+                             TileManager& _tileManager, float _currentZoom) const {
 
     std::vector<const Style*> styles;
 
@@ -221,17 +222,24 @@ void Labels::skipTransitions(const std::shared_ptr<Scene>& _scene,
         TileID tileID = tile->getID();
         std::shared_ptr<Tile> proxy;
 
-        const auto& source = _scene->getTileSource(tile->sourceID());
-        if (!source) { continue; }
+        auto source = _scene->getTileSource(tile->sourceID());
+        if (!source) {
+            source = _tileManager.getClientTileSource(tile->sourceID());
+            // If tiles for this source exist, this source must exist (either tile or client source)
+            assert(source);
+            continue;
+        }
 
         if (m_lastZoom < _currentZoom) {
             // zooming in, add the one cached parent tile
-            proxy = findProxy(tile->sourceID(), tileID.getParent(source->zoomBias()), _tiles, _cache);
+            proxy = findProxy(tile->sourceID(), tileID.getParent(source->zoomBias()), _tiles,
+                              *_tileManager.getTileCache());
             if (proxy) { skipTransitions(styles, *tile, *proxy); }
         } else {
             // zooming out, add the 4 cached children tiles
             for (int i = 0; i < 4; i++) {
-                proxy = findProxy(tile->sourceID(), tileID.getChild(i, source->maxZoom()), _tiles, _cache);
+                proxy = findProxy(tile->sourceID(), tileID.getChild(i, source->maxZoom()), _tiles,
+                                  *_tileManager.getTileCache());
                 if (proxy) { skipTransitions(styles, *tile, *proxy); }
             }
         }
@@ -415,7 +423,7 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
                             const std::shared_ptr<Scene>& _scene,
                             const std::vector<std::shared_ptr<Tile>>& _tiles,
                             const std::vector<std::unique_ptr<Marker>>& _markers,
-                            TileCache& _cache) {
+                            TileManager& _tileManager) {
 
     m_transforms.clear();
     m_obbs.clear();
@@ -428,7 +436,7 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
     /// Mark labels to skip transitions
 
     if (int(m_lastZoom) != int(_viewState.zoom)) {
-        skipTransitions(_scene, _tiles, _cache, _viewState.zoom);
+        skipTransitions(_scene, _tiles, _tileManager, _viewState.zoom);
         m_lastZoom = _viewState.zoom;
     }
 
