@@ -959,6 +959,16 @@ public class MapController implements Renderer {
         nativeUseCachedGlState(mapPointer, use);
     }
 
+    /**
+     * Sets an opaque background color used as default color when a scene is being loaded
+     * @param red red component of the background color
+     * @param green green component of the background color
+     * @param blue blue component of the background color
+     */
+    public void setDefaultBackgroundColor(float red, float green, float blue) {
+        checkPointer(mapPointer);
+        nativeSetDefaultBackgroundColor(mapPointer, red, green, blue);
+    }
 
     // Package private methods
     // =======================
@@ -1141,6 +1151,8 @@ public class MapController implements Renderer {
 
     private synchronized native void nativeUseCachedGlState(long mapPtr, boolean use);
     private synchronized native void nativeCaptureSnapshot(long mapPtr, int[] buffer);
+
+    private synchronized native void nativeSetDefaultBackgroundColor(long mapPtr, float r, float g, float b);
 
     private native void nativeOnUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private native void nativeOnUrlFailure(long callbackPtr);
