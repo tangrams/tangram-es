@@ -47,10 +47,10 @@ std::shared_ptr<TileTask> ClientGeoJsonSource::createTask(TileID _tileId, int _s
 // TODO: pass scene's resourcePath to constructor to be used with `stringFromFile`
 ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<Platform> _platform,
                                          const std::string& _name, const std::string& _url,
-                                         int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
-                                         int32_t _zoomBias)
+                                         TileSource::ZoomOptions _zoomOptions,
+                                         bool _generateCentroids)
 
-    : TileSource(_name, nullptr, _minDisplayZoom, _maxDisplayZoom, _maxZoom, _zoomBias),
+    : TileSource(_name, nullptr, _zoomOptions),
       m_platform(_platform) {
 
     // TODO: handle network url for client datasource data
