@@ -61,6 +61,13 @@ if(NOT ${PLATFORM_TARGET} STREQUAL android)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 endif()
 
+if (CMAKE_BUILD_TYPE MATCHES Debug)
+  add_definitions(-DDEBUG)
+  add_definitions(-DLOG_LEVEL=3)
+else()
+  add_definitions(-DLOG_LEVEL=2)
+endif()
+
 # cmake inclusions and definitions
 set(CMAKE_TARGET_FILE ${PROJECT_SOURCE_DIR}/toolchains/${PLATFORM_TARGET}.cmake)
 
