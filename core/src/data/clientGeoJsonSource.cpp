@@ -224,7 +224,9 @@ struct add_geometry {
         feature.lines.emplace_back();
         Line& line = feature.lines.back();
         for (const auto& p : geom) {
-            line.push_back(transformPoint(p));
+            auto tp = transformPoint(p);
+            if (line.size() > 0 && tp == line.back()) { continue; }
+            line.push_back(tp);
         }
         return true;
     }
@@ -235,7 +237,9 @@ struct add_geometry {
             feature.polygons.back().emplace_back();
             Line& line = feature.polygons.back().back();
             for (const auto& p : ring) {
-                line.push_back(transformPoint(p));
+                auto tp = transformPoint(p);
+                if (line.size() > 0 && tp == line.back()) { continue; }
+                line.push_back(tp);
             }
         }
         return true;
