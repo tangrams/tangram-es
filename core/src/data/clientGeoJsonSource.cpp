@@ -241,10 +241,24 @@ struct add_geometry {
         return true;
     }
 
+    bool operator()(const geometry::multi_point<int16_t>& geom) {
+        for (auto& g : geom) { (*this)(g); }
+        return true;
+    }
+
+    bool operator()(const geometry::multi_line_string<int16_t>& geom) {
+        for (auto& g : geom) { (*this)(g); }
+        return true;
+    }
+
+    bool operator()(const geometry::multi_polygon<int16_t>& geom) {
+        for (auto& g : geom) { (*this)(g); }
+        return true;
+    }
+
     template <typename T>
     bool operator()(T) {
-        // Unreachable: All multi-geometries and feature collections
-        // are split up in vector tiles.
+        // Ignore GeometryCollection
         return false;
     }
 };
