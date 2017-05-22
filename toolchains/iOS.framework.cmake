@@ -1,6 +1,6 @@
 include(${CMAKE_SOURCE_DIR}/toolchains/iOS.toolchain.cmake)
 
-set(FRAMEWORK_VERSION "0.7.0")
+set(FRAMEWORK_VERSION "0.7.1-dev")
 
 message(STATUS "Build for iOS archs " ${IOS_ARCH})
 
