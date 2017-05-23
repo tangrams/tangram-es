@@ -29,6 +29,8 @@ public:
             : minDisplayZoom(_minDisplayZoom), maxDisplayZoom(_maxDisplayZoom),
               maxZoom(_maxZoom), zoomBias(_zoomBias) {}
 
+        ZoomOptions() {}
+
         // Minimum zoom for which tiles will be displayed
         int32_t minDisplayZoom = -1;
         // Maximum zoom for which tiles will be displayed
@@ -81,7 +83,7 @@ public:
      * and zoom level of tiles to produce their URL.
      */
     TileSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
-               ZoomOptions _zoomOptions);
+               ZoomOptions _zoomOptions = {});
 
     virtual ~TileSource();
 

@@ -985,6 +985,7 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
     int32_t maxDisplayZoom = -1;
     int32_t maxZoom = 18;
     int32_t zoomBias = 0;
+    bool generateCentroids = false;
 
     if (auto typeNode = source["type"]) {
         type = typeNode.Scalar();
@@ -1082,7 +1083,11 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
     TileSource::ZoomOptions zoomOptions = { minDisplayZoom, maxDisplayZoom, maxZoom, zoomBias };
 
     if (type == "GeoJSON" && !tiled) {
-        sourcePtr = std::make_shared<ClientGeoJsonSource>(platform, name, url, zoomOptions);
+        if (auto genLabelCentroidsNode = source["generate_label_centroids"]) {
+            generateCentroids = true;
+        }
+        sourcePtr = std::make_shared<ClientGeoJsonSource>(platform, name, url, generateCentroids,
+                                                          zoomOptions);
     } else if (type == "Raster") {
         TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
         bool generateMipmaps = false;
@@ -1092,8 +1097,8 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
             }
         }
 
-        sourcePtr = std::make_shared<RasterSource>(name, std::move(rawSources), zoomOptions,
-                                                   options, generateMipmaps);
+        sourcePtr = std::make_shared<RasterSource>(name, std::move(rawSources), options, zoomOptions,
+                                                   generateMipmaps);
     } else {
         sourcePtr = std::make_shared<TileSource>(name, std::move(rawSources), zoomOptions);
 

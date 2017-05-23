@@ -29,7 +29,7 @@ protected:
 public:
 
     RasterSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
-                 TileSource::ZoomOptions _zoomOptions, TextureOptions _options,
+                 TextureOptions _options, TileSource::ZoomOptions _zoomOptions = {},
                  bool genMipmap = false);
 
     // TODO Is this always PNG or can it also be JPEG?

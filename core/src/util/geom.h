@@ -88,16 +88,20 @@ float signedArea(InputIt _begin, InputIt _end) {
  * If the polygon has no area, the coordinates returned are NaN.
  */
 template<class InputIt, class Vector = typename InputIt::value_type>
-Vector centroid(InputIt begin, InputIt end) {
+Vector centroid(InputIt begin, InputIt end, bool relative = true) {
+    // TODO: Implement centroid calculation relative to first coordinate in the polygon ring
     Vector centroid;
     float area = 0.f;
+
     for (auto curr = begin, prev = end - 1; curr != end; prev = curr, ++curr) {
         float a = (prev->x * curr->y - curr->x * prev->y);
         centroid.x += (prev->x + curr->x) * a;
         centroid.y += (prev->y + curr->y) * a;
         area += a;
     }
-    return centroid / (3.f * area);
+    centroid.x /= (3.f * area);
+    centroid.y /= (3.f * area);
+    return centroid;
 }
 
 template<class T>
@@ -130,9 +134,6 @@ glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosit
 glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize, bool& clipped);
 
 glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize, bool& _clipped);
-
-/* Computes the geometric center of the two dimensional region defined by the polygon */
-glm::vec2 centroid(const std::vector<std::vector<glm::vec3>>& _polygon);
 
 inline glm::vec2 rotateBy(const glm::vec2& _in, const glm::vec2& _normal) {
     return {
