@@ -94,10 +94,16 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 - (TGMapData *)addDataLayer:(NSString *)name
 {
+    return [self addDataLayer:name generateCentroid:false];
+}
+
+- (TGMapData *)addDataLayer:(NSString *)name generateCentroid:(bool)generateCentroid
+{
     if (!self.map) { return nil; }
 
     std::string dataLayerName = std::string([name UTF8String]);
-    auto source = std::make_shared<Tangram::ClientGeoJsonSource>(self.map->getPlatform(), dataLayerName, "");
+    auto source = std::make_shared<Tangram::ClientGeoJsonSource>(self.map->getPlatform(),
+                    dataLayerName, "", generateCentroid);
     self.map->addTileSource(source);
 
     TGMapData* clientData = [[TGMapData alloc] initWithMapView:self name:name source:source];
