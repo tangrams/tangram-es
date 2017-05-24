@@ -92,15 +92,22 @@ Vector centroid(InputIt begin, InputIt end, bool relative = true) {
     // TODO: Implement centroid calculation relative to first coordinate in the polygon ring
     Vector centroid;
     float area = 0.f;
+    const auto& xOffset = (relative) ? begin->x : 0.f;
+    const auto& yOffset = (relative) ? begin->y : 0.f;
 
     for (auto curr = begin, prev = end - 1; curr != end; prev = curr, ++curr) {
-        float a = (prev->x * curr->y - curr->x * prev->y);
-        centroid.x += (prev->x + curr->x) * a;
-        centroid.y += (prev->y + curr->y) * a;
+        const auto& xVal_prev = (relative) ? (prev->x - begin->x) : prev->x;
+        const auto& yVal_prev = (relative) ? (prev->y - begin->y) : prev->y;
+        const auto& xVal_curr = (relative) ? (curr->x - begin->x) : curr->x;
+        const auto& yVal_curr = (relative) ? (curr->y - begin->y) : curr->y;
+
+        float a = (xVal_prev * yVal_curr - xVal_curr * yVal_prev);
+        centroid.x += (xVal_prev + xVal_curr) * a;
+        centroid.y += (yVal_prev + yVal_curr) * a;
         area += a;
     }
-    centroid.x /= (3.f * area);
-    centroid.y /= (3.f * area);
+    centroid.x = centroid.x / (3.f * area) + xOffset;
+    centroid.y = centroid.y / (3.f * area) + yOffset;
     return centroid;
 }
 
