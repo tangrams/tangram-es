@@ -224,7 +224,9 @@ struct add_geometry {
         feature.lines.emplace_back();
         Line& line = feature.lines.back();
         for (const auto& p : geom) {
-            line.push_back(transformPoint(p));
+            auto tp = transformPoint(p);
+            if (line.size() > 0 && tp == line.back()) { continue; }
+            line.push_back(tp);
         }
         return true;
     }
@@ -235,16 +237,32 @@ struct add_geometry {
             feature.polygons.back().emplace_back();
             Line& line = feature.polygons.back().back();
             for (const auto& p : ring) {
-                line.push_back(transformPoint(p));
+                auto tp = transformPoint(p);
+                if (line.size() > 0 && tp == line.back()) { continue; }
+                line.push_back(tp);
             }
         }
         return true;
     }
 
+    bool operator()(const geometry::multi_point<int16_t>& geom) {
+        for (auto& g : geom) { (*this)(g); }
+        return true;
+    }
+
+    bool operator()(const geometry::multi_line_string<int16_t>& geom) {
+        for (auto& g : geom) { (*this)(g); }
+        return true;
+    }
+
+    bool operator()(const geometry::multi_polygon<int16_t>& geom) {
+        for (auto& g : geom) { (*this)(g); }
+        return true;
+    }
+
     template <typename T>
     bool operator()(T) {
-        // Unreachable: All multi-geometries and feature collections
-        // are split up in vector tiles.
+        // Ignore GeometryCollection
         return false;
     }
 };

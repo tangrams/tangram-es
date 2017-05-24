@@ -18,7 +18,8 @@ foreach(_ext ${IOS_EXTENSIONS_FILES})
         ${PROJECT_SOURCE_DIR}/platforms/ios/demo/src/${_ext})
 endforeach()
 
-check_mapzen_api_key()
+get_mapzen_api_key(MAPZEN_API_KEY)
+add_definitions(-DMAPZEN_API_KEY="${MAPZEN_API_KEY}")
 
 # Generate demo app configuration plist file to inject API key
 configure_file(${PROJECT_SOURCE_DIR}/platforms/ios/demo/Config.plist.in

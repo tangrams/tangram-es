@@ -34,12 +34,12 @@ set(CORE_COMPILE_DEFS PLATFORM_LINUX)
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
-check_mapzen_api_key()
-add_definitions( -DMAPZEN_API_KEY="$ENV{MAPZEN_API_KEY}" )
-
 if(APPLICATION)
 
   set(EXECUTABLE_NAME "tangram")
+
+  get_mapzen_api_key(MAPZEN_API_KEY)
+  add_definitions(-DMAPZEN_API_KEY="${MAPZEN_API_KEY}")
 
   find_package(OpenGL REQUIRED)
 
