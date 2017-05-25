@@ -68,9 +68,9 @@ public:
 
 
 RasterSource::RasterSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
-                           int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
-                           int32_t _zoomBias, TextureOptions _options, bool _genMipmap)
-    : TileSource(_name, std::move(_sources), _minDisplayZoom, _maxDisplayZoom, _maxZoom, _zoomBias),
+                           TextureOptions _options, TileSource::ZoomOptions _zoomOptions,
+                           bool _genMipmap)
+    : TileSource(_name, std::move(_sources), _zoomOptions),
       m_texOptions(_options),
       m_genMipmap(_genMipmap) {
 
@@ -178,7 +178,7 @@ void RasterSource::clearRaster(const TileID &tileID) {
         raster->clearRaster(rasterID);
     }
 
-    auto rasterID = id.withMaxSourceZoom(m_maxZoom);
+    auto rasterID = id.withMaxSourceZoom(m_zoomOptions.maxZoom);
 
     // We do not want to delete the texture reference from the
     // DS if any of the tiles is still using this as a reference

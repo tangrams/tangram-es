@@ -17,13 +17,9 @@
 namespace Tangram {
 
 TileSource::TileSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
-                       int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
-                       int32_t _zoomBias) :
+                       ZoomOptions _zoomOptions) :
     m_name(_name),
-    m_minDisplayZoom(_minDisplayZoom),
-    m_maxDisplayZoom(_maxDisplayZoom),
-    m_maxZoom(_maxZoom),
-    m_zoomBias(_zoomBias),
+    m_zoomOptions(_zoomOptions),
     m_sources(std::move(_sources)) {
 
     static std::atomic<int32_t> s_serial;
@@ -145,11 +141,11 @@ void TileSource::addRasterSource(std::shared_ptr<TileSource> _rasterSource) {
      */
     int32_t rasterMinDisplayZoom = _rasterSource->minDisplayZoom();
     int32_t rasterMaxDisplayZoom = _rasterSource->maxDisplayZoom();
-    if (rasterMinDisplayZoom > m_minDisplayZoom) {
-        m_minDisplayZoom = rasterMinDisplayZoom;
+    if (rasterMinDisplayZoom > m_zoomOptions.minDisplayZoom) {
+        m_zoomOptions.minDisplayZoom = rasterMinDisplayZoom;
     }
-    if (rasterMaxDisplayZoom < m_maxDisplayZoom) {
-        m_maxDisplayZoom = rasterMaxDisplayZoom;
+    if (rasterMaxDisplayZoom < m_zoomOptions.maxDisplayZoom) {
+        m_zoomOptions.maxDisplayZoom = rasterMaxDisplayZoom;
     }
     m_rasterSources.push_back(_rasterSource);
 }

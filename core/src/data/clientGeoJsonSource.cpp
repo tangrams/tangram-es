@@ -47,11 +47,12 @@ std::shared_ptr<TileTask> ClientGeoJsonSource::createTask(TileID _tileId, int _s
 // TODO: pass scene's resourcePath to constructor to be used with `stringFromFile`
 ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<Platform> _platform,
                                          const std::string& _name, const std::string& _url,
-                                         int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
-                                         int32_t _zoomBias)
+                                         bool _generateCentroids,
+                                         TileSource::ZoomOptions _zoomOptions)
 
-    : TileSource(_name, nullptr, _minDisplayZoom, _maxDisplayZoom, _maxZoom, _zoomBias),
-      m_platform(_platform) {
+    : TileSource(_name, nullptr, _zoomOptions),
+      m_platform(_platform),
+      m_generateCentroids(_generateCentroids) {
 
     // TODO: handle network url for client datasource data
     // TODO: generic uri handling
@@ -77,6 +78,83 @@ ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<Platform> _platform,
 
 ClientGeoJsonSource::~ClientGeoJsonSource() {}
 
+struct add_centroid {
+
+    geometry::point<double>& pt;
+
+    bool operator()(const geometry::polygon<double>& geom) {
+        if (geom.empty()) { return false; }
+        pt = centroid(geom.front().begin(), geom.front().end()-1);
+        if (isnan(pt.x) || isnan(pt.y)) {
+            return false;
+        }
+        return true;
+    }
+
+    bool operator()(const geometry::multi_polygon<double>& geom) {
+        float largestArea = 0.f;
+        size_t largestAreaIndex = 0;
+        auto size = geom.size();
+        for (size_t index = 0; index < geom.size(); index++) {
+            auto& g = geom[index];
+            if (g.empty()){
+                continue;
+            }
+            auto area = signedArea(g.front().begin(), g.front().end());
+            if (area > largestArea) {
+                largestArea = area;
+                largestAreaIndex = index;
+            }
+        }
+        return (*this)(geom[largestAreaIndex]);
+    }
+
+    template <typename T>
+    bool operator()(T) {
+        // Ignore all other geometry types
+        return false;
+    }
+};
+
+struct prop_visitor {
+    Properties& props;
+    std::string& key;
+    void operator()(std::string v) {
+        props.set(key, v);
+    }
+    void operator()(bool v) {
+        props.set(key, double(v));
+    }
+    void operator()(uint64_t v) {
+        props.set(key, double(v));
+    }
+    void operator()(int64_t v) {
+        props.set(key, double(v));
+    }
+    void operator()(double v) {
+        props.set(key, v);
+    }
+
+    template <typename T>
+    void operator()(T) {
+        // Ignore all other basic value types
+    }
+};
+
+void ClientGeoJsonSource::generateLabelCentroidFeature() {
+    for (const auto &feat : m_store->features) {
+        geometry::point<double> centroid;
+        const auto& properties = m_store->properties[feat.id.get<uint64_t>()];
+        if (geometry::geometry<double>::visit(feat.geometry, add_centroid{ centroid })) {
+            uint64_t id = m_store->features.size();
+            m_store->features.emplace_back(centroid, id);
+            m_store->properties.push_back(properties);
+            auto& props = m_store->properties.back();
+            props.set("label_placement", 1.0);
+        }
+    }
+}
+
 void ClientGeoJsonSource::addData(const std::string& _data) {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
@@ -91,22 +169,9 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
         Properties& props = m_store->properties.back();
 
         for (const auto& prop : feature.properties) {
-
-            if (prop.second.is<std::string>()) {
-                props.set(prop.first, prop.second.get<std::string>());
-
-            } else if (prop.second.is<bool>()) {
-                props.set(prop.first, double(prop.second.get<bool>()));
-
-            } else if (prop.second.is<uint64_t>()) {
-                props.set(prop.first, double(prop.second.get<uint64_t>()));
-
-            } else if (prop.second.is<int64_t>()) {
-                props.set(prop.first, double(prop.second.get<int64_t>()));
-
-            } else if (prop.second.is<double>()) {
-                props.set(prop.first, prop.second.get<double>());
-            }
+            auto key = prop.first;
+            prop_visitor visitor = {props, key};
+            mapbox::util::apply_visitor(visitor, prop.second);
         }
         feature.properties.clear();
     }
@@ -114,6 +179,10 @@ void ClientGeoJsonSource::addData(const std::string& _data) {
     m_store->features.insert(m_store->features.end(),
                              std::make_move_iterator(features.begin()),
                              std::make_move_iterator(features.end()));
+
+    if (m_generateCentroids) {
+        generateLabelCentroidFeature();
+    }
 
     m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features, options());
     m_generation++;
@@ -198,6 +267,10 @@ void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coo
 
     m_store->features.emplace_back(geom, id);
     m_store->properties.emplace_back(_tags);
+
+    if (m_generateCentroids) {
+        generateLabelCentroidFeature();
+    }
 
     m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features, options());
     m_generation++;
