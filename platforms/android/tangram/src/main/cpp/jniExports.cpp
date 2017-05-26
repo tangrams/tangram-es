@@ -535,4 +535,10 @@ extern "C" {
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         map->onMemoryWarning();
     }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetDefaultBackgroundColor(JNIEnv* jnienv, jobject obj, jlong mapPtr, jfloat r, jfloat g, jfloat b) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        map->setDefaultBackgroundColor(r, g, b);
+    }
 }
