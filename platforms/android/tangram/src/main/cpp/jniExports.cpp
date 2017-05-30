@@ -116,7 +116,7 @@ extern "C" {
         static_cast<Tangram::AndroidPlatform&>(*platform).dispose(jniEnv);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeLoadScene(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jobject updateErrorCallback, jstring path, jobjectArray updateStrings) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeLoadScene(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring path, jobjectArray updateStrings) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         const char* cPath = jniEnv->GetStringUTFChars(path, NULL);
@@ -131,10 +131,8 @@ extern "C" {
             jniEnv->DeleteLocalRef(value);
         }
 
-        auto updateErrorCallbackRef = jniEnv->NewGlobalRef(updateErrorCallback);
-        map->loadScene(resolveScenePath(cPath).c_str(), false, sceneUpdates, [updateErrorCallbackRef](auto sceneUpdateErrorStatus) {
-            Tangram::sceneUpdateErrorCallback(updateErrorCallbackRef, sceneUpdateErrorStatus);
-        });
+        Tangram::loadScene(*map, cPath, sceneUpdates);
+
         jniEnv->ReleaseStringUTFChars(path, cPath);
     }
 
@@ -521,13 +519,11 @@ extern "C" {
         map->queueSceneUpdate(sceneUpdates);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeApplySceneUpdates(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jobject updateErrorCallback) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeApplySceneUpdates(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        auto updateErrorCallbackRef = jniEnv->NewGlobalRef(updateErrorCallback);
-        map->applySceneUpdates([updateErrorCallbackRef](auto sceneUpdateErrorStatus) {
-            Tangram::sceneUpdateErrorCallback(updateErrorCallbackRef, sceneUpdateErrorStatus);
-        });
+
+        Tangram::applySceneUpdates(*map);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeOnLowMemory(JNIEnv* jnienv, jobject obj, jlong mapPtr) {

@@ -55,7 +55,7 @@ static const std::string GLOBAL_PREFIX = "global.";
 std::mutex SceneLoader::m_textureMutex;
 
 bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::shared_ptr<Scene> _scene,
-                            const std::vector<SceneUpdate>& _updates, SceneUpdateErrorCallback _onSceneUpdateError) {
+                            const std::vector<SceneUpdate>& _updates) {
 
     Importer sceneImporter;
 
@@ -65,8 +65,9 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
         return false;
     }
 
-    if (!applyUpdates(_platform, *_scene, _updates, _onSceneUpdateError)) {
+    if (!applyUpdates(_platform, *_scene, _updates)) {
         LOGW("Scene updates failed when loading scene");
+        return false;
     }
 
     // Load font resources
@@ -78,47 +79,37 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
 }
 
 bool SceneLoader::applyUpdates(const std::shared_ptr<Platform>& platform, Scene& scene,
-                               const std::vector<SceneUpdate>& updates, SceneUpdateErrorCallback onSceneUpdateError) {
+                               const std::vector<SceneUpdate>& updates) {
     auto& root = scene.config();
 
     for (const auto& update : updates) {
-        SceneUpdateError updateError;
-        bool hasError = false;
         Node value;
 
         try {
             value = YAML::Load(update.value);
-        } catch (YAML::ParserException e) {
+        } catch (const YAML::ParserException& e) {
             LOGE("Parsing scene update string failed. '%s'", e.what());
-            updateError = {update, Error::scene_update_value_yaml_syntax_error};
-            hasError = true;
+            scene.errors.push_back({update, Error::scene_update_value_yaml_syntax_error});
+            return false;
         }
 
-        if (!hasError && value) {
+        if (value) {
             try {
                 // Dummy node to trigger YAML exception on YAML syntax errors
                 auto parse = YAML::Load(update.path);
                 Node node = YamlPath(update.path).get(root);
 
                 if (node && node.Scalar().empty() && node != root) {
-                    updateError = {update, Error::scene_update_path_not_found};
-                    hasError = true;
+                    scene.errors.push_back({update, Error::scene_update_path_not_found});
+                    return false;
                 } else {
                     node = value;
                 }
-            } catch(YAML::Exception e) {
+            } catch(const YAML::Exception& e) {
                 LOGE("Parsing scene update string failed. %s '%s'", update.path.c_str(), e.what());
-                updateError = {update, Error::scene_update_path_yaml_syntax_error};
-                hasError = true;
+                scene.errors.push_back({update, Error::scene_update_path_yaml_syntax_error});
+                return false;
             }
-        }
-
-        if (hasError) {
-            if (onSceneUpdateError) {
-                onSceneUpdateError(updateError);
-            }
-
-            return false;
         }
     }
 

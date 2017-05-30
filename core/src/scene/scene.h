@@ -17,6 +17,7 @@
 #include "yaml-cpp/yaml.h"
 #include "util/yamlHelper.h"
 
+#include "map.h" // SceneError
 
 namespace Tangram {
 
@@ -139,6 +140,8 @@ public:
 
     std::atomic_ushort pendingTextures{0};
     std::atomic_ushort pendingFonts{0};
+
+    std::vector<SceneError> errors;
 
 private:
 
