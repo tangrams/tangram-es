@@ -50,6 +50,7 @@ public class MapController implements Renderer {
      * Options representing an error generated after from the map controller
      */
     public enum Error {
+        NONE,
         SCENE_UPDATE_PATH_NOT_FOUND,
         SCENE_UPDATE_PATH_YAML_SYNTAX_ERROR,
         SCENE_UPDATE_VALUE_YAML_SYNTAX_ERROR,
@@ -128,6 +129,7 @@ public class MapController implements Renderer {
     }
 
     /**
+     * @deprecated
      * Interface for a callback to received additional error information in a {@link SceneUpdateError}
      * Triggered after a call of {@link #applySceneUpdates()} or {@link #loadSceneFile(String, List<SceneUpdate>)}
      * Listener should be set with {@link #setSceneUpdateErrorListener(SceneUpdateErrorListener)}
@@ -139,6 +141,13 @@ public class MapController implements Renderer {
          * @param sceneUpdateError The  {@link SceneUpdateError} holding error informations
          */
         void onSceneUpdateError(SceneUpdateError sceneUpdateError);
+    }
+
+    public interface SceneLoadListener {
+
+        void onSceneReady();
+
+        void onSceneError(SceneUpdateError sceneUpdateError);
     }
 
     /**
@@ -284,7 +293,7 @@ public class MapController implements Renderer {
         String[] updateStrings = bundleSceneUpdates(sceneUpdates);
         scenePath = path;
         checkPointer(mapPointer);
-        nativeLoadScene(mapPointer, sceneUpdateErrorListener, path, updateStrings);
+        nativeLoadScene(mapPointer, path, updateStrings);
         removeAllMarkers();
         requestRender();
     }
@@ -732,35 +741,52 @@ public class MapController implements Renderer {
      * @param listener The {@link FeaturePickListener} to call
      */
     public void setFeaturePickListener(final FeaturePickListener listener) {
-        featurePickListener = new FeaturePickListener() {
-            @Override
-            public void onFeaturePick(final Map<String, String> properties, final float positionX, final float positionY) {
-                uiThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onFeaturePick(properties, positionX, positionY);
-                    }
-                });
-            }
-        };
+        if (listener == null) {
+            featurePickListener = null;
+        } else {
+            featurePickListener = new FeaturePickListener() {
+                @Override
+                public void onFeaturePick(final Map<String, String> properties, final float positionX, final float positionY) {
+                    uiThreadHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.onFeaturePick(properties, positionX, positionY);
+                        }
+                    });
+                }
+            };
+        }
     }
 
     /**
      * Set a listener for scene update error statuses
+     * @param listener The {@link SceneLoadListener} to call after scene has loaded
+     */
+    public void setSceneLoadListener(final SceneLoadListener listener) {
+        sceneLoadListener = listener;
+    }
+
+    /**
+     * @deprecated use setSceneLoadListener instead
+     * Set a listener for scene update error statuses
      * @param listener The {@link SceneUpdateErrorListener} to call after scene update have failed
      */
     public void setSceneUpdateErrorListener(final SceneUpdateErrorListener listener) {
-        sceneUpdateErrorListener = new SceneUpdateErrorListener() {
-            @Override
-            public void onSceneUpdateError(final SceneUpdateError sceneUpdateError) {
-                uiThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onSceneUpdateError(sceneUpdateError);
-                    }
-                });
-            }
-        };
+        if (listener == null) {
+            sceneUpdateErrorListener = null;
+        } else {
+            sceneUpdateErrorListener = new SceneUpdateErrorListener() {
+                @Override
+                public void onSceneUpdateError(final SceneUpdateError sceneUpdateError) {
+                    uiThreadHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.onSceneUpdateError(sceneUpdateError);
+                        }
+                    });
+                }
+            };
+        }
     }
 
     /**
@@ -768,17 +794,21 @@ public class MapController implements Renderer {
      * @param listener The {@link LabelPickListener} to call
      */
     public void setLabelPickListener(final LabelPickListener listener) {
-        labelPickListener = new LabelPickListener() {
-            @Override
-            public void onLabelPick(final LabelPickResult labelPickResult, final float positionX, final float positionY) {
-                uiThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onLabelPick(labelPickResult, positionX, positionY);
-                    }
-                });
-            }
-        };
+        if (listener == null) {
+            labelPickListener = null;
+        } else {
+            labelPickListener = new LabelPickListener() {
+                @Override
+                public void onLabelPick(final LabelPickResult labelPickResult, final float positionX, final float positionY) {
+                    uiThreadHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.onLabelPick(labelPickResult, positionX, positionY);
+                        }
+                    });
+                }
+            };
+        }
     }
 
     /**
@@ -786,17 +816,21 @@ public class MapController implements Renderer {
      * @param listener The {@link MarkerPickListener} to call
      */
     public void setMarkerPickListener(final MarkerPickListener listener) {
-        markerPickListener = new MarkerPickListener() {
-            @Override
-            public void onMarkerPick(final MarkerPickResult markerPickResult, final float positionX, final float positionY) {
-                uiThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onMarkerPick(markerPickResult, positionX, positionY);
-                    }
-                });
-            }
-        };
+        if (listener == null) {
+            markerPickListener = null;
+        } else {
+            markerPickListener = new MarkerPickListener() {
+                @Override
+                public void onMarkerPick(final MarkerPickResult markerPickResult, final float positionX, final float positionY) {
+                    uiThreadHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.onMarkerPick(markerPickResult, positionX, positionY);
+                        }
+                    });
+                }
+            };
+        }
     }
 
     /**
@@ -885,6 +919,10 @@ public class MapController implements Renderer {
      * @param listener The {@link ViewCompleteListener} to call when the view is complete
      */
     public void setViewCompleteListener(final ViewCompleteListener listener) {
+        if (listener == null) {
+            viewCompleteListener = null;
+            return;
+        }
         viewCompleteListener = new ViewCompleteListener() {
             @Override
             public void onViewComplete() {
@@ -946,7 +984,10 @@ public class MapController implements Renderer {
      */
     public void applySceneUpdates() {
         checkPointer(mapPointer);
-        nativeApplySceneUpdates(mapPointer, sceneUpdateErrorListener);
+
+        removeAllMarkers();
+
+        nativeApplySceneUpdates(mapPointer);
     }
 
     /**
@@ -1100,7 +1141,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeOnLowMemory(long mapPtr);
     private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
     private synchronized native void nativeDispose(long mapPtr);
-    private synchronized native void nativeLoadScene(long mapPtr, SceneUpdateErrorListener listener, String path, String[] updateStrings);
+    private synchronized native void nativeLoadScene(long mapPtr, String path, String[] updateStrings);
     private synchronized native void nativeSetupGL(long mapPtr);
     private synchronized native void nativeResize(long mapPtr, int width, int height);
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
@@ -1131,7 +1172,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
     private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String componentValue);
     private synchronized native void nativeQueueSceneUpdates(long mapPtr, String[] updateStrings);
-    private synchronized native void nativeApplySceneUpdates(long mapPtr, SceneUpdateErrorListener listener);
+    private synchronized native void nativeApplySceneUpdates(long mapPtr);
     private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
     private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
@@ -1178,6 +1219,7 @@ public class MapController implements Renderer {
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
     private FeaturePickListener featurePickListener;
+    private SceneLoadListener sceneLoadListener;
     private SceneUpdateErrorListener sceneUpdateErrorListener;
     private LabelPickListener labelPickListener;
     private MarkerPickListener markerPickListener;
@@ -1209,8 +1251,11 @@ public class MapController implements Renderer {
             nativeRender(mapPointer);
         }
 
-        if (viewComplete && viewCompleteListener != null) {
-            viewCompleteListener.onViewComplete();
+        if (viewComplete) {
+
+            if (viewCompleteListener != null) {
+                viewCompleteListener.onViewComplete();
+            }
         }
         if (frameCaptureCallback != null) {
             if (!frameCaptureAwaitCompleteView || viewComplete) {
@@ -1268,6 +1313,28 @@ public class MapController implements Renderer {
             }
         });
         return true;
+    }
+
+    // Called from JNI on worker or render-thread.
+    void sceneReadyCallback(final boolean success, final SceneUpdateError error) {
+        if (!success && sceneUpdateErrorListener != null) {
+            // TODO run on main thread
+            sceneUpdateErrorListener.onSceneUpdateError(error);
+        }
+
+        if (sceneLoadListener != null) {
+            final SceneLoadListener cb = sceneLoadListener;
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (success) {
+                        cb.onSceneReady();
+                    } else {
+                        cb.onSceneError(error);
+                    }
+                }
+            });
+        }
     }
 
     // Font Fetching

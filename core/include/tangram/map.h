@@ -65,20 +65,19 @@ struct SceneUpdate {
 };
 
 enum Error {
+    none,
     scene_update_path_not_found,
     scene_update_path_yaml_syntax_error,
     scene_update_value_yaml_syntax_error,
 };
 
-struct SceneUpdateError {
+struct SceneError {
     SceneUpdate update;
     Error error;
 };
 
-using SceneUpdateErrorCallback = std::function<void(const SceneUpdateError&)>;
-
-// Function type for a mapReady callback
-using MapReady = std::function<void(void*)>;
+// Function type for a sceneReady callback
+using SceneReadyCallback = std::function<void(bool success, const SceneError&)>;
 
 enum class EaseType : char {
     linear = 0,
@@ -99,17 +98,15 @@ public:
     // Any pending scene update will be cleared
     void loadSceneAsync(const char* _scenePath,
                         bool _useScenePosition = false,
-                        MapReady _onMapReady = nullptr,
-                        void *_onMapReadyUserData = nullptr,
-                        const std::vector<SceneUpdate>& sceneUpdates = {},
-                        SceneUpdateErrorCallback _onSceneUpdateError = nullptr);
+                        SceneReadyCallback _onSceneReady = nullptr,
+                        const std::vector<SceneUpdate>& sceneUpdates = {});
 
     // Load the scene at the given absolute file path synchronously
     // Any pending scene update will be cleared
     void loadScene(const char* _scenePath,
                    bool _useScenePosition = false,
-                   const std::vector<SceneUpdate>& sceneUpdates = {},
-                   SceneUpdateErrorCallback _onSceneUpdateError = nullptr);
+                   SceneReadyCallback _onSceneReady = nullptr,
+                   const std::vector<SceneUpdate>& sceneUpdates = {});
 
     // Request an update to the scene configuration; the path is a series of yaml keys
     // separated by a '.' and the value is a string of yaml to replace the current value
@@ -118,7 +115,7 @@ public:
     void queueSceneUpdate(const std::vector<SceneUpdate>& sceneUpdates);
 
     // Apply all previously requested scene updates
-    void applySceneUpdates(SceneUpdateErrorCallback _onSceneUpdateError = nullptr);
+    void applySceneUpdates(SceneReadyCallback _onSceneReady = nullptr);
 
     // Set an MBTiles SQLite database file for a DataSource in the scene.
     void setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath);
