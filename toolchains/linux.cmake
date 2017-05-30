@@ -31,7 +31,7 @@ add_definitions(-DTANGRAM_LINUX)
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
 add_library(platform_linux
-  ${PROJECT_SOURCE_DIR}/platforms/linux/src/platform_linux.cpp
+  ${PROJECT_SOURCE_DIR}/platforms/linux/src/linuxPlatform.cpp
   ${PROJECT_SOURCE_DIR}/platforms/common/urlClient.cpp)
 
 target_include_directories(platform_linux
@@ -67,7 +67,6 @@ if(TANGRAM_APPLICATION)
   endif()
 
   add_executable(${EXECUTABLE_NAME}
-    ${PROJECT_SOURCE_DIR}/platforms/linux/src/linuxPlatform.cpp
     ${PROJECT_SOURCE_DIR}/platforms/linux/src/main.cpp
     ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp
     ${PROJECT_SOURCE_DIR}/platforms/common/glfwApp.cpp
@@ -92,9 +91,9 @@ if(TANGRAM_APPLICATION)
 
 endif()
 
-if (HEADLESS)
+if (TANGRAM_HEADLESS)
 
-  if (USE_SYSTEM_OSMESA_LIBS)
+  if (TANGRAM_USE_SYSTEM_OSMESA_LIBS)
     include(FindPkgConfig)
     pkg_check_modules(OSMesa REQUIRED osmesa)
   else ()
@@ -119,7 +118,7 @@ if (HEADLESS)
     PUBLIC
     PLATFORM_HEADLESS=1)
 
-  if (USE_SYSTEM_OSMESA_LIBS)
+  if (TANGRAM_USE_SYSTEM_OSMESA_LIBS)
   else() # if use ExternalProject
     add_dependencies(headless_context OSMesa)
   endif()

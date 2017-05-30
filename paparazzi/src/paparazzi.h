@@ -27,13 +27,13 @@ protected:
 
     std::string m_scene;
     std::string m_apiKey;
-    double m_lat;
-    double m_lon;
-    float m_zoom;
-    float m_rotation;
-    float m_tilt;
-    int m_width;
-    int m_height;
+    double m_lat = 0.0;
+    double m_lon = 0.0;
+    float m_zoom = 0.0f;
+    float m_rotation = 0.0f;
+    float m_tilt = 0.0f;
+    int m_width = 0;
+    int m_height = 0;
 
     std::unique_ptr<Tangram::Map> m_map;
     std::unique_ptr<Tangram::HeadlessContext> m_glContext;

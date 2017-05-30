@@ -36,15 +36,7 @@ double getTime() {
     return ((unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000) * 0.001;
 }
 
-Paparazzi::Paparazzi()
-  : m_scene(""),
-    m_lat(0.0),
-    m_lon(0.0),
-    m_zoom(0.0f),
-    m_rotation(0.0f),
-    m_tilt(0.0),
-    m_width(0),
-    m_height(0) {
+Paparazzi::Paparazzi() {
 
     m_glContext = std::make_unique<HeadlessContext>();
     if (!m_glContext->init()) {
@@ -162,12 +154,12 @@ bool Paparazzi::update(int32_t _maxWaitTime) {
         delta = float(getTime() - startTime);
 
         if (bFinish) {
-            logMsg("Update: Finish!\n");
+            LOG("Update: Finish!\n");
             return true;
         }
         usleep(10000);
     }
-    logMsg("Update: Done waiting...\n");
+    LOG("Update: Done waiting...\n");
     return false;
 }
 
@@ -178,9 +170,9 @@ void Paparazzi::render(std::string& _image) {
 
     GL::finish();
 
-    stbi_write_png_to_func([](void *context, void *data, int size) {
-            static_cast<std::string*>(context)->append(static_cast<const char*>(data), size);
-        },
+    stbi_write_png_to_func(
+        [](void *context, void *data, int size) {
+            static_cast<std::string*>(context)->append(static_cast<const char*>(data), size); },
         &_image,
         m_glContext->width(),
         m_glContext->height(),
