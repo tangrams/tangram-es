@@ -32,6 +32,7 @@ RenderState::RenderState() {
     m_indexBuffer = { 0, false };
     m_program = { 0, false };
     m_clearColor = { 0., 0., 0., 0., false };
+    m_defaultOpaqueClearColor = { 0., 0., 0., false };
     m_texture = { 0, 0, false };
     m_textureUnit = { 0, false };
     m_framebuffer = { 0, false };
@@ -140,6 +141,20 @@ bool RenderState::blendingFunc(GLenum sfactor, GLenum dfactor) {
         return false;
     }
     return true;
+}
+
+void RenderState::clearDefaultOpaqueColor() {
+    if (m_defaultOpaqueClearColor.set) {
+        clearColor(m_defaultOpaqueClearColor.r, m_defaultOpaqueClearColor.g, m_defaultOpaqueClearColor.b, 1.0);
+    }
+}
+
+bool RenderState::defaultOpaqueClearColor() {
+    return m_defaultOpaqueClearColor.set;
+}
+
+void RenderState::defaultOpaqueClearColor(GLclampf r, GLclampf g, GLclampf b) {
+    m_defaultOpaqueClearColor = { r, g, b, true };
 }
 
 bool RenderState::clearColor(GLclampf r, GLclampf g, GLclampf b, GLclampf a) {

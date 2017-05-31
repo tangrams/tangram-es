@@ -18,9 +18,9 @@ class ClientGeoJsonSource : public TileSource {
 
 public:
 
-    ClientGeoJsonSource(std::shared_ptr<Platform> _platform, const std::string& _name, const std::string& _url,
-                        int32_t _minDisplayZoom = -1, int32_t _maxDisplayZoom = -1, int32_t _maxZoom = 18,
-                        int32_t _zoomBias = 0);
+    ClientGeoJsonSource(std::shared_ptr<Platform> _platform, const std::string& _name,
+            const std::string& _url, bool generateCentroids = false,
+            TileSource::ZoomOptions _zoomOptions = {});
     ~ClientGeoJsonSource();
 
     // http://www.iana.org/assignments/media-types/application/geo+json
@@ -31,6 +31,7 @@ public:
     void addPoint(const Properties& _tags, LngLat _point);
     void addLine(const Properties& _tags, const Coordinates& _line);
     void addPoly(const Properties& _tags, const std::vector<Coordinates>& _poly);
+    void generateLabelCentroidFeature();
 
     virtual void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
     std::shared_ptr<TileTask> createTask(TileID _tileId, int _subTask) override;
@@ -47,6 +48,7 @@ protected:
 
     mutable std::mutex m_mutexStore;
     bool m_hasPendingData = false;
+    bool m_generateCentroids = false;
 
     std::shared_ptr<Platform> m_platform;
 

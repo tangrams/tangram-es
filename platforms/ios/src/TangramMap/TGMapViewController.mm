@@ -94,10 +94,16 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 - (TGMapData *)addDataLayer:(NSString *)name
 {
+    return [self addDataLayer:name generateCentroid:false];
+}
+
+- (TGMapData *)addDataLayer:(NSString *)name generateCentroid:(bool)generateCentroid
+{
     if (!self.map) { return nil; }
 
     std::string dataLayerName = std::string([name UTF8String]);
-    auto source = std::make_shared<Tangram::ClientGeoJsonSource>(self.map->getPlatform(), dataLayerName, "");
+    auto source = std::make_shared<Tangram::ClientGeoJsonSource>(self.map->getPlatform(),
+                    dataLayerName, "", generateCentroid);
     self.map->addTileSource(source);
 
     TGMapData* clientData = [[TGMapData alloc] initWithMapView:self name:name source:source];
@@ -808,6 +814,16 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
     self.map->setupGL();
     self.map->setPixelScale(self.contentScaleFactor);
+
+    // Query background color set in UI designer
+    GLKView* view = (GLKView *)self.view;
+    UIColor* backgroundColor = view.backgroundColor;
+
+    if (backgroundColor != nil) {
+        CGFloat red = 0.0, green = 0.0, blue = 0.0, alpha = 0.0;
+        [backgroundColor getRed:&red green:&green blue:&blue alpha:&alpha];
+        self.map->setDefaultBackgroundColor(red, green, blue);
+    }
 }
 
 - (void)tearDownGL

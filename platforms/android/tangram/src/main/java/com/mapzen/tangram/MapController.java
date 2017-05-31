@@ -520,12 +520,27 @@ public class MapController implements Renderer {
      * object will be returned.
      */
     public MapData addDataLayer(String name) {
+        return addDataLayer(name, false);
+    }
+
+    /**
+     * Construct a collection of drawable map features.
+     * @param name The name of the data collection. Once added to a map, features from this
+     * @param generateCentroid boolean to control <a href=
+     * "https://mapzen.com/documentation/tangram/sources/#generate_label_centroids"> label centroid
+     * generation</a> for polygon geometry
+     * {@code MapData} will be available from a data source with this name, just like a data source
+     * specified in a scene file. You cannot create more than one data source with the same name.
+     * If you call {@code addDataLayer} with the same name more than once, the same {@code MapData}
+     * object will be returned.
+     */
+    public MapData addDataLayer(String name, boolean generateCentroid) {
         MapData mapData = clientTileSources.get(name);
         if (mapData != null) {
             return mapData;
         }
         checkPointer(mapPointer);
-        long pointer = nativeAddTileSource(mapPointer, name);
+        long pointer = nativeAddTileSource(mapPointer, name, generateCentroid);
         if (pointer <= 0) {
             throw new RuntimeException("Unable to create new data source");
         }
@@ -944,6 +959,16 @@ public class MapController implements Renderer {
         nativeUseCachedGlState(mapPointer, use);
     }
 
+    /**
+     * Sets an opaque background color used as default color when a scene is being loaded
+     * @param red red component of the background color
+     * @param green green component of the background color
+     * @param blue blue component of the background color
+     */
+    public void setDefaultBackgroundColor(float red, float green, float blue) {
+        checkPointer(mapPointer);
+        nativeSetDefaultBackgroundColor(mapPointer, red, green, blue);
+    }
 
     // Package private methods
     // =======================
@@ -1127,10 +1152,12 @@ public class MapController implements Renderer {
     private synchronized native void nativeUseCachedGlState(long mapPtr, boolean use);
     private synchronized native void nativeCaptureSnapshot(long mapPtr, int[] buffer);
 
+    private synchronized native void nativeSetDefaultBackgroundColor(long mapPtr, float r, float g, float b);
+
     private native void nativeOnUrlSuccess(byte[] rawDataBytes, long callbackPtr);
     private native void nativeOnUrlFailure(long callbackPtr);
 
-    synchronized native long nativeAddTileSource(long mapPtr, String name);
+    synchronized native long nativeAddTileSource(long mapPtr, String name, boolean generateCentroid);
     synchronized native void nativeRemoveTileSource(long mapPtr, long sourcePtr);
     synchronized native void nativeClearTileSource(long mapPtr, long sourcePtr);
     synchronized native void nativeAddFeature(long mapPtr, long sourcePtr, double[] coordinates, int[] rings, String[] properties);

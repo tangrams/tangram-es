@@ -38,10 +38,12 @@ void FrameBuffer::apply(RenderState& _rs, GLuint _handle, glm::vec2 _viewport, g
     _rs.framebuffer(_handle);
     _rs.viewport(0, 0, _viewport.x, _viewport.y);
 
-    _rs.clearColor(_clearColor.r / 255.f,
-                   _clearColor.g / 255.f,
-                   _clearColor.b / 255.f,
-                   _clearColor.a / 255.f);
+    if (_clearColor == glm::vec4(0.0) && _rs.defaultOpaqueClearColor()) {
+        _rs.clearDefaultOpaqueColor();
+    } else {
+        _clearColor /= 255.f;
+        _rs.clearColor(_clearColor.r, _clearColor.g, _clearColor.b, _clearColor.a);
+    }
 
     // Enable depth testing
     _rs.depthMask(GL_TRUE);

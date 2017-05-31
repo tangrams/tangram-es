@@ -88,16 +88,27 @@ float signedArea(InputIt _begin, InputIt _end) {
  * If the polygon has no area, the coordinates returned are NaN.
  */
 template<class InputIt, class Vector = typename InputIt::value_type>
-Vector centroid(InputIt begin, InputIt end) {
+Vector centroid(InputIt begin, InputIt end, bool relative = true) {
+    // TODO: Implement centroid calculation relative to first coordinate in the polygon ring
     Vector centroid;
     float area = 0.f;
+    const auto& xOffset = (relative) ? begin->x : 0.f;
+    const auto& yOffset = (relative) ? begin->y : 0.f;
+
     for (auto curr = begin, prev = end - 1; curr != end; prev = curr, ++curr) {
-        float a = (prev->x * curr->y - curr->x * prev->y);
-        centroid.x += (prev->x + curr->x) * a;
-        centroid.y += (prev->y + curr->y) * a;
+        const auto& xVal_prev = (relative) ? (prev->x - begin->x) : prev->x;
+        const auto& yVal_prev = (relative) ? (prev->y - begin->y) : prev->y;
+        const auto& xVal_curr = (relative) ? (curr->x - begin->x) : curr->x;
+        const auto& yVal_curr = (relative) ? (curr->y - begin->y) : curr->y;
+
+        float a = (xVal_prev * yVal_curr - xVal_curr * yVal_prev);
+        centroid.x += (xVal_prev + xVal_curr) * a;
+        centroid.y += (yVal_prev + yVal_curr) * a;
         area += a;
     }
-    return centroid / (3.f * area);
+    centroid.x = centroid.x / (3.f * area) + xOffset;
+    centroid.y = centroid.y / (3.f * area) + yOffset;
+    return centroid;
 }
 
 template<class T>
@@ -130,9 +141,6 @@ glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosit
 glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize, bool& clipped);
 
 glm::vec2 worldToScreenSpace(const glm::mat4& _mvp, const glm::vec4& _worldPosition, const glm::vec2& _screenSize, bool& _clipped);
-
-/* Computes the geometric center of the two dimensional region defined by the polygon */
-glm::vec2 centroid(const std::vector<std::vector<glm::vec3>>& _polygon);
 
 inline glm::vec2 rotateBy(const glm::vec2& _in, const glm::vec2& _normal) {
     return {

@@ -356,6 +356,22 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable TGMapData *)addDataLayer:(NSString *)name;
 
 /**
+ Adds a named data layer to the map. See `TGMapData` for more details.
+ Refer <a href="https://mapzen.com/documentation/tangram/sources/#generate_label_centroids">label 
+ centroid generation</a> documentation for adding a centroid point for label placement for polygon 
+ geometry.
+
+ @param name the name of the data layer.
+ @param generateCentroid boolean to control label centroid generation for polygon geometry.
+
+ @return the map data, nil if the data source can't be initialized
+
+ @note You cannot create more than one data source with the same name, otherwise the same
+ object will be returned.
+ */
+- (nullable TGMapData *)addDataLayer:(NSString *)name generateCentroid:(bool)generateCentroid;
+
+/**
  Asks to capture a screenshot of the map view buffer.
 
  A delegate should be set to the map view and `-[TGMapViewDelegate didCaptureScreenshot:view:screenshot]`

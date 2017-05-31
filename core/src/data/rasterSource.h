@@ -29,8 +29,8 @@ protected:
 public:
 
     RasterSource(const std::string& _name, std::unique_ptr<DataSource> _sources,
-                 int32_t _minDisplayZoom, int32_t _maxDisplayZoom, int32_t _maxZoom,
-                 int32_t _zoomBias, TextureOptions _options, bool genMipmap = false);
+                 TextureOptions _options, TileSource::ZoomOptions _zoomOptions = {},
+                 bool genMipmap = false);
 
     // TODO Is this always PNG or can it also be JPEG?
     virtual const char* mimeType() const override { return "image/png"; };
