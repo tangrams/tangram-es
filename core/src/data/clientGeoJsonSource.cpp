@@ -51,8 +51,8 @@ ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<Platform> _platform,
                                          TileSource::ZoomOptions _zoomOptions)
 
     : TileSource(_name, nullptr, _zoomOptions),
-      m_platform(_platform),
-      m_generateCentroids(_generateCentroids) {
+      m_generateCentroids(_generateCentroids),
+      m_platform(_platform) {
 
     // TODO: handle network url for client datasource data
     // TODO: generic uri handling
@@ -85,7 +85,7 @@ struct add_centroid {
     bool operator()(const geometry::polygon<double>& geom) {
         if (geom.empty()) { return false; }
         pt = centroid(geom.front().begin(), geom.front().end()-1);
-        if (isnan(pt.x) || isnan(pt.y)) {
+        if (std::isnan(pt.x) || std::isnan(pt.y)) {
             return false;
         }
         return true;
@@ -94,7 +94,6 @@ struct add_centroid {
     bool operator()(const geometry::multi_polygon<double>& geom) {
         float largestArea = 0.f;
         size_t largestAreaIndex = 0;
-        auto size = geom.size();
         for (size_t index = 0; index < geom.size(); index++) {
             auto& g = geom[index];
             if (g.empty()){
