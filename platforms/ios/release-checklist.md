@@ -5,19 +5,40 @@
 - Have cocoapods installed
 - Have ownership privileges to update the cocoapods trunk spec
 
-## Steps
-1. Update the version tag `${FRAMEWORK_VERSION}` that gets injected through CMake to the .plist file
-of the framework for the release you're doing. Submit this as a PR for release.
-2. Build the iOS universal framework for release ( `make clean  && make ios-framework-universal RELEASE=1` ).
-3. Take the *universal* framework file and copy it into a branch on the framework holding repo
-(https://github.com/tangrams/ios-framework). Submit this for PR following the convention seen in other
-PRs for release notes ( https://github.com/tangrams/ios-framework/pull/17 )
-4. Once #5's PR merges to master, tag the release with the same version number as #2.
-5. Update the Tangram-es.podspec file version number with that same tag, and run `pod spec lint` to
-make sure everything is happy. Fix issues if not happy (eventually we should document known possible
-issues). Submit to PR once lint is clean.
-6. Once #6 PR merges, push the updated pod spec to trunk: `pod trunk push Tangram-es.podspec`
-7. Submit a PR to increment the version number for #1's plist file. We add `-dev` to the end of the
-version numbers while in development.
-8. Before publishing the Tangram release, add the zipped version of both Debug and Release flavors
-to the Download attachments of the release.
+Steps to release the Tangram ES iOS Framework to Cocoapods:
+
+### 1. Prepare release commit
+Remove `-dev` from the version number in `iOS.framework.cmake`:
+```
+set(FRAMEWORK_VERSION "1.0.0")
+```
+And increment the version number in `Tangram-es.podspec`:
+```
+s.version = '1.0.0'
+```
+Commit and push to master.
+
+### 2. Tag release commit
+Tag the commit with the release version and push the tag to GitHub.
+```
+$ git tag 1.0.0
+$ git push origin 1.0.0
+```
+
+### 3. Prepare next development cycle
+Increment the version and restore `-dev` to the version number in `iOS.framework.cmake`:
+```
+set(FRAMEWORK_VERSION "1.0.1-dev")
+```
+Commit and push to master.
+
+### 4. Push framework to CocoaPods
+Once [CircleCI](https://circleci.com/gh/tangrams/tangram-es) completes the tag build, run `pod spec lint` in the directory containing `Tangram-es.podspec` to validate the Podspec.
+
+Push the podspec to trunk:
+```
+pod trunk push Tangram-es.podspec
+```
+
+### 5. Document release
+Document release notes at https://github.com/tangrams/tangram-es/releases.
