@@ -23,6 +23,8 @@ deployment:
       # Build the framework in debug mode and package it into pod.zip
       - make ios DEBUG=1
       - cd build/ios-framework-universal/Debug/ && zip -r ${CIRCLE_ARTIFACTS}/pod.zip TangramMap.framework
+      # Add the readme file.
+      - cd platforms/ios/framework/ && zip ${CIRCLE_ARTIFACTS}/pod.zip README.md
       # Add the license file.
       - zip ${CIRCLE_ARTIFACTS}/pod.zip LICENSE
       # Upload the Cocoapods archive to S3.
@@ -36,6 +38,8 @@ deployment:
       # Build the framework in release mode and package it into pod.zip
       - make ios RELEASE=1
       - cd build/ios-framework-universal/Release/ && zip -r ${CIRCLE_ARTIFACTS}/pod.zip TangramMap.framework
+      # Add the readme file.
+      - cd platforms/ios/framework/ && zip ${CIRCLE_ARTIFACTS}/pod.zip README.md
       # Add the license file.
       - zip ${CIRCLE_ARTIFACTS}/pod.zip LICENSE
       # Upload the Cocoapods archive to S3.
