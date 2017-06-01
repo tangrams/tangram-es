@@ -21,7 +21,8 @@ deployment:
     branch: master
     commands:
       # Build the framework in debug mode and package it into pod.zip
-      - make ios DEBUG=1
+      - make clean-ios
+      - make ios-framework-universal DEBUG=1
       - cd build/ios-framework-universal/Debug/ && zip -r ${CIRCLE_ARTIFACTS}/pod.zip TangramMap.framework
       # Add the readme file.
       - cd platforms/ios/framework/ && zip ${CIRCLE_ARTIFACTS}/pod.zip README.md
@@ -36,7 +37,8 @@ deployment:
     owner: tangrams
     commands:
       # Build the framework in release mode and package it into pod.zip
-      - make ios RELEASE=1
+      - make clean-ios
+      - make ios-framework-universal RELEASE=1
       - cd build/ios-framework-universal/Release/ && zip -r ${CIRCLE_ARTIFACTS}/pod.zip TangramMap.framework
       # Add the readme file.
       - cd platforms/ios/framework/ && zip ${CIRCLE_ARTIFACTS}/pod.zip README.md
