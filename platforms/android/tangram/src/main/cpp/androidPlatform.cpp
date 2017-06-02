@@ -455,7 +455,7 @@ void initGLExtensions() {
     glExtensionsLoaded = true;
 }
     
-void AndroidPlatform::sceneReadyCallback(SceneID id, Scenebool success, const SceneError& sceneError) {
+void AndroidPlatform::sceneReadyCallback(SceneID id, bool success, const SceneError& sceneError) {
 
     JniThreadBinding jniEnv(jvm);
 

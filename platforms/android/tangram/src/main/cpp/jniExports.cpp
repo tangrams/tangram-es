@@ -104,8 +104,8 @@ extern "C" {
         auto platform = std::make_shared<Tangram::AndroidPlatform>(jniEnv, assetManager, tangramInstance);
         auto map = new Tangram::Map(platform);
 
-        map->setSceneReadyListener([platform](bool success, const Tangram::SceneError& error) {
-                platform->sceneReadyCallback(success, error);
+        map->setSceneReadyListener([platform](Tangram::SceneID id, bool success, const Tangram::SceneError& error) {
+                platform->sceneReadyCallback(id, success, error);
             });
         return reinterpret_cast<jlong>(map);
     }
@@ -137,7 +137,7 @@ extern "C" {
             jniEnv->DeleteLocalRef(value);
         }
 
-        jint sceneId = map->loadScene(resolveScenePath(cPath).c_str(), false, sceneUpdates);
+        jint sceneId = map->loadSceneAsync(resolveScenePath(cPath).c_str(), false, sceneUpdates);
 
         jniEnv->ReleaseStringUTFChars(path, cPath);
 

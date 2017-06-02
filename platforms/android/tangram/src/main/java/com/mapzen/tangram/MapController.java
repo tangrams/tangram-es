@@ -27,6 +27,7 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public class MapController implements Renderer {
 
+
     /**
      * Options for interpolating map parameters
      */
@@ -286,21 +287,23 @@ public class MapController implements Renderer {
         });
     }
 
-    static MapController getInstance(GLSurfaceView view) {
-        return new MapController(view);
-    }
 
     /**
-     * Load a new scene file
+     * Load a new scene file.
+     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
+     * ready.
      * @param path Location of the YAML scene file within the application assets
+     * @return Scene ID
      */
     public int loadSceneFile(String path) {
         return loadSceneFile(path, null);
     }
 
     /**
-     * Load a new scene file
+     * Load a new scene file asynchronously.
      * If scene updates triggers an error, they won't be applied.
+     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
+     * ready.
      * @param path Location of the YAML scene file within the application assets
      * @param sceneUpdates List of {@code SceneUpdate}
      * @return Scene ID
@@ -783,6 +786,10 @@ public class MapController implements Renderer {
         sceneLoadListener = listener;
     }
 
+    void setMapReadyCallback(MapView.OnMapReadyCallback callback) {
+        mapReadyCallback = callback;
+    }
+
     /**
      * @deprecated use setSceneLoadListener instead
      * Set a listener for scene update error statuses
@@ -997,7 +1004,9 @@ public class MapController implements Renderer {
 
     /**
      * Apply updates queued by queueSceneUpdate; this empties the current queue of updates
-     * If a scene update is triggered, scene updates won't be applied.
+     * If a updates trigger an error, scene updates won't be applied.
+     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
+     * ready.
      * @return Scene ID
      */
     public int applySceneUpdates() {
@@ -1238,6 +1247,7 @@ public class MapController implements Renderer {
     private HttpHandler httpHandler;
     private FeaturePickListener featurePickListener;
     private SceneLoadListener sceneLoadListener;
+    private MapView.OnMapReadyCallback mapReadyCallback;
     private SceneUpdateErrorListener sceneUpdateErrorListener;
     private LabelPickListener labelPickListener;
     private MarkerPickListener markerPickListener;
@@ -1340,8 +1350,8 @@ public class MapController implements Renderer {
             sceneUpdateErrorListener.onSceneUpdateError(error);
         }
 
-        if (sceneLoadListener != null) {
-            final SceneLoadListener cb = sceneLoadListener;
+        final SceneLoadListener cb = sceneLoadListener;
+        if (cb != null) {
             uiThreadHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -1350,6 +1360,18 @@ public class MapController implements Renderer {
                     } else {
                         cb.onSceneError(sceneId, error);
                     }
+                }
+            });
+        }
+
+        final MapView.OnMapReadyCallback readyCb = mapReadyCallback;
+        mapReadyCallback = null;
+
+        if (readyCb != null) {
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    readyCb.onMapReady(MapController.this);
                 }
             });
         }

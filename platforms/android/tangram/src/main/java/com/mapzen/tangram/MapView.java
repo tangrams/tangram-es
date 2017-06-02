@@ -18,22 +18,26 @@ public class MapView extends FrameLayout {
 
     protected GLSurfaceView glSurfaceView;
     protected MapController mapController;
-    protected AsyncTask<Void, Void, Boolean> getMapTask;
 
     public MapView(Context context) {
-
         super(context);
-
         configureGLSurfaceView();
-
     }
 
     public MapView(Context context, AttributeSet attrs) {
-
         super(context, attrs);
-
         configureGLSurfaceView();
+    }
 
+    public MapController getMap(MapController.SceneLoadListener listener) {
+        if (mapController != null) {
+            return mapController;
+        }
+        mapController = getMapInstance();
+        mapController.setSceneLoadListener(listener);
+        mapController.init();
+
+        return mapController;
     }
 
     /**
@@ -72,39 +76,19 @@ public class MapView extends FrameLayout {
                             @NonNull final String sceneFilePath,
                             final List<SceneUpdate> sceneUpdates) {
 
-        disposeTask();
+        if (mapController != null) {
+            throw new RuntimeException("MapController already initialized");
+        }
 
-        final MapController mapInstance = getMapInstance();
-
-        getMapTask = new AsyncTask<Void, Void, Boolean>() {
-
-            @Override
-            @SuppressWarnings("WrongThread")
-            protected Boolean doInBackground(Void... params) {
-                mapInstance.init();
-                mapInstance.loadSceneFile(sceneFilePath, sceneUpdates);
-                return true;
-            }
-
-            @Override
-            protected void onPostExecute(Boolean ok) {
-                addView(glSurfaceView);
-                disposeMap();
-                mapController = mapInstance;
-                callback.onMapReady(mapController);
-            }
-
-            @Override
-            protected void onCancelled(Boolean ok) {
-                mapInstance.dispose();
-            }
-
-        }.execute();
+        mapController = getMapInstance();
+        mapController.setMapReadyCallback(callback);
+        mapController.init();
+        mapController.loadSceneFile(sceneFilePath, sceneUpdates);
 
     }
 
     protected MapController getMapInstance() {
-        return MapController.getInstance(glSurfaceView);
+        return new MapController(glSurfaceView);
     }
 
     protected void configureGLSurfaceView() {
@@ -113,17 +97,7 @@ public class MapView extends FrameLayout {
         glSurfaceView.setEGLContextClientVersion(2);
         glSurfaceView.setPreserveEGLContextOnPause(true);
         glSurfaceView.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 0, 16, 0));
-
-    }
-
-    protected void disposeTask() {
-
-        if (getMapTask != null) {
-            // MapController is being initialized, so we'll dispose it in the onCancelled callback.
-            getMapTask.cancel(true);
-        }
-        getMapTask = null;
-
+        addView(glSurfaceView);
     }
 
     protected void disposeMap() {
@@ -162,7 +136,6 @@ public class MapView extends FrameLayout {
      */
     public void onDestroy() {
 
-        disposeTask();
         disposeMap();
 
     }

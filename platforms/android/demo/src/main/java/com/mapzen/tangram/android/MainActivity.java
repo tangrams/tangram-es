@@ -34,8 +34,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, TapResponder,
-        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener, SceneUpdateErrorListener {
+public class MainActivity extends AppCompatActivity implements MapController.SceneLoadListener, TapResponder,
+        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener {
 
     private static final String MAPZEN_API_KEY = BuildConfig.MAPZEN_API_KEY;
 
@@ -96,7 +96,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // set previously we want to apply it again. The text is restored in onRestoreInstanceState,
         // which occurs after onCreate and onStart, but before onPostCreate, so we get the URL here.
         String sceneUrl = sceneSelector.getCurrentString();
-        view.getMapAsync(this, sceneUrl, sceneUpdates);
+
+        map = view.getMap(this);
+        map.loadSceneFile(sceneUrl, sceneUpdates);
+
+        map.setZoom(16);
+        map.setPosition(new LngLat(-74.00976419448854, 40.70532700869127));
+        map.setHttpHandler(getHttpHandler());
+        map.setTapResponder(this);
+        map.setDoubleTapResponder(this);
+        map.setLongPressResponder(this);
+        map.setFeaturePickListener(this);
+        map.setLabelPickListener(this);
+        map.setMarkerPickListener(this);
+
+        map.setViewCompleteListener(new ViewCompleteListener() {
+            public void onViewComplete() {
+                Log.d("Tangram", "View complete");
+            }});
+
+        markers = map.addDataLayer("touch");
     }
 
     @Override
@@ -125,24 +144,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     @Override
-    public void onMapReady(MapController mapController) {
-        map = mapController;
-        map.setZoom(16);
-        map.setPosition(new LngLat(-74.00976419448854, 40.70532700869127));
-        map.setHttpHandler(getHttpHandler());
-        map.setTapResponder(this);
-        map.setDoubleTapResponder(this);
-        map.setLongPressResponder(this);
-        map.setFeaturePickListener(this);
-        map.setLabelPickListener(this);
-        map.setMarkerPickListener(this);
-        map.setSceneUpdateErrorListener(this);
+    public void onSceneReady(int sceneId) {
+        Log.d("Tangram", "onSceneReady!");
+    }
 
-        map.setViewCompleteListener(new ViewCompleteListener() {
-                public void onViewComplete() {
-                    Log.d("Tangram", "View complete");
-                }});
-        markers = map.addDataLayer("touch");
+    @Override
+    public void onSceneError(int sceneId, SceneUpdateError sceneUpdateError) {
+        Log.d("Tangram", "Scene update errors "
+                + sceneUpdateError.getSceneUpdate().toString()
+                + " " + sceneUpdateError.getError().toString());
     }
 
     HttpHandler getHttpHandler() {
@@ -256,11 +266,5 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Toast.makeText(getApplicationContext(), "Selected Marker: " + message, Toast.LENGTH_SHORT).show();
     }
 
-    @Override
-    public void onSceneUpdateError(SceneUpdateError sceneUpdateError) {
-        Log.d("Tangram", "Scene update errors "
-                + sceneUpdateError.getSceneUpdate().toString()
-                + " " + sceneUpdateError.getError().toString());
-    }
 }
 
