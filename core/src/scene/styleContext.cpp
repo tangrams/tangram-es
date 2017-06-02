@@ -357,6 +357,8 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
 
         switch (_key) {
             case StyleParamKey::text_source:
+            case StyleParamKey::text_source_left:
+            case StyleParamKey::text_source_right:
                 _val = value;
                 break;
             default:
