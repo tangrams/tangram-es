@@ -32,10 +32,14 @@ public:
     bool remove(MarkerID markerID);
 
     // Set the styling for a marker using a YAML string; returns true if the marker was found and updated.
-    bool setStylingFromString(MarkerID markerID, const char* styling);
+    bool setStylingFromString(MarkerID markerID, const char* styling) {
+        return setStyling(markerID, styling, false);
+    }
 
     // Set the styling for a marker using a scene path; returns true is the marker was found and update.
-    bool setStylingFromPath(MarkerID markerID, const char* path);
+    bool setStylingFromPath(MarkerID markerID, const char* path) {
+        return setStyling(markerID, path, true);
+    }
 
     bool setBitmap(MarkerID markerID, int width, int height, const unsigned int* bitmapData);
 
@@ -77,6 +81,7 @@ private:
 
     Marker* getMarkerOrNull(MarkerID markerID);
 
+    bool setStyling(MarkerID markerID, const char* styling, bool isPath);
     bool buildStyling(Marker& marker);
     bool buildGeometry(Marker& marker, int zoom);
 

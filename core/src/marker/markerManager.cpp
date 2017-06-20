@@ -60,26 +60,11 @@ bool MarkerManager::remove(MarkerID markerID) {
     return false;
 }
 
-bool MarkerManager::setStylingFromString(MarkerID markerID, const char* styling) {
+bool MarkerManager::setStyling(MarkerID markerID, const char* styling, bool isPath) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
-    marker->setStyling(std::string(styling), false);
-
-    // Create a draw rule from the styling string.
-    if (!buildStyling(*marker)) { return false; }
-
-    // Build the feature mesh for the marker's current geometry.
-    buildGeometry(*marker, m_zoom);
-
-    return true;
-}
-
-bool MarkerManager::setStylingFromPath(MarkerID markerID, const char* path) {
-    Marker* marker = getMarkerOrNull(markerID);
-    if (!marker) { return false; }
-
-    marker->setStyling(std::string(path), true);
+    marker->setStyling(std::string(styling), isPath);
 
     // Create a draw rule from the styling string.
     if (!buildStyling(*marker)) { return false; }
@@ -374,7 +359,7 @@ bool MarkerManager::buildStyling(Marker& marker) {
         YAML::Node node = YAML::Load(markerStyling.string);
         // Parse style parameters from the YAML node.
         SceneLoader::parseStyleParams(node, m_scene, "", params);
-    } catch (YAML::Exception e) {
+    } catch (const YAML::Exception& e) {
         LOG("Invalid marker styling '%s', %s", markerStyling.string.c_str(), e.what());
         return false;
     }
