@@ -684,12 +684,18 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     }
 
     CGFloat scale = pinchRecognizer.scale;
-    [pinchRecognizer setScale:1.0];
-    self.map->handlePinchGesture(location.x * self.contentScaleFactor, location.y * self.contentScaleFactor, scale, pinchRecognizer.velocity);
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(pinchFocus:recognizer:)]) {
+        CGPoint focusPosition = [self.gestureDelegate pinchFocus:self recognizer:pinchRecognizer];
+        self.map->handlePinchGesture(focusPosition.x * self.contentScaleFactor, focusPosition.y * self.contentScaleFactor, scale, pinchRecognizer.velocity);
+    } else {
+        self.map->handlePinchGesture(location.x * self.contentScaleFactor, location.y * self.contentScaleFactor, scale, pinchRecognizer.velocity);
+    }
 
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizePinchGesture:)]) {
         [self.gestureDelegate mapView:self recognizer:pinchRecognizer didRecognizePinchGesture:location];
     }
+
+    [pinchRecognizer setScale:1.0];
 }
 
 - (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer
@@ -702,12 +708,18 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     }
 
     CGFloat rotation = rotationRecognizer.rotation;
-    [rotationRecognizer setRotation:0.0];
-    self.map->handleRotateGesture(position.x * self.contentScaleFactor, position.y * self.contentScaleFactor, rotation);
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(rotationFocus:recognizer:)]) {
+        CGPoint focusPosition = [self.gestureDelegate rotationFocus:self recognizer:rotationRecognizer];
+        self.map->handleRotateGesture(focusPosition.x * self.contentScaleFactor, focusPosition.y * self.contentScaleFactor, rotation);
+    } else {
+        self.map->handleRotateGesture(position.x * self.contentScaleFactor, position.y * self.contentScaleFactor, rotation);
+    }
 
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeRotationGesture:)]) {
         [self.gestureDelegate mapView:self recognizer:rotationRecognizer didRecognizeRotationGesture:position];
     }
+
+    [rotationRecognizer setRotation:0.0];
 }
 
 - (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer
