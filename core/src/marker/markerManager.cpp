@@ -418,8 +418,6 @@ bool MarkerManager::buildGeometry(Marker& marker, int zoom) {
     marker.setSelectionColor(selectionColor);
     marker.setMesh(styler->style().getID(), zoom, styler->build());
 
-    setVisible(marker.id(), marker.isVisible());
-
     return true;
 }
 
