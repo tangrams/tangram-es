@@ -113,6 +113,6 @@ NS_ASSUME_NONNULL_END
  @note The internal marker error will remain until you access it,
  make sure to check for errors on the marker after critical API calls or property access.
  */
-- (BOOL)getError:(NSError**)error;
+- (BOOL)getError:(NSError* _Nullable * _Nullable)error;
 
 @end
