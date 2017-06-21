@@ -56,13 +56,9 @@ if(APPLICATION)
     add_subdirectory(${PROJECT_SOURCE_DIR}/platforms/common/glfw)
   endif()
 
-  # add sources and include headers
-  find_sources_and_include_directories(
-    ${PROJECT_SOURCE_DIR}/platforms/linux/src/*.h
-    ${PROJECT_SOURCE_DIR}/platforms/linux/src/*.cpp)
-
   add_executable(${EXECUTABLE_NAME}
-    ${SOURCES}
+    ${PROJECT_SOURCE_DIR}/platforms/linux/src/linuxPlatform.cpp
+    ${PROJECT_SOURCE_DIR}/platforms/linux/src/main.cpp
     ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp
     ${PROJECT_SOURCE_DIR}/platforms/common/urlClient.cpp
     ${PROJECT_SOURCE_DIR}/platforms/common/glfwApp.cpp

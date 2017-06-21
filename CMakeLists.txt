@@ -78,7 +78,7 @@ include(${CMAKE_TARGET_FILE})
 
 if(BENCHMARK OR UNIT_TESTS)
     add_library(platform_mock
-        ${PROJECT_SOURCE_DIR}/tests/src/platform_mock.cpp
+        ${PROJECT_SOURCE_DIR}/tests/src/mockPlatform.cpp
         ${PROJECT_SOURCE_DIR}/tests/src/gl_mock.cpp)
 
     target_include_directories(platform_mock

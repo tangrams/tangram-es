@@ -36,17 +36,14 @@ if(APPLICATION)
     add_subdirectory(${PROJECT_SOURCE_DIR}/platforms/common/glfw)
   endif()
 
-  # add sources and include headers
-  set(OSX_EXTENSIONS_FILES *.mm *.cpp)
-  foreach(_ext ${OSX_EXTENSIONS_FILES})
-    find_sources_and_include_directories(
-      ${PROJECT_SOURCE_DIR}/platforms/osx/src/*.h
-      ${PROJECT_SOURCE_DIR}/platforms/osx/src/${_ext})
-  endforeach()
-
   add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes" "Resources")
 
-  set(SOURCES ${SOURCES} ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp ${PROJECT_SOURCE_DIR}/platforms/common/glfwApp.cpp)
+  set(SOURCES
+    ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp
+    ${PROJECT_SOURCE_DIR}/platforms/common/glfwApp.cpp
+    ${PROJECT_SOURCE_DIR}/platforms/osx/src/main.mm
+    ${PROJECT_SOURCE_DIR}/platforms/osx/src/osxPlatform.mm
+    )
 
   add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES} ${OSX_RESOURCES})
 

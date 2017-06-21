@@ -1,7 +1,7 @@
 #include "glfwApp.h"
+#include "linuxPlatform.h"
 #include "log.h"
 #include "map.h"
-#include "platform_linux.h"
 #include <memory>
 #include <signal.h>
 #include <stdlib.h>

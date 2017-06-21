@@ -7,7 +7,7 @@
 #import "TGMapViewController.h"
 #import "TGFontConverter.h"
 #import "TGHttpHandler.h"
-#import "platform_ios.h"
+#import "iosPlatform.h"
 #import "log.h"
 
 namespace Tangram {
@@ -133,7 +133,7 @@ std::vector<FontSourceHandle> iOSPlatform::systemFontFallbacksHandle() const {
     std::vector<FontSourceHandle> handles;
 
     for (NSString* fallback in fallbacks) {
-    
+
         if (!allowedFamily(fallback)) { continue; }
 
         for (NSString* fontName in [UIFont fontNamesForFamilyName:fallback]) {

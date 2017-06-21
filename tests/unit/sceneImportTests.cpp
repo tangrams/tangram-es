@@ -1,11 +1,12 @@
 #include "catch.hpp"
 
-#include <iostream>
-#include <vector>
+#include "mockPlatform.h"
+#include "scene/importer.h"
 
 #include "yaml-cpp/yaml.h"
-#include "platform_mock.h"
-#include "scene/importer.h"
+
+#include <iostream>
+#include <vector>
 
 using namespace Tangram;
 using namespace YAML;

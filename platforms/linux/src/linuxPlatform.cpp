@@ -1,4 +1,4 @@
-#include "platform_linux.h"
+#include "linuxPlatform.h"
 #include "gl/hardware.h"
 #include "log.h"
 #include <stdio.h>

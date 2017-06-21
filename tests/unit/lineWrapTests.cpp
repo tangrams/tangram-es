@@ -1,6 +1,6 @@
 #include "catch.hpp"
 #include "map.h"
-#include "platform_mock.h"
+#include "mockPlatform.h"
 #include "style/textStyleBuilder.h"
 
 #include <memory>

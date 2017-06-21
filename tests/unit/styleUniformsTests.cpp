@@ -1,18 +1,19 @@
 #include "catch.hpp"
 
+#include "log.h"
+#include "mockPlatform.h"
+#include "scene/filters.h"
+#include "scene/importer.h"
+#include "scene/scene.h"
+#include "scene/sceneLoader.h"
+#include "util/variant.h"
+
+#include "yaml-cpp/yaml.h"
+
 #include <iostream>
 #include <vector>
 #include <string>
 #include <unordered_map>
-
-#include "yaml-cpp/yaml.h"
-#include "scene/filters.h"
-#include "scene/importer.h"
-#include "scene/sceneLoader.h"
-#include "scene/scene.h"
-#include "util/variant.h"
-#include "platform_mock.h"
-#include "log.h"
 
 using namespace Tangram;
 using YAML::Node;

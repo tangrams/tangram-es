@@ -1,6 +1,6 @@
 #ifdef PLATFORM_ANDROID
 
-#include "platform_android.h"
+#include "androidPlatform.h"
 
 #include "data/properties.h"
 #include "data/propertyItem.h"

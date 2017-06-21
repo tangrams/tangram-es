@@ -15,8 +15,8 @@
 #import "TGMarker+Internal.h"
 #import "TGHelpers.h"
 #import "data/propertyItem.h"
+#import "iosPlatform.h"
 #import "map.h"
-#import "platform_ios.h"
 
 #import <unordered_map>
 #import <functional>

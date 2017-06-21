@@ -1,7 +1,7 @@
 #include "glfwApp.h"
 #include "log.h"
 #include "map.h"
-#include "platform_osx.h"
+#include "osxPlatform.h"
 #include <memory>
 #include <signal.h>
 #include <stdlib.h>

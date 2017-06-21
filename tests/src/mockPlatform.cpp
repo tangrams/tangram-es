@@ -1,4 +1,4 @@
-#include "platform_mock.h"
+#include "mockPlatform.h"
 
 #include <stdio.h>
 #include <stdarg.h>

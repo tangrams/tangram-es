@@ -2,7 +2,7 @@
 
 #include "log.h"
 #include "map.h"
-#include "platform_mock.h"
+#include "mockPlatform.h"
 #include "scene/scene.h"
 #include "scene/sceneLoader.h"
 #include "style/style.h"

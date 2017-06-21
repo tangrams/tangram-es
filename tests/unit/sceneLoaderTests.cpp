@@ -1,15 +1,15 @@
 #include "catch.hpp"
 
-#include "yaml-cpp/yaml.h"
-#include "scene/sceneLoader.h"
+#include "mockPlatform.h"
+#include "scene/pointLight.h"
 #include "scene/scene.h"
+#include "scene/sceneLoader.h"
 #include "style/material.h"
-#include "style/style.h"
 #include "style/polylineStyle.h"
 #include "style/polygonStyle.h"
-#include "scene/pointLight.h"
+#include "style/style.h"
 
-#include "platform_mock.h"
+#include "yaml-cpp/yaml.h"
 
 using namespace Tangram;
 using YAML::Node;
