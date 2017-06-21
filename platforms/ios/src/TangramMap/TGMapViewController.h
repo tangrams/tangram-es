@@ -242,7 +242,7 @@ NS_ASSUME_NONNULL_END
  @param mapView a pointer to the map view
  @param sceneUpdateError a NSError containing information about the scene update that failed
  */
-- (void)mapView:(nonnull TGMapViewController *)mapView didFailSceneUpdateWithError:(NSError *)sceneUpdateError;
+- (void)mapView:(nonnull TGMapViewController *)mapView didFailSceneUpdateWithError:(nonnull NSError *)sceneUpdateError;
 
 @end
 
@@ -357,8 +357,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Adds a named data layer to the map. See `TGMapData` for more details.
- Refer <a href="https://mapzen.com/documentation/tangram/sources/#generate_label_centroids">label 
- centroid generation</a> documentation for adding a centroid point for label placement for polygon 
+ Refer <a href="https://mapzen.com/documentation/tangram/sources/#generate_label_centroids">label
+ centroid generation</a> documentation for adding a centroid point for label placement for polygon
  geometry.
 
  @param name the name of the data layer.
