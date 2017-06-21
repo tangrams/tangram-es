@@ -5,8 +5,8 @@
 #include "data/properties.h"
 #include "data/propertyItem.h"
 #include "log.h"
+#include "map.h"
 #include "util/url.h"
-#include "tangram.h"
 
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES 1

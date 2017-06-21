@@ -1,4 +1,4 @@
-#include "tangram.h"
+#include "map.h"
 #include "platform_android.h"
 #include "data/clientGeoJsonSource.h"
 

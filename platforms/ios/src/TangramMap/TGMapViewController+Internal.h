@@ -7,8 +7,8 @@
 //
 
 #import "TGMapViewController.h"
-#import "tangram.h"
 #import "data/clientGeoJsonSource.h"
+#import "map.h"
 #import <vector>
 #import <memory>
 

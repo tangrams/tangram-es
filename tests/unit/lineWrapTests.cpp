@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "tangram.h"
+#include "map.h"
 #include "platform_mock.h"
 #include "style/textStyleBuilder.h"
 

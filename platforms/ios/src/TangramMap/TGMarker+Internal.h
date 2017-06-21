@@ -6,7 +6,7 @@
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
-#import "tangram.h"
+#import "map.h"
 
 @interface TGMarker ()
 
