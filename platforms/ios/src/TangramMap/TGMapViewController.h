@@ -375,6 +375,23 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (strong, nonatomic) NSURL* resourceRoot;
 
+@property (readonly, nonatomic) SEL respondToTapGestureAction;
+@property (readonly, nonatomic) SEL respondToDoubleTapGestureAction;
+@property (readonly, nonatomic) SEL respondToPanGestureAction;
+@property (readonly, nonatomic) SEL respondToPinchGestureAction;
+@property (readonly, nonatomic) SEL respondToRotationGestureAction;
+@property (readonly, nonatomic) SEL respondToShoveGestureAction;
+@property (readonly, nonatomic) SEL respondToLongPressGestureAction;
+
+/// Must be set after viewDidLoad in the view lifecycle to override default
+@property (strong, nonatomic) UITapGestureRecognizer* tapGestureRecognizer;
+@property (strong, nonatomic) UITapGestureRecognizer* doubleTapGestureRecognizer;
+@property (strong, nonatomic) UIPanGestureRecognizer* panGestureRecognizer;
+@property (strong, nonatomic) UIPinchGestureRecognizer* pinchGestureRecognizer;
+@property (strong, nonatomic) UIRotationGestureRecognizer* rotationGestureRecognizer;
+@property (strong, nonatomic) UIPanGestureRecognizer* shoveGestureRecognizer;
+@property (strong, nonatomic) UILongPressGestureRecognizer* longPressGestureRecognizer;
+
 /**
  Adds a named data layer to the map. See `TGMapData` for more details.
 
