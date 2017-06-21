@@ -1,5 +1,3 @@
-#ifdef PLATFORM_IOS
-
 #import <UIKit/UIKit.h>
 #import <cstdio>
 #import <cstdarg>
@@ -264,5 +262,3 @@ void iOSPlatform::cancelUrlRequest(const std::string& _url) {
 }
 
 } // namespace Tangram
-
-#endif //PLATFORM_IOS

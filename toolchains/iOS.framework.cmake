@@ -6,7 +6,7 @@ message(STATUS "Build for iOS archs " ${IOS_ARCH})
 
 set(FRAMEWORK_NAME TangramMap)
 
-add_definitions(-DPLATFORM_IOS)
+add_definitions(-DTANGRAM_IOS)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}
     -fobjc-abi-version=2

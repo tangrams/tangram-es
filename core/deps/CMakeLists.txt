@@ -47,7 +47,7 @@ target_include_directories(miniz
 
 
 
-if(NOT USE_SYSTEM_FONT_LIBS)
+if(NOT TANGRAM_USE_SYSTEM_FONT_LIBS)
   ## Harfbuzz - ICU-Common - UCDN - Freetype2 ##
   ##############################################
   set(HARFBUZZ_BUILD_ICU ON CACHE BOOL "Enable building of ICU")

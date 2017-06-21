@@ -4,7 +4,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_CXX_FLAGS} -L/opt/vc/lib/")
 set(CXX_FLAGS_DEBUG "-g -O0")
 set(EXECUTABLE_NAME "tangram")
 
-add_definitions(-DPLATFORM_RPI)
+add_definitions(-DTANGRAM_RPI)
 
 check_unsupported_compiler_version()
 

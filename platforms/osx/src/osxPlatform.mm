@@ -1,5 +1,3 @@
-#ifdef PLATFORM_OSX
-
 #include "osxPlatform.h"
 #include "gl/hardware.h"
 #include "log.h"
@@ -173,5 +171,3 @@ void OSXPlatform::cancelUrlRequest(const std::string& _url) {
 }
 
 } // namespace Tangram
-
-#endif //PLATFORM_OSX

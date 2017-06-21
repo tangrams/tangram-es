@@ -1,5 +1,3 @@
-#ifdef PLATFORM_ANDROID
-
 #include "androidPlatform.h"
 
 #include "data/properties.h"
@@ -477,5 +475,3 @@ void initGLExtensions() {
 }
 
 } // namespace Tangram
-
-#endif

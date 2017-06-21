@@ -1,6 +1,3 @@
-# set for test in other cmake files
-set(PLATFORM_OSX ON)
-
 check_unsupported_compiler_version()
 
 # options
@@ -8,13 +5,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=c++1y")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wreturn-type -Wsign-compare -Wignored-qualifiers -Wtype-limits -Wmissing-field-initializers")
 set(CXX_FLAGS_DEBUG "-g -O0")
 
-# compile definitions (adds -DPLATFORM_OSX)
-set(CORE_COMPILE_DEFS PLATFORM_OSX)
+add_definitions(-DTANGRAM_OSX)
 
 # Build core library with dependencies.
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
-if(APPLICATION)
+if(TANGRAM_APPLICATION)
 
   set(EXECUTABLE_NAME "tangram")
 
@@ -24,7 +20,7 @@ if(APPLICATION)
   find_package(OpenGL REQUIRED)
 
   # Build GLFW.
-  if (USE_SYSTEM_GLFW_LIBS)
+  if (TANGRAM_USE_SYSTEM_GLFW_LIBS)
     include(FindPkgConfig)
     pkg_check_modules(GLFW REQUIRED glfw3)
   else()

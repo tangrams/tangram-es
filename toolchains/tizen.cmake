@@ -5,9 +5,6 @@ endif()
 
 # include(${CMAKE_SOURCE_DIR}/toolchains/tizen.toolchain.cmake)
 
-# set for test in other cmake files
-set(PLATFORM_TIZEN ON)
-
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fPIC")
 
 # global compile options
@@ -40,8 +37,7 @@ endif()
 
 check_unsupported_compiler_version()
 
-# compile definitions (adds -DPLATFORM_LINUX)
-set(CORE_COMPILE_DEFS PLATFORM_TIZEN)
+add_definitions(-DTANGRAM_TIZEN)
 
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)

@@ -1,9 +1,9 @@
 #pragma once
 
-#if defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI) || defined(PLATFORM_IOS)
+#if defined(TANGRAM_ANDROID) || defined(TANGRAM_RPI) || defined(TANGRAM_IOS)
 typedef long GLsizeiptr;
 typedef long GLintptr;
-#elif defined(PLATFORM_TIZEN)
+#elif defined(TANGRAM_TIZEN)
 typedef signed long int  GLintptr;
 typedef signed long int  GLsizeiptr;
 #else

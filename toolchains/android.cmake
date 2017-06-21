@@ -1,4 +1,4 @@
-add_definitions(-DPLATFORM_ANDROID)
+add_definitions(-DTANGRAM_ANDROID)
 
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)

@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.0)
 project(tangram)
 
 # Options
-option(USE_SYSTEM_FONT_LIBS "Use system libraries Freetype, ICU and Harfbuzz via pkgconfig" OFF)
-option(USE_SYSTEM_GLFW_LIBS "Use system libraries for GLFW3 via pkgconfig" OFF)
+option(TANGRAM_USE_SYSTEM_FONT_LIBS "Use system libraries Freetype, ICU and Harfbuzz via pkgconfig" OFF)
+option(TANGRAM_USE_SYSTEM_GLFW_LIBS "Use system libraries for GLFW3 via pkgconfig" OFF)
 
 if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "")
     message(STATUS "Build type configuration " ${CMAKE_BUILD_TYPE})
@@ -17,7 +17,7 @@ if(NOT EXISTS "${PROJECT_SOURCE_DIR}/core/deps/harfbuzz-icu-freetype/harfbuzz/RE
     return()
 endif()
 
-set(APPLICATION ON)
+set(TANGRAM_APPLICATION ON)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
