@@ -70,7 +70,7 @@ bool MarkerManager::setStyling(MarkerID markerID, const char* styling, bool isPa
     if (!buildStyling(*marker)) { return false; }
 
     // Build the feature mesh for the marker's current geometry.
-    buildGeometry(*marker, m_zoom);
+    buildMesh(*marker, m_zoom);
 
     return true;
 }
@@ -88,7 +88,7 @@ bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const un
 
     // The geometry is unchanged, but the mesh must be rebuilt because DynamicQuadMesh contains
     // texture batches as part of its data.
-    buildGeometry(*marker, m_zoom);
+    buildMesh(*marker, m_zoom);
 
     return true;
 }
@@ -119,13 +119,15 @@ bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
+    marker->clearMesh();
+
     // If the marker does not have a 'point' feature mesh built, build it.
     if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
         auto feature = std::make_unique<Feature>();
         feature->geometryType = GeometryType::points;
         feature->points.emplace_back();
         marker->setFeature(std::move(feature));
-        buildGeometry(*marker, m_zoom);
+        buildMesh(*marker, m_zoom);
     }
 
     // Update the marker's bounds to the given coordinates.
@@ -159,6 +161,9 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
 
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
+
+    marker->clearMesh();
+
     if (!coordinates || count < 2) { return false; }
 
     // Build a feature for the new set of polyline points.
@@ -194,7 +199,7 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
     marker->setFeature(std::move(feature));
 
     // Build a new mesh for the marker.
-    buildGeometry(*marker, m_zoom);
+    buildMesh(*marker, m_zoom);
 
     return true;
 }
@@ -205,6 +210,9 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
 
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
+
+    marker->clearMesh();
+
     if (!coordinates || !counts || rings < 1) { return false; }
 
     // Build a feature for the new set of polygon points.
@@ -254,7 +262,7 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
     marker->setFeature(std::move(feature));
 
     // Build a new mesh for the marker.
-    buildGeometry(*marker, m_zoom);
+    buildMesh(*marker, m_zoom);
 
     return true;
 }
@@ -267,7 +275,7 @@ bool MarkerManager::update(int zoom) {
     bool rebuilt = false;
     for (auto& marker : m_markers) {
         if (zoom != marker->builtZoomLevel()) {
-            buildGeometry(*marker, zoom);
+            buildMesh(*marker, zoom);
             rebuilt = true;
         }
     }
@@ -285,7 +293,7 @@ void MarkerManager::rebuildAll() {
 
     for (auto& entry : m_markers) {
         buildStyling(*entry);
-        buildGeometry(*entry, m_zoom);
+        buildMesh(*entry, m_zoom);
     }
 
 }
@@ -297,8 +305,6 @@ const std::vector<std::unique_ptr<Marker>>& MarkerManager::markers() const {
 bool MarkerManager::buildStyling(Marker& marker) {
 
     if (!m_scene) { return false; }
-
-    std::vector<StyleParam> params;
 
     const auto& markerStyling = marker.styling();
 
@@ -351,6 +357,8 @@ bool MarkerManager::buildStyling(Marker& marker) {
         return marker.finalizeRuleMergingForName(path.substr(start, end - start));
     }
 
+    std::vector<StyleParam> params;
+
     // If the styling is not a path, try to load it as a string of YAML.
     const auto& sceneJsFnList = m_scene->functions();
     auto jsFnIndex = sceneJsFnList.size();
@@ -373,7 +381,9 @@ bool MarkerManager::buildStyling(Marker& marker) {
     return true;
 }
 
-bool MarkerManager::buildGeometry(Marker& marker, int zoom) {
+bool MarkerManager::buildMesh(Marker& marker, int zoom) {
+
+    marker.clearMesh();
 
     auto feature = marker.feature();
     auto rule = marker.drawRule();

@@ -83,7 +83,7 @@ private:
 
     bool setStyling(MarkerID markerID, const char* styling, bool isPath);
     bool buildStyling(Marker& marker);
-    bool buildGeometry(Marker& marker, int zoom);
+    bool buildMesh(Marker& marker, int zoom);
 
     std::unique_ptr<StyleContext> m_styleContext;
     std::shared_ptr<Scene> m_scene;
