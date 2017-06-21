@@ -375,21 +375,44 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (strong, nonatomic) NSURL* resourceRoot;
 
+/// The selector that must be used as an action on the tap gesture recognizer
 @property (readonly, nonatomic) SEL respondToTapGestureAction;
+/// The selector that must be used as an action on the double tap gesture recognizer
 @property (readonly, nonatomic) SEL respondToDoubleTapGestureAction;
+/// The selector that must be used as an action on the pan gesture recognizer
 @property (readonly, nonatomic) SEL respondToPanGestureAction;
+/// The selector that must be used as an action on the pinch gesture recognizer
 @property (readonly, nonatomic) SEL respondToPinchGestureAction;
+/// The selector that must be used as an action on the rotation gesture recognizer
 @property (readonly, nonatomic) SEL respondToRotationGestureAction;
+/// The selector that must be used as an action on the shove gesture recognizer
 @property (readonly, nonatomic) SEL respondToShoveGestureAction;
+/// The selector that must be used as an action on the long press gesture recognizer
 @property (readonly, nonatomic) SEL respondToLongPressGestureAction;
 
-/// Must be set after viewDidLoad in the view lifecycle to override default
+/// The following recognizers must be set after viewDidLoad in the view lifecycle in order to override default.
+/// Only one instance of the recognizer type will be used on the view at once.
+/// Adding any recognizer removes the default or previoulsy added recognizer on the map view.
+
+/// Replaces the tap gesture recognizer used by the map view, adds it to the UIView
 @property (strong, nonatomic) UITapGestureRecognizer* tapGestureRecognizer;
+
+/// Replaces the double tap gesture recognizer used by the map view, adds it to the UIView
 @property (strong, nonatomic) UITapGestureRecognizer* doubleTapGestureRecognizer;
+
+/// Replaces the pan gesture recognizer used by the map view, adds it to the UIView
 @property (strong, nonatomic) UIPanGestureRecognizer* panGestureRecognizer;
+
+/// Replaces the pinch gesture recognizer used by the map view, adds it to the UIView
 @property (strong, nonatomic) UIPinchGestureRecognizer* pinchGestureRecognizer;
+
+/// Replaces the rotation gesture recognizer used by the map view, adds it to the UIView
 @property (strong, nonatomic) UIRotationGestureRecognizer* rotationGestureRecognizer;
+
+/// Replaces the shove gesture recognizer used by the map view, adds it to the UIView
 @property (strong, nonatomic) UIPanGestureRecognizer* shoveGestureRecognizer;
+
+/// Replaces the long press gesture recognizer used by the map view, adds it to the UIView
 @property (strong, nonatomic) UILongPressGestureRecognizer* longPressGestureRecognizer;
 
 /**
