@@ -88,7 +88,7 @@ if(BENCHMARK OR UNIT_TESTS)
         PUBLIC -DUNIT_TESTS)
 
     target_link_libraries(platform_mock
-        PUBLIC core)
+        PUBLIC tangramcore)
 
 endif()
 
