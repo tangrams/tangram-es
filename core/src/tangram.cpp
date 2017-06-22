@@ -312,6 +312,12 @@ void Map::applySceneUpdates(SceneUpdateErrorCallback _onSceneUpdateError) {
         });
 }
 
+void Map::setDataSourceUrl(const char* _dataSourceName, const char* _url) {
+    std::string scenePath = std::string("sources.") + _dataSourceName + ".url";
+    queueSceneUpdate(scenePath.c_str(), _url);
+    applySceneUpdates();
+}
+
 void Map::setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath) {
     std::string scenePath = std::string("sources.") + _dataSourceName + ".mbtiles";
     queueSceneUpdate(scenePath.c_str(), _mbtilesFilePath);

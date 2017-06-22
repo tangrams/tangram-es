@@ -120,6 +120,9 @@ public:
     // Apply all previously requested scene updates
     void applySceneUpdates(SceneUpdateErrorCallback _onSceneUpdateError = nullptr);
 
+    // Set url for a DataSource in the scene.
+    void setDataSourceUrl(const char* _dataSourceName, const char* _url);
+
     // Set an MBTiles SQLite database file for a DataSource in the scene.
     void setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath);
 

@@ -89,13 +89,12 @@ extern "C" {
         return ret;
     }
 
-    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeLngLatToScreenPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray coordinates) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetDataSourceUrl(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring dataSourceName, jstring url) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        jdouble* arr = jniEnv->GetDoubleArrayElements(coordinates, NULL);
-        bool ret = map->lngLatToScreenPosition(arr[0], arr[1], &arr[0], &arr[1]);
-        jniEnv->ReleaseDoubleArrayElements(coordinates, arr, 0);
-        return ret;
+        auto dataSourceNameString = stringFromJString(jniEnv, dataSourceName);
+        auto urlString = stringFromJString(jniEnv, url);
+        map->setDataSourceUrl(dataSourceNameString.c_str(), urlString.c_str());
     }
 
     JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeInit(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {

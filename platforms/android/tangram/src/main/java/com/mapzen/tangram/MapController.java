@@ -512,6 +512,16 @@ public class MapController implements Renderer {
     }
 
     /**
+     * Set url for a DataSource in the scene.
+     * @param dataSourceName data source name
+     * @param url url for a DataSource
+     */
+    public void setDataSourceUrl(String dataSourceName, String url) {
+        checkPointer(mapPointer);
+        nativeSetDataSourceUrl(mapPointer, dataSourceName, url);
+    }
+
+    /**
      * Construct a collection of drawable map features.
      * @param name The name of the data collection. Once added to a map, features from this
      * {@code MapData} will be available from a data source with this name, just like a data source
@@ -1119,6 +1129,7 @@ public class MapController implements Renderer {
     private synchronized native float nativeGetTilt(long mapPtr);
     private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);
     private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates);
+    private synchronized native void nativeSetDataSourceUrl(long mapPtr, String dataSourceName, String url);
     private synchronized native void nativeSetPixelScale(long mapPtr, float scale);
     private synchronized native void nativeSetCameraType(long mapPtr, int type);
     private synchronized native int nativeGetCameraType(long mapPtr);
