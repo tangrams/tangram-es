@@ -526,7 +526,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 - (void)setCameraType:(TGCameraType)cameraType
 {
-    if (!self.map){ return; }
+    if (!self.map) { return; }
 
     self.map->setCameraType(cameraType);
 }
@@ -535,56 +535,142 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 - (void)setupGestureRecognizers
 {
-    /* Construct Gesture Recognizers */
-    //1. Tap
-    UITapGestureRecognizer* tapRecognizer = [[UITapGestureRecognizer alloc]
-                                             initWithTarget:self action:@selector(respondToTapGesture:)];
-    tapRecognizer.numberOfTapsRequired = 1;
+    _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(respondToTapGesture:)];
+    _tapGestureRecognizer.numberOfTapsRequired = 1;
     // TODO: Figure a way to have a delay set for it not to tap gesture not to wait long enough for a doubletap gesture to be recognized
-    tapRecognizer.delaysTouchesEnded = NO;
+    _tapGestureRecognizer.delaysTouchesEnded = NO;
 
-    //2. DoubleTap
-    UITapGestureRecognizer* doubleTapRecognizer = [[UITapGestureRecognizer alloc]
-                                                   initWithTarget:self action:@selector(respondToDoubleTapGesture:)];
-    doubleTapRecognizer.numberOfTapsRequired = 2;
+    _doubleTapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(respondToDoubleTapGesture:)];
+    _doubleTapGestureRecognizer.numberOfTapsRequired = 2;
     // Distanle single tap when double tap occurs
-    [tapRecognizer requireGestureRecognizerToFail:doubleTapRecognizer];
+    [_tapGestureRecognizer requireGestureRecognizerToFail:_doubleTapGestureRecognizer];
 
-    //3. Pan
-    UIPanGestureRecognizer* panRecognizer = [[UIPanGestureRecognizer alloc]
-                                             initWithTarget:self action:@selector(respondToPanGesture:)];
-    panRecognizer.maximumNumberOfTouches = 1;
+    _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(respondToPanGesture:)];
+    _panGestureRecognizer.maximumNumberOfTouches = 1;
 
-    //4. Pinch
-    UIPinchGestureRecognizer* pinchRecognizer = [[UIPinchGestureRecognizer alloc]
-                                                 initWithTarget:self action:@selector(respondToPinchGesture:)];
-
-    //5. Rotate
-    UIRotationGestureRecognizer* rotationRecognizer = [[UIRotationGestureRecognizer alloc]
-                                                       initWithTarget:self action:@selector(respondToRotationGesture:)];
-
-    //6. Shove
-    UIPanGestureRecognizer* shoveRecognizer = [[UIPanGestureRecognizer alloc]
-                                               initWithTarget:self action:@selector(respondToShoveGesture:)];
-    shoveRecognizer.minimumNumberOfTouches = 2;
-
-    //7. Long press
-    UILongPressGestureRecognizer* longPressRecognizer = [[UILongPressGestureRecognizer alloc]
-                                                         initWithTarget:self action:@selector(respondToLongPressGesture:)];
+    _pinchGestureRecognizer = [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(respondToPinchGesture:)];
+    _rotationGestureRecognizer = [[UIRotationGestureRecognizer alloc] initWithTarget:self action:@selector(respondToRotationGesture:)];
+    _shoveGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(respondToShoveGesture:)];
+    _shoveGestureRecognizer.minimumNumberOfTouches = 2;
+    _longPressGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(respondToLongPressGesture:)];
 
     // Use the delegate method 'shouldRecognizeSimultaneouslyWithGestureRecognizer' for gestures that can be concurrent
-    panRecognizer.delegate = self;
-    pinchRecognizer.delegate = self;
-    rotationRecognizer.delegate = self;
+    _panGestureRecognizer.delegate = self;
+    _pinchGestureRecognizer.delegate = self;
+    _rotationGestureRecognizer.delegate = self;
 
-    /* Setup gesture recognizers */
-    [self.view addGestureRecognizer:tapRecognizer];
-    [self.view addGestureRecognizer:doubleTapRecognizer];
-    [self.view addGestureRecognizer:panRecognizer];
-    [self.view addGestureRecognizer:pinchRecognizer];
-    [self.view addGestureRecognizer:rotationRecognizer];
-    [self.view addGestureRecognizer:shoveRecognizer];
-    [self.view addGestureRecognizer:longPressRecognizer];
+    [self.view addGestureRecognizer:_tapGestureRecognizer];
+    [self.view addGestureRecognizer:_doubleTapGestureRecognizer];
+    [self.view addGestureRecognizer:_panGestureRecognizer];
+    [self.view addGestureRecognizer:_pinchGestureRecognizer];
+    [self.view addGestureRecognizer:_rotationGestureRecognizer];
+    [self.view addGestureRecognizer:_shoveGestureRecognizer];
+    [self.view addGestureRecognizer:_longPressGestureRecognizer];
+}
+
+- (void)setTapGestureRecognizer:(UITapGestureRecognizer *)recognizer
+{
+    if (!recognizer) { return; }
+    if (_tapGestureRecognizer) {
+        [self.view removeGestureRecognizer:_tapGestureRecognizer];
+    }
+    _tapGestureRecognizer = recognizer;
+    [self.view addGestureRecognizer:_tapGestureRecognizer];
+}
+
+- (void)setDoubleTapGestureRecognizer:(UITapGestureRecognizer *)recognizer
+{
+    if (!recognizer) { return; }
+    if (_doubleTapGestureRecognizer) {
+        [self.view removeGestureRecognizer:_doubleTapGestureRecognizer];
+    }
+    _doubleTapGestureRecognizer = recognizer;
+    [self.view addGestureRecognizer:_doubleTapGestureRecognizer];
+}
+
+- (void)setPanGestureRecognizer:(UIPanGestureRecognizer *)recognizer
+{
+    if (!recognizer) { return; }
+    if (_panGestureRecognizer) {
+        [self.view removeGestureRecognizer:_panGestureRecognizer];
+    }
+    _panGestureRecognizer = recognizer;
+    [self.view addGestureRecognizer:_panGestureRecognizer];
+}
+
+- (void)setPinchGestureRecognizer:(UIPinchGestureRecognizer *)recognizer
+{
+    if (!recognizer) { return; }
+    if (_pinchGestureRecognizer) {
+        [self.view removeGestureRecognizer:_pinchGestureRecognizer];
+    }
+    _pinchGestureRecognizer = recognizer;
+    [self.view addGestureRecognizer:_pinchGestureRecognizer];
+}
+
+- (void)setRotationGestureRecognizer:(UIRotationGestureRecognizer *)recognizer
+{
+    if (!recognizer) { return; }
+    if (_rotationGestureRecognizer) {
+        [self.view removeGestureRecognizer:_rotationGestureRecognizer];
+    }
+    _rotationGestureRecognizer = recognizer;
+    [self.view addGestureRecognizer:_rotationGestureRecognizer];
+}
+
+- (void)setShoveGestureRecognizer:(UIPanGestureRecognizer *)recognizer
+{
+    if (!recognizer) { return; }
+    if (_shoveGestureRecognizer) {
+        [self.view removeGestureRecognizer:_shoveGestureRecognizer];
+    }
+    _shoveGestureRecognizer = recognizer;
+    [self.view addGestureRecognizer:_shoveGestureRecognizer];
+}
+
+- (void)setLongPressGestureRecognizer:(UILongPressGestureRecognizer *)recognizer
+{
+    if (!recognizer) { return; }
+    if (_longPressGestureRecognizer) {
+        [self.view removeGestureRecognizer:_longPressGestureRecognizer];
+    }
+    _longPressGestureRecognizer = recognizer;
+    [self.view addGestureRecognizer:_longPressGestureRecognizer];
+}
+
+- (SEL)respondToTapGestureAction
+{
+    return @selector(respondToTapGesture:);
+}
+
+- (SEL)respondToDoubleTapGestureAction
+{
+    return @selector(respondToDoubleTapGesture:);
+}
+
+- (SEL)respondToPanGestureAction
+{
+    return @selector(respondToPanGesture:);
+}
+
+- (SEL)respondToPinchGestureAction
+{
+    return @selector(respondToPinchGesture:);
+}
+
+- (SEL)respondToRotationGestureAction
+{
+    return @selector(respondToRotationGesture:);
+}
+
+- (SEL)respondToShoveGestureAction
+{
+    return @selector(respondToShoveGesture:);
+}
+
+- (SEL)respondToLongPressGestureAction
+{
+    return @selector(respondToLongPressGesture:);
 }
 
 // Implement touchesBegan to catch down events
