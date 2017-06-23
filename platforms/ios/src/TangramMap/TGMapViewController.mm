@@ -568,8 +568,9 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     [self.view addGestureRecognizer:_longPressGestureRecognizer];
 }
 
-- (void) setTapGestureRecognizer:(UITapGestureRecognizer *)recognizer
+- (void)setTapGestureRecognizer:(UITapGestureRecognizer *)recognizer
 {
+    if (!recognizer) { return; }
     if (_tapGestureRecognizer) {
         [self.view removeGestureRecognizer:_tapGestureRecognizer];
     }
@@ -577,8 +578,9 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     [self.view addGestureRecognizer:_tapGestureRecognizer];
 }
 
-- (void) setDoubleTapGestureRecognizer:(UITapGestureRecognizer *)recognizer
+- (void)setDoubleTapGestureRecognizer:(UITapGestureRecognizer *)recognizer
 {
+    if (!recognizer) { return; }
     if (_doubleTapGestureRecognizer) {
         [self.view removeGestureRecognizer:_doubleTapGestureRecognizer];
     }
@@ -586,8 +588,9 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     [self.view addGestureRecognizer:_doubleTapGestureRecognizer];
 }
 
-- (void) setPanGestureRecognizer:(UIPanGestureRecognizer *)recognizer
+- (void)setPanGestureRecognizer:(UIPanGestureRecognizer *)recognizer
 {
+    if (!recognizer) { return; }
     if (_panGestureRecognizer) {
         [self.view removeGestureRecognizer:_panGestureRecognizer];
     }
@@ -595,8 +598,9 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     [self.view addGestureRecognizer:_panGestureRecognizer];
 }
 
-- (void) setPinchGestureRecognizer:(UIPinchGestureRecognizer *)recognizer
+- (void)setPinchGestureRecognizer:(UIPinchGestureRecognizer *)recognizer
 {
+    if (!recognizer) { return; }
     if (_pinchGestureRecognizer) {
         [self.view removeGestureRecognizer:_pinchGestureRecognizer];
     }
@@ -604,8 +608,9 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     [self.view addGestureRecognizer:_pinchGestureRecognizer];
 }
 
-- (void) setRotationGestureRecognizer:(UIRotationGestureRecognizer *)recognizer
+- (void)setRotationGestureRecognizer:(UIRotationGestureRecognizer *)recognizer
 {
+    if (!recognizer) { return; }
     if (_rotationGestureRecognizer) {
         [self.view removeGestureRecognizer:_rotationGestureRecognizer];
     }
@@ -613,8 +618,9 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     [self.view addGestureRecognizer:_rotationGestureRecognizer];
 }
 
-- (void) setShoveGestureRecognizer:(UIPanGestureRecognizer *)recognizer
+- (void)setShoveGestureRecognizer:(UIPanGestureRecognizer *)recognizer
 {
+    if (!recognizer) { return; }
     if (_shoveGestureRecognizer) {
         [self.view removeGestureRecognizer:_shoveGestureRecognizer];
     }
@@ -622,8 +628,9 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     [self.view addGestureRecognizer:_shoveGestureRecognizer];
 }
 
-- (void) setLongPressGestureRecognizer:(UILongPressGestureRecognizer *)recognizer
+- (void)setLongPressGestureRecognizer:(UILongPressGestureRecognizer *)recognizer
 {
+    if (!recognizer) { return; }
     if (_longPressGestureRecognizer) {
         [self.view removeGestureRecognizer:_longPressGestureRecognizer];
     }
@@ -631,37 +638,37 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     [self.view addGestureRecognizer:_longPressGestureRecognizer];
 }
 
-- (SEL) respondToTapGestureAction
+- (SEL)respondToTapGestureAction
 {
     return @selector(respondToTapGesture:);
 }
 
-- (SEL) respondToDoubleTapGestureAction
+- (SEL)respondToDoubleTapGestureAction
 {
     return @selector(respondToDoubleTapGesture:);
 }
 
-- (SEL) respondToPanGestureAction
+- (SEL)respondToPanGestureAction
 {
     return @selector(respondToPanGesture:);
 }
 
-- (SEL) respondToPinchGestureAction
+- (SEL)respondToPinchGestureAction
 {
     return @selector(respondToPinchGesture:);
 }
 
-- (SEL) respondToRotationGestureAction
+- (SEL)respondToRotationGestureAction
 {
     return @selector(respondToRotationGesture:);
 }
 
-- (SEL) respondToShoveGestureAction
+- (SEL)respondToShoveGestureAction
 {
     return @selector(respondToShoveGesture:);
 }
 
-- (SEL) respondToLongPressGestureAction
+- (SEL)respondToLongPressGestureAction
 {
     return @selector(respondToLongPressGesture:);
 }

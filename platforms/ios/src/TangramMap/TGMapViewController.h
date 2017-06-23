@@ -394,25 +394,25 @@ NS_ASSUME_NONNULL_BEGIN
 /// Only one instance of the recognizer type will be used on the view at once.
 /// Adding any recognizer removes the default or previoulsy added recognizer on the map view.
 
-/// Replaces the tap gesture recognizer used by the map view, adds it to the UIView
+/// Replaces the tap gesture recognizer used by the map view, adds it to the UIView, must be non-nil
 @property (strong, nonatomic) UITapGestureRecognizer* tapGestureRecognizer;
 
-/// Replaces the double tap gesture recognizer used by the map view, adds it to the UIView
+/// Replaces the double tap gesture recognizer used by the map view, adds it to the UIView, must be non-nil
 @property (strong, nonatomic) UITapGestureRecognizer* doubleTapGestureRecognizer;
 
-/// Replaces the pan gesture recognizer used by the map view, adds it to the UIView
+/// Replaces the pan gesture recognizer used by the map view, adds it to the UIView, must be non-nil
 @property (strong, nonatomic) UIPanGestureRecognizer* panGestureRecognizer;
 
-/// Replaces the pinch gesture recognizer used by the map view, adds it to the UIView
+/// Replaces the pinch gesture recognizer used by the map view, adds it to the UIView, must be non-nil
 @property (strong, nonatomic) UIPinchGestureRecognizer* pinchGestureRecognizer;
 
-/// Replaces the rotation gesture recognizer used by the map view, adds it to the UIView
+/// Replaces the rotation gesture recognizer used by the map view, adds it to the UIView, must be non-nil
 @property (strong, nonatomic) UIRotationGestureRecognizer* rotationGestureRecognizer;
 
-/// Replaces the shove gesture recognizer used by the map view, adds it to the UIView
+/// Replaces the shove gesture recognizer used by the map view, adds it to the UIView, must be non-nil
 @property (strong, nonatomic) UIPanGestureRecognizer* shoveGestureRecognizer;
 
-/// Replaces the long press gesture recognizer used by the map view, adds it to the UIView
+/// Replaces the long press gesture recognizer used by the map view, adds it to the UIView, must be non-nil
 @property (strong, nonatomic) UILongPressGestureRecognizer* longPressGestureRecognizer;
 
 /**
