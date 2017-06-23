@@ -915,6 +915,9 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
     // Query background color set in UI designer
     GLKView* view = (GLKView *)self.view;
+
+    self.preferredFramesPerSecond = 60;
+
     UIColor* backgroundColor = view.backgroundColor;
 
     if (backgroundColor != nil) {

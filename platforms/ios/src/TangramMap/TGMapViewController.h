@@ -307,6 +307,8 @@ NS_ASSUME_NONNULL_BEGIN
  system_ (based on a `UIKit` coordinate system); which is independent of the phone pixel density. Refer the
  <a href="https://developer.apple.com/library/content/documentation/2DDrawing/Conceptual/DrawingPrintingiOS/GraphicsDrawingOverview/GraphicsDrawingOverview.html">Apple documentation</a>
  _Coordinate Systems and Drawing in iOS_ for more informations.
+ The `preferredFramesPerSecond` is set by default to 60, make sure that this value fits the need of
+ your application.
 
  */
 @interface TGMapViewController : GLKViewController <UIGestureRecognizerDelegate>
