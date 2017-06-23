@@ -53,6 +53,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Whether the map view should handle a single tap gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  @return Whether the map view should proceed by handling this gesture behavior
@@ -62,6 +63,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Whether the map view should handle a double tap gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  @return Whether the map view should proceed by handling this gesture behavior
@@ -71,6 +73,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Whether the map view should handle a long press gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  @return Whether the map view should proceed by handling this gesture behavior
@@ -80,6 +83,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Whether the map view should handle a pan gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param displacement the logical pixel displacement of the recognized gesture
  @return Whether the map view should proceed by handling this gesture behavior
@@ -89,6 +93,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Whether the map view should handle a pinch gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  @return Whether the map view should proceed by handling this gesture behavior
@@ -99,6 +104,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Whether the map view should handle a rotation gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  @return Whether the map view should proceed by handling this gesture behavior
@@ -108,6 +114,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Whether the map view should handle a shove gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param displacement the logical pixel displacement of the recognized gesture
  @return Whether the map view should proceed by handling this gesture behavior
@@ -115,8 +122,27 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer shouldRecognizeShoveGesture:(CGPoint)displacement;
 
 /**
+ If implemented, the returned value will be the focus for the rotation gesture.
+
+ @param view the map view attached to the recognizer
+ @param recognizer the `UIGestureRecognizer` associated with the gesture
+ @return The screen position the rotation gesture should focus to.
+ */
+- (CGPoint)rotationFocus:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer;
+
+/**
+ If implemented, the returned value will be the focus for the pinch gesture.
+
+ @param view the map view attached to the recognizer
+ @param recognizer the `UIGestureRecognizer` associated with the gesture
+ @return The screen position the pinch gesture should focus to.
+ */
+- (CGPoint)pinchFocus:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer;
+
+/**
  Called when the map view just handled a single tap gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  */
@@ -125,6 +151,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Called when the map view just handled a single double gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  */
@@ -133,6 +160,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Called when the map view just handled a long press gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  */
@@ -141,6 +169,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Called when the map view just handled a pan gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param displacement the logical pixel displacement of the recognized gesture
  */
@@ -149,6 +178,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Called when the map view just handled a pinch gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  */
@@ -157,6 +187,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Called when the map view just handled a rotation gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  */
@@ -165,6 +196,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Called when the map view just handled a shove gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param displacement the logical pixel displacement of the recognized gesture
  */
