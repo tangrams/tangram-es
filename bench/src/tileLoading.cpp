@@ -1,22 +1,22 @@
-#include "tangram.h"
-#include "gl.h"
-#include "platform_mock.h"
-#include "log.h"
 #include "data/tileSource.h"
-#include "scene/sceneLoader.h"
-#include "scene/scene.h"
-#include "style/style.h"
+#include "gl.h"
+#include "log.h"
+#include "map.h"
+#include "mockPlatform.h"
 #include "scene/importer.h"
+#include "scene/scene.h"
+#include "scene/sceneLoader.h"
 #include "scene/styleContext.h"
-#include "util/mapProjection.h"
+#include "style/style.h"
 #include "tile/tile.h"
 #include "tile/tileBuilder.h"
 #include "tile/tileTask.h"
 #include "text/fontContext.h"
+#include "util/mapProjection.h"
 
-#include <vector>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <vector>
 
 #include "benchmark/benchmark_api.h"
 #include "benchmark/benchmark.h"

@@ -1,12 +1,12 @@
 #include "catch.hpp"
 
 #include "data/tileSource.h"
+#include "mockPlatform.h"
 #include "tile/tileManager.h"
 #include "tile/tileWorker.h"
 #include "util/mapProjection.h"
 #include "util/fastmap.h"
 #include "view/view.h"
-#include "platform_mock.h"
 
 #include <deque>
 

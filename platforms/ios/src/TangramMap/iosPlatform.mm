@@ -1,5 +1,3 @@
-#ifdef PLATFORM_IOS
-
 #import <UIKit/UIKit.h>
 #import <cstdio>
 #import <cstdarg>
@@ -7,7 +5,7 @@
 #import "TGMapViewController.h"
 #import "TGFontConverter.h"
 #import "TGHttpHandler.h"
-#import "platform_ios.h"
+#import "iosPlatform.h"
 #import "log.h"
 
 namespace Tangram {
@@ -133,7 +131,7 @@ std::vector<FontSourceHandle> iOSPlatform::systemFontFallbacksHandle() const {
     std::vector<FontSourceHandle> handles;
 
     for (NSString* fallback in fallbacks) {
-    
+
         if (!allowedFamily(fallback)) { continue; }
 
         for (NSString* fontName in [UIFont fontNamesForFamilyName:fallback]) {
@@ -264,5 +262,3 @@ void iOSPlatform::cancelUrlRequest(const std::string& _url) {
 }
 
 } // namespace Tangram
-
-#endif //PLATFORM_IOS

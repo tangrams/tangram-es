@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tangram.h"
+#include "map.h"
 
 #include <cmath>
 #include <functional>

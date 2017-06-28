@@ -1,16 +1,15 @@
 #include "catch.hpp"
-#include "tangram.h"
+#include "gl/dynamicQuadMesh.h"
+#include "labels/labels.h"
+#include "labels/textLabel.h"
+#include "labels/textLabels.h"
+#include "map.h"
 #include "platform.h"
 #include "scene/scene.h"
 #include "style/style.h"
 #include "style/textStyle.h"
-#include "labels/labels.h"
-#include "labels/textLabel.h"
-#include "labels/textLabels.h"
-#include "gl/dynamicQuadMesh.h"
-
-#include "view/view.h"
 #include "tile/tile.h"
+#include "view/view.h"
 
 #include <memory>
 

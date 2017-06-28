@@ -2,10 +2,10 @@
 
 #include "gl/mesh.h"
 #include "gl/shaderProgram.h"
+#include "map.h"
 #include "platform.h"
-#include "tangram.h"
-#include "tile/tile.h"
 #include "style/material.h"
+#include "tile/tile.h"
 
 #include <memory>
 #include <vector>

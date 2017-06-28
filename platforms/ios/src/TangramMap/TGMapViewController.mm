@@ -14,9 +14,9 @@
 #import "TGLabelPickResult+Internal.h"
 #import "TGMarker+Internal.h"
 #import "TGHelpers.h"
-#import "platform_ios.h"
 #import "data/propertyItem.h"
-#import "tangram.h"
+#import "iosPlatform.h"
+#import "map.h"
 
 #import <unordered_map>
 #import <functional>

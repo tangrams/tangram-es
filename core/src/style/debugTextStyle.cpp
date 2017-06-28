@@ -1,9 +1,9 @@
 #include "style/debugTextStyle.h"
 
 #include "labels/textLabels.h"
+#include "map.h"
 #include "scene/drawRule.h"
 #include "style/textStyleBuilder.h"
-#include "tangram.h"
 #include "tile/tile.h"
 
 namespace Tangram {

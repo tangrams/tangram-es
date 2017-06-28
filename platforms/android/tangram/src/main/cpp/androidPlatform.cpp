@@ -1,12 +1,10 @@
-#ifdef PLATFORM_ANDROID
-
-#include "platform_android.h"
+#include "androidPlatform.h"
 
 #include "data/properties.h"
 #include "data/propertyItem.h"
 #include "log.h"
+#include "map.h"
 #include "util/url.h"
-#include "tangram.h"
 
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES 1
@@ -477,5 +475,3 @@ void initGLExtensions() {
 }
 
 } // namespace Tangram
-
-#endif

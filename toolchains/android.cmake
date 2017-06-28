@@ -1,4 +1,4 @@
-add_definitions(-DPLATFORM_ANDROID)
+add_definitions(-DTANGRAM_ANDROID)
 
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
@@ -10,7 +10,7 @@ set(LIB_NAME tangram) # in order to have libtangram.so
 add_library(${LIB_NAME} SHARED
   ${CMAKE_SOURCE_DIR}/platforms/common/platform_gl.cpp
   ${CMAKE_SOURCE_DIR}/platforms/android/tangram/src/main/cpp/jniExports.cpp
-  ${CMAKE_SOURCE_DIR}/platforms/android/tangram/src/main/cpp/platform_android.cpp
+  ${CMAKE_SOURCE_DIR}/platforms/android/tangram/src/main/cpp/androidPlatform.cpp
   ${CMAKE_SOURCE_DIR}/platforms/android/tangram/src/main/cpp/sqlite3ndk.cpp)
 
 target_include_directories(${LIB_NAME} PUBLIC

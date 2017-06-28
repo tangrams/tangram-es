@@ -1,7 +1,7 @@
 #pragma once
 
+#include "map.h"
 #include "platform.h"
-#include "tangram.h"
 #include <memory>
 
 namespace Tangram {

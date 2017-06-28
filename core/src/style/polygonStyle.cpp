@@ -2,11 +2,11 @@
 
 #include "gl/mesh.h"
 #include "gl/shaderProgram.h"
+#include "map.h"
 #include "marker/marker.h"
 #include "material.h"
 #include "platform.h"
 #include "scene/drawRule.h"
-#include "tangram.h"
 #include "tile/tile.h"
 #include "util/builders.h"
 #include "util/extrude.h"
