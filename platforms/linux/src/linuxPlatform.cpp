@@ -1,4 +1,4 @@
-#include "platform_linux.h"
+#include "linuxPlatform.h"
 #include "gl/hardware.h"
 #include "log.h"
 #include <stdio.h>
@@ -8,9 +8,9 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
-#if defined(PLATFORM_LINUX)
+#if defined(TANGRAM_LINUX)
 #include <GLFW/glfw3.h>
-#elif defined(PLATFORM_RPI)
+#elif defined(TANGRAM_RPI)
 #include "context.h"
 #endif
 
@@ -68,18 +68,18 @@ void LinuxPlatform::cancelUrlRequest(const std::string& _url) {
 LinuxPlatform::~LinuxPlatform() {}
 
 void setCurrentThreadPriority(int priority) {
-#if defined(PLATFORM_LINUX)
+#if defined(TANGRAM_LINUX)
     int tid = syscall(SYS_gettid);
     setpriority(PRIO_PROCESS, tid, priority);
-#elif defined(PLATFORM_RPI)
+#elif defined(TANGRAM_RPI)
     // no-op
 #endif
 }
 
 void initGLExtensions() {
-#if defined(PLATFORM_LINUX)
+#if defined(TANGRAM_LINUX)
     Tangram::Hardware::supportsMapBuffer = true;
-#elif defined(PLATFORM_RPI)
+#elif defined(TANGRAM_RPI)
     // no-op
 #endif
 }

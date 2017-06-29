@@ -1,11 +1,12 @@
 #include "catch.hpp"
-#include "tangram.h"
 #include "labels/label.h"
-#include "view/view.h"
-#include "style/textStyle.h"
 #include "labels/screenTransform.h"
 #include "labels/textLabel.h"
 #include "labels/textLabels.h"
+#include "map.h"
+#include "style/textStyle.h"
+#include "view/view.h"
+
 #include "glm/mat4x4.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 

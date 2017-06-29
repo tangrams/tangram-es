@@ -35,5 +35,4 @@ private:
 
 } // namespace Tangram
 
-#endif
-
+#endif // __OBJC__

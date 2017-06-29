@@ -6,7 +6,7 @@ message(STATUS "Build for iOS archs " ${IOS_ARCH})
 
 set(FRAMEWORK_NAME TangramMap)
 
-add_definitions(-DPLATFORM_IOS)
+add_definitions(-DTANGRAM_IOS)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}
     -fobjc-abi-version=2
@@ -43,7 +43,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
 set(SOURCES
     ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp
-    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/platform_ios.mm
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/iosPlatform.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHelpers.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGFontConverter.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGGeoPolyline.mm
@@ -72,7 +72,7 @@ set(FRAMEWORK_HEADERS
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapViewController.h)
 
 set(HEADERS
-    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/platform_ios.h
+    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/iosPlatform.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarkerPickResult+Internal.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGLabelPickResult+Internal.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapViewController+Internal.h

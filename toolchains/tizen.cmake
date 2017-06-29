@@ -5,9 +5,6 @@ endif()
 
 # include(${CMAKE_SOURCE_DIR}/toolchains/tizen.toolchain.cmake)
 
-# set for test in other cmake files
-set(PLATFORM_TIZEN ON)
-
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fPIC")
 
 # global compile options
@@ -40,20 +37,22 @@ endif()
 
 check_unsupported_compiler_version()
 
-# compile definitions (adds -DPLATFORM_LINUX)
-set(CORE_COMPILE_DEFS PLATFORM_TIZEN)
+add_definitions(-DTANGRAM_TIZEN)
 
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
 set(LIB_NAME tangram) # in order to have libtangram.so
 
-# add sources and include headers
-find_sources_and_include_directories(
-  ${PROJECT_SOURCE_DIR}/tizen/inc/*.h
-  ${PROJECT_SOURCE_DIR}/tizen/src/*.cpp)
+add_library(${LIB_NAME} SHARED
+  ${PROJECT_SOURCE_DIR}/platforms/tizen/src/platform_gl.cpp
+  ${PROJECT_SOURCE_DIR}/platforms/tizen/src/platform_tizen.cpp
+  ${PROJECT_SOURCE_DIR}/platforms/tizen/src/urlWorker.cpp
+  )
 
-add_library(${LIB_NAME} SHARED ${SOURCES})
+target_include_directories(${LIB_NAME} PUBLIC
+  ${PROJECT_SOURCE_DIR}/platforms/tizen/inc
+  )
 
 # link to the core library, forcing all symbols to be added
 # (whole-archive must be turned off after core so that lc++ symbols aren't duplicated)

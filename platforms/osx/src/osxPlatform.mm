@@ -1,11 +1,9 @@
-#ifdef PLATFORM_OSX
-
-#import <cstdio>
-#import <cstdarg>
-
-#include "platform_osx.h"
+#include "osxPlatform.h"
 #include "gl/hardware.h"
 #include "log.h"
+
+#import <cstdarg>
+#import <cstdio>
 
 #define DEFAULT "fonts/NotoSans-Regular.ttf"
 #define FONT_AR "fonts/NotoNaskh-Regular.ttf"
@@ -173,5 +171,3 @@ void OSXPlatform::cancelUrlRequest(const std::string& _url) {
 }
 
 } // namespace Tangram
-
-#endif //PLATFORM_OSX

@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef PLATFORM_ANDROID
+#ifdef TANGRAM_ANDROID
 #include <GLES2/gl2platform.h>
 
 #ifndef GL_GLEXT_PROTOTYPES
@@ -9,7 +9,7 @@
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
-// defined in platform_android.cpp
+// Values defined in androidPlatform.cpp
 extern PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT;
 extern PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT;
 extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
@@ -17,37 +17,34 @@ extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
 #define glDeleteVertexArrays glDeleteVertexArraysOESEXT
 #define glGenVertexArrays glGenVertexArraysOESEXT
 #define glBindVertexArray glBindVertexArrayOESEXT
-#endif
+#endif // TANGRAM_ANDROID
 
-#ifdef PLATFORM_IOS
+#ifdef TANGRAM_IOS
 #include <OpenGLES/ES2/gl.h>
 #include <OpenGLES/ES2/glext.h>
 #define glDeleteVertexArrays glDeleteVertexArraysOES
 #define glGenVertexArrays glGenVertexArraysOES
 #define glBindVertexArray glBindVertexArrayOES
-#endif
+#endif // TANGRAM_IOS
 
-#ifdef PLATFORM_OSX
+#ifdef TANGRAM_OSX
 #define GLFW_INCLUDE_GLEXT
 #include <GLFW/glfw3.h>
-/*
- * typedef to resolve name conflict in osx
- */
+// Resolve aliased names in OS X
 #define glClearDepthf glClearDepth
 #define glDepthRangef glDepthRange
 #define glDeleteVertexArrays glDeleteVertexArraysAPPLE
 #define glGenVertexArrays glGenVertexArraysAPPLE
 #define glBindVertexArray glBindVertexArrayAPPLE
-#endif
+#endif // TANGRAM_OSX
 
-#ifdef PLATFORM_LINUX
+#ifdef TANGRAM_LINUX
 #define GL_GLEXT_PROTOTYPES
 #include <GLFW/glfw3.h>
-#endif
+#endif // TANGRAM_LINUX
 
-#ifdef PLATFORM_RPI
-//  Broadcom hardware library for hijacking the GPU card without window manager
-//
+#ifdef TANGRAM_RPI
+// Broadcom library for direct GPU access
 #include "bcm_host.h"
 
 #include <GLES2/gl2.h>
@@ -60,9 +57,9 @@ static void glBindVertexArray(GLuint array) {}
 static void glDeleteVertexArrays(GLsizei n, const GLuint *arrays) {}
 static void glGenVertexArrays(GLsizei n, GLuint *arrays) {}
 
-#endif
+#endif // TANGRAM_RPI
 
-#if defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS) || defined(PLATFORM_RPI)
+#if defined(TANGRAM_ANDROID) || defined(TANGRAM_IOS) || defined(TANGRAM_RPI)
     #define glMapBuffer glMapBufferOES
     #define glUnmapBuffer glUnmapBufferOES
-#endif
+#endif // defined(TANGRAM_ANDROID) || defined(TANGRAM_IOS) || defined(TANGRAM_RPI)

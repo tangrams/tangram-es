@@ -12,7 +12,7 @@
 #import "TGMapViewController+Internal.h"
 #import "TGHelpers.h"
 #import "TGTypes.h"
-#import "tangram.h"
+#import "map.h"
 
 @interface TGMarker () {
     Tangram::Map* tangramInstance;

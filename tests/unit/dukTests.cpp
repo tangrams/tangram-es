@@ -1,12 +1,13 @@
 #include "catch.hpp"
 
-#include "yaml-cpp/yaml.h"
+#include "mockPlatform.h"
 #include "scene/filters.h"
 #include "scene/sceneLoader.h"
 #include "scene/scene.h"
 #include "scene/styleContext.h"
 #include "util/builders.h"
-#include "platform_mock.h"
+
+#include "yaml-cpp/yaml.h"
 
 using namespace Tangram;
 

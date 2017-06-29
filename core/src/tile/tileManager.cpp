@@ -1,8 +1,8 @@
 #include "tile/tileManager.h"
 
 #include "data/tileSource.h"
+#include "map.h"
 #include "platform.h"
-#include "tangram.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
 #include "util/mapProjection.h"

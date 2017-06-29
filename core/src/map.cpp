@@ -1,4 +1,4 @@
-#include "tangram.h"
+#include "map.h"
 
 #include "data/clientGeoJsonSource.h"
 #include "debug/textDisplay.h"

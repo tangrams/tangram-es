@@ -1,7 +1,7 @@
 #pragma once
 
 #include "glm/vec2.hpp"
-#include "tangram.h"
+#include "map.h"
 #include "util/variant.h"
 
 namespace Tangram {

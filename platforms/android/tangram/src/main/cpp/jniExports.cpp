@@ -1,6 +1,6 @@
-#include "tangram.h"
-#include "platform_android.h"
+#include "androidPlatform.h"
 #include "data/clientGeoJsonSource.h"
+#include "map.h"
 
 #include <cassert>
 

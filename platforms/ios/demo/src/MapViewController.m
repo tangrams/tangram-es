@@ -31,7 +31,7 @@
 - (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView
 {
     NSLog(@"Did complete view");
-    [mapView captureScreenshot:YES];
+    // [mapView captureScreenshot:YES];
 }
 
 - (void)mapView:(TGMapViewController *)mapView didLoadSceneAsync:(NSString *)scene

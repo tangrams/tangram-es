@@ -1,5 +1,5 @@
-#include "tangram.h"
 #include "gl.h"
+#include "map.h"
 
 #include "util/builders.h"
 #include "glm/glm.hpp"
