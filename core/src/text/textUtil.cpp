@@ -18,13 +18,7 @@ float TextWrapper::getShapeRangeWidth(const alfons::LineLayout& _line,
 
     for (auto& shape : _line.shapes()) {
 
-        if (!shape.cluster) {
-            shapeCount++;
-            lineWidth += _line.advance(shape);
-            continue;
-        }
-
-        charCount++;
+        if (shape.cluster) { charCount++; }
         shapeCount++;
         lineWidth += _line.advance(shape);
 
@@ -35,7 +29,8 @@ float TextWrapper::getShapeRangeWidth(const alfons::LineLayout& _line,
         }
 
         if (lastShape != 0 && (shape.mustBreak || charCount >= _maxLineChars)) {
-            // only go to next line if chars have been added on the current line
+
+            // Only go to next line if chars have been added on the current line
             if (shape.mustBreak || lastChar > _minLineChars) {
 
                 auto& endShape = _line.shapes()[lastShape-1];
