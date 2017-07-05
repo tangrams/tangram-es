@@ -3,13 +3,15 @@
 #include "mockPlatform.h"
 #include "style/textStyleBuilder.h"
 
+#include "log.h"
+
 #include <memory>
 
 namespace Tangram {
 
 #define TEST_FONT_SIZE  24
 #define TEST_FONT       "fonts/NotoSans-Regular.ttf"
-#define TEST_FONT_AR 	"fonts/NotoNaskh-Regular.ttf"
+#define TEST_FONT_AR    "fonts/NotoNaskh-Regular.ttf"
 #define TEST_FONT_JP    "fonts/DroidSansJapanese.ttf"
 
 struct ScratchBuffer : public alfons::MeshCallback {
@@ -49,7 +51,7 @@ TEST_CASE("Ensure empty line is given when giving empty shape to alfons", "[Core
     TextWrapper textWrap;
     alfons::LineMetrics metrics;
 
-    float width = textWrap.getShapeRangeWidth(line, 10, 4);
+    float width = textWrap.getShapeRangeWidth(line);
     int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
 
     REQUIRE(nbLines == 0);
@@ -58,67 +60,122 @@ TEST_CASE("Ensure empty line is given when giving empty shape to alfons", "[Core
 TEST_CASE() {
     initFont();
 
-    auto line = shaper.shape(font, "The quick brown fox");
+    auto text = UnicodeString::fromUTF8("The quick brown fox");
 
-    REQUIRE(line.shapes().size() == 19);
+    {
+        auto line = shaper.shapeICU(font, text, 4, 10);
+        REQUIRE(line.shapes().size() == 19);
 
-    TextWrapper textWrap;
-    alfons::LineMetrics metrics;
-    float width = textWrap.getShapeRangeWidth(line, 4, 10);
-    int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
-    REQUIRE(nbLines == 2);
+        TextWrapper textWrap;
+        alfons::LineMetrics metrics;
+        float width = textWrap.getShapeRangeWidth(line);
+        int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
+        REQUIRE(nbLines == 2);
+    }
 
-    textWrap.clearWraps();
-    width = textWrap.getShapeRangeWidth(line, 4, 4);
-    nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
-    REQUIRE(nbLines == 3);
+    {
+        auto line = shaper.shapeICU(font, text, 4, 4);
+        TextWrapper textWrap;
+        alfons::LineMetrics metrics;
+        float width = textWrap.getShapeRangeWidth(line);
+        int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
+        REQUIRE(nbLines == 3);
+    }
 
-    textWrap.clearWraps();
-    width = textWrap.getShapeRangeWidth(line, 0, 1);
-    nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
-    REQUIRE(nbLines == 4);
+    {
+        auto line = shaper.shapeICU(font, text, 0, 1);
 
-    textWrap.clearWraps();
-    width = textWrap.getShapeRangeWidth(line, 0, 3);
-    nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
-    REQUIRE(nbLines == 4);
+        TextWrapper textWrap;
+        alfons::LineMetrics metrics;
+        float width = textWrap.getShapeRangeWidth(line);
+        int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
+        REQUIRE(nbLines == 4);
+    }
 
-    textWrap.clearWraps();
-    width = textWrap.getShapeRangeWidth(line, 2, 5);
-    nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
-    REQUIRE(nbLines == 4);
+    {
+        auto line = shaper.shapeICU(font, text, 0, 3);
+        TextWrapper textWrap;
+        alfons::LineMetrics metrics;
+        float width = textWrap.getShapeRangeWidth(line);
+        int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
+        REQUIRE(nbLines == 4);
+    }
+
+    {
+        auto line = shaper.shapeICU(font, text, 2, 5);
+        TextWrapper textWrap;
+        alfons::LineMetrics metrics;
+        float width = textWrap.getShapeRangeWidth(line);
+        int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
+        REQUIRE(nbLines == 4);
+    }
+
 }
 
 TEST_CASE() {
     initFont(TEST_FONT_AR);
 
-    auto line = shaper.shape(font, "لعدم عليها كلّ.");
-    REQUIRE(line.shapes().size() == 15);
+    auto text = UnicodeString::fromUTF8("لعدم عليها كلّ.");
 
-    TextWrapper textWrap;
-    alfons::LineMetrics metrics;
+    {
+        auto line = shaper.shapeICU(font, text, 0, 1);
+        REQUIRE(line.shapes().size() == 15);
 
-    float width = textWrap.getShapeRangeWidth(line, 0, 1);
-    int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
-    REQUIRE(nbLines == 3);
+        TextWrapper textWrap;
+        alfons::LineMetrics metrics;
 
-    textWrap.clearWraps();
-    width = textWrap.getShapeRangeWidth(line, 0, 10);
-    nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
-    REQUIRE(nbLines == 2);
+        float width = textWrap.getShapeRangeWidth(line);
+        int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
+        REQUIRE(nbLines == 3);
+    }
+
+    {
+        auto line = shaper.shapeICU(font, text, 0, 10);
+        REQUIRE(line.shapes().size() == 15);
+
+        TextWrapper textWrap;
+        alfons::LineMetrics metrics;
+        float width = textWrap.getShapeRangeWidth(line);
+        int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
+
+        REQUIRE(nbLines == 2);
+    }
 }
 
 TEST_CASE() {
     initFont(TEST_FONT_JP);
 
-    auto line = shaper.shape(font, "日本語のキーボード");
+    auto text = UnicodeString::fromUTF8("日本語のキーボード");
+
+    auto line = shaper.shapeICU(font, text, 0, 1);
     REQUIRE(line.shapes().size() == 9);
 
     TextWrapper textWrap;
     alfons::LineMetrics metrics;
-    float width = textWrap.getShapeRangeWidth(line, 0, 1);
+    float width = textWrap.getShapeRangeWidth(line);
     int nbLines = textWrap.draw(batch, width, line, TextLabelProperty::Align::center, 1.0, metrics);
     REQUIRE(nbLines == 7);
+}
+
+
+TEST_CASE() {
+    initFont(TEST_FONT_AR);
+
+    auto text = UnicodeString::fromUTF8("الضفة الغربية وقطاع غزة");
+
+    {
+        auto line = shaper.shapeICU(font, text, 1, 10);
+        REQUIRE(line.shapes()[5].mustBreak);
+        REQUIRE(line.shapes()[13].mustBreak);
+        REQUIRE(line.shapes()[22].mustBreak);
+    }
+
+    {
+        auto line = shaper.shapeICU(font, text, 1, 15);
+        REQUIRE(line.shapes()[13].mustBreak);
+        REQUIRE(line.shapes()[22].mustBreak);
+    }
+
 }
 
 }
