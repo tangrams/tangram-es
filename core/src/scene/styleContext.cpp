@@ -469,6 +469,10 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 _val = static_cast<float>(duk_get_number(m_ctx, -1));
                 break;
             }
+            case StyleParamKey::size: {
+                _val = glm::vec2(static_cast<float>(duk_get_number(m_ctx, -1)));
+                break;
+            }
             case StyleParamKey::order:
             case StyleParamKey::outline_order:
             case StyleParamKey::priority:
