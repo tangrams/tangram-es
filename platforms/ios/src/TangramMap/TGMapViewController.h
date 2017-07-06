@@ -53,6 +53,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Whether the map view should handle a single tap gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  @return Whether the map view should proceed by handling this gesture behavior
@@ -62,6 +63,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Whether the map view should handle a double tap gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  @return Whether the map view should proceed by handling this gesture behavior
@@ -71,6 +73,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Whether the map view should handle a long press gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  @return Whether the map view should proceed by handling this gesture behavior
@@ -80,6 +83,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Whether the map view should handle a pan gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param displacement the logical pixel displacement of the recognized gesture
  @return Whether the map view should proceed by handling this gesture behavior
@@ -89,6 +93,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Whether the map view should handle a pinch gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  @return Whether the map view should proceed by handling this gesture behavior
@@ -99,6 +104,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Whether the map view should handle a rotation gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  @return Whether the map view should proceed by handling this gesture behavior
@@ -108,6 +114,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Whether the map view should handle a shove gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param displacement the logical pixel displacement of the recognized gesture
  @return Whether the map view should proceed by handling this gesture behavior
@@ -115,8 +122,27 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer shouldRecognizeShoveGesture:(CGPoint)displacement;
 
 /**
+ If implemented, the returned value will be the focus for the rotation gesture.
+
+ @param view the map view attached to the recognizer
+ @param recognizer the `UIGestureRecognizer` associated with the gesture
+ @return The screen position the rotation gesture should focus to.
+ */
+- (CGPoint)rotationFocus:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer;
+
+/**
+ If implemented, the returned value will be the focus for the pinch gesture.
+
+ @param view the map view attached to the recognizer
+ @param recognizer the `UIGestureRecognizer` associated with the gesture
+ @return The screen position the pinch gesture should focus to.
+ */
+- (CGPoint)pinchFocus:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer;
+
+/**
  Called when the map view just handled a single tap gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  */
@@ -125,6 +151,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Called when the map view just handled a single double gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  */
@@ -133,6 +160,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Called when the map view just handled a long press gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  */
@@ -141,6 +169,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Called when the map view just handled a pan gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param displacement the logical pixel displacement of the recognized gesture
  */
@@ -149,6 +178,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Called when the map view just handled a pinch gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  */
@@ -157,6 +187,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Called when the map view just handled a rotation gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param location the logical pixel location of the recognized gesture
  */
@@ -165,6 +196,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Called when the map view just handled a shove gesture.
 
+ @param view the map view attached to the recognizer
  @param recognizer the `UIGestureRecognizer` associated with the gesture
  @param displacement the logical pixel displacement of the recognized gesture
  */
@@ -242,7 +274,7 @@ NS_ASSUME_NONNULL_END
  @param mapView a pointer to the map view
  @param sceneUpdateError a NSError containing information about the scene update that failed
  */
-- (void)mapView:(nonnull TGMapViewController *)mapView didFailSceneUpdateWithError:(NSError *)sceneUpdateError;
+- (void)mapView:(nonnull TGMapViewController *)mapView didFailSceneUpdateWithError:(nonnull NSError *)sceneUpdateError;
 
 @end
 
@@ -275,6 +307,8 @@ NS_ASSUME_NONNULL_BEGIN
  system_ (based on a `UIKit` coordinate system); which is independent of the phone pixel density. Refer the
  <a href="https://developer.apple.com/library/content/documentation/2DDrawing/Conceptual/DrawingPrintingiOS/GraphicsDrawingOverview/GraphicsDrawingOverview.html">Apple documentation</a>
  _Coordinate Systems and Drawing in iOS_ for more informations.
+ The `preferredFramesPerSecond` is set by default to 60, make sure that this value fits the need of
+ your application.
 
  */
 @interface TGMapViewController : GLKViewController <UIGestureRecognizerDelegate>
@@ -343,6 +377,46 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (strong, nonatomic) NSURL* resourceRoot;
 
+/// The selector that must be used as an action on the tap gesture recognizer
+@property (readonly, nonatomic) SEL respondToTapGestureAction;
+/// The selector that must be used as an action on the double tap gesture recognizer
+@property (readonly, nonatomic) SEL respondToDoubleTapGestureAction;
+/// The selector that must be used as an action on the pan gesture recognizer
+@property (readonly, nonatomic) SEL respondToPanGestureAction;
+/// The selector that must be used as an action on the pinch gesture recognizer
+@property (readonly, nonatomic) SEL respondToPinchGestureAction;
+/// The selector that must be used as an action on the rotation gesture recognizer
+@property (readonly, nonatomic) SEL respondToRotationGestureAction;
+/// The selector that must be used as an action on the shove gesture recognizer
+@property (readonly, nonatomic) SEL respondToShoveGestureAction;
+/// The selector that must be used as an action on the long press gesture recognizer
+@property (readonly, nonatomic) SEL respondToLongPressGestureAction;
+
+/// The following recognizers must be set after viewDidLoad in the view lifecycle in order to override default.
+/// Only one instance of the recognizer type will be used on the view at once.
+/// Adding any recognizer removes the default or previoulsy added recognizer on the map view.
+
+/// Replaces the tap gesture recognizer used by the map view, adds it to the UIView, must be non-nil
+@property (strong, nonatomic) UITapGestureRecognizer* tapGestureRecognizer;
+
+/// Replaces the double tap gesture recognizer used by the map view, adds it to the UIView, must be non-nil
+@property (strong, nonatomic) UITapGestureRecognizer* doubleTapGestureRecognizer;
+
+/// Replaces the pan gesture recognizer used by the map view, adds it to the UIView, must be non-nil
+@property (strong, nonatomic) UIPanGestureRecognizer* panGestureRecognizer;
+
+/// Replaces the pinch gesture recognizer used by the map view, adds it to the UIView, must be non-nil
+@property (strong, nonatomic) UIPinchGestureRecognizer* pinchGestureRecognizer;
+
+/// Replaces the rotation gesture recognizer used by the map view, adds it to the UIView, must be non-nil
+@property (strong, nonatomic) UIRotationGestureRecognizer* rotationGestureRecognizer;
+
+/// Replaces the shove gesture recognizer used by the map view, adds it to the UIView, must be non-nil
+@property (strong, nonatomic) UIPanGestureRecognizer* shoveGestureRecognizer;
+
+/// Replaces the long press gesture recognizer used by the map view, adds it to the UIView, must be non-nil
+@property (strong, nonatomic) UILongPressGestureRecognizer* longPressGestureRecognizer;
+
 /**
  Adds a named data layer to the map. See `TGMapData` for more details.
 
@@ -357,8 +431,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Adds a named data layer to the map. See `TGMapData` for more details.
- Refer <a href="https://mapzen.com/documentation/tangram/sources/#generate_label_centroids">label 
- centroid generation</a> documentation for adding a centroid point for label placement for polygon 
+ Refer <a href="https://mapzen.com/documentation/tangram/sources/#generate_label_centroids">label
+ centroid generation</a> documentation for adding a centroid point for label placement for polygon
  geometry.
 
  @param name the name of the data layer.

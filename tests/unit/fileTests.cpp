@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <sys/stat.h>
-#include "tangram.h"
+#include "map.h"
 #include "platform.h"
 
 TEST_CASE( "Compare byte size of allocated resource to os file size", "[Core][bytesFromResource]" ) {

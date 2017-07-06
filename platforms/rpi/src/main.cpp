@@ -13,7 +13,7 @@
 #include <cstdlib>
 
 #include "context.h"
-#include "tangram.h"
+#include "map.h"
 #include "platform_linux.h"
 #include "log.h"
 

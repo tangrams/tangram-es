@@ -1,14 +1,14 @@
 #include "debug/frameInfo.h"
 
-#include "tangram.h"
 #include "debug/textDisplay.h"
+#include "gl.h"
+#include "gl/glError.h"
+#include "gl/primitives.h"
+#include "map.h"
 #include "tile/tileManager.h"
 #include "tile/tile.h"
 #include "tile/tileCache.h"
-#include "gl/primitives.h"
 #include "view/view.h"
-#include "gl.h"
-#include "gl/glError.h"
 
 #include <deque>
 #include <ctime>

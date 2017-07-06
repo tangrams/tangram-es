@@ -2,7 +2,7 @@
 #   - CORE_INCLUDE_DIRS, the path where to CORE headers are located
 #   - CORE_LIBRARY, the core library name
 
-project(core)
+project(tangramcore)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # using regular Clang or AppleClang
@@ -16,14 +16,7 @@ set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/tangram)
 set(DEPS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps)
 set(GENERATED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/generated)
 
-set(CORE_LIBRARY core CACHE INTERNAL "core library name" FORCE)
-
-if (CMAKE_BUILD_TYPE MATCHES Debug)
-  add_definitions(-DDEBUG)
-  add_definitions(-DLOG_LEVEL=3)
-else()
-  add_definitions(-DLOG_LEVEL=2)
-endif()
+set(CORE_LIBRARY tangramcore CACHE INTERNAL "core library name" FORCE)
 
 if (TANGRAM_WARN_ON_RULE_CONFLICT)
   add_definitions(-DTANGRAM_WARN_ON_RULE_CONFLICT)

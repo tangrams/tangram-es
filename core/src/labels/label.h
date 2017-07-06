@@ -2,7 +2,7 @@
 
 #include "labels/fadeEffect.h"
 #include "labels/labelProperty.h"
-#include "tangram.h"
+#include "map.h"
 #include "util/types.h"
 #include "util/hash.h"
 

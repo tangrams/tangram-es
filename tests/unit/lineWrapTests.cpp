@@ -1,6 +1,6 @@
 #include "catch.hpp"
-#include "tangram.h"
-#include "platform_mock.h"
+#include "map.h"
+#include "mockPlatform.h"
 #include "style/textStyleBuilder.h"
 
 #include <memory>

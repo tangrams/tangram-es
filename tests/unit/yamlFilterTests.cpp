@@ -1,15 +1,16 @@
 #include "catch.hpp"
 
-#include <iostream>
-#include <vector>
+#include "data/tileData.h"
+#include "mockPlatform.h"
+#include "scene/filters.h"
+#include "scene/scene.h"
+#include "scene/sceneLoader.h"
+#include "scene/styleContext.h"
 
 #include "yaml-cpp/yaml.h"
-#include "scene/filters.h"
-#include "data/tileData.h"
-#include "scene/sceneLoader.h"
-#include "scene/scene.h"
-#include "scene/styleContext.h"
-#include "platform_mock.h"
+
+#include <iostream>
+#include <vector>
 
 using namespace Tangram;
 using YAML::Node;

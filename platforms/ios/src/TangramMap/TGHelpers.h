@@ -7,7 +7,7 @@
 //
 
 #import "TGMapViewController.h"
-#import "tangram.h"
+#import "map.h"
 
 @interface TGHelpers : NSObject
 
