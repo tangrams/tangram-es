@@ -343,7 +343,8 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 recreate_context = true;
                 break;
             case GLFW_KEY_R:
-                map->loadSceneAsync(sceneFile.c_str());
+                map->loadSceneAsync(sceneFile.c_str(), true, {}, nullptr,
+                        {SceneUpdate("global.sdk_mapzen_api_key", MAPZEN_API_KEY)});
                 break;
             case GLFW_KEY_Z:
                 map->setZoomEased(map->getZoom() + 1.f, 1.5f);

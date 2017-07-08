@@ -22,7 +22,6 @@ public:
 
     struct Response {
         std::vector<char> data;
-        bool successful = false;
         bool canceled = false;
     };
 

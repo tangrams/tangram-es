@@ -162,14 +162,15 @@ void UrlClient::curlLoop(uint32_t index) {
             curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &httpStatus);
             // Handle success or error.
             if (result == CURLE_OK && httpStatus >= 200 && httpStatus < 300) {
-                LOGD("curlLoop %u succeeded with http status: %d for url: %s", index, httpStatus, url);
-                task.response.successful = true;
+                LOGD("curlLoop %u succeeded with http status: %d for url: %s",
+                     index, httpStatus, url);
             } else if (result == CURLE_ABORTED_BY_CALLBACK) {
                 LOGD("curlLoop %u request aborted for url: %s", index, url);
-                task.response.successful = false;
+                task.response.data.clear();
             } else {
-                LOGE("curlLoop %u failed: '%s' with http status: %d for url: %s", index, curlErrorString, httpStatus, url);
-                task.response.successful = false;
+                LOGE("curlLoop %u failed: '%s' with http status: %d for url: %s",
+                    index, curlErrorString, httpStatus, url);
+                task.response.data.clear();
             }
             if (task.request.callback) {
                 LOGD("curlLoop %u performing request callback", index);
@@ -179,7 +180,6 @@ void UrlClient::curlLoop(uint32_t index) {
         // Reset the response.
         task.response.data.clear();
         task.response.canceled = false;
-        task.response.successful = false;
     }
     LOGD("curlLoop %u exiting", index);
     // Clean up our easy handle.

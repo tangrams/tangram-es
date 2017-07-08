@@ -18,13 +18,6 @@ set(GENERATED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/generated)
 
 set(CORE_LIBRARY tangramcore CACHE INTERNAL "core library name" FORCE)
 
-if (CMAKE_BUILD_TYPE MATCHES Debug)
-  add_definitions(-DDEBUG)
-  add_definitions(-DLOG_LEVEL=3)
-else()
-  add_definitions(-DLOG_LEVEL=2)
-endif()
-
 if (TANGRAM_WARN_ON_RULE_CONFLICT)
   add_definitions(-DTANGRAM_WARN_ON_RULE_CONFLICT)
 endif()

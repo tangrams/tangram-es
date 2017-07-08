@@ -67,7 +67,7 @@ struct TestContext {
     void loadTile(const char* path){
         std::ifstream resource(path, std::ifstream::ate | std::ifstream::binary);
         if(!resource.is_open()) {
-            LOGE("Failed to read file at path: %s", path.c_str());
+            LOGE("Failed to read file at path: %s", path);
             return;
         }
 
