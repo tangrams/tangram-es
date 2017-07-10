@@ -379,17 +379,23 @@ bool Map::update(float _dt) {
             markersNeedUpdate |= marker->isEasing();
         }
 
+        // FIXME: Set of labels needs to be updated when markers were added or removed.
+        // Otherwise Labels::m_labels may point to deleted Label instances.
+#if 0
         if (impl->view.changedOnLastUpdate() ||
-            impl->tileManager.hasTileSetChanged()) {
-
+            impl->tileManager.hasTileSetChanged() ||
+            markersNeedUpdate) {
+#endif
             for (const auto& tile : tiles) {
                 tile->update(_dt, impl->view);
             }
             impl->labels.updateLabelSet(impl->view.state(), _dt, impl->scene, tiles, markers,
                                         impl->tileManager);
+#if 0
         } else {
             impl->labels.updateLabels(impl->view.state(), _dt, impl->scene->styles(), tiles, markers);
         }
+#endif
     }
 
     FrameInfo::endUpdate();
