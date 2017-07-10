@@ -100,7 +100,13 @@ extern "C" {
 
     JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeInit(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
         setupJniEnv(jniEnv);
-        auto map = new Tangram::Map(std::shared_ptr<Tangram::Platform>(new Tangram::AndroidPlatform(jniEnv, assetManager, tangramInstance)));
+
+        auto platform = std::make_shared<Tangram::AndroidPlatform>(jniEnv, assetManager, tangramInstance);
+        auto map = new Tangram::Map(platform);
+
+        map->setSceneReadyListener([platform](bool success, const Tangram::SceneError& error) {
+                platform->sceneReadyCallback(success, error);
+            });
         return reinterpret_cast<jlong>(map);
     }
 
@@ -131,7 +137,7 @@ extern "C" {
             jniEnv->DeleteLocalRef(value);
         }
 
-        Tangram::loadScene(*map, cPath, sceneUpdates);
+        map->loadScene(resolveScenePath(cPath).c_str(), false, sceneUpdates);
 
         jniEnv->ReleaseStringUTFChars(path, cPath);
     }
@@ -523,7 +529,7 @@ extern "C" {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
 
-        Tangram::applySceneUpdates(*map);
+        map->applySceneUpdates();
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeOnLowMemory(JNIEnv* jnienv, jobject obj, jlong mapPtr) {

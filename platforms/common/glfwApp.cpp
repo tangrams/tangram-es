@@ -80,8 +80,7 @@ void create(std::shared_ptr<Platform> p, std::string f, int w, int h) {
     // Setup tangram
     if (!map) {
         map = new Tangram::Map(platform);
-        map->loadSceneAsync(sceneFile.c_str(), true, nullptr,
-                {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
+        map->loadSceneAsync(sceneFile.c_str(), true, {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
     }
 
     // Create a windowed mode window and its OpenGL context
@@ -351,8 +350,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 recreate_context = true;
                 break;
             case GLFW_KEY_R:
-                map->loadSceneAsync(sceneFile.c_str(), true, nullptr,
-                                    {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
+                map->loadSceneAsync(sceneFile.c_str(), true, {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
                 break;
             case GLFW_KEY_Z:
                 map->setZoomEased(map->getZoom() + 1.f, 1.5f);
@@ -413,8 +411,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 void dropCallback(GLFWwindow* window, int count, const char** paths) {
 
     sceneFile = std::string(paths[0]);
-    map->loadSceneAsync(sceneFile.c_str(), true, nullptr,
-                        {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
+    map->loadSceneAsync(sceneFile.c_str(), true, {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
 
 }
 
