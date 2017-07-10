@@ -166,6 +166,27 @@ bool FontContext::layoutText(TextStyle::Parameters& _params, const icu::UnicodeS
     if (_params.wordWrap) {
         m_textWrapper.clearWraps();
 
+        if (_params.maxLines != 0) {
+            uint32_t numLines = 0;
+            int pos = 0;
+            int max = line.shapes().size();
+
+            for (auto& shape : line.shapes()) {
+                pos++;
+                if (shape.mustBreak) {
+                    numLines++;
+                    if (numLines >= _params.maxLines && pos < max) {
+                        shape.mustBreak = false;
+                        line.removeShapes(shape.isSpace ? pos-1 : pos, max);
+
+                        auto ellipsis = m_shaper.shape(_params.font, "…");
+                        line.addShapes(ellipsis.shapes());
+                        break;
+                    }
+                }
+            }
+        }
+
         float width = m_textWrapper.getShapeRangeWidth(line);
 
         for (size_t i = 0; i < 3; i++) {

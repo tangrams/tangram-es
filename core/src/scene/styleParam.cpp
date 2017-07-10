@@ -37,6 +37,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"font:weight", StyleParamKey::text_font_weight},
     {"interactive", StyleParamKey::interactive},
     {"join", StyleParamKey::join},
+    {"max_lines", StyleParamKey::text_max_lines},
     {"miter_limit", StyleParamKey::miter_limit},
     {"none", StyleParamKey::none},
     {"offset", StyleParamKey::offset},
@@ -50,8 +51,8 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"outline:visible", StyleParamKey::outline_visible},
     {"outline:width", StyleParamKey::outline_width},
     {"placement", StyleParamKey::placement},
-    {"placement_spacing", StyleParamKey::placement_spacing},
     {"placement_min_length_ratio", StyleParamKey::placement_min_length_ratio},
+    {"placement_spacing", StyleParamKey::placement_spacing},
     {"priority", StyleParamKey::priority},
     {"repeat_distance", StyleParamKey::repeat_distance},
     {"repeat_group", StyleParamKey::repeat_group},
@@ -72,12 +73,13 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"text:font:transform", StyleParamKey::text_transform},
     {"text:font:weight", StyleParamKey::text_font_weight},
     {"text:interactive", StyleParamKey::text_interactive},
+    {"text:max_lines", StyleParamKey::text_max_lines},
     {"text:offset", StyleParamKey::text_offset},
+    {"text:optional", StyleParamKey::text_optional},
     {"text:order", StyleParamKey::text_order},
     {"text:priority", StyleParamKey::text_priority},
     {"text:repeat_distance", StyleParamKey::text_repeat_distance},
     {"text:repeat_group", StyleParamKey::text_repeat_group},
-    {"text:optional", StyleParamKey::text_optional},
     {"text:text_source", StyleParamKey::text_source},
     {"text:text_source:left", StyleParamKey::text_source_left},
     {"text:text_source:right", StyleParamKey::text_source_right},
@@ -299,6 +301,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::order:
     case StyleParamKey::outline_order:
     case StyleParamKey::priority:
+    case StyleParamKey::text_max_lines:
     case StyleParamKey::text_priority: {
         int num;
         if (parseInt(_value, num) > 0) {
@@ -475,6 +478,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::text_order:
     case StyleParamKey::outline_order:
     case StyleParamKey::priority:
+    case StyleParamKey::text_max_lines:
     case StyleParamKey::text_priority:
     case StyleParamKey::color:
     case StyleParamKey::outline_color:

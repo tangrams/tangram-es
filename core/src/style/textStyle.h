@@ -33,6 +33,7 @@ public:
         float fontSize = 12.0f;
         Label::Options labelOptions;
         bool wordWrap = true;
+        uint32_t maxLines = 0;
         uint32_t maxLineWidth = 15;
 
         TextLabelProperty::Transform transform = TextLabelProperty::Transform::none;
