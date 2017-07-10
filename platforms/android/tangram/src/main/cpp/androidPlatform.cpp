@@ -474,24 +474,4 @@ void AndroidPlatform::sceneReadyCallback(bool success, const SceneError& sceneEr
     jniEnv->CallVoidMethod(m_tangramInstance, sceneReadyCallbackMID, success, jUpdateErrorStatus);
 }
 
-void loadScene(Map& map, const char* cPath, const std::vector<SceneUpdate>& updates) {
-
-    map.loadScene(resolveScenePath(cPath).c_str(), false,
-                   [&](bool success, const Tangram::SceneError& error){
-                       auto platform = static_cast<AndroidPlatform&>(*map.getPlatform());
-                       platform.sceneReadyCallback(success, error);
-                   },
-                   updates);
-}
-
-void applySceneUpdates(Map& map) {
-
-    map.applySceneUpdates(
-            [&](bool success, const Tangram::SceneError& error) {
-                auto platform = static_cast<AndroidPlatform&>(*map.getPlatform());
-                platform.sceneReadyCallback(success, error);
-            });
-}
-
-
 } // namespace Tangram

@@ -98,14 +98,12 @@ public:
     // Any pending scene update will be cleared
     void loadSceneAsync(const char* _scenePath,
                         bool _useScenePosition = false,
-                        SceneReadyCallback _onSceneReady = nullptr,
                         const std::vector<SceneUpdate>& sceneUpdates = {});
 
     // Load the scene at the given absolute file path synchronously
     // Any pending scene update will be cleared
     void loadScene(const char* _scenePath,
                    bool _useScenePosition = false,
-                   SceneReadyCallback _onSceneReady = nullptr,
                    const std::vector<SceneUpdate>& sceneUpdates = {});
 
     // Request an update to the scene configuration; the path is a series of yaml keys
@@ -114,8 +112,10 @@ public:
     void queueSceneUpdate(const char* _path, const char* _value);
     void queueSceneUpdate(const std::vector<SceneUpdate>& sceneUpdates);
 
+    void setSceneReadyListener(SceneReadyCallback _onSceneReady);
+
     // Apply all previously requested scene updates
-    void applySceneUpdates(SceneReadyCallback _onSceneReady = nullptr);
+    void applySceneUpdates();
 
     // Set an MBTiles SQLite database file for a DataSource in the scene.
     void setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath);

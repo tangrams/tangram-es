@@ -56,9 +56,9 @@ bool keepRunning = true;
 
 void loadSceneFile() {
     if (mapzenApiKey.empty()) {
-        map->loadSceneAsync(sceneFile.c_str(), true, nullptr, {});
+        map->loadSceneAsync(sceneFile.c_str(), true, {});
     } else {
-        map->loadSceneAsync(sceneFile.c_str(), true, nullptr,
+        map->loadSceneAsync(sceneFile.c_str(), true,
                             {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
     }
 }
