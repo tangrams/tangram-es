@@ -34,10 +34,8 @@
     // [mapView captureScreenshot:YES];
 }
 
-- (void)mapView:(TGMapViewController *)mapView didLoadSceneAsync:(NSString *)scene
+- (void)mapViewDidSceneLoad:(TGMapViewController *)mapView
 {
-    NSLog(@"Did load scene async %@", scene);
-
     TGGeoPoint newYork;
     newYork.longitude = -74.00976419448854;
     newYork.latitude = 40.70532700869127;
@@ -52,6 +50,11 @@
     // Add a client data source, named 'mz_route_line_transit'
     MapViewController* vc = (MapViewController *)mapView;
     vc.mapData = [mapView addDataLayer:@"mz_route_line_transit"];
+}
+
+- (void)mapView:(TGMapViewController *)mapView didLoadSceneAsync:(NSString *)scene
+{
+    // Deprecate!!
 }
 
 - (void)mapView:(TGMapViewController *)mapView didSelectMarker:(TGMarkerPickResult *)markerPickResult atScreenPosition:(TGGeoPoint)position;
