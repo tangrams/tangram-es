@@ -219,6 +219,7 @@ NS_ASSUME_NONNULL_END
 
  @param mapView a pointer to the map view
  @param scene the path to the scene that has been loaded
+ TODO: deprecate for didSceneLoad
  */
 - (void)mapView:(nonnull TGMapViewController *)mapView didLoadSceneAsync:(nonnull NSString *)scene;
 /**
@@ -268,13 +269,18 @@ NS_ASSUME_NONNULL_END
 
 /**
  Called whenever scene updates have been applied to the scene file.
- The list of scene update statuses will be emtpy if all updates have been applied successfully.
+ The list of scene update statuses will be empty if all updates have been applied successfully.
  Called whenever scene updates have failed to apply to the scene file.
 
  @param mapView a pointer to the map view
  @param sceneUpdateError a NSError containing information about the scene update that failed
+ TODO: Mark this as deprecated
  */
 - (void)mapView:(nonnull TGMapViewController *)mapView didFailSceneUpdateWithError:(nonnull NSError *)sceneUpdateError;
+
+// TODO: Documentation
+- (void)mapView:(nonnull TGMapViewController *)mapView didSceneLoadWithError:(nonnull NSError *)sceneError;
+- (void)mapViewDidSceneLoad:(nonnull TGMapViewController *)mapView;
 
 @end
 

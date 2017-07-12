@@ -36,10 +36,12 @@
             return TGErrorSceneUpdatePathNotFound;
         case Tangram::Error::scene_update_value_yaml_syntax_error:
             return TGErrorSceneUpdateValueYAMLSyntaxError;
+        case Tangram::Error::none:
+            return TGErrorNone;
     }
 }
 
-+ (NSError *)errorFromSceneUpdateError:(Tangram::SceneUpdateError)updateError
++ (NSError *)errorFromSceneError:(Tangram::SceneError)updateError
 {
     NSString* path = [NSString stringWithUTF8String:updateError.update.path.c_str()];
     NSString* value = [NSString stringWithUTF8String:updateError.update.value.c_str()];
