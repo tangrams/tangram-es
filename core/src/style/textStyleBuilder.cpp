@@ -590,6 +590,8 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
     _rule.get(StyleParamKey::transition_selected_time, p.labelOptions.selectTransition.time);
     _rule.get(StyleParamKey::transition_show_time, p.labelOptions.showTransition.time);
 
+    _rule.get(StyleParamKey::text_max_lines, p.maxLines);
+
     uint32_t priority = 0;
     size_t repeatGroupHash = 0;
     std::string repeatGroup;

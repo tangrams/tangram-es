@@ -13,8 +13,7 @@ class TextWrapper {
 
 public:
 
-    float getShapeRangeWidth(const alfons::LineLayout& _line,
-        size_t _minLineChars, size_t _maxLineChars);
+    float getShapeRangeWidth(const alfons::LineLayout& _line);
 
     void clearWraps();
 

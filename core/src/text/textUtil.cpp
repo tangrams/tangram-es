@@ -4,8 +4,7 @@
 
 namespace Tangram {
 
-float TextWrapper::getShapeRangeWidth(const alfons::LineLayout& _line,
-                                      size_t _minLineChars, size_t _maxLineChars) {
+float TextWrapper::getShapeRangeWidth(const alfons::LineLayout& _line) {
     float maxWidth = 0;
 
     float lineWidth = 0;
@@ -16,42 +15,39 @@ float TextWrapper::getShapeRangeWidth(const alfons::LineLayout& _line,
     size_t lastShape = 0;
     size_t lastChar = 0;
 
-    for (auto& shape : _line.shapes()) {
+    for (auto it = _line.shapes().begin(), end = _line.shapes().end(); it != end; it++) {
 
-        if (!shape.cluster) {
-            shapeCount++;
-            lineWidth += _line.advance(shape);
-            continue;
-        }
+        auto &shape = *it;
 
         charCount++;
         shapeCount++;
         lineWidth += _line.advance(shape);
 
-        if (shape.canBreak || shape.mustBreak) {
+        if (shape.mustBreak) {
             lastShape = shapeCount;
             lastChar = charCount;
             lastWidth = lineWidth;
-        }
 
-        if (lastShape != 0 && (shape.mustBreak || charCount >= _maxLineChars)) {
-            // only go to next line if chars have been added on the current line
-            if (shape.mustBreak || lastChar > _minLineChars) {
-
-                auto& endShape = _line.shapes()[lastShape-1];
-
-                if (endShape.isSpace) {
-                    lineWidth -= _line.advance(endShape);
-                    lastWidth -= _line.advance(endShape);
-                }
-
-                m_lineWraps.emplace_back(lastShape, lastWidth);
-                maxWidth = std::max(maxWidth, lastWidth);
-
-                lineWidth -= lastWidth;
-                charCount -= lastChar;
-                lastShape = 0;
+            // Append shapes of current glyph cluster
+            while ((it+1 != end) && !(it+1)->cluster) {
+                it++;
+                lineWidth += _line.advance(*it);
+                shapeCount++;
             }
+
+            auto& endShape = _line.shapes()[lastShape-1];
+
+            if (endShape.isSpace) {
+                lineWidth -= _line.advance(endShape);
+                lastWidth -= _line.advance(endShape);
+            }
+
+            m_lineWraps.emplace_back(lastShape, lastWidth);
+            maxWidth = std::max(maxWidth, lastWidth);
+
+            lineWidth -= lastWidth;
+            charCount -= lastChar;
+            lastShape = 0;
         }
     }
 
