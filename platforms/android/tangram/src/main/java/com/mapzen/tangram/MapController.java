@@ -1203,8 +1203,11 @@ public class MapController implements Renderer {
             return;
         }
 
-        boolean viewComplete = nativeUpdate(mapPointer, delta);
-        nativeRender(mapPointer);
+        boolean viewComplete;
+        synchronized(this) {
+            viewComplete = nativeUpdate(mapPointer, delta);
+            nativeRender(mapPointer);
+        }
 
         if (viewComplete && viewCompleteListener != null) {
             viewCompleteListener.onViewComplete();
