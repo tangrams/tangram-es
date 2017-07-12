@@ -15,6 +15,7 @@ class Marker;
 class Scene;
 class StyleBuilder;
 class StyleContext;
+class View;
 
 class MarkerManager {
 
@@ -63,9 +64,10 @@ public:
     // Set a marker to a polygon feature at the given position; returns true if the marker was found and updated.
     bool setPolygon(MarkerID markerID, LngLat* coordinates, int* counts, int rings);
 
-    // Update the zoom level for all markers; markers are built for one zoom level at a time so when the current zoom
-    // changes, all marker meshes are rebuilt.
-    bool update(int zoom);
+    // Update the zoom level for all markers; markers are built for one zoom
+    // level at a time so when the current zoom changes, all marker meshes are
+    // rebuilt. Returns true when any Markers changed since last call to update.
+    bool update(const View& _view, float _dt);
 
     // Remove and destroy all markers.
     void removeAll();
@@ -94,6 +96,7 @@ private:
 
     uint32_t m_idCounter = 0;
     int m_zoom = 0;
+    bool m_dirty = false;
 
 };
 

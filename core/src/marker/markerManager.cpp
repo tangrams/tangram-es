@@ -7,6 +7,7 @@
 #include "scene/dataLayer.h"
 #include "scene/styleContext.h"
 #include "style/style.h"
+#include "view/view.h"
 #include "labels/labelSet.h"
 #include "log.h"
 #include "selection/featureSelection.h"
@@ -37,6 +38,7 @@ void MarkerManager::setScene(std::shared_ptr<Scene> scene) {
 }
 
 MarkerID MarkerManager::add() {
+    m_dirty = true;
 
     // Add a new empty marker object to the list of markers.
     auto id = ++m_idCounter;
@@ -51,6 +53,8 @@ MarkerID MarkerManager::add() {
 }
 
 bool MarkerManager::remove(MarkerID markerID) {
+    m_dirty = true;
+
     for (auto it = m_markers.begin(), end = m_markers.end(); it != end; ++it) {
         if (it->get()->id() == markerID) {
             m_markers.erase(it);
@@ -63,6 +67,8 @@ bool MarkerManager::remove(MarkerID markerID) {
 bool MarkerManager::setStyling(MarkerID markerID, const char* styling, bool isPath) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
+
+    m_dirty = true;
 
     marker->setStyling(std::string(styling), isPath);
 
@@ -78,6 +84,8 @@ bool MarkerManager::setStyling(MarkerID markerID, const char* styling, bool isPa
 bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const unsigned int* bitmapData) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
+
+    m_dirty = true;
 
     TextureOptions options = { GL_RGBA, GL_RGBA, { GL_LINEAR, GL_LINEAR }, { GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE } };
     auto texture = std::make_unique<Texture>(width, height, options);
@@ -97,6 +105,8 @@ bool MarkerManager::setVisible(MarkerID markerID, bool visible) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
+    m_dirty = true;
+
     marker->setVisible(visible);
     return true;
 }
@@ -104,6 +114,8 @@ bool MarkerManager::setVisible(MarkerID markerID, bool visible) {
 bool MarkerManager::setDrawOrder(MarkerID markerID, int drawOrder) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
+
+    m_dirty = true;
 
     marker->setDrawOrder(drawOrder);
 
@@ -118,6 +130,8 @@ bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
 
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
+
+    m_dirty = true;
 
     marker->clearMesh();
 
@@ -144,6 +158,8 @@ bool MarkerManager::setPointEased(MarkerID markerID, LngLat lngLat, float durati
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
+    m_dirty = true;
+
     // If the marker does not have a 'point' feature built, set that point immediately.
     if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
         return setPoint(markerID, lngLat);
@@ -161,6 +177,8 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
 
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
+
+    m_dirty = true;
 
     marker->clearMesh();
 
@@ -210,6 +228,8 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
 
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
+
+    m_dirty = true;
 
     marker->clearMesh();
 
@@ -267,29 +287,38 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
     return true;
 }
 
-bool MarkerManager::update(int zoom) {
+bool MarkerManager::update(const View& _view, float _dt) {
 
-    if (zoom == m_zoom) {
-         return false;
-    }
+    m_zoom = _view.getZoom();
+
     bool rebuilt = false;
+    bool easing = false;
+    bool dirty = m_dirty;
+    m_dirty = false;
+
     for (auto& marker : m_markers) {
-        if (zoom != marker->builtZoomLevel()) {
-            buildMesh(*marker, zoom);
+
+        if (m_zoom != marker->builtZoomLevel()) {
+            buildMesh(*marker, m_zoom);
             rebuilt = true;
         }
+
+        marker->update(_dt, _view);
+        easing |= marker->isEasing();
     }
-    m_zoom = zoom;
-    return rebuilt;
+
+    return rebuilt || easing || dirty;
 }
 
 void MarkerManager::removeAll() {
+    m_dirty = true;
 
     m_markers.clear();
 
 }
 
 void MarkerManager::rebuildAll() {
+    m_dirty = true;
 
     for (auto& entry : m_markers) {
         buildStyling(*entry);
