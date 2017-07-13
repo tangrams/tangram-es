@@ -2,10 +2,11 @@
 #include "osxPlatform.h"
 #include "gl/hardware.h"
 #include "log.h"
-#include <map>
+#include "platform_gl.h"
 
 #import <cstdarg>
 #import <cstdio>
+#import <map>
 #import <AppKit/AppKit.h>
 
 #define DEFAULT "fonts/NotoSans-Regular.ttf"

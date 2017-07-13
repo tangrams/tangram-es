@@ -14,6 +14,7 @@
 #include "util/mapProjection.h"
 #include "util/util.h"
 #include "util/url.h"
+#include "util/zipArchive.h"
 #include "view/view.h"
 
 #include <algorithm>
@@ -21,6 +22,8 @@
 namespace Tangram {
 
 static std::atomic<int32_t> s_serial;
+
+Scene::Scene() : id(s_serial++) {}
 
 Scene::Scene(std::shared_ptr<const Platform> _platform, const Url& _url)
     : id(s_serial++),
@@ -57,7 +60,8 @@ void Scene::copyConfig(const Scene& _other) {
     m_globalRefs = _other.m_globalRefs;
 
     m_mapProjection.reset(new MercatorProjection());
-    m_assets = _other.assets();
+
+    m_zipArchives = _other.m_zipArchives;
 }
 
 Scene::~Scene() {}
@@ -77,6 +81,43 @@ Style* Scene::findStyle(const std::string& _name) {
         if (style->getName() == _name) { return style.get(); }
     }
     return nullptr;
+}
+
+UrlRequestHandle Scene::startUrlRequest(std::shared_ptr<Platform> platform, Url url, UrlCallback callback) {
+    if (url.scheme() == "zip") {
+        UrlResponse response;
+        // URL for a file in a zip archive, get the source URL from the fragment.
+        auto encodedSourceUrl = url.netLocation();
+        auto source = Url(Url::unEscapeReservedCharacters(encodedSourceUrl));
+        // Search for the source URL in our archive map.
+        auto it = m_zipArchives.find(source);
+        if (it != m_zipArchives.end()) {
+            auto& archive = it->second;
+            // Found the archive! Now create a response for the request.
+            auto zipEntryPath = url.path().substr(1);
+            auto entry = archive->findEntry(zipEntryPath);
+            if (entry) {
+                response.content.resize(entry->uncompressedSize);
+                bool success = archive->decompressEntry(entry, response.content.data());
+                if (!success) {
+                    response.error = "Unable to decompress zip archive file.";
+                }
+            } else {
+                response.error = "Did not find zip archive entry.";
+            }
+        } else {
+            response.error = "Could not find zip archive.";
+        }
+        callback(response);
+        return 0;
+    }
+
+    // For non-zip URLs, send it to the platform.
+    return platform->startUrlRequest(url, callback);
+}
+
+void Scene::addZipArchive(Url url, std::shared_ptr<ZipArchive> zipArchive) {
+    m_zipArchives.emplace(url, zipArchive);
 }
 
 int Scene::addIdForName(const std::string& _name) {
@@ -144,47 +185,6 @@ void Scene::setPixelScale(float _scale) {
         style->setPixelScale(_scale);
     }
     m_fontContext->setPixelScale(_scale);
-}
-
-void Scene::createSceneAsset(const std::shared_ptr<Platform>& platform, const Url& resolvedUrl,
-                                 const Url& relativeUrl, const Url& base) {
-
-    auto& resolvedStr = resolvedUrl.string();
-    auto& baseStr = base.string();
-    std::shared_ptr<Asset> asset;
-
-    if (m_assets.find(resolvedStr) != m_assets.end()) { return; }
-
-    if ( (Url::getPathExtension(resolvedUrl.path()) == "zip") ){
-        if (relativeUrl.hasHttpScheme() || (resolvedUrl.hasHttpScheme() && base.isEmpty())) {
-            // Data to be fetched later (and zipHandle created) in network callback
-            asset = std::make_shared<ZippedAsset>(resolvedStr);
-
-        } else if (relativeUrl.isAbsolute() || base.isEmpty() || !m_assets[baseStr]->zipHandle()) {
-            // load zip asset from File if its absolute or no base or base is not a zip asset
-            asset = std::make_shared<ZippedAsset>(resolvedStr, nullptr, platform->bytesFromFile(resolvedStr.c_str()));
-        } else {
-            auto parentAsset = static_cast<ZippedAsset*>(m_assets[baseStr].get());
-            // Parent asset (for base Str) must have been created by now
-            assert(parentAsset);
-            asset = std::make_shared<ZippedAsset>(resolvedStr, nullptr,
-                                                                       parentAsset->readBytesFromAsset(platform, resolvedStr));
-        }
-    } else {
-        const auto& parentAsset = m_assets[baseStr];
-
-        if (relativeUrl.isAbsolute() || (parentAsset && !parentAsset->zipHandle())) {
-            // Make sure to first check for cases when the asset does not belong within a zipBundle
-            asset = std::make_shared<Asset>(resolvedStr);
-        } else if (parentAsset && parentAsset->zipHandle()) {
-            // Asset is in zip bundle
-            asset = std::make_shared<ZippedAsset>(resolvedStr, parentAsset->zipHandle());
-        } else {
-            asset = std::make_shared<Asset>(resolvedStr);
-        }
-    }
-
-    m_assets[resolvedStr] = asset;
 }
 
 }

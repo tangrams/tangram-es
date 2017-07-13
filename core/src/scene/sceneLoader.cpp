@@ -57,9 +57,9 @@ std::mutex SceneLoader::m_textureMutex;
 bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::shared_ptr<Scene> _scene,
                             const std::vector<SceneUpdate>& _updates) {
 
-    Importer sceneImporter;
+    Importer sceneImporter(_scene);
 
-    _scene->config() = sceneImporter.applySceneImports(_platform, _scene);
+    _scene->config() = sceneImporter.applySceneImports(_platform);
 
     if (!_scene->config()) {
         return false;
@@ -105,8 +105,7 @@ bool SceneLoader::applyUpdates(const std::shared_ptr<Platform>& platform, Scene&
         }
     }
 
-    Importer importer;
-    importer.resolveSceneUrls(platform, scene, root, Url(scene.path()).resolved(Url(scene.resourceRoot())));
+    Importer::resolveSceneUrls(root, scene.url());
 
     return true;
 }
@@ -567,12 +566,6 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
     std::shared_ptr<Texture> texture;
 
     Url url(urlString);
-    
-    auto& asset = scene->sceneAssets()[url];
-    // asset must exist for this path (must be created during scene importing)
-    assert(asset);
-    
-    // FIXME: Zip assets aren't handled by the paths below.
 
     if (url.hasBase64Data() && url.mediaType() == "image/png") {
         auto data = url.data();
@@ -598,30 +591,28 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
             LOGE("Invalid Base64 texture");
         }
     } else {
-        scene->pendingTextures++;
-        platform->startUrlRequest(url, [=](UrlResponse response) {
-                if (response.error) {
-                    LOGE("Error retrieving URL '%s': %s", url.string().c_str(), response.error);
-                }
-                std::lock_guard<std::mutex> lock(m_textureMutex);
-                auto texture = scene->getTexture(name);
-                if (texture) {
-                    if (!texture->loadImageFromMemory(std::move(response.content))) {
-                        LOGE("Invalid texture data from URL '%s'", url.string().c_str());
-                    }
-
-                    if (texture->spriteAtlas()) {
-                        texture->spriteAtlas()->updateSpriteNodes({texture->getWidth(), texture->getHeight()});
-                    }
-
-                    scene->pendingTextures--;
-                    if (scene->pendingTextures == 0) {
-                        platform->requestRender();
-                    }
-                }
-            });
         std::vector<char> textureData = {};
         texture = std::make_shared<Texture>(textureData, options, generateMipmaps);
+
+        scene->pendingTextures++;
+        scene->startUrlRequest(platform, url, [&](UrlResponse response) {
+                if (response.error) {
+                    LOGE("Error retrieving URL '%s': %s", url.string().c_str(), response.error);
+                } else {
+                    if (texture) {
+                        if (!texture->loadImageFromMemory(std::move(response.content))) {
+                            LOGE("Invalid texture data from URL '%s'", url.string().c_str());
+                        }
+                        if (texture->spriteAtlas()) {
+                            texture->spriteAtlas()->updateSpriteNodes({texture->getWidth(), texture->getHeight()});
+                        }
+                    }
+                }
+                scene->pendingTextures--;
+                if (scene->pendingTextures == 0) {
+                    platform->requestRender();
+                }
+            });
     }
 
     return texture;
@@ -631,15 +622,13 @@ bool SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
                               const std::shared_ptr<Scene>& scene) {
     TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
 
+    std::lock_guard<std::mutex> lock(m_textureMutex);
+    auto emplaceResult = scene->textures().emplace(url, nullptr);
+    auto textureIt = emplaceResult.first;
     auto texture = fetchTexture(platform, url, url, options, false, scene);
-    if (texture) {
-        std::lock_guard<std::mutex> lock(m_textureMutex);
-        scene->textures().emplace(url, texture);
-        return true;
-    }
+    textureIt->second = texture;
 
-    LOGE("Missing texture %s", url.c_str());
-    return false;
+    return true;
 }
 
 void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& node,
@@ -736,15 +725,9 @@ void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& 
 
     Url url(uri);
 
-    auto& asset = scene->sceneAssets()[_ft.uri];
-    // asset must exist for this path (must be created during scene importing)
-    assert(asset);
-    
-    // FIXME: Zip assets aren't handled by the URL request below.
-    
     // Load font file.
     scene->pendingFonts++;
-    platform->startUrlRequest(url, [_ft, scene](UrlResponse response) {
+    scene->startUrlRequest(platform, url, [_ft, scene](UrlResponse response) {
         if (response.error) {
             LOGE("Error retrieving font '%s' at %s: ", _ft.alias.c_str(), _ft.uri.c_str(), response.error);
         } else {

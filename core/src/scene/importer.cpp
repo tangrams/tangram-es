@@ -3,6 +3,7 @@
 #include "log.h"
 #include "platform.h"
 #include "scene/sceneLoader.h"
+#include "util/zipArchive.h"
 
 #include "yaml-cpp/yaml.h"
 #include <cassert>
@@ -12,20 +13,21 @@ using YAML::NodeType;
 
 namespace Tangram {
 
+Importer::Importer(std::shared_ptr<Scene> scene)
+    : m_scene(scene) {
+}
 
-Node Importer::applySceneImports(const std::shared_ptr<Platform>& platform,
-                                 std::shared_ptr<Scene>& scene) {
+Node Importer::applySceneImports(std::shared_ptr<Platform> platform) {
 
-    const Url& sceneUrl = scene->url();
+    const Url& sceneUrl = m_scene->url();
 
     Url nextUrlToImport;
 
-    if (!scene->yaml().empty()) {
-        // Load scene from yaml string
-        processScene(platform, scene, sceneUrl, scene->yaml());
+    if (!m_scene->yaml().empty()) {
+        // Load scene from yaml string.
+        addSceneString(sceneUrl, sceneUrl, m_scene->yaml());
     } else {
-        // Load scene from yaml file
-        scene->createSceneAsset(platform, sceneUrl, Url(""), Url(""));
+        // Load scene from yaml file.
         m_sceneQueue.push_back(sceneUrl);
     }
 
@@ -37,106 +39,101 @@ Node Importer::applySceneImports(const std::shared_ptr<Platform>& platform,
         {
             std::unique_lock<std::mutex> lock(sceneMutex);
 
-            condition.wait(lock, [&, this]{
-                    if (m_sceneQueue.empty()) {
-                        // Not busy at all?
-                        if (activeDownloads == 0) { return true; }
-                    } else {
-                        // More work and not completely busy?
-                        if (activeDownloads < MAX_SCENE_DOWNLOAD) { return true; }
-                    }
-                    return false;
-                });
-
-
             if (m_sceneQueue.empty()) {
                 if (activeDownloads == 0) {
                     break;
                 }
+                condition.wait(lock);
+            }
+
+            if (!m_sceneQueue.empty()) {
+                nextUrlToImport = m_sceneQueue.back();
+                m_sceneQueue.pop_back();
+            } else {
                 continue;
             }
 
-            nextUrlToImport = m_sceneQueue.back();
-            m_sceneQueue.pop_back();
-
-            if (m_scenes.find(nextUrlToImport) != m_scenes.end()) {
+            if (m_importedScenes.find(nextUrlToImport) != m_importedScenes.end()) {
                 // This scene URL has already been imported, we're done!
                 continue;
             }
         }
 
-        bool isZipped = (Url::getPathExtension(nextUrlToImport.path()) == "zip");
-        auto& asset = scene->assets()[nextUrlToImport.string()];
-        // An asset at this path must have been created by now.
-        assert(asset);
-
         activeDownloads++;
-        platform->startUrlRequest(nextUrlToImport, [&, nextUrlToImport](UrlResponse response) {
+        m_scene->startUrlRequest(platform, nextUrlToImport, [&, nextUrlToImport](UrlResponse response) {
             if (response.error) {
                 LOGE("Unable to retrieve '%s': %s", nextUrlToImport.string().c_str(), response.error);
             } else {
                 std::unique_lock<std::mutex> lock(sceneMutex);
-                processScene(nextUrlToImport, std::string(response.content.begin(), response.content.end()));
+                addSceneData(nextUrlToImport, response.content);
             }
             activeDownloads--;
             condition.notify_all();
         });
-
-#if 0
-        if (path.hasHttpScheme() && !asset->zipHandle()) {
-            activeDownloads++;
-            platform->startUrlRequest(path.string(), [&, isZipped, path](std::vector<char>&& rawData) {
-                // Running on download-thread
-                if (!rawData.empty()) {
-                    std::unique_lock<std::mutex> lock(sceneMutex);
-                    auto& asset = scene->assets()[path.string()];
-                    if (isZipped) {
-                        auto& zippedAsset = static_cast<ZippedAsset&>(*asset);
-                        zippedAsset.buildZipHandle(rawData);
-                        processScene(platform, scene, path, asset->readStringFromAsset(platform));
-                    } else {
-                        processScene(platform, scene, path, std::string(rawData.data(), rawData.size()));
-                    }
-                }
-                activeDownloads--;
-                condition.notify_all();
-            });
-        } else {
-            std::unique_lock<std::mutex> lock(sceneMutex);
-            processScene(platform, scene, path, getSceneString(platform, path, asset));
-        }
-#endif
     }
 
     Node root = Node();
 
     LOGD("Processing scene import Stack:");
     std::vector<Url> sceneStack;
-    importScenesRecursive(platform, scene, root, sceneUrl, sceneStack);
+    importScenesRecursive(root, sceneUrl, sceneStack);
 
     return root;
 }
 
-void Importer::processScene(const std::shared_ptr<Platform>& platform, std::shared_ptr<Scene>& scene,
-        const Url& sceneUrl, const std::string &sceneString) {
+void Importer::addSceneData(const Url& sceneUrl, std::vector<char>& sceneContent) {
 
     LOGD("Process: '%s'", sceneUrl.string().c_str());
 
     // Don't load imports twice
-    if (m_scenes.find(sceneUrl) != m_scenes.end()) {
+    if (m_importedScenes.find(sceneUrl) != m_importedScenes.end()) {
         return;
     }
 
-    try {
-        auto sceneNode = YAML::Load(sceneString);
-
-        m_scenes[sceneUrl] = sceneNode;
-
-        for (const auto& import : getResolvedImportUrls(platform, scene, sceneNode, sceneUrl)) {
-            m_sceneQueue.push_back(import);
+    Url baseUrl = sceneUrl;
+    std::string sceneString;
+    if (Url::getPathExtension(sceneUrl.path()) == "zip") {
+        // We're loading a scene from a zip archive!
+        // First, create an archive from the data.
+        auto zipArchive = std::make_shared<ZipArchive>();
+        zipArchive->loadFromMemory(sceneContent);
+        // Find the "base" scene file in the archive entries.
+        for (const auto& entry : zipArchive->entries()) {
+            auto ext = Url::getPathExtension(entry.path);
+            // The "base" scene file must have extension "yaml" or "yml" and be
+            // at the root directory of the archive (i.e. no '/' in path).
+            if ((ext == "yaml" || ext == "yml") && entry.path.find('/') == std::string::npos) {
+                // Found the base, now create a URL to resolve the contents.
+                auto encodedSourceUrl = Url::escapeReservedCharacters(sceneUrl.string());
+                baseUrl = Url("zip://" +  encodedSourceUrl);
+                // And extract the contents to the scene string.
+                sceneString.resize(entry.uncompressedSize);
+                zipArchive->decompressEntry(&entry, &sceneString[0]);
+                break;
+            }
         }
+        // Add the archive to the scene.
+        m_scene->addZipArchive(sceneUrl, zipArchive);
+    } else {
+        sceneString = std::string(sceneContent.data(), sceneContent.size());
+    }
+
+    addSceneString(baseUrl, sceneUrl, sceneString);
+}
+
+void Importer::addSceneString(const Url& baseUrl, const Url& sceneUrl, const std::string& sceneString) {
+    Node sceneNode;
+    try {
+        sceneNode = YAML::Load(sceneString);
     } catch (YAML::ParserException e) {
         LOGE("Parsing scene config '%s'", e.what());
+        return;
+    }
+
+    m_importedScenes[sceneUrl] = sceneNode;
+
+    for (const auto& import : getResolvedImportUrls(sceneNode, baseUrl)) {
+        m_sceneQueue.push_back(import);
     }
 }
 
@@ -166,21 +163,31 @@ bool nodeIsTextureUrl(const Node& node, const Node& textures) {
     return true;
 }
 
-void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform, Scene& scene,
-                                Node& root, const Url& base) {
+void Importer::resolveSceneUrls(Node& root, const Url& base) {
+
+    // Resolve import URLs.
+
+    if (Node import = root["import"]) {
+        if (import.IsScalar()) {
+            import = Url(import.Scalar()).resolved(base).string();
+        } else if (import.IsSequence()) {
+            for (Node path : import) {
+                if (path.IsScalar()) {
+                    path = Url(path.Scalar()).resolved(base).string();
+                }
+            }
+        }
+    }
 
     // Resolve global texture URLs.
-    std::string relativeUrl = "";
 
     Node textures = root["textures"];
 
-    if (textures) {
+    if (textures.IsDefined()) {
         for (auto texture : textures) {
             if (Node textureUrlNode = texture.second["url"]) {
                 if (nodeIsPotentialUrl(textureUrlNode)) {
-                    relativeUrl = textureUrlNode.Scalar();
                     textureUrlNode = Url(textureUrlNode.Scalar()).resolved(base).string();
-                    scene.createSceneAsset(platform, textureUrlNode.Scalar(), relativeUrl, base);
                 }
             }
         }
@@ -198,9 +205,7 @@ void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform, Scene
             //style->texture
             if (Node texture = style["texture"]) {
                 if (nodeIsTextureUrl(texture, textures)) {
-                    relativeUrl = texture.Scalar();
                     texture = Url(texture.Scalar()).resolved(base).string();
-                    scene.createSceneAsset(platform, texture.Scalar(), relativeUrl, base);
                 }
             }
 
@@ -212,9 +217,7 @@ void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform, Scene
                         if (!propNode.IsMap()) { continue; }
                         if (Node matTexture = propNode["texture"]) {
                             if (nodeIsTextureUrl(matTexture, textures)) {
-                                relativeUrl = matTexture.Scalar();
                                 matTexture = Url(matTexture.Scalar()).resolved(base).string();
-                                scene.createSceneAsset(platform, matTexture.Scalar(), relativeUrl, base);
                             }
                         }
                     }
@@ -228,15 +231,11 @@ void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform, Scene
                     for (auto uniformEntry : uniforms) {
                         Node uniformValue = uniformEntry.second;
                         if (nodeIsTextureUrl(uniformValue, textures)) {
-                            relativeUrl = uniformValue.Scalar();
                             uniformValue = Url(uniformValue.Scalar()).resolved(base).string();
-                            scene.createSceneAsset(platform, uniformValue.Scalar(), relativeUrl, base);
                         } else if (uniformValue.IsSequence()) {
                             for (Node u : uniformValue) {
                                 if (nodeIsTextureUrl(u, textures)) {
-                                    relativeUrl = u.Scalar();
                                     u = Url(u.Scalar()).resolved(base).string();
-                                    scene.createSceneAsset(platform, u.Scalar(), relativeUrl, base);
                                 }
                             }
                         }
@@ -248,7 +247,6 @@ void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform, Scene
 
     // Resolve data source URLs.
 
-    // TODO: create assets for sources
     if (Node sources = root["sources"]) {
         for (auto source : sources) {
             if (!source.second.IsMap()) { continue; }
@@ -268,17 +266,13 @@ void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform, Scene
                 if (font.second.IsMap()) {
                     auto urlNode = font.second["url"];
                     if (nodeIsPotentialUrl(urlNode)) {
-                        relativeUrl = urlNode.Scalar();
                         urlNode = Url(urlNode.Scalar()).resolved(base).string();
-                        scene.createSceneAsset(platform, urlNode.Scalar(), relativeUrl, base);
                     }
                 } else if (font.second.IsSequence()) {
                     for (auto& fontNode : font.second) {
                         auto urlNode = fontNode["url"];
                         if (nodeIsPotentialUrl(urlNode)) {
-                            relativeUrl = urlNode.Scalar();
                             urlNode = Url(urlNode.Scalar()).resolved(base).string();
-                            scene.createSceneAsset(platform, urlNode.Scalar(), relativeUrl, base);
                         }
                     }
                 }
@@ -287,41 +281,26 @@ void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform, Scene
     }
 }
 
-std::string Importer::getSceneString(const std::shared_ptr<Platform>& platform,
-                                     const Url& scenePath, const std::shared_ptr<Asset>& asset) {
-    if (!asset) { return "";}
+std::vector<Url> Importer::getResolvedImportUrls(const Node& sceneNode, const Url& base) {
 
-    return asset->readStringFromAsset(platform);
-}
-
-std::vector<Url> Importer::getResolvedImportUrls(const std::shared_ptr<Platform>& platform,
-                                                 std::shared_ptr<Scene>& scene,
-                                                 const Node& sceneNode, const Url& base) {
-
-    std::vector<Url> scenePaths;
+    std::vector<Url> sceneUrls;
 
     if (const Node& import = sceneNode["import"]) {
         if (import.IsScalar()) {
-            auto resolvedUrl = Url(import.Scalar()).resolved(base);
-            scene->createSceneAsset(platform, resolvedUrl, import.Scalar(), base);
-            scenePaths.push_back(resolvedUrl);
+            sceneUrls.push_back(Url(import.Scalar()).resolved(base));
         } else if (import.IsSequence()) {
             for (const auto& path : import) {
                 if (path.IsScalar()) {
-                    auto resolvedUrl = Url(path.Scalar()).resolved(base);
-                    scene->createSceneAsset(platform, resolvedUrl, path.Scalar(), base);
-                    scenePaths.push_back(resolvedUrl);
+                    sceneUrls.push_back(Url(path.Scalar()).resolved(base));
                 }
             }
         }
     }
 
-    return scenePaths;
+    return sceneUrls;
 }
 
-void Importer::importScenesRecursive(const std::shared_ptr<Platform>& platform,
-                                     std::shared_ptr<Scene>& scene, Node& root,
-                                     const Url& sceneUrl, std::vector<Url>& sceneStack) {
+void Importer::importScenesRecursive(Node& root, const Url& sceneUrl, std::vector<Url>& sceneStack) {
 
     LOGD("Starting importing Scene: %s", sceneUrl.string().c_str());
 
@@ -335,19 +314,20 @@ void Importer::importScenesRecursive(const std::shared_ptr<Platform>& platform,
 
     sceneStack.push_back(sceneUrl);
 
-    auto sceneNode = m_scenes[sceneUrl];
+    auto sceneNode = m_importedScenes[sceneUrl];
 
-    if (sceneNode.IsNull()) { return; }
-    if (!sceneNode.IsMap()) { return; }
+    if (!sceneNode.IsDefined() || !sceneNode.IsMap()) {
+        return;
+    }
 
-    auto imports = getResolvedImportUrls(platform, scene, sceneNode, sceneUrl);
+    auto imports = getResolvedImportUrls(sceneNode, sceneUrl);
 
     // Don't want to merge imports, so remove them here.
     sceneNode.remove("import");
 
     for (const auto& url : imports) {
 
-        importScenesRecursive(platform, scene, root, url, sceneStack);
+        importScenesRecursive(root, url, sceneStack);
 
     }
 
@@ -355,7 +335,7 @@ void Importer::importScenesRecursive(const std::shared_ptr<Platform>& platform,
 
     mergeMapFields(root, sceneNode);
 
-    resolveSceneUrls(platform, scene, root, sceneUrl);
+    resolveSceneUrls(root, sceneUrl);
 }
 
 void Importer::mergeMapFields(Node& target, const Node& import) {
