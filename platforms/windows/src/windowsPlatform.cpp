@@ -5,14 +5,8 @@
 #include <stdarg.h>
 #include <libgen.h>
 #include <unistd.h>
-#include <sys/resource.h>
-#include <sys/syscall.h>
 
-#if defined(TANGRAM_LINUX)
 #include <GLFW/glfw3.h>
-#elif defined(TANGRAM_RPI)
-#include "context.h"
-#endif
 
 #define DEFAULT "fonts/NotoSans-Regular.ttf"
 #define FONT_AR "fonts/NotoNaskh-Regular.ttf"
@@ -36,11 +30,7 @@ WindowsPlatform::WindowsPlatform(UrlClient::Options urlClientOptions) :
     m_urlClient(urlClientOptions) {}
 
 void WindowsPlatform::requestRender() const {
-#if defined(PLATFORM_LINUX)
     glfwPostEmptyEvent();
-#elif defined(PLATFORM_RPI)
-    setRenderRequest(true);
-#endif
 }
 
 std::vector<FontSourceHandle> WindowsPlatform::systemFontFallbacksHandle() const {
@@ -67,21 +57,8 @@ void WindowsPlatform::cancelUrlRequest(const std::string& _url) {
 
 WindowsPlatform::~WindowsPlatform() {}
 
-void setCurrentThreadPriority(int priority) {
-#if defined(TANGRAM_LINUX)
-    int tid = syscall(SYS_gettid);
-    setpriority(PRIO_PROCESS, tid, priority);
-#elif defined(TANGRAM_RPI)
-    // no-op
-#endif
-}
-
 void initGLExtensions() {
-#if defined(TANGRAM_LINUX)
     Tangram::Hardware::supportsMapBuffer = true;
-#elif defined(TANGRAM_RPI)
-    // no-op
-#endif
 }
 
 } // namespace Tangram
