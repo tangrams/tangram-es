@@ -26,7 +26,7 @@ endif()
 include(${PROJECT_SOURCE_DIR}/toolchains/utils.cmake)
 
 # platform lookup
-set(SUPPORTED_TARGETS darwin ios android raspberrypi linux tizen ios.framework)
+set(SUPPORTED_TARGETS darwin ios android raspberrypi linux tizen ios.framework windows)
 
 if(NOT PLATFORM_TARGET)
     string(TOLOWER "${CMAKE_SYSTEM_NAME}" varplatform)
