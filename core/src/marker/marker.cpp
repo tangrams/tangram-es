@@ -78,6 +78,10 @@ void Marker::setMesh(uint32_t styleId, uint32_t zoom, std::unique_ptr<StyledMesh
     m_modelMatrix = glm::scale(glm::vec3(scale));
 }
 
+void Marker::clearMesh() {
+    m_mesh.reset();
+}
+
 void Marker::setTexture(std::unique_ptr<Texture> texture) {
     m_texture = std::move(texture);
 }
