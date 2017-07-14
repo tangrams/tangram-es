@@ -89,6 +89,12 @@ target_compile_definitions(${CORE_LIBRARY}
 # make groups for xcode
 group_recursive_sources(src "src")
 
+if(WIN32)
+	set(INCBIN "${PROJECT_SOURCE_DIR}/../scripts/incbin.bat")
+else()
+	set(INCBIN "sh ${PROJECT_SOURCE_DIR}/../scripts/incbin.bat")
+endif()
+
 # add compile shader targets
 file(GLOB_RECURSE SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
 set(SHADER_OUTPUT_DIRECTORY ${GENERATED_DIR})
@@ -106,7 +112,7 @@ foreach(_shader ${SHADER_FILES})
             OUTPUT ${SHADER_OUTPUT}
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..
             MAIN_DEPENDENCY ${_shader}
-            COMMAND ${PROJECT_SOURCE_DIR}/../scripts/incbin.sh
+            COMMAND ${INCBIN}
                 ${_shader}
                 core/generated/${_shader_name}.h
                 ${_shader_name})
@@ -122,6 +128,8 @@ add_custom_command(
   OUTPUT ${DEFAULT_POINT_TEXTURE_HEADER}
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..
   MAIN_DEPENDENCY ${DEFAULT_POINT_TEXTURE_IMAGE}
-  COMMAND ${PROJECT_SOURCE_DIR}/../scripts/incbin.sh ${DEFAULT_POINT_TEXTURE_IMAGE} ${DEFAULT_POINT_TEXTURE_HEADER} default_point_texture
+  COMMAND ${INCBIN}
+		${DEFAULT_POINT_TEXTURE_IMAGE} ${DEFAULT_POINT_TEXTURE_HEADER}
+		default_point_texture
   )
 add_dependencies(${CORE_LIBRARY} default_point_texture)
