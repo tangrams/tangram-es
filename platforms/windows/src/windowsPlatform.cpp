@@ -57,6 +57,10 @@ void WindowsPlatform::cancelUrlRequest(const std::string& _url) {
 
 WindowsPlatform::~WindowsPlatform() {}
 
+void setCurrentThreadPriority(int priority) {
+	// No-op
+}
+
 void initGLExtensions() {
     Tangram::Hardware::supportsMapBuffer = true;
 }
