@@ -38,6 +38,9 @@ if(TANGRAM_APPLICATION)
   add_definitions(-DMAPZEN_API_KEY="${MAPZEN_API_KEY}")
 
   find_package(OpenGL REQUIRED)
+	
+	# CURL
+	find_package(CURL REQUIRED)
 
   # Build GLFW.
   if (TANGRAM_USE_SYSTEM_GLFW_LIBS)
@@ -63,11 +66,13 @@ if(TANGRAM_APPLICATION)
   target_include_directories(${EXECUTABLE_NAME}
     PUBLIC
     ${GLFW_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/platforms/common)
+    ${PROJECT_SOURCE_DIR}/platforms/common
+		${CURL_INCLUDE_DIRS})
 
   target_link_libraries(${EXECUTABLE_NAME}
     ${CORE_LIBRARY}
-    -lcurl glfw
+		${CURL_LIBRARIES}
+    glfw
     # only used when not using external lib
     -ldl
     -pthread
