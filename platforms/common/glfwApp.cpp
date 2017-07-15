@@ -87,6 +87,9 @@ void create(std::shared_ptr<Platform> p, std::string f, int w, int h) {
 
     // Make the main_window's context current
     glfwMakeContextCurrent(main_window);
+#ifdef _WIN32
+		gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+#endif
 
     // Set input callbacks
     glfwSetFramebufferSizeCallback(main_window, framebufferResizeCallback);

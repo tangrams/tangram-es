@@ -40,6 +40,16 @@ extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
 
 #if defined(TANGRAM_LINUX) || defined(TANGRAM_WINDOWS)
 #define GL_GLEXT_PROTOTYPES
+#ifdef TANGRAM_WINDOWS
+#define GLFW_INCLUDE_NONE
+#include <glad/glad.h>
+// Add missing stuff
+#define glGenVertexArrays glGenVertexArraysOES
+#define glDeleteVertexArrays glDeleteVertexArraysOES
+#define glBindVertexArray glBindVertexArrayOES
+#define glMapBuffer glMapBufferOES
+#define glUnmapBuffer glUnmapBufferOES
+#endif // TANGRAM_WINDOWS
 #include <GLFW/glfw3.h>
 #endif // defined(TANGRAM_LINUX) || defined(TANGRAM_WINDOWS)
 
