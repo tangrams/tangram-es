@@ -69,7 +69,6 @@ set(LINK_LIBRARIES
     sqlite3
     double-conversion
     miniz
-    z
 		${ZLIB_LIBRARIES})
 
 if (UNIX AND NOT APPLE)

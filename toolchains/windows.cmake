@@ -38,8 +38,6 @@ if(TANGRAM_APPLICATION)
   add_definitions(-DMAPZEN_API_KEY="${MAPZEN_API_KEY}")
 
   find_package(OpenGL REQUIRED)
-	
-	# CURL
 	find_package(CURL REQUIRED)
 
   # Build GLFW.
@@ -54,7 +52,7 @@ if(TANGRAM_APPLICATION)
     set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
     add_subdirectory(${PROJECT_SOURCE_DIR}/platforms/common/glfw)
   endif()
-
+	
   add_executable(${EXECUTABLE_NAME}
     ${PROJECT_SOURCE_DIR}/platforms/windows/src/windowsPlatform.cpp
     ${PROJECT_SOURCE_DIR}/platforms/windows/src/main.cpp
@@ -63,7 +61,7 @@ if(TANGRAM_APPLICATION)
     ${PROJECT_SOURCE_DIR}/platforms/common/glfwApp.cpp
     ${PROJECT_SOURCE_DIR}/platforms/common/glad.c
     )
-
+		
   target_include_directories(${EXECUTABLE_NAME}
     PUBLIC
     ${GLFW_SOURCE_DIR}/include
@@ -75,7 +73,6 @@ if(TANGRAM_APPLICATION)
 		${CURL_LIBRARIES}
     glfw
     # only used when not using external lib
-    -ldl
     -pthread
     ${GLFW_LIBRARIES}
     ${OPENGL_LIBRARIES})
