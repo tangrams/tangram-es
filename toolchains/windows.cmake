@@ -61,6 +61,7 @@ if(TANGRAM_APPLICATION)
     ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp
     ${PROJECT_SOURCE_DIR}/platforms/common/urlClient.cpp
     ${PROJECT_SOURCE_DIR}/platforms/common/glfwApp.cpp
+    ${PROJECT_SOURCE_DIR}/platforms/common/glad.c
     )
 
   target_include_directories(${EXECUTABLE_NAME}
