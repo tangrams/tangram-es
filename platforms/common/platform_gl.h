@@ -44,11 +44,8 @@ extern PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT;
 #define GLFW_INCLUDE_NONE
 #include <glad/glad.h>
 // Add missing stuff
-#define glGenVertexArrays glGenVertexArraysOES
-#define glDeleteVertexArrays glDeleteVertexArraysOES
-#define glBindVertexArray glBindVertexArrayOES
-#define glMapBuffer glMapBufferOES
-#define glUnmapBuffer glUnmapBufferOES
+#define glDepthRangef(a, b) glDepthRange((double)(a), (double)(b))
+#define glClearDepthf(a) glClearDepth((double)(a))
 #endif // TANGRAM_WINDOWS
 #include <GLFW/glfw3.h>
 #endif // defined(TANGRAM_LINUX) || defined(TANGRAM_WINDOWS)
