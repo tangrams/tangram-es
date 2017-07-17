@@ -9,7 +9,7 @@ This project uses CMake (minimum version 3.0), you can download it [here](http:/
 brew install cmake
 ```
 
-Make sure to update git submodules before you build:
+Make sure to update git submodules **before** you build with Make:
 
 ```bash
 git submodule update --init
@@ -47,6 +47,12 @@ Then open the application with:
 
 ```bash
 open build/osx/bin/tangram.app
+```
+
+To open the application with console logs:
+
+```bash
+open build/osx/bin/tangram.app/Contents/MacOS/tangram
 ```
 
 You can open a different YAML scene file by dragging and dropping it into the window, or passing it as an argument:
