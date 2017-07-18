@@ -72,7 +72,9 @@ void create(std::shared_ptr<Platform> p, std::string f, int w, int h) {
     } else {
         LOGW("No API key found!\n\nMapzen data sources require an API key. "
              "Sign up for a free key at http://mapzen.com/developers and then set it from the command line with: "
-             "\n\n\texport MAPZEN_API_KEY=YOUR_KEY_HERE\n");
+             "\n\n\texport MAPZEN_API_KEY=YOUR_KEY_HERE"
+             "\n\nOr, if using an IDE on macOS, with: "
+             "\n\n\tlaunchctl setenv MAPZEN_API_KEY YOUR_API_KEY\n");
     }
 
     // Setup tangram
