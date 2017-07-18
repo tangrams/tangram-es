@@ -29,6 +29,8 @@ std::string sceneFile;
 std::string markerStylingPath = "layers.touch.point.draw.icons";
 std::string polylineStyle = "{ style: lines, interactive: true, color: red, width: 20px, order: 5000 }";
 
+std::string mapzenApiKey;
+
 GLFWwindow* main_window = nullptr;
 Tangram::Map* map = nullptr;
 int width = 800;
@@ -64,16 +66,20 @@ void create(std::shared_ptr<Platform> p, std::string f, int w, int h) {
         return;
     }
 
-#ifndef MAPZEN_API_KEY
-    LOG("Environment variable MAPZEN_API_KEY not set. Kindly set this environment variable and relaunch.");
-    exit(1);
-#endif
+    char* mapzenApiKeyEnvVar = getenv("MAPZEN_API_KEY");
+    if (mapzenApiKeyEnvVar && strlen(mapzenApiKeyEnvVar) > 0) {
+        mapzenApiKey = mapzenApiKeyEnvVar;
+    } else {
+        LOGW("No API key found!\n\nMapzen data sources require an API key. "
+             "Sign up for a free key at http://mapzen.com/developers and then set it from the command line with: "
+             "\n\n\texport MAPZEN_API_KEY=YOUR_KEY_HERE\n");
+    }
 
     // Setup tangram
     if (!map) {
         map = new Tangram::Map(platform);
         map->loadSceneAsync(sceneFile.c_str(), true, {}, nullptr,
-                {SceneUpdate("global.sdk_mapzen_api_key", MAPZEN_API_KEY)});
+                {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
     }
 
     // Create a windowed mode window and its OpenGL context
@@ -406,7 +412,7 @@ void dropCallback(GLFWwindow* window, int count, const char** paths) {
 
     sceneFile = std::string(paths[0]);
     map->loadSceneAsync(sceneFile.c_str(), true, {}, nullptr,
-                        {SceneUpdate("global.sdk_mapzen_api_key", MAPZEN_API_KEY)});
+                        {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
 
 }
 
