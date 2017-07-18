@@ -366,7 +366,7 @@ bool Map::update(float _dt) {
 
     impl->view.update();
 
-    impl->markerManager.update(static_cast<int>(impl->view.getZoom()));
+    bool markersChanged = impl->markerManager.update(impl->view, _dt);
 
     for (const auto& style : impl->scene->styles()) {
         style->onBeginUpdate();
@@ -380,13 +380,9 @@ bool Map::update(float _dt) {
         auto& tiles = impl->tileManager.getVisibleTiles();
         auto& markers = impl->markerManager.markers();
 
-        for (const auto& marker : markers) {
-            marker->update(_dt, impl->view);
-            markersNeedUpdate |= marker->isEasing();
-        }
-
         if (impl->view.changedOnLastUpdate() ||
-            impl->tileManager.hasTileSetChanged()) {
+            impl->tileManager.hasTileSetChanged() ||
+            markersChanged) {
 
             for (const auto& tile : tiles) {
                 tile->update(_dt, impl->view);

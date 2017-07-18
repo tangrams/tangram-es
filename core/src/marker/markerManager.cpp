@@ -7,6 +7,7 @@
 #include "scene/dataLayer.h"
 #include "scene/styleContext.h"
 #include "style/style.h"
+#include "view/view.h"
 #include "labels/labelSet.h"
 #include "log.h"
 #include "selection/featureSelection.h"
@@ -37,6 +38,7 @@ void MarkerManager::setScene(std::shared_ptr<Scene> scene) {
 }
 
 MarkerID MarkerManager::add() {
+    m_dirty = true;
 
     // Add a new empty marker object to the list of markers.
     auto id = ++m_idCounter;
@@ -51,6 +53,8 @@ MarkerID MarkerManager::add() {
 }
 
 bool MarkerManager::remove(MarkerID markerID) {
+    m_dirty = true;
+
     for (auto it = m_markers.begin(), end = m_markers.end(); it != end; ++it) {
         if (it->get()->id() == markerID) {
             m_markers.erase(it);
@@ -60,32 +64,19 @@ bool MarkerManager::remove(MarkerID markerID) {
     return false;
 }
 
-bool MarkerManager::setStylingFromString(MarkerID markerID, const char* styling) {
+bool MarkerManager::setStyling(MarkerID markerID, const char* styling, bool isPath) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
-    marker->setStyling(std::string(styling), false);
+    m_dirty = true;
+
+    marker->setStyling(std::string(styling), isPath);
 
     // Create a draw rule from the styling string.
     if (!buildStyling(*marker)) { return false; }
 
     // Build the feature mesh for the marker's current geometry.
-    buildGeometry(*marker, m_zoom);
-
-    return true;
-}
-
-bool MarkerManager::setStylingFromPath(MarkerID markerID, const char* path) {
-    Marker* marker = getMarkerOrNull(markerID);
-    if (!marker) { return false; }
-
-    marker->setStyling(std::string(path), true);
-
-    // Create a draw rule from the styling string.
-    if (!buildStyling(*marker)) { return false; }
-
-    // Build the feature mesh for the marker's current geometry.
-    buildGeometry(*marker, m_zoom);
+    buildMesh(*marker, m_zoom);
 
     return true;
 }
@@ -93,6 +84,8 @@ bool MarkerManager::setStylingFromPath(MarkerID markerID, const char* path) {
 bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const unsigned int* bitmapData) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
+
+    m_dirty = true;
 
     TextureOptions options = { GL_RGBA, GL_RGBA, { GL_LINEAR, GL_LINEAR }, { GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE } };
     auto texture = std::make_unique<Texture>(width, height, options);
@@ -103,7 +96,7 @@ bool MarkerManager::setBitmap(MarkerID markerID, int width, int height, const un
 
     // The geometry is unchanged, but the mesh must be rebuilt because DynamicQuadMesh contains
     // texture batches as part of its data.
-    buildGeometry(*marker, m_zoom);
+    buildMesh(*marker, m_zoom);
 
     return true;
 }
@@ -112,6 +105,8 @@ bool MarkerManager::setVisible(MarkerID markerID, bool visible) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
+    m_dirty = true;
+
     marker->setVisible(visible);
     return true;
 }
@@ -119,6 +114,8 @@ bool MarkerManager::setVisible(MarkerID markerID, bool visible) {
 bool MarkerManager::setDrawOrder(MarkerID markerID, int drawOrder) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
+
+    m_dirty = true;
 
     marker->setDrawOrder(drawOrder);
 
@@ -134,13 +131,17 @@ bool MarkerManager::setPoint(MarkerID markerID, LngLat lngLat) {
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
 
+    m_dirty = true;
+
+    marker->clearMesh();
+
     // If the marker does not have a 'point' feature mesh built, build it.
     if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
         auto feature = std::make_unique<Feature>();
         feature->geometryType = GeometryType::points;
         feature->points.emplace_back();
         marker->setFeature(std::move(feature));
-        buildGeometry(*marker, m_zoom);
+        buildMesh(*marker, m_zoom);
     }
 
     // Update the marker's bounds to the given coordinates.
@@ -156,6 +157,8 @@ bool MarkerManager::setPointEased(MarkerID markerID, LngLat lngLat, float durati
 
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
+
+    m_dirty = true;
 
     // If the marker does not have a 'point' feature built, set that point immediately.
     if (!marker->mesh() || !marker->feature() || marker->feature()->geometryType != GeometryType::points) {
@@ -174,6 +177,11 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
 
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
+
+    m_dirty = true;
+
+    marker->clearMesh();
+
     if (!coordinates || count < 2) { return false; }
 
     // Build a feature for the new set of polyline points.
@@ -209,7 +217,7 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
     marker->setFeature(std::move(feature));
 
     // Build a new mesh for the marker.
-    buildGeometry(*marker, m_zoom);
+    buildMesh(*marker, m_zoom);
 
     return true;
 }
@@ -220,6 +228,11 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
 
     Marker* marker = getMarkerOrNull(markerID);
     if (!marker) { return false; }
+
+    m_dirty = true;
+
+    marker->clearMesh();
+
     if (!coordinates || !counts || rings < 1) { return false; }
 
     // Build a feature for the new set of polygon points.
@@ -269,38 +282,47 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
     marker->setFeature(std::move(feature));
 
     // Build a new mesh for the marker.
-    buildGeometry(*marker, m_zoom);
+    buildMesh(*marker, m_zoom);
 
     return true;
 }
 
-bool MarkerManager::update(int zoom) {
+bool MarkerManager::update(const View& _view, float _dt) {
 
-    if (zoom == m_zoom) {
-         return false;
-    }
+    m_zoom = _view.getZoom();
+
     bool rebuilt = false;
+    bool easing = false;
+    bool dirty = m_dirty;
+    m_dirty = false;
+
     for (auto& marker : m_markers) {
-        if (zoom != marker->builtZoomLevel()) {
-            buildGeometry(*marker, zoom);
+
+        if (m_zoom != marker->builtZoomLevel()) {
+            buildMesh(*marker, m_zoom);
             rebuilt = true;
         }
+
+        marker->update(_dt, _view);
+        easing |= marker->isEasing();
     }
-    m_zoom = zoom;
-    return rebuilt;
+
+    return rebuilt || easing || dirty;
 }
 
 void MarkerManager::removeAll() {
+    m_dirty = true;
 
     m_markers.clear();
 
 }
 
 void MarkerManager::rebuildAll() {
+    m_dirty = true;
 
     for (auto& entry : m_markers) {
         buildStyling(*entry);
-        buildGeometry(*entry, m_zoom);
+        buildMesh(*entry, m_zoom);
     }
 
 }
@@ -312,8 +334,6 @@ const std::vector<std::unique_ptr<Marker>>& MarkerManager::markers() const {
 bool MarkerManager::buildStyling(Marker& marker) {
 
     if (!m_scene) { return false; }
-
-    std::vector<StyleParam> params;
 
     const auto& markerStyling = marker.styling();
 
@@ -366,6 +386,8 @@ bool MarkerManager::buildStyling(Marker& marker) {
         return marker.finalizeRuleMergingForName(path.substr(start, end - start));
     }
 
+    std::vector<StyleParam> params;
+
     // If the styling is not a path, try to load it as a string of YAML.
     const auto& sceneJsFnList = m_scene->functions();
     auto jsFnIndex = sceneJsFnList.size();
@@ -374,7 +396,7 @@ bool MarkerManager::buildStyling(Marker& marker) {
         YAML::Node node = YAML::Load(markerStyling.string);
         // Parse style parameters from the YAML node.
         SceneLoader::parseStyleParams(node, m_scene, "", params);
-    } catch (YAML::Exception e) {
+    } catch (const YAML::Exception& e) {
         LOG("Invalid marker styling '%s', %s", markerStyling.string.c_str(), e.what());
         return false;
     }
@@ -388,7 +410,9 @@ bool MarkerManager::buildStyling(Marker& marker) {
     return true;
 }
 
-bool MarkerManager::buildGeometry(Marker& marker, int zoom) {
+bool MarkerManager::buildMesh(Marker& marker, int zoom) {
+
+    marker.clearMesh();
 
     auto feature = marker.feature();
     auto rule = marker.drawRule();
@@ -432,8 +456,6 @@ bool MarkerManager::buildGeometry(Marker& marker, int zoom) {
 
     marker.setSelectionColor(selectionColor);
     marker.setMesh(styler->style().getID(), zoom, styler->build());
-
-    setVisible(marker.id(), marker.isVisible());
 
     return true;
 }

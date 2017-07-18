@@ -63,6 +63,8 @@ public:
     // Set the styled mesh for this marker with the associated style id and zoom level.
     void setMesh(uint32_t styleId, uint32_t zoom, std::unique_ptr<StyledMesh> mesh);
 
+    void clearMesh();
+
     void setTexture(std::unique_ptr<Texture> texture);
 
     // Set an ease for the origin of this marker in Mercator meters.
