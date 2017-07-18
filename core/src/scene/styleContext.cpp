@@ -448,6 +448,11 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
     } else if (duk_is_number(m_ctx, -1)) {
 
         switch (_key) {
+            case StyleParamKey::text_source:
+            case StyleParamKey::text_source_left:
+            case StyleParamKey::text_source_right:
+                _val = doubleToString(static_cast<double>(duk_get_number(m_ctx, -1)));
+                break;
             case StyleParamKey::extrude:
                 _val = glm::vec2(0.f, static_cast<float>(duk_get_number(m_ctx, -1)));
                 break;

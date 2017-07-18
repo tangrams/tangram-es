@@ -4,7 +4,6 @@
 
 namespace Tangram {
 
-// Helper to cleanup double string values from trailing 0s
 std::string doubleToString(double _doubleValue) {
     std::string value = std::to_string(_doubleValue);
 
