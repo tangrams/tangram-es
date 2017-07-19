@@ -19,13 +19,16 @@
 
 @implementation TGHttpHandler
 
+@synthesize HTTPAdditionalHeaders = _HTTPAdditionalHeaders;
+
+#pragma mark - Initializers
+
 - (instancetype)init
 {
     self = [super init];
 
     if (self) {
-        self.configuration = [TGHttpHandler defaultSessionConfiguration];
-        self.session = [NSURLSession sessionWithConfiguration:self.configuration];
+        [self initialSetupWithConfiguration:[TGHttpHandler defaultSessionConfiguration]];
     }
 
     return self;
@@ -36,13 +39,21 @@
     self = [super init];
 
     if (self) {
-        self.configuration = [TGHttpHandler defaultSessionConfiguration];
+        [self initialSetupWithConfiguration:[TGHttpHandler defaultSessionConfiguration]];
         [self setCachePath:cachePath cacheMemoryCapacity:memoryCapacity cacheDiskCapacity:diskCapacity];
-        self.session = [NSURLSession sessionWithConfiguration:self.configuration];
     }
 
     return self;
 }
+
+- (void)initialSetupWithConfiguration:(NSURLSessionConfiguration *)configuration {
+    self.configuration = configuration;
+    self.session = [NSURLSession sessionWithConfiguration:configuration];
+    self.HTTPAdditionalHeaders = [[NSMutableDictionary alloc] init];
+
+}
+
+#pragma mark - Class Methods
 
 + (NSURLSessionConfiguration*)defaultSessionConfiguration
 {
@@ -54,6 +65,19 @@
     return sessionConfiguration;
 }
 
+#pragma mark - Custom Getter/Setters
+
+- (NSMutableDictionary *)HTTPAdditionalHeaders {
+    return _HTTPAdditionalHeaders;
+}
+
+- (void)setAdditionalHTTPHeaders:(NSMutableDictionary *)HTTPAdditionalHeaders {
+    _HTTPAdditionalHeaders = HTTPAdditionalHeaders;
+    self.configuration.HTTPAdditionalHeaders = HTTPAdditionalHeaders;
+    //Probably unnecessary, but for safety sake
+    self.session.configuration.HTTPAdditionalHeaders = HTTPAdditionalHeaders;
+}
+
 - (void)setCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity
 {
     NSURLCache* tileCache = [[NSURLCache alloc] initWithMemoryCapacity:memoryCapacity
@@ -63,6 +87,8 @@
     self.configuration.URLCache = tileCache;
     self.configuration.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
 }
+
+#pragma mark - Instance Methods
 
 - (void)downloadRequestAsync:(NSString*)url completionHandler:(TGDownloadCompletionHandler)completionHandler
 {

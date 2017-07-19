@@ -37,6 +37,8 @@ unsigned long long timePrev, timeStart;
 Map* map = nullptr;
 std::shared_ptr<LinuxPlatform> platform;
 
+std::string mapzenApiKey;
+
 static bool bUpdate = true;
 
 //==============================================================================
@@ -87,11 +89,6 @@ void setup(int argc, char **argv) {
     double lon = 0.0f;
     std::string scene = "scene.yaml";
 
-#ifndef MAPZEN_API_KEY
-    LOG("Environment variable MAPZEN_API_KEY not set. Kindly set this environment variable and relaunch.");
-    exit(1);
-#endif
-
     for (int i = 1; i < argc - 1; i++) {
         std::string argName(argv[i]), argValue(argv[i + 1]);
         if (argName == "-s" || argName == "--scene") {
@@ -113,8 +110,18 @@ void setup(int argc, char **argv) {
         }
     }
 
+    // Get Mapzen API key from environment variables.
+    char* mapzenApiKeyEnvVar = getenv("MAPZEN_API_KEY");
+    if (mapzenApiKeyEnvVar && strlen(mapzenApiKeyEnvVar) > 0) {
+        mapzenApiKey = mapzenApiKeyEnvVar;
+    } else {
+        LOGW("No API key found!\n\nMapzen data sources require an API key. "
+             "Sign up for a free key at http://mapzen.com/developers and then set it from the command line with: "
+             "\n\n\texport MAPZEN_API_KEY=YOUR_KEY_HERE\n");
+    }
+
     map = new Map(platform);
-    map->loadSceneAsync(scene.c_str(), false, {}, nullptr, {SceneUpdate("global.sdk_mapzen_api_key", MAPZEN_API_KEY)});
+    map->loadSceneAsync(scene.c_str(), false, {}, nullptr, {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
     map->setupGL();
     map->resize(width, height);
     if (lon != 0.0f && lat != 0.0f) {
