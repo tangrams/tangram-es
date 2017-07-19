@@ -8,6 +8,9 @@ namespace Tangram {
 class Value;
 struct PropertyItem;
 
+// Helper to cleanup double string values from trailing 0s
+std::string doubleToString(double _doubleValue);
+
 struct Properties {
     using Item = PropertyItem;
 

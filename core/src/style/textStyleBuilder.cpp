@@ -171,7 +171,7 @@ bool getTextSource(const StyleParamKey _key, const DrawRule& _rule, const Proper
     auto& textSource = _rule.findParameter(_key);
     if (textSource.value.is<StyleParam::TextSource>()) {
         for (auto& key : textSource.value.get<StyleParam::TextSource>().keys) {
-            _text = _props.getString(key);
+            _text = _props.getAsString(key);
             if (!_text.empty()) { break; }
         }
     } else if (textSource.value.is<std::string>()) {
