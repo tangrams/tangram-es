@@ -30,6 +30,12 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface TGHttpHandler : NSObject
 
+
+/**
+ Additional HTTP headers analogous to the standard NSURLSessionConfiguration property of the same name.
+ */
+@property(nonatomic, strong) NSMutableDictionary *HTTPAdditionalHeaders;
+
 /**
  Initializes a http handler with the default configuration.
 
