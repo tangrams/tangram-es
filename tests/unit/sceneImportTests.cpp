@@ -18,13 +18,21 @@ public:
 
     TestImporter(std::unordered_map<Url, std::string> _testScenes) : m_testScenes(_testScenes) {}
 
+    auto& scenes() { return m_scenes; }
+
 protected:
     virtual std::string getSceneString(const std::shared_ptr<Platform>& platform,
-            const Url& scenePath, const std::shared_ptr<Asset>& asset = nullptr) override {
+                                       const Url& scenePath,
+                                       const std::shared_ptr<Asset>& asset = nullptr) override {
+        auto it = m_testScenes.find(scenePath);
+        if (it == m_testScenes.end()) {
+            logMsg("Missing scenePath %s\n", scenePath.string().c_str());
+        }
         return m_testScenes[scenePath];
     }
 
     std::unordered_map<Url, std::string> m_testScenes;
+
 };
 
 TestImporter::TestImporter() {
@@ -310,6 +318,35 @@ TEST_CASE("Scalar and null overwrite correctly", "[import][core]") {
     auto scene = std::make_shared<Scene>(platform,  "base.yaml");
     scene->resourceRoot() = "/";
     auto root = importer.applySceneImports(platform, scene);
+
+    CHECK(root["scalar_at_end"].Scalar() == "scalar");
+    CHECK(root["null_at_end"].IsNull());
+}
+
+TEST_CASE("Scene load from source string", "[import][core]") {
+    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
+    std::unordered_map<Url, std::string> testScenes;
+    testScenes["/resource_root/scalar.yaml"] = R"END(
+            null_at_end: scalar
+    )END";
+    testScenes["/resource_root/null.yaml"] = R"END(
+            scalar_at_end: null
+    )END";
+
+    std::string base_yaml = R"END(
+        import: [scalar.yaml, null.yaml]
+        scalar_at_end: scalar
+        null_at_end: null
+    )END";
+
+    TestImporter importer(testScenes);
+
+    auto scene = std::make_shared<Scene>(platform, base_yaml, "/resource_root/");
+    auto root = importer.applySceneImports(platform, scene);
+
+    for (auto& s : importer.scenes()) {
+        logMsg(":> %s\n", s.first.string().c_str());
+    }
 
     CHECK(root["scalar_at_end"].Scalar() == "scalar");
     CHECK(root["null_at_end"].IsNull());

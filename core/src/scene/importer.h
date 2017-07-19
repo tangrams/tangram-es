@@ -29,7 +29,7 @@ public:
 
     void resolveSceneUrls(const std::shared_ptr<Platform>& platform, Scene& scene, Node& root, const Url& base);
 
-// protected for testing purposes, else could be private
+    // protected for testing purposes, else could be private
 protected:
     // Overriden in unit testing
     virtual std::string getSceneString(const std::shared_ptr<Platform>& platform,
@@ -49,7 +49,6 @@ protected:
 
     void mergeMapFields(Node& target, const Node& import);
 
-private:
     // import scene to respective root nodes
     std::unordered_map<Url, Node> m_scenes;
 
