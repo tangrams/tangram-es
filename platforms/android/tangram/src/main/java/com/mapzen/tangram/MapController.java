@@ -143,11 +143,26 @@ public class MapController implements Renderer {
         void onSceneUpdateError(SceneUpdateError sceneUpdateError);
     }
 
+    /**
+     * Interface for listening to scene load status information.
+     * Triggered after a call of {@link #applySceneUpdates()} or {@link #loadSceneFile(String, List<SceneUpdate>)}
+     * Listener should be set with {@link #setSceneLoadListener(SceneLoadListener)}
+     * The callbacks will be run on the main (UI) thread.
+     */
     public interface SceneLoadListener {
 
-        void onSceneReady();
+        /**
+         * Received when a scene load succeeded.
+         * @param sceneId returned by {@link #applySceneUpdates()} or {@link #loadSceneFile(String, List<SceneUpdate>)}
+         */
+        void onSceneReady(int sceneId);
 
-        void onSceneError(SceneUpdateError sceneUpdateError);
+        /**
+         * Receive error status when a scene load failed
+         * @param sceneId returned by {@link #applySceneUpdates()} or {@link #loadSceneFile(String, List<SceneUpdate>)}
+         * @param sceneUpdateError The  {@link SceneUpdateError} holding error informations
+         */
+        void onSceneError(int sceneId, SceneUpdateError sceneUpdateError);
     }
 
     /**
@@ -279,8 +294,8 @@ public class MapController implements Renderer {
      * Load a new scene file
      * @param path Location of the YAML scene file within the application assets
      */
-    public void loadSceneFile(String path) {
-        loadSceneFile(path, null);
+    public int loadSceneFile(String path) {
+        return loadSceneFile(path, null);
     }
 
     /**
@@ -288,14 +303,16 @@ public class MapController implements Renderer {
      * If scene updates triggers an error, they won't be applied.
      * @param path Location of the YAML scene file within the application assets
      * @param sceneUpdates List of {@code SceneUpdate}
+     * @return Scene ID
      */
-    public void loadSceneFile(String path, List<SceneUpdate> sceneUpdates) {
+    public int loadSceneFile(String path, List<SceneUpdate> sceneUpdates) {
         String[] updateStrings = bundleSceneUpdates(sceneUpdates);
         scenePath = path;
         checkPointer(mapPointer);
-        nativeLoadScene(mapPointer, path, updateStrings);
+        int sceneId = nativeLoadScene(mapPointer, path, updateStrings);
         removeAllMarkers();
         requestRender();
+        return sceneId;
     }
 
     /**
@@ -981,13 +998,14 @@ public class MapController implements Renderer {
     /**
      * Apply updates queued by queueSceneUpdate; this empties the current queue of updates
      * If a scene update is triggered, scene updates won't be applied.
+     * @return Scene ID
      */
-    public void applySceneUpdates() {
+    public int applySceneUpdates() {
         checkPointer(mapPointer);
 
         removeAllMarkers();
 
-        nativeApplySceneUpdates(mapPointer);
+        return nativeApplySceneUpdates(mapPointer);
     }
 
     /**
@@ -1141,7 +1159,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeOnLowMemory(long mapPtr);
     private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
     private synchronized native void nativeDispose(long mapPtr);
-    private synchronized native void nativeLoadScene(long mapPtr, String path, String[] updateStrings);
+    private synchronized native int nativeLoadScene(long mapPtr, String path, String[] updateStrings);
     private synchronized native void nativeSetupGL(long mapPtr);
     private synchronized native void nativeResize(long mapPtr, int width, int height);
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
@@ -1172,7 +1190,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
     private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String componentValue);
     private synchronized native void nativeQueueSceneUpdates(long mapPtr, String[] updateStrings);
-    private synchronized native void nativeApplySceneUpdates(long mapPtr);
+    private synchronized native int nativeApplySceneUpdates(long mapPtr);
     private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
     private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
@@ -1316,7 +1334,7 @@ public class MapController implements Renderer {
     }
 
     // Called from JNI on worker or render-thread.
-    void sceneReadyCallback(final boolean success, final SceneUpdateError error) {
+    void sceneReadyCallback(final int sceneId, final boolean success, final SceneUpdateError error) {
         if (!success && sceneUpdateErrorListener != null) {
             // TODO run on main thread
             sceneUpdateErrorListener.onSceneUpdateError(error);
@@ -1328,9 +1346,9 @@ public class MapController implements Renderer {
                 @Override
                 public void run() {
                     if (success) {
-                        cb.onSceneReady();
+                        cb.onSceneReady(sceneId);
                     } else {
-                        cb.onSceneError(error);
+                        cb.onSceneError(sceneId, error);
                     }
                 }
             });

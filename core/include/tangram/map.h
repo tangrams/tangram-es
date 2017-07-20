@@ -76,8 +76,10 @@ struct SceneError {
     Error error;
 };
 
+using SceneID = int32_t;
+
 // Function type for a sceneReady callback
-using SceneReadyCallback = std::function<void(bool success, const SceneError&)>;
+using SceneReadyCallback = std::function<void(SceneID id, bool success, const SceneError&)>;
 
 enum class EaseType : char {
     linear = 0,
@@ -96,15 +98,15 @@ public:
 
     // Load the scene at the given absolute file path asynchronously
     // Any pending scene update will be cleared
-    void loadSceneAsync(const char* _scenePath,
-                        bool _useScenePosition = false,
-                        const std::vector<SceneUpdate>& sceneUpdates = {});
+    SceneID loadSceneAsync(const char* _scenePath,
+                           bool _useScenePosition = false,
+                           const std::vector<SceneUpdate>& sceneUpdates = {});
 
     // Load the scene at the given absolute file path synchronously
     // Any pending scene update will be cleared
-    void loadScene(const char* _scenePath,
-                   bool _useScenePosition = false,
-                   const std::vector<SceneUpdate>& sceneUpdates = {});
+    SceneID loadScene(const char* _scenePath,
+                      bool _useScenePosition = false,
+                      const std::vector<SceneUpdate>& sceneUpdates = {});
 
     // Request an update to the scene configuration; the path is a series of yaml keys
     // separated by a '.' and the value is a string of yaml to replace the current value
@@ -115,7 +117,7 @@ public:
     void setSceneReadyListener(SceneReadyCallback _onSceneReady);
 
     // Apply all previously requested scene updates
-    void applySceneUpdates();
+    SceneID applySceneUpdates();
 
     // Set an MBTiles SQLite database file for a DataSource in the scene.
     void setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath);

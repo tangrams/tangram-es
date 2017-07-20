@@ -182,7 +182,7 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
 
 // NB: Not thread-safe. Must be called on the main/render thread!
 // (Or externally synchronized with main/render thread)
-void Map::loadScene(const char* _scenePath, bool _useScenePosition,
+SceneID Map::loadScene(const char* _scenePath, bool _useScenePosition,
                     const std::vector<SceneUpdate>& _sceneUpdates) {
 
     LOG("Loading scene file: %s", _scenePath);
@@ -203,15 +203,16 @@ void Map::loadScene(const char* _scenePath, bool _useScenePosition,
 
     if (impl->onSceneReady) {
         if (scene->errors.empty()) {
-            impl->onSceneReady(true, {});
+            impl->onSceneReady(scene->id, true, {});
         } else {
-            impl->onSceneReady(false, scene->errors.front());
+            impl->onSceneReady(scene->id, false, scene->errors.front());
         }
     }
+    return scene->id;
 }
 
-void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition,
-                         const std::vector<SceneUpdate>& _sceneUpdates) {
+SceneID Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition,
+                            const std::vector<SceneUpdate>& _sceneUpdates) {
 
     LOG("Loading scene file (async): %s", _scenePath);
 
@@ -235,7 +236,7 @@ void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition,
                             impl->nextScene.reset();
                         } else {
                             // loadScene[Async] was called in the meantime.
-                            if (impl->onSceneReady) { impl->onSceneReady(false, {}); }
+                            if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, false, {}); }
                             return;
                         }
                     }
@@ -246,10 +247,12 @@ void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition,
                         applySceneUpdates();
                     }
 
-                    if (impl->onSceneReady) { impl->onSceneReady(newSceneLoaded, {}); }
+                    if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, newSceneLoaded, {}); }
                 });
             platform->requestRender();
         });
+
+    return nextScene->id;
 }
 
 void Map::queueSceneUpdate(const char* _path, const char* _value) {
@@ -270,17 +273,17 @@ std::shared_ptr<Platform>& Map::getPlatform() {
     return platform;
 }
 
-void Map::applySceneUpdates() {
+SceneID Map::applySceneUpdates() {
 
     std::shared_ptr<Scene> nextScene;
     std::vector<SceneUpdate> updates;
     {
         std::lock_guard<std::mutex> lock(impl->sceneMutex);
-        if (impl->sceneUpdates.empty()) { return; }
+        if (impl->sceneUpdates.empty()) { return -1; }
 
         if (impl->nextScene) {
             // Changes are automatically applied once the scene is loaded
-            return;
+            return nextScene->id;
         }
         LOG("Applying %d scene updates", impl->sceneUpdates.size());
 
@@ -301,7 +304,7 @@ void Map::applySceneUpdates() {
                 if (impl->onSceneReady) {
                     SceneError err;
                     if (!nextScene->errors.empty()) { err = nextScene->errors.front(); }
-                    impl->onSceneReady(false, err);
+                    impl->onSceneReady(nextScene->id, false, err);
                 }
                 return;
             }
@@ -315,7 +318,7 @@ void Map::applySceneUpdates() {
                             impl->nextScene.reset();
                         } else {
                             // loadScene[Async] was called in the meantime.
-                            if (impl->onSceneReady) { impl->onSceneReady(false, {}); }
+                            if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, false, {}); }
                             return;
                         }
                     }
@@ -324,10 +327,12 @@ void Map::applySceneUpdates() {
                         impl->setScene(s);
                         applySceneUpdates();
                     }
-                    if (impl->onSceneReady) { impl->onSceneReady(true, {}); }
+                    if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, true, {}); }
                 });
             platform->requestRender();
         });
+
+    return nextScene->id;
 }
 
 void Map::setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath) {
