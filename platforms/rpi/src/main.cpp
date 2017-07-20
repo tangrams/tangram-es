@@ -121,7 +121,12 @@ void setup(int argc, char **argv) {
     }
 
     map = new Map(platform);
-    map->loadSceneAsync(scene.c_str(), false, {}, nullptr, {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
+    if (mapzenApiKey.empty()) {
+        map->loadSceneAsync(scene.c_str(), false, {}, nullptr, {});
+    } else {
+        map->loadSceneAsync(scene.c_str(), false, {}, nullptr, {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
+    }
+
     map->setupGL();
     map->resize(width, height);
     if (lon != 0.0f && lat != 0.0f) {
