@@ -25,8 +25,8 @@ static glm::mat4 orthoMatrix;
 #define MOUSE_ID "mouse0"
 static int mouse_fd = -1;
 typedef struct {
-    float   x,y;
-    float   velX,velY;
+    float   x, y;
+    float   velX, velY;
     int     button;
 } Mouse;
 static Mouse mouse;
@@ -35,61 +35,63 @@ static unsigned char keyPressed;
 
 // Mouse stuff
 //--------------------------------
-std::string searchForDevice(const std::string& _device) {
+std::string searchForDevice(const std::string& device) {
     std::ifstream file;
     std::string buffer;
     std::string address = "NONE";
 
     file.open("/proc/bus/input/devices");
 
-    if (!file.is_open())
-      return "NOT FOUND";
+    if (!file.is_open()) {
+        return "NOT FOUND";
+    }
 
     while (!file.eof()) {
-      getline(file, buffer);
-      std::size_t found = buffer.find(_device);
-      if(found!=std::string::npos){
-        std::string tmp = buffer.substr(found+_device.size()+1);
-        std::size_t foundBegining = tmp.find("event");
-        if(foundBegining!=std::string::npos){
-            address = "/dev/input/"+tmp.substr(foundBegining);
-            address.erase(address.size()-1,1);
+        getline(file, buffer);
+        std::size_t found = buffer.find(device);
+        if (found != std::string::npos) {
+            std::string tmp = buffer.substr(found + device.size() + 1);
+            std::size_t foundBegining = tmp.find("event");
+            if (foundBegining != std::string::npos) {
+                address = "/dev/input/" + tmp.substr(foundBegining);
+                address.erase(address.size() - 1, 1);
+            }
+            break;
         }
-        break;
-      }
     }
 
     file.close();
     return address;
 }
 
-void closeMouse(){
-    if (mouse_fd > 0)
+void closeMouse() {
+    if (mouse_fd > 0) {
         close(mouse_fd);
+    }
     mouse_fd = -1;
 }
 
-int initMouse(){
+int initMouse() {
     closeMouse();
 
-    mouse.x = viewport.z*0.5;
-    mouse.y = viewport.w*0.5;
+    mouse.x = viewport.z * 0.5;
+    mouse.y = viewport.w * 0.5;
     std::string mouseAddress = searchForDevice(MOUSE_ID);
-    std::cout << "Mouse [" << mouseAddress << "]"<< std::endl;
+    std::cout << "Mouse [" << mouseAddress << "]" << std::endl;
     mouse_fd = open(mouseAddress.c_str(), O_RDONLY | O_NONBLOCK);
 
     return mouse_fd;
 }
 
-
-bool readMouseEvent(struct input_event *mousee){
+bool readMouseEvent(struct input_event *mousee) {
     int bytes;
     if (mouse_fd > 0) {
         bytes = read(mouse_fd, mousee, sizeof(struct input_event));
-        if (bytes == -1)
+        if (bytes == -1) {
             return false;
-        else if (bytes == sizeof(struct input_event))
+        } else if (bytes == sizeof(struct input_event)) {
             return true;
+        }
     }
     return false;
 }
@@ -100,30 +102,30 @@ bool updateMouse() {
     }
 
     struct input_event mousee;
-    while ( readMouseEvent(&mousee) ) {
+    while (readMouseEvent(&mousee)) {
 
-        mouse.velX=0;
-        mouse.velY=0;
+        mouse.velX = 0;
+        mouse.velY = 0;
 
-        float x,y = 0.0f;
+        float x = 0.0f, y = 0.0f;
         int button = 0;
 
-        switch(mousee.type) {
+        switch (mousee.type) {
             // Update Mouse Event
             case EV_KEY:
                 switch (mousee.code) {
                     case BTN_LEFT:
-                        if (mousee.value == 1){
+                        if (mousee.value == 1) {
                             button = 1;
                         }
                         break;
                     case BTN_RIGHT:
-                        if(mousee.value == 1){
+                        if (mousee.value == 1) {
                             button = 2;
                         }
                         break;
                     case BTN_MIDDLE:
-                        if(mousee.value == 1){
+                        if (mousee.value == 1) {
                             button = 3;
                         }
                         break;
@@ -133,10 +135,10 @@ bool updateMouse() {
                 }
                 if (button != mouse.button) {
                     mouse.button = button;
-                    if(mouse.button == 0){
-                        onMouseRelease(mouse.x,mouse.y);
+                    if (mouse.button == 0) {
+                        onMouseRelease(mouse.x, mouse.y);
                     } else {
-                        onMouseClick(mouse.x,mouse.y,mouse.button);
+                        onMouseClick(mouse.x, mouse.y, mouse.button);
                     }
                 }
                 break;
@@ -158,30 +160,30 @@ bool updateMouse() {
                     default:
                         break;
                 }
-                mouse.x+=mouse.velX;
-                mouse.y+=mouse.velY;
+                mouse.x += mouse.velX;
+                mouse.y += mouse.velY;
 
                 // Clamp values
-                if (mouse.x < 0) mouse.x=0;
-                if (mouse.y < 0) mouse.y=0;
-                if (mouse.x > viewport.z) mouse.x = viewport.z;
-                if (mouse.y > viewport.w) mouse.y = viewport.w;
+                if (mouse.x < 0) { mouse.x = 0; }
+                if (mouse.y < 0) { mouse.y = 0; }
+                if (mouse.x > viewport.z) { mouse.x = viewport.z; }
+                if (mouse.y > viewport.w) { mouse.y = viewport.w; }
 
                 if (mouse.button != 0) {
-                    onMouseDrag(mouse.x,mouse.y,mouse.button);
+                    onMouseDrag(mouse.x, mouse.y, mouse.button);
                 } else {
-                    onMouseMove(mouse.x,mouse.y);
+                    onMouseMove(mouse.x, mouse.y);
                 }
                 break;
             case EV_ABS:
                 switch (mousee.code) {
                     case ABS_X:
-                        x = ((float)mousee.value/4095.0f)*viewport.z;
+                        x = ((float)mousee.value / 4095.0f) * viewport.z;
                         mouse.velX = x - mouse.x;
                         mouse.x = x;
                         break;
                     case ABS_Y:
-                        y = (1.0-((float)mousee.value/4095.0f))*viewport.w;
+                        y = (1.0 - ((float)mousee.value / 4095.0f)) * viewport.w;
                         mouse.velY = y - mouse.y;
                         mouse.y = y;
                         break;
@@ -189,9 +191,9 @@ bool updateMouse() {
                         break;
                 }
                 if (mouse.button != 0) {
-                    onMouseDrag(mouse.x,mouse.y,mouse.button);
+                    onMouseDrag(mouse.x, mouse.y, mouse.button);
                 } else {
-                    onMouseMove(mouse.x,mouse.y);
+                    onMouseMove(mouse.x, mouse.y);
                 }
                 break;
             default:
@@ -234,7 +236,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 //==============================================================================
-void initGL(int argc, char **argv){
+void initGL(int argc, char **argv) {
 
     // Start OpenGL ES
     bcm_host_init();
