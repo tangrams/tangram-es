@@ -14,8 +14,8 @@
 
 #include "context.h"
 #include "map.h"
-#include "linuxPlatform.h"
 #include "log.h"
+#include "rpiPlatform.h"
 
 #include <iostream>
 #include "glm/trigonometric.hpp"
@@ -35,7 +35,7 @@ struct timeval tv;
 unsigned long long timePrev, timeStart;
 
 Map* map = nullptr;
-std::shared_ptr<LinuxPlatform> platform;
+std::shared_ptr<RpiPlatform> platform;
 
 std::string mapzenApiKey;
 
@@ -50,7 +50,7 @@ int main(int argc, char **argv){
     UrlClient::Options urlClientOptions;
     urlClientOptions.numberOfThreads = 4;
 
-    platform = std::make_shared<LinuxPlatform>(urlClientOptions);
+    platform = std::make_shared<RpiPlatform>(urlClientOptions);
 
     // Start OpenGL context
     initGL(argc, argv);
