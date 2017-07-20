@@ -26,6 +26,7 @@ target_include_directories(${EXECUTABLE_NAME}
   PUBLIC
   ${PROJECT_SOURCE_DIR}/platforms/common
   ${PROJECT_SOURCE_DIR}/platforms/linux/src
+  ${PROJECT_SOURCE_DIR}/platforms/rpi/src
   /opt/vc/include/
   /opt/vc/include/interface/vcos/pthreads
   /opt/vc/include/interface/vmcs_host/linux
