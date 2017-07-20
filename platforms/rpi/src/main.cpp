@@ -14,7 +14,7 @@
 
 #include "context.h"
 #include "map.h"
-#include "platform_linux.h"
+#include "linuxPlatform.h"
 #include "log.h"
 
 #include <iostream>
