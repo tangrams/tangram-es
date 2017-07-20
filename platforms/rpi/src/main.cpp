@@ -20,14 +20,13 @@
 #include <iostream>
 #include "glm/trigonometric.hpp"
 
-
-#define KEY_ESC      113    // q
-#define KEY_ZOOM_IN  45     // -
-#define KEY_ZOOM_OUT 61     // =
+#define KEY_ESC      27     // esc
+#define KEY_ZOOM_IN  61     // =
+#define KEY_ZOOM_OUT 45     // -
 #define KEY_UP       119    // w
 #define KEY_LEFT     97     // a
-#define KEY_RIGHT    115    // s
-#define KEY_DOWN     122    // z
+#define KEY_DOWN     115    // s
+#define KEY_RIGHT    100    // d
 
 using namespace Tangram;
 
@@ -166,22 +165,22 @@ void newFrame() {
 void onKeyPress(int _key) {
     switch (_key) {
         case KEY_ZOOM_IN:
-            map->handlePinchGesture(0.0,0.0,0.5,0.0);
+            map->setZoom(map->getZoom() + 1.0f);
             break;
         case KEY_ZOOM_OUT:
-            map->handlePinchGesture(0.0,0.0,2.0,0.0);
+            map->setZoom(map->getZoom() - 1.0f);
             break;
         case KEY_UP:
-            map->handlePanGesture(0.0,0.0,0.0,100.0);
+            map->handlePanGesture(0.0, 0.0, 0.0, 100.0);
             break;
         case KEY_DOWN:
-            map->handlePanGesture(0.0,0.0,0.0,-100.0);
+            map->handlePanGesture(0.0, 0.0, 0.0, -100.0);
             break;
         case KEY_LEFT:
-            map->handlePanGesture(0.0,0.0,100.0,0.0);
+            map->handlePanGesture(0.0, 0.0, 100.0, 0.0);
             break;
         case KEY_RIGHT:
-            map->handlePanGesture(0.0,0.0,-100.0,0.0);
+            map->handlePanGesture(0.0, 0.0, -100.0, 0.0);
             break;
         case KEY_ESC:
             bUpdate = false;
