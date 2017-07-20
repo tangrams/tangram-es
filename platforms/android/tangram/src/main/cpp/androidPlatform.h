@@ -22,6 +22,7 @@ struct MarkerPickResult;
 class Map;
 struct SceneUpdate;
 struct SceneError;
+using SceneID = int32_t;
 
 void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* featurePickResult);
 void markerPickCallback(jobject listener, jobject tangramInstance, const Tangram::MarkerPickResult* markerPickResult);
@@ -44,7 +45,7 @@ public:
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
     bool startUrlRequest(const std::string& _url, UrlCallback _callback) override;
     void cancelUrlRequest(const std::string& _url) override;
-    void sceneReadyCallback(bool success, const SceneError& error);
+    void sceneReadyCallback(SceneID id, bool success, const SceneError& error);
 
 private:
 

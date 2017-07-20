@@ -81,7 +81,7 @@ void setupJniEnv(JNIEnv* jniEnv) {
     getFontFallbackFilePath = jniEnv->GetMethodID(tangramClass, "getFontFallbackFilePath", "(II)Ljava/lang/String;");
     requestRenderMethodID = jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
-    sceneReadyCallbackMID = jniEnv->GetMethodID(tangramClass, "sceneReadyCallback", "(ZLcom/mapzen/tangram/SceneUpdateError;)V");
+    sceneReadyCallbackMID = jniEnv->GetMethodID(tangramClass, "sceneReadyCallback", "(IZLcom/mapzen/tangram/SceneUpdateError;)V");
 
     jclass featurePickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$FeaturePickListener");
     onFeaturePickMID = jniEnv->GetMethodID(featurePickListenerClass, "onFeaturePick", "(Ljava/util/Map;FF)V");
@@ -455,7 +455,7 @@ void initGLExtensions() {
     glExtensionsLoaded = true;
 }
     
-void AndroidPlatform::sceneReadyCallback(bool success, const SceneError& sceneError) {
+void AndroidPlatform::sceneReadyCallback(SceneID id, bool success, const SceneError& sceneError) {
 
     JniThreadBinding jniEnv(jvm);
 
@@ -471,7 +471,7 @@ void AndroidPlatform::sceneReadyCallback(bool success, const SceneError& sceneEr
                                                        jError);
     }
 
-    jniEnv->CallVoidMethod(m_tangramInstance, sceneReadyCallbackMID, success, jUpdateErrorStatus);
+    jniEnv->CallVoidMethod(m_tangramInstance, sceneReadyCallbackMID, id, success, jUpdateErrorStatus);
 }
 
 } // namespace Tangram
