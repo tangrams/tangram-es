@@ -46,6 +46,21 @@ void newFrame();
 
 int main(int argc, char **argv){
 
+    printf("Starting a full-screen map window. Use keys to navigate:\n"
+           "\t'%c' = Pan up\n"
+           "\t'%c' = Pan left\n"
+           "\t'%c' = Pan down\n"
+           "\t'%c' = Pan right\n"
+           "\t'%c' = Zoom in\n"
+           "\t'%c' = Zoom out\n"
+           "\t'esc'= Exit\n"
+           "Press 'enter' to continue.",
+           KEY_UP, KEY_LEFT, KEY_DOWN, KEY_RIGHT, KEY_ZOOM_IN, KEY_ZOOM_OUT);
+
+    if (getchar() == -1) {
+        return 1;
+    }
+
     UrlClient::Options urlClientOptions;
     urlClientOptions.numberOfThreads = 4;
 
