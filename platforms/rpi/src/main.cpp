@@ -1,24 +1,19 @@
-#include <stdio.h>
-#include <fcntl.h>
-#include <assert.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/shm.h>
-
-#include <stdlib.h>
-#include <string.h>
-#include <termios.h>
-
-#include <curl/curl.h>
-#include <cstdlib>
-
 #include "context.h"
 #include "map.h"
 #include "log.h"
 #include "rpiPlatform.h"
 
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 #include <iostream>
-#include "glm/trigonometric.hpp"
+
+#include <fcntl.h>
+#include <sys/time.h>
+#include <sys/shm.h>
+#include <termios.h>
 
 #define KEY_ESC      27     // esc
 #define KEY_ZOOM_IN  61     // =
@@ -30,9 +25,6 @@
 
 using namespace Tangram;
 
-struct timeval tv;
-unsigned long long timePrev, timeStart;
-
 Map* map = nullptr;
 std::shared_ptr<RpiPlatform> platform;
 
@@ -40,11 +32,73 @@ std::string mapzenApiKey;
 
 static bool bUpdate = true;
 
-//==============================================================================
-void setup(int argc, char **argv);
-void newFrame();
+struct LaunchOptions {
+    std::string sceneFilePath;
+    int x = 0;
+    int y = 0;
+    int width = 0;
+    int height = 0;
+    double latitude = 0.0;
+    double longitude = 0.0;
+    float zoom = 0.0f;
+    float rotation = 0.0f;
+    float tilt = 0.0f;
+};
 
-int main(int argc, char **argv){
+LaunchOptions getLaunchOptions(int argc, char **argv) {
+
+    LaunchOptions options;
+
+    options.sceneFilePath = "scene.yaml";
+    options.width = getWindowWidth();
+    options.height = getWindowHeight();
+
+    for (int i = 1; i < argc - 1; i++) {
+        std::string argName = argv[i];
+        std::string argValue = argv[i + 1];
+        if (argName == "-s" || argName == "--scene") {
+            options.sceneFilePath = argValue;
+        } else if (argName == "-lat" ) {
+            options.latitude = std::stod(argValue);
+        } else if (argName == "-lon" ) {
+            options.longitude = std::stod(argValue);
+        } else if (argName == "-z" || argName == "--zoom" ) {
+            options.zoom = std::stof(argValue);
+        } else if (argName == "-x" || argName == "--x_position") {
+            options.x = std::stoi(argValue);
+        } else if (argName == "-y" || argName == "--y_position") {
+            options.y = std::stoi(argValue);
+        } else if (argName == "-w" || argName == "--width") {
+            options.width = std::stoi(argValue);
+        } else if (argName == "-h" || argName == "--height") {
+            options.height = std::stoi(argValue);
+        } else if (argName == "-t" || argName == "--tilt") {
+            options.tilt = std::stof(argValue);
+        } else if (argName == "-r" || argName == "--rotation") {
+            options.rotation = std::stof(argValue);
+        }
+    }
+    return options;
+}
+
+struct Timer {
+    timeval start;
+
+    Timer() {
+        gettimeofday(&start, NULL);
+    }
+
+    // Get the time in seconds since delta was last called.
+    double deltaSeconds() {
+        timeval current;
+        gettimeofday(&current, NULL);
+        double delta = (double)(current.tv_sec - start.tv_sec) + (current.tv_usec - start.tv_usec) * 1.0E-6;
+        start = current;
+        return delta;
+    }
+};
+
+int main(int argc, char **argv) {
 
     printf("Starting a full-screen map window. Use keys to navigate:\n"
            "\t'%c' = Pan up\n"
@@ -61,68 +115,15 @@ int main(int argc, char **argv){
         return 1;
     }
 
+    LaunchOptions options = getLaunchOptions(argc, argv);
+
     UrlClient::Options urlClientOptions;
     urlClientOptions.numberOfThreads = 4;
 
     platform = std::make_shared<RpiPlatform>(urlClientOptions);
 
     // Start OpenGL context
-    initGL(argc, argv);
-
-    // Set background color and clear buffers
-    setup(argc, argv);
-
-    // Start clock
-    gettimeofday(&tv, NULL);
-    timeStart = timePrev = (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000;
-
-    while (bUpdate) {
-        updateGL();
-        if (getRenderRequest() || platform->isContinuousRendering() ) {
-            setRenderRequest(false);
-            newFrame();
-        }
-    }
-
-    if (map) {
-        delete map;
-        map = nullptr;
-    }
-
-    closeGL();
-    return 0;
-}
-
-void setup(int argc, char **argv) {
-    int width = getWindowWidth();
-    int height = getWindowHeight();
-    float rot = 0.0f;
-    float zoom = 0.0f;
-    float tilt = 0.0f;
-    double lat = 0.0f;
-    double lon = 0.0f;
-    std::string scene = "scene.yaml";
-
-    for (int i = 1; i < argc - 1; i++) {
-        std::string argName(argv[i]), argValue(argv[i + 1]);
-        if (argName == "-s" || argName == "--scene") {
-            scene = argValue;
-        } else if (argName == "-lat" ) {
-            lat = std::stod(argValue);
-        } else if (argName == "-lon" ) {
-            lon = std::stod(argValue);
-        } else if (argName == "-z" || argName == "--zoom" ) {
-            zoom = std::stof(argValue);
-        } else if (argName == "-w" || argName == "--width") {
-            width = std::stoi(argValue);
-        } else if (argName == "-h" || argName == "--height") {
-            height = std::stoi(argValue);
-        } else if (argName == "-t" || argName == "--tilt") {
-            tilt = std::stof(argValue);
-        } else if (argName == "-r" || argName == "--rotation") {
-            rot = std::stof(argValue);
-        }
-    }
+    createSurface(options.x, options.y, options.width, options.height);
 
     // Get Mapzen API key from environment variables.
     char* mapzenApiKeyEnvVar = getenv("MAPZEN_API_KEY");
@@ -136,43 +137,39 @@ void setup(int argc, char **argv) {
 
     map = new Map(platform);
     if (mapzenApiKey.empty()) {
-        map->loadSceneAsync(scene.c_str(), false, {}, nullptr, {});
+        map->loadScene(options.sceneFilePath.c_str(), false, {}, nullptr);
     } else {
-        map->loadSceneAsync(scene.c_str(), false, {}, nullptr, {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
+        map->loadScene(options.sceneFilePath.c_str(), false, { SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey) }, nullptr);
     }
 
     map->setupGL();
-    map->resize(width, height);
-    if (lon != 0.0f && lat != 0.0f) {
-        map->setPosition(lon,lat);
+    map->resize(options.width, options.height);
+    map->setPosition(options.longitude, options.latitude);
+    map->setZoom(options.zoom);
+    map->setTilt(options.tilt);
+    map->setRotation(options.rotation);
+
+    // Start clock
+    Timer timer;
+
+    while (bUpdate) {
+        pollInput();
+        double dt = timer.deltaSeconds();
+        if (getRenderRequest() || platform->isContinuousRendering() ) {
+            setRenderRequest(false);
+            map->update(dt);
+            map->render();
+            swapSurface();
+        }
     }
-    if (zoom != 0.0f) {
-        map->setZoom(zoom);
+
+    if (map) {
+        delete map;
+        map = nullptr;
     }
-    if (tilt != 0.0f) {
-        map->setTilt(glm::radians(tilt));
-    }
-    if (rot != 0.0f) {
-        map->setRotation(glm::radians(rot));
-    }
-}
 
-void newFrame() {
-
-    // Update
-    gettimeofday( &tv, NULL);
-    unsigned long long timeNow = (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000;
-    double delta = ((double)timeNow - (double)timePrev)*0.001;
-
-    //logMsg("New frame (delta %d msec)\n",delta);
-
-    map->update(delta);
-    timePrev = timeNow;
-
-    // Render
-    map->render();
-
-    renderGL();
+    destroySurface();
+    return 0;
 }
 
 //======================================================================= EVENTS
