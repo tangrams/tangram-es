@@ -272,9 +272,6 @@ public class MapController implements Renderer {
         });
     }
 
-    static MapController getInstance(GLSurfaceView view) {
-        return new MapController(view);
-    }
 
     /**
      * Load a new scene file.

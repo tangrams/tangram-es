@@ -137,7 +137,7 @@ extern "C" {
             jniEnv->DeleteLocalRef(value);
         }
 
-        jint sceneId = map->loadScene(resolveScenePath(cPath).c_str(), false, sceneUpdates);
+        jint sceneId = map->loadSceneAsync(resolveScenePath(cPath).c_str(), false, sceneUpdates);
 
         jniEnv->ReleaseStringUTFChars(path, cPath);
 
