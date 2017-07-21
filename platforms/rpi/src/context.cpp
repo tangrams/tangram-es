@@ -400,10 +400,10 @@ void updateGL() {
     updateMouse();
 
     int key = getKey();
-    if ( key != -1 && key != keyPressed ){
-        keyPressed = key;
+    if (key != -1 && key != keyPressed){
         onKeyPress(key);
     }
+    keyPressed = key;
 }
 
 void setWindowSize(int _width, int _height) {
