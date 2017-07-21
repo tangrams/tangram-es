@@ -67,4 +67,7 @@ private:
 
 };
 
+#define LOGS(fmt, ...) \
+do { Tangram::TextDisplay::Instance().log(fmt, ## __VA_ARGS__); } while(0)
+
 }

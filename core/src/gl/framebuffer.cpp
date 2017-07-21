@@ -8,6 +8,8 @@
 #include "log.h"
 #include "glm/vec2.hpp"
 
+#include <cmath>
+
 namespace Tangram {
 
 FrameBuffer::FrameBuffer(int _width, int _height, bool _colorRenderBuffer) :

@@ -4,6 +4,7 @@
 #include "rpiPlatform.h"
 
 #include <cassert>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
