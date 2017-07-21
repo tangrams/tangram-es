@@ -36,9 +36,9 @@ LinuxPlatform::LinuxPlatform(UrlClient::Options urlClientOptions) :
     m_urlClient(urlClientOptions) {}
 
 void LinuxPlatform::requestRender() const {
-#if defined(PLATFORM_LINUX)
+#if defined(TANGRAM_LINUX)
     glfwPostEmptyEvent();
-#elif defined(PLATFORM_RPI)
+#elif defined(TANGRAM_RPI)
     setRenderRequest(true);
 #endif
 }
