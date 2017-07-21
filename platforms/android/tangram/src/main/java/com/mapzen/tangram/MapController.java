@@ -130,21 +130,6 @@ public class MapController implements Renderer {
     }
 
     /**
-     * @deprecated
-     * Interface for a callback to received additional error information in a {@link SceneUpdateError}
-     * Triggered after a call of {@link #applySceneUpdates()} or {@link #loadSceneFile(String, List<SceneUpdate>)}
-     * Listener should be set with {@link #setSceneUpdateErrorListener(SceneUpdateErrorListener)}
-     * The callback will be run on the main (UI) thread.
-     */
-    public interface SceneUpdateErrorListener {
-        /**
-         * Receive error status when a scene update failed
-         * @param sceneUpdateError The  {@link SceneUpdateError} holding error informations
-         */
-        void onSceneUpdateError(SceneUpdateError sceneUpdateError);
-    }
-
-    /**
      * Interface for listening to scene load status information.
      * Triggered after a call of {@link #applySceneUpdates()} or {@link #loadSceneFile(String, List<SceneUpdate>)}
      * Listener should be set with {@link #setSceneLoadListener(SceneLoadListener)}
@@ -790,29 +775,6 @@ public class MapController implements Renderer {
     }
 
     /**
-     * @deprecated use setSceneLoadListener instead
-     * Set a listener for scene update error statuses
-     * @param listener The {@link SceneUpdateErrorListener} to call after scene update have failed
-     */
-    public void setSceneUpdateErrorListener(final SceneUpdateErrorListener listener) {
-        if (listener == null) {
-            sceneUpdateErrorListener = null;
-        } else {
-            sceneUpdateErrorListener = new SceneUpdateErrorListener() {
-                @Override
-                public void onSceneUpdateError(final SceneUpdateError sceneUpdateError) {
-                    uiThreadHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            listener.onSceneUpdateError(sceneUpdateError);
-                        }
-                    });
-                }
-            };
-        }
-    }
-
-    /**
      * Set a listener for label pick events
      * @param listener The {@link LabelPickListener} to call
      */
@@ -1246,7 +1208,6 @@ public class MapController implements Renderer {
     private HttpHandler httpHandler;
     private FeaturePickListener featurePickListener;
     private SceneLoadListener sceneLoadListener;
-    private SceneUpdateErrorListener sceneUpdateErrorListener;
     private LabelPickListener labelPickListener;
     private MarkerPickListener markerPickListener;
     private ViewCompleteListener viewCompleteListener;
@@ -1343,10 +1304,6 @@ public class MapController implements Renderer {
 
     // Called from JNI on worker or render-thread.
     void sceneReadyCallback(final int sceneId, final boolean success, final SceneUpdateError error) {
-        if (!success && sceneUpdateErrorListener != null) {
-            // TODO run on main thread
-            sceneUpdateErrorListener.onSceneUpdateError(error);
-        }
 
         final SceneLoadListener cb = sceneLoadListener;
         if (cb != null) {
