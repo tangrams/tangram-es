@@ -213,15 +213,7 @@ NS_ASSUME_NONNULL_END
  */
 @protocol TGMapViewDelegate <NSObject>
 @optional
-/**
- Called after a `-[TGMapViewController loadSceneFileAsync:]` or
- `-[TGMapViewController loadSceneFileAsync:sceneUpdates:]` is completed.
 
- @param mapView a pointer to the map view
- @param scene the path to the scene that has been loaded
- TODO: deprecate for didSceneLoad
- */
-- (void)mapView:(nonnull TGMapViewController *)mapView didLoadSceneAsync:(nonnull NSString *)scene;
 /**
  Always called after the method `-[TGMapViewController pickFeatureAt:]` is called on the map view.
 
@@ -267,20 +259,20 @@ NS_ASSUME_NONNULL_END
  */
 - (void)mapView:(nonnull TGMapViewController *)view didCaptureScreenshot:(nonnull UIImage *)screenshot;
 
+// TODO: Update Documentation
 /**
- Called whenever scene updates have been applied to the scene file.
- The list of scene update statuses will be empty if all updates have been applied successfully.
- Called whenever scene updates have failed to apply to the scene file.
+ If set by the user, this is called after a
+ `-[TGMapViewController loadSceneFile]` or
+ `-[TGMapViewController loadSceneFileAsync:]` or
+ `-[TGMapViewController loadSceneFileAsync:sceneUpdates:]` or
+ `-[TGMapViewController applySceneUpdate]` is completed.
 
  @param mapView a pointer to the map view
- @param sceneUpdateError a NSError containing information about the scene update that failed
- TODO: Mark this as deprecated
+ @param sceneID sceneID corresponding to which this callback will be called 
+ @param success whether the scene load or update succeed or not. To be used by the user to perform success/fail behavior
+ @param sceneError any errors during scene load or update
  */
-- (void)mapView:(nonnull TGMapViewController *)mapView didFailSceneUpdateWithError:(nonnull NSError *)sceneUpdateError;
-
-// TODO: Documentation
-- (void)mapView:(nonnull TGMapViewController *)mapView didSceneLoadWithError:(nonnull NSError *)sceneError;
-- (void)mapViewDidSceneLoad:(nonnull TGMapViewController *)mapView;
+- (void)mapView:(nonnull TGMapViewController *)mapView didSceneReady:(int)sceneID Success:(bool)success WithError:(nonnull NSError *)sceneError;
 
 @end
 

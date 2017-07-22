@@ -23,19 +23,20 @@
     NSLog(@"Did capture screenshot");
 }
 
-- (void)mapView:(TGMapViewController *)mapView didFailSceneUpdateWithError:(NSError *)sceneUpdateError;
-{
-    NSLog(@"Scene update error for update with error %@", sceneUpdateError);
-}
-
 - (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView
 {
     NSLog(@"Did complete view");
     // [mapView captureScreenshot:YES];
 }
 
-- (void)mapViewDidSceneLoad:(TGMapViewController *)mapView
+- (void)mapView:(TGMapViewController *)mapView didSceneReady:(int)sceneID Success:(bool)success WithError:(nonnull NSError *)sceneError
 {
+    if (!success) { return; }
+    if (!sceneError) {
+        NSLog(@"Scene Ready with error %@", sceneError);
+        return;
+    }
+
     TGGeoPoint newYork;
     newYork.longitude = -74.00976419448854;
     newYork.latitude = 40.70532700869127;
@@ -50,11 +51,6 @@
     // Add a client data source, named 'mz_route_line_transit'
     MapViewController* vc = (MapViewController *)mapView;
     vc.mapData = [mapView addDataLayer:@"mz_route_line_transit"];
-}
-
-- (void)mapView:(TGMapViewController *)mapView didLoadSceneAsync:(NSString *)scene
-{
-    // Deprecate!!
 }
 
 - (void)mapView:(TGMapViewController *)mapView didSelectMarker:(TGMarkerPickResult *)markerPickResult atScreenPosition:(TGGeoPoint)position;
