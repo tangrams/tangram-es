@@ -246,10 +246,8 @@ void createSurface(int x, int y, int width, int height) {
     // Start OpenGL ES
     bcm_host_init();
 
-    // Clear application state
-    int32_t success = 0;
+    // Error state
     EGLBoolean result = 0;
-    EGLint num_config = 0;
 
     static const EGLint attribute_list[] = {
         EGL_RED_SIZE, 8,
@@ -280,7 +278,8 @@ void createSurface(int x, int y, int width, int height) {
     assert(EGL_FALSE != result);
 
     // get an appropriate EGL frame buffer configuration
-    EGLConfig config;
+    EGLConfig config = NULL;
+    EGLint num_config = 0;
     result = eglChooseConfig(display, attribute_list, &config, 1, &num_config);
     assert(EGL_FALSE != result);
 
@@ -291,6 +290,17 @@ void createSurface(int x, int y, int width, int height) {
     // create an EGL rendering context
     context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attributes);
     assert(context != EGL_NO_CONTEXT);
+
+    // If given width or height is zero, set to display dimension.
+    uint32_t screen_width = 0, screen_height = 0;
+    int32_t success = graphics_get_display_size(0, &screen_width, &screen_height);
+    assert(success >= 0);
+    if (width == 0) {
+        width = screen_width;
+    }
+    if (height == 0) {
+        height = screen_height;
+    }
 
     // Set viewport size.
     viewport.x = x;

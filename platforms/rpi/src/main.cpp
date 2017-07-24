@@ -34,7 +34,7 @@ std::string mapzenApiKey;
 static bool bUpdate = true;
 
 struct LaunchOptions {
-    std::string sceneFilePath;
+    std::string sceneFilePath = "scene.yaml";
     int x = 0;
     int y = 0;
     int width = 0;
@@ -49,10 +49,6 @@ struct LaunchOptions {
 LaunchOptions getLaunchOptions(int argc, char **argv) {
 
     LaunchOptions options;
-
-    options.sceneFilePath = "scene.yaml";
-    options.width = getWindowWidth();
-    options.height = getWindowHeight();
 
     for (int i = 1; i < argc - 1; i++) {
         std::string argName = argv[i];
@@ -101,7 +97,7 @@ struct Timer {
 
 int main(int argc, char **argv) {
 
-    printf("Starting a full-screen map window. Use keys to navigate:\n"
+    printf("Starting an interactive map window. Use keys to navigate:\n"
            "\t'%c' = Pan up\n"
            "\t'%c' = Pan left\n"
            "\t'%c' = Pan down\n"
@@ -144,7 +140,7 @@ int main(int argc, char **argv) {
     }
 
     map->setupGL();
-    map->resize(options.width, options.height);
+    map->resize(getWindowWidth(), getWindowHeight());
     map->setPosition(options.longitude, options.latitude);
     map->setZoom(options.zoom);
     map->setTilt(options.tilt);
