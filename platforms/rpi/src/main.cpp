@@ -35,15 +35,16 @@ static bool bUpdate = true;
 
 struct LaunchOptions {
     std::string sceneFilePath = "scene.yaml";
+    double latitude = 0.0;
+    double longitude = 0.0;
     int x = 0;
     int y = 0;
     int width = 0;
     int height = 0;
-    double latitude = 0.0;
-    double longitude = 0.0;
     float zoom = 0.0f;
     float rotation = 0.0f;
     float tilt = 0.0f;
+    bool hasLocationSet = false;
 };
 
 LaunchOptions getLaunchOptions(int argc, char **argv) {
@@ -55,12 +56,15 @@ LaunchOptions getLaunchOptions(int argc, char **argv) {
         std::string argValue = argv[i + 1];
         if (argName == "-s" || argName == "--scene") {
             options.sceneFilePath = argValue;
-        } else if (argName == "-lat" ) {
+        } else if (argName == "-lat" || argName == "--latitude") {
             options.latitude = std::stod(argValue);
-        } else if (argName == "-lon" ) {
+            options.hasLocationSet = true;
+        } else if (argName == "-lon" || argName == "--longitude") {
             options.longitude = std::stod(argValue);
+            options.hasLocationSet = true;
         } else if (argName == "-z" || argName == "--zoom" ) {
             options.zoom = std::stof(argValue);
+            options.hasLocationSet = true;
         } else if (argName == "-x" || argName == "--x_position") {
             options.x = std::stoi(argValue);
         } else if (argName == "-y" || argName == "--y_position") {
@@ -122,10 +126,13 @@ int main(int argc, char **argv) {
     // Start OpenGL context
     createSurface(options.x, options.y, options.width, options.height);
 
+    std::vector<SceneUpdate> updates;
+
     // Get Mapzen API key from environment variables.
     char* mapzenApiKeyEnvVar = getenv("MAPZEN_API_KEY");
     if (mapzenApiKeyEnvVar && strlen(mapzenApiKeyEnvVar) > 0) {
         mapzenApiKey = mapzenApiKeyEnvVar;
+        updates.push_back(SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey));
     } else {
         LOGW("No API key found!\n\nMapzen data sources require an API key. "
              "Sign up for a free key at http://mapzen.com/developers and then set it from the command line with: "
@@ -133,18 +140,16 @@ int main(int argc, char **argv) {
     }
 
     map = new Map(platform);
-    if (mapzenApiKey.empty()) {
-        map->loadScene(options.sceneFilePath.c_str(), false, {}, nullptr);
-    } else {
-        map->loadScene(options.sceneFilePath.c_str(), false, { SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey) }, nullptr);
-    }
-
+    map->loadScene(options.sceneFilePath.c_str(), !options.hasLocationSet, updates, nullptr);
     map->setupGL();
     map->resize(getWindowWidth(), getWindowHeight());
-    map->setPosition(options.longitude, options.latitude);
-    map->setZoom(options.zoom);
     map->setTilt(options.tilt);
     map->setRotation(options.rotation);
+
+    if (options.hasLocationSet) {
+        map->setPosition(options.longitude, options.latitude);
+        map->setZoom(options.zoom);
+    }
 
     // Start clock
     Timer timer;
