@@ -25,6 +25,8 @@ namespace Tangram {
 
 static std::atomic<int32_t> s_serial;
 
+Scene::Scene() : id(s_serial++) {}
+
 Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _path)
     : id(s_serial++),
       m_path(_path),
@@ -58,9 +60,9 @@ Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _path
     m_mapProjection.reset(new MercatorProjection());
 }
 
-Scene::Scene(const Scene& _other)
-    : id(s_serial++),
-      m_featureSelection(std::make_unique<FeatureSelection>()) {
+void Scene::copyConfig(const Scene& _other) {
+
+    m_featureSelection.reset(new FeatureSelection());
 
     m_config = _other.m_config;
     m_fontContext = _other.m_fontContext;

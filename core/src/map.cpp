@@ -72,11 +72,12 @@ public:
     std::shared_ptr<Platform> platform;
     InputHandler inputHandler;
 
-    std::vector<SceneUpdate> sceneUpdates;
     std::array<Ease, 4> eases;
 
     std::shared_ptr<Scene> scene;
-    std::shared_ptr<Scene> nextScene = nullptr;
+    std::shared_ptr<Scene> lastValidScene;
+    std::vector<SceneUpdate> sceneUpdates;
+    std::atomic<int32_t> sceneLoadTasks;
 
     // NB: Destruction of (managed and loading) tiles must happen
     // before implicit destruction of 'scene' above!
@@ -190,7 +191,7 @@ SceneID Map::loadScene(const char* _scenePath, bool _useScenePosition,
     {
         std::lock_guard<std::mutex> lock(impl->sceneMutex);
         impl->sceneUpdates.clear();
-        impl->nextScene.reset();
+        impl->lastValidScene.reset();
     }
 
     auto scene = std::make_shared<Scene>(platform, _scenePath);
@@ -198,7 +199,7 @@ SceneID Map::loadScene(const char* _scenePath, bool _useScenePosition,
 
     if (SceneLoader::loadScene(platform, scene, _sceneUpdates)) {
         impl->setScene(scene);
-
+        impl->lastValidScene = scene;
     }
 
     if (impl->onSceneReady) {
@@ -220,34 +221,29 @@ SceneID Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition,
     {
         std::lock_guard<std::mutex> lock(impl->sceneMutex);
         impl->sceneUpdates.clear();
-        impl->nextScene = std::make_shared<Scene>(platform, _scenePath);
-        impl->nextScene->useScenePosition = _useScenePosition;
-        nextScene = impl->nextScene;
+        nextScene = std::make_shared<Scene>(platform, _scenePath);
+        nextScene->useScenePosition = _useScenePosition;
     }
+
+    impl->sceneLoadTasks++;
 
     runAsyncTask([nextScene, _sceneUpdates, this](){
 
             bool newSceneLoaded = SceneLoader::loadScene(platform, nextScene, _sceneUpdates);
 
-            impl->jobQueue.add([nextScene, newSceneLoaded, this]() {
-                    {
-                        std::lock_guard<std::mutex> lock(impl->sceneMutex);
-                        if (nextScene == impl->nextScene) {
-                            impl->nextScene.reset();
-                        } else {
-                            // loadScene[Async] was called in the meantime.
-                            if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, false, {}); }
-                            return;
-                        }
-                    }
+            // NB: Need to set the scene on the worker thread so that waiting
+            // applyUpdates AsyncTasks can access it to copy the config.
+            if (newSceneLoaded) { impl->lastValidScene = nextScene; }
 
+            impl->jobQueue.add([nextScene, newSceneLoaded, this]() {
                     if (newSceneLoaded) {
                         auto s = nextScene;
                         impl->setScene(s);
-                        applySceneUpdates();
                     }
 
                     if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, newSceneLoaded, {}); }
+
+                    impl->sceneLoadTasks--;
                 });
             platform->requestRender();
         });
@@ -275,28 +271,33 @@ std::shared_ptr<Platform>& Map::getPlatform() {
 
 SceneID Map::applySceneUpdates() {
 
+
     std::shared_ptr<Scene> nextScene;
     std::vector<SceneUpdate> updates;
     {
         std::lock_guard<std::mutex> lock(impl->sceneMutex);
         if (impl->sceneUpdates.empty()) { return -1; }
 
-        if (impl->nextScene) {
-            // Changes are automatically applied once the scene is loaded
-            return impl->nextScene->id;
-        }
         LOG("Applying %d scene updates", impl->sceneUpdates.size());
-
-        impl->nextScene = std::make_shared<Scene>(*impl->scene);
-        impl->nextScene->useScenePosition = false;
 
         updates = impl->sceneUpdates;
         impl->sceneUpdates.clear();
 
-        nextScene = impl->nextScene;
+        nextScene = std::make_shared<Scene>();
+        nextScene->useScenePosition = false;
     }
 
+    impl->sceneLoadTasks++;
+
     runAsyncTask([nextScene, updates = std::move(updates), this](){
+
+            if (!impl->lastValidScene) {
+                if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, false, {}); }
+                impl->sceneLoadTasks--;
+                return;
+            }
+
+            nextScene->copyConfig(*impl->lastValidScene);
 
             if (!SceneLoader::applyUpdates(platform, *nextScene, updates)) {
                 LOGW("Scene updates not applied to current scene");
@@ -306,30 +307,28 @@ SceneID Map::applySceneUpdates() {
                     if (!nextScene->errors.empty()) { err = nextScene->errors.front(); }
                     impl->onSceneReady(nextScene->id, false, err);
                 }
+                impl->sceneLoadTasks--;
                 return;
             }
 
+
             bool configApplied = SceneLoader::applyConfig(platform, nextScene);
 
+            // NB: Need to set the scene on the worker thread so that waiting
+            // applyUpdates AsyncTasks can access it to copy the config.
+            if (configApplied) { impl->lastValidScene = nextScene; }
+
             impl->jobQueue.add([nextScene, configApplied, this]() {
-                    {
-                        std::lock_guard<std::mutex> lock(impl->sceneMutex);
-                        if (nextScene == impl->nextScene) {
-                            impl->nextScene.reset();
-                        } else {
-                            // loadScene[Async] was called in the meantime.
-                            if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, false, {}); }
-                            return;
-                        }
-                    }
+
                     if (configApplied) {
                         auto s = nextScene;
                         impl->setScene(s);
-                        applySceneUpdates();
                     }
                     if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, true, {}); }
                 });
             platform->requestRender();
+
+            impl->sceneLoadTasks--;
         });
 
     return nextScene->id;
@@ -418,9 +417,9 @@ bool Map::update(float _dt) {
     bool tilesLoading = impl->tileManager.hasLoadingTiles();
     bool labelsNeedUpdate = impl->labels.needUpdate();
     bool resourceLoading = (impl->scene->pendingTextures > 0);
-    bool nextScene = bool(impl->nextScene);
 
-    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || resourceLoading || nextScene) {
+    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || resourceLoading ||
+        impl->sceneLoadTasks > 0) {
         viewComplete = false;
     }
 

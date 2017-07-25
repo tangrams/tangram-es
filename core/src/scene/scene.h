@@ -67,9 +67,13 @@ public:
         yes, no, none
     };
 
+    Scene();
     Scene(std::shared_ptr<const Platform> _platform, const std::string& _path = "");
-    Scene(const Scene& _other);
+    Scene(const Scene& _other) = delete;
+
     ~Scene();
+
+    void copyConfig(const Scene& _other);
 
     auto& camera() { return m_camera; }
 
