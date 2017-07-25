@@ -1,6 +1,10 @@
 #include "glfwApp.h"
 #include "data/clientGeoJsonSource.h"
 #include "debug/textDisplay.h"
+#ifdef TANGRAM_WINDOWS
+#define GLFW_INCLUDE_NONE
+#include <glad/glad.h>
+#endif // TANGRAM_WINDOWS
 #include <GLFW/glfw3.h>
 #include "log.h"
 #include <cstdlib>
@@ -87,6 +91,9 @@ void create(std::shared_ptr<Platform> p, std::string f, int w, int h) {
 
     // Make the main_window's context current
     glfwMakeContextCurrent(main_window);
+#ifdef _WIN32
+		gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+#endif
 
     // Set input callbacks
     glfwSetFramebufferSizeCallback(main_window, framebufferResizeCallback);
