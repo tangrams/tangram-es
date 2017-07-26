@@ -29,7 +29,7 @@ import okhttp3.TlsVersion;
  */
 public class HttpHandler {
 
-    private OkHttpClient okClient;
+    protected OkHttpClient okClient;
 
     /**
      * Enables TLS v1.2 when creating SSLSockets.
