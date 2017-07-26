@@ -230,21 +230,30 @@ SceneID Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition,
     runAsyncTask([nextScene, _sceneUpdates, this](){
 
             bool newSceneLoaded = SceneLoader::loadScene(platform, nextScene, _sceneUpdates);
+            if (!newSceneLoaded) {
+
+                if (impl->onSceneReady) {
+                    SceneError err;
+                    if (!nextScene->errors.empty()) { err = nextScene->errors.front(); }
+                    impl->onSceneReady(nextScene->id, false, err);
+                }
+                impl->sceneLoadTasks--;
+                return;
+            }
 
             // NB: Need to set the scene on the worker thread so that waiting
             // applyUpdates AsyncTasks can access it to copy the config.
-            if (newSceneLoaded) { impl->lastValidScene = nextScene; }
+            impl->lastValidScene = nextScene;
 
             impl->jobQueue.add([nextScene, newSceneLoaded, this]() {
                     if (newSceneLoaded) {
                         auto s = nextScene;
                         impl->setScene(s);
                     }
-
-                    if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, newSceneLoaded, {}); }
-
-                    impl->sceneLoadTasks--;
+                    if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, true, {}); }
                 });
+            impl->sceneLoadTasks--;
+
             platform->requestRender();
         });
 
@@ -326,9 +335,9 @@ SceneID Map::applySceneUpdates() {
                     }
                     if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, true, {}); }
                 });
-            platform->requestRender();
-
             impl->sceneLoadTasks--;
+
+            platform->requestRender();
         });
 
     return nextScene->id;
