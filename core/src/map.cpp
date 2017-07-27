@@ -124,10 +124,8 @@ Map::~Map() {
 }
 
 void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
-    {
-        std::lock_guard<std::mutex> lock(sceneMutex);
-        scene = _scene;
-    }
+
+    scene = _scene;
 
     scene->setPixelScale(view.pixelScale());
 
@@ -191,13 +189,16 @@ SceneID Map::loadScene(const char* _scenePath, bool _useScenePosition,
         std::lock_guard<std::mutex> lock(impl->sceneMutex);
         impl->lastValidScene.reset();
     }
-
     auto scene = std::make_shared<Scene>(platform, _scenePath);
     scene->useScenePosition = _useScenePosition;
 
     if (SceneLoader::loadScene(platform, scene, _sceneUpdates)) {
         impl->setScene(scene);
-        impl->lastValidScene = scene;
+
+        {
+            std::lock_guard<std::mutex> lock(impl->sceneMutex);
+            impl->lastValidScene = scene;
+        }
     }
 
     if (impl->onSceneReady) {
@@ -215,12 +216,8 @@ SceneID Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition,
 
     LOG("Loading scene file (async): %s", _scenePath);
 
-    std::shared_ptr<Scene> nextScene;
-    {
-        std::lock_guard<std::mutex> lock(impl->sceneMutex);
-        nextScene = std::make_shared<Scene>(platform, _scenePath);
-        nextScene->useScenePosition = _useScenePosition;
-    }
+    auto nextScene = std::make_shared<Scene>(platform, _scenePath);
+    nextScene->useScenePosition = _useScenePosition;
 
     impl->sceneLoadTasks++;
 
@@ -238,9 +235,12 @@ SceneID Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition,
                 return;
             }
 
-            // NB: Need to set the scene on the worker thread so that waiting
-            // applyUpdates AsyncTasks can access it to copy the config.
-            impl->lastValidScene = nextScene;
+            {
+                std::lock_guard<std::mutex> lock(impl->sceneMutex);
+                // NB: Need to set the scene on the worker thread so that waiting
+                // applyUpdates AsyncTasks can access it to copy the config.
+                impl->lastValidScene = nextScene;
+            }
 
             impl->jobQueue.add([nextScene, newSceneLoaded, this]() {
                     if (newSceneLoaded) {
@@ -267,13 +267,10 @@ std::shared_ptr<Platform>& Map::getPlatform() {
 
 SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
 
-    std::shared_ptr<Scene> nextScene;
     std::vector<SceneUpdate> updates = _sceneUpdates;
-    {
-        std::lock_guard<std::mutex> lock(impl->sceneMutex);
-        nextScene = std::make_shared<Scene>();
-        nextScene->useScenePosition = false;
-    }
+
+    auto nextScene = std::make_shared<Scene>();
+    nextScene->useScenePosition = false;
 
     impl->sceneLoadTasks++;
 
@@ -285,7 +282,10 @@ SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
                 return;
             }
 
-            nextScene->copyConfig(*impl->lastValidScene);
+            {
+                std::lock_guard<std::mutex> lock(impl->sceneMutex);
+                nextScene->copyConfig(*impl->lastValidScene);
+            }
 
             if (!SceneLoader::applyUpdates(platform, *nextScene, updates)) {
                 LOGW("Scene updates not applied to current scene");
@@ -302,10 +302,12 @@ SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
 
             bool configApplied = SceneLoader::applyConfig(platform, nextScene);
 
-            // NB: Need to set the scene on the worker thread so that waiting
-            // applyUpdates AsyncTasks can access it to copy the config.
-            if (configApplied) { impl->lastValidScene = nextScene; }
-
+            {
+                std::lock_guard<std::mutex> lock(impl->sceneMutex);
+                // NB: Need to set the scene on the worker thread so that waiting
+                // applyUpdates AsyncTasks can access it to copy the config.
+                if (configApplied) { impl->lastValidScene = nextScene; }
+            }
             impl->jobQueue.add([nextScene, configApplied, this]() {
 
                     if (configApplied) {
