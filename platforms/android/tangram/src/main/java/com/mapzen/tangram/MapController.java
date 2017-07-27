@@ -233,7 +233,7 @@ public class MapController implements Renderer {
 
         fontFileParser = new FontFileParser();
 
-        // Parse font file desription
+        // Parse font file description
         fontFileParser.parse();
 
         mapPointer = nativeInit(this, assetManager);
