@@ -131,21 +131,20 @@ public class MapController implements Renderer {
 
     /**
      * Interface for listening to scene load status information.
-     * Triggered after a call of {@link #applySceneUpdates()} or {@link #loadSceneFile(String, List<SceneUpdate>)}
+     * Triggered after a call of {@link #updateScene(List<SceneUpdate>)} or {@link #loadSceneFile(String, List<SceneUpdate>)}
      * Listener should be set with {@link #setSceneLoadListener(SceneLoadListener)}
      * The callbacks will be run on the main (UI) thread.
      */
     public interface SceneLoadListener {
-
         /**
          * Received when a scene load succeeded.
-         * @param sceneId returned by {@link #applySceneUpdates()} or {@link #loadSceneFile(String, List<SceneUpdate>)}
+         * @param sceneId returned by {@link #updateScene(List<SceneUpdate>)} or {@link #loadSceneFile(String, List<SceneUpdate>)}
          */
         void onSceneReady(int sceneId);
 
         /**
          * Receive error status when a scene load failed
-         * @param sceneId returned by {@link #applySceneUpdates()} or {@link #loadSceneFile(String, List<SceneUpdate>)}
+         * @param sceneId returned by {@link #updateScene(List<SceneUpdate>)} or {@link #loadSceneFile(String, List<SceneUpdate>)}
          * @param sceneUpdateError The  {@link SceneUpdateError} holding error informations
          */
         void onSceneError(int sceneId, SceneUpdateError sceneUpdateError);
@@ -301,6 +300,28 @@ public class MapController implements Renderer {
         removeAllMarkers();
         requestRender();
         return sceneId;
+    }
+
+    /**
+     * Apply SceneUpdates to the current scene.
+     * If a updates trigger an error, scene updates won't be applied.
+     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
+     * ready.
+     * @param sceneUpdates List of {@code SceneUpdate}
+     * @return new scene ID
+     */
+    public int updateScene(List<SceneUpdate> sceneUpdates) {
+        checkPointer(mapPointer);
+
+        if (sceneUpdates == null || sceneUpdates.size() == 0) {
+            throw new IllegalArgumentException("sceneUpdates can not be null or empty in queueSceneUpdates");
+        }
+
+        removeAllMarkers();
+
+        String[] updateStrings = bundleSceneUpdates(sceneUpdates);
+
+        return nativeUpdateScene(mapPointer, updateStrings);
     }
 
     /**
@@ -936,46 +957,6 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Enqueue a scene component update with its corresponding YAML node value
-     * @param sceneUpdate A {@code SceneUpdate}
-     */
-    public void queueSceneUpdate(SceneUpdate sceneUpdate) {
-        checkPointer(mapPointer);
-        if (sceneUpdate == null) {
-            throw new IllegalArgumentException("sceneUpdate can not be null in queueSceneUpdates");
-        }
-        nativeQueueSceneUpdate(mapPointer, sceneUpdate.getPath(), sceneUpdate.getValue());
-    }
-
-    /**
-     * Enqueue a scene component update with its corresponding YAML node value
-     * @param sceneUpdates List of {@code SceneUpdate}
-     */
-    public void queueSceneUpdate(List<SceneUpdate> sceneUpdates) {
-        checkPointer(mapPointer);
-        if (sceneUpdates == null || sceneUpdates.size() == 0) {
-            throw new IllegalArgumentException("sceneUpdates can not be null or empty in queueSceneUpdates");
-        }
-        String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        nativeQueueSceneUpdates(mapPointer, updateStrings);
-    }
-
-    /**
-     * Apply updates queued by queueSceneUpdate; this empties the current queue of updates
-     * If a updates trigger an error, scene updates won't be applied.
-     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
-     * ready.
-     * @return Scene ID
-     */
-    public int applySceneUpdates() {
-        checkPointer(mapPointer);
-
-        removeAllMarkers();
-
-        return nativeApplySceneUpdates(mapPointer);
-    }
-
-    /**
      * Set whether the OpenGL state will be cached between subsequent frames. This improves
      * rendering efficiency, but can cause errors if your application code makes OpenGL calls.
      * @param use Whether to use a cached OpenGL state; false by default
@@ -1155,9 +1136,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeHandlePinchGesture(long mapPtr, float posX, float posY, float scale, float velocity);
     private synchronized native void nativeHandleRotateGesture(long mapPtr, float posX, float posY, float rotation);
     private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
-    private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String componentValue);
-    private synchronized native void nativeQueueSceneUpdates(long mapPtr, String[] updateStrings);
-    private synchronized native int nativeApplySceneUpdates(long mapPtr);
+    private synchronized native int nativeUpdateScene(long mapPtr, String[] updateStrings);
     private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
     private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);

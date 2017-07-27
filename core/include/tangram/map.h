@@ -108,16 +108,12 @@ public:
                       bool _useScenePosition = false,
                       const std::vector<SceneUpdate>& sceneUpdates = {});
 
+    void setSceneReadyListener(SceneReadyCallback _onSceneReady);
+
     // Request an update to the scene configuration; the path is a series of yaml keys
     // separated by a '.' and the value is a string of yaml to replace the current value
     // at the given path in the scene
-    void queueSceneUpdate(const char* _path, const char* _value);
-    void queueSceneUpdate(const std::vector<SceneUpdate>& sceneUpdates);
-
-    void setSceneReadyListener(SceneReadyCallback _onSceneReady);
-
-    // Apply all previously requested scene updates
-    SceneID applySceneUpdates();
+    SceneID updateSceneAsync(const std::vector<SceneUpdate>& sceneUpdates);
 
     // Set an MBTiles SQLite database file for a DataSource in the scene.
     void setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath);

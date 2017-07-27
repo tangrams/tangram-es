@@ -76,7 +76,6 @@ public:
 
     std::shared_ptr<Scene> scene;
     std::shared_ptr<Scene> lastValidScene;
-    std::vector<SceneUpdate> sceneUpdates;
     std::atomic<int32_t> sceneLoadTasks;
 
     // NB: Destruction of (managed and loading) tiles must happen
@@ -190,7 +189,6 @@ SceneID Map::loadScene(const char* _scenePath, bool _useScenePosition,
 
     {
         std::lock_guard<std::mutex> lock(impl->sceneMutex);
-        impl->sceneUpdates.clear();
         impl->lastValidScene.reset();
     }
 
@@ -220,7 +218,6 @@ SceneID Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition,
     std::shared_ptr<Scene> nextScene;
     {
         std::lock_guard<std::mutex> lock(impl->sceneMutex);
-        impl->sceneUpdates.clear();
         nextScene = std::make_shared<Scene>(platform, _scenePath);
         nextScene->useScenePosition = _useScenePosition;
     }
@@ -260,16 +257,6 @@ SceneID Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition,
     return nextScene->id;
 }
 
-void Map::queueSceneUpdate(const char* _path, const char* _value) {
-    std::lock_guard<std::mutex> lock(impl->sceneMutex);
-    impl->sceneUpdates.push_back({_path, _value});
-}
-
-void Map::queueSceneUpdate(const std::vector<SceneUpdate>& sceneUpdates) {
-    std::lock_guard<std::mutex> lock(impl->sceneMutex);
-    impl->sceneUpdates.insert(impl->sceneUpdates.end(), sceneUpdates.begin(), sceneUpdates.end());
-}
-
 void Map::setSceneReadyListener(SceneReadyCallback _onSceneReady) {
     impl->onSceneReady = _onSceneReady;
 }
@@ -278,20 +265,12 @@ std::shared_ptr<Platform>& Map::getPlatform() {
     return platform;
 }
 
-SceneID Map::applySceneUpdates() {
-
+SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
 
     std::shared_ptr<Scene> nextScene;
-    std::vector<SceneUpdate> updates;
+    std::vector<SceneUpdate> updates = _sceneUpdates;
     {
         std::lock_guard<std::mutex> lock(impl->sceneMutex);
-        if (impl->sceneUpdates.empty()) { return -1; }
-
-        LOG("Applying %d scene updates", impl->sceneUpdates.size());
-
-        updates = impl->sceneUpdates;
-        impl->sceneUpdates.clear();
-
         nextScene = std::make_shared<Scene>();
         nextScene->useScenePosition = false;
     }
@@ -345,8 +324,7 @@ SceneID Map::applySceneUpdates() {
 
 void Map::setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath) {
     std::string scenePath = std::string("sources.") + _dataSourceName + ".mbtiles";
-    queueSceneUpdate(scenePath.c_str(), _mbtilesFilePath);
-    applySceneUpdates();
+    updateSceneAsync({SceneUpdate{scenePath.c_str(), _mbtilesFilePath}});
 }
 
 void Map::resize(int _newWidth, int _newHeight) {

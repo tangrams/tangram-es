@@ -378,24 +378,25 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 map->setPixelScale(pixel_scale);
                 break;
             case GLFW_KEY_P:
-                map->queueSceneUpdate("cameras", "{ main_camera: { type: perspective } }");
-                map->applySceneUpdates();
+                map->updateSceneAsync({SceneUpdate{"cameras", "{ main_camera: { type: perspective } }"}});
                 break;
             case GLFW_KEY_I:
-                map->queueSceneUpdate("cameras", "{ main_camera: { type: isometric } }");
-                map->applySceneUpdates();
+                map->updateSceneAsync({SceneUpdate{"cameras", "{ main_camera: { type: isometric } }"}});
                 break;
             case GLFW_KEY_G:
                 static bool geoJSON = false;
                 if (!geoJSON) {
-                    map->queueSceneUpdate("sources.osm.type", "GeoJSON");
-                    map->queueSceneUpdate("sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.json");
+                    map->updateSceneAsync({
+                            SceneUpdate{"sources.osm.type", "GeoJSON"},
+                            SceneUpdate{"sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.json"}
+                        });
                 } else {
-                    map->queueSceneUpdate("sources.osm.type", "MVT");
-                    map->queueSceneUpdate("sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt");
+                    map->updateSceneAsync({
+                            SceneUpdate{"sources.osm.type", "MVT"},
+                            SceneUpdate{"sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt"}
+                        });
                 }
                 geoJSON = !geoJSON;
-                map->applySceneUpdates();
                 break;
             case GLFW_KEY_ESCAPE:
                 glfwSetWindowShouldClose(window, true);
