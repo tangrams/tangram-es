@@ -148,8 +148,15 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
 
     @Override
     public void onSceneReady(int sceneId, SceneError sceneError) {
+
         Log.d("Tangram", "onSceneReady!");
-        if (sceneError != null) {
+        if (sceneError == null) {
+            Toast.makeText(this, "Scene ready: " + sceneId, Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Scene load error: " + sceneId + " "
+                    + sceneError.getSceneUpdate().toString()
+                    + " " + sceneError.getError().toString(), Toast.LENGTH_SHORT).show();
+
             Log.d("Tangram", "Scene update errors "
                     + sceneError.getSceneUpdate().toString()
                     + " " + sceneError.getError().toString());
