@@ -1,42 +1,36 @@
 #pragma once
 
 #include "platform_gl.h"
-#undef countof
-#include "glm/glm.hpp"
 
 // GL Context
-void    initGL(int argc, char **argv);
-void    updateGL();
-void    renderGL();
-void    closeGL();
+void createSurface(int x, int y, int width, int height);
+void pollInput();
+void swapSurface();
+void destroySurface();
 
 // SET
-void    setWindowSize(int _width, int _height);
-void    setRenderRequest(bool _render);
+void setWindowSize(int width, int height);
+void setRenderRequest(bool render);
 
 // GET
-bool    getRenderRequest();
-int     getWindowWidth();
-int     getWindowHeight();
-glm::vec2 getWindowSize();
-glm::mat4 getOrthoMatrix();
+bool getRenderRequest();
+int getWindowWidth();
+int getWindowHeight();
 
-float   getMouseX();
-float   getMouseY();
-glm::vec2 getMousePosition();
+float getMouseX();
+float getMouseY();
 
-float   getMouseVelX();
-float   getMouseVelY();
-glm::vec2 getMouseVelocity();
+float getMouseVelX();
+float getMouseVelY();
 
-int     getMouseButton();
+int getMouseButton();
 
 unsigned char getKeyPressed();
 
 // EVENTS
-void    onKeyPress(int _key);
-void    onMouseMove(float _x, float _y);
-void    onMouseClick(float _x, float _y, int _button);
-void    onMouseDrag(float _x, float _y, int _button);
-void    onMouseRelease(float _x, float _y);
-void    onViewportResize(int _width, int _height);
+void onKeyPress(int key);
+void onMouseMove(float x, float y);
+void onMouseClick(float x, float y, int button);
+void onMouseDrag(float x, float y, int button);
+void onMouseRelease(float x, float y);
+void onViewportResize(int width, int height);

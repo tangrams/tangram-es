@@ -3,6 +3,8 @@
 #include "log.h"
 #include "platform.h"
 
+#include <algorithm>
+
 #define MAX_DOWNLOADS 4
 
 namespace Tangram {

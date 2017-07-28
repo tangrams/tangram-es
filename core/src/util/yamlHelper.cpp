@@ -4,6 +4,8 @@
 #include "log.h"
 #include "csscolorparser.hpp"
 
+#include <cmath>
+
 #define MAP_DELIM '.'
 #define SEQ_DELIM '#'
 

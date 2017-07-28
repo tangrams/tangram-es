@@ -1,4 +1,5 @@
 #include "context.h"
+#include "platform.h"
 
 #include <assert.h>
 #include <fcntl.h>
@@ -8,9 +9,6 @@
 #include <termios.h>
 #include <linux/input.h>
 
-#include "glm/gtc/matrix_transform.hpp"
-#include "platform.h"
-#include "util/geom.h"
 
 // Main global variables
 //-------------------------------
@@ -19,77 +17,86 @@ EGLDisplay display;
 EGLSurface surface;
 EGLContext context;
 
-static glm::ivec4 viewport;
-static glm::mat4 orthoMatrix;
+struct Viewport {
+    int x = 0;
+    int y = 0;
+    int width = 0;
+    int height = 0;
+};
+Viewport viewport;
 
 #define MOUSE_ID "mouse0"
 static int mouse_fd = -1;
-typedef struct {
-    float   x,y;
-    float   velX,velY;
-    int     button;
-} Mouse;
+struct Mouse {
+    float x = 0.f;
+    float y = 0.f;
+    float velX = 0.f;
+    float velY = 0.f;
+    int button = 0;
+};
 static Mouse mouse;
 static bool bRender;
 static unsigned char keyPressed;
 
 // Mouse stuff
 //--------------------------------
-std::string searchForDevice(const std::string& _device) {
+std::string searchForDevice(const std::string& device) {
     std::ifstream file;
     std::string buffer;
     std::string address = "NONE";
 
     file.open("/proc/bus/input/devices");
 
-    if (!file.is_open())
-      return "NOT FOUND";
+    if (!file.is_open()) {
+        return "NOT FOUND";
+    }
 
     while (!file.eof()) {
-      getline(file, buffer);
-      std::size_t found = buffer.find(_device);
-      if(found!=std::string::npos){
-        std::string tmp = buffer.substr(found+_device.size()+1);
-        std::size_t foundBegining = tmp.find("event");
-        if(foundBegining!=std::string::npos){
-            address = "/dev/input/"+tmp.substr(foundBegining);
-            address.erase(address.size()-1,1);
+        getline(file, buffer);
+        std::size_t found = buffer.find(device);
+        if (found != std::string::npos) {
+            std::string tmp = buffer.substr(found + device.size() + 1);
+            std::size_t foundBegining = tmp.find("event");
+            if (foundBegining != std::string::npos) {
+                address = "/dev/input/" + tmp.substr(foundBegining);
+                address.erase(address.size() - 1, 1);
+            }
+            break;
         }
-        break;
-      }
     }
 
     file.close();
     return address;
 }
 
-void closeMouse(){
-    if (mouse_fd > 0)
+void closeMouse() {
+    if (mouse_fd > 0) {
         close(mouse_fd);
+    }
     mouse_fd = -1;
 }
 
-int initMouse(){
+int initMouse() {
     closeMouse();
 
-    mouse.x = viewport.z*0.5;
-    mouse.y = viewport.w*0.5;
+    mouse.x = viewport.width * 0.5;
+    mouse.y = viewport.height * 0.5;
     std::string mouseAddress = searchForDevice(MOUSE_ID);
-    std::cout << "Mouse [" << mouseAddress << "]"<< std::endl;
+    std::cout << "Mouse [" << mouseAddress << "]" << std::endl;
     mouse_fd = open(mouseAddress.c_str(), O_RDONLY | O_NONBLOCK);
 
     return mouse_fd;
 }
 
-
-bool readMouseEvent(struct input_event *mousee){
+bool readMouseEvent(struct input_event *mousee) {
     int bytes;
     if (mouse_fd > 0) {
         bytes = read(mouse_fd, mousee, sizeof(struct input_event));
-        if (bytes == -1)
+        if (bytes == -1) {
             return false;
-        else if (bytes == sizeof(struct input_event))
+        } else if (bytes == sizeof(struct input_event)) {
             return true;
+        }
     }
     return false;
 }
@@ -100,30 +107,30 @@ bool updateMouse() {
     }
 
     struct input_event mousee;
-    while ( readMouseEvent(&mousee) ) {
+    while (readMouseEvent(&mousee)) {
 
-        mouse.velX=0;
-        mouse.velY=0;
+        mouse.velX = 0;
+        mouse.velY = 0;
 
-        float x,y = 0.0f;
+        float x = 0.0f, y = 0.0f;
         int button = 0;
 
-        switch(mousee.type) {
+        switch (mousee.type) {
             // Update Mouse Event
             case EV_KEY:
                 switch (mousee.code) {
                     case BTN_LEFT:
-                        if (mousee.value == 1){
+                        if (mousee.value == 1) {
                             button = 1;
                         }
                         break;
                     case BTN_RIGHT:
-                        if(mousee.value == 1){
+                        if (mousee.value == 1) {
                             button = 2;
                         }
                         break;
                     case BTN_MIDDLE:
-                        if(mousee.value == 1){
+                        if (mousee.value == 1) {
                             button = 3;
                         }
                         break;
@@ -133,10 +140,10 @@ bool updateMouse() {
                 }
                 if (button != mouse.button) {
                     mouse.button = button;
-                    if(mouse.button == 0){
-                        onMouseRelease(mouse.x,mouse.y);
+                    if (mouse.button == 0) {
+                        onMouseRelease(mouse.x, mouse.y);
                     } else {
-                        onMouseClick(mouse.x,mouse.y,mouse.button);
+                        onMouseClick(mouse.x, mouse.y, mouse.button);
                     }
                 }
                 break;
@@ -158,30 +165,30 @@ bool updateMouse() {
                     default:
                         break;
                 }
-                mouse.x+=mouse.velX;
-                mouse.y+=mouse.velY;
+                mouse.x += mouse.velX;
+                mouse.y += mouse.velY;
 
                 // Clamp values
-                if (mouse.x < 0) mouse.x=0;
-                if (mouse.y < 0) mouse.y=0;
-                if (mouse.x > viewport.z) mouse.x = viewport.z;
-                if (mouse.y > viewport.w) mouse.y = viewport.w;
+                if (mouse.x < 0) { mouse.x = 0; }
+                if (mouse.y < 0) { mouse.y = 0; }
+                if (mouse.x > viewport.width) { mouse.x = viewport.width; }
+                if (mouse.y > viewport.height) { mouse.y = viewport.height; }
 
                 if (mouse.button != 0) {
-                    onMouseDrag(mouse.x,mouse.y,mouse.button);
+                    onMouseDrag(mouse.x, mouse.y, mouse.button);
                 } else {
-                    onMouseMove(mouse.x,mouse.y);
+                    onMouseMove(mouse.x, mouse.y);
                 }
                 break;
             case EV_ABS:
                 switch (mousee.code) {
                     case ABS_X:
-                        x = ((float)mousee.value/4095.0f)*viewport.z;
+                        x = ((float)mousee.value / 4095.0f) * viewport.width;
                         mouse.velX = x - mouse.x;
                         mouse.x = x;
                         break;
                     case ABS_Y:
-                        y = (1.0-((float)mousee.value/4095.0f))*viewport.w;
+                        y = (1.0 - ((float)mousee.value / 4095.0f)) * viewport.height;
                         mouse.velY = y - mouse.y;
                         mouse.y = y;
                         break;
@@ -189,9 +196,9 @@ bool updateMouse() {
                         break;
                 }
                 if (mouse.button != 0) {
-                    onMouseDrag(mouse.x,mouse.y,mouse.button);
+                    onMouseDrag(mouse.x, mouse.y, mouse.button);
                 } else {
-                    onMouseMove(mouse.x,mouse.y);
+                    onMouseMove(mouse.x, mouse.y);
                 }
                 break;
             default:
@@ -234,38 +241,26 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 //==============================================================================
-void initGL(int argc, char **argv){
+void createSurface(int x, int y, int width, int height) {
 
     // Start OpenGL ES
     bcm_host_init();
 
-    // Clear application state
-    int32_t success = 0;
-    EGLBoolean result;
-    EGLint num_config;
-
-    static EGL_DISPMANX_WINDOW_T nativeviewport;
-
-    DISPMANX_ELEMENT_HANDLE_T dispman_element;
-    DISPMANX_DISPLAY_HANDLE_T dispman_display;
-    DISPMANX_UPDATE_HANDLE_T dispman_update;
-    VC_RECT_T dst_rect;
-    VC_RECT_T src_rect;
-
-    uint32_t screen_width;
-    uint32_t screen_height;
+    // Error state
+    EGLBoolean result = 0;
 
     static const EGLint attribute_list[] = {
         EGL_RED_SIZE, 8,
         EGL_GREEN_SIZE, 8,
         EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 8,
+        EGL_DEPTH_SIZE, 16,
         EGL_SAMPLE_BUFFERS, 1,
         EGL_SAMPLES, 4,
+        EGL_CONFORMANT, EGL_OPENGL_ES2_BIT,
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_DEPTH_SIZE, 16,
+        EGL_TRANSPARENT_TYPE, EGL_NONE,
         EGL_NONE
     };
 
@@ -274,101 +269,112 @@ void initGL(int argc, char **argv){
         EGL_NONE
     };
 
-    EGLConfig config;
-
     // get an EGL display connection
     display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    assert(display!=EGL_NO_DISPLAY);
-    check();
+    assert(display != EGL_NO_DISPLAY);
 
     // initialize the EGL display connection
     result = eglInitialize(display, NULL, NULL);
     assert(EGL_FALSE != result);
-    check();
 
     // get an appropriate EGL frame buffer configuration
+    EGLConfig config = NULL;
+    EGLint num_config = 0;
     result = eglChooseConfig(display, attribute_list, &config, 1, &num_config);
     assert(EGL_FALSE != result);
-    check();
 
     // get an appropriate EGL frame buffer configuration
     result = eglBindAPI(EGL_OPENGL_ES_API);
     assert(EGL_FALSE != result);
-    check();
 
     // create an EGL rendering context
     context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attributes);
-    assert(context!=EGL_NO_CONTEXT);
-    check();
+    assert(context != EGL_NO_CONTEXT);
 
-    // create an EGL viewport surface
-    success = graphics_get_display_size(0 /* LCD */, &screen_width, &screen_height);
-    assert( success >= 0 );
+    // If given width or height is zero, set to display dimension.
+    uint32_t screen_width = 0, screen_height = 0;
+    int32_t success = graphics_get_display_size(0, &screen_width, &screen_height);
+    assert(success >= 0);
+    if (width == 0) {
+        width = screen_width;
+    }
+    if (height == 0) {
+        height = screen_height;
+    }
 
-    //  Initially the viewport is for all the screen
-    viewport.x = 0;
-    viewport.y = 0;
-    viewport.z = screen_width;
-    viewport.w = screen_height;
+    // Set viewport size.
+    viewport.x = x;
+    viewport.y = y;
+    viewport.width = width;
+    viewport.height = height;
 
+    VC_RECT_T dst_rect = { 0 };
     dst_rect.x = viewport.x;
     dst_rect.y = viewport.y;
-    dst_rect.width = viewport.z;
-    dst_rect.height = viewport.w;
+    dst_rect.width = viewport.width;
+    dst_rect.height = viewport.height;
 
-    src_rect.x = 0;
-    src_rect.y = 0;
-    src_rect.width = viewport.z << 16;
-    src_rect.height = viewport.w << 16;
+    VC_RECT_T src_rect = { 0 };
+    src_rect.x = viewport.x;
+    src_rect.y = viewport.y;
+    src_rect.width = viewport.width << 16;
+    src_rect.height = viewport.height << 16;
 
-    dispman_display = vc_dispmanx_display_open( 0 /* LCD */);
-    dispman_update = vc_dispmanx_update_start( 0 );
+    // Configure the display layer to have full opacity.
+    VC_DISPMANX_ALPHA_T dispman_alpha = { 0 };
+    dispman_alpha.flags = DISPMANX_FLAGS_ALPHA_FIXED_ALL_PIXELS;
+    dispman_alpha.opacity = 0xFF;
+    dispman_alpha.mask = NULL;
 
-    dispman_element = vc_dispmanx_element_add( dispman_update, dispman_display,
-                                       0/*layer*/, &dst_rect, 0/*src*/,
-                                       &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha*/, 0/*clamp*/, (DISPMANX_TRANSFORM_T)0/*transform*/);
+    DISPMANX_DISPLAY_HANDLE_T dispman_display = vc_dispmanx_display_open(0);
+    DISPMANX_UPDATE_HANDLE_T dispman_update = vc_dispmanx_update_start(0);
 
-    nativeviewport.element = dispman_element;
-    nativeviewport.width = viewport.z;
-    nativeviewport.height = viewport.w;
-    vc_dispmanx_update_submit_sync( dispman_update );
-    check();
+    DISPMANX_ELEMENT_HANDLE_T dispman_element = vc_dispmanx_element_add(
+        dispman_update,
+        dispman_display,
+        0 /*layer*/,
+        &dst_rect,
+        0 /*src*/,
+        &src_rect,
+        DISPMANX_PROTECTION_NONE,
+        &dispman_alpha,
+        0 /*clamp*/,
+        (DISPMANX_TRANSFORM_T)0 /*transform*/
+        );
 
-    surface = eglCreateWindowSurface( display, config, &nativeviewport, NULL );
+    vc_dispmanx_update_submit_sync(dispman_update);
+
+    static EGL_DISPMANX_WINDOW_T native_window = { 0 };
+    native_window.element = dispman_element;
+    native_window.width = viewport.width;
+    native_window.height = viewport.height;
+
+    surface = eglCreateWindowSurface(display, config, &native_window, NULL);
     assert(surface != EGL_NO_SURFACE);
-    check();
 
     // connect the context to the surface
     result = eglMakeCurrent(display, surface, surface, context);
     assert(EGL_FALSE != result);
-    check();
 
-    // Set background color and clear buffers
-    // glClearColor(0.15f, 0.25f, 0.35f, 1.0f);
-    // glClear( GL_COLOR_BUFFER_BIT );
-
-    setWindowSize(viewport.z,viewport.w);
-    mouse.x = viewport.z*0.5;
-    mouse.y = viewport.w*0.5;
+    setWindowSize(viewport.width, viewport.height);
     check();
 
     initMouse();
-    ///printf("OpenGL Initialize at %i,%i,%i,%i\n",viewport.x,viewport.y,viewport.z,viewport.w);
 }
 
-void renderGL(){
+void swapSurface() {
     eglSwapBuffers(display, surface);
 }
 
-void closeGL(){
+void destroySurface() {
     closeMouse();
     eglSwapBuffers(display, surface);
 
     // Release OpenGL resources
-    eglMakeCurrent( display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT );
-    eglDestroySurface( display, surface );
-    eglDestroyContext( display, context );
-    eglTerminate( display );
+    eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    eglDestroySurface(display, surface);
+    eglDestroyContext(display, context);
+    eglTerminate(display);
 }
 
 
@@ -395,39 +401,29 @@ int getKey() {
     return character;
 }
 
-void updateGL() {
+void pollInput() {
     updateMouse();
 
     int key = getKey();
-    if ( key != -1 && key != keyPressed ){
-        keyPressed = key;
+    if (key != -1 && key != keyPressed){
         onKeyPress(key);
     }
+    keyPressed = key;
 }
 
 void setWindowSize(int _width, int _height) {
-    viewport.z = _width;
-    viewport.w = _height;
-    glViewport((float)viewport.x, (float)viewport.y, (float)viewport.z, (float)viewport.w);
-    orthoMatrix = glm::ortho((float)viewport.x, (float)viewport.z, (float)viewport.y, (float)viewport.w);
-
-    onViewportResize(viewport.z, viewport.w);
+    viewport.width = _width;
+    viewport.height = _height;
+    glViewport((float)viewport.x, (float)viewport.y, (float)viewport.width, (float)viewport.height);
+    onViewportResize(viewport.width, viewport.height);
 }
 
 int getWindowWidth(){
-    return viewport.z;
+    return viewport.width;
 }
 
 int getWindowHeight(){
-    return viewport.w;
-}
-
-glm::vec2 getWindowSize() {
-    return glm::vec2(viewport.w,viewport.w);
-}
-
-glm::mat4 getOrthoMatrix(){
-    return orthoMatrix;
+    return viewport.height;
 }
 
 float getMouseX(){
@@ -438,20 +434,12 @@ float getMouseY(){
     return mouse.y;
 }
 
-glm::vec2 getMousePosition() {
-    return glm::vec2(mouse.x,mouse.y);
-}
-
 float getMouseVelX(){
     return mouse.velX;
 }
 
 float getMouseVelY(){
     return mouse.velY;
-}
-
-glm::vec2 getMouseVelocity() {
-    return glm::vec2(mouse.velX,mouse.velY);
 }
 
 int getMouseButton(){
