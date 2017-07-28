@@ -36,6 +36,8 @@
             return TGErrorSceneUpdatePathNotFound;
         case Tangram::Error::scene_update_value_yaml_syntax_error:
             return TGErrorSceneUpdateValueYAMLSyntaxError;
+        case Tangram::Error::no_valid_scene:
+            return TGErrorNoValidScene;
         case Tangram::Error::none:
             return TGErrorNone;
     }

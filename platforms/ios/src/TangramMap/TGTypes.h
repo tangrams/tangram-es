@@ -49,6 +49,8 @@ typedef NS_ENUM(NSInteger, TGError) {
     TGErrorSceneUpdatePathYAMLSyntaxError,
     /// The YAML syntax of the scene update value has a syntax error
     TGErrorSceneUpdateValueYAMLSyntaxError,
+    /// No valid scene was loaded (and on tries to update the scene)
+    TGErrorNoValidScene,
     /// An error code for markers
     TGErrorMarker,
 };

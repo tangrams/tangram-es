@@ -269,10 +269,9 @@ NS_ASSUME_NONNULL_END
 
  @param mapView a pointer to the map view
  @param sceneID sceneID corresponding to which this callback will be called 
- @param success whether the scene load or update succeed or not. To be used by the user to perform success/fail behavior
  @param sceneError any errors during scene load or update
  */
-- (void)mapView:(nonnull TGMapViewController *)mapView didSceneReady:(int)sceneID Success:(bool)success WithError:(nonnull NSError *)sceneError;
+- (void)mapView:(nonnull TGMapViewController *)mapView didSceneReady:(int)sceneID WithError:(nonnull NSError *)sceneError;
 
 @end
 
@@ -492,8 +491,10 @@ NS_ASSUME_NONNULL_BEGIN
  Tangram will automatically load that remote scene file.
 
  @param path the scene path URL
+
+ @return the integer (SceneID) associated with this scene load.
  */
-- (void)loadSceneFile:(NSString *)path;
+- (int)loadSceneFile:(NSString *)path;
 
 /**
  Loads a scene file (similar to `-loadSceneFile:`), with a list of
@@ -502,16 +503,20 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param path the scene path URL
  @param sceneUpdates a list of `TGSceneUpdate` to apply to the scene
+
+ @return the integer (SceneID) associated with this scene load.
  */
-- (void)loadSceneFile:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
+- (int)loadSceneFile:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
 
 /**
- Loads a scene file asynchronously, may call `-[TGMapViewDelegate mapView:didLoadSceneAsync:]`
+ Loads a scene file asynchronously, may call `-[TGMapViewDelegate didSceneReady:WithError:]`
  if a `TGMapViewDelegate` is set to the map view.
 
  @param path the scene path URL
+
+ @return the integer (SceneID) associated with this scene load.
  */
-- (void)loadSceneFileAsync:(NSString *)path;
+- (int)loadSceneFileAsync:(NSString *)path;
 
 /**
  Loads a scene asynchronously (similar to `-loadSceneFileAsync:`), with a
@@ -520,36 +525,21 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param path the scene path URL
  @param sceneUpdates a list of `TGSceneUpdate` to apply to the scene
+
+ @return the integer (SceneID) associated with this scene load.
  */
-- (void)loadSceneFileAsync:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
+- (int)loadSceneFileAsync:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
 
 /**
- Queue a scene update.
-
- The path is a series of yaml keys separated by a '.' and the value is a string
- of yaml to replace the current value at the given path in the scene.
-
- @param componentPath the path of the scene component to update
- @value the value to assign to the YAML component selected with `componentPath`
-
- @note Scene updates must be applied with `-applySceneUpdates:`
- */
-- (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value;
-
-/**
- Queue a list of scene updates.
-
+ Update the scene with the list of updates asyncronously, may call `-[TGMapViewDelegate didSceneReady:WithError:]`
+ if a `TGMapViewDelegate` is set to the map view. Also see `TGSceneUpdate` for more info.
+ 
  @param sceneUpdates a list of updates to apply to the scene, see `TGSceneUpdate` for more infos
-
- @note Scene updates must be applied with `-applySceneUpdates:`
- */
-- (void)queueSceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
-
-/**
- Apply scene updates queued with `-queueSceneUpdate*` methods.
  If a scene update error happens, scene udpates won't be applied.
+
+ @return the integer (SceneID) associated with this scene update.
  */
-- (void)applySceneUpdates;
+- (int)updateScene:(NSArray<TGSceneUpdate *> *)sceneUpdates;
 
 #pragma mark Feature picking interface
 
