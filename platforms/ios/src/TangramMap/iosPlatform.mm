@@ -1,6 +1,8 @@
 #import <UIKit/UIKit.h>
-#import <cstdio>
 #import <cstdarg>
+#import <cstdio>
+#import <cstdlib>
+#import <map>
 
 #import "TGMapViewController.h"
 #import "TGFontConverter.h"
