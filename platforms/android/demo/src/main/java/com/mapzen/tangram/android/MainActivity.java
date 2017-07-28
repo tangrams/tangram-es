@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.Window;
 import android.widget.Toast;
 
+import com.mapzen.tangram.CachePolicy;
 import com.mapzen.tangram.HttpHandler;
 import com.mapzen.tangram.LabelPickResult;
 import com.mapzen.tangram.LngLat;
@@ -33,6 +34,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.CacheControl;
+import okhttp3.HttpUrl;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, TapResponder,
         DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener, SceneUpdateErrorListener {
@@ -148,7 +153,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     HttpHandler getHttpHandler() {
         File cacheDir = getExternalCacheDir();
         if (cacheDir != null && cacheDir.exists()) {
-            return new HttpHandler(new File(cacheDir, "tile_cache"), 30 * 1024 * 1024);
+            CachePolicy cachePolicy = new CachePolicy() {
+                CacheControl tileCacheControl = new CacheControl.Builder().maxStale(7, TimeUnit.DAYS).build();
+                @Override
+                public CacheControl apply(HttpUrl url) {
+                    if (url.host().equals("tile.mapzen.com")) {
+                        return tileCacheControl;
+                    }
+                    return null;
+                }
+            };
+            return new HttpHandler(new File(cacheDir, "tile_cache"), 30 * 1024 * 1024, cachePolicy);
         }
         return new HttpHandler();
     }

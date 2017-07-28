@@ -11,16 +11,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import okhttp3.Cache;
+import okhttp3.CacheControl;
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.ConnectionSpec;
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import javax.net.ssl.SSLContext;
-import okhttp3.ConnectionSpec;
 import okhttp3.TlsVersion;
 
 /**
@@ -29,7 +31,8 @@ import okhttp3.TlsVersion;
  */
 public class HttpHandler {
 
-    private OkHttpClient okClient;
+    protected OkHttpClient okClient;
+    protected CachePolicy cachePolicy;
 
     /**
      * Enables TLS v1.2 when creating SSLSockets.
@@ -96,7 +99,7 @@ public class HttpHandler {
      * Construct an {@code HttpHandler} with default options.
      */
     public HttpHandler() {
-        this(null, 0);
+        this(null, 0, null);
     }
 
     /**
@@ -106,6 +109,17 @@ public class HttpHandler {
      * @param maxSize Maximum size of data to cache, in bytes
      */
     public HttpHandler(File directory, long maxSize) {
+        this(directory, maxSize, null);
+    }
+
+    /**
+     * Construct an {@code HttpHandler} with cache.
+     * Cache map data in a directory with a specified size limit
+     * @param directory Directory in which map data will be cached
+     * @param maxSize Maximum size of data to cache, in bytes
+     * @param policy Cache policy to apply on requests
+     */
+    public HttpHandler(File directory, long maxSize, CachePolicy policy) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .writeTimeout(10, TimeUnit.SECONDS)
@@ -113,6 +127,17 @@ public class HttpHandler {
 
         if (directory != null && maxSize > 0) {
             builder.cache(new Cache(directory, maxSize));
+        }
+
+        // Use specified policy or construct default if null.
+        cachePolicy = policy;
+        if (cachePolicy == null) {
+            cachePolicy = new CachePolicy() {
+                @Override
+                public CacheControl apply(HttpUrl url) {
+                    return null;
+                }
+            };
         }
 
         if (Build.VERSION.SDK_INT >= 16 && Build.VERSION.SDK_INT < 22) {
@@ -146,9 +171,13 @@ public class HttpHandler {
      * @return true if request was successfully started
      */
     public boolean onRequest(String url, Callback cb) {
-        Request request = new Request.Builder()
-                .url(url)
-                .build();
+        HttpUrl httpUrl = HttpUrl.parse(url);
+        Request.Builder builder = new Request.Builder().url(httpUrl);
+        CacheControl cacheControl = cachePolicy.apply(httpUrl);
+        if (cacheControl != null) {
+            builder.cacheControl(cacheControl);
+        }
+        Request request = builder.build();
         okClient.newCall(request).enqueue(cb);
         return true;
     }
@@ -173,5 +202,4 @@ public class HttpHandler {
             }
         }
     }
-
 }
