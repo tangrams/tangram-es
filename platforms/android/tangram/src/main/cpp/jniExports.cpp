@@ -512,9 +512,6 @@ extern "C" {
             jniEnv->DeleteLocalRef(value);
         }
 
-        // Already checked on the java side
-        if (sceneUpdates.empty()) { return -1; }
-
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
 
         return map->updateSceneAsync(sceneUpdates);
