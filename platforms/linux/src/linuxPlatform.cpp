@@ -8,12 +8,6 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
-#if defined(TANGRAM_LINUX)
-#include <GLFW/glfw3.h>
-#elif defined(TANGRAM_RPI)
-#include "context.h"
-#endif
-
 #define DEFAULT "fonts/NotoSans-Regular.ttf"
 #define FONT_AR "fonts/NotoNaskh-Regular.ttf"
 #define FONT_HE "fonts/NotoSansHebrew-Regular.ttf"
@@ -35,12 +29,15 @@ LinuxPlatform::LinuxPlatform() :
 LinuxPlatform::LinuxPlatform(UrlClient::Options urlClientOptions) :
     m_urlClient(urlClientOptions) {}
 
+
+void LinuxPlatform::setRenderCallbackFunction(std::function<void()> callback) {
+    m_renderCallbackFunction = callback;
+}
+
 void LinuxPlatform::requestRender() const {
-#if defined(PLATFORM_LINUX)
-    glfwPostEmptyEvent();
-#elif defined(PLATFORM_RPI)
-    setRenderRequest(true);
-#endif
+    if (m_renderCallbackFunction) {
+        m_renderCallbackFunction();
+    }
 }
 
 std::vector<FontSourceHandle> LinuxPlatform::systemFontFallbacksHandle() const {

@@ -6,6 +6,8 @@
 #include <signal.h>
 #include <stdlib.h>
 
+#include <GLFW/glfw3.h>
+
 using namespace Tangram;
 
 int main(int argc, char* argv[]) {
@@ -25,6 +27,8 @@ int main(int argc, char* argv[]) {
 
     // Create the windowed app.
     GlfwApp::create(platform, sceneFile, 1024, 768);
+
+    platform->setRenderCallbackFunction([](){ glfwPostEmptyEvent(); });
 
     // Give it a chance to shutdown cleanly on CTRL-C
     signal(SIGINT, &GlfwApp::stop);

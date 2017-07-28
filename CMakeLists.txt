@@ -108,3 +108,7 @@ if(BENCHMARK)
     message(STATUS "Build with benchmarks")
     add_subdirectory(${PROJECT_SOURCE_DIR}/bench)
 endif()
+
+if(PAPARAZZI)
+    add_subdirectory(${PROJECT_SOURCE_DIR}/paparazzi)
+endif()

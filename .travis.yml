@@ -24,6 +24,7 @@ matrix:
                   - libicu-dev
                   - libfreetype6-dev
                   - libharfbuzz-dev
+                  - libosmesa-dev
         - os: linux
           env: PLATFORM=android
           addons:

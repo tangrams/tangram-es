@@ -3,6 +3,16 @@
 set -e
 set -o pipefail
 
+if [[ ${PLATFORM} == "linux" ]]; then
+
+    sudo add-apt-repository -y ppa:kevinkreiser/libsodium
+    sudo add-apt-repository -y ppa:kevinkreiser/libpgm
+    sudo add-apt-repository -y ppa:kevinkreiser/zeromq3
+    sudo add-apt-repository -y ppa:kevinkreiser/czmq
+    sudo apt-get update
+    sudo apt-get install libzmq3-dev libczmq-dev
+fi
+
 if [[ ${PLATFORM} == "android" ]]; then
 
     # Note: the right way to download these packages is through the Android Studio SDK manager,
