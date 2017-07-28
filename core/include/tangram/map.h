@@ -97,24 +97,27 @@ public:
     Map(std::shared_ptr<Platform> _platform);
     ~Map();
 
-    // Load the scene at the given absolute file path asynchronously
-    // Any pending scene update will be cleared
+    // Load the scene at the given absolute file path asynchronously.
     SceneID loadSceneAsync(const char* _scenePath,
                            bool _useScenePosition = false,
                            const std::vector<SceneUpdate>& sceneUpdates = {});
 
     // Load the scene at the given absolute file path synchronously
-    // Any pending scene update will be cleared
     SceneID loadScene(const char* _scenePath,
                       bool _useScenePosition = false,
                       const std::vector<SceneUpdate>& sceneUpdates = {});
 
-    void setSceneReadyListener(SceneReadyCallback _onSceneReady);
-
-    // Request an update to the scene configuration; the path is a series of yaml keys
-    // separated by a '.' and the value is a string of yaml to replace the current value
-    // at the given path in the scene
+    // Request updates to the current scene configuration. This reloads the
+    // scene with the updated configuration.
+    // The SceneUpdate path is a series of yaml keys separated by a '.' and the
+    // value is a string of yaml to replace the current value at the given path
+    // in the scene.
     SceneID updateSceneAsync(const std::vector<SceneUpdate>& sceneUpdates);
+
+    // Set listener for scene load events. The callback receives the SceneID
+    // of the loaded scene and SceneError in case loading was not successful.
+    // The callback may be be called from the main or worker thread.
+    void setSceneReadyListener(SceneReadyCallback _onSceneReady);
 
     // Set an MBTiles SQLite database file for a DataSource in the scene.
     void setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath);
