@@ -104,8 +104,8 @@ extern "C" {
         auto platform = std::make_shared<Tangram::AndroidPlatform>(jniEnv, assetManager, tangramInstance);
         auto map = new Tangram::Map(platform);
 
-        map->setSceneReadyListener([platform](Tangram::SceneID id, bool success, const Tangram::SceneError& error) {
-                platform->sceneReadyCallback(id, success, error);
+        map->setSceneReadyListener([platform](Tangram::SceneID id, const Tangram::SceneError* error) {
+                platform->sceneReadyCallback(id, error);
             });
         return reinterpret_cast<jlong>(map);
     }

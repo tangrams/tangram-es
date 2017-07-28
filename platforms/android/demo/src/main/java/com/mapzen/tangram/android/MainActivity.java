@@ -20,8 +20,8 @@ import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
 import com.mapzen.tangram.Marker;
 import com.mapzen.tangram.MarkerPickResult;
+import com.mapzen.tangram.SceneError;
 import com.mapzen.tangram.SceneUpdate;
-import com.mapzen.tangram.SceneUpdateError;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
@@ -147,15 +147,13 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
 
 
     @Override
-    public void onSceneReady(int sceneId) {
+    public void onSceneReady(int sceneId, SceneError sceneError) {
         Log.d("Tangram", "onSceneReady!");
-    }
-
-    @Override
-    public void onSceneError(int sceneId, SceneUpdateError sceneUpdateError) {
-        Log.d("Tangram", "Scene update errors "
-                + sceneUpdateError.getSceneUpdate().toString()
-                + " " + sceneUpdateError.getError().toString());
+        if (sceneError != null) {
+            Log.d("Tangram", "Scene update errors "
+                    + sceneError.getSceneUpdate().toString()
+                    + " " + sceneError.getError().toString());
+        }
     }
 
     HttpHandler getHttpHandler() {

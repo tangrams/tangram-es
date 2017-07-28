@@ -69,6 +69,7 @@ enum Error {
     scene_update_path_not_found,
     scene_update_path_yaml_syntax_error,
     scene_update_value_yaml_syntax_error,
+    no_valid_scene,
 };
 
 struct SceneError {
@@ -79,7 +80,7 @@ struct SceneError {
 using SceneID = int32_t;
 
 // Function type for a sceneReady callback
-using SceneReadyCallback = std::function<void(SceneID id, bool success, const SceneError&)>;
+using SceneReadyCallback = std::function<void(SceneID id, const SceneError*)>;
 
 enum class EaseType : char {
     linear = 0,

@@ -203,9 +203,9 @@ SceneID Map::loadScene(const char* _scenePath, bool _useScenePosition,
 
     if (impl->onSceneReady) {
         if (scene->errors.empty()) {
-            impl->onSceneReady(scene->id, true, {});
+            impl->onSceneReady(scene->id, nullptr);
         } else {
-            impl->onSceneReady(scene->id, false, scene->errors.front());
+            impl->onSceneReady(scene->id, &(scene->errors.front()));
         }
     }
     return scene->id;
@@ -229,7 +229,7 @@ SceneID Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition,
                 if (impl->onSceneReady) {
                     SceneError err;
                     if (!nextScene->errors.empty()) { err = nextScene->errors.front(); }
-                    impl->onSceneReady(nextScene->id, false, err);
+                    impl->onSceneReady(nextScene->id, &err);
                 }
                 impl->sceneLoadTasks--;
                 return;
@@ -247,7 +247,7 @@ SceneID Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition,
                         auto s = nextScene;
                         impl->setScene(s);
                     }
-                    if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, true, {}); }
+                    if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, nullptr); }
                 });
             impl->sceneLoadTasks--;
 
@@ -277,7 +277,10 @@ SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
     runAsyncTask([nextScene, updates = std::move(updates), this](){
 
             if (!impl->lastValidScene) {
-                if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, false, {}); }
+                if (impl->onSceneReady) {
+                    SceneError err {{}, Error::no_valid_scene};
+                    impl->onSceneReady(nextScene->id, &err);
+                }
                 impl->sceneLoadTasks--;
                 return;
             }
@@ -293,7 +296,7 @@ SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
                 if (impl->onSceneReady) {
                     SceneError err;
                     if (!nextScene->errors.empty()) { err = nextScene->errors.front(); }
-                    impl->onSceneReady(nextScene->id, false, err);
+                    impl->onSceneReady(nextScene->id, &err);
                 }
                 impl->sceneLoadTasks--;
                 return;
@@ -314,7 +317,7 @@ SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
                         auto s = nextScene;
                         impl->setScene(s);
                     }
-                    if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, true, {}); }
+                    if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, nullptr); }
                 });
             impl->sceneLoadTasks--;
 

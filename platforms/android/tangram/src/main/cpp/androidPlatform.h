@@ -28,8 +28,6 @@ void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* fea
 void markerPickCallback(jobject listener, jobject tangramInstance, const Tangram::MarkerPickResult* markerPickResult);
 void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult);
 
-void loadScene(Map& map, const char* cPath, const std::vector<SceneUpdate>& updates);
-void applySceneUpdates(Map& map);
 
 class AndroidPlatform : public Platform {
 
@@ -45,7 +43,7 @@ public:
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
     bool startUrlRequest(const std::string& _url, UrlCallback _callback) override;
     void cancelUrlRequest(const std::string& _url) override;
-    void sceneReadyCallback(SceneID id, bool success, const SceneError& error);
+    void sceneReadyCallback(SceneID id, const SceneError* error);
 
 private:
 

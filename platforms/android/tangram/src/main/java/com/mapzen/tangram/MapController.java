@@ -55,6 +55,7 @@ public class MapController implements Renderer {
         SCENE_UPDATE_PATH_NOT_FOUND,
         SCENE_UPDATE_PATH_YAML_SYNTAX_ERROR,
         SCENE_UPDATE_VALUE_YAML_SYNTAX_ERROR,
+        NO_VALID_SCENE,
     }
 
     protected static EaseType DEFAULT_EASE_TYPE = EaseType.CUBIC;
@@ -137,17 +138,11 @@ public class MapController implements Renderer {
      */
     public interface SceneLoadListener {
         /**
-         * Received when a scene load succeeded.
+         * Received when a scene load finished. The scene load or update failed when sceneError is not null.
          * @param sceneId returned by {@link #updateScene(List<SceneUpdate>)} or {@link #loadSceneFile(String, List<SceneUpdate>)}
+         * @param sceneError The {@link SceneError} holding error information
          */
-        void onSceneReady(int sceneId);
-
-        /**
-         * Receive error status when a scene load failed
-         * @param sceneId returned by {@link #updateScene(List<SceneUpdate>)} or {@link #loadSceneFile(String, List<SceneUpdate>)}
-         * @param sceneUpdateError The  {@link SceneUpdateError} holding error informations
-         */
-        void onSceneError(int sceneId, SceneUpdateError sceneUpdateError);
+        void onSceneReady(int sceneId, SceneError sceneError);
     }
 
     /**
@@ -1279,18 +1274,14 @@ public class MapController implements Renderer {
     }
 
     // Called from JNI on worker or render-thread.
-    void sceneReadyCallback(final int sceneId, final boolean success, final SceneUpdateError error) {
+    void sceneReadyCallback(final int sceneId, final SceneError error) {
 
         final SceneLoadListener cb = sceneLoadListener;
         if (cb != null) {
             uiThreadHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (success) {
-                        cb.onSceneReady(sceneId);
-                    } else {
-                        cb.onSceneError(sceneId, error);
-                    }
+                    cb.onSceneReady(sceneId, error);
                 }
             });
         }
