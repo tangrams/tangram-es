@@ -762,21 +762,17 @@ public class MapController implements Renderer {
      * @param listener The {@link FeaturePickListener} to call
      */
     public void setFeaturePickListener(final FeaturePickListener listener) {
-        if (listener == null) {
-            featurePickListener = null;
-        } else {
-            featurePickListener = new FeaturePickListener() {
-                @Override
-                public void onFeaturePick(final Map<String, String> properties, final float positionX, final float positionY) {
-                    uiThreadHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            listener.onFeaturePick(properties, positionX, positionY);
-                        }
-                    });
-                }
-            };
-        }
+        featurePickListener = (listener == null) ? null : new FeaturePickListener() {
+            @Override
+            public void onFeaturePick(final Map<String, String> properties, final float positionX, final float positionY) {
+                uiThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onFeaturePick(properties, positionX, positionY);
+                    }
+                });
+            }
+        };
     }
 
     /**
@@ -792,21 +788,17 @@ public class MapController implements Renderer {
      * @param listener The {@link LabelPickListener} to call
      */
     public void setLabelPickListener(final LabelPickListener listener) {
-        if (listener == null) {
-            labelPickListener = null;
-        } else {
-            labelPickListener = new LabelPickListener() {
-                @Override
-                public void onLabelPick(final LabelPickResult labelPickResult, final float positionX, final float positionY) {
-                    uiThreadHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            listener.onLabelPick(labelPickResult, positionX, positionY);
-                        }
-                    });
-                }
-            };
-        }
+        labelPickListener = (listener == null) ? null : new LabelPickListener() {
+            @Override
+            public void onLabelPick(final LabelPickResult labelPickResult, final float positionX, final float positionY) {
+                uiThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onLabelPick(labelPickResult, positionX, positionY);
+                    }
+                });
+            }
+        };
     }
 
     /**
@@ -814,21 +806,17 @@ public class MapController implements Renderer {
      * @param listener The {@link MarkerPickListener} to call
      */
     public void setMarkerPickListener(final MarkerPickListener listener) {
-        if (listener == null) {
-            markerPickListener = null;
-        } else {
-            markerPickListener = new MarkerPickListener() {
-                @Override
-                public void onMarkerPick(final MarkerPickResult markerPickResult, final float positionX, final float positionY) {
-                    uiThreadHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            listener.onMarkerPick(markerPickResult, positionX, positionY);
-                        }
-                    });
-                }
-            };
-        }
+        markerPickListener = (listener == null) ? null : new MarkerPickListener() {
+            @Override
+            public void onMarkerPick(final MarkerPickResult markerPickResult, final float positionX, final float positionY) {
+                uiThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onMarkerPick(markerPickResult, positionX, positionY);
+                    }
+                });
+            }
+        };
     }
 
     /**
@@ -917,11 +905,7 @@ public class MapController implements Renderer {
      * @param listener The {@link ViewCompleteListener} to call when the view is complete
      */
     public void setViewCompleteListener(final ViewCompleteListener listener) {
-        if (listener == null) {
-            viewCompleteListener = null;
-            return;
-        }
-        viewCompleteListener = new ViewCompleteListener() {
+        viewCompleteListener = (listener == null) ? null : new ViewCompleteListener() {
             @Override
             public void onViewComplete() {
                 uiThreadHandler.post(new Runnable() {
