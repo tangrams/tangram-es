@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
     }
 
     map = new Map(platform);
-    map->loadScene(options.sceneFilePath.c_str(), !options.hasLocationSet, updates, nullptr);
+    map->loadScene(options.sceneFilePath.c_str(), !options.hasLocationSet, updates);
     map->setupGL();
     map->resize(getWindowWidth(), getWindowHeight());
     map->setTilt(options.tilt);
