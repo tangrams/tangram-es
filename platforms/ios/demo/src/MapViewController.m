@@ -29,7 +29,7 @@
     // [mapView captureScreenshot:YES];
 }
 
-- (void)mapView:(TGMapViewController *)mapView didSceneReady:(int)sceneID WithError:(nonnull NSError *)sceneError
+- (void)mapView:(TGMapViewController *)mapView didLoadScene:(int)sceneID withError:(nonnull NSError *)sceneError
 {
     if (sceneError) {
         NSLog(@"Scene Ready with error %@", sceneError);

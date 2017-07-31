@@ -259,7 +259,6 @@ NS_ASSUME_NONNULL_END
  */
 - (void)mapView:(nonnull TGMapViewController *)view didCaptureScreenshot:(nonnull UIImage *)screenshot;
 
-// TODO: Update Documentation
 /**
  If set by the user, this is called after a
  `-[TGMapViewController loadSceneFile]` or
@@ -271,7 +270,7 @@ NS_ASSUME_NONNULL_END
  @param sceneID sceneID corresponding to which this callback will be called 
  @param sceneError any errors during scene load or update
  */
-- (void)mapView:(nonnull TGMapViewController *)mapView didSceneReady:(int)sceneID WithError:(nonnull NSError *)sceneError;
+- (void)mapView:(nonnull TGMapViewController *)mapView didLoadScene:(int)sceneID withError:(nonnull NSError *)sceneError;
 
 @end
 
@@ -492,7 +491,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param path the scene path URL
 
- @return the integer (SceneID) associated with this scene load.
+ @return the integer (SceneID) associated with this scene load or -1 if scene can not be loaded. 
  */
 - (int)loadSceneFile:(NSString *)path;
 
@@ -504,17 +503,17 @@ NS_ASSUME_NONNULL_BEGIN
  @param path the scene path URL
  @param sceneUpdates a list of `TGSceneUpdate` to apply to the scene
 
- @return the integer (SceneID) associated with this scene load.
+ @return the integer (SceneID) associated with this scene load or -1 if scene can not be loaded.
  */
 - (int)loadSceneFile:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
 
 /**
- Loads a scene file asynchronously, may call `-[TGMapViewDelegate didSceneReady:WithError:]`
+ Loads a scene file asynchronously, may call `-[TGMapViewDelegate didLoadScene:withError:]`
  if a `TGMapViewDelegate` is set to the map view.
 
  @param path the scene path URL
 
- @return the integer (SceneID) associated with this scene load.
+ @return the integer (SceneID) associated with this scene load or -1 if scene can not be loaded.
  */
 - (int)loadSceneFileAsync:(NSString *)path;
 
@@ -526,18 +525,18 @@ NS_ASSUME_NONNULL_BEGIN
  @param path the scene path URL
  @param sceneUpdates a list of `TGSceneUpdate` to apply to the scene
 
- @return the integer (SceneID) associated with this scene load.
+ @return the integer (SceneID) associated with this scene load or -1 if scene can not be loaded.
  */
 - (int)loadSceneFileAsync:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
 
 /**
- Update the scene with the list of updates asyncronously, may call `-[TGMapViewDelegate didSceneReady:WithError:]`
+ Update the scene with the list of updates asyncronously, may call `-[TGMapViewDelegate didLoadScene:withError:]`
  if a `TGMapViewDelegate` is set to the map view. Also see `TGSceneUpdate` for more info.
  
  @param sceneUpdates a list of updates to apply to the scene, see `TGSceneUpdate` for more infos
  If a scene update error happens, scene udpates won't be applied.
 
- @return the integer (SceneID) associated with this scene update.
+ @return the integer (SceneID) associated with this scene update or -1 if scene can not be updated.
  */
 - (int)updateScene:(NSArray<TGSceneUpdate *> *)sceneUpdates;
 
