@@ -34,12 +34,7 @@ The demo application uses the Mapzen vector tile service, so you will need a Map
 
 ## Build ##
 
-Before compiling, choose which compiler to use:
-```
-export CXX=/usr/bin/g++-4.9
-```
-
-Then compile:
+Compile the demo application with:
 
 ```
 make rpi
@@ -53,11 +48,16 @@ cd build/rpi/bin
 ./tangram
 ```
 
-Tangram will be rendered directly to the screen without a window manager. To show a mouse cursor, run with `-m`:
+You can provide several command line options:
+ - `-s` or `--scene` followed by a path or URL to a scene file to load
+ - `-lat` or `--latitude` followed by a latitude for the map view
+ - `-lon` or `--longitude` followed by a longitude for the map view
+ - `-z` or `--zoom` followed by a zoom level for the map view
+ - `-x` or `--x_position` followed by a horizontal offset in pixels for the window
+ - `-y` or `--y_position` followed by a vertical offset in pixels for the window
+ - `-w` or `--width` followed by a horizontal size in pixels for the window
+ - `-h` or `--height` followed by a vertical size in pixels for the window
+ - `-t` or `--tilt` followed by a tilt in radians for the map view
+ - `-r` or `--rotation` followed by a rotation from North in radians for the map view
 
-```
-cd build/rpi/bin
-./tangram -m
-```
-
-You can also move the map with `w`, `a`, `s`, and `z`, zoom in and out with `-` and `=`, and quit with `q`.
+You can move the map with `w`, `a`, `s`, and `d`, zoom in and out with `-` and `=`, and quit with `esc`.
