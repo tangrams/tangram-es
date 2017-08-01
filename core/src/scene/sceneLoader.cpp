@@ -1066,6 +1066,11 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         isMBTilesFile = urlLength > extLength && (url.compare(urlLength - extLength, extLength, extStr) == 0);
     }
 
+    bool isTms = false;
+    if (auto tmsNode = source["tms"]) {
+        getBool(tmsNode, isTms);
+    }
+
     auto rawSources = std::make_unique<MemoryCacheDataSource>();
     rawSources->setCacheSize(CACHE_SIZE);
 
@@ -1075,7 +1080,7 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         // Create an MBTiles data source from the file at the url and add it to the source chain.
         rawSources->setNext(std::make_unique<MBTilesDataSource>(platform, name, url, ""));
     } else if (tiled) {
-        rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url, std::move(subdomains)));
+        rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url, std::move(subdomains), isTms));
     }
 
     std::shared_ptr<TileSource> sourcePtr;

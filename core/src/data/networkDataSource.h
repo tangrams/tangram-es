@@ -10,7 +10,7 @@ class NetworkDataSource : public TileSource::DataSource {
 public:
 
     NetworkDataSource(std::shared_ptr<Platform> _platform, const std::string& _urlTemplate,
-            std::vector<std::string>&& _urlSubdomains);
+            std::vector<std::string>&& _urlSubdomains, bool isTms);
 
     bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
 
@@ -28,6 +28,7 @@ private:
     std::string m_urlTemplate;
     std::vector<std::string> m_urlSubdomains;
     size_t m_urlSubdomainIndex = 0;
+    bool m_isTms = false;
 
     std::vector<TileID> m_pending;
 
