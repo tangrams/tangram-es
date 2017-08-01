@@ -270,7 +270,7 @@ NS_ASSUME_NONNULL_END
  @param sceneID sceneID corresponding to which this callback will be called 
  @param sceneError any errors during scene load or update
  */
-- (void)mapView:(nonnull TGMapViewController *)mapView didLoadScene:(int)sceneID withError:(nonnull NSError *)sceneError;
+- (void)mapView:(nonnull TGMapViewController *)mapView didLoadScene:(int)sceneID withError:(nullable NSError *)sceneError;
 
 @end
 
