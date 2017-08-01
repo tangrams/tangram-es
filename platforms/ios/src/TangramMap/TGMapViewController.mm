@@ -205,7 +205,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 #pragma mark Scene updates
 
-- (int)updateScene:(NSArray<TGSceneUpdate *> *)sceneUpdates
+- (int)updateSceneAsync:(NSArray<TGSceneUpdate *> *)sceneUpdates
 {
     if (!self.map) { return -1; }
 

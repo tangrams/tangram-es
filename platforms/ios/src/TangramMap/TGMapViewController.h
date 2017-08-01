@@ -538,7 +538,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  @return the integer (SceneID) associated with this scene update or -1 if scene can not be updated.
  */
-- (int)updateScene:(NSArray<TGSceneUpdate *> *)sceneUpdates;
+- (int)updateSceneAsync:(NSArray<TGSceneUpdate *> *)sceneUpdates;
 
 #pragma mark Feature picking interface
 
