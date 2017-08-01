@@ -4,6 +4,21 @@
 
 #include <cassert>
 
+
+std::vector<Tangram::SceneUpdate> unpackSceneUpdates(JNIEnv* jniEnv, jobjectArray updateStrings) {
+    size_t nUpdateStrings = (updateStrings == NULL)? 0 : jniEnv->GetArrayLength(updateStrings);
+
+    std::vector<Tangram::SceneUpdate> sceneUpdates;
+    for (size_t i = 0; i < nUpdateStrings;) {
+        jstring path = (jstring) (jniEnv->GetObjectArrayElement(updateStrings, i++));
+        jstring value = (jstring) (jniEnv->GetObjectArrayElement(updateStrings, i++));
+        sceneUpdates.emplace_back(stringFromJString(jniEnv, path), stringFromJString(jniEnv, value));
+        jniEnv->DeleteLocalRef(path);
+        jniEnv->DeleteLocalRef(value);
+    }
+    return sceneUpdates;
+}
+
 extern "C" {
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble lon, jdouble lat) {
@@ -126,17 +141,8 @@ extern "C" {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         const char* cPath = jniEnv->GetStringUTFChars(path, NULL);
-        size_t nUpdateStrings = (updateStrings == NULL) ? 0 : jniEnv->GetArrayLength(updateStrings);
 
-        std::vector<Tangram::SceneUpdate> sceneUpdates;
-        for (size_t i = 0; i < nUpdateStrings;) {
-            jstring path = (jstring) (jniEnv->GetObjectArrayElement(updateStrings, i++));
-            jstring value = (jstring) (jniEnv->GetObjectArrayElement(updateStrings, i++));
-            sceneUpdates.emplace_back(stringFromJString(jniEnv, path), stringFromJString(jniEnv, value));
-            jniEnv->DeleteLocalRef(path);
-            jniEnv->DeleteLocalRef(value);
-        }
-
+        auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
         jint sceneId = map->loadScene(resolveScenePath(cPath).c_str(), false, sceneUpdates);
 
         jniEnv->ReleaseStringUTFChars(path, cPath);
@@ -148,20 +154,28 @@ extern "C" {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         const char* cPath = jniEnv->GetStringUTFChars(path, NULL);
-        size_t nUpdateStrings = (updateStrings == NULL) ? 0 : jniEnv->GetArrayLength(updateStrings);
 
-        std::vector<Tangram::SceneUpdate> sceneUpdates;
-        for (size_t i = 0; i < nUpdateStrings;) {
-            jstring path = (jstring) (jniEnv->GetObjectArrayElement(updateStrings, i++));
-            jstring value = (jstring) (jniEnv->GetObjectArrayElement(updateStrings, i++));
-            sceneUpdates.emplace_back(stringFromJString(jniEnv, path), stringFromJString(jniEnv, value));
-            jniEnv->DeleteLocalRef(path);
-            jniEnv->DeleteLocalRef(value);
-        }
-
+        auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
         jint sceneId = map->loadSceneAsync(resolveScenePath(cPath).c_str(), false, sceneUpdates);
 
         jniEnv->ReleaseStringUTFChars(path, cPath);
+
+        return sceneId;
+
+
+    }
+
+    JNIEXPORT jint JNICALL Java_com_mapzen_tangram_MapController_nativeLoadSceneYaml(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring yaml, jstring resourceRoot, jobjectArray updateStrings) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        const char* cYaml = jniEnv->GetStringUTFChars(yaml, NULL);
+        const char* cResourceRoot = jniEnv->GetStringUTFChars(resourceRoot, NULL);
+
+        auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
+        jint sceneId = map->loadSceneYamlAsync(cYaml, resolveScenePath(cResourceRoot), false, sceneUpdates);
+
+        jniEnv->ReleaseStringUTFChars(yaml, cYaml);
+        jniEnv->ReleaseStringUTFChars(resourceRoot, cResourceRoot);
 
         return sceneId;
     }
@@ -523,17 +537,7 @@ extern "C" {
     JNIEXPORT jint JNICALL Java_com_mapzen_tangram_MapController_nativeUpdateScene(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jobjectArray updateStrings) {
         assert(mapPtr > 0);
 
-        size_t nUpdateStrings = (updateStrings == NULL)? 0 : jniEnv->GetArrayLength(updateStrings);
-
-        std::vector<Tangram::SceneUpdate> sceneUpdates;
-        for (size_t i = 0; i < nUpdateStrings;) {
-            jstring path = (jstring) (jniEnv->GetObjectArrayElement(updateStrings, i++));
-            jstring value = (jstring) (jniEnv->GetObjectArrayElement(updateStrings, i++));
-            sceneUpdates.emplace_back(stringFromJString(jniEnv, path), stringFromJString(jniEnv, value));
-            jniEnv->DeleteLocalRef(path);
-            jniEnv->DeleteLocalRef(value);
-        }
-
+        auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
 
         return map->updateSceneAsync(sceneUpdates);

@@ -383,6 +383,9 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             case GLFW_KEY_I:
                 map->updateSceneAsync({SceneUpdate{"cameras", "{ main_camera: { type: isometric } }"}});
                 break;
+            case GLFW_KEY_M:
+                map->loadSceneYamlAsync("{ scene: { background: { color: red } } }", std::string(""));
+                break;
             case GLFW_KEY_G:
                 static bool geoJSON = false;
                 if (!geoJSON) {
