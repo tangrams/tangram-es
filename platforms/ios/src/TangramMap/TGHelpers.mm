@@ -49,8 +49,13 @@
     NSString* value = [NSString stringWithUTF8String:updateError.update.value.c_str()];
     TGSceneUpdate* udpate = [[TGSceneUpdate alloc] initWithPath:path value:value];
 
-    NSMutableDictionary* userInfo = [[NSMutableDictionary alloc] init];
-    [userInfo setObject:udpate forKey:@"TGUpdate"];
+    NSDictionary *userInfo = @{
+        NSLocalizedDescriptionKey: NSLocalizedString(@"An error occured during Scene Update.", nil),
+        NSLocalizedFailureReasonErrorKey: NSLocalizedString(
+            @"Possible bad yaml reference in the SceneUpdate object or within the scene", nil),
+        NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(
+            @"Try checking SceneUpdate path and value parameters, and making sure they conform to be valid yaml objects", nil),
+    };
 
     NSError* error = [NSError errorWithDomain:TGErrorDomain
                                          code:(NSInteger)updateError.error
