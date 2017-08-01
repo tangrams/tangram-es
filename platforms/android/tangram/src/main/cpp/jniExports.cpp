@@ -137,6 +137,28 @@ extern "C" {
             jniEnv->DeleteLocalRef(value);
         }
 
+        jint sceneId = map->loadScene(resolveScenePath(cPath).c_str(), false, sceneUpdates);
+
+        jniEnv->ReleaseStringUTFChars(path, cPath);
+
+        return sceneId;
+    }
+
+    JNIEXPORT jint JNICALL Java_com_mapzen_tangram_MapController_nativeLoadSceneAsync(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring path, jobjectArray updateStrings) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        const char* cPath = jniEnv->GetStringUTFChars(path, NULL);
+        size_t nUpdateStrings = (updateStrings == NULL) ? 0 : jniEnv->GetArrayLength(updateStrings);
+
+        std::vector<Tangram::SceneUpdate> sceneUpdates;
+        for (size_t i = 0; i < nUpdateStrings;) {
+            jstring path = (jstring) (jniEnv->GetObjectArrayElement(updateStrings, i++));
+            jstring value = (jstring) (jniEnv->GetObjectArrayElement(updateStrings, i++));
+            sceneUpdates.emplace_back(stringFromJString(jniEnv, path), stringFromJString(jniEnv, value));
+            jniEnv->DeleteLocalRef(path);
+            jniEnv->DeleteLocalRef(value);
+        }
+
         jint sceneId = map->loadSceneAsync(resolveScenePath(cPath).c_str(), false, sceneUpdates);
 
         jniEnv->ReleaseStringUTFChars(path, cPath);

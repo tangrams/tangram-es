@@ -132,14 +132,16 @@ public class MapController implements Renderer {
 
     /**
      * Interface for listening to scene load status information.
-     * Triggered after a call of {@link #updateScene(List<SceneUpdate>)} or {@link #loadSceneFile(String, List<SceneUpdate>)}
+     * Triggered after a call of {@link #updateSceneAsync(List<SceneUpdate>)} or
+     * {@link #loadSceneFileAsync(String, List<SceneUpdate>)} or {@link #loadSceneFile(String, List<SceneUpdate>)}
      * Listener should be set with {@link #setSceneLoadListener(SceneLoadListener)}
      * The callbacks will be run on the main (UI) thread.
      */
     public interface SceneLoadListener {
         /**
          * Received when a scene load finished. The scene load or update failed when sceneError is not null.
-         * @param sceneId returned by {@link #updateScene(List<SceneUpdate>)} or {@link #loadSceneFile(String, List<SceneUpdate>)}
+         * @param sceneId returned by {@link #updateSceneAsync(List<SceneUpdate>)} or
+         * {@link #loadSceneFileAsync(String, List<SceneUpdate>)}
          * @param sceneError The {@link SceneError} holding error information
          */
         void onSceneReady(int sceneId, SceneError sceneError);
@@ -266,13 +268,13 @@ public class MapController implements Renderer {
         });
     }
 
-
     /**
-     * Load a new scene file.
+     * Load a new scene file synchronously.
      * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
      * ready.
      * @param path Location of the YAML scene file within the application assets
-     * @return Scene ID
+     * @return Scene ID An identifier for the scene being loaded, the same value will be passed to
+     * {@link SceneLoadListener#onSceneReady(int sceneId, SceneError sceneError)} when loading is complete.
      */
     public int loadSceneFile(String path) {
         return loadSceneFile(path, null);
@@ -280,12 +282,25 @@ public class MapController implements Renderer {
 
     /**
      * Load a new scene file asynchronously.
+     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
+     * ready.
+     * @param path Location of the YAML scene file within the application assets
+     * @return Scene ID An identifier for the scene being loaded, the same value will be passed to
+     * {@link SceneLoadListener#onSceneReady(int sceneId, SceneError sceneError)} when loading is complete.
+     */
+    public int loadSceneFileAsync(String path) {
+        return loadSceneFileAsync(path, null);
+    }
+
+    /**
+     * Load a new scene file synchronously.
      * If scene updates triggers an error, they won't be applied.
      * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
      * ready.
      * @param path Location of the YAML scene file within the application assets
      * @param sceneUpdates List of {@code SceneUpdate}
-     * @return Scene ID
+     * @return Scene ID An identifier for the scene being loaded, the same value will be passed to
+     * {@link SceneLoadListener#onSceneReady(int sceneId, SceneError sceneError)} when loading is complete.
      */
     public int loadSceneFile(String path, List<SceneUpdate> sceneUpdates) {
         String[] updateStrings = bundleSceneUpdates(sceneUpdates);
@@ -298,14 +313,34 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Apply SceneUpdates to the current scene.
+     * Load a new scene file asynchronously.
+     * If scene updates triggers an error, they won't be applied.
+     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
+     * ready.
+     * @param path Location of the YAML scene file within the application assets
+     * @param sceneUpdates List of {@code SceneUpdate}
+     * @return Scene ID An identifier for the scene being loaded, the same value will be passed to
+     * {@link SceneLoadListener#onSceneReady(int sceneId, SceneError sceneError)} when loading is complete.
+     */
+    public int loadSceneFileAsync(String path, List<SceneUpdate> sceneUpdates) {
+        String[] updateStrings = bundleSceneUpdates(sceneUpdates);
+        scenePath = path;
+        checkPointer(mapPointer);
+        int sceneId = nativeLoadSceneAsync(mapPointer, path, updateStrings);
+        removeAllMarkers();
+        requestRender();
+        return sceneId;
+    }
+
+    /**
+     * Apply SceneUpdates to the current scene asyncronously
      * If a updates trigger an error, scene updates won't be applied.
      * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
      * ready.
      * @param sceneUpdates List of {@code SceneUpdate}
      * @return new scene ID
      */
-    public int updateScene(List<SceneUpdate> sceneUpdates) {
+    public int updateSceneAsync(List<SceneUpdate> sceneUpdates) {
         checkPointer(mapPointer);
 
         if (sceneUpdates == null || sceneUpdates.size() == 0) {
@@ -1087,6 +1122,7 @@ public class MapController implements Renderer {
     private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
     private synchronized native void nativeDispose(long mapPtr);
     private synchronized native int nativeLoadScene(long mapPtr, String path, String[] updateStrings);
+    private synchronized native int nativeLoadSceneAsync(long mapPtr, String path, String[] updateStrings);
     private synchronized native void nativeSetupGL(long mapPtr);
     private synchronized native void nativeResize(long mapPtr, int width, int height);
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
