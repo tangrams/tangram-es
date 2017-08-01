@@ -29,8 +29,8 @@ deployment:
       # Add the license file.
       - zip ${CIRCLE_ARTIFACTS}/pod.zip LICENSE
       # Upload the Cocoapods archive to S3.
-      - aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-snapshots/tangram-snapshot-${CIRCLE_BUILD_NUM}.zip
-      - aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-latest.zip
+      - aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-snapshots/tangram-snapshot-debug-${CIRCLE_BUILD_NUM}.zip
+      - aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-latest-debug.zip
   releases:
     # For any tag of the form 1, 1.2, 1.2.3, etc. we will deploy a release build.
     tag: /[0-9]+(\.[0-9]+)*/
