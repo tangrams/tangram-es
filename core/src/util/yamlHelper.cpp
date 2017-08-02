@@ -52,7 +52,7 @@ YamlPath YamlPath::add(const std::string& key) {
     return YamlPath(codedPath + MAP_DELIM + key);
 }
 
-YAML::Node YamlPath::get(YAML::Node node) {
+bool YamlPath::get(YAML::Node r, YAML::Node& n) {
     size_t beginToken = 0, endToken = 0, pathSize = codedPath.size();
     auto delimiter = MAP_DELIM; // First token must be a map key.
     while (endToken < pathSize) {
@@ -62,20 +62,31 @@ YAML::Node YamlPath::get(YAML::Node node) {
         endToken = std::min(endToken, codedPath.find(MAP_DELIM, beginToken));
         if (delimiter == SEQ_DELIM) {
             int index = std::stoi(&codedPath[beginToken]);
-            node.reset(node[index]);
+            try {
+                r.reset(r[index]);
+            } catch(const YAML::Exception& e) {
+                LOGE("%s", e.what());
+                return false;
+            }
         } else if (delimiter == MAP_DELIM) {
             auto key = codedPath.substr(beginToken, endToken - beginToken);
-            node.reset(node[key]);
+            try {
+                r.reset(r[key]);
+            } catch(const YAML::Exception& e) {
+                LOGE("%s", e.what());
+                return false;
+            }
         } else {
-            return Node(); // Path is malformed, return null node.
+            return false; // Path is malformed, return null node.
         }
         delimiter = codedPath[endToken]; // Get next character as the delimiter.
         ++endToken; // Move past the delimiter.
-        if (endToken < pathSize && !node) {
-            return Node(); // A node in the path was missing, return null node.
+        if (endToken < pathSize && !r) {
+            return false; // A node in the path was missing, return null node.
         }
     }
-    return node;
+    n.reset(r);
+    return true;
 }
 
 glm::vec4 getColorAsVec4(const Node& node) {

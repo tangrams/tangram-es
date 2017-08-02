@@ -97,9 +97,10 @@ bool SceneLoader::applyUpdates(const std::shared_ptr<Platform>& platform, Scene&
             try {
                 // Dummy node to trigger YAML exception on YAML syntax errors
                 auto parse = YAML::Load(update.path);
-                Node node = YamlPath(update.path).get(root);
+                Node node = Node();
+                auto validPath = YamlPath(update.path).get(root, node);
 
-                if (node && node.Scalar().empty() && node != root) {
+                if (!validPath) {
                     scene.errors.push_back({update, Error::scene_update_path_not_found});
                     return false;
                 } else {
@@ -169,9 +170,11 @@ void SceneLoader::applyGlobals(Node root, Scene& scene) {
     }
 
     for (auto& globalRef : scene.globalRefs()) {
-        auto target = globalRef.first.get(root);
-        auto global = globalRef.second.get(globals);
-        if (target && global) {
+        auto target = Node();
+        auto global = Node();
+        auto validTargetPath = globalRef.first.get(root, target);
+        auto validGlobalPath = globalRef.second.get(globals, global);
+        if (validTargetPath && validGlobalPath && target && global) {
             target = global;
         } else {
             LOGW("Global reference is undefined: %s <= %s",
