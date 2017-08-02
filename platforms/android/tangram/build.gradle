@@ -15,6 +15,7 @@ android {
     targetSdkVersion 25
     versionCode buildVersionCode()
     versionName VERSION_NAME
+    consumerProguardFiles 'tangram-proguard-rules.txt'
     externalNativeBuild {
       cmake {
         targets 'tangram'

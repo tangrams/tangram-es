@@ -1,0 +1,26 @@
+# Tangram
+-keep class com.mapzen.tangram.MapController {
+  boolean startUrlRequest(...);
+  void cancelUrlRequest(...);
+  *** getFontFilePath(...);
+  *** getFontFallbackFilePath(...);
+  void requestRender();
+  void setRenderMode(...);
+  *** markerById(...);
+}
+-keep class com.mapzen.tangram.MapController$EaseType { *; }
+-keep class com.mapzen.tangram.MapController$FeaturePickListener { *; }
+-keep class com.mapzen.tangram.MapController$LabelPickListener { *; }
+-keep class com.mapzen.tangram.MapController$MarkerPickListener { *; }
+-keep class com.mapzen.tangram.MapController$SceneUpdateErrorListener { *; }
+-keep class com.mapzen.tangram.LabelPickResult { *; }
+-keep class com.mapzen.tangram.MarkerPickResult { *; }
+-keep class com.mapzen.tangram.Marker { *; }
+-keep class com.mapzen.tangram.SceneUpdateError { *; }
+-keepclassmembers class com.mapzen.tangram.* {
+  native <methods>;
+}
+
+# OkHttp3
+-dontwarn okhttp3.**
+-dontwarn okio.**
