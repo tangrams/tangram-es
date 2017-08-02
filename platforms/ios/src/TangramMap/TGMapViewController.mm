@@ -129,6 +129,21 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 #pragma mark Scene loading interface
 
+- (Tangram::SceneReadyCallback) sceneReadyListener {
+    return [=](int sceneID, auto sceneError) {
+        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadScene:withError:)]) { return; }
+
+        [self.markersById removeAllObjects];
+
+        NSError* error = nil;
+        if (sceneError) {
+            error = [TGHelpers errorFromSceneError:*sceneError];
+        }
+        [self.mapViewDelegate mapView:self didLoadScene:sceneID withError:error];
+        self.renderRequested = YES;
+    };
+}
+
 - (int)loadSceneFile:(NSString*)path
 {
     return [self loadSceneFile:path sceneUpdates:nil];
@@ -153,43 +168,13 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
     self.scenePath = path;
 
-    auto updateCallbackStatus = [=](int sceneID, auto sceneError) {
-        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadScene:withError:)]) { return; }
-
-        NSError* error = nil;
-        if (sceneError) {
-            error = [TGHelpers errorFromSceneError:*sceneError];
-        }
-        [self.mapViewDelegate mapView:self didLoadScene:sceneID withError:error];
-    };
-
-    self.map->setSceneReadyListener(updateCallbackStatus);
-    [self.markersById removeAllObjects];
-    int sceneID = self.map->loadScene([path UTF8String], false, updates);
-
-    self.renderRequested = YES;
-
-    return sceneID;
+    self.map->setSceneReadyListener([self sceneReadyListener]);
+    return self.map->loadScene([path UTF8String], false, updates);
 }
 
 - (int)loadSceneFileAsync:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
 {
     if (!self.map) { return -1; }
-
-    self.scenePath = path;
-
-    Tangram::SceneReadyCallback onReadyCallback = [=](int sceneID, auto sceneError) {
-        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadScene:withError:)]) { return; }
-
-        [self.markersById removeAllObjects];
-
-        NSError* error = nil;
-        if (sceneError) {
-            error = [TGHelpers errorFromSceneError:*sceneError];
-        }
-        [self.mapViewDelegate mapView:self didLoadScene:sceneID withError:error];
-        self.renderRequested = YES;
-    };
 
     std::vector<Tangram::SceneUpdate> updates;
 
@@ -199,7 +184,9 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         }
     }
 
-    self.map->setSceneReadyListener(onReadyCallback);
+    self.scenePath = path;
+
+    self.map->setSceneReadyListener([self sceneReadyListener]);
     return self.map->loadSceneAsync([path UTF8String], false, updates);
 }
 
@@ -209,30 +196,17 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return -1; }
 
-    std::vector<Tangram::SceneUpdate> updates;
-
     if (!sceneUpdates || ![sceneUpdates count]) {
         return -1;
     }
+
+    std::vector<Tangram::SceneUpdate> updates;
 
     for (TGSceneUpdate* update in sceneUpdates) {
         updates.push_back({std::string([update.path UTF8String]), std::string([update.value UTF8String])});
     }
 
-    auto updateCallbackStatus = [=](int sceneID, auto sceneError) {
-        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadScene:withError:)]) { return; }
-
-        [self.markersById removeAllObjects];
-
-        NSError* error = nil;
-        if (sceneError) {
-            error = [TGHelpers errorFromSceneError:*sceneError];
-        }
-        [self.mapViewDelegate mapView:self didLoadScene:sceneID withError:error];
-        self.renderRequested = YES;
-    };
-
-    self.map->setSceneReadyListener(updateCallbackStatus);
+    self.map->setSceneReadyListener([self sceneReadyListener]);
     return self.map->updateSceneAsync(updates);
 }
 
