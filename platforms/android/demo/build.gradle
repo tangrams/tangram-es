@@ -26,6 +26,9 @@ android {
       debuggable true
       jniDebuggable true
     }
+    release {
+      minifyEnabled true
+    }
   }
 }
 
