@@ -24,7 +24,8 @@ constexpr double single_tap_time = 0.25; //seconds (to avoid a long press being 
 
 std::shared_ptr<Platform> platform;
 
-std::string sceneFile;
+std::string sceneFile = "scene.yaml";
+std::string sceneYaml;
 
 std::string markerStylingPath = "layers.touch.point.draw.icons";
 std::string polylineStyle = "{ style: lines, interactive: true, color: red, width: 20px, order: 5000 }";
@@ -54,19 +55,53 @@ Tangram::MarkerID polyline = 0;
 
 bool keepRunning = true;
 
-void loadSceneFile() {
-    if (mapzenApiKey.empty()) {
-        map->loadSceneAsync(sceneFile.c_str(), true, {});
+void loadSceneFile(bool setPosition = false) {
+    std::vector<SceneUpdate> updates;
+
+    if (!mapzenApiKey.empty()) {
+        updates.push_back(SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey));
+    }
+
+    if (!sceneYaml.empty()) {
+        map->loadSceneYamlAsync(sceneYaml, sceneFile, setPosition, updates);
     } else {
-        map->loadSceneAsync(sceneFile.c_str(), true,
-                            {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
+        map->loadSceneAsync(sceneFile, setPosition, updates);
     }
 }
 
-void create(std::shared_ptr<Platform> p, std::string f, int w, int h) {
+void parseArgs(int argc, char* argv[]) {
+    // Load file from command line, if given.
+    int argi = 0;
+    while (++argi < argc) {
+        if (strcmp(argv[argi - 1], "-f") == 0) {
+            sceneFile = std::string(argv[argi]);
+            LOG("File from command line: %s\n", argv[argi]);
+            break;
+        }
+        if (strcmp(argv[argi - 1], "-s") == 0) {
+
+            if (argi+1 < argc) {
+                sceneYaml = std::string(argv[argi]);
+                sceneFile = std::string(argv[argi+1]);
+                LOG("Yaml from command line: %s, resource path: %s\n",
+                    sceneYaml.c_str(), sceneFile.c_str());
+            } else {
+                LOG("-s options requires YAML string and resource path");
+                exit(1);
+            }
+            break;
+        }
+    }
+}
+
+void setScene(const std::string& _path, const std::string& _yaml) {
+    sceneFile = _path;
+    sceneYaml = _yaml;
+}
+
+void create(std::shared_ptr<Platform> p, int w, int h) {
 
     platform = p;
-    sceneFile = f;
     width = w;
     height = h;
 
@@ -89,7 +124,6 @@ void create(std::shared_ptr<Platform> p, std::string f, int w, int h) {
     // Setup tangram
     if (!map) {
         map = new Tangram::Map(platform);
-        loadSceneFile();
     }
 
     // Create a windowed mode window and its OpenGL context
@@ -121,6 +155,8 @@ void create(std::shared_ptr<Platform> p, std::string f, int w, int h) {
 }
 
 void run() {
+
+    loadSceneFile(true);
 
     double lastTime = glfwGetTime();
 
@@ -424,6 +460,8 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 void dropCallback(GLFWwindow* window, int count, const char** paths) {
 
     sceneFile = std::string(paths[0]);
+    sceneYaml.clear();
+
     loadSceneFile();
 }
 
