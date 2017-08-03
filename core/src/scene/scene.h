@@ -17,6 +17,7 @@
 #include "yaml-cpp/yaml.h"
 #include "util/yamlHelper.h"
 
+#include "map.h" // SceneError
 
 namespace Tangram {
 
@@ -66,9 +67,13 @@ public:
         yes, no, none
     };
 
+    Scene();
     Scene(std::shared_ptr<const Platform> _platform, const std::string& _path = "");
-    Scene(const Scene& _other);
+    Scene(const Scene& _other) = delete;
+
     ~Scene();
+
+    void copyConfig(const Scene& _other);
 
     auto& camera() { return m_camera; }
 
@@ -139,6 +144,8 @@ public:
 
     std::atomic_ushort pendingTextures{0};
     std::atomic_ushort pendingFonts{0};
+
+    std::vector<SceneError> errors;
 
 private:
 

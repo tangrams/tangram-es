@@ -27,6 +27,7 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public class MapController implements Renderer {
 
+
     /**
      * Options for interpolating map parameters
      */
@@ -50,9 +51,11 @@ public class MapController implements Renderer {
      * Options representing an error generated after from the map controller
      */
     public enum Error {
+        NONE,
         SCENE_UPDATE_PATH_NOT_FOUND,
         SCENE_UPDATE_PATH_YAML_SYNTAX_ERROR,
         SCENE_UPDATE_VALUE_YAML_SYNTAX_ERROR,
+        NO_VALID_SCENE,
     }
 
     protected static EaseType DEFAULT_EASE_TYPE = EaseType.CUBIC;
@@ -128,17 +131,20 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Interface for a callback to received additional error information in a {@link SceneUpdateError}
-     * Triggered after a call of {@link #applySceneUpdates()} or {@link #loadSceneFile(String, List<SceneUpdate>)}
-     * Listener should be set with {@link #setSceneUpdateErrorListener(SceneUpdateErrorListener)}
-     * The callback will be run on the main (UI) thread.
+     * Interface for listening to scene load status information.
+     * Triggered after a call of {@link #updateSceneAsync(List<SceneUpdate>)} or
+     * {@link #loadSceneFileAsync(String, List<SceneUpdate>)} or {@link #loadSceneFile(String, List<SceneUpdate>)}
+     * Listener should be set with {@link #setSceneLoadListener(SceneLoadListener)}
+     * The callbacks will be run on the main (UI) thread.
      */
-    public interface SceneUpdateErrorListener {
+    public interface SceneLoadListener {
         /**
-         * Receive error status when a scene update failed
-         * @param sceneUpdateError The  {@link SceneUpdateError} holding error informations
+         * Received when a scene load finished. The scene load or update failed when sceneError is not null.
+         * @param sceneId returned by {@link #updateSceneAsync(List<SceneUpdate>)} or
+         * {@link #loadSceneFileAsync(String, List<SceneUpdate>)}
+         * @param sceneError The {@link SceneError} holding error information
          */
-        void onSceneUpdateError(SceneUpdateError sceneUpdateError);
+        void onSceneReady(int sceneId, SceneError sceneError);
     }
 
     /**
@@ -262,31 +268,90 @@ public class MapController implements Renderer {
         });
     }
 
-    static MapController getInstance(GLSurfaceView view) {
-        return new MapController(view);
-    }
-
     /**
-     * Load a new scene file
+     * Load a new scene file synchronously.
+     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
+     * ready.
      * @param path Location of the YAML scene file within the application assets
+     * @return Scene ID An identifier for the scene being loaded, the same value will be passed to
+     * {@link SceneLoadListener#onSceneReady(int sceneId, SceneError sceneError)} when loading is complete.
      */
-    public void loadSceneFile(String path) {
-        loadSceneFile(path, null);
+    public int loadSceneFile(String path) {
+        return loadSceneFile(path, null);
     }
 
     /**
-     * Load a new scene file
+     * Load a new scene file asynchronously.
+     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
+     * ready.
+     * @param path Location of the YAML scene file within the application assets
+     * @return Scene ID An identifier for the scene being loaded, the same value will be passed to
+     * {@link SceneLoadListener#onSceneReady(int sceneId, SceneError sceneError)} when loading is complete.
+     */
+    public int loadSceneFileAsync(String path) {
+        return loadSceneFileAsync(path, null);
+    }
+
+    /**
+     * Load a new scene file synchronously.
      * If scene updates triggers an error, they won't be applied.
+     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
+     * ready.
      * @param path Location of the YAML scene file within the application assets
      * @param sceneUpdates List of {@code SceneUpdate}
+     * @return Scene ID An identifier for the scene being loaded, the same value will be passed to
+     * {@link SceneLoadListener#onSceneReady(int sceneId, SceneError sceneError)} when loading is complete.
      */
-    public void loadSceneFile(String path, List<SceneUpdate> sceneUpdates) {
+    public int loadSceneFile(String path, List<SceneUpdate> sceneUpdates) {
         String[] updateStrings = bundleSceneUpdates(sceneUpdates);
         scenePath = path;
         checkPointer(mapPointer);
-        nativeLoadScene(mapPointer, sceneUpdateErrorListener, path, updateStrings);
+        int sceneId = nativeLoadScene(mapPointer, path, updateStrings);
         removeAllMarkers();
         requestRender();
+        return sceneId;
+    }
+
+    /**
+     * Load a new scene file asynchronously.
+     * If scene updates triggers an error, they won't be applied.
+     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
+     * ready.
+     * @param path Location of the YAML scene file within the application assets
+     * @param sceneUpdates List of {@code SceneUpdate}
+     * @return Scene ID An identifier for the scene being loaded, the same value will be passed to
+     * {@link SceneLoadListener#onSceneReady(int sceneId, SceneError sceneError)} when loading is complete.
+     */
+    public int loadSceneFileAsync(String path, List<SceneUpdate> sceneUpdates) {
+        String[] updateStrings = bundleSceneUpdates(sceneUpdates);
+        scenePath = path;
+        checkPointer(mapPointer);
+        int sceneId = nativeLoadSceneAsync(mapPointer, path, updateStrings);
+        removeAllMarkers();
+        requestRender();
+        return sceneId;
+    }
+
+    /**
+     * Apply SceneUpdates to the current scene asyncronously
+     * If a updates trigger an error, scene updates won't be applied.
+     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
+     * ready.
+     * @param sceneUpdates List of {@code SceneUpdate}
+     * @return new scene ID
+     */
+    public int updateSceneAsync(List<SceneUpdate> sceneUpdates) {
+        checkPointer(mapPointer);
+
+        if (sceneUpdates == null || sceneUpdates.size() == 0) {
+            throw new IllegalArgumentException("sceneUpdates can not be null or empty in queueSceneUpdates");
+        }
+
+        removeAllMarkers();
+
+        String[] updateStrings = bundleSceneUpdates(sceneUpdates);
+
+        return nativeUpdateScene(mapPointer, updateStrings);
     }
 
     /**
@@ -732,7 +797,7 @@ public class MapController implements Renderer {
      * @param listener The {@link FeaturePickListener} to call
      */
     public void setFeaturePickListener(final FeaturePickListener listener) {
-        featurePickListener = new FeaturePickListener() {
+        featurePickListener = (listener == null) ? null : new FeaturePickListener() {
             @Override
             public void onFeaturePick(final Map<String, String> properties, final float positionX, final float positionY) {
                 uiThreadHandler.post(new Runnable() {
@@ -747,20 +812,10 @@ public class MapController implements Renderer {
 
     /**
      * Set a listener for scene update error statuses
-     * @param listener The {@link SceneUpdateErrorListener} to call after scene update have failed
+     * @param listener The {@link SceneLoadListener} to call after scene has loaded
      */
-    public void setSceneUpdateErrorListener(final SceneUpdateErrorListener listener) {
-        sceneUpdateErrorListener = new SceneUpdateErrorListener() {
-            @Override
-            public void onSceneUpdateError(final SceneUpdateError sceneUpdateError) {
-                uiThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onSceneUpdateError(sceneUpdateError);
-                    }
-                });
-            }
-        };
+    public void setSceneLoadListener(final SceneLoadListener listener) {
+        sceneLoadListener = listener;
     }
 
     /**
@@ -768,7 +823,7 @@ public class MapController implements Renderer {
      * @param listener The {@link LabelPickListener} to call
      */
     public void setLabelPickListener(final LabelPickListener listener) {
-        labelPickListener = new LabelPickListener() {
+        labelPickListener = (listener == null) ? null : new LabelPickListener() {
             @Override
             public void onLabelPick(final LabelPickResult labelPickResult, final float positionX, final float positionY) {
                 uiThreadHandler.post(new Runnable() {
@@ -786,7 +841,7 @@ public class MapController implements Renderer {
      * @param listener The {@link MarkerPickListener} to call
      */
     public void setMarkerPickListener(final MarkerPickListener listener) {
-        markerPickListener = new MarkerPickListener() {
+        markerPickListener = (listener == null) ? null : new MarkerPickListener() {
             @Override
             public void onMarkerPick(final MarkerPickResult markerPickResult, final float positionX, final float positionY) {
                 uiThreadHandler.post(new Runnable() {
@@ -885,7 +940,7 @@ public class MapController implements Renderer {
      * @param listener The {@link ViewCompleteListener} to call when the view is complete
      */
     public void setViewCompleteListener(final ViewCompleteListener listener) {
-        viewCompleteListener = new ViewCompleteListener() {
+        viewCompleteListener = (listener == null) ? null : new ViewCompleteListener() {
             @Override
             public void onViewComplete() {
                 uiThreadHandler.post(new Runnable() {
@@ -913,40 +968,6 @@ public class MapController implements Renderer {
      */
     public void setDebugFlag(DebugFlag flag, boolean on) {
         nativeSetDebugFlag(flag.ordinal(), on);
-    }
-
-    /**
-     * Enqueue a scene component update with its corresponding YAML node value
-     * @param sceneUpdate A {@code SceneUpdate}
-     */
-    public void queueSceneUpdate(SceneUpdate sceneUpdate) {
-        checkPointer(mapPointer);
-        if (sceneUpdate == null) {
-            throw new IllegalArgumentException("sceneUpdate can not be null in queueSceneUpdates");
-        }
-        nativeQueueSceneUpdate(mapPointer, sceneUpdate.getPath(), sceneUpdate.getValue());
-    }
-
-    /**
-     * Enqueue a scene component update with its corresponding YAML node value
-     * @param sceneUpdates List of {@code SceneUpdate}
-     */
-    public void queueSceneUpdate(List<SceneUpdate> sceneUpdates) {
-        checkPointer(mapPointer);
-        if (sceneUpdates == null || sceneUpdates.size() == 0) {
-            throw new IllegalArgumentException("sceneUpdates can not be null or empty in queueSceneUpdates");
-        }
-        String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        nativeQueueSceneUpdates(mapPointer, updateStrings);
-    }
-
-    /**
-     * Apply updates queued by queueSceneUpdate; this empties the current queue of updates
-     * If a scene update is triggered, scene updates won't be applied.
-     */
-    public void applySceneUpdates() {
-        checkPointer(mapPointer);
-        nativeApplySceneUpdates(mapPointer, sceneUpdateErrorListener);
     }
 
     /**
@@ -1100,7 +1121,8 @@ public class MapController implements Renderer {
     private synchronized native void nativeOnLowMemory(long mapPtr);
     private synchronized native long nativeInit(MapController instance, AssetManager assetManager);
     private synchronized native void nativeDispose(long mapPtr);
-    private synchronized native void nativeLoadScene(long mapPtr, SceneUpdateErrorListener listener, String path, String[] updateStrings);
+    private synchronized native int nativeLoadScene(long mapPtr, String path, String[] updateStrings);
+    private synchronized native int nativeLoadSceneAsync(long mapPtr, String path, String[] updateStrings);
     private synchronized native void nativeSetupGL(long mapPtr);
     private synchronized native void nativeResize(long mapPtr, int width, int height);
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
@@ -1129,9 +1151,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeHandlePinchGesture(long mapPtr, float posX, float posY, float scale, float velocity);
     private synchronized native void nativeHandleRotateGesture(long mapPtr, float posX, float posY, float rotation);
     private synchronized native void nativeHandleShoveGesture(long mapPtr, float distance);
-    private synchronized native void nativeQueueSceneUpdate(long mapPtr, String componentPath, String componentValue);
-    private synchronized native void nativeQueueSceneUpdates(long mapPtr, String[] updateStrings);
-    private synchronized native void nativeApplySceneUpdates(long mapPtr, SceneUpdateErrorListener listener);
+    private synchronized native int nativeUpdateScene(long mapPtr, String[] updateStrings);
     private synchronized native void nativeSetPickRadius(long mapPtr, float radius);
     private synchronized native void nativePickFeature(long mapPtr, float posX, float posY, FeaturePickListener listener);
     private synchronized native void nativePickLabel(long mapPtr, float posX, float posY, LabelPickListener listener);
@@ -1178,7 +1198,7 @@ public class MapController implements Renderer {
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
     private FeaturePickListener featurePickListener;
-    private SceneUpdateErrorListener sceneUpdateErrorListener;
+    private SceneLoadListener sceneLoadListener;
     private LabelPickListener labelPickListener;
     private MarkerPickListener markerPickListener;
     private ViewCompleteListener viewCompleteListener;
@@ -1209,8 +1229,11 @@ public class MapController implements Renderer {
             nativeRender(mapPointer);
         }
 
-        if (viewComplete && viewCompleteListener != null) {
-            viewCompleteListener.onViewComplete();
+        if (viewComplete) {
+
+            if (viewCompleteListener != null) {
+                viewCompleteListener.onViewComplete();
+            }
         }
         if (frameCaptureCallback != null) {
             if (!frameCaptureAwaitCompleteView || viewComplete) {
@@ -1268,6 +1291,20 @@ public class MapController implements Renderer {
             }
         });
         return true;
+    }
+
+    // Called from JNI on worker or render-thread.
+    void sceneReadyCallback(final int sceneId, final SceneError error) {
+
+        final SceneLoadListener cb = sceneLoadListener;
+        if (cb != null) {
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    cb.onSceneReady(sceneId, error);
+                }
+            });
+        }
     }
 
     // Font Fetching

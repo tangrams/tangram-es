@@ -11,21 +11,23 @@ void setupJniEnv(JNIEnv* _jniEnv);
 void onUrlSuccess(JNIEnv* jniEnv, jbyteArray jFetchedBytes, jlong jCallbackPtr);
 void onUrlFailure(JNIEnv* jniEnv, jlong jCallbackPtr);
 
-std::string resolveScenePath(const char* path);
-
 std::string stringFromJString(JNIEnv* jniEnv, jstring string);
+std::string resolveScenePath(const char* path);
 
 namespace Tangram {
 
 struct LabelPickResult;
 struct FeaturePickResult;
 struct MarkerPickResult;
-struct SceneUpdateError;
+class Map;
+struct SceneUpdate;
+struct SceneError;
+using SceneID = int32_t;
 
 void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* featurePickResult);
 void markerPickCallback(jobject listener, jobject tangramInstance, const Tangram::MarkerPickResult* markerPickResult);
 void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult);
-void sceneUpdateErrorCallback(jobject updateStatusCallbackRef, const SceneUpdateError& sceneUpdateErrorStatus);
+
 
 class AndroidPlatform : public Platform {
 
@@ -41,6 +43,7 @@ public:
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
     bool startUrlRequest(const std::string& _url, UrlCallback _callback) override;
     void cancelUrlRequest(const std::string& _url) override;
+    void sceneReadyCallback(SceneID id, const SceneError* error);
 
 private:
 

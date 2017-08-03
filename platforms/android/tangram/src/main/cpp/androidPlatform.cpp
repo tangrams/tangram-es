@@ -44,11 +44,11 @@ static jmethodID onLabelPickMID = 0;
 static jmethodID onMarkerPickMID = 0;
 static jmethodID labelPickResultInitMID = 0;
 static jmethodID markerPickResultInitMID = 0;
-static jmethodID onSceneUpdateErrorMID = 0;
-static jmethodID sceneUpdateErrorInitMID = 0;
+static jmethodID sceneReadyCallbackMID = 0;
+static jmethodID sceneErrorInitMID = 0;
 
 static jclass labelPickResultClass = nullptr;
-static jclass sceneUpdateErrorClass = nullptr;
+static jclass sceneErrorClass = nullptr;
 static jclass markerPickResultClass = nullptr;
 
 static jclass hashmapClass = nullptr;
@@ -81,6 +81,7 @@ void setupJniEnv(JNIEnv* jniEnv) {
     getFontFallbackFilePath = jniEnv->GetMethodID(tangramClass, "getFontFallbackFilePath", "(II)Ljava/lang/String;");
     requestRenderMethodID = jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
+    sceneReadyCallbackMID = jniEnv->GetMethodID(tangramClass, "sceneReadyCallback", "(ILcom/mapzen/tangram/SceneError;)V");
 
     jclass featurePickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$FeaturePickListener");
     onFeaturePickMID = jniEnv->GetMethodID(featurePickListenerClass, "onFeaturePick", "(Ljava/util/Map;FF)V");
@@ -99,13 +100,11 @@ void setupJniEnv(JNIEnv* jniEnv) {
     markerPickResultClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/MarkerPickResult"));
     markerPickResultInitMID = jniEnv->GetMethodID(markerPickResultClass, "<init>", "(Lcom/mapzen/tangram/Marker;DD)V");
 
-    if (sceneUpdateErrorClass) {
-        jniEnv->DeleteGlobalRef(sceneUpdateErrorClass);
+    if (sceneErrorClass) {
+        jniEnv->DeleteGlobalRef(sceneErrorClass);
     }
-    sceneUpdateErrorClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/SceneUpdateError"));
-    sceneUpdateErrorInitMID = jniEnv->GetMethodID(sceneUpdateErrorClass, "<init>", "(Ljava/lang/String;Ljava/lang/String;I)V");
-    jclass sceneUpdateErrorListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$SceneUpdateErrorListener");
-    onSceneUpdateErrorMID = jniEnv->GetMethodID(sceneUpdateErrorListenerClass, "onSceneUpdateError", "(Lcom/mapzen/tangram/SceneUpdateError;)V");
+    sceneErrorClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/SceneError"));
+    sceneErrorInitMID = jniEnv->GetMethodID(sceneErrorClass, "<init>", "(Ljava/lang/String;Ljava/lang/String;I)V");
 
     if (hashmapClass) {
         jniEnv->DeleteGlobalRef(hashmapClass);
@@ -360,24 +359,6 @@ void setCurrentThreadPriority(int priority) {
     setpriority(PRIO_PROCESS, tid, priority);
 }
 
-void sceneUpdateErrorCallback(jobject updateCallbackRef, const SceneUpdateError& sceneUpdateError) {
-
-    if (!updateCallbackRef) {
-        return;
-    }
-
-    JniThreadBinding jniEnv(jvm);
-
-    jstring jUpdateStatusPath = jniEnv->NewStringUTF(sceneUpdateError.update.path.c_str());
-    jstring jUpdateStatusValue = jniEnv->NewStringUTF(sceneUpdateError.update.value.c_str());
-    jint jError = (jint)sceneUpdateError.error;
-    jobject jUpdateErrorStatus = jniEnv->NewObject(sceneUpdateErrorClass, sceneUpdateErrorInitMID,
-                                                   jUpdateStatusPath, jUpdateStatusValue, jError);
-
-    jniEnv->CallVoidMethod(updateCallbackRef, onSceneUpdateErrorMID, jUpdateErrorStatus);
-    jniEnv->DeleteGlobalRef(updateCallbackRef);
-}
-
 void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult) {
 
     JniThreadBinding jniEnv(jvm);
@@ -472,6 +453,25 @@ void initGLExtensions() {
     glGenVertexArraysOESEXT = (PFNGLGENVERTEXARRAYSOESPROC) dlsym(libhandle, "glGenVertexArraysOES");
 
     glExtensionsLoaded = true;
+}
+    
+void AndroidPlatform::sceneReadyCallback(SceneID id, const SceneError* sceneError) {
+
+    JniThreadBinding jniEnv(jvm);
+
+    jobject jUpdateErrorStatus = 0;
+
+    if (sceneError) {
+        jstring jUpdateStatusPath = jniEnv->NewStringUTF(sceneError->update.path.c_str());
+        jstring jUpdateStatusValue = jniEnv->NewStringUTF(sceneError->update.value.c_str());
+        jint jError = (jint) sceneError->error;
+        jobject jUpdateErrorStatus = jniEnv->NewObject(sceneErrorClass,
+                                                       sceneErrorInitMID,
+                                                       jUpdateStatusPath, jUpdateStatusValue,
+                                                       jError);
+    }
+
+    jniEnv->CallVoidMethod(m_tangramInstance, sceneReadyCallbackMID, id, jUpdateErrorStatus);
 }
 
 } // namespace Tangram
