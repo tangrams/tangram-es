@@ -180,17 +180,13 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
 
 // NB: Not thread-safe. Must be called on the main/render thread!
 // (Or externally synchronized with main/render thread)
-SceneID Map::loadScene(const std::string& _scenePath, bool _useScenePosition,
+SceneID Map::loadScene(std::shared_ptr<Scene> scene,
                        const std::vector<SceneUpdate>& _sceneUpdates) {
-
-    LOG("Loading scene file: %s", _scenePath.c_str());
 
     {
         std::lock_guard<std::mutex> lock(impl->sceneMutex);
         impl->lastValidScene.reset();
     }
-    auto scene = std::make_shared<Scene>(platform, _scenePath);
-    scene->useScenePosition = _useScenePosition;
 
     if (SceneLoader::loadScene(platform, scene, _sceneUpdates)) {
         impl->setScene(scene);
@@ -209,6 +205,24 @@ SceneID Map::loadScene(const std::string& _scenePath, bool _useScenePosition,
         }
     }
     return scene->id;
+}
+
+SceneID Map::loadScene(const std::string& _scenePath, bool _useScenePosition,
+                       const std::vector<SceneUpdate>& _sceneUpdates) {
+
+    LOG("Loading scene file: %s", _scenePath.c_str());
+    auto scene = std::make_shared<Scene>(platform, _scenePath);
+    scene->useScenePosition = _useScenePosition;
+    return loadScene(scene, _sceneUpdates);
+}
+
+SceneID Map::loadSceneYaml(const std::string& _yaml, const std::string& _resourceRoot,
+                           bool _useScenePosition, const std::vector<SceneUpdate>& _sceneUpdates) {
+
+    LOG("Loading scene string");
+    auto scene = std::make_shared<Scene>(platform, _yaml, _resourceRoot);
+    scene->useScenePosition = _useScenePosition;
+    return loadScene(scene, _sceneUpdates);
 }
 
 SceneID Map::loadSceneAsync(const std::string& _scenePath, bool _useScenePosition,
