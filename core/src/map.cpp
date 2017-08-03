@@ -6,6 +6,7 @@
 #include "gl.h"
 #include "gl/glError.h"
 #include "gl/framebuffer.h"
+#include "gl/fxaa.h"
 #include "gl/hardware.h"
 #include "gl/primitives.h"
 #include "gl/renderState.h"
@@ -85,6 +86,9 @@ public:
     TileManager tileManager;
     MarkerManager markerManager;
     std::unique_ptr<FrameBuffer> selectionBuffer = std::make_unique<FrameBuffer>(0, 0);
+    std::unique_ptr<FrameBuffer> renderBuffer;
+    bool postProcess = true;
+    std::unique_ptr<Fxaa> postProcessFxaa = std::make_unique<Fxaa>();
 
     bool cacheGlState = false;
     float pickRadius = .5f;
@@ -93,6 +97,10 @@ public:
 
     SceneReadyCallback onSceneReady = nullptr;
 };
+
+void Map::enablePostProcess(bool _enable) {
+    impl->postProcess = _enable;
+}
 
 void Map::Impl::setEase(EaseField _f, Ease _e) {
     eases[static_cast<size_t>(_f)] = _e;
@@ -175,6 +183,10 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
 
     if (animated != platform->isContinuousRendering()) {
         platform->setContinuousRendering(animated);
+    }
+
+    if (postProcess) {
+        renderBuffer = std::make_unique<FrameBuffer>(view.getWidth(), view.getHeight(), false);
     }
 }
 
@@ -369,6 +381,9 @@ void Map::resize(int _newWidth, int _newHeight) {
     impl->view.setSize(_newWidth, _newHeight);
 
     impl->selectionBuffer = std::make_unique<FrameBuffer>(_newWidth/2, _newHeight/2);
+    if (impl->postProcess) {
+        impl->renderBuffer = std::make_unique<FrameBuffer>(_newWidth, _newHeight);
+    }
 
     Primitives::setResolution(impl->renderState, _newWidth, _newHeight);
 }
@@ -522,8 +537,15 @@ void Map::render() {
 
     // Setup default framebuffer for a new frame
     glm::vec2 viewport(impl->view.getWidth(), impl->view.getHeight());
-    FrameBuffer::apply(impl->renderState, impl->renderState.defaultFrameBuffer(),
-                       viewport, impl->scene->background().asIVec4());
+
+    if (impl->postProcess && !drawSelectionBuffer) {
+        impl->renderBuffer->applyAsRenderTarget(impl->renderState,
+                                          impl->scene->background().asIVec4());
+
+    } else {
+        FrameBuffer::apply(impl->renderState, impl->renderState.defaultFrameBuffer(),
+                           viewport, impl->scene->background().asIVec4());
+    }
 
     if (drawSelectionBuffer) {
         impl->selectionBuffer->drawDebug(impl->renderState, viewport);
@@ -553,6 +575,15 @@ void Map::render() {
             }
 
             style->onEndDrawFrame();
+        }
+    }
+
+    if (impl->postProcess) {
+        FrameBuffer::apply(impl->renderState, impl->renderState.defaultFrameBuffer(),
+                           viewport, impl->scene->background().asIVec4());
+
+        if (impl->renderBuffer->colorTexture()) {
+            impl->postProcessFxaa->draw(impl->renderState, *impl->renderBuffer->colorTexture(), viewport);
         }
     }
 

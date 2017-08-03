@@ -43,6 +43,8 @@ public:
 
     void drawDebug(RenderState& _rs, glm::vec2 _dim);
 
+    auto& colorTexture() { return m_texture; }
+
 private:
 
     void init(RenderState& _rs);
