@@ -20,7 +20,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)clearDataSource:(std::shared_ptr<Tangram::TileSource>)tileSource;
 
-- (Tangram::SceneReadyCallback)setSceneReadyListener;
+- (Tangram::SceneReadyCallback)sceneReadyListener;
+
+- (std::vector<Tangram::SceneUpdate>)unpackSceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
 
 NS_ASSUME_NONNULL_END
 

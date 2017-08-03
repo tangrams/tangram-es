@@ -29,7 +29,6 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     BOOL viewComplete;
 }
 
-@property (nullable, copy, nonatomic) NSString* scenePath;
 @property (nullable, strong, nonatomic) EAGLContext* context;
 @property (assign, nonatomic) CGFloat contentScaleFactor;
 @property (assign, nonatomic) BOOL renderRequested;
@@ -129,7 +128,18 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 #pragma mark Scene loading interface
 
-- (Tangram::SceneReadyCallback) sceneReadyListener {
+- (std::vector<Tangram::SceneUpdate>)unpackSceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
+{
+    std::vector<Tangram::SceneUpdate> updates;
+    if (sceneUpdates) {
+        for (TGSceneUpdate* update in sceneUpdates) {
+            updates.push_back({std::string([update.path UTF8String]), std::string([update.value UTF8String])});
+        }
+    }
+    return updates;
+}
+
+- (Tangram::SceneReadyCallback)sceneReadyListener {
     return [=](int sceneID, auto sceneError) {
         if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadScene:withError:)]) { return; }
 
@@ -158,15 +168,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return -1; }
 
-    std::vector<Tangram::SceneUpdate> updates;
-
-    if (sceneUpdates) {
-        for (TGSceneUpdate* update in sceneUpdates) {
-            updates.push_back({std::string([update.path UTF8String]), std::string([update.value UTF8String])});
-        }
-    }
-
-    self.scenePath = path;
+    auto updates = [self unpackSceneUpdates:sceneUpdates];
 
     self.map->setSceneReadyListener([self sceneReadyListener]);
     return self.map->loadScene([path UTF8String], false, updates);
@@ -176,18 +178,30 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return -1; }
 
-    std::vector<Tangram::SceneUpdate> updates;
-
-    if (sceneUpdates) {
-        for (TGSceneUpdate* update in sceneUpdates) {
-            updates.push_back({std::string([update.path UTF8String]), std::string([update.value UTF8String])});
-        }
-    }
-
-    self.scenePath = path;
+    auto updates = [self unpackSceneUpdates:sceneUpdates];
 
     self.map->setSceneReadyListener([self sceneReadyListener]);
     return self.map->loadSceneAsync([path UTF8String], false, updates);
+}
+
+- (int)loadSceneYaml:(NSString *)yaml resourceRoot:(NSString *)resourceRoot sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
+{
+    if (!self.map) { return -1; }
+
+    auto updates = [self unpackSceneUpdates:sceneUpdates];
+
+    self.map->setSceneReadyListener([self sceneReadyListener]);
+    return self.map->loadSceneYaml([yaml UTF8String], [resourceRoot UTF8String], false, updates);
+}
+
+- (int)loadSceneYamlAsync:(NSString *)yaml resourceRoot:(NSString *)resourceRoot sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
+{
+    if (!self.map) { return -1; }
+
+    auto updates = [self unpackSceneUpdates:sceneUpdates];
+
+    self.map->setSceneReadyListener([self sceneReadyListener]);
+    return self.map->loadSceneYamlAsync([yaml UTF8String], [resourceRoot UTF8String], false, updates);
 }
 
 #pragma mark Scene updates
@@ -200,11 +214,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         return -1;
     }
 
-    std::vector<Tangram::SceneUpdate> updates;
-
-    for (TGSceneUpdate* update in sceneUpdates) {
-        updates.push_back({std::string([update.path UTF8String]), std::string([update.value UTF8String])});
-    }
+    auto updates = [self unpackSceneUpdates:sceneUpdates];
 
     self.map->setSceneReadyListener([self sceneReadyListener]);
     return self.map->updateSceneAsync(updates);
