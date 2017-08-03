@@ -154,70 +154,70 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     };
 }
 
-- (int)loadSceneFile:(NSString*)path
+- (int)loadSceneFromURL:(NSURL *)url
 {
-    return [self loadSceneFile:path sceneUpdates:nil];
+    return [self loadSceneFromURL:url withUpdates:nil];
 }
 
-- (int)loadSceneFileAsync:(NSString*)path
+- (int)loadSceneAsyncFromURL:(NSURL *)url
 {
-    return [self loadSceneFileAsync:path sceneUpdates:nil];
+    return [self loadSceneAsyncFromURL:url withUpdates:nil];
 }
 
-- (int)loadSceneFile:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
+- (int)loadSceneFromURL:(NSURL *)url withUpdates:(NSArray<TGSceneUpdate *> *)updates
 {
     if (!self.map) { return -1; }
 
-    auto updates = unpackSceneUpdates(sceneUpdates);
+    auto sceneUpdates = unpackSceneUpdates(updates);
 
     self.map->setSceneReadyListener([self sceneReadyListener]);
-    return self.map->loadScene([path UTF8String], false, updates);
+    return self.map->loadScene([[url absoluteString] UTF8String], false, sceneUpdates);
 }
 
-- (int)loadSceneFileAsync:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
+- (int)loadSceneAsyncFromURL:(NSURL *)url withUpdates:(NSArray<TGSceneUpdate *> *)updates
 {
     if (!self.map) { return -1; }
 
-    auto updates = unpackSceneUpdates(sceneUpdates);
+    auto sceneUpdates = unpackSceneUpdates(updates);
 
     self.map->setSceneReadyListener([self sceneReadyListener]);
-    return self.map->loadSceneAsync([path UTF8String], false, updates);
+    return self.map->loadSceneAsync([[url absoluteString] UTF8String], false, sceneUpdates);
 }
 
-- (int)loadSceneYaml:(NSString *)yaml resourceRoot:(NSString *)resourceRoot sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
+- (int)loadSceneFromYAML:(NSString *)yaml relativeToURL:(NSURL *)url withUpdates:(NSArray<TGSceneUpdate *> *)updates
 {
     if (!self.map) { return -1; }
 
-    auto updates = unpackSceneUpdates(sceneUpdates);
+    auto sceneUpdates = unpackSceneUpdates(updates);
 
     self.map->setSceneReadyListener([self sceneReadyListener]);
-    return self.map->loadSceneYaml([yaml UTF8String], [resourceRoot UTF8String], false, updates);
+    return self.map->loadSceneYamlAsync([yaml UTF8String], [[url absoluteString] UTF8String], false, sceneUpdates);
 }
 
-- (int)loadSceneYamlAsync:(NSString *)yaml resourceRoot:(NSString *)resourceRoot sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
+- (int)loadSceneAsyncFromYAML:(NSString *)yaml relativeToURL:(NSURL *)url withUpdates:(NSArray<TGSceneUpdate *> *)updates
 {
     if (!self.map) { return -1; }
 
-    auto updates = unpackSceneUpdates(sceneUpdates);
+    auto sceneUpdates = unpackSceneUpdates(updates);
 
     self.map->setSceneReadyListener([self sceneReadyListener]);
-    return self.map->loadSceneYamlAsync([yaml UTF8String], [resourceRoot UTF8String], false, updates);
+    return self.map->loadSceneYamlAsync([yaml UTF8String], [[url absoluteString] UTF8String], false, sceneUpdates);
 }
 
 #pragma mark Scene updates
 
-- (int)updateSceneAsync:(NSArray<TGSceneUpdate *> *)sceneUpdates
+- (int)updateSceneAsync:(NSArray<TGSceneUpdate *> *)updates
 {
     if (!self.map) { return -1; }
 
-    if (!sceneUpdates || ![sceneUpdates count]) {
+    if (!updates || ![updates count]) {
         return -1;
     }
 
-    auto updates = unpackSceneUpdates(sceneUpdates);
+    auto sceneUpdates = unpackSceneUpdates(updates);
 
     self.map->setSceneReadyListener([self sceneReadyListener]);
-    return self.map->updateSceneAsync(updates);
+    return self.map->updateSceneAsync(sceneUpdates);
 }
 
 #pragma mark Longitude/Latitude - Screen position conversions
