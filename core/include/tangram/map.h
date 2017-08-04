@@ -99,9 +99,6 @@ public:
     ~Map();
 
     // Load the scene at the given absolute file path asynchronously.
-    SceneID loadSceneAsync(std::shared_ptr<Scene> _scene,
-                           const std::vector<SceneUpdate>& _sceneUpdates = {});
-
     SceneID loadSceneAsync(const std::string& _scenePath,
                            bool _useScenePosition = false,
                            const std::vector<SceneUpdate>& _sceneUpdates = {});
@@ -116,9 +113,6 @@ public:
                                const std::vector<SceneUpdate>& _sceneUpdates = {});
 
     // Load the scene at the given absolute file path synchronously
-    SceneID loadScene(std::shared_ptr<Scene> _scene,
-                      const std::vector<SceneUpdate>& _sceneUpdates = {});
-
     SceneID loadScene(const std::string& _scenePath,
                       bool _useScenePosition = false,
                       const std::vector<SceneUpdate>& sceneUpdates = {});
@@ -362,6 +356,12 @@ private:
 protected:
 
     std::shared_ptr<Platform> platform;
+
+    SceneID loadSceneAsync(std::shared_ptr<Scene> _scene,
+                       const std::vector<SceneUpdate>& _sceneUpdates = {});
+
+    SceneID loadScene(std::shared_ptr<Scene> _scene,
+                  const std::vector<SceneUpdate>& _sceneUpdates = {});
 
 };
 
