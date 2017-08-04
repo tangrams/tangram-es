@@ -264,6 +264,8 @@ NS_ASSUME_NONNULL_END
  `-[TGMapViewController loadSceneFile]` or
  `-[TGMapViewController loadSceneFileAsync:]` or
  `-[TGMapViewController loadSceneFileAsync:sceneUpdates:]` or
+ `-[TGMapViewController loadSceneFileYaml:resourceRoot:sceneUpdates:]` or
+ `-[TGMapViewController loadSceneFileYamlAsync:resourceRoot:sceneUpdates:]` or
  `-[TGMapViewController applySceneUpdate]` is completed.
 
  @param mapView a pointer to the map view
@@ -528,6 +530,32 @@ NS_ASSUME_NONNULL_BEGIN
  @return the integer (SceneID) associated with this scene load or -1 if scene can not be loaded.
  */
 - (int)loadSceneFileAsync:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
+
+/**
+ Loads a scene synchronously using an explicitly specified yaml string, with a list of updates
+ to be applied to the scene.
+ If a scene update error happens, scene updates won't be applied.
+
+ @param yaml Yaml scene string
+ @param resourceRoot Base path to resolve relative urls within the yaml scene string
+ @param sceneUpdates a list of `TGSceneUpdate` to apply to the scene
+
+ @return the integer (SceneID) associated with this scene load or -1 if scene can not be loaded.
+*/
+- (int)loadSceneYaml:(NSString *)yaml resourceRoot:(NSString *)resourceRoot sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
+
+/**
+ Loads a scene asynchronously using an explicitly specified yaml string, with a list of updates
+ to be applied to the scene.
+ If a scene update error happens, scene updates won't be applied.
+
+ @param yaml Yaml scene string
+ @param resourceRoot Base path to resolve relative urls within the yaml scene string
+ @param sceneUpdates a list of `TGSceneUpdate` to apply to the scene
+
+ @return the integer (SceneID) associated with this scene load or -1 if scene can not be loaded.
+*/
+- (int)loadSceneYamlAsync:(NSString *)yaml resourceRoot:(NSString *)resourceRoot sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
 
 /**
  Update the scene with the list of updates asyncronously, may call `-[TGMapViewDelegate didLoadScene:withError:]`

@@ -13,6 +13,7 @@ namespace Tangram {
 
 class Platform;
 class TileSource;
+class Scene;
 
 enum LabelType {
     icon,
@@ -98,12 +99,21 @@ public:
     ~Map();
 
     // Load the scene at the given absolute file path asynchronously.
-    SceneID loadSceneAsync(const char* _scenePath,
+    SceneID loadSceneAsync(const std::string& _scenePath,
                            bool _useScenePosition = false,
-                           const std::vector<SceneUpdate>& sceneUpdates = {});
+                           const std::vector<SceneUpdate>& _sceneUpdates = {});
+
+    // Load the scene provided an explicit yaml scene string
+    SceneID loadSceneYaml(const std::string& _yaml, const std::string& _resourceRoot,
+                          bool _useScenePosition = false,
+                          const std::vector<SceneUpdate>& _sceneUpdates = {});
+
+    SceneID loadSceneYamlAsync(const std::string& _yaml, const std::string& _resourceRoot,
+                               bool _useScenePosition = false,
+                               const std::vector<SceneUpdate>& _sceneUpdates = {});
 
     // Load the scene at the given absolute file path synchronously
-    SceneID loadScene(const char* _scenePath,
+    SceneID loadScene(const std::string& _scenePath,
                       bool _useScenePosition = false,
                       const std::vector<SceneUpdate>& sceneUpdates = {});
 
@@ -346,6 +356,12 @@ private:
 protected:
 
     std::shared_ptr<Platform> platform;
+
+    SceneID loadSceneAsync(std::shared_ptr<Scene> _scene,
+                       const std::vector<SceneUpdate>& _sceneUpdates = {});
+
+    SceneID loadScene(std::shared_ptr<Scene> _scene,
+                  const std::vector<SceneUpdate>& _sceneUpdates = {});
 
 };
 

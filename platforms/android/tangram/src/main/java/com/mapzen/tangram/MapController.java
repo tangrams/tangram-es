@@ -304,7 +304,6 @@ public class MapController implements Renderer {
      */
     public int loadSceneFile(String path, List<SceneUpdate> sceneUpdates) {
         String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        scenePath = path;
         checkPointer(mapPointer);
         int sceneId = nativeLoadScene(mapPointer, path, updateStrings);
         removeAllMarkers();
@@ -324,9 +323,46 @@ public class MapController implements Renderer {
      */
     public int loadSceneFileAsync(String path, List<SceneUpdate> sceneUpdates) {
         String[] updateStrings = bundleSceneUpdates(sceneUpdates);
-        scenePath = path;
         checkPointer(mapPointer);
         int sceneId = nativeLoadSceneAsync(mapPointer, path, updateStrings);
+        removeAllMarkers();
+        requestRender();
+        return sceneId;
+    }
+
+    /**
+     * Load a new scene synchronously, provided an explicit yaml scene string to load
+     * If scene updates triggers an error, they won't be applied.
+     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
+     * ready.
+     * @param yaml YAML scene String
+     * @param resourceRoot base path to resolve relative URLs
+     * @param sceneUpdates List of {@code SceneUpdate}
+     * @return Scene ID An identifier for the scene being loaded, the same value will be passed to
+     */
+    public int loadSceneYaml(String yaml, String resourceRoot, List<SceneUpdate> sceneUpdates) {
+        String[] updateStrings = bundleSceneUpdates(sceneUpdates);
+        checkPointer(mapPointer);
+        int sceneId = nativeLoadSceneYaml(mapPointer, yaml, resourceRoot, updateStrings);
+        removeAllMarkers();
+        requestRender();
+        return sceneId;
+    }
+
+    /**
+     * Load a new scene asynchronously, provided an explicit yaml scene string to load
+     * If scene updates triggers an error, they won't be applied.
+     * Use {@link #setSceneLoadListener(SceneLoadListener)} for notification when the new scene is
+     * ready.
+     * @param yaml YAML scene String
+     * @param resourceRoot base path to resolve relative URLs
+     * @param sceneUpdates List of {@code SceneUpdate}
+     * @return Scene ID An identifier for the scene being loaded, the same value will be passed to
+     */
+    public int loadSceneYamlAsync(String yaml, String resourceRoot, List<SceneUpdate> sceneUpdates) {
+        String[] updateStrings = bundleSceneUpdates(sceneUpdates);
+        checkPointer(mapPointer);
+        int sceneId = nativeLoadSceneYamlAsync(mapPointer, yaml, resourceRoot, updateStrings);
         removeAllMarkers();
         requestRender();
         return sceneId;
@@ -1123,6 +1159,8 @@ public class MapController implements Renderer {
     private synchronized native void nativeDispose(long mapPtr);
     private synchronized native int nativeLoadScene(long mapPtr, String path, String[] updateStrings);
     private synchronized native int nativeLoadSceneAsync(long mapPtr, String path, String[] updateStrings);
+    private synchronized native int nativeLoadSceneYaml(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
+    private synchronized native int nativeLoadSceneYamlAsync(long mapPtr, String yaml, String resourceRoot, String[] updateStrings);
     private synchronized native void nativeSetupGL(long mapPtr);
     private synchronized native void nativeResize(long mapPtr, int width, int height);
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
@@ -1188,7 +1226,6 @@ public class MapController implements Renderer {
     // Private members
     // ===============
 
-    private String scenePath;
     private long mapPointer;
     private long time = System.nanoTime();
     private GLSurfaceView mapView;
