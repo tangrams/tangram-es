@@ -190,7 +190,7 @@
     NSMutableArray<TGSceneUpdate *>* updates = [[NSMutableArray alloc]init];
     [updates addObject:[[TGSceneUpdate alloc]initWithPath:@"global.sdk_mapzen_api_key" value:apiKey]];
 
-    [super loadSceneFileAsync:@"https://tangrams.github.io/walkabout-style/walkabout-style.yaml" sceneUpdates:updates];
+    [super loadSceneAsyncFromURL:[NSURL URLWithString:@"https://tangrams.github.io/walkabout-style/walkabout-style.yaml"] withUpdates:updates];
 }
 
 - (void)viewDidLoad
