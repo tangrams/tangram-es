@@ -1,9 +1,11 @@
 package com.mapzen.tangram;
 
+import android.support.annotation.Keep;
+
 /**
  * {@code MarkerPickResult} represents labels that can be selected on the screen
  */
-
+@Keep
 public class MarkerPickResult {
 
     private Marker marker;

@@ -1,0 +1,3 @@
+# OkHttp3
+-dontwarn okhttp3.**
+-dontwarn okio.**

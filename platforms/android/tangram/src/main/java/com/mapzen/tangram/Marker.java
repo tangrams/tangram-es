@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.support.annotation.Keep;
 import android.util.DisplayMetrics;
 
 import com.mapzen.tangram.geometry.Polygon;
@@ -14,6 +15,7 @@ import com.mapzen.tangram.geometry.Polyline;
  * Class used to display points, polylines, and bitmaps dynamically on a map. Do not create one of
  * these objects directly, instead use {@link MapController#addMarker()}.
  */
+@Keep
 public class Marker {
 
     private Context context;
