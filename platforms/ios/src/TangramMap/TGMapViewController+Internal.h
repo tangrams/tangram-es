@@ -22,8 +22,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (Tangram::SceneReadyCallback)sceneReadyListener;
 
-- (std::vector<Tangram::SceneUpdate>)unpackSceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates;
-
 NS_ASSUME_NONNULL_END
 
 @property (assign, nonatomic, nullable) Tangram::Map* map;

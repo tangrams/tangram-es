@@ -128,7 +128,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 #pragma mark Scene loading interface
 
-- (std::vector<Tangram::SceneUpdate>)unpackSceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
+std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *sceneUpdates)
 {
     std::vector<Tangram::SceneUpdate> updates;
     if (sceneUpdates) {
@@ -168,7 +168,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return -1; }
 
-    auto updates = [self unpackSceneUpdates:sceneUpdates];
+    auto updates = unpackSceneUpdates(sceneUpdates);
 
     self.map->setSceneReadyListener([self sceneReadyListener]);
     return self.map->loadScene([path UTF8String], false, updates);
@@ -178,7 +178,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return -1; }
 
-    auto updates = [self unpackSceneUpdates:sceneUpdates];
+    auto updates = unpackSceneUpdates(sceneUpdates);
 
     self.map->setSceneReadyListener([self sceneReadyListener]);
     return self.map->loadSceneAsync([path UTF8String], false, updates);
@@ -188,7 +188,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return -1; }
 
-    auto updates = [self unpackSceneUpdates:sceneUpdates];
+    auto updates = unpackSceneUpdates(sceneUpdates);
 
     self.map->setSceneReadyListener([self sceneReadyListener]);
     return self.map->loadSceneYaml([yaml UTF8String], [resourceRoot UTF8String], false, updates);
@@ -198,7 +198,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return -1; }
 
-    auto updates = [self unpackSceneUpdates:sceneUpdates];
+    auto updates = unpackSceneUpdates(sceneUpdates);
 
     self.map->setSceneReadyListener([self sceneReadyListener]);
     return self.map->loadSceneYamlAsync([yaml UTF8String], [resourceRoot UTF8String], false, updates);
@@ -214,7 +214,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
         return -1;
     }
 
-    auto updates = [self unpackSceneUpdates:sceneUpdates];
+    auto updates = unpackSceneUpdates(sceneUpdates);
 
     self.map->setSceneReadyListener([self sceneReadyListener]);
     return self.map->updateSceneAsync(updates);
