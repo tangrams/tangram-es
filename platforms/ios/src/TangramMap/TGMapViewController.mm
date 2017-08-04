@@ -141,16 +141,16 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (Tangram::SceneReadyCallback)sceneReadyListener {
     return [=](int sceneID, auto sceneError) {
-        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadScene:withError:)]) { return; }
-
         [self.markersById removeAllObjects];
+        self.renderRequested = YES;
+
+        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadScene:withError:)]) { return; }
 
         NSError* error = nil;
         if (sceneError) {
             error = [TGHelpers errorFromSceneError:*sceneError];
         }
         [self.mapViewDelegate mapView:self didLoadScene:sceneID withError:error];
-        self.renderRequested = YES;
     };
 }
 
