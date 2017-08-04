@@ -264,8 +264,8 @@ NS_ASSUME_NONNULL_END
  `-[TGMapViewController loadSceneFile]` or
  `-[TGMapViewController loadSceneFileAsync:]` or
  `-[TGMapViewController loadSceneFileAsync:sceneUpdates:]` or
- `-[TGMapViewController loadSceneFileYaml:sceneUpdates:]` or
- `-[TGMapViewController loadSceneFileYamlAsync:sceneUpdates:]` or
+ `-[TGMapViewController loadSceneFileYaml:resourceRoot:sceneUpdates:]` or
+ `-[TGMapViewController loadSceneFileYamlAsync:resourceRoot:sceneUpdates:]` or
  `-[TGMapViewController applySceneUpdate]` is completed.
 
  @param mapView a pointer to the map view
@@ -533,7 +533,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Loads a scene synchronously using an explicitly specified yaml string, with a list of updates
- to be applied to be applied to the scene.
+ to be applied to the scene.
  If a scene update error happens, scene updates won't be applied.
 
  @param yaml Yaml scene string
@@ -546,7 +546,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Loads a scene asynchronously using an explicitly specified yaml string, with a list of updates
- to be applied to be applied to the scene.
+ to be applied to the scene.
  If a scene update error happens, scene updates won't be applied.
 
  @param yaml Yaml scene string
