@@ -52,28 +52,29 @@ YamlPath YamlPath::add(const std::string& key) {
     return YamlPath(codedPath + MAP_DELIM + key);
 }
 
-bool YamlPath::get(YAML::Node r, YAML::Node& n) {
+bool YamlPath::get(YAML::Node root, YAML::Node& out) {
     size_t beginToken = 0, endToken = 0, pathSize = codedPath.size();
     auto delimiter = MAP_DELIM; // First token must be a map key.
     while (endToken < pathSize) {
+        if (!root.IsDefined()) {
+            return false; // A node before the end of the path was mising, quit!
+        }
         beginToken = endToken;
         endToken = pathSize;
         endToken = std::min(endToken, codedPath.find(SEQ_DELIM, beginToken));
         endToken = std::min(endToken, codedPath.find(MAP_DELIM, beginToken));
         if (delimiter == SEQ_DELIM) {
             int index = std::stoi(&codedPath[beginToken]);
-            try {
-                r.reset(r[index]);
-            } catch(const YAML::Exception& e) {
-                LOGE("%s", e.what());
+            if (root.IsSequence()) {
+                root.reset(root[index]);
+            } else {
                 return false;
             }
         } else if (delimiter == MAP_DELIM) {
             auto key = codedPath.substr(beginToken, endToken - beginToken);
-            try {
-                r.reset(r[key]);
-            } catch(const YAML::Exception& e) {
-                LOGE("%s", e.what());
+            if (root.IsMap()) {
+                root.reset(root[key]);
+            } else {
                 return false;
             }
         } else {
@@ -81,11 +82,9 @@ bool YamlPath::get(YAML::Node r, YAML::Node& n) {
         }
         delimiter = codedPath[endToken]; // Get next character as the delimiter.
         ++endToken; // Move past the delimiter.
-        if (endToken < pathSize && !r) {
-            return false; // A node in the path was missing, return null node.
-        }
     }
-    n.reset(r);
+    // Success! Assign the result.
+    out.reset(root);
     return true;
 }
 
