@@ -32,8 +32,8 @@ deployment:
       - aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-snapshots/tangram-snapshot-debug-${CIRCLE_BUILD_NUM}.zip
       - aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-latest-debug.zip
   releases:
-    # For any tag of the form 1, 1.2, 1.2.3, etc. we will deploy a release build.
-    tag: /[0-9]+(\.[0-9]+)*/
+    # For any tag of the form 1, 1.2.3, 1.4-beta2, etc. we will deploy a release build.
+    tag: /[0-9]+(\.[0-9]+)*(-beta[0-9]*)?/
     owner: tangrams
     commands:
       # Build the framework in release mode and package it into pod.zip
