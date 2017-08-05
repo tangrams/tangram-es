@@ -94,20 +94,12 @@ bool SceneLoader::applyUpdates(const std::shared_ptr<Platform>& platform, Scene&
         }
 
         if (value) {
-            try {
-                // Dummy node to trigger YAML exception on YAML syntax errors
-                auto parse = YAML::Load(update.path);
-                Node node = YamlPath(update.path).get(root);
-
-                if (node && node.Scalar().empty() && node != root) {
-                    scene.errors.push_back({update, Error::scene_update_path_not_found});
-                    return false;
-                } else {
-                    node = value;
-                }
-            } catch(const YAML::Exception& e) {
-                LOGE("Parsing scene update string failed. %s '%s'", update.path.c_str(), e.what());
-                scene.errors.push_back({update, Error::scene_update_path_yaml_syntax_error});
+            Node node;
+            bool pathIsValid = YamlPath(update.path).get(root, node);
+            if (pathIsValid) {
+                node = value;
+            } else {
+                scene.errors.push_back({update, Error::scene_update_path_not_found});
                 return false;
             }
         }
@@ -169,9 +161,10 @@ void SceneLoader::applyGlobals(Node root, Scene& scene) {
     }
 
     for (auto& globalRef : scene.globalRefs()) {
-        auto target = globalRef.first.get(root);
-        auto global = globalRef.second.get(globals);
-        if (target && global) {
+        Node target, global;
+        bool targetPathIsValid = globalRef.first.get(root, target);
+        bool globalPathIsValid = globalRef.second.get(globals, global);
+        if (targetPathIsValid && globalPathIsValid && target.IsDefined() && global.IsDefined()) {
             target = global;
         } else {
             LOGW("Global reference is undefined: %s <= %s",

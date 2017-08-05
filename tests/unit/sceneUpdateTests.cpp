@@ -226,16 +226,23 @@ TEST_CASE("Scene update statuses") {
     CHECK(scene.errors.front().error == Error::scene_update_value_yaml_syntax_error);
     scene.errors.clear();
 
-    updates = {{"!map#0", "first_value"}};
+    updates = {{"someKey.somePath", "someValue"}};
     CHECK(SceneLoader::applyUpdates(platform_mock, scene, updates) == false);
-    CHECK(scene.errors.front().error == Error::scene_update_path_yaml_syntax_error);
+    CHECK(scene.errors.front().error == Error::scene_update_path_not_found);
     scene.errors.clear();
 
-    // Test was broken
-    // updates = {{"key_not_existing", "first_value"}};
-    // CHECK(SceneLoader::applyUpdates(platform_mock, scene, updates) == false);
-    // CHECK(scene.errors.front().error == Error::scene_update_path_not_found);
-    // scene.errors.clear();
+    updates = {{"map.a.map_a_value", "someValue"}};
+    CHECK(SceneLoader::applyUpdates(platform_mock, scene, updates) == false);
+    CHECK(scene.errors.front().error == Error::scene_update_path_not_found);
+    scene.errors.clear();
+
+    updates = {{"!map#0", "first_value"}};
+    CHECK(SceneLoader::applyUpdates(platform_mock, scene, updates) == false);
+    CHECK(scene.errors.front().error == Error::scene_update_path_not_found);
+    scene.errors.clear();
+
+    updates = {{"key_not_existing", "first_value"}};
+    CHECK(SceneLoader::applyUpdates(platform_mock, scene, updates) == true);
 
     updates = {{"!map#0", "{ first_value"}};
     CHECK(SceneLoader::applyUpdates(platform_mock, scene, updates) == false);
