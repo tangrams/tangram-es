@@ -1,8 +1,6 @@
 #include "glfwApp.h"
-#include "data/clientGeoJsonSource.h"
 #include "debug/textDisplay.h"
 #include <GLFW/glfw3.h>
-#include "log.h"
 #include <cstdlib>
 
 namespace Tangram {
@@ -129,7 +127,10 @@ void create(std::shared_ptr<Platform> p, int w, int h) {
     // Create a windowed mode window and its OpenGL context
     glfwWindowHint(GLFW_SAMPLES, 2);
     if (!main_window) {
-        main_window = glfwCreateWindow(width, height, "Tangram ES", NULL, NULL);
+        char versionString[256] = { 0 };
+        std::snprintf(versionString, sizeof(versionString), "Tangram ES %d.%d.%d",
+            TANGRAM_VERSION_MAJOR, TANGRAM_VERSION_MINOR, TANGRAM_VERSION_PATCH);
+        main_window = glfwCreateWindow(width, height, versionString, NULL, NULL);
     }
     if (!main_window) {
         glfwTerminate();
