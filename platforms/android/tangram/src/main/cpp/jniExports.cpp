@@ -12,10 +12,19 @@ extern "C" {
         map->setPosition(lon, lat);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetPositionEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble lon, jdouble lat, jfloat duration, jint ease) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetPositionEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble lon, jdouble lat, jfloat duration, jint ease, jobject cancelledCallbackPtr, jobject finishedCallbackPtr) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setPositionEased(lon, lat, duration, static_cast<Tangram::EaseType>(ease));
+
+        auto animationCancelledCallbackRef = jniEnv->NewGlobalRef(cancelledCallbackPtr);
+        auto animationFinishedCallbackRef = jniEnv->NewGlobalRef(finishedCallbackPtr);
+        map->setPositionEased(lon, lat, duration, static_cast<Tangram::EaseType>(ease),
+            [animationCancelledCallbackRef]() {
+                Tangram::animationCancelledCallback(animationCancelledCallbackRef);
+            },
+            [animationFinishedCallbackRef]() {
+                Tangram::animationFinishedCallback(animationFinishedCallbackRef);
+        });
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray lonLat) {
@@ -32,10 +41,19 @@ extern "C" {
         map->setZoom(zoom);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetZoomEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat zoom, jfloat duration, jint ease) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetZoomEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat zoom, jfloat duration, jint ease, jobject cancelledCallbackPtr, jobject finishedCallbackPtr) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setZoomEased(zoom, duration, static_cast<Tangram::EaseType>(ease));
+
+        auto animationCancelledCallbackRef = jniEnv->NewGlobalRef(cancelledCallbackPtr);
+        auto animationFinishedCallbackRef = jniEnv->NewGlobalRef(finishedCallbackPtr);
+        map->setZoomEased(zoom, duration, static_cast<Tangram::EaseType>(ease),
+            [animationCancelledCallbackRef]() {
+                Tangram::animationCancelledCallback(animationCancelledCallbackRef);
+            },
+            [animationFinishedCallbackRef]() {
+                Tangram::animationFinishedCallback(animationFinishedCallbackRef);
+        });
     }
 
     JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_nativeGetZoom(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
@@ -50,10 +68,19 @@ extern "C" {
         map->setRotation(radians);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetRotationEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat radians, jfloat duration, jint ease) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetRotationEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat radians, jfloat duration, jint ease, jobject cancelledCallbackPtr, jobject finishedCallbackPtr) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setRotationEased(radians, duration, static_cast<Tangram::EaseType>(ease));
+
+        auto animationCancelledCallbackRef = jniEnv->NewGlobalRef(cancelledCallbackPtr);
+        auto animationFinishedCallbackRef = jniEnv->NewGlobalRef(finishedCallbackPtr);
+        map->setRotationEased(radians, duration, static_cast<Tangram::EaseType>(ease),
+            [animationCancelledCallbackRef]() {
+                Tangram::animationCancelledCallback(animationCancelledCallbackRef);
+            },
+            [animationFinishedCallbackRef]() {
+                Tangram::animationFinishedCallback(animationFinishedCallbackRef);
+        });
     }
 
     JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_nativeGetRotation(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
@@ -68,16 +95,52 @@ extern "C" {
         map->setTilt(radians);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetTiltEased(JNIEnv* jniEnv, jobject obj,  jlong mapPtr, jfloat radians, jfloat duration, jint ease) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetTiltEased(JNIEnv* jniEnv, jobject obj,  jlong mapPtr, jfloat radians, jfloat duration, jint ease, jobject cancelledCallbackPtr, jobject finishedCallbackPtr) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setTiltEased(radians, duration, static_cast<Tangram::EaseType>(ease));
+
+        auto animationCancelledCallbackRef = jniEnv->NewGlobalRef(cancelledCallbackPtr);
+        auto animationFinishedCallbackRef = jniEnv->NewGlobalRef(finishedCallbackPtr);
+        map->setTiltEased(radians, duration, static_cast<Tangram::EaseType>(ease),
+            [animationCancelledCallbackRef]() {
+                Tangram::animationCancelledCallback(animationCancelledCallbackRef);
+            },
+            [animationFinishedCallbackRef]() {
+                Tangram::animationFinishedCallback(animationFinishedCallbackRef);
+        });
     }
 
     JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_nativeGetTilt(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         return map->getTilt();
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetPositionZoomRotationTilt(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble lon, jdouble lat, jfloat zoom, jfloat radiansRotation, jfloat radiansTilt) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        map->setPositionZoomRotationTilt(lon, lat, zoom, radiansRotation, radiansTilt);
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetPositionZoomRotationTiltEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble lon, jdouble lat, jfloat zoom, jfloat radiansRotation, jfloat radiansTilt, jfloat duration, jint ease, jobject cancelledCallbackPtr, jobject finishedCallbackPtr) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+
+        auto animationCancelledCallbackRef = jniEnv->NewGlobalRef(cancelledCallbackPtr);
+        auto animationFinishedCallbackRef = jniEnv->NewGlobalRef(finishedCallbackPtr);
+        map->setPositionZoomRotationTiltEased(lon, lat, zoom, radiansRotation, radiansTilt, duration, static_cast<Tangram::EaseType>(ease),
+            [animationCancelledCallbackRef]() {
+                Tangram::animationCancelledCallback(animationCancelledCallbackRef);
+            },
+            [animationFinishedCallbackRef]() {
+                Tangram::animationFinishedCallback(animationFinishedCallbackRef);
+        });
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeCancelEasing(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        map->clearEasing();
     }
 
     JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeScreenPositionToLngLat(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray coordinates) {

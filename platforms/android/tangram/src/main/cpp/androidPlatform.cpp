@@ -46,6 +46,8 @@ static jmethodID labelPickResultInitMID = 0;
 static jmethodID markerPickResultInitMID = 0;
 static jmethodID onSceneUpdateErrorMID = 0;
 static jmethodID sceneUpdateErrorInitMID = 0;
+static jmethodID onAnimationCancelledCallbackMID  =0;
+static jmethodID onAnimationFinishedCallbackMID = 0;
 
 static jclass labelPickResultClass = nullptr;
 static jclass sceneUpdateErrorClass = nullptr;
@@ -106,6 +108,12 @@ void setupJniEnv(JNIEnv* jniEnv) {
     sceneUpdateErrorInitMID = jniEnv->GetMethodID(sceneUpdateErrorClass, "<init>", "(Ljava/lang/String;Ljava/lang/String;I)V");
     jclass sceneUpdateErrorListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$SceneUpdateErrorListener");
     onSceneUpdateErrorMID = jniEnv->GetMethodID(sceneUpdateErrorListenerClass, "onSceneUpdateError", "(Lcom/mapzen/tangram/SceneUpdateError;)V");
+
+    jclass animationCancelledCallbackClass = jniEnv->FindClass("com/mapzen/tangram/MapController$AnimationCancelledCallback");
+    onAnimationCancelledCallbackMID = jniEnv->GetMethodID(animationCancelledCallbackClass, "onAnimationCancelledCallback", "()V");
+
+    jclass animationFinishedCallbackClass = jniEnv->FindClass("com/mapzen/tangram/MapController$AnimationFinishedCallback");
+    onAnimationFinishedCallbackMID = jniEnv->GetMethodID(animationFinishedCallbackClass, "onAnimationFinishedCallback", "()V");
 
     if (hashmapClass) {
         jniEnv->DeleteGlobalRef(hashmapClass);
@@ -376,6 +384,32 @@ void sceneUpdateErrorCallback(jobject updateCallbackRef, const SceneUpdateError&
 
     jniEnv->CallVoidMethod(updateCallbackRef, onSceneUpdateErrorMID, jUpdateErrorStatus);
     jniEnv->DeleteGlobalRef(updateCallbackRef);
+}
+
+void animationCancelledCallback(jobject animationCancelledCallbackRef) {
+
+    if (!animationCancelledCallbackRef) {
+        return;
+    }
+
+    JniThreadBinding jniEnv(jvm);
+
+    jniEnv->CallVoidMethod(animationCancelledCallbackRef, onAnimationCancelledCallbackMID);
+    jniEnv->DeleteGlobalRef(animationCancelledCallbackRef);
+
+}
+
+void animationFinishedCallback(jobject animationFinishedCallbackRef) {
+
+    if (!animationFinishedCallbackRef) {
+        return;
+    }
+
+    JniThreadBinding jniEnv(jvm);
+
+    jniEnv->CallVoidMethod(animationFinishedCallbackRef, onAnimationFinishedCallbackMID);
+    jniEnv->DeleteGlobalRef(animationFinishedCallbackRef);
+
 }
 
 void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult) {

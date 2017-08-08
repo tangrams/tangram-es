@@ -155,6 +155,17 @@ bool MBTilesDataSource::loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb
 
             getTileData(tileId, *task.rawTileData);
 
+            /*LOGW("first tile: %s, %d", tileId.toString().c_str(), task.rawTileData->size());
+
+            while (!task.hasData() && tileId.z > 0) {
+                tileId.x /= 2;
+                tileId.y /= 2;
+                tileId.z -= 1;
+
+                LOGW("fallback tile: %s, %d", tileId.toString().c_str(), task.rawTileData->size());
+                getTileData(tileId, *task.rawTileData);
+            }*/
+
             if (task.hasData()) {
                 LOGW("loaded tile: %s, %d", tileId.toString().c_str(), task.rawTileData->size());
 
