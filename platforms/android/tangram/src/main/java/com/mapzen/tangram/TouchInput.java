@@ -192,6 +192,11 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
     private RotateResponder rotateResponder;
     private ShoveResponder shoveResponder;
 
+    private boolean detectPanGesture;
+    private boolean detectScaleGesture;
+    private boolean detectRotateGesture;
+    private boolean detectShoveGesture;
+
     private EnumSet<Gestures> detectedGestures;
     private EnumMap<Gestures, EnumSet<Gestures>> allowedSimultaneousGestures;
 
@@ -202,6 +207,11 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
      * @param context A {@link Context} whose {@code Handler} will be used for deferred events
      */
     public TouchInput(Context context) {
+
+        this.detectPanGesture = true;
+        this.detectScaleGesture = true;
+        this.detectRotateGesture = true;
+        this.detectShoveGesture = true;
 
         this.panTapGestureDetector = new GestureDetector(context, this);
         this.scaleGestureDetector = new ScaleGestureDetector(context, this);
@@ -324,16 +334,56 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         }
     }
 
+    /**
+     * Set whether pan gesture will be detected
+     * @param detectPanGesture enabled/disabled
+     */
+    public void setDetectPanGesture(boolean detectPanGesture) {
+        this.detectPanGesture = detectPanGesture;
+    }
+
+    /**
+     * Set whether scale gesture will be detected
+     * @param detectScaleGesture enabled/disabled
+     */
+    public void setDetectScaleGesture(boolean detectScaleGesture) {
+        this.detectScaleGesture = detectScaleGesture;
+    }
+
+    /**
+     * Set whether rotate gesture will be detected
+     * @param detectRotateGesture enabled/disabled
+     */
+    public void setDetectRotateGesture(boolean detectRotateGesture) {
+        this.detectRotateGesture = detectRotateGesture;
+    }
+
+    /**
+     * Set whether shove gesture will be detected
+     * @param detectShoveGesture enabled/disabled
+     */
+    public void setDetectShoveGesture(boolean detectShoveGesture) {
+        this.detectShoveGesture = detectShoveGesture;
+    }
+
     // View.OnTouchListener implementation
     // ===================================
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
 
-        panTapGestureDetector.onTouchEvent(event);
-        scaleGestureDetector.onTouchEvent(event);
-        shoveGestureDetector.onTouchEvent(event);
-        rotateGestureDetector.onTouchEvent(event);
+        if (detectPanGesture) {
+            panTapGestureDetector.onTouchEvent(event);
+        }
+        if (detectScaleGesture) {
+            scaleGestureDetector.onTouchEvent(event);
+        }
+        if (detectRotateGesture) {
+            rotateGestureDetector.onTouchEvent(event);
+        }
+        if (detectShoveGesture) {
+            shoveGestureDetector.onTouchEvent(event);
+        }
 
         return true;
     }

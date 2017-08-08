@@ -319,6 +319,38 @@ public class MapController implements Renderer {
     }
 
     /**
+     * Set whether pan gesture will be detected
+     * @param detectPanGesture enabled/disabled
+     */
+    public void setDetectPanGesture(boolean detectPanGesture) {
+        touchInput.setDetectPanGesture(detectPanGesture);
+    }
+
+    /**
+     * Set whether scale gesture will be detected
+     * @param detectScaleGesture enabled/disabled
+     */
+    public void setDetectScaleGesture(boolean detectScaleGesture) {
+        touchInput.setDetectScaleGesture(detectScaleGesture);
+    }
+
+    /**
+     * Set whether rotate gesture will be detected
+     * @param detectRotateGesture enabled/disabled
+     */
+    public void setDetectRotateGesture(boolean detectRotateGesture) {
+        touchInput.setDetectRotateGesture(detectRotateGesture);
+    }
+
+    /**
+     * Set whether shove gesture will be detected
+     * @param detectShoveGesture enabled/disabled
+     */
+    public void setDetectShoveGesture(boolean detectShoveGesture) {
+        touchInput.setDetectShoveGesture(detectShoveGesture);
+    }
+
+    /**
      * Set the geographic position of the center of the map view
      * @param position LngLat of the position to set
      */
