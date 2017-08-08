@@ -24,11 +24,11 @@ std::shared_ptr<Platform> platform;
 
 std::string sceneFile = "scene.yaml";
 std::string sceneYaml;
+std::string mapzenApiKey;
 
 std::string markerStylingPath = "layers.touch.point.draw.icons";
 std::string polylineStyle = "{ style: lines, interactive: true, color: red, width: 20px, order: 5000 }";
 
-std::string mapzenApiKey;
 
 GLFWwindow* main_window = nullptr;
 Tangram::Map* map = nullptr;
@@ -53,7 +53,7 @@ Tangram::MarkerID polyline = 0;
 
 bool keepRunning = true;
 
-void loadSceneFile(bool setPosition = false) {
+void loadSceneFile(bool setPosition) {
     std::vector<SceneUpdate> updates;
 
     if (!mapzenApiKey.empty()) {
