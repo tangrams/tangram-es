@@ -51,8 +51,6 @@ Tangram::MarkerID marker = 0;
 Tangram::MarkerID poiMarker = 0;
 Tangram::MarkerID polyline = 0;
 
-bool keepRunning = true;
-
 void loadSceneFile(bool setPosition) {
     std::vector<SceneUpdate> updates;
 
@@ -162,7 +160,7 @@ void run() {
     double lastTime = glfwGetTime();
 
     // Loop until the user closes the window
-    while (keepRunning && !glfwWindowShouldClose(main_window)) {
+    while (!glfwWindowShouldClose(main_window)) {
 
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
@@ -185,9 +183,9 @@ void run() {
 }
 
 void stop(int) {
-    if (keepRunning) {
+    if (!glfwWindowShouldClose(main_window)) {
         logMsg("shutdown\n");
-        keepRunning = false;
+        glfwSetWindowShouldClose(main_window, 1);
         glfwPostEmptyEvent();
     } else {
         logMsg("killed!\n");
