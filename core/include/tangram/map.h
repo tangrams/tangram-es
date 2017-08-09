@@ -348,6 +348,8 @@ public:
 
     std::shared_ptr<Platform>& getPlatform();
 
+    void enablePostProcess(bool _enable);
+
 private:
 
     class Impl;

@@ -54,6 +54,7 @@ Tangram::MarkerID poiMarker = 0;
 Tangram::MarkerID polyline = 0;
 
 bool keepRunning = true;
+bool postProcessOn = true;
 
 void loadSceneFile(bool setPosition = false) {
     std::vector<SceneUpdate> updates;
@@ -127,7 +128,7 @@ void create(std::shared_ptr<Platform> p, int w, int h) {
     }
 
     // Create a windowed mode window and its OpenGL context
-    glfwWindowHint(GLFW_SAMPLES, 2);
+    //glfwWindowHint(GLFW_SAMPLES, 2);
     if (!main_window) {
         main_window = glfwCreateWindow(width, height, "Tangram ES", NULL, NULL);
     }
@@ -364,6 +365,10 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
     if (action == GLFW_PRESS) {
         switch (key) {
+            case GLFW_KEY_0:
+                postProcessOn = !postProcessOn;
+                map->enablePostProcess(postProcessOn);
+                break;
             case GLFW_KEY_1:
                 Tangram::toggleDebugFlag(Tangram::DebugFlags::freeze_tiles);
                 break;
