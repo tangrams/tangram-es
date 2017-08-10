@@ -338,9 +338,9 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Delegates
 
 /// Assign a gesture recognizer delegate, may be `nil`, see `TGRecognizerDelegate` for more details
-@property (weak, nonatomic, nullable) id<TGRecognizerDelegate> gestureDelegate;
+@property (strong, nonatomic, nullable) id<TGRecognizerDelegate> gestureDelegate;
 /// Assign a map viw delegate, may be `nil`, see `TGMapViewDelegate` for more details
-@property (weak, nonatomic, nullable) id<TGMapViewDelegate> mapViewDelegate;
+@property (strong, nonatomic, nullable) id<TGMapViewDelegate> mapViewDelegate;
 
 #pragma mark Camera/View modifiers
 
@@ -545,7 +545,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  If an error occurs while applying updates the new scene will not be applied.
  See `TGSceneUpdate` for details.
- 
+
  @param yaml YAML scene string.
  @param url The base URL used to resolve relative URLs in the scene.
  @param updates A list of `TGSceneUpdate` to apply to the scene.
