@@ -142,7 +142,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 - (Tangram::SceneReadyCallback)sceneReadyListener {
     return [=](int sceneID, auto sceneError) {
         [self.markersById removeAllObjects];
-        self.renderRequested = YES;
+        [self renderOnce];
 
         if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadScene:withError:)]) { return; }
 
