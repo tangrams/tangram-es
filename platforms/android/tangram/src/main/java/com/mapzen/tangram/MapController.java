@@ -1319,7 +1319,11 @@ public class MapController implements Renderer {
         httpHandler.onRequest(url, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                android.util.Log.e("Tangram", "Failed url request: " + url + " " + e.toString());
+                if (call.isCanceled()) {
+                    android.util.Log.d("Tangram", "Canceled URL request: " + url);
+                } else {
+                    android.util.Log.e("Tangram", "Failed URL request: " + url + " " + e.toString());
+                }
                 nativeOnUrlFailure(callbackPtr);
             }
 
