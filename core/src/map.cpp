@@ -504,15 +504,10 @@ void Map::render() {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
         for (const auto& style : impl->scene->styles()) {
-            style->onBeginDrawSelectionFrame(impl->renderState, impl->view, *(impl->scene));
 
-            for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                style->drawSelectionFrame(impl->renderState, *tile);
-            }
-
-            for (const auto& marker : impl->markerManager.markers()) {
-                style->drawSelectionFrame(impl->renderState, *marker);
-            }
+            style->drawSelectionFrame(impl->renderState, impl->view, *(impl->scene),
+                                      impl->tileManager.getVisibleTiles(),
+                                      impl->markerManager.markers());
         }
 
         std::vector<SelectionColorRead> colorCache;
