@@ -492,6 +492,11 @@ void Map::render() {
     // Run render-thread tasks
     impl->renderState.jobQueue.runJobs();
 
+
+    for (const auto& style : impl->scene->styles()) {
+        style->onBeginFrame(impl->renderState);
+    }
+
     // Render feature selection pass to offscreen framebuffer
     if (impl->selectionQueries.size() > 0 || drawSelectionBuffer) {
         impl->selectionBuffer->applyAsRenderTarget(impl->renderState);
@@ -529,10 +534,6 @@ void Map::render() {
         impl->selectionBuffer->drawDebug(impl->renderState, viewport);
         FrameInfo::draw(impl->renderState, impl->view, impl->tileManager);
         return;
-    }
-
-    for (const auto& style : impl->scene->styles()) {
-        style->onBeginFrame(impl->renderState);
     }
 
     {
