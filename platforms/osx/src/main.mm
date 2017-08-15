@@ -38,7 +38,7 @@ using namespace Tangram;
                                                       atIndex:1];
     apiKeyMenuItem.target = self;
 
-    NSMenuItem* editFileMenuItem = [appMenu insertItemWithTitle:@"Edit Scene"
+    NSMenuItem* editFileMenuItem = [appMenu insertItemWithTitle:@"Open Scene with Exernal Editor"
                                                          action:@selector(startFileEdit)
                                                   keyEquivalent:@"e"
                                                         atIndex:2];
@@ -101,7 +101,7 @@ using namespace Tangram;
 + (void)startFileEdit
 {
     NSString* file = [NSString stringWithUTF8String:GlfwApp::sceneFile.c_str()];
-    NSURL* url = [NSURL fileURLWithPath:file];
+    NSURL* url = [NSURL URLWithString:file relativeToURL:[[NSBundle mainBundle] resourceURL]];
     [[NSWorkspace sharedWorkspace] openURL:url];
 }
 
