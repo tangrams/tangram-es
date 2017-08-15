@@ -268,6 +268,10 @@ public:
                       const std::vector<std::shared_ptr<Tile>>& _tiles,
                       const std::vector<std::unique_ptr<Marker>>& _markers);
 
+    void drawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene,
+                            const std::vector<std::shared_ptr<Tile>>& _tiles,
+                            const std::vector<std::unique_ptr<Marker>>& _markers);
+
     void drawSelectionFrame(RenderState& rs, const Tile& _tile);
 
     void drawSelectionFrame(RenderState& _rs, const Marker& _marker);

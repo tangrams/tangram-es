@@ -297,6 +297,16 @@ void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) 
     }
 }
 
+void Style::drawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene,
+                               const std::vector<std::shared_ptr<Tile>>& _tiles,
+                               const std::vector<std::unique_ptr<Marker>>& _markers) {
+
+    onBeginDrawSelectionFrame(rs, _view, _scene);
+
+    for (const auto& tile : _tiles) { drawSelectionFrame(rs, *tile); }
+    for (const auto& marker : _markers) { drawSelectionFrame(rs, *marker); }
+}
+
 void Style::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) {
 
     if (!m_selection) {
@@ -373,8 +383,7 @@ void Style::drawSelectionFrame(Tangram::RenderState& rs, const Tangram::Tile &_t
 
 }
 
-void Style::draw(RenderState& rs,
-                 const View& _view, Scene& _scene,
+void Style::draw(RenderState& rs, const View& _view, Scene& _scene,
                  const std::vector<std::shared_ptr<Tile>>& _tiles,
                  const std::vector<std::unique_ptr<Marker>>& _markers) {
 
