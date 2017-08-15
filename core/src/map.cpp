@@ -541,18 +541,11 @@ void Map::render() {
         // Loop over all styles
         for (const auto& style : impl->scene->styles()) {
 
-            style->onBeginDrawFrame(impl->renderState, impl->view, *(impl->scene));
+            style->draw(impl->renderState,
+                        impl->view, *(impl->scene),
+                        impl->tileManager.getVisibleTiles(),
+                        impl->markerManager.markers());
 
-            // Loop over all tiles in m_tileSet
-            for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                style->draw(impl->renderState, *tile);
-            }
-
-            for (const auto& marker : impl->markerManager.markers()) {
-                style->draw(impl->renderState, *marker);
-            }
-
-            style->onEndDrawFrame();
         }
     }
 

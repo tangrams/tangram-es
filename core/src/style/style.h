@@ -148,6 +148,8 @@ protected:
 
     bool m_selection;
 
+    bool m_translucent = false;
+
 private:
 
     struct UniformBlock {
@@ -255,12 +257,16 @@ public:
     virtual void onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene);
 
     /* Perform any unsetup needed after drawing each frame */
-    virtual void onEndDrawFrame() {}
+    virtual void onEndDrawFrame(RenderState& rs, const View& _view, Scene& _scene) {}
 
     /* Draws the geometry associated with this <Style> */
     virtual void draw(RenderState& rs, const Tile& _tile);
 
     virtual void draw(RenderState& rs, const Marker& _marker);
+
+    virtual void draw(RenderState& rs, const View& _view, Scene& _scene,
+                      const std::vector<std::shared_ptr<Tile>>& _tiles,
+                      const std::vector<std::unique_ptr<Marker>>& _markers);
 
     void drawSelectionFrame(RenderState& rs, const Tile& _tile);
 
@@ -275,6 +281,8 @@ public:
     void setRasterType(RasterType _rasterType) { m_rasterType = _rasterType; }
 
     void setTexCoordsGeneration(bool _texCoordsGeneration) { m_texCoordsGeneration = _texCoordsGeneration; }
+
+    void setTranslucent(bool _translucent) { m_translucent = _translucent; }
 
     bool genTexCoords() const { return m_texCoordsGeneration; }
 

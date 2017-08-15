@@ -822,6 +822,11 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
         }
     }
 
+    if (Node blendOrderNode = styleNode["blend_translucent"]) {
+        auto translucent = blendOrderNode.as<bool>();
+        style.setTranslucent(translucent);
+    }
+
     if (Node texcoordsNode = styleNode["texcoords"]) {
         style.setTexCoordsGeneration(texcoordsNode.as<bool>());
     }

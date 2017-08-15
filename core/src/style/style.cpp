@@ -373,6 +373,38 @@ void Style::drawSelectionFrame(Tangram::RenderState& rs, const Tangram::Tile &_t
 
 }
 
+void Style::draw(RenderState& rs,
+                 const View& _view, Scene& _scene,
+                 const std::vector<std::shared_ptr<Tile>>& _tiles,
+                 const std::vector<std::unique_ptr<Marker>>& _markers) {
+
+    onBeginDrawFrame(rs, _view, _scene);
+
+    if (m_translucent) {
+
+        rs.colorMask(false, false, false, false);
+
+        rs.depthTest(GL_TRUE);
+        rs.depthMask(GL_TRUE);
+
+        for (const auto& tile : _tiles) { draw(rs, *tile); }
+        for (const auto& marker : _markers) { draw(rs, *marker); }
+
+        rs.colorMask(true, true, true, true);
+        GL::depthFunc(GL_EQUAL);
+    }
+
+    for (const auto& tile : _tiles) { draw(rs, *tile); }
+    for (const auto& marker : _markers) { draw(rs, *marker); }
+
+    onEndDrawFrame(rs, _view, _scene);
+
+    if (m_translucent) {
+        GL::depthFunc(GL_LESS);
+    }
+}
+
+
 void Style::draw(RenderState& rs, const Tile& _tile) {
 
     auto& styleMesh = _tile.getMesh(*this);
