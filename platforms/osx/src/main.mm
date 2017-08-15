@@ -15,6 +15,7 @@ using namespace Tangram;
 + (void)startApiKeyInput;
 + (void)startFileOpen;
 + (void)startFileEdit;
++ (void)startFileReload;
 + (NSString*) apiKeyDefaultsName;
 @end
 
@@ -50,6 +51,12 @@ using namespace Tangram;
                                                     keyEquivalent:@"o"
                                                           atIndex:3];
     sceneOpenMenuItem.target = self;
+
+    NSMenuItem* sceneReloadMenuItem = [appMenu insertItemWithTitle:@"Reload Scene"
+                                                             action:@selector(startFileReload)
+                                                      keyEquivalent:@"r"
+                                                            atIndex:4];
+    sceneReloadMenuItem.target = self;
 }
 
 + (void)startApiKeyInput
@@ -103,6 +110,11 @@ using namespace Tangram;
     NSString* file = [NSString stringWithUTF8String:GlfwApp::sceneFile.c_str()];
     NSURL* url = [NSURL URLWithString:file relativeToURL:[[NSBundle mainBundle] resourceURL]];
     [[NSWorkspace sharedWorkspace] openURL:url];
+}
+
++ (void)startFileReload
+{
+    GlfwApp::loadSceneFile();
 }
 
 + (NSString*)apiKeyDefaultsName
