@@ -387,6 +387,18 @@ void Style::draw(RenderState& rs, const View& _view, Scene& _scene,
                  const std::vector<std::shared_ptr<Tile>>& _tiles,
                  const std::vector<std::unique_ptr<Marker>>& _markers) {
 
+    auto tileIt = std::find_if(std::begin(_tiles), std::end(_tiles),
+                               [this](const auto& t){ return bool(t->getMesh(*this)); });
+
+    auto markerIt = std::find_if(std::begin(_markers), std::end(_markers),
+                               [this](const auto& m){ return m->styleId() == this->m_id && m->mesh(); });
+
+    // Skip when no mesh is to be rendered.
+    // This also compiles shaders when they are first used.
+    if (tileIt == std::end(_tiles) && markerIt == std::end(_markers)) {
+        return;
+    }
+
     onBeginDrawFrame(rs, _view, _scene);
 
     if (m_translucent) {
