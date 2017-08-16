@@ -228,12 +228,11 @@ bool iOSPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback
 
         if (error != nil) {
 
-            if (error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled) {
+            if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled) {
                 LOGD("Request cancelled: %s", [response.URL.absoluteString UTF8String]);
             } else {
                 LOGE("Response \"%s\" with error \"%s\".", response, [error.localizedDescription UTF8String]);
             }
-
 
         } else if (statusCode < 200 || statusCode >= 300) {
 
