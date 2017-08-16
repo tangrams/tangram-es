@@ -162,8 +162,8 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
 
         if (_bounds) {
             auto aabb = m_options.anchors.extents(m_dim);
-            aabb.min += position + m_options.offset;
-            aabb.max += position + m_options.offset;
+            aabb.min += position;
+            aabb.max += position;
             if (!aabb.intersect(*_bounds)) { return false; }
         }
 
