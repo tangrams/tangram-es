@@ -176,7 +176,7 @@ public:
     // (in seconds) is provided, position eases to the set value over the duration;
     // calling either version of the setter overrides all previous calls
     void setPosition(double _lon, double _lat);
-    void setPositionEased(double _lon, double _lat, float _duration, EaseType _e = EaseType::quint, EaseCancelCb cancelCb = nullptr, EaseFinishCb finishCb = nullptr);
+    void setPositionEased(double _lon, double _lat, float _duration, EaseType _e = EaseType::quint, EaseCancelCb _cancelCb = nullptr, EaseFinishCb _finishCb = nullptr);
 
     // Set the values of the arguments to the position of the map view in degrees
     // longitude and latitude
@@ -186,7 +186,7 @@ public:
     // zoom eases to the set value over the duration; calling either version of the setter
     // overrides all previous calls
     void setZoom(float _z);
-    void setZoomEased(float _z, float _duration, EaseType _e = EaseType::quint, EaseCancelCb cancelCb = nullptr, EaseFinishCb finishCb = nullptr);
+    void setZoomEased(float _z, float _duration, EaseType _e = EaseType::quint, EaseCancelCb _cancelCb = nullptr, EaseFinishCb _finishCb = nullptr);
 
     // Get the fractional zoom level of the view
     float getZoom();
@@ -196,7 +196,7 @@ public:
     // the set value over the duration; calling either version of the setter overrides
     // all previous calls
     void setRotation(float _radians);
-    void setRotationEased(float _radians, float _duration, EaseType _e = EaseType::quint, EaseCancelCb cancelCb = nullptr, EaseFinishCb finishCb = nullptr);
+    void setRotationEased(float _radians, float _duration, EaseType _e = EaseType::quint, EaseCancelCb _cancelCb = nullptr, EaseFinishCb _finishCb = nullptr);
 
     // Get the counter-clockwise rotation of the view in radians; 0 corresponds to
     // North pointing up
@@ -206,7 +206,7 @@ public:
     // if duration (in seconds) is provided, tilt eases to the set value over the
     // duration; calling either version of the setter overrides all previous calls
     void setTilt(float _radians);
-    void setTiltEased(float _radians, float _duration, EaseType _e = EaseType::quint, EaseCancelCb cancelCb = nullptr, EaseFinishCb finishCb = nullptr);
+    void setTiltEased(float _radians, float _duration, EaseType _e = EaseType::quint, EaseCancelCb _cancelCb = nullptr, EaseFinishCb _finishCb = nullptr);
 
     // Get the tilt angle of the view in radians; 0 corresponds to straight down
     float getTilt();
@@ -217,7 +217,7 @@ public:
     // Set the geographic position, zoom level, rotation, tilt angle
     // if duration (in seconds) is provided, tilt eases to the set value over the
     // duration; calling either version of the setter overrides all previous calls
-    void setPositionZoomRotationTiltEased(double& _lon, double& _lat, float _z, float _radiansRotation, float _radiansTilt, float _duration, EaseType _e = EaseType::quint, EaseCancelCb cancelCb = nullptr, EaseFinishCb finishCb = nullptr);
+    void setPositionZoomRotationTiltEased(double& _lon, double& _lat, float _z, float _radiansRotation, float _radiansTilt, float _duration, EaseType _e = EaseType::quint, EaseCancelCb _cancelCb = nullptr, EaseFinishCb _finishCb = nullptr);
 
     // Clear all easings
     void clearEasing();

@@ -46,8 +46,8 @@ static jmethodID labelPickResultInitMID = 0;
 static jmethodID markerPickResultInitMID = 0;
 static jmethodID onSceneUpdateErrorMID = 0;
 static jmethodID sceneUpdateErrorInitMID = 0;
-static jmethodID onAnimationCancelledCallbackMID  =0;
-static jmethodID onAnimationFinishedCallbackMID = 0;
+static jmethodID onEaseCancelCallbackMID = 0;
+static jmethodID onEaseFinishCallbackMID = 0;
 
 static jclass labelPickResultClass = nullptr;
 static jclass sceneUpdateErrorClass = nullptr;
@@ -109,11 +109,11 @@ void setupJniEnv(JNIEnv* jniEnv) {
     jclass sceneUpdateErrorListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$SceneUpdateErrorListener");
     onSceneUpdateErrorMID = jniEnv->GetMethodID(sceneUpdateErrorListenerClass, "onSceneUpdateError", "(Lcom/mapzen/tangram/SceneUpdateError;)V");
 
-    jclass animationCancelledCallbackClass = jniEnv->FindClass("com/mapzen/tangram/MapController$AnimationCancelledCallback");
-    onAnimationCancelledCallbackMID = jniEnv->GetMethodID(animationCancelledCallbackClass, "onAnimationCancelledCallback", "()V");
+    jclass easeCancelCallbackClass = jniEnv->FindClass("com/mapzen/tangram/MapController$EaseCancelCallback");
+    onEaseCancelCallbackMID = jniEnv->GetMethodID(easeCancelCallbackClass, "onEaseCancelCallback", "()V");
 
-    jclass animationFinishedCallbackClass = jniEnv->FindClass("com/mapzen/tangram/MapController$AnimationFinishedCallback");
-    onAnimationFinishedCallbackMID = jniEnv->GetMethodID(animationFinishedCallbackClass, "onAnimationFinishedCallback", "()V");
+    jclass easeFinishCallbackClass = jniEnv->FindClass("com/mapzen/tangram/MapController$EaseFinishCallback");
+    onEaseFinishCallbackMID = jniEnv->GetMethodID(easeFinishCallbackClass, "onEaseFinishCallback", "()V");
 
     if (hashmapClass) {
         jniEnv->DeleteGlobalRef(hashmapClass);
@@ -386,29 +386,29 @@ void sceneUpdateErrorCallback(jobject updateCallbackRef, const SceneUpdateError&
     jniEnv->DeleteGlobalRef(updateCallbackRef);
 }
 
-void animationCancelledCallback(jobject animationCancelledCallbackRef) {
+void easeCancelCallback(jobject easeCancelCallbackRef) {
 
-    if (!animationCancelledCallbackRef) {
+    if (!easeCancelCallbackRef) {
         return;
     }
 
     JniThreadBinding jniEnv(jvm);
 
-    jniEnv->CallVoidMethod(animationCancelledCallbackRef, onAnimationCancelledCallbackMID);
-    jniEnv->DeleteGlobalRef(animationCancelledCallbackRef);
+    jniEnv->CallVoidMethod(easeCancelCallbackRef, onEaseCancelCallbackMID);
+    jniEnv->DeleteGlobalRef(easeCancelCallbackRef);
 
 }
 
-void animationFinishedCallback(jobject animationFinishedCallbackRef) {
+void easeFinishCallback(jobject easeFinishCallbackRef) {
 
-    if (!animationFinishedCallbackRef) {
+    if (!easeFinishCallbackRef) {
         return;
     }
 
     JniThreadBinding jniEnv(jvm);
 
-    jniEnv->CallVoidMethod(animationFinishedCallbackRef, onAnimationFinishedCallbackMID);
-    jniEnv->DeleteGlobalRef(animationFinishedCallbackRef);
+    jniEnv->CallVoidMethod(easeFinishCallbackRef, onEaseFinishCallbackMID);
+    jniEnv->DeleteGlobalRef(easeFinishCallbackRef);
 
 }
 

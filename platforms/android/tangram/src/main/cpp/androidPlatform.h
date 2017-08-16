@@ -26,8 +26,8 @@ void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* fea
 void markerPickCallback(jobject listener, jobject tangramInstance, const Tangram::MarkerPickResult* markerPickResult);
 void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult);
 void sceneUpdateErrorCallback(jobject updateStatusCallbackRef, const SceneUpdateError& sceneUpdateErrorStatus);
-void animationCancelledCallback(jobject animationCancelledCallbackRef);
-void animationFinishedCallback(jobject animationFinishedCallbackRef);
+void easeCancelCallback(jobject easeCancelCallbackRef);
+void easeFinishCallback(jobject easeFinishCallbackRef);
 
 class AndroidPlatform : public Platform {
 

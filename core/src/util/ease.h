@@ -27,8 +27,8 @@ struct Ease {
     EaseCancelCb cancelCb;
     EaseFinishCb finishCb;
 
-    Ease() : t(0), d(0), cb([](float) {}), finishCb(nullptr) {}
-    Ease(float _duration, EaseCb _cb) : t(-1), d(_duration), cb(_cb), finishCb(nullptr) {}
+    Ease() : t(0), d(0), cb([](float) {}), cancelCb(nullptr), finishCb(nullptr) {}
+    Ease(float _duration, EaseCb _cb) : t(-1), d(_duration), cb(_cb), cancelCb(nullptr), finishCb(nullptr) {}
     Ease(float _duration, EaseCb _cb, EaseCancelCb _cancelCb, EaseFinishCb _finishCb) : t(-1), d(_duration), cb(_cb), cancelCb(_cancelCb), finishCb(_finishCb) {}
 
     bool finished() const { return t >= d; }

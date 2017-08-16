@@ -154,21 +154,21 @@ public class MapController implements Renderer {
     /**
      * Callback when animation was cancelled
      */
-    public interface AnimationCancelledCallback {
+    public interface EaseCancelCallback {
         /**
          * Called when animation was cancelled.
          */
-        void onAnimationCancelledCallback();
+        void onEaseCancelCallback();
     }
 
     /**
      * Callback when animation was finished
      */
-    public interface AnimationFinishedCallback {
+    public interface EaseFinishCallback {
         /**
          * Called when animation was finished.
          */
-        void onAnimationFinishedCallback();
+        void onEaseFinishCallback();
     }
 
     /**
@@ -374,10 +374,10 @@ public class MapController implements Renderer {
      * @param duration Time in milliseconds to ease to the given position
      * @param ease Type of easing to use
      */
-    public void setPositionEased(LngLat position, int duration, EaseType ease, AnimationCancelledCallback animationCancelledCallback, AnimationFinishedCallback finishedCallbackPtr) {
+    public void setPositionEased(LngLat position, int duration, EaseType ease, EaseCancelCallback easeCancelCallback, EaseFinishCallback finishedCallbackPtr) {
         float seconds = duration / 1000.f;
         checkPointer(mapPointer);
-        nativeSetPositionEased(mapPointer, position.longitude, position.latitude, seconds, ease.ordinal(), animationCancelledCallback, finishedCallbackPtr);
+        nativeSetPositionEased(mapPointer, position.longitude, position.latitude, seconds, ease.ordinal(), easeCancelCallback, finishedCallbackPtr);
     }
 
     /**
@@ -424,10 +424,10 @@ public class MapController implements Renderer {
      * @param duration Time in milliseconds to ease to given zoom
      * @param ease Type of easing to use
      */
-    public void setZoomEased(float zoom, int duration, EaseType ease, AnimationCancelledCallback animationCancelledCallback, AnimationFinishedCallback finishedCallbackPtr) {
+    public void setZoomEased(float zoom, int duration, EaseType ease, EaseCancelCallback easeCancelCallback, EaseFinishCallback finishedCallbackPtr) {
         float seconds = duration / 1000.f;
         checkPointer(mapPointer);
-        nativeSetZoomEased(mapPointer, zoom, seconds, ease.ordinal(), animationCancelledCallback, finishedCallbackPtr);
+        nativeSetZoomEased(mapPointer, zoom, seconds, ease.ordinal(), easeCancelCallback, finishedCallbackPtr);
     }
 
     /**
@@ -463,10 +463,10 @@ public class MapController implements Renderer {
      * @param duration Time in milliseconds to ease to the given rotation
      * @param ease Type of easing to use
      */
-    public void setRotationEased(float rotation, int duration, EaseType ease, AnimationCancelledCallback animationCancelledCallback, AnimationFinishedCallback finishedCallbackPtr) {
+    public void setRotationEased(float rotation, int duration, EaseType ease, EaseCancelCallback easeCancelCallback, EaseFinishCallback finishedCallbackPtr) {
         float seconds = duration / 1000.f;
         checkPointer(mapPointer);
-        nativeSetRotationEased(mapPointer, rotation, seconds, ease.ordinal(), animationCancelledCallback, finishedCallbackPtr);
+        nativeSetRotationEased(mapPointer, rotation, seconds, ease.ordinal(), easeCancelCallback, finishedCallbackPtr);
     }
 
     /**
@@ -502,10 +502,10 @@ public class MapController implements Renderer {
      * @param duration Time in milliseconds to ease to the given tilt
      * @param ease Type of easing to use
      */
-    public void setTiltEased(float tilt, int duration, EaseType ease, AnimationCancelledCallback animationCancelledCallback, AnimationFinishedCallback finishedCallbackPtr) {
+    public void setTiltEased(float tilt, int duration, EaseType ease, EaseCancelCallback easeCancelCallback, EaseFinishCallback finishedCallbackPtr) {
         float seconds = duration / 1000.f;
         checkPointer(mapPointer);
-        nativeSetTiltEased(mapPointer, tilt, seconds, ease.ordinal(), animationCancelledCallback, finishedCallbackPtr);
+        nativeSetTiltEased(mapPointer, tilt, seconds, ease.ordinal(), easeCancelCallback, finishedCallbackPtr);
     }
 
     /**
@@ -551,10 +551,10 @@ public class MapController implements Renderer {
      * @param duration Time in milliseconds to ease to the given tilt
      * @param ease Type of easing to use
      */
-    public void setPositionZoomRotationTiltEased(LngLat position, float zoom, float rotation, float tilt, int duration, EaseType ease, AnimationCancelledCallback animationCancelledCallback, AnimationFinishedCallback animationFinishedCallback) {
+    public void setPositionZoomRotationTiltEased(LngLat position, float zoom, float rotation, float tilt, int duration, EaseType ease, EaseCancelCallback easeCancelCallback, EaseFinishCallback easeFinishCallback) {
         float seconds = duration / 1000.f;
         checkPointer(mapPointer);
-        nativeSetPositionZoomRotationTiltEased(mapPointer, position.longitude, position.latitude, zoom, rotation, tilt, seconds, ease.ordinal(), animationCancelledCallback, animationFinishedCallback);
+        nativeSetPositionZoomRotationTiltEased(mapPointer, position.longitude, position.latitude, zoom, rotation, tilt, seconds, ease.ordinal(), easeCancelCallback, easeFinishCallback);
     }
 
     /**
@@ -1216,19 +1216,19 @@ public class MapController implements Renderer {
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
     private synchronized native void nativeRender(long mapPtr);
     private synchronized native void nativeSetPosition(long mapPtr, double lon, double lat);
-    private synchronized native void nativeSetPositionEased(long mapPtr, double lon, double lat, float seconds, int ease, AnimationCancelledCallback animationCancelledCallback, AnimationFinishedCallback finishedCallbackPtr);
+    private synchronized native void nativeSetPositionEased(long mapPtr, double lon, double lat, float seconds, int ease, EaseCancelCallback cancelCallback, EaseFinishCallback finishCallback);
     private synchronized native void nativeGetPosition(long mapPtr, double[] lonLatOut);
     private synchronized native void nativeSetZoom(long mapPtr, float zoom);
-    private synchronized native void nativeSetZoomEased(long mapPtr, float zoom, float seconds, int ease, AnimationCancelledCallback animationCancelledCallback, AnimationFinishedCallback finishedCallbackPtr);
+    private synchronized native void nativeSetZoomEased(long mapPtr, float zoom, float seconds, int ease, EaseCancelCallback cancelCallback, EaseFinishCallback finishCallback);
     private synchronized native float nativeGetZoom(long mapPtr);
     private synchronized native void nativeSetRotation(long mapPtr, float radians);
-    private synchronized native void nativeSetRotationEased(long mapPtr, float radians, float seconds, int ease, AnimationCancelledCallback animationCancelledCallback, AnimationFinishedCallback finishedCallbackPtr);
+    private synchronized native void nativeSetRotationEased(long mapPtr, float radians, float seconds, int ease, EaseCancelCallback cancelCallback, EaseFinishCallback finishCallback);
     private synchronized native float nativeGetRotation(long mapPtr);
     private synchronized native void nativeSetTilt(long mapPtr, float radians);
-    private synchronized native void nativeSetTiltEased(long mapPtr, float radians, float seconds, int ease, AnimationCancelledCallback animationCancelledCallback, AnimationFinishedCallback finishedCallbackPtr);
+    private synchronized native void nativeSetTiltEased(long mapPtr, float radians, float seconds, int ease, EaseCancelCallback cancelCallback, EaseFinishCallback finishCallback);
     private synchronized native float nativeGetTilt(long mapPtr);
     private synchronized native void nativeSetPositionZoomRotationTilt(long mapPtr, double lon, double lat, float zoom, float radiansZoom, float radiansRotation);
-    private synchronized native void nativeSetPositionZoomRotationTiltEased(long mapPtr, double lon, double lat, float zoom, float radiansZoom, float radiansRotation, float seconds, int ease, AnimationCancelledCallback animationCancelledCallback, AnimationFinishedCallback finishedCallbackPtr);
+    private synchronized native void nativeSetPositionZoomRotationTiltEased(long mapPtr, double lon, double lat, float zoom, float radiansZoom, float radiansRotation, float seconds, int ease, EaseCancelCallback cancelCallback, EaseFinishCallback finishCallback);
     private synchronized native void nativeCancelEasing(long mapPtr);
     private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);
     private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates);
