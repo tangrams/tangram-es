@@ -54,6 +54,8 @@ public:
     struct DataSource {
         virtual ~DataSource() {}
 
+        virtual TileID getFallbackTileID(const TileID& _tileID, int32_t _maxZoom, int32_t _zoomBias) = 0;
+
         virtual bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) = 0;
 
         /* Stops any running I/O tasks pertaining to @_tile */
@@ -86,6 +88,8 @@ public:
                ZoomOptions _zoomOptions = {});
 
     virtual ~TileSource();
+
+    TileID getFallbackTileID(const TileID& _tileID);
 
     /**
      * @return the mime-type of the DataSource.
