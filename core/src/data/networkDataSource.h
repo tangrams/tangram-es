@@ -12,6 +12,7 @@ public:
     NetworkDataSource(std::shared_ptr<Platform> _platform, const std::string& _urlTemplate,
             std::vector<std::string>&& _urlSubdomains, bool isTms);
 
+    TileID getFallbackTileID(const TileID& _tileID, int32_t _maxZoom, int32_t _zoomBias) override { return _tileID; }
     bool loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;
 
     void cancelLoadingTile(const TileID& _tile) override;
