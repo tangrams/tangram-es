@@ -62,9 +62,8 @@ textures:
 styles:
     heightglow:
         base: polygons
-        blend: overlay
+        blend: translucent
         blend_order: -2
-        blend_translucent: true
         lighting: vertex
         shaders:
             blocks:
@@ -72,7 +71,6 @@ styles:
     heightglowline:
         base: lines
         blend_order: -1
-        blend_translucent: true
         mix: heightglow
     icons:
         base: points

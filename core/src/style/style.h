@@ -43,6 +43,7 @@ enum class Blending : uint8_t {
     multiply,
     inlay,
     overlay,
+    translucent,
 };
 
 enum class RasterType : uint8_t {
@@ -147,8 +148,6 @@ protected:
     RasterType m_rasterType = RasterType::none;
 
     bool m_selection;
-
-    bool m_translucent = false;
 
 private:
 
@@ -285,8 +284,6 @@ public:
     void setRasterType(RasterType _rasterType) { m_rasterType = _rasterType; }
 
     void setTexCoordsGeneration(bool _texCoordsGeneration) { m_texCoordsGeneration = _texCoordsGeneration; }
-
-    void setTranslucent(bool _translucent) { m_translucent = _translucent; }
 
     bool genTexCoords() const { return m_texCoordsGeneration; }
 

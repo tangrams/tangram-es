@@ -292,6 +292,12 @@ void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) 
             rs.depthTest(GL_TRUE);
             rs.depthMask(GL_FALSE);
             break;
+        case Blending::translucent:
+            rs.blending(GL_TRUE);
+            rs.blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            rs.depthTest(GL_TRUE);
+            rs.depthMask(GL_TRUE);
+            break;
         default:
             break;
     }
@@ -322,6 +328,7 @@ void Style::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene&
         case Blending::opaque:
         case Blending::add:
         case Blending::multiply:
+        case Blending::translucent:
             rs.depthTest(GL_TRUE);
             rs.depthMask(GL_TRUE);
             break;
@@ -401,12 +408,9 @@ void Style::draw(RenderState& rs, const View& _view, Scene& _scene,
 
     onBeginDrawFrame(rs, _view, _scene);
 
-    if (m_translucent) {
+    if (m_blend == Blending::translucent) {
 
         rs.colorMask(false, false, false, false);
-
-        rs.depthTest(GL_TRUE);
-        rs.depthMask(GL_TRUE);
 
         for (const auto& tile : _tiles) { draw(rs, *tile); }
         for (const auto& marker : _markers) { draw(rs, *marker); }
@@ -420,7 +424,7 @@ void Style::draw(RenderState& rs, const View& _view, Scene& _scene,
 
     onEndDrawFrame(rs, _view, _scene);
 
-    if (m_translucent) {
+    if (m_blend == Blending::translucent) {
         GL::depthFunc(GL_LESS);
     }
 }

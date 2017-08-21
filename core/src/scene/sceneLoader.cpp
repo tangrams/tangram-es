@@ -805,11 +805,12 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
 
     if (Node blendNode = styleNode["blend"]) {
         const std::string& blendMode = blendNode.Scalar();
-        if      (blendMode == "opaque")   { style.setBlendMode(Blending::opaque); }
-        else if (blendMode == "add")      { style.setBlendMode(Blending::add); }
-        else if (blendMode == "multiply") { style.setBlendMode(Blending::multiply); }
-        else if (blendMode == "overlay")  { style.setBlendMode(Blending::overlay); }
-        else if (blendMode == "inlay")    { style.setBlendMode(Blending::inlay); }
+        if      (blendMode == "opaque")      { style.setBlendMode(Blending::opaque); }
+        else if (blendMode == "add")         { style.setBlendMode(Blending::add); }
+        else if (blendMode == "multiply")    { style.setBlendMode(Blending::multiply); }
+        else if (blendMode == "overlay")     { style.setBlendMode(Blending::overlay); }
+        else if (blendMode == "inlay")       { style.setBlendMode(Blending::inlay); }
+        else if (blendMode == "translucent") { style.setBlendMode(Blending::translucent); }
         else { LOGW("Invalid blend mode '%s'", blendMode.c_str()); }
     }
 
@@ -820,11 +821,6 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
         } catch (const BadConversion& e) {
             LOGE("Integral value expected for blend_order style parameter.\n");
         }
-    }
-
-    if (Node blendOrderNode = styleNode["blend_translucent"]) {
-        auto translucent = blendOrderNode.as<bool>();
-        style.setTranslucent(translucent);
     }
 
     if (Node texcoordsNode = styleNode["texcoords"]) {
