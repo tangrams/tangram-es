@@ -14,7 +14,7 @@ void onUrlFailure(JNIEnv* jniEnv, jlong jCallbackPtr);
 std::string stringFromJString(JNIEnv* jniEnv, jstring string);
 jstring jstringFromString(JNIEnv* jniEnv, const std::string& string);
 
-std::string resolveScenePath(const char* path);
+std::string resolveScenePath(const std::string& path);
 
 namespace Tangram {
 

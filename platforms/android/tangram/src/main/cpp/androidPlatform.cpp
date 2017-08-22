@@ -154,7 +154,7 @@ jstring jstringFromString(JNIEnv* jniEnv, const std::string& string) {
     return jniEnv->NewString(reinterpret_cast<const jchar*>(&chars[0]), chars.length());
 }
 
-std::string resolveScenePath(const char* path) {
+std::string resolveScenePath(const std::string& path) {
     // If the path is an absolute URL (like a file:// or http:// URL)
     // then resolving it will return the same URL. Otherwise, we resolve
     // it against the "asset" scheme to know later that this path is in
