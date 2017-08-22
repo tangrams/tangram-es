@@ -409,24 +409,23 @@ void Style::draw(RenderState& rs, const View& _view, Scene& _scene,
     onBeginDrawFrame(rs, _view, _scene);
 
     if (m_blend == Blending::translucent) {
-
         rs.colorMask(false, false, false, false);
-
-        for (const auto& tile : _tiles) { draw(rs, *tile); }
-        for (const auto& marker : _markers) { draw(rs, *marker); }
-
-        rs.colorMask(true, true, true, true);
-        GL::depthFunc(GL_EQUAL);
     }
 
     for (const auto& tile : _tiles) { draw(rs, *tile); }
     for (const auto& marker : _markers) { draw(rs, *marker); }
 
-    onEndDrawFrame(rs, _view, _scene);
-
     if (m_blend == Blending::translucent) {
+        rs.colorMask(true, true, true, true);
+        GL::depthFunc(GL_EQUAL);
+
+        for (const auto& tile : _tiles) { draw(rs, *tile); }
+        for (const auto& marker : _markers) { draw(rs, *marker); }
+
         GL::depthFunc(GL_LESS);
     }
+
+    onEndDrawFrame(rs, _view, _scene);
 }
 
 
