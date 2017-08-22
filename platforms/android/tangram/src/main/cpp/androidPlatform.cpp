@@ -20,6 +20,8 @@
 #include <libgen.h>
 #include <unistd.h>
 #include <sys/resource.h>
+#include <codecvt>
+#include <locale>
 
 #include "sqlite3ndk.h"
 
@@ -141,10 +143,15 @@ void onUrlFailure(JNIEnv* _jniEnv, jlong _jCallbackPtr) {
 }
 
 std::string stringFromJString(JNIEnv* jniEnv, jstring string) {
-    size_t length = jniEnv->GetStringLength(string);
-    std::string out(length, 0);
-    jniEnv->GetStringUTFRegion(string, 0, length, &out[0]);
-    return out;
+    auto length = jniEnv->GetStringLength(string);
+    std::u16string chars(length, char16_t());
+    jniEnv->GetStringRegion(string, 0, length, reinterpret_cast<jchar*>(&chars[0]));
+    return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().to_bytes(chars);
+}
+
+jstring jstringFromString(JNIEnv* jniEnv, const std::string& string) {
+    auto chars = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().from_bytes(string);
+    return jniEnv->NewString(reinterpret_cast<const jchar*>(&chars[0]), chars.length());
 }
 
 std::string resolveScenePath(const char* path) {
@@ -195,7 +202,7 @@ std::string AndroidPlatform::fontPath(const std::string& _family, const std::str
 
     std::string key = _family + "_" + _weight + "_" + _style;
 
-    jstring jkey = jniEnv->NewStringUTF(key.c_str());
+    jstring jkey = jstringFromString(jniEnv, key);
     jstring returnStr = (jstring) jniEnv->CallObjectMethod(m_tangramInstance, getFontFilePath, jkey);
 
     auto resultStr = stringFromJString(jniEnv, returnStr);
@@ -333,7 +340,7 @@ std::vector<char> AndroidPlatform::bytesFromFile(const char* _path) const {
 bool AndroidPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
 
     JniThreadBinding jniEnv(jvm);
-    jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
+    jstring jUrl = jstringFromString(jniEnv, _url);
 
     // This is probably super dangerous. In order to pass a reference to our callback we have to convert it
     // to a Java type. We allocate a new callback object and then reinterpret the pointer to it as a Java long.
@@ -350,7 +357,7 @@ bool AndroidPlatform::startUrlRequest(const std::string& _url, UrlCallback _call
 
 void AndroidPlatform::cancelUrlRequest(const std::string& _url) {
     JniThreadBinding jniEnv(jvm);
-    jstring jUrl = jniEnv->NewStringUTF(_url.c_str());
+    jstring jUrl = jstringFromString(jniEnv, _url);
     jniEnv->CallVoidMethod(m_tangramInstance, cancelUrlRequestMID, jUrl);
 }
 
@@ -376,8 +383,8 @@ void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPi
         jobject hashmap = jniEnv->NewObject(hashmapClass, hashmapInitMID);
 
         for (const auto& item : properties->items()) {
-            jstring jkey = jniEnv->NewStringUTF(item.key.c_str());
-            jstring jvalue = jniEnv->NewStringUTF(properties->asString(item.value).c_str());
+            jstring jkey = jstringFromString(jniEnv, item.key);
+            jstring jvalue = jstringFromString(jniEnv, properties->asString(item.value));
             jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
         }
 
@@ -431,8 +438,8 @@ void featurePickCallback(jobject listener, const Tangram::FeaturePickResult* fea
         position[1] = featurePickResult->position[1];
 
         for (const auto& item : properties->items()) {
-            jstring jkey = jniEnv->NewStringUTF(item.key.c_str());
-            jstring jvalue = jniEnv->NewStringUTF(properties->asString(item.value).c_str());
+            jstring jkey = jstringFromString(jniEnv, item.key);
+            jstring jvalue = jstringFromString(jniEnv, properties->asString(item.value));
             jniEnv->CallObjectMethod(hashmap, hashmapPutMID, jkey, jvalue);
         }
     }
@@ -462,8 +469,8 @@ void AndroidPlatform::sceneReadyCallback(SceneID id, const SceneError* sceneErro
     jobject jUpdateErrorStatus = 0;
 
     if (sceneError) {
-        jstring jUpdateStatusPath = jniEnv->NewStringUTF(sceneError->update.path.c_str());
-        jstring jUpdateStatusValue = jniEnv->NewStringUTF(sceneError->update.value.c_str());
+        jstring jUpdateStatusPath = jstringFromString(jniEnv, sceneError->update.path);
+        jstring jUpdateStatusValue = jstringFromString(jniEnv, sceneError->update.value);
         jint jError = (jint) sceneError->error;
         jobject jUpdateErrorStatus = jniEnv->NewObject(sceneErrorClass,
                                                        sceneErrorInitMID,
