@@ -31,7 +31,8 @@ android {
                  '-Wall',
                  '-Wignored-qualifiers',
                  '-Wtype-limits',
-                 '-Wmissing-field-initializers'
+                 '-Wmissing-field-initializers',
+                 '-Wno-format-pedantic'
 
         abiFilters 'armeabi-v7a'
       }
