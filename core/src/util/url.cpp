@@ -326,6 +326,9 @@ void Url::parse() {
     size_t start = 0;
     size_t end = buffer.size();
 
+    // Ensure that the buffer is not too large to describe in 16-bit part indicies.
+    assert(end == (uint16_t)end);
+
     // Parse the fragment.
     {
         // If there's a '#' in the string, the substring after it to the end is the fragment.
