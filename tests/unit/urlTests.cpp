@@ -232,6 +232,20 @@ TEST_CASE("Retrieve the file extension from a path string", "[Url]") {
 
 }
 
+TEST_CASE("Escape reserved characters in strings with %-encoding") {
+
+    CHECK(Url::escapeReservedCharacters("non-reserved") == "non-reserved");
+    CHECK(Url::escapeReservedCharacters("some reserved") == "some%20reserved");
+    CHECK(Url::escapeReservedCharacters("🍩") == "%F0%9F%8D%A9");
+    CHECK(Url::escapeReservedCharacters("도넛") == "%EB%8F%84%EB%84%9B");
+
+    CHECK(Url::unEscapeReservedCharacters("non-reserved") == "non-reserved");
+    CHECK(Url::unEscapeReservedCharacters("some%20reserved") == "some reserved");
+    CHECK(Url::unEscapeReservedCharacters("%F0%9F%8D%A9") == "🍩");
+    CHECK(Url::unEscapeReservedCharacters("%EB%8F%84%EB%84%9B") == "도넛");
+
+}
+
 // [1]:
 // Some of the examples for path resolution given in RFC 3986 don't produce the same result
 // in our implementation because the interpretation of the parameters string in RFC 3986 is

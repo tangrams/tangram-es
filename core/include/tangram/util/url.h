@@ -110,6 +110,19 @@ public:
     // e.g. getPathExtension("example.com/a/b/c.txt") == "txt"
     static std::string getPathExtension(const std::string& path);
 
+    // Returns true if the given character has a reserved purpose in URI syntax
+    // according to https://tools.ietf.org/html/rfc3986#section-2.3
+    static bool isReservedCharacter(unsigned char in);
+
+    // Returns a copy of the input with all reserved characters replaced with
+    // percent-encoded escape sequences, as described in
+    // https://tools.ietf.org/html/rfc3986#section-2.1
+    static std::string escapeReservedCharacters(const std::string& in);
+
+    // Returns a copy of the input with all percent-encoded escape sequences
+    // replaced with the corresponding UTF-8 characters.
+    static std::string unEscapeReservedCharacters(const std::string& in);
+
 private:
 
     // buffer contains the actual text of the URL.
