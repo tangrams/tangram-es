@@ -34,7 +34,7 @@ lights:
     light1:
         type: directional
         origin: world
-        direction: [1, 1, -1]
+        direction: &sun_direction [.2, .8, -1]
         diffuse: [.3, .3, .3, 1.]
         ambient: [0.7, 0.7, 0.7, 1.]
 
@@ -62,8 +62,8 @@ textures:
 styles:
     heightglow:
         base: polygons
-        blend: translucent
-        blend_order: -2
+        # blend: translucent
+        # blend_order: -2
         lighting: vertex
         shaders:
             blocks:
@@ -72,6 +72,19 @@ styles:
         base: lines
         blend_order: -1
         mix: heightglow
+    shadows:
+        base: polygons
+        blend: translucent
+        blend_order: -3
+        lighting: false
+        shaders:
+            uniforms:
+                u_light_direction: *sun_direction
+            blocks:
+                position: |
+                    vec3 L = normalize(u_light_direction);
+                    position.xy += (-position.z / L.z) * L.xy;
+                    position.z /= 50.0;
     icons:
         base: points
         texture: pois
@@ -420,13 +433,16 @@ layers:
             draw:
                 polygons:
                     extrude: function () { return feature.height > 20 || $zoom >= 16; }
-                    order: 1001
+                shadows:
+                    extrude: function () { return feature.height > 20 || $zoom >= 16; }
+                    color: [0.0, 0.0, 0.0, 0.15]
+                    order: global.feature_order
                 lines:
                     style: heightglowline
                     width: 2px
                     color: gray
                     # color: [.75, .75, .73]
-                    order: 1000
+                    # order: 1000
                     extrude: true
 
         high-line:
