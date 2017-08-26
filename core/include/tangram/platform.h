@@ -15,9 +15,11 @@ using FontSourceLoader = std::function<std::vector<char>()>;
 struct FontSourceHandle {
     FontSourceHandle(std::string _path) : path(_path) {}
     FontSourceHandle(FontSourceLoader _loader) : load(_loader) {}
+    FontSourceHandle() {}
 
     std::string path;
-    FontSourceLoader load;
+    FontSourceLoader load = nullptr;
+    bool isValid() { return !path.empty() || load; }
 };
 
 // Print a formatted message to the console
@@ -66,7 +68,7 @@ public:
     // Stop retrieving data from a URL that was previously requested
     virtual void cancelUrlRequest(const std::string& _url) = 0;
 
-    virtual std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const;
+    virtual FontSourceHandle systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const;
 
     virtual std::vector<FontSourceHandle> systemFontFallbacksHandle() const;
 

@@ -35,6 +35,9 @@ void FontContext::loadFonts() {
     }
 
     for (auto fallback : fallbacks) {
+
+        if (!fallback.isValid()) { continue; }
+
         alfons::InputSource source;
 
         if (fallback.path.empty()) {
@@ -335,21 +338,39 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
 
     // 2. System font
     if (fontData.size() == 0) {
-        fontData = m_platform->systemFont(_family, _weight, _style);
-    }
+        bool useFallbackFont = false;
 
-    if (fontData.size() == 0) {
-        LOGN("Could not load font file %s", FontDescription::BundleAlias(_family, _style, _weight).c_str());
+        auto systemFontHandle = m_platform->systemFont(_family, _weight, _style);
+        if (systemFontHandle.isValid()) {
+            alfons::InputSource source;
 
-        // 3. Add fallbacks from default font
-        if (m_font[sizeIndex]) {
-            font->addFaces(*m_font[sizeIndex]);
+            if (systemFontHandle.path.empty()) {
+                fontData = systemFontHandle.load();
+                if (fontData.size() > 0) {
+                    source = alfons::InputSource(systemFontHandle.load);
+                    font->addFace(m_alfons.addFontFace(source, fontSize));
+
+                    if (m_font[sizeIndex]) {
+                        font->addFaces(*m_font[sizeIndex]);
+                    }
+                } else {
+                    useFallbackFont = true;
+                }
+            } else {
+                // Not used right now
+                // TODO with applefonts
+            }
+        } else {
+            useFallbackFont = true;
         }
-    } else {
-        font->addFace(m_alfons.addFontFace(alfons::InputSource(std::move(fontData)), fontSize));
 
-        if (m_font[sizeIndex]) {
-            font->addFaces(*m_font[sizeIndex]);
+        if (useFallbackFont) {
+            LOGN("Could not load font file %s", FontDescription::BundleAlias(_family, _style, _weight).c_str());
+
+            // 3. Add fallbacks from default font
+            if (m_font[sizeIndex]) {
+                font->addFaces(*m_font[sizeIndex]);
+            }
         }
     }
 

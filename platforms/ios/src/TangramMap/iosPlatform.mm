@@ -150,7 +150,7 @@ std::vector<FontSourceHandle> iOSPlatform::systemFontFallbacksHandle() const {
     return handles;
 }
 
-std::vector<char> iOSPlatform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
+FontSourceHandle iOSPlatform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
     static std::map<int, CGFloat> weightTraits = {
         {100, UIFontWeightUltraLight},
         {200, UIFontWeightThin},
@@ -208,7 +208,7 @@ std::vector<char> iOSPlatform::systemFont(const std::string& _name, const std::s
         }
     }
 
-    return loadUIFont(font);
+    return FontSourceHandle([font]() { return loadUIFont(font); });
 }
 
 bool iOSPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {

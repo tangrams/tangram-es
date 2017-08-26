@@ -265,14 +265,14 @@ std::vector<FontSourceHandle> AndroidPlatform::systemFontFallbacksHandle() const
     return handles;
 }
 
-std::vector<char> AndroidPlatform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
+FontSourceHandle AndroidPlatform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
     std::string path = fontPath(_name, _weight, _face);
 
     if (path.empty()) { return {}; }
 
     auto data = bytesFromFile(path.c_str());
 
-    return data;
+    return FontSourceHandle([data]() { return data; });
 }
 
 void AndroidPlatform::setContinuousRendering(bool _isContinuous) {
@@ -461,7 +461,7 @@ void initGLExtensions() {
 
     glExtensionsLoaded = true;
 }
-    
+
 void AndroidPlatform::sceneReadyCallback(SceneID id, const SceneError* sceneError) {
 
     JniThreadBinding jniEnv(jvm);

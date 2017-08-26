@@ -154,7 +154,7 @@ std::vector<FontSourceHandle> OSXPlatform::systemFontFallbacksHandle() const {
     return handles;
 }
 
-std::vector<char> OSXPlatform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
+FontSourceHandle OSXPlatform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
     static std::map<int, CGFloat> weightTraits = {
         {100, NSFontWeightUltraLight},
         {100, NSFontWeightUltraLight},
@@ -212,7 +212,7 @@ std::vector<char> OSXPlatform::systemFont(const std::string& _name, const std::s
         }
     }
 
-    return loadNSFont(font);
+    return FontSourceHandle([font]() { return loadNSFont(font); });
 }
 
 bool OSXPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
