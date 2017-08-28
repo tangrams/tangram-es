@@ -419,9 +419,15 @@ void Style::draw(RenderState& rs, const View& _view, Scene& _scene,
         rs.colorMask(true, true, true, true);
         GL::depthFunc(GL_EQUAL);
 
+        GL::enable(GL_STENCIL_TEST);
+        GL::clear(GL_STENCIL_BUFFER_BIT);
+        GL::stencilFunc(GL_EQUAL, GL_ZERO, 0xFF);
+        GL::stencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+
         for (const auto& tile : _tiles) { draw(rs, *tile); }
         for (const auto& marker : _markers) { draw(rs, *marker); }
 
+        GL::disable(GL_STENCIL_TEST);
         GL::depthFunc(GL_LESS);
     }
 
