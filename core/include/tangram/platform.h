@@ -14,12 +14,14 @@ using FontSourceLoader = std::function<std::vector<char>()>;
 
 struct FontSourceHandle {
     FontSourceHandle(std::string _path) : path(_path) {}
+    FontSourceHandle(std::string _path, bool _appleFont) : path(_path), appleFont(_appleFont) {}
     FontSourceHandle(FontSourceLoader _loader) : load(_loader) {}
     FontSourceHandle() {}
 
     std::string path;
     FontSourceLoader load = nullptr;
-    bool isValid() { return !path.empty() || load; }
+    bool appleFont = false;
+    bool isValid() { return !path.empty() || load || appleFont; }
 };
 
 // Print a formatted message to the console

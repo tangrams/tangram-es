@@ -142,10 +142,11 @@ std::vector<FontSourceHandle> OSXPlatform::systemFontFallbacksHandle() const {
             NSString* fontName = familyFont[0];
             NSString* fontStyle = familyFont[1];
             if ( ![fontName containsString:@"-"] || [fontStyle isEqualToString:@"Regular"]) {
-                handles.emplace_back([fontName]() {
-                    auto data = loadNSFont([NSFont fontWithName:fontName size:1.0]);
-                    return data;
-                });
+                handles.emplace_back(fontName.UTF8String, true);
+                //handles.emplace_back([fontName]() {
+                    //auto data = loadNSFont([NSFont fontWithName:fontName size:1.0]);
+                    //return data;
+                //});
                 break;
             }
         }
@@ -212,7 +213,8 @@ FontSourceHandle OSXPlatform::systemFont(const std::string& _name, const std::st
         }
     }
 
-    return FontSourceHandle([font]() { return loadNSFont(font); });
+    //return FontSourceHandle([font]() { return loadNSFont(font); });
+    return FontSourceHandle(font.fontName.UTF8String, true);
 }
 
 bool OSXPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
