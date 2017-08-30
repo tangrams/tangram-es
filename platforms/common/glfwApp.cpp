@@ -133,6 +133,7 @@ void create(std::shared_ptr<Platform> p, int w, int h) {
 
     // Create a windowed mode window and its OpenGL context
     glfwWindowHint(GLFW_SAMPLES, 2);
+    glfwWindowHint(GLFW_STENCIL_BITS, 8);
     if (!main_window) {
         main_window = glfwCreateWindow(width, height, versionString, NULL, NULL);
     }

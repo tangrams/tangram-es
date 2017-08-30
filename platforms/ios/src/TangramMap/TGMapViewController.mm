@@ -868,7 +868,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
     view.drawableColorFormat = GLKViewDrawableColorFormatRGBA8888;
     view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
-    view.drawableStencilFormat = GLKViewDrawableStencilFormatNone;
+    view.drawableStencilFormat = GLKViewDrawableStencilFormat8;
     view.drawableMultisample = GLKViewDrawableMultisampleNone;
 
     self.contentScaleFactor = view.contentScaleFactor;

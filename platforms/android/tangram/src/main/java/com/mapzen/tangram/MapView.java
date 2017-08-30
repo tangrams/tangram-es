@@ -54,7 +54,7 @@ public class MapView extends FrameLayout {
         glSurfaceView = new GLSurfaceView(getContext());
         glSurfaceView.setEGLContextClientVersion(2);
         glSurfaceView.setPreserveEGLContextOnPause(true);
-        glSurfaceView.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 0, 16, 0));
+        glSurfaceView.setEGLConfigChooser(new ConfigChooser(8, 8, 8, 0, 16, 8));
         addView(glSurfaceView);
     }
 
