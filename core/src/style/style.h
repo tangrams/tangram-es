@@ -42,8 +42,8 @@ enum class Blending : uint8_t {
     add,
     multiply,
     inlay,
-    overlay,
     translucent,
+    overlay,
 };
 
 enum class RasterType : uint8_t {
