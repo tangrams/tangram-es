@@ -92,6 +92,9 @@ public:
     static void flipImageData(unsigned char *result, int w, int h, int depth);
     static void flipImageData(GLuint *result, int w, int h);
 
+    size_t bytesPerPixel();
+    size_t bufferSize();
+
 protected:
 
     void generate(RenderState& rs, GLuint _textureUnit);
@@ -116,8 +119,6 @@ protected:
     Disposer m_disposer;
 
 private:
-
-    size_t bytesPerPixel();
 
     bool m_generateMipmaps;
 };

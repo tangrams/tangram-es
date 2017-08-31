@@ -1,3 +1,6 @@
+global:
+    mapzen_api_key: ''
+
 sources:
     stamen-terrain:
         type: Raster
@@ -10,5 +13,5 @@ layers:
         data: { source: stamen-terrain }
         draw:
             raster:
-                color: [0.5, 0.5, 0.5]
+                #color: [0.8, 0.8, 0.8]
                 order: 0 # draw on bottom
