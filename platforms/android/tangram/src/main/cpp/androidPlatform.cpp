@@ -141,7 +141,7 @@ void onUrlFailure(JNIEnv* _jniEnv, jlong _jCallbackPtr) {
 }
 
 std::string stringFromJString(JNIEnv* jniEnv, jstring string) {
-    size_t length = jniEnv->GetStringLength(string);
+    size_t length = jniEnv->GetStringUTFLength(string);
     std::string out(length, 0);
     jniEnv->GetStringUTFRegion(string, 0, length, &out[0]);
     return out;
