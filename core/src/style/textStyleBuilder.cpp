@@ -553,7 +553,7 @@ TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
                                                   bool _iconText) const {
 
     const static std::string defaultWeight("400");
-    const static std::string defaultStyle("normal");
+    const static std::string defaultStyle("regular");
     const static std::string defaultFamily("default");
 
     TextStyle::Parameters p;

@@ -710,7 +710,7 @@ void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& 
         LOGW("");
         return;
     }
-    std::string style = "normal", weight = "400", uri;
+    std::string style = "regular", weight = "400", uri;
 
     for (const auto& fontDesc : node) {
         const std::string& key = fontDesc.first.Scalar();
