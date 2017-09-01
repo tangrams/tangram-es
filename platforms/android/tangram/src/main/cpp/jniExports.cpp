@@ -140,12 +140,10 @@ extern "C" {
     JNIEXPORT jint JNICALL Java_com_mapzen_tangram_MapController_nativeLoadScene(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring path, jobjectArray updateStrings) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        const char* cPath = jniEnv->GetStringUTFChars(path, NULL);
+        auto cPath = stringFromJString(jniEnv, path);
 
         auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
         jint sceneId = map->loadScene(resolveScenePath(cPath).c_str(), false, sceneUpdates);
-
-        jniEnv->ReleaseStringUTFChars(path, cPath);
 
         return sceneId;
     }
@@ -153,12 +151,10 @@ extern "C" {
     JNIEXPORT jint JNICALL Java_com_mapzen_tangram_MapController_nativeLoadSceneAsync(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring path, jobjectArray updateStrings) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        const char* cPath = jniEnv->GetStringUTFChars(path, NULL);
+        auto cPath = stringFromJString(jniEnv, path);
 
         auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
         jint sceneId = map->loadSceneAsync(resolveScenePath(cPath).c_str(), false, sceneUpdates);
-
-        jniEnv->ReleaseStringUTFChars(path, cPath);
 
         return sceneId;
 
@@ -168,14 +164,11 @@ extern "C" {
     JNIEXPORT jint JNICALL Java_com_mapzen_tangram_MapController_nativeLoadSceneYaml(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring yaml, jstring resourceRoot, jobjectArray updateStrings) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        const char* cYaml = jniEnv->GetStringUTFChars(yaml, NULL);
-        const char* cResourceRoot = jniEnv->GetStringUTFChars(resourceRoot, NULL);
+        auto cYaml = stringFromJString(jniEnv, yaml);
+        auto cResourceRoot = stringFromJString(jniEnv, resourceRoot);
 
         auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
         jint sceneId = map->loadSceneYaml(cYaml, resolveScenePath(cResourceRoot), false, sceneUpdates);
-
-        jniEnv->ReleaseStringUTFChars(yaml, cYaml);
-        jniEnv->ReleaseStringUTFChars(resourceRoot, cResourceRoot);
 
         return sceneId;
     }
@@ -183,14 +176,11 @@ extern "C" {
     JNIEXPORT jint JNICALL Java_com_mapzen_tangram_MapController_nativeLoadSceneYamlAsync(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jstring yaml, jstring resourceRoot, jobjectArray updateStrings) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        const char* cYaml = jniEnv->GetStringUTFChars(yaml, NULL);
-        const char* cResourceRoot = jniEnv->GetStringUTFChars(resourceRoot, NULL);
+        auto cYaml = stringFromJString(jniEnv, yaml);
+        auto cResourceRoot = stringFromJString(jniEnv, resourceRoot);
 
         auto sceneUpdates = unpackSceneUpdates(jniEnv, updateStrings);
         jint sceneId = map->loadSceneYamlAsync(cYaml, resolveScenePath(cResourceRoot), false, sceneUpdates);
-
-        jniEnv->ReleaseStringUTFChars(yaml, cYaml);
-        jniEnv->ReleaseStringUTFChars(resourceRoot, cResourceRoot);
 
         return sceneId;
     }
