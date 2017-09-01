@@ -316,7 +316,7 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
 
     // Pick the smallest font that does not scale down too much
     float fontSize = BASE_SIZE;
-    for (int i = 0; i < MAX_STEPS; i++) {
+    for (int i = 0; i < MAX_STEPS-1; i++) {
         sizeIndex = i;
 
         if (_size <= fontSize) { break; }
