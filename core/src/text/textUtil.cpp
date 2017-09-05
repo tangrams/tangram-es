@@ -24,8 +24,6 @@ float TextWrapper::getShapeRangeWidth(const alfons::LineLayout& _line) {
         lineWidth += _line.advance(shape);
 
         if (shape.mustBreak) {
-            lastShape = shapeCount;
-            lastChar = charCount;
             lastWidth = lineWidth;
 
             // Append shapes of current glyph cluster
@@ -34,6 +32,9 @@ float TextWrapper::getShapeRangeWidth(const alfons::LineLayout& _line) {
                 lineWidth += _line.advance(*it);
                 shapeCount++;
             }
+
+            lastChar = charCount;
+            lastShape = shapeCount;
 
             auto& endShape = _line.shapes()[lastShape-1];
 
