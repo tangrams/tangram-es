@@ -1,9 +1,12 @@
 #include "osxPlatform.h"
 #include "gl/hardware.h"
 #include "log.h"
+#include <map>
 
+#import "TGFontConverter.h"
 #import <cstdarg>
 #import <cstdio>
+#import <AppKit/AppKit.h>
 
 #define DEFAULT "fonts/NotoSans-Regular.ttf"
 #define FONT_AR "fonts/NotoNaskh-Regular.ttf"
@@ -93,16 +96,123 @@ std::string OSXPlatform::stringFromFile(const char* _path) const {
     return data;
 }
 
+std::vector<char> loadNSFont(NSFont* _font) {
+    if (!_font) {
+        return {};
+    }
+
+    CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)_font.fontName);
+
+    if (!fontRef) {
+        return {};
+    }
+
+    std::vector<char> data = [TGFontConverter fontDataForCGFont:fontRef];
+
+    CGFontRelease(fontRef);
+
+    if (data.empty()) {
+        LOG("CoreGraphics font failed to decode");
+    }
+
+    return data;
+}
+
+bool allowedFamily(NSString* familyName) {
+    const NSArray<NSString *> *allowedFamilyList = @[ @"Hebrew", @"Kohinoor", @"Gumurki", @"Thonburi", @"Tamil",
+                                                    @"Gurmukhi", @"Kailasa", @"Sangam", @"PingFang", @"Geeza",
+                                                    @"Mishafi", @"Farah", @"Hiragino", @"Gothic" ];
+
+    for (NSString* allowedFamily in allowedFamilyList) {
+        if ( [familyName containsString:allowedFamily] ) { return true; }
+    }
+    return false;
+}
+
 std::vector<FontSourceHandle> OSXPlatform::systemFontFallbacksHandle() const {
     std::vector<FontSourceHandle> handles;
 
-    handles.emplace_back(DEFAULT);
-    handles.emplace_back(FONT_AR);
-    handles.emplace_back(FONT_HE);
-    handles.emplace_back(FONT_JA);
-    handles.emplace_back(FALLBACK);
+    NSFontManager *manager = [NSFontManager sharedFontManager];
+    NSArray<NSString *> *fallbacks = [manager availableFontFamilies];
+
+    for (NSString* fallback in fallbacks) {
+        if (!allowedFamily(fallback)) { continue; }
+
+        for (NSArray* familyFont in [manager availableMembersOfFontFamily:fallback]) {
+            NSString* fontName = familyFont[0];
+            NSString* fontStyle = familyFont[1];
+            if ( ![fontName containsString:@"-"] || [fontStyle isEqualToString:@"Regular"]) {
+                handles.emplace_back([fontName]() {
+                    auto data = loadNSFont([NSFont fontWithName:fontName size:1.0]);
+                    return data;
+                });
+                break;
+            }
+        }
+    }
 
     return handles;
+}
+
+std::vector<char> OSXPlatform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
+    static std::map<int, CGFloat> weightTraits = {
+        {100, NSFontWeightUltraLight},
+        {100, NSFontWeightUltraLight},
+        {200, NSFontWeightThin},
+        {300, NSFontWeightLight},
+        {400, NSFontWeightRegular},
+        {500, NSFontWeightMedium},
+        {600, NSFontWeightSemibold},
+        {700, NSFontWeightBold},
+        {800, NSFontWeightHeavy},
+        {900, NSFontWeightBlack},
+    };
+
+    static std::map<std::string, NSFontSymbolicTraits> fontTraits = {
+        {"italic", NSFontItalicTrait},
+        {"bold", NSFontBoldTrait},
+        {"expanded", NSFontExpandedTrait},
+        {"condensed", NSFontCondensedTrait},
+        {"monospace", NSFontMonoSpaceTrait},
+    };
+
+    NSFont* font = [NSFont fontWithName:[NSString stringWithUTF8String:_name.c_str()] size:1.0];
+
+    if (font == nil) {
+        // Get the default system font
+        if (_weight.empty()) {
+            font = [NSFont systemFontSize:1.0];
+        } else {
+            int weight = atoi(_weight.c_str());
+
+            // Default to 400 boldness
+            weight = (weight == 0) ? 400 : weight;
+
+            // Map weight value to range [100..900]
+            weight = std::min(std::max(100, (int)floor(weight / 100.0 + 0.5) * 100), 900);
+
+            font = [NSFont systemFontOfSize:1.0 weight:weightTraits[weight]];
+        }
+    }
+
+    if (_face != "normal") {
+        NSFontSymbolicTraits traits;
+        NSFontDescriptor* descriptor = [font fontDescriptor];
+
+        auto it = fontTraits.find(_face);
+        if (it != fontTraits.end()) {
+            traits = it->second;
+
+            // Create a new descriptor with the symbolic traits
+            descriptor = [descriptor fontDescriptorWithSymbolicTraits:traits];
+
+            if (descriptor != nil) {
+                font = [NSFont fontWithDescriptor:descriptor size:1.0];
+            }
+        }
+    }
+
+    return loadNSFont(font);
 }
 
 bool OSXPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {

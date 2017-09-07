@@ -43,6 +43,7 @@ if(TANGRAM_APPLICATION)
     ${PROJECT_SOURCE_DIR}/platforms/common/glfwApp.cpp
     ${PROJECT_SOURCE_DIR}/platforms/osx/src/main.mm
     ${PROJECT_SOURCE_DIR}/platforms/osx/src/osxPlatform.mm
+    ${PROJECT_SOURCE_DIR}/platforms/common/TGFontConverter.mm
     )
 
   add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES} ${OSX_RESOURCES})

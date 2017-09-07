@@ -45,7 +45,7 @@ set(SOURCES
     ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/iosPlatform.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHelpers.mm
-    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGFontConverter.mm
+    ${PROJECT_SOURCE_DIR}/platforms/common/TGFontConverter.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGGeoPolyline.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGGeoPolygon.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHttpHandler.mm
@@ -79,7 +79,7 @@ set(HEADERS
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapData+Internal.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarker+Internal.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHelpers.h
-    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGFontConverter.h
+    ${PROJECT_SOURCE_DIR}/platforms/common/TGFontConverter.h
     ${FRAMEWORK_HEADERS})
 
 # add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes/fonts" "./fonts")
@@ -87,6 +87,7 @@ add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/platforms/ios/framework/Mo
 
 add_library(${FRAMEWORK_NAME} SHARED ${SOURCES} ${HEADERS} ${RESOURCES})
 target_link_libraries(${FRAMEWORK_NAME} ${CORE_LIBRARY})
+target_include_directories(${FRAMEWORK_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/platforms/common)
 
 # Link with SQLite, needed for MBTiles access.
 target_link_libraries(${FRAMEWORK_NAME} sqlite3)
