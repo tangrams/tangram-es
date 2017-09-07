@@ -3,7 +3,6 @@
 #include "log.h"
 #include <map>
 
-#import "TGFontConverter.h"
 #import <cstdarg>
 #import <cstdio>
 #import <AppKit/AppKit.h>
@@ -96,28 +95,6 @@ std::string OSXPlatform::stringFromFile(const char* _path) const {
     return data;
 }
 
-std::vector<char> loadNSFont(NSFont* _font) {
-    if (!_font) {
-        return {};
-    }
-
-    CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)_font.fontName);
-
-    if (!fontRef) {
-        return {};
-    }
-
-    std::vector<char> data = [TGFontConverter fontDataForCGFont:fontRef];
-
-    CGFontRelease(fontRef);
-
-    if (data.empty()) {
-        LOG("CoreGraphics font failed to decode");
-    }
-
-    return data;
-}
-
 bool allowedFamily(NSString* familyName) {
     const NSArray<NSString *> *allowedFamilyList = @[ @"Hebrew", @"Kohinoor", @"Gumurki", @"Thonburi", @"Tamil",
                                                     @"Gurmukhi", @"Kailasa", @"Sangam", @"PingFang", @"Geeza",
@@ -143,10 +120,6 @@ std::vector<FontSourceHandle> OSXPlatform::systemFontFallbacksHandle() const {
             NSString* fontStyle = familyFont[1];
             if ( ![fontName containsString:@"-"] || [fontStyle isEqualToString:@"Regular"]) {
                 handles.emplace_back(fontName.UTF8String, true);
-                //handles.emplace_back([fontName]() {
-                    //auto data = loadNSFont([NSFont fontWithName:fontName size:1.0]);
-                    //return data;
-                //});
                 break;
             }
         }
@@ -213,7 +186,6 @@ FontSourceHandle OSXPlatform::systemFont(const std::string& _name, const std::st
         }
     }
 
-    //return FontSourceHandle([font]() { return loadNSFont(font); });
     return FontSourceHandle(font.fontName.UTF8String, true);
 }
 
