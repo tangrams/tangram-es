@@ -87,6 +87,7 @@ add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/platforms/ios/framework/Mo
 
 add_library(${FRAMEWORK_NAME} SHARED ${SOURCES} ${HEADERS} ${RESOURCES})
 target_link_libraries(${FRAMEWORK_NAME} ${CORE_LIBRARY})
+target_include_directories(${FRAMEWORK_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/platforms/common)
 
 # Link with SQLite, needed for MBTiles access.
 target_link_libraries(${FRAMEWORK_NAME} sqlite3)
