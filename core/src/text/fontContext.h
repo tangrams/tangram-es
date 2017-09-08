@@ -49,13 +49,19 @@ struct FontDescription {
     }
 
     static std::string Alias(const std::string& family, const std::string& style, const std::string& weight) {
-        return family + "_" + weight + "_" + style;
+        return family + "_" + getNumericFontWeight(weight) + "_" + style;
     }
 
     static std::string BundleAlias(const std::string& family, const std::string& style, const std::string& weight) {
         // TODO: support .woff on bundle fonts
-        std::string alias = family + "-" + weight + style + ".ttf";
+        std::string alias = family + "-" + getNumericFontWeight(weight) + style + ".ttf";
         return alias;
+    }
+
+    static std::string getNumericFontWeight(const std::string& weight) {
+        if (weight == "normal") { return "400"; }
+        if (weight == "bold") { return "700"; }
+        return weight;
     }
 };
 
@@ -118,6 +124,8 @@ public:
     void releaseFonts();
 
 private:
+
+    static const std::vector<float> s_fontRasterSizes;
 
     float m_sdfRadius;
     ScratchBuffer m_scratch;

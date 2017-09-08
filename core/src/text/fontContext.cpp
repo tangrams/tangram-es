@@ -9,14 +9,13 @@
 #include <memory>
 #include <regex>
 
-#define BASE_SIZE 16
-#define STEP_SIZE 12
-#define MAX_STEPS 3
 #define SDF_WIDTH 6
 
 #define MIN_LINE_WIDTH 4
 
 namespace Tangram {
+
+const std::vector<float> FontContext::s_fontRasterSizes = { 16, 28, 40 };
 
 FontContext::FontContext(std::shared_ptr<const Platform> _platform) :
     m_sdfRadius(SDF_WIDTH),
@@ -31,8 +30,8 @@ void FontContext::setPixelScale(float _scale) {
 void FontContext::loadFonts() {
     auto fallbacks = m_platform->systemFontFallbacksHandle();
 
-    for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-        m_font[i] = m_alfons.addFont("default", size);
+    for (size_t i = 0; i < s_fontRasterSizes.size(); i++) {
+        m_font[i] = m_alfons.addFont("default", s_fontRasterSizes[i]);
     }
 
     for (auto fallback : fallbacks) {
@@ -44,8 +43,8 @@ void FontContext::loadFonts() {
             source = alfons::InputSource(fallback.path);
         }
 
-        for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-            m_font[i]->addFace(m_alfons.addFontFace(source, size));
+        for (size_t i = 0; i < s_fontRasterSizes.size(); i++) {
+            m_font[i]->addFace(m_alfons.addFontFace(source, s_fontRasterSizes[i]));
         }
     }
 }
@@ -269,9 +268,9 @@ void FontContext::addFont(const FontDescription& _ft, alfons::InputSource _sourc
     // NB: Synchronize for calls from download thread
     std::lock_guard<std::mutex> lock(m_fontMutex);
 
-    for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-        auto font = m_alfons.getFont(_ft.alias, size);
-        font->addFace(m_alfons.addFontFace(_source, size));
+    for (size_t i = 0; i < s_fontRasterSizes.size(); i++) {
+        auto font = m_alfons.getFont(_ft.alias, s_fontRasterSizes[i]);
+        font->addFace(m_alfons.addFontFace(_source, s_fontRasterSizes[i]));
 
         // add fallbacks from default font
         font->addFaces(*m_font[i]);
@@ -312,15 +311,14 @@ void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::
 std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, const std::string& _style,
                                                    const std::string& _weight, float _size) {
 
-    int sizeIndex = 0;
-
     // Pick the smallest font that does not scale down too much
-    float fontSize = BASE_SIZE;
-    for (int i = 0; i < MAX_STEPS; i++) {
-        sizeIndex = i;
+    float fontSize = s_fontRasterSizes.back();
+    size_t sizeIndex = s_fontRasterSizes.size() - 1;
 
-        if (_size <= fontSize) { break; }
-        fontSize += STEP_SIZE;
+    auto fontSizeItr = std::lower_bound(s_fontRasterSizes.begin(), s_fontRasterSizes.end(), _size);
+    if (fontSizeItr != s_fontRasterSizes.end()) {
+        fontSize = *fontSizeItr;
+        sizeIndex = fontSizeItr - s_fontRasterSizes.begin();
     }
 
     std::lock_guard<std::mutex> lock(m_fontMutex);
