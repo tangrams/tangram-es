@@ -758,7 +758,6 @@ bool isComplexShapingScript(const icu::UnicodeString& _text) {
     for (UChar c = iterator.first(); c != CharacterIterator::DONE; c = iterator.next()) {
         if (c >= u'\u0600' && c <= u'\u18AF') {
             if ((c <= u'\u06FF') ||                   // Arabic:     "\u0600-\u06FF"
-                (c >= u'\u1000' && c <= u'\u109F') || // Burmese:    "\u1000-\u109F"
                 (c >= u'\u1800' && c <= u'\u18AF')) { // Mongolian:  "\u1800-\u18AF"
                 return true;
             }
