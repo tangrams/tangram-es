@@ -1,3 +1,4 @@
+#include"appleAllowedFonts.h"
 #include "osxPlatform.h"
 #include "gl/hardware.h"
 #include "log.h"
@@ -93,17 +94,6 @@ std::string OSXPlatform::stringFromFile(const char* _path) const {
 
     data = Platform::stringFromFile([path UTF8String]);
     return data;
-}
-
-bool allowedFamily(NSString* familyName) {
-    const NSArray<NSString *> *allowedFamilyList = @[ @"Hebrew", @"Kohinoor", @"Gumurki", @"Thonburi", @"Tamil",
-                                                    @"Gurmukhi", @"Kailasa", @"Sangam", @"PingFang", @"Geeza",
-                                                    @"Mishafi", @"Farah", @"Hiragino", @"Gothic" ];
-
-    for (NSString* allowedFamily in allowedFamilyList) {
-        if ( [familyName containsString:allowedFamily] ) { return true; }
-    }
-    return false;
 }
 
 std::vector<FontSourceHandle> OSXPlatform::systemFontFallbacksHandle() const {

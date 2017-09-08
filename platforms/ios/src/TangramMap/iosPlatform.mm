@@ -4,6 +4,7 @@
 #import <cstdlib>
 #import <map>
 
+#import "appleAllowedFonts.h"
 #import "TGMapViewController.h"
 #import "TGHttpHandler.h"
 #import "iosPlatform.h"
@@ -90,17 +91,6 @@ std::string iOSPlatform::stringFromFile(const char* _path) const {
 
     data = Platform::stringFromFile([path UTF8String]);
     return data;
-}
-
-bool allowedFamily(NSString* familyName) {
-    const NSArray<NSString *> *allowedFamilyList = @[ @"Hebrew", @"Kohinoor", @"Gumurki", @"Thonburi", @"Tamil",
-                                                    @"Gurmukhi", @"Kailasa", @"Sangam", @"PingFang", @"Geeza",
-                                                    @"Mishafi", @"Farah", @"Hiragino", @"Gothic" ];
-
-    for (NSString* allowedFamily in allowedFamilyList) {
-        if ( [familyName containsString:allowedFamily] ) { return true; }
-    }
-    return false;
 }
 
 std::vector<FontSourceHandle> iOSPlatform::systemFontFallbacksHandle() const {
