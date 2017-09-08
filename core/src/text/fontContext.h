@@ -125,6 +125,8 @@ public:
 
 private:
 
+    static const std::vector<float> s_fontRasterSizes;
+
     float m_sdfRadius;
     ScratchBuffer m_scratch;
     std::vector<unsigned char> m_sdfBuffer;
