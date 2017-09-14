@@ -13,15 +13,15 @@ using UrlCallback = std::function<void(std::vector<char>&&)>;
 using FontSourceLoader = std::function<std::vector<char>()>;
 
 struct FontSourceHandle {
-    FontSourceHandle(std::string _path) : path(_path) {}
-    FontSourceHandle(std::string _path, bool _appleFont) : path(_path), appleFont(_appleFont) {}
+    FontSourceHandle(std::string _path) : pathOrFontName(_path) {}
+    FontSourceHandle(std::string _pathOrFontName, bool _isFontName) : pathOrFontName(_pathOrFontName), isFontName(_isFontName) {}
     FontSourceHandle(FontSourceLoader _loader) : load(_loader) {}
     FontSourceHandle() {}
 
-    std::string path;
+    std::string pathOrFontName;
     FontSourceLoader load = nullptr;
-    bool appleFont = false;
-    bool isValid() { return !path.empty() || load || appleFont; }
+    bool isFontName = false;
+    bool isValid() { return !pathOrFontName.empty() || load || isFontName; }
 };
 
 // Print a formatted message to the console

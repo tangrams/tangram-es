@@ -40,10 +40,10 @@ void FontContext::loadFonts() {
 
         alfons::InputSource source;
 
-        if (fallback.path.empty()) {
+        if (fallback.pathOrFontName.empty()) {
             source = alfons::InputSource(fallback.load);
         } else {
-            source = alfons::InputSource(fallback.path, fallback.appleFont);
+            source = alfons::InputSource(fallback.pathOrFontName, fallback.isFontName);
         }
 
         for (size_t i = 0; i < s_fontRasterSizes.size(); i++) {
@@ -344,7 +344,7 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
         if (systemFontHandle.isValid()) {
             alfons::InputSource source;
 
-            if (systemFontHandle.path.empty()) {
+            if (systemFontHandle.pathOrFontName.empty()) {
                 fontData = systemFontHandle.load();
                 if (fontData.size() > 0) {
                     source = alfons::InputSource(systemFontHandle.load);
@@ -356,7 +356,7 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
                     useFallbackFont = true;
                 }
             } else {
-                source = alfons::InputSource(systemFontHandle.path, systemFontHandle.appleFont);
+                source = alfons::InputSource(systemFontHandle.pathOrFontName, systemFontHandle.isFontName);
                 font->addFace(m_alfons.addFontFace(source, fontSize));
                 if (m_font[sizeIndex]) {
                     font->addFaces(*m_font[sizeIndex]);
