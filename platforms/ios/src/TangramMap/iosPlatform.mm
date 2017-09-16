@@ -1,6 +1,8 @@
 #import <UIKit/UIKit.h>
-#import <cstdio>
 #import <cstdarg>
+#import <cstdio>
+#import <cstdlib>
+#import <map>
 
 #import "TGMapViewController.h"
 #import "TGFontConverter.h"
@@ -226,7 +228,11 @@ bool iOSPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback
 
         if (error != nil) {
 
-            LOGE("Response \"%s\" with error \"%s\".", response, [error.localizedDescription UTF8String]);
+            if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled) {
+                LOGD("Request cancelled: %s", [response.URL.absoluteString UTF8String]);
+            } else {
+                LOGE("Response \"%s\" with error \"%s\".", response, [error.localizedDescription UTF8String]);
+            }
 
         } else if (statusCode < 200 || statusCode >= 300) {
 

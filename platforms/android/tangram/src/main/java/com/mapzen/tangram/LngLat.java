@@ -1,8 +1,11 @@
 package com.mapzen.tangram;
 
+import android.support.annotation.Keep;
+
 /**
  * {@code LngLat} represents a geographic coordinate with longitude and latitude.
  */
+@Keep
 public class LngLat {
 
     public double longitude; // Degrees longitude

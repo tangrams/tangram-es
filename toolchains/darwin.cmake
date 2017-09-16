@@ -17,6 +17,10 @@ if(TANGRAM_APPLICATION)
   get_mapzen_api_key(MAPZEN_API_KEY)
   add_definitions(-DMAPZEN_API_KEY="${MAPZEN_API_KEY}")
 
+  if($ENV{CIRCLE_BUILD_NUM})
+    add_definitions(-DBUILD_NUM_STRING="\($ENV{CIRCLE_BUILD_NUM}\)")
+  endif()
+
   find_package(OpenGL REQUIRED)
 
   # Build GLFW.
@@ -39,6 +43,7 @@ if(TANGRAM_APPLICATION)
     ${PROJECT_SOURCE_DIR}/platforms/common/glfwApp.cpp
     ${PROJECT_SOURCE_DIR}/platforms/osx/src/main.mm
     ${PROJECT_SOURCE_DIR}/platforms/osx/src/osxPlatform.mm
+    ${PROJECT_SOURCE_DIR}/platforms/common/TGFontConverter.mm
     )
 
   add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES} ${OSX_RESOURCES})

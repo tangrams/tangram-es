@@ -1,72 +1,167 @@
-#include <stdio.h>
-#include <fcntl.h>
-#include <assert.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/shm.h>
-
-#include <stdlib.h>
-#include <string.h>
-#include <termios.h>
-
-#include <curl/curl.h>
-#include <cstdlib>
-
 #include "context.h"
 #include "map.h"
-#include "platform_linux.h"
 #include "log.h"
+#include "rpiPlatform.h"
 
+#include <cassert>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 #include <iostream>
-#include "glm/trigonometric.hpp"
 
+#include <fcntl.h>
+#include <sys/time.h>
+#include <sys/shm.h>
+#include <termios.h>
 
-#define KEY_ESC      113    // q
-#define KEY_ZOOM_IN  45     // -
-#define KEY_ZOOM_OUT 61     // =
+#define KEY_ESC      27     // esc
+#define KEY_ZOOM_IN  61     // =
+#define KEY_ZOOM_OUT 45     // -
 #define KEY_UP       119    // w
 #define KEY_LEFT     97     // a
-#define KEY_RIGHT    115    // s
-#define KEY_DOWN     122    // z
+#define KEY_DOWN     115    // s
+#define KEY_RIGHT    100    // d
 
 using namespace Tangram;
 
-struct timeval tv;
-unsigned long long timePrev, timeStart;
-
 Map* map = nullptr;
-std::shared_ptr<LinuxPlatform> platform;
+std::shared_ptr<RpiPlatform> platform;
 
 std::string mapzenApiKey;
 
 static bool bUpdate = true;
 
-//==============================================================================
-void setup(int argc, char **argv);
-void newFrame();
+struct LaunchOptions {
+    std::string sceneFilePath = "scene.yaml";
+    double latitude = 0.0;
+    double longitude = 0.0;
+    int x = 0;
+    int y = 0;
+    int width = 0;
+    int height = 0;
+    float zoom = 0.0f;
+    float rotation = 0.0f;
+    float tilt = 0.0f;
+    bool hasLocationSet = false;
+};
 
-int main(int argc, char **argv){
+LaunchOptions getLaunchOptions(int argc, char **argv) {
+
+    LaunchOptions options;
+
+    for (int i = 1; i < argc - 1; i++) {
+        std::string argName = argv[i];
+        std::string argValue = argv[i + 1];
+        if (argName == "-s" || argName == "--scene") {
+            options.sceneFilePath = argValue;
+        } else if (argName == "-lat" || argName == "--latitude") {
+            options.latitude = std::stod(argValue);
+            options.hasLocationSet = true;
+        } else if (argName == "-lon" || argName == "--longitude") {
+            options.longitude = std::stod(argValue);
+            options.hasLocationSet = true;
+        } else if (argName == "-z" || argName == "--zoom" ) {
+            options.zoom = std::stof(argValue);
+            options.hasLocationSet = true;
+        } else if (argName == "-x" || argName == "--x_position") {
+            options.x = std::stoi(argValue);
+        } else if (argName == "-y" || argName == "--y_position") {
+            options.y = std::stoi(argValue);
+        } else if (argName == "-w" || argName == "--width") {
+            options.width = std::stoi(argValue);
+        } else if (argName == "-h" || argName == "--height") {
+            options.height = std::stoi(argValue);
+        } else if (argName == "-t" || argName == "--tilt") {
+            options.tilt = std::stof(argValue);
+        } else if (argName == "-r" || argName == "--rotation") {
+            options.rotation = std::stof(argValue);
+        }
+    }
+    return options;
+}
+
+struct Timer {
+    timeval start;
+
+    Timer() {
+        gettimeofday(&start, NULL);
+    }
+
+    // Get the time in seconds since delta was last called.
+    double deltaSeconds() {
+        timeval current;
+        gettimeofday(&current, NULL);
+        double delta = (double)(current.tv_sec - start.tv_sec) + (current.tv_usec - start.tv_usec) * 1.0E-6;
+        start = current;
+        return delta;
+    }
+};
+
+int main(int argc, char **argv) {
+
+    printf("Starting an interactive map window. Use keys to navigate:\n"
+           "\t'%c' = Pan up\n"
+           "\t'%c' = Pan left\n"
+           "\t'%c' = Pan down\n"
+           "\t'%c' = Pan right\n"
+           "\t'%c' = Zoom in\n"
+           "\t'%c' = Zoom out\n"
+           "\t'esc'= Exit\n"
+           "Press 'enter' to continue.",
+           KEY_UP, KEY_LEFT, KEY_DOWN, KEY_RIGHT, KEY_ZOOM_IN, KEY_ZOOM_OUT);
+
+    if (getchar() == -1) {
+        return 1;
+    }
+
+    LaunchOptions options = getLaunchOptions(argc, argv);
 
     UrlClient::Options urlClientOptions;
     urlClientOptions.numberOfThreads = 4;
 
-    platform = std::make_shared<LinuxPlatform>(urlClientOptions);
+    platform = std::make_shared<RpiPlatform>(urlClientOptions);
 
     // Start OpenGL context
-    initGL(argc, argv);
+    createSurface(options.x, options.y, options.width, options.height);
 
-    // Set background color and clear buffers
-    setup(argc, argv);
+    std::vector<SceneUpdate> updates;
+
+    // Get Mapzen API key from environment variables.
+    char* mapzenApiKeyEnvVar = getenv("MAPZEN_API_KEY");
+    if (mapzenApiKeyEnvVar && strlen(mapzenApiKeyEnvVar) > 0) {
+        mapzenApiKey = mapzenApiKeyEnvVar;
+        updates.push_back(SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey));
+    } else {
+        LOGW("No API key found!\n\nMapzen data sources require an API key. "
+             "Sign up for a free key at http://mapzen.com/developers and then set it from the command line with: "
+             "\n\n\texport MAPZEN_API_KEY=YOUR_KEY_HERE\n");
+    }
+
+    map = new Map(platform);
+    map->loadScene(options.sceneFilePath.c_str(), !options.hasLocationSet, updates);
+    map->setupGL();
+    map->resize(getWindowWidth(), getWindowHeight());
+    map->setTilt(options.tilt);
+    map->setRotation(options.rotation);
+
+    if (options.hasLocationSet) {
+        map->setPosition(options.longitude, options.latitude);
+        map->setZoom(options.zoom);
+    }
 
     // Start clock
-    gettimeofday(&tv, NULL);
-    timeStart = timePrev = (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000;
+    Timer timer;
 
     while (bUpdate) {
-        updateGL();
+        pollInput();
+        double dt = timer.deltaSeconds();
         if (getRenderRequest() || platform->isContinuousRendering() ) {
             setRenderRequest(false);
-            newFrame();
+            map->update(dt);
+            map->render();
+            swapSurface();
         }
     }
 
@@ -75,90 +170,8 @@ int main(int argc, char **argv){
         map = nullptr;
     }
 
-    closeGL();
+    destroySurface();
     return 0;
-}
-
-void setup(int argc, char **argv) {
-    int width = getWindowWidth();
-    int height = getWindowHeight();
-    float rot = 0.0f;
-    float zoom = 0.0f;
-    float tilt = 0.0f;
-    double lat = 0.0f;
-    double lon = 0.0f;
-    std::string scene = "scene.yaml";
-
-    for (int i = 1; i < argc - 1; i++) {
-        std::string argName(argv[i]), argValue(argv[i + 1]);
-        if (argName == "-s" || argName == "--scene") {
-            scene = argValue;
-        } else if (argName == "-lat" ) {
-            lat = std::stod(argValue);
-        } else if (argName == "-lon" ) {
-            lon = std::stod(argValue);
-        } else if (argName == "-z" || argName == "--zoom" ) {
-            zoom = std::stof(argValue);
-        } else if (argName == "-w" || argName == "--width") {
-            width = std::stoi(argValue);
-        } else if (argName == "-h" || argName == "--height") {
-            height = std::stoi(argValue);
-        } else if (argName == "-t" || argName == "--tilt") {
-            tilt = std::stof(argValue);
-        } else if (argName == "-r" || argName == "--rotation") {
-            rot = std::stof(argValue);
-        }
-    }
-
-    // Get Mapzen API key from environment variables.
-    char* mapzenApiKeyEnvVar = getenv("MAPZEN_API_KEY");
-    if (mapzenApiKeyEnvVar && strlen(mapzenApiKeyEnvVar) > 0) {
-        mapzenApiKey = mapzenApiKeyEnvVar;
-    } else {
-        LOGW("No API key found!\n\nMapzen data sources require an API key. "
-             "Sign up for a free key at http://mapzen.com/developers and then set it from the command line with: "
-             "\n\n\texport MAPZEN_API_KEY=YOUR_KEY_HERE\n");
-    }
-
-    map = new Map(platform);
-    if (mapzenApiKey.empty()) {
-        map->loadSceneAsync(scene.c_str(), false, {}, nullptr, {});
-    } else {
-        map->loadSceneAsync(scene.c_str(), false, {}, nullptr, {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
-    }
-
-    map->setupGL();
-    map->resize(width, height);
-    if (lon != 0.0f && lat != 0.0f) {
-        map->setPosition(lon,lat);
-    }
-    if (zoom != 0.0f) {
-        map->setZoom(zoom);
-    }
-    if (tilt != 0.0f) {
-        map->setTilt(glm::radians(tilt));
-    }
-    if (rot != 0.0f) {
-        map->setRotation(glm::radians(rot));
-    }
-}
-
-void newFrame() {
-
-    // Update
-    gettimeofday( &tv, NULL);
-    unsigned long long timeNow = (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000;
-    double delta = ((double)timeNow - (double)timePrev)*0.001;
-
-    //logMsg("New frame (delta %d msec)\n",delta);
-
-    map->update(delta);
-    timePrev = timeNow;
-
-    // Render
-    map->render();
-
-    renderGL();
 }
 
 //======================================================================= EVENTS
@@ -166,22 +179,22 @@ void newFrame() {
 void onKeyPress(int _key) {
     switch (_key) {
         case KEY_ZOOM_IN:
-            map->handlePinchGesture(0.0,0.0,0.5,0.0);
+            map->setZoom(map->getZoom() + 1.0f);
             break;
         case KEY_ZOOM_OUT:
-            map->handlePinchGesture(0.0,0.0,2.0,0.0);
+            map->setZoom(map->getZoom() - 1.0f);
             break;
         case KEY_UP:
-            map->handlePanGesture(0.0,0.0,0.0,100.0);
+            map->handlePanGesture(0.0, 0.0, 0.0, 100.0);
             break;
         case KEY_DOWN:
-            map->handlePanGesture(0.0,0.0,0.0,-100.0);
+            map->handlePanGesture(0.0, 0.0, 0.0, -100.0);
             break;
         case KEY_LEFT:
-            map->handlePanGesture(0.0,0.0,100.0,0.0);
+            map->handlePanGesture(0.0, 0.0, 100.0, 0.0);
             break;
         case KEY_RIGHT:
-            map->handlePanGesture(0.0,0.0,-100.0,0.0);
+            map->handlePanGesture(0.0, 0.0, -100.0, 0.0);
             break;
         case KEY_ESC:
             bUpdate = false;

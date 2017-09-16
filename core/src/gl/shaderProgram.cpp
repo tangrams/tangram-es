@@ -8,6 +8,8 @@
 #include "log.h"
 #include "platform.h"
 
+#include <sstream>
+
 namespace Tangram {
 
 ShaderProgram::ShaderProgram() {

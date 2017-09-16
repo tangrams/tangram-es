@@ -29,11 +29,17 @@ deployment:
       # Add the license file.
       - zip ${CIRCLE_ARTIFACTS}/pod.zip LICENSE
       # Upload the Cocoapods archive to S3.
-      - aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-snapshots/tangram-snapshot-${CIRCLE_BUILD_NUM}.zip
-      - aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-latest.zip
+      - aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-snapshots/tangram-snapshot-debug-${CIRCLE_BUILD_NUM}.zip
+      - aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-latest-debug.zip
+      # Build the MacOS demo app and package it into demo.zip
+      - make osx -j MACOSX_DEPLOYMENT_TARGET=10.10.0
+      - cd build/osx/bin && zip -r ${CIRCLE_ARTIFACTS}/demo.zip tangram.app
+      # Upload the demo archive to S3.
+      - aws s3 cp ${CIRCLE_ARTIFACTS}/demo.zip s3://ios.mapzen.com/tangram-osx-snapshots/tangram-snapshot-debug-${CIRCLE_BUILD_NUM}.zip
+      - aws s3 cp ${CIRCLE_ARTIFACTS}/demo.zip s3://ios.mapzen.com/tangram-osx-latest-debug.zip
   releases:
-    # For any tag of the form 1, 1.2, 1.2.3, etc. we will deploy a release build.
-    tag: /[0-9]+(\.[0-9]+)*/
+    # For any tag of the form 1, 1.2.3, 1.4-beta2, etc. we will deploy a release build.
+    tag: /[0-9]+(\.[0-9]+)*(-beta[0-9]*)?/
     owner: tangrams
     commands:
       # Build the framework in release mode and package it into pod.zip

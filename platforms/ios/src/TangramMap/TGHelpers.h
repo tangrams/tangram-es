@@ -12,8 +12,8 @@
 @interface TGHelpers : NSObject
 
 + (Tangram::EaseType)convertEaseTypeFrom:(TGEaseType)ease;
-+ (TGError)convertSceneUpdateErrorTypeFrom:(Tangram::Error)error;
-+ (NSError *)errorFromSceneUpdateError:(Tangram::SceneUpdateError)updateError;
++ (TGError)convertTGErrorTypeFrom:(Tangram::Error)error;
++ (NSError *)errorFromSceneError:(Tangram::SceneError)updateError;
 
 @end
 

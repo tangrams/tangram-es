@@ -23,20 +23,18 @@
     NSLog(@"Did capture screenshot");
 }
 
-- (void)mapView:(TGMapViewController *)mapView didFailSceneUpdateWithError:(NSError *)sceneUpdateError;
-{
-    NSLog(@"Scene update error for update with error %@", sceneUpdateError);
-}
-
 - (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView
 {
     NSLog(@"Did complete view");
     // [mapView captureScreenshot:YES];
 }
 
-- (void)mapView:(TGMapViewController *)mapView didLoadSceneAsync:(NSString *)scene
+- (void)mapView:(TGMapViewController *)mapView didLoadScene:(int)sceneID withError:(nullable NSError *)sceneError
 {
-    NSLog(@"Did load scene async %@", scene);
+    if (sceneError) {
+        NSLog(@"Scene Ready with error %@", sceneError);
+        return;
+    }
 
     TGGeoPoint newYork;
     newYork.longitude = -74.00976419448854;
@@ -192,7 +190,7 @@
     NSMutableArray<TGSceneUpdate *>* updates = [[NSMutableArray alloc]init];
     [updates addObject:[[TGSceneUpdate alloc]initWithPath:@"global.sdk_mapzen_api_key" value:apiKey]];
 
-    [super loadSceneFileAsync:@"https://tangrams.github.io/walkabout-style/walkabout-style.yaml" sceneUpdates:updates];
+    [super loadSceneAsyncFromURL:[NSURL URLWithString:@"https://tangrams.github.io/walkabout-style/walkabout-style.yaml"] withUpdates:updates];
 }
 
 - (void)viewDidLoad

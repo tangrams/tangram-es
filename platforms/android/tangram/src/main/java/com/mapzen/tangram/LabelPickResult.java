@@ -1,10 +1,13 @@
 package com.mapzen.tangram;
 
+import android.support.annotation.Keep;
+
 import java.util.Map;
 
 /**
  * {@code LabelPickResult} represents labels that can be selected on the screen
  */
+@Keep
 public class LabelPickResult {
 
     /**

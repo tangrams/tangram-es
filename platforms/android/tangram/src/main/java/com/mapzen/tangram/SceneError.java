@@ -1,18 +1,20 @@
 package com.mapzen.tangram;
 
+import android.support.annotation.Keep;
+
 import com.mapzen.tangram.MapController.Error;
 
 /**
- * {@code SceneUpdateError} Holds an error status and its associated scene updated
+ * {@code SceneError} Holds an error status and its associated scene updated
  */
-
-public class SceneUpdateError {
+@Keep
+public class SceneError {
 
 
     private SceneUpdate sceneUpdate;
     private Error error;
 
-    private SceneUpdateError(String sceneUpdatePath, String sceneUpdateValue, int error) {
+    private SceneError(String sceneUpdatePath, String sceneUpdateValue, int error) {
         this.sceneUpdate = new SceneUpdate(sceneUpdatePath, sceneUpdateValue);
         this.error = Error.values()[error];
     }

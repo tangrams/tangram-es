@@ -36,17 +36,27 @@
             return TGErrorSceneUpdatePathNotFound;
         case Tangram::Error::scene_update_value_yaml_syntax_error:
             return TGErrorSceneUpdateValueYAMLSyntaxError;
+        case Tangram::Error::no_valid_scene:
+            return TGErrorNoValidScene;
+        case Tangram::Error::none:
+            return TGErrorNone;
     }
 }
 
-+ (NSError *)errorFromSceneUpdateError:(Tangram::SceneUpdateError)updateError
++ (NSError *)errorFromSceneError:(Tangram::SceneError)updateError
 {
     NSString* path = [NSString stringWithUTF8String:updateError.update.path.c_str()];
     NSString* value = [NSString stringWithUTF8String:updateError.update.value.c_str()];
-    TGSceneUpdate* udpate = [[TGSceneUpdate alloc] initWithPath:path value:value];
+    TGSceneUpdate* update = [[TGSceneUpdate alloc] initWithPath:path value:value];
 
-    NSMutableDictionary* userInfo = [[NSMutableDictionary alloc] init];
-    [userInfo setObject:udpate forKey:@"TGUpdate"];
+    NSDictionary *userInfo = @{
+        NSLocalizedDescriptionKey: NSLocalizedString((
+            [NSString stringWithFormat:@"An error occured during Scene Update -> (%@: %@)", update.path, update.value]), nil),
+        NSLocalizedFailureReasonErrorKey: NSLocalizedString(
+            @"Possible bad yaml reference in the SceneUpdate object or within the scene", nil),
+        NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(
+            @"Try checking SceneUpdate path and value parameters, and making sure they conform to be valid yaml objects", nil),
+    };
 
     NSError* error = [NSError errorWithDomain:TGErrorDomain
                                          code:(NSInteger)updateError.error

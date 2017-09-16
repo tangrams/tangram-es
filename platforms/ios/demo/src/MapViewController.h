@@ -10,13 +10,12 @@
 
 @interface MapViewControllerDelegate : NSObject <TGMapViewDelegate>
 
-- (void)mapView:(TGMapViewController *)mapView didLoadSceneAsync:(NSString *)scene;
+- (void)mapView:(TGMapViewController *)mapView didLoadScene:(int)sceneID withError:(nullable NSError *)sceneError;
 - (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView;
 - (void)mapView:(TGMapViewController *)mapView didSelectFeature:(NSDictionary *)feature atScreenPosition:(CGPoint)position;
 - (void)mapView:(TGMapViewController *)mapView didSelectLabel:(TGLabelPickResult *)labelPickResult atScreenPosition:(CGPoint)position;
 - (void)mapView:(TGMapViewController *)mapView didSelectMarker:(TGMarkerPickResult *)markerPickResult atScreenPosition:(TGGeoPoint)position;
 - (void)mapView:(TGMapViewController *)view didCaptureScreenshot:(UIImage *)screenshot;
-- (void)mapView:(TGMapViewController *)mapView didFailSceneUpdateWithError:(NSError *)sceneUpdateError;
 
 @end
 

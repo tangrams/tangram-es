@@ -2,6 +2,7 @@ iOS
 ===
 
 The recommended way to use tangram-es in an iOS project is to add it as a CocoaPods dependency. The library is hosted in CocoaPods under the pod name 'Tangram-es'. To find the latest version, check CocoaPods: https://cocoapods.org/pods/Tangram-es.
+For convenience, we also provide Debug snapshots and Releases at [ios.mapzen.com](http://ios.mapzen.com/).
 
 ## Setup ##
 
@@ -35,6 +36,8 @@ make ios MAPZEN_API_KEY=mapzen-xxxx
 ```
 
 You can optionally append `DEBUG=1` or `RELEASE=1` to choose the build type.
+
+> Note: DEBUG version of the framework does not have bitcode enabled. If you need bitcode, make sure to get RELEASE version of the framework.
 
 This will generate an Xcode project that you can use to deploy on device or simulator:
 

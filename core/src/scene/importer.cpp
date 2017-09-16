@@ -12,42 +12,49 @@ using YAML::NodeType;
 
 namespace Tangram {
 
-std::atomic_uint Importer::progressCounter(0);
 
 Node Importer::applySceneImports(const std::shared_ptr<Platform>& platform,
-        std::shared_ptr<Scene>& scene) {
+                                 std::shared_ptr<Scene>& scene) {
 
     const Url& scenePath = scene->path();
     const Url& resourceRoot = scene->resourceRoot();
 
+    Url rootScenePath;
+
+    if (scenePath.isEmpty()) {
+        // Load scene from yaml string
+        rootScenePath = resourceRoot;
+        processScene(platform, scene, rootScenePath, scene->yaml());
+    } else {
+        // Load scene from yaml file
+        rootScenePath = scenePath.resolved(resourceRoot);
+        scene->createSceneAsset(platform, rootScenePath, Url(""), Url(""));
+        m_sceneQueue.push_back(rootScenePath);
+    }
+
+    std::atomic_uint activeDownloads(0);
+    std::mutex sceneMutex;
+    std::condition_variable condition;
     Url path;
-    Url rootScenePath = scenePath.resolved(resourceRoot);
-
-    // Asset fills the m_path of the yaml asset with the yaml file in the zip bundle
-    scene->createSceneAsset(platform, rootScenePath, Url(""), Url(""));
-
-    m_sceneQueue.push_back(rootScenePath);
-
 
     while (true) {
         {
             std::unique_lock<std::mutex> lock(sceneMutex);
 
-            m_condition.wait(lock, [&, this]{
+            condition.wait(lock, [&, this]{
                     if (m_sceneQueue.empty()) {
                         // Not busy at all?
-                        if (progressCounter == 0) { return true; }
+                        if (activeDownloads == 0) { return true; }
                     } else {
                         // More work and not completely busy?
-                        if (progressCounter < MAX_SCENE_DOWNLOAD) { return true; }
+                        if (activeDownloads < MAX_SCENE_DOWNLOAD) { return true; }
                     }
-
                     return false;
                 });
 
 
             if (m_sceneQueue.empty()) {
-                if (progressCounter == 0) {
+                if (activeDownloads == 0) {
                     break;
                 }
                 continue;
@@ -65,8 +72,9 @@ Node Importer::applySceneImports(const std::shared_ptr<Platform>& platform,
         assert(asset);
 
         if (path.hasHttpScheme() && !asset->zipHandle()) {
-            progressCounter++;
+            activeDownloads++;
             platform->startUrlRequest(path.string(), [&, isZipped, path](std::vector<char>&& rawData) {
+                // Running on download-thread
                 if (!rawData.empty()) {
                     std::unique_lock<std::mutex> lock(sceneMutex);
                     auto& asset = scene->assets()[path.string()];
@@ -78,8 +86,8 @@ Node Importer::applySceneImports(const std::shared_ptr<Platform>& platform,
                         processScene(platform, scene, path, std::string(rawData.data(), rawData.size()));
                     }
                 }
-                progressCounter--;
-                m_condition.notify_all();
+                activeDownloads--;
+                condition.notify_all();
             });
         } else {
             std::unique_lock<std::mutex> lock(sceneMutex);
@@ -97,7 +105,7 @@ Node Importer::applySceneImports(const std::shared_ptr<Platform>& platform,
 }
 
 void Importer::processScene(const std::shared_ptr<Platform>& platform, std::shared_ptr<Scene>& scene,
-        const Url& scenePath, const std::string &sceneString) {
+                            const Url& scenePath, const std::string &sceneString) {
 
     LOGD("Process: '%s'", scenePath.string().c_str());
 
@@ -113,7 +121,6 @@ void Importer::processScene(const std::shared_ptr<Platform>& platform, std::shar
 
         for (const auto& import : getResolvedImportUrls(platform, scene, sceneNode, scenePath)) {
             m_sceneQueue.push_back(import);
-            m_condition.notify_all();
         }
     } catch (YAML::ParserException e) {
         LOGE("Parsing scene config '%s'", e.what());
@@ -146,7 +153,8 @@ bool nodeIsTextureUrl(const Node& node, const Node& textures) {
     return true;
 }
 
-void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform, Scene& scene, Node& root, const Url& base) {
+void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform, Scene& scene,
+                                Node& root, const Url& base) {
 
     // Resolve global texture URLs.
     std::string relativeUrl = "";
@@ -269,14 +277,15 @@ void Importer::resolveSceneUrls(const std::shared_ptr<Platform>& platform, Scene
 }
 
 std::string Importer::getSceneString(const std::shared_ptr<Platform>& platform,
-        const Url& scenePath, const std::shared_ptr<Asset>& asset) {
+                                     const Url& scenePath, const std::shared_ptr<Asset>& asset) {
     if (!asset) { return "";}
 
     return asset->readStringFromAsset(platform);
 }
 
 std::vector<Url> Importer::getResolvedImportUrls(const std::shared_ptr<Platform>& platform,
-        std::shared_ptr<Scene>& scene, const Node& sceneNode, const Url& base) {
+                                                 std::shared_ptr<Scene>& scene,
+                                                 const Node& sceneNode, const Url& base) {
 
     std::vector<Url> scenePaths;
 
@@ -300,7 +309,8 @@ std::vector<Url> Importer::getResolvedImportUrls(const std::shared_ptr<Platform>
 }
 
 void Importer::importScenesRecursive(const std::shared_ptr<Platform>& platform,
-        std::shared_ptr<Scene>& scene, Node& root, const Url& scenePath, std::vector<Url>& sceneStack) {
+                                     std::shared_ptr<Scene>& scene, Node& root,
+                                     const Url& scenePath, std::vector<Url>& sceneStack) {
 
     LOGD("Starting importing Scene: %s", scenePath.string().c_str());
 

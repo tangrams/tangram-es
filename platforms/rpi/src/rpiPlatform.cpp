@@ -1,4 +1,4 @@
-#include "linuxPlatform.h"
+#include "rpiPlatform.h"
 #include "gl/hardware.h"
 #include "log.h"
 #include <stdio.h>
@@ -8,11 +8,7 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
-#if defined(TANGRAM_LINUX)
-#include <GLFW/glfw3.h>
-#elif defined(TANGRAM_RPI)
 #include "context.h"
-#endif
 
 #define DEFAULT "fonts/NotoSans-Regular.ttf"
 #define FONT_AR "fonts/NotoNaskh-Regular.ttf"
@@ -29,17 +25,17 @@ void logMsg(const char* fmt, ...) {
     va_end(args);
 }
 
-LinuxPlatform::LinuxPlatform() :
+RpiPlatform::RpiPlatform() :
     m_urlClient(UrlClient::Options{}) {}
 
-LinuxPlatform::LinuxPlatform(UrlClient::Options urlClientOptions) :
+RpiPlatform::RpiPlatform(UrlClient::Options urlClientOptions) :
     m_urlClient(urlClientOptions) {}
 
-void LinuxPlatform::requestRender() const {
-    glfwPostEmptyEvent();
+void RpiPlatform::requestRender() const {
+    setRenderRequest(true);
 }
 
-std::vector<FontSourceHandle> LinuxPlatform::systemFontFallbacksHandle() const {
+std::vector<FontSourceHandle> RpiPlatform::systemFontFallbacksHandle() const {
     std::vector<FontSourceHandle> handles;
 
     handles.emplace_back(DEFAULT);
@@ -51,23 +47,24 @@ std::vector<FontSourceHandle> LinuxPlatform::systemFontFallbacksHandle() const {
     return handles;
 }
 
-bool LinuxPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
+bool RpiPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
+
     return m_urlClient.addRequest(_url, _callback);
 }
 
-void LinuxPlatform::cancelUrlRequest(const std::string& _url) {
+void RpiPlatform::cancelUrlRequest(const std::string& _url) {
+
     m_urlClient.cancelRequest(_url);
 }
 
-LinuxPlatform::~LinuxPlatform() {}
+RpiPlatform::~RpiPlatform() {}
 
 void setCurrentThreadPriority(int priority) {
-    int tid = syscall(SYS_gettid);
-    setpriority(PRIO_PROCESS, tid, priority);
+    // no-op
 }
 
 void initGLExtensions() {
-    Tangram::Hardware::supportsMapBuffer = true;
+    // no-op
 }
 
 } // namespace Tangram

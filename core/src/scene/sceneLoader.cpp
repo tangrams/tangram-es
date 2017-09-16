@@ -55,7 +55,7 @@ static const std::string GLOBAL_PREFIX = "global.";
 std::mutex SceneLoader::m_textureMutex;
 
 bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::shared_ptr<Scene> _scene,
-                            const std::vector<SceneUpdate>& _updates, SceneUpdateErrorCallback _onSceneUpdateError) {
+                            const std::vector<SceneUpdate>& _updates) {
 
     Importer sceneImporter;
 
@@ -65,8 +65,9 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
         return false;
     }
 
-    if (!applyUpdates(_platform, *_scene, _updates, _onSceneUpdateError)) {
+    if (!applyUpdates(_platform, *_scene, _updates)) {
         LOGW("Scene updates failed when loading scene");
+        return false;
     }
 
     // Load font resources
@@ -78,47 +79,29 @@ bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::sha
 }
 
 bool SceneLoader::applyUpdates(const std::shared_ptr<Platform>& platform, Scene& scene,
-                               const std::vector<SceneUpdate>& updates, SceneUpdateErrorCallback onSceneUpdateError) {
+                               const std::vector<SceneUpdate>& updates) {
     auto& root = scene.config();
 
     for (const auto& update : updates) {
-        SceneUpdateError updateError;
-        bool hasError = false;
         Node value;
 
         try {
             value = YAML::Load(update.value);
-        } catch (YAML::ParserException e) {
+        } catch (const YAML::ParserException& e) {
             LOGE("Parsing scene update string failed. '%s'", e.what());
-            updateError = {update, Error::scene_update_value_yaml_syntax_error};
-            hasError = true;
-        }
-
-        if (!hasError && value) {
-            try {
-                // Dummy node to trigger YAML exception on YAML syntax errors
-                auto parse = YAML::Load(update.path);
-                Node node = YamlPath(update.path).get(root);
-
-                if (node && node.Scalar().empty() && node != root) {
-                    updateError = {update, Error::scene_update_path_not_found};
-                    hasError = true;
-                } else {
-                    node = value;
-                }
-            } catch(YAML::Exception e) {
-                LOGE("Parsing scene update string failed. %s '%s'", update.path.c_str(), e.what());
-                updateError = {update, Error::scene_update_path_yaml_syntax_error};
-                hasError = true;
-            }
-        }
-
-        if (hasError) {
-            if (onSceneUpdateError) {
-                onSceneUpdateError(updateError);
-            }
-
+            scene.errors.push_back({update, Error::scene_update_value_yaml_syntax_error});
             return false;
+        }
+
+        if (value) {
+            Node node;
+            bool pathIsValid = YamlPath(update.path).get(root, node);
+            if (pathIsValid) {
+                node = value;
+            } else {
+                scene.errors.push_back({update, Error::scene_update_path_not_found});
+                return false;
+            }
         }
     }
 
@@ -178,9 +161,10 @@ void SceneLoader::applyGlobals(Node root, Scene& scene) {
     }
 
     for (auto& globalRef : scene.globalRefs()) {
-        auto target = globalRef.first.get(root);
-        auto global = globalRef.second.get(globals);
-        if (target && global) {
+        Node target, global;
+        bool targetPathIsValid = globalRef.first.get(root, target);
+        bool globalPathIsValid = globalRef.second.get(globals, global);
+        if (targetPathIsValid && globalPathIsValid && target.IsDefined() && global.IsDefined()) {
             target = global;
         } else {
             LOGW("Global reference is undefined: %s <= %s",
@@ -726,7 +710,7 @@ void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& 
         LOGW("");
         return;
     }
-    std::string style = "normal", weight = "400", uri;
+    std::string style = "regular", weight = "400", uri;
 
     for (const auto& fontDesc : node) {
         const std::string& key = fontDesc.first.Scalar();
@@ -1066,6 +1050,11 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         isMBTilesFile = urlLength > extLength && (url.compare(urlLength - extLength, extLength, extStr) == 0);
     }
 
+    bool isTms = false;
+    if (auto tmsNode = source["tms"]) {
+        getBool(tmsNode, isTms);
+    }
+
     auto rawSources = std::make_unique<MemoryCacheDataSource>();
     rawSources->setCacheSize(CACHE_SIZE);
 
@@ -1075,7 +1064,7 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
         // Create an MBTiles data source from the file at the url and add it to the source chain.
         rawSources->setNext(std::make_unique<MBTilesDataSource>(platform, name, url, ""));
     } else if (tiled) {
-        rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url, std::move(subdomains)));
+        rawSources->setNext(std::make_unique<NetworkDataSource>(platform, url, std::move(subdomains), isTms));
     }
 
     std::shared_ptr<TileSource> sourcePtr;

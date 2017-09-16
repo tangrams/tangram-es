@@ -1,9 +1,9 @@
 #pragma once
 
-#include "debug/textDisplay.h"
 #include "platform.h"
 
 #include <atomic>
+#include <cstring>
 
 /*
  * Log utilities:
@@ -53,6 +53,3 @@ do { Tangram::logMsg("ERROR %s:%d: " fmt "\n", __FILENAME__, __LINE__, ## __VA_A
 #define LOG(fmt, ...)
 #define LOGN(fmt, ...)
 #endif
-
-#define LOGS(fmt, ...) \
-do { Tangram::TextDisplay::Instance().log(fmt, ## __VA_ARGS__); } while(0)

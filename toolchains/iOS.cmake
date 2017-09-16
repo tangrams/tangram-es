@@ -7,6 +7,15 @@ set(TANGRAM_FRAMEWORK ${PROJECT_SOURCE_DIR}/${TANGRAM_FRAMEWORK})
 set(EXECUTABLE_NAME "tangram")
 set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CFNetwork GLKit)
 
+# NB:cmake versions before 3.9.0 had an issue where the path specified for MACOSX_FRAMEWORK_LOCATION
+# was prepended by "../" when set to something other than "Resources" which is what we require here.
+# Refer: https://gitlab.kitware.com/cmake/cmake/issues/16680 for the actual cmake issue
+if(${CMAKE_VERSION} VERSION_LESS "3.9.0")
+    set(MACOSX_FRAMEWORK_LOCATION ${EXECUTABLE_NAME}.app/Frameworks)
+else()
+    set(MACOSX_FRAMEWORK_LOCATION Resources/Frameworks)
+endif()
+
 message(STATUS "Linking with Tangram Framework " ${TANGRAM_FRAMEWORK})
 message(STATUS "Building for architectures " ${ARCH})
 
@@ -37,7 +46,7 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
     RESOURCE "${IOS_DEMO_RESOURCES}")
 
 set_source_files_properties(${TANGRAM_FRAMEWORK} PROPERTIES
-    MACOSX_PACKAGE_LOCATION ${EXECUTABLE_NAME}.app/Frameworks)
+    MACOSX_PACKAGE_LOCATION ${MACOSX_FRAMEWORK_LOCATION})
 
 if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
     set_xcode_property(${EXECUTABLE_NAME} GCC_GENERATE_DEBUGGING_SYMBOLS YES)

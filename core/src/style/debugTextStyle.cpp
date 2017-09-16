@@ -55,7 +55,7 @@ std::unique_ptr<StyledMesh> DebugTextStyleBuilder::build() {
     params.text = m_tileID;
     params.fontSize = 30.f;
 
-    params.font = m_style.context()->getFont("sans-serif", "normal", "400", 32 * m_style.pixelScale());
+    params.font = m_style.context()->getFont("sans-serif", "regular", "400", 32 * m_style.pixelScale());
 
     TextStyleBuilder::LabelAttributes attrib;
     if (!prepareLabel(params, Label::Type::debug, attrib)) {

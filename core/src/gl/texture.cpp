@@ -285,6 +285,10 @@ bool Texture::isRepeatWrapping(TextureWrapping _wrapping) {
     return _wrapping.wraps == GL_REPEAT || _wrapping.wrapt == GL_REPEAT;
 }
 
+size_t Texture::bufferSize() {
+    return m_width * m_height * bytesPerPixel();
+}
+
 size_t Texture::bytesPerPixel() {
     switch (m_options.internalFormat) {
         case GL_ALPHA:

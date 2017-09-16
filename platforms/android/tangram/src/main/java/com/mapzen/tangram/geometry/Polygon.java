@@ -1,5 +1,7 @@
 package com.mapzen.tangram.geometry;
 
+import android.support.annotation.Keep;
+
 import com.mapzen.tangram.LngLat;
 
 import java.util.List;
@@ -8,6 +10,7 @@ import java.util.Map;
 /**
  * {@code Polygon} is a sequence of rings of LngLat points and its properties.
  */
+@Keep
 public class Polygon extends Geometry {
 
     public Polygon(List<List<LngLat>> polygon, Map<String, String> properties) {

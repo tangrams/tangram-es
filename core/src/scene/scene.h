@@ -17,6 +17,7 @@
 #include "yaml-cpp/yaml.h"
 #include "util/yamlHelper.h"
 
+#include "map.h" // SceneError
 
 namespace Tangram {
 
@@ -66,9 +67,14 @@ public:
         yes, no, none
     };
 
+    Scene();
     Scene(std::shared_ptr<const Platform> _platform, const std::string& _path = "");
-    Scene(const Scene& _other);
+    Scene(std::shared_ptr<const Platform> _platform, const std::string& _yaml, const std::string& _resourceRoot);
+    Scene(const Scene& _other) = delete;
+
     ~Scene();
+
+    void copyConfig(const Scene& _other);
 
     auto& camera() { return m_camera; }
 
@@ -91,6 +97,7 @@ public:
     Style* findStyle(const std::string& _name);
 
     const auto& path() const { return m_path; }
+    const auto& yaml() { return m_yaml; }
     const auto& resourceRoot() const { return m_resourceRoot; }
     const auto& config() const { return m_config; }
     const auto& tileSources() const { return m_tileSources; };
@@ -140,10 +147,14 @@ public:
     std::atomic_ushort pendingTextures{0};
     std::atomic_ushort pendingFonts{0};
 
+    std::vector<SceneError> errors;
+
 private:
 
     // The file path from which this scene was loaded
     std::string m_path;
+
+    std::string m_yaml;
 
     std::string m_resourceRoot;
 

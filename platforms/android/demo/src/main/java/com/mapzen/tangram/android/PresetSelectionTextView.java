@@ -1,6 +1,7 @@
 package com.mapzen.tangram.android;
 
 import android.content.Context;
+import android.support.annotation.Keep;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
@@ -17,6 +18,7 @@ import java.util.List;
 
 public class PresetSelectionTextView extends android.support.v7.widget.AppCompatAutoCompleteTextView {
 
+    @Keep
     public interface OnSelectionListener {
         void onSelection(String selection);
     }

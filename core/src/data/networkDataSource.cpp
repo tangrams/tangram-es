@@ -3,15 +3,18 @@
 #include "log.h"
 #include "platform.h"
 
+#include <algorithm>
+
 #define MAX_DOWNLOADS 4
 
 namespace Tangram {
 
 NetworkDataSource::NetworkDataSource(std::shared_ptr<Platform> _platform, const std::string& _urlTemplate,
-        std::vector<std::string>&& _urlSubdomains) :
+        std::vector<std::string>&& _urlSubdomains, bool isTms) :
     m_platform(_platform),
     m_urlTemplate(_urlTemplate),
     m_urlSubdomains(std::move(_urlSubdomains)),
+    m_isTms(isTms),
     m_maxDownloads(MAX_DOWNLOADS) {}
 
 std::string NetworkDataSource::constructURL(const TileID& _tileCoord, size_t _subdomainIndex) const {
@@ -23,7 +26,13 @@ std::string NetworkDataSource::constructURL(const TileID& _tileCoord, size_t _su
     }
     size_t yPos = url.find("{y}");
     if (yPos != std::string::npos) {
-        url.replace(yPos, 3, std::to_string(_tileCoord.y));
+        int y = _tileCoord.y;
+        int z = _tileCoord.z;
+        if (m_isTms) {
+            // Convert XYZ to TMS
+            y = (1 << z) - 1 - _tileCoord.y;
+        }
+        url.replace(yPos, 3, std::to_string(y));
     }
     size_t zPos = url.find("{z}");
     if (zPos != std::string::npos) {

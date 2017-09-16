@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.Window;
 import android.widget.Toast;
 
+import com.mapzen.tangram.CachePolicy;
 import com.mapzen.tangram.HttpHandler;
 import com.mapzen.tangram.LabelPickResult;
 import com.mapzen.tangram.LngLat;
@@ -14,15 +15,13 @@ import com.mapzen.tangram.MapController;
 import com.mapzen.tangram.MapController.FeaturePickListener;
 import com.mapzen.tangram.MapController.LabelPickListener;
 import com.mapzen.tangram.MapController.MarkerPickListener;
-import com.mapzen.tangram.MapController.SceneUpdateErrorListener;
 import com.mapzen.tangram.MapController.ViewCompleteListener;
 import com.mapzen.tangram.MapData;
 import com.mapzen.tangram.MapView;
-import com.mapzen.tangram.MapView.OnMapReadyCallback;
 import com.mapzen.tangram.Marker;
 import com.mapzen.tangram.MarkerPickResult;
+import com.mapzen.tangram.SceneError;
 import com.mapzen.tangram.SceneUpdate;
-import com.mapzen.tangram.SceneUpdateError;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
@@ -33,9 +32,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, TapResponder,
-        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener, SceneUpdateErrorListener {
+import okhttp3.CacheControl;
+import okhttp3.HttpUrl;
+
+public class MainActivity extends AppCompatActivity implements MapController.SceneLoadListener, TapResponder,
+        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener {
 
     private static final String MAPZEN_API_KEY = BuildConfig.MAPZEN_API_KEY;
 
@@ -96,7 +99,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // set previously we want to apply it again. The text is restored in onRestoreInstanceState,
         // which occurs after onCreate and onStart, but before onPostCreate, so we get the URL here.
         String sceneUrl = sceneSelector.getCurrentString();
-        view.getMapAsync(this, sceneUrl, sceneUpdates);
+
+        map = view.getMap(this);
+        map.loadSceneFile(sceneUrl, sceneUpdates);
+
+        map.setZoom(16);
+        map.setPosition(new LngLat(-74.00976419448854, 40.70532700869127));
+        map.setHttpHandler(getHttpHandler());
+        map.setTapResponder(this);
+        map.setDoubleTapResponder(this);
+        map.setLongPressResponder(this);
+        map.setFeaturePickListener(this);
+        map.setLabelPickListener(this);
+        map.setMarkerPickListener(this);
+
+        map.setViewCompleteListener(new ViewCompleteListener() {
+            public void onViewComplete() {
+                Log.d("Tangram", "View complete");
+            }});
+
+        markers = map.addDataLayer("touch");
     }
 
     @Override
@@ -125,30 +147,36 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     @Override
-    public void onMapReady(MapController mapController) {
-        map = mapController;
-        map.setZoom(16);
-        map.setPosition(new LngLat(-74.00976419448854, 40.70532700869127));
-        map.setHttpHandler(getHttpHandler());
-        map.setTapResponder(this);
-        map.setDoubleTapResponder(this);
-        map.setLongPressResponder(this);
-        map.setFeaturePickListener(this);
-        map.setLabelPickListener(this);
-        map.setMarkerPickListener(this);
-        map.setSceneUpdateErrorListener(this);
+    public void onSceneReady(int sceneId, SceneError sceneError) {
 
-        map.setViewCompleteListener(new ViewCompleteListener() {
-                public void onViewComplete() {
-                    Log.d("Tangram", "View complete");
-                }});
-        markers = map.addDataLayer("touch");
+        Log.d("Tangram", "onSceneReady!");
+        if (sceneError == null) {
+            Toast.makeText(this, "Scene ready: " + sceneId, Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Scene load error: " + sceneId + " "
+                    + sceneError.getSceneUpdate().toString()
+                    + " " + sceneError.getError().toString(), Toast.LENGTH_SHORT).show();
+
+            Log.d("Tangram", "Scene update errors "
+                    + sceneError.getSceneUpdate().toString()
+                    + " " + sceneError.getError().toString());
+        }
     }
 
     HttpHandler getHttpHandler() {
         File cacheDir = getExternalCacheDir();
         if (cacheDir != null && cacheDir.exists()) {
-            return new HttpHandler(new File(cacheDir, "tile_cache"), 30 * 1024 * 1024);
+            CachePolicy cachePolicy = new CachePolicy() {
+                CacheControl tileCacheControl = new CacheControl.Builder().maxStale(7, TimeUnit.DAYS).build();
+                @Override
+                public CacheControl apply(HttpUrl url) {
+                    if (url.host().equals("tile.mapzen.com")) {
+                        return tileCacheControl;
+                    }
+                    return null;
+                }
+            };
+            return new HttpHandler(new File(cacheDir, "tile_cache"), 30 * 1024 * 1024, cachePolicy);
         }
         return new HttpHandler();
     }
@@ -254,13 +282,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.d("Tangram", "Picked marker: " + markerPickResult.getMarker().getMarkerId());
         final String message = String.valueOf(markerPickResult.getMarker().getMarkerId());
         Toast.makeText(getApplicationContext(), "Selected Marker: " + message, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onSceneUpdateError(SceneUpdateError sceneUpdateError) {
-        Log.d("Tangram", "Scene update errors "
-                + sceneUpdateError.getSceneUpdate().toString()
-                + " " + sceneUpdateError.getError().toString());
     }
 }
 

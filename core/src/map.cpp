@@ -73,11 +73,11 @@ public:
     std::shared_ptr<Platform> platform;
     InputHandler inputHandler;
 
-    std::vector<SceneUpdate> sceneUpdates;
     std::array<Ease, 5> eases;
 
     std::shared_ptr<Scene> scene;
-    std::shared_ptr<Scene> nextScene = nullptr;
+    std::shared_ptr<Scene> lastValidScene;
+    std::atomic<int32_t> sceneLoadTasks;
 
     // NB: Destruction of (managed and loading) tiles must happen
     // before implicit destruction of 'scene' above!
@@ -91,6 +91,8 @@ public:
     float pickRadius = .5f;
 
     std::vector<SelectionQuery> selectionQueries;
+
+    SceneReadyCallback onSceneReady = nullptr;
 };
 
 void Map::Impl::setEase(EaseField _f, Ease _e) {
@@ -127,10 +129,8 @@ Map::~Map() {
 }
 
 void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
-    {
-        std::lock_guard<std::mutex> lock(sceneMutex);
-        scene = _scene;
-    }
+
+    scene = _scene;
 
     scene->setPixelScale(view.pixelScale());
 
@@ -185,148 +185,188 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
 
 // NB: Not thread-safe. Must be called on the main/render thread!
 // (Or externally synchronized with main/render thread)
-void Map::loadScene(const char* _scenePath, bool _useScenePosition,
-                    const std::vector<SceneUpdate>& _sceneUpdates,
-                    SceneUpdateErrorCallback _onSceneUpdateError) {
-
-    LOG("Loading scene file: %s", _scenePath);
+SceneID Map::loadScene(std::shared_ptr<Scene> scene,
+                       const std::vector<SceneUpdate>& _sceneUpdates) {
 
     {
         std::lock_guard<std::mutex> lock(impl->sceneMutex);
-        impl->sceneUpdates.clear();
-        impl->nextScene.reset();
+        impl->lastValidScene.reset();
     }
 
-    auto scene = std::make_shared<Scene>(platform, _scenePath);
-    scene->useScenePosition = _useScenePosition;
-
-    if (SceneLoader::loadScene(platform, scene, _sceneUpdates, _onSceneUpdateError)) {
+    if (SceneLoader::loadScene(platform, scene, _sceneUpdates)) {
         impl->setScene(scene);
+
+        {
+            std::lock_guard<std::mutex> lock(impl->sceneMutex);
+            impl->lastValidScene = scene;
+        }
     }
+
+    if (impl->onSceneReady) {
+        if (scene->errors.empty()) {
+            impl->onSceneReady(scene->id, nullptr);
+        } else {
+            impl->onSceneReady(scene->id, &(scene->errors.front()));
+        }
+    }
+    return scene->id;
 }
 
-void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition,
-                         MapReady _onMapReady, void *_onMapReadyUserData,
-                         const std::vector<SceneUpdate>& _sceneUpdates,
-                         SceneUpdateErrorCallback _onSceneUpdateError) {
+SceneID Map::loadScene(const std::string& _scenePath, bool _useScenePosition,
+                       const std::vector<SceneUpdate>& _sceneUpdates) {
 
-    LOG("Loading scene file (async): %s", _scenePath);
+    LOG("Loading scene file: %s", _scenePath.c_str());
+    auto scene = std::make_shared<Scene>(platform, _scenePath);
+    scene->useScenePosition = _useScenePosition;
+    return loadScene(scene, _sceneUpdates);
+}
 
-    std::shared_ptr<Scene> nextScene;
-    {
-        std::lock_guard<std::mutex> lock(impl->sceneMutex);
-        impl->sceneUpdates.clear();
-        impl->nextScene = std::make_shared<Scene>(platform, _scenePath);
-        impl->nextScene->useScenePosition = _useScenePosition;
-        nextScene = impl->nextScene;
-    }
+SceneID Map::loadSceneYaml(const std::string& _yaml, const std::string& _resourceRoot,
+                           bool _useScenePosition, const std::vector<SceneUpdate>& _sceneUpdates) {
 
-    runAsyncTask([nextScene, _onMapReady, _onMapReadyUserData, _sceneUpdates, _onSceneUpdateError, this](){
+    LOG("Loading scene string");
+    auto scene = std::make_shared<Scene>(platform, _yaml, _resourceRoot);
+    scene->useScenePosition = _useScenePosition;
+    return loadScene(scene, _sceneUpdates);
+}
 
-            bool newSceneLoaded = SceneLoader::loadScene(platform, nextScene, _sceneUpdates, _onSceneUpdateError);
+SceneID Map::loadSceneAsync(const std::string& _scenePath, bool _useScenePosition,
+                            const std::vector<SceneUpdate>& _sceneUpdates) {
 
-            impl->jobQueue.add([nextScene, newSceneLoaded, _onMapReady, _onMapReadyUserData, _onSceneUpdateError, this]() {
-                    {
-                        std::lock_guard<std::mutex> lock(impl->sceneMutex);
-                        if (nextScene == impl->nextScene) {
-                            impl->nextScene.reset();
-                        } else {
-                            // loadScene[Async] was called in the meantime.
-                            return;
-                        }
-                    }
+    LOG("Loading scene file (async): %s", _scenePath.c_str());
+    auto scene = std::make_shared<Scene>(platform, _scenePath);
+    scene->useScenePosition = _useScenePosition;
+    return loadSceneAsync(scene, _sceneUpdates);
+}
 
+SceneID Map::loadSceneYamlAsync(const std::string& _yaml, const std::string& _resourceRoot,
+                                bool _useScenePosition, const std::vector<SceneUpdate>& _sceneUpdates) {
+
+    LOG("Loading scene string (async)");
+    auto scene = std::make_shared<Scene>(platform, _yaml, _resourceRoot);
+    scene->useScenePosition = _useScenePosition;
+    return loadSceneAsync(scene, _sceneUpdates);
+}
+
+SceneID Map::loadSceneAsync(std::shared_ptr<Scene> nextScene,
+                            const std::vector<SceneUpdate>& _sceneUpdates) {
+
+    impl->sceneLoadTasks++;
+
+    runAsyncTask([nextScene, _sceneUpdates, this](){
+
+            bool newSceneLoaded = SceneLoader::loadScene(platform, nextScene, _sceneUpdates);
+            if (!newSceneLoaded) {
+
+                if (impl->onSceneReady) {
+                    SceneError err;
+                    if (!nextScene->errors.empty()) { err = nextScene->errors.front(); }
+                    impl->onSceneReady(nextScene->id, &err);
+                }
+                impl->sceneLoadTasks--;
+                return;
+            }
+
+            {
+                std::lock_guard<std::mutex> lock(impl->sceneMutex);
+                // NB: Need to set the scene on the worker thread so that waiting
+                // applyUpdates AsyncTasks can access it to copy the config.
+                impl->lastValidScene = nextScene;
+            }
+
+            impl->jobQueue.add([nextScene, newSceneLoaded, this]() {
                     if (newSceneLoaded) {
                         auto s = nextScene;
                         impl->setScene(s);
-                        applySceneUpdates(_onSceneUpdateError);
-
-                        if (_onMapReady) {
-                            _onMapReady(_onMapReadyUserData);
-                        }
                     }
+                    if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, nullptr); }
                 });
+            impl->sceneLoadTasks--;
+
             platform->requestRender();
         });
+
+    return nextScene->id;
 }
 
-void Map::queueSceneUpdate(const char* _path, const char* _value) {
-    std::lock_guard<std::mutex> lock(impl->sceneMutex);
-    impl->sceneUpdates.push_back({_path, _value});
-}
-
-void Map::queueSceneUpdate(const std::vector<SceneUpdate>& sceneUpdates) {
-    std::lock_guard<std::mutex> lock(impl->sceneMutex);
-    impl->sceneUpdates.insert(impl->sceneUpdates.end(), sceneUpdates.begin(), sceneUpdates.end());
+void Map::setSceneReadyListener(SceneReadyCallback _onSceneReady) {
+    impl->onSceneReady = _onSceneReady;
 }
 
 std::shared_ptr<Platform>& Map::getPlatform() {
     return platform;
 }
 
-void Map::applySceneUpdates(SceneUpdateErrorCallback _onSceneUpdateError) {
+SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
 
-    std::shared_ptr<Scene> nextScene;
-    std::vector<SceneUpdate> updates;
-    {
-        std::lock_guard<std::mutex> lock(impl->sceneMutex);
-        if (impl->sceneUpdates.empty()) { return; }
+    std::vector<SceneUpdate> updates = _sceneUpdates;
 
-        if (impl->nextScene) {
-            // Changes are automatically applied once the scene is loaded
-            return;
-        }
-        LOG("Applying %d scene updates", impl->sceneUpdates.size());
+    auto nextScene = std::make_shared<Scene>();
+    nextScene->useScenePosition = false;
 
-        impl->nextScene = std::make_shared<Scene>(*impl->scene);
-        impl->nextScene->useScenePosition = false;
+    impl->sceneLoadTasks++;
 
-        updates = impl->sceneUpdates;
-        impl->sceneUpdates.clear();
+    runAsyncTask([nextScene, updates = std::move(updates), this](){
 
-        nextScene = impl->nextScene;
-    }
-
-    runAsyncTask([nextScene, updates = std::move(updates), _onSceneUpdateError, this](){
-
-            if (!SceneLoader::applyUpdates(platform, *nextScene, updates, _onSceneUpdateError)) {
-                LOGW("Scene updates not applied to current scene");
+            if (!impl->lastValidScene) {
+                if (impl->onSceneReady) {
+                    SceneError err {{}, Error::no_valid_scene};
+                    impl->onSceneReady(nextScene->id, &err);
+                }
+                impl->sceneLoadTasks--;
                 return;
             }
 
+            {
+                std::lock_guard<std::mutex> lock(impl->sceneMutex);
+                nextScene->copyConfig(*impl->lastValidScene);
+            }
+
+            if (!SceneLoader::applyUpdates(platform, *nextScene, updates)) {
+                LOGW("Scene updates not applied to current scene");
+
+                if (impl->onSceneReady) {
+                    SceneError err;
+                    if (!nextScene->errors.empty()) { err = nextScene->errors.front(); }
+                    impl->onSceneReady(nextScene->id, &err);
+                }
+                impl->sceneLoadTasks--;
+                return;
+            }
+
+
             bool configApplied = SceneLoader::applyConfig(platform, nextScene);
 
-            impl->jobQueue.add([nextScene, configApplied, _onSceneUpdateError, this]() {
-                    {
-                        std::lock_guard<std::mutex> lock(impl->sceneMutex);
-                        if (nextScene == impl->nextScene) {
-                            impl->nextScene.reset();
-                        } else {
-                            // loadScene[Async] was called in the meantime.
-                            return;
-                        }
-                    }
+            {
+                std::lock_guard<std::mutex> lock(impl->sceneMutex);
+                // NB: Need to set the scene on the worker thread so that waiting
+                // applyUpdates AsyncTasks can access it to copy the config.
+                if (configApplied) { impl->lastValidScene = nextScene; }
+            }
+            impl->jobQueue.add([nextScene, configApplied, this]() {
 
                     if (configApplied) {
                         auto s = nextScene;
                         impl->setScene(s);
-                        applySceneUpdates(_onSceneUpdateError);
                     }
+                    if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, nullptr); }
                 });
+            impl->sceneLoadTasks--;
+
             platform->requestRender();
         });
+
+    return nextScene->id;
 }
 
 void Map::setDataSourceUrl(const char* _dataSourceName, const char* _url) {
     std::string scenePath = std::string("sources.") + _dataSourceName + ".url";
-    queueSceneUpdate(scenePath.c_str(), _url);
-    applySceneUpdates();
+    updateSceneAsync({SceneUpdate{scenePath.c_str(), _url}});
 }
 
 void Map::setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath) {
     std::string scenePath = std::string("sources.") + _dataSourceName + ".mbtiles";
-    queueSceneUpdate(scenePath.c_str(), _mbtilesFilePath);
-    applySceneUpdates();
+    updateSceneAsync({SceneUpdate{scenePath.c_str(), _mbtilesFilePath}});
 }
 
 void Map::resize(int _newWidth, int _newHeight) {
@@ -411,9 +451,9 @@ bool Map::update(float _dt) {
     bool tilesLoading = impl->tileManager.hasLoadingTiles();
     bool labelsNeedUpdate = impl->labels.needUpdate();
     bool resourceLoading = (impl->scene->pendingTextures > 0);
-    bool nextScene = bool(impl->nextScene);
 
-    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || resourceLoading || nextScene) {
+    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || resourceLoading ||
+        impl->sceneLoadTasks > 0) {
         viewComplete = false;
     }
 

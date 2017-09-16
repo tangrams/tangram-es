@@ -29,7 +29,6 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     BOOL viewComplete;
 }
 
-@property (nullable, copy, nonatomic) NSString* scenePath;
 @property (nullable, strong, nonatomic) EAGLContext* context;
 @property (assign, nonatomic) CGFloat contentScaleFactor;
 @property (assign, nonatomic) BOOL renderRequested;
@@ -129,107 +128,96 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 #pragma mark Scene loading interface
 
-- (void)loadSceneFile:(NSString*)path
+std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *sceneUpdates)
 {
-    [self loadSceneFile:path sceneUpdates:nil];
-}
-
-- (void)loadSceneFileAsync:(NSString*)path
-{
-    [self loadSceneFileAsync:path sceneUpdates:nil];
-}
-
-- (void)loadSceneFile:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
-{
-    if (!self.map) { return; }
-
     std::vector<Tangram::SceneUpdate> updates;
-
     if (sceneUpdates) {
         for (TGSceneUpdate* update in sceneUpdates) {
             updates.push_back({std::string([update.path UTF8String]), std::string([update.value UTF8String])});
         }
     }
-
-    self.scenePath = path;
-
-    auto updateCallbackStatus = [=](auto sceneUpdateError) {
-        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didFailSceneUpdateWithError:)]) { return; }
-        [self.mapViewDelegate mapView:self didFailSceneUpdateWithError:[TGHelpers errorFromSceneUpdateError:sceneUpdateError]];
-    };
-
-    self.map->loadScene([path UTF8String], false, updates, updateCallbackStatus);
-    [self.markersById removeAllObjects];
-
-    self.renderRequested = YES;
+    return updates;
 }
 
-- (void)loadSceneFileAsync:(NSString *)path sceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
-{
-    if (!self.map) { return; }
-
-    self.scenePath = path;
-
-    Tangram::MapReady onReadyCallback = [=](void* _userPtr) -> void {
-        if (self.mapViewDelegate && [self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadSceneAsync:)]) {
-            [self.mapViewDelegate mapView:self didLoadSceneAsync:path];
-        }
-
+- (Tangram::SceneReadyCallback)sceneReadyListener {
+    return [=](int sceneID, auto sceneError) {
         [self.markersById removeAllObjects];
-        self.renderRequested = YES;
-    };
+        [self renderOnce];
 
-    std::vector<Tangram::SceneUpdate> updates;
+        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadScene:withError:)]) { return; }
 
-    if (sceneUpdates) {
-        for (TGSceneUpdate* update in sceneUpdates) {
-            updates.push_back({std::string([update.path UTF8String]), std::string([update.value UTF8String])});
+        NSError* error = nil;
+        if (sceneError) {
+            error = [TGHelpers errorFromSceneError:*sceneError];
         }
-    }
-
-    auto updateCallbackStatus = [=](auto sceneUpdateError) {
-        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didFailSceneUpdateWithError:)]) { return; }
-        [self.mapViewDelegate mapView:self didFailSceneUpdateWithError:[TGHelpers errorFromSceneUpdateError:sceneUpdateError]];
+        [self.mapViewDelegate mapView:self didLoadScene:sceneID withError:error];
     };
+}
 
-    self.map->loadSceneAsync([path UTF8String], false, onReadyCallback, nullptr, updates, updateCallbackStatus);
+- (int)loadSceneFromURL:(NSURL *)url
+{
+    return [self loadSceneFromURL:url withUpdates:nil];
+}
+
+- (int)loadSceneAsyncFromURL:(NSURL *)url
+{
+    return [self loadSceneAsyncFromURL:url withUpdates:nil];
+}
+
+- (int)loadSceneFromURL:(NSURL *)url withUpdates:(NSArray<TGSceneUpdate *> *)updates
+{
+    if (!self.map) { return -1; }
+
+    auto sceneUpdates = unpackSceneUpdates(updates);
+
+    self.map->setSceneReadyListener([self sceneReadyListener]);
+    return self.map->loadScene([[url absoluteString] UTF8String], false, sceneUpdates);
+}
+
+- (int)loadSceneAsyncFromURL:(NSURL *)url withUpdates:(NSArray<TGSceneUpdate *> *)updates
+{
+    if (!self.map) { return -1; }
+
+    auto sceneUpdates = unpackSceneUpdates(updates);
+
+    self.map->setSceneReadyListener([self sceneReadyListener]);
+    return self.map->loadSceneAsync([[url absoluteString] UTF8String], false, sceneUpdates);
+}
+
+- (int)loadSceneFromYAML:(NSString *)yaml relativeToURL:(NSURL *)url withUpdates:(NSArray<TGSceneUpdate *> *)updates
+{
+    if (!self.map) { return -1; }
+
+    auto sceneUpdates = unpackSceneUpdates(updates);
+
+    self.map->setSceneReadyListener([self sceneReadyListener]);
+    return self.map->loadSceneYamlAsync([yaml UTF8String], [[url absoluteString] UTF8String], false, sceneUpdates);
+}
+
+- (int)loadSceneAsyncFromYAML:(NSString *)yaml relativeToURL:(NSURL *)url withUpdates:(NSArray<TGSceneUpdate *> *)updates
+{
+    if (!self.map) { return -1; }
+
+    auto sceneUpdates = unpackSceneUpdates(updates);
+
+    self.map->setSceneReadyListener([self sceneReadyListener]);
+    return self.map->loadSceneYamlAsync([yaml UTF8String], [[url absoluteString] UTF8String], false, sceneUpdates);
 }
 
 #pragma mark Scene updates
 
-- (void)queueSceneUpdates:(NSArray<TGSceneUpdate *> *)sceneUpdates
+- (int)updateSceneAsync:(NSArray<TGSceneUpdate *> *)updates
 {
-    if (!self.map) { return; }
+    if (!self.map) { return -1; }
 
-    std::vector<Tangram::SceneUpdate> updates;
-
-    if (sceneUpdates) {
-        for (TGSceneUpdate* update in sceneUpdates) {
-            updates.push_back({std::string([update.path UTF8String]), std::string([update.value UTF8String])});
-        }
+    if (!updates || ![updates count]) {
+        return -1;
     }
 
-    self.map->queueSceneUpdate(updates);
-}
+    auto sceneUpdates = unpackSceneUpdates(updates);
 
-- (void)queueSceneUpdate:(NSString*)componentPath withValue:(NSString*)value
-{
-    if (!self.map) { return; }
-
-    self.map->queueSceneUpdate([componentPath UTF8String], [value UTF8String]);
-}
-
-- (void)applySceneUpdates
-{
-    if (!self.map) { return; }
-
-    auto updateCallbackError = [=](auto sceneUpdateError) {
-        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didFailSceneUpdateWithError:)]) { return; }
-
-        [self.mapViewDelegate mapView:self didFailSceneUpdateWithError:[TGHelpers errorFromSceneUpdateError:sceneUpdateError]];
-    };
-
-    self.map->applySceneUpdates(updateCallbackError);
+    self.map->setSceneReadyListener([self sceneReadyListener]);
+    return self.map->updateSceneAsync(sceneUpdates);
 }
 
 #pragma mark Longitude/Latitude - Screen position conversions

@@ -1,9 +1,11 @@
 #include "glfwApp.h"
-#include "data/clientGeoJsonSource.h"
 #include "debug/textDisplay.h"
 #include <GLFW/glfw3.h>
-#include "log.h"
 #include <cstdlib>
+
+#ifndef BUILD_NUM_STRING
+#define BUILD_NUM_STRING ""
+#endif
 
 namespace Tangram {
 
@@ -24,12 +26,13 @@ constexpr double single_tap_time = 0.25; //seconds (to avoid a long press being 
 
 std::shared_ptr<Platform> platform;
 
-std::string sceneFile;
+std::string sceneFile = "scene.yaml";
+std::string sceneYaml;
+std::string mapzenApiKey;
 
 std::string markerStylingPath = "layers.touch.point.draw.icons";
 std::string polylineStyle = "{ style: lines, interactive: true, color: red, width: 20px, order: 5000 }";
 
-std::string mapzenApiKey;
 
 GLFWwindow* main_window = nullptr;
 Tangram::Map* map = nullptr;
@@ -52,12 +55,53 @@ Tangram::MarkerID marker = 0;
 Tangram::MarkerID poiMarker = 0;
 Tangram::MarkerID polyline = 0;
 
-bool keepRunning = true;
+void loadSceneFile(bool setPosition) {
+    std::vector<SceneUpdate> updates;
 
-void create(std::shared_ptr<Platform> p, std::string f, int w, int h) {
+    if (!mapzenApiKey.empty()) {
+        updates.push_back(SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey));
+    }
+
+    if (!sceneYaml.empty()) {
+        map->loadSceneYamlAsync(sceneYaml, sceneFile, setPosition, updates);
+    } else {
+        map->loadSceneAsync(sceneFile, setPosition, updates);
+    }
+}
+
+void parseArgs(int argc, char* argv[]) {
+    // Load file from command line, if given.
+    int argi = 0;
+    while (++argi < argc) {
+        if (strcmp(argv[argi - 1], "-f") == 0) {
+            sceneFile = std::string(argv[argi]);
+            LOG("File from command line: %s\n", argv[argi]);
+            break;
+        }
+        if (strcmp(argv[argi - 1], "-s") == 0) {
+
+            if (argi+1 < argc) {
+                sceneYaml = std::string(argv[argi]);
+                sceneFile = std::string(argv[argi+1]);
+                LOG("Yaml from command line: %s, resource path: %s\n",
+                    sceneYaml.c_str(), sceneFile.c_str());
+            } else {
+                LOG("-s options requires YAML string and resource path");
+                exit(1);
+            }
+            break;
+        }
+    }
+}
+
+void setScene(const std::string& _path, const std::string& _yaml) {
+    sceneFile = _path;
+    sceneYaml = _yaml;
+}
+
+void create(std::shared_ptr<Platform> p, int w, int h) {
 
     platform = p;
-    sceneFile = f;
     width = w;
     height = h;
 
@@ -80,18 +124,17 @@ void create(std::shared_ptr<Platform> p, std::string f, int w, int h) {
     // Setup tangram
     if (!map) {
         map = new Tangram::Map(platform);
-        if (mapzenApiKey.empty()) {
-            map->loadSceneAsync(sceneFile.c_str(), true, {}, nullptr, {});
-        } else {
-            map->loadSceneAsync(sceneFile.c_str(), true, {}, nullptr,
-                    {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
-        }
     }
+
+    // Build a version string for the window title.
+    char versionString[256] = { 0 };
+    std::snprintf(versionString, sizeof(versionString), "Tangram ES %d.%d.%d " BUILD_NUM_STRING,
+        TANGRAM_VERSION_MAJOR, TANGRAM_VERSION_MINOR, TANGRAM_VERSION_PATCH);
 
     // Create a windowed mode window and its OpenGL context
     glfwWindowHint(GLFW_SAMPLES, 2);
     if (!main_window) {
-        main_window = glfwCreateWindow(width, height, "Tangram ES", NULL, NULL);
+        main_window = glfwCreateWindow(width, height, versionString, NULL, NULL);
     }
     if (!main_window) {
         glfwTerminate();
@@ -118,10 +161,12 @@ void create(std::shared_ptr<Platform> p, std::string f, int w, int h) {
 
 void run() {
 
+    loadSceneFile(true);
+
     double lastTime = glfwGetTime();
 
     // Loop until the user closes the window
-    while (keepRunning && !glfwWindowShouldClose(main_window)) {
+    while (!glfwWindowShouldClose(main_window)) {
 
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
@@ -144,9 +189,9 @@ void run() {
 }
 
 void stop(int) {
-    if (keepRunning) {
+    if (!glfwWindowShouldClose(main_window)) {
         logMsg("shutdown\n");
-        keepRunning = false;
+        glfwSetWindowShouldClose(main_window, 1);
         glfwPostEmptyEvent();
     } else {
         logMsg("killed!\n");
@@ -355,8 +400,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 recreate_context = true;
                 break;
             case GLFW_KEY_R:
-                map->loadSceneAsync(sceneFile.c_str(), true, {}, nullptr,
-                        {SceneUpdate("global.sdk_mapzen_api_key", MAPZEN_API_KEY)});
+                loadSceneFile();
                 break;
             case GLFW_KEY_Z:
                 map->setZoomEased(map->getZoom() + 1.f, 1.5f);
@@ -375,24 +419,28 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 map->setPixelScale(pixel_scale);
                 break;
             case GLFW_KEY_P:
-                map->queueSceneUpdate("cameras", "{ main_camera: { type: perspective } }");
-                map->applySceneUpdates();
+                map->updateSceneAsync({SceneUpdate{"cameras", "{ main_camera: { type: perspective } }"}});
                 break;
             case GLFW_KEY_I:
-                map->queueSceneUpdate("cameras", "{ main_camera: { type: isometric } }");
-                map->applySceneUpdates();
+                map->updateSceneAsync({SceneUpdate{"cameras", "{ main_camera: { type: isometric } }"}});
+                break;
+            case GLFW_KEY_M:
+                map->loadSceneYamlAsync("{ scene: { background: { color: red } } }", std::string(""));
                 break;
             case GLFW_KEY_G:
                 static bool geoJSON = false;
                 if (!geoJSON) {
-                    map->queueSceneUpdate("sources.osm.type", "GeoJSON");
-                    map->queueSceneUpdate("sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.json");
+                    map->updateSceneAsync({
+                            SceneUpdate{"sources.osm.type", "GeoJSON"},
+                            SceneUpdate{"sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.json"}
+                        });
                 } else {
-                    map->queueSceneUpdate("sources.osm.type", "MVT");
-                    map->queueSceneUpdate("sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt");
+                    map->updateSceneAsync({
+                            SceneUpdate{"sources.osm.type", "MVT"},
+                            SceneUpdate{"sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt"}
+                        });
                 }
                 geoJSON = !geoJSON;
-                map->applySceneUpdates();
                 break;
             case GLFW_KEY_ESCAPE:
                 glfwSetWindowShouldClose(window, true);
@@ -417,9 +465,9 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 void dropCallback(GLFWwindow* window, int count, const char** paths) {
 
     sceneFile = std::string(paths[0]);
-    map->loadSceneAsync(sceneFile.c_str(), true, {}, nullptr,
-                        {SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey)});
+    sceneYaml.clear();
 
+    loadSceneFile();
 }
 
 void framebufferResizeCallback(GLFWwindow* window, int fWidth, int fHeight) {

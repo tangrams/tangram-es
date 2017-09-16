@@ -41,12 +41,16 @@ typedef NS_ENUM(NSInteger, TGCameraType) {
 
 /// Description of error status from Tangram
 typedef NS_ENUM(NSInteger, TGError) {
+    /// No Error
+    TGErrorNone,
     /// The path of the scene update was not found on the scene file
     TGErrorSceneUpdatePathNotFound,
     /// The YAML syntax of the scene udpate path has a syntax error
     TGErrorSceneUpdatePathYAMLSyntaxError,
     /// The YAML syntax of the scene update value has a syntax error
     TGErrorSceneUpdateValueYAMLSyntaxError,
+    /// No valid scene was loaded (and on tries to update the scene)
+    TGErrorNoValidScene,
     /// An error code for markers
     TGErrorMarker,
 };
