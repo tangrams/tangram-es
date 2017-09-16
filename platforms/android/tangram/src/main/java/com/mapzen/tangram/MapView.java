@@ -46,7 +46,14 @@ public class MapView extends FrameLayout {
     }
 
     protected MapController getMapInstance() {
-        return new MapController(glSurfaceView);
+        try {
+            return new MapController(glSurfaceView);
+        }
+        catch (Exception e) {
+            removeView(glSurfaceView);
+            configureGLSurfaceView();
+            return new MapController(glSurfaceView);
+        }
     }
 
     protected void configureGLSurfaceView() {
