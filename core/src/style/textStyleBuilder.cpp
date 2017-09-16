@@ -251,6 +251,9 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
 }
 
 bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
+
+    if (!checkRule(_rule)) { return false; }
+
     TextStyle::Parameters params = applyRule(_rule, _feat.props, false);
 
     Label::Type labelType;

@@ -57,7 +57,19 @@ public:
     bool handleBoundaryLabel(const Feature& _feat, const DrawRule& _rule,
                              const TextStyle::Parameters& _params);
 
-    bool checkRule(const DrawRule& _rule) const override { return true; }
+    bool checkRule(const DrawRule& _rule) const override {
+        if (_rule.hasParameterSet(StyleParamKey::text_font_family) ||
+            _rule.hasParameterSet(StyleParamKey::text_font_fill) ||
+            _rule.hasParameterSet(StyleParamKey::text_font_size) ||
+            _rule.hasParameterSet(StyleParamKey::text_font_stroke_color) ||
+            _rule.hasParameterSet(StyleParamKey::text_font_stroke_width) ||
+            _rule.hasParameterSet(StyleParamKey::text_font_style) ||
+            _rule.hasParameterSet(StyleParamKey::text_font_weight)) {
+            return true;
+        }
+
+        return false;
+    }
 
     std::vector<std::unique_ptr<Label>>* labels() { return &m_labels; }
 
