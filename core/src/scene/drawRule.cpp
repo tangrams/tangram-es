@@ -46,6 +46,14 @@ DrawRule::DrawRule(const DrawRuleData& _ruleData, const std::string& _layerName,
     }
 }
 
+bool DrawRule::hasParameterSet(StyleParamKey _key) const {
+    if (auto& param = findParameter(_key)) {
+        auto key = static_cast<uint8_t>(param.key);
+        return active[key];
+    }
+    return false;
+}
+
 void DrawRule::merge(const DrawRuleData& _ruleData, const SceneLayer& _layer) {
 
     evalConflict(*this, _ruleData, _layer);

@@ -93,6 +93,8 @@ struct DrawRule {
 
     size_t getParamSetHash() const;
 
+    bool hasParameterSet(StyleParamKey _key) const;
+
     const StyleParam& findParameter(StyleParamKey _key) const;
 
     template<typename T>
