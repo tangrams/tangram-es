@@ -551,6 +551,19 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
     }
 }
 
+bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
+    if (_rule.hasParameterSet(StyleParamKey::text_font_family) ||
+        _rule.hasParameterSet(StyleParamKey::text_font_fill) ||
+        _rule.hasParameterSet(StyleParamKey::text_font_size) ||
+        _rule.hasParameterSet(StyleParamKey::text_font_stroke_color) ||
+        _rule.hasParameterSet(StyleParamKey::text_font_stroke_width) ||
+        _rule.hasParameterSet(StyleParamKey::text_font_style) ||
+        _rule.hasParameterSet(StyleParamKey::text_font_weight)) {
+        return true;
+    }
+    return false;
+}
+
 TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
                                                   const Properties& _props,
                                                   bool _iconText) const {
