@@ -4,8 +4,8 @@
 #import <cstdlib>
 #import <map>
 
+#import "appleAllowedFonts.h"
 #import "TGMapViewController.h"
-#import "TGFontConverter.h"
 #import "TGHttpHandler.h"
 #import "iosPlatform.h"
 #import "log.h"
@@ -29,28 +29,6 @@ NSString* resolvePath(const char* _path, NSURL* _resourceRoot) {
     LOGW("Failed to resolve path: %s", _path);
 
     return nil;
-}
-
-std::vector<char> loadUIFont(UIFont* _font) {
-    if (!_font) {
-        return {};
-    }
-
-    CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)_font.fontName);
-
-    if (!fontRef) {
-        return {};
-    }
-
-    std::vector<char> data = [TGFontConverter fontDataForCGFont:fontRef];
-
-    CGFontRelease(fontRef);
-
-    if (data.empty()) {
-        LOG("CoreGraphics font failed to decode");
-    }
-
-    return data;
 }
 
 void logMsg(const char* fmt, ...) {
@@ -115,17 +93,6 @@ std::string iOSPlatform::stringFromFile(const char* _path) const {
     return data;
 }
 
-bool allowedFamily(NSString* familyName) {
-    const NSArray<NSString *> *allowedFamilyList = @[ @"Hebrew", @"Kohinoor", @"Gumurki", @"Thonburi", @"Tamil",
-                                                    @"Gurmukhi", @"Kailasa", @"Sangam", @"PingFang", @"Geeza",
-                                                    @"Mishafi", @"Farah", @"Hiragino", @"Gothic" ];
-
-    for (NSString* allowedFamily in allowedFamilyList) {
-        if ( [familyName containsString:allowedFamily] ) { return true; }
-    }
-    return false;
-}
-
 std::vector<FontSourceHandle> iOSPlatform::systemFontFallbacksHandle() const {
 
     NSArray<NSString *> *fallbacks = [UIFont familyNames];
@@ -138,10 +105,7 @@ std::vector<FontSourceHandle> iOSPlatform::systemFontFallbacksHandle() const {
 
         for (NSString* fontName in [UIFont fontNamesForFamilyName:fallback]) {
             if ( ![fontName containsString:@"-"] || [fontName containsString:@"-Regular"]) {
-                handles.emplace_back([fontName]() {
-                    auto data = loadUIFont([UIFont fontWithName:fontName size:1.0]);
-                    return data;
-                });
+                handles.emplace_back(fontName.UTF8String, true);
                 break;
             }
         }
@@ -150,7 +114,7 @@ std::vector<FontSourceHandle> iOSPlatform::systemFontFallbacksHandle() const {
     return handles;
 }
 
-std::vector<char> iOSPlatform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
+FontSourceHandle iOSPlatform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
     static std::map<int, CGFloat> weightTraits = {
         {100, UIFontWeightUltraLight},
         {200, UIFontWeightThin},
@@ -208,7 +172,7 @@ std::vector<char> iOSPlatform::systemFont(const std::string& _name, const std::s
         }
     }
 
-    return loadUIFont(font);
+    return FontSourceHandle(font.fontName.UTF8String, true);
 }
 
 bool iOSPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {

@@ -13,11 +13,15 @@ using UrlCallback = std::function<void(std::vector<char>&&)>;
 using FontSourceLoader = std::function<std::vector<char>()>;
 
 struct FontSourceHandle {
-    FontSourceHandle(std::string _path) : path(_path) {}
+    FontSourceHandle(std::string _path) : pathOrFontName(_path) {}
+    FontSourceHandle(std::string _pathOrFontName, bool _isFontName) : pathOrFontName(_pathOrFontName), isFontName(_isFontName) {}
     FontSourceHandle(FontSourceLoader _loader) : load(_loader) {}
+    FontSourceHandle() {}
 
-    std::string path;
-    FontSourceLoader load;
+    std::string pathOrFontName;
+    FontSourceLoader load = nullptr;
+    bool isFontName = false;
+    bool isValid() { return !pathOrFontName.empty() || load || isFontName; }
 };
 
 // Print a formatted message to the console
@@ -66,7 +70,7 @@ public:
     // Stop retrieving data from a URL that was previously requested
     virtual void cancelUrlRequest(const std::string& _url) = 0;
 
-    virtual std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const;
+    virtual FontSourceHandle systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const;
 
     virtual std::vector<FontSourceHandle> systemFontFallbacksHandle() const;
 
