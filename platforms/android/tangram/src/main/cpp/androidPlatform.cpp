@@ -198,17 +198,10 @@ AndroidPlatform::AndroidPlatform(JNIEnv* _jniEnv, jobject _assetManager, jobject
     }
 
     sqlite3_ndk_init(m_assetManager);
-
-    m_fileRequestThread = std::thread(&AndroidPlatform::fileRequestLoop, this);
 }
 
 void AndroidPlatform::dispose(JNIEnv* _jniEnv) {
     _jniEnv->DeleteGlobalRef(m_tangramInstance);
-
-    // Stop the file request thread.
-    m_keepRunning = false;
-    m_fileRequestCondition.notify_all();
-    m_fileRequestThread.join();
 }
 
 void AndroidPlatform::requestRender() const {
@@ -293,14 +286,16 @@ std::vector<char> AndroidPlatform::bytesFromFile(const Url& url) const {
         return data.data();
     };
 
-    const char* path = url.path().c_str();
+    auto path = url.path();
 
     if (url.scheme() == "asset") {
         // The asset manager doesn't like paths starting with '/'.
-        path = (path[0] == '/') ? path + 1 : path;
-        bytesFromAssetManager(path, allocator);
+        if (!path.empty() && path.front() == '/') {
+            path = path.substr(1);
+        }
+        bytesFromAssetManager(path.c_str(), allocator);
     } else {
-        Platform::bytesFromFileSystem(path, allocator);
+        Platform::bytesFromFileSystem(path.c_str(), allocator);
     }
 
     return data;
@@ -313,11 +308,13 @@ UrlRequestHandle AndroidPlatform::startUrlRequest(Url _url, UrlCallback _callbac
     // Get the current value of the request counter and add one, atomically.
     UrlRequestHandle requestHandle = m_urlRequestCount++;
 
-    // If the requested URL does not use HTTP or HTTPS, then send it to our file request thread.
+    // If the requested URL does not use HTTP or HTTPS, retrieve it synchronously.
     if (!_url.hasHttpScheme()) {
-        std::lock_guard<std::mutex> lock(m_fileRequestMutex);
-        m_fileRequests.push_back({_url, _callback});
-        m_fileRequestCondition.notify_one();
+        UrlResponse response;
+        response.content = bytesFromFile(_url);
+        if (_callback) {
+            _callback(response);
+        }
         return requestHandle;
     }
 
@@ -384,44 +381,6 @@ void AndroidPlatform::onUrlComplete(JNIEnv* _jniEnv, jlong _jRequestHandle, jbyt
     if (callback) {
         callback(response);
     }
-}
-
-void AndroidPlatform::fileRequestLoop() {
-    // Create a UrlResponse for re-use.
-    UrlResponse response;
-    // Loop until our owner tells us to stop.
-    while (m_keepRunning) {
-        bool haveRequest = false;
-        FileRequest request;
-        // Wait until the condition variable is notified.
-        {
-            std::unique_lock<std::mutex> lock(m_fileRequestMutex);
-            if (m_fileRequests.empty()) {
-                LOGD("fileRequestLoop waiting");
-                m_fileRequestCondition.wait(lock);
-            }
-            LOGD("fileRequestLoop notified");
-            // Try to get a request from the list.
-            if (!m_fileRequests.empty()) {
-                // Take the first request from our list.
-                request = m_fileRequests.front();
-                m_fileRequests.erase(m_fileRequests.begin());
-                haveRequest = true;
-            }
-        }
-        if (haveRequest) {
-            // Start working on the request.
-            LOGD("fileRequestLoop retrieving '%s'", request.url.string().c_str());
-            response.content = bytesFromFile(request.url);
-            if (request.callback) {
-                LOGD("fileRequestLoop performing callback");
-                request.callback(response);
-            }
-        }
-        response.content.clear();
-        response.error = nullptr;
-    }
-    LOGD("fileRequestLoop stopping");
 }
 
 void setCurrentThreadPriority(int priority) {

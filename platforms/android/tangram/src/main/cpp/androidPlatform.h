@@ -6,10 +6,8 @@
 #include <android/asset_manager.h>
 
 #include <atomic>
-#include <condition_variable>
 #include <mutex>
 #include <string>
-#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -59,23 +57,7 @@ private:
     jobject m_tangramInstance;
     AAssetManager* m_assetManager;
 
-    struct FileRequest {
-        Url url;
-        UrlCallback callback;
-    };
-
     std::atomic_uint_fast64_t m_urlRequestCount;
-
-    // m_fileRequestMutex should be locked any time m_fileRequests is accessed.
-    std::mutex m_fileRequestMutex;
-    std::vector<FileRequest> m_fileRequests;
-
-    // This function loops while m_keepRunning is 'true', waiting on m_fileRequestCondition to get
-    // items from the front of m_fileRequests and process them. m_fileRequestThread runs this function.
-    void fileRequestLoop();
-    std::condition_variable m_fileRequestCondition;
-    std::thread m_fileRequestThread;
-    bool m_keepRunning = true;
 
     // m_callbackMutex should be locked any time m_callbacks is accessed.
     std::mutex m_callbackMutex;
