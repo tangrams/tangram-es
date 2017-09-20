@@ -106,7 +106,7 @@ bool SceneLoader::applyUpdates(const std::shared_ptr<Platform>& platform, Scene&
     }
 
     Importer importer;
-    importer.resolveSceneUrls(platform, scene, root, Url(scene.path()).resolved(Url(scene.resourceRoot())));
+    importer.resolveSceneUrls(platform, scene, root, Url(scene.path()).resolved(scene.resourceRoot()));
 
     return true;
 }

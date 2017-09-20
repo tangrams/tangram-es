@@ -4,6 +4,7 @@
 #include "labels/textLabel.h"
 #include "style/textStyle.h"
 #include "text/textUtil.h"
+#include "util/url.h"
 
 #include "alfons/alfons.h"
 #include "alfons/atlas.h"
@@ -16,6 +17,7 @@
 #include <mutex>
 
 namespace Tangram {
+
 
 struct FontMetrics {
     float ascender, descender, lineHeight;
@@ -115,7 +117,7 @@ public:
         std::vector<GlyphQuad>* quads;
     };
 
-    void setSceneResourceRoot(const std::string& sceneResourceRoot) { m_sceneResourceRoot = sceneResourceRoot; }
+    void setSceneResourceRoot(const Url& sceneResourceRoot) { m_sceneResourceRoot = sceneResourceRoot; }
 
     void addFont(const FontDescription& _ft, alfons::InputSource _source);
 
@@ -150,7 +152,7 @@ private:
     // textures and a MeshCallback implemented by TextStyleBuilder for adding glyph quads.
     alfons::TextBatch m_batch;
     TextWrapper m_textWrapper;
-    std::string m_sceneResourceRoot = "";
+    Url m_sceneResourceRoot = Url();
 
     std::shared_ptr<const Platform> m_platform;
 
