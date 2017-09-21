@@ -45,8 +45,7 @@ UrlRequestHandle MockPlatform::startUrlRequest(Url _url, UrlCallback _callback) 
 
     auto it = m_files.find(_url);
     if (it != m_files.end()) {
-        const auto& contents = it->second;
-        response.content.assign(contents.begin(), contents.end());
+        response.content = it->second;
     } else {
         response.error = "Url contents could not be found!";
     }
@@ -59,6 +58,10 @@ UrlRequestHandle MockPlatform::startUrlRequest(Url _url, UrlCallback _callback) 
 void MockPlatform::cancelUrlRequest(UrlRequestHandle _request) {}
 
 void MockPlatform::putMockUrlContents(Url url, std::string contents) {
+    m_files[url].assign(contents.begin(), contents.end());
+}
+
+void MockPlatform::putMockUrlContents(Url url, std::vector<char> contents) {
     m_files[url] = contents;
 }
 
