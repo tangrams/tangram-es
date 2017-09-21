@@ -21,7 +21,8 @@ android {
         targets 'tangram'
         arguments '-DPLATFORM_TARGET=android',
                   '-DANDROID_TOOLCHAIN=clang',
-                  '-DANDROID_STL=c++_shared'
+                  '-DANDROID_STL=c++_shared',
+                  '-DANDROID_DEPRECATED_HEADERS=ON'
         cppFlags '-std=c++14',
                  '-pedantic',
                  '-fPIC',
