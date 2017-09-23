@@ -189,7 +189,8 @@ void Scene::createSceneAsset(const std::shared_ptr<Platform>& platform, const Ur
             // Data to be fetched later (and zipHandle created) in network callback
             asset = std::make_shared<ZippedAsset>(resolvedStr);
 
-        } else if (relativeUrl.isAbsolute() || base.isEmpty()) {
+        } else if (relativeUrl.isAbsolute() || base.isEmpty() || !m_assets[baseStr]->zipHandle()) {
+            // load zip asset from File if its absolute or no base or base is not a zip asset
             asset = std::make_shared<ZippedAsset>(resolvedStr, nullptr, platform->bytesFromFile(resolvedStr.c_str()));
         } else {
             auto parentAsset = static_cast<ZippedAsset*>(m_assets[baseStr].get());
