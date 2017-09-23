@@ -1,9 +1,9 @@
+#include"appleAllowedFonts.h"
 #include "osxPlatform.h"
 #include "gl/hardware.h"
 #include "log.h"
 #include <map>
 
-#import "TGFontConverter.h"
 #import <cstdarg>
 #import <cstdio>
 #import <AppKit/AppKit.h>
@@ -96,39 +96,6 @@ std::string OSXPlatform::stringFromFile(const char* _path) const {
     return data;
 }
 
-std::vector<char> loadNSFont(NSFont* _font) {
-    if (!_font) {
-        return {};
-    }
-
-    CGFontRef fontRef = CGFontCreateWithFontName((CFStringRef)_font.fontName);
-
-    if (!fontRef) {
-        return {};
-    }
-
-    std::vector<char> data = [TGFontConverter fontDataForCGFont:fontRef];
-
-    CGFontRelease(fontRef);
-
-    if (data.empty()) {
-        LOG("CoreGraphics font failed to decode");
-    }
-
-    return data;
-}
-
-bool allowedFamily(NSString* familyName) {
-    const NSArray<NSString *> *allowedFamilyList = @[ @"Hebrew", @"Kohinoor", @"Gumurki", @"Thonburi", @"Tamil",
-                                                    @"Gurmukhi", @"Kailasa", @"Sangam", @"PingFang", @"Geeza",
-                                                    @"Mishafi", @"Farah", @"Hiragino", @"Gothic" ];
-
-    for (NSString* allowedFamily in allowedFamilyList) {
-        if ( [familyName containsString:allowedFamily] ) { return true; }
-    }
-    return false;
-}
-
 std::vector<FontSourceHandle> OSXPlatform::systemFontFallbacksHandle() const {
     std::vector<FontSourceHandle> handles;
 
@@ -142,10 +109,7 @@ std::vector<FontSourceHandle> OSXPlatform::systemFontFallbacksHandle() const {
             NSString* fontName = familyFont[0];
             NSString* fontStyle = familyFont[1];
             if ( ![fontName containsString:@"-"] || [fontStyle isEqualToString:@"Regular"]) {
-                handles.emplace_back([fontName]() {
-                    auto data = loadNSFont([NSFont fontWithName:fontName size:1.0]);
-                    return data;
-                });
+                handles.emplace_back(fontName.UTF8String, true);
                 break;
             }
         }
@@ -154,7 +118,7 @@ std::vector<FontSourceHandle> OSXPlatform::systemFontFallbacksHandle() const {
     return handles;
 }
 
-std::vector<char> OSXPlatform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
+FontSourceHandle OSXPlatform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
     static std::map<int, CGFloat> weightTraits = {
         {100, NSFontWeightUltraLight},
         {100, NSFontWeightUltraLight},
@@ -212,7 +176,7 @@ std::vector<char> OSXPlatform::systemFont(const std::string& _name, const std::s
         }
     }
 
-    return loadNSFont(font);
+    return FontSourceHandle(font.fontName.UTF8String, true);
 }
 
 bool OSXPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {

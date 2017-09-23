@@ -207,12 +207,12 @@ std::string fontPath(const std::string& _name, const std::string& _weight,
     return fontFile;
 }
 
-std::vector<char> systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
+FontSourceHandle systemFont(const std::string& _name, const std::string& _weight, const std::string& _face, size_t* _size) {
     std::string path = fontPath(_name, _weight, _face);
 
     if (path.empty()) { return {}; }
 
-    return bytesFromFile(path.c_str());
+    return FontSourceHandle([path]() { return bytesFromFile(path.c_str()); });
 }
 
 std::vector<char> bytesFromFile(const char* _path) {

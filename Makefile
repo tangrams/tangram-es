@@ -301,7 +301,7 @@ ifndef TANGRAM_IOS_FRAMEWORK_SLIM
 ifeq (, $(shell which xcpretty))
 	${IOS_FRAMEWORK_BUILD}
 else
-	${IOS_FRAMEWORK_BUILD} | ${XCPRETTY}
+	set -euo pipefail; ${IOS_FRAMEWORK_BUILD} | ${XCPRETTY}
 endif
 endif
 
@@ -312,7 +312,7 @@ ios-framework-sim: cmake-ios-framework-sim
 ifeq (, $(shell which xcpretty))
 	${IOS_FRAMEWORK_SIM_BUILD}
 else
-	${IOS_FRAMEWORK_SIM_BUILD} | ${XCPRETTY}
+	set -euo pipefail; ${IOS_FRAMEWORK_SIM_BUILD} | ${XCPRETTY}
 endif
 
 ios-framework-universal: ios-framework ios-framework-sim

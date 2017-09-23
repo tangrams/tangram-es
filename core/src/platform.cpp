@@ -71,9 +71,9 @@ std::vector<char> Platform::bytesFromFile(const char* _path) const {
     return data;
 }
 
-std::vector<char> Platform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
+FontSourceHandle Platform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
     // No-op by default
-    return {};
+    return FontSourceHandle();
 }
 
 std::vector<FontSourceHandle> Platform::systemFontFallbacksHandle() const {
