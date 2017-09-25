@@ -90,6 +90,7 @@ void SelectionQuery::process(const View& _view, const FrameBuffer& _framebuffer,
 
         glm::dvec2 bbCenter = marker->bounds().center();
         glm::dvec2 lonLat = _view.getMapProjection().MetersToLonLat(bbCenter);
+        lonLat.x = LngLat::wrapLongitude(lonLat.x);
         MarkerPickResult markerResult(marker->id(), {lonLat.x, lonLat.y}, {{m_position.x, m_position.y}});
 
         cb(&markerResult);
@@ -118,7 +119,7 @@ void SelectionQuery::process(const View& _view, const FrameBuffer& _framebuffer,
 
         auto coordinate = label.second->coordToLngLat(label.first->modelCenter());
 
-        LabelPickResult queryResult(label.first->renderType(), LngLat{coordinate.x, coordinate.y},
+        LabelPickResult queryResult(label.first->renderType(), LngLat{coordinate.x, coordinate.y}.wrapped(),
                                     FeaturePickResult(props, {{m_position.x, m_position.y}}));
 
         cb(&queryResult);
