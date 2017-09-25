@@ -76,6 +76,8 @@ public:
 
 protected:
 
+    // A stop gap solution to load assets having `file` scheme in the path
+    std::string removeFileScheme(const char* _path) const;
     bool bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator) const;
 
 private:

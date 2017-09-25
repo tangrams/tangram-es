@@ -16,6 +16,7 @@
 #include "glm/vec2.hpp"
 #include "yaml-cpp/yaml.h"
 #include "util/yamlHelper.h"
+#include "util/url.h"
 
 #include "map.h" // SceneError
 
@@ -33,7 +34,6 @@ class Style;
 class Texture;
 class TileSource;
 struct Stops;
-class Url;
 
 // Delimiter used in sceneloader for style params and layer-sublayer naming
 const std::string DELIMITER = ":";
@@ -96,7 +96,7 @@ public:
     auto& featureSelection() { return m_featureSelection; }
     Style* findStyle(const std::string& _name);
 
-    const auto& path() const { return m_path; }
+    const auto& path() const { return m_path.string(); }
     const auto& yaml() { return m_yaml; }
     const auto& resourceRoot() const { return m_resourceRoot; }
     const auto& config() const { return m_config; }
@@ -152,11 +152,11 @@ public:
 private:
 
     // The file path from which this scene was loaded
-    std::string m_path;
+    Url m_path;
 
     std::string m_yaml;
 
-    std::string m_resourceRoot;
+    Url m_resourceRoot;
 
     // The root node of the YAML scene configuration
     YAML::Node m_config;

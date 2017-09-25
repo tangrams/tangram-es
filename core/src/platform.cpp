@@ -22,6 +22,17 @@ std::string Platform::resolveAssetPath(const std::string& path) const {
     return path;
 };
 
+std::string Platform::removeFileScheme(const char *_path) const {
+    if (!_path || strlen(_path) == 0) { return ""; }
+
+    const static std::string fileScheme = "file://";
+    auto path = std::string(_path);
+    if (path.compare(0, fileScheme.length(), fileScheme) == 0) {
+        path.erase(0, fileScheme.length());
+    }
+    return path;
+}
+
 bool Platform::bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator) const {
     std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
 
@@ -41,9 +52,9 @@ bool Platform::bytesFromFileSystem(const char* _path, std::function<char*(size_t
 }
 
 std::string Platform::stringFromFile(const char* _path) const {
-    std::string out;
-    if (!_path || strlen(_path) == 0) { return out; }
 
+    auto path = removeFileScheme(_path);
+    std::string out;
     std::string data;
 
     auto allocator = [&](size_t size) {
@@ -51,14 +62,14 @@ std::string Platform::stringFromFile(const char* _path) const {
         return &data[0];
     };
 
-    bytesFromFileSystem(_path, allocator);
+    bytesFromFileSystem(path.c_str(), allocator);
 
     return data;
 }
 
 std::vector<char> Platform::bytesFromFile(const char* _path) const {
-    if (!_path || strlen(_path) == 0) { return {}; }
 
+    auto path = removeFileScheme(_path);
     std::vector<char> data;
 
     auto allocator = [&](size_t size) {
@@ -66,7 +77,7 @@ std::vector<char> Platform::bytesFromFile(const char* _path) const {
         return data.data();
     };
 
-    bytesFromFileSystem(_path, allocator);
+    bytesFromFileSystem(path.c_str(), allocator);
 
     return data;
 }

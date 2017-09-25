@@ -32,25 +32,28 @@ Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _path
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()) {
 
-    std::regex r("^(http|https):/");
-    std::smatch match;
+    Url pathUrl = Url(_path);
+    const auto& path = pathUrl.path();
 
-    if (std::regex_search(_path, match, r)) {
-        m_resourceRoot = "";
-        m_path = _path;
+    if (pathUrl.hasHttpScheme()) {
+        m_resourceRoot = Url("");
+        m_path = pathUrl;
     } else {
-
-        auto split = _path.find_last_of("/");
+        auto split = path.find_last_of("/");
         if (split == std::string::npos) {
-            m_resourceRoot = "";
-            m_path = _path;
+            m_resourceRoot = Url();
+            m_path = pathUrl;
         } else {
-            m_resourceRoot = _path.substr(0, split + 1);
-            m_path = _path.substr(split + 1);
+            m_resourceRoot = Url(path.substr(0, split + 1)).resolved(pathUrl);
+            m_path = Url(path.substr(split + 1));
         }
     }
 
-    LOGD("Scene '%s' => '%s' : '%s'", _path.c_str(), m_resourceRoot.c_str(), m_path.c_str());
+    if (!m_resourceRoot.isEmpty() && !m_resourceRoot.hasScheme()) {
+        m_resourceRoot = m_resourceRoot.resolved(Url("file://"));
+    }
+
+    LOGD("Scene '%s' => '%s' : '%s'", _path.c_str(), m_resourceRoot.string().c_str(), m_path.string().c_str());
 
     m_fontContext->setSceneResourceRoot(m_resourceRoot);
 
@@ -71,6 +74,7 @@ Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _yaml
 
     m_mapProjection.reset(new MercatorProjection());
 }
+
 
 void Scene::copyConfig(const Scene& _other) {
 

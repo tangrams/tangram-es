@@ -306,32 +306,34 @@ bool AndroidPlatform::bytesFromAssetManager(const char* _path, std::function<cha
 std::string AndroidPlatform::stringFromFile(const char* _path) const {
 
     std::string data;
+    auto path = removeFileScheme(_path);
 
     auto allocator = [&](size_t size) {
         data.resize(size);
         return &data[0];
     };
 
-    if (strncmp(_path, aaPrefix, aaPrefixLen) == 0) {
-        bytesFromAssetManager(_path + aaPrefixLen, allocator);
+    if (strncmp(path.c_str(), aaPrefix, aaPrefixLen) == 0) {
+        bytesFromAssetManager(path.c_str() + aaPrefixLen, allocator);
     } else {
-        Platform::bytesFromFileSystem(_path, allocator);
+        Platform::bytesFromFileSystem(path.c_str(), allocator);
     }
     return data;
 }
 
 std::vector<char> AndroidPlatform::bytesFromFile(const char* _path) const {
     std::vector<char> data;
+    auto path = removeFileScheme(_path);
 
     auto allocator = [&](size_t size) {
         data.resize(size);
         return data.data();
     };
 
-    if (strncmp(_path, aaPrefix, aaPrefixLen) == 0) {
-        bytesFromAssetManager(_path + aaPrefixLen, allocator);
+    if (strncmp(path.c_str(), aaPrefix, aaPrefixLen) == 0) {
+        bytesFromAssetManager(path.c_str() + aaPrefixLen, allocator);
     } else {
-        Platform::bytesFromFileSystem(_path, allocator);
+        Platform::bytesFromFileSystem(path.c_str(), allocator);
     }
 
     return data;

@@ -331,7 +331,7 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
 
     // 1. Bundle
     // Assuming bundled ttf file follows this convention
-    std::string bundleFontPath = m_sceneResourceRoot + "fonts/" +
+    std::string bundleFontPath = m_sceneResourceRoot.string() + "fonts/" +
         FontDescription::BundleAlias(_family, _style, _weight);
 
     std::vector<char> fontData = m_platform->bytesFromFile(bundleFontPath.c_str());
