@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
   compileSdkVersion 26
-  buildToolsVersion '25.0.3'
+  buildToolsVersion '26.0.1'
 
   def apiKey = project.hasProperty('mapzenApiKey') ? mapzenApiKey : System.getenv('MAPZEN_API_KEY')
 
@@ -34,5 +34,5 @@ android {
 
 dependencies {
   compile project(path: ':tangram')
-  compile 'com.android.support:design:25.3.1'
+  compile 'com.android.support:design:26.1.0'
 }
