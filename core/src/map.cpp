@@ -595,7 +595,7 @@ void Map::getPosition(double& _lon, double& _lat) {
 
     glm::dvec2 meters(impl->view.getPosition().x, impl->view.getPosition().y);
     glm::dvec2 degrees = impl->view.getMapProjection().MetersToLonLat(meters);
-    _lon = degrees.x;
+    _lon = LngLat::wrapLongitude(degrees.x);
     _lat = degrees.y;
 
 }
@@ -698,7 +698,7 @@ bool Map::screenPositionToLngLat(double _x, double _y, double* _lng, double* _la
     glm::dvec3 eye = impl->view.getPosition();
     glm::dvec2 meters(_x + eye.x, _y + eye.y);
     glm::dvec2 lngLat = impl->view.getMapProjection().MetersToLonLat(meters);
-    *_lng = lngLat.x;
+    *_lng = LngLat::wrapLongitude(lngLat.x);
     *_lat = lngLat.y;
 
     return (intersection >= 0);
