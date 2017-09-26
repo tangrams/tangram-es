@@ -252,6 +252,10 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
     auto& styles = _scene->styles();
     for(uint32_t i = 0; i < styles.size(); i++) {
         styles[i]->setID(i);
+
+        if (auto pointStyle = dynamic_cast<PointStyle*>(styles[i].get())) {
+            pointStyle->setTextures(_scene->textures());
+        }
     }
 
     if (Node layers = config["layers"]) {
@@ -556,15 +560,6 @@ bool SceneLoader::extractTexFiltering(Node& filtering, TextureFiltering& filter)
     }
 }
 
-void SceneLoader::updateSpriteNodes(const std::string& texName, std::shared_ptr<Texture>& texture,
-                                    const std::shared_ptr<Scene>& scene) {
-    auto& spriteAtlases = scene->spriteAtlases();
-    if (spriteAtlases.find(texName) != spriteAtlases.end()) {
-        auto& spriteAtlas = spriteAtlases[texName];
-        spriteAtlas->updateSpriteNodes(texture);
-    }
-}
-
 std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platform>& platform,
                                                    const std::string& name, const std::string& url,
                                                    const TextureOptions& options, bool generateMipmaps,
@@ -592,7 +587,10 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
                         LOGE("Invalid texture data '%s'", url.c_str());
                     }
 
-                    updateSpriteNodes(name, texture, scene);
+                    if (texture->spriteAtlas()) {
+                        texture->spriteAtlas()->updateSpriteNodes({texture->getWidth(), texture->getHeight()});
+                    }
+
                     scene->pendingTextures--;
                     if (scene->pendingTextures == 0) {
                         platform->requestRender();
@@ -667,6 +665,10 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
 
     const std::string& name = node.first.Scalar();
     Node textureConfig = node.second;
+    if (!textureConfig.IsMap()) {
+        LOGW("Invalid texture node '%s', skipping.", name.c_str());
+        return;
+    }
 
     std::string file;
     TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
@@ -693,7 +695,7 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
     }
     std::lock_guard<std::mutex> lock(m_textureMutex);
     if (Node sprites = textureConfig["sprites"]) {
-        std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture));
+        auto atlas = std::make_unique<SpriteAtlas>();
 
         for (auto it = sprites.begin(); it != sprites.end(); ++it) {
 
@@ -708,7 +710,8 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
                 atlas->addSpriteNode(spriteName, pos, size);
             }
         }
-        scene->spriteAtlases()[name] = atlas;
+        atlas->updateSpriteNodes({texture->getWidth(), texture->getHeight()});
+        texture->spriteAtlas() = std::move(atlas);
     }
     scene->textures().emplace(name, texture);
 }
@@ -875,13 +878,9 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
         std::lock_guard<std::mutex> lock(m_textureMutex);
         if (auto pointStyle = dynamic_cast<PointStyle*>(&style)) {
             const std::string& textureName = textureNode.Scalar();
-            auto& atlases = scene->spriteAtlases();
-            auto atlasIt = atlases.find(textureName);
             auto styleTexture = scene->getTexture(textureName);
-            if (atlasIt != atlases.end()) {
-                pointStyle->setSpriteAtlas(atlasIt->second);
-            } else if (styleTexture){
-                pointStyle->setTexture(styleTexture);
+            if (styleTexture) {
+                pointStyle->setDefaultTexture(styleTexture);
             } else {
                 LOGW("Undefined texture name %s", textureName.c_str());
             }
@@ -1534,8 +1533,8 @@ Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
     return Filter();
 }
 
-void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& scene, const std::string& prefix,
-                                   std::vector<StyleParam>& out) {
+void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& scene,
+                                   const std::string& prefix, std::vector<StyleParam>& out) {
 
     for (const auto& prop : params) {
 
@@ -1545,8 +1544,20 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
         } else {
             key = prop.first.Scalar();
         }
+        Node value = prop.second;
+
         if (key == "transition" || key == "text:transition") {
             parseTransition(prop.second, scene, key, out);
+            continue;
+        }
+
+        if (key == "texture") {
+            if (value.IsScalar()) {
+                auto strVal = value.Scalar();
+                out.push_back(StyleParam{ StyleParamKey::texture, strVal });
+            } else {
+                ;// TODO load texture
+            }
             continue;
         }
 
@@ -1554,8 +1565,6 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
             // Add StyleParam to signify that icon uses text
             out.push_back(StyleParam{ StyleParamKey::point_text, "" });
         }
-
-        Node value = prop.second;
 
         switch (value.Type()) {
         case NodeType::Scalar: {

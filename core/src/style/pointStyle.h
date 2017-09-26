@@ -25,6 +25,7 @@ public:
         bool autoAngle = false;
         std::string sprite;
         std::string spriteDefault;
+        std::string texture;
         glm::vec2 size;
         uint32_t color = 0xffffffff;
         Label::Options labelOptions;
@@ -37,6 +38,8 @@ public:
     PointStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
                Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES, bool _selection = true);
 
+    virtual ~PointStyle();
+
     virtual void onBeginUpdate() override;
     virtual void onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) override;
     virtual void onBeginFrame(RenderState& rs) override;
@@ -44,15 +47,17 @@ public:
     virtual void draw(RenderState& rs, const Tile& _tile) override {}
     virtual void draw(RenderState& rs, const Marker& _marker) override {}
 
-    void setSpriteAtlas(std::shared_ptr<SpriteAtlas> _spriteAtlas) { m_spriteAtlas = _spriteAtlas; }
-    void setTexture(std::shared_ptr<Texture> _texture) { m_texture = _texture; }
+    void setTextures(const std::unordered_map<std::string, std::shared_ptr<Texture>>& _textures) {
+        m_textures = &_textures;
+    }
+    void setDefaultTexture(std::shared_ptr<Texture>& _texture) {
+        m_defaultTexture = _texture;
+    }
 
-    const auto& texture() const { return m_texture; }
-    const auto& spriteAtlas() const { return m_spriteAtlas; }
+    auto textures() const { return m_textures; }
+    const auto& defaultTexture() const { return m_defaultTexture; }
 
-    virtual ~PointStyle();
-
-    auto& getMesh() const { return m_mesh; }
+    auto& mesh() const { return m_mesh; }
     virtual size_t dynamicMeshSize() const override { return m_mesh->bufferSize(); }
 
     virtual std::unique_ptr<StyleBuilder> createBuilder() const override;
@@ -67,8 +72,8 @@ public:
 
 protected:
 
-    std::shared_ptr<SpriteAtlas> m_spriteAtlas;
-    std::shared_ptr<Texture> m_texture;
+    std::shared_ptr<Texture> m_defaultTexture;
+    const std::unordered_map<std::string, std::shared_ptr<Texture>>* m_textures = nullptr;
 
     struct UniformBlock {
         UniformLocation uTex{"u_tex"};

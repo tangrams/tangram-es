@@ -105,13 +105,6 @@ void PointStyleBuilder::setup(const Marker& _marker, int zoom) {
 }
 
 bool PointStyleBuilder::checkRule(const DrawRule& _rule) const {
-    uint32_t checkColor;
-    // require a color or texture atlas/texture to be valid
-    if (!_rule.get(StyleParamKey::color, checkColor) &&
-        !m_style.texture() &&
-        !m_style.spriteAtlas()) {
-        return false;
-    }
     return true;
 }
 
@@ -126,7 +119,6 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     _rule.get(StyleParamKey::buffer, p.labelOptions.buffer);
 
     uint32_t priority = 0;
-    size_t repeatGroupHash = 0;
     std::string repeatGroup;
     StyleParam::Width repeatDistance;
 
@@ -135,6 +127,8 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     }
 
     _rule.get(StyleParamKey::sprite_default, p.spriteDefault);
+    _rule.get(StyleParamKey::texture, p.texture);
+
     _rule.get(StyleParamKey::placement, p.placement);
     StyleParam::Width placementSpacing;
     auto placementSpacingParam = _rule.findParameter(StyleParamKey::placement_spacing);
@@ -163,6 +157,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     }
 
     if (p.labelOptions.repeatDistance > 0.f) {
+        size_t repeatGroupHash = 0;
         if (_rule.get(StyleParamKey::repeat_group, repeatGroup)) {
             hash_combine(repeatGroupHash, repeatGroup);
         } else {
@@ -220,7 +215,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     return p;
 }
 
-void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
+void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad, Texture* _texture,
                                  const PointStyle::Parameters& _params, const DrawRule& _rule) {
 
     uint32_t selectionColor = 0;
@@ -238,7 +233,7 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
                                                      _params.labelOptions,
                                                      SpriteLabel::VertexAttributes{_params.color,
                                                              selectionColor, _params.extrudeScale },
-                                                     m_texture,
+                                                     _texture,
                                                      *m_spriteLabels,
                                                      m_quads.size()));
 
@@ -275,25 +270,47 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad,
         });
 }
 
-bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const {
+bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params,
+                                  glm::vec4& _quad, Texture** _texture) const {
+
     _quad = glm::vec4(0.0, 1.0, 1.0, 0.0);
+    auto texture = m_style.defaultTexture().get();
 
-    if (m_style.spriteAtlas()) {
-        SpriteNode spriteNode;
+    if (!_params.texture.empty()) {
 
-        if (!m_style.spriteAtlas()->getSpriteNode(_params.sprite, spriteNode) &&
-            !m_style.spriteAtlas()->getSpriteNode(_params.spriteDefault, spriteNode)) {
-            return false;
+        if (_params.texture == "null") {
+            texture = nullptr;
+        } else {
+            if (!m_style.textures()) {
+                return false;
+            }
+
+            auto it = m_style.textures()->find(_params.texture);
+            if (it == m_style.textures()->end()) {
+                return false;
+            }
+            texture = it->second.get();
         }
+    }
 
-        if (std::isnan(_params.size.x)) {
-            _params.size = spriteNode.m_size;
+    if (texture) {
+        if (auto& atlas = texture->spriteAtlas()) {
+
+            SpriteNode spriteNode;
+            if (!atlas->getSpriteNode(_params.sprite, spriteNode) &&
+                !atlas->getSpriteNode(_params.spriteDefault, spriteNode)) {
+                return false;
+            }
+
+            if (std::isnan(_params.size.x)) {
+                _params.size = spriteNode.m_size;
+            }
+
+            _quad.x = spriteNode.m_uvBL.x;
+            _quad.y = spriteNode.m_uvBL.y;
+            _quad.z = spriteNode.m_uvTR.x;
+            _quad.w = spriteNode.m_uvTR.y;
         }
-
-        _quad.x = spriteNode.m_uvBL.x;
-        _quad.y = spriteNode.m_uvBL.y;
-        _quad.z = spriteNode.m_uvTR.x;
-        _quad.w = spriteNode.m_uvTR.y;
     } else {
         // default point size
         if (std::isnan(_params.size.x)) {
@@ -301,12 +318,14 @@ bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params, glm::vec4& _q
         }
     }
 
+    *_texture = texture;
+
     _params.size *= m_style.pixelScale();
 
     return true;
 }
 
-void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& uvsQuad,
+void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& _uvsQuad, Texture* _texture,
                                            PointStyle::Parameters& params, const DrawRule& _rule) {
 
     if (_line.size() < 2) { return; }
@@ -336,10 +355,10 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& u
                     if (params.autoAngle) {
                         params.labelOptions.angle = angleBetween(p, q);
                     }
-                    addLabel(p, uvsQuad, params, _rule);
+                    addLabel(p, _uvsQuad, _texture, params, _rule);
                     if (i == _line.size() - 2) {
                         // Place label on endpoint
-                        addLabel(q, uvsQuad, params, _rule);
+                        addLabel(q, _uvsQuad, _texture, params, _rule);
                     }
                 }
             }
@@ -355,7 +374,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& u
                         params.labelOptions.angle = angleBetween(p, q);
                     }
                     glm::vec3 midpoint(0.5f * (p.x + q.x), 0.5f * (p.y + q.y), 0.0f);
-                    addLabel(midpoint, uvsQuad, params, _rule);
+                    addLabel(midpoint, _uvsQuad, _texture, params, _rule);
                 }
             }
             break;
@@ -385,7 +404,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& u
                     params.labelOptions.angle = RAD_TO_DEG * atan2(r.x, r.y);
                 }
 
-                addLabel({p.x, p.y, 0.f}, uvsQuad, params, _rule);
+                addLabel({p.x, p.y, 0.f}, _uvsQuad, _texture, params, _rule);
 
             } while (sampler.advance(spacing, p, r));
         }
@@ -401,12 +420,13 @@ bool PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
 
     PointStyle::Parameters p = applyRule(_rule, _props);
     glm::vec4 uvsQuad;
+    Texture* texture = nullptr;
 
-    if (!getUVQuad(p, uvsQuad)) {
+    if (!getUVQuad(p, uvsQuad, &texture)) {
         return false;
     }
 
-    addLabel(_point, uvsQuad, p, _rule);
+    addLabel(_point, uvsQuad, texture, p, _rule);
 
     return true;
 }
@@ -416,12 +436,13 @@ bool PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
 
     PointStyle::Parameters p = applyRule(_rule, _props);
     glm::vec4 uvsQuad;
+    Texture* texture = nullptr;
 
-    if (!getUVQuad(p, uvsQuad)) {
+    if (!getUVQuad(p, uvsQuad, &texture)) {
         return false;
     }
 
-    labelPointsPlacing(_line, uvsQuad, p, _rule);
+    labelPointsPlacing(_line, uvsQuad, texture, p, _rule);
 
     return true;
 }
@@ -431,20 +452,21 @@ bool PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
 
     PointStyle::Parameters p = applyRule(_rule, _props);
     glm::vec4 uvsQuad;
+    Texture* texture = nullptr;
 
-    if (!getUVQuad(p, uvsQuad)) {
+    if (!getUVQuad(p, uvsQuad, &texture)) {
         return false;
     }
 
     if (p.placement != LabelProperty::centroid) {
         for (auto line : _polygon) {
-            labelPointsPlacing(line, uvsQuad, p, _rule);
+            labelPointsPlacing(line, uvsQuad, texture, p, _rule);
         }
     } else {
         if (!_polygon.empty()) {
             glm::vec3 c;
             c = centroid(_polygon.front().begin(), _polygon.front().end());
-            addLabel(c, uvsQuad, p, _rule);
+            addLabel(c, uvsQuad, texture, p, _rule);
         }
     }
 

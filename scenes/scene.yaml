@@ -72,9 +72,6 @@ styles:
         base: lines
         blend_order: -1
         mix: heightglow
-    icons:
-        base: points
-        texture: pois
     dashed:
         base: lines
         dash: [3.0, 0.3]
@@ -122,7 +119,8 @@ layers:
         point:
             filter: { type: point }
             draw:
-              icons:
+              points:
+                texture: pois
                 sprite: sunburst
                 collide: false
                 transition: { show: { time: 0s }, hide: { time: 0s } }
@@ -309,7 +307,8 @@ layers:
             # oneway arrows and shields are distinct groups!
             filter: { oneway: yes, shield_text: false, $zoom: { min: 17 } }
             draw:
-                icons:
+                points:
+                    texture: pois
                     flat: true
                     sprite: arrow
                     size: [[17, 18px], [18, 20px], [20, 32px]]
@@ -322,7 +321,8 @@ layers:
                 network: 'US:I' # US interstates only in this demo
                 shield_text: true
             draw:
-                icons:
+                points:
+                    texture: pois
                     sprite: shield
                     # sprite: function() { return feature.network }
                     priority: 2
@@ -343,7 +343,7 @@ layers:
             thinning:
                 filter: { $zoom: { max: 11 } }
                 draw:
-                    icons:
+                    points:
                         repeat_distance: 75px
 
         labels:
@@ -456,7 +456,8 @@ layers:
     pois:
         data: { source: osm }
         draw:
-            icons:
+            points:
+                texture: pois
                 interactive: true
                 collide: true
                 transition: { show: { time: 0s }, hide: { time: 1s } }
@@ -474,7 +475,7 @@ layers:
                     - { $zoom: { min: 16 } }
                     - { area: { min: 500px2 } }
             draw:
-                icons:
+                points:
                     sprite: tree
                     priority: 2
                     size: 16px
@@ -492,7 +493,7 @@ layers:
                     - { $zoom: { min: 7 }, tier: 1 }
                     - { $zoom: { min: 9 }, tier: { max: 3 } }
             draw:
-                icons:
+                points:
                     visible: false
                 text:
                     priority: 2
@@ -509,7 +510,7 @@ layers:
                     kind: [peak, viewpoint, bicycle_rental, car_sharing, park, forest, cemetery, graveyard]
                 $zoom: { min: 15 }
             draw:
-                icons:
+                points:
                     size: [[13, 12px], [15, 18px]]
                     interactive: true
                     priority: 6
@@ -523,7 +524,7 @@ layers:
                     - { $zoom: { min: 17 } }
                     - { $zoom: { min: 16 }, kind: station }
                 draw:
-                    icons:
+                    points:
                         text:
                             visible: true
                             font:
@@ -533,37 +534,37 @@ layers:
             # add generic icon at high zoom
             generic:
                 filter: { $zoom: { min: 18 } }
-                draw: { icons: { sprite: info } }
+                draw: { points: { sprite: info } }
 
-            # examples of different icons mapped to feature properties
-            icons:
+            # examples of different points mapped to feature properties
+            points:
                 restaurant:
                     filter: { kind: [restaurant] }
-                    draw: { icons: { sprite: restaurant } }
+                    draw: { points: { sprite: restaurant } }
                 cafe:
                     filter: { kind: [cafe, convenience] }
-                    draw: { icons: { sprite: cafe } }
+                    draw: { points: { sprite: cafe } }
                 bar:
                     filter: { kind: [bar, pub] }
-                    draw: { icons: { sprite: bar } }
+                    draw: { points: { sprite: bar } }
                 culture:
                     filter: { kind: [museum, library, church, place_of_worship, bank] }
-                    draw: { icons: { sprite: museum } }
+                    draw: { points: { sprite: museum } }
                 station:
                     filter: { kind: [station] }
-                    draw: { icons: { sprite: train, priority: 2 } }
+                    draw: { points: { sprite: train, priority: 2 } }
                 hospital:
                     filter: { kind: [hospital, pharmacy] }
-                    draw: { icons: { sprite: hospital } }
+                    draw: { points: { sprite: hospital } }
                 hotel:
                     filter: { kind: [hotel, hostel] }
-                    draw: { icons: { sprite: hotel } }
+                    draw: { points: { sprite: hotel } }
                 bus_stop:
                     filter: { kind: [bus_stop] }
-                    draw: { icons: { sprite: bus } }
+                    draw: { points: { sprite: bus } }
                 bookstore:
                     filter: { kind: [bookstore] }
-                    draw: { icons: { sprite: bookstore } }
+                    draw: { points: { sprite: bookstore } }
 
     boundaries:
         data: { source: osm }

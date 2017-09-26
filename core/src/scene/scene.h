@@ -28,7 +28,6 @@ class Light;
 class MapProjection;
 class Platform;
 class SceneLayer;
-class SpriteAtlas;
 class Style;
 class Texture;
 class TileSource;
@@ -88,7 +87,6 @@ public:
     auto& textures() { return m_textures; };
     auto& functions() { return m_jsFunctions; };
     auto& assets() { return m_assets; };
-    auto& spriteAtlases() { return m_spriteAtlases; };
     auto& stops() { return m_stops; }
     auto& background() { return m_background; }
     auto& fontContext() { return m_fontContext; }
@@ -171,7 +169,6 @@ private:
     std::map<std::string, std::string> m_lightShaderBlocks;
 
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
-    std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
 
     // path as key
     fastmap<std::string, std::shared_ptr<Asset>> m_assets;

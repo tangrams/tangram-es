@@ -39,15 +39,15 @@ struct PointStyleBuilder : public StyleBuilder {
         m_textStyleBuilder = m_style.textStyle().createBuilder();
     }
 
-    bool getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const;
+    bool getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad, Texture** _texture) const;
 
     PointStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
 
     // Gets points for label placement and appropriate angle for each label (if `auto` angle is set)
-    void labelPointsPlacing(const Line& _line, const glm::vec4& _quad,
+    void labelPointsPlacing(const Line& _line, const glm::vec4& _quad, Texture* _texture,
                             PointStyle::Parameters& _params, const DrawRule& _rule);
 
-    void addLabel(const Point& _point, const glm::vec4& _quad,
+    void addLabel(const Point& _point, const glm::vec4& _quad, Texture* _texture,
                   const PointStyle::Parameters& _params, const DrawRule& _rule);
 
     void addLayoutItems(LabelCollider& _layout) override;

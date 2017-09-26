@@ -92,6 +92,7 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"text_source:left", StyleParamKey::text_source_left},
     {"text_source:right", StyleParamKey::text_source_right},
     {"text_wrap", StyleParamKey::text_wrap},
+    {"texture", StyleParamKey::texture},
     {"tile_edges", StyleParamKey::tile_edges},
     {"transition:hide:time", StyleParamKey::transition_hide_time},
     {"transition:selected:time", StyleParamKey::transition_selected_time},
@@ -273,6 +274,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::outline_style:
     case StyleParamKey::repeat_group:
     case StyleParamKey::text_repeat_group:
+    case StyleParamKey::texture:
         return _value;
     case StyleParamKey::text_font_size: {
         float fontSize = 0.f;
@@ -451,6 +453,7 @@ std::string StyleParam::toString() const {
     case StyleParamKey::sprite_default:
     case StyleParamKey::style:
     case StyleParamKey::text_align:
+    case StyleParamKey::texture:
         if (!value.is<std::string>()) break;
         return k + value.get<std::string>();
     case StyleParamKey::anchor:
