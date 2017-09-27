@@ -65,21 +65,22 @@ using namespace Tangram;
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
     NSString* defaultsValueString = [defaults stringForKey:defaultsKeyString];
 
-    NSAlert* alert = [[NSAlert alloc] init];
-    [alert setMessageText:@"Set API key default"];
-
     NSTextField *input = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 200, 24)];
     input.translatesAutoresizingMaskIntoConstraints = YES;
     input.editable = YES;
     input.selectable = YES;
     if (defaultsValueString != nil) {
         [input setStringValue:defaultsValueString];
-        [input selectText:self];
     }
 
-    [alert setAccessoryView:input];
+    NSAlert* alert = [[NSAlert alloc] init];
+    [alert setMessageText:@"Set API key default"];
+    [alert setAccessoryView: input];
     [alert addButtonWithTitle:@"Ok"];
     [alert addButtonWithTitle:@"Cancel"];
+    [alert layout];
+    [alert.window makeFirstResponder:alert.accessoryView];
+
     NSInteger button = [alert runModal];
     if (button == NSAlertFirstButtonReturn) {
         [defaults setValue:[input stringValue] forKey:defaultsKeyString];
