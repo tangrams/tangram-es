@@ -16,6 +16,8 @@ using namespace Tangram;
 + (void)startFileOpen;
 + (void)startFileEdit;
 + (void)startFileReload;
++ (void)copyEditorTextToClipboard;
++ (void)pasteEditorTextFromClipboard;
 + (NSString*) apiKeyDefaultsName;
 @end
 
@@ -57,6 +59,18 @@ using namespace Tangram;
                                                       keyEquivalent:@"r"
                                                             atIndex:4];
     sceneReloadMenuItem.target = self;
+
+    NSMenuItem* copyMenuItem = [appMenu insertItemWithTitle:@"Copy"
+                                                     action:@selector(copyEditorTextToClipboard)
+                                              keyEquivalent:@"c"
+                                                    atIndex:5];
+    copyMenuItem.target = self;
+
+    NSMenuItem* pasteMenuItem = [appMenu insertItemWithTitle:@"Paste"
+                                                      action:@selector(pasteEditorTextFromClipboard)
+                                               keyEquivalent:@"v"
+                                                     atIndex:6];
+    pasteMenuItem.target = self;
 }
 
 + (void)startApiKeyInput
@@ -81,12 +95,13 @@ using namespace Tangram;
     [alert layout];
     [alert.window makeFirstResponder:alert.accessoryView];
 
-    NSInteger button = [alert runModal];
-    if (button == NSAlertFirstButtonReturn) {
-        [defaults setValue:[input stringValue] forKey:defaultsKeyString];
-        GlfwApp::mapzenApiKey = std::string([[input stringValue] UTF8String]);
-        GlfwApp::loadSceneFile();
-    }
+    [alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] completionHandler:^(NSModalResponse returnCode) {
+        if (returnCode == NSAlertFirstButtonReturn) {
+            [defaults setValue:[input stringValue] forKey:defaultsKeyString];
+            GlfwApp::mapzenApiKey = std::string([[input stringValue] UTF8String]);
+            GlfwApp::loadSceneFile();
+        }
+    }];
 }
 
 + (void)startFileOpen
@@ -118,6 +133,25 @@ using namespace Tangram;
 + (void)startFileReload
 {
     GlfwApp::loadSceneFile();
+}
+
++ (void)copyEditorTextToClipboard
+{
+    NSText* fieldEditor = [[[NSApplication sharedApplication] keyWindow] fieldEditor:NO forObject:nil];
+    if (fieldEditor) {
+        NSPasteboard* pasteboard = [NSPasteboard generalPasteboard];
+        [pasteboard clearContents];
+        [pasteboard setString:[fieldEditor string] forType:NSPasteboardTypeString];
+    }
+}
+
++ (void)pasteEditorTextFromClipboard
+{
+    NSText* fieldEditor = [[[NSApplication sharedApplication] keyWindow] fieldEditor:NO forObject:nil];
+    if (fieldEditor) {
+        NSPasteboard* pasteboard = [NSPasteboard generalPasteboard];
+        [fieldEditor setString:[pasteboard stringForType:NSPasteboardTypeString]];
+    }
 }
 
 + (NSString*)apiKeyDefaultsName
