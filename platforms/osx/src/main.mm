@@ -34,43 +34,44 @@ using namespace Tangram;
 
     // Set up menu shortcuts.
     NSMenu *mainMenu = [[NSApplication sharedApplication] mainMenu];
+
+    // Set up Tangram ES menu.
     NSMenu *appMenu = [[mainMenu itemAtIndex:0] submenu];
-    NSMenuItem* apiKeyMenuItem = [appMenu insertItemWithTitle:@"API Key..."
-                                                       action:@selector(startApiKeyInput)
-                                                keyEquivalent:@"k"
-                                                      atIndex:1];
-    apiKeyMenuItem.target = self;
+    [appMenu insertItemWithTitle:@"API Key..."
+                          action:@selector(startApiKeyInput)
+                   keyEquivalent:@"k"
+                         atIndex:1].target = self;
 
-    NSMenuItem* editFileMenuItem = [appMenu insertItemWithTitle:@"Open Scene with Exernal Editor"
-                                                         action:@selector(startFileEdit)
-                                                  keyEquivalent:@"e"
-                                                        atIndex:2];
+    // Set up File menu.
+    NSMenuItem* fileMenuItem = [mainMenu insertItemWithTitle:@"" action:nil keyEquivalent:@"" atIndex:1];
+    NSMenu* fileMenu = [[NSMenu alloc] init];
+    [fileMenuItem setSubmenu:fileMenu];
+    [fileMenu setTitle:@"File"];
+    [fileMenu addItemWithTitle:@"Open Scene with External Editor"
+                       action:@selector(startFileEdit)
+                keyEquivalent:@"e"].target = self;
 
-    editFileMenuItem.target = self;
+    [fileMenu addItemWithTitle:@"Open Scene..."
+                       action:@selector(startFileOpen)
+                keyEquivalent:@"o"].target = self;
 
-    NSMenuItem* sceneOpenMenuItem = [appMenu insertItemWithTitle:@"Open Scene..."
-                                                           action:@selector(startFileOpen)
-                                                    keyEquivalent:@"o"
-                                                          atIndex:3];
-    sceneOpenMenuItem.target = self;
+    [fileMenu addItemWithTitle:@"Reload Scene"
+                       action:@selector(startFileReload)
+                keyEquivalent:@"r"].target = self;
 
-    NSMenuItem* sceneReloadMenuItem = [appMenu insertItemWithTitle:@"Reload Scene"
-                                                             action:@selector(startFileReload)
-                                                      keyEquivalent:@"r"
-                                                            atIndex:4];
-    sceneReloadMenuItem.target = self;
+    // Set up Edit menu.
+    NSMenuItem* editMenuItem = [mainMenu insertItemWithTitle:@"" action:nil keyEquivalent:@"" atIndex:2];
+    NSMenu* editMenu = [[NSMenu alloc] init];
+    [editMenuItem setSubmenu:editMenu];
+    [editMenu setTitle:@"Edit"];
 
-    NSMenuItem* copyMenuItem = [appMenu insertItemWithTitle:@"Copy"
-                                                     action:@selector(copyEditorTextToClipboard)
-                                              keyEquivalent:@"c"
-                                                    atIndex:5];
-    copyMenuItem.target = self;
+    [editMenu addItemWithTitle:@"Copy"
+                        action:@selector(copyEditorTextToClipboard)
+                 keyEquivalent:@"c"].target = self;
 
-    NSMenuItem* pasteMenuItem = [appMenu insertItemWithTitle:@"Paste"
-                                                      action:@selector(pasteEditorTextFromClipboard)
-                                               keyEquivalent:@"v"
-                                                     atIndex:6];
-    pasteMenuItem.target = self;
+    [editMenu addItemWithTitle:@"Paste"
+                        action:@selector(pasteEditorTextFromClipboard)
+                 keyEquivalent:@"v"].target = self;
 }
 
 + (void)startApiKeyInput
