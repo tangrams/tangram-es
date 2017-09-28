@@ -43,6 +43,15 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (instancetype)init;
 
+
+/**
+ Initializes a http handler with the custom configuration.
+
+ @param configuration custom NSURLConfiguration object
+ @return an initialized http handler
+ */
+- (instancetype)initWithSessionConfiguration:(NSURLSessionConfiguration *)configuration;
+
 /**
  Initializes a http handler with a user defined configuration.
 
