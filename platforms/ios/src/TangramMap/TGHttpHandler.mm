@@ -97,6 +97,7 @@
 
     self.configuration.URLCache = tileCache;
     self.configuration.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
+    self.session = [NSURLSession sessionWithConfiguration:self.configuration];
 }
 
 #pragma mark - Instance Methods
