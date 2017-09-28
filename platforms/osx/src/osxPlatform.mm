@@ -145,7 +145,7 @@ FontSourceHandle OSXPlatform::systemFont(const std::string& _name, const std::st
     if (font == nil) {
         // Get the default system font
         if (_weight.empty()) {
-            font = [NSFont systemFontSize:1.0];
+            font = [NSFont systemFontOfSize:1.0];
         } else {
             int weight = atoi(_weight.c_str());
 
