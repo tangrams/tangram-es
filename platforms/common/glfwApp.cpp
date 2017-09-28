@@ -251,10 +251,15 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 
     if ((time - last_time_released) < double_tap_time) {
         // Double tap recognized
-        Tangram::LngLat p;
-        map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
-        map->setPositionEased(p.longitude, p.latitude, 1.f);
-
+        const float duration = 0.5f;
+        Tangram::LngLat tapped, current;
+        map->screenPositionToLngLat(x, y, &tapped.longitude, &tapped.latitude);
+        map->getPosition(current.longitude, current.latitude);
+        map->setZoomEased(map->getZoom() + 1.f, duration, EaseType::quint);
+        map->setPositionEased(
+            0.5 * (tapped.longitude + current.longitude),
+            0.5 * (tapped.latitude + current.latitude),
+            duration, EaseType::quint);
     } else if ((time - last_time_pressed) < single_tap_time) {
         // Single tap recognized
         Tangram::LngLat p;
