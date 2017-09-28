@@ -74,7 +74,11 @@ void parseArgs(int argc, char* argv[]) {
     int argi = 0;
     while (++argi < argc) {
         if (strcmp(argv[argi - 1], "-f") == 0) {
-            sceneFile = std::string(argv[argi]);
+            Url url(argv[argi]);
+            if (!url.hasScheme()) {
+                url = url.resolved(Url("file://"));
+            }
+            sceneFile = url.string();
             LOG("File from command line: %s\n", argv[argi]);
             break;
         }
@@ -465,7 +469,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
 void dropCallback(GLFWwindow* window, int count, const char** paths) {
 
-    sceneFile = std::string(paths[0]);
+    sceneFile = "file://" + std::string(paths[0]);
     sceneYaml.clear();
 
     loadSceneFile();
