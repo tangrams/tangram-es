@@ -123,23 +123,3 @@ TEST_CASE( "Style Uniforms Parsing and Injection Test: textures uniform value", 
     REQUIRE(uniformValues.value.get<UniformTextureArray>().names[1] == "img/normals.jpg");
     REQUIRE(uniformValues.value.get<UniformTextureArray>().names[2] == "img/sem.jpg");
 }
-
-TEST_CASE( "Style Uniforms Parsing failure Tests: textures uniform value", "[StyleUniforms][core][yaml]") {
-    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform, Url());
-
-    Node node = YAML::Load(R"END(
-        u_tex: not_a_texture
-        u_tex2: [not_a_texture_path2, not_a_texture_path_1]
-        u_uniform_float0: 0.5f
-        u_uniform_float1: 0s.5
-    )END");
-
-    StyleUniform uniformValues;
-
-    REQUIRE(!SceneLoader::parseStyleUniforms(platform, node["u_tex"], scene, uniformValues));
-    REQUIRE(!SceneLoader::parseStyleUniforms(platform, node["u_tex2"], scene, uniformValues));
-    REQUIRE(!SceneLoader::parseStyleUniforms(platform, node["u_uniform_float0"], scene, uniformValues));
-    REQUIRE(!SceneLoader::parseStyleUniforms(platform, node["u_uniform_float1"], scene, uniformValues));
-}
-

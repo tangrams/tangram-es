@@ -1597,9 +1597,8 @@ bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, 
             if (scene) {
                 std::shared_ptr<Texture> texture = scene->getTexture(strVal);
 
-                if (!texture && !loadTexture(platform, strVal, scene)) {
-                    LOGW("Can't load texture with name %s", strVal.c_str());
-                    return false;
+                if (!texture) {
+                    loadTexture(platform, strVal, scene);
                 }
             }
 
@@ -1645,9 +1644,8 @@ bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, 
                 if (scene) {
                     std::shared_ptr<Texture> texture = scene->getTexture(textureName);
 
-                    if (!texture && !loadTexture(platform, textureName, scene)) {
-                        LOGW("Can't load texture with name %s", textureName.c_str());
-                        return false;
+                    if (!texture) {
+                        loadTexture(platform, textureName, scene);
                     }
                 }
             }
