@@ -116,9 +116,7 @@ using namespace Tangram;
     if (button == NSFileHandlingPanelOKButton) {
         NSURL* url = [openPanel URLs].firstObject;
         LOG("Got URL to open: %s", [[url absoluteString] UTF8String]);
-        // TODO: When generic URL support is added to scene loading, we should
-        // use the full URL here instead of just the path.
-        GlfwApp::sceneFile = std::string([[url path] UTF8String]);
+        GlfwApp::sceneFile = [[url absoluteString] UTF8String];
         GlfwApp::sceneYaml.clear();
         GlfwApp::loadSceneFile();
     }
