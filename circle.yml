@@ -7,7 +7,7 @@ machine:
     XCODE_SCHEME: phony
 dependencies:
   pre:
-    - brew install awscli
+    - brew install awscli cmake
     - gem install jazzy
 checkout:
   post:
