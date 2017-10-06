@@ -78,6 +78,14 @@ add_subdirectory(SQLiteCpp)
 # Extensions aren't needed for MBTiles and aren't available in older versions of sqlite3.
 target_compile_definitions(SQLiteCpp PRIVATE SQLITE_OMIT_LOAD_EXTENSION)
 
+# needed for sqlite3 to work for ndk15c+ and android api level < 21
+# refer:
+# https://github.com/android-ndk/ndk/issues/477 and
+# https://android.googlesource.com/platform/bionic/+/master/docs/32-bit-abi.md
+if (ANDROID)
+    target_compile_definitions(sqlite3 PRIVATE _FILE_OFFSET_BITS=32)
+endif()
+
 ## double-conversion ##
 #######################
 add_subdirectory(double-conversion)
