@@ -74,7 +74,11 @@ void parseArgs(int argc, char* argv[]) {
     int argi = 0;
     while (++argi < argc) {
         if (strcmp(argv[argi - 1], "-f") == 0) {
-            sceneFile = std::string(argv[argi]);
+            Url url(argv[argi]);
+            if (!url.hasScheme()) {
+                url = url.resolved(Url("file://"));
+            }
+            sceneFile = url.string();
             LOG("File from command line: %s\n", argv[argi]);
             break;
         }
@@ -133,6 +137,7 @@ void create(std::shared_ptr<Platform> p, int w, int h) {
 
     // Create a windowed mode window and its OpenGL context
     glfwWindowHint(GLFW_SAMPLES, 2);
+    glfwWindowHint(GLFW_STENCIL_BITS, 8);
     if (!main_window) {
         main_window = glfwCreateWindow(width, height, versionString, NULL, NULL);
     }
@@ -246,10 +251,15 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 
     if ((time - last_time_released) < double_tap_time) {
         // Double tap recognized
-        Tangram::LngLat p;
-        map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
-        map->setPositionEased(p.longitude, p.latitude, 1.f);
-
+        const float duration = 0.5f;
+        Tangram::LngLat tapped, current;
+        map->screenPositionToLngLat(x, y, &tapped.longitude, &tapped.latitude);
+        map->getPosition(current.longitude, current.latitude);
+        map->setZoomEased(map->getZoom() + 1.f, duration, EaseType::quint);
+        map->setPositionEased(
+            0.5 * (tapped.longitude + current.longitude),
+            0.5 * (tapped.latitude + current.latitude),
+            duration, EaseType::quint);
     } else if ((time - last_time_pressed) < single_tap_time) {
         // Single tap recognized
         Tangram::LngLat p;
@@ -464,7 +474,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
 void dropCallback(GLFWwindow* window, int count, const char** paths) {
 
-    sceneFile = std::string(paths[0]);
+    sceneFile = "file://" + std::string(paths[0]);
     sceneYaml.clear();
 
     loadSceneFile();

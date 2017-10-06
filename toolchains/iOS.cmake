@@ -1,7 +1,7 @@
 include(${CMAKE_SOURCE_DIR}/toolchains/iOS.toolchain.cmake)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-set(ARCH "armv7 armv7s arm64 i386 x86_64")
+set(ARCH "armv7 arm64 x86_64")
 set(SUPPORTED_PLATFORMS "iphonesimulator iphoneos")
 set(TANGRAM_FRAMEWORK ${PROJECT_SOURCE_DIR}/${TANGRAM_FRAMEWORK})
 set(EXECUTABLE_NAME "tangram")

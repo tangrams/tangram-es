@@ -507,6 +507,11 @@ void Map::render() {
     // Run render-thread tasks
     impl->renderState.jobQueue.runJobs();
 
+
+    for (const auto& style : impl->scene->styles()) {
+        style->onBeginFrame(impl->renderState);
+    }
+
     // Render feature selection pass to offscreen framebuffer
     if (impl->selectionQueries.size() > 0 || drawSelectionBuffer) {
         impl->selectionBuffer->applyAsRenderTarget(impl->renderState);
@@ -514,15 +519,10 @@ void Map::render() {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
         for (const auto& style : impl->scene->styles()) {
-            style->onBeginDrawSelectionFrame(impl->renderState, impl->view, *(impl->scene));
 
-            for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                style->drawSelectionFrame(impl->renderState, *tile);
-            }
-
-            for (const auto& marker : impl->markerManager.markers()) {
-                style->drawSelectionFrame(impl->renderState, *marker);
-            }
+            style->drawSelectionFrame(impl->renderState, impl->view, *(impl->scene),
+                                      impl->tileManager.getVisibleTiles(),
+                                      impl->markerManager.markers());
         }
 
         std::vector<SelectionColorRead> colorCache;
@@ -546,28 +546,17 @@ void Map::render() {
         return;
     }
 
-    for (const auto& style : impl->scene->styles()) {
-        style->onBeginFrame(impl->renderState);
-    }
-
     {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
         // Loop over all styles
         for (const auto& style : impl->scene->styles()) {
 
-            style->onBeginDrawFrame(impl->renderState, impl->view, *(impl->scene));
+            style->draw(impl->renderState,
+                        impl->view, *(impl->scene),
+                        impl->tileManager.getVisibleTiles(),
+                        impl->markerManager.markers());
 
-            // Loop over all tiles in m_tileSet
-            for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                style->draw(impl->renderState, *tile);
-            }
-
-            for (const auto& marker : impl->markerManager.markers()) {
-                style->draw(impl->renderState, *marker);
-            }
-
-            style->onEndDrawFrame();
         }
     }
 
@@ -623,7 +612,7 @@ void Map::getPosition(double& _lon, double& _lat) {
 
     glm::dvec2 meters(impl->view.getPosition().x, impl->view.getPosition().y);
     glm::dvec2 degrees = impl->view.getMapProjection().MetersToLonLat(meters);
-    _lon = degrees.x;
+    _lon = LngLat::wrapLongitude(degrees.x);
     _lat = degrees.y;
 
 }
@@ -795,7 +784,7 @@ bool Map::screenPositionToLngLat(double _x, double _y, double* _lng, double* _la
     glm::dvec3 eye = impl->view.getPosition();
     glm::dvec2 meters(_x + eye.x, _y + eye.y);
     glm::dvec2 lngLat = impl->view.getMapProjection().MetersToLonLat(meters);
-    *_lng = lngLat.x;
+    *_lng = LngLat::wrapLongitude(lngLat.x);
     *_lat = lngLat.y;
 
     return (intersection >= 0);

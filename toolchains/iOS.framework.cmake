@@ -1,6 +1,8 @@
 include(${CMAKE_SOURCE_DIR}/toolchains/iOS.toolchain.cmake)
 
-set(FRAMEWORK_VERSION "0.8.1-dev")
+set(FRAMEWORK_VERSION "0.8.2-dev")
+
+set(IOS_TARGET_VERSION "9.3")
 
 message(STATUS "Build for iOS archs " ${IOS_ARCH})
 
@@ -14,6 +16,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}
     -std=c++14
     -stdlib=libc++
     -w
+    -miphoneos-version-min=${IOS_TARGET_VERSION}
     -isysroot ${CMAKE_IOS_SDK_ROOT}")
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
@@ -22,6 +25,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}
     -fobjc-abi-version=2
     -fobjc-arc
     -w
+    -miphoneos-version-min=${IOS_TARGET_VERSION}
     -isysroot ${CMAKE_IOS_SDK_ROOT}")
 
 if(${IOS_PLATFORM} STREQUAL "SIMULATOR")
@@ -135,6 +139,7 @@ set_xcode_property(${FRAMEWORK_NAME} VALID_ARCHS "${IOS_ARCH}")
 set_xcode_property(${FRAMEWORK_NAME} ARCHS "${IOS_ARCH}")
 set_xcode_property(${FRAMEWORK_NAME} DEFINES_MODULE "YES")
 set_xcode_property(${FRAMEWORK_NAME} CURRENT_PROJECT_VERSION "${FRAMEWORK_VERSION}")
+set_xcode_property(${FRAMEWORK_NAME} IPHONEOS_DEPLOYMENT_TARGET "${IOS_TARGET_VERSION}")
 
 # Set RPATH to be within the application /Frameworks directory
 set_xcode_property(${FRAMEWORK_NAME} LD_DYLIB_INSTALL_NAME "@rpath/${FRAMEWORK_NAME}.framework/${FRAMEWORK_NAME}")

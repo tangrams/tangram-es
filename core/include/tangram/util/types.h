@@ -29,6 +29,21 @@ struct LngLat {
                latitude == _other.latitude;
     }
 
+    // Get a LngLat with an equivalent longitude within the range (-180, 180].
+    LngLat wrapped() const {
+        return LngLat(wrapLongitude(longitude), latitude);
+    }
+
+    // Get an equivalent longitude within the range (-180, 180].
+    static double wrapLongitude(double longitude) {
+        if (longitude > 180.0) {
+            return longitude - (int)((longitude + 180.0) / 360.0) * 360.0;
+        } else if (longitude <= -180.0) {
+            return longitude - (int)((longitude - 180.0) / 360.0) * 360.0;
+        }
+        return longitude;
+    }
+
     double longitude = 0.0;
     double latitude = 0.0;
 };
@@ -37,4 +52,4 @@ typedef std::vector<LngLat> Coordinates;
 
 typedef uint32_t MarkerID;
 
-}
+} // namespace Tangram

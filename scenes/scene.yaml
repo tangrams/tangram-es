@@ -62,12 +62,15 @@ textures:
 styles:
     heightglow:
         base: polygons
+        blend: translucent
+        blend_order: -2
         lighting: vertex
         shaders:
             blocks:
                 color: "color.rgb += vec3(worldPosition().z / 800.);"
     heightglowline:
         base: lines
+        blend_order: -1
         mix: heightglow
     icons:
         base: points
@@ -417,11 +420,13 @@ layers:
             draw:
                 polygons:
                     extrude: function () { return feature.height > 20 || $zoom >= 16; }
+                    color: [.83, .83, .83, 0.5]
+                    order: 1001
                 lines:
                     style: heightglowline
-                    width: 1.0
-                    color: [.75, .75, .73]
-                    order: function() { return feature.sort_key + 1 || 0; }
+                    width: 2px
+                    color: [.75, .75, .73, 0.5]
+                    order: 1000
                     extrude: true
 
         high-line:

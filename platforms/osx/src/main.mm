@@ -15,6 +15,9 @@ using namespace Tangram;
 + (void)startApiKeyInput;
 + (void)startFileOpen;
 + (void)startFileEdit;
++ (void)startFileReload;
++ (void)copyEditorTextToClipboard;
++ (void)pasteEditorTextFromClipboard;
 + (NSString*) apiKeyDefaultsName;
 @end
 
@@ -31,25 +34,44 @@ using namespace Tangram;
 
     // Set up menu shortcuts.
     NSMenu *mainMenu = [[NSApplication sharedApplication] mainMenu];
+
+    // Set up Tangram ES menu.
     NSMenu *appMenu = [[mainMenu itemAtIndex:0] submenu];
-    NSMenuItem* apiKeyMenuItem = [appMenu insertItemWithTitle:@"API Key..."
-                                                       action:@selector(startApiKeyInput)
-                                                keyEquivalent:@"k"
-                                                      atIndex:1];
-    apiKeyMenuItem.target = self;
+    [appMenu insertItemWithTitle:@"API Key..."
+                          action:@selector(startApiKeyInput)
+                   keyEquivalent:@"k"
+                         atIndex:1].target = self;
 
-    NSMenuItem* editFileMenuItem = [appMenu insertItemWithTitle:@"Edit Scene"
-                                                         action:@selector(startFileEdit)
-                                                  keyEquivalent:@"e"
-                                                        atIndex:2];
+    // Set up File menu.
+    NSMenuItem* fileMenuItem = [mainMenu insertItemWithTitle:@"" action:nil keyEquivalent:@"" atIndex:1];
+    NSMenu* fileMenu = [[NSMenu alloc] init];
+    [fileMenuItem setSubmenu:fileMenu];
+    [fileMenu setTitle:@"File"];
+    [fileMenu addItemWithTitle:@"Open Scene with External Editor"
+                       action:@selector(startFileEdit)
+                keyEquivalent:@"e"].target = self;
 
-    editFileMenuItem.target = self;
+    [fileMenu addItemWithTitle:@"Open Scene..."
+                       action:@selector(startFileOpen)
+                keyEquivalent:@"o"].target = self;
 
-    NSMenuItem* sceneOpenMenuItem = [appMenu insertItemWithTitle:@"Open Scene..."
-                                                           action:@selector(startFileOpen)
-                                                    keyEquivalent:@"o"
-                                                          atIndex:3];
-    sceneOpenMenuItem.target = self;
+    [fileMenu addItemWithTitle:@"Reload Scene"
+                       action:@selector(startFileReload)
+                keyEquivalent:@"r"].target = self;
+
+    // Set up Edit menu.
+    NSMenuItem* editMenuItem = [mainMenu insertItemWithTitle:@"" action:nil keyEquivalent:@"" atIndex:2];
+    NSMenu* editMenu = [[NSMenu alloc] init];
+    [editMenuItem setSubmenu:editMenu];
+    [editMenu setTitle:@"Edit"];
+
+    [editMenu addItemWithTitle:@"Copy"
+                        action:@selector(copyEditorTextToClipboard)
+                 keyEquivalent:@"c"].target = self;
+
+    [editMenu addItemWithTitle:@"Paste"
+                        action:@selector(pasteEditorTextFromClipboard)
+                 keyEquivalent:@"v"].target = self;
 }
 
 + (void)startApiKeyInput
@@ -58,27 +80,29 @@ using namespace Tangram;
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
     NSString* defaultsValueString = [defaults stringForKey:defaultsKeyString];
 
-    NSAlert* alert = [[NSAlert alloc] init];
-    [alert setMessageText:@"Set API key default"];
-
     NSTextField *input = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 200, 24)];
     input.translatesAutoresizingMaskIntoConstraints = YES;
     input.editable = YES;
     input.selectable = YES;
     if (defaultsValueString != nil) {
         [input setStringValue:defaultsValueString];
-        [input selectText:self];
     }
 
-    [alert setAccessoryView:input];
+    NSAlert* alert = [[NSAlert alloc] init];
+    [alert setMessageText:@"Set API key default"];
+    [alert setAccessoryView: input];
     [alert addButtonWithTitle:@"Ok"];
     [alert addButtonWithTitle:@"Cancel"];
-    NSInteger button = [alert runModal];
-    if (button == NSAlertFirstButtonReturn) {
-        [defaults setValue:[input stringValue] forKey:defaultsKeyString];
-        GlfwApp::mapzenApiKey = std::string([[input stringValue] UTF8String]);
-        GlfwApp::loadSceneFile();
-    }
+    [alert layout];
+    [alert.window makeFirstResponder:alert.accessoryView];
+
+    [alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] completionHandler:^(NSModalResponse returnCode) {
+        if (returnCode == NSAlertFirstButtonReturn) {
+            [defaults setValue:[input stringValue] forKey:defaultsKeyString];
+            GlfwApp::mapzenApiKey = std::string([[input stringValue] UTF8String]);
+            GlfwApp::loadSceneFile();
+        }
+    }];
 }
 
 + (void)startFileOpen
@@ -91,8 +115,10 @@ using namespace Tangram;
     NSInteger button = [openPanel runModal];
     if (button == NSFileHandlingPanelOKButton) {
         NSURL* url = [openPanel URLs].firstObject;
-        LOG("Got file URL: %s", [[url absoluteString] UTF8String]);
-        GlfwApp::sceneFile = std::string([[url absoluteString] UTF8String]);
+        LOG("Got URL to open: %s", [[url absoluteString] UTF8String]);
+        // TODO: When generic URL support is added to scene loading, we should
+        // use the full URL here instead of just the path.
+        GlfwApp::sceneFile = std::string([[url path] UTF8String]);
         GlfwApp::sceneYaml.clear();
         GlfwApp::loadSceneFile();
     }
@@ -101,8 +127,32 @@ using namespace Tangram;
 + (void)startFileEdit
 {
     NSString* file = [NSString stringWithUTF8String:GlfwApp::sceneFile.c_str()];
-    NSURL* url = [NSURL fileURLWithPath:file];
+    NSURL* url = [NSURL URLWithString:file relativeToURL:[[NSBundle mainBundle] resourceURL]];
     [[NSWorkspace sharedWorkspace] openURL:url];
+}
+
++ (void)startFileReload
+{
+    GlfwApp::loadSceneFile();
+}
+
++ (void)copyEditorTextToClipboard
+{
+    NSText* fieldEditor = [[[NSApplication sharedApplication] keyWindow] fieldEditor:NO forObject:nil];
+    if (fieldEditor) {
+        NSPasteboard* pasteboard = [NSPasteboard generalPasteboard];
+        [pasteboard clearContents];
+        [pasteboard setString:[fieldEditor string] forType:NSPasteboardTypeString];
+    }
+}
+
++ (void)pasteEditorTextFromClipboard
+{
+    NSText* fieldEditor = [[[NSApplication sharedApplication] keyWindow] fieldEditor:NO forObject:nil];
+    if (fieldEditor) {
+        NSPasteboard* pasteboard = [NSPasteboard generalPasteboard];
+        [fieldEditor setString:[pasteboard stringForType:NSPasteboardTypeString]];
+    }
 }
 
 + (NSString*)apiKeyDefaultsName

@@ -34,6 +34,18 @@
     return self;
 }
 
+
+- (instancetype)initWithSessionConfiguration:(NSURLSessionConfiguration *)configuration
+{
+    self = [super init];
+
+    if (self) {
+        [self initialSetupWithConfiguration:configuration];
+    }
+
+    return self;
+}
+
 - (instancetype)initWithCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity
 {
     self = [super init];
@@ -74,8 +86,7 @@
 - (void)setAdditionalHTTPHeaders:(NSMutableDictionary *)HTTPAdditionalHeaders {
     _HTTPAdditionalHeaders = HTTPAdditionalHeaders;
     self.configuration.HTTPAdditionalHeaders = HTTPAdditionalHeaders;
-    //Probably unnecessary, but for safety sake
-    self.session.configuration.HTTPAdditionalHeaders = HTTPAdditionalHeaders;
+    self.session = [NSURLSession sessionWithConfiguration:self.configuration];
 }
 
 - (void)setCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity
@@ -86,6 +97,7 @@
 
     self.configuration.URLCache = tileCache;
     self.configuration.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
+    self.session = [NSURLSession sessionWithConfiguration:self.configuration];
 }
 
 #pragma mark - Instance Methods

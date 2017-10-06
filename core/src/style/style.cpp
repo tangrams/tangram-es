@@ -292,9 +292,25 @@ void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) 
             rs.depthTest(GL_TRUE);
             rs.depthMask(GL_FALSE);
             break;
+        case Blending::translucent:
+            rs.blending(GL_TRUE);
+            rs.blendingFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            rs.depthTest(GL_TRUE);
+            rs.depthMask(GL_TRUE);
+            break;
         default:
             break;
     }
+}
+
+void Style::drawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene,
+                               const std::vector<std::shared_ptr<Tile>>& _tiles,
+                               const std::vector<std::unique_ptr<Marker>>& _markers) {
+
+    onBeginDrawSelectionFrame(rs, _view, _scene);
+
+    for (const auto& tile : _tiles) { drawSelectionFrame(rs, *tile); }
+    for (const auto& marker : _markers) { drawSelectionFrame(rs, *marker); }
 }
 
 void Style::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene& _scene) {
@@ -312,6 +328,7 @@ void Style::onBeginDrawSelectionFrame(RenderState& rs, const View& _view, Scene&
         case Blending::opaque:
         case Blending::add:
         case Blending::multiply:
+        case Blending::translucent:
             rs.depthTest(GL_TRUE);
             rs.depthMask(GL_TRUE);
             break;
@@ -372,6 +389,51 @@ void Style::drawSelectionFrame(Tangram::RenderState& rs, const Tangram::Tile &_t
     }
 
 }
+
+void Style::draw(RenderState& rs, const View& _view, Scene& _scene,
+                 const std::vector<std::shared_ptr<Tile>>& _tiles,
+                 const std::vector<std::unique_ptr<Marker>>& _markers) {
+
+    auto tileIt = std::find_if(std::begin(_tiles), std::end(_tiles),
+                               [this](const auto& t){ return bool(t->getMesh(*this)); });
+
+    auto markerIt = std::find_if(std::begin(_markers), std::end(_markers),
+                               [this](const auto& m){ return m->styleId() == this->m_id && m->mesh(); });
+
+    // Skip when no mesh is to be rendered.
+    // This also compiles shaders when they are first used.
+    if (tileIt == std::end(_tiles) && markerIt == std::end(_markers)) {
+        return;
+    }
+
+    onBeginDrawFrame(rs, _view, _scene);
+
+    if (m_blend == Blending::translucent) {
+        rs.colorMask(false, false, false, false);
+    }
+
+    for (const auto& tile : _tiles) { draw(rs, *tile); }
+    for (const auto& marker : _markers) { draw(rs, *marker); }
+
+    if (m_blend == Blending::translucent) {
+        rs.colorMask(true, true, true, true);
+        GL::depthFunc(GL_EQUAL);
+
+        GL::enable(GL_STENCIL_TEST);
+        GL::clear(GL_STENCIL_BUFFER_BIT);
+        GL::stencilFunc(GL_EQUAL, GL_ZERO, 0xFF);
+        GL::stencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+
+        for (const auto& tile : _tiles) { draw(rs, *tile); }
+        for (const auto& marker : _markers) { draw(rs, *marker); }
+
+        GL::disable(GL_STENCIL_TEST);
+        GL::depthFunc(GL_LESS);
+    }
+
+    onEndDrawFrame(rs, _view, _scene);
+}
+
 
 void Style::draw(RenderState& rs, const Tile& _tile) {
 
