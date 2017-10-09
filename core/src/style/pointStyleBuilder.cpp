@@ -105,7 +105,22 @@ void PointStyleBuilder::setup(const Marker& _marker, int zoom) {
 }
 
 bool PointStyleBuilder::checkRule(const DrawRule& _rule) const {
-    return true;
+    // require a color or texture atlas/texture to be valid
+    uint32_t color;
+    if (_rule.get(StyleParamKey::color, color)) {
+        return true;
+    }
+
+    std::string texture;
+    if (_rule.get(StyleParamKey::texture, texture) && !texture.empty()) {
+        return true;
+    }
+
+    if (m_style.defaultTexture()) {
+        return true;
+    }
+
+    return false;
 }
 
 auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _props) const -> PointStyle::Parameters {
