@@ -23,6 +23,7 @@ public:
         bool interactive = false;
         bool keepTileEdges = false;
         bool autoAngle = false;
+        bool dynamicTexture = false;
         std::string sprite;
         std::string spriteDefault;
         std::string texture;

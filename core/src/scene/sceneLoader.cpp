@@ -1555,8 +1555,8 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
             if (value.IsScalar()) {
                 auto strVal = value.Scalar();
                 out.push_back(StyleParam{ StyleParamKey::texture, strVal });
-            } else {
-                ;// TODO load texture
+            } else if (value.IsNull()){
+                out.push_back(StyleParam{ StyleParamKey::texture, "" });
             }
             continue;
         }

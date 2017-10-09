@@ -127,7 +127,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     }
 
     _rule.get(StyleParamKey::sprite_default, p.spriteDefault);
-    _rule.get(StyleParamKey::texture, p.texture);
+    p.dynamicTexture = _rule.get(StyleParamKey::texture, p.texture);
 
     _rule.get(StyleParamKey::placement, p.placement);
     StyleParam::Width placementSpacing;
@@ -276,9 +276,9 @@ bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params,
     _quad = glm::vec4(0.0, 1.0, 1.0, 0.0);
     auto texture = m_style.defaultTexture().get();
 
-    if (!_params.texture.empty()) {
+    if (_params.dynamicTexture) {
 
-        if (_params.texture == "null") {
+        if (_params.texture == "") {
             texture = nullptr;
         } else {
             if (!m_style.textures()) {
