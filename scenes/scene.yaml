@@ -60,6 +60,9 @@ textures:
             arrow: [1, 1175, 22, 22]
 
 styles:
+    icons:
+        base: points
+        texture: pois
     heightglow:
         base: polygons
         blend: translucent
@@ -119,9 +122,9 @@ layers:
         point:
             filter: { type: point }
             draw:
-              points:
-                texture: pois
+              icons:
                 sprite: sunburst
+                # texture: null
                 collide: false
                 transition: { show: { time: 0s }, hide: { time: 0s } }
 
