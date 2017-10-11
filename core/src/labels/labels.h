@@ -52,7 +52,7 @@ public:
 
     bool needUpdate() const { return m_needUpdate; }
 
-    std::pair<Label*, Tile*> getLabel(uint32_t _selectionColor) const;
+    std::pair<Label*, const Tile*> getLabel(uint32_t _selectionColor) const;
 
 protected:
 
@@ -72,8 +72,8 @@ protected:
     bool withinRepeatDistance(Label *_label);
 
     void processLabelUpdate(const ViewState& _viewState, const LabelSet* _labelSet, Style* _style,
-                            Tile* _tile, const glm::mat4& _mvp, float _dt, bool _drawAll,
-                            bool _onlyRender, bool _isProxy, int _drawOrder);
+                            const Tile* _tile, const Marker *_marker, const glm::mat4& _mvp,
+                            float _dt, bool _drawAll, bool _onlyRender, bool _isProxy);
 
     bool m_needUpdate;
 
@@ -81,21 +81,22 @@ protected:
 
     struct LabelEntry {
 
-        LabelEntry(Label* _label, Style* _style, Tile* _tile, bool _proxy, Range _screenTransform, int _drawOrder)
+        LabelEntry(Label* _label, Style* _style, const Tile* _tile, const Marker* _marker,
+                   bool _proxy, Range _screenTransform)
             : label(_label),
               style(_style),
               tile(_tile),
+              marker(_marker),
               priority(_label->options().priority),
               proxy(_proxy),
-              drawOrder(_drawOrder),
               transformRange(_screenTransform) {}
 
         Label* label;
         Style* style;
-        Tile* tile;
+        const Tile* tile;
+        const Marker* marker;
         float priority;
         bool proxy;
-        int drawOrder;
 
         Range transformRange;
         Range obbsRange;

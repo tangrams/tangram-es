@@ -74,7 +74,7 @@ public:
 
     void setSelectionFeatures(const fastmap<uint32_t, std::shared_ptr<Properties>> _selectionFeatures);
 
-    std::shared_ptr<Properties> getSelectionFeature(uint32_t _id);
+    std::shared_ptr<Properties> getSelectionFeature(uint32_t _id) const;
 
     const auto& getSelectionFeatures() const { return m_selectionFeatures; }
 
