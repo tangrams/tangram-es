@@ -34,13 +34,9 @@ Labels::Labels()
 
 Labels::~Labels() {}
 
-void Labels::processLabelUpdate(const ViewState& _viewState, StyledMesh* _mesh, Style* _style,
+void Labels::processLabelUpdate(const ViewState& _viewState, const LabelSet* _labelSet, Style* _style,
                                 Tile* _tile, const glm::mat4& _mvp, float _dt, bool _drawAll,
                                 bool _onlyRender, bool _isProxy, int _drawOrder) {
-
-    if (!_mesh) { return; }
-    auto labelMesh = dynamic_cast<const LabelSet*>(_mesh);
-    if (!labelMesh) { return; }
 
     // TODO appropriate buffer to filter out-of-screen labels
     float border = 256.0f;
@@ -52,7 +48,7 @@ void Labels::processLabelUpdate(const ViewState& _viewState, StyledMesh* _mesh, 
                       _viewState.viewportSize.x,
                       _viewState.viewportSize.y);
 
-    for (auto& label : labelMesh->getLabels()) {
+    for (auto& label : _labelSet->getLabels()) {
         if (!_drawAll && (label->state() == Label::State::dead) ) {
             continue;
         }
@@ -133,7 +129,10 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
 
         for (const auto& style : _styles) {
             const auto& mesh = tile->getMesh(*style);
-            processLabelUpdate(_viewState, mesh.get(), style.get(), tile.get(), mvp,
+            auto labels = dynamic_cast<const LabelSet*>(mesh.get());
+            if (!labels) { continue; }
+
+            processLabelUpdate(_viewState, labels, style.get(), tile.get(), mvp,
                                _dt, drawAllLabels, _onlyRender, proxyTile, 0);
         }
     }
@@ -147,8 +146,10 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
             if (marker->styleId() != style->getID()) { continue; }
 
             const auto& mesh = marker->mesh();
+            auto labels = dynamic_cast<const LabelSet*>(mesh);
+            if (!labels) { continue; }
 
-            processLabelUpdate(_viewState, mesh, style.get(), nullptr,
+            processLabelUpdate(_viewState, labels, style.get(), nullptr,
                                marker->modelViewProjectionMatrix(),
                                _dt, drawAllLabels, _onlyRender, false,
                                marker->drawOrder());

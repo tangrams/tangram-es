@@ -19,6 +19,7 @@
 namespace Tangram {
 
 class FontContext;
+class LabelSet;
 class Marker;
 class Tile;
 class Style;
@@ -70,8 +71,8 @@ protected:
 
     bool withinRepeatDistance(Label *_label);
 
-    void processLabelUpdate(const ViewState& _viewState, StyledMesh* mesh, Style* _style, Tile* _tile,
-                            const glm::mat4& _mvp, float _dt, bool _drawAll,
+    void processLabelUpdate(const ViewState& _viewState, const LabelSet* _labelSet, Style* _style,
+                            Tile* _tile, const glm::mat4& _mvp, float _dt, bool _drawAll,
                             bool _onlyRender, bool _isProxy, int _drawOrder);
 
     bool m_needUpdate;
