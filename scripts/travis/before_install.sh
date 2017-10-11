@@ -11,7 +11,7 @@ if [[ ${PLATFORM} == "android" ]]; then
 
     # Download android ndk
     echo "Downloading ndk..."
-    curl -L https://dl.google.com/android/repository/android-ndk-r13b-linux-x86_64.zip -o ndk.zip
+    curl -L https://dl.google.com/android/repository/android-ndk-r15c-linux-x86_64.zip -o ndk.zip
     echo "Done."
 
     # Extract android ndk
@@ -21,7 +21,7 @@ if [[ ${PLATFORM} == "android" ]]; then
 
     # Update PATH
     echo "Updating PATH..."
-    export ANDROID_NDK_HOME=${PWD}/android-ndk-r13b
+    export ANDROID_NDK_HOME=${PWD}/android-ndk-r15c
     export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_NDK_HOME}
     echo $PATH
     echo "Done."
