@@ -21,6 +21,10 @@ struct Color {
         return glm::ivec4(r, g, b, a);
     }
 
+    static Color fromNormalized(double r, double g, double b, double a) {
+        return Color(255 * r, 255 * g, 255 * b, 255 * a);
+    }
+
     static Color mix(const Color& _x, const Color& _y, float _a) {
         return Color(
             _x.r * (1 - _a) + _y.r * _a,
