@@ -42,6 +42,8 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
 
     private static final String MAPZEN_API_KEY = BuildConfig.MAPZEN_API_KEY;
 
+    private static final String TAG = "TangramDemo";
+
     private static final String[] SCENE_PRESETS = {
             "asset:///scene.yaml",
             "https://mapzen.com/carto/bubble-wrap-style-more-labels/bubble-wrap-style-more-labels.zip",
@@ -73,6 +75,13 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         setContentView(R.layout.main);
+
+        if (MAPZEN_API_KEY.isEmpty() || MAPZEN_API_KEY.equals("null")) {
+            Log.w(TAG, "No API key found! Mapzen data sources require an API key.\n" +
+                    "Sign up for a free key at http://mapzen.com/developers and set it\n" +
+                    "in your local Gradle properties file (~/.gradle/gradle.properties)\n" +
+                    "as 'mapzenApiKey=YOUR-API-KEY-HERE'");
+        }
 
         // Create a scene update to apply our API key in the scene.
         sceneUpdates.add(new SceneUpdate("global.sdk_mapzen_api_key", MAPZEN_API_KEY));
@@ -115,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
 
         map.setViewCompleteListener(new ViewCompleteListener() {
             public void onViewComplete() {
-                Log.d("Tangram", "View complete");
+                Log.d(TAG, "View complete");
             }});
 
         markers = map.addDataLayer("touch");
@@ -149,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     @Override
     public void onSceneReady(int sceneId, SceneError sceneError) {
 
-        Log.d("Tangram", "onSceneReady!");
+        Log.d(TAG, "onSceneReady!");
         if (sceneError == null) {
             Toast.makeText(this, "Scene ready: " + sceneId, Toast.LENGTH_SHORT).show();
         } else {
@@ -157,7 +166,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
                     + sceneError.getSceneUpdate().toString()
                     + " " + sceneError.getError().toString(), Toast.LENGTH_SHORT).show();
 
-            Log.d("Tangram", "Scene update errors "
+            Log.d(TAG, "Scene update errors "
                     + sceneError.getSceneUpdate().toString()
                     + " " + sceneError.getError().toString());
         }
@@ -241,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     @Override
     public void onFeaturePick(Map<String, String> properties, float positionX, float positionY) {
         if (properties.isEmpty()) {
-            Log.d("Tangram", "Empty selection");
+            Log.d(TAG, "Empty selection");
             return;
         }
 
@@ -250,7 +259,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
             name = "unnamed";
         }
 
-        Log.d("Tangram", "Picked: " + name);
+        Log.d(TAG, "Picked: " + name);
         final String message = name;
         Toast.makeText(getApplicationContext(), "Selected: " + message, Toast.LENGTH_SHORT).show();
     }
@@ -258,7 +267,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     @Override
     public void onLabelPick(LabelPickResult labelPickResult, float positionX, float positionY) {
         if (labelPickResult == null) {
-            Log.d("Tangram", "Empty label selection");
+            Log.d(TAG, "Empty label selection");
             return;
         }
 
@@ -267,7 +276,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
             name = "unnamed";
         }
 
-        Log.d("Tangram", "Picked label: " + name);
+        Log.d(TAG, "Picked label: " + name);
         final String message = name;
         Toast.makeText(getApplicationContext(), "Selected label: " + message, Toast.LENGTH_SHORT).show();
     }
@@ -275,11 +284,11 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     @Override
     public void onMarkerPick(MarkerPickResult markerPickResult, float positionX, float positionY) {
         if (markerPickResult == null) {
-            Log.d("Tangram", "Empty marker selection");
+            Log.d(TAG, "Empty marker selection");
             return;
         }
 
-        Log.d("Tangram", "Picked marker: " + markerPickResult.getMarker().getMarkerId());
+        Log.d(TAG, "Picked marker: " + markerPickResult.getMarker().getMarkerId());
         final String message = String.valueOf(markerPickResult.getMarker().getMarkerId());
         Toast.makeText(getApplicationContext(), "Selected Marker: " + message, Toast.LENGTH_SHORT).show();
     }
