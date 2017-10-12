@@ -76,6 +76,13 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
 
         setContentView(R.layout.main);
 
+        if (MAPZEN_API_KEY.isEmpty() || MAPZEN_API_KEY.equals("null")) {
+            Log.w(TAG, "No API key found! Mapzen data sources require an API key.\n" +
+                    "Sign up for a free key at http://mapzen.com/developers and set it\n" +
+                    "in your local Gradle properties file (~/.gradle/gradle.properties)\n" +
+                    "as 'mapzenApiKey=YOUR-API-KEY-HERE'");
+        }
+
         // Create a scene update to apply our API key in the scene.
         sceneUpdates.add(new SceneUpdate("global.sdk_mapzen_api_key", MAPZEN_API_KEY));
 
