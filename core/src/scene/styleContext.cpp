@@ -432,7 +432,7 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                     duk_pop(m_ctx);
                 }
 
-                _val = Color::fromNormalized(r, g, b, a).abgr;
+                _val = ColorF(r, g, b, a).toColor().abgr;
                 break;
             }
             default:

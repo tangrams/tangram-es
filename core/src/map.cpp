@@ -523,7 +523,7 @@ void Map::render() {
     // Setup default framebuffer for a new frame
     glm::vec2 viewport(impl->view.getWidth(), impl->view.getHeight());
     FrameBuffer::apply(impl->renderState, impl->renderState.defaultFrameBuffer(),
-                       viewport, impl->scene->background().asIVec4());
+                       viewport, impl->scene->background().toColorF());
 
     if (drawSelectionBuffer) {
         impl->selectionBuffer->drawDebug(impl->renderState, viewport);
