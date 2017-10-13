@@ -21,6 +21,7 @@ namespace Tangram {
 struct ScreenTransform;
 struct ViewState;
 struct OBBBuffer;
+class Texture;
 
 class Label {
 
@@ -87,6 +88,8 @@ public:
 
     // Returns the candidate priority for a feature with multiple labels
     virtual float candidatePriority() const { return 0; }
+
+    virtual const Texture* texture() const { return nullptr; }
 
     bool update(const glm::mat4& _mvp, const ViewState& _viewState,
                 const AABB* _bounds, ScreenTransform& _transform);

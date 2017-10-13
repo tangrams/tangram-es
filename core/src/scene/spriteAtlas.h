@@ -1,6 +1,5 @@
 #pragma once
 
-#include "gl/texture.h"
 #include "util/fastmap.h"
 
 #include "glm/glm.hpp"
@@ -19,21 +18,15 @@ struct SpriteNode {
 class SpriteAtlas {
 
 public:
-    SpriteAtlas(std::shared_ptr<Texture> _texture);
+    SpriteAtlas();
 
     /* Creates a sprite node in the atlas located at _origin in the texture by a size in pixels _size */
     void addSpriteNode(const std::string& _name, glm::vec2 _origin, glm::vec2 _size);
     bool getSpriteNode(const std::string& _name, SpriteNode& _node) const;
-    void updateSpriteNodes(std::shared_ptr<Texture> _texture);
-
-    /* Bind the atlas in the driver */
-    void bind(RenderState& rs, GLuint _slot);
-
-    Texture* texture() { return m_texture.get(); }
+    void updateSpriteNodes(const glm::vec2&  _textureSize);
 
 private:
     fastmap<std::string, SpriteNode> m_spritesNodes;
-    std::shared_ptr<Texture> m_texture;
 };
 
 }

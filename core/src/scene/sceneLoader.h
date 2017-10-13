@@ -79,14 +79,6 @@ struct SceneLoader {
             const TextureOptions& options, bool generateMipmaps, const std::shared_ptr<Scene>& scene);
     static bool extractTexFiltering(Node& filtering, TextureFiltering& filter);
 
-    /*
-     * Sprite nodes are created using a default 1x1 black texture when sprite atlas is requested over the network.
-     * Once a sprite atlas has been fetched, sprite nodes need to be updated according to the width/height of the
-     * fetched sprite atlas.
-     */
-    static void updateSpriteNodes(const std::string& texName,
-            std::shared_ptr<Texture>& texture, const std::shared_ptr<Scene>& scene);
-
     static MaterialTexture loadMaterialTexture(const std::shared_ptr<Platform>& platform, Node matCompNode,
                                                const std::shared_ptr<Scene>& scene, Style& style);
 

@@ -235,17 +235,10 @@ void SpriteLabel::addVerticesToMesh(ScreenTransform& _transform, const glm::vec2
 
     auto& style = m_labels.m_style;
 
-    // Before pushing our geometry to the mesh, we push the texture that should be
-    // used to draw this label. We check a few potential textures in order of priority.
-    Texture* tex = nullptr;
-    if (m_texture) { tex = m_texture; }
-    else if (style.texture()) { tex = style.texture().get(); }
-    else if (style.spriteAtlas()) { tex = style.spriteAtlas()->texture(); }
+    // If texture is null, the mesh will use the default point texture.
+    style.mesh()->pushTexture(m_texture);
 
-    // If tex is null, the mesh will use the default point texture.
-    style.getMesh()->pushTexture(tex);
-
-    auto* quadVertices = style.getMesh()->pushQuad();
+    auto* quadVertices = style.mesh()->pushQuad();
 
     if (m_options.flat) {
         FlatTransform transform(_transform);

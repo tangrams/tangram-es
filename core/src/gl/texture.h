@@ -2,6 +2,7 @@
 
 #include "gl.h"
 #include "gl/disposer.h"
+#include "scene/spriteAtlas.h"
 
 #include <vector>
 #include <memory>
@@ -95,6 +96,8 @@ public:
     size_t bytesPerPixel();
     size_t bufferSize();
 
+    auto& spriteAtlas() { return m_spriteAtlas; }
+
 protected:
 
     void generate(RenderState& rs, GLuint _textureUnit);
@@ -121,6 +124,9 @@ protected:
 private:
 
     bool m_generateMipmaps;
+
+    std::unique_ptr<SpriteAtlas> m_spriteAtlas;
+
 };
 
 }

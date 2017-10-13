@@ -59,6 +59,8 @@ public:
         return glm::vec2(m_coordinates);
     }
 
+    const Texture* texture() const override { return m_texture; }
+
 private:
 
     const Coordinates m_coordinates;
