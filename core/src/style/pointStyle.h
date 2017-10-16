@@ -19,23 +19,6 @@ class PointStyle : public Style {
 
 public:
 
-    struct Parameters {
-        bool interactive = false;
-        bool keepTileEdges = false;
-        bool autoAngle = false;
-        bool dynamicTexture = false;
-        std::string sprite;
-        std::string spriteDefault;
-        std::string texture;
-        glm::vec2 size;
-        uint32_t color = 0xffffffff;
-        Label::Options labelOptions;
-        LabelProperty::Placement placement = LabelProperty::Placement::vertex;
-        float extrudeScale = 1.f;
-        float placementMinLengthRatio = 1.0f;
-        float placementSpacing = 80.f;
-    };
-
     PointStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
                Blending _blendMode = Blending::overlay, GLenum _drawMode = GL_TRIANGLES, bool _selection = true);
 

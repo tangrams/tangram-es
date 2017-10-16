@@ -123,9 +123,9 @@ bool PointStyleBuilder::checkRule(const DrawRule& _rule) const {
     return false;
 }
 
-auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _props) const -> PointStyle::Parameters {
+auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _props) const -> Parameters {
 
-    PointStyle::Parameters p;
+    Parameters p;
     glm::vec2 size;
 
     _rule.get(StyleParamKey::color, p.color);
@@ -220,7 +220,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
         p.size = glm::vec2(NAN, NAN);
     }
 
-    std::hash<PointStyle::Parameters> hash;
+    std::hash<Parameters> hash;
     p.labelOptions.paramHash = hash(p);
 
     if (p.interactive) {
@@ -231,7 +231,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
 }
 
 void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad, Texture* _texture,
-                                 const PointStyle::Parameters& _params, const DrawRule& _rule) {
+                                 const Parameters& _params, const DrawRule& _rule) {
 
     uint32_t selectionColor = 0;
 
@@ -285,8 +285,7 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad, Te
         });
 }
 
-bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params,
-                                  glm::vec4& _quad, Texture** _texture) const {
+bool PointStyleBuilder::getUVQuad(Parameters& _params, glm::vec4& _quad, Texture** _texture) const {
 
     _quad = glm::vec4(0.0, 1.0, 1.0, 0.0);
     auto texture = m_style.defaultTexture().get();
@@ -341,7 +340,7 @@ bool PointStyleBuilder::getUVQuad(PointStyle::Parameters& _params,
 }
 
 void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& _uvsQuad, Texture* _texture,
-                                           PointStyle::Parameters& params, const DrawRule& _rule) {
+                                           Parameters& params, const DrawRule& _rule) {
 
     if (_line.size() < 2) { return; }
 
@@ -433,7 +432,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& _
 bool PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
                                  const DrawRule& _rule) {
 
-    PointStyle::Parameters p = applyRule(_rule, _props);
+    Parameters p = applyRule(_rule, _props);
     glm::vec4 uvsQuad;
     Texture* texture = nullptr;
 
@@ -449,7 +448,7 @@ bool PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
 bool PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
                                 const DrawRule& _rule) {
 
-    PointStyle::Parameters p = applyRule(_rule, _props);
+    Parameters p = applyRule(_rule, _props);
     glm::vec4 uvsQuad;
     Texture* texture = nullptr;
 
@@ -465,7 +464,7 @@ bool PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
 bool PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props,
                                    const DrawRule& _rule) {
 
-    PointStyle::Parameters p = applyRule(_rule, _props);
+    Parameters p = applyRule(_rule, _props);
     glm::vec4 uvsQuad;
     Texture* texture = nullptr;
 
