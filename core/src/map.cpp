@@ -364,11 +364,6 @@ void Map::setDataSourceUrl(const char* _dataSourceName, const char* _url) {
     updateSceneAsync({SceneUpdate{scenePath.c_str(), _url}});
 }
 
-void Map::setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath) {
-    std::string scenePath = std::string("sources.") + _dataSourceName + ".mbtiles";
-    updateSceneAsync({SceneUpdate{scenePath.c_str(), _mbtilesFilePath}});
-}
-
 void Map::resize(int _newWidth, int _newHeight) {
 
     LOGS("resize: %d x %d", _newWidth, _newHeight);
