@@ -145,13 +145,17 @@ void onUrlFailure(JNIEnv* _jniEnv, jlong _jCallbackPtr) {
 std::string stringFromJString(JNIEnv* jniEnv, jstring string) {
     auto length = jniEnv->GetStringLength(string);
     std::u16string chars(length, char16_t());
-    jniEnv->GetStringRegion(string, 0, length, reinterpret_cast<jchar*>(&chars[0]));
+    if(!chars.empty()) {
+        jniEnv->GetStringRegion(string, 0, length, reinterpret_cast<jchar*>(&chars[0]));
+    }
     return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().to_bytes(chars);
 }
 
 jstring jstringFromString(JNIEnv* jniEnv, const std::string& string) {
+    const auto emptyu16 = u"";
     auto chars = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().from_bytes(string);
-    return jniEnv->NewString(reinterpret_cast<const jchar*>(&chars[0]), chars.length());
+    auto s = reinterpret_cast<const jchar*>(chars.empty() ? emptyu16 : chars.data());
+    return jniEnv->NewString(s, chars.length());
 }
 
 std::string resolveScenePath(const std::string& path) {
