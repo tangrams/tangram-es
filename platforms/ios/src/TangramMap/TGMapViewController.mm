@@ -142,17 +142,28 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (Tangram::SceneReadyCallback)sceneReadyListener {
     __weak TGMapViewController* weakSelf = self;
-    return [weakSelf](int sceneID, auto sceneError) {
-        [weakSelf.markersById removeAllObjects];
-        [weakSelf renderOnce];
 
-        if (!weakSelf.mapViewDelegate || ![weakSelf.mapViewDelegate respondsToSelector:@selector(mapView:didLoadScene:withError:)]) { return; }
+    return [weakSelf](int sceneID, auto sceneError) {
+        __strong TGMapViewController* strongSelf = weakSelf;
+
+        if (!strongSelf) {
+            return;
+        }
+
+        [strongSelf.markersById removeAllObjects];
+        [strongSelf renderOnce];
+
+        if (!strongSelf.mapViewDelegate || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didLoadScene:withError:)]) {
+            return;
+        }
 
         NSError* error = nil;
+
         if (sceneError) {
             error = [TGHelpers errorFromSceneError:*sceneError];
         }
-        [weakSelf.mapViewDelegate mapView:weakSelf didLoadScene:sceneID withError:error];
+
+        [strongSelf.mapViewDelegate mapView:strongSelf didLoadScene:sceneID withError:error];
     };
 }
 
@@ -279,22 +290,24 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
     __weak TGMapViewController* weakSelf = self;
     self.map->pickFeatureAt(screenPosition.x, screenPosition.y, [weakSelf](const Tangram::FeaturePickResult* featureResult) {
-        if (!weakSelf.mapViewDelegate || ![weakSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
+        __strong TGMapViewController* strongSelf = weakSelf;
+
+        if (!strongSelf || !strongSelf.mapViewDelegate || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
             return;
         }
 
         CGPoint position = CGPointMake(0.0, 0.0);
 
         if (!featureResult) {
-            [weakSelf.mapViewDelegate mapView:weakSelf didSelectFeature:nil atScreenPosition:position];
+            [strongSelf.mapViewDelegate mapView:strongSelf didSelectFeature:nil atScreenPosition:position];
             return;
         }
 
         NSMutableDictionary* featureProperties = [[NSMutableDictionary alloc] init];
 
         const auto& properties = featureResult->properties;
-        position = CGPointMake(featureResult->position[0] / weakSelf.contentScaleFactor,
-                               featureResult->position[1] / weakSelf.contentScaleFactor);
+        position = CGPointMake(featureResult->position[0] / strongSelf.contentScaleFactor,
+                               featureResult->position[1] / strongSelf.contentScaleFactor);
 
         for (const auto& item : properties->items()) {
             NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
@@ -302,7 +315,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
             featureProperties[key] = value;
         }
 
-        [weakSelf.mapViewDelegate mapView:weakSelf didSelectFeature:featureProperties atScreenPosition:position];
+        [strongSelf.mapViewDelegate mapView:strongSelf didSelectFeature:featureProperties atScreenPosition:position];
     });
 }
 
@@ -315,33 +328,35 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
     __weak TGMapViewController* weakSelf = self;
     self.map->pickMarkerAt(screenPosition.x, screenPosition.y, [weakSelf](const Tangram::MarkerPickResult* markerPickResult) {
-        if (!weakSelf.mapViewDelegate || ![weakSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectMarker:atScreenPosition:)]) {
+        __strong TGMapViewController* strongSelf = weakSelf;
+
+        if (!strongSelf || !strongSelf.mapViewDelegate || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectMarker:atScreenPosition:)]) {
             return;
         }
 
         CGPoint position = CGPointMake(0.0, 0.0);
 
         if (!markerPickResult) {
-            [weakSelf.mapViewDelegate mapView:weakSelf didSelectMarker:nil atScreenPosition:position];
+            [strongSelf.mapViewDelegate mapView:strongSelf didSelectMarker:nil atScreenPosition:position];
             return;
         }
 
         NSString* key = [NSString stringWithFormat:@"%d", (NSUInteger)markerPickResult->id];
-        TGMarker* marker = [weakSelf.markersById objectForKey:key];
+        TGMarker* marker = [strongSelf.markersById objectForKey:key];
 
         if (!marker) {
-            [weakSelf.mapViewDelegate mapView:weakSelf didSelectMarker:nil atScreenPosition:position];
+            [strongSelf.mapViewDelegate mapView:strongSelf didSelectMarker:nil atScreenPosition:position];
             return;
         }
 
-        position = CGPointMake(markerPickResult->position[0] / weakSelf.contentScaleFactor,
-                               markerPickResult->position[1] / weakSelf.contentScaleFactor);
+        position = CGPointMake(markerPickResult->position[0] / strongSelf.contentScaleFactor,
+                               markerPickResult->position[1] / strongSelf.contentScaleFactor);
 
         TGGeoPoint coordinates = TGGeoPointMake(markerPickResult->coordinates.longitude,
                                                 markerPickResult->coordinates.latitude);
 
         TGMarkerPickResult* result = [[TGMarkerPickResult alloc] initWithCoordinates:coordinates marker:marker];
-        [weakSelf.mapViewDelegate mapView:weakSelf didSelectMarker:result atScreenPosition:position];
+        [strongSelf.mapViewDelegate mapView:strongSelf didSelectMarker:result atScreenPosition:position];
     });
 }
 
@@ -354,14 +369,16 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
     __weak TGMapViewController* weakSelf = self;
     self.map->pickLabelAt(screenPosition.x, screenPosition.y, [weakSelf](const Tangram::LabelPickResult* labelPickResult) {
-        if (!weakSelf.mapViewDelegate || ![weakSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectLabel:atScreenPosition:)]) {
+        __strong TGMapViewController* strongSelf = weakSelf;
+
+        if (!strongSelf || !strongSelf.mapViewDelegate || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectLabel:atScreenPosition:)]) {
             return;
         }
 
         CGPoint position = CGPointMake(0.0, 0.0);
 
         if (!labelPickResult) {
-            [weakSelf.mapViewDelegate mapView:weakSelf didSelectLabel:nil atScreenPosition:position];
+            [strongSelf.mapViewDelegate mapView:strongSelf didSelectLabel:nil atScreenPosition:position];
             return;
         }
 
@@ -369,8 +386,8 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
         const auto& touchItem = labelPickResult->touchItem;
         const auto& properties = touchItem.properties;
-        position = CGPointMake(touchItem.position[0] / weakSelf.contentScaleFactor,
-                               touchItem.position[1] / weakSelf.contentScaleFactor);
+        position = CGPointMake(touchItem.position[0] / strongSelf.contentScaleFactor,
+                               touchItem.position[1] / strongSelf.contentScaleFactor);
 
         for (const auto& item : properties->items()) {
             NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
@@ -382,7 +399,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
         TGLabelPickResult* tgLabelPickResult = [[TGLabelPickResult alloc] initWithCoordinates:coordinates
                                                                                          type:(TGLabelType)labelPickResult->type
                                                                                    properties:featureProperties];
-        [weakSelf.mapViewDelegate mapView:weakSelf didSelectLabel:tgLabelPickResult atScreenPosition:position];
+        [strongSelf.mapViewDelegate mapView:strongSelf didSelectLabel:tgLabelPickResult atScreenPosition:position];
     });
 }
 
