@@ -15,10 +15,13 @@ struct SpriteVertex {
     glm::vec3 pos;
     glm::u16vec2 uv;
     struct State {
-        uint32_t selection;
+        uint32_t selection_color;
         uint32_t color;
+        uint32_t outline_color;
+        uint16_t outline_edge;
+        uint16_t antialias_factor;
         uint16_t alpha;
-        uint16_t scale;
+        uint16_t padding;
     } state;
 
     static const float alpha_scale;
@@ -31,6 +34,9 @@ public:
     struct VertexAttributes {
         uint32_t color;
         uint32_t selectionColor;
+        uint32_t outlineColor;
+        uint16_t outlineEdge;
+        uint16_t antialiasFactor;
         float extrudeScale;
     };
 

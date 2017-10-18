@@ -460,7 +460,13 @@ layers:
         data: { source: osm }
         draw:
             points:
-                texture: pois
+                #texture: pois
+                color: red
+                size: 26px
+                outline:
+                    visible: true
+                    width: 2px
+                    color: blue
                 interactive: true
                 collide: true
                 transition: { show: { time: 0s }, hide: { time: 1s } }

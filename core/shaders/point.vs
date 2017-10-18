@@ -7,6 +7,8 @@ precision mediump float;
 #define LOWP
 #endif
 
+#define TANGRAM_PX_FADE_RANGE 2.
+
 #pragma tangram: defines
 
 uniform mat4 u_ortho;
@@ -33,6 +35,9 @@ attribute LOWP vec4 a_stroke;
 attribute float a_scale;
 #else
 attribute vec3 a_position;
+attribute vec4 a_outline_color;
+attribute float a_outline_edge;
+attribute float a_aa_factor;
 #endif
 
 #ifdef TANGRAM_FEATURE_SELECTION
@@ -45,6 +50,10 @@ varying vec2 v_texcoords;
 #ifdef TANGRAM_TEXT
 varying float v_sdf_threshold;
 varying float v_sdf_pixel;
+#else
+varying float v_aa_factor;
+varying float v_outline_edge;
+varying vec4 v_outline_color;
 #endif
 varying float v_alpha;
 
@@ -98,6 +107,9 @@ void main() {
 
 #else
     v_texcoords = a_uv;
+    v_outline_color = a_outline_color;
+    v_outline_edge = a_outline_edge;
+    v_aa_factor = a_aa_factor;
 
     gl_Position = vec4(a_position, 1.0);
 

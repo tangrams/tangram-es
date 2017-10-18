@@ -220,6 +220,17 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
         p.size = glm::vec2(NAN, NAN);
     }
 
+    auto& strokeWidth = _rule.findParameter(StyleParamKey::outline_width);
+
+    if (_rule.get(StyleParamKey::outline_color, p.outlineColor) &&
+        strokeWidth.value.is<StyleParam::Width>()) {
+
+        auto& widthParam = strokeWidth.value.get<StyleParam::Width>();
+
+        p.outlineWidth = widthParam.value * m_style.pixelScale();;
+    }
+
+
     std::hash<Parameters> hash;
     p.labelOptions.paramHash = hash(p);
 
@@ -246,8 +257,13 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad, Te
     m_labels.push_back(std::make_unique<SpriteLabel>(glm::vec3(glm::vec2(_point), m_zoom),
                                                      _params.size,
                                                      _params.labelOptions,
-                                                     SpriteLabel::VertexAttributes{_params.color,
-                                                             selectionColor, _params.extrudeScale },
+                                                     SpriteLabel::VertexAttributes{
+                                                             _params.color,
+                                                             selectionColor,
+                                                             _params.outlineColor,
+                                                             _params.outlineEdge,
+                                                             _params.antialiasFactor,
+                                                             _params.extrudeScale },
                                                      _texture,
                                                      *m_spriteLabels,
                                                      m_quads.size()));
@@ -335,6 +351,18 @@ bool PointStyleBuilder::getUVQuad(Parameters& _params, glm::vec4& _quad, Texture
     *_texture = texture;
 
     _params.size *= m_style.pixelScale();
+
+    if (!texture) {
+        float pixelScale = std::numeric_limits<uint16_t>::max() / _params.size.x * 2.0;
+
+        if (_params.outlineWidth > 0.f) {
+            _params.outlineWidth = std::min(_params.size.x, _params.outlineWidth);
+
+            _params.outlineEdge = _params.outlineWidth * pixelScale;
+        }
+
+        _params.antialiasFactor = pixelScale;
+    }
 
     return true;
 }

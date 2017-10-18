@@ -54,7 +54,11 @@ public:
     TextStyle& textStyle() const { return *m_textStyle; }
     virtual void setPixelScale(float _pixelScale) override;
 
+    SpriteVertex* pushQuad(Texture* texture) const;
+
 protected:
+
+    void drawMesh(RenderState& rs, ShaderProgram& shaderProgram, UniformLocation& uSpriteMode);
 
     std::shared_ptr<Texture> m_defaultTexture;
     const std::unordered_map<std::string, std::shared_ptr<Texture>>* m_textures = nullptr;
@@ -62,28 +66,19 @@ protected:
     struct UniformBlock {
         UniformLocation uTex{"u_tex"};
         UniformLocation uOrtho{"u_ortho"};
+        UniformLocation uSpriteMode{"u_sprite_mode"};
     } m_mainUniforms, m_selectionUniforms;
 
+    struct TextureBatch {
+        TextureBatch(Texture* t) : texture(t) {}
+        Texture* texture = nullptr;
+        size_t vertexCount = 0;
+    };
+
     mutable std::unique_ptr<DynamicQuadMesh<SpriteVertex>> m_mesh;
+    mutable std::vector<TextureBatch> m_batches;
 
     std::unique_ptr<TextStyle> m_textStyle;
 };
 
-}
-
-namespace std {
-    template <>
-    struct hash<Tangram::PointStyle::Parameters> {
-        size_t operator() (const Tangram::PointStyle::Parameters& p) const {
-            std::hash<Tangram::Label::Options> optionsHash;
-            std::size_t seed = 0;
-            hash_combine(seed, p.sprite);
-            hash_combine(seed, p.color);
-            hash_combine(seed, p.size.x);
-            hash_combine(seed, p.size.y);
-            hash_combine(seed, (int)p.placement);
-            hash_combine(seed, optionsHash(p.labelOptions));
-            return seed;
-        }
-    };
 }

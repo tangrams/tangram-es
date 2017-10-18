@@ -29,6 +29,10 @@ struct PointStyleBuilder : public StyleBuilder {
         std::string texture;
         glm::vec2 size;
         uint32_t color = 0xffffffff;
+        float outlineWidth = 0.f;
+        uint32_t outlineColor = 0xff000000;
+        uint16_t outlineEdge = 0;
+        uint16_t antialiasFactor = 0;
         Label::Options labelOptions;
         LabelProperty::Placement placement = LabelProperty::Placement::vertex;
         float extrudeScale = 1.f;

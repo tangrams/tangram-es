@@ -113,15 +113,3 @@ foreach(_shader ${SHADER_FILES})
         add_dependencies(${CORE_LIBRARY} ${_shader_name})
     endif()
 endforeach()
-
-# add target to transform the default point texture into a data header
-set(DEFAULT_POINT_TEXTURE_IMAGE ${CMAKE_CURRENT_SOURCE_DIR}/../images/default-point.png)
-set(DEFAULT_POINT_TEXTURE_HEADER ${GENERATED_DIR}/defaultPointTextureData.h)
-add_custom_target(default_point_texture DEPENDS ${DEFAULT_POINT_TEXTURE_HEADER})
-add_custom_command(
-  OUTPUT ${DEFAULT_POINT_TEXTURE_HEADER}
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..
-  MAIN_DEPENDENCY ${DEFAULT_POINT_TEXTURE_IMAGE}
-  COMMAND ${PROJECT_SOURCE_DIR}/../scripts/incbin.sh ${DEFAULT_POINT_TEXTURE_IMAGE} ${DEFAULT_POINT_TEXTURE_HEADER} default_point_texture
-  )
-add_dependencies(${CORE_LIBRARY} default_point_texture)
