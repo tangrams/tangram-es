@@ -191,7 +191,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     auto sceneUpdates = unpackSceneUpdates(updates);
 
     self.map->setSceneReadyListener([self sceneReadyListener]);
-    return self.map->loadSceneYamlAsync([yaml UTF8String], [[url absoluteString] UTF8String], false, sceneUpdates);
+    return self.map->loadSceneYaml([yaml UTF8String], [[url absoluteString] UTF8String], false, sceneUpdates);
 }
 
 - (int)loadSceneAsyncFromYAML:(NSString *)yaml relativeToURL:(NSURL *)url withUpdates:(NSArray<TGSceneUpdate *> *)updates
