@@ -545,7 +545,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  If an error occurs while applying updates the new scene will not be applied.
  See `TGSceneUpdate` for details.
- 
+
  @param yaml YAML scene string.
  @param url The base URL used to resolve relative URLs in the scene.
  @param updates A list of `TGSceneUpdate` to apply to the scene.

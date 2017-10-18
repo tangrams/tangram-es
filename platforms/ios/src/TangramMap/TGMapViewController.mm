@@ -105,7 +105,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
                     dataLayerName, "", generateCentroid);
     self.map->addTileSource(source);
 
-    TGMapData* clientData = [[TGMapData alloc] initWithMapView:self name:name source:source];
+    __weak TGMapViewController* weakSelf = self;
+    TGMapData* clientData = [[TGMapData alloc] initWithMapView:weakSelf name:name source:source];
     self.dataLayersByName[name] = clientData;
 
     return clientData;
@@ -140,17 +141,18 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 }
 
 - (Tangram::SceneReadyCallback)sceneReadyListener {
-    return [=](int sceneID, auto sceneError) {
-        [self.markersById removeAllObjects];
-        [self renderOnce];
+    __weak TGMapViewController* weakSelf = self;
+    return [weakSelf](int sceneID, auto sceneError) {
+        [weakSelf.markersById removeAllObjects];
+        [weakSelf renderOnce];
 
-        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadScene:withError:)]) { return; }
+        if (!weakSelf.mapViewDelegate || ![weakSelf.mapViewDelegate respondsToSelector:@selector(mapView:didLoadScene:withError:)]) { return; }
 
         NSError* error = nil;
         if (sceneError) {
             error = [TGHelpers errorFromSceneError:*sceneError];
         }
-        [self.mapViewDelegate mapView:self didLoadScene:sceneID withError:error];
+        [weakSelf.mapViewDelegate mapView:weakSelf didLoadScene:sceneID withError:error];
     };
 }
 
@@ -275,23 +277,24 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     screenPosition.x *= self.contentScaleFactor;
     screenPosition.y *= self.contentScaleFactor;
 
-    self.map->pickFeatureAt(screenPosition.x, screenPosition.y, [=](const Tangram::FeaturePickResult* featureResult) {
-        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
+    __weak TGMapViewController* weakSelf = self;
+    self.map->pickFeatureAt(screenPosition.x, screenPosition.y, [weakSelf](const Tangram::FeaturePickResult* featureResult) {
+        if (!weakSelf.mapViewDelegate || ![weakSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
             return;
         }
 
         CGPoint position = CGPointMake(0.0, 0.0);
 
         if (!featureResult) {
-            [self.mapViewDelegate mapView:self didSelectFeature:nil atScreenPosition:position];
+            [weakSelf.mapViewDelegate mapView:weakSelf didSelectFeature:nil atScreenPosition:position];
             return;
         }
 
         NSMutableDictionary* featureProperties = [[NSMutableDictionary alloc] init];
 
         const auto& properties = featureResult->properties;
-        position = CGPointMake(featureResult->position[0] / self.contentScaleFactor,
-                               featureResult->position[1] / self.contentScaleFactor);
+        position = CGPointMake(featureResult->position[0] / weakSelf.contentScaleFactor,
+                               featureResult->position[1] / weakSelf.contentScaleFactor);
 
         for (const auto& item : properties->items()) {
             NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
@@ -299,7 +302,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
             featureProperties[key] = value;
         }
 
-        [self.mapViewDelegate mapView:self didSelectFeature:featureProperties atScreenPosition:position];
+        [weakSelf.mapViewDelegate mapView:weakSelf didSelectFeature:featureProperties atScreenPosition:position];
     });
 }
 
@@ -310,34 +313,35 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     screenPosition.x *= self.contentScaleFactor;
     screenPosition.y *= self.contentScaleFactor;
 
-    self.map->pickMarkerAt(screenPosition.x, screenPosition.y, [=](const Tangram::MarkerPickResult* markerPickResult) {
-        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectMarker:atScreenPosition:)]) {
+    __weak TGMapViewController* weakSelf = self;
+    self.map->pickMarkerAt(screenPosition.x, screenPosition.y, [weakSelf](const Tangram::MarkerPickResult* markerPickResult) {
+        if (!weakSelf.mapViewDelegate || ![weakSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectMarker:atScreenPosition:)]) {
             return;
         }
 
         CGPoint position = CGPointMake(0.0, 0.0);
 
         if (!markerPickResult) {
-            [self.mapViewDelegate mapView:self didSelectMarker:nil atScreenPosition:position];
+            [weakSelf.mapViewDelegate mapView:weakSelf didSelectMarker:nil atScreenPosition:position];
             return;
         }
 
         NSString* key = [NSString stringWithFormat:@"%d", (NSUInteger)markerPickResult->id];
-        TGMarker* marker = [self.markersById objectForKey:key];
+        TGMarker* marker = [weakSelf.markersById objectForKey:key];
 
         if (!marker) {
-            [self.mapViewDelegate mapView:self didSelectMarker:nil atScreenPosition:position];
+            [weakSelf.mapViewDelegate mapView:weakSelf didSelectMarker:nil atScreenPosition:position];
             return;
         }
 
-        position = CGPointMake(markerPickResult->position[0] / self.contentScaleFactor,
-                               markerPickResult->position[1] / self.contentScaleFactor);
+        position = CGPointMake(markerPickResult->position[0] / weakSelf.contentScaleFactor,
+                               markerPickResult->position[1] / weakSelf.contentScaleFactor);
 
         TGGeoPoint coordinates = TGGeoPointMake(markerPickResult->coordinates.longitude,
                                                 markerPickResult->coordinates.latitude);
 
         TGMarkerPickResult* result = [[TGMarkerPickResult alloc] initWithCoordinates:coordinates marker:marker];
-        [self.mapViewDelegate mapView:self didSelectMarker:result atScreenPosition:position];
+        [weakSelf.mapViewDelegate mapView:weakSelf didSelectMarker:result atScreenPosition:position];
     });
 }
 
@@ -348,15 +352,16 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     screenPosition.x *= self.contentScaleFactor;
     screenPosition.y *= self.contentScaleFactor;
 
-    self.map->pickLabelAt(screenPosition.x, screenPosition.y, [=](const Tangram::LabelPickResult* labelPickResult) {
-        if (!self.mapViewDelegate || ![self.mapViewDelegate respondsToSelector:@selector(mapView:didSelectLabel:atScreenPosition:)]) {
+    __weak TGMapViewController* weakSelf = self;
+    self.map->pickLabelAt(screenPosition.x, screenPosition.y, [weakSelf](const Tangram::LabelPickResult* labelPickResult) {
+        if (!weakSelf.mapViewDelegate || ![weakSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectLabel:atScreenPosition:)]) {
             return;
         }
 
         CGPoint position = CGPointMake(0.0, 0.0);
 
         if (!labelPickResult) {
-            [self.mapViewDelegate mapView:self didSelectLabel:nil atScreenPosition:position];
+            [weakSelf.mapViewDelegate mapView:weakSelf didSelectLabel:nil atScreenPosition:position];
             return;
         }
 
@@ -364,8 +369,8 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
         const auto& touchItem = labelPickResult->touchItem;
         const auto& properties = touchItem.properties;
-        position = CGPointMake(touchItem.position[0] / self.contentScaleFactor,
-                               touchItem.position[1] / self.contentScaleFactor);
+        position = CGPointMake(touchItem.position[0] / weakSelf.contentScaleFactor,
+                               touchItem.position[1] / weakSelf.contentScaleFactor);
 
         for (const auto& item : properties->items()) {
             NSString* key = [NSString stringWithUTF8String:item.key.c_str()];
@@ -377,7 +382,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
         TGLabelPickResult* tgLabelPickResult = [[TGLabelPickResult alloc] initWithCoordinates:coordinates
                                                                                          type:(TGLabelType)labelPickResult->type
                                                                                    properties:featureProperties];
-        [self.mapViewDelegate mapView:self didSelectLabel:tgLabelPickResult atScreenPosition:position];
+        [weakSelf.mapViewDelegate mapView:weakSelf didSelectLabel:tgLabelPickResult atScreenPosition:position];
     });
 }
 
@@ -822,7 +827,8 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self != nil) {
-        std::shared_ptr<Tangram::Platform> platform(new Tangram::iOSPlatform(self));
+        __weak TGMapViewController* weakSelf = self;
+        std::shared_ptr<Tangram::Platform> platform(new Tangram::iOSPlatform(weakSelf));
         self.map = new Tangram::Map(platform);
     }
     return self;
@@ -832,7 +838,8 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 {
     self = [super initWithCoder:aDecoder];
     if (self != nil) {
-        std::shared_ptr<Tangram::Platform> platform(new Tangram::iOSPlatform(self));
+        __weak TGMapViewController* weakSelf = self;
+        std::shared_ptr<Tangram::Platform> platform(new Tangram::iOSPlatform(weakSelf));
         self.map = new Tangram::Map(platform);
     }
     return self;

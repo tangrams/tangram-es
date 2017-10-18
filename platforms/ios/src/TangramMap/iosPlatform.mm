@@ -49,7 +49,7 @@ void initGLExtensions() {
     // No-op
 }
 
-iOSPlatform::iOSPlatform(TGMapViewController* _viewController) :
+iOSPlatform::iOSPlatform(__weak TGMapViewController* _viewController) :
     Platform(),
     m_viewController(_viewController)
 {
