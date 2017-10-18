@@ -875,11 +875,14 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
     [self setupGestureRecognizers];
     [self setupGL];
-
 }
 
 - (void)dealloc
 {
+    if (self.map) {
+        delete self.map;
+    }
+
     if ([EAGLContext currentContext] == self.context) {
         [EAGLContext setCurrentContext:nil];
     }
@@ -913,14 +916,6 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
         [backgroundColor getRed:&red green:&green blue:&blue alpha:&alpha];
         self.map->setDefaultBackgroundColor(red, green, blue);
     }
-}
-
-- (void)tearDownGL
-{
-    if (!self.map) { return; }
-
-    delete self.map;
-    self.map = nullptr;
 }
 
 -(void)viewWillLayoutSubviews {
