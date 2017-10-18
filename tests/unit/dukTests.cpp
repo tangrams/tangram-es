@@ -164,7 +164,7 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::color", "[Duktape][evalStyleFn]") 
     REQUIRE(ctx.setFunctions({ R"(function () { return [1.0, 1.0, 0.0, 1.0] })"}));
     REQUIRE(ctx.evalStyle(0, StyleParamKey::color, value) == true);
     REQUIRE(value.is<uint32_t>() == true);
-    REQUIRE(value.get<uint32_t>() == 0xffffff00);
+    REQUIRE(value.get<uint32_t>() == 0xff00ffff);
 
     REQUIRE(ctx.setFunctions({ R"(function () { return [0.0, 1.0, 0.0] })"}));
     REQUIRE(ctx.evalStyle(0, StyleParamKey::color, value) == true);
