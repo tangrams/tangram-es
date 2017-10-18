@@ -142,6 +142,8 @@ void UrlClient::curlLoop(uint32_t index) {
     curl_easy_setopt(handle, CURLOPT_FAILONERROR, 1L);
     curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT_MS, m_options.connectionTimeoutMs);
     curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, m_options.requestTimeoutMs);
+    curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1);
+    curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 42);
     // Loop until the session is destroyed.
     while (m_keepRunning) {
         bool haveRequest = false;
