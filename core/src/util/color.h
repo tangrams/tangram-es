@@ -13,6 +13,9 @@ struct ColorF;
 // without losing precision.
 struct Color {
 
+    // This union allows the color components to be accessed either as separate
+    // bytes or as an integer combining the four bytes. On a big-endian system
+    // the integer will combine the components in 'rgba' order instead.
     union {
         struct {
             uint8_t r, g, b, a;
