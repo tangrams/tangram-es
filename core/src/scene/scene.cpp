@@ -49,7 +49,7 @@ void Scene::copyConfig(const Scene& _other) {
 
     m_featureSelection.reset(new FeatureSelection());
 
-    m_config = _other.m_config;
+    m_config = YAML::Clone(_other.m_config);
     m_fontContext = _other.m_fontContext;
 
     m_url = _other.m_url;
