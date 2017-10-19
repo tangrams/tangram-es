@@ -67,10 +67,6 @@ static jmethodID markerByIDMID = 0;
 
 static bool glExtensionsLoaded = false;
 
-// Android assets are distinguished from file paths by the "asset" scheme.
-// static const char* aaPrefix = "asset:///";
-// static const size_t aaPrefixLen = 9;
-
 void AndroidPlatform::bindJniEnvToThread(JNIEnv* jniEnv) {
     jniEnv->GetJavaVM(&jvm);
 }
