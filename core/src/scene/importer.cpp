@@ -5,8 +5,10 @@
 #include "scene/sceneLoader.h"
 #include "util/zipArchive.h"
 
-#include "yaml-cpp/yaml.h"
+#include <atomic>
 #include <cassert>
+#include <condition_variable>
+#include <mutex>
 
 using YAML::Node;
 using YAML::NodeType;
@@ -19,13 +21,13 @@ Importer::Importer(std::shared_ptr<Scene> scene)
 
 Node Importer::applySceneImports(std::shared_ptr<Platform> platform) {
 
-    const Url& sceneUrl = m_scene->url();
+    Url sceneUrl = m_scene->url();
 
     Url nextUrlToImport;
 
     if (!m_scene->yaml().empty()) {
         // Load scene from yaml string.
-        addSceneString(sceneUrl, sceneUrl, m_scene->yaml());
+        addSceneString(sceneUrl, m_scene->yaml());
     } else {
         // Load scene from yaml file.
         m_sceneQueue.push_back(sceneUrl);
@@ -90,9 +92,8 @@ void Importer::addSceneData(const Url& sceneUrl, std::vector<char>& sceneContent
         return;
     }
 
-    Url baseUrl = sceneUrl;
     std::string sceneString;
-    if (Url::getPathExtension(sceneUrl.path()) == "zip") {
+    if (isZipArchiveUrl(sceneUrl)) {
         // We're loading a scene from a zip archive!
         // First, create an archive from the data.
         auto zipArchive = std::make_shared<ZipArchive>();
@@ -103,10 +104,7 @@ void Importer::addSceneData(const Url& sceneUrl, std::vector<char>& sceneContent
             // The "base" scene file must have extension "yaml" or "yml" and be
             // at the root directory of the archive (i.e. no '/' in path).
             if ((ext == "yaml" || ext == "yml") && entry.path.find('/') == std::string::npos) {
-                // Found the base, now create a URL to resolve the contents.
-                auto encodedSourceUrl = Url::escapeReservedCharacters(sceneUrl.string());
-                baseUrl = Url("zip://" +  encodedSourceUrl);
-                // And extract the contents to the scene string.
+                // Found the base, now extract the contents to the scene string.
                 sceneString.resize(entry.uncompressedSize);
                 zipArchive->decompressEntry(&entry, &sceneString[0]);
                 break;
@@ -118,10 +116,10 @@ void Importer::addSceneData(const Url& sceneUrl, std::vector<char>& sceneContent
         sceneString = std::string(sceneContent.data(), sceneContent.size());
     }
 
-    addSceneString(baseUrl, sceneUrl, sceneString);
+    addSceneString(sceneUrl, sceneString);
 }
 
-void Importer::addSceneString(const Url& baseUrl, const Url& sceneUrl, const std::string& sceneString) {
+void Importer::addSceneString(const Url& sceneUrl, const std::string& sceneString) {
     Node sceneNode;
     try {
         sceneNode = YAML::Load(sceneString);
@@ -132,9 +130,130 @@ void Importer::addSceneString(const Url& baseUrl, const Url& sceneUrl, const std
 
     m_importedScenes[sceneUrl] = sceneNode;
 
-    for (const auto& import : getResolvedImportUrls(sceneNode, baseUrl)) {
+    for (const auto& import : getResolvedImportUrls(sceneNode, sceneUrl)) {
         m_sceneQueue.push_back(import);
     }
+}
+
+std::vector<Url> Importer::getResolvedImportUrls(const Node& sceneNode, const Url& baseUrl) {
+
+    std::vector<Url> sceneUrls;
+
+    auto base = baseUrl;
+    if (isZipArchiveUrl(baseUrl)) {
+        base = getBaseUrlForZipArchive(baseUrl);
+    }
+
+    if (const Node& import = sceneNode["import"]) {
+        if (import.IsScalar()) {
+            sceneUrls.push_back(Url(import.Scalar()).resolved(base));
+        } else if (import.IsSequence()) {
+            for (const auto& path : import) {
+                if (path.IsScalar()) {
+                    sceneUrls.push_back(Url(path.Scalar()).resolved(base));
+                }
+            }
+        }
+    }
+
+    return sceneUrls;
+}
+
+void Importer::importScenesRecursive(Node& root, const Url& sceneUrl, std::vector<Url>& sceneStack) {
+
+    LOGD("Starting importing Scene: %s", sceneUrl.string().c_str());
+
+    for (const auto& s : sceneStack) {
+        if (sceneUrl == s) {
+            LOGE("%s will cause a cyclic import. Stopping this scene from being imported",
+                    sceneUrl.string().c_str());
+            return;
+        }
+    }
+
+    sceneStack.push_back(sceneUrl);
+
+    auto sceneNode = m_importedScenes[sceneUrl];
+
+    if (!sceneNode.IsDefined() || !sceneNode.IsMap()) {
+        return;
+    }
+
+    auto imports = getResolvedImportUrls(sceneNode, sceneUrl);
+
+    // Don't want to merge imports, so remove them here.
+    sceneNode.remove("import");
+
+    for (const auto& url : imports) {
+
+        importScenesRecursive(root, url, sceneStack);
+
+    }
+
+    sceneStack.pop_back();
+
+    mergeMapFields(root, sceneNode);
+
+    resolveSceneUrls(root, sceneUrl);
+}
+
+void Importer::mergeMapFields(Node& target, const Node& import) {
+
+    for (const auto& entry : import) {
+
+        const auto& key = entry.first.Scalar();
+        const auto& source = entry.second;
+        auto dest = target[key];
+
+        if (!dest) {
+            dest = source;
+            continue;
+        }
+
+        if (dest.Type() != source.Type()) {
+            LOGN("Merging different node types: '%s'\n'%s'\n<==\n'%s'",
+                 key.c_str(), Dump(dest).c_str(), Dump(source).c_str());
+        }
+
+        switch(dest.Type()) {
+            case NodeType::Null:
+            case NodeType::Scalar:
+            case NodeType::Sequence:
+                dest = source;
+                break;
+
+            case NodeType::Map: {
+                auto newTarget = dest;
+                if (source.IsMap()) {
+                    mergeMapFields(newTarget, source);
+                } else {
+                    dest = source;
+                }
+                break;
+            }
+            default:
+                // NodeType::Undefined is handled above by checking (!dest).
+                // All types are handled, so this should never be reached.
+                assert(false);
+                break;
+        }
+    }
+}
+
+bool Importer::isZipArchiveUrl(const Url& url) {
+    return Url::getPathExtension(url.path()) == "zip";
+}
+
+Url Importer::getBaseUrlForZipArchive(const Url& archiveUrl) {
+    auto encodedSourceUrl = Url::escapeReservedCharacters(archiveUrl.string());
+    auto baseUrl = Url("zip://" +  encodedSourceUrl);
+    return baseUrl;
+}
+
+Url Importer::getArchiveUrlForZipEntry(const Url& zipEntryUrl) {
+    auto encodedSourceUrl = zipEntryUrl.netLocation();
+    auto source = Url(Url::unEscapeReservedCharacters(encodedSourceUrl));
+    return source;
 }
 
 bool nodeIsPotentialUrl(const Node& node) {
@@ -163,20 +282,11 @@ bool nodeIsTextureUrl(const Node& node, const Node& textures) {
     return true;
 }
 
-void Importer::resolveSceneUrls(Node& root, const Url& base) {
+void Importer::resolveSceneUrls(Node& root, const Url& baseUrl) {
 
-    // Resolve import URLs.
-
-    if (Node import = root["import"]) {
-        if (import.IsScalar()) {
-            import = Url(import.Scalar()).resolved(base).string();
-        } else if (import.IsSequence()) {
-            for (Node path : import) {
-                if (path.IsScalar()) {
-                    path = Url(path.Scalar()).resolved(base).string();
-                }
-            }
-        }
+    auto base = baseUrl;
+    if (isZipArchiveUrl(baseUrl)) {
+        base = getBaseUrlForZipArchive(baseUrl);
     }
 
     // Resolve global texture URLs.
@@ -277,106 +387,6 @@ void Importer::resolveSceneUrls(Node& root, const Url& base) {
                     }
                 }
             }
-        }
-    }
-}
-
-std::vector<Url> Importer::getResolvedImportUrls(const Node& sceneNode, const Url& base) {
-
-    std::vector<Url> sceneUrls;
-
-    if (const Node& import = sceneNode["import"]) {
-        if (import.IsScalar()) {
-            sceneUrls.push_back(Url(import.Scalar()).resolved(base));
-        } else if (import.IsSequence()) {
-            for (const auto& path : import) {
-                if (path.IsScalar()) {
-                    sceneUrls.push_back(Url(path.Scalar()).resolved(base));
-                }
-            }
-        }
-    }
-
-    return sceneUrls;
-}
-
-void Importer::importScenesRecursive(Node& root, const Url& sceneUrl, std::vector<Url>& sceneStack) {
-
-    LOGD("Starting importing Scene: %s", sceneUrl.string().c_str());
-
-    for (const auto& s : sceneStack) {
-        if (sceneUrl == s) {
-            LOGE("%s will cause a cyclic import. Stopping this scene from being imported",
-                    sceneUrl.string().c_str());
-            return;
-        }
-    }
-
-    sceneStack.push_back(sceneUrl);
-
-    auto sceneNode = m_importedScenes[sceneUrl];
-
-    if (!sceneNode.IsDefined() || !sceneNode.IsMap()) {
-        return;
-    }
-
-    auto imports = getResolvedImportUrls(sceneNode, sceneUrl);
-
-    // Don't want to merge imports, so remove them here.
-    sceneNode.remove("import");
-
-    for (const auto& url : imports) {
-
-        importScenesRecursive(root, url, sceneStack);
-
-    }
-
-    sceneStack.pop_back();
-
-    mergeMapFields(root, sceneNode);
-
-    resolveSceneUrls(root, sceneUrl);
-}
-
-void Importer::mergeMapFields(Node& target, const Node& import) {
-
-    for (const auto& entry : import) {
-
-        const auto& key = entry.first.Scalar();
-        const auto& source = entry.second;
-        auto dest = target[key];
-
-        if (!dest) {
-            dest = source;
-            continue;
-        }
-
-        if (dest.Type() != source.Type()) {
-            LOGN("Merging different node types: '%s'\n'%s'\n<==\n'%s'",
-                 key.c_str(), Dump(dest).c_str(), Dump(source).c_str());
-        }
-
-        switch(dest.Type()) {
-            case NodeType::Null:
-            case NodeType::Scalar:
-            case NodeType::Sequence:
-                dest = source;
-                break;
-
-            case NodeType::Map: {
-                auto newTarget = dest;
-                if (source.IsMap()) {
-                    mergeMapFields(newTarget, source);
-                } else {
-                    dest = source;
-                }
-                break;
-            }
-            default:
-                // NodeType::Undefined is handled above by checking (!dest).
-                // All types are handled, so this should never be reached.
-                assert(false);
-                break;
         }
     }
 }

@@ -2,8 +2,8 @@
 
 #include "data/tileSource.h"
 #include "gl/shaderProgram.h"
-#include "platform.h"
 #include "scene/dataLayer.h"
+#include "scene/importer.h"
 #include "scene/light.h"
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
@@ -13,9 +13,7 @@
 #include "text/fontContext.h"
 #include "util/mapProjection.h"
 #include "util/util.h"
-#include "util/url.h"
 #include "util/zipArchive.h"
-#include "view/view.h"
 
 #include <algorithm>
 
@@ -86,9 +84,8 @@ Style* Scene::findStyle(const std::string& _name) {
 UrlRequestHandle Scene::startUrlRequest(std::shared_ptr<Platform> platform, Url url, UrlCallback callback) {
     if (url.scheme() == "zip") {
         UrlResponse response;
-        // URL for a file in a zip archive, get the source URL from the fragment.
-        auto encodedSourceUrl = url.netLocation();
-        auto source = Url(Url::unEscapeReservedCharacters(encodedSourceUrl));
+        // URL for a file in a zip archive, get the encoded source URL.
+        auto source = Importer::getArchiveUrlForZipEntry(url);
         // Search for the source URL in our archive map.
         auto it = m_zipArchives.find(source);
         if (it != m_zipArchives.end()) {

@@ -1,16 +1,14 @@
 #pragma once
 
+#include "scene/scene.h"
 #include "util/url.h"
 
-#include <atomic>
-#include <condition_variable>
+#include "yaml-cpp/yaml.h"
+
 #include <memory>
-#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "yaml-cpp/yaml.h"
-#include "scene/scene.h"
 
 namespace Tangram {
 
@@ -28,6 +26,12 @@ public:
     // Loads the main scene with deep merging dependent imported scenes.
     Node applySceneImports(std::shared_ptr<Platform> platform);
 
+    static bool isZipArchiveUrl(const Url& url);
+
+    static Url getBaseUrlForZipArchive(const Url& archiveUrl);
+
+    static Url getArchiveUrlForZipEntry(const Url& zipEntryUrl);
+
     // Traverses the nodes contained in the given root scene node and for all
     // nodes that represent URLs, replaces the contents with that URL resolved
     // against the given base URL.
@@ -39,7 +43,7 @@ protected:
     void addSceneData(const Url& sceneUrl, std::vector<char>& sceneContent);
 
     // Process and store data for an imported scene from a string of YAML.
-    void addSceneString(const Url& baseUrl, const Url& sceneUrl, const std::string& sceneString);
+    void addSceneString(const Url& sceneUrl, const std::string& sceneString);
 
     // Get the sequence of scene names that are designated to be imported into the
     // input scene node by its 'import' fields.
