@@ -880,6 +880,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     self.continuous = NO;
     self.markersById = [[NSMutableDictionary alloc] init];
     self.dataLayersByName = [[NSMutableDictionary alloc] init];
+    self.resourceRoot = [[NSBundle mainBundle] resourceURL];
 
     if (!self.httpHandler) {
         self.httpHandler = [[TGHttpHandler alloc] initWithCachePath:@"/tangram_cache"
@@ -975,15 +976,6 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 {
     _continuous = c;
     self.paused = !c;
-}
-
-- (void)setResourceRoot:(NSURL *)resourceRoot
-{
-    if (!self.map) { return; }
-
-    Tangram::iOSPlatform& platform = static_cast<Tangram::iOSPlatform&>(*self.map->getPlatform());
-
-    platform.setResourceRoot(resourceRoot);
 }
 
 - (void)captureScreenshot:(BOOL)waitForViewComplete

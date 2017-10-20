@@ -20,28 +20,32 @@ public:
         uint32_t requestTimeoutMs = 30000;
     };
 
-    struct Response {
-        std::vector<char> data;
-        bool canceled = false;
-    };
-
     UrlClient(Options options);
     ~UrlClient();
 
-    bool addRequest(const std::string& url, UrlCallback onComplete);
+    UrlRequestHandle addRequest(const std::string& url, UrlCallback onComplete);
 
-    void cancelRequest(const std::string& url);
+    void cancelRequest(UrlRequestHandle request);
 
 private:
+
     struct Request {
         std::string url;
         UrlCallback callback;
+        UrlRequestHandle handle;
+        bool canceled;
     };
+
+    using Response = UrlResponse;
 
     struct Task {
         Request request;
         Response response;
     };
+
+    static Response getCanceledResponse();
+    static size_t curlWriteCallback(char* ptr, size_t size, size_t n, void* user);
+    static int curlProgressCallback(void* user, double dltotal, double dlnow, double ultotal, double ulnow);
 
     void curlLoop(uint32_t index);
 
@@ -51,6 +55,7 @@ private:
     std::condition_variable m_requestCondition;
     std::mutex m_requestMutex;
     Options m_options;
+    UrlRequestHandle m_requestCount = 0;
     bool m_keepRunning = false;
 };
 

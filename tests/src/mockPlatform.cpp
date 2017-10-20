@@ -39,11 +39,41 @@ std::vector<FontSourceHandle> MockPlatform::systemFontFallbacksHandle() const {
     return handles;
 }
 
-bool MockPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
-    return true;
+UrlRequestHandle MockPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
+
+    UrlResponse response;
+
+    auto it = m_files.find(_url);
+    if (it != m_files.end()) {
+        response.content = it->second;
+    } else {
+        response.error = "Url contents could not be found!";
+    }
+
+    _callback(response);
+
+    return 0;
 }
 
-void MockPlatform::cancelUrlRequest(const std::string& _url) {}
+void MockPlatform::cancelUrlRequest(UrlRequestHandle _request) {}
+
+void MockPlatform::putMockUrlContents(Url url, std::string contents) {
+    m_files[url].assign(contents.begin(), contents.end());
+}
+
+void MockPlatform::putMockUrlContents(Url url, std::vector<char> contents) {
+    m_files[url] = contents;
+}
+
+std::vector<char> MockPlatform::getBytesFromFile(const char* path) {
+    std::vector<char> result;
+    auto allocator = [&](size_t size) {
+        result.resize(size);
+        return result.data();
+    };
+    Platform::bytesFromFileSystem(path, allocator);
+    return result;
+}
 
 void setCurrentThreadPriority(int priority) {}
 

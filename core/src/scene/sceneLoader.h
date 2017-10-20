@@ -4,18 +4,12 @@
 #include "map.h"
 #include "scene/scene.h"
 
-#include <cassert>
 #include <memory>
-#include <mutex>
-#include <sstream>
 #include <string>
 #include <tuple>
 #include <vector>
 
 #include "yaml-cpp/yaml.h"
-#include "glm/vec2.hpp"
-#include "glm/vec3.hpp"
-#include "glm/vec4.hpp"
 
 namespace Tangram {
 
@@ -94,7 +88,6 @@ struct SceneLoader {
     static bool loadStyle(const std::shared_ptr<Platform>& platform, const std::string& styleName,
                           Node config, const std::shared_ptr<Scene>& scene);
 
-    static std::mutex m_textureMutex;
     SceneLoader() = delete;
 
 };

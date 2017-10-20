@@ -51,12 +51,12 @@ std::vector<FontSourceHandle> LinuxPlatform::systemFontFallbacksHandle() const {
     return handles;
 }
 
-bool LinuxPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
-    return m_urlClient.addRequest(_url, _callback);
+UrlRequestHandle LinuxPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
+    return m_urlClient.addRequest(_url.string(), _callback);
 }
 
-void LinuxPlatform::cancelUrlRequest(const std::string& _url) {
-    m_urlClient.cancelRequest(_url);
+void LinuxPlatform::cancelUrlRequest(UrlRequestHandle _request) {
+    m_urlClient.cancelRequest(_request);
 }
 
 LinuxPlatform::~LinuxPlatform() {}

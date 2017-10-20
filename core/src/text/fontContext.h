@@ -40,22 +40,14 @@ struct GlyphTexture {
 struct FontDescription {
     std::string uri;
     std::string alias;
-    std::string bundleAlias;
 
     FontDescription(std::string family, std::string style, std::string weight, std::string uri)
         : uri(uri) {
         alias = Alias(family, style, weight);
-        bundleAlias = BundleAlias(family, style, weight);
     }
 
     static std::string Alias(const std::string& family, const std::string& style, const std::string& weight) {
         return family + "_" + getNumericFontWeight(weight) + "_" + style;
-    }
-
-    static std::string BundleAlias(const std::string& family, const std::string& style, const std::string& weight) {
-        // TODO: support .woff on bundle fonts
-        std::string alias = family + "-" + getNumericFontWeight(weight) + style + ".ttf";
-        return alias;
     }
 
     static std::string getNumericFontWeight(const std::string& weight) {
@@ -115,8 +107,6 @@ public:
         std::vector<GlyphQuad>* quads;
     };
 
-    void setSceneResourceRoot(const std::string& sceneResourceRoot) { m_sceneResourceRoot = sceneResourceRoot; }
-
     void addFont(const FontDescription& _ft, alfons::InputSource _source);
 
     void setPixelScale(float _scale);
@@ -150,7 +140,6 @@ private:
     // textures and a MeshCallback implemented by TextStyleBuilder for adding glyph quads.
     alfons::TextBatch m_batch;
     TextWrapper m_textWrapper;
-    std::string m_sceneResourceRoot = "";
 
     std::shared_ptr<const Platform> m_platform;
 
