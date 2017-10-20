@@ -49,7 +49,7 @@ void initGLExtensions() {
     // No-op
 }
 
-iOSPlatform::iOSPlatform(TGMapViewController* _viewController) :
+iOSPlatform::iOSPlatform(__weak TGMapViewController* _viewController) :
     Platform(),
     m_viewController(_viewController)
 {
@@ -57,7 +57,13 @@ iOSPlatform::iOSPlatform(TGMapViewController* _viewController) :
 }
 
 void iOSPlatform::requestRender() const {
-    [m_viewController renderOnce];
+    __strong TGMapViewController* mapViewController = m_viewController;
+
+    if (!mapViewController) {
+        return;
+    }
+
+    [mapViewController renderOnce];
 }
 
 void iOSPlatform::setResourceRoot(NSURL* _resourceRoot) {
@@ -66,7 +72,13 @@ void iOSPlatform::setResourceRoot(NSURL* _resourceRoot) {
 
 void iOSPlatform::setContinuousRendering(bool _isContinuous) {
     Platform::setContinuousRendering(_isContinuous);
-    [m_viewController setContinuous:_isContinuous];
+    __strong TGMapViewController* mapViewController = m_viewController;
+
+    if (!mapViewController) {
+        return;
+    }
+
+    [mapViewController setContinuous:_isContinuous];
 }
 
 std::string iOSPlatform::resolveAssetPath(const std::string& _path) const {
@@ -176,7 +188,13 @@ FontSourceHandle iOSPlatform::systemFont(const std::string& _name, const std::st
 }
 
 bool iOSPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
-    TGHttpHandler* httpHandler = [m_viewController httpHandler];
+    __strong TGMapViewController* mapViewController = m_viewController;
+
+    if (!mapViewController) {
+        return false;
+    }
+
+    TGHttpHandler* httpHandler = [mapViewController httpHandler];
 
     if (!httpHandler) {
         return false;
@@ -223,9 +241,17 @@ bool iOSPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback
 }
 
 void iOSPlatform::cancelUrlRequest(const std::string& _url) {
-    TGHttpHandler* httpHandler = [m_viewController httpHandler];
+    __strong TGMapViewController* mapViewController = m_viewController;
 
-    if (!httpHandler) { return; }
+    if (!mapViewController) {
+        return;
+    }
+
+    TGHttpHandler* httpHandler = [mapViewController httpHandler];
+
+    if (!httpHandler) {
+        return;
+    }
 
     NSString* url = [NSString stringWithUTF8String:_url.c_str()];
     [httpHandler cancelDownloadRequestAsync:url];

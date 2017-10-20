@@ -14,7 +14,7 @@ class iOSPlatform : public Platform {
 
 public:
 
-    iOSPlatform(TGMapViewController* _viewController);
+    iOSPlatform(__weak TGMapViewController* _viewController);
     void requestRender() const override;
     void setContinuousRendering(bool _isContinuous) override;
     std::string resolveAssetPath(const std::string& _path) const override;
@@ -28,7 +28,7 @@ public:
 
 private:
 
-    TGMapViewController* m_viewController;
+    __weak TGMapViewController* m_viewController;
     NSURL* m_resourceRoot;
 
 };

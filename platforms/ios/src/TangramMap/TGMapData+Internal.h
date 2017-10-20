@@ -14,7 +14,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-- (instancetype)initWithMapView:(TGMapViewController *)mapView name:(NSString *)name source:(std::shared_ptr<Tangram::TileSource>)source;
+- (instancetype)initWithMapView:(__weak TGMapViewController *)mapView name:(NSString *)name source:(std::shared_ptr<Tangram::TileSource>)source;
 
 NS_ASSUME_NONNULL_END
 
