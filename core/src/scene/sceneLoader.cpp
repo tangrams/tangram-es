@@ -33,6 +33,10 @@
 #include "view/view.h"
 
 #include "csscolorparser.hpp"
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
+#include "glm/vec4.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <iterator>
@@ -51,8 +55,6 @@ namespace Tangram {
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
 static const std::string GLOBAL_PREFIX = "global.";
-
-std::mutex SceneLoader::m_textureMutex;
 
 bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::shared_ptr<Scene> _scene,
                             const std::vector<SceneUpdate>& _updates) {
@@ -481,7 +483,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(const std::shared_ptr<Platform>
 
     MaterialTexture matTex;
     {
-        std::lock_guard<std::mutex> lock(m_textureMutex);
+        std::lock_guard<std::mutex> lock(scene->textureMutex);
         matTex.tex = scene->textures()[name];
     }
 
@@ -599,6 +601,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
                 if (response.error) {
                     LOGE("Error retrieving URL '%s': %s", url.string().c_str(), response.error);
                 } else {
+                    std::lock_guard<std::mutex> lock(scene->textureMutex);
                     if (texture) {
                         if (!texture->loadImageFromMemory(std::move(response.content))) {
                             LOGE("Invalid texture data from URL '%s'", url.string().c_str());
@@ -624,7 +627,7 @@ bool SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
 
     auto texture = fetchTexture(platform, url, url, options, false, scene);
     {
-        std::lock_guard<std::mutex> lock(m_textureMutex);
+        std::lock_guard<std::mutex> lock(scene->textureMutex);
         scene->textures()[url] = texture;
     }
 
@@ -660,11 +663,8 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
     }
 
     auto texture = fetchTexture(platform, name, file, options, generateMipmaps, scene);
-    if (!texture) {
-        LOGE("Missing texture %s", name.c_str());
-        return;
-    }
-    std::lock_guard<std::mutex> lock(m_textureMutex);
+
+    std::lock_guard<std::mutex> lock(scene->textureMutex);
     if (Node sprites = textureConfig["sprites"]) {
         auto atlas = std::make_unique<SpriteAtlas>();
 
@@ -827,7 +827,7 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
     }
 
     if (Node textureNode = styleNode["texture"]) {
-        std::lock_guard<std::mutex> lock(m_textureMutex);
+        std::lock_guard<std::mutex> lock(scene->textureMutex);
         if (auto pointStyle = dynamic_cast<PointStyle*>(&style)) {
             const std::string& textureName = textureNode.Scalar();
             auto styleTexture = scene->getTexture(textureName);

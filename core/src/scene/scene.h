@@ -10,6 +10,7 @@
 #include <atomic>
 #include <list>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <tuple>
@@ -146,6 +147,10 @@ public:
 
     float pixelScale() { return m_pixelScale; }
     void setPixelScale(float _scale);
+
+    // Should be locked when the texture collection is being accessed by
+    // multiple threads.
+    std::mutex textureMutex;
 
     std::atomic_ushort pendingTextures{0};
     std::atomic_ushort pendingFonts{0};
