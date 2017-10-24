@@ -5,21 +5,17 @@ cmake_minimum_required(VERSION 2.8.12)
 set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "")
 set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "")
 set(YAML_CPP_INSTALL OFF CACHE BOOL "")
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp)
+add_subdirectory(yaml-cpp)
 
-target_include_directories(yaml-cpp
-  PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp/include
-)
+target_include_directories(yaml-cpp PUBLIC yaml-cpp/include)
 
 ## css-color-parser-cpp ##
 ##########################
-add_library(css-color-parser-cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/css-color-parser-cpp/csscolorparser.cpp)
+add_library(css-color-parser-cpp css-color-parser-cpp/csscolorparser.cpp)
 
-target_include_directories(css-color-parser-cpp
-  PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/css-color-parser-cpp)
+set_target_properties(css-color-parser-cpp PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED ON)
+
+target_include_directories(css-color-parser-cpp PUBLIC css-color-parser-cpp)
 
 ## duktape ##
 #############
