@@ -25,6 +25,13 @@
 
 #include "sqlite3ndk.h"
 
+
+PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT = 0;
+PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT = 0;
+PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT = 0;
+
+namespace Tangram {
+
 /* Followed the following document for JavaVM tips when used with native threads
  * http://android.wooyd.org/JNIExample/#NWD1sCYeT-I
  * http://developer.android.com/training/articles/perf-jni.html and
@@ -34,7 +41,6 @@
 
 static JavaVM* jvm = nullptr;
 // JNI Env bound on androids render thread (our native main thread)
-static jobject tangramInstance = nullptr;
 static jmethodID requestRenderMethodID = 0;
 static jmethodID setRenderModeMethodID = 0;
 static jmethodID startUrlRequestMID = 0;
@@ -61,24 +67,16 @@ static jmethodID markerByIDMID = 0;
 
 static bool glExtensionsLoaded = false;
 
-PFNGLBINDVERTEXARRAYOESPROC glBindVertexArrayOESEXT = 0;
-PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArraysOESEXT = 0;
-PFNGLGENVERTEXARRAYSOESPROC glGenVertexArraysOESEXT = 0;
-
-// Android assets are distinguished from file paths by the "asset" scheme.
-static const char* aaPrefix = "asset:///";
-static const size_t aaPrefixLen = 9;
-
-void bindJniEnvToThread(JNIEnv* jniEnv) {
+void AndroidPlatform::bindJniEnvToThread(JNIEnv* jniEnv) {
     jniEnv->GetJavaVM(&jvm);
 }
 
-void setupJniEnv(JNIEnv* jniEnv) {
+void AndroidPlatform::setupJniEnv(JNIEnv* jniEnv) {
     bindJniEnvToThread(jniEnv);
 
     jclass tangramClass = jniEnv->FindClass("com/mapzen/tangram/MapController");
-    startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)Z");
-    cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(Ljava/lang/String;)V");
+    startUrlRequestMID = jniEnv->GetMethodID(tangramClass, "startUrlRequest", "(Ljava/lang/String;J)V");
+    cancelUrlRequestMID = jniEnv->GetMethodID(tangramClass, "cancelUrlRequest", "(J)V");
     getFontFilePath = jniEnv->GetMethodID(tangramClass, "getFontFilePath", "(Ljava/lang/String;)Ljava/lang/String;");
     getFontFallbackFilePath = jniEnv->GetMethodID(tangramClass, "getFontFallbackFilePath", "(II)Ljava/lang/String;");
     requestRenderMethodID = jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
@@ -121,45 +119,20 @@ void setupJniEnv(JNIEnv* jniEnv) {
     onMarkerPickMID = jniEnv->GetMethodID(markerPickListenerClass, "onMarkerPick", "(Lcom/mapzen/tangram/MarkerPickResult;FF)V");
 }
 
-void onUrlSuccess(JNIEnv* _jniEnv, jbyteArray _jBytes, jlong _jCallbackPtr) {
-
-    size_t length = _jniEnv->GetArrayLength(_jBytes);
-    std::vector<char> content;
-    content.resize(length);
-
-    _jniEnv->GetByteArrayRegion(_jBytes, 0, length, reinterpret_cast<jbyte*>(content.data()));
-
-    Tangram::UrlCallback* callback = reinterpret_cast<Tangram::UrlCallback*>(_jCallbackPtr);
-    (*callback)(std::move(content));
-    delete callback;
-}
-
-void onUrlFailure(JNIEnv* _jniEnv, jlong _jCallbackPtr) {
-    std::vector<char> empty;
-
-    Tangram::UrlCallback* callback = reinterpret_cast<Tangram::UrlCallback*>(_jCallbackPtr);
-    (*callback)(std::move(empty));
-    delete callback;
-}
-
 std::string stringFromJString(JNIEnv* jniEnv, jstring string) {
     auto length = jniEnv->GetStringLength(string);
     std::u16string chars(length, char16_t());
-    jniEnv->GetStringRegion(string, 0, length, reinterpret_cast<jchar*>(&chars[0]));
+    if(!chars.empty()) {
+        jniEnv->GetStringRegion(string, 0, length, reinterpret_cast<jchar*>(&chars[0]));
+    }
     return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().to_bytes(chars);
 }
 
 jstring jstringFromString(JNIEnv* jniEnv, const std::string& string) {
+    const auto emptyu16 = u"";
     auto chars = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>().from_bytes(string);
-    return jniEnv->NewString(reinterpret_cast<const jchar*>(&chars[0]), chars.length());
-}
-
-std::string resolveScenePath(const std::string& path) {
-    // If the path is an absolute URL (like a file:// or http:// URL)
-    // then resolving it will return the same URL. Otherwise, we resolve
-    // it against the "asset" scheme to know later that this path is in
-    // the asset bundle.
-    return Tangram::Url(path).resolved("asset:///").string();
+    auto s = reinterpret_cast<const jchar*>(chars.empty() ? emptyu16 : chars.data());
+    return jniEnv->NewString(s, chars.length());
 }
 
 class JniThreadBinding {
@@ -184,8 +157,6 @@ public:
         return jniEnv;
     }
 };
-
-namespace Tangram {
 
 void logMsg(const char* fmt, ...) {
 
@@ -303,24 +274,7 @@ bool AndroidPlatform::bytesFromAssetManager(const char* _path, std::function<cha
     return read > 0;
 }
 
-std::string AndroidPlatform::stringFromFile(const char* _path) const {
-
-    std::string data;
-
-    auto allocator = [&](size_t size) {
-        data.resize(size);
-        return &data[0];
-    };
-
-    if (strncmp(_path, aaPrefix, aaPrefixLen) == 0) {
-        bytesFromAssetManager(_path + aaPrefixLen, allocator);
-    } else {
-        Platform::bytesFromFileSystem(_path, allocator);
-    }
-    return data;
-}
-
-std::vector<char> AndroidPlatform::bytesFromFile(const char* _path) const {
+std::vector<char> AndroidPlatform::bytesFromFile(const Url& url) const {
     std::vector<char> data;
 
     auto allocator = [&](size_t size) {
@@ -328,37 +282,101 @@ std::vector<char> AndroidPlatform::bytesFromFile(const char* _path) const {
         return data.data();
     };
 
-    if (strncmp(_path, aaPrefix, aaPrefixLen) == 0) {
-        bytesFromAssetManager(_path + aaPrefixLen, allocator);
+    auto path = url.path();
+
+    if (url.scheme() == "asset") {
+        // The asset manager doesn't like paths starting with '/'.
+        if (!path.empty() && path.front() == '/') {
+            path = path.substr(1);
+        }
+        bytesFromAssetManager(path.c_str(), allocator);
     } else {
-        Platform::bytesFromFileSystem(_path, allocator);
+        Platform::bytesFromFileSystem(path.c_str(), allocator);
     }
 
     return data;
 }
 
-bool AndroidPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
+UrlRequestHandle AndroidPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
 
     JniThreadBinding jniEnv(jvm);
-    jstring jUrl = jstringFromString(jniEnv, _url);
 
-    // This is probably super dangerous. In order to pass a reference to our callback we have to convert it
-    // to a Java type. We allocate a new callback object and then reinterpret the pointer to it as a Java long.
-    // In Java, we associate this long with the current network request and pass it back to native code when
-    // the request completes (either in onUrlSuccess or onUrlFailure), reinterpret the long back into a
-    // pointer, call the callback function if the request succeeded, and delete the heap-allocated UrlCallback
-    // to make sure nothing is leaked.
-    jlong jCallbackPtr = reinterpret_cast<jlong>(new UrlCallback(_callback));
+    // Get the current value of the request counter and add one, atomically.
+    UrlRequestHandle requestHandle = m_urlRequestCount++;
 
-    jboolean methodResult = jniEnv->CallBooleanMethod(m_tangramInstance, startUrlRequestMID, jUrl, jCallbackPtr);
+    // If the requested URL does not use HTTP or HTTPS, retrieve it synchronously.
+    if (!_url.hasHttpScheme()) {
+        UrlResponse response;
+        response.content = bytesFromFile(_url);
+        if (_callback) {
+            _callback(response);
+        }
+        return requestHandle;
+    }
 
-    return methodResult;
+    // Store our callback, associated with the request handle.
+    {
+        std::lock_guard<std::mutex> lock(m_callbackMutex);
+        m_callbacks[requestHandle] = _callback;
+    }
+
+    jlong jRequestHandle = static_cast<jlong>(requestHandle);
+
+    // Check that it's safe to convert the UrlRequestHandle to a jlong and back.
+    assert(requestHandle == static_cast<UrlRequestHandle>(jRequestHandle));
+
+    jstring jUrl = jstringFromString(jniEnv, _url.string());
+
+    // Call the MapController method to start the URL request.
+    jniEnv->CallVoidMethod(m_tangramInstance, startUrlRequestMID, jUrl, jRequestHandle);
+
+    return requestHandle;
 }
 
-void AndroidPlatform::cancelUrlRequest(const std::string& _url) {
+void AndroidPlatform::cancelUrlRequest(UrlRequestHandle request) {
+
     JniThreadBinding jniEnv(jvm);
-    jstring jUrl = jstringFromString(jniEnv, _url);
-    jniEnv->CallVoidMethod(m_tangramInstance, cancelUrlRequestMID, jUrl);
+
+    jlong jRequestHandle = static_cast<jlong>(request);
+
+    jniEnv->CallVoidMethod(m_tangramInstance, cancelUrlRequestMID, jRequestHandle);
+
+    // We currently don't try to cancel requests for local files.
+}
+
+void AndroidPlatform::onUrlComplete(JNIEnv* _jniEnv, jlong _jRequestHandle, jbyteArray _jBytes, jstring _jError) {
+    // Start building a response object.
+    UrlResponse response;
+
+    // If the request was successful, we will receive a non-null byte array.
+    if (_jBytes != nullptr) {
+        size_t length = _jniEnv->GetArrayLength(_jBytes);
+        response.content.resize(length);
+        _jniEnv->GetByteArrayRegion(_jBytes, 0, length, reinterpret_cast<jbyte*>(response.content.data()));
+        // TODO: Can we use a DirectByteBuffer to transfer data with fewer copies?
+    }
+
+    // If the request was unsuccessful, we will receive a non-null error string.
+    std::string error;
+    if (_jError != nullptr) {
+        error = stringFromJString(_jniEnv, _jError);
+        response.error = error.c_str();
+    }
+
+    // Find the callback associated with the request.
+    UrlCallback callback;
+    {
+        std::lock_guard<std::mutex> lock(m_callbackMutex);
+        UrlRequestHandle requestHandle = static_cast<UrlRequestHandle>(_jRequestHandle);
+        auto it = m_callbacks.find(requestHandle);
+        if (it != m_callbacks.end()) {
+            callback = std::move(it->second);
+            m_callbacks.erase(it);
+        }
+    }
+    if (callback) {
+        callback(response);
+    }
 }
 
 void setCurrentThreadPriority(int priority) {
@@ -472,10 +490,10 @@ void AndroidPlatform::sceneReadyCallback(SceneID id, const SceneError* sceneErro
         jstring jUpdateStatusPath = jstringFromString(jniEnv, sceneError->update.path);
         jstring jUpdateStatusValue = jstringFromString(jniEnv, sceneError->update.value);
         jint jError = (jint) sceneError->error;
-        jobject jUpdateErrorStatus = jniEnv->NewObject(sceneErrorClass,
-                                                       sceneErrorInitMID,
-                                                       jUpdateStatusPath, jUpdateStatusValue,
-                                                       jError);
+        jUpdateErrorStatus = jniEnv->NewObject(sceneErrorClass,
+                                               sceneErrorInitMID,
+                                               jUpdateStatusPath, jUpdateStatusValue,
+                                               jError);
     }
 
     jniEnv->CallVoidMethod(m_tangramInstance, sceneReadyCallbackMID, id, jUpdateErrorStatus);

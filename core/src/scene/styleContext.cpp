@@ -432,10 +432,7 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                     duk_pop(m_ctx);
                 }
 
-                _val = (((uint32_t)(255.0 * a) & 0xff) << 24) |
-                       (((uint32_t)(255.0 * r) & 0xff)<< 16) |
-                       (((uint32_t)(255.0 * g) & 0xff)<< 8) |
-                       (((uint32_t)(255.0 * b) & 0xff));
+                _val = ColorF(r, g, b, a).toColor().abgr;
                 break;
             }
             default:

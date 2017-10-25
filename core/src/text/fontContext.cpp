@@ -329,50 +329,43 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     auto font = m_alfons.getFont(FontDescription::Alias(_family, _style, _weight), fontSize);
     if (font->hasFaces()) { return font; }
 
-    // 1. Bundle
-    // Assuming bundled ttf file follows this convention
-    std::string bundleFontPath = m_sceneResourceRoot + "fonts/" +
-        FontDescription::BundleAlias(_family, _style, _weight);
+    // First, try to load from the system fonts.
 
-    std::vector<char> fontData = m_platform->bytesFromFile(bundleFontPath.c_str());
+    bool useFallbackFont = false;
 
-    // 2. System font
-    if (fontData.size() == 0) {
-        bool useFallbackFont = false;
+    auto systemFontHandle = m_platform->systemFont(_family, _weight, _style);
+    if (systemFontHandle.isValid()) {
+        alfons::InputSource source;
 
-        auto systemFontHandle = m_platform->systemFont(_family, _weight, _style);
-        if (systemFontHandle.isValid()) {
-            alfons::InputSource source;
-
-            if (systemFontHandle.pathOrFontName.empty()) {
-                fontData = systemFontHandle.load();
-                if (fontData.size() > 0) {
-                    source = alfons::InputSource(systemFontHandle.load);
-                    font->addFace(m_alfons.addFontFace(source, fontSize));
-                    if (m_font[sizeIndex]) {
-                        font->addFaces(*m_font[sizeIndex]);
-                    }
-                } else {
-                    useFallbackFont = true;
-                }
-            } else {
-                source = alfons::InputSource(systemFontHandle.pathOrFontName, systemFontHandle.isFontName);
+        if (systemFontHandle.pathOrFontName.empty()) {
+            auto fontData = systemFontHandle.load();
+            if (fontData.size() > 0) {
+                source = alfons::InputSource(systemFontHandle.load);
                 font->addFace(m_alfons.addFontFace(source, fontSize));
                 if (m_font[sizeIndex]) {
                     font->addFaces(*m_font[sizeIndex]);
                 }
+            } else {
+                useFallbackFont = true;
             }
         } else {
-            useFallbackFont = true;
-        }
-
-        if (useFallbackFont) {
-            LOGN("Could not load font file %s", FontDescription::BundleAlias(_family, _style, _weight).c_str());
-
-            // 3. Add fallbacks from default font
+            source = alfons::InputSource(systemFontHandle.pathOrFontName, systemFontHandle.isFontName);
+            font->addFace(m_alfons.addFontFace(source, fontSize));
             if (m_font[sizeIndex]) {
                 font->addFaces(*m_font[sizeIndex]);
             }
+        }
+    } else {
+        useFallbackFont = true;
+    }
+
+    if (useFallbackFont) {
+        LOGD("Loading fallback font for Family: %s, Style: %s, Weight: %s, Size %f",
+            _family.c_str(), _style.c_str(), _weight.c_str(), _size);
+
+        // Add fallbacks from default font.
+        if (m_font[sizeIndex]) {
+            font->addFaces(*m_font[sizeIndex]);
         }
     }
 

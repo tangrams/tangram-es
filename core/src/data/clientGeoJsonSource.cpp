@@ -1,5 +1,6 @@
 #include "data/clientGeoJsonSource.h"
 
+#include "log.h"
 #include "platform.h"
 #include "tile/tileTask.h"
 #include "util/geom.h"
@@ -54,26 +55,22 @@ ClientGeoJsonSource::ClientGeoJsonSource(std::shared_ptr<Platform> _platform,
       m_generateCentroids(_generateCentroids),
       m_platform(_platform) {
 
-    // TODO: handle network url for client datasource data
-    // TODO: generic uri handling
     m_generateGeometry = true;
     m_store = std::make_unique<ClientGeoJsonData>();
 
     if (!_url.empty()) {
-        std::regex r("^(http|https):/");
-        std::smatch match;
-        if (std::regex_search(_url, match, r)) {
-            m_platform->startUrlRequest(_url,
-                    [&, this](std::vector<char>&& rawData) {
-                        addData(std::string(rawData.begin(), rawData.end()));
-                        m_hasPendingData = false;
-                    });
-            m_hasPendingData = true;
-        } else {
-            // Load from file
-            addData(m_platform->stringFromFile(_url.c_str()));
-        }
+        UrlCallback onUrlFinished = [&, this](UrlResponse response) {
+            if (response.error) {
+                LOGE("Unable to retrieve data from '%s': %s", _url.c_str(), response.error);
+            } else {
+                addData(std::string(response.content.begin(), response.content.end()));
+            }
+            m_hasPendingData = false;
+        };
+        m_platform->startUrlRequest(_url, onUrlFinished);
+        m_hasPendingData = true;
     }
+
 }
 
 ClientGeoJsonSource::~ClientGeoJsonSource() {}

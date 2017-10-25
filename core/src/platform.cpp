@@ -18,27 +18,7 @@ bool Platform::isContinuousRendering() const {
     return m_continuousRendering;
 }
 
-std::string Platform::resolveAssetPath(const std::string& path) const {
-    return path;
-};
-
-// If the input string begins with "file://" then this returns a pointer to
-// the character immediately after that prefix, otherwise it returns the
-// same pointer. This is a temporary work-around for loading URLs with a
-// file scheme through functions like fopen.
-const char* removeFileScheme(const char* _path) {
-    static const std::string prefix = "file://";
-    int compare = prefix.compare(0, prefix.size(), _path, prefix.size());
-    if (_path != nullptr && compare == 0) {
-        return _path + prefix.size();
-    }
-    return _path;
-}
-
-bool Platform::bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator) const {
-
-    _path = removeFileScheme(_path);
-
+bool Platform::bytesFromFileSystem(const char* _path, std::function<char*(size_t)> _allocator) {
     std::ifstream resource(_path, std::ifstream::ate | std::ifstream::binary);
 
     if(!resource.is_open()) {
@@ -54,37 +34,6 @@ bool Platform::bytesFromFileSystem(const char* _path, std::function<char*(size_t
     resource.close();
 
     return true;
-}
-
-std::string Platform::stringFromFile(const char* _path) const {
-    std::string out;
-    if (!_path || strlen(_path) == 0) { return out; }
-
-    std::string data;
-
-    auto allocator = [&](size_t size) {
-        data.resize(size);
-        return &data[0];
-    };
-
-    bytesFromFileSystem(_path, allocator);
-
-    return data;
-}
-
-std::vector<char> Platform::bytesFromFile(const char* _path) const {
-    if (!_path || strlen(_path) == 0) { return {}; }
-
-    std::vector<char> data;
-
-    auto allocator = [&](size_t size) {
-        data.resize(size);
-        return data.data();
-    };
-
-    bytesFromFileSystem(_path, allocator);
-
-    return data;
 }
 
 FontSourceHandle Platform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {

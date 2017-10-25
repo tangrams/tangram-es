@@ -20,7 +20,7 @@ FrameBuffer::FrameBuffer(int _width, int _height, bool _colorRenderBuffer) :
 
 }
 
-bool FrameBuffer::applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor) {
+bool FrameBuffer::applyAsRenderTarget(RenderState& _rs, ColorF _clearColor) {
 
     if (!m_glFrameBufferHandle) {
         init(_rs);
@@ -35,15 +35,14 @@ bool FrameBuffer::applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor) {
     return true;
 }
 
-void FrameBuffer::apply(RenderState& _rs, GLuint _handle, glm::vec2 _viewport, glm::vec4 _clearColor) {
+void FrameBuffer::apply(RenderState& _rs, GLuint _handle, glm::vec2 _viewport, ColorF _clearColor) {
 
     _rs.framebuffer(_handle);
     _rs.viewport(0, 0, _viewport.x, _viewport.y);
 
-    if (_clearColor == glm::vec4(0.0) && _rs.defaultOpaqueClearColor()) {
+    if (_clearColor == ColorF() && _rs.defaultOpaqueClearColor()) {
         _rs.clearDefaultOpaqueColor();
     } else {
-        _clearColor /= 255.f;
         _rs.clearColor(_clearColor.r, _clearColor.g, _clearColor.b, _clearColor.a);
     }
 
