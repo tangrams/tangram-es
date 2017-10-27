@@ -46,7 +46,6 @@ public:
         platform(_platform),
         inputHandler(_platform, view),
         scene(std::make_shared<Scene>(_platform, Url())),
-        sceneLoadTasks(0),
         tileWorker(_platform, MAX_WORKERS),
         tileManager(_platform, tileWorker) {}
 
@@ -77,7 +76,7 @@ public:
 
     std::shared_ptr<Scene> scene;
     std::shared_ptr<Scene> lastValidScene;
-    std::atomic<int32_t> sceneLoadTasks;
+    std::atomic<int32_t> sceneLoadTasks{0};
 
     // NB: Destruction of (managed and loading) tiles must happen
     // before implicit destruction of 'scene' above!
