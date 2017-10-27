@@ -46,6 +46,7 @@ public:
         platform(_platform),
         inputHandler(_platform, view),
         scene(std::make_shared<Scene>(_platform, Url())),
+        sceneLoadTasks(0),
         tileWorker(_platform, MAX_WORKERS),
         tileManager(_platform, tileWorker) {}
 
