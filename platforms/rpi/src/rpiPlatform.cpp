@@ -47,14 +47,13 @@ std::vector<FontSourceHandle> RpiPlatform::systemFontFallbacksHandle() const {
     return handles;
 }
 
-bool RpiPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
+UrlRequestHandle RpiPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
 
-    return m_urlClient.addRequest(_url, _callback);
+    return m_urlClient.addRequest(_url.string(), _callback);
 }
 
-void RpiPlatform::cancelUrlRequest(const std::string& _url) {
-
-    m_urlClient.cancelRequest(_url);
+void RpiPlatform::cancelUrlRequest(UrlRequestHandle _request) {
+    m_urlClient.cancelRequest(_request);
 }
 
 RpiPlatform::~RpiPlatform() {}
