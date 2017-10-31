@@ -1,6 +1,7 @@
 #pragma once
 
 #include "util/url.h"
+#include "util/variant.h"
 
 #include <functional>
 #include <string>
@@ -29,15 +30,17 @@ using UrlCallback = std::function<void(UrlResponse)>;
 using FontSourceLoader = std::function<std::vector<char>()>;
 
 struct FontSourceHandle {
-    FontSourceHandle(std::string _path) : pathOrFontName(_path) {}
-    FontSourceHandle(std::string _pathOrFontName, bool _isFontName) : pathOrFontName(_pathOrFontName), isFontName(_isFontName) {}
-    FontSourceHandle(FontSourceLoader _loader) : load(_loader) {}
+
+    using FontSourceValue = variant<none_type, Url, std::string, FontSourceLoader>;
+
+    FontSourceHandle(Url path) : fontSourceValue(path) {}
+    FontSourceHandle(std::string name) : fontSourceValue(name) {}
+    FontSourceHandle(FontSourceLoader loader) : fontSourceValue(loader) {}
     FontSourceHandle() {}
 
-    std::string pathOrFontName;
-    FontSourceLoader load = nullptr;
-    bool isFontName = false;
-    bool isValid() { return !pathOrFontName.empty() || load || isFontName; }
+    FontSourceValue fontSourceValue = none_type{};
+
+    bool isValid() { return !fontSourceValue.is<none_type>(); }
 };
 
 // Print a formatted message to the console

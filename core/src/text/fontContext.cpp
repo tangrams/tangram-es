@@ -40,10 +40,12 @@ void FontContext::loadFonts() {
 
         alfons::InputSource source;
 
-        if (fallback.pathOrFontName.empty()) {
-            source = alfons::InputSource(fallback.load);
-        } else {
-            source = alfons::InputSource(fallback.pathOrFontName, fallback.isFontName);
+        if (fallback.fontSourceValue.is<FontSourceLoader>()) {
+            source = alfons::InputSource(fallback.fontSourceValue.get<FontSourceLoader>());
+        } else if (fallback.fontSourceValue.is<Url>()) {
+            source = alfons::InputSource(fallback.fontSourceValue.get<Url>().path());
+        } else if (fallback.fontSourceValue.is<std::string>()) {
+            source = alfons::InputSource(fallback.fontSourceValue.get<std::string>(), true);
         }
 
         for (size_t i = 0; i < s_fontRasterSizes.size(); i++) {
@@ -334,32 +336,33 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     bool useFallbackFont = false;
 
     auto systemFontHandle = m_platform->systemFont(_family, _weight, _style);
-    if (systemFontHandle.isValid()) {
-        alfons::InputSource source;
 
-        if (systemFontHandle.pathOrFontName.empty()) {
-            auto fontData = systemFontHandle.load();
+    alfons::InputSource source;
+
+    if (systemFontHandle.isValid()) {
+        if (systemFontHandle.fontSourceValue.is<FontSourceLoader>()) {
+            auto& loader = systemFontHandle.fontSourceValue.get<FontSourceLoader>();
+            auto fontData = loader();
             if (fontData.size() > 0) {
-                source = alfons::InputSource(systemFontHandle.load);
-                font->addFace(m_alfons.addFontFace(source, fontSize));
-                if (m_font[sizeIndex]) {
-                    font->addFaces(*m_font[sizeIndex]);
-                }
+                source = alfons::InputSource(loader);
             } else {
                 useFallbackFont = true;
             }
+        } else if (systemFontHandle.fontSourceValue.is<Url>()) {
+            source = alfons::InputSource(systemFontHandle.fontSourceValue.get<Url>().path());
         } else {
-            source = alfons::InputSource(systemFontHandle.pathOrFontName, systemFontHandle.isFontName);
-            font->addFace(m_alfons.addFontFace(source, fontSize));
-            if (m_font[sizeIndex]) {
-                font->addFaces(*m_font[sizeIndex]);
-            }
+            source = alfons::InputSource(systemFontHandle.fontSourceValue.get<std::string>(), true);
         }
     } else {
         useFallbackFont = true;
     }
 
-    if (useFallbackFont) {
+    if (!useFallbackFont) {
+        font->addFace(m_alfons.addFontFace(source, fontSize));
+        if (m_font[sizeIndex]) {
+            font->addFaces(*m_font[sizeIndex]);
+        }
+    } else {
         LOGD("Loading fallback font for Family: %s, Style: %s, Weight: %s, Size %f",
             _family.c_str(), _style.c_str(), _weight.c_str(), _size);
 

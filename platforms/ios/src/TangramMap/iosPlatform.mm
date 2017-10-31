@@ -60,6 +60,7 @@ std::vector<FontSourceHandle> iOSPlatform::systemFontFallbacksHandle() const {
     NSArray<NSString *> *fallbacks = [UIFont familyNames];
 
     std::vector<FontSourceHandle> handles;
+    handles.reserve([fallbacks count]);
 
     for (NSString* fallback in fallbacks) {
 
@@ -67,7 +68,7 @@ std::vector<FontSourceHandle> iOSPlatform::systemFontFallbacksHandle() const {
 
         for (NSString* fontName in [UIFont fontNamesForFamilyName:fallback]) {
             if ( ![fontName containsString:@"-"] || [fontName containsString:@"-Regular"]) {
-                handles.emplace_back(fontName.UTF8String, true);
+                handles.emplace_back(std::string(fontName.UTF8String));
                 break;
             }
         }
@@ -134,7 +135,7 @@ FontSourceHandle iOSPlatform::systemFont(const std::string& _name, const std::st
         }
     }
 
-    return FontSourceHandle(font.fontName.UTF8String, true);
+    return FontSourceHandle(std::string(font.fontName.UTF8String));
 }
 
 UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
