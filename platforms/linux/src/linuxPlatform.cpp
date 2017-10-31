@@ -63,7 +63,7 @@ FontSourceHandle LinuxPlatform::systemFont(const std::string& _name, const std::
 
     if (fontFile.empty()) { return {}; }
 
-    return FontSourceHandle(fontFile, true);
+    return FontSourceHandle(fontFile, false);
 }
 
 UrlRequestHandle LinuxPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
