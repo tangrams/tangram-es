@@ -214,7 +214,7 @@
     self.locationManager = [[CLLocationManager alloc] init];
     self.locationManager.delegate = self;
     // Enable for Location Tracking
-    // [self.locationManager requestAlwaysAuthorization];
+     [self.locationManager requestAlwaysAuthorization];
 }
 
 - (void)beginBackgroundLocationTracking {
@@ -238,7 +238,7 @@
     switch (status) {
         case kCLAuthorizationStatusAuthorizedAlways:
             // Enable to turn on background location tracking - be aware we don't shut this off ever, so the sample app will consume battery life if allowed to run in the background.
-            // [self beginBackgroundLocationTracking];
+             [self beginBackgroundLocationTracking];
             break;
         default:
             break;
