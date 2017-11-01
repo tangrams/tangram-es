@@ -92,7 +92,6 @@ public:
         LOG("SETUP");
         ctx.loadScene("scene.yaml");
         ctx.loadTile("tile.mvt");
-        ctx.parseTile();
         LOG("READY");
     }
     void TearDown() override {
@@ -102,14 +101,14 @@ public:
 };
 
 BENCHMARK_DEFINE_F(TileLoadingFixture, BuildTest)(benchmark::State& st) {
-#if 1
     while (st.KeepRunning()) {
         ctx.parseTile();
+        if (!ctx.tileData) { break; }
+
         result = ctx.tileBuilder->build({0,0,10,10,0}, *ctx.tileData, *ctx.source);
 
         LOG("ok %d / bytes - %d", bool(result), result->getMemoryUsage());
     }
-#endif
 }
 
 BENCHMARK_REGISTER_F(TileLoadingFixture, BuildTest);
