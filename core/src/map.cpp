@@ -76,7 +76,7 @@ public:
 
     std::shared_ptr<Scene> scene;
     std::shared_ptr<Scene> lastValidScene;
-    std::atomic<int32_t> sceneLoadTasks;
+    std::atomic<int32_t> sceneLoadTasks{0};
 
     // NB: Destruction of (managed and loading) tiles must happen
     // before implicit destruction of 'scene' above!
