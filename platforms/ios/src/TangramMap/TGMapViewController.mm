@@ -27,6 +27,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     BOOL shouldCaptureFrame;
     BOOL captureFrameWaitForViewComplete;
     BOOL viewComplete;
+    BOOL viewInBackground;
 }
 
 @property (nullable, strong, nonatomic) EAGLContext* context;
@@ -864,18 +865,47 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 #pragma mark Map view lifecycle
 
+- (void)didEnterBackground:(__unused NSNotification *)notification
+{
+    if (!self->viewInBackground) {
+        self->viewInBackground = YES;
+    }
+}
+
+- (void)didLeaveBackground:(__unused NSNotification *)notification
+{
+    if (self->viewInBackground) {
+        if (!self.context) {
+            [self setupGL];
+        }
+
+        self->viewInBackground = NO;
+    }
+}
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
 
-    self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-    if (!self.context) {
-        NSLog(@"Failed to create ES context");
-    }
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(didEnterBackground:)
+                                                 name:UIApplicationDidEnterBackgroundNotification
+                                               object:nil];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(didLeaveBackground:)
+                                                 name:UIApplicationWillEnterForegroundNotification
+                                               object:nil];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(didLeaveBackground:)
+                                                 name:UIApplicationDidBecomeActiveNotification
+                                               object:nil];
 
     self->viewComplete = NO;
     self->captureFrameWaitForViewComplete = YES;
     self->shouldCaptureFrame = NO;
+    self->viewInBackground = [UIApplication sharedApplication].applicationState == UIApplicationStateBackground;
     self.renderRequested = YES;
     self.continuous = NO;
     self.markersById = [[NSMutableDictionary alloc] init];
@@ -888,18 +918,13 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
                                                   cacheDiskCapacity:30*1024*1024];
     }
 
-    GLKView* view = (GLKView *)self.view;
-    view.context = self.context;
-
-    view.drawableColorFormat = GLKViewDrawableColorFormatRGBA8888;
-    view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
-    view.drawableStencilFormat = GLKViewDrawableStencilFormat8;
-    view.drawableMultisample = GLKViewDrawableMultisampleNone;
-
-    self.contentScaleFactor = view.contentScaleFactor;
-
     [self setupGestureRecognizers];
-    [self setupGL];
+
+    if (!self->viewInBackground) {
+        [self setupGL];
+    } else {
+        self.context = nil;
+    }
 }
 
 - (void)dealloc
@@ -924,13 +949,26 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)setupGL
 {
+    self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+
+    if (!self.context) {
+        NSLog(@"Failed to create ES context");
+    }
+
+    GLKView* view = (GLKView *)self.view;
+    view.context = self.context;
+
+    view.drawableColorFormat = GLKViewDrawableColorFormatRGBA8888;
+    view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
+    view.drawableStencilFormat = GLKViewDrawableStencilFormat8;
+    view.drawableMultisample = GLKViewDrawableMultisampleNone;
+
+    self.contentScaleFactor = view.contentScaleFactor;
+
     [EAGLContext setCurrentContext:self.context];
 
     self.map->setupGL();
     self.map->setPixelScale(self.contentScaleFactor);
-
-    // Query background color set in UI designer
-    GLKView* view = (GLKView *)self.view;
 
     self.preferredFramesPerSecond = 60;
 
@@ -986,6 +1024,10 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)update
 {
+    if (self->viewInBackground) {
+        return;
+    }
+
     self->viewComplete = self.map->update([self timeSinceLastUpdate]);
 
     if (viewComplete && [self.mapViewDelegate respondsToSelector:@selector(mapViewDidCompleteLoading:)]) {
@@ -1001,6 +1043,10 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
+    if (self->viewInBackground) {
+        return;
+    }
+
     self.map->render();
 
     if (self.mapViewDelegate && [self.mapViewDelegate respondsToSelector:@selector(mapView:didCaptureScreenshot:)]) {
