@@ -753,9 +753,9 @@ public class MapController implements Renderer {
      */
     public MapData addDataLayer(String name, boolean generateCentroid) {
         MapData mapData = clientTileSources.get(name);
-        if (mapData != null) {
+        /*if (mapData != null) {
             return mapData;
-        }
+        }*/
         checkPointer(mapPointer);
         long pointer = nativeAddTileSource(mapPointer, name, generateCentroid);
         if (pointer <= 0) {
@@ -1165,16 +1165,34 @@ public class MapController implements Renderer {
         nativeClearTileSource(mapPointer, sourcePtr);
     }
 
-    void addFeature(long sourcePtr, double[] coordinates, int[] rings, String[] properties) {
+    long addFeature(long sourcePtr, double[] coordinates, int[] rings, String[] properties) {
         checkPointer(mapPointer);
         checkPointer(sourcePtr);
-        nativeAddFeature(mapPointer, sourcePtr, coordinates, rings, properties);
+        return nativeAddFeature(mapPointer, sourcePtr, coordinates, rings, properties);
     }
 
     void addGeoJson(long sourcePtr, String geoJson) {
         checkPointer(mapPointer);
         checkPointer(sourcePtr);
         nativeAddGeoJson(mapPointer, sourcePtr, geoJson);
+    }
+
+    void updateLine(long sourcePtr, long id, double[] coordinates) {
+        checkPointer(mapPointer);
+        checkPointer(sourcePtr);
+        nativeUpdateLinePoints(mapPointer, sourcePtr, id, coordinates);
+    }
+
+    void updateLine(long sourcePtr, long id, String[] properties) {
+        checkPointer(mapPointer);
+        checkPointer(sourcePtr);
+        nativeUpdateLineProperties(mapPointer, sourcePtr, id, properties);
+    }
+
+    void removeLine(long sourcePtr, long id) {
+        checkPointer(mapPointer);
+        checkPointer(sourcePtr);
+        nativeRemoveLine(mapPointer, sourcePtr, id);
     }
 
     void checkPointer(long ptr) {
@@ -1341,8 +1359,11 @@ public class MapController implements Renderer {
     synchronized native long nativeAddTileSource(long mapPtr, String name, boolean generateCentroid);
     synchronized native void nativeRemoveTileSource(long mapPtr, long sourcePtr);
     synchronized native void nativeClearTileSource(long mapPtr, long sourcePtr);
-    synchronized native void nativeAddFeature(long mapPtr, long sourcePtr, double[] coordinates, int[] rings, String[] properties);
+    synchronized native long nativeAddFeature(long mapPtr, long sourcePtr, double[] coordinates, int[] rings, String[] properties);
     synchronized native void nativeAddGeoJson(long mapPtr, long sourcePtr, String geoJson);
+    synchronized native void nativeUpdateLinePoints(long mapPtr, long sourcePtr, long id, double[] coordinates);
+    synchronized native void nativeUpdateLineProperties(long mapPtr, long sourcePtr, long id, String[] properties);
+    synchronized native void nativeRemoveLine(long mapPtr, long sourcePtr, long id);
 
     native void nativeSetDebugFlag(int flag, boolean on);
 

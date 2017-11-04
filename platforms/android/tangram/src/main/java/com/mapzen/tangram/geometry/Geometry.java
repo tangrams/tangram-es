@@ -23,7 +23,7 @@ public abstract class Geometry {
         return properties;
     }
 
-    protected String[] getStringMapAsArray(Map<String, String> properties) {
+    public static String[] getStringMapAsArray(Map<String, String> properties) {
         String[] out = new String[properties.size() * 2];
         int i = 0;
         for (Map.Entry<String, String> entry : properties.entrySet()) {

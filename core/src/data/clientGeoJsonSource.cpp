@@ -16,6 +16,7 @@
 
 
 #include <regex>
+#include <log.h>
 
 namespace Tangram {
 
@@ -37,6 +38,7 @@ struct ClientGeoJsonData {
     std::unique_ptr<geojsonvt::GeoJSONVT> tiles;
     mapbox::geometry::feature_collection<double> features;
     std::vector<Properties> properties;
+    std::map<uint64_t, uint64_t> polylineIds;
 };
 
 std::shared_ptr<TileTask> ClientGeoJsonSource::createTask(TileID _tileId, int _subTask) {
@@ -214,23 +216,24 @@ void ClientGeoJsonSource::clearData() {
     m_generation++;
 }
 
-void ClientGeoJsonSource::addPoint(const Properties& _tags, LngLat _point) {
+uint64_t ClientGeoJsonSource::addPoint(Properties& _tags, LngLat _point) {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 
     geometry::point<double> geom { _point.longitude, _point.latitude };
 
-    uint64_t id = m_store->features.size();
+    uint64_t i = m_store->features.size();
 
-    m_store->features.emplace_back(geom, id);
+    m_store->features.emplace_back(geom, i);
     m_store->properties.emplace_back(_tags);
 
     m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features, options());
     m_generation++;
+
+    return i;
 }
 
-void ClientGeoJsonSource::addLine(const Properties& _tags, const Coordinates& _line) {
-
+uint64_t ClientGeoJsonSource::addLine(Properties& _tags, const Coordinates& _line) {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 
@@ -239,17 +242,22 @@ void ClientGeoJsonSource::addLine(const Properties& _tags, const Coordinates& _l
         geom.emplace_back(p.longitude, p.latitude);
     }
 
-    uint64_t id = m_store->features.size();
+    uint64_t i = m_store->features.size();
+    uint64_t id = m_store->polylineIds.size();
 
-    m_store->features.emplace_back(geom, id);
+    _tags.set("id", std::to_string(id));
+
+    m_store->features.emplace_back(geom, i);
     m_store->properties.emplace_back(_tags);
+    m_store->polylineIds.insert(std::pair<uint64_t, uint64_t>(id, i));
 
     m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features, options());
     m_generation++;
+
+    return id;
 }
 
-void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coordinates>& _poly) {
-
+uint64_t ClientGeoJsonSource::addPoly(Properties& _tags, const std::vector<Coordinates>& _poly) {
 
     std::lock_guard<std::mutex> lock(m_mutexStore);
 
@@ -262,9 +270,9 @@ void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coo
         }
     }
 
-    uint64_t id = m_store->features.size();
+    uint64_t i = m_store->features.size();
 
-    m_store->features.emplace_back(geom, id);
+    m_store->features.emplace_back(geom, i);
     m_store->properties.emplace_back(_tags);
 
     if (m_generateCentroids) {
@@ -273,6 +281,71 @@ void ClientGeoJsonSource::addPoly(const Properties& _tags, const std::vector<Coo
 
     m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features, options());
     m_generation++;
+
+    return i;
+}
+
+void ClientGeoJsonSource::updateLine(uint64_t id, const Coordinates& _line) {
+
+    std::lock_guard<std::mutex> lock(m_mutexStore);
+
+    std::map<uint64_t, uint64_t>::iterator findIt = m_store->polylineIds.find(id);
+
+    if (findIt != m_store->polylineIds.end() && findIt->second < m_store->features.size()) {
+        uint64_t i = findIt->second;
+
+        geometry::line_string<double> geom;
+        for (auto &p : _line) {
+            geom.emplace_back(p.longitude, p.latitude);
+        }
+
+        m_store->features[i] = mapbox::geometry::feature<double>(geom, i);
+
+        m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features, options());
+        m_generation++;
+    }
+}
+
+void ClientGeoJsonSource::updateLine(uint64_t id, const Properties& _tags) {
+
+    std::lock_guard<std::mutex> lock(m_mutexStore);
+
+    std::map<uint64_t, uint64_t>::iterator findIt = m_store->polylineIds.find(id);
+
+    if (findIt != m_store->polylineIds.end() && findIt->second < m_store->properties.size()) {
+        uint64_t i = findIt->second;
+
+        for (int j = 0; j < _tags.items().size(); ++j) {
+            m_store->properties[i].set(_tags.items()[j].key, _tags.getString(_tags.items()[j].key));
+        }
+
+        m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features, options());
+        m_generation++;
+    }
+}
+
+void ClientGeoJsonSource::removeLine(uint64_t id) {
+
+    std::lock_guard<std::mutex> lock(m_mutexStore);
+
+    std::map<uint64_t, uint64_t>::iterator findIt = m_store->polylineIds.find(id);
+
+    if (findIt != m_store->polylineIds.end() && findIt->second < m_store->features.size()) {
+        uint64_t i = findIt->second;
+
+        m_store->features.erase(std::next(m_store->features.begin(), i));
+        m_store->properties.erase(std::next(m_store->properties.begin(), i));
+
+        for (std::map<uint64_t, uint64_t>::iterator it = m_store->polylineIds.begin(); it != m_store->polylineIds.end(); ++it) {
+            if (it->second > i) {
+                it->second = it->second - 1;
+                m_store->features[it->second].id = it->second;
+            }
+        }
+
+        m_store->tiles = std::make_unique<geojsonvt::GeoJSONVT>(m_store->features, options());
+        m_generation++;
+    }
 }
 
 struct add_geometry {

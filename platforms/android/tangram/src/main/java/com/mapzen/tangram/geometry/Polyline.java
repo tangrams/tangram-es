@@ -13,13 +13,18 @@ import java.util.Map;
 @Keep
 public class Polyline extends Geometry {
 
-    public Polyline(List<LngLat> polyline, Map<String, String> properties) {
-        this.coordinates = new double[polyline.size() * 2];
+    public static double[] toCoordinateArray(List<LngLat> polyline) {
+        double[] coordinates = new double[polyline.size() * 2];
         int i = 0;
         for (LngLat point : polyline) {
             coordinates[i++] = point.longitude;
             coordinates[i++] = point.latitude;
         }
+        return coordinates;
+    }
+
+    public Polyline(List<LngLat> polyline, Map<String, String> properties) {
+        this.coordinates = toCoordinateArray(polyline);
         if (properties != null) {
             this.properties = getStringMapAsArray(properties);
         }
