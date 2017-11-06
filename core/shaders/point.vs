@@ -22,6 +22,8 @@ uniform float u_device_pixel_ratio;
 uniform vec2 u_uv_scale_factor;
 uniform float u_max_stroke_width;
 uniform LOWP int u_pass;
+#else
+uniform int u_sprite_mode;
 #endif
 
 #pragma tangram: uniforms
@@ -36,7 +38,6 @@ attribute float a_scale;
 #else
 attribute vec3 a_position;
 attribute vec4 a_outline_color;
-attribute float a_outline_edge;
 attribute float a_aa_factor;
 #endif
 
@@ -52,7 +53,7 @@ varying float v_sdf_threshold;
 varying float v_sdf_pixel;
 #else
 varying float v_aa_factor;
-varying float v_outline_edge;
+varying vec2 v_edge;
 varying vec4 v_outline_color;
 #endif
 varying float v_alpha;
@@ -106,9 +107,13 @@ void main() {
     gl_Position = (u_ortho * position);
 
 #else
-    v_texcoords = a_uv;
+    if (u_sprite_mode == 0) {
+      v_texcoords = sign(a_uv);
+      v_edge = abs(a_uv);
+    } else {
+      v_texcoords = a_uv;
+    }
     v_outline_color = a_outline_color;
-    v_outline_edge = a_outline_edge;
     v_aa_factor = a_aa_factor;
 
     gl_Position = vec4(a_position, 1.0);

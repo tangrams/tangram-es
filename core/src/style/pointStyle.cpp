@@ -37,14 +37,12 @@ void PointStyle::constructVertexLayout() {
 
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 3, GL_FLOAT, false, 0},
-        {"a_uv", 2, GL_UNSIGNED_SHORT, true, 0},
+        {"a_uv", 2, GL_SHORT, true, 0},
         {"a_selection_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_outline_color", 4, GL_UNSIGNED_BYTE, true, 0},
-        {"a_outline_edge", 1, GL_UNSIGNED_SHORT, true, 0},
-        {"a_aa_factor", 1, GL_UNSIGNED_SHORT, true, 0},
+        {"a_aa_factor", 1, GL_SHORT, true, 0},
         {"a_alpha", 1, GL_UNSIGNED_SHORT, true, 0},
-        {"a_padding", 1, GL_UNSIGNED_SHORT, true, 0},
     }));
 }
 

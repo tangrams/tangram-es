@@ -14,7 +14,7 @@ namespace Tangram {
 using namespace LabelProperty;
 
 const float SpriteVertex::alpha_scale = 65535.0f;
-const float SpriteVertex::texture_scale = 65535.0f;
+const float SpriteVertex::texture_scale = 32767.0f;
 
 struct BillboardTransform {
     ScreenTransform& m_transform;
@@ -230,10 +230,8 @@ void SpriteLabel::addVerticesToMesh(ScreenTransform& _transform, const glm::vec2
         m_vertexAttrib.selectionColor,
         m_vertexAttrib.color,
         m_vertexAttrib.outlineColor,
-        m_vertexAttrib.outlineEdge,
         m_vertexAttrib.antialiasFactor,
         uint16_t(m_alpha * SpriteVertex::alpha_scale),
-        0
     };
 
     auto* quadVertices = m_labels.m_style.pushQuad(m_texture);

@@ -22,7 +22,7 @@ varying vec4 v_color;
 varying vec2 v_texcoords;
 varying float v_alpha;
 varying float v_aa_factor;
-varying float v_outline_edge;
+varying vec2 v_edge;
 varying vec4 v_outline_color;
 
 
@@ -36,13 +36,25 @@ void main(void) {
     vec4 color = v_color;
 
     if (u_sprite_mode == 0) {
-        vec2 uv = v_texcoords * 2. - 1.;
-        float point_dist = length(uv);
+        float point_dist = length(v_texcoords);
 
-        color = mix(color, v_outline_color,
-                    1. - smoothstep(v_outline_edge - v_aa_factor,
-                                    v_outline_edge + v_aa_factor,
-                                    1. - point_dist));
+        if (v_outline_color.a > 0.0) {
+
+          float outline_edge = v_edge.x;
+          float fill_edge = v_edge.y;
+
+          vec4 mixColor = mix(color, v_outline_color, v_outline_color.a);
+
+          color = mix(color, mixColor,
+                      smoothstep(max(0.0, outline_edge - v_aa_factor),
+                                 min(1.0, outline_edge + v_aa_factor),
+                                 point_dist));
+
+          color = mix(color, v_outline_color,
+                      smoothstep(max(0.0, fill_edge - v_aa_factor),
+                                 min(1.0, fill_edge + v_aa_factor),
+                                 point_dist));
+        }
 
         color.a = mix(color.a, 0., (smoothstep(max(1. - v_aa_factor, 0.), 1., point_dist)));
     } else {

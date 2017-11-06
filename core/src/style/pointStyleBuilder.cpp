@@ -227,7 +227,7 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
 
         auto& widthParam = strokeWidth.value.get<StyleParam::Width>();
 
-        p.outlineWidth = widthParam.value * m_style.pixelScale();;
+        p.outlineWidth = widthParam.value * m_style.pixelScale();
     }
 
 
@@ -261,7 +261,6 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad, Te
                                                              _params.color,
                                                              selectionColor,
                                                              _params.outlineColor,
-                                                             _params.outlineEdge,
                                                              _params.antialiasFactor,
                                                              _params.extrudeScale },
                                                      _texture,
@@ -353,15 +352,28 @@ bool PointStyleBuilder::getUVQuad(Parameters& _params, glm::vec4& _quad, Texture
     _params.size *= m_style.pixelScale();
 
     if (!texture) {
-        float pixelScale = std::numeric_limits<uint16_t>::max() / _params.size.x * 2.0;
+
+        float fillEdge = _params.size.x;
+        float outlineEdge = 1.f;
+
+        // Adds half the outline width in each direction (* 0.5 * 2.0)
+        _params.size += _params.outlineWidth;
+
+        // Fraction at which fill ends
+        fillEdge /= _params.size.x;
 
         if (_params.outlineWidth > 0.f) {
-            _params.outlineWidth = std::min(_params.size.x, _params.outlineWidth);
-
-            _params.outlineEdge = _params.outlineWidth * pixelScale;
+            // Fraction at which outline starts
+            outlineEdge = fillEdge - _params.outlineWidth / _params.size.x;
         }
 
-        _params.antialiasFactor = pixelScale;
+        fillEdge = std::max(0.0001f, fillEdge);
+        outlineEdge = std::max(0.0001f, outlineEdge);
+
+        _quad = glm::vec4(-outlineEdge, -fillEdge,
+                          outlineEdge, fillEdge);
+
+        _params.antialiasFactor = std::numeric_limits<int16_t>::max() / _params.size.x * 2.0f;
     }
 
     return true;
