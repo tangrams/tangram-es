@@ -27,7 +27,7 @@ varying vec4 v_outline_color;
 
 
 uniform sampler2D u_tex;
-uniform int u_sprite_mode;
+uniform LOWP int u_sprite_mode;
 
 #pragma tangram: global
 

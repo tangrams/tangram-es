@@ -23,7 +23,7 @@ uniform vec2 u_uv_scale_factor;
 uniform float u_max_stroke_width;
 uniform LOWP int u_pass;
 #else
-uniform int u_sprite_mode;
+uniform LOWP int u_sprite_mode;
 #endif
 
 #pragma tangram: uniforms
