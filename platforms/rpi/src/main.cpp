@@ -139,8 +139,19 @@ int main(int argc, char **argv) {
              "\n\n\texport MAPZEN_API_KEY=YOUR_KEY_HERE\n");
     }
 
+    // Resolve the scene file URL against the current directory.
+    Url baseUrl("file:///");
+    char pathBuffer[PATH_MAX] = {0};
+    if (getcwd(pathBuffer, PATH_MAX) != nullptr) {
+        baseUrl = Url(std::string(pathBuffer) + "/").resolved(baseUrl);
+    }
+
+    LOG("Base URL: %s", baseUrl.string().c_str());
+
+    Url sceneUrl = Url(options.sceneFilePath).resolved(baseUrl);
+
     map = new Map(platform);
-    map->loadScene(options.sceneFilePath.c_str(), !options.hasLocationSet, updates);
+    map->loadScene(sceneUrl.string(), !options.hasLocationSet, updates);
     map->setupGL();
     map->resize(getWindowWidth(), getWindowHeight());
     map->setTilt(options.tilt);
