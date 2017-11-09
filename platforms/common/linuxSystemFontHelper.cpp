@@ -53,8 +53,8 @@ std::vector<std::string> systemFallbackFonts(FcConfig* fcConfig) {
     return fallbackFonts;
 }
 
-std::string systemFontPath(FcConfig* fcConfig,
-        const std::string& _name, const std::string& _weight, const std::string& _face) {
+std::string systemFontPath(FcConfig* fcConfig, const std::string& _name,
+                           const std::string& _weight, const std::string& _face) {
 
     if (!fcConfig) { return ""; }
 
