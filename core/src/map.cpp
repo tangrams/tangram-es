@@ -77,6 +77,7 @@ public:
     std::shared_ptr<Scene> scene;
     std::shared_ptr<Scene> lastValidScene;
     std::atomic<int32_t> sceneLoadTasks{0};
+    std::condition_variable sceneLoadCondition;
 
     // NB: Destruction of (managed and loading) tiles must happen
     // before implicit destruction of 'scene' above!
@@ -92,6 +93,18 @@ public:
     std::vector<SelectionQuery> selectionQueries;
 
     SceneReadyCallback onSceneReady = nullptr;
+
+    void sceneLoadBegin() {
+        sceneLoadTasks++;
+    }
+
+    void sceneLoadEnd() {
+        sceneLoadTasks--;
+        assert(sceneLoadTasks >= 0);
+
+        sceneLoadCondition.notify_one();
+    }
+
 };
 
 void Map::Impl::setEase(EaseField _f, Ease _e) {
@@ -184,7 +197,10 @@ SceneID Map::loadScene(std::shared_ptr<Scene> scene,
                        const std::vector<SceneUpdate>& _sceneUpdates) {
 
     {
-        std::lock_guard<std::mutex> lock(impl->sceneMutex);
+        std::unique_lock<std::mutex> lock(impl->sceneMutex);
+
+        impl->sceneLoadCondition.wait(lock, [&]{ return impl->sceneLoadTasks == 0; });
+
         impl->lastValidScene.reset();
     }
 
@@ -246,7 +262,7 @@ SceneID Map::loadSceneYamlAsync(const std::string& _yaml, const std::string& _re
 SceneID Map::loadSceneAsync(std::shared_ptr<Scene> nextScene,
                             const std::vector<SceneUpdate>& _sceneUpdates) {
 
-    impl->sceneLoadTasks++;
+    impl->sceneLoadBegin();
 
     runAsyncTask([nextScene, _sceneUpdates, this](){
 
@@ -258,7 +274,7 @@ SceneID Map::loadSceneAsync(std::shared_ptr<Scene> nextScene,
                     if (!nextScene->errors.empty()) { err = nextScene->errors.front(); }
                     impl->onSceneReady(nextScene->id, &err);
                 }
-                impl->sceneLoadTasks--;
+                impl->sceneLoadEnd();
                 return;
             }
 
@@ -276,8 +292,8 @@ SceneID Map::loadSceneAsync(std::shared_ptr<Scene> nextScene,
                     }
                     if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, nullptr); }
                 });
-            impl->sceneLoadTasks--;
 
+            impl->sceneLoadEnd();
             platform->requestRender();
         });
 
@@ -294,12 +310,12 @@ std::shared_ptr<Platform>& Map::getPlatform() {
 
 SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
 
+    impl->sceneLoadBegin();
+
     std::vector<SceneUpdate> updates = _sceneUpdates;
 
     auto nextScene = std::make_shared<Scene>();
     nextScene->useScenePosition = false;
-
-    impl->sceneLoadTasks++;
 
     runAsyncTask([nextScene, updates = std::move(updates), this](){
 
@@ -308,7 +324,7 @@ SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
                     SceneError err {{}, Error::no_valid_scene};
                     impl->onSceneReady(nextScene->id, &err);
                 }
-                impl->sceneLoadTasks--;
+                impl->sceneLoadEnd();
                 return;
             }
 
@@ -325,7 +341,7 @@ SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
                     if (!nextScene->errors.empty()) { err = nextScene->errors.front(); }
                     impl->onSceneReady(nextScene->id, &err);
                 }
-                impl->sceneLoadTasks--;
+                impl->sceneLoadEnd();
                 return;
             }
 
@@ -346,8 +362,8 @@ SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
                     }
                     if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, nullptr); }
                 });
-            impl->sceneLoadTasks--;
 
+            impl->sceneLoadEnd();
             platform->requestRender();
         });
 
