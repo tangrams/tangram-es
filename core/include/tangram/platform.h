@@ -33,9 +33,9 @@ struct FontSourceHandle {
 
     using FontSourceValue = variant<none_type, Url, std::string, FontSourceLoader>;
 
-    FontSourceHandle(Url path) : fontSourceValue(path) {}
-    FontSourceHandle(std::string name) : fontSourceValue(name) {}
-    FontSourceHandle(FontSourceLoader loader) : fontSourceValue(loader) {}
+    explicit FontSourceHandle(Url path) : fontSourceValue(path) {}
+    explicit FontSourceHandle(std::string name) : fontSourceValue(name) {}
+    explicit FontSourceHandle(FontSourceLoader loader) : fontSourceValue(loader) {}
     FontSourceHandle() {}
 
     FontSourceValue fontSourceValue = none_type{};

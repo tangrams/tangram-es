@@ -30,11 +30,11 @@ void MockPlatform::requestRender() const {}
 std::vector<FontSourceHandle> MockPlatform::systemFontFallbacksHandle() const {
     std::vector<FontSourceHandle> handles;
 
-    handles.emplace_back(DEFAULT);
-    handles.emplace_back(FONT_AR);
-    handles.emplace_back(FONT_HE);
-    handles.emplace_back(FONT_JA);
-    handles.emplace_back(FALLBACK);
+    handles.emplace_back(Url{DEFAULT});
+    handles.emplace_back(Url{FONT_AR});
+    handles.emplace_back(Url{FONT_HE});
+    handles.emplace_back(Url{FONT_JA});
+    handles.emplace_back(Url{FALLBACK});
 
     return handles;
 }
