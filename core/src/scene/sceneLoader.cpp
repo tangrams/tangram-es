@@ -482,18 +482,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(const std::shared_ptr<Platform>
     const std::string& name = textureNode.Scalar();
 
     MaterialTexture matTex;
-    {
-        std::lock_guard<std::mutex> lock(scene->textureMutex);
-        matTex.tex = scene->textures()[name];
-    }
-
-    if (!matTex.tex) {
-        // Load inline material  textures
-        if (!loadTexture(platform, name, scene)) {
-            LOGW("Not able to load material texture: %s", name.c_str());
-            return MaterialTexture();
-        }
-    }
+    matTex.tex = loadTexture(platform, name, scene);
 
     if (Node mappingNode = matCompNode["mapping"]) {
         const std::string& mapping = mappingNode.Scalar();
@@ -562,8 +551,10 @@ bool SceneLoader::extractTexFiltering(Node& filtering, TextureFiltering& filter)
 }
 
 
-std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platform>& platform, const std::string& name, const std::string& urlString,
-        const TextureOptions& options, bool generateMipmaps, const std::shared_ptr<Scene>& scene) {
+std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platform>& platform,
+                                                   const std::string& name, const std::string& urlString,
+                                                   const TextureOptions& options, bool generateMipmaps,
+                                                   const std::shared_ptr<Scene>& scene) {
 
     std::shared_ptr<Texture> texture;
 
@@ -600,7 +591,6 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
                 if (response.error) {
                     LOGE("Error retrieving URL '%s': %s", url.string().c_str(), response.error);
                 } else {
-                    std::lock_guard<std::mutex> lock(scene->textureMutex);
                     if (texture) {
                         if (!texture->loadImageFromMemory(std::move(response.content))) {
                             LOGE("Invalid texture data from URL '%s'", url.string().c_str());
@@ -620,17 +610,17 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
     return texture;
 }
 
-bool SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const std::string& url,
-                              const std::shared_ptr<Scene>& scene) {
-    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
+std::shared_ptr<Texture> SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform,
+                                                  const std::string& url, const std::shared_ptr<Scene>& scene) {
 
-    auto texture = fetchTexture(platform, url, url, options, false, scene);
-    {
-        std::lock_guard<std::mutex> lock(scene->textureMutex);
-        scene->textures()[url] = texture;
+    auto entry = scene->textures().find(url);
+    if (entry != scene->textures().end()) {
+        return entry->second;
     }
 
-    return true;
+    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
+
+    return fetchTexture(platform, url, url, options, false, scene);
 }
 
 void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& node,
@@ -643,11 +633,11 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
         return;
     }
 
-    std::string file;
+    std::string url;
     TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
 
-    if (Node url = textureConfig["url"]) {
-        file = url.as<std::string>();
+    if (Node urlNode = textureConfig["url"]) {
+        url = urlNode.as<std::string>();
     } else {
         LOGW("No url specified for texture '%s', skipping.", name.c_str());
         return;
@@ -661,9 +651,8 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
         }
     }
 
-    auto texture = fetchTexture(platform, name, file, options, generateMipmaps, scene);
+    auto texture = fetchTexture(platform, name, url, options, generateMipmaps, scene);
 
-    std::lock_guard<std::mutex> lock(scene->textureMutex);
     if (Node sprites = textureConfig["sprites"]) {
         auto atlas = std::make_unique<SpriteAtlas>();
 
@@ -826,7 +815,6 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
     }
 
     if (Node textureNode = styleNode["texture"]) {
-        std::lock_guard<std::mutex> lock(scene->textureMutex);
         if (auto pointStyle = dynamic_cast<PointStyle*>(&style)) {
             const std::string& textureName = textureNode.Scalar();
             auto styleTexture = scene->getTexture(textureName);
@@ -1592,16 +1580,9 @@ bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, 
         } else {
             const std::string& strVal = value.Scalar();
             styleUniform.type = "sampler2D";
-
-            if (scene) {
-                std::shared_ptr<Texture> texture = scene->getTexture(strVal);
-
-                if (!texture) {
-                    loadTexture(platform, strVal, scene);
-                }
-            }
-
             styleUniform.value = strVal;
+
+            loadTexture(platform, strVal, scene);
         }
     } else if (value.IsSequence()) {
         int size = value.size();
@@ -1640,13 +1621,7 @@ bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, 
                 const std::string& textureName = strVal.Scalar();
                 textureArrayUniform.names.push_back(textureName);
 
-                if (scene) {
-                    std::shared_ptr<Texture> texture = scene->getTexture(textureName);
-
-                    if (!texture) {
-                        loadTexture(platform, textureName, scene);
-                    }
-                }
+                loadTexture(platform, textureName, scene);
             }
 
             styleUniform.value = std::move(textureArrayUniform);
