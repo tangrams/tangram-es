@@ -391,15 +391,15 @@ void Map::resize(int _newWidth, int _newHeight) {
 
 bool Map::update(float _dt) {
 
-    // Wait until font resources are fully loaded
-    if (impl->scene->pendingFonts > 0) {
-        platform->requestRender();
+    impl->jobQueue.runJobs();
+
+    // Wait until font and texture resources are fully loaded
+    if (impl->scene->pendingFonts > 0 ||
+        impl->scene->pendingTextures > 0) {
         return false;
     }
 
     FrameInfo::beginUpdate();
-
-    impl->jobQueue.runJobs();
 
     impl->scene->updateTime(_dt);
 
