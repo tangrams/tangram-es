@@ -99,9 +99,6 @@ foreach(_shader ${SHADER_FILES})
     if(${_shader_ext} STREQUAL "fs" OR ${_shader_ext} STREQUAL "glsl" OR ${_shader_ext} STREQUAL "vs")
         set(_shader_name ${_shader_name}_${_shader_ext})
         set(SHADER_OUTPUT ${SHADER_OUTPUT_DIRECTORY}/${_shader_name}.h)
-        add_custom_target(
-            ${_shader_name}
-            DEPENDS ${SHADER_OUTPUT})
         add_custom_command(
             OUTPUT ${SHADER_OUTPUT}
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..
@@ -110,6 +107,8 @@ foreach(_shader ${SHADER_FILES})
                 ${_shader}
                 core/generated/${_shader_name}.h
                 ${_shader_name})
-        add_dependencies(${CORE_LIBRARY} ${_shader_name})
+        list(APPEND SHADER_OUTPUT_FILES ${SHADER_OUTPUT})
     endif()
 endforeach()
+add_custom_target(shader-headers DEPENDS ${SHADER_OUTPUT_FILES})
+add_dependencies(${CORE_LIBRARY} shader-headers)
