@@ -303,9 +303,14 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad, Te
 bool PointStyleBuilder::getUVQuad(Parameters& _params, glm::vec4& _quad, Texture** _texture) const {
 
     _quad = glm::vec4(0.0, 1.0, 1.0, 0.0);
+
     auto texture = m_style.defaultTexture().get();
 
-    if (_params.dynamicTexture) {
+    if (m_texture) {
+        // If marker texture has been assigned, always use it.
+        texture = m_texture;
+
+    } else if (_params.dynamicTexture) {
 
         if (_params.texture == "") {
             texture = nullptr;
@@ -323,6 +328,8 @@ bool PointStyleBuilder::getUVQuad(Parameters& _params, glm::vec4& _quad, Texture
     }
 
     if (texture) {
+        *_texture = texture;
+
         if (auto& atlas = texture->spriteAtlas()) {
 
             SpriteNode spriteNode;
@@ -339,19 +346,20 @@ bool PointStyleBuilder::getUVQuad(Parameters& _params, glm::vec4& _quad, Texture
             _quad.y = spriteNode.m_uvBL.y;
             _quad.z = spriteNode.m_uvTR.x;
             _quad.w = spriteNode.m_uvTR.y;
+        } else {
+            if (std::isnan(_params.size.x)) {
+                _params.size = glm::vec2{texture->getWidth(), texture->getHeight()};
+            }
         }
+        _params.size *= m_style.pixelScale();
+
     } else {
-        // default point size
+
+        // Default point size
         if (std::isnan(_params.size.x)) {
             _params.size = glm::vec2(8.0);
         }
-    }
-
-    *_texture = texture;
-
-    _params.size *= m_style.pixelScale();
-
-    if (!texture) {
+        _params.size *= m_style.pixelScale();
 
         float fillEdge = _params.size.x;
         float outlineEdge = 1.f;
