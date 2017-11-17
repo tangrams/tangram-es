@@ -611,16 +611,21 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
 }
 
 std::shared_ptr<Texture> SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform,
-                                                  const std::string& url, const std::shared_ptr<Scene>& scene) {
+                                                  const std::string& name, const std::shared_ptr<Scene>& scene) {
 
-    auto entry = scene->textures().find(url);
+    auto entry = scene->textures().find(name);
     if (entry != scene->textures().end()) {
         return entry->second;
     }
 
+    // If texture could not be found by name then interpret name as URL
     TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
 
-    return fetchTexture(platform, url, url, options, false, scene);
+    auto texture = fetchTexture(platform, name, name, options, false, scene);
+
+    scene->textures().emplace(name, texture);
+
+    return texture;
 }
 
 void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& node,
