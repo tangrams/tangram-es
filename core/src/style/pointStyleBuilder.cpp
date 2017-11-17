@@ -322,6 +322,11 @@ bool PointStyleBuilder::getUVQuad(Parameters& _params, glm::vec4& _quad, Texture
         }
     }
 
+    // If marker texture has been assigned, always use it.
+    if (m_texture) {
+        texture = m_texture;
+    }
+
     if (texture) {
         if (auto& atlas = texture->spriteAtlas()) {
 
