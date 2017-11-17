@@ -1582,7 +1582,8 @@ bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, 
             styleUniform.type = "sampler2D";
             styleUniform.value = strVal;
 
-            loadTexture(platform, strVal, scene);
+            auto texture = loadTexture(platform, strVal, scene);
+            scene->textures().emplace(strVal, texture);
         }
     } else if (value.IsSequence()) {
         int size = value.size();
@@ -1621,7 +1622,8 @@ bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, 
                 const std::string& textureName = strVal.Scalar();
                 textureArrayUniform.names.push_back(textureName);
 
-                loadTexture(platform, textureName, scene);
+                auto texture = loadTexture(platform, textureName, scene);
+                scene->textures().emplace(textureName, texture);
             }
 
             styleUniform.value = std::move(textureArrayUniform);
