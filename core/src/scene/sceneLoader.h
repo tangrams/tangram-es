@@ -68,7 +68,7 @@ struct SceneLoader {
     static Filter generatePredicate(Node filter, std::string _key);
     static bool getFilterRangeValue(const Node& node, double& val, bool& hasPixelArea);
     /* loads a texture with default texture properties */
-    static std::shared_ptr<Texture> loadTexture(const std::shared_ptr<Platform>& platform, const std::string& url, const std::shared_ptr<Scene>& scene);
+    static std::shared_ptr<Texture> getOrLoadTexture(const std::shared_ptr<Platform>& platform, const std::string& url, const std::shared_ptr<Scene>& scene);
     static std::shared_ptr<Texture> fetchTexture(const std::shared_ptr<Platform>& platform, const std::string& name, const std::string& url,
             const TextureOptions& options, bool generateMipmaps, const std::shared_ptr<Scene>& scene);
     static bool extractTexFiltering(Node& filtering, TextureFiltering& filter);
