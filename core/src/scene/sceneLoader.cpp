@@ -482,7 +482,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(const std::shared_ptr<Platform>
     const std::string& name = textureNode.Scalar();
 
     MaterialTexture matTex;
-    matTex.tex = loadTexture(platform, name, scene);
+    matTex.tex = getOrLoadTexture(platform, name, scene);
 
     if (Node mappingNode = matCompNode["mapping"]) {
         const std::string& mapping = mappingNode.Scalar();
@@ -610,17 +610,22 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
     return texture;
 }
 
-std::shared_ptr<Texture> SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform,
-                                                  const std::string& url, const std::shared_ptr<Scene>& scene) {
+std::shared_ptr<Texture> SceneLoader::getOrLoadTexture(const std::shared_ptr<Platform>& platform,
+                                                       const std::string& name, const std::shared_ptr<Scene>& scene) {
 
-    auto entry = scene->textures().find(url);
+    auto entry = scene->textures().find(name);
     if (entry != scene->textures().end()) {
         return entry->second;
     }
 
+    // If texture could not be found by name then interpret name as URL
     TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
 
-    return fetchTexture(platform, url, url, options, false, scene);
+    auto texture = fetchTexture(platform, name, name, options, false, scene);
+
+    scene->textures().emplace(name, texture);
+
+    return texture;
 }
 
 void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& node,
@@ -1582,7 +1587,7 @@ bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, 
             styleUniform.type = "sampler2D";
             styleUniform.value = strVal;
 
-            loadTexture(platform, strVal, scene);
+            getOrLoadTexture(platform, strVal, scene);
         }
     } else if (value.IsSequence()) {
         int size = value.size();
@@ -1621,7 +1626,7 @@ bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, 
                 const std::string& textureName = strVal.Scalar();
                 textureArrayUniform.names.push_back(textureName);
 
-                loadTexture(platform, textureName, scene);
+                getOrLoadTexture(platform, textureName, scene);
             }
 
             styleUniform.value = std::move(textureArrayUniform);
