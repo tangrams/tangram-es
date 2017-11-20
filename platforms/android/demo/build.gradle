@@ -10,6 +10,8 @@ android {
     minSdkVersion 15
     targetSdkVersion 26
     buildConfigField 'String', 'MAPZEN_API_KEY', '"' + apiKey + '"'
+    // provide dimension strategy for tangram library's dim
+    missingDimensionStrategy 'tangramAbi', 'slim'
   }
 
   sourceSets.main {
@@ -27,9 +29,10 @@ android {
       minifyEnabled true
     }
   }
+
 }
 
 dependencies {
-  compile project(path: ':tangram')
-  compile 'com.android.support:design:25.3.1'
+  implementation project(path: ':tangram')
+  implementation 'com.android.support:design:25.3.1'
 }
