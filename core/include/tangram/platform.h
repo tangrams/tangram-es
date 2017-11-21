@@ -1,7 +1,6 @@
 #pragma once
 
 #include "util/url.h"
-#include "util/variant.h"
 
 #include <functional>
 #include <string>
@@ -31,16 +30,40 @@ using FontSourceLoader = std::function<std::vector<char>()>;
 
 struct FontSourceHandle {
 
-    using FontSourceValue = variant<none_type, Url, std::string, FontSourceLoader>;
+    explicit FontSourceHandle(Url path) : fontPath(path) { tag = FontPath; }
+    explicit FontSourceHandle(std::string name) : fontName(name) { tag = FontName; }
+    explicit FontSourceHandle(FontSourceLoader loader) : fontLoader(loader) { tag = FontLoader; }
+    explicit FontSourceHandle(bool no_op) : none(no_op) { tag = None; }
 
-    explicit FontSourceHandle(Url path) : fontSourceValue(path) {}
-    explicit FontSourceHandle(std::string name) : fontSourceValue(name) {}
-    explicit FontSourceHandle(FontSourceLoader loader) : fontSourceValue(loader) {}
-    FontSourceHandle() {}
+    ~FontSourceHandle() {}
 
-    FontSourceValue fontSourceValue = none_type{};
+    FontSourceHandle(const FontSourceHandle& other) {
+        tag = other.tag;
+        switch (other.tag) {
+            case FontSourceHandle::FontPath:
+                fontPath = other.fontPath;
+                break;
+            case FontSourceHandle::FontName:
+                fontName = other.fontName;
+                break;
+            case FontSourceHandle::FontLoader:
+                fontLoader = other.fontLoader;
+                break;
+            case FontSourceHandle::None:
+                none = other.none;
+                break;
+        }
+    }
 
-    bool isValid() { return !fontSourceValue.is<none_type>(); }
+    enum {FontPath, FontName, FontLoader, None} tag;
+    union {
+        bool none;
+        Url fontPath;
+        std::string fontName;
+        FontSourceLoader fontLoader;
+    };
+
+    bool isValid() { return tag != None; }
 };
 
 // Print a formatted message to the console

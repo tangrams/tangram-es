@@ -40,12 +40,19 @@ void FontContext::loadFonts() {
 
         alfons::InputSource source;
 
-        if (fallback.fontSourceValue.is<FontSourceLoader>()) {
-            source = alfons::InputSource(fallback.fontSourceValue.get<FontSourceLoader>());
-        } else if (fallback.fontSourceValue.is<Url>()) {
-            source = alfons::InputSource(fallback.fontSourceValue.get<Url>().path());
-        } else if (fallback.fontSourceValue.is<std::string>()) {
-            source = alfons::InputSource(fallback.fontSourceValue.get<std::string>(), true);
+        switch (fallback.tag) {
+            case FontSourceHandle::FontPath:
+                source = alfons::InputSource(fallback.fontPath.path());
+                break;
+            case FontSourceHandle::FontName:
+                source = alfons::InputSource(fallback.fontName, true);
+                break;
+            case FontSourceHandle::FontLoader:
+                source = alfons::InputSource(fallback.fontLoader);
+                break;
+            case FontSourceHandle::None:
+            default:
+                return;
         }
 
         for (size_t i = 0; i < s_fontRasterSizes.size(); i++) {
@@ -339,22 +346,27 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
 
     alfons::InputSource source;
 
-    if (systemFontHandle.isValid()) {
-        if (systemFontHandle.fontSourceValue.is<FontSourceLoader>()) {
-            auto& loader = systemFontHandle.fontSourceValue.get<FontSourceLoader>();
+    switch (systemFontHandle.tag) {
+        case FontSourceHandle::FontPath:
+            source = alfons::InputSource(systemFontHandle.fontPath.path());
+            break;
+        case FontSourceHandle::FontName:
+            source = alfons::InputSource(systemFontHandle.fontName, true);
+            break;
+        case FontSourceHandle::FontLoader:
+        {
+            auto& loader = systemFontHandle.fontLoader;
             auto fontData = loader();
             if (fontData.size() > 0) {
                 source = alfons::InputSource(loader);
             } else {
                 useFallbackFont = true;
             }
-        } else if (systemFontHandle.fontSourceValue.is<Url>()) {
-            source = alfons::InputSource(systemFontHandle.fontSourceValue.get<Url>().path());
-        } else {
-            source = alfons::InputSource(systemFontHandle.fontSourceValue.get<std::string>(), true);
+            break;
         }
-    } else {
-        useFallbackFont = true;
+        case FontSourceHandle::None:
+        default:
+            useFallbackFont = true;
     }
 
     if (!useFallbackFont) {
