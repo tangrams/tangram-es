@@ -453,6 +453,8 @@ size_t Url::removeDotSegmentsFromRange(std::string& str, size_t start, size_t co
     size_t pos = start; // 'input' position.
     size_t out = pos; // 'output' position.
 
+    const bool had_leading_slash = count != 0 ? str[start] == '/' : true;
+
     while (pos < end) {
         if (pos + 2 < end &&
                    str[pos] == '.' &&
@@ -480,6 +482,10 @@ size_t Url::removeDotSegmentsFromRange(std::string& str, size_t start, size_t co
                    str[pos + 3] == '/') {
             pos += 3;
             out = removeLastSegmentFromRange(str, start, out);
+            if(out == 0 && !had_leading_slash) {
+                //do not introduce a leading slash (also skip the slash of this /../ segment)
+                pos++;
+            }
         } else if (pos + 3 == end &&
                    str[pos] == '/' &&
                    str[pos + 1] == '.' &&
