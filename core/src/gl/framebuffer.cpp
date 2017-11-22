@@ -14,6 +14,8 @@ namespace Tangram {
 
 FrameBuffer::FrameBuffer(int _width, int _height, bool _colorRenderBuffer) :
     m_glFrameBufferHandle(0),
+    m_glDepthRenderBufferHandle(0),
+    m_glColorRenderBufferHandle(0),
     m_valid(false),
     m_colorRenderBuffer(_colorRenderBuffer),
     m_width(_width), m_height(_height) {
