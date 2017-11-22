@@ -394,8 +394,8 @@ bool Map::update(float _dt) {
     impl->jobQueue.runJobs();
 
     // Wait until font and texture resources are fully loaded
-    if (impl->scene->pendingFonts > 0 ||
-        impl->scene->pendingTextures > 0) {
+    if (impl->scene->pendingFonts > 0 || impl->scene->pendingTextures > 0) {
+        platform->requestRender();
         return false;
     }
 
@@ -451,15 +451,15 @@ bool Map::update(float _dt) {
     bool tilesChanged = impl->tileManager.hasTileSetChanged();
     bool tilesLoading = impl->tileManager.hasLoadingTiles();
     bool labelsNeedUpdate = impl->labels.needUpdate();
-    bool resourceLoading = (impl->scene->pendingTextures > 0);
 
-    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || resourceLoading ||
-        impl->sceneLoadTasks > 0) {
+    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || impl->sceneLoadTasks > 0) {
         viewComplete = false;
     }
 
     // Request render if labels are in fading states or markers are easing.
-    if (labelsNeedUpdate || markersNeedUpdate) { platform->requestRender(); }
+    if (labelsNeedUpdate || markersNeedUpdate) {
+        platform->requestRender();
+    }
 
     return viewComplete;
 }
