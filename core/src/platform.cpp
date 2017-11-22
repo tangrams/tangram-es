@@ -38,7 +38,7 @@ bool Platform::bytesFromFileSystem(const char* _path, std::function<char*(size_t
 
 FontSourceHandle Platform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
     // No-op by default
-    return FontSourceHandle(false);
+    return FontSourceHandle();
 }
 
 std::vector<FontSourceHandle> Platform::systemFontFallbacksHandle() const {

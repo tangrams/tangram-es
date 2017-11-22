@@ -34,7 +34,7 @@ void FontContext::loadFonts() {
         m_font[i] = m_alfons.addFont("default", s_fontRasterSizes[i]);
     }
 
-    for (auto fallback : fallbacks) {
+    for (const auto& fallback : fallbacks) {
 
         if (!fallback.isValid()) { continue; }
 

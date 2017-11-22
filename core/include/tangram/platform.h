@@ -33,7 +33,7 @@ struct FontSourceHandle {
     explicit FontSourceHandle(Url path) : fontPath(path) { tag = FontPath; }
     explicit FontSourceHandle(std::string name) : fontName(name) { tag = FontName; }
     explicit FontSourceHandle(FontSourceLoader loader) : fontLoader(loader) { tag = FontLoader; }
-    explicit FontSourceHandle(bool no_op) : none(no_op) { tag = None; }
+    explicit FontSourceHandle() {}
 
     ~FontSourceHandle() {}
 
@@ -55,15 +55,15 @@ struct FontSourceHandle {
         }
     }
 
-    enum {FontPath, FontName, FontLoader, None} tag;
+    enum {FontPath, FontName, FontLoader, None} tag = None;
     union {
-        bool none;
+        bool none = false;
         Url fontPath;
         std::string fontName;
         FontSourceLoader fontLoader;
     };
 
-    bool isValid() { return tag != None; }
+    bool isValid() const { return tag != None; }
 };
 
 // Print a formatted message to the console
