@@ -94,6 +94,27 @@ TEST_CASE("Remove dot segments from a path", "[Url]") {
     CHECK(Url::removeDotSegmentsFromString("a//b//c") == "a//b//c");
     CHECK(Url::removeDotSegmentsFromString("a./b../..c/.d") == "a./b../..c/.d");
 
+    //preserve absolute and relative urls (keep the leading / when given, don't add one)
+    CHECK(Url::removeDotSegmentsFromString("a/../b") == "b");
+    CHECK(Url::removeDotSegmentsFromString("/a/../b") == "/b");
+    CHECK(Url::removeDotSegmentsFromString("a/../") == "");
+    CHECK(Url::removeDotSegmentsFromString("/a/../") == "/");
+    CHECK(Url::removeDotSegmentsFromString("a/../../") == "");
+    CHECK(Url::removeDotSegmentsFromString("/a/../../") == "/");
+    CHECK(Url::removeDotSegmentsFromString("a/b/../c") == "a/c");
+    CHECK(Url::removeDotSegmentsFromString("/a/b/../c") == "/a/c");
+    CHECK(Url::removeDotSegmentsFromString("a/b/../") == "a/");
+    CHECK(Url::removeDotSegmentsFromString("/a/b/../") == "/a/");
+    CHECK(Url::removeDotSegmentsFromString("a/b/../c/d") == "a/c/d");
+    CHECK(Url::removeDotSegmentsFromString("/a/b/../c/d") == "/a/c/d");
+    CHECK(Url::removeDotSegmentsFromString("a/b/../../c") == "c");
+    CHECK(Url::removeDotSegmentsFromString("/a/b/../../c") == "/c");
+    CHECK(Url::removeDotSegmentsFromString("a/b/../../../c") == "c");
+    CHECK(Url::removeDotSegmentsFromString("/a/b/../../../c") == "/c");
+    CHECK(Url::removeDotSegmentsFromString("./a/b/../../c") == "c");
+    CHECK(Url::removeDotSegmentsFromString("/./a/b/../../c") == "/c");
+    CHECK(Url::removeDotSegmentsFromString("/../a") == "/a");
+
 }
 
 TEST_CASE("Produce a 'standardized' URL", "[Url]") {
