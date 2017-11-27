@@ -58,7 +58,7 @@ std::vector<FontSourceHandle> LinuxPlatform::systemFontFallbacksHandle() const {
 }
 
 FontSourceHandle LinuxPlatform::systemFont(const std::string& _name, const std::string& _weight,
-        const std::string& _face) const {
+                                           const std::string& _face) const {
 
     std::string fontFile = systemFontPath(m_fcConfig, _name, _weight, _face);
 

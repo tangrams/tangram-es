@@ -33,9 +33,24 @@ struct FontSourceHandle {
     explicit FontSourceHandle(Url path) : fontPath(path) { tag = FontPath; }
     explicit FontSourceHandle(std::string name) : fontName(name) { tag = FontName; }
     explicit FontSourceHandle(FontSourceLoader loader) : fontLoader(loader) { tag = FontLoader; }
-    explicit FontSourceHandle() {}
+    FontSourceHandle() {}
 
-    ~FontSourceHandle() {}
+    ~FontSourceHandle() {
+        using std::string;
+        switch (tag) {
+            case FontSourceHandle::FontPath:
+                fontPath.~Url();
+                break;
+            case FontSourceHandle::FontName:
+                fontName.~string();
+                break;
+            case FontSourceHandle::FontLoader:
+                fontLoader.~FontSourceLoader();
+                break;
+            case FontSourceHandle::None:
+                break;
+        }
+    }
 
     FontSourceHandle(const FontSourceHandle& other) {
         tag = other.tag;
@@ -50,14 +65,12 @@ struct FontSourceHandle {
                 fontLoader = other.fontLoader;
                 break;
             case FontSourceHandle::None:
-                none = other.none;
                 break;
         }
     }
 
-    enum {FontPath, FontName, FontLoader, None} tag = None;
+    enum { FontPath, FontName, FontLoader, None } tag = None;
     union {
-        bool none = false;
         Url fontPath;
         std::string fontName;
         FontSourceLoader fontLoader;
