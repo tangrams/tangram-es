@@ -30,51 +30,17 @@ using FontSourceLoader = std::function<std::vector<char>()>;
 
 struct FontSourceHandle {
 
+    FontSourceHandle() {}
+    ~FontSourceHandle() {}
+
     explicit FontSourceHandle(Url path) : fontPath(path) { tag = FontPath; }
     explicit FontSourceHandle(std::string name) : fontName(name) { tag = FontName; }
     explicit FontSourceHandle(FontSourceLoader loader) : fontLoader(loader) { tag = FontLoader; }
-    FontSourceHandle() {}
-
-    ~FontSourceHandle() {
-        using std::string;
-        switch (tag) {
-            case FontSourceHandle::FontPath:
-                fontPath.~Url();
-                break;
-            case FontSourceHandle::FontName:
-                fontName.~string();
-                break;
-            case FontSourceHandle::FontLoader:
-                fontLoader.~FontSourceLoader();
-                break;
-            case FontSourceHandle::None:
-                break;
-        }
-    }
-
-    FontSourceHandle(const FontSourceHandle& other) {
-        tag = other.tag;
-        switch (other.tag) {
-            case FontSourceHandle::FontPath:
-                fontPath = other.fontPath;
-                break;
-            case FontSourceHandle::FontName:
-                fontName = other.fontName;
-                break;
-            case FontSourceHandle::FontLoader:
-                fontLoader = other.fontLoader;
-                break;
-            case FontSourceHandle::None:
-                break;
-        }
-    }
 
     enum { FontPath, FontName, FontLoader, None } tag = None;
-    union {
-        Url fontPath;
-        std::string fontName;
-        FontSourceLoader fontLoader;
-    };
+    Url fontPath;
+    std::string fontName;
+    FontSourceLoader fontLoader;
 
     bool isValid() const { return tag != None; }
 };
