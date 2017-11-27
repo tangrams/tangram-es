@@ -61,10 +61,22 @@ std::string systemFontPath(FcConfig* fcConfig, const std::string& _name,
     std::string fontFile = "";
     FcValue fcFamily, fcFace, fcWeight;
 
-    fcFamily.type = fcFace.type = fcWeight.type = FcType::FcTypeString;
+    fcFamily.type = fcFace.type = FcType::FcTypeString;
     fcFamily.u.s = reinterpret_cast<const FcChar8*>(_name.c_str());
-    fcWeight.u.s = reinterpret_cast<const FcChar8*>(_weight.c_str());
     fcFace.u.s = reinterpret_cast<const FcChar8*>(_face.c_str());
+
+    fcWeight.type = FcType::FcTypeInteger;
+    fcWeight.u.i = atoi(_weight.c_str());
+    if (fcWeight.u.i == 0) {
+        if (strcasecmp(_weight.c_str(), "normal") == 0) {
+            fcWeight.u.i = 400;
+        } else if (strcasecmp(_weight.c_str(), "bold") == 0) {
+            fcWeight.u.i = 700;
+        } else {
+            // Could not parse weight value
+            fcWeight.u.i = 400;
+        }
+    }
 
     // Create a pattern with family, style and weight font properties
     FcPattern* pattern = FcPatternCreate();
