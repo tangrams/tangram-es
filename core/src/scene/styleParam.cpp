@@ -436,6 +436,7 @@ std::string StyleParam::toString() const {
             // TODO add more..
             return k + value.get<TextSource>().keys[0];
         }
+        break;
     case StyleParamKey::transition_hide_time:
     case StyleParamKey::text_transition_hide_time:
     case StyleParamKey::transition_show_time:
