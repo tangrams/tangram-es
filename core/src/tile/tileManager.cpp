@@ -130,7 +130,7 @@ void TileManager::updateTileSets(const View& _view) {
     m_tilesInProgress = 0;
     m_tileSetChanged = false;
 
-    if (_view.changedOnLastUpdate() && !getDebugFlag(DebugFlags::freeze_tiles)) {
+    if (!getDebugFlag(DebugFlags::freeze_tiles)) {
 
         for (auto& tileSet : m_tileSets) {
             tileSet.visibleTiles.clear();
