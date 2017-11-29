@@ -62,7 +62,7 @@ android {
       // Default configuration
     }
     full {
-      externalNativeBuild.cmake.abiFilters 'x86'
+      externalNativeBuild.cmake.abiFilters 'x86', 'arm64-v8a'
     }
   }
 
