@@ -8,11 +8,7 @@
 
 #include <libgen.h>
 
-#define DEFAULT "fonts/NotoSans-Regular.ttf"
-#define FONT_AR "fonts/NotoNaskh-Regular.ttf"
-#define FONT_HE "fonts/NotoSansHebrew-Regular.ttf"
-#define FONT_JA "fonts/DroidSansJapanese.ttf"
-#define FALLBACK "fonts/DroidSansFallback.ttf"
+#define DEFAULT_FONT "fonts/NotoSans-Regular.ttf"
 
 #include "log.h"
 
@@ -30,11 +26,7 @@ void MockPlatform::requestRender() const {}
 std::vector<FontSourceHandle> MockPlatform::systemFontFallbacksHandle() const {
     std::vector<FontSourceHandle> handles;
 
-    handles.emplace_back(Url{DEFAULT});
-    handles.emplace_back(Url{FONT_AR});
-    handles.emplace_back(Url{FONT_HE});
-    handles.emplace_back(Url{FONT_JA});
-    handles.emplace_back(Url{FALLBACK});
+    handles.emplace_back(Url{DEFAULT_FONT});
 
     return handles;
 }
