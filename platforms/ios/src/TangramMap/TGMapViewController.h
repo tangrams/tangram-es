@@ -370,6 +370,7 @@ NS_ASSUME_NONNULL_BEGIN
  or be notified when a network request completes).
  More informations on the default provided configuration can be found on the description
  of `TGHttpHandler`.
+ @note If a scene load is called before viewDidLoad, httpHandler will result in an error response.
  */
 @property (strong, nonatomic) TGHttpHandler* httpHandler;
 
