@@ -140,14 +140,19 @@ FontSourceHandle iOSPlatform::systemFont(const std::string& _name, const std::st
 UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
     __strong TGMapViewController* mapViewController = m_viewController;
 
+    UrlResponse errorResponse;
     if (!mapViewController) {
-        return false;
+        errorResponse.error = "MapViewController not initialized.";
+        _callback(errorResponse);
+        return 0;
     }
 
     TGHttpHandler* httpHandler = [mapViewController httpHandler];
 
     if (!httpHandler) {
-        return false;
+        errorResponse.error = "HttpHandler not set in MapViewController";
+        _callback(errorResponse);
+        return 0;
     }
 
     TGDownloadCompletionHandler handler = ^void (NSData* data, NSURLResponse* response, NSError* error) {
