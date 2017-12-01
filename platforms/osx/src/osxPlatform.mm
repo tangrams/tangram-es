@@ -65,6 +65,8 @@ std::vector<FontSourceHandle> OSXPlatform::systemFontFallbacksHandle() const {
     NSFontManager *manager = [NSFontManager sharedFontManager];
     NSArray<NSString *> *fallbacks = [manager availableFontFamilies];
 
+    handles.reserve([fallbacks count]);
+
     for (NSString* fallback in fallbacks) {
         if (!allowedFamily(fallback)) { continue; }
 
@@ -72,7 +74,7 @@ std::vector<FontSourceHandle> OSXPlatform::systemFontFallbacksHandle() const {
             NSString* fontName = familyFont[0];
             NSString* fontStyle = familyFont[1];
             if ( ![fontName containsString:@"-"] || [fontStyle isEqualToString:@"Regular"]) {
-                handles.emplace_back(fontName.UTF8String, true);
+                handles.emplace_back(std::string(fontName.UTF8String));
                 break;
             }
         }
@@ -139,7 +141,7 @@ FontSourceHandle OSXPlatform::systemFont(const std::string& _name, const std::st
         }
     }
 
-    return FontSourceHandle(font.fontName.UTF8String, true);
+    return FontSourceHandle(std::string(font.fontName.UTF8String));
 }
 
 UrlRequestHandle OSXPlatform::startUrlRequest(Url _url, UrlCallback _callback) {

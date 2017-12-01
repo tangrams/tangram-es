@@ -1,5 +1,7 @@
 #import "appleAllowedFonts.h"
 
+namespace Tangram {
+
 bool allowedFamily(NSString* familyName) {
     const NSArray<NSString *> *allowedFamilyList = @[ @"Hebrew", @"Kohinoor", @"Gumurki", @"Thonburi", @"Tamil",
                                                     @"Gurmukhi", @"Kailasa", @"Sangam", @"PingFang", @"Geeza",
@@ -9,4 +11,6 @@ bool allowedFamily(NSString* familyName) {
         if ( [familyName containsString:allowedFamily] ) { return true; }
     }
     return false;
+}
+
 }

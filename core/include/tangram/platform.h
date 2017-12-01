@@ -29,15 +29,20 @@ using UrlCallback = std::function<void(UrlResponse)>;
 using FontSourceLoader = std::function<std::vector<char>()>;
 
 struct FontSourceHandle {
-    FontSourceHandle(std::string _path) : pathOrFontName(_path) {}
-    FontSourceHandle(std::string _pathOrFontName, bool _isFontName) : pathOrFontName(_pathOrFontName), isFontName(_isFontName) {}
-    FontSourceHandle(FontSourceLoader _loader) : load(_loader) {}
-    FontSourceHandle() {}
 
-    std::string pathOrFontName;
-    FontSourceLoader load = nullptr;
-    bool isFontName = false;
-    bool isValid() { return !pathOrFontName.empty() || load || isFontName; }
+    FontSourceHandle() {}
+    ~FontSourceHandle() {}
+
+    explicit FontSourceHandle(Url path) : fontPath(path) { tag = FontPath; }
+    explicit FontSourceHandle(std::string name) : fontName(name) { tag = FontName; }
+    explicit FontSourceHandle(FontSourceLoader loader) : fontLoader(loader) { tag = FontLoader; }
+
+    enum { FontPath, FontName, FontLoader, None } tag = None;
+    Url fontPath;
+    std::string fontName;
+    FontSourceLoader fontLoader;
+
+    bool isValid() const { return tag != None; }
 };
 
 // Print a formatted message to the console

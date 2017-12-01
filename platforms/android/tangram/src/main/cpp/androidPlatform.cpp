@@ -228,7 +228,7 @@ std::vector<FontSourceHandle> AndroidPlatform::systemFontFallbacksHandle() const
     std::string fallbackPath = fontFallbackPath(importance, weightHint);
 
     while (!fallbackPath.empty()) {
-        handles.emplace_back(fallbackPath);
+        handles.emplace_back(Url(fallbackPath));
 
         fallbackPath = fontFallbackPath(importance++, weightHint);
     }
