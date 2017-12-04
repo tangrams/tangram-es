@@ -53,8 +53,6 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
                 LOGN("Remove source %s", tileSet.source->name().c_str());
                 return true;
             }
-            // Clear cache
-            tileSet.tiles.clear();
             return false;
         });
 
