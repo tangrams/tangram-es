@@ -42,15 +42,14 @@ TileManager::~TileManager() {
 
 void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>& _sources) {
 
-    m_tileCache->clear();
-
-    // Remove all (non-client datasources) sources and respective tileSets not present in the
-    // new scene
+    // Remove all (non-client datasources) sources and respective tileSets
     auto it = std::remove_if(
         m_tileSets.begin(), m_tileSets.end(),
         [&](auto& tileSet) {
             if (!tileSet.clientTileSource) {
                 LOGN("Remove source %s", tileSet.source->name().c_str());
+                // Remove tiles from cache
+                m_tileCache->clear(tileSet.source->id());
                 return true;
             }
             return false;
@@ -58,7 +57,7 @@ void TileManager::setTileSources(const std::vector<std::shared_ptr<TileSource>>&
 
     m_tileSets.erase(it, m_tileSets.end());
 
-    // add new sources
+    // Add new sources
     for (const auto& source : _sources) {
 
         if (!source->generateGeometry()) { continue; }
@@ -85,23 +84,28 @@ std::shared_ptr<TileSource> TileManager::getClientTileSource(int32_t sourceID) {
 }
 
 void TileManager::addClientTileSource(std::shared_ptr<TileSource> _tileSource) {
+    for (const auto& tileSet : m_tileSets) {
+        if (tileSet.source == _tileSource) { return; }
+    }
+
     m_tileSets.push_back({ _tileSource, true });
 }
 
 bool TileManager::removeClientTileSource(TileSource& _tileSource) {
-    bool removed = false;
-    for (auto it = m_tileSets.begin(); it != m_tileSets.end();) {
-        if (it->source.get() == &_tileSource) {
-            // Remove the textures for this tile source
-            it->source->clearRasters();
-            // Remove the tile set associated with this tile source
-            it = m_tileSets.erase(it);
-            removed = true;
-        } else {
-            ++it;
-        }
+
+    auto it = std::find_if(m_tileSets.begin(), m_tileSets.end(),
+                           [&](auto& tileSet) { return (tileSet.source.get() == &_tileSource); });
+
+    if (it != m_tileSets.end()) {
+        // Remove the textures for this tile source
+        it->source->clearRasters();
+        // Remove tiles from cache
+        m_tileCache->clear(it->source->id());
+        // Remove the tile set associated with this tile source
+        m_tileSets.erase(it);
+        return true;
     }
-    return removed;
+    return false;
 }
 
 void TileManager::clearTileSets() {

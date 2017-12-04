@@ -111,6 +111,19 @@ public:
         m_cacheUsage = 0;
     }
 
+    void clear(int32_t _source) {
+        auto it = std::remove_if(m_cacheList.begin(), m_cacheList.end(),
+                                 [&](auto& entry){
+                                     if (entry.key.first == _source) {
+                                         m_cacheMap.erase(entry.key);
+                                         m_cacheUsage -= entry.tile->getMemoryUsage();
+                                         return true;
+                                     }
+                                     return false;
+                                 });
+        m_cacheList.erase(it, m_cacheList.end());
+    }
+
 private:
     CacheMap m_cacheMap;
     CacheList m_cacheList;
