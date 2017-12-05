@@ -118,7 +118,7 @@ FontSourceHandle iOSPlatform::systemFont(const std::string& _name, const std::st
         }
     }
 
-    if (_face != "normal") {
+    if (_face != "regular") {
         UIFontDescriptorSymbolicTraits traits;
         UIFontDescriptor* descriptor = [font fontDescriptor];
 

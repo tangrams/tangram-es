@@ -9,12 +9,6 @@
 #import <map>
 #import <AppKit/AppKit.h>
 
-#define DEFAULT "fonts/NotoSans-Regular.ttf"
-#define FONT_AR "fonts/NotoNaskh-Regular.ttf"
-#define FONT_HE "fonts/NotoSansHebrew-Regular.ttf"
-#define FONT_JA "fonts/DroidSansJapanese.ttf"
-#define FALLBACK "fonts/DroidSansFallback.ttf"
-
 namespace Tangram {
 
 void logMsg(const char* fmt, ...) {
@@ -124,7 +118,7 @@ FontSourceHandle OSXPlatform::systemFont(const std::string& _name, const std::st
         }
     }
 
-    if (_face != "normal") {
+    if (_face != "regular") {
         NSFontSymbolicTraits traits;
         NSFontDescriptor* descriptor = [font fontDescriptor];
 
