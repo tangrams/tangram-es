@@ -33,6 +33,10 @@
 #include "view/view.h"
 
 #include "csscolorparser.hpp"
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
+#include "glm/vec4.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <iterator>
@@ -52,14 +56,12 @@ constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
 static const std::string GLOBAL_PREFIX = "global.";
 
-std::mutex SceneLoader::m_textureMutex;
-
 bool SceneLoader::loadScene(const std::shared_ptr<Platform>& _platform, std::shared_ptr<Scene> _scene,
                             const std::vector<SceneUpdate>& _updates) {
 
-    Importer sceneImporter;
+    Importer sceneImporter(_scene);
 
-    _scene->config() = sceneImporter.applySceneImports(_platform, _scene);
+    _scene->config() = sceneImporter.applySceneImports(_platform);
 
     if (!_scene->config()) {
         return false;
@@ -105,8 +107,7 @@ bool SceneLoader::applyUpdates(const std::shared_ptr<Platform>& platform, Scene&
         }
     }
 
-    Importer importer;
-    importer.resolveSceneUrls(platform, scene, root, Url(scene.path()).resolved(Url(scene.resourceRoot())));
+    Importer::resolveSceneUrls(root, scene.url());
 
     return true;
 }
@@ -181,7 +182,7 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
     // Instantiate built-in styles
     _scene->styles().emplace_back(new PolygonStyle("polygons"));
     _scene->styles().emplace_back(new PolylineStyle("lines"));
-    _scene->styles().emplace_back(new DebugTextStyle("debugtext", std::make_shared<FontContext>(_platform), true));
+    _scene->styles().emplace_back(new DebugTextStyle("debugtext", _scene->fontContext(), true));
     _scene->styles().emplace_back(new TextStyle("text", _scene->fontContext(), true));
     _scene->styles().emplace_back(new DebugStyle("debug"));
     _scene->styles().emplace_back(new PointStyle("points", _scene->fontContext()));
@@ -252,6 +253,10 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
     auto& styles = _scene->styles();
     for(uint32_t i = 0; i < styles.size(); i++) {
         styles[i]->setID(i);
+
+        if (auto pointStyle = dynamic_cast<PointStyle*>(styles[i].get())) {
+            pointStyle->setTextures(_scene->textures());
+        }
     }
 
     if (Node layers = config["layers"]) {
@@ -308,7 +313,8 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Platform>& _platform, const 
     return true;
 }
 
-void SceneLoader::loadShaderConfig(const std::shared_ptr<Platform>& platform, Node shaders, Style& style, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadShaderConfig(const std::shared_ptr<Platform>& platform, Node shaders, Style& style,
+                                   const std::shared_ptr<Scene>& scene) {
 
     if (!shaders) { return; }
 
@@ -416,7 +422,9 @@ glm::vec4 parseMaterialVec(const Node& prop) {
     return glm::vec4(0.0);
 }
 
-void SceneLoader::loadMaterial(const std::shared_ptr<Platform>& platform, Node matNode, Material& material, const std::shared_ptr<Scene>& scene, Style& style) {
+void SceneLoader::loadMaterial(const std::shared_ptr<Platform>& platform, Node matNode, Material& material,
+                               const std::shared_ptr<Scene>& scene, Style& style) {
+
     if (!matNode.IsMap()) { return; }
 
     if (Node n = matNode["emission"]) {
@@ -459,7 +467,8 @@ void SceneLoader::loadMaterial(const std::shared_ptr<Platform>& platform, Node m
     material.setNormal(loadMaterialTexture(platform, matNode["normal"], scene, style));
 }
 
-MaterialTexture SceneLoader::loadMaterialTexture(const std::shared_ptr<Platform>& platform, Node matCompNode, const std::shared_ptr<Scene>& scene, Style& style) {
+MaterialTexture SceneLoader::loadMaterialTexture(const std::shared_ptr<Platform>& platform, Node matCompNode,
+                                                 const std::shared_ptr<Scene>& scene, Style& style) {
 
     if (!matCompNode) { return MaterialTexture{}; }
 
@@ -473,18 +482,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(const std::shared_ptr<Platform>
     const std::string& name = textureNode.Scalar();
 
     MaterialTexture matTex;
-    {
-        std::lock_guard<std::mutex> lock(m_textureMutex);
-        matTex.tex = scene->textures()[name];
-    }
-
-    if (!matTex.tex) {
-        // Load inline material  textures
-        if (!loadTexture(platform, name, scene)) {
-            LOGW("Not able to load material texture: %s", name.c_str());
-            return MaterialTexture();
-        }
-    }
+    matTex.tex = getOrLoadTexture(platform, name, scene);
 
     if (Node mappingNode = matCompNode["mapping"]) {
         const std::string& mapping = mappingNode.Scalar();
@@ -552,119 +550,99 @@ bool SceneLoader::extractTexFiltering(Node& filtering, TextureFiltering& filter)
     }
 }
 
-void SceneLoader::updateSpriteNodes(const std::string& texName,
-        std::shared_ptr<Texture>& texture, const std::shared_ptr<Scene>& scene) {
-    auto& spriteAtlases = scene->spriteAtlases();
-    if (spriteAtlases.find(texName) != spriteAtlases.end()) {
-        auto& spriteAtlas = spriteAtlases[texName];
-        spriteAtlas->updateSpriteNodes(texture);
-    }
-}
 
-std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platform>& platform, const std::string& name, const std::string& url,
-        const TextureOptions& options, bool generateMipmaps, const std::shared_ptr<Scene>& scene) {
+std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platform>& platform,
+                                                   const std::string& name, const std::string& urlString,
+                                                   const TextureOptions& options, bool generateMipmaps,
+                                                   const std::shared_ptr<Scene>& scene) {
 
     std::shared_ptr<Texture> texture;
 
-    std::regex r("^(http|https):/");
-    std::smatch match;
+    Url url(urlString);
 
-    auto& asset = scene->assets()[url];
-    if (!asset) {
-        LOGE("Asset missing at path: %s.", url.c_str());
-        return texture;
-    }
+    if (url.hasBase64Data() && url.mediaType() == "image/png") {
+        auto data = url.data();
 
-    // TODO: generalize using URI handlers
-    if (std::regex_search(url, match, r) && !asset->zipHandle()) {
+        std::vector<unsigned char> blob;
+
+        try {
+            blob = Base64::decode(data);
+        } catch(std::runtime_error e) {
+            LOGE("Can't decode Base64 texture '%s'", e.what());
+        }
+
+        if (blob.empty()) {
+            LOGE("Can't decode Base64 texture");
+            return nullptr;
+        }
+        texture = std::make_shared<Texture>(0, 0, options, generateMipmaps);
+
+        std::vector<char> textureData;
+        auto cdata = reinterpret_cast<char*>(blob.data());
+        textureData.insert(textureData.begin(), cdata, cdata + blob.size());
+        if (!texture->loadImageFromMemory(textureData)) {
+            LOGE("Invalid Base64 texture");
+        }
+    } else {
+        texture = std::make_shared<Texture>(std::vector<char>(), options, generateMipmaps);
+
         scene->pendingTextures++;
-        platform->startUrlRequest(url, [=](std::vector<char>&& rawData) {
-                std::lock_guard<std::mutex> lock(m_textureMutex);
-                auto texture = scene->getTexture(name);
-                if (texture) {
-                    if (!texture->loadImageFromMemory(rawData)) {
-                        LOGE("Invalid texture data '%s'", url.c_str());
-                    }
-
-                    updateSpriteNodes(name, texture, scene);
-                    scene->pendingTextures--;
-                    if (scene->pendingTextures == 0) {
-                        platform->requestRender();
+        scene->startUrlRequest(platform, url, [&, scene, texture](UrlResponse response) {
+                if (response.error) {
+                    LOGE("Error retrieving URL '%s': %s", url.string().c_str(), response.error);
+                } else {
+                    if (texture) {
+                        if (!texture->loadImageFromMemory(std::move(response.content))) {
+                            LOGE("Invalid texture data from URL '%s'", url.string().c_str());
+                        }
+                        if (texture->spriteAtlas()) {
+                            texture->spriteAtlas()->updateSpriteNodes({texture->getWidth(), texture->getHeight()});
+                        }
                     }
                 }
+                scene->pendingTextures--;
+                if (scene->pendingTextures == 0) {
+                    platform->requestRender();
+                }
             });
-        std::vector<char> textureData = {};
-        texture = std::make_shared<Texture>(textureData, options, generateMipmaps);
-    } else {
-
-        if (url.substr(0, 22) == "data:image/png;base64,") {
-            // Skip data: prefix
-            auto data = url.substr(22);
-
-            std::vector<unsigned char> blob;
-
-            try {
-                blob = Base64::decode(data);
-            } catch(std::runtime_error e) {
-                LOGE("Can't decode Base64 texture '%s'", e.what());
-            }
-
-            if (blob.empty()) {
-                LOGE("Can't decode Base64 texture");
-                return nullptr;
-            }
-            texture = std::make_shared<Texture>(0, 0, options, generateMipmaps);
-
-            std::vector<char> textureData;
-            auto cdata = reinterpret_cast<char*>(blob.data());
-            textureData.insert(textureData.begin(), cdata, cdata + blob.size());
-            if (!texture->loadImageFromMemory(textureData)) {
-                LOGE("Invalid Base64 texture");
-            }
-
-        } else {
-
-            auto data = asset->readBytesFromAsset(platform);
-
-            if (data.size() == 0) {
-                LOGE("Can't load texture resource at url '%s'", url.c_str());
-                return nullptr;
-            }
-
-            texture = std::make_shared<Texture>(0, 0, options, generateMipmaps);
-            if (!texture->loadImageFromMemory(data)) {
-                LOGE("Invalid texture data '%s'", url.c_str());
-            }
-        }
     }
 
     return texture;
 }
 
-bool SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const std::string& url, const std::shared_ptr<Scene>& scene) {
-    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
+std::shared_ptr<Texture> SceneLoader::getOrLoadTexture(const std::shared_ptr<Platform>& platform,
+                                                       const std::string& name, const std::shared_ptr<Scene>& scene) {
 
-    auto texture = fetchTexture(platform, url, url, options, false, scene);
-    if (texture) {
-        std::lock_guard<std::mutex> lock(m_textureMutex);
-        scene->textures().emplace(url, texture);
-        return true;
+    auto entry = scene->textures().find(name);
+    if (entry != scene->textures().end()) {
+        return entry->second;
     }
 
-    LOGE("Missing texture %s", url.c_str());
-    return false;
+    // If texture could not be found by name then interpret name as URL
+    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
+
+    auto texture = fetchTexture(platform, name, name, options, false, scene);
+
+    scene->textures().emplace(name, texture);
+
+    return texture;
 }
 
-void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& node, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& node,
+                              const std::shared_ptr<Scene>& scene) {
 
     const std::string& name = node.first.Scalar();
     Node textureConfig = node.second;
+    if (!textureConfig.IsMap()) {
+        LOGW("Invalid texture node '%s', skipping.", name.c_str());
+        return;
+    }
 
-    std::string file;
+    std::string url;
     TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
 
-    if (Node url = textureConfig["url"]) {
-        file = url.as<std::string>();
+    if (Node urlNode = textureConfig["url"]) {
+        url = urlNode.as<std::string>();
     } else {
         LOGW("No url specified for texture '%s', skipping.", name.c_str());
         return;
@@ -678,14 +656,10 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
         }
     }
 
-    auto texture = fetchTexture(platform, name, file, options, generateMipmaps, scene);
-    if (!texture) {
-        LOGE("Missing texture %s", name.c_str());
-        return;
-    }
-    std::lock_guard<std::mutex> lock(m_textureMutex);
+    auto texture = fetchTexture(platform, name, url, options, generateMipmaps, scene);
+
     if (Node sprites = textureConfig["sprites"]) {
-        std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture));
+        auto atlas = std::make_unique<SpriteAtlas>();
 
         for (auto it = sprites.begin(); it != sprites.end(); ++it) {
 
@@ -700,12 +674,14 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
                 atlas->addSpriteNode(spriteName, pos, size);
             }
         }
-        scene->spriteAtlases()[name] = atlas;
+        atlas->updateSpriteNodes({texture->getWidth(), texture->getHeight()});
+        texture->spriteAtlas() = std::move(atlas);
     }
     scene->textures().emplace(name, texture);
 }
 
-void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& node, const std::string& family, const std::shared_ptr<Scene>& scene) {
+void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& node,
+                         const std::string& family, const std::shared_ptr<Scene>& scene) {
     if (!node.IsMap()) {
         LOGW("");
         return;
@@ -738,42 +714,24 @@ void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& 
     std::transform(family.begin(), family.end(), familyNormalized.begin(), ::tolower);
     std::transform(style.begin(), style.end(), styleNormalized.begin(), ::tolower);
 
-    // Download/Load the font and add it to the context
     FontDescription _ft(familyNormalized, styleNormalized, weight, uri);
 
-    std::regex regex("^(http|https):/");
-    std::smatch match;
+    Url url(uri);
 
-    auto& asset = scene->assets()[_ft.uri];
-    if (!asset) {
-        LOGE("Asset missing at path: %s.", _ft.uri.c_str());
-        return;
-    }
-
-    if (std::regex_search(uri, match, regex) && !asset->zipHandle()) {
-        // Load remote
-        scene->pendingFonts++;
-        platform->startUrlRequest(_ft.uri, [_ft, scene](std::vector<char>&& rawData) {
-            if (rawData.size() == 0) {
-                LOGE("Bad URL request for font %s at URL %s", _ft.alias.c_str(), _ft.uri.c_str());
-            } else {
-                scene->fontContext()->addFont(_ft, alfons::InputSource(std::move(rawData)));
-            }
-            scene->pendingFonts--;
-        });
-    } else {
-        auto data = asset->readBytesFromAsset(platform);
-
-        if (data.size() == 0) {
-            LOGW("Local font at path %s can't be found (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
+    // Load font file.
+    scene->pendingFonts++;
+    scene->startUrlRequest(platform, url, [_ft, scene](UrlResponse response) {
+        if (response.error) {
+            LOGE("Error retrieving font '%s' at %s: ", _ft.alias.c_str(), _ft.uri.c_str(), response.error);
         } else {
-            LOGN("Adding local font %s (%s)", _ft.uri.c_str(), _ft.bundleAlias.c_str());
-            scene->fontContext()->addFont(_ft, alfons::InputSource(std::move(data)));
+            scene->fontContext()->addFont(_ft, alfons::InputSource(std::move(response.content)));
         }
-    }
+        scene->pendingFonts--;
+    });
 }
 
-void SceneLoader::loadFont(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& font, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadFont(const std::shared_ptr<Platform>& platform, const std::pair<Node, Node>& font,
+                           const std::shared_ptr<Scene>& scene) {
     const std::string& family = font.first.Scalar();
 
     if (font.second.IsMap()) {
@@ -785,7 +743,8 @@ void SceneLoader::loadFont(const std::shared_ptr<Platform>& platform, const std:
     }
 }
 
-void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Style& style, Node styleNode, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Style& style, Node styleNode,
+                                 const std::shared_ptr<Scene>& scene) {
 
     if (!styleNode) {
         LOGW("Can not parse style parameters, bad style YAML Node");
@@ -861,16 +820,11 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
     }
 
     if (Node textureNode = styleNode["texture"]) {
-        std::lock_guard<std::mutex> lock(m_textureMutex);
         if (auto pointStyle = dynamic_cast<PointStyle*>(&style)) {
             const std::string& textureName = textureNode.Scalar();
-            auto& atlases = scene->spriteAtlases();
-            auto atlasIt = atlases.find(textureName);
             auto styleTexture = scene->getTexture(textureName);
-            if (atlasIt != atlases.end()) {
-                pointStyle->setSpriteAtlas(atlasIt->second);
-            } else if (styleTexture){
-                pointStyle->setTexture(styleTexture);
+            if (styleTexture) {
+                pointStyle->setDefaultTexture(styleTexture);
             } else {
                 LOGW("Undefined texture name %s", textureName.c_str());
             }
@@ -902,7 +856,8 @@ void SceneLoader::loadStyleProps(const std::shared_ptr<Platform>& platform, Styl
 
 }
 
-bool SceneLoader::loadStyle(const std::shared_ptr<Platform>& platform, const std::string& name, Node config, const std::shared_ptr<Scene>& scene) {
+bool SceneLoader::loadStyle(const std::shared_ptr<Platform>& platform, const std::string& name,
+                            Node config, const std::shared_ptr<Scene>& scene) {
 
     const auto& builtIn = Style::builtInStyleNames();
 
@@ -1125,8 +1080,8 @@ void SceneLoader::loadSource(const std::shared_ptr<Platform>& platform, const st
 
 }
 
-void SceneLoader::loadSourceRasters(const std::shared_ptr<Platform>& platform, std::shared_ptr<TileSource> &source, Node rasterNode, const Node& sources,
-                                    const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadSourceRasters(const std::shared_ptr<Platform>& platform, std::shared_ptr<TileSource> &source,
+                                    Node rasterNode, const Node& sources, const std::shared_ptr<Scene>& scene) {
     if (rasterNode.IsSequence()) {
         for (const auto& raster : rasterNode) {
             std::string srcName = raster.Scalar();
@@ -1534,8 +1489,8 @@ Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
     return Filter();
 }
 
-void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& scene, const std::string& prefix,
-                                   std::vector<StyleParam>& out) {
+void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& scene,
+                                   const std::string& prefix, std::vector<StyleParam>& out) {
 
     for (const auto& prop : params) {
 
@@ -1545,8 +1500,20 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
         } else {
             key = prop.first.Scalar();
         }
+        Node value = prop.second;
+
         if (key == "transition" || key == "text:transition") {
             parseTransition(prop.second, scene, key, out);
+            continue;
+        }
+
+        if (key == "texture") {
+            if (value.IsScalar()) {
+                auto strVal = value.Scalar();
+                out.push_back(StyleParam{ StyleParamKey::texture, strVal });
+            } else if (value.IsNull()){
+                out.push_back(StyleParam{ StyleParamKey::texture, "" });
+            }
             continue;
         }
 
@@ -1554,8 +1521,6 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
             // Add StyleParam to signify that icon uses text
             out.push_back(StyleParam{ StyleParamKey::point_text, "" });
         }
-
-        Node value = prop.second;
 
         switch (value.Type()) {
         case NodeType::Scalar: {
@@ -1617,7 +1582,8 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
     }
 }
 
-bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, const Node& value, const std::shared_ptr<Scene>& scene, StyleUniform& styleUniform) {
+bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, const Node& value,
+                                     const std::shared_ptr<Scene>& scene, StyleUniform& styleUniform) {
     if (value.IsScalar()) { // float, bool or string (texture)
         double fValue;
         bool bValue;
@@ -1631,17 +1597,9 @@ bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, 
         } else {
             const std::string& strVal = value.Scalar();
             styleUniform.type = "sampler2D";
-
-            if (scene) {
-                std::shared_ptr<Texture> texture = scene->getTexture(strVal);
-
-                if (!texture && !loadTexture(platform, strVal, scene)) {
-                    LOGW("Can't load texture with name %s", strVal.c_str());
-                    return false;
-                }
-            }
-
             styleUniform.value = strVal;
+
+            getOrLoadTexture(platform, strVal, scene);
         }
     } else if (value.IsSequence()) {
         int size = value.size();
@@ -1680,14 +1638,7 @@ bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, 
                 const std::string& textureName = strVal.Scalar();
                 textureArrayUniform.names.push_back(textureName);
 
-                if (scene) {
-                    std::shared_ptr<Texture> texture = scene->getTexture(textureName);
-
-                    if (!texture && !loadTexture(platform, textureName, scene)) {
-                        LOGW("Can't load texture with name %s", textureName.c_str());
-                        return false;
-                    }
-                }
+                getOrLoadTexture(platform, textureName, scene);
             }
 
             styleUniform.value = std::move(textureArrayUniform);
@@ -1700,7 +1651,8 @@ bool SceneLoader::parseStyleUniforms(const std::shared_ptr<Platform>& platform, 
     return true;
 }
 
-void SceneLoader::parseTransition(Node params, const std::shared_ptr<Scene>& scene, std::string _prefix, std::vector<StyleParam>& out) {
+void SceneLoader::parseTransition(Node params, const std::shared_ptr<Scene>& scene, std::string _prefix,
+                                  std::vector<StyleParam>& out) {
 
     // First iterate over the mapping of 'events', we currently recognize 'hide', 'selected', and 'show'.
     for (const auto& event : params) {
@@ -1726,7 +1678,8 @@ void SceneLoader::parseTransition(Node params, const std::shared_ptr<Scene>& sce
     }
 }
 
-SceneLayer SceneLoader::loadSublayer(const Node& layer, const std::string& layerName, const std::shared_ptr<Scene>& scene) {
+SceneLayer SceneLoader::loadSublayer(const Node& layer, const std::string& layerName,
+                                     const std::shared_ptr<Scene>& scene) {
 
     std::vector<SceneLayer> sublayers;
     std::vector<DrawRuleData> rules;

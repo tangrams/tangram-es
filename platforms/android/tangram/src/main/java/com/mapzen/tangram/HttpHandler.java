@@ -26,6 +26,7 @@ import okhttp3.Request;
 import okhttp3.TlsVersion;
 
 /**
+ * FIXME: Rename to UrlHandler.
  * {@code HttpHandler} is a class for customizing HTTP requests for map resources, it can be
  * extended to override the request or caching behavior.
  */
@@ -121,6 +122,8 @@ public class HttpHandler {
      */
     public HttpHandler(File directory, long maxSize, CachePolicy policy) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
+                .followRedirects(true)
+                .followSslRedirects(true)
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .writeTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS);
@@ -168,38 +171,39 @@ public class HttpHandler {
      * Begin an HTTP request
      * @param url URL for the requested resource
      * @param cb Callback for handling request result
-     * @return true if request was successfully started
+     * @param requestHandle the identifier for the request
+     * @return The Okhttp3.Call enqueued for execution
      */
-    public boolean onRequest(String url, Callback cb) {
+    public void onRequest(String url, Callback cb, long requestHandle) {
         HttpUrl httpUrl = HttpUrl.parse(url);
-        Request.Builder builder = new Request.Builder().url(httpUrl);
+        Request.Builder builder = new Request.Builder().url(httpUrl).tag(requestHandle);
         CacheControl cacheControl = cachePolicy.apply(httpUrl);
         if (cacheControl != null) {
             builder.cacheControl(cacheControl);
         }
         Request request = builder.build();
-        okClient.newCall(request).enqueue(cb);
-        return true;
+        Call call = okClient.newCall(request);
+        call.enqueue(cb);
     }
 
-    /**
-     * Cancel an HTTP request
-     * @param url URL of the request to be cancelled
-     */
-    public void onCancel(String url) {
+   /**
+    * Cancel an HTTP request
+    * @param requestHandle the identifier for the request to be cancelled
+    */
+   public void onCancel(long requestHandle) {
+       // check and cancel running call
+       for (Call runningCall : okClient.dispatcher().runningCalls()) {
+           if (runningCall.request().tag().equals(requestHandle)) {
+               runningCall.cancel();
+           }
+       }
 
-        // check and cancel running call
-        for (Call runningCall : okClient.dispatcher().runningCalls()) {
-            if (runningCall.request().url().toString().equals(url)) {
-                runningCall.cancel();
-            }
-        }
+       // check and cancel queued call
+       for (Call queuedCall : okClient.dispatcher().queuedCalls()) {
+           if (queuedCall.request().tag().equals(requestHandle)) {
+               queuedCall.cancel();
+           }
+       }
+   }
 
-        // check and cancel queued call
-        for (Call queuedCall : okClient.dispatcher().queuedCalls()) {
-            if (queuedCall.request().url().toString().equals(url)) {
-                queuedCall.cancel();
-            }
-        }
-    }
 }

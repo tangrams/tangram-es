@@ -23,6 +23,8 @@ And increment the version number in `Tangram-es.podspec`:
 s.version = '1.0.0'
 ```
 
+For desktop apps, update the version number in `core/include/tangram.h`
+
 Commit and push to master.
 ```
 $ git commit -m "Release 1.0.0"

@@ -13,12 +13,13 @@ class Texture;
 
 struct SpriteVertex {
     glm::vec3 pos;
-    glm::u16vec2 uv;
+    glm::i16vec2 uv;
     struct State {
-        uint32_t selection;
+        uint32_t selection_color;
         uint32_t color;
+        uint32_t outline_color;
+        uint16_t antialias_factor;
         uint16_t alpha;
-        uint16_t scale;
     } state;
 
     static const float alpha_scale;
@@ -31,6 +32,8 @@ public:
     struct VertexAttributes {
         uint32_t color;
         uint32_t selectionColor;
+        uint32_t outlineColor;
+        uint16_t antialiasFactor;
         float extrudeScale;
     };
 
@@ -59,6 +62,8 @@ public:
         return glm::vec2(m_coordinates);
     }
 
+    const Texture* texture() const override { return m_texture; }
+
 private:
 
     const Coordinates m_coordinates;
@@ -77,7 +82,7 @@ private:
 struct SpriteQuad {
     struct {
         glm::vec2 pos;
-        glm::u16vec2 uv;
+        glm::i16vec2 uv;
     } quad[4];
 };
 

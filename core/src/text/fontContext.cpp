@@ -34,16 +34,25 @@ void FontContext::loadFonts() {
         m_font[i] = m_alfons.addFont("default", s_fontRasterSizes[i]);
     }
 
-    for (auto fallback : fallbacks) {
+    for (const auto& fallback : fallbacks) {
 
         if (!fallback.isValid()) { continue; }
 
         alfons::InputSource source;
 
-        if (fallback.pathOrFontName.empty()) {
-            source = alfons::InputSource(fallback.load);
-        } else {
-            source = alfons::InputSource(fallback.pathOrFontName, fallback.isFontName);
+        switch (fallback.tag) {
+            case FontSourceHandle::FontPath:
+                source = alfons::InputSource(fallback.fontPath.path());
+                break;
+            case FontSourceHandle::FontName:
+                source = alfons::InputSource(fallback.fontName, true);
+                break;
+            case FontSourceHandle::FontLoader:
+                source = alfons::InputSource(fallback.fontLoader);
+                break;
+            case FontSourceHandle::None:
+            default:
+                return;
         }
 
         for (size_t i = 0; i < s_fontRasterSizes.size(); i++) {
@@ -329,50 +338,49 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     auto font = m_alfons.getFont(FontDescription::Alias(_family, _style, _weight), fontSize);
     if (font->hasFaces()) { return font; }
 
-    // 1. Bundle
-    // Assuming bundled ttf file follows this convention
-    std::string bundleFontPath = m_sceneResourceRoot + "fonts/" +
-        FontDescription::BundleAlias(_family, _style, _weight);
+    // First, try to load from the system fonts.
 
-    std::vector<char> fontData = m_platform->bytesFromFile(bundleFontPath.c_str());
+    bool useFallbackFont = false;
 
-    // 2. System font
-    if (fontData.size() == 0) {
-        bool useFallbackFont = false;
+    auto systemFontHandle = m_platform->systemFont(_family, _weight, _style);
 
-        auto systemFontHandle = m_platform->systemFont(_family, _weight, _style);
-        if (systemFontHandle.isValid()) {
-            alfons::InputSource source;
+    alfons::InputSource source;
 
-            if (systemFontHandle.pathOrFontName.empty()) {
-                fontData = systemFontHandle.load();
-                if (fontData.size() > 0) {
-                    source = alfons::InputSource(systemFontHandle.load);
-                    font->addFace(m_alfons.addFontFace(source, fontSize));
-                    if (m_font[sizeIndex]) {
-                        font->addFaces(*m_font[sizeIndex]);
-                    }
-                } else {
-                    useFallbackFont = true;
-                }
+    switch (systemFontHandle.tag) {
+        case FontSourceHandle::FontPath:
+            source = alfons::InputSource(systemFontHandle.fontPath.path());
+            break;
+        case FontSourceHandle::FontName:
+            source = alfons::InputSource(systemFontHandle.fontName, true);
+            break;
+        case FontSourceHandle::FontLoader:
+        {
+            auto& loader = systemFontHandle.fontLoader;
+            auto fontData = loader();
+            if (fontData.size() > 0) {
+                source = alfons::InputSource(loader);
             } else {
-                source = alfons::InputSource(systemFontHandle.pathOrFontName, systemFontHandle.isFontName);
-                font->addFace(m_alfons.addFontFace(source, fontSize));
-                if (m_font[sizeIndex]) {
-                    font->addFaces(*m_font[sizeIndex]);
-                }
+                useFallbackFont = true;
             }
-        } else {
-            useFallbackFont = true;
+            break;
         }
+        case FontSourceHandle::None:
+        default:
+            useFallbackFont = true;
+    }
 
-        if (useFallbackFont) {
-            LOGN("Could not load font file %s", FontDescription::BundleAlias(_family, _style, _weight).c_str());
+    if (!useFallbackFont) {
+        font->addFace(m_alfons.addFontFace(source, fontSize));
+        if (m_font[sizeIndex]) {
+            font->addFaces(*m_font[sizeIndex]);
+        }
+    } else {
+        LOGD("Loading fallback font for Family: %s, Style: %s, Weight: %s, Size %f",
+            _family.c_str(), _style.c_str(), _weight.c_str(), _size);
 
-            // 3. Add fallbacks from default font
-            if (m_font[sizeIndex]) {
-                font->addFaces(*m_font[sizeIndex]);
-            }
+        // Add fallbacks from default font.
+        if (m_font[sizeIndex]) {
+            font->addFaces(*m_font[sizeIndex]);
         }
     }
 

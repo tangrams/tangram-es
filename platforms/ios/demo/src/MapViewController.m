@@ -6,11 +6,14 @@
 //
 
 #import "MapViewController.h"
+#import <CoreLocation/CoreLocation.h>
 
-@interface MapViewController ()
+@interface MapViewController ()  <CLLocationManagerDelegate>
 
 @property (assign, nonatomic) TGMarker* markerPolygon;
 @property (strong, nonatomic) TGMapData* mapData;
+@property (strong, nonatomic) CLLocationManager *locationManager;
+@property (strong, nonatomic) TGMarker* locationTrackingMarker;
 
 - (void)addAlert:(NSString *)message withTitle:(NSString *)title;
 
@@ -191,6 +194,15 @@
     [updates addObject:[[TGSceneUpdate alloc]initWithPath:@"global.sdk_mapzen_api_key" value:apiKey]];
 
     [super loadSceneAsyncFromURL:[NSURL URLWithString:@"https://tangrams.github.io/walkabout-style/walkabout-style.yaml"] withUpdates:updates];
+
+    //Location tracking marker setup
+    TGMarker* markerPoint = [self markerAdd];
+    markerPoint.stylingString = @"{ style: 'points', color: 'white', size: [25px, 25px], collide: false }";
+    TGGeoPoint newYork;
+    newYork.longitude = -74.00976419448854;
+    newYork.latitude = 40.70532700869127;
+    markerPoint.point = newYork;
+    self.locationTrackingMarker = markerPoint;
 }
 
 - (void)viewDidLoad
@@ -199,11 +211,38 @@
 
     self.mapViewDelegate = [[MapViewControllerDelegate alloc] init];
     self.gestureDelegate = [[MapViewControllerRecognizerDelegate alloc] init];
+    self.locationManager = [[CLLocationManager alloc] init];
+    self.locationManager.delegate = self;
+    // Enable for Location Tracking
+//     [self.locationManager requestAlwaysAuthorization];
 }
 
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
+- (void)beginBackgroundLocationTracking {
+    self.locationManager.activityType = CLActivityTypeOther;
+    self.locationManager.desiredAccuracy = kCLLocationAccuracyBest;
+    self.locationManager.pausesLocationUpdatesAutomatically = NO;
+    self.locationManager.allowsBackgroundLocationUpdates = YES;
+    [self.locationManager startUpdatingLocation];
+    [self.locationManager startUpdatingHeading];
+}
+
+#pragma mark - Location Manager Delegate
+
+- (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray<CLLocation *> *)locations {
+    NSLog(@"Locations came in - %@", locations);
+    TGGeoPoint point = TGGeoPointMake(locations[0].coordinate.longitude, locations[0].coordinate.latitude);
+    [self.locationTrackingMarker pointEased:point seconds:1.0 easeType:TGEaseTypeCubic];
+}
+
+- (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
+    switch (status) {
+        case kCLAuthorizationStatusAuthorizedAlways:
+            // Enable to turn on background location tracking - be aware we don't shut this off ever, so the sample app will consume battery life if allowed to run in the background.
+//             [self beginBackgroundLocationTracking];
+            break;
+        default:
+            break;
+    }
 }
 
 @end

@@ -74,11 +74,7 @@ void parseArgs(int argc, char* argv[]) {
     int argi = 0;
     while (++argi < argc) {
         if (strcmp(argv[argi - 1], "-f") == 0) {
-            Url url(argv[argi]);
-            if (!url.hasScheme()) {
-                url = url.resolved(Url("file://"));
-            }
-            sceneFile = url.string();
+            sceneFile = std::string(argv[argi]);
             LOG("File from command line: %s\n", argv[argi]);
             break;
         }

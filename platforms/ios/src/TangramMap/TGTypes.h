@@ -11,9 +11,8 @@
 /// Indicates an error occurred in the Tangram Framework.
 extern NSString* const TGErrorDomain;
 
-/*
- These enumerations describe an ease type function to be used for camera or other transition animation.
- The function is being used to interpolate between the start and end position of the animation.
+/**
+ Describes ease functions to be used for camera or other transition animation.
  */
 typedef NS_ENUM(NSInteger, TGEaseType) {
     /// Linear ease type `f(t) = t`
@@ -27,8 +26,8 @@ typedef NS_ENUM(NSInteger, TGEaseType) {
 };
 
 /**
- Description for a <a href="https://mapzen.com/documentation/tangram/Cameras-Overview/#camera-types">
- Tangram camera type</a>.
+ Describes <a href="https://mapzen.com/documentation/tangram/Cameras-Overview/#camera-types">
+ Tangram camera types</a>.
  */
 typedef NS_ENUM(NSInteger, TGCameraType) {
     /// Type for a <a href="https://mapzen.com/documentation/tangram/Cameras-Overview/#perspective-camera">perspective camera</a>
@@ -39,7 +38,9 @@ typedef NS_ENUM(NSInteger, TGCameraType) {
     TGCameraTypeFlat,
 };
 
-/// Description of error status from Tangram
+/**
+ Error statuses from Tangram
+ */
 typedef NS_ENUM(NSInteger, TGError) {
     /// No Error
     TGErrorNone,
@@ -55,7 +56,9 @@ typedef NS_ENUM(NSInteger, TGError) {
     TGErrorMarker,
 };
 
-/// Debug flags to render additional information about various map components
+/**
+ Debug flags to render additional information about various map components
+ */
 typedef NS_ENUM(NSInteger, TGDebugFlag) {
     /// While on, the set of tiles currently being drawn will not update to match the view
     TGDebugFlagFreezeTiles = 0,

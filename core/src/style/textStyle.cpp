@@ -11,8 +11,8 @@
 #include "view/view.h"
 
 #include "text_fs.h"
+#include "text_vs.h"
 #include "sdf_fs.h"
-#include "point_vs.h"
 
 namespace Tangram {
 
@@ -39,10 +39,10 @@ void TextStyle::constructShaderProgram() {
 
     if (m_sdf) {
         m_shaderSource->setSourceStrings(SHADER_SOURCE(sdf_fs),
-                                         SHADER_SOURCE(point_vs));
+                                         SHADER_SOURCE(text_vs));
     } else {
         m_shaderSource->setSourceStrings(SHADER_SOURCE(text_fs),
-                                         SHADER_SOURCE(point_vs));
+                                         SHADER_SOURCE(text_vs));
     }
 
     m_shaderSource->addSourceBlock("defines", "#define TANGRAM_TEXT\n");

@@ -14,7 +14,7 @@ namespace Tangram {
 using namespace LabelProperty;
 
 const float SpriteVertex::alpha_scale = 65535.0f;
-const float SpriteVertex::texture_scale = 65535.0f;
+const float SpriteVertex::texture_scale = 32767.0f;
 
 struct BillboardTransform {
     ScreenTransform& m_transform;
@@ -229,23 +229,12 @@ void SpriteLabel::addVerticesToMesh(ScreenTransform& _transform, const glm::vec2
     SpriteVertex::State state {
         m_vertexAttrib.selectionColor,
         m_vertexAttrib.color,
+        m_vertexAttrib.outlineColor,
+        m_vertexAttrib.antialiasFactor,
         uint16_t(m_alpha * SpriteVertex::alpha_scale),
-        0,
     };
 
-    auto& style = m_labels.m_style;
-
-    // Before pushing our geometry to the mesh, we push the texture that should be
-    // used to draw this label. We check a few potential textures in order of priority.
-    Texture* tex = nullptr;
-    if (m_texture) { tex = m_texture; }
-    else if (style.texture()) { tex = style.texture().get(); }
-    else if (style.spriteAtlas()) { tex = style.spriteAtlas()->texture(); }
-
-    // If tex is null, the mesh will use the default point texture.
-    style.getMesh()->pushTexture(tex);
-
-    auto* quadVertices = style.getMesh()->pushQuad();
+    auto* quadVertices = m_labels.m_style.pushQuad(m_texture);
 
     if (m_options.flat) {
         FlatTransform transform(_transform);

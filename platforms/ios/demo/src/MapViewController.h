@@ -10,19 +10,19 @@
 
 @interface MapViewControllerDelegate : NSObject <TGMapViewDelegate>
 
-- (void)mapView:(TGMapViewController *)mapView didLoadScene:(int)sceneID withError:(nullable NSError *)sceneError;
-- (void)mapViewDidCompleteLoading:(TGMapViewController *)mapView;
-- (void)mapView:(TGMapViewController *)mapView didSelectFeature:(NSDictionary *)feature atScreenPosition:(CGPoint)position;
-- (void)mapView:(TGMapViewController *)mapView didSelectLabel:(TGLabelPickResult *)labelPickResult atScreenPosition:(CGPoint)position;
-- (void)mapView:(TGMapViewController *)mapView didSelectMarker:(TGMarkerPickResult *)markerPickResult atScreenPosition:(TGGeoPoint)position;
-- (void)mapView:(TGMapViewController *)view didCaptureScreenshot:(UIImage *)screenshot;
+- (void)mapView:(nonnull TGMapViewController *)mapView didLoadScene:(int)sceneID withError:(nullable NSError *)sceneError;
+- (void)mapViewDidCompleteLoading:(nonnull TGMapViewController *)mapView;
+- (void)mapView:(nonnull TGMapViewController *)mapView didSelectFeature:(nullable NSDictionary *)feature atScreenPosition:(CGPoint)position;
+- (void)mapView:(nonnull TGMapViewController *)mapView didSelectLabel:(nullable TGLabelPickResult *)labelPickResult atScreenPosition:(CGPoint)position;
+- (void)mapView:(nonnull TGMapViewController *)mapView didSelectMarker:(nullable TGMarkerPickResult *)markerPickResult atScreenPosition:(TGGeoPoint)position;
+- (void)mapView:(nonnull TGMapViewController *)view didCaptureScreenshot:(nonnull UIImage *)screenshot;
 
 @end
 
 @interface MapViewControllerRecognizerDelegate : NSObject <TGRecognizerDelegate>
 
-- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeSingleTapGesture:(CGPoint)location;
-- (void)mapView:(TGMapViewController *)view recognizer:(UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location;
+- (void)mapView:(nonnull TGMapViewController *)view recognizer:(nonnull UIGestureRecognizer *)recognizer didRecognizeSingleTapGesture:(CGPoint)location;
+- (void)mapView:(nonnull TGMapViewController *)view recognizer:(nonnull UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location;
 
 @end
 

@@ -26,9 +26,8 @@ using namespace Tangram;
 struct TestContext {
 
     MercatorProjection s_projection;
-    const char* sceneFile = "scene.yaml";
 
-    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
+    std::shared_ptr<MockPlatform> platform = std::make_shared<MockPlatform>();
 
     std::shared_ptr<Scene> scene;
     StyleContext styleContext;
@@ -41,13 +40,16 @@ struct TestContext {
 
     std::unique_ptr<TileBuilder> tileBuilder;
 
-    void loadScene(const char* sceneFile) {
+    void loadScene(const char* path) {
 
-        Importer sceneImporter;
-        scene = std::make_shared<Scene>(platform, sceneFile);
+        Url sceneUrl(path);
+        platform->putMockUrlContents(sceneUrl, MockPlatform::getBytesFromFile(path));
+
+        scene = std::make_shared<Scene>(platform, sceneUrl);
+        Importer importer(scene);
 
         try {
-            scene->config() = sceneImporter.applySceneImports(platform, scene);
+            scene->config() = importer.applySceneImports(platform);
         }
         catch (YAML::ParserException e) {
             LOGE("Parsing scene config '%s'", e.what());
@@ -65,19 +67,9 @@ struct TestContext {
     }
 
     void loadTile(const char* path){
-        std::ifstream resource(path, std::ifstream::ate | std::ifstream::binary);
-        if(!resource.is_open()) {
-            LOGE("Failed to read file at path: %s", path);
-            return;
-        }
 
-        size_t _size = resource.tellg();
-        resource.seekg(std::ifstream::beg);
+        rawTileData = MockPlatform::getBytesFromFile(path);
 
-        rawTileData.resize(_size);
-
-        resource.read(&rawTileData[0], _size);
-        resource.close();
     }
 
     void parseTile() {
@@ -94,17 +86,13 @@ struct TestContext {
 class TileLoadingFixture : public benchmark::Fixture {
 public:
     TestContext ctx;
-    MercatorProjection s_projection;
-    const char* sceneFile = "scene.yaml";
-
     std::shared_ptr<Tile> result;
 
     void SetUp() override {
         LOG("SETUP");
-        ctx.loadScene(sceneFile);
+        ctx.loadScene("scene.yaml");
         ctx.loadTile("tile.mvt");
-        ctx.parseTile();
-        LOG("Ready");
+        LOG("READY");
     }
     void TearDown() override {
         result.reset();
@@ -113,14 +101,14 @@ public:
 };
 
 BENCHMARK_DEFINE_F(TileLoadingFixture, BuildTest)(benchmark::State& st) {
-#if 0
     while (st.KeepRunning()) {
         ctx.parseTile();
+        if (!ctx.tileData) { break; }
+
         result = ctx.tileBuilder->build({0,0,10,10,0}, *ctx.tileData, *ctx.source);
 
         LOG("ok %d / bytes - %d", bool(result), result->getMemoryUsage());
     }
-#endif
 }
 
 BENCHMARK_REGISTER_F(TileLoadingFixture, BuildTest);

@@ -164,7 +164,7 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::color", "[Duktape][evalStyleFn]") 
     REQUIRE(ctx.setFunctions({ R"(function () { return [1.0, 1.0, 0.0, 1.0] })"}));
     REQUIRE(ctx.evalStyle(0, StyleParamKey::color, value) == true);
     REQUIRE(value.is<uint32_t>() == true);
-    REQUIRE(value.get<uint32_t>() == 0xffffff00);
+    REQUIRE(value.get<uint32_t>() == 0xff00ffff);
 
     REQUIRE(ctx.setFunctions({ R"(function () { return [0.0, 1.0, 0.0] })"}));
     REQUIRE(ctx.evalStyle(0, StyleParamKey::color, value) == true);
@@ -240,8 +240,7 @@ TEST_CASE( "Test evalStyleFn - StyleParamKey::text_source", "[Duktape][evalStyle
 }
 
 TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFilter]") {
-    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
-    Scene scene(platform);
+    Scene scene(std::make_shared<MockPlatform>(), Url());
     YAML::Node n0 = YAML::Load(R"(filter: function() { return feature.sort_key === 2; })");
     YAML::Node n1 = YAML::Load(R"(filter: function() { return feature.name === 'test'; })");
 
@@ -283,8 +282,7 @@ TEST_CASE( "Test evalFilter - Init filter function from yaml", "[Duktape][evalFi
 }
 
 TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][evalStyle]") {
-    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform);
+    std::shared_ptr<Scene> scene = std::make_shared<Scene>(std::make_shared<MockPlatform>(), Url());
     YAML::Node n0 = YAML::Load(R"(
             draw:
                 color: function() { return '#ffff00ff'; }
@@ -332,8 +330,7 @@ TEST_CASE("Test evalStyle - Init StyleParam function from yaml", "[Duktape][eval
 }
 
 TEST_CASE( "Test evalFunction explicit", "[Duktape][evalFunction]") {
-    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>(platform);
+    std::shared_ptr<Scene> scene = std::make_shared<Scene>(std::make_shared<MockPlatform>(), Url());
     YAML::Node n0 = YAML::Load(R"(
             global:
                 width: 2

@@ -59,18 +59,24 @@ if(TANGRAM_APPLICATION)
     add_subdirectory(${PROJECT_SOURCE_DIR}/platforms/common/glfw)
   endif()
 
+  # System font config
+  include(FindPkgConfig)
+  pkg_check_modules(FONTCONFIG REQUIRED "fontconfig")
+
   add_executable(${EXECUTABLE_NAME}
     ${PROJECT_SOURCE_DIR}/platforms/linux/src/linuxPlatform.cpp
     ${PROJECT_SOURCE_DIR}/platforms/linux/src/main.cpp
     ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp
     ${PROJECT_SOURCE_DIR}/platforms/common/urlClient.cpp
+    ${PROJECT_SOURCE_DIR}/platforms/common/linuxSystemFontHelper.cpp
     ${PROJECT_SOURCE_DIR}/platforms/common/glfwApp.cpp
     )
 
   target_include_directories(${EXECUTABLE_NAME}
     PUBLIC
     ${GLFW_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/platforms/common)
+    ${PROJECT_SOURCE_DIR}/platforms/common
+    ${FONTCONFIG_INCLUDE_DIRS})
 
   target_link_libraries(${EXECUTABLE_NAME}
     ${CORE_LIBRARY}
@@ -79,7 +85,8 @@ if(TANGRAM_APPLICATION)
     -ldl
     -pthread
     ${GLFW_LIBRARIES}
-    ${OPENGL_LIBRARIES})
+    ${OPENGL_LIBRARIES}
+    ${FONTCONFIG_LDFLAGS})
 
   add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes")
 

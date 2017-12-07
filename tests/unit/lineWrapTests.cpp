@@ -35,10 +35,10 @@ alfons::FontManager fontManager;
 std::shared_ptr<alfons::Font> font;
 
 void initFont(std::string _font = TEST_FONT) {
-    std::shared_ptr<Platform> platform = std::make_shared<MockPlatform>();
+    std::shared_ptr<MockPlatform> platform = std::make_shared<MockPlatform>();
     font = fontManager.addFont("default", TEST_FONT_SIZE, alfons::InputSource(_font));
 
-    auto data = platform->bytesFromFile(_font.c_str());
+    auto data = platform->getBytesFromFile(_font.c_str());
     auto face = fontManager.addFontFace(alfons::InputSource(std::move(data)), TEST_FONT_SIZE);
     font->addFace(face);
 }

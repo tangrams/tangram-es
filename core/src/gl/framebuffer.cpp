@@ -14,13 +14,15 @@ namespace Tangram {
 
 FrameBuffer::FrameBuffer(int _width, int _height, bool _colorRenderBuffer) :
     m_glFrameBufferHandle(0),
+    m_glDepthRenderBufferHandle(0),
+    m_glColorRenderBufferHandle(0),
     m_valid(false),
     m_colorRenderBuffer(_colorRenderBuffer),
     m_width(_width), m_height(_height) {
 
 }
 
-bool FrameBuffer::applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor) {
+bool FrameBuffer::applyAsRenderTarget(RenderState& _rs, ColorF _clearColor) {
 
     if (!m_glFrameBufferHandle) {
         init(_rs);
@@ -35,15 +37,14 @@ bool FrameBuffer::applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor) {
     return true;
 }
 
-void FrameBuffer::apply(RenderState& _rs, GLuint _handle, glm::vec2 _viewport, glm::vec4 _clearColor) {
+void FrameBuffer::apply(RenderState& _rs, GLuint _handle, glm::vec2 _viewport, ColorF _clearColor) {
 
     _rs.framebuffer(_handle);
     _rs.viewport(0, 0, _viewport.x, _viewport.y);
 
-    if (_clearColor == glm::vec4(0.0) && _rs.defaultOpaqueClearColor()) {
+    if (_clearColor == ColorF() && _rs.defaultOpaqueClearColor()) {
         _rs.clearDefaultOpaqueColor();
     } else {
-        _clearColor /= 255.f;
         _rs.clearColor(_clearColor.r, _clearColor.g, _clearColor.b, _clearColor.a);
     }
 

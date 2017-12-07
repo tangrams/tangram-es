@@ -2,4 +2,6 @@
 
 #import <Foundation/Foundation.h>
 
-bool allowedFamily(NSString* familyName);
+namespace Tangram {
+    bool allowedFamily(NSString* familyName);
+}

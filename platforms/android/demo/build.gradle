@@ -6,9 +6,6 @@ android {
 
   def apiKey = project.hasProperty('mapzenApiKey') ? mapzenApiKey : System.getenv('MAPZEN_API_KEY')
 
-  assert apiKey != null : "To run the demo, you must provide a Mapzen API key as an environment\
-    variable named 'MAPZEN_API_KEY' or a Gradle property named 'mapzenApiKey'"
-
   defaultConfig {
     minSdkVersion 15
     targetSdkVersion 26

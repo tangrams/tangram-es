@@ -98,6 +98,7 @@ public class MapView extends FrameLayout {
 
     /**
      * You must call this method from the parent Activity/Fragment's corresponding method.
+     * Any access to MapView.mapController is illegal after this call.
      */
     public void onDestroy() {
 
