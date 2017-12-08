@@ -226,7 +226,7 @@ void View::update(bool _constrainToWorldBounds) {
     m_changed = false;
 
     if (_constrainToWorldBounds) {
-        m_constraint.setRadius(std::fmax(getWidth(), getHeight()) / pixelsPerMeter() / pixelScale());
+        m_constraint.setRadius(0.5 * std::fmax(getWidth(), getHeight()) / pixelsPerMeter() / pixelScale());
         m_pos.x = m_constraint.getConstrainedX(m_pos.x);
         m_pos.y = m_constraint.getConstrainedY(m_pos.y);
         m_zoom -= std::log(m_constraint.getConstrainedScale()) / std::log(2);
@@ -332,7 +332,7 @@ double View::screenToGroundPlaneInternal(double& _screenX, double& _screenY) con
 
 float View::pixelsPerMeter() const {
 
-    double metersPerTile = MapProjection::HALF_CIRCUMFERENCE * exp2(-m_zoom);
+    double metersPerTile = 2.0 * MapProjection::HALF_CIRCUMFERENCE * exp2(-m_zoom);
     return s_pixelsPerTile / metersPerTile;
 }
 
