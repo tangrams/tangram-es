@@ -1564,6 +1564,11 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
 
             break;
         }
+        case NodeType::Null: {
+            // Handles the case, when null style param value is used to unset a merged style param
+            out.emplace_back(StyleParam::getKey(key));
+            break;
+        }
         default:
             LOGW("Style parameter %s must be a scalar, sequence, or map.", key.c_str());
         }

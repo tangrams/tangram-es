@@ -158,7 +158,11 @@ struct StyleParam {
 
     StyleParam() :
         key(StyleParamKey::none),
-        value(none_type{}) {};
+        value(none_type{}) {}
+
+    StyleParam(StyleParamKey _key) :
+        key(_key),
+        value(none_type{}) {}
 
     StyleParam(const std::string& _key, const std::string& _value);
 
