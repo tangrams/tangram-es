@@ -587,7 +587,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
         texture = std::make_shared<Texture>(std::vector<char>(), options, generateMipmaps);
 
         scene->pendingTextures++;
-        scene->startUrlRequest(platform, url, [&, scene, texture](UrlResponse response) {
+        scene->startUrlRequest(platform, url, [&, url, scene, texture](UrlResponse response) {
                 if (response.error) {
                     LOGE("Error retrieving URL '%s': %s", url.string().c_str(), response.error);
                 } else {
