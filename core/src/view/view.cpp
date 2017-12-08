@@ -332,7 +332,7 @@ double View::screenToGroundPlaneInternal(double& _screenX, double& _screenY) con
 
 float View::pixelsPerMeter() const {
 
-    double metersPerTile = MapProjection::HALF_CIRCUMFERENCE * exp2(-m_zoom);
+    double metersPerTile = 2.0 * MapProjection::HALF_CIRCUMFERENCE * exp2(-m_zoom);
     return s_pixelsPerTile / metersPerTile;
 }
 
