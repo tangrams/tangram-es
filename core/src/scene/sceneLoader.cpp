@@ -1566,6 +1566,7 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
         }
         default:
             LOGW("Style parameter %s must be a scalar, sequence, or map.", key.c_str());
+            out.emplace_back(StyleParam::getKey(key));
         }
     }
 }
