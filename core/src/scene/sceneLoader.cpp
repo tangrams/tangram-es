@@ -587,7 +587,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
         texture = std::make_shared<Texture>(std::vector<char>(), options, generateMipmaps);
 
         scene->pendingTextures++;
-        scene->startUrlRequest(platform, url, [&, scene, texture](UrlResponse response) {
+        scene->startUrlRequest(platform, url, [&, url, scene, texture](UrlResponse response) {
                 if (response.error) {
                     LOGE("Error retrieving URL '%s': %s", url.string().c_str(), response.error);
                 } else {
@@ -1574,6 +1574,11 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
             // NB: Flatten parameter map
             parseStyleParams(value, scene, key, out);
 
+            break;
+        }
+        case NodeType::Null: {
+            // Handles the case, when null style param value is used to unset a merged style param
+            out.emplace_back(StyleParam::getKey(key));
             break;
         }
         default:
