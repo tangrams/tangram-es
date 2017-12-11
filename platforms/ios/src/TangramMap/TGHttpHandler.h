@@ -76,7 +76,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Cancels a download request for a specific URL.
 
- @param url the URL to cancel the network request for
+ @param taskIdentifier the taskIdentifier to cancel the network request for
  */
 - (void)cancelDownloadRequestAsync:(NSUInteger)taskIdentifier;
 
