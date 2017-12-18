@@ -76,7 +76,7 @@ android {
 
 dependencies {
   api 'com.squareup.okhttp3:okhttp:3.5.0'
-  api 'com.android.support:support-annotations:25.3.1'
+  implementation 'com.android.support:support-annotations:25.3.1'
 }
 
 apply from: file('gradle-mvn-push.gradle')
