@@ -1,5 +1,6 @@
 Android
 =======
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.mapzen.tangram/tangram/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.mapzen.tangram/tangram)
 
 The recommended way use tangram-es in an Android project is to add it as a Gradle dependency. The library is hosted on Maven Central in the package 'com.mapzen.tangram'. To find the latest version number, check [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.mapzen.tangram%22).
 
@@ -19,7 +20,7 @@ Then add tangram-es in the 'dependencies' section of your module's 'build.gradle
 
 ```
 dependencies {
-  compile 'com.mapzen.tangram:tangram:0.5.0'
+  compile 'com.mapzen.tangram:tangram:$latest_version'
 }
 ```
 
