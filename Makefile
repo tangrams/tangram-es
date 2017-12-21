@@ -221,7 +221,7 @@ android: android-demo
 
 android-sdk:
 	@cd platforms/android/ && \
-	./gradlew tangram:assembleFullRelease
+	./gradlew tangram:assembleRelease
 
 android-demo:
 	@cd platforms/android/ && \

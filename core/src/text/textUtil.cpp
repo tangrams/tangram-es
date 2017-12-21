@@ -48,7 +48,6 @@ float TextWrapper::getShapeRangeWidth(const alfons::LineLayout& _line) {
 
             lineWidth -= lastWidth;
             charCount -= lastChar;
-            lastShape = 0;
         }
     }
 

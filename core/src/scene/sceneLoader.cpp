@@ -632,7 +632,8 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
                               const std::shared_ptr<Scene>& scene) {
 
     const std::string& name = node.first.Scalar();
-    Node textureConfig = node.second;
+    const Node& textureConfig = node.second;
+
     if (!textureConfig.IsMap()) {
         LOGW("Invalid texture node '%s', skipping.", name.c_str());
         return;
@@ -661,13 +662,19 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
     if (Node sprites = textureConfig["sprites"]) {
         auto atlas = std::make_unique<SpriteAtlas>();
 
+        float density = 1.f;
+        if (Node d = textureConfig["density"]) {
+            double val;
+            if (getDouble(d, val)) { density = val; }
+        }
+
         for (auto it = sprites.begin(); it != sprites.end(); ++it) {
 
             const Node sprite = it->second;
             const std::string& spriteName = it->first.Scalar();
 
             if (sprite) {
-                glm::vec4 desc = parseVec<glm::vec4>(sprite);
+                glm::vec4 desc = parseVec<glm::vec4>(sprite) * density;
                 glm::vec2 pos = glm::vec2(desc.x, desc.y);
                 glm::vec2 size = glm::vec2(desc.z, desc.w);
 

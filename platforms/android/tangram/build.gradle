@@ -38,7 +38,7 @@ android {
                  '-Wmissing-field-initializers',
                  '-Wno-format-pedantic'
 
-        abiFilters 'armeabi-v7a'
+        abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86'
       }
     }
   }
@@ -48,6 +48,8 @@ android {
       path '../../../CMakeLists.txt'
     }
   }
+
+  flavorDimensions "tangramAbi"
 
   buildTypes {
     debug {
@@ -65,7 +67,7 @@ android {
 
 dependencies {
   api 'com.squareup.okhttp3:okhttp:3.5.0'
-  api 'com.android.support:support-annotations:26.1.0'
+  implementation 'com.android.support:support-annotations:27.0.2'
 }
 
 apply from: file('gradle-mvn-push.gradle')
