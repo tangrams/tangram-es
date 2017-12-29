@@ -11,7 +11,7 @@ if [ "${PLATFORM}" = "android" ] && [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ 
     make android-sdk
 
     cd "$TRAVIS_BUILD_DIR"/platforms/android
-    git clone https://github.com/mapzen/android-config.git
-    ./gradlew uploadArchives -PsonatypeUsername="$SONATYPE_USERNAME" -PsonatypePassword="$SONATYPE_PASSWORD" -Psigning.keyId="$SIGNING_KEY_ID" -Psigning.password="$SIGNING_PASSWORD" -Psigning.secretKeyRingFile="$SIGNING_SECRET_KEY_RING_FILE"
+    ./gradlew bintrayUpload -bintray.user="$BINTRAY_USERNAME" -bintray.apikey="$BINTRAY_APIKEY" -bintray.gpg.password="$BINTRAY_PASSWORD"
+
     cd "$TRAVIS_BUILD_DIR"
 fi

@@ -1,6 +1,27 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 
+ext {
+  bintrayRepo = 'maven'
+  bintrayName = 'tangram'
+
+  publishedGroupId = 'com.mapzen.tangram'
+  libraryName = 'tangram-es'
+  artifact = 'tangram-es'
+
+  libraryDescription = '2D and 3D map renderer using OpenGL ES'
+
+  siteUrl = 'https://github.com/tangrams/tangram-es'
+  gitUrl = 'https://github.com/tangrams/tangram-es.git'
+
+  libraryVersion = '0.9.1'
+
+  licenseName = 'The MIT License (MIT)'
+  licenseUrl = 'https://github.com/tangrams/tangram-es/blob/master/LICENSE'
+  allLicenses = ["MIT"]
+}
+
+
 group = GROUP
 version = VERSION_NAME
 
@@ -65,4 +86,5 @@ dependencies {
   implementation 'com.android.support:support-annotations:25.3.1'
 }
 
-apply from: file('gradle-mvn-push.gradle')
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
