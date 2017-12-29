@@ -16,6 +16,10 @@ ext {
 
   libraryVersion = '0.9.1'
 
+  developerId = 'tallytalwar  '
+  developerName = 'Varun Talwar '
+  developerEmail = 'tallytalwar@gmail.com'
+
   licenseName = 'The MIT License (MIT)'
   licenseUrl = 'https://github.com/tangrams/tangram-es/blob/master/LICENSE'
   allLicenses = ["MIT"]
