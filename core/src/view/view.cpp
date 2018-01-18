@@ -237,7 +237,8 @@ void View::update(bool _constrainToWorldBounds) {
         float maxPitchRadians = glm::radians(getMaxPitch());
         if (m_type != CameraType::perspective) {
             // Prevent projection plane from intersecting ground plane.
-            maxPitchRadians = atan2(m_pos.z, m_height * .5f);
+            float intersectingPitchRadians = atan2(m_pos.z, m_height * .5f);
+            maxPitchRadians = glm::min(maxPitchRadians, intersectingPitchRadians);
         }
         m_pitch = glm::clamp(m_pitch, 0.f, maxPitchRadians);
     }
