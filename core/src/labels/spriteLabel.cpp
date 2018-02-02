@@ -42,17 +42,17 @@ struct FlatTransform {
         : m_transform(_transform) {}
 
     void set(const std::array<glm::vec2, 4>& _position,
-             const std::array<glm::vec3, 4>& _projected) {
+             const std::array<glm::vec4, 4>& _projected) {
         for (size_t i = 0; i < 4; i++) {
-            m_transform.push_back(_position[i]);
+            m_transform.push_back(glm::vec3(_position[i], _projected[i].w));
         }
         for (size_t i = 0; i < 4; i++) {
-            m_transform.push_back(_projected[i]);
+            m_transform.push_back(glm::vec3(_projected[i]));
         }
     }
 
     glm::vec2 position(size_t i) const { return glm::vec2(m_transform[i]); }
-    glm::vec3 projected(size_t i) const { return m_transform[4+i]; }
+    glm::vec4 projected(size_t i) const { return glm::vec4(m_transform[4+i], m_transform[i].z); }
 };
 
 SpriteLabel::SpriteLabel(Coordinates _coordinates, glm::vec2 _size, Label::Options _options,
@@ -82,7 +82,7 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
     if (m_options.flat) {
 
         std::array<glm::vec2, 4> positions;
-        std::array<glm::vec3, 4> projected;
+        std::array<glm::vec4, 4> projected;
 
         float sourceScale = pow(2, m_coordinates.z);
 
@@ -117,12 +117,13 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
             glm::vec4 proj = worldToClipSpace(_mvp, glm::vec4(positions[i], 0.f, 1.f));
             if (proj.w <= 0.0f) { return false; }
 
-            projected[i] = glm::vec3(proj) / proj.w;
+            projected[i] = proj;
 
+            proj /= proj.w;
             // from normalized device coordinates to screen space coordinate system
             // top-left screen axis, y pointing down
-            positions[i].x = 1 + projected[i].x;
-            positions[i].y = 1 - projected[i].y;
+            positions[i].x = 1 + proj.x;
+            positions[i].y = 1 - proj.y;
             positions[i] *= halfScreen;
 
             aabb.include(positions[i].x, positions[i].y);
@@ -263,8 +264,8 @@ void SpriteLabel::addVerticesToMesh(ScreenTransform& _transform, const glm::vec2
 
             vertex.pos.x = coord.x;
             vertex.pos.y = coord.y;
-            vertex.pos.z = 0;
-
+            vertex.pos.z = 0.f;
+            vertex.pos.w = 1.f;
             vertex.uv = quad.quad[i].uv;
             vertex.state = state;
         }
