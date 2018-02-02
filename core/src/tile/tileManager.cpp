@@ -163,7 +163,7 @@ void TileManager::updateTileSets(const View& _view) {
                     if (ta.z == tb.z && ta.x == tb.x && ta.y == tb.y && ta.wrap == tb.wrap) {
                         tileSet.visibleTiles.erase(next);
                         next = it;
-                        LOG(">>>>>> drop");
+                        //LOG(">>>>>> drop");
                     } else {
                         it = next;
                     }
@@ -197,15 +197,15 @@ void TileManager::updateTileSets(const View& _view) {
             auto ta = a->getID();
             auto tb = b->getID();
             if (ta.z == tb.z && ta.x == tb.x && ta.y == tb.y && ta.wrap == tb.wrap) {
-                LOG("----------- drop %d", (ta == tb));
+                //LOG("----------- drop %d", (ta == tb));
                 return true;
             }
             return false;
         });
 
-    if (drop != m_tiles.end()) {
-        LOG("-----");
-    }
+    // if (drop != m_tiles.end()) {
+    //     LOG("-----");
+    // }
 
     m_tiles.erase(drop, m_tiles.end());
 }
