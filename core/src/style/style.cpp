@@ -271,13 +271,13 @@ void Style::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _scene) 
             rs.blending(GL_TRUE);
             rs.blendingFunc(GL_ONE, GL_ONE);
             rs.depthTest(GL_TRUE);
-            rs.depthMask(GL_TRUE);
+            rs.depthMask(GL_FALSE);
             break;
         case Blending::multiply:
             rs.blending(GL_TRUE);
             rs.blendingFunc(GL_ZERO, GL_SRC_COLOR);
             rs.depthTest(GL_TRUE);
-            rs.depthMask(GL_TRUE);
+            rs.depthMask(GL_FALSE);
             break;
         case Blending::overlay:
             rs.blending(GL_TRUE);
