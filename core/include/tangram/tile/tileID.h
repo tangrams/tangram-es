@@ -29,7 +29,11 @@ struct TileID {
     TileID(const TileID& _rhs) = default;
 
     bool operator< (const TileID& _rhs) const {
-        return s > _rhs.s || (s == _rhs.s && (z > _rhs.z || (z == _rhs.z && (x < _rhs.x || (x == _rhs.x && (y < _rhs.y || (y == _rhs.y && wrap < _rhs.wrap)))))));
+        if (z != _rhs.z) { return z > _rhs.z; }
+        if (x != _rhs.x) { return x < _rhs.x; }
+        if (y != _rhs.y) { return y < _rhs.y; }
+        if (wrap != _rhs.wrap) { return wrap < _rhs.wrap; }
+        return s > _rhs.s;
     }
     bool operator> (const TileID& _rhs) const { return _rhs < const_cast<TileID&>(*this); }
     bool operator<=(const TileID& _rhs) const { return !(*this > _rhs); }
