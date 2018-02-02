@@ -136,7 +136,7 @@ void TileManager::updateTileSets(const View& _view) {
             tileSet.visibleTiles.clear();
         }
 
-        auto tileCb = [&, zoom = _view.getZoom()](TileID _tileID){
+        auto tileCb = [&](TileID _tileID){
             for (auto& tileSet : m_tileSets) {
                 auto zoomBias = tileSet.source->zoomBias();
                 auto maxZoom = tileSet.source->maxZoom();
@@ -147,6 +147,29 @@ void TileManager::updateTileSets(const View& _view) {
         };
 
         _view.getVisibleTiles(tileCb);
+
+        for (auto& tileSet : m_tileSets) {
+            if (tileSet.source->maxZoom() >= _view.getZoom()) { continue; }
+            // Remove tiles with the same coordinates but different styling zoom.
+            // Keep tile with highest style zoom.
+            // TODO can this be done on insert?
+            auto it = tileSet.visibleTiles.begin();
+            auto end = tileSet.visibleTiles.end();
+            if (it != end) {
+                auto next = it;
+                while (++next != end) {
+                    auto ta = *it;
+                    auto tb = *next;
+                    if (ta.z == tb.z && ta.x == tb.x && ta.y == tb.y && ta.wrap == tb.wrap) {
+                        tileSet.visibleTiles.erase(next);
+                        next = it;
+                        LOG(">>>>>> drop");
+                    } else {
+                        it = next;
+                    }
+                }
+            }
+        }
     }
 
     for (auto& tileSet : m_tileSets) {
@@ -161,13 +184,30 @@ void TileManager::updateTileSets(const View& _view) {
     // Make m_tiles an unique list of tiles for rendering sorted from
     // high to low zoom-levels.
     std::sort(m_tiles.begin(), m_tiles.end(), [](auto& a, auto& b) {
-            return a->sourceID() == b->sourceID() ?
-                a->getID() < b->getID() :
-                a->sourceID() < b->sourceID(); }
-        );
+            if (a->sourceID() != b->sourceID()) {
+                return a->sourceID() < b->sourceID();
+            }
+            return a->getID() < b->getID();
+        });
 
-    // Remove duplicates: Proxy tiles could have been added more than once
-    m_tiles.erase(std::unique(m_tiles.begin(), m_tiles.end()), m_tiles.end());
+    // Remove duplicates: Proxy tiles could have been added more than once,
+    // or tiles with the same coordinates but different styling
+    auto drop = std::unique(m_tiles.begin(), m_tiles.end(), [](auto& a, auto& b) {
+            if (a->sourceID() != b->sourceID()) { return false; }
+            auto ta = a->getID();
+            auto tb = b->getID();
+            if (ta.z == tb.z && ta.x == tb.x && ta.y == tb.y && ta.wrap == tb.wrap) {
+                LOG("----------- drop %d", (ta == tb));
+                return true;
+            }
+            return false;
+        });
+
+    if (drop != m_tiles.end()) {
+        LOG("-----");
+    }
+
+    m_tiles.erase(drop, m_tiles.end());
 }
 
 void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
