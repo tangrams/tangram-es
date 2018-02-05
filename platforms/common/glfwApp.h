@@ -17,7 +17,7 @@ void destroy();
 
 extern std::string sceneFile;
 extern std::string sceneYaml;
-extern std::string mapzenApiKey;
+extern std::string apiKey;
 
 } // namespace GlfwApp
 
