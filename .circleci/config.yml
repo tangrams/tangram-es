@@ -12,8 +12,8 @@ jobs:
       - checkout
       - run: git submodule update --init
       # Install dependencies.
+      - run: sudo gem install jazzy --version 0.9.0
       - run: brew install cmake
-      - run: sudo gem install jazzy
       # Build framework and docs.
       - run: make ios TANGRAM_IOS_FRAMEWORK_SLIM=1
       - run: make ios-docs
