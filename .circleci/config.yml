@@ -15,8 +15,8 @@ jobs:
       - run: brew install cmake
       - run: gem install jazzy
       # Build framework and docs.
-      - make ios TANGRAM_IOS_FRAMEWORK_SLIM=1
-      - make ios-docs
+      - run: make ios TANGRAM_IOS_FRAMEWORK_SLIM=1
+      - run: make ios-docs
   build-deploy-ios-snapshot:
     macos:
       xcode: "9.0"
@@ -32,16 +32,16 @@ jobs:
       - run: brew install awscli cmake
       - run: gem install jazzy
       # Build the framework in debug mode and package it into pod.zip
-      - make ios-framework-universal DEBUG=1
-      - make ios-docs
-      - cd build/ios-framework-universal/Debug/ && zip -r ${CIRCLE_ARTIFACTS}/pod.zip TangramMap.framework
+      - run: make ios-framework-universal DEBUG=1
+      - run: make ios-docs
+      - run: cd build/ios-framework-universal/Debug/ && zip -r ${CIRCLE_ARTIFACTS}/pod.zip TangramMap.framework
       # Add the readme file.
-      - cd platforms/ios/framework/ && zip ${CIRCLE_ARTIFACTS}/pod.zip README.md
+      - run: cd platforms/ios/framework/ && zip ${CIRCLE_ARTIFACTS}/pod.zip README.md
       # Add the license file.
-      - zip ${CIRCLE_ARTIFACTS}/pod.zip LICENSE
+      - run: zip ${CIRCLE_ARTIFACTS}/pod.zip LICENSE
       # Upload the Cocoapods archive to S3.
-      - aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-snapshots/tangram-snapshot-debug-${CIRCLE_BUILD_NUM}.zip
-      - aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-latest-debug.zip
+      - run: aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-snapshots/tangram-snapshot-debug-${CIRCLE_BUILD_NUM}.zip
+      - run: aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-latest-debug.zip
   build-deploy-macos-snapshot:
     macos:
       xcode: "9.0"
@@ -104,6 +104,8 @@ workflows:
               only: master
       - build-deploy-ios-release:
           filters:
+            # For any tag of the form 1, 1.2.3, 1.4-beta2, etc. we will deploy a release build.
             tags:
-              # For any tag of the form 1, 1.2.3, 1.4-beta2, etc. we will deploy a release build.
               only: /[0-9]+(\.[0-9]+)*(-beta[0-9]*)?/
+            branches:
+              ignore: /.*/
