@@ -13,7 +13,7 @@ jobs:
       - run: git submodule update --init
       # Install dependencies.
       - run: brew install cmake
-      - run: gem install jazzy
+      - run: sudo gem install jazzy
       # Build framework and docs.
       - run: make ios TANGRAM_IOS_FRAMEWORK_SLIM=1
       - run: make ios-docs
