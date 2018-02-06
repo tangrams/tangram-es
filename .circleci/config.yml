@@ -12,7 +12,8 @@ jobs:
       - checkout
       - run: git submodule update --init
       # Install dependencies.
-      - run: sudo gem install jazzy --version 0.9.0
+      # For unclear reasons, 'jazzy' fails to install on CircleCI if 'atomos' is not installed first.
+      - run: sudo gem install atomos jazzy
       - run: brew install cmake
       # Build framework and docs.
       - run: make ios TANGRAM_IOS_FRAMEWORK_SLIM=1
@@ -29,8 +30,9 @@ jobs:
       - checkout
       - run: git submodule update --init
       # Install dependencies.
+      # For unclear reasons, 'jazzy' fails to install on CircleCI if 'atomos' is not installed first.
+      - run: sudo gem install atomos jazzy
       - run: brew install awscli cmake
-      - run: gem install jazzy
       # Build the framework in debug mode and package it into pod.zip
       - run: make ios-framework-universal DEBUG=1
       - run: make ios-docs
@@ -73,8 +75,9 @@ jobs:
       - checkout
       - run: git submodule update --init
       # Install dependencies.
+      # For unclear reasons, 'jazzy' fails to install on CircleCI if 'atomos' is not installed first.
+      - run: sudo gem install atomos jazzy
       - run: brew install awscli cmake
-      - run: gem install jazzy
       # Build the framework in release mode and package it into pod.zip
       - run: make ios-framework-universal RELEASE=1
       - run: make ios-docs
