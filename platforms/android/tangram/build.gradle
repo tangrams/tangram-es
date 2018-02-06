@@ -1,30 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
-
-ext {
-  bintrayRepo = 'maven'
-  bintrayName = 'tangram'
-
-  publishedGroupId = 'com.mapzen.tangram'
-  libraryName = 'tangram-es'
-  artifact = 'tangram-es'
-
-  libraryDescription = '2D and 3D map renderer using OpenGL ES'
-
-  siteUrl = 'https://github.com/tangrams/tangram-es'
-  gitUrl = 'https://github.com/tangrams/tangram-es.git'
-
-  libraryVersion = '0.9.1'
-
-  developerId = 'tallytalwar  '
-  developerName = 'Varun Talwar '
-  developerEmail = 'tallytalwar@gmail.com'
-
-  licenseName = 'The MIT License (MIT)'
-  licenseUrl = 'https://github.com/tangrams/tangram-es/blob/master/LICENSE'
-  allLicenses = ["MIT"]
-}
-
+apply plugin: 'com.jfrog.bintray'
 
 group = GROUP
 version = VERSION_NAME
@@ -69,8 +45,6 @@ android {
     }
   }
 
-  flavorDimensions "tangramAbi"
-
   buildTypes {
     debug {
       externalNativeBuild {
@@ -90,5 +64,83 @@ dependencies {
   implementation 'com.android.support:support-annotations:26.1.0'
 }
 
-apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
-apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
+// Configure POM for Maven Central.
+
+install {
+  repositories.mavenInstaller {
+    pom.project {
+      packaging POM_PACKAGING
+      groupId GROUP
+      artifactId POM_ARTIFACT_ID
+      name POM_NAME
+      description POM_DESCRIPTION
+      url POM_URL
+      licenses {
+        license {
+          name POM_LICENCE_NAME
+          url POM_LICENCE_URL
+        }
+      }
+      developers {
+        developer {
+          id POM_DEVELOPER_ID
+          name POM_DEVELOPER_NAME
+        }
+      }
+      scm {
+        connection POM_SCM_CONNECTION
+        developerConnection POM_SCM_DEV_CONNECTION
+        url POM_URL
+      }
+    }
+  }
+}
+
+// Create tasks for Android artifacts.
+
+task androidSourcesJar(type: Jar) {
+  classifier = 'sources'
+  from android.sourceSets.main.java.srcDirs
+}
+
+task androidJavadocs(type: Javadoc) {
+  source = android.sourceSets.main.java.srcDirs
+  classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+  exclude 'com/almeros/android/multitouch'
+}
+
+task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+  classifier = 'javadoc'
+  from androidJavadocs.destinationDir
+}
+
+artifacts {
+  archives androidSourcesJar
+  archives androidJavadocsJar
+}
+
+// Configure Bintray upload.
+
+bintray {
+  user = hasProperty('bintrayUser') ? property('bintrayUser') : System.getenv('BINTRAY_USER')
+  key = hasProperty('bintrayApiKey') ? property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+  configurations = ['archives']
+  override = true
+  pkg {
+    userOrg = 'tangrams'
+    repo = 'maven'
+    name = 'tangram'
+    desc = POM_DESCRIPTION
+    websiteUrl = POM_URL
+    vcsUrl = POM_SCM_URL
+    licenses = [POM_LICENCE_NAME]
+    publish = true
+    publicDownloadNumbers = true
+    version {
+      name = VERSION_NAME
+      gpg {
+        sign = true
+      }
+    }
+  }
+}
