@@ -14,7 +14,7 @@ public class SceneUpdate {
      * @param path Series of yaml keys separated by a ".". Represents the scene path to be updated
      * @param value A yaml string which will update the value at the specified path
      */
-    public SceneUpdate(String path, String value) {
+    public SceneUpdate(final String path, final String value) {
         this.componentPath = path;
         this.componentValue = value;
     }

@@ -13,5 +13,5 @@ public interface CachePolicy {
      * @param url The URL being requested
      * @return The CacheControl to apply to the request, or {@code null} for the default behavior.
      */
-    CacheControl apply(HttpUrl url);
+    CacheControl apply(final HttpUrl url);
 }
