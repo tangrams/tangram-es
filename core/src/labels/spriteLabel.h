@@ -12,7 +12,7 @@ class PointStyle;
 class Texture;
 
 struct SpriteVertex {
-    glm::vec3 pos;
+    glm::vec4 pos;
     glm::i16vec2 uv;
     struct State {
         uint32_t selection_color;
