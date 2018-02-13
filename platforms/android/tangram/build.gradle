@@ -61,7 +61,7 @@ android {
 }
 
 dependencies {
-  api 'com.squareup.okhttp3:okhttp:3.5.0'
+  api 'com.squareup.okhttp3:okhttp:3.9.1'
   implementation 'com.android.support:support-annotations:26.1.0'
 }
 
