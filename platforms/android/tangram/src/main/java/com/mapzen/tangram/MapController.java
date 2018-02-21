@@ -979,10 +979,9 @@ public class MapController implements Renderer {
 
     /**
      * Removes the passed in {@link Marker} from the map.
+     * Alias of Marker{@link #removeMarker(long)}
      * @param marker to remove from the map.
      * @return whether or not the marker was removed
-     * @deprecated This method force to keep a whole object ref, to remove it.
-     * (And can cause NullPointerException if null passed). Use Marker{@link #removeMarker(long)} instead.
      */
     public boolean removeMarker(@NonNull final Marker marker) {
         return this.removeMarker(marker.getMarkerId());
