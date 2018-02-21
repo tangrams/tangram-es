@@ -107,7 +107,7 @@ public:
 
     void setup(const Marker& _marker, int zoom) override {
         m_zoom = zoom;
-        m_tileUnitsPerMeter = 1.f / _marker.extent();
+        m_tileUnitsPerMeter = 1.f / _marker.modelScale();
         m_meshData.clear();
     }
 
