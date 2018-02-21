@@ -18,8 +18,6 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLDisplay;
 
 import android.opengl.GLSurfaceView;
-import android.opengl.GLSurfaceView.EGLConfigChooser;
-import android.util.Log;
 
 /**
  * {@code ConfigChooser} is a convenience class for configuring a {@code GLSurfaceView}.
@@ -35,7 +33,7 @@ public class ConfigChooser implements GLSurfaceView.EGLConfigChooser {
      * @param depth Depth bits
      * @param stencil Stencil bits
      */
-    public ConfigChooser (int r, int g, int b, int a, int depth, int stencil) {
+    public ConfigChooser(final int r, final int g, final int b, final int a, final int depth, final int stencil) {
         mRedSize = r;
         mGreenSize = g;
         mBlueSize = b;
@@ -53,44 +51,41 @@ public class ConfigChooser implements GLSurfaceView.EGLConfigChooser {
         EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT, EGL10.EGL_NONE};
 
     @Override
-    public EGLConfig chooseConfig (EGL10 egl, EGLDisplay display) {
-
+    public EGLConfig chooseConfig(final EGL10 egl, final EGLDisplay display) {
         // Get the number of minimally matching EGL configurations
-        int[] num_config = new int[1];
+        final int[] num_config = new int[1];
         egl.eglChooseConfig(display, s_configAttribs, null, 0, num_config);
 
-        int numConfigs = num_config[0];
-
+        final int numConfigs = num_config[0];
         if (numConfigs <= 0) {
             throw new IllegalArgumentException("No configs match configSpec");
         }
 
         // Allocate then read the array of minimally matching EGL configs
-        EGLConfig[] configs = new EGLConfig[numConfigs];
+        final EGLConfig[] configs = new EGLConfig[numConfigs];
         egl.eglChooseConfig(display, s_configAttribs, configs, numConfigs, num_config);
 
         // Now return the "best" one
         return chooseConfig(egl, display, configs);
     }
 
-    public EGLConfig chooseConfig (EGL10 egl, EGLDisplay display, EGLConfig[] configs) {
-
+    public EGLConfig chooseConfig(final EGL10 egl, final EGLDisplay display, final EGLConfig[] configs) {
         EGLConfig bestConfig = null;
         int bestDepth = 0;
         int bestStencil = 0;
 
-        for (EGLConfig config : configs) {
-            int d = findConfigAttrib(egl, display, config, EGL10.EGL_DEPTH_SIZE, 0);
-            int s = findConfigAttrib(egl, display, config, EGL10.EGL_STENCIL_SIZE, 0);
+        for (final EGLConfig config : configs) {
+            final int d = findConfigAttrib(egl, display, config, EGL10.EGL_DEPTH_SIZE);
+            final int s = findConfigAttrib(egl, display, config, EGL10.EGL_STENCIL_SIZE);
 
             // We need at least mDepthSize and mStencilSize bits
             if (d < mDepthSize || s < mStencilSize) { continue; }
 
             // We want an *exact* match for red/green/blue/alpha
-            int r = findConfigAttrib(egl, display, config, EGL10.EGL_RED_SIZE, 0);
-            int g = findConfigAttrib(egl, display, config, EGL10.EGL_GREEN_SIZE, 0);
-            int b = findConfigAttrib(egl, display, config, EGL10.EGL_BLUE_SIZE, 0);
-            int a = findConfigAttrib(egl, display, config, EGL10.EGL_ALPHA_SIZE, 0);
+            final int r = findConfigAttrib(egl, display, config, EGL10.EGL_RED_SIZE);
+            final int g = findConfigAttrib(egl, display, config, EGL10.EGL_GREEN_SIZE);
+            final int b = findConfigAttrib(egl, display, config, EGL10.EGL_BLUE_SIZE);
+            final int a = findConfigAttrib(egl, display, config, EGL10.EGL_ALPHA_SIZE);
 
             if (r == mRedSize && g == mGreenSize && b == mBlueSize && a == mAlphaSize &&
                 d >= bestDepth && s >= bestStencil) {
@@ -98,18 +93,16 @@ public class ConfigChooser implements GLSurfaceView.EGLConfigChooser {
                 bestConfig = config;
                 bestDepth = d;
                 bestStencil = s;
-
             }
         }
         return bestConfig;
     }
 
-    private int findConfigAttrib (EGL10 egl, EGLDisplay display, EGLConfig config, int attribute, int defaultValue) {
-
+    private int findConfigAttrib(final EGL10 egl, final EGLDisplay display, final EGLConfig config, final int attribute) {
         if (egl.eglGetConfigAttrib(display, config, attribute, mValue)) {
             return mValue[0];
         }
-        return defaultValue;
+        return 0;
     }
 
     // Subclasses can adjust these values:

@@ -14,7 +14,7 @@ public class SceneError {
     private SceneUpdate sceneUpdate;
     private Error error;
 
-    private SceneError(String sceneUpdatePath, String sceneUpdateValue, int error) {
+    private SceneError(final String sceneUpdatePath, final String sceneUpdateValue, final int error) {
         this.sceneUpdate = new SceneUpdate(sceneUpdatePath, sceneUpdateValue);
         this.error = Error.values()[error];
     }
