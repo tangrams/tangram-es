@@ -16,7 +16,7 @@ uniform LOWP int u_sprite_mode;
 attribute vec2 a_uv;
 attribute LOWP float a_alpha;
 attribute LOWP vec4 a_color;
-attribute vec3 a_position;
+attribute vec4 a_position;
 attribute vec4 a_outline_color;
 attribute float a_aa_factor;
 
@@ -57,5 +57,5 @@ void main() {
     v_outline_color = a_outline_color;
     v_aa_factor = a_aa_factor;
 
-    gl_Position = vec4(a_position, 1.0);
+    gl_Position = a_position;
 }

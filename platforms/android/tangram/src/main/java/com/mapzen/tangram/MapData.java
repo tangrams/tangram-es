@@ -1,5 +1,8 @@
 package com.mapzen.tangram;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.mapzen.tangram.geometry.Geometry;
 import com.mapzen.tangram.geometry.Point;
 import com.mapzen.tangram.geometry.Polygon;
@@ -23,7 +26,7 @@ public class MapData {
      * @param pointer The markerId to the native data source, encoded as a long
      * @param map The {@code MapController} associated with this data source
      */
-    MapData(String name, long pointer, MapController map) {
+    MapData(final String name, final long pointer, @NonNull final MapController map) {
         this.name = name;
         this.pointer = pointer;
         this.map = map;
@@ -33,7 +36,7 @@ public class MapData {
      * Add a geometry feature to this data collection
      * @param geometry The feature to add
      */
-    protected long addFeature(Geometry geometry) {
+    protected long addFeature(@NonNull final Geometry geometry) {
         return map.addFeature(pointer,
                 geometry.getCoordinateArray(),
                 geometry.getRingArray(),
@@ -66,7 +69,7 @@ public class MapData {
      * the scene file used by the map; may be null.
      * @return This object, for chaining.
      */
-    public long addPoint(LngLat point, Map<String, String> properties) {
+    public long addPoint(@NonNull final LngLat point, @Nullable final Map<String, String> properties) {
         return addFeature(new Point(point, properties));
     }
 
@@ -77,7 +80,7 @@ public class MapData {
      * the scene file used by the map; may be null.
      * @return This object, for chaining.
      */
-    public long addPolyline(List<LngLat> polyline, Map<String, String> properties) {
+    public long addPolyline(@NonNull final List<LngLat> polyline, @Nullable final Map<String, String> properties) {
         return addFeature(new Polyline(polyline, properties));
     }
 
@@ -91,7 +94,7 @@ public class MapData {
      * the scene file used by the map; may be null.
      * @return This object, for chaining.
      */
-    public long addPolygon(List<List<LngLat>> polygon, Map<String, String> properties) {
+    public long addPolygon(@NonNull final List<List<LngLat>> polygon, @Nullable final Map<String, String> properties) {
         return addFeature(new Polygon(polygon, properties));
     }
 
@@ -100,7 +103,8 @@ public class MapData {
      * @param data A string containing a <a href="http://geojson.org/">GeoJSON</a> FeatureCollection
      * @return This object, for chaining.
      */
-    public MapData addGeoJson(String data) {
+    @NonNull
+    public MapData addGeoJson(final String data) {
         map.addGeoJson(pointer, data);
         return this;
     }
@@ -144,6 +148,7 @@ public class MapData {
      * Remove all features from this collection.
      * @return This object, for chaining.
      */
+    @NonNull
     public MapData clear() {
         map.clearTileSource(pointer);
         return this;

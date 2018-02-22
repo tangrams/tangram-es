@@ -1,6 +1,8 @@
 package com.mapzen.tangram.geometry;
 
 import android.support.annotation.Keep;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.mapzen.tangram.LngLat;
 
@@ -16,14 +18,14 @@ public class Polyline extends Geometry {
     public static double[] toCoordinateArray(List<LngLat> polyline) {
         double[] coordinates = new double[polyline.size() * 2];
         int i = 0;
-        for (LngLat point : polyline) {
+        for (final LngLat point : polyline) {
             coordinates[i++] = point.longitude;
             coordinates[i++] = point.latitude;
         }
         return coordinates;
     }
 
-    public Polyline(List<LngLat> polyline, Map<String, String> properties) {
+    public Polyline(@NonNull final List<LngLat> polyline, @Nullable final Map<String, String> properties) {
         this.coordinates = toCoordinateArray(polyline);
         if (properties != null) {
             this.properties = getStringMapAsArray(properties);
