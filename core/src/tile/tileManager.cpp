@@ -16,6 +16,117 @@
 
 namespace Tangram {
 
+
+enum class TileManager::ProxyID : uint8_t {
+    no_proxies = 0,
+    child1 = 1 << 0,
+    child2 = 1 << 1,
+    child3 = 1 << 2,
+    child4 = 1 << 3,
+    parent = 1 << 4,
+    parent2 = 1 << 5,
+};
+
+struct TileManager::TileEntry {
+
+    TileEntry() : m_proxyCounter(0), m_proxies(0), m_visible(false) {}
+    TileEntry(std::shared_ptr<Tile>& _tile) : tile(_tile) {}
+
+    ~TileEntry() { clearTask(); }
+
+    std::shared_ptr<Tile> tile;
+    std::shared_ptr<TileTask> task;
+
+    /* A Counter for number of tiles this tile acts a proxy for */
+    int32_t m_proxyCounter;
+
+    /* The set of proxy tiles referenced by this tile */
+    uint8_t m_proxies;
+    bool m_visible;
+
+    bool isReady() { return bool(tile); }
+    bool isInProgress() { return bool(task) && !task->isCanceled(); }
+
+    bool needsLoading() {
+        if (isReady()) { return false; }
+        if (!task) { return true; }
+        if (task->isCanceled()) { return false; }
+        if (task->needsLoading()) { return true; }
+
+        for (auto& subtask : task->subTasks()) {
+            if (subtask->needsLoading()) { return true; }
+        }
+        return false;
+    }
+
+    bool isCanceled() { return bool(task) && task->isCanceled(); }
+
+    // New Data only when
+    // - task still exists
+    // - task has a tile ready
+    // - tile has all rasters set
+    bool newData() {
+        if (bool(task) && task->isReady()) {
+
+            for (auto& rTask : task->subTasks()) {
+                if (!rTask->isReady()) { return false; }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    void clearTask() {
+        if (task) {
+            for (auto& raster : task->subTasks()) {
+                raster->cancel();
+            }
+            task->subTasks().clear();
+            task->cancel();
+
+            task.reset();
+        }
+    }
+
+    /* Methods to set and get proxy counter */
+    int getProxyCounter() { return m_proxyCounter; }
+    void incProxyCounter() { m_proxyCounter++; }
+    void decProxyCounter() { m_proxyCounter = m_proxyCounter > 0 ? m_proxyCounter - 1 : 0; }
+    void resetProxyCounter() { m_proxyCounter = 0; }
+
+    bool setProxy(ProxyID id) {
+        if ((m_proxies & static_cast<uint8_t>(id)) == 0) {
+            m_proxies |= static_cast<uint8_t>(id);
+            return true;
+        }
+        return false;
+    }
+
+    bool unsetProxy(ProxyID id) {
+        if ((m_proxies & static_cast<uint8_t>(id)) != 0) {
+            m_proxies &= ~static_cast<uint8_t>(id);
+            return true;
+        }
+        return false;
+    }
+
+    /* Method to check whther this tile is in the current set of visible tiles
+     * determined by view::updateTiles().
+     */
+    bool isVisible() const {
+        return m_visible;
+    }
+
+    void setVisible(bool _visible) {
+        m_visible = _visible;
+    }
+};
+
+TileManager::TileSet::TileSet(std::shared_ptr<TileSource> _source, bool _clientSource) :
+    source(_source), clientTileSource(_clientSource) {}
+
+TileManager::TileSet::~TileSet() {}
+
 TileManager::TileManager(std::shared_ptr<Platform> platform, TileTaskQueue& _tileWorker) :
     m_workers(_tileWorker) {
 
@@ -106,9 +217,13 @@ bool TileManager::removeClientTileSource(TileSource& _tileSource) {
     return removed;
 }
 
-void TileManager::clearTileSets() {
+void TileManager::clearTileSets(bool clearSourceCaches) {
     for (auto& tileSet : m_tileSets) {
         tileSet.tiles.clear();
+
+        if (clearSourceCaches) {
+            tileSet.source->clearData();
+        }
     }
 
     m_tileCache->clear();

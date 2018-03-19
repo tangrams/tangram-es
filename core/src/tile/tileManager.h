@@ -44,7 +44,7 @@ public:
     /* Updates visible tile set and load missing tiles */
     void updateTileSets(const View& _view);
 
-    void clearTileSets();
+    void clearTileSets(bool clearSourceCaches = false);
 
     void clearTileSet(int32_t _sourceId);
 
@@ -65,8 +65,6 @@ public:
 
     std::unique_ptr<TileCache>& getTileCache() { return m_tileCache; }
 
-    const auto& getTileSets() { return m_tileSets; }
-
     /* @_cacheSize: Set size of in-memory tile cache in bytes.
      * This cache holds recently used <Tile>s that are ready for rendering.
      */
@@ -74,126 +72,12 @@ public:
 
 protected:
 
-    enum class ProxyID : uint8_t {
-        no_proxies = 0,
-        child1 = 1 << 0,
-        child2 = 1 << 1,
-        child3 = 1 << 2,
-        child4 = 1 << 3,
-        parent = 1 << 4,
-        parent2 = 1 << 5,
-    };
-
-    struct TileEntry {
-
-        TileEntry(){}
-        TileEntry(std::shared_ptr<Tile>& _tile) : tile(_tile) {}
-
-        ~TileEntry() { clearTask(); }
-
-        std::shared_ptr<Tile> tile;
-        std::shared_ptr<TileTask> task;
-
-        /* A Counter for number of tiles this tile acts a proxy for */
-        int m_proxyCounter = 0;
-
-        /* The set of proxy tiles referenced by this tile */
-        uint8_t m_proxies = 0;
-
-        bool isReady() { return bool(tile); }
-        bool isInProgress() { return bool(task) && !task->isCanceled(); }
-
-        bool needsLoading() {
-            //return !bool(task) || (task->needsLoading() && !task->isCanceled());
-            if (isReady()) { return false; }
-            if (!task) { return true; }
-            if (task->isCanceled()) { return false; }
-            if (task->needsLoading()) { return true; }
-
-            for (auto& subtask : task->subTasks()) {
-                if (subtask->needsLoading()) { return true; }
-            }
-            return false;
-        }
-
-        // size_t rastersPending() {
-        //     if (task) {
-        //         return (task->source().rasterSources().size() - task->subTasks().size());
-        //     }
-        //     return 0;
-        // }
-        bool isCanceled() { return bool(task) && task->isCanceled(); }
-
-        // New Data only when
-        // - task still exists
-        // - task has a tile ready
-        // - tile has all rasters set
-        bool newData() {
-            if (bool(task) && task->isReady()) {
-
-                //if (rastersPending()) { return false; }
-
-                for (auto& rTask : task->subTasks()) {
-                    if (!rTask->isReady()) { return false; }
-                }
-                return true;
-            }
-            return false;
-        }
-
-        void clearTask() {
-            if (task) {
-                for (auto& raster : task->subTasks()) {
-                    raster->cancel();
-                }
-                task->subTasks().clear();
-                task->cancel();
-
-                task.reset();
-            }
-        }
-
-        /*
-         * Methods to set and get proxy counter
-         */
-        int getProxyCounter() { return m_proxyCounter; }
-        void incProxyCounter() { m_proxyCounter++; }
-        void decProxyCounter() { m_proxyCounter = m_proxyCounter > 0 ? m_proxyCounter - 1 : 0; }
-        void resetProxyCounter() { m_proxyCounter = 0; }
-
-        bool setProxy(ProxyID id) {
-            if ((m_proxies & static_cast<uint8_t>(id)) == 0) {
-                m_proxies |= static_cast<uint8_t>(id);
-                return true;
-            }
-            return false;
-        }
-
-        bool unsetProxy(ProxyID id) {
-            if ((m_proxies & static_cast<uint8_t>(id)) != 0) {
-                m_proxies &= ~static_cast<uint8_t>(id);
-                return true;
-            }
-            return false;
-        }
-
-        bool m_visible = false;
-
-        /* Method to check whther this tile is in the current set of visible tiles
-         * determined by view::updateTiles().
-         */
-        bool isVisible() const {
-            return m_visible;
-        }
-
-        void setVisible(bool _visible) {
-            m_visible = _visible;
-        }
-    };
+    enum class ProxyID : uint8_t;
+    struct TileEntry;
 
     struct TileSet {
-        TileSet(std::shared_ptr<TileSource> _source, bool _clientSource)
-            : source(_source), clientTileSource(_clientSource) {}
+        TileSet(std::shared_ptr<TileSource> _source, bool _clientSource);
+        ~TileSet();
 
         std::shared_ptr<TileSource> source;
 
