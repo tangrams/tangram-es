@@ -44,11 +44,20 @@ struct TileManager::TileEntry {
     uint8_t m_proxies;
     bool m_visible;
 
-    bool isReady() { return bool(tile); }
-    bool isInProgress() { return bool(task) && !task->isCanceled(); }
+    bool isReady() {
+        return bool(tile);
+    }
+
+    bool isInProgress() {
+        return bool(task) && !task->isCanceled();
+    }
+
+    bool isCanceled() {
+        return bool(task) && task->isCanceled();
+    }
 
     bool needsLoading() {
-        if (isReady()) { return false; }
+        if (bool(tile)) { return false; }
         if (!task) { return true; }
         if (task->isCanceled()) { return false; }
         if (task->needsLoading()) { return true; }
@@ -59,18 +68,21 @@ struct TileManager::TileEntry {
         return false;
     }
 
-    bool isCanceled() { return bool(task) && task->isCanceled(); }
-
-    // New Data only when
+    // Complete task only when
     // - task still exists
     // - task has a tile ready
     // - tile has all rasters set
-    bool newData() {
+    bool completeTileTask() {
         if (bool(task) && task->isReady()) {
 
             for (auto& rTask : task->subTasks()) {
                 if (!rTask->isReady()) { return false; }
             }
+
+            task->complete();
+            tile = task->tile();
+            task.reset();
+
             return true;
         }
         return false;
@@ -304,14 +316,10 @@ void TileManager::updateTileSet(TileSet& _tileSet, const ViewState& _view) {
     // Check for ready tasks, move Tile to active TileSet and unset Proxies.
     for (auto& it : tiles) {
         auto& entry = it.second;
-        if (entry.newData()) {
+        if (entry.completeTileTask()) {
             clearProxyTiles(_tileSet, it.first, entry, removeTiles);
-            entry.task->complete();
 
-            entry.tile = std::move(entry.task->tile());
-            entry.task.reset();
             newTiles = true;
-
             m_tileSetChanged = true;
         }
     }
