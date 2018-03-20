@@ -555,8 +555,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
                                                    const std::string& name, const std::string& urlString,
                                                    const TextureOptions& options, bool generateMipmaps,
                                                    const std::shared_ptr<Scene>& scene,
-                                                   float density) {
-
+                                                   float density, std::unique_ptr<SpriteAtlas> _atlas) {
     std::shared_ptr<Texture> texture;
 
     Url url(urlString);
@@ -586,6 +585,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
         }
     } else {
         texture = std::make_shared<Texture>(std::vector<char>(), options, generateMipmaps, density);
+        texture->spriteAtlas() = std::move(_atlas);
 
         scene->pendingTextures++;
         scene->startUrlRequest(platform, url, [&, url, scene, texture](UrlResponse response) {
@@ -664,10 +664,9 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
         if (getDouble(d, val)) { density = val; }
     }
 
-    auto texture = fetchTexture(platform, name, url, options, generateMipmaps, scene, density);
-
+    std::unique_ptr<SpriteAtlas> atlas;
     if (Node sprites = textureConfig["sprites"]) {
-        auto atlas = std::make_unique<SpriteAtlas>();
+        atlas = std::make_unique<SpriteAtlas>();
 
         for (auto it = sprites.begin(); it != sprites.end(); ++it) {
 
@@ -682,9 +681,9 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
                 atlas->addSpriteNode(spriteName, pos, size);
             }
         }
-        atlas->updateSpriteNodes({texture->getWidth(), texture->getHeight()});
-        texture->spriteAtlas() = std::move(atlas);
     }
+    auto texture = fetchTexture(platform, name, url, options, generateMipmaps, scene, density, std::move(atlas));
+
     scene->textures().emplace(name, texture);
 }
 
