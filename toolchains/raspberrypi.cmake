@@ -8,8 +8,8 @@ add_definitions(-DTANGRAM_RPI)
 
 check_unsupported_compiler_version()
 
-get_mapzen_api_key(MAPZEN_API_KEY)
-add_definitions(-DMAPZEN_API_KEY="${MAPZEN_API_KEY}")
+get_nextzen_api_key(NEXTZEN_API_KEY)
+add_definitions(-DNEXTZEN_API_KEY="${NEXTZEN_API_KEY}")
 
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
