@@ -3,12 +3,12 @@ apply plugin: 'com.android.application'
 android {
   compileSdkVersion 26
 
-  def apiKey = project.hasProperty('mapzenApiKey') ? mapzenApiKey : System.getenv('MAPZEN_API_KEY')
+  def apiKey = project.hasProperty('nextzenApiKey') ? nextzenApiKey : System.getenv('NEXTZEN_API_KEY')
 
   defaultConfig {
     minSdkVersion 15
     targetSdkVersion 26
-    buildConfigField 'String', 'MAPZEN_API_KEY', '"' + apiKey + '"'
+    buildConfigField 'String', 'NEXTZEN_API_KEY', '"' + apiKey + '"'
   }
 
   sourceSets.main {

@@ -25,8 +25,8 @@ set(SOURCES
     ${PROJECT_SOURCE_DIR}/platforms/ios/demo/src/MapViewController.m
     )
 
-get_mapzen_api_key(MAPZEN_API_KEY)
-add_definitions(-DMAPZEN_API_KEY="${MAPZEN_API_KEY}")
+get_nextzen_api_key(NEXTZEN_API_KEY)
+add_definitions(-DNEXTZEN_API_KEY="${NEXTZEN_API_KEY}")
 
 # Generate demo app configuration plist file to inject API key
 configure_file(${PROJECT_SOURCE_DIR}/platforms/ios/demo/Config.plist.in

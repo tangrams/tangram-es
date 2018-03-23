@@ -1,6 +1,6 @@
 global:
     feature_order: function () { return feature.sort_rank; }
-    sdk_mapzen_api_key: ''
+    sdk_api_key: ''
 
 fonts:
     Montserrat:
@@ -98,10 +98,10 @@ styles:
 sources:
     osm:
         type: MVT
-        url: https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt
+        url: https://tile.nextzen.org/tilezen/vector/v1/256/all/{z}/{x}/{y}.mvt
         max_zoom: 16
         url_params:
-            api_key: global.sdk_mapzen_api_key
+            api_key: global.sdk_api_key
 
 layers:
     touch:

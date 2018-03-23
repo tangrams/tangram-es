@@ -28,7 +28,7 @@ std::shared_ptr<Platform> platform;
 
 std::string sceneFile = "scene.yaml";
 std::string sceneYaml;
-std::string mapzenApiKey;
+std::string apiKey;
 
 std::string markerStylingPath = "layers.touch.point.draw.icons";
 std::string polylineStyle = "{ style: lines, interactive: true, color: red, width: 20px, order: 5000 }";
@@ -58,8 +58,8 @@ Tangram::MarkerID polyline = 0;
 void loadSceneFile(bool setPosition) {
     std::vector<SceneUpdate> updates;
 
-    if (!mapzenApiKey.empty()) {
-        updates.push_back(SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey));
+    if (!apiKey.empty()) {
+        updates.push_back(SceneUpdate("global.sdk_api_key", apiKey));
     }
 
     if (!sceneYaml.empty()) {
@@ -110,15 +110,15 @@ void create(std::shared_ptr<Platform> p, int w, int h) {
         return;
     }
 
-    char* mapzenApiKeyEnvVar = getenv("MAPZEN_API_KEY");
-    if (mapzenApiKeyEnvVar && strlen(mapzenApiKeyEnvVar) > 0) {
-        mapzenApiKey = mapzenApiKeyEnvVar;
+    char* nextzenApiKeyEnvVar = getenv("NEXTZEN_API_KEY");
+    if (nextzenApiKeyEnvVar && strlen(nextzenApiKeyEnvVar) > 0) {
+        apiKey = nextzenApiKeyEnvVar;
     } else {
-        LOGW("No API key found!\n\nMapzen data sources require an API key. "
-             "Sign up for a free key at http://mapzen.com/developers and then set it from the command line with: "
-             "\n\n\texport MAPZEN_API_KEY=YOUR_KEY_HERE"
+        LOGW("No API key found!\n\nNextzen data sources require an API key. "
+             "Sign up for a key at https://developers.nextzen.org/about.html and then set it from the command line with: "
+             "\n\n\texport NEXTZEN_API_KEY=YOUR_KEY_HERE"
              "\n\nOr, if using an IDE on macOS, with: "
-             "\n\n\tlaunchctl setenv MAPZEN_API_KEY YOUR_API_KEY\n");
+             "\n\n\tlaunchctl setenv NEXTZEN_API_KEY YOUR_API_KEY\n");
     }
 
     // Setup tangram

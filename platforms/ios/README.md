@@ -26,13 +26,13 @@ gem install xcpretty
 
 ## Build ##
 
-You will need a Mapzen API key to use the vector-tile and terrain service that is being used from the stylesheet of the demo app.
-To get an API key visit: [mapzen.com/developers/](https://mapzen.com/developers/).
+You will need a Nextzen API key to use the vector-tile and terrain service that is being used from the stylesheet of the demo app.
+To get an API key visit: [developers.nextzen.org](https://developers.nextzen.org/).
 
 Building the iOS demo application requires Xcode 9.0 or newer. From the root directory of the project, run:
 
 ```bash
-make ios MAPZEN_API_KEY=mapzen-xxxx
+make ios NEXTZEN_API_KEY=yourApiKeyHere
 ```
 
 You can optionally append `DEBUG=1` or `RELEASE=1` to choose the build type.

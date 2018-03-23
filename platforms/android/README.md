@@ -30,11 +30,11 @@ That's it! If you want to build tangram-es for Android from scratch, continue re
 
 To build for Android you'll need [Android Studio](https://developer.android.com/studio/index.html) version 3.0 or newer on Mac OS X, Ubuntu, or Windows 10. Using the Android Studio SDK Manager, install or update the 'CMake', 'LLDB', and 'NDK' packages from the 'SDK Tools' tab.
 
-The demo application uses the Mapzen vector tile service, so you will need a Mapzen API key to build and run the demo. 
+The demo application uses the Nextzen vector tile service, so you will need a Nextzen API key to build and run the demo. 
 
- 1. Visit https://mapzen.com/documentation/overview/#get-started-developing-with-mapzen to get an API key.
+ 1. Visit https://developers.nextzen.org/ to get an API key.
 
- 2. In your local Gradle properties file (`~/.gradle/gradle.properties`) add the following line, substituting your API key: `mapzenApiKey=YOUR-API-KEY-HERE`
+ 2. In your local Gradle properties file (`~/.gradle/gradle.properties`) add the following line, substituting your API key: `nextzenApiKey=yourApiKeyHere`
 
 ## Build ##
 

@@ -14,8 +14,8 @@ if(TANGRAM_APPLICATION)
 
   set(EXECUTABLE_NAME "tangram")
 
-  get_mapzen_api_key(MAPZEN_API_KEY)
-  add_definitions(-DMAPZEN_API_KEY="${MAPZEN_API_KEY}")
+  get_nextzen_api_key(NEXTZEN_API_KEY)
+  add_definitions(-DNEXTZEN_API_KEY="${NEXTZEN_API_KEY}")
 
   if($ENV{CIRCLE_BUILD_NUM})
     add_definitions(-DBUILD_NUM_STRING="\($ENV{CIRCLE_BUILD_NUM}\)")
