@@ -7,7 +7,7 @@ set -o pipefail
 if [ "${PLATFORM}" = "android" ]; then
     cd "$TRAVIS_BUILD_DIR"/platforms/android
 
-    ./gradlew artifactoryUpload -PbuildNumber=${TRAVIS_BUILD_NUMBER}
+    ./gradlew artifactoryPublish -PbuildNumber=${TRAVIS_BUILD_NUMBER}
 
     cd "$TRAVIS_BUILD_DIR"
 fi
