@@ -80,5 +80,6 @@ publishing {
   }
 }
 artifactoryPublish {
+  dependsOn('build')
   publications(publishing.publications.aar)
 }
