@@ -58,9 +58,9 @@ publishing {
       artifactId POM_ARTIFACT_ID
       version VERSION_NAME
       // Tell maven to prepare the generated AAR file for publishing.
-      artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
-      artifact(androidSourcesJar)
-      artifact(androidJavadocsJar)
+      artifact "$buildDir/outputs/aar/${project.getName()}-release.aar"
+      artifact androidSourcesJar
+      artifact androidJavadocsJar
       // Configure the POM file.
       pom.withXml {
         // Add our POM info from the closure above.
@@ -83,24 +83,16 @@ publishing {
 // Configure Artifactory upload.
 // Plugin documentation: https://www.jfrog.com/confluence/display/RTF/Gradle+Artifactory+Plugin
 
-artifactoryPublish {
-  dependsOn('build')
-  publications(publishing.publications.aar)
-}
-
 artifactory {
-  def username = project.hasProperty('artifactoryUsername') ? artifactoryUsername : System.getenv('ARTIFACTORY_USERNAME')
-  def password = project.hasProperty('artifactoryPassword') ? artifactoryPassword : System.getenv('ARTIFACTORY_PASSWORD')
-
-  clientConfig.publisher.username = "$username"
-  clientConfig.publisher.password = "$password"
-
-  contextUrl = 'https://oss.jfrog.org/artifactory'
+  contextUrl = 'https://oss.jfrog.org'
   publish {
     repository {
       repoKey = 'oss-snapshot-local' // The Artifactory repository key to publish to
+      username = project.hasProperty('artifactoryUsername') ? artifactoryUsername : System.env.ARTIFACTORY_USERNAME
+      password = project.hasProperty('artifactoryPassword') ? artifactoryPassword : System.env.ARTIFACTORY_PASSWORD
     }
     defaults {
+      publications(publishing.publications.aar)
       // Tell the Artifactory plugin whether to publish the publications defined in the build script.
       publishBuildInfo = true
       publishArtifacts = true
@@ -111,7 +103,4 @@ artifactory {
   resolve {
     repoKey = 'jcenter'
   }
-  // Set build info.
-  clientConfig.info.setBuildName('build-name')
-  clientConfig.info.setBuildNumber('314159')
 }
