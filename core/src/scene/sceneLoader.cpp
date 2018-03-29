@@ -674,11 +674,11 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
             const std::string& spriteName = it->first.Scalar();
 
             if (sprite) {
-                glm::vec4 desc = parseVec<glm::vec4>(sprite) * density;
+                glm::vec4 desc = parseVec<glm::vec4>(sprite);
                 glm::vec2 pos = glm::vec2(desc.x, desc.y);
                 glm::vec2 size = glm::vec2(desc.z, desc.w);
 
-                atlas->addSpriteNode(spriteName, pos, size);
+                atlas->addSpriteNode(spriteName, pos, size, density);
             }
         }
         atlas->updateSpriteNodes({texture->getWidth(), texture->getHeight()});
