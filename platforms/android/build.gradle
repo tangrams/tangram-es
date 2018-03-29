@@ -1,20 +1,47 @@
-allprojects {
-  buildscript {
-    repositories {
-      google()
-      jcenter()
-    }
-    dependencies {
-      classpath 'com.android.tools.build:gradle:3.0.1'
-      classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.5.4'
-    }
+buildscript {
+  repositories {
+    google()
+    jcenter()
   }
+  dependencies {
+    classpath 'com.android.tools.build:gradle:3.0.1'
+    classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.7.0'
+  }
+}
 
+allprojects {
   dependencies {
     repositories {
       google()
       jcenter()
       mavenCentral()
     }
+  }
+}
+
+apply plugin: 'com.jfrog.artifactory'
+// Configure Artifactory plugin. This must be in the root project build.gradle.
+// Plugin documentation: https://www.jfrog.com/confluence/display/RTF/Gradle+Artifactory+Plugin
+artifactory {
+  contextUrl = 'https://oss.jfrog.org'
+  publish {
+    repository {
+      repoKey = 'oss-snapshot-local'
+      username = project.hasProperty('artifactoryUsername') ? artifactoryUsername : System.env.ARTIFACTORY_USERNAME
+      password = project.hasProperty('artifactoryPassword') ? artifactoryPassword : System.env.ARTIFACTORY_PASSWORD
+    }
+    defaults {
+      publishBuildInfo = true
+      publishArtifacts = true
+      publishPom = true
+      publishIvy = false
+    }
+  }
+  resolve {
+    repoKey = 'jcenter'
+  }
+  clientConfig.info.setBuildName('tangram-android')
+  if (project.hasProperty('buildNumber')) {
+    clientConfig.info.setBuildNumber(buildNumber)
   }
 }

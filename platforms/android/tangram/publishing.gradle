@@ -79,28 +79,6 @@ publishing {
     }
   }
 }
-
-// Configure Artifactory upload.
-// Plugin documentation: https://www.jfrog.com/confluence/display/RTF/Gradle+Artifactory+Plugin
-
-artifactory {
-  contextUrl = 'https://oss.jfrog.org'
-  publish {
-    repository {
-      repoKey = 'oss-snapshot-local' // The Artifactory repository key to publish to
-      username = project.hasProperty('artifactoryUsername') ? artifactoryUsername : System.env.ARTIFACTORY_USERNAME
-      password = project.hasProperty('artifactoryPassword') ? artifactoryPassword : System.env.ARTIFACTORY_PASSWORD
-    }
-    defaults {
-      publications(publishing.publications.aar)
-      // Tell the Artifactory plugin whether to publish the publications defined in the build script.
-      publishBuildInfo = true
-      publishArtifacts = true
-      publishPom = true // Publish generated POM files to Artifactory (true by default)
-      publishIvy = false
-    }
-  }
-  resolve {
-    repoKey = 'jcenter'
-  }
+artifactoryPublish {
+  publications(publishing.publications.aar)
 }
