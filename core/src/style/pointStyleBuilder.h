@@ -61,7 +61,7 @@ struct PointStyleBuilder : public StyleBuilder {
 
     bool getUVQuad(Parameters& _params, glm::vec4& _quad, Texture** _texture) const;
 
-    Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
+    Parameters applyRule(const DrawRule& _rule) const;
 
     // Gets points for label placement and appropriate angle for each label (if `auto` angle is set)
     void labelPointsPlacing(const Line& _line, const glm::vec4& _quad, Texture* _texture,

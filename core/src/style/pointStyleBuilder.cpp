@@ -123,7 +123,7 @@ bool PointStyleBuilder::checkRule(const DrawRule& _rule) const {
     return false;
 }
 
-auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _props) const -> Parameters {
+auto PointStyleBuilder::applyRule(const DrawRule& _rule) const -> Parameters {
 
     Parameters p;
     glm::vec2 size;
@@ -481,7 +481,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& _
 bool PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
                                  const DrawRule& _rule) {
 
-    Parameters p = applyRule(_rule, _props);
+    Parameters p = applyRule(_rule);
     glm::vec4 uvsQuad;
     Texture* texture = nullptr;
 
@@ -497,7 +497,7 @@ bool PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
 bool PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
                                 const DrawRule& _rule) {
 
-    Parameters p = applyRule(_rule, _props);
+    Parameters p = applyRule(_rule);
     glm::vec4 uvsQuad;
     Texture* texture = nullptr;
 
@@ -513,7 +513,7 @@ bool PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
 bool PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props,
                                    const DrawRule& _rule) {
 
-    Parameters p = applyRule(_rule, _props);
+    Parameters p = applyRule(_rule);
     glm::vec4 uvsQuad;
     Texture* texture = nullptr;
 
