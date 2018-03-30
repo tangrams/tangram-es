@@ -154,6 +154,7 @@
     bitmap.resize(w * h);
 
     CGColorSpaceRef colorSpace = CGImageGetColorSpace(cgImage);
+    // iOS only supports contexts with pre-multiplied alpha, so we transform it below.
     CGContextRef cgContext = CGBitmapContextCreate(bitmap.data(), w, h, 8, w * 4,
         colorSpace, kCGImageAlphaPremultipliedLast);
 
@@ -163,6 +164,23 @@
 
     CGContextDrawImage(cgContext, CGRectMake(0, 0, w, h), cgImage);
     CGContextRelease(cgContext);
+
+    // For each pixel in the image, convert from BGRA to RGBA and if A != 0 then un-pre-multiply alpha.
+    // TODO: This is wasteful! Instead we could ingest pre-multiplied data with a flag or enum and
+    // alter the rendering mode for this texture appropriately. -MEB 3.30.18
+    for (auto& pixel : bitmap) {
+        auto* p = reinterpret_cast<unsigned char*>(&pixel);
+        unsigned int a = p[3];
+        unsigned int b = p[0];
+        if (a == 0) {
+            p[0] = p[2];
+            p[2] = b;
+        } else {
+            p[0] = p[2] * 255 / a;
+            p[1] = p[1] * 255 / a;
+            p[2] = b * 255 / a;
+        }
+    }
 
     if (!tangramInstance->markerSetBitmap(self.identifier, w, h, bitmap.data())) {
         [self createNSError];
