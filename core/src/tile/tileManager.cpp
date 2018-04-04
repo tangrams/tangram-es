@@ -29,8 +29,8 @@ enum class TileManager::ProxyID : uint8_t {
 
 struct TileManager::TileEntry {
 
-    TileEntry() : m_proxyCounter(0), m_proxies(0), m_visible(false) {}
-    TileEntry(std::shared_ptr<Tile>& _tile) : tile(_tile) {}
+    TileEntry(std::shared_ptr<Tile>& _tile)
+        : tile(_tile), m_proxyCounter(0), m_proxies(0), m_visible(false) {}
 
     ~TileEntry() { clearTask(); }
 
