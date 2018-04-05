@@ -1,0 +1,6 @@
+# cancel flag
+race:Tangram::UrlClient::cancelRequest
+race:Tangram::UrlClient::curlProgressCallback
+
+# icu cmemory.c - gHeapInUse flag
+race:uprv_malloc_52
