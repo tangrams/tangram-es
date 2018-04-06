@@ -40,7 +40,9 @@ artifactory {
   resolve {
     repoKey = 'jcenter'
   }
-  clientConfig.info.setBuildName('tangram-android')
+  if (project.hasProperty('buildName')) {
+    clientConfig.info.setBuildName(buildName)
+  }
   if (project.hasProperty('buildNumber')) {
     clientConfig.info.setBuildNumber(buildNumber)
   }
