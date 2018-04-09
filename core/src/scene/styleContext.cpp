@@ -472,7 +472,10 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
                 break;
             }
             case StyleParamKey::size: {
-                _val = glm::vec2(static_cast<float>(duk_get_number(m_ctx, -1)));
+                StyleParam::SizeValue vec;
+                vec.fill( {NAN, Unit::pixel} );
+                vec[0].value = static_cast<float>(duk_get_number(m_ctx, -1));
+                _val = vec;
                 break;
             }
             case StyleParamKey::order:

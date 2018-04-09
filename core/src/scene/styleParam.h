@@ -85,7 +85,7 @@ enum class StyleParamKey : uint8_t {
 
 constexpr size_t StyleParamKeySize = static_cast<size_t>(StyleParamKey::NUM_ELEMENTS);
 
-enum class Unit { pixel, milliseconds, meter, seconds };
+enum class Unit { pixel, milliseconds, meter, seconds, percentage, sizeauto };
 
 static inline std::string unitString(Unit unit) {
     switch(unit) {
@@ -93,6 +93,8 @@ static inline std::string unitString(Unit unit) {
         case Unit::milliseconds: return "milliseconds";
         case Unit::meter: return "meter";
         case Unit::seconds: return "seconds";
+        case Unit::percentage: return "%";
+        case Unit::sizeauto: return "auto";
         default: return "undefined";
     }
 }
@@ -121,10 +123,11 @@ struct StyleParam {
         Unit unit = Unit::meter;
 
         bool isMeter() const { return unit == Unit::meter; }
+        bool isPercentage() const { return unit == Unit::percentage; }
+        bool isAuto() const { return unit == Unit::sizeauto; }
         bool isPixel() const { return unit == Unit::pixel; }
         bool isSeconds() const { return unit == Unit::seconds; }
         bool isMilliseconds() const { return unit == Unit::milliseconds; }
-
     };
     struct Width : ValueUnitPair {
 
@@ -153,7 +156,8 @@ struct StyleParam {
         }
     };
 
-    using Value = variant<none_type, Undefined, bool, float, uint32_t, std::string, glm::vec2, Width,
+    using SizeValue = std::array<ValueUnitPair, 2>;
+    using Value = variant<none_type, Undefined, bool, float, uint32_t, std::string, glm::vec2, SizeValue, Width,
                           LabelProperty::Placement, LabelProperty::Anchors, TextSource>;
 
     StyleParam() :
@@ -195,9 +199,12 @@ struct StyleParam {
     static bool parseTime(const std::string& _value, float& _time);
 
     // values within _value string parameter must be delimited by ','
+    static bool parseSize(const std::string& _value, const std::vector<Unit>& _allowedUnits, SizeValue& _vec2);
     static bool parseVec2(const std::string& _value, const std::vector<Unit>& _allowedUnits, UnitVec<glm::vec2>& _vec2);
     static bool parseVec3(const std::string& _value, const std::vector<Unit>& _allowedUnits, UnitVec<glm::vec3>& _vec3);
 
+    static int parseSizeUnitPair(const std::string& _value, size_t start,
+                                 StyleParam::ValueUnitPair& _result);
     static int parseValueUnitPair(const std::string& _value, size_t start,
                                   StyleParam::ValueUnitPair& _result);
 
