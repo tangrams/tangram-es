@@ -456,16 +456,18 @@ auto Stops::nearestHigherFrame(float _key) const -> std::vector<Frame>::const_it
 }
 
 void Stops::eval(const Stops& _stops, StyleParamKey _key, float _zoom, StyleParam::Value& _result) {
+
+    /* StyleParam::size stops can not have a generic evaluation, and
+     * requires more context and is handled in the pointStyleBuilder
+     */
+    if (StyleParam::isSize(_key)) { return; }
+
     if (StyleParam::isColor(_key)) {
         _result = _stops.evalColor(_zoom);
     } else if (StyleParam::isWidth(_key)) {
         _result = _stops.evalExpFloat(_zoom);
     } else if (StyleParam::isOffsets(_key)) {
         _result = _stops.evalVec2(_zoom);
-    } else if (StyleParam::isSize(_key)) {
-        // TODO: What should be done here!
-        // Size stop evaluation happens during pointStyleBuilder rule evaluation
-      //  _result = _stops.evalSize(_zoom);
     } else {
         _result = _stops.evalFloat(_zoom);
     }

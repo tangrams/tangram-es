@@ -126,7 +126,6 @@ bool PointStyleBuilder::checkRule(const DrawRule& _rule) const {
 auto PointStyleBuilder::applyRule(const DrawRule& _rule) const -> Parameters {
 
     Parameters p;
-    glm::vec2 size;
 
     _rule.get(StyleParamKey::color, p.color);
     _rule.get(StyleParamKey::sprite, p.sprite);
@@ -191,33 +190,6 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule) const -> Parameters {
     _rule.get(StyleParamKey::angle, p.labelOptions.angle);
     if (std::isnan(p.labelOptions.angle)) {
         p.autoAngle = true;
-    }
-
-    auto sizeParam = _rule.findParameter(StyleParamKey::size);
-    if (sizeParam.stops) {
-        if (sizeParam.value.is<float>()) {
-            // Assume size here is 1D (TODO: 2D, in another PR)
-            // size to build this label from
-            float lowerSize = sizeParam.stops->evalSize(m_styleZoom).get<float>();
-            // size for next style zoom for interpolation
-            float higherSize = sizeParam.stops->evalSize(m_styleZoom + 1).get<float>();
-            p.extrudeScale = (higherSize - lowerSize);
-            p.size = glm::vec2(lowerSize);
-        } else if (sizeParam.value.is<glm::vec2>()) {
-            p.size = sizeParam.stops->evalExpVec2(m_styleZoom);
-            // NB: this assumes that the width/height ratio is
-            // constant for all stops
-            glm::vec2 higherSize = sizeParam.stops->evalExpVec2(m_styleZoom + 1);
-            p.extrudeScale = (higherSize.x - p.size.x);
-        }
-    } else if (_rule.get(StyleParamKey::size, size)) {
-        if (size.x == 0.f || std::isnan(size.y)) {
-            p.size = glm::vec2(size.x);
-        } else {
-            p.size = size;
-        }
-    } else {
-        p.size = glm::vec2(NAN, NAN);
     }
 
     auto& strokeWidth = _rule.findParameter(StyleParamKey::outline_width);
@@ -300,9 +272,7 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad, Te
         });
 }
 
-bool PointStyleBuilder::getUVQuad(Parameters& _params, glm::vec4& _quad, Texture** _texture) const {
-
-    _quad = glm::vec4(0.0, 1.0, 1.0, 0.0);
+bool PointStyleBuilder::getTexture(const Parameters& _params, Texture **_texture) const {
 
     auto texture = m_style.defaultTexture().get();
 
@@ -329,38 +299,105 @@ bool PointStyleBuilder::getUVQuad(Parameters& _params, glm::vec4& _quad, Texture
 
     if (texture) {
         *_texture = texture;
+    }
 
-        if (auto& atlas = texture->spriteAtlas()) {
+    return true;
+}
 
+bool PointStyleBuilder::evalSizeParam(const DrawRule& _rule, Parameters& _params, const Texture* _texture) const {
+    StyleParam::SizeValue size;
+    SpriteNode spriteNode;
+    glm::vec2 cssSize = {1.f, 1.f};
+    float aspectRatio = 1.f;
+    bool useCssSize = false;
+
+    if (_texture) {
+        cssSize = glm::vec2{_texture->getWidth(), _texture->getHeight()} * _texture->invDensity();
+        aspectRatio = _texture->getWidth() / _texture->getHeight();
+        useCssSize = true; // can use cssSize and aspect if "%" or "auto" size is used
+
+        const auto &atlas = _texture->spriteAtlas();
+        if (atlas) {
+            if (!atlas->getSpriteNode(_params.sprite, spriteNode) &&
+                !atlas->getSpriteNode(_params.spriteDefault, spriteNode)) {
+                return false;
+            }
+            // can use cssSize and aspect if "%" or "auto" size is used
+            cssSize = spriteNode.m_size * _texture->invDensity();
+            aspectRatio = spriteNode.m_size.x / spriteNode.m_size.y;
+        } else {
+            // missing sprite atlas for texture but sprite specified in draw rule
+            return false;
+        }
+    } else {
+        // default css size of 16px
+        cssSize = glm::vec2(16.f);
+    }
+
+    auto sizeParam = _rule.findParameter(StyleParamKey::size);
+
+    if (sizeParam.stops) {
+        glm::vec2 lower = sizeParam.stops->evalSize(m_styleZoom, cssSize, aspectRatio, useCssSize);
+        // illegal size values were evaluated
+        if (isnan(lower.x)) { return false; }
+
+        glm::vec2 higher = sizeParam.stops->evalSize(m_styleZoom + 1, cssSize, aspectRatio, useCssSize);
+        _params.size = lower;
+        _params.extrudeScale = higher.x - lower.x;
+
+    } else if (_rule.get(StyleParamKey::size, size)) {
+        // illegal size values in draw rule
+        if ( (!useCssSize && !(size[0].isPixel() && size[1].isPixel()) ) ||
+             (size[0].isAuto() && size[1].isAuto()) ) {
+            return false;
+        }
+
+        if (size[0].isPixel() && size[1].isPixel()) {
+            if (std::isnan(size[0].value) && std::isnan(size[1].value)) {
+                _params.size = cssSize;
+            } else if (size[0].value == 0.f || std::isnan(size[1].value)) {
+                _params.size = glm::vec2(size[0].value);
+            } else {
+                _params.size = glm::vec2(size[0].value, size[1].value);
+            }
+        } else {
+            // _texture/spriteNode must have been set!
+            assert(useCssSize);
+            if (size[0].isPercentage()) {
+                _params.size = cssSize * (size[0].value * 0.01f);
+            } else if (size[0].isAuto()) { // size[1] must be pixel
+                _params.size = glm::vec2(size[1].value * aspectRatio, size[1].value);
+            } else { // size[0] must be pixel
+                _params.size = glm::vec2(size[0].value, size[0].value / aspectRatio);
+            }
+        }
+    } else {
+        return false;
+    }
+
+    _params.size *= m_style.pixelScale();
+
+    return true;
+}
+
+bool PointStyleBuilder::getUVQuad(Parameters& _params, glm::vec4& _quad, const Texture* _texture) const {
+
+    _quad = glm::vec4(0.0, 1.0, 1.0, 0.0);
+
+    if (_texture) {
+        const auto& atlas = _texture->spriteAtlas();
+        if (atlas) {
             SpriteNode spriteNode;
             if (!atlas->getSpriteNode(_params.sprite, spriteNode) &&
                 !atlas->getSpriteNode(_params.spriteDefault, spriteNode)) {
                 return false;
             }
-
-            if (std::isnan(_params.size.x)) {
-                // determine the css size of the sprite if size is not determined from style draw rule
-                _params.size = spriteNode.m_size * texture->invDensity();
-            }
-
             _quad.x = spriteNode.m_uvBL.x;
             _quad.y = spriteNode.m_uvBL.y;
             _quad.z = spriteNode.m_uvTR.x;
             _quad.w = spriteNode.m_uvTR.y;
-        } else {
-            if (std::isnan(_params.size.x)) {
-                _params.size = glm::vec2{texture->getWidth(), texture->getHeight()} * texture->invDensity();
-            }
         }
-        _params.size *= m_style.pixelScale();
-
     } else {
-
-        // Default point size
-        if (std::isnan(_params.size.x)) {
-            _params.size = glm::vec2(8.0);
-        }
-        _params.size *= m_style.pixelScale();
 
         float fillEdge = _params.size.x;
         float outlineEdge = 1.f;
@@ -485,7 +522,13 @@ bool PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
     glm::vec4 uvsQuad;
     Texture* texture = nullptr;
 
-    if (!getUVQuad(p, uvsQuad, &texture)) {
+    if (!getTexture(p, &texture)) {
+        return false;
+    }
+    if (!evalSizeParam(_rule, p, texture)) {
+        return false;
+    }
+    if (!getUVQuad(p, uvsQuad, texture)) {
         return false;
     }
 
@@ -501,7 +544,13 @@ bool PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
     glm::vec4 uvsQuad;
     Texture* texture = nullptr;
 
-    if (!getUVQuad(p, uvsQuad, &texture)) {
+    if (!getTexture(p, &texture)) {
+        return false;
+    }
+    if (!evalSizeParam(_rule, p, texture)) {
+        return false;
+    }
+    if (!getUVQuad(p, uvsQuad, texture)) {
         return false;
     }
 
@@ -517,7 +566,13 @@ bool PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
     glm::vec4 uvsQuad;
     Texture* texture = nullptr;
 
-    if (!getUVQuad(p, uvsQuad, &texture)) {
+    if (!getTexture(p, &texture)) {
+        return false;
+    }
+    if (!evalSizeParam(_rule, p, texture)) {
+        return false;
+    }
+    if (!getUVQuad(p, uvsQuad, texture)) {
         return false;
     }
 
