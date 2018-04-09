@@ -44,8 +44,6 @@ android {
     }
   }
 
-  flavorDimensions "tangramAbi"
-
   buildTypes {
     debug {
       externalNativeBuild {
