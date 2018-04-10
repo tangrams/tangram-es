@@ -16,7 +16,6 @@
  */
 
 apply plugin: 'maven'
-apply plugin: 'signing'
 
 def isReleaseBuild() {
   return VERSION_NAME.contains('SNAPSHOT') == false
@@ -34,8 +33,6 @@ afterEvaluate { project ->
   uploadArchives {
     repositories {
       mavenDeployer {
-        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
         pom.groupId = GROUP
         pom.artifactId = POM_ARTIFACT_ID
         pom.version = VERSION_NAME
@@ -76,11 +73,6 @@ afterEvaluate { project ->
         }
       }
     }
-  }
-
-  signing {
-    required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
-    sign configurations.archives
   }
 
   task androidJavadocs(type: Javadoc) {
