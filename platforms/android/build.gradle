@@ -1,7 +1,6 @@
 allprojects {
   buildscript {
     repositories {
-      mavenCentral()
       jcenter()
       google()
     }
@@ -13,7 +12,6 @@ allprojects {
 
   dependencies {
     repositories {
-      mavenCentral()
       jcenter()
       google()
     }
