@@ -12,7 +12,7 @@ Pod::Spec.new do |s|
   s.documentation_url = 'https://mapzen.com/documentation/tangram/ios-framework/0.9.0/'
 
   s.source = {
-    :http => "http://ios.mapzen.com/tangram-releases/tangram-release-#{s.version}.zip"
+    :http => "https://dl.bintray.com/tangrams/cocoapods/:#{s.version}-release.zip"
   }
 
   s.platform              = :ios
