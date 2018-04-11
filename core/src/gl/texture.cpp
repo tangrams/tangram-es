@@ -21,17 +21,19 @@
 
 namespace Tangram {
 
-Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _options, bool _generateMipmaps)
+Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _options,
+        bool _generateMipmaps, float _density)
     : m_options(_options), m_generateMipmaps(_generateMipmaps) {
 
+    m_invDensity = 1.f/_density;
     m_glHandle = 0;
     m_shouldResize = false;
     m_target = GL_TEXTURE_2D;
     resize(_width, _height);
 }
 
-Texture::Texture(const std::vector<char>& _data, TextureOptions options, bool generateMipmaps)
-    : Texture(0u, 0u, options, generateMipmaps) {
+Texture::Texture(const std::vector<char>& _data, TextureOptions options, bool generateMipmaps, float density)
+    : Texture(0u, 0u, options, generateMipmaps, density) {
 
     loadImageFromMemory(_data);
 }

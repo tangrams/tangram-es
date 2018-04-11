@@ -5,7 +5,7 @@ namespace Tangram {
 SpriteAtlas::SpriteAtlas() {}
 
 void SpriteAtlas::addSpriteNode(const std::string& _name, glm::vec2 _origin, glm::vec2 _size) {
-    m_spritesNodes[_name] = SpriteNode { {}, {}, _size, _origin };
+    m_spritesNodes[_name] = SpriteNode { {}, {}, _size, _origin};
 }
 
 bool SpriteAtlas::getSpriteNode(const std::string& _name, SpriteNode& _node) const {

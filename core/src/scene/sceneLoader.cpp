@@ -554,7 +554,8 @@ bool SceneLoader::extractTexFiltering(Node& filtering, TextureFiltering& filter)
 std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platform>& platform,
                                                    const std::string& name, const std::string& urlString,
                                                    const TextureOptions& options, bool generateMipmaps,
-                                                   const std::shared_ptr<Scene>& scene) {
+                                                   const std::shared_ptr<Scene>& scene,
+                                                   float density) {
 
     std::shared_ptr<Texture> texture;
 
@@ -575,7 +576,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
             LOGE("Can't decode Base64 texture");
             return nullptr;
         }
-        texture = std::make_shared<Texture>(0, 0, options, generateMipmaps);
+        texture = std::make_shared<Texture>(0, 0, options, generateMipmaps, density);
 
         std::vector<char> textureData;
         auto cdata = reinterpret_cast<char*>(blob.data());
@@ -584,7 +585,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
             LOGE("Invalid Base64 texture");
         }
     } else {
-        texture = std::make_shared<Texture>(std::vector<char>(), options, generateMipmaps);
+        texture = std::make_shared<Texture>(std::vector<char>(), options, generateMipmaps, density);
 
         scene->pendingTextures++;
         scene->startUrlRequest(platform, url, [&, url, scene, texture](UrlResponse response) {
@@ -657,16 +658,16 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
         }
     }
 
-    auto texture = fetchTexture(platform, name, url, options, generateMipmaps, scene);
+    float density = 1.f;
+    if (Node d = textureConfig["density"]) {
+        double val;
+        if (getDouble(d, val)) { density = val; }
+    }
+
+    auto texture = fetchTexture(platform, name, url, options, generateMipmaps, scene, density);
 
     if (Node sprites = textureConfig["sprites"]) {
         auto atlas = std::make_unique<SpriteAtlas>();
-
-        float density = 1.f;
-        if (Node d = textureConfig["density"]) {
-            double val;
-            if (getDouble(d, val)) { density = val; }
-        }
 
         for (auto it = sprites.begin(); it != sprites.end(); ++it) {
 
@@ -674,7 +675,7 @@ void SceneLoader::loadTexture(const std::shared_ptr<Platform>& platform, const s
             const std::string& spriteName = it->first.Scalar();
 
             if (sprite) {
-                glm::vec4 desc = parseVec<glm::vec4>(sprite) * density;
+                glm::vec4 desc = parseVec<glm::vec4>(sprite);
                 glm::vec2 pos = glm::vec2(desc.x, desc.y);
                 glm::vec2 size = glm::vec2(desc.z, desc.w);
 
