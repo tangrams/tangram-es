@@ -225,6 +225,7 @@ android-sdk:
 
 android-demo:
 	@cd platforms/android/ && \
+	touch local.properties && \
 	./gradlew demo:assembleDebug
 
 osx: ${OSX_BUILD_DIR}/Makefile

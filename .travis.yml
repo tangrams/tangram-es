@@ -52,4 +52,4 @@ script:
 
 after_success:
     - source ./scripts/travis/script_deploy_android_snapshot.sh
-    - source ./scripts/travis/script_deploy_android_demo.sh
+    #- source ./scripts/travis/script_deploy_android_demo.sh

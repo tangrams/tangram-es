@@ -3,15 +3,17 @@
 set -e
 set -o pipefail
 
-if [ "${PLATFORM}" = "android" ] && [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
-
-    # Configure private repository credentials (used to sign release artifacts)
-    echo -e "machine github.com\n  login $GITHUB_USERNAME\n  password $GITHUB_PASSWORD" >> ~/.netrc
-
-    make android-sdk
-
+# if [ "${PLATFORM}" = "android" ] && [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
+if [ "${PLATFORM}" = "android" ]; then
     cd "$TRAVIS_BUILD_DIR"/platforms/android
-    git clone https://github.com/mapzen/android-config.git
-    ./gradlew uploadArchives -PsonatypeUsername="$SONATYPE_USERNAME" -PsonatypePassword="$SONATYPE_PASSWORD" -Psigning.keyId="$SIGNING_KEY_ID" -Psigning.password="$SIGNING_PASSWORD" -Psigning.secretKeyRingFile="$SIGNING_SECRET_KEY_RING_FILE"
+
+    ./gradlew artifactoryPublish -PbuildName=tangram-android -PbuildNumber=${TRAVIS_BUILD_NUMBER}
+
+    # If the git tag for the build is not empty then promote the build to bintray.
+    if [ -n "${TRAVIS_TAG}" ]; then
+        # Bintray REST call: https://www.jfrog.com/confluence/display/RTF/Deploying+Snapshots+to+oss.jfrog.org#DeployingSnapshotstooss.jfrog.org-PromotingaReleaseBuild
+        curl -X POST -u ${ARTIFACTORY_USERNAME}:${ARTIFACTORY_PASSWORD} https://oss.jfrog.org/api/plugins/build/promote/snapshotsToBintray/tangram-android/${TRAVIS_BUILD_NUMBER}
+    fi
+
     cd "$TRAVIS_BUILD_DIR"
 fi
