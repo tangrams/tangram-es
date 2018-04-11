@@ -2,7 +2,6 @@ iOS
 ===
 
 The recommended way to use tangram-es in an iOS project is to add it as a CocoaPods dependency. The library is hosted in CocoaPods under the pod name 'Tangram-es'. To find the latest version, check CocoaPods: https://cocoapods.org/pods/Tangram-es.
-For convenience, we also provide Debug snapshots and Releases at [ios.mapzen.com](http://ios.mapzen.com/).
 
 ## Setup ##
 

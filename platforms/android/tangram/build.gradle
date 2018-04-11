@@ -44,8 +44,6 @@ android {
     }
   }
 
-  flavorDimensions "tangramAbi"
-
   buildTypes {
     debug {
       externalNativeBuild {
@@ -65,4 +63,4 @@ dependencies {
   implementation 'com.android.support:support-annotations:26.1.0'
 }
 
-apply from: file('gradle-mvn-push.gradle')
+apply from: 'publishing.gradle'
