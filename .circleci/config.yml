@@ -28,11 +28,13 @@ jobs:
       # Build the framework in debug mode and package it into pod.zip
       - run: make ios-framework-universal DEBUG=1
       - run: make ios-docs
-      - run: zip -r pod.zip build/ios-framework-universal/Debug/TangramMap.framework
+      # To produce the intended structure within the zip archive, we must cd to each file's location.
+      - run: cd build/ios-framework-universal/Debug && zip -r ~/pod.zip TangramMap.framework
       # Add the readme and license files.
-      - run: zip pod.zip platforms/ios/framework/README.md LICENSE
+      - run: cd platforms/ios/framework && zip ~/pod.zip README.md
+      - run: zip ~/pod.zip LICENSE
       - store_artifacts:
-          path: pod.zip
+          path: ~/pod.zip
   build-deploy-macos-snapshot:
     macos:
       xcode: "9.0"
@@ -44,9 +46,10 @@ jobs:
       - run: brew install cmake
       # Build the MacOS demo app and package it into demo.zip
       - run: make osx -j 2 MACOSX_DEPLOYMENT_TARGET=10.10.0
-      - run: zip -r demo.zip build/osx/bin/tangram.app
+      # To produce the intended structure within the zip archive, we must cd to each file's location.
+      - run: cd build/osx/bin && zip -r ~/demo.zip tangram.app
       - store_artifacts:
-          path: demo.zip
+          path: ~/demo.zip
   build-deploy-ios-release:
     macos:
       xcode: "9.0"
@@ -61,14 +64,16 @@ jobs:
       # Build the framework in release mode and package it into pod.zip
       - run: make ios-framework-universal RELEASE=1
       - run: make ios-docs
-      - run: zip -r pod.zip build/ios-framework-universal/Release/TangramMap.framework
+      # To produce the intended structure within the zip archive, we must cd to each file's location.
+      - run: cd build/ios-framework-universal/Release && zip -r ~/pod.zip TangramMap.framework
       # Add the readme and license files.
-      - run: zip pod.zip platforms/ios/framework/README.md LICENSE
+      - run: cd platforms/ios/framework && zip ~/pod.zip README.md
+      - run: zip ~/pod.zip LICENSE
       # Upload and publish the Cocoapods archive to Bintray.
       - run: jfrog bt config --user=${BINTRAY_USER} --key=${BINTRAY_API_KEY} --licenses=MIT
-      - run: jfrog bt upload --publish=true pod.zip tangrams/cocoapods/Tangram-es/${CIRCLE_TAG} ${CIRCLE_TAG}-release.zip
+      - run: jfrog bt upload --publish=true ~/pod.zip tangrams/cocoapods/Tangram-es/${CIRCLE_TAG} ${CIRCLE_TAG}-release.zip
       - store_artifacts:
-          path: pod.zip
+          path: ~/pod.zip
 
 workflows:
   version: 2
