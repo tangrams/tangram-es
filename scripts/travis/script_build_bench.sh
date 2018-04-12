@@ -5,6 +5,5 @@ set -o pipefail
 
 if [[ ${PLATFORM} == "osx" || ${PLATFORM} == "linux" ]]; then
     # Build unit tests
-    make -j4 benchmark
+    make benchmark CMAKE_OPTIONS="-GNinja"
 fi
-

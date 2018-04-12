@@ -24,6 +24,7 @@ matrix:
                     - libicu-dev
                     - libfreetype6-dev
                     - libharfbuzz-dev
+                    - ninja-build
         - env: PLATFORM=android
           addons:
             apt:
