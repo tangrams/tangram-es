@@ -730,7 +730,7 @@ void applyTextTransform(const TextStyle::Parameters& _params,
     switch (_params.transform) {
     case TextLabelProperty::Transform::capitalize: {
         UErrorCode status{U_ZERO_ERROR};
-        auto *wordIterator = BreakIterator::createWordInstance(loc, status);
+        auto *wordIterator = icu::BreakIterator::createWordInstance(loc, status);
 
         if (U_SUCCESS(status)) { _string.toTitle(wordIterator); }
 
@@ -755,7 +755,7 @@ bool isComplexShapingScript(const icu::UnicodeString& _text) {
     // See also http://r12a.github.io/scripts/featurelist/
 
     icu::StringCharacterIterator iterator(_text);
-    for (UChar c = iterator.first(); c != CharacterIterator::DONE; c = iterator.next()) {
+    for (UChar c = iterator.first(); c != icu::CharacterIterator::DONE; c = iterator.next()) {
         if (c >= u'\u0600' && c <= u'\u18AF') {
             if ((c <= u'\u06FF') ||                   // Arabic:     "\u0600-\u06FF"
                 (c >= u'\u1800' && c <= u'\u18AF')) { // Mongolian:  "\u1800-\u18AF"
