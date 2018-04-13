@@ -15,18 +15,18 @@ Make sure to update git submodules **before** you build with Make:
 git submodule update --init
 ```
 
-The demo application uses the Mapzen vector tile service, so you will need a Mapzen API key to build and run the demo. 
+The demo application uses the Nextzen vector tile service, so you will need a Nextzen API key to build and run the demo. 
 
- 1. Visit https://mapzen.com/documentation/overview/#get-started-developing-with-mapzen to get an API key.
+ 1. Visit https://developers.nextzen.org/ to get an API key.
 
- 2. Setup an environment variable (`MAPZEN_API_KEY`) to point to your API key. 
+ 2. Setup an environment variable (`NEXTZEN_API_KEY`) to point to your API key. 
  If you are using an IDE on osx, you need to do the following:
     ```bash
-    launchctl setenv MAPZEN_API_KEY YOUR_API_KEY
+    launchctl setenv NEXTZEN_API_KEY YOUR_API_KEY
     ```
  If you are running the app from a terminal you need to do the following:
     ```bash
-    export MAPZEN_API_KEY=YOUR_API_KEY
+    export NEXTZEN_API_KEY=YOUR_API_KEY
     ```
 
 ## Build ##

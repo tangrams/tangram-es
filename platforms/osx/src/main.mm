@@ -29,7 +29,7 @@ using namespace Tangram;
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
     NSString* storedApiKey = [defaults stringForKey:[self apiKeyDefaultsName]];
     if (storedApiKey != nil) {
-        GlfwApp::mapzenApiKey = std::string([storedApiKey UTF8String]);
+        GlfwApp::apiKey = std::string([storedApiKey UTF8String]);
     }
 
     // Set up menu shortcuts.
@@ -99,7 +99,7 @@ using namespace Tangram;
     [alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] completionHandler:^(NSModalResponse returnCode) {
         if (returnCode == NSAlertFirstButtonReturn) {
             [defaults setValue:[input stringValue] forKey:defaultsKeyString];
-            GlfwApp::mapzenApiKey = std::string([[input stringValue] UTF8String]);
+            GlfwApp::apiKey = std::string([[input stringValue] UTF8String]);
             GlfwApp::loadSceneFile();
         }
     }];
@@ -155,7 +155,7 @@ using namespace Tangram;
 
 + (NSString*)apiKeyDefaultsName
 {
-    return @"mapzenApiKey";
+    return @"apiKey";
 }
 @end
 
@@ -170,7 +170,7 @@ int main(int argc, char* argv[]) {
     [TGPreferences setup];
 
     GlfwApp::parseArgs(argc, argv);
-    
+
     NSString* sceneInputString = [NSString stringWithUTF8String:GlfwApp::sceneFile.c_str()];
     NSURL* resourceDirectoryUrl = [[NSBundle mainBundle] resourceURL];
     NSURL* sceneFileUrl = [NSURL URLWithString:sceneInputString relativeToURL:resourceDirectoryUrl];

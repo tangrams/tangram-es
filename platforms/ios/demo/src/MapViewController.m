@@ -187,11 +187,11 @@
 {
     NSString* configPListPath = [[NSBundle mainBundle] pathForResource: @"Config" ofType: @"plist"];
     NSMutableDictionary* configDict =[[NSMutableDictionary alloc] initWithContentsOfFile:configPListPath];
-    NSString* apiKey = [configDict valueForKey:@"MapzenApiKey"];
-    NSAssert(apiKey, @"Please provide a valid API key by setting the environment variable MAPZEN_API_KEY at build time");
+    NSString* apiKey = [configDict valueForKey:@"NextzenApiKey"];
+    NSAssert(apiKey, @"Please provide a valid API key by setting the environment variable NEXTZEN_API_KEY at build time");
 
     NSMutableArray<TGSceneUpdate *>* updates = [[NSMutableArray alloc]init];
-    [updates addObject:[[TGSceneUpdate alloc]initWithPath:@"global.sdk_mapzen_api_key" value:apiKey]];
+    [updates addObject:[[TGSceneUpdate alloc]initWithPath:@"global.sdk_api_key" value:apiKey]];
 
     [super loadSceneAsyncFromURL:[NSURL URLWithString:@"https://tangrams.github.io/walkabout-style/walkabout-style.yaml"] withUpdates:updates];
 

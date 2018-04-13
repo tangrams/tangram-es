@@ -1,5 +1,6 @@
 /*
  * Copyright 2013 Chris Banes
+ * Copyright 2018 Matt Blair
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,34 +16,31 @@
  */
 
 apply plugin: 'maven'
-apply plugin: 'signing'
 
 def isReleaseBuild() {
-  return VERSION_NAME.contains("SNAPSHOT") == false
+  return VERSION_NAME.contains('SNAPSHOT') == false
 }
 
 def getRepositoryUsername() {
-  return hasProperty('sonatypeUsername') ? sonatypeUsername : ""
+  return project.hasProperty('bintrayUsername') ? bintrayUsername : System.env.BINTRAY_USERNAME
 }
 
 def getRepositoryPassword() {
-  return hasProperty('sonatypePassword') ? sonatypePassword : ""
+  return project.hasProperty('bintrayApiKey') ? bintrayApiKey : System.env.BINTRAY_API_KEY
 }
 
 afterEvaluate { project ->
   uploadArchives {
     repositories {
       mavenDeployer {
-        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
         pom.groupId = GROUP
         pom.artifactId = POM_ARTIFACT_ID
         pom.version = VERSION_NAME
 
-        repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        repository(url: 'https://api.bintray.com/maven/tangrams/maven/tangram/') {
           authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
         }
-        snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+        snapshotRepository(url: 'https://oss.jfrog.org/artifactory/oss-snapshot-local/') {
           authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
         }
 
@@ -75,11 +73,6 @@ afterEvaluate { project ->
         }
       }
     }
-  }
-
-  signing {
-    required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
-    sign configurations.archives
   }
 
   task androidJavadocs(type: Javadoc) {

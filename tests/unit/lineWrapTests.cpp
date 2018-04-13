@@ -60,7 +60,7 @@ TEST_CASE("Ensure empty line is given when giving empty shape to alfons", "[Core
 TEST_CASE() {
     initFont();
 
-    auto text = UnicodeString::fromUTF8("The quick brown fox");
+    auto text = icu::UnicodeString::fromUTF8("The quick brown fox");
 
     {
         auto line = shaper.shapeICU(font, text, 4, 10);
@@ -115,7 +115,7 @@ TEST_CASE() {
 TEST_CASE() {
     initFont(TEST_FONT_AR);
 
-    auto text = UnicodeString::fromUTF8("لعدم عليها كلّ.");
+    auto text = icu::UnicodeString::fromUTF8("لعدم عليها كلّ.");
 
     {
         auto line = shaper.shapeICU(font, text, 0, 1);
@@ -145,7 +145,7 @@ TEST_CASE() {
 TEST_CASE() {
     initFont(TEST_FONT_JP);
 
-    auto text = UnicodeString::fromUTF8("日本語のキーボード");
+    auto text = icu::UnicodeString::fromUTF8("日本語のキーボード");
 
     auto line = shaper.shapeICU(font, text, 0, 1);
     REQUIRE(line.shapes().size() == 9);
@@ -161,7 +161,7 @@ TEST_CASE() {
 TEST_CASE() {
     initFont(TEST_FONT_AR);
 
-    auto text = UnicodeString::fromUTF8("الضفة الغربية وقطاع غزة");
+    auto text = icu::UnicodeString::fromUTF8("الضفة الغربية وقطاع غزة");
 
     {
         auto line = shaper.shapeICU(font, text, 1, 10);

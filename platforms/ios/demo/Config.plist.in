@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>MapzenApiKey</key>
-    <string>${MAPZEN_API_KEY}</string>
+	<key>NextzenApiKey</key>
+    <string>${NEXTZEN_API_KEY}</string>
 </dict>
 </plist>

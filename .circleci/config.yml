@@ -24,18 +24,17 @@ jobs:
       # Install dependencies.
       # For unclear reasons, 'jazzy' fails to install on CircleCI if 'atomos' is not installed first.
       - run: sudo gem install atomos jazzy
-      - run: brew install awscli cmake
+      - run: brew install cmake
       # Build the framework in debug mode and package it into pod.zip
       - run: make ios-framework-universal DEBUG=1
       - run: make ios-docs
-      - run: cd build/ios-framework-universal/Debug/ && zip -r ${CIRCLE_ARTIFACTS}/pod.zip TangramMap.framework
-      # Add the readme file.
-      - run: cd platforms/ios/framework/ && zip ${CIRCLE_ARTIFACTS}/pod.zip README.md
-      # Add the license file.
-      - run: zip ${CIRCLE_ARTIFACTS}/pod.zip LICENSE
-      # Upload the Cocoapods archive to S3.
-      - run: aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-snapshots/tangram-snapshot-debug-${CIRCLE_BUILD_NUM}.zip
-      - run: aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-latest-debug.zip
+      # To produce the intended structure within the zip archive, we must cd to each file's location.
+      - run: cd build/ios-framework-universal/Debug && zip -r ~/pod.zip TangramMap.framework
+      # Add the readme and license files.
+      - run: cd platforms/ios/framework && zip ~/pod.zip README.md
+      - run: zip ~/pod.zip LICENSE
+      - store_artifacts:
+          path: ~/pod.zip
   build-deploy-macos-snapshot:
     macos:
       xcode: "9.0"
@@ -44,13 +43,13 @@ jobs:
       - checkout
       - run: git submodule update --init
       # Install dependencies.
-      - run: brew install awscli cmake
+      - run: brew install cmake
       # Build the MacOS demo app and package it into demo.zip
       - run: make osx -j 2 MACOSX_DEPLOYMENT_TARGET=10.10.0
-      - run: cd build/osx/bin && zip -r ${CIRCLE_ARTIFACTS}/demo.zip tangram.app
-      # Upload the demo archive to S3.
-      - run: aws s3 cp ${CIRCLE_ARTIFACTS}/demo.zip s3://ios.mapzen.com/tangram-osx-snapshots/tangram-snapshot-debug-${CIRCLE_BUILD_NUM}.zip
-      - run: aws s3 cp ${CIRCLE_ARTIFACTS}/demo.zip s3://ios.mapzen.com/tangram-osx-latest-debug.zip
+      # To produce the intended structure within the zip archive, we must cd to each file's location.
+      - run: cd build/osx/bin && zip -r ~/demo.zip tangram.app
+      - store_artifacts:
+          path: ~/demo.zip
   build-deploy-ios-release:
     macos:
       xcode: "9.0"
@@ -61,17 +60,20 @@ jobs:
       # Install dependencies.
       # For unclear reasons, 'jazzy' fails to install on CircleCI if 'atomos' is not installed first.
       - run: sudo gem install atomos jazzy
-      - run: brew install awscli cmake
+      - run: brew install cmake jfrog-cli-go
       # Build the framework in release mode and package it into pod.zip
       - run: make ios-framework-universal RELEASE=1
       - run: make ios-docs
-      - run: cd build/ios-framework-universal/Release/ && zip -r ${CIRCLE_ARTIFACTS}/pod.zip TangramMap.framework
-      # Add the readme file.
-      - run: cd platforms/ios/framework/ && zip ${CIRCLE_ARTIFACTS}/pod.zip README.md
-      # Add the license file.
-      - run: zip ${CIRCLE_ARTIFACTS}/pod.zip LICENSE
-      # Upload the Cocoapods archive to S3.
-      - run: aws s3 cp ${CIRCLE_ARTIFACTS}/pod.zip s3://ios.mapzen.com/tangram-releases/tangram-release-${CIRCLE_TAG}.zip
+      # To produce the intended structure within the zip archive, we must cd to each file's location.
+      - run: cd build/ios-framework-universal/Release && zip -r ~/pod.zip TangramMap.framework
+      # Add the readme and license files.
+      - run: cd platforms/ios/framework && zip ~/pod.zip README.md
+      - run: zip ~/pod.zip LICENSE
+      # Upload and publish the Cocoapods archive to Bintray.
+      - run: jfrog bt config --user=${BINTRAY_USER} --key=${BINTRAY_API_KEY} --licenses=MIT
+      - run: jfrog bt upload --publish=true ~/pod.zip tangrams/cocoapods/Tangram-es/${CIRCLE_TAG} ${CIRCLE_TAG}-release.zip
+      - store_artifacts:
+          path: ~/pod.zip
 
 workflows:
   version: 2

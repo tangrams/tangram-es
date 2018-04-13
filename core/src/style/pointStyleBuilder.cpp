@@ -339,7 +339,8 @@ bool PointStyleBuilder::getUVQuad(Parameters& _params, glm::vec4& _quad, Texture
             }
 
             if (std::isnan(_params.size.x)) {
-                _params.size = spriteNode.m_size;
+                // determine the css size of the sprite if size is not determined from style draw rule
+                _params.size = spriteNode.m_size * texture->invDensity();
             }
 
             _quad.x = spriteNode.m_uvBL.x;
@@ -348,7 +349,7 @@ bool PointStyleBuilder::getUVQuad(Parameters& _params, glm::vec4& _quad, Texture
             _quad.w = spriteNode.m_uvTR.y;
         } else {
             if (std::isnan(_params.size.x)) {
-                _params.size = glm::vec2{texture->getWidth(), texture->getHeight()};
+                _params.size = glm::vec2{texture->getWidth(), texture->getHeight()} * texture->invDensity();
             }
         }
         _params.size *= m_style.pixelScale();
