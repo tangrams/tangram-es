@@ -25,6 +25,8 @@ if [[ ${PLATFORM} == "android" ]]; then
     # Build android project
     echo "Building android project"
     export TERM=dumb
-    make android
+    pushd platforms/android
+    ./gradlew demo:assembleDebug -Pandroid.injected.build.abi=armeabi-v7a
+    popd
 fi
 
