@@ -4,8 +4,6 @@
 #include "yaml-cpp/yaml.h"
 #include "util/mapProjection.h"
 
-#include <iostream>
-
 using namespace Tangram;
 
 Stops instance_color() {
@@ -253,8 +251,8 @@ TEST_CASE("Stops using auto for StyleParam::size", "[Stops][YAML]") {
     REQUIRE(stops.evalSize(0, CSSSIZE, ASPECTRATIO, true) == glm::vec2(18, 9));
 
     auto nanValue = stops.evalSize(0, CSSSIZE, ASPECTRATIO, false);
-    REQUIRE(isnan(nanValue.x) == true);
-    REQUIRE(isnan(nanValue.y) == true);
+    REQUIRE(std::isnan(nanValue.x) == true);
+    REQUIRE(std::isnan(nanValue.y) == true);
 
     REQUIRE(stops.evalSize(18, CSSSIZE, ASPECTRATIO, true) == glm::vec2(40, 20));
 }
@@ -277,8 +275,8 @@ TEST_CASE("Stops using `%` for StyleParam::size", "[Stops][YAML]") {
     REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
 
     auto nanValue = stops.evalSize(0, CSSSIZE, ASPECTRATIO, false);
-    REQUIRE(isnan(nanValue.x) == true);
-    REQUIRE(isnan(nanValue.y) == true);
+    REQUIRE(std::isnan(nanValue.x) == true);
+    REQUIRE(std::isnan(nanValue.y) == true);
 
     val = glm::abs(stops.evalSize(10, CSSSIZE, ASPECTRATIO, true) - glm::vec2(7.f, 8.f));
     REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
@@ -301,13 +299,12 @@ TEST_CASE("Stops using auto and `%` for StyleParam::size", "[Stops][YAML]") {
      */
     REQUIRE(stops.frames.size() == 2);
 
-    auto blah = stops.evalSize(0, CSSSIZE, ASPECTRATIO, true);
     auto val = glm::abs(stops.evalSize(0, CSSSIZE, ASPECTRATIO, true) - glm::vec2(40.f, 20.f));
     REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
 
     auto nanValue = stops.evalSize(0, CSSSIZE, ASPECTRATIO, false);
-    REQUIRE(isnan(nanValue.x) == true);
-    REQUIRE(isnan(nanValue.y) == true);
+    REQUIRE(std::isnan(nanValue.x) == true);
+    REQUIRE(std::isnan(nanValue.y) == true);
 
     val = glm::abs(stops.evalSize(18, CSSSIZE, ASPECTRATIO, true) - glm::vec2(30.f, 15.f));
     REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
@@ -328,13 +325,12 @@ TEST_CASE("Stops using `%` and auto for StyleParam::size", "[Stops][YAML]") {
      */
     REQUIRE(stops.frames.size() == 2);
 
-    auto blah = stops.evalSize(0, CSSSIZE, ASPECTRATIO, true);
     auto val = glm::abs(stops.evalSize(0, CSSSIZE, ASPECTRATIO, true) - glm::vec2(30.f, 15.f));
     REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
 
     auto nanValue = stops.evalSize(0, CSSSIZE, ASPECTRATIO, false);
-    REQUIRE(isnan(nanValue.x) == true);
-    REQUIRE(isnan(nanValue.y) == true);
+    REQUIRE(std::isnan(nanValue.x) == true);
+    REQUIRE(std::isnan(nanValue.y) == true);
 
     val = glm::abs(stops.evalSize(18, CSSSIZE, ASPECTRATIO, true) - glm::vec2(40.f, 20.f));
     REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));

@@ -309,12 +309,13 @@ bool PointStyleBuilder::evalSizeParam(const DrawRule& _rule, Parameters& _params
     SpriteNode spriteNode;
     glm::vec2 cssSize = {1.f, 1.f};
     float aspectRatio = 1.f;
-    bool useCssSize = false;
+    bool useTextureInfo = false;
 
     if (_texture) {
         cssSize = glm::vec2{_texture->getWidth(), _texture->getHeight()} * _texture->invDensity();
         aspectRatio = _texture->getWidth() / _texture->getHeight();
-        useCssSize = true; // can use cssSize and aspect if "%" or "auto" size is used
+        // can use cssSize and aspect if "%" or "auto" size is used
+        useTextureInfo = true;
 
         const auto &atlas = _texture->spriteAtlas();
         if (atlas) {
@@ -322,10 +323,9 @@ bool PointStyleBuilder::evalSizeParam(const DrawRule& _rule, Parameters& _params
                 !atlas->getSpriteNode(_params.spriteDefault, spriteNode)) {
                 return false;
             }
-            // can use cssSize and aspect if "%" or "auto" size is used
             cssSize = spriteNode.m_size * _texture->invDensity();
             aspectRatio = spriteNode.m_size.x / spriteNode.m_size.y;
-        } else {
+        } else if ( !_params.sprite.empty() || !_params.spriteDefault.empty()) {
             // missing sprite atlas for texture but sprite specified in draw rule
             return false;
         }
@@ -337,18 +337,20 @@ bool PointStyleBuilder::evalSizeParam(const DrawRule& _rule, Parameters& _params
     auto sizeParam = _rule.findParameter(StyleParamKey::size);
 
     if (sizeParam.stops) {
-        glm::vec2 lower = sizeParam.stops->evalSize(m_styleZoom, cssSize, aspectRatio, useCssSize);
+        glm::vec2 lower = sizeParam.stops->evalSize(m_styleZoom, cssSize, aspectRatio, useTextureInfo);
         // illegal size values were evaluated
-        if (isnan(lower.x)) { return false; }
+        if (std::isnan(lower.x)) { return false; }
 
-        glm::vec2 higher = sizeParam.stops->evalSize(m_styleZoom + 1, cssSize, aspectRatio, useCssSize);
+        glm::vec2 higher = sizeParam.stops->evalSize(m_styleZoom + 1, cssSize, aspectRatio, useTextureInfo);
         _params.size = lower;
         _params.extrudeScale = higher.x - lower.x;
 
     } else if (_rule.get(StyleParamKey::size, size)) {
         // illegal size values in draw rule
-        if ( (!useCssSize && !(size[0].isPixel() && size[1].isPixel()) ) ||
-             (size[0].isAuto() && size[1].isAuto()) ) {
+        // 1. both width and height set to auto (no way to determine one from another using aspect)
+        // 2. No to determine sizes when % or auto is used texture information is not available (aspect/density).
+        if ( (size[0].isAuto() && size[1].isAuto()) ||
+                (!useTextureInfo && (size[0].isPercentage() || size[0].isAuto() || size[1].isAuto()))) {
             return false;
         }
 
@@ -362,7 +364,8 @@ bool PointStyleBuilder::evalSizeParam(const DrawRule& _rule, Parameters& _params
             }
         } else {
             // _texture/spriteNode must have been set!
-            assert(useCssSize);
+            if (!useTextureInfo) { return false; }
+
             if (size[0].isPercentage()) {
                 _params.size = cssSize * (size[0].value * 0.01f);
             } else if (size[0].isAuto()) { // size[1] must be pixel

@@ -79,8 +79,9 @@ auto Stops::FontSize(const YAML::Node& _node) -> Stops {
 auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> Stops {
     Stops stops;
 
-    // mixed dim stops not allowed for sizes
+    // mixed dim stops not allowed for sizes (except when 1D stop uses %)
     bool hasSingleDim = true;
+    bool dimSet = false;
 
     if (!_node.IsSequence()) {
         return stops;
@@ -113,44 +114,51 @@ auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> S
 
         if (frameNode[1].IsScalar()) {
 
+            StyleParam::SizeValue sizeValue;
+            // default size values
+            sizeValue.fill({NAN, Unit::pixel});
+            bool validStop = constructFrame(frameNode[1], 0, sizeValue[0]);
+            if (!validStop) { continue; }
+
+            bool hasPercentage = sizeValue[0].isPercentage();
+
             // Check for mixed dimension stops
-            if (stops.frames.empty()) {
-                hasSingleDim = true;
-            } else if (!hasSingleDim) {
+            if (dimSet && !hasSingleDim && !hasPercentage) {
                 LOGW("Can not have mixed dimensions stops for Size style parameter.");
                 stops.frames.clear();
                 return stops;
             }
 
-            StyleParam::SizeValue sizeValue;
-            // default size values
-            sizeValue.fill({NAN, Unit::pixel});
-            if (constructFrame(frameNode[1], 0, sizeValue[0])) {
-                stops.frames.emplace_back(key, sizeValue);
+            if (!dimSet && !hasPercentage) {
+                dimSet = true;
             }
+
+            stops.frames.emplace_back(key, sizeValue);
         } else if (frameNode[1].IsSequence()) {
 
             // Check for mixed dimension stops
-            if (stops.frames.empty()) {
-                hasSingleDim = false;
-            } else if (hasSingleDim) {
+            if (dimSet && hasSingleDim) {
                 LOGW("Can not have mixed dimensions stops for Size style parameter.");
                 stops.frames.clear();
                 return stops;
             }
+
+            if (!dimSet) {
+                dimSet = true;
+                hasSingleDim = false;
+            }
+
             StyleParam::SizeValue sizeValue;
             // default size values
             sizeValue.fill({NAN, Unit::pixel});
-            size_t index = 0;
-            for (const auto& sequenceNode : frameNode[1]) {
-                if (!constructFrame(sequenceNode, 0, sizeValue[index])) {
-                    break;
-                }
-                index++;
+            const auto& sequenceNode = frameNode[1];
+
+            bool validStop = constructFrame(sequenceNode[0], 0, sizeValue[0]);
+            if (!validStop || !constructFrame(sequenceNode[1], 0, sizeValue[1])) {
+                continue;
             }
-            if (index == 2) {
-                stops.frames.emplace_back(key, sizeValue);
-            }
+
+            stops.frames.emplace_back(key, sizeValue);
         }
     }
     return stops;
@@ -398,32 +406,38 @@ auto Stops::evalVec2(float _key) const -> glm::vec2 {
 
 }
 
-auto Stops::evalSize(float _key, const glm::vec2& _cssSize, float _aspectRatio, bool _useCssSize) const -> glm::vec2 {
+auto Stops::evalSize(float _key, const glm::vec2& _cssSize, float _aspectRatio, bool _useTextureInfo) const -> glm::vec2 {
 
     if (frames.empty()) { return {NAN, NAN}; }
 
     auto getSizeValue = [&](StyleParam::SizeValue size) -> glm::vec2 {
-        if ( (!_useCssSize && (!size[0].isPixel() && !size[1].isPixel()) ) ||
-             (size[0].isAuto() && size[1].isAuto()) ) {
+        // illegal size values in draw rule
+        // 1. both width and height set to auto (no way to determine one from another using aspect)
+        // 2. No to determine sizes when % or auto is used texture information is not available (aspect/density).
+        if ( (size[0].isAuto() && size[1].isAuto()) ||
+                (!_useTextureInfo && (size[0].isPercentage() || size[0].isAuto() || size[1].isAuto()))) {
             return {NAN, NAN};
         }
         if (size[0].isPixel() && size[1].isPixel()) {
             if (std::isnan(size[0].value) && std::isnan(size[1].value)) {
                 return _cssSize;
-            } else if (size[0].value == 0.f || std::isnan(size[1].value)) {
+            }
+            if (size[0].value == 0.f || std::isnan(size[1].value)) {
                 return glm::vec2(size[0].value);
-            } else {
-                return glm::vec2(size[0].value, size[1].value);
             }
-        } else {
-            if (size[0].isPercentage()) {
-                return _cssSize * (size[0].value * 0.01f);
-            } else if (size[0].isAuto()) {
-                return glm::vec2(size[1].value * _aspectRatio, size[1].value);
-            } else {
-                return glm::vec2(size[0].value, size[0].value / _aspectRatio);
-            }
+            return glm::vec2(size[0].value, size[1].value);
         }
+
+        // Use textureInfo
+        if (!_useTextureInfo) { return {NAN, NAN}; }
+
+        if (size[0].isPercentage()) {
+            return _cssSize * (size[0].value * 0.01f);
+        }
+        if (size[0].isAuto()) {
+            return glm::vec2(size[1].value * _aspectRatio, size[1].value);
+        }
+        return glm::vec2(size[0].value, size[0].value / _aspectRatio);
     };
 
     auto upper = nearestHigherFrame(_key);

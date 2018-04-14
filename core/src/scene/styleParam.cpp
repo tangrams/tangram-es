@@ -523,8 +523,9 @@ static const std::vector<std::string> s_units = { "px", "ms", "m", "s", "%" };
 int StyleParam::parseSizeUnitPair(const std::string &_value, size_t offset,
                                   StyleParam::ValueUnitPair &_result) {
     const char* autoStr = "auto";
-    const int autoSize = 4;
-    if (_value.substr(offset, autoSize).compare(autoStr) == 0) {
+    const size_t autoSize = 4;
+
+    if (_value.size() >= (offset + autoSize) && _value.compare(offset, autoSize, autoStr) == 0) {
         _result.unit = Unit::sizeauto;
         offset += autoSize;
         return offset;

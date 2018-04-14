@@ -128,6 +128,13 @@ struct StyleParam {
         bool isPixel() const { return unit == Unit::pixel; }
         bool isSeconds() const { return unit == Unit::seconds; }
         bool isMilliseconds() const { return unit == Unit::milliseconds; }
+
+        bool operator==(const ValueUnitPair& _other) const {
+            return value == _other.value && unit == _other.unit;
+        }
+        bool operator!=(const ValueUnitPair& _other) const {
+            return value != _other.value || unit != _other.unit;
+        }
     };
     struct Width : ValueUnitPair {
 
@@ -139,13 +146,6 @@ struct StyleParam {
 
         Width(ValueUnitPair& _other) :
             ValueUnitPair(_other) {}
-
-        bool operator==(const Width& _other) const {
-            return value == _other.value && unit == _other.unit;
-        }
-        bool operator!=(const Width& _other) const {
-            return value != _other.value || unit != _other.unit;
-        }
     };
 
 

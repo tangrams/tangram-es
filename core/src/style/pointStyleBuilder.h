@@ -75,7 +75,7 @@ struct PointStyleBuilder : public StyleBuilder {
 private:
 
     /*
-     * Resolves the aptly texture used by the point style builder
+     * Resolves the apt texture used by the point style builder
      * Texture could be specified by:
      * - explicit marker texture
      * - texture name specified in the draw rules
