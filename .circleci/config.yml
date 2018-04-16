@@ -1,5 +1,48 @@
 version: 2
 jobs:
+  build-test-linux:
+    machine: true
+    steps:
+      - checkout
+      - run: git submodule update --init
+      - run: sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+      - run: sudo apt-get update
+      - run: sudo apt-get install -y cmake3 g++-4.9 libcurl4-openssl-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libgl1-mesa-dev libicu-dev libfreetype6-dev libharfbuzz-dev
+      - run: make -j4 linux CXX=g++-4.9 CC=gcc-4.9 CMAKE_OPTIONS="-DTANGRAM_USE_SYSTEM_FONT_LIBS=1 -DUNIT_TESTS=1 -DBENCHMARK=1"
+      - run:
+          name: Run unit tests
+          command: |
+            cd ./build/linux/bin
+            for file in unit/*.out
+              do
+                echo "Running ${file}"
+                $file
+              done
+      - run:
+          name: Run benchmarks
+          command: |
+            cd ./build/linux/bin
+            # Download a tile for testing
+            curl --compressed -L -o tile.mvt https://tile.nextzen.org/tilezen/vector/v1/256/all/10/301/384.mvt?api_key=${NEXTZEN_API_KEY}
+            for file in bench/*.out
+              do
+                echo "Running ${file}"
+                $file
+              done
+  build-android:
+    docker:
+      - image: lakoo/android-ndk:25-26.0.1-r15c
+    steps:
+      - checkout
+      - run: git submodule update --init
+      - run: cd platforms/android && ./gradlew demo:assembleDebug -Pandroid.injected.build.abi=armeabi-v7a
+  build-deploy-android-snapshot:
+    docker:
+      - image: lakoo/android-ndk:25-26.0.1-r15c
+    steps:
+      - checkout
+      - run: git submodule update --init
+      - run: cd platforms/android && ./gradlew uploadArchives
   build-ios:
     macos:
       xcode: "9.0"
@@ -79,6 +122,15 @@ workflows:
   version: 2
   build-and-deploy:
     jobs:
+      - build-test-linux
+      - build-android:
+          filters:
+            branches:
+              ignore: master
+      - build-deploy-android-snapshot:
+          filters:
+            branches:
+              only: master
       - build-ios:
           filters:
             branches:
