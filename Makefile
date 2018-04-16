@@ -22,7 +22,6 @@ all: android osx ios
 .PHONY: benchmark
 .PHONY: ios-framework
 .PHONY: ios-framework-universal
-.PHONY: check-ndk
 .PHONY: cmake-osx
 .PHONY: cmake-xcode
 .PHONY: cmake-ios
@@ -60,30 +59,17 @@ IOS_FRAMEWORK_XCODE_PROJ = tangram.xcodeproj
 XCPRETTY = $(shell command -v xcpretty 2> /dev/null)
 
 # Default build type is Release
-CONFIG = Release
+BUILD_TYPE = Release
 ifdef DEBUG
-	CONFIG = Debug
-endif
-
-ifdef DEBUG
-	BUILD_TYPE = -DCMAKE_BUILD_TYPE=Debug
-endif
-ifdef RELEASE
-	BUILD_TYPE = -DCMAKE_BUILD_TYPE=Release
-endif
-
-ifndef TANGRAM_CMAKE_OPTIONS
-	TANGRAM_CMAKE_OPTIONS = \
-		-DBENCHMARK=0 \
-		-DUNIT_TESTS=0
+	BUILD_TYPE = Debug
 endif
 
 # Build for iOS simulator architecture only
 ifdef TANGRAM_IOS_FRAMEWORK_SLIM
-	IOS_FRAMEWORK_PATH = ${IOS_FRAMEWORK_SIM_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework
+	IOS_FRAMEWORK_PATH = ${IOS_FRAMEWORK_SIM_BUILD_DIR}/lib/${BUILD_TYPE}/TangramMap.framework
 	IOS_FRAMEWORK_DEVICE_ARCHS = ''
 else
-	IOS_FRAMEWORK_PATH = ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}/TangramMap.framework
+	IOS_FRAMEWORK_PATH = ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${BUILD_TYPE}/TangramMap.framework
 	IOS_FRAMEWORK_DEVICE_ARCHS = 'armv7 arm64'
 endif
 IOS_FRAMEWORK_SIM_ARCHS = 'x86_64'
@@ -91,54 +77,56 @@ IOS_FRAMEWORK_SIM_ARCHS = 'x86_64'
 BENCH_CMAKE_PARAMS = \
 	-DBENCHMARK=1 \
 	-DAPPLICATION=0 \
-	-DCMAKE_BUILD_TYPE=Release
+	-DCMAKE_BUILD_TYPE=Release \
+	${CMAKE_OPTIONS}
 
 UNIT_TESTS_CMAKE_PARAMS = \
 	-DUNIT_TESTS=1 \
 	-DAPPLICATION=0 \
-	-DCMAKE_BUILD_TYPE=Debug
+	-DCMAKE_BUILD_TYPE=Debug \
+	${CMAKE_OPTIONS}
 
 IOS_CMAKE_PARAMS = \
-        ${BUILD_TYPE} \
-        ${CMAKE_OPTIONS} \
+	-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
 	-DPLATFORM_TARGET=ios \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/iOS.toolchain.cmake \
 	-DTANGRAM_FRAMEWORK=${IOS_FRAMEWORK_PATH} \
-	-G Xcode
+	-G Xcode \
+	${CMAKE_OPTIONS}
 
 IOS_FRAMEWORK_CMAKE_PARAMS = \
-        ${BUILD_TYPE} \
-        ${CMAKE_OPTIONS} \
+	-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
 	-DPLATFORM_TARGET=ios.framework \
 	-DIOS_SIMULATOR_ARCHS=${IOS_FRAMEWORK_SIM_ARCHS} \
 	-DIOS_DEVICE_ARCHS=${IOS_FRAMEWORK_DEVICE_ARCHS} \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/iOS.toolchain.cmake \
-	-G Xcode
+	-G Xcode \
+	${CMAKE_OPTIONS}
 
 DARWIN_XCODE_CMAKE_PARAMS = \
-        ${BUILD_TYPE} \
-        ${CMAKE_OPTIONS} \
+	-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
 	-DPLATFORM_TARGET=darwin \
 	-DCMAKE_OSX_DEPLOYMENT_TARGET:STRING="10.9" \
-	-G Xcode
+	-G Xcode \
+	${CMAKE_OPTIONS}
 
 DARWIN_CMAKE_PARAMS = \
-        ${BUILD_TYPE} \
-        ${CMAKE_OPTIONS} \
+	-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
 	-DPLATFORM_TARGET=darwin \
-	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+	${CMAKE_OPTIONS}
 
 RPI_CMAKE_PARAMS = \
-        ${BUILD_TYPE} \
-        ${CMAKE_OPTIONS} \
+	-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
 	-DPLATFORM_TARGET=raspberrypi \
-	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+	${CMAKE_OPTIONS}
 
 LINUX_CMAKE_PARAMS = \
-        ${BUILD_TYPE} \
-        ${CMAKE_OPTIONS} \
+	-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
 	-DPLATFORM_TARGET=linux \
-	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+	${CMAKE_OPTIONS}
 
 ifndef TIZEN_PROFILE
 	TIZEN_PROFILE=mobile
@@ -149,24 +137,24 @@ ifndef TIZEN_VERSION
 endif
 
 TIZEN_ARM_CMAKE_PARAMS = \
-        ${BUILD_TYPE} \
-        ${CMAKE_OPTIONS} \
+	-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
 	-DTIZEN_SDK=$$TIZEN_SDK \
 	-DTIZEN_SYSROOT=$$TIZEN_SDK/platforms/tizen-${TIZEN_VERSION}/${TIZEN_PROFILE}/rootstraps/${TIZEN_PROFILE}-${TIZEN_VERSION}-device.core \
 	-DTIZEN_DEVICE=1 \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/tizen.toolchain.cmake \
 	-DPLATFORM_TARGET=tizen \
-	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+	${CMAKE_OPTIONS}
 
 TIZEN_X86_CMAKE_PARAMS = \
-	${BUILD_TYPE} \
-	${CMAKE_OPTIONS} \
+	-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
 	-DTIZEN_SDK=$$TIZEN_SDK \
 	-DTIZEN_SYSROOT=$$TIZEN_SDK/platforms/tizen-${TIZEN_VERSION}/${TIZEN_PROFILE}/rootstraps/${TIZEN_PROFILE}-${TIZEN_VERSION}-emulator.core \
 	-DTIZEN_DEVICE=0 \
 	-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_DIR}/tizen.toolchain.cmake \
 	-DPLATFORM_TARGET=tizen \
-	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+	${CMAKE_OPTIONS}
 
 clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux clean-shaders \
 	clean-tizen-arm clean-tizen-x86
@@ -199,7 +187,7 @@ clean-benchmark:
 	rm -rf ${BENCH_BUILD_DIR}
 
 clean-shaders:
-	rm -rf core/include/shaders/*.h
+	rm -rf core/generated/*.h
 
 clean-tizen-arm:
 	rm -rf ${TIZEN_ARM_BUILD_DIR}
@@ -227,38 +215,33 @@ android-demo:
 	@cd platforms/android/ && \
 	./gradlew demo:assembleDebug
 
-osx: ${OSX_BUILD_DIR}/Makefile
-	@cd ${OSX_BUILD_DIR} && \
-	${MAKE}
-
-${OSX_BUILD_DIR}/Makefile: cmake-osx
-
-OSX_BUILD = \
-	xcodebuild -target ${OSX_TARGET} -project ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ} -configuration ${CONFIG}
-
-xcode: ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}
-ifeq (, $(shell which xcpretty))
-	${OSX_BUILD}
-else
-	${OSX_BUILD} | ${XCPRETTY}
-endif
-
-${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ}: cmake-xcode
-
-cmake-xcode:
-	@mkdir -p ${OSX_XCODE_BUILD_DIR}
-	@cd ${OSX_XCODE_BUILD_DIR} && \
-	cmake ../.. ${DARWIN_XCODE_CMAKE_PARAMS}
+osx: cmake-osx
+	cmake --build ${OSX_BUILD_DIR}
 
 cmake-osx:
 	@mkdir -p ${OSX_BUILD_DIR}
 	@cd ${OSX_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_CMAKE_PARAMS}
 
-IOS_BUILD = \
-	xcodebuild -target ${IOS_TARGET} ARCHS=${IOS_FRAMEWORK_SIM_ARCHS} ONLY_ACTIVE_ARCH=NO -sdk iphonesimulator -project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ} -configuration ${CONFIG}
+OSX_BUILD = \
+	xcodebuild -target ${OSX_TARGET} -project ${OSX_XCODE_BUILD_DIR}/${OSX_XCODE_PROJ} -configuration ${BUILD_TYPE}
 
-ios: ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}
+xcode: cmake-xcode
+ifeq (, $(shell which xcpretty))
+	${OSX_BUILD}
+else
+	${OSX_BUILD} | ${XCPRETTY}
+endif
+
+cmake-xcode:
+	@mkdir -p ${OSX_XCODE_BUILD_DIR}
+	@cd ${OSX_XCODE_BUILD_DIR} && \
+	cmake ../.. ${DARWIN_XCODE_CMAKE_PARAMS}
+
+IOS_BUILD = \
+	xcodebuild -target ${IOS_TARGET} ARCHS=${IOS_FRAMEWORK_SIM_ARCHS} ONLY_ACTIVE_ARCH=NO -sdk iphonesimulator -project ${IOS_BUILD_DIR}/${IOS_XCODE_PROJ} -configuration ${BUILD_TYPE}
+
+ios: cmake-ios
 ifeq (, $(shell which xcpretty))
 	${IOS_BUILD}
 else
@@ -272,8 +255,6 @@ endif
 	@mkdir -p ${IOS_DOCS_BUILD_DIR}
 	@cd platforms/ios && \
 	jazzy --config jazzy.yml
-
-${IOS_BUILD_DIR}/${IOS_XCODE_PROJ}: cmake-ios
 
 cmake-ios: ios-framework-universal
 	@mkdir -p ${IOS_BUILD_DIR}
@@ -293,7 +274,7 @@ cmake-ios-framework-sim:
 	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS} -DIOS_PLATFORM=SIMULATOR -DBUILD_IOS_FRAMEWORK=TRUE
 
 IOS_FRAMEWORK_BUILD = \
-	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} -configuration ${CONFIG}
+	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} -configuration ${BUILD_TYPE}
 
 ios-framework: cmake-ios-framework
 ifndef TANGRAM_IOS_FRAMEWORK_SLIM
@@ -305,7 +286,7 @@ endif
 endif
 
 IOS_FRAMEWORK_SIM_BUILD = \
-	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_SIM_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} -configuration ${CONFIG}
+	xcodebuild -target ${IOS_FRAMEWORK_TARGET} -project ${IOS_FRAMEWORK_SIM_BUILD_DIR}/${IOS_FRAMEWORK_XCODE_PROJ} -configuration ${BUILD_TYPE}
 
 ios-framework-sim: cmake-ios-framework-sim
 ifeq (, $(shell which xcpretty))
@@ -316,16 +297,15 @@ endif
 
 ios-framework-universal: ios-framework ios-framework-sim
 ifndef TANGRAM_IOS_FRAMEWORK_SLIM
-	@mkdir -p ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}
-	@cp -r ${IOS_FRAMEWORK_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}
-	lipo ${IOS_FRAMEWORK_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework/TangramMap \
-		${IOS_FRAMEWORK_SIM_BUILD_DIR}/lib/${CONFIG}/TangramMap.framework/TangramMap \
-		-create -output ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${CONFIG}/TangramMap.framework/TangramMap
+	@mkdir -p ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${BUILD_TYPE}
+	@cp -r ${IOS_FRAMEWORK_BUILD_DIR}/lib/${BUILD_TYPE}/TangramMap.framework ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${BUILD_TYPE}
+	lipo ${IOS_FRAMEWORK_BUILD_DIR}/lib/${BUILD_TYPE}/TangramMap.framework/TangramMap \
+		${IOS_FRAMEWORK_SIM_BUILD_DIR}/lib/${BUILD_TYPE}/TangramMap.framework/TangramMap \
+		-create -output ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${BUILD_TYPE}/TangramMap.framework/TangramMap
 endif
 
 rpi: cmake-rpi
-	@cd ${RPI_BUILD_DIR} && \
-	${MAKE}
+	cmake --build ${RPI_BUILD_DIR}
 
 cmake-rpi:
 	@mkdir -p ${RPI_BUILD_DIR}
@@ -333,26 +313,23 @@ cmake-rpi:
 	cmake ../.. ${RPI_CMAKE_PARAMS}
 
 linux: cmake-linux
-	cd ${LINUX_BUILD_DIR} && \
-	${MAKE}
+	cmake --build ${LINUX_BUILD_DIR}
 
 cmake-linux:
-	mkdir -p ${LINUX_BUILD_DIR}
-	cd ${LINUX_BUILD_DIR} &&\
+	@mkdir -p ${LINUX_BUILD_DIR}
+	@cd ${LINUX_BUILD_DIR} && \
 	cmake ../.. ${LINUX_CMAKE_PARAMS}
 
 tizen-arm: cmake-tizen-arm
-	cd ${TIZEN_ARM_BUILD_DIR} && \
-	${MAKE}
+	cmake --build ${TIZEN_ARM_BUILD_DIR}
 
 cmake-tizen-arm:
-	mkdir -p ${TIZEN_ARM_BUILD_DIR}
-	cd ${TIZEN_ARM_BUILD_DIR} &&\
+	@mkdir -p ${TIZEN_ARM_BUILD_DIR}
+	@cd ${TIZEN_ARM_BUILD_DIR} && \
 	cmake ../.. ${TIZEN_ARM_CMAKE_PARAMS}
 
 tizen-x86: cmake-tizen-x86
-	cd ${TIZEN_X86_BUILD_DIR} && \
-	${MAKE}
+	cmake --build ${TIZEN_X86_BUILD_DIR}
 
 cmake-tizen-x86:
 	mkdir -p ${TIZEN_X86_BUILD_DIR}
@@ -365,13 +342,13 @@ unit-tests:
 	@mkdir -p ${TESTS_BUILD_DIR}
 	@cd ${TESTS_BUILD_DIR} && \
 	cmake ../.. ${UNIT_TESTS_CMAKE_PARAMS} && \
-	${MAKE}
+	cmake --build .
 
 benchmark:
 	@mkdir -p ${BENCH_BUILD_DIR}
 	@cd ${BENCH_BUILD_DIR} && \
-	cmake ../../ ${BENCH_CMAKE_PARAMS} && \
-	${MAKE}
+	cmake ../.. ${BENCH_CMAKE_PARAMS} && \
+	cmake --build .
 
 format:
 	@for file in `git diff --diff-filter=ACMRTUXB --name-only -- '*.cpp' '*.h'`; do \
