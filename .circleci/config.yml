@@ -20,9 +20,9 @@ jobs:
       - run:
           name: Run benchmarks
           command: |
+            # Use a stored tile for testing
+            cp bench/test_tile_10_301_384.mvt build/linux/bin/tile.mvt
             cd ./build/linux/bin
-            # Download a tile for testing
-            curl --compressed -L -o tile.mvt https://tile.nextzen.org/tilezen/vector/v1/256/all/10/301/384.mvt?api_key=${NEXTZEN_API_KEY}
             for file in bench/*.out
               do
                 echo "Running ${file}"
