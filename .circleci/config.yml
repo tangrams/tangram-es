@@ -1,14 +1,12 @@
 version: 2
 jobs:
   build-test-linux:
-    machine: true
+    docker:
+      - image: matteblair/docker-tangram-linux:latest
     steps:
       - checkout
       - run: git submodule update --init
-      - run: sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-      - run: sudo apt-get update
-      - run: sudo apt-get install -y cmake3 g++-4.9 libcurl4-openssl-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libgl1-mesa-dev libicu-dev libfreetype6-dev libharfbuzz-dev
-      - run: make -j4 linux CXX=g++-4.9 CC=gcc-4.9 CMAKE_OPTIONS="-DTANGRAM_USE_SYSTEM_FONT_LIBS=1 -DUNIT_TESTS=1 -DBENCHMARK=1"
+      - run: make linux CMAKE_OPTIONS="-DTANGRAM_USE_SYSTEM_FONT_LIBS=1 -DTANGRAM_USE_SYSTEM_GLFW_LIBS=1 -DUNIT_TESTS=1 -DBENCHMARK=1 -GNinja"
       - run:
           name: Run unit tests
           command: |
