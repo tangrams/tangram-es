@@ -9,7 +9,7 @@ JobQueue::~JobQueue() {
 
 void JobQueue::add(Job job) {
 
-    if (!m_stopped.load()) {
+    if (!m_stopped.load(std::memory_order_relaxed)) {
         std::lock_guard<std::mutex> lock(m_mutex);
         m_jobs.push_back(std::move(job));
     } else {
