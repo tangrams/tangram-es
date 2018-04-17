@@ -587,7 +587,7 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
     } else {
         texture = std::make_shared<Texture>(std::vector<char>(), options, generateMipmaps, density);
 
-        scene->pendingTextures++;
+        scene->pendingTextures.fetch_add(1, std::memory_order_relaxed);
         scene->startUrlRequest(platform, url, [&, url, scene, texture](UrlResponse response) {
                 if (response.error) {
                     LOGE("Error retrieving URL '%s': %s", url.string().c_str(), response.error);
@@ -601,8 +601,8 @@ std::shared_ptr<Texture> SceneLoader::fetchTexture(const std::shared_ptr<Platfor
                         }
                     }
                 }
-                scene->pendingTextures--;
-                if (scene->pendingTextures == 0) {
+                scene->pendingTextures.fetch_sub(1, std::memory_order_relaxed);
+                if (scene->pendingTextures.load(std::memory_order_relaxed) == 0) {
                     platform->requestRender();
                 }
             });
@@ -727,14 +727,14 @@ void loadFontDescription(const std::shared_ptr<Platform>& platform, const Node& 
     Url url(uri);
 
     // Load font file.
-    scene->pendingFonts++;
+    scene->pendingFonts.fetch_add(1, std::memory_order_relaxed);
     scene->startUrlRequest(platform, url, [_ft, scene](UrlResponse response) {
         if (response.error) {
             LOGE("Error retrieving font '%s' at %s: ", _ft.alias.c_str(), _ft.uri.c_str(), response.error);
         } else {
             scene->fontContext()->addFont(_ft, alfons::InputSource(std::move(response.content)));
         }
-        scene->pendingFonts--;
+        scene->pendingFonts.fetch_sub(1, std::memory_order_relaxed);
     });
 }
 

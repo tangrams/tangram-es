@@ -24,7 +24,7 @@ TileSource::TileSource(const std::string& _name, std::unique_ptr<DataSource> _so
 
     static std::atomic<int32_t> s_serial;
 
-    m_id = s_serial++;
+    m_id = s_serial.fetch_add(1, std::memory_order_relaxed);
 }
 
 TileSource::~TileSource() {

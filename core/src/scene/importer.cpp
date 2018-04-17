@@ -42,7 +42,7 @@ Node Importer::applySceneImports(std::shared_ptr<Platform> platform) {
             std::unique_lock<std::mutex> lock(sceneMutex);
 
             if (m_sceneQueue.empty()) {
-                if (activeDownloads == 0) {
+                if (activeDownloads.load(std::memory_order_relaxed) == 0) {
                     break;
                 }
                 condition.wait(lock);
@@ -61,7 +61,7 @@ Node Importer::applySceneImports(std::shared_ptr<Platform> platform) {
             }
         }
 
-        activeDownloads++;
+        activeDownloads.fetch_add(1, std::memory_order_relaxed);
         m_scene->startUrlRequest(platform, nextUrlToImport, [&, nextUrlToImport](UrlResponse response) {
             if (response.error) {
                 LOGE("Unable to retrieve '%s': %s", nextUrlToImport.string().c_str(), response.error);
@@ -69,7 +69,7 @@ Node Importer::applySceneImports(std::shared_ptr<Platform> platform) {
                 std::unique_lock<std::mutex> lock(sceneMutex);
                 addSceneData(nextUrlToImport, response.content);
             }
-            activeDownloads--;
+            activeDownloads.fetch_sub(1, std::memory_order_relaxed);
             condition.notify_all();
         });
     }
