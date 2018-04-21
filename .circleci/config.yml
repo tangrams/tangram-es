@@ -8,26 +8,8 @@ jobs:
       - run: git submodule update --init
       - run: make cmake-linux CMAKE_OPTIONS="-DTANGRAM_USE_SYSTEM_FONT_LIBS=1 -DTANGRAM_USE_SYSTEM_GLFW_LIBS=1 -DUNIT_TESTS=1 -DBENCHMARK=1 -GNinja"
       - run: ninja -C build/linux -j 4
-      - run:
-          name: Run unit tests
-          command: |
-            cd ./build/linux/bin
-            for file in unit/*.out
-              do
-                echo "Running ${file}"
-                $file
-              done
-      - run:
-          name: Run benchmarks
-          command: |
-            # Use a stored tile for testing
-            cp bench/test_tile_10_301_384.mvt build/linux/bin/tile.mvt
-            cd ./build/linux/bin
-            for file in bench/*.out
-              do
-                echo "Running ${file}"
-                $file
-              done
+      - run: source scripts/run_tests.sh build/linux/bin
+      - run: source scripts/run_bench.sh build/linux/bin
   build-android:
     docker:
       - image: lakoo/android-ndk:25-26.0.1-r15c
