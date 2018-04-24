@@ -26,7 +26,7 @@ jobs:
       - run: cd platforms/android && ./gradlew uploadArchives
   build-ios:
     macos:
-      xcode: "9.0"
+      xcode: "9.2.0"
     steps:
       # Check out repository with submodules.
       - checkout
@@ -40,7 +40,7 @@ jobs:
       - run: make ios-docs
   build-deploy-ios-snapshot:
     macos:
-      xcode: "9.0"
+      xcode: "9.2.0"
     steps:
       # Check out repository with submodules.
       - checkout
@@ -61,7 +61,7 @@ jobs:
           path: ~/pod.zip
   build-deploy-macos-snapshot:
     macos:
-      xcode: "9.0"
+      xcode: "9.2.0"
     steps:
       # Check out repository with submodules.
       - checkout
@@ -76,7 +76,7 @@ jobs:
           path: ~/demo.zip
   build-deploy-ios-release:
     macos:
-      xcode: "9.0"
+      xcode: "9.2.0"
     steps:
       # Check out repository with submodules.
       - checkout
