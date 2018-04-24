@@ -10,15 +10,15 @@
 
 using namespace Tangram;
 
-std::vector<glm::vec3> line = {
-    {0.0, 0.0, 0.0},
-    {1.0, 0.0, 0.0},
-    {1.0, 1.0, 0.0},
-    {0.0, 1.0, 0.0},
+std::vector<glm::vec2> line = {
+    {0.0, 0.0},
+    {1.0, 0.0},
+    {1.0, 1.0},
+    {0.0, 1.0},
 };
 
 struct PosNormEnormColVertex {
-    glm::vec3 pos;
+    glm::vec2 pos;
     glm::vec2 texcoord;
     glm::vec2 enorm;
     GLfloat ewidth;
@@ -30,7 +30,7 @@ static void BM_Tangram_BuildButtMiterLine(benchmark::State& state) {
     while(state.KeepRunning()) {
         std::vector<PosNormEnormColVertex> vertices;
         PolyLineBuilder builder {
-            [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
+            [&](const glm::vec2& coord, const glm::vec2& normal, const glm::vec2& uv) {
                 vertices.push_back({ coord, uv, normal, 0.5f, 0xffffff, 0.f });
             },
             CapTypes::butt,
@@ -46,7 +46,7 @@ static void BM_Tangram_BuildRoundRoundLine(benchmark::State& state) {
     while(state.KeepRunning()) {
         std::vector<PosNormEnormColVertex> vertices;
         PolyLineBuilder builder {
-            [&](const glm::vec3& coord, const glm::vec2& normal, const glm::vec2& uv) {
+            [&](const glm::vec2& coord, const glm::vec2& normal, const glm::vec2& uv) {
                 vertices.push_back({ coord, uv, normal, 0.5f, 0xffffff, 0.f });
             },
             CapTypes::round,

@@ -183,7 +183,6 @@ std::shared_ptr<TileData> GeoJson::parseTile(const TileTask& _task, const MapPro
         return Point {
             (tmp.x - tileOrigin.x) * tileInverseScale,
             (tmp.y - tileOrigin.y) * tileInverseScale,
-             0
         };
     };
 

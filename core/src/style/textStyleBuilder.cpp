@@ -283,7 +283,7 @@ bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
             const auto& polygons = _feat.polygons;
             for (const auto& polygon : polygons) {
                 if (!polygon.empty()) {
-                    glm::vec3 c;
+                    glm::vec2 c;
                     c = centroid(polygon.front().begin(), polygon.front().end());
                     addLabel(Label::Type::point, {{ c }}, params, attrib, _rule);
                 }

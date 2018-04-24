@@ -278,7 +278,7 @@ struct add_geometry {
 
     // Transform a geojsonvt::TilePoint into the corresponding Tangram::Point
     Point transformPoint(geometry::point<int16_t> pt) {
-        return { pt.x / extent, 1. - pt.y / extent, 0 };
+        return { pt.x / extent, 1. - pt.y / extent };
     }
 
     Feature& feature;
