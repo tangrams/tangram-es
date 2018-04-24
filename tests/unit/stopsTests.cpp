@@ -136,8 +136,8 @@ TEST_CASE("Regression test - Dont crash on evaluating empty stops", "[Stops][YAM
 
     {
         MercatorProjection proj{};
-        std::vector<Unit> units = { Unit::meter };
-        Stops stops(Stops::Widths(node, proj, units));
+        uint8_t allowedUnit = Unit::meter;
+        Stops stops(Stops::Widths(node, proj, allowedUnit));
         REQUIRE(stops.frames.size() == 0);
         stops.evalVec2(1);
     }
@@ -147,8 +147,8 @@ TEST_CASE("Regression test - Dont crash on evaluating empty stops", "[Stops][YAM
         stops.evalVec2(1);
     }
     {
-        std::vector<Unit> units = { Unit::meter };
-        Stops stops(Stops::Offsets(node, units));
+        uint8_t allowedUnit = Unit::meter;
+        Stops stops(Stops::Offsets(node, allowedUnit));
         REQUIRE(stops.frames.size() == 0);
         stops.evalVec2(1);
     }

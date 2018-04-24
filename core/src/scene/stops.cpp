@@ -76,7 +76,7 @@ auto Stops::FontSize(const YAML::Node& _node) -> Stops {
     return stops;
 }
 
-auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> Stops {
+auto Stops::Sizes(const YAML::Node& _node, uint8_t _units) -> Stops {
     Stops stops;
 
     // mixed dim stops not allowed for sizes (except when 1D stop uses %)
@@ -91,8 +91,8 @@ auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> S
 
     auto constructFrame = [&](const auto& _frameNode, size_t offset, StyleParam::ValueUnitPair& _result) -> bool {
         if (StyleParam::parseSizeUnitPair(_frameNode.Scalar(), offset, _result)) {
-            if (std::find(_units.begin(), _units.end(), _result.unit) == _units.end()) {
-                LOGW("Size StyleParam can only take in pixel, % or auto values in: %s", Dump(_node).c_str());
+            if ( !(_units & _result.unit) ) {
+                LOGW("Size StyleParam can only take in pixel, %% or auto values in: %s", Dump(_node).c_str());
                 return false;
             }
         } else {
@@ -164,7 +164,7 @@ auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> S
     return stops;
 }
 
-auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) -> Stops {
+auto Stops::Offsets(const YAML::Node& _node, uint8_t _units) -> Stops {
     Stops stops;
     if (!_node.IsSequence()) {
         return stops;
@@ -198,7 +198,8 @@ auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) ->
                 }
             }
             if (widths.size() == 2) {
-                if (widths[0].unit != Unit::pixel || widths[1].unit != Unit::pixel) {
+                if ( !(widths[0].unit & _units ) &&
+                        !(widths[1].unit & _units) ) {
                     LOGW("Non-pixel unit not allowed for multidimensionnal stop values");
                 }
                 stops.frames.emplace_back(key, glm::vec2(widths[0].value, widths[1].value));
@@ -209,7 +210,7 @@ auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) ->
     return stops;
 }
 
-auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, const std::vector<Unit>& _units) -> Stops {
+auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, uint8_t _units) -> Stops {
     Stops stops;
     if (!_node.IsSequence()) { return stops; }
 
@@ -234,15 +235,8 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, co
         size_t start = 0;
 
         if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, width)) {
-            bool valid = false;
-            for (auto& unit : _units) {
-                if (width.unit == unit) {
-                    valid = true;
-                    break;
-                }
-            }
 
-            if (!valid) {
+            if (! (width.unit & _units) ) {
                 LOGW("Invalid unit is being used for stop %s", Dump(frameNode[1]).c_str());
             }
 

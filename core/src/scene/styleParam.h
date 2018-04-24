@@ -85,7 +85,14 @@ enum class StyleParamKey : uint8_t {
 
 constexpr size_t StyleParamKeySize = static_cast<size_t>(StyleParamKey::NUM_ELEMENTS);
 
-enum class Unit { pixel, milliseconds, meter, seconds, percentage, sizeauto };
+enum Unit : uint8_t {
+    pixel = 1 << 0,
+    milliseconds = 1 << 1,
+    meter = 1 << 2,
+    seconds = 1 << 3,
+    percentage = 1 << 4,
+    sizeauto = 1 << 5
+};
 
 static inline std::string unitString(Unit unit) {
     switch(unit) {
@@ -199,9 +206,9 @@ struct StyleParam {
     static bool parseTime(const std::string& _value, float& _time);
 
     // values within _value string parameter must be delimited by ','
-    static bool parseSize(const std::string& _value, const std::vector<Unit>& _allowedUnits, SizeValue& _vec2);
-    static bool parseVec2(const std::string& _value, const std::vector<Unit>& _allowedUnits, UnitVec<glm::vec2>& _vec2);
-    static bool parseVec3(const std::string& _value, const std::vector<Unit>& _allowedUnits, UnitVec<glm::vec3>& _vec3);
+    static bool parseSize(const std::string& _value, uint8_t _allowedUnits, SizeValue& _vec2);
+    static bool parseVec2(const std::string& _value, uint8_t _allowedUnits, UnitVec<glm::vec2>& _vec2);
+    static bool parseVec3(const std::string& _value, uint8_t _allowedUnits, UnitVec<glm::vec3>& _vec3);
 
     static int parseSizeUnitPair(const std::string& _value, size_t start,
                                  StyleParam::ValueUnitPair& _result);
@@ -218,7 +225,7 @@ struct StyleParam {
     static bool isFontSize(StyleParamKey _key);
     static bool isRequired(StyleParamKey _key);
 
-    static const std::vector<Unit>& unitsForStyleParam(StyleParamKey _key);
+    static uint8_t unitsForStyleParam(StyleParamKey _key);
 
     static StyleParamKey getKey(const std::string& _key);
 
