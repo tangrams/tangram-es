@@ -60,11 +60,11 @@ enum GeometryType {
     polygons
 };
 
-typedef glm::vec2 Point;
+using Point = glm::vec2;
 
-typedef std::vector<Point> Line;
+using Line = std::vector<Point>;
 
-typedef std::vector<Line> Polygon;
+using Polygon = std::vector<Line>;
 
 struct Feature {
     Feature() {}
