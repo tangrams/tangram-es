@@ -473,8 +473,7 @@ void StyleContext::parseStyleResult(StyleParamKey _key, StyleParam::Value& _val)
             }
             case StyleParamKey::size: {
                 StyleParam::SizeValue vec;
-                vec.fill( {NAN, Unit::pixel} );
-                vec[0].value = static_cast<float>(duk_get_number(m_ctx, -1));
+                vec.x.value = static_cast<float>(duk_get_number(m_ctx, -1));
                 _val = vec;
                 break;
             }

@@ -645,21 +645,10 @@ int parseVec(const std::string& _value, uint8_t allowedUnits, UnitVec<T>& _vec) 
 }
 
 bool StyleParam::parseSize(const std::string &_value, uint8_t allowedUnits, SizeValue& _vec) {
-    // initialize with defaults
-    _vec.fill({NAN, Unit::pixel});
-    const size_t elements = _vec.size();
-
     int offset = 0;
-    for (size_t i = 0; i < elements; i++) {
-        offset = StyleParam::parseSizeUnitPair(_value, offset, _vec[i]);
-        if (offset < 0) { return i; }
-
-        if ( !(_vec[i].unit & allowedUnits) ) {
-            return 0;
-        }
-    }
-
-    return elements;
+    offset = StyleParam::parseSizeUnitPair(_value, offset, _vec.x);
+    offset = StyleParam::parseSizeUnitPair(_value, offset, _vec.y);
+    return (offset > 0) && ((_vec.x.unit & allowedUnits) && (_vec.y.unit & allowedUnits));
 }
 
 bool StyleParam::parseVec2(const std::string& _value, uint8_t allowedUnits, UnitVec<glm::vec2>& _vec) {

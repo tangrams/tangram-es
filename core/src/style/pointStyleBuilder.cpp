@@ -307,15 +307,10 @@ bool PointStyleBuilder::getTexture(const Parameters& _params, Texture **_texture
 bool PointStyleBuilder::evalSizeParam(const DrawRule& _rule, Parameters& _params, const Texture* _texture) const {
     StyleParam::SizeValue size;
     SpriteNode spriteNode;
-    glm::vec2 cssSize = {1.f, 1.f};
-    float aspectRatio = 1.f;
-    bool useTextureInfo = false;
+    glm::vec2 spriteSize(NAN);
 
     if (_texture) {
-        cssSize = glm::vec2{_texture->getWidth(), _texture->getHeight()} * _texture->invDensity();
-        aspectRatio = _texture->getWidth() / _texture->getHeight();
-        // can use cssSize and aspect if "%" or "auto" size is used
-        useTextureInfo = true;
+        spriteSize = glm::vec2{_texture->getWidth(), _texture->getHeight()} * _texture->invDensity();
 
         const auto &atlas = _texture->spriteAtlas();
         if (atlas) {
@@ -323,59 +318,34 @@ bool PointStyleBuilder::evalSizeParam(const DrawRule& _rule, Parameters& _params
                 !atlas->getSpriteNode(_params.spriteDefault, spriteNode)) {
                 return false;
             }
-            cssSize = spriteNode.m_size * _texture->invDensity();
-            aspectRatio = spriteNode.m_size.x / spriteNode.m_size.y;
+            spriteSize = spriteNode.m_size * _texture->invDensity();
         } else if ( !_params.sprite.empty() || !_params.spriteDefault.empty()) {
             // missing sprite atlas for texture but sprite specified in draw rule
             return false;
         }
-    } else {
-        // default css size of 16px
-        cssSize = glm::vec2(16.f);
     }
 
     auto sizeParam = _rule.findParameter(StyleParamKey::size);
 
     if (sizeParam.stops) {
-        glm::vec2 lower = sizeParam.stops->evalSize(m_styleZoom, cssSize, aspectRatio, useTextureInfo);
-        // illegal size values were evaluated
-        if (std::isnan(lower.x)) { return false; }
-
-        glm::vec2 higher = sizeParam.stops->evalSize(m_styleZoom + 1, cssSize, aspectRatio, useTextureInfo);
+        glm::vec2 lower = sizeParam.stops->evalSize(m_styleZoom, spriteSize);
+        glm::vec2 higher = sizeParam.stops->evalSize(m_styleZoom + 1, spriteSize);
+        if ((std::isnan(lower.x) || std::isnan(lower.y)) || (std::isnan(higher.x) || std::isnan(higher.y))) {
+            // Illegal size values were evaluated.
+            return false;
+        }
         _params.size = lower;
         _params.extrudeScale = higher.x - lower.x;
 
     } else if (_rule.get(StyleParamKey::size, size)) {
-        // illegal size values in draw rule
-        // 1. both width and height set to auto (no way to determine one from another using aspect)
-        // 2. No to determine sizes when % or auto is used texture information is not available (aspect/density).
-        if ( (size[0].isAuto() && size[1].isAuto()) ||
-                (!useTextureInfo && (size[0].isPercentage() || size[0].isAuto() || size[1].isAuto()))) {
+        glm::vec2 pixelSize = size.getSizePixels(spriteSize);
+        if (std::isnan(pixelSize.x) || std::isnan(pixelSize.y)) {
+            // Illegal size values were evaluated.
             return false;
         }
-
-        if (size[0].isPixel() && size[1].isPixel()) {
-            if (std::isnan(size[0].value) && std::isnan(size[1].value)) {
-                _params.size = cssSize;
-            } else if (size[0].value == 0.f || std::isnan(size[1].value)) {
-                _params.size = glm::vec2(size[0].value);
-            } else {
-                _params.size = glm::vec2(size[0].value, size[1].value);
-            }
-        } else {
-            // _texture/spriteNode must have been set!
-            if (!useTextureInfo) { return false; }
-
-            if (size[0].isPercentage()) {
-                _params.size = cssSize * (size[0].value * 0.01f);
-            } else if (size[0].isAuto()) { // size[1] must be pixel
-                _params.size = glm::vec2(size[1].value * aspectRatio, size[1].value);
-            } else { // size[0] must be pixel
-                _params.size = glm::vec2(size[0].value, size[0].value / aspectRatio);
-            }
-        }
+        _params.size = pixelSize;
     } else {
-        return false;
+        _params.size = spriteSize;
     }
 
     _params.size *= m_style.pixelScale();

@@ -163,7 +163,44 @@ struct StyleParam {
         }
     };
 
-    using SizeValue = std::array<ValueUnitPair, 2>;
+    struct SizeValue {
+        ValueUnitPair x = { NAN, Unit::pixel };
+        ValueUnitPair y = { NAN, Unit::pixel };
+
+        // Apply this size value for a point with the given default sprite size, in CSS pixels.
+        // To apply no default sprite size, input a vector of NaN values.
+        // If either dimension of the output is NaN, then there is no valid size result.
+        glm::vec2 getSizePixels(glm::vec2 spriteSize) const {
+            if (x.isPercentage()) {
+                return spriteSize * (x.value * 0.01f);
+            }
+            if (x.isAuto() && y.isPixel()) {
+                return glm::vec2(y.value * spriteSize.x / spriteSize.y, y.value);
+            }
+            if (x.isPixel() && y.isAuto()) {
+                return glm::vec2(x.value, x.value * spriteSize.y / spriteSize.x);
+            }
+            if (x.isPixel() && y.isPixel()) {
+                if (std::isnan(y.value)) {
+                    if (std::isnan(x.value)) {
+                        return spriteSize;
+                    }
+                    return glm::vec2(x.value);
+                }
+                return glm::vec2(x.value, y.value);
+            }
+            return glm::vec2(NAN);
+        }
+
+        bool operator==(const SizeValue& other) const {
+            return x == other.x && y == other.y;
+        }
+
+        bool operator!=(const SizeValue& other) const {
+            return !(*this == other);
+        }
+    };
+
     using Value = variant<none_type, Undefined, bool, float, uint32_t, std::string, glm::vec2, SizeValue, Width,
                           LabelProperty::Placement, LabelProperty::Anchors, TextSource>;
 

@@ -45,7 +45,7 @@ struct Stops {
     auto evalColor(float _key) const -> uint32_t;
     auto evalVec2(float _key) const -> glm::vec2;
     auto evalExpVec2(float _key) const -> glm::vec2;
-    auto evalSize(float _key, const glm::vec2& cssSize, float aspectRatio, bool useTextureInfo) const -> glm::vec2;
+    auto evalSize(float _key, const glm::vec2& cssSize) const -> glm::vec2;
     auto nearestHigherFrame(float _key) const -> std::vector<Frame>::const_iterator;
 
     static void eval(const Stops& _stops, StyleParamKey _key, float _zoom, StyleParam::Value& _result);

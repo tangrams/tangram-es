@@ -27,7 +27,7 @@ struct PointStyleBuilder : public StyleBuilder {
         std::string sprite;
         std::string spriteDefault;
         std::string texture;
-        glm::vec2 size;
+        glm::vec2 size = { 16.f, 16.f };
         uint32_t color = 0xffffffff;
         float outlineWidth = 0.f;
         uint32_t outlineColor = 0x00000000;

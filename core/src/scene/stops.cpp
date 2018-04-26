@@ -80,8 +80,8 @@ auto Stops::Sizes(const YAML::Node& _node, uint8_t _units) -> Stops {
     Stops stops;
 
     // mixed dim stops not allowed for sizes (except when 1D stop uses %)
-    bool hasSingleDim = true;
-    bool dimSet = false;
+    bool has1DSize = false;
+    bool has2DSize = false;
 
     if (!_node.IsSequence()) {
         return stops;
@@ -89,8 +89,8 @@ auto Stops::Sizes(const YAML::Node& _node, uint8_t _units) -> Stops {
 
     float lastKey = 0;
 
-    auto constructFrame = [&](const auto& _frameNode, size_t offset, StyleParam::ValueUnitPair& _result) -> bool {
-        if (StyleParam::parseSizeUnitPair(_frameNode.Scalar(), offset, _result)) {
+    auto constructFrame = [&](const auto& _frameNode, StyleParam::ValueUnitPair& _result) -> bool {
+        if (StyleParam::parseSizeUnitPair(_frameNode.Scalar(), 0, _result)) {
             if ( !(_units & _result.unit) ) {
                 LOGW("Size StyleParam can only take in pixel, %% or auto values in: %s", Dump(_node).c_str());
                 return false;
@@ -113,52 +113,28 @@ auto Stops::Sizes(const YAML::Node& _node, uint8_t _units) -> Stops {
         lastKey = key;
 
         if (frameNode[1].IsScalar()) {
-
             StyleParam::SizeValue sizeValue;
-            // default size values
-            sizeValue.fill({NAN, Unit::pixel});
-            bool validStop = constructFrame(frameNode[1], 0, sizeValue[0]);
-            if (!validStop) { continue; }
-
-            bool hasPercentage = sizeValue[0].isPercentage();
-
-            // Check for mixed dimension stops
-            if (dimSet && !hasSingleDim && !hasPercentage) {
-                LOGW("Can not have mixed dimensions stops for Size style parameter.");
-                stops.frames.clear();
-                return stops;
-            }
-
-            if (!dimSet && !hasPercentage) {
-                dimSet = true;
-            }
-
-            stops.frames.emplace_back(key, sizeValue);
-        } else if (frameNode[1].IsSequence()) {
-
-            // Check for mixed dimension stops
-            if (dimSet && hasSingleDim) {
-                LOGW("Can not have mixed dimensions stops for Size style parameter.");
-                stops.frames.clear();
-                return stops;
-            }
-
-            if (!dimSet) {
-                dimSet = true;
-                hasSingleDim = false;
-            }
-
-            StyleParam::SizeValue sizeValue;
-            // default size values
-            sizeValue.fill({NAN, Unit::pixel});
-            const auto& sequenceNode = frameNode[1];
-
-            bool validStop = constructFrame(sequenceNode[0], 0, sizeValue[0]);
-            if (!validStop || !constructFrame(sequenceNode[1], 0, sizeValue[1])) {
+            if (!constructFrame(frameNode[1], sizeValue.x)) {
                 continue;
             }
-
+            if (!sizeValue.x.isPercentage()) {
+                has1DSize = true;
+            }
             stops.frames.emplace_back(key, sizeValue);
+        } else if (frameNode[1].IsSequence()) {
+            StyleParam::SizeValue sizeValue;
+            const auto& sequenceNode = frameNode[1];
+            if (!constructFrame(sequenceNode[0], sizeValue.x) ||
+                !constructFrame(sequenceNode[1], sizeValue.y)) {
+                continue;
+            }
+            has2DSize = true;
+            stops.frames.emplace_back(key, sizeValue);
+        }
+        if (has1DSize && has2DSize) {
+            LOGW("Cannot have mixed dimensions stops for Size style parameter: %s", Dump(_node).c_str());
+            stops.frames.clear();
+            return stops;
         }
     }
     return stops;
@@ -400,48 +376,18 @@ auto Stops::evalVec2(float _key) const -> glm::vec2 {
 
 }
 
-auto Stops::evalSize(float _key, const glm::vec2& _cssSize, float _aspectRatio, bool _useTextureInfo) const -> glm::vec2 {
+auto Stops::evalSize(float _key, const glm::vec2& _cssSize) const -> glm::vec2 {
 
     if (frames.empty()) { return {NAN, NAN}; }
-
-    auto getSizeValue = [&](StyleParam::SizeValue size) -> glm::vec2 {
-        // illegal size values in draw rule
-        // 1. both width and height set to auto (no way to determine one from another using aspect)
-        // 2. No to determine sizes when % or auto is used texture information is not available (aspect/density).
-        if ( (size[0].isAuto() && size[1].isAuto()) ||
-                (!_useTextureInfo && (size[0].isPercentage() || size[0].isAuto() || size[1].isAuto()))) {
-            return {NAN, NAN};
-        }
-        if (size[0].isPixel() && size[1].isPixel()) {
-            if (std::isnan(size[0].value) && std::isnan(size[1].value)) {
-                return _cssSize;
-            }
-            if (size[0].value == 0.f || std::isnan(size[1].value)) {
-                return glm::vec2(size[0].value);
-            }
-            return glm::vec2(size[0].value, size[1].value);
-        }
-
-        // Use textureInfo
-        if (!_useTextureInfo) { return {NAN, NAN}; }
-
-        if (size[0].isPercentage()) {
-            return _cssSize * (size[0].value * 0.01f);
-        }
-        if (size[0].isAuto()) {
-            return glm::vec2(size[1].value * _aspectRatio, size[1].value);
-        }
-        return glm::vec2(size[0].value, size[0].value / _aspectRatio);
-    };
 
     auto upper = nearestHigherFrame(_key);
     auto lower = upper - 1;
 
     if (upper == frames.end()) {
-        return getSizeValue(lower->value.get<StyleParam::SizeValue>());
+        return lower->value.get<StyleParam::SizeValue>().getSizePixels(_cssSize);
     }
     if (lower < frames.begin()) {
-        return getSizeValue(upper->value.get<StyleParam::SizeValue>());
+        return upper->value.get<StyleParam::SizeValue>().getSizePixels(_cssSize);
     }
 
     double range = exp2(upper->key - lower->key) - 1.0;
@@ -449,8 +395,8 @@ auto Stops::evalSize(float _key, const glm::vec2& _cssSize, float _aspectRatio, 
 
     double lerp = pos / range;
 
-    const glm::vec2& lowerVal = getSizeValue(lower->value.get<StyleParam::SizeValue>());
-    const glm::vec2& upperVal = getSizeValue(upper->value.get<StyleParam::SizeValue>());
+    const glm::vec2 lowerVal = lower->value.get<StyleParam::SizeValue>().getSizePixels(_cssSize);
+    const glm::vec2 upperVal = upper->value.get<StyleParam::SizeValue>().getSizePixels(_cssSize);
 
     return glm::vec2(lowerVal.x * (1 - lerp) + upperVal.x * lerp,
                      lowerVal.y * (1 - lerp) + upperVal.y * lerp);
