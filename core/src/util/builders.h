@@ -63,7 +63,7 @@ struct PolygonBuilder {
  * @enormal extrusion vector of the output coordinate
  * @uv      texture coordinate of the output coordinate
  */
-typedef std::function<void(const glm::vec3& coord, const glm::vec2& enormal, const glm::vec2& uv)> PolyLineVertexFn;
+typedef std::function<void(const glm::vec2& coord, const glm::vec2& enormal, const glm::vec2& uv)> PolyLineVertexFn;
 
 /* PolyLineBuilder context,
  * see Builders::buildPolyLine()
