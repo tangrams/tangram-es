@@ -101,16 +101,16 @@ const std::map<std::string, StyleParamKey> s_StyleParamMap = {
     {"width", StyleParamKey::width},
 };
 
-const std::map<StyleParamKey, std::vector<Unit>> s_StyleParamUnits = {
-    {StyleParamKey::offset, {Unit::pixel}},
-    {StyleParamKey::text_offset, {Unit::pixel}},
-    {StyleParamKey::buffer, {Unit::pixel}},
-    {StyleParamKey::text_buffer, {Unit::pixel}},
-    {StyleParamKey::size, {Unit::pixel}},
-    {StyleParamKey::placement_spacing, {Unit::pixel}},
-    {StyleParamKey::text_font_stroke_width, {Unit::pixel}},
-    {StyleParamKey::width, {Unit::meter, Unit::pixel}},
-    {StyleParamKey::outline_width, {Unit::meter, Unit::pixel}}
+const std::map<StyleParamKey, uint8_t > s_StyleParamUnits = {
+    {StyleParamKey::offset, Unit::pixel},
+    {StyleParamKey::text_offset, Unit::pixel},
+    {StyleParamKey::buffer, Unit::pixel},
+    {StyleParamKey::text_buffer, Unit::pixel},
+    {StyleParamKey::size, (Unit::pixel | Unit::percentage | Unit::sizeauto)},
+    {StyleParamKey::placement_spacing, Unit::pixel},
+    {StyleParamKey::text_font_stroke_width, Unit::pixel},
+    {StyleParamKey::width, (Unit::pixel | Unit::meter)},
+    {StyleParamKey::outline_width, (Unit::pixel | Unit::meter)}
 };
 
 static int parseInt(const std::string& _str, int& _value) {
@@ -166,6 +166,8 @@ StyleParam::StyleParam(const std::string& _key, const std::string& _value) {
 }
 
 StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& _value) {
+    auto allowedUnits = unitsForStyleParam(key);
+
     switch (key) {
     case StyleParamKey::extrude: {
         return parseExtrudeString(_value);
@@ -186,7 +188,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::text_offset:
     case StyleParamKey::offset: {
         UnitVec<glm::vec2> vec;
-        if (!parseVec2(_value, { Unit::pixel }, vec) || std::isnan(vec.value.y)) {
+        if (!parseVec2(_value, allowedUnits, vec) || std::isnan(vec.value.y)) {
             LOGW("Invalid offset parameter '%s'.", _value.c_str());
         }
         return vec.value;
@@ -194,7 +196,7 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
     case StyleParamKey::text_buffer:
     case StyleParamKey::buffer: {
         UnitVec<glm::vec2> vec;
-        if (!parseVec2(_value, { Unit::pixel }, vec)) {
+        if (!parseVec2(_value, allowedUnits, vec)) {
             LOGW("Invalid buffer parameter '%s'.", _value.c_str());
         }
         if (std::isnan(vec.value.y)) {
@@ -203,11 +205,11 @@ StyleParam::Value StyleParam::parseString(StyleParamKey key, const std::string& 
         return vec.value;
     }
     case StyleParamKey::size: {
-        UnitVec<glm::vec2> vec;
-        if (!parseVec2(_value, { Unit::pixel }, vec)) {
+        SizeValue vec;
+        if (!parseSize(_value, allowedUnits, vec)) {
             LOGW("Invalid size parameter '%s'.", _value.c_str());
         }
-        return vec.value;
+        return vec;
     }
     case StyleParamKey::transition_hide_time:
     case StyleParamKey::transition_show_time:
@@ -421,6 +423,9 @@ std::string StyleParam::toString() const {
         return k + "(" + std::to_string(p[0]) + ", " + std::to_string(p[1]) + ")";
     }
     case StyleParamKey::size:
+        //TODO
+        // Do String parsing for debugging
+        break;
     case StyleParamKey::offset:
     case StyleParamKey::text_offset: {
         if (!value.is<glm::vec2>()) break;
@@ -515,7 +520,21 @@ std::string StyleParam::toString() const {
 
 }
 
-static const std::vector<std::string> s_units = { "px", "ms", "m", "s" };
+static const std::vector<std::string> s_units = { "px", "ms", "m", "s", "%" };
+
+int StyleParam::parseSizeUnitPair(const std::string &_value, size_t offset,
+                                  StyleParam::ValueUnitPair &_result) {
+    const char* autoStr = "auto";
+    const size_t autoSize = 4;
+
+    if (_value.size() >= (offset + autoSize) && _value.compare(offset, autoSize, autoStr) == 0) {
+        _result.unit = Unit::sizeauto;
+        offset += autoSize;
+        return offset;
+    }
+
+    return parseValueUnitPair(_value, offset, _result);
+}
 
 int StyleParam::parseValueUnitPair(const std::string& _value, size_t offset,
                                    StyleParam::ValueUnitPair& _result) {
@@ -536,7 +555,7 @@ int StyleParam::parseValueUnitPair(const std::string& _value, size_t offset,
         const auto& unit = s_units[i];
         std::string valueUnit;
         if (unit == _value.substr(offset, std::min<int>(_value.length(), unit.length()))) {
-            _result.unit = static_cast<Unit>(i);
+            _result.unit = static_cast<Unit>(1 << i);
             offset += unit.length();
             break;
         }
@@ -601,11 +620,11 @@ int parseVec(const std::string& _value, T& _vec) {
 }
 
 template<typename T>
-int parseVec(const std::string& _value, const std::vector<Unit>& units, UnitVec<T>& _vec) {
+int parseVec(const std::string& _value, uint8_t allowedUnits, UnitVec<T>& _vec) {
      // initialize with defaults
     const size_t elements = _vec.size;
     for (size_t i = 0; i < elements; i++) {
-        _vec.units[i] = units[0];
+        _vec.units[i] = Unit::pixel;
         _vec.value[i] = NAN;
     }
 
@@ -615,7 +634,7 @@ int parseVec(const std::string& _value, const std::vector<Unit>& units, UnitVec<
         offset = StyleParam::parseValueUnitPair(_value, offset, v);
         if (offset < 0) { return i; }
 
-        if (std::find(units.begin(), units.end(), v.unit) == units.end()) {
+        if ( !(v.unit & allowedUnits) ) {
             return 0;
         }
         _vec.units[i] = v.unit;
@@ -625,12 +644,19 @@ int parseVec(const std::string& _value, const std::vector<Unit>& units, UnitVec<
     return elements;
 }
 
-bool StyleParam::parseVec2(const std::string& _value, const std::vector<Unit>& units, UnitVec<glm::vec2>& _vec) {
-    return parseVec(_value, units, _vec);
+bool StyleParam::parseSize(const std::string &_value, uint8_t allowedUnits, SizeValue& _vec) {
+    int offset = 0;
+    offset = StyleParam::parseSizeUnitPair(_value, offset, _vec.x);
+    offset = StyleParam::parseSizeUnitPair(_value, offset, _vec.y);
+    return (offset > 0) && ((_vec.x.unit & allowedUnits) && (_vec.y.unit & allowedUnits));
 }
 
-bool StyleParam::parseVec3(const std::string& _value, const std::vector<Unit>& units, UnitVec<glm::vec3> & _vec) {
-    return parseVec(_value, units, _vec);
+bool StyleParam::parseVec2(const std::string& _value, uint8_t allowedUnits, UnitVec<glm::vec2>& _vec) {
+    return parseVec(_value, allowedUnits, _vec);
+}
+
+bool StyleParam::parseVec3(const std::string& _value, uint8_t allowedUnits, UnitVec<glm::vec3>& _vec) {
+    return parseVec(_value, allowedUnits, _vec);
 }
 
 uint32_t StyleParam::parseColor(const std::string& _color) {
@@ -754,13 +780,12 @@ bool StyleParam::isRequired(StyleParamKey _key) {
     return std::find(requiredKeys.begin(), requiredKeys.end(), _key) != requiredKeys.end();
 }
 
-const std::vector<Unit>& StyleParam::unitsForStyleParam(StyleParamKey _key) {
+uint8_t StyleParam::unitsForStyleParam(StyleParamKey _key) {
     auto it = s_StyleParamUnits.find(_key);
     if (it != s_StyleParamUnits.end()) {
         return it->second;
     }
-    static const std::vector<Unit> empty;
-    return empty;
+    return 0;
 }
 
 }

@@ -136,8 +136,8 @@ TEST_CASE("Regression test - Dont crash on evaluating empty stops", "[Stops][YAM
 
     {
         MercatorProjection proj{};
-        std::vector<Unit> units = { Unit::meter };
-        Stops stops(Stops::Widths(node, proj, units));
+        uint8_t allowedUnit = Unit::meter;
+        Stops stops(Stops::Widths(node, proj, allowedUnit));
         REQUIRE(stops.frames.size() == 0);
         stops.evalVec2(1);
     }
@@ -147,8 +147,8 @@ TEST_CASE("Regression test - Dont crash on evaluating empty stops", "[Stops][YAM
         stops.evalVec2(1);
     }
     {
-        std::vector<Unit> units = { Unit::meter };
-        Stops stops(Stops::Offsets(node, units));
+        uint8_t allowedUnit = Unit::meter;
+        Stops stops(Stops::Offsets(node, allowedUnit));
         REQUIRE(stops.frames.size() == 0);
         stops.evalVec2(1);
     }
@@ -160,18 +160,64 @@ TEST_CASE("Regression test - Dont crash on evaluating empty stops", "[Stops][YAM
 
 }
 
+TEST_CASE("Mixed dimension stops for StyleParam::size not allowed, exception of `%` and 2d", "[Stops][YAML]") {
+
+    // 1d, 2d
+    YAML::Node node = YAML::Load(R"END(
+        [[0, 6px], [1, [6px, 7px]]]
+    )END");
+    Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
+    REQUIRE(stops.frames.size() == 0);
+
+    // 2d, 1d
+    node = YAML::Load(R"END(
+        [[0, [6px, 7px]], [1, 6px]]
+    )END");
+    stops = Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size));
+    REQUIRE(stops.frames.size() == 0);
+
+    // 1d, %, 2d
+    node = YAML::Load(R"END(
+        [[0, 6px], [1, 50%], [2, [6px, 7px]]]
+    )END");
+    stops = Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size));
+    REQUIRE(stops.frames.size() == 0);
+
+    // % 1d 2d
+    node = YAML::Load(R"END(
+        [[0, 50%], [1, 6px], [2, [6px, 7px]]]
+    )END");
+    stops = Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size));
+    REQUIRE(stops.frames.size() == 0);
+
+    // % 2d 1d
+    node = YAML::Load(R"END(
+        [[0, 50%], [1, [6px, 7px]], [2, 6px]]
+    )END");
+    stops = Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size));
+    REQUIRE(stops.frames.size() == 0);
+
+    // 2d % 1d
+    node = YAML::Load(R"END(
+        [[0, 50%], [1, [6px, 7px]], [2, 6px]]
+    )END");
+    stops = Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size));
+    REQUIRE(stops.frames.size() == 0);
+}
+
 TEST_CASE("2 dimension stops for icon sizes with mixed units", "[Stops][YAML]") {
     YAML::Node node = YAML::Load(R"END(
         [[6, [18.0 px, 14px]], [13, [20 m, 15px]], [16, [24, 18]]]
     )END");
+    const glm::vec2 CSS_SIZE(1.f, 1.f);
 
     Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
 
     REQUIRE(stops.frames.size() == 3);
 
-    REQUIRE(stops.evalSize(0).get<glm::vec2>() == glm::vec2(18, 14));
-    REQUIRE(stops.evalSize(13).get<glm::vec2>() == glm::vec2(20, 15));
-    REQUIRE(stops.evalSize(18).get<glm::vec2>() == glm::vec2(24, 18));
+    REQUIRE(stops.evalSize(0, CSS_SIZE) == glm::vec2(18, 14));
+    REQUIRE(stops.evalSize(13, CSS_SIZE) == glm::vec2(20, 15));
+    REQUIRE(stops.evalSize(18, CSS_SIZE) == glm::vec2(24, 18));
 }
 
 
@@ -179,12 +225,104 @@ TEST_CASE("1 dimension stops for icon sizes", "[Stops][YAML]") {
     YAML::Node node = YAML::Load(R"END(
         [[6, 18], [13, 20]]
     )END");
+    const glm::vec2 CSS_SIZE(1.f, 1.f);
 
     Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
 
     REQUIRE(stops.frames.size() == 2);
 
-    REQUIRE(stops.evalSize(0).get<float>() == 18);
-    REQUIRE(stops.evalSize(18).get<float>() == 20);
+    REQUIRE(stops.evalSize(0, CSS_SIZE) == glm::vec2(18,18));
+    REQUIRE(stops.evalSize(18, CSS_SIZE) == glm::vec2(20,20));
 }
 
+// Test for stops auto
+TEST_CASE("Stops using auto for StyleParam::size", "[Stops][YAML]") {
+    YAML::Node node = YAML::Load(R"END(
+        [[6, [18, "auto"]], [13, ["auto", 20]]]
+    )END");
+    const glm::vec2 CSS_SIZE(2.f, 1.f);
+
+    Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
+
+    REQUIRE(stops.frames.size() == 2);
+    REQUIRE(stops.evalSize(0, CSS_SIZE) == glm::vec2(18, 9));
+
+    auto nanValue = stops.evalSize(0, glm::vec2(NAN));
+    REQUIRE((std::isnan(nanValue.x) || std::isnan(nanValue.y)) == true);
+
+    REQUIRE(stops.evalSize(18, CSS_SIZE) == glm::vec2(40, 20));
+}
+
+TEST_CASE("Stops using `%` for StyleParam::size", "[Stops][YAML]") {
+    YAML::Node node = YAML::Load(R"END(
+        [[6, 50%], [10, [7px, 8px]], [13, 100%]]
+    )END");
+    const glm::vec2 CSS_SIZE(10.f, 20.f);
+
+    Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
+
+    /*
+     * Make sure this has valid frames, because of mixed 1D (%) and 2D stops.
+     */
+    REQUIRE(stops.frames.size() == 3);
+
+    auto val = glm::abs(stops.evalSize(0, CSS_SIZE) - glm::vec2(5.f, 10.f));
+    REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
+
+    auto nanValue = stops.evalSize(0, glm::vec2(NAN));
+    REQUIRE((std::isnan(nanValue.x) || std::isnan(nanValue.y)) == true);
+
+    val = glm::abs(stops.evalSize(10, CSS_SIZE) - glm::vec2(7.f, 8.f));
+    REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
+
+    val = glm::abs(stops.evalSize(18, CSS_SIZE) - glm::vec2(10.f, 20.f));
+    REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
+}
+
+TEST_CASE("Stops using auto and `%` for StyleParam::size", "[Stops][YAML]") {
+    YAML::Node node = YAML::Load(R"END(
+        [[6, ["auto", 20]], [13, 50%]]
+    )END");
+    const glm::vec2 CSS_SIZE(60, 30);
+
+    Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
+
+    /*
+     * Make sure this has valid frames, because of mixed 2D and 1D (%) stops.
+     */
+    REQUIRE(stops.frames.size() == 2);
+
+    auto val = glm::abs(stops.evalSize(0, CSS_SIZE) - glm::vec2(40.f, 20.f));
+    REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
+
+    auto nanValue = stops.evalSize(0, glm::vec2(NAN));
+    REQUIRE((std::isnan(nanValue.x) || std::isnan(nanValue.y)) == true);
+
+    val = glm::abs(stops.evalSize(18, CSS_SIZE) - glm::vec2(30.f, 15.f));
+    REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
+
+}
+
+TEST_CASE("Stops using `%` and auto for StyleParam::size", "[Stops][YAML]") {
+    YAML::Node node = YAML::Load(R"END(
+        [[6, 50%], [13, ["auto", 20]]]
+    )END");
+    const glm::vec2 CSS_SIZE(60, 30);
+
+    Stops stops(Stops::Sizes(node, StyleParam::unitsForStyleParam(StyleParamKey::size)));
+
+    /*
+     * Make sure this has valid frames, because of mixed 1D (%) and 2D stops.
+     */
+    REQUIRE(stops.frames.size() == 2);
+
+    auto val = glm::abs(stops.evalSize(0, CSS_SIZE) - glm::vec2(30.f, 15.f));
+    REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
+
+    auto nanValue = stops.evalSize(0, glm::vec2(NAN));
+    REQUIRE((std::isnan(nanValue.x) || std::isnan(nanValue.y)) == true);
+
+    val = glm::abs(stops.evalSize(18, CSS_SIZE) - glm::vec2(40.f, 20.f));
+    REQUIRE(glm::all(glm::lessThan(val, glm::vec2(FLT_EPSILON))));
+
+}

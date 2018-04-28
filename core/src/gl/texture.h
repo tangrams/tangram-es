@@ -95,6 +95,7 @@ public:
     size_t bufferSize();
 
     auto& spriteAtlas() { return m_spriteAtlas; }
+    const auto& spriteAtlas() const { return m_spriteAtlas; }
 
     float invDensity() const { return m_invDensity; }
 
