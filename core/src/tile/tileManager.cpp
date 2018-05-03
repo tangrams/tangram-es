@@ -80,7 +80,7 @@ struct TileManager::TileEntry {
             }
 
             task->complete();
-            tile = task->tile();
+            tile = task->getTile();
             task.reset();
 
             return true;

@@ -25,7 +25,7 @@ public:
 
     StyleBuilder* getStyleBuilder(const std::string& _name);
 
-    std::shared_ptr<Tile> build(TileID _tileID, const TileData& _data, const TileSource& _source);
+    std::unique_ptr<Tile> build(TileID _tileID, const TileData& _data, const TileSource& _source);
 
     const Scene& scene() const { return *m_scene; }
 

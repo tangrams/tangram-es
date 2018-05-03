@@ -18,13 +18,22 @@ TileTask::TileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _su
     m_priority(0),
     m_proxyState(false) {}
 
+TileTask::~TileTask() {}
+
+std::unique_ptr<Tile> TileTask::getTile() {
+    return std::move(m_tile);
+}
+
+void TileTask::setTile(std::unique_ptr<Tile>&& _tile) {
+    m_tile = std::move(_tile);
+}
+
 void TileTask::process(TileBuilder& _tileBuilder) {
 
     auto tileData = m_source->parse(*this, *_tileBuilder.scene().mapProjection());
 
     if (tileData) {
-        auto tile = _tileBuilder.build(m_tileId, *tileData, *m_source);
-        std::atomic_store(&m_tile, tile);
+        m_tile = _tileBuilder.build(m_tileId, *tileData, *m_source);
     } else {
         cancel();
     }
