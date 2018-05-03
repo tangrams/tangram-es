@@ -3,6 +3,7 @@
 #include "util/mapProjection.h"
 #include "view/view.h"
 #include <cmath>
+#include "log.h"
 
 namespace Tangram {
 
@@ -17,68 +18,70 @@ float getMinimumEnclosingZoom(double aLng, double aLat, double bLng, double bLat
     return zoom;
 }
 
-std::function<float(float)> getFlyToZoomFunction(float zStart, float zEnd, float zMax) {
-    // The zoom ease function for the "fly to" animation is a quadratic function, z(t), such that:
-    // z(0) = zStart,
-    // z(1) = zEnd,
-    // z(tMax) = zMax.
-    // where tMax is the t where dz/dt = 0, i.e. the vertex of the parabola.
-    // We can write z(t) as:
-    // z(t) = a * t^2 + b * t + c
-    // So defining z(t) is a matter of finding the appropriate coefficients 'a', 'b', and 'c'.
+std::function<glm::dvec3(float)> getFlyToFunction(const View& view, glm::dvec3 start, glm::dvec3 end, double& _distance) {
 
-    // First let's define some new variables to make things easier later.
-    float m = zMax - zStart;
-    float f = zEnd - zStart;
+    // Implementation of https://www.win.tue.nl/~vanwijk/zoompan.pdf
 
-    // From the first boundary condition, we get: z(0) = zStart = c.
-    float c = zStart;
+    // User preference for zoom/move curve sqrt(2)
+    const double rho = 1.414;
 
-    // From the second boundary condition, we get: z(1) = zEnd = a + b + c,
-    // which we can now reduce to: a = zEnd - zStart - b = f - b. We'll use this later.
+    const double scale = std::pow(2.0, end.z - start.z);
 
-    // To apply the third condition, we must find tMax. We differentiate z(t) and get:
-    // dz/dt = 2 * a * t + b
-    // At tMax, dz/dt = 0, so: 0 = 2 * a * tMax + b,
-    // then: tMax = -b / (2 * a).
+    // Current view bounds in Mercator Meters
+    auto rect = view.getBoundsRect();
+    auto width = std::abs(rect[0][0] - rect[1][0]);
+    auto height = std::abs(rect[0][1] - rect[1][1]);
 
-    // Substituting into the original expression for z(t) and simplifying, we get:
-    // z(tMax) = -b^2 / (4 * a) + c = zMax.
-    // Now we substitute our expressions for 'a' and 'c':
-    // zMax = -b^2 / (4 * (f - b)) + zStart.
-    // -b^2 / (4 * (f - b)) = zMax - zStart = m.
-    // -b^2 = 4 * (f - b) * m.
-    // 0 = b^2 + 4 * m * (f - b).
-    // 0 = b^2 - 4 * m * b + 4 * m * f.
-    // Apply the quadratic equation to find the roots for 'b' and simplify:
-    // b = 2 * (m +/- sqrt(m * (m - f))).
-    // For our case, we only care about the root closer to -infinity.
-    float b = 2.f * (m - sqrt(m * (m - f)));
+    const double w0 = std::max(width, height);
+    const double w1 = w0 / scale;
 
-    // Now we can solve for 'a':
-    float a = f - b;
+    const glm::dvec2 c0{start.x, start.y};
+    const glm::dvec2 c1{end.x, end.y};
 
-    // Finally, we apply our hard-won parameters in a lambda for the ease function:
-    return [=] (float t) {
-        return a * t * t + b * t + c;
-    };
-}
+    const double u1 = glm::distance(c0, c1);
 
-std::function<float(float)> getFlyToPositionFunction(float k) {
-    // Maaaaaagic!
-    float a = 1.f / k;
-    float b = log2((a + 1.f) / a);
-    float c = -a;
+    auto b = [=](int i) {
+                 double n = std::pow(w1, 2.0) - std::pow(w0, 2.0) +
+                     (i ? -1.0 : 1.0) * std::pow(rho, 4.0) * std::pow(u1, 2.0);
 
-    auto f = [](float x, float a, float b, float c) { return a * exp2(b * x * x * x) + c; };
+                 double d = 2.0 * (i ? w1 : w0) * std::pow(rho, 2.0) * u1;
+                 return n / d;
+             };
 
-    return [=] (float t) {
-        if (t <= .5f) {
-            return .5f * f(2.f * t, a, b, c);
-        } else {
-            return 1.f - .5f * f(2.f * (1.f - t), a, b, c);
-        }
-    };
+    auto r = [](double b) { return std::log(-b + std::sqrt(std::pow(b, 2.0) + 1.0)); };
+
+    // Parameterization of the elliptic path to pass through (u0,w0) and (u1,w1)
+    const double r0 = r(b(0));
+    const double r1 = r(b(1));
+    const double S = (r1 - r0) / rho;
+
+    _distance = std::isnan(S) ? std::abs(start.z - end.z) : S;
+
+    // u, w define the elliptic path.
+    auto u = [=](double s) {
+                 double a = w0 / std::pow(rho, 2);
+                 return a * std::cosh(r0) * std::tanh(rho * s + r0) - a * std::sinh(r0);
+             };
+
+    auto w = [=](double s) { return std::cosh(r0) / std::cosh(rho * s + r0); };
+
+    // Check if movement is large enough to derive the fly-to curve
+    bool move = u1 > std::numeric_limits<double>::epsilon();
+
+    return [=](float t) {
+
+                 if (t >= 1.0) {
+                     return end;
+                 } else if (move) {
+                     double s = S * t;
+                     glm::dvec2 pos = glm::mix(c0, c1, u(s) / u1);
+                     double zoom = start.z - std::log2(w(s));
+
+                     return glm::dvec3(pos.x, pos.y, zoom);
+                 } else {
+                     return glm::mix(start, end, t);
+                 }
+           };
 }
 
 } // namespace Tangram

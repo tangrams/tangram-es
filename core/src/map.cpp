@@ -600,9 +600,17 @@ void Map::setPosition(double _lon, double _lat) {
 
 void Map::setPositionEased(double _lon, double _lat, float _duration, EaseType _e) {
 
-    double lon_start, lat_start;
-    getPosition(lon_start, lat_start);
-    auto cb = [=](float t) { impl->setPositionNow(ease(lon_start, _lon, t, _e), ease(lat_start, _lat, t, _e)); };
+    double lonStart, latStart;
+    getPosition(lonStart, latStart);
+
+    double dLongitude = _lon - lonStart;
+    if (dLongitude > 180.0) {
+        _lon -= 360.0;
+    } else if (dLongitude < -180.0) {
+        _lon += 360.0;
+    }
+
+    auto cb = [=](float t) { impl->setPositionNow(ease(lonStart, _lon, t, _e), ease(latStart, _lat, t, _e)); };
     impl->setEase(EaseField::position, { _duration, cb });
 
 }
@@ -639,26 +647,41 @@ void Map::setZoomEased(float _z, float _duration, EaseType _e) {
 
 }
 
-void Map::flyTo(double _lon, double _lat, float _z, float _duration) {
+void Map::flyTo(double _lon, double _lat, float _z, float _duration, float _speed) {
 
-    double lon_start = 0., lat_start = 0.;
-    getPosition(lon_start, lat_start);
-    float z_start = getZoom();
-    float z_max = getMinimumEnclosingZoom(lon_start, lat_start, _lon, _lat, impl->view, 0.2f);
-    auto zoom_fn = getFlyToZoomFunction(z_start, _z, z_max);
-    auto cb_zoom = [=](float t) {
-        float z_t = zoom_fn(t);
-        impl->setZoomNow(z_t);
-    };
-    auto pos_fn = getFlyToPositionFunction(12.f);
-    auto cb_pos = [=](float t) {
-        float r = pos_fn(t);
-        double lon = lon_start + (_lon - lon_start) * r;
-        double lat = lat_start + (_lat - lat_start) * r;
-        impl->setPositionNow(lon, lat);
-    };
-    impl->setEase(EaseField::zoom, { _duration, cb_zoom });
-    impl->setEase(EaseField::position, { _duration, cb_pos });
+    double lonStart = 0., latStart = 0.;
+    getPosition(lonStart, latStart);
+    float zStart = getZoom();
+
+    double dLongitude = _lon - lonStart;
+    if (dLongitude > 180.0) {
+        _lon -= 360.0;
+    } else if (dLongitude < -180.0) {
+        _lon += 360.0;
+    }
+
+    const MapProjection& projection = impl->view.getMapProjection();
+    glm::dvec2 a = projection.LonLatToMeters(glm::dvec2(lonStart, latStart));
+    glm::dvec2 b = projection.LonLatToMeters(glm::dvec2(_lon, _lat));
+
+    double distance = 0.0;
+    auto fn = getFlyToFunction(impl->view,
+                               glm::dvec3(a.x, a.y, zStart),
+                               glm::dvec3(b.x, b.y, _z),
+                               distance);
+    auto cb =
+        [=](float t) {
+            glm::dvec3 pos = fn(t);
+            impl->view.setPosition(pos.x, pos.y);
+            impl->view.setZoom(pos.z);
+            impl->platform->requestRender();
+        };
+
+    if (_speed <= 0.f) { _speed = 1.f; }
+
+    float duration = _duration > 0 ? _duration : distance / _speed;
+
+    impl->setEase(EaseField::zoom, { duration, cb });
 
 }
 
