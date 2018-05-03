@@ -95,11 +95,11 @@ void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer
     }
 }
 
-std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData, const TileSource& _source) {
+std::unique_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData, const TileSource& _source) {
 
     m_selectionFeatures.clear();
 
-    auto tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), &_source);
+    auto tile = std::make_unique<Tile>(_tileID, *m_scene->mapProjection(), &_source);
 
     tile->initGeometry(m_scene->styles().size());
 

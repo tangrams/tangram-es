@@ -17,6 +17,7 @@ class Material;
 class PointLight;
 class SceneLayer;
 class ShaderProgram;
+class SpriteAtlas;
 class Style;
 class TileManager;
 class TileSource;
@@ -70,7 +71,9 @@ struct SceneLoader {
     /* loads a texture with default texture properties */
     static std::shared_ptr<Texture> getOrLoadTexture(const std::shared_ptr<Platform>& platform, const std::string& url, const std::shared_ptr<Scene>& scene);
     static std::shared_ptr<Texture> fetchTexture(const std::shared_ptr<Platform>& platform, const std::string& name, const std::string& url,
-            const TextureOptions& options, bool generateMipmaps, const std::shared_ptr<Scene>& scene, float density = 1.f);
+                                                 const TextureOptions& options, bool generateMipmaps, const std::shared_ptr<Scene>& scene,
+                                                 float density = 1.f, std::unique_ptr<SpriteAtlas> _atlas = nullptr);
+
     static bool extractTexFiltering(Node& filtering, TextureFiltering& filter);
 
     static MaterialTexture loadMaterialTexture(const std::shared_ptr<Platform>& platform, Node matCompNode,

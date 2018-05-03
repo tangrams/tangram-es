@@ -13,7 +13,22 @@ TileTask::TileTask(TileID& _tileId, std::shared_ptr<TileSource> _source, int _su
     m_subTaskId(_subTask),
     m_source(_source),
     m_sourceGeneration(_source->generation()),
-    m_priority(0) {}
+    m_ready(false),
+    m_canceled(false),
+    m_needsLoading(true),
+    m_priority(0),
+    m_proxyState(false) {}
+
+TileTask::~TileTask() {}
+
+std::unique_ptr<Tile> TileTask::getTile() {
+    return std::move(m_tile);
+}
+
+void TileTask::setTile(std::unique_ptr<Tile>&& _tile) {
+    m_tile = std::move(_tile);
+    m_ready = true;
+}
 
 void TileTask::process(TileBuilder& _tileBuilder) {
 
@@ -21,6 +36,7 @@ void TileTask::process(TileBuilder& _tileBuilder) {
 
     if (tileData) {
         m_tile = _tileBuilder.build(m_tileId, *tileData, *m_source);
+        m_ready = true;
     } else {
         cancel();
     }
