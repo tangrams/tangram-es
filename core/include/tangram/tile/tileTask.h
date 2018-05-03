@@ -34,7 +34,7 @@ public:
     virtual bool isReady() const {
         if (needsLoading()) { return false; }
 
-        return bool(m_tile);
+        return bool(m_ready);
     }
 
     Tile* tile() { return m_tile.get(); }
@@ -102,6 +102,7 @@ protected:
     // Tile result, set when tile was  sucessfully created
     std::unique_ptr<Tile> m_tile;
 
+    std::atomic<bool> m_ready;
     std::atomic<bool> m_canceled;
     std::atomic<bool> m_needsLoading;
 
