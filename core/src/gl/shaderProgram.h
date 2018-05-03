@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gl.h"
-#include "gl/disposer.h"
 #include "gl/shaderSource.h"
 #include "gl/uniform.h"
 #include "util/fastmap.h"
@@ -120,7 +119,7 @@ private:
 
     bool m_needsBuild = true;
 
-    Disposer m_disposer;
+    RenderState* m_rs = nullptr;
 
 };
 

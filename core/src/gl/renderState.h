@@ -1,10 +1,10 @@
 #pragma once
 
 #include "gl.h"
-#include "gl/disposer.h"
-#include "util/jobQueue.h"
 #include <array>
 #include <string>
+#include <mutex>
+#include <vector>
 #include <unordered_map>
 
 namespace Tangram {
@@ -92,15 +92,7 @@ public:
 
     bool viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
-    void vertexBufferUnset(GLuint handle);
-
     void indexBufferUnset(GLuint handle);
-
-    void shaderProgramUnset(GLuint program);
-
-    void textureUnset(GLenum target, GLuint handle);
-
-    void framebufferUnset(GLuint handle);
 
     void cacheDefaultFramebuffer();
 
@@ -108,14 +100,31 @@ public:
 
     GLuint getQuadIndexBuffer();
 
-    std::array<GLuint, MAX_ATTRIBUTES> attributeBindings = { { 0 } };
+    void flushResourceDeletion();
 
-    JobQueue jobQueue;
+    void queueTextureDeletion(GLuint texture);
+
+    void queueVAODeletion(size_t count, GLuint* vao);
+
+    void queueBufferDeletion(GLuint buffer);
+
+    void queueFramebufferDeletion(GLuint framebuffer);
+
+    void queueShaderDeletion(GLuint shader);
+
+    std::array<GLuint, MAX_ATTRIBUTES> attributeBindings = { { 0 } };
 
     std::unordered_map<std::string, GLuint> fragmentShaders;
     std::unordered_map<std::string, GLuint> vertexShaders;
 
 private:
+
+    std::mutex m_deletionMutex;
+    std::vector<GLuint> m_VAODeletion;
+    std::vector<GLuint> m_BufferDeletion;
+    std::vector<GLuint> m_TextureDeletion;
+    std::vector<GLuint> m_ShaderDeletion;
+    std::vector<GLuint> m_FramebufferDeletion;
 
     uint32_t m_nextTextureUnit = 0;
 

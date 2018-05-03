@@ -62,9 +62,9 @@ void Vao::unbind() {
     GL::bindVertexArray(0);
 }
 
-void Vao::dispose() {
+void Vao::dispose(RenderState& rs) {
     if (!m_glVAOs.empty()) {
-        GL::deleteVertexArrays(m_glVAOs.size(), m_glVAOs.data());
+        rs.queueVAODeletion(m_glVAOs.size(), m_glVAOs.data());
         m_glVAOs.clear();
     }
 }

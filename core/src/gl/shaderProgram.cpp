@@ -1,6 +1,5 @@
 #include "gl/shaderProgram.h"
 
-#include "gl/disposer.h"
 #include "gl/glError.h"
 #include "gl/renderState.h"
 #include "glm/gtc/type_ptr.hpp"
@@ -17,17 +16,9 @@ ShaderProgram::ShaderProgram() {
 }
 
 ShaderProgram::~ShaderProgram() {
-
-    auto glProgram = m_glProgram;
-
-    m_disposer([=](RenderState& rs) {
-        if (glProgram != 0) {
-            GL::deleteProgram(glProgram);
-        }
-        // Deleting the shader program that is currently in-use sets the current shader program to 0
-        // so we un-set the current program in the render state.
-        rs.shaderProgramUnset(glProgram);
-    });
+    if (m_rs && m_glProgram) {
+        m_rs->queueShaderDeletion(m_glProgram);
+    }
 }
 
 GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
@@ -103,7 +94,7 @@ bool ShaderProgram::build(RenderState& rs) {
 
     // Clear any cached shader locations
     m_attribMap.clear();
-    m_disposer = Disposer(rs);
+    m_rs = &rs;
 
     return true;
 }

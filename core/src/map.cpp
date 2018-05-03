@@ -505,9 +505,8 @@ void Map::render() {
         impl->renderState.invalidate();
     }
 
-    // Run render-thread tasks
-    impl->renderState.jobQueue.runJobs();
-
+    // Delete batch of gl resources
+    impl->renderState.flushResourceDeletion();
 
     for (const auto& style : impl->scene->styles()) {
         style->onBeginFrame(impl->renderState);
