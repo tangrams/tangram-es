@@ -106,13 +106,11 @@ public:
 
     void queueVAODeletion(size_t count, GLuint* vao);
 
-    void queueBufferDeletion(GLuint buffer);
+    void queueBufferDeletion(size_t count, GLuint* buffers);
 
     void queueFramebufferDeletion(GLuint framebuffer);
 
-    void queueProgramDeletion(GLuint program);
-
-    void queueShaderDeletion(GLuint shader);
+    void queueProgramDeletion(GLuint program, GLuint fragShader, GLuint vertShader);
 
     std::array<GLuint, MAX_ATTRIBUTES> attributeBindings = { { 0 } };
 

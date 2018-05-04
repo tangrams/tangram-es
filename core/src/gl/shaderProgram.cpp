@@ -17,14 +17,8 @@ ShaderProgram::ShaderProgram() {
 
 ShaderProgram::~ShaderProgram() {
     if (m_rs) {
-        if (m_glProgram) {
-            m_rs->queueProgramDeletion(m_glProgram);
-        }
-        if (m_glFragmentShader) {
-            m_rs->queueShaderDeletion(m_glFragmentShader);
-        }
-        if (m_glVertexShader) {
-            m_rs->queueShaderDeletion(m_glVertexShader);
+        if (m_glProgram || m_glFragmentShader || m_glVertexShader) {
+            m_rs->queueProgramDeletion(m_glProgram, m_glFragmentShader, m_glVertexShader);
         }
     }
 }

@@ -35,11 +35,9 @@ MeshBase::MeshBase(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode
 
 MeshBase::~MeshBase() {
     if (m_rs) {
-        if (m_glVertexBuffer) {
-            m_rs->queueBufferDeletion(m_glVertexBuffer);
-        }
-        if (m_glIndexBuffer) {
-            m_rs->queueBufferDeletion(m_glIndexBuffer);
+        if (m_glVertexBuffer || m_glIndexBuffer) {
+            GLuint buffers[] = { m_glVertexBuffer, m_glIndexBuffer };
+            m_rs->queueBufferDeletion(2, buffers);
         }
         m_vaos.dispose(*m_rs);
     }

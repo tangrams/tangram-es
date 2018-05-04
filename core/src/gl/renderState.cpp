@@ -75,14 +75,11 @@ void RenderState::queueFramebufferDeletion(GLuint framebuffer) {
     m_framebufferDeletionList.push_back(framebuffer);
 }
 
-void RenderState::queueProgramDeletion(GLuint program) {
+void RenderState::queueProgramDeletion(GLuint program, GLuint fragShader, GLuint vertShader) {
     std::lock_guard<std::mutex> guard(m_deletionListMutex);
     m_programDeletionList.push_back(program);
-}
-
-void RenderState::queueShaderDeletion(GLuint shader) {
-    std::lock_guard<std::mutex> guard(m_deletionListMutex);
-    m_shaderDeletionList.push_back(shader);
+    m_shaderDeletionList.push_back(fragShader);
+    m_shaderDeletionList.push_back(vertShader);
 }
 
 void RenderState::queueTextureDeletion(GLuint texture) {
@@ -95,9 +92,9 @@ void RenderState::queueVAODeletion(size_t count, GLuint* vao) {
     m_VAODeletionList.insert(m_VAODeletionList.end(), vao, vao + count);
 }
 
-void RenderState::queueBufferDeletion(GLuint buffer) {
+void RenderState::queueBufferDeletion(size_t count, GLuint* buffers) {
     std::lock_guard<std::mutex> guard(m_deletionListMutex);
-    m_bufferDeletionList.push_back(buffer);
+    m_bufferDeletionList.insert(m_bufferDeletionList.end(), buffers, buffers + count);
 }
 
 GLuint RenderState::getTextureUnit(GLuint _unit) {
