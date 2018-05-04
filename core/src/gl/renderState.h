@@ -110,6 +110,8 @@ public:
 
     void queueFramebufferDeletion(GLuint framebuffer);
 
+    void queueProgramDeletion(GLuint program);
+
     void queueShaderDeletion(GLuint shader);
 
     std::array<GLuint, MAX_ATTRIBUTES> attributeBindings = { { 0 } };
@@ -119,12 +121,13 @@ public:
 
 private:
 
-    std::mutex m_deletionMutex;
-    std::vector<GLuint> m_VAODeletion;
-    std::vector<GLuint> m_BufferDeletion;
-    std::vector<GLuint> m_TextureDeletion;
-    std::vector<GLuint> m_ShaderDeletion;
-    std::vector<GLuint> m_FramebufferDeletion;
+    std::mutex m_deletionListMutex;
+    std::vector<GLuint> m_VAODeletionList;
+    std::vector<GLuint> m_bufferDeletionList;
+    std::vector<GLuint> m_textureDeletionList;
+    std::vector<GLuint> m_programDeletionList;
+    std::vector<GLuint> m_shaderDeletionList;
+    std::vector<GLuint> m_framebufferDeletionList;
 
     uint32_t m_nextTextureUnit = 0;
 

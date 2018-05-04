@@ -107,6 +107,8 @@ private:
     }
 
     GLuint m_glProgram = 0;
+    GLuint m_glFragmentShader = 0;
+    GLuint m_glVertexShader = 0;
 
     fastmap<std::string, GLint> m_attribMap;
     fastmap<GLint, UniformValue> m_uniformCache;

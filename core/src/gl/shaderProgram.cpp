@@ -16,8 +16,16 @@ ShaderProgram::ShaderProgram() {
 }
 
 ShaderProgram::~ShaderProgram() {
-    if (m_rs && m_glProgram) {
-        m_rs->queueShaderDeletion(m_glProgram);
+    if (m_rs) {
+        if (m_glProgram) {
+            m_rs->queueProgramDeletion(m_glProgram);
+        }
+        if (m_glFragmentShader) {
+            m_rs->queueShaderDeletion(m_glFragmentShader);
+        }
+        if (m_glVertexShader) {
+            m_rs->queueShaderDeletion(m_glVertexShader);
+        }
     }
 }
 
@@ -63,9 +71,19 @@ bool ShaderProgram::build(RenderState& rs) {
     if (!m_needsBuild) { return false; }
     m_needsBuild = false;
 
-    // Delete handle for old program; values of 0 are silently ignored
-    GL::deleteProgram(m_glProgram);
-    m_glProgram = 0;
+    // Delete handle for old program and shaders.
+    if (m_glProgram) {
+        GL::deleteProgram(m_glProgram);
+        m_glProgram = 0;
+    }
+    if (m_glFragmentShader) {
+        GL::deleteShader(m_glFragmentShader);
+        m_glFragmentShader = 0;
+    }
+    if (m_glVertexShader) {
+        GL::deleteShader(m_glVertexShader);
+        m_glVertexShader = 0;
+    }
 
     auto& vertSrc = m_vertexShaderSource;
     auto& fragSrc = m_fragmentShaderSource;
@@ -91,6 +109,8 @@ bool ShaderProgram::build(RenderState& rs) {
     }
 
     m_glProgram = program;
+    m_glFragmentShader = fragmentShader;
+    m_glVertexShader = vertexShader;
 
     // Clear any cached shader locations
     m_attribMap.clear();
