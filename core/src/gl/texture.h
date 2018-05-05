@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gl.h"
-#include "gl/disposer.h"
 #include "scene/spriteAtlas.h"
 
 #include <vector>
@@ -120,7 +119,7 @@ protected:
 
     GLenum m_target;
 
-    Disposer m_disposer;
+    RenderState* m_rs = nullptr;
 
 private:
 

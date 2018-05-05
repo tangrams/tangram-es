@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "glm/vec4.hpp"
-#include "gl/disposer.h"
 #include "gl.h"
 #include "util/color.h"
 
@@ -50,7 +49,7 @@ private:
 
     std::unique_ptr<Texture> m_texture;
 
-    Disposer m_disposer;
+    RenderState* m_rs = nullptr;
 
     GLuint m_glFrameBufferHandle;
 

@@ -37,6 +37,66 @@ RenderState::RenderState() {
 
 }
 
+void RenderState::flushResourceDeletion() {
+    std::lock_guard<std::mutex> guard(m_deletionListMutex);
+
+    if (m_VAODeletionList.size()) {
+        GL::deleteVertexArrays(m_VAODeletionList.size(), m_VAODeletionList.data());
+        m_VAODeletionList.clear();
+    }
+    if (m_textureDeletionList.size()) {
+        GL::deleteTextures(m_textureDeletionList.size(), m_textureDeletionList.data());
+        m_textureDeletionList.clear();
+    }
+    if (m_bufferDeletionList.size()) {
+        GL::deleteBuffers(m_bufferDeletionList.size(), m_bufferDeletionList.data());
+        m_bufferDeletionList.clear();
+    }
+    if (m_framebufferDeletionList.size()) {
+        GL::deleteFramebuffers(m_framebufferDeletionList.size(), m_framebufferDeletionList.data());
+        m_framebufferDeletionList.clear();
+    }
+    if (m_programDeletionList.size()) {
+        for (GLuint program : m_programDeletionList) {
+            GL::deleteProgram(program);
+        }
+        m_programDeletionList.clear();
+    }
+    if (m_shaderDeletionList.size()) {
+        for (GLuint shader : m_shaderDeletionList) {
+            GL::deleteShader(shader);
+        }
+        m_shaderDeletionList.clear();
+    }
+}
+
+void RenderState::queueFramebufferDeletion(GLuint framebuffer) {
+    std::lock_guard<std::mutex> guard(m_deletionListMutex);
+    m_framebufferDeletionList.push_back(framebuffer);
+}
+
+void RenderState::queueProgramDeletion(GLuint program, GLuint fragShader, GLuint vertShader) {
+    std::lock_guard<std::mutex> guard(m_deletionListMutex);
+    m_programDeletionList.push_back(program);
+    m_shaderDeletionList.push_back(fragShader);
+    m_shaderDeletionList.push_back(vertShader);
+}
+
+void RenderState::queueTextureDeletion(GLuint texture) {
+    std::lock_guard<std::mutex> guard(m_deletionListMutex);
+    m_textureDeletionList.push_back(texture);
+}
+
+void RenderState::queueVAODeletion(size_t count, GLuint* vao) {
+    std::lock_guard<std::mutex> guard(m_deletionListMutex);
+    m_VAODeletionList.insert(m_VAODeletionList.end(), vao, vao + count);
+}
+
+void RenderState::queueBufferDeletion(size_t count, GLuint* buffers) {
+    std::lock_guard<std::mutex> guard(m_deletionListMutex);
+    m_bufferDeletionList.insert(m_bufferDeletionList.end(), buffers, buffers + count);
+}
+
 GLuint RenderState::getTextureUnit(GLuint _unit) {
     return GL_TEXTURE0 + _unit;
 }
@@ -44,6 +104,7 @@ GLuint RenderState::getTextureUnit(GLuint _unit) {
 RenderState::~RenderState() {
 
     deleteQuadIndexBuffer();
+    flushResourceDeletion();
 
     for (auto& s : vertexShaders) {
         GL::deleteShader(s.second);
@@ -299,33 +360,9 @@ bool RenderState::indexBuffer(GLuint handle) {
     return true;
 }
 
-void RenderState::vertexBufferUnset(GLuint handle) {
-    if (m_vertexBuffer.handle == handle) {
-        m_vertexBuffer.set = false;
-    }
-}
-
 void RenderState::indexBufferUnset(GLuint handle) {
     if (m_indexBuffer.handle == handle) {
         m_indexBuffer.set = false;
-    }
-}
-
-void RenderState::shaderProgramUnset(GLuint program) {
-    if (m_program.program == program) {
-        m_program.set = false;
-    }
-}
-
-void RenderState::textureUnset(GLenum target, GLuint handle) {
-    if (m_texture.handle == handle) {
-        m_texture.set = false;
-    }
-}
-
-void RenderState::framebufferUnset(GLuint handle) {
-    if (m_framebuffer.handle == handle) {
-        m_framebuffer.set = false;
     }
 }
 

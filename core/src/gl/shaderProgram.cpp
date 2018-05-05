@@ -1,6 +1,5 @@
 #include "gl/shaderProgram.h"
 
-#include "gl/disposer.h"
 #include "gl/glError.h"
 #include "gl/renderState.h"
 #include "glm/gtc/type_ptr.hpp"
@@ -17,17 +16,11 @@ ShaderProgram::ShaderProgram() {
 }
 
 ShaderProgram::~ShaderProgram() {
-
-    auto glProgram = m_glProgram;
-
-    m_disposer([=](RenderState& rs) {
-        if (glProgram != 0) {
-            GL::deleteProgram(glProgram);
+    if (m_rs) {
+        if (m_glProgram || m_glFragmentShader || m_glVertexShader) {
+            m_rs->queueProgramDeletion(m_glProgram, m_glFragmentShader, m_glVertexShader);
         }
-        // Deleting the shader program that is currently in-use sets the current shader program to 0
-        // so we un-set the current program in the render state.
-        rs.shaderProgramUnset(glProgram);
-    });
+    }
 }
 
 GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
@@ -72,9 +65,19 @@ bool ShaderProgram::build(RenderState& rs) {
     if (!m_needsBuild) { return false; }
     m_needsBuild = false;
 
-    // Delete handle for old program; values of 0 are silently ignored
-    GL::deleteProgram(m_glProgram);
-    m_glProgram = 0;
+    // Delete handle for old program and shaders.
+    if (m_glProgram) {
+        GL::deleteProgram(m_glProgram);
+        m_glProgram = 0;
+    }
+    if (m_glFragmentShader) {
+        GL::deleteShader(m_glFragmentShader);
+        m_glFragmentShader = 0;
+    }
+    if (m_glVertexShader) {
+        GL::deleteShader(m_glVertexShader);
+        m_glVertexShader = 0;
+    }
 
     auto& vertSrc = m_vertexShaderSource;
     auto& fragSrc = m_fragmentShaderSource;
@@ -100,10 +103,12 @@ bool ShaderProgram::build(RenderState& rs) {
     }
 
     m_glProgram = program;
+    m_glFragmentShader = fragmentShader;
+    m_glVertexShader = vertexShader;
 
     // Clear any cached shader locations
     m_attribMap.clear();
-    m_disposer = Disposer(rs);
+    m_rs = &rs;
 
     return true;
 }
