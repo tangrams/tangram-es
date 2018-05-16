@@ -502,7 +502,7 @@ void Map::render() {
 
     // Invalidate render states for new frame
     if (!impl->cacheGlState) {
-        impl->renderState.invalidate();
+        impl->renderState.invalidateStates();
     }
 
     // Delete batch of gl resources

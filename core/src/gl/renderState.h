@@ -28,8 +28,16 @@ public:
     RenderState& operator=(const RenderState&) = delete;
     RenderState& operator=(RenderState&&) = delete;
 
-    // Reset the render states.
+    // Reset the GL state cache and resource handles.
+    // Call this after GL context loss.
     void invalidate();
+
+    // Reset the GL state cache.
+    // Call this when outside code may have changed OpenGL states.
+    void invalidateStates();
+
+    // Reset the resource handle cache.
+    void invalidateHandles();
 
     // Get the texture slot from a texture unit from 0 to TANGRAM_MAX_TEXTURE_UNIT-1.
     static GLuint getTextureUnit(GLuint _unit);

@@ -118,7 +118,11 @@ RenderState::~RenderState() {
 }
 
 void RenderState::invalidate() {
+    invalidateStates();
+    invalidateHandles();
+}
 
+void RenderState::invalidateStates() {
     m_blending.set = false;
     m_blendingFunc.set = false;
     m_clearColor.set = false;
@@ -143,10 +147,25 @@ void RenderState::invalidate() {
     GL::depthFunc(GL_LESS);
     GL::clearDepth(1.0);
     GL::depthRange(0.0, 1.0);
+}
 
-    // No need to delete shaders after context loss
+void RenderState::invalidateHandles() {
+    // The shader handles in our caches are no longer valid,
+    // so clear them without deleting.
     vertexShaders.clear();
     fragmentShaders.clear();
+
+    // The handles queued for deletion are no longer valid,
+    // so clear them without deleting.
+    {
+        std::lock_guard<std::mutex> guard(m_deletionListMutex);
+        m_VAODeletionList.clear();
+        m_textureDeletionList.clear();
+        m_bufferDeletionList.clear();
+        m_framebufferDeletionList.clear();
+        m_programDeletionList.clear();
+        m_shaderDeletionList.clear();
+    }
 }
 
 void RenderState::cacheDefaultFramebuffer() {
