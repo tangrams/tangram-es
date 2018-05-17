@@ -17,8 +17,12 @@ ShaderProgram::ShaderProgram() {
 
 ShaderProgram::~ShaderProgram() {
     if (m_rs) {
-        if (m_glProgram || m_glFragmentShader || m_glVertexShader) {
-            m_rs->queueProgramDeletion(m_glProgram, m_glFragmentShader, m_glVertexShader);
+        if (m_glProgram) {
+            // Delete only the program, separate shaders are cached and eventually deleted by RenderState.
+            // TODO: This approach leaves shaders in memory even if they aren't used by any programs until
+            // the entire Map (and its RenderState) is destroyed. Ideally we could use a reference-counted
+            // cache to keep shaders in memory only while at least one program uses them. (MEB 2018/5/17)
+            m_rs->queueProgramDeletion(m_glProgram);
         }
     }
 }
