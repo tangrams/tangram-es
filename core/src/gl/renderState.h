@@ -118,7 +118,7 @@ public:
 
     void queueFramebufferDeletion(GLuint framebuffer);
 
-    void queueProgramDeletion(GLuint program, GLuint fragShader, GLuint vertShader);
+    void queueProgramDeletion(GLuint program);
 
     std::array<GLuint, MAX_ATTRIBUTES> attributeBindings = { { 0 } };
 
