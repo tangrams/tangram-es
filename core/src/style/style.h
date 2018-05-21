@@ -31,6 +31,16 @@ struct DrawRule;
 struct LightUniforms;
 struct MaterialUniforms;
 
+enum class StyleType : uint8_t {
+    none,
+    debug,
+    point,
+    polygon,
+    polyline,
+    raster,
+    text,
+};
+
 enum class LightingType : uint8_t {
     none,
     vertex,
@@ -149,6 +159,8 @@ protected:
 
     bool m_selection;
 
+    StyleType m_type = StyleType::none;
+
 private:
 
     struct UniformBlock {
@@ -201,6 +213,8 @@ public:
     Style(std::string _name, Blending _blendMode, GLenum _drawMode, bool _selection);
 
     virtual ~Style();
+
+    StyleType type() { return m_type; }
 
     static bool compare(std::unique_ptr<Style>& a, std::unique_ptr<Style>& b) {
 

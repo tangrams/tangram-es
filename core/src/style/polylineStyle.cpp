@@ -66,8 +66,9 @@ struct PolylineVertex : PolylineVertexNoUVs {
 };
 
 PolylineStyle::PolylineStyle(std::string _name, Blending _blendMode, GLenum _drawMode, bool _selection)
-    : Style(_name, _blendMode, _drawMode, _selection)
-{}
+    : Style(_name, _blendMode, _drawMode, _selection) {
+    m_type = StyleType::polyline;
+}
 
 void PolylineStyle::constructVertexLayout() {
 
