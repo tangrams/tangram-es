@@ -63,6 +63,10 @@ struct UrlClient::Task {
         curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1);
         curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 20);
         curl_easy_setopt(handle, CURLOPT_TCP_NODELAY, 1);
+#ifdef TANGRAM_WINDOWS
+        curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+#endif
     }
 
     void setup() {
