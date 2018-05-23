@@ -1,6 +1,6 @@
 include(${CMAKE_SOURCE_DIR}/toolchains/iOS.toolchain.cmake)
 
-set(FRAMEWORK_VERSION "0.9.3")
+set(FRAMEWORK_VERSION "0.9.4-dev")
 
 set(IOS_TARGET_VERSION "9.3")
 
