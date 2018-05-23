@@ -113,7 +113,7 @@ using namespace Tangram;
     openPanel.allowsMultipleSelection = NO;
 
     NSInteger button = [openPanel runModal];
-    if (button == NSFileHandlingPanelOKButton) {
+    if (button == NSModalResponseOK) {
         NSURL* url = [openPanel URLs].firstObject;
         LOG("Got URL to open: %s", [[url absoluteString] UTF8String]);
         GlfwApp::sceneFile = [[url absoluteString] UTF8String];

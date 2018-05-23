@@ -39,17 +39,9 @@ Texture::Texture(const std::vector<char>& _data, TextureOptions options, bool ge
 }
 
 Texture::~Texture() {
-
-    auto glHandle = m_glHandle;
-    auto target = m_target;
-
-    m_disposer([=](RenderState& rs) {
-        // If the currently-bound texture is deleted, the binding resets to 0
-        // according to the OpenGL spec, so unset this texture binding.
-        rs.textureUnset(target, glHandle);
-
-        GL::deleteTextures(1, &glHandle);
-    });
+    if (m_rs) {
+        m_rs->queueTextureDeletion(m_glHandle);
+    }
 }
 
 bool Texture::loadImageFromMemory(const std::vector<char>& _data) {
@@ -102,7 +94,7 @@ Texture& Texture::operator=(Texture&& _other) {
     m_height = _other.m_height;
     m_target = _other.m_target;
     m_generateMipmaps = _other.m_generateMipmaps;
-    m_disposer = std::move(_other.m_disposer);
+    m_rs = _other.m_rs;
 
     return *this;
 }
@@ -196,7 +188,7 @@ void Texture::generate(RenderState& rs, GLuint _textureUnit) {
     GL::texParameteri(m_target, GL_TEXTURE_WRAP_S, m_options.wrapping.wraps);
     GL::texParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.wrapping.wrapt);
 
-    m_disposer = Disposer(rs);
+    m_rs = &rs;
 }
 
 bool Texture::isValid() const {

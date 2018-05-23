@@ -27,17 +27,20 @@ public:
     TileTask(const TileTask& _other) = delete;
     TileTask& operator=(const TileTask& _other) = delete;
 
-    virtual ~TileTask() {}
+    virtual ~TileTask();
 
     virtual bool hasData() const { return true; }
 
     virtual bool isReady() const {
         if (needsLoading()) { return false; }
 
-        return bool(m_tile);
+        return bool(m_ready);
     }
 
-    std::shared_ptr<Tile>& tile() { return m_tile; }
+    Tile* tile() { return m_tile.get(); }
+
+    std::unique_ptr<Tile> getTile();
+    void setTile(std::unique_ptr<Tile>&& _tile);
 
     TileSource& source() { return *m_source; }
     int64_t sourceGeneration() const { return m_sourceGeneration; }
@@ -97,13 +100,14 @@ protected:
     const int64_t m_sourceGeneration;
 
     // Tile result, set when tile was  sucessfully created
-    std::shared_ptr<Tile> m_tile;
+    std::unique_ptr<Tile> m_tile;
 
-    bool m_canceled = false;
-    bool m_needsLoading = true;
+    std::atomic<bool> m_ready;
+    std::atomic<bool> m_canceled;
+    std::atomic<bool> m_needsLoading;
 
     std::atomic<float> m_priority;
-    bool m_proxyState = false;
+    std::atomic<bool> m_proxyState;
 };
 
 class BinaryTileTask : public TileTask {

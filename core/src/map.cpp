@@ -512,12 +512,11 @@ void Map::render() {
 
     // Invalidate render states for new frame
     if (!impl->cacheGlState) {
-        impl->renderState.invalidate();
+        impl->renderState.invalidateStates();
     }
 
-    // Run render-thread tasks
-    impl->renderState.jobQueue.runJobs();
-
+    // Delete batch of gl resources
+    impl->renderState.flushResourceDeletion();
 
     for (const auto& style : impl->scene->styles()) {
         style->onBeginFrame(impl->renderState);
@@ -1019,15 +1018,8 @@ void Map::runAsyncTask(std::function<void()> _task) {
 }
 
 void Map::onMemoryWarning() {
-    auto& tileCache = impl->tileManager.getTileCache();
 
-    if (tileCache) {
-        tileCache->clear();
-    }
-
-    for (auto& tileSet : impl->tileManager.getTileSets()) {
-        tileSet.source->clearData();
-    }
+    impl->tileManager.clearTileSets(true);
 
     if (impl->scene && impl->scene->fontContext()) {
         impl->scene->fontContext()->releaseFonts();

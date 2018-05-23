@@ -290,6 +290,8 @@ void FontContext::addFont(const FontDescription& _ft, alfons::InputSource _sourc
 }
 
 void FontContext::releaseFonts() {
+
+    std::lock_guard<std::mutex> lock(m_fontMutex);
     // Unload Freetype and Harfbuzz resources for all font faces
     m_alfons.unload();
 

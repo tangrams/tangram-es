@@ -54,7 +54,7 @@ void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer
             continue;
         }
 
-        // Apply defaul draw rules defined for this style
+        // Apply default draw rules defined for this style
         style->style().applyDefaultDrawRules(rule);
 
         if (!m_ruleSet.evaluateRuleForContext(rule, m_styleContext)) {
@@ -95,11 +95,11 @@ void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer
     }
 }
 
-std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData, const TileSource& _source) {
+std::unique_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData, const TileSource& _source) {
 
     m_selectionFeatures.clear();
 
-    auto tile = std::make_shared<Tile>(_tileID, *m_scene->mapProjection(), &_source);
+    auto tile = std::make_unique<Tile>(_tileID, *m_scene->mapProjection(), &_source);
 
     tile->initGeometry(m_scene->styles().size());
 

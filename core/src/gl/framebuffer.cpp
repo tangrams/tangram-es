@@ -164,18 +164,13 @@ void FrameBuffer::init(RenderState& _rs) {
         m_valid = true;
     }
 
-    m_disposer = Disposer(_rs);
+    m_rs = &_rs;
 }
 
 FrameBuffer::~FrameBuffer() {
-
-    GLuint glHandle = m_glFrameBufferHandle;
-
-    m_disposer([=](RenderState& rs) {
-        rs.framebufferUnset(glHandle);
-
-        GL::deleteFramebuffers(1, &glHandle);
-    });
+    if (m_rs) {
+        m_rs->queueFramebufferDeletion(m_glFrameBufferHandle);
+    }
 }
 
 void FrameBuffer::drawDebug(RenderState& _rs, glm::vec2 _dim) {

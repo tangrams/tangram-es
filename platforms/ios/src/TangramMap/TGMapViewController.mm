@@ -824,7 +824,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     CGPoint displacement = [shoveRecognizer translationInView:self.view];
     [shoveRecognizer setTranslation:{0, 0} inView:self.view];
 
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:shouldRecognizeShoveGesture:)]) {
+    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeShoveGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:shoveRecognizer shouldRecognizeShoveGesture:displacement]) {
             return;
         }
@@ -834,7 +834,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     if ([shoveRecognizer numberOfTouches] == 2) {
         self.map->handleShoveGesture(displacement.y);
 
-        if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(recognizer:didRecognizeShoveGesture:)]) {
+        if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeShoveGesture:)]) {
             [self.gestureDelegate mapView:self recognizer:shoveRecognizer didRecognizeShoveGesture:displacement];
         }
     }

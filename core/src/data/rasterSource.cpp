@@ -110,11 +110,11 @@ std::shared_ptr<TileData> RasterSource::parse(const TileTask& _task, const MapPr
     Feature rasterFeature;
     rasterFeature.geometryType = GeometryType::polygons;
     rasterFeature.polygons = { { {
-                                         {0.0f, 0.0f, 0.0f},
-                                         {1.0f, 0.0f, 0.0f},
-                                         {1.0f, 1.0f, 0.0f},
-                                         {0.0f, 1.0f, 0.0f},
-                                         {0.0f, 0.0f, 0.0f}
+                                         {0.0f, 0.0f},
+                                         {1.0f, 0.0f},
+                                         {1.0f, 1.0f},
+                                         {0.0f, 1.0f},
+                                         {0.0f, 0.0f}
                                  } } };
     rasterFeature.props = Properties();
 

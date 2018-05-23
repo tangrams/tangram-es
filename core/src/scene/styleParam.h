@@ -85,7 +85,14 @@ enum class StyleParamKey : uint8_t {
 
 constexpr size_t StyleParamKeySize = static_cast<size_t>(StyleParamKey::NUM_ELEMENTS);
 
-enum class Unit { pixel, milliseconds, meter, seconds };
+enum Unit : uint8_t {
+    pixel = 1 << 0,
+    milliseconds = 1 << 1,
+    meter = 1 << 2,
+    seconds = 1 << 3,
+    percentage = 1 << 4,
+    sizeauto = 1 << 5
+};
 
 static inline std::string unitString(Unit unit) {
     switch(unit) {
@@ -93,6 +100,8 @@ static inline std::string unitString(Unit unit) {
         case Unit::milliseconds: return "milliseconds";
         case Unit::meter: return "meter";
         case Unit::seconds: return "seconds";
+        case Unit::percentage: return "%";
+        case Unit::sizeauto: return "auto";
         default: return "undefined";
     }
 }
@@ -121,10 +130,18 @@ struct StyleParam {
         Unit unit = Unit::meter;
 
         bool isMeter() const { return unit == Unit::meter; }
+        bool isPercentage() const { return unit == Unit::percentage; }
+        bool isAuto() const { return unit == Unit::sizeauto; }
         bool isPixel() const { return unit == Unit::pixel; }
         bool isSeconds() const { return unit == Unit::seconds; }
         bool isMilliseconds() const { return unit == Unit::milliseconds; }
 
+        bool operator==(const ValueUnitPair& _other) const {
+            return value == _other.value && unit == _other.unit;
+        }
+        bool operator!=(const ValueUnitPair& _other) const {
+            return value != _other.value || unit != _other.unit;
+        }
     };
     struct Width : ValueUnitPair {
 
@@ -136,13 +153,6 @@ struct StyleParam {
 
         Width(ValueUnitPair& _other) :
             ValueUnitPair(_other) {}
-
-        bool operator==(const Width& _other) const {
-            return value == _other.value && unit == _other.unit;
-        }
-        bool operator!=(const Width& _other) const {
-            return value != _other.value || unit != _other.unit;
-        }
     };
 
 
@@ -153,7 +163,45 @@ struct StyleParam {
         }
     };
 
-    using Value = variant<none_type, Undefined, bool, float, uint32_t, std::string, glm::vec2, Width,
+    struct SizeValue {
+        ValueUnitPair x = { NAN, Unit::pixel };
+        ValueUnitPair y = { NAN, Unit::pixel };
+
+        // Apply this size value for a point with the given default sprite size, in CSS pixels.
+        // To apply no default sprite size, input a vector of NaN values.
+        // If either dimension of the output is NaN, then there is no valid size result.
+        glm::vec2 getSizePixels(glm::vec2 spriteSize) const {
+            if (x.isPercentage()) {
+                return spriteSize * (x.value * 0.01f);
+            }
+            if (x.isAuto() && y.isPixel()) {
+                return glm::vec2(y.value * spriteSize.x / spriteSize.y, y.value);
+            }
+            if (x.isPixel() && y.isAuto()) {
+                return glm::vec2(x.value, x.value * spriteSize.y / spriteSize.x);
+            }
+            if (x.isPixel() && y.isPixel()) {
+                if (std::isnan(y.value)) {
+                    if (std::isnan(x.value)) {
+                        return spriteSize;
+                    }
+                    return glm::vec2(x.value);
+                }
+                return glm::vec2(x.value, y.value);
+            }
+            return glm::vec2(NAN);
+        }
+
+        bool operator==(const SizeValue& other) const {
+            return x == other.x && y == other.y;
+        }
+
+        bool operator!=(const SizeValue& other) const {
+            return !(*this == other);
+        }
+    };
+
+    using Value = variant<none_type, Undefined, bool, float, uint32_t, std::string, glm::vec2, SizeValue, Width,
                           LabelProperty::Placement, LabelProperty::Anchors, TextSource>;
 
     StyleParam() :
@@ -195,9 +243,12 @@ struct StyleParam {
     static bool parseTime(const std::string& _value, float& _time);
 
     // values within _value string parameter must be delimited by ','
-    static bool parseVec2(const std::string& _value, const std::vector<Unit>& _allowedUnits, UnitVec<glm::vec2>& _vec2);
-    static bool parseVec3(const std::string& _value, const std::vector<Unit>& _allowedUnits, UnitVec<glm::vec3>& _vec3);
+    static bool parseSize(const std::string& _value, uint8_t _allowedUnits, SizeValue& _vec2);
+    static bool parseVec2(const std::string& _value, uint8_t _allowedUnits, UnitVec<glm::vec2>& _vec2);
+    static bool parseVec3(const std::string& _value, uint8_t _allowedUnits, UnitVec<glm::vec3>& _vec3);
 
+    static int parseSizeUnitPair(const std::string& _value, size_t start,
+                                 StyleParam::ValueUnitPair& _result);
     static int parseValueUnitPair(const std::string& _value, size_t start,
                                   StyleParam::ValueUnitPair& _result);
 
@@ -211,7 +262,7 @@ struct StyleParam {
     static bool isFontSize(StyleParamKey _key);
     static bool isRequired(StyleParamKey _key);
 
-    static const std::vector<Unit>& unitsForStyleParam(StyleParamKey _key);
+    static uint8_t unitsForStyleParam(StyleParamKey _key);
 
     static StyleParamKey getKey(const std::string& _key);
 

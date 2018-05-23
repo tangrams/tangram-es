@@ -41,7 +41,7 @@ struct TestTileWorker : TileTaskQueue {
                 continue;
             }
 
-            task->tile() = std::make_shared<Tile>(task->tileId(), s_projection, &task->source());
+            task->setTile(std::make_unique<Tile>(task->tileId(), s_projection, &task->source()));
 
             pendingTiles = true;
             processedCount++;
@@ -53,7 +53,7 @@ struct TestTileWorker : TileTaskQueue {
         auto task = tasks[position];
         tasks.erase(tasks.begin() + position);
 
-        task->tile() = std::make_shared<Tile>(task->tileId(), s_projection, &task->source());
+        task->setTile(std::make_unique<Tile>(task->tileId(), s_projection, &task->source()));
 
         pendingTiles = true;
         processedCount++;

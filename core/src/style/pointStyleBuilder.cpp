@@ -123,10 +123,9 @@ bool PointStyleBuilder::checkRule(const DrawRule& _rule) const {
     return false;
 }
 
-auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _props) const -> Parameters {
+auto PointStyleBuilder::applyRule(const DrawRule& _rule) const -> Parameters {
 
     Parameters p;
-    glm::vec2 size;
 
     _rule.get(StyleParamKey::color, p.color);
     _rule.get(StyleParamKey::sprite, p.sprite);
@@ -191,33 +190,6 @@ auto PointStyleBuilder::applyRule(const DrawRule& _rule, const Properties& _prop
     _rule.get(StyleParamKey::angle, p.labelOptions.angle);
     if (std::isnan(p.labelOptions.angle)) {
         p.autoAngle = true;
-    }
-
-    auto sizeParam = _rule.findParameter(StyleParamKey::size);
-    if (sizeParam.stops) {
-        if (sizeParam.value.is<float>()) {
-            // Assume size here is 1D (TODO: 2D, in another PR)
-            // size to build this label from
-            float lowerSize = sizeParam.stops->evalSize(m_styleZoom).get<float>();
-            // size for next style zoom for interpolation
-            float higherSize = sizeParam.stops->evalSize(m_styleZoom + 1).get<float>();
-            p.extrudeScale = (higherSize - lowerSize);
-            p.size = glm::vec2(lowerSize);
-        } else if (sizeParam.value.is<glm::vec2>()) {
-            p.size = sizeParam.stops->evalExpVec2(m_styleZoom);
-            // NB: this assumes that the width/height ratio is
-            // constant for all stops
-            glm::vec2 higherSize = sizeParam.stops->evalExpVec2(m_styleZoom + 1);
-            p.extrudeScale = (higherSize.x - p.size.x);
-        }
-    } else if (_rule.get(StyleParamKey::size, size)) {
-        if (size.x == 0.f || std::isnan(size.y)) {
-            p.size = glm::vec2(size.x);
-        } else {
-            p.size = size;
-        }
-    } else {
-        p.size = glm::vec2(NAN, NAN);
     }
 
     auto& strokeWidth = _rule.findParameter(StyleParamKey::outline_width);
@@ -300,9 +272,7 @@ void PointStyleBuilder::addLabel(const Point& _point, const glm::vec4& _quad, Te
         });
 }
 
-bool PointStyleBuilder::getUVQuad(Parameters& _params, glm::vec4& _quad, Texture** _texture) const {
-
-    _quad = glm::vec4(0.0, 1.0, 1.0, 0.0);
+bool PointStyleBuilder::getTexture(const Parameters& _params, Texture **_texture) const {
 
     auto texture = m_style.defaultTexture().get();
 
@@ -329,38 +299,78 @@ bool PointStyleBuilder::getUVQuad(Parameters& _params, glm::vec4& _quad, Texture
 
     if (texture) {
         *_texture = texture;
+    }
 
-        if (auto& atlas = texture->spriteAtlas()) {
+    return true;
+}
 
+bool PointStyleBuilder::evalSizeParam(const DrawRule& _rule, Parameters& _params, const Texture* _texture) const {
+    StyleParam::SizeValue size;
+    SpriteNode spriteNode;
+    glm::vec2 spriteSize(NAN);
+
+    if (_texture) {
+        spriteSize = glm::vec2{_texture->getWidth(), _texture->getHeight()} * _texture->invDensity();
+
+        const auto &atlas = _texture->spriteAtlas();
+        if (atlas) {
+            if (!atlas->getSpriteNode(_params.sprite, spriteNode) &&
+                !atlas->getSpriteNode(_params.spriteDefault, spriteNode)) {
+                return false;
+            }
+            spriteSize = spriteNode.m_size * _texture->invDensity();
+        } else if ( !_params.sprite.empty() || !_params.spriteDefault.empty()) {
+            // missing sprite atlas for texture but sprite specified in draw rule
+            return false;
+        }
+    }
+
+    auto sizeParam = _rule.findParameter(StyleParamKey::size);
+
+    if (sizeParam.stops) {
+        glm::vec2 lower = sizeParam.stops->evalSize(m_styleZoom, spriteSize);
+        glm::vec2 higher = sizeParam.stops->evalSize(m_styleZoom + 1, spriteSize);
+        if ((std::isnan(lower.x) || std::isnan(lower.y)) || (std::isnan(higher.x) || std::isnan(higher.y))) {
+            // Illegal size values were evaluated.
+            return false;
+        }
+        _params.size = lower;
+        _params.extrudeScale = higher.x - lower.x;
+
+    } else if (_rule.get(StyleParamKey::size, size)) {
+        glm::vec2 pixelSize = size.getSizePixels(spriteSize);
+        if (std::isnan(pixelSize.x) || std::isnan(pixelSize.y)) {
+            // Illegal size values were evaluated.
+            return false;
+        }
+        _params.size = pixelSize;
+    } else {
+        _params.size = spriteSize;
+    }
+
+    _params.size *= m_style.pixelScale();
+
+    return true;
+}
+
+bool PointStyleBuilder::getUVQuad(Parameters& _params, glm::vec4& _quad, const Texture* _texture) const {
+
+    _quad = glm::vec4(0.0, 1.0, 1.0, 0.0);
+
+    if (_texture) {
+        const auto& atlas = _texture->spriteAtlas();
+        if (atlas) {
             SpriteNode spriteNode;
             if (!atlas->getSpriteNode(_params.sprite, spriteNode) &&
                 !atlas->getSpriteNode(_params.spriteDefault, spriteNode)) {
                 return false;
             }
-
-            if (std::isnan(_params.size.x)) {
-                // determine the css size of the sprite if size is not determined from style draw rule
-                _params.size = spriteNode.m_size * texture->invDensity();
-            }
-
             _quad.x = spriteNode.m_uvBL.x;
             _quad.y = spriteNode.m_uvBL.y;
             _quad.z = spriteNode.m_uvTR.x;
             _quad.w = spriteNode.m_uvTR.y;
-        } else {
-            if (std::isnan(_params.size.x)) {
-                _params.size = glm::vec2{texture->getWidth(), texture->getHeight()} * texture->invDensity();
-            }
         }
-        _params.size *= m_style.pixelScale();
-
     } else {
-
-        // Default point size
-        if (std::isnan(_params.size.x)) {
-            _params.size = glm::vec2(8.0);
-        }
-        _params.size *= m_style.pixelScale();
 
         float fillEdge = _params.size.x;
         float outlineEdge = 1.f;
@@ -442,7 +452,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& _
             }
             break;
         case LabelProperty::Placement::spaced: {
-            LineSampler<std::vector<Point>> sampler;
+            LineSampler<std::vector<glm::vec3>> sampler;
 
             sampler.set(_line);
 
@@ -467,7 +477,7 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& _
                     params.labelOptions.angle = RAD_TO_DEG * atan2(r.x, r.y);
                 }
 
-                addLabel({p.x, p.y, 0.f}, _uvsQuad, _texture, params, _rule);
+                addLabel({p.x, p.y}, _uvsQuad, _texture, params, _rule);
 
             } while (sampler.advance(spacing, p, r));
         }
@@ -481,11 +491,17 @@ void PointStyleBuilder::labelPointsPlacing(const Line& _line, const glm::vec4& _
 bool PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
                                  const DrawRule& _rule) {
 
-    Parameters p = applyRule(_rule, _props);
+    Parameters p = applyRule(_rule);
     glm::vec4 uvsQuad;
     Texture* texture = nullptr;
 
-    if (!getUVQuad(p, uvsQuad, &texture)) {
+    if (!getTexture(p, &texture)) {
+        return false;
+    }
+    if (!evalSizeParam(_rule, p, texture)) {
+        return false;
+    }
+    if (!getUVQuad(p, uvsQuad, texture)) {
         return false;
     }
 
@@ -497,11 +513,17 @@ bool PointStyleBuilder::addPoint(const Point& _point, const Properties& _props,
 bool PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
                                 const DrawRule& _rule) {
 
-    Parameters p = applyRule(_rule, _props);
+    Parameters p = applyRule(_rule);
     glm::vec4 uvsQuad;
     Texture* texture = nullptr;
 
-    if (!getUVQuad(p, uvsQuad, &texture)) {
+    if (!getTexture(p, &texture)) {
+        return false;
+    }
+    if (!evalSizeParam(_rule, p, texture)) {
+        return false;
+    }
+    if (!getUVQuad(p, uvsQuad, texture)) {
         return false;
     }
 
@@ -513,11 +535,17 @@ bool PointStyleBuilder::addLine(const Line& _line, const Properties& _props,
 bool PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _props,
                                    const DrawRule& _rule) {
 
-    Parameters p = applyRule(_rule, _props);
+    Parameters p = applyRule(_rule);
     glm::vec4 uvsQuad;
     Texture* texture = nullptr;
 
-    if (!getUVQuad(p, uvsQuad, &texture)) {
+    if (!getTexture(p, &texture)) {
+        return false;
+    }
+    if (!evalSizeParam(_rule, p, texture)) {
+        return false;
+    }
+    if (!getUVQuad(p, uvsQuad, texture)) {
         return false;
     }
 
@@ -527,7 +555,7 @@ bool PointStyleBuilder::addPolygon(const Polygon& _polygon, const Properties& _p
         }
     } else {
         if (!_polygon.empty()) {
-            glm::vec3 c;
+            glm::vec2 c;
             c = centroid(_polygon.front().begin(), _polygon.front().end());
             addLabel(c, uvsQuad, texture, p, _rule);
         }
