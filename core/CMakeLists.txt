@@ -92,7 +92,7 @@ group_recursive_sources(src "src")
 if(WIN32)
 	set(INCBIN "${PROJECT_SOURCE_DIR}/../scripts/incbin.bat")
 else()
-	set(INCBIN "sh ${PROJECT_SOURCE_DIR}/../scripts/incbin.bat")
+	set(INCBIN sh "${PROJECT_SOURCE_DIR}/../scripts/incbin.bat")
 endif()
 
 # add compile shader targets
