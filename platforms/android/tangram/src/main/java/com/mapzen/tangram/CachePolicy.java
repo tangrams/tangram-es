@@ -1,5 +1,7 @@
 package com.mapzen.tangram;
 
+import android.support.annotation.NonNull;
+
 import okhttp3.CacheControl;
 import okhttp3.HttpUrl;
 
@@ -13,5 +15,5 @@ public interface CachePolicy {
      * @param url The URL being requested
      * @return The CacheControl to apply to the request, or {@code null} for the default behavior.
      */
-    CacheControl apply(final HttpUrl url);
+    CacheControl apply(@NonNull final HttpUrl url);
 }
