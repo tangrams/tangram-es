@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 2.8.12)
-
 ## yaml-cpp ##
 ##############
 set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "")
