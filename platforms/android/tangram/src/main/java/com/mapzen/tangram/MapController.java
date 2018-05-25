@@ -1376,6 +1376,7 @@ public class MapController implements Renderer {
                 }
                 final ResponseBody body = response.body();
                 if (body == null) {
+                    nativeOnUrlComplete(mapPointer, requestHandle, null, response.message());
                     throw new IOException("Unexpected null body for URL: " + url);
                 }
                 else {
