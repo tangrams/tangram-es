@@ -163,6 +163,10 @@ public class MapController implements Renderer {
     public interface CameraAnimationCallback {
         void onFinish();
         void onCancel();
+
+    @Keep
+    public interface MapChangeListener {
+        void onMapChanged();
     }
 
     /**
@@ -1152,6 +1156,10 @@ public class MapController implements Renderer {
         };
     }
 
+    public void setMapChangeListener(MapChangeListener listener) {
+        this.mapChangeListener = listener;
+    }
+
     /**
      * Enqueue a Runnable to be executed synchronously on the rendering thread
      * @param r Runnable to run
@@ -1393,6 +1401,7 @@ public class MapController implements Renderer {
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
     private LongSparseArray<Object> httpRequestHandles = new LongSparseArray<>();
+    private MapChangeListener mapChangeListener;
     private FeaturePickListener featurePickListener;
     private SceneLoadListener sceneLoadListener;
     private LabelPickListener labelPickListener;
@@ -1440,6 +1449,10 @@ public class MapController implements Renderer {
                 frameCaptureCallback.onCaptured(capture());
                 frameCaptureCallback = null;
             }
+        }
+
+        if (mapChangeListener != null) {
+            mapChangeListener.onMapChanged();
         }
     }
 
