@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-  compileSdkVersion 26
+  compileSdkVersion 27
 
   def apiKey = project.hasProperty('nextzenApiKey') ? nextzenApiKey : System.getenv('NEXTZEN_API_KEY')
 
   defaultConfig {
     minSdkVersion 15
-    targetSdkVersion 26
+    targetSdkVersion 27
     buildConfigField 'String', 'NEXTZEN_API_KEY', '"' + apiKey + '"'
   }
 
@@ -31,5 +31,5 @@ android {
 
 dependencies {
   implementation project(path: ':tangram')
-  implementation 'com.android.support:design:25.3.1'
+  implementation 'com.android.support:design:27.1.1'
 }
