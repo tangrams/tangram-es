@@ -2,7 +2,6 @@ package com.mapzen.tangram;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -33,7 +32,7 @@ public class MapView extends FrameLayout {
      * the callback will be made on the UI thread
      */
     @NonNull
-    public MapController getMap(final MapController.SceneLoadListener listener) {
+    public MapController getMap(@Nullable final MapController.SceneLoadListener listener) {
         if (mapController != null) {
             return mapController;
         }
@@ -61,8 +60,8 @@ public class MapView extends FrameLayout {
         if (mapController != null) {
             // MapController has been initialized, so we'll dispose it now.
             mapController.dispose();
+            mapController = null;
         }
-        mapController = null;
     }
 
     /**

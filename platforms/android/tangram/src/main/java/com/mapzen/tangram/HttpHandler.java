@@ -1,6 +1,8 @@
 package com.mapzen.tangram;
 
 import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -111,7 +113,7 @@ public class HttpHandler {
      * @param directory Directory in which map data will be cached
      * @param maxSize Maximum size of data to cache, in bytes
      */
-    public HttpHandler(final File directory, final long maxSize) {
+    public HttpHandler(@Nullable final File directory, final long maxSize) {
         this(directory, maxSize, null);
     }
 
@@ -122,7 +124,7 @@ public class HttpHandler {
      * @param maxSize Maximum size of data to cache, in bytes
      * @param policy Cache policy to apply on requests
      */
-    public HttpHandler(final File directory, final long maxSize, final CachePolicy policy) {
+    public HttpHandler(@Nullable final File directory, final long maxSize, @Nullable final CachePolicy policy) {
         final OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .followRedirects(true)
                 .followSslRedirects(true)
@@ -139,7 +141,7 @@ public class HttpHandler {
         if (cachePolicy == null) {
             cachePolicy = new CachePolicy() {
                 @Override
-                public CacheControl apply(final HttpUrl url) {
+                public CacheControl apply(@NonNull final HttpUrl url) {
                     return null;
                 }
             };
@@ -175,16 +177,21 @@ public class HttpHandler {
      * @param cb Callback for handling request result
      * @param requestHandle the identifier for the request
      */
-    public void onRequest(final String url, final Callback cb, final long requestHandle) {
+    public void onRequest(@NonNull final String url, @NonNull final Callback cb, final long requestHandle) {
         final HttpUrl httpUrl = HttpUrl.parse(url);
-        final Request.Builder builder = new Request.Builder().url(httpUrl).tag(requestHandle);
-        final CacheControl cacheControl = cachePolicy.apply(httpUrl);
-        if (cacheControl != null) {
-            builder.cacheControl(cacheControl);
+        if (httpUrl == null) {
+            cb.onFailure(null, new IOException("HttpUrl failed to parse url=" + url));
         }
-        final Request request = builder.build();
-        final Call call = okClient.newCall(request);
-        call.enqueue(cb);
+        else {
+            final Request.Builder builder = new Request.Builder().url(httpUrl).tag(requestHandle);
+            final CacheControl cacheControl = cachePolicy.apply(httpUrl);
+            if (cacheControl != null) {
+                builder.cacheControl(cacheControl);
+            }
+            final Request request = builder.build();
+            final Call call = okClient.newCall(request);
+            call.enqueue(cb);
+        }
     }
 
    /**

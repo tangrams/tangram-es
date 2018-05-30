@@ -19,6 +19,7 @@ import com.mapzen.tangram.TouchInput.Gestures;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 import java.io.IOException;
 import java.lang.annotation.Retention;
@@ -1356,7 +1357,7 @@ public class MapController implements Renderer {
     }
 
     @Keep
-    void startUrlRequest(final String url, final long requestHandle) {
+    void startUrlRequest(@NonNull final String url, final long requestHandle) {
         if (httpHandler == null) {
             return;
         }
@@ -1373,8 +1374,15 @@ public class MapController implements Renderer {
                     nativeOnUrlComplete(mapPointer, requestHandle, null, response.message());
                     throw new IOException("Unexpected response code: " + response + " for URL: " + url);
                 }
-                final byte[] bytes = response.body().bytes();
-                nativeOnUrlComplete(mapPointer, requestHandle, bytes, null);
+                final ResponseBody body = response.body();
+                if (body == null) {
+                    nativeOnUrlComplete(mapPointer, requestHandle, null, response.message());
+                    throw new IOException("Unexpected null body for URL: " + url);
+                }
+                else {
+                    final byte[] bytes = body.bytes();
+                    nativeOnUrlComplete(mapPointer, requestHandle, bytes, null);
+                }
             }
         };
 
@@ -1382,6 +1390,7 @@ public class MapController implements Renderer {
     }
 
     // Called from JNI on worker or render-thread.
+    @Keep
     void sceneReadyCallback(final int sceneId, final SceneError error) {
 
         final SceneLoadListener cb = sceneLoadListener;
