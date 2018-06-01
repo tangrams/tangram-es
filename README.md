@@ -28,5 +28,3 @@ You can also find us in the tangram-chat gitter chat room: https://gitter.im/tan
 ## Contributions Welcome
 
 We gladly appreciate feedback, feature requests, and contributions. For information and instructions, see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-Tangram ES is an open-source project sponsored by [Mapzen](https://mapzen.com).
