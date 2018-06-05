@@ -55,7 +55,7 @@ std::function<glm::dvec3(float)> getFlyToFunction(const View& view, glm::dvec3 s
     const double r1 = r(b(1));
     const double S = (r1 - r0) / rho;
 
-    _distance = std::isnan(S) ? std::abs(start.z - end.z) : S;
+    _distance = std::isnan(S) ? std::abs(start.z - end.z) * 0.5 : S;
 
     // u, w define the elliptic path.
     auto u = [=](double s) {
