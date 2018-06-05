@@ -7,7 +7,9 @@ if(MSVC)
 else()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++1y")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wignored-qualifiers -Wtype-limits -Wmissing-field-initializers")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fstack-protector -static")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fstack-protector")
+	# Static build
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -DCURL_STATICLIB")
 	
 	if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 		# Clang may be also used in MSVC-Clang toolchain and that will pass match above,
@@ -90,6 +92,10 @@ if(TANGRAM_APPLICATION)
     ${GLFW_LIBRARIES}
     ${OPENGL_LIBRARIES}
 		${CURL_LIBRARIES}
+	)
+	# For CURL static
+	target_link_libraries(${EXECUTABLE_NAME}
+		wsock32 ws2_32 crypt32 wldap32
 	)
 
   add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes")
