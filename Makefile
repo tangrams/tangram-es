@@ -1,3 +1,17 @@
+# Multiplatform stuff
+ifdef ComSpec
+	# Windows shell
+	RMPATH = rmdir /S /Q
+	MKPATH = md
+	# A hack to suppress "already exists" error
+	MKPATH_QUIET = 2>nul || VER>nul
+else
+	# Civilized rest of the world
+	RMPATH = rm -rf
+	MKPATH = mkdir -p
+	MKPATH_QUIET =
+endif
+
 all: android osx ios
 
 .PHONY: clean
@@ -7,6 +21,7 @@ all: android osx ios
 .PHONY: clean-ios
 .PHONY: clean-rpi
 .PHONY: clean-linux
+.PHONY: clean-windows
 .PHONY: clean-benchmark
 .PHONY: clean-shaders
 .PHONY: clean-tizen-arm
@@ -19,6 +34,7 @@ all: android osx ios
 .PHONY: ios
 .PHONY: rpi
 .PHONY: linux
+.PHONY: windows
 .PHONY: benchmark
 .PHONY: ios-framework
 .PHONY: ios-framework-universal
@@ -43,6 +59,7 @@ IOS_SIM_BUILD_DIR = build/ios-sim
 IOS_DOCS_BUILD_DIR = build/ios-docs
 RPI_BUILD_DIR = build/rpi
 LINUX_BUILD_DIR = build/linux
+WINDOWS_BUILD_DIR = build\windows
 TESTS_BUILD_DIR = build/tests
 BENCH_BUILD_DIR = build/bench
 TIZEN_ARM_BUILD_DIR = build/tizen-arm
@@ -128,6 +145,13 @@ LINUX_CMAKE_PARAMS = \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
 	${CMAKE_OPTIONS}
 
+WINDOWS_CMAKE_PARAMS = \
+	-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+	-DPLATFORM_TARGET=windows \
+	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+	-G "MinGW Makefiles"\
+	${CMAKE_OPTIONS}
+
 ifndef TIZEN_PROFILE
 	TIZEN_PROFILE=mobile
 endif
@@ -156,53 +180,56 @@ TIZEN_X86_CMAKE_PARAMS = \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
 	${CMAKE_OPTIONS}
 
-clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode clean-linux clean-shaders \
-	clean-tizen-arm clean-tizen-x86
+clean: clean-android clean-osx clean-ios clean-rpi clean-tests clean-xcode \
+	clean-linux clean-windows clean-shaders clean-tizen-arm clean-tizen-x86
 
 clean-android:
-	rm -rf platforms/android/build
-	rm -rf platforms/android/tangram/build
-	rm -rf platforms/android/tangram/.externalNativeBuild
-	rm -rf platforms/android/demo/build
+	${RMPATH} platforms/android/build
+	${RMPATH} platforms/android/tangram/build
+	${RMPATH} platforms/android/tangram/.externalNativeBuild
+	${RMPATH} platforms/android/demo/build
 
 clean-osx:
-	rm -rf ${OSX_BUILD_DIR}
+	${RMPATH} ${OSX_BUILD_DIR}
 
 clean-ios: clean-ios-framework clean-ios-framework-sim clean-ios-framework-universal
-	rm -rf ${IOS_BUILD_DIR}
+	${RMPATH} ${IOS_BUILD_DIR}
 
 clean-rpi:
-	rm -rf ${RPI_BUILD_DIR}
+	${RMPATH} ${RPI_BUILD_DIR}
 
 clean-linux:
-	rm -rf ${LINUX_BUILD_DIR}
+	${RMPATH} ${LINUX_BUILD_DIR}
+
+clean-windows:
+	${RMPATH} ${WINDOWS_BUILD_DIR}
 
 clean-xcode:
-	rm -rf ${OSX_XCODE_BUILD_DIR}
+	${RMPATH} ${OSX_XCODE_BUILD_DIR}
 
 clean-tests:
-	rm -rf ${TESTS_BUILD_DIR}
+	${RMPATH} ${TESTS_BUILD_DIR}
 
 clean-benchmark:
-	rm -rf ${BENCH_BUILD_DIR}
+	${RMPATH} ${BENCH_BUILD_DIR}
 
 clean-shaders:
-	rm -rf core/generated/*.h
+	${RMPATH} core/generated/*.h
 
 clean-tizen-arm:
-	rm -rf ${TIZEN_ARM_BUILD_DIR}
+	${RMPATH} ${TIZEN_ARM_BUILD_DIR}
 
 clean-tizen-x86:
-	rm -rf ${TIZEN_X86_BUILD_DIR}
+	${RMPATH} ${TIZEN_X86_BUILD_DIR}
 
 clean-ios-framework:
-	rm -rf ${IOS_FRAMEWORK_BUILD_DIR}
+	${RMPATH} ${IOS_FRAMEWORK_BUILD_DIR}
 
 clean-ios-framework-sim:
-	rm -rf ${IOS_FRAMEWORK_SIM_BUILD_DIR}
+	${RMPATH} ${IOS_FRAMEWORK_SIM_BUILD_DIR}
 
 clean-ios-framework-universal:
-	rm -rf ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}
+	${RMPATH} ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}
 
 android: android-demo
 	@echo "run: 'adb install -r android/demo/build/outputs/apk/demo-debug.apk'"
@@ -219,7 +246,7 @@ osx: cmake-osx
 	cmake --build ${OSX_BUILD_DIR}
 
 cmake-osx:
-	@mkdir -p ${OSX_BUILD_DIR}
+	@${MKPATH} ${OSX_BUILD_DIR} ${MKPATH_QUIET}
 	@cd ${OSX_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_CMAKE_PARAMS}
 
@@ -234,7 +261,7 @@ else
 endif
 
 cmake-xcode:
-	@mkdir -p ${OSX_XCODE_BUILD_DIR}
+	@${MKPATH} ${OSX_XCODE_BUILD_DIR} ${MKPATH_QUIET}
 	@cd ${OSX_XCODE_BUILD_DIR} && \
 	cmake ../.. ${DARWIN_XCODE_CMAKE_PARAMS}
 
@@ -252,24 +279,24 @@ ios-docs:
 ifeq (, $(shell which jazzy))
 	$(error "Please install jazzy by running 'gem install jazzy'")
 endif
-	@mkdir -p ${IOS_DOCS_BUILD_DIR}
+	@${MKPATH} ${IOS_DOCS_BUILD_DIR} ${MKPATH_QUIET}
 	@cd platforms/ios && \
 	jazzy --config jazzy.yml
 
 cmake-ios: ios-framework-universal
-	@mkdir -p ${IOS_BUILD_DIR}
+	@${MKPATH} ${IOS_BUILD_DIR} ${MKPATH_QUIET}
 	@cd ${IOS_BUILD_DIR} && \
 	cmake ../.. ${IOS_CMAKE_PARAMS}
 
 cmake-ios-framework:
 ifndef TANGRAM_IOS_FRAMEWORK_SLIM
-	@mkdir -p ${IOS_FRAMEWORK_BUILD_DIR}
+	@${MKPATH} ${IOS_FRAMEWORK_BUILD_DIR} ${MKPATH_QUIET}
 	@cd ${IOS_FRAMEWORK_BUILD_DIR} && \
 	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS} -DBUILD_IOS_FRAMEWORK=TRUE
 endif
 
 cmake-ios-framework-sim:
-	@mkdir -p ${IOS_FRAMEWORK_SIM_BUILD_DIR}
+	@${MKPATH} ${IOS_FRAMEWORK_SIM_BUILD_DIR} ${MKPATH_QUIET}
 	@cd ${IOS_FRAMEWORK_SIM_BUILD_DIR} && \
 	cmake ../.. ${IOS_FRAMEWORK_CMAKE_PARAMS} -DIOS_PLATFORM=SIMULATOR -DBUILD_IOS_FRAMEWORK=TRUE
 
@@ -297,7 +324,7 @@ endif
 
 ios-framework-universal: ios-framework ios-framework-sim
 ifndef TANGRAM_IOS_FRAMEWORK_SLIM
-	@mkdir -p ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${BUILD_TYPE}
+	@${MKPATH} ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${BUILD_TYPE} ${MKPATH_QUIET}
 	@cp -r ${IOS_FRAMEWORK_BUILD_DIR}/lib/${BUILD_TYPE}/TangramMap.framework ${IOS_FRAMEWORK_UNIVERSAL_BUILD_DIR}/${BUILD_TYPE}
 	lipo ${IOS_FRAMEWORK_BUILD_DIR}/lib/${BUILD_TYPE}/TangramMap.framework/TangramMap \
 		${IOS_FRAMEWORK_SIM_BUILD_DIR}/lib/${BUILD_TYPE}/TangramMap.framework/TangramMap \
@@ -308,7 +335,7 @@ rpi: cmake-rpi
 	cmake --build ${RPI_BUILD_DIR}
 
 cmake-rpi:
-	@mkdir -p ${RPI_BUILD_DIR}
+	@${MKPATH} ${RPI_BUILD_DIR} ${MKPATH_QUIET}
 	@cd ${RPI_BUILD_DIR} && \
 	cmake ../.. ${RPI_CMAKE_PARAMS}
 
@@ -316,15 +343,23 @@ linux: cmake-linux
 	cmake --build ${LINUX_BUILD_DIR}
 
 cmake-linux:
-	@mkdir -p ${LINUX_BUILD_DIR}
+	@${MKPATH} ${LINUX_BUILD_DIR} ${MKPATH_QUIET}
 	@cd ${LINUX_BUILD_DIR} && \
 	cmake ../.. ${LINUX_CMAKE_PARAMS}
+
+windows: cmake-windows
+	cmake --build ${WINDOWS_BUILD_DIR}
+
+cmake-windows:
+	@${MKPATH} ${WINDOWS_BUILD_DIR} ${MKPATH_QUIET}
+	@cd ${WINDOWS_BUILD_DIR} && \
+	cmake ../.. ${WINDOWS_CMAKE_PARAMS}
 
 tizen-arm: cmake-tizen-arm
 	cmake --build ${TIZEN_ARM_BUILD_DIR}
 
 cmake-tizen-arm:
-	@mkdir -p ${TIZEN_ARM_BUILD_DIR}
+	@${MKPATH} ${TIZEN_ARM_BUILD_DIR} ${MKPATH_QUIET}
 	@cd ${TIZEN_ARM_BUILD_DIR} && \
 	cmake ../.. ${TIZEN_ARM_CMAKE_PARAMS}
 
@@ -332,20 +367,20 @@ tizen-x86: cmake-tizen-x86
 	cmake --build ${TIZEN_X86_BUILD_DIR}
 
 cmake-tizen-x86:
-	mkdir -p ${TIZEN_X86_BUILD_DIR}
+	${MKPATH} ${TIZEN_X86_BUILD_DIR} ${MKPATH_QUIET}
 	cd ${TIZEN_X86_BUILD_DIR} && \
 	cmake ../.. ${TIZEN_X86_CMAKE_PARAMS}
 
 tests: unit-tests
 
 unit-tests:
-	@mkdir -p ${TESTS_BUILD_DIR}
+	@${MKPATH} ${TESTS_BUILD_DIR} ${MKPATH_QUIET}
 	@cd ${TESTS_BUILD_DIR} && \
 	cmake ../.. ${UNIT_TESTS_CMAKE_PARAMS} && \
 	cmake --build .
 
 benchmark:
-	@mkdir -p ${BENCH_BUILD_DIR}
+	@${MKPATH} ${BENCH_BUILD_DIR} ${MKPATH_QUIET}
 	@cd ${BENCH_BUILD_DIR} && \
 	cmake ../.. ${BENCH_CMAKE_PARAMS} && \
 	cmake --build .
