@@ -28,6 +28,7 @@
 #include "util/inputHandler.h"
 #include "util/ease.h"
 #include "util/jobQueue.h"
+#include "view/flyTo.h"
 #include "view/view.h"
 
 #include <bitset>
@@ -599,9 +600,17 @@ void Map::setPosition(double _lon, double _lat) {
 
 void Map::setPositionEased(double _lon, double _lat, float _duration, EaseType _e) {
 
-    double lon_start, lat_start;
-    getPosition(lon_start, lat_start);
-    auto cb = [=](float t) { impl->setPositionNow(ease(lon_start, _lon, t, _e), ease(lat_start, _lat, t, _e)); };
+    double lonStart, latStart;
+    getPosition(lonStart, latStart);
+
+    double dLongitude = _lon - lonStart;
+    if (dLongitude > 180.0) {
+        _lon -= 360.0;
+    } else if (dLongitude < -180.0) {
+        _lon += 360.0;
+    }
+
+    auto cb = [=](float t) { impl->setPositionNow(ease(lonStart, _lon, t, _e), ease(latStart, _lat, t, _e)); };
     impl->setEase(EaseField::position, { _duration, cb });
 
 }
@@ -635,6 +644,44 @@ void Map::setZoomEased(float _z, float _duration, EaseType _e) {
     float z_start = getZoom();
     auto cb = [=](float t) { impl->setZoomNow(ease(z_start, _z, t, _e)); };
     impl->setEase(EaseField::zoom, { _duration, cb });
+
+}
+
+void Map::flyTo(double _lon, double _lat, float _z, float _duration, float _speed) {
+
+    double lonStart = 0., latStart = 0.;
+    getPosition(lonStart, latStart);
+    float zStart = getZoom();
+
+    double dLongitude = _lon - lonStart;
+    if (dLongitude > 180.0) {
+        _lon -= 360.0;
+    } else if (dLongitude < -180.0) {
+        _lon += 360.0;
+    }
+
+    const MapProjection& projection = impl->view.getMapProjection();
+    glm::dvec2 a = projection.LonLatToMeters(glm::dvec2(lonStart, latStart));
+    glm::dvec2 b = projection.LonLatToMeters(glm::dvec2(_lon, _lat));
+
+    double distance = 0.0;
+    auto fn = getFlyToFunction(impl->view,
+                               glm::dvec3(a.x, a.y, zStart),
+                               glm::dvec3(b.x, b.y, _z),
+                               distance);
+    auto cb =
+        [=](float t) {
+            glm::dvec3 pos = fn(t);
+            impl->view.setPosition(pos.x, pos.y);
+            impl->view.setZoom(pos.z);
+            impl->platform->requestRender();
+        };
+
+    if (_speed <= 0.f) { _speed = 1.f; }
+
+    float duration = _duration > 0 ? _duration : distance / _speed;
+
+    impl->setEase(EaseField::zoom, { duration, cb });
 
 }
 

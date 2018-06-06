@@ -460,6 +460,21 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 map->setZoom(14);
                 break;
             case GLFW_KEY_F3:
+                map->flyTo(8.82, 53.08, 16., 0.0, 2.0);
+                break;
+            case GLFW_KEY_F4:
+                map->flyTo(8.82, 53.08, 10., 0.0, 2.5);
+                break;
+            case GLFW_KEY_F5:
+                map->flyTo(-74.00976419448854, 40.70532700869127, 16., 4.);
+                break;
+            case GLFW_KEY_F6:
+                map->flyTo(-122.41, 37.7749, 16., 0.0, 4.0);
+                break;
+            case GLFW_KEY_F7:
+                map->flyTo(139.839478, 35.652832, 16., 0.0, 1.0);
+                break;
+            case GLFW_KEY_W:
                 map->onMemoryWarning();
                 break;
         default:

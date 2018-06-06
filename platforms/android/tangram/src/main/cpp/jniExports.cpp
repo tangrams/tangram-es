@@ -96,6 +96,12 @@ extern "C" {
         return map->getTilt();
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeFlyTo(JNIEnv* jniEnv, jobject obj,  jlong mapPtr, jdouble lon, jdouble lat, jfloat zoom, jfloat duration, jfloat speed) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        map->flyTo(lon, lat, zoom, duration, speed);
+    }
+
     JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeScreenPositionToLngLat(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray coordinates) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
