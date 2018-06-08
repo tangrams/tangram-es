@@ -90,6 +90,14 @@ enum class EaseType : char {
     sine,
 };
 
+struct CameraPosition {
+    double longitude;
+    double latitude;
+    float zoom;
+    float rotation;
+    float tilt;
+};
+
 class Map {
 
 public:
@@ -215,6 +223,14 @@ public:
 
     // Get the camera type (0 = perspective, 1 = isometric, 2 = flat)
     int getCameraType();
+
+    CameraPosition getCameraPosition();
+
+    void setCameraPosition(const CameraPosition& _camera);
+
+    void setCameraPositionEased(const CameraPosition& _camera, float duration, EaseType _e = EaseType::quint);
+
+    void cancelCameraEase();
 
     // Given coordinates in screen space (x right, y down), set the output longitude and
     // latitude to the geographic location corresponding to that point; returns false if

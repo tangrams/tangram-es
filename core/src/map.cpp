@@ -38,7 +38,7 @@ namespace Tangram {
 
 const static size_t MAX_WORKERS = 2;
 
-enum class EaseField { position, zoom, rotation, tilt };
+enum class EaseField { position, zoom, rotation, tilt, camera };
 
 class Map::Impl {
 
@@ -73,7 +73,7 @@ public:
     std::shared_ptr<Platform> platform;
     InputHandler inputHandler;
 
-    std::array<Ease, 4> eases;
+    std::array<Ease, 5> eases;
 
     std::shared_ptr<Scene> scene;
     std::shared_ptr<Scene> lastValidScene;
@@ -115,7 +115,11 @@ void Map::Impl::setEase(EaseField _f, Ease _e) {
 
 void Map::Impl::clearEase(EaseField _f) {
     static Ease none = {};
-    eases[static_cast<size_t>(_f)] = none;
+    if (!eases[static_cast<size_t>(EaseField::camera)].finished()) {
+        for (auto& e : eases) { e = none; }
+    } else {
+        eases[static_cast<size_t>(_f)] = none;
+    }
 }
 
 static std::bitset<9> g_flags = 0;
@@ -590,14 +594,67 @@ void Map::Impl::setPositionNow(double _x, double _y) {
 
 }
 
+CameraPosition Map::getCameraPosition() {
+    CameraPosition camera;
+
+    getPosition(camera.longitude, camera.latitude);
+    camera.zoom = getZoom();
+    camera.rotation = getRotation();
+    camera.tilt = getTilt();
+
+    return camera;
+}
+
+void Map::cancelCameraEase() {
+    impl->clearEase(EaseField::position);
+    impl->clearEase(EaseField::zoom);
+    impl->clearEase(EaseField::rotation);
+    impl->clearEase(EaseField::tilt);
+    impl->clearEase(EaseField::camera);
+}
+
+void Map::setCameraPosition(const CameraPosition& _camera) {
+    cancelCameraEase();
+
+    impl->setPositionNow(_camera.longitude, _camera.latitude);
+    impl->setZoomNow(_camera.zoom);
+    impl->setRotationNow(_camera.rotation);
+    impl->setTiltNow(_camera.tilt);
+}
+
+void Map::setCameraPositionEased(const CameraPosition& _camera, float _duration, EaseType _e) {
+    cancelCameraEase();
+
+    double lonStart, latStart;
+    getPosition(lonStart, latStart);
+    if (_camera.longitude != lonStart || _camera.latitude != latStart) {
+        setPositionEased(_camera.longitude, _camera.latitude, _duration, _e);
+    }
+    if (_camera.zoom != getZoom()) {
+        setZoomEased(_camera.zoom, _duration, _e);
+    }
+    if (_camera.rotation != getRotation()) {
+        setRotationEased(_camera.rotation, _duration, _e);
+    }
+    if (_camera.tilt != getTilt()) {
+        setTiltEased(_camera.tilt, _duration, _e);
+    }
+    impl->setEase(EaseField::camera, { _duration, [](float t){} });
+}
+
 void Map::setPosition(double _lon, double _lat) {
 
-    impl->setPositionNow(_lon, _lat);
+    glm::dvec2 meters = impl->view.getMapProjection().LonLatToMeters({ _lon, _lat});
+
+    impl->setPositionNow(meters.x, meters.y);
     impl->clearEase(EaseField::position);
 
 }
 
 void Map::setPositionEased(double _lon, double _lat, float _duration, EaseType _e) {
+
+    CameraPosition pos = getCameraPosition();
+    setCameraPositionEased(pos, _duration, _e);
 
     double lonStart, latStart;
     getPosition(lonStart, latStart);
@@ -687,7 +744,8 @@ void Map::flyTo(double _lon, double _lat, float _z, float _duration, float _spee
 
     float duration = _duration > 0 ? _duration : distance / _speed;
 
-    impl->setEase(EaseField::zoom, { duration, cb });
+    cancelCameraEase();
+    impl->setEase(EaseField::camera, { duration, cb });
 
 }
 
