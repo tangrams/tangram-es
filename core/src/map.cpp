@@ -582,10 +582,9 @@ void Map::captureSnapshot(unsigned int* _data) {
     GL::readPixels(0, 0, impl->view.getWidth(), impl->view.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)_data);
 }
 
-void Map::Impl::setPositionNow(double _lon, double _lat) {
+void Map::Impl::setPositionNow(double _x, double _y) {
 
-    glm::dvec2 meters = view.getMapProjection().LonLatToMeters({ _lon, _lat});
-    view.setPosition(meters.x, meters.y);
+    view.setPosition(_x, _y);
     inputHandler.cancelFling();
     platform->requestRender();
 
@@ -610,7 +609,14 @@ void Map::setPositionEased(double _lon, double _lat, float _duration, EaseType _
         _lon += 360.0;
     }
 
-    auto cb = [=](float t) { impl->setPositionNow(ease(lonStart, _lon, t, _e), ease(latStart, _lat, t, _e)); };
+    glm::dvec2 start = impl->view.getMapProjection().LonLatToMeters({ lonStart, latStart});
+    glm::dvec2 end = impl->view.getMapProjection().LonLatToMeters({ _lon, _lat});
+
+    auto cb = [=](float t) {
+                  impl->setPositionNow(ease(start.x, end.x, t, _e),
+                                       ease(start.y, end.y, t, _e));
+              };
+
     impl->setEase(EaseField::position, { _duration, cb });
 
 }
