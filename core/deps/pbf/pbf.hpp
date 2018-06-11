@@ -8,11 +8,11 @@
  * Author: Josh Haberman <jhaberman@gmail.com>
  */
 
+#include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <stdexcept>
 #include <string>
-#include <cstring>
-#include <cassert>
 
 #undef LIKELY
 #undef UNLIKELY
@@ -27,8 +27,13 @@
 
 namespace protobuf {
 
+#ifdef _MSC_VER
+#define FORCEINLINE __forceinline
+#define NOINLINE
+#else
 #define FORCEINLINE inline __attribute__((always_inline))
 #define NOINLINE __attribute__((noinline))
+#endif
 #define PBF_INLINE FORCEINLINE
 
 class message {

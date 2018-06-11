@@ -45,6 +45,7 @@ int height = 600;
 float density = 1.0;
 float pixel_scale = 1.0;
 bool recreate_context = false;
+bool forceGeoJsonSource = false;
 
 bool was_panning = false;
 double last_time_released = -double_tap_time; // First click should never trigger a double tap
@@ -441,8 +442,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 map->loadSceneYamlAsync("{ scene: { background: { color: red } } }", std::string(""));
                 break;
             case GLFW_KEY_G:
-                static bool geoJSON = false;
-                if (!geoJSON) {
+                if (!forceGeoJsonSource) {
                     map->updateSceneAsync({
                             SceneUpdate{"sources.osm.type", "GeoJSON"},
                             SceneUpdate{"sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.json"}
@@ -453,7 +453,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                             SceneUpdate{"sources.osm.url", "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt"}
                         });
                 }
-                geoJSON = !geoJSON;
+                forceGeoJsonSource = !forceGeoJsonSource;
                 break;
             case GLFW_KEY_ESCAPE:
                 glfwSetWindowShouldClose(window, true);

@@ -1,5 +1,6 @@
 #include "util/url.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <cassert>
 

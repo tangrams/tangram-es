@@ -1,6 +1,7 @@
 # global compile options
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(MSVC)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -std=gnu++1y")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc") # Exceptions handler - required for yaml-cpp
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_USE_MATH_DEFINES") # required for geojson-vt-cpp
