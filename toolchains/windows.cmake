@@ -42,6 +42,9 @@ add_definitions(-DTANGRAM_WINDOWS)
 # load core library
 add_subdirectory(${PROJECT_SOURCE_DIR}/core)
 
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
+
 if(TANGRAM_APPLICATION)
 
   set(EXECUTABLE_NAME "tangram")
@@ -54,7 +57,6 @@ if(TANGRAM_APPLICATION)
   endif()
 	
   find_package(OpenGL REQUIRED)
-	find_package(CURL REQUIRED)
 
   # Build GLFW.
   if (TANGRAM_USE_SYSTEM_GLFW_LIBS)
@@ -92,12 +94,10 @@ if(TANGRAM_APPLICATION)
     -pthread
     ${GLFW_LIBRARIES}
     ${OPENGL_LIBRARIES}
-		${CURL_LIBRARIES}
 	)
-	# For CURL static
-	target_link_libraries(${EXECUTABLE_NAME}
-		wsock32 ws2_32 crypt32 wldap32
-	)
+	
+  # Add Conan libs: curl and zlib.
+  target_link_libraries(${EXECUTABLE_NAME} ${CONAN_LIBS})
 
   add_resources(${EXECUTABLE_NAME} "${PROJECT_SOURCE_DIR}/scenes")
 
