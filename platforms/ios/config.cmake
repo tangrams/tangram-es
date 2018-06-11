@@ -1,63 +1,80 @@
-include(cmake/iOS.toolchain.cmake)
+add_definitions(-DTANGRAM_IOS)
 
-set(ARCH "armv7 arm64 x86_64")
-set(SUPPORTED_PLATFORMS "iphonesimulator iphoneos")
-set(TANGRAM_FRAMEWORK ${PROJECT_SOURCE_DIR}/${TANGRAM_FRAMEWORK})
-set(FRAMEWORKS CoreGraphics CoreFoundation CoreLocation QuartzCore UIKit OpenGLES Security CFNetwork GLKit)
+set(TANGRAM_FRAMEWORK_VERSION "0.9.4-dev")
 
-# NB:cmake versions before 3.9.0 had an issue where the path specified for MACOSX_FRAMEWORK_LOCATION
-# was prepended by "../" when set to something other than "Resources" which is what we require here.
-# Refer: https://gitlab.kitware.com/cmake/cmake/issues/16680 for the actual cmake issue
-if(${CMAKE_VERSION} VERSION_LESS "3.9.0")
-  set(MACOSX_FRAMEWORK_LOCATION ${EXECUTABLE_NAME}.app/Frameworks)
-else()
-  set(MACOSX_FRAMEWORK_LOCATION Resources/Frameworks)
-endif()
+### Configure iOS toolchain.
+set(IOS TRUE)
+set(CMAKE_OSX_SYSROOT "iphoneos")
+set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
+set(CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "9.3")
 
-message(STATUS "Linking with Tangram Framework: ${TANGRAM_FRAMEWORK}")
-message(STATUS "Building for architectures: ${ARCH}")
+# Tell SQLiteCpp to not build its own copy of SQLite, we will use the system library instead.
+set(SQLITECPP_INTERNAL_SQLITE OFF CACHE BOOL "")
 
-get_nextzen_api_key(NEXTZEN_API_KEY)
-add_definitions(-DNEXTZEN_API_KEY="${NEXTZEN_API_KEY}")
-
-# Generate demo app configuration plist file to inject API key
-configure_file("${PROJECT_SOURCE_DIR}/platforms/ios/demo/Config.plist.in"
-  "${PROJECT_SOURCE_DIR}/platforms/ios/demo/resources/Config.plist"
+set(TANGRAM_FRAMEWORK_HEADERS
+  platforms/ios/framework/src/TangramMap.h
+  platforms/ios/framework/src/TGGeoPolyline.h
+  platforms/ios/framework/src/TGGeoPolygon.h
+  platforms/ios/framework/src/TGGeoPoint.h
+  platforms/ios/framework/src/TGMarker.h
+  platforms/ios/framework/src/TGSceneUpdate.h
+  platforms/ios/framework/src/TGMapData.h
+  platforms/ios/framework/src/TGTypes.h
+  platforms/ios/framework/src/TGHttpHandler.h
+  platforms/ios/framework/src/TGLabelPickResult.h
+  platforms/ios/framework/src/TGMarkerPickResult.h
+  platforms/ios/framework/src/TGMapViewController.h
 )
 
-add_bundle_resources(IOS_DEMO_RESOURCES "${PROJECT_SOURCE_DIR}/platforms/ios/demo/resources/" "Resources")
-
-add_executable(tangram MACOSX_BUNDLE
-  platforms/ios/demo/src/AppDelegate.m
-  platforms/ios/demo/src/main.m
-  platforms/ios/demo/src/MapViewController.m
-  ${IOS_DEMO_RESOURCES}
-  ${TANGRAM_FRAMEWORK}
+add_library(TangramMap SHARED
+  ${TANGRAM_FRAMEWORK_HEADERS}
+  platforms/common/platform_gl.cpp
+  platforms/common/appleAllowedFonts.h
+  platforms/common/appleAllowedFonts.mm
+  platforms/ios/framework/src/iosPlatform.h
+  platforms/ios/framework/src/iosPlatform.mm
+  platforms/ios/framework/src/TGHelpers.h
+  platforms/ios/framework/src/TGHelpers.mm
+  platforms/ios/framework/src/TGGeoPolyline.mm
+  platforms/ios/framework/src/TGGeoPolygon.mm
+  platforms/ios/framework/src/TGHttpHandler.mm
+  platforms/ios/framework/src/TGMapData+Internal.h
+  platforms/ios/framework/src/TGMapData.mm
+  platforms/ios/framework/src/TGSceneUpdate.mm
+  platforms/ios/framework/src/TGLabelPickResult+Internal.h
+  platforms/ios/framework/src/TGLabelPickResult.mm
+  platforms/ios/framework/src/TGMarkerPickResult+Internal.h
+  platforms/ios/framework/src/TGMarkerPickResult.mm
+  platforms/ios/framework/src/TGMarker+Internal.h
+  platforms/ios/framework/src/TGMarker.mm
+  platforms/ios/framework/src/TGTypes.mm
+  platforms/ios/framework/src/TGMapViewController+Internal.h
+  platforms/ios/framework/src/TGMapViewController.mm
 )
 
-target_link_libraries(tangram ${TANGRAM_FRAMEWORK})
-
-# setting xcode properties
-set_target_properties(tangram PROPERTIES
-  MACOSX_BUNDLE_INFO_PLIST "${PROJECT_SOURCE_DIR}/platforms/ios/demo/Info.plist"
-  MACOSX_FRAMEWORK_IDENTIFIER "com.mapzen.tangram"
-  RESOURCE ${IOS_DEMO_RESOURCES}
+target_link_libraries(TangramMap PRIVATE
+  tangram-core
+  sqlite3
+  # Frameworks: use quotes so "-framework X" is treated as a single linker flag.
+  "-framework CoreFoundation"
+  "-framework CoreGraphics"
+  "-framework CoreText"
+  "-framework GLKit"
+  "-framework OpenGLES"
+  "-framework UIKit"
 )
 
-set_source_files_properties(${TANGRAM_FRAMEWORK} PROPERTIES
-  MACOSX_PACKAGE_LOCATION ${MACOSX_FRAMEWORK_LOCATION})
+target_include_directories(TangramMap PRIVATE
+  platforms/common
+)
 
-if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
-  set_xcode_property(tangram GCC_GENERATE_DEBUGGING_SYMBOLS YES)
-endif()
-
-set_xcode_property(tangram CODE_SIGN_IDENTITY "iPhone Developer")
-set_xcode_property(tangram SUPPORTED_PLATFORMS ${SUPPORTED_PLATFORMS})
-set_xcode_property(tangram ONLY_ACTIVE_ARCH "YES")
-set_xcode_property(tangram VALID_ARCHS "${ARCH}")
-set_xcode_property(tangram TARGETED_DEVICE_FAMILY "1,2")
-set_xcode_property(tangram LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks")
-
-foreach(_framework ${FRAMEWORKS})
-  add_framework(${_framework} tangram ${CMAKE_SYSTEM_FRAMEWORK_PATH})
-endforeach()
+set_target_properties(TangramMap PROPERTIES
+  FRAMEWORK TRUE
+  PUBLIC_HEADER "${TANGRAM_FRAMEWORK_HEADERS}"
+  MACOSX_FRAMEWORK_INFO_PLIST "${PROJECT_SOURCE_DIR}/platforms/ios/framework/Info.plist"
+  XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION "${TANGRAM_FRAMEWORK_VERSION}"
+  XCODE_ATTRIBUTE_DEFINES_MODULE "YES"
+  XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
+  XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14"
+  XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++"
+)

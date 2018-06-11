@@ -128,13 +128,18 @@ macro(add_resources TARGET RESOURCE_DIR)
 
 endmacro(add_resources)
 
-macro(add_framework FWNAME APPNAME LIBPATH)
-    find_library(FRAMEWORK_${FWNAME} NAMES ${FWNAME} PATHS ${LIBPATH} PATH_SUFFIXES Frameworks NO_DEFAULT_PATH)
-    if(${FRAMEWORK_${FWNAME}} STREQUAL FRAMEWORK_${FWNAME}-NOTFOUND)
-        message(ERROR ": Framework ${FWNAME} not found")
-    else()
-        target_link_libraries(${APPNAME} ${FRAMEWORK_${FWNAME}})
+macro(target_add_framework APPNAME FWNAME)
+    find_library(${FWNAME}_FRAMEWORK ${FWNAME})
+    if(${${FWNAME}_FRAMEWORK})
+        target_link_libraries(${APPNAME} PRIVATE ${FRAMEWORK_${FWNAME}})
         message(STATUS "Framework ${FWNAME} found")
+    else()
+        message(SEND_ERROR "Framework ${FWNAME} not found")
     endif()
-endmacro(add_framework)
+endmacro(target_add_framework)
+
+# This little macro lets you set any XCode specific property
+macro (set_xcode_property TARGET XCODE_PROPERTY XCODE_VALUE)
+    set_property (TARGET ${TARGET} PROPERTY XCODE_ATTRIBUTE_${XCODE_PROPERTY} ${XCODE_VALUE})
+endmacro (set_xcode_property)
 

@@ -90,6 +90,7 @@ add_library(tangram-core
   src/util/yamlHelper.cpp
   src/util/zipArchive.cpp
   src/util/zlibHelper.cpp
+  src/view/flyTo.cpp
   src/view/view.cpp
   src/view/viewConstraint.cpp
 )
