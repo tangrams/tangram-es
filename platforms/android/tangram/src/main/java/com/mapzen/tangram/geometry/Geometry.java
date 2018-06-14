@@ -1,5 +1,8 @@
 package com.mapzen.tangram.geometry;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.util.Map;
 
 /**
@@ -19,14 +22,16 @@ public abstract class Geometry {
         return rings;
     }
 
+    @Nullable
     public String[] getPropertyArray() {
         return properties;
     }
 
-    protected String[] getStringMapAsArray(Map<String, String> properties) {
-        String[] out = new String[properties.size() * 2];
+    @NonNull
+    protected String[] getStringMapAsArray(@NonNull final Map<String, String> properties) {
+        final String[] out = new String[properties.size() * 2];
         int i = 0;
-        for (Map.Entry<String, String> entry : properties.entrySet()) {
+        for (final Map.Entry<String, String> entry : properties.entrySet()) {
             out[i++] = entry.getKey();
             out[i++] = entry.getValue();
         }

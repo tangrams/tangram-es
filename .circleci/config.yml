@@ -1,0 +1,137 @@
+version: 2
+jobs:
+  build-test-linux:
+    docker:
+      - image: matteblair/docker-tangram-linux:latest
+    steps:
+      - checkout
+      - run: git submodule update --init
+      - run: make cmake-linux CMAKE_OPTIONS="-DTANGRAM_USE_SYSTEM_FONT_LIBS=1 -DTANGRAM_USE_SYSTEM_GLFW_LIBS=1 -DUNIT_TESTS=1 -DBENCHMARK=1 -GNinja"
+      - run: ninja -C build/linux -j 4
+      - run: source scripts/run_tests.sh build/linux/bin
+      - run: source scripts/run_bench.sh build/linux/bin
+  build-android:
+    docker:
+      - image: lakoo/android-ndk:25-26.0.1-r15c
+    steps:
+      - checkout
+      - run: git submodule update --init
+      - run: cd platforms/android && ./gradlew demo:assembleDebug -Ptangram.abis=armeabi-v7a
+  build-deploy-android-snapshot:
+    docker:
+      - image: lakoo/android-ndk:25-26.0.1-r15c
+    steps:
+      - checkout
+      - run: git submodule update --init
+      - run: cd platforms/android && ./gradlew uploadArchives
+  build-ios:
+    macos:
+      xcode: "9.2.0"
+    steps:
+      # Check out repository with submodules.
+      - checkout
+      - run: git submodule update --init
+      # Install dependencies.
+      # For unclear reasons, 'jazzy' fails to install on CircleCI if 'atomos' is not installed first.
+      - run: sudo gem install atomos jazzy
+      - run: brew install cmake
+      # Build framework and docs.
+      - run: make ios TANGRAM_IOS_FRAMEWORK_SLIM=1
+      - run: make ios-docs
+  build-deploy-ios-snapshot:
+    macos:
+      xcode: "9.2.0"
+    steps:
+      # Check out repository with submodules.
+      - checkout
+      - run: git submodule update --init
+      # Install dependencies.
+      # For unclear reasons, 'jazzy' fails to install on CircleCI if 'atomos' is not installed first.
+      - run: sudo gem install atomos jazzy
+      - run: brew install cmake
+      # Build the framework in debug mode and package it into pod.zip
+      - run: make ios-framework-universal DEBUG=1
+      - run: make ios-docs
+      # To produce the intended structure within the zip archive, we must cd to each file's location.
+      - run: cd build/ios-framework-universal/Debug && zip -r ~/pod.zip TangramMap.framework
+      # Add the readme and license files.
+      - run: cd platforms/ios/framework && zip ~/pod.zip README.md
+      - run: zip ~/pod.zip LICENSE
+      - store_artifacts:
+          path: ~/pod.zip
+  build-deploy-macos-snapshot:
+    macos:
+      xcode: "9.2.0"
+    steps:
+      # Check out repository with submodules.
+      - checkout
+      - run: git submodule update --init
+      # Install dependencies.
+      - run: brew install cmake
+      # Build the MacOS demo app and package it into demo.zip
+      - run: make osx -j 2 MACOSX_DEPLOYMENT_TARGET=10.10.0
+      # To produce the intended structure within the zip archive, we must cd to each file's location.
+      - run: cd build/osx/bin && zip -r ~/demo.zip tangram.app
+      - store_artifacts:
+          path: ~/demo.zip
+  build-deploy-ios-release:
+    macos:
+      xcode: "9.2.0"
+    steps:
+      # Check out repository with submodules.
+      - checkout
+      - run: git submodule update --init
+      # Install dependencies.
+      # For unclear reasons, 'jazzy' fails to install on CircleCI if 'atomos' is not installed first.
+      - run: sudo gem install atomos jazzy
+      - run: brew install cmake jfrog-cli-go
+      # Build the framework in release mode and package it into pod.zip
+      - run: make ios-framework-universal RELEASE=1
+      - run: make ios-docs
+      # To produce the intended structure within the zip archive, we must cd to each file's location.
+      - run: cd build/ios-framework-universal/Release && zip -r ~/pod.zip TangramMap.framework
+      # Add the readme and license files.
+      - run: cd platforms/ios/framework && zip ~/pod.zip README.md
+      - run: zip ~/pod.zip LICENSE
+      # Upload and publish the Cocoapods archive to Bintray.
+      - run: jfrog bt config --user=${BINTRAY_USER} --key=${BINTRAY_API_KEY} --licenses=MIT
+      - run: jfrog bt upload --publish=true ~/pod.zip tangrams/cocoapods/Tangram-es/${CIRCLE_TAG} ${CIRCLE_TAG}-release.zip
+      - store_artifacts:
+          path: ~/pod.zip
+
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      # Run on all pushes
+      - build-test-linux
+      # Run on pushes to all branches except master
+      - build-android:
+          filters:
+            branches:
+              ignore: master
+      - build-ios:
+          filters:
+            branches:
+              ignore: master
+      # Run on pushes to master
+      - build-deploy-android-snapshot:
+          filters:
+            branches:
+              only: master
+      - build-deploy-macos-snapshot:
+          filters:
+            branches:
+              only: master
+      - build-deploy-ios-snapshot:
+          filters:
+            branches:
+              only: master
+      # Run on tag pushes
+      - build-deploy-ios-release:
+          filters:
+            # For any tag of the form 1, 1.2.3, 1.4-beta2, etc. we will deploy a release build.
+            tags:
+              only: /[0-9]+(\.[0-9]+)*(-beta[0-9]*)?/
+            branches:
+              ignore: /.*/

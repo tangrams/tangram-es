@@ -34,7 +34,9 @@ constexpr int max_anchors = 9;
 
 struct Anchors {
 
-    Anchors() {}
+    Anchors() {
+        anchor.fill(Anchor::center);
+    }
 
     Anchors(LabelProperty::Anchor _anchor) {
         anchor[0] = _anchor;

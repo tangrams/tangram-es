@@ -12,6 +12,8 @@
 #include "point_vs.h"
 #include "point_fs.h"
 
+#include "log.h"
+
 namespace Tangram {
 
 PointStyle::PointStyle(std::string _name, std::shared_ptr<FontContext> _fontContext,
@@ -34,12 +36,13 @@ void PointStyle::build(const Scene& _scene) {
 void PointStyle::constructVertexLayout() {
 
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
-        {"a_position", 3, GL_FLOAT, false, 0},
-        {"a_uv", 2, GL_UNSIGNED_SHORT, true, 0},
+        {"a_position", 4, GL_FLOAT, false, 0},
+        {"a_uv", 2, GL_SHORT, true, 0},
         {"a_selection_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
+        {"a_outline_color", 4, GL_UNSIGNED_BYTE, true, 0},
+        {"a_aa_factor", 1, GL_SHORT, true, 0},
         {"a_alpha", 1, GL_UNSIGNED_SHORT, true, 0},
-        {"a_scale", 1, GL_UNSIGNED_SHORT, false, 0},
     }));
 }
 
@@ -50,6 +53,7 @@ void PointStyle::constructShaderProgram() {
 
 void PointStyle::onBeginUpdate() {
     m_mesh->clear();
+    m_batches.clear();
     m_textStyle->onBeginUpdate();
 }
 
@@ -65,10 +69,27 @@ void PointStyle::onBeginDrawFrame(RenderState& rs, const View& _view, Scene& _sc
     auto texUnit = rs.nextAvailableTextureUnit();
 
     m_shaderProgram->setUniformi(rs, m_mainUniforms.uTex, texUnit);
+
     m_shaderProgram->setUniformMatrix4f(rs, m_mainUniforms.uOrtho,
                                         _view.getOrthoViewportMatrix());
 
-    m_mesh->draw(rs, *m_shaderProgram, texUnit);
+
+    size_t vertexPos = 0;
+    for (auto& batch : m_batches) {
+
+        auto tex = batch.texture;
+
+        m_shaderProgram->setUniformi(rs, m_mainUniforms.uSpriteMode, bool(tex) ? 1 : 0);
+
+        if (tex) {
+            tex->update(rs, texUnit);
+            tex->bind(rs, texUnit);
+        }
+
+        m_mesh->drawRange(rs, *m_shaderProgram, vertexPos, batch.vertexCount);
+
+        vertexPos += batch.vertexCount;
+    }
 
     m_textStyle->onBeginDrawFrame(rs, _view, _scene);
 }
@@ -95,6 +116,17 @@ std::unique_ptr<StyleBuilder> PointStyle::createBuilder() const {
 void PointStyle::setPixelScale(float _pixelScale) {
     Style::setPixelScale(_pixelScale);
     m_textStyle->setPixelScale(_pixelScale);
+}
+
+SpriteVertex* PointStyle::pushQuad(Texture* texture) const {
+
+    if (m_batches.empty() || m_batches.back().texture != texture) {
+        m_batches.push_back({ texture });
+    }
+
+    m_batches.back().vertexCount += 4;
+
+    return m_mesh->pushQuad();
 }
 
 }

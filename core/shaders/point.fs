@@ -21,21 +21,49 @@ uniform float u_device_pixel_ratio;
 varying vec4 v_color;
 varying vec2 v_texcoords;
 varying float v_alpha;
+varying float v_aa_factor;
+varying vec2 v_edge;
+varying vec4 v_outline_color;
+
 
 uniform sampler2D u_tex;
+uniform LOWP int u_sprite_mode;
 
 #pragma tangram: global
 
 void main(void) {
-    if (v_alpha < TANGRAM_EPSILON) {
-        discard;
+
+    vec4 color = v_color;
+
+    if (u_sprite_mode == 0) {
+        float point_dist = length(v_texcoords);
+
+        if (v_outline_color.a > 0.0) {
+
+          float outline_edge = v_edge.x;
+          float fill_edge = v_edge.y;
+
+          vec4 mixColor = mix(color, v_outline_color, v_outline_color.a);
+
+          color = mix(color, mixColor,
+                      smoothstep(max(0.0, outline_edge - v_aa_factor),
+                                 min(1.0, outline_edge + v_aa_factor),
+                                 point_dist));
+
+          color = mix(color, v_outline_color,
+                      smoothstep(max(0.0, fill_edge - v_aa_factor),
+                                 min(1.0, fill_edge + v_aa_factor),
+                                 point_dist));
+        }
+
+        color.a = mix(color.a, 0., (smoothstep(max(1. - v_aa_factor, 0.), 1., point_dist)));
     } else {
-        vec4 texColor = texture2D(u_tex, v_texcoords);
-        vec4 color = vec4(texColor.rgb * v_color.rgb, v_alpha * texColor.a * v_color.a);
-
-        #pragma tangram: color
-        #pragma tangram: filter
-
-        gl_FragColor = color;
+        color *= texture2D(u_tex, v_texcoords);
     }
+    color.a *= v_alpha;
+
+    #pragma tangram: color
+    #pragma tangram: filter
+
+    gl_FragColor = color;
 }

@@ -1,18 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-  compileSdkVersion 25
-  buildToolsVersion '25.0.2'
+  compileSdkVersion 27
 
-  def apiKey = project.hasProperty('mapzenApiKey') ? mapzenApiKey : System.getenv('MAPZEN_API_KEY')
-
-  assert apiKey != null : "To run the demo, you must provide a Mapzen API key as an environment\
-    variable named 'MAPZEN_API_KEY' or a Gradle property named 'mapzenApiKey'"
+  def apiKey = project.hasProperty('nextzenApiKey') ? nextzenApiKey : System.getenv('NEXTZEN_API_KEY')
 
   defaultConfig {
     minSdkVersion 15
-    targetSdkVersion 25
-    buildConfigField 'String', 'MAPZEN_API_KEY', '"' + apiKey + '"'
+    targetSdkVersion 27
+    buildConfigField 'String', 'NEXTZEN_API_KEY', '"' + apiKey + '"'
   }
 
   sourceSets.main {
@@ -30,9 +26,10 @@ android {
       minifyEnabled true
     }
   }
+
 }
 
 dependencies {
-  compile project(path: ':tangram')
-  compile 'com.android.support:design:25.3.1'
+  implementation project(path: ':tangram')
+  implementation 'com.android.support:design:27.1.1'
 }

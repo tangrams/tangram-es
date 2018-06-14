@@ -7,12 +7,19 @@ version = VERSION_NAME
 apply from: 'versioning.gradle'
 
 android {
-  compileSdkVersion 25
-  buildToolsVersion '25.0.2'
+  compileSdkVersion 27
+
+  // Specific ABI targets can be chosen with the 'abis' property as a comma-separated list of ABIs.
+  // From the command line, add '-Ptangram.abis=armeabi-v7a,x86,...' to only build those ABIs.
+  // When building from Android Studio, the ABI for the target device is injected and takes precedence.
+  def abi = 'all'
+  if (!project.hasProperty('android.injected.invoked.from.ide') && project.hasProperty('tangram.abis')) {
+    abi = project.getProperty('tangram.abis')
+  }
 
   defaultConfig {
     minSdkVersion 15
-    targetSdkVersion 25
+    targetSdkVersion 27
     versionCode buildVersionCode()
     versionName VERSION_NAME
     consumerProguardFiles 'tangram-proguard-rules.txt'
@@ -31,9 +38,15 @@ android {
                  '-Wall',
                  '-Wignored-qualifiers',
                  '-Wtype-limits',
-                 '-Wmissing-field-initializers'
+                 '-Wmissing-field-initializers',
+                 '-Wno-format-pedantic'
 
-        abiFilters 'armeabi-v7a'
+        if (abi == 'all') {
+          abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86'
+        } else {
+          abiFilters abi.split(',')
+        }
+
       }
     }
   }
@@ -56,25 +69,11 @@ android {
       }
     }
   }
-  productFlavors {
-    slim {
-      // Default configuration
-    }
-    full {
-      externalNativeBuild.cmake.abiFilters 'armeabi', 'arm64-v8a', 'x86'
-    }
-  }
-
-  if (project.hasProperty('doFullRelease')) {
-    defaultPublishConfig 'fullRelease'
-  } else {
-    defaultPublishConfig 'slimDebug'
-  }
 }
 
 dependencies {
-  compile 'com.squareup.okhttp3:okhttp:3.5.0'
-  compile 'com.android.support:support-annotations:25.0.0'
+  api 'com.squareup.okhttp3:okhttp:3.10.0'
+  implementation 'com.android.support:support-annotations:27.1.1'
 }
 
-apply from: file('gradle-mvn-push.gradle')
+apply from: 'publishing.gradle'

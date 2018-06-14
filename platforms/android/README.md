@@ -1,15 +1,16 @@
 Android
 =======
+[ ![Download](https://api.bintray.com/packages/tangrams/maven/tangram/images/download.svg) ](https://bintray.com/tangrams/maven/tangram/_latestVersion)
 
-The recommended way use tangram-es in an Android project is to add it as a Gradle dependency. The library is hosted on Maven Central in the package 'com.mapzen.tangram'. To find the latest version number, check [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.mapzen.tangram%22).
+The recommended way use tangram-es in an Android project is to add it as a Gradle dependency. The library is hosted on jcenter in the package 'com.mapzen.tangram'. To see all available versions, check [Bintray](https://bintray.com/tangrams/maven/tangram).
 
-If Maven Central is not set up as a dependency repository, add it in your project's 'build.gradle' file:
+If jcenter is not set up as a dependency repository, add it in your project's 'build.gradle' file:
 
 ```
 allprojects {
   dependencies {
     repositories {
-      mavenCentral()
+      jcenter()
     }
   }
 }
@@ -19,7 +20,7 @@ Then add tangram-es in the 'dependencies' section of your module's 'build.gradle
 
 ```
 dependencies {
-  compile 'com.mapzen.tangram:tangram:0.5.0'
+  compile 'com.mapzen.tangram:tangram:$latest_version'
 }
 ```
 
@@ -27,13 +28,13 @@ That's it! If you want to build tangram-es for Android from scratch, continue re
 
 ## Setup ##
 
-To build for Android you'll need [Android Studio](https://developer.android.com/studio/index.html) version 2.2 or newer on Mac OS X, Ubuntu, or Windows 10. Using the Android Studio SDK Manager, install or update the 'CMake', 'LLDB', and 'NDK' packages from the 'SDK Tools' tab.
+To build for Android you'll need [Android Studio](https://developer.android.com/studio/index.html) version 3.0 or newer on Mac OS X, Ubuntu, or Windows 10. Using the Android Studio SDK Manager, install or update the 'CMake', 'LLDB', and 'NDK' packages from the 'SDK Tools' tab.
 
-The demo application uses the Mapzen vector tile service, so you will need a Mapzen API key to build and run the demo. 
+The demo application uses the Nextzen vector tile service, so you will need a Nextzen API key to build and run the demo. 
 
- 1. Visit https://mapzen.com/documentation/overview/#get-started-developing-with-mapzen to get an API key.
+ 1. Visit https://developers.nextzen.org/ to get an API key.
 
- 2. In your local Gradle properties file (`~/.gradle/gradle.properties`) add the following line, substituting your API key: `mapzenApiKey=YOUR-API-KEY-HERE`
+ 2. In your local Gradle properties file (`~/.gradle/gradle.properties`) add the following line, substituting your API key: `nextzenApiKey=yourApiKeyHere`
 
 ## Build ##
 

@@ -109,6 +109,6 @@ NS_ASSUME_NONNULL_BEGIN
 NS_ASSUME_NONNULL_END
 
 /// The map view this data source is on
-@property (readonly, nonatomic) TGMapViewController* _Nullable map;
+@property (readonly, weak, nonatomic) TGMapViewController* _Nullable map;
 
 @end

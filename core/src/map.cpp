@@ -28,6 +28,7 @@
 #include "util/inputHandler.h"
 #include "util/ease.h"
 #include "util/jobQueue.h"
+#include "view/flyTo.h"
 #include "view/view.h"
 
 #include <bitset>
@@ -45,7 +46,7 @@ public:
     Impl(std::shared_ptr<Platform> _platform) :
         platform(_platform),
         inputHandler(_platform, view),
-        scene(std::make_shared<Scene>(_platform)),
+        scene(std::make_shared<Scene>(_platform, Url())),
         tileWorker(_platform, MAX_WORKERS),
         tileManager(_platform, tileWorker) {}
 
@@ -76,7 +77,8 @@ public:
 
     std::shared_ptr<Scene> scene;
     std::shared_ptr<Scene> lastValidScene;
-    std::atomic<int32_t> sceneLoadTasks;
+    std::atomic<int32_t> sceneLoadTasks{0};
+    std::condition_variable sceneLoadCondition;
 
     // NB: Destruction of (managed and loading) tiles must happen
     // before implicit destruction of 'scene' above!
@@ -92,6 +94,18 @@ public:
     std::vector<SelectionQuery> selectionQueries;
 
     SceneReadyCallback onSceneReady = nullptr;
+
+    void sceneLoadBegin() {
+        sceneLoadTasks++;
+    }
+
+    void sceneLoadEnd() {
+        sceneLoadTasks--;
+        assert(sceneLoadTasks >= 0);
+
+        sceneLoadCondition.notify_one();
+    }
+
 };
 
 void Map::Impl::setEase(EaseField _f, Ease _e) {
@@ -184,7 +198,10 @@ SceneID Map::loadScene(std::shared_ptr<Scene> scene,
                        const std::vector<SceneUpdate>& _sceneUpdates) {
 
     {
-        std::lock_guard<std::mutex> lock(impl->sceneMutex);
+        std::unique_lock<std::mutex> lock(impl->sceneMutex);
+
+        impl->sceneLoadCondition.wait(lock, [&]{ return impl->sceneLoadTasks == 0; });
+
         impl->lastValidScene.reset();
     }
 
@@ -246,7 +263,7 @@ SceneID Map::loadSceneYamlAsync(const std::string& _yaml, const std::string& _re
 SceneID Map::loadSceneAsync(std::shared_ptr<Scene> nextScene,
                             const std::vector<SceneUpdate>& _sceneUpdates) {
 
-    impl->sceneLoadTasks++;
+    impl->sceneLoadBegin();
 
     runAsyncTask([nextScene, _sceneUpdates, this](){
 
@@ -258,7 +275,7 @@ SceneID Map::loadSceneAsync(std::shared_ptr<Scene> nextScene,
                     if (!nextScene->errors.empty()) { err = nextScene->errors.front(); }
                     impl->onSceneReady(nextScene->id, &err);
                 }
-                impl->sceneLoadTasks--;
+                impl->sceneLoadEnd();
                 return;
             }
 
@@ -276,8 +293,8 @@ SceneID Map::loadSceneAsync(std::shared_ptr<Scene> nextScene,
                     }
                     if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, nullptr); }
                 });
-            impl->sceneLoadTasks--;
 
+            impl->sceneLoadEnd();
             platform->requestRender();
         });
 
@@ -294,12 +311,12 @@ std::shared_ptr<Platform>& Map::getPlatform() {
 
 SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
 
+    impl->sceneLoadBegin();
+
     std::vector<SceneUpdate> updates = _sceneUpdates;
 
     auto nextScene = std::make_shared<Scene>();
     nextScene->useScenePosition = false;
-
-    impl->sceneLoadTasks++;
 
     runAsyncTask([nextScene, updates = std::move(updates), this](){
 
@@ -308,7 +325,7 @@ SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
                     SceneError err {{}, Error::no_valid_scene};
                     impl->onSceneReady(nextScene->id, &err);
                 }
-                impl->sceneLoadTasks--;
+                impl->sceneLoadEnd();
                 return;
             }
 
@@ -325,7 +342,7 @@ SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
                     if (!nextScene->errors.empty()) { err = nextScene->errors.front(); }
                     impl->onSceneReady(nextScene->id, &err);
                 }
-                impl->sceneLoadTasks--;
+                impl->sceneLoadEnd();
                 return;
             }
 
@@ -346,8 +363,8 @@ SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
                     }
                     if (impl->onSceneReady) { impl->onSceneReady(nextScene->id, nullptr); }
                 });
-            impl->sceneLoadTasks--;
 
+            impl->sceneLoadEnd();
             platform->requestRender();
         });
 
@@ -375,15 +392,15 @@ void Map::resize(int _newWidth, int _newHeight) {
 
 bool Map::update(float _dt) {
 
-    // Wait until font resources are fully loaded
-    if (impl->scene->pendingFonts > 0) {
+    impl->jobQueue.runJobs();
+
+    // Wait until font and texture resources are fully loaded
+    if (impl->scene->pendingFonts > 0 || impl->scene->pendingTextures > 0) {
         platform->requestRender();
         return false;
     }
 
     FrameInfo::beginUpdate();
-
-    impl->jobQueue.runJobs();
 
     impl->scene->updateTime(_dt);
 
@@ -435,15 +452,15 @@ bool Map::update(float _dt) {
     bool tilesChanged = impl->tileManager.hasTileSetChanged();
     bool tilesLoading = impl->tileManager.hasLoadingTiles();
     bool labelsNeedUpdate = impl->labels.needUpdate();
-    bool resourceLoading = (impl->scene->pendingTextures > 0);
 
-    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || resourceLoading ||
-        impl->sceneLoadTasks > 0) {
+    if (viewChanged || tilesChanged || tilesLoading || labelsNeedUpdate || impl->sceneLoadTasks > 0) {
         viewComplete = false;
     }
 
     // Request render if labels are in fading states or markers are easing.
-    if (labelsNeedUpdate || markersNeedUpdate) { platform->requestRender(); }
+    if (labelsNeedUpdate || markersNeedUpdate) {
+        platform->requestRender();
+    }
 
     return viewComplete;
 }
@@ -486,11 +503,15 @@ void Map::render() {
 
     // Invalidate render states for new frame
     if (!impl->cacheGlState) {
-        impl->renderState.invalidate();
+        impl->renderState.invalidateStates();
     }
 
-    // Run render-thread tasks
-    impl->renderState.jobQueue.runJobs();
+    // Delete batch of gl resources
+    impl->renderState.flushResourceDeletion();
+
+    for (const auto& style : impl->scene->styles()) {
+        style->onBeginFrame(impl->renderState);
+    }
 
     // Render feature selection pass to offscreen framebuffer
     if (impl->selectionQueries.size() > 0 || drawSelectionBuffer) {
@@ -499,15 +520,10 @@ void Map::render() {
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
 
         for (const auto& style : impl->scene->styles()) {
-            style->onBeginDrawSelectionFrame(impl->renderState, impl->view, *(impl->scene));
 
-            for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                style->drawSelectionFrame(impl->renderState, *tile);
-            }
-
-            for (const auto& marker : impl->markerManager.markers()) {
-                style->drawSelectionFrame(impl->renderState, *marker);
-            }
+            style->drawSelectionFrame(impl->renderState, impl->view, *(impl->scene),
+                                      impl->tileManager.getVisibleTiles(),
+                                      impl->markerManager.markers());
         }
 
         std::vector<SelectionColorRead> colorCache;
@@ -523,16 +539,12 @@ void Map::render() {
     // Setup default framebuffer for a new frame
     glm::vec2 viewport(impl->view.getWidth(), impl->view.getHeight());
     FrameBuffer::apply(impl->renderState, impl->renderState.defaultFrameBuffer(),
-                       viewport, impl->scene->background().asIVec4());
+                       viewport, impl->scene->background().toColorF());
 
     if (drawSelectionBuffer) {
         impl->selectionBuffer->drawDebug(impl->renderState, viewport);
         FrameInfo::draw(impl->renderState, impl->view, impl->tileManager);
         return;
-    }
-
-    for (const auto& style : impl->scene->styles()) {
-        style->onBeginFrame(impl->renderState);
     }
 
     {
@@ -541,18 +553,11 @@ void Map::render() {
         // Loop over all styles
         for (const auto& style : impl->scene->styles()) {
 
-            style->onBeginDrawFrame(impl->renderState, impl->view, *(impl->scene));
+            style->draw(impl->renderState,
+                        impl->view, *(impl->scene),
+                        impl->tileManager.getVisibleTiles(),
+                        impl->markerManager.markers());
 
-            // Loop over all tiles in m_tileSet
-            for (const auto& tile : impl->tileManager.getVisibleTiles()) {
-                style->draw(impl->renderState, *tile);
-            }
-
-            for (const auto& marker : impl->markerManager.markers()) {
-                style->draw(impl->renderState, *marker);
-            }
-
-            style->onEndDrawFrame();
         }
     }
 
@@ -595,9 +600,17 @@ void Map::setPosition(double _lon, double _lat) {
 
 void Map::setPositionEased(double _lon, double _lat, float _duration, EaseType _e) {
 
-    double lon_start, lat_start;
-    getPosition(lon_start, lat_start);
-    auto cb = [=](float t) { impl->setPositionNow(ease(lon_start, _lon, t, _e), ease(lat_start, _lat, t, _e)); };
+    double lonStart, latStart;
+    getPosition(lonStart, latStart);
+
+    double dLongitude = _lon - lonStart;
+    if (dLongitude > 180.0) {
+        _lon -= 360.0;
+    } else if (dLongitude < -180.0) {
+        _lon += 360.0;
+    }
+
+    auto cb = [=](float t) { impl->setPositionNow(ease(lonStart, _lon, t, _e), ease(latStart, _lat, t, _e)); };
     impl->setEase(EaseField::position, { _duration, cb });
 
 }
@@ -606,7 +619,7 @@ void Map::getPosition(double& _lon, double& _lat) {
 
     glm::dvec2 meters(impl->view.getPosition().x, impl->view.getPosition().y);
     glm::dvec2 degrees = impl->view.getMapProjection().MetersToLonLat(meters);
-    _lon = degrees.x;
+    _lon = LngLat::wrapLongitude(degrees.x);
     _lat = degrees.y;
 
 }
@@ -631,6 +644,44 @@ void Map::setZoomEased(float _z, float _duration, EaseType _e) {
     float z_start = getZoom();
     auto cb = [=](float t) { impl->setZoomNow(ease(z_start, _z, t, _e)); };
     impl->setEase(EaseField::zoom, { _duration, cb });
+
+}
+
+void Map::flyTo(double _lon, double _lat, float _z, float _duration, float _speed) {
+
+    double lonStart = 0., latStart = 0.;
+    getPosition(lonStart, latStart);
+    float zStart = getZoom();
+
+    double dLongitude = _lon - lonStart;
+    if (dLongitude > 180.0) {
+        _lon -= 360.0;
+    } else if (dLongitude < -180.0) {
+        _lon += 360.0;
+    }
+
+    const MapProjection& projection = impl->view.getMapProjection();
+    glm::dvec2 a = projection.LonLatToMeters(glm::dvec2(lonStart, latStart));
+    glm::dvec2 b = projection.LonLatToMeters(glm::dvec2(_lon, _lat));
+
+    double distance = 0.0;
+    auto fn = getFlyToFunction(impl->view,
+                               glm::dvec3(a.x, a.y, zStart),
+                               glm::dvec3(b.x, b.y, _z),
+                               distance);
+    auto cb =
+        [=](float t) {
+            glm::dvec3 pos = fn(t);
+            impl->view.setPosition(pos.x, pos.y);
+            impl->view.setZoom(pos.z);
+            impl->platform->requestRender();
+        };
+
+    if (_speed <= 0.f) { _speed = 1.f; }
+
+    float duration = _duration > 0 ? _duration : distance / _speed;
+
+    impl->setEase(EaseField::zoom, { duration, cb });
 
 }
 
@@ -709,7 +760,7 @@ bool Map::screenPositionToLngLat(double _x, double _y, double* _lng, double* _la
     glm::dvec3 eye = impl->view.getPosition();
     glm::dvec2 meters(_x + eye.x, _y + eye.y);
     glm::dvec2 lngLat = impl->view.getMapProjection().MetersToLonLat(meters);
-    *_lng = lngLat.x;
+    *_lng = LngLat::wrapLongitude(lngLat.x);
     *_lat = lngLat.y;
 
     return (intersection >= 0);
@@ -933,15 +984,8 @@ void Map::runAsyncTask(std::function<void()> _task) {
 }
 
 void Map::onMemoryWarning() {
-    auto& tileCache = impl->tileManager.getTileCache();
 
-    if (tileCache) {
-        tileCache->clear();
-    }
-
-    for (auto& tileSet : impl->tileManager.getTileSets()) {
-        tileSet.source->clearData();
-    }
+    impl->tileManager.clearTileSets(true);
 
     if (impl->scene && impl->scene->fontContext()) {
         impl->scene->fontContext()->releaseFonts();

@@ -3,6 +3,7 @@
 #include "platform.h"
 #include "log.h"
 #include "scene/styleParam.h"
+#include "scene/spriteAtlas.h"
 #include "util/mapProjection.h"
 
 #include <algorithm>
@@ -75,13 +76,31 @@ auto Stops::FontSize(const YAML::Node& _node) -> Stops {
     return stops;
 }
 
-auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> Stops {
+auto Stops::Sizes(const YAML::Node& _node, uint8_t _units) -> Stops {
     Stops stops;
+
+    // mixed dim stops not allowed for sizes (except when 1D stop uses %)
+    bool has1DSize = false;
+    bool has2DSize = false;
+
     if (!_node.IsSequence()) {
         return stops;
     }
 
     float lastKey = 0;
+
+    auto constructFrame = [&](const auto& _frameNode, StyleParam::ValueUnitPair& _result) -> bool {
+        if (StyleParam::parseSizeUnitPair(_frameNode.Scalar(), 0, _result)) {
+            if ( !(_units & _result.unit) ) {
+                LOGW("Size StyleParam can only take in pixel, %% or auto values in: %s", Dump(_node).c_str());
+                return false;
+            }
+        } else {
+            LOGW("could not parse node %s\n", Dump(_frameNode).c_str());
+            return false;
+        }
+        return true;
+    };
 
     for (const auto& frameNode : _node) {
         if (!frameNode.IsSequence() || frameNode.size() != 2) { continue; }
@@ -94,47 +113,34 @@ auto Stops::Sizes(const YAML::Node& _node, const std::vector<Unit>& _units) -> S
         lastKey = key;
 
         if (frameNode[1].IsScalar()) {
-            StyleParam::ValueUnitPair sizeValue;
-            sizeValue.unit = Unit::pixel;
-            size_t start = 0;
-
-            if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, sizeValue)) {
-                for (auto& unit : _units) {
-                    if (sizeValue.unit != unit) {
-                        LOGW("Size StyleParam can only take in pixel values in: %s", Dump(_node).c_str());
-                    }
-                }
-
-                stops.frames.emplace_back(key, sizeValue.value);
-            } else {
-                LOGW("could not parse node %s\n", Dump(frameNode[1]).c_str());
+            StyleParam::SizeValue sizeValue;
+            if (!constructFrame(frameNode[1], sizeValue.x)) {
+                continue;
             }
+            if (!sizeValue.x.isPercentage()) {
+                has1DSize = true;
+            }
+            stops.frames.emplace_back(key, sizeValue);
         } else if (frameNode[1].IsSequence()) {
-            std::vector<StyleParam::ValueUnitPair> sizeValues;
-
-            for (const auto& sequenceNode : frameNode[1]) {
-                StyleParam::ValueUnitPair sizeValue;
-                sizeValue.unit = Unit::pixel; // default to pixel
-                if (StyleParam::parseValueUnitPair(sequenceNode.Scalar(), 0, sizeValue)) {
-                    for (auto& unit : _units) {
-                        if (sizeValue.unit != unit) {
-                            LOGW("Size StyleParam can only take in pixel values in: %s", Dump(_node).c_str());
-                        }
-                    }
-                    sizeValues.push_back(sizeValue);
-                } else {
-                    LOGW("could not parse node %s\n", Dump(sequenceNode).c_str());
-                }
+            StyleParam::SizeValue sizeValue;
+            const auto& sequenceNode = frameNode[1];
+            if (!constructFrame(sequenceNode[0], sizeValue.x) ||
+                !constructFrame(sequenceNode[1], sizeValue.y)) {
+                continue;
             }
-            if (sizeValues.size() == 2) {
-                stops.frames.emplace_back(key, glm::vec2(sizeValues[0].value, sizeValues[1].value));
-            }
+            has2DSize = true;
+            stops.frames.emplace_back(key, sizeValue);
+        }
+        if (has1DSize && has2DSize) {
+            LOGW("Cannot have mixed dimensions stops for Size style parameter: %s", Dump(_node).c_str());
+            stops.frames.clear();
+            return stops;
         }
     }
     return stops;
 }
 
-auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) -> Stops {
+auto Stops::Offsets(const YAML::Node& _node, uint8_t _units) -> Stops {
     Stops stops;
     if (!_node.IsSequence()) {
         return stops;
@@ -168,7 +174,8 @@ auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) ->
                 }
             }
             if (widths.size() == 2) {
-                if (widths[0].unit != Unit::pixel || widths[1].unit != Unit::pixel) {
+                if ( !(widths[0].unit & _units ) &&
+                        !(widths[1].unit & _units) ) {
                     LOGW("Non-pixel unit not allowed for multidimensionnal stop values");
                 }
                 stops.frames.emplace_back(key, glm::vec2(widths[0].value, widths[1].value));
@@ -179,7 +186,7 @@ auto Stops::Offsets(const YAML::Node& _node, const std::vector<Unit>& _units) ->
     return stops;
 }
 
-auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, const std::vector<Unit>& _units) -> Stops {
+auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, uint8_t _units) -> Stops {
     Stops stops;
     if (!_node.IsSequence()) { return stops; }
 
@@ -204,15 +211,8 @@ auto Stops::Widths(const YAML::Node& _node, const MapProjection& _projection, co
         size_t start = 0;
 
         if (StyleParam::parseValueUnitPair(frameNode[1].Scalar(), start, width)) {
-            bool valid = false;
-            for (auto& unit : _units) {
-                if (width.unit == unit) {
-                    valid = true;
-                    break;
-                }
-            }
 
-            if (!valid) {
+            if (! (width.unit & _units) ) {
                 LOGW("Invalid unit is being used for stop %s", Dump(frameNode[1]).c_str());
             }
 
@@ -376,15 +376,31 @@ auto Stops::evalVec2(float _key) const -> glm::vec2 {
 
 }
 
-auto Stops::evalSize(float _key) const -> StyleParam::Value {
-    if (frames.empty()) { return 0.f; }
+auto Stops::evalSize(float _key, const glm::vec2& _cssSize) const -> glm::vec2 {
 
-    if (frames[0].value.is<float>()) {
-        return evalExpFloat(_key);
-    } else if (frames[0].value.is<glm::vec2>()) {
-        return evalExpVec2(_key);
+    if (frames.empty()) { return {NAN, NAN}; }
+
+    auto upper = nearestHigherFrame(_key);
+    auto lower = upper - 1;
+
+    if (upper == frames.end()) {
+        return lower->value.get<StyleParam::SizeValue>().getSizePixels(_cssSize);
     }
-    return 0.f;
+    if (lower < frames.begin()) {
+        return upper->value.get<StyleParam::SizeValue>().getSizePixels(_cssSize);
+    }
+
+    double range = exp2(upper->key - lower->key) - 1.0;
+    double pos = exp2(_key - lower->key) - 1.0;
+
+    double lerp = pos / range;
+
+    const glm::vec2 lowerVal = lower->value.get<StyleParam::SizeValue>().getSizePixels(_cssSize);
+    const glm::vec2 upperVal = upper->value.get<StyleParam::SizeValue>().getSizePixels(_cssSize);
+
+    return glm::vec2(lowerVal.x * (1 - lerp) + upperVal.x * lerp,
+                     lowerVal.y * (1 - lerp) + upperVal.y * lerp);
+
 }
 
 auto Stops::nearestHigherFrame(float _key) const -> std::vector<Frame>::const_iterator {
@@ -394,14 +410,18 @@ auto Stops::nearestHigherFrame(float _key) const -> std::vector<Frame>::const_it
 }
 
 void Stops::eval(const Stops& _stops, StyleParamKey _key, float _zoom, StyleParam::Value& _result) {
+
+    /* StyleParam::size stops can not have a generic evaluation, and
+     * requires more context and is handled in the pointStyleBuilder
+     */
+    if (StyleParam::isSize(_key)) { return; }
+
     if (StyleParam::isColor(_key)) {
         _result = _stops.evalColor(_zoom);
     } else if (StyleParam::isWidth(_key)) {
         _result = _stops.evalExpFloat(_zoom);
     } else if (StyleParam::isOffsets(_key)) {
         _result = _stops.evalVec2(_zoom);
-    } else if (StyleParam::isSize(_key)) {
-        _result = _stops.evalSize(_zoom);
     } else {
         _result = _stops.evalFloat(_zoom);
     }

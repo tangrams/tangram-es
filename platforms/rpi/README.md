@@ -23,13 +23,13 @@ You will also need to install development packages for libcurl:
 sudo apt-get install libcurl4-openssl-dev
 ```
 
-The demo application uses the Mapzen vector tile service, so you will need a Mapzen API key to build and run the demo. 
+The demo application uses the Nextzen vector tile service, so you will need a Nextzen API key to build and run the demo. 
 
- 1. Visit https://mapzen.com/documentation/overview/#get-started-developing-with-mapzen to get an API key.
+ 1. Visit https://developers.nextzen.org/ to get an API key.
 
- 2. Setup an environment variable (`MAPZEN_API_KEY`) to point to your API key.
+ 2. Setup an environment variable (`NEXTZEN_API_KEY`) to point to your API key.
     ```bash
-    export MAPZEN_API_KEY=YOUR_API_KEY
+    export NEXTZEN_API_KEY=YOUR_API_KEY
     ```
 
 ## Build ##

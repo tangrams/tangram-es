@@ -1,6 +1,5 @@
 #include "gl/shaderProgram.h"
 
-#include "gl/disposer.h"
 #include "gl/glError.h"
 #include "gl/renderState.h"
 #include "glm/gtc/type_ptr.hpp"
@@ -17,17 +16,15 @@ ShaderProgram::ShaderProgram() {
 }
 
 ShaderProgram::~ShaderProgram() {
-
-    auto glProgram = m_glProgram;
-
-    m_disposer([=](RenderState& rs) {
-        if (glProgram != 0) {
-            GL::deleteProgram(glProgram);
+    if (m_rs) {
+        if (m_glProgram) {
+            // Delete only the program, separate shaders are cached and eventually deleted by RenderState.
+            // TODO: This approach leaves shaders in memory even if they aren't used by any programs until
+            // the entire Map (and its RenderState) is destroyed. Ideally we could use a reference-counted
+            // cache to keep shaders in memory only while at least one program uses them. (MEB 2018/5/17)
+            m_rs->queueProgramDeletion(m_glProgram);
         }
-        // Deleting the shader program that is currently in-use sets the current shader program to 0
-        // so we un-set the current program in the render state.
-        rs.shaderProgramUnset(glProgram);
-    });
+    }
 }
 
 GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
@@ -72,9 +69,19 @@ bool ShaderProgram::build(RenderState& rs) {
     if (!m_needsBuild) { return false; }
     m_needsBuild = false;
 
-    // Delete handle for old program; values of 0 are silently ignored
-    GL::deleteProgram(m_glProgram);
-    m_glProgram = 0;
+    // Delete handle for old program and shaders.
+    if (m_glProgram) {
+        GL::deleteProgram(m_glProgram);
+        m_glProgram = 0;
+    }
+    if (m_glFragmentShader) {
+        GL::deleteShader(m_glFragmentShader);
+        m_glFragmentShader = 0;
+    }
+    if (m_glVertexShader) {
+        GL::deleteShader(m_glVertexShader);
+        m_glVertexShader = 0;
+    }
 
     auto& vertSrc = m_vertexShaderSource;
     auto& fragSrc = m_fragmentShaderSource;
@@ -100,10 +107,12 @@ bool ShaderProgram::build(RenderState& rs) {
     }
 
     m_glProgram = program;
+    m_glFragmentShader = fragmentShader;
+    m_glVertexShader = vertexShader;
 
     // Clear any cached shader locations
     m_attribMap.clear();
-    m_disposer = Disposer(rs);
+    m_rs = &rs;
 
     return true;
 }

@@ -3,6 +3,7 @@
 #include <functional>
 #include <mutex>
 #include <vector>
+#include <atomic>
 
 namespace Tangram {
 
@@ -33,7 +34,7 @@ private:
 
     std::vector<Job> m_jobs;
     std::mutex m_mutex;
-    bool m_stopped = false;
+    std::atomic<bool> m_stopped{false};
 };
 
 }

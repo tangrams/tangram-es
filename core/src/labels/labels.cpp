@@ -34,28 +34,22 @@ Labels::Labels()
 
 Labels::~Labels() {}
 
-void Labels::processLabelUpdate(const ViewState& viewState,
-                                StyledMesh* mesh, Tile* tile,
-                                const glm::mat4& mvp,
-                                float dt, bool drawAll,
-                                bool onlyRender, bool isProxy) {
-
-    if (!mesh) { return; }
-    auto labelMesh = dynamic_cast<const LabelSet*>(mesh);
-    if (!labelMesh) { return; }
+void Labels::processLabelUpdate(const ViewState& _viewState, const LabelSet* _labelSet, Style* _style,
+                                const Tile* _tile, const Marker* _marker, const glm::mat4& _mvp,
+                                float _dt, bool _drawAll, bool _onlyRender, bool _isProxy) {
 
     // TODO appropriate buffer to filter out-of-screen labels
     float border = 256.0f;
     AABB extendedBounds(-border, -border,
-                        viewState.viewportSize.x + border,
-                        viewState.viewportSize.y + border);
+                        _viewState.viewportSize.x + border,
+                        _viewState.viewportSize.y + border);
 
     AABB screenBounds(0, 0,
-                      viewState.viewportSize.x,
-                      viewState.viewportSize.y);
+                      _viewState.viewportSize.x,
+                      _viewState.viewportSize.y);
 
-    for (auto& label : labelMesh->getLabels()) {
-        if (!drawAll && (label->state() == Label::State::dead) ) {
+    for (auto& label : _labelSet->getLabels()) {
+        if (!_drawAll && (label->state() == Label::State::dead) ) {
             continue;
         }
 
@@ -63,35 +57,35 @@ void Labels::processLabelUpdate(const ViewState& viewState,
         ScreenTransform transform { m_transforms, transformRange };
 
         // Use extendedBounds when labels take part in collision detection.
-        auto bounds = (onlyRender || !label->canOcclude())
+        auto bounds = (_onlyRender || !label->canOcclude())
             ? screenBounds
             : extendedBounds;
 
-        if (!label->update(mvp, viewState, &bounds, transform)) {
+        if (!label->update(_mvp, _viewState, &bounds, transform)) {
             continue;
         }
 
 
-        if (onlyRender) {
+        if (_onlyRender) {
             if (label->occludedLastFrame()) { label->occlude(); }
 
             if (label->visibleState() || !label->canOcclude()) {
-                m_needUpdate |= label->evalState(dt);
-                label->addVerticesToMesh(transform, viewState.viewportSize);
+                m_needUpdate |= label->evalState(_dt);
+                label->addVerticesToMesh(transform, _viewState.viewportSize);
             }
         } else if (label->canOcclude()) {
-            m_labels.emplace_back(label.get(), tile, isProxy, transformRange);
+            m_labels.emplace_back(label.get(), _style, _tile, _marker, _isProxy, transformRange);
         } else {
-            m_needUpdate |= label->evalState(dt);
-            label->addVerticesToMesh(transform, viewState.viewportSize);
+            m_needUpdate |= label->evalState(_dt);
+            label->addVerticesToMesh(transform, _viewState.viewportSize);
         }
         if (label->selectionColor()) {
-            m_selectionLabels.emplace_back(label.get(), tile, isProxy, transformRange);
+            m_selectionLabels.emplace_back(label.get(), _style, _tile, _marker, _isProxy, transformRange);
         }
     }
 }
 
-std::pair<Label*, Tile*> Labels::getLabel(uint32_t _selectionColor) const {
+std::pair<Label*, const Tile*> Labels::getLabel(uint32_t _selectionColor) const {
 
     for (auto& entry : m_selectionLabels) {
 
@@ -135,7 +129,10 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
 
         for (const auto& style : _styles) {
             const auto& mesh = tile->getMesh(*style);
-            processLabelUpdate(_viewState, mesh.get(), tile.get(), mvp,
+            auto labels = dynamic_cast<const LabelSet*>(mesh.get());
+            if (!labels) { continue; }
+
+            processLabelUpdate(_viewState, labels, style.get(), tile.get(), nullptr, mvp,
                                _dt, drawAllLabels, _onlyRender, proxyTile);
         }
     }
@@ -149,8 +146,10 @@ void Labels::updateLabels(const ViewState& _viewState, float _dt,
             if (marker->styleId() != style->getID()) { continue; }
 
             const auto& mesh = marker->mesh();
+            auto labels = dynamic_cast<const LabelSet*>(mesh);
+            if (!labels) { continue; }
 
-            processLabelUpdate(_viewState, mesh, nullptr,
+            processLabelUpdate(_viewState, labels, style.get(), nullptr, marker.get(),
                                marker->modelViewProjectionMatrix(),
                                _dt, drawAllLabels, _onlyRender, false);
         }
@@ -246,7 +245,7 @@ void Labels::skipTransitions(const std::shared_ptr<Scene>& _scene,
     }
 }
 
-bool Labels::labelComparator(const LabelEntry& _a, const LabelEntry& _b) {
+bool Labels::priorityComparator(const LabelEntry& _a, const LabelEntry& _b) {
     if (_a.proxy != _b.proxy) {
         return _b.proxy;
     }
@@ -289,9 +288,35 @@ bool Labels::labelComparator(const LabelEntry& _a, const LabelEntry& _b) {
     return l1 < l2;
 }
 
-void Labels::sortLabels() {
-    // Use stable sort so that relative ordering of markers is preserved.
-    std::stable_sort(m_labels.begin(), m_labels.end(), Labels::labelComparator);
+bool Labels::zOrderComparator(const LabelEntry& _a, const LabelEntry& _b) {
+
+    if (_a.style != _b.style) {
+        return _a.style < _b.style;
+    }
+
+    if (_a.marker && _b.marker) {
+        if (_a.marker->drawOrder() != _b.marker->drawOrder()) {
+            return _a.marker->drawOrder() < _b.marker->drawOrder();
+        }
+    }
+
+    // Sort by texture to reduce draw calls (increase batching)
+    if (_a.label->texture() != _b.label->texture()) {
+        return _a.label->texture() < _b.label->texture();
+    }
+
+    // Sort Markers by id
+    if (_a.marker && _b.marker) {
+        return _a.marker->id() < _b.marker->id();
+    }
+
+    // Just keep tile label order consistent
+    if (_a.tile && _b.tile) {
+        return _a.label < _b.label;
+    }
+
+    // Add tile labels before markers
+    return bool(_a.tile);
 }
 
 void Labels::handleOcclusions(const ViewState& _viewState) {
@@ -431,7 +456,7 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
     /// Collect and update labels from visible tiles
     updateLabels(_viewState, _dt, _scene->styles(), _tiles, _markers, false);
 
-    sortLabels();
+    std::sort(m_labels.begin(), m_labels.end(), Labels::priorityComparator);
 
     /// Mark labels to skip transitions
 
@@ -445,21 +470,27 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
 
     handleOcclusions(_viewState);
 
+    // Update label state
+    for (auto& entry : m_labels) {
+        m_needUpdate |= entry.label->evalState(_dt);
+    }
+
+    std::sort(m_labels.begin(), m_labels.end(), Labels::zOrderComparator);
+
     Label::AABB screenBounds{0, 0, _viewState.viewportSize.x, _viewState.viewportSize.y};
 
     // Update label meshes
     for (auto& entry : m_labels) {
+
+        if (!entry.label->visibleState()) { continue; }
+
         ScreenTransform transform { m_transforms, entry.transformRange };
 
-        m_needUpdate |= entry.label->evalState(_dt);
+        for (auto& obb : OBBBuffer{ m_obbs, entry.obbsRange }) {
 
-        if (entry.label->visibleState()) {
-            for (auto& obb : OBBBuffer{ m_obbs, entry.obbsRange }) {
-
-                if (obb.getExtent().intersect(screenBounds)) {
-                    entry.label->addVerticesToMesh(transform, _viewState.viewportSize);
-                    break;
-                }
+            if (obb.getExtent().intersect(screenBounds)) {
+                entry.label->addVerticesToMesh(transform, _viewState.viewportSize);
+                break;
             }
         }
     }

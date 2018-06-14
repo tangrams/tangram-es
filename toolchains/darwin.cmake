@@ -14,8 +14,8 @@ if(TANGRAM_APPLICATION)
 
   set(EXECUTABLE_NAME "tangram")
 
-  get_mapzen_api_key(MAPZEN_API_KEY)
-  add_definitions(-DMAPZEN_API_KEY="${MAPZEN_API_KEY}")
+  get_nextzen_api_key(NEXTZEN_API_KEY)
+  add_definitions(-DNEXTZEN_API_KEY="${NEXTZEN_API_KEY}")
 
   if($ENV{CIRCLE_BUILD_NUM})
     add_definitions(-DBUILD_NUM_STRING="\($ENV{CIRCLE_BUILD_NUM}\)")
@@ -43,6 +43,7 @@ if(TANGRAM_APPLICATION)
     ${PROJECT_SOURCE_DIR}/platforms/common/glfwApp.cpp
     ${PROJECT_SOURCE_DIR}/platforms/osx/src/main.mm
     ${PROJECT_SOURCE_DIR}/platforms/osx/src/osxPlatform.mm
+    ${PROJECT_SOURCE_DIR}/platforms/common/appleAllowedFonts.mm
     )
 
   add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES} ${OSX_RESOURCES})

@@ -11,13 +11,13 @@ This repository contains both the core rendering library and sample applications
 
 For more information about building Tangram ES or using it in your project, see the individual platform pages below:
 
-| Platform                                | Build status                       |
-| --------------------------------------- | ---------------------------------- |
-| [Android](platforms/android) | [![Travis CI BuildStatus](https://travis-ci.org/tangrams/tangram-es.svg?branch=master)](https://travis-ci.org/tangrams/tangram-es/builds) |
-| [iOS](platforms/ios) | [![CircleCI](https://circleci.com/gh/tangrams/tangram-es.svg?style=shield&circle-token=741ff7f06a008b6eb491680c2d47968a7c4eaa3a)](https://circleci.com/gh/tangrams/tangram-es) |
-| [Mac OS X](platforms/osx) | |
-| [Ubuntu Linux](platforms/linux) | [![Travis CI BuildStatus](https://travis-ci.org/tangrams/tangram-es.svg?branch=master)](https://travis-ci.org/tangrams/tangram-es/builds) |
-| [Raspberry Pi](platforms/rpi) | |
+| Platform                        | Build status |
+| ------------------------------- |--------------|
+| [Android](platforms/android)    | [![CircleCI](https://circleci.com/gh/tangrams/tangram-es.svg?style=shield)](https://circleci.com/gh/tangrams/tangram-es)|
+| [iOS](platforms/ios)            | [![CircleCI](https://circleci.com/gh/tangrams/tangram-es.svg?style=shield)](https://circleci.com/gh/tangrams/tangram-es)|
+| [Mac OS X](platforms/osx)       |
+| [Ubuntu Linux](platforms/linux) |  [![CircleCI](https://circleci.com/gh/tangrams/tangram-es.svg?style=shield)](https://circleci.com/gh/tangrams/tangram-es)|
+| [Raspberry Pi](platforms/rpi)   |
 
 ## Support
 

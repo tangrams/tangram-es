@@ -21,33 +21,27 @@
 
 namespace Tangram {
 
-Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _options, bool _generateMipmaps)
+Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _options,
+        bool _generateMipmaps, float _density)
     : m_options(_options), m_generateMipmaps(_generateMipmaps) {
 
+    m_invDensity = 1.f/_density;
     m_glHandle = 0;
     m_shouldResize = false;
     m_target = GL_TEXTURE_2D;
     resize(_width, _height);
 }
 
-Texture::Texture(const std::vector<char>& _data, TextureOptions options, bool generateMipmaps)
-    : Texture(0u, 0u, options, generateMipmaps) {
+Texture::Texture(const std::vector<char>& _data, TextureOptions options, bool generateMipmaps, float density)
+    : Texture(0u, 0u, options, generateMipmaps, density) {
 
     loadImageFromMemory(_data);
 }
 
 Texture::~Texture() {
-
-    auto glHandle = m_glHandle;
-    auto target = m_target;
-
-    m_disposer([=](RenderState& rs) {
-        // If the currently-bound texture is deleted, the binding resets to 0
-        // according to the OpenGL spec, so unset this texture binding.
-        rs.textureUnset(target, glHandle);
-
-        GL::deleteTextures(1, &glHandle);
-    });
+    if (m_rs) {
+        m_rs->queueTextureDeletion(m_glHandle);
+    }
 }
 
 bool Texture::loadImageFromMemory(const std::vector<char>& _data) {
@@ -100,7 +94,7 @@ Texture& Texture::operator=(Texture&& _other) {
     m_height = _other.m_height;
     m_target = _other.m_target;
     m_generateMipmaps = _other.m_generateMipmaps;
-    m_disposer = std::move(_other.m_disposer);
+    m_rs = _other.m_rs;
 
     return *this;
 }
@@ -194,7 +188,7 @@ void Texture::generate(RenderState& rs, GLuint _textureUnit) {
     GL::texParameteri(m_target, GL_TEXTURE_WRAP_S, m_options.wrapping.wraps);
     GL::texParameteri(m_target, GL_TEXTURE_WRAP_T, m_options.wrapping.wrapt);
 
-    m_disposer = Disposer(rs);
+    m_rs = &rs;
 }
 
 bool Texture::isValid() const {
@@ -283,6 +277,10 @@ void Texture::resize(const unsigned int _width, const unsigned int _height) {
 
 bool Texture::isRepeatWrapping(TextureWrapping _wrapping) {
     return _wrapping.wraps == GL_REPEAT || _wrapping.wrapt == GL_REPEAT;
+}
+
+size_t Texture::bufferSize() {
+    return m_width * m_height * bytesPerPixel();
 }
 
 size_t Texture::bytesPerPixel() {

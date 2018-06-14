@@ -1,11 +1,11 @@
 include(${CMAKE_SOURCE_DIR}/toolchains/iOS.toolchain.cmake)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-set(ARCH "armv7 armv7s arm64 i386 x86_64")
+set(ARCH "armv7 arm64 x86_64")
 set(SUPPORTED_PLATFORMS "iphonesimulator iphoneos")
 set(TANGRAM_FRAMEWORK ${PROJECT_SOURCE_DIR}/${TANGRAM_FRAMEWORK})
 set(EXECUTABLE_NAME "tangram")
-set(FRAMEWORKS CoreGraphics CoreFoundation QuartzCore UIKit OpenGLES Security CFNetwork GLKit)
+set(FRAMEWORKS CoreGraphics CoreFoundation CoreLocation QuartzCore UIKit OpenGLES Security CFNetwork GLKit)
 
 # NB:cmake versions before 3.9.0 had an issue where the path specified for MACOSX_FRAMEWORK_LOCATION
 # was prepended by "../" when set to something other than "Resources" which is what we require here.
@@ -25,8 +25,8 @@ set(SOURCES
     ${PROJECT_SOURCE_DIR}/platforms/ios/demo/src/MapViewController.m
     )
 
-get_mapzen_api_key(MAPZEN_API_KEY)
-add_definitions(-DMAPZEN_API_KEY="${MAPZEN_API_KEY}")
+get_nextzen_api_key(NEXTZEN_API_KEY)
+add_definitions(-DNEXTZEN_API_KEY="${NEXTZEN_API_KEY}")
 
 # Generate demo app configuration plist file to inject API key
 configure_file(${PROJECT_SOURCE_DIR}/platforms/ios/demo/Config.plist.in

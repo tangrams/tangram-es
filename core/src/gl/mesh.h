@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gl.h"
-#include "gl/disposer.h"
 #include "gl/vertexLayout.h"
 #include "gl/vao.h"
 #include "style/style.h"
@@ -102,10 +101,10 @@ protected:
     bool m_isCompiled;
     bool m_dirty;
 
+    RenderState* m_rs = nullptr;
+
     GLsizei m_dirtySize;
     GLintptr m_dirtyOffset;
-
-    Disposer m_disposer;
 
     size_t compileIndices(const std::vector<std::pair<uint32_t, uint32_t>>& _offsets,
                           const std::vector<uint16_t>& _indices, size_t _offset);

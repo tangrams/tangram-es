@@ -97,7 +97,7 @@ void Tile::setSelectionFeatures(const fastmap<uint32_t, std::shared_ptr<Properti
     m_selectionFeatures = _selectionFeatures;
 }
 
-std::shared_ptr<Properties> Tile::getSelectionFeature(uint32_t _id) {
+std::shared_ptr<Properties> Tile::getSelectionFeature(uint32_t _id) const {
     auto it = m_selectionFeatures.find(_id);
     if (it != m_selectionFeatures.end()) {
         return it->second;
@@ -110,6 +110,11 @@ size_t Tile::getMemoryUsage() const {
         for (auto& entry : m_geometry) {
             if (entry) {
                 m_memoryUsage += entry->bufferSize();
+            }
+        }
+        for (auto& raster : m_rasters) {
+            if (raster.texture) {
+                m_memoryUsage += raster.texture->bufferSize();
             }
         }
     }

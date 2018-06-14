@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fontconfig/fontconfig.h>
+
 #include "platform.h"
 #include "urlClient.h"
 
@@ -14,11 +16,14 @@ public:
     ~RpiPlatform() override;
     void requestRender() const override;
     std::vector<FontSourceHandle> systemFontFallbacksHandle() const override;
-    bool startUrlRequest(const std::string& _url, UrlCallback _callback) override;
-    void cancelUrlRequest(const std::string& _url) override;
+    UrlRequestHandle startUrlRequest(Url _url, UrlCallback _callback) override;
+    void cancelUrlRequest(UrlRequestHandle _url) override;
+    FontSourceHandle systemFont(const std::string& _name, const std::string& _weight,
+            const std::string& _face) const override;
 
 protected:
 
+    FcConfig* m_fcConfig = nullptr;
     UrlClient m_urlClient;
 
 };

@@ -254,7 +254,7 @@ NS_ASSUME_NONNULL_END
 /**
  Called whenever `-[TGMapViewController captureScreenshot:] is called on the map view.
 
- @param mapView a pointer to the map view
+ @param view a pointer to the map view
  @param screenshot the image object representing the screenshot
  */
 - (void)mapView:(nonnull TGMapViewController *)view didCaptureScreenshot:(nonnull UIImage *)screenshot;
@@ -370,17 +370,21 @@ NS_ASSUME_NONNULL_BEGIN
  or be notified when a network request completes).
  More informations on the default provided configuration can be found on the description
  of `TGHttpHandler`.
+ @note If a scene load is called before viewDidLoad, httpHandler will result in an error response.
  */
 @property (strong, nonatomic) TGHttpHandler* httpHandler;
 
 /**
- Assign the default resource root for this map view.
- The resource root is the default directory where Tangram will try to load resources and scene
- assets.
+ Assign the resource root for this map view. Scene file URLs will be resolved
+ relative to this URL.
 
  Must be non`-nil`.
 
- @note By default the resource root is the main bundle resource URL.
+ @note By default the resource root is the main bundle resource URL. Using the
+ default resource root: `scene.yaml` is resolved to
+ `file://<main bundle path>/Resources/scene.yaml`, `/path/scene.yaml` is
+ resolved to `file:///path/scene.yaml`, and `https://my.host/scene.yaml` is
+ resolved to itself.
  */
 @property (strong, nonatomic) NSURL* resourceRoot;
 
@@ -469,7 +473,7 @@ NS_ASSUME_NONNULL_BEGIN
  Set a `TGDebugFlag` to the map view
 
  @param debugFlag the debug flag to set
- @param value whether the flag is on or off
+ @param on whether the flag is on or off
  */
 - (void)setDebugFlag:(TGDebugFlag)debugFlag value:(BOOL)on;
 
@@ -545,7 +549,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  If an error occurs while applying updates the new scene will not be applied.
  See `TGSceneUpdate` for details.
- 
+
  @param yaml YAML scene string.
  @param url The base URL used to resolve relative URLs in the scene.
  @param updates A list of `TGSceneUpdate` to apply to the scene.

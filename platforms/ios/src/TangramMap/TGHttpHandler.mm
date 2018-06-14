@@ -34,6 +34,18 @@
     return self;
 }
 
+
+- (instancetype)initWithSessionConfiguration:(NSURLSessionConfiguration *)configuration
+{
+    self = [super init];
+
+    if (self) {
+        [self initialSetupWithConfiguration:configuration];
+    }
+
+    return self;
+}
+
 - (instancetype)initWithCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity
 {
     self = [super init];
@@ -74,8 +86,7 @@
 - (void)setAdditionalHTTPHeaders:(NSMutableDictionary *)HTTPAdditionalHeaders {
     _HTTPAdditionalHeaders = HTTPAdditionalHeaders;
     self.configuration.HTTPAdditionalHeaders = HTTPAdditionalHeaders;
-    //Probably unnecessary, but for safety sake
-    self.session.configuration.HTTPAdditionalHeaders = HTTPAdditionalHeaders;
+    self.session = [NSURLSession sessionWithConfiguration:self.configuration];
 }
 
 - (void)setCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity
@@ -86,23 +97,26 @@
 
     self.configuration.URLCache = tileCache;
     self.configuration.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
+    self.session = [NSURLSession sessionWithConfiguration:self.configuration];
 }
 
 #pragma mark - Instance Methods
 
-- (void)downloadRequestAsync:(NSString*)url completionHandler:(TGDownloadCompletionHandler)completionHandler
+- (NSUInteger)downloadRequestAsync:(NSString*)url completionHandler:(TGDownloadCompletionHandler)completionHandler
 {
     NSURLSessionDataTask* dataTask = [self.session dataTaskWithURL:[NSURL URLWithString:url]
                                                                       completionHandler:completionHandler];
 
     [dataTask resume];
+
+    return [dataTask taskIdentifier];
 }
 
-- (void)cancelDownloadRequestAsync:(NSString*)url
+- (void)cancelDownloadRequestAsync:(NSUInteger)taskIdentifier
 {
     [self.session getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
         for (NSURLSessionTask* task in dataTasks) {
-            if ([[task originalRequest].URL.absoluteString isEqualToString:url]) {
+            if ([task taskIdentifier] == taskIdentifier) {
                 [task cancel];
                 break;
             }

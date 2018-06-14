@@ -182,6 +182,11 @@ public:
     void setZoom(float _z);
     void setZoomEased(float _z, float _duration, EaseType _e = EaseType::quint);
 
+    // Run flight animation to change postion and zoom  of the map
+    // If _duration is 0, speed is used as factor to change the duration that is
+    // calculated for the duration of the flight path. (Recommended range 0.1 - 2.0)
+    void flyTo(double _lon, double _lat, float _z, float _duration, float _speed = 1.0f);
+
     // Get the fractional zoom level of the view
     float getZoom();
 

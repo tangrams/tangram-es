@@ -28,7 +28,7 @@ std::shared_ptr<Platform> platform;
 
 std::string sceneFile = "scene.yaml";
 std::string sceneYaml;
-std::string mapzenApiKey;
+std::string apiKey;
 
 std::string markerStylingPath = "layers.touch.point.draw.icons";
 std::string polylineStyle = "{ style: lines, interactive: true, color: red, width: 20px, order: 5000 }";
@@ -58,8 +58,8 @@ Tangram::MarkerID polyline = 0;
 void loadSceneFile(bool setPosition) {
     std::vector<SceneUpdate> updates;
 
-    if (!mapzenApiKey.empty()) {
-        updates.push_back(SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey));
+    if (!apiKey.empty()) {
+        updates.push_back(SceneUpdate("global.sdk_api_key", apiKey));
     }
 
     if (!sceneYaml.empty()) {
@@ -110,15 +110,15 @@ void create(std::shared_ptr<Platform> p, int w, int h) {
         return;
     }
 
-    char* mapzenApiKeyEnvVar = getenv("MAPZEN_API_KEY");
-    if (mapzenApiKeyEnvVar && strlen(mapzenApiKeyEnvVar) > 0) {
-        mapzenApiKey = mapzenApiKeyEnvVar;
+    char* nextzenApiKeyEnvVar = getenv("NEXTZEN_API_KEY");
+    if (nextzenApiKeyEnvVar && strlen(nextzenApiKeyEnvVar) > 0) {
+        apiKey = nextzenApiKeyEnvVar;
     } else {
-        LOGW("No API key found!\n\nMapzen data sources require an API key. "
-             "Sign up for a free key at http://mapzen.com/developers and then set it from the command line with: "
-             "\n\n\texport MAPZEN_API_KEY=YOUR_KEY_HERE"
+        LOGW("No API key found!\n\nNextzen data sources require an API key. "
+             "Sign up for a key at https://developers.nextzen.org/about.html and then set it from the command line with: "
+             "\n\n\texport NEXTZEN_API_KEY=YOUR_KEY_HERE"
              "\n\nOr, if using an IDE on macOS, with: "
-             "\n\n\tlaunchctl setenv MAPZEN_API_KEY YOUR_API_KEY\n");
+             "\n\n\tlaunchctl setenv NEXTZEN_API_KEY YOUR_API_KEY\n");
     }
 
     // Setup tangram
@@ -133,6 +133,7 @@ void create(std::shared_ptr<Platform> p, int w, int h) {
 
     // Create a windowed mode window and its OpenGL context
     glfwWindowHint(GLFW_SAMPLES, 2);
+    glfwWindowHint(GLFW_STENCIL_BITS, 8);
     if (!main_window) {
         main_window = glfwCreateWindow(width, height, versionString, NULL, NULL);
     }
@@ -246,10 +247,15 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 
     if ((time - last_time_released) < double_tap_time) {
         // Double tap recognized
-        Tangram::LngLat p;
-        map->screenPositionToLngLat(x, y, &p.longitude, &p.latitude);
-        map->setPositionEased(p.longitude, p.latitude, 1.f);
-
+        const float duration = 0.5f;
+        Tangram::LngLat tapped, current;
+        map->screenPositionToLngLat(x, y, &tapped.longitude, &tapped.latitude);
+        map->getPosition(current.longitude, current.latitude);
+        map->setZoomEased(map->getZoom() + 1.f, duration, EaseType::quint);
+        map->setPositionEased(
+            0.5 * (tapped.longitude + current.longitude),
+            0.5 * (tapped.latitude + current.latitude),
+            duration, EaseType::quint);
     } else if ((time - last_time_pressed) < single_tap_time) {
         // Single tap recognized
         Tangram::LngLat p;
@@ -454,6 +460,21 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 map->setZoom(14);
                 break;
             case GLFW_KEY_F3:
+                map->flyTo(8.82, 53.08, 16., 0.0, 2.0);
+                break;
+            case GLFW_KEY_F4:
+                map->flyTo(8.82, 53.08, 10., 0.0, 2.5);
+                break;
+            case GLFW_KEY_F5:
+                map->flyTo(-74.00976419448854, 40.70532700869127, 16., 4.);
+                break;
+            case GLFW_KEY_F6:
+                map->flyTo(-122.41, 37.7749, 16., 0.0, 4.0);
+                break;
+            case GLFW_KEY_F7:
+                map->flyTo(139.839478, 35.652832, 16., 0.0, 1.0);
+                break;
+            case GLFW_KEY_W:
                 map->onMemoryWarning();
                 break;
         default:
@@ -464,7 +485,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
 void dropCallback(GLFWwindow* window, int count, const char** paths) {
 
-    sceneFile = std::string(paths[0]);
+    sceneFile = "file://" + std::string(paths[0]);
     sceneYaml.clear();
 
     loadSceneFile();

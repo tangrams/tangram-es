@@ -226,7 +226,7 @@ void View::update(bool _constrainToWorldBounds) {
     m_changed = false;
 
     if (_constrainToWorldBounds) {
-        m_constraint.setRadius(std::fmax(getWidth(), getHeight()) / pixelsPerMeter() / pixelScale());
+        m_constraint.setRadius(0.5 * std::fmax(getWidth(), getHeight()) / pixelsPerMeter() / pixelScale());
         m_pos.x = m_constraint.getConstrainedX(m_pos.x);
         m_pos.y = m_constraint.getConstrainedY(m_pos.y);
         m_zoom -= std::log(m_constraint.getConstrainedScale()) / std::log(2);
@@ -237,7 +237,8 @@ void View::update(bool _constrainToWorldBounds) {
         float maxPitchRadians = glm::radians(getMaxPitch());
         if (m_type != CameraType::perspective) {
             // Prevent projection plane from intersecting ground plane.
-            maxPitchRadians = atan2(m_pos.z, m_height * .5f);
+            float intersectingPitchRadians = atan2(m_pos.z, m_height * .5f);
+            maxPitchRadians = glm::min(maxPitchRadians, intersectingPitchRadians);
         }
         m_pitch = glm::clamp(m_pitch, 0.f, maxPitchRadians);
     }
@@ -332,7 +333,7 @@ double View::screenToGroundPlaneInternal(double& _screenX, double& _screenY) con
 
 float View::pixelsPerMeter() const {
 
-    double metersPerTile = MapProjection::HALF_CIRCUMFERENCE * exp2(-m_zoom);
+    double metersPerTile = 2.0 * MapProjection::HALF_CIRCUMFERENCE * exp2(-m_zoom);
     return s_pixelsPerTile / metersPerTile;
 }
 

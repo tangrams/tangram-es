@@ -8,7 +8,9 @@
 
 #pragma once
 
-/// Structure holding a geographic coordinate (longitude and latitude)
+/**
+ Structure holding a geographics coordinate (longitude and latitude)
+ */
 struct TGGeoPoint {
     /// The geographic longitude
     double longitude;
@@ -16,6 +18,9 @@ struct TGGeoPoint {
     double latitude;
 };
 
+/**
+ `TGGeoPoint`
+ */
 typedef struct TGGeoPoint TGGeoPoint;
 
 /**

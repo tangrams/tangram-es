@@ -32,7 +32,7 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
 
 @implementation TGMapData
 
-- (instancetype)initWithMapView:(TGMapViewController *)mapView name:(NSString *)name source:(std::shared_ptr<Tangram::ClientGeoJsonSource>)source
+- (instancetype)initWithMapView:(__weak TGMapViewController *)mapView name:(NSString *)name source:(std::shared_ptr<Tangram::ClientGeoJsonSource>)source
 {
     self = [super init];
 

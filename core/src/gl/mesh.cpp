@@ -34,25 +34,13 @@ MeshBase::MeshBase(std::shared_ptr<VertexLayout> _vertexLayout, GLenum _drawMode
 }
 
 MeshBase::~MeshBase() {
-
-    auto vaos = m_vaos;
-    auto glVertexBuffer = m_glVertexBuffer;
-    auto glIndexBuffer = m_glIndexBuffer;
-
-    m_disposer([=](RenderState& rs) mutable {
-        // Deleting a index/array buffer being used ends up setting up the current vertex/index buffer to 0
-        // after the driver finishes using it, force the render state to be 0 for vertex/index buffer
-        if (glVertexBuffer) {
-            rs.vertexBufferUnset(glVertexBuffer);
-            GL::deleteBuffers(1, &glVertexBuffer);
+    if (m_rs) {
+        if (m_glVertexBuffer || m_glIndexBuffer) {
+            GLuint buffers[] = { m_glVertexBuffer, m_glIndexBuffer };
+            m_rs->queueBufferDeletion(2, buffers);
         }
-        if (glIndexBuffer) {
-            rs.indexBufferUnset(glIndexBuffer);
-            GL::deleteBuffers(1, &glIndexBuffer);
-        }
-        vaos.dispose();
-    });
-
+        m_vaos.dispose(*m_rs);
+    }
 
     if (m_glVertexData) {
         delete[] m_glVertexData;
@@ -61,7 +49,6 @@ MeshBase::~MeshBase() {
     if (m_glIndexData) {
         delete[] m_glIndexData;
     }
-
 }
 
 void MeshBase::setVertexLayout(std::shared_ptr<VertexLayout> _vertexLayout) {
@@ -151,7 +138,7 @@ void MeshBase::upload(RenderState& rs) {
         m_glIndexData = nullptr;
     }
 
-    m_disposer = Disposer(rs);
+    m_rs = &rs;
 
     m_isUploaded = true;
 }

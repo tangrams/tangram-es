@@ -9,14 +9,13 @@
 #include <memory>
 #include <regex>
 
-#define BASE_SIZE 16
-#define STEP_SIZE 12
-#define MAX_STEPS 3
 #define SDF_WIDTH 6
 
 #define MIN_LINE_WIDTH 4
 
 namespace Tangram {
+
+const std::vector<float> FontContext::s_fontRasterSizes = { 16, 28, 40 };
 
 FontContext::FontContext(std::shared_ptr<const Platform> _platform) :
     m_sdfRadius(SDF_WIDTH),
@@ -31,21 +30,33 @@ void FontContext::setPixelScale(float _scale) {
 void FontContext::loadFonts() {
     auto fallbacks = m_platform->systemFontFallbacksHandle();
 
-    for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-        m_font[i] = m_alfons.addFont("default", size);
+    for (size_t i = 0; i < s_fontRasterSizes.size(); i++) {
+        m_font[i] = m_alfons.addFont("default", s_fontRasterSizes[i]);
     }
 
-    for (auto fallback : fallbacks) {
+    for (const auto& fallback : fallbacks) {
+
+        if (!fallback.isValid()) { continue; }
+
         alfons::InputSource source;
 
-        if (fallback.path.empty()) {
-            source = alfons::InputSource(fallback.load);
-        } else {
-            source = alfons::InputSource(fallback.path);
+        switch (fallback.tag) {
+            case FontSourceHandle::FontPath:
+                source = alfons::InputSource(fallback.fontPath.path());
+                break;
+            case FontSourceHandle::FontName:
+                source = alfons::InputSource(fallback.fontName, true);
+                break;
+            case FontSourceHandle::FontLoader:
+                source = alfons::InputSource(fallback.fontLoader);
+                break;
+            case FontSourceHandle::None:
+            default:
+                return;
         }
 
-        for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-            m_font[i]->addFace(m_alfons.addFontFace(source, size));
+        for (size_t i = 0; i < s_fontRasterSizes.size(); i++) {
+            m_font[i]->addFace(m_alfons.addFontFace(source, s_fontRasterSizes[i]));
         }
     }
 }
@@ -269,9 +280,9 @@ void FontContext::addFont(const FontDescription& _ft, alfons::InputSource _sourc
     // NB: Synchronize for calls from download thread
     std::lock_guard<std::mutex> lock(m_fontMutex);
 
-    for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
-        auto font = m_alfons.getFont(_ft.alias, size);
-        font->addFace(m_alfons.addFontFace(_source, size));
+    for (size_t i = 0; i < s_fontRasterSizes.size(); i++) {
+        auto font = m_alfons.getFont(_ft.alias, s_fontRasterSizes[i]);
+        font->addFace(m_alfons.addFontFace(_source, s_fontRasterSizes[i]));
 
         // add fallbacks from default font
         font->addFaces(*m_font[i]);
@@ -279,6 +290,8 @@ void FontContext::addFont(const FontDescription& _ft, alfons::InputSource _sourc
 }
 
 void FontContext::releaseFonts() {
+
+    std::lock_guard<std::mutex> lock(m_fontMutex);
     // Unload Freetype and Harfbuzz resources for all font faces
     m_alfons.unload();
 
@@ -312,15 +325,14 @@ void FontContext::ScratchBuffer::drawGlyph(const alfons::Rect& q, const alfons::
 std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, const std::string& _style,
                                                    const std::string& _weight, float _size) {
 
-    int sizeIndex = 0;
-
     // Pick the smallest font that does not scale down too much
-    float fontSize = BASE_SIZE;
-    for (int i = 0; i < MAX_STEPS; i++) {
-        sizeIndex = i;
+    float fontSize = s_fontRasterSizes.back();
+    size_t sizeIndex = s_fontRasterSizes.size() - 1;
 
-        if (_size <= fontSize) { break; }
-        fontSize += STEP_SIZE;
+    auto fontSizeItr = std::lower_bound(s_fontRasterSizes.begin(), s_fontRasterSizes.end(), _size);
+    if (fontSizeItr != s_fontRasterSizes.end()) {
+        fontSize = *fontSizeItr;
+        sizeIndex = fontSizeItr - s_fontRasterSizes.begin();
     }
 
     std::lock_guard<std::mutex> lock(m_fontMutex);
@@ -328,28 +340,47 @@ std::shared_ptr<alfons::Font> FontContext::getFont(const std::string& _family, c
     auto font = m_alfons.getFont(FontDescription::Alias(_family, _style, _weight), fontSize);
     if (font->hasFaces()) { return font; }
 
-    // 1. Bundle
-    // Assuming bundled ttf file follows this convention
-    std::string bundleFontPath = m_sceneResourceRoot + "fonts/" +
-        FontDescription::BundleAlias(_family, _style, _weight);
+    // First, try to load from the system fonts.
 
-    std::vector<char> fontData = m_platform->bytesFromFile(bundleFontPath.c_str());
+    bool useFallbackFont = false;
 
-    // 2. System font
-    if (fontData.size() == 0) {
-        fontData = m_platform->systemFont(_family, _weight, _style);
+    auto systemFontHandle = m_platform->systemFont(_family, _weight, _style);
+
+    alfons::InputSource source;
+
+    switch (systemFontHandle.tag) {
+        case FontSourceHandle::FontPath:
+            source = alfons::InputSource(systemFontHandle.fontPath.path());
+            break;
+        case FontSourceHandle::FontName:
+            source = alfons::InputSource(systemFontHandle.fontName, true);
+            break;
+        case FontSourceHandle::FontLoader:
+        {
+            auto& loader = systemFontHandle.fontLoader;
+            auto fontData = loader();
+            if (fontData.size() > 0) {
+                source = alfons::InputSource(loader);
+            } else {
+                useFallbackFont = true;
+            }
+            break;
+        }
+        case FontSourceHandle::None:
+        default:
+            useFallbackFont = true;
     }
 
-    if (fontData.size() == 0) {
-        LOGN("Could not load font file %s", FontDescription::BundleAlias(_family, _style, _weight).c_str());
-
-        // 3. Add fallbacks from default font
+    if (!useFallbackFont) {
+        font->addFace(m_alfons.addFontFace(source, fontSize));
         if (m_font[sizeIndex]) {
             font->addFaces(*m_font[sizeIndex]);
         }
     } else {
-        font->addFace(m_alfons.addFontFace(alfons::InputSource(std::move(fontData)), fontSize));
+        LOGD("Loading fallback font for Family: %s, Style: %s, Weight: %s, Size %f",
+            _family.c_str(), _style.c_str(), _weight.c_str(), _size);
 
+        // Add fallbacks from default font.
         if (m_font[sizeIndex]) {
             font->addFaces(*m_font[sizeIndex]);
         }

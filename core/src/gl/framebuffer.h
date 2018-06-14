@@ -4,8 +4,8 @@
 #include <vector>
 
 #include "glm/vec4.hpp"
-#include "gl/disposer.h"
 #include "gl.h"
+#include "util/color.h"
 
 namespace Tangram {
 
@@ -20,9 +20,9 @@ public:
 
     ~FrameBuffer();
 
-    bool applyAsRenderTarget(RenderState& _rs, glm::vec4 _clearColor = glm::vec4(0.0));
+    bool applyAsRenderTarget(RenderState& _rs, ColorF _clearColor = ColorF());
 
-    static void apply(RenderState& _rs, GLuint _handle, glm::vec2 _viewport, glm::vec4 _clearColor);
+    static void apply(RenderState& _rs, GLuint _handle, glm::vec2 _viewport, ColorF _clearColor);
 
     bool valid() const { return m_valid; }
 
@@ -49,7 +49,7 @@ private:
 
     std::unique_ptr<Texture> m_texture;
 
-    Disposer m_disposer;
+    RenderState* m_rs = nullptr;
 
     GLuint m_glFrameBufferHandle;
 

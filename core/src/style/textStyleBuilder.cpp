@@ -251,6 +251,9 @@ bool TextStyleBuilder::handleBoundaryLabel(const Feature& _feat, const DrawRule&
 }
 
 bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
+
+    if (!checkRule(_rule)) { return false; }
+
     TextStyle::Parameters params = applyRule(_rule, _feat.props, false);
 
     Label::Type labelType;
@@ -280,7 +283,7 @@ bool TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
             const auto& polygons = _feat.polygons;
             for (const auto& polygon : polygons) {
                 if (!polygon.empty()) {
-                    glm::vec3 c;
+                    glm::vec2 c;
                     c = centroid(polygon.front().begin(), polygon.front().end());
                     addLabel(Label::Type::point, {{ c }}, params, attrib, _rule);
                 }
@@ -548,12 +551,25 @@ void TextStyleBuilder::addLineTextLabels(const Feature& _feat, const TextStyle::
     }
 }
 
+bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
+    if (_rule.hasParameterSet(StyleParamKey::text_font_family) ||
+        _rule.hasParameterSet(StyleParamKey::text_font_fill) ||
+        _rule.hasParameterSet(StyleParamKey::text_font_size) ||
+        _rule.hasParameterSet(StyleParamKey::text_font_stroke_color) ||
+        _rule.hasParameterSet(StyleParamKey::text_font_stroke_width) ||
+        _rule.hasParameterSet(StyleParamKey::text_font_style) ||
+        _rule.hasParameterSet(StyleParamKey::text_font_weight)) {
+        return true;
+    }
+    return false;
+}
+
 TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
                                                   const Properties& _props,
                                                   bool _iconText) const {
 
     const static std::string defaultWeight("400");
-    const static std::string defaultStyle("normal");
+    const static std::string defaultStyle("regular");
     const static std::string defaultFamily("default");
 
     TextStyle::Parameters p;
@@ -714,7 +730,7 @@ void applyTextTransform(const TextStyle::Parameters& _params,
     switch (_params.transform) {
     case TextLabelProperty::Transform::capitalize: {
         UErrorCode status{U_ZERO_ERROR};
-        auto *wordIterator = BreakIterator::createWordInstance(loc, status);
+        auto *wordIterator = icu::BreakIterator::createWordInstance(loc, status);
 
         if (U_SUCCESS(status)) { _string.toTitle(wordIterator); }
 
@@ -739,10 +755,9 @@ bool isComplexShapingScript(const icu::UnicodeString& _text) {
     // See also http://r12a.github.io/scripts/featurelist/
 
     icu::StringCharacterIterator iterator(_text);
-    for (UChar c = iterator.first(); c != CharacterIterator::DONE; c = iterator.next()) {
+    for (UChar c = iterator.first(); c != icu::CharacterIterator::DONE; c = iterator.next()) {
         if (c >= u'\u0600' && c <= u'\u18AF') {
             if ((c <= u'\u06FF') ||                   // Arabic:     "\u0600-\u06FF"
-                (c >= u'\u1000' && c <= u'\u109F') || // Burmese:    "\u1000-\u109F"
                 (c >= u'\u1800' && c <= u'\u18AF')) { // Mongolian:  "\u1800-\u18AF"
                 return true;
             }

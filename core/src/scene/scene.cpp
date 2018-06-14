@@ -2,9 +2,8 @@
 
 #include "data/tileSource.h"
 #include "gl/shaderProgram.h"
-#include "log.h"
-#include "platform.h"
 #include "scene/dataLayer.h"
+#include "scene/importer.h"
 #include "scene/light.h"
 #include "scene/spriteAtlas.h"
 #include "scene/stops.h"
@@ -14,12 +13,9 @@
 #include "text/fontContext.h"
 #include "util/mapProjection.h"
 #include "util/util.h"
-#include "util/url.h"
-#include "view/view.h"
+#include "util/zipArchive.h"
 
 #include <algorithm>
-#include <atomic>
-#include <regex>
 
 namespace Tangram {
 
@@ -27,47 +23,24 @@ static std::atomic<int32_t> s_serial;
 
 Scene::Scene() : id(s_serial++) {}
 
-Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _path)
+Scene::Scene(std::shared_ptr<const Platform> _platform, const Url& _url)
     : id(s_serial++),
+      m_url(_url),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()) {
-
-    std::regex r("^(http|https):/");
-    std::smatch match;
-
-    if (std::regex_search(_path, match, r)) {
-        m_resourceRoot = "";
-        m_path = _path;
-    } else {
-
-        auto split = _path.find_last_of("/");
-        if (split == std::string::npos) {
-            m_resourceRoot = "";
-            m_path = _path;
-        } else {
-            m_resourceRoot = _path.substr(0, split + 1);
-            m_path = _path.substr(split + 1);
-        }
-    }
-
-    LOGD("Scene '%s' => '%s' : '%s'", _path.c_str(), m_resourceRoot.c_str(), m_path.c_str());
-
-    m_fontContext->setSceneResourceRoot(m_resourceRoot);
 
     // For now we only have one projection..
     // TODO how to share projection with view?
     m_mapProjection.reset(new MercatorProjection());
 }
 
-Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _yaml, const std::string& _resourceRoot)
+Scene::Scene(std::shared_ptr<const Platform> _platform, const std::string& _yaml, const Url& _url)
     : id(s_serial++),
       m_fontContext(std::make_shared<FontContext>(_platform)),
       m_featureSelection(std::make_unique<FeatureSelection>()) {
 
-    m_resourceRoot = _resourceRoot;
+    m_url = _url;
     m_yaml = _yaml;
-
-    m_fontContext->setSceneResourceRoot(m_resourceRoot);
 
     m_mapProjection.reset(new MercatorProjection());
 }
@@ -76,17 +49,17 @@ void Scene::copyConfig(const Scene& _other) {
 
     m_featureSelection.reset(new FeatureSelection());
 
-    m_config = _other.m_config;
+    m_config = YAML::Clone(_other.m_config);
     m_fontContext = _other.m_fontContext;
 
-    m_path = _other.m_path;
+    m_url = _other.m_url;
     m_yaml = _other.m_yaml;
-    m_resourceRoot = _other.m_resourceRoot;
 
     m_globalRefs = _other.m_globalRefs;
 
     m_mapProjection.reset(new MercatorProjection());
-    m_assets = _other.assets();
+
+    m_zipArchives = _other.m_zipArchives;
 }
 
 Scene::~Scene() {}
@@ -106,6 +79,42 @@ Style* Scene::findStyle(const std::string& _name) {
         if (style->getName() == _name) { return style.get(); }
     }
     return nullptr;
+}
+
+UrlRequestHandle Scene::startUrlRequest(std::shared_ptr<Platform> platform, Url url, UrlCallback callback) {
+    if (url.scheme() == "zip") {
+        UrlResponse response;
+        // URL for a file in a zip archive, get the encoded source URL.
+        auto source = Importer::getArchiveUrlForZipEntry(url);
+        // Search for the source URL in our archive map.
+        auto it = m_zipArchives.find(source);
+        if (it != m_zipArchives.end()) {
+            auto& archive = it->second;
+            // Found the archive! Now create a response for the request.
+            auto zipEntryPath = url.path().substr(1);
+            auto entry = archive->findEntry(zipEntryPath);
+            if (entry) {
+                response.content.resize(entry->uncompressedSize);
+                bool success = archive->decompressEntry(entry, response.content.data());
+                if (!success) {
+                    response.error = "Unable to decompress zip archive file.";
+                }
+            } else {
+                response.error = "Did not find zip archive entry.";
+            }
+        } else {
+            response.error = "Could not find zip archive.";
+        }
+        callback(response);
+        return 0;
+    }
+
+    // For non-zip URLs, send it to the platform.
+    return platform->startUrlRequest(url, callback);
+}
+
+void Scene::addZipArchive(Url url, std::shared_ptr<ZipArchive> zipArchive) {
+    m_zipArchives.emplace(url, zipArchive);
 }
 
 int Scene::addIdForName(const std::string& _name) {
@@ -173,46 +182,6 @@ void Scene::setPixelScale(float _scale) {
         style->setPixelScale(_scale);
     }
     m_fontContext->setPixelScale(_scale);
-}
-
-void Scene::createSceneAsset(const std::shared_ptr<Platform>& platform, const Url& resolvedUrl,
-                                 const Url& relativeUrl, const Url& base) {
-
-    auto& resolvedStr = resolvedUrl.string();
-    auto& baseStr = base.string();
-    std::shared_ptr<Asset> asset;
-
-    if (m_assets.find(resolvedStr) != m_assets.end()) { return; }
-
-    if ( (Url::getPathExtension(resolvedUrl.path()) == "zip") ){
-        if (relativeUrl.hasHttpScheme() || (resolvedUrl.hasHttpScheme() && base.isEmpty())) {
-            // Data to be fetched later (and zipHandle created) in network callback
-            asset = std::make_shared<ZippedAsset>(resolvedStr);
-
-        } else if (relativeUrl.isAbsolute() || base.isEmpty()) {
-            asset = std::make_shared<ZippedAsset>(resolvedStr, nullptr, platform->bytesFromFile(resolvedStr.c_str()));
-        } else {
-            auto parentAsset = static_cast<ZippedAsset*>(m_assets[baseStr].get());
-            // Parent asset (for base Str) must have been created by now
-            assert(parentAsset);
-            asset = std::make_shared<ZippedAsset>(resolvedStr, nullptr,
-                                                                       parentAsset->readBytesFromAsset(platform, resolvedStr));
-        }
-    } else {
-        const auto& parentAsset = m_assets[baseStr];
-
-        if (relativeUrl.isAbsolute() || (parentAsset && !parentAsset->zipHandle())) {
-            // Make sure to first check for cases when the asset does not belong within a zipBundle
-            asset = std::make_shared<Asset>(resolvedStr);
-        } else if (parentAsset && parentAsset->zipHandle()) {
-            // Asset is in zip bundle
-            asset = std::make_shared<ZippedAsset>(resolvedStr, parentAsset->zipHandle());
-        } else {
-            asset = std::make_shared<Asset>(resolvedStr);
-        }
-    }
-
-    m_assets[resolvedStr] = asset;
 }
 
 }

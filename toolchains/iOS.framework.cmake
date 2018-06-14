@@ -1,6 +1,8 @@
 include(${CMAKE_SOURCE_DIR}/toolchains/iOS.toolchain.cmake)
 
-set(FRAMEWORK_VERSION "0.8.0-beta2")
+set(FRAMEWORK_VERSION "0.9.4-dev")
+
+set(IOS_TARGET_VERSION "9.3")
 
 message(STATUS "Build for iOS archs " ${IOS_ARCH})
 
@@ -14,6 +16,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}
     -std=c++14
     -stdlib=libc++
     -w
+    -miphoneos-version-min=${IOS_TARGET_VERSION}
     -isysroot ${CMAKE_IOS_SDK_ROOT}")
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
@@ -22,6 +25,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}
     -fobjc-abi-version=2
     -fobjc-arc
     -w
+    -miphoneos-version-min=${IOS_TARGET_VERSION}
     -isysroot ${CMAKE_IOS_SDK_ROOT}")
 
 if(${IOS_PLATFORM} STREQUAL "SIMULATOR")
@@ -45,7 +49,7 @@ set(SOURCES
     ${PROJECT_SOURCE_DIR}/platforms/common/platform_gl.cpp
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/iosPlatform.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHelpers.mm
-    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGFontConverter.mm
+    ${PROJECT_SOURCE_DIR}/platforms/common/appleAllowedFonts.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGGeoPolyline.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGGeoPolygon.mm
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHttpHandler.mm
@@ -79,7 +83,7 @@ set(HEADERS
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMapData+Internal.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGMarker+Internal.h
     ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGHelpers.h
-    ${PROJECT_SOURCE_DIR}/platforms/ios/src/TangramMap/TGFontConverter.h
+    ${PROJECT_SOURCE_DIR}/platforms/common/appleAllowedFonts.h
     ${FRAMEWORK_HEADERS})
 
 # add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/scenes/fonts" "./fonts")
@@ -87,6 +91,7 @@ add_bundle_resources(RESOURCES "${PROJECT_SOURCE_DIR}/platforms/ios/framework/Mo
 
 add_library(${FRAMEWORK_NAME} SHARED ${SOURCES} ${HEADERS} ${RESOURCES})
 target_link_libraries(${FRAMEWORK_NAME} ${CORE_LIBRARY})
+target_include_directories(${FRAMEWORK_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/platforms/common)
 
 # Link with SQLite, needed for MBTiles access.
 target_link_libraries(${FRAMEWORK_NAME} sqlite3)
@@ -134,6 +139,7 @@ set_xcode_property(${FRAMEWORK_NAME} VALID_ARCHS "${IOS_ARCH}")
 set_xcode_property(${FRAMEWORK_NAME} ARCHS "${IOS_ARCH}")
 set_xcode_property(${FRAMEWORK_NAME} DEFINES_MODULE "YES")
 set_xcode_property(${FRAMEWORK_NAME} CURRENT_PROJECT_VERSION "${FRAMEWORK_VERSION}")
+set_xcode_property(${FRAMEWORK_NAME} IPHONEOS_DEPLOYMENT_TARGET "${IOS_TARGET_VERSION}")
 
 # Set RPATH to be within the application /Frameworks directory
 set_xcode_property(${FRAMEWORK_NAME} LD_DYLIB_INSTALL_NAME "@rpath/${FRAMEWORK_NAME}.framework/${FRAMEWORK_NAME}")

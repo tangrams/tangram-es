@@ -99,9 +99,6 @@ foreach(_shader ${SHADER_FILES})
     if(${_shader_ext} STREQUAL "fs" OR ${_shader_ext} STREQUAL "glsl" OR ${_shader_ext} STREQUAL "vs")
         set(_shader_name ${_shader_name}_${_shader_ext})
         set(SHADER_OUTPUT ${SHADER_OUTPUT_DIRECTORY}/${_shader_name}.h)
-        add_custom_target(
-            ${_shader_name}
-            DEPENDS ${SHADER_OUTPUT})
         add_custom_command(
             OUTPUT ${SHADER_OUTPUT}
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..
@@ -110,18 +107,8 @@ foreach(_shader ${SHADER_FILES})
                 ${_shader}
                 core/generated/${_shader_name}.h
                 ${_shader_name})
-        add_dependencies(${CORE_LIBRARY} ${_shader_name})
+        list(APPEND SHADER_OUTPUT_FILES ${SHADER_OUTPUT})
     endif()
 endforeach()
-
-# add target to transform the default point texture into a data header
-set(DEFAULT_POINT_TEXTURE_IMAGE ${CMAKE_CURRENT_SOURCE_DIR}/../images/default-point.png)
-set(DEFAULT_POINT_TEXTURE_HEADER ${GENERATED_DIR}/defaultPointTextureData.h)
-add_custom_target(default_point_texture DEPENDS ${DEFAULT_POINT_TEXTURE_HEADER})
-add_custom_command(
-  OUTPUT ${DEFAULT_POINT_TEXTURE_HEADER}
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..
-  MAIN_DEPENDENCY ${DEFAULT_POINT_TEXTURE_IMAGE}
-  COMMAND ${PROJECT_SOURCE_DIR}/../scripts/incbin.sh ${DEFAULT_POINT_TEXTURE_IMAGE} ${DEFAULT_POINT_TEXTURE_HEADER} default_point_texture
-  )
-add_dependencies(${CORE_LIBRARY} default_point_texture)
+add_custom_target(shader-headers DEPENDS ${SHADER_OUTPUT_FILES})
+add_dependencies(${CORE_LIBRARY} shader-headers)

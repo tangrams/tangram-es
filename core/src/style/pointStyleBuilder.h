@@ -19,6 +19,26 @@ struct IconMesh : LabelSet {
 
 struct PointStyleBuilder : public StyleBuilder {
 
+    struct Parameters {
+        bool interactive = false;
+        bool keepTileEdges = false;
+        bool autoAngle = false;
+        bool dynamicTexture = false;
+        std::string sprite;
+        std::string spriteDefault;
+        std::string texture;
+        glm::vec2 size = { 16.f, 16.f };
+        uint32_t color = 0xffffffff;
+        float outlineWidth = 0.f;
+        uint32_t outlineColor = 0x00000000;
+        uint16_t antialiasFactor = 0;
+        Label::Options labelOptions;
+        LabelProperty::Placement placement = LabelProperty::Placement::vertex;
+        float extrudeScale = 1.f;
+        float placementMinLengthRatio = 1.0f;
+        float placementSpacing = 80.f;
+    };
+
     const PointStyle& m_style;
 
 
@@ -39,16 +59,14 @@ struct PointStyleBuilder : public StyleBuilder {
         m_textStyleBuilder = m_style.textStyle().createBuilder();
     }
 
-    bool getUVQuad(PointStyle::Parameters& _params, glm::vec4& _quad) const;
-
-    PointStyle::Parameters applyRule(const DrawRule& _rule, const Properties& _props) const;
+    Parameters applyRule(const DrawRule& _rule) const;
 
     // Gets points for label placement and appropriate angle for each label (if `auto` angle is set)
-    void labelPointsPlacing(const Line& _line, const glm::vec4& _quad,
-                            PointStyle::Parameters& _params, const DrawRule& _rule);
+    void labelPointsPlacing(const Line& _line, const glm::vec4& _quad, Texture* _texture,
+                            Parameters& _params, const DrawRule& _rule);
 
-    void addLabel(const Point& _point, const glm::vec4& _quad,
-                  const PointStyle::Parameters& _params, const DrawRule& _rule);
+    void addLabel(const Point& _point, const glm::vec4& _quad, Texture* _texture,
+                  const Parameters& _params, const DrawRule& _rule);
 
     void addLayoutItems(LabelCollider& _layout) override;
 
@@ -56,6 +74,26 @@ struct PointStyleBuilder : public StyleBuilder {
 
 private:
 
+    /*
+     * Resolves the apt texture used by the point style builder
+     * Texture could be specified by:
+     * - explicit marker texture
+     * - texture name specified in the draw rules
+     * - default texture specified for the style
+     */
+    bool getTexture(const Parameters& _params, Texture** _texture) const;
+
+    /*
+     * Evaluates the size the point sprite can be drawn with:
+     * - size specified in the draw rule
+     * - Texture density information could be required if:
+     *      - no size is specified in the draw rule
+     *      - draw rule size uses '%' units, which scale the sprite texture based on the texture density
+     * - size specified in the draw rule uses "auto" which means width/height of the sprite is evaluated, keeping the
+     * same aspect ratio.
+     */
+    bool evalSizeParam(const DrawRule& _rule, Parameters& _params, const Texture* _texture) const;
+    bool getUVQuad(Parameters& _params, glm::vec4& _quad, const Texture* _texture) const;
 
     std::vector<std::unique_ptr<Label>> m_labels;
     std::vector<SpriteQuad> m_quads;
@@ -73,4 +111,21 @@ private:
 
 };
 
+}
+
+namespace std {
+    template <>
+    struct hash<Tangram::PointStyleBuilder::Parameters> {
+        size_t operator() (const Tangram::PointStyleBuilder::Parameters& p) const {
+            std::hash<Tangram::Label::Options> optionsHash;
+            std::size_t seed = 0;
+            hash_combine(seed, p.sprite);
+            hash_combine(seed, p.color);
+            hash_combine(seed, p.size.x);
+            hash_combine(seed, p.size.y);
+            hash_combine(seed, (int)p.placement);
+            hash_combine(seed, optionsHash(p.labelOptions));
+            return seed;
+        }
+    };
 }

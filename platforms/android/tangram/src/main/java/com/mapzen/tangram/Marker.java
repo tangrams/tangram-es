@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.Keep;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.DisplayMetrics;
 
 import com.mapzen.tangram.geometry.Polygon;
@@ -18,9 +20,9 @@ import com.mapzen.tangram.geometry.Polyline;
 @Keep
 public class Marker {
 
-    private Context context;
+    private final Context context;
     private long markerId = 0;
-    private MapController map;
+    private final MapController map;
     private boolean visible = true;
     private Object userData = null;
 
@@ -30,7 +32,7 @@ public class Marker {
      * @param markerId the marker id
      * @param map the map this marker is added to
      */
-    Marker(Context context, long markerId, MapController map) {
+    Marker(@NonNull final Context context, final long markerId, @NonNull final MapController map) {
         this.context = context;
         this.markerId = markerId;
         this.map = map;
@@ -40,7 +42,7 @@ public class Marker {
      * Custom user data storage.
      * @param userData The user data to hold in this marker.
      */
-    public void setUserData(Object userData) {
+    public void setUserData(@Nullable final Object userData) {
         this.userData = userData;
     }
 
@@ -48,6 +50,7 @@ public class Marker {
      * Gets custom user data.
      * @return The user data held by this marker.
      */
+    @Nullable
     public Object getUserData() {
         return this.userData;
     }
@@ -73,7 +76,7 @@ public class Marker {
      * @param path Absolute path to a draw rule in the current scene, delimited with "."
      * @return whether the styling was successfully set on the marker.
      */
-    public boolean setStylingFromPath(String path) {
+    public boolean setStylingFromPath(final String path) {
         return map.setMarkerStylingFromPath(markerId, path);
     }
 
@@ -91,7 +94,7 @@ public class Marker {
      * @param styleStr the style string
      * @return whether the style was successfully set
      */
-    public boolean setStylingFromString(String styleString) {
+    public boolean setStylingFromString(final String styleString) {
         return map.setMarkerStylingFromString(markerId, styleString);
     }
 
@@ -102,7 +105,7 @@ public class Marker {
      * @param drawableId the drawable resource id
      * @return whether the drawable's bitmap was successfully set
      */
-    public boolean setDrawable(int drawableId) {
+    public boolean setDrawable(final int drawableId) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inTargetDensity = context.getResources().getDisplayMetrics().densityDpi;
         Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), drawableId, options);
@@ -116,7 +119,7 @@ public class Marker {
      * @param drawable the drawable
      * @return whether the drawable's bitmap was successfully set
      */
-    public boolean setDrawable(Drawable drawable) {
+    public boolean setDrawable(@NonNull final Drawable drawable) {
         int density = context.getResources().getDisplayMetrics().densityDpi;
         BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
         bitmapDrawable.setTargetDensity(density);
@@ -130,7 +133,7 @@ public class Marker {
      * @param point lat/lng location
      * @return whether the point was successfully set
      */
-    public boolean setPoint(LngLat point) {
+    public boolean setPoint(@NonNull final LngLat point) {
         return map.setMarkerPoint(markerId, point.longitude, point.latitude);
     }
 
@@ -141,7 +144,8 @@ public class Marker {
      * @param ease animation type
      * @return whether the point was successfully set
      */
-    public boolean setPointEased(LngLat point, int duration, MapController.EaseType ease) {
+    public boolean setPointEased(@Nullable final LngLat point, final int duration,
+                                 @NonNull final MapController.EaseType ease) {
         if (point == null) {
             return false;
         }
@@ -154,7 +158,7 @@ public class Marker {
      * @param polyline the polyline to display
      * @return whether the polyline was successfully set
      */
-    public boolean setPolyline(Polyline polyline) {
+    public boolean setPolyline(@Nullable final Polyline polyline) {
         if (polyline == null) {
             return false;
         }
@@ -168,7 +172,7 @@ public class Marker {
      * @param polygon the polygon to display
      * @return whether the polygon was successfully set
      */
-    public boolean setPolygon(Polygon polygon) {
+    public boolean setPolygon(@Nullable final Polygon polygon) {
         if (polygon == null) {
             return false;
         }
@@ -181,7 +185,7 @@ public class Marker {
      * @param visible whether or not the marker should be visible
      * @return whether the marker's visibility was successfully set
      */
-    public boolean setVisible(boolean visible) {
+    public boolean setVisible(final boolean visible) {
         boolean success = map.setMarkerVisible(markerId, visible);
         if (success) {
             this.visible = visible;
@@ -194,7 +198,7 @@ public class Marker {
      * @param drawOrder the draw order to set
      * @return whether the marker's draw order was successfully set
      */
-    public boolean setDrawOrder(int drawOrder) {
+    public boolean setDrawOrder(final int drawOrder) {
         return map.setMarkerDrawOrder(markerId, drawOrder);
     }
 
@@ -206,24 +210,24 @@ public class Marker {
         return visible;
     }
 
-    private boolean setBitmap(Bitmap bitmap) {
-        int density = context.getResources().getDisplayMetrics().densityDpi;
-        int width = bitmap.getScaledWidth(density);
-        int height = bitmap.getScaledHeight(density);
+    private boolean setBitmap(@NonNull final Bitmap bitmap) {
+        final int density = context.getResources().getDisplayMetrics().densityDpi;
+        final int width = bitmap.getScaledWidth(density);
+        final int height = bitmap.getScaledHeight(density);
 
-        int[] argb = new int[width * height];
+        final int[] argb = new int[width * height];
         bitmap.getPixels(argb, 0, width, 0, 0, width, height);
 
-        int[] abgr = new int[width * height];
+        final int[] abgr = new int[width * height];
         int row, col;
         for (int i = 0; i < argb.length; i++) {
             col = i % width;
             row = i / width;
-            int pix = argb[i];
-            int pb = (pix >> 16) & 0xff;
-            int pr = (pix << 16) & 0x00ff0000;
-            int pix1 = (pix & 0xff00ff00) | pr | pb;
-            int flippedIndex = (height - 1 - row) * width + col;
+            final int pix = argb[i];
+            final int pb = (pix >> 16) & 0xff;
+            final int pr = (pix << 16) & 0x00ff0000;
+            final int pix1 = (pix & 0xff00ff00) | pr | pb;
+            final int flippedIndex = (height - 1 - row) * width + col;
             abgr[flippedIndex] = pix1;
         }
 

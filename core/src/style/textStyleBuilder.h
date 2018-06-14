@@ -57,8 +57,7 @@ public:
     bool handleBoundaryLabel(const Feature& _feat, const DrawRule& _rule,
                              const TextStyle::Parameters& _params);
 
-    bool checkRule(const DrawRule& _rule) const override { return true; }
-
+    bool checkRule(const DrawRule& _rule) const override;
     std::vector<std::unique_ptr<Label>>* labels() { return &m_labels; }
 
     void addLayoutItems(LabelCollider& _layout) override;

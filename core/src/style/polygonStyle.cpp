@@ -89,14 +89,14 @@ struct PolygonStyleBuilder : public StyleBuilder {
 
 public:
 
-    struct {
+    struct Parameters {
         uint32_t order = 0;
         uint32_t color = 0xffffffff;
         glm::vec2 extrude;
         float height;
         float minHeight;
         uint32_t selectionColor = 0;
-    } m_params;
+    };
 
     void setup(const Tile& _tile) override {
         m_tileUnitsPerMeter = _tile.getInverseScale();
@@ -118,7 +118,7 @@ public:
 
     PolygonStyleBuilder(const PolygonStyle& _style) : m_style(_style) {}
 
-    void parseRule(const DrawRule& _rule, const Properties& _props);
+    Parameters parseRule(const DrawRule& _rule, const Properties& _props);
 
     PolygonBuilder& polygonBuilder() { return m_builder; }
 
@@ -148,39 +148,41 @@ std::unique_ptr<StyledMesh> PolygonStyleBuilder<V>::build() {
 }
 
 template <class V>
-void PolygonStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties& _props) {
-    _rule.get(StyleParamKey::color, m_params.color);
-    _rule.get(StyleParamKey::extrude, m_params.extrude);
-    _rule.get(StyleParamKey::order, m_params.order);
+auto PolygonStyleBuilder<V>::parseRule(const DrawRule& _rule, const Properties& _props) -> Parameters {
+    Parameters p;
+    _rule.get(StyleParamKey::color, p.color);
+    _rule.get(StyleParamKey::extrude, p.extrude);
+    _rule.get(StyleParamKey::order, p.order);
 
     if (Tangram::getDebugFlag(Tangram::DebugFlags::proxy_colors)) {
-        m_params.color <<= (m_zoom % 6);
+        p.color <<= (m_zoom % 6);
     }
 
-    auto& extrude = m_params.extrude;
-    m_params.minHeight = getLowerExtrudeMeters(extrude, _props) * m_tileUnitsPerMeter;
-    m_params.height = getUpperExtrudeMeters(extrude, _props) * m_tileUnitsPerMeter;
+    auto& extrude = p.extrude;
+    p.minHeight = getLowerExtrudeMeters(extrude, _props) * m_tileUnitsPerMeter;
+    p.height = getUpperExtrudeMeters(extrude, _props) * m_tileUnitsPerMeter;
 
-    m_params.selectionColor = _rule.selectionColor;
+    p.selectionColor = _rule.selectionColor;
+    return p;
 }
 
 template <class V>
 bool PolygonStyleBuilder<V>::addPolygon(const Polygon& _polygon, const Properties& _props, const DrawRule& _rule) {
 
-    parseRule(_rule, _props);
+    auto p = parseRule(_rule, _props);
 
-    m_builder.addVertex = [this](const glm::vec3& coord,
+    m_builder.addVertex = [this, p](const glm::vec3& coord,
                                  const glm::vec3& normal,
                                  const glm::vec2& uv) {
-        m_meshData.vertices.push_back({ coord, m_params.order, normal, uv, m_params.color, m_params.selectionColor });
+        m_meshData.vertices.push_back({ coord, p.order, normal, uv, p.color, p.selectionColor });
     };
 
-    if (m_params.minHeight != m_params.height) {
-        Builders::buildPolygonExtrusion(_polygon, m_params.minHeight,
-                                        m_params.height, m_builder);
+    if (p.minHeight != p.height) {
+        Builders::buildPolygonExtrusion(_polygon, p.minHeight,
+                                        p.height, m_builder);
     }
 
-    Builders::buildPolygon(_polygon, m_params.height, m_builder);
+    Builders::buildPolygon(_polygon, p.height, m_builder);
 
     m_meshData.indices.insert(m_meshData.indices.end(),
                               m_builder.indices.begin(),

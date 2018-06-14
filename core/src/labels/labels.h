@@ -16,11 +16,10 @@
 #include <unordered_map>
 #include <vector>
 
-#define PERF_TRACE __attribute__ ((noinline))
-
 namespace Tangram {
 
 class FontContext;
+class LabelSet;
 class Marker;
 class Tile;
 class Style;
@@ -45,15 +44,15 @@ public:
     /* onlyRender: when the view and tiles have not changed one does not need to update the set of
      * active labels. We just need to render these the labels in this case
      */
-    PERF_TRACE void updateLabels(const ViewState& _viewState, float _dt,
-                                 const std::vector<std::unique_ptr<Style>>& _styles,
-                                 const std::vector<std::shared_ptr<Tile>>& _tiles,
-                                 const std::vector<std::unique_ptr<Marker>>& _markers,
-                                 bool _onlyRender = true);
+    void updateLabels(const ViewState& _viewState, float _dt,
+                      const std::vector<std::unique_ptr<Style>>& _styles,
+                      const std::vector<std::shared_ptr<Tile>>& _tiles,
+                      const std::vector<std::unique_ptr<Marker>>& _markers,
+                      bool _onlyRender = true);
 
     bool needUpdate() const { return m_needUpdate; }
 
-    std::pair<Label*, Tile*> getLabel(uint32_t _selectionColor) const;
+    std::pair<Label*, const Tile*> getLabel(uint32_t _selectionColor) const;
 
 protected:
 
@@ -66,17 +65,15 @@ protected:
                          const std::vector<std::shared_ptr<Tile>>& _tiles,
                          TileManager& _tileManager, float _currentZoom) const;
 
-    PERF_TRACE void skipTransitions(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) const;
+    void skipTransitions(const std::vector<const Style*>& _styles, Tile& _tile, Tile& _proxy) const;
 
-    PERF_TRACE void sortLabels();
+    void handleOcclusions(const ViewState& _viewState);
 
-    PERF_TRACE void handleOcclusions(const ViewState& _viewState);
+    bool withinRepeatDistance(Label *_label);
 
-    PERF_TRACE bool withinRepeatDistance(Label *_label);
-
-    void processLabelUpdate(const ViewState& viewState, StyledMesh* mesh, Tile* tile,
-                            const glm::mat4& mvp, float dt, bool drawAll,
-                            bool onlyRender, bool isProxy);
+    void processLabelUpdate(const ViewState& _viewState, const LabelSet* _labelSet, Style* _style,
+                            const Tile* _tile, const Marker *_marker, const glm::mat4& _mvp,
+                            float _dt, bool _drawAll, bool _onlyRender, bool _isProxy);
 
     bool m_needUpdate;
 
@@ -84,15 +81,20 @@ protected:
 
     struct LabelEntry {
 
-        LabelEntry(Label* _label, Tile* _tile, bool _proxy, Range _screenTransform)
+        LabelEntry(Label* _label, Style* _style, const Tile* _tile, const Marker* _marker,
+                   bool _proxy, Range _screenTransform)
             : label(_label),
+              style(_style),
               tile(_tile),
+              marker(_marker),
               priority(_label->options().priority),
               proxy(_proxy),
               transformRange(_screenTransform) {}
 
         Label* label;
-        Tile* tile;
+        Style* style;
+        const Tile* tile;
+        const Marker* marker;
         float priority;
         bool proxy;
 
@@ -100,7 +102,9 @@ protected:
         Range obbsRange;
     };
 
-    static bool labelComparator(const LabelEntry& _a, const LabelEntry& _b);
+    static bool priorityComparator(const LabelEntry& _a, const LabelEntry& _b);
+
+    static bool zOrderComparator(const LabelEntry& _a, const LabelEntry& _b);
 
     std::vector<OBB> m_obbs;
     ScreenTransform::Buffer m_transforms;

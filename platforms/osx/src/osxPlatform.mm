@@ -1,15 +1,13 @@
+#include"appleAllowedFonts.h"
 #include "osxPlatform.h"
 #include "gl/hardware.h"
 #include "log.h"
+#include "platform_gl.h"
 
 #import <cstdarg>
 #import <cstdio>
-
-#define DEFAULT "fonts/NotoSans-Regular.ttf"
-#define FONT_AR "fonts/NotoNaskh-Regular.ttf"
-#define FONT_HE "fonts/NotoSansHebrew-Regular.ttf"
-#define FONT_JA "fonts/DroidSansJapanese.ttf"
-#define FALLBACK "fonts/DroidSansFallback.ttf"
+#import <map>
+#import <AppKit/AppKit.h>
 
 namespace Tangram {
 
@@ -31,142 +29,165 @@ void initGLExtensions() {
     Tangram::Hardware::supportsMapBuffer = true;
 }
 
-NSString* resolvePath(const char* _path) {
-
-    NSString* pathString = [NSString stringWithUTF8String:_path];
-
-    NSURL* resourceFolderUrl = [[NSBundle mainBundle] resourceURL];
-
-    NSURL* resolvedUrl = [NSURL URLWithString:pathString
-                                relativeToURL:resourceFolderUrl];
-
-    NSFileManager* fileManager = [NSFileManager defaultManager];
-
-    NSString* pathInAppBundle = [resolvedUrl path];
-
-    if ([fileManager fileExistsAtPath:pathInAppBundle]) {
-        return pathInAppBundle;
-    }
-
-    LOGW("Failed to resolve path: %s", _path);
-
-    return nil;
-}
-
 void OSXPlatform::requestRender() const {
     glfwPostEmptyEvent();
 }
 
-OSXPlatform::OSXPlatform() : m_stopUrlRequests(false) {
-    NSURLSessionConfiguration *defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
-
-    m_defaultSession = [NSURLSession sessionWithConfiguration: defaultConfigObject];
-
+OSXPlatform::OSXPlatform() {
+    NSURLSessionConfiguration* configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
     NSString *cachePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"/tile_cache"];
     NSURLCache *tileCache = [[NSURLCache alloc] initWithMemoryCapacity: 4 * 1024 * 1024 diskCapacity: 30 * 1024 * 1024 diskPath: cachePath];
-    defaultConfigObject.URLCache = tileCache;
-    defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
-    defaultConfigObject.timeoutIntervalForRequest = 30;
-    defaultConfigObject.timeoutIntervalForResource = 60;
+    configuration.URLCache = tileCache;
+    configuration.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
+    configuration.timeoutIntervalForRequest = 30;
+    configuration.timeoutIntervalForResource = 60;
+
+    m_urlSession = [NSURLSession sessionWithConfiguration: configuration];
 }
 
 OSXPlatform::~OSXPlatform() {
-    {
-        std::lock_guard<std::mutex> guard(m_urlRequestMutex);
-        m_stopUrlRequests = true;
-    }
-
-    [m_defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
+    [m_urlSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
         for(NSURLSessionTask* task in dataTasks) {
             [task cancel];
         }
     }];
 }
 
-std::string OSXPlatform::stringFromFile(const char* _path) const {
-    NSString* path = resolvePath(_path);
-    std::string data;
-
-    if (!path) { return data; }
-
-    data = Platform::stringFromFile([path UTF8String]);
-    return data;
-}
-
 std::vector<FontSourceHandle> OSXPlatform::systemFontFallbacksHandle() const {
     std::vector<FontSourceHandle> handles;
 
-    handles.emplace_back(DEFAULT);
-    handles.emplace_back(FONT_AR);
-    handles.emplace_back(FONT_HE);
-    handles.emplace_back(FONT_JA);
-    handles.emplace_back(FALLBACK);
+    NSFontManager *manager = [NSFontManager sharedFontManager];
+    NSArray<NSString *> *fallbacks = [manager availableFontFamilies];
+
+    handles.reserve([fallbacks count]);
+
+    for (NSString* fallback in fallbacks) {
+        if (!allowedFamily(fallback)) { continue; }
+
+        for (NSArray* familyFont in [manager availableMembersOfFontFamily:fallback]) {
+            NSString* fontName = familyFont[0];
+            NSString* fontStyle = familyFont[1];
+            if ( ![fontName containsString:@"-"] || [fontStyle isEqualToString:@"Regular"]) {
+                handles.emplace_back(std::string(fontName.UTF8String));
+                break;
+            }
+        }
+    }
 
     return handles;
 }
 
-bool OSXPlatform::startUrlRequest(const std::string& _url, UrlCallback _callback) {
-
-    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
-
-    void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
-        {
-            std::lock_guard<std::mutex> guard(m_urlRequestMutex);
-
-            if (m_stopUrlRequests) {
-                LOGE("Response after Tangram shutdown.");
-                return;
-            }
-        }
-
-        NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
-
-        int statusCode = [httpResponse statusCode];
-
-        std::vector<char> rawDataVec;
-
-        if (error != nil) {
-
-            if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled) {
-                LOGD("Request cancelled: %s", [response.URL.absoluteString UTF8String]);
-            } else {
-                LOGE("Response \"%s\" with error \"%s\".", response, [error.localizedDescription UTF8String]);
-            }
-
-        } else if (statusCode < 200 || statusCode >= 300) {
-
-            LOGE("Unsuccessful status code %d: \"%s\" from: %s",
-                statusCode,
-                [[NSHTTPURLResponse localizedStringForStatusCode: statusCode] UTF8String],
-                [response.URL.absoluteString UTF8String]);
-            _callback(std::move(rawDataVec));
-
-        } else {
-
-            int dataLength = [data length];
-            rawDataVec.resize(dataLength);
-            memcpy(rawDataVec.data(), (char *)[data bytes], dataLength);
-            _callback(std::move(rawDataVec));
-
-        }
-
+FontSourceHandle OSXPlatform::systemFont(const std::string& _name, const std::string& _weight, const std::string& _face) const {
+    static std::map<int, CGFloat> weightTraits = {
+        {100, NSFontWeightUltraLight},
+        {100, NSFontWeightUltraLight},
+        {200, NSFontWeightThin},
+        {300, NSFontWeightLight},
+        {400, NSFontWeightRegular},
+        {500, NSFontWeightMedium},
+        {600, NSFontWeightSemibold},
+        {700, NSFontWeightBold},
+        {800, NSFontWeightHeavy},
+        {900, NSFontWeightBlack},
     };
 
-    NSURLSessionDataTask* dataTask = [m_defaultSession dataTaskWithURL:[NSURL URLWithString:nsUrl] completionHandler:handler];
+    static std::map<std::string, NSFontSymbolicTraits> fontTraits = {
+        {"italic", NSFontItalicTrait},
+        {"bold", NSFontBoldTrait},
+        {"expanded", NSFontExpandedTrait},
+        {"condensed", NSFontCondensedTrait},
+        {"monospace", NSFontMonoSpaceTrait},
+    };
+
+    NSFont* font = [NSFont fontWithName:[NSString stringWithUTF8String:_name.c_str()] size:1.0];
+
+    if (font == nil) {
+        // Get the default system font
+        if (_weight.empty()) {
+            font = [NSFont systemFontOfSize:1.0];
+        } else {
+            int weight = atoi(_weight.c_str());
+
+            // Default to 400 boldness
+            weight = (weight == 0) ? 400 : weight;
+
+            // Map weight value to range [100..900]
+            weight = std::min(std::max(100, (int)floor(weight / 100.0 + 0.5) * 100), 900);
+
+            font = [NSFont systemFontOfSize:1.0 weight:weightTraits[weight]];
+        }
+    }
+
+    if (_face != "regular") {
+        NSFontSymbolicTraits traits;
+        NSFontDescriptor* descriptor = [font fontDescriptor];
+
+        auto it = fontTraits.find(_face);
+        if (it != fontTraits.end()) {
+            traits = it->second;
+
+            // Create a new descriptor with the symbolic traits
+            descriptor = [descriptor fontDescriptorWithSymbolicTraits:traits];
+
+            if (descriptor != nil) {
+                font = [NSFont fontWithDescriptor:descriptor size:1.0];
+            }
+        }
+    }
+
+    return FontSourceHandle(std::string(font.fontName.UTF8String));
+}
+
+UrlRequestHandle OSXPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
+
+    void (^handler)(NSData*, NSURLResponse*, NSError*) = ^void (NSData* data, NSURLResponse* response, NSError* error) {
+
+        // Create our response object. The '__block' specifier is to allow mutation in the data-copy block below.
+        __block UrlResponse urlResponse;
+
+        // Check for errors from NSURLSession, then check for HTTP errors.
+        if (error != nil) {
+
+            urlResponse.error = [error.localizedDescription UTF8String];
+
+        } else if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+
+            NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
+            int statusCode = [httpResponse statusCode];
+            if (statusCode >= 400) {
+                urlResponse.error = [[NSHTTPURLResponse localizedStringForStatusCode: statusCode] UTF8String];
+            }
+        }
+
+        // Copy the data from the NSURLResponse into our URLResponse.
+        // First we allocate the total data size.
+        urlResponse.content.resize([data length]);
+        // NSData may be stored in several ranges, so the 'bytes' method may incur extra copy operations.
+        // To avoid that we copy the data in ranges provided by the NSData.
+        [data enumerateByteRangesUsingBlock:^(const void * _Nonnull bytes, NSRange byteRange, BOOL * _Nonnull stop) {
+            memcpy(urlResponse.content.data() + byteRange.location, bytes, byteRange.length);
+        }];
+
+        // Run the callback from the requester.
+        if (_callback) {
+            _callback(urlResponse);
+        }
+    };
+
+    NSURL* nsUrl = [NSURL URLWithString:[NSString stringWithUTF8String:_url.string().c_str()]];
+    NSURLSessionDataTask* dataTask = [m_urlSession dataTaskWithURL:nsUrl completionHandler:handler];
 
     [dataTask resume];
 
-    return true;
+    return [dataTask taskIdentifier];
 
 }
 
-void OSXPlatform::cancelUrlRequest(const std::string& _url) {
+void OSXPlatform::cancelUrlRequest(UrlRequestHandle handle) {
 
-    NSString* nsUrl = [NSString stringWithUTF8String:_url.c_str()];
-
-    [m_defaultSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
-        for(NSURLSessionTask* task in dataTasks) {
-            if([[task originalRequest].URL.absoluteString isEqualToString:nsUrl]) {
+    [m_urlSession getTasksWithCompletionHandler:^(NSArray* dataTasks, NSArray* uploadTasks, NSArray* downloadTasks) {
+        for (NSURLSessionTask* task in dataTasks) {
+            if ([task taskIdentifier] == handle) {
                 [task cancel];
                 break;
             }

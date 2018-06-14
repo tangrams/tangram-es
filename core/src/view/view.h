@@ -87,7 +87,7 @@ public:
     // Set the maximum pitch angle in degrees as a series of stops over zooms.
     void setMaxPitchStops(std::shared_ptr<Stops> stops);
 
-    // Get the maximum pitch angle for the current zoom.
+    // Get the maximum pitch angle for the current zoom, in degrees.
     float getMaxPitch() const;
 
     /* Sets the ratio of hardware pixels to logical pixels (for high-density screens)
@@ -237,7 +237,7 @@ protected:
     float m_aspect;
     float m_pixelScale = 1.0f;
     float m_fov = 0.25 * PI;
-    float m_maxPitch = 0.5 * PI;
+    float m_maxPitch = 90.f;
 
     CameraType m_type;
 

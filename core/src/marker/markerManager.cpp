@@ -210,7 +210,7 @@ bool MarkerManager::setPolyline(MarkerID markerID, LngLat* coordinates, int coun
     for (int i = 0; i < count; ++i) {
         auto degrees = glm::dvec2(coordinates[i].longitude, coordinates[i].latitude);
         auto meters = m_mapProjection->LonLatToMeters(degrees);
-        line.emplace_back((meters.x - origin.x) * scale, (meters.y - origin.y) * scale, 0.f);
+        line.emplace_back((meters.x - origin.x) * scale, (meters.y - origin.y) * scale);
     }
 
     // Update the feature data for the marker.
@@ -273,7 +273,7 @@ bool MarkerManager::setPolygon(MarkerID markerID, LngLat* coordinates, int* coun
         for (int j = 0; j < count; ++j) {
             auto degrees = glm::dvec2(ring[j].longitude, ring[j].latitude);
             auto meters = m_mapProjection->LonLatToMeters(degrees);
-            line.emplace_back((meters.x - origin.x) * scale, (meters.y - origin.y) * scale, 0.f);
+            line.emplace_back((meters.x - origin.x) * scale, (meters.y - origin.y) * scale);
         }
         ring += count;
     }

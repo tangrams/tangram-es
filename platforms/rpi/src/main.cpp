@@ -29,7 +29,7 @@ using namespace Tangram;
 Map* map = nullptr;
 std::shared_ptr<RpiPlatform> platform;
 
-std::string mapzenApiKey;
+std::string apiKey;
 
 static bool bUpdate = true;
 
@@ -129,18 +129,29 @@ int main(int argc, char **argv) {
     std::vector<SceneUpdate> updates;
 
     // Get Mapzen API key from environment variables.
-    char* mapzenApiKeyEnvVar = getenv("MAPZEN_API_KEY");
-    if (mapzenApiKeyEnvVar && strlen(mapzenApiKeyEnvVar) > 0) {
-        mapzenApiKey = mapzenApiKeyEnvVar;
-        updates.push_back(SceneUpdate("global.sdk_mapzen_api_key", mapzenApiKey));
+    char* nextzenApiKeyEnvVar = getenv("NEXTZEN_API_KEY");
+    if (nextzenApiKeyEnvVar && strlen(nextzenApiKeyEnvVar) > 0) {
+        apiKey = nextzenApiKeyEnvVar;
+        updates.push_back(SceneUpdate("global.sdk_api_key", apiKey));
     } else {
-        LOGW("No API key found!\n\nMapzen data sources require an API key. "
-             "Sign up for a free key at http://mapzen.com/developers and then set it from the command line with: "
-             "\n\n\texport MAPZEN_API_KEY=YOUR_KEY_HERE\n");
+        LOGW("No API key found!\n\nNextzen data sources require an API key. "
+             "Sign up for a key at https://developers.nextzen.org/about.html and then set it from the command line with: "
+             "\n\n\texport NEXTZEN_API_KEY=YOUR_KEY_HERE\n");
     }
 
+    // Resolve the scene file URL against the current directory.
+    Url baseUrl("file:///");
+    char pathBuffer[PATH_MAX] = {0};
+    if (getcwd(pathBuffer, PATH_MAX) != nullptr) {
+        baseUrl = Url(std::string(pathBuffer) + "/").resolved(baseUrl);
+    }
+
+    LOG("Base URL: %s", baseUrl.string().c_str());
+
+    Url sceneUrl = Url(options.sceneFilePath).resolved(baseUrl);
+
     map = new Map(platform);
-    map->loadScene(options.sceneFilePath.c_str(), !options.hasLocationSet, updates);
+    map->loadScene(sceneUrl.string(), !options.hasLocationSet, updates);
     map->setupGL();
     map->resize(getWindowWidth(), getWindowHeight());
     map->setTilt(options.tilt);

@@ -104,7 +104,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 NS_ASSUME_NONNULL_END
 
-/*
+/**
  Returns whether the usage of this marker resulted in internal errors
 
  @param error a pointer to output error
