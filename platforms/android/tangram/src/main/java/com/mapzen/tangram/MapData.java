@@ -17,7 +17,7 @@ import java.util.Map;
 public class MapData {
 
     String name;
-    long pointer = 0;
+    long pointer;
     MapController map;
 
     /**
