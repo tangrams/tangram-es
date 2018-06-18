@@ -1,24 +1,24 @@
 package com.mapzen.tangram;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.FileNotFoundException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
+import android.os.Build;
+import android.support.annotation.NonNull;
+import android.util.ArrayMap;
+import android.util.SparseArray;
+import android.util.Xml;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import android.os.Build;
-import android.util.ArrayMap;
-import android.util.SparseArray;
-import android.util.Xml;
-import android.support.annotation.NonNull;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 class FontFileParser {
 

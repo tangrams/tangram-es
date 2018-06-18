@@ -7,23 +7,17 @@ import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.os.Build;
 import android.os.Handler;
-import android.support.annotation.IntDef;
 import android.support.annotation.IntRange;
 import android.support.annotation.Keep;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.ArrayMap;
 import android.util.DisplayMetrics;
+import android.util.LongSparseArray;
 
 import com.mapzen.tangram.TouchInput.Gestures;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 import java.io.IOException;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -31,6 +25,11 @@ import java.util.Map;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  * {@code MapController} is the main class for interacting with a Tangram map.
@@ -216,13 +215,11 @@ public class MapController implements Renderer {
      */
     protected MapController(@NonNull final GLSurfaceView view) {
         if (Build.VERSION.SDK_INT > 18) {
-            markers = new ArrayMap<>();
             clientTileSources = new ArrayMap<>();
-        }
-        else {
-            markers = new HashMap<>();
+        } else {
             clientTileSources = new HashMap<>();
         }
+        markers = new LongSparseArray<>();
 
         // Set up MapView
         mapView = view;
@@ -1022,7 +1019,8 @@ public class MapController implements Renderer {
         nativeMarkerRemoveAll(mapPointer);
 
         // Invalidate all markers so their ids are unusable
-        for (final Marker marker : markers.values()) {
+        for (int i = 0; i < markers.size(); i++) {
+            final Marker marker = markers.valueAt(i);
             marker.invalidate();
         }
 
@@ -1301,7 +1299,7 @@ public class MapController implements Renderer {
     private FrameCaptureCallback frameCaptureCallback;
     private boolean frameCaptureAwaitCompleteView;
     private Map<String, MapData> clientTileSources;
-    private Map<Long, Marker> markers; // Consider change to SparseLongArray<Marker> when drop API < 18
+    private LongSparseArray<Marker> markers;
     private Handler uiThreadHandler;
 
     // GLSurfaceView.Renderer methods
