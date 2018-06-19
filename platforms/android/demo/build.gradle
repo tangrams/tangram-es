@@ -6,7 +6,7 @@ android {
   def apiKey = project.hasProperty('nextzenApiKey') ? nextzenApiKey : System.getenv('NEXTZEN_API_KEY')
 
   defaultConfig {
-    minSdkVersion 15
+    minSdkVersion 16
     targetSdkVersion 27
     buildConfigField 'String', 'NEXTZEN_API_KEY', '"' + apiKey + '"'
   }
