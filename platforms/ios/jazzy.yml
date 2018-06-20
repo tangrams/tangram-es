@@ -8,8 +8,8 @@ copyright: '© 2017 [Mapzen](https://www.mapzen.com/).'
 head: |
     <link rel='shortcut icon' href='https://mapzen.com/common/styleguide/images/favicon.ico' type='image/x-icon' />
 objc: Yes
-framework_root: ./src/
+framework_root: ./framework/src
 sdk: iphonesimulator
-umbrella_header: ./framework/TangramMap.h
+umbrella_header: ./framework/src/TangramMap.h
 skip_undocumented: Yes
 #hide_documentation_coverage: Yes
