@@ -7,8 +7,12 @@ set(IOS TRUE)
 set(CMAKE_OSX_SYSROOT "iphoneos")
 set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
 set(CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "9.3")
+execute_process(COMMAND xcrun --sdk iphoneos --show-sdk-version OUTPUT_VARIABLE IOS_SDK_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 # Tell SQLiteCpp to not build its own copy of SQLite, we will use the system library instead.
+if (IOS_SDK_VERSION VERSION_LESS 11.0)
+  set(SQLITE_USE_LEGACY_STRUCT ON CACHE BOOL "")
+endif()
 set(SQLITECPP_INTERNAL_SQLITE OFF CACHE BOOL "")
 
 set(TANGRAM_FRAMEWORK_HEADERS
