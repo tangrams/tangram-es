@@ -22,6 +22,42 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(JNIEnv* jniEnv, jobjectArra
 
 extern "C" {
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetCameraPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble lon, jdouble lat,
+                                                                                         jfloat zoom, jfloat rotation, jfloat tilt, jfloat duration, jint ease) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+
+        CameraPosition camera;
+        camera.longitude = lon;
+        camera.latitude = lat;
+        camera.zoom = zoom;
+        camera.rotation = rotation;
+        camera.tilt = tilt;
+
+        if (duration > 0) {
+            map->setCameraPositionEased(camera, duration, static_cast<Tangram::EaseType>(ease));
+        } else {
+            map->setCameraPosition(camera);
+        }
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetCameraPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray lonLat, jfloatArray zoomRotationTilt) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        jdouble* pos = jniEnv->GetDoubleArrayElements(lonLat, NULL);
+        jfloat* zrt = jniEnv->GetFloatArrayElements(zoomRotationTilt, NULL);
+
+        auto camera = map->getCameraPosition();
+        pos[0] = camera.longitude;
+        pos[1] = camera.latitude;
+        zrt[0] = camera.zoom;
+        zrt[1] = camera.rotation;
+        zrt[2] = camera.tilt;
+
+        jniEnv->ReleaseDoubleArrayElements(lonLat, pos, 0);
+        jniEnv->ReleaseFloatArrayElements(zoomRotationTilt, zrt, 0);
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble lon, jdouble lat) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);

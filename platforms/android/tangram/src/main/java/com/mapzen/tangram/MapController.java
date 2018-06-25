@@ -416,6 +416,64 @@ public class MapController implements Renderer {
     }
 
     /**
+     * Set the camera position of the map view
+     * @param camera CameraPosition to set
+     */
+    public void setCameraPosition(@NonNull final CameraPosition camera) {
+        checkPointer(mapPointer);
+        nativeSetCameraPosition(mapPointer, camera.longitude, camera.latitude, camera.zoom, camera.rotation, camera.tilt, 0.f, 0);
+    }
+
+    /**
+     * Set the camera position of the map view with default easing
+     * @param camera CameraPosition to set
+     * @param duration Time in milliseconds to ease to the given position
+     */
+    public void setCameraPositionEased(@NonNull final CameraPosition camera, final int duration) {
+        setCameraPositionEased(camera, duration, DEFAULT_EASE_TYPE);
+    }
+
+    /**
+     * Set the camera position of the map view with default easing
+     * @param camera CameraPosition to set
+     * @param duration Time in milliseconds to ease to the given position
+     * @param ease Type of easing to use
+     */
+    public void setCameraPositionEased(@NonNull final CameraPosition camera, final int duration, @NonNull final EaseType ease) {
+        checkPointer(mapPointer);
+        final float seconds = duration / 1000.f;
+        nativeSetCameraPosition(mapPointer, camera.longitude, camera.latitude, camera.zoom, camera.rotation, camera.tilt, seconds, ease.ordinal());
+    }
+
+    /**
+     * Get the cameraPosition of the map view
+     * @return The current camera position
+     */
+    @NonNull
+    public CameraPosition getCameraPosition() {
+        return getCameraPosition(new CameraPosition());
+    }
+
+    /**
+     * Get the camera position of the map view
+     * @param out CameraPosition to be reused as the output
+     * @return the current camera position of the map view
+     */
+    @NonNull
+    public CameraPosition getCameraPosition(@NonNull final CameraPosition out) {
+        checkPointer(mapPointer);
+        final double[] pos = { 0, 0 };
+        final float[] zrt = { 0, 0, 0 };
+        nativeGetCameraPosition(mapPointer, pos, zrt);
+        out.longitude = pos[0];
+        out.latitude = pos[1];
+        out.zoom = zrt[0];
+        out.rotation = zrt[1];
+        out.tilt = zrt[2];
+        return out;
+    }
+
+    /**
      * Set the geographic position of the center of the map view
      * @param position LngLat of the position to set
      */
@@ -1215,6 +1273,8 @@ public class MapController implements Renderer {
     private synchronized native void nativeResize(long mapPtr, int width, int height);
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
     private synchronized native void nativeRender(long mapPtr);
+    private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);
+    private synchronized native void nativeSetCameraPosition(long mapPtr, double lon, double lat, float zoom, float rotation, float tilt, float seconds, int ease);
     private synchronized native void nativeSetPosition(long mapPtr, double lon, double lat);
     private synchronized native void nativeSetPositionEased(long mapPtr, double lon, double lat, float seconds, int ease);
     private synchronized native void nativeGetPosition(long mapPtr, double[] lonLatOut);
