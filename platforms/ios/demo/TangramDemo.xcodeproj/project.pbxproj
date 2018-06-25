@@ -15,6 +15,18 @@
 		D298723E20D05F7A009A0AB8 /* Main_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D298723B20D05F7A009A0AB8 /* Main_iPad.storyboard */; };
 		D2DB6A9420DAE14A0043E74F /* TangramMap.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2DB6A9320DAE14A0043E74F /* TangramMap.framework */; };
 		D2DB6A9520DAE1500043E74F /* TangramMap.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D2DB6A9320DAE14A0043E74F /* TangramMap.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D2F0603520E6E01700CB442F /* AppDelegate.h in Sources */ = {isa = PBXBuildFile; fileRef = D298723020D05F6E009A0AB8 /* AppDelegate.h */; };
+		D2F0603620E6E01700CB442F /* MapViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D298723120D05F6E009A0AB8 /* MapViewController.m */; };
+		D2F0603720E6E01700CB442F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = D298723220D05F6E009A0AB8 /* main.m */; };
+		D2F0603820E6E01700CB442F /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D298723320D05F6E009A0AB8 /* AppDelegate.m */; };
+		D2F0603920E6E01700CB442F /* MapViewController.h in Sources */ = {isa = PBXBuildFile; fileRef = D298723420D05F6E009A0AB8 /* MapViewController.h */; };
+		D2F0603B20E6E31200CB442F /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D2F0603A20E6E31200CB442F /* libsqlite3.tbd */; };
+		D2F0603D20E6E32200CB442F /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D2F0603C20E6E32200CB442F /* libz.tbd */; };
+		D2F0603F20E6E33300CB442F /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D2F0603E20E6E33300CB442F /* libc++.tbd */; };
+		D2F0604320EA9AD000CB442F /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = D298723920D05F7A009A0AB8 /* LaunchScreen.xib */; };
+		D2F0604420EA9AD000CB442F /* Main_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D298723A20D05F7A009A0AB8 /* Main_iPhone.storyboard */; };
+		D2F0604520EA9AD000CB442F /* Main_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D298723B20D05F7A009A0AB8 /* Main_iPad.storyboard */; };
+		D2F0604720EACEB700CB442F /* libtangram-static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D2F0604620EACEB700CB442F /* libtangram-static.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -42,6 +54,11 @@
 		D298723B20D05F7A009A0AB8 /* Main_iPad.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main_iPad.storyboard; sourceTree = "<group>"; };
 		D298723F20D05F88009A0AB8 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D2DB6A9320DAE14A0043E74F /* TangramMap.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TangramMap.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D2F0601F20E6DFAF00CB442F /* TangramDemo-static.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TangramDemo-static.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D2F0603A20E6E31200CB442F /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		D2F0603C20E6E32200CB442F /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		D2F0603E20E6E33300CB442F /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
+		D2F0604620EACEB700CB442F /* libtangram-static.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = "libtangram-static.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,12 +70,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D2F0601C20E6DFAF00CB442F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D2F0604720EACEB700CB442F /* libtangram-static.a in Frameworks */,
+				D2F0603F20E6E33300CB442F /* libc++.tbd in Frameworks */,
+				D2F0603D20E6E32200CB442F /* libz.tbd in Frameworks */,
+				D2F0603B20E6E31200CB442F /* libsqlite3.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		D235656F20D9BA77006E3D13 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D2F0604620EACEB700CB442F /* libtangram-static.a */,
+				D2F0603E20E6E33300CB442F /* libc++.tbd */,
+				D2F0603C20E6E32200CB442F /* libz.tbd */,
+				D2F0603A20E6E31200CB442F /* libsqlite3.tbd */,
 				D2DB6A9320DAE14A0043E74F /* TangramMap.framework */,
 			);
 			name = Frameworks;
@@ -79,6 +111,7 @@
 			isa = PBXGroup;
 			children = (
 				D298721620D05D8E009A0AB8 /* TangramDemo.app */,
+				D2F0601F20E6DFAF00CB442F /* TangramDemo-static.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -126,6 +159,23 @@
 			productReference = D298721620D05D8E009A0AB8 /* TangramDemo.app */;
 			productType = "com.apple.product-type.application";
 		};
+		D2F0601E20E6DFAF00CB442F /* TangramDemo-static */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D2F0603220E6DFB200CB442F /* Build configuration list for PBXNativeTarget "TangramDemo-static" */;
+			buildPhases = (
+				D2F0601B20E6DFAF00CB442F /* Sources */,
+				D2F0601C20E6DFAF00CB442F /* Frameworks */,
+				D2F0601D20E6DFAF00CB442F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "TangramDemo-static";
+			productName = "TangramDemo-static";
+			productReference = D2F0601F20E6DFAF00CB442F /* TangramDemo-static.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -137,6 +187,10 @@
 				TargetAttributes = {
 					D298721520D05D8E009A0AB8 = {
 						CreatedOnToolsVersion = 9.3;
+						ProvisioningStyle = Automatic;
+					};
+					D2F0601E20E6DFAF00CB442F = {
+						CreatedOnToolsVersion = 9.4.1;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -155,6 +209,7 @@
 			projectRoot = "";
 			targets = (
 				D298721520D05D8E009A0AB8 /* TangramDemo */,
+				D2F0601E20E6DFAF00CB442F /* TangramDemo-static */,
 			);
 		};
 /* End PBXProject section */
@@ -170,6 +225,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D2F0601D20E6DFAF00CB442F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D2F0604320EA9AD000CB442F /* LaunchScreen.xib in Resources */,
+				D2F0604420EA9AD000CB442F /* Main_iPhone.storyboard in Resources */,
+				D2F0604520EA9AD000CB442F /* Main_iPad.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -180,6 +245,18 @@
 				D298723620D05F6F009A0AB8 /* main.m in Sources */,
 				D298723520D05F6F009A0AB8 /* MapViewController.m in Sources */,
 				D298723720D05F6F009A0AB8 /* AppDelegate.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D2F0601B20E6DFAF00CB442F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D2F0603520E6E01700CB442F /* AppDelegate.h in Sources */,
+				D2F0603620E6E01700CB442F /* MapViewController.m in Sources */,
+				D2F0603720E6E01700CB442F /* main.m in Sources */,
+				D2F0603820E6E01700CB442F /* AppDelegate.m in Sources */,
+				D2F0603920E6E01700CB442F /* MapViewController.h in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -329,6 +406,42 @@
 			};
 			name = Release;
 		};
+		D2F0603320E6DFB200CB442F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				HEADER_SEARCH_PATHS = ../../../build/ios/Include;
+				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				OTHER_LDFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mapzen.ios.TangramDemo-static";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SYMROOT = ../../../build/ios;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D2F0603420E6DFB200CB442F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				HEADER_SEARCH_PATHS = ../../../build/ios/Include;
+				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				OTHER_LDFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mapzen.ios.TangramDemo-static";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SYMROOT = ../../../build/ios;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -346,6 +459,15 @@
 			buildConfigurations = (
 				D298722D20D05D91009A0AB8 /* Debug */,
 				D298722E20D05D91009A0AB8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D2F0603220E6DFB200CB442F /* Build configuration list for PBXNativeTarget "TangramDemo-static" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D2F0603320E6DFB200CB442F /* Debug */,
+				D2F0603420E6DFB200CB442F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
