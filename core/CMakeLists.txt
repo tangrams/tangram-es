@@ -156,10 +156,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   )
 endif()
 
-set_target_properties(tangram-core
-  PROPERTIES
-  CXX_STANDARD 14
-  CXX_STANDARD_REQUIRED ON
+# C++14 is required for compiling tangram-core and for using the interface headers.
+# Making this option PUBLIC declares it as a requirement for targets linking against tangram-core.
+target_compile_options(tangram-core
+  PUBLIC -std=c++14
 )
 
 # make groups for xcode
