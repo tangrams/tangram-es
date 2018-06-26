@@ -35,7 +35,7 @@ jobs:
       - run: sudo gem install jazzy --no-document
       - run: brew install cmake
       # Build framework and docs.
-      - run: make ios TANGRAM_IOS_FRAMEWORK_SLIM=1
+      - run: make ios-sim
       - run: make ios-docs
   build-deploy-ios-snapshot:
     macos:
@@ -51,7 +51,7 @@ jobs:
       - run: make ios-framework-universal DEBUG=1
       - run: make ios-docs
       # To produce the intended structure within the zip archive, we must cd to each file's location.
-      - run: cd build/ios-framework-universal/Debug && zip -r ~/pod.zip TangramMap.framework
+      - run: cd build/ios/Debug-universal && zip -r ~/pod.zip TangramMap.framework
       # Add the readme and license files.
       - run: cd platforms/ios/framework && zip ~/pod.zip README.md
       - run: zip ~/pod.zip LICENSE
@@ -86,7 +86,7 @@ jobs:
       - run: make ios-framework-universal RELEASE=1
       - run: make ios-docs
       # To produce the intended structure within the zip archive, we must cd to each file's location.
-      - run: cd build/ios-framework-universal/Release && zip -r ~/pod.zip TangramMap.framework
+      - run: cd build/ios/Release-universal && zip -r ~/pod.zip TangramMap.framework
       # Add the readme and license files.
       - run: cd platforms/ios/framework && zip ~/pod.zip README.md
       - run: zip ~/pod.zip LICENSE
