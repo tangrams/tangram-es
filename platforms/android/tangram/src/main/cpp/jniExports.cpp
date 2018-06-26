@@ -163,6 +163,10 @@ extern "C" {
         map->setSceneReadyListener([platform](Tangram::SceneID id, const Tangram::SceneError* error) {
             platform->sceneReadyCallback(id, error);
         });
+        map->setCameraAnimationListener([platform](bool success) {
+            platform->cameraAnimationCallback(success);
+        });
+
         return reinterpret_cast<jlong>(map);
     }
 

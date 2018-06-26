@@ -94,6 +94,7 @@ public:
     std::vector<SelectionQuery> selectionQueries;
 
     SceneReadyCallback onSceneReady = nullptr;
+    CameraAnimationCallback cameraAnimationListener = nullptr;
 
     void sceneLoadBegin() {
         sceneLoadTasks++;
@@ -116,7 +117,12 @@ void Map::Impl::setEase(EaseField _f, Ease _e) {
 void Map::Impl::clearEase(EaseField _f) {
     static Ease none = {};
     if (!eases[static_cast<size_t>(EaseField::camera)].finished()) {
+        //
         for (auto& e : eases) { e = none; }
+
+        if (cameraAnimationListener) {
+            cameraAnimationListener(false);
+        }
     } else {
         eases[static_cast<size_t>(_f)] = none;
     }
@@ -309,6 +315,10 @@ void Map::setSceneReadyListener(SceneReadyCallback _onSceneReady) {
     impl->onSceneReady = _onSceneReady;
 }
 
+void Map::setCameraAnimationListener(CameraAnimationCallback _cb) {
+    impl->cameraAnimationListener = _cb;
+}
+
 std::shared_ptr<Platform>& Map::getPlatform() {
     return platform;
 }
@@ -411,11 +421,18 @@ bool Map::update(float _dt) {
     bool viewComplete = true;
     bool markersNeedUpdate = false;
 
+    bool easeFinished = false;
     for (auto& ease : impl->eases) {
         if (!ease.finished()) {
             ease.update(_dt);
             viewComplete = false;
+            if (ease.finished()) {
+                easeFinished = true;
+            }
         }
+    }
+    if (easeFinished && impl->cameraAnimationListener) {
+        impl->cameraAnimationListener(true);
     }
 
     impl->inputHandler.update(_dt);
@@ -605,16 +622,17 @@ CameraPosition Map::getCameraPosition() {
     return camera;
 }
 
-void Map::cancelCameraEase() {
+void Map::cancelCameraAnimation() {
+
+    impl->clearEase(EaseField::camera);
     impl->clearEase(EaseField::position);
     impl->clearEase(EaseField::zoom);
     impl->clearEase(EaseField::rotation);
     impl->clearEase(EaseField::tilt);
-    impl->clearEase(EaseField::camera);
 }
 
 void Map::setCameraPosition(const CameraPosition& _camera) {
-    cancelCameraEase();
+    cancelCameraAnimation();
 
     impl->setPositionNow(_camera.longitude, _camera.latitude);
     impl->setZoomNow(_camera.zoom);
@@ -623,7 +641,7 @@ void Map::setCameraPosition(const CameraPosition& _camera) {
 }
 
 void Map::setCameraPositionEased(const CameraPosition& _camera, float _duration, EaseType _e) {
-    cancelCameraEase();
+    cancelCameraAnimation();
 
     double lonStart, latStart;
     getPosition(lonStart, latStart);
@@ -744,7 +762,7 @@ void Map::flyTo(double _lon, double _lat, float _z, float _duration, float _spee
 
     float duration = _duration > 0 ? _duration : distance / _speed;
 
-    cancelCameraEase();
+    cancelCameraAnimation();
     impl->setEase(EaseField::camera, { duration, cb });
 
 }

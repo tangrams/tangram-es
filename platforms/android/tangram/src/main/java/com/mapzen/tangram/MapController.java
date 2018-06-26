@@ -158,6 +158,11 @@ public class MapController implements Renderer {
         void onSceneReady(final int sceneId, final SceneError sceneError);
     }
 
+    public interface CameraAnimationCallback {
+        void onFinish();
+        void onCancel();
+    }
+
     /**
      * Callback for {@link #captureFrame(FrameCaptureCallback, boolean) }
      */
@@ -430,7 +435,17 @@ public class MapController implements Renderer {
      * @param duration Time in milliseconds to ease to the given position
      */
     public void setCameraPositionEased(@NonNull final CameraPosition camera, final int duration) {
-        setCameraPositionEased(camera, duration, DEFAULT_EASE_TYPE);
+        setCameraPositionEased(camera, duration, DEFAULT_EASE_TYPE, null);
+    }
+
+    /**
+     * Set the camera position of the map view with default easing
+     * @param camera CameraPosition to set
+     * @param duration Time in milliseconds to ease to the given position
+     * @param cb callback for handling animation finished or canceled event
+     */
+    public void setCameraPositionEased(@NonNull final CameraPosition camera, final int duration, final CameraAnimationCallback cb) {
+        setCameraPositionEased(camera, duration, DEFAULT_EASE_TYPE, cb);
     }
 
     /**
@@ -440,7 +455,25 @@ public class MapController implements Renderer {
      * @param ease Type of easing to use
      */
     public void setCameraPositionEased(@NonNull final CameraPosition camera, final int duration, @NonNull final EaseType ease) {
+        setCameraPositionEased(camera, duration, ease, null);
+    }
+
+    /**
+     * Set the camera position of the map view with default easing
+     * @param camera CameraPosition to set
+     * @param duration Time in milliseconds to ease to the given position
+     * @param ease Type of easing to use
+     * @param cb callback for handling animation finished or canceled event
+     */
+    public void setCameraPositionEased(@NonNull final CameraPosition camera, final int duration, @NonNull final EaseType ease, final CameraAnimationCallback cb) {
         checkPointer(mapPointer);
+
+        if (cameraAnimationCallback != null) {
+            cameraAnimationCallback.onCancel();
+            cameraAnimationCallback = null;
+        }
+        cameraAnimationCallback = cb;
+
         final float seconds = duration / 1000.f;
         nativeSetCameraPosition(mapPointer, camera.longitude, camera.latitude, camera.zoom, camera.rotation, camera.tilt, seconds, ease.ordinal());
     }
@@ -1355,6 +1388,7 @@ public class MapController implements Renderer {
     private Map<String, MapData> clientTileSources;
     private LongSparseArray<Marker> markers;
     private Handler uiThreadHandler;
+    private CameraAnimationCallback cameraAnimationCallback;
 
     // GLSurfaceView.Renderer methods
     // ==============================
@@ -1486,6 +1520,27 @@ public class MapController implements Renderer {
                 @Override
                 public void run() {
                     cb.onSceneReady(sceneId, error);
+                }
+            });
+        }
+    }
+
+    // Called from JNI on worker or render-thread.
+    @Keep
+    void cameraAnimationCallback(final boolean finished) {
+
+        final CameraAnimationCallback cb = cameraAnimationCallback;
+        if (cb != null) {
+            cameraAnimationCallback = null;
+
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (finished) {
+                        cb.onFinish();
+                    } else {
+                        cb.onCancel();
+                    }
                 }
             });
         }

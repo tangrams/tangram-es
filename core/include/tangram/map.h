@@ -83,6 +83,8 @@ using SceneID = int32_t;
 // Function type for a sceneReady callback
 using SceneReadyCallback = std::function<void(SceneID id, const SceneError*)>;
 
+using CameraAnimationCallback = std::function<void(bool finished)>;
+
 enum class EaseType : char {
     linear = 0,
     cubic,
@@ -136,6 +138,8 @@ public:
     // of the loaded scene and SceneError in case loading was not successful.
     // The callback may be be called from the main or worker thread.
     void setSceneReadyListener(SceneReadyCallback _onSceneReady);
+
+    void setCameraAnimationListener(CameraAnimationCallback _cb);
 
     // Set an MBTiles SQLite database file for a DataSource in the scene.
     void setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath);
@@ -230,7 +234,7 @@ public:
 
     void setCameraPositionEased(const CameraPosition& _camera, float duration, EaseType _e = EaseType::quint);
 
-    void cancelCameraEase();
+    void cancelCameraAnimation();
 
     // Given coordinates in screen space (x right, y down), set the output longitude and
     // latitude to the geographic location corresponding to that point; returns false if

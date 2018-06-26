@@ -54,6 +54,7 @@ static jmethodID labelPickResultInitMID = 0;
 static jmethodID markerPickResultInitMID = 0;
 static jmethodID sceneReadyCallbackMID = 0;
 static jmethodID sceneErrorInitMID = 0;
+static jmethodID cameraAnimationCallbackMID = 0;
 
 static jclass labelPickResultClass = nullptr;
 static jclass sceneErrorClass = nullptr;
@@ -82,6 +83,7 @@ void AndroidPlatform::setupJniEnv(JNIEnv* jniEnv) {
     requestRenderMethodID = jniEnv->GetMethodID(tangramClass, "requestRender", "()V");
     setRenderModeMethodID = jniEnv->GetMethodID(tangramClass, "setRenderMode", "(I)V");
     sceneReadyCallbackMID = jniEnv->GetMethodID(tangramClass, "sceneReadyCallback", "(ILcom/mapzen/tangram/SceneError;)V");
+    cameraAnimationCallbackMID = jniEnv->GetMethodID(tangramClass, "cameraAnimationCallback", "(Z)V");
 
     jclass featurePickListenerClass = jniEnv->FindClass("com/mapzen/tangram/MapController$FeaturePickListener");
     onFeaturePickMID = jniEnv->GetMethodID(featurePickListenerClass, "onFeaturePick", "(Ljava/util/Map;FF)V");
@@ -497,6 +499,11 @@ void AndroidPlatform::sceneReadyCallback(SceneID id, const SceneError* sceneErro
     }
 
     jniEnv->CallVoidMethod(m_tangramInstance, sceneReadyCallbackMID, id, jUpdateErrorStatus);
+}
+
+void AndroidPlatform::cameraAnimationCallback(bool finished) {
+    JniThreadBinding jniEnv(jvm);
+    jniEnv->CallVoidMethod(m_tangramInstance, cameraAnimationCallbackMID, finished);
 }
 
 } // namespace Tangram
