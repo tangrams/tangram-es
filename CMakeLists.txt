@@ -28,18 +28,19 @@ endif()
 include(cmake/utils.cmake)
 
 # Configure platform target.
-set(TANGRAM_PLATFORM_CONFIG_FILE "platforms/${TANGRAM_PLATFORM}/config.cmake")
-if(EXISTS "${PROJECT_SOURCE_DIR}/${TANGRAM_PLATFORM_CONFIG_FILE}")
-  message(STATUS "Including platform CMake config file: ${TANGRAM_PLATFORM_CONFIG_FILE}")
-else()
-  message(SEND_ERROR "Cannot find CMake config file for platform: ${TANGRAM_PLATFORM}. Looked for: ${TANGRAM_PLATFORM_CONFIG_FILE}")
-  return()
+if(TANGRAM_PLATFORM)
+  set(TANGRAM_PLATFORM_CONFIG_FILE "platforms/${TANGRAM_PLATFORM}/config.cmake")
+  if(EXISTS "${PROJECT_SOURCE_DIR}/${TANGRAM_PLATFORM_CONFIG_FILE}")
+    message(STATUS "Including platform CMake config file: ${TANGRAM_PLATFORM_CONFIG_FILE}")
+  else()
+    message(SEND_ERROR "Cannot find CMake config file for platform: ${TANGRAM_PLATFORM}. Looked for: ${TANGRAM_PLATFORM_CONFIG_FILE}")
+    return()
+  endif()
+  # Cache platform target.
+  set(TANGRAM_PLATFORM ${TANGRAM_PLATFORM} CACHE INTERNAL "Tangram platform target" FORCE)
+  # Include the platform config file.
+  include(${TANGRAM_PLATFORM_CONFIG_FILE})
 endif()
-
-# Cache platform target.
-set(TANGRAM_PLATFORM ${TANGRAM_PLATFORM} CACHE INTERNAL "Tangram platform target" FORCE)
-
-include(${TANGRAM_PLATFORM_CONFIG_FILE})
 
 # Add core library.
 add_subdirectory(core)
