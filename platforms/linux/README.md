@@ -3,7 +3,7 @@ Ubuntu or Debian Linux
 
 ## Setup ##
 
-This project uses CMake (minimum version 3.0), you can download it [here](http://www.cmake.org/download/) or install it with apt-get.
+This project uses CMake (minimum version 3.2), you can download it [here](http://www.cmake.org/download/) or install it with apt-get.
 
 ```bash
 sudo apt-get install cmake
@@ -68,7 +68,7 @@ sudo apt-get install libglfw3-dev libicu-dev libfreetype6-dev libharfbuzz-dev
 Then compile with the following options:
 
 ```bash
-CMAKE_OPTIONS=" -DUSE_SYSTEM_GLFW_LIBS=1 -DUSE_SYSTEM_FONT_LIBS=1" make linux
+make linux CMAKE_OPTIONS="-DUSE_SYSTEM_GLFW_LIBS=1 -DUSE_SYSTEM_FONT_LIBS=1"
 ```
 
 ### CLion ###
