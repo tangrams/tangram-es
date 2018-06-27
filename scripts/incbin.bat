@@ -1,6 +1,6 @@
 : incbin - A utility for including binary files in C source.
 :          Given a binary file and a C symbol name, generates
-:          a .h or .c file with that binary data stored as an
+:          a .h or .c file with that binary data stored as an 
 :          array of unsigned chars.
 :
 :          This script has no non-standard dependencies and runs
@@ -13,7 +13,6 @@
 : UNIX:    sh incbin.bat myfile.bin output.h symbolname
 :
 :          ; if false ; then #lolwut
-#!/bin/bash
 
 <!--- : Begin batch script ---
 
@@ -115,9 +114,9 @@ bytes=`od -An -t x1 -v "$1"`
 			printf "/*%08x*/ " $offset
 			count=0
 		else
-			printf ,
+			echo -n ,
 		fi
-		printf 0x$val
+		echo -n 0x$val
 
 		offset=$(($offset+1)) ; count=$(($count+1))
 	done
