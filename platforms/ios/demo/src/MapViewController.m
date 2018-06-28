@@ -185,15 +185,16 @@
 
 - (void)viewWillAppear:(BOOL)animated
 {
-    NSString* configPListPath = [[NSBundle mainBundle] pathForResource: @"Config" ofType: @"plist"];
-    NSMutableDictionary* configDict =[[NSMutableDictionary alloc] initWithContentsOfFile:configPListPath];
-    NSString* apiKey = [configDict valueForKey:@"NextzenApiKey"];
+    NSString* apiKey = [[[NSBundle mainBundle] infoDictionary] valueForKey:@"NEXTZEN_API_KEY"];
+    if ([apiKey length] == 0) {
+        apiKey = [[[NSProcessInfo processInfo] environment] valueForKeyPath:@"NEXTZEN_API_KEY"];
+    }
     NSAssert(apiKey, @"Please provide a valid API key by setting the environment variable NEXTZEN_API_KEY at build time");
 
     NSMutableArray<TGSceneUpdate *>* updates = [[NSMutableArray alloc]init];
     [updates addObject:[[TGSceneUpdate alloc]initWithPath:@"global.sdk_api_key" value:apiKey]];
 
-    [super loadSceneAsyncFromURL:[NSURL URLWithString:@"https://tangrams.github.io/walkabout-style/walkabout-style.yaml"] withUpdates:updates];
+    [super loadSceneAsyncFromURL:[NSURL URLWithString:@"https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip"] withUpdates:updates];
 
     //Location tracking marker setup
     TGMarker* markerPoint = [self markerAdd];

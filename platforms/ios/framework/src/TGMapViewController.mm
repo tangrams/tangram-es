@@ -115,7 +115,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 - (BOOL)removeDataSource:(std::shared_ptr<Tangram::TileSource>)tileSource name:(NSString *)name
 {
-    if (!self.map || !tileSource) { return; }
+    if (!self.map || !tileSource) { return NO; }
 
     [self.dataLayersByName removeObjectForKey:name];
     return self.map->removeTileSource(*tileSource);

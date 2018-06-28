@@ -1,5 +1,4 @@
 #include "glfwApp.h"
-#include "debug/textDisplay.h"
 #include <GLFW/glfw3.h>
 #include <cstdlib>
 
