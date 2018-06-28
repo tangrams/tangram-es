@@ -206,6 +206,8 @@ endif
 	@cd platforms/ios && \
 	jazzy --config jazzy.yml
 
+# This rule includes steps to copy necessary workspace settings into a user-specific location in the iOS workspace.
+# See platforms/ios/DEVELOPING.md for details.
 cmake-ios:
 	cmake -H. -B${IOS_BUILD_DIR} ${IOS_CMAKE_PARAMS}
 	@mkdir -p platforms/ios/Tangram.xcworkspace/xcuserdata/${USER}.xcuserdatad
