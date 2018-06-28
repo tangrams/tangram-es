@@ -69,7 +69,7 @@ jobs:
       # Build the MacOS demo app and package it into demo.zip
       - run: make osx -j 2 MACOSX_DEPLOYMENT_TARGET=10.10.0
       # To produce the intended structure within the zip archive, we must cd to each file's location.
-      - run: cd build/osx/bin && zip -r ~/demo.zip tangram.app
+      - run: cd build/osx && zip -r ~/demo.zip tangram.app
       - store_artifacts:
           path: ~/demo.zip
   build-deploy-ios-release:
