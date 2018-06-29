@@ -55,9 +55,8 @@ else
 endif
 
 # Default build type is Release
-BUILD_TYPE = Release
-ifdef DEBUG
-	BUILD_TYPE = Debug
+ifndef BUILD_TYPE
+	BUILD_TYPE = Release
 endif
 
 BENCH_CMAKE_PARAMS = \
