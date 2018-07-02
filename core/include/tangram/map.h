@@ -178,49 +178,37 @@ public:
     // Each unsigned int corresponds to an RGBA pixel value
     void captureSnapshot(unsigned int* _data);
 
-    // Set the position of the map view in degrees longitude and latitude; if duration
-    // (in seconds) is provided, position eases to the set value over the duration;
-    // calling either version of the setter overrides all previous calls
+    // Set the position of the map view in degrees longitude and latitude
     void setPosition(double _lon, double _lat);
-    void setPositionEased(double _lon, double _lat, float _duration, EaseType _e = EaseType::quint);
 
     // Set the values of the arguments to the position of the map view in degrees
     // longitude and latitude
     void getPosition(double& _lon, double& _lat);
 
-    // Set the fractional zoom level of the view; if duration (in seconds) is provided,
-    // zoom eases to the set value over the duration; calling either version of the setter
-    // overrides all previous calls
+    // Set the fractional zoom level of the view
     void setZoom(float _z);
-    void setZoomEased(float _z, float _duration, EaseType _e = EaseType::quint);
-
-    // Run flight animation to change postion and zoom  of the map
-    // If _duration is 0, speed is used as factor to change the duration that is
-    // calculated for the duration of the flight path. (Recommended range 0.1 - 2.0)
-    void flyTo(double _lon, double _lat, float _z, float _duration, float _speed = 1.0f);
 
     // Get the fractional zoom level of the view
     float getZoom();
 
     // Set the counter-clockwise rotation of the view in radians; 0 corresponds to
-    // North pointing up; if duration (in seconds) is provided, rotation eases to the
-    // the set value over the duration; calling either version of the setter overrides
-    // all previous calls
+    // North pointing up
     void setRotation(float _radians);
-    void setRotationEased(float _radians, float _duration, EaseType _e = EaseType::quint);
 
     // Get the counter-clockwise rotation of the view in radians; 0 corresponds to
     // North pointing up
     float getRotation();
 
-    // Set the tilt angle of the view in radians; 0 corresponds to straight down;
-    // if duration (in seconds) is provided, tilt eases to the set value over the
-    // duration; calling either version of the setter overrides all previous calls
+    // Set the tilt angle of the view in radians; 0 corresponds to straight down
     void setTilt(float _radians);
-    void setTiltEased(float _radians, float _duration, EaseType _e = EaseType::quint);
 
     // Get the tilt angle of the view in radians; 0 corresponds to straight down
     float getTilt();
+
+    // Run flight animation to change postion and zoom  of the map
+    // If _duration is 0, speed is used as factor to change the duration that is
+    // calculated for the duration of the flight path. (Recommended range 0.1 - 2.0)
+    void flyTo(double _lon, double _lat, float _z, float _duration, float _speed = 1.0f);
 
     // Set the camera type (0 = perspective, 1 = isometric, 2 = flat)
     void setCameraType(int _type);

@@ -532,8 +532,10 @@ public class MapController implements Renderer {
      */
     public void setPositionEased(@NonNull final LngLat position, final int duration, @NonNull final EaseType ease) {
         checkPointer(mapPointer);
-        final float seconds = duration / 1000.f;
-        nativeSetPositionEased(mapPointer, position.longitude, position.latitude, seconds, ease.ordinal());
+        CameraPosition cameraPosition = getCameraPosition();
+        cameraPosition.longitude = position.longitude;
+        cameraPosition.latitude = position.latitude;
+        setCameraPositionEased(cameraPosition, duration, ease);
     }
 
     /**
@@ -584,8 +586,9 @@ public class MapController implements Renderer {
      */
     public void setZoomEased(final float zoom, final int duration, @NonNull final EaseType ease) {
         checkPointer(mapPointer);
-        final float seconds = duration / 1000.f;
-        nativeSetZoomEased(mapPointer, zoom, seconds, ease.ordinal());
+        CameraPosition cameraPosition = getCameraPosition();
+        cameraPosition.zoom = zoom;
+        setCameraPositionEased(cameraPosition, duration, ease);
     }
 
     /**
@@ -623,8 +626,9 @@ public class MapController implements Renderer {
      */
     public void setRotationEased(final float rotation, final int duration, @NonNull final EaseType ease) {
         checkPointer(mapPointer);
-        final float seconds = duration / 1000.f;
-        nativeSetRotationEased(mapPointer, rotation, seconds, ease.ordinal());
+        CameraPosition cameraPosition = getCameraPosition();
+        cameraPosition.rotation = rotation;
+        setCameraPositionEased(cameraPosition, duration, ease);
     }
 
     /**
@@ -662,8 +666,9 @@ public class MapController implements Renderer {
      */
     public void setTiltEased(final float tilt, final int duration, @NonNull final EaseType ease) {
         checkPointer(mapPointer);
-        final float seconds = duration / 1000.f;
-        nativeSetTiltEased(mapPointer, tilt, seconds, ease.ordinal());
+        CameraPosition cameraPosition = getCameraPosition();
+        cameraPosition.tilt = tilt;
+        setCameraPositionEased(cameraPosition, duration, ease);
     }
 
     /**
@@ -1309,16 +1314,12 @@ public class MapController implements Renderer {
     private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);
     private synchronized native void nativeSetCameraPosition(long mapPtr, double lon, double lat, float zoom, float rotation, float tilt, float seconds, int ease);
     private synchronized native void nativeSetPosition(long mapPtr, double lon, double lat);
-    private synchronized native void nativeSetPositionEased(long mapPtr, double lon, double lat, float seconds, int ease);
     private synchronized native void nativeGetPosition(long mapPtr, double[] lonLatOut);
     private synchronized native void nativeSetZoom(long mapPtr, float zoom);
-    private synchronized native void nativeSetZoomEased(long mapPtr, float zoom, float seconds, int ease);
     private synchronized native float nativeGetZoom(long mapPtr);
     private synchronized native void nativeSetRotation(long mapPtr, float radians);
-    private synchronized native void nativeSetRotationEased(long mapPtr, float radians, float seconds, int ease);
     private synchronized native float nativeGetRotation(long mapPtr);
     private synchronized native void nativeSetTilt(long mapPtr, float radians);
-    private synchronized native void nativeSetTiltEased(long mapPtr, float radians, float seconds, int ease);
     private synchronized native float nativeGetTilt(long mapPtr);
     private synchronized native void nativeFlyTo(long mapPtr, double lon, double lat, float zoom, float duration, float speed);
     private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);

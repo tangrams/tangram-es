@@ -250,11 +250,12 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
         Tangram::LngLat tapped, current;
         map->screenPositionToLngLat(x, y, &tapped.longitude, &tapped.latitude);
         map->getPosition(current.longitude, current.latitude);
-        map->setZoomEased(map->getZoom() + 1.f, duration, EaseType::quint);
-        map->setPositionEased(
-            0.5 * (tapped.longitude + current.longitude),
-            0.5 * (tapped.latitude + current.latitude),
-            duration, EaseType::quint);
+        auto pos = map->getCameraPosition();
+        pos.zoom += 1.f;
+        pos.longitude = 0.5 * (tapped.longitude + current.longitude);
+        pos.latitude = 0.5 * (tapped.latitude + current.latitude);
+
+        map->setCameraPositionEased(pos, duration, EaseType::quint);
     } else if ((time - last_time_pressed) < single_tap_time) {
         // Single tap recognized
         Tangram::LngLat p;
@@ -407,12 +408,18 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             case GLFW_KEY_R:
                 loadSceneFile();
                 break;
-            case GLFW_KEY_Z:
-                map->setZoomEased(map->getZoom() + 1.f, 1.5f);
+            case GLFW_KEY_Z: {
+                auto pos = map->getCameraPosition();
+                pos.zoom += 1.f;
+                map->setCameraPositionEased(pos, 1.5f);
                 break;
-            case GLFW_KEY_N:
-                map->setRotationEased(0.f, 1.f);
+            }
+            case GLFW_KEY_N: {
+                auto pos = map->getCameraPosition();
+                pos.rotation = 0.f;
+                map->setCameraPositionEased(pos, 1.f);
                 break;
+            }
             case GLFW_KEY_S:
                 if (pixel_scale == 1.0) {
                     pixel_scale = 2.0;

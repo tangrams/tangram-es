@@ -64,12 +64,6 @@ extern "C" {
         map->setPosition(lon, lat);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetPositionEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble lon, jdouble lat, jfloat duration, jint ease) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setPositionEased(lon, lat, duration, static_cast<Tangram::EaseType>(ease));
-    }
-
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray lonLat) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
@@ -84,12 +78,6 @@ extern "C" {
         map->setZoom(zoom);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetZoomEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat zoom, jfloat duration, jint ease) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setZoomEased(zoom, duration, static_cast<Tangram::EaseType>(ease));
-    }
-
     JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_nativeGetZoom(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
@@ -102,11 +90,6 @@ extern "C" {
         map->setRotation(radians);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetRotationEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat radians, jfloat duration, jint ease) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setRotationEased(radians, duration, static_cast<Tangram::EaseType>(ease));
-    }
 
     JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_nativeGetRotation(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
         assert(mapPtr > 0);
@@ -118,12 +101,6 @@ extern "C" {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         map->setTilt(radians);
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetTiltEased(JNIEnv* jniEnv, jobject obj,  jlong mapPtr, jfloat radians, jfloat duration, jint ease) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setTiltEased(radians, duration, static_cast<Tangram::EaseType>(ease));
     }
 
     JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_nativeGetTilt(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
