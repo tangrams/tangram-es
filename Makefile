@@ -51,7 +51,7 @@ IOS_FRAMEWORK_XCODE_PROJ = tangram.xcodeproj
 ifeq (, $(shell which xcpretty))
 	XCPRETTY =
 else
-	XCPRETTY = | xcpretty
+	XCPRETTY = | xcpretty && exit \${PIPESTATUS[0]}
 endif
 
 # Default build type is Release
