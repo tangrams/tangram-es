@@ -226,12 +226,18 @@ ios-framework-universal: ios-framework ios-framework-sim
 		-create -output ${IOS_BUILD_DIR}/${BUILD_TYPE}-universal/TangramMap.framework/TangramMap
 
 ios-static: cmake-ios
-	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme tangram-static -configuration ${BUILD_TYPE} -sdk iphoneos ${XCPRETTY}
+	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo-static -configuration ${BUILD_TYPE} -sdk iphoneos ${XCPRETTY}
 
 ios-static-sim: cmake-ios
+	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo-static -configuration ${BUILD_TYPE} -sdk iphonesimulator ${XCPRETTY}
+
+ios-static-lib: cmake-ios
+	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme tangram-static -configuration ${BUILD_TYPE} -sdk iphoneos ${XCPRETTY}
+
+ios-static-lib-sim: cmake-ios
 	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme tangram-static -configuration ${BUILD_TYPE} -sdk iphonesimulator ${XCPRETTY}
 
-ios-static-universal: ios-static ios-static-sim
+ios-static-lib-universal: ios-static-lib ios-static-lib-sim
 	@mkdir -p ${IOS_BUILD_DIR}/${BUILD_TYPE}-universal
 	lipo ${IOS_BUILD_DIR}/${BUILD_TYPE}-iphoneos/libtangram-static.a \
 		${IOS_BUILD_DIR}/${BUILD_TYPE}-iphonesimulator/libtangram-static.a \
