@@ -36,6 +36,7 @@ jobs:
       - run: brew install cmake
       # Build framework and docs.
       - run: make ios-sim
+      - run: make ios-static-sim
       - run: make ios-docs
   build-deploy-ios-snapshot:
     macos:
