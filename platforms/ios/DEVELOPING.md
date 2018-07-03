@@ -29,3 +29,17 @@ Building a project through an Xcode workspace behaves a little differently from 
 To overcome this, we use a workspace setting that keeps build products in the locations specified by their original projects. This can be set in Xcode by opening a workspace, then navigating to _File_ > _Workspace Settings_ in the menu bar, then clicking _Advanced..._, then choosing the _Legacy_ option.
 
 This setting is stored per-user in the workspace data, located in `Tangram.xcworkspace/xcuserdata/$USER.xcuserdatad/WorkspaceSettings.xcsettings` where `$USER` is the current user name. Since this path is different for every user, we cannot track this file in git. Instead, we keep a file that stores these settings in `platforms/ios/WorkspaceSettings.xcsettings` and we copy this file into the appropriate location for each user as a step in the `make cmake-ios` rule in our `Makefile`.
+
+## CMake can configure most Xcode settings ##
+
+We use CMake to specify build configurations in Tangram ES because of its portability across platforms. However when setting up builds targeting iOS, we can take advantage of the fact that we will only use CMake to generate Xcode projects. CMake configures the build settings on a target in a generated XCode project from the target `PROPERTIES` in CMake. These settings are string-based key-value pairs. In an open Xcode project, you can use the **Quick Help Inspector** on the right-side panel to determine the key name for any build setting. This key is used in the text-file representation of the Xcode project data (a `pbxproj` file).
+
+![Xcode build settings in a project window and the pbxproj file](/images/xcode-attributes.png)
+
+In CMake you can set the value of these build settings by setting a property on a library or executable target with the name `XCODE_ATTRIBUTE_<BUILD_SETTING_NAME>` (this pattern is documented in the CMake manual [here](https://cmake.org/cmake/help/v3.12/prop_tgt/XCODE_ATTRIBUTE_an-attribute.html)). For example, to set the build setting from the image above that is declared as `IPHONEOS_DEPLOYMENT_TARGET` for a target named `myIosTarget`, your CMake file should contain:
+
+```cmake
+set_target_properties(myIosTarget PROPERTIES XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "9.3")
+```
+
+Some build configurations are more easily applied through Xcode settings, and some are only relevant when Xcode is the target IDE.
