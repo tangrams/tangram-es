@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "TGExport.h"
 #import "TGGeoPoint.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -19,6 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
  with possibly different geometry types; returns true if the marker ID was found and
  successfully updated, otherwise returns false.
  */
+TG_EXPORT
 @interface TGGeoPolyline : NSObject
 
 /**

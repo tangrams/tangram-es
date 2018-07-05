@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "TGExport.h"
 #import "TGGeoPoint.h"
 #import "TGMarker.h"
 
@@ -17,6 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  See `-[TGMapViewController pickMarkerAt:]` and `[TGMapViewDelegate mapView:didSelectMarker:atScreenPosition:]`.
  */
+TG_EXPORT
 @interface TGMarkerPickResult : NSObject
 
 /// The geographic coordinates of the selected label

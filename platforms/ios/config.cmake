@@ -7,6 +7,7 @@ set(IOS TRUE)
 set(CMAKE_OSX_SYSROOT "iphoneos")
 set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
 set(CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "9.3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
 execute_process(COMMAND xcrun --sdk iphoneos --show-sdk-version OUTPUT_VARIABLE IOS_SDK_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 # Tell SQLiteCpp to not build its own copy of SQLite, we will use the system library instead.
@@ -19,6 +20,7 @@ set(SQLITECPP_INTERNAL_SQLITE OFF CACHE BOOL "")
 # static library target, relative paths cause it to fail with an error.
 set(TANGRAM_FRAMEWORK_HEADERS
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TangramMap.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGExport.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPolyline.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPolygon.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPoint.h
