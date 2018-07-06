@@ -25,6 +25,9 @@ void featurePickCallback(jobject listener, const FeaturePickResult* featurePickR
 void markerPickCallback(jobject listener, jobject tangramInstance, const MarkerPickResult* markerPickResult);
 void labelPickCallback(jobject listener, const LabelPickResult* labelPickResult);
 
+void easeCancelCallback(jobject easeCancelCallbackRef);
+void easeFinishCallback(jobject easeFinishCallbackRef);
+
 std::string stringFromJString(JNIEnv* jniEnv, jstring string);
 jstring jstringFromString(JNIEnv* jniEnv, const std::string& string);
 

@@ -384,8 +384,13 @@ bool PolylineStyleBuilder<V>::evalWidth(const StyleParam& _styleParam, float& wi
             width *= meterWidthScale;
             slope = width * 2;
         } else {
-            width *= pixelWidthScale;
-            slope = width;
+            if (pixelWidthScale < 0.00005f) {
+                width *= meterWidthScale * 6;
+                slope = width * 2;
+            } else {
+                width *= pixelWidthScale;
+                slope = width;
+            }
         }
         return true;
     }

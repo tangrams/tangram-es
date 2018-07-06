@@ -36,8 +36,8 @@ public class MapData {
      * Add a geometry feature to this data collection
      * @param geometry The feature to add
      */
-    protected void addFeature(@NonNull final Geometry geometry) {
-        map.addFeature(pointer,
+    protected long addFeature(@NonNull final Geometry geometry) {
+        return map.addFeature(pointer,
                 geometry.getCoordinateArray(),
                 geometry.getRingArray(),
                 geometry.getPropertyArray());
@@ -69,10 +69,8 @@ public class MapData {
      * the scene file used by the map; may be null.
      * @return This object, for chaining.
      */
-    @NonNull
-    public MapData addPoint(@NonNull final LngLat point, @Nullable final Map<String, String> properties) {
-        addFeature(new Point(point, properties));
-        return this;
+    public long addPoint(@NonNull final LngLat point, @Nullable final Map<String, String> properties) {
+        return addFeature(new Point(point, properties));
     }
 
     /**
@@ -82,10 +80,8 @@ public class MapData {
      * the scene file used by the map; may be null.
      * @return This object, for chaining.
      */
-    @NonNull
-    public MapData addPolyline(@NonNull final List<LngLat> polyline, @Nullable final Map<String, String> properties) {
-        addFeature(new Polyline(polyline, properties));
-        return this;
+    public long addPolyline(@NonNull final List<LngLat> polyline, @Nullable final Map<String, String> properties) {
+        return addFeature(new Polyline(polyline, properties));
     }
 
     /**
@@ -98,10 +94,8 @@ public class MapData {
      * the scene file used by the map; may be null.
      * @return This object, for chaining.
      */
-    @NonNull
-    public MapData addPolygon(@NonNull final List<List<LngLat>> polygon, @Nullable final Map<String, String> properties) {
-        addFeature(new Polygon(polygon, properties));
-        return this;
+    public long addPolygon(@NonNull final List<List<LngLat>> polygon, @Nullable final Map<String, String> properties) {
+        return addFeature(new Polygon(polygon, properties));
     }
 
     /**
@@ -112,6 +106,41 @@ public class MapData {
     @NonNull
     public MapData addGeoJson(final String data) {
         map.addGeoJson(pointer, data);
+        return this;
+    }
+
+    /**
+     * Update polyline by id in this collection.
+     * @param id Polyline id.
+     * @param polyline A list of coordinates that define the line segments of the feature.
+     * @return This object, for chaining.
+     */
+    public MapData updatePolyline(long id, List<LngLat> polyline) {
+        // TODO: DISABLED POLYLINE - remove this method
+        map.updateLine(pointer, id, Polyline.toCoordinateArray(polyline));
+        return this;
+    }
+
+    /**
+     * Update polyline by id in this collection.
+     * @param id Polyline id.
+     * @param properties Properties.
+     * @return This object, for chaining.
+     */
+    public MapData updatePolyline(long id, Map<String, String> properties) {
+        // TODO: DISABLED POLYLINE - remove this method
+        map.updateLine(pointer, id, Geometry.getStringMapAsArray(properties));
+        return this;
+    }
+
+    /**
+     * Remove polyline by id from this collection.
+     * @param id Polyline id.
+     * @return This object, for chaining.
+     */
+    public MapData removePolyline(long id) {
+        // TODO: DISABLED POLYLINE - remove this method
+        map.removeLine(pointer, id);
         return this;
     }
 

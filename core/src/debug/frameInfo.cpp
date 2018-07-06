@@ -110,13 +110,11 @@ void FrameInfo::draw(RenderState& rs, const View& _view, TileManager& _tileManag
         if (getDebugFlag(DebugFlags::tangram_infos)) {
             std::vector<std::string> debuginfos;
 
-            debuginfos.push_back("visible tiles:"
-                                 + std::to_string(_tileManager.getVisibleTiles().size()));
+            debuginfos.push_back("");
+            debuginfos.push_back("");
+            debuginfos.push_back("");
             debuginfos.push_back("selectable features:"
                                  + std::to_string(features));
-            debuginfos.push_back("tile cache size:"
-                                 + std::to_string(_tileManager.getTileCache()->getMemoryUsage() / 1024) + "kb");
-            debuginfos.push_back("tile size:" + std::to_string(memused / 1024) + "kb");
             debuginfos.push_back("avg frame cpu time:" + to_string_with_precision(avgTimeCpu, 2) + "ms");
             debuginfos.push_back("avg frame render time:" + to_string_with_precision(avgTimeRender, 2) + "ms");
             debuginfos.push_back("avg frame update time:" + to_string_with_precision(avgTimeUpdate, 2) + "ms");
@@ -125,6 +123,15 @@ void FrameInfo::draw(RenderState& rs, const View& _view, TileManager& _tileManag
                                  + std::to_string(_view.getPosition().y));
             debuginfos.push_back("tilt:" + std::to_string(_view.getPitch() * 57.3) + "deg");
             debuginfos.push_back("pixel scale:" + std::to_string(_view.pixelScale()));
+            debuginfos.push_back("visible tiles:"
+                                 + std::to_string(_tileManager.getVisibleTiles().size()));
+            debuginfos.push_back("tile cache size:"
+                                 + std::to_string(_tileManager.getTileCache()->getMemoryUsage() / 1024) + "kb");
+            debuginfos.push_back("tile size:" + std::to_string(memused / 1024) + "kb");
+            for (const auto& tile : _tileManager.getVisibleTiles()) {
+                debuginfos.push_back("tile pos:"
+                                     + tile->getID().toString());
+            }
 
             TextDisplay::Instance().draw(rs, debuginfos);
         }

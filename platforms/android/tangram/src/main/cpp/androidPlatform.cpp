@@ -54,6 +54,8 @@ static jmethodID labelPickResultInitMID = 0;
 static jmethodID markerPickResultInitMID = 0;
 static jmethodID sceneReadyCallbackMID = 0;
 static jmethodID sceneErrorInitMID = 0;
+static jmethodID onEaseCancelCallbackMID = 0;
+static jmethodID onEaseFinishCallbackMID = 0;
 
 static jclass labelPickResultClass = nullptr;
 static jclass sceneErrorClass = nullptr;
@@ -105,6 +107,12 @@ void AndroidPlatform::setupJniEnv(JNIEnv* jniEnv) {
     }
     sceneErrorClass = (jclass)jniEnv->NewGlobalRef(jniEnv->FindClass("com/mapzen/tangram/SceneError"));
     sceneErrorInitMID = jniEnv->GetMethodID(sceneErrorClass, "<init>", "(Ljava/lang/String;Ljava/lang/String;I)V");
+
+    jclass easeCancelCallbackClass = jniEnv->FindClass("com/mapzen/tangram/MapController$EaseCancelCallback");
+    onEaseCancelCallbackMID = jniEnv->GetMethodID(easeCancelCallbackClass, "onEaseCancelCallback", "()V");
+
+    jclass easeFinishCallbackClass = jniEnv->FindClass("com/mapzen/tangram/MapController$EaseFinishCallback");
+    onEaseFinishCallbackMID = jniEnv->GetMethodID(easeFinishCallbackClass, "onEaseFinishCallback", "()V");
 
     if (hashmapClass) {
         jniEnv->DeleteGlobalRef(hashmapClass);
@@ -382,6 +390,32 @@ void AndroidPlatform::onUrlComplete(JNIEnv* _jniEnv, jlong _jRequestHandle, jbyt
 void setCurrentThreadPriority(int priority) {
     int  tid = gettid();
     setpriority(PRIO_PROCESS, tid, priority);
+}
+
+void easeCancelCallback(jobject easeCancelCallbackRef) {
+
+    if (!easeCancelCallbackRef) {
+        return;
+    }
+
+    JniThreadBinding jniEnv(jvm);
+
+    jniEnv->CallVoidMethod(easeCancelCallbackRef, onEaseCancelCallbackMID);
+    jniEnv->DeleteGlobalRef(easeCancelCallbackRef);
+
+}
+
+void easeFinishCallback(jobject easeFinishCallbackRef) {
+
+    if (!easeFinishCallbackRef) {
+        return;
+    }
+
+    JniThreadBinding jniEnv(jvm);
+
+    jniEnv->CallVoidMethod(easeFinishCallbackRef, onEaseFinishCallbackMID);
+    jniEnv->DeleteGlobalRef(easeFinishCallbackRef);
+
 }
 
 void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult) {

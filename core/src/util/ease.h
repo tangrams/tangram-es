@@ -7,8 +7,6 @@
 
 namespace Tangram {
 
-using EaseCb = std::function<void (float)>;
-
 template<typename T>
 T ease(T _start, T _end, float _t, EaseType _e) {
     float f = _t;
@@ -26,9 +24,12 @@ struct Ease {
     float t;
     float d;
     EaseCb cb;
+    EaseCancelCb cancelCb;
+    EaseFinishCb finishCb;
 
-    Ease() : t(0), d(0), cb([](float) {}) {}
-    Ease(float _duration, EaseCb _cb) : t(-1), d(_duration), cb(_cb) {}
+    Ease() : t(0), d(0), cb([](float) {}), cancelCb(nullptr), finishCb(nullptr) {}
+    Ease(float _duration, EaseCb _cb) : t(-1), d(_duration), cb(_cb), cancelCb(nullptr), finishCb(nullptr) {}
+    Ease(float _duration, EaseCb _cb, EaseCancelCb _cancelCb, EaseFinishCb _finishCb) : t(-1), d(_duration), cb(_cb), cancelCb(_cancelCb), finishCb(_finishCb) {}
 
     bool finished() const { return t >= d; }
 

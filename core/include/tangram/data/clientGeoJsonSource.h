@@ -28,9 +28,12 @@ public:
 
     // Add geometry from a GeoJSON string
     void addData(const std::string& _data);
-    void addPoint(const Properties& _tags, LngLat _point);
-    void addLine(const Properties& _tags, const Coordinates& _line);
-    void addPoly(const Properties& _tags, const std::vector<Coordinates>& _poly);
+    uint64_t addPoint(Properties& _tags, LngLat _point);
+    uint64_t addLine(Properties& _tags, const Coordinates& _line);
+    uint64_t addPoly(Properties& _tags, const std::vector<Coordinates>& _poly);
+    void updateLine(uint64_t id, const Coordinates& _line);
+    void updateLine(uint64_t id, const Properties& _tags);
+    void removeLine(uint64_t id);
     void generateLabelCentroidFeature();
 
     virtual void loadTileData(std::shared_ptr<TileTask> _task, TileTaskCb _cb) override;

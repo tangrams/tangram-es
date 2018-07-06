@@ -90,6 +90,18 @@ enum class EaseType : char {
     sine,
 };
 
+struct EaseCancel {
+
+};
+
+struct EaseFinish {
+
+};
+
+using EaseCb = std::function<void (float)>;
+using EaseCancelCb = std::function<void ()>;
+using EaseFinishCb = std::function<void ()>;
+
 class Map {
 
 public:
@@ -129,8 +141,8 @@ public:
     // The callback may be be called from the main or worker thread.
     void setSceneReadyListener(SceneReadyCallback _onSceneReady);
 
-    // Set an MBTiles SQLite database file for a DataSource in the scene.
-    void setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath);
+    // Set url for a DataSource in the scene.
+    void setDataSourceUrl(const char* _dataSourceName, const char* _url);
 
     // Initialize graphics resources; OpenGL context must be created prior to calling this
     void setupGL();
@@ -170,7 +182,7 @@ public:
     // (in seconds) is provided, position eases to the set value over the duration;
     // calling either version of the setter overrides all previous calls
     void setPosition(double _lon, double _lat);
-    void setPositionEased(double _lon, double _lat, float _duration, EaseType _e = EaseType::quint);
+    void setPositionEased(double _lon, double _lat, float _duration, EaseType _e = EaseType::quint, EaseCancelCb _cancelCb = nullptr, EaseFinishCb _finishCb = nullptr);
 
     // Set the values of the arguments to the position of the map view in degrees
     // longitude and latitude
@@ -180,7 +192,7 @@ public:
     // zoom eases to the set value over the duration; calling either version of the setter
     // overrides all previous calls
     void setZoom(float _z);
-    void setZoomEased(float _z, float _duration, EaseType _e = EaseType::quint);
+    void setZoomEased(float _z, float _duration, EaseType _e = EaseType::quint, EaseCancelCb _cancelCb = nullptr, EaseFinishCb _finishCb = nullptr);
 
     // Run flight animation to change postion and zoom  of the map
     // If _duration is 0, speed is used as factor to change the duration that is
@@ -195,7 +207,7 @@ public:
     // the set value over the duration; calling either version of the setter overrides
     // all previous calls
     void setRotation(float _radians);
-    void setRotationEased(float _radians, float _duration, EaseType _e = EaseType::quint);
+    void setRotationEased(float _radians, float _duration, EaseType _e = EaseType::quint, EaseCancelCb _cancelCb = nullptr, EaseFinishCb _finishCb = nullptr);
 
     // Get the counter-clockwise rotation of the view in radians; 0 corresponds to
     // North pointing up
@@ -205,10 +217,21 @@ public:
     // if duration (in seconds) is provided, tilt eases to the set value over the
     // duration; calling either version of the setter overrides all previous calls
     void setTilt(float _radians);
-    void setTiltEased(float _radians, float _duration, EaseType _e = EaseType::quint);
+    void setTiltEased(float _radians, float _duration, EaseType _e = EaseType::quint, EaseCancelCb _cancelCb = nullptr, EaseFinishCb _finishCb = nullptr);
 
     // Get the tilt angle of the view in radians; 0 corresponds to straight down
     float getTilt();
+
+    // Set the geographic position, zoom level, rotation, tilt angle
+    void setPositionZoomRotationTilt(double& _lon, double& _lat, float _z, float _radiansRotation, float _radiansTilt);
+
+    // Set the geographic position, zoom level, rotation, tilt angle
+    // if duration (in seconds) is provided, tilt eases to the set value over the
+    // duration; calling either version of the setter overrides all previous calls
+    void setPositionZoomRotationTiltEased(double& _lon, double& _lat, float _z, float _radiansRotation, float _radiansTilt, float _duration, EaseType _e = EaseType::quint, EaseCancelCb _cancelCb = nullptr, EaseFinishCb _finishCb = nullptr);
+
+    // Clear all easings
+    void clearEasing();
 
     // Set the camera type (0 = perspective, 1 = isometric, 2 = flat)
     void setCameraType(int _type);
