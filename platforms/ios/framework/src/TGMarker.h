@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-
+#import "TGExport.h"
 #import "TGGeoPoint.h"
 #import "TGGeoPolygon.h"
 #import "TGGeoPolyline.h"
@@ -24,6 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
  The marker style should defined using the <a href="https://mapzen.com/documentation/tangram/Styles-Overview">
  Tangram YAML syntax</a>.
  */
+TG_EXPORT
 @interface TGMarker : NSObject
 
 /**

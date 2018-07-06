@@ -6,7 +6,7 @@
 //
 
 #import <UIKit/UIKit.h>
-#import <TangramMap/TangramMap.h>
+#import "TangramMap/TangramMap.h"
 
 @interface MapViewControllerDelegate : NSObject <TGMapViewDelegate>
 

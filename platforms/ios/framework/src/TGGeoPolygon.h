@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "TGExport.h"
 #import "TGGeoPoint.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -17,6 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
  The polygon winding order and internal polygons must be set according to the <a href="http://geojson.org/geojson-spec.html#polygon">
  GeoJSON specification</a>.
  */
+TG_EXPORT
 @interface TGGeoPolygon : NSObject
 
 /**

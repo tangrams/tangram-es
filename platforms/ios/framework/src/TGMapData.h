@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "TGExport.h"
 #import "TGGeoPoint.h"
 #import "TGGeoPolygon.h"
 #import "TGGeoPolyline.h"
@@ -54,6 +55,7 @@ typedef NSDictionary<NSString *, NSString *> TGFeatureProperties;
  dataLayer.add(polyline: line, properties: properties);
  ```
  */
+TG_EXPORT
 @interface TGMapData : NSObject
 
 NS_ASSUME_NONNULL_BEGIN

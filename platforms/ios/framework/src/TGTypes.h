@@ -7,9 +7,10 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "TGExport.h"
 
 /// Indicates an error occurred in the Tangram Framework.
-extern NSString* const TGErrorDomain;
+extern TG_EXPORT NSString* const TGErrorDomain;
 
 /**
  Describes ease functions to be used for camera or other transition animation.

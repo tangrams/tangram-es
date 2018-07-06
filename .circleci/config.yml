@@ -35,7 +35,8 @@ jobs:
       - run: sudo gem install jazzy --no-document
       - run: brew install cmake
       # Build framework and docs.
-      - run: make ios-sim
+      - run: make ios-sim BUILD_TYPE=Debug
+      - run: make ios-static-sim BUILD_TYPE=Debug
       - run: make ios-docs
   build-deploy-ios-snapshot:
     macos:

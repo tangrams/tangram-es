@@ -34,7 +34,7 @@ Building the iOS demo application requires Xcode 9.0 or newer. From the root dir
 make ios NEXTZEN_API_KEY=yourApiKeyHere
 ```
 
-You can optionally append `DEBUG=1` or `RELEASE=1` to choose the build type.
+You can optionally append a `BUILD_TYPE` variable to choose the build type, for example `BUILD_TYPE=Debug`.
 
 This will generate and compile an Xcode project for the Tangram iOS framework and demo application. To run/debug the demo application, open the projects in the iOS Xcode workspace:
 

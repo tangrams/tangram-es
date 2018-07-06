@@ -7,6 +7,7 @@
 //
 
 #pragma once
+#import "TGExport.h"
 
 /**
  Structure holding a geographics coordinate (longitude and latitude)
@@ -30,7 +31,7 @@ typedef struct TGGeoPoint TGGeoPoint;
  @param lat the latitude coordinate
  @return a `TGGeoPoint` holding the longitude and latitude
  */
-static inline TGGeoPoint TGGeoPointMake(double lon, double lat)
+TG_EXPORT static inline TGGeoPoint TGGeoPointMake(double lon, double lat)
 {
     TGGeoPoint p;
     p.latitude = lat;

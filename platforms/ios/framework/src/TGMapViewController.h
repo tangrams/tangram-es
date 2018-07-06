@@ -318,6 +318,7 @@ NS_ASSUME_NONNULL_BEGIN
  your application.
 
  */
+TG_EXPORT
 @interface TGMapViewController : GLKViewController <UIGestureRecognizerDelegate>
 
 /**

@@ -45,7 +45,7 @@ To build the executable demo application:
 make linux
 ```
 
-You can optionally use `make -j` to parallelize the build and append `DEBUG=1` or `RELEASE=1` to choose the build type.
+You can optionally use `make -j` to parallelize the build and append a `BUILD_TYPE` variable to choose the build type, for example `BUILD_TYPE=Debug`.
 
 Then run it from the output folder:
 

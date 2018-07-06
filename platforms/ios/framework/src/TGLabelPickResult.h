@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "TGExport.h"
 #import "TGGeoPoint.h"
 #import "TGMapData.h"
 
@@ -25,6 +26,7 @@ typedef NS_ENUM(NSInteger, TGLabelType) {
 
  See `-[TGMapViewController pickLabelAt:]` and `[TGMapViewDelegate mapView:didSelectLabel:atScreenPosition:]`.
  */
+TG_EXPORT
 @interface TGLabelPickResult : NSObject
 
 NS_ASSUME_NONNULL_BEGIN

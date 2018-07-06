@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "TGExport.h"
 
 /**
  A network request completion callback, called when a download request of `TGHttpHandler`
@@ -28,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
  To change this configuration, create a new http handler and set it to the map view with
  `-[TGMapViewController httpHandler]`.
  */
+TG_EXPORT
 @interface TGHttpHandler : NSObject
 
 
