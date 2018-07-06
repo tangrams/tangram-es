@@ -1,3 +1,10 @@
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  # Recent versions of Clang are extremely verbose about implicit long-to-int
+  # conversions. While this *can* be an actual error, it's not practical to
+  # address every instance of it in all dependencies, so we'll silence it here.
+  add_compile_options(-Wno-shorten-64-to-32)
+endif()
+
 ## yaml-cpp ##
 ##############
 set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "")
