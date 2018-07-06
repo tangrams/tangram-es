@@ -802,6 +802,13 @@ void Map::setPositionZoomRotationTiltEased(double& _lon, double& _lat, float _z,
     double lon_start, lat_start;
     getPosition(lon_start, lat_start);
 
+	double dLongitude = _lon - lonStart; 
+    if (dLongitude > 180.0) { 
+        _lon -= 360.0; 
+    } else if (dLongitude < -180.0) { 
+        _lon += 360.0; 
+    }
+
     float z_start = getZoom();
 
     float radians_start = getRotation();
