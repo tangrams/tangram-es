@@ -1,0 +1,79 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+
+group = GROUP
+version = VERSION_NAME
+
+apply from: 'versioning.gradle'
+
+android {
+  compileSdkVersion 27
+
+  // Specific ABI targets can be chosen with the 'abis' property as a comma-separated list of ABIs.
+  // From the command line, add '-Ptangram.abis=armeabi-v7a,x86,...' to only build those ABIs.
+  // When building from Android Studio, the ABI for the target device is injected and takes precedence.
+  def abi = 'all'
+  if (!project.hasProperty('android.injected.invoked.from.ide') && project.hasProperty('tangram.abis')) {
+    abi = project.getProperty('tangram.abis')
+  }
+
+  defaultConfig {
+    minSdkVersion 15
+    targetSdkVersion 27
+    versionCode buildVersionCode()
+    versionName VERSION_NAME
+    consumerProguardFiles 'tangram-proguard-rules.txt'
+    externalNativeBuild {
+      cmake {
+        targets 'tangram'
+        arguments '-DPLATFORM_TARGET=android',
+                  '-DANDROID_TOOLCHAIN=clang',
+                  '-DANDROID_STL=c++_shared'
+        cppFlags '-std=c++14',
+                 '-pedantic',
+                 '-fPIC',
+                 '-fexceptions',
+                 '-frtti',
+                 //warnings
+                 '-Wall',
+                 '-Wignored-qualifiers',
+                 '-Wtype-limits',
+                 '-Wmissing-field-initializers',
+                 '-Wno-format-pedantic'
+
+        if (abi == 'all') {
+          abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86'
+        } else {
+          abiFilters abi.split(',')
+        }
+
+      }
+    }
+  }
+
+  externalNativeBuild {
+    cmake {
+      path '../../../CMakeLists.txt'
+    }
+  }
+
+  buildTypes {
+    debug {
+      externalNativeBuild {
+        cmake.cppFlags '-g'
+      }
+    }
+    release {
+      externalNativeBuild {
+        cmake.cppFlags'-g0'
+      }
+    }
+  }
+}
+
+dependencies {
+  api 'com.squareup.okhttp3:okhttp:3.10.0'
+  implementation 'com.android.support:support-annotations:27.1.1'
+}
+
+apply from: 'publishing.gradle'
