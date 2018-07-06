@@ -36,9 +36,9 @@
 
 namespace Tangram {
 
-const static size_t MAX_WORKERS = 2;
+const static size_t MAX_WORKERS = 4;
 
-enum class EaseField { position, zoom, rotation, tilt };
+enum class EaseField { position, zoom, rotation, tilt, all };
 
 class Map::Impl {
 
@@ -59,6 +59,7 @@ public:
     void setZoomNow(float _z);
     void setRotationNow(float _radians);
     void setTiltNow(float _radians);
+    void setPositionZoomRotationTiltNow(double _lon, double _lat, float _z, float _radiansRotation, float _radiansTilt);
 
     void setPixelScale(float _pixelsPerPoint);
 
@@ -73,7 +74,7 @@ public:
     std::shared_ptr<Platform> platform;
     InputHandler inputHandler;
 
-    std::array<Ease, 4> eases;
+    std::array<Ease, 5> eases;
 
     std::shared_ptr<Scene> scene;
     std::shared_ptr<Scene> lastValidScene;
@@ -115,7 +116,11 @@ void Map::Impl::setEase(EaseField _f, Ease _e) {
 
 void Map::Impl::clearEase(EaseField _f) {
     static Ease none = {};
-    eases[static_cast<size_t>(_f)] = none;
+    size_t i = static_cast<size_t>(_f);
+    if (eases[i].cancelCb != nullptr) {
+        eases[i].cancelCb();
+    }
+    eases[i] = none;
 }
 
 static std::bitset<9> g_flags = 0;
@@ -371,9 +376,9 @@ SceneID Map::updateSceneAsync(const std::vector<SceneUpdate>& _sceneUpdates) {
     return nextScene->id;
 }
 
-void Map::setMBTiles(const char* _dataSourceName, const char* _mbtilesFilePath) {
-    std::string scenePath = std::string("sources.") + _dataSourceName + ".mbtiles";
-    updateSceneAsync({SceneUpdate{scenePath.c_str(), _mbtilesFilePath}});
+void Map::setDataSourceUrl(const char* _dataSourceName, const char* _url) {
+    std::string scenePath = std::string("sources.") + _dataSourceName + ".url";
+    updateSceneAsync({SceneUpdate{scenePath.c_str(), _url}});
 }
 
 void Map::resize(int _newWidth, int _newHeight) {
@@ -411,6 +416,11 @@ bool Map::update(float _dt) {
         if (!ease.finished()) {
             ease.update(_dt);
             viewComplete = false;
+        }
+        else if (ease.finishCb != nullptr) {
+            ease.finishCb();
+            ease.cancelCb = nullptr;
+            ease.finishCb = nullptr;
         }
     }
 
@@ -595,23 +605,25 @@ void Map::setPosition(double _lon, double _lat) {
 
     impl->setPositionNow(_lon, _lat);
     impl->clearEase(EaseField::position);
+    impl->clearEase(EaseField::all);
 
 }
 
-void Map::setPositionEased(double _lon, double _lat, float _duration, EaseType _e) {
+void Map::setPositionEased(double _lon, double _lat, float _duration, EaseType _e, EaseCancelCb _cancelCb, EaseFinishCb _finishCb) {
 
-    double lonStart, latStart;
-    getPosition(lonStart, latStart);
+    double lon_start, lat_start;
+    getPosition(lon_start, lat_start);
 
-    double dLongitude = _lon - lonStart;
-    if (dLongitude > 180.0) {
-        _lon -= 360.0;
-    } else if (dLongitude < -180.0) {
-        _lon += 360.0;
+    double dLongitude = _lon - lonStart; 
+    if (dLongitude > 180.0) { 
+        _lon -= 360.0; 
+    } else if (dLongitude < -180.0) { 
+        _lon += 360.0; 
     }
 
-    auto cb = [=](float t) { impl->setPositionNow(ease(lonStart, _lon, t, _e), ease(latStart, _lat, t, _e)); };
-    impl->setEase(EaseField::position, { _duration, cb });
+    auto cb = [=](float t) { impl->setPositionNow(ease(lon_start, _lon, t, _e), ease(lat_start, _lat, t, _e)); };
+    impl->setEase(EaseField::position, { _duration, cb, _cancelCb, _finishCb });
+    impl->clearEase(EaseField::all);
 
 }
 
@@ -639,11 +651,12 @@ void Map::setZoom(float _z) {
 
 }
 
-void Map::setZoomEased(float _z, float _duration, EaseType _e) {
+void Map::setZoomEased(float _z, float _duration, EaseType _e, EaseCancelCb _cancelCb, EaseFinishCb _finishCb) { 
 
     float z_start = getZoom();
     auto cb = [=](float t) { impl->setZoomNow(ease(z_start, _z, t, _e)); };
-    impl->setEase(EaseField::zoom, { _duration, cb });
+    impl->setEase(EaseField::zoom, { _duration, cb, _cancelCb, _finishCb }); 
+    impl->clearEase(EaseField::all); 
 
 }
 
@@ -702,10 +715,11 @@ void Map::setRotation(float _radians) {
 
     impl->setRotationNow(_radians);
     impl->clearEase(EaseField::rotation);
+    impl->clearEase(EaseField::all);
 
 }
 
-void Map::setRotationEased(float _radians, float _duration, EaseType _e) {
+void Map::setRotationEased(float _radians, float _duration, EaseType _e, EaseCancelCb _cancelCb, EaseFinishCb _finishCb) {
 
     float radians_start = getRotation();
 
@@ -715,7 +729,8 @@ void Map::setRotationEased(float _radians, float _duration, EaseType _e) {
     _radians = radians_start + radians_delta;
 
     auto cb = [=](float t) { impl->setRotationNow(ease(radians_start, _radians, t, _e)); };
-    impl->setEase(EaseField::rotation, { _duration, cb });
+    impl->setEase(EaseField::rotation, { _duration, cb, _cancelCb, _finishCb });
+    impl->clearEase(EaseField::all);
 
 }
 
@@ -737,20 +752,85 @@ void Map::setTilt(float _radians) {
 
     impl->setTiltNow(_radians);
     impl->clearEase(EaseField::tilt);
+    impl->clearEase(EaseField::all);
 
 }
 
-void Map::setTiltEased(float _radians, float _duration, EaseType _e) {
+void Map::setTiltEased(float _radians, float _duration, EaseType _e, EaseCancelCb _cancelCb, EaseFinishCb _finishCb) {
 
     float tilt_start = getTilt();
     auto cb = [=](float t) { impl->setTiltNow(ease(tilt_start, _radians, t, _e)); };
-    impl->setEase(EaseField::tilt, { _duration, cb });
+    impl->setEase(EaseField::tilt, { _duration, cb, _cancelCb, _finishCb });
+    impl->clearEase(EaseField::all);
 
 }
 
 float Map::getTilt() {
 
     return impl->view.getPitch();
+
+}
+
+void Map::Impl::setPositionZoomRotationTiltNow(double _lon, double _lat, float _z, float _radiansRotation, float _radiansTilt) {
+
+    glm::dvec2 meters = view.getMapProjection().LonLatToMeters({ _lon, _lat});
+    view.setPosition(meters.x, meters.y);
+    view.setZoom(_z);
+    view.setRoll(_radiansRotation);
+    view.setPitch(_radiansTilt);
+
+    inputHandler.cancelFling();
+
+    platform->requestRender();
+
+}
+
+void Map::setPositionZoomRotationTilt(double& _lon, double& _lat, float _z, float _radiansRotation, float _radiansTilt) {
+
+    impl->setPositionZoomRotationTiltNow(_lon, _lat, _z, _radiansRotation, _radiansTilt);
+
+    impl->clearEase(EaseField::position);
+    impl->clearEase(EaseField::zoom);
+    impl->clearEase(EaseField::rotation);
+    impl->clearEase(EaseField::tilt);
+    impl->clearEase(EaseField::all);
+
+}
+
+void Map::setPositionZoomRotationTiltEased(double& _lon, double& _lat, float _z, float _radiansRotation, float _radiansTilt, float _duration, EaseType _e, EaseCancelCb _cancelCb, EaseFinishCb _finishCb) {
+
+    double lon_start, lat_start;
+    getPosition(lon_start, lat_start);
+
+    float z_start = getZoom();
+
+    float radians_start = getRotation();
+    float radians_delta = glm::mod(_radiansRotation - radians_start, (float)TWO_PI);
+    if (radians_delta > PI) { radians_delta -= TWO_PI; }
+    _radiansRotation = radians_start + radians_delta;
+
+    float tilt_start = getTilt();
+
+    auto cb = [=](float t) {
+        impl->setPositionZoomRotationTiltNow(ease(lon_start, _lon, t, _e), ease(lat_start, _lat, t, _e),
+                                             ease(z_start, _z, t, _e),
+                                             ease(radians_start, _radiansRotation, t, _e),
+                                             ease(tilt_start, _radiansTilt, t, _e));
+    };
+
+    impl->clearEase(EaseField::position);
+    impl->clearEase(EaseField::zoom);
+    impl->clearEase(EaseField::rotation);
+    impl->clearEase(EaseField::tilt);
+    impl->setEase(EaseField::all, { _duration, cb, _cancelCb, _finishCb });
+
+}
+
+void Map::clearEasing() {
+
+    for (int i = 0; i < 5; i++) {
+        impl->clearEase(EaseField(i));
+    }
 
 }
 
