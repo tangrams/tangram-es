@@ -35,7 +35,8 @@ jobs:
       - run: sudo gem install jazzy --no-document
       - run: brew install cmake
       # Build framework and docs.
-      - run: make ios-sim
+      - run: make ios-sim BUILD_TYPE=Debug
+      - run: make ios-static-sim BUILD_TYPE=Debug
       - run: make ios-docs
   build-deploy-ios-snapshot:
     macos:
@@ -48,7 +49,7 @@ jobs:
       - run: sudo gem install jazzy --no-document
       - run: brew install cmake
       # Build the framework in debug mode and package it into pod.zip
-      - run: make ios-framework-universal DEBUG=1
+      - run: make ios-framework-universal BUILD_TYPE=Debug
       - run: make ios-docs
       # To produce the intended structure within the zip archive, we must cd to each file's location.
       - run: cd build/ios/Debug-universal && zip -r ~/pod.zip TangramMap.framework
@@ -83,7 +84,7 @@ jobs:
       - run: gem install atomos jazzy --no-document
       - run: brew install cmake jfrog-cli-go
       # Build the framework in release mode and package it into pod.zip
-      - run: make ios-framework-universal RELEASE=1
+      - run: make ios-framework-universal BUILD_TYPE=Release
       - run: make ios-docs
       # To produce the intended structure within the zip archive, we must cd to each file's location.
       - run: cd build/ios/Release-universal && zip -r ~/pod.zip TangramMap.framework

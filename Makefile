@@ -51,13 +51,12 @@ IOS_FRAMEWORK_XCODE_PROJ = tangram.xcodeproj
 ifeq (, $(shell which xcpretty))
 	XCPRETTY =
 else
-	XCPRETTY = | xcpretty
+	XCPRETTY = | xcpretty && exit \${PIPESTATUS[0]}
 endif
 
 # Default build type is Release
-BUILD_TYPE = Release
-ifdef DEBUG
-	BUILD_TYPE = Debug
+ifndef BUILD_TYPE
+	BUILD_TYPE = Release
 endif
 
 BENCH_CMAKE_PARAMS = \
@@ -225,6 +224,24 @@ ios-framework-universal: ios-framework ios-framework-sim
 	lipo ${IOS_BUILD_DIR}/${BUILD_TYPE}-iphoneos/TangramMap.framework/TangramMap \
 		${IOS_BUILD_DIR}/${BUILD_TYPE}-iphonesimulator/TangramMap.framework/TangramMap \
 		-create -output ${IOS_BUILD_DIR}/${BUILD_TYPE}-universal/TangramMap.framework/TangramMap
+
+ios-static: cmake-ios
+	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo-static -configuration ${BUILD_TYPE} -sdk iphoneos ${XCPRETTY}
+
+ios-static-sim: cmake-ios
+	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo-static -configuration ${BUILD_TYPE} -sdk iphonesimulator ${XCPRETTY}
+
+ios-static-lib: cmake-ios
+	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme tangram-static -configuration ${BUILD_TYPE} -sdk iphoneos ${XCPRETTY}
+
+ios-static-lib-sim: cmake-ios
+	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme tangram-static -configuration ${BUILD_TYPE} -sdk iphonesimulator ${XCPRETTY}
+
+ios-static-lib-universal: ios-static-lib ios-static-lib-sim
+	@mkdir -p ${IOS_BUILD_DIR}/${BUILD_TYPE}-universal
+	lipo ${IOS_BUILD_DIR}/${BUILD_TYPE}-iphoneos/libtangram-static.a \
+		${IOS_BUILD_DIR}/${BUILD_TYPE}-iphonesimulator/libtangram-static.a \
+		-create -output ${IOS_BUILD_DIR}/${BUILD_TYPE}-universal/libtangram-static.a
 
 rpi: cmake-rpi
 	cmake --build ${RPI_BUILD_DIR}

@@ -7,6 +7,7 @@ set(IOS TRUE)
 set(CMAKE_OSX_SYSROOT "iphoneos")
 set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
 set(CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "9.3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
 execute_process(COMMAND xcrun --sdk iphoneos --show-sdk-version OUTPUT_VARIABLE IOS_SDK_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 # Tell SQLiteCpp to not build its own copy of SQLite, we will use the system library instead.
@@ -15,22 +16,25 @@ if (IOS_SDK_VERSION VERSION_LESS 11.0)
 endif()
 set(SQLITECPP_INTERNAL_SQLITE OFF CACHE BOOL "")
 
+# Headers must be absolute paths for the copy_if_different command on the
+# static library target, relative paths cause it to fail with an error.
 set(TANGRAM_FRAMEWORK_HEADERS
-  platforms/ios/framework/src/TangramMap.h
-  platforms/ios/framework/src/TGGeoPolyline.h
-  platforms/ios/framework/src/TGGeoPolygon.h
-  platforms/ios/framework/src/TGGeoPoint.h
-  platforms/ios/framework/src/TGMarker.h
-  platforms/ios/framework/src/TGSceneUpdate.h
-  platforms/ios/framework/src/TGMapData.h
-  platforms/ios/framework/src/TGTypes.h
-  platforms/ios/framework/src/TGHttpHandler.h
-  platforms/ios/framework/src/TGLabelPickResult.h
-  platforms/ios/framework/src/TGMarkerPickResult.h
-  platforms/ios/framework/src/TGMapViewController.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TangramMap.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGExport.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPolyline.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPolygon.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPoint.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMarker.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGSceneUpdate.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapData.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGTypes.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGHttpHandler.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGLabelPickResult.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMarkerPickResult.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapViewController.h
 )
 
-add_library(TangramMap SHARED
+set(TANGRAM_FRAMEWORK_SOURCES
   ${TANGRAM_FRAMEWORK_HEADERS}
   platforms/common/platform_gl.cpp
   platforms/common/appleAllowedFonts.h
@@ -54,6 +58,12 @@ add_library(TangramMap SHARED
   platforms/ios/framework/src/TGTypes.mm
   platforms/ios/framework/src/TGMapViewController+Internal.h
   platforms/ios/framework/src/TGMapViewController.mm
+)
+
+### Configure dynamic framework build target. 
+
+add_library(TangramMap SHARED
+  ${TANGRAM_FRAMEWORK_SOURCES}
 )
 
 target_link_libraries(TangramMap PRIVATE
@@ -81,4 +91,79 @@ set_target_properties(TangramMap PROPERTIES
   XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
   XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14"
   XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++"
+)
+
+### Configure static library build target.
+
+add_library(tangram-static STATIC
+  ${TANGRAM_FRAMEWORK_SOURCES}
+)
+
+target_link_libraries(tangram-static PRIVATE
+  tangram-core
+  sqlite3
+  # Frameworks: use quotes so "-framework X" is treated as a single linker flag.
+  "-framework CoreFoundation"
+  "-framework CoreGraphics"
+  "-framework CoreText"
+  "-framework GLKit"
+  "-framework OpenGLES"
+  "-framework UIKit"
+)
+
+target_include_directories(tangram-static PRIVATE
+  platforms/common
+)
+
+# To produce a distributable version of our iOS SDK as a static library, we
+# need to collect all the symbols that will be needed in a final, linked
+# executable. CMake normally makes these symbols available by propagating link
+# flags from dependencies, but users who aren't building the SDK from source
+# won't have the dependency libraries in a build tree. We solve this by pre-
+# linking all of the dependency libraries that we would normally pass as flags.
+
+# Here we manually list the library files for all of our compiled dependencies.
+# I haven't found a way to get a full, recursive library list from CMake
+# so this list will need to be updated when any new library dependencies are
+# added. Note the quotes: this is needed to not make it a "list", which CMake
+# delimits with semicolons. Xcode expects a space-delimited list.
+set(TANGRAM_STATIC_DEPENDENCIES "\
+  $<TARGET_FILE:tangram-core>
+  $<TARGET_FILE:duktape>
+  $<TARGET_FILE:css-color-parser-cpp>
+  $<TARGET_FILE:yaml-cpp>
+  $<TARGET_FILE:alfons>
+  $<TARGET_FILE:linebreak>
+  $<TARGET_FILE:harfbuzz>
+  $<TARGET_FILE:freetype>
+  $<TARGET_FILE:icucommon>
+  $<TARGET_FILE:SQLiteCpp>
+  $<TARGET_FILE:double-conversion>
+  $<TARGET_FILE:miniz>
+  "
+)
+
+set_target_properties(tangram-static PROPERTIES
+  XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION "${TANGRAM_FRAMEWORK_VERSION}"
+  XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
+  XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14"
+  XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++"
+  # The Xcode settings below are to pre-link our static libraries into a single
+  # archive. Xcode will take the objects from this target and from all of the
+  # pre-link libraries, combine them, and resolve the symbols into one "master"
+  # object file before outputting an archive.
+  XCODE_ATTRIBUTE_GENERATE_MASTER_OBJECT_FILE "YES"
+  XCODE_ATTRIBUTE_PRELINK_LIBS "${TANGRAM_STATIC_DEPENDENCIES}"
+)
+
+# Copy the framework headers into a directory in the build folder, for use by
+# the static demo app build and for distribution.
+add_custom_command(TARGET tangram-static POST_BUILD
+  COMMAND
+  ${CMAKE_COMMAND} -E make_directory
+  "${PROJECT_BINARY_DIR}/Include/TangramMap/"
+  COMMAND
+  ${CMAKE_COMMAND} -E copy_if_different
+  ${TANGRAM_FRAMEWORK_HEADERS}
+  "${PROJECT_BINARY_DIR}/Include/TangramMap/"
 )

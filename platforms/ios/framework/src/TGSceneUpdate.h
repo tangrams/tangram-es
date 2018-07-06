@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "TGExport.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -30,6 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
  view.applySceneUpdates()
  ```
  */
+TG_EXPORT
 @interface TGSceneUpdate : NSObject
 
 /**
