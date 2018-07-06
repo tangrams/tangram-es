@@ -614,11 +614,11 @@ void Map::setPositionEased(double _lon, double _lat, float _duration, EaseType _
     double lon_start, lat_start;
     getPosition(lon_start, lat_start);
 
-    double dLongitude = _lon - lonStart; 
-    if (dLongitude > 180.0) { 
-        _lon -= 360.0; 
-    } else if (dLongitude < -180.0) { 
-        _lon += 360.0; 
+    double dLongitude = _lon - lon_start;
+    if (dLongitude > 180.0) {
+        _lon -= 360.0;
+    } else if (dLongitude < -180.0) {
+        _lon += 360.0;
     }
 
     auto cb = [=](float t) { impl->setPositionNow(ease(lon_start, _lon, t, _e), ease(lat_start, _lat, t, _e)); };
@@ -801,13 +801,6 @@ void Map::setPositionZoomRotationTiltEased(double& _lon, double& _lat, float _z,
 
     double lon_start, lat_start;
     getPosition(lon_start, lat_start);
-
-	double dLongitude = _lon - lonStart; 
-    if (dLongitude > 180.0) { 
-        _lon -= 360.0; 
-    } else if (dLongitude < -180.0) { 
-        _lon += 360.0; 
-    }
 
     float z_start = getZoom();
 
