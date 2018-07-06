@@ -3,7 +3,7 @@ Mac OS X
 
 ## Setup ##
 
-This project uses CMake (minimum version 3.0), you can download it [here](http://www.cmake.org/download/) or use your favorite installation package tool like [homebrew](http://brew.sh/).
+This project uses CMake (minimum version 3.2), you can download it [here](http://www.cmake.org/download/) or use your favorite installation package tool like [homebrew](http://brew.sh/).
 
 ```bash
 brew install cmake

@@ -26,34 +26,32 @@ jobs:
       - run: cd platforms/android && ./gradlew uploadArchives
   build-ios:
     macos:
-      xcode: "9.2.0"
+      xcode: "9.4.0"
     steps:
       # Check out repository with submodules.
       - checkout
       - run: git submodule update --init
       # Install dependencies.
-      # For unclear reasons, 'jazzy' fails to install on CircleCI if 'atomos' is not installed first.
-      - run: sudo gem install atomos jazzy
+      - run: sudo gem install jazzy --no-document
       - run: brew install cmake
       # Build framework and docs.
-      - run: make ios TANGRAM_IOS_FRAMEWORK_SLIM=1
+      - run: make ios-sim
       - run: make ios-docs
   build-deploy-ios-snapshot:
     macos:
-      xcode: "9.2.0"
+      xcode: "9.4.0"
     steps:
       # Check out repository with submodules.
       - checkout
       - run: git submodule update --init
       # Install dependencies.
-      # For unclear reasons, 'jazzy' fails to install on CircleCI if 'atomos' is not installed first.
-      - run: sudo gem install atomos jazzy
+      - run: sudo gem install jazzy --no-document
       - run: brew install cmake
       # Build the framework in debug mode and package it into pod.zip
       - run: make ios-framework-universal DEBUG=1
       - run: make ios-docs
       # To produce the intended structure within the zip archive, we must cd to each file's location.
-      - run: cd build/ios-framework-universal/Debug && zip -r ~/pod.zip TangramMap.framework
+      - run: cd build/ios/Debug-universal && zip -r ~/pod.zip TangramMap.framework
       # Add the readme and license files.
       - run: cd platforms/ios/framework && zip ~/pod.zip README.md
       - run: zip ~/pod.zip LICENSE
@@ -61,7 +59,7 @@ jobs:
           path: ~/pod.zip
   build-deploy-macos-snapshot:
     macos:
-      xcode: "9.2.0"
+      xcode: "9.4.0"
     steps:
       # Check out repository with submodules.
       - checkout
@@ -71,25 +69,24 @@ jobs:
       # Build the MacOS demo app and package it into demo.zip
       - run: make osx -j 2 MACOSX_DEPLOYMENT_TARGET=10.10.0
       # To produce the intended structure within the zip archive, we must cd to each file's location.
-      - run: cd build/osx/bin && zip -r ~/demo.zip tangram.app
+      - run: cd build/osx && zip -r ~/demo.zip tangram.app
       - store_artifacts:
           path: ~/demo.zip
   build-deploy-ios-release:
     macos:
-      xcode: "9.2.0"
+      xcode: "9.4.0"
     steps:
       # Check out repository with submodules.
       - checkout
       - run: git submodule update --init
       # Install dependencies.
-      # For unclear reasons, 'jazzy' fails to install on CircleCI if 'atomos' is not installed first.
-      - run: sudo gem install atomos jazzy
+      - run: gem install atomos jazzy --no-document
       - run: brew install cmake jfrog-cli-go
       # Build the framework in release mode and package it into pod.zip
       - run: make ios-framework-universal RELEASE=1
       - run: make ios-docs
       # To produce the intended structure within the zip archive, we must cd to each file's location.
-      - run: cd build/ios-framework-universal/Release && zip -r ~/pod.zip TangramMap.framework
+      - run: cd build/ios/Release-universal && zip -r ~/pod.zip TangramMap.framework
       # Add the readme and license files.
       - run: cd platforms/ios/framework && zip ~/pod.zip README.md
       - run: zip ~/pod.zip LICENSE
