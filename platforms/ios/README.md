@@ -36,7 +36,12 @@ make ios NEXTZEN_API_KEY=yourApiKeyHere
 
 You can optionally append a `BUILD_TYPE` variable to choose the build type, for example `BUILD_TYPE=Debug`.
 
-This will generate and compile an Xcode project for the Tangram iOS framework and demo application. To run/debug the demo application, open the projects in the iOS Xcode workspace:
+This will generate and compile an Xcode project for the Tangram iOS framework and demo application. 
+
+Note: Above will show code signing errors as no developer team is set for the `TangramDemo` application project, however
+this can be explicitly set for the projects in the iOS Xcode workspace.
+
+To run/debug the demo application, open the projects in the iOS Xcode workspace:
 
 ```bash
 open platforms/ios/Tangram.xcworkspace
