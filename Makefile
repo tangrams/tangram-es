@@ -169,7 +169,7 @@ clean-tizen-x86:
 	rm -rf ${TIZEN_X86_BUILD_DIR}
 
 android: android-demo
-	@echo "run: 'adb install -r platforms/android/demo/build/outputs/apk/demo-debug.apk'"
+	@echo "run: 'adb install -r platforms/android/demo/build/outputs/apk/debug/demo-debug.apk'"
 
 android-sdk:
 	@cd platforms/android/ && \
