@@ -31,16 +31,13 @@ To get an API key visit: [developers.nextzen.org](https://developers.nextzen.org
 Building the iOS demo application requires Xcode 9.0 or newer. From the root directory of the project, run:
 
 ```bash
-make ios NEXTZEN_API_KEY=yourApiKeyHere
+make ios-xcode NEXTZEN_API_KEY=yourApiKeyHere
 ```
 
 You can optionally append a `BUILD_TYPE` variable to choose the build type, for example `BUILD_TYPE=Debug`.
 
-This will generate and compile an Xcode project for the Tangram iOS framework and demo application. To run/debug the demo application, open the projects in the iOS Xcode workspace:
-
-```bash
-open platforms/ios/Tangram.xcworkspace
-```
+This will generate an Xcode project for the Tangram iOS framework and demo application and open the project in an Xcode
+workspace. 
 
 Note on Code Signing and Provisioning Profiles:
 * For Simulator: Code signing is not required, so you can ignore any signing errors in target _TangramDemo_ > _General_ > _Signing_.
