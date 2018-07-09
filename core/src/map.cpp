@@ -728,6 +728,18 @@ float Map::getTilt() {
     return impl->view.getPitch();
 }
 
+void Map::getEnclosingViewPosition(LngLat _a, LngLat _b, float _bufferMeters, LngLat& _center, float& _zoom) {
+    const MapProjection& projection = impl->view.getMapProjection();
+    glm::dvec2 aMeters = projection.LonLatToMeters(glm::dvec2(_a.longitude, _a.latitude));
+    glm::dvec2 bMeters = projection.LonLatToMeters(glm::dvec2(_b.longitude, _b.latitude));
+    double distance = glm::distance(aMeters, bMeters) * (1. + _bufferMeters);
+    double focusScale = distance / (2. * MapProjection::HALF_CIRCUMFERENCE);
+    double viewScale = impl->view.getWidth() / projection.TileSize();
+    _zoom = -log2(focusScale / viewScale);
+    glm::dvec2 center = projection.MetersToLonLat((aMeters + bMeters) * 0.5);
+    _center = LngLat{center.x, center.y};
+}
+
 void Map::flyTo(double _lon, double _lat, float _z, float _duration, float _speed) {
 
     double lonStart = 0., latStart = 0.;

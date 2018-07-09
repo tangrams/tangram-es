@@ -205,6 +205,8 @@ public:
     // Get the tilt angle of the view in radians; 0 corresponds to straight down
     float getTilt();
 
+    void getEnclosingViewPosition(LngLat a, LngLat b, float bufferMeters, LngLat& center, float& zoom);
+
     // Run flight animation to change postion and zoom  of the map
     // If _duration is 0, speed is used as factor to change the duration that is
     // calculated for the duration of the flight path. (Recommended range 0.1 - 2.0)
