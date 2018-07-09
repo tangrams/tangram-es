@@ -4,8 +4,13 @@ public class CameraUpdate {
     CameraPosition position;
     Float zoomBy;
     Float zoomTo;
+    Float rotation;
+    Float tilt;
     float[] scrollBy;
     LngLat lngLat;
+
+    LngLat[] bounds;
+    int padding;
 
     public CameraUpdate scrollBy(float x, float y) {
         scrollBy = new float[2];
@@ -34,6 +39,16 @@ public class CameraUpdate {
         return this;
     }
 
+    public CameraUpdate setRotation(float radians) {
+        rotation = new Float(radians);
+        return this;
+    }
+
+    public CameraUpdate setTilt(float radians) {
+        tilt = new Float(radians);
+        return this;
+    }
+
     public static CameraUpdate newCameraPosition(CameraPosition camera) {
         CameraUpdate update = new CameraUpdate();
         update.position = camera;
@@ -49,24 +64,9 @@ public class CameraUpdate {
 
     public static CameraUpdate newLatLngBounds(LngLat b1, LngLat b2, int padding) {
         CameraUpdate update = new CameraUpdate();
-        // TODO
+        update.bounds = new LngLat[] {b1, b2};
+        update.padding = padding;
         return update;
     }
 
-    void applyTo(CameraPosition camera) {
-        if (position != null) {
-            camera.set(position);
-        }
-        if (lngLat != null && zoomTo != null) {
-            camera.longitude = lngLat.longitude;
-            camera.latitude = lngLat.latitude;
-            camera.zoom = zoomTo;
-        }
-        if (zoomBy != null) {
-            camera.zoom += zoomBy;
-        }
-
-        // TODO bounds, scrollBy
-
-    }
 }

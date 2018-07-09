@@ -109,6 +109,20 @@ extern "C" {
         return map->getTilt();
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetEnclosingViewPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble aLng, jdouble aLat, jdouble bLng, jdouble bLat,
+                                                                                                jfloat bufferMeters, jdoubleArray lngLatZoom) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        LngLat center;
+        float zoom;
+        map->getEnclosingViewPosition(LngLat{aLng,aLat}, LngLat{bLng,bLat}, bufferMeters, center, zoom);
+        jdouble* arr = jniEnv->GetDoubleArrayElements(lngLatZoom, NULL);
+        arr[0] = center.longitude;
+        arr[1] = center.latitude;
+        arr[2] = zoom;
+        jniEnv->ReleaseDoubleArrayElements(lngLatZoom, arr, 0);
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeFlyTo(JNIEnv* jniEnv, jobject obj,  jlong mapPtr, jdouble lon, jdouble lat, jfloat zoom, jfloat duration, jfloat speed) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);

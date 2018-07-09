@@ -502,7 +502,37 @@ public class MapController implements Renderer {
 
         CameraPosition camera = getCameraPosition();
 
-        update.applyTo(camera);
+
+        if (update.position != null) {
+            camera.set(update.position);
+        }
+        if (update.bounds != null) {
+            double[] lngLatZoom = new double[3];
+            nativeGetEnclosingViewPosition(mapPointer, update.bounds[0].longitude, update.bounds[0].latitude,
+                    update.bounds[1].longitude, update.bounds[1].latitude, update.padding, lngLatZoom);
+
+            camera.longitude = lngLatZoom[0];
+            camera.latitude = lngLatZoom[1];
+            camera.zoom = (float)lngLatZoom[2];
+        }
+        if (update.lngLat != null) {
+            camera.longitude = update.lngLat.longitude;
+            camera.latitude = update.lngLat.latitude;
+        }
+        if (update.zoomTo != null) {
+            camera.zoom = update.zoomTo;
+        }
+        if (update.zoomBy != null) {
+            camera.zoom += update.zoomBy;
+        }
+        if (update.rotation != null) {
+            camera.rotation = update.rotation;
+        }
+        if (update.tilt != null) {
+            camera.tilt = update.tilt;
+        }
+        // TODO scrollBy
+
 
         final float seconds = duration / 1000.f;
         nativeSetCameraPosition(mapPointer, camera.longitude, camera.latitude, camera.zoom, camera.rotation, camera.tilt, seconds, ease.ordinal());
@@ -1352,6 +1382,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeSetTilt(long mapPtr, float radians);
     private synchronized native float nativeGetTilt(long mapPtr);
     private synchronized native void nativeFlyTo(long mapPtr, double lon, double lat, float zoom, float duration, float speed);
+    private synchronized native void nativeGetEnclosingViewPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, float bufferMeters, double[] lngLatZoom);
     private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);
     private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates);
     private synchronized native void nativeSetPixelScale(long mapPtr, float scale);
