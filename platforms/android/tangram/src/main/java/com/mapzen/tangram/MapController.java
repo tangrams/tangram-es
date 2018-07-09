@@ -469,8 +469,11 @@ public class MapController implements Renderer {
         checkPointer(mapPointer);
 
         if (cameraAnimationCallback != null) {
-            cameraAnimationCallback.onCancel();
+            // NB: Prevent recursion loop when setCameraPositionEased is called from onCancel callback
+            CameraAnimationCallback prev = cameraAnimationCallback;
             cameraAnimationCallback = null;
+            prev.onCancel();
+
         }
         cameraAnimationCallback = cb;
 
