@@ -197,6 +197,9 @@ ios: cmake-ios
 ios-sim: cmake-ios
 	xcodebuild -workspace platforms/ios/Tangram.xcworkspace -scheme TangramDemo -configuration ${BUILD_TYPE} -sdk iphonesimulator ${XCPRETTY}
 
+ios-xcode: cmake-ios
+	open platforms/ios/Tangram.xcworkspace
+
 ios-docs:
 ifeq (, $(shell which jazzy))
 	$(error "Please install jazzy by running 'gem install jazzy'")
