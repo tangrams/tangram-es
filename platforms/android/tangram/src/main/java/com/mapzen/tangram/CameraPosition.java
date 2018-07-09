@@ -19,4 +19,12 @@ public class CameraPosition {
                 Float.compare(that.rotation, rotation) == 0 &&
                 Float.compare(that.tilt, tilt) == 0;
     }
+
+    public void set(CameraPosition camera) {
+        longitude = camera.longitude;
+        latitude = camera.latitude;
+        zoom = camera.zoom;
+        rotation = camera.rotation;
+        tilt = camera.tilt;
+    }
 }

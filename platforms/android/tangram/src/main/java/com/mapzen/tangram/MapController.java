@@ -482,6 +482,33 @@ public class MapController implements Renderer {
     }
 
     /**
+     * Set the camera position of the map view with default easing
+     * @param update CameraUpdate to update current camera position
+     * @param duration Time in milliseconds to ease to the given position
+     * @param ease Type of easing to use
+     * @param cb callback for handling animation finished or canceled event
+     */
+    public void setCameraPositionEased(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease, final CameraAnimationCallback cb) {
+        checkPointer(mapPointer);
+
+        if (cameraAnimationCallback != null) {
+            // NB: Prevent recursion loop when setCameraPositionEased is called from onCancel callback
+            CameraAnimationCallback prev = cameraAnimationCallback;
+            cameraAnimationCallback = null;
+            prev.onCancel();
+
+        }
+        cameraAnimationCallback = cb;
+
+        CameraPosition camera = getCameraPosition();
+
+        update.applyTo(camera);
+
+        final float seconds = duration / 1000.f;
+        nativeSetCameraPosition(mapPointer, camera.longitude, camera.latitude, camera.zoom, camera.rotation, camera.tilt, seconds, ease.ordinal());
+    }
+
+    /**
      * Get the cameraPosition of the map view
      * @return The current camera position
      */
