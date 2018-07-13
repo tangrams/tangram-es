@@ -1,5 +1,7 @@
 package com.mapzen.tangram;
 
+import android.support.annotation.NonNull;
+
 public class CameraPosition {
 
     public double longitude; // Degrees longitude
@@ -26,5 +28,26 @@ public class CameraPosition {
         zoom = camera.zoom;
         rotation = camera.rotation;
         tilt = camera.tilt;
+    }
+
+    public LngLat getPosition(@NonNull LngLat lngLat) {
+        lngLat.set(longitude, latitude);
+        return lngLat;
+    }
+
+    public LngLat getPosition() {
+        return getPosition(new LngLat());
+    }
+
+    public float getZoom() {
+        return zoom;
+    }
+
+    public float getRotation() {
+        return rotation;
+    }
+
+    public float getTilt() {
+        return tilt;
     }
 }

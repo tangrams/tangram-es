@@ -1,51 +1,48 @@
 package com.mapzen.tangram;
 
 public class CameraUpdate {
+
     CameraPosition position;
     Float zoomBy;
     Float zoomTo;
     Float rotation;
     Float tilt;
-    float[] scrollBy;
     LngLat lngLat;
-
     LngLat[] bounds;
     int padding;
 
-    public CameraUpdate scrollBy(float x, float y) {
-        scrollBy = new float[2];
-        scrollBy[0] = x;
-        scrollBy[1] = y;
+    public CameraUpdate setPosition(LngLat lngLat) {
+        this.lngLat = new LngLat(lngLat);
         return this;
     }
 
-    public CameraUpdate zoomBy(float dz) {
-        zoomBy = new Float(dz);
-        return this;
-    }
-
-    public CameraUpdate zoomIn() {
-        zoomBy = new Float(1);
-        return this;
-    }
-
-    public CameraUpdate zoomOut() {
-        zoomBy = new Float(-1);
-        return this;
-    }
-
-    public CameraUpdate zoomTo(float zoom) {
-        zoomTo = new Float(zoom);
+    public CameraUpdate setZoom(float zoom) {
+        this.zoomTo = new Float(zoom);
         return this;
     }
 
     public CameraUpdate setRotation(float radians) {
-        rotation = new Float(radians);
+        this.rotation = new Float(radians);
         return this;
     }
 
     public CameraUpdate setTilt(float radians) {
-        tilt = new Float(radians);
+        this.tilt = new Float(radians);
+        return this;
+    }
+
+    public CameraUpdate zoomBy(float dz) {
+        this.zoomBy = new Float(dz);
+        return this;
+    }
+
+    public CameraUpdate zoomIn() {
+        this.zoomBy = new Float(1);
+        return this;
+    }
+
+    public CameraUpdate zoomOut() {
+        this.zoomBy = new Float(-1);
         return this;
     }
 
@@ -62,10 +59,10 @@ public class CameraUpdate {
         return update;
     }
 
-    public static CameraUpdate newLatLngBounds(LngLat b1, LngLat b2, int padding) {
+    public static CameraUpdate newLatLngBounds(LngLat b1, LngLat b2, int paddingMeters) {
         CameraUpdate update = new CameraUpdate();
-        update.bounds = new LngLat[] {b1, b2};
-        update.padding = padding;
+        update.bounds = new LngLat[] {new LngLat(b1), new LngLat(b2)};
+        update.padding = paddingMeters;
         return update;
     }
 
