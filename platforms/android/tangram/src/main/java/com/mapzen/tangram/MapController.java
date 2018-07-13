@@ -492,6 +492,26 @@ public class MapController implements Renderer {
      * Set the camera position of the map view with default easing
      * @param update CameraUpdate to update current camera position
      * @param duration Time in milliseconds to ease to the given position
+     */
+    public void setCameraPositionEased(@NonNull final CameraUpdate update, final int duration) {
+        setCameraPositionEased(update, duration, DEFAULT_EASE_TYPE, null);
+    }
+
+
+    /**
+     * Set the camera position of the map view with default easing
+     * @param update CameraUpdate to update current camera position
+     * @param duration Time in milliseconds to ease to the given position
+     * @param ease Type of easing to use
+     */
+    public void setCameraPositionEased(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease) {
+        setCameraPositionEased(update, duration, ease, null);
+    }
+
+    /**
+     * Set the camera position of the map view with default easing
+     * @param update CameraUpdate to update current camera position
+     * @param duration Time in milliseconds to ease to the given position
      * @param ease Type of easing to use
      * @param cb callback for handling animation finished or canceled event
      */
@@ -569,28 +589,9 @@ public class MapController implements Renderer {
      * Set the geographic position of the center of the map view
      * @param position LngLat of the position to set
      */
-    public void setPosition(@NonNull final LngLat position) {
+     public void setPosition(@NonNull final LngLat position) {
         setCameraPosition(new CameraUpdate().setPosition(position));
-    }
-
-    /**
-     * Set the geographic position of the center of the map view with default easing
-     * @param position LngLat of the position to set
-     * @param duration Time in milliseconds to ease to the given position
-     */
-    public void setPositionEased(@NonNull final LngLat position, final int duration) {
-        setPositionEased(position, duration, DEFAULT_EASE_TYPE);
-    }
-
-    /**
-     * Set the geographic position of the center of the map view with custom easing
-     * @param position LngLat of the position to set
-     * @param duration Time in milliseconds to ease to the given position
-     * @param ease Type of easing to use
-     */
-    public void setPositionEased(@NonNull final LngLat position, final int duration, @NonNull final EaseType ease) {
-        setCameraPositionEased(new CameraUpdate().setPosition(position), duration, ease, null);
-    }
+     }
 
     /**
      * Get the geographic position of the center of the map view
@@ -615,27 +616,8 @@ public class MapController implements Renderer {
      * Set the zoom level of the map view
      * @param zoom Zoom level; lower values show more area
      */
-    public void setZoom(final float zoom) {
+     public void setZoom(final float zoom) {
         setCameraPosition(new CameraUpdate().setZoom(zoom));
-    }
-
-    /**
-     * Set the zoom level of the map view with default easing
-     * @param zoom Zoom level; lower values show more area
-     * @param duration Time in milliseconds to ease to given zoom
-     */
-    public void setZoomEased(final float zoom, final int duration) {
-        setZoomEased(zoom, duration, DEFAULT_EASE_TYPE);
-    }
-
-    /**
-     * Set the zoom level of the map view with custom easing
-     * @param zoom Zoom level; lower values show more area
-     * @param duration Time in milliseconds to ease to given zoom
-     * @param ease Type of easing to use
-     */
-    public void setZoomEased(final float zoom, final int duration, @NonNull final EaseType ease) {
-        setCameraPositionEased(new CameraUpdate().setZoom(zoom), duration, ease, null);
     }
 
     /**
@@ -650,27 +632,8 @@ public class MapController implements Renderer {
      * Set the rotation of the view
      * @param rotation Counter-clockwise rotation in radians; 0 corresponds to North pointing up
      */
-    public void setRotation(final float rotation) {
+     public void setRotation(final float rotation) {
         setCameraPosition(new CameraUpdate().setRotation(rotation));
-    }
-
-    /**
-     * Set the rotation of the view with default easing
-     * @param rotation Counter-clockwise rotation in radians; 0 corresponds to North pointing up
-     * @param duration Time in milliseconds to ease to the given rotation
-     */
-    public void setRotationEased(final float rotation, final int duration) {
-        setRotationEased(rotation, duration, DEFAULT_EASE_TYPE);
-    }
-
-    /**
-     * Set the rotation of the view with custom easing
-     * @param rotation Counter-clockwise rotation in radians; 0 corresponds to North pointing up
-     * @param duration Time in milliseconds to ease to the given rotation
-     * @param ease Type of easing to use
-     */
-    public void setRotationEased(final float rotation, final int duration, @NonNull final EaseType ease) {
-        setCameraPositionEased(new CameraUpdate().setRotation(rotation), duration, ease, null);
     }
 
     /**
@@ -687,25 +650,6 @@ public class MapController implements Renderer {
      */
     public void setTilt(final float tilt) {
         setCameraPosition(new CameraUpdate().setTilt(tilt));
-    }
-
-    /**
-     * Set the tilt angle of the view with default easing
-     * @param tilt Tilt angle in radians; 0 corresponds to straight down
-     * @param duration Time in milliseconds to ease to the given tilt
-     */
-    public void setTiltEased(final float tilt, final int duration) {
-        setTiltEased(tilt, duration, DEFAULT_EASE_TYPE);
-    }
-
-    /**
-     * Set the tilt angle of the view with custom easing
-     * @param tilt Tilt angle in radians; 0 corresponds to straight down
-     * @param duration Time in milliseconds to ease to the given tilt
-     * @param ease Type of easing to use
-     */
-    public void setTiltEased(final float tilt, final int duration, @NonNull final EaseType ease) {
-        setCameraPositionEased(new CameraUpdate().setTilt(tilt), duration, ease, null);
     }
 
     /**
