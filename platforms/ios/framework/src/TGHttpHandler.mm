@@ -3,6 +3,7 @@
 //  TangramMap
 //
 //  Created by Karim Naaji on 11/23/16.
+//  Updated by Matt Blair on 7/13/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
@@ -13,7 +14,7 @@
 @property (strong, nonatomic) NSURLSession* session;
 @property (strong, nonatomic) NSURLSessionConfiguration* configuration;
 
-+ (NSURLSessionConfiguration*)defaultConfiguration;
++ (NSURLSessionConfiguration*)defaultSessionConfiguration;
 
 @end
 

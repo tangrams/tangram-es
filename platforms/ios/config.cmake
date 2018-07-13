@@ -31,7 +31,7 @@ set(TANGRAM_FRAMEWORK_HEADERS
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGHttpHandler.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGLabelPickResult.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMarkerPickResult.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapViewController.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapView.h
 )
 
 set(TANGRAM_FRAMEWORK_SOURCES
@@ -56,8 +56,8 @@ set(TANGRAM_FRAMEWORK_SOURCES
   platforms/ios/framework/src/TGMarker+Internal.h
   platforms/ios/framework/src/TGMarker.mm
   platforms/ios/framework/src/TGTypes.mm
-  platforms/ios/framework/src/TGMapViewController+Internal.h
-  platforms/ios/framework/src/TGMapViewController.mm
+  platforms/ios/framework/src/TGMapView+Internal.h
+  platforms/ios/framework/src/TGMapView.mm
 )
 
 ### Configure dynamic framework build target. 
@@ -75,6 +75,7 @@ target_link_libraries(TangramMap PRIVATE
   "-framework CoreText"
   "-framework GLKit"
   "-framework OpenGLES"
+  "-framework QuartzCore"
   "-framework UIKit"
 )
 
@@ -108,6 +109,7 @@ target_link_libraries(tangram-static PRIVATE
   "-framework CoreText"
   "-framework GLKit"
   "-framework OpenGLES"
+  "-framework QuartzCore"
   "-framework UIKit"
 )
 

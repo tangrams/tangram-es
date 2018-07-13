@@ -1,44 +1,320 @@
 //
-//  TGMapViewController.mm
+//  TGMapView.mm
 //  TangramMap
 //
-//  Created by Matt Blair on 8/25/14.
-//  Updated by Matt Smollinger on 7/29/16.
-//  Updated by Karim Naaji on 2/15/17.
-//  Copyright (c) 2017 Mapzen. All rights reserved.
+//  Created by Matt Blair on 7/10/18.
 //
 
-#import "TGMapViewController+Internal.h"
-#import "TGMapData+Internal.h"
-#import "TGMarkerPickResult+Internal.h"
-#import "TGLabelPickResult+Internal.h"
-#import "TGMarker+Internal.h"
+#import "TGMapView.h"
+#import "TGMapView+Internal.h"
 #import "TGHelpers.h"
-#import "data/propertyItem.h"
-#import "iosPlatform.h"
-#import "map.h"
+#import "TGHttpHandler.h"
+#import "TGLabelPickResult.h"
+#import "TGLabelPickResult+Internal.h"
+#import "TGMapData.h"
+#import "TGMapData+Internal.h"
+#import "TGMarkerPickResult.h"
+#import "TGMarkerPickResult+Internal.h"
+#import "TGMarker.h"
+#import "TGMarker+Internal.h"
+#import "TGSceneUpdate.h"
+#import <GLKit/GLKit.h>
 
-#import <unordered_map>
-#import <functional>
+#include "data/propertyItem.h"
+#include "iosPlatform.h"
+#include "map.h"
+#include <unordered_map>
+#include <functional>
 
 __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
-@interface TGMapViewController () {
-    BOOL shouldCaptureFrame;
-    BOOL captureFrameWaitForViewComplete;
-    BOOL viewComplete;
-    BOOL viewInBackground;
+@interface TGMapView () <UIGestureRecognizerDelegate, GLKViewDelegate> {
+    BOOL _shouldCaptureFrame;
+    BOOL _captureFrameWaitForViewComplete;
+    BOOL _viewComplete;
+    BOOL _viewInBackground;
+    BOOL _renderRequested;
 }
 
 @property (nullable, strong, nonatomic) EAGLContext* context;
-@property (assign, nonatomic) CGFloat contentScaleFactor;
-@property (assign, nonatomic) BOOL renderRequested;
+@property (strong, nonatomic) GLKView* glView;
+@property (strong, nonatomic) CADisplayLink* displayLink;
 @property (strong, nonatomic) NSMutableDictionary* markersById;
 @property (strong, nonatomic) NSMutableDictionary* dataLayersByName;
 
-@end
+@end // interface TGMapView
 
-@implementation TGMapViewController
+@implementation TGMapView
+
+- (instancetype)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        [self setup];
+    }
+    return self;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super initWithCoder:aDecoder];
+    if (self) {
+        [self setup];
+    }
+    return self;
+}
+
+- (void)dealloc
+{
+    if (_map) {
+        delete _map;
+    }
+
+    if ([EAGLContext currentContext] == _context) {
+        [EAGLContext setCurrentContext:nil];
+    }
+
+    if (_displayLink) {
+        [_displayLink invalidate];
+    }
+}
+
+- (void)setup
+{
+    __weak TGMapView* weakSelf = self;
+    std::shared_ptr<Tangram::Platform> platform(new Tangram::iOSPlatform(weakSelf));
+    _map = new Tangram::Map(platform);
+
+    NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
+    [notificationCenter addObserver:self
+                           selector:@selector(didEnterBackground:)
+                               name:UIApplicationDidEnterBackgroundNotification
+                             object:nil];
+
+    [notificationCenter addObserver:self
+                           selector:@selector(didLeaveBackground:)
+                               name:UIApplicationWillEnterForegroundNotification
+                             object:nil];
+
+    [notificationCenter addObserver:self
+                           selector:@selector(didLeaveBackground:)
+                               name:UIApplicationDidBecomeActiveNotification
+                             object:nil];
+
+    _viewComplete = NO;
+    _captureFrameWaitForViewComplete = YES;
+    _shouldCaptureFrame = NO;
+    _viewInBackground = [UIApplication sharedApplication].applicationState == UIApplicationStateBackground;
+    _renderRequested = YES;
+    _continuous = NO;
+    _preferredFramesPerSecond = 60;
+    _markersById = [[NSMutableDictionary alloc] init];
+    _dataLayersByName = [[NSMutableDictionary alloc] init];
+    _resourceRoot = [[NSBundle mainBundle] resourceURL];
+
+    // TODO: Instantiate httpHandler lazily so that if a client app provides one, the default never needs to be created.
+    _httpHandler = [[TGHttpHandler alloc] initWithCachePath:@"/tangram_cache"
+                                        cacheMemoryCapacity:4*1024*1024
+                                          cacheDiskCapacity:30*1024*1024];
+
+    if(!_viewInBackground) {
+        [self setupGL];
+    }
+
+    [self setupGestureRecognizers];
+
+    self.clipsToBounds = YES;
+    self.opaque = YES;
+    self.autoresizesSubviews = YES;
+    self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+}
+
+- (void)didEnterBackground:(__unused NSNotification *)notification
+{
+    _viewInBackground = YES;
+    _displayLink.paused = YES;
+}
+
+- (void)didLeaveBackground:(__unused NSNotification *)notification
+{
+    _viewInBackground = NO;
+    if (!_context) {
+        [self setupGL];
+    }
+    _displayLink.paused = NO;
+}
+
+- (void)setupGL
+{
+    _context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+
+    if (!_context) {
+        NSLog(@"Failed to create GLES context");
+        return;
+    }
+
+    _glView = [[GLKView alloc] initWithFrame:self.bounds context:_context];
+
+    _glView.drawableColorFormat = GLKViewDrawableColorFormatRGBA8888;
+    _glView.drawableDepthFormat = GLKViewDrawableDepthFormat24;
+    _glView.drawableStencilFormat = GLKViewDrawableStencilFormat8;
+    _glView.drawableMultisample = GLKViewDrawableMultisampleNone;
+    _glView.opaque = YES;
+    _glView.delegate = self;
+    _glView.autoresizingMask = self.autoresizingMask;
+
+
+    [EAGLContext setCurrentContext:self.context];
+    [_glView bindDrawable];
+
+    [self insertSubview:_glView atIndex:0];
+
+    // By default,  a GLKView's contentScaleFactor property matches the scale of
+    // the screen that contains it, so the framebuffer is already configured for
+    // rendering at the full resolution of the display.
+    self.contentScaleFactor = _glView.contentScaleFactor;
+
+    _map->setupGL();
+    _map->setPixelScale(_glView.contentScaleFactor);
+
+    UIColor* backgroundColor = self.backgroundColor;
+
+    if (backgroundColor != nil) {
+        CGFloat red = 0.0, green = 0.0, blue = 0.0, alpha = 0.0;
+        [backgroundColor getRed:&red green:&green blue:&blue alpha:&alpha];
+        _map->setDefaultBackgroundColor(red, green, blue);
+    }
+
+}
+
+- (void)setupDisplayLink
+{
+    BOOL visible = self.superview && self.window;
+    if (visible && !_displayLink) {
+        _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(displayLinkUpdate:)];
+        _displayLink.preferredFramesPerSecond = self.preferredFramesPerSecond;
+        [_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
+        _renderRequested = YES;
+    } else if (!visible && _displayLink) {
+        [_displayLink invalidate];
+        _displayLink = nil;
+    }
+}
+
+- (void)setupGestureRecognizers
+{
+    _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(respondToTapGesture:)];
+    _tapGestureRecognizer.numberOfTapsRequired = 1;
+    // TODO: Figure a way to have a delay set for it not to tap gesture not to wait long enough for a doubletap gesture to be recognized
+    _tapGestureRecognizer.delaysTouchesEnded = NO;
+
+    _doubleTapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(respondToDoubleTapGesture:)];
+    _doubleTapGestureRecognizer.numberOfTapsRequired = 2;
+    // Ignore single tap when double tap occurs
+    [_tapGestureRecognizer requireGestureRecognizerToFail:_doubleTapGestureRecognizer];
+
+    _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(respondToPanGesture:)];
+    _panGestureRecognizer.maximumNumberOfTouches = 1;
+
+    _pinchGestureRecognizer = [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(respondToPinchGesture:)];
+    _rotationGestureRecognizer = [[UIRotationGestureRecognizer alloc] initWithTarget:self action:@selector(respondToRotationGesture:)];
+    _shoveGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(respondToShoveGesture:)];
+    _shoveGestureRecognizer.minimumNumberOfTouches = 2;
+    _longPressGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(respondToLongPressGesture:)];
+
+    // Use the delegate method 'shouldRecognizeSimultaneouslyWithGestureRecognizer' for gestures that can be concurrent
+    _panGestureRecognizer.delegate = self;
+    _pinchGestureRecognizer.delegate = self;
+    _rotationGestureRecognizer.delegate = self;
+
+    [_glView addGestureRecognizer:_tapGestureRecognizer];
+    [_glView addGestureRecognizer:_doubleTapGestureRecognizer];
+    [_glView addGestureRecognizer:_panGestureRecognizer];
+    [_glView addGestureRecognizer:_pinchGestureRecognizer];
+    [_glView addGestureRecognizer:_rotationGestureRecognizer];
+    [_glView addGestureRecognizer:_shoveGestureRecognizer];
+    [_glView addGestureRecognizer:_longPressGestureRecognizer];
+}
+
+- (void)displayLinkUpdate:(CADisplayLink *)sender
+{
+    if (_renderRequested || self.continuous) {
+        _renderRequested = NO;
+        [self.glView display];
+    }
+}
+
+
+- (void)didReceiveMemoryWarning
+{
+    if (self.map) {
+        self.map->onMemoryWarning();
+    }
+}
+
+- (void)didMoveToWindow
+{
+    [self setupDisplayLink];
+    [super didMoveToWindow];
+}
+
+- (void)didMoveToSuperview
+{
+    [self setupDisplayLink];
+    [super didMoveToSuperview];
+}
+
+- (void)layoutSubviews
+{
+    [super layoutSubviews];
+
+    CGSize size = self.bounds.size;
+    self.map->resize(size.width * self.contentScaleFactor, size.height * self.contentScaleFactor);
+
+    [self requestRender];
+}
+
+- (void)requestRender
+{
+    if (!self.map) { return; }
+
+    _renderRequested = YES;
+}
+
+- (void)captureScreenshot:(BOOL)waitForViewComplete
+{
+    self->_captureFrameWaitForViewComplete = waitForViewComplete;
+    self->_shouldCaptureFrame = YES;
+}
+
+- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
+{
+    if (self->_viewInBackground) {
+        return;
+    }
+
+    CFTimeInterval dt = _displayLink.targetTimestamp - _displayLink.timestamp;
+    _viewComplete = self.map->update(dt);
+
+    self.map->render();
+
+    if (_viewComplete && [self.mapViewDelegate respondsToSelector:@selector(mapViewDidCompleteLoading:)]) {
+        [self.mapViewDelegate mapViewDidCompleteLoading:self];
+    }
+
+    if (self.mapViewDelegate && [self.mapViewDelegate respondsToSelector:@selector(mapView:didCaptureScreenshot:)]) {
+        if (self->_shouldCaptureFrame && (!self->_captureFrameWaitForViewComplete || self->_viewComplete)) {
+            UIGraphicsBeginImageContext(self.frame.size);
+            [self drawViewHierarchyInRect:self.frame afterScreenUpdates:YES];
+            UIImage* screenshot = UIGraphicsGetImageFromCurrentImageContext();
+            UIGraphicsEndImageContext();
+
+            [self.mapViewDelegate mapView:self didCaptureScreenshot:screenshot];
+
+            self->_shouldCaptureFrame = NO;
+        }
+    }
+}
 
 - (NSArray<TGMarker *> *)markers
 {
@@ -53,14 +329,14 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 - (TGMarker*)markerAdd
 {
     TGMarker* marker = [[TGMarker alloc] initWithMap:self.map];
-    NSString* key = [NSString stringWithFormat:@"%d", (NSUInteger)marker.identifier];
+    NSString* key = [NSString stringWithFormat:@"%d", marker.identifier];
     self.markersById[key] = marker;
     return marker;
 }
 
 - (void)markerRemove:(TGMarker *)marker
 {
-    NSString* key = [NSString stringWithFormat:@"%d", (NSUInteger)marker.identifier];
+    NSString* key = [NSString stringWithFormat:@"%d", marker.identifier];
     self.map->markerRemove(marker.identifier);
     [self.markersById removeObjectForKey:key];
     marker.identifier = 0;
@@ -94,10 +370,10 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 - (TGMapData *)addDataLayer:(NSString *)name
 {
-    return [self addDataLayer:name generateCentroid:false];
+    return [self addDataLayer:name generateCentroid:NO];
 }
 
-- (TGMapData *)addDataLayer:(NSString *)name generateCentroid:(bool)generateCentroid
+- (TGMapData *)addDataLayer:(NSString *)name generateCentroid:(BOOL)generateCentroid
 {
     if (!self.map) { return nil; }
 
@@ -106,7 +382,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
                     dataLayerName, "", generateCentroid);
     self.map->addTileSource(source);
 
-    __weak TGMapViewController* weakSelf = self;
+    __weak TGMapView* weakSelf = self;
     TGMapData* clientData = [[TGMapData alloc] initWithMapView:weakSelf name:name source:source];
     self.dataLayersByName[name] = clientData;
 
@@ -142,17 +418,17 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 }
 
 - (Tangram::SceneReadyCallback)sceneReadyListener {
-    __weak TGMapViewController* weakSelf = self;
+    __weak TGMapView* weakSelf = self;
 
     return [weakSelf](int sceneID, auto sceneError) {
-        __strong TGMapViewController* strongSelf = weakSelf;
+        __strong TGMapView* strongSelf = weakSelf;
 
         if (!strongSelf) {
             return;
         }
 
         [strongSelf.markersById removeAllObjects];
-        [strongSelf renderOnce];
+        [strongSelf requestRender];
 
         if (!strongSelf.mapViewDelegate || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didLoadScene:withError:)]) {
             return;
@@ -168,17 +444,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     };
 }
 
-- (int)loadSceneFromURL:(NSURL *)url
-{
-    return [self loadSceneFromURL:url withUpdates:nil];
-}
-
-- (int)loadSceneAsyncFromURL:(NSURL *)url
-{
-    return [self loadSceneAsyncFromURL:url withUpdates:nil];
-}
-
-- (int)loadSceneFromURL:(NSURL *)url withUpdates:(NSArray<TGSceneUpdate *> *)updates
+- (int)loadSceneFromURL:(NSURL *)url withUpdates:(nullable NSArray<TGSceneUpdate *> *)updates
 {
     if (!self.map) { return -1; }
 
@@ -188,7 +454,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     return self.map->loadScene([[url absoluteString] UTF8String], false, sceneUpdates);
 }
 
-- (int)loadSceneAsyncFromURL:(NSURL *)url withUpdates:(NSArray<TGSceneUpdate *> *)updates
+- (int)loadSceneAsyncFromURL:(NSURL *)url withUpdates:(nullable NSArray<TGSceneUpdate *> *)updates
 {
     if (!self.map) { return -1; }
 
@@ -198,7 +464,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     return self.map->loadSceneAsync([[url absoluteString] UTF8String], false, sceneUpdates);
 }
 
-- (int)loadSceneFromYAML:(NSString *)yaml relativeToURL:(NSURL *)url withUpdates:(NSArray<TGSceneUpdate *> *)updates
+- (int)loadSceneFromYAML:(NSString *)yaml relativeToURL:(NSURL *)url withUpdates:(nullable NSArray<TGSceneUpdate *> *)updates
 {
     if (!self.map) { return -1; }
 
@@ -208,7 +474,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     return self.map->loadSceneYaml([yaml UTF8String], [[url absoluteString] UTF8String], false, sceneUpdates);
 }
 
-- (int)loadSceneAsyncFromYAML:(NSString *)yaml relativeToURL:(NSURL *)url withUpdates:(NSArray<TGSceneUpdate *> *)updates
+- (int)loadSceneAsyncFromYAML:(NSString *)yaml relativeToURL:(NSURL *)url withUpdates:(nullable NSArray<TGSceneUpdate *> *)updates
 {
     if (!self.map) { return -1; }
 
@@ -289,9 +555,9 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     screenPosition.x *= self.contentScaleFactor;
     screenPosition.y *= self.contentScaleFactor;
 
-    __weak TGMapViewController* weakSelf = self;
+    __weak TGMapView* weakSelf = self;
     self.map->pickFeatureAt(screenPosition.x, screenPosition.y, [weakSelf](const Tangram::FeaturePickResult* featureResult) {
-        __strong TGMapViewController* strongSelf = weakSelf;
+        __strong TGMapView* strongSelf = weakSelf;
 
         if (!strongSelf || !strongSelf.mapViewDelegate || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
             return;
@@ -327,9 +593,9 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     screenPosition.x *= self.contentScaleFactor;
     screenPosition.y *= self.contentScaleFactor;
 
-    __weak TGMapViewController* weakSelf = self;
+    __weak TGMapView* weakSelf = self;
     self.map->pickMarkerAt(screenPosition.x, screenPosition.y, [weakSelf](const Tangram::MarkerPickResult* markerPickResult) {
-        __strong TGMapViewController* strongSelf = weakSelf;
+        __strong TGMapView* strongSelf = weakSelf;
 
         if (!strongSelf || !strongSelf.mapViewDelegate || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectMarker:atScreenPosition:)]) {
             return;
@@ -342,7 +608,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
             return;
         }
 
-        NSString* key = [NSString stringWithFormat:@"%d", (NSUInteger)markerPickResult->id];
+        NSString* key = [NSString stringWithFormat:@"%d", markerPickResult->id];
         TGMarker* marker = [strongSelf.markersById objectForKey:key];
 
         if (!marker) {
@@ -368,9 +634,9 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     screenPosition.x *= self.contentScaleFactor;
     screenPosition.y *= self.contentScaleFactor;
 
-    __weak TGMapViewController* weakSelf = self;
+    __weak TGMapView* weakSelf = self;
     self.map->pickLabelAt(screenPosition.x, screenPosition.y, [weakSelf](const Tangram::LabelPickResult* labelPickResult) {
-        __strong TGMapViewController* strongSelf = weakSelf;
+        __strong TGMapView* strongSelf = weakSelf;
 
         if (!strongSelf || !strongSelf.mapViewDelegate || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectLabel:atScreenPosition:)]) {
             return;
@@ -411,6 +677,8 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
     self.map->setPosition(position.longitude, position.latitude);
 }
+
+// TODO: Remove the variations of animateTo* with no ease type and add a TGEaseTypeDefault to use instead.
 
 - (void)animateToPosition:(TGGeoPoint)position withDuration:(float)seconds
 {
@@ -542,146 +810,74 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     self.map->setCameraType(cameraType);
 }
 
-#pragma mark Gestures
-
-- (void)setupGestureRecognizers
-{
-    _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(respondToTapGesture:)];
-    _tapGestureRecognizer.numberOfTapsRequired = 1;
-    // TODO: Figure a way to have a delay set for it not to tap gesture not to wait long enough for a doubletap gesture to be recognized
-    _tapGestureRecognizer.delaysTouchesEnded = NO;
-
-    _doubleTapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(respondToDoubleTapGesture:)];
-    _doubleTapGestureRecognizer.numberOfTapsRequired = 2;
-    // Distanle single tap when double tap occurs
-    [_tapGestureRecognizer requireGestureRecognizerToFail:_doubleTapGestureRecognizer];
-
-    _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(respondToPanGesture:)];
-    _panGestureRecognizer.maximumNumberOfTouches = 1;
-
-    _pinchGestureRecognizer = [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(respondToPinchGesture:)];
-    _rotationGestureRecognizer = [[UIRotationGestureRecognizer alloc] initWithTarget:self action:@selector(respondToRotationGesture:)];
-    _shoveGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(respondToShoveGesture:)];
-    _shoveGestureRecognizer.minimumNumberOfTouches = 2;
-    _longPressGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(respondToLongPressGesture:)];
-
-    // Use the delegate method 'shouldRecognizeSimultaneouslyWithGestureRecognizer' for gestures that can be concurrent
-    _panGestureRecognizer.delegate = self;
-    _pinchGestureRecognizer.delegate = self;
-    _rotationGestureRecognizer.delegate = self;
-
-    [self.view addGestureRecognizer:_tapGestureRecognizer];
-    [self.view addGestureRecognizer:_doubleTapGestureRecognizer];
-    [self.view addGestureRecognizer:_panGestureRecognizer];
-    [self.view addGestureRecognizer:_pinchGestureRecognizer];
-    [self.view addGestureRecognizer:_rotationGestureRecognizer];
-    [self.view addGestureRecognizer:_shoveGestureRecognizer];
-    [self.view addGestureRecognizer:_longPressGestureRecognizer];
-}
-
 - (void)setTapGestureRecognizer:(UITapGestureRecognizer *)recognizer
 {
     if (!recognizer) { return; }
     if (_tapGestureRecognizer) {
-        [self.view removeGestureRecognizer:_tapGestureRecognizer];
+        [_glView removeGestureRecognizer:_tapGestureRecognizer];
     }
     _tapGestureRecognizer = recognizer;
-    [self.view addGestureRecognizer:_tapGestureRecognizer];
+    [_glView addGestureRecognizer:_tapGestureRecognizer];
 }
 
 - (void)setDoubleTapGestureRecognizer:(UITapGestureRecognizer *)recognizer
 {
     if (!recognizer) { return; }
     if (_doubleTapGestureRecognizer) {
-        [self.view removeGestureRecognizer:_doubleTapGestureRecognizer];
+        [_glView removeGestureRecognizer:_doubleTapGestureRecognizer];
     }
     _doubleTapGestureRecognizer = recognizer;
-    [self.view addGestureRecognizer:_doubleTapGestureRecognizer];
+    [_glView addGestureRecognizer:_doubleTapGestureRecognizer];
 }
 
 - (void)setPanGestureRecognizer:(UIPanGestureRecognizer *)recognizer
 {
     if (!recognizer) { return; }
     if (_panGestureRecognizer) {
-        [self.view removeGestureRecognizer:_panGestureRecognizer];
+        [_glView removeGestureRecognizer:_panGestureRecognizer];
     }
     _panGestureRecognizer = recognizer;
-    [self.view addGestureRecognizer:_panGestureRecognizer];
+    [_glView addGestureRecognizer:_panGestureRecognizer];
 }
 
 - (void)setPinchGestureRecognizer:(UIPinchGestureRecognizer *)recognizer
 {
     if (!recognizer) { return; }
     if (_pinchGestureRecognizer) {
-        [self.view removeGestureRecognizer:_pinchGestureRecognizer];
+        [_glView removeGestureRecognizer:_pinchGestureRecognizer];
     }
     _pinchGestureRecognizer = recognizer;
-    [self.view addGestureRecognizer:_pinchGestureRecognizer];
+    [_glView addGestureRecognizer:_pinchGestureRecognizer];
 }
 
 - (void)setRotationGestureRecognizer:(UIRotationGestureRecognizer *)recognizer
 {
     if (!recognizer) { return; }
     if (_rotationGestureRecognizer) {
-        [self.view removeGestureRecognizer:_rotationGestureRecognizer];
+        [_glView removeGestureRecognizer:_rotationGestureRecognizer];
     }
     _rotationGestureRecognizer = recognizer;
-    [self.view addGestureRecognizer:_rotationGestureRecognizer];
+    [_glView addGestureRecognizer:_rotationGestureRecognizer];
 }
 
 - (void)setShoveGestureRecognizer:(UIPanGestureRecognizer *)recognizer
 {
     if (!recognizer) { return; }
     if (_shoveGestureRecognizer) {
-        [self.view removeGestureRecognizer:_shoveGestureRecognizer];
+        [_glView removeGestureRecognizer:_shoveGestureRecognizer];
     }
     _shoveGestureRecognizer = recognizer;
-    [self.view addGestureRecognizer:_shoveGestureRecognizer];
+    [_glView addGestureRecognizer:_shoveGestureRecognizer];
 }
 
 - (void)setLongPressGestureRecognizer:(UILongPressGestureRecognizer *)recognizer
 {
     if (!recognizer) { return; }
     if (_longPressGestureRecognizer) {
-        [self.view removeGestureRecognizer:_longPressGestureRecognizer];
+        [_glView removeGestureRecognizer:_longPressGestureRecognizer];
     }
     _longPressGestureRecognizer = recognizer;
-    [self.view addGestureRecognizer:_longPressGestureRecognizer];
-}
-
-- (SEL)respondToTapGestureAction
-{
-    return @selector(respondToTapGesture:);
-}
-
-- (SEL)respondToDoubleTapGestureAction
-{
-    return @selector(respondToDoubleTapGesture:);
-}
-
-- (SEL)respondToPanGestureAction
-{
-    return @selector(respondToPanGesture:);
-}
-
-- (SEL)respondToPinchGestureAction
-{
-    return @selector(respondToPinchGesture:);
-}
-
-- (SEL)respondToRotationGestureAction
-{
-    return @selector(respondToRotationGesture:);
-}
-
-- (SEL)respondToShoveGestureAction
-{
-    return @selector(respondToShoveGesture:);
-}
-
-- (SEL)respondToLongPressGestureAction
-{
-    return @selector(respondToLongPressGesture:);
+    [_glView addGestureRecognizer:_longPressGestureRecognizer];
 }
 
 // Implement touchesBegan to catch down events
@@ -705,7 +901,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)respondToLongPressGesture:(UILongPressGestureRecognizer *)longPressRecognizer
 {
-    CGPoint location = [longPressRecognizer locationInView:self.view];
+    CGPoint location = [longPressRecognizer locationInView:_glView];
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeLongPressGesture:)] ) {
         if (![self.gestureDelegate mapView:self recognizer:longPressRecognizer shouldRecognizeLongPressGesture:location]) { return; }
     }
@@ -717,7 +913,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer
 {
-    CGPoint location = [tapRecognizer locationInView:self.view];
+    CGPoint location = [tapRecognizer locationInView:_glView];
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeSingleTapGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:tapRecognizer shouldRecognizeSingleTapGesture:location]) { return; }
     }
@@ -729,7 +925,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)respondToDoubleTapGesture:(UITapGestureRecognizer *)doubleTapRecognizer
 {
-    CGPoint location = [doubleTapRecognizer locationInView:self.view];
+    CGPoint location = [doubleTapRecognizer locationInView:_glView];
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeDoubleTapGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:doubleTapRecognizer shouldRecognizeDoubleTapGesture:location]) { return; }
     }
@@ -741,7 +937,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)respondToPanGesture:(UIPanGestureRecognizer *)panRecognizer
 {
-    CGPoint displacement = [panRecognizer translationInView:self.view];
+    CGPoint displacement = [panRecognizer translationInView:_glView];
 
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizePanGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:panRecognizer shouldRecognizePanGesture:displacement]) {
@@ -749,11 +945,11 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
         }
     }
 
-    CGPoint velocity = [panRecognizer velocityInView:self.view];
-    CGPoint end = [panRecognizer locationInView:self.view];
+    CGPoint velocity = [panRecognizer velocityInView:_glView];
+    CGPoint end = [panRecognizer locationInView:_glView];
     CGPoint start = {end.x - displacement.x, end.y - displacement.y};
 
-    [panRecognizer setTranslation:CGPointZero inView:self.view];
+    [panRecognizer setTranslation:CGPointZero inView:_glView];
 
     switch (panRecognizer.state) {
         case UIGestureRecognizerStateChanged:
@@ -773,7 +969,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer
 {
-    CGPoint location = [pinchRecognizer locationInView:self.view];
+    CGPoint location = [pinchRecognizer locationInView:_glView];
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizePinchGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:pinchRecognizer shouldRecognizePinchGesture:location]) {
             return;
@@ -797,7 +993,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer
 {
-    CGPoint position = [rotationRecognizer locationInView:self.view];
+    CGPoint position = [rotationRecognizer locationInView:_glView];
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeRotationGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:rotationRecognizer shouldRecognizeRotationGesture:position]) {
             return;
@@ -821,8 +1017,8 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer
 {
-    CGPoint displacement = [shoveRecognizer translationInView:self.view];
-    [shoveRecognizer setTranslation:{0, 0} inView:self.view];
+    CGPoint displacement = [shoveRecognizer translationInView:_glView];
+    [shoveRecognizer setTranslation:{0, 0} inView:_glView];
 
     if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeShoveGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:shoveRecognizer shouldRecognizeShoveGesture:displacement]) {
@@ -839,228 +1035,5 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
         }
     }
 }
-#pragma mark Standard Initializer
 
-- (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
-{
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    if (self != nil) {
-        __weak TGMapViewController* weakSelf = self;
-        std::shared_ptr<Tangram::Platform> platform(new Tangram::iOSPlatform(weakSelf));
-        self.map = new Tangram::Map(platform);
-    }
-    return self;
-}
-
-- (instancetype)initWithCoder:(NSCoder *)aDecoder
-{
-    self = [super initWithCoder:aDecoder];
-    if (self != nil) {
-        __weak TGMapViewController* weakSelf = self;
-        std::shared_ptr<Tangram::Platform> platform(new Tangram::iOSPlatform(weakSelf));
-        self.map = new Tangram::Map(platform);
-    }
-    return self;
-}
-
-#pragma mark Map view lifecycle
-
-- (void)didEnterBackground:(__unused NSNotification *)notification
-{
-    if (!self->viewInBackground) {
-        self->viewInBackground = YES;
-    }
-}
-
-- (void)didLeaveBackground:(__unused NSNotification *)notification
-{
-    if (self->viewInBackground) {
-        if (!self.context) {
-            [self setupGL];
-        }
-
-        self->viewInBackground = NO;
-    }
-}
-
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
-
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(didEnterBackground:)
-                                                 name:UIApplicationDidEnterBackgroundNotification
-                                               object:nil];
-
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(didLeaveBackground:)
-                                                 name:UIApplicationWillEnterForegroundNotification
-                                               object:nil];
-
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(didLeaveBackground:)
-                                                 name:UIApplicationDidBecomeActiveNotification
-                                               object:nil];
-
-    self->viewComplete = NO;
-    self->captureFrameWaitForViewComplete = YES;
-    self->shouldCaptureFrame = NO;
-    self->viewInBackground = [UIApplication sharedApplication].applicationState == UIApplicationStateBackground;
-    self.renderRequested = YES;
-    self.continuous = NO;
-    self.markersById = [[NSMutableDictionary alloc] init];
-    self.dataLayersByName = [[NSMutableDictionary alloc] init];
-    self.resourceRoot = [[NSBundle mainBundle] resourceURL];
-
-    if (!self.httpHandler) {
-        self.httpHandler = [[TGHttpHandler alloc] initWithCachePath:@"/tangram_cache"
-                                                cacheMemoryCapacity:4*1024*1024
-                                                  cacheDiskCapacity:30*1024*1024];
-    }
-
-    [self setupGestureRecognizers];
-
-    if (!self->viewInBackground) {
-        [self setupGL];
-    } else {
-        self.context = nil;
-    }
-}
-
-- (void)dealloc
-{
-    if (self.map) {
-        delete self.map;
-    }
-
-    if ([EAGLContext currentContext] == self.context) {
-        [EAGLContext setCurrentContext:nil];
-    }
-}
-
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-
-    if (self.map) {
-        self.map->onMemoryWarning();
-    }
-}
-
-- (void)setupGL
-{
-    self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-
-    if (!self.context) {
-        NSLog(@"Failed to create ES context");
-    }
-
-    GLKView* view = (GLKView *)self.view;
-    view.context = self.context;
-
-    view.drawableColorFormat = GLKViewDrawableColorFormatRGBA8888;
-    view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
-    view.drawableStencilFormat = GLKViewDrawableStencilFormat8;
-    view.drawableMultisample = GLKViewDrawableMultisampleNone;
-
-    self.contentScaleFactor = view.contentScaleFactor;
-
-    [EAGLContext setCurrentContext:self.context];
-
-    self.map->setupGL();
-    self.map->setPixelScale(self.contentScaleFactor);
-
-    self.preferredFramesPerSecond = 60;
-
-    UIColor* backgroundColor = view.backgroundColor;
-
-    if (backgroundColor != nil) {
-        CGFloat red = 0.0, green = 0.0, blue = 0.0, alpha = 0.0;
-        [backgroundColor getRed:&red green:&green blue:&blue alpha:&alpha];
-        self.map->setDefaultBackgroundColor(red, green, blue);
-    }
-}
-
--(void)viewWillLayoutSubviews {
-    [super viewWillLayoutSubviews];
-    int width = self.view.bounds.size.width;
-    int height = self.view.bounds.size.height;
-    self.map->resize(width * self.contentScaleFactor, height * self.contentScaleFactor);
-}
-
-- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
-{
-    self.map->resize(size.width * self.contentScaleFactor, size.height * self.contentScaleFactor);
-
-    [self renderOnce];
-}
-
-- (void)requestRender
-{
-    if (!self.map) { return; }
-
-    self.renderRequested = YES;
-}
-
-- (void)renderOnce
-{
-    if (!self.continuous) {
-        self.renderRequested = YES;
-        self.paused = NO;
-    }
-}
-
-- (void)setContinuous:(BOOL)c
-{
-    _continuous = c;
-    self.paused = !c;
-}
-
-- (void)captureScreenshot:(BOOL)waitForViewComplete
-{
-    self->captureFrameWaitForViewComplete = waitForViewComplete;
-    self->shouldCaptureFrame = YES;
-}
-
-- (void)update
-{
-    if (self->viewInBackground) {
-        return;
-    }
-
-    self->viewComplete = self.map->update([self timeSinceLastUpdate]);
-
-    if (viewComplete && [self.mapViewDelegate respondsToSelector:@selector(mapViewDidCompleteLoading:)]) {
-        [self.mapViewDelegate mapViewDidCompleteLoading:self];
-    }
-
-    if (!self.continuous && !self.renderRequested) {
-        self.paused = YES;
-    }
-
-    self.renderRequested = NO;
-}
-
-- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
-{
-    if (self->viewInBackground) {
-        return;
-    }
-
-    self.map->render();
-
-    if (self.mapViewDelegate && [self.mapViewDelegate respondsToSelector:@selector(mapView:didCaptureScreenshot:)]) {
-        if (self->shouldCaptureFrame && (!self->captureFrameWaitForViewComplete || self->viewComplete)) {
-            UIGraphicsBeginImageContext(self.view.frame.size);
-            [self.view drawViewHierarchyInRect:self.view.frame afterScreenUpdates:YES];
-            UIImage* screenshot = UIGraphicsGetImageFromCurrentImageContext();
-            UIGraphicsEndImageContext();
-
-            [self.mapViewDelegate mapView:self didCaptureScreenshot:screenshot];
-
-            self->shouldCaptureFrame = NO;
-        }
-    }
-}
-
-@end
+@end // implementation TGMapView

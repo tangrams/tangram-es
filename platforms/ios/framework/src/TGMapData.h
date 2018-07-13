@@ -3,21 +3,22 @@
 //  TangramMap
 //
 //  Created by Karim Naaji on 2/24/16.
+//  Updated by Matt Blair on 7/13/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
 #import "TGExport.h"
 #import "TGGeoPoint.h"
 #import "TGGeoPolygon.h"
 #import "TGGeoPolyline.h"
+#import <Foundation/Foundation.h>
 
 /**
  Dictionary of feature properties keyed by their property name
  */
 typedef NSDictionary<NSString *, NSString *> TGFeatureProperties;
 
-@class TGMapViewController;
+@class TGMapView;
 
 /**
  A `TGMapData` is a convenience class to display point, polygons or polylines from a dynamic data layer.
@@ -111,6 +112,6 @@ NS_ASSUME_NONNULL_BEGIN
 NS_ASSUME_NONNULL_END
 
 /// The map view this data source is on
-@property (readonly, weak, nonatomic) TGMapViewController* _Nullable map;
+@property (readonly, weak, nonatomic) TGMapView* _Nullable mapView;
 
 @end

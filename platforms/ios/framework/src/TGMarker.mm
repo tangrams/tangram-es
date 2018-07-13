@@ -3,16 +3,18 @@
 //  TangramMap
 //
 //  Created by Karim Naaji on 2/17/17.
+//  Updated by Matt Blair on 7/13/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
 #import "TGMarker.h"
 #import "TGMarker+Internal.h"
-#import "TGMapViewController.h"
-#import "TGMapViewController+Internal.h"
+#import "TGMapView.h"
+#import "TGMapView+Internal.h"
 #import "TGHelpers.h"
 #import "TGTypes.h"
-#import "map.h"
+
+#include "map.h"
 
 @interface TGMarker () {
     Tangram::Map* tangramInstance;

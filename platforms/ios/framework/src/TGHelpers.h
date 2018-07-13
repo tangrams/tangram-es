@@ -3,11 +3,14 @@
 //  TangramMap
 //
 //  Created by Karim Naaji on 10/18/16.
+//  Updated by Matt Blair on 7/13/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
-#import "TGMapViewController.h"
-#import "map.h"
+#import "TGTypes.h"
+#import <Foundation/Foundation.h>
+
+#include "map.h"
 
 @interface TGHelpers : NSObject
 

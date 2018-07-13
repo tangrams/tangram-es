@@ -3,10 +3,12 @@
 //  TangramMap
 //
 //  Created by Karim Naaji on 10/18/16.
+//  Updated by Matt Blair on 7/13/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
 #import "TGHelpers.h"
+#import "TGSceneUpdate.h"
 #import "TGTypes.h"
 
 @implementation TGHelpers

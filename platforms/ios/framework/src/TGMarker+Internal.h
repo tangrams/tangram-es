@@ -3,10 +3,11 @@
 //  TangramMap
 //
 //  Created by Karim Naaji on 4/10/17.
+//  Updated by Matt Blair on 7/13/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
-#import "map.h"
+#include "map.h"
 
 @interface TGMarker ()
 
