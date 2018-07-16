@@ -46,6 +46,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 
 @implementation TGMapView
 
+#pragma mark Lifecycle Methods
+
 - (instancetype)initWithFrame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
@@ -236,22 +238,6 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     [_glView addGestureRecognizer:_longPressGestureRecognizer];
 }
 
-- (void)displayLinkUpdate:(CADisplayLink *)sender
-{
-    if (_renderRequested || self.continuous) {
-        _renderRequested = NO;
-        [self.glView display];
-    }
-}
-
-
-- (void)didReceiveMemoryWarning
-{
-    if (self.map) {
-        self.map->onMemoryWarning();
-    }
-}
-
 - (void)didMoveToWindow
 {
     [self setupDisplayLink];
@@ -274,47 +260,77 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     [self requestRender];
 }
 
+#pragma mark Memory Management
+
+- (void)didReceiveMemoryWarning
+{
+    self.map->onMemoryWarning();
+}
+
+#pragma mark Rendering Behavior
+
 - (void)requestRender
 {
-    if (!self.map) { return; }
-
     _renderRequested = YES;
 }
 
-- (void)captureScreenshot:(BOOL)waitForViewComplete
+- (void)displayLinkUpdate:(CADisplayLink *)sender
 {
-    self->_captureFrameWaitForViewComplete = waitForViewComplete;
-    self->_shouldCaptureFrame = YES;
+    if (_renderRequested || self.continuous) {
+        _renderRequested = NO;
+
+        CFTimeInterval dt = _displayLink.targetTimestamp - _displayLink.timestamp;
+        _viewComplete = self.map->update(dt);
+
+        // When invoking delegate selectors like this below, we don't need to check whether the delegate is `nil`. `nil` is
+        // a valid object that returns `0`, `nil`, or `NO` from all messages, including `respondsToSelector`. So we can use
+        // `respondsToSelector` to check for delegate nullity and selector response at the same time. MEB 2018.7.16
+
+        if (_viewComplete && [self.mapViewDelegate respondsToSelector:@selector(mapViewDidCompleteLoading:)]) {
+            [self.mapViewDelegate mapViewDidCompleteLoading:self];
+        }
+
+        if ([self.mapViewDelegate respondsToSelector:@selector(mapView:didCaptureScreenshot:)]) {
+            if (_shouldCaptureFrame && (!_captureFrameWaitForViewComplete || _viewComplete)) {
+
+                UIImage *screenshot = [_glView snapshot];
+
+                // For now we only have the GLKView to capture. In the future, to capture a view heirarchy including any
+                // other subviews, we can use the alternative approach below. MEB 2018.7.16
+                // UIGraphicsBeginImageContext(self.frame.size);
+                // [self drawViewHierarchyInRect:self.frame afterScreenUpdates:YES];
+                // UIImage* screenshot = UIGraphicsGetImageFromCurrentImageContext();
+                // UIGraphicsEndImageContext();
+
+                [self.mapViewDelegate mapView:self didCaptureScreenshot:screenshot];
+
+                _shouldCaptureFrame = NO;
+            }
+        }
+
+        [self.glView display];
+    }
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
-    if (self->_viewInBackground) {
+    if (_viewInBackground) {
         return;
     }
 
-    CFTimeInterval dt = _displayLink.targetTimestamp - _displayLink.timestamp;
-    _viewComplete = self.map->update(dt);
-
     self.map->render();
-
-    if (_viewComplete && [self.mapViewDelegate respondsToSelector:@selector(mapViewDidCompleteLoading:)]) {
-        [self.mapViewDelegate mapViewDidCompleteLoading:self];
-    }
-
-    if (self.mapViewDelegate && [self.mapViewDelegate respondsToSelector:@selector(mapView:didCaptureScreenshot:)]) {
-        if (self->_shouldCaptureFrame && (!self->_captureFrameWaitForViewComplete || self->_viewComplete)) {
-            UIGraphicsBeginImageContext(self.frame.size);
-            [self drawViewHierarchyInRect:self.frame afterScreenUpdates:YES];
-            UIImage* screenshot = UIGraphicsGetImageFromCurrentImageContext();
-            UIGraphicsEndImageContext();
-
-            [self.mapViewDelegate mapView:self didCaptureScreenshot:screenshot];
-
-            self->_shouldCaptureFrame = NO;
-        }
-    }
 }
+
+#pragma mark Screenshots
+
+- (void)captureScreenshot:(BOOL)waitForViewComplete
+{
+    _captureFrameWaitForViewComplete = waitForViewComplete;
+    _shouldCaptureFrame = YES;
+    [self requestRender];
+}
+
+#pragma mark Markers
 
 - (NSArray<TGMarker *> *)markers
 {
@@ -353,6 +369,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     self.map->markerRemoveAll();
 }
 
+#pragma mark Debugging
+
 - (void)setDebugFlag:(TGDebugFlag)debugFlag value:(BOOL)on
 {
     Tangram::setDebugFlag((Tangram::DebugFlags)debugFlag, on);
@@ -367,6 +385,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     Tangram::toggleDebugFlag((Tangram::DebugFlags)debugFlag);
 }
+
+#pragma mark Data Layers
 
 - (TGMapData *)addDataLayer:(NSString *)name
 {
@@ -404,7 +424,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     self.map->clearTileSource(*tileSource, true, true);
 }
 
-#pragma mark Scene loading interface
+#pragma mark Loading Scenes
 
 std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *sceneUpdates)
 {
@@ -430,7 +450,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
         [strongSelf.markersById removeAllObjects];
         [strongSelf requestRender];
 
-        if (!strongSelf.mapViewDelegate || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didLoadScene:withError:)]) {
+        if (![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didLoadScene:withError:)]) {
             return;
         }
 
@@ -484,8 +504,6 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     return self.map->loadSceneYamlAsync([yaml UTF8String], [[url absoluteString] UTF8String], false, sceneUpdates);
 }
 
-#pragma mark Scene updates
-
 - (int)updateSceneAsync:(NSArray<TGSceneUpdate *> *)updates
 {
     if (!self.map) { return -1; }
@@ -500,7 +518,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     return self.map->updateSceneAsync(sceneUpdates);
 }
 
-#pragma mark Longitude/Latitude - Screen position conversions
+#pragma mark Coordinate Conversions
 
 - (CGPoint)lngLatToScreenPosition:(TGGeoPoint)lngLat
 {
@@ -539,7 +557,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     return nullTangramGeoPoint;
 }
 
-#pragma mark Feature picking
+#pragma mark Picking Map Objects
 
 - (void)setPickRadius:(float)logicalPixels
 {
@@ -559,7 +577,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     self.map->pickFeatureAt(screenPosition.x, screenPosition.y, [weakSelf](const Tangram::FeaturePickResult* featureResult) {
         __strong TGMapView* strongSelf = weakSelf;
 
-        if (!strongSelf || !strongSelf.mapViewDelegate || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
+        if (!strongSelf || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
             return;
         }
 
@@ -597,7 +615,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     self.map->pickMarkerAt(screenPosition.x, screenPosition.y, [weakSelf](const Tangram::MarkerPickResult* markerPickResult) {
         __strong TGMapView* strongSelf = weakSelf;
 
-        if (!strongSelf || !strongSelf.mapViewDelegate || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectMarker:atScreenPosition:)]) {
+        if (!strongSelf || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectMarker:atScreenPosition:)]) {
             return;
         }
 
@@ -638,7 +656,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     self.map->pickLabelAt(screenPosition.x, screenPosition.y, [weakSelf](const Tangram::LabelPickResult* labelPickResult) {
         __strong TGMapView* strongSelf = weakSelf;
 
-        if (!strongSelf || !strongSelf.mapViewDelegate || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectLabel:atScreenPosition:)]) {
+        if (!strongSelf || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectLabel:atScreenPosition:)]) {
             return;
         }
 
@@ -670,7 +688,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     });
 }
 
-#pragma mark Map position implementation
+#pragma mark Camera Properties
 
 - (void)setPosition:(TGGeoPoint)position {
     if (!self.map) { return; }
@@ -810,6 +828,8 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     self.map->setCameraType(cameraType);
 }
 
+#pragma mark Gesture Recognizers
+
 - (void)setTapGestureRecognizer:(UITapGestureRecognizer *)recognizer
 {
     if (!recognizer) { return; }
@@ -897,16 +917,16 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     return YES;
 }
 
-#pragma mark - Gesture Recognizer Delegate Methods
+#pragma mark - Gesture Responders
 
 - (void)respondToLongPressGesture:(UILongPressGestureRecognizer *)longPressRecognizer
 {
     CGPoint location = [longPressRecognizer locationInView:_glView];
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeLongPressGesture:)] ) {
+    if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeLongPressGesture:)] ) {
         if (![self.gestureDelegate mapView:self recognizer:longPressRecognizer shouldRecognizeLongPressGesture:location]) { return; }
     }
 
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeLongPressGesture:)]) {
+    if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeLongPressGesture:)]) {
         [self.gestureDelegate mapView:self recognizer:longPressRecognizer didRecognizeLongPressGesture:location];
     }
 }
@@ -914,11 +934,11 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 - (void)respondToTapGesture:(UITapGestureRecognizer *)tapRecognizer
 {
     CGPoint location = [tapRecognizer locationInView:_glView];
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeSingleTapGesture:)]) {
+    if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeSingleTapGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:tapRecognizer shouldRecognizeSingleTapGesture:location]) { return; }
     }
 
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeSingleTapGesture:)]) {
+    if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeSingleTapGesture:)]) {
         [self.gestureDelegate mapView:self recognizer:tapRecognizer didRecognizeSingleTapGesture:location];
     }
 }
@@ -926,11 +946,11 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 - (void)respondToDoubleTapGesture:(UITapGestureRecognizer *)doubleTapRecognizer
 {
     CGPoint location = [doubleTapRecognizer locationInView:_glView];
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeDoubleTapGesture:)]) {
+    if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeDoubleTapGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:doubleTapRecognizer shouldRecognizeDoubleTapGesture:location]) { return; }
     }
 
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeDoubleTapGesture:)]) {
+    if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeDoubleTapGesture:)]) {
         [self.gestureDelegate mapView:self recognizer:doubleTapRecognizer didRecognizeDoubleTapGesture:location];
     }
 }
@@ -939,7 +959,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 {
     CGPoint displacement = [panRecognizer translationInView:_glView];
 
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizePanGesture:)]) {
+    if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizePanGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:panRecognizer shouldRecognizePanGesture:displacement]) {
             return;
         }
@@ -962,7 +982,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
             break;
     }
 
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizePanGesture:)]) {
+    if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizePanGesture:)]) {
         [self.gestureDelegate mapView:self recognizer:panRecognizer didRecognizePanGesture:displacement];
     }
 }
@@ -970,21 +990,21 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 - (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer
 {
     CGPoint location = [pinchRecognizer locationInView:_glView];
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizePinchGesture:)]) {
+    if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizePinchGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:pinchRecognizer shouldRecognizePinchGesture:location]) {
             return;
         }
     }
 
     CGFloat scale = pinchRecognizer.scale;
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(pinchFocus:recognizer:)]) {
+    if ([self.gestureDelegate respondsToSelector:@selector(pinchFocus:recognizer:)]) {
         CGPoint focusPosition = [self.gestureDelegate pinchFocus:self recognizer:pinchRecognizer];
         self.map->handlePinchGesture(focusPosition.x * self.contentScaleFactor, focusPosition.y * self.contentScaleFactor, scale, pinchRecognizer.velocity);
     } else {
         self.map->handlePinchGesture(location.x * self.contentScaleFactor, location.y * self.contentScaleFactor, scale, pinchRecognizer.velocity);
     }
 
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizePinchGesture:)]) {
+    if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizePinchGesture:)]) {
         [self.gestureDelegate mapView:self recognizer:pinchRecognizer didRecognizePinchGesture:location];
     }
 
@@ -994,21 +1014,21 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 - (void)respondToRotationGesture:(UIRotationGestureRecognizer *)rotationRecognizer
 {
     CGPoint position = [rotationRecognizer locationInView:_glView];
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeRotationGesture:)]) {
+    if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeRotationGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:rotationRecognizer shouldRecognizeRotationGesture:position]) {
             return;
         }
     }
 
     CGFloat rotation = rotationRecognizer.rotation;
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(rotationFocus:recognizer:)]) {
+    if ([self.gestureDelegate respondsToSelector:@selector(rotationFocus:recognizer:)]) {
         CGPoint focusPosition = [self.gestureDelegate rotationFocus:self recognizer:rotationRecognizer];
         self.map->handleRotateGesture(focusPosition.x * self.contentScaleFactor, focusPosition.y * self.contentScaleFactor, rotation);
     } else {
         self.map->handleRotateGesture(position.x * self.contentScaleFactor, position.y * self.contentScaleFactor, rotation);
     }
 
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeRotationGesture:)]) {
+    if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeRotationGesture:)]) {
         [self.gestureDelegate mapView:self recognizer:rotationRecognizer didRecognizeRotationGesture:position];
     }
 
@@ -1020,7 +1040,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     CGPoint displacement = [shoveRecognizer translationInView:_glView];
     [shoveRecognizer setTranslation:{0, 0} inView:_glView];
 
-    if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeShoveGesture:)]) {
+    if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeShoveGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:shoveRecognizer shouldRecognizeShoveGesture:displacement]) {
             return;
         }
@@ -1030,7 +1050,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     if ([shoveRecognizer numberOfTouches] == 2) {
         self.map->handleShoveGesture(displacement.y);
 
-        if (self.gestureDelegate && [self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeShoveGesture:)]) {
+        if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeShoveGesture:)]) {
             [self.gestureDelegate mapView:self recognizer:shoveRecognizer didRecognizeShoveGesture:displacement];
         }
     }
