@@ -8,7 +8,7 @@
 #import "TGMapView.h"
 #import "TGMapView+Internal.h"
 #import "TGHelpers.h"
-#import "TGHttpHandler.h"
+#import "TGURLHandler.h"
 #import "TGLabelPickResult.h"
 #import "TGLabelPickResult+Internal.h"
 #import "TGMapData.h"
@@ -114,8 +114,8 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     _dataLayersByName = [[NSMutableDictionary alloc] init];
     _resourceRoot = [[NSBundle mainBundle] resourceURL];
 
-    // TODO: Instantiate httpHandler lazily so that if a client app provides one, the default never needs to be created.
-    _httpHandler = [[TGHttpHandler alloc] initWithCachePath:@"/tangram_cache"
+    // TODO: Instantiate urlHandler lazily so that if a client app provides one, the default never needs to be created.
+    _urlHandler = [[TGURLHandler alloc] initWithCachePath:@"/tangram_cache"
                                         cacheMemoryCapacity:4*1024*1024
                                           cacheDiskCapacity:30*1024*1024];
 

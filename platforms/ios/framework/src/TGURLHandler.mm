@@ -1,15 +1,15 @@
 //
-//  TGHttpHandler.mm
+//  TGURLHandler.mm
 //  TangramMap
 //
 //  Created by Karim Naaji on 11/23/16.
-//  Updated by Matt Blair on 7/13/18.
+//  Updated by Matt Blair on 7/16/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
-#import "TGHttpHandler.h"
+#import "TGURLHandler.h"
 
-@interface TGHttpHandler()
+@interface TGURLHandler()
 
 @property (strong, nonatomic) NSURLSession* session;
 @property (strong, nonatomic) NSURLSessionConfiguration* configuration;
@@ -18,7 +18,7 @@
 
 @end
 
-@implementation TGHttpHandler
+@implementation TGURLHandler
 
 @synthesize HTTPAdditionalHeaders = _HTTPAdditionalHeaders;
 
@@ -29,7 +29,7 @@
     self = [super init];
 
     if (self) {
-        [self initialSetupWithConfiguration:[TGHttpHandler defaultSessionConfiguration]];
+        [self initialSetupWithConfiguration:[TGURLHandler defaultSessionConfiguration]];
     }
 
     return self;
@@ -52,7 +52,7 @@
     self = [super init];
 
     if (self) {
-        [self initialSetupWithConfiguration:[TGHttpHandler defaultSessionConfiguration]];
+        [self initialSetupWithConfiguration:[TGURLHandler defaultSessionConfiguration]];
         [self setCachePath:cachePath cacheMemoryCapacity:memoryCapacity cacheDiskCapacity:diskCapacity];
     }
 

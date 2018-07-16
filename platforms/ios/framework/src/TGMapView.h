@@ -14,12 +14,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class TGHttpHandler;
 @class TGLabelPickResult;
 @class TGMapData;
 @class TGMarker;
 @class TGMarkerPickResult;
 @class TGSceneUpdate;
+@class TGURLHandler;
 
 @protocol TGMapViewDelegate;
 @protocol TGRecognizerDelegate;
@@ -294,15 +294,15 @@ TG_EXPORT
 #pragma mark File Handling
 
 /**
- Assign a `TGHttpHandler` for network request management.
+ Assign a `TGURLHandler` for network request management.
 
  A default handler will be used if this is not set.
 
- @note Assigning the http handler is optional and should only be done if you want to change any network access behavior
- (e.g. specify cache location and size or be notified when a network request completes). See `TGHTTPHandler` for more
+ @note Assigning the URL handler is optional and should only be done if you want to change any network access behavior
+ (e.g. specify cache location and size or be notified when a network request completes). See `TGURLHandler` for more
  information on the default provided configuration.
  */
-@property (strong, nonatomic) TGHttpHandler* httpHandler;
+@property (strong, nonatomic) TGURLHandler* urlHandler;
 
 /**
  Assign the resource root for this map view.
