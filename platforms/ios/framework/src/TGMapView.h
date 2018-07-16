@@ -52,6 +52,45 @@ NS_ASSUME_NONNULL_BEGIN
 TG_EXPORT
 @interface TGMapView : UIView
 
+#pragma mark Initialize the View
+
+/**
+ Initializes and returns a new map view with no scene loaded.
+
+ To load a map scene use one of:
+
+ `-[TGMapView loadSceneFromURL:withUpdates:]`
+
+ `-[TGMapView loadSceneAsyncFromURL:withUpdates:]`
+
+ `-[TGMapView loadSceneFromYAML:relativeToURL:withUpdates:]`
+
+ `-[TGMapView loadSceneAsyncFromYAML:relativeToUrl:withUpdates:]`
+
+ @param frame The view frame.
+ @return An initialized map view.
+ */
+- (instancetype)initWithFrame:(CGRect)frame;
+
+/**
+ Initializes and returns a new map view with no scene loaded.
+
+ To load a map scene use one of:
+
+ `-[TGMapView loadSceneFromURL:withUpdates:]`
+
+ `-[TGMapView loadSceneAsyncFromURL:withUpdates:]`
+
+ `-[TGMapView loadSceneFromYAML:relativeToURL:withUpdates:]`
+
+ `-[TGMapView loadSceneAsyncFromYAML:relativeToUrl:withUpdates:]`
+
+ @param frame The view frame.
+ @param urlHandler A `TGURLHandler` for customizing URL request behavior.
+ @return An initialized map view.
+ */
+- (instancetype)initWithFrame:(CGRect)frame urlHandler:(TGURLHandler *)urlHandler;
+
 #pragma mark Loading Scenes
 
 /**
@@ -292,17 +331,6 @@ TG_EXPORT
 @property (readonly, nonatomic) NSArray<TGMarker *>* markers;
 
 #pragma mark File Handling
-
-/**
- Assign a `TGURLHandler` for network request management.
-
- A default handler will be used if this is not set.
-
- @note Assigning the URL handler is optional and should only be done if you want to change any network access behavior
- (e.g. specify cache location and size or be notified when a network request completes). See `TGURLHandler` for more
- information on the default provided configuration.
- */
-@property (strong, nonatomic) TGURLHandler* urlHandler;
 
 /**
  Assign the resource root for this map view.

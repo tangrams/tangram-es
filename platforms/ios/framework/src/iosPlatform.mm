@@ -147,7 +147,7 @@ UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
         return 0;
     }
 
-    TGURLHandler* urlHandler = [mapView urlHandler];
+    TGURLHandler* urlHandler = mapView.urlHandler;
 
     if (!urlHandler) {
         errorResponse.error = "urlHandler not set in MapView";
@@ -202,7 +202,7 @@ void iOSPlatform::cancelUrlRequest(UrlRequestHandle _request) {
         return;
     }
 
-    TGURLHandler* urlHandler = [mapView urlHandler];
+    TGURLHandler* urlHandler = mapView.urlHandler;
 
     if (!urlHandler) {
         return;

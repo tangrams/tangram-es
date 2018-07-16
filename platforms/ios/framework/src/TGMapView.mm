@@ -66,6 +66,16 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     return self;
 }
 
+- (instancetype)initWithFrame:(CGRect)frame urlHandler:(TGURLHandler *)urlHandler
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.urlHandler = urlHandler;
+        [self setup];
+    }
+    return self;
+}
+
 - (void)dealloc
 {
     if (_map) {
@@ -114,10 +124,11 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     _dataLayersByName = [[NSMutableDictionary alloc] init];
     _resourceRoot = [[NSBundle mainBundle] resourceURL];
 
-    // TODO: Instantiate urlHandler lazily so that if a client app provides one, the default never needs to be created.
-    _urlHandler = [[TGURLHandler alloc] initWithCachePath:@"/tangram_cache"
-                                        cacheMemoryCapacity:4*1024*1024
-                                          cacheDiskCapacity:30*1024*1024];
+    if (!_urlHandler) {
+        _urlHandler = [[TGURLHandler alloc] initWithCachePath:@"/tangram_cache"
+                                          cacheMemoryCapacity:4*1024*1024
+                                            cacheDiskCapacity:30*1024*1024];
+    }
 
     if(!_viewInBackground) {
         [self setupGL];
