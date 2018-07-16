@@ -647,7 +647,9 @@ int parseVec(const std::string& _value, uint8_t allowedUnits, UnitVec<T>& _vec) 
 bool StyleParam::parseSize(const std::string &_value, uint8_t allowedUnits, SizeValue& _vec) {
     int offset = 0;
     offset = StyleParam::parseSizeUnitPair(_value, offset, _vec.x);
-    offset = StyleParam::parseSizeUnitPair(_value, offset, _vec.y);
+    if (offset != _value.size()) {
+        offset = StyleParam::parseSizeUnitPair(_value, offset, _vec.y);
+    }
     return (offset > 0) && ((_vec.x.unit & allowedUnits) && (_vec.y.unit & allowedUnits));
 }
 
