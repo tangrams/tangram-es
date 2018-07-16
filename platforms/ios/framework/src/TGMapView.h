@@ -52,7 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
 TG_EXPORT
 @interface TGMapView : UIView
 
-#pragma mark Load a Scene File
+#pragma mark Loading Scenes
 
 /**
  Load a scene file synchronously from a URL with a list of updates.
@@ -68,7 +68,7 @@ TG_EXPORT
 /**
  Load a scene file asynchronously from a URL with a list of updates.
 
- Calls `mapView:didLoadScene:withError:` on the `mapViewDelegate` when it completes.
+ Calls `-[TGMapViewDelegate mapView:didLoadScene:withError:]` on the `mapViewDelegate` when it completes.
 
  If an error occurs while applying updates the new scene will not be applied. See `TGSceneUpdate` for details.
 
@@ -81,7 +81,7 @@ TG_EXPORT
 /**
  Load a scene synchronously from string with a list of updates.
 
- Calls `mapView:didLoadScene:withError:` on the `mapViewDelegate` when it completes.
+ Calls `-[TGMapViewDelegate mapView:didLoadScene:withError:]` on the `mapViewDelegate` when it completes.
 
  If an error occurs while applying updates the new scene will not be applied. See `TGSceneUpdate` for details.
 
@@ -97,7 +97,7 @@ TG_EXPORT
 /**
  Load a scene asynchronously from string with a list of updates.
 
- Calls `mapView:didLoadScene:withError:` on the `mapViewDelegate` when it completes.
+ Calls `-[TGMapViewDelegate mapView:didLoadScene:withError:]` on the `mapViewDelegate` when it completes.
 
  If an error occurs while applying updates the new scene will not be applied. See `TGSceneUpdate` for details.
 
@@ -113,7 +113,7 @@ TG_EXPORT
 /**
  Modify the current scene asynchronously with a list of updates.
 
- Calls `mapView:didLoadScene:withError:` on the `mapViewDelegate` when it completes.
+ Calls `-[TGMapViewDelegate mapView:didLoadScene:withError:]` on the `mapViewDelegate` when it completes.
 
  If an error occurs while applying updates, no changes will be applied. See `TGSceneUpdate` for details.
 
@@ -163,7 +163,7 @@ TG_EXPORT
  */
 @property (assign, nonatomic) float tilt;
 
-#pragma mark Animate the Map Position
+#pragma mark Camera Animation
 
 /**
  Animate the map view to a center coordinate.
@@ -241,7 +241,7 @@ TG_EXPORT
  */
 - (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType;
 
-#pragma mark Convert Coordinates
+#pragma mark Coordinate Conversions
 
 /**
  Convert a longitude and latitude to a view position.
@@ -261,7 +261,7 @@ TG_EXPORT
 - (TGGeoPoint)screenPositionToLngLat:(CGPoint)viewPosition;
 
 
-#pragma mark Put Markers on the Map
+#pragma mark Markers
 
 /**
  Remove all the Markers from the map.
@@ -291,12 +291,12 @@ TG_EXPORT
  */
 @property (readonly, nonatomic) NSArray<TGMarker *>* markers;
 
-#pragma mark Configuration
+#pragma mark File Handling
 
 /**
- Assign `TGHttpHandler` for network request management.
+ Assign a `TGHttpHandler` for network request management.
 
- A default http handler will be used if this is not set.
+ A default handler will be used if this is not set.
 
  @note Assigning the http handler is optional and should only be done if you want to change any network access behavior
  (e.g. specify cache location and size or be notified when a network request completes). See `TGHTTPHandler` for more
@@ -315,13 +315,12 @@ TG_EXPORT
  */
 @property (strong, nonatomic) NSURL* resourceRoot;
 
-#pragma mark Customize Rendering Behavior
+#pragma mark Rendering Behavior
 
 /**
  Request the view to draw another frame.
 
- Typically there is no need to call this. The map view re-draws automatically
- when needed.
+ Typically there is no need to call this. The map view re-draws automatically when needed.
  */
 - (void)requestRender;
 
@@ -382,7 +381,7 @@ TG_EXPORT
  */
 @property (strong, nonatomic) UILongPressGestureRecognizer* longPressGestureRecognizer;
 
-#pragma mark Add Data Layers
+#pragma mark Data Layers
 
 /**
  Adds a named data layer to the map.
@@ -397,7 +396,7 @@ TG_EXPORT
  */
 - (nullable TGMapData *)addDataLayer:(NSString *)name generateCentroid:(BOOL)generateCentroid;
 
-#pragma mark Capture the Map View as an Image
+#pragma mark Screenshots
 
 /**
  Capture a screenshot of the map view.
@@ -410,7 +409,7 @@ TG_EXPORT
  */
 - (void)captureScreenshot:(BOOL)waitForViewComplete;
 
-#pragma mark Pick Objects in the Map
+#pragma mark Picking Map Objects
 
 /**
  Set the radius in logical pixels to use when picking features on the map (default is `0.5`).
@@ -463,7 +462,14 @@ TG_EXPORT
  */
 - (void)pickMarkerAt:(CGPoint)viewPosition;
 
-#pragma mark Debugging features
+#pragma mark Memory Management
+
+/**
+ Reduce memory usage by freeing currently unused resources.
+ */
+- (void)didReceiveMemoryWarning;
+
+#pragma mark Debugging
 
 /**
  Set a `TGDebugFlag` on the map view.
@@ -523,7 +529,7 @@ atScreenPosition:(CGPoint)position;
 atScreenPosition:(CGPoint)position;
 
 /**
- Receive the result from `-[TGMapViewController pickMarkerAt:]`.
+ Receive the result from `-[TGMapView pickMarkerAt:]`.
 
  @param mapView The map view instance.
  @param markerPickResult A result object with information about the picked marker or `nil` if no marker was found.
@@ -534,7 +540,7 @@ didSelectMarker:(nullable TGMarkerPickResult *)markerPickResult
 atScreenPosition:(CGPoint)position;
 
 /**
- Receive the result from `-[TGMapViewController captureScreenshot:]`.
+ Receive the result from `-[TGMapView captureScreenshot:]`.
 
  @param mapView The map view instance.
  @param screenshot The image object representing the screenshot.
@@ -547,17 +553,13 @@ didCaptureScreenshot:(nonnull UIImage *)screenshot;
 
  See:
 
- `-[TGMapViewController loadSceneFromURL:]`
+ `-[TGMapView loadSceneAsyncFromURL:withUpdates:]`
 
- `-[TGMapViewController loadSceneAsyncFromURL:]`
+ `-[TGMapView loadSceneFromYAML:relativeToURL:withUpdates:]`
 
- `-[TGMapViewController loadSceneAsyncFromURL:withUpdates:]`
+ `-[TGMapView loadSceneAsyncFromYAML:relativeToURL:withUpdates:]`
 
- `-[TGMapViewController loadSceneFromYAML:relativeToURL:withUpdates:]`
-
- `-[TGMapViewController loadSceneAsyncFromYAML:relativeToURL:withUpdates:]`
-
- `-[TGMapViewController updateSceneAsync:]`
+ `-[TGMapView updateSceneAsync:]`
 
  @param mapView The map view instance.
  @param sceneID The ID of the scene that was loaded or updated.
