@@ -36,11 +36,11 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     BOOL _renderRequested;
 }
 
-@property (nullable, strong, nonatomic) EAGLContext* context;
-@property (strong, nonatomic) GLKView* glView;
-@property (strong, nonatomic) CADisplayLink* displayLink;
-@property (strong, nonatomic) NSMutableDictionary* markersById;
-@property (strong, nonatomic) NSMutableDictionary* dataLayersByName;
+@property (nullable, strong, nonatomic) EAGLContext *context;
+@property (strong, nonatomic) GLKView *glView;
+@property (strong, nonatomic) CADisplayLink *displayLink;
+@property (strong, nonatomic) NSMutableDictionary<NSString *, TGMarker *> *markersById;
+@property (strong, nonatomic) NSMutableDictionary<NSString *, TGMapData *> *dataLayersByName;
 
 @end // interface TGMapView
 
