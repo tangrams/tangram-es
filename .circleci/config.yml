@@ -81,7 +81,7 @@ jobs:
       - checkout
       - run: git submodule update --init
       # Install dependencies.
-      - run: gem install atomos jazzy --no-document
+      - run: gem install jazzy --no-document
       - run: brew install cmake jfrog-cli-go
       # Build the framework in release mode and package it into pod.zip
       - run: make ios-framework-universal BUILD_TYPE=Release
