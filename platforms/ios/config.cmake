@@ -1,6 +1,6 @@
 add_definitions(-DTANGRAM_IOS)
 
-set(TANGRAM_FRAMEWORK_VERSION "0.9.6")
+set(TANGRAM_FRAMEWORK_VERSION "0.9.7-dev")
 
 ### Configure iOS toolchain.
 set(IOS TRUE)
