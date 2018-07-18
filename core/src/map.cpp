@@ -408,13 +408,13 @@ bool Map::update(float _dt) {
         auto& ease = impl->eases[0];
         ease.update(_dt);
 
-        cameraEasing = ease.finished();
-
         if (ease.finished()) {
             if (impl->cameraAnimationListener) {
                 impl->cameraAnimationListener(true);
             }
             impl->eases.clear();
+        } else {
+            cameraEasing = true;
         }
     }
 
