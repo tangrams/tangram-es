@@ -168,11 +168,12 @@ group_recursive_sources(src "src")
 # add compile shader targets
 file(GLOB_RECURSE SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
 set(SHADER_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/generated)
+
 foreach(_shader ${SHADER_FILES})
   get_filename_component(_shader_name ${_shader} NAME_WE)
   get_filename_component(_shader_ext ${_shader} EXT)
-  string(REGEX REPLACE "\\." "" _shader_ext ${_shader_ext})
-  if(${_shader_ext} STREQUAL "fs" OR ${_shader_ext} STREQUAL "glsl" OR ${_shader_ext} STREQUAL "vs")
+  string(REGEX REPLACE "\\." "" _shader_ext "${_shader_ext}")
+  if("${_shader_ext}" STREQUAL "fs" OR "${_shader_ext}" STREQUAL "glsl" OR "${_shader_ext}" STREQUAL "vs")
     set(_shader_name ${_shader_name}_${_shader_ext})
     set(SHADER_OUTPUT ${SHADER_OUTPUT_DIRECTORY}/${_shader_name}.h)
     add_custom_command(
