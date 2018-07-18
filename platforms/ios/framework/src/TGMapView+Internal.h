@@ -25,6 +25,6 @@ NS_ASSUME_NONNULL_BEGIN
 NS_ASSUME_NONNULL_END
 
 @property (assign, nonatomic, nullable) Tangram::Map* map;
-@property (strong, nonatomic, nullable) TGURLHandler* urlHandler;
+@property (strong, nonatomic, nullable) id<TGURLHandler> urlHandler;
 
 @end

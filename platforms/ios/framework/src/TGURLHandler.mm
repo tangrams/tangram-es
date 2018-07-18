@@ -9,18 +9,13 @@
 
 #import "TGURLHandler.h"
 
-@interface TGURLHandler()
+@interface TGDefaultURLHandler()
 
 @property (strong, nonatomic) NSURLSession* session;
-@property (strong, nonatomic) NSURLSessionConfiguration* configuration;
-
-+ (NSURLSessionConfiguration*)defaultSessionConfiguration;
 
 @end
 
-@implementation TGURLHandler
-
-@synthesize HTTPAdditionalHeaders = _HTTPAdditionalHeaders;
+@implementation TGDefaultURLHandler
 
 #pragma mark - Initializers
 
@@ -29,84 +24,47 @@
     self = [super init];
 
     if (self) {
-        [self initialSetupWithConfiguration:[TGURLHandler defaultSessionConfiguration]];
+        [self setupWithConfiguration:[TGDefaultURLHandler defaultConfiguration]];
     }
 
     return self;
 }
 
-
-- (instancetype)initWithSessionConfiguration:(NSURLSessionConfiguration *)configuration
+- (instancetype)initWithConfiguration:(NSURLSessionConfiguration *)configuration
 {
     self = [super init];
 
     if (self) {
-        [self initialSetupWithConfiguration:configuration];
+        [self setupWithConfiguration:configuration];
     }
 
     return self;
 }
 
-- (instancetype)initWithCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity
-{
-    self = [super init];
-
-    if (self) {
-        [self initialSetupWithConfiguration:[TGURLHandler defaultSessionConfiguration]];
-        [self setCachePath:cachePath cacheMemoryCapacity:memoryCapacity cacheDiskCapacity:diskCapacity];
-    }
-
-    return self;
-}
-
-- (void)initialSetupWithConfiguration:(NSURLSessionConfiguration *)configuration {
-    self.configuration = configuration;
+- (void)setupWithConfiguration:(NSURLSessionConfiguration *)configuration {
     self.session = [NSURLSession sessionWithConfiguration:configuration];
-    self.HTTPAdditionalHeaders = [[NSMutableDictionary alloc] init];
-
 }
 
 #pragma mark - Class Methods
 
-+ (NSURLSessionConfiguration*)defaultSessionConfiguration
++ (NSURLSessionConfiguration*)defaultConfiguration
 {
-    NSURLSessionConfiguration* sessionConfiguration = [NSURLSessionConfiguration defaultSessionConfiguration];
+    NSURLSessionConfiguration* configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
 
-    sessionConfiguration.timeoutIntervalForRequest = 30;
-    sessionConfiguration.timeoutIntervalForResource = 60;
+    configuration.timeoutIntervalForRequest = 30;
+    configuration.URLCache = [[NSURLCache alloc] initWithMemoryCapacity:4*1024*1024
+                                                           diskCapacity:30*1024*1024
+                                                               diskPath:@"/tangram_cache"];
 
-    return sessionConfiguration;
-}
-
-#pragma mark - Custom Getter/Setters
-
-- (NSMutableDictionary *)HTTPAdditionalHeaders {
-    return _HTTPAdditionalHeaders;
-}
-
-- (void)setAdditionalHTTPHeaders:(NSMutableDictionary *)HTTPAdditionalHeaders {
-    _HTTPAdditionalHeaders = HTTPAdditionalHeaders;
-    self.configuration.HTTPAdditionalHeaders = HTTPAdditionalHeaders;
-    self.session = [NSURLSession sessionWithConfiguration:self.configuration];
-}
-
-- (void)setCachePath:(NSString*)cachePath cacheMemoryCapacity:(NSUInteger)memoryCapacity cacheDiskCapacity:(NSUInteger)diskCapacity
-{
-    NSURLCache* tileCache = [[NSURLCache alloc] initWithMemoryCapacity:memoryCapacity
-                                                          diskCapacity:diskCapacity
-                                                              diskPath:cachePath];
-
-    self.configuration.URLCache = tileCache;
-    self.configuration.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
-    self.session = [NSURLSession sessionWithConfiguration:self.configuration];
+    return configuration;
 }
 
 #pragma mark - Instance Methods
 
-- (NSUInteger)downloadRequestAsync:(NSString*)url completionHandler:(TGDownloadCompletionHandler)completionHandler
+- (NSUInteger)downloadRequestAsync:(NSURL *)url completionHandler:(TGDownloadCompletionHandler)completionHandler
 {
-    NSURLSessionDataTask* dataTask = [self.session dataTaskWithURL:[NSURL URLWithString:url]
-                                                                      completionHandler:completionHandler];
+    NSURLSessionDataTask* dataTask = [self.session dataTaskWithURL:url
+                                                 completionHandler:completionHandler];
 
     [dataTask resume];
 

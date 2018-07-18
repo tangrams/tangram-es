@@ -11,88 +11,67 @@
 #import "TGExport.h"
 
 /**
- A URL request completion callback, called when a download request of `TGURLHandler`
- completed an asynchronous request.
+ A URL request completion callback, called when a download request of `TGURLHandler` completes an asynchronous request.
 */
 typedef void(^TGDownloadCompletionHandler)(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error);
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- A configurable URL handler used in a `TGMapViewController`.
+ A URL Handler interface for creating cancellable asynchronous URL requests.
+ */
+@protocol TGURLHandler <NSObject>
 
- `TGMapView` provides a default URL handler with the following configuration:
+/**
+ Create an asynchronous download request.
 
-    - cache location: `/tangram_cache`
-    - cache memory capacity: 4Mb
-    - cache disk capacity: 30Mb
+ @param url The URL to download.
+ @param completionHandler A handler to be called once the URL request completed.
+ @return A task identifier that uniquely identifies the URL request within this handler.
 
- To change this configuration, create a new URL handler and set it to the map view with `-[TGMapView urlHandler]`.
+ @note This method will be automatically called by the map view instance.
+ */
+- (NSUInteger)downloadRequestAsync:(NSURL *)url completionHandler:(TGDownloadCompletionHandler)completionHandler;
+
+/**
+ Cancel a previous download request.
+
+ @param taskIdentifier The task identifier for the request to cancel.
+ */
+- (void)cancelDownloadRequestAsync:(NSUInteger)taskIdentifier;
+
+@end // protocol TGURLHandler
+
+/**
+ A default implementation of the `TGURLHandler` interface.
  */
 TG_EXPORT
-@interface TGURLHandler : NSObject
+@interface TGDefaultURLHandler : NSObject<TGURLHandler>
 
 /**
- Additional HTTP headers analogous to the standard NSURLSessionConfiguration property of the same name.
- */
-@property(nonatomic, strong) NSMutableDictionary *HTTPAdditionalHeaders;
-
-/**
- Initializes a URL handler with the default configuration.
+ Initialize a URL handler with the default configuration.
 
  @return an initialized URL handler
  */
 - (instancetype)init;
 
 /**
- Initializes a URL handler with the custom configuration.
+ Initialize a URL handler with a custom configuration.
 
  @param configuration custom NSURLConfiguration object
  @return an initialized URL handler
  */
-- (instancetype)initWithSessionConfiguration:(NSURLSessionConfiguration *)configuration;
+- (instancetype)initWithConfiguration:(NSURLSessionConfiguration *)configuration;
 
 /**
- Initializes a URL handler with a user defined configuration.
+ Get the default configuration object for this URL handler type.
 
- @param cachePath the location of the path in the client application bundle
- @param memoryCapacity the memory capacity of the cache, in bytes
- @param diskCapacity the disk capacity of cache, in bytes
- @return an initalized URL handler with the provided configuration
+ This configuration has a modified request timeout and a URL cache in memory and on disk. You can use this object as a
+ base for further configuration modifications.
  */
-- (instancetype)initWithCachePath:(NSString *)cachePath
-              cacheMemoryCapacity:(NSUInteger)memoryCapacity
-                cacheDiskCapacity:(NSUInteger)diskCapacity;
++ (NSURLSessionConfiguration*)defaultConfiguration;
 
-/**
- Creates an asynchronous download request.
-
- @param url the URL of the download request
- @param completionHandler a handler to be called once the URL request completed
- @return an integer that uniquely identifies the resulting task within this handler
-
- @note This method will be automatically called by the map view instance.
- */
-- (NSUInteger)downloadRequestAsync:(NSString *)url completionHandler:(TGDownloadCompletionHandler)completionHandler;
-
-/**
- Cancels a download request for a specific URL.
-
- @param taskIdentifier the taskIdentifier to cancel the network request for
- */
-- (void)cancelDownloadRequestAsync:(NSUInteger)taskIdentifier;
-
-/**
- Updates the URL handler cache configuration.
-
- @param cachePath the location of the path in the client application bundle
- @param memoryCapacity the memory capacity of the cache, in bytes
- @param diskCapacity the disk capacity of cache, in bytes
- */
-- (void)setCachePath:(NSString *)cachePath
- cacheMemoryCapacity:(NSUInteger)memoryCapacity
-   cacheDiskCapacity:(NSUInteger)diskCapacity;
+@end // interface TGDefaultURLHandler
 
 NS_ASSUME_NONNULL_END
 
-@end

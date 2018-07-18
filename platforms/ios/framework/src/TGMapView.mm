@@ -66,7 +66,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     return self;
 }
 
-- (instancetype)initWithFrame:(CGRect)frame urlHandler:(TGURLHandler *)urlHandler
+- (instancetype)initWithFrame:(CGRect)frame urlHandler:(id<TGURLHandler>)urlHandler
 {
     self = [super initWithFrame:frame];
     if (self) {
@@ -125,9 +125,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     _resourceRoot = [[NSBundle mainBundle] resourceURL];
 
     if (!_urlHandler) {
-        _urlHandler = [[TGURLHandler alloc] initWithCachePath:@"/tangram_cache"
-                                          cacheMemoryCapacity:4*1024*1024
-                                            cacheDiskCapacity:30*1024*1024];
+        _urlHandler = [[TGDefaultURLHandler alloc] init];
     }
 
     if(!_viewInBackground) {

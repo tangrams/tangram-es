@@ -147,7 +147,7 @@ UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
         return 0;
     }
 
-    TGURLHandler* urlHandler = mapView.urlHandler;
+    id<TGURLHandler> urlHandler = mapView.urlHandler;
 
     if (!urlHandler) {
         errorResponse.error = "urlHandler not set in MapView";
@@ -189,7 +189,8 @@ UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
         }
     };
 
-    NSString* url = [NSString stringWithUTF8String:_url.string().c_str()];
+    NSString* urlAsString = [NSString stringWithUTF8String:_url.string().c_str()];
+    NSURL* url = [NSURL URLWithString:urlAsString];
     NSUInteger taskIdentifier = [urlHandler downloadRequestAsync:url completionHandler:handler];
 
     return taskIdentifier;
@@ -202,7 +203,7 @@ void iOSPlatform::cancelUrlRequest(UrlRequestHandle _request) {
         return;
     }
 
-    TGURLHandler* urlHandler = mapView.urlHandler;
+    id<TGURLHandler> urlHandler = mapView.urlHandler;
 
     if (!urlHandler) {
         return;

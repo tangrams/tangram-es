@@ -19,10 +19,10 @@ NS_ASSUME_NONNULL_BEGIN
 @class TGMarker;
 @class TGMarkerPickResult;
 @class TGSceneUpdate;
-@class TGURLHandler;
 
 @protocol TGMapViewDelegate;
 @protocol TGRecognizerDelegate;
+@protocol TGURLHandler;
 
 /**
  `TGMapView` is a flexible and customizable map view managing the lifecycle of an OpenGL ES map. This view provides
@@ -89,7 +89,7 @@ TG_EXPORT
  @param urlHandler A `TGURLHandler` for customizing URL request behavior.
  @return An initialized map view.
  */
-- (instancetype)initWithFrame:(CGRect)frame urlHandler:(TGURLHandler *)urlHandler;
+- (instancetype)initWithFrame:(CGRect)frame urlHandler:(id<TGURLHandler>)urlHandler;
 
 #pragma mark Loading Scenes
 
