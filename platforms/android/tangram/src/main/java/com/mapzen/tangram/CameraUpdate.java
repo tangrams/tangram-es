@@ -9,7 +9,7 @@ public class CameraUpdate {
     Float tilt;
     LngLat lngLat;
     LngLat[] bounds;
-    int padding;
+    float padding;
 
     public CameraUpdate setPosition(LngLat lngLat) {
         this.lngLat = new LngLat(lngLat);
@@ -59,10 +59,10 @@ public class CameraUpdate {
         return update;
     }
 
-    public static CameraUpdate newLatLngBounds(LngLat b1, LngLat b2, int paddingMeters) {
+    public static CameraUpdate newLatLngBounds(LngLat b1, LngLat b2, float padding) {
         CameraUpdate update = new CameraUpdate();
         update.bounds = new LngLat[] {new LngLat(b1), new LngLat(b2)};
-        update.padding = paddingMeters;
+        update.padding = padding;
         return update;
     }
 

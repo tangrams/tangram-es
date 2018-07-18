@@ -205,7 +205,8 @@ public:
     // Get the tilt angle of the view in radians; 0 corresponds to straight down
     float getTilt();
 
-    void getEnclosingViewPosition(LngLat a, LngLat b, float bufferMeters, LngLat& center, float& zoom);
+    // Get the CameraPosition that encloses the bounds given by _a and _b
+    CameraPosition getEnclosingCameraPosition(LngLat a, LngLat b, float buffer);
 
     // Run flight animation to change postion and zoom  of the map
     // If _duration is 0, speed is used as factor to change the duration that is
