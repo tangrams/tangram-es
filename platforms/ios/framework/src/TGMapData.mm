@@ -3,12 +3,18 @@
 //  TangramMap
 //
 //  Created by Karim Naaji on 2/24/16.
+//  Updated by Matt Blair on 7/13/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
-#import "TGMapViewController+Internal.h"
-#import <memory>
-#import <vector>
+#import "TGMapData.h"
+#import "TGMapData+Internal.h"
+#import "TGMapView.h"
+#import "TGMapView+Internal.h"
+
+#include "tangram.h"
+#include <memory>
+#include <vector>
 
 typedef std::vector<Tangram::LngLat> Line;
 typedef std::vector<Line> Polygon;
@@ -18,7 +24,7 @@ typedef std::vector<Line> Polygon;
 }
 
 @property (copy, nonatomic) NSString* name;
-@property (weak, nonatomic) TGMapViewController* map;
+@property (weak, nonatomic) TGMapView* map;
 
 @end
 
@@ -32,7 +38,7 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
 
 @implementation TGMapData
 
-- (instancetype)initWithMapView:(__weak TGMapViewController *)mapView name:(NSString *)name source:(std::shared_ptr<Tangram::ClientGeoJsonSource>)source
+- (instancetype)initWithMapView:(__weak TGMapView *)mapView name:(NSString *)name source:(std::shared_ptr<Tangram::ClientGeoJsonSource>)source
 {
     self = [super init];
 
@@ -121,14 +127,15 @@ static inline void tangramProperties(TGFeatureProperties* properties, Tangram::P
     [self.map clearDataSource:dataSource];
 }
 
-- (void)remove
+- (BOOL)remove
 {
     if (!self.map) {
-        return;
+        return NO;
     }
 
-    [self.map removeDataSource:dataSource name:self.name];
+    BOOL removed = [self.map removeDataSource:dataSource name:self.name];
     self.map = nil;
+    return removed;
 }
 
 @end

@@ -3,18 +3,16 @@
 //  TangramMap
 //
 //  Created by Karim Naaji on 2/17/17.
+//  Updated by Matt Blair on 7/13/18.
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
 #import "TGExport.h"
 #import "TGGeoPoint.h"
 #import "TGGeoPolygon.h"
 #import "TGGeoPolyline.h"
 #import "TGTypes.h"
-
-@class TGMapViewController;
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

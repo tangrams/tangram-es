@@ -1,14 +1,13 @@
 #import "appleAllowedFonts.h"
-#import "TGMapViewController.h"
 #import "TGHttpHandler.h"
-#import "iosPlatform.h"
-#import "log.h"
-
-#import <cstdarg>
-#import <cstdio>
-#import <cstdlib>
-#import <map>
 #import <UIKit/UIKit.h>
+
+#include "iosPlatform.h"
+#include "log.h"
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <map>
 
 namespace Tangram {
 
@@ -30,29 +29,29 @@ void initGLExtensions() {
     // No-op
 }
 
-iOSPlatform::iOSPlatform(__weak TGMapViewController* _viewController) :
+iOSPlatform::iOSPlatform(__weak TGMapView* _mapView) :
     Platform(),
-    m_viewController(_viewController) {}
+    m_mapView(_mapView) {}
 
 void iOSPlatform::requestRender() const {
-    __strong TGMapViewController* mapViewController = m_viewController;
+    __strong TGMapView* mapView = m_mapView;
 
-    if (!mapViewController) {
+    if (!mapView) {
         return;
     }
 
-    [mapViewController renderOnce];
+    [mapView requestRender];
 }
 
 void iOSPlatform::setContinuousRendering(bool _isContinuous) {
     Platform::setContinuousRendering(_isContinuous);
-    __strong TGMapViewController* mapViewController = m_viewController;
+    __strong TGMapView* mapView = m_mapView;
 
-    if (!mapViewController) {
+    if (!mapView) {
         return;
     }
 
-    [mapViewController setContinuous:_isContinuous];
+    mapView.continuous = _isContinuous;
 }
 
 std::vector<FontSourceHandle> iOSPlatform::systemFontFallbacksHandle() const {
@@ -139,19 +138,19 @@ FontSourceHandle iOSPlatform::systemFont(const std::string& _name, const std::st
 }
 
 UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
-    __strong TGMapViewController* mapViewController = m_viewController;
+    __strong TGMapView* mapView = m_mapView;
 
     UrlResponse errorResponse;
-    if (!mapViewController) {
-        errorResponse.error = "MapViewController not initialized.";
+    if (!mapView) {
+        errorResponse.error = "MapView not initialized.";
         _callback(errorResponse);
         return 0;
     }
 
-    TGHttpHandler* httpHandler = [mapViewController httpHandler];
+    TGHttpHandler* httpHandler = [mapView httpHandler];
 
     if (!httpHandler) {
-        errorResponse.error = "HttpHandler not set in MapViewController";
+        errorResponse.error = "HttpHandler not set in MapView";
         _callback(errorResponse);
         return 0;
     }
@@ -169,7 +168,7 @@ UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
         } else if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
 
             NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
-            int statusCode = [httpResponse statusCode];
+            long statusCode = [httpResponse statusCode];
             if (statusCode < 200 || statusCode >= 300) {
                 urlResponse.error = [[NSHTTPURLResponse localizedStringForStatusCode: statusCode] UTF8String];
             }
@@ -197,13 +196,13 @@ UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
 }
 
 void iOSPlatform::cancelUrlRequest(UrlRequestHandle _request) {
-    __strong TGMapViewController* mapViewController = m_viewController;
+    __strong TGMapView* mapView = m_mapView;
 
-    if (!mapViewController) {
+    if (!mapView) {
         return;
     }
 
-    TGHttpHandler* httpHandler = [mapViewController httpHandler];
+    TGHttpHandler* httpHandler = [mapView httpHandler];
 
     if (!httpHandler) {
         return;
