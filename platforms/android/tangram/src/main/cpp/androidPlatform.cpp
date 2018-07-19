@@ -382,8 +382,7 @@ void AndroidPlatform::onUrlComplete(JNIEnv* _jniEnv, jlong _jRequestHandle, jbyt
 }
 
 void setCurrentThreadPriority(int priority) {
-    int  tid = gettid();
-    setpriority(PRIO_PROCESS, tid, priority);
+    setpriority(PRIO_PROCESS, 0, priority);
 }
 
 void labelPickCallback(jobject listener, const Tangram::LabelPickResult* labelPickResult) {
