@@ -78,8 +78,7 @@ void LinuxPlatform::cancelUrlRequest(UrlRequestHandle _request) {
 LinuxPlatform::~LinuxPlatform() {}
 
 void setCurrentThreadPriority(int priority) {
-    int tid = syscall(SYS_gettid);
-    setpriority(PRIO_PROCESS, tid, priority);
+    setpriority(PRIO_PROCESS, 0, priority);
 }
 
 void initGLExtensions() {
