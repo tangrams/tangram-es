@@ -1,5 +1,6 @@
 #import "appleAllowedFonts.h"
 #import "TGURLHandler.h"
+#import "TGMapView+Internal.h"
 #import <UIKit/UIKit.h>
 
 #include "iosPlatform.h"

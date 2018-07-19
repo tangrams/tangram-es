@@ -7,6 +7,8 @@
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
+#import "TGGeoPolygon.h"
+#import "TGGeoPolyline.h"
 #import "TGMapData.h"
 #import "TGMapData+Internal.h"
 #import "TGMapView.h"

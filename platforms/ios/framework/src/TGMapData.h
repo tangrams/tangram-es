@@ -9,8 +9,6 @@
 
 #import "TGExport.h"
 #import "TGGeoPoint.h"
-#import "TGGeoPolygon.h"
-#import "TGGeoPolyline.h"
 #import <Foundation/Foundation.h>
 
 /**
@@ -19,6 +17,8 @@
 typedef NSDictionary<NSString *, NSString *> TGFeatureProperties;
 
 @class TGMapView;
+@class TGGeoPolygon;
+@class TGGeoPolyline;
 
 /**
  A `TGMapData` is a convenience class to display point, polygons or polylines from a dynamic data layer.
