@@ -21,7 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
  @return an initialized `TGMarkerPickResult`
 
  @note You shouldn't have to create a `TGMarkerPickResult` yourself, those are returned as a result to
- a selection query on the `TGMapViewController` and initialized by the latter.
+ a selection query on the `TGMapView` and initialized by the latter.
  */
 - (instancetype) initWithCoordinates:(TGGeoPoint)coordinates marker:(TGMarker *)marker;
 

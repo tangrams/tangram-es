@@ -40,7 +40,7 @@ typedef NSDictionary<NSString *, NSString *> TGFeatureProperties;
  In your implementation, to add a polyline fitting under the `mz_route_line_transit` layer:
 
  ```swift
- // Create a data layer in the TGMapViewController mapView
+ // Create a data layer in the TGMapView mapView
  var dataLayer = mapView.addDataLayer(name: "mz_Route_line_transit");
 
  var line = TGGeoPolyline()

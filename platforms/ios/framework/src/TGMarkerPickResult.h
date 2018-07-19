@@ -17,7 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Data structure holding the result of a marker selection that occured on the map view.
 
- See `-[TGMapViewController pickMarkerAt:]` and `[TGMapViewDelegate mapView:didSelectMarker:atScreenPosition:]`.
+ See `-[TGMapView pickMarkerAt:]` and `[TGMapViewDelegate mapView:didSelectMarker:atScreenPosition:]`.
  */
 TG_EXPORT
 @interface TGMarkerPickResult : NSObject
