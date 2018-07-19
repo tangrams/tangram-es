@@ -6,11 +6,20 @@
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
+#import <CoreLocation/CoreLocation.h>
 #import <Foundation/Foundation.h>
 #import "TGExport.h"
 
 /// Indicates an error occurred in the Tangram Framework.
 extern TG_EXPORT NSString* const TGErrorDomain;
+
+/**
+ TODO
+ */
+typedef struct TGCoordinateBounds {
+    CLLocationCoordinate2D sw;
+    CLLocationCoordinate2D ne;
+} TGCoordinateBounds;
 
 /**
  Describes ease functions to be used for camera or other transition animation.

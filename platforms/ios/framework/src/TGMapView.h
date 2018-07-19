@@ -9,11 +9,13 @@
 #import "TGGeoPoint.h"
 #import "TGMapData.h"
 #import "TGTypes.h"
+#import <CoreLocation/CoreLocation.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class TGCameraPosition;
 @class TGLabelPickResult;
 @class TGMapData;
 @class TGMarker;
@@ -175,7 +177,12 @@ TG_EXPORT
  */
 @property (weak, nonatomic, nullable) id<TGMapViewDelegate> mapViewDelegate;
 
-#pragma mark Camera Properties
+#pragma mark Changing the Map Viewport
+
+/**
+ TODO
+ */
+@property (copy, nonatomic) TGCameraPosition *cameraPosition;
 
 /**
  The minimum zoom level for the map view.
@@ -196,7 +203,33 @@ TG_EXPORT
 /**
  Assign a `TGCameraType` to the view camera
  */
-@property (assign, nonatomic) TGCameraType cameraType;
+@property (nonatomic) TGCameraType cameraType;
+
+/**
+ TODO
+ */
+- (void)setCameraPosition:(TGCameraPosition *)cameraPosition
+             withDuration:(NSTimeInterval)duration
+                 easeType:(TGEaseType)easeType
+                 callback:(nullable void (^)(BOOL canceled))callback;
+
+/**
+ TODO
+ */
+- (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition
+                   callback:(nullable void (^)(BOOL cancelled))callback;
+
+/**
+ TODO
+ */
+- (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition
+               withDuration:(NSTimeInterval)duration
+                   callback:(nullable void (^)(BOOL cancelled))callback;
+
+/**
+ TODO
+ */
+- (TGCameraPosition*)cameraThatFitsBounds:(TGCoordinateBounds)bounds withPadding:(UIEdgeInsets)padding;
 
 /**
  Assign a longitude and latitude to the map view camera
@@ -217,8 +250,6 @@ TG_EXPORT
  Assign a tilt angle in radians to the map view camera
  */
 @property (assign, nonatomic) float tilt;
-
-#pragma mark Camera Animation
 
 /**
  Animate the map view to a center coordinate.

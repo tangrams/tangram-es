@@ -20,6 +20,7 @@ set(SQLITECPP_INTERNAL_SQLITE OFF CACHE BOOL "")
 # static library target, relative paths cause it to fail with an error.
 set(TANGRAM_FRAMEWORK_HEADERS
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TangramMap.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGCameraPosition.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGExport.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPoint.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPolygon.h
@@ -43,6 +44,8 @@ set(TANGRAM_FRAMEWORK_SOURCES
   platforms/common/platform_gl.cpp
   platforms/ios/framework/src/iosPlatform.h
   platforms/ios/framework/src/iosPlatform.mm
+  platforms/ios/framework/src/TGCameraPosition+Internal.h
+  platforms/ios/framework/src/TGCameraPosition.mm
   platforms/ios/framework/src/TGHelpers.h
   platforms/ios/framework/src/TGHelpers.mm
   platforms/ios/framework/src/TGGeoPolygon.mm

@@ -114,15 +114,15 @@ struct EdgePadding {
 
 struct CameraUpdate {
     enum Flags {
-        SET_LNGLAT = 1 << 0,
-        SET_ZOOM = 1 << 1,
-        SET_ZOOM_BY = 1 << 2,
-        SET_ROTATION = 1 << 3,
+        SET_LNGLAT =      1 << 0,
+        SET_ZOOM =        1 << 1,
+        SET_ZOOM_BY =     1 << 2,
+        SET_ROTATION =    1 << 3,
         SET_ROTATION_BY = 1 << 4,
-        SET_TILT = 1 << 5,
-        SET_TILT_BY = 1 << 6,
-        SET_BOUNDS = 1 << 7,
-        SET_CAMERA = 1 << 8,
+        SET_TILT =        1 << 5,
+        SET_TILT_BY =     1 << 6,
+        SET_BOUNDS =      1 << 7,
+        SET_CAMERA =      1 << 8,
     };
     int set = 0;
 

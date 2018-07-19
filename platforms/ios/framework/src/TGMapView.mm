@@ -7,6 +7,8 @@
 
 #import "TGMapView.h"
 #import "TGMapView+Internal.h"
+#import "TGCameraPosition.h"
+#import "TGCameraPosition+Internal.h"
 #import "TGHelpers.h"
 #import "TGURLHandler.h"
 #import "TGLabelPickResult.h"
@@ -43,6 +45,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 @property (strong, nonatomic) CADisplayLink *displayLink;
 @property (strong, nonatomic) NSMutableDictionary<NSString *, TGMarker *> *markersById;
 @property (strong, nonatomic) NSMutableDictionary<NSString *, TGMapData *> *dataLayersByName;
+@property (nonatomic, copy, nullable) void (^cameraAnimationCallback)(BOOL);
 
 @end // interface TGMapView
 
@@ -135,6 +138,15 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     }
 
     [self setupGestureRecognizers];
+
+    self.map->setCameraAnimationListener([weakSelf](bool finished){
+        void (^callback)(BOOL) = weakSelf.cameraAnimationCallback;
+        if (callback) {
+            callback(!finished);
+        }
+        weakSelf.cameraAnimationCallback = nil;
+        [weakSelf regionDidChangeAnimated:YES];
+    });
 
     self.clipsToBounds = YES;
     self.opaque = YES;
@@ -700,7 +712,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     });
 }
 
-#pragma mark Camera Properties
+#pragma mark Changing the Map Viewport
 
 - (float)minimumZoomLevel
 {
@@ -866,6 +878,48 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     pos.tilt = radians;
     self.map->setCameraPositionEased(pos, seconds, ease);
     [self regionDidChangeAnimated:YES];
+}
+
+- (TGCameraPosition *)cameraPosition
+{
+    Tangram::CameraPosition camera = self.map->getCameraPosition();
+    TGCameraPosition *result = [[TGCameraPosition alloc] initWithCoreCamera:&camera];
+    return result;
+}
+
+- (void)setCameraPosition:(TGCameraPosition *)cameraPosition
+{
+    Tangram::CameraPosition result = [cameraPosition convertToCoreCamera];
+    [self regionWillChangeAnimated:NO];
+    self.map->setCameraPosition(result);
+    [self regionDidChangeAnimated:NO];
+}
+
+- (void)setCameraPosition:(TGCameraPosition *)cameraPosition
+             withDuration:(NSTimeInterval)duration
+                 easeType:(TGEaseType)easeType
+                 callback:(void (^)(BOOL))callback
+{
+    Tangram::CameraPosition camera = [cameraPosition convertToCoreCamera];
+    Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
+    [self regionWillChangeAnimated:YES];
+    self.map->setCameraPositionEased(camera, duration, ease);
+    self.cameraAnimationCallback = callback;
+}
+
+- (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition callback:(void (^)(BOOL))callback
+{
+    [self flyToCameraPosition:cameraPosition withDuration:-1.0 callback:callback];
+}
+
+- (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition
+               withDuration:(NSTimeInterval)duration
+                   callback:(void (^)(BOOL))callback
+{
+    Tangram::CameraPosition camera = [cameraPosition convertToCoreCamera];
+    [self regionWillChangeAnimated:YES];
+    self.map->flyTo(camera, duration);
+    self.cameraAnimationCallback = callback;
 }
 
 #pragma mark Camera type
