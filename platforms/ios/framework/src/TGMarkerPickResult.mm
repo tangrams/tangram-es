@@ -6,6 +6,7 @@
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
+#import "TGMarker.h"
 #import "TGMarkerPickResult.h"
 #import "TGMarkerPickResult+Internal.h"
 

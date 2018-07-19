@@ -9,7 +9,8 @@
 #import <Foundation/Foundation.h>
 #import "TGExport.h"
 #import "TGGeoPoint.h"
-#import "TGMarker.h"
+
+@class TGMarker;
 
 NS_ASSUME_NONNULL_BEGIN
 

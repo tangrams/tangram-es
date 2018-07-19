@@ -1,5 +1,6 @@
 #import "appleAllowedFonts.h"
-#import "TGHttpHandler.h"
+#import "TGURLHandler.h"
+#import "TGMapView+Internal.h"
 #import <UIKit/UIKit.h>
 
 #include "iosPlatform.h"
@@ -147,10 +148,10 @@ UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
         return 0;
     }
 
-    TGHttpHandler* httpHandler = [mapView httpHandler];
+    id<TGURLHandler> urlHandler = mapView.urlHandler;
 
-    if (!httpHandler) {
-        errorResponse.error = "HttpHandler not set in MapView";
+    if (!urlHandler) {
+        errorResponse.error = "urlHandler not set in MapView";
         _callback(errorResponse);
         return 0;
     }
@@ -189,8 +190,9 @@ UrlRequestHandle iOSPlatform::startUrlRequest(Url _url, UrlCallback _callback) {
         }
     };
 
-    NSString* url = [NSString stringWithUTF8String:_url.string().c_str()];
-    NSUInteger taskIdentifier = [httpHandler downloadRequestAsync:url completionHandler:handler];
+    NSString* urlAsString = [NSString stringWithUTF8String:_url.string().c_str()];
+    NSURL* url = [NSURL URLWithString:urlAsString];
+    NSUInteger taskIdentifier = [urlHandler downloadRequestAsync:url completionHandler:handler];
 
     return taskIdentifier;
 }
@@ -202,13 +204,13 @@ void iOSPlatform::cancelUrlRequest(UrlRequestHandle _request) {
         return;
     }
 
-    TGHttpHandler* httpHandler = [mapView httpHandler];
+    id<TGURLHandler> urlHandler = mapView.urlHandler;
 
-    if (!httpHandler) {
+    if (!urlHandler) {
         return;
     }
 
-    [httpHandler cancelDownloadRequestAsync:_request];
+    [urlHandler cancelDownloadRequestAsync:_request];
 }
 
 } // namespace Tangram

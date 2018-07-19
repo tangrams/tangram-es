@@ -9,10 +9,11 @@
 
 #import "TGExport.h"
 #import "TGGeoPoint.h"
-#import "TGGeoPolygon.h"
-#import "TGGeoPolyline.h"
 #import "TGTypes.h"
 #import <UIKit/UIKit.h>
+
+@class TGGeoPolygon;
+@class TGGeoPolyline;
 
 NS_ASSUME_NONNULL_BEGIN
 

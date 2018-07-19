@@ -8,7 +8,7 @@
 #import "TGMapView.h"
 #import "TGMapView+Internal.h"
 #import "TGHelpers.h"
-#import "TGHttpHandler.h"
+#import "TGURLHandler.h"
 #import "TGLabelPickResult.h"
 #import "TGLabelPickResult+Internal.h"
 #import "TGMapData.h"
@@ -66,6 +66,16 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     return self;
 }
 
+- (instancetype)initWithFrame:(CGRect)frame urlHandler:(id<TGURLHandler>)urlHandler
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.urlHandler = urlHandler;
+        [self setup];
+    }
+    return self;
+}
+
 - (void)dealloc
 {
     if (_map) {
@@ -114,10 +124,9 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     _dataLayersByName = [[NSMutableDictionary alloc] init];
     _resourceRoot = [[NSBundle mainBundle] resourceURL];
 
-    // TODO: Instantiate httpHandler lazily so that if a client app provides one, the default never needs to be created.
-    _httpHandler = [[TGHttpHandler alloc] initWithCachePath:@"/tangram_cache"
-                                        cacheMemoryCapacity:4*1024*1024
-                                          cacheDiskCapacity:30*1024*1024];
+    if (!_urlHandler) {
+        _urlHandler = [[TGDefaultURLHandler alloc] init];
+    }
 
     if(!_viewInBackground) {
         [self setupGL];

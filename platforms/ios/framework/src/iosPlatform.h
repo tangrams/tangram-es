@@ -2,7 +2,7 @@
 
 #include "platform.h"
 
-#import "TGMapView.h"
+@class TGMapView;
 
 namespace Tangram {
 

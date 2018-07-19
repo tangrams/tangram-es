@@ -21,43 +21,43 @@ set(SQLITECPP_INTERNAL_SQLITE OFF CACHE BOOL "")
 set(TANGRAM_FRAMEWORK_HEADERS
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TangramMap.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGExport.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPolyline.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPolygon.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPoint.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMarker.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGSceneUpdate.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapData.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGTypes.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGHttpHandler.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPolygon.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPolyline.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGLabelPickResult.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMarkerPickResult.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapData.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapView.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMarker.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMarkerPickResult.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGSceneUpdate.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGTypes.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGURLHandler.h
 )
 
 set(TANGRAM_FRAMEWORK_SOURCES
   ${TANGRAM_FRAMEWORK_HEADERS}
-  platforms/common/platform_gl.cpp
   platforms/common/appleAllowedFonts.h
   platforms/common/appleAllowedFonts.mm
+  platforms/common/platform_gl.cpp
   platforms/ios/framework/src/iosPlatform.h
   platforms/ios/framework/src/iosPlatform.mm
   platforms/ios/framework/src/TGHelpers.h
   platforms/ios/framework/src/TGHelpers.mm
-  platforms/ios/framework/src/TGGeoPolyline.mm
   platforms/ios/framework/src/TGGeoPolygon.mm
-  platforms/ios/framework/src/TGHttpHandler.mm
-  platforms/ios/framework/src/TGMapData+Internal.h
-  platforms/ios/framework/src/TGMapData.mm
-  platforms/ios/framework/src/TGSceneUpdate.mm
-  platforms/ios/framework/src/TGLabelPickResult+Internal.h
+  platforms/ios/framework/src/TGGeoPolyline.mm
   platforms/ios/framework/src/TGLabelPickResult.mm
-  platforms/ios/framework/src/TGMarkerPickResult+Internal.h
-  platforms/ios/framework/src/TGMarkerPickResult.mm
-  platforms/ios/framework/src/TGMarker+Internal.h
-  platforms/ios/framework/src/TGMarker.mm
-  platforms/ios/framework/src/TGTypes.mm
-  platforms/ios/framework/src/TGMapView+Internal.h
+  platforms/ios/framework/src/TGLabelPickResult+Internal.h
+  platforms/ios/framework/src/TGMapData.mm
+  platforms/ios/framework/src/TGMapData+Internal.h
   platforms/ios/framework/src/TGMapView.mm
+  platforms/ios/framework/src/TGMapView+Internal.h
+  platforms/ios/framework/src/TGMarker.mm
+  platforms/ios/framework/src/TGMarker+Internal.h
+  platforms/ios/framework/src/TGMarkerPickResult.mm
+  platforms/ios/framework/src/TGMarkerPickResult+Internal.h
+  platforms/ios/framework/src/TGSceneUpdate.mm
+  platforms/ios/framework/src/TGTypes.mm
+  platforms/ios/framework/src/TGURLHandler.mm
 )
 
 ### Configure dynamic framework build target. 
