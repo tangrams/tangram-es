@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
  @return an initialized `TGLabelPickResult`
 
  @note You shouldn't have to create a `TGLabelPickResult` yourself, those are returned as a result to
- a selection query on the `TGMapViewController` and initialized by the latter.
+ a selection query on the `TGMapView` and initialized by the latter.
  */
 - (instancetype) initWithCoordinates:(TGGeoPoint)coordinates type:(TGLabelType)type properties:(TGFeatureProperties *)properties;
 

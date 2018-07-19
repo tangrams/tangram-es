@@ -24,7 +24,7 @@ typedef NS_ENUM(NSInteger, TGLabelType) {
 /**
  Data structure holding the result of a label selection that occured on the map view.
 
- See `-[TGMapViewController pickLabelAt:]` and `[TGMapViewDelegate mapView:didSelectLabel:atScreenPosition:]`.
+ See `-[TGMapView pickLabelAt:]` and `[TGMapViewDelegate mapView:didSelectLabel:atScreenPosition:]`.
  */
 TG_EXPORT
 @interface TGLabelPickResult : NSObject
