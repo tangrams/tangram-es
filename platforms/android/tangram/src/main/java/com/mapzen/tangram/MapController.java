@@ -516,45 +516,23 @@ public class MapController implements Renderer {
      * @param cb callback for handling animation finished or canceled event
      */
     public void setCameraPositionEased(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease, final CameraAnimationCallback cb) {
+      checkPointer(mapPointer);
 
-        CameraPosition camera;
+        if (cameraAnimationCallback != null) {
+            // NB: Prevent recursion loop when setCameraPositionEased is called from onCancel callback
+            CameraAnimationCallback prev = cameraAnimationCallback;
+            cameraAnimationCallback = null;
+            prev.onCancel();
 
-        if (update.position != null) {
-            camera = new CameraPosition();
-            camera.set(update.position);
-        } else {
-            camera = getCameraPosition();
         }
+        cameraAnimationCallback = cb;
 
-        if (update.bounds != null) {
-            double[] lngLatZoom = new double[3];
-            nativeGetEnclosingViewPosition(mapPointer,
-                    update.bounds[0].longitude, update.bounds[0].latitude,
-                    update.bounds[1].longitude, update.bounds[1].latitude,
-                    update.padding, lngLatZoom);
+        final float seconds = duration / 1000.f;
 
-            camera.longitude = lngLatZoom[0];
-            camera.latitude = lngLatZoom[1];
-            camera.zoom = (float)lngLatZoom[2];
-        }
-        if (update.lngLat != null) {
-            camera.longitude = update.lngLat.longitude;
-            camera.latitude = update.lngLat.latitude;
-        }
-        if (update.zoomTo != null) {
-            camera.zoom = update.zoomTo;
-        }
-        if (update.zoomBy != null) {
-            camera.zoom += update.zoomBy;
-        }
-        if (update.rotation != null) {
-            camera.rotation = update.rotation;
-        }
-        if (update.tilt != null) {
-            camera.tilt = update.tilt;
-        }
-
-        setCameraPositionEased(camera, duration, ease, cb);
+        nativeUpdateCameraPosition(mapPointer, update.set, update.longitude, update.latitude, update.zoom,
+                update.zoomBy, update.rotation, update.rotationBy, update.tilt, update.tiltBy,
+                update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.boundsPadding,
+                seconds, ease.ordinal());
     }
 
     /**
@@ -1218,6 +1196,10 @@ public class MapController implements Renderer {
     private synchronized native void nativeRender(long mapPtr);
     private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);
     private synchronized native void nativeSetCameraPosition(long mapPtr, double lon, double lat, float zoom, float rotation, float tilt, float seconds, int ease);
+    private synchronized native void nativeUpdateCameraPosition(long mapPtr, int set, double lon, double lat, float zoom, float zoomBy,
+                                                                float rotation, float rotateBy, float tilt, float tiltBy,
+                                                                double b1lon, double b1lat, double b2lon, double b2lat, float bPadding,
+                                                                float duration, int ease);
     private synchronized native void nativeFlyTo(long mapPtr, double lon, double lat, float zoom, float duration, float speed);
     private synchronized native void nativeGetEnclosingViewPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, float buffer, double[] lngLatZoom);
     private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);

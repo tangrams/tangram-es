@@ -58,6 +58,34 @@ extern "C" {
         jniEnv->ReleaseFloatArrayElements(zoomRotationTilt, zrt, 0);
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeUpdateCameraPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr,
+                                                                                            jint set, jdouble lon, jdouble lat,
+                                                                                            jfloat zoom, jfloat zoomBy,
+                                                                                            jfloat rotation, jfloat rotateBy,
+                                                                                            jfloat tilt, jfloat tiltBy,
+                                                                                            jdouble b1lon, jdouble b1lat,
+                                                                                            jdouble b2lon, jdouble b2lat,
+                                                                                            jfloat bPadding,
+                                                                                            jfloat duration, jint ease) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+
+        CameraUpdate update;
+        update.set = set;
+
+        update.lngLat = LngLat{lon,lat};
+        update.zoom = zoom;
+        update.zoomBy = zoomBy;
+        update.rotation = rotation;
+        update.rotationBy = rotateBy;
+        update.tilt = tilt;
+        update.tiltBy = tiltBy;
+        update.bounds = std::array<LngLat,2>{LngLat{b1lon, b1lat}, LngLat{b2lon, b2lat}};
+        update.boundsPadding = bPadding;
+
+        map->updateCameraPosition(update, duration, static_cast<Tangram::EaseType>(ease));
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetEnclosingViewPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble aLng, jdouble aLat, jdouble bLng, jdouble bLat,
                                                                                                 jfloat buffer, jdoubleArray lngLatZoom) {
         assert(mapPtr > 0);
