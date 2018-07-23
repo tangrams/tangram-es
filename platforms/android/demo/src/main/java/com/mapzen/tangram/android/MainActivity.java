@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
 
         map = view.getMap(this, getHttpHandler());
         map.loadSceneFile(sceneUrl, sceneUpdates);
-        map.setCameraPosition(new CameraUpdate().setZoom(16).setPosition(new LngLat(-74.00976419448854, 40.70532700869127)));
+        map.updateCameraPosition(new CameraUpdate().setZoom(16).setPosition(new LngLat(-74.00976419448854, 40.70532700869127)));
         map.setTapResponder(this);
         map.setDoubleTapResponder(this);
         map.setLongPressResponder(this);
@@ -221,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         map.pickLabel(x, y);
         map.pickMarker(x, y);
 
-        map.setCameraPositionEased(new CameraUpdate().setPosition(tappedPoint), 1000);
+        map.updateCameraPosition(new CameraUpdate().setPosition(tappedPoint), 1000);
 
         return true;
     }
@@ -235,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
                 .5 * (tapped.longitude + current.longitude),
                 .5 * (tapped.latitude + current.latitude));
 
-        map.setCameraPositionEased(CameraUpdate.newCameraPosition(current).setPosition(next).zoomIn(),
+        map.updateCameraPosition(CameraUpdate.newCameraPosition(current).setPosition(next).zoomIn(),
                     500, MapController.EaseType.CUBIC);
         return true;
     }

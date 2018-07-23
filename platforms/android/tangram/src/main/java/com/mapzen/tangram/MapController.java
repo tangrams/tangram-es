@@ -422,70 +422,10 @@ public class MapController implements Renderer {
 
     /**
      * Set the camera position of the map view
-     * @param camera CameraPosition to set
-     */
-    public void setCameraPosition(@NonNull final CameraPosition camera) {
-        setCameraPositionEased(camera, 0, DEFAULT_EASE_TYPE,null);
-    }
-
-    /**
-     * Set the camera position of the map view
      * @param update CameraUpdate to modify current camera position
      */
-    public void setCameraPosition(@NonNull final CameraUpdate update) {
-        setCameraPositionEased(update, 0, DEFAULT_EASE_TYPE,null);
-    }
-
-    /**
-     * Set the camera position of the map view with default easing
-     * @param camera CameraPosition to set
-     * @param duration Time in milliseconds to ease to the given position
-     */
-    public void setCameraPositionEased(@NonNull final CameraPosition camera, final int duration) {
-        setCameraPositionEased(camera, duration, DEFAULT_EASE_TYPE, null);
-    }
-
-    /**
-     * Set the camera position of the map view with default easing
-     * @param camera CameraPosition to set
-     * @param duration Time in milliseconds to ease to the given position
-     * @param cb callback for handling animation finished or canceled event
-     */
-    public void setCameraPositionEased(@NonNull final CameraPosition camera, final int duration, final CameraAnimationCallback cb) {
-        setCameraPositionEased(camera, duration, DEFAULT_EASE_TYPE, cb);
-    }
-
-    /**
-     * Set the camera position of the map view with default easing
-     * @param camera CameraPosition to set
-     * @param duration Time in milliseconds to ease to the given position
-     * @param ease Type of easing to use
-     */
-    public void setCameraPositionEased(@NonNull final CameraPosition camera, final int duration, @NonNull final EaseType ease) {
-        setCameraPositionEased(camera, duration, ease, null);
-    }
-
-    /**
-     * Set the camera position of the map view with default easing
-     * @param camera CameraPosition to set
-     * @param duration Time in milliseconds to ease to the given position
-     * @param ease Type of easing to use
-     * @param cb callback for handling animation finished or canceled event
-     */
-    public void setCameraPositionEased(@NonNull final CameraPosition camera, final int duration, @NonNull final EaseType ease, @Nullable final CameraAnimationCallback cb) {
-        checkPointer(mapPointer);
-
-        if (cameraAnimationCallback != null) {
-            // NB: Prevent recursion loop when setCameraPositionEased is called from onCancel callback
-            CameraAnimationCallback prev = cameraAnimationCallback;
-            cameraAnimationCallback = null;
-            prev.onCancel();
-
-        }
-        cameraAnimationCallback = cb;
-
-        final float seconds = duration / 1000.f;
-        nativeSetCameraPosition(mapPointer, camera.longitude, camera.latitude, camera.zoom, camera.rotation, camera.tilt, seconds, ease.ordinal());
+    public void updateCameraPosition(@NonNull final CameraUpdate update) {
+        updateCameraPosition(update, 0, DEFAULT_EASE_TYPE,null);
     }
 
     /**
@@ -493,8 +433,8 @@ public class MapController implements Renderer {
      * @param update CameraUpdate to update current camera position
      * @param duration Time in milliseconds to ease to the given position
      */
-    public void setCameraPositionEased(@NonNull final CameraUpdate update, final int duration) {
-        setCameraPositionEased(update, duration, DEFAULT_EASE_TYPE, null);
+    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration) {
+        updateCameraPosition(update, duration, DEFAULT_EASE_TYPE, null);
     }
 
 
@@ -504,8 +444,8 @@ public class MapController implements Renderer {
      * @param duration Time in milliseconds to ease to the given position
      * @param ease Type of easing to use
      */
-    public void setCameraPositionEased(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease) {
-        setCameraPositionEased(update, duration, ease, null);
+    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease) {
+        updateCameraPosition(update, duration, ease, null);
     }
 
     /**
@@ -515,7 +455,7 @@ public class MapController implements Renderer {
      * @param ease Type of easing to use
      * @param cb callback for handling animation finished or canceled event
      */
-    public void setCameraPositionEased(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease, final CameraAnimationCallback cb) {
+    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease, final CameraAnimationCallback cb) {
       checkPointer(mapPointer);
 
         if (cameraAnimationCallback != null) {
@@ -1195,7 +1135,6 @@ public class MapController implements Renderer {
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
     private synchronized native void nativeRender(long mapPtr);
     private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);
-    private synchronized native void nativeSetCameraPosition(long mapPtr, double lon, double lat, float zoom, float rotation, float tilt, float seconds, int ease);
     private synchronized native void nativeUpdateCameraPosition(long mapPtr, int set, double lon, double lat, float zoom, float zoomBy,
                                                                 float rotation, float rotateBy, float tilt, float tiltBy,
                                                                 double b1lon, double b1lat, double b2lon, double b2lat, float bPadding,
