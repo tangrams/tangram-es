@@ -13,10 +13,12 @@
 #import "TGLabelPickResult+Internal.h"
 #import "TGMapData.h"
 #import "TGMapData+Internal.h"
+#import "TGMapViewDelegate.h"
 #import "TGMarkerPickResult.h"
 #import "TGMarkerPickResult+Internal.h"
 #import "TGMarker.h"
 #import "TGMarker+Internal.h"
+#import "TGRecognizerDelegate.h"
 #import "TGSceneUpdate.h"
 #import <GLKit/GLKit.h>
 

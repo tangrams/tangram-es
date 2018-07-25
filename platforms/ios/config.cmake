@@ -27,8 +27,10 @@ set(TANGRAM_FRAMEWORK_HEADERS
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGLabelPickResult.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapData.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapView.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMapViewDelegate.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMarker.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGMarkerPickResult.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGRecognizerDelegate.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGSceneUpdate.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGTypes.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGURLHandler.h
