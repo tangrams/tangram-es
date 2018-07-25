@@ -1,9 +1,6 @@
-set(content "")
-file(STRINGS "${in}" file_content_lines)
-foreach(file_content ${file_content_lines})
-   string(REGEX REPLACE "(^[ ]*(//)[^\n]*)" "" file_content_res "${file_content}")
-   if (NOT "${file_content_res}" STREQUAL "")
-     string(CONCAT content ${content} "\n" ${file_content_res})
-   endif()
-endforeach()
-file(WRITE "${out}" "const static char* ${name} = R\"(${content}\n)\";")
+file(READ "${in}" file_content)
+# drop single line comments
+string(REGEX REPLACE "([\n][ \t]*(//)[^\n]*)" "" content "${file_content}")
+# drop empty lines
+string(REGEX REPLACE "[\n]+" "\n" content "${content}")
+file(WRITE "${out}" "const static char* ${name} = R\"(\n${content})\";")
