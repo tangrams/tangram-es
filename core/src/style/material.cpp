@@ -150,7 +150,7 @@ std::string Material::getDefinesBlock(){
 }
 
 std::string Material::getClassBlock() {
-    return SHADER_SOURCE(material_glsl);
+    return material_glsl;
 }
 
 std::unique_ptr<MaterialUniforms> Material::injectOnProgram(ShaderSource& _source ) {

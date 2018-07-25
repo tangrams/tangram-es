@@ -97,7 +97,7 @@ void PointLight::setupProgram(RenderState& rs, const View& _view, ShaderProgram&
 }
 
 std::string PointLight::getClassBlock() {
-    return SHADER_SOURCE(pointLight_glsl);
+    return pointLight_glsl;
 }
 
 std::string PointLight::getInstanceDefinesBlock() {

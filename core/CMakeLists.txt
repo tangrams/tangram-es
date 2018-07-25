@@ -180,10 +180,7 @@ foreach(_shader ${SHADER_FILES})
       OUTPUT "${SHADER_OUTPUT}"
       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..
       MAIN_DEPENDENCY "${_shader}"
-      COMMAND ${PROJECT_SOURCE_DIR}/../scripts/incbin.sh
-        "${_shader}"
-        "core/generated/${_shader_name}.h"
-        "${_shader_name}")
+      COMMAND ${CMAKE_COMMAND} -Din="${_shader}" -Dout="core/generated/${_shader_name}.h" -Dname="${_shader_name}" -P ${CMAKE_CURRENT_SOURCE_DIR}/shaders.cmake)
     list(APPEND SHADER_OUTPUT_FILES "${SHADER_OUTPUT}")
   endif()
 endforeach()
