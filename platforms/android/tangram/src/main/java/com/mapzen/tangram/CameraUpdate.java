@@ -99,21 +99,21 @@ public class CameraUpdate {
     }
     public static CameraUpdate newLngLatZoom(LngLat lngLat, float zoom) {
         CameraUpdate update = new CameraUpdate();
+        update.set = SET_LNGLAT | SET_ZOOM;
         update.longitude = lngLat.longitude;
         update.latitude = lngLat.latitude;
         update.zoom = zoom;
-        update.set = SET_LNGLAT | SET_ZOOM;
         return update;
     }
 
     public static CameraUpdate newLatLngBounds(LngLat b1, LngLat b2, float padding) {
         CameraUpdate update = new CameraUpdate();
+        update.set = SET_BOUNDS;
         update.boundsLon1 = b1.longitude;
         update.boundsLat1 = b1.latitude;
         update.boundsLon2 = b2.longitude;
         update.boundsLat2 = b2.latitude;
         update.boundsPadding = padding;
-        update.set = SET_BOUNDS;
         return update;
     }
 
