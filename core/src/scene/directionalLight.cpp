@@ -45,7 +45,7 @@ void DirectionalLight::setupProgram(RenderState& rs, const View& _view, ShaderPr
 }
 
 std::string DirectionalLight::getClassBlock() {
-    return SHADER_SOURCE(directionalLight_glsl);
+    return directionalLight_glsl;
 }
 
 std::string DirectionalLight::getInstanceDefinesBlock() {

@@ -112,8 +112,7 @@ void PolylineStyle::setDashBackgroundColor(const glm::vec4 _dashBackgroundColor)
 
 void PolylineStyle::constructShaderProgram() {
 
-    m_shaderSource->setSourceStrings(SHADER_SOURCE(polyline_fs),
-                                     SHADER_SOURCE(polyline_vs));
+    m_shaderSource->setSourceStrings(polyline_fs, polyline_vs);
 
     if (m_dashArray.size() > 0) {
         TextureOptions options {GL_RGBA, GL_RGBA, {GL_NEAREST, GL_NEAREST}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};

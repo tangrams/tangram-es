@@ -58,7 +58,7 @@ void SpotLight::setupProgram(RenderState& rs, const View& _view, ShaderProgram& 
 }
 
 std::string SpotLight::getClassBlock() {
-    return SHADER_SOURCE(spotLight_glsl);
+    return spotLight_glsl;
 }
 
 std::string SpotLight::getInstanceAssignBlock() {

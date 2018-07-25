@@ -216,7 +216,7 @@ void Style::setupRasters(const std::vector<std::shared_ptr<TileSource>>& _source
             + std::to_string(numRasterSource) + "\n", false);
     m_shaderSource->addSourceBlock("defines", "#define TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n", false);
 
-    m_shaderSource->addSourceBlock("raster", SHADER_SOURCE(rasters_glsl));
+    m_shaderSource->addSourceBlock("raster", rasters_glsl);
 }
 
 

@@ -47,8 +47,7 @@ void PointStyle::constructVertexLayout() {
 }
 
 void PointStyle::constructShaderProgram() {
-    m_shaderSource->setSourceStrings(SHADER_SOURCE(point_fs),
-                                     SHADER_SOURCE(point_vs));
+    m_shaderSource->setSourceStrings(point_fs, point_vs);
 }
 
 void PointStyle::onBeginUpdate() {

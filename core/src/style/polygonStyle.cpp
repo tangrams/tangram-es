@@ -76,8 +76,7 @@ void PolygonStyle::constructVertexLayout() {
 
 void PolygonStyle::constructShaderProgram() {
 
-    m_shaderSource->setSourceStrings(SHADER_SOURCE(polygon_fs),
-                                      SHADER_SOURCE(polygon_vs));
+    m_shaderSource->setSourceStrings(polygon_fs, polygon_vs);
 
     if (m_texCoordsGeneration) {
         m_shaderSource->addSourceBlock("defines", "#define TANGRAM_USE_TEX_COORDS\n");
