@@ -165,24 +165,47 @@ target_compile_options(tangram-core
 # make groups for xcode
 group_recursive_sources(src "src")
 
-# add compile shader targets
-file(GLOB_RECURSE SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
-set(SHADER_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/generated)
-
+# We include GLSL shader sources into the library by generating header files with the source text
+# printed into a string constant. A CMake script generates one of these headers for each shader source
+# file and they each become a custom target that the core library depends on.
+set(SHADER_FILES
+  shaders/ambientLight.glsl
+  shaders/debug.fs
+  shaders/debug.vs
+  shaders/debugPrimitive.fs
+  shaders/debugPrimitive.vs
+  shaders/debugTexture.fs
+  shaders/debugTexture.vs
+  shaders/directionalLight.glsl
+  shaders/lights.glsl
+  shaders/material.glsl
+  shaders/point.fs
+  shaders/point.vs
+  shaders/pointLight.glsl
+  shaders/polygon.fs
+  shaders/polygon.vs
+  shaders/polyline.fs
+  shaders/polyline.vs
+  shaders/rasters.glsl
+  shaders/sdf.fs
+  shaders/selection.fs
+  shaders/spotLight.glsl
+  shaders/text.fs
+  shaders/text.vs
+)
 foreach(_shader ${SHADER_FILES})
   get_filename_component(_shader_name "${_shader}" NAME_WE)
   get_filename_component(_shader_ext "${_shader}" EXT)
   string(REGEX REPLACE "\\." "" _shader_ext "${_shader_ext}")
-  if("${_shader_ext}" STREQUAL "fs" OR "${_shader_ext}" STREQUAL "glsl" OR "${_shader_ext}" STREQUAL "vs")
-    set(_shader_name "${_shader_name}_${_shader_ext}")
-    set(SHADER_OUTPUT "${SHADER_OUTPUT_DIRECTORY}/${_shader_name}.h")
-    add_custom_command(
-      OUTPUT "${SHADER_OUTPUT}"
-      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..
-      MAIN_DEPENDENCY "${_shader}"
-      COMMAND ${CMAKE_COMMAND} -Din="${_shader}" -Dout="core/generated/${_shader_name}.h" -Dname="${_shader_name}" -P ${CMAKE_CURRENT_SOURCE_DIR}/shaders.cmake)
-    list(APPEND SHADER_OUTPUT_FILES "${SHADER_OUTPUT}")
-  endif()
+  set(_shader_name "${_shader_name}_${_shader_ext}")
+  set(SHADER_OUTPUT "${PROJECT_SOURCE_DIR}/generated/${_shader_name}.h")
+  add_custom_command(
+    OUTPUT "${SHADER_OUTPUT}"
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    MAIN_DEPENDENCY "${_shader}"
+    COMMAND ${CMAKE_COMMAND} -Din="${_shader}" -Dout="${SHADER_OUTPUT}" -Dname="${_shader_name}" -P ${CMAKE_CURRENT_SOURCE_DIR}/shaders.cmake
+  )
+  list(APPEND SHADER_OUTPUT_FILES "${SHADER_OUTPUT}")
 endforeach()
 add_custom_target(shader-headers DEPENDS ${SHADER_OUTPUT_FILES})
 add_dependencies(tangram-core shader-headers)
