@@ -84,6 +84,29 @@ didCaptureScreenshot:(nonnull UIImage *)screenshot;
 - (void)mapView:(nonnull TGMapView *)mapView didLoadScene:(int)sceneID withError:(nullable NSError *)sceneError;
 
 /**
+ Called immediately before the displayed map region changes.
+
+ @param mapView The map view instance.
+ @param animated If YES the change will be animated over time, if NO the change will happen immediately.
+ */
+- (void)mapView:(nonnull TGMapView *)mapView regionWillChangeAnimated:(BOOL)animated;
+
+/**
+ Called repeatedly when the displayed map region changes due to an animation or a gesture.
+
+ @param mapView The map view instance.
+ */
+- (void)mapViewRegionIsChanging:(nonnull TGMapView *)mapView;
+
+/**
+ Called after the displayed map region changes.
+
+ @param mapView The map view instance.
+ @param animated If YES the change was animated over time, if NO the change happened immediately.
+ */
+- (void)mapView:(nonnull TGMapView *)mapView regionDidChangeAnimated:(BOOL)animated;
+
+/**
  Called after the view completes loading all content in the current view.
 
  @param mapView The map view instance.
