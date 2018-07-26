@@ -8,6 +8,7 @@ import android.view.Window;
 import android.widget.Toast;
 
 import com.mapzen.tangram.CachePolicy;
+import com.mapzen.tangram.DefaultHttpHandler;
 import com.mapzen.tangram.HttpHandler;
 import com.mapzen.tangram.LabelPickResult;
 import com.mapzen.tangram.LngLat;
@@ -184,9 +185,9 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
                     return null;
                 }
             };
-            return new HttpHandler(new File(cacheDir, "tile_cache"), 30 * 1024 * 1024, cachePolicy);
+            return new DefaultHttpHandler(new File(cacheDir, "tile_cache"), 30 * 1024 * 1024, cachePolicy);
         }
-        return new HttpHandler();
+        return new DefaultHttpHandler();
     }
 
     @Override
