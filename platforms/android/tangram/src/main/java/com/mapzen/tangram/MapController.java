@@ -26,11 +26,6 @@ import java.util.Map;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
-
 /**
  * {@code MapController} is the main class for interacting with a Tangram map.
  */
@@ -228,7 +223,7 @@ public class MapController implements Renderer {
         view.setPreserveEGLContextOnPause(true);
 
         // Set a default HTTPHandler
-        httpHandler = new HttpHandler();
+        httpHandler = new DefaultHttpHandler();
 
         touchInput = new TouchInput(view.getContext());
         view.setOnTouchListener(touchInput);
@@ -1375,27 +1370,15 @@ public class MapController implements Renderer {
             return;
         }
 
-        final Callback callback = new Callback() {
+        final HttpResponse callback = new HttpResponse() {
             @Override
-            public void onFailure(final Call call, final IOException e) {
+            public void failure(IOException e) {
                 nativeOnUrlComplete(mapPointer, requestHandle, null, e.getMessage());
             }
 
             @Override
-            public void onResponse(final Call call, final Response response) throws IOException {
-                if (!response.isSuccessful()) {
-                    nativeOnUrlComplete(mapPointer, requestHandle, null, response.message());
-                    throw new IOException("Unexpected response code: " + response + " for URL: " + url);
-                }
-                final ResponseBody body = response.body();
-                if (body == null) {
-                    nativeOnUrlComplete(mapPointer, requestHandle, null, response.message());
-                    throw new IOException("Unexpected null body for URL: " + url);
-                }
-                else {
-                    final byte[] bytes = body.bytes();
-                    nativeOnUrlComplete(mapPointer, requestHandle, bytes, null);
-                }
+            public void success(byte[] rawDataBytes) {
+                nativeOnUrlComplete(mapPointer, requestHandle, rawDataBytes, null);
             }
         };
 
