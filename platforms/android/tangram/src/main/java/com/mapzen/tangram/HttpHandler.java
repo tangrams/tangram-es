@@ -4,7 +4,8 @@ import android.support.annotation.NonNull;
 
 /**
  * {@code HttpHandler} interface for handling network requests for map resources,
- * it can be extended to override the http network request or caching behavior.
+ * it can be implemented to provide non-default http network request or caching behavior.
+ * To use client implemented HttpHandler use {@link MapController#setHttpHandler(HttpHandler)}
  */
 public interface HttpHandler {
     /**

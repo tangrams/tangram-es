@@ -179,6 +179,7 @@ public class DefaultHttpHandler implements HttpHandler {
             cb.failure(new IOException("HttpUrl failed to parse url=" + url));
         }
         else {
+            // Construct OkHttp.Callback which fowards apt response calls to internal Tangram.HttpResponse
             final Callback callback = new Callback() {
                 @Override
                 public void onFailure(final Call call, final IOException e) {
