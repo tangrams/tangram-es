@@ -7,6 +7,9 @@ import android.util.Log;
 import android.view.Window;
 import android.widget.Toast;
 
+import com.mapzen.tangram.CameraPosition;
+import com.mapzen.tangram.CameraUpdate;
+import com.mapzen.tangram.CameraUpdateFactory;
 import com.mapzen.tangram.LabelPickResult;
 import com.mapzen.tangram.LngLat;
 import com.mapzen.tangram.MapController;
@@ -113,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
 
         map = view.getMap(this, getHttpHandler());
         map.loadSceneFile(sceneUrl, sceneUpdates);
-        map.updateCameraPosition(new CameraUpdate().setZoom(16).setPosition(new LngLat(-74.00976419448854, 40.70532700869127)));
+        map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(new LngLat(-74.00976419448854, 40.70532700869127), 16));
         map.setTapResponder(this);
         map.setDoubleTapResponder(this);
         map.setLongPressResponder(this);
@@ -221,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         map.pickLabel(x, y);
         map.pickMarker(x, y);
 
-        map.updateCameraPosition(new CameraUpdate().setPosition(tappedPoint), 1000);
+        map.updateCameraPosition(CameraUpdateFactory.setPosition(tappedPoint), 1000);
 
         return true;
     }
@@ -230,12 +233,12 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     public boolean onDoubleTap(float x, float y) {
 
         LngLat tapped = map.screenPositionToLngLat(new PointF(x, y));
-        CameraPosition current = map.getCameraPosition();
-        LngLat next = new LngLat(
-                .5 * (tapped.longitude + current.longitude),
-                .5 * (tapped.latitude + current.latitude));
+        CameraPosition camera = map.getCameraPosition();
 
-        map.updateCameraPosition(CameraUpdate.newCameraPosition(current).setPosition(next).zoomIn(),
+        camera.longitude = .5 * (tapped.longitude + camera.longitude);
+        camera.latitude = .5 * (tapped.latitude + camera.latitude);
+        camera.zoom += 1;
+        map.updateCameraPosition(CameraUpdateFactory.newCameraPosition(camera),
                     500, MapController.EaseType.CUBIC);
         return true;
     }
