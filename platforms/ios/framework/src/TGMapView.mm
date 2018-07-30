@@ -13,10 +13,12 @@
 #import "TGLabelPickResult+Internal.h"
 #import "TGMapData.h"
 #import "TGMapData+Internal.h"
+#import "TGMapViewDelegate.h"
 #import "TGMarkerPickResult.h"
 #import "TGMarkerPickResult+Internal.h"
 #import "TGMarker.h"
 #import "TGMarker+Internal.h"
+#import "TGRecognizerDelegate.h"
 #import "TGSceneUpdate.h"
 #import <GLKit/GLKit.h>
 
@@ -231,6 +233,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     _rotationGestureRecognizer = [[UIRotationGestureRecognizer alloc] initWithTarget:self action:@selector(respondToRotationGesture:)];
     _shoveGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(respondToShoveGesture:)];
     _shoveGestureRecognizer.minimumNumberOfTouches = 2;
+    _shoveGestureRecognizer.maximumNumberOfTouches = 2;
     _longPressGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(respondToLongPressGesture:)];
 
     // Use the delegate method 'shouldRecognizeSimultaneouslyWithGestureRecognizer' for gestures that can be concurrent
@@ -702,7 +705,9 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 - (void)setPosition:(TGGeoPoint)position {
     if (!self.map) { return; }
 
+    [self regionWillChangeAnimated:NO];
     self.map->setPosition(position.longitude, position.latitude);
+    [self regionDidChangeAnimated:NO];
 }
 
 // TODO: Remove the variations of animateTo* with no ease type and add a TGEaseTypeDefault to use instead.
@@ -716,28 +721,31 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 {
     if (!self.map) { return; }
 
+    [self regionWillChangeAnimated:YES];
+    // TODO: During animation we should be calling mapViewRegionIsChanging on the delegate.
     Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
     self.map->setPositionEased(position.longitude, position.latitude, seconds, ease);
+    [self regionDidChangeAnimated:YES];
 }
 
 - (TGGeoPoint)position
 {
-    static const TGGeoPoint nullTangramGeoPoint = {NAN, NAN};
+    TGGeoPoint result{NAN, NAN};
 
-    if (!self.map) { return nullTangramGeoPoint; }
+    if (!self.map) { return result; }
 
-    TGGeoPoint returnVal;
+    self.map->getPosition(result.longitude, result.latitude);
 
-    self.map->getPosition(returnVal.longitude, returnVal.latitude);
-
-    return returnVal;
+    return result;
 }
 
 - (void)setZoom:(float)zoom
 {
     if (!self.map) { return; }
 
+    [self regionWillChangeAnimated:NO];
     self.map->setZoom(zoom);
+    [self regionDidChangeAnimated:NO];
 }
 
 - (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)seconds
@@ -749,8 +757,11 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 {
     if (!self.map) { return; }
 
+    [self regionWillChangeAnimated:YES];
+    // TODO: During animation we should be calling mapViewRegionIsChanging on the delegate.
     Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
     self.map->setZoomEased(zoomLevel, seconds, ease);
+    [self regionDidChangeAnimated:YES];
 }
 
 - (float)zoom
@@ -769,15 +780,20 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 {
     if (!self.map) { return; }
 
+    [self regionWillChangeAnimated:YES];
+    // TODO: During animation we should be calling mapViewRegionIsChanging on the delegate.
     Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
     self.map->setRotationEased(radians, seconds, ease);
+    [self regionDidChangeAnimated:YES];
 }
 
 - (void)setRotation:(float)radians
 {
     if (!self.map) { return; }
 
+    [self regionWillChangeAnimated:NO];
     self.map->setRotation(radians);
+    [self regionDidChangeAnimated:NO];
 }
 
 - (float)rotation
@@ -798,7 +814,9 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 {
     if (!self.map) { return; }
 
+    [self regionWillChangeAnimated:NO];
     self.map->setTilt(radians);
+    [self regionDidChangeAnimated:NO];
 }
 
 - (void)animateToTilt:(float)radians withDuration:(float)seconds
@@ -810,8 +828,11 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 {
     if (!self.map) { return; }
 
+    [self regionWillChangeAnimated:YES];
+    // TODO: During animation we should be calling mapViewRegionIsChanging on the delegate.
     Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
     self.map->setTiltEased(radians, seconds, ease);
+    [self regionDidChangeAnimated:YES];
 }
 
 #pragma mark Camera type
@@ -978,14 +999,17 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     CGPoint end = [panRecognizer locationInView:_glView];
     CGPoint start = {end.x - displacement.x, end.y - displacement.y};
 
-    [panRecognizer setTranslation:CGPointZero inView:_glView];
-
     switch (panRecognizer.state) {
+        case UIGestureRecognizerStateBegan:
+            [self regionWillChangeAnimated:YES];
+            break;
         case UIGestureRecognizerStateChanged:
+            [self regionIsChanging];
             self.map->handlePanGesture(start.x * self.contentScaleFactor, start.y * self.contentScaleFactor, end.x * self.contentScaleFactor, end.y * self.contentScaleFactor);
             break;
         case UIGestureRecognizerStateEnded:
             self.map->handleFlingGesture(end.x * self.contentScaleFactor, end.y * self.contentScaleFactor, velocity.x * self.contentScaleFactor, velocity.y * self.contentScaleFactor);
+            [self regionDidChangeAnimated:YES];
             break;
         default:
             break;
@@ -994,6 +1018,9 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizePanGesture:)]) {
         [self.gestureDelegate mapView:self recognizer:panRecognizer didRecognizePanGesture:displacement];
     }
+
+    // Reset translation to zero so that subsequent calls get relative value.
+    [panRecognizer setTranslation:CGPointZero inView:_glView];
 }
 
 - (void)respondToPinchGesture:(UIPinchGestureRecognizer *)pinchRecognizer
@@ -1006,17 +1033,31 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     }
 
     CGFloat scale = pinchRecognizer.scale;
-    if ([self.gestureDelegate respondsToSelector:@selector(pinchFocus:recognizer:)]) {
-        CGPoint focusPosition = [self.gestureDelegate pinchFocus:self recognizer:pinchRecognizer];
-        self.map->handlePinchGesture(focusPosition.x * self.contentScaleFactor, focusPosition.y * self.contentScaleFactor, scale, pinchRecognizer.velocity);
-    } else {
-        self.map->handlePinchGesture(location.x * self.contentScaleFactor, location.y * self.contentScaleFactor, scale, pinchRecognizer.velocity);
+    switch (pinchRecognizer.state) {
+        case UIGestureRecognizerStateBegan:
+            [self regionWillChangeAnimated:YES];
+            break;
+        case UIGestureRecognizerStateChanged:
+            [self regionIsChanging];
+            if ([self.gestureDelegate respondsToSelector:@selector(pinchFocus:recognizer:)]) {
+                CGPoint focusPosition = [self.gestureDelegate pinchFocus:self recognizer:pinchRecognizer];
+                self.map->handlePinchGesture(focusPosition.x * self.contentScaleFactor, focusPosition.y * self.contentScaleFactor, scale, pinchRecognizer.velocity);
+            } else {
+                self.map->handlePinchGesture(location.x * self.contentScaleFactor, location.y * self.contentScaleFactor, scale, pinchRecognizer.velocity);
+            }
+            break;
+        case UIGestureRecognizerStateEnded:
+            [self regionDidChangeAnimated:YES];
+            break;
+        default:
+            break;
     }
 
     if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizePinchGesture:)]) {
         [self.gestureDelegate mapView:self recognizer:pinchRecognizer didRecognizePinchGesture:location];
     }
 
+    // Reset scale to 1 so that subsequent calls get relative value.
     [pinchRecognizer setScale:1.0];
 }
 
@@ -1030,24 +1071,37 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     }
 
     CGFloat rotation = rotationRecognizer.rotation;
-    if ([self.gestureDelegate respondsToSelector:@selector(rotationFocus:recognizer:)]) {
-        CGPoint focusPosition = [self.gestureDelegate rotationFocus:self recognizer:rotationRecognizer];
-        self.map->handleRotateGesture(focusPosition.x * self.contentScaleFactor, focusPosition.y * self.contentScaleFactor, rotation);
-    } else {
-        self.map->handleRotateGesture(position.x * self.contentScaleFactor, position.y * self.contentScaleFactor, rotation);
+    switch (rotationRecognizer.state) {
+        case UIGestureRecognizerStateBegan:
+            [self regionWillChangeAnimated:YES];
+            break;
+        case UIGestureRecognizerStateChanged:
+            [self regionIsChanging];
+            if ([self.gestureDelegate respondsToSelector:@selector(rotationFocus:recognizer:)]) {
+                CGPoint focusPosition = [self.gestureDelegate rotationFocus:self recognizer:rotationRecognizer];
+                self.map->handleRotateGesture(focusPosition.x * self.contentScaleFactor, focusPosition.y * self.contentScaleFactor, rotation);
+            } else {
+                self.map->handleRotateGesture(position.x * self.contentScaleFactor, position.y * self.contentScaleFactor, rotation);
+            }
+            break;
+        case UIGestureRecognizerStateEnded:
+            [self regionDidChangeAnimated:YES];
+            break;
+        default:
+            break;
     }
 
     if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeRotationGesture:)]) {
         [self.gestureDelegate mapView:self recognizer:rotationRecognizer didRecognizeRotationGesture:position];
     }
 
+    // Reset rotation to zero so that subsequent calls get relative value.
     [rotationRecognizer setRotation:0.0];
 }
 
 - (void)respondToShoveGesture:(UIPanGestureRecognizer *)shoveRecognizer
 {
     CGPoint displacement = [shoveRecognizer translationInView:_glView];
-    [shoveRecognizer setTranslation:{0, 0} inView:_glView];
 
     if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:shouldRecognizeShoveGesture:)]) {
         if (![self.gestureDelegate mapView:self recognizer:shoveRecognizer shouldRecognizeShoveGesture:displacement]) {
@@ -1055,13 +1109,48 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
         }
     }
 
-    // don't trigger shove on single touch gesture
-    if ([shoveRecognizer numberOfTouches] == 2) {
-        self.map->handleShoveGesture(displacement.y);
+    switch (shoveRecognizer.state) {
+        case UIGestureRecognizerStateBegan:
+            [self regionWillChangeAnimated:YES];
+            break;
+        case UIGestureRecognizerStateChanged:
+            [self regionIsChanging];
+            self.map->handleShoveGesture(displacement.y);
+            if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeShoveGesture:)]) {
+                [self.gestureDelegate mapView:self recognizer:shoveRecognizer didRecognizeShoveGesture:displacement];
+            }
+            break;
+        case UIGestureRecognizerStateEnded:
+            [self regionDidChangeAnimated:YES];
+            break;
+        default:
+            break;
+    }
 
-        if ([self.gestureDelegate respondsToSelector:@selector(mapView:recognizer:didRecognizeShoveGesture:)]) {
-            [self.gestureDelegate mapView:self recognizer:shoveRecognizer didRecognizeShoveGesture:displacement];
-        }
+    // Reset translation to zero so that subsequent calls get relative value.
+    [shoveRecognizer setTranslation:CGPointZero inView:_glView];
+}
+
+#pragma mark Internal Logic
+
+- (void)regionWillChangeAnimated:(BOOL)animated
+{
+    if ([self.mapViewDelegate respondsToSelector:@selector(mapView:regionWillChangeAnimated:)]) {
+        [self.mapViewDelegate mapView:self regionWillChangeAnimated:animated];
+    }
+}
+
+- (void)regionIsChanging
+{
+    if ([self.mapViewDelegate respondsToSelector:@selector(mapViewRegionIsChanging:)]) {
+        [self.mapViewDelegate mapViewRegionIsChanging:self];
+    }
+}
+
+- (void)regionDidChangeAnimated:(BOOL)animated
+{
+    if ([self.mapViewDelegate respondsToSelector:@selector(mapView:regionDidChangeAnimated:)]) {
+        [self.mapViewDelegate mapView:self regionDidChangeAnimated:animated];
     }
 }
 
