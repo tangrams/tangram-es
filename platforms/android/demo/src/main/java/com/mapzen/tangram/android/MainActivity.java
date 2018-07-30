@@ -109,12 +109,11 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         // which occurs after onCreate and onStart, but before onPostCreate, so we get the URL here.
         String sceneUrl = sceneSelector.getCurrentString();
 
-        map = view.getMap(this);
+        map = view.getMap(this, getHttpHandler());
         map.loadSceneFile(sceneUrl, sceneUpdates);
 
         map.setZoom(16);
         map.setPosition(new LngLat(-74.00976419448854, 40.70532700869127));
-        map.setHttpHandler(getHttpHandler());
         map.setTapResponder(this);
         map.setDoubleTapResponder(this);
         map.setLongPressResponder(this);

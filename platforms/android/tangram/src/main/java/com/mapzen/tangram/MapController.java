@@ -242,18 +242,25 @@ public class MapController implements Renderer {
         uiThreadHandler = new Handler(view.getContext().getMainLooper());
     }
 
+
     /**
      * Initialize native Tangram component. This must be called before any use
      * of the MapController!
      * This function is separated from MapController constructor to allow
      * initialization and loading of the Scene on a background thread.
+     * @param handler {@link HttpHandler} to use for retrieving remote map resources
      */
-    void init() {
+    void init(@Nullable final HttpHandler handler) {
         // Get configuration info from application
         displayMetrics = mapView.getContext().getResources().getDisplayMetrics();
         assetManager = mapView.getContext().getAssets();
 
         fontFileParser = new FontFileParser();
+
+        // Use the DefaultHttpHandler if none is provided
+        if (httpHandler != null) {
+            httpHandler = handler;
+        }
 
         // Parse font file description
         fontFileParser.parse();
@@ -406,15 +413,6 @@ public class MapController implements Renderer {
         final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
 
         return nativeUpdateScene(mapPointer, updateStrings);
-    }
-
-    /**
-     * Set the {@link HttpHandler} for retrieving remote map resources; a default-constructed
-     * HttpHandler is suitable for most cases, but methods can be extended to modify resource URLs
-     * @param handler the HttpHandler to use
-     */
-    public void setHttpHandler(final HttpHandler handler) {
-        this.httpHandler = handler;
     }
 
     /**
@@ -1361,7 +1359,7 @@ public class MapController implements Renderer {
         if (httpHandler == null) {
             return;
         }
-        httpHandler.onCancel(requestHandle);
+        httpHandler.cancelRequest(requestHandle);
     }
 
     @Keep
@@ -1370,19 +1368,19 @@ public class MapController implements Renderer {
             return;
         }
 
-        final HttpResponse callback = new HttpResponse() {
+        final HttpCallbackBridge callback = new HttpCallbackBridge() {
             @Override
-            public void failure(IOException e) {
+            public void onFailure(IOException e) {
                 nativeOnUrlComplete(mapPointer, requestHandle, null, e.getMessage());
             }
 
             @Override
-            public void success(byte[] rawDataBytes) {
+            public void onSuccess(byte[] rawDataBytes) {
                 nativeOnUrlComplete(mapPointer, requestHandle, rawDataBytes, null);
             }
         };
 
-        httpHandler.onRequest(url, callback, requestHandle);
+        httpHandler.startRequest(url, callback, requestHandle);
     }
 
     // Called from JNI on worker or render-thread.

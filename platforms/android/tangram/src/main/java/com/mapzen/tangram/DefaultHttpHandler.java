@@ -173,34 +173,34 @@ public class DefaultHttpHandler implements HttpHandler {
     }
 
     @Override
-    public void onRequest(@NonNull final String url, @NonNull final HttpResponse cb, final long requestHandle) {
+    public void startRequest(@NonNull final String url, @NonNull final HttpCallbackBridge cb, final long requestHandle) {
         final HttpUrl httpUrl = HttpUrl.parse(url);
         if (httpUrl == null) {
-            cb.failure(new IOException("HttpUrl failed to parse url=" + url));
+            cb.onFailure(new IOException("HttpUrl failed to parse url=" + url));
         }
         else {
             // Construct OkHttp.Callback which fowards apt response calls to internal Tangram.HttpResponse
             final Callback callback = new Callback() {
                 @Override
                 public void onFailure(final Call call, final IOException e) {
-                    cb.failure(e);
+                    cb.onFailure(e);
                 }
 
                 @Override
                 public void onResponse(final Call call, final Response response) throws IOException {
                     if (!response.isSuccessful()) {
                         IOException e = new IOException("Unexpected response code: " + response + " for URL: " + url);
-                        cb.failure(e);
+                        cb.onFailure(e);
                         throw e;
                     }
                     final ResponseBody body = response.body();
                     if (body == null) {
                         IOException e = new IOException("Unexpected null body for URL: " + url);
-                        cb.failure(e);
+                        cb.onFailure(e);
                         throw e;
                     }
                     else {
-                        cb.success(body.bytes());
+                        cb.onSuccess(body.bytes());
                     }
                 }
             };
@@ -216,7 +216,7 @@ public class DefaultHttpHandler implements HttpHandler {
     }
 
     @Override
-    public void onCancel(final long requestHandle) {
+    public void cancelRequest(final long requestHandle) {
         // check and cancel running call
         for (final Call runningCall : okClient.dispatcher().runningCalls()) {
             if (runningCall.request().tag().equals(requestHandle)) {

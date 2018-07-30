@@ -33,12 +33,24 @@ public class MapView extends FrameLayout {
      */
     @NonNull
     public MapController getMap(@Nullable final MapController.SceneLoadListener listener) {
+        return getMap(listener, null);
+    }
+
+    /**
+     * Construct a {@code MapController}; may only be called from the UI thread
+     * @param listener The listener to receive to receive scene load events;
+     * @param handler Set the client implemented {@link HttpHandler} for retrieving remote map resources;
+     *                when null {@link DefaultHttpHandler} is used
+     * the callback will be made on the UI thread
+     */
+    @NonNull
+    public MapController getMap(@Nullable final MapController.SceneLoadListener listener, @Nullable final HttpHandler handler) {
         if (mapController != null) {
             return mapController;
         }
         mapController = getMapInstance();
         mapController.setSceneLoadListener(listener);
-        mapController.init();
+        mapController.init(handler);
 
         return mapController;
     }
