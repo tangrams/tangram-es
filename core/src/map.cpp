@@ -764,15 +764,23 @@ float Map::getTilt() {
     return impl->view.getPitch();
 }
 
-CameraPosition Map::getEnclosingCameraPosition(LngLat _a, LngLat _b, float _buffer) {
+CameraPosition Map::getEnclosingCameraPosition(LngLat _a, LngLat _b, int _buffer) {
     CameraPosition camera;
     const MapProjection& projection = impl->view.getMapProjection();
     glm::dvec2 aMeters = projection.LonLatToMeters(glm::dvec2(_a.longitude, _a.latitude));
     glm::dvec2 bMeters = projection.LonLatToMeters(glm::dvec2(_b.longitude, _b.latitude));
-    double distance = glm::distance(aMeters, bMeters) * (1. + _buffer);
-    double focusScale = distance / (2. * MapProjection::HALF_CIRCUMFERENCE);
-    double viewScale = impl->view.getWidth() / projection.TileSize();
-    camera.zoom = -log2(focusScale / viewScale);
+
+    double tileSize = projection.TileSize() * impl->view.pixelScale();
+    double buffer = _buffer * 2 * impl->view.pixelScale();
+
+    double hFocusScale = glm::distance(aMeters.x, bMeters.x) / (2. * MapProjection::HALF_CIRCUMFERENCE);
+    double hViewScale = (impl->view.getWidth() - buffer) / tileSize;
+
+    double vFocusScale = glm::distance(aMeters.y, bMeters.y) / (2. * MapProjection::HALF_CIRCUMFERENCE);
+    double vViewScale = (impl->view.getHeight() - buffer) / tileSize;
+
+    camera.zoom = -std::log2(std::max(hFocusScale / hViewScale, vFocusScale / vViewScale));
+
     glm::dvec2 center = projection.MetersToLonLat((aMeters + bMeters) * 0.5);
     camera.longitude = center.x;
     camera.latitude = center.y;

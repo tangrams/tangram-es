@@ -1140,7 +1140,7 @@ public class MapController implements Renderer {
                                                                 double b1lon, double b1lat, double b2lon, double b2lat, float bPadding,
                                                                 float duration, int ease);
     private synchronized native void nativeFlyTo(long mapPtr, double lon, double lat, float zoom, float duration, float speed);
-    private synchronized native void nativeGetEnclosingViewPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, float buffer, double[] lngLatZoom);
+    private synchronized native void nativeGetEnclosingViewPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, int buffer, double[] lngLatZoom);
     private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);
     private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates);
     private synchronized native void nativeSetPixelScale(long mapPtr, float scale);

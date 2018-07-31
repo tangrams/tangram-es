@@ -68,7 +68,7 @@ extern "C" {
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetEnclosingViewPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble aLng, jdouble aLat, jdouble bLng, jdouble bLat,
-                                                                                                jfloat buffer, jdoubleArray lngLatZoom) {
+                                                                                                jint buffer, jdoubleArray lngLatZoom) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         CameraPosition camera = map->getEnclosingCameraPosition(LngLat{aLng,aLat}, LngLat{bLng,bLat}, buffer);
