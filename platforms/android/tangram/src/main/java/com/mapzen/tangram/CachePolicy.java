@@ -2,18 +2,15 @@ package com.mapzen.tangram;
 
 import android.support.annotation.NonNull;
 
-import okhttp3.CacheControl;
-import okhttp3.HttpUrl;
-
 /**
- * A CachePolicy evaluates a {@link HttpUrl} and determines the {@link CacheControl} that should
- * apply to a request for that URL.
+ * A CachePolicy evaluates a url (String) and determines the apt caching control that should be
+ * applied to a request for that url.
  */
 public interface CachePolicy {
     /**
      * Apply a caching policy to a URL.
-     * @param url The URL being requested
-     * @return The CacheControl to apply to the request, or {@code null} for the default behavior.
+     * @param url A string URL being requested
+     * @return true to apply to apply client implemented caching control to the request, or false for the default behavior
      */
-    CacheControl apply(@NonNull final HttpUrl url);
+    boolean apply(@NonNull final String url);
 }

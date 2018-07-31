@@ -174,17 +174,18 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     HttpHandler getHttpHandler() {
         File cacheDir = getExternalCacheDir();
         if (cacheDir != null && cacheDir.exists()) {
+            CacheControl tileCacheControl = new CacheControl.Builder().maxStale(7, TimeUnit.DAYS).build();
             CachePolicy cachePolicy = new CachePolicy() {
-                CacheControl tileCacheControl = new CacheControl.Builder().maxStale(7, TimeUnit.DAYS).build();
                 @Override
-                public CacheControl apply(HttpUrl url) {
-                    if (url.host().equals("tile.mapzen.com")) {
-                        return tileCacheControl;
+                public boolean apply(String url) {
+                    final HttpUrl httpUrl = HttpUrl.parse(url);
+                    if (httpUrl.host().equals("tile.nextzen.com")) {
+                        return true;
                     }
-                    return null;
+                    return false;
                 }
             };
-            return new DefaultHttpHandler(new File(cacheDir, "tile_cache"), 30 * 1024 * 1024, cachePolicy);
+            return new DefaultHttpHandler(new File(cacheDir, "tile_cache"), 30 * 1024 * 1024, cachePolicy, tileCacheControl);
         }
         return new DefaultHttpHandler();
     }

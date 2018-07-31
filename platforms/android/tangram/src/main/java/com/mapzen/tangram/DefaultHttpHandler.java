@@ -37,6 +37,7 @@ public class DefaultHttpHandler implements HttpHandler {
 
     protected OkHttpClient okClient;
     protected CachePolicy cachePolicy;
+    protected CacheControl tileCacheControl;
 
     /**
      * Enables TLS v1.2 when creating SSLSockets.
@@ -105,7 +106,7 @@ public class DefaultHttpHandler implements HttpHandler {
      * Construct an {@code DefaultHttpHandler} with default options.
      */
     public DefaultHttpHandler() {
-        this(null, 0, null);
+        this(null, 0, null, null);
     }
 
     /**
@@ -115,7 +116,7 @@ public class DefaultHttpHandler implements HttpHandler {
      * @param maxSize Maximum size of data to cache, in bytes
      */
     public DefaultHttpHandler(@Nullable final File directory, final long maxSize) {
-        this(directory, maxSize, null);
+        this(directory, maxSize, null, null);
     }
 
     /**
@@ -124,8 +125,9 @@ public class DefaultHttpHandler implements HttpHandler {
      * @param directory Directory in which map data will be cached
      * @param maxSize Maximum size of data to cache, in bytes
      * @param policy Cache policy to apply on requests
+     * @param cacheControl {@link CacheControl} used to provide caching based on {@link CachePolicy}
      */
-    public DefaultHttpHandler(@Nullable final File directory, final long maxSize, @Nullable final CachePolicy policy) {
+    public DefaultHttpHandler(@Nullable final File directory, final long maxSize, @Nullable final CachePolicy policy, @Nullable final CacheControl cacheControl) {
         final OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .followRedirects(true)
                 .followSslRedirects(true)
@@ -139,11 +141,12 @@ public class DefaultHttpHandler implements HttpHandler {
 
         // Use specified policy or construct default if null.
         cachePolicy = policy;
-        if (cachePolicy == null) {
+        tileCacheControl = cacheControl;
+        if (cachePolicy == null || tileCacheControl == null) {
             cachePolicy = new CachePolicy() {
                 @Override
-                public CacheControl apply(@NonNull final HttpUrl url) {
-                    return null;
+                public boolean apply(@NonNull final String url) {
+                    return false;
                 }
             };
         }
@@ -205,9 +208,8 @@ public class DefaultHttpHandler implements HttpHandler {
                 }
             };
             final Request.Builder builder = new Request.Builder().url(httpUrl).tag(requestHandle);
-            final CacheControl cacheControl = cachePolicy.apply(httpUrl);
-            if (cacheControl != null) {
-                builder.cacheControl(cacheControl);
+            if (cachePolicy.apply(url)) {
+                builder.cacheControl(tileCacheControl);
             }
             final Request request = builder.build();
             final Call call = okClient.newCall(request);
