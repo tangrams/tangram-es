@@ -10,6 +10,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -41,7 +42,7 @@ public class DefaultHttpHandler implements HttpHandler {
 
     /**
      * Enables TLS v1.2 when creating SSLSockets.
-     * <p/>
+     * <p>
      * For some reason, android supports TLS v1.2 from API 16, but enables it by
      * default only from API 20.
      *
@@ -176,16 +177,21 @@ public class DefaultHttpHandler implements HttpHandler {
     }
 
     @Override
-    public void startRequest(@NonNull final String url, @NonNull final HttpCallbackBridge cb, final long requestHandle) {
+    public Object startRequest(@NonNull final String url, @NonNull final HttpHandler.Callback cb) {
         final HttpUrl httpUrl = HttpUrl.parse(url);
+        Call call = null;
         if (httpUrl == null) {
             cb.onFailure(new IOException("HttpUrl failed to parse url=" + url));
         }
         else {
-            // Construct OkHttp.Callback which fowards apt response calls to internal Tangram.HttpResponse
-            final Callback callback = new Callback() {
+            // Construct okhttp3.Callback which forwards apt response calls to internal HttpResponse.Callback
+            final okhttp3.Callback callback = new okhttp3.Callback() {
                 @Override
                 public void onFailure(final Call call, final IOException e) {
+                    if (call.isCanceled()) {
+                        cb.onCancel();
+                        return;
+                    }
                     cb.onFailure(e);
                 }
 
@@ -203,35 +209,27 @@ public class DefaultHttpHandler implements HttpHandler {
                         throw e;
                     }
                     else {
-                        cb.onSuccess(body.bytes());
+                        // TODO headers? cacheControl?
+                        cb.onResponse(response.code(), body.bytes(), new HashMap<String, String>());
                     }
                 }
             };
-            final Request.Builder builder = new Request.Builder().url(httpUrl).tag(requestHandle);
+            final Request.Builder builder = new Request.Builder().url(httpUrl);
+            // TODO: cachePolicy using headers??
             if (cachePolicy.apply(url)) {
                 builder.cacheControl(tileCacheControl);
             }
             final Request request = builder.build();
-            final Call call = okClient.newCall(request);
+            call = okClient.newCall(request);
             call.enqueue(callback);
         }
+        return call;
     }
 
     @Override
-    public void cancelRequest(final long requestHandle) {
-        // check and cancel running call
-        for (final Call runningCall : okClient.dispatcher().runningCalls()) {
-            if (runningCall.request().tag().equals(requestHandle)) {
-                runningCall.cancel();
-            }
-        }
-
-        // check and cancel queued call
-        for (final Call queuedCall : okClient.dispatcher().queuedCalls()) {
-            if (queuedCall.request().tag().equals(requestHandle)) {
-                queuedCall.cancel();
-            }
-        }
+    public void cancelRequest(final Object cancelObj) {
+        Call call = (Call)cancelObj;
+        call.cancel();
     }
 
 }

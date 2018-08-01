@@ -13,6 +13,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.ArrayMap;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.LongSparseArray;
 
 import com.mapzen.tangram.TouchInput.Gestures;
@@ -211,8 +212,10 @@ public class MapController implements Renderer {
     protected MapController(@NonNull final GLSurfaceView view) {
         if (Build.VERSION.SDK_INT > 18) {
             clientTileSources = new ArrayMap<>();
+            httpRequestHandles = new ArrayMap<>();
         } else {
             clientTileSources = new HashMap<>();
+            httpRequestHandles = new HashMap<>();
         }
         markers = new LongSparseArray<>();
 
@@ -1284,6 +1287,7 @@ public class MapController implements Renderer {
     private FontFileParser fontFileParser;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
+    private Map<Long, Object> httpRequestHandles;
     private FeaturePickListener featurePickListener;
     private SceneLoadListener sceneLoadListener;
     private LabelPickListener labelPickListener;
@@ -1356,10 +1360,12 @@ public class MapController implements Renderer {
     // ==================
     @Keep
     void cancelUrlRequest(final long requestHandle) {
-        if (httpHandler == null) {
-            return;
+        if (httpHandler != null) {
+            Object request = httpRequestHandles.get(requestHandle);
+            if (request != null) {
+                httpHandler.cancelRequest(request);
+            }
         }
-        httpHandler.cancelRequest(requestHandle);
     }
 
     @Keep
@@ -1368,19 +1374,28 @@ public class MapController implements Renderer {
             return;
         }
 
-        final HttpCallbackBridge callback = new HttpCallbackBridge() {
+        final HttpHandler.Callback callback = new HttpHandler.Callback() {
             @Override
             public void onFailure(IOException e) {
                 nativeOnUrlComplete(mapPointer, requestHandle, null, e.getMessage());
             }
 
             @Override
-            public void onSuccess(byte[] rawDataBytes) {
+            public void onResponse(final int code, final byte[] rawDataBytes, final Map<String, String> headers) {
+                // TODO: Use of returned error code and headers for better network response logging/retries, etc
                 nativeOnUrlComplete(mapPointer, requestHandle, rawDataBytes, null);
+            }
+
+            @Override
+            public void onCancel() {
+                Log.d("Tangram", "");
             }
         };
 
-        httpHandler.startRequest(url, callback, requestHandle);
+        Object request = httpHandler.startRequest(url, callback);
+        if (request != null) {
+            httpRequestHandles.put(requestHandle, request);
+        }
     }
 
     // Called from JNI on worker or render-thread.
