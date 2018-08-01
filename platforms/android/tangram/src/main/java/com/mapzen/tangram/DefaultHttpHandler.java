@@ -197,15 +197,14 @@ public class DefaultHttpHandler implements HttpHandler {
 
                 @Override
                 public void onResponse(final Call call, final Response response) throws IOException {
-                    final ResponseBody body = response.body();
-                    if (body == null) {
-                        IOException e = new IOException("Unexpected null body for URL: " + url);
-                        cb.onFailure(e);
-                        throw e;
-                    }
-                    else {
+                    try {
+                        final ResponseBody body = response.body();
                         // TODO headers? cacheControl?
-                        cb.onResponse(response.code(), body.bytes(), new HashMap<String, String>());
+                        cb.onResponse(response.code(), body.bytes(), response.headers().toMultimap());
+                    } catch (final IOException e) {
+                        android.util.Log.e("Tangram", "Error while reading bytes from response body.", e);
+                    } finally {
+                        response.close();
                     }
                 }
             };
@@ -222,9 +221,11 @@ public class DefaultHttpHandler implements HttpHandler {
     }
 
     @Override
-    public void cancelRequest(final Object cancelObj) {
-        Call call = (Call)cancelObj;
-        call.cancel();
+    public void cancelRequest(final Object request) {
+        if (request instanceof Call) {
+            Call call = (Call)request;
+            call.cancel();
+        }
     }
 
 }

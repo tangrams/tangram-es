@@ -13,7 +13,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.ArrayMap;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.LongSparseArray;
 
 import com.mapzen.tangram.TouchInput.Gestures;
@@ -212,12 +211,11 @@ public class MapController implements Renderer {
     protected MapController(@NonNull final GLSurfaceView view) {
         if (Build.VERSION.SDK_INT > 18) {
             clientTileSources = new ArrayMap<>();
-            httpRequestHandles = new ArrayMap<>();
         }
         else {
             clientTileSources = new HashMap<>();
-            httpRequestHandles = new HashMap<>();
         }
+        httpRequestHandles = new LongSparseArray<>();
         markers = new LongSparseArray<>();
 
         // Set up MapView
@@ -225,9 +223,6 @@ public class MapController implements Renderer {
         view.setRenderer(this);
         view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         view.setPreserveEGLContextOnPause(true);
-
-        // Set a default HTTPHandler
-        httpHandler = new DefaultHttpHandler();
 
         touchInput = new TouchInput(view.getContext());
         view.setOnTouchListener(touchInput);
@@ -262,7 +257,10 @@ public class MapController implements Renderer {
         fontFileParser = new FontFileParser();
 
         // Use the DefaultHttpHandler if none is provided
-        if (httpHandler != null) {
+        if (handler == null) {
+            httpHandler = new DefaultHttpHandler();
+        }
+        else {
             httpHandler = handler;
         }
 
@@ -1288,7 +1286,7 @@ public class MapController implements Renderer {
     private FontFileParser fontFileParser;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
-    private Map<Long, Object> httpRequestHandles;
+    private LongSparseArray<Object> httpRequestHandles;
     private FeaturePickListener featurePickListener;
     private SceneLoadListener sceneLoadListener;
     private LabelPickListener labelPickListener;
@@ -1366,6 +1364,7 @@ public class MapController implements Renderer {
             if (request != null) {
                 httpHandler.cancelRequest(request);
             }
+            httpRequestHandles.remove(requestHandle);
         }
     }
 
@@ -1377,12 +1376,14 @@ public class MapController implements Renderer {
 
         final HttpHandler.Callback callback = new HttpHandler.Callback() {
             @Override
-            public void onFailure(IOException e) {
-                nativeOnUrlComplete(mapPointer, requestHandle, null, e.getMessage());
+            public void onFailure(@Nullable final IOException e) {
+                String msg = (e == null) ? null : e.getMessage();
+                nativeOnUrlComplete(mapPointer, requestHandle, null, msg);
+                httpRequestHandles.remove(requestHandle);
             }
 
             @Override
-            public void onResponse(final int code, final byte[] rawDataBytes, final Map<String, String> headers) {
+            public void onResponse(final int code, @Nullable final byte[] rawDataBytes, @Nullable final Map<String, List<String>> headers) {
                 // TODO: Use of returned error code and headers for better network response logging/retries, etc
                 if (code >= 200 && code < 300) {
                     nativeOnUrlComplete(mapPointer, requestHandle, rawDataBytes, null);
@@ -1390,11 +1391,13 @@ public class MapController implements Renderer {
                 else {
                     nativeOnUrlComplete(mapPointer, requestHandle, null, "Unexpected response code: " + code + " for URL: " + url);
                 }
+                httpRequestHandles.remove(requestHandle);
             }
 
             @Override
             public void onCancel() {
-                Log.d("Tangram", "");
+                nativeOnUrlComplete(mapPointer, requestHandle, null, null);
+                httpRequestHandles.remove(requestHandle);
             }
         };
 

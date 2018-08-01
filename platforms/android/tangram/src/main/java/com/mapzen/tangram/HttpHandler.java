@@ -1,8 +1,10 @@
 package com.mapzen.tangram;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,11 +20,12 @@ public interface HttpHandler {
      * @return identifier associated with this network request, used to canceling the request
      */
     Object startRequest(@NonNull final String url, @NonNull final Callback cb);
+
     /**
      * Cancel an HTTP request
-     * @param object an identifier for the request to be cancelled
+     * @param request an identifier for the request to be cancelled
      */
-    void cancelRequest(final Object object);
+    void cancelRequest(final Object request);
 
     /**
      * {@code Callback}
@@ -33,15 +36,19 @@ public interface HttpHandler {
          * Network request failed response
          * @param e Exception representing the failed network request
          */
-        void onFailure(IOException e);
-        /**
-         * Network request success response
-         * @param errorCode An integer error code returned from a network response
-         * @param rawDataBytes raw bytes from the body of a network response
-         * @param headers network package headers
-         */
-        void onResponse(final int errorCode, byte[] rawDataBytes, Map<String, String> headers);
+        void onFailure(@Nullable final IOException e);
 
+        /**
+         * Called when the HTTP response was successfully returned by the remote server
+         * @param code An integer code returned from a network response
+         * @param rawDataBytes raw bytes from the body of a network response
+         * @param headers network response package headers
+         */
+        void onResponse(final int code, @Nullable final byte[] rawDataBytes, @Nullable final Map<String, List<String>> headers);
+
+        /**
+         * Called when the request could not be executed due to cancellation
+         */
         void onCancel();
     }
 }
