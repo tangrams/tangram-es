@@ -213,7 +213,8 @@ public class MapController implements Renderer {
         if (Build.VERSION.SDK_INT > 18) {
             clientTileSources = new ArrayMap<>();
             httpRequestHandles = new ArrayMap<>();
-        } else {
+        }
+        else {
             clientTileSources = new HashMap<>();
             httpRequestHandles = new HashMap<>();
         }
@@ -1383,7 +1384,12 @@ public class MapController implements Renderer {
             @Override
             public void onResponse(final int code, final byte[] rawDataBytes, final Map<String, String> headers) {
                 // TODO: Use of returned error code and headers for better network response logging/retries, etc
-                nativeOnUrlComplete(mapPointer, requestHandle, rawDataBytes, null);
+                if (code >= 200 && code < 300) {
+                    nativeOnUrlComplete(mapPointer, requestHandle, rawDataBytes, null);
+                }
+                else {
+                    nativeOnUrlComplete(mapPointer, requestHandle, null, "Unexpected response code: " + code + " for URL: " + url);
+                }
             }
 
             @Override

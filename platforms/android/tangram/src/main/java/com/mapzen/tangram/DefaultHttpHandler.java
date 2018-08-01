@@ -197,11 +197,6 @@ public class DefaultHttpHandler implements HttpHandler {
 
                 @Override
                 public void onResponse(final Call call, final Response response) throws IOException {
-                    if (!response.isSuccessful()) {
-                        IOException e = new IOException("Unexpected response code: " + response + " for URL: " + url);
-                        cb.onFailure(e);
-                        throw e;
-                    }
                     final ResponseBody body = response.body();
                     if (body == null) {
                         IOException e = new IOException("Unexpected null body for URL: " + url);
