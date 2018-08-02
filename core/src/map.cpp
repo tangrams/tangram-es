@@ -656,7 +656,7 @@ void Map::setCameraPositionEased(const CameraPosition& _camera, float _duration,
     e.start.tilt = getTilt();
     e.end.tilt = _camera.tilt;
 
-    impl->eases.push_back(Ease{_duration,
+    impl->eases.emplace_back(_duration,
         [=](float t) {
             impl->view.setPosition(ease(e.start.pos.x, e.end.pos.x, t, _e),
                                    ease(e.start.pos.y, e.end.pos.y, t, _e));
@@ -665,7 +665,7 @@ void Map::setCameraPositionEased(const CameraPosition& _camera, float _duration,
             impl->view.setRoll(ease(e.start.rotation, e.end.rotation, t, _e));
 
             impl->view.setPitch(ease(e.start.tilt, e.end.tilt, t, _e));
-        }});
+        });
 
     platform->requestRender();
 }
@@ -679,10 +679,6 @@ void Map::updateCameraPosition(const CameraUpdate& _update, float _duration, Eas
     }
     if ((_update.set & CameraUpdate::SET_BOUNDS) != 0) {
         camera = getEnclosingCameraPosition(_update.bounds[0], _update.bounds[1], _update.boundsPadding);
-    }
-    if ((_update.set & CameraUpdate::SET_LNGLAT) != 0) {
-        camera.longitude = _update.lngLat.longitude;
-        camera.latitude = _update.lngLat.latitude;
     }
     if ((_update.set & CameraUpdate::SET_LNGLAT) != 0) {
         camera.longitude = _update.lngLat.longitude;
@@ -824,7 +820,7 @@ void Map::flyTo(double _lon, double _lat, float _z, float _duration, float _spee
 
     cancelCameraAnimation();
 
-    impl->eases.push_back(Ease{duration, cb});
+    impl->eases.emplace_back(duration, cb);
 }
 
 bool Map::screenPositionToLngLat(double _x, double _y, double* _lng, double* _lat) {
