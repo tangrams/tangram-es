@@ -452,6 +452,16 @@ public class MapController implements Renderer {
      * Set the camera position of the map view with default easing
      * @param update CameraUpdate to update current camera position
      * @param duration Time in milliseconds to ease to the given position
+     * @param cb callback for handling animation finished or canceled event
+     */
+    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final CameraAnimationCallback cb) {
+         updateCameraPosition(update, duration, DEFAULT_EASE_TYPE, cb);
+    }
+
+    /**
+     * Set the camera position of the map view with default easing
+     * @param update CameraUpdate to update current camera position
+     * @param duration Time in milliseconds to ease to the given position
      * @param ease Type of easing to use
      * @param cb callback for handling animation finished or canceled event
      */
