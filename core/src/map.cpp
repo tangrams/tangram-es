@@ -976,45 +976,38 @@ void Map::markerRemoveAll() {
 }
 
 void Map::handleTapGesture(float _posX, float _posY) {
-
+    cancelCameraAnimation();
     impl->inputHandler.handleTapGesture(_posX, _posY);
-
 }
 
 void Map::handleDoubleTapGesture(float _posX, float _posY) {
-
+    cancelCameraAnimation();
     impl->inputHandler.handleDoubleTapGesture(_posX, _posY);
-
 }
 
 void Map::handlePanGesture(float _startX, float _startY, float _endX, float _endY) {
-
+    cancelCameraAnimation();
     impl->inputHandler.handlePanGesture(_startX, _startY, _endX, _endY);
-
 }
 
 void Map::handleFlingGesture(float _posX, float _posY, float _velocityX, float _velocityY) {
-
+    cancelCameraAnimation();
     impl->inputHandler.handleFlingGesture(_posX, _posY, _velocityX, _velocityY);
-
 }
 
 void Map::handlePinchGesture(float _posX, float _posY, float _scale, float _velocity) {
-
+    cancelCameraAnimation();
     impl->inputHandler.handlePinchGesture(_posX, _posY, _scale, _velocity);
-
 }
 
 void Map::handleRotateGesture(float _posX, float _posY, float _radians) {
-
+    cancelCameraAnimation();
     impl->inputHandler.handleRotateGesture(_posX, _posY, _radians);
-
 }
 
 void Map::handleShoveGesture(float _distance) {
-
+    cancelCameraAnimation();
     impl->inputHandler.handleShoveGesture(_distance);
-
 }
 
 void Map::setupGL() {
