@@ -459,13 +459,11 @@ public class MapController implements Renderer {
       checkPointer(mapPointer);
 
         if (cameraAnimationCallback != null) {
-            // NB: Prevent recursion loop when setCameraPositionEased is called from onCancel callback
+            // NB: Prevent recursion loop when updateCameraPosition is called from onCancel callback
             CameraAnimationCallback prev = cameraAnimationCallback;
             cameraAnimationCallback = null;
             prev.onCancel();
-
         }
-        cameraAnimationCallback = cb;
 
         final float seconds = duration / 1000.f;
 
@@ -473,6 +471,14 @@ public class MapController implements Renderer {
                 update.zoomBy, update.rotation, update.rotationBy, update.tilt, update.tiltBy,
                 update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.boundsPadding,
                 seconds, ease.ordinal());
+
+        if (cb != null) {
+            if (duration > 0) {
+                cameraAnimationCallback = cb;
+            } else {
+                cb.onFinish();
+            }
+        }
     }
 
     /**
