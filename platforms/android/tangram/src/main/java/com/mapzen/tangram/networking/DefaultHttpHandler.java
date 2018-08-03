@@ -95,6 +95,7 @@ public class DefaultHttpHandler implements HttpHandler {
                         data = body.bytes();
                     } catch (final IOException e) {
                         Log.e("Tangram", "Error reading bytes from response body.", e);
+                        onFailure(call, e);
                     } finally {
                         response.close();
                     }

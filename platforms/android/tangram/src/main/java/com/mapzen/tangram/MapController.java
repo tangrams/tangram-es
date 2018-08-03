@@ -1359,16 +1359,28 @@ public class MapController implements Renderer {
 
     // Networking methods
     // ==================
-    @Keep
-    void cancelUrlRequest(final long requestHandle) {
-        if (httpHandler != null) {
-            Object request = httpRequestHandles.get(requestHandle);
-            if (request != null) {
-                httpHandler.cancelRequest(request);
-            }
+
+    private void syncRemoveHttpHandle(final long requestHandle) {
+        synchronized(this) {
             httpRequestHandles.remove(requestHandle);
         }
     }
+
+    @Keep
+    void cancelUrlRequest(final long requestHandle) {
+        if (httpHandler != null) {
+            Object request;
+            synchronized(this) {
+                request = httpRequestHandles.get(requestHandle);
+            }
+            if (request != null) {
+                httpHandler.cancelRequest(request);
+            }
+            syncRemoveHttpHandle(requestHandle);
+        }
+    }
+
+
 
     @Keep
     void startUrlRequest(@NonNull final String url, final long requestHandle) {
@@ -1381,7 +1393,7 @@ public class MapController implements Renderer {
             public void onFailure(@Nullable final IOException e) {
                 String msg = (e == null) ? null : e.getMessage();
                 nativeOnUrlComplete(mapPointer, requestHandle, null, msg);
-                httpRequestHandles.remove(requestHandle);
+                syncRemoveHttpHandle(requestHandle);
             }
 
             @Override
@@ -1393,19 +1405,21 @@ public class MapController implements Renderer {
                 else {
                     nativeOnUrlComplete(mapPointer, requestHandle, null, "Unexpected response code: " + code + " for URL: " + url);
                 }
-                httpRequestHandles.remove(requestHandle);
+                syncRemoveHttpHandle(requestHandle);
             }
 
             @Override
             public void onCancel() {
                 nativeOnUrlComplete(mapPointer, requestHandle, null, null);
-                httpRequestHandles.remove(requestHandle);
+                syncRemoveHttpHandle(requestHandle);
             }
         };
 
         Object request = httpHandler.startRequest(url, callback);
         if (request != null) {
-            httpRequestHandles.put(requestHandle, request);
+            synchronized (this) {
+                httpRequestHandles.put(requestHandle, request);
+            }
         }
     }
 
