@@ -41,8 +41,6 @@ public class DefaultHttpHandler implements HttpHandler {
                 .writeTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS);
 
-        configureClient(builder);
-
         // For some reason, android supports TLS v1.2 from API 16, but enables it by default only from API 20.
         if (Build.VERSION.SDK_INT < 22) {
             try {
@@ -64,6 +62,8 @@ public class DefaultHttpHandler implements HttpHandler {
                 android.util.Log.e("Tangram", "Error while setting TLS 1.2", exc);
             }
         }
+
+        configureClient(builder);
 
         okClient = builder.build();
     }

@@ -213,11 +213,9 @@ public class MapController implements Renderer {
     protected MapController(@NonNull final GLSurfaceView view) {
         if (Build.VERSION.SDK_INT > 18) {
             clientTileSources = new ArrayMap<>();
-        }
-        else {
+        } else {
             clientTileSources = new HashMap<>();
         }
-        httpRequestHandles = new LongSparseArray<>();
         markers = new LongSparseArray<>();
 
         // Set up MapView
@@ -243,7 +241,6 @@ public class MapController implements Renderer {
         uiThreadHandler = new Handler(view.getContext().getMainLooper());
     }
 
-
     /**
      * Initialize native Tangram component. This must be called before any use
      * of the MapController!
@@ -261,8 +258,7 @@ public class MapController implements Renderer {
         // Use the DefaultHttpHandler if none is provided
         if (handler == null) {
             httpHandler = new DefaultHttpHandler();
-        }
-        else {
+        } else {
             httpHandler = handler;
         }
 
@@ -1288,7 +1284,7 @@ public class MapController implements Renderer {
     private FontFileParser fontFileParser;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
-    private LongSparseArray<Object> httpRequestHandles;
+    private LongSparseArray<Object> httpRequestHandles = new LongSparseArray<>();
     private FeaturePickListener featurePickListener;
     private SceneLoadListener sceneLoadListener;
     private LabelPickListener labelPickListener;
@@ -1372,15 +1368,13 @@ public class MapController implements Renderer {
             Object request;
             synchronized(this) {
                 request = httpRequestHandles.get(requestHandle);
+                httpRequestHandles.remove(requestHandle);
             }
             if (request != null) {
                 httpHandler.cancelRequest(request);
             }
-            syncRemoveHttpHandle(requestHandle);
         }
     }
-
-
 
     @Keep
     void startUrlRequest(@NonNull final String url, final long requestHandle) {
@@ -1391,7 +1385,7 @@ public class MapController implements Renderer {
         final HttpHandler.Callback callback = new HttpHandler.Callback() {
             @Override
             public void onFailure(@Nullable final IOException e) {
-                String msg = (e == null) ? null : e.getMessage();
+                String msg = (e == null) ? "" : e.getMessage();
                 nativeOnUrlComplete(mapPointer, requestHandle, null, msg);
                 syncRemoveHttpHandle(requestHandle);
             }
