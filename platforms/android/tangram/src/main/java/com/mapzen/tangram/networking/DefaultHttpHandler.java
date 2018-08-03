@@ -1,4 +1,4 @@
-package com.mapzen.tangram;
+package com.mapzen.tangram.networking;
 
 import android.os.Build;
 import android.support.annotation.NonNull;

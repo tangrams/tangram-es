@@ -1,7 +1,10 @@
-package com.mapzen.tangram;
+package com.mapzen.tangram.networking;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import com.mapzen.tangram.MapController;
+import com.mapzen.tangram.MapView;
 
 import java.io.IOException;
 

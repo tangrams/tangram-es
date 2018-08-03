@@ -8,6 +8,9 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
+import com.mapzen.tangram.networking.DefaultHttpHandler;
+import com.mapzen.tangram.networking.HttpHandler;
+
 /**
  * {@code MapView} is a View for displaying a Tangram map.
  */

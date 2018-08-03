@@ -23,8 +23,8 @@ import com.mapzen.tangram.SceneUpdate;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
-import com.mapzen.tangram.DefaultHttpHandler;
-import com.mapzen.tangram.HttpHandler;
+import com.mapzen.tangram.networking.DefaultHttpHandler;
+import com.mapzen.tangram.networking.HttpHandler;
 
 import java.io.File;
 import java.util.ArrayList;

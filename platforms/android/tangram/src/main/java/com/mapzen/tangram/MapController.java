@@ -16,6 +16,8 @@ import android.util.DisplayMetrics;
 import android.util.LongSparseArray;
 
 import com.mapzen.tangram.TouchInput.Gestures;
+import com.mapzen.tangram.networking.DefaultHttpHandler;
+import com.mapzen.tangram.networking.HttpHandler;
 
 import java.io.IOException;
 import java.util.HashMap;
