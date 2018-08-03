@@ -7,8 +7,6 @@ import android.util.Log;
 import android.view.Window;
 import android.widget.Toast;
 
-import com.mapzen.tangram.CachePolicy;
-import com.mapzen.tangram.HttpHandler;
 import com.mapzen.tangram.LabelPickResult;
 import com.mapzen.tangram.LngLat;
 import com.mapzen.tangram.MapController;
@@ -25,6 +23,8 @@ import com.mapzen.tangram.SceneUpdate;
 import com.mapzen.tangram.TouchInput.DoubleTapResponder;
 import com.mapzen.tangram.TouchInput.LongPressResponder;
 import com.mapzen.tangram.TouchInput.TapResponder;
+import com.mapzen.tangram.networking.DefaultHttpHandler;
+import com.mapzen.tangram.networking.HttpHandler;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -34,8 +34,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Cache;
 import okhttp3.CacheControl;
 import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
 public class MainActivity extends AppCompatActivity implements MapController.SceneLoadListener, TapResponder,
         DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener {
@@ -108,12 +111,11 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         // which occurs after onCreate and onStart, but before onPostCreate, so we get the URL here.
         String sceneUrl = sceneSelector.getCurrentString();
 
-        map = view.getMap(this);
+        map = view.getMap(this, getHttpHandler());
         map.loadSceneFile(sceneUrl, sceneUpdates);
 
         map.setZoom(16);
         map.setPosition(new LngLat(-74.00976419448854, 40.70532700869127));
-        map.setHttpHandler(getHttpHandler());
         map.setTapResponder(this);
         map.setDoubleTapResponder(this);
         map.setLongPressResponder(this);
@@ -172,21 +174,22 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
     }
 
     HttpHandler getHttpHandler() {
-        File cacheDir = getExternalCacheDir();
-        if (cacheDir != null && cacheDir.exists()) {
-            CachePolicy cachePolicy = new CachePolicy() {
-                CacheControl tileCacheControl = new CacheControl.Builder().maxStale(7, TimeUnit.DAYS).build();
-                @Override
-                public CacheControl apply(HttpUrl url) {
-                    if (url.host().equals("tile.mapzen.com")) {
-                        return tileCacheControl;
-                    }
-                    return null;
+        return new DefaultHttpHandler() {
+            @Override
+            protected void configureClient(OkHttpClient.Builder builder) {
+                File cacheDir = getExternalCacheDir();
+                if (cacheDir != null && cacheDir.exists()) {
+                    builder.cache(new Cache(cacheDir, 16 * 1024 * 1024));
                 }
-            };
-            return new HttpHandler(new File(cacheDir, "tile_cache"), 30 * 1024 * 1024, cachePolicy);
-        }
-        return new HttpHandler();
+            }
+            CacheControl tileCacheControl = new CacheControl.Builder().maxStale(7, TimeUnit.DAYS).build();
+            @Override
+            protected void configureRequest(HttpUrl url, Request.Builder builder) {
+                if ("tile.nextzen.com".equals(url.host())) {
+                    builder.cacheControl(tileCacheControl);
+                }
+            }
+        };
     }
 
     @Override

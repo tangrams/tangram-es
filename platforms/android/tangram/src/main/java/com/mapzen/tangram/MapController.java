@@ -16,6 +16,8 @@ import android.util.DisplayMetrics;
 import android.util.LongSparseArray;
 
 import com.mapzen.tangram.TouchInput.Gestures;
+import com.mapzen.tangram.networking.DefaultHttpHandler;
+import com.mapzen.tangram.networking.HttpHandler;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -25,11 +27,6 @@ import java.util.Map;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 /**
  * {@code MapController} is the main class for interacting with a Tangram map.
@@ -227,9 +224,6 @@ public class MapController implements Renderer {
         view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         view.setPreserveEGLContextOnPause(true);
 
-        // Set a default HTTPHandler
-        httpHandler = new HttpHandler();
-
         touchInput = new TouchInput(view.getContext());
         view.setOnTouchListener(touchInput);
 
@@ -252,13 +246,21 @@ public class MapController implements Renderer {
      * of the MapController!
      * This function is separated from MapController constructor to allow
      * initialization and loading of the Scene on a background thread.
+     * @param handler {@link HttpHandler} to use for retrieving remote map resources
      */
-    void init() {
+    void init(@Nullable final HttpHandler handler) {
         // Get configuration info from application
         displayMetrics = mapView.getContext().getResources().getDisplayMetrics();
         assetManager = mapView.getContext().getAssets();
 
         fontFileParser = new FontFileParser();
+
+        // Use the DefaultHttpHandler if none is provided
+        if (handler == null) {
+            httpHandler = new DefaultHttpHandler();
+        } else {
+            httpHandler = handler;
+        }
 
         // Parse font file description
         fontFileParser.parse();
@@ -411,15 +413,6 @@ public class MapController implements Renderer {
         final String[] updateStrings = bundleSceneUpdates(sceneUpdates);
 
         return nativeUpdateScene(mapPointer, updateStrings);
-    }
-
-    /**
-     * Set the {@link HttpHandler} for retrieving remote map resources; a default-constructed
-     * HttpHandler is suitable for most cases, but methods can be extended to modify resource URLs
-     * @param handler the HttpHandler to use
-     */
-    public void setHttpHandler(final HttpHandler handler) {
-        this.httpHandler = handler;
     }
 
     /**
@@ -1291,6 +1284,7 @@ public class MapController implements Renderer {
     private FontFileParser fontFileParser;
     private DisplayMetrics displayMetrics = new DisplayMetrics();
     private HttpHandler httpHandler;
+    private LongSparseArray<Object> httpRequestHandles = new LongSparseArray<>();
     private FeaturePickListener featurePickListener;
     private SceneLoadListener sceneLoadListener;
     private LabelPickListener labelPickListener;
@@ -1361,12 +1355,25 @@ public class MapController implements Renderer {
 
     // Networking methods
     // ==================
+
+    private void syncRemoveHttpHandle(final long requestHandle) {
+        synchronized(this) {
+            httpRequestHandles.remove(requestHandle);
+        }
+    }
+
     @Keep
     void cancelUrlRequest(final long requestHandle) {
-        if (httpHandler == null) {
-            return;
+        if (httpHandler != null) {
+            Object request;
+            synchronized(this) {
+                request = httpRequestHandles.get(requestHandle);
+                httpRequestHandles.remove(requestHandle);
+            }
+            if (request != null) {
+                httpHandler.cancelRequest(request);
+            }
         }
-        httpHandler.onCancel(requestHandle);
     }
 
     @Keep
@@ -1375,31 +1382,39 @@ public class MapController implements Renderer {
             return;
         }
 
-        final Callback callback = new Callback() {
+        final HttpHandler.Callback callback = new HttpHandler.Callback() {
             @Override
-            public void onFailure(final Call call, final IOException e) {
-                nativeOnUrlComplete(mapPointer, requestHandle, null, e.getMessage());
+            public void onFailure(@Nullable final IOException e) {
+                String msg = (e == null) ? "" : e.getMessage();
+                nativeOnUrlComplete(mapPointer, requestHandle, null, msg);
+                syncRemoveHttpHandle(requestHandle);
             }
 
             @Override
-            public void onResponse(final Call call, final Response response) throws IOException {
-                if (!response.isSuccessful()) {
-                    nativeOnUrlComplete(mapPointer, requestHandle, null, response.message());
-                    throw new IOException("Unexpected response code: " + response + " for URL: " + url);
-                }
-                final ResponseBody body = response.body();
-                if (body == null) {
-                    nativeOnUrlComplete(mapPointer, requestHandle, null, response.message());
-                    throw new IOException("Unexpected null body for URL: " + url);
+            public void onResponse(final int code, @Nullable final byte[] rawDataBytes) {
+                // TODO: Use of returned error code and headers for better network response logging/retries, etc
+                if (code >= 200 && code < 300) {
+                    nativeOnUrlComplete(mapPointer, requestHandle, rawDataBytes, null);
                 }
                 else {
-                    final byte[] bytes = body.bytes();
-                    nativeOnUrlComplete(mapPointer, requestHandle, bytes, null);
+                    nativeOnUrlComplete(mapPointer, requestHandle, null, "Unexpected response code: " + code + " for URL: " + url);
                 }
+                syncRemoveHttpHandle(requestHandle);
+            }
+
+            @Override
+            public void onCancel() {
+                nativeOnUrlComplete(mapPointer, requestHandle, null, null);
+                syncRemoveHttpHandle(requestHandle);
             }
         };
 
-        httpHandler.onRequest(url, callback, requestHandle);
+        Object request = httpHandler.startRequest(url, callback);
+        if (request != null) {
+            synchronized (this) {
+                httpRequestHandles.put(requestHandle, request);
+            }
+        }
     }
 
     // Called from JNI on worker or render-thread.
