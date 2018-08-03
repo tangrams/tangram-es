@@ -4,8 +4,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 /**
  * {@code HttpHandler} interface for handling network requests for map resources,
@@ -40,11 +38,10 @@ public interface HttpHandler {
 
         /**
          * Called when the HTTP response was successfully returned by the remote server
-         * @param code An integer code returned from a network response
-         * @param rawDataBytes raw bytes from the body of a network response
-         * @param headers network response package headers
+         * @param code Status code returned from the network response
+         * @param body Data comprising the body of the network response
          */
-        void onResponse(final int code, @Nullable final byte[] rawDataBytes, @Nullable final Map<String, List<String>> headers);
+        void onResponse(final int code, @Nullable final byte[] body);
 
         /**
          * Called when the request could not be executed due to cancellation

@@ -2,26 +2,16 @@ package com.mapzen.tangram;
 
 import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.util.Log;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 
-import okhttp3.Cache;
-import okhttp3.CacheControl;
 import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.ConnectionSpec;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -31,104 +21,19 @@ import okhttp3.ResponseBody;
 import okhttp3.TlsVersion;
 
 /**
- * {@code DefaultHttpHandler} is a provides a default implementation for {@link HttpHandler}
- * for customizing HTTP requests for map resources.
+ * {@code DefaultHttpHandler} is an implementation of {@link HttpHandler} using OkHTTP.
+ * Customize this class for your own application by subclassing and overriding
+ * {@link DefaultHttpHandler#configureClient(OkHttpClient.Builder)} and
+ * {@link DefaultHttpHandler#configureRequest(HttpUrl, Request.Builder)}.
  */
 public class DefaultHttpHandler implements HttpHandler {
 
-    protected OkHttpClient okClient;
-    protected CachePolicy cachePolicy;
-    protected CacheControl tileCacheControl;
-
-    /**
-     * Enables TLS v1.2 when creating SSLSockets.
-     * <p>
-     * For some reason, android supports TLS v1.2 from API 16, but enables it by
-     * default only from API 20.
-     *
-     * @link https://developer.android.com/reference/javax/net/ssl/SSLSocket.html
-     * @see SSLSocketFactory
-     */
-    private class Tls12SocketFactory extends SSLSocketFactory {
-        private final String[] TLS_V12_ONLY = {"TLSv1.2"};
-
-        final SSLSocketFactory delegate;
-
-        public Tls12SocketFactory(final SSLSocketFactory base) {
-            this.delegate = base;
-        }
-
-        @Override
-        public String[] getDefaultCipherSuites() {
-            return delegate.getDefaultCipherSuites();
-        }
-
-        @Override
-        public String[] getSupportedCipherSuites() {
-            return delegate.getSupportedCipherSuites();
-        }
-
-        @Override
-        public Socket createSocket(final Socket s, final String host, final int port, final boolean autoClose) throws IOException {
-            return patch(delegate.createSocket(s, host, port, autoClose));
-        }
-
-        @Override
-        public Socket createSocket(final String host, final int port) throws IOException, UnknownHostException {
-            return patch(delegate.createSocket(host, port));
-        }
-
-        @Override
-        public Socket createSocket(final String host, final int port, final InetAddress localHost,
-                                   final int localPort) throws IOException, UnknownHostException {
-            return patch(delegate.createSocket(host, port, localHost, localPort));
-        }
-
-        @Override
-        public Socket createSocket(InetAddress host, int port) throws IOException {
-            return patch(delegate.createSocket(host, port));
-        }
-
-        @Override
-        public Socket createSocket(final InetAddress address, final int port, final InetAddress localAddress,
-                                   final int localPort) throws IOException {
-            return patch(delegate.createSocket(address, port, localAddress, localPort));
-        }
-
-        private Socket patch(final Socket s) {
-            if (s instanceof SSLSocket) {
-                ((SSLSocket) s).setEnabledProtocols(TLS_V12_ONLY);
-            }
-            return s;
-        }
-    }
+    private OkHttpClient okClient;
 
     /**
      * Construct an {@code DefaultHttpHandler} with default options.
      */
     public DefaultHttpHandler() {
-        this(null, 0, null, null);
-    }
-
-    /**
-     * Construct an {@code DefaultHttpHandler} with cache.
-     * Cache map data in a directory with a specified size limit
-     * @param directory Directory in which map data will be cached
-     * @param maxSize Maximum size of data to cache, in bytes
-     */
-    public DefaultHttpHandler(@Nullable final File directory, final long maxSize) {
-        this(directory, maxSize, null, null);
-    }
-
-    /**
-     * Construct an {@code DefaultHttpHandler} with cache.
-     * Cache map data in a directory with a specified size limit
-     * @param directory Directory in which map data will be cached
-     * @param maxSize Maximum size of data to cache, in bytes
-     * @param policy Cache policy to apply on requests
-     * @param cacheControl {@link CacheControl} used to provide caching based on {@link CachePolicy}
-     */
-    public DefaultHttpHandler(@Nullable final File directory, final long maxSize, @Nullable final CachePolicy policy, @Nullable final CacheControl cacheControl) {
         final OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .followRedirects(true)
                 .followSslRedirects(true)
@@ -136,22 +41,9 @@ public class DefaultHttpHandler implements HttpHandler {
                 .writeTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS);
 
-        if (directory != null && maxSize > 0) {
-            builder.cache(new Cache(directory, maxSize));
-        }
+        configureClient(builder);
 
-        // Use specified policy or construct default if null.
-        cachePolicy = policy;
-        tileCacheControl = cacheControl;
-        if (cachePolicy == null || tileCacheControl == null) {
-            cachePolicy = new CachePolicy() {
-                @Override
-                public boolean apply(@NonNull final String url) {
-                    return false;
-                }
-            };
-        }
-
+        // For some reason, android supports TLS v1.2 from API 16, but enables it by default only from API 20.
         if (Build.VERSION.SDK_INT < 22) {
             try {
                 final SSLContext sc = SSLContext.getInstance("TLSv1.2");
@@ -179,44 +71,42 @@ public class DefaultHttpHandler implements HttpHandler {
     @Override
     public Object startRequest(@NonNull final String url, @NonNull final HttpHandler.Callback cb) {
         final HttpUrl httpUrl = HttpUrl.parse(url);
-        Call call = null;
         if (httpUrl == null) {
-            cb.onFailure(new IOException("HttpUrl failed to parse url=" + url));
+            cb.onFailure(new IOException("Failed to parse URL: " + url));
+            return null;
         }
-        else {
-            // Construct okhttp3.Callback which forwards apt response calls to internal HttpResponse.Callback
-            final okhttp3.Callback callback = new okhttp3.Callback() {
-                @Override
-                public void onFailure(final Call call, final IOException e) {
-                    if (call.isCanceled()) {
-                        cb.onCancel();
-                        return;
-                    }
-                    cb.onFailure(e);
+        // Construct okhttp3.Callback which forwards response calls to HttpResponse.Callback
+        final okhttp3.Callback callback = new okhttp3.Callback() {
+            @Override
+            public void onFailure(final Call call, final IOException e) {
+                if (call.isCanceled()) {
+                    cb.onCancel();
+                    return;
                 }
+                cb.onFailure(e);
+            }
 
-                @Override
-                public void onResponse(final Call call, final Response response) throws IOException {
+            @Override
+            public void onResponse(final Call call, final Response response) {
+                byte[] data = null;
+                final ResponseBody body = response.body();
+                if (body != null) {
                     try {
-                        final ResponseBody body = response.body();
-                        // TODO headers? cacheControl?
-                        cb.onResponse(response.code(), body.bytes(), response.headers().toMultimap());
+                        data = body.bytes();
                     } catch (final IOException e) {
-                        android.util.Log.e("Tangram", "Error while reading bytes from response body.", e);
+                        Log.e("Tangram", "Error reading bytes from response body.", e);
                     } finally {
                         response.close();
                     }
                 }
-            };
-            final Request.Builder builder = new Request.Builder().url(httpUrl);
-            // TODO: cachePolicy using headers??
-            if (cachePolicy.apply(url)) {
-                builder.cacheControl(tileCacheControl);
+                cb.onResponse(response.code(), data);
             }
-            final Request request = builder.build();
-            call = okClient.newCall(request);
-            call.enqueue(callback);
-        }
+        };
+        final Request.Builder builder = new Request.Builder().url(httpUrl);
+        configureRequest(httpUrl, builder);
+        final Request request = builder.build();
+        Call call = okClient.newCall(request);
+        call.enqueue(callback);
         return call;
     }
 
@@ -226,6 +116,21 @@ public class DefaultHttpHandler implements HttpHandler {
             Call call = (Call)request;
             call.cancel();
         }
+    }
+
+    /**
+     * Override this method to customize the OkHTTP client
+     * @param builder OkHTTP client builder to customize
+     */
+    protected void configureClient(OkHttpClient.Builder builder) {
+    }
+
+    /**
+     * Override this method to customize HTTP requests
+     * @param url Request URL
+     * @param builder Request builder to customize
+     */
+    protected void configureRequest(HttpUrl url, Request.Builder builder) {
     }
 
 }
