@@ -69,6 +69,14 @@ android {
       }
     }
   }
+
+  sourceSets {
+    main {
+      jniLibs.srcDirs += ['../bench/']
+    }
+  }
+
+
 }
 
 dependencies {
