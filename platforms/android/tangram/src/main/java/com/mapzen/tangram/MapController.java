@@ -1392,7 +1392,6 @@ public class MapController implements Renderer {
 
             @Override
             public void onResponse(final int code, @Nullable final byte[] rawDataBytes) {
-                // TODO: Use of returned error code and headers for better network response logging/retries, etc
                 if (code >= 200 && code < 300) {
                     nativeOnUrlComplete(mapPointer, requestHandle, rawDataBytes, null);
                 }
