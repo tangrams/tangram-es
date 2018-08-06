@@ -74,7 +74,7 @@ public:
     std::shared_ptr<Platform> platform;
     InputHandler inputHandler;
 
-    std::vector<Ease> eases;
+    std::unique_ptr<Ease> ease;
     std::shared_ptr<Scene> scene;
     std::shared_ptr<Scene> lastValidScene;
     std::atomic<int32_t> sceneLoadTasks{0};
@@ -404,15 +404,15 @@ bool Map::update(float _dt) {
     bool markersNeedUpdate = false;
     bool cameraEasing = false;
 
-    if (!impl->eases.empty()) {
-        auto& ease = impl->eases[0];
+    if (impl->ease) {
+        auto& ease = *(impl->ease);
         ease.update(_dt);
 
         if (ease.finished()) {
             if (impl->cameraAnimationListener) {
                 impl->cameraAnimationListener(true);
             }
-            impl->eases.clear();
+            impl->ease.reset();
         } else {
             cameraEasing = true;
         }
@@ -601,7 +601,7 @@ CameraPosition Map::getCameraPosition() {
 void Map::cancelCameraAnimation() {
     impl->inputHandler.cancelFling();
 
-    impl->eases.clear();
+    impl->ease.reset();
 
     if (impl->cameraAnimationListener) {
         impl->cameraAnimationListener(false);
@@ -656,7 +656,7 @@ void Map::setCameraPositionEased(const CameraPosition& _camera, float _duration,
     e.start.tilt = getTilt();
     e.end.tilt = _camera.tilt;
 
-    impl->eases.emplace_back(_duration,
+    impl->ease = std::make_unique<Ease>(_duration,
         [=](float t) {
             impl->view.setPosition(ease(e.start.pos.x, e.end.pos.x, t, _e),
                                    ease(e.start.pos.y, e.end.pos.y, t, _e));
@@ -820,7 +820,7 @@ void Map::flyTo(double _lon, double _lat, float _z, float _duration, float _spee
 
     cancelCameraAnimation();
 
-    impl->eases.emplace_back(duration, cb);
+    impl->ease = std::make_unique<Ease>(duration, cb);
 }
 
 bool Map::screenPositionToLngLat(double _x, double _y, double* _lng, double* _lat) {
