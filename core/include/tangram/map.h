@@ -250,10 +250,7 @@ public:
 
     void setCameraPositionEased(const CameraPosition& _camera, float duration, EaseType _e = EaseType::quint);
 
-    void updateCameraPosition(const CameraPosition& _camera);
-
     void updateCameraPosition(const CameraUpdate& _update, float duration = 0.f, EaseType _e = EaseType::quint);
-
 
     void cancelCameraAnimation();
 
