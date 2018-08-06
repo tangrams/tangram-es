@@ -4,11 +4,18 @@
 #include "util/variant.h"
 
 #include "glm/vec2.hpp"
+#include <initializer_list>
 #include <string>
 #include <vector>
 
+// Forward declaration
+namespace YAML {
+  class Node;
+}
+
 namespace Tangram {
 
+struct Color;
 struct Stops;
 
 enum class StyleParamKey : uint8_t {
@@ -85,38 +92,57 @@ enum class StyleParamKey : uint8_t {
 
 constexpr size_t StyleParamKeySize = static_cast<size_t>(StyleParamKey::NUM_ELEMENTS);
 
-enum Unit : uint8_t {
-    pixel = 1 << 0,
-    milliseconds = 1 << 1,
-    meter = 1 << 2,
-    seconds = 1 << 3,
-    percentage = 1 << 4,
-    sizeauto = 1 << 5
+enum class Unit {
+    none = 0,
+    pixel,
+    milliseconds,
+    meter,
+    seconds,
+    percentage,
+    sizeauto,
 };
 
-static inline std::string unitString(Unit unit) {
-    switch(unit) {
-        case Unit::pixel: return "pixel";
-        case Unit::milliseconds: return "milliseconds";
-        case Unit::meter: return "meter";
-        case Unit::seconds: return "seconds";
-        case Unit::percentage: return "%";
-        case Unit::sizeauto: return "auto";
-        default: return "undefined";
+const std::string unitStrings[] = {
+        "",
+        "px",
+        "ms",
+        "m",
+        "s",
+        "%",
+        "auto",
+};
+
+struct UnitSet {
+    int bits = 0;
+    constexpr UnitSet(std::initializer_list<Unit> units) {
+        for (const auto u : units) {
+            bits |= 1 << static_cast<int>(u);
+        }
     }
+    bool contains(Unit unit) {
+        return (bits & static_cast<int>(unit)) != 0;
+    }
+};
+
+static inline std::string unitToString(Unit unit) {
+    return unitStrings[static_cast<int>(unit)];
+}
+
+static inline Unit stringToUnit(const std::string& string, size_t offset, size_t length) {
+    auto count = sizeof(unitStrings) / sizeof(*unitStrings);
+    for (size_t i = 0; i < count; i++) {
+        if (string.compare(offset, length, unitStrings[i]) == 0) {
+            return static_cast<Unit>(i);
+        }
+    }
+    return Unit::none;
 }
 
 template <typename T>
 struct UnitVec {
     T value = T(0.0);
     static constexpr int size = sizeof(value)/sizeof(value[0]);
-    Unit units[size];
-
-    UnitVec() {
-        for (int i = 0; i < size; ++i) {
-            units[i] = Unit::meter;
-        }
-    }
+    Unit units[size] = { Unit::none };
 };
 
 struct StyleParam {
@@ -143,6 +169,7 @@ struct StyleParam {
             return value != _other.value || unit != _other.unit;
         }
     };
+
     struct Width : ValueUnitPair {
 
         Width() = default;
@@ -154,7 +181,6 @@ struct StyleParam {
         Width(ValueUnitPair& _other) :
             ValueUnitPair(_other) {}
     };
-
 
     struct TextSource {
         std::vector<std::string> keys;
@@ -208,11 +234,20 @@ struct StyleParam {
         key(StyleParamKey::none),
         value(none_type{}) {}
 
-    StyleParam(StyleParamKey _key) :
+    explicit StyleParam(StyleParamKey _key) :
         key(_key),
-        value(none_type{}) {}
+        value(none_type{}) {
 
-    StyleParam(const std::string& _key, const std::string& _value);
+    }
+
+    explicit StyleParam(const std::string& _key) :
+        key(getKey(_key)),
+        value(none_type{}) {
+    }
+
+    StyleParam(const std::string& key, const YAML::Node& value);
+
+    StyleParam(StyleParamKey _key, const YAML::Node& _value);
 
     StyleParam(StyleParamKey _key, std::string _value) :
         key(_key),
@@ -243,9 +278,9 @@ struct StyleParam {
     static bool parseTime(const std::string& _value, float& _time);
 
     // values within _value string parameter must be delimited by ','
-    static bool parseSize(const std::string& _value, uint8_t _allowedUnits, SizeValue& _vec2);
-    static bool parseVec2(const std::string& _value, uint8_t _allowedUnits, UnitVec<glm::vec2>& _vec2);
-    static bool parseVec3(const std::string& _value, uint8_t _allowedUnits, UnitVec<glm::vec3>& _vec3);
+//    static bool parseSize(const std::string& _value, uint8_t _allowedUnits, SizeValue& _vec2);
+//    static bool parseVec2(const std::string& _value, uint8_t _allowedUnits, UnitVec<glm::vec2>& _vec2);
+//    static bool parseVec3(const std::string& _value, uint8_t _allowedUnits, UnitVec<glm::vec3>& _vec3);
 
     static int parseSizeUnitPair(const std::string& _value, size_t start,
                                  StyleParam::ValueUnitPair& _result);
@@ -253,6 +288,17 @@ struct StyleParam {
                                   StyleParam::ValueUnitPair& _result);
 
     static Value parseString(StyleParamKey key, const std::string& _value);
+
+    // WIP: Node-based value parsing.
+    static Value parseNode(StyleParamKey key, const YAML::Node& node);
+
+    static bool parseSize(const YAML::Node& node, UnitSet allowedUnits, SizeValue& result);
+    static bool parseVec2(const YAML::Node& node, UnitSet allowedUnits, UnitVec<glm::vec2>& result);
+    static bool parseVec3(const YAML::Node& node, UnitSet allowedUnits, UnitVec<glm::vec3>& result);
+    static bool parseSizeUnitPair(const std::string& value, StyleParam::ValueUnitPair& result);
+    static bool parseValueUnitPair(const std::string& value, StyleParam::ValueUnitPair& result);
+
+    static bool parseColor(const YAML::Node& node, Color& result);
 
     static bool isColor(StyleParamKey _key);
     static bool isSize(StyleParamKey _key);
@@ -262,7 +308,9 @@ struct StyleParam {
     static bool isFontSize(StyleParamKey _key);
     static bool isRequired(StyleParamKey _key);
 
-    static uint8_t unitsForStyleParam(StyleParamKey _key);
+//    static uint8_t unitsForStyleParam(StyleParamKey _key);
+
+    static UnitSet unitSetForStyleParam(StyleParamKey key);
 
     static StyleParamKey getKey(const std::string& _key);
 
