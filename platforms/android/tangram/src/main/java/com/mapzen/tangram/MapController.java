@@ -429,9 +429,9 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Set the camera position of the map view with default easing
+     * Animate the camera position of the map view with the default easing function
      * @param update CameraUpdate to update current camera position
-     * @param duration Time in milliseconds to ease to the given position
+     * @param duration Time in milliseconds to ease to the updated position
      */
     public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration) {
         updateCameraPosition(update, duration, DEFAULT_EASE_TYPE, null);
@@ -439,9 +439,9 @@ public class MapController implements Renderer {
 
 
     /**
-     * Set the camera position of the map view with default easing
+     * Animate the camera position of the map view with an easing function
      * @param update CameraUpdate to update current camera position
-     * @param duration Time in milliseconds to ease to the given position
+     * @param duration Time in milliseconds to ease to the updated position
      * @param ease Type of easing to use
      */
     public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease) {
@@ -449,23 +449,24 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Set the camera position of the map view with default easing
+     * Animate the camera position of the map view and run a callback when the animation completes
      * @param update CameraUpdate to update current camera position
-     * @param duration Time in milliseconds to ease to the given position
-     * @param cb callback for handling animation finished or canceled event
+     * @param duration Time in milliseconds to ease to the updated position
+     * @param cb Callback that will run when the animation is finished or canceled
      */
     public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final CameraAnimationCallback cb) {
          updateCameraPosition(update, duration, DEFAULT_EASE_TYPE, cb);
     }
 
     /**
-     * Set the camera position of the map view with default easing
+     * Animate the camera position of the map view with an easing function and run a callback when
+     * the animation completes
      * @param update CameraUpdate to update current camera position
-     * @param duration Time in milliseconds to ease to the given position
+     * @param duration Time in milliseconds to ease to the updated position
      * @param ease Type of easing to use
-     * @param cb callback for handling animation finished or canceled event
+     * @param cb Callback that will run when the animation is finished or canceled
      */
-    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease, final CameraAnimationCallback cb) {
+    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease, @Nullable final CameraAnimationCallback cb) {
       checkPointer(mapPointer);
 
         if (cameraAnimationCallback != null) {
@@ -492,7 +493,7 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Get the cameraPosition of the map view
+     * Get the {@link CameraPosition} of the map view
      * @return The current camera position
      */
     @NonNull
@@ -501,7 +502,7 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Get the camera position of the map view
+     * Get the {@link CameraPosition} of the map view
      * @param out CameraPosition to be reused as the output
      * @return the current camera position of the map view
      */
@@ -520,7 +521,7 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Run flight animation to change postion and zoom  of the map
+     * Smoothly animate over an arc to an updated camera position for the map view
      * @param position LngLat of the position to set
      * @param zoom Zoom level; lower values show more area
      * @param duration Time in milliseconds to ease to given zoom

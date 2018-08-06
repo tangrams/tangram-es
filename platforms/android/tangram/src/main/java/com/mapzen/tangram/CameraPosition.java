@@ -22,7 +22,11 @@ public class CameraPosition {
                 Float.compare(that.tilt, tilt) == 0;
     }
 
-    public void set(CameraPosition camera) {
+    /**
+     * Set this {@link CameraPosition} from the values in another camera.
+     * @param camera The camera to use values from
+     */
+    public void set(@NonNull CameraPosition camera) {
         longitude = camera.longitude;
         latitude = camera.latitude;
         zoom = camera.zoom;
@@ -30,23 +34,45 @@ public class CameraPosition {
         tilt = camera.tilt;
     }
 
-    public LngLat getPosition(@NonNull LngLat lngLat) {
+    /**
+     * Get the longitude and latitude of the center of the camera view.
+     * @param lngLat A {@link LngLat} to hold the coordinates
+     * @return The {@link LngLat} containing the center coordinates
+     */
+    public @NonNull LngLat getPosition(@NonNull LngLat lngLat) {
         lngLat.set(longitude, latitude);
         return lngLat;
     }
 
-    public LngLat getPosition() {
+    /**
+     * Get the longitude and latitude of the center of the camera view.
+     * @return The {@link LngLat} containing the center coordinates
+     */
+    public @NonNull LngLat getPosition() {
         return getPosition(new LngLat());
     }
 
+    /**
+     * Get the zoom level of the camera view. Lower zoom values correspond to a higher effective
+     * altitude of the camera view.
+     * @return The zoom level.
+     */
     public float getZoom() {
         return zoom;
     }
 
+    /**
+     * Get the rotation of the camera view in radians counter-clockwise from North.
+     * @return The rotation in radians.
+     */
     public float getRotation() {
         return rotation;
     }
 
+    /**
+     * Get the tilt angle of the camera view in radians from straight down.
+     * @return The tilt angle in radians.
+     */
     public float getTilt() {
         return tilt;
     }
