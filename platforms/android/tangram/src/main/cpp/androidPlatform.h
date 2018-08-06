@@ -41,6 +41,7 @@ public:
     UrlRequestHandle startUrlRequest(Url _url, UrlCallback _callback) override;
     void cancelUrlRequest(UrlRequestHandle _request) override;
     void sceneReadyCallback(SceneID id, const SceneError* error);
+    void cameraAnimationCallback(bool finished);
 
     void onUrlComplete(JNIEnv* jniEnv, jlong jRequestHandle, jbyteArray jBytes, jstring jError);
 

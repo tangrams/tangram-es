@@ -158,6 +158,11 @@ public class MapController implements Renderer {
         void onSceneReady(final int sceneId, final SceneError sceneError);
     }
 
+    public interface CameraAnimationCallback {
+        void onFinish();
+        void onCancel();
+    }
+
     /**
      * Callback for {@link #captureFrame(FrameCaptureCallback, boolean) }
      */
@@ -416,176 +421,107 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Set the geographic position of the center of the map view
-     * @param position LngLat of the position to set
+     * Set the camera position of the map view
+     * @param update CameraUpdate to modify current camera position
      */
-    public void setPosition(@NonNull final LngLat position) {
-        checkPointer(mapPointer);
-        nativeSetPosition(mapPointer, position.longitude, position.latitude);
+    public void updateCameraPosition(@NonNull final CameraUpdate update) {
+        updateCameraPosition(update, 0, DEFAULT_EASE_TYPE,null);
     }
 
     /**
-     * Set the geographic position of the center of the map view with default easing
-     * @param position LngLat of the position to set
-     * @param duration Time in milliseconds to ease to the given position
+     * Animate the camera position of the map view with the default easing function
+     * @param update CameraUpdate to update current camera position
+     * @param duration Time in milliseconds to ease to the updated position
      */
-    public void setPositionEased(@NonNull final LngLat position, final int duration) {
-        setPositionEased(position, duration, DEFAULT_EASE_TYPE);
+    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration) {
+        updateCameraPosition(update, duration, DEFAULT_EASE_TYPE, null);
     }
 
+
     /**
-     * Set the geographic position of the center of the map view with custom easing
-     * @param position LngLat of the position to set
-     * @param duration Time in milliseconds to ease to the given position
+     * Animate the camera position of the map view with an easing function
+     * @param update CameraUpdate to update current camera position
+     * @param duration Time in milliseconds to ease to the updated position
      * @param ease Type of easing to use
      */
-    public void setPositionEased(@NonNull final LngLat position, final int duration, @NonNull final EaseType ease) {
-        checkPointer(mapPointer);
-        final float seconds = duration / 1000.f;
-        nativeSetPositionEased(mapPointer, position.longitude, position.latitude, seconds, ease.ordinal());
+    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease) {
+        updateCameraPosition(update, duration, ease, null);
     }
 
     /**
-     * Get the geographic position of the center of the map view
-     * @return The current map position in a LngLat
+     * Animate the camera position of the map view and run a callback when the animation completes
+     * @param update CameraUpdate to update current camera position
+     * @param duration Time in milliseconds to ease to the updated position
+     * @param cb Callback that will run when the animation is finished or canceled
+     */
+    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final CameraAnimationCallback cb) {
+         updateCameraPosition(update, duration, DEFAULT_EASE_TYPE, cb);
+    }
+
+    /**
+     * Animate the camera position of the map view with an easing function and run a callback when
+     * the animation completes
+     * @param update CameraUpdate to update current camera position
+     * @param duration Time in milliseconds to ease to the updated position
+     * @param ease Type of easing to use
+     * @param cb Callback that will run when the animation is finished or canceled
+     */
+    public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease, @Nullable final CameraAnimationCallback cb) {
+      checkPointer(mapPointer);
+
+        if (cameraAnimationCallback != null) {
+            // NB: Prevent recursion loop when updateCameraPosition is called from onCancel callback
+            CameraAnimationCallback prev = cameraAnimationCallback;
+            cameraAnimationCallback = null;
+            prev.onCancel();
+        }
+
+        final float seconds = duration / 1000.f;
+
+        nativeUpdateCameraPosition(mapPointer, update.set, update.longitude, update.latitude, update.zoom,
+                update.zoomBy, update.rotation, update.rotationBy, update.tilt, update.tiltBy,
+                update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.boundsPadding,
+                seconds, ease.ordinal());
+
+        if (cb != null) {
+            if (duration > 0) {
+                cameraAnimationCallback = cb;
+            } else {
+                cb.onFinish();
+            }
+        }
+    }
+
+    /**
+     * Get the {@link CameraPosition} of the map view
+     * @return The current camera position
      */
     @NonNull
-    public LngLat getPosition() {
-        return getPosition(new LngLat());
+    public CameraPosition getCameraPosition() {
+        return getCameraPosition(new CameraPosition());
     }
 
     /**
-     * Get the geographic position of the center of the map view
-     * @param out LngLat to be reused as the output
-     * @return LngLat of the center of the map view
+     * Get the {@link CameraPosition} of the map view
+     * @param out CameraPosition to be reused as the output
+     * @return the current camera position of the map view
      */
     @NonNull
-    public LngLat getPosition(@NonNull final LngLat out) {
+    public CameraPosition getCameraPosition(@NonNull final CameraPosition out) {
         checkPointer(mapPointer);
-        final double[] tmp = { 0, 0 };
-        nativeGetPosition(mapPointer, tmp);
-        return out.set(tmp[0], tmp[1]);
+        final double[] pos = { 0, 0 };
+        final float[] zrt = { 0, 0, 0 };
+        nativeGetCameraPosition(mapPointer, pos, zrt);
+        out.longitude = pos[0];
+        out.latitude = pos[1];
+        out.zoom = zrt[0];
+        out.rotation = zrt[1];
+        out.tilt = zrt[2];
+        return out;
     }
 
     /**
-     * Set the zoom level of the map view
-     * @param zoom Zoom level; lower values show more area
-     */
-    public void setZoom(final float zoom) {
-        checkPointer(mapPointer);
-        nativeSetZoom(mapPointer, zoom);
-    }
-
-    /**
-     * Set the zoom level of the map view with default easing
-     * @param zoom Zoom level; lower values show more area
-     * @param duration Time in milliseconds to ease to given zoom
-     */
-    public void setZoomEased(final float zoom, final int duration) {
-        setZoomEased(zoom, duration, DEFAULT_EASE_TYPE);
-    }
-
-    /**
-     * Set the zoom level of the map view with custom easing
-     * @param zoom Zoom level; lower values show more area
-     * @param duration Time in milliseconds to ease to given zoom
-     * @param ease Type of easing to use
-     */
-    public void setZoomEased(final float zoom, final int duration, @NonNull final EaseType ease) {
-        checkPointer(mapPointer);
-        final float seconds = duration / 1000.f;
-        nativeSetZoomEased(mapPointer, zoom, seconds, ease.ordinal());
-    }
-
-    /**
-     * Get the zoom level of the map view
-     * @return Zoom level; lower values show more area
-     */
-    public float getZoom() {
-        checkPointer(mapPointer);
-        return nativeGetZoom(mapPointer);
-    }
-
-    /**
-     * Set the rotation of the view
-     * @param rotation Counter-clockwise rotation in radians; 0 corresponds to North pointing up
-     */
-    public void setRotation(final float rotation) {
-        checkPointer(mapPointer);
-        nativeSetRotation(mapPointer, rotation);
-    }
-
-    /**
-     * Set the rotation of the view with default easing
-     * @param rotation Counter-clockwise rotation in radians; 0 corresponds to North pointing up
-     * @param duration Time in milliseconds to ease to the given rotation
-     */
-    public void setRotationEased(final float rotation, final int duration) {
-        setRotationEased(rotation, duration, DEFAULT_EASE_TYPE);
-    }
-
-    /**
-     * Set the rotation of the view with custom easing
-     * @param rotation Counter-clockwise rotation in radians; 0 corresponds to North pointing up
-     * @param duration Time in milliseconds to ease to the given rotation
-     * @param ease Type of easing to use
-     */
-    public void setRotationEased(final float rotation, final int duration, @NonNull final EaseType ease) {
-        checkPointer(mapPointer);
-        final float seconds = duration / 1000.f;
-        nativeSetRotationEased(mapPointer, rotation, seconds, ease.ordinal());
-    }
-
-    /**
-     * Get the rotation of the view
-     * @return Counter-clockwise rotation in radians; 0 corresponds to North pointing up
-     */
-    public float getRotation() {
-        checkPointer(mapPointer);
-        return nativeGetRotation(mapPointer);
-    }
-
-    /**
-     * Set the tilt angle of the view
-     * @param tilt Tilt angle in radians; 0 corresponds to straight down
-     */
-    public void setTilt(final float tilt) {
-        checkPointer(mapPointer);
-        nativeSetTilt(mapPointer, tilt);
-    }
-
-    /**
-     * Set the tilt angle of the view with default easing
-     * @param tilt Tilt angle in radians; 0 corresponds to straight down
-     * @param duration Time in milliseconds to ease to the given tilt
-     */
-    public void setTiltEased(final float tilt, final int duration) {
-        setTiltEased(tilt, duration, DEFAULT_EASE_TYPE);
-    }
-
-    /**
-     * Set the tilt angle of the view with custom easing
-     * @param tilt Tilt angle in radians; 0 corresponds to straight down
-     * @param duration Time in milliseconds to ease to the given tilt
-     * @param ease Type of easing to use
-     */
-    public void setTiltEased(final float tilt, final int duration, @NonNull final EaseType ease) {
-        checkPointer(mapPointer);
-        final float seconds = duration / 1000.f;
-        nativeSetTiltEased(mapPointer, tilt, seconds, ease.ordinal());
-    }
-
-    /**
-     * Get the tilt angle of the view
-     * @return Tilt angle in radians; 0 corresponds to straight down
-     */
-    public float getTilt() {
-        checkPointer(mapPointer);
-        return nativeGetTilt(mapPointer);
-    }
-
-    /**
-     * Run flight animation to change postion and zoom  of the map
+     * Smoothly animate over an arc to an updated camera position for the map view
      * @param position LngLat of the position to set
      * @param zoom Zoom level; lower values show more area
      * @param duration Time in milliseconds to ease to given zoom
@@ -1215,19 +1151,13 @@ public class MapController implements Renderer {
     private synchronized native void nativeResize(long mapPtr, int width, int height);
     private synchronized native boolean nativeUpdate(long mapPtr, float dt);
     private synchronized native void nativeRender(long mapPtr);
-    private synchronized native void nativeSetPosition(long mapPtr, double lon, double lat);
-    private synchronized native void nativeSetPositionEased(long mapPtr, double lon, double lat, float seconds, int ease);
-    private synchronized native void nativeGetPosition(long mapPtr, double[] lonLatOut);
-    private synchronized native void nativeSetZoom(long mapPtr, float zoom);
-    private synchronized native void nativeSetZoomEased(long mapPtr, float zoom, float seconds, int ease);
-    private synchronized native float nativeGetZoom(long mapPtr);
-    private synchronized native void nativeSetRotation(long mapPtr, float radians);
-    private synchronized native void nativeSetRotationEased(long mapPtr, float radians, float seconds, int ease);
-    private synchronized native float nativeGetRotation(long mapPtr);
-    private synchronized native void nativeSetTilt(long mapPtr, float radians);
-    private synchronized native void nativeSetTiltEased(long mapPtr, float radians, float seconds, int ease);
-    private synchronized native float nativeGetTilt(long mapPtr);
+    private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);
+    private synchronized native void nativeUpdateCameraPosition(long mapPtr, int set, double lon, double lat, float zoom, float zoomBy,
+                                                                float rotation, float rotateBy, float tilt, float tiltBy,
+                                                                double b1lon, double b1lat, double b2lon, double b2lat, float bPadding,
+                                                                float duration, int ease);
     private synchronized native void nativeFlyTo(long mapPtr, double lon, double lat, float zoom, float duration, float speed);
+    private synchronized native void nativeGetEnclosingViewPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, int buffer, double[] lngLatZoom);
     private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);
     private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates);
     private synchronized native void nativeSetPixelScale(long mapPtr, float scale);
@@ -1295,6 +1225,7 @@ public class MapController implements Renderer {
     private Map<String, MapData> clientTileSources;
     private LongSparseArray<Marker> markers;
     private Handler uiThreadHandler;
+    private CameraAnimationCallback cameraAnimationCallback;
 
     // GLSurfaceView.Renderer methods
     // ==============================
@@ -1426,6 +1357,27 @@ public class MapController implements Renderer {
                 @Override
                 public void run() {
                     cb.onSceneReady(sceneId, error);
+                }
+            });
+        }
+    }
+
+    // Called from JNI on worker or render-thread.
+    @Keep
+    void cameraAnimationCallback(final boolean finished) {
+
+        final CameraAnimationCallback cb = cameraAnimationCallback;
+        if (cb != null) {
+            cameraAnimationCallback = null;
+
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (finished) {
+                        cb.onFinish();
+                    } else {
+                        cb.onCancel();
+                    }
                 }
             });
         }

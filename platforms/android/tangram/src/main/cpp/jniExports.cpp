@@ -22,78 +22,61 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(JNIEnv* jniEnv, jobjectArra
 
 extern "C" {
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble lon, jdouble lat) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetCameraPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray lonLat, jfloatArray zoomRotationTilt) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setPosition(lon, lat);
+        jdouble* pos = jniEnv->GetDoubleArrayElements(lonLat, NULL);
+        jfloat* zrt = jniEnv->GetFloatArrayElements(zoomRotationTilt, NULL);
+
+        auto camera = map->getCameraPosition();
+        pos[0] = camera.longitude;
+        pos[1] = camera.latitude;
+        zrt[0] = camera.zoom;
+        zrt[1] = camera.rotation;
+        zrt[2] = camera.tilt;
+
+        jniEnv->ReleaseDoubleArrayElements(lonLat, pos, 0);
+        jniEnv->ReleaseFloatArrayElements(zoomRotationTilt, zrt, 0);
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetPositionEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble lon, jdouble lat, jfloat duration, jint ease) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeUpdateCameraPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr,
+                                                                                            jint set, jdouble lon, jdouble lat,
+                                                                                            jfloat zoom, jfloat zoomBy,
+                                                                                            jfloat rotation, jfloat rotateBy,
+                                                                                            jfloat tilt, jfloat tiltBy,
+                                                                                            jdouble b1lon, jdouble b1lat,
+                                                                                            jdouble b2lon, jdouble b2lat,
+                                                                                            jfloat bPadding,
+                                                                                            jfloat duration, jint ease) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setPositionEased(lon, lat, duration, static_cast<Tangram::EaseType>(ease));
+
+        CameraUpdate update;
+        update.set = set;
+
+        update.lngLat = LngLat{lon,lat};
+        update.zoom = zoom;
+        update.zoomBy = zoomBy;
+        update.rotation = rotation;
+        update.rotationBy = rotateBy;
+        update.tilt = tilt;
+        update.tiltBy = tiltBy;
+        update.bounds = std::array<LngLat,2>{LngLat{b1lon, b1lat}, LngLat{b2lon, b2lat}};
+        update.boundsPadding = bPadding;
+
+        map->updateCameraPosition(update, duration, static_cast<Tangram::EaseType>(ease));
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray lonLat) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetEnclosingViewPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble aLng, jdouble aLat, jdouble bLng, jdouble bLat,
+                                                                                                jint buffer, jdoubleArray lngLatZoom) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        jdouble* arr = jniEnv->GetDoubleArrayElements(lonLat, NULL);
-        map->getPosition(arr[0], arr[1]);
-        jniEnv->ReleaseDoubleArrayElements(lonLat, arr, 0);
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetZoom(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat zoom) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setZoom(zoom);
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetZoomEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat zoom, jfloat duration, jint ease) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setZoomEased(zoom, duration, static_cast<Tangram::EaseType>(ease));
-    }
-
-    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_nativeGetZoom(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        return map->getZoom();
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetRotation(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat radians) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setRotation(radians);
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetRotationEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat radians, jfloat duration, jint ease) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setRotationEased(radians, duration, static_cast<Tangram::EaseType>(ease));
-    }
-
-    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_nativeGetRotation(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        return map->getRotation();
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetTilt(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat radians) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setTilt(radians);
-    }
-
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetTiltEased(JNIEnv* jniEnv, jobject obj,  jlong mapPtr, jfloat radians, jfloat duration, jint ease) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->setTiltEased(radians, duration, static_cast<Tangram::EaseType>(ease));
-    }
-
-    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_nativeGetTilt(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
-        assert(mapPtr > 0);
-        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        return map->getTilt();
+        CameraPosition camera = map->getEnclosingCameraPosition(LngLat{aLng,aLat}, LngLat{bLng,bLat}, buffer);
+        jdouble* arr = jniEnv->GetDoubleArrayElements(lngLatZoom, NULL);
+        arr[0] = camera.longitude;
+        arr[1] = camera.latitude;
+        arr[2] = camera.zoom;
+        jniEnv->ReleaseDoubleArrayElements(lngLatZoom, arr, 0);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeFlyTo(JNIEnv* jniEnv, jobject obj,  jlong mapPtr, jdouble lon, jdouble lat, jfloat zoom, jfloat duration, jfloat speed) {
@@ -127,6 +110,10 @@ extern "C" {
         map->setSceneReadyListener([platform](Tangram::SceneID id, const Tangram::SceneError* error) {
             platform->sceneReadyCallback(id, error);
         });
+        map->setCameraAnimationListener([platform](bool success) {
+            platform->cameraAnimationCallback(success);
+        });
+
         return reinterpret_cast<jlong>(map);
     }
 

@@ -7,6 +7,9 @@ import android.util.Log;
 import android.view.Window;
 import android.widget.Toast;
 
+import com.mapzen.tangram.CameraPosition;
+import com.mapzen.tangram.CameraUpdate;
+import com.mapzen.tangram.CameraUpdateFactory;
 import com.mapzen.tangram.LabelPickResult;
 import com.mapzen.tangram.LngLat;
 import com.mapzen.tangram.MapController;
@@ -113,9 +116,7 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
 
         map = view.getMap(this, getHttpHandler());
         map.loadSceneFile(sceneUrl, sceneUpdates);
-
-        map.setZoom(16);
-        map.setPosition(new LngLat(-74.00976419448854, 40.70532700869127));
+        map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(new LngLat(-74.00976419448854, 40.70532700869127), 16));
         map.setTapResponder(this);
         map.setDoubleTapResponder(this);
         map.setLongPressResponder(this);
@@ -223,20 +224,32 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         map.pickLabel(x, y);
         map.pickMarker(x, y);
 
-        map.setPositionEased(tappedPoint, 1000);
+        map.updateCameraPosition(CameraUpdateFactory.setPosition(tappedPoint), 1000, new MapController.CameraAnimationCallback() {
+            @Override
+            public void onFinish() {
+                Log.d("Tangram","finished!");
+            }
+
+            @Override
+            public void onCancel() {
+                Log.d("Tangram","canceled!");
+            }
+        });
 
         return true;
     }
 
     @Override
     public boolean onDoubleTap(float x, float y) {
-        map.setZoomEased(map.getZoom() + 1.f, 500);
+
         LngLat tapped = map.screenPositionToLngLat(new PointF(x, y));
-        LngLat current = map.getPosition();
-        LngLat next = new LngLat(
-                .5 * (tapped.longitude + current.longitude),
-                .5 * (tapped.latitude + current.latitude));
-        map.setPositionEased(next, 500);
+        CameraPosition camera = map.getCameraPosition();
+
+        camera.longitude = .5 * (tapped.longitude + camera.longitude);
+        camera.latitude = .5 * (tapped.latitude + camera.latitude);
+        camera.zoom += 1;
+        map.updateCameraPosition(CameraUpdateFactory.newCameraPosition(camera),
+                    500, MapController.EaseType.CUBIC);
         return true;
     }
 

@@ -724,7 +724,10 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     [self regionWillChangeAnimated:YES];
     // TODO: During animation we should be calling mapViewRegionIsChanging on the delegate.
     Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
-    self.map->setPositionEased(position.longitude, position.latitude, seconds, ease);
+    auto pos = self.map->getCameraPosition();
+    pos.longitude = position.longitude;
+    pos.latitude = position.latitude;
+    self.map->setCameraPositionEased(pos, seconds, ease);
     [self regionDidChangeAnimated:YES];
 }
 
@@ -760,7 +763,9 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     [self regionWillChangeAnimated:YES];
     // TODO: During animation we should be calling mapViewRegionIsChanging on the delegate.
     Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
-    self.map->setZoomEased(zoomLevel, seconds, ease);
+    auto pos = self.map->getCameraPosition();
+    pos.zoom = zoomLevel;
+    self.map->setCameraPositionEased(pos, seconds, ease);
     [self regionDidChangeAnimated:YES];
 }
 
@@ -783,7 +788,9 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     [self regionWillChangeAnimated:YES];
     // TODO: During animation we should be calling mapViewRegionIsChanging on the delegate.
     Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
-    self.map->setRotationEased(radians, seconds, ease);
+    auto pos = self.map->getCameraPosition();
+    pos.rotation = radians;
+    self.map->setCameraPositionEased(pos, seconds, ease);
     [self regionDidChangeAnimated:YES];
 }
 
@@ -831,7 +838,9 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     [self regionWillChangeAnimated:YES];
     // TODO: During animation we should be calling mapViewRegionIsChanging on the delegate.
     Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
-    self.map->setTiltEased(radians, seconds, ease);
+    auto pos = self.map->getCameraPosition();
+    pos.tilt = radians;
+    self.map->setCameraPositionEased(pos, seconds, ease);
     [self regionDidChangeAnimated:YES];
 }
 

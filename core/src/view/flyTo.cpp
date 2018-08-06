@@ -7,16 +7,6 @@
 
 namespace Tangram {
 
-float getMinimumEnclosingZoom(double aLng, double aLat, double bLng, double bLat, const View& view, float buffer) {
-    const MapProjection& projection = view.getMapProjection();
-    glm::dvec2 aMeters = projection.LonLatToMeters(glm::dvec2(aLng, aLat));
-    glm::dvec2 bMeters = projection.LonLatToMeters(glm::dvec2(bLng, bLat));
-    double distance = glm::distance(aMeters, bMeters) * (1. + buffer);
-    double focusScale = distance / (2. * MapProjection::HALF_CIRCUMFERENCE);
-    double viewScale = view.getWidth() / projection.TileSize();
-    double zoom = -log2(focusScale / viewScale);
-    return zoom;
-}
 
 std::function<glm::dvec3(float)> getFlyToFunction(const View& view, glm::dvec3 start, glm::dvec3 end, double& _distance) {
 
