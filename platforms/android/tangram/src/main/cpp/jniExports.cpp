@@ -89,18 +89,18 @@ extern "C" {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         jdouble* arr = jniEnv->GetDoubleArrayElements(coordinates, NULL);
-        bool ret = map->screenPositionToLngLat(arr[0], arr[1], &arr[0], &arr[1]);
+        bool result = map->screenPositionToLngLat(arr[0], arr[1], &arr[0], &arr[1]);
         jniEnv->ReleaseDoubleArrayElements(coordinates, arr, 0);
-        return ret;
+        return static_cast<jboolean>(result);
     }
 
     JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeLngLatToScreenPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray coordinates) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         jdouble* arr = jniEnv->GetDoubleArrayElements(coordinates, NULL);
-        bool ret = map->lngLatToScreenPosition(arr[0], arr[1], &arr[0], &arr[1]);
+        bool result = map->lngLatToScreenPosition(arr[0], arr[1], &arr[0], &arr[1]);
         jniEnv->ReleaseDoubleArrayElements(coordinates, arr, 0);
-        return ret;
+        return static_cast<jboolean>(result);
     }
 
     JNIEXPORT jlong JNICALL Java_com_mapzen_tangram_MapController_nativeInit(JNIEnv* jniEnv, jobject obj, jobject tangramInstance, jobject assetManager) {
@@ -187,10 +187,11 @@ extern "C" {
         map->resize(width, height);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeUpdate(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat dt) {
+    JNIEXPORT jboolean bool JNICALL Java_com_mapzen_tangram_MapController_nativeUpdate(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat dt) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        return map->update(dt);
+        auto result = map->update(dt);
+        return static_cast<jboolean>(result);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeRender(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
@@ -315,54 +316,54 @@ extern "C" {
         return static_cast<jlong>(markerID);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerRemove(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerRemove(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto result = map->markerRemove(static_cast<unsigned int>(markerID));
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetStylingFromString(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jstring styling) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetStylingFromString(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jstring styling) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto styleString = stringFromJString(jniEnv, styling);
         auto result = map->markerSetStylingFromString(static_cast<unsigned int>(markerID), styleString.c_str());
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetStylingFromPath(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jstring path) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetStylingFromPath(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jstring path) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto pathString = stringFromJString(jniEnv, path);
         auto result = map->markerSetStylingFromPath(static_cast<unsigned int>(markerID), pathString.c_str());
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetBitmap(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jint width, jint height, jintArray data) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetBitmap(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jint width, jint height, jintArray data) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         jint* ptr = jniEnv->GetIntArrayElements(data, NULL);
         unsigned int* imgData = reinterpret_cast<unsigned int*>(ptr);
         jniEnv->ReleaseIntArrayElements(data, ptr, JNI_ABORT);
         auto result = map->markerSetBitmap(static_cast<unsigned int>(markerID), width, height, imgData);
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPoint(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdouble lng, jdouble lat) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPoint(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdouble lng, jdouble lat) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto result = map->markerSetPoint(static_cast<unsigned int>(markerID), Tangram::LngLat(lng, lat));
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPointEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdouble lng, jdouble lat, jfloat duration, jint ease) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPointEased(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdouble lng, jdouble lat, jfloat duration, jint ease) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto result = map->markerSetPointEased(static_cast<unsigned int>(markerID), Tangram::LngLat(lng, lat), duration, static_cast<Tangram::EaseType>(ease));
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPolyline(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdoubleArray jcoordinates, jint count) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPolyline(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdoubleArray jcoordinates, jint count) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         if (!jcoordinates || count == 0) { return false; }
@@ -376,10 +377,10 @@ extern "C" {
         }
 
         auto result = map->markerSetPolyline(static_cast<unsigned int>(markerID), polyline.data(), count);
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPolygon(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdoubleArray jcoordinates, jintArray jcounts, jint rings) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetPolygon(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jdoubleArray jcoordinates, jintArray jcounts, jint rings) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         if (!jcoordinates || !jcounts || rings == 0) { return false; }
@@ -400,21 +401,21 @@ extern "C" {
         }
 
         auto result = map->markerSetPolygon(static_cast<unsigned int>(markerID), polygonCoords.data(), counts, rings);
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetVisible(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jboolean visible) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetVisible(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jboolean visible) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto result = map->markerSetVisible(static_cast<unsigned int>(markerID), visible);
-        return result;
+        return static_cast<jboolean>(result);
     }
 
-    JNIEXPORT bool JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetDrawOrder(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jint drawOrder) {
+    JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerSetDrawOrder(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jlong markerID, jint drawOrder) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         auto result = map->markerSetDrawOrder(markerID, drawOrder);
-        return result;
+        return static_cast<jboolean>(result);
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeMarkerRemoveAll(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
