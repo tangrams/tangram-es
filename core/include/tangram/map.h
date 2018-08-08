@@ -122,7 +122,7 @@ struct CameraUpdate {
     float tilt = 0;
     float tiltBy = 0;
     std::array<LngLat,2> bounds;
-    int boundsPadding = 0;
+    std::array<int, 4> padding = {{0}};
 };
 
 class Map {
@@ -230,8 +230,9 @@ public:
     // Get the tilt angle of the view in radians; 0 corresponds to straight down
     float getTilt();
 
-    // Get the CameraPosition that encloses the bounds given by _a and _b
-    CameraPosition getEnclosingCameraPosition(LngLat a, LngLat b, int buffer);
+    // Get the CameraPosition that encloses the bounds given by _a and _b and
+    // leaves at least the given amount of padding on each side (in logical pixels).
+    CameraPosition getEnclosingCameraPosition(LngLat _a, LngLat _b, int _leftPad, int _topPad, int _rightPad, int _bottomPad);
 
     // Run flight animation to change postion and zoom  of the map
     // If _duration is 0, speed is used as factor to change the duration that is

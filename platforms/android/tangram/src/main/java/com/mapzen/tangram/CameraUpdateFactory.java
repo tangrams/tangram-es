@@ -1,5 +1,6 @@
 package com.mapzen.tangram;
 
+import android.graphics.Rect;
 import android.support.annotation.NonNull;
 
 public class CameraUpdateFactory {
@@ -161,14 +162,14 @@ public class CameraUpdateFactory {
      * @return The update
      */
     @NonNull
-    public static CameraUpdate newLatLngBounds(@NonNull LngLat sw, @NonNull LngLat ne, float padding) {
+    public static CameraUpdate newLatLngBounds(@NonNull LngLat sw, @NonNull LngLat ne, Rect padding) {
         CameraUpdate update = new CameraUpdate();
         update.set = CameraUpdate.SET_BOUNDS;
         update.boundsLon1 = sw.longitude;
         update.boundsLat1 = sw.latitude;
         update.boundsLon2 = ne.longitude;
         update.boundsLat2 = ne.latitude;
-        update.boundsPadding = padding;
+        update.padding = new int[]{padding.left, padding.top, padding.right, padding.bottom};
         return update;
     }
 }

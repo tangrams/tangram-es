@@ -678,7 +678,7 @@ void Map::updateCameraPosition(const CameraUpdate& _update, float _duration, Eas
         camera = getCameraPosition();
     }
     if ((_update.set & CameraUpdate::SET_BOUNDS) != 0) {
-        camera = getEnclosingCameraPosition(_update.bounds[0], _update.bounds[1], _update.boundsPadding);
+        camera = getEnclosingCameraPosition(_update.bounds[0], _update.bounds[1], _update.padding[0], _update.padding[1], _update.padding[2], _update.padding[3]);
     }
     if ((_update.set & CameraUpdate::SET_LNGLAT) != 0) {
         camera.longitude = _update.lngLat.longitude;
@@ -760,27 +760,36 @@ float Map::getTilt() {
     return impl->view.getPitch();
 }
 
-CameraPosition Map::getEnclosingCameraPosition(LngLat _a, LngLat _b, int _buffer) {
-    CameraPosition camera;
-    const MapProjection& projection = impl->view.getMapProjection();
+CameraPosition Map::getEnclosingCameraPosition(LngLat _a, LngLat _b, int _leftPad, int _topPad, int _rightPad, int _bottomPad) {
+    const View& view = impl->view;
+    const MapProjection& projection = view.getMapProjection();
+
+    // Convert the bounding coordinates into Mercator meters.
     glm::dvec2 aMeters = projection.LonLatToMeters(glm::dvec2(_a.longitude, _a.latitude));
     glm::dvec2 bMeters = projection.LonLatToMeters(glm::dvec2(_b.longitude, _b.latitude));
+    glm::dvec2 dMeters = glm::abs(aMeters - bMeters);
 
-    double tileSize = projection.TileSize() * impl->view.pixelScale();
-    double buffer = _buffer * 2 * impl->view.pixelScale();
+    // Calculate the inner size of the view that the bounds must fit within.
+    glm::dvec2 innerSize(view.getWidth() / view.pixelScale(), view.getHeight() / view.pixelScale());
+    innerSize -= glm::dvec2((_leftPad + _rightPad), (_topPad + _bottomPad));
 
-    double hFocusScale = glm::distance(aMeters.x, bMeters.x) / (2. * MapProjection::HALF_CIRCUMFERENCE);
-    double hViewScale = (impl->view.getWidth() - buffer) / tileSize;
+    // Calculate the map scale that fits the bounds into the inner size in each dimension.
+    glm::dvec2 metersPerPixel = dMeters / innerSize;
 
-    double vFocusScale = glm::distance(aMeters.y, bMeters.y) / (2. * MapProjection::HALF_CIRCUMFERENCE);
-    double vViewScale = (impl->view.getHeight() - buffer) / tileSize;
+    // Take the value from the larger dimension to calculate the final zoom.
+    double maxMetersPerPixel = std::max(metersPerPixel.x, metersPerPixel.y);
+    double zoom = -std::log2(maxMetersPerPixel * projection.TileSize() / MapProjection::CIRCUMFERENCE);
 
-    camera.zoom = -std::log2(std::max(hFocusScale / hViewScale, vFocusScale / vViewScale));
+    // Adjust the center of the final visible region using the padding converted to Mercator meters.
+    glm::dvec2 paddingMeters = glm::dvec2(_rightPad - _leftPad, _topPad - _bottomPad) * maxMetersPerPixel;
+    glm::dvec2 centerMeters = 0.5 * (aMeters + bMeters + paddingMeters);
 
-    glm::dvec2 center = projection.MetersToLonLat((aMeters + bMeters) * 0.5);
-    camera.longitude = center.x;
-    camera.latitude = center.y;
+    glm::dvec2 centerLngLat = projection.MetersToLonLat(centerMeters);
 
+    CameraPosition camera;
+    camera.zoom = static_cast<float>(zoom);
+    camera.longitude = centerLngLat.x;
+    camera.latitude = centerLngLat.y;
     return camera;
 }
 
