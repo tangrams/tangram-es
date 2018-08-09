@@ -24,7 +24,7 @@ public class CameraUpdate {
     double boundsLat1;
     double boundsLon2;
     double boundsLat2;
-    float boundsPadding;
+    int[] padding;
     int set;
 
     CameraUpdate() {

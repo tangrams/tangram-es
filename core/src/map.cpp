@@ -74,7 +74,7 @@ public:
     std::shared_ptr<Platform> platform;
     InputHandler inputHandler;
 
-    std::vector<Ease> eases;
+    std::unique_ptr<Ease> ease;
     std::shared_ptr<Scene> scene;
     std::shared_ptr<Scene> lastValidScene;
     std::atomic<int32_t> sceneLoadTasks{0};
@@ -404,15 +404,15 @@ bool Map::update(float _dt) {
     bool markersNeedUpdate = false;
     bool cameraEasing = false;
 
-    if (!impl->eases.empty()) {
-        auto& ease = impl->eases[0];
+    if (impl->ease) {
+        auto& ease = *(impl->ease);
         ease.update(_dt);
 
         if (ease.finished()) {
             if (impl->cameraAnimationListener) {
                 impl->cameraAnimationListener(true);
             }
-            impl->eases.clear();
+            impl->ease.reset();
         } else {
             cameraEasing = true;
         }
@@ -601,7 +601,7 @@ CameraPosition Map::getCameraPosition() {
 void Map::cancelCameraAnimation() {
     impl->inputHandler.cancelFling();
 
-    impl->eases.clear();
+    impl->ease.reset();
 
     if (impl->cameraAnimationListener) {
         impl->cameraAnimationListener(false);
@@ -656,7 +656,7 @@ void Map::setCameraPositionEased(const CameraPosition& _camera, float _duration,
     e.start.tilt = getTilt();
     e.end.tilt = _camera.tilt;
 
-    impl->eases.emplace_back(_duration,
+    impl->ease = std::make_unique<Ease>(_duration,
         [=](float t) {
             impl->view.setPosition(ease(e.start.pos.x, e.end.pos.x, t, _e),
                                    ease(e.start.pos.y, e.end.pos.y, t, _e));
@@ -678,7 +678,7 @@ void Map::updateCameraPosition(const CameraUpdate& _update, float _duration, Eas
         camera = getCameraPosition();
     }
     if ((_update.set & CameraUpdate::SET_BOUNDS) != 0) {
-        camera = getEnclosingCameraPosition(_update.bounds[0], _update.bounds[1], _update.boundsPadding);
+        camera = getEnclosingCameraPosition(_update.bounds[0], _update.bounds[1], _update.padding);
     }
     if ((_update.set & CameraUpdate::SET_LNGLAT) != 0) {
         camera.longitude = _update.lngLat.longitude;
@@ -760,27 +760,36 @@ float Map::getTilt() {
     return impl->view.getPitch();
 }
 
-CameraPosition Map::getEnclosingCameraPosition(LngLat _a, LngLat _b, int _buffer) {
-    CameraPosition camera;
-    const MapProjection& projection = impl->view.getMapProjection();
+CameraPosition Map::getEnclosingCameraPosition(LngLat _a, LngLat _b, EdgePadding _pad) {
+    const View& view = impl->view;
+    const MapProjection& projection = view.getMapProjection();
+
+    // Convert the bounding coordinates into Mercator meters.
     glm::dvec2 aMeters = projection.LonLatToMeters(glm::dvec2(_a.longitude, _a.latitude));
     glm::dvec2 bMeters = projection.LonLatToMeters(glm::dvec2(_b.longitude, _b.latitude));
+    glm::dvec2 dMeters = glm::abs(aMeters - bMeters);
 
-    double tileSize = projection.TileSize() * impl->view.pixelScale();
-    double buffer = _buffer * 2 * impl->view.pixelScale();
+    // Calculate the inner size of the view that the bounds must fit within.
+    glm::dvec2 innerSize(view.getWidth() / view.pixelScale(), view.getHeight() / view.pixelScale());
+    innerSize -= glm::dvec2((_pad.left + _pad.right), (_pad.top + _pad.bottom));
 
-    double hFocusScale = glm::distance(aMeters.x, bMeters.x) / (2. * MapProjection::HALF_CIRCUMFERENCE);
-    double hViewScale = (impl->view.getWidth() - buffer) / tileSize;
+    // Calculate the map scale that fits the bounds into the inner size in each dimension.
+    glm::dvec2 metersPerPixel = dMeters / innerSize;
 
-    double vFocusScale = glm::distance(aMeters.y, bMeters.y) / (2. * MapProjection::HALF_CIRCUMFERENCE);
-    double vViewScale = (impl->view.getHeight() - buffer) / tileSize;
+    // Take the value from the larger dimension to calculate the final zoom.
+    double maxMetersPerPixel = std::max(metersPerPixel.x, metersPerPixel.y);
+    double zoom = -std::log2(maxMetersPerPixel * projection.TileSize() / MapProjection::CIRCUMFERENCE);
 
-    camera.zoom = -std::log2(std::max(hFocusScale / hViewScale, vFocusScale / vViewScale));
+    // Adjust the center of the final visible region using the padding converted to Mercator meters.
+    glm::dvec2 paddingMeters = glm::dvec2(_pad.right - _pad.left, _pad.top - _pad.bottom) * maxMetersPerPixel;
+    glm::dvec2 centerMeters = 0.5 * (aMeters + bMeters + paddingMeters);
 
-    glm::dvec2 center = projection.MetersToLonLat((aMeters + bMeters) * 0.5);
-    camera.longitude = center.x;
-    camera.latitude = center.y;
+    glm::dvec2 centerLngLat = projection.MetersToLonLat(centerMeters);
 
+    CameraPosition camera;
+    camera.zoom = static_cast<float>(zoom);
+    camera.longitude = centerLngLat.x;
+    camera.latitude = centerLngLat.y;
     return camera;
 }
 
@@ -820,7 +829,7 @@ void Map::flyTo(double _lon, double _lat, float _z, float _duration, float _spee
 
     cancelCameraAnimation();
 
-    impl->eases.emplace_back(duration, cb);
+    impl->ease = std::make_unique<Ease>(duration, cb);
 }
 
 bool Map::screenPositionToLngLat(double _x, double _y, double* _lng, double* _lat) {

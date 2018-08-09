@@ -1,8 +1,5 @@
 #pragma once
 
-//Define global constants
-#define R_EARTH 6378137.0
-
 #include "tile/tileID.h"
 #include "util/geom.h"
 
@@ -19,7 +16,9 @@ protected:
 public:
     constexpr static double INV_360 = 1.0/360.0;
     constexpr static double INV_180 = 1.0/180.0;
+    constexpr static double R_EARTH = 6378137.0;
     constexpr static double HALF_CIRCUMFERENCE = PI * R_EARTH;
+    constexpr static double CIRCUMFERENCE = 2 * PI * R_EARTH;
     /*
      * 256 is default tile size
      */

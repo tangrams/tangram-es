@@ -480,7 +480,7 @@ public class MapController implements Renderer {
 
         nativeUpdateCameraPosition(mapPointer, update.set, update.longitude, update.latitude, update.zoom,
                 update.zoomBy, update.rotation, update.rotationBy, update.tilt, update.tiltBy,
-                update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.boundsPadding,
+                update.boundsLon1, update.boundsLat1, update.boundsLon2, update.boundsLat2, update.padding,
                 seconds, ease.ordinal());
 
         if (cb != null) {
@@ -1154,7 +1154,7 @@ public class MapController implements Renderer {
     private synchronized native void nativeGetCameraPosition(long mapPtr, double[] lonLatOut, float[] zoomRotationTiltOut);
     private synchronized native void nativeUpdateCameraPosition(long mapPtr, int set, double lon, double lat, float zoom, float zoomBy,
                                                                 float rotation, float rotateBy, float tilt, float tiltBy,
-                                                                double b1lon, double b1lat, double b2lon, double b2lat, float bPadding,
+                                                                double b1lon, double b1lat, double b2lon, double b2lat, int[] padding,
                                                                 float duration, int ease);
     private synchronized native void nativeFlyTo(long mapPtr, double lon, double lat, float zoom, float duration, float speed);
     private synchronized native void nativeGetEnclosingViewPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, int buffer, double[] lngLatZoom);
