@@ -678,7 +678,7 @@ void Map::updateCameraPosition(const CameraUpdate& _update, float _duration, Eas
         camera = getCameraPosition();
     }
     if ((_update.set & CameraUpdate::SET_BOUNDS) != 0) {
-        camera = getEnclosingCameraPosition(_update.bounds[0], _update.bounds[1], _update.padding[0], _update.padding[1], _update.padding[2], _update.padding[3]);
+        camera = getEnclosingCameraPosition(_update.bounds[0], _update.bounds[1], _update.padding);
     }
     if ((_update.set & CameraUpdate::SET_LNGLAT) != 0) {
         camera.longitude = _update.lngLat.longitude;
@@ -760,7 +760,7 @@ float Map::getTilt() {
     return impl->view.getPitch();
 }
 
-CameraPosition Map::getEnclosingCameraPosition(LngLat _a, LngLat _b, int _leftPad, int _topPad, int _rightPad, int _bottomPad) {
+CameraPosition Map::getEnclosingCameraPosition(LngLat _a, LngLat _b, EdgePadding _pad) {
     const View& view = impl->view;
     const MapProjection& projection = view.getMapProjection();
 
@@ -771,7 +771,7 @@ CameraPosition Map::getEnclosingCameraPosition(LngLat _a, LngLat _b, int _leftPa
 
     // Calculate the inner size of the view that the bounds must fit within.
     glm::dvec2 innerSize(view.getWidth() / view.pixelScale(), view.getHeight() / view.pixelScale());
-    innerSize -= glm::dvec2((_leftPad + _rightPad), (_topPad + _bottomPad));
+    innerSize -= glm::dvec2((_pad.left + _pad.right), (_pad.top + _pad.bottom));
 
     // Calculate the map scale that fits the bounds into the inner size in each dimension.
     glm::dvec2 metersPerPixel = dMeters / innerSize;
@@ -781,7 +781,7 @@ CameraPosition Map::getEnclosingCameraPosition(LngLat _a, LngLat _b, int _leftPa
     double zoom = -std::log2(maxMetersPerPixel * projection.TileSize() / MapProjection::CIRCUMFERENCE);
 
     // Adjust the center of the final visible region using the padding converted to Mercator meters.
-    glm::dvec2 paddingMeters = glm::dvec2(_rightPad - _leftPad, _topPad - _bottomPad) * maxMetersPerPixel;
+    glm::dvec2 paddingMeters = glm::dvec2(_pad.right - _pad.left, _pad.top - _pad.bottom) * maxMetersPerPixel;
     glm::dvec2 centerMeters = 0.5 * (aMeters + bMeters + paddingMeters);
 
     glm::dvec2 centerLngLat = projection.MetersToLonLat(centerMeters);

@@ -46,7 +46,7 @@ extern "C" {
                                                                                             jfloat tilt, jfloat tiltBy,
                                                                                             jdouble b1lon, jdouble b1lat,
                                                                                             jdouble b2lon, jdouble b2lat,
-                                                                                            jintArray padding,
+                                                                                            jintArray jpad,
                                                                                             jfloat duration, jint ease) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
@@ -61,23 +61,26 @@ extern "C" {
         update.rotationBy = rotateBy;
         update.tilt = tilt;
         update.tiltBy = tiltBy;
-        update.bounds = std::array<LngLat,2>{LngLat{b1lon, b1lat}, LngLat{b2lon, b2lat}};
-        if (padding != NULL) {
-            jniEnv->GetIntArrayRegion(padding, 0, 4, update.padding.data());
+        update.bounds = std::array<LngLat,2>{{LngLat{b1lon, b1lat}, LngLat{b2lon, b2lat}}};
+        if (jpad != NULL) {
+            jint* jpadArray = jniEnv->GetIntArrayElements(jpad, NULL);
+            update.padding = EdgePadding{jpadArray[0], jpadArray[1], jpadArray[2], jpadArray[3]};
+            jniEnv->ReleaseIntArrayElements(jpad, jpadArray, JNI_ABORT);
         }
-
         map->updateCameraPosition(update, duration, static_cast<Tangram::EaseType>(ease));
     }
 
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetEnclosingViewPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble aLng, jdouble aLat, jdouble bLng, jdouble bLat,
-                                                                                                jintArray jpadding, jdoubleArray lngLatZoom) {
+                                                                                                jintArray jpad, jdoubleArray lngLatZoom) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        std::array<int, 4> pad{{0}};
-        if (jpadding != NULL) {
-            jniEnv->GetIntArrayRegion(jpadding, 0, 4, pad.data());
+        EdgePadding padding;
+        if (jpad != NULL) {
+            jint* jpadArray = jniEnv->GetIntArrayElements(jpad, NULL);
+            padding = EdgePadding(jpadArray[0], jpadArray[1], jpadArray[2], jpadArray[3]);
+            jniEnv->ReleaseIntArrayElements(jpad, jpadArray, JNI_ABORT);
         }
-        CameraPosition camera = map->getEnclosingCameraPosition(LngLat{aLng,aLat}, LngLat{bLng,bLat}, pad[0], pad[1], pad[2], pad[3]);
+        CameraPosition camera = map->getEnclosingCameraPosition(LngLat{aLng,aLat}, LngLat{bLng,bLat}, padding);
         jdouble* arr = jniEnv->GetDoubleArrayElements(lngLatZoom, NULL);
         arr[0] = camera.longitude;
         arr[1] = camera.latitude;

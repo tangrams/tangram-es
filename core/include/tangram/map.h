@@ -100,6 +100,18 @@ struct CameraPosition {
     float tilt = 0;
 };
 
+struct EdgePadding {
+    int left = 0;
+    int top = 0;
+    int right = 0;
+    int bottom = 0;
+
+    EdgePadding() {}
+
+    EdgePadding(int left, int top, int right, int bottom)
+        : left(left), top(top), right(right), bottom(bottom) {}
+};
+
 struct CameraUpdate {
     enum Flags {
         SET_LNGLAT = 1 << 0,
@@ -122,7 +134,7 @@ struct CameraUpdate {
     float tilt = 0;
     float tiltBy = 0;
     std::array<LngLat,2> bounds;
-    std::array<int, 4> padding = {{0}};
+    EdgePadding padding;
 };
 
 class Map {
@@ -232,7 +244,7 @@ public:
 
     // Get the CameraPosition that encloses the bounds given by _a and _b and
     // leaves at least the given amount of padding on each side (in logical pixels).
-    CameraPosition getEnclosingCameraPosition(LngLat _a, LngLat _b, int _leftPad, int _topPad, int _rightPad, int _bottomPad);
+    CameraPosition getEnclosingCameraPosition(LngLat _a, LngLat _b, EdgePadding _pad);
 
     // Run flight animation to change postion and zoom  of the map
     // If _duration is 0, speed is used as factor to change the duration that is

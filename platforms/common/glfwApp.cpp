@@ -313,7 +313,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
             map->screenPositionToLngLat(last_x, last_y, &coords[1].longitude, &coords[1].latitude);
 
             map->markerSetPolyline(polyline, coords, 2);
-            auto cam = map->getEnclosingCameraPosition(coords[0], coords[1], 200, 100, 200, 100);
+            auto cam = map->getEnclosingCameraPosition(coords[0], coords[1], EdgePadding(200, 100, 200, 100));
 
             map->setCameraPosition(cam);
         }
