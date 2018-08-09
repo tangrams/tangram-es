@@ -134,14 +134,6 @@ public class MapController implements Renderer {
         void onMarkerPick(final MarkerPickResult markerPickResult, final float positionX, final float positionY);
     }
 
-    public interface ViewCompleteListener {
-        /**
-         * Called on the UI thread at the end of whenever the view is stationary, fully loaded, and
-         * no animations are running.
-         */
-        void onViewComplete();
-    }
-
     /**
      * Interface for listening to scene load status information.
      * Triggered after a call of {@link #updateSceneAsync(List<SceneUpdate>)} or
@@ -163,10 +155,32 @@ public class MapController implements Renderer {
     public interface CameraAnimationCallback {
         void onFinish();
         void onCancel();
+    }
 
     @Keep
     public interface MapChangeListener {
-        void onMapChanged();
+        /**
+         * Called on the UI thread at the end of whenever the view is stationary, fully loaded, and
+         * no animations are running.
+         */
+        void onViewComplete();
+
+        /**
+         * Called on the UI thread at the start of a camera animation
+         * @param animated false when camera updates are set immediately, true otherwise
+         */
+        void onRegionWillChangeAnimated(boolean animated);
+
+        /**
+         * Called on the UI thread during a camera animation or when map is changing due to user interaction
+         */
+        void onRegionIsChanging();
+
+        /**
+         * Called on the UI thread at the end of a camera animation
+         * @param animated false when camera updates are set immediately, true otherwise
+         */
+        void onRegionDidChangeAnimated(boolean animated);
     }
 
     /**
@@ -442,7 +456,6 @@ public class MapController implements Renderer {
         updateCameraPosition(update, duration, DEFAULT_EASE_TYPE, null);
     }
 
-
     /**
      * Animate the camera position of the map view with an easing function
      * @param update CameraUpdate to update current camera position
@@ -460,7 +473,7 @@ public class MapController implements Renderer {
      * @param cb Callback that will run when the animation is finished or canceled
      */
     public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final CameraAnimationCallback cb) {
-         updateCameraPosition(update, duration, DEFAULT_EASE_TYPE, cb);
+        updateCameraPosition(update, duration, DEFAULT_EASE_TYPE, cb);
     }
 
     /**
@@ -472,7 +485,12 @@ public class MapController implements Renderer {
      * @param cb Callback that will run when the animation is finished or canceled
      */
     public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease, @Nullable final CameraAnimationCallback cb) {
-      checkPointer(mapPointer);
+
+        onRegionWillChangeAnimated(true);
+
+        // TODO: Appropriately handle call to `mapChangeListener.onRegionIsChanging` during camera animation updates.
+
+        checkPointer(mapPointer);
 
         if (cameraAnimationCallback != null) {
             // NB: Prevent recursion loop when updateCameraPosition is called from onCancel callback
@@ -495,6 +513,8 @@ public class MapController implements Renderer {
                 cb.onFinish();
             }
         }
+
+        onRegionDidChangeAnimated(true);
     }
 
     /**
@@ -575,9 +595,13 @@ public class MapController implements Renderer {
      *              calculated for the distance of the flight path. (Recommended range 0.1 - 10.0)
      */
     public void flyTo(@NonNull final LngLat position, final float zoom, final int duration, final float speed) {
+        boolean animated = (duration == 0) ? false : true;
+        onRegionWillChangeAnimated(animated);
         checkPointer(mapPointer);
         final float seconds = duration / 1000.f;
+        // TODO: Appropriately handle call to `mapChangeListener.onRegionIsChanging` during camera animation updates.
         nativeFlyTo(mapPointer, position.longitude, position.latitude, zoom, seconds, speed);
+        onRegionDidChangeAnimated(animated);
     }
 
     /**
@@ -1139,11 +1163,11 @@ public class MapController implements Renderer {
     }
 
     /**
-     * Set a listener for view complete events.
-     * @param listener The {@link ViewCompleteListener} to call when the view is complete
+     * Set a listener for map change events
+     * @param listener The {@link MapChangeListener} to call when the map change events occur due to camera updates or user interaction
      */
-    public void setViewCompleteListener(@Nullable final ViewCompleteListener listener) {
-        viewCompleteListener = (listener == null) ? null : new ViewCompleteListener() {
+    public void setMapChangeListener(@Nullable final MapChangeListener listener) {
+        mapChangeListener = (listener == null) ? null : new MapChangeListener() {
             @Override
             public void onViewComplete() {
                 uiThreadHandler.post(new Runnable() {
@@ -1153,11 +1177,56 @@ public class MapController implements Renderer {
                     }
                 });
             }
+
+            @Override
+            public void onRegionWillChangeAnimated(final boolean animated) {
+                uiThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onRegionWillChangeAnimated(animated);
+                    }
+                });
+            }
+
+            @Override
+            public void onRegionIsChanging() {
+                uiThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onRegionIsChanging();
+                    }
+                });
+            }
+
+            @Override
+            public void onRegionDidChangeAnimated(final boolean animated) {
+                uiThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onRegionDidChangeAnimated(animated);
+                    }
+                });
+            }
         };
     }
 
-    public void setMapChangeListener(MapChangeListener listener) {
-        this.mapChangeListener = listener;
+    //Convenience package private member functions
+    private void onRegionWillChangeAnimated(boolean animated) {
+        if (mapChangeListener != null) {
+            mapChangeListener.onRegionWillChangeAnimated(animated);
+        }
+    }
+
+    private void onRegionDidChangeAnimated(boolean animated) {
+        if (mapChangeListener != null) {
+            mapChangeListener.onRegionDidChangeAnimated(animated);
+        }
+    }
+
+    private void onRegionIsChanging() {
+        if (mapChangeListener != null) {
+            mapChangeListener.onRegionIsChanging();
+        }
     }
 
     /**
@@ -1406,7 +1475,6 @@ public class MapController implements Renderer {
     private SceneLoadListener sceneLoadListener;
     private LabelPickListener labelPickListener;
     private MarkerPickListener markerPickListener;
-    private ViewCompleteListener viewCompleteListener;
     private FrameCaptureCallback frameCaptureCallback;
     private boolean frameCaptureAwaitCompleteView;
     private Map<String, MapData> clientTileSources;
@@ -1440,8 +1508,8 @@ public class MapController implements Renderer {
         }
 
         if (viewComplete) {
-            if (viewCompleteListener != null) {
-                viewCompleteListener.onViewComplete();
+            if (mapChangeListener != null) {
+                mapChangeListener.onViewComplete();
             }
         }
         if (frameCaptureCallback != null) {
@@ -1449,10 +1517,6 @@ public class MapController implements Renderer {
                 frameCaptureCallback.onCaptured(capture());
                 frameCaptureCallback = null;
             }
-        }
-
-        if (mapChangeListener != null) {
-            mapChangeListener.onMapChanged();
         }
     }
 
