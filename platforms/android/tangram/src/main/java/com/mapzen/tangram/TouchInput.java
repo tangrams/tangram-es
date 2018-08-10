@@ -306,7 +306,7 @@ public class TouchInput implements OnTouchListener, OnScaleGestureListener,
         mapChangeListener = listener;
     }
 
-    //Convenience package private member functions
+    //Convenience member functions
     private void onRegionWillChangeAnimated(boolean animated) {
         if (mapChangeListener != null) {
             mapChangeListener.onRegionWillChangeAnimated(animated);

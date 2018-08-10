@@ -1211,7 +1211,7 @@ public class MapController implements Renderer {
         touchInput.setMapChangeListener(mapChangeListener);
     }
 
-    //Convenience package private member functions
+    //Convenience member functions
     private void onRegionWillChangeAnimated(boolean animated) {
         if (mapChangeListener != null) {
             mapChangeListener.onRegionWillChangeAnimated(animated);
