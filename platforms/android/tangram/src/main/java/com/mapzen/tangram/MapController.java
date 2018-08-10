@@ -486,11 +486,11 @@ public class MapController implements Renderer {
      */
     public void updateCameraPosition(@NonNull final CameraUpdate update, final int duration, @NonNull final EaseType ease, @Nullable final CameraAnimationCallback cb) {
 
-        onRegionWillChangeAnimated(true);
-
         // TODO: Appropriately handle call to `mapChangeListener.onRegionIsChanging` during camera animation updates.
 
         checkPointer(mapPointer);
+
+        onRegionWillChangeAnimated(true);
 
         if (cameraAnimationCallback != null) {
             // NB: Prevent recursion loop when updateCameraPosition is called from onCancel callback
@@ -595,9 +595,9 @@ public class MapController implements Renderer {
      *              calculated for the distance of the flight path. (Recommended range 0.1 - 10.0)
      */
     public void flyTo(@NonNull final LngLat position, final float zoom, final int duration, final float speed) {
+        checkPointer(mapPointer);
         boolean animated = (duration == 0) ? false : true;
         onRegionWillChangeAnimated(animated);
-        checkPointer(mapPointer);
         final float seconds = duration / 1000.f;
         // TODO: Appropriately handle call to `mapChangeListener.onRegionIsChanging` during camera animation updates.
         nativeFlyTo(mapPointer, position.longitude, position.latitude, zoom, seconds, speed);
