@@ -376,6 +376,8 @@ void scrollCallback(GLFWwindow* window, double scrollx, double scrolly) {
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
+    CameraPosition camera = map->getCameraPosition();
+
     if (action == GLFW_PRESS) {
         switch (key) {
             case GLFW_KEY_1:
@@ -469,19 +471,34 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 map->setZoom(14);
                 break;
             case GLFW_KEY_F3:
-                map->flyTo(8.82, 53.08, 16., 0.0, 2.0);
+                camera.longitude = 8.82;
+                camera.latitude = 53.08;
+                camera.zoom = 16.f;
+                map->flyTo(camera, -1.f, 2.0);
                 break;
             case GLFW_KEY_F4:
-                map->flyTo(8.82, 53.08, 10., 0.0, 2.5);
+                camera.longitude = 8.82;
+                camera.latitude = 53.08;
+                camera.zoom = 10.f;
+                map->flyTo(camera, -1.f, 2.5);
                 break;
             case GLFW_KEY_F5:
-                map->flyTo(-74.00976419448854, 40.70532700869127, 16., 4.);
+                camera.longitude = -74.00976419448854;
+                camera.latitude = 40.70532700869127;
+                camera.zoom = 16.f;
+                map->flyTo(camera, 4.);
                 break;
             case GLFW_KEY_F6:
-                map->flyTo(-122.41, 37.7749, 16., 0.0, 4.0);
+                camera.longitude = -122.41;
+                camera.latitude = 37.7749;
+                camera.zoom = 16.f;
+                map->flyTo(camera, -1.f, 4.0);
                 break;
             case GLFW_KEY_F7:
-                map->flyTo(139.839478, 35.652832, 16., 0.0, 1.0);
+                camera.longitude = 139.839478;
+                camera.latitude = 35.652832;
+                camera.zoom = 16.f;
+                map->flyTo(camera, -1.f, 1.0);
                 break;
             case GLFW_KEY_W:
                 map->onMemoryWarning();

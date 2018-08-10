@@ -265,7 +265,7 @@ public:
     // Run flight animation to change postion and zoom  of the map
     // If _duration is 0, speed is used as factor to change the duration that is
     // calculated for the duration of the flight path. (Recommended range 0.1 - 2.0)
-    void flyTo(double _lon, double _lat, float _z, float _duration, float _speed = 1.0f);
+    void flyTo(const CameraPosition& _camera, float _duration, float _speed = 1.0f);
 
     // Set the camera type (0 = perspective, 1 = isometric, 2 = flat)
     void setCameraType(int _type);

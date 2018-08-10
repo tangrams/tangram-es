@@ -809,33 +809,44 @@ CameraPosition Map::getEnclosingCameraPosition(LngLat _a, LngLat _b, EdgePadding
     return camera;
 }
 
-void Map::flyTo(double _lon, double _lat, float _z, float _duration, float _speed) {
+void Map::flyTo(const CameraPosition& _camera, float _duration, float _speed) {
 
-    double lonStart = 0., latStart = 0.;
-    getPosition(lonStart, latStart);
+    double lngStart = 0., latStart = 0., lngEnd = _camera.longitude, latEnd = _camera.latitude;
+    getPosition(lngStart, latStart);
     float zStart = getZoom();
+    float rStart = getRotation();
+    float tStart = getTilt();
 
-    double dLongitude = _lon - lonStart;
+    // Ease over the smallest angular distance needed
+    float radiansDelta = glm::mod(_camera.rotation - rStart, (float)TWO_PI);
+    if (radiansDelta > PI) { radiansDelta -= TWO_PI; }
+    float rEnd = rStart + radiansDelta;
+
+    double dLongitude = lngEnd - lngStart;
     if (dLongitude > 180.0) {
-        _lon -= 360.0;
+        lngEnd -= 360.0;
     } else if (dLongitude < -180.0) {
-        _lon += 360.0;
+        lngEnd += 360.0;
     }
 
     const MapProjection& projection = impl->view.getMapProjection();
-    glm::dvec2 a = projection.LonLatToMeters(glm::dvec2(lonStart, latStart));
-    glm::dvec2 b = projection.LonLatToMeters(glm::dvec2(_lon, _lat));
+    glm::dvec2 a = projection.LonLatToMeters(glm::dvec2(lngStart, latStart));
+    glm::dvec2 b = projection.LonLatToMeters(glm::dvec2(lngEnd, latEnd));
 
     double distance = 0.0;
     auto fn = getFlyToFunction(impl->view,
                                glm::dvec3(a.x, a.y, zStart),
-                               glm::dvec3(b.x, b.y, _z),
+                               glm::dvec3(b.x, b.y, _camera.zoom),
                                distance);
+
+    EaseType e = EaseType::cubic;
     auto cb =
         [=](float t) {
             glm::dvec3 pos = fn(t);
             impl->view.setPosition(pos.x, pos.y);
             impl->view.setZoom(pos.z);
+            impl->view.setRoll(ease(rStart, rEnd, t, e));
+            impl->view.setPitch(ease(tStart, _camera.tilt, t, e));
             impl->platform->requestRender();
         };
 
@@ -846,6 +857,8 @@ void Map::flyTo(double _lon, double _lat, float _z, float _duration, float _spee
     cancelCameraAnimation();
 
     impl->ease = std::make_unique<Ease>(duration, cb);
+
+    platform->requestRender();
 }
 
 bool Map::screenPositionToLngLat(double _x, double _y, double* _lng, double* _lat) {
