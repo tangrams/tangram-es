@@ -166,7 +166,7 @@ public class MapController implements Renderer {
         void onViewComplete();
 
         /**
-         * Called on the UI thread at the start of a camera animation
+         * Called on the UI thread at the start of a camera animation or user interaction
          * @param animated false when camera updates are set immediately, true otherwise
          */
         void onRegionWillChangeAnimated(boolean animated);
@@ -177,7 +177,7 @@ public class MapController implements Renderer {
         void onRegionIsChanging();
 
         /**
-         * Called on the UI thread at the end of a camera animation
+         * Called on the UI thread at the end of a camera animation or user interaction
          * @param animated false when camera updates are set immediately, true otherwise
          */
         void onRegionDidChangeAnimated(boolean animated);
