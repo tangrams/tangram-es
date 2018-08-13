@@ -14,12 +14,19 @@
 extern TG_EXPORT NSString* const TGErrorDomain;
 
 /**
- TODO
+ A map area defined by bounding coordinates.
  */
-typedef struct TGCoordinateBounds {
+struct TGCoordinateBounds {
+    /** The minimum longitude and latitude of the area. */
     CLLocationCoordinate2D sw;
+    /** The maximum longitude and latitude of the area. */
     CLLocationCoordinate2D ne;
-} TGCoordinateBounds;
+};
+
+/**
+ Struct `TGCoordinateBounds`
+ */
+typedef struct TGCoordinateBounds TGCoordinateBounds;
 
 /**
  Describes ease functions to be used for camera or other transition animation.

@@ -15,6 +15,14 @@
 TG_EXPORT
 @interface TGCameraPosition : NSObject <NSCopying>
 
+/**
+ Initialize a camera position with a location and orientation.
+
+ @param center The location at the center of the map view
+ @param zoom The zoom level of the map view, lower values show more area
+ @param bearing The orientation of the map view in degrees clockwise from North
+ @param pitch The tilt of the map view in degrees away from straight down
+ */
 - (instancetype)initWithCenter:(CLLocationCoordinate2D)center
                           zoom:(CGFloat)zoom
                        bearing:(CLLocationDirection)bearing

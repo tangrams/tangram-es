@@ -180,7 +180,11 @@ TG_EXPORT
 #pragma mark Changing the Map Viewport
 
 /**
- TODO
+ The current position and orientation of the map camera.
+
+ Setting this property will move the map immediately. To animate the movement use
+ `-[TGMapView setCameraPosition:withDuration:easeType:callback:]` or
+ `-[TGMapView flyToCameraPosition:withDuration:callback:]`
  */
 @property (copy, nonatomic) TGCameraPosition *cameraPosition;
 
@@ -206,7 +210,12 @@ TG_EXPORT
 @property (nonatomic) TGCameraType cameraType;
 
 /**
- TODO
+ Move the map camera to a new position with an easing animation.
+
+ @param cameraPosition The new camera position
+ @param duration The animation duration in seconds
+ @param easeType The type of easing animation
+ @param callback A callback to execute when the animation completes
  */
 - (void)setCameraPosition:(TGCameraPosition *)cameraPosition
              withDuration:(NSTimeInterval)duration
@@ -214,20 +223,31 @@ TG_EXPORT
                  callback:(nullable void (^)(BOOL canceled))callback;
 
 /**
- TODO
+ Move the map camera to a new position with an animation that pans and zooms in a smooth arc.
+
+ The animation duration is calculated based on the distance to the new camera position.
+
+ @param cameraPosition The new camera position
+ @param callback A callback to execute when the animation completes
  */
 - (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition
-                   callback:(nullable void (^)(BOOL cancelled))callback;
+                   callback:(nullable void (^)(BOOL canceled))callback;
 
 /**
- TODO
+ Move the map camera to a new position with an animation that pans and zooms in a smooth arc.
+
+ @param cameraPosition The new camera position
+ @param callback A callback to execute when the animation completes
  */
 - (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition
                withDuration:(NSTimeInterval)duration
-                   callback:(nullable void (^)(BOOL cancelled))callback;
+                   callback:(nullable void (^)(BOOL canceled))callback;
 
 /**
- TODO
+ Get a camera position that encloses the given bounds with at least the given amount of padding on each side.
+
+ @param bounds The map bounds to enclose
+ @param padding The minimum distance to keep between the bounds and the edges of the view
  */
 - (TGCameraPosition*)cameraThatFitsBounds:(TGCoordinateBounds)bounds withPadding:(UIEdgeInsets)padding;
 
