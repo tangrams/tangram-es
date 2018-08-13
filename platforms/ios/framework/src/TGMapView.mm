@@ -702,6 +702,8 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 #pragma mark Camera Properties
 
+
+
 - (void)setPosition:(TGGeoPoint)position {
     if (!self.map) { return; }
 

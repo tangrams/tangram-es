@@ -228,6 +228,22 @@ public:
     // Get the fractional zoom level of the view
     float getZoom();
 
+    // Set the minimum zoom level for the view; values less than 0 will be
+    // clamped to 0; values greater than the current maximum zoom level will set
+    // the maximum zoom to this value.
+    void setMinZoom(float _minZoom);
+
+    // Get the minimum zoom level for the view.
+    float getMinZoom();
+
+    // Set the maximum zoom level for the view; values greater than 20.5 will be
+    // clamped to 20.5; values less than the current minimum zoom level will set
+    // the minimum zoom to this value.
+    void setMaxZoom(float _maxZoom);
+
+    // Get the maximum zoom level for the view.
+    float getMaxZoom();
+
     // Set the counter-clockwise rotation of the view in radians; 0 corresponds to
     // North pointing up
     void setRotation(float _radians);

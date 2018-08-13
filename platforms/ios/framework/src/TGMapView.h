@@ -178,6 +178,16 @@ TG_EXPORT
 #pragma mark Camera Properties
 
 /**
+ TODO
+ */
+@property (assign, nonatomic) double minimumZoomLevel;
+
+/**
+ TODO
+ */
+@property (assign, nonatomic) double maximumZoomLevel;
+
+/**
  Assign a `TGCameraType` to the view camera
  */
 @property (assign, nonatomic) TGCameraType cameraType;
