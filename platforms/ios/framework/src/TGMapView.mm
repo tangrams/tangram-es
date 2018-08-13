@@ -787,47 +787,11 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     [self regionDidChangeAnimated:NO];
 }
 
-- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)seconds
-{
-    [self animateToZoomLevel:zoomLevel withDuration:seconds withEaseType:TGEaseTypeCubic];
-}
-
-- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)seconds withEaseType:(TGEaseType)easeType
-{
-    if (!self.map) { return; }
-
-    [self regionWillChangeAnimated:YES];
-    // TODO: During animation we should be calling mapViewRegionIsChanging on the delegate.
-    Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
-    auto pos = self.map->getCameraPosition();
-    pos.zoom = zoomLevel;
-    self.map->setCameraPositionEased(pos, seconds, ease);
-    [self regionDidChangeAnimated:YES];
-}
-
 - (float)zoom
 {
     if (!self.map) { return 0.0; }
 
     return self.map->getZoom();
-}
-
-- (void)animateToRotation:(float)radians withDuration:(float)seconds
-{
-    [self animateToRotation:radians withDuration:seconds withEaseType:TGEaseTypeCubic];
-}
-
-- (void)animateToRotation:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType
-{
-    if (!self.map) { return; }
-
-    [self regionWillChangeAnimated:YES];
-    // TODO: During animation we should be calling mapViewRegionIsChanging on the delegate.
-    Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
-    auto pos = self.map->getCameraPosition();
-    pos.rotation = radians;
-    self.map->setCameraPositionEased(pos, seconds, ease);
-    [self regionDidChangeAnimated:YES];
 }
 
 - (void)setRotation:(float)radians
@@ -860,24 +824,6 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     [self regionWillChangeAnimated:NO];
     self.map->setTilt(radians);
     [self regionDidChangeAnimated:NO];
-}
-
-- (void)animateToTilt:(float)radians withDuration:(float)seconds
-{
-    [self animateToTilt:radians withDuration:seconds withEaseType:TGEaseType::TGEaseTypeCubic];
-}
-
-- (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType
-{
-    if (!self.map) { return; }
-
-    [self regionWillChangeAnimated:YES];
-    // TODO: During animation we should be calling mapViewRegionIsChanging on the delegate.
-    Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
-    auto pos = self.map->getCameraPosition();
-    pos.tilt = radians;
-    self.map->setCameraPositionEased(pos, seconds, ease);
-    [self regionDidChangeAnimated:YES];
 }
 
 - (TGCameraPosition *)cameraPosition
