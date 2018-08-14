@@ -178,14 +178,20 @@ TG_EXPORT
 #pragma mark Camera Properties
 
 /**
- TODO
+ The minimum zoom level for the map view.
+
+ The default minimum zoom is 0. Values less than the default will be clamped. Assigning a value greater than the current
+ maximum zoom will set the maximum zoom to this value.
  */
-@property (assign, nonatomic) double minimumZoomLevel;
+@property (assign, nonatomic) float minimumZoomLevel;
 
 /**
- TODO
+ The maximum zoom level for the map view.
+
+ The default maximum zoom is 20.5. Values greater than the default will be clamped. Assigning a value less than the
+ current minimum zoom will set the minimum zoom to this value.
  */
-@property (assign, nonatomic) double maximumZoomLevel;
+@property (assign, nonatomic) float maximumZoomLevel;
 
 /**
  Assign a `TGCameraType` to the view camera

@@ -702,7 +702,29 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 #pragma mark Camera Properties
 
+- (float)minimumZoomLevel
+{
+    if (!self.map) { return 0; }
+    return self.map->getMinZoom();
+}
 
+- (void)setMinimumZoomLevel:(float)minimumZoomLevel
+{
+    if (!self.map) { return; }
+    self.map->setMinZoom(minimumZoomLevel);
+}
+
+- (float)maximumZoomLevel
+{
+    if (!self.map) { return 0; }
+    return self.map->getMaxZoom();
+}
+
+- (void)setMaximumZoomLevel:(float)maximumZoomLevel
+{
+    if (!self.map) { return; }
+    self.map->setMaxZoom(maximumZoomLevel);
+}
 
 - (void)setPosition:(TGGeoPoint)position {
     if (!self.map) { return; }
