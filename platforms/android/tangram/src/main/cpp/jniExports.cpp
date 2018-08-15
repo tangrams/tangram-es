@@ -234,6 +234,30 @@ extern "C" {
         return map->getCameraType();
     }
 
+    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_nativeGetMinZoom(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        return map->getMinZoom();
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetMinZoom(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat minZoom) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        map->setMinZoom(minZoom);
+    }
+
+    JNIEXPORT jfloat JNICALL Java_com_mapzen_tangram_MapController_nativeGetMaxZoom(JNIEnv* jniEnv, jobject obj, jlong mapPtr) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        return map->getMaxZoom();
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeSetMaxZoom(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat maxZoom) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        map->setMaxZoom(maxZoom);
+    }
+
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeHandleTapGesture(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jfloat posX, jfloat posY) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);

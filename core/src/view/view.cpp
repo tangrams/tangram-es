@@ -140,6 +140,21 @@ float View::getFocalLength() const {
 
 }
 
+void View::setMinZoom(float minZoom) {
+
+    m_minZoom = std::max(minZoom, 0.f);
+    m_maxZoom = std::max(minZoom, m_maxZoom);
+    // Set the current zoom again to validate it.
+    setZoom(m_zoom);
+}
+
+void View::setMaxZoom(float maxZoom) {
+
+    m_maxZoom = std::min(maxZoom, 20.5f);
+    m_minZoom = std::min(maxZoom, m_minZoom);
+    // Set the current zoom again to validate it.
+    setZoom(m_zoom);
+}
 
 void View::setMaxPitch(float degrees) {
 
@@ -176,7 +191,7 @@ void View::setPosition(double _x, double _y) {
 
 void View::setZoom(float _z) {
     // ensure zoom value is allowed
-    m_zoom = glm::clamp(_z, s_minZoom, s_maxZoom);
+    m_zoom = glm::clamp(_z, m_minZoom, m_maxZoom);
     m_dirtyMatrices = true;
     m_dirtyTiles = true;
 }
@@ -480,10 +495,10 @@ void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
     // Scan options - avoid heap allocation for std::function
     // [1] http://www.drdobbs.com/cpp/efficient-use-of-lambda-expressions-and/232500059?pgno=2
     struct ScanParams {
-        explicit ScanParams(int _zoom) : zoom(_zoom) {}
+        explicit ScanParams(int _zoom, int _maxZoom) : zoom(_zoom), maxZoom(_maxZoom) {}
 
         int zoom;
-        int maxZoom = int(s_maxZoom);
+        int maxZoom;
 
         // Distance thresholds in tile space for levels of detail:
         // Element [n] in each array is the minimum tile index at which level-of-detail n
@@ -496,7 +511,7 @@ void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
         glm::ivec4 last = glm::ivec4{-1};
     };
 
-    ScanParams opt{ zoom };
+    ScanParams opt{ zoom, static_cast<int>(m_maxZoom) };
 
     if (m_type == CameraType::perspective) {
 

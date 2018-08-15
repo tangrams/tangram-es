@@ -81,6 +81,18 @@ public:
     // field-of-view angle.
     float getFocalLength() const;
 
+    // Set the minimum zoom level. Clamped to >=0.
+    void setMinZoom(float minZoom);
+
+    // Get the minimum zoom level.
+    float getMinZoom() const { return m_minZoom; }
+
+    // Set the maximum zoom level. Clamped to <= 20.5.
+    void setMaxZoom(float maxZoom);
+
+    // Get the maximum zoom level.
+    float getMaxZoom() const { return m_maxZoom; }
+
     // Set the maximum pitch angle in degrees.
     void setMaxPitch(float degrees);
 
@@ -186,9 +198,6 @@ public:
     /* Returns true if the view properties have changed since the last call to update() */
     bool changedOnLastUpdate() const { return m_changed; }
 
-    /* TODO: API for setting these */
-    constexpr static float s_maxZoom = 20.5;
-    constexpr static float s_minZoom = 0.0;
     constexpr static float s_pixelsPerTile = 256.0;
 
     const glm::mat4& getOrthoViewportMatrix() const { return m_orthoViewport; };
@@ -238,6 +247,8 @@ protected:
     float m_pixelScale = 1.0f;
     float m_fov = 0.25 * PI;
     float m_maxPitch = 90.f;
+    float m_minZoom = 0.f;
+    float m_maxZoom = 20.5f;
 
     CameraType m_type;
 

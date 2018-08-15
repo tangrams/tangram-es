@@ -553,6 +553,48 @@ public class MapController implements Renderer {
     }
 
     /**
+     * Get the minimum zoom level of the map view. The default minimum zoom is 0.
+     * @return The zoom level
+     */
+    public float getMinimumZoomLevel() {
+        checkPointer(mapPointer);
+        return nativeGetMinZoom(mapPointer);
+    }
+
+    /**
+     * Set the minimum zoom level of the map view.
+     *
+     * Values less than the default minimum zoom will be clamped. Assigning a value greater than the
+     * current maximum zoom will set the maximum zoom to this value.
+     * @param minimumZoom The zoom level
+     */
+    public void setMinimumZoomLevel(float minimumZoom) {
+        checkPointer(mapPointer);
+        nativeSetMinZoom(mapPointer, minimumZoom);
+    }
+
+    /**
+     * Get the maximum zoom level of the map view. The default maximum zoom is 20.5.
+     * @return The zoom level
+     */
+    public float getMaximumZoomLevel() {
+        checkPointer(mapPointer);
+        return nativeGetMaxZoom(mapPointer);
+    }
+
+    /**
+     * Set the maximum zoom level of the map view.
+     *
+     * Values greater than the default maximum zoom will be clamped. Assigning a value less than the
+     * current minimum zoom will set the minimum zoom to this value.
+     * @param maximumZoom The zoom level
+     */
+    public void setMaximumZoomLevel(float maximumZoom) {
+        checkPointer(mapPointer);
+        nativeSetMaxZoom(mapPointer, maximumZoom);
+    }
+
+    /**
      * Find the geographic coordinates corresponding to the given position on screen
      * @param screenPosition Position in pixels from the top-left corner of the map area
      * @return LngLat corresponding to the given point, or null if the screen position
@@ -1157,12 +1199,16 @@ public class MapController implements Renderer {
                                                                 double b1lon, double b1lat, double b2lon, double b2lat, int[] padding,
                                                                 float duration, int ease);
     private synchronized native void nativeFlyTo(long mapPtr, double lon, double lat, float zoom, float duration, float speed);
-    private synchronized native void nativeGetEnclosingViewPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, int buffer, double[] lngLatZoom);
+    private synchronized native void nativeGetEnclosingViewPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, int[] buffer, double[] lngLatZoom);
     private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);
     private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates);
     private synchronized native void nativeSetPixelScale(long mapPtr, float scale);
     private synchronized native void nativeSetCameraType(long mapPtr, int type);
     private synchronized native int nativeGetCameraType(long mapPtr);
+    private synchronized native float nativeGetMinZoom(long mapPtr);
+    private synchronized native void nativeSetMinZoom(long mapPtr, float minZoom);
+    private synchronized native float nativeGetMaxZoom(long mapPtr);
+    private synchronized native void nativeSetMaxZoom(long mapPtr, float maxZoom);
     private synchronized native void nativeHandleTapGesture(long mapPtr, float posX, float posY);
     private synchronized native void nativeHandleDoubleTapGesture(long mapPtr, float posX, float posY);
     private synchronized native void nativeHandlePanGesture(long mapPtr, float startX, float startY, float endX, float endY);

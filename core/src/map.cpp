@@ -738,6 +738,22 @@ float Map::getZoom() {
     return impl->view.getZoom();
 }
 
+void Map::setMinZoom(float _minZoom) {
+    impl->view.setMinZoom(_minZoom);
+}
+
+float Map::getMinZoom() {
+    return impl->view.getMinZoom();
+}
+
+void Map::setMaxZoom(float _maxZoom) {
+    impl->view.setMaxZoom(_maxZoom);
+}
+
+float Map::getMaxZoom() {
+    return impl->view.getMaxZoom();
+}
+
 void Map::setRotation(float _radians) {
     cancelCameraAnimation();
 
