@@ -151,6 +151,12 @@
     [view pickFeatureAt:location];
     [view pickLabelAt:location];
     // [view pickMarkerAt:location];
+
+    TGCameraPosition* camera = [view cameraPosition];
+    camera.center = CLLocationCoordinate2DMake(coordinates.latitude, coordinates.longitude);
+    [view setCameraPosition:camera withDuration:0.5 easeType:TGEaseTypeCubic callback: ^(BOOL canceled){
+        NSLog(@"Animation completed %d", !canceled);
+    }];
 }
 
 - (void)mapView:(TGMapView *)mapView recognizer:(UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location
