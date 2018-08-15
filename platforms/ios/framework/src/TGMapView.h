@@ -276,8 +276,8 @@ TG_EXPORT
 /**
  Convert a longitude and latitude to a view position.
 
- @param lngLat The geographic coordinate to convert.
- @return The view position of the input coordinate, or `(NAN, NAN)` if the coordinate is not visible in the view.
+ @param lngLat The geographic coordinate to convert
+ @return The view position of the input coordinate
  */
 - (CGPoint)lngLatToScreenPosition:(TGGeoPoint)lngLat;
 
@@ -286,7 +286,7 @@ TG_EXPORT
  location corresponding to that point.
 
  @param viewPosition the 2d screen position to convert
- @return the longitude and latitude, or `(NAN, NAN)` if the point is not visible on the screen.
+ @return the longitude and latitude
  */
 - (TGGeoPoint)screenPositionToLngLat:(CGPoint)viewPosition;
 
