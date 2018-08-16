@@ -9,11 +9,13 @@
 #import "TGGeoPoint.h"
 #import "TGMapData.h"
 #import "TGTypes.h"
+#import <CoreLocation/CoreLocation.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class TGCameraPosition;
 @class TGLabelPickResult;
 @class TGMapData;
 @class TGMarker;
@@ -175,7 +177,16 @@ TG_EXPORT
  */
 @property (weak, nonatomic, nullable) id<TGMapViewDelegate> mapViewDelegate;
 
-#pragma mark Camera Properties
+#pragma mark Changing the Map Viewport
+
+/**
+ The current position and orientation of the map camera.
+
+ Setting this property will move the map immediately. To animate the movement use
+ `-[TGMapView setCameraPosition:withDuration:easeType:callback:]` or
+ `-[TGMapView flyToCameraPosition:withDuration:callback:]`
+ */
+@property (copy, nonatomic) TGCameraPosition *cameraPosition;
 
 /**
  The minimum zoom level for the map view.
@@ -196,7 +207,49 @@ TG_EXPORT
 /**
  Assign a `TGCameraType` to the view camera
  */
-@property (assign, nonatomic) TGCameraType cameraType;
+@property (nonatomic) TGCameraType cameraType;
+
+/**
+ Move the map camera to a new position with an easing animation.
+
+ @param cameraPosition The new camera position
+ @param duration The animation duration in seconds
+ @param easeType The type of easing animation
+ @param callback A callback to execute when the animation completes
+ */
+- (void)setCameraPosition:(TGCameraPosition *)cameraPosition
+             withDuration:(NSTimeInterval)duration
+                 easeType:(TGEaseType)easeType
+                 callback:(nullable void (^)(BOOL canceled))callback;
+
+/**
+ Move the map camera to a new position with an animation that pans and zooms in a smooth arc.
+
+ The animation duration is calculated based on the distance to the new camera position.
+
+ @param cameraPosition The new camera position
+ @param callback A callback to execute when the animation completes
+ */
+- (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition
+                   callback:(nullable void (^)(BOOL canceled))callback;
+
+/**
+ Move the map camera to a new position with an animation that pans and zooms in a smooth arc.
+
+ @param cameraPosition The new camera position
+ @param callback A callback to execute when the animation completes
+ */
+- (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition
+               withDuration:(NSTimeInterval)duration
+                   callback:(nullable void (^)(BOOL canceled))callback;
+
+/**
+ Get a camera position that encloses the given bounds with at least the given amount of padding on each side.
+
+ @param bounds The map bounds to enclose
+ @param padding The minimum distance to keep between the bounds and the edges of the view
+ */
+- (TGCameraPosition*)cameraThatFitsBounds:(TGCoordinateBounds)bounds withPadding:(UIEdgeInsets)padding;
 
 /**
  Assign a longitude and latitude to the map view camera
@@ -217,84 +270,6 @@ TG_EXPORT
  Assign a tilt angle in radians to the map view camera
  */
 @property (assign, nonatomic) float tilt;
-
-#pragma mark Camera Animation
-
-/**
- Animate the map view to a center coordinate.
-
- @param position The center coordinate.
- @param seconds The animation duration in seconds.
-
- @note The default ease type for this animation is cubic, see `TGEaseType` for details.
- */
-- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)seconds;
-
-/**
- Animate the map view to a center coordinate with an easing function.
-
- @param position The center coordinate.
- @param seconds The animation duration in seconds.
- @param easeType The ease type to use. See `TGEaseType` for more details.
- */
-- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)seconds withEaseType:(TGEaseType)easeType;
-
-/**
- Animate the map view to a zoom level.
-
- @param zoomLevel The zoom level.
- @param seconds The animation duration in seconds.
-
- @note The default ease type for this animation is cubic, see `TGEaseType` for details.
- */
-- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)seconds;
-
-/**
- Animate the map view to a zoom level with an easing function.
-
- @param zoomLevel The zoom level.
- @param seconds The animation duration in seconds.
- @param easeType The ease type to use. See `TGEaseType` for more details.
- */
-- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)seconds withEaseType:(TGEaseType)easeType;
-
-/**
- Animate the map view to a rotation.
-
- @param radians The rotation in radians.
- @param seconds The animation duration in seconds.
-
- @note The default ease type for this animation is cubic, see `TGEaseType` for details.
- */
-- (void)animateToRotation:(float)radians withDuration:(float)seconds;
-
-/**
- Animate the map view to a rotation with an easing function.
-
- @param radians The rotation in radians.
- @param seconds The animation duration in seconds.
- @param easeType The ease type to use. See `TGEaseType` for more details.
- */
-- (void)animateToRotation:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType;
-
-/**
- Animate the map view to a tilt angle.
-
- @param radians The tilt angle in radians.
- @param seconds The animation duration in seconds.
-
- @note The default ease type for this animation is cubic, see `TGEaseType` for details.
- */
-- (void)animateToTilt:(float)radians withDuration:(float)seconds;
-
-/**
- Animate the map view to a tilt angle with an easing function.
-
- @param radians The tilt angle in radians.
- @param seconds The animation duration in seconds.
- @param easeType The ease type to use, see `TGEaseType` for more details.
- */
-- (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType;
 
 #pragma mark Coordinate Conversions
 

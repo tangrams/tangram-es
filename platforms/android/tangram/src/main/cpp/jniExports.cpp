@@ -91,7 +91,11 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeFlyTo(JNIEnv* jniEnv, jobject obj,  jlong mapPtr, jdouble lon, jdouble lat, jfloat zoom, jfloat duration, jfloat speed) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
-        map->flyTo(lon, lat, zoom, duration, speed);
+        CameraPosition camera = map->getCameraPosition();
+        camera.longitude = lon;
+        camera.latitude = lat;
+        camera.zoom = zoom;
+        map->flyTo(camera, duration);
     }
 
     JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeScreenPositionToLngLat(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray coordinates) {

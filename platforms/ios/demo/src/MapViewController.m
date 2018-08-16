@@ -41,16 +41,12 @@
         return;
     }
 
-    TGGeoPoint newYork;
+    CLLocationCoordinate2D newYork;
     newYork.longitude = -74.00976419448854;
     newYork.latitude = 40.70532700869127;
 
-    TGGeoPoint cairo;
-    cairo.longitude = 30.00;
-    cairo.latitude = 31.25;
-
-    [mapView setZoom:15];
-    [mapView setPosition:newYork];
+    TGCameraPosition *camera = [[TGCameraPosition alloc] initWithCenter:newYork zoom:15 bearing:0 pitch:0];
+    [mapView setCameraPosition:camera];
 
     // Add a client data source, named 'mz_route_line_transit'
     self.mapData = [mapView addDataLayer:@"mz_route_line_transit" generateCentroid:NO];
@@ -155,6 +151,12 @@
     [view pickFeatureAt:location];
     [view pickLabelAt:location];
     // [view pickMarkerAt:location];
+
+    TGCameraPosition* camera = [view cameraPosition];
+    camera.center = CLLocationCoordinate2DMake(coordinates.latitude, coordinates.longitude);
+    [view setCameraPosition:camera withDuration:0.5 easeType:TGEaseTypeCubic callback: ^(BOOL canceled){
+        NSLog(@"Animation completed %d", !canceled);
+    }];
 }
 
 - (void)mapView:(TGMapView *)mapView recognizer:(UIGestureRecognizer *)recognizer didRecognizeLongPressGesture:(CGPoint)location

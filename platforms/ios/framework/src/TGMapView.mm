@@ -7,6 +7,8 @@
 
 #import "TGMapView.h"
 #import "TGMapView+Internal.h"
+#import "TGCameraPosition.h"
+#import "TGCameraPosition+Internal.h"
 #import "TGHelpers.h"
 #import "TGURLHandler.h"
 #import "TGLabelPickResult.h"
@@ -43,6 +45,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 @property (strong, nonatomic) CADisplayLink *displayLink;
 @property (strong, nonatomic) NSMutableDictionary<NSString *, TGMarker *> *markersById;
 @property (strong, nonatomic) NSMutableDictionary<NSString *, TGMapData *> *dataLayersByName;
+@property (nonatomic, copy, nullable) void (^cameraAnimationCallback)(BOOL);
 
 @end // interface TGMapView
 
@@ -135,6 +138,15 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
     }
 
     [self setupGestureRecognizers];
+
+    self.map->setCameraAnimationListener([weakSelf](bool finished){
+        void (^callback)(BOOL) = weakSelf.cameraAnimationCallback;
+        if (callback) {
+            callback(!finished);
+        }
+        weakSelf.cameraAnimationCallback = nil;
+        [weakSelf regionDidChangeAnimated:YES];
+    });
 
     self.clipsToBounds = YES;
     self.opaque = YES;
@@ -700,7 +712,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     });
 }
 
-#pragma mark Camera Properties
+#pragma mark Changing the Map Viewport
 
 - (float)minimumZoomLevel
 {
@@ -775,47 +787,11 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     [self regionDidChangeAnimated:NO];
 }
 
-- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)seconds
-{
-    [self animateToZoomLevel:zoomLevel withDuration:seconds withEaseType:TGEaseTypeCubic];
-}
-
-- (void)animateToZoomLevel:(float)zoomLevel withDuration:(float)seconds withEaseType:(TGEaseType)easeType
-{
-    if (!self.map) { return; }
-
-    [self regionWillChangeAnimated:YES];
-    // TODO: During animation we should be calling mapViewRegionIsChanging on the delegate.
-    Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
-    auto pos = self.map->getCameraPosition();
-    pos.zoom = zoomLevel;
-    self.map->setCameraPositionEased(pos, seconds, ease);
-    [self regionDidChangeAnimated:YES];
-}
-
 - (float)zoom
 {
     if (!self.map) { return 0.0; }
 
     return self.map->getZoom();
-}
-
-- (void)animateToRotation:(float)radians withDuration:(float)seconds
-{
-    [self animateToRotation:radians withDuration:seconds withEaseType:TGEaseTypeCubic];
-}
-
-- (void)animateToRotation:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType
-{
-    if (!self.map) { return; }
-
-    [self regionWillChangeAnimated:YES];
-    // TODO: During animation we should be calling mapViewRegionIsChanging on the delegate.
-    Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
-    auto pos = self.map->getCameraPosition();
-    pos.rotation = radians;
-    self.map->setCameraPositionEased(pos, seconds, ease);
-    [self regionDidChangeAnimated:YES];
 }
 
 - (void)setRotation:(float)radians
@@ -850,22 +826,46 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     [self regionDidChangeAnimated:NO];
 }
 
-- (void)animateToTilt:(float)radians withDuration:(float)seconds
+- (TGCameraPosition *)cameraPosition
 {
-    [self animateToTilt:radians withDuration:seconds withEaseType:TGEaseType::TGEaseTypeCubic];
+    Tangram::CameraPosition camera = self.map->getCameraPosition();
+    TGCameraPosition *result = [[TGCameraPosition alloc] initWithCoreCamera:&camera];
+    return result;
 }
 
-- (void)animateToTilt:(float)radians withDuration:(float)seconds withEaseType:(TGEaseType)easeType
+- (void)setCameraPosition:(TGCameraPosition *)cameraPosition
 {
-    if (!self.map) { return; }
+    Tangram::CameraPosition result = [cameraPosition convertToCoreCamera];
+    [self regionWillChangeAnimated:NO];
+    self.map->setCameraPosition(result);
+    [self regionDidChangeAnimated:NO];
+}
 
-    [self regionWillChangeAnimated:YES];
-    // TODO: During animation we should be calling mapViewRegionIsChanging on the delegate.
+- (void)setCameraPosition:(TGCameraPosition *)cameraPosition
+             withDuration:(NSTimeInterval)duration
+                 easeType:(TGEaseType)easeType
+                 callback:(void (^)(BOOL))callback
+{
+    Tangram::CameraPosition camera = [cameraPosition convertToCoreCamera];
     Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
-    auto pos = self.map->getCameraPosition();
-    pos.tilt = radians;
-    self.map->setCameraPositionEased(pos, seconds, ease);
-    [self regionDidChangeAnimated:YES];
+    [self regionWillChangeAnimated:YES];
+    self.map->setCameraPositionEased(camera, duration, ease);
+    self.cameraAnimationCallback = callback;
+}
+
+- (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition callback:(void (^)(BOOL))callback
+{
+    [self flyToCameraPosition:cameraPosition withDuration:-1.0 callback:callback];
+}
+
+- (void)flyToCameraPosition:(TGCameraPosition *)cameraPosition
+               withDuration:(NSTimeInterval)duration
+                   callback:(void (^)(BOOL))callback
+{
+    Tangram::CameraPosition camera = [cameraPosition convertToCoreCamera];
+    [self regionWillChangeAnimated:YES];
+    self.map->flyTo(camera, duration);
+    self.cameraAnimationCallback = callback;
 }
 
 #pragma mark Camera type
