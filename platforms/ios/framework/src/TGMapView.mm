@@ -847,6 +847,18 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     self.cameraAnimationCallback = callback;
 }
 
+- (TGCameraPosition *)cameraThatFitsBounds:(TGCoordinateBounds)bounds withPadding:(UIEdgeInsets)padding
+{
+    if (!self.map) {
+        return nil;
+    }
+    Tangram::LngLat sw(bounds.sw.longitude, bounds.sw.latitude);
+    Tangram::LngLat ne(bounds.ne.longitude, bounds.ne.latitude);
+    Tangram::EdgePadding pad(padding.left, padding.top, padding.right, padding.bottom);
+    Tangram::CameraPosition camera = self.map->getEnclosingCameraPosition(sw, ne, pad);
+    return [[TGCameraPosition alloc] initWithCoreCamera:&camera];
+}
+
 #pragma mark Camera type
 
 - (TGCameraType)cameraType
