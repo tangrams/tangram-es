@@ -111,7 +111,7 @@
 
     auto polylineCoords = reinterpret_cast<Tangram::LngLat*>([polyline coordinates]);
 
-    if (!tangramInstance->markerSetPolyline(self.identifier, polylineCoords, polyline.count)) {
+    if (!tangramInstance->markerSetPolyline(self.identifier, polylineCoords, static_cast<int>(polyline.count))) {
         [self createNSError];
     }
 }
@@ -123,7 +123,7 @@
 
     auto polygonCoords = reinterpret_cast<Tangram::LngLat*>([polygon coordinates]);
 
-    if (!tangramInstance->markerSetPolygon(self.identifier, polygonCoords, [polygon rings], [polygon ringsCount])) {
+    if (!tangramInstance->markerSetPolygon(self.identifier, polygonCoords, [polygon rings], static_cast<int>([polygon ringsCount]))) {
         [self createNSError];
     }
 }
@@ -186,7 +186,7 @@
         }
     }
 
-    if (!tangramInstance->markerSetBitmap(self.identifier, w, h, bitmap.data())) {
+    if (!tangramInstance->markerSetBitmap(self.identifier, static_cast<int>(w), static_cast<int>(h), bitmap.data())) {
         [self createNSError];
     }
 }
