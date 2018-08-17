@@ -3,6 +3,7 @@ package com.mapzen.tangram;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
+import android.graphics.Rect;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.os.Build;
@@ -526,6 +527,39 @@ public class MapController implements Renderer {
     public void cancelCameraAnimation() {
         checkPointer(mapPointer);
         nativeCancelCameraAnimation(mapPointer);
+    }
+
+    /**
+     * Get the {@link CameraPosition} that that encloses the given bounds with at least the given amount of padding on each side.
+     * @param sw south-west coordinate
+     * @param ne northwest coordinate
+     * @param padding The minimum distance to keep between the bounds and the edges of the view
+     * @return The enclosing camera position
+     */
+    @NonNull
+    public CameraPosition getEnclosingCameraPosition(@NonNull LngLat sw, @NonNull LngLat ne, @NonNull Rect padding) {
+        return getEnclosingCameraPosition(sw, ne, padding, new CameraPosition());
+    }
+
+    /**
+     * Get the {@link CameraPosition} that that encloses the given bounds with at least the given amount of padding on each side.
+     * @param sw south-west coordinate
+     * @param ne northwest coordinate
+     * @param padding The minimum distance to keep between the bounds and the edges of the view
+     * @param out CameraPosition to be reused as the output
+     * @return The enclosing camera position
+     */
+    @NonNull
+    public CameraPosition getEnclosingCameraPosition(@NonNull LngLat sw, @NonNull LngLat ne, @NonNull Rect padding, @NonNull final CameraPosition out) {
+        int pad[] = new int[]{padding.left, padding.top, padding.right, padding.bottom};
+        double lngLatZoom[] = new double[3];
+        nativeGetEnclosingCameraPosition(mapPointer, sw.longitude, sw.latitude, ne.longitude, ne.latitude, pad, lngLatZoom);
+        out.longitude = lngLatZoom[0];
+        out.latitude = lngLatZoom[1];
+        out.zoom = (float)lngLatZoom[2];
+        out.rotation = 0.f;
+        out.tilt = 0.f;
+        return out;
     }
 
     /**
@@ -1207,7 +1241,7 @@ public class MapController implements Renderer {
                                                                 double b1lon, double b1lat, double b2lon, double b2lat, int[] padding,
                                                                 float duration, int ease);
     private synchronized native void nativeFlyTo(long mapPtr, double lon, double lat, float zoom, float duration, float speed);
-    private synchronized native void nativeGetEnclosingViewPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, int[] buffer, double[] lngLatZoom);
+    private synchronized native void nativeGetEnclosingCameraPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, int[] buffer, double[] lngLatZoom);
     private synchronized native void nativeCancelCameraAnimation(long mapPtr);
     private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);
     private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates);
