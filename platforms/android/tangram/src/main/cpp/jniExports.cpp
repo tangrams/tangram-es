@@ -98,6 +98,12 @@ extern "C" {
         map->flyTo(camera, duration);
     }
 
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeCancelCameraAnimation(JNIEnv* jniEnv, jobject obj,  jlong mapPtr) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        map->cancelCameraAnimation();
+    }
+
     JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeScreenPositionToLngLat(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray coordinates) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);

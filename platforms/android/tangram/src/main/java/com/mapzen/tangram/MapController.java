@@ -521,6 +521,14 @@ public class MapController implements Renderer {
     }
 
     /**
+     * Cancel current camera animation
+     */
+    public void cancelCameraAnimation() {
+        checkPointer(mapPointer);
+        nativeCancelCameraAnimation(mapPointer);
+    }
+
+    /**
      * Smoothly animate over an arc to an updated camera position for the map view
      * @param position LngLat of the position to set
      * @param zoom Zoom level; lower values show more area
@@ -1200,6 +1208,7 @@ public class MapController implements Renderer {
                                                                 float duration, int ease);
     private synchronized native void nativeFlyTo(long mapPtr, double lon, double lat, float zoom, float duration, float speed);
     private synchronized native void nativeGetEnclosingViewPosition(long mapPtr, double aLng, double aLat, double bLng, double bLat, int[] buffer, double[] lngLatZoom);
+    private synchronized native void nativeCancelCameraAnimation(long mapPtr);
     private synchronized native boolean nativeScreenPositionToLngLat(long mapPtr, double[] coordinates);
     private synchronized native boolean nativeLngLatToScreenPosition(long mapPtr, double[] coordinates);
     private synchronized native void nativeSetPixelScale(long mapPtr, float scale);
