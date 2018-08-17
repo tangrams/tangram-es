@@ -70,8 +70,8 @@ extern "C" {
         map->updateCameraPosition(update, duration, static_cast<Tangram::EaseType>(ease));
     }
 
-    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetEnclosingViewPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble aLng, jdouble aLat, jdouble bLng, jdouble bLat,
-                                                                                                jintArray jpad, jdoubleArray lngLatZoom) {
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeGetEnclosingCameraPosition(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdouble aLng, jdouble aLat, jdouble bLng, jdouble bLat,
+                                                                                                  jintArray jpad, jdoubleArray lngLatZoom) {
         assert(mapPtr > 0);
         auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
         EdgePadding padding;
@@ -96,6 +96,12 @@ extern "C" {
         camera.latitude = lat;
         camera.zoom = zoom;
         map->flyTo(camera, duration);
+    }
+
+    JNIEXPORT void JNICALL Java_com_mapzen_tangram_MapController_nativeCancelCameraAnimation(JNIEnv* jniEnv, jobject obj,  jlong mapPtr) {
+        assert(mapPtr > 0);
+        auto map = reinterpret_cast<Tangram::Map*>(mapPtr);
+        map->cancelCameraAnimation();
     }
 
     JNIEXPORT jboolean JNICALL Java_com_mapzen_tangram_MapController_nativeScreenPositionToLngLat(JNIEnv* jniEnv, jobject obj, jlong mapPtr, jdoubleArray coordinates) {
