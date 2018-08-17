@@ -180,13 +180,17 @@ float View::getMaxPitch() const {
 
 }
 
-
 void View::setPosition(double _x, double _y) {
-
-    m_pos.x = _x;
-    m_pos.y = _y;
+    // Wrap horizontal position around the 180th meridian, which corresponds to +/- HALF_CIRCUMFERENCE meters.
+    m_pos.x = _x - std::round(_x / MapProjection::CIRCUMFERENCE) * MapProjection::CIRCUMFERENCE;
+    // Clamp vertical position to the span of the map, which is +/- HALF_CIRCUMFERENCE meters.
+    m_pos.y = glm::clamp(_y, -MapProjection::HALF_CIRCUMFERENCE, MapProjection::HALF_CIRCUMFERENCE);
     m_dirtyTiles = true;
+}
 
+void View::setCenterCoordinates(Tangram::LngLat center) {
+    auto meters = m_projection->LonLatToMeters({center.longitude, center.latitude});
+    setPosition(meters.x, meters.y);
 }
 
 void View::setZoom(float _z) {
@@ -234,6 +238,11 @@ void View::pitch(float _dpitch) {
 
     setPitch(m_pitch + _dpitch);
 
+}
+
+LngLat View::getCenterCoordinates() const {
+    auto center = m_projection->MetersToLonLat({m_pos.x, m_pos.y});
+    return LngLat(center.x, center.y);
 }
 
 void View::update(bool _constrainToWorldBounds) {
@@ -547,12 +556,11 @@ void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
         // Wrap x to the range [0, (1 << z))
         tile.x = x & ((1 << tile.z) - 1);
         tile.y = y;
-        tile.w = (x - tile.x) >> opt.zoom; // wrap
 
         if (tile != opt.last) {
             opt.last = tile;
 
-            _tileCb(TileID(tile.x, tile.y, tile.z, tile.z, tile.w));
+            _tileCb(TileID(tile.x, tile.y, tile.z, tile.z));
         }
     };
 

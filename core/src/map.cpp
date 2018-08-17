@@ -161,8 +161,8 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
     }
 
     if (scene->useScenePosition) {
-        glm::dvec2 projPos = view.getMapProjection().LonLatToMeters(scene->startPosition);
-        view.setPosition(projPos.x, projPos.y);
+        auto position = scene->startPosition;
+        view.setCenterCoordinates({position.x, position.y});
         view.setZoom(scene->startZoom);
     }
 
@@ -611,8 +611,7 @@ void Map::cancelCameraAnimation() {
 void Map::setCameraPosition(const CameraPosition& _camera) {
     cancelCameraAnimation();
 
-    glm::dvec2 meters = impl->view.getMapProjection().LonLatToMeters({ _camera.longitude, _camera.latitude});
-    impl->view.setPosition(meters.x, meters.y);
+    impl->view.setCenterCoordinates(LngLat(_camera.longitude, _camera.latitude));
     impl->view.setZoom(_camera.zoom);
     impl->view.setRoll(_camera.rotation);
     impl->view.setPitch(_camera.tilt);
@@ -720,10 +719,9 @@ void Map::setPosition(double _lon, double _lat) {
 }
 
 void Map::getPosition(double& _lon, double& _lat) {
-    glm::dvec2 meters(impl->view.getPosition().x, impl->view.getPosition().y);
-    glm::dvec2 degrees = impl->view.getMapProjection().MetersToLonLat(meters);
-    _lon = LngLat::wrapLongitude(degrees.x);
-    _lat = degrees.y;
+    LngLat degrees = impl->view.getCenterCoordinates();
+    _lon = degrees.longitude;
+    _lat = degrees.latitude;
 }
 
 void Map::setZoom(float _z) {
