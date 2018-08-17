@@ -746,27 +746,6 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     [self regionDidChangeAnimated:NO];
 }
 
-// TODO: Remove the variations of animateTo* with no ease type and add a TGEaseTypeDefault to use instead.
-
-- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)seconds
-{
-    [self animateToPosition:position withDuration:seconds withEaseType:TGEaseTypeCubic];
-}
-
-- (void)animateToPosition:(TGGeoPoint)position withDuration:(float)seconds withEaseType:(TGEaseType)easeType
-{
-    if (!self.map) { return; }
-
-    [self regionWillChangeAnimated:YES];
-    // TODO: During animation we should be calling mapViewRegionIsChanging on the delegate.
-    Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
-    auto pos = self.map->getCameraPosition();
-    pos.longitude = position.longitude;
-    pos.latitude = position.latitude;
-    self.map->setCameraPositionEased(pos, seconds, ease);
-    [self regionDidChangeAnimated:YES];
-}
-
 - (TGGeoPoint)position
 {
     TGGeoPoint result{NAN, NAN};
@@ -866,6 +845,18 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     [self regionWillChangeAnimated:YES];
     self.map->flyTo(camera, duration);
     self.cameraAnimationCallback = callback;
+}
+
+- (TGCameraPosition *)cameraThatFitsBounds:(TGCoordinateBounds)bounds withPadding:(UIEdgeInsets)padding
+{
+    if (!self.map) {
+        return nil;
+    }
+    Tangram::LngLat sw(bounds.sw.longitude, bounds.sw.latitude);
+    Tangram::LngLat ne(bounds.ne.longitude, bounds.ne.latitude);
+    Tangram::EdgePadding pad(padding.left, padding.top, padding.right, padding.bottom);
+    Tangram::CameraPosition camera = self.map->getEnclosingCameraPosition(sw, ne, pad);
+    return [[TGCameraPosition alloc] initWithCoreCamera:&camera];
 }
 
 #pragma mark Camera type
