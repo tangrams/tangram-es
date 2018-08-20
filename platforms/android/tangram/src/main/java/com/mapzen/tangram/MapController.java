@@ -793,7 +793,9 @@ public class MapController implements Renderer {
             @Override
             public boolean onPan(final float startX, final float startY, final float endX, final float endY) {
                 if (responder == null || !responder.onPan(startX, startY, endX, endY)) {
-                    nativeHandlePanGesture(mapPointer, startX, startY, endX, endY);
+                    if (panGesturesEnabled) {
+                        nativeHandlePanGesture(mapPointer, startX, startY, endX, endY);
+                    }
                 }
                 return true;
             }
@@ -801,7 +803,9 @@ public class MapController implements Renderer {
             @Override
             public boolean onFling(final float posX, final float posY, final float velocityX, final float velocityY) {
                 if (responder == null || !responder.onFling(posX, posY, velocityX, velocityY)) {
-                    nativeHandleFlingGesture(mapPointer, posX, posY, velocityX, velocityY);
+                    if (panGesturesEnabled) {
+                        nativeHandleFlingGesture(mapPointer, posX, posY, velocityX, velocityY);
+                    }
                 }
                 return true;
             }
@@ -817,7 +821,9 @@ public class MapController implements Renderer {
             @Override
             public boolean onRotate(final float x, final float y, final float rotation) {
                 if (responder == null || !responder.onRotate(x, y, rotation)) {
-                    nativeHandleRotateGesture(mapPointer, x, y, rotation);
+                    if (rotateGesturesEnabled) {
+                        nativeHandleRotateGesture(mapPointer, x, y, rotation);
+                    }
                 }
                 return true;
             }
@@ -833,7 +839,9 @@ public class MapController implements Renderer {
             @Override
             public boolean onScale(final float x, final float y, final float scale, final float velocity) {
                 if (responder == null || !responder.onScale(x, y, scale, velocity)) {
-                    nativeHandlePinchGesture(mapPointer, x, y, scale, velocity);
+                    if (zoomGesturesEnabled) {
+                        nativeHandlePinchGesture(mapPointer, x, y, scale, velocity);
+                    }
                 }
                 return true;
             }
@@ -849,7 +857,9 @@ public class MapController implements Renderer {
             @Override
             public boolean onShove(final float distance) {
                 if (responder == null || !responder.onShove(distance)) {
-                    nativeHandleShoveGesture(mapPointer, distance);
+                    if (tiltGesturesEnabled) {
+                        nativeHandleShoveGesture(mapPointer, distance);
+                    }
                 }
                 return true;
             }
@@ -874,6 +884,90 @@ public class MapController implements Renderer {
      */
     public boolean isSimultaneousGestureAllowed(final Gestures first, final Gestures second) {
         return touchInput.isSimultaneousDetectionAllowed(first, second);
+    }
+
+    /**
+     * Set whether the user can move the map view with panning gestures. This is true by default.
+     *
+     * When this is false you can still move the map view programmatically.
+     * @param enabled If true, panning is enabled.
+     */
+    public void setPanGesturesEnabled(boolean enabled) {
+        panGesturesEnabled = enabled;
+    }
+
+    /**
+     * Get whether the user can move the map view with panning gestures.
+     * @return True if panning is enabled.
+     */
+    public boolean isPanGesturesEnabled() {
+        return panGesturesEnabled;
+    }
+
+    /**
+     * Set whether the user can zoom the map view with pinch and double-tap-move gestures. This is
+     * true by default.
+     *
+     * When this is false you can still zoom the map view programmatically.
+     * @param enabled If true, zooming with gestures is enabled.
+     */
+    public void setZoomGesturesEnabled(boolean enabled) {
+        zoomGesturesEnabled = enabled;
+    }
+
+    /**
+     * Get whether the user can zoom the map view with pinch and double-tap-zoom gestures.
+     * @return True if zooming with gestures is enabled.
+     */
+    public boolean isZoomGesturesEnabled() {
+        return zoomGesturesEnabled;
+    }
+
+    /**
+     * Set whether the user can rotate the map view with gestures. This is true by default.
+     *
+     * When this is false you can still rotate the map view programmatically.
+     * @param enabled If true, rotating with gestures is enabled.
+     */
+    public void setRotateGesturesEnabled(boolean enabled) {
+        rotateGesturesEnabled = enabled;
+    }
+
+    /**
+     * Get whether the user can rotate the map view with gestures.
+     * @return True if rotating with gestures is enabled.
+     */
+    public boolean isRotateGesturesEnabled() {
+        return rotateGesturesEnabled;
+    }
+
+    /**
+     * Set whether the user can tilt the map with shove gestures. This is true by default.
+     *
+     * When this is false you can still tilt the map view programmatically.
+     * @param enabled If true, tilting with gestures is enabled.
+     */
+    public void setTiltGesturesEnabled(boolean enabled) {
+        tiltGesturesEnabled = enabled;
+    }
+
+    /**
+     * Get whether the user can rotate the map with with shove gestures.
+     * @return True if tilting with gestures is enabled.
+     */
+    public boolean isTiltGesturesEnabled() {
+        return tiltGesturesEnabled;
+    }
+
+    /**
+     * Set whether the user can change the map with all gestures.
+     * @param enabled If true, all gestures are enabled. If false, all gestures are disabled.
+     */
+    public void setAllGesturesEnabled(boolean enabled) {
+        setPanGesturesEnabled(enabled);
+        setZoomGesturesEnabled(enabled);
+        setRotateGesturesEnabled(enabled);
+        setTiltGesturesEnabled(enabled);
     }
 
     /**
@@ -1315,6 +1409,10 @@ public class MapController implements Renderer {
     private LongSparseArray<Marker> markers;
     private Handler uiThreadHandler;
     private CameraAnimationCallback cameraAnimationCallback;
+    private boolean panGesturesEnabled = true;
+    private boolean zoomGesturesEnabled = true;
+    private boolean rotateGesturesEnabled = true;
+    private boolean tiltGesturesEnabled = true;
 
     // GLSurfaceView.Renderer methods
     // ==============================
