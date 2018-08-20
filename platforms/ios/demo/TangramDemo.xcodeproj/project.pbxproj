@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D20C4A55212B6D94005BDB9A /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D20C4A54212B6D93005BDB9A /* GLKit.framework */; };
 		D298723520D05F6F009A0AB8 /* MapViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D298723120D05F6E009A0AB8 /* MapViewController.m */; };
 		D298723620D05F6F009A0AB8 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = D298723220D05F6E009A0AB8 /* main.m */; };
 		D298723720D05F6F009A0AB8 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D298723320D05F6E009A0AB8 /* AppDelegate.m */; };
@@ -43,6 +44,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D20C4A54212B6D93005BDB9A /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
 		D298721620D05D8E009A0AB8 /* TangramDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TangramDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D298723020D05F6E009A0AB8 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		D298723120D05F6E009A0AB8 /* MapViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MapViewController.m; sourceTree = "<group>"; };
@@ -74,6 +76,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D20C4A55212B6D94005BDB9A /* GLKit.framework in Frameworks */,
 				D2F0604720EACEB700CB442F /* libtangram-static.a in Frameworks */,
 				D2F0603F20E6E33300CB442F /* libc++.tbd in Frameworks */,
 				D2F0603D20E6E32200CB442F /* libz.tbd in Frameworks */,
@@ -87,6 +90,7 @@
 		D235656F20D9BA77006E3D13 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D20C4A54212B6D93005BDB9A /* GLKit.framework */,
 				D2F0604620EACEB700CB442F /* libtangram-static.a */,
 				D2F0603E20E6E33300CB442F /* libc++.tbd */,
 				D2F0603C20E6E32200CB442F /* libz.tbd */,
