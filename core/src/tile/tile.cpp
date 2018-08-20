@@ -43,22 +43,15 @@ void Tile::initGeometry(uint32_t _size) {
 }
 
 void Tile::update(float _dt, const View& _view) {
-    const auto& viewOrigin = _view.getPosition();
-    double xTranslation = m_tileOrigin.x - viewOrigin.x;
-    double yTranslation = m_tileOrigin.y - viewOrigin.y;
-
-    // If the tile center is closer when wrapped around the 180th meridian, then wrap it.
-    auto mapBounds = _view.getMapProjection().MapBounds();
-    auto mapSpan = mapBounds.max.x - mapBounds.min.x;
-    if (xTranslation + m_scale / 2.0 > mapSpan / 2.0) {
-        xTranslation -= mapSpan;
-    } else if (xTranslation + m_scale / 2.0 < -mapSpan / 2.0) {
-        xTranslation += mapSpan;
-    }
+    // Get the relative position of the *center* of the tile, to ensure that the result places the tile as close to
+    // the view center as possible.
+    auto centerOffset = glm::dvec2(m_scale / 2.0);
+    auto centerRelativeMeters = _view.getRelativeMeters(m_tileOrigin + centerOffset);
+    auto originRelativeMeters = centerRelativeMeters - centerOffset;
 
     // Apply tile-view translation to the model matrix
-    m_modelMatrix[3][0] = static_cast<float>(xTranslation);
-    m_modelMatrix[3][1] = static_cast<float>(yTranslation);
+    m_modelMatrix[3][0] = static_cast<float>(originRelativeMeters.x);
+    m_modelMatrix[3][1] = static_cast<float>(originRelativeMeters.y);
 
     m_mvp = _view.getViewProjectionMatrix() * m_modelMatrix;
 }

@@ -451,15 +451,25 @@ void View::updateMatrices() {
 }
 
 glm::vec2 View::lonLatToScreenPosition(double lon, double lat, bool& clipped) const {
-    glm::dvec2 meters = m_projection->LonLatToMeters({lon, lat});
-    glm::dvec4 lonLat(meters, 0.0, 1.0);
+    glm::dvec2 absoluteMeters = m_projection->LonLatToMeters({lon, lat});
+    glm::dvec2 relativeMeters = getRelativeMeters(absoluteMeters);
+    glm::dvec4 worldPosition(relativeMeters, 0.0, 1.0);
 
-    lonLat.x = lonLat.x - m_pos.x;
-    lonLat.y = lonLat.y - m_pos.y;
-
-    glm::vec2 screenPosition = worldToScreenSpace(m_viewProj, lonLat, {m_vpWidth, m_vpHeight}, clipped);
+    glm::vec2 screenPosition = worldToScreenSpace(m_viewProj, worldPosition, {m_vpWidth, m_vpHeight}, clipped);
 
     return screenPosition;
+}
+
+glm::dvec2 View::getRelativeMeters(glm::dvec2 projectedMeters) const {
+    double dx = projectedMeters.x - m_pos.x;
+    double dy = projectedMeters.y - m_pos.y;
+    // If the position is closer when wrapped around the 180th meridian, then wrap it.
+    if (dx > MapProjection::HALF_CIRCUMFERENCE) {
+        dx -= MapProjection::CIRCUMFERENCE;
+    } else if (dx < -MapProjection::HALF_CIRCUMFERENCE) {
+        dx += MapProjection::CIRCUMFERENCE;
+    }
+    return {dx, dy};
 }
 
 void View::getVisibleTiles(const std::function<void(TileID)>& _tileCb) const {
