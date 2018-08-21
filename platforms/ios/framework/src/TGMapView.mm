@@ -546,28 +546,19 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 - (CGPoint)lngLatToScreenPosition:(TGGeoPoint)lngLat
 {
-    static const CGPoint nullCGPoint = {(CGFloat)NAN, (CGFloat)NAN};
-
-    if (!self.map) { return nullCGPoint; }
+    if (!self.map) { return CGPointZero; }
 
     double screenPosition[2];
-    if (self.map->lngLatToScreenPosition(lngLat.longitude, lngLat.latitude,
-        &screenPosition[0], &screenPosition[1])) {
+    self.map->lngLatToScreenPosition(lngLat.longitude, lngLat.latitude, &screenPosition[0], &screenPosition[1]);
+    screenPosition[0] /= self.contentScaleFactor;
+    screenPosition[1] /= self.contentScaleFactor;
 
-        screenPosition[0] /= self.contentScaleFactor;
-        screenPosition[1] /= self.contentScaleFactor;
-
-        return CGPointMake((CGFloat)screenPosition[0], (CGFloat)screenPosition[1]);
-    }
-
-    return nullCGPoint;
+    return CGPointMake((CGFloat)screenPosition[0], (CGFloat)screenPosition[1]);
 }
 
 - (TGGeoPoint)screenPositionToLngLat:(CGPoint)screenPosition
 {
-    static const TGGeoPoint nullTangramGeoPoint = {NAN, NAN};
-
-    if (!self.map) { return nullTangramGeoPoint; }
+    if (!self.map) { return TGGeoPointMake(0, 0); }
 
     screenPosition.x *= self.contentScaleFactor;
     screenPosition.y *= self.contentScaleFactor;
@@ -578,7 +569,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
         return lngLat;
     }
 
-    return nullTangramGeoPoint;
+    return TGGeoPointMake(0, 0);
 }
 
 #pragma mark Picking Map Objects
