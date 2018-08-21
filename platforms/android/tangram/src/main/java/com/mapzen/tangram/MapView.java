@@ -2,6 +2,7 @@ package com.mapzen.tangram;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -18,6 +19,11 @@ public class MapView extends FrameLayout {
 
     protected GLSurfaceView glSurfaceView;
     protected MapController mapController;
+    protected AsyncTask<Void, Void, MapController> getMapAsyncTask;
+
+    public interface MapReadyCallback {
+        void onMapReady(MapController mapController);
+    }
 
     public MapView(@NonNull final Context context) {
         super(context);
@@ -27,6 +33,56 @@ public class MapView extends FrameLayout {
     public MapView(@NonNull final Context context, @Nullable final AttributeSet attrs) {
         super(context, attrs);
         configureGLSurfaceView();
+    }
+
+    public void getMapAsync(@Nullable final MapReadyCallback readyCallback) {
+        getMapAsync(readyCallback, null, null);
+    }
+
+    public void getMapAsync(@Nullable final MapReadyCallback readyCallback,
+                            @Nullable final MapController.SceneLoadListener sceneLoadListener) {
+        getMapAsync(readyCallback, sceneLoadListener, null);
+    }
+
+    public void getMapAsync(@Nullable final MapReadyCallback readyCallback,
+                            @Nullable final MapController.SceneLoadListener sceneLoadListener,
+                            @Nullable final HttpHandler handler) {
+
+        disposeMapReadyTask();
+
+        final Context ctx = glSurfaceView.getContext();
+
+        getMapAsyncTask = new AsyncTask<Void, Void, MapController>() {
+            @Override
+            protected MapController doInBackground(Void... voids) {
+                if (mapController != null) {
+                    return mapController;
+                }
+                MapController controller = getMapInstance();
+                controller.init(ctx, handler);
+
+                return controller;
+            }
+
+            @Override
+            protected void onPostExecute(MapController controller) {
+                if (mapController != null) {
+                    mapController.dispose();
+                }
+                mapController = controller;
+                mapController.postInit();
+                mapController.setSceneLoadListener(sceneLoadListener);
+                readyCallback.onMapReady(mapController);
+            }
+
+            @Override
+            protected void onCancelled(MapController controller) {
+                if (controller != null) {
+                    controller.dispose();
+                }
+            }
+        }.execute();
+
     }
 
     /**
@@ -49,12 +105,15 @@ public class MapView extends FrameLayout {
      */
     @NonNull
     public MapController getMap(@Nullable final MapController.SceneLoadListener listener, @Nullable final HttpHandler handler) {
+        disposeMapReadyTask();
         if (mapController != null) {
             return mapController;
         }
         mapController = getMapInstance();
+
         mapController.setSceneLoadListener(listener);
-        mapController.init(handler);
+        mapController.init(glSurfaceView.getContext(), handler);
+        mapController.postInit();
 
         return mapController;
     }
@@ -72,7 +131,16 @@ public class MapView extends FrameLayout {
         addView(glSurfaceView);
     }
 
+    protected void disposeMapReadyTask() {
+        if (getMapAsyncTask != null) {
+            getMapAsyncTask.cancel(true);
+        }
+        getMapAsyncTask = null;
+    }
+
     protected void disposeMap() {
+        disposeMapReadyTask();
+
         if (mapController != null) {
             // MapController has been initialized, so we'll dispose it now.
             mapController.dispose();

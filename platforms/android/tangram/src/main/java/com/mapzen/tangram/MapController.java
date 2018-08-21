@@ -1,5 +1,6 @@
 package com.mapzen.tangram;
 
+import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
@@ -229,22 +230,6 @@ public class MapController implements Renderer {
         view.setRenderer(this);
         view.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         view.setPreserveEGLContextOnPause(true);
-
-        touchInput = new TouchInput(view.getContext());
-        view.setOnTouchListener(touchInput);
-
-        setPanResponder(null);
-        setScaleResponder(null);
-        setRotateResponder(null);
-        setShoveResponder(null);
-
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.ROTATE, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.ROTATE, Gestures.SHOVE, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.SCALE, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.PAN, false);
-        touchInput.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.LONG_PRESS, false);
-
-        uiThreadHandler = new Handler(view.getContext().getMainLooper());
     }
 
     /**
@@ -254,10 +239,10 @@ public class MapController implements Renderer {
      * initialization and loading of the Scene on a background thread.
      * @param handler {@link HttpHandler} to use for retrieving remote map resources
      */
-    void init(@Nullable final HttpHandler handler) {
+    void init(@NonNull final Context context, @Nullable final HttpHandler handler) {
         // Get configuration info from application
-        displayMetrics = mapView.getContext().getResources().getDisplayMetrics();
-        assetManager = mapView.getContext().getAssets();
+        displayMetrics = context.getResources().getDisplayMetrics();
+        assetManager = context.getAssets();
 
         fontFileParser = new FontFileParser();
 
@@ -275,6 +260,24 @@ public class MapController implements Renderer {
         if (mapPointer <= 0) {
             throw new RuntimeException("Unable to create a native Map object! There may be insufficient memory available.");
         }
+    }
+
+    void postInit() {
+        touchInput = new TouchInput(mapView.getContext());
+        mapView.setOnTouchListener(touchInput);
+
+        setPanResponder(null);
+        setScaleResponder(null);
+        setRotateResponder(null);
+        setShoveResponder(null);
+
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.ROTATE, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.ROTATE, Gestures.SHOVE, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.SCALE, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SHOVE, Gestures.PAN, false);
+        touchInput.setSimultaneousDetectionAllowed(Gestures.SCALE, Gestures.LONG_PRESS, false);
+
+        uiThreadHandler = new Handler(mapView.getContext().getMainLooper());
     }
 
     void dispose() {
