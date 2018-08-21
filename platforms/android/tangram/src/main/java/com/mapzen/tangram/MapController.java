@@ -235,8 +235,9 @@ public class MapController implements Renderer {
     /**
      * Initialize native Tangram component. This must be called before any use
      * of the MapController!
-     * This function is separated from MapController constructor to allow
-     * initialization and loading of the Scene on a background thread.
+     * This function is separated from MapController constructor to allow usage of underlying GLSurfaceView
+     * context on a non-ui thread
+     * @param context Context from underlying GLSurfaceView
      * @param handler {@link HttpHandler} to use for retrieving remote map resources
      */
     void init(@NonNull final Context context, @Nullable final HttpHandler handler) {
@@ -262,6 +263,10 @@ public class MapController implements Renderer {
         }
     }
 
+    /**
+     * Responsible to configure {@link MapController} configuration on the ui thread.
+     * Must be called from the ui thread post instantiation of {@link MapController}
+     */
     void postInit() {
         touchInput = new TouchInput(mapView.getContext());
         mapView.setOnTouchListener(touchInput);

@@ -21,6 +21,10 @@ public class MapView extends FrameLayout {
     protected MapController mapController;
     protected AsyncTask<Void, Void, MapController> getMapAsyncTask;
 
+    /**
+     * MapReadyCallback interface
+     * onMapReady gets invoked on the ui thread when {@link MapController} is instantiated and ready to be used
+     */
     public interface MapReadyCallback {
         void onMapReady(MapController mapController);
     }
@@ -35,15 +39,38 @@ public class MapView extends FrameLayout {
         configureGLSurfaceView();
     }
 
+    /**
+     * Construct a {@code MapController} in an async thread; may only be called from the UI thread
+     * Map instance uses {@link DefaultHttpHandler} for retrieving remote map resources
+     * @param readyCallback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
+     * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
+     */
     public void getMapAsync(@Nullable final MapReadyCallback readyCallback) {
         getMapAsync(readyCallback, null, null);
     }
 
+    /**
+     * Construct a {@code MapController} in an async thread; may only be called from the UI thread
+     * Map instance uses {@link DefaultHttpHandler} for retrieving remote map resources
+     * @param readyCallback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
+     * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
+     * @param sceneLoadListener The listener to receive to receive scene load events;
+     * the callback will be made on the UI thread
+     */
     public void getMapAsync(@Nullable final MapReadyCallback readyCallback,
                             @Nullable final MapController.SceneLoadListener sceneLoadListener) {
         getMapAsync(readyCallback, sceneLoadListener, null);
     }
 
+    /**
+     * Construct a {@code MapController} in an async thread; may only be called from the UI thread
+     * Map instance uses {@link DefaultHttpHandler} for retrieving remote map resources
+     * @param readyCallback {@link MapReadyCallback#onMapReady(MapController)} to be invoked when
+     * {@link MapController} is instantiated and ready to be used. The callback will be made on the UI thread
+     * @param sceneLoadListener The listener to receive to receive scene load events;
+     * @param handler Set the client implemented {@link HttpHandler} for retrieving remote map resources
+     *                when null {@link DefaultHttpHandler} is used
+     */
     public void getMapAsync(@Nullable final MapReadyCallback readyCallback,
                             @Nullable final MapController.SceneLoadListener sceneLoadListener,
                             @Nullable final HttpHandler handler) {
@@ -131,6 +158,9 @@ public class MapView extends FrameLayout {
         addView(glSurfaceView);
     }
 
+    /**
+     * Responsible to dispose any getMapReadyTask
+     */
     protected void disposeMapReadyTask() {
         if (getMapAsyncTask != null) {
             getMapAsyncTask.cancel(true);
