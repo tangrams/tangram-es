@@ -44,7 +44,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
 public class MainActivity extends AppCompatActivity implements MapController.SceneLoadListener, TapResponder,
-        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener {
+        DoubleTapResponder, LongPressResponder, FeaturePickListener, LabelPickListener, MarkerPickListener,
+        MapView.MapReadyCallback {
 
     private static final String NEXTZEN_API_KEY = BuildConfig.NEXTZEN_API_KEY;
 
@@ -112,9 +113,14 @@ public class MainActivity extends AppCompatActivity implements MapController.Sce
         // The AutoCompleteTextView preserves its contents from previous instances, so if a URL was
         // set previously we want to apply it again. The text is restored in onRestoreInstanceState,
         // which occurs after onCreate and onStart, but before onPostCreate, so we get the URL here.
-        String sceneUrl = sceneSelector.getCurrentString();
 
-        map = view.getMap(this, getHttpHandler());
+        view.getMapAsync(this, this, getHttpHandler());
+    }
+
+    @Override
+    public void onMapReady(MapController mapController) {
+        map = mapController;
+        String sceneUrl = sceneSelector.getCurrentString();
         map.loadSceneFile(sceneUrl, sceneUpdates);
         map.updateCameraPosition(CameraUpdateFactory.newLngLatZoom(new LngLat(-74.00976419448854, 40.70532700869127), 16));
         map.setTapResponder(this);
