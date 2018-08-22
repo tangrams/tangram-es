@@ -101,12 +101,12 @@
 {
     NSLog(@"Did tap at %f %f", location.x, location.y);
 
-    TGGeoPoint coordinates = [view screenPositionToLngLat:location];
+    CLLocationCoordinate2D coordinates = [view coordinateFromViewPosition:location];
 
     // Add polyline data layer
     {
         TGFeatureProperties* properties = @{ @"type" : @"line", @"color" : @"#D2655F" };
-        static TGGeoPoint lastCoordinates = {NAN, NAN};
+        static CLLocationCoordinate2D lastCoordinates = {NAN, NAN};
 
         if (!isnan(lastCoordinates.latitude)) {
             TGGeoPolyline* line = [[TGGeoPolyline alloc] init];
@@ -197,7 +197,7 @@
     //Location tracking marker setup
     TGMarker* markerPoint = [mapView markerAdd];
     markerPoint.stylingString = @"{ style: 'points', color: 'white', size: [25px, 25px], collide: false }";
-    TGGeoPoint newYork;
+    CLLocationCoordinate2D newYork;
     newYork.longitude = -74.00976419448854;
     newYork.latitude = 40.70532700869127;
     markerPoint.point = newYork;
@@ -230,7 +230,7 @@
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray<CLLocation *> *)locations {
     NSLog(@"Locations came in - %@", locations);
-    TGGeoPoint point = TGGeoPointMake(locations[0].coordinate.longitude, locations[0].coordinate.latitude);
+    CLLocationCoordinate2D point = CLLocationCoordinate2DMake(locations[0].coordinate.longitude, locations[0].coordinate.latitude);
     [self.locationTrackingMarker pointEased:point seconds:1.0 easeType:TGEaseTypeCubic];
 }
 

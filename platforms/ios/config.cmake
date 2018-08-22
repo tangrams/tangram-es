@@ -22,7 +22,7 @@ set(TANGRAM_FRAMEWORK_HEADERS
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TangramMap.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGCameraPosition.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGExport.h
-  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPoint.h
+  ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeometry.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPolygon.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGGeoPolyline.h
   ${PROJECT_SOURCE_DIR}/platforms/ios/framework/src/TGLabelPickResult.h
@@ -46,8 +46,6 @@ set(TANGRAM_FRAMEWORK_SOURCES
   platforms/ios/framework/src/iosPlatform.mm
   platforms/ios/framework/src/TGCameraPosition+Internal.h
   platforms/ios/framework/src/TGCameraPosition.mm
-  platforms/ios/framework/src/TGHelpers.h
-  platforms/ios/framework/src/TGHelpers.mm
   platforms/ios/framework/src/TGGeoPolygon.mm
   platforms/ios/framework/src/TGGeoPolyline.mm
   platforms/ios/framework/src/TGLabelPickResult.mm
@@ -61,6 +59,7 @@ set(TANGRAM_FRAMEWORK_SOURCES
   platforms/ios/framework/src/TGMarkerPickResult.mm
   platforms/ios/framework/src/TGMarkerPickResult+Internal.h
   platforms/ios/framework/src/TGSceneUpdate.mm
+  platforms/ios/framework/src/TGTypes+Internal.h
   platforms/ios/framework/src/TGTypes.mm
   platforms/ios/framework/src/TGURLHandler.mm
 )
@@ -77,6 +76,7 @@ target_link_libraries(TangramMap PRIVATE
   # Frameworks: use quotes so "-framework X" is treated as a single linker flag.
   "-framework CoreFoundation"
   "-framework CoreGraphics"
+  "-framework CoreLocation"
   "-framework CoreText"
   "-framework GLKit"
   "-framework OpenGLES"
@@ -112,6 +112,7 @@ target_link_libraries(tangram-static PRIVATE
   # Frameworks: use quotes so "-framework X" is treated as a single linker flag.
   "-framework CoreFoundation"
   "-framework CoreGraphics"
+  "-framework CoreLocation"
   "-framework CoreText"
   "-framework GLKit"
   "-framework OpenGLES"

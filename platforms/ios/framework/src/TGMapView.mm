@@ -9,7 +9,6 @@
 #import "TGMapView+Internal.h"
 #import "TGCameraPosition.h"
 #import "TGCameraPosition+Internal.h"
-#import "TGHelpers.h"
 #import "TGURLHandler.h"
 #import "TGLabelPickResult.h"
 #import "TGLabelPickResult+Internal.h"
@@ -22,6 +21,7 @@
 #import "TGMarker+Internal.h"
 #import "TGRecognizerDelegate.h"
 #import "TGSceneUpdate.h"
+#import "TGTypes+Internal.h"
 #import <GLKit/GLKit.h>
 
 #include "data/propertyItem.h"
@@ -30,7 +30,13 @@
 #include <unordered_map>
 #include <functional>
 
-__CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
+inline float convertBearingDegreesToRotationRadians(CLLocationDirection bearing) {
+    return -TGRadiansFromDegrees(bearing);
+}
+
+inline CLLocationDirection convertRotationRadiansToBearingDegrees(float rotation) {
+    return TGDegreesFromRadians(-rotation);
+}
 
 @interface TGMapView () <UIGestureRecognizerDelegate, GLKViewDelegate> {
     BOOL _shouldCaptureFrame;
@@ -464,7 +470,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 - (Tangram::SceneReadyCallback)sceneReadyListener {
     __weak TGMapView* weakSelf = self;
 
-    return [weakSelf](int sceneID, auto sceneError) {
+    return [weakSelf](int sceneID, const Tangram::SceneError *sceneError) {
         __strong TGMapView* strongSelf = weakSelf;
 
         if (!strongSelf) {
@@ -481,7 +487,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
         NSError* error = nil;
 
         if (sceneError) {
-            error = [TGHelpers errorFromSceneError:*sceneError];
+            error = TGConvertCoreSceneErrorToNSError(sceneError);
         }
 
         [strongSelf.mapViewDelegate mapView:strongSelf didLoadScene:sceneID withError:error];
@@ -544,32 +550,32 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
 
 #pragma mark Coordinate Conversions
 
-- (CGPoint)lngLatToScreenPosition:(TGGeoPoint)lngLat
+- (CGPoint)viewPositionFromCoordinate:(CLLocationCoordinate2D)coordinate
 {
     if (!self.map) { return CGPointZero; }
 
-    double screenPosition[2];
-    self.map->lngLatToScreenPosition(lngLat.longitude, lngLat.latitude, &screenPosition[0], &screenPosition[1]);
-    screenPosition[0] /= self.contentScaleFactor;
-    screenPosition[1] /= self.contentScaleFactor;
+    double viewPosition[2];
+    self.map->lngLatToScreenPosition(coordinate.longitude, coordinate.latitude, &viewPosition[0], &viewPosition[1]);
+    viewPosition[0] /= self.contentScaleFactor;
+    viewPosition[1] /= self.contentScaleFactor;
 
-    return CGPointMake((CGFloat)screenPosition[0], (CGFloat)screenPosition[1]);
+    return CGPointMake((CGFloat)viewPosition[0], (CGFloat)viewPosition[1]);
 }
 
-- (TGGeoPoint)screenPositionToLngLat:(CGPoint)screenPosition
+- (CLLocationCoordinate2D)coordinateFromViewPosition:(CGPoint)viewPosition
 {
-    if (!self.map) { return TGGeoPointMake(0, 0); }
+    if (!self.map) { return kCLLocationCoordinate2DInvalid; }
 
-    screenPosition.x *= self.contentScaleFactor;
-    screenPosition.y *= self.contentScaleFactor;
+    viewPosition.x *= self.contentScaleFactor;
+    viewPosition.y *= self.contentScaleFactor;
 
-    TGGeoPoint lngLat;
-    if (self.map->screenPositionToLngLat(screenPosition.x, screenPosition.y,
-        &lngLat.longitude, &lngLat.latitude)) {
-        return lngLat;
+    CLLocationCoordinate2D coordinate;
+    if (self.map->screenPositionToLngLat(viewPosition.x, viewPosition.y,
+        &coordinate.longitude, &coordinate.latitude)) {
+        return coordinate;
     }
 
-    return TGGeoPointMake(0, 0);
+    return kCLLocationCoordinate2DInvalid;
 }
 
 #pragma mark Picking Map Objects
@@ -581,22 +587,22 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     self.map->setPickRadius(logicalPixels);
 }
 
-- (void)pickFeatureAt:(CGPoint)screenPosition
+- (void)pickFeatureAt:(CGPoint)viewPosition
 {
     if (!self.map) { return; }
 
-    screenPosition.x *= self.contentScaleFactor;
-    screenPosition.y *= self.contentScaleFactor;
+    viewPosition.x *= self.contentScaleFactor;
+    viewPosition.y *= self.contentScaleFactor;
 
     __weak TGMapView* weakSelf = self;
-    self.map->pickFeatureAt(screenPosition.x, screenPosition.y, [weakSelf](const Tangram::FeaturePickResult* featureResult) {
+    self.map->pickFeatureAt(viewPosition.x, viewPosition.y, [weakSelf](const Tangram::FeaturePickResult* featureResult) {
         __strong TGMapView* strongSelf = weakSelf;
 
         if (!strongSelf || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectFeature:atScreenPosition:)]) {
             return;
         }
 
-        CGPoint position = CGPointMake(0.0, 0.0);
+        CGPoint position = CGPointZero;
 
         if (!featureResult) {
             [strongSelf.mapViewDelegate mapView:strongSelf didSelectFeature:nil atScreenPosition:position];
@@ -619,22 +625,22 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     });
 }
 
-- (void)pickMarkerAt:(CGPoint)screenPosition
+- (void)pickMarkerAt:(CGPoint)viewPosition
 {
     if (!self.map) { return; }
 
-    screenPosition.x *= self.contentScaleFactor;
-    screenPosition.y *= self.contentScaleFactor;
+    viewPosition.x *= self.contentScaleFactor;
+    viewPosition.y *= self.contentScaleFactor;
 
     __weak TGMapView* weakSelf = self;
-    self.map->pickMarkerAt(screenPosition.x, screenPosition.y, [weakSelf](const Tangram::MarkerPickResult* markerPickResult) {
+    self.map->pickMarkerAt(viewPosition.x, viewPosition.y, [weakSelf](const Tangram::MarkerPickResult* markerPickResult) {
         __strong TGMapView* strongSelf = weakSelf;
 
         if (!strongSelf || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectMarker:atScreenPosition:)]) {
             return;
         }
 
-        CGPoint position = CGPointMake(0.0, 0.0);
+        CGPoint position = CGPointZero;
 
         if (!markerPickResult) {
             [strongSelf.mapViewDelegate mapView:strongSelf didSelectMarker:nil atScreenPosition:position];
@@ -652,23 +658,23 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
         position = CGPointMake(markerPickResult->position[0] / strongSelf.contentScaleFactor,
                                markerPickResult->position[1] / strongSelf.contentScaleFactor);
 
-        TGGeoPoint coordinates = TGGeoPointMake(markerPickResult->coordinates.longitude,
-                                                markerPickResult->coordinates.latitude);
+        CLLocationCoordinate2D coordinate = CLLocationCoordinate2DMake(markerPickResult->coordinates.latitude,
+                                                                       markerPickResult->coordinates.longitude);
 
-        TGMarkerPickResult* result = [[TGMarkerPickResult alloc] initWithCoordinates:coordinates marker:marker];
+        TGMarkerPickResult* result = [[TGMarkerPickResult alloc] initWithCoordinate:coordinate marker:marker];
         [strongSelf.mapViewDelegate mapView:strongSelf didSelectMarker:result atScreenPosition:position];
     });
 }
 
-- (void)pickLabelAt:(CGPoint)screenPosition
+- (void)pickLabelAt:(CGPoint)viewPosition
 {
     if (!self.map) { return; }
 
-    screenPosition.x *= self.contentScaleFactor;
-    screenPosition.y *= self.contentScaleFactor;
+    viewPosition.x *= self.contentScaleFactor;
+    viewPosition.y *= self.contentScaleFactor;
 
     __weak TGMapView* weakSelf = self;
-    self.map->pickLabelAt(screenPosition.x, screenPosition.y, [weakSelf](const Tangram::LabelPickResult* labelPickResult) {
+    self.map->pickLabelAt(viewPosition.x, viewPosition.y, [weakSelf](const Tangram::LabelPickResult* labelPickResult) {
         __strong TGMapView* strongSelf = weakSelf;
 
         if (!strongSelf || ![strongSelf.mapViewDelegate respondsToSelector:@selector(mapView:didSelectLabel:atScreenPosition:)]) {
@@ -695,8 +701,8 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
             featureProperties[key] = value;
         }
 
-        TGGeoPoint coordinates = TGGeoPointMake(labelPickResult->coordinates.longitude, labelPickResult->coordinates.latitude);
-        TGLabelPickResult* tgLabelPickResult = [[TGLabelPickResult alloc] initWithCoordinates:coordinates
+        CLLocationCoordinate2D coordinate = {labelPickResult->coordinates.latitude, labelPickResult->coordinates.longitude};
+        TGLabelPickResult* tgLabelPickResult = [[TGLabelPickResult alloc] initWithCoordinate:coordinate
                                                                                          type:(TGLabelType)labelPickResult->type
                                                                                    properties:featureProperties];
         [strongSelf.mapViewDelegate mapView:strongSelf didSelectLabel:tgLabelPickResult atScreenPosition:position];
@@ -729,7 +735,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     self.map->setMaxZoom(maximumZoomLevel);
 }
 
-- (void)setPosition:(TGGeoPoint)position {
+- (void)setPosition:(CLLocationCoordinate2D)position {
     if (!self.map) { return; }
 
     [self regionWillChangeAnimated:NO];
@@ -737,18 +743,17 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     [self regionDidChangeAnimated:NO];
 }
 
-- (TGGeoPoint)position
+- (CLLocationCoordinate2D)position
 {
-    TGGeoPoint result{NAN, NAN};
+    if (!self.map) { return kCLLocationCoordinate2DInvalid; }
 
-    if (!self.map) { return result; }
+    CLLocationCoordinate2D coordinate;
+    self.map->getPosition(coordinate.longitude, coordinate.latitude);
 
-    self.map->getPosition(result.longitude, result.latitude);
-
-    return result;
+    return coordinate;
 }
 
-- (void)setZoom:(float)zoom
+- (void)setZoom:(CGFloat)zoom
 {
     if (!self.map) { return; }
 
@@ -757,42 +762,46 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
     [self regionDidChangeAnimated:NO];
 }
 
-- (float)zoom
+- (CGFloat)zoom
 {
     if (!self.map) { return 0.0; }
 
     return self.map->getZoom();
 }
 
-- (void)setRotation:(float)radians
+- (void)setBearing:(CLLocationDirection)bearing
 {
     if (!self.map) { return; }
 
     [self regionWillChangeAnimated:NO];
-    self.map->setRotation(radians);
+    float rotation = convertBearingDegreesToRotationRadians(bearing);
+    self.map->setRotation(rotation);
     [self regionDidChangeAnimated:NO];
 }
 
-- (float)rotation
+- (CLLocationDirection)bearing
 {
     if (!self.map) { return 0.0; }
 
-    return self.map->getRotation();
+    float rotation = self.map->getRotation();
+    return convertRotationRadiansToBearingDegrees(rotation);
 }
 
-- (float)tilt
+- (CGFloat)pitch
 {
-    if (!self.map) { return 0.0; }
+    if (!self.map) { return 0.f; }
 
-    return self.map->getTilt();
+    float tilt = self.map->getTilt();
+    return TGDegreesFromRadians(tilt);
 }
 
-- (void)setTilt:(float)radians
+- (void)setPitch:(CGFloat)pitch
 {
     if (!self.map) { return; }
 
     [self regionWillChangeAnimated:NO];
-    self.map->setTilt(radians);
+    float tilt = TGRadiansFromDegrees(pitch);
+    self.map->setTilt(tilt);
     [self regionDidChangeAnimated:NO];
 }
 
@@ -817,7 +826,7 @@ std::vector<Tangram::SceneUpdate> unpackSceneUpdates(NSArray<TGSceneUpdate *> *s
                  callback:(void (^)(BOOL))callback
 {
     Tangram::CameraPosition camera = [cameraPosition convertToCoreCamera];
-    Tangram::EaseType ease = [TGHelpers convertEaseTypeFrom:easeType];
+    Tangram::EaseType ease = TGConvertTGEaseTypeToCoreEaseType(easeType);
     [self regionWillChangeAnimated:YES];
     self.map->setCameraPositionEased(camera, duration, ease);
     self.cameraAnimationCallback = callback;

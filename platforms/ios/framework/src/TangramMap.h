@@ -17,7 +17,6 @@ FOUNDATION_EXPORT double TangramMapVersionNumber;
 FOUNDATION_EXPORT const unsigned char TangramMapVersionString[];
 
 #import "TGCameraPosition.h"
-#import "TGGeoPoint.h"
 #import "TGGeoPolygon.h"
 #import "TGGeoPolyline.h"
 #import "TGLabelPickResult.h"

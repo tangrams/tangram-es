@@ -6,9 +6,9 @@
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
+#import <CoreLocation/CoreLocation.h>
 #import <Foundation/Foundation.h>
 #import "TGExport.h"
-#import "TGGeoPoint.h"
 
 @class TGMarker;
 
@@ -23,7 +23,7 @@ TG_EXPORT
 @interface TGMarkerPickResult : NSObject
 
 /// The geographic coordinates of the selected label
-@property (readonly, nonatomic) TGGeoPoint coordinates;
+@property (readonly, nonatomic) CLLocationCoordinate2D coordinates;
 
 /// The selected marker
 @property (readonly, nonatomic) TGMarker* marker;

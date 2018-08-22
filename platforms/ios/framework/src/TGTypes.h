@@ -6,27 +6,11 @@
 //  Copyright (c) 2017 Mapzen. All rights reserved.
 //
 
-#import <CoreLocation/CoreLocation.h>
 #import <Foundation/Foundation.h>
 #import "TGExport.h"
 
 /// Indicates an error occurred in the Tangram Framework.
 extern TG_EXPORT NSString* const TGErrorDomain;
-
-/**
- A map area defined by bounding coordinates.
- */
-struct TGCoordinateBounds {
-    /** The minimum longitude and latitude of the area. */
-    CLLocationCoordinate2D sw;
-    /** The maximum longitude and latitude of the area. */
-    CLLocationCoordinate2D ne;
-};
-
-/**
- Struct `TGCoordinateBounds`
- */
-typedef struct TGCoordinateBounds TGCoordinateBounds;
 
 /**
  Describes ease functions to be used for camera or other transition animation.

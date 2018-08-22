@@ -13,8 +13,8 @@
 #import "TGMarker+Internal.h"
 #import "TGMapView.h"
 #import "TGMapView+Internal.h"
-#import "TGHelpers.h"
 #import "TGTypes.h"
+#import "TGTypes+Internal.h"
 
 #include "map.h"
 
@@ -80,24 +80,24 @@
     }
 }
 
-- (void)pointEased:(TGGeoPoint)coordinates seconds:(float)seconds easeType:(TGEaseType)ease
+- (void)pointEased:(CLLocationCoordinate2D)point seconds:(NSTimeInterval)seconds easeType:(TGEaseType)ease
 {
     [self clearGeometry];
-    _point = coordinates;
+    _point = point;
 
-    Tangram::LngLat lngLat(coordinates.longitude, coordinates.latitude);
+    Tangram::LngLat lngLat(point.longitude, point.latitude);
 
-    if (!tangramInstance->markerSetPointEased(self.identifier, lngLat, seconds, [TGHelpers convertEaseTypeFrom:ease])) {
+    if (!tangramInstance->markerSetPointEased(self.identifier, lngLat, seconds, TGConvertTGEaseTypeToCoreEaseType(ease))) {
         [self createNSError];
     }
 }
 
-- (void)setPoint:(TGGeoPoint)coordinates
+- (void)setPoint:(CLLocationCoordinate2D)point
 {
     [self clearGeometry];
-    _point = coordinates;
+    _point = point;
 
-    Tangram::LngLat lngLat(coordinates.longitude, coordinates.latitude);
+    Tangram::LngLat lngLat(point.longitude, point.latitude);
 
     if (!tangramInstance->markerSetPoint(self.identifier, lngLat)) {
         [self createNSError];
@@ -109,9 +109,14 @@
     [self clearGeometry];
     _polyline = polyline;
 
-    auto polylineCoords = reinterpret_cast<Tangram::LngLat*>([polyline coordinates]);
+    CLLocationCoordinate2D *coordinates = polyline.coordinates;
+    size_t count = polyline.count;
+    std::vector<Tangram::LngLat> lngLatCoords(count);
+    for (size_t i = 0; i < count; i++) {
+        lngLatCoords[i] = TGConvertCLLocationCoordinate2DToCoreLngLat(coordinates[i]);
+    }
 
-    if (!tangramInstance->markerSetPolyline(self.identifier, polylineCoords, static_cast<int>(polyline.count))) {
+    if (!tangramInstance->markerSetPolyline(self.identifier, lngLatCoords.data(), static_cast<int>(polyline.count))) {
         [self createNSError];
     }
 }
@@ -121,9 +126,14 @@
     [self clearGeometry];
     _polygon = polygon;
 
-    auto polygonCoords = reinterpret_cast<Tangram::LngLat*>([polygon coordinates]);
+    CLLocationCoordinate2D *coordinates = polygon.coordinates;
+    size_t count = polygon.count;
+    std::vector<Tangram::LngLat> lngLatCoords(count);
+    for (size_t i = 0; i < count; i++) {
+        lngLatCoords[i] = TGConvertCLLocationCoordinate2DToCoreLngLat(coordinates[i]);
+    }
 
-    if (!tangramInstance->markerSetPolygon(self.identifier, polygonCoords, [polygon rings], static_cast<int>([polygon ringsCount]))) {
+    if (!tangramInstance->markerSetPolygon(self.identifier, lngLatCoords.data(), polygon.rings, static_cast<int>(polygon.ringsCount))) {
         [self createNSError];
     }
 }
